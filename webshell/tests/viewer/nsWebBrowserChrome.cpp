@@ -23,6 +23,8 @@
 // Local Includes
 #include "nsWebBrowserChrome.h"
 #include "nsBrowserWindow.h"
+#include "nsWebCrawler.h"
+#include "nsViewerApp.h"
 
 // Helper Classes
 #include "nsIGenericFactory.h"
@@ -30,6 +32,7 @@
 
 
 // Interfaces needed to be included
+#include "nsIDocShellTreeItem.h"
 
 // CIDs
 
@@ -126,8 +129,22 @@ NS_IMETHODIMP nsWebBrowserChrome::GetChromeMask(PRUint32* aChromeMask)
 NS_IMETHODIMP nsWebBrowserChrome::GetNewBrowser(PRUint32 aChromeMask, 
    nsIWebBrowser** aWebBrowser)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   if(mBrowserWindow->mWebCrawler && (mBrowserWindow->mWebCrawler->Crawling() || 
+      mBrowserWindow->mWebCrawler->LoadingURLList()))
+      {
+      // Do not fly javascript popups when we are crawling
+      *aWebBrowser = nsnull;
+      return NS_ERROR_NOT_IMPLEMENTED;
+      }
+
+   nsBrowserWindow* browser = nsnull;
+   mBrowserWindow->mApp->OpenWindow(aChromeMask, browser);
+
+   NS_ENSURE_TRUE(browser, NS_ERROR_FAILURE);
+
+   *aWebBrowser = browser->mWebBrowser;
+   NS_IF_ADDREF(*aWebBrowser);
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::FindNamedBrowserChrome(const PRUnichar* aName,
@@ -188,8 +205,23 @@ NS_IMETHODIMP nsWebBrowserChrome::ShowModal()
 NS_IMETHODIMP nsWebBrowserChrome::GetNewWindow(PRInt32 aChromeFlags, 
    nsIDocShellTreeItem** aDocShellTreeItem)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   if(mBrowserWindow->mWebCrawler && (mBrowserWindow->mWebCrawler->Crawling() || 
+      mBrowserWindow->mWebCrawler->LoadingURLList()))
+      {
+      // Do not fly javascript popups when we are crawling
+      *aDocShellTreeItem = nsnull;
+      return NS_ERROR_NOT_IMPLEMENTED;
+      }
+
+   nsBrowserWindow* browser = nsnull;
+   mBrowserWindow->mApp->OpenWindow(nsIWebBrowserChrome::allChrome, browser);
+
+   NS_ENSURE_TRUE(browser, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIDocShellTreeItem> newDocShellAsItem(do_QueryInterface(browser->mDocShell));
+   *aDocShellTreeItem = newDocShellAsItem;
+   NS_IF_ADDREF(*aDocShellTreeItem);
+   return NS_OK;
 }
 
 //*****************************************************************************
@@ -213,64 +245,57 @@ NS_IMETHODIMP nsWebBrowserChrome::Create()
 
 NS_IMETHODIMP nsWebBrowserChrome::Destroy()
 {
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_UNEXPECTED;
+   return mBrowserWindow->Destroy();
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::SetPosition(PRInt32 x, PRInt32 y)
+NS_IMETHODIMP nsWebBrowserChrome::SetPosition(PRInt32 aX, PRInt32 aY)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   PRInt32 cx=0;
+   PRInt32 cy=0;
+
+   NS_ENSURE_SUCCESS(GetSize(&cx, &cy), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(SetPositionAndSize(aX, aY, cx, cy, PR_FALSE), 
+      NS_ERROR_FAILURE);
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::GetPosition(PRInt32* x, PRInt32* y)
+NS_IMETHODIMP nsWebBrowserChrome::GetPosition(PRInt32* aX, PRInt32* aY)
 {
-   NS_ENSURE_ARG_POINTER(x && y);
+   return GetPositionAndSize(aX, aY, nsnull, nsnull);
+}
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+NS_IMETHODIMP nsWebBrowserChrome::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
+{
+   PRInt32 x=0;
+   PRInt32 y=0;
+
+   NS_ENSURE_SUCCESS(GetPosition(&x, &y), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, aCX, aCY, aRepaint), 
+      NS_ERROR_FAILURE);
+
    return NS_OK;
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::SetSize(PRInt32 cx, PRInt32 cy, PRBool fRepaint)
+NS_IMETHODIMP nsWebBrowserChrome::GetSize(PRInt32* aCX, PRInt32* aCY)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return GetPositionAndSize(nsnull, nsnull, aCX, aCY);
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::GetSize(PRInt32* cx, PRInt32* cy)
+NS_IMETHODIMP nsWebBrowserChrome::SetPositionAndSize(PRInt32 aX, PRInt32 aY, 
+   PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
 {
-   NS_ENSURE_ARG_POINTER(cx && cy);
-
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return mBrowserWindow->SetPositionAndSize(aX, aY, aCX, aCY, aRepaint);
 }
 
-NS_IMETHODIMP nsWebBrowserChrome::SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx,
-   PRInt32 cy, PRBool fRepaint)
+NS_IMETHODIMP nsWebBrowserChrome::GetPositionAndSize(PRInt32* aX, PRInt32* aY, 
+   PRInt32* aCX, PRInt32* aCY)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebBrowserChrome::GetPositionAndSize(PRInt32* x, PRInt32* y, PRInt32* cx,
-   PRInt32* cy)
-{
-   
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return mBrowserWindow->GetPositionAndSize(aX, aY, aCX, aCY);
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::Repaint(PRBool aForce)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return mBrowserWindow->Repaint(aForce);
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::GetParentWidget(nsIWidget** aParentWidget)
@@ -304,18 +329,12 @@ NS_IMETHODIMP nsWebBrowserChrome::SetParentNativeWindow(nativeWindow aParentNati
 
 NS_IMETHODIMP nsWebBrowserChrome::GetVisibility(PRBool* aVisibility)
 {
-   NS_ENSURE_ARG_POINTER(aVisibility);
-
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return mBrowserWindow->GetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::SetVisibility(PRBool aVisibility)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return mBrowserWindow->SetVisibility(aVisibility);
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::GetMainWidget(nsIWidget** aMainWidget)
@@ -328,40 +347,30 @@ NS_IMETHODIMP nsWebBrowserChrome::GetMainWidget(nsIWidget** aMainWidget)
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::SetFocus()
-{
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+{  
+   return mBrowserWindow->SetFocus();
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
    PRBool* aTookFocus)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return mBrowserWindow->FocusAvailable(aCurrentFocus, aTookFocus);
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::GetTitle(PRUnichar** aTitle)
 {
-   NS_ENSURE_ARG_POINTER(aTitle);
-
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   return mBrowserWindow->GetTitle(aTitle);
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::SetTitle(const PRUnichar* aTitle)
 {
-   NS_ENSURE_STATE(mBrowserWindow->mWindow);
-
    mBrowserWindow->mTitle = aTitle;
 
    nsAutoString newTitle(aTitle);
 
    newTitle.Append(" - Raptor");
    
-   mBrowserWindow->mWindow->SetTitle(newTitle);
+   mBrowserWindow->SetTitle(newTitle.GetUnicode());
    return NS_OK;
 }
 

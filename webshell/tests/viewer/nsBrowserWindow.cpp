@@ -152,7 +152,6 @@ static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 #endif
 
 static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
-static NS_DEFINE_CID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_CID(kButtonCID, NS_BUTTON_CID);
 static NS_DEFINE_CID(kFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_CID(kTextFieldCID, NS_TEXTFIELD_CID);
@@ -165,7 +164,6 @@ static NS_DEFINE_CID(kLabelCID, NS_LABEL_CID);
 
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMDOCUMENT_IID);
 static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
@@ -202,6 +200,244 @@ static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENTLOADEROBSERVER_IID
 static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 #endif
 static void* GetItemsNativeData(nsISupports* aObject);
+
+//******* Cleanup Above here***********/
+
+//*****************************************************************************
+// nsBrowserWindow::nsIBaseWindow
+//*****************************************************************************   
+
+NS_IMETHODIMP nsBrowserWindow::InitWindow(nativeWindow aParentNativeWindow,
+   nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
+{
+   // Ignore wigdet parents for now.  Don't think those are a vaild thing to call.
+   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, PR_FALSE), NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::Create()
+{
+   NS_ASSERTION(PR_FALSE, "You can't call this");
+   return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP nsBrowserWindow::Destroy()
+{
+   RemoveBrowser(this);
+
+   nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+   if(webShell)
+      {
+      //XXXTAB Should do this on the docShell
+      nsCOMPtr<nsIDocumentLoader> docLoader;
+      webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+      if(docLoader)
+         docLoader->RemoveObserver(this);
+      nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+      docShellWin->Destroy();
+      NS_RELEASE(mDocShell);
+      }
+
+   DestroyWidget(mBack);         
+   mBack = nsnull;
+   DestroyWidget(mForward);      
+   mForward = nsnull;
+   DestroyWidget(mLocation);     
+   mLocation = nsnull;
+   DestroyWidget(mStatus);       
+   mStatus = nsnull;
+
+   if(mThrobber)
+      {
+      mThrobber->Destroy();
+      NS_RELEASE(mThrobber);
+      mThrobber = nsnull;
+      }
+
+   DestroyWidget(mWindow);       
+   mWindow = nsnull;
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::SetPosition(PRInt32 aX, PRInt32 aY)
+{
+   PRInt32 cx=0;
+   PRInt32 cy=0;
+
+   NS_ENSURE_SUCCESS(GetSize(&cx, &cy), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(SetPositionAndSize(aX, aY, cx, cy, PR_FALSE), 
+      NS_ERROR_FAILURE);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::GetPosition(PRInt32* aX, PRInt32* aY)
+{
+   return GetPositionAndSize(aX, aY, nsnull, nsnull);
+}
+
+NS_IMETHODIMP nsBrowserWindow::SetSize(PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
+{
+   PRInt32 x=0;
+   PRInt32 y=0;
+
+   NS_ENSURE_SUCCESS(GetPosition(&x, &y), NS_ERROR_FAILURE);
+   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, aCX, aCY, aRepaint), 
+      NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::GetSize(PRInt32* aCX, PRInt32* aCY)
+{
+   return GetPositionAndSize(nsnull, nsnull, aCX, aCY);
+}
+
+NS_IMETHODIMP nsBrowserWindow::SetPositionAndSize(PRInt32 aX, PRInt32 aY, 
+   PRInt32 aCX, PRInt32 aCY, PRBool aRepaint)
+{
+   NS_ENSURE_SUCCESS(mWindow->Resize(aX, aY, aCX, aCY, aRepaint), 
+      NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::GetPositionAndSize(PRInt32* aX, PRInt32* aY, 
+   PRInt32* aCX, PRInt32* aCY)
+{
+   nsRect bounds;
+
+   NS_ENSURE_SUCCESS(mWindow->GetBounds(bounds), NS_ERROR_FAILURE);
+
+   if(aX)
+      *aX = bounds.x;
+   if(aY)
+      *aY = bounds.y;
+   if(aCX)
+      *aCX = bounds.width;
+   if(aCY)
+      *aCY = bounds.height;
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::Repaint(PRBool aForce)
+{
+   //XXX First Check In
+   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::GetParentWidget(nsIWidget** aParentWidget)
+{
+   NS_ENSURE_ARG_POINTER(aParentWidget);
+   //XXX First Check In
+   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::SetParentWidget(nsIWidget* aParentWidget)
+{
+   NS_ASSERTION(PR_FALSE, "You can't call this");
+   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsBrowserWindow::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
+{
+   NS_ENSURE_ARG_POINTER(aParentNativeWindow);
+
+   //XXX First Check In
+   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::SetParentNativeWindow(nativeWindow aParentNativeWindow)
+{
+   NS_ASSERTION(PR_FALSE, "You can't call this");
+   return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsBrowserWindow::GetVisibility(PRBool* aVisibility)
+{
+   NS_ENSURE_ARG_POINTER(aVisibility);
+
+   //XXX First Check In
+   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::SetVisibility(PRBool aVisibility)
+{
+   NS_ENSURE_STATE(mWindow);
+
+   NS_ENSURE_SUCCESS(mWindow->Show(aVisibility), NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::GetMainWidget(nsIWidget** aMainWidget)
+{
+   NS_ENSURE_ARG_POINTER(aMainWidget);
+
+   //XXX First Check In
+   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::SetFocus()
+{
+   //XXX First Check In
+   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
+   PRBool* aTookFocus)
+{
+   //XXX First Check In
+   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::GetTitle(PRUnichar** aTitle)
+{
+   NS_ENSURE_ARG_POINTER(aTitle);
+
+   *aTitle = mTitle.ToNewUnicode();
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
+{
+   NS_ENSURE_STATE(mWindow);
+
+   mTitle = aTitle;
+
+   NS_ENSURE_SUCCESS(mWindow->SetTitle(aTitle), NS_ERROR_FAILURE);
+
+   return NS_OK;
+}
+
+//*****************************************************************************
+// nsBrowserWindow: Helper Function
+//*****************************************************************************   
+
+void nsBrowserWindow::DestroyWidget(nsISupports* aWidget)
+{
+   if(aWidget)
+      {
+      nsCOMPtr<nsIWidget> w(do_QueryInterface(aWidget));
+      if(w)
+         w->Destroy();
+      }
+}
+
+//******* Cleanup below here *************/
+
+
+
 
 //----------------------------------------------------------------------
 
@@ -310,7 +546,7 @@ nsBrowserWindow::CloseAllWindows()
   while (0 != gBrowsers.Count()) {
     nsBrowserWindow* bw = (nsBrowserWindow*) gBrowsers.ElementAt(0);
     NS_ADDREF(bw);
-    bw->Close();
+    bw->Destroy();
     NS_RELEASE(bw);
   }
   gBrowsers.Clear();
@@ -682,10 +918,10 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
 #ifndef HTMLDialogs 
   if (aID == PRVCY_PREFILL) {
     nsAutoString url("file:///y|/htmldlgs.htm");
-    nsIBrowserWindow* bw = nsnull;
+    nsBrowserWindow* bw = nsnull;
     mApp->OpenWindow(PRUint32(~0), bw);
-    bw->Show();
-    ((nsBrowserWindow *)bw)->GoTo(url.GetUnicode());
+    bw->SetVisibility(PR_TRUE);
+    bw->GoTo(url.GetUnicode());
     NS_RELEASE(bw);
   }
 #endif
@@ -822,7 +1058,7 @@ nsBrowserWindow::DoFileOpen()
     // Ask the Web widget to load the file URL
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
     webShell->LoadURL(nsString(fileURL.GetURLString()).GetUnicode());
-    Show();
+    SetVisibility(PR_TRUE);
   }
 }
 
@@ -1049,11 +1285,6 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
 
   *aInstancePtrResult = NULL;
 
-  if (aIID.Equals(kIBrowserWindowIID)) {
-    *aInstancePtrResult = (void*) ((nsIBrowserWindow*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
   if (aIID.Equals(kIDocumentLoaderObserverIID)) {
     *aInstancePtrResult = (void*) ((nsIDocumentLoaderObserver*)this);
     NS_ADDREF_THIS();
@@ -1075,7 +1306,7 @@ nsBrowserWindow::QueryInterface(const nsIID& aIID,
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)((nsIBrowserWindow*)this));
+    *aInstancePtrResult = (void*) ((nsISupports*)((nsIWebShellContainer*)this));
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -1137,7 +1368,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
   }
   webBrowserWin->SetVisibility(PR_TRUE);
 
-  if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
+  if (nsIWebBrowserChrome::menuBarOn & aChromeMask) {
     rv = CreateMenuBar(r.width);
     if (NS_OK != rv) {
       return rv;
@@ -1146,14 +1377,14 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     r.x = r.y = 0;
   }
 
-  if (NS_CHROME_TOOL_BAR_ON & aChromeMask) {
+  if (nsIWebBrowserChrome::toolBarOn & aChromeMask) {
     rv = CreateToolBar(r.width);
     if (NS_OK != rv) {
       return rv;
     }
   }
 
-  if (NS_CHROME_STATUS_BAR_ON & aChromeMask) {
+  if (nsIWebBrowserChrome::statusBarOn & aChromeMask) {
     rv = CreateStatusBar(r.width);
     if (NS_OK != rv) {
       return rv;
@@ -1215,7 +1446,7 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     docLoader->AddObserver(this);
   }
 
-  if (NS_CHROME_MENU_BAR_ON & aChromeMask) {
+  if (nsIWebBrowserChrome::menuBarOn & aChromeMask) {
     rv = CreateMenuBar(r.width);
     if (NS_OK != rv) {
       return rv;
@@ -1224,14 +1455,14 @@ nsBrowserWindow::Init(nsIAppShell* aAppShell,
     r.x = r.y = 0;
   }
 
-  if (NS_CHROME_TOOL_BAR_ON & aChromeMask) {
+  if (nsIWebBrowserChrome::toolBarOn & aChromeMask) {
     rv = CreateToolBar(r.width);
     if (NS_OK != rv) {
       return rv;
     }
   }
 
-  if (NS_CHROME_STATUS_BAR_ON & aChromeMask) {
+  if (nsIWebBrowserChrome::statusBarOn & aChromeMask) {
     rv = CreateStatusBar(r.width);
     if (NS_OK != rv) {
       return rv;
@@ -1459,7 +1690,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   nsRect rr(0, 0, aWidth, aHeight);
 
   // position location bar (it's stretchy)
-  if (NS_CHROME_TOOL_BAR_ON & mChromeMask) {
+  if (nsIWebBrowserChrome::toolBarOn & mChromeMask) {
     nsIWidget* locationWidget = nsnull;
     if (mLocation &&
         NS_SUCCEEDED(mLocation->QueryInterface(kIWidgetIID,
@@ -1526,7 +1757,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
   nsIWidget* statusWidget = nsnull;
 
   if (mStatus && NS_OK == mStatus->QueryInterface(kIWidgetIID,(void**)&statusWidget)) {
-    if (mChromeMask & NS_CHROME_STATUS_BAR_ON) {
+    if (mChromeMask & nsIWebBrowserChrome::statusBarOn) {
       statusWidget->Resize(0, aHeight - txtHeight,
                            aWidth, txtHeight,
                            PR_TRUE);
@@ -1543,7 +1774,7 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
 
   // inset the web widget
 
-  if (NS_CHROME_TOOL_BAR_ON & mChromeMask) {
+  if (nsIWebBrowserChrome::toolBarOn & mChromeMask) {
     rr.height -= BUTTON_HEIGHT;
     rr.y += BUTTON_HEIGHT;
   }
@@ -1606,69 +1837,6 @@ nsBrowserWindow::GetWindowBounds(nsRect& aBounds)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::Show()
-{
-  NS_PRECONDITION(nsnull != mWindow, "null window");
-  mWindow->Show(PR_TRUE);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::Hide()
-{
-  NS_PRECONDITION(nsnull != mWindow, "null window");
-  mWindow->Show(PR_FALSE);
-  return NS_OK;
-}
-
-static void DestroyWidget(nsISupports* aWidget)
-{
-  if (aWidget) {
-    nsIWidget* w;
-    nsresult rv = aWidget->QueryInterface(kIWidgetIID, (void**) &w);
-    if (NS_SUCCEEDED(rv)) {
-      w->Destroy();
-      NS_RELEASE(w);
-    }
-    NS_RELEASE(aWidget);
-  }
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::Close()
-{
-  RemoveBrowser(this);
-
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
-  if (nsnull != webShell) {
-    nsCOMPtr<nsIDocumentLoader> docLoader;
-    webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-    if (docLoader) {
-      docLoader->RemoveObserver(this);
-    }
-    nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
-    docShellWin->Destroy();
-    NS_RELEASE(mDocShell);
-  }
-
-  DestroyWidget(mBack);         mBack = nsnull;
-  DestroyWidget(mForward);      mForward = nsnull;
-  DestroyWidget(mLocation);     mLocation = nsnull;
-  DestroyWidget(mStatus);       mStatus = nsnull;
-
-  if (mThrobber) {
-    mThrobber->Destroy();
-    NS_RELEASE(mThrobber);
-    mThrobber = nsnull;
-  }
-
-  DestroyWidget(mWindow);       mWindow = nsnull;
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP
 nsBrowserWindow::ShowModally(PRBool aPrepare)
 {
   // unsupported by viewer
@@ -1712,55 +1880,6 @@ nsBrowserWindow::GetContentWebShell(nsIWebShell **aResult)
 }
 
 //----------------------------------------
-NS_IMETHODIMP
-nsBrowserWindow::IsIntrinsicallySized(PRBool& aResult)
-{
-  aResult = PR_FALSE;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::SetTitle(const PRUnichar* aTitle)
-{
-   EnsureWebBrowserChrome();
-   return mWebBrowserChrome->SetTitle(aTitle);
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::GetTitle(PRUnichar** aResult)
-{
-  *aResult = mTitle.ToNewUnicode();
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::SetStatus(const PRUnichar* aStatus)
-{
-  if (nsnull != mStatus) {
-    PRUint32 size;
-    mStatus->SetText(aStatus,size);
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::GetStatus(const PRUnichar** aResult)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::SetDefaultStatus(const PRUnichar* aStatus)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsBrowserWindow::GetDefaultStatus(const PRUnichar** aResult)
-{
-  return NS_OK;
-}
-
 NS_IMETHODIMP
 nsBrowserWindow::SetProgress(PRInt32 aProgress, PRInt32 aProgressMax)
 {
@@ -1881,7 +2000,7 @@ nsBrowserWindow::NewWebShell(PRUint32 aChromeMask,
     {
       // Default is to startup hidden
       if (aVisible) {
-        browser->Show();
+        browser->SetVisibility(PR_TRUE);
       }
       nsIWebShell *shell;
       rv = browser->GetWebShell(shell);
@@ -1889,7 +2008,7 @@ nsBrowserWindow::NewWebShell(PRUint32 aChromeMask,
     }
     else
     {
-      browser->Close();
+      browser->Destroy();
     }
   }
   else
@@ -2318,8 +2437,8 @@ nsBrowserWindow::ShowPrintPreview(PRInt32 aID)
           nsBrowserWindow* bw = new nsNativeBrowserWindow;
           bw->SetApp(mApp);
           bw->Init(mAppShell, nsRect(0, 0, 600, 400),
-                   NS_CHROME_MENU_BAR_ON, PR_TRUE, docv, printContext);
-          bw->Show();
+                   nsIWebBrowserChrome::menuBarOn, PR_TRUE, docv, printContext);
+          bw->SetVisibility(PR_TRUE);
 
           NS_RELEASE(printContext);
         }
@@ -3438,107 +3557,4 @@ NS_IMETHODIMP nsBrowserWindow::EnsureWebBrowserChrome()
    return NS_OK;
 }
 
-//----------------------------------------------------------------------
 
-// Factory code for creating nsBrowserWindow's
-
-class nsBrowserWindowFactory : public nsIFactory
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIFACTORY
-
-  nsBrowserWindowFactory();
-  virtual ~nsBrowserWindowFactory();
-};
-
-nsBrowserWindowFactory::nsBrowserWindowFactory()
-{
-  NS_INIT_REFCNT();
-}
-
-nsBrowserWindowFactory::~nsBrowserWindowFactory()
-{
-}
-
-nsresult
-nsBrowserWindowFactory::QueryInterface(const nsIID &aIID, void **aResult)
-{
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  // Always NULL result, in case of failure
-  *aResult = NULL;
-
-  if (aIID.Equals(kISupportsIID)) {
-    *aResult = (void *)(nsISupports*)this;
-  } else if (aIID.Equals(kIFactoryIID)) {
-    *aResult = (void *)(nsIFactory*)this;
-  }
-
-  if (*aResult == NULL) {
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF_THIS(); // Increase reference count for caller
-  return NS_OK;
-}
-
-NS_IMPL_ADDREF(nsBrowserWindowFactory);
-NS_IMPL_RELEASE(nsBrowserWindowFactory);
-
-nsresult
-nsBrowserWindowFactory::CreateInstance(nsISupports *aOuter,
-                                       const nsIID &aIID,
-                                       void **aResult)
-{
-  nsresult rv;
-  nsBrowserWindow *inst;
-
-  if (aResult == NULL) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  *aResult = NULL;
-  if (nsnull != aOuter) {
-    rv = NS_ERROR_NO_AGGREGATION;
-    goto done;
-  }
-
-  NS_NEWXPCOM(inst, nsNativeBrowserWindow);
-  if (inst == NULL) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-    goto done;
-  }
-
-  NS_ADDREF(inst);
-  rv = inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst);
-
-done:
-  return rv;
-}
-
-nsresult
-nsBrowserWindowFactory::LockFactory(PRBool aLock)
-{
-  // Not implemented in simplest case.
-  return NS_OK;
-}
-
-nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
-nsresult
-NS_NewBrowserWindowFactory(nsIFactory** aFactory)
-{
-  nsresult rv = NS_OK;
-  nsBrowserWindowFactory* inst;
-  NS_NEWXPCOM(inst, nsBrowserWindowFactory);
-  if (nsnull == inst) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  else {
-    NS_ADDREF(inst);
-  }
-  *aFactory = inst;
-  return rv;
-}

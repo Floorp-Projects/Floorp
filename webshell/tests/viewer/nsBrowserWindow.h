@@ -25,9 +25,13 @@
 // Local Includes
 #include "nsWebBrowserChrome.h"
 
+// Helper Classes
+
+// Interfaces Needed
+#include "nsIBaseWindow.h"
+
 
 #include "nsIWebBrowser.h"
-#include "nsIBrowserWindow.h"
 #include "nsIStreamListener.h"
 #include "nsIProgressEventSink.h"
 #include "nsIWebShell.h"
@@ -62,7 +66,7 @@ class nsWebCrawler;
 /**
  * Abstract base class for our test app's browser windows
  */
-class nsBrowserWindow : public nsIBrowserWindow,
+class nsBrowserWindow : public nsIBaseWindow,
                         public nsIDocumentLoaderObserver,
                         public nsIProgressEventSink,
                         public nsIWebShellContainer,
@@ -75,6 +79,14 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
+
+  // nsIBaseWindow
+  NS_DECL_NSIBASEWINDOW
+
+protected:
+   void DestroyWidget(nsISupports* aWidget);
+
+public:
 
   // nsIBrowserWindow
   NS_IMETHOD Init(nsIAppShell* aAppShell,
@@ -92,20 +104,9 @@ public:
                           PRBool aWidthTransient, PRBool aHeightTransient);
   NS_IMETHOD GetContentBounds(nsRect& aBounds);
   NS_IMETHOD GetWindowBounds(nsRect& aBounds);
-  NS_IMETHOD IsIntrinsicallySized(PRBool& aResult);
-  NS_IMETHOD ShowAfterCreation() { return Show(); }
-  NS_IMETHOD Show();
-  NS_IMETHOD Hide();
-  NS_IMETHOD Close();
   NS_IMETHOD ShowModally(PRBool aPrepare);
   NS_IMETHOD SetChrome(PRUint32 aNewChromeMask);
   NS_IMETHOD GetChrome(PRUint32& aChromeMaskResult);
-  NS_IMETHOD SetTitle(const PRUnichar* aTitle);
-  NS_IMETHOD GetTitle(PRUnichar** aResult);
-  NS_IMETHOD SetStatus(const PRUnichar* aStatus);
-  NS_IMETHOD GetStatus(const PRUnichar** aResult);
-  NS_IMETHOD SetDefaultStatus(const PRUnichar* aStatus);
-  NS_IMETHOD GetDefaultStatus(const PRUnichar** aResult);
   NS_IMETHOD SetProgress(PRInt32 aProgress, PRInt32 aProgressMax);
   NS_IMETHOD ShowMenuBar(PRBool aShow);
   NS_IMETHOD GetWebShell(nsIWebShell*& aResult);
