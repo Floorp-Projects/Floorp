@@ -40,7 +40,7 @@
 #include "nsSpecialSystemDirectory.h"
 #include "prprf.h"
 
-//#include "string.h"
+//#include <string.h>
 //void* operator new(size_t n) { return malloc(n); }
 
 struct FilesTest

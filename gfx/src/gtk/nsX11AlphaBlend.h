@@ -40,7 +40,7 @@
 #ifndef nsX11AlphaBlend_h__
 #define nsX11AlphaBlend_h__
 
-#include "X11/Xlib.h"
+#include <X11/Xlib.h>
 #include "nsColor.h"
 
 class nsAntiAliasedGlyph;

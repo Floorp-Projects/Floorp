@@ -1,6 +1,6 @@
 #include "nsILocalFile.h"
 
-#include "stdio.h"
+#include <stdio.h>
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "nsIMemory.h"

@@ -22,7 +22,7 @@
 // mozLineTerm.cpp: class implementing mozILineTerm/mozILineTermAux interfaces,
 // providing an XPCOM/XPCONNECT wrapper for the LINETERM module
 
-#include "stdio.h"
+#include <stdio.h>
 
 #include "nspr.h"
 #include "nscore.h"

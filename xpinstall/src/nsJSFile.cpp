@@ -44,7 +44,7 @@
 
 #include "nsIDOMInstallVersion.h"
 
-#include "stdio.h"
+#include <stdio.h>
 
 #ifdef _WINDOWS
 #include "nsJSWinReg.h"

@@ -40,7 +40,7 @@
 #include "nsQtMenu.h"
 #include "resources.h"
 #include "nscore.h"
-#include "stdio.h"
+#include <stdio.h>
 
 nsMenuEventHandler::nsMenuEventHandler(nsBrowserWindow * window)
 {

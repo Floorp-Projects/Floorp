@@ -41,7 +41,7 @@
 #include "nsPhGfxLog.h"
 #include "nsDeviceContextPh.h"
 #include "nspr.h"
-#include "errno.h"
+#include <errno.h>
 #include <Pt.h>
 #include <photon/PxImage.h>
 #include "photon/PhRender.h"

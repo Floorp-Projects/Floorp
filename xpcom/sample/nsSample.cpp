@@ -44,7 +44,7 @@
  *
  */
 #include "plstr.h"
-#include "stdio.h"
+#include <stdio.h>
 
 #include "nsSample.h"
 #include "nsMemory.h"

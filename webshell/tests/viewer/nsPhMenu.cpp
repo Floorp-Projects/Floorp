@@ -41,7 +41,7 @@
 #include "resources.h"
 #include "nscore.h"
 
-#include "stdio.h"
+#include <stdio.h>
 
 
 int MenuItemActivate (PtWidget_t *widget, void *command, PtCallbackInfo_t *cbinfo)

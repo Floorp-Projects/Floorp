@@ -40,7 +40,7 @@
 #include "nscore.h"
 #include "nsIMemory.h"
 #include "plstr.h"
-#include "stdio.h"
+#include <stdio.h>
 
 #include "nsSound.h"
 

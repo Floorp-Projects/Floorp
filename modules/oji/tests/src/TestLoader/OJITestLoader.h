@@ -26,8 +26,8 @@
 #include "ojiapitests.h"
 #include "testtypes.h"
 
-#include "sys/stat.h"
-#include "string.h"
+#include <sys/stat.h>
+#include <string.h>
 
 #define OJITESTLOADER_IID                            \
 { /* a1e5ed51-aa4a-11d1-85b2-00805f0e4dfe */         \
