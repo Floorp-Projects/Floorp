@@ -32,6 +32,7 @@ CPPSRCS =				\
       nsEditorCommands.cpp   \
       nsEditorUtils.cpp      \
       nsEditorRegistration.cpp \
+      nsEditorParserObserver.cpp \
       nsTextEditRules.cpp    \
       nsHTMLEditRules.cpp    \
       nsHTMLEditUtils.cpp    \
@@ -70,6 +71,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsEditorCommands.obj	  \
 	.\$(OBJDIR)\nsEditorUtils.obj		    \
 	.\$(OBJDIR)\nsEditorRegistration.obj \
+	.\$(OBJDIR)\nsEditorParserObserver.obj \
   .\$(OBJDIR)\nsTextEditRules.obj     \
   .\$(OBJDIR)\TextEditorTest.obj      \
   .\$(OBJDIR)\nsHTMLEditRules.obj     \
