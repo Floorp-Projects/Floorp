@@ -74,7 +74,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
     js_InitContextForLocking(cx);
 #endif
 
-    JS_LOCK_RUNTIME(rt);
+    JS_LOCK_GC(rt);
     for (;;) {
         first = (rt->contextList.next == &rt->contextList);
         if (rt->state == JSRTS_UP) {
@@ -89,7 +89,7 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         JS_WAIT_CONDVAR(rt->stateChange, JS_NO_TIMEOUT);
     }
     JS_APPEND_LINK(&cx->links, &rt->contextList);
-    JS_UNLOCK_RUNTIME(rt);
+    JS_UNLOCK_GC(rt);
 
     /*
      * First we do the infallible, every-time per-context initializations.
@@ -139,10 +139,10 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
             return NULL;
         }
 
-        JS_LOCK_RUNTIME(rt);
+        JS_LOCK_GC(rt);
         rt->state = JSRTS_UP;
         JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
-        JS_UNLOCK_RUNTIME(rt);
+        JS_UNLOCK_GC(rt);
     }
 
     return cx;
@@ -158,13 +158,13 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
     rt = cx->runtime;
 
     /* Remove cx from context list first. */
-    JS_LOCK_RUNTIME(rt);
+    JS_LOCK_GC(rt);
     JS_ASSERT(rt->state == JSRTS_UP || rt->state == JSRTS_LAUNCHING);
     JS_REMOVE_LINK(&cx->links);
     last = (rt->contextList.next == &rt->contextList);
     if (last)
         rt->state = JSRTS_LANDING;
-    JS_UNLOCK_RUNTIME(rt);
+    JS_UNLOCK_GC(rt);
 
     if (last) {
         /* Unpin all pinned atoms before final GC. */
@@ -207,7 +207,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 
     if (last) {
         /* Always force, so we wait for any racing GC to finish. */
-        js_ForceGC(cx);
+        js_ForceGC(cx, GC_LAST_CONTEXT);
 
         /* Iterate until no finalizer removes a GC root or lock. */
         while (rt->gcPoke)
@@ -218,13 +218,13 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
             js_FreeAtomState(cx, &rt->atomState);
 
         /* Take the runtime down, now that it has no contexts or atoms. */
-        JS_LOCK_RUNTIME(rt);
+        JS_LOCK_GC(rt);
         rt->state = JSRTS_DOWN;
         JS_NOTIFY_ALL_CONDVAR(rt->stateChange);
-        JS_UNLOCK_RUNTIME(rt);
+        JS_UNLOCK_GC(rt);
     } else {
         if (gcmode == JS_FORCE_GC)
-            js_ForceGC(cx);
+            js_ForceGC(cx, 0);
         else if (gcmode == JS_MAYBE_GC)
             JS_MaybeGC(cx);
     }
@@ -256,7 +256,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 }
 
 JSBool
-js_LiveContext(JSRuntime *rt, JSContext *cx)
+js_ValidContextPointer(JSRuntime *rt, JSContext *cx)
 {
     JSCList *cl;
 
@@ -269,18 +269,20 @@ js_LiveContext(JSRuntime *rt, JSContext *cx)
 }
 
 JSContext *
-js_ContextIterator(JSRuntime *rt, JSContext **iterp)
+js_ContextIterator(JSRuntime *rt, JSBool unlocked, JSContext **iterp)
 {
     JSContext *cx = *iterp;
 
-    JS_LOCK_RUNTIME(rt);
+    if (unlocked)
+        JS_LOCK_GC(rt);
     if (!cx)
         cx = (JSContext *)&rt->contextList;
     cx = (JSContext *)cx->links.next;
     if (&cx->links == &rt->contextList)
         cx = NULL;
     *iterp = cx;
-    JS_UNLOCK_RUNTIME(rt);
+    if (unlocked)
+        JS_UNLOCK_GC(rt);
     return cx;
 }
 

@@ -221,7 +221,7 @@ nsXPConnect::ReleaseXPConnectSingleton()
         {
             FILE* oldFileHandle = js_DumpGCHeap;
             js_DumpGCHeap = stdout;
-            js_ForceGC(ccx);
+            JS_GC(ccx);
             js_DumpGCHeap = oldFileHandle;
         }
 #endif

@@ -706,7 +706,7 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         js_DumpGCHeap = stdout;
     }
 #endif
-    js_ForceGC(cx);
+    JS_GC(cx);
 #ifdef GC_MARK_DEBUG
     if (js_DumpGCHeap != stdout)
         fclose(js_DumpGCHeap);

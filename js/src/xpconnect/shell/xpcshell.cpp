@@ -310,7 +310,7 @@ GC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
         js_DumpGCHeap = stdout;
     }
 #endif
-    js_ForceGC(cx);
+    JS_GC(cx);
 #ifdef GC_MARK_DEBUG
     if (js_DumpGCHeap != stdout)
         fclose(js_DumpGCHeap);
@@ -920,7 +920,7 @@ main(int argc, char **argv)
                                          PR_TRUE, getter_AddRefs(baz));
     bar = nsnull;
     baz = nsnull;
-    js_ForceGC(foo);
+    JS_GC(foo);
     JS_DestroyContext(foo);
 #endif
 
@@ -934,12 +934,12 @@ main(int argc, char **argv)
 #endif
 
     JS_ClearScope(jscontext, glob);
-    js_ForceGC(jscontext);
+    JS_GC(jscontext);
     JSContext *oldcx;
     cxstack->Pop(&oldcx);
     NS_ASSERTION(oldcx == jscontext, "JS thread context push/pop mismatch");
     cxstack = nsnull;
-    js_ForceGC(jscontext);
+    JS_GC(jscontext);
     JS_DestroyContext(jscontext);
     xpc->SyncJSContexts();
     xpc = nsnull;   // force nsCOMPtr to Release the service

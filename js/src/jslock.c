@@ -408,7 +408,7 @@ ClaimScope(JSScope *scope, JSContext *cx)
          * request before waiting on rt->scopeSharingDone).
          */
         if (!scope->u.link &&
-            (!js_LiveContext(rt, ownercx) ||
+            (!js_ValidContextPointer(rt, ownercx) ||
              !ownercx->requestDepth ||
              ownercx->thread == cx->thread)) {
             JS_ASSERT(scope->u.count == 0);
