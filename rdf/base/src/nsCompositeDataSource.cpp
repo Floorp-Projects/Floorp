@@ -548,6 +548,7 @@ CompositeDataSourceImpl::Release()
     // observes holds a reference _back_ to the composite datasource.
     NS_PRECONDITION(PRInt32(mRefCnt) > 0, "duplicate release");
     --mRefCnt;
+    NS_LOG_RELEASE(this, mRefCnt, "CompositeDataSourceImpl");
 
     // When the number of references == the number of datasources,
     // then we know that all that remains are the circular
