@@ -676,28 +676,29 @@ nsStreamConverter::OnStopRequest(nsIChannel * aChannel, nsISupports *ctxt, nsres
   {
     nsMIMESession   *tSession = (nsMIMESession *) mBridgeStream;
     
-  	if (mMimeStreamConverterListener)
-	{
-    	struct mime_stream_data *msd = (struct mime_stream_data *)tSession->data_object;
-    	if (msd)
-    	{
-			static NS_DEFINE_CID(kCIMimeHeadersCID, NS_IMIMEHEADERS_CID);
-  			nsresult rv;
-  			nsCOMPtr<nsIMimeHeaders> mimeHeaders;
- 
-  			rv = nsComponentManager::CreateInstance(kCIMimeHeadersCID, 
-                                          nsnull, nsCOMTypeInfo<nsIMimeHeaders>::GetIID(), 
-                                          (void **) getter_AddRefs(mimeHeaders)); 
-    		
-    		if (NS_SUCCEEDED(rv))
-    		{
-    			mimeHeaders->Initialize(msd->headers->all_headers);
-				mMimeStreamConverterListener->OnHeadersReady(mimeHeaders);
-			}
-			else
-				mMimeStreamConverterListener->OnHeadersReady(nsnull);
-		}
-	}
+    if (mMimeStreamConverterListener)
+    {
+      struct mime_stream_data *msd = (struct mime_stream_data *)tSession->data_object;
+      if (msd)
+      {
+        static NS_DEFINE_CID(kCIMimeHeadersCID, NS_IMIMEHEADERS_CID);
+        nsresult rv;
+        nsCOMPtr<nsIMimeHeaders> mimeHeaders;
+        
+        rv = nsComponentManager::CreateInstance(kCIMimeHeadersCID, 
+          nsnull, nsCOMTypeInfo<nsIMimeHeaders>::GetIID(), 
+          (void **) getter_AddRefs(mimeHeaders)); 
+        
+        if (NS_SUCCEEDED(rv))
+        {
+          if (msd->headers)
+            mimeHeaders->Initialize(msd->headers->all_headers);
+          mMimeStreamConverterListener->OnHeadersReady(mimeHeaders);
+        }
+        else
+          mMimeStreamConverterListener->OnHeadersReady(nsnull);
+      }
+    }
     
     tSession->complete((nsMIMESession *)mBridgeStream);
   }
