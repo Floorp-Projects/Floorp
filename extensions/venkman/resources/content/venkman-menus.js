@@ -84,10 +84,19 @@ function initMenus()
         [
          ["open-url"],
          ["find-file"],
-         ["-"],
+         ["close-source-tab",
+                 {enabledif: "console.views.source2.currentContent && " +
+                             "console.views.source2.sourceTabList.length"}],
          ["close"],
+         ["-"],
          ["save-source-tab", { enabledif: "console.views.source2.canSave()" }],
          ["save-profile"],
+         ["-"],
+         ["save-settings"],
+         ["restore-settings"],
+         ["toggle-save-settings",
+                 {type: "checkbox",
+                  checkedif: "console.prefs['saveSettingsOnExit']"}],
          ["-"],
          [navigator.platform.search(/win/i) == -1 ? "quit" : "exit"]
         ]

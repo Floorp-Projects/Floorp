@@ -82,7 +82,7 @@
 
   <binding id="viewcontainer">
     <content>
-      <xul:box xbl:inherits="type" class="view-container" flex="1">
+      <xul:box xbl:inherits="orient=type" class="view-container" flex="1">
         <children/>
       </xul:box>
     </content>

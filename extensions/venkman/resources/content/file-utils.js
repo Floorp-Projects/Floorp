@@ -220,7 +220,25 @@ function LocalFile(file, mode, perms, tmp)
     
     if (typeof perms == "undefined")
         perms = 0666 & ~futils.umask;
-    
+
+    if (typeof mode == "string")
+    {
+        switch (mode)
+        {
+            case ">":
+                mode = MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE;
+                break;
+            case ">>":
+                mode = MODE_WRONLY | MODE_CREATE | MODE_APPEND;
+                break;
+            case "<":
+                mode = MODE_RDONLY;
+                break;
+            default:
+                throw "Invalid mode ``" + mode + "''";
+        }
+    }
+        
     if (typeof file == "string")
     {
         this.localFile = classes[LOCALFILE_CTRID].createInstance(nsILocalFile);

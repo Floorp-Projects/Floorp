@@ -32,6 +32,8 @@ const nsIInterfaceRequestor = Components.interfaces.nsIInterfaceRequestor;
 const nsIWebNavigation      = Components.interfaces.nsIWebNavigation;
 const nsIDocShellTreeItem   = Components.interfaces.nsIDocShellTreeItem;
 
+var utils = new Object();
+
 if (typeof document == "undefined") /* in xpcshell */
 {
     dumpln = print;
@@ -330,15 +332,69 @@ function insertHyphenatedWord (longWord, containerTag)
 function insertLink (matchText, containerTag)
 {
     var href;
+    var linkText;
     
-    if (matchText.indexOf ("://") == -1 && matchText.indexOf("x-jsd") != 0)
-        href = "http://" + matchText;
+    var trailing;
+    ary = matchText.match(/([.,]+)$/);
+    if (ary)
+    {
+        linkText = RegExp.leftContext;
+        trailing = ary[1];
+    }
     else
-        href = matchText;
-    
+    {
+        linkText = matchText;
+    }
+
+    var ary = linkText.match (/^(\w[\w-]+):/);
+    if (ary)
+    {
+        if (!("schemes" in utils))
+        {
+            var pfx = "@mozilla.org/network/protocol;1?name=";
+            var len = pfx.length
+
+            utils.schemes = new Object();
+            for (var c in Components.classes)
+            {
+                if (c.indexOf(pfx) == 0)
+                    utils.schemes[c.substr(len)] = true;
+            }
+        }
+        
+        if (!(ary[1] in utils.schemes))
+        {
+            insertHyphenatedWord(matchText, containerTag);
+            return;
+        }
+
+        href = linkText;
+    }
+    else
+    {
+        href = "http://" + linkText;
+    }
+
     var anchor = htmlVA (null, href, "");
-    insertHyphenatedWord(matchText, anchor);
-    containerTag.appendChild (anchor);    
+    insertHyphenatedWord (linkText, anchor);
+    containerTag.appendChild (anchor);
+    if (trailing)
+        insertHyphenatedWord (trailing, containerTag);
+    
+}
+
+function insertQuote (matchText, containerTag, msgtype)
+{
+    if (msgtype[0] == "#")
+    {
+        containerTag.appendChild(document.createTextNode(matchText));
+        return;
+    }
+    
+    if (matchText == "``")
+        containerTag.appendChild(document.createTextNode("\u201c"));
+    else
+        containerTag.appendChild(document.createTextNode("\u201d"));
 }
 
 /* length should be an even number >= 6 */
@@ -531,6 +587,20 @@ function getBaseWindowFromWindow (win)
     return rv;
 }
 
+function getSpecialDirectory(name)
+{
+    if (!("directoryService" in utils))
+    {
+        const DS_CTR = "@mozilla.org/file/directory_service;1";
+        const nsIProperties = Components.interfaces.nsIProperties;
+    
+        utils.directoryService =
+            Components.classes[DS_CTR].getService(nsIProperties);
+    }
+    
+    return utils.directoryService.get(name, Components.interfaces.nsIFile);
+}
+
 function getPathFromURL (url)
 {
     var ary = url.match(/^(.*\/)([^\/?#]+)(\?|#|$)/);
@@ -559,13 +629,6 @@ function getURLSpecFromFile (file)
 
     const nsIIOService = Components.interfaces.nsIIOService;
     const nsILocalFile = Components.interfaces.nsILocalFile;
-    /* bug 166792 added this interface in Sept. 2002, but we need to work on
-     * older versions too. */
-    var nsIFileProtocolHandler;
-    if ("nsIFileProtocolHandler" in Components.interfaces)
-        nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
-    else
-        nsIFileProtocolHandler = null;
     
     if (typeof file == "string")
     {
@@ -576,9 +639,12 @@ function getURLSpecFromFile (file)
     }
     
     var service = Components.classes[IOS_CTRID].getService(nsIIOService);
-    if (!nsIFileProtocolHandler)
+    /* In sept 2002, bug 166792 moved this method to the nsIFileProtocolHandler
+     * interface, but we need to support older versions too. */
+    if ("getURLSpecFromFile" in service)
         return service.getURLSpecFromFile(file);
 
+    var nsIFileProtocolHandler = Components.interfaces.nsIFileProtocolHandler;
     var fileHandler = service.getProtocolHandler("file");
     fileHandler = fileHandler.QueryInterface(nsIFileProtocolHandler);
     return fileHandler.getURLSpecFromFile(file);

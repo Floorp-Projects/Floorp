@@ -104,7 +104,7 @@ function getMsgFrom (bundle, msgName, params, deflt)
         
         if (params && params instanceof Array)
             rv = bundle.formatStringFromName (msgName, params, params.length);
-        else if (params)
+        else if (params || params == 0)
             rv = bundle.formatStringFromName (msgName, [params], 1);
         else
             rv = bundle.GetStringFromName (msgName);
@@ -139,16 +139,17 @@ const MT_HELLO     = "HELLO";
 const MT_HELP      = "HELP";
 const MT_WARN      = "WARN";
 const MT_INFO      = "INFO";
-const MT_SOURCE    = "SOURCE";
-const MT_STEP      = "STEP";
+const MT_OUTPUT    = "#OUTPUT";
+const MT_SOURCE    = "#SOURCE";
+const MT_STEP      = "#STEP";
 const MT_STOP      = "STOP";
-const MT_ETRACE    = "ETRACE";
-const MT_LOG       = "LOG";
+const MT_ETRACE    = "#ETRACE";
+const MT_LOG       = "#LOG";
 const MT_USAGE     = "USAGE";
-const MT_EVAL_IN   = "EVAL-IN";
-const MT_EVAL_OUT  = "EVAL-OUT";
-const MT_FEVAL_IN  = "FEVAL-IN";
-const MT_FEVAL_OUT = "FEVAL-OUT";
+const MT_EVAL_IN   = "#EVAL-IN";
+const MT_EVAL_OUT  = "#EVAL-OUT";
+const MT_FEVAL_IN  = "#FEVAL-IN";
+const MT_FEVAL_OUT = "#FEVAL-OUT";
 
 /* these messages might be needed to report an exception at startup, before
  * initMsgs() has been called. */

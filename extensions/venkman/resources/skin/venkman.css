@@ -35,6 +35,12 @@
 
 @import url(chrome://communicator/skin/);
 
+/*
+ * we have to explicitly import this css, because we're overriding the binding
+ * of the supremely awful <tab> tag.
+ */
+@import url(chrome://global/skin/tabbox.css);
+
 viewcontainer {
     -moz-binding: url(chrome://venkman/content/venkman-bindings.xml#viewcontainer);
 }
@@ -59,7 +65,15 @@ treecol[hideheader="true"] {
 }
 
 tree {
-    margin: 0px 0px 0px 0px;
+    margin: 0px;
+}
+
+treechildren {
+    border: 1px white solid;
+}
+
+treechildren[focused] {
+    border: 1px black solid;
 }
 
 tabpanels {
@@ -266,6 +280,17 @@ browser {
     margin: 1px;
 }
 
+tab { 
+    -moz-binding: none;
+    padding-right: 5px;
+}
+
+.tab-close-button:hover {
+    border: 1px silver outset;
+    margin: 0px;
+    margin-top: 1px;
+}
+
 .view-title-pop:hover,
 .view-title-close:hover {
     border: 1px silver outset;
@@ -299,6 +324,13 @@ floatingview[dragover="left"] {
 .view-title-pop[dragover="left"] {
     list-style-image: url("chrome://venkman/skin/images/arrow-left.png") !important;
 }
+
+.tab-close-button {
+    list-style-image: url("chrome://venkman/skin/images/view-close-button.png");
+    margin: 1px;
+    margin-top: 2px;
+}
+
 
 floatingview[dragover="up"] {
     padding-top: 0px;

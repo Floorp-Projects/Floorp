@@ -49,7 +49,7 @@ a.venkman-link:visited {
 }
 
 .msg-data[msg-type="ERROR"] {
-    background: darkred;
+    background: #550000;
     color: white;
 }
 

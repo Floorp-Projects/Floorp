@@ -203,12 +203,11 @@ function pm_addpref (prefName, defaultValue)
         }
 
         return value;
-    }
+    };
+    
+    if (!arrayContains(prefManager.prefNames, prefName))
+        prefManager.prefNames.push(prefName);
 
-    if (prefName in prefManager)
-        return;
-
-    prefManager.prefNames.push(prefName);
     prefManager.prefNames.sort();
     prefManager.prefs.__defineGetter__(prefName, prefGetter);
     prefManager.prefs.__defineSetter__(prefName, prefSetter);

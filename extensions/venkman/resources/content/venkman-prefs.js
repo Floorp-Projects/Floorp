@@ -35,25 +35,30 @@
 
 function initPrefs()
 {
+    var dir = getSpecialDirectory("ProfD");
+    dir.append("venkman-settings.js");
+    var defaultSettingsFile = dir.path;
 
     console.prefManager = new PrefManager("extensions.venkman.");
     console.prefs = console.prefManager.prefs;
     
     var prefs =
         [
-         ["maxStringLength", 100],
-         ["startupCount", 0],
          ["enableChromeFilter", true],
-         ["tabWidth", 4],
-         ["initialScripts", ""],
-         ["prettyprint", false],
          ["guessContext", 5],
          ["guessPattern", "(\\w+)\\s*[:=]\\s*$"],
-         ["permitStartupHit", true],
-         ["statusDuration", 5 * 1000],
-         ["menubarInFloaters", navigator.platform.indexOf ("Mac") != -1],
+         ["initialScripts", ""],
          ["lastErrorMode", "ignore"],
-         ["lastThrowMode", "ignore"]
+         ["lastThrowMode", "ignore"],
+         ["maxStringLength", 4000],
+         ["menubarInFloaters", navigator.platform.indexOf ("Mac") != -1],
+         ["permitStartupHit", true],
+         ["prettyprint", false],
+         ["saveSettingsOnExit", false],
+         ["settingsFile", defaultSettingsFile],
+         ["startupCount", 0],
+         ["statusDuration", 5 * 1000],
+         ["tabWidth", 4]
         ];
 
     console.prefManager.addPrefs(prefs);

@@ -1183,7 +1183,6 @@ function xtv_thaw ()
     
     delete this.changeStart;
     delete this.changeAmount;
-
 }
 
 XULTreeView.prototype.saveBranchState =
@@ -1500,6 +1499,88 @@ function xtv_pactrow (action)
 XULTreeView.prototype.performActionOnCell =
 function xtv_pactcell (action)
 {
+}
+
+XULTreeView.prototype.onRouteFocus =
+function xtv_rfocus (event)
+{
+    if (this.tree && this.tree.treeBody)
+        this.tree.treeBody.setAttribute("focused", true)
+
+    if ("onFocus" in this)
+        this.onFocus(event);
+}
+
+XULTreeView.prototype.onRouteBlur =
+function xtv_rblur (event)
+{
+    if (this.tree && this.tree.treeBody)
+        this.tree.treeBody.removeAttribute("focused");
+
+    if ("onBlur" in this)
+        this.onBlur(event);
+}
+
+XULTreeView.prototype.onRouteDblClick =
+function xtv_rdblclick (event)
+{
+    if (!("onRowCommand" in this) || event.target.localName != "treechildren")
+        return;
+
+    var rowIndex = this.tree.selection.currentIndex;
+    if (rowIndex == -1 || rowIndex > this.rowCount)
+        return;
+    var rec = this.childData.locateChildByVisualRow(rowIndex);
+    if (!rec)
+    {
+        ASSERT (0, "bogus row index " + rowIndex);
+        return;
+    }
+
+    this.onRowCommand(rec, event);
+}
+
+XULTreeView.prototype.onRouteKeyPress =
+function xtv_rkeypress (event)
+{
+    var rec;
+    
+    if ("onRowCommand" in this && (event.keyCode == 13 || event.charCode == 32))
+    {
+        if (!this.selection)
+            return;
+        
+        var rowIndex = this.tree.selection.currentIndex;
+        if (rowIndex == -1 || rowIndex > this.rowCount)
+            return;
+        rec = this.childData.locateChildByVisualRow(rowIndex);
+        if (!rec)
+        {
+            ASSERT (0, "bogus row index " + rowIndex);
+            return;
+        }
+
+        this.onRowCommand(rec, event);
+    }
+    else if ("onKeyPress" in this)
+    {
+        var rowIndex = this.tree.selection.currentIndex;
+        if (rowIndex != -1 && rowIndex < this.rowCount)
+        {
+            var rec = this.childData.locateChildByVisualRow(rowIndex);
+            if (!rec)
+            {
+                ASSERT (0, "bogus row index " + rowIndex);
+                return;
+            }
+        }
+        else
+        {
+            rec = null;
+        }
+        
+        this.onKeyPress(rec, event);
+    }
 }
 
 /*******************************************************************************/

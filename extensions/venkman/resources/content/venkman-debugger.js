@@ -501,12 +501,12 @@ function smgr_hasbp (line)
 }
 
 ScriptManager.prototype.setBreakpoint =
-function smgr_break (line, parentBP)
+function smgr_break (line, parentBP, props)
 {
     var found = false;
     
     for (var i in this.instances)
-        found |= this.instances[i].setBreakpoint(line, parentBP);
+        found |= this.instances[i].setBreakpoint(line, parentBP, props);
 
     return found;
 }
@@ -683,6 +683,9 @@ function si_linemap()
 {
     if (!this._lineMapInited)
     {
+        if (this.topLevel && this.topLevel.jsdScript.isValid)
+            this.topLevel.addToLineMap(this._lineMap);
+        
         for (var i in this.functions)
         {
             if (this.functions[i].jsdScript.isValid)
@@ -754,21 +757,22 @@ function si_getbp (line)
 }
 
 ScriptInstance.prototype.setBreakpoint =
-function si_setbp (line, parentBP)
+function si_setbp (line, parentBP, props)
 {
     function setBP (scriptWrapper)
     {
-        var jsdScript = scriptWrapper.jsdScript;
-        if (!jsdScript.isValid)
+        if (!scriptWrapper.jsdScript.isValid)
             return false;
+
+        var jsdScript = scriptWrapper.jsdScript;
 
         if (line >= jsdScript.baseLineNumber &&
             line <= jsdScript.baseLineNumber + jsdScript.lineExtent &&
-            jsdScript.isLineExecutable (line, PCMAP_SOURCETEXT))
+            (jsdScript.isLineExecutable (line, PCMAP_SOURCETEXT) ||
+             jsdScript.baseLineNumber == line))
         {
-            scriptWrapper.setBreakpoint(jsdScript.lineToPc(line,
-                                                           PCMAP_SOURCETEXT),
-                                        parentBP);
+            var pc = jsdScript.lineToPc(line, PCMAP_SOURCETEXT);
+            scriptWrapper.setBreakpoint(pc, parentBP, props);
             return true;
         }
         return false;
@@ -975,7 +979,7 @@ function sw_hasbp (pc)
 }
 
 ScriptWrapper.prototype.setBreakpoint =
-function sw_setbp (pc, parentBP)
+function sw_setbp (pc, parentBP, props)
 {
     var key = this.jsdScript.tag + ":" + pc;
     
@@ -985,6 +989,9 @@ function sw_setbp (pc, parentBP)
         return null;
 
     var brk = new BreakInstance (parentBP, this, pc);
+    if (props)
+        brk.setProperties(props);
+    
     console.breaks[key] = brk;
     this.breaks[key] = brk;
     
@@ -1139,6 +1146,39 @@ function bi_getURL ()
             "&enabled=" + this.enabled);
 }
 
+BreakInstance.prototype.getProperties =
+function bi_getprops()
+{
+    var rv = new Object();
+
+    rv.enabled = this._enabled;
+    if ("_conditionEnabled" in this)
+        rv.conditionEnabled = this._conditionEnabled;
+    if ("_condition" in this)
+        rv.condition = this._condition;
+    if ("_passExceptions" in this)
+        rv.passExceptions = this._passExceptions;
+    if ("_logResult" in this)
+        rv.logResult = this._logResult;
+    if ("_resultAction" in this)
+        rv.resultAction = this._resultAction;
+
+    return rv;
+}
+
+BreakInstance.prototype.setProperties =
+function bi_setprops(obj)
+{
+    for (var p in obj)
+    {
+        if (p.search(/pc|url|lineNumber/) == -1)
+            this[p] = obj[p];
+    }
+    
+    if ("propsWindow" in this)
+        this.propsWindow.populateFromBreakpoint();
+}
+
 BreakInstance.prototype.clearBreakpoint =
 function bi_clear()
 {
@@ -1264,7 +1304,7 @@ function FutureBreakpoint (url, lineNumber)
     this.url = url;
     this.lineNumber = lineNumber;
     this.enabled = true;
-    this.childrenBP = new Object;
+    this.childrenBP = new Object();
     this.conditionEnabled = false;
     this.condition = "";
     this.passExceptions = false;
@@ -1283,6 +1323,34 @@ function fb_getURL ()
             "&logResult=" + this.logResult +
             "&resultAction=" + this.resultAction +
             "&enabled=" + this.enabled);
+}
+
+
+FutureBreakpoint.prototype.getProperties =
+function fb_getprops()
+{
+    var rv = new Object();
+    
+    rv.conditionEnabled = this.conditionEnabled;
+    rv.condition = this.condition;
+    rv.passExceptions = this.passExceptions;
+    rv.logResult = this.logResult;
+    rv.resultAction = this.resultAction;
+
+    return rv;
+}
+
+FutureBreakpoint.prototype.setProperties =
+function fb_setprops(obj)
+{
+    for (var p in obj)
+    {
+        if (p.search(/url|lineNumber|childrenBP/) == -1)
+            this[p] = obj[p];
+    }
+    
+    if ("propsWindow" in this)
+        this.propsWindow.populateFromBreakpoint();
 }
 
 FutureBreakpoint.prototype.clearFutureBreakpoint =
@@ -1413,7 +1481,8 @@ function debugTrap (frame, type, rv)
                             [rv.value.stringValue, formatFrame(frame)]),
                      MT_ETRACE);
             if (rv.value.jsClassName == "Error")
-                display (formatProperty(rv.value.getProperty("message")));
+                display (formatProperty(rv.value.getProperty("message")),
+                         MT_EVAL_OUT);
 
             if (console.throwMode != TMODE_BREAK)
                 return jsdIExecutionHook.RETURN_CONTINUE_THROW;
@@ -1736,7 +1805,7 @@ function displayProperties (v)
 
     var p = new Object();
     v.getProperties (p, {});
-    for (var i in p.value) display(formatProperty (p.value[i]));
+    for (var i in p.value) display(formatProperty (p.value[i]), MT_EVAL_OUT);
 }
 
 function displaySourceContext (sourceText, line, contextLines)
@@ -1793,7 +1862,7 @@ function displayFrame (jsdFrame, idx, showHeader, sourceContext)
     if (typeof sourceContext == "undefined")
         sourceContext = null;
 
-    display(getMsg(MSN_FMT_FRAME_LINE, [idx, formatFrame(jsdFrame)]));
+    display(getMsg(MSN_FMT_FRAME_LINE, [idx, formatFrame(jsdFrame)]), MT_OUTPUT);
 
     if (!jsdFrame.isNative && sourceContext != null)
     {
@@ -1826,7 +1895,7 @@ function getFutureBreakpoint (urlPattern, lineNumber)
     return null;
 }
 
-function setFutureBreakpoint (urlPattern, lineNumber)
+function setFutureBreakpoint (urlPattern, lineNumber, props)
 {
     var key = urlPattern + "#" + lineNumber;
 
@@ -1848,6 +1917,8 @@ function setFutureBreakpoint (urlPattern, lineNumber)
     }    
 
     var fbreak = new FutureBreakpoint (urlPattern, lineNumber);
+    if (props)
+        fbreak.setProperties(props);
     console.fbreaks[key] = fbreak;
 
     dispatch ("hook-fbreak-set", { fbreak: fbreak });

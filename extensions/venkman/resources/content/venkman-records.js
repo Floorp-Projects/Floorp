@@ -611,9 +611,13 @@ function vr_refresh ()
         }
         catch (ex)
         {
+            /*
             dd ("caught exception refreshing " + this.displayName);
-            dd (dumpObjectTree(ex));
-
+            if (typeof ex == "object")
+                dd (dumpObjectTree(ex));
+            else
+                dd(ex);
+            */
             if (!(ex instanceof jsdIValue))
                 ex = console.jsds.wrapValue(ex);
             

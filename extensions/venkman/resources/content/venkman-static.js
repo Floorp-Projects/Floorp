@@ -33,8 +33,8 @@
  *
  */
 
-const __vnk_version        = "0.9.48";
-const __vnk_requiredLocale = "0.9.47+";
+const __vnk_version        = "0.9.57";
+const __vnk_requiredLocale = "0.9.51+";
 var   __vnk_versionSuffix  = "";
 
 const __vnk_counter_url = 
@@ -282,6 +282,8 @@ function dispatchCommand (command, e, flags)
                     dd (getMsg(MSN_ERR_INTERNAL_HOOK, h));
                 }
 
+                dd ("Caught exception calling " +
+                    (isBefore ? "before" : "after") + " hook " + h);
                 dd (formatException(ex));
                 if (typeof ex == "object" && "stack" in ex)
                     dd (ex.stack);
@@ -553,17 +555,12 @@ function init()
 
     for (i = 0; i < startupMsgs.length; ++i)
         display (startupMsgs[i][0], startupMsgs[i][1]);
-    
+
     display (getMsg(MSN_TIP1_HELP, 
                     console.prefs["sessionView.requireSlash"] ? "/" : ""));
     display (MSG_TIP2_HELP);
     if (console.prefs["sessionView.requireSlash"])
         display (MSG_TIP3_HELP);
-
-    //if (console.prefs["sessionView.requireSlash"])
-    //    display (MSG_SLASH_REQUIRED, MT_ATTENTION);
-    //dispatch ("commands");
-    //dispatch ("help");
 
     dispatch ("pprint", { toggle: console.prefs["prettyprint"] });
 
@@ -575,6 +572,13 @@ function init()
     }
 
     console.initialized = true;
+
+    if (console.prefs["saveSettingsOnExit"])
+    {
+        dispatch ("restore-settings",
+                  {settingsFile: console.prefs["settingsFile"]});
+    }
+
     dispatch ("hook-venkman-started");
 
     dd ("}");
@@ -584,6 +588,12 @@ function destroy ()
 {
     if (console.prefs["saveLayoutOnExit"])
         dispatch ("save-layout default");
+
+    if (console.prefs["saveSettingsOnExit"])
+    {
+        dispatch ("save-settings",
+                  {settingsFile: console.prefs["settingsFile"]});
+    }
 
     delete console.currentEvalObject;
     delete console.jsdConsole;
@@ -629,14 +639,16 @@ function fetchLaunchCount()
     {
         var ary = String(r.responseText).match(/(\d+)/);
         if (ary)
+        {
             display (getMsg(MSN_LAUNCH_COUNT,
                             [console.prefs["startupCount"], ary[1]]));
+        }
     };
     
     var r = new XMLHttpRequest();
     r.onload = onLoad;
     r.open ("GET",
-            __vnk_counter_url + "?local=" +  console.prefs["startupCount"] +
+            __vnk_counter_url + "?local=" + console.prefs["startupCount"] +
             "&version=" + __vnk_version);
     r.send (null);
 }
@@ -649,7 +661,6 @@ function con_ua ()
     {
         return ("Venkman " + __vnk_version + __vnk_versionSuffix + 
                 " [Mozilla " + ary[1] + "/" + ary[2] + "]");
-        
     }
 
     return ("Venkman " + __vnk_version + __vnk_versionSuffix + " [" + 

@@ -91,8 +91,11 @@ function updateTitle()
     for (v in containedViews)
         ary.push(containedViews[v].caption);
 
-    document.title = getMsg(opener.MSN_FLOATER_TITLE,
-                            ary.join(opener.MSG_COMMASP));
+    var views = ary.join(opener.MSG_COMMASP);
+    if (views == "")
+        views = opener.MSG_VAL_NONE;
+    
+    document.title = getMsg(opener.MSN_FLOATER_TITLE, views);
 }
 
 

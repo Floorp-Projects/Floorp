@@ -50,8 +50,11 @@ a.venkman-link:hover {
 .msg {                                      /* .msg = a single message in the */
     width: 100%;                            /* output window                  */
     font: 11pt lucida, sans-serif;
-    font-family: monospace;
     white-space: -moz-pre-wrap;
+}
+
+.msg[monospace] { 
+    font-family: monospace;
 }
 
 .msg-data[msg-type="USAGE"] {

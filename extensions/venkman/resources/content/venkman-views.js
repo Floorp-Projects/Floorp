@@ -98,6 +98,11 @@ function destroyViews()
  */
 function syncTreeView (treeContent, treeView, cb)
 {
+    function ondblclick(event) { treeView.onRouteDblClick(event); };
+    function onkeypress(event) { treeView.onRouteKeyPress(event); };
+    function onfocus(event)    { treeView.onRouteFocus(event); };
+    function onblur(event)     { treeView.onRouteBlur(event); };
+    
     function tryAgain()
     {
         if ("treeBoxObject" in treeContent)
@@ -119,11 +124,29 @@ function syncTreeView (treeContent, treeView, cb)
         treeContent.treeBoxObject.view = treeView;
         if (treeContent.treeBoxObject.selection)
             treeContent.treeBoxObject.selection.tree = treeContent.treeBoxObject;
+
     }
     catch (ex)
     {
         setTimeout (tryAgain, 500);
         return;
+    }
+    
+    if (!treeContent._listenersInstalled)
+    {
+        try
+        {
+            treeContent.addEventListener("dblclick", ondblclick, false);
+            treeContent.addEventListener("keypress", onkeypress, false);
+            treeContent.addEventListener("focus", onfocus, false);
+            treeContent.addEventListener("blur", onblur, false);
+        }
+        catch (ex)
+        {
+            dd ("caught exception setting listeners: " + ex);
+        }
+
+        treeContent._listenersInstalled = true;
     }
     
     if (typeof cb == "function")
@@ -334,6 +357,9 @@ function bv_init ()
          ["clear-all"],
          ["fclear-all"],
          ["-"],
+         ["save-breakpoints"],
+         ["restore-settings"],
+         ["-"],
          ["break-props"]
         ]
     };
@@ -357,24 +383,24 @@ function bv_hide()
     syncTreeView (getChildById(this.currentContent, "break-tree"), null);
 }
 
-console.views.breaks.onDblClick =
-function bv_sel (e)
+console.views.breaks.onRowCommand =
+function bv_rowcommand (rec)
 {
-    if (e.target.localName != "treechildren")
-        return;
+    if (rec instanceof BPRecord)
+        dispatch ("find-bp", {breakpoint: rec.breakWrapper});
+}
 
-    var rowIndex = this.tree.selection.currentIndex;
-    if (rowIndex == -1 || rowIndex > this.rowCount)
-        return;
-    var row = this.childData.locateChildByVisualRow(rowIndex);
-    if (!row)
+console.views.breaks.onKeyPress =
+function bv_keypress(rec, e)
+{
+    if (e.keyCode == 46)
     {
-        ASSERT (0, "bogus row index " + rowIndex);
-        return;
+        cx = this.getContext({});
+        if ("hasBreak" in cx)
+            dispatch ("clear-break", cx);
+        if ("hasFBreak" in cx)
+            dispatch ("clear-fbreak", cx);
     }
-
-    if (row instanceof BPRecord)
-        dispatch ("find-bp", {breakpoint: row.breakWrapper});
 }
 
 console.views.breaks.getContext =
@@ -462,6 +488,9 @@ function lv_init ()
         getContext: this.getContext,
         items:
         [
+         ["change-value", {enabledif: "cx.parentValue"}],
+         ["watch-expr"],
+         ["-"],
          ["set-eval-obj", {type: "checkbox",
                            checkedif: "has('jsdValue') && " +
                                       "cx.jsdValue.getWrappedValue() == " +
@@ -668,10 +697,15 @@ function lv_hide ()
     syncTreeView (getChildById(this.currentContent, "locals-tree"), null);
 }
 
-console.views.locals.onDblClick =
-function lv_dblclick ()
+console.views.locals.onRowCommand =
+function lv_rowcommand(rec)
 {
-    //dd ("locals double click");
+    if (this.isContainerEmpty(rec.childIndex) && "value" in rec.parentRecord)
+    {
+        dispatch ("change-value", 
+                  {parentValue: rec.parentRecord.value, 
+                   propertyName: rec.displayName});
+    }
 }
 
 console.views.locals.getCellProperties =
@@ -696,6 +730,8 @@ function lv_cellprops (index, colID, properties)
 console.views.locals.getContext =
 function lv_getcx(cx)
 {
+    var locals = console.views.locals;
+    
     cx.jsdValueList = new Array();
     
     function recordContextGetter (cx, rec, i)
@@ -703,6 +739,24 @@ function lv_getcx(cx)
         if (i == 0)
         {
             cx.jsdValue = rec.value;
+            cx.expression = rec.displayName;
+            
+            if ("value" in rec.parentRecord)
+            {
+                cx.parentValue = rec.parentRecord.value;
+                var cur = rec.parentRecord;
+                while (cur != locals.childData &&
+                       cur != locals.scopeRecord)
+                {
+                    cx.expression = cur.displayName + "." + cx.expression;
+                    cur = cur.parentRecord;
+                }
+            }
+            else
+            {
+                cx.parentValue = null;
+            }
+            cx.propertyName = rec.displayName;
         }
         else
         {
@@ -1130,32 +1184,14 @@ function scv_hide ()
     syncTreeView (getChildById(this.currentContent, "scripts-tree"), null);
 }
 
-console.views.scripts.onDblClick =
-function scv_dblclick (e)
+console.views.scripts.onRowCommand =
+function scv_rowcommand (rec)
 {
-    if (e.target.localName != "treechildren")
-        return;
-
-    var scriptsView = console.views.scripts;
-    var rowIndex = scriptsView.tree.selection.currentIndex;
-    
-    if (rowIndex == -1)
-        return;
-
-    if (rowIndex == -1 || rowIndex > scriptsView.rowCount)
-    {
-        //dd ("row out of bounds");
-        return;
-    }
-    
-    var row = scriptsView.childData.locateChildByVisualRow(rowIndex);
-    ASSERT (row, "bogus row");
-
-    if (row instanceof ScriptRecord)
-        dispatch ("find-script", { scriptWrapper: row.scriptWrapper });
-    else if (row instanceof ScriptInstanceRecord)
+    if (rec instanceof ScriptRecord)
+        dispatch ("find-script", { scriptWrapper: rec.scriptWrapper });
+    else if (rec instanceof ScriptInstanceRecord)
         dispatch ("find-sourcetext",
-                  { sourceText: row.scriptInstance.sourceText });
+                  { sourceText: rec.scriptInstance.sourceText });
 }
 
 console.views.scripts.onClick =
@@ -1335,7 +1371,7 @@ function ss_init ()
          ["sessionView.outputWindow",
           "chrome://venkman/content/venkman-output-window.html?$css"],
          ["sessionView.currentCSS",
-          "chrome://venkman/skin/venkman-output-default.css"],
+          "chrome://venkman/skin/venkman-output-dark.css"],
          ["sessionView.defaultCSS",
           "chrome://venkman/skin/venkman-output-default.css"],
          ["sessionView.darkCSS",
@@ -1403,6 +1439,7 @@ function ss_init ()
         
     this.munger = new CMunger();
     this.munger.enabled = true;
+    this.munger.addRule ("quote", /(``|'')/, insertQuote);
     this.munger.addRule
         ("link", /((\w+):\/\/[^<>()\'\"\s:]+|www(\.[^.<>()\'\"\s:]+){2,}|x-jsd:help[\w&\?%]*)/,
          insertLink);
@@ -1509,7 +1546,19 @@ console.views.session.hooks["hook-session-display"] =
 function ss_hookDisplay (e)
 {
     var message = e.message;
-    var msgtype = ("msgtype" in e) ? e.msgtype : MT_INFO;
+    var msgtype = (e.msgtype) ? e.msgtype : MT_INFO;
+    var monospace;
+    var mtname;
+    
+    if (msgtype[0] == "#")
+    {
+        monospace = true;
+        mtname = msgtype.substr(1);    
+    }
+    else
+    {
+        mtname = msgtype;
+    }
     
     function setAttribs (obj, c, attrs)
     {
@@ -1519,7 +1568,9 @@ function ss_hookDisplay (e)
                 obj.setAttribute (a, attrs[a]);
         }
         obj.setAttribute("class", c);
-        obj.setAttribute("msg-type", msgtype);
+        obj.setAttribute("msg-type", mtname);
+        if (monospace)
+            obj.setAttribute("monospace", "true");
     }
 
     var msgRow = htmlTR("msg");
@@ -1528,7 +1579,7 @@ function ss_hookDisplay (e)
     var msgData = htmlTD();
     setAttribs(msgData, "msg-data");
     if (typeof message == "string")
-        msgData.appendChild(console.views.session.stringToDOM(message));
+        msgData.appendChild(console.views.session.stringToDOM(message, msgtype));
     else
         msgData.appendChild(message);
 
@@ -1664,14 +1715,14 @@ function ss_hide ()
 }
 
 console.views.session.stringToDOM = 
-function ss_stringToDOM (message)
+function ss_stringToDOM (message, msgtype)
 {
     var ary = message.split ("\n");
     var span = htmlSpan();
     
     for (var l in ary)
     {
-        this.munger.munge(ary[l], span);
+        this.munger.munge(ary[l], span, msgtype);
         span.appendChild (htmlBR());
     }
 
@@ -2009,17 +2060,11 @@ function skv_hide()
     syncTreeView (getChildById(this.currentContent, "stack-tree"), null);
 }
 
-console.views.stack.onDblClick =
-function skv_select (e)
+console.views.stack.onRowCommand =
+function skv_rowcommand (rec)
 {
-    if (e.target.localName != "treechildren")
-        return;
-
-    var rowIndex = console.views.stack.tree.selection.currentIndex;
+    var rowIndex = rec.childIndex;
     
-    if (rowIndex == -1)
-        return;
-
     if (rowIndex >= 0 && rowIndex < console.frames.length)
         dispatch ("frame", { frameIndex: rowIndex });
 }
@@ -2096,7 +2141,14 @@ console.views.source2.viewId = VIEW_SOURCE2;
 console.views.source2.init =
 function ss_init ()
 {
-    console.prefManager.addPref ("source2View.maxTabs", 5);
+    var prefs =
+        [
+         ["source2View.maxTabs", 5],
+         ["source2View.showCloseButton", true],
+         ["source2View.middleClickClose", false]
+        ];
+    
+    console.prefManager.addPrefs(prefs);
 
     this.cmdary =
         [
@@ -2709,16 +2761,16 @@ function s2v_syncframe (iframe)
     {
         if ("contentDocument" in iframe && "webProgress" in iframe)
         {
+            var listener = console.views.source2.progressListener;
+            iframe.addProgressListener (listener, WINDOW);
+            iframe.loadURI (iframe.getAttribute ("targetSrc"));
+
             if (iframe.hasAttribute ("raiseOnSync"))
             {
                 var i = this.getIndexOfDOMWindow (iframe.webProgress.DOMWindow);
                 this.showTab(i);
                 iframe.removeAttribute ("raiseOnSync");
             }
-
-            var listener = console.views.source2.progressListener;
-            iframe.addProgressListener (listener, WINDOW);
-            iframe.loadURI (iframe.getAttribute ("targetSrc"));
         }
         else
         {
@@ -2727,11 +2779,11 @@ function s2v_syncframe (iframe)
     }
     catch (ex)
     {
-        // dd ("caught exception showing session view, will try again later.");
-        // dd (dumpObjectTree(ex));
+        dd ("caught exception showing session view, will try again later.");
+        dd (ex);
+        dd (dumpObjectTree(ex));
         setTimeout (tryAgain, 500);
     }
-
 }
 
 console.views.source2.syncOutputDeck =
@@ -2776,6 +2828,7 @@ function s2v_cleardeck ()
         bloke.setAttribute ("id", "source2-bloke");
         bloke.setAttribute ("hidden", "true");
         this.tabs.appendChild (bloke);
+        bloke.selected = true;
     }
 }
 
@@ -2785,26 +2838,52 @@ function s2v_createframe (sourceTab, index, raiseFlag)
     if (!ASSERT(this.deck, "we're deckless"))
         return null;
 
-    if (this.tabs.childNodes.length == 1)
-    {
-        var bloke = getChildById (this.tabs, "source2-bloke");
-        if (bloke)
-            this.tabs.removeChild(bloke);
-    }
+    var bloke = getChildById (this.tabs, "source2-bloke");
+    if (bloke)
+        this.tabs.removeChild(bloke);
 
     var document = this.currentContent.ownerDocument;
 
-    var tab = document.createElement ("tab");
+    var tab = document.createElement ("tab");    
+    tab.selected = false;
     tab.setAttribute ("class", "source2-tab");
     tab.setAttribute ("context", "context:source2");
-    tab.setAttribute ("crop", "center");
+    tab.setAttribute ("align", "center");
     tab.setAttribute ("flex", "1");
-    tab.setAttribute ("label", sourceTab.sourceText.shortName);
+    tab.setAttribute("onclick",
+                     "console.views.source2.onTabClick(event)");    
+
+    var tabicon = document.createElement("image");
+    tabicon.setAttribute("class", "tab-icon");
+    tab.appendChild(tabicon); 
+    var label = document.createElement("label");
+    tab.label = label;
+    label.setAttribute("value", sourceTab.sourceText.shortName);
+    label.setAttribute("crop", "center");
+    label.setAttribute("flex", "1");
+    tab.appendChild(label);
+    tab.appendChild(document.createElement("spacer"));
+    if (console.prefs["source2View.showCloseButton"])
+    {
+        var closeButton = document.createElement("image");
+        closeButton.setAttribute("class", "tab-close-button");
+        closeButton.setAttribute("onclick",
+                                 "console.views.source2.onCloseButton(event)");
+        tab.appendChild(closeButton);
+    }
 
     if (index < this.tabs.childNodes.length)
         this.tabs.insertBefore (tab, this.tabs.childNodes[index]);
     else
         this.tabs.appendChild (tab);
+
+    if (!this.tabs.firstChild.hasAttribute("first-tab"))
+    {
+        this.tabs.firstChild.setAttribute("first-tab", "true");
+        if (this.tabs.firstChild.nextSibling)
+            this.tabs.firstChild.nextSibling.removeAttribute("first-tab");
+    }
+
     sourceTab.tab = tab;
 
     var tabPanel = document.createElement("tabpanel");
@@ -2849,7 +2928,7 @@ function s2v_loadsource (sourceText, index)
             {
                 return null;
             }
-            sourceTab.tab.setAttribute("label", sourceText.shortName);
+            sourceTab.tab.label.setAttribute("value", sourceText.shortName);
             sourceTab.iframe.setAttribute("targetSrc", sourceText.jsdURL);
             sourceTab.iframe.setAttribute("raiseOnSync", "true");
             this.syncOutputFrame(sourceTab.iframe);
@@ -2894,6 +2973,30 @@ function s2v_addsource (sourceText)
     return this.loadSourceTextAtIndex (sourceText, index);
 }
 
+console.views.source2.onCloseButton =
+function s2v_onclose(e)
+{
+    var index = this.getIndexOfTab(e.target.parentNode);
+    this.removeSourceTabAtIndex(index);    
+    e.preventBubble()
+}
+
+console.views.source2.onTabClick =
+function s2v_ontab(e)
+{
+    var tab;
+    if (e.target.localName == "tab")
+        tab = e.target;
+    else
+        tab = e.target.parentNode;
+    
+    var index = this.getIndexOfTab(tab);
+    if (e.which == 2 && console.prefs["source2View.middleClickClose"])
+        this.removeSourceTabAtIndex(index);
+    else
+        this.showTab(index);
+}
+
 console.views.source2.removeSourceText =
 function s2v_removetext (sourceText)
 {
@@ -2923,6 +3026,8 @@ function s2v_removeindex (index)
             lastIndex = this.sourceTabList.length - 1;
         if (lastIndex >= 0)
             this.showTab(lastIndex);
+        if (index == 0 && this.tabs.firstChild)
+            this.tabs.firstChild.setAttribute("first-tab", "true");
     }
     else if (this.lastSelectedTab > this.sourceTabList.length)
     {
@@ -2994,6 +3099,7 @@ function s2v_getindex (window)
     {
         if (child.firstChild.webProgress.DOMWindow == window)
             return i;
+        
         ++i;
         child = child.nextSibling;
     }
@@ -3016,7 +3122,32 @@ function s2v_showtab (index)
 {
     //dd ("show tab " + index);
     if (this.tabs)
-        this.tabs.selectedItem = this.tabs.childNodes[index];
+    {
+        for (var i = 0; i < this.tabs.childNodes.length; ++i)
+        {
+            var tab = this.tabs.childNodes[i];
+            tab.selected = false;
+            tab.removeAttribute("selected");
+            tab.removeAttribute("beforeselected");
+            tab.removeAttribute("afterselected");
+        }
+        
+        tab = this.tabs.childNodes[index];
+        tab.selected = true;
+        tab.setAttribute("selected", "true");
+        if (tab.previousSibling)
+            tab.previousSibling.setAttribute("beforeselected", "true");
+        if (tab.nextSibling)
+            tab.nextSibling.setAttribute("afterselected", "true");
+        
+        this.tabs.selectedItem = tab;
+        if (!ASSERT(index <= (this.deck.childNodes.length - 1) && index >= 0,
+                    "index ``" + index + "'' out of range"))
+        {
+            return;
+        }
+        this.deck.selectedIndex = index;
+    }
     else
         this.lastSelectedTab = index;
 }
@@ -3210,16 +3341,16 @@ function s2v_show ()
         source2View.onShow();
     };
 
-    var version;
-    var help;
+    //var version;
+    //var help;
     
     try
     {
         this.tabs  = getChildById (this.currentContent, "source2-tabs");
         this.deck  = getChildById (this.currentContent, "source2-deck");
         //this.bloke = getChildById (this.currentContent, "source2-bloke");
-        version = getChildById (this.currentContent, "source2-version-label");
-        help = getChildById (this.currentContent, "source2-help-label");
+        //version = getChildById (this.currentContent, "source2-version-label");
+        //help = getChildById (this.currentContent, "source2-help-label");
     }
     catch (ex)
     {
@@ -3233,8 +3364,8 @@ function s2v_show ()
         return;
     }
 
-    version.setAttribute ("value", console.userAgent);
-    help.setAttribute ("value", MSG_SOURCE2_HELP);
+    //version.setAttribute ("value", console.userAgent);
+    //help.setAttribute ("value", MSG_SOURCE2_HELP);
     this.syncOutputDeck();
     initContextMenu(this.currentContent.ownerDocument, "context:source2");
 }
@@ -3242,7 +3373,8 @@ function s2v_show ()
 console.views.source2.onHide =
 function s2v_hide ()
 {
-    this.lastSelectedTab = this.tabs.selectedIndex;
+    if (this.sourceTabList.length > 0)
+        this.lastSelectedTab = this.tabs.selectedIndex;
     this.clearOutputDeck();
     this.deck = null;
     this.tabs = null;
@@ -3825,6 +3957,7 @@ function wv_init()
          ["watch-expr",     cmdWatchExpr,          CMD_CONSOLE],
          ["watch-exprd",    cmdWatchExpr,          CMD_CONSOLE],
          ["remove-watch",   cmdUnwatch,            CMD_CONSOLE],
+         ["save-watches",   cmdSaveWatches,        CMD_CONSOLE],
          ["watch-property", cmdWatchProperty,      0],
         ];
 
@@ -3832,6 +3965,8 @@ function wv_init()
         getContext: this.getContext,
         items:
         [
+         ["change-value", {enabledif: "cx.parentValue"}],
+         ["-"],
          ["watch-expr"],
          ["remove-watch"],
          ["set-eval-obj", {type: "checkbox",
@@ -3855,8 +3990,10 @@ function wv_init()
                   checkedif: "ValueRecord.prototype.showFunctions"}],
          ["toggle-ecmas",
                  {type: "checkbox",
-                  checkedif: "ValueRecord.prototype.showECMAProps"}]
-          
+                  checkedif: "ValueRecord.prototype.showECMAProps"}],
+         ["-"],
+         ["save-watches"],
+         ["restore-settings"]
         ]
     };
 
@@ -3929,6 +4066,11 @@ function wv_getcx(cx)
             if (i == 0)
             {
                 cx.jsdValue = rec.value;
+                if ("value" in rec.parentRecord)
+                    cx.parentValue = rec.parentRecord.value;
+                else
+                    cx.parentValue = null;
+                cx.propertyName = rec.displayName;
                 if (rec.parentRecord == console.views.watches.childData)
                     cx.index = rec.childIndex;
             }
@@ -3964,10 +4106,26 @@ function wv_refresh()
     this.tree.invalidate();
 }
 
-console.views.watches.onDblClick =
-function wv_dblclick ()
+console.views.watches.onRowCommand =
+function wv_rowcommand(rec)
 {
-    //dd ("watches double click");
+    if ("value" in rec.parentRecord)
+    {
+        dispatch ("change-value", 
+                  {parentValue: rec.parentRecord.value,
+                   propertyName: rec.displayName});
+    }
+}
+
+console.views.watches.onKeyPress =
+function wv_keypress(rec, e)
+{
+    if (e.keyCode == 46)
+    {
+        var cx = this.getContext({});
+        if ("index" in cx)
+            dispatch ("remove-watch", cx);        
+    }
 }
 
 function cmdUnwatch (e)
@@ -4003,10 +4161,16 @@ function cmdWatchExpr (e)
     
     if (!e.expression)
     {
-        if (e.isInteractive)
+        if ("isInteractive" in e && e.isInteractive)
         {
-            var watchData = console.views.watches.childData;
+            var watchData = console.views.watches.childData.childData;
             var len = watchData.length;
+            if (len == 0)
+            {
+                display (getMsg(MSG_NO_WATCHES_SET));
+                return null;
+            }
+            
             display (getMsg(MSN_WATCH_HEADER, len));
             for (var i = 0; i < len; ++i)
             {
@@ -4038,25 +4202,12 @@ function cmdWatchExpr (e)
             return null;
         }
 
-        if (console.currentEvalObject instanceof jsdIStackFrame)
-        {
-            refresher = function () {
-                            if ("frames" in console)
-                            {
-                                this.value =
-                                    evalInTargetScope(e.expression, true);
-                            }
-                        };
-        }
-        else
-        {
-            var evalObject = console.currentEvalObject;
-            refresher = function () {
-                            rv = console.doEval.apply(evalObject,
-                                                      [e.expression, parent]);
-                            this.value = console.jsds.wrapValue(rv);
-                        };
-        }
+        refresher = function () {
+                        if ("frames" in console)
+                            this.value = evalInTargetScope(e.expression, true);
+                        else
+                            throw MSG_VAL_NA;
+                    };
     }
     else
     {
@@ -4087,6 +4238,40 @@ function cmdWatchProperty (e)
     rec.onPreRefresh();
     console.views.watches.childData.appendChild(rec);
     return rec;
+}
+
+function cmdSaveWatches(e)
+{
+    var needClose = false;
+    var file = e.settingsFile;
+    
+    if (!file || file == "?")
+    {
+        rv = pickSaveAs(MSG_SAVE_FILE, "*.js");
+        if (rv.reason == PICK_CANCEL)
+            return;
+        e.settingsFile = file = fopen(rv.file, ">");
+        needClose = true;
+    }
+    else if (typeof file == "string")
+    {
+        e.settingsFile = file = fopen(file, ">");
+        needClose = true;
+    }
+
+    file.write ("\n//Watch settings start...\n");
+    
+    var watchData = console.views.watches.childData.childData;
+    var len = watchData.length;
+    for (var i = 0; i < len; ++i)
+    {
+        file.write("dispatch('watch-expr " + watchData[i].displayName + "');\n");
+    }
+
+    file.write ("\n" + MSG_WATCHES_RESTORED.quote() + ";\n");    
+
+    if (needClose)
+        file.close();
 }
 
 /*******************************************************************************
@@ -4186,25 +4371,11 @@ function winv_cellprops (index, colID, properties)
     return;
 }
 
-console.views.windows.onDblClick =
-function winv_dblclick (e)
+console.views.windows.onRowCommand =
+function winv_rowcommand (rec)
 {
-    if (e.target.localName != "treechildren")
-        return;
-
-    var rowIndex = this.tree.selection.currentIndex;
-    if (rowIndex == -1 || rowIndex > this.rowCount)
-        return;
-    var row = this.childData.locateChildByVisualRow(rowIndex);
-    if (!row)
-    {
-        ASSERT (0, "bogus row index " + rowIndex);
-        return;
-    }
-
-    if ("url" in row)
-        dispatch ("find-url", { url: row.url });
-                  
+    if ("url" in rec)
+        dispatch ("find-url", { url: rec.url });
 }
 
 console.views.windows.getContext =

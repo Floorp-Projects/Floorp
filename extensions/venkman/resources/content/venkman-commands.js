@@ -47,6 +47,7 @@ function initCommands()
          ["about-mozilla",  cmdAboutMozilla,                                  0],
          ["break",          cmdBreak,                               CMD_CONSOLE],
          ["break-props",    cmdBreakProps,                          CMD_CONSOLE],
+         ["change-value",   cmdChangeValue,                                   0],
          ["chrome-filter",  cmdChromeFilter,                        CMD_CONSOLE],
          ["clear",          cmdClear,                               CMD_CONSOLE],
          ["clear-all",      cmdClearAll,                            CMD_CONSOLE],
@@ -104,16 +105,19 @@ function initCommands()
          ["propsd",         cmdProps,                               CMD_CONSOLE],
          ["quit",           cmdQuit,                                CMD_CONSOLE],
          ["restore-layout", cmdRestoreLayout,                       CMD_CONSOLE],
+         ["restore-settings", cmdRestoreSettings,                   CMD_CONSOLE],
          ["release-notes",  cmdReleaseNotes,                                  0],
          ["run-to",         cmdRunTo,                            CMD_NEED_STACK],
+         ["save-breakpoints", cmdSaveBreakpoints,                   CMD_CONSOLE],
          ["save-layout",    cmdSaveLayout,                          CMD_CONSOLE],
          ["save-profile",   cmdSaveProfile,                         CMD_CONSOLE],
+         ["save-settings",  cmdSaveSettings,                        CMD_CONSOLE],
          ["scan-source",    cmdScanSource,                                    0],
          ["scope",          cmdScope,              CMD_CONSOLE | CMD_NEED_STACK],
          ["this-expr",      cmdThisExpr,                            CMD_CONSOLE],
          ["toggle-float",   cmdToggleFloat,                         CMD_CONSOLE],
-         ["toggle-save-layout", cmdToggleSaveLayout,                          0],
          ["toggle-view",    cmdToggleView,                          CMD_CONSOLE],
+         ["toggle-pref",    cmdTogglePref,                          CMD_CONSOLE],
          ["startup-init",   cmdStartupInit,                         CMD_CONSOLE],
          ["step",           cmdStep,               CMD_CONSOLE | CMD_NEED_STACK],
          ["stop",           cmdStop,                 CMD_CONSOLE | CMD_NO_STACK],
@@ -130,6 +134,8 @@ function initCommands()
          ["toggle-ias",               "startup-init toggle",                  0],
          ["toggle-pprint",            "pprint toggle",                        0],
          ["toggle-profile",           "profile toggle",                       0],
+         ["toggle-save-layout",       "toggle-pref saveLayoutOnExit",         0],
+         ["toggle-save-settings",     "toggle-pref saveSettingsOnExit",       0],
          ["em-cycle",                 "emode cycle",                          0],
          ["em-ignore",                "emode ignore",                         0],
          ["em-trace",                 "emode trace",                          0],
@@ -253,16 +259,24 @@ function cmdBreak (e)
             }
             else
             {
-                var fbreak = getFutureBreakpoint(url, e.lineNumber);
+                var props = e.properties;
+                var fbreak;
+                if (e.parent)
+                    fbreak = e.parent;
+                else
+                    fbreak = getFutureBreakpoint(url, e.lineNumber);
                 if (!fbreak)
                 {
                     dispatch ("fbreak", { isInteractive: e.isInteractive,
                                           urlPattern: url,
-                                          lineNumber: e.lineNumber });
+                                          lineNumber: e.lineNumber,
+                                          props: props});
                     fbreak = getFutureBreakpoint(url, e.lineNumber);
+                    props = null; // hard breakpoint properties will be inherited
                 }
 
-                console.scriptManagers[url].setBreakpoint (e.lineNumber, fbreak);
+                console.scriptManagers[url].setBreakpoint (e.lineNumber, fbreak,
+                                                           props);
                 feedback (e, getMsg(MSN_BP_CREATED, [url, e.lineNumber]));
             }
         }
@@ -286,6 +300,60 @@ function cmdBreakProps (e)
     e.breakWrapper.propsWindow = 
         openDialog ("chrome://venkman/content/venkman-bpprops.xul", "",
                     "chrome,extrachrome,menubar,resizable", e.breakWrapper);
+}
+
+function cmdChangeValue(e)
+{
+    var obj = e.parentValue.getWrappedValue();
+    
+    if (!e.newValue)
+    {
+        var ok;
+        
+        var current = obj[e.propertyName];
+        if (typeof current == "string")
+            current = current.quote();
+        else if (typeof current == "object")
+            current = "";
+        else
+            current = String(current);
+
+        while (!ok)
+        {
+            
+            var expr = prompt(getMsg(MSN_ENTER_EXPRESSION, e.propertyName),
+                              current);
+            if (expr == null || expr == "")
+                return;
+            
+            try
+            {
+                if ("frames" in console)
+                {
+                    e.newValue = evalInTargetScope(expr, true);
+                    e.newValue = e.newValue.getWrappedValue();
+                }
+                else
+                {
+                    var parent = e.parentValue.jsParent.getWrappedValue();
+                    e.newValue = eval(expr, parent);
+                }
+                ok = true;
+            }
+            catch(ex)
+            {
+                if (ex instanceof jsdIValue)
+                    alert (String(ex.getWrappedValue));
+                else
+                    alert (String(ex));
+
+                current = expr;
+            }
+        }
+    }
+
+    obj[e.propertyName] = e.newValue;
+    dispatch ("hook-eval-done");
 }
 
 function cmdChromeFilter (e)
@@ -721,11 +789,13 @@ function cmdFBreak(e)
         if (i == 0)
             display (MSG_NO_FBREAKS_SET);
 
-        return;
+        return null;
     }
     else
     {
-        if (setFutureBreakpoint (e.urlPattern, e.lineNumber))
+        var fbreak = setFutureBreakpoint (e.urlPattern, e.lineNumber, 
+                                          e.properties);
+        if (fbreak)
         {
             feedback (e, getMsg(MSN_FBP_CREATED, [e.urlPattern, e.lineNumber]));
         }
@@ -734,6 +804,7 @@ function cmdFBreak(e)
             feedback (e, getMsg(MSN_FBP_EXISTS, [e.urlPattern, e.lineNumber]),
                       MT_ERROR);
         }
+        return fbreak;
     }
 }
 
@@ -1015,7 +1086,11 @@ function cmdFrame (e)
         e.frameIndex = getCurrentFrameIndex();
     }    
 
-    dispatch ("find-frame", { frameIndex: e.frameIndex });
+    if (!("isInteractive" in e))
+        e.isInteractive = false;
+    
+    dispatch ("find-frame", { frameIndex: e.frameIndex,
+                              isInteractive: e.isInteractive });
     return true;
 }
 
@@ -1080,7 +1155,7 @@ function cmdLoadd (e)
         var rv = rvStr = console._loader.loadSubScript(e.url, obj);
         if (typeof rv == "function")
             rvStr = MSG_TYPE_FUNCTION;
-        display(getMsg(MSN_SUBSCRIPT_LOADED, [e.url, rvStr]), MT_INFO);
+        feedback(e, getMsg(MSN_SUBSCRIPT_LOADED, [e.url, rvStr]), MT_INFO);
         return rv;
     }
     catch (ex)
@@ -1321,6 +1396,23 @@ function cmdRestoreLayout (e)
     console.viewManager.reconstituteVURLs (layout.split (/\s*;\s*/));
 }
 
+function cmdRestoreSettings(e)
+{
+    if (!e.settingsFile || e.settingsFile == "?")
+    {
+        var rv = pickOpen(MSG_OPEN_FILE, "*.js");
+        if (rv.reason == PICK_CANCEL)
+            return;
+        e.settingsFile = getURLSpecFromFile(rv.file);
+    }
+    else if (e.settingsFile.indexOf("file:") != 0)
+    {
+        e.settingsFile = getURLSpecFromFile(e.settingsFile);
+    }
+
+    dispatch("loadd", { url: e.settingsFile });
+}
+
 function cmdReleaseNotes (e)
 {
     openTopWin(MSG_RELEASE_URL);
@@ -1337,7 +1429,90 @@ function cmdRunTo (e)
     dispatch ("cont");
 }
 
-function cmdSaveLayout (e)
+function cmdSaveBreakpoints(e)
+{
+    var needClose = false;
+    var file = e.settingsFile;
+    
+    if (!file || file == "?")
+    {
+        var rv = pickSaveAs(MSG_SAVE_FILE, "*.js");
+        if (rv.reason == PICK_CANCEL)
+            return;
+        e.settingsFile = file = fopen(rv.file, ">");
+        needClose = true;
+    }
+    else if (typeof file == "string")
+    {
+        e.settingsFile = file = fopen(file, ">");
+        needClose = true;
+    }
+
+    var fbp, bp;
+    var params;
+
+    file.write ("\n//Breakpoint settings start...\n");
+    
+    for (i in console.fbreaks)
+    {
+        var wroteVar;
+        
+        fbp = console.fbreaks[i];
+        params = {
+            urlPattern: fbp.url,
+            lineNumber: fbp.lineNumber,
+            properties: fbp.getProperties()
+        };
+
+        if (keys(fbp.childrenBP).length)
+        {
+            if (!wroteVar)
+            {
+                file.write ("var fbreak;\n\n");
+                wroteVar = true;
+            }
+            file.write("fbreak = ");
+        }            
+
+        file.write("dispatch('fbreak', " + params.toSource() + ");\n\n");
+
+        for (i in fbp.childrenBP)
+        {
+            bp = fbp.childrenBP[i];
+            
+            file.write("dispatch('break', {" +
+                       "urlPattern:" + bp.url.quote() + ", " +
+                       "lineNumber:" + bp.lineNumber + ", " +
+                       "parent:fbreak, " +
+                       "properties:" + bp.getProperties().toSource() +
+                       "});\n");
+        };
+
+        file.write("\n");
+    }
+    
+    for (i in console.breaks)
+    {
+        bp = console.breaks[i];
+        if (!bp.parentBP)
+        {
+            params = {
+                urlPattern: bp.url,
+                lineNumber: bp.lineNumber,
+                properties: bp.getProperties()
+            };
+            
+            file.write("dispatch('break', " + params.toSource() + ");\n");
+        }
+    }
+    
+    file.write (MSG_BREAKPOINTS_RESTORED.quote() + ";\n");
+
+    if (needClose)
+        file.close();
+}
+    
+function cmdSaveLayout(e)
 {
     if (!e.name)
     {
@@ -1393,7 +1568,7 @@ function cmdSaveProfile (e)
         e.targetFile = rv.file;
     }
     
-    var file = fopen (e.targetFile, MODE_WRONLY | MODE_CREATE | MODE_TRUNCATE);
+    var file = fopen (e.targetFile, ">");
 
     var templateName;
     var ary = file.localFile.path.match(/\.([^.]+)$/);
@@ -1449,6 +1624,28 @@ function cmdSaveProfile (e)
     console.profiler.generateReport (profileReport);
 
     return file.localFile;
+}
+
+function cmdSaveSettings(e)
+{
+    if (!e.settingsFile || e.settingsFile == "?")
+    {
+        var rv = pickSaveAs(MSG_SAVE_FILE, "*.js");
+        if (rv.reason == PICK_CANCEL)
+            return;
+        e.settingsFile = fopen(rv.file, ">");
+    }
+    else if (typeof e.settingsFile == "string")
+    {
+        e.settingsFile = fopen(e.settingsFile, ">");
+    }
+  
+    dispatch ("save-breakpoints", { settingsFile: e.settingsFile });
+    dispatch ("save-watches", { settingsFile: e.settingsFile });
+
+    e.settingsFile.write("\n" + MSG_SETTINGS_RESTORED.quote() + ";\n");
+    
+    e.settingsFile.close();
 }
 
 function cmdScanSource (e)
@@ -1516,10 +1713,21 @@ function cmdToggleSomething (e)
 
 function cmdSetEvalObj (e)
 {
-    if (e.jsdValue instanceof jsdIStackFrame)
-        console.currentEvalObject = e.jsdValue;
-    else
-        console.currentEvalObject = e.jsdValue.getWrappedValue();
+    if (!(e.jsdValue instanceof jsdIStackFrame))
+    {
+        e.jsdValue = e.jsdValue.getWrappedValue();
+    }
+    
+    if (e.jsdValue == console.currentEvalObject)
+    {
+        var frame = getCurrentFrame();
+        if (frame)
+            e.jsdValue = frame;
+        else
+            e.jsdValue = console;
+    }
+    
+    console.currentEvalObject = e.jsdValue;
 }
 
 function cmdSetScriptFlag (e)
@@ -1747,11 +1955,12 @@ function cmdToggleFloat (e)
     dispatch ("move-view", { viewId: e.viewId, locationUrl: locationUrl });
 }
 
-function cmdToggleSaveLayout (e)
+function cmdTogglePref (e)
 {
-    var state = !console.prefs["saveLayoutOnExit"];
-    console.prefs["saveLayoutOnExit"] = state;
-    feedback (e, getMsg (MSN_SAVE_LAYOUT, state ? MSG_VAL_ON : MSG_VAL_OFF));
+    var state = !console.prefs[e.prefName];
+    console.prefs[e.prefName] = state;
+    feedback (e, getMsg (MSN_FMT_PREFVALUE, 
+                         [e.prefName, state ? MSG_VAL_ON : MSG_VAL_OFF]));
 }
                      
 function cmdToggleView (e)
