@@ -60,6 +60,10 @@ nsMimeBaseEmitter::nsMimeBaseEmitter()
 
   // Initialize data output vars...
   mFirstHeaders = PR_TRUE;
+
+  if (mBufferMgr)
+    delete mBufferMgr;
+
   mBufferMgr = NULL;
   mTotalWritten = 0;
   mTotalRead = 0;
