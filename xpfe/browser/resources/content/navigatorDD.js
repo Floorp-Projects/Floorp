@@ -347,7 +347,29 @@ var homeButtonObserver = {
       var url = retrieveURLFromData(aData);
       var prefService = nsJSComponentManager.getService("component://netscape/preferences",
                                                         "nsIPref");
-      prefService.SetUnicharPref("browser.startup.homepage", url);                                           
+      try 
+        {
+          var prefvalue = prefService.GetBoolPref("browser.homepage.enable_home_button_drop");
+        }                                                        
+      catch(e)
+        {
+          var prefvalue = false;
+        }
+      if (!prefvalue)
+        {
+          var commonDialogService = nsJSComponentManager.getService("component://netscape/appshell/commonDialogs",
+                                                                    "nsICommonDialogs");
+          var checkValue = { value: false };                                                                              
+          var promptTitle = bundle.GetStringFromName("droponhometitle");
+          var promptMsg = bundle.GetStringFromName("droponhomemsg");
+          var checkMsg = bundle.GetStringFromName("dontremindme");
+          var setHomepage = commonDialogService.ConfirmCheck(window, promptTitle, promptMsg, checkMsg, checkValue);
+          prefService.SetBoolPref("browser.homepage.enable_home_button_drop", checkValue.value);
+        }
+      else
+        var setHomepage = true;
+      if (setHomepage)
+        prefService.SetUnicharPref("browser.startup.homepage", url);                                           
     },
     
   onDragOver: function (aEvent, aFlavour)
