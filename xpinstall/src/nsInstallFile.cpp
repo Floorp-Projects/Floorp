@@ -60,7 +60,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
 
     mUpgradeFile = PR_FALSE;
     
-    if ((folderSpec == "null") || (inInstall == NULL)) 
+    if ((folderSpec.Equals("")) || (inInstall == NULL)) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;

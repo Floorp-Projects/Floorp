@@ -115,7 +115,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
 
 : nsInstallObject(inInstall)
 {
-    if ((inInstall == nsnull) || (inVRName == "null") || (inJarLocation == "null")) 
+    if ((inInstall == nsnull) || (inVRName.Equals("")) || (inJarLocation.Equals(""))) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;
@@ -141,7 +141,7 @@ nsInstallPatch::nsInstallPatch( nsInstall* inInstall,
     mVersionInfo->Init(inVInfo);
     
     
-    if(inPartialPath != "null")
+    if(! inPartialPath.Equals(""))
         *mTargetFile += inPartialPath;
 }
 

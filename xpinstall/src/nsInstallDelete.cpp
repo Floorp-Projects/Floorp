@@ -43,7 +43,7 @@ nsInstallDelete::nsInstallDelete( nsInstall* inInstall,
 
 : nsInstallObject(inInstall)
 {
-    if ((folderSpec == "null") || (inInstall == NULL)) 
+    if ((folderSpec.Equals("")) || (inInstall == NULL)) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;

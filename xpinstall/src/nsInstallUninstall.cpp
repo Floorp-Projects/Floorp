@@ -41,7 +41,7 @@ nsInstallUninstall::nsInstallUninstall( nsInstall* inInstall,
 
 : nsInstallObject(inInstall)
 {
-    if (regName == "null") 
+    if (regName.Equals("")) 
     {
         *error = nsInstall::INVALID_ARGUMENTS;
         return;

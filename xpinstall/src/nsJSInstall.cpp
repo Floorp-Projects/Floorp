@@ -177,13 +177,19 @@ void ConvertJSValToStr(nsString&  aString,
                       jsval      aValue)
 {
   JSString *jsstring;
+  jschar* chars=nsnull;
+
   if((jsstring = JS_ValueToString(aContext, aValue)) != nsnull)
   {
     aString.SetString(JS_GetStringChars(jsstring));
+    if (aString.EqualsIgnoreCase("null"))
+    {
+        aString.SetString("");
+    }
   }
   else
   {
-    aString = "";
+    aString.SetString("");
   }
 }
 
