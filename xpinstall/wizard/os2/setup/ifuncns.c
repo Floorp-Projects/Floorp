@@ -1341,6 +1341,38 @@ HRESULT ProcessOS2INI(ULONG ulTiming, char *szSectionPrefix)
   return(FO_SUCCESS);
 }
 
+/* Helper function that moves a given hobject to the front of */
+/* an association string in OS2.INI */
+
+void MoveHOBJToFront(HOBJECT hobject, char* szApp, char* szKey)
+{
+  CHAR szhobj[CCHMAXPATH];
+  CHAR *szOrigBuffer, *szNewBuffer, *szCurrNew, *szCurrOrig;
+  ULONG ulSize;
+  int i;
+
+  sprintf(szhobj, "%d\0", hobject);
+  PrfQueryProfileSize(HINI_USERPROFILE, szApp, szKey, &ulSize );
+  szOrigBuffer = (char*)malloc(sizeof(char)*ulSize);
+  szNewBuffer = (char*)malloc(sizeof(char)*ulSize);
+  PrfQueryProfileData(HINI_USERPROFILE, szApp, szKey, szOrigBuffer, &ulSize);
+  szCurrOrig = szOrigBuffer;
+  szCurrNew = szNewBuffer;
+  strncpy(szCurrNew, szhobj, 7);
+  szCurrNew +=7;
+  for (i=0; i<ulSize/7; i++) {
+     if (strcmp(szCurrOrig, szhobj)) {
+       strncpy(szCurrNew, szCurrOrig, 7);
+       szCurrNew += 7;
+     }
+     szCurrOrig += 7;
+  }
+  PrfWriteProfileData(HINI_USERPROFILE, szApp, szKey, szNewBuffer, ulSize);
+  free(szOrigBuffer);
+  free(szNewBuffer);
+}
+
+
 HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
 {
   DWORD dwIndex0;
@@ -1417,24 +1449,24 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
           strcat(szSetupString, "OBJECTID=");
           strcat(szSetupString, szObjectID);
         }
-        GetPrivateProfileString(szSection1, "Association Filters",  "", szBuf, sizeof(szBuf), szFileIniConfig);
-        if (szBuf[0]) {
+        GetPrivateProfileString(szSection1, "Association Filters",  "", szAssocFilters, sizeof(szAssocFilters), szFileIniConfig);
+        if (szAssocFilters[0]) {
           if (diOS2Integration.oiCBAssociateHTML.bCheckBoxState == TRUE) {
             if (szSetupString[0]) {
               strcat(szSetupString, ";");
             }
             strcat(szSetupString, "ASSOCFILTER=");
-            strcat(szSetupString, szBuf);
+            strcat(szSetupString, szAssocFilters);
           }
         }
-        GetPrivateProfileString(szSection1, "Association Types",  "", szBuf, sizeof(szBuf), szFileIniConfig);
-        if (szBuf[0]) {
+        GetPrivateProfileString(szSection1, "Association Types",  "", szAssocTypes, sizeof(szAssocTypes), szFileIniConfig);
+        if (szAssocTypes[0]) {
           if (diOS2Integration.oiCBAssociateHTML.bCheckBoxState == TRUE) {
             if (szSetupString[0]) {
               strcat(szSetupString, ";");
             }
             strcat(szSetupString, "ASSOCTYPE=");
-            strcat(szSetupString, szBuf);
+            strcat(szSetupString, szAssocTypes);
           }
         }
         GetPrivateProfileString(szSection1, "Setup String",  "", szBuf, sizeof(szBuf), szFileIniConfig);
@@ -1462,6 +1494,25 @@ HRESULT ProcessProgramFolder(DWORD dwTiming, char *szSectionPrefix)
           strcat(szBuf, szTitle);
         }
         UpdateInstallLog(KEY_OS2_OBJECT, szBuf, FALSE);
+
+        if ((diOS2Integration.oiCBAssociateHTML.bCheckBoxState == TRUE) &&
+            (szAssocFilters[0] || szAssocTypes[0])) {
+          HOBJECT hobj = WinQueryObject(szBuf);
+          if (szAssocFilters[0]) {
+            char *currFilter = strtok(szAssocFilters, ",");
+            while (currFilter) {
+              MoveHOBJToFront(hobj, "PMWP_ASSOC_FILTER", currFilter);
+              currFilter = strtok(NULL, ",");
+            }
+          }
+          if (szAssocTypes[0]) {
+            char *currType = strtok(szAssocTypes, ",");
+            while (currType) {
+              MoveHOBJToFront(hobj, "PMWP_ASSOC_TYPE", currType);
+              currType = strtok(NULL, ",");
+            }
+          }
+        }
 
         ++dwIndex1;
         itoa(dwIndex1, szIndex1, 10);
