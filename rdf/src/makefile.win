@@ -23,30 +23,40 @@ MAKE_OBJ_TYPE = DLL
 DLLNAME=rdf
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-C_OBJS=.\$(OBJDIR)\vocab.obj \
-       .\$(OBJDIR)\core.obj \
-       .\$(OBJDIR)\remstore.obj \
-       .\$(OBJDIR)\utils.obj \
-       .\$(OBJDIR)\rdfparse.obj \
-       .\$(OBJDIR)\bmk2rdf.obj \
-       .\$(OBJDIR)\columns.obj \
-       .\$(OBJDIR)\rdfht.obj \
-       .\$(OBJDIR)\ht.obj \
-       $(NULL)
+C_OBJS=\
+        .\$(OBJDIR)\vocab.obj    \
+        .\$(OBJDIR)\core.obj     \
+        .\$(OBJDIR)\remstore.obj \
+        .\$(OBJDIR)\utils.obj    \
+        .\$(OBJDIR)\rdfparse.obj \
+        .\$(OBJDIR)\bmk2rdf.obj  \
+        .\$(OBJDIR)\columns.obj  \
+        .\$(OBJDIR)\rdfht.obj    \
+        $(NULL)
 
 CPP_OBJS=\
-	.\$(OBJDIR)\comwrap.obj \
-	.\$(OBJDIR)\netglue.obj \
+        .\$(OBJDIR)\comwrap.obj            \
+        .\$(OBJDIR)\netglue.obj            \
+        .\$(OBJDIR)\nsRDFDataModel.obj     \
+        .\$(OBJDIR)\nsRDFDataModelItem.obj \
+        .\$(OBJDIR)\nsRDFTreeItem.obj      \
+        .\$(OBJDIR)\nsRDFTreeDataModel.obj \
+        .\$(OBJDIR)\nsRDFTreeColumn.obj    \
 	$(NULL)
 
-LLIBS=				\
- $(DIST)\lib\xpcom32.lib	\
- $(DIST)\lib\raptorbase.lib     \
- $(DIST)\lib\netlib.lib     \
- $(DIST)\lib\libplc21.lib    \
+LLIBS=\
+ $(DIST)\lib\xpcom32.lib         \
+ $(DIST)\lib\raptorbase.lib      \
+ $(DIST)\lib\netlib.lib          \
+ $(DIST)\lib\libplc21.lib        \
  $(LIBNSPR)  
 
-LINCS= -I$(PUBLIC)\rdf -I$(LIBNSPR) -I$(XPDIST)\public\xpcom -I$(PUBLIC)\netlib -I$(PUBLIC)\raptor
+LINCS=  -I$(PUBLIC)\rdf          \
+        -I$(XPDIST)\public\xpcom \
+        -I$(PUBLIC)\netlib       \
+        -I$(PUBLIC)\raptor       \
+        $(NULL)
+
 include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
