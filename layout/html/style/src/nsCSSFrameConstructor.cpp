@@ -2916,8 +2916,9 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
           // a dropdown list. The display area and button are created through anonymous content.
           // The drop-down list's frame is created explicitly. The combobox frame shares it's content
           // with the drop-down list.
+        PRUint32 flags = NS_BLOCK_SHRINK_WRAP | (aIsAbsolutelyPositioned?NS_BLOCK_SPACE_MGR:0);
         nsIFrame * comboboxFrame;
-        rv = NS_NewComboboxControlFrame(aPresShell, &comboboxFrame);
+        rv = NS_NewComboboxControlFrame(aPresShell, &comboboxFrame, flags);
 
            // Determine geometric parent for the combobox frame
         nsIFrame* geometricParent = aParentFrame;
@@ -2954,7 +2955,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
           // absolutely positioned.
           nsIFrame* newFrame = nsnull;
           nsIFrame* scrolledFrame = nsnull;
-          NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+          NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, flags);
 
           InitializeSelectFrame(aPresShell, aPresContext, aState, listFrame, scrolledFrame, aContent, comboboxFrame,
                                listStyle, PR_FALSE, PR_FALSE, PR_TRUE);
@@ -3002,8 +3003,9 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         listFrame->Init(aPresContext, aContent, aParentFrame, aStyleContext, nsnull);
 
         // create the area frame we are scrolling 
+        PRUint32 flags = NS_BLOCK_SHRINK_WRAP | (aIsAbsolutelyPositioned?NS_BLOCK_SPACE_MGR:0);
         nsIFrame* scrolledFrame = nsnull;
-        NS_NewSelectsAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+        NS_NewSelectsAreaFrame(&scrolledFrame, flags);
 
         nsCOMPtr<nsIListControlFrame> listControlframe(do_QueryInterface(listFrame));
         if (listControlframe) {
@@ -3089,8 +3091,11 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         nsIFrame * listFrame;
         rv = NS_NewListControlFrame(aPresShell, &listFrame);
         aNewFrame = listFrame;
+
+        PRUint32 flags = NS_BLOCK_SHRINK_WRAP | (aIsAbsolutelyPositioned?NS_BLOCK_SPACE_MGR:0);
         nsIFrame* scrolledFrame = nsnull;
-        NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+        NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, flags);
+
         // ******* this code stolen from Initialze ScrollFrame ********
         // please adjust this code to use BuildScrollFrame.
 
