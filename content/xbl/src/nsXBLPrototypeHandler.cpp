@@ -636,7 +636,7 @@ nsXBLPrototypeHandler::MouseEventMatched(nsIAtom* aEventType, nsIDOMMouseEvent* 
 
 struct keyCodeData {
   const char* str;
-  size_t strlen;
+  size_t strlength;
   PRUint32 keycode;
 };
 
@@ -776,7 +776,7 @@ PRInt32 nsXBLPrototypeHandler::GetMatchingKeyCode(const nsAReadableString& aKeyN
   PRUint32 keyNameLength = keyName.Length();
   const char* keyNameStr = keyName.get();
   for (int i = 0; i < (sizeof(gKeyCodes) / sizeof(gKeyCodes[0])); ++i)
-    if (keyNameLength == gKeyCodes[i].strlen &&
+    if (keyNameLength == gKeyCodes[i].strlength &&
         !nsCRT::strcmp(gKeyCodes[i].str, keyNameStr))
       return gKeyCodes[i].keycode;
 
