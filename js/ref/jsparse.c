@@ -1612,7 +1612,8 @@ Expr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     return pn;
 }
 
-/* ZZZbe don't create functions till codegen? or at least don't bind fn name */
+/* ZZZbe don't create functions till codegen? or at least don't bind 
+ * fn name */
 static JSBool
 LookupArgOrVar(JSContext *cx, JSAtom *atom, JSTreeContext *tc,
 	       JSOp *opp, jsint *slotp)
