@@ -26,6 +26,7 @@
 <window 
   title="&directoryWindowTitle.label;"
   xmlns:html="http://www.w3.org/TR/REC-html40"
+  xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   align="vertical">
 
@@ -44,7 +45,6 @@
             <treerow>
               <treecell class="filename" indent="true"
                         value="rdf:urn:http-index-format:Filename"/>
-
               <treecell value="rdf:urn:http-index-format:Content-Length" />
               <treecell value="rdf:urn:http-index-format:Last-Modified" />
             </treerow>
@@ -52,11 +52,15 @@
         </treechildren>
       </template>
 
+      <treecol id="FilenameColumn" rdf:resource="urn:http-index-format:Filename" sortActive="true" sortDirection="ascending" />
+      <treecol id="ContentLengthColumn" rdf:resource="urn:http-index-format:Content-Length"/>
+      <treecol id="LastModColumn" rdf:resource="urn:http-index-format:Last-Modified"/>
+
       <treehead>
         <treerow>
-          <treecell>&directoryWindow.filename.label;</treecell>
-          <treecell>&directoryWindow.contentlength.label;</treecell>
-          <treecell>&directoryWindow.lastmodified.label;</treecell>
+          <treecell value="&directoryWindow.filename.label;" onclick="return doSort('FilenameColumn');" observes="FilenameColumn" sortActive="true" sortDirection="ascending" />
+          <treecell value="&directoryWindow.contentlength.label;" onclick="return doSort('ContentLengthColumn');" observes="ContentLengthColumn" />
+          <treecell value="&directoryWindow.lastmodified.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
         </treerow>
       </treehead>
 

@@ -155,3 +155,31 @@ function Boot()
 setTimeout("Boot()", 0);
 
 
+function doSort(sortColName)
+{
+	var node = document.getElementById(sortColName);
+	if (!node) return(false);
+
+	// determine column resource to sort on
+	var sortResource = node.getAttribute('resource');
+
+	// switch between ascending & descending sort (no natural order support)
+	var sortDirection="ascending";
+	var isSortActive = node.getAttribute('sortActive');
+	if (isSortActive == "true")
+	{
+		var currentDirection = node.getAttribute('sortDirection');
+		if (currentDirection == "ascending")
+		{
+			sortDirection = "descending";
+		}
+	}
+
+	var isupports = Components.classes["component://netscape/rdf/xul-sort-service"].getService();
+	if (!isupports)    return(false);
+	var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);
+	if (!xulSortService)    return(false);
+	xulSortService.Sort(node, sortResource, sortDirection);
+
+	return(false);
+}
