@@ -745,6 +745,17 @@ void _PR_InitThreads(
     int rv;
     PRThread *thred;
 
+#ifdef _PR_NEED_PTHREAD_INIT
+    /*
+     * On BSD/OS (3.1 and 4.0), the pthread subsystem is lazily
+     * initialized, but pthread_self() fails to initialize
+     * pthreads and hence returns a null thread ID if invoked
+     * by the primordial thread before any other pthread call.
+     * So we explicitly initialize pthreads here.
+     */
+    pthread_init();
+#endif
+
 #if defined(_PR_DCETHREADS) || defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
     /*
     ** These might be function evaluations
