@@ -1115,9 +1115,14 @@ NS_IMETHODIMP
 nsXMLContentSink::HandleStartElement(const PRUnichar *aName, 
                                      const PRUnichar **aAtts, 
                                      PRUint32 aAttsCount, 
-                                     PRUint32 aIndex, 
+                                     PRInt32 aIndex, 
                                      PRUint32 aLineNumber)
 {
+  NS_PRECONDITION(aIndex >= -1, "Bogus aIndex");
+  NS_PRECONDITION(aAttsCount % 2 == 0, "incorrect aAttsCount");
+  // Adjust aAttsCount so it's the actual number of attributes
+  aAttsCount /= 2;
+
   nsresult result = NS_OK;
   PRBool appendContent = PR_TRUE;
   nsCOMPtr<nsIContent> content;
@@ -1193,7 +1198,7 @@ nsXMLContentSink::HandleStartElement(const PRUnichar *aName,
   }
 
   // Set the ID attribute atom on the node info object for this node
-  if ((aIndex != (PRUint32)-1) && NS_SUCCEEDED(result)) {
+  if (aIndex != -1 && NS_SUCCEEDED(result)) {
     nsCOMPtr<nsIAtom> IDAttr = do_GetAtom(aAtts[aIndex]);
 
     if (IDAttr) {
@@ -1472,7 +1477,7 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
   const PRUnichar* atts[] = {name.get(), value.get(), nsnull};
     
   rv = HandleStartElement(NS_LITERAL_STRING("parsererror").get(), atts, 1,
-                          (PRUint32)-1, (PRUint32)-1);
+                          -1, (PRUint32)-1);
   NS_ENSURE_SUCCESS(rv,rv);
 
   rv = HandleCharacterData(aErrorText, nsCRT::strlen(aErrorText));
@@ -1480,7 +1485,7 @@ nsXMLContentSink::ReportError(const PRUnichar* aErrorText,
   
   const PRUnichar* noAtts[] = {0, 0};
   rv = HandleStartElement(NS_LITERAL_STRING("sourcetext").get(), noAtts, 0,
-                          (PRUint32)-1, (PRUint32)-1);
+                          -1, (PRUint32)-1);
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = HandleCharacterData(aSourceText, nsCRT::strlen(aSourceText));
