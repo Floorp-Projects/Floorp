@@ -25,20 +25,22 @@
 #include "nsIDocument.h"
 #include "nsRepository.h"
 #include "nsEditFactory.h"
+#include "nsEditorCID.h"
 
 
 
 static NS_DEFINE_IID(kIDOMEventReceiverIID, NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kIDOMMouseListenerIID, NS_IDOMMOUSELISTENER_IID);
-static NS_DEFINE_IID(kIDOMKeyListenerIID, NS_IDOMKEYLISTENER_IID);
-static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
-static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
-static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
-static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
-static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIDOMKeyListenerIID,   NS_IDOMKEYLISTENER_IID);
+static NS_DEFINE_IID(kIDOMTextIID,          NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kIDOMElementIID,       NS_IDOMELEMENT_IID);
+static NS_DEFINE_IID(kIDOMNodeIID,          NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kIDocumentIID,         NS_IDOCUMENT_IID);
+static NS_DEFINE_IID(kIFactoryIID,          NS_IFACTORY_IID);
+static NS_DEFINE_IID(kIEditFactoryIID,      NS_IEDITORFACTORY_IID);
+static NS_DEFINE_IID(kIEditorIID,           NS_IEDITOR_IID);
+static NS_DEFINE_IID(kISupportsIID,         NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kEditorCID,            NS_EDITOR_CID);
 
 
 //monitor for the editor
@@ -73,7 +75,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aClass, nsIFactory
 
   *aFactory = nsnull;
 
-  if (aClass.Equals(kIEditFactoryIID)) {
+  if (aClass.Equals(kEditorCID)) {
     return getEditFactory(aFactory);
   }
   return NS_NOINTERFACE;
@@ -115,6 +117,7 @@ NSUnregisterSelf(const char *path)
 nsEditor::nsEditor()
 {
   //initialize member variables here
+  NS_INIT_REFCNT();
 }
 
 
