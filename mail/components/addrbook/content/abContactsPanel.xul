@@ -67,7 +67,7 @@
     <hbox id="panel-bar" class="toolbar" align="center">
       <menulist id="addressbookList" 
                 oncommand="DirPaneSelectionChangeMenulist(); AbPanelOnChange(event)" flex="1"
-                persist="selectedAB">
+                persist="value">
         <menupopup id="addressbookList-menupopup" 
                    datasources="rdf:addressdirectory" 
                    ref="moz-abdirectory://"

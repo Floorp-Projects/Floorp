@@ -115,26 +115,6 @@ var gAddressBookPanelAbListener = {
 function LoadPreviouslySelectedAB()
 {
   var abPopup = document.getElementById('addressbookList');
-  if ( abPopup )
-  {
-    var menupopup = document.getElementById('addressbookList-menupopup');
-    var selectedAB = abPopup.getAttribute("selectedAB");
-    if (!selectedAB) 
-      selectedAB = kPersonalAddressbookURI;
-      
-    if ( selectedAB && menupopup && menupopup.childNodes )
-    {
-      for ( var index = menupopup.childNodes.length - 1; index >= 0; index-- )
-      {
-        if ( menupopup.childNodes[index].getAttribute('value') == selectedAB )
-        {
-          abPopup.label = menupopup.childNodes[index].getAttribute('label');
-          abPopup.value = menupopup.childNodes[index].getAttribute('value');
-          break;
-        }
-      }
-    }
-  }
   ChangeDirectoryByURI(abPopup.selectedItem.id);
 }
 
