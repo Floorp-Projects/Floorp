@@ -33,6 +33,7 @@
 #include "nsIAutoCompleteResults.h"
 #include "nsIServiceManager.h"
 #include "nsIMsgHeaderParser.h"
+#include "nsILDAPMessage.h"
 #include "nsLDAP.h"
 #include "prlog.h"
 
