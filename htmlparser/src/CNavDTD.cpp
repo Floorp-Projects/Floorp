@@ -42,6 +42,7 @@
 #include "nsViewSourceHTML.h"
 #include "nsParserNode.h"
 #include "nsHTMLEntities.h"
+#include "nsLinebreakConverter.h"
 
 #ifdef XP_PC
 #include <direct.h> //this is here for debug reasons...
@@ -1919,6 +1920,10 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
   int aIndex=0;
   int aMax=mSkippedContent.GetSize();
   
+  // XXX rickg This linefeed conversion stuff should be moved out of
+  // the parser and into the form element code
+  PRBool aMustConvertLinebreaks = PR_FALSE;
+  
   for(aIndex=0;aIndex<aMax;aIndex++){
     CHTMLToken* theNextToken=(CHTMLToken*)mSkippedContent.PopFront();
 
@@ -1931,6 +1936,10 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
     if(eToken_attribute!=theTokenType) {
       if((eHTMLTag_textarea==theNodeTag) && (eToken_entity==theTokenType)) {
         ((CEntityToken*)theNextToken)->TranslateToUnicodeStr(mScratch);
+        // since this is an entity, we know that it's only one character.
+        // check to see if it's a CR, in which case we'll need to do line
+        // termination conversion at the end.
+        aMustConvertLinebreaks |= (mScratch[0] == kCR);
       }
       else theNextToken->GetSource(mScratch);
 
@@ -1938,6 +1947,23 @@ nsresult CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32 &aCount) {
     }
     mTokenRecycler->RecycleToken(theNextToken);
   }
+  
+  // if the string contained CRs (hence is either CR, or CRLF terminated)
+  // we need to convert line breaks
+  if (aMustConvertLinebreaks)
+  {
+    /*
+    PRInt32  offset;
+    while ((offset = aNode.mSkippedContent.Find("\r\n")) != kNotFound)
+      aNode.mSkippedContent.Cut(offset, 1);		// remove the CR
+  
+    // now replace remaining CRs with LFs
+    aNode.mSkippedContent.ReplaceChar("\r", kNewLine);
+    */
+    nsLinebreakConverter::ConvertStringLineBreaks(aNode.mSkippedContent,
+         nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
+  }
+  
   // Let's hope that this does not hamper the  PERFORMANCE!!
   mLineNumber += aNode.mSkippedContent.CountChar(kNewLine);
   return NS_OK;

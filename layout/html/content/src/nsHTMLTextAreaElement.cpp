@@ -44,6 +44,7 @@
 #include "nsIFocusableContent.h"
 #include "nsIEventStateManager.h"
 #include "nsISizeOfHandler.h"
+#include "nsLinebreakConverter.h"
 
 static NS_DEFINE_IID(kIDOMHTMLTextAreaElementIID, NS_IDOMHTMLTEXTAREAELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -373,11 +374,17 @@ nsHTMLTextAreaElement::GetDefaultValue(nsString& aDefaultValue)
 NS_IMETHODIMP
 nsHTMLTextAreaElement::SetDefaultValue(const nsString& aDefaultValue)
 {
-  // trim leading whitespace 
+  // trim leading whitespace. -- why?
   static char whitespace[] = " \r\n\t";
-  nsString value(aDefaultValue);
-  value.Trim(whitespace, PR_TRUE, PR_FALSE);
-  mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, value, PR_TRUE);
+  nsString defaultValue(aDefaultValue);
+  defaultValue.Trim(whitespace, PR_TRUE, PR_FALSE);
+
+  // normalize line breaks. Need this e.g. when the value is
+  // coming from a URL, which used platform line breaks.
+  nsLinebreakConverter::ConvertStringLineBreaks(defaultValue,
+       nsLinebreakConverter::eLinebreakAny, nsLinebreakConverter::eLinebreakContent);
+  
+  mInner.SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::value, defaultValue, PR_TRUE);
   return NS_OK;
 
 }
