@@ -661,13 +661,13 @@
                 "Let " (:local n) ", " (:local k) ", and " (:local s) " be integers such that "
                 (:expr boolean (>= k 1)) ", " (:expr boolean (cascade rational (expt 10 (- k 1)) <= s <= (expt 10 k))) ", "
                 (:expr boolean (= (real-to-float32 (rat* s (expt 10 (- n k)))) x float32)) ", and " (:local k) " is as small as possible.")
-            (note (:local k) " is the number of digits in the decimal representation of " (:local s) ", " (:local s)
-                  " is not divisible by 10, and the least significant digit of " (:local s)
-                  " is not necessarily uniquely determined by the above criteria.")
             (const n integer (bottom))
             (const k integer (bottom))
             (const s integer (bottom))
             (*/)
+            (note (:local k) " is the number of digits in the decimal representation of " (:local s) ", " (:local s)
+                  " is not divisible by 10, and the least significant digit of " (:local s)
+                  " is not necessarily uniquely determined by the above criteria.")
             (// "When there are multiple possibilities for " (:local s) " according to the rules above, "
                 "implementations are encouraged but not required to select the one according to the following rules: "
                 "Select the value of " (:local s) " for which " (:expr rational (rat* s (expt 10 (- n k)))) " is closest in value to " (:local r)
@@ -708,13 +708,13 @@
                 "Let " (:local n) ", " (:local k) ", and " (:local s) " be integers such that "
                 (:expr boolean (>= k 1)) ", " (:expr boolean (cascade rational (expt 10 (- k 1)) <= s <= (expt 10 k))) ", "
                 (:expr boolean (= (real-to-float64 (rat* s (expt 10 (- n k)))) x float64)) ", and " (:local k) " is as small as possible.")
-            (note (:local k) " is the number of digits in the decimal representation of " (:local s) ", that " (:local s)
-                  " is not divisible by 10, and that the least significant digit of " (:local s)
-                  " is not necessarily uniquely determined by the above criteria.")
             (const n integer (bottom))
             (const k integer (bottom))
             (const s integer (bottom))
             (*/)
+            (note (:local k) " is the number of digits in the decimal representation of " (:local s) ", that " (:local s)
+                  " is not divisible by 10, and that the least significant digit of " (:local s)
+                  " is not necessarily uniquely determined by the above criteria.")
             (// "When there are multiple possibilities for " (:local s) " according to the rules above, "
                 "implementations are encouraged but not required to select the one according to the following rules: "
                 "Select the value of " (:local s) " for which " (:expr rational (rat* s (expt 10 (- n k)))) " is closest in value to " (:local r)
@@ -1037,6 +1037,14 @@
       (rwhen (in result (tag none) :narrow-false)
         (throw property-access-error))
       (return result))
+    
+    
+    (define (index-read (o object) (i integer) (phase phase))
+            object-opt
+      (rwhen (or (< i 0) (>= i array-limit))
+        (throw range-error))
+      (const limit class (object-type o))
+      (return ((& bracket-read limit) o limit (vector (new u-long i)) phase)))
     
     
     (define (default-bracket-read (o object) (limit class) (args (vector object)) (phase phase)) object-opt
@@ -2349,13 +2357,17 @@
     (rule :brackets ((validate (-> (context environment) void)) (setup (-> () void))
                      (eval (-> (environment phase) (vector object))))
       (production :brackets ([ ]) brackets-none
-        ((validate (cxt :unused) (env :unused)))
+        ((validate cxt env) :forward)
         ((setup) :forward)
         ((eval (env :unused) (phase :unused)) (return (vector-of object))))
-      (production :brackets ([ (:list-expression allow-in) ]) brackets-unnamed
-        ((validate cxt env) ((validate :list-expression) cxt env))
+      (production :brackets ([ (:list-expression allow-in) ]) brackets-some
+        ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval env phase) (return ((eval-as-list :list-expression) env phase)))))
+        ((eval env phase) (return ((eval-as-list :list-expression) env phase))))
+      (production :brackets ([ :expressions-with-rest ]) brackets-rest
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval env phase) (return ((eval :expressions-with-rest) env phase)))))
     
     (rule :arguments ((validate (-> (context environment) void)) (setup (-> () void))
                       (eval (-> (environment phase) (vector object))))
@@ -2366,7 +2378,50 @@
       (production :arguments (:paren-list-expression) arguments-some
         ((validate cxt env) :forward)
         ((setup) :forward)
-        ((eval env phase) (return ((eval-as-list :paren-list-expression) env phase)))))
+        ((eval env phase) (return ((eval-as-list :paren-list-expression) env phase))))
+      (production :arguments (\( :expressions-with-rest \)) arguments-rest
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval env phase) (return ((eval :expressions-with-rest) env phase)))))
+    
+    (rule :expressions-with-rest ((validate (-> (context environment) void)) (setup (-> () void))
+                                  (eval (-> (environment phase) (vector object))))
+      (production :expressions-with-rest (:rest-expression) expressions-with-rest-one
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval env phase) (return ((eval :rest-expression) env phase))))
+      (production :expressions-with-rest ((:list-expression allow-in) \, :rest-expression) expressions-with-rest-more
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval env phase)
+         (const args1 (vector object) ((eval-as-list :list-expression) env phase))
+         (const args2 (vector object) ((eval :rest-expression) env phase))
+         (return (append args1 args2)))))
+    
+    (rule :rest-expression ((validate (-> (context environment) void)) (setup (-> () void))
+                            (eval (-> (environment phase) (vector object))))
+      (production :rest-expression (\.\.\. (:assignment-expression allow-in)) rest-expression-one
+        ((validate cxt env) :forward)
+        ((setup) :forward)
+        ((eval env phase)
+         (const a object (read-reference ((eval :assignment-expression) env phase) phase))
+         (rwhen (not ((&opt is array-class) a))
+           (throw bad-value-error))
+         (const length u-long (assert-in (read-instance-property a (new qualified-name array-private "length") phase) u-long))
+         (var i integer 0)
+         (var args (vector object) (vector-of object))
+         (while (/= i (& value length))
+           (const arg object-opt (index-read a i phase))
+           (rwhen (in arg (tag none) :narrow-false)
+             (/* "An implementation may, at its discretion, either " (:keyword throw) :nbsp (:tag property-access-error)
+                 " or treat the hole as a missing argument, substituting the called function" :apostrophe "s default parameter value if there is one, "
+                 (:tag undefined) " if the called function is unchecked, or " (:keyword throw) "ing" :nbsp (:tag argument-mismatch-error) " otherwise. "
+                 "An implementation must not replace such a hole with " (:tag undefined) " except when the called function is unchecked or happens to "
+                 "have " (:tag undefined) " as its default parameter value.")
+             (throw property-access-error))
+           (<- args (append args (vector arg)))
+           (<- i (+ i 1)))
+         (return args))))
     (%print-actions ("Validation" validate) ("Setup" setup) ("Evaluation" eval))
     
     
