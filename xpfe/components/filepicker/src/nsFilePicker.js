@@ -43,13 +43,14 @@ const nsISupports         = Components.interfaces.nsISupports;
 const nsIFactory          = Components.interfaces.nsIFactory;
 const nsIFilePicker       = Components.interfaces.nsIFilePicker;
 const bundle              = srGetStrBundle("chrome://global/locale/filepicker.properties");
+var   lastDirectory       = "/";
 
 function nsFilePicker()
 {
   /* attributes */
   this.mSelectedFilter = 0;
   this.mDefaultString = "";
-  this.mDisplayDirectory = "";
+  this.mDisplayDirectory = lastDirectory;
   this.mFilterTitles = new Array();
   this.mFilters = new Array();
 }
@@ -113,6 +114,8 @@ nsFilePicker.prototype = {
     var o = new Object();
     o.title = this.mTitle;
     o.mode = this.mMode;
+    o.displayDirectory = this.mDisplayDirectory;
+    o.defaultString = this.mDefaultString;
     o.filters = new Object();
     o.filters.titles = this.mFilterTitles;
     o.filters.types = this.mFilters;
@@ -124,6 +127,7 @@ nsFilePicker.prototype = {
                                  o);
 
     this.mFile = o.retvals.file;
+    lastDirectory = o.retvals.directory;
   }
 }
 
