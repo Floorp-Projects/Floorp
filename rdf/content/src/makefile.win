@@ -41,6 +41,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsRuleNetwork.obj             \
         .\$(OBJDIR)\nsXULAtoms.obj                \
         .\$(OBJDIR)\nsXULAttributes.obj		        \
+        .\$(OBJDIR)\nsXULAttributeValue.obj                 \
         .\$(OBJDIR)\nsXULCommandDispatcher.obj    \
         .\$(OBJDIR)\nsXULControllers.obj          \
         .\$(OBJDIR)\nsXULPopupListener.obj        \
