@@ -217,7 +217,7 @@ NS_IMETHODIMP RobotSink::CloseFrameset(const nsIParserNode& aNode)
 
 NS_IMETHODIMP RobotSink::OpenContainer(const nsIParserNode& aNode)
 {
-  nsAutoString tmp(aNode.GetText());
+  nsAutoString tmp; tmp.Assign(aNode.GetText());
   tmp.ToLowerCase();
   if (tmp.EqualsWithConversion("a")) {
     nsAutoString k, v;
@@ -333,7 +333,7 @@ NS_IMETHODIMP RobotSink::RemoveObserver(nsIRobotSinkObserver* aObserver)
 
 void RobotSink::ProcessLink(const nsString& aLink)
 {
-  nsAutoString absURLSpec(aLink);
+  nsAutoString absURLSpec; absURLSpec.Assign(aLink);
 
   // Make link absolute
   // XXX base tag handling

@@ -19,7 +19,9 @@ int main(int argc, char **argv)
   if(gWorkList) {
     int i;
     for (i = 1; i < argc; i++) {
-      gWorkList->AppendElement(new nsString(argv[i]));
+      nsString *tempString = new nsString;
+      tempString->AssignWithConversion(argv[i]);
+      gWorkList->AppendElement(tempString);
     }
   }
 

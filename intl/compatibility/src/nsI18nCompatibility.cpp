@@ -55,7 +55,7 @@ NS_IMPL_ISUPPORTS(nsI18nCompatibility, NS_GET_IID(nsII18nCompatibility));
 
 NS_IMETHODIMP nsI18nCompatibility::CSIDtoCharsetName(PRUint16 csid, PRUnichar **_retval)
 {
-  nsString charsetname(I18N_CSIDtoCharsetName(csid));
+  nsString charsetname; charsetname.AssignWithConversion(I18N_CSIDtoCharsetName(csid));
 
   *_retval = charsetname.ToNewUnicode();
 

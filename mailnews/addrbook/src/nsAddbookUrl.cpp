@@ -168,13 +168,13 @@ nsAddbookUrl::CrackPrintURL(char *searchPart, PRInt32 aOperation)
   if (!emailAddr.IsEmpty())
   {
     nsUnescape(emailAddr);
-    mAbCardProperty->SetCardValue(kPriEmailColumn, nsString(emailAddr).GetUnicode());
+    mAbCardProperty->SetCardValue(kPriEmailColumn, NS_ConvertASCIItoUCS2(emailAddr).GetUnicode());
   }
 
   if (!folderName.IsEmpty())
   {
     nsUnescape(folderName);
-    mAbCardProperty->SetCardValue(kWorkAddressBook, nsString(folderName).GetUnicode());
+    mAbCardProperty->SetCardValue(kWorkAddressBook, NS_ConvertASCIItoUCS2(folderName).GetUnicode());
   }
   
   return NS_OK;

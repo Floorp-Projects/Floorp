@@ -95,7 +95,7 @@ nsMimeConverter::DecodeMimePartIIStr(const nsString& header,
   nsresult res = NS_OK;
 
   (void) charset.ToCString(charsetCstr, kMAX_CSNAME+1);
-  nsCAutoString encodedStr(header);
+  nsCAutoString encodedStr; encodedStr.AssignWithConversion(header);
   // apply MIME decode.
   decodedCstr = MIME_DecodeMimePartIIStr(encodedStr,
                                            charsetCstr, eatContinuations);

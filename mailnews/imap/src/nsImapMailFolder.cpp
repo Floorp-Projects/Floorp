@@ -372,7 +372,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
       }
     }
       // make the imap folder remember the file spec it was created with.
-    nsCAutoString leafName (currentFolderDBNameStr);
+    nsCAutoString leafName; leafName.AssignWithConversion(currentFolderDBNameStr);
     nsCOMPtr <nsIFileSpec> msfFileSpec;
     rv = NS_NewFileSpecWithSpec(currentFolderPath, getter_AddRefs(msfFileSpec));
     if (NS_SUCCEEDED(rv) && msfFileSpec)
@@ -615,7 +615,9 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         if (NS_FAILED(rv)) return rv;
         parentFolder = do_QueryInterface(res, &rv);
         if (NS_FAILED(rv)) return rv;
-      return parentFolder->CreateClientSubfolderInfo(nsCAutoString(leafName), hierarchyDelimiter);
+        nsCAutoString leafnameC;
+        leafnameC.AssignWithConversion(leafName);
+      return parentFolder->CreateClientSubfolderInfo(leafnameC, hierarchyDelimiter);
     }
     
   // if we get here, it's really a leaf, and "this" is the parent.

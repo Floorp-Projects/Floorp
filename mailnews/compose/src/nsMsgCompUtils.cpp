@@ -1634,7 +1634,9 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
   	{
   		nsAutoString newSpec; newSpec.AssignWithConversion("http://");
   		newSpec.AppendWithConversion(aSpec);
-		rv = pNetService->NewURI(nsCAutoString(newSpec), nsnull, aInstancePtrResult);
+      nsCAutoString newspecC;
+      newspecC.AssignWithConversion(newSpec);
+		rv = pNetService->NewURI(newspecC, nsnull, aInstancePtrResult);
   	}
   	else
 		rv = pNetService->NewURI(aSpec, nsnull, aInstancePtrResult);

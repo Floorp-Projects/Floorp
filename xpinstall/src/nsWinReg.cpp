@@ -51,7 +51,7 @@ nsWinReg::SetRootKey(PRInt32 key)
 PRInt32
 nsWinReg::CreateKey(const nsString& subkey, const nsString& classname, PRInt32* aReturn)
 {
-	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_CREATE, subkey, classname, "null", aReturn);
+	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_CREATE, subkey, classname, NS_ConvertASCIItoUCS2("null"), aReturn);
 
   if(wi == nsnull)
   {
@@ -77,7 +77,7 @@ nsWinReg::CreateKey(const nsString& subkey, const nsString& classname, PRInt32* 
 PRInt32
 nsWinReg::DeleteKey(const nsString& subkey, PRInt32* aReturn)
 {
-	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE, subkey, "null", "null", aReturn);
+	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE, subkey, NS_ConvertASCIItoUCS2("null"), NS_ConvertASCIItoUCS2("null"), aReturn);
 
   if(wi == nsnull)
   {
@@ -103,7 +103,7 @@ nsWinReg::DeleteKey(const nsString& subkey, PRInt32* aReturn)
 PRInt32
 nsWinReg::DeleteValue(const nsString& subkey, const nsString& valname, PRInt32* aReturn)
 {
-	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE_VAL, subkey, valname, "null", aReturn);
+	nsWinRegItem* wi = new nsWinRegItem(this, mRootKey, NS_WIN_REG_DELETE_VAL, subkey, valname, NS_ConvertASCIItoUCS2("null"), aReturn);
 
   if(wi == nsnull)
   {
@@ -394,7 +394,7 @@ nsWinReg::NativeGetValueString(const nsString& subkey, const nsString& valname, 
 
     if(ERROR_SUCCESS == result && type == REG_SZ)
     {
-        *aReturn = (char*)valbuf;
+        aReturn->AssignWithConversion((char*)valbuf);
     }
 
     if (subkeyCString)   Recycle(subkeyCString);
@@ -517,7 +517,8 @@ nsWinReg::NativeGetValue(const nsString& subkey, const nsString& valname)
         result = RegQueryValueEx( newkey, valnameCString, nsnull, &type, valbuf, &length );
 
         if ( ERROR_SUCCESS == result ) {
-            data = new nsString((char*)valbuf);
+            data = new nsString;
+            data->AssignWithConversion((char *)valbuf);
 			      length = data->Length();
             value = new nsWinRegValue(type, (void*)data, length);
         }

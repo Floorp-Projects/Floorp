@@ -36,7 +36,7 @@ main(int argc, const char** argv)
 	nsCOMPtr<nsILocaleService>		locale_service;
 	nsCOMPtr<nsILocale>				locale;
 	nsCOMPtr<nsIPlatformCharset>	platform_charset;
-	nsString						locale_category("NSILOCALE_MESSAGES");
+	nsString						locale_category; locale_category.AssignWithConversion("NSILOCALE_MESSAGES");
 	PRUnichar*						category_value, *charset;
 	nsString						categoryAsNSString, charsetAsNSString;
 
@@ -57,7 +57,7 @@ main(int argc, const char** argv)
 	categoryAsNSString = category_value;
 	printf("DefaultCharset for %s is %s\n",categoryAsNSString.ToNewCString(),charsetAsNSString.ToNewCString());
 
-	categoryAsNSString = "en-US";
+	categoryAsNSString.AssignWithConversion("en-US");
 	rv = platform_charset->GetDefaultCharsetForLocale(categoryAsNSString.GetUnicode(),&charset);
 	if (NS_FAILED(rv)) return -1;
 

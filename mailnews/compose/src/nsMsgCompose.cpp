@@ -687,7 +687,11 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
 			    PR_Free(outCString);
 		    }
 		    else
-			    m_compFields->SetBody(nsCAutoString(msgBody));
+        {
+          nsCAutoString msgbodyC;
+          msgbodyC.AssignWithConversion(msgBody);
+			    m_compFields->SetBody(msgbodyC);
+        }
       }
     }
 	}
@@ -1182,11 +1186,13 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
       {
         nsAutoString aCharset; aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
         char * utf8Author = nsnull;
-        nsAutoString authorStr(author);
+        nsAutoString authorStr; authorStr.Assign(author);
         rv = ConvertFromUnicode(aCharset, authorStr, &utf8Author);
         if (NS_SUCCEEDED(rv) && utf8Author)
         {
-          rv = parser->ExtractHeaderAddressName(nsCAutoString(aCharset), utf8Author, &authorName);
+          nsCAutoString acharsetC;
+          acharsetC.AssignWithConversion(aCharset);
+          rv = parser->ExtractHeaderAddressName(acharsetC, utf8Author, &authorName);
           if (NS_SUCCEEDED(rv))
             rv = ConvertToUnicode(aCharset, authorName, authorStr);
         }

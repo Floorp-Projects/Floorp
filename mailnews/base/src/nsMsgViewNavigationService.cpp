@@ -94,7 +94,9 @@ static nsresult GetMessageValue(nsIRDFResource *message, nsString& propertyURI, 
 		return rv;
 
 	nsCOMPtr<nsIRDFResource> propertyResource;
-	rv = info->rdfService->GetResource(nsCAutoString(propertyURI), getter_AddRefs(propertyResource));
+  nsCAutoString propertyuriC;
+  propertyuriC.AssignWithConversion(propertyURI);
+	rv = info->rdfService->GetResource(propertyuriC, getter_AddRefs(propertyResource));
 	if(NS_FAILED(rv))
 		return rv;
 
@@ -176,7 +178,10 @@ static PRBool UnreadThreadNavigationFunction(nsIDOMXULElement *messageElement, n
 		return PR_FALSE;
 
 	nsCOMPtr<nsIRDFResource> messageResource;
-	rv = info->rdfService->GetResource(nsCAutoString(idResult), getter_AddRefs(messageResource));
+
+  nsCAutoString idresultC;
+  idresultC.AssignWithConversion(idResult);
+	rv = info->rdfService->GetResource(idresultC, getter_AddRefs(messageResource));
 	if(NS_FAILED(rv))
 		return PR_FALSE;
 
@@ -761,7 +766,9 @@ nsresult nsMsgViewNavigationService::FindNextInChildren(nsIDOMNode *parent, navi
 			return rv;
 
 		nsCOMPtr<nsIRDFResource> parentResource;
-		rv = info->rdfService->GetResource(nsCAutoString(parentURI), getter_AddRefs(parentResource));
+    nsCAutoString parenturiC;
+    parenturiC.AssignWithConversion(parentURI);
+		rv = info->rdfService->GetResource(parenturiC, getter_AddRefs(parentResource));
 		if(NS_FAILED(rv))
 			return rv;
 

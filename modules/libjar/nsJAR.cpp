@@ -362,19 +362,33 @@ return NS_OK;
   
   //-- Get its corresponding signature file
   nsCAutoString sigFilename;
-  sigFilename = manifestFilename;
+  sigFilename.Assign(manifestFilename);
   PRInt32 extension = sigFilename.RFindChar('.') + 1;
   NS_ASSERTION(extension != 0, "Manifest Parser: Missing file extension.");
   (void)sigFilename.Cut(extension, 2);
   nsXPIDLCString sigBuffer;
   PRUint32 sigLen;
-  rv = LoadEntry(sigFilename+"rsa", getter_Copies(sigBuffer), &sigLen);
+  nsCAutoString autostring; autostring.Assign(sigBuffer);
+  autostring.Append("rsa");
+  rv = LoadEntry(autostring.GetBuffer(), getter_Copies(sigBuffer), &sigLen);
   if (NS_FAILED(rv))
-    rv = LoadEntry(sigFilename+"RSA", getter_Copies(sigBuffer), &sigLen);
+  {
+    autostring.Assign(sigBuffer);
+    autostring.Append("RSA");
+    rv = LoadEntry(autostring.GetBuffer(), getter_Copies(sigBuffer), &sigLen);
+  }
   if (NS_FAILED(rv))
-    rv = LoadEntry(sigFilename+"dsa", getter_Copies(sigBuffer), &sigLen);
+  {
+    autostring.Assign(sigBuffer);
+    autostring.Append("dsa");
+    rv = LoadEntry(autostring.GetBuffer(), getter_Copies(sigBuffer), &sigLen);
+  }
   if (NS_FAILED(rv))
-    rv = LoadEntry(sigFilename+"DSA", getter_Copies(sigBuffer), &sigLen);
+  {
+    autostring.Assign(sigBuffer);
+    autostring.Append("DSA");
+    rv = LoadEntry(autostring.GetBuffer(), getter_Copies(sigBuffer), &sigLen);
+  }
   if (NS_FAILED(rv)) return rv;
   
   //-- Verify that the signature file is a valid signature of the SF file

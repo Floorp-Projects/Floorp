@@ -1097,7 +1097,7 @@ nsresult nsObserverTopic::Notify(eHTMLTags aTag,nsIParserNode& aNode,void* aUniq
       mKeys.Push((PRUnichar*)mDTDKey.GetUnicode());
       mValues.Push((PRUnichar*)mTopic.GetUnicode());
 
-      nsAutoString theTagStr(nsHTMLTags::GetStringValue(aTag));
+      nsAutoString theTagStr; theTagStr.AssignWithConversion(nsHTMLTags::GetStringValue(aTag));
       nsObserverNotifier theNotifier(theTagStr.GetUnicode(),(nsISupports*)aUniqueID,&mKeys,&mValues);
       theDeque->FirstThat(theNotifier); 
       result=theNotifier.mResult; 

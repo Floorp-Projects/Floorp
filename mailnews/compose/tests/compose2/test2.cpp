@@ -434,7 +434,7 @@ int main(int argc, char *argv[])
         return NS_ERROR_FAILURE;
       }
 
-      pMsgCompFields->SetTo(nsAutoString("rhp@netscape.com").GetUnicode());
+      pMsgCompFields->SetTo(NS_ConvertASCIItoUCS2("rhp@netscape.com").GetUnicode());
       pMsgSend->SendMessageFile(GetHackIdentity(),  // identity...
                           pMsgCompFields, // nsIMsgCompFields                  *fields,
                           mailIFile,             // nsFileSpec                        *sendFileSpec,

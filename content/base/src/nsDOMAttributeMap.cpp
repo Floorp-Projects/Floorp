@@ -218,7 +218,7 @@ nsDOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
     nsCOMPtr<nsIDOMNode> attribute;
     nsCOMPtr<nsIAtom> nameAtom;
     PRInt32 nameSpaceID;
-    nsAutoString name(aName);
+    nsAutoString name; name.Assign(aName);
 
     mContent->ParseAttributeString(aName, *getter_AddRefs(nameAtom),
                                    nameSpaceID);

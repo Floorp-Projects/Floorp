@@ -389,17 +389,17 @@ int main(int argc, char *argv[])
       PR_FREEIF(aEmail);
       PR_FREEIF(aFullName);      
 
-      pMsgCompFields->SetFrom(nsAutoString(addr).GetUnicode());
-      pMsgCompFields->SetTo(nsAutoString("rhp@netscape.com").GetUnicode());
+      pMsgCompFields->SetFrom(NS_ConvertASCIItoUCS2(addr).GetUnicode());
+      pMsgCompFields->SetTo(NS_ConvertASCIItoUCS2("rhp@netscape.com").GetUnicode());
       PR_snprintf(subject, sizeof(subject), "Spam from: %s", addr);
 
 
-      pMsgCompFields->SetSubject(nsAutoString(subject).GetUnicode());
+      pMsgCompFields->SetSubject(NS_ConvertASCIItoUCS2(subject).GetUnicode());
       // pMsgCompFields->SetTheForcePlainText(PR_TRUE, &rv);
-      pMsgCompFields->SetBody(nsAutoString(email).GetUnicode());
-      pMsgCompFields->SetCharacterSet(nsAutoString("us-ascii").GetUnicode());
+      pMsgCompFields->SetBody(NS_ConvertASCIItoUCS2(email).GetUnicode());
+      pMsgCompFields->SetCharacterSet(NS_ConvertASCIItoUCS2("us-ascii").GetUnicode());
       
-      pMsgCompFields->SetAttachments(nsAutoString("http://www.netscape.com").GetUnicode());
+      pMsgCompFields->SetAttachments(NS_ConvertASCIItoUCS2("http://www.netscape.com").GetUnicode());
 
       PRInt32 nBodyLength;
       PRUnichar    *pUnicharBody;

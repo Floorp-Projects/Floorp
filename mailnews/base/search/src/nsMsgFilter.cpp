@@ -435,8 +435,9 @@ nsresult nsMsgFilter::SaveRule()
 	case nsMsgFilterAction::ChangePriority:
 		{
 			nsAutoString priority;
-            nsCAutoString cStr(priority);
 			NS_MsgGetUntranslatedPriorityName (m_action.m_priority, &priority);
+      nsCAutoString cStr;
+      cStr.AssignWithConversion(priority);
 			err = filterList->WriteStrAttr(nsMsgFilterAttribActionValue, cStr);
 		}
 		break;

@@ -62,7 +62,7 @@ nsWinCharset::nsWinCharset()
   // XXX We should make the following block critical section
   if(nsnull == gInfo)
   {
-     nsAutoString propertyURL("resource:/res/wincharset.properties");
+     nsAutoString propertyURL; propertyURL.AssignWithConversion("resource:/res/wincharset.properties");
 
      nsURLProperties *info = new nsURLProperties( propertyURL );
      NS_ASSERTION( info , " cannot create nsURLProperties");
@@ -73,16 +73,16 @@ nsWinCharset::nsWinCharset()
   {
           UINT acp = ::GetACP();
           PRInt32 acpint = (PRInt32)(acp & 0x00FFFF);
-          nsAutoString acpKey("acp.");
-          acpKey.Append(acpint, 10);
+          nsAutoString acpKey; acpKey.AssignWithConversion("acp.");
+          acpKey.AppendInt(acpint, 10);
 
           nsresult res = gInfo->Get(acpKey, mCharset);
           if(NS_FAILED(res)) {
-              mCharset = "windows-1252";
+              mCharset.AssignWithConversion("windows-1252");
           }
 
   } else {
-        mCharset = "windows-1252";
+        mCharset.AssignWithConversion("windows-1252");
   }
 }
 nsWinCharset::~nsWinCharset()
@@ -108,7 +108,7 @@ nsWinCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	nsCOMPtr<nsIWin32Locale>	winLocale;
 	LCID						localeAsLCID;
 	char						acp_name[6];
-	nsString					charset("windows-1252");
+	nsString					charset;charset.AssignWithConversion("windows-1252");
 	nsString					localeAsNSString(localeName);
 
 	//
@@ -126,8 +126,8 @@ nsWinCharset::GetDefaultCharsetForLocale(const PRUnichar* localeName, PRUnichar*
 	//
 	if (!gInfo) { *_retValue = charset.ToNewUnicode(); return NS_ERROR_OUT_OF_MEMORY; }
 
-     nsAutoString acp_key("acp.");
-	 acp_key.Append(acp_name);
+     nsAutoString acp_key; acp_key.AssignWithConversion("acp.");
+	 acp_key.AppendWithConversion(acp_name);
 	 result = gInfo->Get(acp_key,charset);
 	
 	 *_retValue = charset.ToNewUnicode();

@@ -134,7 +134,7 @@ nsresult nsScanner::SetDocumentCharset(const nsString& aCharset , nsCharsetSourc
 
   NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
   NS_ASSERTION( nsnull != calias, "cannot find charset alias");
-  nsAutoString charsetName = aCharset;
+  nsAutoString charsetName; charsetName.Assign(aCharset);
   if( NS_SUCCEEDED(res) && (nsnull != calias))
   {
     PRBool same = PR_FALSE;

@@ -79,13 +79,13 @@ nsresult nsCollationWin::Initialize(nsILocale* locale)
   }
 
   // default charset name
-  mCharset.Assign("ISO-8859-1");
+  mCharset.AssignWithConversion("ISO-8859-1");
   
   // default LCID (en-US)
   mLCID = 1033;
 
   PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory("NSILOCALE_COLLATE");
+  nsString aCategory; aCategory.AssignWithConversion("NSILOCALE_COLLATE");
 
   // get locale string, use app default if no locale specified
   if (locale == nsnull) {
@@ -162,7 +162,7 @@ nsresult nsCollationWin::CreateRawSortKey(const nsCollationStrength strength,
 {
   int byteLen;
   nsresult res = NS_OK;
-  nsAutoString stringNormalized(stringIn);
+  nsAutoString stringNormalized; stringNormalized.Assign(stringIn);
 
   if (mCollation != NULL && strength == kCollationCaseInSensitive) {
     mCollation->NormalizeString(stringNormalized);

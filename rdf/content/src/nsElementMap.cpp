@@ -191,12 +191,15 @@ nsElementMap::Add(const nsString& aID, nsIContent* aContent)
                     rv = tag->ToString(tagname);
                     if (NS_FAILED(rv)) return rv;
 
+                    nsCAutoString tagnameC, aidC; 
+                    tagnameC.AssignWithConversion(tagname);
+                    aidC.AssignWithConversion(aID);
                     PR_LOG(gMapLog, PR_LOG_ALWAYS,
                            ("xulelemap(%p) dup    %s[%p] <-- %s\n",
                             this,
-                            (const char*) nsCAutoString(tagname),
+                            (const char*) tagnameC,
                             aContent,
-                            (const char*) nsCAutoString(aID)));
+                            (const char*) aidC));
                 }
 #endif
 
@@ -225,12 +228,15 @@ nsElementMap::Add(const nsString& aID, nsIContent* aContent)
         rv = tag->ToString(tagname);
         if (NS_FAILED(rv)) return rv;
 
+        nsCAutoString tagnameC, aidC; 
+        tagnameC.AssignWithConversion(tagname);
+        aidC.AssignWithConversion(aID);
         PR_LOG(gMapLog, PR_LOG_ALWAYS,
                ("xulelemap(%p) add    %s[%p] <-- %s\n",
                 this,
-                (const char*) nsCAutoString(tagname),
+                (const char*) tagnameC,
                 aContent,
-                (const char*) nsCAutoString(aID)));
+                (const char*)aidC));
     }
 #endif
 
@@ -257,12 +263,15 @@ nsElementMap::Remove(const nsString& aID, nsIContent* aContent)
         rv = tag->ToString(tagname);
         if (NS_FAILED(rv)) return rv;
 
+        nsCAutoString tagnameC, aidC; 
+        tagnameC.AssignWithConversion(tagname);
+        aidC.AssignWithConversion(aID);
         PR_LOG(gMapLog, PR_LOG_ALWAYS,
                ("xulelemap(%p) remove  %s[%p] <-- %s\n",
                 this,
-                (const char*) nsCAutoString(tagname),
+                (const char*) tagnameC,
                 aContent,
-                (const char*) nsCAutoString(aID)));
+                (const char*) aidC));
     }
 #endif
 

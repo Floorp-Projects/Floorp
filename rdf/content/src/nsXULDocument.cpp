@@ -3983,10 +3983,11 @@ nsXULDocument::OpenWidgetItem(nsIContent* aElement)
 
         nsAutoString tagStr;
         tag->ToString(tagStr);
-
+        nsCAutoString tagstrC;
+        tagstrC.AssignWithConversion(tagStr);
         PR_LOG(gXULLog, PR_LOG_DEBUG,
                ("xuldoc open-widget-item %s",
-                (const char*) nsCAutoString(tagStr)));
+                (const char*) tagstrC));
     }
 #endif
 
@@ -4032,10 +4033,12 @@ nsXULDocument::CloseWidgetItem(nsIContent* aElement)
 
         nsAutoString tagStr;
         tag->ToString(tagStr);
+        nsCAutoString tagstrC;
+        tagstrC.AssignWithConversion(tagStr);
 
         PR_LOG(gXULLog, PR_LOG_DEBUG,
                ("xuldoc close-widget-item %s",
-                (const char*) nsCAutoString(tagStr)));
+                (const char*) tagstrC));
     }
 #endif
 
@@ -4083,9 +4086,11 @@ nsXULDocument::RebuildWidgetItem(nsIContent* aElement)
         nsAutoString tagStr;
         tag->ToString(tagStr);
 
+        nsCAutoString tagstrC;
+        tagstrC.AssignWithConversion(tagStr);
         PR_LOG(gXULLog, PR_LOG_DEBUG,
                ("xuldoc close-widget-item %s",
-                (const char*) nsCAutoString(tagStr)));
+                (const char*) tagstrC));
     }
 #endif
 
@@ -5136,9 +5141,11 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         nsAutoString tagstr;
         aPrototype->mTag->ToString(tagstr);
 
+        nsCAutoString tagstrC;
+        tagstrC.AssignWithConversion(tagstr);
         PR_LOG(gXULLog, PR_LOG_ALWAYS,
                ("xul: creating <%s> from prototype",
-                (const char*) nsCAutoString(tagstr)));
+                (const char*) tagstrC));
     }
 #endif
 
@@ -5436,7 +5443,10 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
         }
 
         nsCOMPtr<nsIRDFDataSource> ds;
-        rv = gRDFService->GetDataSource(nsCAutoString(uriStr), getter_AddRefs(ds));
+        nsCAutoString uristrC;
+        uristrC.AssignWithConversion(uriStr);
+
+        rv = gRDFService->GetDataSource(uristrC, getter_AddRefs(ds));
 
         if (NS_FAILED(rv)) {
             // This is only a warning because the data source may not
@@ -5444,9 +5454,9 @@ nsXULDocument::CheckTemplateBuilder(nsIContent* aElement)
             // security, a bad URL, etc.
 #ifdef DEBUG
             nsCAutoString msg;
-            msg += "unable to load datasource '";
-            msg += nsCAutoString(uriStr);
-            msg += '\'';
+            msg.Append("unable to load datasource '");
+            msg.AppendWithConversion(uriStr);
+            msg.Append('\'');
             NS_WARNING((const char*) msg);
 #endif
             continue;
@@ -5573,10 +5583,11 @@ nsXULDocument::OverlayForwardReference::Resolve()
 
     rv = Merge(target, mOverlay);
     if (NS_FAILED(rv)) return eResolve_Error;
-
+    nsCAutoString idC;
+    idC.AssignWithConversion(id);
     PR_LOG(gXULLog, PR_LOG_ALWAYS,
            ("xul: overlay resolved '%s'",
-            (const char*) nsCAutoString(id)));
+            (const char*) idC));
 
     mResolved = PR_TRUE;
     return eResolve_Succeeded;
@@ -5668,9 +5679,11 @@ nsXULDocument::OverlayForwardReference::~OverlayForwardReference()
         nsAutoString id;
         mOverlay->GetAttribute(kNameSpaceID_None, kIdAtom, id);
 
+        nsCAutoString idC;
+        idC.AssignWithConversion(id);
         PR_LOG(gXULLog, PR_LOG_ALWAYS,
                ("xul: overlay failed to resolve '%s'",
-                (const char*) nsCAutoString(id)));
+                (const char*) idC));
     }
 #endif
 }
@@ -5726,11 +5739,15 @@ nsXULDocument::BroadcasterHookup::~BroadcasterHookup()
         rv = tag->ToString(tagStr);
         if (NS_FAILED(rv)) return;
 
+        nsCAutoString tagstrC, attributeC,broadcasteridC;
+        tagstrC.AssignWithConversion(tagStr);
+        attributeC.AssignWithConversion(attribute);
+        broadcasteridC.AssignWithConversion(broadcasterID);
         PR_LOG(gXULLog, PR_LOG_ALWAYS,
                ("xul: broadcaster hookup failed <%s attribute='%s'> to %s",
-                (const char*) nsCAutoString(tagStr),
-                (const char*) nsCAutoString(attribute),
-                (const char*) nsCAutoString(broadcasterID)));
+                (const char*) tagstrC,
+                (const char*) attributeC,
+                (const char*) broadcasteridC));
     }
 #endif
 }
@@ -5857,11 +5874,15 @@ nsXULDocument::CheckBroadcasterHookup(nsXULDocument* aDocument,
         rv = tag2->ToString(tagStr);
         if (NS_FAILED(rv)) return rv;
 
+        nsCAutoString tagstrC, attributeC,broadcasteridC;
+        tagstrC.AssignWithConversion(tagStr);
+        attributeC.AssignWithConversion(attribute);
+        broadcasteridC.AssignWithConversion(broadcasterID);
         PR_LOG(gXULLog, PR_LOG_ALWAYS,
                ("xul: broadcaster hookup <%s attribute='%s'> to %s",
-                (const char*) nsCAutoString(tagStr),
-                (const char*) nsCAutoString(attribute),
-                (const char*) nsCAutoString(broadcasterID)));
+                (const char*) tagstrC,
+                (const char*) attributeC,
+                (const char*) broadcasteridC));
     }
 #endif
 

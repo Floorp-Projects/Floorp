@@ -503,7 +503,7 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
                 if (NS_FAILED(rv)) return rv;
 
                 PRUnichar *ptrv = nsnull;
-                rv = stringBundle->GetStringFromName( nsString("FindText").GetUnicode(), &ptrv);
+                rv = stringBundle->GetStringFromName( NS_ConvertASCIItoUCS2("FindText").GetUnicode(), &ptrv);
                 if (NS_FAILED(rv)) return rv;                
                 
                 handler->PromptForFile(ptrv, PSM_FILE_NAME, PR_TRUE, &filePath);
@@ -534,10 +534,11 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         if (NS_FAILED(rv)) goto failure;
           
         CMTStatus psmStatus;
-          
+        nsCAutoString profilenameC;
+        profilenameC.AssignWithConversion(profileName);
         psmStatus = CMT_Hello( mControl, 
                                    PROTOCOL_VERSION, 
-                                   nsCAutoString(profileName), 
+                                   profilenameC, 
                                    (char*)profileSpec.GetNativePathCString());        
 
         if (psmStatus == CMTFailure)

@@ -656,14 +656,14 @@ public:
   NS_IMETHOD GetUndoString(nsString *aString)
   {
     if (aString)
-      *aString = "";
+      aString->SetLength(0);
     return NS_OK;
   }
 
   NS_IMETHOD GetRedoString(nsString *aString)
   {
     if (aString)
-      *aString = "";
+      aString->SetLength(0) ;
     return NS_OK;
   }
 

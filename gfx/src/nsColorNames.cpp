@@ -133,7 +133,7 @@ nsColorNames::LookupName(const nsCString& aColorName)
 
 nsColorName 
 nsColorNames::LookupName(const nsString& aColorName) {
-  nsCAutoString theName(aColorName);
+  nsCAutoString theName; theName.AssignWithConversion(aColorName);
   return LookupName(theName);
 }
 

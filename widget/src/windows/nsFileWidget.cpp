@@ -170,7 +170,7 @@ PRBool nsFileWidget::Show()
   if (result == PR_TRUE) {
     // I think it also needs a conversion here (to unicode since appending to nsString) 
     // but doing that generates garbage file name, weird.
-    mFile.Append(fileBuffer);
+    mFile.AppendWithConversion(fileBuffer);
   }
   
   return((PRBool)result);
@@ -190,11 +190,11 @@ void nsFileWidget::GetFilterListArray(nsString& aFilterList)
     const nsString& filter = mFilters[i];
     
     aFilterList.Append(title);
-    aFilterList.Append('\0');
+    aFilterList.AppendWithConversion('\0');
     aFilterList.Append(filter);
-    aFilterList.Append('\0');
+    aFilterList.AppendWithConversion('\0');
   }
-  aFilterList.Append('\0'); 
+  aFilterList.AppendWithConversion('\0'); 
 }
 
 //-------------------------------------------------------------------------
@@ -332,7 +332,7 @@ nsFileDlgResults nsFileWidget::GetFolder(nsIWidget        * aParent,
       nsAutoString pathStr;
       PRUnichar *unichar = ConvertFromFileSystemCharset(path);
       if (nsnull == unichar)
-        pathStr.Assign(path);
+        pathStr.AssignWithConversion(path);
       else {
         pathStr.Assign(unichar);
         delete [] unichar;
@@ -383,7 +383,7 @@ void nsFileWidget::GetFileSystemCharset(nsString & fileSystemCharset)
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
 	  if (NS_FAILED(rv)) 
-		  aCharset.Assign("windows-1252");
+		  aCharset.AssignWithConversion("windows-1252");
   }
   fileSystemCharset = aCharset;
 }

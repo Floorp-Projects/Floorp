@@ -53,7 +53,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS(nsDateTimeFormatWin, kIDateTimeFormatIID);
 nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
 {
   PRUnichar *aLocaleUnichar = NULL;
-  nsString aCategory("NSILOCALE_TIME");
+  nsString aCategory; aCategory.AssignWithConversion("NSILOCALE_TIME");
   nsresult res = NS_OK;
 
   // use cached info if match with stored locale
@@ -86,7 +86,7 @@ nsresult nsDateTimeFormatWin::Initialize(nsILocale* locale)
   }
 
   // default charset name
-  mCharset.Assign("ISO-8859-1");
+  mCharset.AssignWithConversion("ISO-8859-1");
   
   // default LCID (en-US)
   mLCID = 1033;
@@ -239,7 +239,7 @@ nsresult nsDateTimeFormatWin::FormatTMTime(nsILocale* locale,
   NS_ASSERTION(NSDATETIMEFORMAT_BUFFER_LEN >= (PRUint32) (timeLen + 1), "internal time buffer is not large enough");
 
   // Copy the result
-  stringOut.Assign("");
+  stringOut.SetLength(0);
   if (dateLen != 0 && timeLen != 0) {
     stringOut.Assign(dateBuffer, dateLen);
     stringOut.Append((PRUnichar *)(L" "), 1);
@@ -327,7 +327,7 @@ int nsDateTimeFormatWin::nsGetTimeFormatW(DWORD dwFlags, const SYSTEMTIME *lpTim
   nsresult res = NS_OK;
 
   if (mW_API) {
-    nsString formatString(format ? format : "");
+    nsString formatString; if (format) formatString.AssignWithConversion(format);
     LPCWSTR wstr = format ? (LPCWSTR) formatString.GetUnicode() : NULL;
     len = GetTimeFormatW(mLCID, dwFlags, lpTime, wstr, (LPWSTR) timeStr, cchTime);
   }
@@ -355,7 +355,7 @@ int nsDateTimeFormatWin::nsGetDateFormatW(DWORD dwFlags, const SYSTEMTIME *lpDat
   nsresult res = NS_OK;
 
   if (mW_API) {
-    nsString formatString(format ? format : "");
+    nsString formatString; if (format) formatString.AssignWithConversion(format);
     LPCWSTR wstr = format ? (LPCWSTR) formatString.GetUnicode() : NULL;
     len = GetDateFormatW(mLCID, dwFlags, lpDate, wstr, (LPWSTR) dataStr, cchDate);
   }

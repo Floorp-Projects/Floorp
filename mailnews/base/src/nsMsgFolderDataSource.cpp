@@ -1251,7 +1251,7 @@ nsMsgFolderDataSource::createBiffStateNode(nsIMsgFolder *folder, nsIRDFNode **ta
 
 	nsCAutoString biffString;
 	GetBiffStateString(biffState, biffString);
-	nsAutoString uniStr = biffString;
+	nsAutoString uniStr;uniStr.AssignWithConversion(biffString);
 	createNode(uniStr, target, getRDFService());
 	return NS_OK;
 }

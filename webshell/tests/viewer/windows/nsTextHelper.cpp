@@ -52,7 +52,7 @@ NS_METHOD  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize, PR
   NS_ALLOC_CHAR_BUF(buf, 512, bufLength);
   int charsCopied = GetWindowText(mWnd, buf, bufLength);
   aTextBuffer.SetLength(0);
-  aTextBuffer.Append(buf);
+  aTextBuffer.AppendWithConversion(buf);
   NS_FREE_CHAR_BUF(buf);
   aActualSize = charsCopied;
   return NS_OK;
@@ -76,7 +76,7 @@ NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, P
   PRUint32 actualSize;
   GetText(currentText, 256, actualSize);
   nsString newText(aText);
-  currentText.Insert(newText, aStartPos, aText.Length());
+  currentText.Insert(newText.GetUnicode(), aStartPos, aText.Length());
   SetText(currentText,actualSize);
   aActualSize = aText.Length();
 

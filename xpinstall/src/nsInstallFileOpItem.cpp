@@ -1071,7 +1071,7 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutAbort()
   nsCOMPtr<nsIFile> shortcutTarget;
 
   shortcutDescription = *mDescription;
-  shortcutDescription.Append(".lnk");
+  shortcutDescription.AppendWithConversion(".lnk");
   mShortcutPath->Clone(getter_AddRefs(shortcutTarget));
   shortcutTarget->Append(nsAutoCString(shortcutDescription));
 

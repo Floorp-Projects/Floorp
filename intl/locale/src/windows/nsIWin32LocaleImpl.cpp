@@ -463,13 +463,13 @@ nsIWin32LocaleImpl::GetXPLocale(LCID winLCID, nsString* locale)
 				if (sublang_id == iso_list[i].sublang_list[j].win_code) {
 					PR_snprintf(rfc_locale_string,9,"%s-%s%c",iso_list[i].iso_code,
 						iso_list[i].sublang_list[j].iso_code,0);
-					*locale = rfc_locale_string;
+					locale->AssignWithConversion(rfc_locale_string);
 					return NS_OK;
 				}
 			}
 			// no sublang, so just lang
 			PR_snprintf(rfc_locale_string,9,"%s%c",iso_list[i].iso_code,0);
-			*locale = rfc_locale_string;
+			locale->AssignWithConversion(rfc_locale_string);
 			return NS_OK;
 		}
 	}

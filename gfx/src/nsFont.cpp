@@ -103,7 +103,7 @@ PRBool nsFont::EnumerateFamilies(nsFontFamilyEnumFunc aFunc, void* aData) const
 {
   PRBool    running = PR_TRUE;
 
-  nsAutoString  familyList(name); // copy to work buffer
+  nsAutoString  familyList; familyList.Assign(name); // copy to work buffer
   nsAutoString  familyStr;
 
   familyList.Append(kNullCh);  // put an extra null at the end

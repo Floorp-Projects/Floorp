@@ -87,7 +87,7 @@ PRBool TestASCIILB(nsILineBreaker *lb,
                  const char* in, const PRUint32 len, 
                  const PRUint32* out, PRUint32 outlen)
 {
-         nsAutoString eng1(in);
+         nsAutoString eng1; eng1.AssignWithConversion(in);
          PRUint32 i,j;
          PRUint32 res[256];
          PRBool ok = PR_TRUE;
@@ -145,7 +145,7 @@ PRBool TestASCIIWB(nsIWordBreaker *lb,
                  const char* in, const PRUint32 len, 
                  const PRUint32* out, PRUint32 outlen)
 {
-         nsAutoString eng1(in);
+         nsAutoString eng1; eng1.AssignWithConversion(in);
          // nsBreakState bk(eng1.GetUnicode(), eng1.Length());
 
          PRUint32 i,j;
@@ -235,7 +235,7 @@ PRBool TestLineBreaker()
      cout << "Test 3 - GetLineBreaker():\n";
      nsILineBreaker *lb;
 
-     nsAutoString lb_arg("");
+     nsAutoString lb_arg;
      res = t->GetBreaker(lb_arg, &lb);
      if(NS_FAILED(res) || (lb == NULL)) {
          cout << "GetBreaker(nsILineBreaker*) failed\n";
@@ -319,7 +319,7 @@ PRBool TestWordBreaker()
      cout << "Test 3 - GetWordBreaker():\n";
      nsIWordBreaker *lb;
 
-     nsAutoString lb_arg("");
+     nsAutoString lb_arg;
      res = t->GetBreaker(lb_arg, &lb);
      if(NS_FAILED(res) || (lb == NULL)) {
          cout << "GetBreaker(nsIWordBreaker*) failed\n";
@@ -422,15 +422,15 @@ void SamplePrintWordWithBreak()
                                 (nsISupports**) &t);
    nsIWordBreaker *wbk;
 
-   nsAutoString wb_arg("");
+   nsAutoString wb_arg;
    res = t->GetBreaker(wb_arg, &wbk);
 
-   nsAutoString result("");
-   nsAutoString tmp("");
+   nsAutoString result;
+   nsAutoString tmp;
 
    for(PRUint32 i = 0; i < numOfFragment; i++)
    {
-      nsAutoString fragText(wb[i]); 
+      nsAutoString fragText; fragText.AssignWithConversion(wb[i]); 
       // nsBreakState bk(fragText.GetUnicode(), fragText.Length());
 
       PRUint32 cur = 0;
@@ -439,22 +439,22 @@ void SamplePrintWordWithBreak()
       PRUint32 start = 0;
       for(PRUint32 j = 0; ! done ; j++)
       {
-            tmp="";
+            tmp.SetLength(0);
             fragText.Mid(tmp, start, cur - start);
             result.Append(tmp);
-            result.Append("^");
+            result.AppendWithConversion("^");
             start = cur;
             wbk->Next(fragText.GetUnicode(), fragText.Length(), cur, &cur, &done);
       }
 
-      tmp="";
+      tmp.SetLength(0);
       fragText.Mid(tmp, start, fragText.Length() - start);
       result.Append(tmp);
 
 
       if( i != (numOfFragment -1 ))
       {
-        nsAutoString nextFragText(wb[i+1]);
+        nsAutoString nextFragText; nextFragText.AssignWithConversion(wb[i+1]);
  
         PRBool canBreak = PR_TRUE;
         res = wbk->BreakInBetween( fragText.GetUnicode(), 
@@ -464,7 +464,7 @@ void SamplePrintWordWithBreak()
                                   &canBreak
                                 );
         if(canBreak)
-            result.Append("^");
+            result.AppendWithConversion("^");
 
         fragText = nextFragText;
       }
@@ -483,16 +483,16 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
                                 (nsISupports**) &t);
    nsIWordBreaker *wbk;
 
-   nsAutoString wb_arg("");
+   nsAutoString wb_arg;
    res = t->GetBreaker(wb_arg, &wbk);
 
 
-   nsAutoString fragText(wb[fragN]); 
+   nsAutoString fragText; fragText.AssignWithConversion(wb[fragN]); 
    
    PRUint32 begin, end;
 
 
-   nsAutoString result("");
+   nsAutoString result;
    res = wbk->FindWord(fragText.GetUnicode(), fragText.Length(), 
                           offset, &begin, &end);
 
@@ -504,7 +504,7 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
      nsAutoString curFragText = fragText;
      for(PRUint32  p = fragN +1; p < numOfFragment ;p++)
      {
-        nsAutoString nextFragText(wb[p]); 
+        nsAutoString nextFragText; nextFragText.AssignWithConversion(wb[p]); 
         res = wbk->BreakInBetween(curFragText.GetUnicode(), 
                                   curFragText.Length(),
                                   nextFragText.GetUnicode(), 
@@ -517,7 +517,7 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
         res = wbk->FindWord(nextFragText.GetUnicode(), nextFragText.Length(), 
                           0, &b, &e);
 
-        nsAutoString tmp("");
+        nsAutoString tmp;
         nextFragText.Mid(tmp,b,e-b);
         result.Append(tmp);
 
@@ -533,7 +533,7 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
      nsAutoString curFragText = fragText;
      for(PRUint32  p = fragN ; p > 0 ;p--)
      {
-        nsAutoString prevFragText(wb[p-1]); 
+        nsAutoString prevFragText; prevFragText.AssignWithConversion(wb[p-1]); 
         res = wbk->BreakInBetween(prevFragText.GetUnicode(), 
                                   prevFragText.Length(),
                                   curFragText.GetUnicode(), 
@@ -546,7 +546,7 @@ void SampleFindWordBreakFromPosition(PRUint32 fragN, PRUint32 offset)
         res = wbk->FindWord(prevFragText.GetUnicode(), prevFragText.Length(), 
                           prevFragText.Length(), &b, &e);
 
-        nsAutoString tmp("");
+        nsAutoString tmp;
         prevFragText.Mid(tmp,b,e-b);
         result.Insert(tmp,0);
 

@@ -74,7 +74,9 @@ nsresult GetMessageServiceFromURI(const char *uri, nsIMsgMessageService **messag
 
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = nsServiceManager::GetService((const char *) nsCAutoString(progID), NS_GET_IID(nsIMsgMessageService),
+    nsCAutoString progidC;
+    progidC.AssignWithConversion(progID);
+		rv = nsServiceManager::GetService((const char *) progidC, NS_GET_IID(nsIMsgMessageService),
 		           (nsISupports**)messageService, nsnull);
 	}
 
@@ -89,7 +91,11 @@ nsresult ReleaseMessageServiceFromURI(const char *uri, nsIMsgMessageService *mes
 
 	rv = GetMessageServiceProgIDForURI(uri, progID);
 	if(NS_SUCCEEDED(rv))
-		rv = nsServiceManager::ReleaseService(nsCAutoString(progID), messageService);
+  {
+    nsCAutoString progidC;
+    progidC.AssignWithConversion(progID);
+		rv = nsServiceManager::ReleaseService(progidC, messageService);
+  }
 	return rv;
 }
 

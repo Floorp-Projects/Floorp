@@ -652,7 +652,8 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const PRUnichar *profileName, nsFileSpec*
     rv = NS_NewFileSpec(getter_AddRefs(spec));
     if (NS_FAILED(rv)) return rv;
 
-    nsCAutoString profileLocation(aProfile->profileLocation);
+    nsCAutoString profileLocation;
+    profileLocation.AssignWithConversion(aProfile->profileLocation);
     rv = spec->SetPersistentDescriptorString(profileLocation.GetBuffer());
     if (NS_FAILED(rv)) return rv;
 

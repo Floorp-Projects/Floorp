@@ -4355,12 +4355,14 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
 
         nsAutoString templatestr;
         aTemplateNode->GetAttribute(kNameSpaceID_None, nsXULAtoms::id, templatestr);
-
+        nsCAutoString templatestrC,tagstrC;
+        tagstrC.AssignWithConversion(tagstr);
+        templatestrC.AssignWithConversion(templatestr);
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("xultemplate[%p] build-content-from-template %s (template='%s') [%s]",
                 this,
-                (const char*) nsCAutoString(tagstr),
-                (const char*) nsCAutoString(templatestr),
+                (const char*) tagstrC,
+                (const char*) templatestrC,
                 (const char*) resourceCStr));
     }
 #endif
@@ -4454,9 +4456,11 @@ nsXULTemplateBuilder::BuildContentFromTemplate(nsIContent *aTemplateNode,
         if (PR_LOG_TEST(gLog, PR_LOG_DEBUG)) {
             nsAutoString tagname;
             tag->ToString(tagname);
+            nsCAutoString tagstrC;
+            tagstrC.AssignWithConversion(tagname);
             PR_LOG(gLog, PR_LOG_DEBUG,
                    ("xultemplate[%p]     building %s %s %s",
-                    this, (const char*) nsCAutoString(tagname),
+                    this, (const char*) tagstrC,
                     (isResourceElement ? "[resource]" : ""),
                     (isUnique ? "[unique]" : "")));
         }
@@ -5132,11 +5136,14 @@ nsXULTemplateBuilder::RemoveMember(nsIContent* aContainerElement,
             rv = aMember->GetValueConst(&resourceCStr);
             if (NS_FAILED(rv)) return rv;
             
+            nsCAutoString childtagstrC,parenttagstrC;
+            parenttagstrC.AssignWithConversion(parentTagStr);
+            childtagstrC.AssignWithConversion(childTagStr);
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("xultemplate[%p] remove-member %s->%s [%s]",
                     this,
-                    (const char*) nsCAutoString(parentTagStr),
-                    (const char*) nsCAutoString(childTagStr),
+                    (const char*) parenttagstrC,
+                    (const char*) childtagstrC,
                     resourceCStr));
         }
 #endif
@@ -5782,10 +5789,12 @@ nsXULTemplateBuilder::Log(const char* aOperation,
         rv = gXULUtils->GetTextForNode(aTarget, targetStr);
         if (NS_FAILED(rv)) return rv;
 
+        nsCAutoString targetstrC;
+        targetstrC.AssignWithConversion(targetStr);
         PR_LOG(gLog, PR_LOG_DEBUG,
                ("                        --[%s]-->[%s]",
                 propertyStr,
-                (const char*) nsCAutoString(targetStr)));
+                (const char*) targetstrC));
     }
     return NS_OK;
 }
@@ -6461,9 +6470,11 @@ nsresult nsXULTemplateBuilder::CompileConditions(Rule* aRule,
             nsAutoString tagstr;
             tag->ToString(tagstr);
 
+            nsCAutoString tagstrC;
+            tagstrC.AssignWithConversion(tagstr);
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("xultemplate[%p] unrecognized condition test <%s>",
-                    this, NS_STATIC_CAST(const char*, nsCAutoString(tagstr))));
+                    this, NS_STATIC_CAST(const char*, tagstrC)));
 #endif
             continue;
         }
@@ -6726,9 +6737,11 @@ nsXULTemplateBuilder::CompileBindings(Rule* aRule,
             nsAutoString tagstr;
             tag->ToString(tagstr);
 
+            nsCAutoString tagstrC;
+            tagstrC.AssignWithConversion(tagstr);
             PR_LOG(gLog, PR_LOG_ALWAYS,
                    ("xultemplate[%p] unrecognized binding <%s>",
-                    this, NS_STATIC_CAST(const char*, nsCAutoString(tagstr))));
+                    this, NS_STATIC_CAST(const char*, tagstrC)));
 #endif
 
             continue;

@@ -1425,8 +1425,9 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       // Create the URI
       if (NS_FAILED(image->GetSrc(tUrl)))
         return NS_ERROR_FAILURE;
-      
-      if (NS_FAILED(nsMsgNewURL(&attachment.url, nsCAutoString(tUrl))))
+      nsCAutoString turlC;
+      turlC.AssignWithConversion(tUrl);
+      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC)))
       {
         // Well, the first time failed...which means we probably didn't get
         // the full path name...
@@ -1457,7 +1458,9 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
           if (loc >= 0)
             workURL.SetLength(loc+1);
           workURL.Append(tUrl);
-          if (NS_FAILED(nsMsgNewURL(&attachment.url, nsCAutoString(workURL))))
+          nsCAutoString workurlC;
+          workurlC.AssignWithConversion(workURL);
+          if (NS_FAILED(nsMsgNewURL(&attachment.url, workurlC)))
           {
             // rhp - just try to continue and send it without this image.
             continue;
@@ -1483,7 +1486,9 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       // Create the URI
       if (NS_FAILED(link->GetHref(tUrl)))
         return NS_ERROR_FAILURE;
-      if (NS_FAILED(nsMsgNewURL(&attachment.url, nsCAutoString(tUrl))))
+      nsCAutoString turlC;
+      turlC.AssignWithConversion(tUrl);
+      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC)))
         return NS_ERROR_OUT_OF_MEMORY;
       
       NS_IF_ADDREF(attachment.url);
@@ -1496,7 +1501,9 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       // Create the URI
       if (NS_FAILED(anchor->GetHref(tUrl)))
         return NS_ERROR_FAILURE;
-      if (NS_FAILED(nsMsgNewURL(&attachment.url, nsCAutoString(tUrl))))
+      nsCAutoString turlC;
+      turlC.AssignWithConversion(tUrl);
+      if (NS_FAILED(nsMsgNewURL(&attachment.url, turlC)))
         return NS_ERROR_OUT_OF_MEMORY;
       
       NS_IF_ADDREF(attachment.url);

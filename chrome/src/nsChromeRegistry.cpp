@@ -1249,7 +1249,7 @@ NS_IMETHODIMP nsChromeRegistry::InstallProvider(const nsCAutoString& aProviderTy
         // the package arcs.
         if (val.Find(":packages") != -1 && !aProviderType.Equals(nsCAutoString("package"))) {
           // Get the literal for our base URL.
-          nsAutoString unistr(aBaseURL);
+          nsAutoString unistr;unistr.AssignWithConversion(aBaseURL);
           nsCOMPtr<nsIRDFLiteral> literal;
           mRDFService->GetLiteral(unistr.GetUnicode(), getter_AddRefs(literal));
 

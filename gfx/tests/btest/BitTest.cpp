@@ -654,8 +654,8 @@ nscolor white,black;
   aSurface->SetFont(*font);
 
     // clear surface
-  NS_ColorNameToRGB(nsAutoString("white"), &white);
-  NS_ColorNameToRGB(nsAutoString("red"), &black);
+  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("white"), &white);
+  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("red"), &black);
   aSurface->SetColor(white);
   aSurface->FillRect(0,0,1000,1000);
   aSurface->SetColor(black);
@@ -663,18 +663,18 @@ nscolor white,black;
   aSurface->DrawArc(20, 20,50,100,(float)0.0,(float)90.0);
   aSurface->FillArc(70, 20,50,100,(float)0.0,(float)90.0);
   aSurface->DrawArc(150, 20,50,100,(float)90.0,(float)0.0);
-  aSurface->DrawString("0 to 90\0",20,8);
-  aSurface->DrawString("Reverse (eg 90 to 0)\0",120,8);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("0 to 90\0"),20,8);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("Reverse (eg 90 to 0)\0"),120,8);
 
   aSurface->DrawArc(20, 140,100,50,(float)130.0,(float)180.0);
   aSurface->FillArc(70, 140,100,50,(float)130.0,(float)180.0);
   aSurface->DrawArc(150, 140,100,50,(float)180.0,(float)130.0);
-  aSurface->DrawString("130 to 180\0",20,130);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("130 to 180\0"),20,130);
 
   aSurface->DrawArc(20, 200,50,100,(float)170.0,(float)300.0);
   aSurface->FillArc(70, 200,50,100,(float)170.0,(float)300.0);
   aSurface->DrawArc(150, 200,50,100,(float)300.0,(float)170.0);
-  aSurface->DrawString("170 to 300\0",20,190);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("170 to 300\0"),20,190);
 
 
   return(30);
@@ -694,14 +694,14 @@ nscolor white,black;
             
 
   // clear surface
-  NS_ColorNameToRGB(nsAutoString("white"), &white);
-  NS_ColorNameToRGB(nsAutoString("black"), &black);
+  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("white"), &white);
+  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("black"), &black);
   aSurface->SetColor(white);
   aSurface->FillRect(0,0,1000,1000);
   aSurface->SetColor(black);
 
   aSurface->DrawRect(20, 20, 100, 100);
-  aSurface->DrawString("This is a Rectangle\0",20,5);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("This is a Rectangle\0"),20,5);
 
   aSurface->DrawLine(0,0,300,400);
 
@@ -713,7 +713,7 @@ nscolor white,black;
   pointlist[4].x = 175;pointlist[4].y = 175;
   pointlist[5].x = 150;pointlist[5].y = 150;
   aSurface->DrawPolygon(pointlist,6);
-  aSurface->DrawString("This is a closed Polygon\0",210,150);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("This is a closed Polygon\0"),210,150);
   delete [] pointlist;
 
 #ifdef WINDOWSBROKEN
@@ -724,12 +724,12 @@ nscolor white,black;
   pointlist[3].x = 260;pointlist[3].y = 240;
   pointlist[4].x = 225;pointlist[4].y = 225;
   aSurface->DrawPolygon(pointlist,6);
-  aSurface->DrawString("This is an open Polygon\0",250,200);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("This is an open Polygon\0"),250,200);
   delete [] pointlist;
 #endif  
 
   aSurface->DrawEllipse(30, 150,50,100);
-  aSurface->DrawString("This is an Ellipse\0",30,140);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("This is an Ellipse\0"),30,140);
 
 
   return(30);
@@ -748,14 +748,14 @@ nscolor white,black;
   aSurface->SetFont(*font);
 
     // clear surface
-  NS_ColorNameToRGB(nsAutoString("white"), &white);
-  NS_ColorNameToRGB(nsAutoString("black"), &black);
+  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("white"), &white);
+  NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("black"), &black);
   aSurface->SetColor(white);
   aSurface->FillRect(0,0,1000,1000);
   aSurface->SetColor(black);
 
   aSurface->FillRect(20, 20, 100, 100);
-  aSurface->DrawString("This is a Rectangle\0",20,5);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("This is a Rectangle\0"),20,5);
 
   pointlist = new nsPoint[6];
   pointlist[0].x = 150;pointlist[0].y = 150;
@@ -765,7 +765,7 @@ nscolor white,black;
   pointlist[4].x = 175;pointlist[4].y = 175;
   pointlist[5].x = 150;pointlist[5].y = 150;
   aSurface->FillPolygon(pointlist,6);
-  aSurface->DrawString("This is a closed Polygon\0",210,150);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("This is a closed Polygon\0"),210,150);
   delete [] pointlist;
 
 
@@ -777,12 +777,12 @@ nscolor white,black;
   pointlist[3].x = 260;pointlist[3].y = 240;
   pointlist[4].x = 225;pointlist[4].y = 225;
   aSurface->FillPolygon(pointlist,6);
-  aSurface->DrawString("This is an open Polygon\0",250,200);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("This is an open Polygon\0"),250,200);
   delete [] pointlist;
 #endif
 
   aSurface->FillEllipse(30, 150,50,100);
-  aSurface->DrawString("This is an Ellipse\0",30,140);
+  aSurface->DrawString(NS_ConvertASCIItoUCS2("This is an Ellipse\0"),30,140);
 
   return(30);
 }
@@ -882,13 +882,13 @@ char *str;
     if(aGenLoad == PR_TRUE)
       {
       MyBlendObserver *observer = new MyBlendObserver(aTheImage);
-      NS_ColorNameToRGB(nsAutoString("white"), &white);
+      NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("white"), &white);
       gImageReq = gImageGroup->GetImage(fileURL,observer,&white, 0, 0, 0);
       }
     else
       {
       MyObserver *observer = new MyObserver();
-      NS_ColorNameToRGB(nsAutoString("white"), &white);
+      NS_ColorNameToRGB(NS_ConvertASCIItoUCS2("white"), &white);
       gImageReq = gImageGroup->GetImage(fileURL,observer,&white, 0, 0, 0);
       }
             
@@ -1137,7 +1137,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
     NS_RELEASE(widget);
   }
   PRUint32 size;
-  gBlendMessage->SetText("50",size);
+  gBlendMessage->SetText(NS_ConvertASCIItoUCS2("50"),size);
 
   rect.SetRect(70,370,40,25);
   nsComponentManager::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID, (void**)&gQualMessage);
@@ -1146,7 +1146,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,int aWidth, int 
     widget->Create(gWindow, rect, nsnull, nsnull);
     NS_RELEASE(widget);
   }
-  gQualMessage->SetText("3",size);
+  gQualMessage->SetText(NS_ConvertASCIItoUCS2("3"),size);
 
   ::ShowWindow(window, SW_SHOW);
   ::UpdateWindow(window);

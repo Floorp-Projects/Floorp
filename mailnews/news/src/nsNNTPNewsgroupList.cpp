@@ -334,7 +334,9 @@ nsNNTPNewsgroupList::GetRangeOfArtsToDownload(nsIMsgWindow * aMsgWindow,
 				if (m_knownArts.set) {
 					delete m_knownArts.set;
 				}
-				m_knownArts.set = nsMsgKeySet::Create(nsCAutoString(knownArtsString));
+        nsCAutoString knownartstringC;
+        knownartstringC.AssignWithConversion(knownArtsString);
+				m_knownArts.set = nsMsgKeySet::Create(knownartstringC);
 			}
 			else
 			{	

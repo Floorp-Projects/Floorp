@@ -655,7 +655,7 @@ nsresult nsAbCardDataSource::DoNewCard(nsIAbCard *card, nsISupportsArray *argume
 		literal->GetValue(&name);
 		nsString tempStr = name;
 		nsAllocator::Free(name);
-		nsCAutoString nameStr(tempStr);
+		nsCAutoString nameStr; nameStr.AssignWithConversion(tempStr);
 
 //		rv = card->CreateNewCard(nameStr);
 	}

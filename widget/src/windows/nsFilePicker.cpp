@@ -119,7 +119,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
         nsAutoString pathStr;
         PRUnichar *unichar = ConvertFromFileSystemCharset(fileBuffer);
         if (nsnull == unichar)
-          pathStr.Assign(fileBuffer);
+          pathStr.AssignWithConversion(fileBuffer);
         else {
           pathStr.Assign(unichar);
           delete [] unichar;
@@ -128,7 +128,7 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
         if (result == PR_TRUE) {
           // I think it also needs a conversion here (to unicode since appending to nsString) 
           // but doing that generates garbage file name, weird.
-          mFile.Append(pathStr);
+          mFile.AppendWithConversion(pathStr);
         }
       }
     }
@@ -220,33 +220,33 @@ NS_IMETHODIMP nsFilePicker::SetFilters(PRInt32 aFilterMask)
 
   mFilterList.SetLength(0);
   if (aFilterMask & filterAll) {
-    stringBundle->GetStringFromName(nsAutoString("allTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(nsAutoString("allFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("allTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("allFilter").GetUnicode(), &filter);
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterHTML) {
-    stringBundle->GetStringFromName(nsAutoString("htmlTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(nsAutoString("htmlFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("htmlTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("htmlFilter").GetUnicode(), &filter);
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterText) {
-    stringBundle->GetStringFromName(nsAutoString("textTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(nsAutoString("textFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("textTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("textFilter").GetUnicode(), &filter);
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterImages) {
-    stringBundle->GetStringFromName(nsAutoString("imageTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(nsAutoString("imageFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("imageTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("imageFilter").GetUnicode(), &filter);
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterXML) {
-    stringBundle->GetStringFromName(nsAutoString("xmlTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(nsAutoString("xmlFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xmlTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xmlFilter").GetUnicode(), &filter);
     AppendFilter(title,filter);
   }
   if (aFilterMask & filterXUL) {
-    stringBundle->GetStringFromName(nsAutoString("xulTitle").GetUnicode(), &title);
-    stringBundle->GetStringFromName(nsAutoString("xulFilter").GetUnicode(), &filter);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xulTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(NS_ConvertASCIItoUCS2("xulFilter").GetUnicode(), &filter);
     AppendFilter(title, filter);
   }
 
@@ -257,9 +257,9 @@ NS_IMETHODIMP nsFilePicker::AppendFilter(const PRUnichar *aTitle,
                                          const PRUnichar *aFilter)
 {
   mFilterList.Append(aTitle);
-  mFilterList.Append('\0');
+  mFilterList.AppendWithConversion('\0');
   mFilterList.Append(aFilter);
-  mFilterList.Append('\0');
+  mFilterList.AppendWithConversion('\0');
 
   return NS_OK;
 }
@@ -306,7 +306,7 @@ NS_IMETHODIMP nsFilePicker::GetFileURL(nsIFileURL **aFileURL)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFilePicker::SetDefaultString(const char *aString)
 {
-  mDefault = aString;
+  mDefault.AssignWithConversion(aString);
   return NS_OK;
 }
 
@@ -371,7 +371,7 @@ void nsFilePicker::GetFileSystemCharset(nsString & fileSystemCharset)
 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error getting platform charset");
 	  if (NS_FAILED(rv)) 
-		  aCharset.Assign("windows-1252");
+		  aCharset.AssignWithConversion("windows-1252");
   }
   fileSystemCharset = aCharset;
 }

@@ -420,7 +420,7 @@ nsresult nsEudoraWin32::ScanDescmap( nsIFileSpec *pFolder, nsISupportsArray *pAr
 
 nsresult nsEudoraWin32::FoundMailbox( nsIFileSpec *mailFile, const char *pName, nsISupportsArray *pArray, nsIImportService *pImport)
 {
-	nsString								displayName = pName;
+	nsString								displayName; displayName.AssignWithConversion(pName);
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
 
@@ -461,7 +461,7 @@ nsresult nsEudoraWin32::FoundMailbox( nsIFileSpec *mailFile, const char *pName, 
 
 nsresult nsEudoraWin32::FoundMailFolder( nsIFileSpec *mailFolder, const char *pName, nsISupportsArray *pArray, nsIImportService *pImport)
 {
-	nsString								displayName = pName;
+	nsString								displayName; displayName.AssignWithConversion(pName);
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
 
@@ -687,17 +687,17 @@ void nsEudoraWin32::GetAccountName( const char *pSection, nsString& str)
 	nsCString	s = pSection;
 	
 	if (!s.Compare( "Settings", PR_TRUE)) {
-		str = "Eudora ";
-		str.Append( pSection);
+		str.AssignWithConversion("Eudora ");
+		str.AppendWithConversion( pSection);
 	}
 	else {
 		nsCString tStr;
-		str = pSection;
+		str.AssignWithConversion(pSection);
 		if (s.Length() > 8) {
 			s.Left( tStr, 8);
 			if (!tStr.Compare( "Persona-", PR_TRUE)) {
 				s.Right( tStr, s.Length() - 8);
-				str = (const char *)tStr;
+				str.AssignWithConversion((const char *)tStr);
 			}
 		}
 	}
@@ -843,7 +843,7 @@ void nsEudoraWin32::SetIdentities( nsIMsgAccountManager *accMgr, nsIMsgAccount *
 		nsCOMPtr<nsIMsgIdentity>	id;
 		rv = accMgr->CreateIdentity( getter_AddRefs( id));
 		if (id) {
-			nsString fullName = realName;
+			nsString fullName; fullName.AssignWithConversion(realName);
 			id->SetFullName( fullName.GetUnicode());
 			id->SetIdentityName( fullName.GetUnicode());
 			id->SetEmail( email);
@@ -1357,11 +1357,11 @@ nsresult nsEudoraWin32::FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pN
 			return( rv);
 		if (!pLeaf)
 			return( NS_ERROR_FAILURE);
-		name = pLeaf;
+		name.AssignWithConversion(pLeaf);
 		nsCRT::free( pLeaf);
 		nsString	tStr;
 		name.Right( tStr, 4);
-		if (!tStr.Compare( ".txt", PR_TRUE)) {
+		if (!tStr.Compare( NS_ConvertASCIItoUCS2(".txt").GetUnicode(), PR_TRUE)) {
 			name.Left( tStr, name.Length() - 4);
 			name = tStr;
 		}

@@ -128,7 +128,7 @@ nsHTMLTags::LookupTag(const nsCString& aTag)
 
 nsHTMLTag 
 nsHTMLTags::LookupTag(const nsString& aTag) {
-  nsCAutoString theTag(aTag);
+  nsCAutoString theTag; theTag.AssignWithConversion(aTag);
   return LookupTag(theTag);
 }
 

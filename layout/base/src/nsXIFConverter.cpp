@@ -111,7 +111,7 @@ void nsXIFConverter::BeginStartTag(const nsString& aTag)
 
 void nsXIFConverter::BeginStartTag(nsIAtom* aTag)
 {
-  nsAutoString tag(mNULL);
+  nsAutoString tag; tag.Assign(mNULL);
 
   if (nsnull != aTag) 
     aTag->ToString(tag);

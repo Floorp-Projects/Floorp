@@ -887,8 +887,7 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
             // evaluate the string
             nsAutoString returnValue;
             PRBool isUndefined;
-
-            if (NS_SUCCEEDED(mContext->EvaluateString(nsString(cleanBuffer), 
+            if (NS_SUCCEEDED(mContext->EvaluateString(NS_ConvertASCIItoUCS2(cleanBuffer), 
                                                       nsnull,
                                                       nsnull,
                                                       nsnull,

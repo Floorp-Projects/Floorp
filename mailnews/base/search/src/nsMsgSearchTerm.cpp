@@ -356,7 +356,7 @@ nsresult nsMsgSearchTerm::OutputValue(nsCString &outputStr)
 			nsAutoString priority;
 			NS_MsgGetUntranslatedPriorityName( m_value.u.priority, 
 											 &priority);
-			outputStr += nsCAutoString(priority);
+			outputStr.AppendWithConversion(priority);
 			break;
 		}
 		default:

@@ -1158,19 +1158,21 @@ PUBLIC nsresult
 Wallet_Encrypt (nsAutoString text, nsAutoString& crypt) {
 
   /* convert text from unichar to UTF8 */
-  nsAutoString UTF8text = "";
+  //STRING USE WARNING: this CANT be right. utf8 text should not be stored in autostring
+
+  nsAutoString UTF8text;
   PRUnichar c;
   for (PRUint32 i=0; i<text.Length(); i++) {
     c = text.CharAt(i);
     if (c <= 0x7F) {
-      UTF8text += (char)c;
+      UTF8text.Append(c);
     } else if (c <= 0x7FF) {
-      UTF8text += ((PRUnichar)0xC0) | ((c>>6) & 0x1F);
-      UTF8text += ((PRUnichar)0x80) | (c & 0x3F);
+      UTF8text += PRUnichar((0xC0) | ((c>>6) & 0x1F));
+      UTF8text += PRUnichar((0x80) | (c & 0x3F));
     } else {
-      UTF8text += ((PRUnichar)0xE0) | ((c>>12) & 0xF);
-      UTF8text += ((PRUnichar)0x80) | ((c>>6) & 0x3F);
-      UTF8text += ((PRUnichar)0x80) | (c & 0x3F);
+      UTF8text += PRUnichar((0xE0) | ((c>>12) & 0xF));
+      UTF8text += PRUnichar((0x80) | ((c>>6) & 0x3F));
+      UTF8text += PRUnichar((0x80) | (c & 0x3F));
     }
   }
   
@@ -1189,7 +1191,7 @@ Wallet_Encrypt (nsAutoString text, nsAutoString& crypt) {
   if NS_FAILED(rv) {
     return rv;
   }
-  crypt = cryptCString;
+  crypt.AssignWithConversion(cryptCString);
   Recycle (cryptCString);
   return NS_OK;
 }
@@ -1216,15 +1218,15 @@ Wallet_Decrypt(nsAutoString crypt, nsAutoString& text) {
 
   /* convert text from UTF8 to unichar */
   PRUnichar c;
-  text = "";
+  text.SetLength(0);
   for (PRUint32 i=0; i<PL_strlen(UTF8textCString); ) {
     c = (PRUnichar)UTF8textCString[i++];    
     if ((c & 0x80) == 0x00) {
       text += c;
     } else if ((c & 0xE0) == 0xC0) {
-      text += (((c & 0x1F)<<6) + ((PRUnichar)UTF8textCString[i++] & 0x3F));
+      text += (PRUnichar)(((c & 0x1F)<<6) + ((PRUnichar)UTF8textCString[i++] & 0x3F));
     } else if ((c & 0xF0) == 0xE0) {
-      text += (((c & 0x0F)<<12) + (((PRUnichar)UTF8textCString[i++] & 0x3F)<<6)
+      text += (PRUnichar)(((c & 0x0F)<<12) + (((PRUnichar)UTF8textCString[i++] & 0x3F)<<6)
                                 + ((PRUnichar)UTF8textCString[i++] & 0x3F));
     } else {
       Recycle(UTF8textCString);
