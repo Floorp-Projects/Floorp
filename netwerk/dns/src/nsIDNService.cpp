@@ -128,6 +128,7 @@ NS_IMETHODIMP nsIDNService::ConvertUTF8toACE(const nsACString & input, nsACStrin
   nsAString::const_iterator start, end;
   ustr.BeginReading(start); 
   ustr.EndReading(end); 
+  ace.Truncate();
 
   // encode nodes if non ASCII
   while (start != end) {
