@@ -26,9 +26,8 @@
     </popup>
   </popupset>
 
-  <menupopup id="menu_FilePopup" oncommand="inspector.goToWindow(event.target);">
-
-    <menu 
+  <menupopup id="menu_FilePopup">
+    <menu oncommand="inspector.goToWindow(event.target);"
       id="mnWindowsFile" label="&mnWindows.label;" accesskey="&mnWindows.accesskey;"
       datasources="rdf:window-mediator" ref="NC:WindowMediatorRoot">
       <template>
