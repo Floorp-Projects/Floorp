@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.26 $ 
-# $Date: 2002/04/24 03:18:58 $ 
+# $Revision: 1.27 $ 
+# $Date: 2002/04/24 23:25:31 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -66,6 +66,10 @@
 #                      run the build scrips through cron and this will cause 
 #                      'deadtime'.
 #
+#	errors => The number of errors found in the build file, will be displayed 
+#			in the build cell.
+#	print => Any strings or links which were sent from the buildmachine 
+#		 to be displayed in the build cell.
 #       errorparser => The error parser to use when parsing the logfiles
 #       full-log  => The basename of the log file contianing the full log
 #       brief-log => The basename of the log file contianing the brief log
@@ -1120,8 +1124,17 @@ sub status_table_row {
     # Error count (not a link, but hey)
 
     if ($current_rec->{'errors'}) {
-      $links .= "\t\t<br>errs: ". 
-	$current_rec->{'errors'}."\n";
+        $links .= (
+                   "\t\t<br>errs: ". 
+                   $current_rec->{'errors'}."\n".
+                   "");
+    }
+
+    if ($current_rec->{'print'}) {
+        $links .= (
+                   "\t\t<br>". 
+                   $current_rec->{'print'}."\n".
+                   "");
     }
 
     
