@@ -140,7 +140,9 @@ word (as defined on this page).",
          q{<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
 <TR><TD><A HREF="http://www.mozilla.org/"><IMG
  SRC="http://www.mozilla.org/images/mozilla-banner.gif" ALT=""
-BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>});
+BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
+<CENTER><FONT SIZE=-1>Bugzilla version %version%
+</FONT></CENTER>});
 
 DefParam("blurbhtml",
          "A blurb that appears as part of the header of every Bugzilla page.  This is a place to put brief warnings, pointers to one or two related pages, etc.",
