@@ -55,7 +55,7 @@
 #if defined(XP_MAC)
 #include <AppleEvents.h>
 #include <Processes.h>
-#if !defined(DARWIN)
+#if !defined(XP_MACOSX)
 #include "pprthred.h"
 #endif
 #else
