@@ -275,7 +275,7 @@ nsSmtpService::loadSmtpServers()
             mSmtpServers->AppendElement(smtpServer);
         }
         
-        pref = nsCRT::strtok((char*)(const char*)serverList, ", ", &newStr);
+        pref = nsCRT::strtok(newStr, ", ", &newStr);
     }
 
     return NS_OK;
