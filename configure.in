@@ -382,13 +382,13 @@ TARGET_MD_ARCH=unix
 DIRENT_INO=d_ino
 
 MOZ_JPEG_CFLAGS=
-MOZ_JPEG_LIBS='-L$(DIST)/lib -ljpeg'
+MOZ_JPEG_LIBS='-L$(DIST)/lib -lmozjpeg'
 MOZ_ZLIB_CFLAGS=
-MOZ_ZLIB_LIBS='-L$(DIST)/lib -lz'
+MOZ_ZLIB_LIBS='-L$(DIST)/lib -lmozz'
 MOZ_PNG_CFLAGS=
-MOZ_PNG_LIBS='-L$(DIST)/lib -lpng'
+MOZ_PNG_LIBS='-L$(DIST)/lib -lmozpng'
 MOZ_MNG_CFLAGS=
-MOZ_MNG_LIBS='-L$(DIST)/lib -lmng'
+MOZ_MNG_LIBS='-L$(DIST)/lib -lmozmng'
 
 MOZ_JS_LIBS='-lmozjs'
 XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
@@ -815,10 +815,10 @@ case "$target" in
     LD='$(CC)'
     DSO_CFLAGS=''
     DSO_PIC_CFLAGS=''
-    MOZ_JPEG_LIBS='$(DIST)/lib/jpeg.$(LIB_SUFFIX)'
-    MOZ_ZLIB_LIBS='$(DIST)/lib/z.$(LIB_SUFFIX)'
-    MOZ_PNG_LIBS='$(DIST)/lib/png.$(LIB_SUFFIX)'
-    MOZ_MNG_LIBS='$(DIST)/lib/mng.$(LIB_SUFFIX)'
+    MOZ_JPEG_LIBS='$(DIST)/lib/mozjpeg.$(LIB_SUFFIX)'
+    MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
+    MOZ_PNG_LIBS='$(DIST)/lib/mozpng.$(LIB_SUFFIX)'
+    MOZ_MNG_LIBS='$(DIST)/lib/mozmng.$(LIB_SUFFIX)'
     MOZ_JS_LIBS='$(DIST)/lib/mozjs.lib'
     OS_ARCH=OS2
     OS_TARGET=OS2

@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= jpeg
-LIBRARY_NAME	= jpeg
+LIBRARY_NAME	= mozjpeg
 
 
 CSRCS		= \
