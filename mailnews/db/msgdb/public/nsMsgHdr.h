@@ -112,7 +112,7 @@ public:
 protected:
     nsresult	SetStringColumn(const char *str, mdb_token token);
     nsresult	SetUInt32Column(PRUint32 value, mdb_token token);
-    nsresult	GetUInt32Column(mdb_token token, PRUint32 *pvalue);
+    nsresult	GetUInt32Column(mdb_token token, PRUint32 *pvalue, PRUint32 defaultValue = 0);
 
 	// reference and threading stuff.
 	const char*	GetNextReference(const char *startNextRef, nsCString &reference);

@@ -640,7 +640,7 @@ NS_IMETHODIMP nsMsgHdr::SetThreadParent(nsMsgKey inKey)
 NS_IMETHODIMP nsMsgHdr::GetThreadParent(nsMsgKey *result)
 {
 	nsresult res;
-    res = GetUInt32Column(m_mdb->m_threadParentColumnToken, &m_threadParent);
+    res = GetUInt32Column(m_mdb->m_threadParentColumnToken, &m_threadParent, nsMsgKey_None);
     *result = m_threadParent;
     return NS_OK;
 }
@@ -669,9 +669,9 @@ nsresult nsMsgHdr::SetUInt32Column(PRUint32 value, mdb_token token)
 	return m_mdbRow->AddColumn(m_mdb->GetEnv(),  token, nsMsgDatabase::UInt32ToYarn(&yarn, value));
 }
 
-nsresult nsMsgHdr::GetUInt32Column(mdb_token token, PRUint32 *pvalue)
+nsresult nsMsgHdr::GetUInt32Column(mdb_token token, PRUint32 *pvalue, PRUint32 defaultValue)
 {
-	return m_mdb->RowCellColumnToUInt32(GetMDBRow(), token, pvalue);
+	return m_mdb->RowCellColumnToUInt32(GetMDBRow(), token, pvalue, defaultValue);
 }
 
 // get the next <> delimited reference from nextRef and copy it into reference,
