@@ -1851,18 +1851,6 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
 
     AdjustComputedWidth(); 
 
-#ifdef IBMBIDI
-    // See what edge the width applies to (the default is the content
-    // edge)
-    if (mComputedWidth != NS_UNCONSTRAINEDSIZE) {
-      if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_PADDING) {
-        mComputedWidth -= mComputedPadding.left + mComputedPadding.right;
-      } else if (mStylePosition->mBoxSizing == NS_STYLE_BOX_SIZING_BORDER) {
-        mComputedWidth -= mComputedBorderPadding.left + mComputedBorderPadding.right;
-      }
-    }
-#endif // IBMBIDI
-
     // Now that we have the computed-width, compute the side margins
     CalculateBlockSideMargins(cbrs->mComputedWidth, mComputedWidth);
   }
