@@ -76,6 +76,23 @@
     newWin.saveFileAndPos = true;
   }
 
+  function openNewTabWith(url) {
+
+	urlSecurityCheck(url, document);
+    var wintype = document.firstChild.getAttribute('windowtype');
+
+    // if and only if the current window is a browser window and it has a document with a character
+    // set, then extract the current charset menu setting from the current document and use it to
+    // initialize the new browser window...
+    if (window && (wintype == "navigator:browser")) {
+		var browser=getBrowser();
+		browser.selectedTab = browser.addTab(url);
+    }
+ 
+    // Fix new window.    
+    newWin.saveFileAndPos = true;
+  }
+
   function savePage(url) 
   {
     var postData = null; // No post data, usually.
