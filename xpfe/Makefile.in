@@ -26,7 +26,10 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= browser components/shistory communicator global
+DIRS		= browser components/shistory communicator
+ifndef MOZ_PHOENIX
+DIRS		+= global
+endif
 
 # Because of our great use of encapsulation, there are
 # some header file in xpfe/components that are required
