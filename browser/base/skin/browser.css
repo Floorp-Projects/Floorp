@@ -107,6 +107,11 @@ menuitem.bookmark-item {
   margin-top: -1px;
 }
 
+.bookmark-item > .menu-iconic-left > .menu-iconic-icon {
+  width: 16px;
+  height: 16px;
+}
+
 /* ..... drag and drop styles ..... */
 
 .bookmark-item[dragover-left="true"] {
