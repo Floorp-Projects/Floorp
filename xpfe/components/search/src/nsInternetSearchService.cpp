@@ -73,13 +73,14 @@
 #include "winbase.h"
 #endif
 
-
-#define	POSTHEADER_PREFIX	"Content-type: application/x-www-form-urlencoded; charset=ISO-8859-1\r\nContent-Length: "
-#define	POSTHEADER_SUFFIX	"\r\n\r\n"
-
 #ifdef	DEBUG
 // #define	DEBUG_SEARCH_OUTPUT	1
 #endif
+
+
+
+#define	POSTHEADER_PREFIX	"Content-type: application/x-www-form-urlencoded; charset=ISO-8859-1\r\nContent-Length: "
+#define	POSTHEADER_SUFFIX	"\r\n\r\n"
 
 
 
@@ -98,57 +99,106 @@ static const char kURINC_SearchResultsAnonymous[]     = "NC:SearchResultsAnonymo
 
 
 
-class InternetSearchDataSourceCallback : public nsIStreamListener
+class	InternetSearchContext : public nsIInternetSearchContext
 {
 private:
-	nsIRDFDataSource	*mDataSource;
-	nsIRDFResource		*mParent;
-	nsIRDFResource		*mEngine;
-	static PRInt32		gRefCnt;
-
-    // pseudo-constants    
-	static nsIRDFResource	*kNC_LastSearchRoot;
-	static nsIRDFResource	*kNC_loading;
-	static nsIRDFResource	*kNC_Child;
-	static nsIRDFResource	*kNC_URL;
-	static nsIRDFResource	*kNC_Name;
-	static nsIRDFResource	*kNC_Data;
-	static nsIRDFResource	*kNC_Relevance;
-	static nsIRDFResource	*kNC_RelevanceSort;
-	static nsIRDFResource	*kNC_Site;
-	static nsIRDFResource	*kNC_Engine;
-	static nsIRDFResource	*kNC_HTML;
-	static nsIRDFResource	*kNC_Banner;
-	static nsIRDFResource	*kNC_Icon;
-	static nsIRDFResource	*kNC_StatusIcon;
-
-	nsAutoString		mBuffer;
-
-	nsresult	CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult);
+	nsCOMPtr<nsIRDFResource>	mParent;
+	nsCOMPtr<nsIRDFResource>	mEngine;
+	nsAutoString			mBuffer;
 
 public:
-
-	NS_DECL_ISUPPORTS
-
-			InternetSearchDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent, nsIRDFResource *engine);
-	virtual		~InternetSearchDataSourceCallback(void);
+			InternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine);
+	virtual		~InternetSearchContext(void);
 	NS_METHOD	Init();
 
-	// nsIStreamObserver methods:
-	NS_DECL_NSISTREAMOBSERVER
+friend	NS_IMETHODIMP	NS_NewInternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine,
+							nsIInternetSearchContext **aResult);
 
-	// nsIStreamListener methods:
-	NS_DECL_NSISTREAMLISTENER
+	NS_DECL_ISUPPORTS
+	NS_DECL_NSIINTERNETSEARCHCONTEXT
 };
 
 
 
-nsresult
-NS_NewInternetSearchStreamListener(nsIRDFDataSource *aDataSource, nsIRDFResource *aParent,
-			nsIRDFResource *aEngine, nsIStreamListener** aResult)
+InternetSearchContext::~InternetSearchContext(void)
 {
-	 InternetSearchDataSourceCallback* result =
-		 new InternetSearchDataSourceCallback(aDataSource, aParent, aEngine);
+}
+
+
+
+InternetSearchContext::InternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine)
+	: mParent(aParent), mEngine(aEngine)
+{
+	NS_INIT_ISUPPORTS();
+}
+
+
+
+NS_IMETHODIMP
+InternetSearchContext::Init()
+{
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+InternetSearchContext::GetEngine(nsIRDFResource **node)
+{
+	*node = mEngine;
+	NS_IF_ADDREF(*node);
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+InternetSearchContext::GetParent(nsIRDFResource **node)
+{
+	*node = mParent;
+	NS_IF_ADDREF(*node);
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+InternetSearchContext::AppendBytes(const char *buffer, PRInt32 numBytes)
+{
+	mBuffer.Append(buffer, numBytes);
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+InternetSearchContext::GetBuffer(PRUnichar **buffer)
+{
+	*buffer = NS_CONST_CAST(PRUnichar *, mBuffer.GetUnicode());
+	return(NS_OK);
+}
+
+
+
+NS_IMETHODIMP
+InternetSearchContext::Truncate()
+{
+	mBuffer.Truncate();
+	return(NS_OK);
+}
+
+
+
+NS_IMPL_ISUPPORTS(InternetSearchContext, nsIInternetSearchContext::GetIID());
+
+
+
+nsresult
+NS_NewInternetSearchContext(nsIRDFResource *aParent, nsIRDFResource *aEngine,
+				nsIInternetSearchContext **aResult)
+{
+	 InternetSearchContext *result =
+		 new InternetSearchContext(aParent, aEngine);
 
 	 if (! result)
 		 return NS_ERROR_OUT_OF_MEMORY;
@@ -166,11 +216,13 @@ NS_NewInternetSearchStreamListener(nsIRDFDataSource *aDataSource, nsIRDFResource
 
 
 
-class InternetSearchDataSource : public nsIInternetSearchService, public nsIRDFDataSource
+class InternetSearchDataSource : public nsIInternetSearchService,
+				 public nsIRDFDataSource, nsIStreamListener
 {
 private:
 	static PRInt32			gRefCnt;
 	PRBool				mEngineListBuilt;
+	nsCOMPtr<nsISupportsArray>	mConnections;
 
     // pseudo-constants
 	static nsIRDFResource		*kNC_SearchEngineRoot;
@@ -188,6 +240,12 @@ private:
 	static nsIRDFResource		*kNC_HTML;
 	static nsIRDFResource		*kNC_Icon;
 	static nsIRDFResource		*kNC_StatusIcon;
+
+	static nsIRDFResource		*kNC_Banner;
+	static nsIRDFResource		*kNC_Site;
+	static nsIRDFResource		*kNC_Relevance;
+	static nsIRDFResource		*kNC_RelevanceSort;
+	static nsIRDFResource		*kNC_Engine;
 
 protected:
 	static nsIRDFDataSource		*mInner;
@@ -211,6 +269,7 @@ friend	NS_IMETHODIMP	NS_NewInternetSearchService(nsISupports* aOuter, REFNSIID a
 static	nsresult	GetData(nsString data, char *sectionToFind, char *attribToFind, nsString &value);
 	nsresult	GetInputs(nsString data, nsString text, nsString &input);
 	nsresult	GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult);
+	nsresult	CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult);
 
 
 			InternetSearchDataSource(void);
@@ -219,77 +278,23 @@ static	nsresult	GetData(nsString data, char *sectionToFind, char *attribToFind, 
 
 public:
 
-friend	class		InternetSearchDataSourceCallback;
-
 	NS_DECL_ISUPPORTS
 
 	NS_DECL_NSIINTERNETSEARCHSERVICE
 
+	// nsIStreamObserver methods:
+	NS_DECL_NSISTREAMOBSERVER
+
+	// nsIStreamListener methods:
+	NS_DECL_NSISTREAMLISTENER
+
 	// nsIRDFDataSource methods
-
-	NS_IMETHOD	GetURI(char **uri);
-	NS_IMETHOD	GetSource(nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv,
-				nsIRDFResource **source /* out */);
-	NS_IMETHOD	GetSources(nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv,
-				nsISimpleEnumerator **sources /* out */);
-	NS_IMETHOD	GetTarget(nsIRDFResource *source,
-				nsIRDFResource *property,
-				PRBool tv,
-				nsIRDFNode **target /* out */);
-	NS_IMETHOD	GetTargets(nsIRDFResource *source,
-				nsIRDFResource *property,
-				PRBool tv,
-				nsISimpleEnumerator **targets /* out */);
-	NS_IMETHOD	Assert(nsIRDFResource *source,
-				nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv);
-	NS_IMETHOD	Unassert(nsIRDFResource *source,
-				nsIRDFResource *property,
-				nsIRDFNode *target);
-	NS_IMETHOD	Change(nsIRDFResource* aSource,
-				nsIRDFResource* aProperty,
-				nsIRDFNode* aOldTarget,
-				nsIRDFNode* aNewTarget);
-	NS_IMETHOD	Move(nsIRDFResource* aOldSource,
-				nsIRDFResource* aNewSource,
-				nsIRDFResource* aProperty,
-				nsIRDFNode* aTarget);
-	NS_IMETHOD	HasAssertion(nsIRDFResource *source,
-				nsIRDFResource *property,
-				nsIRDFNode *target,
-				PRBool tv,
-				PRBool *hasAssertion /* out */);
-	NS_IMETHOD	ArcLabelsIn(nsIRDFNode *node,
-				nsISimpleEnumerator **labels /* out */);
-	NS_IMETHOD	ArcLabelsOut(nsIRDFResource *source,
-				nsISimpleEnumerator **labels /* out */);
-	NS_IMETHOD	GetAllResources(nsISimpleEnumerator** aResult);
-	NS_IMETHOD	AddObserver(nsIRDFObserver *n);
-	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
-	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
-				nsIEnumerator/*<nsIRDFResource>*/** commands);
-	NS_IMETHOD	GetAllCmds(nsIRDFResource* source,
-				nsISimpleEnumerator/*<nsIRDFResource>*/** commands);
-
-	NS_IMETHOD	IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-				nsIRDFResource*   aCommand,
-				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
-				PRBool* aResult);
-
-	NS_IMETHOD	DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
-				nsIRDFResource*   aCommand,
-				nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+	NS_DECL_NSIRDFDATASOURCE
 };
 
 
 
 static	nsIRDFService		*gRDFService = nsnull;
-static	InternetSearchDataSource	*gInternetSearchDataSource = nsnull;
 
 PRInt32				InternetSearchDataSource::gRefCnt;
 nsIRDFDataSource		*InternetSearchDataSource::mInner = nsnull;
@@ -310,26 +315,91 @@ nsIRDFResource			*InternetSearchDataSource::kNC_loading;
 nsIRDFResource			*InternetSearchDataSource::kNC_HTML;
 nsIRDFResource			*InternetSearchDataSource::kNC_Icon;
 nsIRDFResource			*InternetSearchDataSource::kNC_StatusIcon;
+nsIRDFResource			*InternetSearchDataSource::kNC_Banner;
+nsIRDFResource			*InternetSearchDataSource::kNC_Site;
+nsIRDFResource			*InternetSearchDataSource::kNC_Relevance;
+nsIRDFResource			*InternetSearchDataSource::kNC_RelevanceSort;
+nsIRDFResource			*InternetSearchDataSource::kNC_Engine;
 
-PRInt32				InternetSearchDataSourceCallback::gRefCnt;
 
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_LastSearchRoot;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_Child;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_URL;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_Name;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_Data;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_Relevance;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_RelevanceSort;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_Site;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_Engine;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_loading;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_HTML;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_Banner;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_Icon;
-nsIRDFResource			*InternetSearchDataSourceCallback::kNC_StatusIcon;
 
 static const char		kEngineProtocol[] = "engine://";
 static const char		kSearchProtocol[] = "internetsearch:";
+
+
+
+InternetSearchDataSource::InternetSearchDataSource(void)
+{
+	NS_INIT_REFCNT();
+
+	if (gRefCnt++ == 0)
+	{
+		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
+			nsIRDFService::GetIID(), (nsISupports**) &gRDFService);
+
+		PR_ASSERT(NS_SUCCEEDED(rv));
+
+		rv = NS_NewISupportsArray(getter_AddRefs(mConnections));
+
+		gRDFService->GetResource(kURINC_SearchEngineRoot,                &kNC_SearchEngineRoot);
+		gRDFService->GetResource(kURINC_LastSearchRoot,                  &kNC_LastSearchRoot);
+		gRDFService->GetResource(kURINC_SearchResultsSitesRoot,          &kNC_SearchResultsSitesRoot);
+		gRDFService->GetResource(NC_NAMESPACE_URI "SearchCategoryRoot",  &kNC_SearchCategoryRoot);
+		gRDFService->GetResource(NC_NAMESPACE_URI "ref",                 &kNC_Ref);
+		gRDFService->GetResource(NC_NAMESPACE_URI "child",               &kNC_Child);
+		gRDFService->GetResource(NC_NAMESPACE_URI "data",                &kNC_Data);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Name",                &kNC_Name);
+		gRDFService->GetResource(NC_NAMESPACE_URI "URL",                 &kNC_URL);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",         &kRDF_InstanceOf);
+		gRDFService->GetResource(RDF_NAMESPACE_URI "type",               &kRDF_type);
+		gRDFService->GetResource(NC_NAMESPACE_URI "loading",             &kNC_loading);
+		gRDFService->GetResource(NC_NAMESPACE_URI "HTML",                &kNC_HTML);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Icon",                &kNC_Icon);
+		gRDFService->GetResource(NC_NAMESPACE_URI "StatusIcon",          &kNC_StatusIcon);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Banner",              &kNC_Banner);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Site",                &kNC_Site);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Relevance",           &kNC_Relevance);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Relevance?sort=true", &kNC_RelevanceSort);
+		gRDFService->GetResource(NC_NAMESPACE_URI "Engine",              &kNC_Engine);
+	}
+}
+
+
+
+InternetSearchDataSource::~InternetSearchDataSource (void)
+{
+	if (--gRefCnt == 0)
+	{
+		NS_IF_RELEASE(kNC_SearchEngineRoot);
+		NS_IF_RELEASE(kNC_LastSearchRoot);
+		NS_IF_RELEASE(kNC_SearchCategoryRoot);
+		NS_IF_RELEASE(kNC_SearchResultsSitesRoot);
+		NS_IF_RELEASE(kNC_Ref);
+		NS_IF_RELEASE(kNC_Child);
+		NS_IF_RELEASE(kNC_Data);
+		NS_IF_RELEASE(kNC_Name);
+		NS_IF_RELEASE(kNC_URL);
+		NS_IF_RELEASE(kRDF_InstanceOf);
+		NS_IF_RELEASE(kRDF_type);
+		NS_IF_RELEASE(kNC_loading);
+		NS_IF_RELEASE(kNC_HTML);
+		NS_IF_RELEASE(kNC_Icon);
+		NS_IF_RELEASE(kNC_StatusIcon);
+		NS_IF_RELEASE(kNC_Banner);
+		NS_IF_RELEASE(kNC_Site);
+		NS_IF_RELEASE(kNC_Relevance);
+		NS_IF_RELEASE(kNC_RelevanceSort);
+		NS_IF_RELEASE(kNC_Engine);
+
+		NS_IF_RELEASE(mInner);
+
+		if (gRDFService)
+		{
+			nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
+			gRDFService = nsnull;
+		}
+	}
+}
 
 
 
@@ -424,74 +494,11 @@ InternetSearchDataSource::resolveSearchCategoryEngineURI(nsIRDFResource *engine,
 
 
 
-InternetSearchDataSource::InternetSearchDataSource(void)
-{
-	NS_INIT_REFCNT();
-
-	if (gRefCnt++ == 0)
-	{
-		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-			nsIRDFService::GetIID(), (nsISupports**) &gRDFService);
-
-		PR_ASSERT(NS_SUCCEEDED(rv));
-
-		gRDFService->GetResource(kURINC_SearchEngineRoot,               &kNC_SearchEngineRoot);
-		gRDFService->GetResource(kURINC_LastSearchRoot,                 &kNC_LastSearchRoot);
-		gRDFService->GetResource(kURINC_SearchResultsSitesRoot,         &kNC_SearchResultsSitesRoot);
-		gRDFService->GetResource(NC_NAMESPACE_URI "SearchCategoryRoot", &kNC_SearchCategoryRoot);
-		gRDFService->GetResource(NC_NAMESPACE_URI "ref",                &kNC_Ref);
-		gRDFService->GetResource(NC_NAMESPACE_URI "child",              &kNC_Child);
-		gRDFService->GetResource(NC_NAMESPACE_URI "data",               &kNC_Data);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Name",               &kNC_Name);
-		gRDFService->GetResource(NC_NAMESPACE_URI "URL",                &kNC_URL);
-		gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf",        &kRDF_InstanceOf);
-		gRDFService->GetResource(RDF_NAMESPACE_URI "type",              &kRDF_type);
-		gRDFService->GetResource(NC_NAMESPACE_URI "loading",            &kNC_loading);
-		gRDFService->GetResource(NC_NAMESPACE_URI "HTML",               &kNC_HTML);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Icon",               &kNC_Icon);
-		gRDFService->GetResource(NC_NAMESPACE_URI "StatusIcon",         &kNC_StatusIcon);
-
-		gInternetSearchDataSource = this;
-	}
-}
-
-
-
-InternetSearchDataSource::~InternetSearchDataSource (void)
-{
-	if (--gRefCnt == 0)
-	{
-		NS_IF_RELEASE(kNC_SearchEngineRoot);
-		NS_IF_RELEASE(kNC_LastSearchRoot);
-		NS_IF_RELEASE(kNC_SearchCategoryRoot);
-		NS_IF_RELEASE(kNC_SearchResultsSitesRoot);
-		NS_IF_RELEASE(kNC_Ref);
-		NS_IF_RELEASE(kNC_Child);
-		NS_IF_RELEASE(kNC_Data);
-		NS_IF_RELEASE(kNC_Name);
-		NS_IF_RELEASE(kNC_URL);
-		NS_IF_RELEASE(kRDF_InstanceOf);
-		NS_IF_RELEASE(kRDF_type);
-		NS_IF_RELEASE(kNC_loading);
-		NS_IF_RELEASE(kNC_HTML);
-		NS_IF_RELEASE(kNC_Icon);
-		NS_IF_RELEASE(kNC_StatusIcon);
-
-		NS_IF_RELEASE(mInner);
-
-		gInternetSearchDataSource = nsnull;
-		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-		gRDFService = nsnull;
-	}
-}
-
-
-
 ////////////////////////////////////////////////////////////////////////
 
 
 
-NS_IMPL_ISUPPORTS2(InternetSearchDataSource, nsIInternetSearchService, nsIRDFDataSource);
+NS_IMPL_ISUPPORTS3(InternetSearchDataSource, nsIInternetSearchService, nsIRDFDataSource, nsIStreamListener);
 
 
 
@@ -1087,6 +1094,60 @@ InternetSearchDataSource::GetCategoryDataSource(nsIRDFDataSource **ds)
 
 
 
+NS_IMETHODIMP
+InternetSearchDataSource::Stop()
+{
+	// cancel any outstanding connections
+	if (mConnections)
+	{
+		PRUint32	count=0, loop;
+		mConnections->Count(&count);
+		for (loop=0; loop < count; loop++)
+		{
+			nsCOMPtr<nsISupports>	iSupports = mConnections->ElementAt(loop);
+			if (!iSupports)	continue;
+			nsCOMPtr<nsIChannel>	channel = do_QueryInterface(iSupports);
+			if (channel)
+			{
+				channel->Cancel();
+			}
+		}
+
+		mConnections->Clear();
+	}
+
+	// remove any loading icons
+	nsresult		rv;
+	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(),
+		getter_AddRefs(trueLiteral))))
+	{
+		nsCOMPtr<nsISimpleEnumerator>	arcs;
+		if (NS_SUCCEEDED(rv = mInner->GetSources(kNC_loading, trueLiteral, PR_TRUE,
+			getter_AddRefs(arcs))))
+		{
+			PRBool			hasMore = PR_TRUE;
+			while (hasMore == PR_TRUE)
+			{
+				if (NS_FAILED(arcs->HasMoreElements(&hasMore)) || (hasMore == PR_FALSE))
+					break;
+				nsCOMPtr<nsISupports>	arc;
+				if (NS_FAILED(arcs->GetNext(getter_AddRefs(arc))))
+					break;
+				nsCOMPtr<nsIRDFResource>	src = do_QueryInterface(arc);
+				if (src)
+				{
+					mInner->Unassert(src, kNC_loading, trueLiteral);
+				}
+			}
+		}
+	}
+
+	return(NS_OK);
+}
+
+
+
 nsresult
 InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNetworkRequest)
 {
@@ -1233,6 +1294,13 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 		}
 	}
 
+	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(),
+		getter_AddRefs(trueLiteral))))
+	{
+		mInner->Assert(source, kNC_loading, trueLiteral, PR_TRUE);
+	}
+
 	// loop over specified search engines
 	while (engineArray->Count() > 0)
 	{
@@ -1276,6 +1344,18 @@ InternetSearchDataSource::BeginSearchRequest(nsIRDFResource *source, PRBool doNe
 	
 	delete engineArray;
 	engineArray = nsnull;
+
+	// if we weren't able to establish any connections, remove the loading attribute
+	// here; otherwise, it will be done when the last connection completes
+	if (mConnections)
+	{
+		PRUint32	count=0;
+		mConnections->Count(&count);
+		if (count < 1)
+		{
+			mInner->Unassert(source, kNC_loading, trueLiteral);
+		}
+	}
 
 	return(rv);
 }
@@ -1393,58 +1473,46 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 		action += input;
 	}
 
-	char	*searchURL = action.ToNewCString();
-	if (!searchURL)
-		return(NS_ERROR_NULL_POINTER);
+	nsCOMPtr<nsIInternetSearchContext>	context;
+	if (NS_FAILED(rv = NS_NewInternetSearchContext(source, engine, getter_AddRefs(context))))
+		return(rv);
+	if (!context)	return(NS_ERROR_UNEXPECTED);
 
-	nsCOMPtr<nsIStreamListener> callback;
-	rv = NS_NewInternetSearchStreamListener(mInner, source, engine, getter_AddRefs(callback));
-	if (NS_SUCCEEDED(rv) && (nsnull != callback))
+	nsCOMPtr<nsIURI>	url;
+	if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), nsCAutoString(action))))
 	{
-		nsCOMPtr<nsIURI>	url;
-		if (NS_SUCCEEDED(rv = NS_NewURI(getter_AddRefs(url), (const char*) searchURL)))
+		nsCOMPtr<nsIChannel>	channel;
+		// XXX: Null LoadGroup ?
+		if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull)))
 		{
 			if (method.EqualsIgnoreCase("post"))
 			{
-				nsCOMPtr<nsIChannel>	channel;
-				// XXX: Null LoadGroup ?
-				if (NS_SUCCEEDED(rv = NS_OpenURI(getter_AddRefs(channel), url, nsnull)))
+				nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
+				if (httpChannel)
 				{
-					nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
-					if (httpChannel)
-					{
-						httpChannel->SetRequestMethod(HM_POST);
+					httpChannel->SetRequestMethod(HM_POST);
 
-				        	// construct post data to send
-				        	nsAutoString	postStr(POSTHEADER_PREFIX);
-				        	postStr.Append(input.Length(), 10);
-				        	postStr += POSTHEADER_SUFFIX;
-				        	postStr += input;
-				        	
-						char	*postData = postStr.ToNewCString();
-						if (postData)
-						{
-							nsCOMPtr<nsIInputStream>	postDataStream;
-							if (NS_SUCCEEDED(rv = NS_NewPostDataStream(PR_FALSE, postData,
-								0, getter_AddRefs(postDataStream))))
-							{
-								httpChannel->SetPostDataStream(postDataStream);
-								/* postData is now owned by the postDataStream instance... ? */
-								rv = channel->AsyncRead(0, -1, nsnull, callback);
-							}
-							else
-							{
-								nsCRT::free(postData);
-								postData = nsnull;
-							}
-						}
+			        	// construct post data to send
+			        	nsAutoString	postStr(POSTHEADER_PREFIX);
+			        	postStr.Append(input.Length(), 10);
+			        	postStr += POSTHEADER_SUFFIX;
+			        	postStr += input;
+			        	
+					nsCOMPtr<nsIInputStream>	postDataStream;
+					if (NS_SUCCEEDED(rv = NS_NewPostDataStream(PR_FALSE, nsCAutoString(postStr),
+						0, getter_AddRefs(postDataStream))))
+					{
+						httpChannel->SetPostDataStream(postDataStream);
 					}
 				}
 			}
-			else if (method.EqualsIgnoreCase("get"))
+
+			if (NS_SUCCEEDED(rv = channel->AsyncRead(0, -1, context, this)))
 			{
-				// XXX: Null LoadGroup?
-				rv = NS_OpenURI(NS_STATIC_CAST(nsIStreamListener *, callback), nsnull, url, nsnull);
+				if (mConnections)
+				{
+					mConnections->AppendElement(channel);
+				}
 			}
 		}
 	}
@@ -1471,16 +1539,13 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 			rv = mInner->Unassert(engine, kNC_StatusIcon, engineIconNode);
 		}
 
-		nsAutoString		trueStr("true");
 		nsCOMPtr<nsIRDFLiteral>	literal;
-		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), getter_AddRefs(literal))))
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(), getter_AddRefs(literal))))
 		{
 			mInner->Assert(engine, kNC_loading, literal, PR_TRUE);
 		}
 	}
 
-	nsCRT::free(searchURL);
-	searchURL = nsnull;
 	return(rv);
 }
 
@@ -1992,81 +2057,8 @@ InternetSearchDataSource::GetURL(nsIRDFResource *source, nsIRDFLiteral** aResult
 
 
 
-InternetSearchDataSourceCallback::InternetSearchDataSourceCallback(nsIRDFDataSource *ds, nsIRDFResource *parent, nsIRDFResource *engine)
-	: mDataSource(ds),
-	  mParent(parent),
-	  mEngine(engine)
-{
-	NS_INIT_REFCNT();
-	NS_IF_ADDREF(mDataSource);
-	NS_IF_ADDREF(mParent);
-	NS_IF_ADDREF(mEngine);
-}
-
-
-
-InternetSearchDataSourceCallback::~InternetSearchDataSourceCallback()
-{
-	NS_IF_RELEASE(mDataSource);
-	NS_IF_RELEASE(mParent);
-	NS_IF_RELEASE(mEngine);
-
-	if (--gRefCnt == 0)
-	{
-		NS_IF_RELEASE(kNC_LastSearchRoot);
-		NS_IF_RELEASE(kNC_Child);
-		NS_IF_RELEASE(kNC_URL);
-		NS_IF_RELEASE(kNC_Name);
-		NS_IF_RELEASE(kNC_Data);
-		NS_IF_RELEASE(kNC_Relevance);
-		NS_IF_RELEASE(kNC_RelevanceSort);
-		NS_IF_RELEASE(kNC_Site);
-		NS_IF_RELEASE(kNC_Engine);
-		NS_IF_RELEASE(kNC_loading);
-		NS_IF_RELEASE(kNC_HTML);
-		NS_IF_RELEASE(kNC_Banner);
-		NS_IF_RELEASE(kNC_Icon);
-		NS_IF_RELEASE(kNC_StatusIcon);
-
-		nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-	}
-}
-
-
-
-NS_METHOD
-InternetSearchDataSourceCallback::Init()
-{
-	if (gRefCnt++ == 0)
-	{
-		nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                   nsIRDFService::GetIID(),
-                                                   (nsISupports**) &gRDFService);
-
-		PR_ASSERT(NS_SUCCEEDED(rv));
-
-		gRDFService->GetResource(kURINC_LastSearchRoot, &kNC_LastSearchRoot);
-		gRDFService->GetResource(NC_NAMESPACE_URI "child", &kNC_Child);
-		gRDFService->GetResource(NC_NAMESPACE_URI "URL", &kNC_URL);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Name", &kNC_Name);
-		gRDFService->GetResource(NC_NAMESPACE_URI "data", &kNC_Data);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Relevance", &kNC_Relevance);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Relevance?sort=true", &kNC_RelevanceSort);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Site", &kNC_Site);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Engine", &kNC_Engine);
-		gRDFService->GetResource(NC_NAMESPACE_URI "loading", &kNC_loading);
-		gRDFService->GetResource(NC_NAMESPACE_URI "HTML", &kNC_HTML);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Banner", &kNC_Banner);
-		gRDFService->GetResource(NC_NAMESPACE_URI "Icon", &kNC_Icon);
-		gRDFService->GetResource(NC_NAMESPACE_URI "StatusIcon", &kNC_StatusIcon);
-	}
-	 return(NS_OK);
-}
-
-
-
 nsresult
-InternetSearchDataSourceCallback::CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult)
+InternetSearchDataSource::CreateAnonymousResource(nsCOMPtr<nsIRDFResource>* aResult)
 {
 	static	PRInt32		gNext = 0;
 
@@ -2080,16 +2072,7 @@ InternetSearchDataSourceCallback::CreateAnonymousResource(nsCOMPtr<nsIRDFResourc
 	uri.Append("#$");
 	uri.Append(++gNext, 16);
 
-	char			*uriC = uri.ToNewCString();
-	if (uriC)
-	{
-		rv = gRDFService->GetResource(uriC, getter_AddRefs(*aResult));
-		nsCRT::free(uriC);
-	}
-	else
-	{
-		rv = NS_ERROR_NULL_POINTER;
-	}
+	rv = gRDFService->GetResource(nsCAutoString(uri), getter_AddRefs(*aResult));
 	return(rv);
 }
 
@@ -2100,59 +2083,72 @@ InternetSearchDataSourceCallback::CreateAnonymousResource(nsCOMPtr<nsIRDFResourc
 
 
 NS_IMETHODIMP
-InternetSearchDataSourceCallback::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
+InternetSearchDataSource::OnStartRequest(nsIChannel* channel, nsISupports *ctxt)
 {
-	nsAutoString		trueStr("true");
-	nsIRDFLiteral		*literal = nsnull;
-	nsresult		rv;
-
 #ifdef	DEBUG_SEARCH_OUTPUT
 	printf("InternetSearchDataSourceCallback::OnStartRequest entered.\n");
 #endif
-
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), &literal)))
-	{
-		mDataSource->Assert(mParent, kNC_loading, literal, PR_TRUE);
-		
-		// Don't starting loading animation for engine here.
-		// Instead, we now do it when the URI is initially opened
-		// which gives a longer and more accurate animation period
-
-//		mDataSource->Assert(mEngine, kNC_loading, literal, PR_TRUE);
-		NS_RELEASE(literal);
-	}
 	return(NS_OK);
 }
 
 
 
 NS_IMETHODIMP
-InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
+InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 					nsresult status, const PRUnichar *errorMsg) 
 {
-	nsAutoString		trueStr("true");
-	nsCOMPtr<nsIRDFLiteral>	literal = nsnull;
-	nsresult		rv;
+	if (mConnections)
+	{
+		mConnections->RemoveElement(channel);
+	}
+
+	nsCOMPtr<nsIInternetSearchContext>	context = do_QueryInterface(ctxt);
+	if (!ctxt)	return(NS_ERROR_NO_INTERFACE);
+
+	nsresult			rv;
+	nsCOMPtr<nsIRDFResource>	mParent;
+	if (NS_FAILED(rv = context->GetParent(getter_AddRefs(mParent))))	return(rv);
+	if (!mParent)	return(NS_ERROR_NO_INTERFACE);
+
+	nsCOMPtr<nsIRDFResource>	mEngine;
+	if (NS_FAILED(rv = context->GetEngine(getter_AddRefs(mEngine))))	return(rv);
+	if (!mEngine)	return(NS_ERROR_NO_INTERFACE);
 
 	nsCOMPtr<nsIURI> aURL;
 	rv = channel->GetURI(getter_AddRefs(aURL));
 	if (NS_FAILED(rv)) return rv;
 
-	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(trueStr.GetUnicode(), getter_AddRefs(literal))))
+	nsCOMPtr<nsIRDFLiteral>	trueLiteral;
+	if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(nsAutoString("true").GetUnicode(), getter_AddRefs(trueLiteral))))
 	{
-		mDataSource->Unassert(mParent, kNC_loading, literal);
-		mDataSource->Unassert(mEngine, kNC_loading, literal);
+		mInner->Unassert(mEngine, kNC_loading, trueLiteral);
+
+		if (mConnections)
+		{
+			PRUint32	count=0;
+			mConnections->Count(&count);
+			if (count <= 1)
+			{
+				mInner->Unassert(mParent, kNC_loading, trueLiteral);
+			}
+		}
 	}
 
 	// copy the engine's icon reference (if it has one) onto the result node
 	nsCOMPtr<nsIRDFNode>		engineIconStatusNode = nsnull;
-	mDataSource->GetTarget(mEngine, kNC_Icon, PR_TRUE, getter_AddRefs(engineIconStatusNode));
+	mInner->GetTarget(mEngine, kNC_Icon, PR_TRUE, getter_AddRefs(engineIconStatusNode));
 	if (engineIconStatusNode)
 	{
-		rv = mDataSource->Assert(mEngine, kNC_StatusIcon, engineIconStatusNode, PR_TRUE);
+		rv = mInner->Assert(mEngine, kNC_StatusIcon, engineIconStatusNode, PR_TRUE);
 	}
 
-	if (mBuffer.Length() < 1)
+	PRUnichar	*uniBuf = nsnull;
+	if (NS_FAILED(rv = context->GetBuffer(&uniBuf)))	return(rv);
+	if (!uniBuf)	return(NS_ERROR_UNEXPECTED);
+
+	nsAutoString	htmlResults(uniBuf);
+
+	if (htmlResults.Length() < 1)
 	{
 #ifdef	DEBUG_SEARCH_OUTPUT
 		printf(" *** InternetSearchDataSourceCallback::OnStopRequest:  no data.\n\n");
@@ -2160,8 +2156,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 		return(NS_OK);
 	}
 
-	nsAutoString	htmlResults(mBuffer);
-	mBuffer.Truncate();
+	if (NS_FAILED(rv = context->Truncate()))	return(rv);
 
 	// save HTML result page for this engine
 	const PRUnichar	*htmlUni = htmlResults.GetUnicode();
@@ -2170,14 +2165,14 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 		nsCOMPtr<nsIRDFLiteral>	htmlLiteral;
 		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(htmlUni, getter_AddRefs(htmlLiteral))))
 		{
-			rv = mDataSource->Assert(mEngine, kNC_HTML, htmlLiteral, PR_TRUE);
+			rv = mInner->Assert(mEngine, kNC_HTML, htmlLiteral, PR_TRUE);
 		}
 	}
 
 	// get data out of graph
 	nsAutoString		data("");
 	nsCOMPtr<nsIRDFNode>	dataNode;
-	if (NS_FAILED(rv = mDataSource->GetTarget(mEngine, kNC_Data, PR_TRUE, getter_AddRefs(dataNode))))
+	if (NS_FAILED(rv = mInner->GetTarget(mEngine, kNC_Data, PR_TRUE, getter_AddRefs(dataNode))))
 	{
 		return(rv);
 	}
@@ -2477,7 +2472,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 				nsCOMPtr<nsIRDFLiteral>	hrefLiteral;
 				if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(hrefUni, getter_AddRefs(hrefLiteral))))
 				{
-					mDataSource->Assert(res, kNC_URL, hrefLiteral, PR_TRUE);
+					mInner->Assert(res, kNC_URL, hrefLiteral, PR_TRUE);
 				}
 			}
 		}
@@ -2496,7 +2491,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 			{
 				if (htmlResponseLiteral)
 				{
-					mDataSource->Assert(res, kNC_HTML, htmlResponseLiteral, PR_TRUE);
+					mInner->Assert(res, kNC_HTML, htmlResponseLiteral, PR_TRUE);
 				}
 			}
 		}
@@ -2504,12 +2499,12 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 		// set banner (if we have one)
 		if (bannerLiteral)
 		{
-			mDataSource->Assert(res, kNC_Banner, bannerLiteral, PR_TRUE);
+			mInner->Assert(res, kNC_Banner, bannerLiteral, PR_TRUE);
 		}
 
 		// look for Site (if it isn't already set)
 		nsCOMPtr<nsIRDFNode>		oldSiteRes = nsnull;
-		mDataSource->GetTarget(res, kNC_Site, PR_TRUE, getter_AddRefs(oldSiteRes));
+		mInner->GetTarget(res, kNC_Site, PR_TRUE, getter_AddRefs(oldSiteRes));
 		if (!oldSiteRes)
 		{
 			PRInt32	protocolOffset = site.FindCharInSet(":", 0);
@@ -2535,7 +2530,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 						{
 							if (siteLiteral)
 							{
-								mDataSource->Assert(res, kNC_Site, siteLiteral, PR_TRUE);
+								mInner->Assert(res, kNC_Site, siteLiteral, PR_TRUE);
 							}
 						}
 					}
@@ -2625,7 +2620,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 
 		// look for Name (if it isn't already set)
 		nsCOMPtr<nsIRDFNode>		oldNameRes = nsnull;
-		mDataSource->GetTarget(res, kNC_Name, PR_TRUE, getter_AddRefs(oldNameRes));
+		mInner->GetTarget(res, kNC_Name, PR_TRUE, getter_AddRefs(oldNameRes));
 		if (!oldNameRes)
 		{
 			if (nameStr.Length() > 0)
@@ -2638,7 +2633,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 					{
 						if (nameLiteral)
 						{
-							mDataSource->Assert(res, kNC_Name, nameLiteral, PR_TRUE);
+							mInner->Assert(res, kNC_Name, nameLiteral, PR_TRUE);
 						}
 					}
 				}
@@ -2660,7 +2655,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 
 		// look for Relevance (if it isn't already set)
 		nsCOMPtr<nsIRDFNode>		oldRelRes = nsnull;
-		mDataSource->GetTarget(res, kNC_Relevance, PR_TRUE, getter_AddRefs(oldRelRes));
+		mInner->GetTarget(res, kNC_Relevance, PR_TRUE, getter_AddRefs(oldRelRes));
 		if (!oldRelRes)
 		{
 			if (relItem.Length() > 0)
@@ -2711,7 +2706,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 			{
 				if (relLiteral)
 				{
-					mDataSource->Assert(res, kNC_Relevance, relLiteral, PR_TRUE);
+					mInner->Assert(res, kNC_Relevance, relLiteral, PR_TRUE);
 				}
 			}
 
@@ -2743,7 +2738,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 				{
 					if (relSortLiteral)
 					{
-						mDataSource->Assert(res, kNC_RelevanceSort, relSortLiteral, PR_TRUE);
+						mInner->Assert(res, kNC_RelevanceSort, relSortLiteral, PR_TRUE);
 					}
 				}
 			}
@@ -2751,7 +2746,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 
 		// set reference to engine this came from (if it isn't already set)
 		nsCOMPtr<nsIRDFNode>		oldEngineRes = nsnull;
-		mDataSource->GetTarget(res, kNC_Engine, PR_TRUE, getter_AddRefs(oldEngineRes));
+		mInner->GetTarget(res, kNC_Engine, PR_TRUE, getter_AddRefs(oldEngineRes));
 		if (!oldEngineRes)
 		{
 			nsAutoString	engineStr;
@@ -2763,7 +2758,7 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 				{
 					if (engineLiteral)
 					{
-						mDataSource->Assert(res, kNC_Engine, engineLiteral, PR_TRUE);
+						mInner->Assert(res, kNC_Engine, engineLiteral, PR_TRUE);
 					}
 				}
 			}
@@ -2771,26 +2766,26 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 
 		// copy the engine's icon reference (if it has one) onto the result node
 		nsCOMPtr<nsIRDFNode>		engineIconNode = nsnull;
-		mDataSource->GetTarget(mEngine, kNC_Icon, PR_TRUE, getter_AddRefs(engineIconNode));
+		mInner->GetTarget(mEngine, kNC_Icon, PR_TRUE, getter_AddRefs(engineIconNode));
 		if (engineIconNode)
 		{
-			rv = mDataSource->Assert(res, kNC_Icon, engineIconNode, PR_TRUE);
+			rv = mInner->Assert(res, kNC_Icon, engineIconNode, PR_TRUE);
 		}
 
 #ifdef	OLDWAY
 		// Note: always add in parent-child relationship last!  (if it isn't already set)
 		PRBool		parentHasChildFlag = PR_FALSE;
-		mDataSource->HasAssertion(mParent, kNC_Child, res, PR_TRUE, &parentHasChildFlag);
+		mInner->HasAssertion(mParent, kNC_Child, res, PR_TRUE, &parentHasChildFlag);
 		if (parentHasChildFlag == PR_FALSE)
 #endif
 		{
-			rv = mDataSource->Assert(mParent, kNC_Child, res, PR_TRUE);
+			rv = mInner->Assert(mParent, kNC_Child, res, PR_TRUE);
 		}
 
 		// Persist this under kNC_LastSearchRoot
-		if (mDataSource)
+		if (mInner)
 		{
-			rv = mDataSource->Assert(kNC_LastSearchRoot, kNC_Child, res, PR_TRUE);
+			rv = mInner->Assert(kNC_LastSearchRoot, kNC_Child, res, PR_TRUE);
 		}
 
 	}
@@ -2803,14 +2798,13 @@ InternetSearchDataSourceCallback::OnStopRequest(nsIChannel* channel, nsISupports
 
 
 
-NS_IMPL_ISUPPORTS(InternetSearchDataSourceCallback, nsIStreamListener::GetIID());
-
-
-
 NS_IMETHODIMP
-InternetSearchDataSourceCallback::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
+InternetSearchDataSource::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
 				nsIInputStream *aIStream, PRUint32 sourceOffset, PRUint32 aLength)
 {
+	nsCOMPtr<nsIInternetSearchContext>	context = do_QueryInterface(ctxt);
+	if (!ctxt)	return(NS_ERROR_NO_INTERFACE);
+
 	nsresult	rv = NS_OK;
 
 	if (aLength < 1)	return(rv);
@@ -2836,7 +2830,8 @@ InternetSearchDataSourceCallback::OnDataAvailable(nsIChannel* channel, nsISuppor
 		return(NS_ERROR_UNEXPECTED);
 	}
 
-	mBuffer.Append(buffer, aLength);
+	context->AppendBytes(buffer, aLength);
+
 	delete [] buffer;
 	buffer = nsnull;
 	return(rv);

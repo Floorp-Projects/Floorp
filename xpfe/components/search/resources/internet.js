@@ -183,8 +183,105 @@ function unloadPage()
 
 
 
+function doStop()
+{
+	var isupports = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+	if (!isupports)    return(false);
+	var internetSearchService = isupports.QueryInterface(Components.interfaces.nsIInternetSearchService);
+	if (internetSearchService)
+	{
+		internetSearchService.Stop();
+	}
+
+	// hide progress bar
+	var progressNode = parent.frames[1].document.getElementById("search-progress");
+	if (progressNode)
+	{
+		progressNode.setAttribute("style", "display: none;");
+	}
+
+	// hide stop button
+	var stopButtonNode = document.getElementById("stopbutton");
+	if (stopButtonNode)
+	{
+		stopButtonNode.setAttribute("style", "display: none;");
+	}
+
+	// show search button
+	var searchButtonNode = document.getElementById("searchbutton");
+	if (searchButtonNode)
+	{
+		searchButtonNode.removeAttribute("style", "display: none;");
+	}
+}
+
+
+
+function checkSearchProgress()
+{
+	var	activeSearchFlag = false;
+
+	var resultsTree = parent.frames[1].document.getElementById("internetresultstree");
+	if (!resultsTree)	return(false);
+	var ref = resultsTree.getAttribute("ref");
+	var ds = resultsTree.database;
+
+	if ((ref) && (ref != "") && (ds))
+	{
+		var rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+		if (rdf)   rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+		if (rdf)
+		{
+			var source = rdf.GetResource(ref, true);
+			var loadingProperty = rdf.GetResource("http://home.netscape.com/NC-rdf#loading", true);
+			var target = ds.GetTarget(source, loadingProperty, true);
+			if (target)	target = target.QueryInterface(Components.interfaces.nsIRDFLiteral);
+			if (target)	target = target.Value;
+			if (target == "true")
+			{
+				activeSearchFlag = true;
+			}
+		}
+	}
+
+	if (activeSearchFlag == true)
+	{
+		setTimeout("checkSearchProgress()", 1000);
+	}
+	else
+	{
+		doStop();
+	}
+	return(true);
+}
+
+
+
 function doSearch()
 {
+	// hide search button
+	var searchButtonNode = document.getElementById("searchbutton");
+	if (searchButtonNode)
+	{
+		searchButtonNode.setAttribute("style", "display: none;");
+	}
+
+	// show stop button
+	var stopButtonNode = document.getElementById("stopbutton");
+	if (stopButtonNode)
+	{
+		stopButtonNode.removeAttribute("style", "display: none;");
+	}
+
+	// show progress bar
+	var progressNode = parent.frames[1].document.getElementById("search-progress");
+	if (progressNode)
+	{
+		progressNode.removeAttribute("style", "display: none;");
+	}
+
+	setTimeout("checkSearchProgress()", 1000);
+
 	gText = "";
 	gSites = "";
 
