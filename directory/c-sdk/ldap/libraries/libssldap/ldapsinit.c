@@ -253,7 +253,7 @@ do_ldapssl_connect(const char *hostlist, int defport, int timeout,
     ssoip->soi_sessioninfo = sseip;
 
     /*
-     * Add SSL layer and let the standard NSPR to LDAP layer and enable SSL.
+     * Add SSL layer and enable SSL.
      */
     if (( sslfd = SSL_ImportFD( NULL, soi.soinfo_prfd )) == NULL ) {
 	goto close_socket_and_exit_with_error;
