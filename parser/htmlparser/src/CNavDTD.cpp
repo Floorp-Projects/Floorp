@@ -508,7 +508,7 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
     mParser=(nsParser*)aParser;
     mSink=(nsIHTMLContentSink*)aSink;
     gRecycler=(CTokenRecycler*)mTokenizer->GetTokenRecycler();
-    while(NS_OK==result){
+    while(NS_SUCCEEDED(result)){
       CToken* theToken=mTokenizer->PopToken();
       if(theToken) { 
         result=HandleToken(theToken,aParser);
@@ -540,8 +540,9 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParse
     mSink=(nsIHTMLContentSink*)aSink;
     if(aNotifySink && mSink){
       if((NS_OK==anErrorCode) && (mBodyContext->GetCount()>0)) {
+        eHTMLTags theTarget;
         while(mBodyContext->GetCount() > 0) {
-          eHTMLTags theTarget = mBodyContext->Last();
+          theTarget = mBodyContext->Last();
           if(gHTMLElements[theTarget].HasSpecialProperty(kBadContentWatch))
             result = HandleSavedTokensAbove(theTarget);
           CloseContainersTo(theTarget,PR_FALSE);
@@ -683,9 +684,18 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
           if(NS_SUCCEEDED(result) || (NS_ERROR_HTMLPARSER_BLOCK==result)) {
             gRecycler->RecycleToken(theToken);
           }
-          else if(NS_ERROR_HTMLPARSER_MISPLACED!=result)
-            mTokenizer->PushTokenFront(theToken);
-          else result=NS_OK;
+          else if(result==NS_ERROR_HTMLPARSER_STOPPARSING)
+            return result;
+          else return NS_OK;
+          /*************************************************************/
+           // CAUTION: Here we are forgetting to push the ATTRIBUTE Tokens.
+           //          So, before you uncomment this part please make sure
+           //          that the attribute tokens are also accounted for.
+          
+           //else if(NS_ERROR_HTMLPARSER_MISPLACED!=result)
+           //  mTokenizer->PushTokenFront(theToken);
+           //else result=NS_OK;
+          /***************************************************************/
           if (mDTDDebug) {
              //mDTDDebug->Verify(this, mParser, mBodyContext->GetCount(), mBodyContext->mStack, mFilename);
           }
@@ -1457,7 +1467,8 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   eHTMLTags     theParent=mBodyContext->Last();
 
   if(NS_OK==result) {
-    if(NS_OK==WillHandleStartTag(aToken,theChildTag,attrNode)) {
+    result=WillHandleStartTag(aToken,theChildTag,attrNode);
+    if(NS_OK==result) {
 
       if(nsHTMLElement::IsSectionTag(theChildTag)){
         switch(theChildTag){
