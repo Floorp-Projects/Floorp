@@ -1630,6 +1630,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
 
   if (nsLayoutAtoms::textTagName == aTag) {
     rv = NS_NewTextFrame(newFrame);
+    isReplaced = PR_TRUE;   // XXX kipp: temporary?
   }
   else {
     nsIHTMLContent *htmlContent;
@@ -1660,6 +1661,7 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresContext*  aPresContext,
       }
       else if (nsHTMLAtoms::br == aTag) {
         rv = NS_NewBRFrame(newFrame);
+        isReplaced = PR_TRUE;   // XXX kipp: temporary?
       }
       else if (nsHTMLAtoms::wbr == aTag) {
         rv = NS_NewWBRFrame(newFrame);
