@@ -136,6 +136,15 @@ nsThemeHandler::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **result)
     return NS_OK;
 }
 
+
+NS_IMETHODIMP 
+nsThemeHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    // don't override anything.  
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
 /**
  * Quick & dirty little 32-bit deep GWorld wrapper, meant to be used within a single
  * block of code. After construction, the GWorld will be made the current port, and

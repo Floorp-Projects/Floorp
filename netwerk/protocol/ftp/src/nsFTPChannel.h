@@ -25,6 +25,7 @@
 #ifndef nsFTPChannel_h___
 #define nsFTPChannel_h___
 
+#include "nsIIOService.h"
 #include "nsIURI.h"
 #include "nsString.h"
 #include "nsILoadGroup.h"
@@ -107,6 +108,8 @@ protected:
     nsCOMPtr<nsISupports>           mUserContext;
     nsresult                        mStatus;
     PRPackedBool                    mCanceled;
+
+    nsCOMPtr<nsIIOService>          mIOService;
 };
 
 #endif /* nsFTPChannel_h___ */

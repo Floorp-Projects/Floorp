@@ -57,6 +57,18 @@ interface nsIProtocolHandler : nsISupports
      * will be used as the originalURI instead.
      */
     nsIChannel newChannel(in nsIURI aURI);
+
+    /**
+     * Allows a protocol to override blacklisted ports.
+     *
+     * |allowPort| will be called when there is an attempt to connect to a port 
+     * that is blacklisted.  For example, for most protocols, port 25 (Simple Mail
+     * Transfer) is banned.  When a url containing this "known-to-do-bad-things" 
+     * port number is encountered, this function will be called to ask if the 
+     * protocol handler wants to override the band.  
+     */
+     
+    boolean allowPort(in long port, in string scheme);
 };
 
 %{C++

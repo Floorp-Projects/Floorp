@@ -126,3 +126,13 @@ nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     *result = channel;
     return rv;
 }
+
+NS_IMETHODIMP 
+nsGopherHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    if (port == GOPHER_PORT)
+        *_retval = PR_TRUE;
+    else
+        *_retval = PR_FALSE;
+    return NS_OK;
+}

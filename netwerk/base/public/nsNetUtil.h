@@ -630,4 +630,30 @@ NS_AsyncReadToStream(nsIRequest **aRequest,
                                  aRequest);
 }
 
+inline nsresult
+NS_CheckPortSafety(PRInt32 port, const char* scheme = nsnull, nsIIOService* ioService = nsnull)
+{
+    nsresult rv;
+
+    nsCOMPtr<nsIIOService> serv;
+    if (ioService == nsnull) {
+        serv = do_GetIOService(&rv);
+        if (NS_FAILED(rv)) return rv;
+        ioService = serv.get();
+    }
+
+    PRBool allow;
+    
+    rv = ioService->AllowPort(port, scheme, &allow);
+    if (NS_FAILED(rv)) {
+        NS_ERROR("NS_CheckPortSafety: ioService->AllowPort failed\n");
+        return rv;
+    }
+    
+    if (!allow)
+        return NS_ERROR_PORT_ACCESS_NOT_ALLOWED;
+
+    return NS_OK;
+}
+
 #endif // nsNetUtil_h__

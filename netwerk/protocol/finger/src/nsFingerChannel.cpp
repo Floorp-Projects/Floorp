@@ -188,6 +188,10 @@ nsFingerChannel::Open(nsIInputStream **_retval)
 {
     nsresult rv = NS_OK;
 
+    rv = NS_CheckPortSafety(mPort, "finger");
+    if (NS_FAILED(rv))
+      return rv;
+
     NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
@@ -205,6 +209,10 @@ NS_IMETHODIMP
 nsFingerChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
     nsresult rv = NS_OK;
+
+    rv = NS_CheckPortSafety(mPort, "finger");
+    if (NS_FAILED(rv))
+      return rv;
 
     NS_WITH_SERVICE(nsISocketTransportService, socketService, kSocketTransportServiceCID, &rv);
     if (NS_FAILED(rv)) return rv;

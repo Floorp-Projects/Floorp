@@ -25,6 +25,7 @@
 
 #include "nsIIOService.h"
 #include "nsString.h"
+#include "nsVoidArray.h"
 #include "nsISocketTransportService.h" 
 #include "nsIFileTransportService.h" 
 #include "nsIDNSService.h" 
@@ -73,6 +74,8 @@ protected:
     
     // Cached protocol handlers
     nsWeakPtr                  mWeakHandler[NS_N(gScheme)];
+
+    nsVoidArray                         mRestrictedPortList;
 };
 
 #endif // nsIOService_h__

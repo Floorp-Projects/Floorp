@@ -28,6 +28,7 @@
 #include "nsIHttpChannel.h"
 #include "nsIHttpEventSink.h"
 #include "nsIStreamListener.h"
+#include "nsIIOService.h"
 #include "nsIURI.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"

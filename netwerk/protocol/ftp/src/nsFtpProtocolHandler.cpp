@@ -168,6 +168,16 @@ nsFtpProtocolHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     return rv;
 }
 
+NS_IMETHODIMP 
+nsFtpProtocolHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    if (port == 21)
+        *_retval = PR_TRUE;
+    else
+        *_retval = PR_FALSE;
+    return NS_OK;
+}
+
 // connection cache methods
 nsresult
 nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsISupports* *_retval) {

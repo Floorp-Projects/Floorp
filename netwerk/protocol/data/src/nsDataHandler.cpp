@@ -117,4 +117,11 @@ nsDataHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsDataHandler::AllowPort(PRInt32 port, const char *scheme, PRBool *_retval)
+{
+    // don't override anything.  
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
 ////////////////////////////////////////////////////////////////////////////////
