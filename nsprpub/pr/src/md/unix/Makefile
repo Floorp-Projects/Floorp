@@ -38,9 +38,9 @@ ifneq ($(USE_PTHREADS),1)
 CSRCS += uxpoll.c
 endif
 
-PTH_USER_CSRCS =          \
-	pthreads_user.c \
-	$(NULL)
+ifeq ($(PTHREADS_USER),1)
+CSRCS += pthreads_user.c
+endif
 
 IRIX_CSRCS =	 \
 	irix.c	 \
@@ -133,10 +133,6 @@ QNX_CSRCS = \
 NTO_CSRCS = \
 	nto.c \
 	$(NULL)
-
-ifeq ($(PTHREADS_USER),1)
-CSRCS += $(PTH_USER_CSRCS)
-endif
 
 ifeq ($(OS_ARCH),IRIX)
 CSRCS += $(IRIX_CSRCS)

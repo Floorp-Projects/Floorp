@@ -47,9 +47,9 @@ ifneq ($(USE_PTHREADS),1)
 CSRCS += uxpoll.c
 endif
 
-PTH_USER_CSRCS =          \
-	pthreads_user.c \
-	$(NULL)
+ifeq ($(PTHREADS_USER),1)
+CSRCS += pthreads_user.c
+endif
 
 ifndef USE_AUTOCONF
 
@@ -144,14 +144,6 @@ QNX_CSRCS = \
 NTO_CSRCS = \
 	nto.c \
 	$(NULL)
-
-endif # !USE_AUTOCONF
-
-ifeq ($(PTHREADS_USER),1)
-CSRCS += $(PTH_USER_CSRCS)
-endif
-
-ifndef USE_AUTOCONF
 
 ifeq ($(OS_ARCH),IRIX)
 CSRCS += $(IRIX_CSRCS)

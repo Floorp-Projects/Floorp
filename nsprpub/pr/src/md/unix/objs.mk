@@ -30,9 +30,9 @@ ifneq ($(USE_PTHREADS),1)
 CSRCS += uxpoll.c
 endif
 
-PTH_USER_CSRCS =          \
-	pthreads_user.c \
-	$(NULL)
+ifeq ($(PTHREADS_USER),1)
+CSRCS += pthreads_user.c
+endif
 
 ifdef USE_AUTOCONF
 
@@ -131,10 +131,6 @@ QNX_CSRCS = \
 NTO_CSRCS = \
 	nto.c \
 	$(NULL)
-
-ifeq ($(PTHREADS_USER),1)
-CSRCS += $(PTH_USER_CSRCS)
-endif
 
 ifeq ($(OS_ARCH),IRIX)
 CSRCS += $(IRIX_CSRCS)
@@ -250,10 +246,6 @@ ifeq ($(OS_ARCH)$(OS_RELEASE),BSD_OS2.1)
 endif
 
 endif # !USE_AUTOCONF
-
-ifeq ($(PTHREADS_USER),1)
-CSRCS += $(PTH_USER_CSRCS)
-endif
 
 OBJS += $(addprefix md/unix/$(OBJDIR)/,$(CSRCS:.c=.$(OBJ_SUFFIX)))  \
 	$(addprefix md/unix/$(OBJDIR)/,$(ASFILES:.s=.$(OBJ_SUFFIX)))
