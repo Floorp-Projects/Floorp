@@ -26,6 +26,8 @@
 
 #include "nsISecretDecoderRing.h"
 
+class nsINSSDialogs;
+
 /**
  * NS_SDR_CONTRACTID - contract id for SDR services.
  *   Implements nsISecretDecoderRing.
@@ -68,6 +70,12 @@ private:
    */
   nsresult encode(const unsigned char *data, PRInt32 dataLen, char **_retval);
   nsresult decode(const char *data, unsigned char **result, PRInt32 * _retval);
+
+  /**
+   * getNSSDialogs - gets an implementation of the nsINSSIDialogs
+   *   interface.
+   */
+  nsresult getNSSDialogs(nsINSSDialogs* *_result);
 };
 
 #endif /* _NSSDR_H_ */
