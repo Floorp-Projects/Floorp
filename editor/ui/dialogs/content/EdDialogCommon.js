@@ -367,7 +367,7 @@ function forceInteger(elementID)
     return;
 
   var stringIn = editField.value;
-  var pat = new RegExp("/\D+/");
+  var pat = new RegExp("/\D+/g");
   if (pat.test(stringIn)) {
 dump("TEST SUCCEEDED\n")
     editField.value = stringIn.replace(pat,"");
