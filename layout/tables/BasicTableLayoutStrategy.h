@@ -170,8 +170,6 @@ public:
                                   const nsReflowState& aReflowState,
                                   nscoord& aSpecifiedTableWidth);
 
-  
-
 protected:
   nsTableFrame * mTableFrame;
 

@@ -170,11 +170,10 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext* aPre
     for (; colIndex<numChildFrames; colIndex++)
     {
       ChildAt(colIndex, colFrame);
-      NS_ASSERTION(nsnull!=colFrame, "bad first column frame");
+      NS_ASSERTION(nsnull!=colFrame, "bad column frame");
       nsStylePosition * colPosition=nsnull;
       colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
-      nsStyleCoord width (0, eStyleUnit_Integer);
-      colPosition->mWidth = width;
+      colPosition->mWidth.SetCoordValue(0);
       colFrame->GetStyleContext(aPresContext, colStyleContext);
       colStyleContext->RecalcAutomaticData(aPresContext);
     }
