@@ -91,6 +91,8 @@ en-US.jar:
         locale/en-US/help/images/threadbutton.gif          (locale/en-US/images/threadbutton.gif)
         locale/en-US/help/images/unread.gif                (locale/en-US/images/unread.gif)
         locale/en-US/help/images/wink.gif                  (locale/en-US/images/wink.gif)
+        locale/en-US/help/images/pen.gif                   (locale/en-US/images/pen.gif)
+        locale/en-US/help/images/key.gif                   (locale/en-US/images/key.gif)
 
 modern.jar:
         skin/modern/communicator/help.css                    (skin/modern/help.css)
