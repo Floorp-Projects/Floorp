@@ -52,7 +52,7 @@ nsWrapUtils::Rewrap(const nsString& aInString,
                                     (nsISupports **)&lf);
   if (NS_SUCCEEDED(rv))
   {
-    nsAutoString lbarg("");
+    nsAutoString lbarg;
     rv = lf->GetBreaker(lbarg, getter_AddRefs(lineBreaker));
     nsServiceManager::ReleaseService(kLWBrkCID, lf);
   }
@@ -75,7 +75,7 @@ nsWrapUtils::Rewrap(const nsString& aInString,
     if (eol > length)
     {
       aOutString.Append(unicodeStr + i, length - i);
-      aOutString.Append('\n');  // DOM line breaks, not NS_LINEBREAK
+      aOutString.AppendWithConversion('\n');  // DOM line breaks, not NS_LINEBREAK
       break;
     }
     if (i > 0) aFirstLineOffset = 0;
@@ -108,7 +108,7 @@ nsWrapUtils::Rewrap(const nsString& aInString,
     else breakPt += i;
     nsAutoString appending(unicodeStr + i, breakPt - i);
     aOutString.Append(unicodeStr + i, breakPt - i);
-    aOutString.Append('\n');  // DOM line breaks, not NS_LINEBREAK
+    aOutString.AppendWithConversion('\n');  // DOM line breaks, not NS_LINEBREAK
 
     i = breakPt;
   } // continue looping over lines
