@@ -27,6 +27,10 @@
 #include "nsBlockFrame.h"
 #include "nsITableLayout.h"
 
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+class nsReflowTimer;
+#endif
+
 struct nsStyleTable;
 
 class nsTableCaptionFrame : public nsBlockFrame
@@ -354,6 +358,11 @@ private:
 
   nsSize    mMaxElementSize;
   nscoord   mInnerTableMaximumWidth;
+
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+public:
+  nsReflowTimer* mTimer;
+#endif
 };
 
 inline nscoord nsTableOuterFrame::GetMinCaptionWidth()

@@ -24,7 +24,7 @@ DEPTH=..\..\..\..
 LIBRARY_NAME=raptorhtmltable_s 
 MODULE=raptor 
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
+DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN 
 
 CPPSRCS= nsCellMap.cpp			\
     nsTableCellFrame.cpp		\

@@ -57,11 +57,18 @@ nsTableCellFrame::nsTableCellFrame()
   mColIndex        = 0;
   mPriorAvailWidth = 0;
   mBorderEdges     = nsnull;
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  mTimer = new nsReflowTimer(this);
+  mBlockTimer = new nsReflowTimer(this);
+#endif
 }
 
 nsTableCellFrame::~nsTableCellFrame()
 {
   delete mBorderEdges;
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflowDone(this);
+#endif
 }
 
 NS_IMETHODIMP
@@ -688,7 +695,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
                                    nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableCellFrame", aReflowState.reason);
-  if (nsDebugTable::gRflCell) nsTableFrame::DebugReflow("TC::Rfl", this, &aReflowState, nsnull);
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
+#endif
 
   nsresult rv = NS_OK;
   // this should probably be cached somewhere
@@ -797,13 +806,17 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
     firstKid->GetOrigin(kidOrigin);
   }
 
-  if (nsDebugTable::gRflArea) nsTableFrame::DebugReflow("Area::Rfl en", firstKid, &kidReflowState, nsnull);
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflow(firstKid, (nsHTMLReflowState&)kidReflowState);
+#endif
   ReflowChild(firstKid, aPresContext, kidSize, kidReflowState,
               kidOrigin.x, kidOrigin.y, 0, aStatus);
   if (isStyleChanged) {
     Invalidate(aPresContext, mRect);
   }
-  if (nsDebugTable::gRflArea) nsTableFrame::DebugReflow("Area::Rfl ex", firstKid, nsnull, &kidSize, aStatus);
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflow(firstKid, (nsHTMLReflowState&)kidReflowState, &kidSize, aStatus);
+#endif
 
 #ifdef NS_DEBUG
   DebugCheckChildSize(firstKid, kidSize, availSize, (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth));
@@ -917,7 +930,9 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   // remember my desired size for this reflow
   SetDesiredSize(aDesiredSize);
 
-  if (nsDebugTable::gRflCell) nsTableFrame::DebugReflow("TC::Rfl ex", this, nsnull, &aDesiredSize, aStatus);
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
+#endif
 
   return NS_OK;
 }

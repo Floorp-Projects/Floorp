@@ -42,6 +42,20 @@
 
 #include "nsCellMap.h"//table cell navigation
 
+nsTableRowGroupFrame::nsTableRowGroupFrame()
+{
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  mTimer = new nsReflowTimer(this);
+#endif
+}
+
+nsTableRowGroupFrame::~nsTableRowGroupFrame()
+{
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflowDone(this);
+#endif
+}
+
 /* ----------- nsTableRowGroupFrame ---------- */
 nsrefcnt nsTableRowGroupFrame::AddRef(void)
 {
@@ -1055,7 +1069,9 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
                              nsReflowStatus&          aStatus)
 {
   DO_GLOBAL_REFLOW_COUNT("nsTableRowGroupFrame", aReflowState.reason);
-  if (nsDebugTable::gRflRowGrp) nsTableFrame::DebugReflow("TRG::Rfl", this, &aReflowState, nsnull);
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
+#endif
   nsresult rv=NS_OK;
 
   // Initialize out parameter
@@ -1163,7 +1179,9 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     mMaxElementSize = *aDesiredSize.maxElementSize;
   }
   
-  if (nsDebugTable::gRflRowGrp) nsTableFrame::DebugReflow("TRG::Rfl ex", this, nsnull, &aDesiredSize, aStatus);
+#if defined DEBUG_TABLE_REFLOW | DEBUG_TABLE_REFLOW_TIMING
+  nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState, &aDesiredSize, aStatus);
+#endif
   return rv;
 }
 

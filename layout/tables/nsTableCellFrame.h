@@ -285,6 +285,10 @@ public:
   nsBorderEdges *mBorderEdges;      // one list of border segments for each side of the table frame
                                     // used only for the collapsing border model
 
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+  nsReflowTimer* mTimer;
+  nsReflowTimer* mBlockTimer;
+#endif
 };
 
 inline nsresult nsTableCellFrame::GetRowIndex(PRInt32 &aRowIndex) const

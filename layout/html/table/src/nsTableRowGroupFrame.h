@@ -29,6 +29,9 @@
 
 class nsTableFrame;
 class nsTableRowFrame;
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+class nsReflowTimer;
+#endif
 
 /* ----------- RowGroupReflowState ---------- */
 
@@ -103,6 +106,7 @@ public:
     */
   friend nsresult 
   NS_NewTableRowGroupFrame(nsIPresShell* aPresShell, nsIFrame** aResult);
+  virtual ~nsTableRowGroupFrame();
 
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
@@ -223,6 +227,7 @@ public:
 
 
 protected:
+  nsTableRowGroupFrame();
 
   /** implement abstract method on nsHTMLContainerFrame */
   virtual PRIntn GetSkipSides() const;
@@ -341,6 +346,10 @@ public:
 private:
   nsSize   mMaxElementSize;
 
+#ifdef DEBUG_TABLE_REFLOW_TIMING
+public:
+  nsReflowTimer* mTimer;
+#endif
 };
 
 inline void nsTableRowGroupFrame::GetMaxElementSize(nsSize& aMaxElementSize) const
