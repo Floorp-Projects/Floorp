@@ -32,7 +32,7 @@ int32 nsObject::s_nObjects = 0;
 nsObject::nsObject(nsISupports *aOuter)
 {
     // ref count init
-    mRefCnt = 0;
+    mRefCnt = 1;
     // assign outer
     if (aOuter) 
         mOuter = aOuter;
