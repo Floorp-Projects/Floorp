@@ -1112,8 +1112,8 @@ HTMLStyleSheetImpl::ConstructRootFrame(nsIPresContext*  aPresContext,
     // Verify it's the root content object
     aContent->GetDocument(doc);
     rootContent = doc->GetRootContent();
-    NS_ASSERTION(rootContent == aContent, "unexpected content");
     NS_RELEASE(doc);
+    NS_ASSERTION(rootContent == aContent, "unexpected content");
     NS_RELEASE(rootContent);
 #endif
 
@@ -1407,9 +1407,6 @@ HTMLStyleSheetImpl::ContentAppended(nsIPresContext* aPresContext,
         lastChildFrame->SetNextSibling(frame);
       }
 
-      // XXX We should probably mark the frame as being dirty: that way the
-      // parent frame can easily identify the newly added frames. Either that
-      // or pass along in count in which case they must be contiguus...
       lastChildFrame = frame;
       NS_RELEASE(child);
     }
