@@ -2146,9 +2146,11 @@ nsFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
 NS_IMETHODIMP
 nsFrame::TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                 nsIRenderingContext& aRC,
-                                nscoord& aDeltaWidth)
+                                nscoord& aDeltaWidth,
+                                PRBool& aLastCharIsJustifiable)
 {
   aDeltaWidth = 0;
+  aLastCharIsJustifiable = PR_FALSE;
   return NS_OK;
 }
 

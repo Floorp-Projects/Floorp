@@ -965,7 +965,8 @@ public:
   // whitespace before justification.
   NS_IMETHOD TrimTrailingWhiteSpace(nsPresContext* aPresContext,
                                     nsIRenderingContext& aRC,
-                                    nscoord& aDeltaWidth) = 0;
+                                    nscoord& aDeltaWidth,
+                                    PRBool& aLastCharIsJustifiable) = 0;
 
   /**
    * Accessor functions to get/set the associated view object

@@ -2613,9 +2613,11 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
     }
     else if (pfd->GetFlag(PFD_ISNONEMPTYTEXTFRAME)) {
       nscoord deltaWidth = 0;
+      PRBool lastCharIsJustifiable = PR_FALSE;
       pfd->mFrame->TrimTrailingWhiteSpace(mPresContext,
                                           *mBlockReflowState->rendContext,
-                                          deltaWidth);
+                                          deltaWidth,
+                                          lastCharIsJustifiable);
 #ifdef NOISY_TRIM
       nsFrame::ListTag(stdout, (psd == mRootSpan
                                 ? mBlockReflowState->frame
@@ -2624,11 +2626,11 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
       nsFrame::ListTag(stdout, pfd->mFrame);
       printf(" returned %d\n", deltaWidth);
 #endif
-      if (deltaWidth) {
-        if (pfd->mJustificationNumSpaces > 0) {
-          pfd->mJustificationNumSpaces--;
-        }
+      if (lastCharIsJustifiable && pfd->mJustificationNumSpaces > 0) {
+        pfd->mJustificationNumSpaces--;
+      }
 
+      if (deltaWidth) {
         pfd->mBounds.width -= deltaWidth;
         if (0 == pfd->mBounds.width) {
           pfd->mMaxElementWidth = 0;
