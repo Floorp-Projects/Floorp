@@ -504,6 +504,8 @@ nsExpatDriver::HandleEndCdataSection()
  * detected errors. The only slightly problematic case is whitespace
  * between the tokens. There MUST be whitespace between the tokens
  * EXCEPT right before > and [.
+ *
+ * We assume the string will not contain the ending '>'.
  */
 static void
 GetDocTypeToken(nsString& aStr,
@@ -516,9 +518,12 @@ GetDocTypeToken(nsString& aStr,
     PRInt32 endQuote = aStr.FindChar(aStr[0],1);
     aStr.Mid(aToken,1,endQuote-1);
     aStr.Cut(0,endQuote+1);
-  } else {    
-    static const char* kDelimiter = " >[\r\n\t"; // Optimized for typical cases
+  } else {
+    static const char* kDelimiter = " [\r\n\t"; // Optimized for typical cases
     PRInt32 tokenEnd = aStr.FindCharInSet(kDelimiter);
+    if (tokenEnd < 0) {
+      tokenEnd = aStr.Length();
+    }
     if (tokenEnd > 0) {
       aStr.Left(aToken, tokenEnd);
       aStr.Cut(0, tokenEnd);
