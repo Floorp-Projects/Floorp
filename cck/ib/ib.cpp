@@ -649,6 +649,23 @@ int StartIB(CString parms, WIDGET *curWidget)
 //checking to see if the AnimatedLogoURL has a http:// appended in front of it 
 //if not then we have to append it;
 
+// check to see if the bmp for rshell background is bigger than 302KB;
+	HANDLE hFile;
+	DWORD dwFileSize;
+	CString Rshellbmp = GetGlobal("ShellBgBitmap");
+
+	hFile = CreateFile ((LPCTSTR)Rshellbmp,GENERIC_READ,FILE_SHARE_READ,NULL,
+							OPEN_EXISTING,FILE_ATTRIBUTE_NORMAL,(HANDLE)NULL);
+
+	dwFileSize = GetFileSize (hFile, NULL);
+	int returnValue;
+	if (dwFileSize < 300000)
+		returnValue = AfxMessageBox("You have chosen a background BitMap that is too small for the customized RShell-If you want to proceed anyway choose Cancel or click on Retry and go back and make your changes",MB_RETRYCANCEL);
+	if (returnValue == IDRETRY)
+		return FALSE;
+
+//end of filesize check;
+
 	CString animLogoUrl = GetGlobal("AnimatedLogoURL");
 	CString leftvalue = animLogoUrl.Left(7);
 	CString httpvalue = "http://";
