@@ -136,6 +136,10 @@ enum nsDOMClassInfoID {
 
   // CSS classes
   eDOMClassInfo_CSSStyleRule_id,
+  eDOMClassInfo_CSSCharsetRule_id,
+  eDOMClassInfo_CSSImportRule_id,
+  eDOMClassInfo_CSSMediaRule_id,
+  eDOMClassInfo_CSSNameSpaceRule_id,
   eDOMClassInfo_CSSRuleList_id,
   eDOMClassInfo_MediaList_id,
   eDOMClassInfo_StyleSheetList_id,
