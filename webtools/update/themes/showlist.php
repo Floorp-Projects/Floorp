@@ -414,9 +414,9 @@ echo"<IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float
 echo"<BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
 
 if ($homepage) {echo"<DIV class=\"iconbar\" style=\"width: 98px;\"><A HREF=\"$homepage\"><IMG SRC=\"/images/home.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"$name Homepage\" ALT=\"\">Homepage</A></DIV>";}
-echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/$appname"."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"$appname\">&nbsp;Works with:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
+echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"$appname\">&nbsp;Works with:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
 if ($osname !=="ALL") {
-echo"<DIV class=\"iconbar\" style=\"width: 85px;\"><IMG SRC=\"/images/$osname"."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"\">OS:<BR>$osname</DIV>";
+echo"<DIV class=\"iconbar\" style=\"width: 85px;\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"\">OS:<BR>$osname</DIV>";
 }
 echo"</DIV>";
 

@@ -372,8 +372,8 @@ echo"</SPAN>\n";
 //Icon Bar Modules
 echo"<DIV style=\"height: 34px\">";
 echo"<DIV class=\"iconbar\" style=\"width: 100px;\"><A HREF=\"install.php/$filename?id=$id&vid=$vid\"><IMG SRC=\"/images/download.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float:left;\" TITLE=\"Install $name (Right-Click to Download)\" ALT=\"\">Install</A><BR><SPAN class=\"filesize\">Size: $filesize kb</SPAN></DIV>";
-echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/$appname"."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"$appname\">&nbsp;Works with:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
-echo"<DIV class=\"iconbar\" style=\"width: 90px;\"><IMG SRC=\"/images/$osname"."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"\">OS:<BR>"; if($osname=="ALL") {echo"All OSes";} else {echo"$osname";} echo"</DIV>";
+echo"<DIV class=\"iconbar\"><IMG SRC=\"/images/".strtolower($appname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"$appname\">&nbsp;Works with:<BR>&nbsp;&nbsp;$minappver - $maxappver</DIV>";
+echo"<DIV class=\"iconbar\" style=\"width: 90px;\"><IMG SRC=\"/images/".strtolower($osname)."_icon.png\" BORDER=0 HEIGHT=34 WIDTH=34 STYLE=\"float: left\" ALT=\"\">OS:<BR>"; if($osname=="ALL") {echo"All OSes";} else {echo"$osname";} echo"</DIV>";
 echo"</DIV>";
 
 echo"</DIV>";
