@@ -28,13 +28,14 @@
 NS_IMPL_ISUPPORTS2(gfxImageFrame, gfxIImageFrame, nsIInterfaceRequestor)
 
 gfxImageFrame::gfxImageFrame() :
-  mTimeout(100),
   mInitalized(PR_FALSE),
-  mDisposalMethod(0),
-  mHasTransparentColor(PR_FALSE),
+  mMutable(PR_TRUE),
   mHasBackgroundColor(PR_FALSE),
+  mHasTransparentColor(PR_FALSE),
+  mTimeout(100),
   mBackgroundColor(0),
-  mTransparentColor(0)
+  mTransparentColor(0),
+  mDisposalMethod(0)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
@@ -48,15 +49,13 @@ gfxImageFrame::~gfxImageFrame()
 /* void init (in nscoord aX, in nscoord aY, in nscoord aWidth, in nscoord aHeight, in gfx_format aFormat); */
 NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, gfx_format aFormat)
 {
+  if (mInitalized)
+    return NS_ERROR_FAILURE;
 
   if (aWidth <= 0 || aHeight <= 0) {
     NS_ASSERTION(0, "error - negative image size\n");
     return NS_ERROR_FAILURE;
   }
-
-
-  if (mInitalized)
-    return NS_ERROR_FAILURE;
 
   mInitalized = PR_TRUE;
 
@@ -111,14 +110,19 @@ NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoor
   return NS_OK;
 }
 
-/* void drawTo */
-NS_IMETHODIMP gfxImageFrame::DrawTo(gfxIImageFrame* aDst, nscoord aDX, nscoord aDY, nscoord aDWidth, nscoord aDHeight)
-{
-  if (!mInitalized)
-    return NS_ERROR_NOT_INITIALIZED;
 
-  nsCOMPtr<nsIImage> img(do_GetInterface(aDst));
-  return mImage->DrawToImage(img, aDX, aDY, aDWidth, aDHeight);
+/* attribute boolean mutable */
+NS_IMETHODIMP gfxImageFrame::GetMutable(PRBool *aMutable)
+{
+  NS_ASSERTION(mInitalized, "gfxImageFrame::GetMutable called on non-inited gfxImageFrame");
+  *aMutable = mMutable;
+  return NS_OK;
+}
+
+NS_IMETHODIMP gfxImageFrame::SetMutable(PRBool aMutable)
+{
+  mMutable = aMutable;
+  return NS_OK;
 }
 
 /* readonly attribute nscoord x; */
@@ -209,6 +213,8 @@ NS_IMETHODIMP gfxImageFrame::GetImageData(PRUint8 **aData, PRUint32 *length)
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
+  NS_ASSERTION(mMutable, "trying to get data on an immutable frame");
+
   *aData = mImage->GetBits();
   *length = mImage->GetLineStride() * mSize.height;
 
@@ -220,6 +226,10 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
+
+  NS_ASSERTION(mMutable, "trying to set data on an immutable frame");
+  if (!mMutable)
+    return NS_ERROR_FAILURE;
 
   PRInt32 row_stride = mImage->GetLineStride();
 
@@ -299,6 +309,8 @@ NS_IMETHODIMP gfxImageFrame::GetAlphaData(PRUint8 **aData, PRUint32 *length)
   if (!mInitalized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
 
+  NS_ASSERTION(mMutable, "trying to get data on an immutable frame");
+
   *aData = mImage->GetAlphaBits();
   *length = mImage->GetAlphaLineStride() * mSize.height;
 
@@ -310,6 +322,10 @@ NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength
 {
   if (!mInitalized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
+
+  NS_ASSERTION(mMutable, "trying to set data on an immutable frame");
+  if (!mMutable)
+    return NS_ERROR_FAILURE;
 
   PRInt32 row_stride = mImage->GetAlphaLineStride();
 
@@ -351,6 +367,21 @@ NS_IMETHODIMP gfxImageFrame::UnlockAlphaData()
 
   return mImage->UnlockImagePixels(PR_TRUE);
 }
+
+
+
+
+
+/* void drawTo */
+NS_IMETHODIMP gfxImageFrame::DrawTo(gfxIImageFrame* aDst, nscoord aDX, nscoord aDY, nscoord aDWidth, nscoord aDHeight)
+{
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIImage> img(do_GetInterface(aDst));
+  return mImage->DrawToImage(img, aDX, aDY, aDWidth, aDHeight);
+}
+
 
 /* attribute long timeout; */
 NS_IMETHODIMP gfxImageFrame::GetTimeout(PRInt32 *aTimeout)
