@@ -17,7 +17,7 @@
   <script language="JavaScript">
   <![CDATA[
     var _elementIDs = ["forwardMessageMode", "autoQuote", "replyOnTop", "spellCheckBeforeSend", "strictlyMime", "wrapLength", "sendDefaultCharsetList", "addressingAutocomplete"];
-    
+
     function Startup()
     {
       doEnabling();
@@ -91,8 +91,22 @@
                prefstring="mailnews.wraplength" prefattribute="value"/>
     <text class="label" value="&char.label;"/>
 	</box>
+
+   <box autostretch="never">
+    <text class="label" value="&sendDefaultCharset.label;" for="sendDefaultCharsetList"/>
+    <menulist id="sendDefaultCharsetList" ref="NC:MaileditCharsetMenuRoot" datasources="rdf:charset-menu"
+              pref="true" preftype="string" prefstring="mailnews.send_default_charset"
+              prefattribute="data">
+      <template>
+        <menupopup oncreate="dump('CREATE MENU NOW\n');">
+          <menuitem value="rdf:http://home.netscape.com/NC-rdf#Name" data="..." uri="..."/>
+        </menupopup>
+      </template>
+    </menulist>       
+    </box> 
 	</titledbox>
 	
+<!--
 	<titledbox orient="vertical" autostretch="never">
 	<title><text value="&languages.label;"/></title>
 
@@ -109,6 +123,7 @@
     </menulist>       
     </box> 
   </titledbox>
+-->
               
       
   <titledbox orient="vertical">
