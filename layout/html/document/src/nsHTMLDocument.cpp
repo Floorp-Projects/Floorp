@@ -44,6 +44,15 @@
 #include "nsRepository.h"
 #include "nsParserCIID.h"
 
+// Find/Serach Includes
+#include "nsISelection.h"
+#include "nsSelectionRange.h"
+#include "nsSelectionPoint.h"
+const PRInt32 kForward  = 0;
+const PRInt32 kBackward = 1;
+
+
+
 //#define rickgdebug 1
 #ifdef rickgdebug
 #include "nsHTMLContentSinkStream.h"
@@ -78,6 +87,21 @@ nsHTMLDocument::nsHTMLDocument()
   mNamedItems = nsnull;
   mParser = nsnull;
   nsHTMLAtoms::AddrefAtoms();
+
+  // Find/Search Init
+  mLastBlockSearchOffset = 0;
+  mAdjustToEnd           = PR_FALSE;
+  mShouldMatchCase       = PR_FALSE;
+  mIsPreTag              = PR_FALSE;
+
+  mHoldBlockContent      = nsnull;
+  mCurrentBlockContent   = nsnull;
+
+  // These will be converted to a nsDeque
+  mParentStack = (nsIContent**) new PRUint32[32];
+  mChildStack  = (nsIContent**) new PRUint32[32];
+
+
 }
 
 nsHTMLDocument::~nsHTMLDocument()
@@ -106,6 +130,10 @@ nsHTMLDocument::~nsHTMLDocument()
   }
 // XXX don't bother doing this until the dll is unloaded???
 //  nsHTMLAtoms::ReleaseAtoms();
+
+  // These will be converted to a nsDeque
+  delete[] mParentStack;
+  delete[] mChildStack;
 }
 
 NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
@@ -988,5 +1016,585 @@ nsHTMLDocument::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject
 
   NS_RELEASE(global);
   return res;
+}
+
+
+//----------------------------
+PRBool IsInline(eHTMLTags aTag)
+{
+  PRBool  result = PR_FALSE;
+
+  switch (aTag)
+  {
+    case  eHTMLTag_a:
+    case  eHTMLTag_address:
+    case  eHTMLTag_big:
+    case  eHTMLTag_blink:
+    case  eHTMLTag_b:
+    case  eHTMLTag_br:
+    case  eHTMLTag_cite:
+    case  eHTMLTag_code:
+    case  eHTMLTag_dfn:
+    case  eHTMLTag_em:
+    case  eHTMLTag_font:
+    case  eHTMLTag_img:
+    case  eHTMLTag_i:
+    case  eHTMLTag_kbd:
+    case  eHTMLTag_keygen:
+    case  eHTMLTag_nobr:
+    case  eHTMLTag_samp:
+    case  eHTMLTag_small:
+    case  eHTMLTag_spacer:
+    case  eHTMLTag_span:      
+    case  eHTMLTag_strike:
+    case  eHTMLTag_strong:
+    case  eHTMLTag_sub:
+    case  eHTMLTag_sup:
+    case  eHTMLTag_td:
+    case  eHTMLTag_textarea:
+    case  eHTMLTag_tt:
+    case  eHTMLTag_var:
+    case  eHTMLTag_wbr:
+           
+      result = PR_TRUE;
+      break;
+
+    default:
+      break;
+
+  }
+  return result;
+}
+
+//----------------------------
+PRBool IsBlockLevel(eHTMLTags aTag, PRBool &isPreTag) 
+{
+  isPreTag = (aTag == eHTMLTag_pre);
+
+  return !IsInline(aTag);
+}
+
+//----------------------------
+class SubText {
+public:
+  nsIContent * mContent;
+  PRInt32      mOffset;
+  PRInt32      mLength;
+};
+
+//----------------------------
+class BlockText {
+  nsString   mText;
+  SubText  * mSubTexts[512];
+  PRInt32    mNumSubTexts;
+public:
+  BlockText() : mNumSubTexts(0) {}
+  virtual ~BlockText();
+
+  char * GetText() { return mText.ToNewCString(); }
+  void AddSubText(nsIContent * aContent, nsString & aStr);
+  PRInt32 GetStartEnd(PRInt32 anIndex, PRInt32 aLength,
+                       nsIContent ** aStartContent, PRInt32 & aStartOffset,
+                       nsIContent ** aEndContent,   PRInt32 & aEndOffset,
+                       PRInt32       aDirection);
+};
+
+//----------------------------
+BlockText::~BlockText() 
+{
+  PRInt32 i;
+  for (i=0;i<mNumSubTexts;i++) {
+    delete mSubTexts[i];
+  }
+}
+
+//----------------------------
+void BlockText::AddSubText(nsIContent * aContent, nsString & aStr) 
+{
+  SubText * subTxt = new SubText();
+  subTxt->mContent = aContent;
+  subTxt->mOffset  = mText.Length();
+  subTxt->mLength  = aStr.Length();
+  mText.Append(aStr);
+  printf("Adding Str to Block [%s]\n", aStr.ToNewCString());
+  printf("Block [%s]\n", mText.ToNewCString());
+  mSubTexts[mNumSubTexts++] = subTxt;
+}
+
+//-----------------------------------------------
+PRInt32 BlockText::GetStartEnd(PRInt32 anIndex, PRInt32 aLength,
+                               nsIContent ** aStartContent, PRInt32 & aStartOffset,
+                               nsIContent ** aEndContent,   PRInt32 & aEndOffset,
+                               PRInt32       aDirection)
+{
+  // Debug
+  char * cStr = mText.ToNewCString();
+  if (strstr(cStr, "blue text")) {
+    int x = 0;
+  }
+  // Debug
+
+  PRInt32 i      = 0;
+  PRInt32 offset = 0;
+  PRInt32 endPos = anIndex + aLength;
+  while (anIndex > mSubTexts[i]->mOffset+mSubTexts[i]->mLength) {
+    i++;
+  }
+  aStartOffset  = anIndex - mSubTexts[i]->mOffset;
+  *aStartContent = mSubTexts[i]->mContent;
+  if (endPos <= mSubTexts[i]->mOffset+mSubTexts[i]->mLength) {
+    aEndOffset = aStartOffset + aLength;
+    *aEndContent = *aStartContent;
+  } else {
+
+    while (endPos > mSubTexts[i]->mOffset+mSubTexts[i]->mLength) {
+      i++;
+    }
+    aEndOffset   = endPos - mSubTexts[i]->mOffset;
+    *aEndContent = mSubTexts[i]->mContent;
+  }
+
+  if (aDirection == kBackward) {
+    endPos -= aLength;
+  }
+  return endPos;
+
+}
+
+//-----------------------------------------------
+PRBool nsHTMLDocument::SearchBlock(BlockText & aBlockText, 
+                               nsString  & aStr) 
+{
+  PRBool found = PR_FALSE;
+
+  mLastBlockSearchOffset = (mCurrentBlockContent == mHoldBlockContent? mLastBlockSearchOffset : 0);
+
+  char * searchStr  = aStr.ToNewCString();
+  char * contentStr = aBlockText.GetText();
+
+  char * adjustedContent;
+  char * str = nsnull;
+
+  if (mSearchDirection == kForward) {
+    adjustedContent = contentStr + mLastBlockSearchOffset;
+    str = strstr(adjustedContent, searchStr);
+  } else {
+    adjustedContent = contentStr;
+    size_t adjLen;
+    if (mAdjustToEnd) {
+      adjLen = strlen(adjustedContent);
+    } else {
+      adjLen = mLastBlockSearchOffset;
+    }
+    size_t srchLen = strlen(searchStr);
+    if (srchLen > adjLen) {
+      str = nsnull;
+    } else if (adjLen == srchLen && !strncmp(adjustedContent, searchStr, srchLen)) {
+      str = adjustedContent;
+    } else {
+      str = adjustedContent + adjLen - srchLen;
+      while (strncmp(str, searchStr, srchLen)) {
+        str--;
+        if (str < adjustedContent) {
+          str = nsnull;
+          break;
+        }
+      }
+    }
+  }
+
+  if (str) {
+    PRInt32 inx = str - contentStr;
+
+    nsIContent * startContent;
+    PRInt32      startOffset;
+    nsIContent * endContent;
+    PRInt32      endOffset;
+
+    mLastBlockSearchOffset      = aBlockText.GetStartEnd(inx, aStr.Length(), &startContent, startOffset, &endContent, endOffset, mSearchDirection);
+    mHoldBlockContent           = mCurrentBlockContent;
+    nsSelectionRange * range    = mSelection->GetRange();
+    nsSelectionPoint * startPnt = range->GetStartPoint();
+    nsSelectionPoint * endPnt   = range->GetEndPoint();
+    startPnt->SetPoint(startContent, startOffset, PR_TRUE);
+    endPnt->SetPoint(endContent, endOffset, PR_FALSE);
+
+    found = PR_TRUE;
+  }
+
+  delete[] searchStr;
+  delete[] contentStr;
+
+  return found;
+}
+
+////////////////////////////////////////////////////
+// Check to see if a Content node is a block tag
+////////////////////////////////////////////////////
+PRBool nsHTMLDocument::ContentIsBlock(nsIContent * aContent) 
+{
+  PRBool    isBlock = PR_FALSE;
+  nsIAtom * atom    = aContent->GetTag();
+  if (atom != nsnull) {
+    nsString str;
+    atom->ToString(str);
+    char * cStr = str.ToNewCString();
+    isBlock = IsBlockLevel(NS_TagToEnum(cStr), mIsPreTag);
+    delete[] cStr;
+    NS_RELEASE(atom);
+  }
+  return isBlock;
+}
+
+
+/////////////////////////////////////////////
+// This function moves up the parent hierarchy 
+// looking for a parent that is a "block"
+/////////////////////////////////////////////
+nsIContent * nsHTMLDocument::FindBlockParent(nsIContent * aContent, 
+                                         PRBool       aSkipThisContent)
+{
+  mStackInx = 0;
+  nsIContent * parent = aContent->GetParent();
+  nsIContent * child;
+
+
+  if (parent == nsnull) {
+    return nsnull;
+  }
+  NS_ADDREF(aContent);
+
+  // This method enables the param "aContent" be part of the "path"
+  // on the stack as the it llok for the block parent.
+  //
+  // There are times whne we don't want to include the aContent
+  // as part of the path so we skip to its next sibling. If it is
+  // the last sibling then we jump up to it's parent.
+  if (aSkipThisContent) {
+    child = aContent;
+    PRBool done = PR_FALSE;
+    while (!done) {
+      PRInt32 inx = parent->IndexOf(child) + (mSearchDirection == kForward?1:-1);
+      if (inx < 0 || inx >= parent->ChildCount()) {
+        NS_RELEASE(child);
+        child  = parent;
+        parent = child->GetParent();
+        if (parent == nsnull) {
+          NS_RELEASE(child);
+          return nsnull;
+        }
+      } else {
+        NS_RELEASE(child);
+        child = parent->ChildAt(inx);
+        done = PR_TRUE;
+      }
+    }
+  } else {
+    child = aContent;
+  }
+
+  // This travels up through the parents lloking for the parent who
+  // is a block tag. We place the child/parent pairs onto a stack 
+  // so we know what nodes to skip as we work our way back down into
+  // the block
+  do {
+
+    NS_ADDREF(parent);
+    NS_ADDREF(child);
+    mParentStack[mStackInx]  = parent;
+    mChildStack[mStackInx++] = child;
+
+    if (ContentIsBlock(parent)) {
+      break;
+    }
+
+    nsIContent * oldChild = child;
+    child  = parent;
+    parent = child->GetParent();
+    NS_RELEASE(oldChild);
+  } while (parent != nsnull);
+
+  NS_RELEASE(child);
+  return parent;
+}
+
+//-----------------------------------------------
+PRBool nsHTMLDocument::BuildBlockFromContent(nsIContent   * aContent,
+                                          BlockText    & aBlockText)
+{
+  // First check to see if it is a new Block node
+  // If it is then we need to check the current block text (aBlockText)
+  // to see if it holds the search string
+  if (ContentIsBlock(aContent)) {
+
+    // Search current block of text
+    if (SearchBlock(aBlockText, mSearchStr)) {
+      return PR_TRUE;
+    }
+
+    // Start new search here on down with a new block
+    BlockText blockText;
+    if (!BuildBlockTraversing(aContent, blockText)) {
+      // down inside the search string wasn't found check the full block text 
+      // for the search text
+      if (SearchBlock(blockText, mSearchStr)) {
+        return PR_TRUE;
+      }
+    } else {
+      // search text was found down inside, so leave
+      return PR_TRUE;
+    }
+
+  } else {
+    return BuildBlockTraversing(aContent, aBlockText);
+  }
+  return PR_FALSE;
+}
+
+//----------------------------------
+// This function moves down through
+// the hiearchy and build the block of text
+//-----------------------------------------
+PRBool nsHTMLDocument::BuildBlockTraversing(nsIContent   * aParent,
+                                        BlockText    & aBlockText) 
+{
+  nsIAtom * atom = aParent->GetTag();
+  if (atom != nsnull) {
+    if (aParent->ChildCount() > 0) {
+      PRInt32 i;
+      if (mSearchDirection == kForward) {
+        for (i=0;i<aParent->ChildCount();i++) {
+          nsIContent * child = aParent->ChildAt(i);
+          if (BuildBlockFromContent(child, aBlockText)) {
+            return PR_TRUE;
+          }
+        }
+      } else { // Backward
+        for (i=aParent->ChildCount()-1;i>=0;i--) {
+          nsIContent * child = aParent->ChildAt(i);
+          if (BuildBlockFromContent(child, aBlockText)) {
+            return PR_TRUE;
+          }
+        }
+      }
+    }
+    NS_RELEASE(atom);
+  } else {
+    static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
+    nsIDOMText* textContent;
+    nsresult rv = aParent->QueryInterface(kIDOMTextIID,(void **)&textContent);
+    if (NS_OK == rv) {
+      nsString stringBuf;
+      textContent->GetData(stringBuf);
+      aBlockText.AddSubText(aParent, stringBuf);
+      NS_RELEASE(textContent);
+    }
+  }
+  return PR_FALSE;
+}
+
+//----------------------------------
+// This function moves down through
+// the hiearchy and build the block of text
+//-----------------------------------------
+PRBool nsHTMLDocument::BuildBlockFromStack(nsIContent * aParent,
+                         BlockText  & aBlockText,
+                         PRInt32      aStackInx) 
+{
+  nsIContent * stackParent = mParentStack[aStackInx];
+  nsIContent * stackChild  = mChildStack[aStackInx];
+
+  PRInt32      inx         = aParent->IndexOf(stackChild);
+  PRInt32      j;
+
+  // Forward
+  if (mSearchDirection == kForward) {
+    for (j=inx;j<aParent->ChildCount();j++) {
+      nsIContent * child = aParent->ChildAt(j);
+      if (child == stackChild && aStackInx < mStackInx) {
+        if (BuildBlockFromStack(child, aBlockText, aStackInx+1)) {
+          return PR_TRUE;
+        }
+      } else {
+        if (!BuildBlockTraversing(child, aBlockText)) {
+          if (SearchBlock(aBlockText, mSearchStr)) {
+            return PR_TRUE;
+          }
+        } else {
+          return PR_TRUE;
+        }
+      }
+    }
+  } else { // Backward
+    for (j=inx;j>=0;j--) {
+      nsIContent * child = aParent->ChildAt(j);
+      if (child == stackChild && aStackInx < mStackInx) {
+        if (BuildBlockFromStack(child, aBlockText, aStackInx+1)) {
+          return PR_TRUE;
+        }
+      } else {
+        if (!BuildBlockTraversing(child, aBlockText)) {
+          if (SearchBlock(aBlockText, mSearchStr)) {
+            return PR_TRUE;
+          }
+        } else {
+          return PR_TRUE;
+        }
+      }
+    }
+
+  }
+  return PR_FALSE;
+
+}
+
+//----------------------------------
+// This function moves down through
+// the hiearchy and build the block of text
+//-----------------------------------------
+PRBool nsHTMLDocument::BuildBlock(nsIContent * aParent,
+                              BlockText  & aBlockText) 
+{
+  nsIContent * stackParent = mParentStack[0];
+  nsIContent * stackChild  = mChildStack[0];
+  PRInt32      inx         = stackParent->IndexOf(stackChild);
+  PRInt32      j;
+
+  if (mSearchDirection == kForward) {
+    for (j=inx;j<stackParent->ChildCount();j++) {
+      nsIContent * child = stackParent->ChildAt(j);
+      if (child == stackChild && mStackInx > 1) {
+        if (BuildBlockFromStack(child, aBlockText, 1)) {
+          return PR_TRUE;
+        }
+      } else {
+        if (BuildBlockTraversing(child, aBlockText)) {
+          return PR_TRUE;
+        } else {
+          if (SearchBlock(aBlockText, mSearchStr)) {
+            return PR_TRUE;
+          }
+        }
+      }
+    }
+  } else {
+    for (j=inx;j>=0;j--) {
+      BlockText blockText;
+      nsIContent * child = stackParent->ChildAt(j);
+      if (child == stackChild && mStackInx > 1) {
+        if (BuildBlockFromStack(child, blockText, 1)) {
+          return PR_TRUE;
+        }
+      } else {
+        if (BuildBlockTraversing(child, blockText)) {
+          return PR_TRUE;
+        } else {
+          if (SearchBlock(blockText, mSearchStr)) {
+            return PR_TRUE;
+          }
+        }
+      }
+      mAdjustToEnd = PR_TRUE;
+    }
+  }
+  return PR_FALSE;
+}
+
+/**
+  * Finds text in content
+ */
+NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
+{
+  aIsFound = PR_FALSE;
+
+  mSearchStr.SetLength(0);
+  mSearchStr.Append(aSearchStr);
+
+  nsIContent * start = nsnull;
+  nsIContent * end   = nsnull;
+  nsIContent * body  = nsnull;
+
+  nsString bodyStr("BODY");
+  PRInt32 i;
+  for (i=0;i<mRootContent->ChildCount();i++) {
+    nsIContent * child = mRootContent->ChildAt(i);
+    PRBool isSynthetic;
+    child->IsSynthetic(isSynthetic);
+    if (!isSynthetic) {
+      nsIAtom * atom = child->GetTag();
+      if (bodyStr.EqualsIgnoreCase(atom)) {
+        body = child;
+        break;
+      }
+
+    }
+    NS_RELEASE(child);
+  }
+
+  if (body == nsnull) {
+    return NS_OK;
+  }
+
+  start = body;
+  // Find Very first Piece of Content
+  while (start->ChildCount() > 0) {
+    nsIContent * child = start;
+    start = child->ChildAt(0);
+    NS_RELEASE(child);
+  }
+
+  end = body;
+  // Last piece of Content
+  PRInt32 count = end->ChildCount();
+  while (count > 0) {
+    nsIContent * child = end;
+    end   = child->ChildAt(count-1);
+    NS_RELEASE(child);
+    count = end->ChildCount();
+  }
+
+  nsSelectionRange * range        = mSelection->GetRange();
+  nsIContent       * startContent = range->GetStartContent();
+  nsIContent       * endContent   = range->GetEndContent();
+  nsSelectionPoint * startPnt     = range->GetStartPoint();
+  nsSelectionPoint * endPnt       = range->GetEndPoint();
+
+  mSearchDirection = aSearchDown? kForward:kBackward;
+  nsIContent * searchContent;
+
+  if (endContent == nsnull && mSearchDirection == kForward) {
+    searchContent = (mSearchDirection == kForward ? body:end);
+    BlockText blockText;
+    if (!BuildBlockTraversing(searchContent, blockText)) {
+      if (SearchBlock(blockText, mSearchStr)) {
+        aIsFound = PR_TRUE;
+      }
+    }
+  } else {
+    searchContent          = (mSearchDirection == kForward ? endContent:startContent);
+    mLastBlockSearchOffset = (mSearchDirection == kForward ? endPnt->GetOffset():startPnt->GetOffset());
+    mAdjustToEnd = PR_FALSE;
+    if (mSearchDirection == kBackward && endContent == nsnull) {
+      searchContent = end;
+      mAdjustToEnd  = PR_TRUE;
+    }
+    nsIContent * blockContent = FindBlockParent(searchContent);
+    while (blockContent != nsnull) {
+
+      BlockText blockText;
+      if (BuildBlock(blockContent, blockText)) {
+        aIsFound = PR_TRUE;
+        break;
+      }
+
+      mLastBlockSearchOffset = 0;
+      mAdjustToEnd           = PR_TRUE;
+      blockContent = FindBlockParent(blockContent, PR_TRUE);
+    }
+  }
+
+  SetDisplaySelection(PR_TRUE); 
+
+  return NS_OK;
 }
 
