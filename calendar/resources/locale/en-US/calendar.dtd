@@ -141,7 +141,7 @@
 <!ENTITY newtodo.startdate.label "Start Date">
 <!ENTITY newtodo.priority.label "Priority">
 <!ENTITY newtodo.percentcomplete.label "&#37; complete">
-<!ENTITY newtodo.categories.label "Categories">
+<!ENTITY newtodo.categories.label "Category">
 <!ENTITY newtodo.starttime.warning "Your start date occurs after your due date.">
 <!ENTITY newtodo.cancelled.label "Cancelled">
 <!ENTITY newtodo.status.label "Status">

@@ -138,7 +138,7 @@
 <!ENTITY newtodo.startdate.label "Beginn">
 <!ENTITY newtodo.priority.label "Priorität">
 <!ENTITY newtodo.percentcomplete.label "&#037; fertig">
-<!ENTITY newtodo.categories.label "Kategorien">
+<!ENTITY newtodo.categories.label "Kategorie">
 <!ENTITY newtodo.starttime.warning "Ihr Beginn ist nach dem Ende.">
 <!ENTITY newtodo.cancelled.label "Abgebrochen">
 <!ENTITY newtodo.status.label "Status">
