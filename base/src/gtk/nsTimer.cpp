@@ -131,6 +131,7 @@ TimerImpl::Init(nsITimerCallback *aCallback,
 {
   //printf("TimerImpl::Init called with callback only for %p\n", this);
     mCallback = aCallback;
+    NS_ADDREF(mCallback);
     // mRepeat = aRepeat;
   if ((aDelay > 10000) || (aDelay < 0)) {
     printf("Timer::Init() called with bogus value \"%d\"!  Not enabling timer.\n",
@@ -149,7 +150,7 @@ TimerImpl::Init(PRUint32 aDelay)
   //printf("TimerImpl::Init called with delay %d only for %p\n", aDelay, this);
 
     mDelay = aDelay;
-    NS_ADDREF(this);
+    //    NS_ADDREF(this);
 
     return NS_OK;
 }
