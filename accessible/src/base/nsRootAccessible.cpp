@@ -65,6 +65,11 @@
 #include "nsPIDOMWindow.h"
 #include "nsReadableUtils.h"
 #include "nsRootAccessible.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+#include "nsIDocShellTreeOwner.h"
+#include "nsIBaseWindow.h"
+
 #ifdef MOZ_XUL
 #include "nsXULTreeAccessible.h"
 #include "nsIXULDocument.h"
@@ -108,6 +113,37 @@ nsRootAccessible::~nsRootAccessible()
 }
 
 // helpers
+/* readonly attribute AString name; */
+NS_IMETHODIMP nsRootAccessible::GetName(nsAString& aName)
+{
+  if (!mDocument) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsIScriptGlobalObject *globalScript = mDocument->GetScriptGlobalObject();
+  nsIDocShell *docShell = nsnull;
+  if (globalScript) {
+    docShell = globalScript->GetDocShell();
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+  if(!docShellAsItem)
+     return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+  docShellAsItem->GetTreeOwner(getter_AddRefs(treeOwner));
+
+  nsCOMPtr<nsIBaseWindow> baseWindow(do_QueryInterface(treeOwner));
+  if (baseWindow) {
+    nsXPIDLString title;
+    baseWindow->GetTitle(getter_Copies(title));
+    aName.Assign(title);
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
+
 /* readonly attribute nsIAccessible accParent; */
 NS_IMETHODIMP nsRootAccessible::GetParent(nsIAccessible * *aParent) 
 { 

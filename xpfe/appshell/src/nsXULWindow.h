@@ -154,6 +154,7 @@ protected:
    PRUint32                mBlurSuppressionLevel;
    PRUint32                mPersistentAttributesDirty; // persistentAttributes
    PRUint32                mPersistentAttributesMask;
+   nsString                mTitle;
 };
 
 // nsContentShellInfo

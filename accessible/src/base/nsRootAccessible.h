@@ -63,7 +63,7 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     nsRootAccessible(nsIDOMNode *aDOMNode, nsIWeakReference* aShell);
     virtual ~nsRootAccessible();
 
-    /* attribute wstring accName; */
+    NS_IMETHOD GetName(nsAString& aName);
     NS_IMETHOD GetParent(nsIAccessible * *aParent);
     NS_IMETHOD GetRole(PRUint32 *aRole);
     NS_IMETHOD GetState(PRUint32 *aState);

@@ -821,18 +821,17 @@ NS_IMETHODIMP nsXULWindow::GetTitle(PRUnichar** aTitle)
 {
    NS_ENSURE_ARG_POINTER(aTitle);
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   *aTitle = ToNewUnicode(mTitle);
+   if (!*aTitle)
+      return NS_ERROR_OUT_OF_MEMORY;
    return NS_OK;
 }
 
 NS_IMETHODIMP nsXULWindow::SetTitle(const PRUnichar* aTitle)
 {
    NS_ENSURE_STATE(mWindow);
-
-   nsAutoString title(aTitle);
-
-   NS_ENSURE_SUCCESS(mWindow->SetTitle(title), NS_ERROR_FAILURE);
+   mTitle.Assign(aTitle);
+   NS_ENSURE_SUCCESS(mWindow->SetTitle(mTitle), NS_ERROR_FAILURE);
 
    // Tell the window mediator that a title has changed
    nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
