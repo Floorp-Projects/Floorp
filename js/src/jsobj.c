@@ -1387,10 +1387,37 @@ with_LookupProperty(JSContext *cx, JSObject *obj, jsid id, JSObject **objp,
 #endif
                     )
 {
-    JSObject *proto = OBJ_GET_PROTO(cx, obj);
+    JSObject *proto;
+    JSScopeProperty *sprop;
+    JSStackFrame *fp;
+
+    proto = OBJ_GET_PROTO(cx, obj);
     if (!proto)
         return js_LookupProperty(cx, obj, id, objp, propp);
-    return OBJ_LOOKUP_PROPERTY(cx, proto, id, objp, propp);
+    if (!OBJ_LOOKUP_PROPERTY(cx, proto, id, objp, propp))
+        return JS_FALSE;
+
+    /*
+     * Check whether id names an argument or local variable in an active
+     * function.  If so, pretend we didn't find it, so that the real arg or
+     * var property can be found in the function's call object, later on in
+     * the scope chain.
+     * XXX blame pre-ECMA reflection of function args and vars as properties
+     */
+    if ((sprop = (JSScopeProperty *) *propp) &&
+        (proto = *objp, OBJ_IS_NATIVE(proto)) &&
+        (sprop->getter == js_GetArgument ||
+         sprop->getter == js_GetLocalVariable)) {
+        JS_ASSERT(OBJ_GET_CLASS(cx, proto) == &js_FunctionClass);
+        for (fp = cx->fp; fp && (!fp->fun || fp->fun->native); fp = fp->down)
+            continue;
+        if (fp && fp->fun == (JSFunction *) JS_GetPrivate(cx, proto)) {
+            OBJ_DROP_PROPERTY(cx, proto, *propp);
+            *objp = NULL;
+            *propp = NULL;
+        }
+    }
+    return JS_TRUE;
 }
 
 static JSBool

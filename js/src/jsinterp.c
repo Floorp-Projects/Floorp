@@ -466,7 +466,7 @@ SetFunctionSlot(JSContext *cx, JSObject *obj, JSPropertyOp setter, jsid id,
     JSBool ok;
 
     slot = (uintN) JSVAL_TO_INT(id);
-    if (!JS_InstanceOf(cx, obj, &js_FunctionClass, NULL)) {
+    if (OBJ_GET_CLASS(cx, obj) != &js_FunctionClass) {
         /*
          * Given a non-function object obj that has a function object in its
          * prototype chain, where an argument or local variable property named
@@ -481,7 +481,7 @@ SetFunctionSlot(JSContext *cx, JSObject *obj, JSPropertyOp setter, jsid id,
             obj = OBJ_GET_PROTO(cx, obj);
             if (!obj)
                 return JS_TRUE;
-        } while (!JS_InstanceOf(cx, obj, &js_FunctionClass, NULL));
+        } while (OBJ_GET_CLASS(cx, obj) != &js_FunctionClass);
 
         JS_LOCK_OBJ(cx, obj);
         scope = OBJ_SCOPE(obj);
