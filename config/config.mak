@@ -259,6 +259,10 @@ CFLAGS = $(CFLAGS) -DUSE_STRING2
 CFLAGS=$(CFLAGS) -DMOZ_MATHML
 !endif
 
+!ifdef MOZ_SVG
+CFLAGS=$(CFLAGS) -DMOZ_SVG
+!endif
+
 
 #//-----------------------------------------------------------------------
 #//
