@@ -152,7 +152,7 @@ nsMsgDatabase::CleanupCache()
 				i--;	// back up array index, since closing removes db from cache.
 			}
 		}
-		XP_ASSERT(GetNumInCache() == 0);	// better not be any open db's.
+		NS_ASSERTION(GetNumInCache() == 0, "some msg dbs left open");	// better not be any open db's.
 		delete m_dbCache;
 	}
 	m_dbCache = NULL; // Need to reset to NULL since it's a
