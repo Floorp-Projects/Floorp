@@ -57,7 +57,6 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGQUOTE
 
-  nsresult CreateStartupUrl(char *uri, nsIURI** aUrl);
   // 
   // Implementation data...
   //

@@ -39,19 +39,9 @@
 #include "nsMsgMimeCID.h"
 #include "nsMsgCompose.h"
 #include "nsMsgMailNewsUrl.h"
-#include "nsIImapUrl.h"
-#include "nsIMailboxUrl.h"
-#include "nsINntpUrl.h"
-#include "nsMsgNewsCID.h"
-#include "nsMsgLocalCID.h"
-#include "nsMsgBaseCID.h"
-#include "nsMsgImapCID.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
-static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
-static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
-static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kStreamConverterCID,    NS_MAILNEWS_MIME_STREAM_CONVERTER_CID);
 
 
@@ -144,47 +134,6 @@ NS_NewMsgQuote(const nsIID &aIID, void ** aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-
-nsresult 
-nsMsgQuote::CreateStartupUrl(char *uri, nsIURI** aUrl)
-{
-    nsresult rv = NS_ERROR_NULL_POINTER;
-    if (!uri || !*uri || !aUrl) return rv;
-    *aUrl = nsnull;
-    if (PL_strncasecmp(uri, "imap", 4) == 0)
-    {
-        nsCOMPtr<nsIImapUrl> imapUrl;
-        rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
-                                                nsIImapUrl::GetIID(),
-                                                getter_AddRefs(imapUrl));
-        if (NS_SUCCEEDED(rv) && imapUrl)
-            rv = imapUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
-                                         (void**) aUrl);
-    }
-    else if (PL_strncasecmp(uri, "mailbox", 7) == 0)
-    {
-        nsCOMPtr<nsIMailboxUrl> mailboxUrl;
-        rv = nsComponentManager::CreateInstance(kCMailboxUrl, nsnull,
-                                                nsIMailboxUrl::GetIID(),
-                                                getter_AddRefs(mailboxUrl));
-        if (NS_SUCCEEDED(rv) && mailboxUrl)
-            rv = mailboxUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
-                                            (void**) aUrl);
-    }
-    else if (PL_strncasecmp(uri, "news", 4) == 0)
-    {
-        nsCOMPtr<nsINntpUrl> nntpUrl;
-        rv = nsComponentManager::CreateInstance(kCNntpUrlCID, nsnull,
-                                                nsINntpUrl::GetIID(),
-                                                getter_AddRefs(nntpUrl));
-        if (NS_SUCCEEDED(rv) && nntpUrl)
-            rv = nntpUrl->QueryInterface(nsCOMTypeInfo<nsIURI>::GetIID(),
-                                         (void**) aUrl);
-    }
-    if (*aUrl)
-        (*aUrl)->SetSpec(uri);
-    return rv;
-}
 
 nsresult
 nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStreamListener * aQuoteMsgStreamListener)
