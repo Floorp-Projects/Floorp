@@ -21,7 +21,7 @@ package grendel.composition;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.*;
+import java.util.Vector;
 
 import javax.swing.*;
 import javax.swing.table.*;
@@ -31,7 +31,7 @@ class AddressDialog extends Dialog implements ActionListener {
     private final int BUTTON_WIDTH  = 100;
     private final int BUTTON_HEIGHT = 28;
 
-    private java.awt.List        mSendToList;    //ListBox gadget that holds recipients names.
+    private List        mSendToList;    //ListBox gadget that holds recipients names.
     private JTable      mTable;         //Tbale displays the address book entries.
     private Vector      mAddresses;     //a parallel list of recipients with mSendToList.
     private boolean     wasCanceled = true; //true if Cancel button was used to dismiss dialog.
