@@ -1200,6 +1200,12 @@ nsMsgComposeAndSend::GetBodyFromEditor()
 // This is the routine that does the magic of generating the body and the
 // attachments for the multipart/related email message.
 //
+typedef struct
+{
+  nsIDOMNode    *node;
+  char          *url;
+} domSaveStruct;
+
 nsresult
 nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aNewsCount)
 {
@@ -1207,6 +1213,8 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
   nsresult                  rv = NS_OK;
   nsISupportsArray          *aNodeList = nsnull;
   PRUint32                  i; 
+  PRInt32                   j = -1;
+  domSaveStruct             *domSaveArray = nsnull;
   
   // Sanity check to see if we should be here or not...if not, just return
   if (!mEditor)
@@ -1227,7 +1235,15 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
   
   nsMsgAttachmentData   attachment;
   PRInt32               locCount = -1;
-  
+
+  if (multipartCount > 0)
+  {
+    domSaveArray = (domSaveStruct *)PR_MALLOC(sizeof(domSaveStruct) * multipartCount);
+    if (!domSaveArray)
+      return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
+    nsCRT::memset(domSaveArray, 0, sizeof(domSaveStruct) * multipartCount);
+  }
+
   for (i = mPreloadedAttachmentCount; i < (mPreloadedAttachmentCount + multipartCount); i++)
   {
     // Reset this structure to null!
@@ -1256,6 +1272,9 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     if (!node) {
       return NS_ERROR_MIME_MPART_ATTACHMENT_ERROR;
     }
+
+    j++;
+    domSaveArray[j].node = node;
     
     // Now, we know the types of objects this node can be, so we will do
     // our query interface here and see what we come up with 
@@ -1435,21 +1454,62 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     // Content-ID for this object. This will be necessary for generating
     // the HTML we need.
     //
+    nsString      domURL;
     if (m_attachments[i].m_content_id)  
     {
       nsString   newSpec("cid:");
-      
+      domURL = "";
+
       newSpec.Append(m_attachments[i].m_content_id);
-      if (anchor) 
+      if (anchor)
+      {
+        anchor->GetHref(domURL);
         anchor->SetHref(newSpec);
+      }
       else if (link)
+      {
+        anchor->GetHref(domURL);
         anchor->SetHref(newSpec);
+      }
       else if (image)
+      {
+        image->GetSrc(domURL);
         image->SetSrc(newSpec);
+      }
+
+      if (!domURL.IsEmpty())
+        domSaveArray[j].url = domURL.ToNewCString();
     }
   }
   
   rv = GetBodyFromEditor();
+
+  // 
+  // Ok, now we need to un-whack the DOM or we have a screwed up document on 
+  // Send failure.
+  //
+  for (i = 0; i < multipartCount; i++)
+  {
+    if ( (!domSaveArray[i].node) || (!domSaveArray[i].url) )
+      continue;
+
+    // Now, we know the types of objects this node can be, so we will do
+    // our query interface here and see what we come up with 
+    nsCOMPtr<nsIDOMHTMLImageElement>    image = (do_QueryInterface(domSaveArray[i].node));
+    nsCOMPtr<nsIDOMHTMLLinkElement>     link = (do_QueryInterface(domSaveArray[i].node));
+    nsCOMPtr<nsIDOMHTMLAnchorElement>   anchor = (do_QueryInterface(domSaveArray[i].node));
+
+    if (anchor)
+      anchor->SetHref(domSaveArray[i].url);
+    else if (link)
+      anchor->SetHref(domSaveArray[i].url);
+    else if (image)
+      image->SetSrc(domSaveArray[i].url);
+
+    nsAllocator::Free(domSaveArray[i].url);
+  }
+
+  PR_FREEIF(domSaveArray);
 
   //
   // Now, we have to create that first child node for the multipart

@@ -518,53 +518,49 @@ nsMsgSendPart::Write()
     if (m_buffer) 
     {
       const char* charset = GetCharsetName();
-      if (!nsCRT::strcasecmp("us-ascii", charset) ||  //XXX I18N use Unicode string
-          !nsCRT::strcasecmp("ISO-8859-1", charset))
+      nsCOMPtr<mozITXTToHTMLConv> conv;
+      nsresult rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
+        NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
+        (void **) getter_AddRefs(conv));
+      if (NS_FAILED(rv))
       {
-        nsCOMPtr<mozITXTToHTMLConv> conv;
-        nsresult rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
-                              NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
-                              (void **) getter_AddRefs(conv));
-        if (NS_FAILED(rv))
-        {
-          status = -1;
-          goto FAIL;
-        }
-
-        //XXX I18N
-        nsAutoString strline(m_buffer);
-        PRUnichar* wline = strline.ToNewUnicode();
-        if (!wline)
-        {
-          status = -1;
-          goto FAIL;
-        }
-
-        PRUnichar* wresult;
-        rv = conv->ScanHTML(wline, ~PRUint32(mozITXTToHTMLConv::kGlyphSubstitution)
-                            /* XXX Ask Prefs what to do */, &wresult);
+        status = -1;
+        goto FAIL;
+      }
+      
+      //XXX I18N
+      nsAutoString strline(m_buffer);
+      PRUnichar* wline = strline.ToNewUnicode();
+      if (!wline)
+      {
+        status = -1;
+        goto FAIL;
+      }
+      
+      PRUnichar* wresult;
+      rv = conv->ScanHTML(wline, ~PRUint32(mozITXTToHTMLConv::kGlyphSubstitution)
+        /* XXX Ask Prefs what to do */, &wresult);
         Recycle(wline);
-        if (NS_FAILED(rv))
-        {
-          status = -1;
-          goto FAIL;
-        }
-
-        //XXX I18N Converting PRUnichar* to char*
-        nsAutoString strresult(wresult);
-        char* cresult = strresult.ToNewCString();
-
-        Recycle(wresult);
-        if (cresult)
-        {
-          SetBuffer(cresult);
-          Recycle(cresult);
-        }
-        else
-        {
-          status = -1;
-          goto FAIL;
-        }
+      if (NS_FAILED(rv))
+      {
+        status = -1;
+        goto FAIL;
+      }
+      
+      //XXX I18N Converting PRUnichar* to char*
+      nsAutoString strresult(wresult);
+      char* cresult = strresult.ToNewCString();
+      
+      Recycle(wresult);
+      if (cresult)
+      {
+        SetBuffer(cresult);
+        Recycle(cresult);
+      }
+      else
+      {
+        status = -1;
+        goto FAIL;
       }
     }
   }
