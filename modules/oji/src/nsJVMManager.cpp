@@ -406,7 +406,7 @@ nsJVMManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
         NS_ADDREF((nsISupports*)*aInstancePtr);
         return NS_OK;
     }
-#ifdef XP_PC
+#if defined(XP_WIN) || defined(XP_OS2)
     // Aggregates...
     if (fDebugManager == NULL) {
         nsresult rslt =

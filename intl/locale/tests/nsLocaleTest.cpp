@@ -703,7 +703,7 @@ win32_test_special_locales(void)
 
 }
 	
-#endif XP_PC
+#endif
 
 #ifdef XP_UNIX
 void
