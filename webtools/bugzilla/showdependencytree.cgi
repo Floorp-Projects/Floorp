@@ -221,9 +221,17 @@ sub makeTreeHTML {
     $html = "<h3>Bugs that bug $linked_id ".($target eq "blocked" ? 
         "blocks" : "depends on");
 
+    # If there are some bugs in this tree, add a link to view them
+    # as a bug list, and add another link to edit them on the "change
+    # several bugs" page if there is more than one and the user has
+    # "editbugs" privileges.
     if ((scalar keys %printed) > 0) {
-        $html .= ' (<a href="buglist.cgi?bug_id=' . join(',', keys %printed) . 
-                 '">view as bug list</a>)';        
+        my $link = "buglist.cgi?bug_id=" . join(',', keys %printed);
+        $html .= qq~ (<a href="$link">view as bug list</a>~;
+        if (UserInGroup("editbugs") && (scalar keys %printed) > 1) {
+            $html .= qq~ | <a href="$link&tweak=1">change several</a>~;
+        }
+        $html .= ')';
     }
     
     # Provide feedback for omitted bugs
