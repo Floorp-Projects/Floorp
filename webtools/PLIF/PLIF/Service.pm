@@ -48,7 +48,7 @@ sub dispatch {
     my $method = $self->can($name);
     local $" = '\', \'';
     if ($method) {
-        $self->dump(10, "Attempting to dispatch method: $self->$name('$app', '@arguments')");
+        $self->dump(10, "Attempting to dispatch method: $self->$name('$app', ...)"); # can't mention @arguments in string since it might contain undefs
         &$method($self, $app, @arguments);
         return 1;
     } else {
