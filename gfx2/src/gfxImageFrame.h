@@ -22,48 +22,44 @@
  */
 
 #include "gfxIImageFrame.h"
+#include "nsIInterfaceRequestor.h"
 
-#include "nsRect.h"
+#include "nsIImage.h"
 
-#define NS_IMAGEFRAME_CID \
-{ /* 99b219ea-1dd1-11b2-aa87-cd48e7d50227 */         \
-     0x99b219ea,                                     \
+#include "nsPoint.h"
+#include "nsSize.h"
+
+#include "nsCOMPtr.h"
+
+#define GFX_IMAGEFRAME_CID \
+{ /* aa699204-1dd1-11b2-84a9-a280c268e4fb */         \
+     0xaa699204,                                     \
      0x1dd1,                                         \
      0x11b2,                                         \
-    {0xaa, 0x87, 0xcd, 0x48, 0xe7, 0xd5, 0x02, 0x27} \
+    {0x84, 0xa9, 0xa2, 0x80, 0xc2, 0x68, 0xe4, 0xfb} \
 }
 
-struct ImageData
-{
-  ImageData() : bytesPerRow(0), data(nsnull), length(0), depth(0) {}
-  ~ImageData() {
-    delete[] data;
-  }
-  PRUint32 bytesPerRow; // bytes per row
-  PRUint8 *data;
-  PRUint32 length; // length of the data in bytes
-  gfx_depth depth;
-};
-
-class nsImageFrame : public gfxIImageFrame
+class gfxImageFrame : public gfxIImageFrame,
+                      public nsIInterfaceRequestor
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_GFXIIMAGEFRAME
+  NS_DECL_NSIINTERFACEREQUESTOR
 
-  nsImageFrame();
-  virtual ~nsImageFrame();
+  gfxImageFrame();
+  virtual ~gfxImageFrame();
+
+protected:
+  nsSize mSize;
 
 private:
-  /* additional members */
-  nsRect mRect;
+  /* private members */
+  nsCOMPtr<nsIImage> mImage;
+  nsPoint mOffset;
+
+  PRInt32 mTimeout;
 
   PRPackedBool mInitalized;   // 8 bits
-  // ???                      // 8 bits
   gfx_format mFormat;         // 16 bits
-
-  ImageData mImageData;
-  ImageData *mAlphaData;
-  
-  PRInt32 mTimeout; // -1 means display forever
 };

@@ -14,41 +14,29 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 2001 Netscape Communications Corporation. All
+ * Copyright (C) 2000 Netscape Communications Corporation. All
  * Rights Reserved.
  * 
  * Contributor(s): 
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "gfxImageContainer.h"
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
 
-#include "nsPIImageContainerGtk.h"
+#include "gfxImageFrame.h"
 
-#include "nsCOMPtr.h"
+// objects that just require generic constructors
 
-#define NS_IMAGECONTAINER_CID \
-{ /* 5e04ec5e-1dd2-11b2-8fda-c4db5fb666e0 */         \
-     0x5e04ec5e,                                     \
-     0x1dd2,                                         \
-     0x11b2,                                         \
-    {0x8f, 0xda, 0xc4, 0xdb, 0x5f, 0xb6, 0x66, 0xe0} \
-}
+NS_GENERIC_FACTORY_CONSTRUCTOR(gfxImageFrame)
 
-class nsImageContainer : public gfxImageContainer,
-                         public nsPIImageContainerGtk
+static nsModuleComponentInfo components[] =
 {
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_NSPIIMAGECONTAINERGTK
-
-  /* overwrite this method */
-  NS_IMETHOD GetPreferredAlphaChannelFormat(gfx_format *aFormat);
-
-  nsImageContainer();
-  virtual ~nsImageContainer();
-
-private:
-  /* additional members */
+  { "windows image frame",
+    GFX_IMAGEFRAME_CID,
+    "@mozilla.org/gfx/image/frame;2",
+    gfxImageFrameConstructor, },
 };
+
+NS_IMPL_NSGETMODULE("nsGfx2Module", components)
 

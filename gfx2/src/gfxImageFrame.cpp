@@ -21,27 +21,27 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  */
 
-#include "nsImageFrame.h"
+#include "gfxImageFrame.h"
 
-NS_IMPL_ISUPPORTS1(nsImageFrame, gfxIImageFrame)
+#include "nsIServiceManager.h"
 
-nsImageFrame::nsImageFrame() :
-  mInitalized(PR_FALSE),
-  mAlphaData(nsnull),
-  mTimeout(-1)
+NS_IMPL_ISUPPORTS2(gfxImageFrame, gfxIImageFrame, nsIInterfaceRequestor)
+
+gfxImageFrame::gfxImageFrame() :
+  mTimeout(0),
+  mInitalized(PR_FALSE)
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
 }
 
-nsImageFrame::~nsImageFrame()
+gfxImageFrame::~gfxImageFrame()
 {
   /* destructor code */
-  delete mAlphaData;
 }
 
 /* void init (in nscoord aX, in nscoord aY, in nscoord aWidth, in nscoord aHeight, in gfx_format aFormat); */
-NS_IMETHODIMP nsImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, gfx_format aFormat)
+NS_IMETHODIMP gfxImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, gfx_format aFormat)
 {
   if (aWidth <= 0 || aHeight <= 0) {
     printf("error - negative image size\n");
@@ -53,34 +53,36 @@ NS_IMETHODIMP nsImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord
 
   mInitalized = PR_TRUE;
 
-  mRect.SetRect(aX, aY, aWidth, aHeight);
+  mOffset.MoveTo(aX, aY);
+  mSize.SizeTo(aWidth, aHeight);
+
   mFormat = aFormat;
 
-  // XXX this makes an assumption about what values these have and what is between them.. i'm being bad.
-  if (mFormat >= gfxIFormats::RGB_A1 && mFormat <= gfxIFormats::BGR_A8)
-    mAlphaData = new ImageData;
+  mImage = do_CreateInstance("@mozilla.org/gfx/image;1");
+
+  gfx_depth depth = 24;
+  nsMaskRequirements maskReq;
 
   switch (aFormat) {
   case gfxIFormats::BGR:
   case gfxIFormats::RGB:
-    mImageData.depth = 24;
+    maskReq = nsMaskRequirements_kNoMask;
     break;
+
   case gfxIFormats::BGRA:
   case gfxIFormats::RGBA:
-    mImageData.depth = 32;
+    printf("we can't do this with the old image code\n");
+    maskReq = nsMaskRequirements_kNeeds8Bit;
     break;
 
   case gfxIFormats::BGR_A1:
   case gfxIFormats::RGB_A1:
-    mImageData.depth = 24;
-    mAlphaData->depth = 1;
-    mAlphaData->bytesPerRow = (((mRect.width + 7) / 8) + 3) & ~0x3;
+    maskReq = nsMaskRequirements_kNeeds1Bit;
     break;
+
   case gfxIFormats::BGR_A8:
   case gfxIFormats::RGB_A8:
-    mImageData.depth = 24;
-    mAlphaData->depth = 8;
-    mAlphaData->bytesPerRow = (mRect.width + 3) & ~0x3;
+    maskReq = nsMaskRequirements_kNeeds8Bit;
     break;
 
   default:
@@ -88,75 +90,65 @@ NS_IMETHODIMP nsImageFrame::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord
     break;
   }
 
-
-  mImageData.bytesPerRow = (mRect.width * mImageData.depth) >> 5;
-
-  if ((mRect.width * mImageData.depth) & 0x1F)
-    mImageData.bytesPerRow++;
-  mImageData.bytesPerRow <<= 2;
-
-
-  mImageData.length = mImageData.bytesPerRow * mRect.height;
-  mImageData.data = new PRUint8[mImageData.length];
-
-  if (mAlphaData) {
-    mAlphaData->length = mAlphaData->bytesPerRow * mRect.height;
-    mAlphaData->data = new PRUint8[mAlphaData->length];
-  }
+  mImage->Init(aWidth, aHeight, depth, maskReq);
 
   return NS_OK;
 }
 
 /* readonly attribute nscoord x; */
-NS_IMETHODIMP nsImageFrame::GetX(nscoord *aX)
+NS_IMETHODIMP gfxImageFrame::GetX(nscoord *aX)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aX = mRect.x;
+  *aX = mOffset.x;
   return NS_OK;
 }
 
 /* readonly attribute nscoord y; */
-NS_IMETHODIMP nsImageFrame::GetY(nscoord *aY)
+NS_IMETHODIMP gfxImageFrame::GetY(nscoord *aY)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aY = mRect.y;
+  *aY = mOffset.y;
   return NS_OK;
 }
 
 
 /* readonly attribute nscoord width; */
-NS_IMETHODIMP nsImageFrame::GetWidth(nscoord *aWidth)
+NS_IMETHODIMP gfxImageFrame::GetWidth(nscoord *aWidth)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aWidth = mRect.width;
+  *aWidth = mSize.width;
   return NS_OK;
 }
 
 /* readonly attribute nscoord height; */
-NS_IMETHODIMP nsImageFrame::GetHeight(nscoord *aHeight)
+NS_IMETHODIMP gfxImageFrame::GetHeight(nscoord *aHeight)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aHeight = mRect.height;
+  *aHeight = mSize.height;
   return NS_OK;
 }
 
 /* readonly attribute nsRect rect; */
-NS_IMETHODIMP nsImageFrame::GetRect(nsRect **aRect)
+NS_IMETHODIMP gfxImageFrame::GetRect(nsRect **aRect)
 {
-  *aRect = &mRect;
+  if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsRect rect(mOffset.x, mOffset.y, mSize.width, mSize.height);
+  *aRect = &rect;
   return NS_OK;
 }
 
 /* readonly attribute gfx_format format; */
-NS_IMETHODIMP nsImageFrame::GetFormat(gfx_format *aFormat)
+NS_IMETHODIMP gfxImageFrame::GetFormat(gfx_format *aFormat)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
@@ -166,106 +158,125 @@ NS_IMETHODIMP nsImageFrame::GetFormat(gfx_format *aFormat)
 }
 
 /* attribute long timeout; */
-NS_IMETHODIMP nsImageFrame::GetTimeout(PRInt32 *aTimeout)
+NS_IMETHODIMP gfxImageFrame::GetTimeout(PRInt32 *aTimeout)
 {
   *aTimeout = mTimeout;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsImageFrame::SetTimeout(PRInt32 aTimeout)
+NS_IMETHODIMP gfxImageFrame::SetTimeout(PRInt32 aTimeout)
 {
   mTimeout = aTimeout;
   return NS_OK;
 }
 
 /* readonly attribute unsigned long imageBytesPerRow; */
-NS_IMETHODIMP nsImageFrame::GetImageBytesPerRow(PRUint32 *aBytesPerRow)
+NS_IMETHODIMP gfxImageFrame::GetImageBytesPerRow(PRUint32 *aBytesPerRow)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aBytesPerRow = mImageData.bytesPerRow;
+  *aBytesPerRow = mImage->GetLineStride();
   return NS_OK;
 }
 
 /* readonly attribute unsigned long imageDataLength; */
-NS_IMETHODIMP nsImageFrame::GetImageDataLength(PRUint32 *aBitsLength)
+NS_IMETHODIMP gfxImageFrame::GetImageDataLength(PRUint32 *aBitsLength)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aBitsLength = mImageData.length;
+  *aBitsLength = mImage->GetBytesPix();
   return NS_OK;
 }
 
 /* void getImageData([array, size_is(length)] out PRUint8 bits, out unsigned long length); */
-NS_IMETHODIMP nsImageFrame::GetImageData(PRUint8 **aData, PRUint32 *length)
+NS_IMETHODIMP gfxImageFrame::GetImageData(PRUint8 **aData, PRUint32 *length)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aData = mImageData.data;
-  *length = mImageData.length;
+  *aData = mImage->GetBits();
+  *length = mImage->GetBytesPix() * mSize.height;
 
   return NS_OK;
 }
 
 /* void setImageData ([array, size_is (length), const] in PRUint8 data, in unsigned long length, in long offset); */
-NS_IMETHODIMP nsImageFrame::SetImageData(const PRUint8 *data, PRUint32 length, PRInt32 offset)
+NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength, PRInt32 aOffset)
 {
   if (!mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
-  if (((PRUint32)offset + length) > mImageData.length)
+  PRUint8 *imgData = mImage->GetBits();
+  PRInt32 imgLen = mImage->GetBytesPix();
+
+  if (((aOffset + (PRInt32)aLength) > imgLen) || !imgData)
     return NS_ERROR_FAILURE;
 
-  memcpy(mImageData.data + offset, data, length);
+  memcpy(imgData + aOffset, aData, aLength);
 
   return NS_OK;
 }
 
 /* readonly attribute unsigned long alphaBytesPerRow; */
-NS_IMETHODIMP nsImageFrame::GetAlphaBytesPerRow(PRUint32 *aBytesPerRow)
+NS_IMETHODIMP gfxImageFrame::GetAlphaBytesPerRow(PRUint32 *aBytesPerRow)
 {
-  if (!mInitalized || !mAlphaData)
+  if (!mInitalized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aBytesPerRow = mAlphaData->bytesPerRow;
+  *aBytesPerRow = mImage->GetAlphaLineStride();
   return NS_OK;
 }
 
 /* readonly attribute unsigned long alphaDataLength; */
-NS_IMETHODIMP nsImageFrame::GetAlphaDataLength(PRUint32 *aBitsLength)
+NS_IMETHODIMP gfxImageFrame::GetAlphaDataLength(PRUint32 *aBitsLength)
 {
-  if (!mInitalized || !mAlphaData)
+  if (!mInitalized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aBitsLength = mAlphaData->length;
+  *aBitsLength = mImage->GetAlphaLineStride() * mSize.height;
   return NS_OK;
 }
 
 /* void getAlphaData([array, size_is(length)] out PRUint8 bits, out unsigned long length); */
-NS_IMETHODIMP nsImageFrame::GetAlphaData(PRUint8 **aBits, PRUint32 *length)
+NS_IMETHODIMP gfxImageFrame::GetAlphaData(PRUint8 **aData, PRUint32 *length)
 {
-  if (!mInitalized || !mAlphaData)
+  if (!mInitalized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
 
-  *aBits = mAlphaData->data;
-  *length = mAlphaData->length;
+  *aData = mImage->GetAlphaBits();
+  *length = mImage->GetAlphaLineStride() * mSize.height;
 
   return NS_OK;
 }
 
 /* void setAlphaData ([array, size_is (length), const] in PRUint8 data, in unsigned long length, in long offset); */
-NS_IMETHODIMP nsImageFrame::SetAlphaData(const PRUint8 *data, PRUint32 length, PRInt32 offset)
+NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength, PRInt32 aOffset)
 {
-  if (!mInitalized || !mAlphaData)
+  if (!mInitalized || !mImage->GetHasAlphaMask())
     return NS_ERROR_NOT_INITIALIZED;
 
-  if (((PRUint32)offset + length) > mAlphaData->length)
+  PRUint8 *alphaData = mImage->GetAlphaBits();
+  PRInt32 alphaLen = mImage->GetAlphaLineStride() * mSize.height;
+
+  if (((aOffset + (PRInt32)aLength) > alphaLen) || !alphaData)
     return NS_ERROR_FAILURE;
 
-  memcpy(mAlphaData->data + offset, data, length);
-
+  memcpy(alphaData + aOffset, aData, aLength);
   return NS_OK;
 }
+
+
+NS_IMETHODIMP gfxImageFrame::GetInterface(const nsIID & aIID, void * *result)
+{
+  NS_ENSURE_ARG_POINTER(result);
+
+  if (NS_SUCCEEDED(QueryInterface(aIID, result)))
+    return NS_OK;
+  if (mImage && aIID.Equals(NS_GET_IID(nsIImage)))
+    return mImage->QueryInterface(aIID, result);
+
+  return NS_NOINTERFACE;
+}
+ 

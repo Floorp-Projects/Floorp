@@ -35,7 +35,6 @@
  * @author Tim Rowley <tor@cs.brown.edu>
  * @author Stuart Parmenter <pavlov@netscape.com>
  * @version 0.1
- * @see "gfx2"
  */
 [scriptable, uuid(51cc27a8-1dd2-11b2-a1aa-dad33ab193b4)]
 interface gfxIImageFrame : nsISupports
@@ -56,7 +55,6 @@ interface gfxIImageFrame : nsISupports
             in nscoord aWidth,
             in nscoord aHeight,
             in gfx_format aFormat);
-
 
   /**
    * The x-offset of the image.
@@ -83,7 +81,6 @@ interface gfxIImageFrame : nsISupports
    */
   [noscript] readonly attribute nsRect rect;
 
-
   /**
    * The image data format the image was created with.
    * @see gfxIFormats
@@ -96,11 +93,7 @@ interface gfxIImageFrame : nsISupports
    */
   attribute long timeout;
 
-
-
   /* data accessors */
-
-
   readonly attribute unsigned long imageBytesPerRow;
 
   /**
@@ -123,10 +116,7 @@ interface gfxIImageFrame : nsISupports
                     in unsigned long length,
                     in long offset);
 
-
-
   /* alpha stuff.. used for _A1 and _A8 formated images */
-
   readonly attribute unsigned long alphaBytesPerRow;
 
   /**
@@ -143,5 +133,4 @@ interface gfxIImageFrame : nsISupports
   void setAlphaData([array, size_is(length), const] in PRUint8 data,
                     in unsigned long length,
                     in long offset);
-
 };
