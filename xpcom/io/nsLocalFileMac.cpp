@@ -51,7 +51,6 @@
 #include <Aliases.h>
 #include <Folders.h>
 
-
 // Stupid @#$% header looks like its got extern mojo but it doesn't really
 extern "C"
 {
@@ -120,12 +119,40 @@ static nsresult MacErrorMapper(OSErr inErr)
 	Exit:	function result = true if the FSSpec records are equal.
 ----------------------------------------------------------------------------*/
 
-static PRBool IsEqualFSSpec (const FSSpec *file1, const FSSpec *file2)
+static PRBool IsEqualFSSpec(const FSSpec& file1, const FSSpec& file2)
 {
 	return
-		file1->vRefNum == file2->vRefNum &&
-		file1->parID == file2->parID &&
-		EqualString(file1->name, file2->name, false, true);
+		file1.vRefNum == file2.vRefNum &&
+		file1.parID == file2.parID &&
+		EqualString(file1.name, file2.name, false, true);
+}
+
+/*----------------------------------------------------------------------------
+	GetParentFolderSpec
+	
+	Given an FSSpec to a (possibly non-existent) file, get an FSSpec for its
+	parent directory.
+	
+----------------------------------------------------------------------------*/
+
+static OSErr GetParentFolderSpec(const FSSpec& fileSpec, FSSpec& parentDirSpec)
+{
+	CInfoPBRec 	pBlock = {0};
+	OSErr		err = noErr;
+	
+	parentDirSpec.name[0] = 0;
+	
+	pBlock.dirInfo.ioVRefNum = fileSpec.vRefNum;
+	pBlock.dirInfo.ioDrDirID = fileSpec.parID;
+	pBlock.dirInfo.ioNamePtr = (StringPtr)parentDirSpec.name;
+	pBlock.dirInfo.ioFDirIndex = -1;		//get info on parID
+	err = PBGetCatInfoSync(&pBlock);
+	if (err != noErr) return err;
+	
+	parentDirSpec.vRefNum = fileSpec.vRefNum;
+	parentDirSpec.parID = pBlock.dirInfo.ioDrParID;
+	
+	return err;
 }
 
 
@@ -819,7 +846,7 @@ nsLocalFile::ResolveAndStat(PRBool resolveTerminal)
 	
 	if (err == noErr)
 	{
-		mStatDirty = PR_TRUE;
+		mStatDirty = PR_FALSE;
 	}
 	
 	return (MacErrorMapper(err));
@@ -1142,16 +1169,13 @@ nsLocalFile::GetLeafName(char * *aLeafName)
 			else
 			{
 				// We don't have an appended path so grab the leaf name from the FSSpec
-				// Convert the Pascal string to a C string
-				unsigned long len = mSpec.name[0];
-				char * tempStr = (char *)PR_MALLOC(len + 1);
-				if (tempStr)
-				{
-					::BlockMoveData(&mSpec.name[1], tempStr, len);
-					tempStr[len] = '\0';
-					*aLeafName = (char*) nsAllocator::Clone(tempStr, len + 1);
-					PR_DELETE(tempStr);
-				}
+				// Convert the Pascal string to a C string				
+				PRInt32 len = mSpec.name[0];
+				char* leafName = (char *)nsAllocator::Alloc(len + 1);
+				if (!leafName) return NS_ERROR_OUT_OF_MEMORY;				
+				::BlockMoveData(&mSpec.name[1], leafName, len);
+				leafName[len] = '\0';
+				*aLeafName = leafName;
 			}
 			break;
 			
@@ -1340,20 +1364,20 @@ nsLocalFile::Delete(PRBool recursive)
 		
 			rv = dirEnum->Init(this);
 
-			nsCOMPtr<nsISimpleEnumerator> iterator = do_QueryInterface(dirEnum);
+			nsCOMPtr<nsISimpleEnumerator> dirIterator = do_QueryInterface(dirEnum);
 		
 			PRBool more;
-			iterator->HasMoreElements(&more);
+			dirIterator->HasMoreElements(&more);
 			while (more)
 			{
 				nsCOMPtr<nsISupports> item;
 				nsCOMPtr<nsIFile> file;
-				iterator->GetNext(getter_AddRefs(item));
+				dirIterator->GetNext(getter_AddRefs(item));
 				file = do_QueryInterface(item);
 	
 				file->Delete(recursive);
 				
-				iterator->HasMoreElements(&more);
+				dirIterator->HasMoreElements(&more);
 			}
 		}
 		//rmdir(filePath);	// todo: save return value?
@@ -1691,38 +1715,40 @@ nsLocalFile::IsExecutable(PRBool *outIsExecutable)
 
 
 NS_IMETHODIMP  
-nsLocalFile::IsDirectory(PRBool *_retval)
+nsLocalFile::IsDirectory(PRBool *outIsDir)
 {
-	NS_ENSURE_ARG(_retval);
-	*_retval = PR_FALSE;
+	NS_ENSURE_ARG(outIsDir);
+	*outIsDir = PR_FALSE;
 
 	nsresult rv = ResolveAndStat(PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
 	
-	long dirID;
-	Boolean isDirectory;
-	if ((::FSpGetDirectoryID(&mTargetSpec, &dirID, &isDirectory) == noErr) && isDirectory)
-		*_retval = PR_TRUE;
+	CInfoPBRec	fileInfo;
+	OSErr	err = GetTargetSpecCatInfo(fileInfo);
+	if (err != noErr)
+		return MacErrorMapper(err);
 
+	*outIsDir = (fileInfo.hFileInfo.ioFlAttrib & ioDirMask) != 0;
 	return NS_OK;
 }
 
 NS_IMETHODIMP  
-nsLocalFile::IsFile(PRBool *_retval)
+nsLocalFile::IsFile(PRBool *outIsFile)
 {
-	NS_ENSURE_ARG(_retval);
-	*_retval = PR_FALSE;
+	NS_ENSURE_ARG(outIsFile);
+	*outIsFile = PR_FALSE;
 
 	nsresult rv = ResolveAndStat(PR_TRUE);
 	
 	if (NS_FAILED(rv))
 		return rv;
 	
-	long dirID;
-	Boolean isDirectory;
-	if ((::FSpGetDirectoryID(&mTargetSpec, &dirID, &isDirectory) == noErr) && !isDirectory)
-		*_retval = PR_TRUE;
+	CInfoPBRec	fileInfo;
+	OSErr	err = GetTargetSpecCatInfo(fileInfo);
+	if (err != noErr)
+		return MacErrorMapper(err);
 
+	*outIsFile = (fileInfo.hFileInfo.ioFlAttrib & ioDirMask) == 0;
 	return NS_OK;
 }
 
@@ -1773,28 +1799,50 @@ nsLocalFile::Equals(nsIFile *inFile, PRBool *_retval)
 }
 
 NS_IMETHODIMP
-nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *_retval)
+nsLocalFile::Contains(nsIFile *inFile, PRBool recur, PRBool *outContains)
 {
-	*_retval = PR_FALSE;
-	   
-	char* myFilePath;
-	if ( NS_FAILED(GetTarget(&myFilePath)))
-		GetPath(&myFilePath);
-	
-	PRInt32 myFilePathLen = strlen(myFilePath);
-	
-	char* inFilePath;
-	if ( NS_FAILED(inFile->GetTarget(&inFilePath)))
-		inFile->GetPath(&inFilePath);
+  /* Note here that we make no attempt to deal with the problem
+     of folder aliases. Doing a 'Contains' test and dealing with
+     folder aliases is Hard. Think about it.
+  */
+	*outContains = PR_FALSE;
 
-	if ( strncmp( myFilePath, inFilePath, myFilePathLen) == 0)
+	PRBool isDir;
+	nsresult rv = IsDirectory(&isDir);    // need to cache this
+	if (NS_FAILED(rv)) return rv;
+	if (!isDir) return NS_OK;   // must be a dir to contain someone
+
+	nsCOMPtr<nsILocalFileMac> macFile(do_QueryInterface(inFile));
+	if (!macFile) return NS_OK;     // trying to compare non-local with local file
+
+	FSSpec  mySpec = mResolvedSpec;
+	FSSpec  compareSpec;
+
+	rv = macFile->GetResolvedFSSpec(&compareSpec);
+	if (NS_FAILED(rv)) return rv;
+
+	// if they are on different volumes, bail
+	if (mResolvedSpec.vRefNum != compareSpec.vRefNum)
+		return NS_OK;
+
+	// if recur == true, test every parent, otherwise just test the first one
+	// (yes, recur does not get set in this loop)
+	OSErr	err = noErr;
+	do
 	{
-		 *_retval = PR_TRUE;
-	}
-		
-	nsAllocator::Free(inFilePath);
-	nsAllocator::Free(myFilePath);
+		FSSpec	parentFolderSpec;
+		err = GetParentFolderSpec(compareSpec, parentFolderSpec);
+		if (err != noErr) break;				// we reached the top	
 
+		if (IsEqualFSSpec(parentFolderSpec, mySpec))
+		{
+			*outContains = PR_TRUE;
+			break;
+		}
+		
+		compareSpec = parentFolderSpec;
+	} while (recur);
+	  
 	return NS_OK;
 }
 
@@ -1933,7 +1981,7 @@ nsresult nsLocalFile::TestFinderFlag(PRUint16 flagMask, PRBool *outFlagSet, PRBo
 		fileInfo.hFileInfo.ioDirID = mResolvedSpec.parID;
 		fileInfo.hFileInfo.ioNamePtr = mResolvedSpec.name;
 
-		err =  PBGetCatInfoSync(&fileInfo);
+		err = PBGetCatInfoSync(&fileInfo);
 	}
 	
 	if (err != noErr)
@@ -1995,7 +2043,7 @@ nsresult nsLocalFile::FindRunningAppByFSSpec(const FSSpec& appSpec, ProcessSeria
 		err = ::GetProcessInformation(&outPsn, &info);
 		if (err != noErr) return NS_ERROR_FAILURE;
 		
-		if (IsEqualFSSpec(&appSpec, info.processAppSpec))
+		if (IsEqualFSSpec(appSpec, *info.processAppSpec))
 		{
   			return NS_OK;
 		}
