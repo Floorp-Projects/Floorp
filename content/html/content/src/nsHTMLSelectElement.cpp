@@ -478,9 +478,9 @@ nsHTMLSelectElement::SetLength(PRUint32 aLength)
   }
 
   PRUint32 curlen;
-  nsresult result;
   GetLength(&curlen);
   if (curlen && (curlen > aLength)) { // Remove extra options
+    nsresult result=NS_OK;
     for (PRInt32 i = (curlen - 1); (i>=(PRInt32)aLength) && NS_SUCCEEDED(result); i--) {
       result = Remove(i);
     }
