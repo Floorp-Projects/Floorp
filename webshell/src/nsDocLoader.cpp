@@ -2000,8 +2000,12 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, nsresult aStatus, cons
       else
         url = "";      
 #endif
+
+#if DEBUG
       cerr << "nsDocumentBindInfo::OnStopRequest: Load of URL '" << url << "' failed.  Error code: " 
            << NS_ERROR_GET_CODE(aStatus) << "\n";
+#endif 
+
 #ifdef NECKO
       nsCRT::free(url);
 #endif
