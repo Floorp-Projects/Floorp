@@ -224,6 +224,12 @@ XFE_RDFToolbar::addItem(HT_Resource node)
 {
     Widget item = NULL;
 
+    HT_Resource   toolbarRoot   = getRootFolder();
+    HT_Resource   parent        = HT_GetParent(node);
+
+    // This node doesn't belong here.
+    if (toolbarRoot != parent) return;
+        
     // Headers
     if (HT_IsContainer(node))
     {
