@@ -2392,36 +2392,38 @@ nsImapProtocol::FetchMessage(const char * messageIds,
     
     switch (whatToFetch) {
         case kEveryThingRFC822:
-      if (m_trackingTime)
-        AdjustChunkSize();      // we started another segment
-      m_startTime = PR_Now();     // save start of download time
-      m_trackingTime = PR_TRUE;
-      if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
-      {
-        if (GetServerStateParser().GetCapabilityFlag() & kHasXSenderCapability)
-          commandString.Append(" %s (XSENDER UID RFC822.SIZE BODY[]");
-        else
-          commandString.Append(" %s (UID RFC822.SIZE BODY[]");
-      }
-      else
-      {
-        if (GetServerStateParser().GetCapabilityFlag() & kHasXSenderCapability)
-          commandString.Append(" %s (XSENDER UID RFC822.SIZE RFC822");
-        else
-          commandString.Append(" %s (UID RFC822.SIZE RFC822");
-      }
-      if (endByte > 0)
-      {
-        // if we are retrieving chunks
-        char *byterangeString = PR_smprintf("<%ld.%ld>",startByte,endByte);
-        if (byterangeString)
-        {
-          commandString.Append(byterangeString);
-          PR_Free(byterangeString);
-        }
-      }
-      commandString.Append(")");
-            break;
+          GetServerStateParser().SetFetchingEverythingRFC822(PR_TRUE);
+          if (m_trackingTime)
+            AdjustChunkSize();      // we started another segment
+          m_startTime = PR_Now();     // save start of download time
+          m_trackingTime = PR_TRUE;
+          if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
+          {
+            if (GetServerStateParser().GetCapabilityFlag() & kHasXSenderCapability)
+              commandString.Append(" %s (XSENDER UID RFC822.SIZE BODY[]");
+            else
+              commandString.Append(" %s (UID RFC822.SIZE BODY[]");
+          }
+          else
+          {
+            if (GetServerStateParser().GetCapabilityFlag() & kHasXSenderCapability)
+              commandString.Append(" %s (XSENDER UID RFC822.SIZE RFC822");
+            else
+              commandString.Append(" %s (UID RFC822.SIZE RFC822");
+          }
+          if (endByte > 0)
+          {
+            // if we are retrieving chunks
+            char *byterangeString = PR_smprintf("<%ld.%ld>",startByte,endByte);
+            if (byterangeString)
+            {
+              commandString.Append(byterangeString);
+              PR_Free(byterangeString);
+            }
+           }
+           commandString.Append(")");
+
+           break;
 
         case kEveryThingRFC822Peek:
           {
@@ -2451,7 +2453,7 @@ nsImapProtocol::FetchMessage(const char * messageIds,
       if (GetServerStateParser().ServerHasIMAP4Rev1Capability())
       {
         PRUint32 server_capabilityFlags = GetServerStateParser().GetCapabilityFlag();
-		PRBool aolImapServer = ((server_capabilityFlags & kAOLImapCapability) != 0);
+		    PRBool aolImapServer = ((server_capabilityFlags & kAOLImapCapability) != 0);
         PRBool useArbitraryHeaders = GetShouldDownloadArbitraryHeaders(); // checks filter headers, etc.
         if (/***** Fix me *** gOptimizedHeaders &&  */// preference -- able to turn it off
           useArbitraryHeaders)  // if it's ok -- no filters on any header, etc.
@@ -2586,9 +2588,10 @@ nsImapProtocol::FetchMessage(const char * messageIds,
       nsresult rv = SendData(protocolString);
       
     nsMemory::Free(cCommandStr);
-        if (NS_SUCCEEDED(rv))
-            ParseIMAPandCheckForNewMail(protocolString);
-      PR_Free(protocolString);
+    if (NS_SUCCEEDED(rv))
+       ParseIMAPandCheckForNewMail(protocolString);
+    PR_Free(protocolString);
+    GetServerStateParser().SetFetchingEverythingRFC822(PR_FALSE); // always clear this flag after every fetch....
     }
     else
         HandleMemoryFailure();

@@ -89,6 +89,7 @@ public:
 	PRBool		IsNumericString(const char *string);
   PRInt32       SizeOfMostRecentMessage();
 	void		SetTotalDownloadSize(PRInt32 newSize) { fTotalDownloadSize = newSize; }
+  void    SetFetchingEverythingRFC822(PRBool fetchingEverythingRFC822) { fFetchEverythingRFC822 = fetchingEverythingRFC822;}
   
   nsImapSearchResultIterator *CreateSearchResultIterator();
   void ResetSearchResultSequence() {fSearchResults->ResetSequence();}
@@ -252,6 +253,8 @@ private:
 	PRInt32 numberOfCharsInThisChunk;
 	PRInt32 charsReadSoFar;
 	PRBool fLastChunk;
+  // when issuing a fetch command, are we fetching everything or just a part?
+  PRBool fFetchEverythingRFC822;
 
 	// Is the server a Netscape 3.x Messaging Server?
 	PRBool	fServerIsNetscape3xServer;

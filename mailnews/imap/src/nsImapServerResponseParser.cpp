@@ -53,6 +53,7 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
     fSelectedMailboxName(nsnull),
     fIMAPstate(kNonAuthenticated),
 	  fLastChunk(PR_FALSE),
+    fFetchEverythingRFC822(PR_FALSE),
 	  fServerIsNetscape3xServer(PR_FALSE),
     m_shell(nsnull),
 	fServerConnection(imapProtocolConnection),
@@ -1133,6 +1134,13 @@ void nsImapServerResponseParser::msg_fetch()
 			if (ContinueParse())
 			{
 				fSizeOfMostRecentMessage = atoi(fNextToken);
+
+        // if we are in the process of fetching everything RFC822 then we should
+        // turn around and force the total download size to be set to this value.
+        // this helps if the server gaves us a bogus size for the message in response to the 
+        // envelope command.
+        if (fFetchEverythingRFC822)
+          SetTotalDownloadSize(fSizeOfMostRecentMessage);
 				
 				if (fSizeOfMostRecentMessage == 0 && CurrentResponseUID())
 				{
