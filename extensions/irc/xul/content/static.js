@@ -2353,6 +2353,13 @@ function __display(message, msgtype, sourceObj, destObj)
         notifyAttention(this);
     else
         notifyActivity (this);
+
+    if (isImportant && client.COPY_MESSAGES)
+    {
+        if ("network" in o && o.network != this)
+            o.network.displayHere("{" + this.name + "} " + message, msgtype,
+                                  sourceObj, destObj);
+    }
 }
 
 function addHistory (source, obj, mergeData, collapseRow)
