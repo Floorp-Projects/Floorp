@@ -29,6 +29,8 @@ calendar.jar:
     content/calendar/dragDrop.js (content/dragDrop.js)
     content/calendar/eventDialog.js (content/eventDialog.js)
     content/calendar/eventDialog.xul (content/eventDialog.xul)
+    content/calendar/goToDateDialog.js (content/goToDateDialog.js)
+    content/calendar/goToDateDialog.xul (content/goToDateDialog.xul)
     content/calendar/outlookImportDialog.xul (content/outlookImportDialog.xul)
     content/calendar/outlookImportDialog.js (content/outlookImportDialog.js)
     content/calendar/importExport.js (content/importExport.js)
