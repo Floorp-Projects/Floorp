@@ -804,8 +804,8 @@ nsXFormsModelElement::ValidateNode(nsIDOMNode *aInstanceNode, PRBool *aResult)
                            NS_LITERAL_STRING("type"), typeAttribute);
 
   // split type (ns:type) into namespace and type.
-  PRUint32 separator = typeAttribute.FindChar(':');
-  if ((separator == kNotFound) || (separator == typeAttribute.Length()))
+  PRInt32 separator = typeAttribute.FindChar(':');
+  if ((separator == kNotFound) || ((PRUint32) separator == typeAttribute.Length()))
     return NS_ERROR_UNEXPECTED;
   // xxx send error to console
 
