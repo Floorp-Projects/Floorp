@@ -1505,16 +1505,10 @@ nsLineLayout::DumpPerSpanData(PerSpanData* psd, PRInt32 aIndent)
 #define VALIGN_TOP    1
 #define VALIGN_BOTTOM 2
 
-#ifndef MOZ_MATHML
-void
-nsLineLayout::VerticalAlignFrames(nsLineBox* aLineBox,
-                                  nsSize& aMaxElementSizeResult)
-#else
 void
 nsLineLayout::VerticalAlignFrames(nsLineBox* aLineBox,
                                   nsSize& aMaxElementSizeResult,
                                   nscoord& aLineBoxAscent)
-#endif
 {
   // Synthesize a PerFrameData for the block frame
   PerFrameData rootPFD;
@@ -1658,9 +1652,7 @@ nsLineLayout::VerticalAlignFrames(nsLineBox* aLineBox,
   mFinalLineHeight = lineHeight;
   aMaxElementSizeResult.width = maxElementWidth;
   aMaxElementSizeResult.height = maxElementHeight;
-#ifdef MOZ_MATHML
   aLineBoxAscent = baselineY;
-#endif
 
   // Undo root-span mFrame pointer to prevent brane damage later on...
   mRootSpan->mFrame = nsnull;

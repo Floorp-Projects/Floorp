@@ -1086,7 +1086,6 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   // coordinate.
   nscoord finalDeltaY = newLineY - aLine->mBounds.y;
   mBlock->SlideLine(*this, aLine, finalDeltaY);
-#ifdef MOZ_MATHML
   // aLine has been slided, but...
   // XXX it is not necessary to worry about the ascent of mBlock here, right?
   // Indeed, depending on the status of the first line of mBlock, we can either have:
@@ -1096,7 +1095,6 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   // case first line of mBlock is clean : it is untouched by the incremental reflow.
   //      In other words, aLine is never equals to mBlock->mLines in this function.
   //      so mBlock->mAscent will remain unchanged. 
-#endif
 
   // Place floaters for this line into the space manager
   if (aLine->HasFloaters()) {
@@ -1444,13 +1442,11 @@ nsBlockFrame::IsPercentageBase(PRBool& aBase) const
 //////////////////////////////////////////////////////////////////////
 // Reflow methods
 
-#ifdef MOZ_MATHML
 inline nscoord
 nsBlockFrame::GetAscent() const
 {
   return mAscent; 
 }
-#endif
 
 static void
 CalculateContainingBlock(const nsHTMLReflowState& aReflowState,
@@ -2229,11 +2225,6 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     autoHeight += borderPadding.bottom;
 
     // Apply min/max values
-#ifdef MOZ_MATHML
-    // XXX Here in ComputeFinalSize()
-    // XXX What to do when min/max values are applied to the height?
-    // How do all this impact on the first line of the block? 
-#endif
     if (NS_UNCONSTRAINEDSIZE != aReflowState.mComputedMaxHeight) {
       nscoord computedMaxHeight = aReflowState.mComputedMaxHeight +
         borderPadding.top + borderPadding.bottom;
@@ -2256,22 +2247,28 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
     }
   }
 
-#ifndef MOZ_MATHML
-  aMetrics.ascent = aMetrics.height;
-  aMetrics.descent = 0;
-#else
-  if (mLines && mLines->mFirstChild && mLines->IsBlock()) {
-    // mAscent is not yet set because we didn't call VerticalAlignFrames()
-    // on mLines. So we need to fetch the ascent of the first child of mLines
+  // Set our desired ascent and descent.
+  // We need to check for special cases where mAscent is not yet properly set.
+  // There are two cases to consider: when the first line is a block, or
+  // when the first line is empty and is followed by a second line that
+  // is a block (e.g., <td>\n<div>). We need to fetch the ascent of the
+  // first child of the first non-empty line.
+  nsLineBox* line = mLines;
+  // see if this first line is empty. if so, move on to the second line
+  if (line && (0 == line->GetHeight())) {
+    line = line->mNext;
+  }
+  // see if the line contains a block. if so, fetch the ascent of the block
+  if (line && line->mFirstChild && line->IsBlock()) {
     nsBlockFrame* bf;
-    nsresult res = mLines->mFirstChild->QueryInterface(kBlockFrameCID, (void**)&bf);
+    nsresult res = line->mFirstChild->QueryInterface(kBlockFrameCID, (void**)&bf);
     if (NS_SUCCEEDED(res) && bf) {
       mAscent = bf->GetAscent();
     }
   }
   aMetrics.ascent = mAscent;
   aMetrics.descent = aMetrics.height - aMetrics.ascent;
-#endif
+
   if (aState.GetFlag(BRS_COMPUTEMAXELEMENTSIZE)) {
     // Store away the final value
     aMetrics.maxElementSize->width = maxWidth;
@@ -4644,16 +4641,13 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     addedBullet = PR_TRUE;
   }
   nsSize maxElementSize;
-#ifndef MOZ_MATHML
-  aLineLayout.VerticalAlignFrames(aLine, maxElementSize);
-#else
   nscoord lineAscent;
   aLineLayout.VerticalAlignFrames(aLine, maxElementSize, lineAscent);
   // Our ascent is the ascent of our first line
   if (aLine == mLines) {
     mAscent = lineAscent;
   }
-#endif
+
   // See if we're shrink wrapping the width
   if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
     // When determining the line's width we also need to include any
@@ -4724,12 +4718,10 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     nscoord dy = -aState.mPrevBottomMargin;
     newY = aState.mY + dy;
     aLine->SlideBy(dy);
-#ifdef MOZ_MATHML
     // keep our ascent in sync
     if (mLines == aLine) {
       mAscent += dy;
     }
-#endif
   }
 
   // See if the line fit. If it doesn't we need to push it. Our first
