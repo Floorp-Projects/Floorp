@@ -49,17 +49,21 @@ CHROME_CONTENT = \
 	NetSupportConfirmCheckYN.xul \
 	pageInfo.xul \
 	pageInfo.js \
+	viewSource.xul \
 	$(NULL)
-#	viewSource.xul \
 
 include $(topsrcdir)/config/rules.mk
 
-GARBAGE	+= viewSource.xul.out
+# the need for this stuff got whacked when smfr removed the build id
+# from viewSource.xul (yay!). Can someone remove the garbage? :-)
+# GARBAGE	+= viewSource.xul.out
+# for some reason puma decided to create a directory viewSource.xul.out
+GARBAGE_DIRS	+= viewSource.xul.out
 
-viewSource.xul.out: viewSource.xul $(DEPTH)/config/build_number
-	cp $(srcdir)/viewSource.xul $@
-	$(PERL) $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number
+# viewSource.xul.out: viewSource.xul $(DEPTH)/config/build_number
+# 	cp $(srcdir)/viewSource.xul $@
+# 	$(PERL) $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number
 
-install:: viewSource.xul.out
-	cp viewSource.xul.out $(CHROME_DIST)/$(CHROME_CONTENT_DIR)/viewSource.xul
+# install:: viewSource.xul.out
+# 	cp viewSource.xul.out $(CHROME_DIST)/$(CHROME_CONTENT_DIR)/viewSource.xul
 
