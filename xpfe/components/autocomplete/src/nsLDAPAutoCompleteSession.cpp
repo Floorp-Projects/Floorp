@@ -465,7 +465,7 @@ nsLDAPAutoCompleteSession::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     // nsIAutoCompleteItem::value
     //
     PRUint32 numVals;
-    char **values;
+    PRUnichar **values;
 
     rv = aMessage->GetValues(valueField, &numVals, &values);
     if (NS_FAILED(rv)) {
@@ -493,7 +493,7 @@ nsLDAPAutoCompleteSession::OnLDAPSearchEntry(nsILDAPMessage *aMessage)
     // just use the first value for the email attribute; subsequent values
     // are ignored
     //
-    rv = item->SetValue(NS_ConvertUTF8toUCS2(values[0]).GetUnicode());
+    rv = item->SetValue(values[0]);
     NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(numVals, values);
 
     if (NS_FAILED(rv)) {
@@ -716,8 +716,8 @@ nsLDAPAutoCompleteSession::StartLDAPSearch()
     // XXXdmose optimization: just request the attributes needed, not all 
     //          attributes. requires tweaking SearchExt.
     //
-    rv = mOperation->SearchExt(dn, scope, 
-                               searchFilter.get(),
+    rv = mOperation->SearchExt(NS_ConvertUTF8toUCS2(dn).get(), scope, 
+                               NS_ConvertUTF8toUCS2(searchFilter).get(),
                                0, nsILDAPOperation::NO_LIMIT);
     if (NS_FAILED(rv)) {
         switch(rv) {
