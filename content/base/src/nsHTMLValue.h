@@ -137,8 +137,8 @@ public:
    */
   static PRUint32 HashCode(const PRUnichar* aBuf) {
     NS_ASSERTION(aBuf, "Cannot work on null buffer!");
-    return nsCRT::BufferHashCode((char*)StrPtr(aBuf),
-                                 Length(aBuf)*sizeof(PRUnichar));
+    return nsCRT::BufferHashCode(StrPtr(aBuf),
+                                 Length(aBuf));
   }
 };
 
