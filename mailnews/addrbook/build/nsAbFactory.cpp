@@ -63,7 +63,7 @@
 #include "nsAddbookProtocolHandler.h"
 #include "nsAddbookUrl.h"
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(__MINGW32__)
 #include "nsAbOutlookDirectory.h"
 #include "nsAbOutlookCard.h"
 #include "nsAbOutlookDirFactory.h"
@@ -103,7 +103,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirFactoryService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbMDBDirFactory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookProtocolHandler)
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(__MINGW32__)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbOutlookDirectory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbOutlookCard)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbOutlookDirFactory)
@@ -212,7 +212,7 @@ static const nsModuleComponentInfo components[] =
     NS_ABMDBDIRFACTORY_CONTRACTID,
     nsAbMDBDirFactoryConstructor },
 
-#ifdef XP_WIN
+#if defined(XP_WIN) && !defined(__MINGW32__)
   { "Address OUTLOOK Book Directory",
     NS_ABOUTLOOKDIRECTORY_CID,
     NS_ABOUTLOOKDIRECTORY_CONTRACTID,
