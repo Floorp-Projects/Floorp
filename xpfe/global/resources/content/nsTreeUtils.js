@@ -29,6 +29,7 @@
 
 function TriStateColumnSort(column_name)
 {
+    debug("TriStateColumnSort("+column_name+")");
     var current_column = find_sort_column();
     var current_direction = find_sort_direction(current_column);
     var column = document.getElementById(column_name);
@@ -45,51 +46,9 @@ function TriStateColumnSort(column_name)
     return true;
 }
 
-
-// Note: doSort() does NOT support natural order sorting, unless naturalOrderResource is valid,
-//       in which case we sort ascending on naturalOrderResource
-
-function doSort(sortColName, naturalOrderResource)
-{
-    var node = document.getElementById(sortColName);
-    // determine column resource to sort on
-    var sortResource = node.getAttribute('resource');
-    if (!sortResource)
-        return false;
-
-    var sortDirection="ascending";
-    var isSortActive = node.getAttribute('sortActive');
-    if (isSortActive == "true") {
-        sortDirection = "ascending";
-        var currentDirection = node.getAttribute('sortDirection');
-        if (currentDirection == "ascending") {
-            if (sortResource != naturalOrderResource)
-                sortDirection = "descending";
-        }
-        else if (currentDirection == "descending") {
-            if (naturalOrderResource)
-                sortResource = naturalOrderResource;
-        }
-    }
-
-    try {
-        var isupports = Components.classes["@mozilla.org/rdf/xul-sort-service;1"].getService();
-        var xulSortService = isupports.QueryInterface(Components.interfaces.nsIXULSortService);   
-    }
-    catch(ex) {
-        return false;
-    }
-
-    try {
-        xulSortService.Sort(node, sortResource, sortDirection);
-    }
-    catch(ex) {
-    }
-    return true;
-}
-
 function SetSortDirection(direction)
 {
+    debug("SetSortDirection("+direction+")");
     var current_column = find_sort_column();
     var current_direction = find_sort_direction(current_column);
     if (current_direction != direction) {
@@ -99,6 +58,7 @@ function SetSortDirection(direction)
 
 function SetSortColumn(column_name)
 {
+    debug("SetSortColumn("+column_name+")");
     var current_column = find_sort_column();
     var current_direction = find_sort_direction(current_column);
     var column = document.getElementById(column_name);
@@ -120,7 +80,9 @@ function sort_column(column, direction)
         var sort_resource = column.getAttribute('resource');
         xulSortService.Sort(column, sort_resource, direction);
     }
-    catch(ex) {
+    catch(ex)
+    {
+        debug("Exception calling xulSortService.Sort()");
     }
     update_sort_menuitems(column, direction);
     return false;
@@ -181,6 +143,7 @@ function update_sort_menuitems(column, direction)
         menuitem = menuitem.nextSibling
         while (1) {
             var name = menuitem.getAttribute('column_id');
+            debug("update: "+name)
             if (!name) break;
             if (column_name == name) {
                 menuitem.setAttribute('checked', 'true');
@@ -229,21 +192,20 @@ function fillViewMenu(popup)
   var head = document.getElementById('headRow');
   var skip_column = document.getElementById('popupCell');
       
-  var name_template = get_localized_string("SortMenuItem");
-  var tree_column = head.firstChild;
-  var column_node = columns.firstChild;
-  var popupChild = popup.firstChild.nextSibling.nextSibling;
-  var firstTime = (fill_after.nextSibling == fill_before);
-  while (tree_column) {
-      if (firstTime) {
-          if (skip_column != tree_column && tree_column.getAttribute("collapsed") != "true") {
+  if (fill_after.nextSibling == fill_before) {
+      var name_template = get_localized_string("SortMenuItem");
+      var tree_column = head.firstChild;
+      var column_node = columns.firstChild;
+      while (tree_column) {
+          if (skip_column != tree_column) {
               // Construct an entry for each cell in the row.
               var column_name = tree_column.getAttribute("value");
               var item = document.createElement("menuitem");
               item.setAttribute("type", "radio");
               item.setAttribute("name", "sort_column");
-              if (column_name == "")
-                  column_name = tree_column.getAttribute("display");             
+              if (column_name == "") {
+                  column_name = tree_column.getAttribute("display");
+              }
               var name = name_template.replace(/%NAME%/g, column_name);
               var id = column_node.id;
               item.setAttribute("value", name);
@@ -252,18 +214,12 @@ function fillViewMenu(popup)
               
               popup.insertBefore(item, fill_before);
           }
-      }
-      else {
-          if (column_node.getAttribute("collapsed") == "true")
-              popupChild.setAttribute("hidden", "true");
-          else
-              popupChild.removeAttribute("hidden");
-          popupChild = popupChild.nextSibling;
-      }
-      tree_column = tree_column.nextSibling;
-      column_node = column_node.nextSibling;
-      if (column_node && column_node.tagName == "splitter")
+          tree_column = tree_column.nextSibling;
           column_node = column_node.nextSibling;
+
+          if (column_node && column_node.tagName == "splitter")
+              column_node = column_node.nextSibling;
+      }
   }
   var sort_column = find_sort_column();
   var sort_direction = find_sort_direction(sort_column);
@@ -305,6 +261,7 @@ function fillContextMenu(name)
     }
 
     var select_list = treeNode.selectedItems;
+    debug("# of Nodes selected: " + treeNode.selectedItems.length + "\n");
 
     var separatorResource =
         rdf.GetResource(NC_NS + "BookmarkSeparator");
@@ -419,6 +376,9 @@ function fillContextMenu(name)
         cmdName = cmdNameLiteral.Value;
         if (!cmdName) break;
 
+        debug("Command #" + cmdIndex + ": id='" + cmdResource.Value +
+              "'  name='" + cmdName + "'");
+
         var newMenuItem = document.createElement("menuitem");
         newMenuItem.setAttribute("value", cmdName);
         popupNode.appendChild(newMenuItem);
@@ -481,3 +441,4 @@ function get_localized_string(name) {
     var bundle = srGetStrBundle(uri);
     return bundle.GetStringFromName(name);
 }
+
