@@ -45,7 +45,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS	= \
 		content \
-		locale \
+		locales \
 		obsolete \
 		profile \
 		xre \
