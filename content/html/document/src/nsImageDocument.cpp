@@ -384,6 +384,7 @@ nsImageDocument::OnStartContainer(imgIRequest* aRequest, imgIContainer* aImage)
   if (mImageResizingEnabled) {
     CheckOverflowing();
   }
+  UpdateTitleAndCharset();
 
   return NS_OK;
 }
