@@ -65,7 +65,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 
 // Constructor of a controller which is set up to use, internally, a
 // singleton command-table pre-filled with editor commands.
-static nsresult
+static NS_METHOD
 nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
                                             void **aResult)
 {
@@ -90,7 +90,7 @@ nsEditorControllerConstructor(nsISupports *aOuter, REFNSIID aIID,
 
 
 // Constructor for a command-table pref-filled with editor commands
-static nsresult
+static NS_METHOD
 nsEditorCommandTableConstructor(nsISupports *aOuter, REFNSIID aIID,
                                             void **aResult)
 {
