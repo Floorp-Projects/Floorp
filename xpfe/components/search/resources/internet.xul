@@ -11,6 +11,7 @@
 <!ENTITY checkbox.column.label       "On">
 <!ENTITY engine.column.label         "Search Engines">
 
+<!ENTITY checkall.button.label       "Check All">
 <!ENTITY uncheckall.button.label     "Uncheck All">
 <!ENTITY savesearch.button.label     "Save Search in Bookmarks">
 ]>
@@ -19,7 +20,7 @@
 <window title="&window.title.label;" style="width:100%; height:100%; background-color:white" align="vertical"
 	xmlns:html="http://www.w3.org/TR/REC-html40"
 	xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="loadPage()" onunload="unloadPage()">
 
 	<html:script src="internet.js" />
 	<html:script src="shared.js" />
@@ -40,10 +41,10 @@
 
 			<template>
                                 <treechildren>
-				<treeitem uri="...">
+				<treeitem uri="..." loading="rdf:http://home.netscape.com/NC-rdf#loading" >
 					<treerow>
 						<treecell treeallowevents="true">
-							<checkbox value="0" />
+							<html:input type="checkbox" onclick="doCheck(this)" />
 						</treecell>
 						<treecell>
 							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
@@ -70,7 +71,8 @@
 
 	<box align="horizontal" style="width: 100%;" >
 		<spring align="horizontal" flex="100%" />
-		<html:input type="button" value="&uncheckall.button.label;" onclick="return doUncheckAll();" />
+		<html:input type="button" value="&checkall.button.label;" onclick="return doCheckAll(true);" />
+		<html:input type="button" value="&uncheckall.button.label;" onclick="return doCheckAll(false);" />
 		<html:input id="SaveSearch" type="button" disabled="true" value="&savesearch.button.label;" onclick="return saveSearch();" />
 		<spring align="horizontal" flex="100%" />
 	</box>

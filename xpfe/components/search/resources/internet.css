@@ -27,6 +27,10 @@ titledbutton {
   background-image: inherit;
 }
 
+treeitem[loading="true"] > treerow > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
+}
+
 treeitem > treerow > treecell > titledbutton[value="AOL Netfind"] {
 	list-style-image: url("resource:/res/rdf/datasets/AOL_NetFind.gif");
 }

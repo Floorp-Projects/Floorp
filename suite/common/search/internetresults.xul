@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?>
+<?xml-stylesheet href="internet.css" type="text/css"?>
 <?xml-stylesheet href="internetresults.css" type="text/css"?>
 
 
@@ -7,6 +8,8 @@
 [
 <!ENTITY window.title.label          "Search Internet Results">
 <!ENTITY results.title.label         "Results:">
+
+<!ENTITY resultsites.title.label     "Search Sites:">
 
 <!ENTITY name.column.label           "Name">
 <!ENTITY relevance.column.label      "Relevance">
@@ -24,6 +27,43 @@
 
 	<box align="horizontal" style="width: 100%;" >
 		<titledbutton style="width: 100%;" id="internetresultssummary" value="&results.title.label;" />
+	</box>
+
+	<box align="horizontal" style="width: 100%;" >
+	<tree id="NC:SearchResultsSitesRoot" style="height: 64;" flex="100%" datasources="rdf:internetsearch">
+		<template>
+			<treechildren>
+				<treeitem>
+					<treerow>
+						<treecell uri="...">
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
+						</treecell>
+					</treerow>
+				</treeitem>
+			</treechildren>
+		</template>
+
+		<treecol id="SiteNameColumn" rdf:resource="http://home.netscape.com/NC-rdf#SiteNameColumn"/>
+		<treehead>
+			<treerow>
+				<treecell resource="http://home.netscape.com/NC-rdf#SiteNameColumn" onclick="return doSort('SiteNameColumn');">
+					<observes element="SiteNameColumn" attribute="sortActive"/>
+					<observes element="SiteNameColumn" attribute="sortDirection"/>
+					&resultsites.title.label;
+				</treecell>
+			</treerow>
+		</treehead>
+
+		<treechildren>
+			<treeitem>
+				<treerow>
+					<treecell>
+						<titledbutton value="All Search Results" align="left" />
+					</treecell>
+				</treerow>
+			</treeitem>
+		</treechildren>
+	</tree>
 	</box>
 
 	<tree id="internetresultstree" style="height: 100%; width: 100%;" flex="100%" datasources="rdf:internetsearch" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
@@ -61,7 +101,7 @@
 							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Site" align="left" style="list-style-image: none;" />
 						</treecell>
 						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Engine" align="left" style="list-style-image: none;" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Engine" align="left" />
 						</treecell>
 					</treerow>
 				</treeitem>
