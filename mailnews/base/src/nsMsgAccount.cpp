@@ -138,7 +138,7 @@ nsMsgAccount::createIncomingServer()
 
   // the server type doesn't exist, use "generic"
   if (NS_FAILED(rv)) {
-    serverType.Copy("generic");
+    *getter_Copies(serverType) = nsXPIDLCString::Copy("generic");
     return rv;
   }
     
