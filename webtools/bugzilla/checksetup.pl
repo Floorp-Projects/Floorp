@@ -1788,7 +1788,7 @@ if (!($sth->fetchrow_arrayref()->[0])) {
 # If the graphs dir is not present, we assume that they have been using
 # a Bugzilla with the old data format, and so upgrade their data files.
 unless (-d 'graphs') {
-    print "Creating graphs directory ...\n";
+    print "Creating graphs directory...\n";
     mkdir 'graphs', 0770; 
     if ($::webservergroup eq "") {
         chmod 0777, 'graphs';
@@ -1797,13 +1797,18 @@ unless (-d 'graphs') {
     # Upgrade data format
     foreach my $in_file (glob("data/mining/*"))
     {
-        # Don't try and upgrade image files!
-        if (($in_file =~ /\.gif$/i) || ($in_file =~ /\.png$/i)) {
+        # Don't try and upgrade image or db files!
+        if (($in_file =~ /\.gif$/i) || 
+            ($in_file =~ /\.png$/i) ||
+            ($in_file =~ /\.db$/i) ||
+            ($in_file =~ /\.orig$/i)) {
             next;
         }
 
-        open(IN, $in_file) or next;
-
+        rename("$in_file", "$in_file.orig") or next;        
+        open(IN, "$in_file.orig") or next;
+        open(OUT, ">$in_file") or next;
+        
         # Fields in the header
         my @declared_fields = ();
 
@@ -1814,17 +1819,17 @@ unless (-d 'graphs') {
                                      RESOLVED VERIFIED CLOSED);
 
         # Fields we actually want (matches the current collectstats.pl)                             
-        my @out_fields = qw(DATE NEW ASSIGNED REOPENED UNCONFIRMED              
-                            VERIFIED CLOSED FIXED INVALID WONTFIX LATER REMIND 
+        my @out_fields = qw(DATE NEW ASSIGNED REOPENED UNCONFIRMED RESOLVED
+                            VERIFIED CLOSED FIXED INVALID WONTFIX LATER REMIND
                             DUPLICATE WORKSFORME MOVED);
 
         while (<IN>) {
-            if (/^# fields: (.*)\s$/) {
-                @declared_fields = map uc, (split /\|/, $1);
-                print "# fields: ", join('|', @out_fields), "\n";
+            if (/^# fields?: (.*)\s$/) {
+                @declared_fields = map uc, (split /\||\r/, $1);
+                print OUT "# fields: ", join('|', @out_fields), "\n";
             }
             elsif (/^(\d+\|.*)/) {
-                my @data = split /\|/, $1;
+                my @data = split /\||\r/, $1;
                 my %data = ();
                 if (@data == @declared_fields) {
                     # old format
@@ -1838,19 +1843,28 @@ unless (-d 'graphs') {
                         $data{$intermediate_fields[$i]} = $data[$i];
                     }
                 }
+                elsif (@data == @out_fields) {
+                    # This line's fine - it has the right number of entries 
+                    for my $i (0 .. $#out_fields) {
+                        $data{$out_fields[$i]} = $data[$i];
+                    }
+                }
                 else {
                     print "Oh dear, input line $. of $in_file had " . scalar(@data) . " fields\n";
                     print "This was unexpected. You may want to check your data files.\n";
                 }
 
-                print join('|', map { $data{$_} || "" } @out_fields), "\n";
+                print OUT join('|', map { 
+                              defined ($data{$_}) ? ($data{$_}) : "" 
+                                                          } @out_fields), "\n";
             }
             else {
-                print;
+                print OUT;
             }
         }
 
         close(IN);
+        close(OUT);
     }    
 }
 

@@ -566,7 +566,7 @@ sub generate_chart {
         next unless $_;
         if (/^#/) {
             if (/^# fields?: (.*)\s*$/) {
-                @fields = split /\|/, $1;
+                @fields = split /\||\r/, $1;
                 &die_politely("`# fields: ' line didn't start with DATE, but with $fields[0]")
                   unless $fields[0] =~ /date/i;
                 push @labels, grep($datasets{$_}, @fields);
