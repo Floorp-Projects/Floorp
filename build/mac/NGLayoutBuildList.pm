@@ -337,6 +337,7 @@ sub BuildClientDist()
 	_InstallFromManifest(":mozilla:intl:uconv:ucvko:MANIFEST",						"$distdirectory:uconv:");
 #	_InstallFromManifest(":mozilla:intl:uconv:ucvth:MANIFEST",						"$distdirectory:uconv:");
 #	_InstallFromManifest(":mozilla:intl:uconv:ucvvt:MANIFEST",						"$distdirectory:uconv:");
+	_InstallFromManifest(":mozilla:intl:uconv:ucvibm:MANIFEST",						"$distdirectory:uconv:");
 
 
 	#UNICHARUTIL
@@ -1129,6 +1130,8 @@ sub BuildInternationalProjects()
 				
 #	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvvt.mcp",					"ucvvt$D.shlb", "ucvvt.toc", 1, $main::ALIAS_SYM_FILES, 1);
 				
+	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvibm.mcp",					"ucvibm$D.shlb", "ucvibm.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
 #	BuildOneProject(":mozilla:intl:uconv:macbuild:ucvth.mcp",					"ucvth$D.shlb", "ucvth.toc", 1, $main::ALIAS_SYM_FILES, 1);
 				
 	BuildOneProject(":mozilla:intl:unicharutil:macbuild:unicharutil.mcp",		"unicharutil$D.shlb", "unicharutil.toc", 1, $main::ALIAS_SYM_FILES, 1);
