@@ -16,85 +16,64 @@
  * Reserved.
  */
 
-#ifndef nsCertificatePrincipal_h___
-#define nsCertificatePrincipal_h___
-
-#include "nsICertificatePrincipal.h"
-#include "nsPrincipal.h"
+#ifndef _NS_CERTIFICATE_PRINCIPAL_H_
+#define _NS_CERTIFICATE_PRINCIPAL_H_
+#include "nsVector.h"
+#include "nsIPrincipal.h"
 
 class nsCertificatePrincipal : public nsICertificatePrincipal {
 public:
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsISupports:
-    NS_DECL_ISUPPORTS
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsIPrincipal:
+	NS_DECL_ISUPPORTS
 
-    NS_IMETHOD
-    IsTrusted(const char* scope, PRBool *pbIsTrusted);
-     
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsICertificatePrincipal:
-    /**
-     * Returns the public key of the certificate.
-     *
-     * @param publicKey -     the Public Key data will be returned in this field.
-     * @param publicKeySize - the length of public key data is returned in this
-     *                        parameter.
-     */
-    NS_IMETHOD
-    GetPublicKey(char **publicKey, PRUint32 *publicKeySize);
+	NS_IMETHOD
+	GetPublicKey(char ** pk, PRUint32 * pkSize);
 
-    /**
-     * Returns the company name of the ceritificate (OU etc parameters of certificate)
-     *
-     * @param result - the certificate details about the signer.
-     */
-    NS_IMETHOD
-    GetCompanyName(char **ppCompanyName);
+	NS_IMETHOD
+	GetCompanyName(char ** cn);
 
-    /**
-     * Returns the certificate issuer's data (OU etc parameters of certificate)
-     *
-     * @param result - the details about the issuer
-     */
-    NS_IMETHOD
-    GetCertificateAuthority(char **ppCertAuthority);
+	NS_IMETHOD
+	GetCertificateAuthority(char ** ca);
 
-    /**
-     * Returns the serial number of certificate 
-     *
-     * @param result - Returns the serial number of certificate 
-     */
-    NS_IMETHOD
-    GetSerialNumber(char **ppSerialNumber);
+	NS_IMETHOD
+	GetSerialNumber(char ** sn);
 
-    /**
-     * Returns the expiration date of certificate 
-     *
-     * @param result - Returns the expiration date of certificate 
-     */
-    NS_IMETHOD
-    GetExpirationDate(char **ppExpDate);
+	NS_IMETHOD
+	GetExpirationDate(char ** ed);
 
-    /**
-     * Returns the finger print of certificate 
-     *
-     * @param result - Returns the finger print of certificate 
-     */
-    NS_IMETHOD
-    GetFingerPrint(char **ppFingerPrint);
+	NS_IMETHOD
+	GetFingerPrint(char ** fp);
 
-    ////////////////////////////////////////////////////////////////////////////
-    // from nsCertificatePrincipal:
-    nsCertificatePrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, nsresult *result);
-    nsCertificatePrincipal(nsPrincipal *pNSPrincipal);
+	NS_IMETHOD
+	GetType(PRInt16 * type);
 
-    virtual ~nsCertificatePrincipal(void);
-    nsPrincipal *GetPeer(void);
+	NS_IMETHOD
+	IsSecure(PRBool * result);
+
+	NS_IMETHOD
+	ToString(char ** result);
+
+	NS_IMETHOD
+	HashCode(PRUint32 * code);
+
+	NS_IMETHOD
+	Equals(nsIPrincipal * other, PRBool * result);
+
+	nsCertificatePrincipal(PRInt16 * type, const unsigned char ** certChain,
+					 PRUint32 * certChainLengths, PRUint32 noOfCerts, nsresult * result);
+	virtual ~nsCertificatePrincipal(void);
 
 protected:
-    nsPrincipal *m_pNSPrincipal;
+	PRInt16 itsType;
+	char * itsKey;
+	PRUint32 itsKeyLength;
+	nsVector * itsCertificateArray;
+	char * itsCompanyName;
+	char * itsCertificateAuthority;
+	char * itsSerialNumber;
+	char * itsExpirationDate;
+	char * itsFingerPrint;	
+	char * itsNickname;
+	char * itsString;
 };
 
-#endif // nsCCertificatePrincipal_h___
+#endif // _NS_CERTIFICATE_PRINCIPAL_H_

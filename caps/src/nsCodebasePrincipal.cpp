@@ -17,81 +17,78 @@
  */
 
 #include "nsCodebasePrincipal.h"
-#include "nsPrincipal.h"
 #include "xp.h"
 
 static NS_DEFINE_IID(kICodebasePrincipalIID, NS_ICODEBASEPRINCIPAL_IID);
-////////////////////////////////////////////////////////////////////////////
-// from nsISupports:
-
-// These macros produce simple version of QueryInterface and AddRef.
-// See the nsISupports.h header file for DETAILS.
 
 NS_IMPL_ISUPPORTS(nsCodebasePrincipal, kICodebasePrincipalIID);
 
-////////////////////////////////////////////////////////////////////////////
-// from nsIPrincipal:
+NS_IMETHODIMP
+nsCodebasePrincipal::GetURL(char **cburl)
+{
+	cburl = (char **)&codeBaseURL;
+	return NS_OK;
+}
 
 NS_IMETHODIMP
-nsCodebasePrincipal::IsTrusted(const char* scope, PRBool *pbIsTrusted)
+nsCodebasePrincipal::IsCodebaseExact(PRBool * result)
 {
-   if(m_pNSPrincipal == NULL)
-   {
-      *pbIsTrusted = PR_FALSE;
-      return NS_ERROR_ILLEGAL_VALUE;
-   }
-   *pbIsTrusted = m_pNSPrincipal->isSecurePrincipal();
-   return NS_OK;
+	* result = (this->itsType == (PRInt16 *)nsIPrincipal::PrincipalType_CodebaseExact) ? PR_TRUE : PR_FALSE;
+	return NS_OK;
 }
-     
 
-
-/**
- * Returns the codebase URL of the principal.
- *
- * @param result - the resulting codebase URL
- */
 NS_IMETHODIMP
-nsCodebasePrincipal::GetURL(char **ppCodeBaseURL)
+nsCodebasePrincipal::IsCodebaseRegex(PRBool * result)
 {
-   if(m_pNSPrincipal == NULL)
-   {
-      *ppCodeBaseURL = NULL;
-      return NS_ERROR_ILLEGAL_VALUE;
-   }
-   *ppCodeBaseURL = m_pNSPrincipal->getKey();
-   return NS_OK;
+	* result = (itsType == (PRInt16 *)nsIPrincipal::PrincipalType_CodebaseRegex) ? PR_TRUE : PR_FALSE;
+	return NS_OK;
 }
 
-////////////////////////////////////////////////////////////////////////////
-// from nsCCodebasePrincipal:
-
-nsCodebasePrincipal::nsCodebasePrincipal(const char *codebaseURL, 
-                                           nsresult *result)
+NS_IMETHODIMP
+nsCodebasePrincipal::GetType(PRInt16 * type)
 {
-   m_pNSPrincipal = new nsPrincipal(nsPrincipalType_CodebaseExact, 
-                                    (void *)codebaseURL, 
-                                    XP_STRLEN(codebaseURL));
-   if(m_pNSPrincipal == NULL)
-   {
-      *result = NS_ERROR_OUT_OF_MEMORY;
-      return;
-   }
-   *result = NS_OK;
+	type = itsType;
+	return NS_OK;
 }
 
-nsCodebasePrincipal::nsCodebasePrincipal(nsPrincipal *pNSPrincipal)
+NS_IMETHODIMP 
+nsCodebasePrincipal::IsSecure(PRBool * result)
+{ 
+	/*
+	if ((0 == memcmp("https:", itsKey, strlen("https:"))) ||
+      (0 == memcmp("file:", itsKey, strlen("file:"))))
+    return PR_TRUE;
+	*/
+	return PR_FALSE;
+}
+
+NS_IMETHODIMP
+nsCodebasePrincipal::ToString(char **result)
 {
-   m_pNSPrincipal = pNSPrincipal;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCodebasePrincipal::HashCode(PRUint32 * code)
+{
+	code=0;
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCodebasePrincipal::Equals(nsIPrincipal * other, PRBool * result)
+{
+	PRInt16 * oType;
+	other->GetType(oType);
+	*result = (itsType == oType) ? PR_TRUE : PR_FALSE;	
+	return NS_OK;
+}
+nsCodebasePrincipal::nsCodebasePrincipal(PRInt16 * type, const char * codeBaseURL)
+{
+	this->itsType=type;
+	this->codeBaseURL=codeBaseURL;
 }
 
 nsCodebasePrincipal::~nsCodebasePrincipal(void)
 {
-   delete m_pNSPrincipal;
-}
-
-nsPrincipal*
-nsCodebasePrincipal::GetPeer(void)
-{
-   return m_pNSPrincipal;
 }

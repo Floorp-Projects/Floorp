@@ -23,9 +23,10 @@
 #include "nsIFactory.h"
 #include "nsIPrincipal.h"
 #include "nsCapsPublicEnums.h"
-
-class nsITarget;
+#include "nsTarget.h"
+//class nsITarget;
 class nsICapsSecurityCallbacks;
+
 
 #define NS_ALL_PRIVILEGES         ((nsITarget*)NULL)
 
@@ -80,9 +81,10 @@ public:
      * @param codebaseURL - the codebase URL
      * @param prin  - the return value is passed in this parameter.
      */
+/*
     NS_IMETHOD
     CreateCodeSourcePrincipal(const unsigned char **certChain, PRUint32 *certChainLengths, PRUint32 noOfCerts, const char *codebaseURL, nsIPrincipal** prin) = 0;
-
+*/
 
     /**
      * Returns the permission for given principal and target
@@ -92,7 +94,7 @@ public:
      * @param state  - the return value is passed in this parameter.
      */
     NS_IMETHOD
-    GetPermission(nsIPrincipal* prin, nsITarget* target, nsPermission *state) = 0;
+    GetPermission(nsIPrincipal* prin, nsTarget * target, nsPermission *state) = 0;
 
     /**
      * Set the permission state for given principal and target. This wouldn't 
@@ -104,7 +106,7 @@ public:
      *                 and target parameters.
      */
     NS_IMETHOD
-    SetPermission(nsIPrincipal* prin, nsITarget* target, nsPermission state) = 0;
+    SetPermission(nsIPrincipal* prin, nsTarget * target, nsPermission state) = 0;
 
     /**
      * Prompts the user if they want to grant permission for the given principal and 
@@ -116,7 +118,7 @@ public:
      *                 target
      */
     NS_IMETHOD
-    AskPermission(nsIPrincipal* prin, nsITarget* target, nsPermission *result) = 0;
+    AskPermission(nsIPrincipal* prin, nsTarget * target, nsPermission *result) = 0;
 
 
     /* 
@@ -147,8 +149,8 @@ public:
      * @param prin   - is either certificate principal or codebase principal
      * @param result - is true if principal was successfully registered with the system
      */
-    NS_IMETHOD
-    RegisterPrincipal(nsIPrincipal* prin, PRBool *result) = 0;
+//    NS_IMETHOD
+//    RegisterPrincipal(nsIPrincipal* prin, PRBool *result) = 0;
 
     /**
      * Prompts the user if they want to grant permission for the principal located
@@ -221,22 +223,22 @@ public:
 
 
     /* interfaces for nsIPrincipal object, may be we should move some of them to nsIprincipal */
-
+/*
     NS_IMETHOD
     NewPrincipal(nsPrincipalType type, void* key, PRUint32 key_len, void *zig, nsIPrincipal* *result) = 0;
 
     NS_IMETHOD
     IsCodebaseExact(nsIPrincipal* principal, PRBool *result) = 0;
-
+*/
     NS_IMETHOD
     CreateMixedPrincipalArray(void *zig, char* name, const char* codebase, void** result) = 0;
-
+/*
     NS_IMETHOD
     ToString(nsIPrincipal* principal, char* *result) = 0;
 
     NS_IMETHOD
     GetVendor(nsIPrincipal* principal, char* *result) = 0;
-
+*/
     NS_IMETHOD
     NewPrincipalArray(PRUint32 count, void* *result) = 0;
 

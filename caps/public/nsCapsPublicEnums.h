@@ -65,6 +65,7 @@ typedef enum nsSetComparisonType {
 
 
 /* The following should match what is in nsJVM plugin's java security code */
+/*
 typedef enum nsPrincipalType {
   nsPrincipalType_Unknown=-1, 
   nsPrincipalType_CodebaseExact=10,
@@ -72,10 +73,7 @@ typedef enum nsPrincipalType {
   nsPrincipalType_Cert,
   nsPrincipalType_CertFingerPrint,
   nsPrincipalType_CertKey,
-  /* CertChain principal is being added for Javasoft's JVM. They will pass the 
-   * whole chain to the nsPrincipal constructor. 
-   */
   nsPrincipalType_CertChain
 } nsPrincipalType;
-
+*/
 #endif /* _NS_CAPS_PUBLIC_ENUMS_H_ */

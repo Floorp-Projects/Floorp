@@ -51,32 +51,35 @@ nsUserTarget::~nsUserTarget(void)
 }
 
 #define OPTION "<option>"
-nsPrivilege * nsUserTarget::enablePrivilege(nsPrincipal *prin, void *data)
+nsPrivilege * 
+nsUserTarget::EnablePrivilege(nsIPrincipal *prin, void *data)
 {
-  char *riskStr = getRisk();
-  char *desc = getDescription();
-  char *prinStr = prin->toString();
-  char *targetStr = new char[strlen(OPTION) + strlen(desc) + 1];
-  XP_STRCPY(targetStr, OPTION);
-  XP_STRCAT(targetStr, desc);
-  PRBool isCert = (prin->isCodebase()) ? PR_FALSE : PR_TRUE;
-  void *cert = prin->getCertificate();
-  nsPermState permState = nsPermState_AllowedSession;
-
+	char * riskStr = this->GetRisk();
+	char * desc = this->GetDescription();
+	char * prinStr;
+	prin->ToString(& prinStr);
+	char * targetStr = new char[strlen(OPTION) + strlen(desc) + 1];
+	XP_STRCPY(targetStr, OPTION);
+	XP_STRCAT(targetStr, desc);
+	PRInt16 prinType;
+	prin->GetType(& prinType);
+//	void *cert;
+//	if(prinType == (PRInt16) nsIPrincipal::PrincipalType_Certificate)
+//		cert = ((nsICertificatePrincipal *) prin)->GetCertificate();
+	nsPermState permState = nsPermState_AllowedSession;
   /* 
    * Check Registration Mode flag and the url code base 
    * to set permission state 
    */
-  if ((nsCapsGetRegistrationModeFlag()) && (prin != NULL)) {
-	  if (prin->isFileCodeBase()) {
-		permState = nsPermState_AllowedSession;
-	  }
-  } else if (displayUI) {
-	/* set displayUI to TRUE, to enable UI */
-    nsCaps_lock();
-    permState = displayPermissionDialog(prinStr, targetStr, riskStr, isCert, cert); 
-    nsCaps_unlock();
-  }
+//  if ((nsCapsGetRegistrationModeFlag()) && (prin != NULL)) {
+//	  if (prinType == (PRInt16) nsIPrincipal::PrincipalType_Codebase) permState = nsPermState_AllowedSession;
+//  } else if (displayUI) {
+		/* set displayUI to TRUE, to enable UI */
+//		nsCaps_lock();
+//		permState = displayPermissionDialog(prinStr, targetStr, riskStr,
+//		 isCert, cert); 
+//		nsCaps_unlock();
+//	}
 
   nsPermissionState permVal; 
   nsDurationState durationVal;
@@ -97,5 +100,3 @@ nsPrivilege * nsUserTarget::enablePrivilege(nsPrincipal *prin, void *data)
   delete []targetStr;
   return nsPrivilege::findPrivilege(permVal, durationVal);
 }
-
-

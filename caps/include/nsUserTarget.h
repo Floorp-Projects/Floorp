@@ -21,10 +21,9 @@
 
 
 #include "prtypes.h"
-
 #include "nsTarget.h"
 #include "nsPrivilege.h"
-#include "nsPrincipal.h"
+//#include "nsPrincipal.h"
 #include "nsCom.h"
 
 /* Any methods that is not defined here is in Java */
@@ -37,45 +36,43 @@ public:
 	nsUserTarget(char *name);
 	virtual ~nsUserTarget(void);
 
-    nsUserTarget(char *name, nsPrincipal *prin, PRInt32 risk, 
-                 char *riskColor, char *description, 
-                 char *detailDescription, char *url)
-      : nsTarget(name, prin, risk, riskColor, description, detailDescription, 
-                 url, NULL)
-    {
-    }
+	nsUserTarget(char *name, nsIPrincipal * prin, PRInt32 risk, 
+					char *riskColor, char *description, 
+					char *detailDescription, char *url)
+	: nsTarget(name, prin, risk, riskColor, description, detailDescription, url, NULL)
+	{
+	}
 
-    nsUserTarget(char *name, nsPrincipal *prin, PRInt32 risk, 
-                 char *riskColor, char *description, 
-                 char *detailDescription, char *url, 
-                 nsTargetArray *targetArray) 
-      : nsTarget(name, prin, risk, riskColor, description, detailDescription, 
-                 url, targetArray)
-    {
-    }
+	nsUserTarget(char *name, nsIPrincipal * prin, PRInt32 risk, 
+					char *riskColor, char *description, 
+					char *detailDescription, char *url, 
+					nsTargetArray *targetArray) 
+	: nsTarget(name, prin, risk, riskColor, description, detailDescription, url, targetArray)
+	{
+	}
 
-    nsUserTarget(char *name, nsPrincipal *prin, PRInt32 risk, 
-                 char *riskColor, 
-                 int desc_id, 
-                 int detail_desc_id,
-                 int help_url_id)
-      : nsTarget(name, prin, risk, riskColor, desc_id, detail_desc_id, 
-                 help_url_id, NULL)
-    {
-    }
+	nsUserTarget(char *name, nsIPrincipal * prin, PRInt32 risk, 
+					char *riskColor, 
+					int desc_id, 
+					int detail_desc_id,
+					int help_url_id)
+	: nsTarget(name, prin, risk, riskColor, desc_id, detail_desc_id, 
+					help_url_id, NULL)
+	{
+	}
 
-    nsUserTarget(char *name, nsPrincipal *prin, PRInt32 risk, 
-                 char *riskColor, 
-                 int desc_id, 
-                 int detail_desc_id,
-                 int help_url_id,
-                 nsTargetArray *targetArray) 
-      : nsTarget(name, prin, risk, riskColor, desc_id, detail_desc_id, 
-                 help_url_id, targetArray)
-    {
-    }
+	nsUserTarget(char *name, nsIPrincipal * prin, PRInt32 risk, 
+					char *riskColor, 
+					int desc_id, 
+					int detail_desc_id,
+					int help_url_id,
+					nsTargetArray *targetArray) 
+	: nsTarget(name, prin, risk, riskColor, desc_id, detail_desc_id, 
+					help_url_id, targetArray)
+	{
+	}
 
-	nsPrivilege * enablePrivilege(nsPrincipal *prin, void *data);
+	nsPrivilege * EnablePrivilege(nsIPrincipal * prin, void *data);
 
 private:
 

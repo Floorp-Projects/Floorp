@@ -256,6 +256,9 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 
 
 #if 0 
+// This needs to be modified at least temporarily.  Caps is undergoing some rearchitecture
+// nsPrincipal doesn't exist anymore, we're trying to move towards using nsIPrincipal and a PrincipalTools.h
+// which includes the definitions for arrays.
 // TODO: Need raman's help. This needs to convert between C++ [] array data type to a nsVector object.
 void* 
 ConvertNSIPrincipalArrayToObject(JNIEnv *pJNIEnv, JSContext *pJSContext, void  **ppNSIPrincipalArrayIN, int numPrincipals, void *pNSISecurityContext)

@@ -25,33 +25,31 @@
 #include "nsTarget.h"
 #include "nsPrivilege.h"
 
-struct nsPrivilegeTable {
+class nsPrivilegeTable {
 
 public:
 
-	/* Public Methods */
 	nsPrivilegeTable(void);
 	virtual ~nsPrivilegeTable(void);
 
-	PRInt32 size(void);
+	PRInt32 Size(void);
 
-	PRBool isEmpty(void);
+	PRBool IsEmpty(void);
 
-	virtual nsPrivilege * get(nsTarget *t);
+	virtual nsPrivilege * Get(nsTarget * t);
 
-	nsPrivilege * put(nsTarget *a, nsPrivilege *priv);
+	nsPrivilege * Put(nsTarget * a, nsPrivilege * priv);
 
-	nsPrivilege * remove(nsTarget *key);
+	nsPrivilege * Remove(nsTarget * key);
 
-	nsPrivilegeTable * clone(void);
+	nsPrivilegeTable * Clone(void);
 
-	void clear(void);
+	void Clear(void);
 
 	void Enumerate(nsHashtableEnumFunc aEnumFunc);
 
 private:
 
-	/* Private Field Accessors */
 	nsHashtable * itsTable;
 };
 

@@ -49,29 +49,27 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 #//------------------------------------------------------------------------
 
 C_OBJS=                                     \
-    .\$(OBJDIR)\nsZip.obj                   \
-    .\$(OBJDIR)\nsLoadZig.obj               \
     .\$(OBJDIR)\jpermission.obj             \
+    .\$(OBJDIR)\nsLoadZig.obj               \
+    .\$(OBJDIR)\nsZip.obj                   \
     $(NULL)
 
 
-CPP_OBJS=                                       \
+CPP_OBJS=                                   \
+    .\$(OBJDIR)\admin.obj                   \
+    .\$(OBJDIR)\nsCaps.obj                  \
+    .\$(OBJDIR)\nsCCapsManager.obj          \
+    .\$(OBJDIR)\nsCCapsManagerFactory.obj   \
+    .\$(OBJDIR)\nsCertificatePrincipal.obj  \
+    .\$(OBJDIR)\nsCodebasePrincipal.obj     \
     .\$(OBJDIR)\nsUserDialogHelper.obj      \
-    .\$(OBJDIR)\nsZig.obj                   \
-    .\$(OBJDIR)\nsPrincipal.obj             \
     .\$(OBJDIR)\nsPrivilege.obj             \
     .\$(OBJDIR)\nsPrivilegeManager.obj      \
     .\$(OBJDIR)\nsPrivilegeTable.obj        \
     .\$(OBJDIR)\nsSystemPrivilegeTable.obj  \
     .\$(OBJDIR)\nsTarget.obj                \
     .\$(OBJDIR)\nsUserTarget.obj            \
-    .\$(OBJDIR)\admin.obj                   \
-    .\$(OBJDIR)\nsCaps.obj                  \
-    .\$(OBJDIR)\nsCCapsManager.obj          \
-    .\$(OBJDIR)\nsCertificatePrincipal.obj        \
-    .\$(OBJDIR)\nsCodebasePrincipal.obj    \
-    .\$(OBJDIR)\nsCCapsManagerFactory.obj   \
-    .\$(OBJDIR)\nsCCodeSourcePrincipal.obj  \
+    .\$(OBJDIR)\nsZig.obj                   \
     $(NULL)
 
 

@@ -1330,28 +1330,25 @@ nsJSSecurityManager::PrintPrincipalsToConsole(JSContext *aCx, JSPrincipals *aPri
 {
   void *principalsArray;
   nsIPrincipal *principal;
-  char *vendor;
+//cd ..  char *vendor;
   PRUint32 i, count;
   static char emptyStr[] = "<empty>\n";
-
   principalsArray = aPrincipals->getPrincipalArray(aCx, aPrincipals);
-
   if (principalsArray == nsnull) {
     PrintToConsole(emptyStr);
     return;
   }
-
   PrintToConsole("[\n");
   mCapsManager->GetPrincipalArraySize(principalsArray, &count);
   for (i = 0; i < count; i++) {
     mCapsManager->GetPrincipalArrayElement(principalsArray, i, &principal);
-    mCapsManager->GetVendor(principal, &vendor);
-    if (vendor == nsnull) {
-      JS_ReportOutOfMemory(aCx);
-      return;
-    }
-    PrintToConsole(vendor);
-    PrintToConsole(",\n");
+//    mCapsManager->GetVendor(principal, &vendor);
+//    if (vendor == nsnull) {
+//      JS_ReportOutOfMemory(aCx);
+//      return;
+//    }
+//    PrintToConsole(vendor);
+//    PrintToConsole(",\n");
   }
   PrintToConsole("]\n");
 }
@@ -1373,24 +1370,19 @@ nsJSSecurityManager::InvalidateCertPrincipals(JSContext *aCx, JSPrincipals *aPri
 char*
 nsJSSecurityManager::FindOriginURL(JSContext *aCx, JSObject *aGlobal)
 {
-  nsISupports *tmp1, *tmp2;
+  nsISupports * tmp1, * tmp2;
   nsIScriptGlobalObjectData* globalData = nsnull;
   nsAutoString urlString;
-
-  tmp1 = (nsISupports*)JS_GetPrivate(aCx, aGlobal);
+  tmp1 = (nsISupports *)JS_GetPrivate(aCx, aGlobal);
   if (nsnull != tmp1 && 
       NS_OK == tmp1->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData)) {
     globalData->GetOrigin(&urlString);
   }
-    
   if (urlString.Length() == 0) {
     /* Must be a new, empty window?  Use running origin. */
     tmp2 = (nsISupports*)JS_GetPrivate(aCx, JS_GetGlobalObject(aCx));
-
     /* Compare running and current to avoid infinite recursion. */
-    if (tmp1 == tmp2) {
-      urlString = gUnknownOriginStr;
-    } 
+    if (tmp1 == tmp2) urlString = gUnknownOriginStr;
     else if (nsnull != tmp2 && 
              NS_OK == tmp2->QueryInterface(kIScriptGlobalObjectDataIID, (void**)&globalData)) {
       globalData->GetOrigin(&urlString);
