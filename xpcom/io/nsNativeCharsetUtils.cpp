@@ -23,6 +23,7 @@
  *   Brian Stell <bstell@ix.netcom.com>
  *   Frank Tang <ftang@netscape.com>
  *   Brendan Eich <brendan@mozilla.org>
+ *   Sergei Dolgov <sergei_d@fi.fi.tartu.ee>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -38,7 +39,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
+#if defined(XP_UNIX)
 
 #include <stdlib.h>   // mbtowc, wctomb
 #include <locale.h>   // setlocale
@@ -757,6 +758,35 @@ void
 NS_ShutdownNativeCharsetUtils()
 {
     nsNativeCharsetConverter::GlobalShutdown();
+}
+
+#elif defined(XP_BEOS)
+
+#include "nsAString.h"
+#include "nsString.h"
+
+NS_COM nsresult
+NS_CopyNativeToUnicode(const nsACString &input, nsAString  &output)
+{
+    output = NS_ConvertUTF8toUCS2(input);
+    return NS_OK;
+}
+
+NS_COM nsresult
+NS_CopyUnicodeToNative(const nsAString  &input, nsACString &output)
+{
+    output =NS_ConvertUCS2toUTF8(input);
+    return NS_OK;
+}
+
+void
+NS_StartupNativeCharsetUtils()
+{
+}
+
+void
+NS_ShutdownNativeCharsetUtils()
+{
 }
 
 #else // non XP_UNIX implementations go here...
