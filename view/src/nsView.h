@@ -49,7 +49,6 @@ public:
   NS_IMETHOD  Init(nsIViewManager* aManager,
       						 const nsRect &aBounds,
                    const nsIView *aParent,
-      						 const nsViewClip *aClip = nsnull,
       						 nsViewVisibility aVisibilityFlag = nsViewVisibility_kShow);
 
   NS_IMETHOD  Destroy();
@@ -145,7 +144,7 @@ protected:
   nsViewVisibility  mVis;
   PRInt32           mNumKids;
   nsRect            mBounds;
-  nsViewClip        mClip;
+  nsViewClip        mChildClip;
   nsTransform2D     *mXForm;
   float             mOpacity;
   PRUint32          mVFlags;
