@@ -349,11 +349,11 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
     {
       LOG_SCOPE(gJPEGlog, "nsJPEGDecoder::WriteFrom -- JPEG_DECOMPRESS_SEQUENTIAL case");
 
-      OutputScanlines(-1);
+      if (OutputScanlines(-1) == PR_FALSE)
+        return NS_OK; /* I/O suspension */
 
       /* If we've completed image output ... */
-      if (mInfo.output_scanline == mInfo.output_height)
-        mState = JPEG_DONE;
+      NS_ASSERTION(mInfo.output_scanline == mInfo.output_height, "We didn't process all of the data!");
     }
   }
 
@@ -493,7 +493,7 @@ nsJPEGDecoder::OutputScanlines(int num_scanlines)
       mFrame->GetImageBytesPerRow(&bpr);
       mFrame->SetImageData(
         samples,             // data
-        mInfo.output_width * 3,  // length
+        bpr,                 // length
         (mInfo.output_scanline-1) * bpr); // offset
 
       nsRect r(0, mInfo.output_scanline, mInfo.output_width, 1);
@@ -563,7 +563,12 @@ my_error_exit (j_common_ptr cinfo)
       error_code = MK_IMAGE_LOSSAGE;
 #endif
 
-  fprintf(stderr, "my_error_exit()\n");
+  char buffer[JMSG_LENGTH_MAX];
+
+  /* Create the message */
+  (*cinfo->err->format_message) (cinfo, buffer);
+
+  fprintf(stderr, "my_error_exit()\n%s\n", buffer);
 
   /* Return control to the setjmp point. */
   longjmp(err->setjmp_buffer, error_code);
