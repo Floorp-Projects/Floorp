@@ -55,13 +55,9 @@ spring[class="PromptEditSpacing"] {
 	width: 5px;
 }
 
-/* HACKS */
-label {
-	background-color:#CCCCCC;
-}
-
 /* Standard Tree */
 
+/*
 tree {
  display: table;
  background-color: white;
@@ -108,21 +104,29 @@ treehead treeitem treecell {
 treecol {
  display: table-column;
 }
-
+*/
 
 /* Custom Trees */
 
 tree[class="abDirectory"] treeitem > treecell > titledbutton {
  vertical-align: bottom;
- height: 16px;
- width: 16px;
+ min-height: 1px;
+ min-width: 1px;
+ height: 1em;
+ width: 1em;
+ margin:0px;
+ padding:0px;
  list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
 }
 
 tree[class="abResults"] treeitem > treecell > titledbutton {
  vertical-align: middle;
- height: 16px;
- width: 16px;
+ min-height: 1px;
+ min-width: 1px;
+ height: 1em;
+ width: 2em;
+ margin:0px;
+ padding:0px;
  list-style-image: url("chrome://addressbook/skin/person.gif");
 }
 

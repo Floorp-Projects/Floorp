@@ -70,7 +70,7 @@ function saChangeDirectoryByDOMNode(dirNode)
 
 function saChangeDirectoryByURI(uri)
 {
-	var tree = frames[0].document.getElementById('resultTree');
+	var tree = frames["browser.selAddrResultPane"].document.getElementById('resultTree');
 	dump("tree = " + tree + "\n");
 	dump("tree.childNodes[7].id = " + tree.childNodes[7].getAttribute('id') + "\n");
 	tree.childNodes[7].setAttribute('id', uri);
@@ -242,27 +242,78 @@ function cvSetVisible(node, visible)
 		node.style.display = "none";
 }
 
+// -------
+// Select Address Window
+// -------
+
 function SelectAddressToButton()
 {
-	var tree = document.getElementById('addressBucket');
-	dump("tree = " + tree + "\n");
-	dump("tree.childNodes[1] = " + tree.childNodes[1] + "\n");
-	dump("tree.childNodes[1].childNodes[0] = " + tree.childNodes[1].childNodes[0] + "\n");
+	AddSelectedAddressesIntoBucket("To: ");
+}
 
-	var body = document.getElementById("bucketBody");
-	dump("body = " + body + "\n");
+function SelectAddressCcButton()
+{
+	AddSelectedAddressesIntoBucket("Cc: ");
+}
+
+function SelectAddressBccButton()
+{
+	AddSelectedAddressesIntoBucket("Bcc: ");
+}
+
+function AddSelectedAddressesIntoBucket(prefix)
+{
+	var item, uri, rdf, cardResource, card, address;
+	var resultsDoc = frames["browser.selAddrResultPane"].document;
+	var bucketDoc = frames["browser.addressbucket"].document;
 	
-	var num = 4;
-	var name = "To: another@aol.com";
+	rdf = Components.classes["component://netscape/rdf/rdf-service"].getService();
+	rdf = rdf.QueryInterface(Components.interfaces.nsIRDFService);
+
+	var selArray = resultsDoc.getElementsByAttribute('selected', 'true');
+	if ( selArray && selArray.length )
+	{
+		for ( item = 0; item < selArray.length; item++ )
+		{
+			uri = selArray[item].getAttribute('id');
+			cardResource = rdf.GetResource(uri);
+			card = cardResource.QueryInterface(Components.interfaces.nsIAbCard);
+			address = prefix + "\"" + card.personName + "\" <" + card.email + ">";
+			AddAddressIntoBucket(bucketDoc, address);
+		}
+	}	
+}
+
+function AddAddressIntoBucket(doc, address)
+{
+	var tree = doc.getElementById('addressBucket');
+
+	var body = doc.getElementById("bucketBody");
 	
-	var newitem = document.createElement('treeitem');
+	var newitem = doc.createElement('treeitem');
 	//newitem.setAttribute("rowID", num);
 	//newitem.setAttribute("rowName", name);
 
-	var elem = document.createElement('treecell');
-	var text = document.createTextNode(name);
+	var elem = doc.createElement('treecell');
+	var text = doc.createTextNode(address);
 	elem.appendChild(text);
 	newitem.appendChild(elem);
 
 	body.appendChild(newitem);
+}
+
+function RemoveSelectedFromBucket()
+{
+	var item;
+	var bucketDoc = frames["browser.addressbucket"].document;
+	var body = bucketDoc.getElementById("bucketBody");
+	
+	var selArray = bucketDoc.getElementsByAttribute('selected', 'true');
+	if ( selArray && selArray.length )
+	{
+		for ( item = selArray.length - 1; item >= 0; item-- )
+		{
+			body.removeChild(selArray[item]);
+		}
+	}	
 }
