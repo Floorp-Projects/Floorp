@@ -47,7 +47,7 @@ public:
 
   virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
   virtual PRBool OnPaint(nsPaintEvent &aEvent);
-  virtual PRBool OnResize(nsRect &aWindowRect);
+  virtual PRBool OnResize(nsSizeEvent &aEvent);
 
 protected:
   NS_IMETHOD nsCheckButton::CreateNative(GtkWidget *parentWindow);

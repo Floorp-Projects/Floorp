@@ -250,7 +250,7 @@ PRBool nsScrollbar::OnPaint (nsPaintEvent & aEvent)
 }
 
 
-PRBool nsScrollbar::OnResize (nsRect &aWindowRect)
+PRBool nsScrollbar::OnResize(nsSizeEvent &aEvent)
 {
   return PR_FALSE;
 }

@@ -190,39 +190,6 @@ static void set_icon (GdkWindow * w)
   gdk_pixmap_unref(pmap);
 }
 
-void nsWindow::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
-{
-    event.widget = this;
-    NS_IF_ADDREF(event.widget);
-
-    GdkEventConfigure *ge;
-    ge = (GdkEventConfigure*)gtk_get_current_event();
-
-    if (aPoint == nsnull) {     // use the point from the event
-      // get the message position in client coordinates and in twips
-
-      if (mWidget != NULL) {
- //       ::ScreenToClient(mWnd, &cpos);
-        event.point.x = PRInt32(ge->x);
-        event.point.y = PRInt32(ge->y);
-      } else {
-        event.point.x = 0;
-        event.point.y = 0;
-      }
-    }     
-    else {                      // use the point override if provided
-      event.point.x = aPoint->x;
-      event.point.y = aPoint->y;
-    }
-
-    event.time = gdk_event_get_time((GdkEvent*)ge);
-    event.message = aEventType;
-
-//    mLastPoint.x = event.point.x;
-//    mLastPoint.y = event.point.y;
-}
-
-
 //-------------------------------------------------------------------------
 //
 // Create the native widget
@@ -587,23 +554,10 @@ NS_METHOD nsWindow::EndResizingChildren(void)
 }
 
 
-PRBool nsWindow::OnResize(nsRect &aWindowRect)
+PRBool nsWindow::OnResize(nsSizeEvent &aEvent)
 {
   if (mEventCallback) {
-    nsSizeEvent event;
-    nsRect winBounds;
-
-    InitEvent(event, NS_SIZE);
-    event.windowSize = &aWindowRect;
-    event.eventStructType = NS_SIZE_EVENT;
-    GetBounds(winBounds);
-  
-    event.mWinWidth  = winBounds.width;
-    event.mWinHeight = winBounds.height;
-
-    PRBool result = DispatchWindowEvent(&event);
-    NS_IF_RELEASE(event.widget);
-    return result;
+    return DispatchWindowEvent(&aEvent);
   }
   return PR_FALSE;
 }
@@ -613,7 +567,7 @@ PRBool nsWindow::OnKey(nsKeyEvent &aEvent)
   if (mEventCallback) {
     return DispatchWindowEvent(&aEvent);
   }
- return PR_FALSE;
+  return PR_FALSE;
 }
 
 
@@ -622,7 +576,7 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
   if (mEventCallback) {
     return DispatchWindowEvent(&aEvent);
   }
- return PR_FALSE;
+  return PR_FALSE;
 }
 
 PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)

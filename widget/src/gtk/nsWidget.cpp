@@ -69,12 +69,15 @@ nsWidget::~nsWidget()
 
 NS_METHOD nsWidget::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
+    g_print("nsWidget::WidgetToScreen\n");
+    // FIXME gdk_window_get_origin()   might do what we want.... ???
     NS_NOTYETIMPLEMENTED("nsWidget::WidgetToScreen");
     return NS_OK;
 }
 
 NS_METHOD nsWidget::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
 {
+    g_print("nsWidget::ScreenToWidget\n");
     NS_NOTYETIMPLEMENTED("nsWidget::ScreenToWidget");
     return NS_OK;
 }
@@ -89,6 +92,7 @@ NS_IMETHODIMP nsWidget::Destroy(void)
 {
   ::gtk_widget_destroy(mWidget);
   mWidget = nsnull;
+  DispatchStandardEvent(NS_DESTROY);
   return NS_OK;
 }
 
@@ -168,6 +172,16 @@ NS_METHOD nsWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 //#ifdef DBG
   g_print("nsWidget::Resize(%3d,%3d) - %s %p %s\n", aWidth, aHeight, mWidget->name, this, aRepaint ? "paint" : "no paint");
 //#endif
+  if (aWidth > 2000)
+  {
+    g_print("we have problems!  aWidth == %d, setting to 0\n", aWidth);
+    aWidth = -1;
+  }
+  if (aHeight > 2000)
+  {
+    g_print("we have problems!  aHeight == %d, setting to 0\n", aHeight);
+    aHeight = -1;
+  }
   mBounds.width  = aWidth;
   mBounds.height = aHeight;
   gtk_widget_set_usize(mWidget, aWidth, aHeight);
@@ -500,6 +514,8 @@ nsresult nsWidget::StandardWindowCreate(nsIWidget *aParent,
   gtk_widget_pop_colormap();
   gtk_widget_pop_visual();
 
+
+  DispatchStandardEvent(NS_CREATE);
   return NS_OK;
 }
 
@@ -604,6 +620,38 @@ void nsWidget::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 
 }
 
+void nsWidget::InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint)
+{
+    event.widget = this;
+    NS_IF_ADDREF(event.widget);
+
+    GdkEventConfigure *ge;
+    ge = (GdkEventConfigure*)gtk_get_current_event();
+
+    if (aPoint == nsnull) {     // use the point from the event
+      // get the message position in client coordinates and in twips
+
+      if (ge != nsnull) {
+ //       ::ScreenToClient(mWnd, &cpos);
+        event.point.x = PRInt32(ge->x);
+        event.point.y = PRInt32(ge->y);
+      } else { 
+        event.point.x = 0;
+        event.point.y = 0;
+      }  
+    }    
+    else {                      // use the point override if provided
+      event.point.x = aPoint->x;
+      event.point.y = aPoint->y;
+    }
+
+    event.time = gdk_event_get_time((GdkEvent*)ge);
+    event.message = aEventType;
+
+//    mLastPoint.x = event.point.x;
+//    mLastPoint.y = event.point.y;
+}
+
 PRBool nsWidget::ConvertStatus(nsEventStatus aStatus)
 {
   switch(aStatus) {
@@ -626,6 +674,24 @@ PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event)
   DispatchEvent(event, status);
   return ConvertStatus(status);
 }
+
+//-------------------------------------------------------------------------
+//
+// Dispatch standard event
+//
+//-------------------------------------------------------------------------
+
+PRBool nsWidget::DispatchStandardEvent(PRUint32 aMsg)
+{
+  nsGUIEvent event;
+  event.eventStructType = NS_GUI_EVENT;
+  InitEvent(event, aMsg);
+
+  PRBool result = DispatchWindowEvent(&event);
+  NS_IF_RELEASE(event.widget);
+  return result;
+}
+
 
 //-------------------------------------------------------------------------
 //

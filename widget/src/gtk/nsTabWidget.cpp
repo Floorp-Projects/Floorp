@@ -112,7 +112,7 @@ PRBool nsTabWidget::OnPaint()
   return PR_FALSE;
 }
 
-PRBool nsTabWidget::OnResize(nsRect &aWindowRect)
+PRBool nsTabWidget::OnResize(nsSizeEvent &aEvent)
 {
     return PR_FALSE;
 }
