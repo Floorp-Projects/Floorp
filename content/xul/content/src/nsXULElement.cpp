@@ -4246,6 +4246,7 @@ nsXULElement::AddPopupListener(nsIAtom* aName)
     if (popupType == eXULPopupType_tooltip) {
         AddEventListener(NS_LITERAL_STRING("mouseout"), eventListener, PR_FALSE);
         AddEventListener(NS_LITERAL_STRING("mousemove"), eventListener, PR_FALSE);
+        AddEventListener(NS_LITERAL_STRING("keydown"), eventListener, PR_FALSE);
     }
     else {
         AddEventListener(NS_LITERAL_STRING("mousedown"), eventListener, PR_FALSE); 
