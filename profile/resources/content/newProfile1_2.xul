@@ -48,11 +48,11 @@
       <html:div class="dirLabel" flex="100%">
         <!-- replace this button with an input field when they start responding
              to css styles properly as the cropping is a problem. -->
-        <titledbutton id="ProfileDir" value="" crop="right"/>
+        <titledbutton class="dialog push" id="ProfileDir" value="" crop="right"/>
       </html:div>
       <spring flex="100%"/>
       <box align="vertical" id="folderbuttons">
-        <titledbutton value="&button.choosefolder.label;" onclick="getProfileDir(null,true);"/>
+        <titledbutton class="dialog push" value="&button.choosefolder.label;" onclick="getProfileDir(null,true);"/>
       </box>
       <spring flex="5%"/>
     </box>

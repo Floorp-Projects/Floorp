@@ -32,10 +32,10 @@
   </box>
 	<box align="horizontal" style="width: 450px;">
     <spring flex="100%"/>
-		<titledbutton id="cancel" value="&cancel.label;" onclick="onCancel()" align="left" style=" margin-top: 1em;"/>
+		<titledbutton class="dialog push" id="cancel" value="&cancel.label;" onclick="onCancel()" align="left" style=" margin-top: 1em;"/>
     <spring flex="20%"/>
-		<titledbutton id="back" value="&back.label;" onclick="onBack()" align="left" style="margin-top: 1em;"/>
-		<titledbutton id="next" value="&next.label;" onclick="onNext()" align="left" style="margin-top: 1em;"/>
+		<titledbutton class="dialog push" id="back" value="&back.label;" onclick="onBack()" align="left" style="margin-top: 1em;"/>
+		<titledbutton class="dialog push" id="next" value="&next.label;" onclick="onNext()" align="left" style="margin-top: 1em;"/>
     <spring flex="5%"/>
 	</box>
 
