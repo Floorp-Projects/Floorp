@@ -80,6 +80,8 @@
             </template>
             <menuitem value="&sidebar.customize.label;"
               oncommand="SidebarCustomize();" />
+			<menuitem value="&sidebar.sbDirectory.label;"
+              oncommand="BrowseMorePanels();" />
             <menuseparator />
           </menupopup>
         </menubutton>
