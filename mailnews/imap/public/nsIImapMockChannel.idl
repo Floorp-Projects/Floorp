@@ -59,4 +59,6 @@ interface nsIImapMockChannel : nsIChannel
     void GetChannelListener(out nsIStreamListener aChannelListener);
     void GetChannelContext(out nsISupports aChannelContext);
     void Close();
+
+	[noscript] void setSecurityInfo(in nsISupports securityInfo);
 };
