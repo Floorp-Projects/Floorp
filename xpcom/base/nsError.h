@@ -75,6 +75,13 @@ typedef PRUint32 nsresult;
 #define NS_ERROR_MODULE_XPCONNECT  18
 #define NS_ERROR_MODULE_PROFILE    19
 #define NS_ERROR_MODULE_LDAP       20
+// NS_ERROR_MODULE_GENERAL should be used by modules that don't
+// care if return code values overlap. Callers of methods that
+// return such codes should be aware that they are not
+// globally unique. Implementors should be careful about blindly
+// returning codes from other modules that might also use
+// the generic base.
+#define NS_ERROR_MODULE_GENERAL    51  
 
 /**
  * @name Standard Error Handling Macros
