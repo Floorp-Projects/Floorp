@@ -151,7 +151,7 @@ net_pop3_load_state(const char* searchhost,
   if (!result) return NULL;
   result->host = PL_strdup(searchhost);
   result->user = PL_strdup(searchuser);
-  result->hash = PL_NewHashTable(20, PL_HashString, uidl_cmp, nsnull, nsnull, nsnull);
+  result->hash = PL_NewHashTable(20, PL_HashString, PL_CompareStrings, PL_CompareValues, nsnull, nsnull);
 
   if (!result->host || !result->user || !result->hash) {
     PR_FREEIF(result->host);
@@ -192,7 +192,7 @@ net_pop3_load_state(const char* searchhost,
             if (current) {
                 current->host = PL_strdup(host);
                 current->user = PL_strdup(user);
-                current->hash = PL_NewHashTable(20, PL_HashString, uidl_cmp, nsnull, nsnull, nsnull);
+                current->hash = PL_NewHashTable(20, PL_HashString, PL_CompareStrings, PL_CompareValues, nsnull, nsnull);
                 if (!current->host || !current->user || !current->hash) {
                     PR_FREEIF(current->host);
                     PR_FREEIF(current->user);
@@ -1753,8 +1753,8 @@ nsPop3Protocol::GetMsg()
                     {
                         m_pop3ConData->newuidl = PL_NewHashTable(20,
                                                                  PL_HashString, 
-                                                                 uidl_cmp,
-                                                                 nsnull,
+                                                                 PL_CompareStrings,
+                                                                 PL_CompareValues,
                                                                  nsnull,
                                                                  nsnull);
                         if (!m_pop3ConData->newuidl)
@@ -1839,7 +1839,7 @@ nsPop3Protocol::GetMsg()
         } else {
             c = 0;
             if (m_pop3ConData->newuidl == NULL) {
-                m_pop3ConData->newuidl = PL_NewHashTable(20, PL_HashString, uidl_cmp, nsnull, nsnull, nsnull);
+                m_pop3ConData->newuidl = PL_NewHashTable(20, PL_HashString, PL_CompareStrings, PL_CompareValues, nsnull, nsnull);
                 if (!m_pop3ConData->newuidl)
                     return MK_OUT_OF_MEMORY;
             }
