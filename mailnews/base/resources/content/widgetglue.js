@@ -24,6 +24,11 @@
  * and then calls a function/command in commandglue
  */
 
+var viewShowAll =0;
+var viewShowRead = 1;
+var viewShowUnread =2;
+var viewShowWatched = 3;
+
 
 function MsgLoadNewsMessage(url)
 {
@@ -179,11 +184,10 @@ function MsgViewAllMsgs()
 {
 	dump("MsgViewAllMsgs");
 
-	var view = messageViewDataSource.QueryInterface(Components.interfaces.nsIMessageView);
-	if(view)
+	if(messageView)
 	{
-		view.SetShowAll();
-		view.SetShowThreads(false);
+		messageView.viewType = viewShowAll;
+		messageView.showThreads = false;
 	}
 	RefreshThreadTreeView();
 }
@@ -192,11 +196,10 @@ function MsgViewUnreadMsg()
 {
 	dump("MsgViewUnreadMsgs");
 
-	var view = messageViewDataSource.QueryInterface(Components.interfaces.nsIMessageView);
-	if(view)
+	if(messageView)
 	{
-		view.SetShowUnread();
-		view.SetShowThreads(false);
+		messageView.viewType = viewShowUnread;
+		view.showThreads = false;
 	}
 
 	RefreshThreadTreeView();
@@ -206,11 +209,10 @@ function MsgViewAllThreadMsgs()
 {
 	dump("MsgViewAllMessagesThreaded");
 
-	var view = messageViewDataSource.QueryInterface(Components.interfaces.nsIMessageView);
-	if(view)
+	if(messageView)
 	{
-		view.SetShowAll();
-		view.SetShowThreads(true);
+		view.viewType = viewShowAll;
+		view.showThreads = true;
 	}
 	RefreshThreadTreeView();
 }

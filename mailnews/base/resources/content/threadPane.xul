@@ -38,11 +38,12 @@ Rights Reserved.
   	<rule>
           <treechildren>
 		<treeitem uri="..."
-  		  Status="rdf:http://home.netscape.com/NC-rdf#Status"
-  		  Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"
-  		  Priority="rdf:http://home.netscape.com/NC-rdf#Priority"
-		  currentView="currentView">
-	  		<treerow >
+			 Status="rdf:http://home.netscape.com/NC-rdf#Status"
+  			 Flagged="rdf:http://home.netscape.com/NC-rdf#Flagged"
+  		     Priority="rdf:http://home.netscape.com/NC-rdf#Priority"
+		>
+	  		<treerow   >
+
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Thread"/>
 				<treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Subject"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Sender"/>

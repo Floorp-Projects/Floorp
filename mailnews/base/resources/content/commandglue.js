@@ -272,6 +272,8 @@ function ToggleMessageFlagged(treeItem)
 
 	var tree = GetThreadTree();
 	var flaggedValue = treeItem.getAttribute('Flagged');
+	dump('flaggedValue is ' + flaggedValue);
+	dump('\n');
 	var flagged = (flaggedValue =="flagged");
 	messenger.MarkMessageFlagged(tree.database, treeItem, !flagged);
 }
@@ -376,10 +378,9 @@ function ChangeThreadView()
 function ShowThreads(showThreads)
 {
 	dump('in showthreads\n');
-	var view = messageViewDataSource.QueryInterface(Components.interfaces.nsIMessageView);
-	if(view)
+	if(messageView)
 	{
-		view.SetShowThreads(showThreads);
+		messageView.showThreads = showThreads;
 		var threadColumn = document.getElementById('ThreadColumnHeader');
 		if(threadColumn)
 		{
@@ -395,3 +396,31 @@ function ShowThreads(showThreads)
 	}
 }
 
+function FolderTest5000()
+{
+
+	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
+
+	var childProperty = RDF.GetResource("http://home.netscape.com/NC-rdf#MessageChild");
+
+	var folderResource = RDF.GetResource("mailbox://scottip@nsmail-2.mcom.com/test5000");
+
+	var beforeTime = new Date();
+
+	var messageChildren = folderDataSource.GetTargets(folderResource, childProperty, true);
+
+	var afterGetTargetsTime = new Date();
+	var timeToLoad = (afterGetTargetsTime.getTime() - beforeTime.getTime())/1000;
+	dump("Time to load is " +  timeToLoad + " seconds\n");
+
+	messageChildren = messageChildren.QueryInterface(Components.interfaces.nsISimpleEnumerator);
+
+	while(messageChildren.HasMoreElements())
+	{
+		messageChildren.GetNext();
+	}
+
+	var afterTime = new Date();
+	timeToLoad = (afterTime.getTime() - beforeTime.getTime())/1000;
+	dump("Time to load is " +  timeToLoad + " seconds\n");
+}

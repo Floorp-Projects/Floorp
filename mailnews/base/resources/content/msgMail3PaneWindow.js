@@ -28,11 +28,14 @@ messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
 var accountManagerDataSource = Components.classes["component://netscape/rdf/datasource?name=msgaccountmanager"].createInstance();
 var folderDataSource = Components.classes["component://netscape/rdf/datasource?name=mailnewsfolders"].createInstance();
 var messageDataSource = Components.classes["component://netscape/rdf/datasource?name=mailnewsmessages"].createInstance();
-var messageViewDataSource = Components.classes["component://netscape/rdf/datasource?name=mail-messageview"].createInstance();
 
 //Create windows status feedback
 var statusFeedback = Components.classes["component://netscape/messenger/statusfeedback"].createInstance();
 statusFeedback = statusFeedback.QueryInterface(Components.interfaces.nsIMsgStatusFeedback);
+
+//Create message view object
+var messageView = Components.classes["component://netscape/messenger/messageview"].createInstance();
+messageView = messageView.QueryInterface(Components.interfaces.nsIMessageView);
 
 /* Functions related to startup */
 function OnLoadMessenger()
@@ -105,15 +108,15 @@ function AddDataSources()
 	//Add statusFeedback
 	var windowData = folderDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
 	windowData.statusFeedback = statusFeedback;
+	windowData.messageView = messageView;
 
 	windowData = messageDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
 	windowData.statusFeedback = statusFeedback;
+	windowData.messageView = messageView;
 
 	windowData = accountManagerDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
 	windowData.statusFeedback = statusFeedback;
-
-	windowData = messageViewDataSource.QueryInterface(Components.interfaces.nsIMsgWindowData);
-	windowData.statusFeedback = statusFeedback;
+	windowData.messageView = messageView;
 
 }	
 
@@ -138,15 +141,10 @@ function OnLoadFolderPane(folderTree)
 
 function OnLoadThreadPane(threadTree)
 {
-	//Add FolderDataSource
-	//to messageview in thread pane.
-	messageViewDataSource = messageViewDataSource.QueryInterface(Components.interfaces.nsIRDFCompositeDataSource);
-	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	messageViewDataSource.AddDataSource(folderDataSource);
 
-	// add messageViewDataSource to thread pane
-	messageViewDataSource = messageViewDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
-	threadTree.database.AddDataSource(messageViewDataSource);
+	// add folderSource to thread pane
+	folderDataSource = folderDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
+	threadTree.database.AddDataSource(folderDataSource);
 
 	//Add message data source
 	messageDataSource = messageDataSource.QueryInterface(Components.interfaces.nsIRDFDataSource);
