@@ -630,40 +630,6 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
     mLastContentIsComplete = PR_TRUE;
 
     const PRInt32 contentType = ((nsTableContent *)(nsIContent*)kid)->GetType();
-    /*
-    if (contentType==nsITableContent::kTableColGroupType)
-    {
-      // Resolve style
-      nsIStyleContextPtr kidStyleContext =
-        aPresContext->ResolveStyleContextFor(kid, this);
-      NS_ASSERTION(kidStyleContext.IsNotNull(), "null style context for kid");
-
-      // SEC: TODO:  when content is appended or deleted, be sure to clear out the frame hierarchy!!!!
-
-      // get next frame, creating one if needed
-      nsIFrame* kidFrame=nsnull;
-      if (nsnull!=prevKidFrame)
-        prevKidFrame->GetNextSibling(kidFrame);  // no need to check for an error, just see if it returned null...
-      else
-        ChildAt(0, kidFrame);
-
-      // if this is the first time, allocate the frame
-      if (nsnull==kidFrame)
-      {
-        nsIContentDelegate* kidDel;
-        kidDel = kid->GetDelegate(aPresContext);
-        nsresult rv = kidDel->CreateFrame(aPresContext, kid,
-                                          this, kidStyleContext, kidFrame);
-        NS_RELEASE(kidDel);
-      }
-
-      // reflow the column group
-      nsReflowState kidReflowState(eReflowReason_Resize, availSize);
-      result = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
-      kidFrame->SetRect(0,0,0,0);
-    }
-    else */
-    //if (contentType==nsITableContent::kTableRowGroupType)
     if (contentType!=nsITableContent::kTableCaptionType)
     {
       // Resolve style
@@ -1983,6 +1949,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aC
         nsTablePart * tablePart = (nsTablePart *)mContent;
         PRInt32 cols = tablePart->GetMaxColumns();
         PRInt32 tableKidCount = tablePart->ChildCount();
+        nsIFrame * colGroupFrame = mFirstChild;
         for (PRInt32 i=0; i<tableKidCount; i++)
         {
           nsTableContentPtr tableKid = (nsTableContent *)tablePart->ChildAt(i);
@@ -1996,6 +1963,9 @@ PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aC
               nsTableColPtr col = (nsTableCol *)tableKid->ChildAt(j);
               NS_ASSERTION(col.IsNotNull(), "bad content");
               nsColLayoutData *colData = new nsColLayoutData(col);
+              nsTableColFrame *colFrame=nsnull;
+              colGroupFrame->ChildAt(j, (nsIFrame *&)colFrame);
+              colData->SetColFrame(colFrame);
               mColumnLayoutData->AppendElement((void *)colData);
             }
           }
@@ -2004,6 +1974,7 @@ PRBool nsTableFrame::SetCellLayoutData(nsCellLayoutData * aData, nsTableCell *aC
           {
             break;
           }
+          ChildAt(i, colGroupFrame);  // can't use colGroupFrame->GetNextSibling because it hasn't been set yet
         }
       }
 

@@ -129,15 +129,14 @@ public:
     * DEBUG METHOD
     *
     */
-  void    ListColumnLayoutData(FILE* out = stdout, PRInt32 aIndent = 0) const;
+  virtual void ListColumnLayoutData(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   
   /** return the width of the column at aColIndex    */
-          PRInt32 GetColumnWidth(PRInt32 aColIndex);
+  virtual PRInt32 GetColumnWidth(PRInt32 aColIndex);
 
   /** set the width of the column at aColIndex to aWidth    */
-          void SetColumnWidth(PRInt32 aColIndex, PRInt32 aWidth);
-
+  virtual void SetColumnWidth(PRInt32 aColIndex, PRInt32 aWidth);
           
   /**
     * Calculate Layout Information

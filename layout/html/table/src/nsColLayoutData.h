@@ -26,6 +26,7 @@
 class nsVoidArray;
 class nsCellLayoutData;
 class nsTableFrame;
+class nsTableColFrame;
 
 
 /** Simple data class that represents in-process reflow information about a column.
@@ -41,6 +42,10 @@ public:
   nsTableCol * GetCol();
 
   void SetCol(nsTableCol * aCol);
+
+  nsTableColFrame *GetColFrame();
+
+  void SetColFrame(nsTableColFrame *aColFrame);
 
   nsVoidArray * GetCells();
 
@@ -67,6 +72,7 @@ public:
 private:
 
   nsTableCol        *mCol;
+  nsTableColFrame   *mColFrame;
   nsVoidArray       *mCells;
 
 };
