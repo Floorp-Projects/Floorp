@@ -144,6 +144,20 @@ function getPreviewForTask( toDoItem )
   }
 }
 
+/* Draws tooltip for events in the various views */
+function getEventToolTip(eventbox, event )
+{
+   var toolTip = document.getElementById( "eventTooltip" );
+
+   while( toolTip.hasChildNodes() )
+   {
+      toolTip.removeChild( toolTip.firstChild );
+   }
+   var holderBox = getPreviewForEvent( eventbox.event );
+   if (holderBox) {
+      toolTip.appendChild( holderBox );
+   }
+}
 /**
 *  Called when mouse moves over a different event display box.
 *  An ICalEventDisplay represents an instance of a possibly recurring event.
@@ -172,7 +186,7 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
 {
   const vbox = document.createElement( "vbox" );
   boxInitializeHeaderGrid(vbox);
-    
+
   if (event)
   {
     gShowTooltip = true;
@@ -182,9 +196,9 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
       boxAppendLabeledText(vbox, "tooltipTitle", event.title);
     }
 
-    if (event.location)
+    if (var location = event.getProperty("LOCATION"))
     {
-      boxAppendLabeledText(vbox, "tooltipLocation", event.location);
+      boxAppendLabeledText(vbox, "tooltipLocation", location);
     }
 
     if (event.start || instStartDate)
@@ -232,11 +246,11 @@ function getPreviewForEvent( event, instStartDate, instEndDate )
       boxAppendLabeledText(vbox, "tooltipStatus", statusString);
     }
 
-    if (event.description)
+    if (var description = event.getProperty("DESCRIPTION"))
     {
       // display up to 4 description lines, like body of message below headers
       boxAppendText(vbox, ""); 
-      boxAppendLines(vbox, event.description, 4);
+      boxAppendLines(vbox, description, 4);
     }
 
     return ( vbox );

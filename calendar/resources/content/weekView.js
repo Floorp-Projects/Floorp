@@ -376,7 +376,7 @@ dump(this.displayEndDate+"\n");
     var eventBox = document.createElement("vbox");
 
     // XXX Consider changing this to only store the ID
-    eventBox.calEvent = calEvent;
+    eventBox.event = calEvent;
 
     var ElementOfRef = document.getElementById("week-tree-day-" + gRefColumnIndex + "-item-" + startHour) ;
     var hourHeight = ElementOfRef.boxObject.height;
@@ -421,7 +421,7 @@ dump(this.displayEndDate+"\n");
     eventBox.setAttribute("ondragdrop", "nsDragAndDrop.drop(event,calendarViewDNDObserver)");
     eventBox.setAttribute("id", "week-view-event-box-" + calEvent.id);
     eventBox.setAttribute("name", "week-view-event-box-" + calEvent.id);
-    eventBox.setAttribute("onmouseover", "gCalendarWindow.changeMouseOverInfo( null, calEvent )");
+    eventBox.setAttribute("onmouseover", "getEventToolTip(this, event)" );
     eventBox.setAttribute("tooltip", "eventTooltip");
 
     // Event box text (title, location and description)

@@ -443,7 +443,7 @@ DayView.prototype.createEventBoxInternal = function(itemOccurrence, startDate, e
    
    eventBox.setAttribute( "onclick", "dayEventItemClick( this, event )" );
    eventBox.setAttribute( "ondblclick", "dayEventItemDoubleClick( this, event )" );
-   eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( event )" );
+   eventBox.setAttribute( "onmouseover", "getEventToolTip(this, event)" );
    eventBox.setAttribute( "tooltip", "eventTooltip" );
    eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,calendarViewDNDObserver);" );
    eventBox.setAttribute( "ondragover", "nsDragAndDrop.dragOver(event,calendarViewDNDObserver)" );

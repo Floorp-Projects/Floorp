@@ -278,13 +278,13 @@ MultiweekView.prototype.createEventBoxInternal = function multiweekView_createEv
     eventBox = document.createElement( "box" );
     eventBox.setAttribute( "id", "multiweek-view-event-box-" + itemOccurrence.id );
     eventBox.setAttribute( "name", "multiweek-view-event-box-"+ itemOccurrence.id );
-    eventBox.setAttribute("class", "multiweek-view-event-class default");
+    eventBox.setAttribute( "class", "multiweek-view-event-class default");
     
     eventBox.setAttribute( "eventbox", "multiweekview" );
 
     eventBox.setAttribute( "onclick", "monthEventBoxClickEvent( this, event )" );
     eventBox.setAttribute( "ondblclick", "monthEventBoxDoubleClickEvent( this, event )" );
-    eventBox.setAttribute( "onmouseover", "gCalendarWindow.changeMouseOverInfo( calendarEventDisplay, event )" );
+    eventBox.setAttribute( "onmouseover", "getEventToolTip(this, event)" );
     eventBox.setAttribute( "tooltip", "eventTooltip" );
     eventBox.setAttribute( "ondraggesture", "nsDragAndDrop.startDrag(event,monthViewEventDragAndDropObserver);" );
 
