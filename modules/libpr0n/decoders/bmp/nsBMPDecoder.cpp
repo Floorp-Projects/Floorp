@@ -258,7 +258,9 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
           return NS_ERROR_UNEXPECTED;
 
         if (mBIH.bpp <= 8) {
-            mNumColors = mBIH.colors ? mBIH.colors : 1 << mBIH.bpp;
+            mNumColors = 1 << mBIH.bpp;
+            if (mBIH.colors && mBIH.colors < mNumColors)
+                mNumColors = mBIH.colors;
 
             mColors = new colorTable[mNumColors];
             if (!mColors)
