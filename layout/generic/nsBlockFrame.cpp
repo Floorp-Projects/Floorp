@@ -2312,6 +2312,18 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
       // want to update mY, e.g. if they have clearance.)
       if (line->IsBlock() || !line->CachedIsEmpty()) {
         aState.mY = line->mBounds.YMost();
+
+        if (aState.GetFlag(BRS_SHRINKWRAPWIDTH)) {
+          // Mark the line as dirty so once we known the final shrink
+          // wrap width we can reflow the line to the correct size.
+          // It's OK to skip doing this for empty lines of inlines.
+          // XXX We don't always need to do this...
+          // XXX For inlines, we could record in the line box
+          // that HorzontalAlignFrames does not depend on the line width,
+          // and thus we don't have to mark it dirty here
+          line->MarkDirty();
+          aState.SetFlag(BRS_NEEDRESIZEREFLOW, PR_TRUE);
+        }
       }
 
       // Record if we need to clear floats before reflowing the next
