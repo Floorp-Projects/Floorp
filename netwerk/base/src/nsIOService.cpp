@@ -23,7 +23,6 @@
 #include "nsIOService.h"
 #include "nsIProtocolHandler.h"
 #include "nscore.h"
-#include "nsString2.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsIFileTransportService.h"

@@ -24,7 +24,7 @@
 #define nsIOService_h__
 
 #include "nsIIOService.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsISocketTransportService.h" 
 #include "nsIFileTransportService.h" 
 #include "nsIDNSService.h" 
