@@ -18,6 +18,7 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 David Gardiner <david.gardiner@unisa.edu.au>
 
 use diagnostics;
 use strict;
@@ -37,6 +38,8 @@ use vars @::legal_resolution,
   @::legal_versions,
   @::legal_severity,
   @::legal_target_milestone,
+  %::versions,
+  %::components,
   %::FORM;
 
 
@@ -181,6 +184,127 @@ my $emailinput1 = GenerateEmailInput(1);
 my $emailinput2 = GenerateEmailInput(2);
 
 
+# javascript
+    
+my $jscript = << 'ENDSCRIPT';
+<script language="Javascript1.1">
+<!--
+var cpts = new Array();
+var vers = new Array();
+ENDSCRIPT
+
+
+my $p;
+my $v;
+my $c;
+my $i = 0;
+my $j = 0;
+
+foreach $c (@::legal_components) {
+    $jscript .= "cpts['$c'] = [];\n";
+}
+
+foreach $v (@::legal_versions) {
+    $jscript .= "vers['$v'] = [];\n";
+}
+
+
+for $p (@::legal_product) {
+    foreach $c (@{$::components{$p}}) {
+        $jscript .= "cpts['$c'].push('$p');\n";
+    }
+    foreach $v (@{$::versions{$p}}) {
+        $jscript .= "vers['$v'].push('$p');\n";
+    }
+}
+
+$i = 0;
+$jscript .= "
+
+// Only display versions/components valid for selected product(s)
+
+function selectProduct(f) {
+    var cnt = 0;
+    var i;
+    var j;
+    for (i=0 ; i<f.product.length ; i++) {
+        if (f.product[i].selected) {
+            cnt++;
+        }
+    }
+    var doall = (cnt == f.product.length || cnt == 0);
+
+    var csel = new Array();
+    for (i=0 ; i<f.component.length ; i++) {
+        if (f.component[i].selected) {
+            csel[f.component[i].value] = 1;
+        }
+    }
+
+    f.component.options.length = 0;
+
+    for (c in cpts) {
+        var doit = doall;
+        for (i=0 ; !doit && i<f.product.length ; i++) {
+            if (f.product[i].selected) {
+                var p = f.product[i].value;
+                for (j in cpts[c]) {
+                    var p2 = cpts[c][j];
+                    if (p2 == p) {
+                        doit = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (doit) {
+            var l = f.component.length;
+            f.component[l] = new Option(c, c);
+            if (csel[c] != undefined) {
+                f.component[l].selected = true;
+            }
+        }
+    }
+
+    var vsel = new Array();
+    for (i=0 ; i<f.version.length ; i++) {
+        if (f.version[i].selected) {
+            vsel[f.version[i].value] = 1;
+        }
+    }
+
+    f.version.options.length = 0;
+
+    for (v in vers) {
+        var doit = doall;
+        for (i=0 ; !doit && i<f.product.length ; i++) {
+            if (f.product[i].selected) {
+                var p = f.product[i].value;
+                for (j in vers[v]) {
+                    var p2 = vers[v][j];
+                    if (p2 == p) {
+                        doit = true;
+                        break;
+                    }
+                }
+            }
+        }
+        if (doit) {
+            var l = f.version.length;
+            f.version[l] = new Option(v, v);
+            if (vsel[v] != undefined) {
+                f.version[l].selected = true;
+            }
+        }
+    }
+
+
+
+
+}
+// -->
+</script>\n";
+
 
 
 # Muck the "legal product" list so that the default one is always first (and
@@ -197,6 +321,8 @@ PutHeader("Bugzilla Query Page", "Query Page");
 
 push @::legal_resolution, "---"; # Oy, what a hack.
 push @::legal_target_milestone, "---"; # Oy, what a hack.
+
+print $jscript;
 
 print "
 <FORM NAME=queryForm METHOD=GET ACTION=\"buglist.cgi\">
@@ -271,7 +397,7 @@ print "
 <tr>
 
 <td align=left valign=top>
-<SELECT NAME=\"product\" MULTIPLE SIZE=5>
+<SELECT NAME=\"product\" MULTIPLE SIZE=5 onChange=\"selectProduct(this.form);\">
 @{[make_options(\@::legal_product, $default{'product'}, $type{'product'})]}
 </SELECT>
 </td>
