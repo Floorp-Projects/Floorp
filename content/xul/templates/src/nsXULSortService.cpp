@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: t; c-basic-offset: 4; c-file-style: "stroustrup" -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -1147,7 +1147,7 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 	if (NS_FAILED(rv = FindTreeElement(container, getter_AddRefs(treeNode))))	return(rv);
 
 	// get composite db for tree
-	nsIDOMXULTreeElement	*domXulTree;
+	nsCOMPtr<nsIDOMXULTreeElement> domXulTree;
 	sortInfo.rdfService = gRDFService;
 	sortInfo.db = nsnull;
 
@@ -1155,7 +1155,8 @@ XULSortServiceImpl::InsertContainerNode(nsIContent *container, nsIContent *node)
 	// that we're sure that we'll hold a reference to it (and actually
 	// release that reference when the stack frame goes away).
 	nsCOMPtr<nsIRDFCompositeDataSource> cds;
-	if (NS_SUCCEEDED(rv = treeNode->QueryInterface(kIDomXulTreeElementIID, (void**)&domXulTree)))
+	rv = treeNode->QueryInterface(kIDomXulTreeElementIID, getter_AddRefs(domXulTree));
+	if (NS_SUCCEEDED(rv))
 	{
 		if (NS_SUCCEEDED(rv = domXulTree->GetDatabase(getter_AddRefs(cds))))
 		{
