@@ -74,7 +74,7 @@ public class ElementImpl_getElementsByTagNameNS_String_String_3 extends BWBaseTe
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
@@ -87,29 +87,24 @@ public class ElementImpl_getElementsByTagNameNS_String_String_3 extends BWBaseTe
                 return BWBaseTest.FAILED;
              } else {
                 String nuri = "xmlns:edi='http://ecommerce.org/schema'";
-                String lname = "dummyattr";
+                String lname = "body";
                 NodeList nl = e.getElementsByTagNameNS(nuri, lname);
-                TestLoader.logErrPrint("Element 'getElementsByTagNameNS' is not a supported method... ");
-                return BWBaseTest.FAILED;
+		if (nl == null) {
+	                TestLoader.logErrPrint("Element 'getElementsByTagNameNS' returned incorrect value ");
+        	        return BWBaseTest.FAILED;
+		}
              }
-        } catch (UnsupportedOperationException ue) {
-             String msg = "UNSUPPORTED METHOD"; 
+        } catch (Exception r) {
+             String msg = "Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (DOMException de) {
-             String msg = "DOMException: " + de;
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
+             return BWBaseTest.FAILED;
         }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
 
+             return BWBaseTest.PASSED;
    }
 
    /**
@@ -133,3 +128,4 @@ public class ElementImpl_getElementsByTagNameNS_String_String_3 extends BWBaseTe
      else {}
    }
 }
+                                 	

@@ -74,7 +74,7 @@ public class ElementImpl_getAttributeNS_String_String_0 extends BWBaseTest imple
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
@@ -86,29 +86,26 @@ public class ElementImpl_getAttributeNS_String_String_0 extends BWBaseTest imple
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-                String nuri = null;
-                String lname = null;
+                String nuri = "xmlns:edi='http://ecommerce.com/schema'";
+                String lname = "dummyattr";
+		String val = "1";
+		e.setAttributeNS(nuri, lname, val);
                 String s = e.getAttributeNS(nuri, lname);
-                TestLoader.logErrPrint("Element 'getAttributeNS' is not a supported method... ");
-                return BWBaseTest.FAILED;
+		if (s == null || !s.equals(val)) {
+	                TestLoader.logErrPrint("Element 'getAttributeNS' returned incorrect value: "+s+" != "+val);
+        	        return BWBaseTest.FAILED;
+		}
              }
-        } catch (UnsupportedOperationException ue) {
-             String msg = "UNSUPPORTED METHOD"; 
+        } catch (Exception e) {
+             String msg = "Exception: " + e;
              TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (DOMException de) {
-             String msg = "DOMException: " + de;
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        }
+             return BWBaseTest.FAILED;
+	}
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
+	return BWBaseTest.PASSED;
 
    }
 

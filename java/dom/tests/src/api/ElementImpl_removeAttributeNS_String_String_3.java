@@ -74,7 +74,7 @@ public class ElementImpl_removeAttributeNS_String_String_3 extends BWBaseTest im
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
@@ -88,27 +88,19 @@ public class ElementImpl_removeAttributeNS_String_String_3 extends BWBaseTest im
              } else {
                 String nuri = "xmlns:edi='http://ecommerce.org/schema'";
                 String lname = "dummyattr";
+		e.setAttributeNS(nuri, lname, "1");
                 e.removeAttributeNS(nuri, lname);
-                TestLoader.logErrPrint("Element 'removeAttributeNS' is not a supported method... ");
-                return BWBaseTest.FAILED;
              }
-        } catch (UnsupportedOperationException ue) {
-             String msg = "UNSUPPORTED METHOD"; 
+        } catch (Exception r) {
+             String msg = "Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (DOMException de) {
-             String msg = "DOMException: " + de;
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
+             return BWBaseTest.FAILED;
         }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
+             return BWBaseTest.PASSED;
 
    }
 

@@ -28,7 +28,7 @@ import org.mozilla.dom.test.*;
 import org.mozilla.dom.*;
 import org.w3c.dom.*;
 
-public class DOMImplementationImpl_createDocumentType_String_String_String_0 extends BWBaseTest implements Execution
+public class DOMImplementationImpl_createDocumentType_String_String_String_4 extends BWBaseTest implements Execution
 {
 
    /**
@@ -38,7 +38,7 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
     ***********************************************************
     *
     */
-   public DOMImplementationImpl_createDocumentType_String_String_String_0()
+   public DOMImplementationImpl_createDocumentType_String_String_String_4()
    {
    }
 
@@ -86,28 +86,29 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
                 return BWBaseTest.FAILED;
              } else {
                try {
-		 String qualifiedName = "edi:price";
-		 String publicId = "pID";
-		 String systemId = "sID";
+		 String qualifiedName = null;
+		 String publicId = null;
+		 String systemId = null;
 		 DocumentType dt = di.createDocumentType(qualifiedName, publicId, systemId);
                  if (dt == null) {
                     System.out.println("DomImplementation 'createDocumentType(...) returned null ...");
                     return BWBaseTest.FAILED;
-                  } 
+                  } else {
+                     System.out.println("DomImplementation 'createDocumentType(...)' didn't throw exception ");
+                     return BWBaseTest.FAILED;
+                  }
                } catch (DOMException de) {
                      TestLoader.logErrPrint("DOMException was thrown: "+de);
-                     return BWBaseTest.FAILED;
+                     return BWBaseTest.PASSED;
                } catch (Exception e) {
                      TestLoader.logErrPrint("Exception was thrown: "+e);
-                     return BWBaseTest.FAILED;
+                     return BWBaseTest.PASSED;
 		}
              }
         } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
         }
-	return BWBaseTest.PASSED;
-
    }
 
    /**

@@ -28,7 +28,7 @@ import org.mozilla.dom.test.*;
 import org.mozilla.dom.*;
 import org.w3c.dom.*;
 
-public class DOMImplementationImpl_createDocumentType_String_String_String_0 extends BWBaseTest implements Execution
+public class DOMImplementationImpl_createDocument_String_String_DocumentType_1 extends BWBaseTest implements Execution
 {
 
    /**
@@ -38,7 +38,7 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
     ***********************************************************
     *
     */
-   public DOMImplementationImpl_createDocumentType_String_String_String_0()
+   public DOMImplementationImpl_createDocument_String_String_DocumentType_1()
    {
    }
 
@@ -75,7 +75,7 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      
+
 
       Document d = (Document)tobj;
         if (d != null)
@@ -86,20 +86,19 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
                 return BWBaseTest.FAILED;
              } else {
                try {
+		 String namespaceURI = "edi='http://ecommerce.org/schema'";
 		 String qualifiedName = "edi:price";
-		 String publicId = "pID";
-		 String systemId = "sID";
-		 DocumentType dt = di.createDocumentType(qualifiedName, publicId, systemId);
-                 if (dt == null) {
-                    System.out.println("DomImplementation 'createDocumentType(...) returned null ...");
+                 if (di.createDocument(namespaceURI, qualifiedName, null) == null) {
+                    System.out.println("DomImplementation 'createDocument' returns null ...");
+		    TestLoader.logErrPrint("DomImplementation 'createDocument' returns null ...");
                     return BWBaseTest.FAILED;
                   } 
                } catch (DOMException de) {
-                     TestLoader.logErrPrint("DOMException was thrown: "+de);
+                     TestLoader.logErrPrint("DOMException : " + de);
                      return BWBaseTest.FAILED;
                } catch (Exception e) {
-                     TestLoader.logErrPrint("Exception was thrown: "+e);
-                     return BWBaseTest.FAILED;
+ 		     TestLoader.logErrPrint("Exception: "+e);
+                     return BWBaseTest.FAILED; 
 		}
              }
         } else {
@@ -107,7 +106,6 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
              return BWBaseTest.FAILED;
         }
 	return BWBaseTest.PASSED;
-
    }
 
    /**

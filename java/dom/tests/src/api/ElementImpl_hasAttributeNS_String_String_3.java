@@ -74,7 +74,7 @@ public class ElementImpl_hasAttributeNS_String_String_3 extends BWBaseTest imple
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
       Document d = (Document)tobj;
       if (d != null)
@@ -84,25 +84,25 @@ public class ElementImpl_hasAttributeNS_String_String_3 extends BWBaseTest imple
 	     if (e == null) {
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
-             } else {
-              try {
-                if (e.hasAttributeNS("dummy", "dummy"));
-                TestLoader.logErrPrint("Element 'hasAttributeNS is not a supported method. Should not return any value... ");
-                return BWBaseTest.FAILED;
-              } catch (UnsupportedOperationException ue) {
-                  TestLoader.logErrPrint("UNSUPPORTED METHOD");
-                  return BWBaseTest.PASSED;
-              }
              }
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
+		String nsuri = "xmlns:edi='http://ec.com/schema'";	
+		String lname = "dummyattr";
+		String val = "1";
+		e.setAttributeNS(nsuri, lname, val);
+                if (e.hasAttributeNS(nsuri, val) == false) {
+	                TestLoader.logErrPrint("Element 'hasAttributeNS returned incorrect value... ");
+        	        return BWBaseTest.FAILED;
+		}
+        } catch (Exception r) {
+             String msg = "hasAttributeNS: Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
+             return BWBaseTest.FAILED;
         }
       } else {
-             System.out.println("Document is  NULL..");
+             System.out.println("hasAttributeNS: Document is  NULL..");
              return BWBaseTest.FAILED;
       }
+       return BWBaseTest.PASSED;
 
    }
 

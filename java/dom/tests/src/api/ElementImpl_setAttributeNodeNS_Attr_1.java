@@ -75,45 +75,40 @@ public class ElementImpl_setAttributeNodeNS_Attr_1 extends BWBaseTest implements
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
       if (d != null)
       {
         try {
-
-	     Attr a = d.createAttribute("dummyattr_5");
-	     if (a == null) {
-                TestLoader.logErrPrint("Document createAttribute FAILED... ");
+             Element e = d.getDocumentElement();
+                String nuri = "xmlns:edi='http://ecommerce.org/schema'";
+                String lname = "dummyattr";
+		String val = "1";
+		Attr a = d.createAttribute(lname);
+		a.setValue(val);
+	     if (e == null || a == null) {
+                TestLoader.logErrPrint("Document Element is  NULL or can't create new attribute..");
                 return BWBaseTest.FAILED;
-	     }
-
-             //Element e = d.getDocumentElement();
-             Element e = d.createElement("BODY");
-	     if (e == null) {
-                TestLoader.logErrPrint("Document Element is  NULL..");
-                return BWBaseTest.FAILED;
-             } else  {
-                Attr anode = e.setAttributeNodeNS(a);
-                TestLoader.logErrPrint("Document setAttributeNodeNS is an unsupported method...");
-                return BWBaseTest.FAILED;
+             } else {
+		e.setAttributeNodeNS(a);
+                Node n = e.getAttributeNodeNS(nuri, lname);
+		if (n == null || n.getNodeType() != Node.ATTRIBUTE_NODE || !((Attr)n).getValue().equals(val)) {
+	                TestLoader.logErrPrint("Element 'getAttributeNS' returned incorrect value ");
+        	        return BWBaseTest.FAILED;
+		}
              }
-         } catch (UnsupportedOperationException ue) {
-                TestLoader.logErrPrint("UNSUPPORTED METHOD ");
-                return BWBaseTest.PASSED;
-         } catch (DOMException e) {
-                TestLoader.logErrPrint("Caught DOMException");
-                return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
+        } catch (Exception r) {
+             String msg = "Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
+             return BWBaseTest.FAILED;
          }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
+      return BWBaseTest.PASSED;
 
    }
 

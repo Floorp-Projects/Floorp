@@ -74,7 +74,7 @@ public class DocumentTypeImpl_getInternalSubset extends BWBaseTest implements Ex
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
@@ -85,17 +85,14 @@ public class DocumentTypeImpl_getInternalSubset extends BWBaseTest implements Ex
 	     if (dt == null) {
                 TestLoader.logErrPrint("Document Type is  NULL..");
                 return BWBaseTest.FAILED;
-             } else {
-                String s = dt.getInternalSubset();
-                TestLoader.logErrPrint("DocumentType 'getInternalSubset' according to specs should currently not have been supported...");
-                return BWBaseTest.FAILED;
-             }
-        } catch (UnsupportedOperationException ue) {
-             String msg = "UNSUPPORTED METHOD "; 
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
+             } 
+             String s = dt.getInternalSubset();
+		if (s == null) {
+	             TestLoader.logErrPrint("DocumentType 'getInternalSubset' return null...");
+        	     return BWBaseTest.FAILED;
+		}
+        } catch (Exception r) {
+             String msg = "Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);
              return BWBaseTest.FAILED;
         }
@@ -103,6 +100,8 @@ public class DocumentTypeImpl_getInternalSubset extends BWBaseTest implements Ex
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
+	return BWBaseTest.PASSED;
+
    }
 
    /**

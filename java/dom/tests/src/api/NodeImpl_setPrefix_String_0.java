@@ -75,42 +75,30 @@ public class NodeImpl_setPrefix_String_0 extends BWBaseTest implements Execution
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
 
       Document d = (Document)tobj;
       if (d != null)
       {
-       try {
-         String name = "nom";
-         Attr a = d.createAttribute(name);
-         if (a == null) 
-         {
-             TestLoader.logErrPrint("Could Not create Attribute " + name);
-             return BWBaseTest.FAILED;
-         }
+	String nsuri = "xmlns:edi='http://ec.com/schema'";
+	String qname = "body";
+	try {
+		Node e = d.createElement(qname);
+		((Node)e).setPrefix(null);
+		TestLoader.logPrint("getPrefix() didn't throw exception");
+		return BWBaseTest.FAILED;			
 
-         String newval = null;
-         a.setPrefix(newval);
-         TestLoader.logErrPrint("setPrefix is an unsupported method...");
-         return BWBaseTest.FAILED;
-       } catch (UnsupportedOperationException ue) {
-            TestLoader.logErrPrint("UNSUPPORTED METHOD");
-            return BWBaseTest.PASSED;
-       } catch (DOMException e) {
-            TestLoader.logErrPrint("Caught DOMException");
-            return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-       }
+	} catch (Exception e) {
+        	   TestLoader.logPrint("Exception: "+e);
+	           return BWBaseTest.PASSED;			
+	}
+
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
-
    }
 
    /**

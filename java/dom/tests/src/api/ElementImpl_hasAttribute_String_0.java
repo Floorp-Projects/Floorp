@@ -74,7 +74,7 @@ public class ElementImpl_hasAttribute_String_0 extends BWBaseTest implements Exe
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
       Document d = (Document)tobj;
       if (d != null)
@@ -85,18 +85,12 @@ public class ElementImpl_hasAttribute_String_0 extends BWBaseTest implements Exe
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-              try {
-                if (e.hasAttribute(null));
-                TestLoader.logErrPrint("Element 'hasAttribute(null) is not a supported method. Should not return any value... ");
+                e.hasAttribute(null);
+                TestLoader.logErrPrint("Element 'hasAttribute(null) didn't throw exception... ");
                 return BWBaseTest.FAILED;
-
-              } catch (UnsupportedOperationException ue) {
-                  TestLoader.logErrPrint("UNSUPPORTED METHOD");
-                  return BWBaseTest.PASSED;
-              }
-             }
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
+	    }
+        } catch (Exception r) {
+             String msg = "Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);
              return BWBaseTest.PASSED;
         }

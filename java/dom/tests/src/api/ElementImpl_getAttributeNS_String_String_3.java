@@ -74,7 +74,7 @@ public class ElementImpl_getAttributeNS_String_String_3 extends BWBaseTest imple
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
@@ -86,22 +86,14 @@ public class ElementImpl_getAttributeNS_String_String_3 extends BWBaseTest imple
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
              } else {
-                String nuri = "xmlns:edi='http://ecommerce.org/schema'";
-                String lname = "dummyattr";
+                String nuri = null;
+                String lname = null;
                 String s = e.getAttributeNS(nuri, lname);
-                TestLoader.logErrPrint("Element 'getAttributeNS' is not a supported method... ");
+                TestLoader.logErrPrint("Element 'getAttributeNS' didn't throw exception");
                 return BWBaseTest.FAILED;
              }
-        } catch (UnsupportedOperationException ue) {
-             String msg = "UNSUPPORTED METHOD"; 
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (DOMException de) {
-             String msg = "DOMException: " + de;
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
+        } catch (Exception r) {
+             String msg = "Exception " + r ; 
              TestLoader.logErrPrint(msg);
              return BWBaseTest.PASSED;
         }

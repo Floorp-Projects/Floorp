@@ -75,7 +75,7 @@ public class ElementImpl_setAttributeNodeNS_Attr_0 extends BWBaseTest implements
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
@@ -88,17 +88,11 @@ public class ElementImpl_setAttributeNodeNS_Attr_0 extends BWBaseTest implements
                 return BWBaseTest.FAILED;
              } else  {
                 Attr anode = e.setAttributeNodeNS(null);
-                TestLoader.logErrPrint("Document setAttributeNodeNS is an unsupported method...");
+                TestLoader.logErrPrint("Document setAttributeNodeNS didn't throw exception...");
                 return BWBaseTest.FAILED;
              }
-         } catch (UnsupportedOperationException ue) {
-                TestLoader.logErrPrint("UNSUPPORTED METHOD ");
-                return BWBaseTest.PASSED;
-         } catch (DOMException e) {
-                TestLoader.logErrPrint("Caught DOMException");
-                return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
+        } catch (Exception r) {
+             String msg = "Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);
              return BWBaseTest.PASSED;
          }

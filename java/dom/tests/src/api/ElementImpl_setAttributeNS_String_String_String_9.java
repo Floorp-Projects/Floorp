@@ -75,7 +75,7 @@ public class ElementImpl_setAttributeNS_String_String_String_9 extends BWBaseTes
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
@@ -91,25 +91,22 @@ public class ElementImpl_setAttributeNS_String_String_String_9 extends BWBaseTes
                 String lname = "dummyattr";
                 String val   = "1";
                 e.setAttributeNS(nuri, lname, val);
-                TestLoader.logErrPrint("setAttributeNS is a unsupported method ...");
-                return BWBaseTest.FAILED;
+		String s = e.getAttributeNS(nuri, lname);
+		if (s == null || !s.equals(val)) {
+	                TestLoader.logErrPrint("'setAttributeNS' didn't set attribute correctly");
+        	        return BWBaseTest.FAILED;
+		}
              }
-         } catch (UnsupportedOperationException ue) {
-                TestLoader.logErrPrint("UNSUPPORTED METHOD");
-                return BWBaseTest.PASSED;
-         } catch (DOMException e) {
-                TestLoader.logErrPrint("Caught DOMException");
-                return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
+        } catch (Exception r) {
+             String msg = "Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
+             return BWBaseTest.FAILED;
          }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
-
+      return BWBaseTest.PASSED;
    }
 
    /**

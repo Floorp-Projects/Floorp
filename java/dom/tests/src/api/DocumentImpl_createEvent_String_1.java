@@ -76,7 +76,7 @@ public class DocumentImpl_createEvent_String_1 extends BWBaseTest implements Exe
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       DocumentImpl d = (DocumentImpl)tobj;

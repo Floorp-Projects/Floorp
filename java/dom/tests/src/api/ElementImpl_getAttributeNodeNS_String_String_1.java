@@ -74,7 +74,7 @@ public class ElementImpl_getAttributeNodeNS_String_String_1 extends BWBaseTest i
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
@@ -89,19 +89,11 @@ public class ElementImpl_getAttributeNodeNS_String_String_1 extends BWBaseTest i
                 String nuri = null;
                 String lname = "dummyattr";
                 Node n = e.getAttributeNodeNS(nuri, lname);
-                TestLoader.logErrPrint("Element 'getAttributeNodeNS' is not a supported method... ");
+                TestLoader.logErrPrint("Element 'getAttributeNodeNS' didn't throw exception... ");
                 return BWBaseTest.FAILED;
              }
-        } catch (UnsupportedOperationException ue) {
-             String msg = "UNSUPPORTED METHOD"; 
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (DOMException de) {
-             String msg = "DOMException: " + de;
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
+        } catch (Exception r) {
+             String msg = "Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);
              return BWBaseTest.PASSED;
         }

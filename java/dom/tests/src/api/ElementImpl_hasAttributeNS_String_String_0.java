@@ -74,7 +74,7 @@ public class ElementImpl_hasAttributeNS_String_String_0 extends BWBaseTest imple
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
       Document d = (Document)tobj;
       if (d != null)
@@ -84,18 +84,12 @@ public class ElementImpl_hasAttributeNS_String_String_0 extends BWBaseTest imple
 	     if (e == null) {
                 TestLoader.logErrPrint("Document Element is  NULL..");
                 return BWBaseTest.FAILED;
-             } else {
-              try {
-                if (e.hasAttributeNS(null, null)) ;
-                TestLoader.logErrPrint("Element 'hasAttributeNS is not a supported method. Should not return any value... ");
+             } 
+		if (e.hasAttributeNS(null, null)) ;
+                TestLoader.logErrPrint("Element 'hasAttributeNS didn't throw exception... ");
                 return BWBaseTest.FAILED;
-              } catch (UnsupportedOperationException ue) {
-                  TestLoader.logErrPrint("UNSUPPORTED METHOD");
-                  return BWBaseTest.PASSED;
-              }
-             }
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
+        } catch (Exception r) {
+             String msg = "Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);
              return BWBaseTest.PASSED;
         }

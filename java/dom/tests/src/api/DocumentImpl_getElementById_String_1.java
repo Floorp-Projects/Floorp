@@ -74,20 +74,19 @@ public class DocumentImpl_getElementById_String_1 extends BWBaseTest implements 
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       DocumentImpl d = (DocumentImpl)tobj;
       if (d != null)
       {
          try {
-             Element e = d.getElementById(null);
-             TestLoader.logErrPrint("Document 'getElementsById'is an unsupported method");
+             Element e = d.getElementById("nonexistent_id");
+             TestLoader.logErrPrint("Document 'getElementsById(nonexistent_id)' didn't throw exception");
              return BWBaseTest.FAILED;
          
-        } catch ( UnsupportedOperationException ue) {
-             String msg = "UNSUPPORTED METHOD";
-             TestLoader.logErrPrint(msg);
+        } catch (Exception e) {
+             TestLoader.logErrPrint("Exception: "+e);
              return BWBaseTest.PASSED;
         }
       } else {

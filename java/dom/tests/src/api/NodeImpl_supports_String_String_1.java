@@ -74,41 +74,23 @@ public class NodeImpl_supports_String_String_1 extends BWBaseTest implements Exe
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
       if (d != null)
       {
-         String elname = "SCRIPT";
-         Element e = d.createElement(elname);
-         if (e == null)
-         {
-            TestLoader.logErrPrint("Could not create Element " + elname);
-            return BWBaseTest.FAILED;
-         }
-
-         String nodename = "HEAD";
-         NodeList nl = d.getElementsByTagName(nodename);
-         if (nl != null) 
-         {
-            int len = nl.getLength();
-
-            Node n = nl.item(0);
-            try {
+	try {
               String feature = null;
               String ver = "2.0";
-              if (n.supports(feature, ver)) {};
-              TestLoader.logErrPrint("Node.supports is an unsupported method...");
+              if (((Node)d).supports(feature, ver)) {};
+              TestLoader.logErrPrint("Node.supports didn't throw exception...");
               return BWBaseTest.FAILED;
-            } catch (UnsupportedOperationException ue) {
-              TestLoader.logErrPrint("UNSUPPORTED METHOD");
-              return BWBaseTest.PASSED;
-            }
-         } else {
-            TestLoader.logErrPrint("Could not find Node " + nodename);
-            return BWBaseTest.FAILED;
-         }
+	} catch (Exception e) {
+		TestLoader.logErrPrint("Exception: "+e);
+	             return BWBaseTest.PASSED;
+	}
+
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;

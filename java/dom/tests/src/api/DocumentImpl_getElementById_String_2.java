@@ -1,4 +1,3 @@
-
 /*
  The contents of this file are subject to the Mozilla Public
  License Version 1.1 (the "License"); you may not use this file
@@ -28,7 +27,7 @@ import org.mozilla.dom.test.*;
 import org.mozilla.dom.*;
 import org.w3c.dom.*;
 
-public class DOMImplementationImpl_createDocumentType_String_String_String_0 extends BWBaseTest implements Execution
+public class DocumentImpl_getElementById_String_2 extends BWBaseTest implements Execution
 {
 
    /**
@@ -38,7 +37,7 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
     ***********************************************************
     *
     */
-   public DOMImplementationImpl_createDocumentType_String_String_String_0()
+   public DocumentImpl_getElementById_String_2()
    {
    }
 
@@ -69,7 +68,7 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
    public boolean execute(Object tobj)
    {
       if (tobj == null)  {
-           TestLoader.logErrPrint("Object is NULL...");
+           TestLoader.logPrint("Object is NULL...");
            return BWBaseTest.FAILED;
       }
 
@@ -77,36 +76,23 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
       osRoutine(os);
       
 
-      Document d = (Document)tobj;
-        if (d != null)
-        {
-             DOMImplementationImpl di = (DOMImplementationImpl)d.getImplementation();
-	     if (di == null) {
-                TestLoader.logErrPrint("Document DomImplementation is  NULL..");
-                return BWBaseTest.FAILED;
-             } else {
-               try {
-		 String qualifiedName = "edi:price";
-		 String publicId = "pID";
-		 String systemId = "sID";
-		 DocumentType dt = di.createDocumentType(qualifiedName, publicId, systemId);
-                 if (dt == null) {
-                    System.out.println("DomImplementation 'createDocumentType(...) returned null ...");
-                    return BWBaseTest.FAILED;
-                  } 
-               } catch (DOMException de) {
-                     TestLoader.logErrPrint("DOMException was thrown: "+de);
-                     return BWBaseTest.FAILED;
-               } catch (Exception e) {
-                     TestLoader.logErrPrint("Exception was thrown: "+e);
-                     return BWBaseTest.FAILED;
-		}
-             }
-        } else {
+
+      DocumentImpl d = (DocumentImpl)tobj;
+      if (d != null)
+      {
+         try {
+             Element e = d.getElementById(null);
+             TestLoader.logErrPrint("Document 'getElementsById(null)' didn't throw exception");
+             return BWBaseTest.FAILED;
+         
+        } catch (Exception e) {
+             TestLoader.logErrPrint("Exception: "+e);
+             return BWBaseTest.PASSED;
+        }
+      } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
-        }
-	return BWBaseTest.PASSED;
+      }
 
    }
 

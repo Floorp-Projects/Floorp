@@ -74,22 +74,20 @@ public class DocumentImpl_getElementsByTagNameNS_String_String_3 extends BWBaseT
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
       if (d != null)
       {
          try {
-             String nuri = "xmlns:edi='http://ecommerce.org/schema'";
-             String qname = "xml";
+             String nuri = null;
+             String qname = null;
              NodeList dt = d.getElementsByTagNameNS(nuri, qname);
-             TestLoader.logErrPrint("Document 'getElementsByTagNameNS' is  not a supported method... ");
+             TestLoader.logErrPrint("Document 'getElementsByTagNameNS' didn't thrpw exception ");
              return BWBaseTest.FAILED;
          
-        } catch (UnsupportedOperationException ue) {
-             String msg = "UNSUPPORTED METHOD";
-             TestLoader.logErrPrint(msg);
+        } catch (Exception e) {
              return BWBaseTest.PASSED;
         }
       } else {

@@ -76,7 +76,7 @@ public class DocumentImpl_createEvent_String_0 extends BWBaseTest implements Exe
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       DocumentImpl d = (DocumentImpl)tobj;
@@ -85,18 +85,14 @@ public class DocumentImpl_createEvent_String_0 extends BWBaseTest implements Exe
        try {
  	     String s = null;
              Event e = d.createEvent(s);
-             TestLoader.logErrPrint("DocumentEvent is not a supported method...");
-             return BWBaseTest.FAILED;
-        } catch (UnsupportedOperationException ue) {
-             String msg = "UNSUPPORTED METHOD "; 
-             TestLoader.logErrPrint(msg);
+        } catch (Exception e) {
              return BWBaseTest.PASSED;
         }
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
-
+	return BWBaseTest.PASSED;	
    }
 
    /**

@@ -74,7 +74,7 @@ public class DocumentTypeImpl_getSystemId extends BWBaseTest implements Executio
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
@@ -85,17 +85,14 @@ public class DocumentTypeImpl_getSystemId extends BWBaseTest implements Executio
 	     if (dt == null) {
                 TestLoader.logErrPrint("Document Type is  NULL..");
                 return BWBaseTest.FAILED;
-             } else {
-                String s = dt.getSystemId();
-                TestLoader.logErrPrint("DocumentType 'getSystemId' according to specs should currently not have been supported...");
-                return BWBaseTest.FAILED;
-             }
-        } catch (UnsupportedOperationException ue) {
-             String msg = "UNSUPPORTED METHOD "; 
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
+             } 
+             String s = dt.getSystemId();
+		if (s == null) {
+	             TestLoader.logErrPrint("DocumentType 'getSystemId' return null...");
+        	     return BWBaseTest.FAILED;
+		}
+        } catch (Exception r) {
+             String msg = "Caught Exception " + r ; 
              TestLoader.logErrPrint(msg);
              return BWBaseTest.FAILED;
         }
@@ -103,6 +100,8 @@ public class DocumentTypeImpl_getSystemId extends BWBaseTest implements Executio
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
+	return BWBaseTest.PASSED;
+
    }
 
    /**

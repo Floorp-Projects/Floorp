@@ -75,7 +75,6 @@ public class DOMImplementationImpl_createDocument_String_String_DocumentType_0 e
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
 
 
       Document d = (Document)tobj;
@@ -87,29 +86,31 @@ public class DOMImplementationImpl_createDocument_String_String_DocumentType_0 e
                 return BWBaseTest.FAILED;
              } else {
                try {
-                 if (di.createDocument(null, null, null) == null) {
-                    System.out.println("DomImplementation 'createDocument' according to specs. is not supported...");
+		DocumentType dt = di.createDocumentType("edi:price", "pID", "sID");
+		if (dt == null) {
+	                TestLoader.logErrPrint("DocumentType is  NULL..");
+        	        return BWBaseTest.FAILED;
+		 }
+		 String namespaceURI = "edi='http://ecommerce.org/schema'";
+		 String qualifiedName = "edi:price";
+                 if (di.createDocument(namespaceURI, qualifiedName, dt) == null) {
+                    System.out.println("DomImplementation 'createDocument' returns null ...");
+		    TestLoader.logErrPrint("DomImplementation 'createDocument' returns null ...");
                     return BWBaseTest.FAILED;
-               
-                  } else {
-                     System.out.println("DomImplementation 'createDocument'  according to specs is not supported...");
-                  }
-               } catch (UnsupportedOperationException ue) {
-                     String msg = "UNSUPPORTED METHOD ";
-                     TestLoader.logErrPrint(msg);
-                     return BWBaseTest.PASSED;
-               } catch (DOMException e) {
-                     String msg = "DOMException : " + e;
-                     TestLoader.logErrPrint(msg);
-                     return BWBaseTest.PASSED;
-               }
+                  } 
+               } catch (DOMException de) {
+                     TestLoader.logErrPrint("DOMException : " + de);
+                     return BWBaseTest.FAILED;
+               } catch (Exception e) {
+ 		     TestLoader.logErrPrint("Exception: "+e);
+                     return BWBaseTest.FAILED; 
+		}
              }
         } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
         }
-
-      return BWBaseTest.PASSED;
+	return BWBaseTest.PASSED;
    }
 
    /**

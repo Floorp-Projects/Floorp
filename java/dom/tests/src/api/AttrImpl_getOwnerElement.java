@@ -74,24 +74,29 @@ public class AttrImpl_getOwnerElement extends BWBaseTest implements Execution
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
       Document d = (Document)tobj;
       if (d != null)
       {
              Attr a = d.createAttribute("dummyattr_2");
-	     if (a == null) {
-                TestLoader.logErrPrint("Could not Create Attribute dummyattr_2..");
+             Element e = d.getDocumentElement();
+	     if (a == null || e == null) {
+                TestLoader.logErrPrint("Could not Create Attribute dummyattr_2 or get document element ..");
                 return BWBaseTest.FAILED;
              } else {
                try {
-		Element e = a.getOwnerElement();
-                TestLoader.logErrPrint("Attr 'getOwnerElement()' is not a supported method ...");
+                e.setAttributeNode(a);
+		Attr da = e.getAttributeNode("dummyattr_2");
+		Element oe = da.getOwnerElement();
+		if (oe != null) { //here we also need to check that oe is the same ???
+	                 return BWBaseTest.PASSED;
+		}
+                TestLoader.logErrPrint("Attr 'getOwnerElement()' returned incorrect element: "+oe+" "+oe.getNodeType());
                 return BWBaseTest.FAILED;
-               } catch (UnsupportedOperationException ue) {
-                 String msg = "UNSUPPORTED METHOD";
-                 TestLoader.logErrPrint(msg);
-                 return BWBaseTest.PASSED;
+               } catch (Exception ex) {
+                 TestLoader.logErrPrint("Exception was thrown: "+ex);
+                 return BWBaseTest.FAILED;
                }
              }
       } else {

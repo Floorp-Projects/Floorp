@@ -74,44 +74,31 @@ public class NodeImpl_getNamespaceURI extends BWBaseTest implements Execution
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
       Document d = (Document)tobj;
       if (d != null)
       {
-         String elname = "SCRIPT";
-         Element e = d.createElement(elname);
-         if (e == null)
-         {
-            TestLoader.logErrPrint("Could not create Element " + elname);
-            return BWBaseTest.FAILED;
-         }
-
-         String nodename = "HEAD";
-         NodeList nl = d.getElementsByTagName(nodename);
-         if (nl != null) 
-         {
-            int len = nl.getLength();
-
-            Node n = nl.item(0);
-            try {
-              String str = n.getNamespaceURI();
-              TestLoader.logErrPrint("getNameSpaceURI is an unsupported method...");
-              return BWBaseTest.FAILED;
-            } catch (UnsupportedOperationException ue) {
-              TestLoader.logErrPrint("UNSUPPORTED METHOD");
-              return BWBaseTest.PASSED;
-            }
-         } else {
-            TestLoader.logErrPrint("Could not find Node " + nodename);
-            return BWBaseTest.FAILED;
-         }
+	String nsuri = "xmlns:edi='http://ec.com/schema'";
+	String qname = "body";
+	try {
+		Element e = d.createElement(qname);
+		String uri = ((Node)e).getNamespaceURI();
+		if (uri == null) { // || !uri.equals(nsuri)) {
+        	   TestLoader.logPrint("getNamespaceURI() returned incorrect value: "+uri);
+	           return BWBaseTest.FAILED;	
+		}
+	} catch (Exception e) {
+        	   TestLoader.logPrint("Exception: "+e);
+	           return BWBaseTest.FAILED;			
+	}
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
 
+	return BWBaseTest.PASSED;
    }
 
    /**

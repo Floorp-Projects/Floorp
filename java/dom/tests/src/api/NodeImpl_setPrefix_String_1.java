@@ -75,42 +75,32 @@ public class NodeImpl_setPrefix_String_1 extends BWBaseTest implements Execution
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      setUnsupported();
+      
 
 
 
       Document d = (Document)tobj;
       if (d != null)
       {
-       try {
-         String name = "nom";
-         Attr a = d.createAttribute(name);
-         if (a == null) 
-         {
-             TestLoader.logErrPrint("Could Not create Attribute " + name);
-             return BWBaseTest.FAILED;
-         }
-
-         String newval = "xml";
-         a.setPrefix(newval);
-         TestLoader.logErrPrint("setPrefix is an unsupported method...");
-         return BWBaseTest.FAILED;
-       } catch (UnsupportedOperationException ue) {
-            TestLoader.logErrPrint("UNSUPPORTED METHOD");
-            return BWBaseTest.PASSED;
-       } catch (DOMException e) {
-            TestLoader.logErrPrint("Caught DOMException");
-            return BWBaseTest.PASSED;
-        } catch (RuntimeException r) {
-             String msg = "Caught RuntimeException " + r ; 
-             TestLoader.logErrPrint(msg);
-             return BWBaseTest.PASSED;
-       }
+	String nsuri = "xmlns:edi='http://ec.com/schema'";
+	String qname = "body";
+	String prefix = "edi";
+	try {
+		Node e = d.createElement(qname);
+		((Node)e).setPrefix(prefix);
+		if (!((Node)e).getPrefix().equals(prefix)) {
+		       	TestLoader.logPrint("getPrefix returned incorrect value");
+		        return BWBaseTest.FAILED;			
+		}
+	} catch (Exception e) {
+        	   TestLoader.logPrint("Exception: "+e);
+	           return BWBaseTest.FAILED;			
+	}
       } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
       }
-
+	return BWBaseTest.PASSED;			
    }
 
    /**

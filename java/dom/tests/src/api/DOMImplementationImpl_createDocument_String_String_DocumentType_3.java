@@ -28,7 +28,7 @@ import org.mozilla.dom.test.*;
 import org.mozilla.dom.*;
 import org.w3c.dom.*;
 
-public class DOMImplementationImpl_createDocumentType_String_String_String_0 extends BWBaseTest implements Execution
+public class DOMImplementationImpl_createDocument_String_String_DocumentType_3 extends BWBaseTest implements Execution
 {
 
    /**
@@ -38,7 +38,7 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
     ***********************************************************
     *
     */
-   public DOMImplementationImpl_createDocumentType_String_String_String_0()
+   public DOMImplementationImpl_createDocument_String_String_DocumentType_3()
    {
    }
 
@@ -75,7 +75,6 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
 
       String os = System.getProperty("OS");
       osRoutine(os);
-      
 
       Document d = (Document)tobj;
         if (d != null)
@@ -86,28 +85,33 @@ public class DOMImplementationImpl_createDocumentType_String_String_String_0 ext
                 return BWBaseTest.FAILED;
              } else {
                try {
+		 DocumentType dt = di.createDocumentType("edi:price", "publicID", "systemID");
+		if (dt == null) {
+	                TestLoader.logErrPrint("DocumentType is  NULL..");
+        	        return BWBaseTest.FAILED;
+		 }
+		 String namespaceURI = "edi='http://ecommerce.org/schema'";
 		 String qualifiedName = "edi:price";
-		 String publicId = "pID";
-		 String systemId = "sID";
-		 DocumentType dt = di.createDocumentType(qualifiedName, publicId, systemId);
-                 if (dt == null) {
-                    System.out.println("DomImplementation 'createDocumentType(...) returned null ...");
+                 if (di.createDocument(null, qualifiedName, dt) == null) {
+                    System.out.println("DomImplementation 'createDocument' returns null ...");
+		    TestLoader.logErrPrint("DomImplementation 'createDocument' returns null ...");
                     return BWBaseTest.FAILED;
-                  } 
+                  } else {
+		     TestLoader.logErrPrint("createDocumetn didn't throw exception ...");
+                     return BWBaseTest.FAILED;
+		}
                } catch (DOMException de) {
-                     TestLoader.logErrPrint("DOMException was thrown: "+de);
-                     return BWBaseTest.FAILED;
+                     TestLoader.logErrPrint("DOMException : " + de);
+                     return BWBaseTest.PASSED;
                } catch (Exception e) {
-                     TestLoader.logErrPrint("Exception was thrown: "+e);
-                     return BWBaseTest.FAILED;
+ 		     TestLoader.logErrPrint("Exception: "+e);
+                     return BWBaseTest.PASSED; 
 		}
              }
         } else {
              System.out.println("Document is  NULL..");
              return BWBaseTest.FAILED;
         }
-	return BWBaseTest.PASSED;
-
    }
 
    /**
