@@ -39,7 +39,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual nsresult Init(nsIPresContext* aPresContext);
+  virtual nsresult Init(nsIDeviceContext* aContext);
 
   virtual nsIView *GetRootView();
   virtual void SetRootView(nsIView *aView);
@@ -99,7 +99,10 @@ public:
   virtual void SetViewContentTransparency(nsIView *aView, PRBool aTransparent);
   virtual void SetViewOpacity(nsIView *aView, float aOpacity);
 
-  virtual nsIPresContext* GetPresContext();
+  NS_IMETHOD SetViewObserver(nsIViewObserver *aObserver);
+  NS_IMETHOD GetViewObserver(nsIViewObserver *&aObserver);
+
+  virtual nsIDeviceContext* GetDeviceContext();
 
   virtual void ClearDirtyRegion();
 
@@ -123,7 +126,8 @@ private:
   void Refresh(nsIView* aView, nsIRenderingContext *aContext,
                        nsRect *rect, PRUint32 aUpdateFlags);
 
-  nsIPresContext    *mContext;
+  nsIDeviceContext  *mContext;
+  nsIViewObserver   *mObserver;
   nsIWidget         *mRootWindow;
   PRTime            mLastRefresh;
   nsIRegion         *mDirtyRegion;

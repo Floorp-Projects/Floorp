@@ -30,6 +30,7 @@ class nsIRegion;
 class nsIRenderingContext;
 class nsTransform2D;
 class nsIFrame;
+class nsIViewObserver;
 struct nsRect;
 
 //this is used by the view clipping APIs since the description of
@@ -365,16 +366,16 @@ public:
   virtual void SetContentTransparency(PRBool aTransparent) = 0;
 
   /**
-   * Set the view's link to the nsIFrame part of the universe.
-   * @param aFrame frame to associate with view. nsnull to disassociate
+   * Set the view's link to client owned data.
+   * @param aData - data to associate with view. nsnull to disassociate
    */
-  virtual void SetFrame(nsIFrame *aFrame) = 0;
+  virtual void SetClientData(void *aData) = 0;
 
   /**
-   * Query the view for it's link to the nsIFrame part of the universe.
-   * @result frame associated with view or nsnull if there is none.
+   * Query the view for it's link to client owned data.
+   * @result data associated with view or nsnull if there is none.
    */
-  virtual nsIFrame * GetFrame() = 0;
+  virtual void * GetClientData() = 0;
 
   /**
    * Get the nearest widget in this view or a parent of this view and

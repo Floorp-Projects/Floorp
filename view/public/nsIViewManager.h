@@ -47,12 +47,12 @@ class nsIViewManager : public nsISupports
 public:
   /**
    * Initialize the ViewManager
-   * Note: this instance does not hold a reference to the presentation
-   * context because it holds a reference to this instance.
-   * @param aPresContext the presentation context to use.
+   * Note: this instance does not hold a reference to the viewobserver
+   * because it holds a reference to this instance.
+   * @param aContext the device context to use.
    * @result The result of the initialization, NS_OK if no errors
    */
-  virtual nsresult Init(nsIPresContext* aPresContext) = 0;
+  virtual nsresult Init(nsIDeviceContext* aContext) = 0;
 
   /**
    * Get the root of the view tree.
@@ -323,10 +323,24 @@ public:
   virtual void SetViewOpacity(nsIView *aView, float aOpacity) = 0;
 
   /**
-   * Get the presentation context associated with this manager
-   * @result presentation context
+   * Set the view observer associated with this manager
+   * @param aObserver - new observer
+   * @result error status
    */
-  virtual nsIPresContext* GetPresContext() = 0;
+  NS_IMETHOD SetViewObserver(nsIViewObserver *aObserver) = 0;
+
+  /**
+   * Get the view observer associated with this manager
+   * @param aObserver - out parameter for observer
+   * @result error status
+   */
+  NS_IMETHOD GetViewObserver(nsIViewObserver *&aObserver) = 0;
+
+  /**
+   * Get the device context associated with this manager
+   * @result device context
+   */
+  virtual nsIDeviceContext* GetDeviceContext() = 0;
 
   /**
    * Set the area that the view manager considers to be "dirty"

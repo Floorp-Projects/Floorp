@@ -215,11 +215,13 @@ nsresult nsView :: Init(nsIViewManager* aManager,
   // check if a real window has to be created
   if (aWindowCIID)
   {
-    nsIPresContext    *cx = mViewManager->GetPresContext();
-    nsIDeviceContext  *dx = cx->GetDeviceContext();
+    nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
     nsRect            trect = aBounds;
+    float             scale;
 
-    trect *= cx->GetTwipsToPixels();
+    dx->GetAppUnitsToDevUnits(scale);
+
+    trect *= scale;
 
     if (NS_OK == LoadWidget(*aWindowCIID))
     {
@@ -234,7 +236,6 @@ nsresult nsView :: Init(nsIViewManager* aManager,
     }
 
     NS_RELEASE(dx);
-    NS_RELEASE(cx);
   }
 
   SetVisibility(aVisibilityFlag);
@@ -395,11 +396,15 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
           }
         }
 
-        if (nsnull != mFrame)
+        if (nsnull != mClientData)
         {
-          nsIPresContext  *cx = mViewManager->GetPresContext();
-          mFrame->Paint(*cx, rc, rect);
-          NS_RELEASE(cx);
+          nsIViewObserver *obs;
+
+          if (NS_OK == mViewManager->GetViewObserver(obs))
+          {
+            obs->Paint((nsIView *)this, rc, rect);
+            NS_RELEASE(obs);
+          }
         }
 
 #ifdef SHOW_VIEW_BORDERS
@@ -475,8 +480,16 @@ PRBool nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint3
 {
   // XXX apply region to rc
   // XXX get bounding rect from region
-  //if (nsnull != mFrame)
-  //  mFrame->Paint(rc, rect, aPaintFlags);
+  //if (nsnull != mClientData)
+  //{
+  //  nsIViewObserver *obs;
+  //
+  //  if (NS_OK == mViewManager->GetViewObserver(obs))
+  //  {
+  //    obs->Paint((nsIView *)this, rc, rect, aPaintFlags);
+  //    NS_RELEASE(obs);
+  //  }
+  //}
   return PR_FALSE;
 }
 
@@ -526,22 +539,26 @@ nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
   }
 
   //if the view's children didn't take the event, check the view itself.
-  if (retval == nsEventStatus_eIgnore && nsnull != mFrame)
+  if ((retval == nsEventStatus_eIgnore) && (nsnull != mClientData))
   {
-    nsIPresContext  *cx = mViewManager->GetPresContext();
-    nscoord         xoff, yoff;
+    nsIViewObserver *obs;
 
-    GetScrollOffset(&xoff, &yoff);
+    if (NS_OK == mViewManager->GetViewObserver(obs))
+    {
+      nscoord xoff, yoff;
 
-    event->point.x += xoff;
-    event->point.y += yoff;
+      GetScrollOffset(&xoff, &yoff);
 
-    mFrame->HandleEvent(*cx, event, retval);
+      event->point.x += xoff;
+      event->point.y += yoff;
 
-    event->point.x -= xoff;
-    event->point.y -= yoff;
+      obs->HandleEvent((nsIView *)this, event, retval);
 
-    NS_RELEASE(cx);
+      event->point.x -= xoff;
+      event->point.y -= yoff;
+
+      NS_RELEASE(obs);
+    }
   }
 
   return retval;
@@ -553,11 +570,13 @@ void nsView :: SetPosition(nscoord x, nscoord y)
 
   if (nsnull != mWindow)
   {
-    nsIPresContext  *px = mViewManager->GetPresContext();
-    nscoord         offx, offy, parx = 0, pary = 0;
-    float           scale = px->GetTwipsToPixels();
-    nsIWidget       *pwidget = nsnull;
+    nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
+    nscoord           offx, offy, parx = 0, pary = 0;
+    float             scale;
+    nsIWidget         *pwidget = nsnull;
   
+    dx->GetAppUnitsToDevUnits(scale);
+
     GetScrollOffset(&offx, &offy);
 
     pwidget = GetOffsetFromWidget(&parx, &pary);
@@ -566,7 +585,7 @@ void nsView :: SetPosition(nscoord x, nscoord y)
     mWindow->Move(NSTwipsToIntPixels((x + parx - offx), scale),
                   NSTwipsToIntPixels((y + pary - offy), scale));
 
-    NS_RELEASE(px);
+    NS_RELEASE(dx);
   }
 }
 
@@ -601,13 +620,15 @@ void nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint)
 
   if (nsnull != mWindow)
   {
-    nsIPresContext  *px = mViewManager->GetPresContext();
-    float           t2p = px->GetTwipsToPixels();
+    nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
+    float             t2p;
   
+    dx->GetAppUnitsToDevUnits(t2p);
+
     mWindow->Resize(NSTwipsToIntPixels(width, t2p), NSTwipsToIntPixels(height, t2p),
                     aPaint);
 
-    NS_RELEASE(px);
+    NS_RELEASE(dx);
   }
 }
 
@@ -821,15 +842,14 @@ void nsView :: SetContentTransparency(PRBool aTransparent)
     mVFlags &= ~VIEW_FLAG_TRANSPARENT;
 }
 
-// Frames have a pointer to the view, so don't AddRef the frame.
-void nsView :: SetFrame(nsIFrame *aFrame)
+void nsView :: SetClientData(void *aData)
 {
-  mFrame = aFrame;
+  mClientData = aData;
 }
 
-nsIFrame * nsView :: GetFrame()
+void * nsView :: GetClientData(void)
 {
-  return mFrame;
+  return mClientData;
 }
 
 //

@@ -85,18 +85,20 @@ void ScrollBarView :: SetPosition(nscoord x, nscoord y)
 
   if (nsnull != mWindow)
   {
-    nsIPresContext  *px = mViewManager->GetPresContext();
-    float           twipToPix = px->GetTwipsToPixels();
-    nscoord         parx = 0, pary = 0;
-    nsIWidget       *pwidget = nsnull;
-  
+    nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
+    float             twipToPix;
+    nscoord           parx = 0, pary = 0;
+    nsIWidget         *pwidget = nsnull;
+
+    dx->GetAppUnitsToDevUnits(twipToPix);  
+
     pwidget = GetOffsetFromWidget(&parx, &pary);
     NS_IF_RELEASE(pwidget);
     
     mWindow->Move(NSTwipsToIntPixels((x + parx), twipToPix),
                   NSTwipsToIntPixels((y + pary), twipToPix));
 
-    NS_RELEASE(px);
+    NS_RELEASE(dx);
   }
 }
 
@@ -106,13 +108,15 @@ void ScrollBarView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint
 
   if (nsnull != mWindow)
   {
-    nsIPresContext  *px = mViewManager->GetPresContext();
-    float           t2p = px->GetTwipsToPixels();
+    nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
+    float             t2p;
   
+    dx->GetAppUnitsToDevUnits(t2p);
+
     mWindow->Resize(NSTwipsToIntPixels(width, t2p), NSTwipsToIntPixels(height, t2p),
                     aPaint);
 
-    NS_RELEASE(px);
+    NS_RELEASE(dx);
   }
 }
 
@@ -396,8 +400,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 
   if (rv == NS_OK)
   {
-    nsIPresContext    *cx = mViewManager->GetPresContext();
-    nsIDeviceContext  *dx = cx->GetDeviceContext();
+    nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
 
     // Create a view for a corner cover
 
@@ -462,7 +465,6 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
     }
 
     NS_RELEASE(dx);
-    NS_RELEASE(cx);
   }
 
   return rv;
@@ -471,8 +473,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
 void nsScrollingView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint)
 {
   nsRect            trect;
-  nsIPresContext    *cx = mViewManager->GetPresContext();
-  nsIDeviceContext  *dx = cx->GetDeviceContext();
+  nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
   nscoord           showHorz = 0, showVert = 0;
   float             scrollWidthFloat, scrollHeightFloat;
   dx->GetScrollBarDimensions(scrollWidthFloat, scrollHeightFloat);
@@ -501,7 +502,9 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height, PRBool aPai
 
   if (nsnull != mWindow)
   {
-    float t2p = cx->GetTwipsToPixels();
+    float t2p;
+
+    dx->GetAppUnitsToDevUnits(t2p);
 
     mClipX = width - showVert;
     mClipY = height - showHorz;
@@ -553,13 +556,13 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height, PRBool aPai
 //  ComputeContainerSize();
 
   NS_RELEASE(dx);
-  NS_RELEASE(cx);
 }
 
 void nsScrollingView :: SetPosition(nscoord aX, nscoord aY)
 {
-  nsIPresContext  *px = mViewManager->GetPresContext();
-  nsIWidget       *thiswin = GetWidget();
+  nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
+  nsIWidget         *thiswin = GetWidget();
+  float             t2p;
 
   if (nsnull == thiswin)
     thiswin = GetOffsetFromWidget(nsnull, nsnull);
@@ -569,7 +572,9 @@ void nsScrollingView :: SetPosition(nscoord aX, nscoord aY)
 
   nsView::SetPosition(aX, aY);
 
-  AdjustChildWidgets(this, this, 0, 0, px->GetTwipsToPixels());
+  dx->GetAppUnitsToDevUnits(t2p);
+
+  AdjustChildWidgets(this, this, 0, 0, t2p);
 
   if (nsnull != thiswin)
   {
@@ -577,7 +582,7 @@ void nsScrollingView :: SetPosition(nscoord aX, nscoord aY)
     NS_RELEASE(thiswin);
   }
 
-  NS_RELEASE(px);
+  NS_RELEASE(dx);
 }
 
 PRBool nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
@@ -609,11 +614,13 @@ PRBool nsScrollingView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
 void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags)
 {
-  nsIView         *scview = nsView::GetViewFor(aEvent->widget);
-  nsIPresContext  *px = mViewManager->GetPresContext();
-  float           scale = px->GetTwipsToPixels();
-  nscoord         dx = 0, dy = 0;
-  nsRect          bounds;
+  nsIView           *scview = nsView::GetViewFor(aEvent->widget);
+  nsIDeviceContext  *px = mViewManager->GetDeviceContext();
+  float             scale;
+  nscoord           dx = 0, dy = 0;
+  nsRect            bounds;
+
+  px->GetAppUnitsToDevUnits(scale);
 
   GetBounds(bounds);
 
@@ -621,6 +628,9 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
   {
     nscoord oy = mOffsetY;
     nscoord newpos;
+    float   p2t;
+
+    px->GetDevUnitsToAppUnits(p2t);
 
     //now, this horrible thing makes sure that as we scroll
     //the document a pixel at a time, we keep the logical position of
@@ -632,7 +642,7 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
     if ((newpos + bounds.height) > mSizeY)
       newpos = mSizeY - bounds.height;
 
-    mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(newpos, scale), px->GetPixelsToTwips());
+    mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(newpos, scale), p2t);
 
     dy = NSTwipsToIntPixels((oy - mOffsetY), scale);
 
@@ -683,6 +693,9 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
   {
     nscoord ox = mOffsetX;
     nscoord newpos;
+    float   p2t;
+
+    px->GetDevUnitsToAppUnits(p2t);
 
     //now, this horrible thing makes sure that as we scroll
     //the document a pixel at a time, we keep the logical position of
@@ -694,7 +707,7 @@ void nsScrollingView :: HandleScrollEvent(nsGUIEvent *aEvent, PRUint32 aEventFla
     if ((newpos + bounds.width) > mSizeX)
       newpos = mSizeX - bounds.width;
 
-    mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(newpos, scale), px->GetPixelsToTwips());
+    mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(newpos, scale), p2t);
 
     dx = NSTwipsToIntPixels((ox - mOffsetX), scale);
 
@@ -769,8 +782,6 @@ void nsScrollingView :: Notify(nsITimer * aTimer)
 
   event.message = NS_MOUSE_MOVE;
 
-  nsIPresContext  *cx   = mViewManager->GetPresContext();
-
   GetBounds(rect);
 
   event.point.x = rect.x;
@@ -778,9 +789,14 @@ void nsScrollingView :: Notify(nsITimer * aTimer)
 
   //printf("timer %d %d\n", event.point.x, event.point.y);
 
-  mFrame->HandleEvent(*cx, &event, retval);
+  nsIViewObserver *obs;
 
-  NS_RELEASE(cx);
+  if (NS_OK == mViewManager->GetViewObserver(obs))
+  {
+    obs->HandleEvent((nsIView *)this, &event, retval);
+    NS_RELEASE(obs);
+  }
+  
   NS_RELEASE(mScrollingTimer);
 
   if (NS_OK == NS_NewTimer(&mScrollingTimer))
@@ -878,7 +894,7 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
       {
         if (mScrollingTimer == nsnull)
         {
-          if (nsnull != mFrame)
+          if (nsnull != mClientData)
           {
             if (ly < 0 || ly > trect.y)
             {
@@ -920,22 +936,26 @@ nsEventStatus nsScrollingView :: HandleEvent(nsGUIEvent *aEvent, PRUint32 aEvent
       {
         nsEventStatus retval;
 
-        if (nsnull != mFrame)
+        if (nsnull != mClientData)
         {
-          nsIPresContext  *cx = mViewManager->GetPresContext();
-          nscoord         xoff, yoff;
+          nsIViewObserver *obs;
 
-          GetScrollOffset(&xoff, &yoff);
+          if (NS_OK == mViewManager->GetViewObserver(obs))
+          {
+            nscoord xoff, yoff;
 
-          aEvent->point.x += xoff;
-          aEvent->point.y += yoff;
+            GetScrollOffset(&xoff, &yoff);
 
-          mFrame->HandleEvent(*cx, aEvent, retval);
+            aEvent->point.x += xoff;
+            aEvent->point.y += yoff;
 
-          aEvent->point.x -= xoff;
-          aEvent->point.y -= yoff;
+            obs->HandleEvent((nsIView *)this, aEvent, retval);
 
-          NS_RELEASE(cx);
+            aEvent->point.x -= xoff;
+            aEvent->point.y -= yoff;
+
+            NS_RELEASE(obs);
+          }
         }
       }
       break;
@@ -956,14 +976,16 @@ void nsScrollingView :: ComputeContainerSize()
 
   if (nsnull != scrollview)
   {
-    nscoord         dx = 0, dy = 0;
-    nsIPresContext  *px = mViewManager->GetPresContext();
-    nscoord         hwidth, hheight;
-    nscoord         vwidth, vheight;
-    PRUint32        oldsizey = mSizeY, oldsizex = mSizeX;
-    nsRect          area(0, 0, 0, 0);
-    nscoord         offx, offy;
-    float           scale = px->GetTwipsToPixels();
+    nscoord           dx = 0, dy = 0;
+    nsIDeviceContext  *px = mViewManager->GetDeviceContext();
+    nscoord           hwidth, hheight;
+    nscoord           vwidth, vheight;
+    PRUint32          oldsizey = mSizeY, oldsizex = mSizeX;
+    nsRect            area(0, 0, 0, 0);
+    nscoord           offx, offy;
+    float             scale;
+
+    px->GetAppUnitsToDevUnits(scale);
 
     ComputeScrollArea(scrollview, area, 0, 0);
 
@@ -1007,8 +1029,11 @@ void nsScrollingView :: ComputeContainerSize()
           //now update the scroller position for the new size
 
           PRUint32  oldpos = scrollv->GetPosition();
+          float     p2t;
 
-          mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeY) / oldsizey), scale), px->GetPixelsToTwips());
+          px->GetDevUnitsToAppUnits(p2t);
+
+          mOffsetY = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeY) / oldsizey), scale), p2t);
 
           dy = NSTwipsToIntPixels((offy - mOffsetY), scale);
 
@@ -1059,8 +1084,11 @@ void nsScrollingView :: ComputeContainerSize()
           //now update the scroller position for the new size
 
           PRUint32  oldpos = scrollh->GetPosition();
+          float     p2t;
 
-          mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeX) / oldsizex), scale), px->GetPixelsToTwips());
+          px->GetDevUnitsToAppUnits(p2t);
+
+          mOffsetX = NSIntPixelsToTwips(NSTwipsToIntPixels(nscoord(((float)oldpos * mSizeX) / oldsizex), scale), p2t);
 
           dx = NSTwipsToIntPixels((offx - mOffsetX), scale);
 
@@ -1207,10 +1235,14 @@ nsScrollPreference nsScrollingView :: GetScrollPreference(void)
 NS_IMETHODIMP
 nsScrollingView :: ScrollTo(nscoord aX, nscoord aY, PRUint32 aUpdateFlags)
 {
-  nsIPresContext  *px = mViewManager->GetPresContext();
-  float           t2p = px->GetTwipsToPixels();
-  float           p2t = px->GetPixelsToTwips();
-  NS_RELEASE(px);
+  nsIDeviceContext  *dx = mViewManager->GetDeviceContext();
+  float             t2p;
+  float             p2t;
+
+  dx->GetAppUnitsToDevUnits(t2p);
+  dx->GetDevUnitsToAppUnits(p2t);
+
+  NS_RELEASE(dx);
 
   nsIWidget*      win;
   win = mVScrollBarView->GetWidget();

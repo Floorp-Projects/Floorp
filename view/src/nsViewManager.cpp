@@ -95,6 +95,9 @@ nsViewManager :: ~nsViewManager()
     
     mDrawingSurface = nsnull;
   }
+
+  mObserver = nsnull;
+  mContext = nsnull;
 }
 
 NS_IMPL_QUERY_INTERFACE(nsViewManager, knsViewManagerIID)
@@ -123,18 +126,19 @@ nsrefcnt nsViewManager::Release(void)
 
 // We don't hold a reference to the presentation context because it
 // holds a reference to us.
-nsresult nsViewManager::Init(nsIPresContext* aPresContext)
+nsresult nsViewManager :: Init(nsIDeviceContext* aContext)
 {
   nsresult rv;
 
-  NS_PRECONDITION(nsnull != aPresContext, "null ptr");
-  if (nsnull == aPresContext) {
+  NS_PRECONDITION(nsnull != aContext, "null ptr");
+
+  if (nsnull == aContext) {
     return NS_ERROR_NULL_POINTER;
   }
   if (nsnull != mContext) {
     return NS_ERROR_ALREADY_INITIALIZED;
   }
-  mContext = aPresContext;
+  mContext = aContext;
 
   mDSBounds.Empty();
   mDrawingSurface = nsnull;
@@ -217,19 +221,14 @@ void nsViewManager :: GetWindowDimensions(nscoord *width, nscoord *height)
 
 void nsViewManager :: SetWindowDimensions(nscoord width, nscoord height)
 {
-  nsIPresShell* presShell = mContext->GetShell();
-
   // Resize the root view
   if (nsnull != mRootView)
     mRootView->SetDimensions(width, height);
 
 //printf("new dims: %4.2f %4.2f...\n", width / 20.0f, height / 20.0f);
   // Inform the presentation shell that we've been resized
-  if (nsnull != presShell)
-  {
-    presShell->ResizeReflow(width, height);
-    NS_RELEASE(presShell);
-  }
+  if (nsnull != mObserver)
+    mObserver->ResizeReflow(mRootView, width, height);
 }
 
 void nsViewManager :: GetWindowOffsets(nscoord *xoffset, nscoord *yoffset)
@@ -313,7 +312,7 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
     localcx->SelectOffScreenDrawingSurface(ds);
   }
 
-  scale = mContext->GetTwipsToPixels();
+  mContext->GetAppUnitsToDevUnits(scale);
 
   GetWindowOffsets(&xoff, &yoff);
 
@@ -322,10 +321,13 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsI
   localcx->SetClipRegion(*region, nsClipCombine_kReplace);
   region->Offset(NSTwipsToIntPixels(xoff, scale), NSTwipsToIntPixels(yoff, scale));
 
-  nsRect trect;
+  nsRect  trect;
+  float   p2t;
+
+  mContext->GetDevUnitsToAppUnits(p2t);
 
   region->GetBoundingBox(&trect.x, &trect.y, &trect.width, &trect.height);
-  trect.ScaleRoundOut(mContext->GetPixelsToTwips());
+  trect.ScaleRoundOut(p2t);
 
   aView->Paint(*localcx, trect, 0);
 
@@ -436,9 +438,12 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, nsR
 
   if ((nsnull != mDirtyRegion) && !mDirtyRegion->IsEmpty())
   {
-    nsRect pixrect = trect;
+    nsRect  pixrect = trect;
+    float   t2p;
 
-    pixrect.ScaleRoundIn(mContext->GetTwipsToPixels());
+    mContext->GetAppUnitsToDevUnits(t2p);
+
+    pixrect.ScaleRoundIn(t2p);
     mDirtyRegion->Subtract(pixrect.x, pixrect.y, pixrect.width, pixrect.height);
   }
 
@@ -554,7 +559,9 @@ void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 a
         rrect = mDirtyRect;
 #else
         mDirtyRegion->GetBoundingBox(&rrect.x, &rrect.y, &rrect.width, &rrect.height);
-        rrect.ScaleRoundOut(mContext->GetPixelsToTwips());
+        float   p2t;
+        mContext->GetDevUnitsToAppUnits(p2t);
+        rrect.ScaleRoundOut(p2t);
 #endif
         rrect.IntersectRect(rrect, vrect);
 
@@ -611,8 +618,10 @@ nsEventStatus nsViewManager :: DispatchEvent(nsGUIEvent *aEvent)
         if (view == mRootView)
         {
           // Convert from pixels to twips
-          float p2t = mContext->GetPixelsToTwips();
+          float             p2t;
           nsIScrollableView *scrollView;
+
+          mContext->GetDevUnitsToAppUnits(p2t);
 
           //XXX hey look, a hack! :) i'm not proud of it, but it does
           //work. the purpose is to prevent resizes of the view if the
@@ -622,7 +631,9 @@ nsEventStatus nsViewManager :: DispatchEvent(nsGUIEvent *aEvent)
           if (NS_OK == mRootView->QueryInterface(kIScrollableViewIID, (void **)&scrollView))
           {
             nscoord sizex, sizey;
-            float t2p = mContext->GetTwipsToPixels();
+            float   t2p;
+
+            mContext->GetAppUnitsToDevUnits(t2p);
 
             scrollView->GetClipSize(&sizex, &sizey);
 
@@ -647,9 +658,10 @@ nsEventStatus nsViewManager :: DispatchEvent(nsGUIEvent *aEvent)
       nsIView*      view = nsView::GetViewFor(aEvent->widget);
       if (nsnull != view) {
 
-        float             convert = mContext->GetPixelsToTwips();
+        float             convert;
         nsRect            trect = *((nsPaintEvent*)aEvent)->rect;
-        nsIDeviceContext  *dx = mContext->GetDeviceContext();
+
+        mContext->GetDevUnitsToAppUnits(convert);
 
         trect *= convert;
 
@@ -659,8 +671,6 @@ nsEventStatus nsViewManager :: DispatchEvent(nsGUIEvent *aEvent)
                    NS_VMREFRESH_SCREEN_RECT |
                    NS_VMREFRESH_IMMEDIATE |
                    NS_VMREFRESH_AUTO_DOUBLE_BUFFER);
-
-        NS_RELEASE(dx);
 
         result = nsEventStatus_eConsumeNoDefault;
       }
@@ -685,25 +695,25 @@ nsEventStatus nsViewManager :: DispatchEvent(nsGUIEvent *aEvent)
         view = nsView::GetViewFor(aEvent->widget);
       }
 
-      if (nsnull != view) {
-        nsIViewManager *vm = view->GetViewManager();
-        nsIPresContext  *cx = vm->GetPresContext();
+      if (nsnull != view)
+      {
+        float p2t, t2p;
 
         // pass on to view somewhere else to deal with
 
-        aEvent->point.x = NSIntPixelsToTwips(aEvent->point.x, cx->GetPixelsToTwips());
-        aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, cx->GetPixelsToTwips());
+        mContext->GetDevUnitsToAppUnits(p2t);
+        mContext->GetAppUnitsToDevUnits(t2p);
+
+        aEvent->point.x = NSIntPixelsToTwips(aEvent->point.x, p2t);
+        aEvent->point.y = NSIntPixelsToTwips(aEvent->point.y, p2t);
 
         
         result = view->HandleEvent(aEvent, NS_VIEW_FLAG_CHECK_CHILDREN | 
                                            NS_VIEW_FLAG_CHECK_PARENT |
                                            NS_VIEW_FLAG_CHECK_SIBLINGS);
 
-        aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, cx->GetTwipsToPixels());
-        aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, cx->GetTwipsToPixels());
-
-        NS_RELEASE(cx);
-        NS_RELEASE(vm);
+        aEvent->point.x = NSTwipsToIntPixels(aEvent->point.x, t2p);
+        aEvent->point.y = NSTwipsToIntPixels(aEvent->point.y, t2p);
       }
       break;
     }
@@ -1011,7 +1021,25 @@ void nsViewManager :: SetViewOpacity(nsIView *aView, float aOpacity)
   aView->SetOpacity(aOpacity);
 }
 
-nsIPresContext * nsViewManager :: GetPresContext()
+NS_IMETHODIMP nsViewManager :: SetViewObserver(nsIViewObserver *aObserver)
+{
+  mObserver = aObserver;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsViewManager :: GetViewObserver(nsIViewObserver *&aObserver)
+{
+  if (nsnull != mObserver)
+  {
+    aObserver = mObserver;
+    NS_ADDREF(mObserver);
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_NO_INTERFACE;
+}
+
+nsIDeviceContext * nsViewManager :: GetDeviceContext()
 {
   NS_IF_ADDREF(mContext);
   return mContext;
@@ -1086,7 +1114,6 @@ nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
   nsIView             *par = &aView;
   nsIWidget           *win;
   nsIRenderingContext *cx = nsnull;
-  nsIDeviceContext    *dx;
   nscoord             x, y, ax = 0, ay = 0;
 
   do
@@ -1114,13 +1141,11 @@ nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)
 
   if (nsnull != win)
   {
-    dx = mContext->GetDeviceContext();
-    dx->CreateRenderingContext(&aView, cx);
+    mContext->CreateRenderingContext(&aView, cx);
 
     if (nsnull != cx)
       cx->Translate(ax, ay);
 
-    NS_RELEASE(dx);
     NS_RELEASE(win);
   }
 
@@ -1146,8 +1171,11 @@ void nsViewManager :: AddRectToDirtyRegion(nsRect &aRect)
   }
 
   nsRect  trect = aRect;
+  float   t2p;
 
-  trect.ScaleRoundOut(mContext->GetTwipsToPixels());
+  mContext->GetAppUnitsToDevUnits(t2p);
+
+  trect.ScaleRoundOut(t2p);
   mDirtyRegion->Union(trect.x, trect.y, trect.width, trect.height);
 }
 
