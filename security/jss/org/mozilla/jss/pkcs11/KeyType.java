@@ -189,6 +189,24 @@ final class KeyType {
                             EncryptionAlgorithm.DES3_CBC,
                             EncryptionAlgorithm.DES3_CBC_PAD
                             },
+                            "DESede"
+                        );
+
+    //////////////////////////////////////////////////////////////
+    static public final KeyType
+    AES       = new KeyType(new Algorithm[]
+                            {
+                            KeyWrapAlgorithm.AES_ECB,
+                            KeyWrapAlgorithm.AES_CBC,
+                            KeyWrapAlgorithm.AES_CBC_PAD,
+                            EncryptionAlgorithm.AES_128_ECB,
+                            EncryptionAlgorithm.AES_128_CBC,
+                            EncryptionAlgorithm.AES_192_ECB,
+                            EncryptionAlgorithm.AES_192_CBC,
+                            EncryptionAlgorithm.AES_256_ECB,
+                            EncryptionAlgorithm.AES_256_CBC,
+                            EncryptionAlgorithm.AES_CBC_PAD,
+                            },
                             "DES"
                         );
 
