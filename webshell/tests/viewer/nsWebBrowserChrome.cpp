@@ -176,8 +176,10 @@ NS_IMETHODIMP nsWebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
 
 NS_IMETHODIMP nsWebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-   NS_ERROR("Haven't Implemented this yet");
-   return NS_ERROR_FAILURE;
+   mBrowserWindow->mWindow->Resize(aCX, aCY, PR_FALSE);
+   mBrowserWindow->Layout(aCX, aCY);
+
+   return NS_OK;
 }
 
 NS_IMETHODIMP nsWebBrowserChrome::ShowAsModal()
@@ -398,9 +400,13 @@ NS_IMETHODIMP nsWebBrowserChrome::OnLocationChange(nsIURI* aURI)
    if(aURI)
       aURI->GetSpec(getter_Copies(spec));
 
-   PRUint32 size;
-   nsAutoString tmp(spec);
-   mBrowserWindow->mLocation->SetText(tmp,size);
+   if(mBrowserWindow->mLocation)
+      {
+      PRUint32 size;
+      nsAutoString tmp(spec);
+
+      mBrowserWindow->mLocation->SetText(tmp,size);
+      }
 
    return NS_OK;
 }
