@@ -319,24 +319,4 @@
         </menupopup>
     </menu>
 
-
-   <!-- Browser Context Charset Menu -->
-
-   <menu id="browserContextCharsetMenu" label="&charsetMenu.label;" accesskey="&charsetMenu.accesskey;" datasources="rdf:charset-menu" ref="NC:BrowserCharsetMenuRoot">
-       <template>
-           <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-               <menupopup>
-               <menuseparator uri="..." />
-               </menupopup>
-           </rule>
-           <rule>
-               <menupopup>
-               <menuitem type="radio" name="charsetGroup" checked="rdf:http://home.netscape.com/NC-rdf#Checked" uri="..." label="rdf:http://home.netscape.com/NC-rdf#Name"/>
-               </menupopup>
-           </rule>
-       </template>
-       <menupopup>
-         <menuitem name="charsetCustomize" accesskey="&charsetCustomize.accesskey;" label="&charsetCustomize.label;" oncommand="window.openDialog('chrome://communicator/content/pref/pref-charset.xul','PrefWindow', 'chrome,modal=yes,resizable=yes', 'browser')"/>
-       </menupopup>
-   </menu>
 </overlay>      
