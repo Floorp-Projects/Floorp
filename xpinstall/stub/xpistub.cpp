@@ -58,6 +58,7 @@
 #endif
 
 #ifdef XP_UNIX
+#include <unistd.h>
 #define COMPONENT_REG "component.reg"
 #endif
 
