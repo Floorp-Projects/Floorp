@@ -4393,8 +4393,10 @@ NS_IMETHODIMP nsImapMailFolder::GetCurMoveCopyMessageFlags(nsIImapUrl *runningUr
       if (label != 0)
         *aResult |= label << 25;
     }
-    else if (mFlags & MSG_FOLDER_FLAG_DRAFTS) // if the message is being added to the drafts folder, don't add the seen flag (Bug #198087)
-      *aResult = 0;
+    // if the message is being added to the Sent or Templates folders,
+    // add the seen flag so the message gets marked read
+    else if (mFlags & (MSG_FOLDER_FLAG_SENTMAIL | MSG_FOLDER_FLAG_TEMPLATES))
+      *aResult = MSG_FLAG_READ;
   }
   return NS_OK;
 }

@@ -5076,15 +5076,13 @@ void nsImapProtocol::OnAppendMsgFromFile()
     char *mailboxName =  OnCreateServerSourceFolderPathString();
     if (mailboxName)
     {
-      imapMessageFlagsType flagsToSet = kImapMsgSeenFlag;
-      // we assume msg is read, for appending to sent/drafts folder, because
-      // in that case, we don't have a msg hdr (and we want the msg to be read)
-      PRUint32 msgFlags = MSG_FLAG_READ;
+      imapMessageFlagsType flagsToSet = 0;
+      PRUint32 msgFlags = 0;
       if (m_imapMessageSink)
         m_imapMessageSink->GetCurMoveCopyMessageFlags(m_runningUrl, &msgFlags);
       
-      if (!(msgFlags & MSG_FLAG_READ))
-        flagsToSet &= ~kImapMsgSeenFlag;
+      if (msgFlags & MSG_FLAG_READ)
+        flagsToSet |= kImapMsgSeenFlag;
       if (msgFlags & MSG_FLAG_MDN_REPORT_SENT)
         flagsToSet |= kImapMsgMDNSentFlag;
       // convert msg flag label (0xE000000) to imap flag label (0x0E00)
