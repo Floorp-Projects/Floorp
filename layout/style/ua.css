@@ -325,6 +325,7 @@ HR {
 }
 BR {
   display: inline;
+  vertical-align: bottom;
   color: cyan;
 }
 IMG {
