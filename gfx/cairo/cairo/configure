@@ -24686,3 +24686,16 @@ echo "  freetype: $use_freetype"
 echo "  atsui: $use_atsui"
 echo ""
 
+if test x"$use_freetype" != "xyes" && \
+   test x"$use_atsui"    != "xyes" ; then
+
+   { { echo "$as_me:$LINENO: error: Cairo requires at least one font backend.
+                  Please install freetype and fontconfig, then try again:
+                  http://freetype.org/  http://fontconfig.org/
+                " >&5
+echo "$as_me: error: Cairo requires at least one font backend.
+                  Please install freetype and fontconfig, then try again:
+                  http://freetype.org/  http://fontconfig.org/
+                " >&2;}
+   { (exit 1); exit 1; }; }
+fi

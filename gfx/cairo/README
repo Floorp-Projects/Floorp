@@ -15,4 +15,6 @@ PATCHES:
     tend to blend towards opaque the more that is drawn.  Short term
     inefficient workaround of clearing the buffer on each set.
 
+  font-backend.diff - upstream patch to configure.in to make sure
+    that a font backend is available.
 
