@@ -54,6 +54,7 @@ install::
 	$(MAKE_INSTALL) pref.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-wallet.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 	$(MAKE_INSTALL) pref-mousewheel.dtd  $(DIST)\bin\chrome\communicator\locale\pref
+	$(MAKE_INSTALL) pref-winhooks.dtd  $(DIST)\bin\chrome\communicator\locale\pref
 
 clobber::
   rm -f $(DIST)\bin\chrome\communicator\locale\pref\*.*
