@@ -35,23 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
-#include "nsPluginDefs.idl"
-
 /**
  * nsIPluginStreamInfo
  *
@@ -62,18 +45,27 @@
  * http://mozilla.org/projects/plugins/
  */
 
-[scriptable, uuid(c3062ffa-2df9-11d4-8cf4-0060b0fc14a3)]
+#include "nsISupports.idl"
+#include "nspluginroot.idl"
+
+%{C++
+#include "nsplugindefs.h"
+%}
+
+[uuid(ed7d4ca0-b005-11d2-adaa-00805f6dec49)]
 interface nsIPluginStreamInfo : nsISupports
 {
-    readonly attribute string contentType;
+  readonly attribute nsMIMEType contentType;
 
-    boolean isSeekable();
+  void isSeekable(out boolean aSeekable);
 
     readonly attribute unsigned long length;
 
     readonly attribute unsigned long lastModified;
 
-    readonly attribute wstring URL;
+  void getURL(out constCharPtr aURL);
 
-    [noscript] void requestRead(in nsByteRangePtr rangeList);
+  void requestRead(in nsByteRangePtr aRangeList);
+
+  attribute long streamOffset;
 };

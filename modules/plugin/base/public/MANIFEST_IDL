@@ -19,6 +19,30 @@
 #
 # This is a list of local files which get copied to the mozilla:dist:??? directory
 #
-nsIPluginManager.idl
-nsIPluginViewer.idl
 
+nspluginroot.idl
+nsIPluginStreamInfo.idl
+nsIPluginManager.idl
+nsIPluginManager2.idl
+nsIPluginInstancePeer.idl
+nsIPluginInstancePeer2.idl
+nsIPluginInstanceOwner.idl
+nsIPlugin.idl
+nsIHTTPHeaderListener.idl
+nsIFileUtilities.idl
+nsIEventHandler.idl
+nsICookieStorage.idl
+nsIClassicPluginFactory.idl
+nsIWindowlessPlugInstPeer.idl
+nsIScriptablePlugin.idl
+nsIPluginTagInfo.idl
+nsIPluginTagInfo2.idl
+nsIPluginViewer.idl
+nsIJRILiveConnectPIPeer.idl
+nsIJRILiveConnectPlugin.idl
+nsIPluginInputStream.idl
+nsIPluginStreamListener.idl
+nsIPluginInstance.idl
+nsPIPluginHost.idl
+nsPIPluginInstancePeer.idl
+nsIPluginHost.idl

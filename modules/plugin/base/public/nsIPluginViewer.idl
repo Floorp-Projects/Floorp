@@ -47,8 +47,6 @@
 interface nsIPluginViewer : nsISupports
 {
 %{C++
-
-
     /**
      * Creates a new plugin viewer, based on a nsIRequest.
      */

@@ -35,23 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
-#include "nsPluginDefs.idl"
-
 /**
  * nsIPluginInstancePeer
  *
@@ -62,8 +45,15 @@
  * http://mozilla.org/projects/plugins/
  */
 
-////////////////////////////////////////////////////////////////////////////////
-// Plugin Instance Peer Interface
+#include "nsISupports.idl"
+#include "nspluginroot.idl"
+
+%{C++
+#include "nsplugindefs.h"
+struct JSObject;
+%}
+
+interface nsIOutputStream;
 
 /**
  * The nsIPluginInstancePeer interface is the set of operations implemented
@@ -74,21 +64,28 @@
  * Other interfaces may be obtained from nsIPluginInstancePeer by calling
  * QueryInterface, e.g. nsIPluginTagInfo.
  */
-[scriptable, uuid(f7d64b8a-2df3-11d4-8cf4-0060b0fc14a3)]
+[uuid(4b7cea20-019b-11d2-815b-006008119d7a)]
 interface nsIPluginInstancePeer : nsISupports
 {
     /**
+   * Returns the value of a variable associated with the plugin manager.
+   *
+   * (Corresponds to NPN_GetValue.)
+   *
+   * @param aVariable - the plugin manager variable to get
+   * @param aValue    - the address of where to store the resulting value
+   * @result          - NS_OK if this operation was successful
+   */
+  void getValue(in nsPluginInstancePeerVariable aVariable, in voidPtr aValue);
+  /**
      * Returns the MIME type of the plugin instance. 
      *
      * (Corresponds to NPP_New's MIMEType argument.)
      *
-     * @result - resulting MIME type
+   * @param aMIMEType - resulting MIME type
+   * @result          - NS_OK if this operation was successful
      */
-    readonly attribute string MIMEType;
-
-    // plugin modes:
-    const unsigned long MODE_EMBEDDED   = 1;
-    const unsigned long MODE_FULL       = 2;
+  readonly attribute nsMIMEType MIMEType;
 
     /**
      * Returns the mode of the plugin instance, i.e. whether the plugin is
@@ -96,9 +93,10 @@ interface nsIPluginInstancePeer : nsISupports
      *
      * (Corresponds to NPP_New's mode argument.)
      *
-     * @result - the resulting mode
+   * @param result - the resulting mode
+   * @result       - NS_OK if this operation was successful
      */
-    readonly attribute unsigned long mode;
+  readonly attribute nsPluginMode mode;
 
     /**
      * This operation is called by the plugin instance when it wishes to send
@@ -108,12 +106,12 @@ interface nsIPluginInstancePeer : nsISupports
      *
      * (Corresponds to NPN_NewStream.)
      *
-     * @param type - type MIME type of the stream to create
-     * @param target - the target window name to receive the data
-     * @result - the resulting output stream
+   * @param aType   - MIME type of the stream to create
+   * @param aTarget - the target window name to receive the data
+   * @param aResult - the resulting output stream
+   * @result        - NS_OK if this operation was successful
      */
-    nsIOutputStream newStream(in string mimeType,
-                              in wstring targetWindow);
+  void newStream(in nsMIMEType aType, in string aTarget, out nsIOutputStream aResult);
 
     /**
      * This operation causes status information to be displayed on the window
@@ -121,16 +119,17 @@ interface nsIPluginInstancePeer : nsISupports
      *
      * (Corresponds to NPN_Status.)
      *
-     * @param message - the status message to display
+   * @param aMessage - the status message to display
+   * @result         - NS_OK if this operation was successful
      */
-    void showStatus(in wstring message);
+  void showStatus(in string aMessage);
 
     /**
      * Set the desired size of the window in which the plugin instance lives.
      *
-     * @param width - new window width
-     * @param height - new window height
+   * @param aWidth  - new window width
+   * @param aHeight - new window height
+   * @result        - NS_OK if this operation was successful
      */
-    void setWindowSize(in unsigned long width,
-                       in unsigned long height);
+  void setWindowSize(in unsigned long aWidth, in unsigned long aHeight);
 };

@@ -36,8 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /**
- * Interface for exposing scriptable plugin methods to JavaScript via
- * XPConnect.
+ * Interface for exposing scriptable plugin methods to JavaScript via XPConnect.
  */
 
 #include "nsISupports.idl"
@@ -47,8 +46,7 @@ interface nsIScriptablePlugin : nsISupports
 {
     /**
      * The object to be wrapped and exposed to JavaScript.  It should
-     * be an XPCOM object, and it can be the same object as the
-     * plugin.
+   * be an XPCOM object, and it can be the same object as the plugin.
      */
     readonly attribute nsQIResult scriptablePeer;
 

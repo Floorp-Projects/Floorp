@@ -45,6 +45,7 @@
 #include "nsIContentViewerEdit.h"
 #include "nsIWebBrowserPrint.h"
 #include "nsIWidget.h"
+#include "nsIPluginManager.h"
 #include "nsIPluginViewer.h"
 
 class nsIStreamListener;

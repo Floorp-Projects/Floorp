@@ -29,56 +29,44 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= plugin
 
 EXPORTS		= \
-		nsIEventHandler.h \
-		nsIFileUtilities.h \
-		nsIJRILiveConnectPlugin.h \
-		nsIJRILiveConnectPlugInstPeer.h \
-		nsILiveConnectPlugin.h \
-		nsILiveConnectPlugInstPeer.h \
-		nsIMalloc.h \
-		nsIPlugin.h \
-		nsIPluginInstance.h \
-		nsIPluginInstancePeer.h \
-		nsIPluginInstancePeer2.h \
-		nsIPluginManager2.h \
-		nsIPluginStream.h \
-		nsIPluginTagInfo.h \
-		nsIPluginTagInfo2.h \
-		nsIWindowlessPlugInstPeer.h \
-		nsIPluginInputStream.h \
-		nsIPluginStreamListener.h \
-		nsIPluginStreamListener2.h \
-		nsIPluginStreamInfo.h \
 		nsplugin.h \
 		nsplugindefs.h \
-		nsICookieStorage.h \
-		nsPIPluginHost.h \
 		nsPluginLogging.h \
 		nsPluginError.h \
 		nsDefaultPlugin.h \
-		nsPIPluginInstancePeer.h \
 		nsPluginNativeWindow.h \
-    $(NULL)
-
-# 4.x headers moved from mozilla/include
-EXPORTS		+= \
+		nsPluginsCID.h \
 		npapi.h \
 		npupp.h \
 		$(NULL)
 
-# DEPRECATED -- remove before we ship 5.0
-EXPORTS		+= \
-		nsIPluginStream.h \
-		nsIPluginStreamPeer.h \
-		nsIPluginStreamPeer2.h \
-		nsISeekablePluginStreamPeer.h \
-		$(NULL)
-
 XPIDLSRCS 	= \
-		nsIScriptablePlugin.idl \
-		nsIHTTPHeaderListener.idl     \
+		nspluginroot.idl \
+		nsIPluginStreamInfo.idl \
 		nsIPluginManager.idl \
+		nsIPluginManager2.idl \
+		nsIPluginInstancePeer.idl \
+		nsIPluginInstancePeer2.idl \
+		nsIPluginInstanceOwner.idl \
+		nsIPlugin.idl \
+		nsIHTTPHeaderListener.idl \
+		nsIFileUtilities.idl \
+		nsIEventHandler.idl \
+		nsICookieStorage.idl \
+		nsIClassicPluginFactory.idl \
+		nsIWindowlessPlugInstPeer.idl \
+		nsIScriptablePlugin.idl \
+		nsIPluginTagInfo.idl \
+		nsIPluginTagInfo2.idl \
 		nsIPluginViewer.idl  \
+		nsIJRILiveConnectPIPeer.idl \
+		nsIJRILiveConnectPlugin.idl \
+		nsIPluginInputStream.idl \
+		nsIPluginStreamListener.idl \
+		nsIPluginInstance.idl \
+		nsPIPluginHost.idl \
+		nsPIPluginInstancePeer.idl \
+		nsIPluginHost.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

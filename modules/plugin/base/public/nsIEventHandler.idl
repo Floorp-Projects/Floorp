@@ -35,22 +35,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
+#include "nsISupports.idl"
+#include "nspluginroot.idl"
 
-#include "nsPluginDefs.idl"
+%{C++
+#include "nsplugindefs.h"
+%}
 
 [uuid(a447ddf0-1a99-11d2-815f-006008119d7a)]
 interface nsIEventHandler : nsISupports
@@ -68,8 +58,9 @@ interface nsIEventHandler : nsISupports
      *
      * (Corresponds to NPP_HandleEvent.)
      *
-     * @param event - the event to be handled
-     * @result - PR_TRUE if event was handled
+   * @param aEvent   - the event to be handled
+   * @param aHandled - set to PR_TRUE if event was handled
+   * @result         - NS_OK if this operation was successful
      */
-    boolean handleEvent(in nsPluginEventPtr event);
+  void handleEvent(in nsPluginEventPtr aEvent, out boolean aHandled);
 };

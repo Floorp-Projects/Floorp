@@ -46,7 +46,7 @@
 
 class NavigatorImpl;
 class nsIDocShell;
-struct nsIPluginHost;
+class nsIPluginHost;
 
 class PluginArrayImpl : public nsIDOMPluginArray,
                         public nsIDOMJSPluginArray

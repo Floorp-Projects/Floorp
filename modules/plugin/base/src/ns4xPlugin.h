@@ -38,7 +38,9 @@
 #ifndef ns4xPlugin_h__
 #define ns4xPlugin_h__
 
-#include "nsplugin.h"
+#include "nsIPlugin.h"
+#include "nsIPluginInstancePeer.h"
+#include "nsIWindowlessPlugInstPeer.h"
 #include "prlink.h"  // for PRLibrary
 #include "npupp.h"
 #include "nsPluginHostImpl.h"

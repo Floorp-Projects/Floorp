@@ -59,27 +59,24 @@
  *         the plugin (only 1)                        
  *  +----------------------+                                             
  *  | nsIPlugin or         |<- - - - - -NSGetFactory()
- *  | nsILiveConnectPlugin |                                             
  *  +----------------------+                                            
  *    |
  *    |                                                                  
- *    |              instances (many)             streams to receive URL data (many)
- *    |          +-------------------+                  +-----------------+         
- *    |          | nsIPluginInstance |+                 | nsIPluginStream |+        
- *    |          |                   ||                 |                 ||                 
- *    |          +-------------------+|                 +-----------------+|                 
- *    |            +------|-----------+                   +------|---------+                  
- *    |                   |                                      |
- *    | PLUGIN SIDE       |peer                                  |peer                
- *~~~~|~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~
- *    | BROWSER SIDE      |                                      |
- *    |                   v                                      v               
- *    |     +---------------------------------+    +----------------------------+
- *    |     | nsIPluginInstancePeer           |+   | nsIPluginStreamPeer        |+
- *    |     | nsIWindowlessPluginInstancePeer ||   | nsISeekablePluginStreamPeer||      
- *    |     | nsILiveConnectPluginInstancePeer||   | nsIPluginstreamPeer2       ||
- *    |     | nsIPluginTagInfo                ||   +----------------------------+|                                        
- *    |     | nsIPluginTagInfo2               ||     +---------------------------+ 
+ *    |              instances (many)
+ *    |          +-------------------+
+ *    |          | nsIPluginInstance |+
+ *    |          +-------------------+|
+ *    |            +------|-----------+
+ *    |                   |
+ *    | PLUGIN SIDE       |peer
+ *~~~~|~~~~~~~~~~~~~~~~~~~|~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+ *    | BROWSER SIDE      |
+ *    |                   v
+ *    |     +---------------------------------+
+ *    |     | nsIPluginInstancePeer           |+
+ *    |     | nsIWindowlessPluginInstancePeer ||
+ *    |     | nsIPluginTagInfo                ||
+ *    |     | nsIPluginTagInfo2               ||
  *    |     +---------------------------------+|                  
  *    |       +--------------------------------+                  
  *    |                                                
@@ -92,7 +89,6 @@
  *  | nsIPref             |                                        
  *  | nsICacheManager ... |                            
  *  +---------------------+                                        
- *
  */ 
 
 #ifndef nsplugins_h___
@@ -104,20 +100,6 @@
  * <B>Interfaces which must be implemented by a plugin</B>
  * These interfaces have NPP equivalents in pre-5.0 browsers (see npapi.h).
  */
-////////////////////////////////////////////////////////////////////////////////
-
-/**
- * NSGetFactory is the main entry point to the plugin's DLL. The plugin manager
- * finds this symbol and calls it to create the plugin class. Once the plugin 
- * object is returned to the plugin manager, instances on the page are created 
- * by calling nsIPlugin::CreateInstance.
- */
-// (Declared in nsComponentManager.h)
-//extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
-//                                           const nsCID &aClass,
-//                                           const char *aClassName,
-//                                           const char *aContractID,
-//                                           nsIFactory **aFactory);
 
 /**                                                               
  * A plugin object is used to create new plugin instances. It manages the
@@ -129,21 +111,6 @@
  * A plugin instance represents a particular activation of a plugin on a page.
  */
 #include "nsIPluginInstance.h"
-
-/**
- * A plugin stream listener ...
- */
-#include "nsIPluginStreamListener.h"
-
-/**
- * The nsILiveConnectPlugin interface provides additional operations that a 
- * plugin must implement if it is to be controlled by JavaScript through 
- * LiveConnect. 
- *
- * Note that this interface is part of a new JNI-based LiveConnect
- * implementation and superceeds that provided prior to Communicator 5.0.
- */
-//#include "nsILiveConnectPlugin.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /**
@@ -181,11 +148,6 @@
  */
 #include "nsIWindowlessPlugInstPeer.h"
 
-/**
- *
- */
-#include "nsIPluginInputStream.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 /**
  * <B>Interfaces implemented by the browser (new for 5.0):
@@ -207,22 +169,6 @@
  * To obtain: QueryInterface on nsIPluginManager
  */
 #include "nsIFileUtilities.h"
-
-/**
- * The nsILiveConnectPluginInstancePeer allows plugins to be manipulated
- * by JavaScript, providing basic scriptability.
- *
- * Note that this interface is part of a new JNI-based LiveConnect
- * implementation and superceeds that provided prior to Communicator 5.0.
- *
- * To obtain: QueryInterface on nsIPluginInstancePeer
- */
-//#include "nsILiveConnectPlugInstPeer.h"
-
-/**
- *
- */
-#include "nsIPluginInputStream.h"
 
 /**
  * The nsIPluginTagInfo2 interface provides additional html tag information

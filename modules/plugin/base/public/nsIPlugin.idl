@@ -35,24 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
-#include "nsPluginDefs.idl"
-#include "nsIFactory.idl"
-
 /**
  * nsIPlugin
  *
@@ -62,6 +44,13 @@
  * Developers are welcome to use NPAPI, please refer to:
  * http://mozilla.org/projects/plugins/
  */
+
+#include "nsIFactory.idl"
+#include "nspluginroot.idl"
+
+%{C++
+#include "nsplugindefs.h"
+%}
 
 %{C++
 // {ffc63200-cf09-11d2-a5a0-bc8f7ad21dfc}
@@ -89,7 +78,7 @@
  * (e.g. by going back in the window history) after previously being stopped
  * by the Stop method. 
  */
-[scriptable, uuid(0e2c3ce4-2de7-11d4-8cf4-0060b0fc14a3)]
+[uuid(df773070-0199-11d2-815b-006008119d7a)]
 interface nsIPlugin : nsIFactory
 {
     /**
@@ -98,13 +87,18 @@ interface nsIPlugin : nsIFactory
      * the specified MIME type.
      */
     void createPluginInstance(in nsISupports aOuter, 
-                              in nsIIDRef iid,
-                              in string pluginMIMEType,
-                              [retval, iid_is(iid)] out nsQIResult result);
+                            in nsIIDRef aIID,
+                            in string aPluginMIMEType,
+                            [retval, iid_is(aIID)] out nsQIResult aResult);
 
     /**
      * Initializes the plugin and will be called before any new instances are
-     * created.
+   * created. It is passed browserInterfaces on which QueryInterface
+   * may be used to obtain an nsIPluginManager, and other interfaces.
+   *
+   * @param browserInterfaces - an object that allows access to other browser
+   * interfaces via QueryInterface
+   * @result - NS_OK if this operation was successful
      */
     void initialize();
 
@@ -113,6 +107,8 @@ interface nsIPlugin : nsIFactory
      * the plugin is disabled by the user.
      *
      * (Corresponds to NPP_Shutdown.)
+   *
+   * @result - NS_OK if this operation was successful
      */
     void shutdown();
 
@@ -125,21 +121,20 @@ interface nsIPlugin : nsIFactory
      *
      * (Corresponds to NPP_GetMIMEDescription.)
      *
-     * @result - the resulting MIME description (freed with nsIAllocator::Free)
+   * @param aMIMEDescription - the resulting MIME description 
+   * @result                 - NS_OK if this operation was successful
      */
-    readonly attribute string MIMEDescription;
+  //readonly attribute string MIMEDescription;
+  void getMIMEDescription(out constCharPtr aMIMEDescription);
 
     /**
-     * Returns the name of the plugin.
+   * Returns the value of a variable associated with the plugin.
      *
-     * (Supersedes NPP_GetValue with NPPVpluginNameString.)
-     */
-    readonly attribute wstring name;
-
-    /**
-     * Returns the name of the plugin.
+   * (Corresponds to NPP_GetValue.)
      *
-     * (Supersedes NPP_GetValue with NPPVpluginDescriptionString.)
+   * @param aVariable - the plugin variable to get
+   * @param aValue    - the address of where to store the resulting value
+   * @result          - NS_OK if this operation was successful
      */
-    readonly attribute wstring description;
+   void getValue(in nsPluginVariable aVariable, in voidPtr aValue);
 };

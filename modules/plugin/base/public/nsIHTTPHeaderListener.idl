@@ -39,7 +39,6 @@
 #include "nsISupports.idl"
 
 /**
- 
  * The nsIHTTPHeaderListener interface allows plugin authors to
  * access HTTP Response headers after issuing an
  * nsIPluginManager::{GetURL,PostURL}() call. <P>
@@ -50,24 +49,14 @@
  * {GetURL,PostURL}()'s streamListener parameter.  The browser will then
  * QI thi streamListener to see if it implements
  * nsIHTTPHeaderListener.
-
  */
 
 [scriptable, uuid(8b246748-1dd2-11b2-9512-9dc84a95fc2f)]
 interface nsIHTTPHeaderListener : nsISupports
 {
-
   /**
-
    * Called for each HTTP Response header.
-
    * NOTE: You must copy the values of the params.  
-
    */
-
   void newResponseHeader(in string headerName, in string headerValue);
 };
-
-////////////////////////////////////////////////////////////////////////////////
-
-#endif /* nsIPluginStreamListener_h___ */

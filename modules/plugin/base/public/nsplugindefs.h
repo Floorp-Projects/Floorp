@@ -35,21 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This superscedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsplugin.h for an overview of how this fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
 #ifndef nsplugindefs_h___
 #define nsplugindefs_h___
 
@@ -384,10 +369,8 @@ enum nsPluginReason {
 
 // Classes that must be implemented by the plugin DLL:
 class nsIPlugin;                        // plugin class (MIME-type handler)
-class nsILiveConnectPlugin;             // subclass of nsIPlugin
 class nsIEventHandler;                  // event handler interface
 class nsIPluginInstance;                // plugin instance
-class nsIPluginStream;                  // stream to receive data from the browser
 
 // Classes that are implemented by the browser:
 class nsIPluginManager;                 // minimum browser requirements
@@ -395,10 +378,6 @@ class nsIFileUtilities;                 // file utilities (accessible from nsIPl
 class nsIPluginInstancePeer;            // parts of nsIPluginInstance implemented by the browser
 class nsIWindowlessPluginInstancePeer;  // subclass of nsIPluginInstancePeer for windowless plugins
 class nsIPluginTagInfo;                 // describes html tag (accessible from nsIPluginInstancePeer)
-class nsILiveConnectPluginInstancePeer; // subclass of nsIPluginInstancePeer
-class nsIPluginStreamPeer;              // parts of nsIPluginStream implemented by the browser
-class nsISeekablePluginStreamPeer;      // seekable subclass of nsIPluginStreamPeer
-
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef XP_MAC

@@ -90,9 +90,6 @@ endif
 endif
 
 EXPORTS		= \
-		nsPluginsCID.h \
-		nsIPluginHost.h \
-		nsIPluginInstanceOwner.h \
     nsPluginViewer.h \
 		$(NULL)
 

@@ -898,7 +898,6 @@ sub BuildClientDist()
     }
     
     #PLUGIN
-    InstallFromManifest(":mozilla:modules:plugin:base:src:MANIFEST",               "$distdirectory:plugin:");
     InstallFromManifest(":mozilla:modules:plugin:base:public:MANIFEST",            "$distdirectory:plugin:");
     InstallFromManifest(":mozilla:modules:plugin:base:public:MANIFEST_IDL",        "$distdirectory:idl:");
     InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",                       "$distdirectory:oji:");

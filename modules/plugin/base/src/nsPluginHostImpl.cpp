@@ -41,7 +41,6 @@
 
 #include "nscore.h"
 #include "nsPluginHostImpl.h"
-#include "nsPluginProxyImpl.h"
 #include <stdio.h>
 #include "prio.h"
 #include "prmem.h"
@@ -104,7 +103,6 @@
 #include "nsIPrincipal.h"
 
 #include "nsIServiceManager.h"
-#include "nsICookieStorage.h"
 #include "nsICookieService.h"
 #include "nsIDOMPlugin.h"
 #include "nsIDOMMimeType.h"
@@ -4435,8 +4433,7 @@ nsPluginHostImpl::GetPluginCount(PRUint32* aPluginCount)
 
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsPluginHostImpl::GetPlugins(PRUint32 aPluginCount, 
-                             nsIDOMPlugin* aPluginArray[])
+nsPluginHostImpl::GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin* aPluginArray[])
 {
   LoadPlugins();
   
@@ -6123,10 +6120,9 @@ nsPluginHostImpl::HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *aInsta
  */
 
 NS_IMETHODIMP 
-nsPluginHostImpl::SetIsScriptableInstance(nsCOMPtr<nsIPluginInstance> aPluginInstance, 
-                                        PRBool aScriptable)
+nsPluginHostImpl::SetIsScriptableInstance(nsIPluginInstance * aPluginInstance, PRBool aScriptable)
 {
-  nsActivePlugin * p = mActivePluginList.find(aPluginInstance.get());
+  nsActivePlugin * p = mActivePluginList.find(aPluginInstance);
   if(p == nsnull)
     return NS_ERROR_FAILURE;
 

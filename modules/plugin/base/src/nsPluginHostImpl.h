@@ -46,6 +46,11 @@
 #include "nsCRT.h"
 #include "nsCOMPtr.h"
 #include "prlink.h"
+
+#include "nsIPlugin.h"
+#include "nsIPluginTagInfo2.h"
+#include "nsIPluginInstancePeer2.h"
+
 #include "nsIFileUtilities.h"
 #include "nsICookieStorage.h"
 #include "nsPluginsDir.h"
@@ -355,7 +360,7 @@ public:
 
   // Methods from nsPIPluginHost
   NS_IMETHOD
-  SetIsScriptableInstance(nsCOMPtr<nsIPluginInstance> aPluginInstance, PRBool aScriptable);
+  SetIsScriptableInstance(nsIPluginInstance *aPluginInstance, PRBool aScriptable);
 
   NS_IMETHOD
   ParsePostBufferToFixHeaders(const char *inPostData, PRUint32 inPostDataLen, 

@@ -35,50 +35,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-////////////////////////////////////////////////////////////////////////////////
-/**
- * <B>INTERFACE TO NETSCAPE COMMUNICATOR PLUGINS (NEW C++ API).</B>
- *
- * <P>This supersedes the old plugin API (npapi.h, npupp.h), and 
- * eliminates the need for glue files: npunix.c, npwin.cpp and npmac.cpp that
- * get linked with the plugin. You will however need to link with the "backward
- * adapter" (badapter.cpp) in order to allow your plugin to run in pre-5.0
- * browsers. 
- *
- * <P>See nsPlugin.idl for an overview of how this interface fits with the 
- * overall plugin architecture.
- */
-////////////////////////////////////////////////////////////////////////////////
-
 #include "nsISupports.idl"
+#include "nspluginroot.idl"
 
 /**
  * nsICookieStorage
- *
- * Level of API support: <b>BETA</B>
- * Subject to final review before 6/1/00.
  */
-[scriptable, uuid(b0175bf6-2dd8-11d4-8cf4-0060b0fc14a3)]
+%{C++
+// {c8c05101-cfdb-11d2-bab8-b088e084e5bc}
+#define NS_COOKIESTORAGE_CID \
+{ 0xc8c05101, 0xcfdb, 0x11d2, { 0xba, 0xb8, 0xb0, 0x88, 0xe0, 0x84, 0xe5, 0xbc } }
+%}
+
+[uuid(c8c05100-cfdb-11d2-bab8-b088e084e5bc)]
 interface nsICookieStorage : nsISupports
 {
     /**
      * Retrieves a cookie from the browser's persistent cookie store.
-     * @param cookieURL        URL string to look up cookie with.
-     * @param cookieCount      on input, size of the cookie buffer, on output cookie's size.
-     * @param cookies          array of cookie strings
+	 * @param aCookieURL    - URL string to look up cookie with.
+	 * @param aCookieBuffer - buffer large enough to accomodate cookie data.
+	 * @param aCookieSize   - on input, size of the cookie buffer, on output cookie's size.
      */
-    void getCookie(in wstring cookieURL,
-                   out unsigned long cookieCount,
-                   [size_is(cookieCount)] out string cookies);
+  void getCookie(in string aCookieURL, in voidPtr aCookieBuffer, in PRUint32Ref aCookieSize);
 
     /**
      * Stores a cookie in the browser's persistent cookie store.
-     * @param cookieURL        URL string store cookie with.
-     * @param cookieCount      specifies  size of cookie data.
-     * @param cookieBuffer     array of cookie strings
+   * @param aCookieURL    - URL string store cookie with.
+   * @param aCookieBuffer - buffer containing cookie data.
+   * @param aCookieSize   - specifies  size of cookie data.
      */
-    void setCookie(in wstring cookieURL,
-                   in unsigned long cookieCount,
-                   [size_is(cookieCount)] in string cookies);
+  void setCookie(in string aCookieURL, in constVoidPtr aCookieBuffer, in unsigned long aCookieSize);
 };
-
