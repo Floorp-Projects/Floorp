@@ -134,6 +134,12 @@ nsresult nsMailboxUrl::QueryInterface(const nsIID &aIID, void** aInstancePtr)
 		NS_ADDREF_THIS();
 		return NS_OK;
 	}
+	if (aIID.Equals(nsIMsgUriUrl::GetIID()))
+	{
+		*aInstancePtr = (void *) ((nsIMsgUriUrl *) this);
+		NS_ADDREF_THIS();
+		return NS_OK;
+	}
 
 #if defined(NS_DEBUG)
     /*
@@ -293,6 +299,31 @@ nsresult nsMailboxUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
 			m_urlListeners->OnStartRunningUrl(this);
 		else
 			m_urlListeners->OnStopRunningUrl(this, aExitCode);
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsMailboxUrl::GetURI(char ** aURI)
+{
+	// function not implemented yet....
+	// when I get scott's function to take a path and a message id and turn it into
+	// a URI then we can add that code here.....
+
+	if (aURI)
+	{
+		const nsFileSpec * filePath = nsnull;
+		GetFilePath(&filePath);
+		if (filePath)
+		{
+			char * uri = nsnull;
+			nsFileSpec folder = *filePath;
+			nsBuildLocalMessageURI(folder, m_messageKey, &uri);
+			*aURI = uri;
+		}
+		else
+			*aURI = nsnull;
+
 	}
 
 	return NS_OK;

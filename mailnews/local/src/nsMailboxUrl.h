@@ -24,7 +24,7 @@
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 #include "nsFileSpec.h"
 
-class nsMailboxUrl : public nsIMailboxUrl, public nsINetlibURL
+class nsMailboxUrl : public nsIMailboxUrl, public nsINetlibURL, nsIMsgUriUrl
 {
 public:
     // from nsIURL:
@@ -85,8 +85,10 @@ public:
 	NS_IMETHOD RegisterListener (nsIUrlListener * aUrlListener);
 	NS_IMETHOD UnRegisterListener (nsIUrlListener * aUrlListener);
 
-    // nsMailboxUrl
+	// from nsIMsgUriUrl
+	NS_IMETHOD GetURI(char ** aURI); 
 
+    // nsMailboxUrl
     nsMailboxUrl(nsISupports* aContainer, nsIURLGroup* aGroup);
 
     NS_DECL_ISUPPORTS
