@@ -24,6 +24,7 @@
 #include "nsIStreamListener.h"
 #include "nsAgg.h"
 #include "nsCOMPtr.h"
+#include "nsWeakPtr.h"
 
 class nsISupportsArray;
 class nsLoadGroupEntry;
@@ -61,14 +62,14 @@ protected:
     PRUint32                    mDefaultLoadAttributes;
     nsISupportsArray*           mChannels;
     nsISupportsArray*           mSubGroups;
-    nsIStreamObserver*          mObserver;
+    nsWeakPtr                   mObserver;
     nsLoadGroup*                mParent;        // weak ref
     PRUint32                    mForegroundCount;
     PRBool                      mIsActive;
 
     nsCOMPtr<nsIChannel>        mDefaultLoadChannel;
 
-    nsCOMPtr<nsILoadGroupListenerFactory> mGroupListenerFactory;
+    nsWeakPtr                   mGroupListenerFactory;
 };
 
 #endif // nsLoadGroup_h__
