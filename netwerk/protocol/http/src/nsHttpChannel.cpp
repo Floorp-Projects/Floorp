@@ -1958,7 +1958,7 @@ nsHttpChannel::GenCredsAndSetEntry(nsIHttpAuthenticator *auth,
     rv = authCache->SetAuthEntry(host, port, directory, realm,
                                  saveCreds ? *result : nsnull,
                                  saveChallenge ? challenge : nsnull,
-                                 ident, ss);
+                                 ident, sessionState);
     return rv;
 }
 
