@@ -2206,11 +2206,12 @@ NavigatorImpl::GetPlugins(nsIDOMPluginArray** aPlugins)
 NS_IMETHODIMP
 NavigatorImpl::JavaEnabled(PRBool* aReturn)
 {
+  nsresult rv = NS_OK;
   *aReturn = PR_FALSE;
 
 #if defined(OJI)
   nsIJVMManager* manager = NULL;
-  nsresult rv = nsServiceManager::GetService(nsIJVMManager::GetCID(),
+  rv = nsServiceManager::GetService(nsIJVMManager::GetCID(),
                                              nsIJVMManager::GetIID(),
                                              (nsISupports **)&manager);
 
