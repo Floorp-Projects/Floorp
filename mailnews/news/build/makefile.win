@@ -81,9 +81,7 @@ LLIBS=												\
 			$(MSGLIBS)								\
 			$(DIST)\lib\xpcom32.lib					\
 			$(DIST)\lib\raptorbase.lib				\
-			$(DIST)\lib\xplib.lib       			\
 			$(DIST)\lib\plc3.lib					\
-			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\msgcoreutil.lib				\
 			$(DIST)\lib\nntp.lib					\
 			$(DIST)\lib\netlib.lib					\
