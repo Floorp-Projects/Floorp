@@ -24,14 +24,31 @@
 #include "nsCRT.h"
 #include "nsISizeOfHandler.h"
 #include "nsString.h"
+#include "prbit.h"
 
-// These get allocated a lot; it used to be 4.  See bug 67618
-static const PRInt32 kGrowArrayBy = 8;
+/**
+ * Grow the array by at least this many elements at a time.
+ */
+static const PRInt32 kMinGrowArrayBy = 8;
+
+/**
+ * This is the threshold (in bytes) of the mImpl struct, past which
+ * we'll force the array to grow geometrically
+ */
 static const PRInt32 kLinearThreshold = 24 * sizeof(void *);
-static const PRInt32 kGrowthFactor = 1;
 
-// because we use this all over
-#define SIZEOF_IMPL(n) (sizeof(Impl) + sizeof(void *) * ((n) - 1))
+/**
+ * Compute the number of bytes requires for the mImpl struct that will
+ * hold |n| elements.
+ */
+#define SIZEOF_IMPL(n_) (sizeof(Impl) + sizeof(void *) * ((n_) - 1))
+
+
+/**
+ * Compute the number of elements that an mImpl struct of |n| bytes
+ * will hold.
+ */
+#define CAPACITYOF_IMPL(n_) ((((n_) - sizeof(Impl)) / sizeof(void *)) + 1)
 
 #if DEBUG_VOIDARRAY
 #define MAXVOID 10
@@ -214,47 +231,28 @@ PRBool nsVoidArray::SizeTo(PRInt32 aSize)
 
 PRBool nsVoidArray::GrowArrayBy(PRInt32 aGrowBy)
 {
-  // We have to grow the array. Grow by kGrowArrayBy slots if we're smaller
-  // than kLinearThreshold bytes, or a power of two if we're larger.
-  // This is much more efficient with most memory allocators, especially
-  // if it's very large, or of the allocator is binned.
-  if (aGrowBy < kGrowArrayBy)
-    aGrowBy = kGrowArrayBy;
+  // We have to grow the array. Grow by kMinGrowArrayBy slots if we're
+  // smaller than kLinearThreshold bytes, or a power of two if we're
+  // larger.  This is much more efficient with most memory allocators,
+  // especially if it's very large, or of the allocator is binned.
+  if (aGrowBy < kMinGrowArrayBy)
+    aGrowBy = kMinGrowArrayBy;
 
-  PRUint32 newCount = Count() + aGrowBy;  // Minimum increase
-  PRUint32 newSize = SIZEOF_IMPL(newCount);
-  
+  PRUint32 newCapacity = GetArraySize() + aGrowBy;  // Minimum increase
+  PRUint32 newSize = SIZEOF_IMPL(newCapacity);
+
   if (newSize >= (PRUint32) kLinearThreshold)
   {
-    // newCount includes enough space for at least kGrowArrayBy new slots.
-    // Select the next power-of-two size in bytes above that.
-    // It's painful to find the biggest 1 bit.  We check for a
-    // power-of-two here, and then double if it is one.
-    PRUint32 oldSize = SIZEOF_IMPL(mImpl->mBits & kArraySizeMask);
-    
-    if ((oldSize & (oldSize-1)) == 0) // oldSize = 2^n for some n
-    {
-      newSize = oldSize << 1; // easy 2^(n+1)
-    }
-    else // count bits and stuff.
-    {
-      PRUint32 bits = 0;
-      while (newSize >>= 1)
-      {
-        bits++;
-      }
-      bits++; // bump to the next power of two;
-      newSize = 1 << bits;
-    }
-    // Make sure we have enough space -- the array can grow by a lot
-    while ((newSize - sizeof(Impl))/sizeof(mImpl->mArray[0]) + 1 < newCount)
-      newSize <<= 1;
+    // newCount includes enough space for at least kMinGrowArrayBy new
+    // slots. Select the next power-of-two size in bytes above or
+    // equal to that.
+    newSize = PR_BIT(PR_CeilingLog2(newSize));
 
-    // inverse of equation above.
-    newCount = (newSize - sizeof(Impl))/sizeof(mImpl->mArray[0]) + 1;
+    // Request an appropriate number of elements.
+    newCapacity = CAPACITYOF_IMPL(newSize);
   }
   // frees old mImpl IF this succeeds
-  if (!SizeTo(newCount))
+  if (!SizeTo(newCapacity))
     return PR_FALSE;
 
   return PR_TRUE;
