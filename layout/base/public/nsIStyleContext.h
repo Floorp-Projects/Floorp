@@ -213,6 +213,9 @@ public:
 
   // call if you change style data after creation
   virtual void    RecalcAutomaticData(nsIPresContext* aPresContext) = 0;
+
+  // debugging
+  virtual void  List(FILE* out, PRInt32 aIndent) = 0;
 };
 
 // this is private to nsStyleSet, don't call it
@@ -220,7 +223,6 @@ extern NS_LAYOUT nsresult
   NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
                      nsISupportsArray* aRules,
                      nsIPresContext* aPresContext,
-                     nsIContent* aContent,
                      nsIFrame* aParentFrame);
 
 #endif /* nsIStyleContext_h___ */
