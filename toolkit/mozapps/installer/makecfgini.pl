@@ -132,8 +132,13 @@ while($line = <fpInIt>)
     @colonSplit = split(/:/, $line);
     if($#colonSplit >= 0)
     {
-      $componentName    = $colonSplit[1];
-      chop($componentName);
+      $componentName = $colonSplit[1];
+      if (substr($componentName, -2, 2) eq "\r\n") {
+        $componentName = substr($componentName, 0, length($componentName) - 2) . "\n";
+      }
+      else {
+        chop($componentName);
+      }
 
       if($componentName =~ /\$UninstallFileZip\$/i)
       {
@@ -180,7 +185,12 @@ while($line = <fpInIt>)
     if($#colonSplit >= 0)
     {
       $componentName = $colonSplit[1];
-      chop($componentName);
+      if (substr($componentName, -2, 2) eq "\r\n") {
+        $componentName = substr($componentName, 0, length($componentName) - 2) . "\n";
+      }
+      else {
+        chop($componentName);
+      }
       $componentName      =~ s/\$UninstallFileZip\$/$fileUninstallZip/gi;
       $installSizeArchive = OutputInstallSizeArchive("$inXpiPath/$componentName");
     }
@@ -193,14 +203,15 @@ while($line = <fpInIt>)
     {
       $stageDir = "$inStagePath/$componentName";
       $stageDir =~ s/(.xpi|.zip)\b//i;
-	    system("find $stageDir -type f | wc -l > filecount.log");
+      if (substr($stageDir, -1, 1) eq "\n") {
+        chop($stageDir);
+      }
+      $fileCount = `find $stageDir -type f | wc -l`;
+      if (substr($fileCount, -1, 1) eq "\n") {
+        chop($fileCount);
+      }
   
-      open(fpFileCount, "filecount.log");
-      $cl = <fpFileCount>;
-	    $cl =~ s/\s//g;
-      close(fpFileCount);
-
-      $line =~ s/\$FileCount\$/$cl/i;
+      $line =~ s/\$FileCount\$/$fileCount/i;
 
       print fpOutIni $line;
     }
