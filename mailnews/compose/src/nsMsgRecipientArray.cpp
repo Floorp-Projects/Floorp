@@ -37,7 +37,7 @@ nsMsgRecipientArray::~nsMsgRecipientArray()
 }
 
 /* the following macro actually implement addref, release and query interface for our class. */
-NS_IMPL_ISUPPORTS(nsMsgRecipientArray, NS_GET_IID(nsMsgRecipientArray));
+NS_IMPL_ISUPPORTS1(nsMsgRecipientArray, nsIMsgRecipientArray)
 
 nsresult nsMsgRecipientArray::StringAt(PRInt32 idx, PRUnichar **_retval)
 {

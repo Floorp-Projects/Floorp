@@ -129,7 +129,7 @@ nsMsgLocalModule::~nsMsgLocalModule()
     Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsMsgLocalModule, NS_GET_IID(nsIModule))
+NS_IMPL_ISUPPORTS1(nsMsgLocalModule, nsIModule)
 
 // Perform our one-time intialization for this module
 nsresult nsMsgLocalModule::Initialize()

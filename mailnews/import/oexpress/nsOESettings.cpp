@@ -94,7 +94,7 @@ nsOESettings::~nsOESettings()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsOESettings, NS_GET_IID(nsIImportSettings));
+NS_IMPL_ISUPPORTS1(nsOESettings, nsIImportSettings)
 
 NS_IMETHODIMP nsOESettings::AutoLocate(PRUnichar **description, nsIFileSpec **location, PRBool *_retval)
 {

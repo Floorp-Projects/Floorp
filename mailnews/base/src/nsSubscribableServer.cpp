@@ -84,7 +84,7 @@ nsSubscribableServer::~nsSubscribableServer(void)
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to free tree");
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsSubscribableServer, NS_GET_IID(nsISubscribableServer));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSubscribableServer, nsISubscribableServer)
 
 NS_IMETHODIMP
 nsSubscribableServer::SetIncomingServer(nsIMsgIncomingServer *aServer)

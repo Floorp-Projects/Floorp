@@ -31,7 +31,7 @@
 
 
 
-NS_IMPL_ISUPPORTS(nsMessageView, NS_GET_IID(nsIMessageView))
+NS_IMPL_ISUPPORTS1(nsMessageView, nsIMessageView)
 
 nsMessageView::nsMessageView()
 {

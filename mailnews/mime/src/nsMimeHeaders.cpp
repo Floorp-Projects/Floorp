@@ -37,7 +37,7 @@ nsMimeHeaders::~nsMimeHeaders()
 		MimeHeaders_free(mHeaders);
 }
 
-NS_IMPL_ISUPPORTS(nsMimeHeaders, NS_GET_IID(nsIMimeHeaders))
+NS_IMPL_ISUPPORTS1(nsMimeHeaders, nsIMimeHeaders)
 
 nsresult nsMimeHeaders::Initialize(const char * aAllHeaders, PRInt32 allHeadersSize)
 {

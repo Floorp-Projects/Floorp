@@ -52,7 +52,7 @@ nsresult NS_NewMsgCompFields(const nsIID &aIID, void ** aInstancePtrResult)
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_THREADSAFE_ISUPPORTS(nsMsgCompFields, NS_GET_IID(nsIMsgCompFields));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgCompFields, nsIMsgCompFields)
 
 nsMsgCompFields::nsMsgCompFields()
 {

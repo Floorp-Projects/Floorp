@@ -404,7 +404,7 @@ NS_METHOD nsIImportMimeEncodeImpl::Create( nsISupports *aOuter, REFNSIID aIID, v
 }
 
 
-NS_IMPL_ISUPPORTS(nsIImportMimeEncodeImpl, NS_GET_IID(nsIImportMimeEncode));
+NS_IMPL_ISUPPORTS1(nsIImportMimeEncodeImpl, nsIImportMimeEncode)
 
 NS_METHOD nsIImportMimeEncodeImpl::EncodeFile(nsIFileSpec *inFile, nsIFileSpec *outFile, const char *fileName, const char *mimeType)
 {

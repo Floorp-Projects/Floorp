@@ -235,7 +235,7 @@ nsMsgHeaderParser::~nsMsgHeaderParser()
 	delete m_USAsciiToUtf8CharsetConverter;
 }
 
-NS_IMPL_ISUPPORTS(nsMsgHeaderParser, NS_GET_IID(nsIMsgHeaderParser));
+NS_IMPL_ISUPPORTS1(nsMsgHeaderParser, nsIMsgHeaderParser)
 
 MimeCharsetConverterClass *nsMsgHeaderParser::GetUSAsciiToUtf8CharsetConverter()
 {

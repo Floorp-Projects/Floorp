@@ -29,7 +29,7 @@
 #include "prmem.h"
 #include "plstr.h"
 
-NS_IMPL_ISUPPORTS(nsMimeConverter, NS_GET_IID(nsIMimeConverter));
+NS_IMPL_ISUPPORTS1(nsMimeConverter, nsIMimeConverter)
 
 /*
  * nsMimeConverter definitions....

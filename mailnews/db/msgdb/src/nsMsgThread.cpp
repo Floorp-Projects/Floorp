@@ -26,7 +26,7 @@
 #include "nsMsgDatabase.h"
 #include "nsCOMPtr.h"
 
-NS_IMPL_ISUPPORTS(nsMsgThread, NS_GET_IID(nsMsgThread))
+NS_IMPL_ISUPPORTS1(nsMsgThread, nsMsgThread)
 
 nsMsgThread::nsMsgThread()
 {
@@ -683,7 +683,7 @@ nsMsgThreadEnumerator::~nsMsgThreadEnumerator()
     NS_RELEASE(mThread);
 }
 
-NS_IMPL_ISUPPORTS(nsMsgThreadEnumerator, NS_GET_IID(nsISimpleEnumerator))
+NS_IMPL_ISUPPORTS1(nsMsgThreadEnumerator, nsISimpleEnumerator)
 
 
 PRInt32 nsMsgThreadEnumerator::MsgKeyFirstChildIndex(nsMsgKey inMsgKey)

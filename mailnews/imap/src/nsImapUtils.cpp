@@ -249,7 +249,7 @@ nsresult nsCreateImapBaseMessageURI(const char *baseURI, char **baseMessageURI)
 
 // nsImapMailboxSpec stuff
 
-NS_IMPL_ISUPPORTS(nsImapMailboxSpec, NS_GET_IID(nsIMailboxSpec));
+NS_IMPL_ISUPPORTS1(nsImapMailboxSpec, nsIMailboxSpec)
 
 nsImapMailboxSpec::nsImapMailboxSpec()
 {

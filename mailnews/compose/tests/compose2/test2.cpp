@@ -219,7 +219,7 @@ private:
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS(SendOperationListener, NS_GET_IID(nsIMsgSendListener));
+NS_IMPL_ISUPPORTS1(SendOperationListener, nsIMsgSendListener)
 
 SendOperationListener::SendOperationListener(void) 
 { 

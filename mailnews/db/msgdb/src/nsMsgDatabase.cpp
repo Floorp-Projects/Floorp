@@ -2095,7 +2095,7 @@ nsMsgDBEnumerator::~nsMsgDBEnumerator()
 	NS_IF_RELEASE(mResultHdr);
 }
 
-NS_IMPL_ISUPPORTS(nsMsgDBEnumerator, NS_GET_IID(nsISimpleEnumerator))
+NS_IMPL_ISUPPORTS1(nsMsgDBEnumerator, nsISimpleEnumerator)
 
 nsresult nsMsgDBEnumerator::GetRowCursor()
 {
@@ -2288,7 +2288,7 @@ nsMsgDBThreadEnumerator::~nsMsgDBThreadEnumerator()
     NS_RELEASE(mDB);
 }
 
-NS_IMPL_ISUPPORTS(nsMsgDBThreadEnumerator, NS_GET_IID(nsISimpleEnumerator))
+NS_IMPL_ISUPPORTS1(nsMsgDBThreadEnumerator, nsISimpleEnumerator)
 
 nsresult nsMsgDBThreadEnumerator::GetTableCursor(void)
 {

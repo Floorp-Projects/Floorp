@@ -52,7 +52,7 @@ void nsUrlListenerManager::ReleaseListeners()
 	}
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsUrlListenerManager, NS_GET_IID(nsIUrlListenerManager));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsUrlListenerManager, nsIUrlListenerManager)
 
 nsresult nsUrlListenerManager::RegisterListener(nsIUrlListener * aUrlListener)
 {

@@ -40,7 +40,7 @@ nsMsgFolderCacheElement::~nsMsgFolderCacheElement()
 }
 
 
-NS_IMPL_ISUPPORTS(nsMsgFolderCacheElement, GetIID());
+NS_IMPL_ISUPPORTS1(nsMsgFolderCacheElement, nsIMsgFolderCacheElement)
 
 NS_IMPL_GETTER_STR(nsMsgFolderCacheElement::GetKey, m_folderKey)
 NS_IMPL_SETTER_STR(nsMsgFolderCacheElement::SetKey, m_folderKey)

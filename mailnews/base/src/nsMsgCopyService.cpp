@@ -274,7 +274,7 @@ nsMsgCopyService::FindRequest(nsISupports* aSupport,
   return copyRequest;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsMsgCopyService, NS_GET_IID(nsIMsgCopyService))
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgCopyService, nsIMsgCopyService)
 
 NS_IMETHODIMP
 nsMsgCopyService::CopyMessages(nsIMsgFolder* srcFolder, /* UI src folder */

@@ -26,7 +26,7 @@
 
 #include "nsNNTPCategoryContainer.h"
 
-NS_IMPL_ISUPPORTS(nsNNTPCategoryContainer, NS_GET_IID(nsINNTPCategoryContainer));
+NS_IMPL_ISUPPORTS1(nsNNTPCategoryContainer, nsINNTPCategoryContainer)
 
 nsNNTPCategoryContainer::nsNNTPCategoryContainer()
 {

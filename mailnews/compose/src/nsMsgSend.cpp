@@ -161,7 +161,7 @@ nsresult NS_NewMsgSend(const nsIID &aIID, void ** aInstancePtrResult)
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgComposeAndSend, NS_GET_IID(nsIMsgSend));
+NS_IMPL_ISUPPORTS1(nsMsgComposeAndSend, nsIMsgSend)
 
 nsMsgComposeAndSend::nsMsgComposeAndSend() : 
     m_messageKey(0xffffffff)

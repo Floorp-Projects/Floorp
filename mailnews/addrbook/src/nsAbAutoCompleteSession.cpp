@@ -407,23 +407,21 @@ nsresult nsAbAutoCompleteSession::SearchPreviousResults(const PRUnichar *searchS
 
 	    for (i = 0, pos = 0; i < nbrOfItems; i ++, pos ++)
 	    {
-	        rv = array->QueryElementAt(pos, nsIAutoCompleteItem::GetIID(), getter_AddRefs(resultItem));
+	        rv = array->QueryElementAt(pos, NS_GET_IID(nsIAutoCompleteItem),
+                                       getter_AddRefs(resultItem));
 	        if (NS_FAILED(rv))
                 return NS_ERROR_FAILURE;
 	        
             rv = resultItem->GetParam(getter_AddRefs(item));
 	        if (NS_FAILED(rv) || !item)
                 return NS_ERROR_FAILURE;
-          
-	        rv = item->QueryInterface(nsAbAutoCompleteParam::GetIID(), (void **)&param);
-	        if (NS_FAILED(rv) || !param)
-                return NS_ERROR_FAILURE;
+
+            param = (nsAbAutoCompleteParam *)(void *)item;
             
 			MatchType matchType;
 			if (CheckEntry(searchStr, searchStrLen, param->mNickName, param->mUserName, param->mEmailAddress, &matchType))
         AddToResult(param->mNickName, param->mUserName, param->mEmailAddress, param->mNotes, param->mIsMailList, matchType, results);
 
-			NS_RELEASE(param);
 	    }
 	    return NS_OK;
     }
@@ -540,4 +538,4 @@ NS_IMETHODIMP nsAbAutoCompleteSession::SetDefaultDomain(const PRUnichar * aDefau
     return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsAbAutoCompleteParam, nsAbAutoCompleteParam::GetIID());
+NS_IMPL_ISUPPORTS1(nsAbAutoCompleteParam, nsISupports)

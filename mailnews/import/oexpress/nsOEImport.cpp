@@ -176,7 +176,7 @@ nsOEImport::~nsOEImport()
 
 
 
-NS_IMPL_ISUPPORTS(nsOEImport, NS_GET_IID(nsIImportModule));
+NS_IMPL_ISUPPORTS1(nsOEImport, nsIImportModule)
 
 
 NS_IMETHODIMP nsOEImport::GetName( PRUnichar **name)
@@ -320,7 +320,7 @@ ImportMailImpl::~ImportMailImpl()
 
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS(ImportMailImpl, NS_GET_IID(nsIImportMail));
+NS_IMPL_THREADSAFE_ISUPPORTS1(ImportMailImpl, nsIImportMail)
 
 NS_IMETHODIMP ImportMailImpl::GetDefaultLocation( nsIFileSpec **ppLoc, PRBool *found, PRBool *userVerify)
 {
@@ -539,7 +539,7 @@ ImportAddressImpl::~ImportAddressImpl()
 
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS(ImportAddressImpl, NS_GET_IID(nsIImportAddressBooks));
+NS_IMPL_THREADSAFE_ISUPPORTS1(ImportAddressImpl, nsIImportAddressBooks)
 
 	
 NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **description, PRBool *_retval)

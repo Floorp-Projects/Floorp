@@ -134,7 +134,7 @@ protected:
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
 };
 
-NS_IMPL_ISUPPORTS(nsPop3TestDriver, NS_GET_IID(nsIUrlListener))
+NS_IMPL_ISUPPORTS1(nsPop3TestDriver, nsIUrlListener)
 
 nsPop3TestDriver::nsPop3TestDriver(nsIEventQueue *queue)
 {

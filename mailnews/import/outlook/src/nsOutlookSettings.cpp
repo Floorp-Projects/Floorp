@@ -92,7 +92,7 @@ nsOutlookSettings::~nsOutlookSettings()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsOutlookSettings, NS_GET_IID(nsIImportSettings));
+NS_IMPL_ISUPPORTS1(nsOutlookSettings, nsIImportSettings)
 
 NS_IMETHODIMP nsOutlookSettings::AutoLocate(PRUnichar **description, nsIFileSpec **location, PRBool *_retval)
 {

@@ -30,7 +30,7 @@
 #include "nsIMimeConverter.h"
 #include "nsXPIDLString.h"
 
-NS_IMPL_ISUPPORTS(nsMsgHdr, NS_GET_IID(nsIMsgDBHdr))
+NS_IMPL_ISUPPORTS1(nsMsgHdr, nsIMsgDBHdr)
 
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 

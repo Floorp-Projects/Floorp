@@ -114,7 +114,7 @@ nsNNTPNewsgroupList::~nsNNTPNewsgroupList()
 	CleanUp();
 }
 
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupList, NS_GET_IID(nsINNTPNewsgroupList));
+NS_IMPL_ISUPPORTS1(nsNNTPNewsgroupList, nsINNTPNewsgroupList)
 
 
 nsresult

@@ -30,7 +30,7 @@
 #include "nsXPIDLString.h"
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsAddrBookSession, NS_GET_IID(nsIAddrBookSession));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsAddrBookSession, nsIAddrBookSession)
     
 nsAddrBookSession::nsAddrBookSession():
   mRefCnt(0)

@@ -26,7 +26,7 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsMsgPrompts.h"
 
-NS_IMPL_ISUPPORTS(nsMsgDeliveryListener, NS_GET_IID(nsIUrlListener))
+NS_IMPL_ISUPPORTS1(nsMsgDeliveryListener, nsIUrlListener)
 
 nsresult 
 nsMsgDeliveryListener::OnStartRunningUrl(nsIURI * aUrl)

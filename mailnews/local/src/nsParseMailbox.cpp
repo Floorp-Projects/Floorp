@@ -425,7 +425,7 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 
 }
 
-NS_IMPL_ISUPPORTS(nsParseMailMessageState, NS_GET_IID(nsIMsgParseMailMsgState));
+NS_IMPL_ISUPPORTS1(nsParseMailMessageState, nsIMsgParseMailMsgState)
 
 nsParseMailMessageState::nsParseMailMessageState()
 {

@@ -24,6 +24,7 @@
 #define _MIMEMOZ_H_
 
 #ifdef __cplusplus
+#include "nsIFileSpec.h"
 extern "C" {
 #endif /* __cplusplus */
 

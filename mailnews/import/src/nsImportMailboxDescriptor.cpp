@@ -44,7 +44,7 @@ NS_METHOD nsImportMailboxDescriptor::Create( nsISupports *aOuter, REFNSIID aIID,
   return rv;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsImportMailboxDescriptor, NS_GET_IID(nsIImportMailboxDescriptor));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsImportMailboxDescriptor, nsIImportMailboxDescriptor)
 
 nsImportMailboxDescriptor::nsImportMailboxDescriptor() 
 { 

@@ -603,7 +603,7 @@ nsMessageViewDataSource::createMessageNode(nsIMessage *message,
 //////////////////////////   nsMessageViewMessageEnumerator //////////////////
 
 
-NS_IMPL_ISUPPORTS(nsMessageViewMessageEnumerator, NS_GET_IID(nsISimpleEnumerator))
+NS_IMPL_ISUPPORTS1(nsMessageViewMessageEnumerator, nsISimpleEnumerator)
 
 nsMessageViewMessageEnumerator::nsMessageViewMessageEnumerator(nsISimpleEnumerator *srcEnumerator,
 															   PRUint32 showStatus)
@@ -719,7 +719,7 @@ nsresult nsMessageViewMessageEnumerator::MeetsCriteria(nsIMessage *message, PRBo
 //////////////////////////   nsMessageViewThreadEnumerator //////////////////
 
 
-NS_IMPL_ISUPPORTS(nsMessageViewThreadEnumerator, NS_GET_IID(nsISimpleEnumerator))
+NS_IMPL_ISUPPORTS1(nsMessageViewThreadEnumerator, nsISimpleEnumerator)
 
 nsMessageViewThreadEnumerator::nsMessageViewThreadEnumerator(nsISimpleEnumerator *threads,
 															 nsIMsgFolder *srcFolder)

@@ -39,7 +39,7 @@ nsNewsDownloadDialogArgs::~nsNewsDownloadDialogArgs()
 {
 }
 
-NS_IMPL_ISUPPORTS(nsNewsDownloadDialogArgs, NS_GET_IID(nsINewsDownloadDialogArgs));
+NS_IMPL_ISUPPORTS1(nsNewsDownloadDialogArgs, nsINewsDownloadDialogArgs)
 
 NS_IMETHODIMP nsNewsDownloadDialogArgs::GetGroupName(char * *aGroupName)
 {

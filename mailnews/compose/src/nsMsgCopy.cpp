@@ -157,7 +157,7 @@ CopyListener::SetMsgComposeAndSendObject(nsMsgComposeAndSend *obj)
 // to listen for message copy completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsMsgCopy, NS_GET_IID(nsIUrlListener))
+NS_IMPL_ISUPPORTS1(nsMsgCopy, nsIUrlListener)
 
 nsMsgCopy::nsMsgCopy()
 {

@@ -3447,7 +3447,7 @@ nsAddrDBEnumerator::~nsAddrDBEnumerator()
 		mRowCursor->CutStrongRef(mDB->GetEnv());
 }
 
-NS_IMPL_ISUPPORTS(nsAddrDBEnumerator, NS_GET_IID(nsIEnumerator))
+NS_IMPL_ISUPPORTS1(nsAddrDBEnumerator, nsIEnumerator)
 
 NS_IMETHODIMP nsAddrDBEnumerator::First(void)
 {
@@ -3575,7 +3575,7 @@ nsListAddressEnumerator::~nsListAddressEnumerator()
 		mListRow->CutStrongRef(mDB->GetEnv());
 }
 
-NS_IMPL_ISUPPORTS(nsListAddressEnumerator, NS_GET_IID(nsIEnumerator))
+NS_IMPL_ISUPPORTS1(nsListAddressEnumerator, nsIEnumerator)
 
 NS_IMETHODIMP nsListAddressEnumerator::First(void)
 {

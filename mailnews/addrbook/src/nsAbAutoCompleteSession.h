@@ -87,10 +87,14 @@ class nsAbAutoCompleteParam : public nsISupports
 {
 public:
 	NS_DECL_ISUPPORTS
-  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ABAUTOCOMPLETEPARAM_IID)
+    //  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ABAUTOCOMPLETEPARAM_IID)
 	
-	nsAbAutoCompleteParam(const PRUnichar* nickName, const PRUnichar* userName,const PRUnichar* emailAddress,
-    const PRUnichar* notes, PRBool isMailList, nsAbAutoCompleteSession::MatchType type)
+	nsAbAutoCompleteParam(const PRUnichar* nickName,
+                          const PRUnichar* userName,
+                          const PRUnichar* emailAddress,
+                          const PRUnichar* notes,
+                          PRBool isMailList,
+                          nsAbAutoCompleteSession::MatchType type)
 	{
 	  NS_INIT_REFCNT();
 		mNickName = nsCRT::strdup(nickName ? nickName : NS_STATIC_CAST(const PRUnichar*, NS_LITERAL_STRING("").get()));

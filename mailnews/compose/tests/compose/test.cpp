@@ -142,7 +142,7 @@ public:
   };  
 };
 
-NS_IMPL_ISUPPORTS(SendOperationListener, NS_GET_IID(nsIMsgSendListener));
+NS_IMPL_ISUPPORTS1(SendOperationListener, nsIMsgSendListener)
 ////////////////////////////////////////////////////////////////////////////////////
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller

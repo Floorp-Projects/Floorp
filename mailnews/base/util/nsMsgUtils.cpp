@@ -142,7 +142,7 @@ nsresult CreateStartupUrl(char *uri, nsIURI** aUrl)
 }
 
 
-NS_IMPL_ISUPPORTS(nsMessageFromMsgHdrEnumerator, NS_GET_IID(nsISimpleEnumerator))
+NS_IMPL_ISUPPORTS1(nsMessageFromMsgHdrEnumerator, nsISimpleEnumerator)
 
 nsMessageFromMsgHdrEnumerator::nsMessageFromMsgHdrEnumerator(nsISimpleEnumerator *srcEnumerator,
 															 nsIMsgFolder *folder)

@@ -56,7 +56,7 @@ const char* nsNNTPNewsgroupPost::m_headerName[HEADER_LAST+1]=
     "Message-ID: ",
 };
     
-NS_IMPL_ISUPPORTS(nsNNTPNewsgroupPost, NS_GET_IID(nsINNTPNewsgroupPost));
+NS_IMPL_ISUPPORTS1(nsNNTPNewsgroupPost, nsINNTPNewsgroupPost)
 
 nsNNTPNewsgroupPost::nsNNTPNewsgroupPost()
 {

@@ -43,7 +43,7 @@ static NS_DEFINE_CID(kAddressBookDBCID, NS_ADDRDATABASE_CID);
 static NS_DEFINE_CID(kMsgHeaderParserCID,		NS_MSGHEADERPARSER_CID); 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
-NS_IMPL_ISUPPORTS(nsAbAddressCollecter, NS_GET_IID(nsIAbAddressCollecter));
+NS_IMPL_ISUPPORTS1(nsAbAddressCollecter, nsIAbAddressCollecter)
 
 static const char *PREF_COLLECT_EMAIL_ADDRESS = "mail.collect_email_address";
 static const char *PREF_COLLECT_EMAIL_ADDRESS_ENABLE_SIZE_LIMIT = "mail.collect_email_address_enable_size_limit";

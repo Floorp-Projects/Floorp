@@ -28,7 +28,7 @@
 #include "nsMsgKeySet.h"
 #include "nsNNTPArticleList.h"
 
-NS_IMPL_ISUPPORTS(nsNNTPArticleList, GetIID())
+NS_IMPL_ISUPPORTS1(nsNNTPArticleList, nsINNTPArticleList)
 
 nsNNTPArticleList::nsNNTPArticleList()
 {

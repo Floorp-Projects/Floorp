@@ -130,7 +130,7 @@ public:
 };
 
 
-NS_IMPL_ISUPPORTS( SendListener, nsCOMTypeInfo<nsIMsgSendListener>::GetIID())
+NS_IMPL_ISUPPORTS1( SendListener, nsIMsgSendListener)
 
 nsresult SendListener::CreateSendListener( nsIMsgSendListener **ppListener)
 {

@@ -33,15 +33,13 @@
 #include "prmem.h"
 //#include <stdio.h>
 
-class nsNNTPCategoryContainer : public nsISupports {
+class nsNNTPCategoryContainer : public nsINNTPCategoryContainer {
  public: 
 	nsNNTPCategoryContainer();
 	virtual ~nsNNTPCategoryContainer();
 	 
 	NS_DECL_ISUPPORTS
-	NS_IMETHOD GetRootCategory(nsINNTPNewsgroup * *aRootCategory);
-	NS_IMETHOD SetRootCategory(nsINNTPNewsgroup * aRootCategory);
-    NS_IMETHOD Initialize(nsINNTPNewsgroup * aRootCategory);
+    NS_DECL_NSINNTPCATEGORYCONTAINER
     
 protected:
     nsINNTPNewsgroup * m_newsgroup;

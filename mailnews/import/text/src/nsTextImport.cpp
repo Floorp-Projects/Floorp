@@ -141,7 +141,7 @@ nsTextImport::~nsTextImport()
 
 
 
-NS_IMPL_ISUPPORTS(nsTextImport, NS_GET_IID(nsIImportModule));
+NS_IMPL_ISUPPORTS1(nsTextImport, nsIImportModule)
 
 
 NS_IMETHODIMP nsTextImport::GetName( PRUnichar **name)
@@ -263,7 +263,7 @@ ImportAddressImpl::~ImportAddressImpl()
 
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS(ImportAddressImpl, NS_GET_IID(nsIImportAddressBooks));
+NS_IMPL_THREADSAFE_ISUPPORTS1(ImportAddressImpl, nsIImportAddressBooks)
 
 	
 NS_IMETHODIMP ImportAddressImpl::GetAutoFind(PRUnichar **addrDescription, PRBool *_retval)

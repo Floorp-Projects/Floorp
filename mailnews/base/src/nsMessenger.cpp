@@ -255,7 +255,7 @@ nsMessenger::~nsMessenger()
 }
 
 
-NS_IMPL_ISUPPORTS(nsMessenger, NS_GET_IID(nsIMessenger))
+NS_IMPL_ISUPPORTS1(nsMessenger, nsIMessenger)
 
 NS_IMETHODIMP    
 nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
@@ -1344,7 +1344,7 @@ public:
   NS_IMETHOD OnStopSending(nsresult aStatus, const PRUnichar *aMsg, PRUint32 aTotalTried, PRUint32 aSuccessful);
 };
 
-NS_IMPL_ISUPPORTS(SendLaterListener, NS_GET_IID(nsIMsgSendLaterListener));
+NS_IMPL_ISUPPORTS1(SendLaterListener, nsIMsgSendLaterListener)
 
 SendLaterListener::SendLaterListener()
 {

@@ -87,7 +87,7 @@ nsMsgDraft::~nsMsgDraft()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgDraft, NS_GET_IID(nsIMsgDraft));
+NS_IMPL_ISUPPORTS1(nsMsgDraft, nsIMsgDraft)
 
 /* this function will be used by the factory to generate an Message Compose Fields Object....*/
 nsresult 

@@ -104,7 +104,7 @@ nsAddbookProtocolHandler::~nsAddbookProtocolHandler()
   mReportColumns = nsnull;
 }
 
-NS_IMPL_ISUPPORTS(nsAddbookProtocolHandler, NS_GET_IID(nsIProtocolHandler));
+NS_IMPL_ISUPPORTS1(nsAddbookProtocolHandler, nsIProtocolHandler)
 
 NS_METHOD
 nsAddbookProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

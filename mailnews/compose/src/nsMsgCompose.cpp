@@ -151,7 +151,7 @@ nsMsgCompose::~nsMsgCompose()
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
-NS_IMPL_ISUPPORTS(nsMsgCompose, NS_GET_IID(nsMsgCompose));
+NS_IMPL_ISUPPORTS1(nsMsgCompose, nsMsgCompose)
 
 //
 // Once we are here, convert the data which we know to be UTF-8 to UTF-16
@@ -1538,7 +1538,7 @@ QuotingOutputStreamListener::SetMimeHeaders(nsIMimeHeaders * headers)
 }
 
 
-NS_IMPL_ISUPPORTS(QuotingOutputStreamListener, NS_GET_IID(nsIStreamListener));
+NS_IMPL_ISUPPORTS1(QuotingOutputStreamListener, nsIStreamListener)
 ////////////////////////////////////////////////////////////////////////////////////
 // END OF QUOTING LISTENER
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1878,7 +1878,7 @@ nsMsgComposeSendListener::GetMessageId(nsCString* aMessageId)
 // is ready before we do various quoting operations
 ////////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_ISUPPORTS(nsMsgDocumentStateListener, NS_GET_IID(nsIDocumentStateListener));
+NS_IMPL_ISUPPORTS1(nsMsgDocumentStateListener, nsIDocumentStateListener)
 
 nsMsgDocumentStateListener::nsMsgDocumentStateListener(void)
 {

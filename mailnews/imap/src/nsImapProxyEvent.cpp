@@ -122,7 +122,7 @@ nsImapExtensionSinkProxy::~nsImapExtensionSinkProxy()
     NS_IF_RELEASE (m_realImapExtensionSink);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsImapExtensionSinkProxy, NS_GET_IID(nsIImapExtensionSink));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsImapExtensionSinkProxy, nsIImapExtensionSink);
 
 NS_IMETHODIMP
 nsImapExtensionSinkProxy::ClearFolderRights(nsIImapProtocol* aProtocol,
@@ -352,7 +352,7 @@ nsImapMiscellaneousSinkProxy::~nsImapMiscellaneousSinkProxy()
     NS_IF_RELEASE (m_realImapMiscellaneousSink);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsImapMiscellaneousSinkProxy, NS_GET_IID(nsIImapMiscellaneousSink));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsImapMiscellaneousSinkProxy, nsIImapMiscellaneousSink)
 
 NS_IMETHODIMP
 nsImapMiscellaneousSinkProxy::GetArbitraryHeaders(nsIImapProtocol* aProtocol,

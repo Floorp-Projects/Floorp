@@ -91,7 +91,7 @@ nsMsgImapModule::~nsMsgImapModule()
     Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsMsgImapModule, NS_GET_IID(nsIModule))
+NS_IMPL_ISUPPORTS1(nsMsgImapModule, nsIModule)
 
 // Perform our one-time intialization for this module
 nsresult nsMsgImapModule::Initialize()

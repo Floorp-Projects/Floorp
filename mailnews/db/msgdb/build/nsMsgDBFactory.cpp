@@ -75,7 +75,7 @@ nsMsgDBModule::~nsMsgDBModule()
     Shutdown();
 }
 
-NS_IMPL_ISUPPORTS(nsMsgDBModule, NS_GET_IID(nsIModule))
+NS_IMPL_ISUPPORTS1(nsMsgDBModule, nsIModule)
 
 // Perform our one-time intialization for this module
 nsresult nsMsgDBModule::Initialize()

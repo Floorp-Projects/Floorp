@@ -184,7 +184,7 @@ nsresult nsAbRDFDataSource::Init()
 	return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsAbRDFDataSource, NS_GET_IID(nsIRDFDataSource));
+NS_IMPL_ISUPPORTS1(nsAbRDFDataSource, nsIRDFDataSource)
 
  // nsIRDFDataSource methods
 NS_IMETHODIMP nsAbRDFDataSource::GetURI(char* *uri)

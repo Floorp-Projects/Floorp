@@ -40,7 +40,7 @@ static const char LINEBREAK_START = '\015';
 
 nsNNTPHost * nsNNTPHost::M_FileOwner = nsnull;
 
-NS_IMPL_ISUPPORTS(nsNNTPHost, GetIID())
+NS_IMPL_ISUPPORTS1(nsNNTPHost, nsINNTPHost)
 
 
 nsNNTPHost::nsNNTPHost()

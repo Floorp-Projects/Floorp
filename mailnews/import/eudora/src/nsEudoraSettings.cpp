@@ -65,7 +65,7 @@ nsEudoraSettings::~nsEudoraSettings()
 	NS_IF_RELEASE( m_pLocation);
 }
 
-NS_IMPL_ISUPPORTS(nsEudoraSettings, NS_GET_IID(nsIImportSettings));
+NS_IMPL_ISUPPORTS1(nsEudoraSettings, nsIImportSettings)
 
 NS_IMETHODIMP nsEudoraSettings::AutoLocate(PRUnichar **description, nsIFileSpec **location, PRBool *_retval)
 {

@@ -50,7 +50,7 @@ NS_METHOD nsImportFieldMap::Create( nsISupports *aOuter, REFNSIID aIID, void **a
   return rv;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsImportFieldMap, NS_GET_IID(nsIImportFieldMap));
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsImportFieldMap, nsIImportFieldMap)
 
 nsImportFieldMap::nsImportFieldMap() 
 { 
