@@ -89,6 +89,7 @@ function SetupControllerCommands()
   gComposerCommandManager.registerCommand("cmd_DeleteCellContents", nsDeleteTableCellContentsCommand);
   gComposerCommandManager.registerCommand("cmd_tableJoinCells",     nsJoinTableCellsCommand);
   gComposerCommandManager.registerCommand("cmd_tableSplitCell",     nsSplitTableCellCommand);
+  gComposerCommandManager.registerCommand("cmd_NormalizeTable",     nsNormalizeTableCommand);
 }
 
 //-----------------------------------------------------------------------------------
@@ -171,9 +172,12 @@ var nsOpenCommand =
     var fp = Components.classes["component://mozilla/filepicker"].createInstance(nsIFilePicker);
     fp.init(window, window.editorShell.GetString("OpenHTMLFile"), nsIFilePicker.modeOpen);
   
-    // While we include "All", include filters that prefer HTML and Text files
-    fp.appendFilters(nsIFilePicker.filterText | nsIFilePicker.filterHTML | nsIFilePicker.filterAll);
-  
+    // When loading into Composer, direct user to prefer HTML files and text files,
+    //   so we call separately to control the order of the filter list
+    fp.appendFilters(nsIFilePicker.filterHTML);
+    fp.appendFilters(nsIFilePicker.filterText);
+    fp.appendFilters(nsIFilePicker.filterAll);
+
     /* doesn't handle *.shtml files */
     try {
       fp.show();
@@ -822,7 +826,7 @@ var nsSelectTableCellCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    return  IsInTableCell();
+    return IsInTableCell();
   },
   doCommand: function(aCommand)
   {
@@ -986,7 +990,7 @@ var nsDeleteTableRowCommand =
   {
     if (this.isCommandEnabled(aCommand))
     {
-      window.editorShell.DeleteTableRow(1);   
+      window.editorShell.DeleteTableRow(1);
       window._content.focus();
     }
   }
@@ -1040,6 +1044,7 @@ var nsDeleteTableCellContentsCommand =
   }
 };
 
+
 //-----------------------------------------------------------------------------------
 var nsNormalizeTableCommand =
 {
@@ -1051,7 +1056,8 @@ var nsNormalizeTableCommand =
   {
     if (this.isCommandEnabled(aCommand))
     {
-      window.editorShell.NormalizeTable();
+      // Use nsnull to let editor find table enclosing current selection
+      window.editorShell.NormalizeTable(null);
       window._content.focus();
     }
   }
@@ -1084,7 +1090,6 @@ var nsJoinTableCellsCommand =
     if (this.isCommandEnabled(aCommand))
     {
       window.editorShell.JoinTableCells();
-dump(editorShell+" **** CAN WE ACCESS GLOBAL editorShell:???\n");
       window._content.focus();
     }
   }
