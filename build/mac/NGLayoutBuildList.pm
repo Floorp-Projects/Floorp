@@ -668,6 +668,8 @@ sub BuildLayoutProjects()
 	#// Build Layout projects
 	#//
 
+	BuildProject(":mozilla:expat:macbuild:expat.mcp",						"expat$D.o");
+
 	BuildOneProject(":mozilla:htmlparser:macbuild:htmlparser.mcp",				"htmlparser$D.shlb", "htmlparser.toc", 1, $main::ALIAS_SYM_FILES, 0);
 
 	BuildOneProject(":mozilla:dom:macbuild:dom.mcp",							"dom$D.shlb", "dom.toc", 1, $main::ALIAS_SYM_FILES, 0);
