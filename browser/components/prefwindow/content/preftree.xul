@@ -75,11 +75,6 @@
     </treeitem>
     <treeitem>
       <treerow>
-        <treecell url="chrome://browser/content/pref/pref-search.xul" label="&search.label;"/> 
-      </treerow>
-    </treeitem>
-    <treeitem>
-      <treerow>
         <treecell url="chrome://browser/content/pref/pref-download.xul" label="&download.label;"/>
       </treerow>
     </treeitem>
