@@ -153,17 +153,24 @@ NS_IMETHODIMP
 nsCodebasePrincipal::GetOrigin(char **origin) 
 {
     nsresult rv;
-    nsCAutoString s;
-    if (NS_SUCCEEDED(mURI->GetHost(s)))
-        rv = mURI->GetPrePath(s);
-    else {
+    nsCAutoString hostPort;
+    if (NS_SUCCEEDED(mURI->GetHostPort(hostPort)))
+    {
+        nsCAutoString scheme;
+        rv = mURI->GetScheme(scheme);
+        NS_ENSURE_SUCCESS(rv, rv);
+        *origin = ToNewCString(scheme + NS_LITERAL_CSTRING("://") + hostPort);
+    }        
+    else
+    {
         // Some URIs (e.g., nsSimpleURI) don't support host. Just
         // get the full spec.
-        rv = mURI->GetSpec(s);
+        nsCAutoString spec;
+        rv = mURI->GetSpec(spec);
+        NS_ENSURE_SUCCESS(rv, rv);
+        *origin = ToNewCString(spec);
     }
-    if (NS_FAILED(rv)) return rv;
 
-    *origin = ToNewCString(s);
     return *origin ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
