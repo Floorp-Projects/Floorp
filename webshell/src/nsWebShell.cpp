@@ -2200,6 +2200,12 @@ nsWebShell::OnStartURLLoad(nsIURL* aURL, const char* aContentType,
                            nsIContentViewer* aViewer)
 {
 
+  // XXX This is a temporary hack for meeting the M4 milestone
+  // for seamonkey.  I think Netlib should send a message to all stream listeners
+  // when it changes the URL like this.  That would mean adding a new method
+  // to nsIStreamListener.  Need to talk to Rick, Kipp, Gagan about this.
+  CheckForTrailingSlash(aURL);
+
   /*
    *Fire the OnStartDocumentLoad of the webshell observer
    */
@@ -2479,12 +2485,6 @@ NS_IMETHODIMP
 nsWebShell::OnStartBinding(nsIURL* aURL, const char *aContentType)
 {
   nsresult rv = NS_OK;
-
-  // XXX This is a temporary hack for meeting the M3 Dogfood milestone
-  // for seamonkey.  I think Netlib should send a message to all stream listeners
-  // when it changes the URL like this.  That would mean adding a new method
-  // to nsIStreamListener.  Need to talk to Rick, Kipp, Gagan about this.
-  CheckForTrailingSlash(aURL);
 
   if (nsnull != mObserver) {
     rv = mObserver->OnStartBinding(aURL, aContentType);
