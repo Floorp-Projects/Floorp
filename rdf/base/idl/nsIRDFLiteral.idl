@@ -41,7 +41,7 @@
 #include "nscore.h" // for PRUnichar
 %}
 
-[ptr] native octet_ptr(PRUint8);
+[ptr] native const_octet_ptr(const PRUint8);
 
 /**
  * A literal node in the graph, whose value is a string.
@@ -91,7 +91,7 @@ interface nsIRDFBlob : nsIRDFNode {
     /**
      * The binary data.
      */
-    [noscript] readonly attribute octet_ptr value;
+    [noscript] readonly attribute const_octet_ptr value;
 
     /**
      * The data's length.

@@ -389,7 +389,7 @@ public:
         PRUint8 *mBytes;
     };
 
-    BlobImpl(PRUint8 *aBytes, PRInt32 aLength)
+    BlobImpl(const PRUint8 *aBytes, PRInt32 aLength)
     {
         NS_INIT_REFCNT();
         mData.mLength = aLength;
@@ -424,7 +424,7 @@ BlobImpl::EqualsNode(nsIRDFNode *aNode, PRBool *aEquals)
         blob->GetLength(&length);
 
         if (length == mData.mLength) {
-            PRUint8 *bytes;
+            const PRUint8 *bytes;
             blob->GetValue(&bytes);
 
             if (0 == nsCRT::memcmp(bytes, mData.mBytes, length)) {
@@ -439,7 +439,7 @@ BlobImpl::EqualsNode(nsIRDFNode *aNode, PRBool *aEquals)
 }
 
 NS_IMETHODIMP
-BlobImpl::GetValue(PRUint8 **aResult)
+BlobImpl::GetValue(const PRUint8 **aResult)
 {
     *aResult = mData.mBytes;
     return NS_OK;
@@ -1253,10 +1253,10 @@ RDFServiceImpl::GetIntLiteral(PRInt32 aInt, nsIRDFInt** aResult)
 }
 
 NS_IMETHODIMP
-RDFServiceImpl::GetBlobLiteral(PRUint8 *aBytes, PRInt32 aLength,
+RDFServiceImpl::GetBlobLiteral(const PRUint8 *aBytes, PRInt32 aLength,
                                nsIRDFBlob **aResult)
 {
-    BlobImpl::Data key = { aLength, aBytes };
+    BlobImpl::Data key = { aLength, NS_CONST_CAST(PRUint8 *, aBytes) };
 
     PLDHashEntryHdr *hdr =
         PL_DHashTableOperate(&mBlobs, &key, PL_DHASH_LOOKUP);
