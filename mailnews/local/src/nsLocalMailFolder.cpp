@@ -311,6 +311,8 @@ nsFolderCompactState::OnStopRequest(nsIChannel *channel, nsISupports *ctxt,
   m_curIndex ++;
   if (m_curIndex >= m_size)
   {
+    msgHdr = nsnull;;
+    newMsgHdr = nsnull;
     // no more to copy finish it up
     FinishCompact();
     Release(); // kill self
