@@ -28,9 +28,9 @@
 #include "nsIPtr.h"
 #include "nsHTMLAtoms.h"
 #include "nsHTMLIIDs.h"
+#include "nsCOMPtr.h"
 
 NS_DEF_PTR(nsIContent);
-NS_DEF_PTR(nsIStyleContext);
 
 static NS_DEFINE_IID(kIHTMLTableColElementIID, NS_IHTMLTABLECOLELEMENT_IID);
 
@@ -88,8 +88,9 @@ nsTableColGroupFrame::InitNewFrames(nsIPresContext& aPresContext, nsIFrame* aChi
         NS_NewTableColFrame(colFrame);
 
         // Set its style context
-        nsIStyleContextPtr colStyleContext =
-          aPresContext.ResolveStyleContextFor(col, mStyleContext, PR_TRUE);
+        nsCOMPtr<nsIStyleContext> colStyleContext;
+        aPresContext.ResolveStyleContextFor(col, mStyleContext,
+                                            getter_AddRefs(colStyleContext), PR_TRUE);
         colFrame->Init(aPresContext, col, this, colStyleContext);
         colFrame->SetInitialChildList(aPresContext, nsnull, nsnull);
 
@@ -520,9 +521,9 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
         colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
         if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
         {
-          nsIStyleContextPtr colStyleContext;
+          nsCOMPtr<nsIStyleContext> colStyleContext;
           nsStylePosition * colPosition=nsnull;
-          colFrame->GetStyleContext(colStyleContext.AssignPtr());
+          colFrame->GetStyleContext(getter_AddRefs(colStyleContext));
           colPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
           if (colIndex<numCols)
           {
@@ -553,14 +554,14 @@ NS_METHOD nsTableColGroupFrame::SetStyleContextForFirstPass(nsIPresContext& aPre
           colFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)colDisplay));
           if (NS_STYLE_DISPLAY_TABLE_COLUMN == colDisplay->mDisplay)
           {
-            nsIStyleContextPtr colStyleContext;
+            nsCOMPtr<nsIStyleContext> colStyleContext;
             const nsStylePosition * colPosition=nsnull;
             colFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)colPosition); // get a read-only version of the style context
             //XXX: how do I know this is auto because it's defaulted, vs. set explicitly to "auto"?
             if (eStyleUnit_Auto==colPosition->mWidth.GetUnit())
             {
               // notice how we defer getting a mutable style context until we're sure we really need one
-              colFrame->GetStyleContext(colStyleContext.AssignPtr());
+              colFrame->GetStyleContext(getter_AddRefs(colStyleContext));
               nsStylePosition * mutableColPosition = (nsStylePosition*)colStyleContext->GetMutableStyleData(eStyleStruct_Position);
               mutableColPosition->mWidth = position->mWidth;
               colStyleContext->RecalcAutomaticData(&aPresContext);

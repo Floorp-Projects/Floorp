@@ -38,9 +38,6 @@
 // XXX TODO:
 // append/insert/remove floater testing
 
-// XXX get rid of this
-typedef nsCOMPtr<nsIStyleContext> nsIStyleContextPtr;
-
 #define INLINE_FRAME_CID \
  { 0xa6cf90e0, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
@@ -405,11 +402,11 @@ nsInlineFrame::CreateAnonymousBlock(nsIPresContext& aPresContext,
   nsIFrame* bf;
   nsresult rv = NS_NewAnonymousBlockFrame(bf);
   if (NS_SUCCEEDED(rv)) {
-    nsIStyleContextPtr newSC;
-    newSC = aPresContext.
-      ResolvePseudoStyleContextFor(mContent, 
-                                   nsHTMLAtoms::mozAnonymousBlock,
-                                   mStyleContext);
+    nsCOMPtr<nsIStyleContext> newSC;
+    aPresContext.ResolvePseudoStyleContextFor(mContent, 
+                                              nsHTMLAtoms::mozAnonymousBlock,
+                                              mStyleContext,
+                                              getter_AddRefs(newSC));
     rv = bf->Init(aPresContext, mContent, this, newSC);
     if (NS_FAILED(rv)) {
       bf->DeleteFrame(aPresContext);

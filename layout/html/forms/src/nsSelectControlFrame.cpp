@@ -742,11 +742,15 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
    * ie: NS_NewAtom(":FIRST-LINE");
    */
   nsIAtom * sbAtom = NS_NewAtom(":SCROLLBAR-LOOK");
-  nsIStyleContext* scrollbarStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
+  nsIStyleContext* scrollbarStyle;
+  aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext,
+                                            &scrollbarStyle);
   NS_RELEASE(sbAtom);
 
   sbAtom = NS_NewAtom(":SCROLLBAR-ARROW-LOOK");
-  nsIStyleContext* arrowStyle = aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext);
+  nsIStyleContext* arrowStyle;
+  aPresContext.ResolvePseudoStyleContextFor(mContent, sbAtom, mStyleContext,
+                                            &arrowStyle);
   NS_RELEASE(sbAtom);
 
 

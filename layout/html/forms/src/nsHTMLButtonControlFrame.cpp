@@ -547,8 +547,9 @@ nsHTMLButtonControlFrame::SetInitialChildList(nsIPresContext& aPresContext,
   mFrames.SetFrames(areaFrame);
 
   // Resolve style and initialize the frame
-  nsIStyleContext* styleContext =
-    aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::buttonContentPseudo, mStyleContext);
+  nsIStyleContext* styleContext;
+  aPresContext.ResolvePseudoStyleContextFor(mContent, nsHTMLAtoms::buttonContentPseudo,
+                                            mStyleContext, &styleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 

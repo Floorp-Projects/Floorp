@@ -128,9 +128,10 @@ nsFieldSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
   mFrames.SetFrames(mContentFrame);
 
   // Resolve style and initialize the frame
-  nsIStyleContext* styleContext = aPresContext.ResolvePseudoStyleContextFor(mContent, 
-                                                                            nsHTMLAtoms::fieldsetContentPseudo,
-                                                                            mStyleContext);
+  nsIStyleContext* styleContext;
+  aPresContext.ResolvePseudoStyleContextFor(mContent, 
+                                            nsHTMLAtoms::fieldsetContentPseudo,
+                                            mStyleContext, &styleContext);
   mFrames.FirstChild()->Init(aPresContext, mContent, this, styleContext);
   NS_RELEASE(styleContext);                                           
 

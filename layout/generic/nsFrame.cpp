@@ -449,11 +449,11 @@ NS_IMETHODIMP nsFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     mStyleContext->GetPseudoType(pseudoTag);
     nsIStyleContext*  newContext;
     if (nsnull != pseudoTag) {
-      newContext = 
-        aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoTag, aParentContext);
+        aPresContext->ResolvePseudoStyleContextFor(mContent, pseudoTag, aParentContext,
+                                                   &newContext);
     }
     else {
-      newContext = aPresContext->ResolveStyleContextFor(mContent, aParentContext);
+      aPresContext->ResolveStyleContextFor(mContent, aParentContext, &newContext);
     }
 
     NS_ASSERTION(nsnull != newContext, "failed to get new style context");
