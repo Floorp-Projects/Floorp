@@ -1229,7 +1229,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
     // Determine if we should run the purify test
   nsDocLoader* dl = nsnull;
   if (gDoPurify) {
-    dl = new nsDocLoader(wd->observer->mWebWidget, this, gDelay);
+    dl = new nsDocLoader(wd->observer, this, gDelay);
 
       // Add the documents to the loader
     for (PRInt32 i=0; i<gRepeatCount; i++)
@@ -1239,7 +1239,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
     dl->StartTimedLoading();
   }
   else if (gLoadTestFromFile) {
-    dl = new nsDocLoader(wd->observer->mWebWidget, this, gDelay);
+    dl = new nsDocLoader(wd->observer, this, gDelay);
     for (PRInt32 i=0; i<gRepeatCount; i++)
       AddTestDocsFromFile(dl, gInputFileName);
     dl->StartTimedLoading();
