@@ -69,6 +69,7 @@ LINCS= \
     -I$(XPDIST)\public\java	\
     -I$(XPDIST)\public\pref	\
     -I$(XPDIST)\public\js	\
+    -I$(XPDIST)\public\jtools   \
     -I$(XPDIST)\public\network 
 #!endif
 
