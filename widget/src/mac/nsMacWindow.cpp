@@ -1155,9 +1155,6 @@ NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
 {
   nsresult rv;
 
-  if (aMode == nsSizeMode_Minimized) // unlikely on the Mac
-    return NS_ERROR_UNEXPECTED;
-
   // resize during zoom may attempt to unzoom us. here's where we put a stop to that.
   if (mZooming)
     return NS_OK;
@@ -1179,18 +1176,22 @@ NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
     nsBaseWidget::GetSizeMode(&previousMode);
     rv = nsBaseWidget::SetSizeMode(aMode);
     if (NS_SUCCEEDED(rv)) {
-      if (aMode == nsSizeMode_Maximized) {
-        CalculateAndSetZoomedSize();
-        ::ZoomWindow(mWindowPtr, inZoomOut, ::FrontWindow() == mWindowPtr);
-      } else if (aMode == nsSizeMode_Normal) {
-        // Only zoom in if the previous state was Maximized
-        if (previousMode == nsSizeMode_Maximized)
-          ::ZoomWindow(mWindowPtr, inZoomIn, ::FrontWindow() == mWindowPtr);
-      }
+      if (aMode == nsSizeMode_Minimized) {
+        ::CollapseWindow(mWindowPtr, true);
+      } else {
+        if (aMode == nsSizeMode_Maximized) {
+          CalculateAndSetZoomedSize();
+          ::ZoomWindow(mWindowPtr, inZoomOut, ::FrontWindow() == mWindowPtr);
+        } else {
+          // Only zoom in if the previous state was Maximized
+          if (previousMode == nsSizeMode_Maximized)
+            ::ZoomWindow(mWindowPtr, inZoomIn, ::FrontWindow() == mWindowPtr);
+        }
 
-      Rect macRect;
-      ::GetWindowPortBounds(mWindowPtr, &macRect);
-      Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
+        Rect macRect;
+        ::GetWindowPortBounds(mWindowPtr, &macRect);
+        Resize(macRect.right - macRect.left, macRect.bottom - macRect.top, PR_FALSE);
+      }
     }
 
     mZooming = PR_FALSE;
