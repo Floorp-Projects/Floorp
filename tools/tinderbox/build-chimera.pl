@@ -273,8 +273,8 @@ sub main {
   # Control tests from here, sorry no config file yet.
   my $chimera_alive_test              = 1;
   my $chimera_test8_test              = 1;
-  my $chimera_startup_test            = 1;
   my $chimera_layout_performance_test = 1;
+  my $chimera_startup_test            = 1;
   my $chimera_window_leaks_test       = 1;
 
   my $chimera_clean_profile = 1;
@@ -452,7 +452,7 @@ sub main {
         TinderUtils::StartupPerformanceTest("ChimeraStartupPerformanceTest",
                                             "Navigator",
                                             "$chimera_dir/build/Navigator.app/Contents/MacOS",
-                                            "-url",
+                                            ["-url"],
                                             "file:$chimera_dir/../../../startup-test.html");      
   }
   
