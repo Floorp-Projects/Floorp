@@ -1623,7 +1623,8 @@ void nsImapServerResponseParser::flags()
         }
         break;
       case 'L':
-        if (fSupportsUserDefinedFlags & kImapMsgSupportUserFlag
+        if ((fSupportsUserDefinedFlags & (kImapMsgSupportUserFlag |
+          kImapMsgLabelFlags))
           && !PL_strncasecmp(fNextToken, "$Label", 6))
         {
           PRInt32 labelValue = fNextToken[6];
@@ -1729,6 +1730,8 @@ void nsImapServerResponseParser::text()
 
 void nsImapServerResponseParser::parse_folder_flags()
 {
+  PRUint16 labelFlags = 0;
+
   do 
   {
     fNextToken = GetNextToken();
@@ -1748,6 +1751,16 @@ void nsImapServerResponseParser::parse_folder_flags()
       fSettablePermanentFlags |= kImapMsgDeletedFlag;
     else if (!PL_strncasecmp(fNextToken, "\\Draft", 6))
       fSettablePermanentFlags |= kImapMsgDraftFlag;
+    else if (!PL_strncasecmp(fNextToken, "$Label1", 7))
+      labelFlags |= 1;
+    else if (!PL_strncasecmp(fNextToken, "$Label2", 7))
+      labelFlags |= 2;
+    else if (!PL_strncasecmp(fNextToken, "$Label3", 7))
+      labelFlags |= 4;
+    else if (!PL_strncasecmp(fNextToken, "$Label4", 7))
+      labelFlags |= 8;
+    else if (!PL_strncasecmp(fNextToken, "$Label5", 7))
+      labelFlags |= 16;
     else if (!PL_strncasecmp(fNextToken, "\\*", 2))
     {
       fSupportsUserDefinedFlags |= kImapMsgSupportUserFlag;
@@ -1756,6 +1769,9 @@ void nsImapServerResponseParser::parse_folder_flags()
       fSupportsUserDefinedFlags |= kImapMsgLabelFlags;
     }
   } while (!at_end_of_line() && ContinueParse());
+
+  if (labelFlags == 31)
+    fSupportsUserDefinedFlags |= kImapMsgLabelFlags;
 
   if (fFlagState)
     fFlagState->SetSupportedUserFlags(fSupportsUserDefinedFlags);

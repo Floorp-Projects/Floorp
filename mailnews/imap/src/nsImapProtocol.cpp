@@ -1363,7 +1363,10 @@ PRBool nsImapProtocol::ProcessCurrentURL()
       rv = m_imapServerSink->LoadNextQueuedUrl(&anotherUrlRun);
     else // if we don't do this, they'll just sit and spin until
           // we run some other url on this server.
+    {
+      Log("ProcessCurrentURL", nsnull, "aborting queued urls");
       rv = m_imapServerSink->AbortQueuedUrls();
+    }
   }
 
   // if we didn't run another url, release the server sink to
@@ -1601,7 +1604,7 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
   if (isBusy)
   {
     nsImapState curUrlImapState;
-    NS_ASSERTION(m_runningUrl,"isBusy, but no running url.");
+//    NS_ASSERTION(m_runningUrl,"isBusy, but no running url.");
     if (m_runningUrl)
     {
       m_runningUrl->GetRequiredImapState(&curUrlImapState);
@@ -3373,9 +3376,9 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
   else if (!new_spec)
     HandleMemoryFailure();
   
-    // Block until libmsg decides whether to download headers or not.
-    PRUint32 *msgIdList = nsnull;
-    PRUint32 msgCount = 0;
+  // Block until libmsg decides whether to download headers or not.
+  PRUint32 *msgIdList = nsnull;
+  PRUint32 msgCount = 0;
   
   if (!DeathSignalReceived())
   {
@@ -3393,6 +3396,9 @@ void nsImapProtocol::ProcessMailboxUpdate(PRBool handlePossibleUndo)
       // this might be bogus, how are we going to do pane notification and stuff when we fetch bodies without
       // headers!
   }
+  else if (new_spec) // need to exit this monitor if death signal received
+    PR_ExitMonitor(m_waitForBodyIdsMonitor);
+
   // wait for a list of bodies to fetch. 
   if (!DeathSignalReceived() && GetServerStateParser().LastCommandSuccessful())
   {
@@ -3636,6 +3642,7 @@ PRBool nsImapProtocol::CheckNewMail()
     {
       nsCAutoString urlSpec;
       mailnewsUrl->GetSpec(urlSpec);
+      nsUnescape(NS_CONST_CAST(char*, urlSpec.get()));
       PR_LOG(IMAP, PR_LOG_ALWAYS, ("%s:%s", logMsg, urlSpec.get()));
     }
   }
@@ -6809,7 +6816,8 @@ void nsImapProtocol::SetupMessageFlagsString(nsCString& flagString,
         userFlags & kImapMsgSupportMDNSentFlag))
         flagString.Append("$MDNSent "); // Not always available
     
-    if ((flags & kImapMsgLabelFlags) && (userFlags & kImapMsgSupportUserFlag))
+    if ((flags & kImapMsgLabelFlags) && (userFlags & (kImapMsgSupportUserFlag |
+      kImapMsgLabelFlags)))
     {
       // turn into a number from 1-5
       PRUint32 labelValue = (flags & kImapMsgLabelFlags) >> 9;
@@ -6860,7 +6868,7 @@ void nsImapProtocol::ProcessStoreFlags(const char * messageIdsString,
   // need to rip this label stuff out of here, and write a new method to
   // get and set labels, and we'll need a new way of communicating label
   // values back to the core mail/news code.
-  if (userFlags & kImapMsgSupportUserFlag)
+  if (userFlags & (kImapMsgSupportUserFlag | kImapMsgLabelFlags))
   {
     if ((flags & kImapMsgLabelFlags))
     {
@@ -6884,7 +6892,8 @@ void nsImapProtocol::ProcessStoreFlags(const char * messageIdsString,
     Store(messageIdsString, flagString.get(), idsAreUids);
 
     // looks like we're going to have to turn off any potential labels on these msgs.
-    if (addFlags && (userFlags & kImapMsgSupportUserFlag) && (flags & kImapMsgLabelFlags))
+    if (addFlags && (userFlags & (kImapMsgSupportUserFlag |
+      kImapMsgLabelFlags)) && (flags & kImapMsgLabelFlags))
     {
       flagString = "-Flags (";
       PRUint32 labelValue = (flags & kImapMsgLabelFlags) >> 9;
