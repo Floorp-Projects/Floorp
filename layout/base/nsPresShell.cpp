@@ -136,6 +136,7 @@
   // for |#ifdef DEBUG| code
 #include "nsSpaceManager.h"
 #include "prenv.h"
+#include "nsIAttribute.h"
 
 #ifdef MOZ_REFLOW_PERF_DSP
 #include "nsIRenderingContext.h"
@@ -3919,12 +3920,12 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
     }
   }
 
-  // Try XPointer
   nsCOMPtr<nsIDOMRange> jumpToRange;
   nsCOMPtr<nsIXPointerResult> xpointerResult;
   if (!content) {
     nsCOMPtr<nsIDOMXMLDocument> xmldoc = do_QueryInterface(mDocument);
     if (xmldoc) {
+      // Try XPointer
       xmldoc->EvaluateXPointer(aAnchorName, getter_AddRefs(xpointerResult));
       if (xpointerResult) {
         xpointerResult->Item(0, getter_AddRefs(jumpToRange));
@@ -3934,30 +3935,62 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
           // an error.
           return NS_ERROR_FAILURE;
         }
+      }
+
+      // Finally try FIXptr
+      if (!jumpToRange) {
+        xmldoc->EvaluateFIXptr(aAnchorName,getter_AddRefs(jumpToRange));
+      }
+
+      if (jumpToRange) {
         nsCOMPtr<nsIDOMNode> node;
         jumpToRange->GetStartContainer(getter_AddRefs(node));
         if (node) {
-          content = do_QueryInterface(node);
+          PRUint16 nodeType;
+          node->GetNodeType(&nodeType);
+          PRInt32 offset = -1;
+          jumpToRange->GetStartOffset(&offset);
+          switch (nodeType) {
+            case nsIDOMNode::ATTRIBUTE_NODE:
+            {
+              // XXX Assuming jumping to the ownerElement is the sanest action.
+              nsCOMPtr<nsIAttribute> attr = do_QueryInterface(node);
+              content = attr->GetContent();
+              break;
+            }
+            case nsIDOMNode::DOCUMENT_NODE:
+            {
+              if (offset >= 0) {
+                nsCOMPtr<nsIDocument> document = do_QueryInterface(node);
+                content = document->GetChildAt(offset);
+              }
+              break;
+            }
+            case nsIDOMNode::DOCUMENT_FRAGMENT_NODE:
+            case nsIDOMNode::ELEMENT_NODE:
+            case nsIDOMNode::ENTITY_REFERENCE_NODE:
+            {
+              if (offset >= 0) {
+                nsCOMPtr<nsIContent> parent = do_QueryInterface(node);
+                content = parent->GetChildAt(offset);
+              }
+              break;
+            }
+            case nsIDOMNode::CDATA_SECTION_NODE:
+            case nsIDOMNode::COMMENT_NODE:
+            case nsIDOMNode::TEXT_NODE:
+            case nsIDOMNode::PROCESSING_INSTRUCTION_NODE:
+            {
+              // XXX This should scroll to a specific position in the text.
+              content = do_QueryInterface(node);
+              break;
+            }
+          }
         }
       }
     }
   }
 
-  // Finally try FIXptr
-  if (!content) {
-    nsCOMPtr<nsIDOMXMLDocument> xmldoc = do_QueryInterface(mDocument);
-    if (xmldoc) {
-      xmldoc->EvaluateFIXptr(aAnchorName,getter_AddRefs(jumpToRange));
-      if (jumpToRange) {
-        nsCOMPtr<nsIDOMNode> node;
-        jumpToRange->GetStartContainer(getter_AddRefs(node));
-        if (node) {
-          content = do_QueryInterface(node);
-        }
-      }
-    }
-  }
- 
   esm->SetContentState(content, NS_EVENT_STATE_URLTARGET);
 
   if (content) {
