@@ -278,6 +278,53 @@ nsCSSFrameConstructor::Init(nsIDocument* aDocument)
   return NS_OK;
 }
 
+// Helper function that determines the child list name that aChildFrame
+// is contained in
+static void
+GetChildListNameFor(nsIFrame* aParentFrame,
+                    nsIFrame* aChildFrame,
+                    nsIAtom** aListName)
+{
+  nsFrameState  frameState;
+  nsIAtom*      listName;
+  
+  // See if the frame is moved out of the flow
+  aChildFrame->GetFrameState(&frameState);
+  if (frameState & NS_FRAME_OUT_OF_FLOW) {
+    // Look at the style information to tell
+    const nsStylePosition* position;
+    aChildFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
+    
+    if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+      listName = nsLayoutAtoms::absoluteList;
+    } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+      listName = nsLayoutAtoms::fixedList;
+    } else {
+#ifdef NS_DEBUG
+      const nsStyleDisplay* display;
+      aChildFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
+      NS_ASSERTION(display->IsFloating(), "not a floated frame");
+#endif
+      listName = nsLayoutAtoms::floaterList;
+    }
+
+  } else {
+    listName = nsnull;
+  }
+
+  // Verify that the frame is actually in that child list
+#ifdef NS_DEBUG
+  nsIFrame* firstChild;
+  aParentFrame->FirstChild(listName, &firstChild);
+
+  nsFrameList frameList(firstChild);
+  NS_ASSERTION(frameList.ContainsFrame(aChildFrame), "not in child list");
+#endif
+
+  NS_IF_ADDREF(listName);
+  *aListName = listName;
+}
+
 nsresult
 nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContext,
                                                nsIFrame*             aParentFrame,
@@ -4056,23 +4103,17 @@ DeleteOutOfFlowChildFrames(nsIPresContext* aPresContext,
         // Remove the mapping from the out-of-flow frame to its placeholder
         presShell->SetPlaceholderFrameFor(outOfFlowFrame, nsnull);
 
-        // XXX TROY Factor this code...
-        nsIAtom* listName;
-        const nsStylePosition* position;
-        outOfFlowFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)position);
-
-        if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-          listName = nsLayoutAtoms::absoluteList;
-        } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
-          listName = nsLayoutAtoms::fixedList;
-        } else {
-          listName = nsLayoutAtoms::floaterList;
-        }
-
-        // Ask the out-of-flow frame's parent frame to delete it
+        // Get the out-of-flow frame's parent
         nsIFrame* parentFrame;
         outOfFlowFrame->GetParent(&parentFrame);
+
+        // Get the child list name for the out-of-flow frame
+        nsIAtom* listName;
+        GetChildListNameFor(parentFrame, outOfFlowFrame, &listName);
+
+        // Ask the parent to delete the out-of-flow frame
         parentFrame->RemoveFrame(*aPresContext, *presShell, listName, outOfFlowFrame);
+        NS_IF_RELEASE(listName);
         NS_RELEASE(presShell);
       }
 
@@ -4908,37 +4949,23 @@ NS_IMETHODIMP
 nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
                                                  nsIFrame*       aFrame)
 {
-  nsCOMPtr<nsIContent> content;
-  nsCOMPtr<nsIAtom>    tag;
-  nsIFrame*            parentFrame;
-  nsresult             rv = NS_OK;
+  nsIFrame*                 parentFrame;
+  nsCOMPtr<nsIStyleContext> styleContext;
+  nsCOMPtr<nsIContent>      content;
+  nsCOMPtr<nsIAtom>         tag;
+  nsresult                  rv = NS_OK;
 
   aFrame->GetParent(&parentFrame);
+  aFrame->GetStyleContext(getter_AddRefs(styleContext));
 
-  // Get the content object associated with aFrame
+  // Get aFrame's content object and the tag name
   aFrame->GetContent(getter_AddRefs(content));
   NS_ASSERTION(content, "null content object");
   content->GetTag(*getter_AddRefs(tag));
-  
-  // Get the style context and determine if the frame is floated or
-  // absolutely positioned
-  nsCOMPtr<nsIStyleContext> styleContext;
-  aFrame->GetStyleContext(getter_AddRefs(styleContext));
-  
-  const nsStyleDisplay* display = (const nsStyleDisplay*)
-    styleContext->GetStyleData(eStyleStruct_Display);
-  const nsStylePosition* position = (const nsStylePosition*)
-    styleContext->GetStyleData(eStyleStruct_Position);
-  nsIAtom*  listName = nsnull;
 
-  // XXX TROY Factor out this code...
-  if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
-    listName = nsLayoutAtoms::absoluteList;
-  } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
-    listName = nsLayoutAtoms::fixedList;
-  } else if (display->IsFloating()) {
-    listName = nsLayoutAtoms::floaterList;
-  }
+  // Get the child list name that the frame is contained in
+  nsCOMPtr<nsIAtom>  listName;
+  GetChildListNameFor(parentFrame, aFrame, getter_AddRefs(listName));
 
   // If the frame is out of the flow, then it has a placeholder frame.
   nsIFrame* placeholderFrame = nsnull;
@@ -4993,10 +5020,12 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresContext* aPresContext,
       GetFloaterContainingBlock(aPresContext, parentFrame);
     
     // Create a frame based on the display type
-    nsAbsoluteItems absoluteItems(absoluteContainingBlock);
-    nsAbsoluteItems floaterList(floaterContainingBlock);
-    nsFrameItems    frameItems;
-    nsAbsoluteItems fixedItems(mFixedContainingBlock);
+    nsAbsoluteItems       absoluteItems(absoluteContainingBlock);
+    nsAbsoluteItems       floaterList(floaterContainingBlock);
+    nsFrameItems          frameItems;
+    nsAbsoluteItems       fixedItems(mFixedContainingBlock);
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      styleContext->GetStyleData(eStyleStruct_Display);
 
     rv = ConstructFrameByDisplayType(aPresContext, display, content,
                                      parentFrame, styleContext,
