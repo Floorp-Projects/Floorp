@@ -34,6 +34,7 @@
 #include "nsIURL.h"
 #include "nsXPIDLString.h"
 #include "nsIPref.h"
+#include "nsIFile.h"
 
 #include "nsIBufferInputStream.h"
 #include "nsIIOService.h"
