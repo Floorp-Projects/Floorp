@@ -451,10 +451,14 @@ nsFontMetricsWin::Init(const nsFont& aFont, nsIAtom* aLangGroup,
   mLangGroup = aLangGroup;
 
   // do special checking for the following lang group
-  CheckFontLangGroup(mLangGroup, gJA,   "ja",    gHitJACase,   gCheckJAFont,   gHaveJAFont);
-  CheckFontLangGroup(mLangGroup, gKO,   "ko",    gHitKOCase,   gCheckKOFont,   gHaveKOFont);
-  CheckFontLangGroup(mLangGroup, gZHTW, "zh-TW", gHitZHTWCase, gCheckZHTWFont, gHaveZHTWFont);
-  CheckFontLangGroup(mLangGroup, gZHCN, "zh-CN", gHitZHCNCase, gCheckZHCNFont, gHaveZHCNFont);
+  // * use fonts?
+  PRInt32 useDccFonts = 0;
+  if (NS_SUCCEEDED(gPref->GetIntPref("browser.display.use_document_fonts", &useDccFonts)) && (useDccFonts != 0)) {
+    CheckFontLangGroup(mLangGroup, gJA,   "ja",    gHitJACase,   gCheckJAFont,   gHaveJAFont);
+    CheckFontLangGroup(mLangGroup, gKO,   "ko",    gHitKOCase,   gCheckKOFont,   gHaveKOFont);
+    CheckFontLangGroup(mLangGroup, gZHTW, "zh-TW", gHitZHTWCase, gCheckZHTWFont, gHaveZHTWFont);
+    CheckFontLangGroup(mLangGroup, gZHCN, "zh-CN", gHitZHCNCase, gCheckZHCNFont, gHaveZHCNFont);
+  }
 
   //don't addref this to avoid circular refs
   mDeviceContext = (nsDeviceContextWin *)aContext;
