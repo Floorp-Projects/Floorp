@@ -72,11 +72,7 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 # (7) Execute "local" rules. (OPTIONAL).                              #
 #######################################################################
 
-nss_build_all: 
-	$(MAKE) build_coreconf
-	$(MAKE) build_nspr
-	$(MAKE) build_dbm
-	$(MAKE)
+nss_build_all: build_coreconf build_nspr build_dbm all
 
 build_coreconf:
 	cd $(CORE_DEPTH)/coreconf ;  $(MAKE)
@@ -112,9 +108,4 @@ else
 endif
 endif
 
-coreconf_hack:
-	cd ../coreconf; $(MAKE)
-	$(MAKE) import
-
-nss_RelEng_bld: coreconf_hack
-	$(MAKE)
+nss_RelEng_bld: build_coreconf import all
