@@ -30,6 +30,7 @@
 #include "nsIDOMDOMImplementation.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIEventQueueService.h"
+#include "nsIPrivateDOMImplementation.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsLayoutCID.h"
 #include "nsNetUtil.h"
@@ -181,6 +182,10 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument *aLoader, nsIDOMDocu
         do_CreateInstance(kIDOMDOMImplementationCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
+    nsCOMPtr<nsIPrivateDOMImplementation> privImplementation(do_QueryInterface(implementation, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+    privImplementation->Init(documentURI);
+
     // Create an empty document from it
     nsString emptyStr;
     nsCOMPtr<nsIDOMDocument> DOMDocument;
@@ -201,11 +206,6 @@ nsSyncLoader::LoadDocument(nsIURI* documentURI, nsIDocument *aLoader, nsIDOMDocu
     // Tell the document to start loading
     nsCOMPtr<nsIDocument> document = do_QueryInterface(DOMDocument, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-
-    // Partial Reset
-    document->SetDocumentURL(documentURI);
-    document->SetBaseURL(documentURI);
-    document->SetBaseTarget(NS_LITERAL_STRING(""));
 
     nsCOMPtr<nsIEventQueueService> service = 
         do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
