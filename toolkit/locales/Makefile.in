@@ -38,6 +38,7 @@ DEPTH		= ../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
+relativesrcdir = toolkit/locales
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -54,7 +55,7 @@ ifeq (,$(filter-out pref,$(MOZ_EXTENSIONS)))
 DEFINES += -DEXTENSION_PREF
 endif
 
-XULPPFLAGS += -I$(srcdir)/$(AB_CD)/defines.inc
+XULPPFLAGS += -I$(LOCALE_SRCDIR)/defines.inc
 
 # Let's imagine we wanted to create a language JARfile without registering it
 
