@@ -484,8 +484,8 @@ static JSPropertySpec ElementProperties[] =
 //
 static JSFunctionSpec ElementMethods[] = 
 {
-  {"getDOMAttribute",          ElementGetDOMAttribute,     1},
-  {"setDOMAttribute",          ElementSetDOMAttribute,     2},
+  {"getAttribute",          ElementGetDOMAttribute,     1},
+  {"setAttribute",          ElementSetDOMAttribute,     2},
   {"removeAttribute",          ElementRemoveAttribute,     1},
   {"getAttributeNode",          ElementGetAttributeNode,     1},
   {"setAttributeNode",          ElementSetAttributeNode,     1},
