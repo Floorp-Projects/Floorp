@@ -678,7 +678,7 @@ nsFormFillController::MouseDown(nsIDOMEvent* aMouseEvent)
   aMouseEvent->GetTarget(getter_AddRefs(target));
 
   nsCOMPtr<nsIDOMHTMLInputElement> targetInput = do_QueryInterface(target);
-  if (targetInput && targetInput != mFocusedInput) {
+  if (!targetInput || (targetInput && targetInput != mFocusedInput)) {
     // A new input will be taking focus.  Ignore the first click
     // so that the popup is not shown.
     mIgnoreClick = PR_TRUE;
