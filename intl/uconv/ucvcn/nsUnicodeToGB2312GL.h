@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *            Yueheng Xu, yueheng.xu@intel.com
  */
 
 #ifndef nsUnicodeToGB2312GL_h___
@@ -33,28 +34,50 @@
  *
  * @created         06/Apr/1999
  * @author  Catalin Rotaru [CATA]
+ * @Modified to use the newer tables in file gbku.h.   
+ *  Yueheng.xu@intel.com. 3/May/2000
  */
-class nsUnicodeToGB2312GL : public nsTableEncoderSupport
+
+class nsUnicodeToGB2312GL : public nsEncoderSupport
 {
 public:
 
-  /**
-   * Class constructor.
-   */
   nsUnicodeToGB2312GL();
+  virtual ~nsUnicodeToGB2312GL(){};
 
-  /**
-   * Static class constructor.
-   */
   static nsresult CreateInstance(nsISupports **aResult);
 
 protected:
+
+  NS_IMETHOD ConvertNoBuff(const PRUnichar * aSrc, 
+                            PRInt32 * aSrcLength, 
+                            char * aDest, 
+                            PRInt32 * aDestLength);
 
   //--------------------------------------------------------------------
   // Subclassing of nsEncoderSupport class [declaration]
 
   NS_IMETHOD GetMaxLength(const PRUnichar * aSrc, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
+
+  NS_IMETHOD ConvertNoBuffNoErr(const PRUnichar * aSrc, PRInt32 * aSrcLength, 
+                                char * aDest, PRInt32 * aDestLength)
+  {
+    return NS_OK;
+  };  // just make it not abstract;
+
+  NS_IMETHOD FillInfo(PRUint32 *aInfo);
+
+ private:
+
+  typedef struct
+  {
+    char leftbyte;
+    char rightbyte;
+
+  } DByte;
+
 };
+
 
 #endif /* nsUnicodeToGB2312GL_h___ */
