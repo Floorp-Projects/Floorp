@@ -48,7 +48,6 @@ install:: $(PROGRAMS)
 	$(MAKE_INSTALL) strres-test.xul $(DIST)\bin\res
 	$(MAKE_INSTALL) strres-test.dtd $(DIST)\bin\res
 	$(MAKE_INSTALL) strres-test.js $(DIST)\bin\res
-	$(MAKE_INSTALL) strres.js $(DISTBROWSWER)
 
 clobber::
 	rm -f $(DIST)\bin\StringBundleTest.exe

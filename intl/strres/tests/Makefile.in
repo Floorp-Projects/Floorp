@@ -31,10 +31,7 @@ EXPORT_RESOURCE	= \
 		$(srcdir)/strres-test.html \
 		$(srcdir)/strres-test.xul \
 		$(srcdir)/strres-test.dtd \
-		$(srcdir)/strres-test.js \
 		$(NULL)
-
-EXPORT_GLOBAL_RESOURCE = $(srcdir)/strres.js
 
 ifndef NECKO
 NETLIB_LIBS	= \
@@ -74,5 +71,4 @@ INCLUDES	+= -I$(srcdir)/../src
 
 install::
 	$(INSTALL) $(EXPORT_RESOURCE) $(DIST)/bin/res
-	$(INSTALL) $(EXPORT_GLOBAL_RESOURCE) $(DIST)/bin/chrome/global/content/default
 
