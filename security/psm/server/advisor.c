@@ -265,7 +265,14 @@ SSMSecurityAdvisorContext_Destroy(SSMResource *res, PRBool doFree)
         if (ct->socketStatus) {
             SSM_FreeResource(&ct->socketStatus->super);
         }
-
+        PR_FREEIF(ct->hostname);
+        PR_FREEIF(ct->senderAddr);
+        if (ct->recipients) {
+            for (i=0; i<ct->numRecipients; i++) {
+                PR_FREEIF(ct->recipients[i]);
+            }
+            PR_FREEIF(ct->recipients);
+        }
         /* Free if asked */
         if (doFree)
             PR_Free(ct);
@@ -3296,11 +3303,14 @@ SSM_ListCRLs(SSMTextGenContext *cx)
 }
 
 SSMStatus
-ssm_getStringForAbleAgent(SSMTextGenContext *cx, const char *agents[],
-                          const char *key)
+ssm_getStringForAbleAgent(SSMTextGenContext *cx, const char *agents[])
 {
     int i;
     SSMStatus rv;
+    char *key;
+    
+    key = SSM_At(cx->m_params, 0);
+
 
     for (i=0; agents[i] != NULL; i++) {
         if (PL_strstr(cx->m_request->agent, agents[i]) != NULL) {
@@ -3317,15 +3327,15 @@ ssm_getStringForAbleAgent(SSMTextGenContext *cx, const char *agents[],
 
 SSMStatus SSM_LayoutSMIMETab(SSMTextGenContext *cx)
 {
-    return ssm_getStringForAbleAgent(cx, kSMimeApps, "app_does_smime");
+    return ssm_getStringForAbleAgent(cx, kSMimeApps);
 }
 
 SSMStatus SSM_LayoutJavaJSTab(SSMTextGenContext *cx)
 {
-    return ssm_getStringForAbleAgent(cx, kJavaJSApps, "app_does_javajs");
+    return ssm_getStringForAbleAgent(cx, kJavaJSApps);
 }
 
 SSMStatus SSM_LayoutOthersTab(SSMTextGenContext *cx)
 {
-    return ssm_getStringForAbleAgent(cx, kSMimeApps, "app_uses_others");
+    return ssm_getStringForAbleAgent(cx, kSMimeApps);
 }
