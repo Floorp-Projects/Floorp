@@ -20,6 +20,7 @@ sub Help {
         'bye' => 'To say goodbye to the bot.',
         'ping' => 'To check the bot is alive.',
         'uptime' => 'Gives the amount of time that the bot has been active.',
+        'seen' => 'Says how long it\'s been since the last time someone was seen. Syntax: seen victim',
     };
 }
 
@@ -63,16 +64,26 @@ sub RegisterConfig {
         ['lastEvil', 1, 0, 0], # when the last c++ insult took place
         ['assumeThanksTime', 1, 1, 10], # how long to assume that thanks are directed to us after hearing from them (seconds)
         ['_lastSpoken', 0, 0, {}], # who has spoken to us
+        ['seenTimes', 1, 1, {}], # the times that the relevant nicks were last seen active
+        ['seenStates', 1, 1, {}], # what the relevant nicks were last seen doing
+        ['seenOverrides', 1, 1, {'therapist' => 'Look, dude, I\'m feeling fine, mm\'k?'}], # canned responses
+        ['source', 1, 1, 'http://lxr.mozilla.org/mozilla/source/webtools/mozbot/'], # reply to give for CTCP SOURCE
     );
 }
 
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
-    $self->{'_lastSpoken'}->{$event->{'user'}} = time();
+    my $now = time();
+    $self->{'_lastSpoken'}->{$event->{'user'}} = $now;
+    if ($event->{'channel'} ne '') {
+        my $channel = $event->{'channel'};
+        $self->{'seenTimes'}->{lc $event->{'from'}} = $now;
+        $self->{'seenStates'}->{lc $event->{'from'}} = "saying '$message' to me in $channel.";
+    }
     my $me = quotemeta($event->{'bot'}->nick);
     my $expandedme = join('+', split(//gos, $me)).'+';
-    if ($message =~ /^\s*(?:mornin[g']?|hi|heya?|w+a+[sz]+u+p+|hello|greetings|yo(?:\s+dude)?|m+[ay]+(?:\s+m+a+i+n+)?\s+m+a+n+|d+u+d+e+)[?!1.\s]*$/osi) {
+    if ($message =~ /^\s*(?:mornin[g']?|hi|heya?|w+a+[sz]+u+p+|hello|wb|welcome\s+back|greetings|yo(?:\s+dude)?|m+[ay]+(?:\s+m+a+i+n+)?\s+m+a+n+|d+u+d+e+)[?!1.\s]*$/osi) {
         if ($self->canGreet($event)) {
             $self->Perform($event, 'greetings');
         }
@@ -88,7 +99,7 @@ sub Told {
         $self->Perform($event, 'yousuck');
     } elsif ($message =~ /^\s*(?:oh[!1?.,\s]*)?(?:thanks|cheers)[\s!1.]*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
         $self->Perform($event, 'thanks');
-    } elsif ($message =~ /^\s*(?::-?\)|good\s+bot[.!1\s]*|you\s+rock|have\s+a\s+bot\s*snack[.!1\s]*)\s*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
+    } elsif ($message =~ /^\s*(?:good\s+bot[.!1\s]*|you\s+rock|:-?\)|(?:have\s+a\s+)?bot\s*snack[.!1\s]*)\s*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
         $self->Perform($event, 'happy');
     } elsif ($message =~ /^\s*(?:i|we)\s+love\s+you\s*[.!1]*\s*(?:[;:8][-o]?[]()\|O0<>[]\s*)?$/osi) {
         $self->Perform($event, 'happy');
@@ -99,7 +110,7 @@ sub Told {
         $self->say($event, "$event->{'from'}: fine thanks! I've been up $uptime so far!");
     } elsif ($message =~ /^\s*(?:who\s+are\s+you)\s*[?!1.\s]*$/osi) {
         $self->say($event, "$event->{'from'}: $self->{'whoami'}");
-    } elsif ($message =~ /^\s*up\s*(?:time)?[?!1.\s]*$/osi) {
+    } elsif ($message =~ /^\s*(?:up\s*(?:time)|status)?[?!1.\s]*$/osi) {
         $uptime = $self->days($^T);
         $self->say($event, "$event->{'from'}: I've been up $uptime.");
     } elsif ($message =~ /^\s*r+h(e+)t+[!1.\s]*\s*$/osi) {
@@ -110,7 +121,8 @@ sub Told {
         }
     } elsif ($message =~ /^\s*ping\s*$/osi) {
         $self->say($event, "$event->{'from'}: pong");
-        # XXX CCTP ping $event->{'from'}
+    } elsif ($message =~ /^\s*!?seen\s+(\S+)\s*$/osi) {
+        $self->DoSeen($event, $1);
     } else {
         return $self->SUPER::Told(@_);
     }
@@ -120,6 +132,11 @@ sub Told {
 sub Heard {
     my $self = shift;
     my ($event, $message) = @_;
+    if ($event->{'channel'} ne '') {
+        my $channel = $event->{'channel'};
+        $self->{'seenTimes'}->{lc $event->{'from'}} = time();
+        $self->{'seenStates'}->{lc $event->{'from'}} = "saying '$message' in $channel.";
+    }
     my $me = quotemeta($event->{'bot'}->nick);
     my $expandedme = join('+', split(//gos, $me)).'+';
     if ($message =~ /^\s*(?:(?:hi|heya?|w+a+s+u+p+|hello|mornin[g']?|greetings|yo(?:\s+yo)*|bonjour|hoi)\s+$me|$expandedme\s*)!*1*\s*$/si) {
@@ -153,6 +170,8 @@ sub Heard {
             $self->{'lastEvil'} = time();
             $self->Perform($event, 'evil'); # calls GetNext which calls saveConfig
         }
+    } elsif ($message =~ /^\s*!seen\s+(\S+)\s*$/osi) {
+        $self->DoSeen($event, $1);
     } else {
         return $self->SUPER::Heard(@_);
     }
@@ -162,6 +181,12 @@ sub Heard {
 sub Felt {
     my $self = shift;
     my ($event, $message) = @_;
+    if ($event->{'channel'} ne '') {
+        my $nick = $event->{'from'};
+        my $channel = $event->{'channel'};
+        $self->{'seenTimes'}->{lc $event->{'from'}} = time();
+        $self->{'seenStates'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
+    }
     my $me = quotemeta($event->{'bot'}->nick);
     if ($message =~ /^\s*(?:pokes|prods)\s+$me\s*[!1.]*\s*$/si) {
         $self->Perform($event, 'ow');
@@ -186,6 +211,12 @@ sub Felt {
 sub Saw {
     my $self = shift;
     my ($event, $message) = @_;
+    if ($event->{'channel'} ne '') {
+        my $nick = $event->{'from'};
+        my $channel = $event->{'channel'};
+        $self->{'seenTimes'}->{lc $event->{'from'}} = time();
+        $self->{'seenStates'}->{lc $event->{'from'}} = "saying '* $nick $message' in $channel.";
+    }
     if ($message =~ /^\s*r+h(e+)t+s?[!1.]*\s*$/osi) {
         if ((time()-$self->{'lastrheet'}) > $self->{'rheetbuffer'}) {
            $self->say($event, "rhe$1$1t!");
@@ -203,13 +234,34 @@ sub Saw {
 sub SpottedJoin {
     my $self = shift;
     my ($event, $channel, $who) = @_;
-    return if grep(lc($_) eq $channel, @{$self->{'autoGreetMute'}});
+    return if grep lc($_) eq $channel, @{$self->{'autoGreetMute'}};
     my $user = $event->{'user'};
     if ($self->canGreet($event) and $self->{'autoGreetings'}->{$who}) {
         $self->sayOrEmote($event, $self->Expand($event, $self->{'autoGreetings'}->{$who}));
         $self->{'autoGreeted'}->{$user} = time();
     }
     return 1; # don't block other modules...
+}
+
+# SpottedNickChange - Called when someone changes nick
+sub SpottedNickChange {
+    my $self = shift;
+    my ($event, $from, $to) = @_;
+    $self->{'seenTimes'}->{lc $event->{'from'}} = time();
+    $self->{'seenStates'}->{lc $event->{'from'}} = "changing nick to $to.";
+    return $self->SUPER::SpottedNickChange(@_);
+}
+
+sub CTCPPing {
+    my $self = shift;
+    my ($event, $who, $what) = @_;
+    $self->ctcpReply($event, 'PING', $what);
+}
+
+sub CTCPSource {
+    my $self = shift;
+    my ($event, $who, $what) = @_;
+    $self->ctcpReply($event, 'SOURCE', $self->{'source'});
 }
 
 sub GetNext {
@@ -252,4 +304,107 @@ sub Expand {
     my ($event, $data) = @_;
     $data =~ s/%/$event->{'from'}/gos;
     return $data;
+}
+
+sub DoSeen {
+    my $self = shift;
+    my ($event, $who) = @_;
+    if (lc $who eq lc $event->{'from'}) {
+        $self->say($event, 'You\'re right here, duh!');
+    } elsif (lc $who eq lc $event->{'nick'}) {
+        $self->say($event, 'I\'m right here, duh!');
+    } elsif (defined($self->{'seenOverrides'}->{$who})) {
+        $self->say($event, $self->{'seenOverrides'}->{$who});
+    } else {
+        my $seconds = $self->{'seenTimes'}->{lc $who};
+        if (defined($seconds)) {
+            my $seconds = time() - $seconds;
+            my $time = '';
+            if ($seconds > 90) {
+                my $minutes = int $seconds / 60;
+                $seconds %= 60;
+                if ($minutes > 90) {
+                    my $hours = int $minutes / 60;
+                    $minutes %= 60;
+                    if ($hours > 36) {
+                        my $days = int $hours / 24;
+                        $hours %= 24;
+                        if ($days > 10) {
+                            my $weeks = int $days / 7;
+                            $days %= 7;
+                            if ($weeks > 10) {
+                                # good god, nice connection
+                            }
+                            if ($weeks != 0) {
+                                if ($time ne '') {
+                                    $time .= ', ';
+                                }
+                                if ($weeks == 1) {
+                                    $time .= "$weeks week";
+                                } else {
+                                    $time .= "$weeks weeks";
+                                }
+                            }
+                        }
+                        if ($days != 0) {
+                            if ($time ne '') {
+                                $time .= ', ';
+                            }
+                            if ($days == 1) {
+                                $time .= "$days day";
+                            } else {
+                                $time .= "$days days";
+                            }
+                        }
+                    }
+                    if ($hours != 0) {
+                        if ($time ne '') {
+                            $time .= ', ';
+                        }
+                        if ($hours == 1) {
+                            $time .= "$hours hour";
+                        } else {
+                            $time .= "$hours hours";
+                        }
+                    }
+                }
+                if ($minutes != 0) {
+                    if ($time ne '') {
+                        $time .= ', ';
+                    }
+                    if ($minutes == 1) {
+                        $time .= "$minutes minute";
+                    } else {
+                        $time .= "$minutes minutes";
+                    }
+                }
+            }
+            if ($seconds == 0) {
+                if ($time eq '') {
+                    $time .= 'right about now';
+                } else {
+                    $time .= ' ago';
+                }
+            } else {
+                if ($time ne '') {
+                    $time .= ' and ';
+                }
+                if ($seconds == 1) {
+                    $time .= 'a second ago';
+                } elsif ($seconds == 2) {
+                    $time .= 'a couple of seconds ago';
+                } else {
+                    $time .= "$seconds seconds ago";
+                }
+            }
+            my $what = $self->{'seenStates'}->{lc $who};
+            $self->say($event, "$who was last seen $time, $what");
+        } else {
+            my $n = '';
+            if ($who =~ /^[aeiou]/o) {
+                $n = 'n';
+            }
+            $self->say($event, "I've never seen a$n '$who', sorry.");
+        }
+    }
 }
