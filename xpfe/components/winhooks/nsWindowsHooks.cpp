@@ -83,7 +83,7 @@ static FileTypeRegistryEntry
     xul( xulExts, "MozillaXUL",  "Mozilla XUL File Document" );
 
 static EditableFileTypeRegistryEntry
-    mozillaMarkup( htmExts, "MozillaHTML", "Mozilla Hypertext Markup Language Document" );
+    mozillaMarkup( htmExts, "MozillaHTML", "Mozilla HyperText Markup Language Document" );
 
 // Implementation of the nsIWindowsHooksSettings interface.
 // Use standard implementation of nsISupports stuff.
