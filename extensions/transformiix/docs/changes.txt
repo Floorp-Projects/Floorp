@@ -1,6 +1,10 @@
-TransforMiiX (TM) 
+TransforMiiX (TM)
 (C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
+
+Build 20000618
+-- Added changes from Olivier Gerardin for improved
+   handling of template parameters
 
 Build 20000523
 
@@ -26,7 +30,7 @@ Build 20000420
    - When an XSLT stylesheet is specified on the command line
      the document base was still defaulting to the XML document,
      instead of the stylesheet
-  
+
 -- Fixed bug in namespace-uri() function [NodeSetFunctionCall.cpp] - Marina
    - If an expression was passed as an argument to the function,
      which evaluated to an empty NodeSet, the context node was being
@@ -35,14 +39,14 @@ Build 20000420
 -- Fixed bug in PathExpr::matches (Marina)
    - expressions such as "foo//bar" would not always match
      properly if more than one node existed in the final
-     set of "matching context nodes" (so basically if foo 
+     set of "matching context nodes" (so basically if foo
      was not the root element).
-     
+
 
 Build 20000419
 
 -- Added the generate-id function
--- Added XPath Extension Function support 
+-- Added XPath Extension Function support
 
 Build 20000413
 
@@ -88,7 +92,7 @@ Build 20000326
    within Mozilla
 
 -- Added Marina Mechtcheriakova's changes to xml/parser/XMLParser.cpp to fix
-   a Unicode bug in ::startElement. Instead of improperly casting char* 
+   a Unicode bug in ::startElement. Instead of improperly casting char*
    as DOM_CHAR*, the proper String constructor, String(char*) is used
 
 Build 20000322
@@ -120,7 +124,7 @@ Build 20000216
    -- this also caused default priorities to be incorrectly calculated.
 
 Build 19991110
--- fixed bug with PathExpr and LocationStep with respect 
+-- fixed bug with PathExpr and LocationStep with respect
    to the ::match method
    -- problem reported by Oblix
 -- Added support for xsl:include (only file URLs will work)
@@ -132,7 +136,7 @@ Build 19990818
 -- Added support for xsl:with-param
 -- Added more XPath support
    -- added operator precedence
-   -- added and, or, <,<=,>=,> 
+   -- added and, or, <,<=,>=,>
 
 
 Build 19990816
@@ -157,14 +161,14 @@ Build 19990812
      FloatPort to Double, I wanted to add more Double related methods
      -- changed the NaN() method to just a static double
      -- All expr classes now use Double::isNaN() and Double::NaN
-     -- I added Double::isInfinite, Double::POSITIVE_INFINITY and 
+     -- I added Double::isInfinite, Double::POSITIVE_INFINITY and
        Double::NEGATIVE_INFINITY
 -- Added base/Integer.cpp back into Makefile
-   -- added Integer::toString(int,String); 
+   -- added Integer::toString(int,String);
    -- changed implementation
 -- Moved code to convert from Strings to doubles and from doubles to Strings
    into the Double class
--- removed testdom.cpp from xml/dom 
+-- removed testdom.cpp from xml/dom
 -- Added more changes from Larry Fitzpatrick and Michele Lee for
    porting issues
    -- added appropriate return values for:
@@ -173,9 +177,9 @@ Build 19990812
       -- base/StringList.cpp
       -- xsl/expr/PredicateList.cpp
 -- Added remaining String Function Calls
-   -- substring(), substring-after(), substring-before(), translate(), 
+   -- substring(), substring-after(), substring-before(), translate(),
       string-length()
-   
+
 
 Build 19990810
 -- Added most of the Whitespace handling
@@ -189,7 +193,7 @@ Build 19990810
 
 Build 19990806
 -- Incoporated Changes From Larry Fitzpatrick
--- Added more XPath functions 
+-- Added more XPath functions
    -- last(), count(), string(), contains(), starts-with(), concat()
    -- see functions.xml/functions.xsl for available functions
 -- Added xsl:text support
