@@ -509,7 +509,7 @@ verify_method_declaration(IDL_tree method_tree)
          * supported in xpcom or non-xpcom (marked with [notxpcom]) methods 
          * as input parameters
          */
-        if (!(notxpcom && IDL_PARAM_DCL(param).attr != IDL_PARAM_IN)) &&
+        if (!(notxpcom && IDL_PARAM_DCL(param).attr != IDL_PARAM_IN) &&
             IDL_tree_property_get(param_type, "nsid") != NULL &&
             IDL_tree_property_get(param_type, "ptr") == NULL &&
             IDL_tree_property_get(param_type, "ref") == NULL) 
