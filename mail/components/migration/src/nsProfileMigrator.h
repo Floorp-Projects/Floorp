@@ -64,7 +64,7 @@ public:
 protected:
   ~nsProfileMigrator() { };
 
-  nsresult GetDefaultMailMigratorKey(nsACString& key, nsCOMPtr<nsIMailProfileMigrator>& bpm);
+  void GetDefaultMailMigratorKey(nsACString& key);
 
   /**
    * Import profiles from ~/.firefox/ or ~/.phoenix/

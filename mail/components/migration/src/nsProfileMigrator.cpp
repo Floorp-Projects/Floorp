@@ -76,25 +76,8 @@ NS_IMPL_ISUPPORTS1(nsProfileMigrator, nsIProfileMigrator)
 NS_IMETHODIMP
 nsProfileMigrator::Migrate(nsIProfileStartup* aStartup)
 {
-  nsresult rv;
-
   nsCAutoString key;
-  nsCOMPtr<nsIMailProfileMigrator> mailMigrator;
-
-  rv = GetDefaultMailMigratorKey(key, mailMigrator);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (!mailMigrator) 
-  {
-    nsCAutoString contractID = NS_LITERAL_CSTRING(NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX) + key;
-    mailMigrator = do_CreateInstance(contractID.get());
-    NS_ENSURE_TRUE(mailMigrator, NS_ERROR_FAILURE);
-  }
-
-  PRBool sourceExists;
-  rv = mailMigrator->GetSourceExists(&sourceExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!sourceExists) return NS_ERROR_FAILURE;
+  GetDefaultMailMigratorKey(key);
 
   nsCOMPtr<nsISupportsCString> cstr (do_CreateInstance("@mozilla.org/supports-cstring;1"));
   NS_ENSURE_TRUE(cstr, NS_ERROR_OUT_OF_MEMORY);
@@ -108,7 +91,6 @@ nsProfileMigrator::Migrate(nsIProfileStartup* aStartup)
   if (!ww || !params) return NS_ERROR_FAILURE;
 
   params->AppendElement(cstr);
-  params->AppendElement(mailMigrator);
   params->AppendElement(aStartup);
 
   nsCOMPtr<nsIDOMWindow> migrateWizard;
@@ -131,9 +113,8 @@ typedef struct {
 #define INTERNAL_NAME_DOGBERT         "Netscape Messenger"
 #endif
 
-nsresult
-nsProfileMigrator::GetDefaultMailMigratorKey(nsACString& aKey,
-                                             nsCOMPtr<nsIMailProfileMigrator>& aMailMigrator)
+void
+nsProfileMigrator::GetDefaultMailMigratorKey(nsACString& aKey)
 {
 #if 0
   HKEY hkey;
@@ -165,16 +146,16 @@ nsProfileMigrator::GetDefaultMailMigratorKey(nsACString& aKey,
   // XXXben - until we figure out what to do here with default browsers on MacOS and
   // GNOME, simply copy data from a previous Seamonkey install. 
   PRBool exists = PR_FALSE;
-  aMailMigrator = do_CreateInstance(NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
-  if (aMailMigrator)
-    aMailMigrator->GetSourceExists(&exists);
+  nsCOMPtr<nsIMailProfileMigrator> mailMigrator;
+  mailMigrator = do_CreateInstance(NS_MAILPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
+  if (mailMigrator)
+    mailMigrator->GetSourceExists(&exists);
   if (exists) {
     aKey = "seamonkey";
-    return NS_OK;
   }
 #endif
 
-  return NS_ERROR_FAILURE;
+  return;
 }
 
 NS_IMETHODIMP

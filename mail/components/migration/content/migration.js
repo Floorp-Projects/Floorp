@@ -12,6 +12,7 @@ var MigrationWizard = {
 
   init: function ()
   {
+    dump('\n\n calling init: \n\n');
     var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
     os.addObserver(this, "Migration:Started", false);
     os.addObserver(this, "Migration:ItemBeforeMigrate", false);
@@ -23,8 +24,7 @@ var MigrationWizard = {
 
     if ("arguments" in window) {
       this._source = window.arguments[0];
-      this._migrator = window.arguments[1].QueryInterface(kIMig);
-      this._autoMigrate = window.arguments[2].QueryInterface(kIPStartup);
+      this._autoMigrate = window.arguments[1].QueryInterface(kIPStartup);
       
       // Show the "nothing" option in the automigrate case to provide an
       // easily identifiable way to avoid migration and create a new profile.
@@ -55,8 +55,10 @@ var MigrationWizard = {
       if (suffix != "nothing") {
         var contractID = kProfileMigratorContractIDPrefix + suffix;
         var migrator = Components.classes[contractID].createInstance(kIMig);
-        if (!migrator.sourceExists)
+        if (!migrator.sourceExists) {
           group.childNodes[i].hidden = true;
+          if (this._source == suffix) this._source = null;
+        }
       }
     }
     
@@ -68,6 +70,7 @@ var MigrationWizard = {
       }
     }
 
+    dump('this.source = ' + this._source + '\n');
     group.selectedItem = this._source == "" ? firstNonDisabled : document.getElementById(this._source);
   },
   
