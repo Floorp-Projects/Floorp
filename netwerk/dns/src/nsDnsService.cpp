@@ -68,7 +68,7 @@ nsDnsService::Init()
 //    create Open Transport Service Provider for DNS Lookups
 #elif defined(_WIN)
 //    create DNS EventHandler Window
-#elif define(XP_UNIX)
+#elif defined(XP_UNIX)
 //    XXXX - ?
 #endif
 
@@ -83,7 +83,7 @@ nsDnsService::~nsDnsService()
 //    deallocate Open Transport Service Provider
 #elif defined(_WIN)
 //    dispose DNS EventHandler Window
-#elif define(XP_UNIX)
+#elif defined(XP_UNIX)
 //    XXXX - ?
 #endif
 }
@@ -144,4 +144,3 @@ nsDnsService::Lookup(const char*     hostname,
 	
 	return NS_OK;
 }
-
