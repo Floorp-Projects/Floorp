@@ -54,15 +54,3 @@ box#reorder {
   min-width: 180px;
 }
 
-
-#more-panels-link
-{
-  color: blue;
-  text-decoration: underline;
-}
-
-#more-panels-link:active
-#more-panels-link[loading="true"]
-{
-  color: red;
-}
