@@ -97,19 +97,19 @@
 		<html:table>
 			<html:tr>
 				<html:td>
-					<html:input name="cookies" type="radio" id="pref:2:int:network.cookie.cookieBehavior" sel="checked" />
+					<html:input name="cookies" type="radio" id="pref:0:int:network.cookie.cookieBehavior" sel="checked" />
 					&accAllCookiesRadio.label;
 				</html:td>
 			</html:tr>
 			<html:tr>
 				<html:td>
-					<html:input name="cookies" type="radio" id="pref:0:int:network.cookie.cookieBehavior" />
+					<html:input name="cookies" type="radio" id="pref:1:int:network.cookie.cookieBehavior" />
 					&accpOrgCookiesRadio.label;
 			</html:td>
 			</html:tr>
 			<html:tr>
 				<html:td>
-					<html:input name="cookies" type="radio" id="pref:1:int:network.cookie.cookieBehavior" />
+					<html:input name="cookies" type="radio" id="pref:2:int:network.cookie.cookieBehavior" />
 					&disCookRadio.label;
 				</html:td>
 			</html:tr>

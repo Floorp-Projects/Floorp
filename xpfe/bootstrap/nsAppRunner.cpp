@@ -43,6 +43,7 @@
 #include "nsFileLocations.h"
 #include "nsFileStream.h"
 #include "nsSpecialSystemDirectory.h"
+#include "nsIWalletService.h"
 #ifdef NECKO
 #include "nsICookieService.h"
 #endif // NECKO
@@ -75,6 +76,9 @@ static NS_DEFINE_CID(kAppShellServiceCID,   NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID,    NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID,              NS_PREF_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
+static NS_DEFINE_IID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
+
+static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 
 #ifdef NECKO
 static NS_DEFINE_CID(kCookieServiceCID,    NS_COOKIESERVICE_CID);
@@ -170,6 +174,7 @@ int main(int argc, char* argv[])
   nsIDOMAppCoresManager *appCoresManager = nsnull;
   nsIURI* url = nsnull;
   nsIPref *prefs = nsnull;
+  nsIWalletService *walletService;
 
 #ifdef NECKO
   nsICookieService *cookieService = nsnull;
@@ -262,20 +267,6 @@ int main(int argc, char* argv[])
 
 #endif // defined(NS_USING_PROFILES)
 
-#ifdef NECKO
-  // fire up an instance of the cookie manager.
-  // I'm doing this using the serviceManager for convenience's sake.
-  // Presumably an application will init it's own cookie service a 
-  // different way (this way works too though).
-  rv = nsServiceManager::GetService(kCookieServiceCID,
-                                    nsCOMTypeInfo<nsICookieService>::GetIID(),
-                                    (nsISupports **)&cookieService);
-#ifndef XP_MAC
-// Until the cookie manager actually exists on the Mac we don't want to bail here
-  if (NS_FAILED(rv))
-      goto done;
-#endif // XP_MAC
-#endif // NECKO
 
   /*
    * Start up the core services:
@@ -688,6 +679,23 @@ int main(int argc, char* argv[])
   if (CheckAndRunPrefs(cmdLineArgs))
     goto done;
 
+#ifdef NECKO
+  // fire up an instance of the cookie manager.
+  // I'm doing this using the serviceManager for convenience's sake.
+  // Presumably an application will init it's own cookie service a 
+  // different way (this way works too though).
+  rv = nsServiceManager::GetService(kCookieServiceCID,
+                                    nsCOMTypeInfo<nsICookieService>::GetIID(),
+                                    (nsISupports **)&cookieService);
+#ifndef XP_MAC
+// Until the cookie manager actually exists on the Mac we don't want to bail here
+  if (NS_FAILED(rv))
+      goto done;
+#endif // XP_MAC
+#endif // NECKO
+
+ 
+
   if ( !useArgs ) {
       nsCOMPtr<nsIWebShellWindow> newWindow;
       rv = appShell->CreateTopLevelWindow(nsnull, url, PR_TRUE, getter_AddRefs(newWindow),
@@ -713,6 +721,10 @@ int main(int argc, char* argv[])
     goto done;
   }
 
+  // Fire up the walletService
+  rv = nsServiceManager::GetService(kWalletServiceCID,
+                                    kIWalletServiceIID,
+                                     (nsISupports **)&walletService);
  
   /*
    * Start up the main event loop...
@@ -737,6 +749,9 @@ done:
   if (nsnull != cookieService)
     nsServiceManager::ReleaseService(kCookieServiceCID, cookieService);
 #endif // NECKO
+
+  if (nsnull != walletService)
+    nsServiceManager::ReleaseService(kWalletServiceCID, walletService);
 
 
   /* Release the shell... */
