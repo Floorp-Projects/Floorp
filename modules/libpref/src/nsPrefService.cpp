@@ -584,7 +584,7 @@ inplaceSortCallback(const void *data1, const void *data2, void *privateData)
 }
 
 //----------------------------------------------------------------------------------------
-extern "C" JSBool pref_InitInitialObjects()
+JSBool pref_InitInitialObjects()
 // Initialize default preference JavaScript buffers from
 // appropriate TEXT resources
 //----------------------------------------------------------------------------------------
