@@ -39,10 +39,6 @@
   margin-right: 3px;
 }
 
-/* From button.css: */
-/* margin: 4px 7px 1px 1px; */
-/* We have too many buttons - must be closer! */
-
 .toolbar, .key-toolbar {
   margin-right: 2px;
 }
@@ -56,8 +52,6 @@
   text-align: center;
 }
 
-/* end of SHOULD GO IN GLOBAL */
-
 #EditModeToolbar {
   padding:       0px;
   /* Same as "standard" toolbar background */
@@ -69,15 +63,15 @@
   background-color: #999999;
   overflow:      hidden;
 }
-/* BORDERS ARE NOT WORKING! global class="plain" is fighting us! */
+
 button.edit-mode:hover, button.edit-mode:hover:active,
 button.edit-mode {
-  -moz-border-radius: 0px 0px 7px 7px;
-  padding: 0px 4px 1px 4px;
-  margin: 0px;
+  -moz-border-radius: 0px 0px 8px 8px;
+  padding: 1px 5px 1px 4px;
+  margin: 0px 1px;
   color: black;
   background-color: #CCCCCC;
-  border-top: 1px solid #CCCCCC; /* Must be same as background */
+  border-top: 0px;
   border-bottom: 1px solid #666666;
   border-left: 1px solid white;
   border-right: 1px solid #666666;
@@ -85,16 +79,14 @@ button.edit-mode {
 
 button.edit-mode:hover {
   border:  1px solid white;
+  border-top: 0px;
 }
 
 button.edit-mode:hover:active {
-  padding: 1px 5px 0px 3px;
-  border:  1px solid white;
+  padding: 2px 4px 0px 5px;
 }
 
 button.edit-mode[selected="1"] {
-  padding: 0px 4px 1px 4px;
-  margin: -1px 0px 0px 0px;
 /* Not resizing well! - use color instead
   font-weight: bold; 
 */
@@ -103,33 +95,39 @@ button.edit-mode[selected="1"] {
 
 button.edit-mode[selected="1"]:active,
 button.edit-mode[selected="1"]:hover:active {
-  padding: 1px 5px 0px 3px;
+  padding: 2px 4px 0px 5px;
 }
 
-#NormalModeButton[type="image"] {
+#NormalModeButton {
   list-style-image:url(chrome://editor/skin/images/editmode-normal.gif); 
 }
 
-#TagModeButton[type="image"] {
+#TagModeButton {
   list-style-image:url(chrome://editor/skin/images/editmode-tags.gif); 
 }
-#SourceModeButton[type="image"] {
+#SourceModeButton {
   list-style-image:url(chrome://editor/skin/images/editmode-html.gif); 
 }
-#PreviewModeButton[type="image"] {
+#PreviewModeButton {
   list-style-image:url(chrome://editor/skin/images/editmode-preview.gif); 
 }
-#ToggleEditModeType {
-  list-style-image:url(chrome://editor/skin/images/editmode-toggle.gif); 
-  border: 1px outset #CCCCCC;
-}
 
-#ToggleEditModeType:hover {
-  border: 1px solid white;
-}
-
-#ToggleEditModeType:hover:active {
-  border: 1px inset #CCCCCC;
+/* Needed to suppress inner box settings - same as button.plain
+   (we can't use 'plain', else we get no outer borders!)
+*/
+button.edit-mode:hover:active > .button-internal-box,
+button.edit-mode > .button-internal-box, 
+button.edit-mode > .button-internal-box:hover:active,
+button.edit-mode > .button-internal-box > .button-text-container, 
+button.edit-mode > .button-internal-box > .button-text-container:hover:active,
+button.edit-mode > .button-internal-box > .button-text-container > .button-text, 
+button.edit-mode > .button-internal-box > .button-text-container > .button.text:hover:active,
+button.edit-mode > .button-internal-box > .button-icon, 
+button.edit-mode > .button-internal-box > .button.icon:hover:active
+{
+  border  : 0px ! important;
+  margin  : 0px;
+  padding : 0px;
 }
 
 /* Image URLs for all Editor toolbar buttons */

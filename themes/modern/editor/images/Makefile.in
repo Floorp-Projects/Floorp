@@ -90,7 +90,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	editmode-tags.gif \
 	editmode-html.gif \
 	editmode-preview.gif \
-	editmode-toggle.gif \
     $(NULL)
 
 include $(topsrcdir)/config/rules.mk

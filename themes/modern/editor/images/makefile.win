@@ -88,4 +88,3 @@ install::
 	$(MAKE_INSTALL) editmode-tags.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) editmode-html.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) editmode-preview.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
-	$(MAKE_INSTALL) editmode-toggle.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
