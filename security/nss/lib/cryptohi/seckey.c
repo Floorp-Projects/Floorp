@@ -1814,24 +1814,27 @@ SECKEY_ImportDERPublicKey(SECItem *derKey, CK_KEY_TYPE type)
     if(pubk == NULL) {
         goto finish;
     }
-    pubk->arena = NULL;
+    pubk->arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (NULL == pubk->arena) {
+        goto finish;
+    }
     pubk->pkcs11Slot = NULL;
     pubk->pkcs11ID = CK_INVALID_HANDLE;
 
     switch( type ) {
       case CKK_RSA:
 	prepare_rsa_pub_key_for_asn1(pubk);
-        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_RSAPublicKeyTemplate,derKey);
+        rv = SEC_QuickDERDecodeItem(pubk->arena, pubk, SECKEY_RSAPublicKeyTemplate,derKey);
         pubk->keyType = rsaKey;
         break;
       case CKK_DSA:
 	prepare_dsa_pub_key_for_asn1(pubk);
-        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_DSAPublicKeyTemplate,derKey);
+        rv = SEC_QuickDERDecodeItem(pubk->arena, pubk, SECKEY_DSAPublicKeyTemplate,derKey);
         pubk->keyType = dsaKey;
         break;
       case CKK_DH:
 	prepare_dh_pub_key_for_asn1(pubk);
-        rv = SEC_ASN1DecodeItem(NULL, pubk, SECKEY_DHPublicKeyTemplate, derKey);
+        rv = SEC_QuickDERDecodeItem(pubk->arena, pubk, SECKEY_DHPublicKeyTemplate, derKey);
         pubk->keyType = dhKey;
         break;
       default:
