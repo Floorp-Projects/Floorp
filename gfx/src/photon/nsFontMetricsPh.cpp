@@ -436,7 +436,7 @@ NS_IMETHODIMP nsFontEnumeratorPh::EnumerateFonts( const char* aLangGroup, const 
 				  {
 					  array[nCount++] = ToNewUnicode(*gFontNames[i]);
 				  }
-				else if stricmp(generic, "monospace") == 0)
+				else if(stricmp(generic, "monospace") == 0)
 				  {
 					  if(gFontDetails[i].flags & PHFONT_INFO_FIXED)
 						 array[nCount++] = ToNewUnicode(*gFontNames[i]);
