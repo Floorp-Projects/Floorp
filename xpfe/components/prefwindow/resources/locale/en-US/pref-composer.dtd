@@ -6,11 +6,16 @@
 <!ENTITY  authorName "Author Name">
 <!ENTITY  AutoSaveCheck.label "Automatically save page every">
 <!ENTITY  minText "minutes">
-<!ENTITY  exterLegand.label "External Editors">
+<!ENTITY  exterLegend.label "External Editors">
 <!ENTITY  htmlSource "HTML Source:">
 <!ENTITY  chooseButton.label "Choose...">
-<!ENTITY  fontSizeHeader "Font Size Mode">
+<!ENTITY  pageColorHeader "Default Page Colors">
 <!ENTITY  img "Images:">
-<!ENTITY  relSizeRadio.label "Show relative size as points based on your Navigator font sizes">
-<!ENTITY  relfontRadio.label "Show relative HTML font scale: -2, -1, 0, +1, +2, +3, +4">
-<!ENTITY  relScaleRadio.label "Show relative HTML scale and absolute &quot;point-size&quot; attributes">
+<!ENTITY  UseNavigatorColor.label "Use Navigator's Color Settings">
+<!ENTITY  UseCustomColors.label "Use Custom Colors">
+<!ENTITY  NormalText.label "Normal Text">
+<!ENTITY  LinkText.label "Link Text">
+<!ENTITY  ActiveLinkText.label "Active Link Text">
+<!ENTITY  FollowedLinkText.label "Followed Link Text">
+<!ENTITY  BackgroundColor.label "Background">
+<!ENTITY  colorPick "ColorPicker">
