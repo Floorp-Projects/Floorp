@@ -115,7 +115,8 @@ void CMostRecentUrls::AddURL(const char * aURL)
     szTemp[sizeof(szTemp) - 1] = '\0';
 
     // check to see if an existing url matches the one passed in
-    for (int i=0; i<MAX_URLS-1; i++)
+    int i = 0;
+    for (; i<MAX_URLS-1; i++)
     {
         if(mURLs[i])
         {
