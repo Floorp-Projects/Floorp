@@ -392,7 +392,7 @@ nsresult nsClipboard::GetNativeDataOffClipboard(IDataObject * aDataObject, UINT 
 
             case CF_HDROP : 
               {
-                LPDROPFILES dropFiles = (LPDROPFILES)(*aData);
+                HDROP dropFiles = (HDROP)(*aData);
 
                 char fileName[1024];
                 UINT numFiles = DragQueryFile(dropFiles, 0xFFFFFFFF, NULL, 0);
