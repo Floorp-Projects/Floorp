@@ -18,9 +18,9 @@
 
 /*
  *  nsDictionary XPCOM component
- *  Version: $Revision: 1.1 $
+ *  Version: $Revision: 1.2 $
  *
- *  $Id: nsDictionary.js,v 1.1 2000/05/05 06:06:34 mj%digicool.com Exp $
+ *  $Id: nsDictionary.js,v 1.2 2000/05/09 11:33:40 mj%digicool.com Exp $
  */
 
 /*
@@ -45,7 +45,7 @@ nsDictionary.prototype= {
 
     getKeys: function(count) {
         var asKeys = new Array();
-        for (sKey in this.hash) asKeys.push(sKey);
+        for (var sKey in this.hash) asKeys.push(sKey);
         count.value = asKeys.length;
         return asKeys;
     },

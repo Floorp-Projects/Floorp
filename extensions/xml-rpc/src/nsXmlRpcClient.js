@@ -18,9 +18,9 @@
 
 /*
  *  nsXmlRpcClient XPCOM component
- *  Version: $Revision: 1.5 $
+ *  Version: $Revision: 1.6 $
  *
- *  $Id: nsXmlRpcClient.js,v 1.5 2000/05/08 15:21:25 mj%digicool.com Exp $
+ *  $Id: nsXmlRpcClient.js,v 1.6 2000/05/09 11:33:41 mj%digicool.com Exp $
  */
 
 /*
@@ -36,7 +36,7 @@ const XMLRPCFAULT_CID =
     Components.ID('{691cb864-0a7e-448c-98ee-4a7f359cf145}');
 const XMLRPCFAULT_IID = Components.interfaces.nsIXmlRpcFault;
 
-const DEBUG = true;
+const DEBUG = false;
 const DEBUGPARSE = false;
 
 /*
@@ -277,7 +277,7 @@ nsXmlRpcClient.prototype = {
 
         // All done.
         debug('Parse finished');
-        if (this._fault) {
+        if (this._foundFault) {
             try {
                 this._fault = createInstance(XMLRPCFAULT_PROGID,
                     'nsIXmlRpcFault');
@@ -307,8 +307,9 @@ nsXmlRpcClient.prototype = {
     },
 
     _parser: null,
+    _foundFault: false,
     
-    // Houston, we have data. Process on first call, don't look back.
+    // Houston, we have data.
     onDataAvailable: function(channel, ctxt, inStr, sourceOffset, count) {
         debug('Data available (' + sourceOffset + ', ' + count + ')');
         if (!this._inProgress) return; // No longer interested.
@@ -361,9 +362,10 @@ nsXmlRpcClient.prototype = {
             this._parser.setDocumentHandler(this);
 
             // Make sure state is clean
-            _valueStack = [];
-            _currValue = null;
-            _cdata = null;
+            this._valueStack = [];
+            this._currValue = null;
+            this._cdata = null;
+            this._foundFault = false;
         }
         
         debug('Cranking up the parser, window = ' + count);
@@ -534,7 +536,7 @@ nsXmlRpcClient.prototype = {
             case 'Dictionary':
                 obj = obj.QueryInterface(Components.interfaces.nsIDictionary);
                 writer.startElement('struct');
-                keys = obj.getKeys({});
+                var keys = obj.getKeys({});
                 for (var i in keys) {
                     writer.startElement('member');
                     writer.startElement('name');
@@ -641,14 +643,15 @@ nsXmlRpcClient.prototype = {
         parser.setDocumentHandler(this);
 
         // Make sure state is clean
-        _valueStack = [];
-        _currValue = null;
-        _cdata = null;
+        this._valueStack = [];
+        this._currValue = null;
+        this._cdata = null;
+        this._foundFault = false;
         
         debug('Cranking up the parser');
         parser.parse(length);
 
-        if (this._fault) {
+        if (this._foundFault) {
             try {
                 this._fault = createInstance(XMLRPCFAULT_PROGID,
                     'nsIXmlRpcFault');
@@ -679,7 +682,7 @@ nsXmlRpcClient.prototype = {
         if (DEBUGPARSE) debug('Start element ' + name);
         switch (name) {
             case 'fault':
-                this._fault = true;
+                this._foundFault = true;
                 break;
 
             case 'value':
@@ -1336,7 +1339,7 @@ function streamToBase64(stream, writer) {
     while (stream.available()) {
         var data = [];
         while (data.length < BASE64CHUNK && stream.available()) {
-            d = stream.read(1).charCodeAt(0);
+            var d = stream.read(1).charCodeAt(0);
             // reading a 0 results in NaN, compensate.
             data = data.concat(isNaN(d) ? 0 : d);
         }
@@ -1351,7 +1354,6 @@ const base64Pad = '=';
 function toBase64(data) {
     var result = '';
     var length = data.length;
-    var i = 0;
     // Convert every three bytes to 4 ascii characters.
     for (var i = 0; i < (length - 2); i += 3) {
         result += toBase64Table[data[i] >> 2];
@@ -1362,7 +1364,7 @@ function toBase64(data) {
 
     // Convert the remaining 1 or 2 bytes, pad out to 4 characters.
     if (length%3) {
-        i = length - (length%3);
+        var i = length - (length%3);
         result += toBase64Table[data[i] >> 2];
         if ((length%3) == 2) {
             result += toBase64Table[((data[i] & 0x03) << 4) + (data[i+1] >> 4)];
