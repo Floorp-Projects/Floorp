@@ -328,28 +328,46 @@ function findNextExecutableLine (script, line)
     
 }
 
+function formatArguments (v)
+{
+    var ary = new Array();
+    var p = new Object();
+    v.getProperties (p, {});
+    p = p.value;
+    for (var i = 0; i < p.length; ++i)
+    {
+        if (p[i].flags & jsdIProperty.FLAG_ARGUMENT)
+            ary.push (getMsg(MSN_FMT_ARGUMENT,
+                             [p[i].name.stringValue, formatValue(v, true)]));
+    }
+    
+    return ary.join (MSG_COMMASP); 
+}
+
 function formatProperty (p)
 {
     if (!p)
         throw BadMojo (ERR_REQUIRED_PARAM, "p");
 
     var flags = p.flags;
-    var s = "[";
-    s += (flags & jsdIProperty.FLAG_ENUMERATE) ? "e" : "-";
-    s += (flags & jsdIProperty.FLAG_READONLY)  ? "r" : "-";
-    s += (flags & jsdIProperty.FLAG_PERMANENT) ? "p" : "-";
-    s += (flags & jsdIProperty.FLAG_ALIAS)     ? "A" : "-";
-    s += (flags & jsdIProperty.FLAG_ARGUMENT)  ? "a" : "-";
-    s += (flags & jsdIProperty.FLAG_VARIABLE)  ? "v" : "-";
-    s += (flags & jsdIProperty.FLAG_HINTED)    ? "h]" : "-]";
+    var s = "";
+    if (flags & jsdIProperty.FLAG_ENUMERATE)
+        s += MSG_VF_ENUMERABLE;
+    if (flags & jsdIProperty.FLAG_READONLY)
+        s += MSG_VF_READONLY;        
+    if (flags & jsdIProperty.FLAG_PERMANENT)
+        s += MSG_VF_PERMANENT;
+    if (flags & jsdIProperty.FLAG_ALIAS)
+        s += MSG_VF_ALIAS;
+    if (flags & jsdIProperty.FLAG_ARGUMENT)
+        s += MSG_VF_ARGUMENT;
+    if (flags & jsdIProperty.FLAG_VARIABLE)
+        s += MSG_VF_VARIABLE;
+    if (flags & jsdIProperty.FLAG_HINTED)
+        s += MSG_VF_HINTED;
 
-    if (p.name)
-        s += " " + p.name.stringValue;
-    
-    if (p.value)
-        s += " " + formatValue(p.value);
-
-    return s;
+    return getMsg(MSN_FMT_PROPERTY, [s, p.name.stringValue,
+                                     formatValue(p.value)]);
 }
 
 function formatScript (script)
@@ -357,84 +375,80 @@ function formatScript (script)
     if (!script)
         throw BadMojo (ERR_REQUIRED_PARAM, "script");
 
-    return MSG_TYPE_FUNCTION + " " + script.functionName + " in " +
-        script.fileName;
+    return getMsg (MSN_FMT_SCRIPT, [script.functionName, script.fileName]);
 }
 
 function formatFrame (f)
 {
     if (!f)
         throw BadMojo (ERR_REQUIRED_PARAM, "f");
-
-    var s = formatScript (f.script);
-    s += " " + MSG_TYPE_LINE + " " + f.line;
+ 
+    return getMsg (MSN_FMT_FRAME,
+                   [f.script.functionName, formatArguments(f.scope),
+                    f.script.fileName, f.line]);
 
     return s;
 }
 
-function formatValue (v)
+function formatValue (v, summary)
 {
     if (!v)
         throw BadMojo (ERR_REQUIRED_PARAM, "v");
     
-    var s = "[";
-    var value = "";
+    var type;
+    var value;
         
-    if (v.isNative)
-        s += MSG_TYPE_NATIVE + " ";
-    
     switch (v.jsType)
     {
         case jsdIValue.TYPE_BOOLEAN:
-            s += MSG_TYPE_BOOLEAN;
+            type = MSG_TYPE_BOOLEAN;
             value = String(v.booleanValue);
             break;
         case jsdIValue.TYPE_DOUBLE:
-            s += MSG_TYPE_DOUBLE;
+            type = MSG_TYPE_DOUBLE;
             value = v.doubleValue;
             break;
         case jsdIValue.TYPE_INT:
-            s += MSG_TYPE_INT;
+            type = MSG_TYPE_INT;
             value = v.intValue;
             break;
         case jsdIValue.TYPE_FUNCTION:
-            s += MSG_TYPE_FUNCTION;
+            type = MSG_TYPE_FUNCTION;
             value = v.jsFunctionName;
             break;
         case jsdIValue.TYPE_NULL:
-            s += MSG_TYPE_NULL;
+            type = MSG_TYPE_NULL;
+            value = MSG_TYPE_NULL;
             break;
         case jsdIValue.TYPE_OBJECT:
-            s += MSG_TYPE_OBJECT;
-            var pcount = new Object();
-            value = String(v.propertyCount) + " " + MSG_TYPE_PROPERTIES;
+            type = MSG_TYPE_OBJECT;
+            if (!summary)
+                value = getMsg(MSN_FMT_OBJECT, String(v.propertyCount));
+            else
+                value = "{" + String(v.propertyCount) + "}";
             break;
         case jsdIValue.TYPE_STRING:
-            s += MSG_TYPE_STRING;
+            type = MSG_TYPE_STRING;
             value = v.stringValue;
             break;
         case jsdIValue.TYPE_VOID:
-            s += MSG_TYPE_VOID;
+            type = MSG_TYPE_VOID;
+            value = MSG_TYPE_VOID;            
             break;
         default:
-            s += MSG_TYPE_UNKNOWN;
+            type = MSG_TYPE_UNKNOWN;
+            value = MSG_TYPE_UNKNOWN;
             break;
     }
 
-    /*
-    if (v.isPrimitive)
-        s += " (" + MSG_TYPE_PRIMITIVE + ")";
-    */
-    s += "]";
+    if (summary)
+        return getMsg (MSN_FMT_VALUE_SHORT, [type, value]);
 
     if (v.jsClassName)
-        s += " [" + MSG_TYPE_CLASS + ": " + v.jsClassName + "]";
+        return getMsg (MSN_FMT_VALUE_LONG, [type, v.jsClassName, value]);
 
-    if (value)
-        s += " " + value;
+    return getMsg (MSN_FMT_VALUE_MED, [type, value]);
 
-    
-    return s;
 }
 
 function loadSource (url, cb)
@@ -443,6 +457,7 @@ function loadSource (url, cb)
         onComplete: function oncomplete (data, url, status) {
             var ary = data.split("\n");
             for (var i = 0; i < ary.length; ++i)
+                /* need to use new String here so we can decorate it later */
                 ary[i] = new String(ary[i].replace(/\r$/, ""));
             console._sources[url] = ary;
             cb(data, url, status);
