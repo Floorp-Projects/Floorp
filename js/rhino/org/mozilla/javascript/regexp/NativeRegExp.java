@@ -70,13 +70,13 @@ public class NativeRegExp extends ScriptableObject implements Function {
                                        ScriptableObject.DONTENUM);
 
         String[] props =     
-                { "lastIndex", "source", "global", "ignoreCase", "multiline" };
+            { "lastIndex", "source", "global", "ignoreCase", "multiline" };
         int[] propAttrs =    
-                {  ScriptableObject.PERMANENT,
-                   ScriptableObject.PERMANENT |  ScriptableObject.READONLY,
-                   ScriptableObject.PERMANENT |  ScriptableObject.READONLY,
-                   ScriptableObject.PERMANENT |  ScriptableObject.READONLY,
-                   ScriptableObject.PERMANENT |  ScriptableObject.READONLY };
+            {  ScriptableObject.PERMANENT,
+               ScriptableObject.PERMANENT |  ScriptableObject.READONLY,
+               ScriptableObject.PERMANENT |  ScriptableObject.READONLY,
+               ScriptableObject.PERMANENT |  ScriptableObject.READONLY,
+               ScriptableObject.PERMANENT |  ScriptableObject.READONLY };
         for (int i=0; i < props.length; i++) {
             proto.defineProperty(props[i], NativeRegExp.class, propAttrs[i]);
         }
@@ -86,13 +86,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
     }
 
     public NativeRegExp(Context cx, Scriptable scope, String source, 
-                                                 String global, boolean flat) {
+                        String global, boolean flat) {
         init(cx, scope, source, global, flat);
     }
 
     public void init(Context cx, Scriptable scope, String source, 
-                     String global, boolean flat) 
-    {
+                     String global, boolean flat) {
         this.source = source;
         flags = 0;
         if (global != null) {
@@ -106,11 +105,10 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     flags |= MULTILINE;
                 } else {
                     Object[] errArgs = { new Character(c) };
-                    throw NativeGlobal.constructError(
-                                 cx, "SyntaxError",
-                                 ScriptRuntime.getMessage(
-                                      "msg.invalid.re.flag", errArgs),
-                                 scope);
+                    throw NativeGlobal.constructError(cx, "SyntaxError",
+                                                      ScriptRuntime.getMessage(
+                                                                               "msg.invalid.re.flag", errArgs),
+                                                      scope);
                 }
             }
         }
@@ -126,7 +124,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     len = REOP_FLATLEN_MAX;
                 }
                 RENode ren2 = new RENode(state, len == 1 ? REOP_FLAT1 : REOP_FLAT,
-                                 new Integer(index));                                 
+                                         new Integer(index));                                 
                 ren2.flags = RENode.NONEMPTY;
                 if (len > 1) {
                     ren2.kid2 = index + len;
@@ -163,8 +161,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
-                       Object[] args)
-    {
+                       Object[] args) {
         return execSub(cx, this, args, scope, false, this);
     }
 
@@ -173,17 +170,16 @@ public class NativeRegExp extends ScriptableObject implements Function {
     }
 
     public static Scriptable compile(Context cx, Scriptable thisVal,
-                                     Object[] args, Function funObj)
-    {
+                                     Object[] args, Function funObj) {
         NativeRegExp thisObj = (NativeRegExp) thisVal; // XXX check cast
         if (args.length > 0 && args[0] instanceof NativeRegExp) {
             if (args.length > 1 && args[1] != Undefined.instance) {
                 // report error
                 throw NativeGlobal.constructError(
-                             cx, "TypeError",
-                             "only one argument may be specified " +
-                               "if the first argument is a RegExp object",
-                             funObj);
+                                                  cx, "TypeError",
+                                                  "only one argument may be specified " +
+                                                  "if the first argument is a RegExp object",
+                                                  funObj);
             }
             NativeRegExp thatObj = (NativeRegExp) args[0];
             thisObj.source = thatObj.source; 
@@ -196,8 +192,8 @@ public class NativeRegExp extends ScriptableObject implements Function {
         }
         String s = args.length == 0 ? "" : ScriptRuntime.toString(args[0]);
         String global = args.length > 1 && args[1] != Undefined.instance
-                            ? ScriptRuntime.toString(args[1])
-                            : null;
+            ? ScriptRuntime.toString(args[1])
+            : null;
         thisObj.init(cx, funObj, s, global, false);
         return thisObj;
     }
@@ -213,7 +209,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
             buf.append('i');
         if ((flags & MULTILINE) != 0)
             buf.append('m');
-	    return buf.toString();
+        return buf.toString();
     }
 
     /**
@@ -267,15 +263,14 @@ public class NativeRegExp extends ScriptableObject implements Function {
 
     private static Object execSub(Context cx, Scriptable thisObj,
                                   Object[] args, Scriptable scopeObj,
-                                  boolean test, Function funObj)
-    {
+                                  boolean test, Function funObj) {
         if (!(thisObj instanceof NativeRegExp)) {
             Object[] errArgs = { ((NativeFunction) funObj).jsGet_name() };
             throw NativeGlobal.constructError(
-                         cx, "TypeError",
-                         ScriptRuntime.getMessage(
-                              "msg.incompat.call", errArgs),
-                         scopeObj);
+                                              cx, "TypeError",
+                                              ScriptRuntime.getMessage(
+                                                                       "msg.incompat.call", errArgs),
+                                              scopeObj);
         }
         NativeRegExp re = (NativeRegExp) thisObj;
         String str;
@@ -284,10 +279,10 @@ public class NativeRegExp extends ScriptableObject implements Function {
             if (str == null) {
                 Object[] errArgs = { re.toString() };
                 throw NativeGlobal.constructError(
-                            cx, "SyntaxError",
-                            ScriptRuntime.getMessage
-                                ("msg.no.re.input.for", errArgs),
-                            thisObj);
+                                                  cx, "SyntaxError",
+                                                  ScriptRuntime.getMessage
+                                                  ("msg.no.re.input.for", errArgs),
+                                                  thisObj);
             }
         } else {
             str = ScriptRuntime.toString(args[0]);
@@ -306,14 +301,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
     }
 
     public static Object exec(Context cx, Scriptable thisObj,
-                              Object[] args, Function funObj)
-    {
+                              Object[] args, Function funObj) {
         return execSub(cx, thisObj, args, funObj, false, funObj);
     }
 
     public static Object test(Context cx, Scriptable thisObj,
-                              Object[] args, Function funObj)
-    {
+                              Object[] args, Function funObj) {
         Object rval = execSub(cx, thisObj, args, funObj, true, funObj);
         if (rval == null || !rval.equals(Boolean.TRUE))
             rval = Boolean.FALSE;
@@ -456,34 +449,34 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 System.out.print(" ");
                 System.out.print(ren.offset);
                 System.out.print(" " +
-                    ((ren.flags & RENode.ANCHORED) != 0 ? "A" : "-") +
-                    ((ren.flags & RENode.SINGLE)   != 0 ? "S" : "-") +
-                    ((ren.flags & RENode.NONEMPTY) != 0 ? "F" : "-") + // F for full
-                    ((ren.flags & RENode.ISNEXT)   != 0 ? "N" : "-") + // N for next
-                    ((ren.flags & RENode.GOODNEXT) != 0 ? "G" : "-") +
-                    ((ren.flags & RENode.ISJOIN)   != 0 ? "J" : "-") +
-                    ((ren.flags & RENode.MINIMAL)  != 0 ? "M" : "-") +
-                    "  " +
-                    reopname[ren.op]);
+                                 ((ren.flags & RENode.ANCHORED) != 0 ? "A" : "-") +
+                                 ((ren.flags & RENode.SINGLE)   != 0 ? "S" : "-") +
+                                 ((ren.flags & RENode.NONEMPTY) != 0 ? "F" : "-") + // F for full
+                                 ((ren.flags & RENode.ISNEXT)   != 0 ? "N" : "-") + // N for next
+                                 ((ren.flags & RENode.GOODNEXT) != 0 ? "G" : "-") +
+                                 ((ren.flags & RENode.ISJOIN)   != 0 ? "J" : "-") +
+                                 ((ren.flags & RENode.MINIMAL)  != 0 ? "M" : "-") +
+                                 "  " +
+                                 reopname[ren.op]);
 
                 switch (ren.op) {
-                  case REOP_ALT:
+                case REOP_ALT:
                     System.out.print(" ");
                     System.out.println(ren.next.offset);
                     dumpRegExp(state, (RENode) ren.kid);
                     break;
 
-                  case REOP_STAR:
-                  case REOP_PLUS:
-                  case REOP_OPT:
-                  case REOP_ANCHOR1:
-            	  case REOP_ASSERT:
-            	  case REOP_ASSERT_NOT:
+                case REOP_STAR:
+                case REOP_PLUS:
+                case REOP_OPT:
+                case REOP_ANCHOR1:
+                case REOP_ASSERT:
+                case REOP_ASSERT_NOT:
                     System.out.println();
                     dumpRegExp(state, (RENode) ren.kid);
                     break;
 
-                  case REOP_QUANT:
+                case REOP_QUANT:
                     System.out.print(" next ");
                     System.out.print(ren.next.offset);
                     System.out.print(" min ");
@@ -493,50 +486,46 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     dumpRegExp(state, (RENode) ren.kid);
                     break;
 
-                  case REOP_LPAREN:
+                case REOP_LPAREN:
                     System.out.print(" num ");
                     System.out.println(ren.num);
                     dumpRegExp(state, (RENode) ren.kid);
                     break;
 
-            	  case REOP_LPARENNON:
+                case REOP_LPARENNON:
                     System.out.println();
                     dumpRegExp(state, (RENode) ren.kid);
             	    break;
 
-                  case REOP_BACKREF:
-                  case REOP_RPAREN:
+                case REOP_BACKREF:
+                case REOP_RPAREN:
                     System.out.print(" num ");
                     System.out.println(ren.num);
                     break;
 
-                  case REOP_CCLASS:
-                  {
+                case REOP_CCLASS: {
                     int index = ((Integer) ren.kid).intValue();
                     int index2 = ren.kid2;
                     int len = index2 - index;
                     System.out.print(" [");
-                    System.out.print(getPrintableString(
-                                    new String(source, index, len)));
+                    System.out.print(getPrintableString(new String(source, index, len)));
                     System.out.println("]");
                     break;
-                  }
+                    }
 
-                  case REOP_FLAT:
-                  {
+                case REOP_FLAT: {
                     int index = ((Integer) ren.kid).intValue();
                     int index2 = ren.kid2;
                     int len = index2 - index;
                     System.out.print(" ");
-                    System.out.print(getPrintableString(
-                                    new String(source, index, len)));
+                    System.out.print(getPrintableString(new String(source, index, len)));
                     System.out.print(" (");
                     System.out.print(len);
                     System.out.println(")");
                     break;
-                  }
+                    }
 
-                  case REOP_FLAT1:
+                case REOP_FLAT1:
                     System.out.print(" ");
                     System.out.print(ren.chr);
                     System.out.print(" ('\\");
@@ -544,41 +533,39 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     System.out.println("')");
                     break;
 
-                  case REOP_JUMP:
+                case REOP_JUMP:
                     System.out.print(" ");
                     System.out.println(ren.next.offset);
                     break;
 
-                  case REOP_UCFLAT:
-                  {
+                case REOP_UCFLAT: {
                     int index = ((Integer) ren.kid).intValue();
                     int len = ren.kid2 - index;
                     for (int i = 0; i < len; i++)
                         System.out.print("\\u" + 
-                            Integer.toHexString(source[index+i]));
+                                         Integer.toHexString(source[index+i]));
                     System.out.println();
                     break;
-                  }
+                    }
 
-                  case REOP_UCFLAT1:
+                case REOP_UCFLAT1:
                     System.out.print("\\u" + 
-                        Integer.toHexString(ren.chr));
+                                     Integer.toHexString(ren.chr));
                     System.out.println();
                     break;
 
-                  case REOP_UCCLASS:
-                  {
+                case REOP_UCCLASS: {
                     int index = ((Integer) ren.kid).intValue();
                     int len = ren.kid2 - index;
                     System.out.print(" [");
                     for (int i = 0; i < len; i++)
                         System.out.print("\\u" + 
-                            Integer.toHexString(source[index+i]));
+                                         Integer.toHexString(source[index+i]));
                     System.out.println("]");
                     break;
-                  }
+                    }
 
-                  default:
+                default:
                     System.out.println();
                     break;
                 }
@@ -591,8 +578,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
     }
 
     private void fixNext(CompilerState state, RENode ren1, RENode ren2,
-                         RENode oldnext)
-    {
+                         RENode oldnext) {
         boolean goodnext;
         RENode next, kid, ren;
 
@@ -644,18 +630,18 @@ public class NativeRegExp extends ScriptableObject implements Function {
          * where we fix the next links under the final ALT node's kid.
          */
         switch (ren1.op) {
-          case REOP_ALT:
-          case REOP_QUANT:
-          case REOP_STAR:
-          case REOP_PLUS:
-          case REOP_OPT:
-          case REOP_LPAREN:
-          case REOP_LPARENNON:
-          case REOP_ASSERT:
-          case REOP_ASSERT_NOT:
+        case REOP_ALT:
+        case REOP_QUANT:
+        case REOP_STAR:
+        case REOP_PLUS:
+        case REOP_OPT:
+        case REOP_LPAREN:
+        case REOP_LPARENNON:
+        case REOP_ASSERT:
+        case REOP_ASSERT_NOT:
             fixNext(state, (RENode) ren1.kid, ren2, oldnext);
             break;
-          default:;
+        default:;
         }
     }
 
@@ -687,12 +673,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 state.index = ++index;
                 if (index < source.length && (source[index] == '|' ||
                                               source[index] == ')'))
-                {
-                    kid = new RENode(state, REOP_EMPTY, null);
-                } else {
-                    kid = parseAltern(state);
-                    index = state.index;
-                }
+                    {
+                        kid = new RENode(state, REOP_EMPTY, null);
+                    } else {
+                        kid = parseAltern(state);
+                        index = state.index;
+                    }
                 if (kid == null)
                     return null;
                 RENode ren2 = new RENode(state, REOP_ALT, kid);
@@ -725,22 +711,22 @@ public class NativeRegExp extends ScriptableObject implements Function {
         /* (balance: */
         while (index != source.length && (c = source[index]) != '|' &&
                c != ')')
-        {
-            RENode ren2 = parseItem(state);
-            if (ren2 == null)
-                return null;
-            setNext(state, ren1, ren2);
-            flags |= ren2.flags;
-            ren1 = ren2;
-            index = state.index;
-        }
+            {
+                RENode ren2 = parseItem(state);
+                if (ren2 == null)
+                    return null;
+                setNext(state, ren1, ren2);
+                flags |= ren2.flags;
+                ren1 = ren2;
+                index = state.index;
+            }
 
         /*
-        * Propagate NONEMPTY to the front of a concatenation list, so that the
-        * first alternative in (^a|b) is considered non-empty.  The first node
-        * in a list may match the empty string (as ^ does), but if the list is
-        * non-empty, then the first node's NONEMPTY flag must be set.
-        */
+         * Propagate NONEMPTY to the front of a concatenation list, so that the
+         * first alternative in (^a|b) is considered non-empty.  The first node
+         * in a list may match the empty string (as ^ does), but if the list is
+         * non-empty, then the first node's NONEMPTY flag must be set.
+         */
         ren.flags |= flags & RENode.NONEMPTY;
         return ren;
     }
@@ -765,33 +751,33 @@ public class NativeRegExp extends ScriptableObject implements Function {
         char[] source = state.source;
         int index = state.index;
         switch (index < source.length ? source[index] : '\0') {
-          case '^':
+        case '^':
             state.index = index + 1;
             ren = new RENode(state, REOP_BOL, null);
             ren.flags |= RENode.ANCHORED;
             return ren;
 
-          case '$':
+        case '$':
             state.index = index + 1;
             return new RENode(state,
-                             (index == state.indexBegin ||
-                              ((source[index-1] == '(' ||
-                                source[index-1] == '|') && /*balance)*/
-                               (index - 1 == state.indexBegin ||
-                                source[index-2] != '\\')))
-                             ? REOP_EOLONLY
-                             : REOP_EOL,
-                             null);
+                              (index == state.indexBegin ||
+                               ((source[index-1] == '(' ||
+                                 source[index-1] == '|') && /*balance)*/
+                                (index - 1 == state.indexBegin ||
+                                 source[index-2] != '\\')))
+                              ? REOP_EOLONLY
+                              : REOP_EOL,
+                              null);
 
-          case '\\':
+        case '\\':
             switch (++index < source.length ? source[index] : '\0') {
-              case 'b':
+            case 'b':
                 op = REOP_WBDRY;
                 break;
-              case 'B':
+            case 'B':
                 op = REOP_WNONBDRY;
                 break;
-              default:
+            default:
                 return parseQuantAtom(state);
             }
 
@@ -804,7 +790,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
             ren.flags |= RENode.NONEMPTY;
             return ren;
 
-          default:;
+        default:;
         }
         return parseQuantAtom(state);
     }
@@ -832,10 +818,10 @@ public class NativeRegExp extends ScriptableObject implements Function {
         int min, max;
         char[] source = state.source;
         int index = state.index;
-    loop:
+        loop:
         while (index < source.length) {
             switch (source[index]) {
-              case '{':
+            case '{':
                 if (++index == source.length || !isDigit(c = source[index])) {
                     reportError("msg.bad.quant",
                                 String.valueOf(source[state.index]), state);
@@ -846,7 +832,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     min = 10 * min + unDigit(c);
                     if ((min >> 16) != 0) {
                         reportError("msg.overlarge.max", tail(source, index),
-                                state);
+                                    state);
                         return null;
                     }
                 }
@@ -899,12 +885,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 ren = ren2;
                 break;
 
-              case '*':
+            case '*':
                 index++;
                 ren = new RENode(state, REOP_STAR, ren);
                 break;
 
-              case '+':
+            case '+':
                 index++;
                 ren2 = new RENode(state, REOP_PLUS, ren);
                 if ((ren.flags & RENode.NONEMPTY) != 0)
@@ -912,12 +898,12 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 ren = ren2;
                 break;
 
-              case '?':
+            case '?':
                 index++;
                 ren = new RENode(state, REOP_OPT, ren);
                 break;
 
-              default:
+            default:
                 break loop;
             }
             if ((index < source.length) && (source[index] == '?')) {
@@ -982,24 +968,22 @@ public class NativeRegExp extends ScriptableObject implements Function {
         }
         switch (source[index]) {
             /* handle /|a/ by returning an empty node for the leftside */
-          case '|':
+        case '|':
             return new RENode(state, REOP_EMPTY, null);
 
-          case '(':
-          
-          
+        case '(':
             op = REOP_END;
             if (source[index + 1] == '?') {
                 switch (source[index + 2]) {
-                    case ':' :
-                        op = REOP_LPARENNON;
-                        break;
-                    case '=' :
-                        op = REOP_ASSERT;
-                        break;
-                    case '!' :
-                        op = REOP_ASSERT_NOT;
-                        break;
+                case ':' :
+                    op = REOP_LPARENNON;
+                    break;
+                case '=' :
+                    op = REOP_ASSERT;
+                    break;
+                case '!' :
+                    op = REOP_ASSERT_NOT;
+                    break;
                 }
             }
             if (op == REOP_END) {
@@ -1037,7 +1021,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
             }
             break;
 
-          case '.':
+        case '.':
             ++index;
             op = REOP_DOT;
             if ((index < source.length) && (source[index] == '*')) {
@@ -1053,7 +1037,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 ren.flags = RENode.SINGLE | RENode.NONEMPTY;
             break;
 
-          case '[':
+        case '[':
             /* A char class must have at least one char in it. */
             if (++index == source.length) {
                 reportError("msg.unterm.class", tail(source, ocp), state);
@@ -1085,59 +1069,59 @@ public class NativeRegExp extends ScriptableObject implements Function {
             ren.flags = RENode.SINGLE | RENode.NONEMPTY;
             break;
 
-          case '\\':
+        case '\\':
             if (++index == source.length) {
                 Context.reportError(ScriptRuntime.getMessage("msg.trail.backslash",
-                                                       null));
+                                                             null));
                 return null;
             }
             c = source[index];
             switch (c) {
-              case 'f':
-              case 'n':
-              case 'r':
-              case 't':
-              case 'v':
+            case 'f':
+            case 'n':
+            case 'r':
+            case 't':
+            case 'v':
                 c = getEscape(c);
                 ren = new RENode(state, REOP_FLAT1, null);
                 break;
-              case 'd':
+            case 'd':
                 ren = new RENode(state, REOP_DIGIT, null);
                 break;
-              case 'D':
+            case 'D':
                 ren = new RENode(state, REOP_NONDIGIT, null);
                 break;
-              case 'w':
+            case 'w':
                 ren = new RENode(state, REOP_ALNUM, null);
                 break;
-              case 'W':
+            case 'W':
                 ren = new RENode(state, REOP_NONALNUM, null);
                 break;
-              case 's':
+            case 's':
                 ren = new RENode(state, REOP_SPACE, null);
                 break;
-              case 'S':
+            case 'S':
                 ren = new RENode(state, REOP_NONSPACE, null);
                 break;
 
-        	  case '0':
-        	  case '1':
-        	  case '2':
-        	  case '3':
-        	  case '4':
-        	  case '5':
-        	  case '6':
-        	  case '7':
-        	  case '8':
-        	  case '9':
-                    /*
-                        Yuk. Keeping the old style \n interpretation for 1.2
-                        compatibility.
-                    */
+            case '0':
+            case '1':
+            case '2':
+            case '3':
+            case '4':
+            case '5':
+            case '6':
+            case '7':
+            case '8':
+            case '9':
+                /*
+                  Yuk. Keeping the old style \n interpretation for 1.2
+                  compatibility.
+                */
                 if ((state.cx.getLanguageVersion() != Context.VERSION_DEFAULT)
-                        && (state.cx.getLanguageVersion() <= Context.VERSION_1_4)) {
+                    && (state.cx.getLanguageVersion() <= Context.VERSION_1_4)) {
                     switch (c) {                    
-                      case '0':
+                    case '0':
                         state.index = index;
                         num = doOctal(state);
                         index = state.index;
@@ -1145,24 +1129,24 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         c = (char) num;
                         break;
 
-                      case '1':
-                      case '2':
-                      case '3':
-                      case '4':
-                      case '5':
-                      case '6':
-                      case '7':
-                      case '8':
-                      case '9':
+                    case '1':
+                    case '2':
+                    case '3':
+                    case '4':
+                    case '5':
+                    case '6':
+                    case '7':
+                    case '8':
+                    case '9':
                         num = unDigit(c);
                         len = 1;
                         while (++index < source.length
-                                            && isDigit(c = source[index])) {
+                               && isDigit(c = source[index])) {
                             num = 10 * num + unDigit(c);
                             len++;
                         }
                         /* n in [8-9] and > count of parenetheses, then revert to
-                        '8' or '9', ignoring the '\' */
+                           '8' or '9', ignoring the '\' */
                         if (((num == 8) || (num == 9)) && (num > state.parenCount)) {
                             ocp = --index;  /* skip beyond the '\' */
                             doFlat = true;
@@ -1170,7 +1154,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                             break;                        
                         }
                         /* more than 1 digit, or a number greater than
-                            the count of parentheses => it's an octal */
+                           the count of parentheses => it's an octal */
                         if ((len > 1) || (num > state.parenCount)) {
                             state.index = ocp;
                             num = doOctal(state);
@@ -1184,7 +1168,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         ren.num = num - 1;       /* \1 is numbered 0, etc. */
 
                         /* Avoid common chr- and flags-setting 
-                                                        code after switch. */
+                           code after switch. */
                         ren.flags = RENode.NONEMPTY;
                         skipCommon = true;
                         break;
@@ -1199,7 +1183,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         num = unDigit(c);
                         len = 1;
                         while (++index < source.length
-                                            && isDigit(c = source[index])) {
+                               && isDigit(c = source[index])) {
                             num = 10 * num + unDigit(c);
                             len++;
                         }
@@ -1207,14 +1191,14 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         ren = new RENode(state, REOP_BACKREF, null);
                         ren.num = num - 1;       /* \1 is numbered 0, etc. */
                         /* Avoid common chr- and flags-setting 
-                                                        code after switch. */
+                           code after switch. */
                         ren.flags = RENode.NONEMPTY;
                         skipCommon = true;
                     }
                 }
                 break;
                 
-              case 'x':
+            case 'x':
                 ocp = index;
                 if (++index < source.length && isHex(c = source[index])) {
                     num = unHex(c);
@@ -1223,9 +1207,9 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         num += unHex(c);
                     } else {
                         if ((state.cx.getLanguageVersion()
-                                                != Context.VERSION_DEFAULT)
-                                && (state.cx.getLanguageVersion() 
-                                                <= Context.VERSION_1_4)) 
+                             != Context.VERSION_DEFAULT)
+                            && (state.cx.getLanguageVersion() 
+                                <= Context.VERSION_1_4)) 
                             index--; /* back up so index points to last hex char */
                         else { /* ecma 2 requires pairs of hex digits. */
                             index = ocp;
@@ -1233,14 +1217,14 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         }
                     }
                 } else {
-            		index = ocp;	/* \xZZ is xZZ (Perl does \0ZZ!) */
-            		num = 'x';
+                    index = ocp;	/* \xZZ is xZZ (Perl does \0ZZ!) */
+                    num = 'x';
                 }
                 ren = new RENode(state, REOP_FLAT1, null);
                 c = (char)num;
                 break;
 
-              case 'c':
+            case 'c':
                 c = source[++index];
                 if (!('A' <= c && c <= 'Z') && !('a' <= c && c <= 'z')) {
                     index -= 2;
@@ -1254,20 +1238,20 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 ren = new RENode(state, REOP_FLAT1, null);
                 break;
 
-              case 'u':
+            case 'u':
                 if (index+4 < source.length &&
                     isHex(source[index+1]) && isHex(source[index+2]) &&
                     isHex(source[index+3]) && isHex(source[index+4]))
-                {
-                    num = (((((unHex(source[index+1]) << 4) +
-                                unHex(source[index+2])) << 4) +
-                               unHex(source[index+3])) << 4) +
-                              unHex(source[index+4]);
-                    c = (char) num;
-                    index += 4;
-                    ren = new RENode(state, REOP_FLAT1, null);
-                    break;
-                }
+                    {
+                        num = (((((unHex(source[index+1]) << 4) +
+                                  unHex(source[index+2])) << 4) +
+                                unHex(source[index+3])) << 4) +
+                            unHex(source[index+4]);
+                        c = (char) num;
+                        index += 4;
+                        ren = new RENode(state, REOP_FLAT1, null);
+                        break;
+                    }
 
                 /* Unlike Perl \\xZZ, we take \\uZZZ to be literal-u then ZZZ. */
                 ocp = index;
@@ -1275,7 +1259,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 skipCommon = true;
                 break;
 
-             default:
+            default:
                 ocp = index;
                 doFlat = true;
                 skipCommon = true;
@@ -1298,17 +1282,17 @@ public class NativeRegExp extends ScriptableObject implements Function {
             /* fall through since doFlat was true */
             doFlat = false;
 
-          default:
+        default:
             while (++index != source.length &&
                    metachars.indexOf(source[index]) == -1)
                 ;
             len = (int)(index - ocp);
             if (index != source.length && len > 1 &&
                 closurechars.indexOf(source[index]) != -1)
-            {
-                index--;
-                len--;
-            }
+                {
+                    index--;
+                    len--;
+                }
             if (len > REOP_FLATLEN_MAX) {
                 len = REOP_FLATLEN_MAX;
                 index = ocp + len;
@@ -1336,13 +1320,13 @@ public class NativeRegExp extends ScriptableObject implements Function {
         char c;
         while (++index < source.length && '0' <= (c = source[index]) &&
                c <= '7')
-        {
-            tmp = 8 * num + (int)(c - '0');
-            if (tmp > 0377) {
-                break;
+            {
+                tmp = 8 * num + (int)(c - '0');
+                if (tmp > 0377) {
+                    break;
+                }
+                num = tmp;
             }
-            num = tmp;
-        }
         index--;
         state.index = index;
         return num;
@@ -1350,17 +1334,17 @@ public class NativeRegExp extends ScriptableObject implements Function {
 
     static char getEscape(char c) {
         switch (c) {
-          case 'b':
+        case 'b':
             return '\b';
-          case 'f':
+        case 'f':
             return '\f';
-          case 'n':
+        case 'n':
             return '\n';
-          case 'r':
+        case 'r':
             return '\r';
-          case 't':
+        case 't':
             return '\t';
-          case 'v':
+        case 'v':
             return (char) 11; // '\v' is not vtab in Java
         }
         throw new RuntimeException();
@@ -1376,7 +1360,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
 
     static boolean isHex(char c) {
         return ('0' <= c && c <= '9') || ('a' <= c && c <= 'f') ||
-               ('A' <= c && c <= 'F');
+            ('A' <= c && c <= 'F');
     }
 
     static int unHex(char c) {
@@ -1393,8 +1377,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
         return new String(a, i, a.length - i);
     }
 
-    private static boolean matchChar(int flags, char c, char c2)
-    {
+    private static boolean matchChar(int flags, char c, char c2) {
         if (c == c2)
             return true;
         else
@@ -1402,266 +1385,260 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 c = Character.toUpperCase(c);
                 c2 = Character.toUpperCase(c2);
                 return c == c2 ||
-                       Character.toLowerCase(c) == Character.toLowerCase(c2);
+                    Character.toLowerCase(c) == Character.toLowerCase(c2);
             }
             else
                 return false;
     }
     
     
-	int greedyRecurse(GreedyState grState, int index, int previousKid)
-	{
-	    int kidMatch;
-	    int match;
-	    int num;
+    int greedyRecurse(GreedyState grState, int index, int previousKid) {
+        int kidMatch;
+        int match;
+        int num;
 
 	/*
-	*    when the kid match fails, we reset the parencount and run any 
-	*    previously succesful kid in order to restablish it's paren
-	*    contents.
-	*/
+         *    when the kid match fails, we reset the parencount and run any 
+         *    previously succesful kid in order to restablish it's paren
+         *    contents.
+         */
 
-	    num = grState.state.parenCount;
-	    kidMatch = matchRENodes(grState.state, grState.kid, grState.next, index);
-	    if (kidMatch == -1) {
+        num = grState.state.parenCount;
+        kidMatch = matchRENodes(grState.state, grState.kid, grState.next, index);
+        if (kidMatch == -1) {
             match = matchRENodes(grState.state, grState.next, null, index);
             if (match != -1) {
-	            grState.state.parenCount = num;
-	            if (previousKid != -1)
-	                matchRENodes(grState.state, grState.kid, grState.next, previousKid);
-	            return index;
+                grState.state.parenCount = num;
+                if (previousKid != -1)
+                    matchRENodes(grState.state, grState.kid, grState.next, previousKid);
+                return index;
             }
             else
                 return -1;
-	    }
-	    else {
+        }
+        else {
             if (kidMatch == index) {
-	            if (previousKid != -1)
-	                matchRENodes(grState.state, grState.kid, grState.next, previousKid);
+                if (previousKid != -1)
+                    matchRENodes(grState.state, grState.kid, grState.next, previousKid);
                 return kidMatch;    /* no point pursuing an empty match forever */
             }
-	        if ((grState.maxKid == 0) || (++grState.kidCount < grState.maxKid)) {
-	            match = greedyRecurse(grState, kidMatch, index);
-	            if (match != -1) return match;
-	            --grState.kidCount;
-	        }
-	        grState.state.parenCount = num;
-	        match = matchRENodes(grState.state, grState.next, null, kidMatch);
+            if ((grState.maxKid == 0) || (++grState.kidCount < grState.maxKid)) {
+                match = greedyRecurse(grState, kidMatch, index);
+                if (match != -1) return match;
+                --grState.kidCount;
+            }
+            grState.state.parenCount = num;
+            match = matchRENodes(grState.state, grState.next, null, kidMatch);
             if (match != -1) {
-	            matchRENodes(grState.state, grState.kid, grState.next, index);
-	            return kidMatch;
+                matchRENodes(grState.state, grState.kid, grState.next, index);
+                return kidMatch;
             }
             else
                 return -1;
-	    }
-	}
+        }
+    }
 
-	int matchGreedyKid(MatchState state, RENode ren, RENode stop,
-                            int kidCount, int index, int previousKid)
-	{
-	    GreedyState grState = new GreedyState();
-	    grState.state = state;
-	    grState.kid = (RENode)ren.kid;
-	    grState.next = ren.next;
-	    grState.stop = stop;
-	    grState.kidCount = kidCount;
-	    grState.maxKid = (ren.op == REOP_QUANT) ? ren.max : 0;
-	    return greedyRecurse(grState, index, previousKid);
-	}
+    int matchGreedyKid(MatchState state, RENode ren, RENode stop,
+                       int kidCount, int index, int previousKid) {
+        GreedyState grState = new GreedyState();
+        grState.state = state;
+        grState.kid = (RENode)ren.kid;
+        grState.next = ren.next;
+        grState.stop = stop;
+        grState.kidCount = kidCount;
+        grState.maxKid = (ren.op == REOP_QUANT) ? ren.max : 0;
+        return greedyRecurse(grState, index, previousKid);
+    }
 
-	int matchNonGreedyKid(MatchState state, RENode ren,
-	                        int kidCount, int maxKid,
-	                        int index)
-	{
-	    int kidMatch;
-	    int match;
+    int matchNonGreedyKid(MatchState state, RENode ren,
+                          int kidCount, int maxKid,
+                          int index) {
+        int kidMatch;
+        int match;
 
-	    match = matchRENodes(state, ren.next, null, index);
-	    if (match != -1) return index;
-	    kidMatch = matchRENodes(state, (RENode)ren.kid, ren.next, index);
-	    if (kidMatch == -1)
-	        return -1;
-	    else {
-	        if (kidMatch == index) return kidMatch;    /* no point pursuing an empty match forever */
-	        return matchNonGreedyKid(state, ren, kidCount, maxKid, kidMatch);
-	    }
-	}
+        match = matchRENodes(state, ren.next, null, index);
+        if (match != -1) return index;
+        kidMatch = matchRENodes(state, (RENode)ren.kid, ren.next, index);
+        if (kidMatch == -1)
+            return -1;
+        else {
+            if (kidMatch == index) return kidMatch;    /* no point pursuing an empty match forever */
+            return matchNonGreedyKid(state, ren, kidCount, maxKid, kidMatch);
+        }
+    }
 
-    int matchRENodes(MatchState state, RENode ren, RENode stop, int index)
-    {
+    int matchRENodes(MatchState state, RENode ren, RENode stop, int index) {
         int num;
-		char[] input = state.input;
-        while ((ren != stop) && (ren != null))
-        {
-            switch (ren.op) {
+        char[] input = state.input;
+        while ((ren != stop) && (ren != null)) {
+                switch (ren.op) {
                 case REOP_EMPTY:
                     break;
                 case REOP_ALT: {
-                        if (ren.next.op != REOP_ALT) {
-                            ren = (RENode)ren.kid;
-                            continue;
-                        }
-                        else {
-                            num = state.parenCount;
-                            int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                            stop, index);
-                            if (kidMatch != -1) return kidMatch;
-                            for (int i = num; i < state.parenCount; i++)
-                                state.parens[i].length = 0;
-                            state.parenCount = num;
-                        }
+                    if (ren.next.op != REOP_ALT) {
+                        ren = (RENode)ren.kid;
+                        continue;
                     }
+                    else {
+                        num = state.parenCount;
+                        int kidMatch = matchRENodes(state, (RENode)ren.kid,
+                                                    stop, index);
+                        if (kidMatch != -1) return kidMatch;
+                        for (int i = num; i < state.parenCount; i++)
+                            state.parens[i].length = 0;
+                        state.parenCount = num;
+                    }
+                }
                     break;
                 case REOP_QUANT: {
-                        int lastKid = -1;
-                        for (num = 0; num < ren.min; num++) {
-                            int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                        ren.next, index);
-                            if (kidMatch == -1)
-                                return -1;
-                            else {
-                                lastKid = index;
-                                index = kidMatch;
-                            }
+                    int lastKid = -1;
+                    for (num = 0; num < ren.min; num++) {
+                        int kidMatch = matchRENodes(state, (RENode)ren.kid,
+                                                    ren.next, index);
+                        if (kidMatch == -1)
+                            return -1;
+                        else {
+                            lastKid = index;
+                            index = kidMatch;
                         }
-						if (num == ren.max)
-							// Have matched the exact count required, 
-							// need to match the rest of the regexp.
-							break;
-                        if ((ren.flags & RENode.MINIMAL) == 0) {
-							int kidMatch = matchGreedyKid(state, ren, stop, num,
-                                                        index, lastKid);
-                            if (kidMatch != -1)
-                                index = kidMatch;
-                        }        
-						else {
-							index = matchNonGreedyKid(state, ren, num,
-														ren.max, index);
-							if (index == -1) return -1;
-                        }				
                     }
-					break;
+                    if (num == ren.max)
+                        // Have matched the exact count required, 
+                        // need to match the rest of the regexp.
+                        break;
+                    if ((ren.flags & RENode.MINIMAL) == 0) {
+                        int kidMatch = matchGreedyKid(state, ren, stop, num,
+                                                      index, lastKid);
+                        if (kidMatch != -1)
+                            index = kidMatch;
+                    }        
+                    else {
+                        index = matchNonGreedyKid(state, ren, num,
+                                                  ren.max, index);
+                        if (index == -1) return -1;
+                    }				
+                }
+                    break;
                 case REOP_PLUS: {
-						int kidMatch = matchRENodes(state, (RENode)ren.kid, 
-														ren.next, index);
-						if (kidMatch == -1)
-						    return -1;
-                        if ((ren.flags & RENode.MINIMAL) == 0) {
-						    index = matchGreedyKid(state, ren, stop, 1, 
-															kidMatch, index);
-                            if (index == -1)
-                                index = kidMatch;
-                        }
-                        else
-						    index = matchNonGreedyKid(state, ren, 1, 0, kidMatch);
-						if (index == -1) return -1;
+                    int kidMatch = matchRENodes(state, (RENode)ren.kid, 
+                                                ren.next, index);
+                    if (kidMatch == -1)
+                        return -1;
+                    if ((ren.flags & RENode.MINIMAL) == 0) {
+                        index = matchGreedyKid(state, ren, stop, 1, 
+                                               kidMatch, index);
+                        if (index == -1)
+                            index = kidMatch;
                     }
-					break;
+                    else
+                        index = matchNonGreedyKid(state, ren, 1, 0, kidMatch);
+                    if (index == -1) return -1;
+                }
+                    break;
                 case REOP_STAR:					
                     if ((ren.flags & RENode.MINIMAL) == 0) {
-					    int kidMatch = matchGreedyKid(state, ren, stop, 0, index, -1);
+                        int kidMatch = matchGreedyKid(state, ren, stop, 0, index, -1);
                         if (kidMatch != -1)
                             index = kidMatch;
                     }
                     else {
-					    index = matchNonGreedyKid(state, ren, 0, 0, index);
-					    if (index == -1) return -1;
+                        index = matchNonGreedyKid(state, ren, 0, 0, index);
+                        if (index == -1) return -1;
                     }
-					break;
+                    break;
                 case REOP_OPT: {
-                        int saveNum = state.parenCount;
-                        if (((ren.flags & RENode.MINIMAL) != 0)) {
-                            int restMatch = matchRENodes(state, ren.next,
-                                                        stop, index);
-                            if (restMatch != -1) return restMatch;
-                        }
-                        int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                        ren.next, index);
-                        if (kidMatch == -1) {
+                    int saveNum = state.parenCount;
+                    if (((ren.flags & RENode.MINIMAL) != 0)) {
+                        int restMatch = matchRENodes(state, ren.next,
+                                                     stop, index);
+                        if (restMatch != -1) return restMatch;
+                    }
+                    int kidMatch = matchRENodes(state, (RENode)ren.kid,
+                                                ren.next, index);
+                    if (kidMatch == -1) {
+                        state.parenCount = saveNum;
+                        break;
+                    }
+                    else {
+                        int restMatch = matchRENodes(state, ren.next,
+                                                     stop, kidMatch);
+                        if (restMatch == -1) {
+                            // need to undo the result of running the kid
                             state.parenCount = saveNum;
                             break;
                         }
-                        else {
-                            int restMatch = matchRENodes(state, ren.next,
-                                                        stop, kidMatch);
-                            if (restMatch == -1) {
-                                // need to undo the result of running the kid
-                                state.parenCount = saveNum;
-                                break;
-                            }
-                            else
-                                return restMatch;
-                        }
-                     }
+                        else
+                            return restMatch;
+                    }
+                }
                 case REOP_LPARENNON:
                     ren = (RENode)ren.kid;
                     continue;
                 case REOP_RPARENNON:
                     break;
                 case REOP_LPAREN: {
-                        num = ren.num;
-                        ren = (RENode)ren.kid;
-                        SubString parsub = state.parens[num];
-                        if (parsub == null) {
-                            parsub = state.parens[num] = new SubString();
-                            parsub.charArray = input;
-                        }
-                        parsub.index = index;
-                        parsub.length = 0;
-                        if (num >= state.parenCount)
-                            state.parenCount = num + 1;
-                        continue;
+                    num = ren.num;
+                    ren = (RENode)ren.kid;
+                    SubString parsub = state.parens[num];
+                    if (parsub == null) {
+                        parsub = state.parens[num] = new SubString();
+                        parsub.charArray = input;
                     }
+                    parsub.index = index;
+                    parsub.length = 0;
+                    if (num >= state.parenCount)
+                        state.parenCount = num + 1;
+                    continue;
+                }
                 case REOP_RPAREN: {
-                        num = ren.num;
-                        SubString parsub = state.parens[num];
-                        if (parsub == null)
-                                throw new RuntimeException("Paren problem");
-                        parsub.length = index - parsub.index;
-                        break;
-                    }
+                    num = ren.num;
+                    SubString parsub = state.parens[num];
+                    if (parsub == null)
+                        throw new RuntimeException("Paren problem");
+                    parsub.length = index - parsub.index;
+                    break;
+                }
                 case REOP_ASSERT: {
-                        int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                        ren.next, index);
-                        if (kidMatch == -1) return -1;
-                        break;
-                    }
+                    int kidMatch = matchRENodes(state, (RENode)ren.kid,
+                                                ren.next, index);
+                    if (kidMatch == -1) return -1;
+                    break;
+                }
                 case REOP_ASSERT_NOT: {
-                        int kidMatch = matchRENodes(state, (RENode)ren.kid,
-                                                        ren.next, index);
-                        if (kidMatch != -1) return -1;
-                        break;
-                    }
-                    
+                    int kidMatch = matchRENodes(state, (RENode)ren.kid,
+                                                ren.next, index);
+                    if (kidMatch != -1) return -1;
+                    break;
+                }
                 case REOP_BACKREF: {
-                        num = ren.num;
-                        if (num >= state.parens.length) {
-                            Context.reportError(
-                                ScriptRuntime.getMessage(
-                                            "msg.bad.backref", null));
-                            return -1;
-                        }
-                        SubString parsub = state.parens[num];
-                        if (parsub == null)
-                            parsub = state.parens[num] = new SubString();
-                        int length = parsub.length;
-                        if ((input.length - index) < length)
-                            return -1;
-                        else {
-                            for (int i = 0; i < length; i++, index++) {
-                                if (!matchChar(state.flags, input[index],
-                                            parsub.charArray[parsub.index + i]))
-                                    return -1;
-                            }
+                    num = ren.num;
+                    if (num >= state.parens.length) {
+                        Context.reportError(
+                                            ScriptRuntime.getMessage(
+                                                                     "msg.bad.backref", null));
+                        return -1;
+                    }
+                    SubString parsub = state.parens[num];
+                    if (parsub == null)
+                        parsub = state.parens[num] = new SubString();
+                    int length = parsub.length;
+                    if ((input.length - index) < length)
+                        return -1;
+                    else {
+                        for (int i = 0; i < length; i++, index++) {
+                            if (!matchChar(state.flags, input[index],
+                                           parsub.charArray[parsub.index + i]))
+                                return -1;
                         }
                     }
+                }
                     break;
                 case REOP_CCLASS:
                     if (index < input.length) {
                         if (ren.bitmap == null) {
                             char[] source = (ren.s != null) 
-                                                ? ren.s 
-                                                : this.source.toCharArray();
+                                ? ren.s 
+                                : this.source.toCharArray();
                             ren.buildBitmap(state, source, ((state.flags & FOLD) != 0));
                         }
                         char c = input[index];
@@ -1690,77 +1667,77 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         return -1;
                     break;
                 case REOP_DOTSTARMIN: {
-                        int cp2;
-                        for (cp2 = index; cp2 < input.length; cp2++) {
-                            int cp3 = matchRENodes(state, ren.next, stop, cp2);
-                            if (cp3 != -1) return cp3;
-            		        if (input[cp2] == '\n')
-            		            return -1;
-                        }
-                        return -1;
+                    int cp2;
+                    for (cp2 = index; cp2 < input.length; cp2++) {
+                        int cp3 = matchRENodes(state, ren.next, stop, cp2);
+                        if (cp3 != -1) return cp3;
+                        if (input[cp2] == '\n')
+                            return -1;
                     }
+                    return -1;
+                }
                 case REOP_DOTSTAR: {
-                        int cp2;
-                        for (cp2 = index; cp2 < input.length; cp2++)
-                            if (input[cp2] == '\n')
-                                break;
-                        while (cp2 >= index) {
-                            int cp3 = matchRENodes(state, ren.next, stop, cp2);
-                            if (cp3 != -1) {
-                                index = cp2;
-                                break;
-                            }
-                            cp2--;
+                    int cp2;
+                    for (cp2 = index; cp2 < input.length; cp2++)
+                        if (input[cp2] == '\n')
+                            break;
+                    while (cp2 >= index) {
+                        int cp3 = matchRENodes(state, ren.next, stop, cp2);
+                        if (cp3 != -1) {
+                            index = cp2;
+                            break;
                         }
-                        break;
+                        cp2--;
                     }
+                    break;
+                }
                 case REOP_WBDRY:
                     if (((index == 0) || !isWord(input[index-1]))
-                          ^ ((index >= input.length) || !isWord(input[index])))
+                        ^ ((index >= input.length) || !isWord(input[index])))
                         ; // leave index 
                     else
                         return -1;
                     break;
-                  case REOP_WNONBDRY:
+                case REOP_WNONBDRY:
                     if (((index == 0) || !isWord(input[index-1]))
-                          ^ ((index < input.length) && isWord(input[index])))
+                        ^ ((index < input.length) && isWord(input[index])))
                         ; // leave index 
                     else
                         return -1;
                     break;
                 case REOP_EOLONLY:
                 case REOP_EOL: {
-                        if (index == input.length)
-                            ; // leave index;
-                        else {
-                            Context cx = Context.getCurrentContext();
-                            RegExpImpl reImpl = getImpl(cx);
-                            if ((reImpl.multiline)
-                                        || ((state.flags & MULTILINE) != 0))
-                                if (input[index] == '\n')
-                                    ;// leave index
-                                else
-                                    return -1;
-                            else
-                                return -1;
-                        }
-                    }
-                    break;
-                case REOP_BOL: {
+                    if (index == input.length)
+                        ; // leave index;
+                    else {
                         Context cx = Context.getCurrentContext();
                         RegExpImpl reImpl = getImpl(cx);
-                        if (index != 0) {
-                            if ((index < input.length)
-                                 && (reImpl.multiline
-                                     || ((state.flags & MULTILINE) != 0))) {
-                                if (input[index - 1] == '\n') {
-                                    break;
-                                }
-                            }
+                        if ((reImpl.multiline)
+                            || ((state.flags & MULTILINE) != 0))
+                            if (input[index] == '\n')
+                                ;// leave index
+                            else
+                                return -1;
+                        else
                             return -1;
-                        }
-                        // leave index
                     }
+                }
+                    break;
+                case REOP_BOL: {
+                    Context cx = Context.getCurrentContext();
+                    RegExpImpl reImpl = getImpl(cx);
+                    if (index != 0) {
+                        if ((index < input.length)
+                            && (reImpl.multiline
+                                || ((state.flags & MULTILINE) != 0))) {
+                            if (input[index - 1] == '\n') {
+                                break;
+                            }
+                        }
+                        return -1;
+                    }
+                    // leave index
+                }
                     break;
                 case REOP_DIGIT:
                     if ((index < input.length) && isDigit(input[index]))
@@ -1788,43 +1765,43 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     break;
                 case REOP_SPACE:
                     if ((index < input.length)
-                               && (TokenStream.isJSSpace(input[index])
-									|| TokenStream.isJSLineTerminator(input[index])))
+                        && (TokenStream.isJSSpace(input[index])
+                            || TokenStream.isJSLineTerminator(input[index])))
                         index++;
                     else
                         return -1;
                     break;
                 case REOP_NONSPACE:
                     if ((index < input.length)
-                                && !(TokenStream.isJSSpace(input[index])
-									|| TokenStream.isJSLineTerminator(input[index])))
+                        && !(TokenStream.isJSSpace(input[index])
+                             || TokenStream.isJSLineTerminator(input[index])))
                         index++;
                     else
                         return -1;
                     break;
                 case REOP_FLAT1:
                     if ((index < input.length)
-                              && matchChar(state.flags, ren.chr, input[index]))
+                        && matchChar(state.flags, ren.chr, input[index]))
                         index++;
                     else
                         return -1;
                     break;
                 case REOP_FLAT: {
-                        char[] source = (ren.s != null)
-                                                ? ren.s
-                                                : this.source.toCharArray();
-                        int start = ((Integer)ren.kid).intValue();
-                        int length = ren.kid2 - start;
-                        if ((input.length - index) < length)
-                            return -1;
-                        else {
-                            for (int i = 0; i < length; i++, index++) {
-                                if (!matchChar(state.flags, input[index],
-                                                            source[start + i]))
-                                    return -1;
-                            }
+                    char[] source = (ren.s != null)
+                        ? ren.s
+                        : this.source.toCharArray();
+                    int start = ((Integer)ren.kid).intValue();
+                    int length = ren.kid2 - start;
+                    if ((input.length - index) < length)
+                        return -1;
+                    else {
+                        for (int i = 0; i < length; i++, index++) {
+                            if (!matchChar(state.flags, input[index],
+                                           source[start + i]))
+                                return -1;
                         }
                     }
+                }
                     break;
                 case REOP_JUMP:
                     break;
@@ -1832,14 +1809,13 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     break;
                 default :
                     throw new RuntimeException("Unsupported by node matcher");
+                }
+                ren = ren.next;
             }
-            ren = ren.next;
-        }
         return index;
     }
 
-    int matchRegExp(MatchState state, RENode ren, int index)
-    {
+    int matchRegExp(MatchState state, RENode ren, int index) {
         // have to include the position beyond the last character
         // in order to detect end-of-input/line condition
         for (int i = index; i <= state.input.length; i++) {            
@@ -1856,8 +1832,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
      * indexp is assumed to be an array of length 1
      */
     Object executeRegExp(Scriptable scopeObj, String str, int indexp[], 
-                         boolean test)
-    {
+                         boolean test) {
         NativeRegExp re = this;
         Context cx = Context.getCurrentContext();
         RegExpImpl res = getImpl(cx);
@@ -1879,7 +1854,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
         state.cpend = charArray.length;
         state.start = start;
         state.skipped = 0;
-		state.input = charArray;
+        state.input = charArray;
 
         state.parenCount = 0;
         state.maybeParens = new SubString[re.parenCount];
@@ -2004,14 +1979,14 @@ public class NativeRegExp extends ScriptableObject implements Function {
     private void reportError(String msg, String arg, CompilerState state) {
         Object[] args = { arg };
         throw NativeGlobal.constructError(
-                    state.cx, "SyntaxError",
-                    ScriptRuntime.getMessage(msg, args),
-                    state.scope);
+                                          state.cx, "SyntaxError",
+                                          ScriptRuntime.getMessage(msg, args),
+                                          state.scope);
     }
 
     private String source;      /* locked source string, sans // */
-    private int lastIndex;      /* index after last match, for //g iterator */
-    private int parenCount;     /* number of parenthesized submatches */
+        private int lastIndex;      /* index after last match, for //g iterator */
+            private int parenCount;     /* number of parenthesized submatches */
     private byte flags;         /* flags  */
     private byte[] program;     /* regular expression bytecode */
 
@@ -2052,8 +2027,7 @@ class RENode {
         this.kid = kid;
     }
     
-    private void calcBMSize(char[] s, int index, int cp2, boolean fold)
-    {
+    private void calcBMSize(char[] s, int index, int cp2, boolean fold) {
         char maxc = 0;
         while (index < cp2) {
             char c = s[index++];
@@ -2063,22 +2037,22 @@ class RENode {
                     && NativeRegExp.isHex(s[index+2])
                     && NativeRegExp.isHex(s[index+3]) 
                     && NativeRegExp.isHex(s[index+4]))
-                {
-                    int x = (((((NativeRegExp.unHex(s[index+0]) << 4) +
+                    {
+                        int x = (((((NativeRegExp.unHex(s[index+0]) << 4) +
                                     NativeRegExp.unHex(s[index+1])) << 4) +
-                                    NativeRegExp.unHex(s[index+2])) << 4) +
-                                    NativeRegExp.unHex(s[index+3]);
-                    c = (char) x;
-                    index += 5;
-                } else {
-                    /*
-                     * Octal and hex escapes can't be > 255.  Skip this
-                     * backslash and let the loop pass over the remaining
-                     * escape sequence as if it were text to match.
-                     */
-                    if (maxc < 255) maxc = 255;
-                    continue;
-                }
+                                  NativeRegExp.unHex(s[index+2])) << 4) +
+                            NativeRegExp.unHex(s[index+3]);
+                        c = (char) x;
+                        index += 5;
+                    } else {
+                        /*
+                         * Octal and hex escapes can't be > 255.  Skip this
+                         * backslash and let the loop pass over the remaining
+                         * escape sequence as if it were text to match.
+                         */
+                        if (maxc < 255) maxc = 255;
+                        continue;
+                    }
             }
             if (fold) {
                 /*
@@ -2096,7 +2070,7 @@ class RENode {
                 maxc = c;
         }
         bmsize = (short)((maxc + NativeRegExp.JS_BITS_PER_BYTE) 
-                                        / NativeRegExp.JS_BITS_PER_BYTE);
+                         / NativeRegExp.JS_BITS_PER_BYTE);
     }
     
     private void matchBit(char c, int fill) {
@@ -2114,8 +2088,7 @@ class RENode {
         matchBit('-', fill);
     }
 
-    void buildBitmap(MatchState state, char[] s, boolean fold)
-    {
+    void buildBitmap(MatchState state, char[] s, boolean fold) {
         int index = ((Integer) kid).intValue();
         int end = kid2;
         byte fill = 0;
@@ -2146,16 +2119,16 @@ class RENode {
             if (c == '\\') {
                 c = s[index++];
                 switch (c) {
-                  case 'b':
-                  case 'f':
-                  case 'n':
-                  case 'r':
-                  case 't':
-                  case 'v':
+                case 'b':
+                case 'f':
+                case 'n':
+                case 'r':
+                case 't':
+                case 'v':
                     c = NativeRegExp.getEscape(c);
                     break;
 
-                  case 'd':
+                case 'd':
                     if (inrange)
                         checkRange(lastc, fill);
                     lastc = (char) nchars;
@@ -2163,7 +2136,7 @@ class RENode {
                         matchBit(c, fill);
                     continue;
 
-                  case 'D':
+                case 'D':
                     if (inrange)
                         checkRange(lastc, fill);
                     lastc = (char) nchars;
@@ -2173,7 +2146,7 @@ class RENode {
                         matchBit(c, fill);
                     continue;
 
-                  case 'w':
+                case 'w':
                     if (inrange)
                         checkRange(lastc, fill);
                     lastc = (char) nchars;
@@ -2182,7 +2155,7 @@ class RENode {
                             matchBit(c, fill);
                     continue;
 
-                  case 'W':
+                case 'W':
                     if (inrange)
                         checkRange(lastc, fill);
                     lastc = (char) nchars;
@@ -2191,7 +2164,7 @@ class RENode {
                             matchBit(c, fill);
                     continue;
 
-                  case 's':
+                case 's':
                     if (inrange)
                         checkRange(lastc, fill);
                     lastc = (char) nchars;
@@ -2200,7 +2173,7 @@ class RENode {
                             matchBit(c, fill);
                     continue;
 
-                  case 'S':
+                case 'S':
                     if (inrange)
                         checkRange(lastc, fill);
                     lastc = (char) nchars;
@@ -2209,14 +2182,14 @@ class RENode {
                             matchBit(c, fill);
                     continue;
 
-                  case '0':
-                  case '1':
-                  case '2':
-                  case '3':
-                  case '4':
-                  case '5':
-                  case '6':
-                  case '7':
+                case '0':
+                case '1':
+                case '2':
+                case '3':
+                case '4':
+                case '5':
+                case '6':
+                case '7':
                     n = NativeRegExp.unDigit(c);
                     ocp = index - 2;
                     c = s[index];
@@ -2237,41 +2210,41 @@ class RENode {
                     c = (char) n;
                     break;
 
-                  case 'x':
+                case 'x':
                     ocp = index;
                     if (index < s.length &&
                         NativeRegExp.isHex(c = s[index++]))
-                    {
-                        n = NativeRegExp.unHex(c);
-                        if (index < s.length &&
-                            NativeRegExp.isHex(c = s[index++]))
                         {
-                            n <<= 4;
-                            n += NativeRegExp.unHex(c);
+                            n = NativeRegExp.unHex(c);
+                            if (index < s.length &&
+                                NativeRegExp.isHex(c = s[index++]))
+                                {
+                                    n <<= 4;
+                                    n += NativeRegExp.unHex(c);
+                                }
+                        } else {
+                            index = ocp;	/* \xZZ is xZZ (Perl does \0ZZ!) */
+                            n = 'x';
                         }
-                    } else {
-                        index = ocp;	/* \xZZ is xZZ (Perl does \0ZZ!) */
-                        n = 'x';
-                    }
                     c = (char) n;
                     break;
 
-                  case 'u':
+                case 'u':
                     if (s.length > index+3
-                            && NativeRegExp.isHex(s[index+0])
-                            && NativeRegExp.isHex(s[index+1]) 
-                            && NativeRegExp.isHex(s[index+2])
-                            && NativeRegExp.isHex(s[index+3])) {
+                        && NativeRegExp.isHex(s[index+0])
+                        && NativeRegExp.isHex(s[index+1]) 
+                        && NativeRegExp.isHex(s[index+2])
+                        && NativeRegExp.isHex(s[index+3])) {
                         n = (((((NativeRegExp.unHex(s[index+0]) << 4) +
                                 NativeRegExp.unHex(s[index+1])) << 4) +
-                                NativeRegExp.unHex(s[index+2])) << 4) +
-                                NativeRegExp.unHex(s[index+3]);
+                              NativeRegExp.unHex(s[index+2])) << 4) +
+                            NativeRegExp.unHex(s[index+3]);
                         c = (char) n;
                         index += 4;
                     }
                     break;
 
-                  case 'c':
+                case 'c':
                     c = s[index++];
                     c = Character.toUpperCase(c);
                     c = (char) (c ^ 64); // JS_TOCTRL
@@ -2282,10 +2255,10 @@ class RENode {
             if (inrange) {
                 if (lastc > c) {
                     throw NativeGlobal.constructError(
-                                 Context.getCurrentContext(), "RangeError",
-                                 ScriptRuntime.getMessage(
-                                      "msg.bad.range", null),
-                                 state.scope);
+                                                      Context.getCurrentContext(), "RangeError",
+                                                      ScriptRuntime.getMessage(
+                                                                               "msg.bad.range", null),
+                                                      state.scope);
                 }
                 inrange = false;
             } else {
@@ -2295,11 +2268,11 @@ class RENode {
                 // [balance:
                 if (index + 1 < end && s[index] == '-' &&
                     s[index+1] != ']')
-                {
-                    index++;
-                    inrange = true;
-                    continue;
-                }
+                    {
+                        index++;
+                        inrange = true;
+                        continue;
+                    }
             }
 
             // Match characters in the range [lastc, c].
@@ -2346,7 +2319,7 @@ class MatchState {
     SubString[] maybeParens;            /* possible paren substring pointers */
     SubString[] parens;                 /* certain paren substring matches */
     Scriptable  scope;
-	char[]		input;
+    char[]		input;
 }
 
 class GreedyState {
