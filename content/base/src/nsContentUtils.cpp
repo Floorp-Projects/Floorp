@@ -740,16 +740,6 @@ nsContentUtils::doReparentContentWrapper(nsIContent *aChild,
     return NS_OK;
   }
 
-  if (aOldDocument) {
-    nsCOMPtr<nsISupports> old_ref = aOldDocument->RemoveReference(aChild);
-
-    if (old_ref) {
-      // Transfer the reference from aOldDocument to aNewDocument
-
-      aNewDocument->AddReference(aChild, old_ref);
-    }
-  }
-
   JSObject *old;
   rv = old_wrapper->GetJSObject(&old);
   NS_ENSURE_SUCCESS(rv, rv);

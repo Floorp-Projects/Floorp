@@ -405,8 +405,6 @@ public:
                                 nsIStyleRule* aStyleRule);
 
   virtual void FlushPendingNotifications(mozFlushType aType);
-  virtual void AddReference(void *aKey, nsISupports *aReference);
-  virtual already_AddRefed<nsISupports> RemoveReference(void *aKey);
   virtual nsIScriptEventManager* GetScriptEventManager();
   virtual void SetXMLDeclaration(const PRUnichar *aVersion,
                                  const PRUnichar *aEncoding,
@@ -592,8 +590,6 @@ protected:
   PRUint8 mDefaultElementType;
 
   nsSupportsHashtable* mBoxObjectTable;
-
-  nsSupportsHashtable mContentWrapperHash;
 
   nsCOMPtr<nsICSSLoader> mCSSLoader;
   nsRefPtr<nsHTMLStyleSheet> mAttrStyleSheet;

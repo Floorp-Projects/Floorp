@@ -48,6 +48,7 @@ class nsIDOMWindow;
 class nsIDOMNSHTMLOptionCollection;
 class nsIPluginInstance;
 class nsIForm;
+class nsIDOMNode;
 class nsIDOMNodeList;
 class nsIDOMDocument;
 class nsIHTMLDocument;
@@ -133,6 +134,36 @@ public:
   static nsresult InitDOMJSClass(JSContext *cx, JSObject *obj);
 
   static JSClass sDOMJSClass;
+
+  /**
+   * Note that the XPConnect wrapper for |aDOMNode| should be preserved.
+   */
+  static nsresult PreserveWrapper(nsIDOMNode *aDOMNode,
+                                  nsIXPConnectWrappedNative *aWrapper);
+
+  /**
+   * Undoes the effects of any prior |PreserveWrapper| calls on
+   * |aDOMNode|.
+   */
+  static void ReleaseWrapper(nsIDOMNode *aDOMNode);
+
+  /**
+   * Mark all preserved wrappers reachable from |aDOMNode| via DOM APIs.
+   */
+  static void MarkReachablePreservedWrappers(nsIDOMNode *aDOMNode,
+                                             JSContext *cx, void *arg);
+
+  /**
+   * Classify the wrappers for use by |MarkReachablePreservedWrappers|
+   * during the GC.  Returns false to indicate failure (out-of-memory).
+   */
+  static PRBool BeginGCMark();
+
+  /**
+   * Clean up data structures (and strong references) created by
+   * |BeginGCMark|.
+   */
+  static void EndGCMark();
 
 protected:
   const nsDOMClassInfoData* mData;
@@ -431,6 +462,10 @@ public:
                        JSObject *globalObj, JSObject **parentObj);
   NS_IMETHOD AddProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
                          JSObject *obj, jsval id, jsval *vp, PRBool *_retval);
+  NS_IMETHOD Finalize(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                      JSObject *obj);
+  NS_IMETHOD Mark(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
+                  JSObject *obj, void *arg, PRUint32 *_retval);
   NS_IMETHOD GetFlags(PRUint32 *aFlags);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)

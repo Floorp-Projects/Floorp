@@ -88,10 +88,10 @@ class nsHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 
 // IID for the nsIDocument interface
-// 0924a06c-29df-4f3d-b053-4ebf099327c6
+// f01b47c6-6271-4c0d-b786-eb5eee222b45
 #define NS_IDOCUMENT_IID      \
-{ 0x0924a06c, 0x29df, 0x4f3d, \
-  { 0xb0, 0x53, 0x4e, 0xbf, 0x09, 0x93, 0x27, 0xc6 } }
+{ 0xf01b47c6, 0x6271, 0x4c0d, \
+  { 0xb7, 0x86, 0xeb, 0x5e, 0xee, 0x22, 0x2b, 0x45 } }
 
 // The base value for the content ID counter.
 // This counter is used by the document to 
@@ -546,9 +546,6 @@ public:
    * Reset this document to aURI and aLoadGroup.  aURI must not be null.
    */
   virtual void ResetToURI(nsIURI *aURI, nsILoadGroup* aLoadGroup) = 0;
-
-  virtual void AddReference(void *aKey, nsISupports *aReference) = 0;
-  virtual already_AddRefed<nsISupports> RemoveReference(void *aKey) = 0;
 
   /**
    * Set the container (docshell) for this document.

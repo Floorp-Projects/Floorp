@@ -100,6 +100,9 @@
 
 #include "prprf.h"
 
+nsresult NS_DOMClassInfo_PreserveWrapper(nsIDOMNode *aDOMNode,
+                                         nsIXPConnectWrappedNative *aWrapper);
+
 // Helper classes
 
 /***********************************************************************/
@@ -1125,7 +1128,8 @@ nsXBLBinding::InitClass(const nsCString& aClassName,
       do_QueryInterface(wrapper);
 
     if (native_wrapper) {
-      doc->AddReference(mBoundElement, native_wrapper);
+      nsCOMPtr<nsIDOMNode> node(do_QueryInterface(mBoundElement));
+      NS_DOMClassInfo_PreserveWrapper(node, native_wrapper);
     }
   }
 
