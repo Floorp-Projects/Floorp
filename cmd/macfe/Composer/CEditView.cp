@@ -802,6 +802,44 @@ void CEditView::SetDocPosition( int inLocation, Int32 inX, Int32 inY, Boolean in
 	CHTMLView::SetDocPosition( inLocation, inX, inY, inScrollEvenIfVisible );
 }
 
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//      ¥       EstablishPort
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+// This is the same as CHTMLView's EstablishPort, but without the call to
+// SetGDevice. We draw into a stack-based offscreen GWorld, and changing
+// the current device under it did bad things (like caused the window to
+// redraw all black).
+Boolean
+CEditView::EstablishPort()
+{
+        Boolean         portSet = false;
+        GWorldPtr       gworld = NULL;
+        
+        // if the current drawable, is an offscreen one, be sure to set it
+        if ( mCurrentDrawable != NULL )
+        {
+                gworld = mCurrentDrawable->GetDrawableOffscreen();
+        }
+        
+        if ( gworld != NULL )
+        {
+                portSet = true;
+                if ( UQDGlobals::GetCurrentPort() != (GrafPtr) mGWorld )
+                {
+                        SetGWorld ( gworld, NULL );
+                        mOffscreenDrawable->mClipChanged = true;
+                }
+        }
+        else
+        {
+                // make sure to restore the main device
+                // SetGDevice ( GetMainDevice() );
+                portSet = LView::EstablishPort();
+        }
+                        
+        return portSet;
+}
+
 /*
 If we are hilighted as the pane being dragged "into", we want to first hide the hilite
 before drawing then draw it back.  This is because we have an offscreen view which 
