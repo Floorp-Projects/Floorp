@@ -108,8 +108,8 @@ nsProxyObjectManager* nsProxyObjectManager::mInstance = nsnull;
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsProxyObjectManager, nsIProxyObjectManager)
 
 nsProxyObjectManager::nsProxyObjectManager()
-: mProxyClassMap(256, PR_TRUE),
-  mProxyObjectMap(256, PR_TRUE)
+    : mProxyObjectMap(256, PR_TRUE),
+      mProxyClassMap(256, PR_TRUE)
 {
     mProxyCreationMonitor = PR_NewMonitor();
 }

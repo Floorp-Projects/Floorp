@@ -150,7 +150,7 @@ protected:
 
 protected:
     nsCOMPtr<nsProxyEventClass> mClass;
-    nsCOMPtr<nsProxyObject>     mProxyObject;
+    nsRefPtr<nsProxyObject>     mProxyObject;
 
     // Owning reference...
     nsProxyEventObject *mRoot;

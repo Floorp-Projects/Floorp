@@ -255,13 +255,6 @@ nsProxyObjectCallInfo::SetCallersQueue(nsIEventQueue* queue)
 }   
 
 
-NS_IMPL_THREADSAFE_ADDREF(nsProxyObject)
-NS_IMPL_THREADSAFE_QUERY_INTERFACE0(nsProxyObject)
-
-nsProxyObject::nsProxyObject()
-{
-  // the mac compiler demands that I have this useless constructor.
-}
 nsProxyObject::nsProxyObject(nsIEventQueue *destQueue, PRInt32 proxyType, nsISupports *realObject)
 {
     mEventQService = do_GetService(kEventQueueServiceCID);
@@ -295,8 +288,14 @@ nsProxyObject::~nsProxyObject()
 }
 
 
+void
+nsProxyObject::AddRef()
+{
+  PR_AtomicIncrement((PRInt32 *)&mRefCnt);
+  NS_LOG_ADDREF(this, mRefCnt, "nsProxyObject", sizeof(*this));
+}
 
-NS_IMETHODIMP_(nsrefcnt)
+void
 nsProxyObject::Release(void)
 {
   NS_PRECONDITION(0 != mRefCnt, "dup release");             
@@ -308,52 +307,35 @@ nsProxyObject::Release(void)
   {
        mRefCnt = 1; /* stabilize */
 
-        PRBool callDirectly;
-        mDestQueue->IsOnCurrentThread(&callDirectly);
+       PRBool callDirectly;
+       mDestQueue->IsOnCurrentThread(&callDirectly);
 
-        if (callDirectly)
-        {
-            NS_DELETEXPCOM(this); 
-            return 0;
-        }
+       if (callDirectly)
+       {
+           delete this;
+           return;
+       }
 
       // need to do something special here so that
       // the real object will always be deleted on
       // the correct thread..
 
-        PLEvent *event = PR_NEW(PLEvent);
-        if (event == nsnull)
-        {
-            NS_ASSERTION(0, "Could not create a plevent. Leaking nsProxyObject!");
-             return 0;  // if this happens we are going to leak.
-        }
+       PLEvent *event = PR_NEW(PLEvent);
+       if (event == nsnull)
+       {
+           NS_ASSERTION(0, "Could not create a plevent. Leaking nsProxyObject!");
+           return;  // if this happens we are going to leak.
+       }
        
-        PL_InitEvent(event, 
-                     this,
-                     ProxyDestructorEventHandler,
-                     ProxyDestructorDestroyHandler);  
+       PL_InitEvent(event, 
+                    this,
+                    ProxyDestructorEventHandler,
+                    ProxyDestructorDestroyHandler);  
 
-        mDestQueue->PostEvent(event);
-        return 0;
+       mDestQueue->PostEvent(event);
   }                          
-  return count;
 }                
 
-
-// GetRealObject
-//  This function must return the real pointer to the object to be proxied.
-//  It must not be a comptr or be addreffed.
-nsISupports*        
-nsProxyObject::GetRealObject() const
-{ 
-    return mRealObject.get(); 
-} 
-
-nsIEventQueue*      
-nsProxyObject::GetQueue() const
-{ 
-    return mDestQueue; 
-}
 
 nsresult
 nsProxyObject::PostAndWait(nsProxyObjectCallInfo *proxyInfo)
@@ -583,8 +565,8 @@ static void* CompletedEventHandler(PLEvent *self)
 
 static void* ProxyDestructorEventHandler(PLEvent *self)
 {              
-    nsProxyObject* owner = (nsProxyObject*) PL_GetEventOwner(self);               
-    NS_DELETEXPCOM(owner);                                                                                              
+    nsProxyObject* owner = (nsProxyObject*) PL_GetEventOwner(self);
+    NS_DELETEXPCOM(owner);
     return nsnull;                                            
 }
 
