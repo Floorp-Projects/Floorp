@@ -409,11 +409,25 @@ NS_IMETHODIMP nsImapService::OpenAttachment(const char *aContentType,
       rv = CreateStartOfImapUrl(uri.get(), getter_AddRefs(imapUrl), folder, aUrlListener, urlSpec, hierarchySeparator);
       if (NS_FAILED(rv)) 
         return rv;
+    
+      urlSpec.Append("/fetch>UID>");
+      urlSpec.Append(char(hierarchySeparator));
+    
+      nsXPIDLCString folderName;
+      GetFolderName(folder, getter_Copies(folderName));
+      urlSpec.Append((const char *) folderName);
+      urlSpec.Append(">");
+      urlSpec.Append(msgKey.get());
+      urlSpec.Append(uriMimePart.get());
+      
       if (uriMimePart)
       {
         nsCOMPtr<nsIMsgMailNewsUrl> mailUrl (do_QueryInterface(imapUrl));
         if (mailUrl)
+        {
+          mailUrl->SetSpec(urlSpec);
           mailUrl->SetFileName(nsDependentCString(aFileName));
+        }
         rv =  FetchMimePart(imapUrl, nsIImapUrl::nsImapOpenMimePart, folder, imapMessageSink,
           nsnull, aDisplayConsumer, msgKey, uriMimePart);
       }
@@ -605,18 +619,6 @@ nsresult nsImapService::FetchMimePart(nsIImapUrl * aImapUrl,
   {
     nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl);
     url->GetSpec(urlSpec);
-    
-    PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder); 
-    
-    urlSpec.Append("fetch>UID>");
-    urlSpec.Append(char(hierarchySeparator));
-    
-    nsXPIDLCString folderName;
-    GetFolderName(aImapMailFolder, getter_Copies(folderName));
-    urlSpec.Append((const char *) folderName);
-    urlSpec.Append(">");
-    urlSpec.Append(messageIdentifierList);
-    urlSpec.Append(mimePart);
     
     // rhp: If we are displaying this message for the purpose of printing, we
     // need to append the header=print option.
@@ -827,12 +829,12 @@ NS_IMETHODIMP nsImapService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
 
   if (NS_SUCCEEDED(rv))
   {
-	nsXPIDLCString folderName;
+    nsXPIDLCString folderName;
     GetFolderName(aMsgFolder, getter_Copies(folderName));
 
-	nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
-	urlSpec.Append("/search>UID>");
-	urlSpec.Append(char(hierarchySeparator));
+    nsCOMPtr <nsIMsgMailNewsUrl> mailNewsUrl = do_QueryInterface(imapUrl);
+    urlSpec.Append("/search>UID>");
+    urlSpec.Append(char(hierarchySeparator));
     urlSpec.Append((const char *) folderName);
     urlSpec.Append('>');
     // escape aSearchUri so that IMAP special characters (i.e. '\')
@@ -846,14 +848,14 @@ NS_IMETHODIMP nsImapService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgW
     {
       nsCOMPtr<nsIEventQueue> queue;	
       // get the Event Queue for this thread...
-	    nsCOMPtr<nsIEventQueueService> pEventQService = 
-	             do_GetService(kEventQueueServiceCID, &rv);
+      nsCOMPtr<nsIEventQueueService> pEventQService = 
+          do_GetService(kEventQueueServiceCID, &rv);
 
       if (NS_FAILED(rv)) return rv;
 
       rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
       if (NS_FAILED(rv)) return rv;
-       rv = GetImapConnectionAndLoadUrl(queue, imapUrl, nsnull, nsnull);
+        rv = GetImapConnectionAndLoadUrl(queue, imapUrl, nsnull, nsnull);
     }
   }
   return rv;
@@ -1174,7 +1176,7 @@ nsImapService::CreateStartOfImapUrl(const char * aImapURI, nsIImapUrl ** imapUrl
                                     nsIMsgFolder* aImapMailFolder,
                                     nsIUrlListener * aUrlListener,
                                     nsCString & urlSpec, 
-									                  PRUnichar &hierarchyDelimiter)
+                                    PRUnichar &hierarchyDelimiter)
 {
   nsresult rv = NS_OK;
   char *hostname = nsnull;
@@ -1196,7 +1198,8 @@ nsImapService::CreateStartOfImapUrl(const char * aImapURI, nsIImapUrl ** imapUrl
   PRInt32 port = IMAP_PORT;
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = aImapMailFolder->GetServer(getter_AddRefs(server));
-  if (NS_SUCCEEDED(rv)) {
+  if (NS_SUCCEEDED(rv)) 
+  {
     server->GetPort(&port);
     if (port == -1 || port == 0) port = IMAP_PORT;
   }
@@ -1204,8 +1207,7 @@ nsImapService::CreateStartOfImapUrl(const char * aImapURI, nsIImapUrl ** imapUrl
   // now we need to create an imap url to load into the connection. The url
   // needs to represent a select folder action. 
   rv = nsComponentManager::CreateInstance(kImapUrlCID, nsnull,
-    NS_GET_IID(nsIImapUrl), (void **)
-    imapUrl);
+    NS_GET_IID(nsIImapUrl), (void **) imapUrl);
   if (NS_SUCCEEDED(rv) && *imapUrl)
   {
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(*imapUrl, &rv);
