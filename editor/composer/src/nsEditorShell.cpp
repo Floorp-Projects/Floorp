@@ -3142,6 +3142,7 @@ nsEditorShell::SetDocumentCharacterSet(const PRUnichar* characterSet)
         nsCOMPtr<nsIMarkupDocumentViewer> markupCV = do_QueryInterface(childCV);
         if (markupCV) {
           NS_ENSURE_SUCCESS(markupCV->SetDefaultCharacterSet(characterSet), NS_ERROR_FAILURE);
+          NS_ENSURE_SUCCESS(markupCV->SetForceCharacterSet(characterSet), NS_ERROR_FAILURE);
         }
       }
     }
