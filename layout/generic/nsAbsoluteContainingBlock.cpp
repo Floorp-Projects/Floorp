@@ -155,13 +155,35 @@ nsAbsoluteContainingBlock::ReplaceFrame(nsIFrame*       aDelegatingFrame,
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
+static void
+AddFrameToChildBounds(nsIFrame* aKidFrame, nsRect* aChildBounds)
+{
+  NS_PRECONDITION(aKidFrame, "Must have kid frame");
+  
+  if (!aChildBounds) {
+    return;
+  }
+
+  // Add in the child's bounds
+  nsRect kidBounds = aKidFrame->GetRect();
+  nsRect* kidOverflow = aKidFrame->GetOverflowAreaProperty();
+  if (kidOverflow) {
+    // Put it in the parent's coordinate system
+    kidBounds = *kidOverflow + kidBounds.TopLeft();
+  }
+  aChildBounds->UnionRect(*aChildBounds, kidBounds);
+}
+
 nsresult
 nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
                                   nsPresContext*          aPresContext,
                                   const nsHTMLReflowState& aReflowState,
                                   nscoord                  aContainingBlockWidth,
                                   nscoord                  aContainingBlockHeight,
-                                  nsRect*                  aChildBounds)
+                                  nsRect*                  aChildBounds,
+                                  PRBool                   aForceReflow,
+                                  PRBool                   aCBWidthChanged,
+                                  PRBool                   aCBHeightChanged)
 {
   // Initialize OUT parameter
   if (aChildBounds)
@@ -181,6 +203,12 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
 
   nsIFrame* kidFrame;
   for (kidFrame = mAbsoluteFrames.FirstChild(); kidFrame; kidFrame = kidFrame->GetNextSibling()) {
+    if (!aForceReflow &&
+        !FrameDependsOnContainer(kidFrame, aCBWidthChanged, aCBHeightChanged)) {
+      // Skip this frame, but add it in to the child bounds as needed
+      AddFrameToChildBounds(kidFrame, aChildBounds);
+      continue;
+    }
     nsReflowReason  reason = reflowState.reason;
 
     nsFrameState kidState = kidFrame->GetStateBits();
@@ -198,26 +226,7 @@ nsAbsoluteContainingBlock::Reflow(nsIFrame*                aDelegatingFrame,
     ReflowAbsoluteFrame(aDelegatingFrame, aPresContext, reflowState, aContainingBlockWidth,
                         aContainingBlockHeight, kidFrame, reason, kidStatus);
 
-    if (aChildBounds) {
-      // Add in the child's bounds
-      nsRect  kidBounds = kidFrame->GetRect();
-      aChildBounds->UnionRect(*aChildBounds, kidBounds);
-
-      // If the frame has visible overflow, then take it into account, too.
-      if (kidFrame->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
-        // Get the property
-        nsRect* overflowArea =  kidFrame->GetOverflowAreaProperty();
-
-        if (overflowArea) {
-          // The overflow area is in the child's coordinate space, so translate
-          // it into the parent's coordinate space
-          nsRect  rect(*overflowArea);
-
-          rect.MoveBy(kidBounds.x, kidBounds.y);
-          aChildBounds->UnionRect(*aChildBounds, rect);
-        }
-      }
-    }
+    AddFrameToChildBounds(kidFrame, aChildBounds);
   }
   return NS_OK;
 }
@@ -230,24 +239,7 @@ nsAbsoluteContainingBlock::CalculateChildBounds(nsPresContext* aPresContext,
   aChildBounds.SetRect(0, 0, 0, 0);
 
   for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f = f->GetNextSibling()) {
-    // Add in the child's bounds
-    nsRect  bounds = f->GetRect();
-    aChildBounds.UnionRect(aChildBounds, bounds);
-  
-    // If the frame has visible overflow, then take it into account, too.
-    if (f->GetStateBits() & NS_FRAME_OUTSIDE_CHILDREN) {
-      // Get the property
-      nsRect* overflowArea = f->GetOverflowAreaProperty();
-  
-      if (overflowArea) {
-        // The overflow area is in the child's coordinate space, so translate
-        // it into the parent's coordinate space
-        nsRect  rect(*overflowArea);
-  
-        rect.MoveBy(bounds.x, bounds.y);
-        aChildBounds.UnionRect(aChildBounds, rect);
-      }
-    }
+    AddFrameToChildBounds(f, &aChildBounds);
   }
 }
 
@@ -303,96 +295,101 @@ static PRBool IsFixedMaxSize(nsStyleUnit aUnit) {
   return aUnit == eStyleUnit_Null || aUnit == eStyleUnit_Coord;
 }
 
-// XXX this logic should eventually be combined into the Reflow methods
-// so we reflow only those frames that need it
 PRBool
-nsAbsoluteContainingBlock::FramesDependOnContainer(PRBool aWidthChanged,
-                                                   PRBool aHeightChanged)
+nsAbsoluteContainingBlock::FrameDependsOnContainer(nsIFrame* f,
+                                                   PRBool aCBWidthChanged,
+                                                   PRBool aCBHeightChanged)
 {
-  for (nsIFrame* f = mAbsoluteFrames.FirstChild(); f; f = f->GetNextSibling()) {
-    const nsStylePosition* pos = f->GetStylePosition();
-    // See if f's position might have changed because it depends on a
-    // placeholder's position
-    if (pos->mOffset.GetTopUnit() == eStyleUnit_Auto ||
-        (f->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL
-         ? pos->mOffset.GetRightUnit() : pos->mOffset.GetLeftUnit()) == eStyleUnit_Auto) {
-      // Note that in CSS2.1, 'bottom:auto' can never actually induce a dependence
-      // on the position of the placeholder
+  const nsStylePosition* pos = f->GetStylePosition();
+  // See if f's position might have changed because it depends on a
+  // placeholder's position
+  // This can happen in the following cases:
+  // 1) Vertical positioning.  "top" must be auto and "bottom" must be auto
+  //    (otherwise the vertical position is completely determined by
+  //    whichever of them is not auto and the height).
+  // 2) Horizontal positioning.  "left" must be auto and "right" must be auto
+  //    (otherwise the horizontal position is completely determined by
+  //    whichever of them is not auto and the width).
+  // See nsHTMLReflowState::InitAbsoluteConstraints -- these are the
+  // only cases when we call CalculateHypotheticalBox().
+  if ((pos->mOffset.GetTopUnit() == eStyleUnit_Auto &&
+       pos->mOffset.GetBottomUnit() == eStyleUnit_Auto) ||
+      (pos->mOffset.GetLeftUnit() == eStyleUnit_Auto &&
+       pos->mOffset.GetRightUnit() == eStyleUnit_Auto)) {
+    return PR_TRUE;
+  }
+  if (!aCBWidthChanged && !aCBHeightChanged) {
+    // skip getting style data
+    return PR_FALSE;
+  }
+  const nsStyleBorder* border = f->GetStyleBorder();
+  const nsStylePadding* padding = f->GetStylePadding();
+  const nsStyleMargin* margin = f->GetStyleMargin();
+  if (aCBWidthChanged) {
+    // See if f's width might have changed.
+    // If border-left, border-right, padding-left, padding-right,
+    // width, min-width, and max-width are all lengths, 'none', or enumerated,
+    // then our frame width does not depend on the parent width.
+    if (pos->mWidth.GetUnit() != eStyleUnit_Coord ||
+        pos->mMinWidth.GetUnit() != eStyleUnit_Coord ||
+        !IsFixedMaxSize(pos->mMaxWidth.GetUnit()) ||
+        !IsFixedBorderSize(border->mBorder.GetLeftUnit()) ||
+        !IsFixedBorderSize(border->mBorder.GetRightUnit()) ||
+        !IsFixedPaddingSize(padding->mPadding.GetLeftUnit()) ||
+        !IsFixedPaddingSize(padding->mPadding.GetRightUnit())) {
       return PR_TRUE;
     }
-    if (!aWidthChanged && !aHeightChanged) {
-      // skip getting style data
-      continue;
-    }
-    const nsStyleBorder* border = f->GetStyleBorder();
-    const nsStylePadding* padding = f->GetStylePadding();
-    const nsStyleMargin* margin = f->GetStyleMargin();
-    if (aWidthChanged) {
-      // See if f's width might have changed.
-      // If border-left, border-right, padding-left, padding-right,
-      // width, min-width, and max-width are all lengths, 'none', or enumerated,
-      // then our frame width does not depend on the parent width.
-      if (pos->mWidth.GetUnit() != eStyleUnit_Coord ||
-          pos->mMinWidth.GetUnit() != eStyleUnit_Coord ||
-          !IsFixedMaxSize(pos->mMaxWidth.GetUnit()) ||
-          !IsFixedBorderSize(border->mBorder.GetLeftUnit()) ||
-          !IsFixedBorderSize(border->mBorder.GetRightUnit()) ||
-          !IsFixedPaddingSize(padding->mPadding.GetLeftUnit()) ||
-          !IsFixedPaddingSize(padding->mPadding.GetRightUnit())) {
-        return PR_TRUE;
-      }
 
-      // See if f's position might have changed. If we're RTL then the
-      // rules are slightly different. We'll assume percentage or auto
-      // margins will always induce a dependency on the size
-      if (!IsFixedMarginSize(margin->mMargin.GetLeftUnit()) ||
-          !IsFixedMarginSize(margin->mMargin.GetRightUnit())) {
+    // See if f's position might have changed. If we're RTL then the
+    // rules are slightly different. We'll assume percentage or auto
+    // margins will always induce a dependency on the size
+    if (!IsFixedMarginSize(margin->mMargin.GetLeftUnit()) ||
+        !IsFixedMarginSize(margin->mMargin.GetRightUnit())) {
+      return PR_TRUE;
+    }
+    if (f->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
+      // Note that even if 'left' is a length, our position can
+      // still depend on the containing block width, because if
+      // 'right' is also a length we will discard 'left' and be
+      // positioned relative to the containing block right edge.
+      // 'left' length and 'right' auto is the only combination
+      // we can be sure of.
+      if (pos->mOffset.GetLeftUnit() != eStyleUnit_Coord ||
+          pos->mOffset.GetRightUnit() != eStyleUnit_Auto) {
         return PR_TRUE;
       }
-      if (f->GetStyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL) {
-        // Note that even if 'left' is a length, our position can
-        // still depend on the containing block width, because if
-        // 'right' is also a length we will discard 'left' and be
-        // positioned relative to the containing block right edge.
-        // 'left' length and 'right' auto is the only combination
-        // we can be sure of.
-        if (pos->mOffset.GetLeftUnit() != eStyleUnit_Coord ||
-            pos->mOffset.GetRightUnit() != eStyleUnit_Auto) {
-          return PR_TRUE;
-        }
-      } else {
-        if (pos->mOffset.GetLeftUnit() != eStyleUnit_Coord) {
-          return PR_TRUE;
-        }
+    } else {
+      if (pos->mOffset.GetLeftUnit() != eStyleUnit_Coord) {
+        return PR_TRUE;
       }
     }
-    if (aHeightChanged) {
-      // See if f's height might have changed.
-      // If border-top, border-bottom, padding-top, padding-bottom,
-      // min-height, and max-height are all lengths or 'none',
-      // and height is a length or height and bottom are auto and top is not auto,
-      // then our frame height does not depend on the parent height.
-      if (!(pos->mHeight.GetUnit() == eStyleUnit_Coord ||
-            (pos->mHeight.GetUnit() == eStyleUnit_Auto &&
-             pos->mOffset.GetBottomUnit() == eStyleUnit_Auto &&
-             pos->mOffset.GetTopUnit() != eStyleUnit_Auto)) ||
-          pos->mMinHeight.GetUnit() != eStyleUnit_Coord ||
-          !IsFixedMaxSize(pos->mMaxHeight.GetUnit()) ||
-          !IsFixedBorderSize(border->mBorder.GetTopUnit()) ||
-          !IsFixedBorderSize(border->mBorder.GetBottomUnit()) ||
-          !IsFixedPaddingSize(padding->mPadding.GetTopUnit()) ||
-          !IsFixedPaddingSize(padding->mPadding.GetBottomUnit())) { 
-       return PR_TRUE;
-      }
+  }
+  if (aCBHeightChanged) {
+    // See if f's height might have changed.
+    // If border-top, border-bottom, padding-top, padding-bottom,
+    // min-height, and max-height are all lengths or 'none',
+    // and height is a length or height and bottom are auto and top is not auto,
+    // then our frame height does not depend on the parent height.
+    if (!(pos->mHeight.GetUnit() == eStyleUnit_Coord ||
+          (pos->mHeight.GetUnit() == eStyleUnit_Auto &&
+           pos->mOffset.GetBottomUnit() == eStyleUnit_Auto &&
+           pos->mOffset.GetTopUnit() != eStyleUnit_Auto)) ||
+        pos->mMinHeight.GetUnit() != eStyleUnit_Coord ||
+        !IsFixedMaxSize(pos->mMaxHeight.GetUnit()) ||
+        !IsFixedBorderSize(border->mBorder.GetTopUnit()) ||
+        !IsFixedBorderSize(border->mBorder.GetBottomUnit()) ||
+        !IsFixedPaddingSize(padding->mPadding.GetTopUnit()) ||
+        !IsFixedPaddingSize(padding->mPadding.GetBottomUnit())) { 
+      return PR_TRUE;
+    }
       
-      // See if f's position might have changed.
-      if (!IsFixedMarginSize(margin->mMargin.GetTopUnit()) ||
-          !IsFixedMarginSize(margin->mMargin.GetBottomUnit())) {
-        return PR_TRUE;
-      }
-      if (pos->mOffset.GetTopUnit() != eStyleUnit_Coord) {
-        return PR_TRUE;
-      }
+    // See if f's position might have changed.
+    if (!IsFixedMarginSize(margin->mMargin.GetTopUnit()) ||
+        !IsFixedMarginSize(margin->mMargin.GetBottomUnit())) {
+      return PR_TRUE;
+    }
+    if (pos->mOffset.GetTopUnit() != eStyleUnit_Coord) {
+      return PR_TRUE;
     }
   }
   return PR_FALSE;

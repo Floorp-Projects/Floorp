@@ -102,13 +102,20 @@ public:
   // 'auto' for an offset, or a percentage based width or height.
   // If aChildBounds is set, it returns (in the local coordinate space) the 
   // bounding rect of the absolutely positioned child elements taking into 
-  // account their overflow area (if it is visible)
+  // account their overflow area (if it is visible).
+  // @param aForceReflow if this is false, reflow for some absolutely
+  //        positioned frames may be skipped based on whether they use
+  //        placeholders for positioning and on whether the containing block
+  //        width or height changed.
   nsresult Reflow(nsIFrame*                aDelegatingFrame,
                   nsPresContext*          aPresContext,
                   const nsHTMLReflowState& aReflowState,
                   nscoord                  aContainingBlockWidth,
                   nscoord                  aContainingBlockHeight,
-                  nsRect*                  aChildBounds = nsnull);
+                  nsRect*                  aChildBounds = nsnull,
+                  PRBool                   aForceReflow = PR_TRUE,
+                  PRBool                   aCBWidthChanged = PR_TRUE,
+                  PRBool                   aCBHeightChanged = PR_TRUE);
 
   // Called by the delegating frame to determine whether the
   // incremental reflow is entirely targeted at absolute children
@@ -116,18 +123,11 @@ public:
                                 const nsHTMLReflowState& aReflowState);
 
   // Called only for a reflow reason of eReflowReason_Incremental.
-  // Returns (in the local coordinate space) the bounding rect of the
-  // absolutely positioned child elements taking into account their
-  // overflow area (if it is visible).
   void IncrementalReflow(nsIFrame*                aDelegatingFrame,
                          nsPresContext*           aPresContext,
                          const nsHTMLReflowState& aReflowState,
                          nscoord                  aContainingBlockWidth,
                          nscoord                  aContainingBlockHeight);
-
-  // Returns PR_TRUE if any absolute frames depend on the position of their
-  // placeholders
-  PRBool FramesDependOnContainer(PRBool aWidthChanged, PRBool aHeightChanged);
 
   void DestroyFrames(nsIFrame*       aDelegatingFrame,
                      nsPresContext* aPresContext);
@@ -137,6 +137,12 @@ public:
   void CalculateChildBounds(nsPresContext* aPresContext, nsRect& aChildBounds);
 
 protected:
+  // Returns PR_TRUE if the position of f depends on the position of
+  // its placeholder or if the position or size of f depends on a
+  // containing block dimension that changed.
+  PRBool FrameDependsOnContainer(nsIFrame* f, PRBool aCBWidthChanged,
+                                 PRBool aCBHeightChanged);
+
   nsresult ReflowAbsoluteFrame(nsIFrame*                aDelegatingFrame,
                                nsPresContext*          aPresContext,
                                const nsHTMLReflowState& aReflowState,
