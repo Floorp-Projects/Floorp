@@ -247,7 +247,7 @@ public:
   NS_DECL_NSITREEBOXOBJECT
 
   // nsIBox
-  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+  NS_IMETHOD GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
   NS_IMETHOD SetBounds(nsBoxLayoutState& aBoxLayoutState, const nsRect& aRect);
 
   // nsIReflowCallback
@@ -295,7 +295,8 @@ public:
                      const nsRect&        aCellRect,
                      nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect);
+                     const nsRect&        aDirtyRect,
+                     nscoord&             aCurrX);
 
   // This method paints the twisty inside a cell in the primary column of an tree.
   nsresult PaintTwisty(PRInt32              aRowIndex,
@@ -323,7 +324,8 @@ public:
                      const nsRect&        aTextRect,
                      nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
-                     const nsRect&        aDirtyRect);
+                     const nsRect&        aDirtyRect,
+                     nscoord&             aCurrX);
 
   // This method paints the checkbox inside a particular cell of the tree.
   nsresult PaintCheckbox(PRInt32              aRowIndex, 

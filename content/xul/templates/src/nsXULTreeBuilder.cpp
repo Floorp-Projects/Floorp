@@ -865,8 +865,8 @@ nsXULTreeBuilder::ToggleOpenState(PRInt32 aIndex)
     }
     
     if (mPersistStateStore) {
-        nsTreeRows::iterator iter = mRows[aIndex];
-        PRBool isOpen = iter->mContainerState == nsTreeRows::eContainerState_Open;
+        PRBool isOpen;
+        IsContainerOpen(aIndex, &isOpen);
 
         nsIRDFResource* container = GetResourceFor(aIndex);
         if (! container)
@@ -1178,13 +1178,7 @@ nsXULTreeBuilder::ReplaceMatch(nsIRDFResource* aMember,
             // Use the persist store to remember if the container
             // is open or closed.
             PRBool open = PR_FALSE;
-
-            if (mPersistStateStore)
-                mPersistStateStore->HasAssertion(container,
-                                                 nsXULContentUtils::NC_open,
-                                                 nsXULContentUtils::true_,
-                                                 PR_TRUE,
-                                                 &open);
+            IsContainerOpen(row, &open);
 
             // If it's open, make sure that we've got a subtree structure ready.
             if (open)
