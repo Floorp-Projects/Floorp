@@ -30,6 +30,8 @@
 #include <X11/xpm.h>
 #endif
 
+#define DUMB_ASS_DEFAULT "75_foreground"
+
 /*----------------------------------------------------------------------*/
 Boolean
 XfeAllocatePixmapFromFile(char *			filename,
@@ -83,11 +85,17 @@ XfeAllocatePixmapFromFile(char *			filename,
 
 #else
 
-	/* So that loser platforms that dont ship xpm will at least compile */
-	*pixmap = XmUNSPECIFIED_PIXMAP;
+	/* Pick a dumb ass default so that loser platform will at least run */
+	*pixmap = XmGetPixmap(DefaultScreenOfDisplay(dpy),
+						  DUMB_ASS_DEFAULT,
+						  BlackPixelOfScreen(DefaultScreenOfDisplay(dpy)),
+						  bg);
+
+	assert( pixmap != XmUNSPECIFIED_PIXMAP );
+	
 	*mask = XmUNSPECIFIED_PIXMAP;
 
-	result = False;
+	result = True;
 
 #endif
 
@@ -144,11 +152,17 @@ XfeAllocatePixmapFromData(char **			data,
 
 #else
 
-	/* So that loser platforms that dont ship xpm will at least compile */
-	*pixmap = XmUNSPECIFIED_PIXMAP;
+	/* Pick a dumb ass default so that loser platform will at least run */
+	*pixmap = XmGetPixmap(DefaultScreenOfDisplay(dpy),
+						  DUMB_ASS_DEFAULT,
+						  BlackPixelOfScreen(DefaultScreenOfDisplay(dpy)),
+						  bg);
+
+	assert( pixmap != XmUNSPECIFIED_PIXMAP );
+	
 	*mask = XmUNSPECIFIED_PIXMAP;
 
-	result = False;
+	result = True;
 
 #endif
 
@@ -159,11 +173,11 @@ Pixmap
 XfeGetPixmapFromFile(Widget w,char * filename)
 {
     Pixmap pixmap = XmUNSPECIFIED_PIXMAP;
-    Pixmap mask;
+    Pixmap mask = XmUNSPECIFIED_PIXMAP;
 
 	assert( filename != NULL );
-	assert( 0 );
 
+#ifdef XFE_USE_NATIVE_XPM
     XfeAllocatePixmapFromFile(filename,
 							  XtDisplay(w),
 							  DefaultRootWindow(XtDisplay(w)),
@@ -173,6 +187,16 @@ XfeGetPixmapFromFile(Widget w,char * filename)
 							  XfeBackground(w),
 							  &pixmap,
 							  &mask);
+#else
+
+	pixmap = XmGetPixmap(XtScreen(w),
+						 DUMB_ASS_DEFAULT,
+						 XfeForeground(w),
+						 XfeBackground(w));
+
+	assert( pixmap != XmUNSPECIFIED_PIXMAP );
+
+#endif
 	
 	if (XfePixmapGood(mask))
 	{
@@ -186,11 +210,11 @@ Pixmap
 XfeGetPixmapFromData(Widget w,char ** data)
 {
     Pixmap pixmap = XmUNSPECIFIED_PIXMAP;
-    Pixmap mask;
+    Pixmap mask = XmUNSPECIFIED_PIXMAP;
 
 	assert( data != NULL );
-/* 	assert( 0 ); */
 
+#ifdef XFE_USE_NATIVE_XPM
     XfeAllocatePixmapFromData(data,
 							  XtDisplay(w),
 							  DefaultRootWindow(XtDisplay(w)),
@@ -200,6 +224,16 @@ XfeGetPixmapFromData(Widget w,char ** data)
 							  XfeBackground(w),
 							  &pixmap,
 							  &mask);
+#else
+
+	pixmap = XmGetPixmap(XtScreen(w),
+						 DUMB_ASS_DEFAULT,
+						 XfeForeground(w),
+						 XfeBackground(w));
+
+	assert( pixmap != XmUNSPECIFIED_PIXMAP );
+
+#endif
 	
 	if (XfePixmapGood(mask))
 	{
