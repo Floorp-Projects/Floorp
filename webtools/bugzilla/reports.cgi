@@ -66,6 +66,8 @@ else
 ConnectToDatabase();
 GetVersionTable();
 
+$::FORM{'output'} = $::FORM{'output'} || "most_doomed"; # a reasonable default
+
 if (! defined $::FORM{'product'})
 	{
 	&choose_product;
@@ -76,7 +78,7 @@ else
 	# can be called from outside. modify %reports
 	# accordingly when a new report type is added
 
-	if (! defined $reports{$::FORM{'output'}})
+	if (! exists $reports{$::FORM{'output'}})
 		{
 		$::FORM{'output'} = "most_doomed"; # a reasonable default
 		}
