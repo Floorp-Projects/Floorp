@@ -57,9 +57,11 @@ REQUIRES	= xpcom \
 		  uriloader \
 		  webbrwsr \
 		  plugin \
+		  prefetch \
 		  $(NULL)
 
 CPPSRCS		= \
+		nsContentSink.cpp \
 		nsPrintEngine.cpp \
 		nsPrintData.cpp \
 		nsPrintObject.cpp \
