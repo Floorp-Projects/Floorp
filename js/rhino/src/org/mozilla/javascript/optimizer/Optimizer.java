@@ -676,11 +676,12 @@ public class Optimizer {
                     }
                     int indexType = rewriteForNumberVariables(arrayIndex);
                     if (indexType == TypeEvent.NumberType) {
-                        // setting the ISNUMBER_PROP signals the codegen
-                        // to use the scriptRuntime.getElem that takes
-                        // a double index
-                        n.putIntProp(Node.ISNUMBER_PROP, Node.RIGHT);
-                        markDCPNumberContext(arrayIndex);
+                        if (!convertParameter(arrayIndex)) {
+                            // setting the ISNUMBER_PROP signals the codegen
+                            // to use the scriptRuntime.getElem that takes
+                            // a double index
+                            n.putIntProp(Node.ISNUMBER_PROP, Node.RIGHT);
+                        }
                     }
                     return TypeEvent.NoType;
                 }
