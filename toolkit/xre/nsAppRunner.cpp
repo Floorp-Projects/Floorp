@@ -1113,7 +1113,8 @@ HandleRemoteArgument(const char* remote)
   ArgResult ar;
 
   const char *profile = 0;
-  const char *program = gAppData->appName;
+  nsCAutoString program(gAppData->appName);
+  ToLowerCase(program);
   const char *username = getenv("LOGNAME");
 
   ar = CheckArg("p", &profile);
@@ -1122,13 +1123,16 @@ HandleRemoteArgument(const char* remote)
     return 1;
   }
 
-  ar = CheckArg("a", &program);
+  const char *temp = nsnull;
+  ar = CheckArg("a", &temp);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -a requires an application name\n");
     return 1;
+  } else if (ar == ARG_FOUND) {
+    program.Assign(temp);
   }
 
-  ar = CheckArg("u", &program);
+  ar = CheckArg("u", &username);
   if (ar == ARG_BAD) {
     PR_fprintf(PR_STDERR, "Error: argument -u requires a username\n");
     return 1;
@@ -1153,7 +1157,7 @@ HandleRemoteArgument(const char* remote)
 
     nsXPIDLCString response;
     PRBool success = PR_FALSE;
-    rv = client->SendCommand(program, username, profile, remote,
+    rv = client->SendCommand(program.get(), username, profile, remote,
                              getter_Copies(response), &success);
     // did the command fail?
     if (NS_FAILED(rv)) {
