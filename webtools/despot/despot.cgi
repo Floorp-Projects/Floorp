@@ -85,7 +85,7 @@ if (!param()) {
     print submit(-name=>"Log in");
     print hr();
     print p("If you think you should be able to use this system, but you haven't been issued a login, please send mail to " .
-            a({href=>"mailto:terry\@mozilla.org"}, "terry") . ".");
+            a({href=>"mailto:dmose\@mozilla.org"}, "dmose") . ".");
 #     print p("If you do not yet have a mozilla.org account, or you have one " .
 #             "but have forgotten your password, please fill in your e-mail " .
 #             "address above, and click <nobr>here: " .
