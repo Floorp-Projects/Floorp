@@ -224,6 +224,8 @@ public:
                                     nscoord aX, nscoord aY, PRInt32 aFontID,
                                     const nscoord* aSpacing, PRBool aIsUnicode);
 
+  inline nsPostScriptObj* GetPostScriptObj() { return mPSObj; };
+
 #ifdef XP_WIN
 // this define is here only so the postscript can be compiled
 // and tested on the windows platform. 

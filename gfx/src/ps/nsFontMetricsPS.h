@@ -48,8 +48,12 @@
 #include "nsIDeviceContext.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
+#include "nsCompressedCharMap.h"
+#include "nsPostScriptObj.h"
 
 class nsDeviceContextPS;
+class nsRenderingContextPS;
+class nsFontPS;
 
 class nsFontMetricsPS : public nsIFontMetrics
 {
@@ -88,9 +92,28 @@ public:
   NS_IMETHOD  GetFontHandle(nsFontHandle &aHandle);
   NS_IMETHOD  GetStringWidth(const char *String,nscoord &aWidth,nscoord aLength);
   NS_IMETHOD  GetStringWidth(const PRUnichar *aString,nscoord &aWidth,nscoord aLength);
+  
+  inline void SetXHeight(nscoord aXHeight) { mXHeight = aXHeight; };
+  inline void SetSuperscriptOffset(nscoord aSuperscriptOffset) { mSuperscriptOffset = aSuperscriptOffset; };
+  inline void SetSubscriptOffset(nscoord aSubscriptOffset) { mSubscriptOffset = aSubscriptOffset; };
+  inline void SetStrikeout(nscoord aOffset, nscoord aSize) { mStrikeoutOffset = aOffset; mStrikeoutSize = aSize; };
+  inline void SetUnderline(nscoord aOffset, nscoord aSize) { mUnderlineOffset = aOffset; mUnderlineSize = aSize; };
+  inline void SetHeight(nscoord aHeight) { mHeight = aHeight; };
+  inline void SetLeading(nscoord aLeading) { mLeading = aLeading; };
+  inline void SetAscent(nscoord aAscent) { mAscent = aAscent; };
+  inline void SetDescent(nscoord aDescent) { mDescent = aDescent; };
+  inline void SetEmHeight(nscoord aEmHeight) { mEmHeight = aEmHeight; };
+  inline void SetEmAscent(nscoord aEmAscent) { mEmAscent = aEmAscent; };
+  inline void SetEmDescent(nscoord aEmDescent) { mEmDescent = aEmDescent; };
+  inline void SetMaxHeight(nscoord aMaxHeight) { mMaxHeight = aMaxHeight; };
+  inline void SetMaxAscent(nscoord aMaxAscent) { mMaxAscent = aMaxAscent; };
+  inline void SetMaxDescent(nscoord aMaxDescent) { mMaxDescent = aMaxDescent; };
+  inline void SetMaxAdvance(nscoord aMaxAdvance) { mMaxAdvance = aMaxAdvance; };
+  inline void SetAveCharWidth(nscoord aAveCharWidth) { mAveCharWidth = aAveCharWidth; };
+  inline void SetSpaceWidth(nscoord aSpaceWidth) { mSpaceWidth = aSpaceWidth; };
 
-  PRInt16 GetFontIndex() { return mFontIndex; }
-
+  inline nsFontPS* GetFontPS() { return mFontPS; }
+  
 #if defined(XP_WIN)
 // this routine is defined here so the PostScript module can be debugged
 // on the windows platform
@@ -130,10 +153,84 @@ protected:
   nscoord             mUnderlineOffset;
   nscoord             mSpaceWidth;
   nscoord             mAveCharWidth;
-  PRInt16             mFontIndex;
 
+  nsFontPS*           mFontPS;
+};
+
+class nsFontPS
+{
 public:
-  nsAFMObject         *mAFMInfo;
+  nsFontPS();
+  nsFontPS(const nsFont& aFont, nsIFontMetrics* aFontMetrics);
+  virtual ~nsFontPS();
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  static nsFontPS* FindFont(const nsFont& aFont, nsIFontMetrics* aFontMetrics);
+
+  inline PRInt32 SupportsChar(PRUnichar aChar)
+    { return mCCMap && CCMAP_HAS_CHAR(mCCMap, aChar); };
+
+  inline PRInt16 GetFontIndex() { return mFontIndex; };
+  inline const nsString& GetFamilyName() { return mFamilyName; };
+
+  virtual nscoord GetWidth(const char* aString, PRUint32 aLength) = 0;
+  virtual nscoord GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
+  virtual nscoord DrawString(nsRenderingContextPS* aContext,
+                             nscoord aX, nscoord aY,
+                             const char* aString, PRUint32 aLength) = 0;
+  virtual nscoord DrawString(nsRenderingContextPS* aContext,
+                             nscoord aX, nscoord aY,
+                             const PRUnichar* aString, PRUint32 aLength) = 0;
+  virtual nsresult RealizeFont(nsFontMetricsPS* aFontMetrics, float dev2app) = 0;
+
+#ifdef MOZ_MATHML
+  virtual nsresult
+  GetBoundingMetrics(const char*        aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics) = 0;
+  virtual nsresult
+  GetBoundingMetrics(const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics) = 0;
+#endif
+
+protected:
+  nsFont*                  mFont;
+  PRUint16*                mCCMap;
+  nsCOMPtr<nsIFontMetrics> mFontMetrics;
+  PRInt16                  mFontIndex;
+  nsString                 mFamilyName;
+};
+
+class nsFontPSAFM : public nsFontPS
+{
+public:
+  nsFontPSAFM(const nsFont& aFont, nsIFontMetrics* aFontMetrics);
+  virtual ~nsFontPSAFM();
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  nscoord GetWidth(const char* aString, PRUint32 aLength);
+  nscoord GetWidth(const PRUnichar* aString, PRUint32 aLength);
+  nscoord DrawString(nsRenderingContextPS* aContext,
+                     nscoord aX, nscoord aY,
+                     const char* aString, PRUint32 aLength);
+  nscoord DrawString(nsRenderingContextPS* aContext,
+                     nscoord aX, nscoord aY,
+                     const PRUnichar* aString, PRUint32 aLength);
+  nsresult RealizeFont(nsFontMetricsPS* aFontMetrics, float dev2app);
+
+#ifdef MOZ_MATHML
+  nsresult
+  GetBoundingMetrics(const char*        aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+  nsresult
+  GetBoundingMetrics(const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+#endif
+
+  nsAFMObject* mAFMInfo;
 };
 
 #endif
