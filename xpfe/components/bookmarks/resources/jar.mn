@@ -22,8 +22,6 @@ comm.jar:
 +	content/communicator/bookmarks/addBookmark.js
 	content/communicator/bookmarks/bm-find.js
 	content/communicator/bookmarks/bm-find.xul
-	content/communicator/bookmarks/bm-panel.js
-	content/communicator/bookmarks/bm-panel.xul
 	content/communicator/bookmarks/bm-props.js
 	content/communicator/bookmarks/bm-props.xul
 +	content/communicator/bookmarks/bookmarksDD.js
