@@ -29,7 +29,11 @@
 #include "nsEmitterUtils.h"
 #include "nsEscape.h"
 #include "nsIMimeStreamConverter.h"
+#include "nsIMsgWindow.h"
+#include "nsIMsgMailNewsUrl.h"
+#include "nsXPIDLString.h"
 #include "nsMimeTypes.h"
+
 
 nsresult NS_NewMimeHtmlEmitter(const nsIID& iid, void **result)
 {
@@ -78,10 +82,10 @@ nsMimeHtmlEmitter::EndHeader()
 nsresult
 nsMimeHtmlEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
 {
-  if (  (contentType) &&
-        ( (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_MIME)) ||
-          (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_SIGNATURE)) ||
-          (!nsCRT::strcmp(contentType, TEXT_VCARD))
+  if ( (contentType) &&
+        ((!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_MIME)) ||
+         (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_SIGNATURE)) ||
+         (!nsCRT::strcmp(contentType, TEXT_VCARD))
         )
      )
   {
@@ -96,29 +100,28 @@ nsMimeHtmlEmitter::StartAttachment(const char *name, const char *contentType, co
 
   mFirst = PR_FALSE;
 
-  UtilityWrite("<CENTER BORDER=1>");
-  UtilityWrite("<TABLE>");
+  UtilityWrite("<CENTER>");
+  UtilityWrite("<TABLE BORDER>");
   UtilityWrite("<tr>");
   UtilityWrite("<TD>");
 
+  UtilityWrite("<CENTER>");
   UtilityWrite("<DIV align=right CLASS=\"headerdisplayname\">");
 
   UtilityWrite(name);
 
   UtilityWrite("</DIV>");
+  UtilityWrite("</CENTER>");
 
   UtilityWrite("</TD>");
   UtilityWrite("<TD>");
-  UtilityWrite("<TABLE BORDER=1>");
+  UtilityWrite("<TABLE BORDER=0>");
   return NS_OK;
 }
 
 nsresult
 nsMimeHtmlEmitter::AddAttachmentField(const char *field, const char *value)
 {
-  if (mSkipAttachment)
-    return NS_OK;
-
   // Don't let bad things happen
   if ( (!value) || (!*value) )
     return NS_OK;
@@ -152,9 +155,6 @@ nsMimeHtmlEmitter::AddAttachmentField(const char *field, const char *value)
 nsresult
 nsMimeHtmlEmitter::EndAttachment()
 {
-  if (mSkipAttachment)
-    return NS_OK;
-
   UtilityWrite("</TABLE>");
   UtilityWrite("</TD>");
   UtilityWrite("</tr>");
@@ -167,6 +167,215 @@ nsMimeHtmlEmitter::EndAttachment()
 
 nsresult
 nsMimeHtmlEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten)
+{
+  Write(buf, size, amountWritten);
+  return NS_OK;
+}
+
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+
+nsresult NS_NewMimeHtmlDisplayEmitter(const nsIID& iid, void **result)
+{
+	nsMimeHtmlDisplayEmitter *obj = new nsMimeHtmlDisplayEmitter();
+	if (obj)
+		return obj->QueryInterface(iid, result);
+	else
+		return NS_ERROR_OUT_OF_MEMORY;
+}
+
+
+/*
+ * nsMimeHtmlEmitter definitions....
+ */
+nsMimeHtmlDisplayEmitter::nsMimeHtmlDisplayEmitter()
+{
+  mFormat = nsMimeOutput::nsMimeMessageBodyQuoting;
+  mFirst = PR_TRUE;
+}
+
+nsMimeHtmlDisplayEmitter::~nsMimeHtmlDisplayEmitter(void)
+{
+}
+
+nsresult 
+nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTMLPrefix()
+{
+  return NS_OK;
+}
+
+nsresult
+nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTML(const char *field, const char *value)
+{
+  return NS_OK;
+}
+
+nsresult
+nsMimeHtmlDisplayEmitter::WriteHeaderFieldHTMLPostfix()
+{
+  return NS_OK;
+}
+
+
+nsresult
+nsMimeHtmlDisplayEmitter::GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink)
+{
+  nsresult rv = NS_OK;
+  if (!mHeaderSink)
+  {
+    nsCOMPtr<nsIURI> uri;
+    mChannel->GetURI(getter_AddRefs(uri));
+    if (uri)
+    {
+      nsCOMPtr<nsIMsgMailNewsUrl> msgurl (do_QueryInterface(uri));
+      if (msgurl)
+      {
+        nsCOMPtr<nsIMsgWindow> msgWindow;
+        msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
+        if (msgWindow)
+          msgWindow->GetMsgHeaderSink(getter_AddRefs(mHeaderSink));
+      }
+    }
+  }
+
+  *aHeaderSink = mHeaderSink;
+  NS_IF_ADDREF(*aHeaderSink);
+  return rv;
+}
+
+nsresult nsMimeHtmlDisplayEmitter::WriteHTMLHeaders()
+{
+  // try to get a header sink if there is one....
+  nsCOMPtr<nsIMsgHeaderSink> headerSink; 
+  nsresult rv = GetHeaderSink(getter_AddRefs(headerSink));
+
+  if (headerSink)
+    headerSink->OnStartHeaders();
+
+  for (PRInt32 i=0; i<mHeaderArray->Count(); i++)
+  {
+    headerInfoType *headerInfo = (headerInfoType *)mHeaderArray->ElementAt(i);
+    if ( (!headerInfo) || (!headerInfo->name) || (!(*headerInfo->name)) ||
+      (!headerInfo->value) || (!(*headerInfo->value)))
+      continue;
+
+    if (headerSink)
+      headerSink->HandleHeader(headerInfo->name, headerInfo->value);
+  }
+
+  DumpAttachmentMenu();
+
+  if (headerSink)
+    headerSink->OnEndHeaders();
+  return NS_OK;
+}
+
+nsresult
+nsMimeHtmlDisplayEmitter::EndHeader()
+{
+  WriteHTMLHeaders();
+  return NS_OK;
+}
+
+nsresult
+nsMimeHtmlDisplayEmitter::DumpAttachmentMenu()
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIMsgHeaderSink> headerSink; 
+  GetHeaderSink(getter_AddRefs(headerSink));
+
+  if ( (!mAttachArray) || (mAttachArray->Count() <= 0) )
+    return NS_OK;
+
+  nsCAutoString escapedName;
+  nsCAutoString escapedUrl;
+  nsCOMPtr<nsIMsgMessageUrl> messageUrl;
+  nsXPIDLCString uriString;
+
+  // Now we can finally write out the attachment information...  
+  PRInt32     i;
+  for (i=0; i<mAttachArray->Count(); i++)
+  {
+    attachmentInfoType *attachInfo = (attachmentInfoType *)mAttachArray->ElementAt(i);
+    if (!attachInfo)
+       continue;
+
+    escapedName = nsEscape(attachInfo->displayName, url_Path);
+    escapedUrl = nsEscape(attachInfo->urlSpec, url_Path);
+     
+    nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(mURL, &rv);
+    if (NS_SUCCEEDED(rv))
+    {
+      rv = messageUrl->GetURI(getter_Copies(uriString));
+    }
+
+    if (headerSink)
+      headerSink->HandleAttachment(escapedUrl, attachInfo->displayName, uriString);
+  } // for each attachment
+
+    // now broadcast to the display emitter sink 
+
+  return NS_OK;
+}
+
+// Attachment handling routines
+// Ok, we are changing the way we handle these now...It used to be that we output 
+// HTML to make a clickable link, etc... but now, this should just be informational
+// and only show up in quoting
+//
+nsresult
+nsMimeHtmlDisplayEmitter::StartAttachment(const char *name, const char *contentType, const char *url)
+{
+
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIMsgHeaderSink> headerSink; 
+  rv = GetHeaderSink(getter_AddRefs(headerSink));
+  
+  if (headerSink)
+  {
+    nsCAutoString escapedUrl;
+    nsXPIDLCString uriString;
+    escapedUrl = nsEscape(url, url_Path);
+
+    nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(mURL, &rv);
+    if (NS_SUCCEEDED(rv))
+      rv = messageUrl->GetURI(getter_Copies(uriString));
+    headerSink->HandleAttachment(escapedUrl, name, uriString);
+  }
+
+  if (  (contentType) &&
+        ( (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_MIME)) ||
+          (!nsCRT::strcmp(contentType, APPLICATION_XPKCS7_SIGNATURE)) ||
+          (!nsCRT::strcmp(contentType, TEXT_VCARD))
+        )
+     )
+  {
+    mSkipAttachment = PR_TRUE;
+    return NS_OK;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+nsMimeHtmlDisplayEmitter::AddAttachmentField(const char *field, const char *value)
+{
+  if (mSkipAttachment)
+    return NS_OK;
+  return NS_OK;
+}
+
+nsresult
+nsMimeHtmlDisplayEmitter::EndAttachment()
+{
+  if (mSkipAttachment)
+    return NS_OK;
+   return NS_OK;
+}
+
+nsresult
+nsMimeHtmlDisplayEmitter::WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten)
 {
   Write(buf, size, amountWritten);
   return NS_OK;

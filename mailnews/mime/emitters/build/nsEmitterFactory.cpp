@@ -41,13 +41,14 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeHtmlEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeRawEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXmlEmitter);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeXULEmitter);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeHtmlDisplayEmitter);
 
 static nsModuleComponentInfo components[] =
 {
   { "HTML MIME Emitter",
     NS_HTML_MIME_EMITTER_CID,
     NS_HTML_MIME_EMITTER_PROGID,
-    nsMimeHtmlEmitterConstructor },
+    nsMimeHtmlDisplayEmitterConstructor },
   { "XML MIME Emitter",
     NS_XML_MIME_EMITTER_CID,
     NS_XML_MIME_EMITTER_PROGID,

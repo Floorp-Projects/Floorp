@@ -32,6 +32,7 @@
 #include "nsIURI.h"
 #include "nsIPref.h"
 #include "nsIChannel.h"
+#include "nsIMimeMiscStatus.h"
 
 class nsMimeHtmlEmitter : public nsMimeBaseEmitter {
 public: 
@@ -54,7 +55,39 @@ protected:
     PRBool        mSkipAttachment;  // attachments we shouldn't show...
 };
 
+class nsMimeHtmlDisplayEmitter : public nsMimeBaseEmitter {
+public: 
+    nsMimeHtmlDisplayEmitter ();
+    virtual       ~nsMimeHtmlDisplayEmitter (void);
+
+    // Header handling routines.
+    NS_IMETHOD    EndHeader();
+
+    // Attachment handling routines
+    NS_IMETHOD    StartAttachment(const char *name, const char *contentType, const char *url);
+    NS_IMETHOD    AddAttachmentField(const char *field, const char *value);
+    NS_IMETHOD    EndAttachment();
+
+    // Body handling routines
+    NS_IMETHOD    WriteBody(const char *buf, PRUint32 size, PRUint32 *amountWritten);
+
+    virtual nsresult            WriteHeaderFieldHTMLPrefix();
+    virtual nsresult            WriteHeaderFieldHTML(const char *field, const char *value);
+    virtual nsresult            WriteHeaderFieldHTMLPostfix();
+    virtual nsresult            WriteHTMLHeaders();
+
+protected:
+    PRBool        mFirst;  // Attachment flag...
+    PRBool        mSkipAttachment;  // attachments we shouldn't show...
+
+    nsCOMPtr<nsIMsgHeaderSink> mHeaderSink;
+    nsresult GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink);
+    nsresult DumpAttachmentMenu();
+};
+
+
 /* this function will be used by the factory to generate an class access object....*/
 extern nsresult NS_NewMimeHtmlEmitter(const nsIID& iid, void **result);
+extern nsresult NS_NewMimeHtmlDisplayEmitter(const nsIID& iid, void **result);
 
 #endif /* _nsMimeHtmlEmitter_h_ */
