@@ -144,7 +144,7 @@ NS_METHOD nsDOMEvent::GetType(nsString& aType)
   const char* mName = GetEventName(mEvent->message);
 
   if (nsnull != mName) {
-    aType = nsString(mName);
+    aType = mName;
     return NS_OK;
   }
   
