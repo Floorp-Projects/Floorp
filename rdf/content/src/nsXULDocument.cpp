@@ -1724,17 +1724,15 @@ XULDocumentImpl::AttributeChanged(nsIContent* aElement,
     if (NS_FAILED(rv)) return rv;
 
     // First see if we need to update our element map.
-    if (nameSpaceID == kNameSpaceID_HTML) {
-        if ((aAttribute == kIdAtom) || (aAttribute == kRefAtom)) {
+    if ((aAttribute == kIdAtom) || (aAttribute == kRefAtom)) {
 
-            rv = mElementMap.Enumerate(RemoveElementsFromMapByContent, aElement);
-            if (NS_FAILED(rv)) return rv;
+        rv = mElementMap.Enumerate(RemoveElementsFromMapByContent, aElement);
+        if (NS_FAILED(rv)) return rv;
 
-            // That'll have removed _both_ the 'ref' and 'id' entries from
-            // the map. So add 'em back now.
-            rv = AddElementToMap(aElement);
-            if (NS_FAILED(rv)) return rv;
-        }
+        // That'll have removed _both_ the 'ref' and 'id' entries from
+        // the map. So add 'em back now.
+        rv = AddElementToMap(aElement);
+        if (NS_FAILED(rv)) return rv;
     }
 
     // Now notify external observers
@@ -1742,7 +1740,7 @@ XULDocumentImpl::AttributeChanged(nsIContent* aElement,
         nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers[i];
         observer->AttributeChanged(this, aElement, aAttribute, aHint);
         if (observer != (nsIDocumentObserver*)mObservers.ElementAt(i)) {
-          i--;
+            i--;
         }
     }
 
