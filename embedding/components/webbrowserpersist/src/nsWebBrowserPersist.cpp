@@ -44,6 +44,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDiskDocument.h"
 #include "nsIWebProgressListener.h"
+#include "nsIAuthPrompt.h"
 
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIDOMHTMLAnchorElement.h"
@@ -162,7 +163,14 @@ NS_IMETHODIMP nsWebBrowserPersist::GetInterface(const nsIID & aIID, void **aIFac
     NS_ENSURE_ARG_POINTER(aIFace);
 
     *aIFace = nsnull;
-    if (mProgressListener)
+
+    nsresult rv = QueryInterface(aIID, aIFace);
+    if (NS_SUCCEEDED(rv) && *aIFace)
+    {
+        return rv;
+    }
+    
+    if (mProgressListener && aIID.Equals(NS_GET_IID(nsIAuthPrompt)))
     {
         nsCOMPtr<nsIInterfaceRequestor> req = do_QueryInterface(mProgressListener);
         if (req)
@@ -175,7 +183,7 @@ NS_IMETHODIMP nsWebBrowserPersist::GetInterface(const nsIID & aIID, void **aIFac
         }
     }
 
-    return QueryInterface(aIID, aIFace);
+    return NS_ERROR_NO_INTERFACE;
 }
 
 
@@ -315,13 +323,52 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
         mContentType.AssignWithConversion(aOutputContentType);
     }
 
-    return SaveDocumentInternal(aDocument, fileAsURI, datapathAsURI);
+    rv = SaveDocumentInternal(aDocument, fileAsURI, datapathAsURI);
+
+    // Now save the URIs that have been gathered
+
+    if (datapathAsURI)
+    {
+        if (mURIMap.Count() > 0)
+        {
+            // Persist each file in the uri map. The document(s)
+            // will be saved after the last one of these is saved.
+            mURIMap.Enumerate(EnumPersistURIs, this);
+        }
+        else
+        {
+            // There are no URIs to save, so just save the document(s)
+
+            // State start notification
+            if (mProgressListener)
+            {
+                mProgressListener->OnStateChange(nsnull, nsnull,
+                    nsIWebProgressListener::STATE_START |
+                        nsIWebProgressListener::STATE_IS_NETWORK,
+                    NS_OK);
+            }
+
+            EndDownload(NS_OK);
+
+            // State stop notification
+            if (mProgressListener)
+            {
+                mProgressListener->OnStateChange(nsnull, nsnull,
+                    nsIWebProgressListener::STATE_STOP |
+                        nsIWebProgressListener::STATE_IS_NETWORK,
+                    NS_OK);
+            }
+        }
+    }
+
+    return rv;
 }
 
 /* void cancelSave(); */
 NS_IMETHODIMP nsWebBrowserPersist::CancelSave()
 {
     mCancel = PR_TRUE;
+    EndDownload(NS_BINDING_ABORTED);
     return NS_OK;
 }
 
@@ -369,7 +416,6 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
     if (completed)
     {
         // Save the documents now all the URIs are saved
-        SaveDocuments();
         EndDownload(NS_OK);
     }
 
@@ -681,7 +727,12 @@ nsresult nsWebBrowserPersist::SaveURIInternal(
     
     // Read from the input channel
     rv = inputChannel->AsyncOpen(this, nsnull);
-    if (NS_FAILED(rv))
+    if (rv == NS_ERROR_NO_CONTENT)
+    {
+        // Assume this is a protocol such as mailto: which does not feed out
+        // data and just ignore it.
+    }
+    else if (NS_FAILED(rv))
     {
         EndDownload(NS_ERROR_FAILURE);
         return NS_ERROR_FAILURE;
@@ -818,18 +869,6 @@ nsresult nsWebBrowserPersist::SaveDocumentInternal(
         // Walk the DOM gathering a list of externally referenced URIs in the uri map
         nsDOMWalker walker;
         walker.WalkDOM(docAsNode, this);
-        if (mURIMap.Count() > 0)
-        {
-            // Persist each file in the uri map. The document(s)
-            // will be saved after the last one of these is saved.
-            mURIMap.Enumerate(EnumPersistURIs, this);
-        }
-        else
-        {
-            // There are no URIs so just save the document(s)
-            SaveDocuments();
-            EndDownload(NS_OK);
-        }
 
         mCurrentDataPath = oldDataPath;
         mCurrentDataPathIsRelative = oldDataPathIsRelative;
@@ -1086,6 +1125,13 @@ nsWebBrowserPersist::EndDownload(nsresult aResult)
     {
         mPersistResult = aResult;
     }
+
+    // Save the documents
+    if (NS_SUCCEEDED(aResult))
+    {
+        SaveDocuments();
+    }
+
     // Cleanup the channels
     mCompleted = PR_TRUE;
     CleanUp();
@@ -1463,14 +1509,37 @@ nsWebBrowserPersist::StoreURIAttribute(
     rv = attrMap->GetNamedItem(attribute, getter_AddRefs(attrNode));
     if (attrNode)
     {
-        nsString oldValue;
+        nsAutoString oldValue;
         attrNode->GetNodeValue(oldValue);
-        nsCString oldCValue; oldCValue.AssignWithConversion(oldValue);
-        URIData *data = nsnull;
-        MakeAndStoreLocalFilenameInURIMap(oldCValue.get(), aNeedsPersisting, &data);
-        if (aData)
+        nsCAutoString oldCValue; oldCValue.AssignWithConversion(oldValue);
+
+        // Test whether this URL should be persisted
+        PRBool shouldPersistURI = PR_TRUE;
+        if (oldCValue.EqualsWithConversion("about:", PR_TRUE, 6) ||
+            oldCValue.EqualsWithConversion("news:", PR_TRUE, 5) ||
+            oldCValue.EqualsWithConversion("snews:", PR_TRUE, 6) ||
+            oldCValue.EqualsWithConversion("ldap:", PR_TRUE, 5) ||
+            oldCValue.EqualsWithConversion("ldaps:", PR_TRUE, 6) ||
+            oldCValue.EqualsWithConversion("mailto:", PR_TRUE, 7) ||
+            oldCValue.EqualsWithConversion("finger:", PR_TRUE, 7) ||
+            oldCValue.EqualsWithConversion("telnet:", PR_TRUE, 7) ||
+            oldCValue.EqualsWithConversion("gopher:", PR_TRUE, 7) ||
+            oldCValue.EqualsWithConversion("javascript:", PR_TRUE, 11) ||
+            oldCValue.EqualsWithConversion("view-source:", PR_TRUE, 12) ||
+            oldCValue.EqualsWithConversion("irc:", PR_TRUE, 4) ||
+            oldCValue.EqualsWithConversion("mailbox:", PR_TRUE, 8))
         {
-            *aData = data;
+            shouldPersistURI = PR_FALSE;
+        }
+
+        if (shouldPersistURI)
+        {
+            URIData *data = nsnull;
+            MakeAndStoreLocalFilenameInURIMap(oldCValue.get(), aNeedsPersisting, &data);
+            if (aData)
+            {
+                *aData = data;
+            }
         }
     }
 
