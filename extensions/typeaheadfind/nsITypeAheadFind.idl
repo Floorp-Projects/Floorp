@@ -57,9 +57,11 @@ interface nsITypeAheadFind : nsISupports
 {
   readonly attribute boolean isActive;   // Is type ahead find mode currently on
 
-  void startNewFind(in nsIDOMWindow aWindow, in boolean aLinksOnly);
+  void startNewFind(in nsIDOMWindow aWindow, in boolean aLinksOnly);  // manual start
   void cancelFind(); // Cancel type ahead find mode
 
+  // If no automatic typeaheadfind start in this window,
+  // must be started manually with startNewFind()
   void setAutoStart(in nsIDOMWindow aWindow, in boolean aAutoStartOn);
   boolean getAutoStart(in nsIDOMWindow aWindow);  
 };

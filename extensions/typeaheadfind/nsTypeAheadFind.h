@@ -181,5 +181,5 @@ protected:
   nsCOMPtr<nsIWeakReference> mFocusedWeakShell;
 
   // The windows where type ahead find does not start automatically as the user types
-  nsCOMPtr<nsISupportsArray> mManualFindWindows;
+  nsCOMPtr<nsISupportsArray> mManualFindWindows; // List of windows where automatic typeahead find is disabled
 };

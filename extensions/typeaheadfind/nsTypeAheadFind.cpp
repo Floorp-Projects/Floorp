@@ -122,7 +122,6 @@ PRInt32 nsTypeAheadFind::gAccelKey = -1;  // magic value of -1 indicates unitial
 
 
 nsTypeAheadFind::nsTypeAheadFind(): 
-  mFocusedWindow(nsnull), mFind(nsnull), 
   mLinksOnlyPref(PR_FALSE), mLinksOnly(PR_FALSE), mIsTypeAheadOn(PR_FALSE), 
   mCaretBrowsingOn(PR_FALSE), mLiteralTextSearchOnly(PR_FALSE), mKeepSelectionOnCancel(PR_FALSE), 
   mDontTryExactMatch(PR_FALSE), mRepeatingMode(eRepeatingNone), mTimeoutLength(0),
@@ -300,12 +299,12 @@ NS_IMETHODIMP nsTypeAheadFind::OnStateChange(nsIWebProgress *aWebProgress,
     if (isEditable)
       return NS_OK;
   }
-  // XXX this manual id check for the mailnews message pane looks like a hack, but is necessary.
+  // XXX the manual id check for the mailnews message pane looks like a hack, but is necessary.
   // We conflict with mailnews single key shortcuts like "n" for next unread message.
   // We need this manual check in Mozilla 1.0 and Netscape 7.0 
   // because people will be using XPI's to install us there, so we have to do our check from here
   // rather than create a new interface or attribute on the browser element.
-  // XXX We will remove this and use a more elegant check in future trunk builds
+  // XXX We will remove this and use autotypeaheadfind="false" in future trunk builds
   doc->GetParentDocument(getter_AddRefs(parentDoc));
   if (parentDoc) {
     nsCOMPtr<nsIContent> browserElementContent;
@@ -315,7 +314,7 @@ NS_IMETHODIMP nsTypeAheadFind::OnStateChange(nsIWebProgress *aWebProgress,
       nsAutoString id, tagName, autoFind;
       browserElement->GetLocalName(tagName);
       browserElement->GetAttribute(NS_LITERAL_STRING("id"), id);
-      browserElement->GetAttribute(NS_LITERAL_STRING("autofind"), autoFind);
+      browserElement->GetAttribute(NS_LITERAL_STRING("autotypeaheadfind"), autoFind);
       if (tagName.EqualsWithConversion("editor") || id.EqualsWithConversion("messagepane") ||
           autoFind.EqualsWithConversion("false")) {
         SetAutoStart(domWindow, PR_FALSE);
@@ -1234,6 +1233,7 @@ void nsTypeAheadFind::AttachNewWindowFocusListener(nsIDOMEventTarget *aTarget)
 void nsTypeAheadFind::GetSelection(nsIPresShell *aPresShell, nsIDOMNode *aCurrentNode, 
                                    nsISelectionController **aSelCon, nsISelection **aDomSel)
 {
+  // if aCurrentNode is nsnull, get selection for document
   *aDomSel = nsnull;
 
   nsCOMPtr<nsIPresContext> presContext;
@@ -1361,6 +1361,8 @@ nsresult nsTypeAheadFind::GetTranslatedString(const nsAString& aKey, nsAString& 
 void nsTypeAheadFind::DisplayStatus(PRBool aSuccess, PRBool aClearStatus)
 {
   // Cache mBrowserChrome, used for showing status messages
+  // XXX Change nsIPresShell:DoCopyLinkLocation to return a string so that 
+  // we can include target URL in status message
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(mFocusedWeakShell));
   if (!presShell)
     return;
