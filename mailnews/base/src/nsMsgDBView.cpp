@@ -3410,22 +3410,13 @@ nsresult nsMsgDBView::MarkThreadRead(nsIMsgThread *threadHdr, nsMsgViewIndex thr
         m_db->IsRead(hdrMsgId, &isRead);
 
         if (isRead != bRead) {
+	    // MarkHdrRead will change the unread count on the thread
             m_db->MarkHdrRead(msgHdr, bRead, nsnull);
             // insert at the front.  should we insert at the end?
             idsMarkedRead.InsertAt(0, hdrMsgId);
         }
     }
 
-    if (bRead) {
-        NS_ASSERTION(0,"fix this");
-        //threadHdr->SetNumNewChildren(0);
-    }
-    else {
-        PRUint32 numChildren;
-        threadHdr->GetNumChildren(&numChildren);
-        NS_ASSERTION(0,"fix this");
-        //threadHdr->SetNumNewChildren(numChildren);
-    }
     return NS_OK;
 }
 
