@@ -153,6 +153,8 @@ public:
   static PRBool TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
                                   const nsStylePosition* aPosition);
 
+  static PRBool TreatFrameAsBlock(nsIFrame* aFrame);
+
   //  --------------------------------------------------
 
   void InitFloater(nsPlaceholderFrame* aFrame);
