@@ -110,38 +110,33 @@
           private purposes in cases where they'll never be seen by humans. 
 
     
-  PERFORMANCE CONSIDERATIONS:
+  --- FAQ ---
 
-    Here are a few tricks to know in order to get better string performance: 
-    
-      1) Try to limit conversions between ascii and unicode; By sticking with nsString
-         wherever possible your code will be i18n-compliant.
+    Q. When should I use nsCString instead of nsString?
 
+    A. You should really try to stick with nsString, so that we stay as unicode
+       compliant as possible. But there are cases where an interface you use requires
+       a char*. In such cases, it's fair to use nsCString. 
 
-      2) Preallocating your string buffer cuts down trips to the allocator. So if you
-         have need for an arbitrarily large buffer, pre-size it like this:
+    Q. I know that my string is going to be a certain size. Can I pre-size my nsString?
+
+    A. Yup, here's how:
 
          {
            nsString mBuffer;
            mBuffer.SetCapacity(aReasonableSize);
          }
 
-      3) Allocating nsAutoString or nsCAutoString on the heap is memory inefficient
-         (after all, the whole point is to avoid a heap allocation of the buffer).
+    Q. Should nsAutoString or nsCAutoString ever live on the heap?  
 
+    A. That would be counterproductive. The point of nsAutoStrings is to preallocate your
+       buffers, and to auto-destroy the string when it goes out of scope. 
 
-      4) Consider using an autoString to write into your arbitrarily-sized stack buffers, rather
-         than it's own buffers.
+    Q. I already have a char*. Can I use the nsString functionality on that buffer?
 
-         For example, let's say you're going to call printf() to emit pretty-printed debug output 
-         of your object. You know from experience that the pretty-printed version of your object 
-         exceeds the capacity of an autostring. Ignoring memory considerations, you could simply 
-         use nsCString, appending the stringized version of each of your class's data members. 
-         This will probably result in calls to the heap manager. 
-
-         But there's a way to do this without necessarily having to call the heap manager.
-         All you do is declare a stack based buffer and instruct nsCString to use that instead 
-         of it's own internal buffer by using the CBufDescriptor class:
+    A. Yes you can -- by using an intermediate class called CBufDescriptor.
+       The CBufDescriptor class is used to tell nsString about an external buffer (heap or stack) to use
+       instead of it's own internal buffers. Here's an example:
          
          {
            char theBuffer[256];
@@ -155,6 +150,19 @@
          Note however that just like any other nsStringXXX use, if you write more data 
          than will fit in the buffer, a visit to the heap manager will be in order. 
      
+
+    Q. What is the simplest way to get from a char* to PRUnichar*?
+    
+    A. The simplest way is by construction (or assignment): 
+
+        {
+          char* theBuf = "hello there";
+          nsAutoString foo(theBuf);
+        }
+
+       If you don't want the char* to be copied into the nsAutoString, the use a 
+       CBufDescriptor instead.
+
 
  **********************************************************************************/
 
