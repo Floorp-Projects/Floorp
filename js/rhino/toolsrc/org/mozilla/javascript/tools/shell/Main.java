@@ -39,6 +39,8 @@
 package org.mozilla.javascript.tools.shell;
 
 import java.io.*;
+import java.net.URL;
+import java.net.MalformedURLException;
 import java.util.*;
 import java.lang.reflect.*;
 import org.mozilla.javascript.*;
@@ -244,7 +246,24 @@ public class Main {
     public static void processFile(Context cx, Scriptable scope,
                                    String filename)
     {
-            Reader in = null;
+        Reader in = null;
+        // Try filename first as URL
+        try {
+            URL url = new URL(filename);
+            InputStream is = url.openStream();
+            in = new BufferedReader(new InputStreamReader(is));
+        }  catch (MalformedURLException mfex) {
+            // fall through to try it as a file
+            in = null;
+        } catch (IOException ioex) {
+            Context.reportError(ToolErrorReporter.getMessage(
+                "msg.couldnt.open.url", filename, ioex.toString()));
+            exitCode = EXITCODE_FILE_NOT_FOUND;
+            return;
+        }
+
+        if (in == null) {
+            // Try filename as file
             try {
                 in = new PushbackReader(new FileReader(filename));
                 int c = in.read();
@@ -277,11 +296,11 @@ public class Main {
             } catch (IOException ioe) {
                 global.getErr().println(ioe.toString());
             }
-            
-            // Here we evalute the entire contents of the file as
-            // a script. Text is printed only if the print() function
-            // is called.
-            evaluateReader(cx, scope, in, filename, 1);
+        }            
+        // Here we evalute the entire contents of the file as
+        // a script. Text is printed only if the print() function
+        // is called.
+        evaluateReader(cx, scope, in, filename, 1);
     }
 
     public static Object evaluateReader(Context cx, Scriptable scope, 
