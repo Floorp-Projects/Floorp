@@ -50,7 +50,7 @@ struct nsChunkList
             : mStorageStart( aStorageStart ),
               mStorageLength( aStorageLength ),
               mDataLength( aDataLength ),
-              mDataStart( aDataStart ? aDataStart, aStorageStart )
+              mDataStart( aDataStart ? aDataStart : aStorageStart )
           {
             // nothing else to do here
           }
@@ -63,20 +63,21 @@ struct nsChunkList
     nsChunkList() : mFirstChunk(0), mLastChunk(0), mTotalDataLength(0) { }
    ~nsChunkList();
 
-    static Chunk* NewChunk( const CharT* aData, PRUint32 aDataLength );
+    static Chunk* NewChunk( const CharT* aData, PRUint32 aDataLength, PRUint32 aAdditionalSpace = 0 );
 
-    Chunk*  InsertChunk( Chunk* aPrevElem, Chunk* aNewElem, Chunk* aNextElem );
+    void    InsertChunk( Chunk* aPrevElem, Chunk* aNewElem, Chunk* aNextElem );
     void    SplitChunk( Chunk* aElem, PRUint32 aSplitOffset );
     Chunk*  RemoveChunk( Chunk* aChunkToRemove );
+    void    DestroyAllChunks();
 
-    private:
-      void  DestroyAllChunks();
+    void    CutLeadingData( PRUint32 aLengthToCut );
+    void    CutTrailingData( PRUint32 aLengthToCut );
   };
 
 
 template <class CharT>
-nsChunkList<CharT>::Chunk*
-nsChunkList<CharT>::NewChunk( const CharT* aData, PRUint32 aDataLength, PRUint32 aAdditionalSpace = 0 )
+typename nsChunkList<CharT>::Chunk*
+nsChunkList<CharT>::NewChunk( const CharT* aData, PRUint32 aDataLength, PRUint32 aAdditionalSpace )
   {
     size_t    object_size    = ((sizeof(Chunk) + sizeof(CharT) - 1) / sizeof(CharT)) * sizeof(CharT);
     PRUint32  buffer_length  = aDataLength + aAdditionalSpace;
@@ -87,7 +88,8 @@ nsChunkList<CharT>::NewChunk( const CharT* aData, PRUint32 aDataLength, PRUint32
       {
         typedef CharT* CharT_ptr;
         CharT* buffer_ptr = CharT_ptr(NS_STATIC_CAST(unsigned char*, object_ptr) + object_size);
-        copy_string(aData, aData+aDataLength, buffer_ptr);
+        if ( aDataLength )
+          copy_string(aData, aData+aDataLength, buffer_ptr);
         return new (object_ptr) Chunk(buffer_ptr, buffer_length, aDataLength);
       }
 
@@ -143,7 +145,7 @@ nsChunkList<CharT>::SplitChunk( Chunk* aChunkToSplit, PRUint32 aSplitPosition )
 
 
 template <class CharT>
-nsChunkList<CharT>::Chunk*
+typename nsChunkList<CharT>::Chunk*
 nsChunkList<CharT>::RemoveChunk( Chunk* aChunkToRemove )
   {
     NS_ASSERTION(aChunkToRemove, "aChunkToRemove");
@@ -164,6 +166,37 @@ nsChunkList<CharT>::RemoveChunk( Chunk* aChunkToRemove )
     mTotalDataLength -= aChunkToRemove->mDataLength;
 
     return aChunkToRemove;
+  }
+
+template <class CharT>
+void
+nsChunkList<CharT>::CutLeadingData( PRUint32 /* aLengthToCut */ )
+  {
+    // BULLSHIT ALERT
+  }
+
+template <class CharT>
+void
+nsChunkList<CharT>::CutTrailingData( PRUint32 aLengthToCut )
+  {
+    Chunk* chunk = mLastChunk;
+    while ( chunk && aLengthToCut )
+      {
+        Chunk* prev_chunk = chunk->mPrev;
+        if ( aLengthToCut < chunk->mDataLength )
+          {
+            chunk->mDataLength -= aLengthToCut;
+            aLengthToCut = 0;
+          }
+        else
+          {
+            RemoveChunk(chunk);
+            aLengthToCut -= chunk->mDataLength;
+            operator delete(chunk);
+          }
+
+        chunk = prev_chunk;
+      }
   }
 
 template <class CharT>
@@ -200,6 +233,8 @@ class basic_nsFragmentedString
       virtual CharT* GetWritableFragment( nsWritableFragment<CharT>&, nsFragmentRequest, PRUint32 );
 
     public:
+      basic_nsFragmentedString() { }
+
       virtual PRUint32 Length() const;
 
       virtual void SetLength( PRUint32 aNewLength );
@@ -219,13 +254,13 @@ class basic_nsFragmentedString
 
 template <class CharT>
 const CharT*
-basic_nsFragmentedString<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset )
+basic_nsFragmentedString<CharT>::GetReadableFragment( nsReadableFragment<CharT>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset ) const
   {
-    Chunk* chunk = 0;
+    typename nsChunkList<CharT>::Chunk* chunk = 0;
     switch ( aRequest )
       {
         case kPrevFragment:
-          chunk = NS_STATIC_CAST(Chunk*, aFragment.mFragmentIdentifier)->mPrev;
+          chunk = NS_STATIC_CAST(typename nsChunkList<CharT>::Chunk*, aFragment.mFragmentIdentifier)->mPrev;
           break;
 
         case kFirstFragment:
@@ -237,7 +272,7 @@ basic_nsFragmentedString<CharT>::GetReadableFragment( nsReadableFragment<CharT>&
           break;
 
         case kNextFragment:
-          chunk = NS_STATIC_CAST(Chunk*, aFragment.mFragmentIdentifier)->mNext;
+          chunk = NS_STATIC_CAST(typename nsChunkList<CharT>::Chunk*, aFragment.mFragmentIdentifier)->mNext;
           break;
 
         case kFragmentAt:
@@ -248,7 +283,7 @@ basic_nsFragmentedString<CharT>::GetReadableFragment( nsReadableFragment<CharT>&
     if ( chunk )
       {
         aFragment.mStart  = chunk->mDataStart;
-        aFragment.mEnd    = chunk->mDataStart + aChunk->mDataLength;
+        aFragment.mEnd    = chunk->mDataStart + chunk->mDataLength;
         aFragment.mFragmentIdentifier = chunk;
         return aFragment.mStart + aOffset;
       }
@@ -257,14 +292,14 @@ basic_nsFragmentedString<CharT>::GetReadableFragment( nsReadableFragment<CharT>&
   }
 
 template <class CharT>
-const CharT*
+CharT*
 basic_nsFragmentedString<CharT>::GetWritableFragment( nsWritableFragment<CharT>& aFragment, nsFragmentRequest aRequest, PRUint32 aOffset )
   {
-    Chunk* chunk = 0;
+    typename nsChunkList<CharT>::Chunk* chunk = 0;
     switch ( aRequest )
       {
         case kPrevFragment:
-          chunk = NS_STATIC_CAST(Chunk*, aFragment.mFragmentIdentifier)->mPrev;
+          chunk = NS_STATIC_CAST(typename nsChunkList<CharT>::Chunk*, aFragment.mFragmentIdentifier)->mPrev;
           break;
 
         case kFirstFragment:
@@ -276,7 +311,7 @@ basic_nsFragmentedString<CharT>::GetWritableFragment( nsWritableFragment<CharT>&
           break;
 
         case kNextFragment:
-          chunk = NS_STATIC_CAST(Chunk*, aFragment.mFragmentIdentifier)->mNext;
+          chunk = NS_STATIC_CAST(typename nsChunkList<CharT>::Chunk*, aFragment.mFragmentIdentifier)->mNext;
           break;
 
         case kFragmentAt:
@@ -287,7 +322,7 @@ basic_nsFragmentedString<CharT>::GetWritableFragment( nsWritableFragment<CharT>&
     if ( chunk )
       {
         aFragment.mStart  = chunk->mDataStart;
-        aFragment.mEnd    = chunk->mDataStart + aChunk->mDataLength;
+        aFragment.mEnd    = chunk->mDataStart + chunk->mDataLength;
         aFragment.mFragmentIdentifier = chunk;
         return aFragment.mStart + aOffset;
       }
@@ -315,12 +350,21 @@ basic_nsFragmentedString<CharT>::SetLength( PRUint32 aNewLength )
     // according to the current interpretation of |SetLength|,
     //  cut off characters from the end, or else add unitialized space to fill
 
-    if ( aNewLength < mTotalDataLength )
-      ; // ...
-    else if ( aNewLength > mTotalDataLength )
+    if ( aNewLength < mChunkList.mTotalDataLength )
       {
-        size_t space_to_add = aNewLength - mTotalDataLength;
-        
+//      if ( aNewLength )
+          mChunkList.CutTrailingData(mChunkList.mTotalDataLength-aNewLength);
+//      else
+//        mChunkList.DestroyAllChunks();
+      }
+
+// temporarily... eliminate as soon as our munging routines don't need this form of |SetLength|
+    else if ( aNewLength > mChunkList.mTotalDataLength )
+      {
+        size_t empty_space_to_add = aNewLength - mChunkList.mTotalDataLength;
+        typename nsChunkList<CharT>::Chunk* new_chunk = nsChunkList<CharT>::NewChunk(0, 0, empty_space_to_add);
+        new_chunk->mDataLength = empty_space_to_add;
+        mChunkList.InsertChunk(mChunkList.mLastChunk, new_chunk, 0);
       }
   }
 
