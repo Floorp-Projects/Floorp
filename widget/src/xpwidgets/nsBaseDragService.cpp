@@ -36,8 +36,10 @@ NS_IMPL_RELEASE(nsBaseDragService)
 //
 //-------------------------------------------------------------------------
 nsBaseDragService::nsBaseDragService() :
-  mTargetSize(0,0), mCanDrop(PR_FALSE), mDragAction(DRAGDROP_ACTION_NONE),
-  mDoingDrag(PR_FALSE)
+  mCanDrop(PR_FALSE), 
+  mDoingDrag(PR_FALSE),
+  mTargetSize(0,0), 
+  mDragAction(DRAGDROP_ACTION_NONE)
 {
   NS_INIT_REFCNT();
   nsresult result = NS_NewISupportsArray(getter_AddRefs(mTransArray));
