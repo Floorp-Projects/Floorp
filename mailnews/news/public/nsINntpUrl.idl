@@ -37,6 +37,8 @@ interface nsIMsgOfflineNewsState;
 interface nsINNTPNewsgroupList;
 interface nsINNTPNewsgroupPost;
 
+typedef long nsNewsAction;
+
 [scriptable, uuid(BDD12930-A682-11d2-804C-006008128C4E)]
 interface nsINntpUrl : nsISupports {
   attribute nsINNTPHost nntpHost;
@@ -48,5 +50,13 @@ interface nsINntpUrl : nsISupports {
   readonly attribute nsIMsgDBHdr messageHeader;
   attribute nsMsgKey messageKey;
   attribute string newsgroupName;
+  attribute nsNewsAction newsAction;
   void SetUsername(in string aUserName);
+
+  /* these are nsMailboxActions */
+  const long ActionGetNewNews = 0;
+  const long ActionDisplayArticle = 1;
+  const long ActionSaveMessageToDisk = 2;
+  const long ActionCancelArticle = 3;
+  const long ActionPostArticle = 4;
 };
