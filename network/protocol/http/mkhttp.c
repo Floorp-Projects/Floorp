@@ -3271,8 +3271,9 @@ net_HTTPLoad (ActiveEntry * ce)
   else
     {
     use_host = NET_ParseURL(ce->URL_s->address, GET_HOST_PART);
-    HG09309
     }
+
+  HG09309
 
   if(!use_host)
     {
