@@ -929,12 +929,21 @@ nsBulletFrame::UpdateBulletCB(nsIPresContext* aPresContext,
       nsIFrame* parent;      
       aFrame->GetParent(&parent);      
       if (parent) {
-        // Mark the bullet frame dirty and ask its parent to reflow it.
-        nsFrameState state;
-        aFrame->GetFrameState(&state);
-        state |= NS_FRAME_IS_DIRTY;
-        aFrame->SetFrameState(state);
-	      parent->ReflowDirtyChild(shell, aFrame);
+        // Reflow the first child of the parent not the bullet frame.
+        // The bullet frame is not in a line list so marking it dirty
+        // has no effect. The reflowing of the bullet frame is done 
+        // indirectly.
+        nsIFrame* frame = nsnull;
+        parent->FirstChild(aPresContext, nsnull, &frame);
+        if (nsnull != frame) {
+          nsFrameState state;
+          frame->GetFrameState(&state);
+          state |= NS_FRAME_IS_DIRTY;
+          frame->SetFrameState(state);
+          parent->ReflowDirtyChild(shell, frame);
+        } else {
+          NS_ASSERTION(0, "No frame to mark dirty for bullet frame.");
+        }
       }
       else {
        NS_ASSERTION(0, "No parent to pass the reflow request up to.");
