@@ -358,10 +358,6 @@ BASIC_LIBS_2	= \
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
 		  $(NULL)
 
-BASIC_LIBS	+= $(XFE_JPEG_LDFLAGS)
-
-BASIC_LIBS	+= $(XFE_PNG_LDFLAGS)
-
 # jwz: link in libmime all the time.
 # but it needs to be before libnetutil, and I don't know how to do that,
 # so just link against libnetutil twice.
@@ -543,12 +539,22 @@ endif  # !MOZ_OJI
 endif  # !MOZ_JAVA
 
 ##
-## Only one of XFE_ZLIB_LDFLAGS and XFE_ZLIB_DSO_LDFLAGS will be defined.
+## Graphics libs.  See mozilla/cmd/unixfe/config/unixfe.mk.
+## 
+BASIC_LIBS += \
+			$(XFE_PNG_LIB) \
+			$(XFE_ZLIB_LIB) \
+			$(XFE_JPEG_LIB) \
+			$(NULL)
+
 ##
-## See unixfe.mk
-##
-BASIC_LIBS	+= $(XFE_ZLIB_LDFLAGS)
-BASIC_DSOS	+= $(XFE_ZLIB_DSO_LDFLAGS)
+## Graphics libs.  See unixfe.mk.
+## 
+BASIC_DSOS += \
+			$(XFE_PNG_DSO) \
+			$(XFE_ZLIB_DSO) \
+			$(XFE_JPEG_DSO) \
+			$(NULL)
 
 ifndef NO_MOCHA
 # XXX To a DSO...

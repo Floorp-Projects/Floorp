@@ -148,14 +148,21 @@ endif
 MKICONS_LIB	= \
 			$(DIST)/lib/libimg.a \
 			$(JAVA_JMC) \
-			$(XFE_PNG_LDFLAGS) \
-			$(XFE_ZLIB_MKICONS_LDFLAGS) \
 			$(DIST)/lib/libnspr21.a \
-			$(XFE_JPEG_LDFLAGS) \
 			$(DIST)/lib/libutil.a \
 			$(DIST)/lib/libxp.a \
 			$(DIST)/lib/libplc21.a \
-			$(DIST)/lib/libxpcom.a
+			$(DIST)/lib/libxpcom.a \
+			$(XFE_PNG_LIB) \
+			$(XFE_ZLIB_LIB) \
+			$(XFE_JPEG_LIB) \
+			$(NULL)
+
+MKICONS_DSOS = \
+			$(XFE_JPEG_DSO) \
+			$(XFE_PNG_DSO) \
+			$(XFE_ZLIB_DSO) \
+			$(NULL)
 
 GARBAGE		+= $(MKICONS_EXE) \
 		  $(ICONS_GEN_HDR) \
@@ -164,7 +171,7 @@ GARBAGE		+= $(MKICONS_EXE) \
 		  $(ICONLIST) \
 		  $(ICONANIMLIST)
 
-MKICONS_EXTRA	= $(OS_LIBS) -lm
+MKICONS_EXTRA = $(MKICONS_DSOS) $(OS_LIBS) -lm
 
 #######################################################################
 # Rules to build mkicons program and then icondata.c
@@ -200,6 +207,3 @@ $(ICONS_GEN_SRC): icondata.h $(ICONANIMLIST) $(MKICONS_EXE) $(ICONS_GEN_HDR)
 	$(MKICONS_EXE) -no-xfe-define - < $(ICONANIMLIST) > $@.$$$$ && mv $@.$$$$ $@
 
 $(LIBRARY): $(OBJS)
-
-caca:
-	@echo $(XFE_ZLIB_MKICONS_LDFLAGS)

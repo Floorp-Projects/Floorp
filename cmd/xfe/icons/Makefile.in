@@ -158,11 +158,18 @@ MKICONS_LIB	= \
 			$(DIST)/lib/libutil.a \
 			$(DIST)/lib/libxp.a \
 			$(DIST)/lib/libxpcom.a \
-			$(XFE_JPEG_LDFLAGS) \
-			$(XFE_PNG_LDFLAGS) \
-			$(XFE_ZLIB_MKICONS_LDFLAGS)
+			$(XFE_PNG_LIB) \
+			$(XFE_ZLIB_LIB) \
+			$(XFE_JPEG_LIB) \
+			$(NULL)
 
-MKICONS_EXTRA	= $(NSPR_LDFLAGS) $(NSPR_LIBS) $(OS_LIBS) -lm
+MKICONS_DSOS = \
+			$(XFE_JPEG_DSO) \
+			$(XFE_PNG_DSO) \
+			$(XFE_ZLIB_DSO) \
+			$(NULL)
+
+MKICONS_EXTRA	= $(NSPR_LDFLAGS) $(NSPR_LIBS) $(MKICONS_DSOS) $(OS_LIBS) -lm
 
 #######################################################################
 # Rules to build mkicons program and then icondata.c

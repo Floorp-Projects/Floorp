@@ -315,7 +315,6 @@ BASIC_LIBS	= \
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)xml.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)lay.a \
-		  $(XFE_PNG_LDFLAGS) \
 		  $(DIST)/lib/libmariner.a \
 		  $(DIST)/lib/libimg.a \
 		  $(DIST)/lib/libnetwork.a	\
@@ -331,9 +330,7 @@ JAVA_JMC	= $(DIST)/lib/libjmc.a	# XXX To be removed...
 endif
 
 BASIC_LIBS	+= \
-		  $(XFE_PNG_LDFLAGS) \
 		  $(JAVA_JMC) \
-		  $(XFE_JPEG_LDFLAGS) \
 		  $(DIST)/lib/libhook.a \
 		  $(DIST)/lib/libparse.a \
 		  $(DIST)/lib/lib$(LITE_PREFIX)pref.a \
@@ -524,12 +521,22 @@ endif  # !MOZ_OJI
 endif  # !MOZ_JAVA
 
 ##
-## Only one of XFE_ZLIB_LDFLAGS and XFE_ZLIB_DSO_LDFLAGS will be defined.
+## Graphics libs.  See mozilla/cmd/unixfe/config/unixfe.mk.
+## 
+BASIC_LIBS += \
+			$(XFE_PNG_LIB) \
+			$(XFE_ZLIB_LIB) \
+			$(XFE_JPEG_LIB) \
+			$(NULL)
+
 ##
-## See unixfe.mk
-##
-BASIC_LIBS	+= $(XFE_ZLIB_LDFLAGS)
-BASIC_DSOS	+= $(XFE_ZLIB_DSO_LDFLAGS)
+## Graphics libs.  See unixfe.mk.
+## 
+BASIC_DSOS += \
+			$(XFE_PNG_DSO) \
+			$(XFE_ZLIB_DSO) \
+			$(XFE_JPEG_DSO) \
+			$(NULL)
 
 ifndef NO_MOCHA
 # XXX To a DSO...
@@ -1300,5 +1307,3 @@ symbols:
 	@echo "RELEASES    = $(RELEASES)"
 	@echo "OS_ARCH     = $(OS_ARCH)"
 	@echo "FC_PLATFORM = $(FC_PLATFORM)"
-
-# eof
