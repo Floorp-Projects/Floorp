@@ -174,8 +174,8 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext*         aTableSty
 
   // determine if the table is auto/fixed and get the fixed width if available
   nscoord maxWidth = aMaxWidthIn; 
-  nscoord specifiedTableWidth = 0;
-  PRBool tableIsAutoWidth = mTableFrame->IsAutoWidth(aReflowState, specifiedTableWidth);
+  nscoord specifiedTableWidth = mTableFrame->CalcBorderBoxWidth(aReflowState);
+  PRBool tableIsAutoWidth = mTableFrame->IsAutoWidth();
   // a specifiedTableWidth of <= 0 indicates percentage based 
   if (!tableIsAutoWidth && (specifiedTableWidth > 0)) {
     maxWidth = PR_MIN(specifiedTableWidth, aMaxWidthIn); // specifiedWidth usually == aMaxWidthIn for fixed table

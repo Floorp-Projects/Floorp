@@ -1111,7 +1111,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
     mMaxElementSize = *aDesiredSize.maxElementSize;
   }
   
-  if (nsDebugTable::gRflRowGrp) nsTableFrame::DebugReflow("TRG::Rfl ex", this, nsnull, &aDesiredSize);
+  if (nsDebugTable::gRflRowGrp) nsTableFrame::DebugReflow("TRG::Rfl ex", this, nsnull, &aDesiredSize, aStatus);
   return rv;
 }
 

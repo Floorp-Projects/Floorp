@@ -118,12 +118,13 @@ struct InnerTableReflowState {
     y=0;  // border/padding???
 
     unconstrainedWidth = PRBool(aReflowState.availableWidth == NS_UNCONSTRAINEDSIZE);
-    availSize.width = aReflowState.availableWidth;
+    unconstrainedHeight = PRBool(aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE);
+
+    availSize.width  = aReflowState.availableWidth;
     if (!unconstrainedWidth) {
       availSize.width -= aBorderPadding.left + aBorderPadding.right;
     }
 
-    unconstrainedHeight = PRBool(aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE);
     availSize.height = aReflowState.availableHeight;
     if (!unconstrainedHeight) {
       availSize.height -= aBorderPadding.top + aBorderPadding.bottom;
@@ -1512,14 +1513,15 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
       needsRecalc = PR_TRUE;
     }
     if (mTableLayoutStrategy && (needsRecalc || !IsColumnWidthsValid())) {
-      mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, aReflowState.mComputedWidth);
+      nscoord boxWidth = CalcBorderBoxWidth(aReflowState);
+      mTableLayoutStrategy->Initialize(aDesiredSize.maxElementSize, boxWidth);
       mBits.mColumnWidthsValid = PR_TRUE; //so we don't do this a second time below
     }
 
     if (!mPrevInFlow) { 
       // only do this for a first-in-flow table frame
       // assign column widths, and assign aMaxElementSize->width
-      BalanceColumnWidths(aPresContext, aReflowState, nsSize(aReflowState.availableWidth, aReflowState.availableHeight),
+      BalanceColumnWidths(aPresContext, aReflowState, nsSize(aReflowState.availableWidth, aReflowState.availableHeight), 
                           aDesiredSize.maxElementSize);
 
       // assign table width
@@ -1567,7 +1569,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext* aPresContext,
     aDesiredSize.maxElementSize = pass1MaxElementSize;
   }
 
-  if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl ex", this, nsnull, &aDesiredSize);
+  if (nsDebugTable::gRflTable) nsTableFrame::DebugReflow("T::Rfl ex", this, nsnull, &aDesiredSize, aStatus);
   return rv;
 }
 
@@ -1864,9 +1866,8 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext*          aPresContext,
 
 void nsTableFrame::ComputePercentBasisForRows(const nsHTMLReflowState& aReflowState)
 {
-  nscoord height;
-  GetTableSpecifiedHeight(height, aReflowState);
-  if ((height > 0) && (height < NS_UNCONSTRAINEDSIZE)) {
+  nscoord height = CalcBorderBoxHeight(aReflowState, PR_TRUE);
+  if ((height > 0) && (height != NS_UNCONSTRAINEDSIZE)) {
     // exclude our border and padding
     const nsStyleSpacing* spacing =
       (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
@@ -2662,7 +2663,7 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext*        aPresContext,
 
 nscoord nsTableFrame::ComputeDesiredWidth(const nsHTMLReflowState& aReflowState) const
 {
-  nscoord desiredWidth=aReflowState.availableWidth;
+  nscoord desiredWidth = aReflowState.availableWidth;
   // this is the biggest hack in the world.  But there's no other rational way to handle nested percent tables
   const nsStylePosition* position;
   PRBool isNested=IsNested(aReflowState, position);
@@ -2822,9 +2823,8 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       
       if (RowGroupsShouldBeConstrained()) {
         // Only applies to the tree widget.
-        nscoord tableSpecifiedHeight;
-        GetTableSpecifiedHeight(tableSpecifiedHeight, aReflowState.reflowState);
-        if (tableSpecifiedHeight != -1) {
+        nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState.reflowState, PR_TRUE);
+        if ((tableSpecifiedHeight > 0) && (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE)) {
           kidReflowState.availableHeight = tableSpecifiedHeight - y;
           if (kidReflowState.availableHeight < 0)
             kidReflowState.availableHeight = 0;
@@ -3081,27 +3081,15 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
       delete [] mColumnWidths;
     }
     mColumnWidths = newColumnWidthsArray;
-   }
+  }
 
   // need to figure out the overall table width constraint
   // default case, get 100% of available space
 
-  PRInt32 maxWidth = aMaxSize.width;
-  const nsStylePosition* position =
-    (const nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
-  if (eStyleUnit_Coord==position->mWidth.GetUnit()) 
-  {
-    nscoord coordWidth=0;
-    coordWidth = position->mWidth.GetCoordValue();
-    // NAV4 compatibility:  0-coord-width == auto-width
-    if (0!=coordWidth)
-      maxWidth = coordWidth;
-  }
-
-  if (0>maxWidth)  // nonsense style specification
-    maxWidth = 0;
+  PRInt32 maxWidth = CalcBorderBoxWidth(aReflowState);
 
   // based on the compatibility mode, create a table layout strategy
+  nscoord boxWidth = CalcBorderBoxWidth(aReflowState);
   if (nsnull == mTableLayoutStrategy) {
     nsCompatibility mode;
     aPresContext->GetCompatibilityMode(&mode);
@@ -3109,13 +3097,13 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this);
     else
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this, eCompatibility_NavQuirks == mode);
-    mTableLayoutStrategy->Initialize(aMaxElementSize, aReflowState.mComputedWidth);
+    mTableLayoutStrategy->Initialize(aMaxElementSize, boxWidth);
     mBits.mColumnWidthsValid=PR_TRUE;
   }
   // fixed-layout tables need to reinitialize the layout strategy. When there are scroll bars
   // reflow gets called twice and the 2nd time has the correct space available.
   else if (!RequiresPass1Layout()) {
-    mTableLayoutStrategy->Initialize(aMaxElementSize, aReflowState.mComputedWidth);
+    mTableLayoutStrategy->Initialize(aMaxElementSize, boxWidth);
   }
 
   mTableLayoutStrategy->BalanceColumnWidths(mStyleContext, aReflowState, maxWidth);
@@ -3357,30 +3345,6 @@ void nsTableFrame::DistributeSpaceToRows(nsIPresContext*   aPresContext,
   DistributeSpaceToCells(aPresContext, aReflowState, aRowGroupFrame);
 }
 
-NS_IMETHODIMP nsTableFrame::GetTableSpecifiedHeight(nscoord&                 aResult, 
-                                                    const nsHTMLReflowState& aReflowState)
-{
-  const nsStylePosition* tablePosition;
-  GetStyleData(eStyleStruct_Position, (const nsStyleStruct *&)tablePosition);
-  
-  const nsStyleTable* tableStyle;
-  GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
-  nscoord tableSpecifiedHeight = -1;
-  if (aReflowState.mComputedHeight != NS_UNCONSTRAINEDSIZE &&
-      aReflowState.mComputedHeight > 0)
-    tableSpecifiedHeight = aReflowState.mComputedHeight;
-  else if (eStyleUnit_Coord == tablePosition->mHeight.GetUnit())
-    tableSpecifiedHeight = tablePosition->mHeight.GetCoordValue();
-  else if (eStyleUnit_Percent == tablePosition->mHeight.GetUnit()) {
-    float percent = tablePosition->mHeight.GetPercentValue();
-    nscoord parentHeight = GetEffectiveContainerHeight(aReflowState);
-    if ((NS_UNCONSTRAINEDSIZE != parentHeight) && (0 != parentHeight))
-      tableSpecifiedHeight = NSToCoordRound((float)parentHeight * percent);
-  }
-  aResult = tableSpecifiedHeight;
-  return NS_OK;
-}
-
 nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext,
                                            const nsHTMLReflowState& aReflowState, 
                                            nscoord                  aDefaultHeight) 
@@ -3388,9 +3352,8 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext*          aPresContext
   NS_ASSERTION(mCellMap, "never ever call me until the cell map is built!");
   nscoord result = aDefaultHeight;
 
-  nscoord tableSpecifiedHeight;
-  GetTableSpecifiedHeight(tableSpecifiedHeight, aReflowState);
-  if (-1 != tableSpecifiedHeight) {
+  nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState, PR_TRUE);
+  if ((tableSpecifiedHeight > 0) && (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE)) {
     if (tableSpecifiedHeight > aDefaultHeight) { 
       // proportionately distribute the excess height to each row
       result = tableSpecifiedHeight;
@@ -3934,15 +3897,11 @@ PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, const nsSty
   return result;
 }
 
-
-// aSpecifiedTableWidth is filled if the table witdth is not auto
-PRBool nsTableFrame::IsAutoWidth(const nsHTMLReflowState& aReflowState,
-                                 nscoord&                 aSpecifiedTableWidth)
+PRBool nsTableFrame::IsAutoWidth()
 {
   PRBool isAuto = PR_TRUE;  // the default
 
   nsStylePosition* tablePosition = (nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
-
   switch (tablePosition->mWidth.GetUnit()) {
 
   case eStyleUnit_Auto:         // specified auto width
@@ -3954,10 +3913,6 @@ PRBool nsTableFrame::IsAutoWidth(const nsHTMLReflowState& aReflowState,
     break;
   case eStyleUnit_Coord:
   case eStyleUnit_Percent:
-    if ((aReflowState.mComputedWidth > 0) &&
-        (aReflowState.mComputedWidth != NS_UNCONSTRAINEDSIZE)) {
-      aSpecifiedTableWidth = aReflowState.mComputedWidth;
-    }
     isAuto = PR_FALSE;
     break;
   default:
@@ -3967,6 +3922,71 @@ PRBool nsTableFrame::IsAutoWidth(const nsHTMLReflowState& aReflowState,
   return isAuto; 
 }
 
+nscoord nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
+{
+  nscoord width = aState.mComputedWidth;
+
+  if (eStyleUnit_Auto == aState.mStylePosition->mWidth.GetUnit()) {
+    if (0 == width) {
+      width = NS_UNCONSTRAINEDSIZE;
+    }
+    if (NS_UNCONSTRAINEDSIZE != aState.availableWidth) {
+      nsMargin margin(0,0,0,0);
+      aState.mStyleSpacing->GetMargin(margin);
+      width = aState.availableWidth - margin.left - margin.right;
+    }
+  }
+  else if (width != NS_UNCONSTRAINEDSIZE) {
+    nsMargin borderPadding(0,0,0,0);
+    aState.mStyleSpacing->GetBorderPadding(borderPadding);
+    width += borderPadding.left + borderPadding.right;
+  }
+  width = PR_MAX(width, 0);
+
+  return width;
+}
+
+nscoord nsTableFrame::CalcBorderBoxHeight(const nsHTMLReflowState& aState,
+                                          PRBool                   aDoNavHack)
+{
+  nscoord height = aState.mComputedHeight;
+  PRBool isAutoHeight  = PR_FALSE;
+  PRBool isPercentHack = PR_FALSE;
+
+  if (eStyleUnit_Auto == aState.mStylePosition->mHeight.GetUnit()) {
+    isAutoHeight = PR_TRUE;
+    if (NS_UNCONSTRAINEDSIZE != aState.availableHeight) {
+      nsMargin margin(0,0,0,0);
+      aState.mStyleSpacing->GetMargin(margin);
+      height = aState.availableHeight - margin.top - margin.bottom;
+    }
+  }
+  else if (((0 == height) || (NS_UNCONSTRAINEDSIZE == height)) &&
+           aDoNavHack && (eStyleUnit_Percent == aState.mStylePosition->mHeight.GetUnit())) {
+    nsIAtom* frameType;
+    aState.frame->GetFrameType(&frameType);
+    if (nsLayoutAtoms::tableFrame == frameType) {
+      float percent = aState.mStylePosition->mHeight.GetPercentValue();
+      nscoord parentHeight = ((nsTableFrame*)aState.frame)->GetEffectiveContainerHeight(aState);
+      if ((NS_UNCONSTRAINEDSIZE != parentHeight) && (0 != parentHeight)) {
+        // css box-sizing not supported for this Nav hack
+        height = NSToCoordRound((float)parentHeight * percent);
+        isPercentHack = PR_TRUE;
+      }
+    }
+    NS_IF_RELEASE(frameType);
+  }
+
+  height = PR_MAX(height, 0);
+
+  if ((height != NS_UNCONSTRAINEDSIZE) && !isAutoHeight && !isPercentHack) {
+    nsMargin borderPadding(0,0,0,0);
+    aState.mStyleSpacing->GetBorderPadding(borderPadding);
+    height += borderPadding.top + borderPadding.bottom;
+  }
+
+  return height;
+}
 
 nscoord nsTableFrame::GetMinCaptionWidth()
 {
@@ -4438,7 +4458,8 @@ void PrettyUC(nscoord aSize,
 void nsTableFrame::DebugReflow(char*                      aMessage,
                                const nsIFrame*            aFrame,
                                const nsHTMLReflowState*   aState, 
-                               const nsHTMLReflowMetrics* aMetrics)
+                               const nsHTMLReflowMetrics* aMetrics,
+                               const nsReflowStatus       aStatus)
 {
   char indent[256];
   nsTableFrame::DebugGetIndent(aFrame, indent);
@@ -4464,6 +4485,9 @@ void nsTableFrame::DebugReflow(char*                      aMessage,
       PrettyUC(aMetrics->maxElementSize->width, width);
       PrettyUC(aMetrics->maxElementSize->height, height);
       printf("maxElem=(%s,%s)", width, height);
+    }
+    if (NS_FRAME_COMPLETE != aStatus) {
+      printf("status=%d", aStatus);
     }
     printf("\n");
   }

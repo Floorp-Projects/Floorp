@@ -149,6 +149,7 @@ table {
   border-collapse: separate;
   margin-top: 0;
   margin-bottom: 0;
+  box-sizing: border-box;
 }
 table[align=left] {
   margin-right: 4px;
@@ -1436,6 +1437,7 @@ sourcetext { /* XXX should not be in HTML namespace */
   margin-top: inherit;
   margin-bottom: inherit;
   background: inherit;
+  box-sizing: border-box;
 }
 
 :table-cell {

@@ -137,12 +137,6 @@ protected:
     */
   PRBool NeedsReflow(const nsHTMLReflowState& aReflowState);
 
-  /** compute the width available to the table during reflow, based on 
-    * the reflow state and the table's style.
-    * @return the computed width
-    */
-  nscoord ComputeAvailableTableWidth(const nsHTMLReflowState& aReflowState);
-
   /** overridden here to handle special caption-table relationship
     * @see nsContainerFrame::VerifyTree
     */
