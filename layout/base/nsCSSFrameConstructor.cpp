@@ -6503,6 +6503,10 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
                                             nsIStyleContext*         aStyleContext,
                                             nsFrameItems&            aFrameItems)
 {
+  // Make sure that we remain confined in the MathML world
+  if (aNameSpaceID != nsMathMLAtoms::nameSpaceID) 
+    return NS_OK;
+
   PRBool    processChildren = PR_TRUE;  // Whether we should process child content.
                                         // MathML frames are inline frames.
                                         // processChildren = PR_TRUE for inline frames.
@@ -6514,10 +6518,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
   PRBool    isFixedPositioned = PR_FALSE;
   PRBool    isReplaced = PR_FALSE;
   PRBool    ignoreInterTagWhitespace = PR_TRUE;
-
-  // Make sure that we remain confined in the MathML world
-  if (aNameSpaceID != nsMathMLAtoms::nameSpaceID) 
-    return NS_OK;
 
   NS_ASSERTION(aTag != nsnull, "null MathML tag");
   if (aTag == nsnull)
@@ -6583,7 +6583,8 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
            aTag == nsMathMLAtoms::mprescripts_ )
      rv = NS_NewMathMLmrowFrame(aPresShell, &newFrame);
   // CONSTRUCTION of MTABLE elements
-  else if (aTag == nsMathMLAtoms::mtable_)  {
+  else if (aTag == nsMathMLAtoms::mtable_ &&
+           disp->mDisplay == NS_STYLE_DISPLAY_TABLE) {
       // <mtable> is an inline-table -- but this isn't yet supported.
       // What we do here is to wrap the table in an anonymous containing
       // block so that it can mix better with other surrounding MathML markups
@@ -6601,8 +6602,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
                                                  getter_AddRefs(mrowContext));
       InitAndRestoreFrame(aPresContext, aState, aContent, aParentFrame,
                           mrowContext, nsnull, newFrame);
-      // add it to the flow
-      aFrameItems.AddChild(newFrame);
 
       // then, create a block frame that will wrap the table frame
       nsIFrame* blockFrame;
@@ -6615,8 +6614,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
                                                  getter_AddRefs(blockContext));
       InitAndRestoreFrame(aPresContext, aState, aContent, newFrame,
                           blockContext, nsnull, blockFrame);
-      // set the block frame as the initial child of the mrow frame
-      newFrame->SetInitialChildList(aPresContext, nsnull, blockFrame);
 
       // then, create the table frame itself
       nsCOMPtr<nsIStyleContext> tableContext;
@@ -6636,19 +6633,13 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
       // set the outerTable as the initial child of the anonymous block
       blockFrame->SetInitialChildList(aPresContext, nsnull, outerTable);
 
-      return rv; 
-  }
-  else if (aTag == nsMathMLAtoms::mtd_) {
-    nsIFrame* innerCell;
-    PRBool pseudoParent;
-    nsMathMLmtableCreator mathTableCreator(aPresShell);
-    rv = ConstructTableCellFrame(aPresShell, aPresContext, aState, aContent, 
-                                 aParentFrame, aStyleContext, mathTableCreator,
-                                 PR_FALSE, aFrameItems, newFrame, innerCell, pseudoParent);
-    if (!pseudoParent) {
+      // set the block frame as the initial child of the mrow frame
+      newFrame->SetInitialChildList(aPresContext, nsnull, blockFrame);
+
+      // add the new frame to the flow
       aFrameItems.AddChild(newFrame);
-    }
-    return rv;
+
+      return rv; 
   }
   // End CONSTRUCTION of MTABLE elements 
 
