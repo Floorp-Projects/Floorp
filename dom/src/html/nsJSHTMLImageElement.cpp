@@ -64,10 +64,9 @@ enum HTMLImageElement_slots {
   HTMLIMAGEELEMENT_HSPACE = -7,
   HTMLIMAGEELEMENT_ISMAP = -8,
   HTMLIMAGEELEMENT_LONGDESC = -9,
-  HTMLIMAGEELEMENT_SRC = -10,
-  HTMLIMAGEELEMENT_USEMAP = -11,
-  HTMLIMAGEELEMENT_VSPACE = -12,
-  HTMLIMAGEELEMENT_WIDTH = -13
+  HTMLIMAGEELEMENT_USEMAP = -10,
+  HTMLIMAGEELEMENT_VSPACE = -11,
+  HTMLIMAGEELEMENT_WIDTH = -12
 };
 
 /***********************************************************************/
@@ -245,24 +244,6 @@ GetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsAutoString prop;
         nsresult result = NS_OK;
         result = a->GetLongDesc(prop);
-        if (NS_SUCCEEDED(result)) {
-          nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
-        }
-        else {
-          return nsJSUtils::nsReportError(cx, result);
-        }
-        break;
-      }
-      case HTMLIMAGEELEMENT_SRC:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_SRC, PR_FALSE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        nsAutoString prop;
-        nsresult result = NS_OK;
-        result = a->GetSrc(prop);
         if (NS_SUCCEEDED(result)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
         }
@@ -485,20 +466,6 @@ SetHTMLImageElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
-      case HTMLIMAGEELEMENT_SRC:
-      {
-        PRBool ok = PR_FALSE;
-        secMan->CheckScriptAccess(scriptCX, obj, NS_DOM_PROP_HTMLIMAGEELEMENT_SRC, PR_TRUE, &ok);
-        if (!ok) {
-          return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_SECURITY_ERR);
-        }
-        nsAutoString prop;
-        nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
-      
-        a->SetSrc(prop);
-        
-        break;
-      }
       case HTMLIMAGEELEMENT_USEMAP:
       {
         PRBool ok = PR_FALSE;
@@ -615,7 +582,6 @@ static JSPropertySpec HTMLImageElementProperties[] =
   {"hspace",    HTMLIMAGEELEMENT_HSPACE,    JSPROP_ENUMERATE},
   {"isMap",    HTMLIMAGEELEMENT_ISMAP,    JSPROP_ENUMERATE},
   {"longDesc",    HTMLIMAGEELEMENT_LONGDESC,    JSPROP_ENUMERATE},
-  {"src",    HTMLIMAGEELEMENT_SRC,    JSPROP_ENUMERATE},
   {"useMap",    HTMLIMAGEELEMENT_USEMAP,    JSPROP_ENUMERATE},
   {"vspace",    HTMLIMAGEELEMENT_VSPACE,    JSPROP_ENUMERATE},
   {"width",    HTMLIMAGEELEMENT_WIDTH,    JSPROP_ENUMERATE},

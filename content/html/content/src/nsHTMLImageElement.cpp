@@ -45,6 +45,7 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
+#include "nsIWebShell.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 // XXX nav attrs: suppress
@@ -129,6 +130,9 @@ public:
 
   // nsIJSNativeInitializer
   NS_IMETHOD        Initialize(JSContext* aContext, PRUint32 argc, jsval *argv);
+
+  nsresult SetSrcInner(nsIURI* aBaseURL, const nsString& aSrc);
+  nsresult GetCallerSourceURL(JSContext* cx, nsIURI** sourceURL);
 
 protected:
   nsGenericHTMLLeafElement mInner;
@@ -348,13 +352,100 @@ nsHTMLImageElement::DeleteProperty(JSContext *aContext, jsval aID, jsval *aVp)
 PRBool    
 nsHTMLImageElement::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
+  PRBool result = PR_TRUE;
+
+  // XXX Security manager needs to be called
+  if (JSVAL_IS_STRING(aID)) {
+    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+    if (PL_strcmp("src", cString) == 0) {
+      nsAutoString src;
+      if (NS_SUCCEEDED(GetSrc(src))) {
+        const PRUnichar* bytes = src.GetUnicode();
+        JSString* str = JS_NewUCStringCopyZ(aContext, (const jschar*)bytes);
+        if (str) {
+          *aVp = STRING_TO_JSVAL(str);
+          return PR_TRUE;
+        }
+        else {
+          return PR_FALSE;
+        }
+      }
+      else {
+        return PR_FALSE;
+      }
+    }
+  }
+
   return mInner.GetProperty(aContext, aID, aVp);
+}
+
+nsresult
+nsHTMLImageElement::GetCallerSourceURL(JSContext* cx,
+                                       nsIURI** sourceURL)
+{
+  // XXX Code duplicated from nsHTMLDocument
+  nsresult result = NS_OK;
+  nsIScriptContext* context = (nsIScriptContext*)JS_GetContextPrivate(cx);
+  
+  if (nsnull != context) {
+    nsCOMPtr<nsIScriptGlobalObject> global;
+
+    global = dont_AddRef(context->GetGlobalObject());
+    if (global) {
+      nsCOMPtr<nsIWebShell> webShell;
+      
+      global->GetWebShell(getter_AddRefs(webShell));
+      if (webShell) {
+        const PRUnichar* url;
+
+        // XXX Ughh - incorrect ownership rules for url?
+        webShell->GetURL(&url);
+        result = NS_NewURI(sourceURL, url);
+      }
+    }
+  }
+
+  return result;
 }
 
 PRBool    
 nsHTMLImageElement::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
 {
-  return mInner.SetProperty(aContext, aID, aVp);
+  nsresult result = NS_OK;
+
+  // XXX Security manager needs to be called
+  if (JSVAL_IS_STRING(aID)) {
+    char* cString = JS_GetStringBytes(JS_ValueToString(aContext, aID));
+    
+    if (PL_strcmp("src", cString) == 0) {
+      nsCOMPtr<nsIURI> base;
+      nsAutoString src, url;
+      
+      // Get the parameter passed in
+      JSString *jsstring;
+      if ((jsstring = JS_ValueToString(aContext, *aVp)) != nsnull) {
+        src.SetString(JS_GetStringChars(jsstring));
+      }
+      else {
+        src.Truncate();
+      }
+      
+      // Get the source of the caller
+      result = GetCallerSourceURL(aContext, getter_AddRefs(base));
+      
+      if (NS_SUCCEEDED(result)) {
+        result = NS_MakeAbsoluteURI(src, base, url);
+        if (NS_SUCCEEDED(result)) {
+          result = SetSrcInner(base, url);
+        }
+      }
+    }
+  }
+  else {
+    result = mInner.SetProperty(aContext, aID, aVp);
+  }
+  
+  return (result == NS_OK);
 }
 
 PRBool    
@@ -493,8 +584,8 @@ nsHTMLImageElement::GetSrc(nsString& aSrc)
   return rv;
 }
 
-NS_IMETHODIMP 
-nsHTMLImageElement::SetSrc(const nsString& aSrc)
+nsresult
+nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL, const nsString& aSrc)
 {
   nsresult result = NS_OK;
 
@@ -530,17 +621,12 @@ nsHTMLImageElement::SetSrc(const nsString& aSrc)
             size.height = 0;
           }
 
-          nsAutoString url, empty;
-          nsIURI* baseURL;
-
-          empty.Truncate();
-          result = mOwnerDocument->GetBaseURL(baseURL);
-          if (NS_SUCCEEDED(result)) {
-            result = NS_MakeAbsoluteURI(aSrc, baseURL, url);
+          nsAutoString url;
+          if (nsnull != aBaseURL) {
+            result = NS_MakeAbsoluteURI(aSrc, aBaseURL, url);
             if (NS_FAILED(result)) {
               url = aSrc;
             }
-            NS_RELEASE(baseURL);
           }
           else {
             url = aSrc;
@@ -576,8 +662,27 @@ nsHTMLImageElement::SetSrc(const nsString& aSrc)
   return result;
 }
 
+NS_IMETHODIMP 
+nsHTMLImageElement::SetSrc(const nsString& aSrc)
+{
+  nsIURI* baseURL = nsnull;
+  nsresult result = NS_OK;
+
+  if (nsnull != mOwnerDocument) {
+    result = mOwnerDocument->GetBaseURL(baseURL);
+  }
+  
+  if (NS_SUCCEEDED(result)) {
+    result = SetSrcInner(baseURL, aSrc);
+    NS_IF_RELEASE(baseURL);
+  }
+
+  return result;
+}
+
 NS_IMETHODIMP
 nsHTMLImageElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
 {
   return mInner.SizeOf(aSizer, aResult, sizeof(*this));
 }
+
