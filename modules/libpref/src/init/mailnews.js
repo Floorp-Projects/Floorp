@@ -381,6 +381,7 @@ pref("mail.smtpserver.default.try_ssl", 0);
 pref("mail.display_glyph", true);   // TXT->HTML :-) etc. in viewer
 pref("mail.display_struct", true);  // TXT->HTML *bold* etc. in viewer; ditto
 pref("mail.send_struct", false);   // HTML->HTML *bold* etc. during Send; ditto
+pref("mailnews.display.original_date", false);   // display date string from mail headers without interpreting
 // For the next 4 prefs, see <http://www.bucksch.org/1/projects/mozilla/108153>
 pref("mailnews.display.prefer_plaintext", false);  // Ignore HTML parts in multipart/alternative
 pref("mailnews.display.html_as", 0);  // How to display HTML parts. 0 = Render the sender's HTML; 1 = HTML->TXT->HTML; 2 = Show HTML source; 3 = Sanitize HTML
