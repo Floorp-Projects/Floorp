@@ -56,7 +56,6 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsAbsoluteFrame.obj	\
  .\$(OBJDIR)\nsBRPart.obj		\
  .\$(OBJDIR)\nsBodyFrame.obj		\
- .\$(OBJDIR)\nsBodyPart.obj		\
  .\$(OBJDIR)\nsGlobalVariables.obj	\
  .\$(OBJDIR)\nsHRPart.obj		\
  .\$(OBJDIR)\nsHTMLAtoms.obj		\
