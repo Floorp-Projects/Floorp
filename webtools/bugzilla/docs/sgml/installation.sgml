@@ -608,6 +608,23 @@ AllowOverride Limit
       for Perl. This can be done using the following Perl one-liner, but 
       I suggest using the symlink approach to avoid upgrade hassles.
       </para>
+
+      <note>
+        <para><quote>Bonsaitools</quote> is the name Terry Weissman, the
+	original author of Bugzilla, created
+	for his suite of webtools at the time he created Bugzilla and several
+	other tools in use at mozilla.org.  He created a directory, 
+	<filename>/usr/bonsaitools</filename> to house his specific versions
+	of perl and other utilities.  This usage is still current at
+	<ulink url="http://bugzilla.mozilla.org/">bugzilla.mozilla.org</ulink>,
+	but in general most other places do not use it.  You can either edit
+	the paths at the start of each perl file to the correct location of
+	perl on your system, or simply bow to history and create a
+	<filename>/usr/bonsaitools</filename> and <filename>/usr/bonsaitools/bin
+	</filename> directory, placing a symlink to perl on your system
+	inside <filename>/usr/bonsaitools/bin</filename>
+	</para>
+      </note>
       
       <para> 
         <programlisting>
