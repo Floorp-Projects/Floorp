@@ -86,7 +86,7 @@ as well.
 <td><input size=35 name=realname></td>
 </tr>
 </table>
-<input type=submit>
+<input type="submit" value="Create Account">
 };
 
 PutFooter();
