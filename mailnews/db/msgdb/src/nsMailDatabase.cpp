@@ -703,73 +703,70 @@ NS_IMETHODIMP nsMailDatabase::ListAllOfflineDeletes(nsMsgKeyArray *offlineDelete
 /* static */
 nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int numunread)
 {
-	nsLocalFolderSummarySpec	summarySpec(*folderName);
-	nsFileSpec					summaryPath(summarySpec);
-	nsresult		err = NS_OK;
-	PRBool			bOpenedDB = PR_FALSE;
-
-	if (!folderName->Exists())
-		return NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
-
-	// should we have type safe downcast methods again?
-	nsMailDatabase *pMessageDB = (nsMailDatabase *) nsMailDatabase::FindInCache(summaryPath);
-	if (pMessageDB == NULL)
-	{
-		pMessageDB = new nsMailDatabase();
-		if(!pMessageDB)
-			return NS_ERROR_OUT_OF_MEMORY;
-
-		pMessageDB->m_folderSpec = new nsLocalFolderSummarySpec();
-		if(!pMessageDB->m_folderSpec)
-		{
-			delete pMessageDB;
-			return NS_ERROR_OUT_OF_MEMORY;
-		}
-
-		*(pMessageDB->m_folderSpec) = summarySpec;
-		// ### this does later stuff (marks latered messages unread), which may be a problem
-		err = pMessageDB->OpenMDB(summaryPath, PR_FALSE);
-		if (err != NS_OK)
-		{
-			delete pMessageDB;
-			pMessageDB = NULL;
-		}
-		bOpenedDB = PR_TRUE;
-	}
-	else
-		pMessageDB->AddRef();
-
-
-	if (pMessageDB == NULL)
-	{
+  nsLocalFolderSummarySpec	summarySpec(*folderName);
+  nsFileSpec					summaryPath(summarySpec);
+  nsresult		err = NS_OK;
+  PRBool			bOpenedDB = PR_FALSE;
+  
+  if (!folderName->Exists())
+    return NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
+  
+  // should we have type safe downcast methods again?
+  nsMailDatabase *pMessageDB = (nsMailDatabase *) nsMailDatabase::FindInCache(summaryPath);
+  if (pMessageDB == nsnull)
+  {
+    pMessageDB = new nsMailDatabase();
+    if(!pMessageDB)
+      return NS_ERROR_OUT_OF_MEMORY;
+    
+    pMessageDB->m_folderSpec = new nsLocalFolderSummarySpec();
+    if(!pMessageDB->m_folderSpec)
+    {
+      delete pMessageDB;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    
+    *(pMessageDB->m_folderSpec) = summarySpec;
+    // ### this does later stuff (marks latered messages unread), which may be a problem
+    err = pMessageDB->OpenMDB(summaryPath, PR_FALSE);
+    if (err != NS_OK)
+    {
+      delete pMessageDB;
+      pMessageDB = nsnull;
+    }
+    bOpenedDB = PR_TRUE;
+  }
+  
+  if (pMessageDB == nsnull)
+  {
 #ifdef DEBUG
-		printf("Exception opening summary file\n");
+    printf("Exception opening summary file\n");
 #endif
-		return NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
-	}
-	
-	{
-		nsFileSpec::TimeStamp actualFolderTimeStamp;
-		folderName->GetModDate(actualFolderTimeStamp) ;
-
-		pMessageDB->m_dbFolderInfo->SetFolderSize(folderName->GetFileSize());
-		pMessageDB->m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
-		pMessageDB->m_dbFolderInfo->ChangeNumVisibleMessages(num);
-		pMessageDB->m_dbFolderInfo->ChangeNumNewMessages(numunread);
-		pMessageDB->m_dbFolderInfo->ChangeNumMessages(num);
-	}
-	// if we opened the db, then we'd better close it. Otherwise, we found it in the cache,
-	// so just commit and release.
-	if (bOpenedDB)
-	{
-		pMessageDB->Close(PR_TRUE);
-	}
-	else if (pMessageDB)
-	{ 
-		err = pMessageDB->Commit(nsMsgDBCommitType::kLargeCommit);
-		pMessageDB->Release();
-	}
-	return err;
+    return NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+  }
+  
+  {
+    nsFileSpec::TimeStamp actualFolderTimeStamp;
+    folderName->GetModDate(actualFolderTimeStamp) ;
+    
+    pMessageDB->m_dbFolderInfo->SetFolderSize(folderName->GetFileSize());
+    pMessageDB->m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
+    pMessageDB->m_dbFolderInfo->ChangeNumVisibleMessages(num);
+    pMessageDB->m_dbFolderInfo->ChangeNumNewMessages(numunread);
+    pMessageDB->m_dbFolderInfo->ChangeNumMessages(num);
+  }
+  // if we opened the db, then we'd better close it. Otherwise, we found it in the cache,
+  // so just commit and release.
+  if (bOpenedDB)
+  {
+    pMessageDB->Close(PR_TRUE);
+  }
+  else if (pMessageDB)
+  { 
+    err = pMessageDB->Commit(nsMsgDBCommitType::kLargeCommit);
+    pMessageDB->Release();
+  }
+  return err;
 }
 
 
