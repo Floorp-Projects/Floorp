@@ -17,6 +17,7 @@
 #
 
 SearchDialog.xul
+SearchDialog.js
 FilterEditor.js
 FilterEditor.xul
 FilterListDialog.xul
