@@ -258,7 +258,13 @@
     -moz-user-focus       : none;
   }  
   
-#attachmentBucket, #attachmentBucketText
+#attachmentBucket
+  {
+    margin-left           : 0px;
+    -moz-user-focus       : normal !important;
+  }
+
+#attachmentBucketText
   {
     margin-left           : 0px;
     -moz-user-focus       : none;
