@@ -97,19 +97,17 @@ static nscoord AccumulateImageSizes(nsIPresContext& aPresContext, nsIFrame& aFra
   nsCOMPtr<nsIAtom> type;
   aFrame.GetFrameType(getter_AddRefs(type));
   if(type.get() == nsLayoutAtoms::imageFrame) {
-    nsSize size;
-    aFrame.GetSize(size);
-    sizes += NS_STATIC_CAST(nscoord,size.width);
+    sizes += NS_STATIC_CAST(nscoord, aFrame.GetSize().width);
   } else {
     // see if there are children to process
     nsIFrame* child = nsnull;
     // XXX: process alternate child lists?
     aFrame.FirstChild(&aPresContext,nsnull,&child);
-    while(child) {
+    while (child) {
       // recurse: note that we already know we are in a child frame, so no need to track further
       sizes += AccumulateImageSizes(aPresContext, *child);
       // now next sibling
-      child->GetNextSibling(&child);
+      child = child->GetNextSibling();
     }
   }
 
@@ -879,9 +877,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // the frame state.
   const nsHTMLReflowState* rs = psd->mReflowState;
   nsReflowReason reason = eReflowReason_Resize;
-  nsFrameState state;
-  aFrame->GetFrameState(&state);
-  if (NS_FRAME_FIRST_REFLOW & state) {
+  if (NS_FRAME_FIRST_REFLOW & aFrame->GetStateBits()) {
     reason = eReflowReason_Initial;
   }  
   else if (rs->reason == eReflowReason_Incremental) { // XXX
@@ -914,7 +910,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         }
       }
       else if (type == eReflowType_ReflowDirty &&
-               (state & NS_FRAME_IS_DIRTY) &&
+               (aFrame->GetStateBits() & NS_FRAME_IS_DIRTY) &&
                !frameIsOnReflowPath) {
         reason = eReflowReason_Dirty;
       }
@@ -924,7 +920,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     reason = eReflowReason_StyleChange;
   }
   else if (rs->reason == eReflowReason_Dirty) {
-    if (state & NS_FRAME_IS_DIRTY)
+    if (aFrame->GetStateBits() & NS_FRAME_IS_DIRTY)
       reason = eReflowReason_Dirty;
   }
 
@@ -1019,7 +1015,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   PRInt32 start, end;
 
   if (bidiEnabled) {
-    if (state & NS_FRAME_IS_BIDI) {
+    if (aFrame->GetStateBits() & NS_FRAME_IS_BIDI) {
       aFrame->GetOffsets(start, end);
     }
   }
@@ -1045,10 +1041,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       // for the text frame's initial reflow (once in the text frame's lifetime)
       // and we don't make any expensive calls.
       // Doing it this way shields us from knowing anything about the frame structure inside a text control.
-      nsIFrame *parentFrame;
-      aFrame->GetParent(&parentFrame);
       PRBool inTextControl = PR_FALSE;
-      while (parentFrame)
+      for (nsIFrame *parentFrame = aFrame->GetParent(); parentFrame;
+           parentFrame = parentFrame->GetParent())
       { 
         nsCOMPtr<nsIAtom> parentFrameType;
         parentFrame->GetFrameType(getter_AddRefs(parentFrameType));
@@ -1060,7 +1055,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
             break;
           }
         }
-        parentFrame->GetParent(&parentFrame);  // advance the loop up the frame tree
       }
       if (inTextControl)
       {
@@ -1115,9 +1109,9 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
       // to have zero width.
       if (metrics.width) {
         pfd->SetFlag(PFD_ISNONEMPTYTEXTFRAME, PR_TRUE);
-        nsCOMPtr<nsIContent> content;
-        nsresult result = pfd->mFrame->GetContent(getter_AddRefs(content));
-        if ((NS_SUCCEEDED(result)) && content) {
+        nsIContent* content = pfd->mFrame->GetContent();
+        if (content) {
+          nsresult result;
           nsCOMPtr<nsITextContent> textContent
             = do_QueryInterface(content, &result);
           if ((NS_SUCCEEDED(result)) && textContent) {
@@ -1210,8 +1204,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
 #endif
 
-  aFrame->GetFrameState(&state);
-  if (NS_FRAME_OUTSIDE_CHILDREN & state) {
+  if (NS_FRAME_OUTSIDE_CHILDREN & aFrame->GetStateBits()) {
     pfd->mCombinedArea = metrics.mOverflowArea;
   }
   else {
@@ -1227,11 +1220,10 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   }
 
   // Size the frame and size its view (if it has one)
-  aFrame->SizeTo(mPresContext, metrics.width, metrics.height);
+  aFrame->SetSize(nsSize(metrics.width, metrics.height));
   if (aFrame->HasView()) {
-    nsIView* view = aFrame->GetView(mPresContext);
-    nsIViewManager  *vm;
-    view->GetViewManager(vm);
+    nsIView* view = aFrame->GetView();
+    nsIViewManager  *vm = view->GetViewManager();
 
 #if 0 // XXX This is the correct code. We'll turn it on later to mitigate risk.
     vm->ResizeView(view, pfd->mCombinedArea);
@@ -1239,7 +1231,6 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     nsRect r(0, 0, metrics.width, metrics.height);
     vm->ResizeView(view, r);
 #endif
-    NS_RELEASE(vm);
   }
 
   // Tell the frame that we're done reflowing it
@@ -1261,8 +1252,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
         // Remove all of the childs next-in-flows. Make sure that we ask
         // the right parent to do the removal (it's possible that the
         // parent is not this because we are executing pullup code)
-        nsHTMLContainerFrame* parent;
-        kidNextInFlow->GetParent((nsIFrame**) &parent);
+        nsHTMLContainerFrame* parent = NS_STATIC_CAST(nsHTMLContainerFrame*,
+                                                      kidNextInFlow->GetParent());
         parent->DeleteNextInFlowChild(mPresContext, kidNextInFlow);
       }
     }
@@ -1299,7 +1290,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   printf(" status=%x\n", aReflowStatus);
 #endif
 
-  if (state & NS_FRAME_IS_BIDI) {
+  if (aFrame->GetStateBits() & NS_FRAME_IS_BIDI) {
     // Since aReflowStatus may change, check it at the end
     if (NS_INLINE_IS_BREAK_BEFORE(aReflowStatus) ) {
       aFrame->AdjustOffsetsForBidi(start, end);
@@ -1643,7 +1634,7 @@ nsLineLayout::AddBulletFrame(nsIFrame* aFrame,
     pfd->mDescent = aMetrics.descent;
 
     // Note: y value will be updated during vertical alignment
-    aFrame->GetRect(pfd->mBounds);
+    pfd->mBounds = aFrame->GetRect();
     pfd->mCombinedArea = aMetrics.mOverflowArea;
     if (mComputeMaxElementWidth) {
       pfd->mMaxElementWidth = aMetrics.width;
@@ -1690,9 +1681,7 @@ PRBool
 nsLineLayout::IsPercentageAwareReplacedElement(nsIPresContext *aPresContext, 
                                                nsIFrame* aFrame)
 {
-  nsFrameState frameState;
-  aFrame->GetFrameState(&frameState);
-  if (frameState & NS_FRAME_REPLACED_ELEMENT)
+  if (aFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT)
   {
     nsCOMPtr<nsIAtom> frameType;
     aFrame->GetFrameType(getter_AddRefs(frameType));
@@ -1732,9 +1721,7 @@ nsLineLayout::IsPercentageAwareReplacedElement(nsIPresContext *aPresContext,
 
 PRBool IsPercentageAwareFrame(nsIPresContext *aPresContext, nsIFrame *aFrame)
 {
-  nsFrameState childFrameState;
-  aFrame->GetFrameState(&childFrameState);
-  if (childFrameState & NS_FRAME_REPLACED_ELEMENT) {
+  if (aFrame->GetStateBits() & NS_FRAME_REPLACED_ELEMENT) {
     if (nsLineLayout::IsPercentageAwareReplacedElement(aPresContext, aFrame)) {
       return PR_TRUE;
     }
@@ -1745,7 +1732,7 @@ PRBool IsPercentageAwareFrame(nsIPresContext *aPresContext, nsIFrame *aFrame)
     aFrame->FirstChild(aPresContext, nsnull, &child);
     if (child)
     { // aFrame is an inline container frame, check my frame state
-      if (childFrameState & NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD) {
+      if (aFrame->GetStateBits() & NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD) {
         return PR_TRUE;
       }
     }
@@ -1936,7 +1923,7 @@ nsLineLayout::VerticalAlignLine(nsLineBox* aLineBox,
         pfd->mBounds.y += baselineY;
         break;
     }
-    pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
+    pfd->mFrame->SetRect(pfd->mBounds);
 #ifdef NOISY_VERTICAL_ALIGN
     printf("  [child of line]");
     nsFrame::ListTag(stdout, pfd->mFrame);
@@ -1999,7 +1986,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
         else {
           pfd->mBounds.y = -aDistanceFromTop + pfd->mMargin.top;
         }
-        pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
+        pfd->mFrame->SetRect(pfd->mBounds);
 #ifdef NOISY_VERTICAL_ALIGN
         printf("    ");
         nsFrame::ListTag(stdout, pfd->mFrame);
@@ -2020,7 +2007,7 @@ nsLineLayout::PlaceTopBottomFrames(PerSpanData* psd,
           pfd->mBounds.y = -aDistanceFromTop + aLineHeight -
             pfd->mMargin.bottom - pfd->mBounds.height;
         }
-        pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
+        pfd->mFrame->SetRect(pfd->mBounds);
 #ifdef NOISY_VERTICAL_ALIGN
         printf("    ");
         nsFrame::ListTag(stdout, pfd->mFrame);
@@ -2514,7 +2501,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
 #endif
       }
       if (psd != mRootSpan) {
-        frame->SetRect(mPresContext, pfd->mBounds);
+        frame->SetRect(pfd->mBounds);
       }
     }
     pfd = pfd->mNext;
@@ -2543,11 +2530,10 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
     //     be checking for any particular content tag type, but rather should
     //     be checking for the existence of a bullet frame to determine if it's a list element or not.
     if (!applyMinLH && (isFirstLine || isLastLine)) {
-      nsCOMPtr<nsIContent> blockContent;
-      nsresult result = mRootSpan->mFrame->mFrame->GetContent(getter_AddRefs(blockContent));
-      if ( NS_SUCCEEDED(result) && blockContent) {
+      nsIContent* blockContent = mRootSpan->mFrame->mFrame->GetContent();
+      if (blockContent) {
         nsCOMPtr<nsIAtom> blockTagAtom;
-        result = blockContent->GetTag(getter_AddRefs(blockTagAtom));
+        nsresult result = blockContent->GetTag(getter_AddRefs(blockTagAtom));
         if ( NS_SUCCEEDED(result) && blockTagAtom) {
           // (2) above, if the first line of LI
           if (isFirstLine && blockTagAtom.get() == nsHTMLAtoms::li) {
@@ -2648,7 +2634,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
       pfd = psd->mFirstFrame;
       while (nsnull != pfd) {
         pfd->mBounds.y -= minY; // move all the children back up
-        pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
+        pfd->mFrame->SetRect(pfd->mBounds);
         pfd = pfd->mNext;
       }
       maxY -= minY; // since minY is in the frame's own coordinate system
@@ -2724,11 +2710,10 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
             // that are direct children of the block will be updated
             // later, however, because the VerticalAlignFrames method
             // will be run after this method.
-            nsRect r;
             nsIFrame* f = pfd->mFrame;
-            f->GetRect(r);
+            nsRect r = f->GetRect();
             r.width -= deltaWidth;
-            f->SetRect(mPresContext, r);
+            f->SetRect(r);
           }
 
           // Adjust the right edge of the span that contains the child span
@@ -2780,7 +2765,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
         if (psd != mRootSpan) {
           // The frame was already placed during psd's
           // reflow. Update the frames rectangle now.
-          pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
+          pfd->mFrame->SetRect(pfd->mBounds);
         }
 
         // Adjust containing span's right edge
@@ -2898,7 +2883,7 @@ nsLineLayout::ApplyFrameJustification(PerSpanData* aPSD, FrameJustificationState
       
       pfd->mBounds.width += dw;
       deltaX += dw;
-      pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
+      pfd->mFrame->SetRect(pfd->mBounds);
     }
   }
   return deltaX;
@@ -2949,8 +2934,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
     // than the frame type due to the changes for bug 141054.)
     if (!InStrictMode()) {
       if (psd->mFirstFrame && psd->mFirstFrame->mFrame) {
-        nsCOMPtr<nsIContent> content;
-        psd->mFirstFrame->mFrame->GetContent(getter_AddRefs(content));
+        nsIContent* content = psd->mFirstFrame->mFrame->GetContent();
         if (content) {
           nsCOMPtr<nsIAtom> tag;
           content->GetTag(getter_AddRefs(tag));
@@ -2967,7 +2951,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
               // of its children.
               nsIFrame *child;
               for (hrFrame->FirstChild(mPresContext, nsnull, &child);
-                   child; child->GetNextSibling(&child)) {
+                   child; child = child->GetNextSibling()) {
                 child->GetFrameType(getter_AddRefs(frameType));
                 if (frameType == nsLayoutAtoms::hrFrame) {
                   hrFrame = child;
@@ -3075,7 +3059,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
 
       if (bulletPfd) {
         bulletPfd->mBounds.x += maxX;
-        bulletPfd->mFrame->SetRect(mPresContext, bulletPfd->mBounds);
+        bulletPfd->mFrame->SetRect(bulletPfd->mBounds);
       }
     }
     if ( (0 != dx) || (visualRTL) )
@@ -3101,7 +3085,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
           maxX = pfd->mBounds.x = maxX - (pfd->mMargin.left + pfd->mBounds.width + pfd->mMargin.right);
         }
 #endif // IBMBIDI
-        pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
+        pfd->mFrame->SetRect(pfd->mBounds);
       }
       aLineBounds.x += dx;
     }
@@ -3118,7 +3102,7 @@ nsLineLayout::HorizontalAlignFrames(nsRect& aLineBounds,
       PRUint32 maxX = psd->mRightEdge;
       while (nsnull != pfd) {
         pfd->mBounds.x = maxX - (pfd->mMargin.left + pfd->mBounds.width + pfd->mMargin.right);
-        pfd->mFrame->SetRect(mPresContext, pfd->mBounds);
+        pfd->mFrame->SetRect(pfd->mBounds);
         maxX = pfd->mBounds.x;
         pfd = pfd->mNext;
       }
@@ -3138,7 +3122,6 @@ nsLineLayout::RelativePositionFrames(nsRect& aCombinedArea)
 void
 nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
 {
-  nsPoint origin;
   nsRect spanCombinedArea;
   PerFrameData* pfd;
 
@@ -3172,11 +3155,10 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
     // Adjust the origin of the frame
     if (pfd->GetFlag(PFD_RELATIVEPOS)) {
       nsIFrame* frame = pfd->mFrame;
-      frame->GetOrigin(origin);
       // XXX what about right and bottom?
       nscoord dx = pfd->mOffsets.left;
       nscoord dy = pfd->mOffsets.top;
-      frame->MoveTo(mPresContext, origin.x + dx, origin.y + dy);
+      frame->SetPosition(frame->GetPosition() + nsPoint(dx, dy));
       x += dx;
       y += dy;
     }
@@ -3244,18 +3226,14 @@ nsLineLayout::RelativePositionFrames(PerSpanData* psd, nsRect& aCombinedArea)
 
   // If we just computed a spans combined area, we need to update its
   // NS_FRAME_OUTSIDE_CHILDREN bit..
-  if (nsnull != psd->mFrame) {
+  if (psd->mFrame) {
     pfd = psd->mFrame;
     nsIFrame* frame = pfd->mFrame;
-    nsFrameState oldState;
-    frame->GetFrameState(&oldState);
-    nsFrameState newState = oldState & ~NS_FRAME_OUTSIDE_CHILDREN;
     if ((minX < 0) || (minY < 0) ||
         (maxX > pfd->mBounds.width) || (maxY > pfd->mBounds.height)) {
-      newState |= NS_FRAME_OUTSIDE_CHILDREN;
-    }
-    if (newState != oldState) {
-      frame->SetFrameState(newState);
+      frame->AddStateBits(NS_FRAME_OUTSIDE_CHILDREN);
+    } else {
+      frame->RemoveStateBits(NS_FRAME_OUTSIDE_CHILDREN);
     }
   }
 }
@@ -3291,9 +3269,9 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
   for (;;) {
     stack.InsertElementAt(aFrame, 0);
 
-    aFrame->GetParent(&aFrame);
+    aFrame = aFrame->GetParent();
 
-    NS_ASSERTION(aFrame != nsnull, "wow, no block frame found");
+    NS_ASSERTION(aFrame, "wow, no block frame found");
     if (! aFrame)
       break;
 
@@ -3315,8 +3293,7 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
       return nsnull;
 
     // Advance to top's next sibling
-    nsIFrame* next;
-    top->GetNextSibling(&next);
+    nsIFrame* next = top->GetNextSibling();
 
     if (! next) {
       // No more siblings. Pop the top element to walk back up the
@@ -3327,9 +3304,7 @@ nsLineLayout::FindNextText(nsIPresContext* aPresContext, nsIFrame* aFrame)
 
     // We know top's parent is good, but next's might not be. So let's
     // set it to be sure.
-    nsIFrame* parent;
-    top->GetParent(&parent);
-    next->SetParent(parent);
+    next->SetParent(top->GetParent());
 
     // Save next at the top of the stack...
     stack.ReplaceElementAt(next, lastIndex);

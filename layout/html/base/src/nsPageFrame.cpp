@@ -125,8 +125,8 @@ nsPageFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                       nsIAtom*        aListName,
                                       nsIFrame*       aChildList)
 {
-  nsIView* view = aChildList->GetView(aPresContext);
-  if (view != nsnull && mDoCreateWidget) {
+  nsIView* view = aChildList->GetView();
+  if (view && mDoCreateWidget) {
     nscoord dx, dy;
     nsCOMPtr<nsIWidget> widget;
     view->GetOffsetFromWidget(&dx, &dy, *getter_AddRefs(widget));
@@ -227,13 +227,11 @@ NS_IMETHODIMP nsPageFrame::Reflow(nsIPresContext*          aPresContext,
         aDesiredSize.height = aReflowState.availableHeight;
       }
 
-      nsIView* view = frame->GetView(aPresContext);
+      nsIView* view = frame->GetView();
       if (view) {
-        nsCOMPtr<nsIViewManager> vm;
-        view->GetViewManager(*getter_AddRefs(vm));
         nsRegion region;
         region.Copy(nsRect(0, 0, aDesiredSize.width, aDesiredSize.height));
-        vm->SetViewChildClipRegion(view, &region);
+        view->GetViewManager()->SetViewChildClipRegion(view, &region);
       }
 
 #ifdef NS_DEBUG
@@ -742,13 +740,11 @@ nsPageFrame::DrawBackground(nsIPresContext*      aPresContext,
     nsIFrame* pageContentFrame  = mFrames.FirstChild();
     NS_ASSERTION(pageContentFrame, "Must always be there.");
 
-    nsRect rect;
-    pageContentFrame->GetRect(rect);
     const nsStyleBorder* border = GetStyleBorder();
     const nsStylePadding* padding = GetStylePadding();
 
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *border, *padding,
+                                    aDirtyRect, pageContentFrame->GetRect(), *border, *padding,
                                     PR_TRUE);
   }
 }

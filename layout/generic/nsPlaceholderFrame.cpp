@@ -142,7 +142,7 @@ nsPlaceholderFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aInden
   fprintf(out, " [parent=%p]", NS_STATIC_CAST(void*, mParent));
 #endif
   if (HasView()) {
-    fprintf(out, " [view=%p]", (void*)GetView(aPresContext));
+    fprintf(out, " [view=%p]", (void*)GetView());
   }
   fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {

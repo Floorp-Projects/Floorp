@@ -227,7 +227,7 @@ nsLineBox::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const
     if (NS_SUCCEEDED(frame->QueryInterface(NS_GET_IID(nsIFrameDebug), (void**)&frameDebug))) {
       frameDebug->List(aPresContext, out, aIndent + 1);
     }
-    frame->GetNextSibling(&frame);
+    frame = frame->GetNextSibling();
   }
 
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
@@ -246,7 +246,7 @@ nsLineBox::LastChild() const
   nsIFrame* frame = mFirstChild;
   PRInt32 n = GetChildCount() - 1;
   while (--n >= 0) {
-    frame->GetNextSibling(&frame);
+    frame = frame->GetNextSibling();
   }
   return frame;
 }
@@ -267,7 +267,7 @@ nsLineBox::IndexOf(nsIFrame* aFrame) const
     if (frame == aFrame) {
       return i;
     }
-    frame->GetNextSibling(&frame);
+    frame = frame->GetNextSibling();
   }
   return -1;
 }
@@ -284,7 +284,7 @@ nsLineBox::IsEmpty(nsCompatibility aCompatMode, PRBool aParentIsPre,
   nsIFrame *kid;
   for (n = GetChildCount(), kid = mFirstChild;
        n > 0;
-       --n, kid->GetNextSibling(&kid))
+       --n, kid = kid->GetNextSibling())
   {
     kid->IsEmpty(aCompatMode, aParentIsPre, aResult);
     if (! *aResult)
@@ -301,8 +301,7 @@ nsLineBox::DeleteLineList(nsIPresContext* aPresContext, nsLineList& aLines)
     // we do all of this before our base class releases it's hold on the
     // view.
     for (nsIFrame* child = aLines.front()->mFirstChild; child; ) {
-      nsIFrame* nextChild;
-      child->GetNextSibling(&nextChild);
+      nsIFrame* nextChild = child->GetNextSibling();
       child->Destroy(aPresContext);
       child = nextChild;
     }
@@ -660,7 +659,6 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
                                nsIFrame                 **aFirstVisual,
                                nsIFrame                 **aLastVisual)
 {
-  nsRect    checkRect;
   PRInt32   currentLine, saveLine, testLine;
   nscoord   saveX;
   nsIFrame  *checkFrame;
@@ -689,16 +687,13 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
 
       checkFrame = line->mFirstChild;
 
-      checkFrame->GetRect(checkRect);
       result = FindLineContaining(checkFrame, &saveLine);
       if (NS_FAILED(result))
         return result;
-      saveX = checkRect.x;
+      saveX = checkFrame->GetRect().x;
       lineFrameCount = line->GetChildCount();
 
-      for (; checkFrame; result = checkFrame->GetNextSibling(&checkFrame)) {
-        if (NS_FAILED(result))
-          break;
+      for (; checkFrame; checkFrame = checkFrame->GetNextSibling()) {
         result = FindLineContaining(checkFrame, &testLine);
         if (NS_FAILED(result))
           return result;
@@ -707,7 +702,7 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
           break;
         }
 
-        checkFrame->GetRect(checkRect);
+        nsRect checkRect = checkFrame->GetRect();
         // If the origin of any frame is less than the previous frame, the line is reordered
         if (checkRect.x < saveX) {
           *aIsReordered = PR_TRUE;
@@ -731,19 +726,12 @@ nsLineIterator::CheckLineOrder(PRInt32                  aLine,
       return result;
 
     leftmostFrame = rightmostFrame = firstFrame;
-    firstFrame->GetRect(checkRect);
-    maxX = checkRect.x;
-    minX = checkRect.x;
+    maxX = minX = firstFrame->GetRect().x;
 
     for (;lineFrameCount > 1;lineFrameCount--) {
-      result = firstFrame->GetNextSibling(&firstFrame);
+      firstFrame = firstFrame->GetNextSibling();
 
-      if (NS_FAILED(result)){
-        NS_ASSERTION(0,"should not be reached nsLineBox\n");
-        return NS_ERROR_FAILURE;
-      }
-
-      firstFrame->GetRect(checkRect);
+      nsRect checkRect = firstFrame->GetRect();
       if (checkRect.x > maxX) {
         maxX = checkRect.x;
         rightmostFrame = firstFrame;
@@ -796,7 +784,6 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
   if (line->mBounds.width == 0)
     return NS_ERROR_FAILURE;
 
-  nsRect r1, r2;
   nsIFrame *stoppingFrame = nsnull;
 
   if (aX < line->mBounds.x) {
@@ -807,8 +794,7 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
     else {
       frame = line->mFirstChild;
     }
-    frame->GetRect(r1);
-    if (r1.width > 0)
+    if (frame->GetRect().width > 0)
     {
       *aFrameFound = frame;
       *aXIsBeforeFirstFrame = PR_TRUE;
@@ -828,8 +814,7 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
     else {
       frame = line->LastChild();
     }
-    frame->GetRect(r1);
-    if (r1.width > 0)
+    if (frame->GetRect().width > 0)
     {
       *aFrameFound = frame;
       *aXIsBeforeFirstFrame = PR_FALSE;
@@ -868,37 +853,36 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
       if (isReordered) {
         nscoord maxX, limX;
         PRInt32 testLine;
-        nsRect tempRect;
         nsIFrame* tempFrame;
 
         maxX = -0x7fffffff;
-        frame->GetRect(tempRect);
 
-        limX = tempRect.x;
+        limX = frame->GetRect().x;
         tempFrame = line->mFirstChild;
         nextFrame = nsnull;
 
         while (tempFrame) {
           if (NS_SUCCEEDED(FindLineContaining(tempFrame, &testLine))
               && testLine == aLineNumber) {
-            tempFrame->GetRect(tempRect);
+            nsRect tempRect = tempFrame->GetRect();
             if (tempRect.x > maxX && tempRect.x < limX) { // we are looking for the highest value less than the current one
               maxX = tempRect.x;
               nextFrame = tempFrame;
             }
           }
-          tempFrame->GetNextSibling(&tempFrame);
+          tempFrame = tempFrame->GetNextSibling();
         }
       }
       else
 #endif // IBMBIDI
-        frame->GetNextSibling(&nextFrame);
-      frame->GetRect(r1);
+        nextFrame = frame->GetNextSibling();
+
+      nsRect r1 = frame->GetRect();
       if (r1.width && aX > r1.x) {
         break;
       }
       if (nextFrame) {
-        nextFrame->GetRect(r2);
+        nsRect r2 = nextFrame->GetRect();
         if (r2.width && aX > r2.XMost()) {
           nscoord rightEdge = r2.XMost();
           nscoord delta = r1.x - rightEdge;
@@ -923,39 +907,38 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
       if (!frame)
         break;
       if (isReordered) {
-        nsRect tempRect;
         nsIFrame* tempFrame;
         nscoord minX, limX;
         PRInt32 testLine;
 
         minX = 0x7fffffff;
-        frame->GetRect(tempRect);
 
-        limX = tempRect.x;
+        limX = frame->GetRect().x;
         tempFrame = line->mFirstChild;
         nextFrame = nsnull;
 
         while (tempFrame) {
           if (NS_SUCCEEDED(FindLineContaining(tempFrame, &testLine))
               && testLine == aLineNumber) {
-            tempFrame->GetRect(tempRect);
+            nsRect tempRect = tempFrame->GetRect();
             if (tempRect.width && tempRect.x < minX && tempRect.x > limX) { // we are looking for the lowest value greater than the current one
               minX = tempRect.x;
               nextFrame = tempFrame;
             }
           }
-          tempFrame->GetNextSibling(&tempFrame);
+          tempFrame = tempFrame->GetNextSibling();
         }
       }
       else
 #endif // IBMBIDI
-      frame->GetNextSibling(&nextFrame);
-      frame->GetRect(r1);
+      nextFrame = frame->GetNextSibling();
+
+      nsRect r1 = frame->GetRect();
       if (r1.width && aX < r1.XMost()) {
         break;
       }
       if (nextFrame) {
-        nextFrame->GetRect(r2);
+        nsRect r2 = nextFrame->GetRect();
         if (r2.width && aX < r2.x) {
           nscoord rightEdge = r1.XMost();
           nscoord delta = r2.x - rightEdge;
@@ -981,7 +964,8 @@ nsLineIterator::FindFrameAt(PRInt32 aLineNumber,
 NS_IMETHODIMP
 nsLineIterator::GetNextSiblingOnLine(nsIFrame*& aFrame, PRInt32 aLineNumber)
 {
-  return aFrame->GetNextSibling(&aFrame);
+  aFrame = aFrame->GetNextSibling();
+  return NS_OK;
 }
 
 //----------------------------------------------------------------------

@@ -100,17 +100,15 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsIPresContext*   aPresContext,
       // absolutely positioned elements
       nsMargin      border(0,0,0,0);
       nsMargin      padding(0,0,0,0);
-      nsFrameState  kidState;
 
       // Ignore the return values for these
       // Typically they are zero and if they fail 
       // we should keep going anyway, there impact is small
       kidReflowState.mStyleBorder->GetBorder(border);
       kidReflowState.mStylePadding->GetPadding(padding);
-      frame->GetFrameState(&kidState);
 
       // First check the combined area
-      if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
+      if (NS_FRAME_OUTSIDE_CHILDREN & frame->GetStateBits()) {
         // The background covers the content area and padding area, so check
         // for children sticking outside the child frame's padding edge
         nscoord paddingEdgeX = aDesiredSize.width - border.right - padding.right;
@@ -133,12 +131,11 @@ NS_IMETHODIMP nsPageContentFrame::Reflow(nsIPresContext*   aPresContext,
 #endif
 
 #ifdef DEBUG_PRINTING
-      nsRect r;
-      frame->GetRect(r);
+      nsRect r = frame->GetRect();
       printf("PCF: Area Frame %p Bounds: %5d,%5d,%5d,%5d\n", frame, r.x, r.y, r.width, r.height);
-      nsIView* view = frame->GetView(aPresContext);
+      nsIView* view = frame->GetView();
       if (view) {
-        view->GetBounds(r);
+        r = view->GetBounds();
         printf("PCF: Area Frame View Bounds: %5d,%5d,%5d,%5d\n", r.x, r.y, r.width, r.height);
       } else {
         printf("PCF: Area Frame View Bounds: NO VIEW\n");

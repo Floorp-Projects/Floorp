@@ -94,14 +94,11 @@ nsSelectsAreaFrame::IsOptionElement(nsIContent* aContent)
 PRBool 
 nsSelectsAreaFrame::IsOptionElementFrame(nsIFrame *aFrame)
 {
-  nsIContent *content = nsnull;
-  aFrame->GetContent(&content);
-  PRBool result = PR_FALSE;
-  if (nsnull != content) {
-    result = IsOptionElement(content);
-    NS_RELEASE(content);
+  nsIContent *content = aFrame->GetContent();
+  if (content) {
+    return IsOptionElement(content);
   }
-  return(result);
+  return PR_FALSE;
 }
 
 //---------------------------------------------------------
@@ -122,10 +119,10 @@ nsSelectsAreaFrame::GetFrameForPoint(nsIPresContext* aPresContext,
 
   if (result == NS_OK) {
     nsIFrame* selectedFrame = *aFrame;
-    while ((nsnull != selectedFrame) && (PR_FALSE == IsOptionElementFrame(selectedFrame))) {
-      selectedFrame->GetParent(&selectedFrame);
+    while (selectedFrame && !IsOptionElementFrame(selectedFrame)) {
+      selectedFrame = selectedFrame->GetParent();
     }  
-    if (nsnull != selectedFrame) {
+    if (selectedFrame) {
       *aFrame = selectedFrame;
     }
     // else, keep the original result as *aFrame, which could be this frame
@@ -141,11 +138,11 @@ nsSelectsAreaFrame::Paint(nsIPresContext*      aPresContext,
                           nsFramePaintLayer    aWhichLayer,
                           PRUint32             aFlags)
 {
-  nsresult rv = nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
+  nsAreaFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, aFlags);
 
   nsIFrame* frame = this;
   while (frame) {
-    frame->GetParent(&frame);
+    frame = frame->GetParent();
     nsCOMPtr<nsIAtom> type;
     frame->GetFrameType(getter_AddRefs(type));
     if (type == nsLayoutAtoms::listControlFrame) {
