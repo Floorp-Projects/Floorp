@@ -291,7 +291,9 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
     if (NULL != URL_s) {
         nsConnectionInfo *pConn = (nsConnectionInfo *)URL_s->fe_data;
 
+#ifdef NOISY
         printf("+++ Finished loading %s\n", URL_s->address);
+#endif
         PR_ASSERT(pConn);
 
         /* Release the ConnectionInfo object held in the URL_Struct. */
