@@ -298,6 +298,7 @@ calStorageCalendar.prototype = {
 
     // void deleteItem( in string id, in calIOperationListener aListener );
     deleteItem: function (aItem, aListener) {
+        dump ("deleteItem\n");
         if (aItem.id == null) {
             if (aListener)
                 aListener.onOperationComplete (this,
@@ -805,7 +806,7 @@ calStorageCalendar.prototype = {
         this.mDeleteItem.params.id = aID;
         this.mDeleteItem.params.cal_id = this.mCalId;
         this.mDeleteAttendees.params.item_id = aID;
-        this.mDeleteProperties.params.id = aID;
+        this.mDeleteProperties.params.item_id = aID;
 
         this.mDB.beginTransaction();
         try {
