@@ -21,7 +21,9 @@
   -->
 
 <!ENTITY lastPickedColor.label "Last-picked color">
-<!ENTITY setColor.label "Select color above or enter an HTML<html:br/>color string (e.g.: &quot;#0000ff&quot; or &quot;blue&quot;):">
+<!ENTITY setColor1.label "Click on a color or">
+<!ENTITY setColor2.label "enter an HTML color string">
+<!ENTITY setColorExample.label "(e.g.: &quot;#0000ff&quot; or &quot;blue&quot;):">
 <!ENTITY default.label "  Default  ">
 <!ENTITY palette.label "Palette:">
 <!ENTITY standardPalette.label "Standard">

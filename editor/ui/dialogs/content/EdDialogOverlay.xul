@@ -35,7 +35,7 @@
     <button class="dialog" id="AdvancedEditButton1" oncommand="onAdvancedEdit()" value="&AdvancedEditButton.label;"
             tooltip="aTooltip" tooltiptext="&AdvancedEditButton.tooltip;"/>
   </box>
-  <separator class="groove-thin tb-margin"/>
+  <separator class="groove"/>
 </box>
 
 <!-- Extra buttons to use when just button is needed

@@ -47,8 +47,7 @@
 <!ENTITY cellSelectColumn.label           "Column">
 <!ENTITY cellSelectNext.label             "Next">
 <!ENTITY cellSelectPrevious.label         "Previous">
-<!ENTITY cellChangeSelectionMsg.label     "When moving the selection:">
-<!ENTITY cellApplyBeforeMove.label        "Apply changes before moving">
+<!ENTITY cellApplyBeforeMove.label        "Apply changes before changing selection">
 <!ENTITY cellKeepCurrentData.label        "Keep current settings">
 <!ENTITY cellRowSpan.label                "Row Span:">
 <!ENTITY cellColSpan.label                "Column Span:">
@@ -65,7 +64,6 @@
 <!ENTITY cellInheritColor.label           "(Let table color show through)">
 
 <!-- Used in both Table and Cell panels  -->
-<!ENTITY defaultColor.label               "Don't specify color">
 <!ENTITY size.label                       "Size">
 <!ENTITY pixels.label                     "pixels">
 <!ENTITY backgroundColor.label            "Background Color:">

@@ -49,6 +49,7 @@ var customLinkColor;
 var customActiveColor;
 var customVisitedColor;
 var customBackgroundColor;
+var previewBGColor;
 
 // Strings we use often
 var styleStr =       "style";

@@ -286,24 +286,23 @@ function CreateCellWithField( name, value )
   if ( value ) valField.setAttribute ( "value", value );
   valField.setAttribute ( "flex", "1" );
   valField.setAttribute ( "class", "plain" );
-  //XXX JS errors (can't tell where!) are preventing this from firing
-  valField.setAttribute ( "onfocus", "SelectItemWithTextfield("+name+")");
+  valField.setAttribute ( "onfocus", "SelectItemWithTextfield(\""+name+"\")");
+  valField.setAttribute ( "allowevents", "true");
   valCell.appendChild ( valField );
   return valCell;
 }
 
 function SelectItemWithTextfield(id)
 {
-dump("*** SelectItemWithTextfield\n");
-  var textfield = document.getItemById(id);
+  var textfield = document.getElementById(id);
   if (textfield)
   {
-    var treerow = textfield.parentNode.parentNode;
-    var tree = treeerow.parentNode.parentNode;
-    if (tree)
+    var treeItem = textfield.parentNode.parentNode.parentNode;
+    if (treeItem)
     {
+      // Prevent SelectTreeItem() from setting selection to entire textfield
       gSelecting = true;
-      tree.selectedItem = textfield.parentNode;
+      treeItem.parentNode.parentNode.selectItem(treeItem);
       gSelecting = false;
     }
   }

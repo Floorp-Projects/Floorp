@@ -87,9 +87,9 @@
           </treecols>
           <treehead>
             <treerow>
-              <treecell class="treecell-header" value="&tree.attributeHeader.label;"
+              <treecell class="treecell-header treecell-inset-header" value="&tree.attributeHeader.label;"
                 tooltip="aTooltip" tooltiptext="Click on item to edit value"/>
-              <treecell class="treecell-header" value="&tree.valueHeader.label;"
+              <treecell class="treecell-header treecell-inset-header" value="&tree.valueHeader.label;"
                 tooltip="aTooltip" tooltiptext="Click on item to edit value"/>
             </treerow>
           </treehead>
@@ -106,7 +106,7 @@
             <title value="&AddHTMLAttributeLabel.label;"/>
             <box autostretch="never">
               <text class="label" for="AddHTMLAttributeNameInput" value="&AttName.label;"/>
-              <textfield flex="1" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)" onfocus="dump('foo\n')"/>
+              <textfield flex="1" id="AddHTMLAttributeNameInput" onkeyup="doHTMLEnabling(event.keyCode)" onmouseup="doHTMLEnabling(event.which)"/>
               <text class="label" for="AddHTMLAttributeValueInput" value="&AttValue.label;"/>
           	  <textfield flex="1" id="AddHTMLAttributeValueInput" onkeyup="doHTMLEnabling(event.keyCode)"/>
               <button class="dialog" id="AddHTMLAttribute" oncommand="onAddHTMLAttribute(this)" value="&AddAttributeButton.label;" disabled="true"/>
@@ -127,8 +127,8 @@
           </treecolgroup>
           <treehead>
             <treerow>
-              <treecell class="treecell-header" value="&tree.attributeHeader.label;"/>
-              <treecell class="treecell-header" value="&tree.valueHeader.label;"/>
+              <treecell class="treecell-header treecell-inset-header" value="&tree.attributeHeader.label;"/>
+              <treecell class="treecell-header treecell-inset-header" value="&tree.valueHeader.label;"/>
             </treerow>
           </treehead>
           <treechildren id="CSSAList" flex="1"/>
@@ -165,8 +165,8 @@
           </treecolgroup>
           <treehead>
             <treerow>
-              <treecell class="treecell-header" value="&tree.attributeHeader.label;"/>
-              <treecell class="treecell-header" value="&tree.valueHeader.label;"/>
+              <treecell class="treecell-header treecell-inset-header" value="&tree.attributeHeader.label;"/>
+              <treecell class="treecell-header treecell-inset-header" value="&tree.valueHeader.label;"/>
             </treerow>
           </treehead>
           <treechildren id="JSEAList" flex="1"/>

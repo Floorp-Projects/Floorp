@@ -59,7 +59,7 @@
     <grid>
       <columns><column/><column/><column/></columns>
       <rows>
-        <row>
+        <row valign="middle" autostretch="never">
           <text class = "label" 
             for   = "srcInput"
             value = "&locationEditField.label;"
@@ -72,9 +72,9 @@
             onchange   = "ChangeImageSrc()"
             style      = "min-width : 20em"/>
           <!-- from EdDialogOverlay.xul -->
-          <button id="ChooseFile" />
+          <button id="ChooseFile"/>
         </row>
-        <row>
+        <row valign="middle" autostretch="never">
           <text class = "label"
             id      = "altTextLabel" 
             for     = "altTextInput"
@@ -153,7 +153,7 @@
               <spring flex="1"/>
               <!--////// CONSTRAIN DIMENSIONS //////-->
               <checkbox id="constrainCheckbox" value="&constrainCheckbox.label;"
-                   oncommand="document.getElementById('widthInput').focus()"
+                   oncommand="ToggleConstrain()"
                    tooltip="aTooltip" tooltiptext="&constrainCheckbox.tooltip;"/>
             </box>
             <spring flex="1"/>
@@ -222,13 +222,9 @@
         <titledbox flex="1" orient="vertical">
           <title id="alignLabel" value="&alignment.label;"/>
           <spring class="spacer"/>
-          <stack orient="vertical">
-            <box valign="middle" autostretch="never" style="padding: 4px 4px 4px 10px">
-              <image id="alignImage"/>
-              <spring class="spacer"/>
-              <text id="alignText" class="label"/>
-            </box>
-            <menulist id = "alignTypeSelect" oncommand="changeAlignment(event.target)" style="background: transparent">
+          <stack>
+            <menulist id = "alignTypeSelect" oncommand="changeAlignment(event.target)" 
+                      style="height: 15px">
               <menupopup valign="middle">
                 <menuitem class="middle" valign="middle" autostretch="never">
                   <spring class="spacer"/>
@@ -261,6 +257,12 @@
                 </menuitem>
               </menupopup>
             </menulist>
+            <box valign="middle" autostretch="never" style="padding: 4px 4px 4px 10px" 
+              mousethrough="always">
+              <image id="alignImage"/>
+              <spring class="spacer"/>
+              <text id="alignText" class="label"/>
+            </box>
           </stack>
         </titledbox>
 
@@ -325,7 +327,7 @@
       <button id="AdvancedEditButton2"/>
     </box>
   </box> <!-- END OF MORE/FEWER SECTION -->
-  <separator class="groove-thin tb-margin"/>
+  <separator class="groove"/>
   <!-- from global dialogOverlay -->
   <box id="okCancelButtons"/> 
 </window>
