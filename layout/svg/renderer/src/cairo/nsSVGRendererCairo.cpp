@@ -39,8 +39,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <cairo.h>
-
 #include "nsCOMPtr.h"
 #include "nsISVGRenderer.h"
 #include "nsSVGCairoPathGeometry.h"

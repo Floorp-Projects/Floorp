@@ -79,10 +79,6 @@ CairoSetStops(cairo_pattern_t *aPattern, nsISVGGradient *aGrad)
     aGrad->GetStopColor(i, &rgba);
     aGrad->GetStopOpacity(i, &opacity);
 
-#ifdef DEBUG_tor
-    fprintf(stderr, "stop %f %08X opacity %f\n", offset, rgba, opacity);
-#endif
-
     cairo_pattern_add_color_stop(aPattern, offset,
                                  NS_GET_R(rgba)/255.0,
                                  NS_GET_G(rgba)/255.0,
@@ -155,10 +151,6 @@ CairoGradient(cairo_t *ctx, nsISVGGradient *aGrad, cairo_text_extents_t *extent)
       y2 = extent->y_bearing + extent->height;
     }
 
-#ifdef DEBUG_tor
-    printf("In CarioGradient: bbox (%f, %f, %f, %f)\n",
-           (float)x1, (float)x2, (float)y1, (float)y2);
-#endif
     cairo_matrix_set_affine(patternMatrix, x2 - x1, 0, 0, y2 - y1, x1, y1);
   } else {
     cairo_matrix_set_identity(patternMatrix);

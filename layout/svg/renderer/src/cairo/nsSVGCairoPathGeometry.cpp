@@ -293,9 +293,6 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
     if (fillType == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
       cairo_fill(ctx);
     } else {
-#ifdef DEBUG_tor
-      fprintf(stderr, "CAIRO FILL GRADIENT ************************\n");
-#endif
       nsCOMPtr<nsISVGGradient> aGrad;
       mSource->GetFillGradient(getter_AddRefs(aGrad));
 
@@ -323,9 +320,6 @@ nsSVGCairoPathGeometry::Render(nsISVGRendererCanvas *canvas)
     if (strokeType == nsISVGGeometrySource::PAINT_TYPE_SOLID_COLOR) {
       cairo_stroke(ctx);
     } else {
-#ifdef DEBUG_tor
-      fprintf(stderr, "CAIRO STROKE GRADIENT ************************\n");
-#endif
       nsCOMPtr<nsISVGGradient> aGrad;
       mSource->GetStrokeGradient(getter_AddRefs(aGrad));
 
