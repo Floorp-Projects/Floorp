@@ -40,6 +40,8 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.FileNotFoundException;
 
+import grendel.util.Constants;
+
 
 /** This class represents a newsrc-format disk file, and the newsgroup
     descriptions within it.

@@ -42,6 +42,8 @@ import javax.mail.URLName;
 //import javax.mail.event.ConnectionEvent;
 import javax.mail.event.StoreEvent;
 
+import grendel.util.Constants;
+
 
 /** Store for News (NNTP) folders.
   <p>

@@ -27,7 +27,6 @@ SRCS=						\
 	BerkeleyStore.java			\
 	ByteString.java				\
 	ByteStringTable.java			\
-	Constants.java				\
 	DotTerminatedInputStream.java		\
 	FilterFolder.java			\
 	FilterFolderFactory.java		\

@@ -26,6 +26,7 @@ import calypso.util.ByteLineBuffer;
 import calypso.util.Assert;
 
 import grendel.storage.intertwingle.Twingle;
+import grendel.util.Constants;
 
 import java.lang.Thread;
 import java.lang.SecurityException;

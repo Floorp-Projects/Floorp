@@ -19,7 +19,7 @@
  * Created: Terry Weissman <terry@netscape.com>,  2 Sep 1997.
  */
 
-package grendel.storage;
+package grendel.util;
 
 import calypso.util.ByteBuf;
 
@@ -30,7 +30,7 @@ import java.io.File;
   we don't want to recompute all over the place.  Mostly, these are system-
   dependent things. */
 
-class Constants {
+public class Constants {
   /** The string used to separate lines in files on this system. */
   public final static String LINEBREAK =
   System.getProperties().getProperty("line.separator");
@@ -44,6 +44,7 @@ class Constants {
   private static boolean unix = false; // Need to use these silly three temp
   private static boolean mac = false;  // variables just so that I can declare
   private static boolean windows = false; // ISUNIX, etc, to be "final".
+  private static boolean os2 = false;
   static {
     String osname = System.getProperties().getProperty("os.name");
     if (osname.startsWith("Windows") ||
@@ -53,6 +54,10 @@ class Constants {
       windows = true;
     } else if (osname.startsWith("Mac OS")) {
       mac = true;
+    // (edwin) Moved from grendel.Main
+    // ### According to talisman this string needs to be verified
+    } else if (osname.startsWith("OS/2")) {
+      os2 = true;
     } else {
       unix = true;
     }
@@ -67,8 +72,12 @@ class Constants {
   /** Whether this is a Windows machine. */
   public final static boolean ISWINDOWS = windows;
 
+  /** Whether this is a OS/2 machine. */
+  public final static boolean ISOS2 = os2;
+
 
   /** File representing the user's home directory. */
-  public final static File HOMEDIR =
-  new File(System.getProperties().getProperty("user.home"));
+  public final static File HOMEDIR = ISUNIX ?
+  new File(System.getProperties().getProperty("user.home")) :
+  new File(System.getProperties().getProperty("user.dir"));
 };

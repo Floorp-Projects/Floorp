@@ -53,6 +53,8 @@ import javax.mail.URLName;
 //import javax.mail.event.ConnectionEvent;
 import javax.mail.event.StoreEvent;
 
+import grendel.util.Constants;
+
 public class PopStore extends Store {
   static final boolean DEBUG = true;
   static void Spew(String s) {

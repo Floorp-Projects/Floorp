@@ -17,6 +17,7 @@
 # Netscape Communications Corporation.  All Rights Reserved.
 
 SRCS=					\
+	Constants.java			\
 	MessageIDGenerator.java		\
 	$(NULL)
 

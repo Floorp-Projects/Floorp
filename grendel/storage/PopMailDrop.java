@@ -41,6 +41,8 @@ import javax.mail.Folder;
 import javax.mail.Message;
 import javax.mail.MessagingException;
 
+import grendel.util.Constants;
+
 //import netscape.pop3.POP3Client;
 //import netscape.pop3.POP3Status;
 //import netscape.pop3.POP3MailDropStats;

@@ -32,6 +32,8 @@ import java.io.IOException;
 import java.io.EOFException;
 import java.util.Enumeration;
 
+import grendel.util.Constants;
+
 class ParseBerkeleyFolderAndExpunge extends ParseBerkeleyFolder {
 
   private static final boolean DEBUG = true;

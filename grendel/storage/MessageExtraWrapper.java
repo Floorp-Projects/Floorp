@@ -26,6 +26,7 @@ import calypso.util.Assert;
 
 import grendel.storage.addressparser.RFC822Mailbox;
 import grendel.storage.addressparser.RFC822MailboxList;
+import grendel.util.Constants;
 
 import java.io.InputStream;
 import java.io.IOException;
