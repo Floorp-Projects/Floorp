@@ -66,6 +66,8 @@ public:
 
   NS_IMETHOD 	BeginPage(void);
   NS_IMETHOD 	EndPage(void);
+  PRBool	IsPrinter() 	{if (nsnull != mSpec){return (PR_TRUE);}else{return (PR_FALSE);} };
+
 
 
 protected:
