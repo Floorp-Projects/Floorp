@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.9 2001/01/19 07:53:47 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.10 2001/01/24 04:20:10 nelsonb%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -170,7 +170,9 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix, c
     SECStatus status;
     SECStatus rv      = SECFailure;
 
-    RNG_RNGInit();     		/* initialize random number generator */
+    status = RNG_RNGInit();     	/* initialize random number generator */
+    if (status != SECSuccess)
+	goto loser;
     RNG_SystemInfoForRNG();
 
     status = nss_OpenCertDB(configdir, certPrefix, readOnly);
@@ -230,7 +232,10 @@ NSS_NoDB_Init(const char * configdir)
       }
       CERT_SetDefaultCertDB(&certhandle);
 
-      RNG_RNGInit();
+      rv = RNG_RNGInit();
+      if (rv != SECSuccess) {
+	   return rv;
+      }
       RNG_SystemInfoForRNG();
       PK11_InitSlotLists();
 
