@@ -369,9 +369,6 @@ typedef unsigned long PRUword;
 
 #ifdef XP_MAC
 #include "protypes.h"
-#ifndef NSPR20
-#define NSPR20 1
-#endif
 #else
 #include "obsolete/protypes.h"
 #endif
