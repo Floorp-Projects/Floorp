@@ -49,7 +49,7 @@
       <tab value="&tab.bannedservers.label;"/>
       <tab id="imagesTab" style="display:none" value="&tab.bannedimages.label;"/>
     </tabbox>
-    <tabpanel id="panel">
+    <tabpanel id="panel" flex="1">
       <box class="tabpanel" id="system" flex="1" orient="vertical">
           <text class="label" value="&div.cookiesonsystem.label;"/>
           <separator class="thin"/>
@@ -73,7 +73,7 @@
           <titledbox>
             <title value="&treehead.infoselected.label;"/>
             <!-- labels -->
-            <grid>
+            <grid flex="1">
               <columns>
                 <column/>
                 <column flex="1"/>
@@ -81,27 +81,27 @@
               <rows>
                 <row>
                   <text value="&props.name.label;"/>
-                  <textfield class="plain" id="ifl_name" readonly="true"/>
+                  <textfield id="ifl_name" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.value.label;"/>
-                  <textfield class="plain" id="ifl_value" readonly="true"/>
+                  <textfield id="ifl_value" readonly="true"/>
                 </row>
                 <row>
                   <text id="ifl_domaintype" value="&props.domain.label;"/>
-                  <textfield class="plain" id="ifl_domain" readonly="true"/>
+                  <textfield id="ifl_domain" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.path.label;"/>
-                  <textfield class="plain" id="ifl_path" readonly="true"/>
+                  <textfield id="ifl_path" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.secure.label;"/>
-                  <textfield class="plain" id="ifl_secure" readonly="true"/>
+                  <textfield id="ifl_secure" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.expires.label;"/>
-                  <textfield class="plain" id="ifl_expires" readonly="true"/>
+                  <textfield id="ifl_expires" readonly="true"/>
                 </row>
               </rows>
             </grid>

@@ -50,7 +50,7 @@
       <tab id="nopreview" value="&tab.nopreview.label;"/>
       <tab id="nocapture" value="&tab.nocapture.label;"/>
     </tabbox>
-    <tabpanel id="panel">
+    <tabpanel id="panel" flex="1">
       <!-- saved signons -->
       <box id="savedsignons" flex="1" orient="vertical">
           <html>&spiel.signonsstored.label;</html>
