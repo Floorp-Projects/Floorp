@@ -34,7 +34,7 @@ Rights Reserved.
 
 
 
-<tree datasources="rdf:null" id="threadTree" 
+<tree datasources="rdf:null" id="threadTree"
 	  		  onselect="top.ThreadPaneSelectionChange(); document.commandDispatcher.updateCommands('tree-select');"
 			  onblur="goOnEvent(this,'blur')"
 			  containment="http://home.netscape.com/NC-rdf#MessageChild"
@@ -108,19 +108,19 @@ Rights Reserved.
 
   <treehead>
     <treerow id="headRow">
-		<treecell display="Thread" onclick="return top.ChangeThreadView();" class="treecell-header threadColumnHeader" id="ThreadColumnHeader"/> 
-		<treecell class="treecell-header" value="&subjectColumn.label;" onclick="return top.MsgSortBySubject();"/>
-		<treecell class="treecell-header" onclick="return top.MsgSortBySender();" value="&senderColumn.label;" id="SenderColumnHeader"/>
-		<treecell class="treecell-header readColumnHeader" display="Read" onclick="return top.MsgSortByRead();"/> 
-		<treecell class="treecell-header" value="&dateColumn.label;" onclick="return top.MsgSortByDate();"/>
-		<treecell class="treecell-header" value="&priorityColumn.label;" onclick="return top.MsgSortByPriority();"/>
-		<treecell class="treecell-header flagColumnHeader" display="Flag" onclick="return top.MsgSortByFlagged();" />
-		<treecell class="treecell-header" value="&statusColumn.label;" onclick="return top.MsgSortByStatus();"/>
-		<treecell class="treecell-header" value="&sizeColumn.label;" onclick="return top.MsgSortBySize();"/>
-		<treecell class="treecell-header" value="&unreadColumn.label;" onclick="return top.MsgSortByUnread();"/>
-		<treecell class="treecell-header" value="&totalColumn.label;" onclick="return top.MsgSortByTotal();"/>
-		<treecell class="treecell-header" value="&orderReceivedColumn.label;" onclick="return top.MsgSortByOrderReceived();"/>
-		<treecell class="treecell-header" allowevents="true" id="popupCell">
+		<treecell display="Thread" onclick="return top.ChangeThreadView();" class="treecell-header treecell-inset-header threadColumnHeader" id="ThreadColumnHeader"/> 
+		<treecell class="treecell-header treecell-inset-header" value="&subjectColumn.label;" onclick="return top.MsgSortBySubject();"/>
+		<treecell class="treecell-header treecell-inset-header" onclick="return top.MsgSortBySender();" value="&senderColumn.label;" id="SenderColumnHeader"/>
+		<treecell class="treecell-header treecell-inset-header readColumnHeader" display="Read" onclick="return top.MsgSortByRead();"/> 
+		<treecell class="treecell-header treecell-inset-header" value="&dateColumn.label;" onclick="return top.MsgSortByDate();"/>
+		<treecell class="treecell-header treecell-inset-header" value="&priorityColumn.label;" onclick="return top.MsgSortByPriority();"/>
+		<treecell class="treecell-header treecell-inset-header flagColumnHeader" display="Flag" onclick="return top.MsgSortByFlagged();" />
+		<treecell class="treecell-header treecell-inset-header" value="&statusColumn.label;" onclick="return top.MsgSortByStatus();"/>
+		<treecell class="treecell-header treecell-inset-header" value="&sizeColumn.label;" onclick="return top.MsgSortBySize();"/>
+		<treecell class="treecell-header treecell-inset-header" value="&unreadColumn.label;" onclick="return top.MsgSortByUnread();"/>
+		<treecell class="treecell-header treecell-inset-header" value="&totalColumn.label;" onclick="return top.MsgSortByTotal();"/>
+		<treecell class="treecell-header treecell-inset-header" value="&orderReceivedColumn.label;" onclick="return top.MsgSortByOrderReceived();"/>
+		<treecell class="treecell-header treecell-inset-header" allowevents="true" id="popupCell">
 		  <menu>
 		    <titledbutton src="chrome://global/skin/opentwisty.gif"/>
 			<menupopup popupanchor="bottomright" 
