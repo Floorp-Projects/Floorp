@@ -47,10 +47,8 @@ nsHTMLBase::CreateViewForFrame(nsIPresContext*  aPresContext,
           aStyleContext->GetStyleData(eStyleStruct_Color);
 
         // Get parent's nsStyleColor
-        nsIStyleContext* parentSC;
-        parent->GetStyleContext(aPresContext, parentSC);
-        const nsStyleColor* parentColor = (const nsStyleColor*)
-          parentSC->GetStyleData(eStyleStruct_Color);
+        const nsStyleColor* parentColor;
+        parent->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&)parentColor);
 
         // If the opacities are different then I need a view
         if (myColor->mOpacity != parentColor->mOpacity) {
@@ -59,7 +57,6 @@ nsHTMLBase::CreateViewForFrame(nsIPresContext*  aPresContext,
              aFrame, myColor->mOpacity, parentColor->mOpacity));
           aForce = PR_TRUE;
         }
-        NS_RELEASE(parentSC);
       }
     }
 
