@@ -1223,9 +1223,10 @@ nsFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
 
 // Resize and incremental reflow
 NS_IMETHODIMP
-nsFrame::GetFrameState(nsFrameState& aResult)
+nsFrame::GetFrameState(nsFrameState* aResult)
 {
-  aResult = mState;
+  NS_PRECONDITION(nsnull != aResult, "null OUT parameter pointer");
+  *aResult = mState;
   return NS_OK;
 }
 
@@ -1506,9 +1507,10 @@ NS_IMETHODIMP nsFrame::GetWindow(nsIWidget*& aWindow) const
 }
 
 NS_IMETHODIMP
-nsFrame::GetFrameType(nsIAtom*& aType) const
+nsFrame::GetFrameType(nsIAtom** aType) const
 {
-  aType = nsnull;
+  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
+  *aType = nsnull;
   return NS_OK;
 }
 

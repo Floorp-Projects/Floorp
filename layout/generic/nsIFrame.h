@@ -395,7 +395,7 @@ public:
    * filled in with the state bits. The return value has no
    * meaning.
    */
-  NS_IMETHOD  GetFrameState(nsFrameState& aResult) = 0;
+  NS_IMETHOD  GetFrameState(nsFrameState* aResult) = 0;
 
   /**
    * Set the current frame-state value for this frame. The return
@@ -484,7 +484,7 @@ public:
    *
    * @see nsLayoutAtoms
    */
-  NS_IMETHOD  GetFrameType(nsIAtom*& aType) const = 0;
+  NS_IMETHOD  GetFrameType(nsIAtom** aType) const = 0;
   
   /**
    * Is this frame a "containing block"?

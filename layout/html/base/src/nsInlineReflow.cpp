@@ -396,7 +396,7 @@ nsInlineReflow::ReflowFrame(PRBool aIsAdjacentWithTop,
   nsReflowReason reason = eReflowReason_Resize;
   nsIFrame* frame = pfd->mFrame;
   nsFrameState state;
-  frame->GetFrameState(state);
+  frame->GetFrameState(&state);
   if (NS_FRAME_FIRST_REFLOW & state) {
     reason = eReflowReason_Initial;
   }
@@ -444,7 +444,7 @@ nsInlineReflow::ReflowFrame(PRBool aIsAdjacentWithTop,
   htmlReflow->Reflow(mPresContext, aMetrics, reflowState, aStatus);
   // XXX could return this in aStatus to save a few cycles
   // XXX could mandate that child sets up mCombinedArea too...
-  frame->GetFrameState(state);
+  frame->GetFrameState(&state);
   if (NS_FRAME_OUTSIDE_CHILDREN & state) {
     pfd->mCombinedArea = aMetrics.mCombinedArea;
   }
@@ -463,7 +463,7 @@ nsInlineReflow::ReflowFrame(PRBool aIsAdjacentWithTop,
   // the NS_FRAME_FIRST_REFLOW bit is cleared so that never give it an
   // initial reflow reason again.
   if (eReflowReason_Initial == reason) {
-    frame->GetFrameState(state);
+    frame->GetFrameState(&state);
     frame->SetFrameState(state & ~NS_FRAME_FIRST_REFLOW);
   }
 

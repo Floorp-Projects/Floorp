@@ -76,7 +76,7 @@ nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
   // We need to allow the view's position to be different than the
   // frame's position
   nsFrameState  state;
-  frame->GetFrameState(state);
+  frame->GetFrameState(&state);
   state &= ~NS_FRAME_SYNC_FRAME_AND_VIEW;
   frame->SetFrameState(state);
 
@@ -342,7 +342,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   // If the frame has child frames that stick outside its bounds, then take
   // them into account, too
   nsFrameState  kidState;
-  kidFrame->GetFrameState(kidState);
+  kidFrame->GetFrameState(&kidState);
   if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
     kidDesiredSize.width = kidDesiredSize.mCombinedArea.width;
     kidDesiredSize.height = kidDesiredSize.mCombinedArea.height;
@@ -401,7 +401,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
       // If the frame has child frames that stick outside its bounds, then take
       // them into account, too
       nsFrameState  kidState;
-      kidFrame->GetFrameState(kidState);
+      kidFrame->GetFrameState(&kidState);
       if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
         kidDesiredSize.width = kidDesiredSize.mCombinedArea.width;
         kidDesiredSize.height = kidDesiredSize.mCombinedArea.height;

@@ -288,7 +288,7 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
 
     // Set NS_FRAME_OUTSIDE_CHILDREN flag, or reset it, as appropriate
     nsFrameState  kidState;
-    kidFrame->GetFrameState(kidState);
+    kidFrame->GetFrameState(&kidState);
     if (NS_FRAME_OUTSIDE_CHILDREN & kidState) {
       nscoord kidXMost = kidReflowState.computedMargin.left +
                          kidDesiredSize.mCombinedArea.XMost();

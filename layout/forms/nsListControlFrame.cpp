@@ -214,7 +214,7 @@ nsListControlFrame::GetFrameForPointUsing(const nsPoint& aPoint,
   mContentFrame->FirstChild(aList, &kid);
   while (nsnull != kid) {
     nsFrameState state;
-    kid->GetFrameState(state);
+    kid->GetFrameState(&state);
     if (NS_FRAME_OUTSIDE_CHILDREN & state) {
       kid->GetRect(kidRect);
       tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
