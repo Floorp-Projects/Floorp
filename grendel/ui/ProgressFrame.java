@@ -164,7 +164,9 @@ public abstract class ProgressFrame extends GeneralFrame implements Runnable {
     progressLoop();
 
     fThread = null;
-    this.dispose();
+    // Is this right? (edwin)
+    // this.dispose();  
+    this.hide();  
   }
 
   public abstract void progressLoop();

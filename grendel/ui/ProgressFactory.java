@@ -187,13 +187,16 @@ class DeleteMessageProgress extends ProgressFrame {
 
       Object args[] = {Util.GetSubject(message)};
 
-     setStatus(MessageFormat.format(fLabels.getString("deletingMessageStatus"),
+      setStatus(MessageFormat.format(fLabels.getString("deletingMessageStatus"),
                                      args));
-      // source.deleteMessage(message);
       try {
-        Thread.sleep(500);
-      } catch (InterruptedException e) {
+        message.setFlag(Flags.Flag.DELETED, true);
+      } catch (MessagingException e) {
       }
+      //try {
+      //  Thread.sleep(500);
+      //} catch (InterruptedException e) {
+      //}
       idx++;
       setProgress(idx);
     }
