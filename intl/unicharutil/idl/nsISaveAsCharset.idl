@@ -51,6 +51,7 @@ interface nsISaveAsCharset : nsISupports
   const unsigned long mask_Fallback                = 0x000000FF; // mask for fallback (8bits)
   const unsigned long mask_Entity                  = 0x00000300; // mask for entity (2bits)
   const unsigned long mask_CharsetFallback         = 0x00000400; // mask for charset fallback (1bit)
+  const unsigned long mask_IgnorableFallback       = 0x00000800; // mask for ignorable code points (1bit)
 
   const unsigned long attr_FallbackNone = 0;                   // no fall back for unconverted chars (skipped)
   const unsigned long attr_FallbackQuestionMark = 1;           // unconverted chars are replaced by '?'
@@ -63,6 +64,8 @@ interface nsISaveAsCharset : nsISupports
   const unsigned long attr_EntityAfterCharsetConv =  0x00000200; // generate Named Entity after charset conversion
 
   const unsigned long attr_CharsetFallback        =  0x00000400; // fallback to other charset and restart the convesion
+
+  const unsigned long attr_IgnoreIgnorables       =  0x00000800; // turn default ignorable code points (and Hebrew/Arabic/Syriac Vowel signs to nothingness
 
                                                                // default attribute for plain text
   const unsigned long attr_plainTextDefault = attr_FallbackNone + attr_EntityNone;               
