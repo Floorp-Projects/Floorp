@@ -42,6 +42,8 @@
 #  define START_TIMER()
 #endif
 
+#define VIEW_SOURCE_HTML
+// #define VIEW_SOURCE_COLORING
 
 #include "nsIDTDDebug.h"
 #include "nsViewSourceHTML.h"
@@ -54,6 +56,9 @@
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
+#ifdef VIEW_SOURCE_HTML
+#include "nsHTMLEntities.h"
+#endif // VIEW_SOURCE_HTML
 #include "COtherDTD.h"
 
 #include "prenv.h"  //this is here for debug reasons...
@@ -81,6 +86,9 @@ static int gErrorThreshold = 10;
   fstream* gDumpFile=0;
 #endif
 
+#ifdef VIEW_SOURCE_HTML
+static const char* kPreStyle = "font-family: monospace; font-weight:normal; color:black; font-size:10pt; padding-top:8px; margin-left:8px;";
+#endif // VIEW_SOURCE_HTML
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -197,6 +205,69 @@ public:
   nsCParserNode       mTextNode;
 };
 
+#ifdef VIEW_SOURCE_HTML
+enum {
+  VIEW_SOURCE_START_TAG = 0,
+  VIEW_SOURCE_END_TAG = 1,
+  VIEW_SOURCE_COMMENT = 2,
+  VIEW_SOURCE_CDATA = 3,
+  VIEW_SOURCE_DOCTYPE = 4,
+  VIEW_SOURCE_PI = 5,
+  VIEW_SOURCE_ENTITY = 6,
+  VIEW_SOURCE_TEXT = 7,
+  VIEW_SOURCE_ATTRIBUTE_NAME = 8,
+  VIEW_SOURCE_ATTRIBUTE_VALUE = 9,
+  VIEW_SOURCE_SUMMARY = 10,
+  VIEW_SOURCE_POPUP = 11
+};
+
+static char* kElementStyles[] = {
+  "color: purple;  font-weight:bold;",
+  "color: purple;  font-weight:bold;",
+  "color: green; font-style:italic;",
+  "color: #CC0066;",
+  "color:steelblue; font-style:italic;",
+  "color:orchid; font-style:italic;",
+  "color:#FF4500; font-weight:normal;",
+  "font-weight: normal;",
+  "color: black; font-weight:bold;",
+  "color: blue; font-weight:normal;",
+  "display:block; background-color:#FFFFCC; width:90%; border:solid; border-width:1pt; font-family: Sans-serif;",
+  "font-weight: normal;"
+};
+
+static char* kBeforeText[] = {
+  "<",
+  "</",
+  "",
+  "",
+  "",
+  "",
+  "&",
+  "",
+  "",
+  "=",
+  "",
+  ""
+};
+
+static char* kAfterText[] = {
+  ">",
+  ">",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  "",
+  ""
+};
+
+#endif // VIEW_SOURCE_HTML
+
 /**
  *  Default constructor
  *  
@@ -207,6 +278,20 @@ public:
 CViewSourceHTML::CViewSourceHTML() : mTags(), mErrors() {
   NS_INIT_REFCNT();
 
+#ifdef VIEW_SOURCE_HTML
+  mStartTag = VIEW_SOURCE_START_TAG;
+  mEndTag = VIEW_SOURCE_END_TAG;
+  mCommentTag = VIEW_SOURCE_COMMENT;
+  mCDATATag = VIEW_SOURCE_CDATA;
+  mDocTypeTag = VIEW_SOURCE_DOCTYPE;
+  mPITag = VIEW_SOURCE_PI;
+  mEntityTag = VIEW_SOURCE_ENTITY;
+  mText = VIEW_SOURCE_TEXT;
+  mKey = VIEW_SOURCE_ATTRIBUTE_NAME;
+  mValue = VIEW_SOURCE_ATTRIBUTE_VALUE;
+  mSummaryTag = VIEW_SOURCE_SUMMARY;
+  mPopupTag = VIEW_SOURCE_POPUP;
+#else
   mStartTag.AssignWithConversion("start");
   mEndTag.AssignWithConversion("end");
   mCommentTag.AssignWithConversion("comment");
@@ -219,6 +304,7 @@ CViewSourceHTML::CViewSourceHTML() : mTags(), mErrors() {
   mValue.AssignWithConversion("val");
   mSummaryTag.AssignWithConversion("summary");
   mPopupTag.AssignWithConversion("popup");
+#endif // VIEW_SOURCE_HTML
 
   mParser=0;
   mSink=0;
@@ -322,7 +408,11 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
 #endif 
 
   STOP_TIMER();
+#ifdef VIEW_SOURCE_HTML
+  mSink=(nsIHTMLContentSink*)aSink;
+#else
   mSink=(nsIXMLContentSink*)aSink;
+#endif // VIEW_SOURCE_HTML
 
   if((!aParserContext.mPrevContext) && (mSink)) {
 
@@ -337,16 +427,31 @@ nsresult CViewSourceHTML::WillBuildModel(  const CParserContext& aParserContext,
     mErrorCount=0;
     mTagCount=0;
 
+#ifdef VIEW_SOURCE_HTML
+    nsAutoString tag;
+    
+    tag.AssignWithConversion("HTML");
+    CStartToken htmlToken(eHTMLTag_html);
+    htmlToken.SetStringValue(tag);
+    nsCParserNode htmlNode(&htmlToken,0);
+    mSink->OpenHTML(htmlNode);
+
+    tag.AssignWithConversion("BODY");
+    CStartToken bodyToken(eHTMLTag_body);
+    bodyToken.SetStringValue(tag);
+    nsCParserNode bodyNode(&bodyToken,0);
+    mSink->OpenBody(bodyNode);
+#else
     static const char* theHeader="<?xml version=\"1.0\"?>";
     CToken ssToken(theHeader);
     nsCParserNode ssNode(&ssToken);
     result= mSink->AddCharacterData(ssNode);
+#endif // VIEW_SOURCE_HTML
 
   #ifdef rickgdebug
     (*gDumpFile) << theHeader << endl;
     (*gDumpFile) << "<viewsource xmlns=\"viewsource\">" << endl;
   #endif
-
   }
 
 
@@ -378,16 +483,29 @@ NS_IMETHODIMP CViewSourceHTML::BuildModel(nsIParser* aParser,nsITokenizer* aToke
     mTokenizer=aTokenizer;
 
     if(!mHasOpenRoot) {
+#ifdef VIEW_SOURCE_HTML
+      nsAutoString tag;
+      tag.AssignWithConversion("PRE");
+      CStartToken theToken(eHTMLTag_pre);
+      theToken.SetStringValue(tag);
+#else
       //now let's automatically open the root container...
       CToken theToken("viewsource");
+#endif // VIEW_SOURCE_HTML
       nsCParserNode theNode(&theToken,0);
      
       CAttributeToken *theAttr=nsnull;
       nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
       if(theAllocator) {
+#ifdef VIEW_SOURCE_HTML
+        theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertToString(kPreStyle));
+        nsString& theKey=theAttr->GetKey();
+        theKey=NS_ConvertToString("style");
+#else
         theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertToString("http://www.mozilla.org/viewsource"));
         nsString& theKey=theAttr->GetKey();
         theKey=NS_ConvertToString("xmlns");
+#endif // VIEW_SOURCE_HTML
       }
       if(theAttr)
         theNode.AddAttribute(theAttr);
@@ -433,7 +551,6 @@ nsresult  CViewSourceHTML::GenerateSummary() {
     mErrors.AppendWithConversion(" error(s) detected -- see highlighted portions.\n");
 
     result=WriteTag(mSummaryTag,mErrors,0,PR_FALSE);
-
   }
 
   return result;
@@ -455,7 +572,11 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
     mParser=(nsParser*)aParser;  //debug XXX
     STOP_TIMER();
 
+#ifdef VIEW_SOURCE_HTML
+    mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
+#else
     mSink=(nsIXMLContentSink*)aParser->GetContentSink();
+#endif // VIEW_SOURCE_HTML
     if((aNotifySink) && (mSink)) {
         //now let's automatically auto-opened containers...
 
@@ -468,6 +589,27 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
 #endif
 
       if(ePlainText!=mDocType) {
+#ifdef VIEW_SOURCE_HTML
+        nsAutoString tag;
+
+        tag.AssignWithConversion("PRE");
+        CEndToken theToken(eHTMLTag_pre);
+        theToken.SetStringValue(tag);
+        nsCParserNode preNode(&theToken,0);
+        mSink->CloseContainer(preNode);
+        
+        tag.AssignWithConversion("BODY");
+        CEndToken bodyToken(eHTMLTag_body);
+        bodyToken.SetStringValue(tag);
+        nsCParserNode bodyNode(&bodyToken,0);
+        mSink->CloseBody(bodyNode);
+        
+        tag.AssignWithConversion("HTML");
+        CEndToken htmlToken(eHTMLTag_html);
+        htmlToken.SetStringValue(tag);
+        nsCParserNode htmlNode(&htmlToken,0);
+        mSink->CloseHTML(htmlNode);
+#else
         //now let's automatically close the root container...
 
         GenerateSummary();
@@ -475,6 +617,7 @@ NS_IMETHODIMP CViewSourceHTML::DidBuildModel(nsresult anErrorCode,PRBool aNotify
         CToken theToken("viewsource");
         nsCParserNode theNode(&theToken,0);
         mSink->CloseContainer(theNode);
+#endif // VIEW_SOURCE_HTML
       }
       result = mSink->DidBuildModel(1);
     }
@@ -612,17 +755,32 @@ PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
  */
 NS_IMETHODIMP CViewSourceHTML::StringTagToIntTag(nsString &aTag, PRInt32* aIntTag) const
 {
+#ifdef VIEW_SOURCE_HTML
+  *aIntTag = nsHTMLTags::LookupTag(aTag);
+  return NS_OK;
+#else
   return NS_ERROR_NOT_IMPLEMENTED;
+#endif // VIEW_SOURCE_HTML
 }
 
 NS_IMETHODIMP CViewSourceHTML::IntTagToStringTag(PRInt32 aIntTag, nsString& aTag) const
 {
+#ifdef VIEW_SOURCE_HTML
+  aTag.AssignWithConversion(nsHTMLTags::GetStringValue((nsHTMLTag)aIntTag));
+  return NS_OK;
+#else
   return NS_ERROR_NOT_IMPLEMENTED;
+#endif // VIEW_SOURCE_HTML
 }
 
 NS_IMETHODIMP CViewSourceHTML::ConvertEntityToUnicode(const nsString& aEntity, PRInt32* aUnicode) const
 {
+#ifdef VIEW_SOURCE_HTML
+  *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
+  return NS_OK;
+#else
   return NS_ERROR_NOT_IMPLEMENTED;
+#endif // VIEW_SOURCE_HTML
 }
 
 
@@ -717,7 +875,7 @@ nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPre
           }
 
           CStartToken theToken(eHTMLTag_br);
-          aContext.mStartNode.Init(&theToken);
+          aContext.mStartNode.Init(&theToken,0);
           result=aSink.AddLeaf(aContext.mStartNode); 
           theTextOffset=theOffset+1;
         }
@@ -733,7 +891,7 @@ nsresult WriteText(const nsString& aTextString,nsIContentSink& aSink,PRBool aPre
     if(0<theSpaces){
 
       CEntityToken theToken( NS_ConvertToString("nbsp") );
-      aContext.mStartNode.Init(&theToken);
+      aContext.mStartNode.Init(&theToken,0);
       int theIndex;
       for(theIndex=0;theIndex<theSpaces;theIndex++)
         result=aSink.AddLeaf(aContext.mStartNode); 
@@ -814,19 +972,52 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
  *  @param   
  *  @return  result status
  */
+#ifdef VIEW_SOURCE_HTML
+nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,nsString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
+#else
 nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,nsString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
+#endif // VIEW_SOURCE_HTML
   static nsString       theString;
 
   nsresult result=NS_OK;
 
   CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
 
+#ifdef VIEW_SOURCE_HTML
+  if (kBeforeText[aTagType][0] != 0) {
+    nsAutoString beforeText;
+    beforeText.AssignWithConversion(kBeforeText[aTagType]);
+    theContext.mITextToken.SetIndirectString(beforeText);
+    mSink->AddLeaf(theContext.mITextNode);
+  }
+
+#ifdef VIEW_SOURCE_COLORING
+  nsAutoString tag;
+  tag.AssignWithConversion("SPAN");
+  CStartToken theTagToken(eHTMLTag_span);
+  theTagToken.SetStringValue(tag);
+#endif // VIEW_SOURCE_COLORING
+#else
   CToken theTagToken(theXMLTagName);
+#endif // VIEW_SOURCE_HTML
+
+#ifdef VIEW_SOURCE_COLORING
   theContext.mStartNode.Init(&theTagToken,mLineNumber);
+
+#ifdef VIEW_SOURCE_HTML
+  nsTokenAllocator* theAllocator=mTokenizer->GetTokenAllocator();
+  if(theAllocator) {
+    CAttributeToken* theAttr=(CAttributeToken*)theAllocator->CreateTokenOfType(eToken_attribute,eHTMLTag_unknown,NS_ConvertToString(kElementStyles[aTagType]));
+    nsString& theKey=theAttr->GetKey();
+    theKey=NS_ConvertToString("style");
+    theContext.mStartNode.AddAttribute(theAttr);
+  }
+#endif // VIEW_SOURCE_HTML
 
   STOP_TIMER();
 
   mSink->OpenContainer(theContext.mStartNode);  //emit <starttag>...
+#endif // VIEW_SOURCE_COLORING
 
 #ifdef rickgdebug
 
@@ -849,8 +1040,24 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,nsString & aText,PRIn
     result=WriteAttributes(attrCount);
   }
 
+#ifdef VIEW_SOURCE_HTML
+#ifdef VIEW_SOURCE_COLORING
+  theContext.mStartNode.ReleaseAll(); 
+  CEndToken theEndToken(eHTMLTag_span);
+  theEndToken.SetStringValue(tag);
+  theContext.mEndNode.Init(&theEndToken,mLineNumber);
+  mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
+#endif // VIEW_SOURCE_COLORING
+  if (kAfterText[aTagType][0] != 0) {
+    nsAutoString afterText;
+    afterText.AssignWithConversion(kAfterText[aTagType]);
+    theContext.mITextToken.SetIndirectString(afterText);
+    mSink->AddLeaf(theContext.mITextNode);
+  }
+#else
   theContext.mEndNode.Init(&theTagToken,mLineNumber);
   mSink->CloseContainer(theContext.mEndNode);  //emit </starttag>...
+#endif // VIEW_SOURCE_HTML
 
 #ifdef rickgdebug
       cstr.Assign(theXMLTagName);
@@ -869,12 +1076,21 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,nsString & aText,PRIn
  *  @param   
  *  @return  result status
  */
+#ifdef VIEW_SOURCE_HTML
+nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired) {
+#else
 nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired) {
+#endif // VIEW_SOURCE_HTML
 
   nsString& theStr=aToken->GetStringValueXXX();
   theStr.StripChar(kCR);
 
+#ifdef VIEW_SOURCE_HTML
+  nsresult result=WriteTag(aTagType,theStr,attrCount,aNewlineRequired);
+#else
   nsresult result=WriteTag(theXMLTagName,theStr,attrCount,aNewlineRequired);
+#endif // VIEW_SOURCE_HTML
+
   return result;
 }
 
@@ -885,7 +1101,11 @@ nsresult CViewSourceHTML::WriteTag(nsString &theXMLTagName,CToken* aToken,PRInt3
  *  @param   
  *  @return  result status
  */
+#ifdef VIEW_SOURCE_HTML
+nsresult CViewSourceHTML::WriteTagWithError(PRInt32 aTagType,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired) {
+#else
 nsresult CViewSourceHTML::WriteTagWithError(nsString &theXMLTagName,CToken* aToken,PRInt32 attrCount,PRBool aNewlineRequired) {
+#endif // VIEW_SOURCE_HTML
 
   STOP_TIMER();
 
@@ -900,8 +1120,12 @@ nsresult CViewSourceHTML::WriteTagWithError(nsString &theXMLTagName,CToken* aTok
     result=mSink->OpenContainer(theContext.mErrorNode);  //emit <error>...
   }
 
+#ifdef VIEW_SOURCE_HTML
     //now write the tag from the source file...
+  result=WriteTag(aTagType,aToken,attrCount,aNewlineRequired);
+#else
   result=WriteTag(theXMLTagName,aToken,attrCount,aNewlineRequired);
+#endif // VIEW_SOURCE_HTML
 
   if(ePlainText!=mDocType) {
 
@@ -952,7 +1176,11 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
   eHTMLTokenTypes theType= (eHTMLTokenTypes)theToken->GetTokenType();
  
   mParser=(nsParser*)aParser;
+#ifdef VIEW_SOURCE_HTML
+  mSink=(nsIHTMLContentSink*)aParser->GetContentSink();
+#else
   mSink=(nsIXMLContentSink*)aParser->GetContentSink();
+#endif // VIEW_SOURCE_HTML
  
   CSharedVSContext& theContext=CSharedVSContext::GetSharedContext();
   theContext.mTokenNode.Init(theToken,mLineNumber);
@@ -1025,7 +1253,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       break;
 
     case eToken_newline:
-      mLineNumber++; //now fall through...
+        mLineNumber++; //now fall through...
     case eToken_whitespace:
       result=WriteTag(mText,aToken,0,PR_FALSE);
       break;

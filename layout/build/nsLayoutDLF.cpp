@@ -40,6 +40,8 @@
 #include "nsIStreamLoadableDocument.h"
 #include "nsIDocStreamLoaderFactory.h"
 
+#define VIEW_SOURCE_HTML
+
 // URL for the "user agent" style sheet
 #define UA_CSS_URL "resource:/res/ua.css"
 
@@ -245,13 +247,18 @@ nsLayoutDLF::CreateInstance(const char *aCommand,
   }
 
   if(0==PL_strcmp(aCommand,"view-source")) {
+#ifdef VIEW_SOURCE_HTML
+    aContentType=gHTMLTypes[0];    
+#else
     if(0==PL_strcmp(aContentType,gHTMLTypes[1])) {
       aContentType=gHTMLTypes[0];
     }
     else if(0==PL_strcmp(aContentType,gHTMLTypes[2])) {
       aContentType=gHTMLTypes[0];
     }
-    else aContentType=gXMLTypes[0];
+    else 
+      aContentType=gXMLTypes[0];
+#endif
   }
 
   // Try html
