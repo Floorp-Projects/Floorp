@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="am.css" type="text/css"?>
 <?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
 <!DOCTYPE window>
 

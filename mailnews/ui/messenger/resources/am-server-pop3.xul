@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="am.css" type="text/css"?>
 <?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
 <!DOCTYPE window>
 
@@ -11,7 +11,7 @@
 
 <html:div> POP Server Information </html:div>
 <box align="vertical" style="width: 100%">
-<box align="vertical" class="bigbox" flex="100%" style="width: 100%; height: 100%;">
+<box align="vertical" class="cleanborder" flex="100%" style="width: 100%; height: 100%;">
   <box align="horizontal">
     <spring flex="100%"/>
     <html:div>Server Hostname </html:div>

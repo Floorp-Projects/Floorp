@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="am.css" type="text/css"?>
 <?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 
 <!DOCTYPE window>
 
@@ -12,7 +12,7 @@
 <box align="vertical" style="width: 100%">
 <html:div>Advanced Settings</html:div>
   <html:div>SMTP Server</html:div>
-<box align="vertical" class="bigbox">
+<box align="vertical" class="cleanborder">
   <html:div>Some email accounts require a unique
             outgoing mail server.</html:div>
   <box align="horizontal">
@@ -28,7 +28,7 @@
 </box>
 
 <html:div>Mail Folder Location</html:div>
-<box align="vertical" class="bigbox">
+<box align="vertical" class="cleanborder">
   <html:div>Store mail in this folder</html:div>
   <box align="horizontal">
     <html:input type="text" flex="100%"/>

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="am.css" type="text/css"?>
 <?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
 <!DOCTYPE window>
 
 <xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
@@ -10,7 +10,7 @@
     <box align="vertical" flex="100%" style="height: 100%; width: 100%;">
     <html:div>Account Settings</html:div>
 
-    <box align="vertical" flex="100%" class="bigbox">
+    <box align="vertical" flex="100%" class="cleanborder">
     <box align="horizontal">
       <spring flex="100%"/>
       <html:div>AccountName:</html:div>
@@ -21,7 +21,7 @@
     </box>
 
     <html:div>Identity</html:div>
-    <box align="vertical" flex="100%" class="bigbox">
+    <box align="vertical" flex="100%" class="cleanborder">
     <html:div>
       Each account can have its own identity, which is the information that
         other people see when they read your messages.
