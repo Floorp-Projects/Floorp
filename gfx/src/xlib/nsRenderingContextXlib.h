@@ -103,6 +103,8 @@ class nsRenderingContextXlib : public nsIRenderingContext
   NS_IMETHOD DrawRect(const nsRect& aRect);
   NS_IMETHOD DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
+  NS_IMETHOD DrawPath(nsPoint*, PRInt32);
+
   NS_IMETHOD FillRect(const nsRect& aRect);
   NS_IMETHOD FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
 
