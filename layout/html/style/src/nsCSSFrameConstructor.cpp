@@ -1554,16 +1554,14 @@ nsCSSFrameConstructor::ConstructTableRowFrame(nsIPresContext*          aPresCont
                                     contentDisplayIsRow, aNewRowFrame, aTableCreator);
     if (NS_FAILED(rv)) return rv;
 
-    if (contentDisplayIsRow) { // called from above
-      // set the primary frame to avoid getting the anonymous row group frame 
-      aState.mFrameManager->SetPrimaryFrameFor(aContent, aNewRowFrame);
-    }
-
     groupFrame->SetInitialChildList(*aPresContext, nsnull, aNewRowFrame);
     if (contentDisplayIsRow) { // called from above
       TableProcessTableList(aPresContext, *toDo);
     }
   }
+    
+  if (aState.mFrameManager)
+    aState.mFrameManager->SetPrimaryFrameFor(aContent, aNewRowFrame);
 
   return rv;
 }
