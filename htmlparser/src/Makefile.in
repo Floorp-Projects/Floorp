@@ -59,7 +59,6 @@ CPPSRCS = \
 		nsParserNode.cpp    \
 		nsScanner.cpp       \
 		nsToken.cpp         \
-		nsTokenHandler.cpp  \
 		nsWellFormedDTD.cpp \
 		nsViewSourceHTML.cpp\
 		$(NULL)
