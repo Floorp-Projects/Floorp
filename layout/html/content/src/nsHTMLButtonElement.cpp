@@ -158,7 +158,7 @@ nsHTMLButtonElement::GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName,
       aResult.Assign(NS_LITERAL_STRING("true"));
     }
 
-    return NS_OK;
+    return rv;
   }
 
   return nsGenericHTMLContainerFormElement::GetAttribute(aNameSpaceID, aName,
