@@ -101,7 +101,7 @@
   #%]
 
   <body bgcolor="[% bgcolor %]" onload="[% onload %]"
-   id="[% Param('urlbase').replace('^https?://','').replace('/$','').replace('[-~@:/.]+','-') %]" 
+   class="[% Param('urlbase').replace('^https?://','').replace('/$','').replace('[-~@:/.]+','-') %]" 
    [%+ bodyattrs %]>
 
 [%# Migration note: the following file corresponds to the old Param
