@@ -1348,7 +1348,7 @@ if (GetFieldDef('bugs_activity', 'field')) {
 
 if (!GetFieldDef('bugs', 'lastdiffed')) {
     AddField('bugs', 'lastdiffed', 'datetime not null');
-    $dbh->do('UPDATE bugs SET lastdiffed = delta_ts, delta_ts = delta_ts');
+    $dbh->do('UPDATE bugs SET lastdiffed = now(), delta_ts = delta_ts');
 }
 
 AddField('profiles', 'newemailtech', 'tinyint not null');
