@@ -1,0 +1,243 @@
+/* vim:set tw=80 expandtab softtabstop=4 ts=4 sw=4: */
+/* ----- BEGIN LICENSE BLOCK -----
+ * Version: MPL 1.1/LGPL 2.1/GPL 2.0
+ * 
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla XBM Decoder.
+ * 
+ * The Initial Developer of the Original Code is Christian Biesinger
+ * <cbiesinger@web.de>.  Portions created by Christian Biesinger are
+ * Copyright (C) 2001 Christian Biesinger.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s):
+ * 
+ * Alternatively, the contents of this file may be used under the terms of
+ * either of the GNU General Public License Version 2 or later (the "GPL"),
+ * or the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the MPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the LGPL or the GPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the MPL, the GPL or the LGPL.
+ * 
+ * ----- END LICENSE BLOCK ----- */
+
+/* KNOWN BUGS:
+ * o first #define line is assumed to be width, second height */
+
+#include <string.h>
+#include <stdlib.h>
+
+#include "nsXBMDecoder.h"
+
+#include "nsIInputStream.h"
+#include "nsIComponentManager.h"
+#include "nsIImage.h"
+#include "nsMemory.h"
+#include "imgIContainerObserver.h"
+#include "nsRect.h"
+#include "nsReadableUtils.h"
+
+#include "imgILoad.h"
+
+NS_IMPL_ISUPPORTS1(nsXBMDecoder, imgIDecoder)
+
+nsXBMDecoder::nsXBMDecoder() : mBuf(nsnull), mPos(nsnull), mRow(nsnull)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+nsXBMDecoder::~nsXBMDecoder()
+{
+    if (mBuf)
+        free(mBuf);
+
+    if (mRow)
+        delete[] mRow;
+}
+
+NS_IMETHODIMP nsXBMDecoder::Init(imgILoad *aLoad)
+{
+    nsresult rv;
+    mObserver = do_QueryInterface(aLoad);
+
+    mImage = do_CreateInstance("@mozilla.org/image/container;1", &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2", &rv);
+    if (NS_FAILED(rv))
+        return rv;
+
+    aLoad->SetImage(mImage);
+
+    mCurRow = mBufSize = mWidth = mHeight = 0;
+    mState = RECV_HEADER;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsXBMDecoder::Close()
+{
+    mObserver->OnStopContainer(nsnull, nsnull, mImage);
+    mObserver->OnStopDecode(nsnull, nsnull, NS_OK, nsnull);
+    mObserver = nsnull;
+    mImage = nsnull;
+    mFrame = nsnull;
+
+    if (mRow) {
+        delete[] mRow;
+        mRow = nsnull;
+    }
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsXBMDecoder::Flush()
+{
+    mFrame->SetMutable(PR_FALSE);
+    return NS_OK;
+}
+
+NS_METHOD nsXBMDecoder::ReadSegCb(nsIInputStream* aIn, void* aClosure,
+                             const char* aFromRawSegment, PRUint32 aToOffset,
+                             PRUint32 aCount, PRUint32 *aWriteCount) {
+    nsXBMDecoder *decoder = NS_REINTERPRET_CAST(nsXBMDecoder*, aClosure);
+    *aWriteCount = aCount;
+    return decoder->ProcessData(aFromRawSegment, aCount);
+}
+
+NS_IMETHODIMP nsXBMDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, PRUint32 *aRetval)
+{
+    return aInStr->ReadSegments(ReadSegCb, this, aCount, aRetval);
+}
+
+nsresult nsXBMDecoder::ProcessData(const char* aData, PRUint32 aCount) {
+    char *endPtr;
+    // calculate the offset since the absolute position might no longer
+    // be valid after realloc
+    const PRPtrdiff posOffset = mPos ? (mPos - mBuf) : 0;
+    mBuf = (char*)realloc(mBuf, mBufSize + aCount + 1);
+    if (!mBuf) {
+        mState = RECV_DONE;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+    memcpy(mBuf + mBufSize, aData, aCount);
+    mBufSize += aCount;
+    mBuf[mBufSize] = 0;
+    mPos = mBuf + posOffset;
+    if (mState == RECV_HEADER) {
+        mPos = strstr(mBuf, "#define");
+        if (!mPos)
+            // #define not found. return for now, waiting for more data.
+            return NS_OK;
+
+        // Convert width and height to numbers
+        if (sscanf(mPos, "#define %*s %d #define %*s %d", &mWidth, &mHeight) != 2)
+            return NS_OK;
+
+        mImage->Init(mWidth, mHeight, mObserver);
+        mObserver->OnStartContainer(nsnull, nsnull, mImage);
+        mFrame->Init(0, 0, mWidth, mHeight, GFXFORMAT);
+        mImage->AppendFrame(mFrame);
+        mObserver->OnStartFrame(nsnull, nsnull, mFrame);
+
+        PRUint32 bpr;
+        mFrame->GetImageBytesPerRow(&bpr);
+
+        mRow = new PRUint8[bpr];
+
+        mState = RECV_SEEK;
+
+        mCurRow = 0;
+        mCurCol = 0;
+
+    }
+    if (mState == RECV_SEEK) {
+        if ((endPtr = strchr(mPos, '{')) != NULL) {
+            mPos = endPtr+1;
+            mState = RECV_DATA;
+        } else {
+            mPos = mBuf + mBufSize;
+            return NS_OK;
+        }
+    }
+    if (mState == RECV_DATA) {
+#if defined(XP_MAC) || defined(XP_MACOSX)
+// bytes per pixel
+        const PRUint32 bpp = 4;
+#else
+        const PRUint32 bpp = 3;
+#endif
+        PRUint32 bpr;
+        mFrame->GetImageBytesPerRow(&bpr);
+
+        do {
+            PRUint32 pixel = strtoul(mPos, &endPtr, 0);
+            if (endPtr == mPos)
+                return NS_OK;   // no number to be found - need more data
+            if (!*endPtr)
+                return NS_OK;   // number at the end - might be missing a digit
+            if (pixel == 0 && *endPtr == 'x')
+                return NS_OK;   // 0x at the end, actual number is missing
+            while (*endPtr && isspace(*endPtr))
+                endPtr++;       // skip whitespace looking for comma
+            if (*endPtr && (*endPtr != ',')) {
+                *endPtr = '\0';
+                mState = RECV_DONE;  // strange character (or ending '}')
+            }
+            mPos = endPtr;
+
+            for (int i = 1; i <= 128; i <<= 1) {
+                // if bit is set, use black, else white
+                PRUint8 val = (pixel & i) ? 0 : 255;
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#define DATA_OFFSET 1
+                mRow[mCurCol * bpp] = 0; // padding byte
+#else
+#define DATA_OFFSET 0
+#endif
+                for (int j = DATA_OFFSET; j < (DATA_OFFSET + 3); j++)
+                    mRow[mCurCol * bpp + j] = val;
+
+                mCurCol++;
+                if (mCurCol == mWidth)
+                    break;
+            }
+            if (mCurCol == mWidth || mState == RECV_DONE) {
+                    // Row finished. Set Data.
+                    mFrame->SetImageData(mRow, bpr, mCurRow * bpr);
+                    nsRect r(0, (mCurRow + 1), mWidth, 1);
+                    mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
+
+                    if ((mCurRow + 1) == mHeight) {
+                        mState = RECV_DONE;
+                        return mObserver->OnStopFrame(nsnull, nsnull, mFrame);
+                    }
+                    mCurRow++;
+                    mCurCol = 0;
+            }
+
+            mPos++;
+        } while (*mPos && (mState == RECV_DATA));
+    }
+    else
+        return NS_ERROR_FAILURE;
+    
+    return NS_OK;
+}
+
+
