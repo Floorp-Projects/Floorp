@@ -55,26 +55,6 @@ nsBulletFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("Bullet", aResult);
 }
 
-NS_IMETHODIMP
-nsBulletFrame::List(FILE* out, PRInt32 aIndent) const
-{
-  PRInt32 i;
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  fprintf(out, "Bullet(%d)@%p ", ContentIndexInContainer(this), this);
-  nsIView* view;
-  GetView(&view);
-  if (nsnull != view) {
-    fprintf(out, " [view=%p]", view);
-  }
-
-  out << mRect;
-  if (0 != mState) {
-    fprintf(out, " [state=%08x]", mState);
-  }
-  fputs("<>\n", out);
-  return NS_OK;
-}
-
 NS_METHOD
 nsBulletFrame::Paint(nsIPresContext&      aCX,
                      nsIRenderingContext& aRenderingContext,
