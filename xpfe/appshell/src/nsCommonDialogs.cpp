@@ -376,7 +376,7 @@ NS_IMETHODIMP nsCommonDialogs::PromptPassword(nsIDOMWindow *inParent,  const PRU
 	block->SetInt( eNumberEditfields, 1 );
 	block->SetInt( eEditField1Password, 1 );
 	rv = DoDialog( inParent, block, kPromptURL );
-	block->GetString( eEditfield2Value, outPassword );
+	block->GetString( eEditfield1Value, outPassword );
 	PRInt32 tempInt = 0;
 	block->GetInt( eButtonPressed, &tempInt );
 	*_retval = tempInt ? PR_FALSE : PR_TRUE;
