@@ -257,7 +257,7 @@ sub isMatchedByMask {
                 # This was entered as an IRC hostmask so we need to
                 # translate it into a regular expression.
                 foreach ($nick, $user, $host) {
-                    quotemeta($_); # escape regular expression magic
+                    $_ = quotemeta($_); # escape regular expression magic
                     s/\\\*/.*/gos; # translate "*" into regexp equivalent
                 }
 
