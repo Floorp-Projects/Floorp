@@ -125,3 +125,8 @@ titledbutton.panel-bar {
   padding-right: 5px;
   font-size: smaller;
 }
+
+titledbutton.panel-bar[selected="1"] {
+  background-color: #98CCF8;
+}
+
