@@ -56,6 +56,7 @@ public:
 
     nsresult RegisterThreadSelf();
     void SetPRThread(PRThread* thread) { mThread = thread; }
+    void WaitUntilReadyToStartMain();
 
     static void PR_CALLBACK Main(void* arg);
     static void PR_CALLBACK Exit(void* arg);
@@ -70,6 +71,7 @@ protected:
     PRThread*                   mThread;
     nsCOMPtr<nsIRunnable>       mRunnable;
     PRBool                      mDead;
+    PRLock*                     mStartLock;
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -53,17 +53,43 @@ interface nsIRunnable;
 [scriptable, uuid(6be5e380-6886-11d3-9382-00104ba0fd40)]
 interface nsIThread : nsISupports
 {
-    void Join();
-    void Interrupt();
-    attribute PRThreadPriority Priority;
-    readonly attribute PRThreadScope Scope;
-    readonly attribute PRThreadState State;
+    // These must all match the values used in prthread.h
+    const PRUint32 PRIORITY_LOW    = 0;
+    const PRUint32 PRIORITY_NORMAL = 1;
+    const PRUint32 PRIORITY_HIGH   = 2;
+    const PRUint32 PRIORITY_URGENT = 3;
+
+    const PRUint32 SCOPE_LOCAL  = 0;
+    const PRUint32 SCOPE_GLOBAL = 1;
+    const PRUint32 SCOPE_BOUND  = 2;
+
+    const PRUint32 STATE_JOINABLE   = 0;
+    const PRUint32 STATE_UNJOINABLE = 1;
+
+    void join();
+    void interrupt();
+
+    attribute PRThreadPriority       priority;
+    readonly attribute PRThreadScope scope;
+    readonly attribute PRThreadState state;
+    
     [noscript] PRThread GetPRThread();
-    void Init(in nsIRunnable aRunnable,
-              in unsigned long aStackSize,
+    
+    void init(in nsIRunnable aRunnable,
+              in PRUint32 aStackSize,
               in PRThreadPriority aPriority,
               in PRThreadScope    aScope,
               in PRThreadState    aState);
+
+    /*
+     * Get the currently running thread (really a static method sort of thing).
+     */
+    readonly attribute nsIThread currentThread;
+    
+    /*
+     * Sleep to at least this many milliseconds (only works on currrent thread).
+     */
+    void sleep(in PRUint32 msec);
 
 %{C++
     // returns the nsIThread for the current thread:
