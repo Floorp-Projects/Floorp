@@ -31,7 +31,7 @@ static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 //
 enum attribute_slot {
   ATTRIBUTE_VALUE             = -1,
-  ATTRIBUTE_SPECIFIED         = -2,
+  ATTRIBUTE_SPECIFIED         = -2
 };
 
 /***********************************************************************/

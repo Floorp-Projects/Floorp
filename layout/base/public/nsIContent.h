@@ -47,7 +47,7 @@ enum nsContentAttr {
 
   // Attribute exists and has a value.  However, value may be the
   // empty string.  e.g. <TABLE BORDER="1"> or <TABLE BORDER="">
-  eContentAttr_HasValue,
+  eContentAttr_HasValue
 };
 
 // A node of content in a documents content model. This interface
