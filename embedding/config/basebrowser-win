@@ -59,8 +59,8 @@ components\nspng.dll
 
 ; accessibility (out of process API support)
 ; see http://www.mozilla.org/projects/ui/accessibility/vendors-win.html
-;components\accessibility.dll              
-;components\accessibility.xpt                 
+components\accessibility.dll              
+components\accessibility.xpt                 
 
 ; appshell 
 components\appshell.dll                 
