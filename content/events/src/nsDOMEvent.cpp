@@ -203,8 +203,8 @@ NS_METHOD nsDOMEvent::GetScreenX(PRInt32* aScreenX)
   //Add extra since loop will free one.
   NS_ADDREF(parent);
   nsIWidget* tmp;
-  while (nsnull != prent) {
-    parent->GetBoundsa(bounds);
+  while (nsnull != parent) {
+    parent->GetBounds(bounds);
     offset.x += bounds.x;
     tmp = parent;
     parent = tmp->GetParent();
@@ -413,7 +413,7 @@ NS_METHOD nsDOMEvent::GetRangeOffset(PRInt32* aRangeOffset)
   if (targetFrame) {
     nsIContent* parent = nsnull;
     PRUint32 actualOffset;
-    PRInt32 offset, endOffset;
+    PRInt32 endOffset;
 
     if (NS_SUCCEEDED(targetFrame->GetPosition(*mPresContext, 
                                               (nsGUIEvent*)mEvent,
