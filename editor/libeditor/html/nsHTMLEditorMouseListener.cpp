@@ -40,6 +40,7 @@
 #include "nsString.h"
 
 #include "nsIDOMEvent.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsISelection.h"
@@ -113,7 +114,8 @@ nsHTMLEditorMouseListener::MouseDown(nsIDOMEvent* aMouseEvent)
     if (isContextClick || (buttonNumber == 0 && clickCount == 2))
     {
       nsCOMPtr<nsIDOMEventTarget> target;
-      res = aMouseEvent->GetTarget(getter_AddRefs(target));
+      nsCOMPtr<nsIDOMNSEvent> internalEvent = do_QueryInterface(aMouseEvent);
+      res = internalEvent->GetExplicitOriginalTarget(getter_AddRefs(target));
       if (NS_FAILED(res)) return res;
       if (!target) return NS_ERROR_NULL_POINTER;
       nsCOMPtr<nsIDOMElement> element = do_QueryInterface(target);
