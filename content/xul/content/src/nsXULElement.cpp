@@ -236,83 +236,79 @@ RemoveJSGCRoot(void* aScriptObjectRef)
 struct EventHandlerMapEntry {
     const char*  mAttributeName;
     nsIAtom*     mAttributeAtom;
-    const nsIID* mHandlerIID;
 };
 
 static EventHandlerMapEntry kEventHandlerMap[] = {
-    { "onclick",         nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "ondblclick",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "onmousedown",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "onmouseup",       nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "onmouseover",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "onmouseout",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
+    { "onclick",         nsnull },
+    { "ondblclick",      nsnull },
+    { "onmousedown",     nsnull },
+    { "onmouseup",       nsnull },
+    { "onmouseover",     nsnull },
+    { "onmouseout",      nsnull },
 
-    { "onmousemove",     nsnull, &NS_GET_IID(nsIDOMMouseMotionListener) },
+    { "onmousemove",     nsnull },
 
-    { "onkeydown",       nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
-    { "onkeyup",         nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
-    { "onkeypress",      nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
+    { "onkeydown",       nsnull },
+    { "onkeyup",         nsnull },
+    { "onkeypress",      nsnull },
 
-    { "onload",          nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
-    { "onunload",        nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
-    { "onabort",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
-    { "onerror",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
+    { "onload",          nsnull },
+    { "onunload",        nsnull },
+    { "onabort",         nsnull },
+    { "onerror",         nsnull },
 
-    { "onpopupshowing",    nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "onpopupshown",      nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "onpopuphiding" ,    nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "onpopuphidden",     nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "onclose",           nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "oncommand",         nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "onbroadcast",       nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "oncommandupdate",   nsnull, &NS_GET_IID(nsIDOMXULListener)        },
+    { "onpopupshowing",    nsnull },
+    { "onpopupshown",      nsnull },
+    { "onpopuphiding" ,    nsnull },
+    { "onpopuphidden",     nsnull },
+    { "onclose",           nsnull },
+    { "oncommand",         nsnull },
+    { "onbroadcast",       nsnull },
+    { "oncommandupdate",   nsnull },
 
-    { "onoverflow",       nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
-    { "onunderflow",      nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
-    { "onoverflowchanged",nsnull, &NS_GET_IID(nsIDOMScrollListener)     },
+    { "onoverflow",       nsnull },
+    { "onunderflow",      nsnull },
+    { "onoverflowchanged",nsnull },
 
-    { "onfocus",         nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
-    { "onblur",          nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
+    { "onfocus",         nsnull },
+    { "onblur",          nsnull },
 
-    { "onsubmit",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "onreset",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "onchange",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "onselect",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "oninput",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
+    { "onsubmit",        nsnull },
+    { "onreset",         nsnull },
+    { "onchange",        nsnull },
+    { "onselect",        nsnull },
+    { "oninput",         nsnull },
 
-    { "onpaint",         nsnull, &NS_GET_IID(nsIDOMPaintListener)       },
+    { "onpaint",         nsnull },
 
-    { "ondragenter",     nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "ondragover",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "ondragexit",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "ondragdrop",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "ondraggesture",   nsnull, &NS_GET_IID(nsIDOMDragListener)        },
+    { "ondragenter",     nsnull },
+    { "ondragover",      nsnull },
+    { "ondragexit",      nsnull },
+    { "ondragdrop",      nsnull },
+    { "ondraggesture",   nsnull },
 
-    { "oncontextmenu",   nsnull, &NS_GET_IID(nsIDOMContextMenuListener) },
+    { "oncontextmenu",   nsnull },
 
-    { nsnull,            nsnull, nsnull                                 }
+    { nsnull,            nsnull }
 };
 
 
 // XXX This function is called for every attribute on every element for
 // XXX which we SetDocument, among other places.  A linear search might
 // XXX not be what we want.
-static nsresult
-GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
+static PRBool
+IsEventHandler(nsIAtom* aName)
 {
-    *aFound = PR_FALSE;
-
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeAtom) {
         if (entry->mAttributeAtom == aName) {
-            *aIID = *entry->mHandlerIID;
-            *aFound = PR_TRUE;
+            return PR_TRUE;
             break;
         }
         ++entry;
     }
 
-    return NS_OK;
+    return PR_FALSE;
 }
 
 static void
@@ -1811,16 +1807,10 @@ nsXULElement::AddListenerFor(nsINodeInfo *aNodeInfo,
             AddPopupListener(attr);
         }
 
-        if (aCompileEventHandlers) {
-            nsIID iid;
-            PRBool isHandler = PR_FALSE;
-            GetEventHandlerIID(attr, &iid, &isHandler);
-
-            if (isHandler) {
-                nsAutoString value;
-                GetAttr(nameSpaceID, attr, value);
-                AddScriptEventListener(attr, value);
-            }
+        if (aCompileEventHandlers && IsEventHandler(attr)) {
+            nsAutoString value;
+            GetAttr(nameSpaceID, attr, value);
+            AddScriptEventListener(attr, value);
         }
     }
 
