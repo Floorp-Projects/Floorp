@@ -41,7 +41,8 @@
 <!DOCTYPE dialog SYSTEM "chrome://cookie/locale/cookieAcceptDialog.dtd">
 
 <dialog id="cookieAcceptDialog"
-    buttons=""
+    acceptLabel="&button.yes.label;"
+    cancelLabel="&button.no.label;"
     onload="onload();"
     ondialogaccept="return cookieAccept();"
     title="&dialog.title;"
