@@ -100,9 +100,4 @@ PROGRAM      =
 	-lc
 #endif
 
-ifeq ($(OS_TARGET), SunOS)
-  EXTRA_LIBS        += \
-	-ldl
-endif
-
 endif
