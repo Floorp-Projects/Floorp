@@ -704,7 +704,7 @@ function getSelectedImage(tree)
 function saveMedia()
 {
   var tree = document.getElementById("imagetree");
-  var item = getSelectedItem(tree);
+  var item = getSelectedImage(tree);
   var url = getAbsoluteURL(getSource(item), item);
 
   if (url)
