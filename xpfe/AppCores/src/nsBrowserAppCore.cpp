@@ -167,9 +167,7 @@ nsBrowserAppCore::~nsBrowserAppCore()
   if (nsnull != mGHistory) {
     nsServiceManager::ReleaseService(kCGlobalHistoryCID, mGHistory);
   }
- if (nsnull != mSHistory) {
-    nsServiceManager::ReleaseService(kCSessionHistoryCID, mSHistory);
-  }
+  NS_IF_RELEASE(mSHistory);
   DecInstanceCount();  
 }
 
@@ -281,8 +279,10 @@ nsBrowserAppCore::Init(const nsString& aId)
   nsServiceManager::GetService(kCGlobalHistoryCID, kIGlobalHistoryIID,
 					(nsISupports **)&mGHistory);
 
-  nsServiceManager::GetService(kCSessionHistoryCID, kISessionHistoryIID,
-                                       (nsISupports **)&mSHistory);
+  rv = nsComponentManager::CreateInstance(kCSessionHistoryCID,
+                                          nsnull,
+                                          kISessionHistoryIID,
+                                          (void **) &mSHistory);
 
   if (!mSHistory)
      printf("********** Couldn't initialize Session History *********\n");
@@ -1233,8 +1233,8 @@ NS_IMETHODIMP
 nsBrowserAppCore::add(nsIWebShell * aWebShell)
 {
    nsresult rv;
-      if (mSHistory) 
-   rv = mSHistory->add(aWebShell);
+   if (mSHistory) 
+     rv = mSHistory->add(aWebShell);
    return rv;
 }
 
@@ -1242,8 +1242,8 @@ NS_IMETHODIMP
 nsBrowserAppCore::Goto(PRInt32 aGotoIndex, nsIWebShell * aPrev)
 {
    nsresult rv;
-      if (mSHistory) 
-   rv = mSHistory->Goto(aGotoIndex, aPrev);
+   if (mSHistory) 
+      rv = mSHistory->Goto(aGotoIndex, aPrev);
    return rv;
 }
 
@@ -1275,7 +1275,7 @@ nsBrowserAppCore::canForward(PRBool & aResult)
 
    if (mSHistory) {
      mSHistory->canForward(result);
-   aResult = result;
+     aResult = result;
    }
    return NS_OK;
 }
@@ -1286,8 +1286,8 @@ nsBrowserAppCore::canBack(PRBool & aResult)
    PRBool result;
 
    if (mSHistory) {
-   mSHistory->canBack(result);
-   aResult = result;
+     mSHistory->canBack(result);
+     aResult = result;
    }
    return NS_OK;
 }
@@ -1297,7 +1297,7 @@ nsBrowserAppCore::getHistoryLength(PRInt32 & aResult)
 {
    PRInt32 result;
    if (mSHistory)
-   mSHistory->getHistoryLength(result);
+     mSHistory->getHistoryLength(result);
    
    aResult = result;
    return NS_OK;
@@ -1310,7 +1310,7 @@ nsBrowserAppCore::getCurrentIndex(PRInt32 & aResult)
    PRInt32 result;
 
    if (mSHistory)
-   mSHistory->getCurrentIndex(result);
+     mSHistory->getCurrentIndex(result);
    
    aResult = result;
    return NS_OK;
