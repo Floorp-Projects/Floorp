@@ -2194,9 +2194,9 @@ public:
 // { ===== begin nsIMdbRow methods =====
 
   // { ----- begin cursor methods -----
-  NS_IMETHOD GetRowCellCursor( // make a cursor starting iteration at inRowPos
+  NS_IMETHOD GetRowCellCursor( // make a cursor starting iteration at inCellPos
     nsIMdbEnv* ev, // context
-    mdb_pos inRowPos, // zero-based ordinal position of row in table
+    mdb_pos inCellPos, // zero-based ordinal position of cell in row
     nsIMdbRowCellCursor** acqCursor) = 0; // acquire new cursor instance
   // } ----- end cursor methods -----
 
@@ -2337,7 +2337,7 @@ public:
   // { ----- begin cell iteration methods -----
   NS_IMETHOD NextCell( // get next cell in the row
     nsIMdbEnv* ev, // context
-    nsIMdbCell* ioCell, // changes to the next cell in the iteration
+    nsIMdbCell** acqCell, // changes to the next cell in the iteration
     mdb_column* outColumn, // column for this particular cell
     mdb_pos* outPos) = 0; // position of cell in row sequence
     

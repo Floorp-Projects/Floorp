@@ -48,11 +48,11 @@
 class nsMorkFactoryFactory : public nsIMdbFactoryFactory
 {
 public:
-	nsMorkFactoryFactory();
-	// nsISupports methods
-	NS_DECL_ISUPPORTS 
+  nsMorkFactoryFactory();
+  // nsISupports methods
+  NS_DECL_ISUPPORTS 
 
-	NS_IMETHOD GetMdbFactory(nsIMdbFactory **aFactory);
+  NS_IMETHOD GetMdbFactory(nsIMdbFactory **aFactory);
 
 };
 
@@ -80,32 +80,32 @@ NS_IMPL_RELEASE(nsMorkFactoryFactory)
 NS_IMETHODIMP
 nsMorkFactoryFactory::QueryInterface(REFNSIID iid, void** result)
 {
-	if (! result)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = nsnull;
-    if(iid.Equals(NS_GET_IID(nsIMdbFactoryFactory)) ||
-		iid.Equals(NS_GET_IID(nsISupports))) {
-		*result = NS_STATIC_CAST(nsIMdbFactoryFactory*, this);
-		AddRef();
-		return NS_OK;
-	}
-    return NS_NOINTERFACE;
+  if (! result)
+    return NS_ERROR_NULL_POINTER;
+  
+  *result = nsnull;
+  if(iid.Equals(NS_GET_IID(nsIMdbFactoryFactory)) ||
+    iid.Equals(NS_GET_IID(nsISupports))) {
+    *result = NS_STATIC_CAST(nsIMdbFactoryFactory*, this);
+    AddRef();
+    return NS_OK;
+  }
+  return NS_NOINTERFACE;
 }
 
 
 
 nsMorkFactoryFactory::nsMorkFactoryFactory()
 {
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 NS_IMETHODIMP nsMorkFactoryFactory::GetMdbFactory(nsIMdbFactory **aFactory)
 {
-	if (!gMDBFactory)
-		gMDBFactory = MakeMdbFactory();
-	*aFactory = gMDBFactory;
-        NS_IF_ADDREF(gMDBFactory);
-	return (gMDBFactory) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+  if (!gMDBFactory)
+    gMDBFactory = MakeMdbFactory();
+  *aFactory = gMDBFactory;
+  NS_IF_ADDREF(gMDBFactory);
+  return (gMDBFactory) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 

@@ -229,9 +229,9 @@ morkRowObject::DropActivity( // tell collection usage no longer expected
 
 // { ----- begin cursor methods -----
 NS_IMETHODIMP
-morkRowObject::GetRowCellCursor( // make a cursor starting iteration at inRowPos
+morkRowObject::GetRowCellCursor( // make a cursor starting iteration at inCellPos
   nsIMdbEnv* mev, // context
-  mdb_pos inPos, // zero-based ordinal position of row in table
+  mdb_pos inPos, // zero-based ordinal position of cell in row
   nsIMdbRowCellCursor** acqCursor)
 {
   mdb_err outErr = 0;
