@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.7 2001/01/05 22:37:47 mcgreer%netscape.com Exp $
+ * $Id: blapi.h,v 1.8 2001/11/14 23:03:19 ian.mcgreer%sun.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -77,6 +77,19 @@ extern SECStatus RSA_PrivateKeyOp(RSAPrivateKey *  key,
 				  unsigned char *  output,
 				  const unsigned char *  input);
 
+/*
+** Perform a raw private-key operation, and check the parameters used in
+** the operation for validity by performing a test operation first.
+**	Length of input and output buffers are equal to key's modulus len.
+*/
+extern SECStatus RSA_PrivateKeyOpDoubleChecked(RSAPrivateKey *  key,
+				               unsigned char *  output,
+				               const unsigned char *  input);
+
+/*
+** Perform a check of private key parameters for consistency.
+*/
+extern SECStatus RSA_PrivateKeyCheck(RSAPrivateKey *key);
 
 
 /********************************************************************
