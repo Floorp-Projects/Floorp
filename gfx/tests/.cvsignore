@@ -1,1 +1,4 @@
 Makefile
+DumpColors
+TestColorNames
+TestRect

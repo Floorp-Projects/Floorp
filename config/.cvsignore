@@ -4,4 +4,6 @@ revdepth
 myconfig.mk
 myrules.mk
 motif.mk
+autoconf.mk
 Makefile
+bsdecho
