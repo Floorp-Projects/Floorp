@@ -38,9 +38,11 @@
 #include "nsLayoutAtoms.h"
 #include "nsCOMPtr.h"
 #include "nsIHTMLTableCellElement.h"
+#include "nsIDOMHTMLTableCellElement.h"
 
 NS_DEF_PTR(nsIStyleContext);
 static NS_DEFINE_IID(kIHTMLTableCellElementIID, NS_IHTMLTABLECELLELEMENT_IID);
+static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
 
 NS_IMETHODIMP
 nsTableCellFrame::Init(nsIPresContext&  aPresContext,
@@ -65,6 +67,32 @@ nsTableCellFrame::Init(nsIPresContext&  aPresContext,
   }
 
   return rv;
+}
+
+void nsTableCellFrame::SetPass1MaxElementSize(const nsSize& aMaxElementSize)
+{ 
+  mPass1MaxElementSize.height = aMaxElementSize.height;
+  nscoord maxElemWidth = aMaxElementSize.width;
+  // the max elem width needs to be set to the max of aMaxElementSize.width and 
+  // the width attribute if both nowrap and width are present on the cell.
+  const nsStylePosition* stylePosition;
+  GetStyleData(eStyleStruct_Position, ((const nsStyleStruct *&)stylePosition));
+  if (stylePosition->mWidth.GetUnit() == eStyleUnit_Coord) {
+    nscoord styleWidth = stylePosition->mWidth.GetCoordValue();
+    if (styleWidth > 0) {
+      nsIDOMHTMLTableCellElement* cellContent = nsnull;
+      nsresult rv = mContent->QueryInterface(kIDOMHTMLTableCellElementIID, (void **)&cellContent);  
+      if (cellContent && NS_SUCCEEDED(rv)) {
+        PRBool nowrap = PR_FALSE;
+        cellContent->GetNoWrap(&nowrap);
+        if (nowrap) {
+          maxElemWidth = PR_MAX(maxElemWidth, styleWidth);
+        }
+        NS_RELEASE(cellContent);
+      }
+    }
+  }
+  mPass1MaxElementSize.width = maxElemWidth;
 }
 
 NS_IMETHODIMP
