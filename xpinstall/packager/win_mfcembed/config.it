@@ -594,6 +594,49 @@ Destination=[WINDIR]
 Fail If Exists=FALSE
 Do Not Uninstall=TRUE
 
+; nss3.dll, softokn3.dll, ssl3.dll, and smime3.dll all need to be copied from
+; the GRE dir to the destination app folder (see bug 202326)
+[Copy File2]
+Timing=post smartupdate
+Source=[$GRE_INSTALL_DIR]\nss3.dll
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
+[Copy File3]
+Timing=post smartupdate
+Source=[$GRE_INSTALL_DIR]\softokn3.dll
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
+[Copy File4]
+Timing=post smartupdate
+Source=[$GRE_INSTALL_DIR]\softokn3.chk
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
+[Copy File5]
+Timing=post smartupdate
+Source=[$GRE_INSTALL_DIR]\ssl3.dll
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
+[Copy File6]
+Timing=post smartupdate
+Source=[$GRE_INSTALL_DIR]\smime3.dll
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
+[Path Lookup $GRE_INSTALL_DIR]
+Path Reg Key Root=HKEY_LOCAL_MACHINE
+Path Reg Key=Software\mozilla.org\GRE\$GreUniqueID$\Main
+Path Reg Name=Install Directory
+Strip Filename=FALSE
+
 
 ;Copy File SequentialX sections
 [Copy File Sequential0]
