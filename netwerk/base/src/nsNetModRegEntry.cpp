@@ -39,18 +39,44 @@ NS_IMPL_ISUPPORTS(nsNetModRegEntry, NS_GET_IID(nsINetModRegEntry));
 //////////////////////////////
 
 NS_IMETHODIMP
-nsNetModRegEntry::GetSyncProxy(nsINetNotify **aNotify) {
-    *aNotify = mSyncProxy;
-    NS_ADDREF(*aNotify);
-    return NS_OK;
+nsNetModRegEntry::GetSyncProxy(nsINetNotify **aNotify) 
+{
+    if (mSyncProxy)
+    {
+        *aNotify = mSyncProxy;
+        NS_ADDREF(*aNotify);
+        return NS_OK;
+    }
+    
+    nsresult rv = BuildProxy(PR_TRUE);
+    
+    if (NS_SUCCEEDED(rv))
+    {
+        *aNotify = mSyncProxy;
+        NS_ADDREF(*aNotify);
+    }
+    return rv;
 }
 
 
 NS_IMETHODIMP
-nsNetModRegEntry::GetAsyncProxy(nsINetNotify **aNotify) {
-    *aNotify = mAsyncProxy;
-    NS_ADDREF(*aNotify);
-    return NS_OK;
+nsNetModRegEntry::GetAsyncProxy(nsINetNotify **aNotify) 
+{
+    if (mAsyncProxy)
+    {
+        *aNotify = mAsyncProxy;
+        NS_ADDREF(*aNotify);
+        return NS_OK;
+    }
+
+    nsresult rv = BuildProxy(PR_FALSE);
+    
+    if (NS_SUCCEEDED(rv))
+    {
+        *aNotify = mAsyncProxy;
+        NS_ADDREF(*aNotify);
+    }
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -105,30 +131,48 @@ nsNetModRegEntry::nsNetModRegEntry(const char *aTopic,
     mTopic = new char [PL_strlen(aTopic) + 1];
     PL_strcpy(mTopic, aTopic);
    
+    mAsyncProxy = nsnull;
+    mSyncProxy = nsnull;
+    mRealNotifier = aNotify;
+
     NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, result); 
     
     if (NS_FAILED(*result)) return;
     
     *result = eventQService->GetThreadEventQueue(PR_CurrentThread(), getter_AddRefs(mEventQ)); 
-     
-    if (NS_FAILED(*result)) return;
+}
 
-    NS_WITH_SERVICE( nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, result);
-    
-    if (NS_FAILED(*result)) return;
+nsresult
+nsNetModRegEntry::BuildProxy(PRBool sync)
+{
+    if (mEventQ == nsnull)
+        return NS_ERROR_NULL_POINTER;
 
-    *result = proxyManager->GetProxyObject(  mEventQ,
-                                             NS_GET_IID(nsINetNotify),
-                                             aNotify,
-                                             PROXY_SYNC | PROXY_ALWAYS,
-                                             getter_AddRefs(mSyncProxy));
-    if (NS_FAILED(*result)) return;
+    nsresult result;
     
-    *result = proxyManager->GetProxyObject(  mEventQ,
-                                             NS_GET_IID(nsINetNotify),
-                                             aNotify,
-                                             PROXY_ASYNC | PROXY_ALWAYS,
-                                             getter_AddRefs(mAsyncProxy));
+    NS_WITH_SERVICE( nsIProxyObjectManager, proxyManager, kProxyObjectManagerCID, &result);
+    
+    if (NS_FAILED(result)) 
+        return result;
+    
+    if (sync)
+    {
+        result = proxyManager->GetProxyObject(  mEventQ,
+                                                NS_GET_IID(nsINetNotify),
+                                                mRealNotifier,
+                                                PROXY_SYNC | PROXY_ALWAYS,
+                                                getter_AddRefs(mSyncProxy));
+    }
+    else
+    {
+         result = proxyManager->GetProxyObject( mEventQ,
+                                                NS_GET_IID(nsINetNotify),
+                                                mRealNotifier,
+                                                PROXY_ASYNC | PROXY_ALWAYS,
+                                                getter_AddRefs(mAsyncProxy));
+    }
+ 
+    return result;
 }
 
 nsNetModRegEntry::~nsNetModRegEntry() 
