@@ -2,6 +2,10 @@
 #include "nsIInputStream.idl"
 #include "nsIURI.idl"
 
+////////////////////////////////////////////////////////////////////////////
+// STREAM CONVERTER USERS
+////////////////////////////////////////////////////////////////////////////
+
 // There are three ways to use a stream converter:
 // 1. SYNCRONOUS. Stream to Stream.
 //    You can supply the service with a stream of type X
@@ -20,6 +24,21 @@
 //    convert that data from type X to your desired output type and
 //    return converted data to you via the nsIStreamListener you passed
 //    in by calling its OnDataAvailable() method.
+
+////////////////////////////////////////////////////////////////////////////
+// STREAM CONVERTER SUPPLIERS
+////////////////////////////////////////////////////////////////////////////
+
+// Registering a stream converter.
+// Stream converter registration is a two step process. First of all the stream
+// converter implementation must register itself with the component manager using
+// a progid in the format below. Second, the stream converter must add the progid
+// to the registry.
+//
+// Stream converter progid format (the stream converter root key is defined in this
+// file):
+//
+// Software/Netscape/streamconv/?from=FROM_MIME_TYPE?to=TO_MIME_TYPE
 
 [scriptable, uuid(46484B30-3BD2-11d3-A16C-0050041CAF44)]
 interface nsIStreamConverter : nsIStreamListener {
@@ -51,6 +70,6 @@ interface nsIStreamConverter : nsIStreamListener {
 
 %{C++
 
-#define NS_ISTREAMCONVERTER_KEY         "component://netscape/strmconv/"
+#define NS_ISTREAMCONVERTER_KEY         "Software/Netscape/streamconv/"
 
 %}
