@@ -412,6 +412,10 @@ nsEventStateManager::CheckForAndDispatchClick(nsIPresContext& aPresContext,
       ret = mouseContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, aStatus); 
       NS_RELEASE(mouseContent);
     }
+
+    if (nsnull != mCurrentTarget) {
+      ret = mCurrentTarget->HandleEvent(aPresContext, &event, aStatus);
+    }
   }
   return ret;
 }
