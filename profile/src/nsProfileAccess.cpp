@@ -1167,7 +1167,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 
                 profileItem->updateProfileEntry = PR_TRUE;
 
-                profileItem->profileName = NS_ConvertASCIItoUCS2(nsUnescape(unixProfileName)).ToNewUnicode();
+                profileItem->profileName = NS_ConvertASCIItoUCS2(unixProfileName).GetUnicode();
                 
                 nsCOMPtr<nsILocalFile> localFile;
                 rv = NS_NewLocalFile(profileLocation, PR_TRUE, getter_AddRefs(localFile));
