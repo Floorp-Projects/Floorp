@@ -1065,6 +1065,9 @@ gfx/tests/Makefile
 htmlparser/Makefile
 htmlparser/robot/Makefile
 htmlparser/src/Makefile
+htmlparser/tests/Makefile
+htmlparser/tests/grabpage/Makefile
+htmlparser/tests/logparse/Makefile
 include/Makefile
 intl/Makefile
 intl/uconv/Makefile
