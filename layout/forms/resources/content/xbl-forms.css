@@ -207,6 +207,10 @@ input {
   padding: 1px 0 1px 0;
 }
 
+input > .anonymous-div {
+  white-space : nowrap;
+}
+
 textarea {
   background-color: -moz-Field;
   border: 2px inset ThreeDFace;
@@ -225,11 +229,16 @@ textarea > scrollbar {
   cursor: default;
 }
 
-*|*::-moz-singleline-textcontrol-frame {
-  overflow: -moz-hidden-unscrollable;
-  white-space: nowrap;
-  background-color: inherit;
-  text-align: inherit;
+textarea > .anonymous-div,
+input > .anonymous-div {
+  -moz-user-focus: none;
+  overflow: auto;
+  border: 0px !important;
+  padding: 0px;
+  margin: 0px;
+  /* XXXldb I'm not sure if we really want the 'text-decoration: inherit',
+     but it's needed to make 'text-decoration' "work" on text inputs. */
+  text-decoration: inherit;
 }
 
 input[disabled],
