@@ -38,32 +38,32 @@
 #include "nsITimer.h"
 #include "nsISupportsArray.h"
 #include "nsIRDFLiteral.h"
-
+#include "nsXPIDLString.h"
 
 
 class nsDirectoryViewerFactory : public nsIDocumentLoaderFactory
 {
 public:
-  nsDirectoryViewerFactory();
-  virtual ~nsDirectoryViewerFactory();
+    nsDirectoryViewerFactory();
+    virtual ~nsDirectoryViewerFactory();
 
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
+    // nsISupports interface
+    NS_DECL_ISUPPORTS
 
-  // nsIDocumentLoaderFactory interface
-  NS_IMETHOD CreateInstance(const char *aCommand,
-                            nsIChannel* aChannel,
-                            nsILoadGroup* aLoadGroup,
-                            const char* aContentType, 
-                            nsISupports* aContainer,
-                            nsISupports* aExtraInfo,
-                            nsIStreamListener** aDocListenerResult,
-                            nsIContentViewer** aDocViewerResult);
+    // nsIDocumentLoaderFactory interface
+    NS_IMETHOD CreateInstance(const char *aCommand,
+                              nsIChannel* aChannel,
+                              nsILoadGroup* aLoadGroup,
+                              const char* aContentType, 
+                              nsISupports* aContainer,
+                              nsISupports* aExtraInfo,
+                              nsIStreamListener** aDocListenerResult,
+                              nsIContentViewer** aDocViewerResult);
 
-  NS_IMETHOD CreateInstanceForDocument(nsISupports* aContainer,
-                                       nsIDocument* aDocument,
-                                       const char *aCommand,
-                                       nsIContentViewer** aDocViewerResult);
+    NS_IMETHOD CreateInstanceForDocument(nsISupports* aContainer,
+                                         nsIDocument* aDocument,
+                                         const char *aCommand,
+                                         nsIContentViewer** aDocViewerResult);
 };
 
 
@@ -76,7 +76,8 @@ private:
 
 	nsIRDFResource		*kNC_Child;
 	nsIRDFResource		*kNC_loading;
-    nsIRDFResource      *kNC_URL;
+	nsIRDFResource		*kNC_URL;
+	nsIRDFResource		*kNC_IsContainer;
 	nsIRDFLiteral		*kTrueLiteral;
 	nsIRDFLiteral		*kFalseLiteral;
 
@@ -97,21 +98,21 @@ protected:
 	nsCString			        mBaseURL;
 	nsCString                   mEncoding;
 
-			    nsHTTPIndex(nsISupports* aContainer);
+    nsHTTPIndex(nsISupports* aContainer);
 	nsresult	CommonInit(void);
 	nsresult 	Init(nsIURI* aBaseURL);
 	PRBool		isWellknownContainerURI(nsIRDFResource *r);
     
     // Get the destination of the nsIRDFResource
-    char* GetDestination(nsIRDFResource *r);
+    void GetDestination(nsIRDFResource *r, nsXPIDLCString& dest);
     static void FireTimer(nsITimer* aTimer, void* aClosure);
 
 public:
-			    nsHTTPIndex();
+    nsHTTPIndex();
 	virtual		~nsHTTPIndex();
 	nsresult	Init(void);
 
-static	nsresult	Create(nsIURI* aBaseURI, nsISupports* aContainer, nsIHTTPIndex** aResult);
+    static	nsresult	Create(nsIURI* aBaseURI, nsISupports* aContainer, nsIHTTPIndex** aResult);
 
 	// nsIHTTPIndex interface
 	NS_DECL_NSIHTTPINDEX
