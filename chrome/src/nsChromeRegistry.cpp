@@ -42,7 +42,10 @@
 #include "nsNetUtil.h"
 #include "nsFileLocations.h"
 #include "nsIFileLocator.h"
+#include "nsPIDOMWindow.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMWindowCollection.h"
+#include "nsIDOMLocation.h"
 #include "nsIWindowMediator.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -56,6 +59,8 @@
 #include "nsISupportsArray.h"
 #include "nsICSSLoader.h"
 #include "nsIDocumentObserver.h"
+#include "nsIXULDocument.h"
+#include "nsINameSpaceManager.h"
 
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -199,8 +204,6 @@ protected:
                               nsIRDFContainer *aContainer,
                               nsIRDFDataSource *aDataSource);
 
-    static void RemoveStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument);
-
 private:
     NS_IMETHOD ReallyRemoveOverlayFromDataSource(const PRUnichar *aDocURI, char *aOverlayURI);
     NS_IMETHOD LoadDataSource(const nsCAutoString &aFileName, nsIRDFDataSource **aResult,
@@ -210,6 +213,9 @@ private:
     NS_IMETHOD GetProfileRoot(nsCAutoString& aFileURL);
 
     NS_IMETHOD RefreshWindow(nsIDOMWindow* aWindow);
+
+		NS_IMETHOD ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocument* aDocument);
+
 };
 
 PRUint32 nsChromeRegistry::gRefCnt  ;
@@ -777,8 +783,6 @@ void BreakProviderAndRemainingFromPath(const char* i_path, char** o_provider, ch
 
 NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 {
-  printf("Refreshing skins!\n");
-
   nsresult rv;
 
   // Flush the style sheet cache completely.
@@ -788,21 +792,16 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
     xulCache->Flush();
   }
   
-  printf("Trying to obtain the window mediator.\n");
-
   // Get the window mediator
   NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
-
-    printf("Trying to enumerate...\n");
 
     if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator)))) {
       // Get each dom window
       PRBool more;
       windowEnumerator->HasMoreElements(&more);
       while (more) {
-        printf("Have something that might be a window.\n");
         nsCOMPtr<nsISupports> protoWindow;
         rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
         if (NS_SUCCEEDED(rv) && protoWindow) {
@@ -820,98 +819,105 @@ NS_IMETHODIMP nsChromeRegistry::RefreshSkins()
 
 NS_IMETHODIMP nsChromeRegistry::RefreshWindow(nsIDOMWindow* aWindow)
 {
-  printf("Refreshing Window!\n");
-
-  nsresult rv;
-
-  // Get the XUL cache.
-  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "components://netscape/rdf/xul-prototype-cache", &rv);
-  
   // Get the DOM document.
   nsCOMPtr<nsIDOMDocument> domDocument;
   aWindow->GetDocument(getter_AddRefs(domDocument));
   if (!domDocument)
     return NS_OK;
 
-  nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
-  if (!document)
-    return NS_OK;
+	nsCOMPtr<nsIDocument> document = do_QueryInterface(domDocument);
+	if (!document)
+	  return NS_OK;
 
-  nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
-  nsCOMPtr<nsICSSLoader> cssLoader;
-  container->GetCSSLoader(*getter_AddRefs(cssLoader));
+  nsCOMPtr<nsIXULDocument> xulDoc = do_QueryInterface(domDocument);
+  if (xulDoc) {
+		
+		nsCOMPtr<nsIHTMLContentContainer> container = do_QueryInterface(document);
+		nsCOMPtr<nsICSSLoader> cssLoader;
+		container->GetCSSLoader(*getter_AddRefs(cssLoader));
 
-  // Build an array of nsIURIs of style sheets we need to load.
-  nsCOMPtr<nsISupportsArray> urls;
-  NS_NewISupportsArray(getter_AddRefs(urls));
+		// Build an array of nsIURIs of style sheets we need to load.
+		nsCOMPtr<nsISupportsArray> urls;
+		NS_NewISupportsArray(getter_AddRefs(urls));
 
-  PRInt32 count = document->GetNumberOfStyleSheets();
+		PRInt32 count = document->GetNumberOfStyleSheets();
   
-  // Iterate over the style sheets.
-  for (PRInt32 i = 0; i < count; i++) {
-    // Get the style sheet
-    nsCOMPtr<nsIStyleSheet> styleSheet = getter_AddRefs(document->GetStyleSheetAt(i));
+		// Iterate over the style sheets.
+		for (PRInt32 i = 0; i < count; i++) {
+			// Get the style sheet
+			nsCOMPtr<nsIStyleSheet> styleSheet = getter_AddRefs(document->GetStyleSheetAt(i));
     
-    // Make sure we aren't the special style sheets that never change.  We
-    // want to skip those.
-    nsCOMPtr<nsIHTMLStyleSheet> attrSheet;
-    container->GetAttributeStyleSheet(getter_AddRefs(attrSheet));
+			// Make sure we aren't the special style sheets that never change.  We
+			// want to skip those.
+			nsCOMPtr<nsIHTMLStyleSheet> attrSheet;
+			container->GetAttributeStyleSheet(getter_AddRefs(attrSheet));
 
-    nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
-    container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));
+			nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
+			container->GetInlineStyleSheet(getter_AddRefs(inlineSheet));
 
-    nsCOMPtr<nsIStyleSheet> attr = do_QueryInterface(attrSheet);
-    nsCOMPtr<nsIStyleSheet> inl = do_QueryInterface(inlineSheet);
-    if ((attr.get() != styleSheet.get()) &&
-      (inl.get() != styleSheet.get())) {
-      // Get the URI and add it to our array.
-      nsCOMPtr<nsIURI> uri;
-      styleSheet->GetURL(*getter_AddRefs(uri));
-      urls->AppendElement(uri);
+			nsCOMPtr<nsIStyleSheet> attr = do_QueryInterface(attrSheet);
+			nsCOMPtr<nsIStyleSheet> inl = do_QueryInterface(inlineSheet);
+			if ((attr.get() != styleSheet.get()) &&
+				(inl.get() != styleSheet.get())) {
+				// Get the URI and add it to our array.
+				nsCOMPtr<nsIURI> uri;
+				styleSheet->GetURL(*getter_AddRefs(uri));
+				urls->AppendElement(uri);
       
-      // Remove the sheet. 
-      count--;
-      i--;
-      RemoveStyleSheet(styleSheet, document);
-    }
-  }
+				// Remove the sheet. 
+				count--;
+				i--;
+				document->RemoveStyleSheet(styleSheet);
+			}
+		}
   
-  // Iterate over the URL array and kick off an asynchronous load of the
-  // sheets for our doc.
-  PRUint32 urlCount;
-  urls->Count(&urlCount);
-  for (PRUint32 j = 0; j < urlCount; j++) {
-    nsCOMPtr<nsISupports> supports = getter_AddRefs(urls->ElementAt(j));
-    nsCOMPtr<nsIURL> url = do_QueryInterface(supports);
-    
-  }
+		// Iterate over the URL array and kick off an asynchronous load of the
+		// sheets for our doc.
+		PRUint32 urlCount;
+		urls->Count(&urlCount);
+		for (PRUint32 j = 0; j < urlCount; j++) {
+			nsCOMPtr<nsISupports> supports = getter_AddRefs(urls->ElementAt(j));
+			nsCOMPtr<nsIURL> url = do_QueryInterface(supports);
+			ProcessStyleSheet(url, cssLoader, document);
+		}
+	}
 
   // Get our frames object
+	nsCOMPtr<nsIDOMWindowCollection> frames;
+	aWindow->GetFrames(getter_AddRefs(frames));
+	if (!frames)
+		return NS_OK;
 
   // Walk the frames
-  /*for ( ; ;) {
+	PRUint32 length;
+	frames->GetLength(&length);
+  for (PRUint32 i = 0; i < length; i++) {
     // For each frame, recur.
-  }*/
+		nsCOMPtr<nsIDOMWindow> childWindow;
+		frames->Item(i, getter_AddRefs(childWindow));
+		if (childWindow)
+			RefreshWindow(childWindow);
+  }
 
   return NS_OK;
 }
 
-void nsChromeRegistry::RemoveStyleSheet(nsIStyleSheet* aSheet, nsIDocument* aDocument)
+NS_IMETHODIMP 
+nsChromeRegistry::ProcessStyleSheet(nsIURL* aURL, nsICSSLoader* aLoader, nsIDocument* aDocument)
 {
-  PRInt32 count = aDocument->GetNumberOfShells();
-  for (PRInt32 i = 0; i < count; i++) {
-    nsCOMPtr<nsIPresShell> shell = getter_AddRefs(aDocument->GetShellAt(i));
+	PRBool doneLoading;
+  nsresult rv = aLoader->LoadStyleLink(nsnull, // anElement
+															aURL,
+															"", // aTitle
+															"", // aMedia
+															kNameSpaceID_Unknown,
+                              aDocument->GetNumberOfStyleSheets(),
+                              nsnull,
+                              doneLoading); // Ignore doneLoading. Don't care.
 
-    nsCOMPtr<nsIStyleSet> set;
-    shell->GetStyleSet(getter_AddRefs(set));
-    if (set) {
-      set->RemoveDocStyleSheet(aSheet);
-      nsCOMPtr<nsIDocumentObserver> obs = do_QueryInterface(shell);
-      if (obs)
-        obs->StyleSheetRemoved(aDocument, aSheet);
-    }
-  }
+  return rv;
 }
+
 
 NS_IMETHODIMP nsChromeRegistry::ApplyTheme(const PRUnichar *themeFileName)
 {
@@ -1219,5 +1225,60 @@ nsChromeRegistry::GetProfileRoot(nsCAutoString& aFileURL)
 NS_IMETHODIMP
 nsChromeRegistry::ReloadChrome()
 {
+	// Do a reload of all top level windows.
+	nsresult rv;
+
+  // Flush the cache completely.
+  NS_WITH_SERVICE(nsIXULPrototypeCache, xulCache, "components://netscape/rdf/xul-prototype-cache", &rv);
+  if (NS_SUCCEEDED(rv) && xulCache) {
+    xulCache->Flush();
+  }
+  
+  // Get the window mediator
+  NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+
+    if (NS_SUCCEEDED(windowMediator->GetEnumerator(nsnull, getter_AddRefs(windowEnumerator)))) {
+      // Get each dom window
+      PRBool more;
+      windowEnumerator->HasMoreElements(&more);
+      while (more) {
+        nsCOMPtr<nsISupports> protoWindow;
+        rv = windowEnumerator->GetNext(getter_AddRefs(protoWindow));
+        if (NS_SUCCEEDED(rv) && protoWindow) {
+          nsCOMPtr<nsPIDOMWindow> domWindow = do_QueryInterface(protoWindow);
+          if (domWindow) {
+						nsCOMPtr<nsIDOMLocation> location;
+						domWindow->GetLocation(getter_AddRefs(location));
+						if (location)
+              location->Reload(PR_FALSE);
+					}
+        }
+        windowEnumerator->HasMoreElements(&more);
+      }
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetSkins(nsISupportsArray** aResult)
+{
+	// XXX Fill in.
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetPackages(nsISupportsArray** aResult)
+{
+	// XXX Fill in.
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsChromeRegistry::GetLocales(nsISupportsArray** aResult)
+{
+	// XXX Fill in.
   return NS_OK;
 }

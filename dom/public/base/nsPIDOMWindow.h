@@ -27,7 +27,7 @@
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
-
+#include "nsIDOMLocation.h"
 
 #define NS_PIDOMWINDOW_IID \
 { 0x3aa80781, 0x7e6a, 0x11d3, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
@@ -38,6 +38,8 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_PIDOMWINDOW_IID; return iid; }
 
   NS_IMETHOD GetPrivateParent(nsPIDOMWindow** aResult)=0;
+
+  NS_IMETHOD GetLocation(nsIDOMLocation** aLocation) = 0;
 };
 
 #endif // nsPIDOMWindow_h__
