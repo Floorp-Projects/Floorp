@@ -64,29 +64,6 @@ XFE_BookmarkFrame::~XFE_BookmarkFrame()
 	main_bm_context = NULL;
 }
 
-extern "C" void
-fe_showBookmarks(Widget /*toplevel*/)
-{
-    //xxx Replace with NavCenter opened to Bookmarks resource.
-
-#ifdef OLD_BOOKMARKS
-  XFE_BookmarkFrame * bm_frame = XFE_BookmarkFrame::getBookmarkFrame();
-
-  XP_ASSERT( bm_frame != NULL );
-
-  bm_frame->show();
-
-#endif /*OLD_BOOKMARKS*/
-
-}
-
-extern "C" void
-fe_showHistory(Widget /*toplevel*/)
-{
-    //xxx Replace with NavCenter opened to Bookmarks resource.
-    //xxx putting this orphaned function here for now.
-}
-
 extern "C" MWContext* fe_getBookmarkContext()
 {
     if (XFE_BookmarkFrame::main_bm_context == NULL)
