@@ -26,6 +26,8 @@
 #include "nsCollationMac.h"
 #include "nsDateTimeFormatMac.h"
 #include "nsLocaleFactoryMac.h"
+#include "nsDateTimeFormatCID.h"
+#include "nsCollationCID.h"
 
 //
 // kLocaleFactory for the nsILocaleFactory interface
@@ -41,6 +43,9 @@ NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);                                                         
 NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);                                                         
 NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
+NS_DEFINE_CID(kCollationFactoryCID, NS_COLLATIONFACTORY_CID);
+NS_DEFINE_CID(kCollationCID, NS_COLLATION_CID);
+NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* serviceMgr,
 											nsIFactory **aFactory);
@@ -88,3 +93,58 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 
 	return res;
 }
+
+extern "C" NS_EXPORT nsresult NSRegisterSelf(const char * path)
+{
+  nsresult res;
+
+  //
+  // register the generic factory
+  //
+  res = nsRepository::RegisterFactory(kLocaleFactoryCID,path,PR_TRUE,PR_TRUE);
+  NS_ASSERTION(res==NS_OK,"nsLocaleTest: RegisterFactory failed.");
+  if (res!=NS_OK) return res;
+
+  //
+  // register the collation factory
+  //
+  res = nsRepository::RegisterFactory(kCollationFactoryCID, path, PR_TRUE, PR_TRUE);
+  NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register CollationFactory failed.");
+  if (NS_FAILED(res)) return res;
+  
+  //
+  // register the collation interface
+  //
+  res = nsRepository::RegisterFactory(kCollationCID, path, PR_TRUE, PR_TRUE);
+  NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register Collation failed.");
+  if (NS_FAILED(res)) return res;
+  
+  //
+  // register the date time formatter
+  //
+  res = nsRepository::RegisterFactory(kDateTimeFormatCID, path, PR_TRUE, PR_TRUE);
+  NS_ASSERTION(res==NS_OK,"nsLocaleTest: Register DateTimeFormat failed.");
+  if (NS_FAILED(res)) return res;
+
+  return NS_OK;
+}
+
+extern "C" NS_EXPORT nsresult NSUnregisterSelf(const char * path)
+{
+  nsresult res;
+
+  res = nsRepository::UnregisterFactory(kLocaleFactoryCID, path);
+  if (res!=NS_OK) return res;
+
+  res = nsRepository::UnregisterFactory(kCollationFactoryCID, path);
+  if (res!=NS_OK) return res;
+
+  res = nsRepository::UnregisterFactory(kCollationCID, path);
+  if (res!=NS_OK) return res;
+
+  res = nsRepository::UnregisterFactory(kDateTimeFormatCID, path);
+  if (res!=NS_OK) return res;
+
+  return NS_OK;
+}
+
