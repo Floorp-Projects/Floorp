@@ -2654,7 +2654,7 @@ pk11ListCertCallback(CERTCertificate *cert, SECItem *derCert, void *arg)
 	isUnique = PR_TRUE;
     }
     /* at this point the nickname is correct for the cert. save it for later */
-    if (!isUnique) {
+    if (!isUnique && cert->nickname) {
          nickname = PORT_ArenaStrdup(listCertP->certList->arena,cert->nickname);
     }
     if (derCert == NULL) {
