@@ -1,14 +1,10 @@
-#!/usr/local/bin/perl
-
+#!perl
 
 #!#perl# -T --
 
-# This script does not need to run under taint perl.
+# This script does not need to run under taint perl since it will be
+# run from cron with the same uid as tinderbox.
 
-# A script for removing old tar files from a given directory.  I use
-# it to remove the tar'ed up results of tinderbox builds.  I keep each
-# build in a file which encodes the date (cvs -D timestamp) like:
-# 		 SEAMONKEY.2001-08-21.20:05.tar.gz
 
 # The contents of this file are subject to the Mozilla Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -31,8 +27,8 @@
 # complete rewrite by Ken Estes, Mail.com (kestes@staff.mail.com).
 # Contributor(s): 
 
-# $Revision: 1.4 $
-# $Date: 2001/10/05 22:42:12 $
+# $Revision: 1.5 $
+# $Date: 2001/10/08 19:25:33 $
 # $Author: kestes%walrus.com $
 # $Name:  $
 
@@ -73,11 +69,28 @@ directories which needs pruning.
 Summary
 
 A simple script to check delete old files which accumulate in a set of
-directories.  The files are sorted by date and kept according to this
-rule: The most recent min-archive-files are kept and ene file each day
-is kept for the previous max-archive-days. All other files are
-deleted.  An index.html file is automatiaclly generated for each
-directory traversed.
+directories.  
+
+I use this script to remove the tar'ed up results of tinderbox builds.
+Each tinderbox build stores its resulting binary files in a directory
+whose name is the name of the branch.  I keep tar filenames
+encode the date cvs checkout timestamp date (cvs -D timestamp) like:
+
+ 		 SEAMONKEY.2001-08-21.200500.tar.gz
+
+The source files used to build this tar file can be recoved with this
+command:
+
+	cvs checkout -r SEAMONKEY -D '2001-08-21 20:05:00' all
+
+
+A new build is completed about once an hour and this script is used
+to ensure that recent files and a few historical files are saved.
+
+The files are sorted by date and kept according to this rule: The most
+recent min-archive-files are kept and if there are more then
+min-archive-files then additionally one file each day is kept for the
+previous max-archive-days.  All other files are deleted.
 
 
 EOF
@@ -121,6 +134,42 @@ sub untaint_digits {
   return $out;
 }
 
+sub format_digits_human_readable {
+    my ($num) = @_;
+
+    my $break = 1000_000_000;
+    my $char = "G";
+    if ($num >= $break) {
+	my $trunc = ( $num - ($num % $break) ) / $break;
+	$out = $trunc;
+	$padding = ' ' x (3-length($out));
+	return $padding.$out.$char;
+    }
+
+    $break = $break / 1000;
+    my $char = "M";
+    if ($num >= $break) {
+	my $trunc = ( $num - ($num % $break) ) / $break;
+	$out = $trunc;
+	$padding = ' ' x (3-length($out));
+	return $padding.$out.$char;
+    }
+
+    $break = $break / 1000;
+    my $char = "K";
+    if ($num >= $break) {
+	my $trunc = ( $num - ($num % $break) ) / $break;
+	$out = $trunc;
+	$padding = ' ' x (3-length($out));
+	return $padding.$out.$char;
+    }
+
+    $char='';
+    $out = $num;
+    $padding = ' ' x (3-length($out));
+    return $padding.$out.$char;
+}
+
 
 sub get_mtime {
     my ($file_name) = @_;
@@ -141,6 +190,28 @@ sub get_mtime {
 
     $MTIME{$file_name} = $mtime;
     return $mtime;
+}
+
+
+sub get_size {
+    my ($file_name) = @_;
+    
+    ($file_name) ||
+	die("Function get_mtime requires a non null filename. \n");
+
+    # use a cached value if we have it.
+    ($size{$file_name}) &&
+	return $size{$file_name};
+
+    my ($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
+	$atime,$mtime,$ctime,$blksize,$blocks)
+	= stat($file_name);
+    
+    ($mtime) or 
+	die("Could not stat file: $file: $! \n");
+
+    $SIZE{$file_name} = $size;
+    return $size;
 }
 
 
@@ -258,7 +329,6 @@ sub purge_dirs {
 sub print_dirs_index {
     my @dir_list = @_;
 
-
     foreach $dir (@dir_list) {
 
 	my $index_file = "$dir/index.html";
@@ -267,15 +337,29 @@ sub print_dirs_index {
 
 	print INDEX "<html>\n";
 	print INDEX "<pre>\n";
+	print INDEX "Files in Directory: $dir\n";
+	print INDEX "as of: ".localtime(time())."\n";
 	print INDEX "\n";
 
 	my @file_set = time_sorted_dir_files($dir);
 	
+	# we do not want the index file in the output.  All the other
+	# files listed are tar files so the output should appear as a list
+	# of tar files.
+
+	@file_set = grep (!/^$index_file$/, @file_set);
+
 	foreach $file_name (@file_set) {
 	    my $basename = basename($file_name);
 	    my $href = "<A  HREF=\"./$basename\" >$basename</A>";	
-	    print INDEX "$href ".localtime(get_mtime($file_name))."\n";
-	    print INDEX "<br>\n";
+	    print INDEX (
+			 $href.
+			 " (".
+			 format_digits_human_readable(get_size($file_name)).
+			 ") ".
+			 localtime(get_mtime($file_name)).
+			 "\n"
+			 );
 	    print INDEX "\n";
 		    
 	} # foreach $file_name
