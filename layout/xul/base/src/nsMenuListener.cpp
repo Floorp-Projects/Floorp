@@ -27,6 +27,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIDOMEventListener.h"
+#include "nsIDOMNSUIEvent.h"
 
 // Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
@@ -85,6 +86,7 @@ nsresult
 nsMenuListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
   PRInt32 menuAccessKey = -1;
+  
   nsMenuBarListener::GetMenuAccessKey(&menuAccessKey);
   if (menuAccessKey) {
     PRUint32 theChar;
@@ -148,6 +150,15 @@ nsMenuListener::KeyDown(nsIDOMEvent* aKeyEvent)
 nsresult
 nsMenuListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {
+  // if event has already been handled, bail
+  nsCOMPtr<nsIDOMNSUIEvent> uiEvent ( do_QueryInterface(aKeyEvent) );
+  if ( uiEvent ) {
+    PRBool eventHandled = PR_FALSE;
+    uiEvent->GetPreventDefault ( &eventHandled );
+    if ( eventHandled )
+      return NS_OK;       // don't consume event
+  }
+  
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   PRUint32 theChar;
 	keyEvent->GetKeyCode(&theChar);
