@@ -82,6 +82,7 @@ public:
 
 private:
   void CreateImage(nsDrawingSurface aSurface);
+  void ConvertImage(nsDrawingSurface aSurface);
 
   /** 
    * Calculate the amount of memory needed for the initialization of the image
@@ -91,14 +92,14 @@ private:
 
 
 private:
-  PRInt32 mWidth;
-  PRInt32 mHeight;
-  PRInt32 mDepth;       // bits per pixel
-  PRInt32 mRowBytes;
-  Pixmap  mThePixMap;
-  PRUint8 * mImageBits;
-  PRInt32   mSizeImage;
-  XImage  * mImage ;
+  PRInt32    mWidth;
+  PRInt32    mHeight;
+  PRInt32    mDepth;       // bits per pixel
+  PRInt32    mRowBytes;
+  Pixmap     mThePixMap;
+  PRUint8    *mImageBits;
+  PRInt32    mSizeImage;
+  XImage     *mImage ;
   nsColorMap *mColorMap;
   PRInt16     mNumPalleteColors;
   PRInt8      mNumBytesPixel;
