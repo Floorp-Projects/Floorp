@@ -89,19 +89,15 @@ nsInterfaceInfoManager::GetAllocator(nsInterfaceInfoManager* iim /*= NULL*/)
     return al;
 }
 
-static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
-
 nsInterfaceInfoManager::nsInterfaceInfoManager()
     : typelibRecords(NULL), allocator(NULL), ctor_succeeded(PR_FALSE)
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
-    nsServiceManager::GetService(kAllocatorCID,
-                                 NS_GET_IID(nsIAllocator),
-                                 (nsISupports **)&this->allocator);
-
-    PR_ASSERT(this->allocator != NULL);
+    // GetGlobalAllocator add-refs its return value
+    this->allocator = dont_AddRef(nsAllocator::GetGlobalAllocator());
+    PR_ASSERT(allocator.get());
 
     if(NS_SUCCEEDED(this->initInterfaceTables()))
         ctor_succeeded = PR_TRUE;
@@ -110,12 +106,13 @@ nsInterfaceInfoManager::nsInterfaceInfoManager()
 static
 XPTHeader *getHeader(const char *filename, nsIAllocator *al) {
     XPTState *state = NULL;
-    XPTCursor curs, *cursor = &curs;
+    XPTCursor curs;
     XPTHeader *header = NULL;
     PRFileInfo fileinfo;
     PRUint32 flen;
     char *whole = NULL;
     PRFileDesc *in = NULL;
+    XPTCursor *cursor = &curs;
 
     if (PR_GetFileInfo(filename, &fileinfo) != PR_SUCCESS) {
         NS_ERROR("PR_GetFileInfo failed");
@@ -331,11 +328,10 @@ nsInterfaceInfoManager::initInterfaceTables()
         return NS_ERROR_FAILURE;
     }
 
-    // this code stolen from SetupRegistry; it might bear further
-    // examination, as the code there doesn't look quite done.
-    nsSpecialSystemDirectory sysdir(nsSpecialSystemDirectory::OS_CurrentProcessDirectory);
-    sysdir += "components";
-//    const char *xptdirname = sysdir.GetCString(); // native path
+    // this seems to be the One True Way to get the components directory
+    // (frankm@eng.sun.com, 9.9.99)
+    nsSpecialSystemDirectory 
+        sysdir(nsSpecialSystemDirectory::XPCOM_CurrentProcessComponentDirectory);
     
 #ifdef XP_MAC
 	PRBool wasAlias;
