@@ -41,9 +41,9 @@ clientThreadFunc(void *arg)
     char buf[128];
     int i;
 
-    addr.inet.family = AF_INET;
+    addr.inet.family = PR_AF_INET;
     addr.inet.port = PR_htons(port);
-    addr.inet.ip = PR_htonl(INADDR_LOOPBACK);
+    addr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
     PR_snprintf(buf, sizeof(buf), "%hu", port);
 
     for (i = 0; i < 5; i++) {
@@ -79,8 +79,8 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Can't create a new TCP socket\n");
 	exit(1);
     }
-    addr.inet.family = AF_INET;
-    addr.inet.ip = PR_htonl(INADDR_ANY);
+    addr.inet.family = PR_AF_INET;
+    addr.inet.ip = PR_htonl(PR_INADDR_ANY);
     addr.inet.port = PR_htons(0);
     if (PR_Bind(listenSock1, &addr) == PR_FAILURE) {
 	fprintf(stderr, "Can't bind socket\n");
@@ -100,8 +100,8 @@ int main(int argc, char **argv)
 	fprintf(stderr, "Can't create a new TCP socket\n");
 	exit(1);
     }
-    addr.inet.family = AF_INET;
-    addr.inet.ip = PR_htonl(INADDR_ANY);
+    addr.inet.family = PR_AF_INET;
+    addr.inet.ip = PR_htonl(PR_INADDR_ANY);
     addr.inet.port = PR_htons(0);
     if (PR_Bind(listenSock2, &addr) == PR_FAILURE) {
 	fprintf(stderr, "Can't bind socket\n");
