@@ -60,17 +60,11 @@ function onLoad()
 
   doSetOKCancel(open, 0, 0, 0);
   
+  dialog.input.focus();
   if (pref) {
-    try {
-      dialog.input.value = pref.CopyUnicharPref("general.open_location.last_url");
-      // Select contents of input field
-      // XXX should probably be done automatically
-      dialog.input.select();
-    } catch (ex) {
-      // the pref was probably empty
-      // give up and just set focus to the field
-      dialog.input.focus();
-    }
+    dialog.input.value = pref.CopyUnicharPref("general.open_location.last_url");     
+    if (dialog.input.value)
+      dialog.input.select(); // XXX should probably be done automatically
   }
   
   doEnabling();
