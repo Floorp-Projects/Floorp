@@ -48,6 +48,8 @@ class nsIAtom;
 class nsStyleChangeList;
 class nsILayoutHistoryState;
 
+struct CantRenderReplacedElementEvent;
+
 // Option flags for GetFrameProperty() member function
 #define NS_IFRAME_MGR_REMOVE_PROP   0x0001
 
