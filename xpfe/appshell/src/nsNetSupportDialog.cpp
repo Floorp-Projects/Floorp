@@ -38,7 +38,9 @@
 #include "nsIWebShellWindow.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIURL.h"
-
+#include "nsICommonDialogs.h"
+#include "nsIWindowMediator.h"
+#include "nsIDOMWindow.h"
 /* Define Class IDs */
 
 static NS_DEFINE_IID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
@@ -55,6 +57,9 @@ static NS_DEFINE_IID(kIDOMEventReceiverIID,   NS_IDOMEVENTRECEIVER_IID);
 static NS_DEFINE_IID(kINetSupportDialogIID,   NS_INETSUPPORTDIALOGSERVICE_IID);
 #endif
 static NS_DEFINE_IID(kIFactoryIID,         NS_IFACTORY_IID);
+
+static NS_DEFINE_CID( kCommonDialogsCID,          NS_CommonDialog_CID);
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 // Copy and paste
 #define APP_DEBUG 1
 static nsresult setAttribute( nsIWebShell *shell,
@@ -333,6 +338,21 @@ NS_IMETHODIMP nsNetSupportDialog::Alert(const PRUnichar *text)
 NS_IMETHODIMP nsNetSupportDialog::Alert( const nsString &aText )
 #endif
 {
+	 nsresult rv;
+	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+	 if ( NS_SUCCEEDED ( rv ) )
+	 {
+	 	nsCOMPtr< nsIDOMWindow> window;
+	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
+	 	nsCOMPtr<nsICommonDialogs> dialogService;
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+                                                      (void**)&dialogService );
+        if( NS_SUCCEEDED ( rv ) )
+        	rv = dialogService->Alert( window, text );
+	 
+	 }
+	 return rv;
+#if 0
 	Init();
 #ifdef NECKO
   nsAutoString aText(text);
@@ -341,6 +361,7 @@ NS_IMETHODIMP nsNetSupportDialog::Alert( const nsString &aText )
 	nsString  url( "chrome://navigator/content/NetSupportAlert.xul") ;
 	DoDialog( url );
 	return NS_OK;
+#endif
 }
 
 #ifdef NECKO
@@ -349,6 +370,22 @@ NS_IMETHODIMP nsNetSupportDialog::Confirm(const PRUnichar *text, PRBool *returnV
 NS_IMETHODIMP nsNetSupportDialog::Confirm( const nsString &aText, PRInt32* returnValue )
 #endif
 {
+
+ nsresult rv;
+	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+	 if ( NS_SUCCEEDED ( rv ) )
+	 {
+	 	nsCOMPtr< nsIDOMWindow> window;
+	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
+	 	nsCOMPtr<nsICommonDialogs> dialogService;
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+                                                      (void**)&dialogService );
+        if( NS_SUCCEEDED ( rv ) )
+        	rv = dialogService->Confirm( window, text, returnValue );
+	 
+	 }
+	 return rv;
+#if 0
 	Init();
 #ifdef NECKO
   nsAutoString aText(text);
@@ -357,7 +394,8 @@ NS_IMETHODIMP nsNetSupportDialog::Confirm( const nsString &aText, PRInt32* retur
 	mReturnValue = returnValue;
 	nsString  url( "chrome://navigator/content/NetSupportConfirm.xul") ; 
 	DoDialog( url  );
-	return NS_OK;	
+	return NS_OK;
+#endif
 }
 
 #ifdef NECKO
@@ -369,6 +407,21 @@ NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck(const PRUnichar *text,
 NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue )
 #endif
 {
+ nsresult rv;
+	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+	 if ( NS_SUCCEEDED ( rv ) )
+	 {
+	 	nsCOMPtr< nsIDOMWindow> window;
+	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
+	 	nsCOMPtr<nsICommonDialogs> dialogService;
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+                                                      (void**)&dialogService );
+        if( NS_SUCCEEDED ( rv ) )
+        	rv = dialogService->ConfirmCheck( window, text, checkMsg, checkValue, returnValue );
+	 
+	 }
+	 return rv;
+#if 0
 	Init();
 #ifdef NECKO
   nsAutoString aText(text);
@@ -380,7 +433,8 @@ NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheck( const nsString &aText, const nsS
 	mCheckMsg = &aCheckMsg;
 	nsString  url( "chrome://navigator/content/NetSupportConfirmCheck.xul") ; 
 	DoDialog( url  );
-	return NS_OK;	
+	return NS_OK;
+#endif
 }
 
 #ifdef NECKO
@@ -409,6 +463,7 @@ NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheckYN(const PRUnichar *text,
 NS_IMETHODIMP	nsNetSupportDialog::ConfirmCheckYN( const nsString &aText, const nsString& aCheckMsg, PRInt32* returnValue, PRBool* checkValue )
 #endif
 {
+	
 	Init();
 #ifdef NECKO
   nsAutoString aText(text);
@@ -432,6 +487,21 @@ NS_IMETHODIMP nsNetSupportDialog::Prompt(const PRUnichar *text,
 NS_IMETHODIMP nsNetSupportDialog::Prompt(	const nsString &aText, const nsString &aDefault,nsString &aResult, PRInt32* returnValue )
 #endif
 {
+ nsresult rv;
+	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+	 if ( NS_SUCCEEDED ( rv ) )
+	 {
+	 	nsCOMPtr< nsIDOMWindow> window;
+	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
+	 	nsCOMPtr<nsICommonDialogs> dialogService;
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+                                                      (void**)&dialogService );
+        if( NS_SUCCEEDED ( rv ) )
+        	rv = dialogService->Prompt( window, text, defaultText, resultText, returnValue );
+	 
+	 }
+	 return rv;
+#if 0
   Init();
 #ifdef NECKO
   nsAutoString aText(text);
@@ -448,6 +518,7 @@ NS_IMETHODIMP nsNetSupportDialog::Prompt(	const nsString &aText, const nsString 
   *resultText = aResult.ToNewUnicode();
 #endif
 	return NS_OK;	
+#endif
 }
 
 #ifdef NECKO
@@ -461,6 +532,21 @@ NS_IMETHODIMP nsNetSupportDialog::PromptUserAndPassword(  const nsString &aText,
                                         nsString &aPassword,PRInt32* returnValue )
 #endif
 {
+	 nsresult rv;
+	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+	 if ( NS_SUCCEEDED ( rv ) )
+	 {
+	 	nsCOMPtr< nsIDOMWindow> window;
+	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
+	 	nsCOMPtr<nsICommonDialogs> dialogService;
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+                                                      (void**)&dialogService );
+        if( NS_SUCCEEDED ( rv ) )
+        	rv = dialogService->PromptUsernameAndPassword( window, text, user, pwd, returnValue );
+	 
+	 }
+	 return rv;
+#if 0
 	Init();
 #ifdef NECKO
   nsAutoString aText(text);
@@ -477,7 +563,8 @@ NS_IMETHODIMP nsNetSupportDialog::PromptUserAndPassword(  const nsString &aText,
   *user = aUser.ToNewUnicode();
   *pwd = aPassword.ToNewUnicode();
 #endif
-	return NS_OK;	
+	return NS_OK;
+#endif	
 }
 
 #ifdef NECKO
@@ -489,6 +576,21 @@ NS_IMETHODIMP nsNetSupportDialog::PromptPassword( 	const nsString &aText,
                                      	nsString &aPassword, PRInt32* returnValue )
 #endif
 {
+	 nsresult rv;
+	 NS_WITH_SERVICE(nsIWindowMediator, windowMediator, kWindowMediatorCID, &rv);
+	 if ( NS_SUCCEEDED ( rv ) )
+	 {
+	 	nsCOMPtr< nsIDOMWindow> window;
+	 	windowMediator->GetMostRecentWindow( NULL, getter_AddRefs( window ) );
+	 	nsCOMPtr<nsICommonDialogs> dialogService;
+	 	rv = nsComponentManager::CreateInstance( kCommonDialogsCID,0, nsICommonDialogs::GetIID(),
+                                                      (void**)&dialogService );
+        if( NS_SUCCEEDED ( rv ) )
+        	rv = dialogService->PromptPassword( window, text, pwd, returnValue );
+	 
+	 }
+	 return rv;
+#if 0
  	Init();
 #ifdef NECKO
   nsAutoString aText(text);
@@ -503,6 +605,7 @@ NS_IMETHODIMP nsNetSupportDialog::PromptPassword( 	const nsString &aText,
   *pwd = aPassword.ToNewUnicode();
 #endif
  	return NS_OK;	
+#endif
 }
 
 
