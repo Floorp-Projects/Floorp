@@ -109,13 +109,13 @@ NS_IMPL_ISUPPORTS1(nsXBLPrototypeHandler, nsIXBLPrototypeHandler)
 NS_IMETHODIMP
 nsXBLPrototypeHandler::EventMatched(nsIDOMEvent* aEvent, PRBool* aResult)
 {
-  nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
-  if (key)
-    *aResult = KeyEventMatched(key);
+  nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aEvent));
+  if (mouse)
+    *aResult = MouseEventMatched(mouse);
   else {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aEvent));
-    if (mouse)
-      *aResult = MouseEventMatched(mouse);
+    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
+    if (key)
+      *aResult = KeyEventMatched(key);
     else *aResult = PR_TRUE;
   }
 
