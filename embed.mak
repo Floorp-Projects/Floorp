@@ -44,6 +44,7 @@ DIRS = \
                 uriloader\exthandler \
 		intl \
 		modules\libpref \
+		jpeg \
 		modules\libimg \
 		gfx \
 		widget \
@@ -79,10 +80,14 @@ DIRS = \
 		dbm \
 		modules\libreg \
 		xpcom \
+		modules\libutil \
+		jpeg \
+		modules\libimg \
+		gfx \
+		widget \
 		js \
 		js\src\xpconnect \
 		js\src\liveconnect \
-		modules\libutil \
 		modules\zlib \
 		modules\zlib\standalone \
 		netwerk \
@@ -90,8 +95,6 @@ DIRS = \
 		uriloader \
 		intl \
 		modules\libpref \
-		modules\libimg \
-		gfx \
 		modules\oji \
 		modules\libjar \
 		caps \
@@ -100,11 +103,10 @@ DIRS = \
 		dom \
 		view \
 		layout \
-		xpfe\appfilelocprovider \
 		rdf \
 		docshell \
+		modules\appfilelocprovider \
 		webshell \
-		widget \
 		embedding \
 		editor \
 		xpfe\appshell \
@@ -117,6 +119,8 @@ DIRS = \
 
 include <$(DEPTH)\config\rules.mak>
 
+all:: build_small
+
 build_small:
 	$(MAKE) -f embed.mak export exporting=1
-	$(MAKE) -f embed.mak
+	$(MAKE) -f embed.mak install
