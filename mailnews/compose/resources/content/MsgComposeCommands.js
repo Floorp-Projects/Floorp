@@ -226,6 +226,15 @@ function ComposeLoad()
 		var opt = new Option(other_header + ":", "addr_other");
 		selectNode.add(opt, null); 
 	}
+
+    // See if we got arguments.
+    if ( window.arguments && window.arguments[0] != null ) {
+        // Window was opened via window.openDialog.  Copy argument
+        // and perform compose initialization (as if we were
+        // opened via toolkitCore's ShowWindowWithArgs).
+        document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
+        ComposeStartup();
+    }
 }
 
 function ComposeUnload(calledFromExit)
