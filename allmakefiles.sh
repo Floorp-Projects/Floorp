@@ -91,6 +91,10 @@ extensions/wallet/Makefile
 extensions/wallet/public/Makefile
 extensions/wallet/src/Makefile
 # extensions/wallet/module/Makefile
+extensions/pics/Makefile
+extensions/pics/public/Makefile
+extensions/pics/src/Makefile
+extensions/pics/tests/Makefile
 gfx/Makefile
 gfx/public/Makefile
 gfx/src/Makefile
