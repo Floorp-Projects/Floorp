@@ -70,10 +70,12 @@ else
             OS_LIBS += -lC_r -lc_r
         endif
       else
+        # makeC++SharedLib(_r) is in either /usr/lpp/xlC/bin
+        # or /usr/ibmcxx/bin.
         ifeq ($(CLASSIC_NSPR),1)
-            MKSHLIB = /usr/lpp/xlC/bin/makeC++SharedLib -p 0
+            MKSHLIB = makeC++SharedLib -p 0
         else
-            MKSHLIB = /usr/lpp/xlC/bin/makeC++SharedLib_r -p 0
+            MKSHLIB = makeC++SharedLib_r -p 0
         endif
         OS_LIBS += -ldl
       endif

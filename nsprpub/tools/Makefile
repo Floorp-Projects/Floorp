@@ -82,7 +82,7 @@ endif
 
 # AIX
 ifeq ($(OS_ARCH),AIX)
-LDOPTS += -blibpath:.:$(PWD)/$(DIST)/lib:/usr/lib/threads:/usr/lpp/xlC/lib:/usr/lib:/lib                                        
+LDOPTS += -blibpath:$(PWD)/$(DIST)/lib:/usr/lib:/lib
 LIBPR = -lnspr$(NSPR_VERSION)_shr
 LIBPLC = -lplc$(NSPR_VERSION)_shr
 endif
