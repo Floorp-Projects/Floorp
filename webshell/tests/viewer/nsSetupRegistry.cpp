@@ -190,7 +190,7 @@ static NS_DEFINE_CID(kNameSpaceManagerCID, NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 
-#if defined(XP_MAC) // XXX somebody please make dynamic registration work on Mac
+#if defined(XP_MAC) || defined (XP_UNIX) // XXX somebody please make dynamic registration work on Mac
 static NS_DEFINE_CID(kRDFBookMarkDataSourceCID, NS_RDFBOOKMARKDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFCompositeDataSourceCID, NS_RDFCOMPOSITEDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFHTMLBuilderCID,        NS_RDFHTMLBUILDER_CID);
@@ -292,7 +292,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kCEventListenerManagerCID, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
-#if defined(XP_MAC) // XXX somebody please make dynamic registration work on Mac
+#if defined(XP_MAC) || defined (XP_UNIX) // XXX somebody please make dynamic registration work on Mac
   nsRepository::RegisterFactory(kRDFBookMarkDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFCompositeDataSourceCID, RDF_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kRDFHTMLBuilderCID,        RDF_DLL, PR_FALSE, PR_FALSE);
