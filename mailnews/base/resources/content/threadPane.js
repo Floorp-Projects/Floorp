@@ -111,11 +111,13 @@ function HandleColumnClick(columnID)
 
   // if sortType is 0, this is an unsupported sort type
   // return, since we can't sort by that column.
-  if (sortType == 0) {
+  if (sortType == 0)
     return;
-  }
 
   var dbview = GetDBView();
+  // if we're already threaded, clicking the thread icon does a reverse sort by id.
+  if (sortType == nsMsgViewSortType.byThread && (dbview.viewFlags & nsMsgViewFlagsType.kThreadedDisplay))
+    sortType = nsMsgViewSortType.byId;
   if (sortType == nsMsgViewSortType.byThread && !dbview.supportsThreading)
       return;
   if (dbview.sortType == sortType) {
