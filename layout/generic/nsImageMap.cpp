@@ -834,12 +834,17 @@ nsImageMap::AddArea(nsIContent* aArea)
   PRBool suppress = PR_FALSE;/* XXX */
 
   Area* area;
-  if ((0 == shape.Length()) || shape.EqualsIgnoreCase("rect")) {
+  if ((0 == shape.Length()) ||
+      shape.EqualsIgnoreCase("rect") ||
+      shape.EqualsIgnoreCase("rectangle")) {
     area = new RectArea(baseURL, href, target, altText, suppress, hasURL);
-  } else if (shape.EqualsIgnoreCase("poly") ||
-             shape.EqualsIgnoreCase("polygon")) {
+  }
+  else if (shape.EqualsIgnoreCase("poly") ||
+           shape.EqualsIgnoreCase("polygon")) {
     area = new PolyArea(baseURL, href, target, altText, suppress, hasURL);
-  } else if (shape.EqualsIgnoreCase("circle")) {
+  }
+  else if (shape.EqualsIgnoreCase("circle") ||
+           shape.EqualsIgnoreCase("circ")) {
     area = new CircleArea(baseURL, href, target, altText, suppress, hasURL);
   }
   else {
