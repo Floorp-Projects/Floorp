@@ -1070,7 +1070,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext& aPresContext,
     }
 
     // now look for undisplayed child content and pseudos
-    if (localContent) {
+    if (localContent && mUndisplayedMap) {
       UndisplayedNode* undisplayed = mUndisplayedMap->GetFirstNode(localContent);
       while (undisplayed) {
         nsIStyleContext* undisplayedContext = nsnull;
