@@ -270,7 +270,6 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
     // Make a copy of the reflow state and change the computed width and height
     // to reflect the available space for the fixed items
     nsHTMLReflowState reflowState(aReflowState);
-    reflowState.reason = eReflowReason_Dirty;
     AdjustReflowStateForScrollbars(aPresContext, reflowState);
  
     PRBool wasHandled; 
