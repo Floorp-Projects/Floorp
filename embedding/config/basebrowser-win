@@ -294,3 +294,10 @@ res\entityTables\html40Special.properties
 res\entityTables\html40Symbols.properties
 res\entityTables\htmlEntityVersions.properties
 res\entityTables\transliterate.properties
+res\fonts\*
+
+;
+; MathML
+;
+components\ucvmath.dll
+res\mathml.css

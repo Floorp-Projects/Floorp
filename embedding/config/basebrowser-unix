@@ -268,3 +268,10 @@ res/loading-image.gif
 res/broken-image.gif
 res/builtin/*
 res/entityTables/*
+res/fonts/*
+
+;
+; MathML
+;
+res/mathml.css
+components/libucvmath.so
