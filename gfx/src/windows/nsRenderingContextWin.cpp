@@ -329,7 +329,7 @@ nsresult nsRenderingContextWin :: CommonInit(void)
   mInitialized = PR_TRUE;
 #endif
 
-  mBlackBrush = ::CreateSolidBrush(RGB(0, 0, 0));
+  mBlackBrush = ::GetStockObject(BLACK_BRUSH);
   mDefFont = ::CreateFont(12, 0, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE,
                           ANSI_CHARSET, OUT_TT_PRECIS, CLIP_DEFAULT_PRECIS,
                           DEFAULT_QUALITY, FF_ROMAN | VARIABLE_PITCH, "Times New Roman");
@@ -644,6 +644,9 @@ void nsRenderingContextWin :: DestroyDrawingSurface(nsDrawingSurface aDS)
 {
   HDC hDC = (HDC)aDS;
 
+  // XXX What's the point? If we're attempting to make sure we don't
+  // delete a GDI object that's in use, that's exactly what we're going
+  // to end up doing 7 lines below...
   HBITMAP hTempBits = ::CreateCompatibleBitmap(hDC, 2, 2);
   HBITMAP hBits = ::SelectObject(hDC, hTempBits);
 

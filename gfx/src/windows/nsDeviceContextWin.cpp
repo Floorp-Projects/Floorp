@@ -40,6 +40,7 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
 {
   if (NULL != mSurface)
   {
+    // XXX We're leaking the HBITMAP...
     DeleteDC(mSurface);
     mSurface = NULL;
   }
