@@ -64,6 +64,8 @@ public:
   NS_IMETHOD GetAttributeStyleSheet(nsIHTMLStyleSheet** aStyleSheet);
   NS_IMETHOD GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aStyleSheet);
 
+  NS_IMETHOD InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify);
+
   NS_IMETHOD GetBaseURL(nsIURL*& aURL) const;
   NS_IMETHOD SetBaseURL(const nsString& aURLSpec);
   NS_IMETHOD GetBaseTarget(nsString& aTarget) const;
@@ -71,6 +73,8 @@ public:
 
   NS_IMETHOD GetDTDMode(nsDTDMode& aMode);
   NS_IMETHOD SetDTDMode(nsDTDMode aMode);
+
+  NS_IMETHOD SetHeaderData(nsIAtom* aHeaderField, const nsString& aData);
 
   NS_IMETHOD ContentAppended(nsIContent* aContainer,
                              PRInt32 aNewIndexInContainer);
@@ -155,7 +159,7 @@ protected:
   void DeleteNamedItems();
   nsIContent *MatchName(nsIContent *aContent, const nsString& aName);
 
-  virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);
+  virtual void InternalAddStyleSheet(nsIStyleSheet* aSheet);
   static PRBool MatchLinks(nsIContent *aContent);
   static PRBool MatchAnchors(nsIContent *aContent);
 
