@@ -849,9 +849,9 @@ public:
     }
 
 
-private:
-
     virtual ~nsCachedHTTPListener() { NS_IF_RELEASE(mChannel); }
+
+private:
 
     NS_DECL_ISUPPORTS
 
