@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.17 $ $Date: 2002/10/10 20:30:16 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.18 $ $Date: 2003/01/09 04:29:01 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -720,7 +720,8 @@ find_object_in_collection (
 static pkiObjectCollectionNode *
 add_object_instance (
   nssPKIObjectCollection *collection,
-  nssCryptokiObject *instance
+  nssCryptokiObject *instance,
+  PRBool *foundIt
 )
 {
     PRUint32 i;
@@ -734,12 +735,14 @@ add_object_instance (
      * for unique identifier is done.  Here, a match means this exact object
      * instance is already in the collection, and we have nothing to do.
      */
+    *foundIt = PR_FALSE;
     node = find_instance_in_collection(collection, instance);
     if (node) {
 	/* The collection is assumed to take over the instance.  Since we
 	 * are not using it, it must be destroyed.
 	 */
 	nssCryptokiObject_Destroy(instance);
+	*foundIt = PR_TRUE;
 	return node;
     }
     mark = nssArena_Mark(collection->arena);
@@ -798,13 +801,14 @@ nssPKIObjectCollection_AddInstances (
 {
     PRStatus status = PR_SUCCESS;
     PRUint32 i = 0;
+    PRBool foundIt;
     pkiObjectCollectionNode *node;
     if (instances) {
 	for (; *instances; instances++, i++) {
 	    if (numInstances > 0 && i == numInstances) {
 		break;
 	    }
-	    node = add_object_instance(collection, *instances);
+	    node = add_object_instance(collection, *instances, &foundIt);
 	    if (node == NULL) {
 		goto loser;
 	    }
@@ -917,7 +921,8 @@ nssPKIObjectCollection_AddInstanceAsObject (
 )
 {
     pkiObjectCollectionNode *node;
-    node = add_object_instance(collection, instance);
+    PRBool foundIt;
+    node = add_object_instance(collection, instance, &foundIt);
     if (node == NULL) {
 	return PR_FAILURE;
     }
@@ -931,11 +936,14 @@ nssPKIObjectCollection_AddInstanceAsObject (
 	node->haveObject = PR_TRUE;
     }
 #ifdef NSS_3_4_CODE
-    else {
+    else if (!foundIt) {
 	/* The instance was added to a pre-existing node.  This
 	 * function is *only* being used for certificates, and having
 	 * multiple instances of certs in 3.X requires updating the
 	 * CERTCertificate.
+	 * But only do it if it was a new instance!!!  If the same instance
+	 * is encountered, we set *foundIt to true.  Detect that here and
+	 * ignore it.
 	 */
 	STAN_ForceCERTCertificateUpdate((NSSCertificate *)node->object);
     }
