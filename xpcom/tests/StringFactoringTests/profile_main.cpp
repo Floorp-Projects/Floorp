@@ -92,10 +92,61 @@ class TestTimer
       nsInt64 mStartTime;
   };
 
+inline
+int
+foo( const nsCString& )
+  {
+    return 1;
+  }
+
+static
+int
+test_construction()
+  {
+    cout << endl;
+
+    {
+      nsCString someCString;
+      int total = 0;
+      TestTimer timer;
+      for ( int i=0; i<N; ++i )
+        {
+          total += foo( someCString );
+        }
+    }
+    cout << "null loop time for constructor" << endl;
+
+
+    {
+      int total = 0;
+      TestTimer timer;
+      for ( int i=0; i<N; ++i )
+        {
+          total += foo( nsCString() );
+        }
+    }
+    cout << "nsCString()" << endl;
+
+
+    {
+      int total = 0;
+      TestTimer timer;
+      for ( int i=0; i<N; ++i )
+        {
+          total += foo( nsCString("This is a reasonable length string with some text in it and it is good.") );
+        }
+    }
+    cout << "nsCString(\"abc\")" << endl;
+
+    return kTestSucceeded;
+  }
+
 static
 int
 test_concat()
   {
+    cout << endl;
+
                 //---------|---------|---------|---------|---------|---------|---------|
     nsCString s1("This is a reasonable length string with some text in it and it is good.");
     nsCString s2("This is another string that I will use in the concatenation test.");
@@ -107,6 +158,17 @@ test_concat()
         cout << "|test_concat()| FAILED" << endl;
         return kTestFailed;
       }
+
+
+    {
+      nsCString anEmptyCString;
+      TestTimer timer;
+      for ( int i=0; i<N; ++i )
+        {
+          len += TotalLength( anEmptyCString );
+        }
+    }
+    cout << "null loop time for concat" << endl;
 
 
     {
@@ -266,6 +328,39 @@ test_repeated_append_string()
 
 static
 int
+test_append_char()
+  {
+    cout << endl;
+
+    PRUint32 len = 0;
+
+    nsCString s1("hello");
+    PRUint32 oldLength = s1.Length();
+    
+    {
+      TestTimer timer;
+      for ( int i=0; i<N; ++i )
+        {
+          s1.SetLength(oldLength);
+        }
+    }
+    cout << "null loop time for append char" << endl;
+
+    {
+      TestTimer timer;
+      for ( int i=0; i<N; ++i )
+        {
+          s1.Append('e');
+          s1.SetLength(oldLength);
+        }
+    }
+    cout << "s1.Append('e')" << endl;
+
+    return kTestSucceeded;
+  }
+
+static
+int
 test_repeated_append_char()
   {
     PRUint32 len = 0;
@@ -309,7 +404,7 @@ test_insert_string()
     return kTestSucceeded;
   }
 
-#if 0
+#ifndef TEST_STD_STRING
 static
 int
 test_find_string()
@@ -378,15 +473,19 @@ main()
 
     Profiler profiler;
 
+    tests_failed += test_construction();
     tests_failed += test_concat();
-    tests_failed += test_concat_and_assign();
+//  tests_failed += test_concat_and_assign();
     tests_failed += test_compare();
     tests_failed += test_countchar();
     tests_failed += test_append_string();
     tests_failed += test_repeated_append_string();
-    tests_failed += test_repeated_append_char();
+    tests_failed += test_append_char();
+//  tests_failed += test_repeated_append_char();
     tests_failed += test_insert_string();
-    // tests_failed += test_find_string();
+#ifndef TEST_STD_STRING
+    tests_failed += test_find_string();
+#endif
 
 #ifdef TEST_STD_STRING
     profiler.Dump("\pStandard String.prof");
