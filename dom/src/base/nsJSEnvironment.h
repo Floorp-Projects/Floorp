@@ -46,6 +46,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIXPCScriptNotify.h"
 #include "nsITimer.h"
+#include "prtime.h"
 
 
 class nsJSContext : public nsIScriptContext,
@@ -155,6 +156,7 @@ private:
   PRPackedBool mProcessingScriptTag;
 
   PRUint32 mBranchCallbackCount;
+  PRTime mBranchCallbackTime;
   PRUint32 mDefaultJSOptions;
 
   // mGlobalWrapperRef is used only to hold a strong reference to the
