@@ -1640,6 +1640,24 @@ nsHTMLDocument::GetBaseURI(nsAWritableString &aURI)
   return NS_OK;
 }
 
+
+NS_IMETHODIMP    
+nsHTMLDocument::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
+                                      nsAWritableString& aPrefix) 
+{
+  aPrefix.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
+                                   nsAWritableString& aNamespaceURI)
+{
+  aNamespaceURI.Truncate();
+  return NS_OK;
+}
+
+
 //
 // nsIDOMHTMLDocument interface implementation
 //

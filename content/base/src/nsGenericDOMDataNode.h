@@ -126,6 +126,10 @@ struct nsGenericDOMDataNode {
                           const nsAReadableString& aVersion,
                           PRBool* aReturn);
   nsresult    GetBaseURI(nsAWritableString& aURI);
+  nsresult    LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
+                                    nsAWritableString& aPrefix);
+  nsresult    LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
+                                 nsAWritableString& aNamespaceURI);
 
   // Implementation for nsIDOMCharacterData
   nsresult    GetData(nsAWritableString& aData);
@@ -356,6 +360,14 @@ struct nsGenericDOMDataNode {
   NS_IMETHOD GetBaseURI(nsAWritableString& aURI) {                      \
     return _g.GetBaseURI(aURI);                                         \
   }                                                                     \
+  NS_IMETHOD LookupNamespacePrefix(const nsAReadableString& aNamespaceURI, \
+                                   nsAWritableString& aPrefix) {           \
+    return _g.LookupNamespacePrefix(aNamespaceURI, aPrefix);               \
+  }                                                                        \
+  NS_IMETHOD LookupNamespaceURI(const nsAReadableString& aNamespacePrefix, \
+                                nsAWritableString& aNamespaceURI) {        \
+    return _g.LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);         \
+  }                                                                        \
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
 #define NS_IMPL_NSIDOMCHARACTERDATA_USING_GENERIC_DOM_DATA(_g)              \

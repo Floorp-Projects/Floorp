@@ -478,6 +478,30 @@ nsDOMAttribute::GetBaseURI(nsAWritableString &aURI)
   return rv;
 }
 
+NS_IMETHODIMP    
+nsDOMAttribute::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
+                                      nsAWritableString& aPrefix) 
+{
+  aPrefix.Truncate();
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(mContent));
+  if (node)
+    rv = node->LookupNamespacePrefix(aNamespaceURI, aPrefix);
+  return rv;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
+                                   nsAWritableString& aNamespaceURI)
+{
+  aNamespaceURI.Truncate();
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOM3Node> node(do_QueryInterface(mContent));
+  if (node)
+    rv = node->LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
+  return rv;
+}
+
 //----------------------------------------------------------------------
 
 nsAttributeChildList::nsAttributeChildList(nsDOMAttribute* aAttribute)

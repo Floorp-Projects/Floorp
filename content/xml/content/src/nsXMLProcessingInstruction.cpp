@@ -130,6 +130,15 @@ public:
   NS_IMETHOD GetBaseURI(nsAWritableString& aURI) {
     return mInner.GetBaseURI(aURI);
   }
+  NS_IMETHOD LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
+                                   nsAWritableString& aPrefix) {
+    return mInner.LookupNamespacePrefix(aNamespaceURI, aPrefix);
+  }
+  NS_IMETHOD LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
+                                nsAWritableString& aNamespaceURI) {
+    return mInner.LookupNamespaceURI(aNamespacePrefix, aNamespaceURI);
+  }
+
   NS_IMETHOD CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
 
   // nsIDOMProcessingInstruction

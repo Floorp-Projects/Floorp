@@ -793,14 +793,19 @@ nsDocument::GetBaseURL(nsIURI*& aURL) const
 NS_IMETHODIMP
 nsDocument::SetBaseURL(nsIURI* aURL)
 {
-  nsresult rv;
-  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_SUCCEEDED(rv)) {
-    rv = securityManager->CheckLoadURI(mDocumentURL, aURL, nsIScriptSecurityManager::STANDARD);
+  nsresult rv = NS_OK;
+  if (aURL) {
+    nsCOMPtr<nsIScriptSecurityManager> securityManager = 
+      do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv)) {
-      mDocumentBaseURL = aURL;
+      rv = securityManager->CheckLoadURI(mDocumentURL, aURL, nsIScriptSecurityManager::STANDARD);
+      if (NS_SUCCEEDED(rv)) {
+        mDocumentBaseURL = aURL;
+      }
     }
+  }
+  else {
+    mDocumentBaseURL = aURL;
   }
 
   return rv;
@@ -2879,6 +2884,22 @@ nsDocument::GetBaseURI(nsAWritableString &aURI)
       CopyASCIItoUCS2(nsDependentCString(spec), aURI);
     }
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDocument::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
+                                  nsAWritableString& aPrefix) 
+{
+  aPrefix.Truncate();
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDocument::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
+                               nsAWritableString& aNamespaceURI)
+{
+  aNamespaceURI.Truncate();
   return NS_OK;
 }
 

@@ -452,6 +452,23 @@ nsXULAttribute::GetBaseURI(nsAWritableString &aURI)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsXULAttribute::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
+                                      nsAWritableString& aPrefix)
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsXULAttribute::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
+                                   nsAWritableString& aNamespaceURI) 
+{
+  NS_NOTYETIMPLEMENTED("write me");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 // nsIDOMAttr interface
 
 NS_IMETHODIMP

@@ -53,6 +53,7 @@
 #include "nsIServiceManager.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
+#include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsContentList.h"
 #include "nsDOMError.h"
@@ -435,6 +436,122 @@ nsNode3Tearoff::GetBaseURI(nsAWritableString& aURI)
   
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsNode3Tearoff::LookupNamespacePrefix(const nsAReadableString& aNamespaceURI,
+                                      nsAWritableString& aPrefix)
+{
+  aPrefix.Truncate();
+
+  // XXX Waiting for DOM spec to list error codes.
+
+  nsCOMPtr<nsINameSpaceManager> manager;
+  nsCOMPtr<nsINodeInfo> ni;
+
+  mContent->GetNodeInfo(*getter_AddRefs(ni));
+  if (ni) {
+    nsCOMPtr<nsINodeInfoManager> nimgr;
+
+    ni->GetNodeInfoManager(*getter_AddRefs(nimgr));
+    NS_ENSURE_TRUE(nimgr, NS_ERROR_UNEXPECTED);
+
+    nimgr->GetNamespaceManager(*getter_AddRefs(manager));
+  }
+
+  // If there's no nodeinfo, get the manager from the document
+  if (!manager) {
+    nsCOMPtr<nsIDocument> doc;
+    mContent->GetDocument(*getter_AddRefs(doc)); 
+    if (!doc) {
+      return NS_ERROR_UNEXPECTED;
+    }
+
+    doc->GetNameSpaceManager(*getter_AddRefs(manager)); 
+  }
+
+  if (!manager) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  // Get the namespace id for the URI
+  PRInt32 namespaceId;
+  manager->GetNameSpaceID(aNamespaceURI, namespaceId);
+  if (namespaceId == kNameSpaceID_Unknown) {
+    return NS_ERROR_FAILURE;
+  }
+
+  // Trace up the content parent chain looking for XML content.
+  // From there, look for a prefix associated with the namespace.
+  nsCOMPtr<nsIContent> content(mContent); 
+  while (content) {
+    nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(content));
+    
+    if (xmlContent) {
+      nsCOMPtr<nsINameSpace> ns;
+      
+      xmlContent->GetContainingNameSpace(*getter_AddRefs(ns));
+      if (ns) {
+        nsCOMPtr<nsIAtom> prefix;
+        nsresult rv = ns->FindNameSpacePrefix(namespaceId, 
+                                              *getter_AddRefs(prefix));
+        if (NS_FAILED(rv)) {
+          return NS_ERROR_FAILURE;
+        }
+        if (prefix) {
+          prefix->ToString(aPrefix);
+        }          
+        return NS_OK;
+      }
+    }
+    
+    nsCOMPtr<nsIContent> tmp(content);
+    tmp->GetParent(*getter_AddRefs(content));
+  }
+  
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsNode3Tearoff::LookupNamespaceURI(const nsAReadableString& aNamespacePrefix,
+                                   nsAWritableString& aNamespaceURI)
+{
+  aNamespaceURI.Truncate();
+
+  // Trace up the content parent chain looking for XML content. From
+  // there, see if anyone up the chain knows about the prefix.
+  nsCOMPtr<nsIContent> content(mContent); 
+  while (content) {
+    nsCOMPtr<nsIXMLContent> xmlContent(do_QueryInterface(content));
+    
+    if (xmlContent) {
+      nsCOMPtr<nsINameSpace> ns;
+      
+      xmlContent->GetContainingNameSpace(*getter_AddRefs(ns));
+      if (ns) {
+        nsCOMPtr<nsIAtom> prefix;
+        nsCOMPtr<nsINameSpace> foundNS;
+        
+        if (!aNamespacePrefix.IsEmpty()) {
+          prefix = dont_AddRef(NS_NewAtom(aNamespacePrefix));
+        }
+
+        nsresult rv = ns->FindNameSpace(prefix, *getter_AddRefs(foundNS));
+        if (NS_FAILED(rv)) {
+          return NS_ERROR_FAILURE;
+        }
+        
+        foundNS->GetNameSpaceURI(aNamespaceURI);
+        return NS_OK;
+      }
+    }
+    
+    nsCOMPtr<nsIContent> tmp(content);
+    tmp->GetParent(*getter_AddRefs(content));
+  }
+  
+  return NS_ERROR_FAILURE;
+}
+
 
 nsDOMEventRTTearoff *
 nsDOMEventRTTearoff::mCachedEventTearoff[NS_EVENT_TEAROFF_CACHE_SIZE];
