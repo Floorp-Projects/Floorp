@@ -112,6 +112,25 @@ private:
   void ComputePaletteSize(PRIntn nBitCount);
 
 private:
+  static unsigned scaled6[1<<6];
+  static unsigned scaled5[1<<5];
+
+  void DrawComposited32(PRBool isLSB, PRBool flipBytes,
+                        unsigned offsetX, unsigned offsetY,
+                        unsigned width, unsigned height,
+                        XImage *ximage, unsigned char *readData);
+  void DrawComposited24(PRBool isLSB, PRBool flipBytes,
+                        unsigned offsetX, unsigned offsetY,
+                        unsigned width, unsigned height,
+                        XImage *ximage, unsigned char *readData);
+  void DrawComposited16(PRBool isLSB, PRBool flipBytes,
+                        unsigned offsetX, unsigned offsetY,
+                        unsigned width, unsigned height,
+                        XImage *ximage, unsigned char *readData);
+  void DrawCompositedGeneral(PRBool isLSB, PRBool flipBytes,
+                             unsigned offsetX, unsigned offsetY,
+                             unsigned width, unsigned height,
+                             XImage *ximage, unsigned char *readData);
   inline void DrawComposited(nsIRenderingContext &aContext,
                              nsDrawingSurface aSurface,
                              PRInt32 aX, PRInt32 aY,
