@@ -1057,85 +1057,85 @@ long RetrieveRedirectFile()
   char      szFileIniRedirect[MAX_BUF];
   ssi       *ssiSiteSelectorTemp;
 
+  if(GetTotalArchivesToDownload() == 0)
+    return(0);
+
   lstrcpy(szFileIniRedirect, szTempDir);
   AppendBackSlash(szFileIniRedirect, sizeof(szFileIniRedirect));
   lstrcat(szFileIniRedirect, FILE_INI_REDIRECT);
 
-  if(FileExists(szFileIniRedirect) == FALSE)
+  if(FileExists(szFileIniRedirect))
+    DeleteFile(szFileIniRedirect);
+
+  GetPrivateProfileString("Redirect", "Status", "", szBuf, MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szBuf, "ENABLED") != 0)
+    return(0);
+
+  ssiSiteSelectorTemp = SsiGetNode(szSiteSelectorDescription);
+  if(ssiSiteSelectorTemp != NULL)
   {
-    GetPrivateProfileString("Redirect", "Status", "", szBuf, MAX_BUF, szFileIniConfig);
-    if(lstrcmpi(szBuf, "ENABLED") != 0)
-      return(0);
+    if(ssiSiteSelectorTemp->szDomain != NULL)
+      lstrcpy(szDomain, ssiSiteSelectorTemp->szDomain);
+    if(ssiSiteSelectorTemp->szIdentifier != NULL)
+      lstrcpy(szIdentifier, ssiSiteSelectorTemp->szIdentifier);
+  }
 
-    if(GetTotalArchivesToDownload() == 0)
-      return(0);
+  lstrcpy(szFileIdiGetRedirect, szTempDir);
+  AppendBackSlash(szFileIdiGetRedirect, sizeof(szFileIdiGetRedirect));
+  lstrcat(szFileIdiGetRedirect, FILE_IDI_GETREDIRECT);
 
-    ssiSiteSelectorTemp = SsiGetNode(szSiteSelectorDescription);
-    if(ssiSiteSelectorTemp != NULL)
+  GetPrivateProfileString("Redirect", "Description", "", szBuf, MAX_BUF, szFileIniConfig);
+  WritePrivateProfileString("File0", "desc", szBuf, szFileIdiGetRedirect);
+
+  dwIndex0  = 0;
+  itoa(dwIndex0,  szIndex0,  10);
+  lstrcpy(szKServerPath, "Server Path");
+  lstrcat(szKServerPath, szIndex0);
+  GetPrivateProfileString("Redirect", szKServerPath, "", szBuf, MAX_BUF, szFileIniConfig);
+  while(*szBuf != '\0')
+  {
+    lstrcpy(szBufUrl, szDomain);
+    lstrcat(szBufUrl, szBuf);
+    if(WritePrivateProfileString("File0", szIndex0, szBufUrl, szFileIdiGetRedirect) == 0)
     {
-      if(ssiSiteSelectorTemp->szDomain != NULL)
-        lstrcpy(szDomain, ssiSiteSelectorTemp->szDomain);
-      if(ssiSiteSelectorTemp->szIdentifier != NULL)
-        lstrcpy(szIdentifier, ssiSiteSelectorTemp->szIdentifier);
+      char szEWPPS[MAX_BUF];
+
+      if(NS_LoadString(hSetupRscInst, IDS_ERROR_WRITEPRIVATEPROFILESTRING, szEWPPS, MAX_BUF) == WIZ_OK)
+      {
+        wsprintf(szBufTemp, "%s\n    [%s]\n    %s=%s", szFileIdiGetRedirect, "File0", szIndex0, szBufUrl);
+        wsprintf(szBuf, szEWPPS, szBufTemp);
+        PrintError(szBuf, ERROR_CODE_SHOW);
+      }
+      return(1);
     }
 
-    lstrcpy(szFileIdiGetRedirect, szTempDir);
-    AppendBackSlash(szFileIdiGetRedirect, sizeof(szFileIdiGetRedirect));
-    lstrcat(szFileIdiGetRedirect, FILE_IDI_GETREDIRECT);
-
-    GetPrivateProfileString("Redirect", "Description", "", szBuf, MAX_BUF, szFileIniConfig);
-    WritePrivateProfileString("File0", "desc", szBuf, szFileIdiGetRedirect);
-
-    dwIndex0  = 0;
-    itoa(dwIndex0,  szIndex0,  10);
+    ++dwIndex0;
+    itoa(dwIndex0, szIndex0, 10);
     lstrcpy(szKServerPath, "Server Path");
     lstrcat(szKServerPath, szIndex0);
     GetPrivateProfileString("Redirect", szKServerPath, "", szBuf, MAX_BUF, szFileIniConfig);
-    while(*szBuf != '\0')
-    {
-      lstrcpy(szBufUrl, szDomain);
-      lstrcat(szBufUrl, szBuf);
-      if(WritePrivateProfileString("File0", szIndex0, szBufUrl, szFileIdiGetRedirect) == 0)
-      {
-        char szEWPPS[MAX_BUF];
+  }
 
-        if(NS_LoadString(hSetupRscInst, IDS_ERROR_WRITEPRIVATEPROFILESTRING, szEWPPS, MAX_BUF) == WIZ_OK)
-        {
-          wsprintf(szBufTemp, "%s\n    [%s]\n    %s=%s", szFileIdiGetRedirect, "File0", szIndex0, szBufUrl);
-          wsprintf(szBuf, szEWPPS, szBufTemp);
-          PrintError(szBuf, ERROR_CODE_SHOW);
-        }
-        return(1);
-      }
+  /* the existance of the getarchives.idi file determines if there are
+     any jar files needed to be downloaded */
+  if(FileExists(szFileIdiGetRedirect))
+  {
+    DecryptString(szBuf, siSDObject.szXpcomDir);
+    lstrcpy(siSDObject.szXpcomDir, szBuf);
 
-      ++dwIndex0;
-      itoa(dwIndex0, szIndex0, 10);
-      lstrcpy(szKServerPath, "Server Path");
-      lstrcat(szKServerPath, szIndex0);
-      GetPrivateProfileString("Redirect", szKServerPath, "", szBuf, MAX_BUF, szFileIniConfig);
-    }
+    WritePrivateProfileString("Netscape Install", "core_file",        siSDObject.szXpcomFile,       szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "core_dir",         siSDObject.szXpcomDir,        szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "no_ads",           siSDObject.szNoAds,           szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "silent",           siSDObject.szSilent,          szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "execution",        siSDObject.szExecution,       szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "confirm_install",  siSDObject.szConfirmInstall,  szFileIdiGetRedirect);
+    WritePrivateProfileString("Netscape Install", "extract_msg",      siSDObject.szExtractMsg,      szFileIdiGetRedirect);
+    WritePrivateProfileString("Execution",        "exe",              siSDObject.szExe,             szFileIdiGetRedirect);
+    WritePrivateProfileString("Execution",        "exe_param",        siSDObject.szExeParam,        szFileIdiGetRedirect);
 
-    /* the existance of the getarchives.idi file determines if there are
-       any jar files needed to be downloaded */
-    if(FileExists(szFileIdiGetRedirect))
-    {
-      DecryptString(szBuf, siSDObject.szXpcomDir);
-      lstrcpy(siSDObject.szXpcomDir, szBuf);
-
-      WritePrivateProfileString("Netscape Install", "core_file",        siSDObject.szXpcomFile,       szFileIdiGetRedirect);
-      WritePrivateProfileString("Netscape Install", "core_dir",         siSDObject.szXpcomDir,        szFileIdiGetRedirect);
-      WritePrivateProfileString("Netscape Install", "no_ads",           siSDObject.szNoAds,           szFileIdiGetRedirect);
-      WritePrivateProfileString("Netscape Install", "silent",           siSDObject.szSilent,          szFileIdiGetRedirect);
-      WritePrivateProfileString("Netscape Install", "execution",        siSDObject.szExecution,       szFileIdiGetRedirect);
-      WritePrivateProfileString("Netscape Install", "confirm_install",  siSDObject.szConfirmInstall,  szFileIdiGetRedirect);
-      WritePrivateProfileString("Netscape Install", "extract_msg",      siSDObject.szExtractMsg,      szFileIdiGetRedirect);
-      WritePrivateProfileString("Execution",        "exe",              siSDObject.szExe,             szFileIdiGetRedirect);
-      WritePrivateProfileString("Execution",        "exe_param",        siSDObject.szExeParam,        szFileIdiGetRedirect);
-
-      lResult = SdArchives(szFileIdiGetRedirect, szTempDir);
-      if((lResult != 0) && (LOWORD(lResult) != 53)) // 53 - url is valid, but file does not exist
-        return(lResult);
-    }
+    lResult = SdArchives(szFileIdiGetRedirect, szTempDir);
+    if((lResult != 0) && (LOWORD(lResult) != 53)) // 53 - url is valid, but file does not exist
+      return(lResult);
   }
 
   return(0);
@@ -4496,6 +4496,7 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
 
   OutputSetupTitle(hdc);
   ReleaseDC(hWndMain, hdc);
+  CleanupXpcomFile();
 
   return(0);
 }
