@@ -59,8 +59,14 @@ function SetFolderPicker(uri,pickerID)
 
 	if (msgfolder.isServer)
 		selectedValue = msgfolder.name;
-	else
-		selectedValue = msgfolder.name + " on " + msgfolder.server.prettyName; 
+	else {
+		if (msgfolder.server) {
+			selectedValue = msgfolder.name + " on " + msgfolder.server.prettyName; 
+		}
+		else {
+			selectedValue = msgfolder.name + " on ???";
+		}
+	}
 
 	picker.setAttribute("value",selectedValue);
 	picker.setAttribute("uri",uri);
