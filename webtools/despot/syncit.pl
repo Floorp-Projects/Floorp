@@ -325,7 +325,7 @@ Newsgroup:</TH><TD>";
                 if (!defined $newsgroups) {
                     $newsgroups = "";
                 }
-                foreach $i (split(/,/, $newsgroups)) {
+                foreach $i (split(/[,\s]+/, $newsgroups)) {
                     my $base = "news:";
                     if ($i =~ /^netscape\.public/) {
                         $base = "news://news.mozilla.org/";
@@ -348,7 +348,7 @@ Documents:</TH><TD>";
                 if (!defined $doclinks) {
                     $doclinks = "";
                 }
-                foreach $i (split(/,/, $doclinks)) {
+                foreach $i (split(/[,\s]+/, $doclinks)) {
                     push @doclist, "<A href='$i'>$i</a>";
                 }
                 print OWNERS join(', ', @doclist);
