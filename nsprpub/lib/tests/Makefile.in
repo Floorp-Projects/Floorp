@@ -43,7 +43,7 @@ include $(MOD_DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
 ifeq ($(OS_ARCH), WINNT)
-DIRS = windows
+# DIRS = windows
 endif
 
 ifeq ($(OS_TARGET), WIN16)
@@ -51,6 +51,7 @@ OS_CFLAGS = $(OS_EXE_CFLAGS)
 endif
 
 CSRCS = \
+	arena.c \
 	string.c \
 	base64t.c
 
@@ -58,7 +59,7 @@ ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 CSRCS += arena.c
 endif
 
-ifeq (,$(filter-out WINNT OS2,$(OS_ARCH))
+ifeq (,$(filter-out WINNT OS2,$(OS_ARCH)))
 PROG_SUFFIX = .exe
 else
 PROG_SUFFIX =
