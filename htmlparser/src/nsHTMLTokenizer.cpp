@@ -471,7 +471,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         nsAutoString endTag(NS_EnumToTag(theTag));
         endTag.Insert("</",0,2);
         CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag,endTag);
-        result=((CTextToken*)textToken)->ConsumeUntil(0,PRBool(eHTMLTag_style==theTag),aScanner,endTag);  //tell new token to finish consuming text...    
+        result=((CTextToken*)textToken)->ConsumeUntil(0,PR_TRUE,aScanner,endTag);  //tell new token to finish consuming text...    
         //endTag.Append(">");        
         CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag,endTag);
         AddToken(textToken,result,mTokenDeque,theRecycler);
