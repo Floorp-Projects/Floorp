@@ -24,50 +24,61 @@
 
 /**
  * MODULE NOTES:
- * @update  DC 11/5/98
+ * @update  dc 11/20/98
  **/
 
 
 /**
- *  This class defines the object that can do special tag handling
+ *  This class defines an object that can do special tag handling
  *  
- *  @update  DC 11/5/98
+ *  @update  DC 11/20/98
  */
 class nsTagHandler : public nsITagHandler {
 
-// MEMBERS
 public:
   nsAutoString  mTheTagName;
 
-
-// METHODS
 public:
 
   /**
    * Constructor
-   * @update dc 11/5/98
+   * @update dc 11/05/98
    */
   nsTagHandler() {}
 
+
+  /**
+   * Destructor
+   * @update dc 11/05/98
+   */
   ~nsTagHandler() {}
 
   /**
-   * SetString
+   * Sets the string (tag) for this nsTagHandler to handle
+   * @update dc 11/19/98
+   * @param aTheString -- The string (tag) associated with this handler
+   * @return VOID
    */
-  void SetString(nsAutoString *aTheString) {mTheTagName = *aTheString;}
-
-  nsAutoString* GetString() {return &mTheTagName;}
+  void SetString(const nsString &aTheString) {mTheTagName = aTheString;}
 
   /**
-   *  Handle this token prior to the DTD
+   * Returns the string (tag) handled by this nsTagHandler
+   * @update dc 11/19/98
+   * @return The tagname associated with this class
+   */
+  nsString* GetString() {return &mTheTagName;}
+
+  /**
+   *  Handle this tag prior to the DTD
    *  @update  dc 11/5/98
+   *  @return	 A boolean indicating if this token was handled here
    */
   virtual PRBool  HandleToken(CToken* aToken,nsIDTD* aDTD) {return PR_FALSE;};
 
   /**
-   *  Handle this token prior to the DTD
+   *  Handle this tag prior to the DTD
    *  @update  dc 11/5/98
-   *  @return	 ptr to previously set contentsink (usually null)  
+   *  @return	 A boolean indicating if this token was handled here
    */
   virtual PRBool  HandleCapturedTokens(CToken* aToken,nsIDTD* aDTD) {return PR_FALSE;};
 
