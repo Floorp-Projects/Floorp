@@ -25,9 +25,7 @@
 
 @interface OrgMozillaChimeraPreferenceNavigation : PreferencePaneBase
 {
-  // IBOutlet NSButton *buttonSystemPreferences;
 	IBOutlet NSTextField *textFieldHomePage;
-	IBOutlet NSTextField *textFieldSearchPage;
   
 	IBOutlet NSButton *checkboxUseSystemHomePage;
   IBOutlet NSButton *checkboxNewTabBlank;
@@ -39,23 +37,16 @@
   
   IBOutlet NSTextField *textFieldHistoryDays;
   
-  IBOutlet NSTextField* mDownloadFolder;
+  IBOutlet NSPopUpButton* mDownloadFolder;
   IBOutlet NSButton* mEnableHelperApps;
 }
 
-- (IBAction)openSystemInternetPanel:(id)sender;
 - (IBAction)checkboxClicked:(id)sender;
 - (IBAction)checkboxUseSystemHomePageClicked:(id)sender;
 - (IBAction)checkboxStartPageClicked:(id)sender;
 - (IBAction)historyDaysModified:(id)sender;
 - (IBAction)clearGlobalHistory:(id)sender;
-
-- (NSString*)getSystemHomePage;
-- (NSString*)getCurrentHomePage;
-
-- (NSString*)getSystemSearchPage;
-- (NSString*)getCurrentSearchPage;
-
--(IBAction) clearDiskCache:(id)aSender;
+- (IBAction)chooseDownloadFolder:(id)sender;
+- (IBAction)clearDiskCache:(id)aSender;
 
 @end

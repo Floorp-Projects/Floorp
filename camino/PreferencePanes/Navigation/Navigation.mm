@@ -22,6 +22,7 @@
 */
 
 #import <Carbon/Carbon.h>
+#import <Cocoa/Cocoa.h>
 
 #import "Navigation.h"
 #import "NSString+Utils.h"
@@ -39,6 +40,10 @@ const int kDefaultExpireDays = 9;
 
 - (NSString*)getInternetConfigString:(ConstStr255Param)icPref;
 - (NSString*)getDownloadFolderDescription;
+- (void)setupDownloadMenuWithPath:(NSString*)inDLPath;
+- (NSString*)getSystemHomePage;
+- (NSString*)getCurrentHomePage;
+- (void)setDownloadFolder:(NSString*)inNewFolder;
 
 @end
 
@@ -80,29 +85,24 @@ const int kDefaultExpireDays = 9;
   [radioOpenTabsForCommand selectCellWithTag:[self getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:&gotPref]];
   [radioOpenForAE selectCellWithTag:[self getIntPref:"browser.reuse_window" withSuccess:&gotPref]];
   
-//  [checkboxOpenTabs setState:[self getBooleanPref:"browser.tabs.opentabfor.middleclick" withSuccess:&gotPref]];
-//  [checkboxOpenTabsForAEs setState:[self getBooleanPref:"browser.always_reuse_window" withSuccess:&gotPref]];
-
   [checkboxLoadTabsInBackground setState:[self getBooleanPref:"browser.tabs.loadInBackground" withSuccess:&gotPref]];
 
   BOOL useSystemHomePage = [self getBooleanPref:"chimera.use_system_home_page" withSuccess:&gotPref] && gotPref;  
   if (useSystemHomePage)
-  {
     [textFieldHomePage setEnabled:NO];
-    [textFieldSearchPage setEnabled:NO];
-  }
 
   [checkboxUseSystemHomePage setState:useSystemHomePage];
   [textFieldHomePage   setStringValue: [self getCurrentHomePage]];
-  [textFieldSearchPage setStringValue: [self getCurrentSearchPage]];
   
   [mEnableHelperApps setState:[self getBooleanPref:"browser.download.autoDispatch" withSuccess:&gotPref]];
 
   NSString* downloadFolderDesc = [self getDownloadFolderDescription];
   if ([downloadFolderDesc length] == 0)
     downloadFolderDesc = [self getLocalizedString:@"MissingDlFolder"];
-    
-  [mDownloadFolder setStringValue:[self getDownloadFolderDescription]];
+  
+  [self setupDownloadMenuWithPath:downloadFolderDesc];
+  
+//  [mDownloadFolder setStringValue:[self getDownloadFolderDescription]];
 }
 
 - (void) didUnselect
@@ -112,22 +112,11 @@ const int kDefaultExpireDays = 9;
   
   // only save the home page pref if it's not the system one
   if (![checkboxUseSystemHomePage state])
-  {
     [self setPref: "browser.startup.homepage" toString: [textFieldHomePage   stringValue]];
-    [self setPref: "chimera.search_page"      toString: [textFieldSearchPage stringValue]];
-  }
   
   // ensure that the prefs exist
   [self setPref:"browser.startup.page"   toInt: [checkboxNewWindowBlank state] ? 1 : 0];
   [self setPref:"browser.tabs.startPage" toInt: [checkboxNewTabBlank    state] ? 1 : 0];
-}
-
-- (IBAction)openSystemInternetPanel:(id)sender
-{
-  if ([[NSWorkspace sharedWorkspace] openFile:@"/System/Library/PreferencePanes/Internet.prefPane"] == NO) {
-    // XXXw. pop up a dialog warning that System Preferences couldn't be launched?
-    NSLog(@"Failed to launch System Preferences.");
-  }
 }
 
 - (IBAction)checkboxClicked:(id)sender
@@ -159,17 +148,12 @@ const int kDefaultExpireDays = 9;
 
   // save the mozilla pref
   if (useSystemHomePage)
-  {
     [self setPref: "browser.startup.homepage" toString: [textFieldHomePage   stringValue]];
-    [self setPref: "chimera.search_page"      toString: [textFieldSearchPage stringValue]];
-  }
   
   [self setPref:"chimera.use_system_home_page" toBoolean: useSystemHomePage];
   [textFieldHomePage   setStringValue: [self getCurrentHomePage]];
-  [textFieldSearchPage setStringValue: [self getCurrentSearchPage]];
 
   [textFieldHomePage   setEnabled:!useSystemHomePage];
-  [textFieldSearchPage setEnabled:!useSystemHomePage];
 }
 
 - (IBAction)checkboxStartPageClicked:(id)sender
@@ -237,34 +221,69 @@ const int kDefaultExpireDays = 9;
   nsresult rv = macDir->GetFSRef(&folderRef);
   if (NS_FAILED(rv))
     return downloadStr;
-
-  FSCatalogInfo catInfo;
-  HFSUniStr255 fileName;
-  OSErr err = FSGetCatalogInfo(&folderRef, kFSCatInfoVolume, &catInfo, &fileName, NULL, NULL);
-  if (err != noErr)
-    return downloadStr;
-    
-  HFSUniStr255 volName;
-  err = FSGetVolumeInfo(catInfo.volume, 0, NULL, kFSVolInfoNone, NULL, &volName, NULL);
-  if (err != noErr)
-    return downloadStr;
-
-  NSString* fileNameStr   = [NSString stringWithCharacters:fileName.unicode length:fileName.length];
-  NSString* volumeNameStr = [NSString stringWithCharacters:volName.unicode  length:volName.length];
-  
-	return [NSString stringWithFormat:[self getLocalizedString:@"DownloadFolderDesc"], fileNameStr, volumeNameStr];
+  UInt8 utf8path[MAXPATHLEN+1];
+  ::FSRefMakePath(&folderRef, utf8path, MAXPATHLEN);
+  return [NSString stringWithUTF8String:(const char*)utf8path];
 }
 
+//
+// -setDownloadFolder:
+//
+// Sets the IC download pref to the given path
+// NOTE: THIS DOES NOT WORK.
+//
+- (void)setDownloadFolder:(NSString*)inNewFolder
+{
+  if (!inNewFolder)
+    return;
+
+  // it would be nice to use PreferenceManager, but I don't want to drag
+  // all that code into the plugin
+  ICInstance icInstance = nil;
+  OSStatus error = ::ICStart(&icInstance, 'CHIM');
+  if (error != noErr)
+    return;
+  
+  // make a ICFileSpec out of our path and shove it into IC
+  NSMutableString* carbonPath = [NSMutableString stringWithString:inNewFolder];
+  [carbonPath replaceOccurrencesOfString:@"/" withString:@":" options:0 range:NSMakeRange(0, [carbonPath length])];
+NSLog(@"carbon path is %@", carbonPath);
+//  const char* utf8str = [inNewFolder UTF8String];
+  const char* utf8str = "Vespa:Users:pink:Desktop:";
+  unsigned len = strlen(utf8str);
+  if (len > 255) 
+    len = 255;
+  
+  char buff[256];
+  strncpy(&buff[1], utf8str, len);
+  buff[0] = len;
+  FSSpec downloadSpec;
+  FSMakeFSSpec(0, 0, (unsigned char*)buff, &downloadSpec);
+  
+  long prefSize = sizeof(ICFileSpec);
+  AliasHandle alias = nil;
+  error = ::NewAlias(nil, &downloadSpec, &alias);
+  NSLog(@"alias is %ld error is %d", alias, error);
+  
+  long aliasSize = ::GetHandleSize((Handle)alias);
+  ICFileSpec* realbuffer = (ICFileSpec*) new char[sizeof(ICFileSpec) + aliasSize];
+  realbuffer->fss = downloadSpec;
+  memcpy(&realbuffer->alias, *alias, aliasSize);
+  
+  error = ::ICSetPref(icInstance, kICDownloadFolder, kICAttrNoChange, (const void*)realbuffer, prefSize);
+  NSLog(@"error is %d", error);
+  
+  ::ICStop(icInstance);
+}
 
 - (NSString*)getInternetConfigString:(ConstStr255Param)icPref
 {
   NSString*     resultString = @"";
   ICInstance		icInstance = NULL;
-  OSStatus 			error;
   
   // it would be nice to use PreferenceManager, but I don't want to drag
   // all that code into the plugin
-  error = ICStart(&icInstance, 'CHIM');
+  OSStatus error = ICStart(&icInstance, 'CHIM');
   if (error != noErr) {
     NSLog(@"Error from ICStart");
     return resultString;
@@ -299,21 +318,6 @@ const int kDefaultExpireDays = 9;
   return [self getStringPref: "browser.startup.homepage" withSuccess:&gotPref];
 }
 
-- (NSString*)getSystemSearchPage
-{
-  return [self getInternetConfigString:kICWebSearchPagePrefs];
-}
-
-- (NSString*)getCurrentSearchPage
-{
-  BOOL gotPref;
-  
-  if ([self getBooleanPref:"chimera.use_system_home_page" withSuccess:&gotPref] && gotPref)
-    return [self getSystemSearchPage];
-    
-  return [self getStringPref: "chimera.search_page" withSuccess:&gotPref];
-}
-
 
 //
 // clearDiskCache:
@@ -327,9 +331,67 @@ const int kDefaultExpireDays = 9;
     cacheServ->EvictEntries(nsICache::STORE_ON_DISK);
 }
 
-
-- (IBAction)checkboxEnableHelperApps:(id)sender
+//
+// -setupDownloadMenuWithPath:
+//
+// Given a full path to the d/l dir, display the leaf name and the finder icon associated
+// with that folder in the first item of the download folder popup.
+//
+- (void)setupDownloadMenuWithPath:(NSString*)inDLPath
 {
+  NSMenuItem* placeholder = [mDownloadFolder itemAtIndex:0];
+  if (!placeholder)
+    return;
+  
+  // get the finder icon and scale it down to 16x16
+  NSImage* icon = [[NSWorkspace sharedWorkspace] iconForFile:inDLPath];
+  [icon setScalesWhenResized:YES];
+  [icon setSize:NSMakeSize(16.0, 16.0)];
 
+  // set the title to the leaf name and the icon to what we gathered above
+  [placeholder setTitle:[inDLPath lastPathComponent]];
+  [placeholder setImage:icon];
+  
+  // ensure first item is selected
+  [mDownloadFolder selectItemAtIndex:0];
+}
+
+//
+// -chooseDownloadFolder:
+//
+// display a file picker sheet allowing the user to set their new download folder
+//
+- (IBAction)chooseDownloadFolder:(id)sender
+{
+  NSString* oldDLFolder = [self getDownloadFolderDescription];
+  NSOpenPanel* panel = [NSOpenPanel openPanel];
+  [panel setCanChooseFiles:NO];
+  [panel setCanChooseDirectories:YES];
+  [panel setAllowsMultipleSelection:NO];
+  
+  [panel beginSheetForDirectory:oldDLFolder file:nil types:nil modalForWindow:[mDownloadFolder window]
+           modalDelegate:self didEndSelector:@selector(openPanelDidEnd:returnCode:contextInfo:)
+           contextInfo:nil];
+}
+
+//
+// -openPanelDidEnd:returnCode:contextInfo:
+//
+// called when the user closes the open panel sheet for selecting a new d/l folder.
+// if they clicked ok, change the IC pref and re-display the new choice in the
+// popup menu
+//
+- (void)openPanelDidEnd:(NSOpenPanel*)sheet returnCode:(int)returnCode contextInfo:(void*)contextInfo
+{
+  if (returnCode == NSOKButton) {
+    // stuff path into pref
+    NSString* newPath = [[sheet filenames] objectAtIndex:0];
+    [self setDownloadFolder:newPath];
+    
+    // update the menu
+    [self setupDownloadMenuWithPath:newPath];
+  }
+  else
+    [mDownloadFolder selectItemAtIndex:0];
 }
 @end
