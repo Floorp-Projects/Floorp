@@ -15,6 +15,7 @@
 // The following is included to make 
 // the browse for a dir code compile
 #include <shlobj.h>
+#include <ctype.h>
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -27,7 +28,7 @@ extern NODE *CurrentNode;
 extern HBITMAP hBitmap;
 extern CString Path;
 extern char iniFilePath[MAX_SIZE];
-
+extern BOOL Validate;
 extern BOOL inNext;
 extern BOOL inPrev;
 extern NODE* WizardTree;
@@ -496,6 +497,37 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 					if (!IterateListBox(parms))
 						return FALSE;
 				}
+				else if(strcmp(pcmd, "IsNumeric") ==0)
+				{
+					WIDGET *wid;
+					wid = curWidget;
+					if (wid)
+					{
+						CString retval = CWizardUI::GetScreenValue(curWidget);
+						curWidget->value = retval;
+						int len = retval.GetLength();
+						char* intval = (char*)(LPCTSTR)(retval);
+						intval[len] = '\0';
+						int pCount =0;
+						while (intval[0] != '\0')
+						{
+							if (!isdigit(intval[0]))
+								pCount++;
+
+							intval++;
+							
+						}
+						if (pCount > 0)
+						{
+							AfxMessageBox("You Must Enter Only Numeric Values", MB_OK);
+							Validate = FALSE;
+						}
+						else
+							Validate = TRUE;
+					}
+					
+				}
+        
 				else if (strcmp(pcmd, "VerifySet") == 0)
 				{
 					// VerifySet checks to see if the first parameter has any value

@@ -61,6 +61,7 @@ extern char currDirPath[MAX_SIZE];
 extern char customizationPath[MAX_SIZE];
 
 extern BOOL IsNewValue;
+BOOL Validate = TRUE;
 
 extern _declspec (dllimport) WIDGET ptr_ga[1000];
 CCriticalSection nextSyncCodeSegment;
@@ -116,7 +117,6 @@ BOOL CWizardUI::OnSetActive()
 	if (!(CurrentNode->isWidgetsSorted)) {
 		SortWidgetsForTabOrder();
 	}
-
 	CreateControls();
 	DisplayControls();
 
@@ -168,6 +168,11 @@ BOOL CWizardUI::OnKillActive()
 LRESULT CWizardUI::OnWizardBack() 
 {
 	// TODO: Add your specialized code here and/or call the base class
+	if (!Validate)
+	{
+		AfxMessageBox("You Must Enter Only Numeric Values", MB_OK);
+		return FALSE;
+	}
 	if (!prevLock.IsLocked())
 	{
 		prevLock.Lock();
@@ -186,6 +191,12 @@ LRESULT CWizardUI::OnWizardBack()
 LRESULT CWizardUI::OnWizardNext() 
 {
 	// TODO: Add your specialized code here and/or call the base class
+	if (!Validate)
+	{
+		AfxMessageBox("You Must Enter Only Numeric Values", MB_OK);
+		return FALSE;
+	}
+
 	if (!nextLock.IsLocked())
 	{
 		nextLock.Lock();
@@ -214,7 +225,7 @@ LRESULT CWizardUI::OnWizardNext()
 			MessageBox("CD Image would be created", "OK", MB_OK);
 			isBuildInstaller = FALSE;
 		}
-
+	
 		UpdateGlobals();
 		DestroyCurrentScreenWidgets();
 		while (!theApp.GoToNextNode())
@@ -328,7 +339,7 @@ BOOL CWizardUI::SetDescription(WIDGET *w)
 BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam) 
 {
 	UINT nID = LOWORD(wParam);
-
+	UINT wNotifyCode = HIWORD(wParam);
 	// Get screen values exchanged
 	UpdateData(TRUE);
 
@@ -337,13 +348,26 @@ BOOL CWizardUI::OnCommand(WPARAM wParam, LPARAM lParam)
 		WIDGET* curWidget = CurrentNode->pageWidgets[i];
 		if (curWidget->widgetID != nID) 
 			continue;
+		if (curWidget->type == "EditBox")
+		{
+			if (wNotifyCode == EN_KILLFOCUS)
+				if(((CEdit*)curWidget->control)->GetModify())
+				{
+					if (((CString)(curWidget->action.onCommand)).GetLength() > 0)
+					theInterpreter->interpret(curWidget->action.onCommand, curWidget);
+//					AfxMessageBox("modified", MB_OK);
+//					((CEdit*)curWidget->control)->SetModify(FALSE);
 
-		if (curWidget->action.onCommand)
-			theInterpreter->interpret(curWidget->action.onCommand, curWidget);
+				}
+		}
+		else
+		{
+			if (curWidget->action.onCommand)
+				theInterpreter->interpret(curWidget->action.onCommand, curWidget);
 
-		if (curWidget->numOfOptDesc > 0)
-			SetDescription(curWidget);
-
+			if (curWidget->numOfOptDesc > 0)
+				SetDescription(curWidget);
+		}
 		break;
 	}
 
@@ -489,7 +513,7 @@ void CWizardUI::CreateControls()
 
 		CRect tmpRect = CRect(s_x, s_y, (s_x + s_width), (s_y + s_height));
 
-		if (widgetType == "Text" || widgetType == "BoldText") {
+		if (widgetType == "Text" || widgetType == "BoldText" || widgetType == "DynamicText") {
 			curWidget->control = new CStatic;
 			rv = ((CStatic*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
 			EnableWidget(curWidget);
@@ -501,7 +525,7 @@ void CWizardUI::CreateControls()
 		}
 		else if (widgetType == "EditBox") {
 			curWidget->control = new CEdit;//Added new style parameter ES_AUTOHSCROLL- to allow *GASP* SCROLLING!!
-			if (rv = ((CEdit*)curWidget->control)->CreateEx(WS_EX_CLIENTEDGE, 
+/*			if (rv = ((CEdit*)curWidget->control)->CreateEx(WS_EX_CLIENTEDGE, 
 													_T("EDIT"), 
 													NULL,
 													WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER |ES_AUTOHSCROLL ,
@@ -509,12 +533,19 @@ void CWizardUI::CreateControls()
 													curWidget->location.y,
 													curWidget->size.width,
 													curWidget->size.height,
-													m_hWnd, 0, 0 ))
+													m_hWnd, ID, 0 ))
+*/
+			if (rv = ((CEdit*)curWidget->control)->CreateEx(WS_EX_CLIENTEDGE, 
+													_T("EDIT"), 
+													NULL,
+													WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_BORDER |ES_AUTOHSCROLL ,
+													tmpRect,this, ID, 0 ))
 			{
 				//Set maximum number of characters allowed per line - limit set to 200
 				((CEdit*)curWidget->control)->SetLimitText(int(curWidget->fieldlen.length));
 				((CEdit*)curWidget->control)->SetWindowText(curWidget->value);
 				EnableWidget(curWidget);
+				((CEdit*)curWidget->control)->SetModify(FALSE);
 			}
 		}
 		else if (widgetType == "Button") {
@@ -1018,6 +1049,15 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 			rv = tmpStr;
 		}
 	}
+	else if (widgetType == "DynamicText") 
+	{
+		char myLine[MAX_SIZE];
+		curWidget->control->GetWindowText(myLine, 250);
+
+		CString line = (CString)myLine;
+		rv = line;
+	}
+
 	else
 		rv = curWidget->value; // !!! Fix this so we're not copying strings all the time
 								// Should be able to just pass in an "assign" boolean
