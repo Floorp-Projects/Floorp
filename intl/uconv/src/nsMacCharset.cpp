@@ -80,7 +80,7 @@ nsresult nsPlatformCharset::InitInfo()
   return NS_OK;
 }
 
-nsresult nsPlatformCharset::MapToCharset(short script, short region, nsAString& outCharset)
+nsresult nsPlatformCharset::MapToCharset(short script, short region, nsACString& outCharset)
 {
   switch (region) {
     case verUS:
@@ -116,7 +116,7 @@ nsresult nsPlatformCharset::MapToCharset(short script, short region, nsAString& 
 }
 
 NS_IMETHODIMP 
-nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsAString& oResult)
+nsPlatformCharset::GetCharset(nsPlatformCharsetSel selector, nsACString& oResult)
 {
   nsresult rv;
   if (mCharset.IsEmpty()) {
@@ -175,7 +175,7 @@ nsPlatformCharset::Init()
 }
 
 nsresult 
-nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsAString& outCharset)
+nsPlatformCharset::MapToCharset(nsAString& inANSICodePage, nsACString& outCharset)
 {
   return NS_OK;
 }
@@ -193,7 +193,7 @@ nsPlatformCharset::ConvertLocaleToCharsetUsingDeprecatedConfig(nsAutoString& loc
 }
 
 nsresult
-nsPlatformCharset::VerifyCharset(nsString &aCharset)
+nsPlatformCharset::VerifyCharset(nsCString &aCharset)
 {
   return NS_OK;
 }
