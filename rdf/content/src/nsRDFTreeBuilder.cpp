@@ -80,7 +80,9 @@
 #include "rdfutil.h"
 
 #include "nsVoidArray.h"
-#include "nsIXULSortService.h"
+#include "rdf_qsort.h"
+
+#include "nsRDFGenericBuilder.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -107,106 +109,19 @@ static NS_DEFINE_IID(kISupportsIID,               NS_ISUPPORTS_IID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,        NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
-static NS_DEFINE_IID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
-static NS_DEFINE_IID(kIXULSortServiceIID,        NS_IXULSORTSERVICE_IID);
-
 ////////////////////////////////////////////////////////////////////////
 
-class RDFTreeBuilderImpl : public nsIRDFContentModelBuilder,
-                           public nsIRDFObserver,
-                           public nsIDOMNodeObserver,
-                           public nsIDOMElementObserver
+class RDFTreeBuilderImpl : public RDFGenericBuilderImpl
 {
-private:
-    nsIRDFDocument*            mDocument;
-    nsIRDFCompositeDataSource* mDB;
-    nsIContent*                mRoot;
-
-    // pseudo-constants
-    static nsrefcnt gRefCnt;
-    static nsIRDFService*       gRDFService;
-    static nsINameSpaceManager* gNameSpaceManager;
-
-    static nsIAtom* kContainerAtom;
-    static nsIAtom* kTreeContentsGeneratedAtom;
-    static nsIAtom* kIdAtom;
-    static nsIAtom* kOpenAtom;
-    static nsIAtom* kResourceAtom;
-    static nsIAtom* kTreeAtom;
-    static nsIAtom* kTreeBodyAtom;
-    static nsIAtom* kTreeCellAtom;
-    static nsIAtom* kTreeChildrenAtom;
-    static nsIAtom* kTreeColAtom;
-    static nsIAtom* kTreeHeadAtom;
-    static nsIAtom* kTreeIconAtom;
-    static nsIAtom* kTreeIndentationAtom;
-    static nsIAtom* kTreeItemAtom;
-    static nsIAtom* kContainmentAtom;
-    static nsIAtom* kNaturalOrderPosAtom;
-
-    static PRInt32  kNameSpaceID_RDF;
-    static PRInt32  kNameSpaceID_XUL;
-
-    static nsIRDFResource* kNC_Title;
-    static nsIRDFResource* kNC_child;
-    static nsIRDFResource* kNC_Column;
-    static nsIRDFResource* kNC_Folder;
-    static nsIRDFResource* kRDF_child;
-
 public:
     RDFTreeBuilderImpl();
     virtual ~RDFTreeBuilderImpl();
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS
-
-    // nsIRDFContentModelBuilder interface
-    NS_IMETHOD SetDocument(nsIRDFDocument* aDocument);
-    NS_IMETHOD SetDataBase(nsIRDFCompositeDataSource* aDataBase);
-    NS_IMETHOD GetDataBase(nsIRDFCompositeDataSource** aDataBase);
-    NS_IMETHOD CreateRootContent(nsIRDFResource* aResource);
-    NS_IMETHOD SetRootContent(nsIContent* aElement);
-    NS_IMETHOD CreateContents(nsIContent* aElement);
-
-    // nsIRDFObserver interface
-    NS_IMETHOD OnAssert(nsIRDFResource* aSubject, nsIRDFResource* aPredicate, nsIRDFNode* aObject);
-    NS_IMETHOD OnUnassert(nsIRDFResource* aSubject, nsIRDFResource* aPredicate, nsIRDFNode* aObjetct);
-
-    // nsIDOMNodeObserver interface
-    NS_DECL_IDOMNODEOBSERVER
-
-    // nsIDOMElementObserver interface
-    NS_DECL_IDOMELEMENTOBSERVER
-
     // Implementation methods
     nsresult
-    FindChildByTag(nsIContent* aElement,
-                   PRInt32 aNameSpaceID,
-                   nsIAtom* aTag,
-                   nsIContent** aChild);
-
-    nsresult
-    FindChildByTagAndResource(nsIContent* aElement,
-                              PRInt32 aNameSpaceID,
-                              nsIAtom* aTag,
-                              nsIRDFResource* aResource,
-                              nsIContent** aChild);
-
-    nsresult
-    EnsureElementHasGenericChild(nsIContent* aParent,
-                                 PRInt32 aNameSpaceID,
-                                 nsIAtom* aTag,
-                                 nsIContent** aResult);
-
-    nsresult
-    FindTreeElement(nsIContent* aElement,
-                    nsIContent** aTreeElement);
-
-    nsresult
-    AddTreeRow(nsIContent* aTreeItemElement,
-               nsIRDFResource* aProperty,
-               nsIRDFResource* aValue,
-               PRInt32 naturalOrderPos);
+    AddWidgetItem(nsIContent* aTreeItemElement,
+                  nsIRDFResource* aProperty,
+                  nsIRDFResource* aValue, PRInt32 naturalOrderPos);
 
     nsresult
     EnsureCell(nsIContent* aTreeItemElement, PRInt32 aIndex, nsIContent** aCellElement);
@@ -228,55 +143,53 @@ public:
     SetCellValue(nsIContent* aTreeRowElement,
                  nsIRDFResource* aProperty,
                  nsIRDFNode* aValue);
-
-	PRBool
-	IsTreeBodyElement(nsIContent* aElement);
-
-    PRBool
-    IsTreeItemElement(nsIContent* aElement);
-
-    PRBool
-    IsTreeProperty(nsIContent* aElement, nsIRDFResource* aProperty);
-
-    PRBool
-    IsOpen(nsIContent* aElement);
-
-    PRBool
-    IsElementInTree(nsIContent* aElement);
+ 
+    nsresult 
+    GetRootWidgetAtom(nsIAtom** aResult) {
+        NS_ADDREF(kTreeAtom);
+        *aResult = kTreeAtom;
+        return NS_OK;
+    }
 
     nsresult
-    GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource);
+    GetWidgetItemAtom(nsIAtom** aResult) {
+        NS_ADDREF(kTreeItemAtom);
+        *aResult = kTreeItemAtom;
+        return NS_OK;
+    }
 
     nsresult
-    CreateResourceElement(PRInt32 aNameSpaceID,
-                          nsIAtom* aTag,
-                          nsIRDFResource* aResource,
-                          nsIContent** aResult);
+    GetInsertionRootAtom(nsIAtom** aResult) {
+        NS_ADDREF(kTreeBodyAtom);
+        *aResult = kTreeBodyAtom;
+        return NS_OK;
+    }
 
     nsresult
-    GetResource(PRInt32 aNameSpaceID,
-                nsIAtom* aNameAtom,
-                nsIRDFResource** aResource);
+    GetItemAtomThatContainsTheChildren(nsIAtom** aResult) {
+        NS_ADDREF(kTreeChildrenAtom);
+        *aResult = kTreeChildrenAtom;
+        return NS_OK;
+    }
 
-    nsresult
-    OpenTreeItem(nsIContent* aElement);
-
-    nsresult
-    CloseTreeItem(nsIContent* aElement);
-
-    nsresult
-    GetElementResource(nsIContent* aElement, nsIRDFResource** aResult);
+    // pseudo-constants
+    static nsrefcnt gRefCnt;
+ 
+    static nsIAtom* kTreeAtom;
+    static nsIAtom* kTreeBodyAtom;
+    static nsIAtom* kTreeCellAtom;
+    static nsIAtom* kTreeChildrenAtom;
+    static nsIAtom* kTreeColAtom;
+    static nsIAtom* kTreeHeadAtom;
+    static nsIAtom* kTreeIconAtom;
+    static nsIAtom* kTreeIndentationAtom;
+    static nsIAtom* kTreeItemAtom;
 };
 
 ////////////////////////////////////////////////////////////////////////
 
 nsrefcnt RDFTreeBuilderImpl::gRefCnt = 0;
 
-nsIAtom* RDFTreeBuilderImpl::kContainerAtom;
-nsIAtom* RDFTreeBuilderImpl::kTreeContentsGeneratedAtom;
-nsIAtom* RDFTreeBuilderImpl::kIdAtom;
-nsIAtom* RDFTreeBuilderImpl::kOpenAtom;
-nsIAtom* RDFTreeBuilderImpl::kResourceAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeBodyAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeCellAtom;
@@ -286,19 +199,6 @@ nsIAtom* RDFTreeBuilderImpl::kTreeHeadAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeIconAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeIndentationAtom;
 nsIAtom* RDFTreeBuilderImpl::kTreeItemAtom;
-nsIAtom* RDFTreeBuilderImpl::kContainmentAtom;
-nsIAtom* RDFTreeBuilderImpl::kNaturalOrderPosAtom;
-
-PRInt32  RDFTreeBuilderImpl::kNameSpaceID_RDF;
-PRInt32  RDFTreeBuilderImpl::kNameSpaceID_XUL;
-
-nsIRDFService*  RDFTreeBuilderImpl::gRDFService;
-nsINameSpaceManager* RDFTreeBuilderImpl::gNameSpaceManager;
-nsIRDFResource* RDFTreeBuilderImpl::kNC_Title;
-nsIRDFResource* RDFTreeBuilderImpl::kNC_child;
-nsIRDFResource* RDFTreeBuilderImpl::kNC_Column;
-nsIRDFResource* RDFTreeBuilderImpl::kNC_Folder;
-nsIRDFResource* RDFTreeBuilderImpl::kRDF_child;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -321,20 +221,9 @@ NS_NewRDFTreeBuilder(nsIRDFContentModelBuilder** result)
 
 
 RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
-    : mDocument(nsnull),
-      mDB(nsnull),
-      mRoot(nsnull)
+    : RDFGenericBuilderImpl()
 {
-    NS_INIT_REFCNT();
-
     if (gRefCnt == 0) {
-        kContainerAtom             = NS_NewAtom("container");
-        kTreeContentsGeneratedAtom = NS_NewAtom("treecontentsgenerated");
-
-        kIdAtom              = NS_NewAtom("id");
-        kOpenAtom            = NS_NewAtom("open");
-        kResourceAtom        = NS_NewAtom("resource");
-
         kTreeAtom            = NS_NewAtom("tree");
         kTreeBodyAtom        = NS_NewAtom("treebody");
         kTreeCellAtom        = NS_NewAtom("treecell");
@@ -344,60 +233,6 @@ RDFTreeBuilderImpl::RDFTreeBuilderImpl(void)
         kTreeIconAtom        = NS_NewAtom("treeicon");
         kTreeIndentationAtom = NS_NewAtom("treeindentation");
         kTreeItemAtom        = NS_NewAtom("treeitem");
-        kContainmentAtom     = NS_NewAtom("containment");
-        kNaturalOrderPosAtom = NS_NewAtom("pos");
-
-        nsresult rv;
-
-        // Register the XUL and RDF namespaces: these'll just retrieve
-        // the IDs if they've already been registered by someone else.
-        if (NS_SUCCEEDED(rv = nsRepository::CreateInstance(kNameSpaceManagerCID,
-                                                           nsnull,
-                                                           kINameSpaceManagerIID,
-                                                           (void**) &gNameSpaceManager))) {
-
-// XXX This is sure to change. Copied from mozilla/layout/xul/content/src/nsXULAtoms.cpp
-static const char kXULNameSpaceURI[]
-    = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-
-static const char kRDFNameSpaceURI[]
-    = RDF_NAMESPACE_URI;
-
-            rv = gNameSpaceManager->RegisterNameSpace(kXULNameSpaceURI, kNameSpaceID_XUL);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register XUL namespace");
-
-            rv = gNameSpaceManager->RegisterNameSpace(kRDFNameSpaceURI, kNameSpaceID_RDF);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to register RDF namespace");
-        }
-        else {
-            NS_ERROR("couldn't create namepsace manager");
-        }
-
-
-        // Initialize the global shared reference to the service
-        // manager and get some shared resource objects.
-        rv = nsServiceManager::GetService(kRDFServiceCID,
-                                          kIRDFServiceIID,
-                                          (nsISupports**) &gRDFService);
-
-        if (NS_FAILED(rv)) {
-            NS_ERROR("couldnt' get RDF service");
-        }
-
-        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURINC_Title,  &kNC_Title)),
-                  "couldn't get resource");
-
-        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURINC_child,  &kNC_child)),
-                  "couldn't get resource");
-
-        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURINC_Column, &kNC_Column)),
-                  "couldn't get resource");
-
-        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURINC_Folder,  &kNC_Folder)),
-                  "couldn't get resource");
-
-        NS_VERIFY(NS_SUCCEEDED(gRDFService->GetResource(kURIRDF_child,  &kRDF_child)),
-                  "couldn't get resource");
     }
 
     ++gRefCnt;
@@ -405,19 +240,9 @@ static const char kRDFNameSpaceURI[]
 
 RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
 {
-    NS_IF_RELEASE(mRoot);
-    NS_IF_RELEASE(mDB);
-    // NS_IF_RELEASE(mDocument) not refcounted
-
     --gRefCnt;
     if (gRefCnt == 0) {
-        NS_RELEASE(kContainerAtom);
-        NS_RELEASE(kTreeContentsGeneratedAtom);
-
-        NS_RELEASE(kIdAtom);
-        NS_RELEASE(kOpenAtom);
-        NS_RELEASE(kResourceAtom);
-
+        
         NS_RELEASE(kTreeAtom);
         NS_RELEASE(kTreeBodyAtom);
         NS_RELEASE(kTreeCellAtom);
@@ -427,823 +252,17 @@ RDFTreeBuilderImpl::~RDFTreeBuilderImpl(void)
         NS_RELEASE(kTreeIconAtom);
         NS_RELEASE(kTreeIndentationAtom);
         NS_RELEASE(kTreeItemAtom);
-        NS_RELEASE(kContainmentAtom);
-        NS_RELEASE(kNaturalOrderPosAtom);
-        NS_RELEASE(kNC_Title);
-        NS_RELEASE(kNC_Column);
-
-        nsServiceManager::ReleaseService(kRDFServiceCID, gRDFService);
-        NS_RELEASE(gNameSpaceManager);
     }
 }
-
-////////////////////////////////////////////////////////////////////////
-
-NS_IMPL_ADDREF(RDFTreeBuilderImpl);
-NS_IMPL_RELEASE(RDFTreeBuilderImpl);
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::QueryInterface(REFNSIID iid, void** aResult)
-{
-    NS_PRECONDITION(aResult != nsnull, "null ptr");
-    if (! aResult)
-        return NS_ERROR_NULL_POINTER;
-
-    if (iid.Equals(kIRDFContentModelBuilderIID) ||
-        iid.Equals(kISupportsIID)) {
-        *aResult = NS_STATIC_CAST(nsIRDFContentModelBuilder*, this);
-    }
-    else if (iid.Equals(kIRDFObserverIID)) {
-        *aResult = NS_STATIC_CAST(nsIRDFObserver*, this);
-    }
-    else if (iid.Equals(nsIDOMNodeObserver::GetIID())) {
-        *aResult = NS_STATIC_CAST(nsIDOMNodeObserver*, this);
-    }
-    else if (iid.Equals(nsIDOMElementObserver::GetIID())) {
-        *aResult = NS_STATIC_CAST(nsIDOMElementObserver*, this);
-    }
-    else {
-        *aResult = nsnull;
-        return NS_NOINTERFACE;
-    }
-    NS_ADDREF(this);
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////
-// nsIRDFContentModelBuilder methods
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::SetDocument(nsIRDFDocument* aDocument)
-{
-    NS_PRECONDITION(aDocument != nsnull, "null ptr");
-    if (! aDocument)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(mDocument == nsnull, "already initialized");
-    if (mDocument)
-        return NS_ERROR_ALREADY_INITIALIZED;
-
-    mDocument = aDocument; // not refcounted
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::SetDataBase(nsIRDFCompositeDataSource* aDataBase)
-{
-    NS_PRECONDITION(aDataBase != nsnull, "null ptr");
-    if (! aDataBase)
-        return NS_ERROR_NULL_POINTER;
-
-    NS_PRECONDITION(mDB == nsnull, "already initialized");
-    if (mDB)
-        return NS_ERROR_ALREADY_INITIALIZED;
-
-    mDB = aDataBase;
-    NS_ADDREF(mDB);
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::GetDataBase(nsIRDFCompositeDataSource** aDataBase)
-{
-    NS_PRECONDITION(aDataBase != nsnull, "null ptr");
-    if (! aDataBase)
-        return NS_ERROR_NULL_POINTER;
-
-    *aDataBase = mDB;
-    NS_ADDREF(mDB);
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::CreateRootContent(nsIRDFResource* aResource)
-{
-    // Create a structure that looks like this:
-    //
-    // <html:document>
-    //    <html:body>
-    //       <xul:tree>
-    //       </xul:tree>
-    //    </html:body>
-    // </html:document>
-    //
-    // Eventually, we should be able to do away with the HTML tags and
-    // just have it create XUL in some other context.
-
-    nsresult rv;
-    nsCOMPtr<nsIAtom>       tag;
-    nsCOMPtr<nsIDocument>   doc;
-
-    if (NS_FAILED(rv = mDocument->QueryInterface(kIDocumentIID,
-                                                 (void**) getter_AddRefs(doc))))
-        return rv;
-
-    // Create the DOCUMENT element
-    if ((tag = dont_AddRef(NS_NewAtom("document"))) == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    nsCOMPtr<nsIContent> root;
-    if (NS_FAILED(rv = NS_NewRDFElement(kNameSpaceID_HTML, /* XXX */
-                                        tag,
-                                        getter_AddRefs(root))))
-        return rv;
-
-    doc->SetRootContent(NS_STATIC_CAST(nsIContent*, root));
-
-    // Create the BODY element
-    nsCOMPtr<nsIContent> body;
-    if ((tag = dont_AddRef(NS_NewAtom("body"))) == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    if (NS_FAILED(rv = NS_NewRDFElement(kNameSpaceID_HTML, /* XXX */
-                                        tag,
-                                        getter_AddRefs(body))))
-        return rv;
-
-
-    // Attach the BODY to the DOCUMENT
-    if (NS_FAILED(rv = root->AppendChildTo(body, PR_FALSE)))
-        return rv;
-
-    // Create the xul:tree element, and indicate that children should
-    // be recursively generated on demand
-    nsCOMPtr<nsIContent> tree;
-    if (NS_FAILED(rv = CreateResourceElement(kNameSpaceID_XUL,
-                                             kTreeAtom,
-                                             aResource,
-                                             getter_AddRefs(tree))))
-        return rv;
-
-    if (NS_FAILED(rv = tree->SetAttribute(kNameSpaceID_RDF, kContainerAtom, "true", PR_FALSE)))
-        return rv;
-
-    // Attach the TREE to the BODY
-    if (NS_FAILED(rv = body->AppendChildTo(tree, PR_FALSE)))
-        return rv;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::SetRootContent(nsIContent* aElement)
-{
-    NS_IF_RELEASE(mRoot);
-    mRoot = aElement;
-    NS_IF_ADDREF(mRoot);
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::CreateContents(nsIContent* aElement)
-{
-    nsresult rv;
-
-    // First, make sure that the element is in the right tree -- ours.
-    if (! IsElementInTree(aElement))
-        return NS_OK;
-
-    // Next, see if the treeitem is even "open". If not, then just
-    // pretend it doesn't have _any_ contents. We check this _before_
-    // checking the contents-generated attribute so that we don't
-    // eagerly set contents-generated on a closed node.
-    if (! IsOpen(aElement))
-        return NS_OK;
-
-    // Now see if someone has marked the element's contents as being
-    // generated: this prevents a re-entrant call from triggering
-    // another generation.
-    nsAutoString attrValue;
-    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
-                                              kTreeContentsGeneratedAtom,
-                                              attrValue))) {
-        NS_ERROR("unable to test contents-generated attribute");
-        return rv;
-    }
-
-    if ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (attrValue.EqualsIgnoreCase("true")))
-        return NS_OK;
-
-    // Now mark the element's contents as being generated so that
-    // any re-entrant calls don't trigger an infinite recursion.
-    if (NS_FAILED(rv = aElement->SetAttribute(kNameSpaceID_None,
-                                              kTreeContentsGeneratedAtom,
-                                              "true",
-                                              PR_FALSE))) {
-        NS_ERROR("unable to set contents-generated attribute");
-        return rv;
-    }
-
-    // Get the treeitem's resource so that we can generate cell
-    // values. We could QI for the nsIRDFResource here, but doing this
-    // via the nsIContent interface allows us to support generic nodes
-    // that might get added in by DOM calls.
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = GetElementResource(aElement, getter_AddRefs(resource)))) {
-        NS_ERROR("unable to get element resource");
-        return rv;
-    }
-
-    // XXX Eventually, we may want to factor this into one method that
-    // handles RDF containers (RDF:Bag, et al.) and another that
-    // handles multi-attributes. For performance...
-
-    // Create a cursor that'll enumerate all of the outbound arcs
-    nsCOMPtr<nsIRDFArcsOutCursor> properties;
-    if (NS_FAILED(rv = mDB->ArcLabelsOut(resource, getter_AddRefs(properties))))
-        return rv;
-
-// rjc - sort
-	nsVoidArray	*tempArray;
-        if ((tempArray = new nsVoidArray()) == nsnull)	return (NS_ERROR_OUT_OF_MEMORY);
-
-    while (NS_SUCCEEDED(rv = properties->Advance())) {
-        nsCOMPtr<nsIRDFResource> property;
-
-        if (NS_FAILED(rv = properties->GetPredicate(getter_AddRefs(property))))
-            break;
-
-        // If it's not a tree property, then it doesn't specify an
-        // object that is member of the current container element;
-        // rather, it specifies a "simple" property of the container
-        // element. Skip it.
-        if (! IsTreeProperty(aElement, property))
-            continue;
-
-        // Create a second cursor that'll enumerate all of the values
-        // for all of the arcs.
-        nsCOMPtr<nsIRDFAssertionCursor> assertions;
-        if (NS_FAILED(rv = mDB->GetTargets(resource, property, PR_TRUE, getter_AddRefs(assertions)))) {
-            NS_ERROR("unable to get targets for property");
-            return rv;
-        }
-
-        while (NS_SUCCEEDED(rv = assertions->Advance())) {
-            nsCOMPtr<nsIRDFNode> value;
-            if (NS_FAILED(rv = assertions->GetValue(getter_AddRefs(value)))) {
-                NS_ERROR("unable to get cursor value");
-                // return rv;
-                break;
-            }
-
-            nsCOMPtr<nsIRDFResource> valueResource;
-            if (NS_SUCCEEDED(value->QueryInterface(kIRDFResourceIID, (void**) getter_AddRefs(valueResource)))
-                && IsTreeProperty(aElement, property)) {
-			/* XXX hack: always append value resource 1st!
-			       due to sort callback implementation */
-                	tempArray->AppendElement(valueResource);
-                	tempArray->AppendElement(property);
-            }
-            else {
-                if (NS_FAILED(rv = SetCellValue(aElement, property, value))) {
-                    NS_ERROR("unable to set cell value");
-                    // return rv;
-                    break;
-                }
-            }
-        }
-    }
-
-        unsigned long numElements = tempArray->Count();
-        if (numElements > 0)
-        {
-        	nsIRDFResource ** flatArray = new nsIRDFResource *[numElements];
-        	if (flatArray)
-        	{
-			// flatten array of resources, sort them, then add as tree elements
-			unsigned long loop;
-
-        	        for (loop=0; loop<numElements; loop++)
-				flatArray[loop] = (nsIRDFResource *)tempArray->ElementAt(loop);
-
-			nsIXULSortService		*gXULSortService = nsnull;
-
-			nsresult rv = nsServiceManager::GetService(kXULSortServiceCID,
-				kIXULSortServiceIID, (nsISupports**) &gXULSortService);
-			if (nsnull != gXULSortService)
-			{
-				gXULSortService->OpenContainer(mDB, aElement, flatArray, numElements/2, 2*sizeof(nsIRDFResource *));
-				nsServiceManager::ReleaseService(kXULSortServiceCID, gXULSortService);
-			}
-
-        		for (loop=0; loop<numElements; loop+=2)
-        		{
-				if (NS_FAILED(rv = AddTreeRow(aElement, flatArray[loop+1], flatArray[loop], loop+1)))
-				{
-					NS_ERROR("unable to create tree row");
-				}
-        		}
-			delete [] flatArray;
-        	}
-        }
-        delete tempArray;
-
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY)
-        // This is a normal return code from nsIRDFCursor::Advance()
-        rv = NS_OK;
-
-    return rv;
-}
-
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::OnAssert(nsIRDFResource* aSubject,
-                             nsIRDFResource* aPredicate,
-                             nsIRDFNode* aObject)
-{
-    NS_PRECONDITION(mDocument != nsnull, "not initialized");
-    if (! mDocument)
-        return NS_ERROR_NOT_INITIALIZED;
-
-    nsresult rv;
-
-    nsCOMPtr<nsISupportsArray> elements;
-    if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(elements)))) {
-        NS_ERROR("unable to create new ISupportsArray");
-        return rv;
-    }
-
-    // Find all the elements in the content model that correspond to
-    // aSubject: for each, we'll try to build XUL children if
-    // appropriate.
-    if (NS_FAILED(rv = mDocument->GetElementsForResource(aSubject, elements))) {
-        NS_ERROR("unable to retrieve elements from resource");
-        return rv;
-    }
-
-    for (PRInt32 i = elements->Count() - 1; i >= 0; --i) {
-        nsCOMPtr<nsIContent> element( do_QueryInterface(elements->ElementAt(i)) );
-        
-        // XXX somehow figure out if building XUL kids on this
-        // particular element makes any sense whatsoever.
-
-        // We'll start by making sure that the element at least has
-        // the same parent has the content model builder's root
-        if (! IsElementInTree(element))
-            continue;
-        
-        nsCOMPtr<nsIRDFResource> resource;
-        if (NS_SUCCEEDED(aObject->QueryInterface(kIRDFResourceIID,
-                                                 (void**) getter_AddRefs(resource)))
-            && IsTreeProperty(element, aPredicate)) {
-            // Okay, the object _is_ a resource, and the predicate is
-            // a tree property. So this'll be a new row in the tree
-            // control.
-
-            // But if the contents of aElement _haven't_ yet been
-            // generated, then just ignore the assertion. We do this
-            // because we know that _eventually_ the contents will be
-            // generated (via CreateContents()) when somebody asks for
-            // them later.
-            nsAutoString contentsGenerated;
-            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None,
-                                                     kTreeContentsGeneratedAtom,
-                                                     contentsGenerated))) {
-                NS_ERROR("severe problem trying to get attribute");
-                return rv;
-            }
-
-            if ((rv == NS_CONTENT_ATTR_HAS_VALUE) &&
-                contentsGenerated.EqualsIgnoreCase("true")) {
-                // Okay, it's a "live" element, so go ahead and append the new
-                // child to this node.
-                if (NS_FAILED(rv = AddTreeRow(element, aPredicate, resource, 0))) {
-                    NS_ERROR("unable to create new tree row");
-                    return rv;
-                }
-            }
-        }
-        else {
-            // Either the object of the assertion is not a resource,
-            // or the object is a resource and the predicate is not a
-            // tree property. So this won't be a new row in the
-            // table. See if we can use it to set a cell value on the
-            // current element.
-            if (NS_FAILED(rv = SetCellValue(element, aPredicate, aObject))) {
-                NS_ERROR("unable to set cell value");
-                return rv;
-            }
-        }
-    }
-    return NS_OK;
-}
-
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::OnUnassert(nsIRDFResource* aSubject,
-                               nsIRDFResource* aPredicate,
-                               nsIRDFNode* aObject)
-{
-    return NS_OK;
-}
-
-////////////////////////////////////////////////////////////////////////
-// nsIDOMNodeObserver interface
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::OnSetNodeValue(nsIDOMNode* aNode, const nsString& aValue)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::OnInsertBefore(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aRefChild)
-{
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::OnReplaceChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild, nsIDOMNode* aOldChild)
-{
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
-{
-    return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::OnAppendChild(nsIDOMNode* aParent, nsIDOMNode* aNewChild)
-{
-    return NS_OK;
-}
-
-
-////////////////////////////////////////////////////////////////////////
-// nsIDOMElementObserver interface
-
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& aName, const nsString& aValue)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = GetDOMNodeResource(aElement, getter_AddRefs(resource)))) {
-        // XXX it's not a resource element, so there's no assertions
-        // we need to make on the back-end. Should we just do the
-        // update?
-        return NS_OK;
-    }
-
-    // Get the nsIContent interface, it's a bit more utilitarian
-    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
-    if (! element) {
-        NS_ERROR("element doesn't support nsIContent");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    // Make sure that the element is in the tree. XXX Even this may be
-    // a bit too promiscuous: an element may also be a XUL element...
-    if (! IsElementInTree(element))
-        return NS_OK;
-
-    // Split the element into its namespace and tag components
-    PRInt32  elementNameSpaceID;
-    if (NS_FAILED(rv = element->GetNameSpaceID(elementNameSpaceID))) {
-        NS_ERROR("unable to get element namespace ID");
-        return rv;
-    }
-
-    nsCOMPtr<nsIAtom> elementNameAtom;
-    if (NS_FAILED(rv = element->GetTag( *getter_AddRefs(elementNameAtom) ))) {
-        NS_ERROR("unable to get element tag");
-        return rv;
-    }
-
-    // Split the property name into its namespace and tag components
-    PRInt32  attrNameSpaceID;
-    nsCOMPtr<nsIAtom> attrNameAtom;
-    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(attrNameAtom), attrNameSpaceID))) {
-        NS_ERROR("unable to parse attribute string");
-        return rv;
-    }
-
-    // Now do the work to change the attribute. There are a couple of
-    // special cases that we need to check for here...
-
-    if ((elementNameSpaceID    == kNameSpaceID_XUL) &&
-        (elementNameAtom.get() == kTreeItemAtom) &&
-        (attrNameSpaceID       == kNameSpaceID_None) &&
-        (attrNameAtom.get()    == kOpenAtom)) {
-        // We are possibly changing the value of the "open"
-        // attribute. This may require us to generate or destroy
-        // content in the tree. See what the old value was...
-        nsAutoString attrValue;
-        if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None, kOpenAtom, attrValue))) {
-            NS_ERROR("unable to get current open state");
-            return rv;
-        }
-
-        if ((rv == NS_CONTENT_ATTR_NO_VALUE) || (rv == NS_CONTENT_ATTR_NOT_THERE) ||
-            ((rv == NS_CONTENT_ATTR_HAS_VALUE) && (! attrValue.EqualsIgnoreCase(aValue)))) {
-            // Okay, it's really changing.
-
-            // This is a "transient" property, so we _don't_ go to the
-            // RDF graph to set it.
-            if (NS_FAILED(rv = element->SetAttribute(kNameSpaceID_None, kOpenAtom, aValue, PR_TRUE))) {
-                NS_ERROR("unable to update attribute on content node");
-                return rv;
-            }
-
-            if (aValue.EqualsIgnoreCase("true")) {
-                rv = OpenTreeItem(element);
-            }
-            else {
-                rv = CloseTreeItem(element);
-            }
-
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to open/close tree item");
-        }
-    }
-    else {
-        // It's a "vanilla" property: push its value into the graph.
-        nsCOMPtr<nsIRDFResource> property;
-        if (NS_FAILED(rv = GetResource(attrNameSpaceID, attrNameAtom, getter_AddRefs(property)))) {
-            NS_ERROR("unable to construct resource");
-            return rv;
-        }
-
-        // Unassert the old value, if there was one.
-        nsAutoString oldValue;
-        if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValue)) {
-            nsCOMPtr<nsIRDFLiteral> value;
-            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
-                NS_ERROR("unable to construct literal");
-                return rv;
-            }
-
-            rv = mDB->Unassert(resource, property, value);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
-        }
-
-        // Assert the new value
-        {
-            nsCOMPtr<nsIRDFLiteral> value;
-            if (NS_FAILED(rv = gRDFService->GetLiteral(aValue, getter_AddRefs(value)))) {
-                NS_ERROR("unable to construct literal");
-                return rv;
-            }
-
-            if (NS_FAILED(rv = mDB->Assert(resource, property, value, PR_TRUE))) {
-                NS_ERROR("unable to assert new property value");
-                return rv;
-            }
-        }
-    }    
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::OnRemoveAttribute(nsIDOMElement* aElement, const nsString& aName)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIRDFResource> resource;
-    if (NS_FAILED(rv = GetDOMNodeResource(aElement, getter_AddRefs(resource)))) {
-        // XXX it's not a resource element, so there's no assertions
-        // we need to make on the back-end. Should we just do the
-        // update?
-        return NS_OK;
-    }
-
-    // Get the nsIContent interface, it's a bit more utilitarian
-    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
-    if (! element) {
-        NS_ERROR("element doesn't support nsIContent");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    // Make sure that the element is in the tree. XXX Even this may be
-    // a bit too promiscuous: an element may also be a XUL element...
-    if (! IsElementInTree(element))
-        return NS_OK;
-
-    // Split the element into its namespace and tag components
-    PRInt32  elementNameSpaceID;
-    if (NS_FAILED(rv = element->GetNameSpaceID(elementNameSpaceID))) {
-        NS_ERROR("unable to get element namespace ID");
-        return rv;
-    }
-
-    nsCOMPtr<nsIAtom> elementNameAtom;
-    if (NS_FAILED(rv = element->GetTag( *getter_AddRefs(elementNameAtom) ))) {
-        NS_ERROR("unable to get element tag");
-        return rv;
-    }
-
-    // Split the property name into its namespace and tag components
-    PRInt32  attrNameSpaceID;
-    nsCOMPtr<nsIAtom> attrNameAtom;
-    if (NS_FAILED(rv = element->ParseAttributeString(aName, *getter_AddRefs(attrNameAtom), attrNameSpaceID))) {
-        NS_ERROR("unable to parse attribute string");
-        return rv;
-    }
-
-    if ((elementNameSpaceID    == kNameSpaceID_XUL) &&
-        (elementNameAtom.get() == kTreeItemAtom) &&
-        (attrNameSpaceID       == kNameSpaceID_None) &&
-        (attrNameAtom.get()    == kOpenAtom)) {
-        // We are removing the value of the "open" attribute. This may
-        // require us to destroy content from the tree.
-
-        // XXX should we check for existence of the attribute first?
-        if (NS_FAILED(rv = element->UnsetAttribute(kNameSpaceID_None, kOpenAtom, PR_TRUE))) {
-            NS_ERROR("unable to attribute on update content node");
-            return rv;
-        }
-
-        if (NS_FAILED(rv = CloseTreeItem(element))) {
-            NS_ERROR("unable to close tree item");
-            return rv;
-        }
-    }
-    else {
-        // It's a "vanilla" property: push its value into the graph.
-
-        nsCOMPtr<nsIRDFResource> property;
-        if (NS_FAILED(rv = GetResource(attrNameSpaceID, attrNameAtom, getter_AddRefs(property)))) {
-            NS_ERROR("unable to construct resource");
-            return rv;
-        }
-
-        // Unassert the old value, if there was one.
-        nsAutoString oldValue;
-        if (NS_CONTENT_ATTR_HAS_VALUE == element->GetAttribute(attrNameSpaceID, attrNameAtom, oldValue)) {
-            nsCOMPtr<nsIRDFLiteral> value;
-            if (NS_FAILED(rv = gRDFService->GetLiteral(oldValue, getter_AddRefs(value)))) {
-                NS_ERROR("unable to construct literal");
-                return rv;
-            }
-
-            rv = mDB->Unassert(resource, property, value);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to unassert old property value");
-        }
-    }
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::OnSetAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aNewAttr)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-RDFTreeBuilderImpl::OnRemoveAttributeNode(nsIDOMElement* aElement, nsIDOMAttr* aOldAttr)
-{
-    NS_NOTYETIMPLEMENTED("write me!");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 // Implementation methods
 
 nsresult
-RDFTreeBuilderImpl::FindChildByTag(nsIContent* aElement,
-                                   PRInt32 aNameSpaceID,
-                                   nsIAtom* aTag,
-                                   nsIContent** aChild)
-{
-    nsresult rv;
-
-    PRInt32 count;
-    if (NS_FAILED(rv = aElement->ChildCount(count)))
-        return rv;
-
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIContent> kid;
-        if (NS_FAILED(rv = aElement->ChildAt(i, *getter_AddRefs(kid))))
-            return rv; // XXX fatal
-
-        PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = kid->GetNameSpaceID(nameSpaceID)))
-            return rv; // XXX fatal
-
-        if (nameSpaceID != aNameSpaceID)
-            continue; // wrong namespace
-
-        nsCOMPtr<nsIAtom> kidTag;
-        if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(kidTag))))
-            return rv; // XXX fatal
-
-        if (kidTag.get() != aTag)
-            continue;
-
-        *aChild = kid;
-        NS_ADDREF(*aChild);
-        return NS_OK;
-    }
-
-    return NS_ERROR_RDF_NO_VALUE; // not found
-}
-
-
-nsresult
-RDFTreeBuilderImpl::FindChildByTagAndResource(nsIContent* aElement,
-                                              PRInt32 aNameSpaceID,
-                                              nsIAtom* aTag,
-                                              nsIRDFResource* aResource,
-                                              nsIContent** aChild)
-{
-    nsresult rv;
-
-    PRInt32 count;
-    if (NS_FAILED(rv = aElement->ChildCount(count)))
-        return rv;
-
-    for (PRInt32 i = 0; i < count; ++i) {
-        nsCOMPtr<nsIContent> kid;
-        if (NS_FAILED(rv = aElement->ChildAt(i, *getter_AddRefs(kid))))
-            return rv; // XXX fatal
-
-        // Make sure it's a <xul:treecell>
-        PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = kid->GetNameSpaceID(nameSpaceID)))
-            return rv; // XXX fatal
-
-        if (nameSpaceID != aNameSpaceID)
-            continue; // wrong namespace
-
-        nsCOMPtr<nsIAtom> tag;
-        if (NS_FAILED(rv = kid->GetTag(*getter_AddRefs(tag))))
-            return rv; // XXX fatal
-
-        if (tag.get() != aTag)
-            continue; // wrong tag
-
-        // Now get the resource ID from the RDF:ID attribute. We do it
-        // via the content model, because you're never sure who
-        // might've added this stuff in...
-        nsCOMPtr<nsIRDFResource> resource;
-        if (NS_FAILED(rv = GetElementResource(kid, getter_AddRefs(resource)))) {
-            NS_ERROR("severe error retrieving resource");
-            return rv;
-        }
-
-        if (resource.get() != aResource)
-            continue; // not the resource we want
-
-        // Fount it!
-        *aChild = kid;
-        NS_ADDREF(*aChild);
-        return NS_OK;
-    }
-
-    return NS_ERROR_RDF_NO_VALUE; // not found
-}
-
-
-nsresult
-RDFTreeBuilderImpl::EnsureElementHasGenericChild(nsIContent* parent,
-                                                 PRInt32 nameSpaceID,
-                                                 nsIAtom* tag,
-                                                 nsIContent** result)
-{
-    nsresult rv;
-
-    if (NS_SUCCEEDED(rv = FindChildByTag(parent, nameSpaceID, tag, result)))
-        return NS_OK;
-
-    if (rv != NS_ERROR_RDF_NO_VALUE)
-        return rv; // something really bad happened
-
-    // if we get here, we need to construct a new child element.
-    nsCOMPtr<nsIContent> element;
-
-    if (NS_FAILED(rv = NS_NewRDFElement(nameSpaceID, tag, getter_AddRefs(element))))
-        return rv;
-
-    if (NS_FAILED(rv = parent->AppendChildTo(element, PR_FALSE)))
-        return rv;
-
-    *result = element;
-    NS_ADDREF(*result);
-    return NS_OK;
-}
-
-nsresult
-RDFTreeBuilderImpl::AddTreeRow(nsIContent* aElement,
-                               nsIRDFResource* aProperty,
-                               nsIRDFResource* aValue,
-                               PRInt32 naturalOrderPos)
+RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
+                                  nsIRDFResource* aProperty,
+                                  nsIRDFResource* aValue,
+                                  PRInt32 naturalOrderPos)
 {
     // If it's a tree property, then we need to add the new child
     // element to a special "children" element in the parent.  The
@@ -1282,7 +301,7 @@ RDFTreeBuilderImpl::AddTreeRow(nsIContent* aElement,
     nsresult rv;
 
     nsCOMPtr<nsIContent> treeChildren;
-    if (IsTreeItemElement(aElement)) {
+    if (IsWidgetItemElement(aElement)) {
         // Ensure that the <xul:treechildren> element exists on the parent.
         if (NS_FAILED(rv = EnsureElementHasGenericChild(aElement,
                                                         kNameSpaceID_XUL,
@@ -1290,7 +309,7 @@ RDFTreeBuilderImpl::AddTreeRow(nsIContent* aElement,
                                                         getter_AddRefs(treeChildren))))
             return rv;
     }
-    else if (IsTreeBodyElement(aElement)) {
+    else if (IsWidgetInsertionRootElement(aElement)) {
         // We'll just use the <xul:treebody> as the element onto which
         // we'll dangle a new row.
         treeChildren = do_QueryInterface(aElement);
@@ -1372,16 +391,17 @@ RDFTreeBuilderImpl::AddTreeRow(nsIContent* aElement,
 
         treeItem->SetAttribute(nameSpaceID, tag, s, PR_FALSE);
 
-	if (naturalOrderPos > 0)
-	{
-		nsAutoString	pos, zero("0");;
-		pos.Append(naturalOrderPos, 10);
-		if (pos.Length() < 4)
-		{
-			pos.Insert(zero, 0, 4-pos.Length()); 
-		}
-		treeItem->SetAttribute(kNameSpaceID_None, kNaturalOrderPosAtom, pos, PR_FALSE);
-	}
+        if (naturalOrderPos > 0)
+	    {
+            // XXX Add this to menu builder as well, or better yet, abstract out.
+		    nsAutoString	pos, zero("0");;
+		    pos.Append(naturalOrderPos, 10);
+		    if (pos.Length() < 4)
+		    {
+			    pos.Insert(zero, 0, 4-pos.Length()); 
+		    }
+		    treeItem->SetAttribute(kNameSpaceID_None, kNaturalOrderPosAtom, pos, PR_FALSE);
+	    }
     }
 
     if (NS_FAILED(rv) && (rv != NS_ERROR_RDF_CURSOR_EMPTY)) {
@@ -1395,43 +415,6 @@ RDFTreeBuilderImpl::AddTreeRow(nsIContent* aElement,
         return rv;
 
     return NS_OK;
-}
-
-
-nsresult
-RDFTreeBuilderImpl::FindTreeElement(nsIContent* aElement,
-                                    nsIContent** aTreeElement)
-{
-    nsresult rv;
-
-    // walk up the tree until you find <xul:tree>
-    nsCOMPtr<nsIContent> element(do_QueryInterface(aElement));
-
-    while (element) {
-        PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = element->GetNameSpaceID(nameSpaceID)))
-            return rv; // XXX fatal
-
-        if (nameSpaceID == kNameSpaceID_XUL) {
-            nsCOMPtr<nsIAtom> tag;
-            if (NS_FAILED(rv = element->GetTag(*getter_AddRefs(tag))))
-                return rv;
-
-            if (tag.get() == kTreeAtom) {
-                *aTreeElement = element;
-                NS_ADDREF(*aTreeElement);
-                return NS_OK;
-            }
-        }
-
-        // up to the parent...
-        nsCOMPtr<nsIContent> parent;
-        element->GetParent(*getter_AddRefs(parent));
-        element = parent;
-    }
-
-    //NS_ERROR("must not've started from within a xul:tree");
-    return NS_ERROR_FAILURE;
 }
 
 
@@ -1781,353 +764,3 @@ RDFTreeBuilderImpl::SetCellValue(nsIContent* aTreeItemElement,
 }
 
 
-
-PRBool
-RDFTreeBuilderImpl::IsTreeBodyElement(nsIContent* element)
-{
-    // Returns PR_TRUE if the element is a <xul:treebody> element.
-    nsresult rv;
-
-    // "element" must be xul:treebody
-    PRInt32 nameSpaceID;
-    if (NS_FAILED(rv = element->GetNameSpaceID(nameSpaceID))) {
-        NS_ERROR("unable to get namespace ID");
-        return PR_FALSE;
-    }
-
-    if (nameSpaceID != kNameSpaceID_XUL)
-        return PR_FALSE; // not a XUL element
-
-    nsCOMPtr<nsIAtom> elementTag;
-    if (NS_FAILED(rv = element->GetTag(*getter_AddRefs(elementTag)))) {
-        NS_ERROR("unable to get tag");
-        return PR_FALSE;
-    }
-
-    if (elementTag.get() != kTreeBodyAtom)
-        return PR_FALSE; // not a <xul:treebody>
-
-    return PR_TRUE;
-}
-
-PRBool
-RDFTreeBuilderImpl::IsTreeItemElement(nsIContent* aElement)
-{
-    // Returns PR_TRUE if the element is a <xul:treeitem> element.
-    nsresult rv;
-
-    // "element" must be xul:tree
-    nsCOMPtr<nsIAtom> tag;
-    if (NS_FAILED(rv = aElement->GetTag(*getter_AddRefs(tag))))
-        return PR_FALSE;
-
-    if (tag.get() != kTreeItemAtom)
-        return PR_FALSE;
-
-    return PR_TRUE;
-}
-
-
-PRBool
-RDFTreeBuilderImpl::IsTreeProperty(nsIContent* aElement, nsIRDFResource* aProperty)
-{
-    // XXX is this okay to _always_ treat ordinal properties as tree
-    // properties? Probably not...
-    if (rdf_IsOrdinalProperty(aProperty))
-        return PR_TRUE;
-
-    nsresult rv;
-    const char* propertyURI;
-    if (NS_FAILED(rv = aProperty->GetValue(&propertyURI))) {
-        NS_ERROR("unable to get property URI");
-        return PR_FALSE;
-    }
-
-    nsAutoString uri;
-
-    nsCOMPtr<nsIContent> element( do_QueryInterface(aElement) );
-    while (element) {
-        // Never ever ask an HTML element about non-HTML attributes.
-        PRInt32 nameSpaceID;
-        if (NS_FAILED(rv = element->GetNameSpaceID(nameSpaceID))) {
-            NS_ERROR("unable to get element namespace");
-            PR_FALSE;
-        }
-
-        if (nameSpaceID != kNameSpaceID_HTML) {
-            // Is this the "rdf:containment? property?
-            if (NS_FAILED(rv = element->GetAttribute(kNameSpaceID_None, kContainmentAtom, uri))) {
-                NS_ERROR("unable to get attribute value");
-                return PR_FALSE;
-            }
-
-            if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-                // Okay we've found the locally specified tree properties,
-                // a whitespace-separated list of property URIs. So we
-                // definitively know whether this is a tree property or
-                // not.
-                if (uri.Find(propertyURI) >= 0)
-                    return PR_TRUE;
-                else
-                    return PR_FALSE;
-            }
-        }
-
-        nsCOMPtr<nsIContent> parent;
-        element->GetParent(*getter_AddRefs(parent));
-        element = parent;
-    }
-
-    // If we get here, we didn't find any tree property: so now
-    // defaults start to kick in.
-
-#define TREE_PROPERTY_HACK
-#if defined(TREE_PROPERTY_HACK)
-    if ((aProperty == kNC_child) ||
-        (aProperty == kNC_Folder) ||
-        (aProperty == kRDF_child)) {
-        return PR_TRUE;
-    }
-    else
-#endif // defined(TREE_PROPERTY_HACK)
-
-        return PR_FALSE;
-}
-
-
-PRBool
-RDFTreeBuilderImpl::IsOpen(nsIContent* aElement)
-{
-    nsresult rv;
-
-    // needs to be a <xul:treeitem> or <xul:treebody> to begin with.
-    PRInt32 nameSpaceID;
-    if (NS_FAILED(rv = aElement->GetNameSpaceID(nameSpaceID))) {
-        NS_ERROR("unable to get namespace ID");
-        return PR_FALSE;
-    }
-
-    if (nameSpaceID != kNameSpaceID_XUL)
-        return PR_FALSE;
-
-    nsCOMPtr<nsIAtom> tag;
-    if (NS_FAILED(rv = aElement->GetTag( *getter_AddRefs(tag) ))) {
-        NS_ERROR("unable to get element's tag");
-        return PR_FALSE;
-    }
-
-    // The <xul:treebody> is _always_ open.
-    if (tag.get() == kTreeBodyAtom)
-        return PR_TRUE;
-
-    // If it's not a <xul:treeitem>, then it's not open.
-    if (tag.get() != kTreeItemAtom)
-        return PR_FALSE;
-
-    nsAutoString value;
-    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None, kOpenAtom, value))) {
-        NS_ERROR("unable to get xul:open attribute");
-        return rv;
-    }
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-        if (value.EqualsIgnoreCase("true"))
-            return PR_TRUE;
-    }
-
-    return PR_FALSE;
-}
-
-
-PRBool
-RDFTreeBuilderImpl::IsElementInTree(nsIContent* aElement)
-{
-    // Make sure that we're actually creating content for the tree
-    // content model that we've been assigned to deal with.
-    nsCOMPtr<nsIContent> treeElement;
-    if (NS_FAILED(FindTreeElement(aElement, getter_AddRefs(treeElement))))
-        return PR_FALSE;
-
-    if (treeElement.get() != mRoot)
-        return PR_FALSE;
-
-    return PR_TRUE;
-}
-
-nsresult
-RDFTreeBuilderImpl::GetDOMNodeResource(nsIDOMNode* aNode, nsIRDFResource** aResource)
-{
-    nsresult rv;
-
-    // Given an nsIDOMNode that presumably has been created as a proxy
-    // for an RDF resource, pull the RDF resource information out of
-    // it.
-
-    nsCOMPtr<nsIContent> element;
-    if (NS_FAILED(rv = aNode->QueryInterface(kIContentIID, getter_AddRefs(element) ))) {
-        NS_ERROR("DOM element doesn't support nsIContent");
-        return rv;
-    }
-
-    return GetElementResource(element, aResource);
-}
-
-nsresult
-RDFTreeBuilderImpl::CreateResourceElement(PRInt32 aNameSpaceID,
-                                          nsIAtom* aTag,
-                                          nsIRDFResource* aResource,
-                                          nsIContent** aResult)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsIContent> result;
-    if (NS_FAILED(rv = NS_NewRDFElement(aNameSpaceID, aTag, getter_AddRefs(result))))
-        return rv;
-
-    const char* uri;
-    if (NS_FAILED(rv = aResource->GetValue(&uri)))
-        return rv;
-
-    if (NS_FAILED(rv = result->SetAttribute(kNameSpaceID_None, kIdAtom, uri, PR_FALSE)))
-        return rv;
-
-    *aResult = result;
-    NS_ADDREF(*aResult);
-    return NS_OK;
-}
-
-
-
-nsresult
-RDFTreeBuilderImpl::GetResource(PRInt32 aNameSpaceID,
-                                nsIAtom* aNameAtom,
-                                nsIRDFResource** aResource)
-{
-    NS_PRECONDITION(aNameAtom != nsnull, "null ptr");
-    if (! aNameAtom)
-        return NS_ERROR_NULL_POINTER;
-
-    // XXX should we allow nodes with no namespace???
-    NS_PRECONDITION(aNameSpaceID != kNameSpaceID_Unknown, "no namespace");
-    if (aNameSpaceID == kNameSpaceID_Unknown)
-        return NS_ERROR_UNEXPECTED;
-
-    // construct a fully-qualified URI from the namespace/tag pair.
-    nsAutoString uri;
-    gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, uri);
-
-    // XXX check to see if we need to insert a '/' or a '#'
-    nsAutoString tag(aNameAtom->GetUnicode());
-    if (0 < uri.Length() && uri.Last() != '#' && uri.Last() != '/' && tag.First() != '#')
-        uri.Append('#');
-
-    uri.Append(tag);
-
-    nsresult rv = gRDFService->GetUnicodeResource(uri, aResource);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
-    return rv;
-}
-
-
-nsresult
-RDFTreeBuilderImpl::OpenTreeItem(nsIContent* aElement)
-{
-    return CreateContents(aElement);
-}
-
-
-nsresult
-RDFTreeBuilderImpl::CloseTreeItem(nsIContent* aElement)
-{
-    nsresult rv;
-
-    // Find the <xul:treechildren> tag so that we can remove all of
-    // the children.
-    nsCOMPtr<nsIContent> treeChildren;
-    rv = FindChildByTag(aElement, kNameSpaceID_XUL, kTreeChildrenAtom, getter_AddRefs(treeChildren));
-
-    // No <xul:treechildren> tag; must've already been closed
-    if (rv == NS_ERROR_RDF_NO_VALUE)
-        return NS_OK;
-
-    if (NS_FAILED(rv)) {
-        NS_ERROR("severe error retrieving <xul:treechildren> node");
-        return rv;
-    }
-
-    PRInt32 count;
-    if (NS_FAILED(rv = treeChildren->ChildCount(count))) {
-        NS_ERROR("unable to get count of <xul:treechildren>'s children");
-        return rv;
-    }
-
-    while (--count >= 0) {
-        // XXX This is a bit gross. We need to recursively remove any
-        // subtrees before we remove the current subtree.
-        nsIContent* child;
-        if (NS_SUCCEEDED(rv = treeChildren->ChildAt(count, child))) {
-            rv = CloseTreeItem(child);
-            NS_RELEASE(child);
-        }
-
-        rv = treeChildren->RemoveChildAt(count, PR_TRUE);
-        NS_ASSERTION(NS_SUCCEEDED(rv), "error removing child");
-    }
-
-    // Clear the contents-generated attribute so that the next time we
-    // come back, we'll regenerate the kids we just killed.
-    if (NS_FAILED(rv = aElement->UnsetAttribute(kNameSpaceID_None,
-                                                kTreeContentsGeneratedAtom,
-                                                PR_FALSE))) {
-        NS_ERROR("unable to clear contents-generated attribute");
-        return rv;
-    }
-
-    return NS_OK;
-}
-
-
-nsresult
-RDFTreeBuilderImpl::GetElementResource(nsIContent* aElement, nsIRDFResource** aResult)
-{
-    // Perform a reverse mapping from an element in the content model
-    // to an RDF resource.
-    nsresult rv;
-    nsAutoString uri;
-    if (NS_FAILED(rv = aElement->GetAttribute(kNameSpaceID_None,
-                                              kIdAtom,
-                                              uri))) {
-        NS_ERROR("severe error retrieving attribute");
-        return rv;
-    }
-
-    if (rv != NS_CONTENT_ATTR_HAS_VALUE) {
-        NS_ERROR("tree element has no ID");
-        return NS_ERROR_UNEXPECTED;
-    }
-
-    // Since the element will store its ID attribute as a document-relative value,
-    // we may need to qualify it first...
-    NS_ASSERTION(mDocument != nsnull, "builder has no document -- can't fully qualify URI");
-    if (nsnull != mDocument) {
-        nsCOMPtr<nsIDocument> doc( do_QueryInterface(mDocument) );
-        NS_ASSERTION(doc, "doesn't support nsIDocument");
-        if (doc) {
-          nsIURL* docURL = nsnull;
-          doc->GetBaseURL(docURL);
-          if (docURL) {
-              const char* url;
-              docURL->GetSpec(&url);
-              rdf_PossiblyMakeAbsolute(url, uri);
-              NS_RELEASE(docURL);
-          }
-        }
-    }
-
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(uri, aResult))) {
-        NS_ERROR("unable to create resource");
-        return rv;
-    }
-
-    return NS_OK;
-}
