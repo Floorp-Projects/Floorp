@@ -1480,9 +1480,10 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 
 		{
 			PRUint32 msgFlags;
+			nsMsgKey		msgKey;
 
 			msgHdr->GetFlags(&msgFlags);
-
+			msgHdr->GetMessageKey(&msgKey);
 			PRBool isRead = (msgFlags & MSG_FLAG_READ);
 			switch (actionType)
 			{
@@ -1575,7 +1576,13 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 			}
 				break;
 			case nsMsgFilterActionMarkRead:
-				MarkFilteredMessageRead(msgHdr);
+				{
+					nsMsgKeyArray	keysToFlag;
+
+					keysToFlag.Add(msgKey);
+					StoreImapFlags(kImapMsgSeenFlag, PR_TRUE, keysToFlag);
+				}
+//				MarkFilteredMessageRead(msgHdr);
 				break;
 			case nsMsgFilterActionKillThread:
 				// for ignore and watch, we will need the db
@@ -1594,10 +1601,76 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
 				break;
 			}
 		}
-		return rv;
 	}
+	return rv;
 }
 
+
+nsresult nsImapMailFolder::StoreImapFlags(imapMessageFlagsType flags, PRBool addFlags, nsMsgKeyArray &keysToFlag)
+{
+	nsresult rv = NS_OK;
+	if (PR_TRUE/* !NET_IsOffline() */)
+	{
+		// If we are not offline, we want to add the flag changes to the server
+		// use the imap service to add or remove flags.
+	}
+	else
+	{
+#ifdef OFFLINE_IMAP
+		MailDB *mailDb = NULL; // change flags offline
+		PRBool wasCreated=FALSE;
+
+		ImapMailDB::Open(GetPathname(), TRUE, &mailDb, GetMaster(), &wasCreated);
+		if (mailDb)
+		{
+			UndoManager *undoManager = NULL;
+			uint32 total = keysToFlag.GetSize();
+
+			for (int keyIndex=0; keyIndex < total; keyIndex++)
+			{
+				OfflineImapOperation	*op = mailDb->GetOfflineOpForKey(keysToFlag[keyIndex], TRUE);
+				if (op)
+				{
+					MailDB *originalDB = NULL;
+					if (op->GetOperationFlags() & kMoveResult)
+					{
+						// get the op in the source db and change the flags there
+						OfflineImapOperation	*originalOp = GetOriginalOp(op, &originalDB);
+						if (originalOp)
+						{
+							if (undoManager && undoManager->GetState() == UndoIdle && NET_IsOffline()) {
+								OfflineIMAPUndoAction *undoAction = new 
+										OfflineIMAPUndoAction(paneForFlagUrl, (MSG_FolderInfo*) this, op->GetMessageKey(), kFlagsChanged,
+										this, NULL, flags, NULL, addFlags);
+								if (undoAction)
+									undoManager->AddUndoAction(undoAction);
+							}
+							op->unrefer();
+							op = originalOp;
+						}
+					}
+						
+					if (addFlags)
+						op->SetImapFlagOperation(op->GetNewMessageFlags() | flags);
+					else
+						op->SetImapFlagOperation(op->GetNewMessageFlags() & ~flags);
+					op->unrefer();
+
+					if (originalDB)
+					{
+						originalDB->Close();
+						originalDB = NULL;
+					}
+				}
+			}
+			mailDb->Commit();	// flush offline flags
+			mailDb->Close();
+			mailDb = NULL;
+		}
+#endif // OFFLINE_IMAP
+	}
+	return rv;
+}
 
 nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 											   nsIMsgDatabase *sourceDB, 
@@ -1606,51 +1679,55 @@ nsresult nsImapMailFolder::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 {
 	nsresult err = NS_OK;
 	
-	if (fUrlQueue && fUrlQueue->GetPane())
 	{
 	 	// look for matching imap folders, then pop folders
-	 	MSG_FolderInfoContainer *imapContainer =  m_imapContainer;
-		nsIMsgFolder *sourceFolder = imapContainer->FindMailPathname(m_mailboxName);
-	 	nsIMsgFolder *destinationFolder = imapContainer->FindMailPathname(destFolder);
-	 	if (!destinationFolder)
-	 		destinationFolder = m_mailMaster->FindMailFolder(destFolder, FALSE);
+		nsCOMPtr<nsIMsgIncomingServer> server;
+		nsresult rv = GetServer(getter_AddRefs(server));
+ 
+		nsCOMPtr<nsIFolder> rootFolder;
+		if (NS_SUCCEEDED(rv)) 
+			rv = server->GetRootFolder(getter_AddRefs(rootFolder));
 
-	 	if (destinationFolder)
+		if (!NS_SUCCEEDED(rv))
+			return rv;
+
+		nsCOMPtr <nsIFolder> destIFolder;
+		rootFolder->FindSubFolder (destFolder, getter_AddRefs(destIFolder));
+
+		nsCOMPtr <nsIMsgFolder> msgFolder;
+		msgFolder = do_QueryInterface(destIFolder);
+
+	 	if (destIFolder)
 	 	{
-			nsIMsgFolder *inbox=nsnull;
-			imapContainer->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, &inbox, 1);
-			if (inbox)
+			// put the header into the source db, since it needs to be there when we copy it
+			// and we need a valid header to pass to StartAsyncCopyMessagesInto
+			nsMsgKey keyToFilter;
+			mailHdr->GetMessageKey(&keyToFilter);
+
+			if (sourceDB && msgFolder)
 			{
-				MSG_FolderInfoMail *destMailFolder = destinationFolder->GetMailFolderInfo();
-				// put the header into the source db, since it needs to be there when we copy it
-				// and we need a valid header to pass to StartAsyncCopyMessagesInto
-				nsMsgKey keyToFilter = mailHdr->GetMessageKey();
+				PRBool imapDeleteIsMoveToTrash = PR_TRUE/* m_host->GetDeleteIsMoveToTrash() */;
 
-				if (sourceDB && destMailFolder)
+				// For each folder, we need to keep track of the ids we want to move to that
+				// folder - we used to store them in the MSG_FolderInfo and then when we'd finished
+				// downloading headers, we'd iterate through all the folders looking for the ones
+				// that needed messages moved into them - perhaps instead we could
+				// keep track of nsIMsgFolder, nsMsgKeyArray pairs here in the imap code.
+//				nsMsgKeyArray *idsToMoveFromInbox = msgFolder->GetImapIdsToMoveFromInbox();
+//				idsToMoveFromInbox->Add(keyToFilter);
+
+				// this is our last best chance to log this
+//				if (m_filterList->LoggingEnabled())
+//					filter->LogRuleHit(GetLogFile(), mailHdr);
+
+				if (imapDeleteIsMoveToTrash)
 				{
-					PRBool imapDeleteIsMoveToTrash = m_host->GetDeleteIsMoveToTrash();
-					
-					nsMsgKeyArray *idsToMoveFromInbox = destMailFolder->GetImapIdsToMoveFromInbox();
-					idsToMoveFromInbox->Add(keyToFilter);
-
-					// this is our last best chance to log this
-					if (m_filterList->LoggingEnabled())
-						filter->LogRuleHit(GetLogFile(), mailHdr);
-
-					if (imapDeleteIsMoveToTrash)
-					{
-						if (m_parseMsgState->m_newMsgHdr)
-						{
-							m_parseMsgState->m_newMsgHdr->Release();
-							m_parseMsgState->m_newMsgHdr = nsnull;
-						}
-					}
-					
-					destinationFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
-					
-					if (imapDeleteIsMoveToTrash)	
-						err = 0;
 				}
+				
+				msgFolder->SetFlag(MSG_FOLDER_FLAG_GOT_NEW);
+				
+				if (imapDeleteIsMoveToTrash)	
+					err = 0;
 			}
 	 	}
 	}

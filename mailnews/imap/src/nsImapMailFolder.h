@@ -248,7 +248,8 @@ public:
 	nsresult MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr, 
 									   nsIMsgDatabase *sourceDB, 
 									   char *destFolder,
-									   nsIMsgFilter *filter)
+									   nsIMsgFilter *filter);
+	nsresult StoreImapFlags(imapMessageFlagsType flags, PRBool addFlags, nsMsgKeyArray &msgKeys);
 #endif // DOING_FILTERS
 protected:
     // Helper methods
