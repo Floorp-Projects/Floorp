@@ -238,6 +238,16 @@ function MsgNewFolder()
 	messenger.NewFolder(folderTree.database, selectedFolder, "New Folder");
 }
 
+function MsgAccountManager()
+{
+    dump('Opening account manager..\n');
+    window.openDialog("chrome://messenger/content/AccountManager.xul", "AccountManager", "chrome");
+}
+
+function MsgSubscribe()
+{
+    dump('open subscribe window.\n');
+}
 
 function MsgOpenAttachment() {}
 function MsgSaveAsFile() {}
@@ -274,8 +284,16 @@ function MsgSelectThread() {}
 function MsgSelectFlaggedMsg() {}
 function MsgFind() {}
 function MsgFindAgain() {}
-function MsgSearchMessages() {}
-function MsgFilters() {}
+
+function MsgSearchMessages() {
+    window.openDialog("chrome://messenger/content/SearchDialog.xul", "SearchMail", "chrome");
+}
+
+function MsgFilters() {
+    window.openDialog("chrome://messenger/content/FilterListDialog.xul", "FilterDialog", "chrome");
+}
+
+
 function MsgFolderProperties() {}
 function MsgPreferences() 
 {

@@ -135,16 +135,6 @@ function GetNewMessages()
 	}
 }
 
-function MsgAccountManager()
-{
-    dump('Opening account manager..\n');
-    window.openDialog("chrome://messenger/content/AccountManager.xul", "AccountManager", "chrome");
-}
-
-function MsgSubscribe()
-{
-    dump('open subscribe window.\n');
-}
 
 function LoadMessage(messageNode)
 {
