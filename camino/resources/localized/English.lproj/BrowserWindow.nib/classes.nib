@@ -160,11 +160,9 @@
                 mAddToAddressBook = NSMenuItem; 
                 mAddToAddressBook2 = NSMenuItem; 
                 mBackItem = NSMenuItem; 
-                mBookmarkViewController = BookmarkViewController; 
                 mContentView = BrowserContentView; 
                 mCopyItem = NSMenuItem; 
                 mForwardItem = NSMenuItem; 
-                mHistoryDataSource = HistoryDataSource; 
                 mImageLinkMenu = NSMenu; 
                 mImageMailToLinkMenu = NSMenu; 
                 mImageMenu = NSMenu; 
