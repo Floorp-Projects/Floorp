@@ -158,7 +158,7 @@ endif
 			! -name "*.reg" \
 			$(PLATFORM_EXCLUDE_LIST) \
 			-exec $(STRIP) $(STRIP_FLAGS) {} >/dev/null 2>&1 \;
-ifneq ($(MOZ_PKG_APPNAME),mozilla)
+ifeq (,$(filter mozilla phoenix,$(MOZ_PKG_APPNAME)))
 	@echo "Creating start script $(MOZ_PKG_APPNAME)..."
 	cd $(DIST)/$(MOZ_PKG_APPNAME); cp mozilla $(MOZ_PKG_APPNAME)
 endif
