@@ -1836,6 +1836,12 @@ nsTreeBodyFrame::PrefillPropertyArray(PRInt32 aRowIndex, nsTreeColumn* aCol)
       else if (mDropOrient == nsITreeView::inDropAfter)
         mScratchArray->AppendElement(nsXULAtoms::dropAfter);
     }
+
+    // odd or even
+    if (aRowIndex % 2)
+      mScratchArray->AppendElement(nsXULAtoms::odd);
+    else
+      mScratchArray->AppendElement(nsXULAtoms::even);
   }
 
   if (aCol) {
