@@ -43,9 +43,6 @@ BUILD         = $(PLATFORM)
 OBJDIR        = $(PLATFORM)
 
 DIST          = $(CORE_DEPTH)/../dist/$(PLATFORM)
-ifdef MOZILLA_CLIENT
-DIST          = $(CORE_DEPTH)/../mozilla/dist/$(PLATFORM)
-endif
 
 VPATH         = $(NSINSTALL_DIR)/$(PLATFORM)
 DEPENDENCIES  = $(PLATFORM)/.md
