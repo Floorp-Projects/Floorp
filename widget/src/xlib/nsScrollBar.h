@@ -34,6 +34,11 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);                           
   NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
   NS_IMETHOD_(nsrefcnt) Release(void);          
+
+  // Override some of the native widget methods for scrollbars
+  PRBool OnPaint(nsPaintEvent &event);
+  PRBool OnResize(nsSizeEvent &event);
+  PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
   
   // nsIScrollBar implementation
   NS_IMETHOD SetMaxRange(PRUint32 aEndRange);
@@ -48,7 +53,13 @@ public:
 			   PRUint32 aPosition, PRUint32 aLineIncrement);
   
   virtual PRBool    OnScroll(PRUint32 scrollCode, int cPos);
-
+private:
+  PRUint32             mMaxRange;
+  PRUint32             mPosition;
+  PRUint32             mThumbSize;
+  PRUint32             mLineIncrement;
+  PRBool               mIsVertical;
+  nsIRenderingContext *mRenderingContext;
 };
 
 #endif // nsButton_h__
