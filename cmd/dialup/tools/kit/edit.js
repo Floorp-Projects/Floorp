@@ -217,10 +217,13 @@ function customize()
 	if ( thePlatform == "Macintosh" )
 		acctsetFile = ( acctsetFile + "Config:ACCTSET.INI" );
 	else
-		acctsetFile = ( acctsetFile + "Config/ACCTSET.INI" );		
+		acctsetFile = ( acctsetFile + "Config\\ACCTSET.INI" );		
 	
 	//alert("acctset.ini is: " + acctsetFile);  
 	document.setupPlugin.SetNameValuePair( acctsetFile, "Mode Selection", "EditMode", "yes" );
+
+	//debug ("Acct file = " + acctsetFile);
+	//debug ("Set the Edit Mode to " + document.setupPlugin.GetNameValuePair( acctsetFile, "Mode Selection", "EditMode") );
 	
 	//clayer.js now takes care of opening this window when the time is right
 	//var configWindow = top.open("config.htm","Configurator","dependent=yes,alwaysraised=yes,width=400,height=65,toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=no,resizable=no");
