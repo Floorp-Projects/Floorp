@@ -18,8 +18,8 @@
 
 DEPTH		= ..
 topsrcdir	= @top_srcdir@
-VPATH		= @srcdir@
 srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
@@ -29,7 +29,7 @@ CSRCS		= nsinstall.c pathsub.c
 ifeq ($(subst /,_,$(shell uname -s)),OS2)
 DIRS		= os2
 LOCAL_INCLUDES	+= -I$(srcdir)/os2
-HSRCS		+= dirent.h getopt.h
+HSRCS		+= $(srcdir)/dirent.h $(srcdir)/getopt.h
 endif
 
 PLSRCS		= nfspwd.pl revdepth.pl
@@ -37,7 +37,14 @@ PLSRCS		= nfspwd.pl revdepth.pl
 TARGETS		= $(PROGRAM) $(PLSRCS:.pl=)
 
 # Generate the build number on the fly.
-TARGETS			+= $(DEPTH)/build/build_number
+ifdef BUILD_OFFICIAL
+TARGETS		+= $(DEPTH)/build/build_number
+endif
+
+# If this is an "official mozilla build" make them shortlived.
+ifdef MOZILLA_OFFICIAL
+TARGETS		+= $(DEPTH)/modules/libpref/src/init/all.js
+endif 
 
 ifneq ($(subst /,_,$(shell uname -s)),WINNT)
 PROGRAM		= nsinstall$(BIN_SUFFIX)
@@ -91,12 +98,11 @@ $(OBJDIR)/gtscc$(BIN_SUFFIX):	$(OBJDIR)/gtscc.o
 
 #update build number from within make script
 $(DEPTH)/build/build_number: FORCE
-	@$(MAKE_OBJDIR)
 	$(RM) $@
-	$(PERL) $(srcdir)/bdate.pl > $@
-	$(PERL) $(srcdir)/aboutime.pl $(DEPTH)/l10n/us/xp/about-all.html $@
+	$(PERL) bdate.pl > $@
+	$(PERL) aboutime.pl $(topsrcdir)/l10n/us/xp/about-all.html $@
 
-$(topsrcdir)/modules/libpref/src/init/all.js: FORCE
+$(DEPTH)/modules/libpref/src/init/all.js: FORCE
 	$(PERL) set-timebomb.pl
 
 $(OBJDIR)/bdate$(BIN_SUFFIX): $(OBJDIR)/bdate.o
@@ -117,7 +123,6 @@ clean clobber realclean clobber_all::
 endif
 
 clean clobber realclean clobber_all:: tweak_nspr
-
 
 # For the continuous build scripts.
 show_objname:
