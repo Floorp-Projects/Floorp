@@ -701,7 +701,7 @@ void MarkPercentAwareFrame(nsIPresContext *aPresContext,
     aFrame->FirstChild(aPresContext, nsnull, &child);
     if (child)
     { // aFrame is an inline container frame, check my frame state
-      if (child->GetStateBits() & NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD) {
+      if (aFrame->GetStateBits() & NS_INLINE_FRAME_CONTAINS_PERCENT_AWARE_CHILD) {
         SetContainsPercentAwareChild(aInline); // if a child container is effected, so am I
       }
     }
