@@ -182,7 +182,8 @@ CToken* CHTMLTokenizerDelegate::ConsumeStartTag(PRUnichar aChar,CScanner& aScann
     nsString& str=result->GetText();
     if(str.EqualsIgnoreCase("SCRIPT") ||
        str.EqualsIgnoreCase("STYLE") ||
-       str.EqualsIgnoreCase("TITLE")) {
+       str.EqualsIgnoreCase("TITLE") ||
+       str.EqualsIgnoreCase("TEXTAREA")) {
       CToken* sc=ConsumeContentToEndTag(str,aChar,aScanner,anErrorCode);
       
       if(sc){
