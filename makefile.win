@@ -83,6 +83,7 @@ DIRS = \
 !if defined(GC_LEAK_DETECTOR)
   gc\boehm			\
 !endif
+!endif
 !if defined(CLIENT_DIRS)
 # the following are associated with the browser
   xpfe				\
