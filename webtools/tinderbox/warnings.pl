@@ -373,7 +373,7 @@ sub print_warning {
   if ($warn_rec->{count} == 1) {
     print "See build log excerpt";
   } else {
-    print "See 1st build log reference";
+    print "See 1st of $warn_rec->{count} occurrences in build log";
   }
   print "</a>)</td></tr>";
 }
