@@ -101,6 +101,7 @@ protected:
     PLHashTable* mLiterals;
 
     char mLastURIPrefix[16];
+    PRInt32 mLastPrefixlen;
     nsCOMPtr<nsIFactory> mLastFactory;
     nsCOMPtr<nsIFactory> mDefaultResourceFactory;
 
@@ -459,7 +460,7 @@ rdf_CompareWideStrings(const void* v1, const void* v2)
 
 
 RDFServiceImpl::RDFServiceImpl()
-    :  mNamedDataSources(nsnull), mResources(nsnull), mLiterals(nsnull)
+    :  mNamedDataSources(nsnull), mResources(nsnull), mLiterals(nsnull), mLastPrefixlen(0)
 {
     NS_INIT_REFCNT();
 }
@@ -612,7 +613,7 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
         // that we just tried to use...
         prefixlen = (p - aURI);
 
-        if ((mLastFactory) && (prefixlen < sizeof(mLastURIPrefix)) &&
+        if ((mLastFactory) && (prefixlen == mLastPrefixlen) &&
             (aURI[0] == mLastURIPrefix[0]) &&
             (0 == PL_strncmp(aURI, mLastURIPrefix, prefixlen))) {
             factory = mLastFactory;
@@ -653,6 +654,7 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
                 if ((prefixlen > 0) && (prefixlen < sizeof(mLastURIPrefix))) {
                     mLastFactory = factory;
                     PL_strncpyz(mLastURIPrefix, aURI, prefixlen + 1);
+                    mLastPrefixlen = prefixlen;
                 }
             }
         }
@@ -669,6 +671,7 @@ RDFServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
         if ((prefixlen > 0) && (prefixlen < sizeof(mLastURIPrefix))) {
             mLastFactory = factory;
             PL_strncpyz(mLastURIPrefix, aURI, prefixlen + 1);
+            mLastPrefixlen = prefixlen;
         }
     }
 
