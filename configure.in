@@ -38,7 +38,7 @@ dnl Pick an option...any option.
 dnl Caveat: random options will override cmdline options.
 dnl ========================================================
 AC_ARG_ENABLE(random-options,
-[  --enable-random-options          Randomly add options to configure],
+[  --enable-random-options Randomly add options to configure],
     [if test "$enableval" = "yes"; then
 	if test -z $BASH_VERSION; then
 	    AC_MSG_WARN("Options randomizer requires GNU bash.");
@@ -1293,7 +1293,7 @@ fi
 
 dnl Checks for header files.
 dnl ========================================================
-AC_CHECK_HEADERS(sys/byteorder.h compat.h stddef.h stdlib.h)
+AC_CHECK_HEADERS(sys/byteorder.h compat.h)
 AC_CHECK_HEADERS(sys/bittypes.h memory.h unistd.h sys/filio.h)
 AC_CHECK_HEADERS(sys/ipc.h shm.h sys/shm.h X11/extensions/XShm.h)
 
