@@ -14,10 +14,11 @@
   <binding id="menulist" display="xul:menu" 
            extends="chrome://global/content/bindings/menulist.xml#menulist-base">
     <content>
-      <xul:image class="menu-icon" inherits="src"/>
-      <xul:label class="menu-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
-      <xul:image class="menu-dropmarker"/>
-      
+      <xul:hbox class="menulist-label-box" flex="1">
+        <xul:image class="menulist-icon" inherits="src"/>
+        <xul:label class="menulist-label" inherits="value=label,crop,accesskey" crop="right" flex="1"/>
+      </xul:hbox>
+      <xul:dropmarker class="menulist-dropmarker" type="menu"/>
       <children includes="menupopup"/>
     </content>
 
@@ -57,7 +58,7 @@
               if (!this.label && this.childNodes.length) {
                 if (!arr.length && this.value)
                   arr = this.firstChild.getElementsByAttribute('value', this.value);
-
+                
                 if (arr.length)
                   this.selectedItem = arr[0];
                 else
@@ -178,7 +179,9 @@
             item.setAttribute("label", label);
             item.setAttribute("value", value);
             popup.appendChild(item);
+            return item;
           }
+          return null;
         ]]>
         </body>
       </method>
@@ -200,7 +203,9 @@
               popup.insertBefore(item, before);
             else
               popup.appendChild(item);
+            return item;
           }
+          return null;
         ]]>
         </body>
       </method>
@@ -214,7 +219,9 @@
             var remove = popup.childNodes[index];
             if (remove)
               popup.removeChild(remove);
+            return remove;
           }
+          return null;
         ]]>
         </body>
       </method>
@@ -232,13 +239,11 @@
 
   <binding id="menulist-editable" extends="chrome://global/content/bindings/menulist.xml#menulist">
     <content>
-      <xul:hbox flex="1" class="menulist-editable-box" align="center">
-        <xul:image class="menu-icon" inherits="src"/>
-        <html:input flex="1" class="menulist-editable-text" allowevents="true"
+      <xul:hbox class="menulist-editable-box" flex="1">
+        <html:input flex="1" class="menulist-editable-input" allowevents="true"
                     inherits="value=label,disabled"/>
-        <xul:image class="menu-dropmarker"/>
       </xul:hbox>
-    
+      <xul:dropmarker class="menulist-dropmarker" type="menu"/>
       <children includes="menupopup"/>
     </content>
     
@@ -384,7 +389,7 @@
       
       <handler event="blur" phase="capturing">
       <![CDATA[
-        if (!this.suppressFocusBlur && !this.hasAttribute('focused')) {
+        if (!this.suppressFocusBlur && this.hasAttribute('focused')) {
           this.removeAttribute('focused');
         }
       ]]>
@@ -429,6 +434,16 @@
         ]]>
       </handler>
     </handlers>    
+  </binding>
+  
+  <binding id="menulist-compact" display="xul:menu" 
+           extends="chrome://global/content/bindings/menulist.xml#menulist">
+    <content>
+      <xul:dropmarker class="menulist-dropmarker" type="menu"/>
+      <xul:image class="menulist-icon" inherits="src"/>
+      <xul:label class="menulist-label" inherits="value=label,crop,accesskey" crop="right" flex="1"/>
+      <children includes="menupopup"/>
+    </content>
   </binding>
   
 </bindings>

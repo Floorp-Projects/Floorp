@@ -1,25 +1,39 @@
-/*
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
- */
+ *  Joe Hewitt <hewitt@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /* ===== scrollbars.css =================================================
   == Styles used by XUL scrollbar-related elements.
@@ -27,160 +41,87 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+
 /* ::::: scrollbar ::::: */
 
 scrollbar {
   -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbar");
+  cursor: default;
 }
 
 /* ::::: slider ::::: */
 
 slider {
-  height: 8px;
-  background: url("chrome://global/skin/scrollbar/mini-slider-hrz-mid.gif") repeat-x;
+  height: 11px;
+  background: url("chrome://global/skin/scrollbar/mini-slider-hrz.gif") repeat-x;
 }
 
 slider[orient="vertical"] {
-  border-top: 0px;
-  border-bottom: 0px;
-  width: 8px;
-  background: url("chrome://global/skin/scrollbar/mini-slider-vrt-mid.gif") repeat-y;
+  width: 11px;
+  background: url("chrome://global/skin/scrollbar/mini-slider-vrt.gif") repeat-y;
+}
+
+/* ::::: borders for thumb and buttons ::::: */
+
+thumb,
+scrollbarbutton {
+  border: 3px solid;
+  -moz-border-top-colors: #000000 #E4EBF2 #C3CAD2;
+  -moz-border-right-colors: #000000 #8F9DAD #A4AFBB;
+  -moz-border-bottom-colors: #000000 #8F9DAD #A4AFBB;
+  -moz-border-left-colors: #000000 #E4EBF2 #C3CAD2;
+  background: #B1BBC5 50% 50% no-repeat;
 }
 
 /* ::::: thumb (horizontal) ::::: */
 
 thumb {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#thumb-horizontal");
+  background-image: url("chrome://global/skin/scrollbar/thumb-vrt-grip.gif");
 }
 
-.thumb-horz-spacer-left {
-  width: 3px;
-  height: 8px;
-  background: url("chrome://global/skin/scrollbar/mini-thumb-hrz-lft.gif") no-repeat;
-}
-
-.thumb-horz-box-middle {
-  height: 8px;
-  background: url("chrome://global/skin/scrollbar/mini-thumb-hrz-mid.gif") repeat-x;
-}
-
-.thumb-horz-spacer-right {
-  width: 3px;
-  height: 8px;
-  background: url("chrome://global/skin/scrollbar/mini-thumb-hrz-rit.gif") no-repeat;
-}
-
-.thumb-horz-grippy {
-  margin-left: 1px;
-  width: 10px;
-  background: url("chrome://global/skin/scrollbar/mini-thumb-hrz-grip.gif") repeat-x;
-}
-
-/* ..... active state ..... */
-
-thumb:active > .thumb-horz-spacer-left {
-  background-image: url("chrome://global/skin/scrollbar/mini-thumb-hrz-lft-act.gif");
-}
-
-thumb:active > .thumb-horz-box-middle {
-  background-image: url("chrome://global/skin/scrollbar/mini-thumb-hrz-mid-act.gif");
-}
-
-thumb:active > .thumb-horz-spacer-right {
-  background-image: url("chrome://global/skin/scrollbar/mini-thumb-hrz-rit-act.gif");
-}
-
-thumb:active > .thumb-horz-box-middle > .thumb-horz-grippy {
-  background-image: url("chrome://global/skin/scrollbar/mini-thumb-hrz-grip-act.gif");
-}
-
-/* ::::: thumb (vertical) ::::: */
-
-thumb[orient="vertical"] {
-  -moz-binding: url("chrome://global/skin/globalBindings.xml#thumb-vertical");
-}
-
-.thumb-vert-spacer-top {
-  background: url("chrome://global/skin/scrollbar/mini-thumb-vrt-top.gif") no-repeat;
-  height: 3px;
-  width: 8px;
-}
-
-.thumb-vert-box-middle {
-  background: url("chrome://global/skin/scrollbar/mini-thumb-vrt-mid.gif") repeat-y;
-  width: 8px;
-}
-
-.thumb-vert-spacer-bottom {
-  background: url("chrome://global/skin/scrollbar/mini-thumb-vrt-btm.gif") no-repeat;
-  height: 3px;
-  width: 8px;
-}
-
-.thumb-vert-grippy {
-  margin-top: 1px;
-  height: 10px;
-  background: url("chrome://global/skin/scrollbar/mini-thumb-vrt-grip.gif") repeat-y;
-}
-
-/* ..... active state ..... */
-
-thumb:active > .thumb-vert-spacer-top {
-  background-image: url("chrome://global/skin/scrollbar/mini-thumb-vrt-top-act.gif") no-repeat;
-}
-
-thumb:active > .thumb-vert-box-middle {
-  background-image: url("chrome://global/skin/scrollbar/mini-thumb-vrt-mid-act.gif") repeat-y;
-}
-
-thumb:active > .thumb-vert-spacer-bottom {
-  background-image: url("chrome://global/skin/scrollbar/mini-thumb-vrt-btm-act.gif") no-repeat;
-}
-
-thumb:active > .thumb-vert-box-middle > .thumb-vert-grippy {
-  background-image: url("chrome://global/skin/scrollbar/mini-thumb-vrt-grip-act.gif");
+thumb[orient="horizontal"] {
+  background-image: url("chrome://global/skin/scrollbar/thumb-hrz-grip.gif");
 }
 
 /* ::::: scrollbar button ::::: */
 
 scrollbarbutton {
-  -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbarbutton");
-  cursor: default;
-  -moz-box-align: end;
+  width: 11px;
+  height: 14px;
+}
+
+scrollbar[orient="horizontal"] > scrollbarbutton {
+  width: 14px;
+  height: 11px;
+}
+
+scrollbarbutton:hover:active {
+  border-left-width: 2px;
+  border-right-width: 2px;
+  -moz-border-top-colors: #000000 #708092 #939FAD;
+  -moz-border-right-colors: #000000 #718193 #9EA9B5;
+  -moz-border-bottom-colors: #000000 #8795A4 #929EAC;
+  -moz-border-left-colors: #000000 #ADB6C0 #9EA9B5;
+  background-color: #9CA8B4;
 }
 
 /* ..... increment .... */
 
 scrollbarbutton[type="increment"] {
-   list-style-image: url("chrome://global/skin/scrollbar/mini-btn-rit.gif")
-}
-
-scrollbarbutton[type="increment"]:hover:active {
-   list-style-image: url("chrome://global/skin/scrollbar/mini-btn-rit-act.gif")
+  background-image: url("chrome://global/skin/scrollbar/mini-btn-rit.gif")
 }
 
 scrollbar[orient="vertical"] > scrollbarbutton[type="increment"] {
-   list-style-image: url("chrome://global/skin/scrollbar/mini-btn-dn.gif")
-}
-
-scrollbar[orient="vertical"] > scrollbarbutton[type="increment"]:hover:active {
-   list-style-image: url("chrome://global/skin/scrollbar/mini-btn-dn-act.gif")
+  background-image: url("chrome://global/skin/scrollbar/mini-btn-dn.gif")
 }
 
 /* ..... decrement .... */
 
 scrollbarbutton[type="decrement"] {
-   list-style-image: url("chrome://global/skin/scrollbar/mini-btn-lft.gif")
-}
-
-scrollbarbutton[type="decrement"]:hover:active {
-   list-style-image: url("chrome://global/skin/scrollbar/mini-btn-lft-act.gif")
+   background-image: url("chrome://global/skin/scrollbar/mini-btn-lft.gif")
 }
 
 scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
-   list-style-image: url("chrome://global/skin/scrollbar/mini-btn-up.gif")
+   background-image: url("chrome://global/skin/scrollbar/mini-btn-up.gif")
 }
 
-scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"]:hover:active {
-   list-style-image: url("chrome://global/skin/scrollbar/mini-btn-up-act.gif")
-}

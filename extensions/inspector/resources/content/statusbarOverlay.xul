@@ -4,9 +4,7 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <statusbar id="status-bar">
-    <statusbarpanel id="txStatusPanel" flex="1">
-      <label id="txStatus" flex="1"/>
-    </statusbarpanel>
+    <statusbarpanel id="txStatusPanel" flex="1"/>
     <progressmeter id="pmStatus" mode="normal" value="0" class="progressmeter-statusbar"/>
   </statusbar>
 

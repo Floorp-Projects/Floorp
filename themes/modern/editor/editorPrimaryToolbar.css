@@ -1,25 +1,39 @@
-/*
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
- */
+ *  Joe Hewitt <hewitt@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -31,207 +45,183 @@
 
 /* ::::: primary toolbar buttons ::::: */
 
-#newButton {
-  list-style-image: url("chrome://editor/skin/btn1/newfile.gif");
+.toolbarbutton-1 {
+  list-style-image: url("chrome://editor/skin/icons/btn1.gif");
 }
 
-#newButton[disabled="true"],
-#newButton[disabled="true"]:hover,
-#newButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/newfile-dis.gif");
+#newButton {
+  -moz-image-region: rect(136px 49px 169px 0);
 }
 
 #newButton:hover {
-  list-style-image: url("chrome://editor/skin/btn1/newfile-hov.gif");
+  -moz-image-region: rect(136px 99px 169px 50px);
 }
 
 #newButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/newfile-act.gif");
+  -moz-image-region: rect(136px 149px 169px 100px);
+}
+
+#newButton[disabled="true"] {
+  -moz-image-region: rect(136px 199px 169px 150px) !important;
 }
 
 #openButton {
-  list-style-image: url("chrome://editor/skin/btn1/openfile.gif");
-}
-
-#openButton[disabled="true"],
-#openButton[disabled="true"]:hover,
-#openButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/openfile-dis.gif");
+  -moz-image-region: rect(170px 49px 203px 0);
 }
 
 #openButton:hover {
-  list-style-image: url("chrome://editor/skin/btn1/openfile-hov.gif");
+  -moz-image-region: rect(170px 99px 203px 50px);
 }
 
 #openButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/openfile-act.gif");
+  -moz-image-region: rect(170px 149px 203px 100px);
+}
+
+#openButton[disabled="true"] {
+  -moz-image-region: rect(170px 199px 203px 150px) !important;
 }
 
 #saveButton {
-  list-style-image: url("chrome://editor/skin/btn1/savefile.gif");
-}
-
-#saveButton[disabled="true"],
-#saveButton[disabled="true"]:hover,
-#saveButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/savefile-dis.gif");
+  -moz-image-region: rect(238px 49px 271px 0);
 }
 
 #saveButton:hover {
-  list-style-image: url("chrome://editor/skin/btn1/savefile-hov.gif");
+  -moz-image-region: rect(238px 99px 271px 50px);
 }
 
 #saveButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/savefile-act.gif");
+  -moz-image-region: rect(238px 149px 271px 100px);
 }
 
-#publishButton {
-  list-style-image: url("chrome://editor/skin/btn1/publish.gif");
+#saveButton[disabled="true"] {
+  -moz-image-region: rect(238px 199px 271px 150px) !important;
 }
 
 #previewButton {
-  list-style-image: url("chrome://editor/skin/btn1/preview.gif");
-}
-
-#previewButton[disabled="true"],
-#previewButton[disabled="true"]:hover,
-#previewButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/preview-dis.gif");
+  -moz-image-region: rect(204px 49px 237px 0);
 }
 
 #previewButton:hover {
-  list-style-image: url("chrome://editor/skin/btn1/preview-hov.gif");
+  -moz-image-region: rect(204px 99px 237px 50px);
 }
 
 #previewButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/preview-act.gif");
+  -moz-image-region: rect(204px 149px 237px 100px);
+}
+
+#previewButton[disabled="true"] {
+  -moz-image-region: rect(204px 199px 237px 150px) !important;
 }
 
 #printButton {
-  list-style-image: url("chrome://communicator/skin/btn1/print.gif");
-}
-
-#printButton[disabled="true"] {
-  list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif") !important;
+  list-style-image: url("chrome://communicator/skin/buttons.gif");
+  -moz-image-region: rect(34px 49px 67px 0);
 }
 
 #printButton[buttonover="true"] {
-  list-style-image: url("chrome://communicator/skin/btn1/print-hov.gif");
+  -moz-image-region: rect(34px 99px 67px 50px);
 }
 
 #printButton[buttondown="true"] {
-  list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
+  -moz-image-region: rect(34px 149px 67px 100px);
 }
 
-#findButton {
-  list-style-image: url("chrome://editor/skin/btn1/find.gif");
+#printButton[disabled="true"] {
+  -moz-image-region: rect(34px 199px 67px 150px);
 }
 
 #linkButton {
-  list-style-image: url("chrome://editor/skin/btn1/link.gif");
-}
-
-#linkButton[disabled="true"],
-#linkButton[disabled="true"]:hover,
-#linkButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/link-dis.gif");
+  -moz-image-region: rect(102px 49px 135px 0);
 }
 
 #linkButton:hover {
-  list-style-image: url("chrome://editor/skin/btn1/link-hov.gif");
+  -moz-image-region: rect(102px 99px 135px 50px);
 }
 
 #linkButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/link-act.gif");
+  -moz-image-region: rect(102px 149px 135px 100px);
+}
+
+#linkButton[disabled="true"] {
+  -moz-image-region: rect(102px 199px 135px 150px) !important;
 }
 
 #imageButton {
-  list-style-image: url("chrome://editor/skin/btn1/image.gif");
-}
-
-#imageButton[disabled="true"],
-#imageButton[disabled="true"]:hover,
-#imageButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/image-dis.gif");
+  -moz-image-region: rect(68px 49px 101px 0);
 }
 
 #imageButton:hover {
-  list-style-image: url("chrome://editor/skin/btn1/image-hov.gif");
+  -moz-image-region: rect(68px 99px 101px 50px);
 }
 
 #imageButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/image-act.gif");
+  -moz-image-region: rect(68px 149px 101px 100px);
+}
+
+#imageButton[disabled="true"] {
+  -moz-image-region: rect(68px 199px 101px 150px) !important;
 }
 
 #namedAnchorButton {
-  list-style-image: url("chrome://editor/skin/btn1/anchor.gif");
-}
-
-#namedAnchorButton[disabled="true"],
-#namedAnchorButton[disabled="true"]:hover,
-#namedAnchorButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/anchor-dis.gif");
+  -moz-image-region: rect(0 49px 33px 0);
 }
 
 #namedAnchorButton:hover {
-  list-style-image: url("chrome://editor/skin/btn1/anchor-hov.gif");
+  -moz-image-region: rect(0 99px 33px 50px);
 }
 
 #namedAnchorButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/anchor-act.gif");
+  -moz-image-region: rect(0 149px 33px 100px);
+}
+
+#namedAnchorButton[disabled="true"] {
+  -moz-image-region: rect(0 199px 33px 150px) !important;
 }
 
 #hlineButton {
-  list-style-image: url("chrome://editor/skin/btn1/hline.gif");
-}
-
-#hlineButton[disabled="true"],
-#hlineButton[disabled="true"]:hover,
-#hlineButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/hline-dis.gif");
+  -moz-image-region: rect(34px 49px 67px 0);
 }
 
 #hlineButton:hover {
-  list-style-image: url("chrome://editor/skin/btn1/hline-hov.gif");
+  -moz-image-region: rect(34px 99px 67px 50px);
 }
 
 #hlineButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/hline-act.gif");
+  -moz-image-region: rect(34px 149px 67px 100px);
+}
+
+#hlineButton[disabled="true"] {
+  -moz-image-region: rect(34px 199px 67px 150px) !important;
 }
 
 #tableButton {
-  list-style-image: url("chrome://editor/skin/btn1/table.gif");
-}
-
-#tableButton[disabled="true"],
-#tableButton[disabled="true"]:hover,
-#tableButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/table-dis.gif");
+  -moz-image-region: rect(306px 49px 339px 0);
 }
 
 #tableButton:hover {
-  list-style-image: url("chrome://editor/skin/btn1/table-hov.gif");
+  -moz-image-region: rect(306px 99px 339px 50px);
 }
 
 #tableButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/table-act.gif");
+  -moz-image-region: rect(306px 149px 339px 100px);
+}
+
+#tableButton[disabled="true"] {
+  -moz-image-region: rect(306px 199px 339px 150px) !important;
 }
 
 #spellingButton {
-  list-style-image: url("chrome://editor/skin/btn1/spell.gif");
-}
-
-#spellingButton[disabled="true"],
-#spellingButton[disabled="true"]:hover,
-#spellingButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/spell-dis.gif");
+  -moz-image-region: rect(272px 49px 305px 0);
 }
 
 #spellingButton:hover {
-  list-style-image: url("chrome://editor/skin/btn1/spell-hov.gif");
+  -moz-image-region: rect(272px 99px 305px 50px);
 }
 
 #spellingButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn1/spell-act.gif");
+  -moz-image-region: rect(272px 149px 305px 100px);
 }
 
+#spellingButton[disabled="true"] {
+  -moz-image-region: rect(272px 199px 305px 150px) !important;
+}

@@ -1,25 +1,39 @@
-/*
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
- */
+ *  Joe Hewitt <hewitt@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /* ===== addressbook.css ================================================
   == Styles for the main Address Book window.
@@ -30,12 +44,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* :::::  addressbook image precaching ::::: */
-
-#resource_bundle_addressbook {
-   -moz-binding: url("chrome://messenger/skin/addressbook/resources.xml#resource_bundle_addressbook");
-}
-
 /* ::::: primary toolbar masthead ::::: */
 
 #abToolbar > .toolbar-holder > .toolbar-primary-icon {
@@ -44,113 +52,89 @@
 
 /* ::::: primary toolbar buttons ::::: */
 
-#button-newcard {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newcard.gif");
+.toolbarbutton-1 {
+  list-style-image: url("chrome://messenger/skin/icons/btn1.gif");
 }
 
-#button-newcard[disabled="true"],
-#button-newcard[disabled="true"]:hover,
-#button-newcard[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newcard-dis.gif");
-} 
+#button-newcard {
+  -moz-image-region: rect(476px 49px 509px 0);
+}
 
 #button-newcard:hover {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newcard-hov.gif");
+  -moz-image-region: rect(476px 99px 509px 50px);
 } 
 
 #button-newcard:hover:active {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newcard-act.gif");
+  -moz-image-region: rect(476px 149px 509px 100px);
 }
 
-#button-newlist {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newlist.gif");
-}
-
-#button-newlist[disabled="true"],
-#button-newlist[disabled="true"]:hover,
-#button-newlist[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newlist-dis.gif");
+#button-newcard[disabled] {
+  -moz-image-region: rect(476px 199px 509px 150px) !important;
 } 
 
+#button-newlist {
+  -moz-image-region: rect(510px 49px 543px 0);
+}
+
 #button-newlist:hover {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newlist-hov.gif");
+  -moz-image-region: rect(510px 99px 543px 50px);
 } 
 
 #button-newlist:hover:active {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/newlist-act.gif");
+  -moz-image-region: rect(510px 149px 543px 100px);
 }
 
-#button-editcard {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/edit.gif");
-}
-
-#button-editcard[disabled="true"],
-#button-editcard[disabled="true"]:hover,
-#button-editcard[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/edit-dis.gif");
+#button-newlist[disabled] {
+  -moz-image-region: rect(510px 199px 543px 150px) !important;
 } 
 
+#button-editcard {
+  -moz-image-region: rect(442px 49px 475px 0);
+}
+
 #button-editcard:hover {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/edit-hov.gif");
+  -moz-image-region: rect(442px 99px 475px 50px);
 } 
 
 #button-editcard:hover:active {
-  list-style-image: url("chrome://messenger/skin/addressbook/btn1/edit-act.gif");
+  -moz-image-region: rect(442px 149px 475px 100px);
 }
 
-#button-newmessage {
-  list-style-image: url("chrome://messenger/skin/btn1/newmsg.gif");
-}
-
-#button-newmessage[disabled="true"],
-#button-newmessage[disabled="true"]:hover,
-#button-newmessage[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/newmsg-dis.gif");
+#button-editcard[disabled] {
+  -moz-image-region: rect(442px 199px 475px 150px) !important;
 } 
 
+#button-newmessage {
+  -moz-image-region: rect(170px 49px 203px 0);
+}
+
 #button-newmessage:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/newmsg-hov.gif");
+  -moz-image-region: rect(170px 99px 203px 50px);
 } 
 
 #button-newmessage:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/newmsg-act.gif");
-}
-
-#button-delete {
-  list-style-image: url("chrome://messenger/skin/btn1/delete.gif");
-}
-
-#button-delete[disabled="true"],
-#button-delete[disabled="true"]:hover,
-#button-delete[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/delete-dis.gif");
+  -moz-image-region: rect(170px 149px 203px 100px);
 } 
 
+#button-newmessage[disabled] {
+  -moz-image-region: rect(170px 199px 203px 150px) !important;
+} 
+
+#button-delete {
+  -moz-image-region: rect(408px 49px 441px 0);
+}
+
 #button-delete:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/delete-hov.gif");
+  -moz-image-region: rect(408px 99px 441px 50px);
 } 
 
 #button-delete:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/delete-act.gif");
+  -moz-image-region: rect(408px 199px 441px 150px);
 }
 
-#button-stop {
-  list-style-image: url("chrome://communicator/skin/btn1/stop.gif");
-}
-
-#button-stop[disabled="true"],
-#button-stop[disabled="true"]:hover,
-#button-stop[disabled="true"]:hover:active {
-  list-style-image: url("chrome://communicator/skin/btn1/stop-dis.gif");
+#button-delete[disabled] {
+  -moz-image-region: rect(408px 199px 441px 150px) !important;
 } 
-
-#button-stop:hover {
-  list-style-image: url("chrome://communicator/skin/btn1/stop-hov.gif");
-} 
-
-#button-stop:hover:active {
-  list-style-image: url("chrome://communicator/skin/btn1/stop-act.gif");
-}
 
 /* ::::: sidebar header ::::: */
 

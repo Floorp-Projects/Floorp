@@ -1,25 +1,39 @@
-/*
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Joe Hewitt <hewitt@netscape.com>
  *
- */
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /* ===== primaryToolbar.css =============================================
   == Images for the Mail primary toolbar.
@@ -30,206 +44,191 @@
 /* ::::: primary toolbar masthead ::::: */
 
 #msgToolbar > .toolbar-holder > .toolbar-primary-icon {
-  background-image: url("chrome://messenger/skin/icons/mast-mail.gif");
+  list-style-image: url("chrome://messenger/skin/icons/mast-mail.gif");
 }
 
 /* ::::: primary toolbar buttons ::::: */
 
-#button-getmsg {
-  list-style-image: url("chrome://messenger/skin/btn1/getmsg.gif");
+.toolbarbutton-1 {
+  list-style-image: url("chrome://messenger/skin/icons/btn1.gif");
 }
 
-#button-getmsg[disabled="true"],
-#button-getmsg[disabled="true"][buttonover="true"],
-#button-getmsg[disabled="true"][buttondown="true"] {
-  list-style-image: url("chrome://messenger/skin/btn1/getmsg-dis.gif");
+#button-getmsg {
+  -moz-image-region: rect(102px 49px 135px 0);
+}
+
+#button-getmsg[buttonover] {
+  -moz-image-region: rect(102px 99px 135px 50px);
 } 
 
-#button-getmsg[buttonover="true"] {
-  list-style-image: url("chrome://messenger/skin/btn1/getmsg-hov.gif");
+#button-getmsg[buttondown] {
+  -moz-image-region: rect(102px 149px 135px 100px);
 } 
 
-#button-getmsg[buttondown="true"] {
-  list-style-image: url("chrome://messenger/skin/btn1/getmsg-act.gif");
+#button-getmsg[disabled] {
+  -moz-image-region: rect(102px 199px 135px 150px) !important;
 } 
 
 #button-newmsg {
-  list-style-image: url("chrome://messenger/skin/btn1/newmsg.gif");
+  -moz-image-region: rect(170px 49px 203px 0);
 }
 
-#button-newmsg[disabled="true"],
-#button-newmsg[disabled="true"]:hover,
-#button-newmsg[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/newmsg-dis.gif");
-} 
-
 #button-newmsg:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/newmsg-hov.gif");
+  -moz-image-region: rect(170px 99px 203px 50px);
 } 
 
 #button-newmsg:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/newmsg-act.gif");
+  -moz-image-region: rect(170px 149px 203px 100px);
+} 
+
+#button-newmsg[disabled] {
+  -moz-image-region: rect(170px 199px 203px 150px) !important;
 } 
 
 #button-reply {
-  list-style-image: url("chrome://messenger/skin/btn1/reply.gif");
+  -moz-image-region: rect(238px 49px 271px 0);
 }
 
-#button-reply[disabled="true"],
-#button-reply[disabled="true"]:hover,
-#button-reply[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/reply-dis.gif");
-} 
-
 #button-reply:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/reply-hov.gif");
+  -moz-image-region: rect(238px 99px 271px 50px);
 } 
 
 #button-reply:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/reply-act.gif");
+  -moz-image-region: rect(238px 149px 271px 100px);
+} 
+
+#button-reply[disabled] {
+  -moz-image-region: rect(238px 199px 271px 150px) !important;
 } 
 
 #button-replyall {
-  list-style-image: url("chrome://messenger/skin/btn1/replyall.gif");
+  -moz-image-region: rect(272px 49px 305px 0);
 }
 
-#button-replyall[disabled="true"],
-#button-replyall[disabled="true"]:hover,
-#button-replyall[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/replyall-dis.gif");
-} 
-
 #button-replyall:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/replyall-hov.gif");
+  -moz-image-region: rect(272px 99px 305px 50px);
 } 
 
 #button-replyall:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/replyall-act.gif");
+  -moz-image-region: rect(272px 149px 305px 100px);
+} 
+
+#button-replyall[disabled] {
+  -moz-image-region: rect(272px 199px 305px 150px) !important;
 } 
 
 #button-forward {
-  list-style-image: url("chrome://messenger/skin/btn1/forward.gif");
+  -moz-image-region: rect(68px 49px 101px 0);
 }
 
-#button-forward[disabled="true"],
-#button-forward[disabled="true"]:hover,
-#button-forward[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/forward-dis.gif");
-} 
-
 #button-forward:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/forward-hov.gif");
+  -moz-image-region: rect(68px 99px 101px 50px);
 } 
 
 #button-forward:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/forward-act.gif");
+  -moz-image-region: rect(68px 149px 101px 100px);
+} 
+
+#button-forward[disabled] {
+  -moz-image-region: rect(68px 199px 101px 150px) !important;
 } 
 
 #button-file {
-  list-style-image: url("chrome://messenger/skin/btn1/file.gif");
+  -moz-image-region: rect(34px 49px 67px 0);
 }
 
 #button-file:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/file-hov.gif");
-} 
-
-#button-file[disabled="true"],
-#button-file[disabled="true"]:hover,
-#button-file[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/file-dis.gif");
+  -moz-image-region: rect(34px 99px 67px 50px);
 } 
 
 #button-file:hover:active,
-#button-file[open="true"] {
-  list-style-image: url("chrome://messenger/skin/btn1/file-act.gif");
+#button-file[open] {
+  -moz-image-region: rect(34px 149px 67px 100px);
+} 
+
+#button-file[disabled] {
+  -moz-image-region: rect(34px 199px 67px 150px) !important;
 } 
 
 #button-next {
-  list-style-image: url("chrome://messenger/skin/btn1/next.gif");
+  -moz-image-region: rect(204px 49px 237px 0);
 }
 
-#button-next[disabled="true"],
-#button-next[disabled="true"]:hover,
-#button-next[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/next-dis.gif");
-} 
-
 #button-next:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/next-hov.gif");
+  -moz-image-region: rect(204px 99px 237px 50px);
 } 
 
 #button-next:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/next-act.gif");
+  -moz-image-region: rect(204px 149px 237px 100px);
+} 
+
+#button-next[disabled] {
+  -moz-image-region: rect(204px 199px 237px 150px) !important;
 } 
 
 #button-delete {
-  list-style-image: url("chrome://messenger/skin/btn1/delete.gif");
+  -moz-image-region: rect(0, 49px 34px 0);
 }
 
-#button-delete[disabled="true"],
-#button-delete[disabled="true"]:hover,
-#button-delete[disabled="true"]:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/delete-dis.gif");
-} 
-
 #button-delete:hover {
-  list-style-image: url("chrome://messenger/skin/btn1/delete-hov.gif");
+  -moz-image-region: rect(0, 99px 34px 50px);
 } 
 
 #button-delete:hover:active {
-  list-style-image: url("chrome://messenger/skin/btn1/delete-act.gif");
+  -moz-image-region: rect(238px 149px 271px 100px);
 }
+
+#button-delete[disabled] {
+  -moz-image-region: rect(238px 199px 271px 150px) !important;
+} 
 
 #button-mark {
-  list-style-image: url("chrome://messenger/skin/btn1/mark.gif");
+  -moz-image-region: rect(136px 49px 169px 0);
 }
 
-#button-mark[disabled="true"],
-#button-mark[disabled="true"][buttonover="true"],
-#button-mark[disabled="true"][buttondown="true"] {
-  list-style-image: url("chrome://messenger/skin/btn1/mark-dis.gif");
+#button-mark[buttonover] {
+  -moz-image-region: rect(136px 99px 169px 50px);
 } 
 
-#button-mark[buttonover="true"] {
-  list-style-image: url("chrome://messenger/skin/btn1/mark-hov.gif");
+#button-mark[buttondown] {
+  -moz-image-region: rect(136px 149px 169px 100px);
 } 
 
-#button-mark[buttondown="true"] {
-  list-style-image: url("chrome://messenger/skin/btn1/mark-act.gif");
+#button-mark[disabled] {
+  -moz-image-region: rect(136px 199px 169px 150px) !important;
 } 
 
 #button-print {
-  list-style-image: url("chrome://communicator/skin/btn1/print.gif");
+  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
+  -moz-image-region: rect(34px 49px 67px 0);
 }
 
-#button-print[disabled="true"],
-#button-print[disabled="true"][buttonover="true"],
-#button-print[disabled="true"][buttondown="true"] {
-  list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
+#button-print[buttonover] {
+  -moz-image-region: rect(34px 99px 67px 50px);
 }
 
-#button-print[buttonover="true"] {
-  list-style-image: url("chrome://communicator/skin/btn1/print-hov.gif");
+#button-print[buttondown] {
+  -moz-image-region: rect(34px 149px 67px 100px);
 }
 
-#button-print[buttondown="true"] {
-  list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
+#button-print[disabled] {
+  -moz-image-region: rect(34px 199px 67px 150px) !important;
 }
 
 #button-stop {
-  list-style-image: url("chrome://communicator/skin/btn1/stop.gif");
+  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
+  -moz-image-region: rect(68px 49px 101px 0);
 }
 
-#button-stop[disabled="true"],
-#button-stop[disabled="true"]:hover,
-#button-stop[disabled="true"]:hover:active {
-  list-style-image: url("chrome://communicator/skin/btn1/stop-dis.gif");
-} 
-
 #button-stop:hover {
-  list-style-image: url("chrome://communicator/skin/btn1/stop-hov.gif");
+  -moz-image-region: rect(68px 99px 101px 50px);
 } 
 
 #button-stop:hover:active {
-  list-style-image: url("chrome://communicator/skin/btn1/stop-act.gif");
+  -moz-image-region: rect(68px 149px 101px 100px);
 }
+
+#button-stop[disabled] {
+  -moz-image-region: rect(68px 199px 101px 150px) !important;
+}
+

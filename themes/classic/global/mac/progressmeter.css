@@ -5,7 +5,7 @@
  **/
   progressmeter[mode="undetermined"] > .progressmeter-internal-box
     {
-      background    : url(chrome://global/skin/progressmeter-busy.gif) repeat-x;
+      background    : url(chrome://global/skin/progressmeter/progressmeter-busy.gif) repeat-x;
     }
  
   progressmeter[mode="undetermined"] > .progressmeter-internal-box > .progressmeter-stack > .progressmeter-progressbar {
@@ -49,7 +49,7 @@
   .progress-bar 
     {
       background-color	  : #9999FF;
-	  background    : url(chrome://global/skin/progressmeter-bar.gif) repeat-x;
+	  background    : url(chrome://global/skin/progressmeter/progressmeter-bar.gif) repeat-x;
 
     }
 

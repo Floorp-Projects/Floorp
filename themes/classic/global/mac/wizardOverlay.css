@@ -1,32 +1,27 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 #wiz-back-button {
-  list-style-image            : url("chrome://global/skin/flat-left-arrow.gif");
+  list-style-image            : url("chrome://global/skin/scroll-left.gif");
 }
-
-#wiz-next-button {
-  list-style-image            : url("chrome://global/skin/flat-right-arrow.gif");
-}
-
 #wiz-back-button[disabled] {
-  list-style-image            : url("chrome://global/skin/flat-left-arrow-disabled.gif");
+  list-style-image            : url("chrome://global/skin/scroll-left-disabled.gif");
 }
-
+#wiz-next-button {
+  list-style-image            : url("chrome://global/skin/scroll-right.gif");
+}
 #wiz-next-button[disabled] {
-  list-style-image            : url("chrome://global/skin/flat-right-arrow-disabled.gif");
+  list-style-image            : url("chrome://global/skin/scroll-right-disabled.gif");
 }
 
-#wizardButtons {
-  margin-top                  : 3px;
-}
+#wizardButtons 
+  {
+    margin-bottom             : 0.4em;
+  }
 
-/** each wizard has it's own scheme for displaying content. Must account for every variation **/
+.box-wizardcontent
+  {
+    margin-left               : 44px;
+    margin-right              : 44px;
+    width                     : 30em;
+  } 
 
-#contentarea > #content,
-#wizard-box > #content,
-#contentsink > #content,
-#contentarea > #wizardContents {
-  margin-left: 5px;
-  margin-right: 5px;
-  margin-top: 5px;
-}

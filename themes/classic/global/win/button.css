@@ -1,181 +1,138 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== button.css =====================================================
+  == Styles used by the XUL button element.
+  ======================================================================= */
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* NEW WIDGET ANDING: <button> */
+/* :::::::::: button :::::::::: */
 
-/** Default Button Styles (apply to usage of <button> without 
- *  any applied class).
- **/
+button {
+  margin: 1px 5px 2px 5px;
+  min-width: 6.3em;
+  border: 3px solid;
+  -moz-border-top-colors: transparent ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: transparent ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: transparent ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: transparent ThreeDHighlight ThreeDLightShadow;
+  background-color: ThreeDFace;
+  color: ButtonText;
+}
 
-/* outer frame */
-  button
-    {
-      margin              : 1px 5px 2px 5px;
-      min-width           : 6.3em;
-      background-color    : ThreeDFace;
-      color               : ButtonText;
-      -moz-user-focus     : normal;
-    }
-  
-  .button-text {
-    margin: 0px !important;
-    text-align: center;
-  }
+.button-box {
+  margin: 1px;
+  border: 1px solid transparent;
+  padding: 1px 4px 2px 3px;
+}
 
-  button, 
-  button[disabled="true"][default],
-  button[disabled="true"]:hover:active
-    {
-      border-left         : 1px solid ThreeDHighlight;
-      border-top          : 1px solid ThreeDHighlight;
-      border-right        : 1px solid ThreeDDarkShadow;
-      border-bottom       : 1px solid ThreeDDarkShadow;
-    }
+.button-text {
+  margin: 0 !important;
+  text-align: center;
+}
 
-  .button-box,
-  button[disabled="true"][default] > .button-box,
-  button[disabled="true"]:hover:active > .button-box
-    {
-      border-left         : 1px solid ThreeDLightShadow;
-      border-top          : 1px solid ThreeDLightShadow;
-      border-right        : 1px solid ThreeDShadow;
-      border-bottom       : 1px solid ThreeDShadow;
-      -moz-user-focus     : none;
-    }
+/* .......... focused state .......... */
 
-  .button-box-2,
-  button[disabled="true"][default] > .button-box > .button-box-2,
-  button[disabled="true"]:hover:active > .button-box > .button-box-2
-    {
-			border              : 1px solid ThreeDLightShadow;	
-    }
-  
-  button:hover:active,
-  button[open="true"],
-  button[checked="true"]
-    {
-      border              : 1px solid ThreeDDarkShadow;
-    }
+button:focus {
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight transparent;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight transparent;
+}
 
-  button:hover:active > .button-box,
-  button[checked="true"] > .button-box,
-  button[checked="true"]:focus > .button-box,
-  button[open="true"] > .button-box,
-  button[open="true"]:focus > .button-box
-    {
-      border              : 1px solid ThreeDShadow;
-    }
+button:focus > .button-box {
+  border: 1px dotted ThreeDDarkShadow;
+}
 
-  button:hover:active > .button-box > .button-box-2,
-  button[checked="true"] > .button-box > .button-box-2,
-  button[checked="true"]:focus> .button-box > .button-box-2,
-  button[open="true"] > .button-box > .button-box-2,
-  button[open="true"]:focus > .button-box > .button-box-2
-    {
-      border              : 1px solid transparent;
-    }
+/* .......... default state .......... */
 
-  button:hover:active > .button-box > .button-box-2 > .button-box-text,
-  button[open="true"] > .button-box > .button-box-2 > .button-box-text
-    {
-      padding             : 1px 2px 0px 3px; 
-    }
-  
-  button[disabled="true"],
-  button[disabled="true"]:hover:active 
-    {
-      color               : GrayText;
-    }
-        
-  button[disabled="true"] > .button-box > .button-box-2 > .button-box-text,
-  button[disabled="true"]:hover:active > .button-box > .button-box-2 > .button-box-text
-    {
-      padding             : 0px 3px 1px 2px;
-    }
+button[default="true"] {
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight ThreeDLightShadow;
+}
 
-/* text wrapping frame (hack because <text> does not support alignment) */
-  .button-box-text,
-  button[disabled]:focus > .button-box > .button-box-2 > .button-box-text
-    {
-      padding             : 0px 3px 1px 2px;
-      border              : 1px solid ThreeDLightShadow;
-      margin              : 1px;
-    }
+/* .......... active/open/checked state .......... */
 
-  button:focus > .button-box > .button-box-2 > .button-box-text
-    {
-      border              : 1px dotted ThreeDDarkShadow;
-    }    
-    
-/** Styles for "DEFAULT" buttons (usually 'OK' or equivalent in dialogs. 
- *  To activate, set 'default' attribute on button.
- **/
- 
-/* outer frame */  
-  button[default], button:focus
-    {
-      border              : 1px solid ThreeDDarkShadow;
-    }
+button:hover:active,
+button[open="true"],
+button[checked="true"] {
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow transparent;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow transparent;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow transparent;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow transparent;
+}
 
-  button[default] > .button-box,
-  button:focus > .button-box
-    {
-      border-left         : 1px solid ThreeDHighlight;
-      border-top          : 1px solid ThreeDHighlight;
-      border-right        : 1px solid ThreeDDarkShadow;
-      border-bottom       : 1px solid ThreeDDarkShadow;
-    }
+button:hover:active > .button-box,
+button[open="true"] > .button-box,
+button[checked="true"] > .button-box {
+  padding: 2px 3px 1px 4px;
+}
 
-  button[default] > .button-box > .button-box-2,
-  button:focus > .button-box > .button-box-2
-    {
-      border-left         : 1px solid ThreeDLightShadow;
-      border-top          : 1px solid ThreeDLightShadow;
-      border-right        : 1px solid ThreeDShadow;
-      border-bottom       : 1px solid ThreeDShadow;
-    }
+/* .......... disabled state .......... */
 
-/* ::::: menu-button buttons ::::: */
+button[disabled="true"] {
+  -moz-border-top-colors: transparent ThreeDHighlight ThreeDLightShadow !important;
+  -moz-border-right-colors: transparent ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-bottom-colors: transparent ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-left-colors: transparent ThreeDHighlight ThreeDLightShadow !important;
+  color: GrayText;
+}
+
+button[disabled="true"] > .button-box {
+  padding: 1px 4px 2px 3px !important;
+}
+
+/* ::::: menu/menu-button buttons ::::: */
 
 button[type="menu-button"] {
-  margin: 0px !important;
-  border: none !important;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  margin: 0;
+  border: none;
 }
 
-.menu-button-dropmarker {
-  list-style-image: url("chrome://global/skin/scroll-down.gif");
+.button-menu-dropmarker,
+.button-menubutton-dropmarker {
+  margin: 1px;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
 }
   
-.menu-button-dropmarker[disabled="true"] {
-  list-style-image: url("chrome://global/skin/scroll-down-disabled.gif");
+.button-menu-dropmarker[disabled="true"],
+.button-menubutton-dropmarker[disabled="true"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
+}
+
+.button-menubutton-dropmarker[open="true"] {
+  margin: 2px 0px 0px 2px;
 }
 
 /* ::::: plain buttons ::::: */
 
-button.plain, 
-button.plain:hover,
-button.plain:hover:active,
-button.plain > .button-box, 
-button.plain:hover > .button-box, 
-button.plain:hover:active > .button-box {
-  border: 0px ! important;
-  margin: 0px;
-  padding: 0px;
+button.plain {
+  border: 0px !important;
+  margin: 0px !important;
+  padding: 0px !important;
 }
-
-/* ::::: close button ::::: */
-
-.close-button {
-    border: none;
-    list-style-image: url("chrome://global/skin/close.png");
-}
-
-.close-button:hover > .toolbarbutton-box {
-    border: 1px solid transparent;
-}
-
-.close-button:hover:active,
-.close-button:hover:active > .toolbarbutton-box {
-    border: none;
-    list-style-image: url("chrome://global/skin/close-act.png");
-}
-

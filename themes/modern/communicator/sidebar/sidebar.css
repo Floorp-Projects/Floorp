@@ -1,27 +1,39 @@
-/*
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *  Stephen Lamm <slamm@netscape.com>
  *  Joe Hewitt <hewitt@netscape.com>
  *
- */
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /* ===== sidebar.css ====================================================
   == Styles used by the Sidebar panel and Sidebar tabs.
@@ -30,28 +42,21 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 #sidebar-box {
-  margin-top: 0px;
   border-left: 1px solid #8998AA;
-  background-color: #C7D0D9;
-}
-
-#sidebar-title-box {
-  border-bottom: none;
+  background-color: #C1CBD5;
 }
 
 /* ::::: sidebar header ::::: */
 
 .sidebarheader-main {
   -moz-binding: url("chrome://communicator/skin/sidebar/sidebarBindings.xml#sidebarheader") !important;
-  border-top: 1px solid #DEE7EE;
-  border-left: 1px solid #DEE7EE;
-  background-color: #B1BDC9;
+  -moz-box-align: center;
+  border-top: 1px solid #DFE5EF;
+  border-left: 1px solid #DFE5EF;
+  padding: 3px 0px 2px 6px;
+  background-color: #C1CBD5;
   color: #000000;
   font-weight: bold;
-}
-
-.sidebarheader-internal-box {
-  padding: 0px 0px 2px 16px;
 }
 
 /* ..... picker button ..... */
@@ -59,6 +64,7 @@
 #sidebar-panel-picker {
   margin-right: 1px;
   margin-top: 1px;
+  padding: 2px;
 }
 
 #sidebar-panel-picker:hover {
@@ -69,14 +75,19 @@
   border-style: inset;
 }
 
-#sidebar-panel-picker {
-  padding: 2px;
-}
-
-#sidebar-panel-picker > .toolbarbutton-box > .toolbarbutton-dropmarker {
+#sidebar-panel-picker > .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://communicator/skin/sidebar/sbpicker-arrow.gif");
   padding-right: 2px;
   padding-left: 2px;
+}
+
+/* ..... close button ..... */
+
+#sidebar-close-button {
+  margin: 0px 1px;
+  -moz-binding: url("chrome://global/content/bindings/toolbarbutton.xml#toolbarbutton-image");
+  padding: 0px 2px 0px 4px;
+  list-style-image: url("chrome://global/skin/icons/closebox.gif");
 }
 
 /* ::::: loading info ::::: */
@@ -90,15 +101,12 @@
   list-style-image: url("chrome://communicator/skin/icons/loading.gif");
 }
 
-box[loadstate="stopped"] > box > box > .image-panel-loading {
-  visibility: hidden;
-}
-
 /* ::::: sidebar panel ::::: */
 
 .iframe-panel {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#iframe-miniscroll") !important;
-  border-bottom: 1px solid #8998AA;
+  border-bottom: 6px solid;
+  -moz-border-bottom-colors: #C1CBD5 #C1CBD5 #C1CBD5 #C1CBD5 #DFE5EF #A1ADBE;
 }
 
 /* ::::: sidebar tabs ::::: */
@@ -107,221 +115,131 @@ box[loadstate="stopped"] > box > box > .image-panel-loading {
  
 .box-texttab {
   -moz-binding: url("chrome://communicator/skin/sidebar/sidebarBindings.xml#sidebar-tab");
-  min-height: 22px;
   color: #000000;
+  border-left: 1px solid #DFE5EF;
 }
 
-.sidebar-tab-text-box {
-  padding: 5px 0px 0px 0px;
+.sidebar-tab-left-box,
+.sidebar-tab-right-box {
+  margin-bottom: 3px;
 }
 
-.sidebar-tab-mid-1 {
+.sidebar-tab-left-box {
+  border-top: 2px solid;
+  border-bottom: 1px solid #C1CBD5;
+  -moz-border-top-colors: #97A4B2 #DFE5EF;
   min-width: 90px;
 }
-   
+
 .sidebar-tab-left {
-  width: 7px;
+  width: 10px;
+  background: url("chrome://communicator/skin/sidebar/sbtab-lft.gif") no-repeat;
 }
 
-.sidebar-tab-left-top {
-  background: url("chrome://communicator/skin/sidebar/sbtab-lft-top.gif") no-repeat;
-  height: 16px;
+.sidebar-tab-text {
+  margin: 0px !important;
+  background: url("chrome://communicator/skin/sidebar/sbtab-mid.gif") repeat-x top;
 }
 
-.sidebar-tab-left-mid {
-  background: url("chrome://communicator/skin/sidebar/sbtab-lft-mid.gif") repeat-y;
-}
-
-.sidebar-tab-left-btm {
-  background: url("chrome://communicator/skin/sidebar/sbtab-lft-btm.gif") no-repeat;
-  height: 5px;
-}
-
-.sidebar-tab-mid-top {
-  background: url("chrome://communicator/skin/sidebar/sbtab-mid-top.gif") repeat-x top;
-  background-color: #B1BDC9;
-}
-
-.sidebar-tab-mid-btm {
-  background: url("chrome://communicator/skin/sidebar/sbtab-mid-btm.gif") repeat-x;
-  height: 6px;
-}
-
-.sidebar-tab-right {
-  width: 34px;
-}
-
-.sidebar-tab-right-top {
-  background: url("chrome://communicator/skin/sidebar/sbtab-rit-top.gif") no-repeat;
-  height: 16px;
-}
-
-.sidebar-tab-right-mid {
-  background: url("chrome://communicator/skin/sidebar/sbtab-rit-mid.gif") repeat-y;
+.sidebar-tab-right-img {
+  width: 32px;
+  height: 13px;
+  list-style-image: url("chrome://communicator/skin/sidebar/sbtab-rit-top.gif");
 }
 
 .sidebar-tab-right-btm {
-  background: url("chrome://communicator/skin/sidebar/sbtab-rit-btm.gif") no-repeat;
-  height: 5px;
+  min-height: 5px;
 }
 
-.sidebar-tab-rightcap {
-  background: url("chrome://communicator/skin/sidebar/sbtab-ritcap.gif") #B1BDC9 repeat-x top;
+.sidebar-tab-right-line {
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #DFE5EF #97A4B2;
 }
 
 /* ..... hover state ..... */
 
-.box-texttab:hover > .sidebar-tab-left > .sidebar-tab-left-top {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-top-hov.gif");
+.box-texttab:hover > .sidebar-tab-left-box {
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #DFE5EF #99A8B9;
 }
 
-.box-texttab:hover > .sidebar-tab-left > .sidebar-tab-left-mid {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-mid-hov.gif");
+.box-texttab:hover > .sidebar-tab-right-box > .sidebar-tab-right-top-box 
+    > .sidebar-tab-right-img 
+{
+  list-style-image: url("chrome://communicator/skin/sidebar/sbtab-rit-top-hov.gif");
 }
 
-.box-texttab:hover > .sidebar-tab-left > .sidebar-tab-left-btm {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-btm-hov.gif");
-}
-
-.box-texttab:hover > .sidebar-tab-mid-1 > .sidebar-tab-mid-2 > .sidebar-tab-mid-top {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid-top-hov.gif");
-}
-
-.box-texttab:hover > .sidebar-tab-mid-1 > .sidebar-tab-mid-2 > .sidebar-tab-mid-btm {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid-btm-hov.gif");
-}
-
-.box-texttab:hover > .sidebar-tab-right > .sidebar-tab-right-top {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-rit-top-hov.gif");
-}
-
-.box-texttab:hover > .sidebar-tab-right > .sidebar-tab-right-mid {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-rit-mid-hov.gif");
-}
-
-.box-texttab:hover > .sidebar-tab-right > .sidebar-tab-right-btm {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-rit-btm-hov.gif");
-}
-
-.box-texttab:hover > .sidebar-tab-rightcap {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-ritcap-hov.gif");
+.box-texttab:hover > .sidebar-tab-right-box > .sidebar-tab-right-btm {
+  background: url("chrome://communicator/skin/sidebar/sbtab-rit-btm-hov.gif") no-repeat bottom left;
 }
 
 /* ..... active state ..... */
 
 .box-texttab:hover:active {
+  border-left: none;
   color: #FFFFFF;
 }
 
-.box-texttab:hover:active > .sidebar-tab-left > .sidebar-tab-left-top {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-top-act.gif");
+.box-texttab:hover:active > .sidebar-tab-left-box {
+  border-left: 2px solid;
+  -moz-border-bottom-colors: #DFE5EF #ADB9C5;
+  -moz-border-top-colors: #97A4B2 #838D97;
+  -moz-border-left-colors: #97A4B2 #AAB5C1;
+  background-color: #ADB9C5;
 }
 
-.box-texttab:hover:active > .sidebar-tab-left > .sidebar-tab-left-mid {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-mid-act.gif");
+.box-texttab:hover:active > .sidebar-tab-left-box > .sidebar-tab-left {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-act.gif");
 }
 
-.box-texttab:hover:active > .sidebar-tab-left > .sidebar-tab-left-btm {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-btm-act.gif");
+.box-texttab:hover:active > .sidebar-tab-left-box > .sidebar-tab-text {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid-act.gif");
 }
 
-.box-texttab:hover:active > .sidebar-tab-mid-1 > .sidebar-tab-mid-2 > .sidebar-tab-mid-top {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid-top-act.gif");
-  background-color: #99A9B7;
+.box-texttab:hover:active > .sidebar-tab-right-box > .sidebar-tab-right-top-box 
+    > .sidebar-tab-right-img 
+{
+  list-style-image: url("chrome://communicator/skin/sidebar/sbtab-rit-top-act.gif");
 }
 
-.box-texttab:hover:active > .sidebar-tab-mid-1 > .sidebar-tab-mid-2 > .sidebar-tab-mid-btm {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid-btm-act.gif");
-}
-
-.box-texttab:hover:active > .sidebar-tab-right > .sidebar-tab-right-top {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-rit-top-act.gif");
-}
-
-.box-texttab:hover:active > .sidebar-tab-right > .sidebar-tab-right-mid {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-rit-mid-act.gif");
-}
-
-.box-texttab:hover:active > .sidebar-tab-right > .sidebar-tab-right-btm {
+.box-texttab:hover:active > .sidebar-tab-right-box > .sidebar-tab-right-btm {
   background-image: url("chrome://communicator/skin/sidebar/sbtab-rit-btm-act.gif");
 }
 
-.box-texttab:hover:active > .sidebar-tab-rightcap {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-ritcap-act.gif");
+/* ..... selected state ..... */
+
+.box-texttab[selected] {
+  border-left: 1px solid #EAF0F7 !important;
+  border-bottom: 1px solid #97A4B2 !important;
+  color: #000000 !important;
 }
 
-/* ..... selected tab ..... */
-
-.box-texttab[selected="true"],
-.box-texttab[selected="true"]:hover:active {
-  border-bottom: 1px solid #8998AA;
-  color: #000000;
+.box-texttab[selected] > .sidebar-tab-left-box {
+  border-bottom: none !important;
+  border-left: none !important;
+  -moz-border-top-colors: #97A4B2 #E6EAF4 !important;
+  background-color: #D2D8E3 !important;
 }
 
-.box-texttab[selected="true"] > .sidebar-tab-left > .sidebar-tab-left-top,
-.box-texttab:hover[selected="true"] > .sidebar-tab-left > .sidebar-tab-left-top,
-.box-texttab:hover:active[selected="true"] > .sidebar-tab-left > .sidebar-tab-left-top {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-top-sel.gif");
+.box-texttab[selected] > .sidebar-tab-left-box,
+.box-texttab[selected] > .sidebar-tab-right-box {
+  margin-bottom: 0 !important;
 }
 
-.box-texttab[selected="true"] > .sidebar-tab-left > .sidebar-tab-left-mid,
-.box-texttab:hover[selected="true"] > .sidebar-tab-left > .sidebar-tab-left-mid,
-.box-texttab:hover:active[selected="true"] > .sidebar-tab-left > .sidebar-tab-left-mid {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-mid-sel.gif");
+.box-texttab[selected] > .sidebar-tab-left-box > .sidebar-tab-left {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-sel.gif") !important;
 }
 
-.box-texttab[selected="true"] > .sidebar-tab-left > .sidebar-tab-left-btm,
-.box-texttab:hover[selected="true"] > .sidebar-tab-left > .sidebar-tab-left-btm,
-.box-texttab:hover:active[selected="true"] > .sidebar-tab-left > .sidebar-tab-left-btm {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-lft-btm-sel.gif");
+.box-texttab[selected] > .sidebar-tab-left-box > .sidebar-tab-text {
+  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid-sel.gif") !important;
 }
 
-.box-texttab[selected="true"] > .sidebar-tab-mid-1 > .sidebar-tab-mid-2 > .sidebar-tab-mid-top,
-.box-texttab:hover[selected="true"] > .sidebar-tab-mid-1 > .sidebar-tab-mid-2 > .sidebar-tab-mid-top, .box-texttab:hover:active[selected="true"] > .sidebar-tab-mid-1 > .sidebar-tab-mid-2 > .sidebar-tab-mid-top {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid-top-sel.gif");
-  background-color: #C6D3DC;
-}
-
-.box-texttab[selected="true"] > .sidebar-tab-mid-1 > .sidebar-tab-mid-2 > .sidebar-tab-mid-btm,
-.box-texttab:hover[selected="true"] > .sidebar-tab-mid-1 > .sidebar-tab-mid-2 > .sidebar-tab-mid-btm, .box-texttab:hover:active[selected="true"] > .sidebar-tab-mid-1 > .sidebar-tab-mid-2 > .sidebar-tab-mid-btm {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-mid-btm-sel.gif");
-}
-
-.box-texttab[selected="true"] > .sidebar-tab-right > .sidebar-tab-right-top,
-.box-texttab:hover[selected="true"] > .sidebar-tab-right > .sidebar-tab-right-top,
-.box-texttab:hover:active[selected="true"] > .sidebar-tab-right > .sidebar-tab-right-top {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-rit-top-sel.gif");
-}
-
-.box-texttab[selected="true"] > .sidebar-tab-right > .sidebar-tab-right-mid,
-.box-texttab:hover[selected="true"] > .sidebar-tab-right > .sidebar-tab-right-mid,
-.box-texttab:hover:active[selected="true"] > .sidebar-tab-right > .sidebar-tab-right-mid {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-rit-mid-sel.gif");
-}
-
-.box-texttab[selected="true"] > .sidebar-tab-right 
-    > .sidebar-tab-right-btm,
-.box-texttab:hover[selected="true"] > .sidebar-tab-right 
-   > .sidebar-tab-right-btm,
-.box-texttab:hover:active[selected="true"]  
-   > .sidebar-tab-right > .sidebar-tab-right-btm 
+.box-texttab[selected] > .sidebar-tab-right-box > .sidebar-tab-right-top-box 
+    > .sidebar-tab-right-img 
 {
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-rit-btm-sel.gif");
+  list-style-image: url("chrome://communicator/skin/sidebar/sbtab-rit-top-sel.gif") !important;
 }
 
-.box-texttab[selected="true"] > .sidebar-tab-rightcap,
-.box-texttab[selected="true"]:hover > .sidebar-tab-rightcap,
-.box-texttab[selected="true"]:hover:active > .sidebar-tab-rightcap 
-{
-  background-image: url("chrome://communicator/skin/sidebar/sbtab-ritcap-sel.gif");
-  background-color: #C6D3DC;
+.box-texttab[selected] > .sidebar-tab-right-box > .sidebar-tab-right-btm {
+  background: #D2D8E3 !important;
 }
-
-.box-texttab[last-panel="true"] {
-  border-bottom: 1px solid #8998AA;
-}
-
-.box-texttab[first-panel-after-selected="true"] {
-  border-top: 1px solid #D6E0EA;
-}
-

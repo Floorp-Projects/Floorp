@@ -1,44 +1,56 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== outliner.css ===================================================
+  == Styles used by the XUL outline element.
+  ======================================================================= */
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-
-/******** Outliner widget **********/
-
-/** basic outliner ****************************************************
- *  basic outliner widget for use in main windows where no decoration
- *  is required.
- **/
+/* ::::: outliner ::::: */
 
 outliner {
-  border-spacing        : 0px;     
-  border-top            : 1px solid ThreeDShadow;                             
-  border-right          : 1px solid ThreeDHighlight;
-  border-bottom         : 1px solid ThreeDShadow;                          
-  border-left           : 1px solid ThreeDShadow; 
-  background-color      : -moz-Field;
-  color                 : -moz-FieldText;   
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
 }
 
-outliner.inset {
-  border-top: 1px solid ThreeDShadow;
-  border-right: 1px solid ThreeDHighlight;
-  border-bottom: 1px solid ThreeDHighlight;
-  border-left: 1px solid ThreeDShadow;
-}
-
-outlinerbody {
-  -moz-user-select: none;
-}
+/* ::::: outliner rows ::::: */
 
 outlinerbody:-moz-outliner-row {
-  height: 18px;
   border: 1px solid transparent;
+  height: 18px;
 }
 
 outlinerbody:-moz-outliner-row(selected) {
   background-color: -moz-Dialog;
 }
 
-outliner:focus > outlinerbody:-moz-outliner-row(selected, focus) {
+outlinerbody:-moz-outliner-row(selected, focus) {
   background-color: Highlight;
 }
 
@@ -46,8 +58,10 @@ outlinerbody:-moz-outliner-row(current, focus) {
   border: 1px dotted #F5DB95;
 }
 
+/* ::::: outliner cells ::::: */
+
 outlinerbody:-moz-outliner-cell {
-  padding: 0px 0px 1px 2px;
+  padding: 0px 0px 0px 2px;
 }
 
 outlinerbody:-moz-outliner-cell-text {
@@ -62,12 +76,14 @@ outlinerbody:-moz-outliner-cell-text(selected, focus) {
   color: HighlightText;
 }
 
+/* ::::: lines connecting cells ::::: */
+
 outlinerbody:-moz-outliner-line {
-  border: 1px dotted grey;
+  border: 1px dotted ThreeDShadow;
 }
 
-outlinerbody:-moz-outliner-line(selected) {
-  border: 1px dotted black;
+outlinerbody:-moz-outliner-line(selected, focus) {
+  border: 1px dotted HighlightText;
 }
 
 outlinerbody:-moz-outliner-separator {
@@ -75,77 +91,64 @@ outlinerbody:-moz-outliner-separator {
   border-bottom: 1px solid ThreeDHighlight;
 }
 
+/* ::::: outliner columns ::::: */
+
 outlinercol { 
-  border-left: 1px solid ThreeDHighlight;
-  border-top: 1px solid ThreeDHighlight;
-  border-right: 1px solid ThreeDDarkShadow;
-  border-bottom : 1px solid ThreeDDarkShadow;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
   background-color: -moz-Dialog;
   color: -moz-DialogText;
-}
-
-.outlinercol-box,
-.outlinercol-image-box {
-  border-left: 1px solid ThreeDLightShadow;
-  border-top: 1px solid ThreeDLightShadow;
-  border-right: 1px solid ThreeDShadow;
-  border-bottom: 1px solid ThreeDShadow;
-}  
-
-.outlinercol-box {
   padding: 0px 4px;
 }
 
-.outlinercol-image-box {
+.outlinercol-image {
   padding: 0px 1px;
 }
-  
-outlinercol:hover:active {
-  border: 1px solid ThreeDShadow;
+
+.outlinercol-text {
+  margin: 0px !important;
 }
 
-outlinercol:hover:active > .outlinercol-box,
-outlinercol:hover:active > .outlinercol-image-box {
-  border-top: 1px solid transparent;
-  border-right: none;
-  border-bottom: none;
-  border-left: 1px solid transparent;
-}
-  
-outlinercol:hover:active > .outlinercol-box {
+/* ..... internal box ..... */
+
+outlinercol:hover:active {
+  border-top: 2px solid;
+  border-right: 1px solid;
+  border-bottom: 1px solid;
+  border-left: 2px solid;
+  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-right-colors: ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDShadow;
+  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
   padding: 1px 4px 0px 5px;
 }
 
-outlinercol:hover:active > .outlinercol-image-box {
+.outlinercol-image:hover:active {
   padding: 1px 1px 0px 2px;
 }
 
-/* column drag and drop styles */
+/* ::::: column drag and drop styles ::::: */
 
 outlinercol[dragging="true"] {
-  border: 1px solid ThreeDDarkShadow;
-  background-color: ThreeDShadow;
-  color: ThreeDHighlight;
-}
-
-outlinercol[dragging="true"] > .outlinercol-box {
-  border: 1px solid transparent;
+  -moz-border-top-colors: ThreeDDarkShadow transparent !important;
+  -moz-border-right-colors: ThreeDDarkShadow transparent!important;
+  -moz-border-bottom-colors: ThreeDDarkShadow transparent !important;
+  -moz-border-left-colors: ThreeDDarkShadow transparent !important;
+  background-color: ThreeDShadow !important;
+  color: ThreeDHighlight !important;
 }
 
 outlinercol[insertafter="true"] {
-  border-right: 1px solid ThreeDDarkShadow;
-}
-
-outlinercol[insertafter="true"] > .outlinercol-box {
-  border-right: 1px solid ThreeDShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
 }
 
 outlinercol[insertbefore="true"] {
-  border-left: 1px solid ThreeDDarkShadow;
-}
-
-outlinercol[insertbefore="true"] > .outlinercol-box {
-  border-left: 1px solid ThreeDShadow;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow;
 }
 
 outlinerbody:-moz-outliner-column(insertbefore) {
@@ -156,41 +159,39 @@ outlinerbody:-moz-outliner-column(insertafter) {
   border-right: 1px solid ThreeDShadow;
 }
 
-/* outliner header with sort direction indicators */
+/* ::::: sort direction indicator :::::  */
 
 .outlinercol-sortdirection {
   list-style-image: none;
 }
 
-.sortDirectionIndicator[sortDirection="ascending"] > .outlinercol-box > .outlinercol-sortdirection {
-  list-style-image: url("chrome://global/skin/sortAscending.gif");
+.sortDirectionIndicator[sortDirection="ascending"] > .outlinercol-sortdirection {
+  list-style-image: url("chrome://global/skin/tree/sort-asc.gif");
 }
 
-.sortDirectionIndicator[sortDirection="descending"] > .outlinercol-box > .outlinercol-sortdirection {
-  list-style-image: url("chrome://global/skin/sortDescending.gif");
+.sortDirectionIndicator[sortDirection="descending"] > .outlinercol-sortdirection {
+  list-style-image: url("chrome://global/skin/tree/sort-dsc.gif");
 }
 
-.outliner-colpicker-icon
-{
-  list-style-image: url("chrome://global/skin/columnselect.gif");
+/* ::::: column picker :::::  */
+
+.outliner-columnpicker-icon {
+  list-style-image: url("chrome://global/skin/tree/columnpicker.gif");
 }
 
-/* twisty rules */
+/* ::::: column picker :::::  */
+
 outlinerbody:-moz-outliner-twisty {
   padding-right: 2px;
-  width: 12px; /* The image's width is 12 pixels */
-  list-style-image: url("chrome://global/skin/twisty-closed.gif");
+  width: 10px; /* The image's width is 10 pixels */
+  list-style-image: url("chrome://global/skin/tree/twisty-clsd.gif");
 }
-  
+
 outlinerbody:-moz-outliner-twisty(open) {
-  width: 12px; /* The image's width is 12 pixels */
-  list-style-image: url("chrome://global/skin/twisty-open.gif");
+  width: 10px; /* The image's width is 10 pixels */
+  list-style-image: url("chrome://global/skin/tree/twisty-open.gif");
 }
 
 outlinerbody:-moz-outliner-indentation {
   width: 16px;
-}
-
-.outlinercol-text {
-  margin: 0px 0px 0px 0px !important;
 }

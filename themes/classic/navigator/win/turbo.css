@@ -1,6 +1,0 @@
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
-
-#turboTrayImage {
-  list-style-image: url("chrome://navigator/skin/turbo-systray.gif");
-  border: 2px inset ThreeDHighlight !important;
-}

@@ -1,7 +1,0 @@
-#!dest messenger:skin
-subscribe.css
-threadPane.css
-folderPane.css
-msgHdrViewOverlay.css
-pref-mailnews.css
-messenger.css

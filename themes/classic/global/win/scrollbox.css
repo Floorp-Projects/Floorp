@@ -5,12 +5,12 @@
  */
 .autorepeatbutton-up 
   {
-    list-style-image      : url("chrome://global/skin/scroll-up.gif")
+    list-style-image      : url("chrome://global/skin/arrow/arrow-up.gif")
   }
 
 .autorepeatbutton-down 
   {
-    list-style-image      : url("chrome://global/skin/scroll-down.gif")
+    list-style-image      : url("chrome://global/skin/arrow/arrow-dn.gif")
   }
 
 autorepeatbutton 
@@ -20,7 +20,6 @@ autorepeatbutton
     margin                : 1px 2px 2px 1px;
     border                : 1px solid transparent;
     padding               : 1px;
-    height                : 1em;  
   }
 
 autorepeatbutton:hover 

@@ -2,8 +2,6 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-main.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -12,7 +10,7 @@
     <stringbundle id="bundle_prefutilities" src="chrome://communicator/locale/pref/prefutilities.properties"/>
     <script type="application/x-javascript" src="chrome://messenger/content/am-main.js"/>
 
-    <hbox class="box-smallheader" title="&accountTitle.label;"/>
+    <dialogheader title="&accountTitle.label;"/>
     
     <description>&accountSettingsDesc.label;</description>
     <hbox align="center">

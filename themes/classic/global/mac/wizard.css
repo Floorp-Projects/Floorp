@@ -1,7 +1,7 @@
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
 .wizard-header {
-  list-style-image: url("chrome://communicator/skin/content-large.gif");
+  list-style-image: url("chrome://communicator/skin/icons/content-large.gif");
   background-color: #FFFFFF;
 }
 
@@ -14,7 +14,7 @@
 
 .wizard-header-box-text {
   border-bottom: 1px solid #9999FF; 
-  padding: 6px 0px 6px 0px;
+  padding: 6px 0 6px 0;
 }
 
 .wizard-header-label {
@@ -23,7 +23,7 @@
 }
 
 .wizard-header-box-icon {
-  margin: 3px 20px 0px 3px;
+  margin: 3px 20 0 3px;
 }
 
 .wizard-header-icon {
@@ -36,12 +36,12 @@
 }
 
 .wizard-buttons-top {
-  padding: 6px 10px;
+  padding: 6px 10;
   background-color: #FFFFFF;
 }
 
 .wizard-buttons-separator {
-  margin: 0px !important;
+  margin: 0 !important;
   border-top: 1px solid #000000 !important;
   border-bottom: 1px solid #FFFFFF !important;
 }
@@ -53,7 +53,7 @@
 
 .wizard-label-box {
   border: 1px solid #777777;
-  padding: 0px 6px;
+  padding: 0 6px;
   background-color: #BBBBBB;
   font-weight: bold;
 }
@@ -64,66 +64,48 @@
 
 .wizard-nav-button,
 .wizard-nav-button[disabled="true"]:hover:active {
-  -moz-binding: url("chrome://global/skin/buttonBindings.xml#buttonleft") !important;
-  margin: 0px !important;
-  border-top: 1px solid #666666 !important;
-  border-right: 1px solid #333333 !important;
-  border-bottom: 1px solid #333333 !important;
-  border-left: 1px solid #666666 !important;
-  min-width: 0px !important;
-  min-height: 0px !important;
-}
-
-.wizard-nav-button > .button-box-1,
-.wizard-nav-button[disabled="true"]:hover:active > .button-box-1 {
-  border-top: 1px solid #FFFFFF !important;
-  border-right: 1px solid #888888 !important;
-  border-bottom: 1px solid #888888 !important;
-  border-left: 1px solid #FFFFFF !important;
-  background-color: #CCCCCC !important;
-  padding: 0px 4px !important;
+  -moz-binding: url("chrome://global/content/bindings/button.xml#button-image") !important;
+  margin: 0 !important;
+  border: 2px solid;
+  min-width: 0;
+  -moz-border-top-colors: #666666 #FFFFFF;
+  -moz-border-right-colors: #333333 #888888;
+  -moz-border-bottom-colors: #333333 #888888;
+  -moz-border-left-colors: #666666 #FFFFFF;
+  -moz-border-radius: 0;
 }
 
 .wizard-nav-button:hover:active {
-  border-top: 1px solid #333333 !important;
-  border-right: 1px solid #666666 !important;
-  border-bottom: 1px solid #666666 !important;
-  border-left: 1px solid #333333 !important;
+  -moz-border-top-colors: #333333 #AAAAAA;
+  -moz-border-right-colors: #666666 #777777;
+  -moz-border-bottom-colors: #666666 #777777;
+  -moz-border-left-colors: #333333 #AAAAAA;
 }
 
-.wizard-nav-button:hover:active > .button-box-1 {
-  background-color: #AAAAAA !important;
-  border-top: 1px solid #777777 !important;
-  border-right: 1px solid #AAAAAA !important;
-  border-bottom: 1px solid #AAAAAA !important;
-  border-left: 1px solid #777777 !important;
-  background-color: #888888 !important;
+.wizard-button[dlgtype="back"] {
+  list-style-image: url("chrome://global/skin/wizard/wizard-btn-lft.gif");
 }
 
-.wizard-button[wizardbutton="back"] {
-  list-style-image: url("chrome://global/skin/wizard-btn-lft.gif");
+.wizard-button[dlgtype="next"] {
+  list-style-image: url("chrome://global/skin/wizard/wizard-btn-rit.gif");
 }
 
-.wizard-button[wizardbutton="next"] {
-  list-style-image: url("chrome://global/skin/wizard-btn-rit.gif");
+.wizard-button[dlgtype="back"][disabled="true"],
+.wizard-button[dlgtype="back"][disabled="true"]:hover:active {
+  list-style-image: url("chrome://global/skin/wizard/wizard-btn-lft-dis.gif");
 }
 
-.wizard-button[wizardbutton="back"][disabled="true"],
-.wizard-button[wizardbutton="back"][disabled="true"]:hover:active {
-  list-style-image: url("chrome://global/skin/wizard-btn-lft-dis.gif");
+.wizard-button[dlgtype="next"][disabled="true"],
+.wizard-button[dlgtype="next"][disabled="true"]:hover:active {
+  list-style-image: url("chrome://global/skin/wizard/wizard-btn-rit-dis.gif");
 }
 
-.wizard-button[wizardbutton="next"][disabled="true"],
-.wizard-button[wizardbutton="next"][disabled="true"]:hover:active {
-  list-style-image: url("chrome://global/skin/wizard-btn-rit-dis.gif");
+.wizard-button[dlgtype="back"]:hover:active {
+  list-style-image: url("chrome://global/skin/wizard/wizard-btn-lft-act.gif");
 }
 
-.wizard-button[wizardbutton="back"]:hover:active {
-  list-style-image: url("chrome://global/skin/wizard-btn-lft-act.gif");
-}
-
-.wizard-button[wizardbutton="next"]:hover:active {
-  list-style-image: url("chrome://global/skin/wizard-btn-rit-act.gif");
+.wizard-button[dlgtype="next"]:hover:active {
+  list-style-image: url("chrome://global/skin/wizard/wizard-btn-rit-act.gif");
 }
 
 

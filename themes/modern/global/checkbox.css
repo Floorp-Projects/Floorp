@@ -1,25 +1,39 @@
-/*
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Joe Hewitt <hewitt@netscape.com>
  *
- */
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /* ===== checkbox.css ===================================================
   == Styles used by the XUL checkbox element.
@@ -30,77 +44,56 @@
 /* ::::: checkbox ::::: */
 
 checkbox {
+  -moz-box-align: center;
+  margin: 0px 2px;
   border: 2px solid transparent;
-  margin: 0px 2px 0px 2px;
-  padding-left: 1px;
-  padding-right: 1px;
+  padding: 1px 2px 1px 4px;
+}
+
+.checkbox-icon {
+  margin-left: 2px;
 }
 
 /* ..... focused state ..... */
 
 checkbox:focus {
   border-color: #98A5B2;
-  -moz-border-radius: 4px 5px 4px 5px;
+  -moz-border-radius: 4px 5px;
 }
 
 /* ..... disabled state ..... */
 
-checkbox[disabled="true"][label] > .internal-box > html,
-checkbox[disabled="true"][label]:hover:active > .internal-box > html {
-  color: #9FA6AE;
-}
-
-/* ..... internal box ..... */
-    
-checkbox > .internal-box {
-  -moz-user-focus: none;
-}   
-
-checkbox > .internal-box > .checkmark-box {
-  margin: 3px 2px 3px 3px;
-}
-
-/* ::::: icon and label ::::: */
-
-checkbox[label] > .internal-box > .checkbox-label {
-  margin: 2px 5px !important;
-}
-
-checkbox > .internal-box > .checkbox-icon {
-  list-style-image: inherit;
+checkbox[disabled="true"] > .checkbox-label-box > .checkbox-label {
+  color: #9FA6AE !important;
 }
 
 /* ::::: checkmark image ::::: */
 
-checkbox > .internal-box > .checkmark-box > .checkbox-check {
+.checkbox-check {
   width: 13px;
   height: 13px;
   list-style-image: url("chrome://global/skin/checkbox/cbox.gif");
 }
   
-checkbox:hover:active > .internal-box > .checkmark-box > .checkbox-check {
+checkbox:hover:active > .checkbox-check {
   list-style-image: url("chrome://global/skin/checkbox/cbox-act.gif");  
 }
   
-checkbox[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check,
-checkbox[disabled="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check {
-  list-style-image: url("chrome://global/skin/checkbox/cbox-dis.gif");  
+.checkbox-check[disabled="true"] {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-dis.gif") !important
 }
 
 /* ..... checked state ..... */
 
-checkbox[checked="true"] > .internal-box > .checkmark-box > .checkbox-check {
+.checkbox-check[checked="true"] {
   list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
 }
     
-checkbox[checked="true"][disabled="true"] > .internal-box 
-    > .checkmark-box > .checkbox-check,
-checkbox[checked="true"][disabled="true"]:hover:active > .internal-box 
-    > .checkmark-box > .checkbox-check {
-  list-style-image: url("chrome://global/skin/checkbox/cbox-dis-check.gif");
-}  
-
-checkbox[checked="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check {
+checkbox:hover:active > .checkbox-check[checked="true"] {
   list-style-image: url("chrome://global/skin/checkbox/cbox-act-check.gif");
+}
+
+.checkbox-check[checked="true"][disabled="true"] {
+  list-style-image: url("chrome://global/skin/checkbox/cbox-dis-check.gif") !important;
 }
 

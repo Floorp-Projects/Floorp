@@ -59,12 +59,12 @@
   </commandset>
   
 
-  <hbox id="component-bar">
+  <statusbarpanel id="component-bar">
     <toolbarbutton class="taskbutton" id="mini-mail" oncommand="toMessengerWindow()" 
             position="2" tooltiptext="&taskMessenger.tooltip;"/>
     <toolbarbutton class="taskbutton" id="mini-addr" oncommand="toAddressBook();"
             position="4" tooltiptext="&taskAddressBook.tooltip;"/>
-  </hbox>
+  </statusbarpanel>
   
   <menupopup id="taskPopup">
     <menuitem position="2" accesskey="&messengerCmd.accesskey;" label="&messengerCmd.label;"  key="key_mail" command="Tasks:Mail"/>

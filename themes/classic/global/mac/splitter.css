@@ -1,83 +1,124 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== splitter.css ===================================================
+  == Styles used by the XUL splitter element.
+  ======================================================================= */
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/******* Splitters *******/
+/* ::::: splitter (vertical) ::::: */
 
-splitter 
-  {
-    cursor                : e-resize;
-    background-color      : #DDDDDD;
-    border-right          : 1px solid #000000;
-    min-width: 5px;
-  }
+splitter {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  cursor: e-resize;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDShadow ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight;
+  width: 8px;
+  background-color: ThreeDFace;
+}
+
+splitter[state="dragging"] {
+  background-image: url("chrome://global/skin/splitter/drag-bg.gif");
+}
+
+/* ::::: splitter (horizontal) ::::: */
+
+splitter[orient="vertical"] {
+  cursor: n-resize;
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight;
+  -moz-border-right-colors: ThreeDShadow ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDHighlight ThreeDLightShadow;
+  height: 8px;
+}
+
+/* ::::: splitter grippy ::::: */
   
-grippy, grippy[collapse="before"]
-  {
-	margin                : 0px;
-    border-left           : 1px solid #FFFFFF;
-    border-top            : 1px solid #FFFFFF;
-    border-right          : 1px solid #9D9D9D;
-    border-bottom         : 1px solid #9D9D9D;
-	padding               : 0px;
-  min-height            : 1px;
-	list-style-image      : url("chrome://global/skin/grippy-horizontal-before.gif");
-	cursor                : pointer;
-  }
+grippy {
+  cursor: pointer;
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+  width: 4px;
+  height: 115px;
+  background-color: transparent;
+  background-repeat: no-repeat;
+}
 
-grippy:hover
-  {
-	  background-color      : #CCCCFF;
-  }
+grippy:hover {
+  background-color: #CCCCFF;
+}
 
-splitter[state="collapsed"] > grippy
-  {
-	  list-style-image      : url("chrome://global/skin/grippy-horizontal-after.gif");
-  }  
-
-.grippy-box
-  {
-    border				  : none;
-  }  
-
-.grippy-image
-  {
-    list-style-image      : inherit;
-  }
-
-splitter[state="dragging"],
-splitter:hover:active
-  {
-    background-color      : #888888;
-    background-image      : url("chrome://global/skin/splitter-drag-bg.gif");
-  }
-
-/* vertical splitters */
-  splitter
-    {
-    	width               : 7px;
-    }
+splitter[orient="vertical"] > grippy {
+  border-top: none;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: none;
+  border-left: 1px solid ThreeDShadow;;
+  width: 115px;
+  height: 4px;
+}
   
-/* horizontal splitters */  
-  /* XXX 'align' support removed to force people to migrate 
-         to 'orient' */
-  splitter[orient="vertical"]
-    {
-      cursor              : n-resize;
-      border-right		  : 0px;
-      border-top		  : 2px groove #000000;
-      min-height: 5px;
-    }
-    
-/**** NOTE *****/
-/* The images below are correct, even though their names are switched. */
+/* ..... normal state ..... */
 
-  splitter[orient="vertical"] > grippy,
-  splitter[orient="vertical"] > grippy[collapse="before"]
-    {
-      list-style-image    : url("chrome://global/skin/grippy-vertical-after.gif");
-    }
-    
-  splitter[state="collapsed"][orient="vertical"] > grippy
-    {
-      list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");
-    }
-    
+/* vertical grippies */
+splitter[collapse="before"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-vrt-before.gif");
+}
+
+splitter[collapse="after"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-vrt-after.gif");
+}
+
+/* horizontal grippies */
+splitter[collapse="before"][orient="vertical"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-hrz-before.gif");
+}  
+
+splitter[collapse="after"][orient="vertical"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-hrz-after.gif");
+}  
+  
+/* ..... collapsed state ..... */
+
+/* vertical grippies */
+splitter[collapse="before"][state="collapsed"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-vrt-after.gif");
+}
+
+splitter[collapse="after"][state="collapsed"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-vrt-before.gif");
+}
+
+/* horizontal grippies */
+splitter[collapse="before"][state="collapsed"][orient="vertical"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-hrz-after.gif");
+}  
+
+splitter[collapse="after"][state="collapsed"][orient="vertical"] > grippy {
+  background-image: url("chrome://global/skin/splitter/grip-hrz-before.gif");
+}  
+

@@ -54,9 +54,6 @@ Rights Reserved.
     <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
   </stringbundleset>
   
-<resourcebundle id="resource_bundle_addressbook" />
-
-  
 <script type="application/x-javascript" src="chrome://messenger/content/accountUtils.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/addressbook/addressbook.js"/>
@@ -276,8 +273,8 @@ Rights Reserved.
   </hbox>
   
   <statusbar id="status-bar" class="chromeclass-status">
-    <hbox id="component-bar"/>
-    <statusbarpanel id="statusText" class="status-bar" flex="1" value="&statusText.label;"/>  
-    <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/>           
+    <statusbarpanel id="component-bar"/>
+    <statusbarpanel id="statusText" flex="1" value="&statusText.label;"/>  
+    <statusbarpanel id="offline-status" class="statusbarpanel-iconic"/>           
   </statusbar>  
 </window>

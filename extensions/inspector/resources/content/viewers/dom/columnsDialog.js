@@ -218,7 +218,7 @@ ColumnsDialog.prototype =
   setDraggingBox: function(aBox)
   {
     if (this.mDraggingBox) {
-      this.mDraggingBox.setAttribute("col-dragging", "false");
+      this.mDraggingBox.removeAttribute("col-dragging");
     }
 
     this.mDraggingBox = aBox;

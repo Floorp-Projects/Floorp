@@ -2,7 +2,6 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/smtpEditOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-advanced.dtd" >
@@ -12,7 +11,7 @@
 
   <script type="application/x-javascript" src="am-smtp.js"/>
 
-  <hbox class="box-smallheader" title="&smtpServer.label;"/>
+  <dialogheader title="&smtpServer.label;"/>
 
   <groupbox>
 

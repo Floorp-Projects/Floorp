@@ -10,19 +10,10 @@
     </resources>
 
     <content>
-      <xul:hbox class="progressmeter-internal-box" flex="1">
-        <xul:stack class="progressmeter-stack" flex="1">
-          <xul:progressbar class="progressmeter-progressbar" inherits="value,statusbar">
-            <xul:box class="progress-bar"/>
-            <xul:box class="progress-remainder"/>
-          </xul:progressbar>
-          <xul:hbox>
-            <xul:spacer flex="1"/>
-            <xul:label class="progress-text" inherits="value=label"/>
-            <xul:spacer flex="1"/>
-          </xul:hbox>
-        </xul:stack>
-      </xul:hbox>
+      <xul:progressbar class="progressmeter-progressbar" inherits="value,mode" flex="1">
+        <xul:box class="progress-bar" inherits="mode"/>
+        <xul:box class="progress-remainder" inherits="mode"/>
+      </xul:progressbar>
     </content>
     
     <implementation implements="nsIAccessibleProvider">     

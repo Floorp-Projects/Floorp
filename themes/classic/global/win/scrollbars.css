@@ -1,118 +1,105 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== scrollbars.css =================================================
+  == Styles used by XUL scrollbar-related elements.
+  ======================================================================= */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/********* XP Scrollbar *********/
+/* ::::: scrollbar ::::: */
 
-scrollbar 
-  {
-    -moz-binding          : url("chrome://global/skin/classicBindings.xml#scrollbar");
-    cursor                : default;
-  }
-  
-/********* XP Scrollbar *********/
+scrollbar {
+  -moz-binding: url("chrome://global/content/bindings/scrollbar.xml#scrollbar");
+  cursor: default;
+}
 
-thumb 
-  {
-    -moz-binding          : url(chrome://global/skin/classicBindings.xml#thumb);
-    border-left           : 1px solid ThreeDLightShadow;
-    border-top            : 1px solid ThreeDLightShadow;
-    border-right          : 1px solid ThreeDDarkShadow;
-    border-bottom         : 1px solid ThreeDDarkShadow;
-    background-color      : -moz-Dialog;
-  }
+/* ::::: slider ::::: */
 
-.thumb-box
-  {
-    border-left           : 1px solid ThreeDHighlight;
-    border-top            : 1px solid ThreeDHighlight;
-    border-right          : 1px solid ThreeDShadow;
-    border-bottom         : 1px solid ThreeDShadow;
-  }
-  
-.thumb-spacer
-  {
-  	min-width			  : 4px;
-  	min-height			  : 4px;
-  } 
-  
-/**
- * Scrollbar button
- **/  
-scrollbarbutton 
-  {
-    -moz-binding          : url("chrome://global/skin/classicBindings.xml#scrollbarbutton");
-    border-left           : 1px solid ThreeDLightShadow;
-    border-top            : 1px solid ThreeDLightShadow;
-    border-right          : 1px solid ThreeDDarkShadow;
-    border-bottom         : 1px solid ThreeDDarkShadow;
-    background-color      : -moz-Dialog;
-  }
+slider {
+  height: 16px;
+  background: url("chrome://global/skin/scrollbar/slider.gif") scrollbar;
+}
 
-.scrollbarbutton-box
-  {
-    border-left           : 1px solid ThreeDHighlight;
-    border-top            : 1px solid ThreeDHighlight;
-    border-right          : 1px solid ThreeDShadow;
-    border-bottom         : 1px solid ThreeDShadow;
-    padding               : 1px;
-  }
+slider[orient="vertical"] {
+  width: 16px;
+}
 
-scrollbarbutton:hover:active 
-  {
-    border                : 1px solid ThreeDShadow;
-  }
-  
-scrollbarbutton:hover:active > .scrollbarbutton-box
-  {
-    border                : 1px solid ThreeDLightShadow;
-    padding               : 2px 0px 0px 2px;
-  }   
+/* ::::: borders for thumb and buttons ::::: */
 
-scrollbarbutton[type="decrement"] 
-  {
-    list-style-image      : url("chrome://global/skin/scroll-left.gif")
-  }
+thumb,
+scrollbarbutton {
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDLightShadow ThreeDHighlight;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+  -moz-border-left-colors: ThreeDLightShadow ThreeDHighlight;
+  background-color: -moz-Dialog;
+}
 
-scrollbarbutton[type="decrement"][disabled="true"] 
-  {
-    list-style-image      : url("chrome://global/skin/scroll-left-disabled.gif") 
-  }
+/* ::::: thumb (horizontal) ::::: */
 
-scrollbarbutton[type="increment"] 
-  {
-    list-style-image      : url("chrome://global/skin/scroll-right.gif")
-  }
+thumb {
+  min-height: 8px;
+}
 
+thumb[orient="horizontal"] {
+  min-width: 8px;
+}
 
-scrollbarbutton[type="increment"][disabled="true"] 
-  {
-    list-style-image      : url("chrome://global/skin/scroll-right-disabled.gif") 
-  }
+/* ::::: scrollbar button ::::: */
 
+scrollbarbutton {
+  width: 16px;
+  height: 16px;
+  background: -moz-Dialog no-repeat 0px 1px;
+}
 
-scrollbarbutton[type="decrement"][sborient="vertical"]
-  {
-    list-style-image      : url("chrome://global/skin/scroll-up.gif")
-  }
+scrollbarbutton:hover:active {
+  -moz-border-top-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-right-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-bottom-colors: ThreeDShadow -moz-Dialog;
+  -moz-border-left-colors: ThreeDShadow -moz-Dialog;
+  background-position: 1px 2px;
+}
 
-scrollbarbutton[type="decrement"][disabled="true"][sborient="vertical"]
-  {
-    list-style-image      : url("chrome://global/skin/scroll-up-disabled.gif") 
-  }
+/* ..... increment .... */
 
-scrollbarbutton[type="increment"][sborient="vertical"]
-  {
-    list-style-image      : url("chrome://global/skin/scroll-down.gif")
-  }
+scrollbarbutton[type="increment"] {
+  background-image: url("chrome://global/skin/arrow/arrow-rit.gif")
+}
 
-scrollbarbutton[type="increment"][disabled="true"][sborient="vertical"]
-  {
-    list-style-image      : url("chrome://global/skin/scroll-down-disabled.gif") 
-  }
+scrollbar[orient="vertical"] > scrollbarbutton[type="increment"] {
+  background-image: url("chrome://global/skin/arrow/arrow-dn.gif")
+}
 
-slider 
-  {
-    background-color      : Scrollbar;                
-    background-image      : url("chrome://global/skin/scrollbar-slider-bg.gif");
-  }
-  
+/* ..... decrement .... */
+
+scrollbarbutton[type="decrement"] {
+   background-image: url("chrome://global/skin/arrow/arrow-lft.gif")
+}
+
+scrollbar[orient="vertical"] > scrollbarbutton[type="decrement"] {
+   background-image: url("chrome://global/skin/arrow/arrow-up.gif")
+}
+

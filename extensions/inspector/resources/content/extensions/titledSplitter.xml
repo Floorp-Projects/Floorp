@@ -41,9 +41,9 @@
         <body><![CDATA[
           var collapsee = this.collapsee;
           if (collapsee) {
-            this.setAttribute("closed", "false");
-            this.setAttribute("collapsed", "false");
-            collapsee.setAttribute("collapsed", "false");
+            this.removeAttribute("closed");
+            this.removeAttribute("collapsed");
+            collapsee.removeAttribute("collapsed");
             this.mOpened = true;
             this.onopen();
           }

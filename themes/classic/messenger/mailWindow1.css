@@ -1,0 +1,132 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
+
+/* ===== mailWindow1.css ================================================
+  == Styles for the main Mail window in the default layout scheme.
+  ======================================================================= */
+
+@import url("chrome://messenger/skin/");
+@import url("chrome://messenger/skin/primaryToolbar.css");
+@import url("chrome://messenger/skin/folderMenus.css");
+@import url("chrome://communicator/skin/sidebar/sidebar.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* :::::
+   :: Make sure the min height is small so we can
+   :: resize the pane vertically -EDV
+   ::::: */
+
+#messagepanebox {
+  min-height: 10px;
+  height: 0px;
+}
+
+/* ::::: border adjustments for focus ring and joined splitters ::::: */
+
+/* ..... sidebar adjustments ..... */
+
+#sidebar-panels-splitter-box {
+  border-top: 1px solid;
+  -moz-border-top-colors: ThreeDShadow;
+}
+
+/* ..... splitter adjustments ..... */
+
+#sidebar-splitter {
+  border-right: none;
+  border-bottom: none;
+  border-left: none;
+  min-width: 5px;
+}
+
+#threadpane-splitter {
+  border: none;
+  min-height: 5px;
+}
+
+#sidebar-panels-splitter {
+  border-top: 1px solid;
+  -moz-border-top-colors: ThreeDHighlight;
+}
+
+#threadpane-splitter[state="collapsed"] {
+  border-bottom: 2px solid;
+}
+
+/* ..... outliner adjustments ..... */
+ 
+#folderOutliner {
+  border-right: 1px solid;
+  -moz-border-right-colors: ThreeDShadow;
+  min-width: 1px;
+}
+
+#threadOutliner {
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  min-width: 1px;
+}
+
+#threadOutliner,
+#accountCentralBox,
+#searchBox {
+  border-left: 2px solid;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+}
+
+#searchBox {
+  border-top: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDShadow;
+}
+
+#folderOutliner > .outliner-rows > .outliner-bodybox,
+#threadOutliner > .outliner-rows > .outliner-bodybox {
+  border: 1px solid transparent;  
+}
+
+#folderOutliner:focus > .outliner-rows > .outliner-bodybox,
+#threadOutliner:focus > .outliner-rows > .outliner-bodybox {
+  border: 1px solid #000000;
+}
+
+/* ..... message pane adjustments ..... */
+
+#messagepanebox {
+ border-top: 2px solid;
+ border-left: 2px solid;
+ -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+ -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+}
+
+#msgHeaderView {
+  border-left: none !important;
+}
+
+#messagepane {
+  border: 1px solid -moz-Field;
+}
+
+#messagepanebox[focusring="true"] > #messagepane {
+  border-color: #000000;
+}

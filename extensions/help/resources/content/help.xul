@@ -1,8 +1,7 @@
 <?xml version="1.0"?>
 
 <?xml-stylesheet href="chrome://communicator/skin/help.css" type="text/css"?>
-<?xml-stylesheet href="chrome://navigator/skin" type="text/css"?>
-<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>

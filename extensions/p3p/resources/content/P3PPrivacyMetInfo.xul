@@ -41,7 +41,7 @@
   <html:script type="application/x-javascript" src="chrome://global/content/strres.js" />
   <html:script type="application/x-javascript" src="chrome://communicator/content/P3PPrivacyMetInfo.js"/>
 
-  <hbox class="box-smallheader" title="&privacyinfo.header;"/>
+  <dialogheader title="&privacyinfo.header;"/>
 
   <text class="header" value="&policymet.text;"/>
 

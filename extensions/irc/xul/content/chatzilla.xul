@@ -194,7 +194,7 @@
   </vbox> <!-- outer-box -->
   
   <statusbar id="status-bar" persist="collapsed">
-    <hbox id="component-bar"/>
+    <statusbarpanel id="component-bar"/>
     <statusbarpanel id="status-text" label="&StatusText.label;" flex="1"
       crop="right"/>
     <statusbarpanel class="statusbarpanel-icononly" id="offline-status"

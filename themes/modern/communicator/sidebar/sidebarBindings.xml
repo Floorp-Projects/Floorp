@@ -6,6 +6,22 @@
 
   <binding id="sidebar-tab" extends="xul:button">
     <content>
+      <xul:hbox class="sidebar-tab-left-box">
+        <xul:spacer class="sidebar-tab-left"/>
+        <xul:label class="sidebar-tab-text" inherits="value=label" crop="right" flex="1"/>
+      </xul:hbox>
+      <xul:vbox class="sidebar-tab-right-box" flex="1">
+        <xul:hbox class="sidebar-tab-right-top-box">
+          <xul:image class="sidebar-tab-right-img"/>
+          <xul:spacer class="sidebar-tab-right-line" flex="1"/>
+        </xul:hbox>
+        <xul:spacer class="sidebar-tab-right-btm" flex="1"/>
+      </xul:vbox>
+    </content>
+  </binding>
+
+  <binding id="DEAD" extends="xul:button">
+    <content>
       <xul:vbox class="sidebar-tab-left">
         <xul:spacer class="sidebar-tab-left-top" inherits="selected,first-panel-after-selected,top-panel,last-panel"/>
         <xul:spacer class="sidebar-tab-left-mid" inherits="selected,first-panel-after-selected,top-panel,last-panel"
@@ -38,11 +54,9 @@
 
   <binding id="sidebarheader">
     <content>
-      <xul:hbox class="sidebarheader-internal-box" flex="1" align="center">
-        <xul:label class="sidebar-header-text" inherits="value=label,crop" crop="right" flex="1"/>
-        <xul:hbox>
-          <children/>
-        </xul:hbox>
+      <xul:label class="sidebar-header-text" inherits="value=label,crop" crop="right" flex="1"/>
+      <xul:hbox>
+        <children/>
       </xul:hbox>
     </content>
   </binding>

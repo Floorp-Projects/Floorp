@@ -1,236 +1,226 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ *
+ */
+
+/* ===== menu.css =======================================================
+  == Styles used by XUL menu-related elements.
+  ======================================================================= */
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
- 
-menu, menuitem  
-  {
-    color                 : MenuText;
-    list-style-image      : none;
-  }
 
-menuitem 
-  {
-    padding               : 0px !important;
-    cursor                : default !important; 
-  }
+/* ::::: menu/menuitem ::::: */
 
+menu, 
+menuitem {
+  -moz-box-align: center;
+  color: MenuText;
+  font: menu;
+  list-style-image: none;
+}
+
+menuitem[default="true"] {
+  font-weight: bold;
+}  
+  
 menu[disabled="true"], menuitem[disabled="true"],
 menu[menuactive="true"][disabled="true"],
-menuitem[menuactive="true"][disabled="true"]
-  {
-	color                 : GrayText;
-  }
+menuitem[menuactive="true"][disabled="true"] {
+  color: GrayText;
+}
 
-menuseparator 
-  {
-    border-top            : 1px solid -moz-mac-menushadow;
-    border-bottom         : 1px solid ThreeDHighlight;
-    margin                : 2px 0px 2px 0px;
-    cursor                : default !important;
-  }
+/* ..... internal content .... */
 
-/*I don't believe this does anything on MacOS (lordpixel@mac.com)*/
-menubar > menu 
-  {
-    border                : 1px solid ActiveBorder;
-    padding               : 2px 3px 2px 3px;
-    margin                : 2px 0px 2px 0px;
-  }
+.menu-text, 
+.menu-accel,
+.menu-iconic-left,
+.menu-iconic-text,
+.menu-iconic-accel {
+  margin: 0px 2px 0px 0px !important;
+  color: inherit;
+}
 
-menubar > menu[menuactive="true"] 
-  {
-    border                : 1px solid #CCCCCC;
-    background-color      : #CCCCCC;
-    -moz-border-radius    : 4px;
-  }
+.menu-text {
+  margin-left: 18px !important;
+  font-weight: inherit;
+}
 
-menubar > menu[menuactive="true"][open="true"] 
-  {
-    border                : 1px solid #DDDDDD;
-    border-bottom         : 1px solid #CCCCCC;
-    background-color      : #CCCCCC;
-    -moz-border-radius    : 4px 4px 0px 0px;
-  }
-/*end of ineffective stuff*/
+.menu-accel {
+  margin-left: 4px;
+  padding-right: 14px;
+}
 
-
-menupopup > menu[menuactive="true"],
-menupopup > menuitem[menuactive="true"],
-popup > menu[menuactive="true"],
-popup > menuitem[menuactive="true"]
-  {
-    background-color      : -moz-mac-menuselect;
-  	color				  : -moz-mac-menutextselect;
-  }
-  
-menupopup > menu,
-menupopup > menuitem,
-popup > menu,
-popup > menuitem
-  {
-       max-width             : 42em; /* should move to content */ 
-  }  
-  
-
-/*Mac menu's don't highlight disabled items at all*/
-menupopup > menu[menuactive="true"][disabled="true"],
-menupopup > menuitem[menuactive="true"][disabled="true"],
-popup > menu[menuactive="true"][disabled="true"],
-popup > menuitem[menuactive="true"][disabled="true"]
-	{
-		background-color: inherit;
-		color: GrayText;
-	}
-/** 
- * Atomic sub-parts of standard menus
- **/
-.menu-right 
-  {
-    margin                : -1px 3px 1px 6px;
-    width                 : 8px;
-    -moz-box-pack         : center;
-    list-style-image      : url("chrome://global/skin/menu-arrow.gif");
-  }
-
-.menu-iconic-left 
-  {
-    color                 : inherit;
-    margin                : 0px 5px 0px 1px;
-    width                 : 11px;
-   -moz-box-pack          : center;
-    list-style-image      : inherit;
-    padding-left          : 16px;
-  }
-
-/**This is a workaround for bug 46231 and should be removed when that bug is fixed*/
-menuitem[type="checkbox"] > .menu-iconic-left, menuitem[type="radio"] > .menu-iconic-left 
-  {
-    color                 : inherit;
-    margin                : 0px 10px 0px 0px;
-    width                 : 11px;
-    -moz-box-pack         : center;
-    list-style-image      : inherit;
-    padding-left		  : 2px;
-  }
-/**end of workaround*/
-
-.menubar-left 
-  {
-    color                 : inherit;
-    margin                : 0px 2px 0px 0px;
-  }
-
-.menu-iconic-text
-  {
-    margin                : 0px 2px 0px 0px;
-  }
-
-.menu-iconic-text, .menu-iconic-accel, .menu-text, .menu-accel 
-  {
-    color                 : inherit;
-  }
-  
-.menu-text 
-  {
-    padding-left          : 20px;
-  }
-
-.menu-accel, .menu-iconic-accel
-  {
-    margin-left           : 10px;
-    padding-right         : 14px;
-  }
-
-menuitem > .menu-accel, menuitem > .menu-iconic-accel
-  {
-    margin : 0px;
-    padding-right : 9px;
-  }
-
-.menubar-text 
-  {
-    color                 : inherit;
-    margin-right          : 2px;
-  }
-
-menuitem[checked="true"] 
-  {
-    list-style-image      : url("chrome://global/skin/menu-check.gif");
-    margin-right		  : 3px;
-  }
-
-menuitem[checked="true"][disabled="true"] 
-  {
-    list-style-image      : url("chrome://global/skin/menu-check-disabled.gif");
-    margin-right		  : 3px;
-  }
-
-menuitem[checked="true"][menuactive="true"] 
-  {
-    list-style-image      : url("chrome://global/skin/menu-check-hover.gif");
-    margin-right		  : 3px;
-  }
-
-.menu-right[disabled="true"] 
-  {
-    list-style-image      : url("chrome://global/skin/menu-arrow-disabled.gif");
-  }
-
-.menu-right[menuactive="true"][disabled="true"] 
-  {
-    list-style-image      : url("chrome://global/skin/menu-arrow-disabled.gif");
-  }
-
-.menu-right[menuactive="true"] 
-  {
-    list-style-image      : url("chrome://global/skin/menu-arrow-hover.gif");
-  }
-
-/* rules for menuitems associated with menulists */
-  
-  menulist > menupopup > menuitem
-  	{
-  	  font: message-box;
-  	  min-width: 0px;
-  	  max-width: none;
-  	  padding: 0px 4px !important;
-  	}
-
-  menulist > menupopup > menuitem > .menu-iconic-left
-    {
-      width               : 10px;
-      margin			  : 0px 5px 0px -6px;
-      padding-left		  : 0px;
-  	}
-  
-  menulist > menupopup > menuitem[menuactive="true"][selected="true"]
-    {
-      list-style-image    : url(chrome://global/skin/menulist-select-dot-active.gif);
-      margin-right		  : 3px;
-    }
-  
-  menulist > menupopup > menuitem[selected="true"]
-    {
-      list-style-image    : url(chrome://global/skin/menulist-select-dot.gif);
-      margin-right		  : 3px;
-    }
-
-/* ::::: autocomplete menuitems ::::: */
-
-.autocomplete-history-popup > menuitem
-  {
-    max-width              : none !important;
-    font                   : message-box;
-  }
-
-/* ::::: tree column picker ::::: */
-
-.treecell-popupcell-menu 
-  {
-    margin-left: -6px;
-    list-style-image: url("chrome://global/skin/columnselect.gif");
-  }
+.menu-iconic-accel {
+  margin-left: 4px;
+  padding-right: 14px;
+}
 
 .menu-iconic-icon {
   width: 16px;
   height: 16px;
   list-style-image: inherit;
+}
+
+/* ..... menu arrow box ..... */
+
+.menu-right {
+  margin: 0px 0px 0px 6px;
+  width: 8px;
+  list-style-image: url("chrome://global/skin/menu/menu-arrow.gif");
+}
+
+.menu-right[disabled="true"],
+.menu-right[menuactive="true"][disabled="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-arrow-dis.gif);
+}
+
+.menu-right[menuactive="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-arrow-hov.gif");
+}
+
+/* ::::: menu/menuitems in menubar ::::: */
+
+menubar > menu {
+  border: 1px solid transparent;
+  padding: 2px 5px 2px 7px;
+  margin: 1px 0px 1px 0px;
+}
+
+menubar > menu[menuactive="true"] {
+  border-top: 1px solid ThreeDHighlight;
+  border-right: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDShadow;
+  border-left: 1px solid ThreeDHighlight;
+}
+
+menubar > menu[menuactive="true"][open="true"] {
+  border-top: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+  border-bottom: 1px solid ThreeDHighlight;
+  border-left: 1px solid ThreeDShadow;
+}
+
+/* ..... internal content .... */
+
+.menubar-left {
+  margin: 0px 2px 0px 0px;
+  color: inherit;
+}
+
+.menubar-text {
+  margin: 0px 2px 0px 0px !important;
+  color: inherit;
+}
+
+/* ::::: menu/menuitems in popups ::::: */
+
+menupopup > menu,
+popup > menu,
+menupopup > menuitem,
+popup > menuitem {
+  padding: 1px;
+  max-width: 42em;
+}
+
+menupopup > menu[menuactive="true"],
+menupopup > menuitem[menuactive="true"],
+popup > menu[menuactive="true"],
+popup > menuitem[menuactive="true"] {
+  background-color: -moz-mac-menuselect;
+  color: -moz-mac-menutextselect;
+}
+
+/* ::::: checkbox menuitem ::::: */
+
+menuitem[checked="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check.gif");
+}
+
+menuitem[checked="true"][disabled="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check-dis.gif");
+}
+
+menuitem[checked="true"][menuactive="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-check-hov.gif");
+}
+
+/* ::::: radio menuitem ::::: */
+
+menuitem[checked="true"][type="radio"] {
+  list-style-image: url("chrome://global/skin/menu/menu-radio.gif");
+}
+
+menuitem[checked="true"][type="radio"][menuactive="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-radio-hov.gif");
+}
+
+menuitem[checked="true"][type="radio"][disabled="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-radio-dis.gif");
+}
+
+/* ::::: menuitems in menulists ::::: */
+
+menulist > menupopup > menuitem,
+.menulist-menupopup > menuitem {
+  max-width: none;
+  padding: 0;
+  font: message-box;
+}
+
+menulist > menupopup > menuitem[selected="true"],
+.menulist-menupopup > menuitem[selected="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-radio.gif");
+}
+
+menulist > menupopup > menuitem[menuactive="true"][selected="true"],
+.menulist-menupopup > menuitem[menuactive="true"][selected="true"] {
+  list-style-image: url("chrome://global/skin/menu/menu-radio-hov.gif");
+}
+
+/* ::::: menuseparator ::::: */
+
+menuseparator {
+  margin: 2px 3px;
+  border-top: 1px solid ThreeDShadow;
+  border-bottom: 1px solid ThreeDHighlight;
+}
+
+menulist > menupopup > menuseparator,
+.menulist-menupopup > menuseparator {
+  margin: 2px 0;
+  border-top: 1px solid #000000;
+  border-bottom: none;
+}
+
+/* ::::: autocomplete ::::: */
+
+.autocomplete-history-popup > menuitem {
+  max-width: none !important;
+  font: message-box;
+}
+
+/* ::::: tree column picker ::::: */
+
+.treecell-popupcell-menu {
+  margin-left: -2px;
+  list-style-image: url("chrome://global/skin/columnselect.gif");
 }

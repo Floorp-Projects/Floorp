@@ -37,8 +37,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-@import url(chrome://communicator/skin/bookmarks/bookmarks.css);
-@import url(chrome://communicator/skin/bookmarks/platformBookmarks.css);
+@import url("chrome://communicator/skin/bookmarks/bookmarks.css");
+@import url("chrome://communicator/skin/bookmarks/platformBookmarks.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 

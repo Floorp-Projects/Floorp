@@ -1,7 +1,22 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.tab-image {
+.tabbrowser-strip {
+  padding-bottom: 3px;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow;
+}
+
+.tabbrowser-tabs {
+  padding-top: 1px;
+}
+
+.tabs-left,
+.tabs-right {
+  width: 3px;
+}
+
+.tab-icon {
   margin-top: 1px;
   margin-right: 3px;
   width: 16px;
@@ -9,13 +24,18 @@
   list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item.gif"); 
 }
 
-tab[busy] > .tab-box > .tab-image {
+tab[busy] > .tab-icon {
   list-style-image: url("chrome://global/skin/loading.gif");
 }
 
-.tabbrowser-closebox {
-  list-style-image: url("chrome://global/skin/closebox.gif");
-  margin-bottom: 3px;
-  margin-right: 2px;
-  margin-left: 4px;
+/* ::::: close button ::::: */
+
+.tabs-closebutton {
+  margin: 3px;
+  list-style-image: url("chrome://global/skin/icons/close-button.gif");
 }
+
+.tabs-closebutton > .toolbarbutton-icon {
+  margin: 0;
+}
+

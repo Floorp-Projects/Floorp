@@ -1,0 +1,206 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: primary toolbar buttons ::::: */
+
+.toolbarbutton-1 {
+  list-style-image: url("chrome://editor/skin/icons/btn1.gif");
+}
+
+#newButton {
+  -moz-image-region: rect(0 16px 16px 0);
+}
+
+#newButton:hover {
+  -moz-image-region: rect(0 32px 16px 16px);
+}
+
+#newButton:hover:active {
+  -moz-image-region: rect(0 48px 16px 32px);
+}
+
+#newButton[disabled="true"] {
+  -moz-image-region: rect(0 64px 16px 48px) !important;
+}
+
+#openButton {
+  -moz-image-region: rect(48px 16px 64px 0);
+}
+
+#openButton:hover {
+  -moz-image-region: rect(48px 32px 64px 16px);
+}
+
+#openButton:hover:active {
+  -moz-image-region: rect(48px 48px 64px 32px);
+}
+
+#openButton[disabled="true"] {
+  -moz-image-region: rect(148px 64px 64px 48px) !important;
+}
+
+#saveButton {
+  -moz-image-region: rect(80px 16px 96px 0);
+}
+
+#saveButton:hover {
+  -moz-image-region: rect(80px 32px 96px 16px);
+}
+
+#saveButton:hover:active {
+  -moz-image-region: rect(80px 48px 96px 32px);
+}
+
+#saveButton[disabled="true"] {
+  -moz-image-region: rect(80px 64px 96px 48px) !important;
+}
+
+#previewButton {
+  -moz-image-region: rect(64px 16px 80px 0);
+}
+
+#previewButton:hover {
+  -moz-image-region: rect(64px 32px 80px 16px);
+}
+
+#previewButton:hover:active {
+  -moz-image-region: rect(64px 48px 80px 32px);
+}
+
+#previewButton[disabled="true"] {
+  -moz-image-region: rect(64px 64px 80px 48px) !important;
+}
+
+#printButton {
+  -moz-image-region: rect(175px 64px 191px 48px);
+}
+
+#printButton[buttonover="true"] {
+  -moz-image-region: rect(191px 16px 207px 0);
+}
+
+#printButton[buttondown="true"] {
+  -moz-image-region: rect(191px 32px 207px 16px);
+}
+
+#printButton[disabled]="true" {
+  -moz-image-region: rect(191px 48px 207px 32px) !important;
+}
+
+#linkButton {
+  -moz-image-region: rect(16px 16px 32px 0);
+}
+
+#linkButton:hover {
+  -moz-image-region: rect(16px 32px 32px 16px);
+}
+
+#linkButton:hover:active {
+  -moz-image-region: rect(16px 48px 32px 32px);
+}
+
+#linkButton[disabled="true"] {
+  -moz-image-region: rect(16px 64px 32px 48px) !important;
+}
+
+#imageButton {
+  -moz-image-region: rect(159px 64px 175px 48px);
+}
+
+#imageButton:hover {
+  -moz-image-region: rect(175px 16px 191px 0);
+}
+
+#imageButton:hover:active {
+  -moz-image-region: rect(175px 32px 191px 16px);
+}
+
+#imageButton[disabled="true"] {
+  -moz-image-region: rect(175px 48px 191px 32px) !important;
+}
+
+#namedAnchorButton {
+  -moz-image-region: rect(143px 64px 159px 48px);
+}
+
+#namedAnchorButton:hover {
+  -moz-image-region: rect(159px 16px 175px 0);
+}
+
+#namedAnchorButton:hover:active {
+  -moz-image-region: rect(159px 32px 175px 16px);
+}
+
+#namedAnchorButton[disabled="true"] {
+  -moz-image-region: rect(159px 48px 175px 32px) !important;
+}
+
+#hlineButton {
+  -moz-image-region: rect(32px 16px 48px 0);
+}
+
+#hlineButton:hover {
+  -moz-image-region: rect(32px 32px 48px 16px);
+}
+
+#hlineButton:hover:active {
+  -moz-image-region: rect(32px 48px 48px 32px);
+}
+
+#hlineButton[disabled="true"] {
+  -moz-image-region: rect(32px 64px 48px 48px) !important;
+}
+
+#tableButton {
+  -moz-image-region: rect(122px 62px 138px 46px);
+}
+
+#tableButton:hover {
+  -moz-image-region: rect(143px 16px 159px 0);
+}
+
+#tableButton:hover:active {
+  -moz-image-region: rect(143px 32px 159px 16px);
+}
+
+#tableButton[disabled="true"] {
+  -moz-image-region: rect(143px 48px 159px 32px) !important;
+}
+
+#spellingButton {
+  -moz-image-region: rect(101px 23px 122px 0);
+}
+
+#spellingButton:hover {
+  -moz-image-region: rect(101px 46px 122px 23px);
+}
+
+#spellingButton:hover:active {
+  -moz-image-region: rect(122px 23px 143px 0);
+}
+
+#spellingButton[disabled="true"] {
+  -moz-image-region: rect(122px 46px 143px 23px) !important;
+}

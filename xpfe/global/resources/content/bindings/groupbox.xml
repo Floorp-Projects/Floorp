@@ -33,6 +33,10 @@
   </binding>
 
   <binding id="caption" extends="chrome://global/content/bindings/general.xml#basetext">
+    <resources>
+      <stylesheet src="chrome://global/skin/groupbox.css"/>
+    </resources>
+    
     <content>
       <children>
         <xul:image class="caption-icon" inherits="src=image"/>

@@ -193,7 +193,7 @@ DOMViewer.prototype =
   {
     var val = aExplicit ? aValue : !this.mDOMView.showAnonymousContent;
     this.mDOMView.showAnonymousContent = val;
-    this.mPanel.panelset.setCommandAttribute("cmd:toggleAnon", "checked", val ? "true" : "false");
+    this.mPanel.panelset.setCommandAttribute("cmd:toggleAnon", "checked", val != null);
     PrefUtils.setPref("inspector.dom.showAnon", val);
   },
   
@@ -201,7 +201,7 @@ DOMViewer.prototype =
   {
     var val = aExplicit ? aValue : !this.mDOMView.showSubDocuments;
     this.mDOMView.showSubDocuments = val;
-    this.mPanel.panelset.setCommandAttribute("cmd:toggleSubDocs", "checked", val ? "true" : "false");
+    this.mPanel.panelset.setCommandAttribute("cmd:toggleSubDocs", "checked", val != null);
   },
   
   toggleAttributes: function(aExplicit, aValue)

@@ -50,10 +50,49 @@ dialog {
 
 /* ::::: dialog buttons ::::: */
 
-.dialog-button-box {
-  padding-top: 1.5em;
-}
-
 .dialog-button {
   font: menu;
+}
+
+/* ::::: dialog header ::::: */
+
+dialogheader {
+  margin: 0px 5px 5px 5px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDDarkShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDDarkShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  padding: 5px 8px;
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+.dialogheader-title {
+  margin: 0px !important;
+  font-size: larger;
+  font-weight: bold;
+}
+
+/* ::::: large dialog header ::::: */
+
+.header-large {
+  -moz-box-orient: vertical;
+  margin: 0;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDShadow;
+  padding: 12px 5px 12px 25px;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
+
+.header-large > .dialogheader-title {
+  font: inherit;
+  font-weight: bold;
+}
+
+.header-large > .dialogheader-description {
+  margin-left: 12px !important;
 }

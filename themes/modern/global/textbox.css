@@ -1,25 +1,39 @@
-/*
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
- */
+ *  Joe Hewitt <hewitt@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /* ===== textbox.css ==================================================
   == Styles used by the XUL textbox element.
@@ -33,35 +47,25 @@
 /* ::::: textbox ::::: */
 
 textbox {
-  cursor: text;
   margin: 2px 4px;
-  background-color: #ffffff;
+  border: 2px solid;
+  padding: 1px 0px 1px 2px;
+  background-color: #FFFFFF;
   color: #000000;
   font: inherit;
 }
 
 textbox,
 textbox[readonly="true"][focused="true"] {
-  border-top: 1px solid #BEC3D3;
-  border-right: 1px solid #F8FAFE;
-  border-bottom: 1px solid #F8FAFE;
-  border-left: 1px solid #BEC3D3;
+  -moz-border-top-colors: #BEC3D3 #5D616E;
+  -moz-border-right-colors: #F8FAFE #5D616E;
+  -moz-border-bottom-colors: #F8FAFE #5D616E;
+  -moz-border-left-colors: #BEC3D3 #5D616E;
 }
 
-.textbox-internal-box, 
-.textarea-internal-box {
-  padding: 1px 0px 1px 2px;
-}
-
-.textbox-internal-box,
-.textarea-internal-box,
-textbox[readonly="true"][focused="true"] > .textbox-internal-box,
-textbox[readonly="true"][focused="true"] > .textarea-internal-box {
-  border: 1px solid #5D616E;
-}
-    
 html|*.textbox-input, 
 html|*.textbox-textarea {
+  cursor: text;
   margin: 0px !important;
   border: none !important;
   padding: 0px !important;
@@ -73,12 +77,10 @@ html|*.textbox-textarea {
 /* ..... focused state ..... */
   
 textbox[focused="true"] {
-  border: 1px solid #98A5B2;
-}
-    
-textbox[focused="true"] > .textbox-internal-box,
-textbox[focused="true"] > .textarea-internal-box {
-  border-color: #000000;
+  -moz-border-top-colors: #98A5B2 #000000;
+  -moz-border-right-colors: #98A5B2 #000000;
+  -moz-border-bottom-colors: #98A5B2 #000000;
+  -moz-border-left-colors: #98A5B2 #000000;
 }
     
 /* ..... disabled state ..... */
@@ -91,16 +93,13 @@ textbox[disabled="true"] {
     
 /* ..... readonly state ..... */
 
-textbox[readonly="true"] > .textbox-internal-box,
-textbox[readonly="true"] > .textarea-internal-box {
+textbox[readonly="true"] {
   background-color: #C7D0D9;
 }
 
 /* ::::: plain textbox ::::: */
 
-textbox.plain, 
-textbox.plain > .textbox-internal-box, 
-textbox.plain > .textarea-internal-box {
+textbox.plain {
   margin: 0px !important;
   border: none !important;
   padding: 0px !important;
@@ -127,9 +126,4 @@ textbox.plain > .textarea-internal-box {
 .textbox-inline-edit {
   margin: 0px !important;
   border: 1px solid #000000 !important;
-}
-
-.textbox-inline-edit > .textbox-internal-box {
-  border: none !important;
-  padding: 1px !important;
 }

@@ -3,8 +3,8 @@
 .wizard-header {
   border-bottom: 2px groove ThreeDFace;
   padding: 10px 0px 10px 0px;
-  background-color: #FFFFFF;
-  color: #000000;
+  background-color: Window;
+  color: WindowText;
 }
 
 .wizard-header-label {

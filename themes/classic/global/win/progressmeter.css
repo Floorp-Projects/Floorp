@@ -5,7 +5,7 @@
  **/
   progressmeter[mode="undetermined"] > .progressmeter-internal-box
     {
-      background-image    : url(chrome://global/skin/progressmeter-busy.gif);
+      background-image    : url("chrome://global/skin/progressmeter/progressmeter-busy.gif");
     }
  
   progressmeter[mode="undetermined"] > .progressmeter-internal-box > .progressmeter-stack > .progressmeter-progressbar 
@@ -15,12 +15,13 @@
 
   progressmeter
     {
-      min-width           : 100px;
-      border-left         : 1px solid ThreeDShadow;
-      border-top          : 1px solid ThreeDShadow;
-      border-right        : 1px solid ThreeDHighlight;
-      border-bottom       : 1px solid ThreeDHighlight;
-      background-color    : -moz-Dialog;
+      min-width: 100px;
+      min-height: 14px;
+      border-left: 1px solid ThreeDShadow;
+      border-top: 1px solid ThreeDShadow;
+      border-right: 1px solid ThreeDHighlight;
+      border-bottom: 1px solid ThreeDHighlight;
+      background-color: -moz-Dialog;
     }
 
   .progressmeter-statusbar 
@@ -58,6 +59,6 @@
 /* progress indicators */
   .progress-bar 
     {
-	    background-color    : ThreeDShadow;
+      background-color    : ThreeDShadow;
     }
   

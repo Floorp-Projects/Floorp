@@ -51,7 +51,8 @@
 </hbox>
 
 <hbox flex="1">
-  <outliner id="directoryOutliner" flex="1" onclick="onClick(event);"
+  <outliner id="directoryOutliner" flex="1"
+            onclick="onClick(event);"
             ondblclick="onDblClick(event);"
             onkeypress="onKeypress(event);"
             onfocus="onOutlinerFocus(event);"

@@ -1,25 +1,39 @@
-/*
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
- */
+ *  Joe Hewitt <hewitt@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /* ===== tabbox.css =================================================
   == Styles used by XUL tab-related elements.
@@ -30,185 +44,73 @@
 /* ::::: tabs ::::: */
 
 tabs {
-  padding: 0px;
+  -moz-box-align: end;
 }
 
 .tabs-left,
 .tabs-right {
-  background: url("chrome://global/skin/tabcontrol/tabs-mid.gif") repeat-x bottom;
-}
-
-.tabs-left-cap {
-  background: url("chrome://global/skin/tabcontrol/tabs-lft.gif") no-repeat bottom;
-  width: 2px;
-}
-
-.tabs-right-cap {
-  background: url("chrome://global/skin/tabcontrol/tabs-rit.gif") no-repeat bottom;
-  width: 2px;
+  border-bottom: 1px solid #000000;
 }
 
 /* ::::: tabpanels ::::: */
 
 tabpanels {
-  border-left: 1px solid #313948;
-  border-right: 1px solid #313948;
-  border-bottom: 1px solid #313948;
-  border-top: none;
+  border-right: 3px solid;
+  border-left: 3px solid;
+  border-bottom: 3px solid;
+  -moz-border-right-colors: #000000 #BAC2CD #C1C9D3;
+  -moz-border-bottom-colors: #000000 #BAC2CD #C1C9D3;
+  -moz-border-left-colors: #000000 #DFE2E6 #D0D7DD;
   padding: 5px;
   background-color: #C7D0D9;
 }
 
 /* ::::: tab ::::: */
 
-tab { 
+tab {
   margin: 0px;
-  padding: 0px;
+  border: 3px solid;
+  border-bottom-width: 3px;
+  -moz-border-top-colors: #000000 #8190A5 #899AAC;
+  -moz-border-right-colors: #000000 #8190A5 #899AAC;
+  -moz-border-bottom-colors: #000000 #8C9DAF;
+  -moz-border-left-colors: #000000 #8190A5 #899AAC;
+  -moz-border-radius-topleft: 3px;
+  -moz-border-radius-topright: 3px;
+  padding: 1px 3px;
+  background-color: #8C9DAF;
   color: #000000;
   font: menu;
 }
 
-.tab-left {
-  width: 5px;
-}
-
-.tab-left-top {
-  background: url("chrome://global/skin/tabcontrol/tab-usel-lft-top.gif") no-repeat;
-  height: 15px;
-}
-
-.tab-left-mid {
-  background: url("chrome://global/skin/tabcontrol/tab-usel-lft-mid.gif") repeat-y;
-}
-
-.tab-left-btm {
-  background: url("chrome://global/skin/tabcontrol/tab-usel-lft-btm.gif") no-repeat;
-  height: 2px;
-}
-
-.tab-mid {
-  background: url("chrome://global/skin/tabcontrol/tab-usel-mid-top.gif") repeat-x top;
-  background-color: #8B9AAD;
-}
-
-.tab-mid-mid {
-  padding: 1px 0px 1px 0px;
-}
-
-.tab-mid-btm {
-  background: url("chrome://global/skin/tabcontrol/tab-usel-mid-btm.gif") repeat-x;
-  height: 2px;
-}
-
-.tab-right {
-  width: 5px;
-}
-
-.tab-right-top {
-  background: url("chrome://global/skin/tabcontrol/tab-usel-rit-top.gif") no-repeat;
-  height: 14px;
-}
-
-.tab-right-mid {
-  background: url("chrome://global/skin/tabcontrol/tab-usel-rit-mid.gif") repeat-y;
-}
-
-.tab-right-btm {
-  background: url("chrome://global/skin/tabcontrol/tab-usel-rit-btm.gif") no-repeat;
-  height: 2px;
-}
-
 .tab-text {
   margin: 0px !important;
-  padding: 3px 0px 3px 0px;
+}
+
+.tab-image {
+  list-style-image: inherit;
 }
 
 /* ..... active state ..... */
 
 tab:hover:active {
-  color: #FFFFFF;
-}
-
-tab:hover:active > .tab-left > .tab-left-top { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-act-lft-top.gif");
-}
-
-tab:hover:active > .tab-left > .tab-left-mid { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-act-lft-mid.gif");
-}
-
-tab:hover:active > .tab-mid { 
-  margin-top: 1px;
-  background-image: url("chrome://global/skin/tabcontrol/tab-act-mid-top.gif");
+  -moz-border-top-colors: transparent #8190A5 #899AAC;
+  -moz-border-right-colors: transparent #8190A5 #899AAC;
+  -moz-border-left-colors: transparent #8190A5 #899AAC;
   background-color: #8B9AAD;
-}
-
-tab:hover:active > .tab-mid > .tab-mid-mid { 
-  padding: 1px 0px 0px 0px;
-}
-
-tab:hover:active > .tab-right > .tab-right-top { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-act-rit-top.gif");
-}
-
-tab:hover:active > .tab-right > .tab-right-mid { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-act-rit-mid.gif");
+  color: #FFFFFF;
 }
 
 /* ..... selected state ..... */
 
-tab[selected="true"], tab:hover:active[selected="true"],
-tab[selected="1"], tab:hover:active[selected="1"] {
+tab[selected="true"],
+tab:hover:active[selected="true"] {
+  -moz-border-top-colors: #000000 #DFE2E6 #D0D7DD;
+  -moz-border-right-colors: #000000 #BAC2CD #C1C9D3;
+  -moz-border-bottom-colors: transparent;
+  -moz-border-left-colors: #000000 #DFE2E6 #D0D7DD;
+  background-color: #C7D0D9;
   color: #000000;
-}
-
-.tab-left-top[selected="true"],
-tab:hover:active[selected="true"] > .tab-left > .tab-left-top { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-sel-lft-top.gif");
-}
-
-.tab-left-mid[selected="true"],
-tab:hover:active[selected="true"] > .tab-left > .tab-left-mid { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-sel-lft-mid.gif");
-}
-
-.tab-left-btm[selected="true"],
-tab:hover:active[selected="true"] > .tab-left > .tab-left-btm { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-sel-lft-btm.gif");
-}
-
-.tab-mid[selected="true"],
-tab:hover:active[selected="true"] > .tab-mid { 
-  margin-top: 0px;
-  background-image: url("chrome://global/skin/tabcontrol/tab-sel-mid-top.gif");
-  background-color: #C7D0D9;
-}
-
-.tab-mid-mid[selected="true"],
-tab:hover:active[selected="true"] > .tab-mid > .tab-mid-mid { 
-  padding: 1px 0px 1px 0px;
-}
-
-
-.tab-mid-btm[selected="true"],
-tab:hover:active[selected="true"] > .tab-mid > .tab-mid-btm { 
-  background-image: none;
-  background-color: #C7D0D9;
-}
-
-.tab-right-top[selected="true"],
-tab:hover:active[selected="true"] > .tab-right > .tab-right-top { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-sel-rit-top.gif");
-}
-
-.tab-right-mid[selected="true"],
-tab:hover:active[selected="true"] > .tab-right > .tab-right-mid { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-sel-rit-mid.gif");
-}
-
-.tab-right-btm[selected="true"],
-tab:hover:active[selected="true"] > .tab-right >  .tab-right-btm { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-sel-rit-btm.gif");
 }
 
 /* ::::: tab-bottom ::::::::::
@@ -217,137 +119,34 @@ tab:hover:active[selected="true"] > .tab-right >  .tab-right-btm {
    ::::: */
 
 .tab-bottom {
-  min-height: 21px;
-}
- 
-.tab-bottom > .tab-left > .tab-left {
-  width: 5px;
-}
-
-.tab-bottom > .tab-left > .tab-left-top {
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-usel-lft-btm.gif");
-  height: 2px;
+  -moz-border-top-colors: #000000 #8C9DAF #8C9DAF;
+  -moz-border-bottom-colors: #000000 #8190A5 #899AAC #8D9EB0;
+  -moz-border-radius-topleft: 0;
+  -moz-border-radius-topright: 0;
+  -moz-border-radius-bottomright: 3px;
+  -moz-border-radius-bottomleft: 3px;
 }
 
-.tab-bottom > .tab-left > .tab-left-btm {
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-usel-lft-top.gif");
-  height: 15px;
+.tab-bottom:hover:active {
+  -moz-border-top-colors: #000000 #8C9DAF #8C9DAF;
+  -moz-border-bottom-colors: transparent #8190A5 #899AAC #8D9EB0;
 }
-
-.tab-bottom > .tab-mid {
-  background: url("chrome://global/skin/tabcontrol/tab-bot-usel-mid-top.gif") repeat-x bottom;
-  background-color: #8B9AAD;
+   
+.tab-bottom[selected="true"] {
+  -moz-border-top-colors: transparent !important;
+  -moz-border-bottom-colors: #000000 #DFE2E6 #D0D7DD transparent !important;
 }
-
-.tab-bottom > .tab-mid > .tab-mid-top {
-  background: url("chrome://global/skin/tabcontrol/tab-bot-usel-mid-btm.gif") repeat-x;
-  height: 2px;
-}
-
-.tab-bottom > .tab-mid > .tab-mid-mid {
-  padding: 1px 0px 1px 0px;
-}
-
-.tab-bottom > .tab-mid > .tab-mid-btm {
-  background: none;
-  height: 0px;
-}
-
-.tab-bottom > .tab-right {
-  width: 5px;
-}
-
-.tab-bottom > .tab-right > .tab-right-top {
-  background: url("chrome://global/skin/tabcontrol/tab-bot-usel-rit-btm.gif") no-repeat;
-  height: 2px;
-}
-
-.tab-bottom > .tab-right > .tab-right-btm {
-  background: url("chrome://global/skin/tabcontrol/tab-bot-usel-rit-top.gif") no-repeat;
-  height: 14px;
-}
-
-/* ..... active state ..... */
-
-.tab-bottom:hover:active > .tab-left > .tab-left-top { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-usel-lft-btm.gif");
-}
-
-.tab-bottom:hover:active > .tab-left > .tab-left-btm { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-act-lft-top.gif");
-}
-
-.tab-bottom:hover:active > .tab-mid { 
-  margin: 0px 0px 1px 0px;
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-act-mid-top.gif");
-}
-
-.tab-bottom:hover:active > .tab-mid > .tab-mid-mid { 
-  padding: 0px 0px 1px 0px;
-}
-
-.tab-bottom:hover:active > .tab-right > .tab-right-top { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-usel-rit-btm.gif");
-}
-
-.tab-bottom:hover:active > .tab-right > .tab-right-btm { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-act-rit-top.gif");
-}
-
-/* ..... selected state ..... */
-
-.tab-bottom[selected="true"] > .tab-left > .tab-left-top,
-.tab-bottom:hover:active[selected="true"] > .tab-left > .tab-left-top { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-lft-btm.gif");
-}
-
-.tab-bottom[selected="true"] > .tab-left > .tab-left-btm,
-.tab-bottom:hover:active[selected="true"] > .tab-left > .tab-left-btm { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-lft-top.gif");
-}
-
-.tab-bottom[selected="true"] > .tab-mid,
-.tab-bottom:hover:active[selected="true"] > .tab-mid { 
-  margin: 0px;
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-mid-top.gif");
-  background-color: #C7D0D9;
-}
-
-.tab-bottom[selected="true"] > .tab-mid > .tab-mid-top,
-.tab-bottom:hover:active[selected="true"] > .tab-mid > .tab-mid-top { 
-  background-image: none;
-  background-color: #C7D0D9;
-}
-
-.tab-bottom[selected="true"] > .tab-mid > .tab-mid-mid,
-.tab-bottom:hover:active[selected="true"] > .tab-mid > .tab-mid-mid { 
-  padding: 1px 0px 1px 0px;
-}
-
-.tab-bottom[selected="true"] > .tab-mid > .tab-mid-btm,
-.tab-bottom:hover:active[selected="true"] > .tab-mid > .tab-mid-btm { 
-  background: none;
-}
-
-.tab-bottom[selected="true"] > .tab-right > .tab-right-top,
-.tab-bottom:hover:active[selected="true"] > .tab-right > .tab-right-top { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-rit-btm.gif");
-}
-
-.tab-bottom[selected="true"] > .tab-right > .tab-right-btm,
-.tab-bottom:hover:active[selected="true"] > .tab-right > .tab-right-btm { 
-  background-image: url("chrome://global/skin/tabcontrol/tab-bot-sel-rit-top.gif");
-}
-
+   
 /* ::::: tabs-bottom ::::: */
+
+.tabs-bottom {
+  -moz-box-align: start;
+}
 
 .tabs-bottom > .tabs-left,
 .tabs-bottom > .tabs-right {
-  background: url("chrome://global/skin/tabcontrol/tabs-bot-mid.gif") repeat-x top;
+  border-top: 1px solid #000000;
+  border-bottom: none;
 }
 
-.tabs-bottom > .tabs-right-cap,
-.tabs-bottom > .tabs-left-cap {
-  background: none;
-}
 

@@ -2,8 +2,6 @@
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-serverwithnoidentities.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -11,7 +9,7 @@
 
   <script src="chrome://messenger/content/am-serverwithnoidentities.js"/>
 
-  <hbox class="box-smallheader" title="&accountTitle.label;"/>
+  <dialogheader title="&accountTitle.label;"/>
 
   <description class="secDesc">&accountSettingsDesc.label;</description>
   <grid>

@@ -1,0 +1,220 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== addressbook.css ================================================
+  == Styles for the main Address Book window.
+  ======================================================================= */
+
+@import url("chrome://messenger/skin/");
+@import url("chrome://communicator/skin/sidebar/sidebar.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: primary toolbar buttons ::::: */
+
+.toolbarbutton-1 {
+  list-style-image: url("chrome://messenger/skin/icons/btn1.gif");
+}
+
+#button-newcard {
+  -moz-image-region: rect(0px 23px 21px 0px);
+}
+
+#button-newcard:hover {
+  -moz-image-region: rect(0px 46px 21px 23px);
+} 
+
+#button-newcard:hover:active {
+  -moz-image-region: rect(0px 69px 21px 46px);
+}
+
+#button-newcard[disabled] {
+  -moz-image-region: rect(0px 92px 21px 69px) !important;
+} 
+
+#button-newlist {
+  -moz-image-region: rect(21px 46px 42px 23px);
+}
+
+#button-newlist:hover {
+  -moz-image-region: rect(21px 23px 42px 0px);
+} 
+
+#button-newlist:hover:active {
+  -moz-image-region: rect(21px 69px 42px 46px);
+}
+
+#button-newlist[disabled] {
+  -moz-image-region: rect(21px 92px 42px 69px) !important;
+} 
+
+#button-editcard {
+  -moz-image-region: rect(42px 23px 63px 0px);
+}
+
+#button-editcard:hover {
+  -moz-image-region: rect(42px 46px 63px 23px);
+} 
+
+#button-editcard:hover:active {
+  -moz-image-region: rect(42px 69px 63px 46px);
+}
+
+#button-editcard[disabled] {
+  -moz-image-region: rect(42px 92px 63px 69px) !important;
+} 
+
+#button-newmessage {
+  -moz-image-region: rect(126px 23px 147px 0px);
+}
+
+#button-newmessage:hover {
+  -moz-image-region: rect(126px 46px 147px 23px);
+} 
+
+#button-newmessage:hover:active {
+  -moz-image-region: rect(126px 69px 147px 46px);
+} 
+
+#button-newmessage[disabled] {
+  -moz-image-region: rect(126px 92px 147px 69px) !important;
+}
+
+#button-delete {
+  -moz-image-region: rect(210px 23px 231px 0px);
+}
+
+#button-delete:hover {
+  -moz-image-region: rect(210px 46px 231px 23px);
+} 
+
+#button-delete:hover:active {
+  -moz-image-region: rect(210px 69px 231px 46px);
+}
+
+#button-delete[disabled] {
+  -moz-image-region: rect(210px 92px 231px 69px) !important;
+}
+
+/* ::::: sidebar header ::::: */
+
+sidebarheader {
+  border: 1px outset ThreeDFace;
+}
+
+#sidebar-title-box {
+  border: none;
+}
+
+/* CardView styles - used in the Card View Pane */
+
+#CardViewOuterBox {
+  border-left: 1px solid ThreeDShadow;
+  border-top: 1px solid ThreeDShadow;
+  border-right: 1px solid ThreeDHighlight;
+}
+
+#CardViewBox {
+  -moz-user-focus: ignore;
+  overflow: auto;
+  min-width: 150px;
+  border-left: 1px solid ThreeDDarkShadow;
+  border-top: 1px solid ThreeDDarkShadow;
+  border-bottom: 1px solid ThreeDLightShadow;
+  border-right: 1px solid ThreeDLightShadow;
+  background-color: #FFFFFF;
+}
+
+#CardViewInnerBox {
+  margin-top: 2px;
+  margin-bottom: 2px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+#CardTitle {
+  font-size: 150%;
+  font-weight: bold;
+  border-bottom: 2px solid black;
+  min-width: 120px;
+  margin: 0px;
+}
+ 
+.cardViewGroup {
+  margin-top: 8px;
+  padding-bottom: 5px;
+  min-width: 50px;
+}
+
+.CardViewHeading {
+  padding: 1px;
+  padding-left: 5px;
+  margin: 0px 0px 1px 0px;
+  background-color: #CCCCFF;
+  color: black;
+  font-weight: bold;
+  min-width: 30px;
+}
+
+.CardViewText,
+.CardViewLink {
+  padding-left: 20px;
+  padding-right: 2px;
+  min-width: 30px;
+  margin: 0px;
+}
+
+.CardViewLink {
+  color: blue;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+html|a {
+  padding-left: 0px;
+  padding-right: 2px;
+  border: none !important;
+}
+
+html|p {
+  border: none !important;
+}
+
+/* ::::: border adjustments ::::: */
+
+#sidebar-box {
+  border-top: none;
+  border-right: 1px solid ThreeDHighlight;
+  border-bottom: none;
+  border-left: 1px solid ThreeDShadow;
+}
+
+#dirTree,
+#resultsTree { 
+  border: none;
+  margin: 0px 0px 0px 0px !important;
+}
+
+#resultsTree {
+  border-left: 1px solid ThreeDShadow;
+}

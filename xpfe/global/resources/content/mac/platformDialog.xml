@@ -12,11 +12,13 @@
           
       <xul:hbox class="dialog-button-box"
                 inherits="pack=buttonpack,align=buttonalign,dir=buttondir,orient=buttonorient">
-        <xul:button dlgtype="help" class="dialog-button"/>
-        <xul:button dlgtype="disclosure" class="dialog-button"/>
+        <xul:button dlgtype="disclosure" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="help" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="extra2" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="extra1" class="dialog-button" hidden="true"/>
         <xul:spacer flex="1"/>
-        <xul:button dlgtype="cancel" class="dialog-button"/>
-        <xul:button dlgtype="accept" class="dialog-button" default="true"/>
+        <xul:button dlgtype="cancel" class="dialog-button" hidden="true"/>
+        <xul:button dlgtype="accept" class="dialog-button" hidden="true"/>
       </xul:hbox>
     </content>
 

@@ -160,11 +160,6 @@
       margin-left         : 23px;
     }
 
-  .icon-dropmarker
-    {
-      list-style-image    : url("chrome://global/skin/dropmarker-down-on.gif");
-    }
-    
   .box-padded
     {
       padding             : 5px;

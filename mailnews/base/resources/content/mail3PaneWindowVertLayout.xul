@@ -60,8 +60,6 @@ Rights Reserved.
   <stringbundle id="bundle_search" src="chrome://messenger/locale/search.properties"/>
 </stringbundleset>
 
-<resourcebundle id="resource_bundle_messenger" />
-
 <script type="application/x-javascript" src="chrome://messenger/content/widgetglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/commandglue.js"/>
 <script type="application/x-javascript" src="chrome://messenger/content/shareglue.js"/>
@@ -163,7 +161,7 @@ Rights Reserved.
           <vbox id="searchAndthreadpaneBox" persist="width" flex ="1">
             <hbox id="searchBox"/>
             <vbox id="threadpaneBox" flex="1" persist="width">
-              <outliner id="threadOutliner" flex="1" persist="width" style="width:0px" context="threadPaneContext" class="window-focusborder" focusring="false"/>
+              <outliner id="threadOutliner" flex="1" persist="width" style="width:0px" context="threadPaneContext"/>
             </vbox>
           </vbox>
           <hbox id="accountCentralBox" flex="1" persist="width"> 
@@ -177,7 +175,7 @@ Rights Reserved.
         <grippy onclick="OnClickThreadAndMessagePaneSplitterGrippy()"/>
       </splitter>
       <!-- msg header view -->
-      <vbox id="messagepanebox" flex="4" persist="collapsed height" class="window-focusborder" focusring="false">
+      <vbox id="messagepanebox" flex="4" persist="collapsed height">
         <hbox id="msgHeaderView"/>
 
         <!-- message view -->

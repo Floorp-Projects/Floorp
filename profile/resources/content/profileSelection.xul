@@ -60,7 +60,7 @@
   
   <keyset id="dialogKeys"/>
 
-  <hbox class="box-header" id="header" title="&profilemanager.label;" description="&windowtitle.label;"/>
+  <dialogheader class="header-large" id="header" title="&profilemanager.label;" description="&windowtitle.label;"/>
   
   <hbox class="wizard-box" flex="1">
 

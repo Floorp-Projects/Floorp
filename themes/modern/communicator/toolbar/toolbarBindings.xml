@@ -4,14 +4,25 @@
           xmlns="http://www.mozilla.org/xbl"
           xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <binding id="toolbar-primary" extends="chrome://global/content/bindings/toolbar.xml#toolbar">
+  <binding id="toolbar-primary"
+           extends="chrome://global/content/bindings/toolbar.xml#toolbar">
     <content>
       <xul:toolbargrippy inherits="last-toolbar"
           tbattr="toolbar-grippy" class="toolbar-primary-grippy"/>
       <xul:hbox class="toolbar-holder toolbar-primary-holder" flex="1" inherits="orient=tborient">
         <xul:image class="toolbar-primary-icon"/>
-        <children/>
+        <xul:hbox class="toolbar-button-box" flex="1">
+          <children/>
+        </xul:hbox>
       </xul:hbox>
+    </content>
+  </binding>
+
+  <binding id="toolbargrippy-primary"
+           extends="chrome://global/content/bindings/toolbar.xml#toolbargrippy">
+    <content>
+      <xul:spacer class="toolbargrippy-primary-top" flex="1"/>
+      <xul:spacer class="toolbargrippy-primary-btm"/>
     </content>
   </binding>
 

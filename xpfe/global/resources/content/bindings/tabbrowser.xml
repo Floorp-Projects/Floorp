@@ -50,27 +50,51 @@
 
     <content>
       <xul:stringbundle src="chrome://global/locale/tabbrowser.properties"/>
-      <xul:tabbox onselect="if (event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
-        <xul:stack collapsed="true" tooltip="_child" context="_child">
-          <xul:tooltip label="foobar" onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
+      <xul:tabbox flex="1"
+                  onselect="if (event.target.localName != 'tabpanels') return; this.parentNode.updateCurrentBrowser();">
+        <xul:hbox class="tabbrowser-strip" collapsed="true" tooltip="_child" context="_child">
+          <xul:tooltip onpopupshowing="event.preventBubble(); if (document.tooltipNode.hasAttribute('label')) { this.setAttribute('label', document.tooltipNode.getAttribute('label')); return true; } return false;"/>
           <xul:menupopup>
-            <xul:menuitem label="&newTab.label;" accesskey="&newTab.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.selectedTab = tabbrowser.addTab('about:blank');"/>
+            <xul:menuitem label="&newTab.label;" accesskey="&newTab.accesskey;"
+                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
+                                     tabbrowser.selectedTab = tabbrowser.addTab('about:blank');"/>
             <xul:menuseparator/>
-            <xul:menuitem label="&reloadTab.label;" accesskey="&reloadTab.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.reloadTab(document.popupNode);"/>
-            <xul:menuitem label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.reloadAllTabs(document.popupNode);"/>
+            <xul:menuitem label="&reloadTab.label;" accesskey="&reloadTab.accesskey;"
+                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
+                                     tabbrowser.reloadTab(document.popupNode);"/>
+            <xul:menuitem label="&reloadAllTabs.label;" accesskey="&reloadAllTabs.accesskey;"
+                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
+                                     tabbrowser.reloadAllTabs(document.popupNode);"/>
             <xul:menuseparator/>
-            <xul:menuitem label="&closeTab.label;" accesskey="&closeTab.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.removeTab(document.popupNode);"/>
+            <xul:menuitem label="&closeTab.label;" accesskey="&closeTab.accesskey;"
+                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
+                                     tabbrowser.removeTab(document.popupNode);"/>
             <xul:menuseparator/>
-            <xul:menuitem label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;" oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode; tabbrowser.removeAllTabsBut(document.popupNode);"/>
+            <xul:menuitem label="&closeOtherTabs.label;" accesskey="&closeOtherTabs.accesskey;"
+                          oncommand="var tabbrowser = this.parentNode.parentNode.parentNode.parentNode;
+                                     tabbrowser.removeAllTabsBut(document.popupNode);"/>
           </xul:menupopup>
-          <xul:tabs style="padding-left:1px; padding-top: 1px;" flex="1"
-                    onclick="if (event.button != 1 || event.target.localName != 'tab') return; this.parentNode.parentNode.parentNode.removeTab(event.target);"
-                    ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode); event.stopPropagation();"
-                    ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode); event.stopPropagation();">
-            <xul:tab validate="never" onerror="this.parentNode.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image')); this.removeAttribute('image');" maxwidth="250" width="0" minwidth="30" flex="100000" class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
+
+          <xul:tabs class="tabbrowser-tabs" closebutton="true" flex="1"
+                    onclick="if (event.button != 1 || event.target.localName != 'tab') return; 
+                             this.parentNode.parentNode.parentNode.removeTab(event.target);"
+                    ondragover="nsDragAndDrop.dragOver(event, this.parentNode.parentNode.parentNode);
+                                event.stopPropagation();"
+                    ondragdrop="nsDragAndDrop.drop(event, this.parentNode.parentNode.parentNode);
+                                event.stopPropagation();"
+                    onclosetab="var node = this.parentNode;
+                                while (node.localName != 'tabbrowser')
+                                  node = node.parentNode;
+                                node.removeCurrentTab();">
+  
+            <xul:tab validate="never" 
+                     onerror="this.parentNode.parentNode.parentNode.addToMissedIconCache(this.getAttribute('image'));
+                              this.removeAttribute('image');"
+                     maxwidth="250" width="0" minwidth="30" flex="100000"
+                     class="tabbrowser-tab" label="&untitledTab;" crop="end"/>
           </xul:tabs>
-        </xul:stack>
-        <xul:tabpanels flex="1" style="margin:0px; padding:0px; border:0px;">
+        </xul:hbox>
+        <xul:tabpanels flex="1" class="plain">
           <xul:browser type="content-primary" inherits="tooltip=contenttooltip,contextmenu=contentcontextmenu"/>
         </xul:tabpanels>
       </xul:tabbox>
@@ -388,19 +412,6 @@
         </body>
       </method>
 
-      <method name="createCloseBox">
-        <body>
-          <![CDATA[
-            var img = document.createElementNS('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', 'image');
-            img.setAttribute('class', 'tabbrowser-closebox');
-            img.setAttribute('label', 'Close Tab');
-            img.setAttribute('onclick', "var node = this.parentNode; while (node.localName != 'tabbrowser') node = node.parentNode; node.removeCurrentTab();");
-            var tabdec = document.getAnonymousElementByAttribute(this.mTabContainer, "class", "tabs-misc-dec");
-            tabdec.appendChild(img);
-          ]]>
-        </body>
-      </method>
-
       <method name="onLinkAdded">
         <parameter name="event"/>
         <body>
@@ -522,9 +533,6 @@
               
               if (this.mCurrentBrowser.contentDocument.title != "")
                 this.mCurrentTab.label = this.mCurrentBrowser.contentDocument.title;
-
-              // Create our close box.
-              this.createCloseBox();
 
               // Hook up our favicon.
               var uri = this.mCurrentBrowser.currentURI;
@@ -724,9 +732,6 @@
                 
                 this.mTabbedMode = true;
                 this.mCurrentBrowser.addEventListener("DOMTitleChanged", this.onTitleChanged, false);
-                
-                // Create our close box.
-                this.createCloseBox();
 
                 // Wire up a progress listener to our tab.
                 var listener = (this.mTabProgressListener)(this, this.mCurrentTab);

@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<bindings id="globalBindings"
+   xmlns="http://www.mozilla.org/xbl"
+   xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <binding id="tab" extends="chrome://global/content/bindings/tabbox.xml#tab">
+    <content>
+      <xul:spacer class="tab-image-left" inherits="selected"/>
+      <xul:hbox flex="1" class="tab-image-middle" align="center" inherits="selected">
+        <xul:image class="tab-left" inherits="src=image,validate"/>
+        <xul:label flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
+      </xul:hbox>
+      <xul:spacer class="tab-image-right" inherits="selected"/>
+    </content>
+  </binding>
+
+  <binding id="tabs" extends="chrome://global/content/bindings/tabbox.xml#tabs">
+    <content>
+      <xul:spacer class="tab-border-top-left-cap"/>
+      <xul:spacer class="tab-border-top-left"/>
+      <children/>
+      <xul:stack flex="1">
+        <xul:spacer class="tab-border-top-right"/>
+        <xul:hbox class="tabs-misc-dec" align="center">
+          <xul:spacer flex="1"/>
+        </xul:hbox>
+      </xul:stack>
+      <xul:spacer class="tab-border-top-right-cap"/>
+    </content>
+  </binding>
+
+</bindings>

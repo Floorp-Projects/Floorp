@@ -1,125 +1,135 @@
-@import url(chrome://communicator/skin/bookmarks/bookmarks.css);
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ */
 
-@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+/* ===== bookmarksToolbar.css ===========================================
+  == Styles specific to bookmark items in a toolbar.
+  ======================================================================= */
 
-/* ::::: bookmark toolbarbuttons ::::: */
-    
+@import url("chrome://communicator/skin/bookmarks/bookmarks.css");
+
+/* ::::: bookmark toolbar buttons ::::: */
+
+/* ..... bookmark items ..... */
+ 
 toolbarbutton.bookmark-item {
-  cursor	            : pointer;
-  min-width           : 0px;
-  max-width           : 13em;
+  cursor: pointer;
+  min-width: 0px;
+  max-width: 13em;
 }
 
-toolbarbutton.bookmark-item:not([container="true"]) {
-  border-right        : 2px solid transparent !important;
-  border-left         : 2px solid transparent !important;
-}
-
-toolbarbutton.bookmark-item[container="true"] {
-  cursor              : default;
-}
-
-toolbarbutton.bookmark-item > .toolbarbutton-box > .toolbarbutton-dropmarker {
-  display             : none;
-}
-    
 toolbarbutton.bookmark-item:hover {
-  color               : #0000FF;
-  text-decoration     : underline;
+  text-decoration: underline;
+  color: #0000FF;
 }
 
+toolbarbutton.bookmark-item:not([container="true"]):hover:active {
+  color: #FF0000 !important;
+}
+
+toolbarbutton.bookmark-item[container="true"],
 toolbarbutton.bookmark-item[container="true"]:hover {
-  text-decoration     : none;
+  cursor: default;
+  text-decoration: none;
 }
 
+toolbarbutton.bookmark-item[disabled="true"],
 toolbarbutton.bookmark-item:not([container="true"]):hover,
-toolbarbutton.bookmark-item:not([container="true"]):hover:active,
-toolbarbutton.bookmark-item:not([container="true"]):hover > .toolbarbutton-box,
-toolbarbutton.bookmark-item:not([container="true"]):hover:active > .toolbarbutton-box {
-  border: 1px solid transparent;
+toolbarbutton.bookmark-item:not([container="true"]):hover:active {
+  border: 2px solid transparent !important;
+  -moz-border-top-colors: transparent !important;
+  -moz-border-right-colors: transparent !important;
+  -moz-border-bottom-colors: transparent !important;
+  -moz-border-left-colors: transparent !important;
   background: transparent !important;
 }
 
-
-toolbarbutton.bookmark-item:not([container="true"]):hover:active,
-toolbarbutton.bookmark-item:not([container="true"]):hover:active > .toolbarbutton-box {
-   color: #FF0000;
-}
-
-
 toolbarbutton.bookmark-item[disabled="true"],
-toolbarbutton.bookmark-item[disabled="true"]:hover,
-toolbarbutton.bookmark-item[disabled="true"]:hover:active
-{
-  color               : GrayText;
-  text-decoration     : none;
-  list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item-disabled.gif");
-  cursor              : default;
+toolbarbutton.bookmark-item[disabled="true"]:hover:active {
+  color: GrayText !important;
 }
 
-toolbarbutton.bookmark-item[disabled="true"][container="true"],
-toolbarbutton.bookmark-item[disabled="true"][container="true"]:hover,
-toolbarbutton.bookmark-item[disabled="true"][container="true"]:hover:active
-{
-  border              : 1px solid transparent !important;
-  list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-disabled.gif");
+toolbarbutton.bookmark-item[disabled="true"] {
+  cursor: default !important;
+  text-decoration: none !important;
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item-disabled.gif") !important;
 }
 
-.menuitem-iconic.bookmark-item[disabled="true"]
-{
-  list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-item-disabled.gif");
+toolbarbutton.bookmark-item[disabled="true"][container="true"] {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-disabled.gif");
 }
 
-.menu-iconic.bookmark-item[disabled="true"][container="true"]
-{
-  list-style-image    : url("chrome://communicator/skin/bookmarks/bookmark-folder-disabled.gif");
+.bookmark-item > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
 }
 
-/* ::::: toolbarbutton drag and drop feedback ::::: */
-
-toolbarbutton.bookmark-item[dragover-right="true"] {
-  border-right        : 2px solid ThreeDDarkShadow !important;
+.bookmark-item > .toolbarbutton-menu-dropmarker {
+  display: none;
 }
+
+/* ..... drag and drop styles ..... */
 
 toolbarbutton.bookmark-item[dragover-left="true"] {
-  border-left         : 2px solid ThreeDDarkShadow !important;
-}
-    
-.toolbarbutton-text[dragover-top="true"] {
-  background-color    : ThreeDDarkShadow;
-  color               : ThreeDHighlight;
+  border-left-color: ThreeDDarkShadow;
 }
 
-/* ::::: menu drag and drop feedback ::::: */
-
-menuitem[dragover-top="true"].bookmark-item {
-  border-top          : 1px solid ThreeDDarkShadow !important;
+toolbarbutton.bookmark-item[dragover-right="true"] {
+  border-right-color: ThreeDDarkShadow;
 }
 
-menu[dragover-top="true"].bookmark-item {
-  border-top          : 1px solid ThreeDDarkShadow !important;
+toolbarbutton.bookmark-item[dragover-top="true"] {
+  border: 1px solid ThreeDDarkShadow;
+}
+
+/* ::::: bookmark menus ::::: */
+
+menu.bookmark-item,
+menuitem.bookmark-item {
+  border-top: 1px solid transparent !important;
+  border-bottom: 1px solid transparent !important;
+  padding: 1px 2px;
+}
+
+.menuitem-iconic.bookmark-item[disabled="true"] {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-item-disabled.gif");
+}
+
+.menu-iconic.bookmark-item[disabled="true"][container="true"] {
+  list-style-image: url("chrome://communicator/skin/bookmarks/bookmark-folder-disabled.gif");
+}
+
+/* ..... drag and drop styles ..... */
+
+menu.bookmark-item[dragover-top="true"],
+menuitem.bookmark-item[dragover-top="true"] {
+  border-top: 1px solid ThreeDDarkShadow !important;
 } 
 
-menuitem.bookmark-item {
-  border-top          : 1px solid transparent !important;
-  border-bottom       : 1px solid transparent !important;
-}
-  
-menu.bookmark-item {
-  border-top          : 1px solid transparent !important;
-  border-bottom       : 1px solid transparent !important;
-}
-  
-menu[dragover="true"].bookmark-item {
-  background-color      : Highlight !important;
-  color                 : HighlightText !important;
+menu.bookmark-item[dragover-bottom="true"],
+menuitem.bookmark-item[dragover-bottom="true"] {
+  border-bottom: 1px solid ThreeDDarkShadow !important;
 }
 
-menuitem[dragover-bottom="true"].bookmark-item {
-  border-bottom       : 1px solid ThreeDDarkShadow !important;
+menu.bookmark-item[dragover="true"] {
+  background: Highlight !important;
+  color: HighlightText !important;
 }
-
-menu[dragover-bottom="true"].bookmark-item {
-  border-bottom       : 1px solid ThreeDDarkShadow !important;
-}
-

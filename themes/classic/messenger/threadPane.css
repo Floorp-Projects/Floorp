@@ -1,0 +1,196 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *   Scott MacGregor (mscott@netscape.com)
+ *   Joe Hewitt (hewitt@netscape.com)
+ */
+
+/* ===== threadPane.css ==============================================
+  == Styles for the thread pane in the Messenger 3-pane window.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: thread decoration ::::: */
+
+outlinerbody:-moz-outliner-cell-text(read) {
+  font-weight: normal;
+}
+
+outlinerbody:-moz-outliner-cell-text(unread) {
+  font-weight: bold;
+}
+
+/* on a collapsed thread, if the top level message is read, but the thread has
+ * unread children, underline the text.  4.x mac did this, very slick 
+ */
+outlinerbody:-moz-outliner-cell-text(container, closed, hasUnread, read) {
+  text-decoration: underline;
+}
+
+/* ::::: priority colors ::::: */
+/****
+ ****  Priority colors currently not being used at the moment.  It has been
+ ****  disabled so as to not conflict with the labels color feature.
+ ****
+outlinerbody:-moz-outliner-cell-text(priorityCol, priority-highest) {
+  color: red;
+}
+
+outlinerbody:-moz-outliner-cell-text(priorityCol, priority-high) {
+  color: rgb(128, 0, 0);
+}
+
+outlinerbody:-moz-outliner-cell-text(priorityCol, priority-lowest) {
+  color: rgb(170, 170, 170);
+}
+
+outlinerbody:-moz-outliner-cell-text(priorityCol, priority-low) {
+  color: rgb(85, 85, 85);
+}
+
+outlinerbody:-moz-outliner-cell-text(priorityCol, selected) {
+  color: -moz-DialogText;
+}
+
+outlinerbody:-moz-outliner-cell-text(priorityCol, selected, focus) {
+  color: HighlightText;
+}
+ ****/
+
+/* ::::: message icons ::::: */
+
+/* ::::: message column icons ::::: */
+
+/* ..... thread column ..... */
+
+outlinercol.threadColumnHeader {
+  list-style-image: url("chrome://messenger/skin/icons/unthreadcol.gif");
+}
+
+outlinercol.threadColumnHeader[sortDirection="ascending"]  {
+  list-style-image: url("chrome://messenger/skin/icons/threadcol.gif");
+}
+
+outlinercol.threadColumnHeader[sortDirection="descending"] {
+  list-style-image: url("chrome://messenger/skin/icons/threadcol.gif");
+}
+
+outlinerbody:-moz-outliner-image(threadCol, container) {
+  list-style-image: url("chrome://messenger/skin/icons/thread-closed.gif");
+}
+
+outlinerbody:-moz-outliner-image(threadCol, container, open) {
+  list-style-image: url("chrome://messenger/skin/icons/thread-open.gif");
+}
+
+outlinerbody:-moz-outliner-image(threadCol, container, hasUnread) {
+  list-style-image: url("chrome://messenger/skin/icons/thread-new-closed.gif");
+}
+
+outlinerbody:-moz-outliner-image(threadCol, container, hasUnread, open) {
+  list-style-image: url("chrome://messenger/skin/icons/thread-new-open.gif");
+}
+
+/* ..... read column ..... */
+
+outlinercol.readColumnHeader {
+  list-style-image: url("chrome://messenger/skin/icons/readcol.gif");
+}
+
+outlinerbody:-moz-outliner-image(unreadButtonColHeader) {
+  list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
+}
+
+outlinerbody:-moz-outliner-image(unreadButtonColHeader, unread) {
+  list-style-image: url("chrome://messenger/skin/icons/unreadmail.gif");
+}
+
+/* ..... flag column ..... */
+
+outlinercol.flagColumnHeader {
+  list-style-image: url("chrome://messenger/skin/icons/flagcol.gif");
+}
+
+outlinerbody:-moz-outliner-image(flaggedCol) {
+  list-style-image: url("chrome://messenger/skin/icons/readmail.gif");
+}
+
+outlinerbody:-moz-outliner-image(flaggedCol, flagged) {
+  list-style-image: url("chrome://messenger/skin/icons/flaggedmail.gif");
+}
+
+/* ..... subject column ..... */
+
+outlinerbody:-moz-outliner-image(subjectCol) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-mail.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, new) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-new.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, attach) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, imapdeleted) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdelete.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, offline) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-offl.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, new, offline) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-new-offl.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, attach, offline) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-attach-offl.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, imapdeleted, offline) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-mail-imapdel-offl.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, news) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-news.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, news, new) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-news-new.gif");
+}
+
+outlinerbody:-moz-outliner-image(subjectCol, news, attach) {
+  padding-right: 2px;
+  list-style-image: url("chrome://messenger/skin/icons/message-news-attach.gif");
+}
+

@@ -15,7 +15,8 @@
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/xpcom/XPCU.js"/>
   <script type="application/x-javascript" src="chrome://inspector/content/jsutil/events/ObserverManager.js"/>  
 
-  <outliner id="olStyleSheets" flex="1" onselect="viewer.onItemSelected()">
+  <outliner id="olStyleSheets" class="plain" flex="1"
+            onselect="viewer.onItemSelected()">
     <outlinercols>
       <outlinercol id="olcHref" label="Stylesheet" primary="true" persist="width,hidden,ordinal" flex="1"/>
       <splitter class="tree-splitter"/>

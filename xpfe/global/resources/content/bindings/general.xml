@@ -211,12 +211,11 @@
     </implementation>
   </binding>
 
-  <binding id="statusbar-panel" extends="xul:button">
+  <binding id="statusbarpanel" display="xul:button">
     <content>
-      <xul:hbox class="statusbar-panel-box" align="center" flex="1">
-        <xul:image class="statusbar-panel-icon" inherits="src"/>
-        <xul:label class="statusbar-panel-text" inherits="value=label,crop" crop="right" flex="1"/>
-      </xul:hbox>
+      <children>
+        <xul:label class="statusbarpanel-text" inherits="value=label,crop" crop="right" flex="1"/>
+      </children>
     </content>
 
     <implementation>
@@ -227,6 +226,13 @@
                 onget="return this.getAttribute('src');"
                 onset="this.setAttribute('src',val); return val;"/>
     </implementation>
+  </binding>
+
+  <binding id="statusbarpanel-iconic" display="xul:button"
+           extends="chrome://global/content/bindings/general.xml#statusbarpanel">
+    <content>
+      <xul:image class="statusbarpanel-icon" inherits="src"/>
+    </content>
   </binding>
 
   <binding id="image">
@@ -281,6 +287,12 @@
         </setter>
       </property>
     </implementation>
+  </binding>
+
+  <binding id="dropmarker">
+    <content>
+      <xul:image class="dropmarker-icon"/>
+    </content>
   </binding>
 
 </bindings>

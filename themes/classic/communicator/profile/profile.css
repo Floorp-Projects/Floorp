@@ -24,7 +24,7 @@
  *
  */
 
-@import url(chrome://global/skin/global.css);
+@import url("chrome://global/skin/global.css");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 

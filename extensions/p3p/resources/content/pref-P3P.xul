@@ -22,7 +22,6 @@
    -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay    href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-P3P.dtd" >
 
@@ -184,7 +183,7 @@
   <script type="application/x-javascript" src="chrome://communicator/content/pref/prefutilities.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-P3P.js"/>
 
-  <hbox class="box-smallheader" title="&lHeader;"/>
+  <dialogheader title="&lHeader;"/>
 
   <!-- P3P Enable/Disable Box -->
   <groupbox orient="vertical">

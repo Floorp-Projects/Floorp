@@ -24,7 +24,6 @@ Contributors:
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 <?xul-overlay href="chrome://messenger/content/msgFolderPickerOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-offline.dtd">
@@ -44,7 +43,7 @@ Contributors:
 
     <label hidden="true" wsm_persist="true" id="server.type"/>  
 
-    <hbox id="headertitle" class="box-smallheader"/>
+    <dialogheader id="headertitle"/>
 
     <groupbox id="offline.titlebox"  hidable="true" hidefor="pop3">
       <caption label="&offlineGroupTitle.label;"/>

@@ -1,25 +1,39 @@
-/*
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
- */
+ *  Joe Hewitt <hewitt@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /* ===== splitter.css ===================================================
   == Styles used by the XUL splitter element.
@@ -30,52 +44,50 @@
 /* ::::: splitter (vertical) ::::: */
 
 splitter {
+  -moz-box-align: center;
+  -moz-box-pack: center;
   cursor: e-resize;
-  border-right: 1px solid #000000;
-  border-left: 1px solid #000000;
-  min-width: 1px;
-  background-color: #C7D0D9;
-}
-
-.splitter-internal-box {
-  border-left: 1px solid #EEF0F3;
-  border-top: 1px solid #EEF0F3;
-  border-right: 1px solid #A5ABB0;
-  border-bottom: 1px solid #A5ABB0;
-  min-width: 5px;
+  border-top: 1px solid;
+  border-right: 2px solid;
+  border-bottom: 1px solid;
+  border-left: 2px solid;
+  -moz-border-top-colors: #DFE5EF;
+  -moz-border-right-colors: #3B414F #AAB4BF;
+  -moz-border-bottom-colors: #AAB4BF;
+  -moz-border-left-colors: #97A4B2 #DFE5EF;
+  min-width: 7px;
+  background-color: #C1CBD5;
 }
 
 /* ::::: splitter (horizontal) ::::: */
 
 splitter[orient="vertical"] {
   cursor: n-resize;
-  border-top: 1px solid #000000;
-  border-right: none;
-  border-bottom: 1px solid #000000;
-  border-left: none;
-  min-width: 1px;
+  border-top: 2px solid;
+  border-right: 1px solid;
+  border-bottom: 2px solid;
+  border-left: 1px solid;
+  -moz-border-top-colors: #97A4B2 #DFE5EF;
+  -moz-border-right-colors: #AAB4BF;
+  -moz-border-bottom-colors: #3B414F #AAB4BF;
+  -moz-border-left-colors: #DFE5EF;
+  min-width: none;
+  min-height: 7px;
 }
 
-splitter[orient="vertical"] > .splitter-internal-box {
-  min-height: 5px;
-}
-  
 /* ::::: splitter grippy ::::: */
   
 grippy {
   cursor: pointer;
-  margin: 0px;
-  padding: 0px;
-  width: 5px;
-  height: 64px;
-  background-color: transparent;
-  background-repeat: no-repeat;
-  background-position: 50% 50%;
+  margin: 0px 1px;
+  min-width: 5px;
+  min-height: 54px;
 }
 
 splitter[orient="vertical"] > grippy {
-  width: 64px;
-  height: 5px;
+  margin: 1px 0px;
+  min-width: 54px;
+  min-height: 5px;
 }
   
 /* ..... normal state ..... */
@@ -98,26 +110,6 @@ splitter[collapse="after"][orient="vertical"] > grippy {
   background-image: url("chrome://global/skin/splitter/grip-hrz-after.gif");
 }  
   
-/* ..... active state ..... */
-
-/* vertical grippies */
-splitter[collapse="before"] > grippy:hover:active {
-  background-image: url("chrome://global/skin/splitter/grip-vrt-act.gif");
-}
-
-splitter[collapse="after"] > grippy:hover:active {
-  background-image: url("chrome://global/skin/splitter/grip-vrt-act.gif");
-}
-
-/* horizontal grippies */
-splitter[collapse="before"][orient="vertical"] > grippy:hover:active {
-  background-image: url("chrome://global/skin/splitter/grip-hrz-act.gif");
-}  
-
-splitter[collapse="after"][orient="vertical"] > grippy:hover:active {
-  background-image: url("chrome://global/skin/splitter/grip-hrz-act.gif");
-}  
-
 /* ..... collapsed state ..... */
 
 /* vertical grippies */

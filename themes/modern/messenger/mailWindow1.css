@@ -1,25 +1,39 @@
-/*
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-1999 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Joe Hewitt <hewitt@netscape.com>
  *
- */
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 /* ===== mailWindow1.css ================================================
   == Styles for the main Mail window in the default layout scheme.
@@ -32,12 +46,6 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: account central :::::: */
-
-#accountCentralBox {
-  background-color: #FFFFFF;
-}
-
 /* :::::
    :: Make sure the min height is small so we can
    :: resize the pane vertically -EDV
@@ -48,168 +56,95 @@
   height: 0px;
 }
 
-/* ::::: tree focus-ring border adjustments ::::: */
+/* ::::: border adjustments for focus ring and joined splitters ::::: */
 
-/* ..... status bar adjustments ..... */
+/* ..... sidebar adjustments ..... */
 
-statusbarpanel,
-#component-bar,
-.progressmeter-statusbar {
-  border-top: none !important;
+#sidebar-panels-splitter-box {
+  border-top: 2px solid;
+  border-right: 2px solid;
+  -moz-border-top-colors: #AAB4BF #3B414F;
+  -moz-border-right-colors: #DFE5EF #97A4B2;
 }
 
 /* ..... splitter adjustments ..... */
 
 #sidebar-splitter {
   border-right: none;
-}
-
-#sidebar-splitter > .splitter-internal-box {
-  border-right: none;
   border-bottom: none;
+  border-left: none;
+  min-width: 7px;
 }
 
-#threadpane-splitter,
-#threadpane-splitter > .splitter-internal-box {
-  border-top: none;
+#threadpane-splitter {
+  border: none;
+  min-height: 7px;
+}
+
+#sidebar-panels-splitter {
   border-left: none;
   border-right: none;
   border-bottom: none;
 }
 
 #threadpane-splitter[state="collapsed"] {
-  border-bottom: 1px solid #000000;
+  border-bottom: 2px solid;
 }
 
-#threadpane-splitter[state="collapsed"] > box {
-  border-bottom: 1px solid #414B75;
-}
-
-.gray-vertical-splitter,
-.gray-vertical-splitter > .splitter-internal-box {
-  border-right: none;
-}
-
-.gray-vertical-splitter > .splitter-internal-box {
-  border-bottom: none;
-}
-
-#sidebar-panels-splitter,
-#sidebar-panels-splitter > .splitter-internal-box {
-  border-top: none;
-}
-
-/* ..... sidebar adjustments ..... */
-
-#sidebar-box {
-  border-top: none;
-}
-
-#sidebar-box > .sidebarheader-main {
-  border-top: none;
-  border-bottom: 1px solid #63676B;
-  border-left: 1px solid #63676B;
-  padding: 0px;
-  background-color: #C7D0D9;
-}
-
-#sidebar-box > .sidebarheader-main > .sidebarheader-internal-box {
-  border-top: 1px solid #EEF0F3;
-  border-left: 1px solid #EEF0F3;
-  color: #000000;
-}
-
-/* ..... tree adjustments ..... */
+/* ..... outliner adjustments ..... */
  
-#folderOutliner,
-#threadOutliner {
-  border-top: none;
-  border-right: none;
-  border-bottom: 1px solid #EBF4FF;
+#folderOutliner {
+  border-right: 2px solid;
+  -moz-border-right-colors: #DFE5EF #97A4B2;
   min-width: 1px;
 }
 
 #threadOutliner {
-  border-left: 1px solid #A5ABB0;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #DFE5EF #97A4B2;
+  min-width: 1px;
 }
 
-#threadOutliner > .outliner-columns {
-  border-left: 1px solid #000000;
+#threadOutliner,
+#accountCentralBox,
+#searchBox,
+#messagepanebox {
+  border-left: 2px solid;
+  -moz-border-left-colors: #AAB4BF #3B414F;
 }
 
-#folderOutliner > outlinerrows {
-  border-bottom: 1px solid #C7D0D9;
+#searchBox {
+  border-top: 1px solid #EEF0F3;
+  border-right: 1px solid #A5ABB0;
+  border-bottom: 2px solid;
+  -moz-border-bottom-colors: #5D616E #BEC3D3;
 }
 
-#threadOutliner > outlinerrows {
-  border-right: none;
-  border-bottom: 1px solid #C7D0D9;
-  border-left: 1px solid #000000;
+#folderOutliner > .outliner-rows > .outliner-bodybox,
+#threadOutliner > .outliner-rows > .outliner-bodybox {
+  border: 1px solid transparent;  
 }
 
-#threadOutliner > outlinerrows > .outliner-bodybox {
-  border: 1px solid transparent;
-}
-
-#threadOutliner:focus > outlinerrows > .outliner-bodybox {
-  border-color: #000000;
+#folderOutliner:focus > .outliner-rows > .outliner-bodybox,
+#threadOutliner:focus > .outliner-rows > .outliner-bodybox {
+  border: 1px solid #000000;
 }
 
 /* ..... message pane adjustments ..... */
 
 #messagepanebox {
-  border-top: 1px solid #A5ABB0;
-  border-bottom: 1px solid #EBF4FF;
-  border-left: 1px solid #A5ABB0;
+ border-top: 2px solid;
+ -moz-border-top-colors: #AAB4BF #3B414F;
 }
 
 #msgHeaderView {
-  border-top: 1px solid #000000;
-  border-right: 1px solid #7B969C;
-  border-bottom: 1px solid #FFFFFF;
-  border-left: 1px solid #000000;
+  border-left: none !important;
 }
 
 #messagepane {
-  border-right: 1px solid #FFFFFF;
-  border-bottom: 1px solid #C7D0D9;
-  border-left: 1px solid #000000;
+  border: 1px solid #FFFFFF;
 }
 
 #messagepanebox[focusring="true"] > #messagepane {
   border-color: #000000;
 }
-
-#messagepanebox[focusring="true"] > #msgHeaderView {
-  border-bottom-color: #000000;
-}
-
-/* ..... account central adjustments ..... */
-
-#accountCentralBox {
-  border-bottom: 1px solid #EBF4FF;
-  border-left: 1px solid #A5ABB0;
-}
-
-[name="accountCentralPane"] {
-  border-bottom: 1px solid #C7D0D9;
-  border-left: 1px solid #000000;
-}
-
-/* ..... quicksearch box left border ..... */
-
-#searchBox {
-  border-left-style: ridge;
-  border-left-width: 2px;
-}
-
-/* ..... quicksearch box border ..... */
-
-#searchBox {
-  border-left-style: ridge;
-  border-bottom-style: ridge;
-  border-bottom-width: 1px;
-  border-left-width: 2px;
-}
-
-

@@ -22,8 +22,6 @@ Contributor(s): ______________________________________. -->
 
 
 <?xml-stylesheet href="chrome://navigator/skin/" type="text/css"?> 
-<!-- XXX - the placement of this include could be temporary -->
-<?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarksToolbar.css" type="text/css"?> 
 
 <?xul-overlay href="chrome://navigator/content/navigatorOverlay.xul"?>
 <?xul-overlay href="chrome://navigator/content/navExtraOverlay.xul"?>
@@ -88,8 +86,6 @@ Contributor(s): ______________________________________. -->
     <stringbundle id="bundle_brand_region" src="chrome://global-region/locale/region.properties"/>
     <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
   </stringbundleset>
-
-<resourcebundle id="resource_bundle_navigator" />
 
   <commandset id="commands">    
     <commandset id="globalEditMenuItems"/>
@@ -160,40 +156,41 @@ Contributor(s): ______________________________________. -->
  
       <hbox id="fullscreen-extra-buttons" hidden="true">
         <toolbarbutton id="fullscreen-exit-button" class="toolbarbutton-1"
-                       label="&exitFullScreenButton.label;" crop="right"
+                       label="&exitFullScreenButton.label;"
                        oncommand="BrowserFullScreenExit();"  
                        tooltiptext="&exitFullScreenButton.tooltip;"/>
       </hbox>
                 
       <hbox id="nav-bar-inner" flex="1">
-        <hbox id="urlbar-group" class="box-toolbar-group chromeclass-location" flex="1">
-          <hbox flex="1" id="urlbar-container">
-            <textbox id="urlbar" class="plain" flex="1"
-                     type="autocomplete" searchSessions="history" 
-                     timeout="50" maxrows="6" alwaysOpenPopup="true"
-                     defaultSearchEngine="true" tabScrolling="true"
-                     showCommentColumn="true"
-                     tooltiptext="&locationBar.tooltip;"
-                     oninput="window.XULBrowserWindow.userTyped.value=true;"
-                     ontextcommand="return handleURLBarCommand(userAction);"
-                     ontextrevert="return handleURLBarRevert();"
-                     onfocus="URLBarFocusHandler(event);"
-                     onblur="URLBarBlurHandler(event);">
-              <deck id="page-proxy-deck">
-                <image id="page-proxy-button"
-                       ondraggesture="PageProxyDragGesture(event);"/>
-                <image id="page-proxy-favicon" validate="never"
-                       ondraggesture="PageProxyDragGesture(event);"
-                       onload="this.parentNode.selectedIndex = 1; event.stopPropagation(); event.preventBubble(); HandleBookmarkIcon(this.src, true);"
-                       onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"/>
-              </deck>
-              <menupopup id="ubhist-popup" class="autocomplete-history-popup"
-                         popupalign="topleft" popupanchor="bottomleft"
-                         onpopupshowing="createUBHistoryMenu(event.target);" 
-                         oncommand="executeUrlBarHistoryCommand(event.target);"/>
-            </textbox>
-          </hbox>
-        </hbox>
+        <textbox id="urlbar" class="chromeclass-location" flex="1"
+                 type="autocomplete" searchSessions="history" 
+                 timeout="50" maxrows="6" alwaysopenpopup="true"
+                 disablehistory="false"
+                 defaultSearchEngine="true" tabScrolling="true"
+                 showCommentColumn="true"
+                 tooltiptext="&locationBar.tooltip;"
+                 oninput="window.XULBrowserWindow.userTyped.value=true;"
+                 ontextcommand="return handleURLBarCommand(eventParam);"
+                 ontextrevert="return handleURLBarRevert();"
+                 onfocus="URLBarFocusHandler(event);"
+                 onblur="URLBarBlurHandler(event);">
+          <deck id="page-proxy-deck">
+            <image id="page-proxy-button"
+                   ondraggesture="PageProxyDragGesture(event);"/>
+            <image id="page-proxy-favicon" validate="never"
+                   ondraggesture="PageProxyDragGesture(event);"
+                   onload="this.parentNode.selectedIndex = 1;
+                           event.stopPropagation();
+                           event.preventBubble();
+                           HandleBookmarkIcon(this.src, true);"
+                   onerror="gBrowser.addToMissedIconCache(this.src); HandleBookmarkIcon(this.src, false);"/>
+          </deck>
+
+          <menupopup id="ubhist-popup" class="autocomplete-history-popup"
+                     popupalign="topleft" popupanchor="bottomleft"
+                     onpopupshowing="createUBHistoryMenu(event.target);" 
+                     oncommand="executeUrlBarHistoryCommand(event.target);"/>
+        </textbox>
 
         <button id="go-button" class="button-toolbar chromeclass-location"
                 label="&goButton.label;" hidden="true" persist="hidden"
@@ -318,7 +315,7 @@ Contributor(s): ______________________________________. -->
                            status="rdf:http://home.netscape.com/WEB-rdf#status"
                            rdf:type="http://home.netscape.com/NC-rdf#Bookmark"
                            tooltiptext="rdf:http://home.netscape.com/NC-rdf#URL"
-                           label="rdf:http://home.netscape.com/NC-rdf#Name" crop="right"/>
+                           label="rdf:http://home.netscape.com/NC-rdf#Name"/>
           </rule>
 
           <rule iscontainer="true" isempty="true"
@@ -390,11 +387,11 @@ Contributor(s): ______________________________________. -->
   <statusbar id="status-bar" class="chromeclass-status"
              ondragover="nsDragAndDrop.dragOver(event, contentAreaDNDObserver);"
              ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
-    <hbox id="component-bar"/>
-    <statusbarpanel id="statusbar-display" label="&statusText.label;" crop="right" flex="1"/>
-    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0"/>
-    <statusbarpanel class="statusbarpanel-icononly" id="offline-status"/>
-    <statusbarpanel class="statusbarpanel-icononly" id="security-button"/>
+    <statusbarpanel id="component-bar"/>
+    <statusbarpanel id="statusbar-display" label="&statusText.label;" flex="1"/>
+    <progressmeter class="progressmeter-statusbar" id="statusbar-icon" mode="normal" value="0"/>
+    <statusbarpanel class="statusbarpanel-iconic" id="offline-status"/>
+    <statusbarpanel class="statusbarpanel-iconic" id="security-button"/>
   </statusbar> 
 
   <data id="fullScreenElementChanges">

@@ -392,7 +392,7 @@ function hideHeaderView(headerTable)
 {
   for (index in headerTable)
   {
-    headerTable[index].enclosingBox.setAttribute('collapsed', true);
+    headerTable[index].enclosingBox.collapsed = true;
   }
 }
 
@@ -406,10 +406,10 @@ function showHeaderView(headerTable)
     headerEntry = headerTable[index];
     if (headerEntry.valid)
     {
-      headerEntry.enclosingBox.removeAttribute('collapsed');
+      headerEntry.enclosingBox.collapsed = false;
     }
     else // if the entry is invalid, always make sure it's collapsed
-      headerEntry.enclosingBox.setAttribute('collapsed', true);
+      headerEntry.enclosingBox.collapsed = true;
   }
 }
 
@@ -444,8 +444,8 @@ function ToggleHeaderView ()
     UpdateMessageHeaders();
     
     // now uncollapse / collapse the right views
-    expandedNode.removeAttribute("collapsed");
-    collapsedNode.setAttribute("collapsed", "true");
+    expandedNode.collapsed = false;
+    collapsedNode.collapsed = true;
   }
   else
   {
@@ -456,8 +456,8 @@ function ToggleHeaderView ()
     UpdateMessageHeaders();
     
     // now uncollapse / collapse the right views
-    collapsedNode.removeAttribute("collapsed");
-    expandedNode.setAttribute("collapsed", "true");
+    collapsedNode.collapsed = false;
+    expandedNode.collapsed = true;
   }  
 
   if (gCollapsedHeaderViewMode)
@@ -483,7 +483,7 @@ function createNewHeaderView(headerName)
   var newHeader = document.createElement("mail-headerfield");
   newHeader.setAttribute('id', idName);
   newHeader.setAttribute('label', currentHeaderData[headerName].headerName + ':');
-  newHeader.setAttribute('collapsed', true);
+  newHeader.collapsed = true;
 
 
   // this new element needs to be inserted into the view...
@@ -564,13 +564,13 @@ function ShowMessageHeaderPane()
   {          
     node = document.getElementById("collapsedHeaderView");
     if (node)
-      node.removeAttribute("collapsed");
+      node.collapsed = false;
   }
   else
   {
     node = document.getElementById("expandedHeaderView");
     if (node)
-      node.removeAttribute("collapsed");
+      node.collapsed = false;
   }
 
 	/* workaround for 39655 */
@@ -586,11 +586,11 @@ function HideMessageHeaderPane()
 {
   var node = document.getElementById("collapsedHeaderView");
   if (node)
-    node.setAttribute("collapsed", "true");
+    node.collapsed = true;
 
   node = document.getElementById("expandedHeaderView");
   if (node)
-    node.setAttribute("collapsed", "true");
+    node.collapsed = true;
 }
 
 function OutputNewsgroups(headerEntry, headerValue)
@@ -815,20 +815,8 @@ function displayAttachmentsForExpandedView()
     gBuildAttachmentsForCurrentMsg = true;
   }
 
-  var attachmentNode = document.getElementById('attachmentTree');
-  var attachmentText = document.getElementById('attachmentText');
   var expandedAttachmentBox = document.getElementById('expandedAttachmentBox');
-  if (numAttachments > 0)  // make sure the attachment button is visible
-  {
-    attachmentNode.removeAttribute('collapsed');
-    attachmentText.removeAttribute('collapsed');
-    expandedAttachmentBox.removeAttribute('collapsed');
-  }
-  else
-  {
-    attachmentNode.setAttribute('collapsed', true);
-    attachmentText.setAttribute('collapsed', true);
-  }
+  expandedAttachmentBox.collapsed = numAttachments <= 0;
 }
 
 // attachment --> the attachment struct containing all the information on the attachment
@@ -843,14 +831,7 @@ function displayAttachmentsForCollapsedView()
 {
   var numAttachments = currentAttachments.length;
   var attachmentNode = document.getElementById('collapsedAttachmentBox');
-  if (numAttachments > 0)  // make sure the attachment button is visible
-  {
-    attachmentNode.removeAttribute('hide');
-  }
-  else
-  {
-    attachmentNode.setAttribute('hide', true);
-  }
+  attachmentNode.collapsed = numAttachments <= 0; // make sure the attachment button is visible
 }
 
 // Public method called to generate a tooltip over an attachment
@@ -987,13 +968,13 @@ function ShowEditMessageButton()
 {
   var editBox = document.getElementById("editMessageBox");
   if (editBox)
-    editBox.removeAttribute("collapsed");
+    editBox.collapsed = false;
 } 
 
 function ClearEditMessageButton() 
 { 
   var editBox = document.getElementById("editMessageBox");
   if (editBox)
-    editBox.setAttribute("collapsed", "true");
+    editBox.collapsed = true;
 }
 

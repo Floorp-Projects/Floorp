@@ -1,466 +1,475 @@
-/*
- * The contents of this file are subject to the Netscape Public
- * License Version 1.1 (the "License"); you may not use this file
- * except in compliance with the License. You may obtain a copy of
- * the License at http://www.mozilla.org/NPL/
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
- * Software distributed under the License is distributed on an "AS
- * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
- * implied. See the License for the specific language governing
- * rights and limitations under the License.
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
  *
- * The Original Code is Mozilla Communicator client code, released
- * March 31, 1998.
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation. Portions created by Netscape are
- * Copyright (C) 1998-2001 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *   Joe Hewitt (hewitt@netscape.com)
- */
+ *  Joe Hewitt <hewitt@netscape.com>
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* ::::: formatting buttons ::::: */
+/* ::::: formatting toolbar ::::: */
 
 #FormatToolbar {
   background: url("chrome://global/skin/toolbar/tb-mid.gif") #C7D0D9 repeat-x top;
 }
 
-#FormatToolbar > toolbarbutton {
-  border: none !important;
+#FormatToolbar > toolbargrippy,
+#FormatToolbar > .toolbar-holder {
+  border-top: 1px solid #CED6DD;
+  border-right: 1px solid #95A0AD;
+  border-bottom: 1px solid #95A0AD;
+  border-left: 1px solid #DAE3ED;
 }
 
-#FormatToolbar > toolbarbutton[checked="true"] {
-  background-color: transparent;
+#FormatToolbar > toolbargrippy:hover:active {
+  border-color: #67737E;
+}
+
+/* ::::: formatting buttons ::::: */
+
+#FormatToolbar > toolbarbutton {
+  border: none !important;
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
+  background-color: transparent !important;
 }
 
 #DecreaseFontSizeButton {
-  list-style-image: url("chrome://editor/skin/btn2/dec-font-size.gif");
+  -moz-image-region: rect(101px 22px 118px 0px);
 }
 
 #DecreaseFontSizeButton:hover {
-  list-style-image: url("chrome://editor/skin/btn2/dec-font-size-hov.gif");
+  -moz-image-region: rect(101px 44px 118px 22px);
 }
 
-#DecreaseFontSizeButton[checked="true"],
-#DecreaseFontSizeButton[checked="true"]:hover,
 #DecreaseFontSizeButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/dec-font-size-act.gif");
+  -moz-image-region: rect(101px 66px 118px 44px);
 }
 
-#DecreaseFontSizeButton[disabled="true"],
-#DecreaseFontSizeButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/dec-font-size-dis.gif");
+#DecreaseFontSizeButton[disabled="true"] {
+  -moz-image-region: rect(101px 88px 118px 66px) !important;
 }
 
 #IncreaseFontSizeButton {
-  list-style-image: url("chrome://editor/skin/btn2/inc-font-size.gif");
+  -moz-image-region: rect(118px 22px 135px 0px);
 }
 
 #IncreaseFontSizeButton:hover {
-  list-style-image: url("chrome://editor/skin/btn2/inc-font-size-hov.gif");
+  -moz-image-region: rect(118px 44px 135px 22px);
 }
 
-#IncreaseFontSizeButton[checked="true"],
-#IncreaseFontSizeButton[checked="true"]:hover,
 #IncreaseFontSizeButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/inc-font-size-act.gif");
+  -moz-image-region: rect(118px 66px 135px 44px);
 }
 
-#IncreaseFontSizeButton[disabled="true"],
-#IncreaseFontSizeButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/inc-font-size-dis.gif");
+#IncreaseFontSizeButton[disabled="true"] {
+  -moz-image-region: rect(118px 88px 135px 66px) !important;
 }
 
 #boldButton {
-  list-style-image: url("chrome://editor/skin/btn2/bold.gif");
+  -moz-image-region: rect(33px 54px 50px 32px);
 }
 
 #boldButton:hover {
-  list-style-image: url("chrome://editor/skin/btn2/bold-hov.gif");
+  -moz-image-region: rect(33px 76px 50px 54px);
 }
 
 #boldButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/bold-act.gif");
+  -moz-image-region: rect(50px 22px 67px 0px );
 }
 
 #boldButton[checked="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/bold-sel.gif");
+  -moz-image-region: rect(33px 98px 50px 76px);
 }
 
-#boldButton[disabled="true"],
-#boldButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/bold-dis.gif");
+#boldButton[disabled="true"] {
+  -moz-image-region: rect(50px 44px 67px 22px) !important;
 }
 
 #italicButton {
-  list-style-image: url("chrome://editor/skin/btn2/italic.gif");
+  -moz-image-region: rect(185px 86px 202px 64px);
 }
 
 #italicButton:hover {
-  list-style-image: url("chrome://editor/skin/btn2/italic-hov.gif");
+  -moz-image-region: rect(202px 22px 219px 0px);
 }
 
 #italicButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/italic-act.gif");
+  -moz-image-region: rect(202px 66px 219px 44px);
 }
 
 #italicButton[checked="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/italic-sel.gif");
+  -moz-image-region: rect(202px 44px 219px 22px);
 }
 
-#italicButton[disabled="true"],
-#italicButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/italic-dis.gif");
+#italicButton[disabled="true"] {
+  -moz-image-region: rect(202px 88px 219px 66px) !important;
 }
 
 #underlineButton {
-  list-style-image: url("chrome://editor/skin/btn2/underline.gif");
+  -moz-image-region: rect(338px 22px 355px 0px);
 }
 
 #underlineButton:hover {
-  list-style-image: url("chrome://editor/skin/btn2/underline-hov.gif");
+  -moz-image-region: rect(338px 44px 355px 22px);
 }
 
 #underlineButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/underline-act.gif");
+  -moz-image-region: rect(338px 88px 355px 66px);
 }
 
 #underlineButton[checked="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/underline-sel.gif");
+  -moz-image-region: rect(338px 66px 355px 44px);
 }
 
-#underlineButton[disabled="true"],
-#underlineButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/underline-dis.gif");
+#underlineButton[disabled="true"] {
+  -moz-image-region: rect(355px 22px 372px 0px) !important;
 }
 
 #ulButton {
-  list-style-image: url("chrome://editor/skin/btn2/bullets.gif");
+  -moz-image-region: rect(50px 66px 67px 44px);
 }
 
 #ulButton:hover {
-  list-style-image: url("chrome://editor/skin/btn2/bullets-hov.gif");
+  -moz-image-region: rect(50px 88px 67px 66px);
 }
 
 #ulButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/bullets-act.gif");
+  -moz-image-region: rect(67px 44px 84px 22px);
 }
 
 #ulButton[checked="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/bullets-sel.gif");
+  -moz-image-region: rect(67px 22px 84px 0px);
 }
 
-#ulButton[disabled="true"],
-#ulButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/bullets-dis.gif");
+#ulButton[disabled="true"] {
+  -moz-image-region: rect(67px 66px 84px 44px ) !important;
 }
+
 
 #olButton {
-  list-style-image: url("chrome://editor/skin/btn2/numbers.gif");
+  -moz-image-region: rect(253px 66px 270px 44px);
 }
 
 #olButton:hover {
-  list-style-image: url("chrome://editor/skin/btn2/numbers-hov.gif");
+  -moz-image-region: rect(253px 88px 270px 66px);
 }
 
 #olButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/numbers-act.gif");
+  -moz-image-region: rect(270px 44px 287px 22px);
 }
 
 #olButton[checked="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/numbers-sel.gif");
+  -moz-image-region: rect(270px 22px 287px 0px);
 }
 
-#olButton[disabled="true"],
-#olButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/numbers-dis.gif");
+#olButton[disabled="true"] {
+  -moz-image-region: rect(270px 66px 287px 44px) !important;
 }
 
 #outdentButton {
-  list-style-image: url("chrome://editor/skin/btn2/outdent.gif");
+  -moz-image-region: rect(270px 88px 287px 66px);
 }
 
 #outdentButton:hover {
-  list-style-image: url("chrome://editor/skin/btn2/outdent-hov.gif");
+  -moz-image-region: rect(287px 22px 304px 0px);
 }
 
-#outdentButton[checked="true"],
-#outdentButton[checked="true"]:hover,
 #outdentButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/outdent-act.gif");
+  -moz-image-region: rect(287px 44px 304px 22px);
 }
 
-#outdentButton[disabled="true"],
-#outdentButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/outdent-dis.gif");
+#outdentButton[disabled="true"] {
+  -moz-image-region: rect(287px 66px 304px 44px) !important;
 }
 
 #indentButton {
-  list-style-image: url("chrome://editor/skin/btn2/indent.gif");
+  -moz-image-region: rect(135px 22px 152px 0px);
 }
 
 #indentButton:hover {
-  list-style-image: url("chrome://editor/skin/btn2/indent-hov.gif");
+  -moz-image-region: rect(135px 44px 152px 22px);
 }
 
-#indentButton[checked="true"],
-#indentButton[checked="true"]:hover,
 #indentButton:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/indent-act.gif");
+  -moz-image-region: rect(135px 66px 152px 44px);
 }
 
-#indentButton[disabled="true"],
-#indentButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/indent-dis.gif");
-}
-
-#AlignPopupButton {
-  list-style-image: url("chrome://editor/skin/btn2/align.gif");
-}
-
-#AlignPopupButton:hover {
-  list-style-image: url("chrome://editor/skin/btn2/align-hov.gif");
-}
-
-#AlignPopupButton:hover:active,
-#AlignPopupButton[open="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/align-act.gif");
-}
-
-#AlignPopupButton[disabled="true"],
-#AlignPopupButton[disabled="true"]:hover,
-#AlignPopupButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/align-dis.gif");
-}
-
-#AlignLeftItem {
-  list-style-image: url("chrome://editor/skin/btn2/align-left.gif");
-}
-
-#AlignLeftItem:hover {
-  list-style-image: url("chrome://editor/skin/btn2/align-left-hov.gif");
-}
-
-#AlignCenterItem {
-  list-style-image: url("chrome://editor/skin/btn2/align-center.gif");
-}
-
-#AlignCenterItem:hover {
-  list-style-image: url("chrome://editor/skin/btn2/align-center-hov.gif");
-}
-
-#AlignRightItem {
-  list-style-image: url("chrome://editor/skin/btn2/align-right.gif");
-}
-
-#AlignRightItem:hover {
-  list-style-image: url("chrome://editor/skin/btn2/align-right-hov.gif");
-}
-
-#AlignJustifyItem {
-  list-style-image: url("chrome://editor/skin/btn2/align-justify.gif");
-}
-
-#AlignJustifyItem:hover {
-  list-style-image: url("chrome://editor/skin/btn2/align-justify-hov.gif");
-}
-
-#InsertPopupButton {
-  list-style-image: url("chrome://editor/skin/btn2/insert.gif");
-}
-
-#InsertPopupButton:hover {
-  list-style-image: url("chrome://editor/skin/btn2/insert-hov.gif");
-}
-
-#InsertPopupButton:hover:active,
-#InsertPopupButton[open="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/insert-act.gif");
-}
-
-#InsertPopupButton[disabled="true"],
-#InsertPopupButton[disabled="true"]:hover,
-#InsertPopupButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/insert-dis.gif");
-}
-
-#InsertLinkItem {
-  list-style-image: url("chrome://editor/skin/btn2/insert-link.gif");
-}
-
-#InsertLinkItem:hover {
-  list-style-image: url("chrome://editor/skin/btn2/insert-link-hov.gif");
-}
-
-#InsertAnchorItem {
-  list-style-image: url("chrome://editor/skin/btn2/insert-anchor.gif");
-}
-
-#InsertAnchorItem:hover {
-  list-style-image: url("chrome://editor/skin/btn2/insert-anchor-hov.gif");
-}
-
-#InsertImageItem {
-  list-style-image: url("chrome://editor/skin/btn2/insert-image.gif");
-}
-
-#InsertImageItem:hover {
-  list-style-image: url("chrome://editor/skin/btn2/insert-image-hov.gif");
-}
-
-#InsertHRuleItem {
-  list-style-image: url("chrome://editor/skin/btn2/insert-hrule.gif");
-}
-
-#InsertHRuleItem:hover {
-  list-style-image: url("chrome://editor/skin/btn2/insert-hrule-hov.gif");
-}
-
-#InsertTableItem {
-  list-style-image: url("chrome://editor/skin/btn2/insert-table.gif");
-}
-
-#InsertTableItem:hover {
-  list-style-image: url("chrome://editor/skin/btn2/insert-table-hov.gif");
+#indentButton[disabled="true"] {
+  -moz-image-region: rect(135px 88px 152px 66px) !important;
 }
 
 #align-left-button {
-  list-style-image: url("chrome://editor/skin/btn2/left.gif");
+  -moz-image-region: rect(236px 44px 253px 22px);
 }
 
 #align-left-button:hover {
-  list-style-image: url("chrome://editor/skin/btn2/left-hov.gif");
+  -moz-image-region: rect(236px 66px 253px 44px);
 }
 
 #align-left-button:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/left-act.gif");
+  -moz-image-region: rect(253px 22px 270px 0px);
 }
 
 #align-left-button[checked="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/left-sel.gif");
+  -moz-image-region: rect(236px 88px 253px 66px);
 }
 
-#align-left-button[disabled="true"],
-#align-left-button[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/left-dis.gif");
+#align-left-button[disabled="true"] {
+  -moz-image-region: rect(253px 44px 270px 22px) !important;
 }
 
 #align-center-button {
-  list-style-image: url("chrome://editor/skin/btn2/center.gif");
+  -moz-image-region: rect(67px 88px 84px 66px);
 }
 
 #align-center-button:hover {
-  list-style-image: url("chrome://editor/skin/btn2/center-hov.gif");
+  -moz-image-region: rect(84px 22px 101px 0px);
 }
 
 #align-center-button:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/center-act.gif");
+  -moz-image-region: rect(84px 66px 101px 44px);
 }
 
 #align-center-button[checked="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/center-sel.gif");
+  -moz-image-region: rect(84px 44px 101px 22px);
 }
 
-#align-center-button[disabled="true"],
-#align-center-button[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/center-dis.gif");
+#align-center-button[disabled="true"] {
+  -moz-image-region: rect(84px 88px 101px 66px) !important;
 }
 
 #align-right-button {
-  list-style-image: url("chrome://editor/skin/btn2/right.gif");
+  -moz-image-region: rect(287px 88px 304px 66px);
 }
 
 #align-right-button:hover {
-  list-style-image: url("chrome://editor/skin/btn2/right-hov.gif");
+  -moz-image-region: rect(304px 22px 321px 0px);
 }
 
 #align-right-button:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/right-act.gif");
+  -moz-image-region: rect(304px 66px 321px 44px);
 }
 
 #align-right-button[checked="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/right-sel.gif");
+  -moz-image-region: rect(304px 44px 321px 22px);
 }
 
-#align-right-button[disabled="true"],
-#align-right-button[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/right-dis.gif");
+#align-right-button[disabled="true"] {
+  -moz-image-region: rect(304px 88px 321px 66px) !important;
 }
 
 #align-justify-button {
-  list-style-image: url("chrome://editor/skin/btn2/justify.gif");
+  -moz-image-region: rect(219px 22px 236px 0px);
 }
 
 #align-justify-button:hover {
-  list-style-image: url("chrome://editor/skin/btn2/justify-hov.gif");
+  -moz-image-region: rect(219px 44px 236px 22px);
 }
 
 #align-justify-button:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/justify-act.gif");
+  -moz-image-region: rect(219px 88px 236px 66px);
 }
 
 #align-justify-button[checked="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/justify-sel.gif");
+  -moz-image-region: rect(219px 66px 236px 44px);
 }
 
-#align-justify-button[disabled="true"],
-#align-justify-button[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/btn2/justify-dis.gif");
+#align-justify-button[disabled="true"] {
+  -moz-image-region: rect(236px 22px 253px 0px) !important;
+}
+
+#AlignPopupButton {
+  -moz-image-region: rect(0px 22px 17px 0px);
+}
+
+#AlignPopupButton:hover {
+  -moz-image-region: rect(0px 44px 17px 22px);
+}
+
+#AlignPopupButton[open="true"] {
+  -moz-image-region: rect(0px 66px 17px 44px) !important;
+}
+
+#AlignPopupButton[disabled="true"] {
+  -moz-image-region: rect(0px 88px 17px 66px) !important;
+}
+
+#InsertPopupButton {
+  -moz-image-region: rect(152px 22px 169px 0px);
+}
+
+#InsertPopupButton:hover {
+  -moz-image-region: rect(152px 44px 169px 22px);
+}
+
+#InsertPopupButton[open="true"] {
+  -moz-image-region: rect(152px 66px 169px 44px) !important;
+}
+
+#InsertPopupButton[disabled="true"] {
+  -moz-image-region: rect(152px 88px 169px 66px) !important;
 }
 
 #smileButtonMenu {
-  list-style-image: url("chrome://editor/skin/btn2/smiley.gif");
+  -moz-image-region: rect(321px 22px 338px 0px);
 }
 
 #smileButtonMenu:hover {
-  list-style-image: url("chrome://editor/skin/btn2/smiley-hov.gif");
+  -moz-image-region: rect(321px 44px 338px 22px);
 }
 
-#smileButtonMenu:hover:active,
 #smileButtonMenu[open="true"] {
-  list-style-image: url("chrome://editor/skin/btn2/smiley-act.gif");
+  -moz-image-region: rect(321px 66px 338px 44px) !important;
 }
 
-#smileButtonMenu[disabled="true"],
-#smileButtonMenu[disabled="true"]:hover,
-#smileButtonMenu[disabled="true"]:hover:active  {
-  list-style-image: url("chrome://editor/skin/btn2/smiley-dis.gif");
+#smileButtonMenu[disabled="true"] {
+  -moz-image-region: rect(321px 88px 338px 66px) !important;
 }
+
+/* ::::: menuitem icons ::::: */
+
+/* ..... align menu ..... */
+
+#AlignPopup > menuitem {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
+}
+
+#AlignLeftItem {
+  -moz-image-region: rect(17px 80px 33px 64px);
+}
+
+#AlignLeftItem:hover {
+  -moz-image-region: rect(17px 96px 33px 80px);
+}
+
+#AlignCenterItem {
+  -moz-image-region: rect(17px 16px 33px 0px);
+}
+
+#AlignCenterItem:hover {
+  -moz-image-region: rect(17px 32px 33px 16px);
+}
+
+#AlignRightItem {
+  -moz-image-region: rect(33px 16px 49px 0px);
+}
+
+#AlignRightItem:hover {
+  -moz-image-region: rect(33px 32px 49px 0px);
+}
+
+#AlignJustifyItem {
+  -moz-image-region: rect(17px 48px 33px 32px);
+}
+
+#AlignJustifyItem:hover {
+  -moz-image-region: rect(17px 64px 33px 48px);
+}
+
+/* ..... insert menu ..... */
+
+#InsertPopup > menuitem {
+  list-style-image: url("chrome://editor/skin/icons/btn2.gif");
+}
+
+#InsertLinkItem {
+  -moz-image-region: rect(185px 16px 201px 0px);
+}
+
+#InsertLinkItem:hover {
+  -moz-image-region: rect(185px 32px 201px 16px);
+}
+
+#InsertAnchorItem {
+  -moz-image-region: rect(169px 16px 185px 0px);
+}
+
+#InsertAnchorItem:hover {
+  -moz-image-region: rect(169px 32px 185px 16px);
+}
+
+#InsertImageItem {
+  -moz-image-region: rect(169px 80px 185px 64px);
+}
+
+#InsertImageItem:hover {
+  -moz-image-region: rect(169px 96px 185px 80px);
+}
+
+#InsertHRuleItem {
+  -moz-image-region: rect(169px 48px 185px 32px);
+}
+
+#InsertHRuleItem:hover {
+  -moz-image-region: rect(169px 64px 185px 48px);
+}
+
+#InsertTableItem {
+  -moz-image-region: rect(185px 48px 201px 32px);
+}
+
+#InsertTableItem:hover {
+  -moz-image-region: rect(185px 64px 201px 48px);
+}
+
+/* ..... smiley menu ..... */
 
 .insert-smile > .menu-iconic-left {
-  list-style-image:url("chrome://editor/skin/icons/smiley/smile_n.gif");
+  list-style-image: url("chrome://editor/content/images/smile_n.gif");
 }
 
 .insert-tongue > .menu-iconic-left {
-  list-style-image:url("chrome://editor/skin/icons/smiley/tongue_n.gif");
+  list-style-image: url("chrome://editor/content/images/tongue_n.gif");
 }
 
 .insert-frown > .menu-iconic-left {
-  list-style-image:url("chrome://editor/skin/icons/smiley/frown_n.gif"); 
+  list-style-image: url("chrome://editor/content/images/frown_n.gif"); 
 }
 
 .insert-wink > .menu-iconic-left {
-  list-style-image:url("chrome://editor/skin/icons/smiley/wink_n.gif");
+  list-style-image: url("chrome://editor/content/images/wink_n.gif");
 }
 
 .insert-laughing > .menu-iconic-left {
-  list-style-image:url("chrome://editor/skin/icons/smiley/laughing_n.gif"); 
+  list-style-image: url("chrome://editor/content/images/laughing_n.gif"); 
 }
 
 .insert-embarrassed > .menu-iconic-left {
-  list-style-image:url("chrome://editor/skin/icons/smiley/embarrassed_n.gif");
+  list-style-image: url("chrome://editor/content/images/embarrassed_n.gif");
 }
 
 .insert-undecided > .menu-iconic-left {
-  list-style-image:url(chrome://editor/skin/icons/smiley/undecided_n.gif); 
-}
-
-.smiley > .menu-iconic-left {
-  margin-right: 15px;
+  list-style-image: url("chrome://editor/content/images/undecided_n.gif"); 
 }
 
 /* ::::: fg/bg color picker ::::: */

@@ -1,0 +1,214 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
+
+/* ===== primaryToolbar.css =============================================
+  == Images for the Mail primary toolbar.
+  ======================================================================= */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: primary toolbar buttons ::::: */
+
+.toolbarbutton-1 {
+  list-style-image: url("chrome://messenger/skin/icons/btn1.gif");
+}
+
+#button-getmsg {
+  -moz-image-region: rect(105px 23px 126px 0px);
+}
+
+#button-getmsg[buttonover] {
+  -moz-image-region: rect(105px 46px 126px 23px);
+} 
+
+#button-getmsg[buttondown] {
+  -moz-image-region: rect(105px 69px 126px 46px);
+} 
+
+#button-getmsg[disabled] {
+  -moz-image-region: rect(105px 92px 126px 69px) !important;
+} 
+
+#button-newmsg {
+  -moz-image-region: rect(126px 23px 147px 0px);
+}
+
+#button-newmsg:hover {
+  -moz-image-region: rect(126px 46px 147px 23px);
+} 
+
+#button-newmsg:hover:active {
+  -moz-image-region: rect(126px 69px 147px 46px);
+} 
+
+#button-newmsg[disabled] {
+  -moz-image-region: rect(126px 92px 147px 69px) !important;
+} 
+
+#button-reply {
+  -moz-image-region: rect(168px 23px 189px 0px);
+}
+
+#button-reply:hover {
+  -moz-image-region: rect(168px 46px 189px 23px);
+} 
+
+#button-reply:hover:active {
+  -moz-image-region: rect(168px 69px 189px 46px);
+} 
+
+#button-reply[disabled] {
+  -moz-image-region: rect(168px 92px 189px 69px) !important;
+} 
+
+#button-replyall {
+  -moz-image-region: rect(189px 23px 210px 0px);
+}
+
+#button-replyall:hover {
+  -moz-image-region: rect(189px 46px 210px 23px);
+} 
+
+#button-replyall:hover:active {
+  -moz-image-region: rect(189px 69px 210px 46px);
+} 
+
+#button-replyall[disabled] {
+  -moz-image-region: rect(189px 92px 210px 69px) !important;
+} 
+
+#button-forward {
+  -moz-image-region: rect(84px 23px 105px 0px);
+}
+
+#button-forward:hover {
+  -moz-image-region: rect(84px 46px 105px 23px);
+} 
+
+#button-forward:hover:active {
+  -moz-image-region: rect(84px 69px 105px 46px);
+} 
+
+#button-forward[disabled] {
+  -moz-image-region: rect(84px 92px 105px 69px) !important;
+} 
+
+#button-file {
+  -moz-image-region: rect(63px 23px 84px 0px);
+}
+
+#button-file:hover {
+  -moz-image-region: rect(63px 46px 84px 23px);
+} 
+
+#button-file:hover:active,
+#button-file[open] {
+  -moz-image-region: rect(63px 69px 84px 46px);
+} 
+
+#button-file[disabled] {
+  -moz-image-region: rect(63px 92px 84px 69px) !important;
+} 
+
+#button-next {
+  -moz-image-region: rect(147px 23px 168px 0px);
+}
+
+#button-next:hover {
+  -moz-image-region: rect(147px 46px 168px 23px);
+} 
+
+#button-next:hover:active {
+  -moz-image-region: rect(147px 69px 168px 46px);
+} 
+
+#button-next[disabled] {
+  -moz-image-region: rect(147px 92px 168px 69px) !important;
+} 
+
+#button-delete {
+  -moz-image-region: rect(210px 23px 231px 0px);
+}
+
+#button-delete:hover {
+  -moz-image-region: rect(210px 46px 231px 23px);
+} 
+
+#button-delete:hover:active {
+  -moz-image-region: rect(210px 69px 231px 46px);
+}
+
+#button-delete[disabled] {
+  -moz-image-region: rect(210px 92px 231px 69px) !important;
+} 
+
+#button-mark {
+  -moz-image-region: rect(336px 23px 356px 0);
+}
+
+#button-mark[buttonover] {
+  -moz-image-region: rect(336px 46px 356px 23px);
+} 
+
+#button-mark[buttondown] {
+  -moz-image-region: rect(336px 69px 356px 46px);
+} 
+
+#button-mark[disabled] {
+  -moz-image-region: rect(336px 92px 356px 69px) !important;
+} 
+
+#button-print {
+  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
+  -moz-image-region: rect(0px 23px 21px 0px);
+}
+
+#button-print[buttonover] {
+  -moz-image-region: rect(0px 46px 21px 23px);
+}
+
+#button-print[buttondown] {
+  -moz-image-region: rect(0px 69px 21px 46px);
+}
+
+#button-print[disabled] {
+  -moz-image-region: rect(0px 92px 21px 69px) !important;
+}
+
+#button-stop {
+  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
+  -moz-image-region: rect(21px 22px 41px 0px);
+}
+
+#button-stop:hover {
+  -moz-image-region: rect(21px 44px 41px 22px);
+} 
+
+#button-stop:hover:active {
+  -moz-image-region: rect(21px 66px 41px 44px);
+}
+
+#button-stop[disabled] {
+  -moz-image-region: rect(21px 88px 41px 66px) !important;
+}
+

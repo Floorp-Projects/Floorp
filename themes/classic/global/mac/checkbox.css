@@ -1,78 +1,87 @@
+/*
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is Mozilla Communicator client code, released
+ * March 31, 1998.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1998-1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s):
+ *
+ */
+
+/* ===== checkbox.css ===================================================
+  == Styles used by the XUL checkbox element.
+  ======================================================================= */
+
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* stylesheet for XUL <checkbox> element */
+/* ::::: checkbox ::::: */
 
-/* default checkbox for dialogs */
+checkbox {
+  -moz-user-focus: ignore;
+  -moz-box-align: center;
+  margin: 2px 4px;
+  padding: 1px 2px 1px 4px;
+}
 
-/* outer checkbox frame */
-  checkbox 
-    {
-      margin: 3px 5px 3px 5px;
-      -moz-user-focus: ignore;
-    }
+.checkbox-label-box {
+  margin-left: 2px;
+  padding: 1px 2px;
+}
 
+.checkbox-icon {
+  margin-right: 2px;
+}
 
+.checkbox-label {
+  margin: 0 !important;
+}
 
-/* checkmark outer frame */
-  checkbox > .internal-box > .checkmark-box 
-    {
-      margin-right: 2px;
-    }
-    
-  checkbox > .internal-box > .checkbox-label
-    {
-    vertical-align: center !important;
-    }
+/* ..... disabled state ..... */
 
-  checkbox[disabled="true"] > .internal-box > .checkmark-box,
-  checkbox[disabled="true"]:hover > .internal-box > .checkmark-box 
-    {
-    }
-    
-/* checkmark inner frame */
-  checkbox > .internal-box > .checkmark-box > .checkbox-check 
-    {
-      list-style-image: url(chrome://global/skin/check-cb-uncheck.gif);
-    }
+checkbox[disabled="true"] {
+  color: GrayText !important;
+}
+
+/* ::::: checkmark image ::::: */
+
+.checkbox-check {
+  width: 14px;
+  height: 12px;
+  background: url("chrome://global/skin/checkbox/cbox.gif") no-repeat;
+}
   
-  checkbox[checked="true"] > .internal-box > .checkmark-box > .checkbox-check 
-    {
-      list-style-image: url(chrome://global/skin/check-cb-check.gif);
-    }
-    
-  checkbox[checked="true"][disabled="true"] > .internal-box > .checkmark-box > .checkbox-check
-    {
-      list-style-image: url(chrome://global/skin/check-cb-check-disable.gif);
-    }  
+checkbox:hover:active > .checkbox-check {
+  background-image: url("chrome://global/skin/checkbox/cbox-act.gif");
+}
 
-  checkbox:hover:active > .internal-box > .checkmark-box > .checkbox-check 
-    {
-      list-style-image: url(chrome://global/skin/check-cb-uncheck-active.gif);  
-    }
-  
-  checkbox[disabled="true"] > .internal-box > .checkmark-box > .checkbox-check
-    {
-  	  list-style-image: url(chrome://global/skin/check-cb-uncheck-disable.gif);  
-    }
+checkbox[disabled="true"] > .checkbox-check {
+  background-image: url("chrome://global/skin/checkbox/cbox-dis.gif") !important;
+}
 
-  checkbox[checked="true"]:hover:active > .internal-box > .checkmark-box > .checkbox-check 
-    {
-      list-style-image: url(chrome://global/skin/check-cb-check-active.gif);
-    }
+/* ..... checked state ..... */
 
-  checkbox > .internal-box > .checkbox-icon 
-    {
-      list-style-image: inherit;
-    }
-    
-/* checkmark label/icon frame */
-  checkbox > .internal-box > html
-    {
-      margin: 0px 0px 2px 0px !important;
-      padding: 2px 0px 0px 0px;   /* 7pt: 2px 0px 0px 1px */
-    }
+checkbox[checked="true"] > .checkbox-check {
+  background-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
 
-  checkbox[disabled="true"][value] > .internal-box > html 
-    {
-      color: #777777;
-    }
+checkbox[checked="true"]:hover:active > .checkbox-check {
+  background-image: url("chrome://global/skin/checkbox/cbox-check-act.gif");
+}
+
+checkbox[checked="true"][disabled="true"] > .checkbox-check {
+  background-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif") !important
+}
+

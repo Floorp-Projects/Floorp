@@ -27,8 +27,6 @@ Contributors:
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-addressing.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -44,7 +42,8 @@ Contributors:
         prefstring="mail.identity.%identitykey%.overrideGlobal_Pref"/>
   <label hidden="true" wsm_persist="true" id="overrideGlobalPref" value=""/>
   <label hidden="true" wsm_persist="true" id="directoryServer" value=""/>
-  <hbox class="box-smallheader" title="&addressing.label;"/>
+
+  <dialogheader title="&addressing.label;"/>
   
   <separator class="thin"/>
   <vbox flex="1">

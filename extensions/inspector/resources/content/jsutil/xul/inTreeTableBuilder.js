@@ -358,7 +358,7 @@ inTreeTableBuilder.prototype =
     var col = this.mLastDragCol;
     var lastWhere = this.mLastDragColWhere;
     if (col)
-      col.setAttribute("dnd-insert-"+lastWhere, "false");
+      col.removeAttribute("dnd-insert-"+lastWhere);
 
     if (aWhere != "before" && aWhere != "after") {
       this.mLastDragCol = null;

@@ -47,67 +47,68 @@
   background-image: url("chrome://communicator/skin/help/mast-help.gif");
 }
 
+.toolbar-primary-holder {
+  -moz-box-align: start;
+  background-image: url("chrome://communicator/skin/toolbar/prtb-bg-noline.gif");
+}
+
+/* Hides text below the above buttons */
+.toolbarbutton-1 > stack > .toolbarbutton-menubutton-button 
+  > .toolbarbutton-text,
+.toolbarbutton-1 > .toolbarbutton-text {
+  display: none;
+}
+
+#helpBackButton > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker,
+#helpForwardButton > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker
+{
+  margin: 30px 0px 0px 34px;
+}
+
 /* ::::: primary toolbar buttons ::::: */
 
-.button-toolbar-1 {
-  margin: 0px;
-}
-
-.menubutton-dual {
-  -moz-binding: url("chrome://communicator/skin/widgetBindings.xml#menubutton-dual-1");
-}
-.toolbar-primary-mid-top {
-  background-image: url("chrome://navigator/skin/toolbar/navbar-mid-top.gif");
+.toolbarbutton-1 {
+  list-style-image: url("chrome://navigator/skin/icons/btn1.gif");
+  min-width: 0px;
 }
 
 #helpBackButton {
-	list-style-image: url("chrome://navigator/skin/btn1/back.gif");
+  -moz-image-region: rect(0, 41px, 38px, 0);
 }
 
-#helpBackButton[disabled="true"],
-#helpBackButton[disabled="true"]:hover,
-#helpBackButton[disabled="true"]:hover:active
-{
-	list-style-image: url("chrome://navigator/skin/btn1/back-dis.gif");
+#helpBackButton[buttonover="true"] {
+  -moz-image-region: rect(0, 83px, 38px, 42px);
 }
 
-#helpBackButton:hover {
-  list-style-image: url("chrome://navigator/skin/btn1/back-hov.gif");
+#helpBackButton[buttondown="true"] {
+  -moz-image-region: rect(0, 125px, 38px, 84px);
 }
 
-#helpBackButton:hover:active {
-  list-style-image: url("chrome://navigator/skin/btn1/back-act.gif");
+#helpBackButton[disabled="true"] {
+  -moz-image-region: rect(0, 167px, 38px, 126px) !important;
 }
 
 #helpForwardButton {
-	list-style-image: url("chrome://navigator/skin/btn1/forward.gif");
+  -moz-image-region: rect(39px, 41px, 77px, 0);
 }
 
-#helpForwardButton[disabled="true"],
-#helpForwardButton[disabled="true"]:hover,
-#helpForwardButton[disabled="true"]:hover:active
-{
-	list-style-image: url("chrome://navigator/skin/btn1/forward-dis.gif");
-}	
-
-#helpForwardButton:hover {
-  list-style-image: url("chrome://navigator/skin/btn1/forward-hov.gif");
+#helpForwardButton[buttonover="true"] {
+  -moz-image-region: rect(39px, 83px, 77px, 42px);
 }
 
-#helpForwardButton:hover:active {
-  list-style-image: url("chrome://navigator/skin/btn1/forward-act.gif");
+#helpForwardButton[buttondown="true"] {
+  -moz-image-region: rect(39px, 125px, 77px, 84px);
+}
+
+#helpForwardButton[disabled="true"] {
+  -moz-image-region: rect(39px, 167px, 77px, 126px) !important;
 }
 
 #helpHomeButton {
 	list-style-image: url("chrome://communicator/skin/help/home.gif");
 }
-
-#helpHomeButton[disabled="true"],
-#helpHomeButton[disabled="true"]:hover,
-#helpHomeButton[disabled="true"]:hover:active
-{
-	list-style-image: url("chrome://communicator/skin/help/home-dis.gif");
-}	
 
 #helpHomeButton:hover {
   list-style-image: url("chrome://communicator/skin/help/home-hov.gif");
@@ -117,25 +118,23 @@
   list-style-image: url("chrome://communicator/skin/help/home-act.gif");
 }
 
-#print {
-  list-style-image: url("chrome://communicator/skin/btn1/print.gif");
-}
+#helpHomeButton[disabled="true"] {
+	list-style-image: url("chrome://communicator/skin/help/home-dis.gif") !important;
+}	
 
-#print[disabled="true"],
-#print[disabled="true"]:hover,
-#print[disabled="true"]:hover:active {
-  list-style-image: url("chrome://communicator/skin/btn1/print-dis.gif");
+#print {
+  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
+  -moz-image-region: rect(0, 49px, 33px, 0);
 }
 
 #print:hover {
-  list-style-image: url("chrome://communicator/skin/btn1/print-hov.gif");
+  -moz-image-region: rect(0, 99px, 33px, 50px);
 }
 
 #print:hover:active {
-  list-style-image: url("chrome://communicator/skin/btn1/print-act.gif");
+  -moz-image-region: rect(0, 149px, 33px, 100px);
 }
 
-#help-content
-{
-  border: 1px inset ThreeDHighlight !important;
+#print[disabled="true"] {
+  -moz-image-region: rect(0, 199px, 33px, 150px) !important;
 }

@@ -1,4 +1,3 @@
-/*  */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -22,7 +21,6 @@
  * Contributor(s):
  *   Joe Hewitt (hewitt@netscape.com)
  *
- *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
@@ -41,80 +39,69 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-#helpBackButton 
-  {
-    list-style-image      : url("chrome://navigator/skin/back.gif");
-  }
-
-#helpBackButton[disabled="true"]
-  {
-    list-style-image      : url("chrome://navigator/skin/back-disabled.gif") !important;
-  }
-
-#helpBackButton[buttonover="true"]
-  {
-    list-style-image      : url("chrome://navigator/skin/back-hover.gif");
-  }
-
-#helpBackButton[buttondown="true"]
-  {
-    list-style-image      : url("chrome://navigator/skin/back-hover-active.gif");
-  }
-
-#helpForwardButton 
-  {
-    list-style-image      : url("chrome://navigator/skin/forward.gif");
-  }
-
-#helpForwardButton[disabled="true"]
-  {
-    list-style-image      : url("chrome://navigator/skin/forward-disabled.gif") !important;
-  }
-
-#helpForwardButton[buttonover="true"]
-  {
-    list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
-  }
-
-#helpForwardButton[buttondown="true"]
-  {
-    list-style-image      : url("chrome://navigator/skin/forward-hover-active.gif");
-  }
-
 /* ::::: primary toolbar buttons ::::: */
 
+.toolbarbutton-1 {
+  list-style-image: url("chrome://navigator/skin/icons/btn1.gif");
+}
+
+#helpBackButton {
+  -moz-image-region: rect(0px 19px 20px 0px);
+}
+
+#helpBackButton[buttonover="true"] {
+  -moz-image-region: rect(0px 38px 20px 19px);
+}
+
+#helpBackButton[buttondown="true"] {
+  -moz-image-region: rect(0px 57px 20px 38px);
+}
+
+#helpBackButton[disabled="true"] {
+  -moz-image-region: rect(0px 76px 20px 57px) !important;
+}
+
+#helpForwardButton {
+  -moz-image-region: rect(20px 19px 40px 0px);
+}
+
+#helpForwardButton[buttonover="true"] {
+  -moz-image-region: rect(20px 38px 40px 19px);
+}
+
+#helpForwardButton[buttondown="true"] {
+  -moz-image-region: rect(20px 57px 40px 38px);
+}
+
+#helpForwardButton[disabled="true"] {
+  -moz-image-region: rect(20px 76px 40px 57px) !important;
+}
+
 #print {
-  list-style-image: url("chrome://global/skin/print.gif");
+  list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
+  -moz-image-region: rect(0px 23px 21px 0px);
+}
+
+#print[buttonover="true"] {
+  -moz-image-region: rect(0px 46px 21px 23px);
+}
+
+#print[buttondown="true"] {
+  -moz-image-region: rect(0px 69px 21px 46px);
 }
 
 #print[disabled="true"] {
-  list-style-image: url("chrome://global/skin/print-disabled.gif") !important;
+  -moz-image-region: rect(0px 92px 21px 69px) !important;
 }
 
-#print:hover {
-  list-style-image: url("chrome://global/skin/print-hover.gif");
-}
-
-#print:hover:active {
-  list-style-image: url("chrome://global/skin/print-hover-active.gif");
-}
-
-#helpHomeButton
-{
-      list-style-image    : url("chrome://communicator/skin/bookmarks/home.gif");
+#helpHomeButton {
+  list-style-image: url("chrome://communicator/skin/bookmarks/home.gif");
 }
     
-#helpHomeButton:hover
-{
-      list-style-image    : url("chrome://communicator/skin/bookmarks/home-hover.gif");
+#helpHomeButton:hover {
+  list-style-image: url("chrome://communicator/skin/bookmarks/home-hover.gif");
 }
     
-#helpHomeButton:hover:active
-{
-      list-style-image    : url("chrome://communicator/skin/bookmarks/home-active.gif");
-}
-
-#help-content
-{
-  border: 1px inset ThreeDHighlight !important;
+#helpHomeButton:hover:active {
+  list-style-image: url("chrome://communicator/skin/bookmarks/home-active.gif");
 }

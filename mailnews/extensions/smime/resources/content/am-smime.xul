@@ -24,7 +24,6 @@ Contributors:
 -->
 
 <?xml-stylesheet href="chrome://messenger/skin/accountManage.css" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/am-smime.dtd">
 
@@ -38,7 +37,7 @@ Contributors:
   <script type="application/x-javascript" src="chrome://messenger/content/AccountManager.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/am-smime.js"/>
     
-  <hbox class="box-smallheader" title="&securityTitle.label;" />
+  <dialogheader title="&securityTitle.label;" />
 
   <groupbox orient="vertical" id="encryption.titlebox">
     <caption label="&encryptionGroupTitle.label;"/>

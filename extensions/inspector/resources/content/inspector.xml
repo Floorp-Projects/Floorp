@@ -148,16 +148,23 @@
         <body><![CDATA[
           // set attribute on command in our document
           var cmd = document.getElementById(aCommand);
-          if (cmd) 
-            cmd.setAttribute(aAttribute, aValue);
-                    
+          if (cmd) {
+            if (aValue == false || aValue == "false")
+              cmd.removeAttribute(aAttribute);
+            else
+              cmd.setAttribute(aAttribute, aValue);
+          }
+          
           // set attribute on command in each viewer document
           var panels = this.panels;
           for (var i = 0; i < panels.length; ++i) {
             var doc = panels[i].viewerDocument;
             cmd = doc.getElementById(aCommand);
             if (cmd)
-              cmd.setAttribute(aAttribute, aValue);
+              if (aValue == false || aValue == "false")
+                cmd.removeAttribute(aAttribute);
+              else
+                cmd.setAttribute(aAttribute, aValue);
           }
         ]]></body>
       </method>
@@ -174,8 +181,11 @@
           
           var els = cmds.getElementsByAttribute("viewer", aEntryUid);
           for (var i = 0; i < els.length; i++) {
-            if (els[i].getAttribute("exclusive") != "false")
-              els[i].setAttribute(aAttr, aValue);
+            if (els[i].hasAttribute("exclusive"))
+              if (aValue == false || aValue == "false")
+                els[i].removeAttribute(aAttr);
+              else
+                els[i].setAttribute(aAttr, aValue);
           }
         ]]></body>
       </method>
@@ -564,7 +574,10 @@
         <body><![CDATA[
           var mpp = this.mListElPopup;
           
-          this.mListEl.setAttribute("disabled", aEntries.length <= 0);
+          if (aEntries.length <= 0)
+            this.mListEl.setAttribute("disabled", true);
+          else
+            this.mListEl.removeAttribute("disabled");
       
           // empty the list
           while (mpp.childNodes.length)
@@ -654,7 +667,7 @@
           var ppId = "ppViewerContext-" + uid;
           var pp = document.getElementById(ppId);
           if (pp) {
-            this.mMenuEl.setAttribute("disabled", "false");
+            this.mMenuEl.removeAttribute("disabled");
             var parent = pp.parentNode;
             parent.removeChild(pp);
             this.mMenuEl.appendChild(pp);

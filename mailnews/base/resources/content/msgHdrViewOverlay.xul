@@ -28,7 +28,6 @@ Rights Reserved.
 
 <script src="chrome://messenger/content/msgHdrViewAddresses.js"/>
 <script src="chrome://messenger/content/msgHdrViewOverlay.js"/>
-<script src="chrome://messenger/content/mime.js"/>
 
 <stringbundleset id="stringbundleset">
   <stringbundle id="bundle_messenger" src="chrome://messenger/locale/messenger.properties"/>
@@ -58,35 +57,37 @@ Rights Reserved.
     <row flex="1"/>
   </rows>
   <columns>
-    <column class="collapsedToggleHdrBox" pack="center">
-      <vbox pack="center" flex="1">
+    <column class="collapsedToggleHdrBox">
+      <hbox align="start">
         <image id="toggleHeaderView" class="collapsedHeaderViewButton"
           onclick="ToggleHeaderView();"/>
-      </vbox>
+      </hbox>
     </column>
       
-    <column id="collapsedsubjectBox" collapsed="true" crop="right" flex="1">
-      <hbox>  
+    <column id="collapsedsubjectBox" collapsed="true" flex="1">
+      <hbox align="start">
         <label class="collapsedHeaderDisplayName" value="&subjectField.label;"/>
         <label id="collapsedsubjectValue" class="collapsedHeaderValue" crop="right" flex="1"/>
       </hbox>
 	</column>
 
     <column id="collapsedfromBox" collapsed="true">
-      <hbox>
+      <hbox align="start">
         <label class="collapsedHeaderDisplayName" value="&fromField.label;"/>          
         <mail-emailaddress id="collapsedfromValue" flex="1"/>
       </hbox>
     </column>
 
     <column id = "collapseddateBox" collapsed="true">
-      <hbox style="text-align: right;">
+      <hbox align="start">
         <label id="collapseddateValue" class="collapsedHeaderValue"/>
       </hbox>
     </column>
 
-    <column id="collapsedAttachmentBox" hide="true" >
+    <column id="collapsedAttachmentBox" collapsed="true">
+      <hbox align="start">
       <image id="collapsedAttachment" class="collapsedAttachmentButton" onclick="ToggleHeaderView();" />  
+      </hbox>
     </column>
   </columns>
 </grid>
@@ -111,23 +112,19 @@ Rights Reserved.
    </vbox>
 
    <vbox id="editMessageBox" class="header-part1" collapsed="true">
-     <spacer class="buttonSpacer"/> 
      <button id="editMessageButton" label="&editMessage.label;" oncommand="MsgComposeDraftMessage()"/>
-     <spacer class="buttonSpacer"/> 
    </vbox> 
 
-   <hbox id="expandedAttachmentBox" class="header-part1" collapsed="true">
-     <vbox id="attachmentGrouping">
-       <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
-     </vbox>
-     <tree id="attachmentTree" class="inset" flex="2" onclick="attachmentTreeClick(event);" context="attachmentTreeContext">
+   <vbox id="expandedAttachmentBox" class="header-part1" collapsed="true">
+     <label id="attachmentText" value="&attachmentsTree.label;" crop="right"/>
+     <tree id="attachmentTree" class="inset" flex="2"
+           onclick="attachmentTreeClick(event);" context="attachmentTreeContext">
        <treecolgroup>
          <treecol flex="1"/>
        </treecolgroup>
-       <treechildren id="attachmentsBody" flex="1">
-       </treechildren>
+       <treechildren id="attachmentsBody" flex="1"/>
      </tree>
-   </hbox>
+   </vbox>
 
   </hbox>
  </hbox>

@@ -1,232 +1,104 @@
 classic.jar:
-    skin/classic/global/contents.rdf
-    skin/classic/global/autocomplete.css
-    skin/classic/global/browser.css
-    skin/classic/global/button.css
-    skin/classic/global/checkbox.css
-    skin/classic/global/colorpicker.css
-    skin/classic/global/console.css
-    skin/classic/global/dialog.css
-    skin/classic/global/filepicker.css
-    skin/classic/global/formatting.css
-    skin/classic/global/global.css
-    skin/classic/global/groupbox.css
-    skin/classic/global/menu.css
-    skin/classic/global/menulist.css
-    skin/classic/global/popup.css
-    skin/classic/global/progressmeter.css
-    skin/classic/global/radio.css
-    skin/classic/global/scrollbars.css
-    skin/classic/global/scrollbox.css
-    skin/classic/global/splitter.css
-    skin/classic/global/tabbox.css
-    skin/classic/global/textbox.css
-    skin/classic/global/toolbar.css
-    skin/classic/global/toolbarbutton.css
-    skin/classic/global/tree.css
-    skin/classic/global/outliner.css
-    skin/classic/global/wizard.css
-    skin/classic/global/wizardOverlay.css
-    skin/classic/global/buttonBindings.xml
-    skin/classic/global/classicBindings.xml
-    skin/classic/global/menulistBindings.xml
-    skin/classic/global/tasksOverlay.css
-    skin/classic/global/arrow-med-up.gif
-    skin/classic/global/arrow-med-up-hover.gif
-    skin/classic/global/arrow-med-down.gif
-    skin/classic/global/arrow-med-down-hover.gif
-    skin/classic/global/arrow-dn.gif
-    skin/classic/global/button-def-disabled-left.gif
-    skin/classic/global/button-def-disabled-middle.gif
-    skin/classic/global/button-def-disabled-right.gif
-    skin/classic/global/button-def-normal-left.gif
-    skin/classic/global/button-def-normal-middle.gif
-    skin/classic/global/button-def-normal-right.gif
-    skin/classic/global/button-def-pressed-left.gif
-    skin/classic/global/button-def-pressed-middle.gif
-    skin/classic/global/button-def-pressed-right.gif
-    skin/classic/global/button-disabled-left.gif
-    skin/classic/global/button-disabled-middle.gif
-    skin/classic/global/button-disabled-right.gif
-    skin/classic/global/button-normal-left.gif
-    skin/classic/global/button-normal-middle.gif
-    skin/classic/global/button-normal-right.gif
-    skin/classic/global/button-pressed-left.gif
-    skin/classic/global/button-pressed-middle.gif
-    skin/classic/global/button-pressed-right.gif
-    skin/classic/global/button-left-btm.gif
-    skin/classic/global/button-left-mid.gif
-    skin/classic/global/button-left-top.gif
-    skin/classic/global/button-mid-btm.gif
-    skin/classic/global/button-mid-mid.gif
-    skin/classic/global/button-mid-top.gif
-    skin/classic/global/button-right-btm.gif
-    skin/classic/global/button-right-mid.gif
-    skin/classic/global/button-right-top.gif
-    skin/classic/global/button-active-left-btm.gif
-    skin/classic/global/button-active-left-mid.gif
-    skin/classic/global/button-active-left-top.gif
-    skin/classic/global/button-active-mid-btm.gif
-    skin/classic/global/button-active-mid-mid.gif
-    skin/classic/global/button-active-mid-top.gif
-    skin/classic/global/button-active-right-btm.gif
-    skin/classic/global/button-active-right-mid.gif
-    skin/classic/global/button-active-right-top.gif
-    skin/classic/global/button-dis-left-btm.gif
-    skin/classic/global/button-dis-left-mid.gif
-    skin/classic/global/button-dis-left-top.gif
-    skin/classic/global/button-dis-mid-btm.gif
-    skin/classic/global/button-dis-mid-mid.gif
-    skin/classic/global/button-dis-mid-top.gif
-    skin/classic/global/button-dis-right-btm.gif
-    skin/classic/global/button-dis-right-mid.gif
-    skin/classic/global/button-dis-right-top.gif
-    skin/classic/global/button-def-left-btm.gif
-    skin/classic/global/button-def-left-mid.gif
-    skin/classic/global/button-def-left-top.gif
-    skin/classic/global/button-def-mid-btm.gif
-    skin/classic/global/button-def-mid-mid.gif
-    skin/classic/global/button-def-mid-top.gif
-    skin/classic/global/button-def-right-btm.gif
-    skin/classic/global/button-def-right-mid.gif
-    skin/classic/global/button-def-right-top.gif
-    skin/classic/global/button-def-active-left-btm.gif
-    skin/classic/global/button-def-active-left-mid.gif
-    skin/classic/global/button-def-active-left-top.gif
-    skin/classic/global/button-def-active-mid-btm.gif
-    skin/classic/global/button-def-active-mid-mid.gif
-    skin/classic/global/button-def-active-mid-top.gif
-    skin/classic/global/button-def-active-right-btm.gif
-    skin/classic/global/button-def-active-right-mid.gif
-    skin/classic/global/button-def-active-right-top.gif
-    skin/classic/global/button-def-dis-left-btm.gif
-    skin/classic/global/button-def-dis-left-mid.gif
-    skin/classic/global/button-def-dis-left-top.gif
-    skin/classic/global/button-def-dis-mid-btm.gif
-    skin/classic/global/button-def-dis-mid-mid.gif
-    skin/classic/global/button-def-dis-mid-top.gif
-    skin/classic/global/button-def-dis-right-btm.gif
-    skin/classic/global/button-def-dis-right-mid.gif
-    skin/classic/global/button-def-dis-right-top.gif
-    skin/classic/global/check-cb-check-active.gif
-    skin/classic/global/check-cb-check-disable.gif
-    skin/classic/global/check-cb-check.gif
-    skin/classic/global/check-cb-uncheck-active.gif
-    skin/classic/global/check-cb-uncheck-disable.gif
-    skin/classic/global/check-cb-uncheck.gif
-    skin/classic/global/check-radio-check-active.gif
-    skin/classic/global/check-radio-check-disable.gif
-    skin/classic/global/check-radio-check.gif
-    skin/classic/global/check-radio-uncheck-active.gif
-    skin/classic/global/check-radio-uncheck-disable.gif
-    skin/classic/global/check-radio-uncheck.gif
-    skin/classic/global/flat-left-arrow.gif 
-    skin/classic/global/flat-right-arrow.gif 
-    skin/classic/global/flat-left-arrow-disabled.gif 
-    skin/classic/global/flat-right-arrow-disabled.gif 
-    skin/classic/global/menu-arrow-disabled.gif
-    skin/classic/global/menu-arrow-hover.gif
-    skin/classic/global/menu-arrow.gif
-    skin/classic/global/menu-check-disabled.gif
-    skin/classic/global/menu-check-hover.gif
-    skin/classic/global/menu-check.gif
-    skin/classic/global/menulist-scroll-active.gif
-    skin/classic/global/menulist-scroll-disabled.gif
-    skin/classic/global/menulist-select-dot-active.gif
-    skin/classic/global/menulist-select-dot.gif
-    skin/classic/global/menulist-active-right-btm.gif
-    skin/classic/global/menulist-active-right-mid.gif
-    skin/classic/global/menulist-active-right-top.gif
-    skin/classic/global/menulist-arrow.gif
-    skin/classic/global/menulist-compact-arrow.gif
-    skin/classic/global/menulist-dis-arrow.gif
-    skin/classic/global/menulist-dis-left-btm.gif
-    skin/classic/global/menulist-dis-left-mid.gif
-    skin/classic/global/menulist-dis-left-top.gif
-    skin/classic/global/menulist-dis-mid-btm.gif
-    skin/classic/global/menulist-dis-mid-mid.gif
-    skin/classic/global/menulist-dis-mid-top.gif
-    skin/classic/global/menulist-dis-right-btm.gif
-    skin/classic/global/menulist-dis-right-mid.gif
-    skin/classic/global/menulist-dis-right-scalebit.gif
-    skin/classic/global/menulist-dis-right-top.gif
-    skin/classic/global/menulist-left-btm.gif
-    skin/classic/global/menulist-left-mid.gif
-    skin/classic/global/menulist-left-top.gif
-    skin/classic/global/menulist-mid-btm.gif
-    skin/classic/global/menulist-mid-mid.gif
-    skin/classic/global/menulist-mid-top.gif
-    skin/classic/global/menulist-right-btm.gif
-    skin/classic/global/menulist-right-mid.gif
-    skin/classic/global/menulist-right-scalebit.gif
-    skin/classic/global/menulist-right-top.gif
-    skin/classic/global/menulist-active-arrow.gif
-    skin/classic/global/menulist-active-left-btm.gif
-    skin/classic/global/menulist-active-left-mid.gif
-    skin/classic/global/menulist-active-left-top.gif
-    skin/classic/global/menulist-active-mid-btm.gif
-    skin/classic/global/menulist-active-mid-mid.gif
-    skin/classic/global/menulist-active-mid-top.gif    
-    skin/classic/global/progressmeter-bar.gif
-    skin/classic/global/progressmeter-busy.gif
-    skin/classic/global/scroll-down-active.gif
-    skin/classic/global/scroll-down-disabled.gif
-    skin/classic/global/scroll-down.gif
-    skin/classic/global/scroll-left-active.gif
-    skin/classic/global/scroll-left-disabled.gif
-    skin/classic/global/scroll-left.gif
-    skin/classic/global/scroll-right-active.gif
-    skin/classic/global/scroll-right-disabled.gif
-    skin/classic/global/scroll-right.gif
-    skin/classic/global/scroll-thumb-horiz-active.png
-    skin/classic/global/scroll-thumb-horiz.png
-    skin/classic/global/scroll-thumb-vert-active.png
-    skin/classic/global/scroll-thumb-vert.png
-    skin/classic/global/scroll-up-active.gif
-    skin/classic/global/scroll-up-disabled.gif
-    skin/classic/global/scroll-up.gif
-    skin/classic/global/slider-bg-horiz.gif
-    skin/classic/global/slider-bg-vert.gif
-    skin/classic/global/tab-border-bot-left-cap.gif
-    skin/classic/global/tab-border-bot-right-cap.gif
-    skin/classic/global/tab-border-bot.gif
-    skin/classic/global/tab-border-top-left-cap.gif
-    skin/classic/global/tab-border-top-right-cap.gif
-    skin/classic/global/tab-border-top.gif
-    skin/classic/global/tab-select-left.gif
-    skin/classic/global/tab-select-middle.gif
-    skin/classic/global/tab-select-right.gif
-    skin/classic/global/tab-sm-bot-sel-left.gif
-    skin/classic/global/tab-sm-bot-sel-mid.gif
-    skin/classic/global/tab-sm-bot-sel-right.gif
-    skin/classic/global/tab-sm-bot-unsel-acti-left.gif
-    skin/classic/global/tab-sm-bot-unsel-acti-mid.gif
-    skin/classic/global/tab-sm-bot-unsel-acti-right.gif
-    skin/classic/global/tab-sm-bot-unsel-left.gif
-    skin/classic/global/tab-sm-bot-unsel-mid.gif
-    skin/classic/global/tab-sm-bot-unsel-right.gif
-    skin/classic/global/tab-unselect-active-left.gif
-    skin/classic/global/tab-unselect-active-middle.gif
-    skin/classic/global/tab-unselect-active-right.gif
-    skin/classic/global/tab-unselect-left.gif
-    skin/classic/global/tab-unselect-middle.gif
-    skin/classic/global/wizard-btn-lft.gif
-    skin/classic/global/wizard-btn-rit.gif
-    skin/classic/global/wizard-btn-lft-dis.gif
-    skin/classic/global/wizard-btn-rit-dis.gif
-    skin/classic/global/wizard-btn-lft-act.gif
-    skin/classic/global/wizard-btn-rit-act.gif
-    skin/classic/global/menulist-scroll.gif
-    skin/classic/global/tab-unselect-right.gif
-    skin/classic/global/ubhist-arrow.gif
-    skin/classic/global/message-icon.gif (::message-icon.gif)
-    skin/classic/global/error-icon.gif (::error-icon.gif)
-    skin/classic/global/alert-icon.gif (::alert-icon.gif)
-    skin/classic/global/question-icon.gif (::question-icon.gif)
-    skin/classic/global/twisty-open.gif
-    skin/classic/global/twisty-open-active.gif
-    skin/classic/global/twisty-open-selected.gif
-    skin/classic/global/twisty-closed.gif
-    skin/classic/global/twisty-closed-active.gif
-    skin/classic/global/twisty-closed-selected.gif
-    
+  skin/classic/global/button.css
+  skin/classic/global/console.css
+  skin/classic/global/browser.css
+  skin/classic/global/checkbox.css
+  skin/classic/global/colorpicker.css
+  skin/classic/global/autocomplete.css
+  skin/classic/global/contents.rdf
+  skin/classic/global/dialog.css
+  skin/classic/global/filepicker.css
+  skin/classic/global/formatting.css
+  skin/classic/global/global.css
+  skin/classic/global/globalBindings.xml
+  skin/classic/global/groupbox.css
+  skin/classic/global/linkTree.css
+  skin/classic/global/menu.css
+  skin/classic/global/menulist.css
+  skin/classic/global/outliner.css
+  skin/classic/global/popup.css
+  skin/classic/global/preview.gif
+  skin/classic/global/progressmeter.css
+  skin/classic/global/radio.css
+  skin/classic/global/scrollbars.css
+  skin/classic/global/scrollbox.css
+  skin/classic/global/spinbuttons.css
+  skin/classic/global/splitter.css
+  skin/classic/global/tabbox.css
+  skin/classic/global/textbox.css
+  skin/classic/global/toolbar.css
+  skin/classic/global/toolbarbutton.css
+  skin/classic/global/tree.css
+  skin/classic/global/wizard.css
+  skin/classic/global/wizardOverlay.css
+  skin/classic/global/icons/alert-exclam.gif                    (icons/alert-exclam.gif)
+  skin/classic/global/icons/alert-error.gif                     (icons/alert-error.gif)
+  skin/classic/global/icons/alert-message.gif                   (icons/alert-message.gif)
+  skin/classic/global/icons/alert-question.gif                  (icons/alert-question.gif)
+  skin/classic/global/checkbox/cbox-check-act.gif               (checkbox/cbox-check-act.gif)
+  skin/classic/global/checkbox/cbox-check-dis.gif               (checkbox/cbox-check-dis.gif)
+  skin/classic/global/checkbox/cbox-check.gif                   (checkbox/cbox-check.gif)
+  skin/classic/global/checkbox/cbox.gif                         (checkbox/cbox.gif)
+  skin/classic/global/checkbox/cbox-act.gif                     (checkbox/cbox-act.gif)
+  skin/classic/global/checkbox/cbox-dis.gif                     (checkbox/cbox-dis.gif)
+  skin/classic/global/radio/radio-check.gif                     (radio/radio-check.gif)
+  skin/classic/global/radio/radio-check-act.gif                 (radio/radio-check-act.gif)
+  skin/classic/global/radio/radio-check-dis.gif                 (radio/radio-check-dis.gif)
+  skin/classic/global/radio/radio.gif                           (radio/radio.gif)
+  skin/classic/global/radio/radio-act.gif                       (radio/radio-act.gif)
+  skin/classic/global/radio/radio-dis.gif                       (radio/radio-dis.gif)
+  skin/classic/global/menu/menu-arrow-hov.gif                   (menu/menu-arrow-hov.gif)
+  skin/classic/global/menu/menu-arrow-dis.gif                   (menu/menu-arrow-dis.gif)
+  skin/classic/global/menu/menu-arrow.gif                       (menu/menu-arrow.gif)
+  skin/classic/global/menu/menu-check.gif                       (menu/menu-check.gif)
+  skin/classic/global/menu/menu-check-dis.gif                   (menu/menu-check-dis.gif)
+  skin/classic/global/menu/menu-check-hov.gif                   (menu/menu-check-hov.gif)
+  skin/classic/global/menu/menu-radio.gif                       (menu/menu-radio.gif)
+  skin/classic/global/menu/menu-radio-hov.gif                   (menu/menu-radio-hov.gif)
+  skin/classic/global/menulist/menulist-arrow-act.gif           (menulist/menulist-arrow-act.gif)
+  skin/classic/global/menulist/menulist-arrow.gif               (menulist/menulist-arrow.gif)
+  skin/classic/global/menulist/menulist-arrow-dis.gif           (menulist/menulist-arrow-dis.gif)
+  skin/classic/global/progressmeter/progressmeter-busy.gif      (progressmeter/progressmeter-busy.gif)
+  skin/classic/global/progressmeter/progressmeter-bar.gif       (progressmeter/progressmeter-bar.gif)
+  skin/classic/global/scrollbar/slider-vrt.gif                  (scrollbar/slider-vrt.gif)
+  skin/classic/global/scrollbar/slider-hrz.gif                  (scrollbar/slider-hrz.gif)
+  skin/classic/global/scrollbar/thumb-hrz-act.png               (scrollbar/thumb-hrz-act.png)
+  skin/classic/global/scrollbar/thumb-vrt-act.png               (scrollbar/thumb-vrt-act.png)
+  skin/classic/global/scrollbar/btn-rit.gif                     (scrollbar/btn-rit.gif)
+  skin/classic/global/scrollbar/btn-up.gif                      (scrollbar/btn-up.gif)
+  skin/classic/global/scrollbar/btn-lft.gif                     (scrollbar/btn-lft.gif)
+  skin/classic/global/scrollbar/thumb-hrz.png                   (scrollbar/thumb-hrz.png)
+  skin/classic/global/scrollbar/thumb-vrt.png                   (scrollbar/thumb-vrt.png)
+  skin/classic/global/scrollbar/btn-dn.gif                      (scrollbar/btn-dn.gif)
+  skin/classic/global/tabbox/tab-unselect-active-left.gif       (tabbox/tab-unselect-active-left.gif)
+  skin/classic/global/tabbox/tab-border-bot-left-cap.gif        (tabbox/tab-border-bot-left-cap.gif)
+  skin/classic/global/tabbox/tab-border-bot-right-cap.gif       (tabbox/tab-border-bot-right-cap.gif)
+  skin/classic/global/tabbox/tab-border-top.gif                 (tabbox/tab-border-top.gif)
+  skin/classic/global/tabbox/tab-border-top-left-cap.gif        (tabbox/tab-border-top-left-cap.gif)
+  skin/classic/global/tabbox/tab-border-top-right-cap.gif       (tabbox/tab-border-top-right-cap.gif)
+  skin/classic/global/tabbox/tab-select-left.gif                (tabbox/tab-select-left.gif)
+  skin/classic/global/tabbox/tab-select-middle.gif              (tabbox/tab-select-middle.gif)
+  skin/classic/global/tabbox/tab-select-right.gif               (tabbox/tab-select-right.gif)
+  skin/classic/global/tabbox/tab-sm-bot-sel-left.gif            (tabbox/tab-sm-bot-sel-left.gif)
+  skin/classic/global/tabbox/tab-sm-bot-sel-mid.gif             (tabbox/tab-sm-bot-sel-mid.gif)
+  skin/classic/global/tabbox/tab-sm-bot-sel-right.gif           (tabbox/tab-sm-bot-sel-right.gif)
+  skin/classic/global/tabbox/tab-sm-bot-unsel-acti-left.gif     (tabbox/tab-sm-bot-unsel-acti-left.gif)
+  skin/classic/global/tabbox/tab-sm-bot-unsel-acti-mid.gif      (tabbox/tab-sm-bot-unsel-acti-mid.gif)
+  skin/classic/global/tabbox/tab-sm-bot-unsel-acti-right.gif    (tabbox/tab-sm-bot-unsel-acti-right.gif)
+  skin/classic/global/tabbox/tab-sm-bot-unsel-left.gif          (tabbox/tab-sm-bot-unsel-left.gif)
+  skin/classic/global/tabbox/tab-sm-bot-unsel-mid.gif           (tabbox/tab-sm-bot-unsel-mid.gif)
+  skin/classic/global/tabbox/tab-sm-bot-unsel-right.gif         (tabbox/tab-sm-bot-unsel-right.gif)
+  skin/classic/global/tabbox/tab-border-bot.gif                 (tabbox/tab-border-bot.gif)
+  skin/classic/global/tabbox/tab-unselect-active-middle.gif     (tabbox/tab-unselect-active-middle.gif)
+  skin/classic/global/tabbox/tab-unselect-active-right.gif      (tabbox/tab-unselect-active-right.gif)
+  skin/classic/global/tabbox/tab-unselect-left.gif              (tabbox/tab-unselect-left.gif)
+  skin/classic/global/tabbox/tab-unselect-middle.gif            (tabbox/tab-unselect-middle.gif)
+  skin/classic/global/tabbox/tab-unselect-right.gif             (tabbox/tab-unselect-right.gif)
+  skin/classic/global/wizard/wizard-btn-rit-act.gif             (wizard/wizard-btn-rit-act.gif)
+  skin/classic/global/wizard/wizard-btn-lft-act.gif             (wizard/wizard-btn-lft-act.gif)
+  skin/classic/global/wizard/wizard-btn-lft-dis.gif             (wizard/wizard-btn-lft-dis.gif)
+  skin/classic/global/wizard/wizard-btn-rit.gif                 (wizard/wizard-btn-rit.gif)
+  skin/classic/global/wizard/wizard-btn-lft.gif                 (wizard/wizard-btn-lft.gif)
+  skin/classic/global/wizard/wizard-btn-rit-dis.gif             (wizard/wizard-btn-rit-dis.gif)
+  skin/classic/global/tree/twisty-open.gif                      (tree/twisty-open.gif)
+  skin/classic/global/tree/twisty-clsd.gif                      (tree/twisty-clsd.gif)

@@ -418,7 +418,7 @@ inSearchModule.prototype =
   {
     if (this.mContextMenu) {
       if (this.mContextMenu.length == 0)
-        aInsertionPoint.setAttribute("hide", "false");
+        aInsertionPoint.removeAttribute("hide");
       // remove the menu items
       for (var i = 0; i < this.mContextMenu.length; ++i)
         aMenu.removeChild(this.mMenuItems[i]);

@@ -54,8 +54,6 @@ Rights Reserved.
     <stringbundle id="bundle_offlinePrompts" src="chrome://messenger/locale/offline.properties"/>
   </stringbundleset>
 
-<resourcebundle id="resource_bundle_messenger" />
-
   <!-- XXX: Replace strres.js when nsContextMenu.js is converted -->
   <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
   <script type="application/x-javascript" src="chrome://messenger/content/shareglue.js"/>

@@ -14,15 +14,12 @@
        use headerValue to set the header value. -->
   <binding id="mail-toggle-headerfield">
     <content>
-      <xul:hbox class="headerBox" inherits="orient" flex="1">
-        <xul:hbox class="headerValueBox" align="start">
+      <xul:hbox class="headerNameBox" align="start">
           <xul:image class="expandHeaderViewButton" inherits="onclick=ontwistyclick"/>
           <xul:spacer flex="1"/>
-          <xul:label class="headerdisplayname plain" inherits="value=label"/>  
-        </xul:hbox>
-        <xul:label class="headerValue" anonid="headerValue" flex="1">*
-        </xul:label>
+        <xul:label class="headerName" inherits="value=label"/>  
       </xul:hbox>
+      <xul:label class="headerValue" anonid="headerValue" flex="1">*</xul:label>
     </content>
 
     <implementation>      
@@ -35,13 +32,10 @@
        use headerValue to set the header value. -->
   <binding id="mail-headerfield">
     <content>
-      <xul:hbox class="headerBox" inherits="orient" align="start" flex="1">
-        <xul:hbox class="headerValueBox">
-          <xul:label class="headerdisplayname plain" inherits="value=label"/>  
-        </xul:hbox>
-        <xul:label class="headerValue" anonid="headerValue" flex="1">*
-        </xul:label>
+      <xul:hbox class="headerNameBox" align="start">
+        <xul:label class="headerName" inherits="value=label" flex="1"/>
       </xul:hbox>
+      <xul:label class="headerValue" anonid="headerValue" flex="1">*</xul:label>
     </content>
 
     <implementation>      
@@ -51,12 +45,10 @@
 
   <binding id="mail-emailheaderfield">
     <content>
-      <xul:hbox class="headerBox" inherits="orient" align="center" flex="1">
-        <xul:hbox class="headerValueBox">
-          <xul:label class="headerdisplayname plain" inherits="value=label"/>
+      <xul:hbox class="headerNameBox" align="start">
+        <xul:label class="headerName" inherits="value=label" flex="1"/>
         </xul:hbox>
-        <xul:mail-emailaddress anonid="emailAddressNode" flex="1"/>
-      </xul:hbox>
+        <xul:mail-emailaddress anonid="emailAddressNode"/>
     </content>
 
     <implementation>
@@ -68,18 +60,14 @@
   <!-- multi-emailHeaderField: presents multiple emailheaderfields with a toggle -->
   <binding id="mail-multi-emailHeaderField">
     <content>
-      <xul:hbox class="headerBox" flex="1">
-        <xul:hbox class="headerValueBox" align="top">
-          <xul:hbox align="center">
-            <xul:image class="showMoreAddressesButton" anonid="toggleIcon" onclick="toggleAddressView();" inherits="onclick"/>
-            <xul:spacer flex="1"/>
-            <xul:label class="headerdisplayname plain" inherits="value=label"/>
-          </xul:hbox>
+      <xul:hbox class="headerNameBox" align="start" pack="end">
+        <xul:image class="addresstwisty" anonid="toggleIcon"
+                   onclick="toggleAddressView();"/>
+        <xul:label class="headerName" inherits="value=label"/>
         </xul:hbox>
 
         <xul:label class="headerValue" anonid="emailAddresses" flex="1"/>
         <xul:label class="headerValue" anonid="longEmailAddresses" flex="1" collapsed="true"/>
-      </xul:hbox>
     </content>
 
     <implementation>
@@ -221,14 +209,11 @@
             // always build the short view...its cheap...
             this.fillAddressesNode(this.emailAddresses, aNumAddressesToShow);
             // if we are currently toggled to show all the email addresses, build the long one too...
-            if (this.emailAddresses.getAttribute("collapsed") == "true")
+            if (this.emailAddresses.collapsed)
               this.buildLongView();
 
             // make sure the icon is always visible if we have more than the # of addresses to show     
-            if (this.mAddresses.length > aNumAddressesToShow) 
-              this.toggleIcon.removeAttribute('collapsed');
-            else
-              this.toggleIcon.setAttribute('collapsed', true);
+            this.toggleIcon.collapsed = this.mAddresses.length <= aNumAddressesToShow;
           ]]> 
         </body>
       </method>
@@ -252,19 +237,19 @@
           var shortNode = this.emailAddresses;
           var longNode = this.longEmailAddresses;
           var imageNode = this.toggleIcon;
-          // test to see which if short is already hidden...
-          if (shortNode.getAttribute("collapsed") == "true")
+          // test to see which if short is already collapsed...
+          if (shortNode.collapsed)
           {
-            longNode.setAttribute("collapsed", true);
-            shortNode.removeAttribute("collapsed"); 
-            imageNode.setAttribute("class", "showMoreAddressesButton");
+            longNode.collapsed = true;
+            shortNode.collapsed = false;
+            imageNode.removeAttribute("open");
           }
           else
           {
             this.buildLongView();
-            shortNode.setAttribute("collapsed", true);
-            longNode.removeAttribute("collapsed"); 
-            imageNode.setAttribute("class", "showFewerAddressesButton");
+            shortNode.collapsed = true;
+            longNode.collapsed = false;
+            imageNode.setAttribute("open", "true");
           }
           ]]>  
         </body>
@@ -311,55 +296,53 @@
   </binding>
 
   <binding id="mail-emailaddress">
-    <content>
-      <xul:box inherits="orient" align="center" flex="1">
-        <xul:label class="emailDisplayButton plain" anonid="emailValue" popup="emailAddressPopup" context="emailAddressPopup" inherits="value=label,crop"/>
-        <xul:image class="emailDisplayImage" anonid="emailImage" context="emailAddressPopup" inherits="label,crop"/>
-      </xul:box>
+    <content popup="emailAddressPopup" context="emailAddressPopup">
+      <xul:label anonid="emailValue" class="emailDisplayButton plain"                 
+                 inherits="value=label,crop"/>
+      <xul:image class="emailDisplayImage" anonid="emailImage"
+                 context="emailAddressPopup" inherits="src=image"/>
     </content>
     
     <implementation>  
-      <property name="label"      onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').setAttribute('label',val);"
-                                  onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').getAttribute('label');"/>
-      <property name="crop"       onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').setAttribute('crop',val);"
-                                  onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').getAttribute('crop');"/>
-      <property name="disabled"   onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').setAttribute('disabled',val);"
-                                  onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailValue').getAttribute('disabled');"/>
-      <property name="src"        onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailImage').setAttribute('src',val);"
-                                  onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailImage').getAttribute('src');"/>
-      <property name="imgalign"   onset="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailImage').setAttribute('imgalign',val);"
-                                  onget="return document.getAnonymousElementByAttribute(this, 'anonid', 'emailImage').getAttribute('imgalign');"/>
+      <property name="label"      onset="this.getPart('emailValue').setAttribute('label',val); return val;"
+                                  onget="return this.getPart('emailValue').getAttribute('label');"/>
+      <property name="crop"       onset="this.getPart('emailValue').setAttribute('crop',val); return val;"
+                                  onget="return this.getPart('emailValue').getAttribute('crop');"/>
+      <property name="disabled"   onset="this.getPart('emailValue').setAttribute('disabled',val); return val;"
+                                  onget="return this.getPart('emailValue').getAttribute('disabled');"/>
+      <property name="src"        onset="this.getPart('emailImage').setAttribute('src',val); return val;"
+                                  onget="return this.getPart('emailImage').getAttribute('src');"/>
+      <property name="imgalign"   onset="this.getPart('emailImage').setAttribute('imgalign',val); return val;"
+                                  onget="return this.getPart('emailImage').getAttribute('imgalign');"/>
+
+      <method name="getPart">
+        <parameter name="aPartId"/>
+        <body><![CDATA[
+          return document.getAnonymousElementByAttribute(this, "anonid", aPartId);
+        ]]></body>
+      </method>
+
       <method name="setTextAttribute">
         <parameter name="attributeName"/>
         <parameter name="attributeValue"/>
-        <body>
-          <![CDATA[   
-            var iconNode = document.getAnonymousElementByAttribute(this, "anonid", "emailImage");
-            iconNode.setAttribute(attributeName, attributeValue);          
-            var textNode = document.getAnonymousElementByAttribute(this, "anonid", "emailValue");
-            textNode.setAttribute(attributeName, attributeValue);
-          ]]>
-        </body>
+        <body><![CDATA[
+          this.setAttribute(attributeName, attributeValue);
+          this.getPart("emailImage").setAttribute(attributeName, attributeValue);          
+          this.getPart("emailValue").setAttribute(attributeName, attributeValue);          
+        ]]></body>
       </method>
 
       <method name="getTextAttribute">
         <parameter name="attributeName"/>
-        <parameter name="attributeValue"/>
-        <body>
-          <![CDATA[   
-            var textNode = document.getAnonymousElementByAttribute(this, "anonid", "emailValue");
-            return textNode.getAttribute(attributeName, attributeValue);
-          ]]>
-        </body>
+        <body><![CDATA[   
+          return this.getPart("emailValue").getAttribute(attributeName);
+        ]]></body>
       </method>
 
       <method name="GetIconNode">
-        <body>
-          <![CDATA[            
-            var imageNode = document.getAnonymousElementByAttribute(this, "anonid", "emailImage");
-            return imageNode;
-          ]]>
-        </body>
+        <body><![CDATA[
+          return this.getPart("emailImage");
+        ]]></body>
       </method>
     </implementation>
   </binding>

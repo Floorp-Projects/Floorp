@@ -31,9 +31,7 @@
 <overlay xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
-  <outliner id="folderOutliner"
-            flex="1"
-            seltype="single">
+  <outliner id="folderOutliner" class="plain" flex="1" seltype="single">
     <outlinerbody flex="1"
                   datasources="rdf:null"
                   statedatasource="rdf:mailnewsfolders"

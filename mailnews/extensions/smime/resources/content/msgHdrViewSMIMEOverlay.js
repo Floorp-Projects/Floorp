@@ -32,8 +32,8 @@ var smimeHeaderSink =
   {
     if (aValidSignature)
     {
-      gSignedUINode.removeAttribute('collapsed');
-      gSMIMEContainer.removeAttribute('collapsed');
+      gSignedUINode.collapsed = false; 
+      gSMIMEContainer.collapsed = false; 
     }
     else
     {
@@ -47,8 +47,8 @@ var smimeHeaderSink =
   {
     if (aValidEncryption)
     {
-      gEncryptedUINode.removeAttribute('collapsed');
-      gSMIMEContainer.removeAttribute('collapsed');
+      gEncryptedUINode.collapsed = false; 
+      gSMIMEContainer.collapsed = false; 
     }
     else
     {
@@ -67,17 +67,17 @@ var smimeHeaderSink =
 
 function onSMIMEStartHeaders()
 {
-  gSMIMEContainer.setAttribute('collapsed', true);
+  gSMIMEContainer.collapsed = true; 
 
   if (gEncryptionUIVisible)
   {
-    gEncryptedUINode.setAttribute('collapsed', true);
+    gEncryptedUINode.collapsed = true;
     gEncryptionUIVisible = false;
   }
 
   if (gSignedUIVisible)
   {
-    gSignedUINode.setAttribute('collapsed', true);
+    gSignedUINode.collapsed = true; 
     gSignedUIVisible = false;
   }
 }
@@ -93,7 +93,7 @@ function msgHdrViewSMIMEOnLoad(event)
 
   gSignedUINode = document.getElementById('signedText');
   gEncryptedUINode = document.getElementById('encryptedText');
-  gSMIMEContainer = document.getElementById('expandedAttachmentBox');
+  gSMIMEContainer = document.getElementById('smimeBox');
 
   // add ourself to the list of message display listeners so we get notified when we are about to display a
   // message.

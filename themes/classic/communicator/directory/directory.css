@@ -41,7 +41,7 @@
 
 */
 
-@import url(chrome://communicator/skin/);
+@import url("chrome://communicator/skin/");
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
@@ -49,7 +49,6 @@
   margin: 0px !important;
   border: none;
 }
-
 
 /* Hide twisty for files */
 .treecell-indent[type="FILE"] > .tree-cell-twisty 
@@ -59,33 +58,19 @@
 
 .treecell-filename
   {
-    list-style-image      : url("chrome://communicator/skin/directory/file-icon.gif");
+    list-style-image      : url("chrome://communicator/skin/directory/file.gif");
   }  
-  
-treeitem[selected="true"] > treerow > .treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/file-icon-sel.gif");
-  }
   
 treeitem[container="true"] > treerow > .treecell-filename
   {
-    list-style-image      : url("chrome://communicator/skin/directory/file-folder-closed.gif");
-  }
-treeitem[container="true"][selected="true"] > treerow > .treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/file-folder-closed-sel.gif");
+    list-style-image      : url("chrome://communicator/skin/directory/folder-clsd.gif");
   }
 
 treeitem[container="true"][open="true"] > treerow > .treecell-filename
   {
-    list-style-image      : url("chrome://communicator/skin/directory/file-folder-open.gif");
+    list-style-image      : url("chrome://communicator/skin/directory/folder-open.gif");
   }
-treeitem[container="true"][open="true"][selected="true"] > treerow > .treecell-filename
-  {
-    list-style-image      : url("chrome://communicator/skin/directory/file-folder-open-sel.gif");
-  }
-  
-  
+
 /* Show an animated icon when a directory/symlink is loading */
 treeitem[type="SYMBOLIC-LINK"][loading="true"] > treerow > .treecell-filename > .tree-cell-twisty,
 treeitem[type="DIRECTORY"][loading="true"] > treerow > treecell > .tree-cell-twisty

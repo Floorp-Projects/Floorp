@@ -15,17 +15,17 @@ tab {
 }
 
 .tab-image-left {
-  background		: url(chrome://global/skin/tab-unselect-left.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-unselect-left.gif) no-repeat;
   width				: 11px;
   height			: 24px;
 }
 
 .tab-image-middle {
-  background		: url(chrome://global/skin/tab-unselect-middle.gif) repeat-x;
+  background		: url(chrome://global/skin/tabbox/tab-unselect-middle.gif) repeat-x;
 }
 
 .tab-image-right {
-  background		: url(chrome://global/skin/tab-unselect-right.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-unselect-right.gif) no-repeat;
   width				: 12px;
   height			: 24px;
 }
@@ -40,15 +40,15 @@ tab:hover:active {
 }
 
 tab:hover:active > .tab-image-left { 
-  background		: url(chrome://global/skin/tab-unselect-active-left.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-unselect-active-left.gif) no-repeat;
 }
 
 tab:hover:active > .tab-image-middle { 
-  background		: url(chrome://global/skin/tab-unselect-active-middle.gif) repeat-x;
+  background		: url(chrome://global/skin/tabbox/tab-unselect-active-middle.gif) repeat-x;
 }
 
 tab:hover:active > .tab-image-right { 
-  background		: url(chrome://global/skin/tab-unselect-active-right.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-unselect-active-right.gif) no-repeat;
 }
 
 
@@ -59,35 +59,35 @@ tab:hover:active[selected="true"],  tab:hover:active[selected="1"]{
 
 tab[selected="true"] > .tab-image-left,
 tab:hover:active[selected="true"] > .tab-image-left { 
-  background		: url(chrome://global/skin/tab-select-left.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-select-left.gif) no-repeat;
 }
 
 tab[selected="true"] > .tab-image-middle,
 tab:hover:active[selected="true"] > .tab-image-middle { 
-  background		: url(chrome://global/skin/tab-select-middle.gif) repeat-x;
+  background		: url(chrome://global/skin/tabbox/tab-select-middle.gif) repeat-x;
 }
 
 tab[selected="true"] > .tab-image-right,
 tab:hover:active[selected="true"] > .tab-image-right { 
-  background		: url(chrome://global/skin/tab-select-right.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-select-right.gif) no-repeat;
 }
 
 .tab-border-top-left {
-  background		: url(chrome://global/skin/tab-border-top.gif) repeat-x bottom;
+  background		: url(chrome://global/skin/tabbox/tab-border-top.gif) repeat-x bottom;
   width				: 2px;
 }
 
 .tab-border-top-left-cap {
-  background		: url(chrome://global/skin/tab-border-top-left-cap.gif) no-repeat bottom;
+  background		: url(chrome://global/skin/tabbox/tab-border-top-left-cap.gif) no-repeat bottom;
   width				: 2px;
 }
 
 .tab-border-top-right {
-  background		: url(chrome://global/skin/tab-border-top.gif) repeat-x bottom;
+  background		: url(chrome://global/skin/tabbox/tab-border-top.gif) repeat-x bottom;
 }
 
 .tab-border-top-right-cap {
-  background		: url(chrome://global/skin/tab-border-top-right-cap.gif) no-repeat bottom;
+  background		: url(chrome://global/skin/tabbox/tab-border-top-right-cap.gif) no-repeat bottom;
   width				: 2px;
 }
 
@@ -105,17 +105,17 @@ tabs {
 }
 
 .tab-bottom > .tab-image-left {
-  background		: url(chrome://global/skin/tab-sm-bot-unsel-left.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-left.gif) no-repeat;
   width				: 11px;
   height			: 19px;
 }
 
 .tab-bottom > .tab-image-middle {
-  background		: url(chrome://global/skin/tab-sm-bot-unsel-mid.gif) repeat-x;
+  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-mid.gif) repeat-x;
 }
 
 .tab-bottom > .tab-image-right {
-  background		: url(chrome://global/skin/tab-sm-bot-unsel-right.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-right.gif) no-repeat;
   width				: 11px;
   height			: 19px;
 }
@@ -125,50 +125,50 @@ tabs {
 }
 
 .tab-bottom:hover:active > .tab-image-left { 
-  background		: url(chrome://global/skin/tab-sm-bot-unsel-acti-left.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-acti-left.gif) no-repeat;
 }
 
 .tab-bottom:hover:active > .tab-image-middle { 
-  background		: url(chrome://global/skin/tab-sm-bot-unsel-acti-mid.gif) repeat-x;
+  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-acti-mid.gif) repeat-x;
 }
 
 .tab-bottom:hover:active > .tab-image-right { 
-  background		: url(chrome://global/skin/tab-sm-bot-unsel-acti-right.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-sm-bot-unsel-acti-right.gif) no-repeat;
 }
 
 /* when a tab is selected this is how it should look */
 
 .tab-bottom[selected="true"] > .tab-image-left,
 .tab-bottom:hover:active[selected="true"] > .tab-image-left { 
-  background		: url(chrome://global/skin/tab-sm-bot-sel-left.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-sm-bot-sel-left.gif) no-repeat;
 }
 
 .tab-bottom[selected="true"] > .tab-image-middle,
 .tab-bottom:hover:active[selected="true"] > .tab-image-middle { 
-  background		: url(chrome://global/skin/tab-sm-bot-sel-mid.gif) repeat-x;
+  background		: url(chrome://global/skin/tabbox/tab-sm-bot-sel-mid.gif) repeat-x;
 }
 
 .tab-bottom[selected="true"] > .tab-image-right,
 .tab-bottom:hover:active[selected="true"] > .tab-image-right { 
-  background		: url(chrome://global/skin/tab-sm-bot-sel-right.gif) no-repeat;
+  background		: url(chrome://global/skin/tabbox/tab-sm-bot-sel-right.gif) no-repeat;
 }
 
 .tabs-bottom > .tab-border-top-left {
-  background		: url(chrome://global/skin/tab-border-bot.gif) repeat-x top;
+  background		: url(chrome://global/skin/tabbox/tab-border-bot.gif) repeat-x top;
   width				: 2px;
 }
 
 .tabs-bottom > .tab-border-top-left-cap {
-  background		: url(chrome://global/skin/tab-border-bot-left-cap.gif) no-repeat top;
+  background		: url(chrome://global/skin/tabbox/tab-border-bot-left-cap.gif) no-repeat top;
   width				: 2px;
 }
 
 .tabs-bottom > .tab-border-top-right {
-  background		: url(chrome://global/skin/tab-border-bot.gif) repeat-x top;
+  background		: url(chrome://global/skin/tabbox/tab-border-bot.gif) repeat-x top;
 }
 
 .tabs-bottom > .tab-border-top-right-cap {
-  background		: url(chrome://global/skin/tab-border-bot-right-cap.gif) no-repeat top;
+  background		: url(chrome://global/skin/tabbox/tab-border-bot-right-cap.gif) no-repeat top;
   width				: 2px;
 }
 
