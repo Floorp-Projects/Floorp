@@ -1,0 +1,107 @@
+<!-- 1.0@bugzilla.org -->
+[%# The contents of this file are subject to the Mozilla Public
+  # License Version 1.1 (the "License"); you may not use this file
+  # except in compliance with the License. You may obtain a copy of
+  # the License at http://www.mozilla.org/MPL/
+  #
+  # Software distributed under the License is distributed on an "AS
+  # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+  # implied. See the License for the specific language governing
+  # rights and limitations under the License.
+  #
+  # The Original Code is the Bugzilla Bug Tracking System.
+  #
+  # The Initial Developer of the Original Code is Netscape Communications
+  # Corporation. Portions created by Netscape are
+  # Copyright (C) 1998 Netscape Communications Corporation. All
+  # Rights Reserved.
+  #
+  # Contributor(s): Gervase Markham <gerv@gerv.net>
+  #%]
+
+[%# INTERFACE:
+  # target: string. URL to go to after login.
+  # form: hash; the form values which need to be submitted to the target script
+  #%]
+
+[% PROCESS global/header.html.tmpl 
+  title = "Login"
+%]
+
+<p>
+  I need a legitimate 
+  [% Param('useLDAP') ? "LDAP username" : "email address" %]
+  and password to continue.
+</p>  
+
+<form action="[% target %]" method="POST">
+  <table>
+    [% IF Param("useLDAP") %]
+      <tr>
+        <td align="right">
+          <b>Username:</b>
+        </td>
+        <td>
+          <input size="10" name="LDAP_login">
+        </td>
+      </tr>
+      <tr>
+        <td align="right">
+          <b>Password:</b>
+        </td>
+        <td>
+          <input type="password" size="10" name="LDAP_password">
+        </td>
+      </tr>
+    [% ELSE %]
+      <tr>
+        <td align="right">
+          <b>E-mail address:</b>
+        </td>
+        <td>
+          <input size="35" name="Bugzilla_login">
+        </td>
+      </tr>
+      <tr>
+        <td align="right">
+          <b>Password:</b>
+        </td>
+        <td>
+          <input type="password" size="35" name="Bugzilla_password">
+        </td>
+      </tr>
+    [% END %]
+  </table>
+  
+  [% PROCESS "global/hidden-fields.html.tmpl"   
+     exclude="^(Bugzilla|LDAP)_(login|password)$" %]
+
+  <input type="submit" name="GoAheadAndLogIn" value="Login">
+</form>
+
+[%# Allow the user to create a new account, or request a token to change 
+  # their password (unless we are using LDAP, in which case the user must 
+  # use LDAP to change it).
+  #%]
+  
+[% UNLESS Param("useLDAP") %]
+  <hr>
+
+  <p>
+    If you don't have a Bugzilla account, you can 
+    <a href="createaccount.cgi">create a new account</a>.
+  </p>
+
+  <form method="get" action="token.cgi">
+    <input type="hidden" name="a" value="reqpw">
+    If you have an account, but have forgotten your password,
+    enter your login name below and submit a request 
+    to change your password.<br>
+    <input size="35" name="loginname">
+    <input type="submit" value="Submit Request">
+  </form>
+
+  <hr>
+[% END %]
+
+[% PROCESS global/footer.html.tmpl %]

@@ -808,92 +808,21 @@ Content-type: text/html
             "send email to " . Param("maintainer") . " explaining why.",
             "Your account has been disabled");
         }
-        print "Content-type: text/html\n\n";
-        PutHeader("Login");
-        if(Param("useLDAP")) {
-          print "I need a legitimate LDAP username and password to continue.\n";
-        } else {
-          print "I need a legitimate e-mail address and password to continue.\n";
-        }
+        
         if (!defined $nexturl || $nexturl eq "") {
             # Sets nexturl to be argv0, stripping everything up to and
             # including the last slash (or backslash on Windows).
             $0 =~ m:([^/\\]*)$:;
             $nexturl = $1;
         }
-        my $method = "POST";
-# We always want to use POST here, because we're submitting a password and don't
-# want to see it in the location bar in the browser in case a co-worker is looking
-# over your shoulder.  If you have cookies off and need to bookmark the query, you
-# can bookmark it from the screen asking for your password, and it should still
-# work.  See http://bugzilla.mozilla.org/show_bug.cgi?id=15980
-#        if (defined $ENV{"REQUEST_METHOD"} && length($::buffer) > 1) {
-#            $method = $ENV{"REQUEST_METHOD"};
-#        }
-        print "
-<FORM action=$nexturl method=$method>
-<table>
-<tr>";
-        if(Param("useLDAP")) {
-          print "
-<td align=right><b>Username:</b></td>
-<td><input size=10 name=LDAP_login></td>
-</tr>
-<tr>
-<td align=right><b>Password:</b></td>
-<td><input type=password size=10 name=LDAP_password></td>";
-        } else {
-          print "
-<td align=right><b>E-mail address:</b></td>
-<td><input size=35 name=Bugzilla_login></td>
-</tr>
-<tr>
-<td align=right><b>Password:</b></td>
-<td><input type=password size=35 name=Bugzilla_password></td>";
-        }
-        print "
-</tr>
-</table>
-";
-        # Add all the form fields into the form as hidden fields
-        # (except for Bugzilla_login and Bugzilla_password which we
-        # already added as text fields above).
-        foreach my $i ( grep( $_ !~ /^Bugzilla_/ , keys %::FORM ) ) {
-          if (defined $::MFORM{$i} && scalar(@{$::MFORM{$i}}) > 1) {
-            # This field has multiple values; add each one separately.
-            foreach my $val (@{$::MFORM{$i}}) {
-              print qq|<input type="hidden" name="$i" value="@{[value_quote($val)]}">\n|;
-            }
-          } else {
-            # This field has a single value; add it.
-            print qq|<input type="hidden" name="$i" value="@{[value_quote($::FORM{$i})]}">\n|;
-          }
-        }
-
-        print qq|
-          <input type="submit" name="GoAheadAndLogIn" value="Login">
-          </form>
-        |;
-
-        # Allow the user to request a token to change their password (unless
-        # we are using LDAP, in which case the user must use LDAP to change it).
-        unless( Param("useLDAP") ) {
-            print qq|
-              <hr>
-              <p>If you don't have a Bugzilla account, you can 
-              <a href="createaccount.cgi">create a new account</a>.</p>
-              <form method="get" action="token.cgi">
-                <input type="hidden" name="a" value="reqpw">
-                If you have an account, but have forgotten your password,
-                enter your login name below and submit a request 
-                to change your password.<br>
-                <input size="35" name="loginname">
-                <input type="submit" value="Submit Request">
-              </form>
-              <hr>
-            |;
-        }
-
+        
+        $vars->{'target'} = $nexturl;
+        $vars->{'form'} = \%::FORM;
+        
+        print "Content-type: text/html\n\n";
+        $template->process("account/login.html.tmpl", $vars)
+          || ThrowTemplateError($template->error());
+                
         # This seems like as good as time as any to get rid of old
         # crufty junk in the logincookies table.  Get rid of any entry
         # that hasn't been used in a month.
@@ -902,8 +831,6 @@ Content-type: text/html
                     "WHERE TO_DAYS(NOW()) - TO_DAYS(lastused) > 30");
         }
 
-        
-        PutFooter();
         exit;
     }
 
