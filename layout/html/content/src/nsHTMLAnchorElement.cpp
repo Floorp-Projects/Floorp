@@ -286,10 +286,16 @@ nsHTMLAnchorElement::HandleDOMEvent(nsIPresContext& aPresContext,
       switch (aEvent->message) {
       case NS_MOUSE_LEFT_BUTTON_DOWN:
         {
-          nsIEventStateManager *stateManager;
-          if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
-            stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
-            NS_RELEASE(stateManager);
+          // don't make the link grab the focus if there is no link handler
+          nsILinkHandler* handler;
+          nsresult rv = aPresContext.GetLinkHandler(&handler);
+          if (NS_SUCCEEDED(rv) && (nsnull != handler)) {
+            nsIEventStateManager *stateManager;
+            if (NS_OK == aPresContext.GetEventStateManager(&stateManager)) {
+              stateManager->SetContentState(this, NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_FOCUS);
+              NS_RELEASE(stateManager);
+            }
+            NS_RELEASE(handler);
           }
           aEventStatus = nsEventStatus_eConsumeNoDefault; 
         }

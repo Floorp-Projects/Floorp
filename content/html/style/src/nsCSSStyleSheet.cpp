@@ -1497,6 +1497,10 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                     linkHandler->GetLinkState(absURLSpec.GetUnicode(), linkState);
                   }
                 }
+                else {
+                  // no link handler?  then all links are unvisited
+                  linkState = eLinkState_Unvisited;
+                }
               }
               if (nsCSSAtoms::linkPseudo == pseudoClass->mAtom) {
                 result = PRBool(eLinkState_Unvisited == linkState);
