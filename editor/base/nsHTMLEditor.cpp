@@ -7197,7 +7197,7 @@ nsHTMLEditor::IsEmptyNode( nsIDOMNode *aNode,
   // cells empty if caller desires.
   if (!IsContainer(aNode) || nsHTMLEditUtils::IsAnchor(aNode) || 
        (aListOrCellNotEmpty && nsHTMLEditUtils::IsListItem(aNode)) ||
-       (aListOrCellNotEmpty && nsHTMLEditUtils::nsHTMLEditUtils::IsTableCell(aNode)) ) 
+       (aListOrCellNotEmpty && nsHTMLEditUtils::IsTableCell(aNode)) ) 
   {
     *outIsEmptyNode = PR_FALSE;
     return NS_OK;
