@@ -705,3 +705,31 @@ xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
         p = list->next;
     }
 }
+
+/*
+ * Verify that the interface declaration is correct
+ */
+gboolean
+verify_interface_declaration(IDL_tree interface_tree)
+{
+    IDL_tree iter;
+    /* 
+     * If we have the scriptable attribute then make sure all of our direct
+     * parents have it as well.
+     * NOTE: We don't recurse since all interfaces will fall through here
+     */
+    if (IDL_tree_property_get(IDL_INTERFACE(interface_tree).ident, 
+        "scriptable")) {
+        for (iter = IDL_INTERFACE(interface_tree).inheritance_spec; iter; 
+            iter = IDL_LIST(iter).next) {
+            if (IDL_tree_property_get(
+                IDL_INTERFACE(iter).ident, "scriptable") == 0) {
+                XPIDL_WARNING((interface_tree,IDL_WARNING1,
+                    "%s is scriptable but inherits from the non-scriptable interface %s\n",
+                    IDL_IDENT(IDL_INTERFACE(interface_tree).ident).str,
+                    IDL_IDENT(IDL_INTERFACE(iter).ident).str));
+            }
+        }
+    }
+    return TRUE;
+}

@@ -153,6 +153,9 @@ interface(TreeState *state)
     char iid_parsed[UUID_LENGTH];
     GSList *doc_comments = IDL_IDENT(IDL_INTERFACE(iface).ident).comments;
 
+    if (!verify_interface_declaration(iface))
+        return FALSE;
+
 #define FAIL    do {ok = FALSE; goto out;} while(0)
 
     fprintf(state->file,   "\n/* starting interface:    %s */\n",

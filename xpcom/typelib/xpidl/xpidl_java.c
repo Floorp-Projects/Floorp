@@ -132,6 +132,8 @@ interface_declaration(TreeState *state)
     char *interface_name = IDL_IDENT(IDL_INTERFACE(interface).ident).str;
     const char *iid = NULL;
 
+    if (!verify_interface_declaration(interface))
+        return FALSE;
     /*
      * Write out JavaDoc comment
      */

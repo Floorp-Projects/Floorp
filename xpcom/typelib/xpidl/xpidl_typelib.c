@@ -510,6 +510,9 @@ typelib_interface(TreeState *state)
     uint16 parent_id = 0;
     PRUint8 interface_flags = 0;
 
+    if (!verify_interface_declaration(iface))
+        return FALSE;
+
     if (IDL_tree_property_get(IDL_INTERFACE(iface).ident, "scriptable"))
         interface_flags |= XPT_ID_SCRIPTABLE;
 
