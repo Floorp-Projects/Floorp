@@ -11553,43 +11553,17 @@ nsCSSFrameConstructor::FindFrameWithContent(nsIPresContext*  aPresContext,
         // looking for
         kidFrame->GetContent(getter_AddRefs(kidContent));
         if (kidContent == aContent) {
-          nsCOMPtr<nsIAtom>  frameType;
 
           // We found a match. See if it's a placeholder frame
+          nsCOMPtr<nsIAtom> frameType;
           kidFrame->GetFrameType(getter_AddRefs(frameType));
           if (nsLayoutAtoms::placeholderFrame == frameType.get()) {
             // Ignore the placeholder and return the out-of-flow frame instead
             return ((nsPlaceholderFrame*)kidFrame)->GetOutOfFlowFrame();
-          } else {
-            // Check if kidframe is the :before pseudo frame for aContent. If it
-            // is, and aContent is an element, then aContent might be a
-            // non-splittable-element, so the real primary frame could be the
-            // next sibling.
-
-            if (aContent->IsContentOfType(nsIContent::eELEMENT) &&
-                nsLayoutUtils::IsGeneratedContentFor(aContent, kidFrame,
-                                                     nsCSSPseudoElements::before)) {
-              kidFrame->GetNextSibling(&kidFrame);
-#ifdef DEBUG
-              NS_ASSERTION(kidFrame, ":before with no next sibling");
-              if (kidFrame) {
-                nsCOMPtr<nsIContent> nextSiblingContent;
-                kidFrame->GetContent(getter_AddRefs(nextSiblingContent));
-
-                // Make sure the content matches, and because I'm paranoid,
-                // make sure it's not the :after pseudo frame.
-
-                NS_ASSERTION(nextSiblingContent.get() == aContent &&
-                             !nsLayoutUtils::IsGeneratedContentFor(aContent, kidFrame,
-                                                                   nsCSSPseudoElements::after),
-                             ":before frame not followed by primary frame");
-              }
-#endif
-            }
-
-            // Return the matching child frame
-            return kidFrame;
           }
+
+          // Return the matching child frame
+          return kidFrame;
         }
 
         // only do this if there is content
