@@ -259,7 +259,7 @@ function goAboutDialog()
     defaultAboutState = false;
   }
   if( defaultAboutState )
-    window.openDialog("chrome:global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
+    window.openDialog("chrome://global/content/about.xul", "About", "modal,chrome,resizable=yes,height=450,width=550");
   else
     window.openDialog( getBrowserURL(), "_blank", "chrome,all,dialog=no", 'about:' );
 }
