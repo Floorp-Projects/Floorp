@@ -240,21 +240,16 @@ NS_IMPL_ISUPPORTS(nsMessenger, nsIMessenger::GetIID())
 NS_IMETHODIMP    
 nsMessenger::Open3PaneWindow()
 {
-	nsIAppShellService* appShell;
 	char *  urlstr=nsnull;
-	nsresult rv;
+	nsresult rv = NS_OK;
 	
 	urlstr = "resource:/res/samples/messenger.html";
-	rv = nsServiceManager::GetService(kAppShellServiceCID,
-									  nsIAppShellService::GetIID(),
-									  (nsISupports**)&appShell);
+	NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
   
 	nsIURL* url = nsnull;
-	nsINetService * pNetService;
-	rv = nsServiceManager::GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports **)&pNetService);
+	NS_WITH_SERVICE(nsINetService, pNetService, kNetServiceCID, &rv);
 	if (NS_SUCCEEDED(rv) && pNetService) {
 		rv = pNetService->CreateURL(&url, urlstr);
-		NS_RELEASE(pNetService);
 		if (NS_FAILED(rv))
 			goto done;
 	}
@@ -272,10 +267,7 @@ nsMessenger::Open3PaneWindow()
                                    200,         // width
                                    200);        // height
 	done:
-	NS_RELEASE(url);
-	if (nsnull != appShell) {
-		nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-	}
+	NS_IF_RELEASE(url);
 	return NS_OK;
 }
 
@@ -623,18 +615,13 @@ nsMessenger::GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
 NS_IMETHODIMP
 nsMessenger::Exit()
 {
-  nsIAppShellService* appShell = nsnull;
-
+	nsresult rv = NS_OK;
   /*
    * Create the Application Shell instance...
    */
-  nsresult rv = nsServiceManager::GetService(kAppShellServiceCID,
-											nsIAppShellService::GetIID(),
-                                             (nsISupports**)&appShell);
-  if (NS_SUCCEEDED(rv)) {
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_SUCCEEDED(rv))
     appShell->Shutdown();
-    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
-  } 
   return NS_OK;
 }
 
