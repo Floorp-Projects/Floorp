@@ -640,24 +640,6 @@ You will get this message once a day until you\'ve dealt with these bugs!
   },
 
   {
-   name => 'nummilestones',
-   desc => 'If using Target Milestone, how many milestones do you wish to
-   appear?',
-   type => 't',
-   default => 10,
-   checker => \&check_numeric
-  },
-
-  {
-   name => 'curmilestone',
-   desc => 'If using Target Milestone, Which milestone are we working ' .
-           'toward right now?',
-   type => 't',
-   default => 1,
-   checker => \&check_numeric
-  },
-
-  {
    name => 'musthavemilestoneonaccept',
    desc => 'If you are using Target Milestone, do you want to require that ' .
            'the milestone be set in order for a user to ACCEPT a bug?',
