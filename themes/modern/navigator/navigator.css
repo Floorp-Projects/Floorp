@@ -43,11 +43,6 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
  * Images for the main buttons
  */
 
-#nav-bar-buttons > button,
-#nav-bar-buttons > menubutton {
-  margin-bottom: 0px;
-}
-
 #back-button 
   {
     margin-left        : 0px;
@@ -369,6 +364,10 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
     width                 : 100px;
   }
 
+#go-button {
+  min-width: 0px;
+}
+  
 #search-button
   {
     margin-right          : 4px;
