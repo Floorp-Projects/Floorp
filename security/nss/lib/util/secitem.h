@@ -37,10 +37,11 @@
  * secitem.h - public data structures and prototypes for handling
  *	       SECItems
  *
- * $Id: secitem.h,v 1.1 2000/03/31 19:40:08 relyea%netscape.com Exp $
+ * $Id: secitem.h,v 1.2 2001/11/02 21:50:09 relyea%netscape.com Exp $
  */
 
 #include "plarena.h"
+#include "plhash.h"
 #include "seccomon.h"
 
 SEC_BEGIN_PROTOS
@@ -100,6 +101,11 @@ extern void SECITEM_FreeItem(SECItem *zap, PRBool freeit);
 ** Zero and then free "zap". If freeit is PR_TRUE then "zap" itself is freed.
 */
 extern void SECITEM_ZfreeItem(SECItem *zap, PRBool freeit);
+
+PLHashNumber PR_CALLBACK SECITEM_Hash ( const void *key);
+
+PRIntn PR_CALLBACK SECITEM_HashCompare ( const void *k1, const void *k2);
+
 
 SEC_END_PROTOS
 
