@@ -1014,12 +1014,20 @@ NS_IMETHODIMP nsRenderingContextMac :: FillRect(const nsRect& aRect)
 
 //------------------------------------------------------------------------
 
-NS_IMETHODIMP nsRenderingContextMac :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+	inline short pinToShort(nscoord value)
+	{
+		if (value < -32768)
+			return -32768;
+		if (value > 32767)
+			return 32767;
+		return (short) value;
+	}
+
+NS_IMETHODIMP nsRenderingContextMac::FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-	StartDraw();
+  StartDraw();
 
   nscoord  x,y,w,h;
-  Rect     therect;
 
   x = aX;
   y = aY;
@@ -1029,10 +1037,13 @@ NS_IMETHODIMP nsRenderingContextMac :: FillRect(nscoord aX, nscoord aY, nscoord 
   // TODO - cps - must debug and fix this 
   mGS->mTMatrix->TransformCoord(&x,&y,&w,&h);
 
-	::SetRect(&therect,x,y,x+w,y+h);
-	::PaintRect(&therect);
+  // beard:  keep rectangle within Quickdraw representable space.
+  Rect therect = { pinToShort(y), pinToShort(x),
+                   pinToShort(y + h), pinToShort(x + w) };
 
-	EndDraw();
+  ::PaintRect(&therect);
+
+  EndDraw();
   return NS_OK;
 }
 
