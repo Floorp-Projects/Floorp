@@ -168,7 +168,8 @@ class HTMLContentSink : public nsIHTMLContentSink,
                         public nsIStreamLoaderObserver,
                         public nsITimerCallback,
                         public nsICSSLoaderObserver,
-                        public nsIDocumentObserver
+                        public nsIDocumentObserver,
+                        public nsIDebugDumpContent
 {
 public:
   HTMLContentSink();
@@ -279,6 +280,9 @@ public:
                               nsIStyleSheet* aStyleSheet,
                               nsIStyleRule* aStyleRule) { return NS_OK; }
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument) { return NS_OK; }
+
+  // nsIDebugDumpContent
+  NS_IMETHOD DumpContentModel();
 
   PRBool IsTimeToNotify();
   PRBool IsInScript();
@@ -2123,13 +2127,14 @@ HTMLContentSink::~HTMLContentSink()
   }
 }
 
-NS_IMPL_ISUPPORTS6(HTMLContentSink, 
+NS_IMPL_ISUPPORTS7(HTMLContentSink, 
                    nsIHTMLContentSink,
                    nsIContentSink,
                    nsIStreamLoaderObserver,
                    nsITimerCallback,
                    nsICSSLoaderObserver,
-                   nsIDocumentObserver)
+                   nsIDocumentObserver,
+                   nsIDebugDumpContent)
 
 nsresult
 HTMLContentSink::Init(nsIDocument* aDoc,
@@ -4847,3 +4852,35 @@ HTMLContentSink::DoFragment(PRBool aFlag)
   return NS_OK; 
 }
 
+/**
+ *  This will dump content model into the output file.
+ *  
+ *  @update  harishd 05/25/00
+ *  @param   
+ *  @return  NS_OK all went well else ERROR
+ */
+
+NS_IMETHODIMP
+HTMLContentSink::DumpContentModel() 
+{
+  nsresult result=NS_OK;
+  FILE* out=::fopen("rtest_html.txt", "a");
+  if(out!=nsnull) {
+    if(mDocument) {
+      nsIContent* root = mDocument->GetRootContent();
+      if(root) {
+        if(mDocumentURI) {
+          char* buff[1]={0};
+          mDocumentURI->GetSpec(buff);
+          fputs(buff[0],out);
+        }
+        fputs(";",out);
+        result=root->DumpContent(out,0,PR_FALSE);
+        fputs(";\n",out);
+        NS_RELEASE(root);
+      }
+    }
+    fclose(out);
+  }
+  return result;
+}
