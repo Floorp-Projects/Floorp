@@ -244,7 +244,7 @@ protected:
 //========================================================================================
 //        Manipulators
 //========================================================================================
-nsOutputFileStream& nsEndl(nsOutputFileStream& os);
+NS_BASE nsOutputFileStream& nsEndl(nsOutputFileStream& os);
  
 
 #endif /* _FILESTREAM_H_ */
