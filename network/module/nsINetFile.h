@@ -33,6 +33,13 @@
 #define COOKIE_FILE "cookies"
 #endif
 
+#define COOKIE_PERMISSION_FILE_TOK "%COOKIE_PERMISSION_F%"
+#ifdef XP_PC
+#define COOKIE_PERMISSION_FILE "cookperm.txt"
+#else
+#define COOKIE_PERMISSION_FILE "cookperm"
+#endif
+
 #define CACHE_DB_F_TOK "%CACHE_DB_F%"
 #define CACHE_DB_FILE "fat.db"
 

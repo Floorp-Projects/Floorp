@@ -23,7 +23,7 @@
  * Additions/Changes by Judson Valeski, Gagan Saksena 1997.
  */
 #if defined(CookieManagement)
-#define TRUST_LABELS 1
+/* #define TRUST_LABELS 1 */
 #endif
 
 #include "rosetta.h"

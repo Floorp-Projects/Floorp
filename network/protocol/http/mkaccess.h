@@ -74,7 +74,7 @@ NET_CookieScriptPrefChanged(const char * newpref, void * data);
     THIS IS THE BEGINNING OF TRUST.H WHICH IDEALLY SHOULD BE A SEPERATE FILE
   ============================================================================================*/
 #ifndef TRUSTLABEL_H
-#define TRUSTLABEL_H 1
+/* #define TRUSTLABEL_H 1 */
 #ifdef TRUST_LABELS
 
 /* the structure that the iterators use to pass back the processed trust label
