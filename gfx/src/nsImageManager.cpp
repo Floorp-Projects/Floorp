@@ -62,17 +62,7 @@ ImageManagerImpl::~ImageManagerImpl()
   NS_RELEASE(mSS);
 }
 
-NS_IMPL_ADDREF(ImageManagerImpl)
-NS_IMPL_QUERY_INTERFACE(ImageManagerImpl, kIImageManagerIID)
-
-nsrefcnt ImageManagerImpl::Release(void)                        
-{
-  if (--mRefCnt == 0) {
-    NS_DELETEXPCOM(this);
-    return 0;
-  }
-  return mRefCnt;
-}
+NS_IMPL_ISUPPORTS1(ImageManagerImpl, nsIImageManager); 
 
 nsresult 
 ImageManagerImpl::Init()
@@ -104,34 +94,6 @@ ImageManagerImpl::FlushCache(void)
   IL_FlushCache();
   return NS_OK;
 }
-#if 0
-//obsolete, ptn test
-nsImageType 
-ImageManagerImpl::GetImageType(const char *buf, PRInt32 length)
-{
-  int ret;
-
-  NS_PRECONDITION(nsnull != buf, "null ptr");
-  ret = IL_Type(buf, length);
-  
-  switch(ret) {
-    case(IL_GIF):
-      return nsImageType_kGIF;
-    case(IL_XBM):
-      return nsImageType_kXBM;
-    case(IL_JPEG):
-      return nsImageType_kJPEG;
-    case(IL_PPM):
-      return nsImageType_kPPM;
-    case(IL_PNG):
-      return nsImageType_kPNG;
-    case(IL_ART):
-      return nsImageType_kART;
-    default:
-      return nsImageType_kUnknown;
-  }
-}
-#endif
 
 extern "C" NS_GFX_(nsresult)
 NS_NewImageManager(nsIImageManager **aInstancePtrResult)
@@ -142,6 +104,7 @@ NS_NewImageManager(nsIImageManager **aInstancePtrResult)
   }
   if (nsnull == gImageManager) {
     gImageManager = new ImageManagerImpl();
+    //neeti
     NS_IF_ADDREF(gImageManager);
   }
   if (nsnull == gImageManager) {
