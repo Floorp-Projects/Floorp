@@ -233,29 +233,29 @@ nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
   //
   
   // priority stuff
-	createNode(NS_LITERAL_STRING("lowest"), getter_AddRefs(kLowestLiteral), rdf);
-	createNode(NS_LITERAL_STRING("low"), getter_AddRefs(kLowLiteral), rdf);
-	createNode(NS_LITERAL_STRING("high"), getter_AddRefs(kHighLiteral), rdf);
-	createNode(NS_LITERAL_STRING("highest"),getter_AddRefs(kHighestLiteral),rdf);
-	createNode(NS_LITERAL_STRING("4"), getter_AddRefs(kLowestSortLiteral), rdf);
-	createNode(NS_LITERAL_STRING("3"), getter_AddRefs(kLowSortLiteral), rdf);
-	createNode(NS_LITERAL_STRING("2"), getter_AddRefs(kNormalSortLiteral), rdf);
-	createNode(NS_LITERAL_STRING("1"), getter_AddRefs(kHighSortLiteral), rdf);
-	createNode(NS_LITERAL_STRING("0"), getter_AddRefs(kHighestSortLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("lowest"), getter_AddRefs(kLowestLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("low"), getter_AddRefs(kLowLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("high"), getter_AddRefs(kHighLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("highest"),getter_AddRefs(kHighestLiteral),rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("4"), getter_AddRefs(kLowestSortLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("3"), getter_AddRefs(kLowSortLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("2"), getter_AddRefs(kNormalSortLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("1"), getter_AddRefs(kHighSortLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("0"), getter_AddRefs(kHighestSortLiteral), rdf);
 
   // message status - 
-	createNode(NS_LITERAL_STRING("flagged"),getter_AddRefs(kFlaggedLiteral),rdf);
-	createNode(NS_LITERAL_STRING("unflagged"), getter_AddRefs(kUnflaggedLiteral), rdf);
-	createNode(NS_LITERAL_STRING("replied"),getter_AddRefs(kRepliedLiteral),rdf);
-	createNode(NS_LITERAL_STRING("new"), getter_AddRefs(kNewLiteral), rdf);
-	createNode(NS_LITERAL_STRING("read"), getter_AddRefs(kReadLiteral), rdf);
-	createNode(NS_LITERAL_STRING("fowarded"), getter_AddRefs(kForwardedLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("flagged"),getter_AddRefs(kFlaggedLiteral),rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("unflagged"), getter_AddRefs(kUnflaggedLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("replied"),getter_AddRefs(kRepliedLiteral),rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("new"), getter_AddRefs(kNewLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("read"), getter_AddRefs(kReadLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("fowarded"), getter_AddRefs(kForwardedLiteral), rdf);
 
   // other useful strings
-	createNode(NS_LITERAL_STRING("true"), getter_AddRefs(kTrueLiteral), rdf);
-	createNode(NS_LITERAL_STRING("false"), getter_AddRefs(kFalseLiteral), rdf);
-	createNode(NS_LITERAL_STRING("news"), getter_AddRefs(kNewsLiteral), rdf);
-	createNode(NS_LITERAL_STRING("mail"), getter_AddRefs(kMailLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("true"), getter_AddRefs(kTrueLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("false"), getter_AddRefs(kFalseLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("news"), getter_AddRefs(kNewsLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING("mail"), getter_AddRefs(kMailLiteral), rdf);
 
   //
   // localized strings - some of the above strings need to be displayed
