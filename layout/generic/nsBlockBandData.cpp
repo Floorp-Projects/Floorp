@@ -98,6 +98,10 @@ nsBlockBandData::GetAvailableSpace(nscoord aY, nsRect& aResult)
 nsresult
 nsBlockBandData::GetBandData(nscoord aY)
 {
+  NS_ASSERTION(mSpaceManager, "bad state, no space manager");
+  if (!mSpaceManager) {
+    return NS_ERROR_FAILURE;
+  }
   PRInt32 iterations =0;
   nsresult rv = mSpaceManager->GetBandData(aY, mSpace, *this);
   while (NS_FAILED(rv)) {
@@ -108,7 +112,8 @@ nsBlockBandData::GetBandData(nscoord aY)
       return NS_ERROR_FAILURE;
     }
     // We need more space for our bands
-    if (mTrapezoids != mData) {
+    NS_ASSERTION(mTrapezoids, "bad state, no mTrapezoids");
+    if (mTrapezoids && (mTrapezoids != mData)) {
       delete [] mTrapezoids;
     }
     PRInt32 newSize = mSize * 2;
@@ -116,6 +121,7 @@ nsBlockBandData::GetBandData(nscoord aY)
       newSize = mCount;
     }
     mTrapezoids = new nsBandTrapezoid[newSize];
+    NS_POSTCONDITION(mTrapezoids, "failure allocating mTrapezoids");
     if (!mTrapezoids) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
