@@ -169,6 +169,9 @@ nsRenderingContextPS :: ~nsRenderingContextPS()
   }
 
   mTranMatrix = nsnull;
+
+  NS_IF_RELEASE(mContext);
+  NS_IF_RELEASE(mFontMetrics);
 }
 
 /** ---------------------------------------------------
