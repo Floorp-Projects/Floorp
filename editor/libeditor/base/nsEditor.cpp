@@ -85,14 +85,10 @@
 #include "nsIFormatConverter.h"
 
 // Drag & Drop, Clipboard Support
-static NS_DEFINE_IID(kIClipboardIID,     NS_ICLIPBOARD_IID);
-static NS_DEFINE_CID(kCClipboardCID,     NS_CLIPBOARD_CID);
-static NS_DEFINE_CID(kIGenericTransferableIID,  NS_IGENERICTRANSFERABLE_IID);
-static NS_DEFINE_CID(kCGenericTransferableCID,  NS_GENERICTRANSFERABLE_CID);
-static NS_DEFINE_IID(kIDataFlavorIID,    NS_IDATAFLAVOR_IID);
-static NS_DEFINE_IID(kCDataFlavorCID,    NS_DATAFLAVOR_CID);
-static NS_DEFINE_IID(kCXIFFormatConverterCID,    NS_XIFFORMATCONVERTER_CID);
-static NS_DEFINE_IID(kIFormatConverterIID, NS_IFORMATCONVERTER_IID);
+static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
+static NS_DEFINE_CID(kCGenericTransferableCID, NS_GENERICTRANSFERABLE_CID);
+static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
+static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
 static NS_DEFINE_IID(kIContentIID,          NS_ICONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID,          NS_IDOMTEXT_IID);
@@ -847,13 +843,14 @@ NS_IMETHODIMP nsEditor::Paste()
   // Get Clipboard Service
   nsIClipboard* clipboard;
   nsresult rv = nsServiceManager::GetService(kCClipboardCID,
-                                             kIClipboardIID,
+                                             nsIClipboard::GetIID(),
                                              (nsISupports **)&clipboard);
 
   // Create generic Transferable for getting the data
   nsCOMPtr<nsIGenericTransferable> genericTrans;
   rv = nsComponentManager::CreateInstance(kCGenericTransferableCID, nsnull, 
-                                          kIGenericTransferableIID, (void**) getter_AddRefs(genericTrans));
+                                          nsIGenericTransferable::GetIID(), 
+                                          (void**) getter_AddRefs(genericTrans));
   if (NS_OK == rv) {
     // Get the nsITransferable interface for getting the data from the clipboard
     nsCOMPtr<nsITransferable> trans(do_QueryInterface(genericTrans));
@@ -861,7 +858,7 @@ NS_IMETHODIMP nsEditor::Paste()
       nsCOMPtr<nsIDataFlavor> flavor;
 
       // Create the desired DataFlavor for the type of data we want to get out of the transferable
-      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, kIDataFlavorIID, (void**) getter_AddRefs(flavor));
+      rv = nsComponentManager::CreateInstance(kCDataFlavorCID, nsnull, nsIDataFlavor::GetIID(), (void**) getter_AddRefs(flavor));
       if (NS_OK == rv) {
         // Initialize the DataFlavor and set it into the GenericTransferable
         flavor->Init(kTextMime, "Text");
