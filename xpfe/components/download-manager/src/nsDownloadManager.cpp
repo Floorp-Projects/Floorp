@@ -853,7 +853,6 @@ nsDownload::GetTransferInformation(PRInt32* aCurr, PRInt32* aMax)
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
 
-PRInt32 i = 0;
 NS_IMETHODIMP
 nsDownload::OnProgressChange(nsIWebProgress *aWebProgress,
                                nsIRequest *aRequest,
