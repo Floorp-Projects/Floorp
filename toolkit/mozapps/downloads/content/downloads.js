@@ -248,8 +248,8 @@ function onDownloadCancel(aEvent)
   // employed by the helper app service isn't fully accessible yet... should be fixed...
   // talk to bz...)
   // the upshot is we have to delete the file if it exists. 
-  var f = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-  f.initWithPath(aEvent.target.id);
+  var f = getLocalFileFromNativePathOrUrl(aEvent.target.id);
+
   if (f.exists()) 
     f.remove(false);
 
@@ -280,15 +280,15 @@ function onDownloadRemove(aEvent)
 
 function onDownloadShow(aEvent)
 {
-  var f = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-  f.initWithPath(aEvent.target.id);
+  var f = getLocalFileFromNativePathOrUrl(aEvent.target.id);
 
   if (f.exists()) {
     try {
       f.reveal();
     } catch (ex) {
       // if reveal failed for some reason (eg on unix it's not currently
-      // implemented), open a browser window rooted at the parent
+      // implemented), send the file: URL  window rooted at the parent to 
+      // the OS handler for that protocol
       var parent = f.parent;
       if (parent) {
         openExternal(parent.path);
@@ -316,9 +316,7 @@ function onDownloadOpen(aEvent)
   var download = aEvent.target;
   if (download.localName == "download") {
     if (download.openable) {
-      var f = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-      f.initWithPath(aEvent.target.id);
-
+      var f = getLocalFileFromNativePathOrUrl(aEvent.target.id);
       if (f.exists()) {
         if (f.isExecutable()) {
           var dontAsk = false;
@@ -398,8 +396,7 @@ function onDownloadRetry(aEvent)
   var download = aEvent.target;
   if (download.localName == "download") {
     var src = getRDFProperty(download.id, "URL");
-    var f = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-    f.initWithPath(aEvent.target.id);
+    var f = getLocalFileFromNativePathOrUrl(aEvent.target.id);
     saveURL(src, f, null, true, true);
   }
   
@@ -814,9 +811,7 @@ var gDownloadPrefObserver = {
 function onDownloadShowFolder()
 {
   var folderName = document.getElementById("saveToFolder");
-  var dir = Components.classes["@mozilla.org/file/local;1"]
-                      .createInstance(Components.interfaces.nsILocalFile);
-  dir.initWithPath(folderName.getAttribute("path"));
+  var dir = getLocalFileFromNativePathOrUrl(folderName.getAttribute("path"));
   if (!dir.exists())
    dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0755);
 
@@ -841,4 +836,31 @@ function openExternal(aPath)
   protocolSvc.loadUrl(uri);
 
   return;
+}
+
+// we should be using real URLs all the time, but until 
+// bug 239948 is fully fixed, this will do...
+function getLocalFileFromNativePathOrUrl(aPathOrUrl)
+{
+  if (aPathOrUrl.substring(0,7) == "file://") {
+
+    // if this is a URL, get the file from that
+    ioSvc = Components.classes["@mozilla.org/network/io-service;1"]
+      .getService(Components.interfaces.nsIIOService);
+
+    // XXX it's possible that using a null char-set here is bad
+    const fileUrl = ioSvc.newURI(aPathOrUrl, null, null).
+      QueryInterface(Components.interfaces.nsIFileURL);
+    return fileUrl.file.clone().
+      QueryInterface(Components.interfaces.nsILocalFile);
+
+  } else {
+
+    // if it's a pathname, create the nsILocalFile directly
+    f = Components.classes["@mozilla.org/file/local;1"].
+      createInstance(Components.interfaces.nsILocalFile);
+    f.initWithPath(aPathOrUrl);
+
+    return f;
+  }
 }
