@@ -97,8 +97,11 @@ RAPTOR_LAYOUT_DIR       = $(MOZ_TOP)/layout
 TREX_GCONFIG_BRANCH     = 
 TREX_GCONFIG_DIR        = $(MOZ_TOP)/gconfig
 
+TREX_XPFC_BRANCH        = 
+TREX_XPFC_DIR           = mozilla/xpfc
+
 TREX_TREX_BRANCH        = 
-TREX_TREX_DIR           = ns/trex
+TREX_TREX_DIR           = mozilla/trex
 
 LIBNLS_BRANCH           = -r libnls_v3_Normandy
 LIBNLS_DIR              = ns/modules/libnls
@@ -210,8 +213,8 @@ pull_trex::
     @echo +++ trex.mak: checking out trex with "$(CVTREX)"
     cd $(MOZ_SRC)\.
     -$(CVS)  $(TREX_GCONFIG_BRANCH)  $(TREX_GCONFIG_DIR)
-    cd $(MOZ_SRC)\$(MOZ_TOP)
-    -$(CVST) $(TREX_TREX_BRANCH)  -d trex  $(TREX_TREX_DIR)
+    -$(CVS)  $(TREX_XPFC_BRANCH)     $(TREX_XPFC_DIR)
+    -$(CVS)  $(TREX_TREX_BRANCH)     $(TREX_TREX_DIR)
     cd $(MOZ_SRC)\.
 
 
@@ -238,7 +241,9 @@ build_julian::
     cd $(MOZ_SRC)\.
 
 build_trex:: 
-    cd $(MOZ_SRC)\$(MOZ_TOP)\trex
+    cd $(MOZ_SRC)\$(MOZ_TOP)\xpfc
+    nmake -f makefile.win
+    cd $(MOZ_SRC)\$(MOZ_TOP)\calendar
     nmake -f makefile.win
     cd $(MOZ_SRC)\.
 
