@@ -58,6 +58,7 @@ private:
 private:
     nsCOMPtr<nsILocalFile>      mCacheDirectory;
     nsCacheEntryHashTable       mInactiveEntries;
+    PRUint64                    mTotalCachedDataSize;
 };
 
 
