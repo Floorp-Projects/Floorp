@@ -16,27 +16,33 @@
  * Copyright (C) 1999 John Fairhurst. All Rights Reserved.
  *
  * Contributor(s): 
- *
  */
+#ifndef _nslocaleos2_h_
+#define _nslocaleos2_h_
 
-#include "nscore.h"
+
 #include "nsISupports.h"
-#include "nsIFactory.h"
-#include "nsCollationOS2.h"
-#include "nsDateTimeFormatOS2.h"
- 
+#include "nscore.h"
+#include "nsString.h"
+#include "nsIOS2Locale.h"
 
 
-class nsLocaleOS2Factory : public nsIFactory
-{
-  public:
-    NS_DECL_ISUPPORTS
+class nsOS2Locale : public nsIOS2Locale {
 
-    NS_DECL_NSIFACTORY
+  NS_DECL_ISUPPORTS
 
-    nsLocaleOS2Factory(const nsCID &aClass); 
-    virtual ~nsLocaleOS2Factory();  
+public:
 
-  private:   
-    nsCID     mClassID;
+  nsOS2Locale();
+  virtual ~nsOS2Locale();
+   
+  NS_IMETHOD GetPlatformLocale(PRUnichar* os2Locale,
+                                size_t length);
+  NS_IMETHOD GetXPLocale(const char* os2Locale, nsString* locale);
+
+protected:
+  inline PRBool ParseLocaleString(const char* locale_string, char* language, char* country, char* extra, char separator);
+
 };
+
+#endif

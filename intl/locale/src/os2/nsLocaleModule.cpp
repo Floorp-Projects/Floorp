@@ -17,8 +17,21 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
+ * Contributor(s):
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date             Modified by     Description of modification
+ * 07/05/2000       IBM Corp.      Reworked file after unix version.
  */
+
+#include "nspr.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIModule.h"
 #include "nsIComponentManager.h"
@@ -29,7 +42,8 @@
 #include "nsLocaleFactory.h"
 #include "nsLocaleCID.h"
 #include "nsIOS2Locale.h"
-#include "nsLocaleOS2.h"
+#include "nsOS2Locale.h"
+#include "nsOS2LocaleFactory.h"
 #include "nsCollationOS2.h"
 #include "nsIScriptableDateFormat.h"
 #include "nsDateTimeFormatOS2.h"
@@ -37,6 +51,7 @@
 #include "nsDateTimeFormatCID.h"
 #include "nsCollationCID.h"
 #include "nsIServiceManager.h"
+#include "nsLanguageAtomService.h"
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
@@ -47,6 +62,11 @@ NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 NS_DEFINE_IID(kILocaleFactoryIID,NS_ILOCALEFACTORY_IID);
 NS_DEFINE_CID(kOS2LocaleFactoryCID, NS_OS2LOCALEFACTORY_CID);
 NS_DEFINE_CID(kLocaleServiceCID, NS_LOCALESERVICE_CID);
+
+//
+// for language atoms
+//
+NS_DEFINE_CID(kLanguageAtomServiceCID, NS_LANGUAGEATOMSERVICE_CID);
 
 //
 // for the collation and formatting interfaces
@@ -166,7 +186,7 @@ nsLocaleModule::GetClassObject(nsIComponentManager *aCompMgr,
     }
   }
   else if (aClass.Equals(kOS2LocaleFactoryCID)) {
-		nsLocaleFactoryOS2 *factory = new nsLocaleFactoryOS2();
+	nsOS2LocaleFactory *factory = new nsOS2LocaleFactory();
     if (!factory) {
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -179,7 +199,7 @@ nsLocaleModule::GetClassObject(nsIComponentManager *aCompMgr,
   }
   else {
     // let the nsLocaleFactory logic take over from here
-    nsLocaleFactoryOS2* factory = new nsLocaleFactoryOS2(aClass);
+    nsLocaleOS2Factory* factory = new nsLocaleOS2Factory(aClass);
     if (!factory) {
       rv = NS_ERROR_OUT_OF_MEMORY;
     }
@@ -222,6 +242,8 @@ static Components gComponents[] = {
     NULL, },
   { "Scriptable Date Format", &kScriptableDateFormatCID,
     NS_SCRIPTABLEDATEFORMAT_CONTRACTID, },
+  { "Language Atom Service", &kLanguageAtomServiceCID,
+    NS_LANGUAGEATOMSERVICE_CONTRACTID, },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 

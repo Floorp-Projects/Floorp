@@ -26,160 +26,54 @@
  * identified per MPL Section 3.3
  *
  * Date             Modified by     Description of modification
- * 03/23/2000       IBM Corp.      Fixed unitialized members in ctor.
- *
+ * 07/05/2000       IBM Corp.      Reworded file after unix model.
  */
 
 #include "nscore.h"
 #include "nsISupports.h"
 #include "nsIFactory.h"
 #include "nsCOMPtr.h"
-#include "nsCollation.h"
 #include "nsCollationOS2.h"
 #include "nsIScriptableDateFormat.h"
 #include "nsDateTimeFormatCID.h"
 #include "nsDateTimeFormatOS2.h"
-#include "nsIOS2Locale.h"
-#include "nsLocaleOS2.h"
 #include "nsLocaleFactoryOS2.h"
-#include "nsLocaleCID.h"
+#include "nsLanguageAtomService.h"
+
 
 NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
-NS_DEFINE_IID(kIOS2LocaleIID, NS_IOS2LOCALE_IID);
-NS_DEFINE_IID(kLocaleFactoryOS2CID, NS_OS2LOCALEFACTORY_CID);
 NS_DEFINE_IID(kICollationFactoryIID, NS_ICOLLATIONFACTORY_IID);                                                        
 NS_DEFINE_IID(kICollationIID, NS_ICOLLATION_IID);                                                         
 NS_DEFINE_IID(kIDateTimeFormatIID, NS_IDATETIMEFORMAT_IID);
 NS_DEFINE_CID(kScriptableDateFormatCID, NS_SCRIPTABLEDATEFORMAT_CID);
+NS_DEFINE_CID(kLanguageAtomServiceCID, NS_LANGUAGEATOMSERVICE_CID);
 
-// ctor/dtor
-nsLocaleFactoryOS2::nsLocaleFactoryOS2() : mSysLocale(nsnull),
-                                           mAppLocale(nsnull)
-{
-   // don't need to init the ref-count because XP nsLocaleFactory does that.
-  // ??? Not sure the above comment is still valid 
-  NS_INIT_REFCNT();
-}
-
-nsLocaleFactoryOS2::nsLocaleFactoryOS2(const nsCID &aClass) : mSysLocale(nsnull), 
-                                           mAppLocale(nsnull)
+nsLocaleOS2Factory::nsLocaleOS2Factory(const nsCID &aClass)  
 {   
   NS_INIT_ISUPPORTS();
   mClassID = aClass;
 }   
 
-nsLocaleFactoryOS2::~nsLocaleFactoryOS2()
+nsLocaleOS2Factory::~nsLocaleOS2Factory()
 {
-   NS_IF_RELEASE(mSysLocale);
-   NS_IF_RELEASE(mAppLocale);
 }
 
-// nsILocaleFactory
-nsresult nsLocaleFactoryOS2::NewLocale( nsString  **aCatList,
-                                        nsString  **aValList,
-                                        PRUint8     aCount,
-                                        nsILocale **aLocale)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleOS2Factory, nsIFactory)
+
+nsresult nsLocaleOS2Factory::CreateInstance(nsISupports *aOuter,  
+                                         const nsIID &aIID,  
+                                         void **aResult)
 {
-   if( !aCatList || !aValList || !aLocale)
-      return NS_ERROR_NULL_POINTER;
+  if (aResult == NULL) {  
+    return NS_ERROR_NULL_POINTER;  
+  }  
 
-   *aLocale = nsnull;
-   nsOS2Locale *aLoc = new nsOS2Locale;
-   if(nsnull == aLoc)
-       return NS_ERROR_OUT_OF_MEMORY;
+  *aResult = NULL;  
 
-   nsresult rc = aLoc->Init( aCatList, aValList, aCount);
-
-   if( NS_FAILED(rc))
-      delete aLoc;
-   else
-   {
-      NS_ADDREF(aLoc);
-      *aLocale = (nsILocale*)aLoc;
-   }
-
-   return rc;
-}
-
-nsresult nsLocaleFactoryOS2::NewLocale( const nsString *aName,
-                                        nsILocale     **aLocale)
-{
-   if( !aName || !aLocale)
-      return NS_ERROR_NULL_POINTER;
-
-   *aLocale = nsnull;
-   nsOS2Locale *aLoc = new nsOS2Locale;
-   if(nsnull == aLoc)
-       return NS_ERROR_OUT_OF_MEMORY;
-
-   nsresult rc = aLoc->Init( *aName);
-
-   if( NS_FAILED(rc))
-      delete aLoc;
-   else
-   {
-      NS_ADDREF(aLoc);
-      *aLocale = (nsILocale*)aLoc;
-   }
-
-   return rc;
-}
-
-nsresult nsLocaleFactoryOS2::GetSystemLocale( nsILocale **aSysLocale)
-{
-   if( !aSysLocale)
-      return NS_ERROR_NULL_POINTER;
-
-   if( !mSysLocale)
-      mSysLocale = new nsSystemLocale;
-
-   NS_ADDREF(mSysLocale);
-
-   return NS_OK;
-}
-
-nsresult nsLocaleFactoryOS2::GetApplicationLocale( nsILocale **aAppLocale)
-{
-   if( !aAppLocale)
-      return NS_ERROR_NULL_POINTER;
-
-   if( !mAppLocale)
-      mAppLocale = new nsApplicationLocale;
-
-   NS_ADDREF(mAppLocale);
-
-   return NS_OK;
-}
-
-
-NS_IMETHODIMP
-nsLocaleFactoryOS2::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
-		void** aResult)
-{
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
   nsISupports *inst = NULL;
 
-  if (aIID.Equals(kISupportsIID)) {
-    *aResult = (void *)(nsISupports*)this;   
-    NS_ADDREF_THIS(); // Increase reference count for caller   
-  }
-  else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-    NS_ADDREF_THIS(); // Increase reference count for caller   
-  }
-  else if (aIID.Equals(kIOS2LocaleIID)) {
-    nsOS2Locale *localeImpl = new nsOS2Locale();
-    if(localeImpl)
-      localeImpl->AddRef();
-    *aResult = (void*)localeImpl;
-  }
-  else if (aIID.Equals(kICollationFactoryIID)) {
+  if (aIID.Equals(kICollationFactoryIID)) {
      NS_NEWXPCOM(inst, nsCollationFactory);
   }
   else if (aIID.Equals(kICollationIID)) {
@@ -188,55 +82,33 @@ nsLocaleFactoryOS2::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
   else if (aIID.Equals(kIDateTimeFormatIID)) {
      NS_NEWXPCOM(inst, nsDateTimeFormatOS2);
   }
-  else if (aIID.Equals(nsIScriptableDateFormat::GetIID())) {
+  else if (aIID.Equals(NS_GET_IID(nsIScriptableDateFormat))) {
      inst = NEW_SCRIPTABLE_DATEFORMAT();
   }
   else if (mClassID.Equals(kScriptableDateFormatCID)) {
      inst = NEW_SCRIPTABLE_DATEFORMAT();
   }
-  if (*aResult == NULL && !inst)
-    return NS_NOINTERFACE;   
-
-  nsresult ret = NS_OK;
-
-  if (inst) {
-    NS_ADDREF(inst);
-    ret = inst->QueryInterface(aIID, aResult);
-    NS_RELEASE(inst);
+  else if (mClassID.Equals(kLanguageAtomServiceCID)) {
+     NS_NEWXPCOM(inst, nsLanguageAtomService);
   }
+  else 
+  {
+    return NS_NOINTERFACE;
+  }
+
+  if (NULL == inst) {
+    return NS_ERROR_OUT_OF_MEMORY;  
+  }
+  
+  NS_ADDREF(inst);
+  nsresult ret = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
   return ret;
 }
 
-/* nsresult nsLocaleFactoryOS2::QueryInterface(const nsIID &aIID,   
-					    void **aResult)   
-{   
-  if (aResult == NULL) {   
-    return NS_ERROR_NULL_POINTER;   
-  }   
-
-  // Always NULL result, in case of failure   
-  *aResult = NULL;   
-
-  if (aIID.Equals(kISupportsIID)) {   
-    *aResult = (void *)(nsISupports*)this;   
-  }
-  else if (aIID.Equals(kIFactoryIID)) {   
-    *aResult = (void *)(nsIFactory*)this;   
-  }   
-
-  if (*aResult == NULL) {   
-    return NS_NOINTERFACE;   
-  }   
-
-  NS_ADDREF_THIS(); // Increase reference count for caller   
-  return NS_OK;   
-}   */
-
-
-NS_IMETHODIMP
-nsLocaleFactoryOS2::LockFactory(PRBool	aBool)
+nsresult nsLocaleOS2Factory::LockFactory(PRBool aLock)
 {
-	return NS_OK;
+   // Not implemented in simplest case.
+   return NS_OK;
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsLocaleFactoryOS2, nsIFactory);
