@@ -20,6 +20,7 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
+	default.htm		\
 	search.js		\
 	search.css		\
 	search.xul		\

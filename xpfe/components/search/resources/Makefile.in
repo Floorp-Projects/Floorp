@@ -25,6 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 FILES = \
+	default.htm		\
 	search.js		\
 	search.css		\
 	search.xul		\
