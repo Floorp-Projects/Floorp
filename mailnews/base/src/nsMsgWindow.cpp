@@ -179,7 +179,10 @@ NS_IMETHODIMP nsMsgWindow::SetDOMWindow(nsIDOMWindow *aWindow)
 
 
     nsAutoString  webShellName("messagepane");
-    rv = mRootWebShell->FindChildWithName(webShellName.GetUnicode(), mMessageWindowWebShell);
+    nsCOMPtr<nsIWebShell> msgWebShell;
+    rv = mRootWebShell->FindChildWithName(webShellName.GetUnicode(), *getter_AddRefs(msgWebShell));
+    // we don't own mMessageWindowWebShell so don't try to keep a reference to it!
+    mMessageWindowWebShell = msgWebShell;
 	}
 	return rv;
 }
@@ -233,6 +236,10 @@ NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
   //    incoming Type                     Preferred type
   //      text/html                    
   //      text/xul
+  //      image/gif
+  //      image/jpeg
+  //      image/png
+  //      image/tiff
 
 
    *aCanHandleContent = PR_FALSE;
@@ -254,7 +261,24 @@ NS_IMETHODIMP nsMsgWindow::CanHandleContent(const char * aContentType,
     
     // for right now, if the load command is viewNormal just say we can handle it...
     if (aCommand == nsIURILoader::viewNormal)
+    {
+       if (nsCRT::strcasecmp(aContentType, "multipart/x-mixed-replace") == 0)
+       {
+        *aDesiredContentType = nsCRT::strdup("text/html");
         *aCanHandleContent = PR_TRUE;
+       }
+       if (nsCRT::strcasecmp(aContentType,  "text/html") == 0
+           || nsCRT::strcasecmp(aContentType, "text/xul") == 0
+           || nsCRT::strcasecmp(aContentType, "text/rdf") == 0 
+           || nsCRT::strcasecmp(aContentType, "text/xml") == 0
+           || nsCRT::strcasecmp(aContentType, "text/css") == 0
+           || nsCRT::strcasecmp(aContentType, "image/gif") == 0
+           || nsCRT::strcasecmp(aContentType, "image/jpeg") == 0
+           || nsCRT::strcasecmp(aContentType, "image/png") == 0
+           || nsCRT::strcasecmp(aContentType, "image/tiff") == 0
+           || nsCRT::strcasecmp(aContentType, "application/http-index-format") == 0)
+           *aCanHandleContent = PR_TRUE;
+    }
   }
 
   return NS_OK;
