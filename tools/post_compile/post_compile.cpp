@@ -215,43 +215,148 @@ int DIGIT_MAP[256] = {
 /*
 * Dceclation of the Instruction types
 */
+char reg_name[8][4] = { "eax", "ecx", "edx", "ebx", "esp", "ebp", "esi", "edi" };
+
+char instr_name[8][8] = { "unknown", "push", "add", "sub", "cmp", "mov", "j", "lea" };
+
+
+enum eRegister {
+    kNoReg = -1,
+    keax = 0,
+};
+
+enum eInstruction {
+    kunknown, kpush, kadd, ksub, kcmp, kmov, kjmp, klea
+};
+
 
 struct CInstruction {
     int             isize;  // size of the instruction in bytes
     unsigned char   idata[8];
-    virtual void    output( void );
+
+    eInstruction    instr;
+    eRegister       dest;
+    eRegister       src;
+
+    long            destData;
+    long            srcData;
+
+    void            output( void );
     void            hexdump( void );
 };
 
 
-void CInstruction::output( void )
+void am_rm32( CInstruction *instr, unsigned char *theCode )
 {
-    cout << "Dummy Instruction\n";
+    unsigned char   reg = *theCode;
+    instr->isize = 2;
+    instr->src = (eRegister)((reg & 0x31) >> 3);
+    instr->dest = (eRegister)(reg & 0x07);
+// ek need to add and set the address mode
+// ek need to determine whether we are doing source/dest or dest/source
+    if ((reg & 0x07) == 0x04)  // check for SIB
+    {
+    }
+
+    if ((reg >= 0x80) && (reg < 0xC0)) // disp32
+    {
+        instr->destData = *(theCode +1);    // ek need to do a long here
+        instr->isize += 4;
+    }
+
+    if ((reg >= 0x40) && (reg < 0x80)) // disp8
+    {
+        instr->destData = *(theCode +1);
+        instr->isize++;
+    }
 }
 
 
-struct CPush:CInstruction {
-                    CPush( unsigned char *theCode );
-    virtual void    output( void ); 
-};
+/*
+*   theCode points to the first register field
+*/
+CInstruction *am_rm32_imm32( eInstruction instr, unsigned char *theCode )
+{
+    CInstruction    *retInstr = new CInstruction;
+    am_rm32( retInstr, theCode );
+    retInstr->src = kNoReg;     // imm32 is the src
+    retInstr->instr = instr;
+    retInstr->srcData = *(long*)(theCode + retInstr->isize-1);
+    retInstr->isize += 4;       // add one for the imm32
+}
 
 
-struct CCmp:CInstruction {
-                    CCmp( unsigned char *theCode );
-    virtual void    output( void ); 
-};
+/*
+*   theCode points to the first register field
+*/
+CInstruction *am_rm32_imm8( eInstruction instr, unsigned char *theCode )
+{
+    CInstruction    *retInstr = new CInstruction;
+    am_rm32( retInstr, theCode );
+    retInstr->src = kNoReg;     // imm8 is the src
+    retInstr->instr = instr;
+    retInstr->srcData = *(theCode + retInstr->isize-1);
+    retInstr->isize += 1;       // add one for the imm8
+}
 
 
-struct CSub:CInstruction {
-                    CSub( unsigned char *theCode );
-    virtual void    output( void ); 
-};
+CInstruction *am_rm32_reg( eInstruction instr, unsigned char *theCode )
+{
+    CInstruction    *retInstr = new CInstruction;
+    am_rm32( retInstr, theCode );
+    retInstr->instr = instr;
+}
 
 
-struct CBadOpCode:CInstruction {
-                    CBadOpCode( unsigned char *theCode );
-    virtual void    output( void ); 
-};
+CInstruction *am_non_reg( eInstruction instr, eRegister reg )
+{
+    CInstruction    *retInstr = new CInstruction;
+    retInstr->isize = 1;
+    retInstr->instr = instr;
+    retInstr->src = reg;
+    retInstr->dest = kNoReg;
+}
+
+
+CInstruction *am_imm8( eInstruction instr, unsigned char *theCode )
+{
+    CInstruction    *retInstr = new CInstruction;
+    retInstr->isize = 2;
+    retInstr->instr = instr;
+    retInstr->src = kNoReg;
+    retInstr->dest = kNoReg;
+    // ek need to get the imm8 data into the data structure
+}
+
+
+CInstruction *am_reg_rm32( eInstruction instr, unsigned char *theCode )
+{
+    CInstruction    *retInstr = new CInstruction;
+    am_rm32( retInstr, theCode );
+    retInstr->instr = instr;
+// ek need to reverse the src and dest
+}
+
+
+void CInstruction::output( void )
+{
+    bool commaNeeded = false;
+
+    cout << instr_name[instr] << "\t";
+
+    if (dest != kNoReg)
+    {
+        cout << reg_name[dest];
+        commaNeeded = true;
+    }
+    if (src != kNoReg)
+    {
+        if (commaNeeded)    cout << ", ";
+        cout << reg_name[src];
+    }
+
+    cout << "\n";
+}
 
 
 void CInstruction::hexdump( void )
@@ -262,147 +367,69 @@ void CInstruction::hexdump( void )
         cout.form("%02x ", idata[isize - instrSize]);
         instrSize--;
     }
-    cout << "\n";
+    cout << "\t";
 }
-
-
-/* CPush */
-CPush::CPush( unsigned char *theCode )
-{
-    switch( *theCode )
-    {
-        case 0x06:
-            isize = 1;
-            break;
-        case 0x0e:
-            isize = 1;
-            break;
-        case 0x0f:
-            isize = 2;
-            break;
-        case 0x16:
-            isize = 1;
-            break;
-        case 0x1e:
-            isize = 1;
-            break;
-        case 0x68:
-            isize = 5;
-            break;
-        case 0x6a:
-            isize = 2;
-            break;
-        case 0x50:
-        case 0x51:
-        case 0x52:
-        case 0x53:
-        case 0x54:
-        case 0x55:
-        case 0x56:
-        case 0x57:
-            isize = 1;
-            break;
-        case 0xFF:
-            isize = 2;  // at least 2!
-            break;
-    }
-    memcpy( idata, theCode, isize );
-}
-
-
-void CPush::output( void )
-{
-    cout << "push r\n";
-}
-
-
-/* CCmp */
-CCmp::CCmp( unsigned char *theCode )
-{
-    isize = 4;
-    memcpy( idata, theCode, isize );
-}
-
-
-void CCmp::output( void )
-{
-    cout << "cmp imm8,off(r)\n";
-}
-
-
-/* CSub */
-CSub::CSub( unsigned char *theCode )
-{
-    isize = 3;
-    memcpy( idata, theCode, isize );
-}
-
-
-void CSub::output( void )
-{
-    cout << "sub r,imm8\n";
-}
-
-
-/* CBadOpCode */
-CBadOpCode::CBadOpCode( unsigned char *theCode )
-{
-    isize = 2;
-    memcpy( idata, theCode, isize );
-}
-
-
-void CBadOpCode::output( void )
-{
-    cout << "*** Bad OpCode ";
-    cout.form( "%02X %02X ***\n", *idata, *(idata+1) );
-}
-
-
 
 
 CInstruction* get_next_instruction( unsigned char *theCode )
 {
     CInstruction    *retInstr;
+    unsigned char   *reg = theCode+1;
 
     switch (*theCode)
     {
+        case 0x01:
+            retInstr = am_rm32_reg( kadd, reg );
+            break;
         case 0x55:
-            retInstr = new CPush( theCode );
+            retInstr = am_non_reg( kpush, (eRegister)(0x55 & 0x07) );
             break;
         case 0x83:
             switch (DIGIT_MAP[*(theCode+1)])
             {
                 case 5:
-                    retInstr = new CSub( theCode );
+                    retInstr = am_rm32_imm8( ksub, theCode+1 );
                     break;
                 case 7:
-                    retInstr = new CCmp( theCode );
+                    retInstr = am_rm32_imm8( kcmp, theCode+1 );
                     break;
                 default:
-                    retInstr = new CBadOpCode( theCode );
+                    retInstr = am_rm32_imm8( kunknown, theCode+1 );
                     break;
             }
             break;
-        case 0x88:
         case 0x89:
+            retInstr = am_rm32_reg( kmov, reg );
+            break;
+        case 0x88:
         case 0x8a:
+            retInstr = am_rm32_imm8( kunknown, theCode +1 );
+            break;
         case 0x8b:
+            retInstr = am_reg_rm32( kmov, reg );
+            break;
         case 0x8c:
         case 0x8e:
+            retInstr = am_rm32_imm8( kunknown, theCode +1 );
+            break;
+        case 0x8d:
+            retInstr = am_rm32_imm8( klea, reg );
+       //     retInstr->isize++;  // ek need to handle the 16/32 instead of 8/32 for lea
+            break;
         case 0xc7:
-          //  retInstr = new CMov( theCode );
+            retInstr = am_rm32_imm32( kmov, theCode +1);
             break;
         case 0x7e:
         case 0xeb:
-          //  retInstr = new CJmp( theCode );
+            retInstr = am_imm8( kjmp, theCode +1);
             break;
 
         default:
-            retInstr = new CBadOpCode( theCode );
+            retInstr = am_rm32_imm8( kunknown, theCode +1);
             break;
     }
 
+    memcpy( retInstr->idata, theCode, retInstr->isize );
     return retInstr;
 }
 
