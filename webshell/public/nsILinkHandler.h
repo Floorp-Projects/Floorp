@@ -66,8 +66,7 @@ public:
    */
   NS_IMETHOD OnOverLink(nsIFrame* aFrame, 
                         const nsString& aURLSpec,
-                        const nsString& aTargetSpec,
-                        nsIPostData* aPostData = 0) = 0;
+                        const nsString& aTargetSpec) = 0;
 
   /**
    * Get the state of a link to a given absolute URL

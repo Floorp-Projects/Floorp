@@ -47,8 +47,7 @@ public:
                          nsIPostData* aPostData = 0);
   NS_IMETHOD OnOverLink(nsIFrame* aFrame, 
                         const nsString& aURLSpec,
-                        const nsString& aTargetSpec,
-                        nsIPostData* aPostData = 0);
+                        const nsString& aTargetSpec);
   NS_IMETHOD GetLinkState(const nsString& aURLSpec, nsLinkState& aState);
 
   void HandleLinkClickEvent(const nsString& aURLSpec,
@@ -177,9 +176,7 @@ LinkHandlerImpl::OnLinkClick(nsIFrame* aFrame,
 NS_IMETHODIMP
 LinkHandlerImpl::OnOverLink(nsIFrame* aFrame,
                             const nsString& aURLSpec,
-                            const nsString& aTargetSpec,
-                            nsIPostData* aPostData)
-
+                            const nsString& aTargetSpec)
 {
   return NS_OK;
 }
@@ -189,21 +186,6 @@ LinkHandlerImpl::GetLinkState(const nsString& aURLSpec, nsLinkState& aState)
 {
   // XXX not yet implemented
   aState = eLinkState_Unvisited;
-
-#ifdef NS_DEBUG
-  if (aURLSpec.Equals("http://visited/")) {
-    aState = eLinkState_Visited;
-  }
-  else if (aURLSpec.Equals("http://out-of-date/")) {
-    aState = eLinkState_OutOfDate;
-  }
-  else if (aURLSpec.Equals("http://active/")) {
-    aState = eLinkState_Active;
-  }
-  else if (aURLSpec.Equals("http://hover/")) {
-    aState = eLinkState_Hover;
-  }
-#endif
   return NS_OK;
 }
 
