@@ -91,3 +91,4 @@ char * nsSelectionRange::ToString() {
   delete endStr;
   return str;
 }
+
