@@ -667,6 +667,7 @@ nsresult nsImapOfflineSync::ProcessNextOperation()
       if ((m_currentDB->ListAllOfflineOpIds(&m_CurrentKeys) != 0) || !m_CurrentKeys.GetSize())
       {
         m_currentDB = nsnull;
+        folderInfo = nsnull; // can't hold onto folderInfo longer than db
         m_currentFolder->ClearFlag(MSG_FOLDER_FLAG_OFFLINEEVENTS);
       }
       else
@@ -997,6 +998,11 @@ nsresult nsImapOfflineDownloader::ProcessNextOperation()
             // so just advance to the next server.
             if (!imapInbox || offlineImapFolder)
             {
+              // here we should check if this a pop3 server/inbox, and the user doesn't want
+              // to download pop3 mail for offline use.
+              if (!imapInbox)
+              {
+              }
               rv = inbox->GetNewMessages(m_window, this);
               if (NS_SUCCEEDED(rv))
                 return rv; // otherwise, fall through.
