@@ -184,7 +184,7 @@ struct nsStringAllocatorTraits<PRUnichar>
 // A small utility class for verifying that all reference counting of
 // shared buffer handles (which are not threadsafe) occurs on a single
 // thread.
-class nsSingleThreadVerifier
+class NS_COM nsSingleThreadVerifier
   {
     public:
       nsSingleThreadVerifier();
