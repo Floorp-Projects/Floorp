@@ -19,6 +19,7 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
   		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="Saving file"
+        onunload="onUnload()"
         width="425"
         height="225">
 
@@ -73,6 +74,11 @@
 
             // Commence.
             data.execute.setAttribute("command","start");
+        }
+
+        function onUnload() {
+            // Inform underlying C++ object.
+            data.execute.setAttribute("command","unload");
         }
 
         var started = false;
@@ -176,6 +182,8 @@
         }
     </html:script>
 
+    <html:div flex="100%">
+
     <html:table style="width:100%;">
 
         <html:tr>
@@ -235,5 +243,7 @@
         </html:tr>
 
     </html:table>
+
+    </html:div>
 
 </window>
