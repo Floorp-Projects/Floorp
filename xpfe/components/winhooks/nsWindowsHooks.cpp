@@ -120,7 +120,6 @@ static EditableFileTypeRegistryEntry
 NS_IMPL_ISUPPORTS1( nsWindowsHooksSettings, nsIWindowsHooksSettings );
 
 nsWindowsHooksSettings::nsWindowsHooksSettings() {
-    NS_INIT_ISUPPORTS();
 }
 
 nsWindowsHooksSettings::~nsWindowsHooksSettings() {
@@ -180,7 +179,6 @@ DEFINE_GETTER_AND_SETTER( HaveBeenSet,      mHaveBeenSet  )
 NS_IMPL_ISUPPORTS2( nsWindowsHooks, nsIWindowsHooks, nsIWindowsRegistry );
 
 nsWindowsHooks::nsWindowsHooks() {
-  NS_INIT_ISUPPORTS();
 }
 
 nsWindowsHooks::~nsWindowsHooks() {

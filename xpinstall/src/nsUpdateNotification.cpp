@@ -76,8 +76,6 @@ nsIRDFResource* nsXPINotifierImpl::kNC_Child = nsnull;
 nsXPINotifierImpl::nsXPINotifierImpl()
     : mRDF(nsnull)
 {
-    NS_INIT_ISUPPORTS();
-
     mPendingRefreshes = 0;
 
     static NS_DEFINE_CID(kRDFInMemoryDataSourceCID, NS_RDFINMEMORYDATASOURCE_CID);

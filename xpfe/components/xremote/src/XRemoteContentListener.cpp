@@ -22,7 +22,6 @@
 
 XRemoteContentListener::XRemoteContentListener()
 {
-  NS_INIT_ISUPPORTS();
 }
 
 XRemoteContentListener::~XRemoteContentListener()

@@ -91,8 +91,6 @@ nsXPInstallManager::nsXPInstallManager()
     mContentLength(0), mDialogOpen(PR_FALSE), mCancelled(PR_FALSE),
     mSelectChrome(PR_TRUE), mNeedsShutdown(PR_FALSE)
 {
-    NS_INIT_ISUPPORTS();
-
     // we need to own ourself because we have a longer
     // lifetime than the scriptlet that created us.
     NS_ADDREF_THIS();

@@ -119,7 +119,6 @@ static int my_inflate(unsigned char* compr, PRUint32 comprLen, unsigned char* un
 
 CertReader::CertReader(nsIURI* aURI, nsISupports* aContext, nsPICertNotification* aObs)
 {
-  NS_INIT_ISUPPORTS();
   mObserver = aObs;
   mContext  = aContext;
   mURI      = aURI;

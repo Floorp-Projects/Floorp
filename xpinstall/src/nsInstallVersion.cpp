@@ -58,7 +58,6 @@ static NS_DEFINE_IID(kIInstallVersion_IID, NS_IDOMINSTALLVERSION_IID);
 nsInstallVersion::nsInstallVersion()
 {
     mScriptObject   = nsnull;
-    NS_INIT_ISUPPORTS();
 }
 
 nsInstallVersion::~nsInstallVersion()
