@@ -512,31 +512,35 @@ function delayedStartup()
 
   clearObsoletePrefs();
 
-#ifdef XP_WIN
+#ifdef HAVE_SHELL_SERVICE
   // Perform default browser checking (after window opens).
-  var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
-                        .getService(Components.interfaces.nsIShellService);
-  var shouldCheck = shell.shouldCheckDefaultBrowser;
-  if (shouldCheck && !shell.isDefaultBrowser(true)) {
-    var brandBundle = document.getElementById("bundle_brand");
-    var shellBundle = document.getElementById("bundle_shell");
-    
-    var brandShortName = brandBundle.getString("brandShortName");
-    var promptTitle = shellBundle.getString("setDefaultBrowserTitle");
-    var promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage", 
-                                                        [brandShortName]);
-    var checkboxLabel = shellBundle.getString("setDefaultBrowserDontAsk");
-    const IPS = Components.interfaces.nsIPromptService;
-    var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                       .getService(IPS);
-    var checkEveryTime = { value: shouldCheck };
-    var rv = ps.confirmEx(window, promptTitle, promptMessage, 
-                         (IPS.BUTTON_TITLE_YES * IPS.BUTTON_POS_0) + 
-                         (IPS.BUTTON_TITLE_NO * IPS.BUTTON_POS_1),
-                         null, null, null, checkboxLabel, checkEveryTime);
-    if (rv == 0)
-      shell.setDefaultBrowser(true, false);
-    shell.shouldCheckDefaultBrowser = checkEveryTime.value;
+  var shell = getShellService();
+  if (shell) {
+    var shouldCheck = shell.shouldCheckDefaultBrowser;
+    if (shouldCheck && !shell.isDefaultBrowser(true)) {
+      var brandBundle = document.getElementById("bundle_brand");
+      var shellBundle = document.getElementById("bundle_shell");
+
+      var brandShortName = brandBundle.getString("brandShortName");
+      var promptTitle = shellBundle.getString("setDefaultBrowserTitle");
+      var promptMessage = shellBundle.getFormattedString("setDefaultBrowserMessage", 
+                                                         [brandShortName]);
+      var checkboxLabel = shellBundle.getString("setDefaultBrowserDontAsk");
+      const IPS = Components.interfaces.nsIPromptService;
+      var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                                                .getService(IPS);
+      var checkEveryTime = { value: shouldCheck };
+      var rv = ps.confirmEx(window, promptTitle, promptMessage, 
+                            (IPS.BUTTON_TITLE_YES * IPS.BUTTON_POS_0) + 
+                            (IPS.BUTTON_TITLE_NO * IPS.BUTTON_POS_1),
+                            null, null, null, checkboxLabel, checkEveryTime);
+      if (rv == 0)
+        shell.setDefaultBrowser(true, false);
+      shell.shouldCheckDefaultBrowser = checkEveryTime.value;
+    }
+  } else {
+    // We couldn't get the shell service; go hide the mail toolbar button.
+    document.getElementById("mail-button").hidden = true;
   }
 #endif
 
@@ -2972,11 +2976,17 @@ nsContextMenu.prototype = {
         this.showItem( "context-viewinfo", !( this.inDirList || this.onImage || this.isTextSelected || this.onLink || this.onTextInput ) );
 
         this.showItem( "context-sep-properties", !( this.inDirList || this.isTextSelected || this.onTextInput ) );
-        // Set As Wallpaper depends on whether an image was clicked on, and only works on Windows.
-        var isWin = navigator.appVersion.indexOf("Windows") != -1;
-        this.showItem( "context-setWallpaper", isWin && this.onImage );
+        // Set As Wallpaper depends on whether an image was clicked on, and only works if we have a shell service.
+        var haveSetWallpaper = false;
+#ifdef HAVE_SHELL_SERVICE
+        // Only enable set as wallpaper if we can get the shell service.
+        var shell = getShellService();
+        if (shell)
+          haveSetWallpaper = true;
+#endif
+        this.showItem( "context-setWallpaper", haveSetWallpaper && this.onImage );
 
-        if( isWin && this.onImage )
+        if( haveSetWallpaper && this.onImage )
             // Disable the Set As Wallpaper menu item if we're still trying to load the image
           this.setItemAttr( "context-setWallpaper", "disabled", (("complete" in this.target) && !this.target.complete) ? "true" : null );
 
@@ -4562,25 +4572,26 @@ var MailIntegration = {
     var extProtocolSvc = Components.classes["@mozilla.org/uriloader/external-protocol-service;1"].getService(Components.interfaces.nsIExternalProtocolService);
     if (extProtocolSvc)
       extProtocolSvc.loadUrl(aURL);
-#ifdef XP_WIN
+#ifdef HAVE_SHELL_SERVICE
   },
   
   readMail: function ()
   {
-    const ss = Components.interfaces.nsIShellService;
-    var shell = Components.classes["@mozilla.org/browser/shell-service;1"].getService(ss);
-    shell.openPreferredApplication(ss.APPLICATION_MAIL);
+    var shell = getShellService();
+    if (shell)
+      shell.openPreferredApplication(Components.interfaces.nsIShellService.APPLICATION_MAIL);
   },
   
   readNews: function ()
   {
-    const ss = Components.interfaces.nsIShellService;
-    var shell = Components.classes["@mozilla.org/browser/shell-service;1"].getService(Components.interfaces.nsIShellService);
-    shell.openPreferredApplication(ss.APPLICATION_NEWS);
+    var shell = window.getShellService();
+    if (shell)
+      shell.openPreferredApplication(Components.interfaces.nsIShellService.APPLICATION_NEWS);
   },
   
   updateUnreadCount: function ()
   {
+#ifdef XP_WIN
     var shell = Components.classes["@mozilla.org/browser/shell-service;1"]
                           .getService(Components.interfaces.nsIWindowsShellService);
     var unreadCount = shell.unreadMailCount;
@@ -4591,6 +4602,7 @@ var MailIntegration = {
     message = gNavigatorBundle.getFormattedString("mailUnreadMenuitem", [unreadCount]);
     element = document.getElementById("readMailItem");
     element.setAttribute("label", message);
+#endif
   }
 #else
   }

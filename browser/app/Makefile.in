@@ -217,9 +217,8 @@ ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
 
 firefox:: mozilla.in Makefile.in Makefile $(DEPTH)/config/autoconf.mk
 	cat $< | sed -e "s|%MOZAPPDIR%|$(mozappdir)|" \
-                -e "s|%MOZ_USER_DIR%|.firefox|" \
-		-e "s|%MREDIR%|$(mredir)|" \
-		-e "s|%MOZILLA-BIN%|$(PROGRAM)|g" > $@
+                -e "s|%MOZ_USER_DIR%|.mozilla/firefox|" \
+		-e "s|%MREDIR%|$(mredir)|" > $@
 	chmod +x $@
 
 libs:: firefox
@@ -238,6 +237,7 @@ ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 ICON_FILES	= \
 		$(DIST)/branding/mozicon50.xpm \
 		$(DIST)/branding/mozicon16.xpm \
+		$(DIST)/branding/document.png \
 		$(NULL)
 
 libs:: $(ICON_FILES)
@@ -272,6 +272,7 @@ endif
 ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/mozicon16.xpm $(DIST)/branding/mozicon16.xpm
 	cp $(srcdir)/mozicon50.xpm $(DIST)/branding/mozicon50.xpm
+	cp $(srcdir)/document.png $(DIST)/branding/document.png
 endif
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
 	cp $(srcdir)/default.xpm   $(DIST)/branding/default.xpm	

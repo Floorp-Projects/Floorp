@@ -94,6 +94,8 @@ WINDRES_VERSION=2.14.90
 W32API_VERSION=2.4
 GNOMEVFS_VERSION=2.0
 GNOMEUI_VERSION=2.2.0
+GCONF_VERSION=1.2.1
+LIBGNOME_VERSION=2.0
 
 dnl Set various checks
 dnl ========================================================
@@ -3505,6 +3507,8 @@ then
     if test "$MOZ_ENABLE_GTK2"
     then
         MOZ_ENABLE_GNOMEVFS=1
+        MOZ_ENABLE_GCONF=1
+        MOZ_ENABLE_LIBGNOME=1
     fi
 
     MOZ_ARG_DISABLE_BOOL(gnomevfs,
@@ -3514,12 +3518,12 @@ then
 
     if test "$MOZ_ENABLE_GNOMEVFS"
     then
-        PKG_CHECK_MODULES(MOZ_GNOMEVFS, gnome-vfs-2.0 >= $GNOMEVFS_VERSION,[
+        PKG_CHECK_MODULES(MOZ_GNOMEVFS, gnome-vfs-2.0 >= $GNOMEVFS_VERSION gnome-vfs-module-2.0 >= $GNOMEVFS_VERSION,[
             MOZ_ENABLE_GNOMEVFS=1
         ],[
             if test "$MOZ_ENABLE_GNOMEVFS" = "force"
             then
-                AC_MSG_ERROR([* * * Could not find gnome-vfs-2.0 >= $GNOMEVFS_VERSION])
+                AC_MSG_ERROR([* * * Could not find gnome-vfs-module-2.0 >= $GNOMEVFS_VERSION])
             fi
             MOZ_ENABLE_GNOMEVFS=
         ])
@@ -3527,6 +3531,31 @@ then
 
     AC_SUBST(MOZ_GNOMEVFS_CFLAGS)
     AC_SUBST(MOZ_GNOMEVFS_LIBS)
+
+    if test "$MOZ_ENABLE_GCONF"
+    then
+        PKG_CHECK_MODULES(MOZ_GCONF, gconf-2.0 >= $GCONF_VERSION,[
+            MOZ_ENABLE_GCONF=1
+        ],[
+            MOZ_ENABLE_GCONF=
+        ])
+    fi
+
+    AC_SUBST(MOZ_GCONF_CFLAGS)
+    AC_SUBST(MOZ_GCONF_LIBS)
+
+    if test "$MOZ_ENABLE_LIBGNOME"
+    then
+        PKG_CHECK_MODULES(MOZ_LIBGNOME, libgnome-2.0 >= $LIBGNOME_VERSION,[
+            MOZ_ENABLE_LIBGNOME=1
+        ],[
+            MOZ_ENABLE_LIBGNOME=
+        ])
+    fi
+
+    AC_SUBST(MOZ_LIBGNOME_CFLAGS)
+    AC_SUBST(MOZ_LIBGNOME_LIBS)
+
 fi
 
 dnl ========================================================

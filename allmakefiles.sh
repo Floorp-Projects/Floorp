@@ -1081,6 +1081,12 @@ if [ ! "$SYSTEM_PNG" ]; then
     MAKEFILES_libimg="$MAKEFILES_libimg modules/libimg/png/Makefile"
 fi
 
+MAKEFILES_gnome="
+    toolkit/Makefile
+    toolkit/components/Makefile
+    toolkit/components/gnome/Makefile
+"
+
 #
 # l10n/
 #
@@ -1485,6 +1491,10 @@ fi
 
 if test -z "$MOZ_XUL"; then
     add_makefiles "$MAKEFILES_minimo"
+fi
+
+if test -n "$MOZ_ENABLE_GTK2"; then
+    add_makefiles "$MAKEFILES_gnome"
 fi
 
 else

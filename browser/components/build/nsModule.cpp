@@ -44,7 +44,7 @@
 #include "nsWindowsShellService.h"
 #elif defined(XP_MACOSX)
 #include "nsMacShellService.h"
-#else
+#elif defined(MOZ_WIDGET_GTK2)
 #include "nsGNOMEShellService.h"
 #endif
 #include "nsProfileMigrator.h"
@@ -71,8 +71,8 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsShellService)
 #elif defined(XP_MACOSX)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacShellService)
-#else
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsGNOMEShellService)
+#elif defined(MOZ_WIDGET_GTK2)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGNOMEShellService, Init)
 #endif
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDogbertProfileMigrator)
@@ -107,7 +107,7 @@ static const nsModuleComponentInfo components[] =
     NS_SHELLSERVICE_CONTRACTID,
     nsMacShellServiceConstructor },
 
-#else
+#elif defined(MOZ_WIDGET_GTK2)
   { "Browser Shell Shervice",
     NS_SHELLSERVICE_CID,
     NS_SHELLSERVICE_CONTRACTID,

@@ -12,13 +12,15 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is Shell Service.
+ * The Original Code is the Mozilla GNOME integration code.
  *
- * The Initial Developer of the Original Code is mozilla.org.
+ * The Initial Developer of the Original Code is
+ * IBM Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2004
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *  Brian Ryner <bryner@brianryner.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -34,30 +36,28 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsgnomeshellservice_h____
-#define nsgnomeshellservice_h____
+#ifndef nsGConfService_h_
+#define nsGConfService_h_
 
-#include "nsIShellService.h"
-#include "nsString.h"
+#include "nsIGConfService.h"
+#include "gconf/gconf-client.h"
 
-class nsGNOMEShellService : public nsIShellService
+#define NS_GCONFSERVICE_CID \
+{0xd96d5985, 0xa13a, 0x4bdc, {0x93, 0x86, 0xef, 0x34, 0x8d, 0x7a, 0x97, 0xa1}}
+
+class nsGConfService : public nsIGConfService
 {
 public:
-  nsGNOMEShellService() : mCheckedThisSession(PR_FALSE) { }
-
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISHELLSERVICE
+  NS_DECL_NSIGCONFSERVICE
 
-  nsresult Init() NS_HIDDEN;
+  nsGConfService() : mClient(nsnull) {}
+  NS_HIDDEN_(nsresult) Init();
 
 private:
-  ~nsGNOMEShellService() {}
+  ~nsGConfService() NS_HIDDEN;
 
-  NS_HIDDEN_(PRBool) KeyMatchesAppName(const char *aKeyValue) const;
-
-  PRPackedBool mCheckedThisSession;
-  PRPackedBool mUseLocaleFilenames;
-  nsCString    mAppPath;
+  GConfClient *mClient;
 };
 
-#endif // nsgnomeshellservice_h____
+#endif

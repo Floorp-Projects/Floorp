@@ -23,6 +23,9 @@ BROWSER_APP_FILES = \
 export::
 	$(NSINSTALL) -D $(DIST)/branding
 	cp $(addprefix $(srcdir)/, $(BROWSER_APP_FILES)) $(DIST)/branding/
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+	cp $(srcdir)/document.png $(DIST)/branding/document.png
+endif
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	cp $(srcdir)/firefox.icns  $(DIST)/branding/firefox.icns
 	cp $(srcdir)/document.icns $(DIST)/branding/document.icns

@@ -72,13 +72,20 @@ static int ComponentValue(const char* aColorSpec, int aLen, int color, int dpc)
   return component;
 }
 
-extern "C" NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec, nscolor* aResult)
+extern "C" NS_GFX_(PRBool) NS_HexToRGB(const nsString& aColorSpec,
+                                       nscolor* aResult)
 {
   // XXXldb nsStackString<10>
   NS_LossyConvertUCS2toASCII bufferStr(aColorSpec);
-  const char* buffer = bufferStr.get();
+  return NS_ASCIIHexToRGB(bufferStr, aResult);
+}
 
-  int nameLen = bufferStr.Length();
+extern "C" NS_GFX_(PRBool) NS_ASCIIHexToRGB(const nsCString& aColorSpec,
+                                            nscolor* aResult)
+{
+  const char* buffer = aColorSpec.get();
+
+  int nameLen = aColorSpec.Length();
   if ((nameLen == 3) || (nameLen == 6)) {
     // Make sure the digits are legal
     for (int i = 0; i < nameLen; i++) {
@@ -164,6 +171,15 @@ extern "C" NS_GFX_(void) NS_RGBToHex(nscolor aColor, nsAString& aResult)
   PR_snprintf(buf, sizeof(buf), "#%02x%02x%02x",
               NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
   CopyASCIItoUTF16(buf, aResult);
+}
+
+extern "C" NS_GFX_(void) NS_RGBToASCIIHex(nscolor aColor,
+                                          nsAFlatCString& aResult)
+{
+  aResult.SetLength(7);
+  char *buf = aResult.BeginWriting();
+  PR_snprintf(buf, 8, "#%02x%02x%02x",
+              NS_GET_R(aColor), NS_GET_G(aColor), NS_GET_B(aColor));
 }
 
 extern "C" NS_GFX_(PRBool) NS_ColorNameToRGB(const nsAString& aColorName, nscolor* aResult)

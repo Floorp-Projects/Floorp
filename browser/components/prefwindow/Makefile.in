@@ -28,3 +28,6 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
+ifneq (,$(filter windows gtk2, $(MOZ_WIDGET_TOOLKIT)))
+DEFINES += -DHAVE_SHELL_SERVICE=1
+endif
