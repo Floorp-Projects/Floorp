@@ -212,13 +212,12 @@ NS_IMETHODIMP nsXMLEncodingObserver::Start()
 
     nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &res);
 
-    if(NS_FAILED(res)) 
-        goto done;
-     
-    res = anObserverService->AddObserver(this, "xmlparser", PR_TRUE);
+    if (NS_SUCCEEDED(res)) {
+      res = anObserverService->AddObserver(this, "xmlparser", PR_TRUE);
 
-    bXMLEncodingObserverStarted = PR_TRUE;
-done:
+      bXMLEncodingObserverStarted = PR_TRUE;
+    }
+
     return res;
 }
 //-------------------------------------------------------------------------
@@ -230,13 +229,12 @@ NS_IMETHODIMP nsXMLEncodingObserver::End()
       return res;
 
     nsCOMPtr<nsIObserverService> anObserverService = do_GetService("@mozilla.org/observer-service;1", &res);
-    if(NS_FAILED(res)) 
-        goto done;
-     
-    res = anObserverService->RemoveObserver(this, "xmlparser");
+    if (NS_SUCCEEDED(res)) {
+      res = anObserverService->RemoveObserver(this, "xmlparser");
 
-    bXMLEncodingObserverStarted = PR_FALSE;
-done:
+      bXMLEncodingObserverStarted = PR_FALSE;
+    }
+
     return res;
 }
 
