@@ -1820,36 +1820,45 @@ nsHTMLOptionCollection::SetProperty(JSContext *aContext, JSObject *aObj,
 
     // If the indx is within range
     if ((indx >= 0) && (indx <= length)) {
+      // aVp must refer to an object
+      if (!JSVAL_IS_OBJECT(*aVp) &&
+          !JS_ConvertValue(aContext, *aVp, JSTYPE_OBJECT, aVp)) {
+        return PR_FALSE;
+      }
 
       // if the value is null, remove this option
       if (JSVAL_IS_NULL(*aVp)) {
         mSelect->Remove(indx);
+
+        // We're done.
+
+        return PR_TRUE;
       }
-      else {
-        JSObject* jsobj = JSVAL_TO_OBJECT(*aVp); 
-        JSClass* jsclass = JS_GetClass(aContext, jsobj);
-        if ((nsnull != jsclass) && (jsclass->flags & JSCLASS_HAS_PRIVATE)) {
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(aContext,
-                                                               jsobj);
 
-          nsCOMPtr<nsIDOMNode> option(do_QueryInterface(supports));
-          nsCOMPtr<nsIDOMNode> parent;
-          nsCOMPtr<nsIDOMNode> ret;
+      JSObject* jsobj = JSVAL_TO_OBJECT(*aVp); 
+      JSClass* jsclass = JS_GetClass(aContext, jsobj);
 
-          if (option) {
-            if (indx == length) {
-              result = mSelect->AppendChild(option, getter_AddRefs(ret));
-            }
-            else {
-              nsIDOMNode *refChild = (nsIDOMNode*)mElements.ElementAt(indx);
-              if (nsnull != refChild) {
-                result = refChild->GetParentNode(getter_AddRefs(parent));
-                if (NS_SUCCEEDED(result) && parent) {
-                  
-                  result = parent->ReplaceChild(option, refChild,
-                                                getter_AddRefs(ret));
-                }
-              }            
+      if (jsclass && !((~jsclass->flags) & (JSCLASS_HAS_PRIVATE |
+                                            JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
+        nsISupports *supports = (nsISupports *)JS_GetPrivate(aContext, jsobj);
+
+        nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(supports));
+        nsCOMPtr<nsIDOMNode> ret;
+
+        if (option) {
+          if (indx == length) {
+            result = mSelect->AppendChild(option, getter_AddRefs(ret));
+          }
+          else {
+            nsIDOMNode *refChild = (nsIDOMNode*)mElements.ElementAt(indx);
+            if (refChild) {
+              nsCOMPtr<nsIDOMNode> parent;
+
+              refChild->GetParentNode(getter_AddRefs(parent));
+
+              if (parent) {
+                parent->ReplaceChild(option, refChild, getter_AddRefs(ret));
+              }
             }
           }
         }
