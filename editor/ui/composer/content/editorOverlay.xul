@@ -92,6 +92,7 @@
     <command id="cmd_printSetup"   value="&printSetupCmd.label;"    oncommand="goDoCommand('cmd_printSetup')"/>
     <command id="cmd_printPreview" value="&printPreviewCmd.label;"  oncommand="goDoCommand('cmd_printPreview')"/>
     <command id="cmd_print"                                         oncommand="goDoCommand('cmd_print')"/>
+    <command id="cmd_print_button"                                  buttonaction="goDoCommand('cmd_print')"/>
 
     <command id="cmd_quit"         value="&exitCmd.label;"          oncommand="goDoCommand('cmd_quit')"/>
 
@@ -242,7 +243,7 @@
 
   <!-- Editor menu items -->
   <menu id="fileMenu" value="&fileMenu.label;" accesskey="&filemenu.accesskey;">
-    <menupopup>
+    <menupopup id="fileMenu_Popup">
       <!-- Note: globalOverlay.xul uses menu_newEditor, but we want different menu item text
                  so we use our own id, value, and accesskey but connect to the same global key and broadcaster node
        -->
@@ -746,9 +747,17 @@
   <button class="button-toolbar-2 top"    id="previewButton"
           value="&previewToolbarCmd.label;" observes="cmd_preview"
           tooltip="aTooltip"              tooltiptext="&previewToolbarCmd.tooltip;"/>
-  <button class="button-toolbar-2 top"    id="printButton"
-          value="&printToolbarCmd.label;" observes="cmd_print"
-          tooltip="aTooltip"              tooltiptext="&printToolbarCmd.tooltip;"/>
+
+  <menubutton class="menubutton-dual toolbar" id="printButton" value="&printToolbarCmd.label;" 
+              observes="cmd_print_button" tooltip="aTooltip" tooltiptext="&printToolbarCmd.tooltip;"
+              crop="right">  
+ 	  <menupopup id="printMenu">
+      <menuitem accesskey="&fileprint.accesskey;" key="printkb" observes="cmd_print" value="&printCmd.label;" default="true"/>
+      <menuitem accesskey="&fileprintsetup.accesskey;" observes="cmd_printSetup" />
+      <menuitem accesskey="&fileprintpreview.accesskey;" observes="cmd_printPreview"/>
+    </menupopup>
+  </menubutton>
+    
   <button class="button-toolbar-2 top"    id="findButton"
           value="&findToolbarCmd.label;"  observes="cmd_find"
           tooltip="aTooltip"              tooltiptext="&findToolbarCmd.tooltip;"/>
