@@ -477,7 +477,14 @@ ConvertAndWrite(const nsAString& aString,
       NS_ENSURE_SUCCESS(rv, rv);
 
       nsCAutoString entString("&#");
-      entString.AppendInt(unicodeBuf[unicodeLength - 1]);
+      if (IS_HIGH_SURROGATE(unicodeBuf[unicodeLength - 1]) && 
+          unicodeLength < startLength && IS_LOW_SURROGATE(unicodeBuf[unicodeLength]))  {
+        entString.AppendInt(SURROGATE_TO_UCS4(unicodeBuf[unicodeLength - 1],
+                                              unicodeBuf[unicodeLength]));
+        unicodeLength += 1;
+      }
+      else
+        entString.AppendInt(unicodeBuf[unicodeLength - 1]);
       entString.Append(';');
 
       rv = aStream->Write(entString.get(), entString.Length(), &written);
