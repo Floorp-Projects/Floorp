@@ -265,6 +265,7 @@ nsBufferedInputStream::Read(char * buf, PRUint32 count, PRUint32 *result)
 {
     nsresult rv;
     if (mBufferDisabled) {
+        NS_ENSURE_TRUE(mStream, NS_BASE_STREAM_CLOSED);
         rv = Source()->Read(buf, count, result);
         if (NS_SUCCEEDED(rv))
             mBufferStartOffset += *result;  // so nsBufferedStream::Tell works
@@ -329,6 +330,7 @@ nsBufferedInputStream::Fill()
 {
     if (mBufferDisabled)
         return NS_OK;
+    NS_ENSURE_TRUE(mStream, NS_BASE_STREAM_CLOSED);
 
     nsresult rv;
     PRInt32 rem = PRInt32(mFillPoint - mCursor);
