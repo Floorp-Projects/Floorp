@@ -220,6 +220,10 @@ public:
                    nsFramePaintLayer    aWhichLayer,
                    PRUint32             aFlags);
 
+  // Make sure we never think this frame is opaque because it has
+  // a background set; we won't be painting it in most cases
+  virtual PRBool CanPaintBackground() { return PR_FALSE; }
+
   /**
     * @see nsIFrame::Reflow
     */
@@ -460,17 +464,8 @@ nsHTMLFrameOuterFrame::Paint(nsIPresContext*      aPresContext,
   }
 
   //printf("outer paint %X (%d,%d,%d,%d) \n", this, aDirtyRect.x, aDirtyRect.y, aDirtyRect.width, aDirtyRect.height);
-  nsIFrame* firstChild = mFrames.FirstChild();
-  if (nsnull != firstChild) {
-    firstChild->Paint(aPresContext, aRenderingContext, aDirtyRect,
-                      aWhichLayer);
-  }
-  if (IsInline()) {
-    return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
-                                       aDirtyRect, aWhichLayer);
-  } else {
-    return NS_OK;
-  }
+  return nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
+                                     aDirtyRect, aWhichLayer);
 }
 
 #ifdef DEBUG

@@ -440,12 +440,10 @@ frameset {
 }
 
 frame {
-  background-color: transparent ! important; /* (b=49779) */
   -moz-user-focus: normal;
 }
 
 iframe {
-  background-color: transparent ! important; /* (b=49779) */
   border: 2px inset;
   -moz-user-focus: normal;
 }
