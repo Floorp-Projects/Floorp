@@ -631,7 +631,8 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
   {
     nsIPref *pref = GetPrefServiceManager(opts);   // Pref service manager
 
-	  pref->GetBoolPref("mailnews.autolookup_unknown_mime_types",&reverse_lookup);
+    if (pref)
+  	  pref->GetBoolPref("mailnews.autolookup_unknown_mime_types",&reverse_lookup);
 	  got_lookup_pref = PR_TRUE;
   }
 

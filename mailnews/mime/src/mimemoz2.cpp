@@ -1037,14 +1037,15 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
     return NULL;
   }
 
+  /***
   nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(msd->prefs));
   if (! (msd->prefs && NS_SUCCEEDED(rv)))
 	{
     PR_FREEIF(msd);
     return NULL;
   }
-
   msd->prefs->Startup(MIME_PREFS_FILE);
+  ***/
 
   // Assign the new mime emitter - will handle output operations
   msd->output_emitter = newEmitter;
@@ -1122,16 +1123,19 @@ mime_bridge_create_stream(MimePluginInstance  *newPluginObj,
   
   // Get the libmime prefs...
   MIME_NoInlineAttachments = PR_TRUE;
-  msd->prefs->GetBoolPref("mail.inline_attachments", &MIME_NoInlineAttachments);
+  if (msd->prefs)
+    msd->prefs->GetBoolPref("mail.inline_attachments", &MIME_NoInlineAttachments);
   MIME_NoInlineAttachments = !MIME_NoInlineAttachments;
 
   /* This pref is written down in with the
   opposite sense of what we like to use... */
   MIME_WrapLongLines = PR_FALSE;
-  msd->prefs->GetBoolPref("mail.wrap_long_lines", &MIME_WrapLongLines);
+  if (msd->prefs)
+    msd->prefs->GetBoolPref("mail.wrap_long_lines", &MIME_WrapLongLines);
 
   MIME_VariableWidthPlaintext = PR_TRUE;
-  msd->prefs->GetBoolPref("mail.fixed_width_messages", &MIME_VariableWidthPlaintext);
+  if (msd->prefs)
+    msd->prefs->GetBoolPref("mail.fixed_width_messages", &MIME_VariableWidthPlaintext);
   MIME_VariableWidthPlaintext = !MIME_VariableWidthPlaintext;
 
   msd->options->no_inline_p = MIME_NoInlineAttachments;
