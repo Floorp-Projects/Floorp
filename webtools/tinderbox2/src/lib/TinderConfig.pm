@@ -4,9 +4,9 @@
 
 
 
-# $Revision: 1.11 $ 
-# $Date: 2000/11/09 19:40:51 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.12 $ 
+# $Date: 2000/11/13 23:00:16 $ 
+# $Author: mcafee%netscape.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TinderConfig.pm,v $ 
 # $Name:  $ 
 
@@ -38,16 +38,16 @@
 package TinderConfig;
 
 
-# the url to the tinderbox server binary directory
+# The url to the tinderbox server binary directory
 
 $URL_BIN =  "http://tinderbox.mozilla.org/cgibin";
 
 
-# the url to the tinderbox server HTML directory
+# The url to the tinderbox server HTML directory
 
 $URL_HTML = "http://tinderbox.mozilla.org/";
 
-# the full path name tinderbox will use to access the tinderbox
+# The full path name tinderbox will use to access the tinderbox
 # servers root data directory where the html will be written.
 
 $TINDERBOX_HTML_DIR = "/usr/apache/cgibin/webtools/tinderbox";
@@ -67,15 +67,15 @@ $TINDERBOX_DATA_DIR = "/usr/apache/cgibin/webtools/tinderbox";
 
 $GLOBAL_INDEX_FILE = "index.html";
 
-# where errors are loged
-  
+# Error log filename:
+
 $ERROR_LOG = "/var/log/tinderbox/log";
-  
-# where the daemon mode lock (for all trees) is placed
+
+# Where the daemon mode lock (for all trees) is placed
 $LOCK_FILE = "/usr/apache/cgibin/webtools/tinderbox/tinderd.lock";
 
-# the time between auto refreshes for all pages in seconds.
-  
+# The time between auto refreshes for all pages in seconds.
+
 $REFRESH_TIME = (60 * 15);
 
 
@@ -119,12 +119,12 @@ $PopUpImpl = (
 #$DB_LEGEND_BORDER = "border rules=none";
 $DB_LEGEND_BORDER = "";
 
-# spacing on html page (in minutes), this resticts the
+# Spacing on html page (in minutes), this resticts the
 # minimum time between builds (to this value plus 5 minutes).
 
 $DB_TABLE_SPACING = 5;
 
-# number of times a database can be updated before its contents must
+# Number of times a database can be updated before its contents must
 # be trimmed of old data.  This scan of the database is used to
 # collect data about average build time so we do not want it
 # performed too infrequently.
@@ -169,7 +169,7 @@ $DB_TRIM_SECONDS = (60 * 60 * 24 * 8);
 
 
 
-# pick one display system if your VC system can display via a web
+# Pick one display system if your VC system can display via a web
 # server then VCDisplay module that you wish to use, otherwise pick
 # 'None'.
 
@@ -179,7 +179,7 @@ $VCDisplayImpl = (
 		 );
 
 
-# pick one method for storting data, Data::Dumper is slow but text
+# Pick one method for storting data, Data::Dumper is slow but text
 # files allows great debugging capabilities and Storable (not yet
 # tested) which is much faster but binary format.
 
@@ -194,7 +194,7 @@ $PersistenceImpl = (
 
 $BONSAI_URL = "http://tinderbox.mozilla.org/bonsai";
 
-# the default number of hours shown on the status page
+# The default number of hours shown on the status page
 
 $DEFAULT_DISPLAY_HOURS = 6;
 
@@ -204,7 +204,7 @@ $DEFAULT_DISPLAY_HOURS = 6;
 #$DEFAULT_HTML_PAGE = 'index.html';
 $DEFAULT_HTML_PAGE = 'status.html';
 
-# the amount of time rmlogs keeps logs on file
+# The amount of time rmlogs keeps logs on file
 
 $BRIEF_LOG_TRIM_DAYS = 1;
 $FULL_LOG_TRIM_DAYS = 7;
