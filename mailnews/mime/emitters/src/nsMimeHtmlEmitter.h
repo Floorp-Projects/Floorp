@@ -77,10 +77,14 @@ public:
     virtual nsresult            WriteHeaderFieldHTMLPostfix();
 
 protected:
+    PRBool        mFirst;  // Attachment flag...
+    PRBool        mSkipAttachment;  // attachments we shouldn't show...
+
     nsCOMPtr<nsIMsgHeaderSink> mHeaderSink;
 
     nsresult GetHeaderSink(nsIMsgHeaderSink ** aHeaderSink);
     PRBool BroadCastHeadersAndAttachments();
+    nsresult StartAttachmentInBody(const char *name, const char *contentType, const char *url);
 
     nsCOMPtr<nsIDateTimeFormat> mDateFormater;
     nsresult GenerateDateString(const char * dateString, PRUnichar ** formattedDate);
