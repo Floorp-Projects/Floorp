@@ -41,7 +41,7 @@ CFLAGS += $(LIBIDL_CFLAGS)
 # separate out to get dependancies right
 LIBXPT=$(DIST)/lib/libxpt.a
 
-EX_LIBS = -lIDL -L$(DIST)/bin $(LIBXPT) $(LIBIDL_LIBS)
+EX_LIBS = -L$(DIST)/bin $(LIBXPT) $(LIBIDL_LIBS)
 
 PROGS = $(OBJDIR)/xpidl
 
