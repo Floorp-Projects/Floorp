@@ -302,10 +302,9 @@ function selectOnOK()
           oldParent = parent;
           parent = parent.parent;
         }
-        var errorTitle =
+        errorTitle =
           gFilePickerBundle.getFormattedString("errorSavingFileTitle",
                                                [file.path]);
-        var errorMessage;
         if (parent.isFile()) {
           errorMessage =
             gFilePickerBundle.getFormattedString("saveParentIsFileMessage",
