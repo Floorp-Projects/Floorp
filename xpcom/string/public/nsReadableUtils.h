@@ -40,7 +40,7 @@
    * @param aSource a 16-bit wide string
    * @return a new |char| buffer you must free with |nsMemory::Free|.
    */
-char* ToNewCString( const nsAReadableString& aSource );
+NS_COM char* ToNewCString( const nsAReadableString& aSource );
 
 
   /**
@@ -52,7 +52,7 @@ char* ToNewCString( const nsAReadableString& aSource );
    * @param aSource an 8-bit wide string
    * @return a new |char| buffer you must free with |nsMemory::Free|.
    */
-char* ToNewCString( const nsAReadableCString& aSource );
+NS_COM char* ToNewCString( const nsAReadableCString& aSource );
 
 
   /**
@@ -64,7 +64,7 @@ char* ToNewCString( const nsAReadableCString& aSource );
    * @param aSource a 16-bit wide string
    * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
    */
-PRUnichar* ToNewUnicode( const nsAReadableString& aSource );
+NS_COM PRUnichar* ToNewUnicode( const nsAReadableString& aSource );
 
 
   /**
@@ -78,7 +78,7 @@ PRUnichar* ToNewUnicode( const nsAReadableString& aSource );
    * @param aSource an 8-bit wide string
    * @return a new |PRUnichar| buffer you must free with |nsMemory::Free|.
    */
-PRUnichar* ToNewUnicode( const nsAReadableCString& aSource );
+NS_COM PRUnichar* ToNewUnicode( const nsAReadableCString& aSource );
 
 
   /**
@@ -86,6 +86,6 @@ PRUnichar* ToNewUnicode( const nsAReadableCString& aSource );
    *
    * @param aString a 16-bit wide string to scan
    */
-PRBool IsASCII( const nsAReadableString& aString );
+NS_COM PRBool IsASCII( const nsAReadableString& aString );
 
 #endif // !defined(nsReadableUtils_h___)
