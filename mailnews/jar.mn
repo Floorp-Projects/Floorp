@@ -91,7 +91,7 @@ messenger.jar:
     content/messenger/messenger.xul                                            (base/resources/content/messenger.xul)
     content/messenger/mail3PaneWindowVertLayout.xul                            (base/resources/content/mail3PaneWindowVertLayout.xul)
     content/messenger/mailWindowExtrasOverlay.xul                              (base/resources/content/mailWindowExtrasOverlay.xul)
-*   content/messenger/mailWindowOverlay.xul                                    (base/resources/content/mailWindowOverlay.xul)
+    content/messenger/mailWindowOverlay.xul                                    (base/resources/content/mailWindowOverlay.xul)
     content/messenger/mailWindowOverlay.js                                     (base/resources/content/mailWindowOverlay.js)
     content/messenger/msgSynchronize.xul                                       (base/resources/content/msgSynchronize.xul)
     content/messenger/msgSynchronize.js                                        (base/resources/content/msgSynchronize.js)

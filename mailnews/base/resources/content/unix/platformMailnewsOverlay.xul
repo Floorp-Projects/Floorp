@@ -10,5 +10,10 @@
     <!-- Select Thread -->
     <key id="key_selectThread" modifiers="alt,shift"/>
 
+    <!-- Find -->
+    <keyset id="mailKeys">
+        <key keycode="VK_F19" oncommand="goDoCommand('cmd_find')"/>
+    </keyset>
+
 </overlay>
 
