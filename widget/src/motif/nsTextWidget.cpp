@@ -173,7 +173,7 @@ NS_METHOD nsTextWidget::SetPassword(PRBool aIsPassword)
 {
   if (mWidget == nsnull && aIsPassword) {
     mMakePassword = PR_TRUE;
-    return;
+    return NS_OK;
   }
 
   if (aIsPassword) {
