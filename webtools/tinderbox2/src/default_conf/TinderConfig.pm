@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.50 $ 
-# $Date: 2003/12/23 14:30:50 $ 
+# $Revision: 1.51 $ 
+# $Date: 2004/06/08 00:09:09 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -52,7 +52,7 @@ $ENV{'PATH'}=  (
                 '/bin'.
                 ':/usr/bin'.
                 ':/usr/local/bin'.
-                ':/opt/gnu/bin/'.
+                ':/opt/gnu/bin'.
                 '');
 
 # How do we run the unzip command?
@@ -404,8 +404,6 @@ $DISPLAY_BUILD_ERRORS = 1;
 
 $BONSAI_URL = "http://bonsai.mozilla.org/";
 
-$P4DB_URL =  "http://public.perforce.com/cgi-bin/p4db";
-
 # If we query bonsai data (e.g., DBImpl above is set to Bonsai), we
 # need to know the directory which bonsai is installed in. Tinderbox
 # needs to be able to see the bonsai directories to get bonsai checkin
@@ -414,6 +412,13 @@ $P4DB_URL =  "http://public.perforce.com/cgi-bin/p4db";
 #$BONSAI_DIR = "/home/httpd/cgi-bin/bonsai";
 $BONSAI_DIR = "/opt/apache/htdocs/webtools/bonsai";
 
+# If we use perforce set the port and information on how to find p4db.
+# I would like to use p4web since there is a security patch out
+# against p4db and the author is not fixing the issues BUT I can not
+# understand the URL interface to p4web.
+
+$P4DB_URL =  "http://public.perforce.com/cgi-bin/p4db";
+$P4PORT = 'perforce.yourcompany.com:1666';
 
 # If we are using PVCS we need to specify the user who will extract
 # the data from the Oracle database and a data seperator which will
