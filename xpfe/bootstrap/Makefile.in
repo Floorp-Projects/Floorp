@@ -82,7 +82,6 @@ LIBS		+= \
 		-lpref \
 		-limg \
 		-lmozutil \
-		-lxp \
 		-lxpcom \
 		$(ZLIB_LIBS) \
 		$(NSPR_LIBS) \

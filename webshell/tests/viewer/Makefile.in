@@ -136,7 +136,6 @@ NETLIB_LIBS		= \
 else
 NETLIB_LIBS		= \
 			-lneckoutil_s \
-			-lxp \
 			-ljsurl \
 			-lmozdbm \
 			$(NULL)
