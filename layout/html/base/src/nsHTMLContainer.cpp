@@ -187,6 +187,8 @@ nsIFrame* nsHTMLContainer::CreateFrame(nsIPresContext* aPresContext,
                                        nsIFrame* aParentFrame)
 {
   // Resolve style for the piece of content
+  // XXX The caller has also resolved the style context, which means we're
+  // resolving it more than once. That's inefficient, and we need to fix it...
   nsIStyleContext* styleContext =
     aPresContext->ResolveStyleContextFor(this, aParentFrame);
   nsStyleDisplay* styleDisplay =
