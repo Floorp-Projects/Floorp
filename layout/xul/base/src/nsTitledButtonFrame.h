@@ -59,6 +59,7 @@ public:
 
   NS_IMETHOD DeleteFrame(nsIPresContext& aPresContext);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
 
   virtual void UpdateAttributes(nsIPresContext&  aPresContext);
   virtual void UpdateImage(nsIPresContext&  aPresContext);

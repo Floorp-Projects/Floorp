@@ -95,6 +95,8 @@ public:
                           nsIAtom*        aListName,
                           nsIFrame*       aOldFrame);
 
+  NS_IMETHOD GetFrameName(nsString& aResult) const;
+
   PRBool IsHorizontal() const { return mHorizontal; }
 
   
