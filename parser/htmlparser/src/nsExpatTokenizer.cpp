@@ -32,12 +32,12 @@
 
 #include "prmem.h"
 #include "nsIUnicharInputStream.h"
-#include "nsINetService.h"
-#include "nsIServiceManager.h"
-
 #ifdef NECKO
 #include "nsNeckoUtil.h"
+#else
+#include "nsINetService.h"
 #endif
+#include "nsIServiceManager.h"
 
  /************************************************************************
   And now for the main class -- nsExpatTokenizer...
@@ -47,8 +47,10 @@ static NS_DEFINE_IID(kISupportsIID,       NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kITokenizerIID,      NS_ITOKENIZER_IID);
 static NS_DEFINE_IID(kHTMLTokenizerIID,   NS_HTMLTOKENIZER_IID);
 static NS_DEFINE_IID(kClassIID,           NS_EXPATTOKENIZER_IID);
+#ifndef NECKO
 static NS_DEFINE_IID(kNetServiceCID,      NS_NETSERVICE_CID);
 static NS_DEFINE_IID(kINetServiceIID,     NS_INETSERVICE_IID);
+#endif
 
 
 static CTokenRecycler* gTokenRecycler=0;
