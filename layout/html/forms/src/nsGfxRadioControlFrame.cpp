@@ -204,6 +204,15 @@ nsGfxRadioControlFrame::SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioBu
 }
 
 //--------------------------------------------------------------
+NS_IMETHODIMP
+nsGfxRadioControlFrame::SetIsInClickEvent(PRBool aVal)
+{
+  mInClickEvent = aVal;
+  return NS_OK;
+}
+
+
+//--------------------------------------------------------------
 PRBool
 nsGfxRadioControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
                                     nsString* aValues, nsString* aNames)
@@ -269,8 +278,13 @@ nsGfxRadioControlFrame::PaintRadioButton(nsIPresContext* aPresContext,
      nscoord y = (mRect.height - height) / 2;
      nsRect rect(x, y, width, height); 
 
+     // So we will use the PaintBackground to paint the dot, 
+     // but it uses the mBackgroundColor for painting and we need to use the mColor
+     // so create a temporary style color struct and set it up appropriately
+     nsStyleColor tmpColor     = *myColor;
+     tmpColor.mBackgroundColor = myColor->mColor;
      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                        aDirtyRect, rect, *myColor, *mySpacing, 0, 0);
+                                        aDirtyRect, rect, tmpColor, *mySpacing, 0, 0);
      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
                                   aDirtyRect, rect, *mySpacing, mRadioButtonFaceStyle, 0);
    }
@@ -302,6 +316,12 @@ nsGfxRadioControlFrame::Paint(nsIPresContext* aPresContext,
 //--------------------------------------------------------------
 PRBool nsGfxRadioControlFrame::GetRadioState()
 {
+  // If we are processing an onclick event then
+  // always return the opposite value
+  // additional explanantion is in nsIRadioControlFrame or nsHTMLInputElement.cpp
+  if (mInClickEvent) {
+    return !mChecked;
+  }
   return mChecked;
 }
 
