@@ -64,9 +64,11 @@ public:
 
 protected:
   nsresult AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
-                   const PRUnichar *messageName);
+                   const PRUnichar *messageName,
+                   const PRUnichar *showAgainName);
   nsresult ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
-                   const PRUnichar *messageName, PRBool* _result);
+                   const PRUnichar *messageName, 
+                   const PRUnichar *showAgainName, PRBool* _result);
   nsCOMPtr<nsIStringBundle> mStringBundle;
   nsCOMPtr<nsIStringBundle> mPIPStringBundle;
   nsCOMPtr<nsIPref> mPref;

@@ -452,7 +452,8 @@ nsNSSDialogs::AlertEnteringSecure(nsIInterfaceRequestor *ctx)
   nsresult rv;
 
   rv = AlertDialog(ctx, ENTER_SITE_PREF, 
-                   NS_LITERAL_STRING("EnterSiteMessage").get());
+                   NS_LITERAL_STRING("EnterSecureMessage").get(),
+                   NS_LITERAL_STRING("EnterSecureShowAgain").get());
 
   return rv;
 }
@@ -463,7 +464,8 @@ nsNSSDialogs::AlertEnteringWeak(nsIInterfaceRequestor *ctx)
   nsresult rv;
 
   rv = AlertDialog(ctx, WEAK_SITE_PREF,
-                   NS_LITERAL_STRING("WeakSiteMessage").get());
+                   NS_LITERAL_STRING("WeakSecureMessage").get(),
+                   NS_LITERAL_STRING("WeakSecureShowAgain").get());
 
   return rv;
 }
@@ -474,7 +476,8 @@ nsNSSDialogs::AlertLeavingSecure(nsIInterfaceRequestor *ctx)
   nsresult rv;
 
   rv = AlertDialog(ctx, LEAVE_SITE_PREF, 
-                   NS_LITERAL_STRING("LeaveSiteMessage").get());
+                   NS_LITERAL_STRING("LeaveSecureMessage").get(),
+                   NS_LITERAL_STRING("LeaveSecureShowAgain").get());
 
   return rv;
 }
@@ -486,7 +489,8 @@ nsNSSDialogs::AlertMixedMode(nsIInterfaceRequestor *ctx)
   nsresult rv;
 
   rv = AlertDialog(ctx, MIXEDCONTENT_PREF, 
-                   NS_LITERAL_STRING("MixedContentMessage").get());
+                   NS_LITERAL_STRING("MixedContentMessage").get(),
+                   NS_LITERAL_STRING("MixedContentShowAgain").get());
 
   return rv;
 }
@@ -494,7 +498,8 @@ nsNSSDialogs::AlertMixedMode(nsIInterfaceRequestor *ctx)
 
 nsresult
 nsNSSDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
-                          const PRUnichar *dialogMessageName)
+                          const PRUnichar *dialogMessageName,
+                          const PRUnichar *showAgainName)
 {
   nsresult rv;
 
@@ -517,7 +522,7 @@ nsNSSDialogs::AlertDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                                    getter_Copies(windowTitle));
   mStringBundle->GetStringFromName(dialogMessageName,
                                    getter_Copies(message));
-  mStringBundle->GetStringFromName(NS_LITERAL_STRING("DontShowAgain").get(),
+  mStringBundle->GetStringFromName(showAgainName,
                                    getter_Copies(dontShowAgain));
   if (!windowTitle || !message || !dontShowAgain) return NS_ERROR_FAILURE;
       
@@ -537,7 +542,8 @@ nsNSSDialogs::ConfirmPostToInsecure(nsIInterfaceRequestor *ctx, PRBool* _result)
   nsresult rv;
 
   rv = ConfirmDialog(ctx, INSECURE_SUBMIT_PREF,
-                     NS_LITERAL_STRING("PostToInsecureFromInsecure").get(),
+                     NS_LITERAL_STRING("PostToInsecureFromInsecureMessage").get(),
+                     NS_LITERAL_STRING("PostToInsecureFromInsecureShowAgain").get(),
                      _result);
 
   return rv;
@@ -548,56 +554,83 @@ nsNSSDialogs::ConfirmPostToInsecureFromSecure(nsIInterfaceRequestor *ctx, PRBool
 {
   nsresult rv;
 
-  rv = ConfirmDialog(ctx, nsnull,
-                     NS_LITERAL_STRING("PostToInsecure").get(), _result);
+  rv = ConfirmDialog(ctx, nsnull, // No preference for this one - it's too important
+                     NS_LITERAL_STRING("PostToInsecureFromSecureMessage").get(),
+                     nsnull, 
+                     _result);
 
   return rv;
 }
 
 nsresult
 nsNSSDialogs::ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
-                            const PRUnichar *messageName, PRBool* _result)
+                            const PRUnichar *messageName, 
+                            const PRUnichar *showAgainName, 
+                            PRBool* _result)
 {
   nsresult rv;
 
   // Get user's preference for this alert
-  PRBool prefValue = PR_TRUE;
-  if (prefName) {
-    rv = mPref->GetBoolPref(prefName, &prefValue);
-    if (NS_FAILED(rv)) prefValue = PR_TRUE;
-  }
+  // prefName, showAgainName are null if there is no preference for this dialog
+  PRBool prefValue;
+  
+  rv = mPref->GetBoolPref(prefName, &prefValue);
+  if (NS_FAILED(rv)) prefValue = PR_TRUE;
 
   // Stop if confirm is not requested
   if (!prefValue) {
     *_result = PR_TRUE;
     return NS_OK;
   }
-
+  
   // Get Prompt to use
   nsCOMPtr<nsIPrompt> prompt = do_GetInterface(ctx);
   if (!prompt) return NS_ERROR_FAILURE;
 
   // Get messages strings from localization file
-  nsXPIDLString windowTitle, message, dontShowAgain;
+  nsXPIDLString windowTitle, message, alertMe, cont;
 
   mStringBundle->GetStringFromName(NS_LITERAL_STRING("Title").get(),
                                    getter_Copies(windowTitle));
   mStringBundle->GetStringFromName(messageName,
                                    getter_Copies(message));
-  if (!windowTitle || !message) return NS_ERROR_FAILURE;
+  mStringBundle->GetStringFromName(showAgainName,
+                                   getter_Copies(alertMe));
+  mStringBundle->GetStringFromName(NS_LITERAL_STRING("Continue").get(),
+                                   getter_Copies(cont));
+  // alertMe is allowed to be null
+  if (!windowTitle || !message || !cont) return NS_ERROR_FAILURE;
+      
+  // Replace # characters with newlines to lay out the dialog.
+  PRUnichar* msgchars = NS_CONST_CAST(PRUnichar*, message.get());
+  
+  PRUint32 i = 0;
+  for (i = 0; msgchars[i] != '\0'; i++) {
+    if (msgchars[i] == '#') {
+      msgchars[i] = '\n';
+    }
+  }  
 
-  if (prefName) {
-    mStringBundle->GetStringFromName(NS_LITERAL_STRING("DontShowAgain").get(),
-                                     getter_Copies(dontShowAgain));
-    if (!dontShowAgain) return NS_ERROR_FAILURE;
-      
-    rv = prompt->ConfirmCheck(windowTitle, message, dontShowAgain, &prefValue, _result);
-  } else {
-    rv = prompt->Confirm(windowTitle, message, _result);
-  }
+  PRInt32 buttonPressed;
+
+  rv  = prompt->ConfirmEx(windowTitle, 
+                          message, 
+                          (nsIPrompt::BUTTON_TITLE_IS_STRING * nsIPrompt::BUTTON_POS_0) +
+                          (nsIPrompt::BUTTON_TITLE_CANCEL * nsIPrompt::BUTTON_POS_1),
+                          cont,
+                          nsnull,
+                          nsnull,
+                          alertMe, 
+                          &prefValue, 
+                          &buttonPressed);
+
   if (NS_FAILED(rv)) return rv;
-      
-  if (prefName && !prefValue) {
+
+  if (buttonPressed == 1) {
+    *_result = PR_FALSE;
+  }                                
+        
+  if (!prefValue) {
     mPref->SetBoolPref(prefName, PR_FALSE);
   }
 
