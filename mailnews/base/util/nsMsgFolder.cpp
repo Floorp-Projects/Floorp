@@ -336,7 +336,7 @@ NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
 NS_IMETHODIMP nsMsgFolder::GetPrettyName(PRUnichar ** name)
 {
 	if (!name)
-		return NS_ERROR_OUT_OF_MEMORY;
+		return NS_ERROR_NULL_POINTER;
 	*name = mName.ToNewUnicode();
 	return (*name) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
