@@ -82,6 +82,7 @@ CPP_OBJS =                                \
   .\$(OBJDIR)\nsEditor.obj                \
   .\$(OBJDIR)\nsEditorUtils.obj           \
   .\$(OBJDIR)\nsEditProperty.obj          \
+  .\$(OBJDIR)\nsTextEditUtils.obj         \
   .\$(OBJDIR)\nsHTMLEditUtils.obj         \
   .\$(OBJDIR)\nsPlaintextDataTransfer.obj \
   .\$(OBJDIR)\nsPlaintextEditor.obj       \
