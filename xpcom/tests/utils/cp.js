@@ -1,6 +1,28 @@
 const nsILocalFile = Components.interfaces.nsILocalFile;
 var prefix = "";
 
+function rename(source, newName)
+{
+    try {
+    var sourceFile = Components.classes["component://mozilla/file/local"].
+	createInstance(nsILocalFile);
+    sourceFile.initWithPath(source);
+    
+    }
+    catch (e) {
+        dump("Could not create nsILocalFile\n");
+    }
+
+    
+    try {
+        sourceFile.copyTo(null, newName);
+    }
+    catch (e) {
+        dump("error coping" + e + "\n");
+    }
+}
+
+
 function cp(source, dest, followLinks, newName)
 {
     try {
