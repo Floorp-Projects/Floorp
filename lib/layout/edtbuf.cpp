@@ -9834,6 +9834,34 @@ XP_Bool CEditBuffer::Reduce( CEditElement *pRoot ){
     return pRoot->Reduce( this );
 }
 
+
+
+void
+CEditBuffer::Protect( CEditElement *pRoot  )
+{
+    // work backwards so when children go away, we don't have
+    //  lossage.
+    CEditElement *pChild, *pNext;
+    pChild = pRoot->GetChild();
+	if (!pChild) //maybe we need to protect this?
+	{
+		//if isContainer and parent and parent->islist protect!!
+		if (pRoot->IsContainer() && pRoot->GetParent() && pRoot->GetParent()->IsList())
+		{
+			//add new text element
+			CEditTextElement *t_ele=new CEditTextElement(pRoot, NULL);
+		}
+	}
+    while( pChild ) 
+	{
+        pNext = pChild->GetNextSibling();
+        Protect( pChild );
+        pChild = pNext;
+    }
+}
+
+
+
 //
 //
 //
@@ -9915,6 +9943,8 @@ void CEditBuffer::FinishedLoad2()
 
     m_pCreationCursor = NULL;
 
+	// protect empty SOME empty lines! //i.e. list items with nothing in their containers
+	Protect( m_pRoot );
     // Get rid of empty items.
     Reduce( m_pRoot );
 

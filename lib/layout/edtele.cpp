@@ -658,6 +658,8 @@ void CEditElement::EnsureSelectableSiblings(CEditBuffer* pBuffer)
         // Make sure the previous sibling exists and is a container
         CEditElement* pPrevious = GetPreviousSibling();
         // EXPERIMENTAL: Don't force another container before inserted table
+		if (pPrevious && pPrevious->GetType() == P_DIVISION)
+			pPrevious = pPrevious->GetChild();
 #if 0
         if ( ! pPrevious ) {
 #else
@@ -672,6 +674,8 @@ void CEditElement::EnsureSelectableSiblings(CEditBuffer* pBuffer)
     {
         // Make sure the next sibling exists and is container
         CEditElement* pNext = GetNextSibling();
+		if (pNext && pNext->GetType() == P_DIVISION)
+			pNext = pNext->GetChild();
 #if 0
         if ( ! pNext || pNext->IsEndContainer() ) {
 #else
@@ -6527,6 +6531,27 @@ XP_Bool CEditContainerElement::ForcesDoubleSpacedNextLine() {
     return BitSet( edt_setContainerHasLineAfter, GetType() );
 }
 
+//helper function
+//default == left!
+PRIVATE XP_Bool CompareAlignments(ED_Alignment x, ED_Alignment y)
+{
+    if (x == y)
+        return TRUE;
+    if ( ((x == ED_ALIGN_ABSCENTER) || (x == ED_ALIGN_CENTER)) 
+        && ((y == ED_ALIGN_ABSCENTER) || (y == ED_ALIGN_CENTER)) )
+            return TRUE;
+    if ( ((x == ED_ALIGN_DEFAULT) || (x == ED_ALIGN_LEFT)) 
+        && ((y == ED_ALIGN_DEFAULT) || (y == ED_ALIGN_LEFT)) )
+            return TRUE;
+    if ( ((x == ED_ALIGN_ABSBOTTOM) || (x == ED_ALIGN_BOTTOM)) 
+        && ((y == ED_ALIGN_ABSBOTTOM) || (y == ED_ALIGN_BOTTOM)) )
+            return TRUE;
+    if ( ((x == ED_ALIGN_ABSTOP) || (x == ED_ALIGN_TOP)) 
+        && ((y == ED_ALIGN_ABSTOP) || (y == ED_ALIGN_TOP)) )
+            return TRUE;
+    return FALSE;
+}
+
 void CEditContainerElement::AdjustContainers( CEditBuffer *pBuffer ){
 
     if( GetType() == P_PARAGRAPH
@@ -6537,18 +6562,34 @@ void CEditContainerElement::AdjustContainers( CEditBuffer *pBuffer ){
         // Convert to internal paragraph type
         //
         SetType( P_NSDT );
-
-        CEditContainerElement *pPrev = (CEditContainerElement*) GetPreviousSibling();
+        CEditElement *pPreviousSibling = (CEditElement*) GetPreviousSibling();
+        CEditContainerElement *pPrev = 0;
+        CEditContainerElement *pNext = (CEditContainerElement*) GetNextSibling();
         //
         // Just some paranoia
         //
-        if ( pPrev && !pPrev->IsContainer() ) pPrev = 0;
+        if ( pPreviousSibling && pPreviousSibling->IsContainer() ) 
+          pPrev = (CEditContainerElement*) pPreviousSibling;
+        if ( pNext && !pNext->IsContainer() ) pNext = 0;
         
+        if ( !pNext || !CompareAlignments(GetAlignment(), pNext->GetAlignment())){
+            CEditContainerElement *pNew;
+            pNew = CEditContainerElement::NewDefaultContainer( 0, 
+                        GetAlignment() );
+            // g++ thinks the following value is not used, but it's mistaken.
+            // The constructor auto-inserts the element into the tree.
+            (void) new CEditBreakElement(pNew, 0);
+            pNew->InsertAfter( this );
+        }
+
         // 
         // If there is a previous container, append an empty single spaced 
-        //  paragraph before this one.
+        //  paragraph before this one.  also append an empty single spaced paragraph if it was a table.
         //
-        if( pPrev && !pPrev->ForcesDoubleSpacedNextLine() ){
+        if ((pPreviousSibling && pPreviousSibling->GetType() == P_TABLE) ||
+			(pPreviousSibling && pPreviousSibling->GetType() == P_DIVISION) || 
+			( pPrev && !pPrev->ForcesDoubleSpacedNextLine()) )
+		{
             CEditContainerElement *pNew;
             pNew = CEditContainerElement::NewDefaultContainer( 0, 
                         GetAlignment() );
@@ -6712,43 +6753,27 @@ XP_Bool CEditContainerElement::SupportsAlign(){
     return BitSet( edt_setContainerSupportsAlign, GetType() );
 }
 
+
 XP_Bool CEditContainerElement::IsImplicitBreak() {
     XP_ASSERT( GetType() == P_NSDT );
     CEditElement *pPrev;
     return ( (pPrev = GetPreviousSibling()) == 0 
                 || !pPrev->IsContainer()
                 || pPrev->Container()->ForcesDoubleSpacedNextLine()
-//                || ((pPrev->Container()->GetAlignment() == ED_ALIGN_RIGHT) && (GetAlignment() != ED_ALIGN_RIGHT) )
-//                || ((pPrev->Container()->GetAlignment() != ED_ALIGN_RIGHT) && (GetAlignment() == ED_ALIGN_RIGHT) )
+#if 0
+                || ((pPrev->Container()->GetAlignment() == ED_ALIGN_RIGHT) && (GetAlignment() != ED_ALIGN_RIGHT) )
+                || ((pPrev->Container()->GetAlignment() != ED_ALIGN_RIGHT) && (GetAlignment() == ED_ALIGN_RIGHT) )
+#endif
                 );
 
 }
 
-//helper function
-//default == left!
-PRIVATE XP_Bool CompareAlignments(ED_Alignment x, ED_Alignment y)
-{
-    if (x == y)
-        return TRUE;
-    if ( ((x == ED_ALIGN_ABSCENTER) || (x == ED_ALIGN_CENTER)) 
-        && ((y == ED_ALIGN_ABSCENTER) || (y == ED_ALIGN_CENTER)) )
-            return TRUE;
-    if ( ((x == ED_ALIGN_DEFAULT) || (x == ED_ALIGN_LEFT)) 
-        && ((y == ED_ALIGN_DEFAULT) || (y == ED_ALIGN_LEFT)) )
-            return TRUE;
-    if ( ((x == ED_ALIGN_ABSBOTTOM) || (x == ED_ALIGN_BOTTOM)) 
-        && ((y == ED_ALIGN_ABSBOTTOM) || (y == ED_ALIGN_BOTTOM)) )
-            return TRUE;
-    if ( ((x == ED_ALIGN_ABSTOP) || (x == ED_ALIGN_TOP)) 
-        && ((y == ED_ALIGN_ABSTOP) || (y == ED_ALIGN_TOP)) )
-            return TRUE;
-    return FALSE;
-}
 
 // 0..2, where 0 = not in pseudo paragraph.
 // 1 = first container of pseudo paragraph.
 // 2 = second container of pseudo paragraph.
 // 3 = after list, <P> does NOT cause a blank line to be drawn above paragraph. we need <P><BR>
+
 int16 CEditContainerElement::GetPseudoParagraphState(){
     if( GetType() != P_NSDT ){
         return 0;
@@ -6783,12 +6808,14 @@ int16 CEditContainerElement::GetPseudoParagraphState(){
         return 4;
     }
     if ( !IsEmpty() && pPrevContainer->GetType() == P_NSDT && pPrevContainer->IsEmpty()
+        && (!pPrevPrev || pPrevPrev->GetType()!= P_TABLE)//tables do not enforce a break! <P> is sufficient for 1 break!
         && (!pPrevPrevContainer || pPrevPrevContainer->GetType() != P_NSDT) ) 
         {
         return 3;
     }
-    if ( ! IsEmpty() && pPrevContainer->GetType() == P_NSDT
-         && pPrevContainer->IsEmpty()  ) {
+    if ( ! IsEmpty() && ((pPrevContainer->GetType() == P_NSDT
+        && pPrevContainer->IsEmpty())|| pPrevPrev && pPrevPrev->GetType() == P_TABLE)   )
+    {
         return 2;
     }
     // Check for state 1
@@ -6802,13 +6829,6 @@ int16 CEditContainerElement::GetPseudoParagraphState(){
     pPrevContainer= GetPreviousNonEmptyContainer(); //check nonempty!
     if ( !IsEmpty() && pPrevContainer && !CompareAlignments(pPrevContainer->GetAlignment(),GetAlignment()) )
         return 1; 
-/*    if ( IsEmpty() && pNext && pNext->IsContainer() 
-           && pNext->Container()->GetType() == P_NSDT
-           && pNext->Container()->IsEmpty() 
-           && pPrevContainer->IsEmpty()
-           ) {
-        return 4;
-    }*/
     return 0;
 }
 
@@ -6828,6 +6848,8 @@ void CEditContainerElement::PrintOpen( CPrintState *pPrintState ){
     if( GetType() == P_NSDT ){
         int16 ppState = GetPseudoParagraphState();
         CEditContainerElement* pPrevContainer=GetPreviousNonEmptyContainer();
+        if (pPrevContainer && pPrevContainer->GetType()!=P_NSDT)
+          pPrevContainer=NULL;//all bets are off
         if (( GetAlignment() == ED_ALIGN_RIGHT && ! IsEmpty()) && ( !pPrevContainer || (pPrevContainer->GetAlignment() != ED_ALIGN_RIGHT ) )){
             pPrintState->m_pOut->Printf( "\n");
             pPrintState->m_iCharPos = pPrintState->m_pOut->Printf( "<DIV ALIGN=right>"); 
@@ -9396,8 +9418,9 @@ void CEditImageElement::PrintOpen( CPrintState *pPrintState ){
             pS1 = " ";
             pS2 = m_href->pExtra;
         }
+        //added '\n' to HREF for visual purposes
         pPrintState->m_iCharPos += pPrintState->m_pOut->Printf( 
-            "<A HREF=%s%s%s>", edt_MakeParamString(m_href->hrefStr), pS1, pS2 );
+            "<A HREF=%s%s%s>\n", edt_MakeParamString(m_href->hrefStr), pS1, pS2 );
     }
 
     // Use special versions of params which has BORDER removed if it's the default

@@ -955,7 +955,7 @@ lo_ProcessDescTitleElement(MWContext *context,
   else
 	{
 	  lo_SetLineBreakState(context, state, LO_LINEFEED_BREAK_SOFT,
-						   LO_CLEAR_NONE, 1, !in_relayout);
+						   LO_CLEAR_NONE, 1, in_relayout);
 	}
   state->x = state->left_margin;
 }
@@ -4413,6 +4413,42 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		 * the width of one list indention.
 		 */
 		case P_NSDT:
+			/*
+			 * The start of a list infers the end of
+			 * the HEAD section of the HTML and starts the BODY
+			 */
+			state->top_state->in_head = FALSE;
+			state->top_state->in_body = TRUE;
+
+			if (state->in_paragraph != FALSE)
+			{
+				lo_CloseParagraph(context, &state, tag, 2);
+			}
+			if (tag->is_end == FALSE)
+			{
+				/*
+				 * Undent to the left for a title if necessary.
+				 */
+				if ((state->list_stack->level != 0)&&
+				    (state->list_stack->type == P_DESC_LIST)&&
+				    (state->list_stack->value > 1))
+				{
+					state->list_stack->old_left_margin -=
+						LIST_MARGIN_INC;
+					state->list_stack->value = 1;
+				}
+
+				if (state->linefeed_state >= 1)
+				{
+					lo_FindLineMargins(context, state,FALSE);
+				}
+				else
+				{
+					lo_SetSoftLineBreakState(context,state,FALSE,1);
+				}
+				state->x = state->left_margin;
+			}
+			break;
 		case P_DESC_TITLE:
 			/*
 			 * The start of a list infers the end of

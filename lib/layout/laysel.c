@@ -1226,8 +1226,9 @@ PRIVATE
 Bool lo_ValidEditableElementIncludingParagraphMarks(MWContext *context, LO_Element* pElement)
 {
     return lo_ValidEditableElement(context, pElement)
-        || (pElement->type== LO_LINEFEED
-	        && pElement->lo_linefeed.break_type == LO_LINEFEED_BREAK_PARAGRAPH);
+        || (pElement->type== LO_LINEFEED)
+	        && (pElement->lo_linefeed.break_type == LO_LINEFEED_BREAK_PARAGRAPH || 
+              pElement->lo_linefeed.break_type == LO_LINEFEED_BREAK_HARD);
 }
 
 /* Moves by one editable position forward or backward. Returns FALSE if it couldn't.

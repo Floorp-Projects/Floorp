@@ -3159,6 +3159,7 @@ public:
 
     void RepairAndSet(CEditSelection& selection);
     XP_Bool Reduce( CEditElement* pRoot );
+	void Protect( CEditElement *pRoot  ); //protect certain things from reduction.
     void NormalizeTree( );
     
     // Change Table and alls cell width data to match
