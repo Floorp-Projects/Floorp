@@ -385,7 +385,7 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
         NS_IF_RELEASE(mSendLater->mEnumerator);
         mSendLater->mEnumerator = nsnull;
 
-        nsresult ret = mSendLater->mMessageFolder->GetMessages(&(mSendLater->mEnumerator));
+        nsresult ret = mSendLater->mMessageFolder->GetMessages(nsnull, &(mSendLater->mEnumerator));
 	      if (NS_FAILED(ret) || (!(mSendLater->mEnumerator)))
           mSendLater->mEnumerator = nsnull;   // just to be sure!
 
@@ -684,7 +684,8 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity                   *identity,
     return NS_ERROR_FAILURE;
   }
 
-  nsresult ret = mMessageFolder->GetMessages(&mEnumerator);
+  // ### fix me - need an nsIMsgWindow here
+  nsresult ret = mMessageFolder->GetMessages(nsnull, &mEnumerator);
 	if (NS_FAILED(ret) || (!mEnumerator))
   {
     NS_RELEASE(mIdentity);

@@ -289,7 +289,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 
 
 //run the url to parse the mailbox
-nsresult nsMsgLocalMailFolder::ParseFolder(nsFileSpec& path)
+nsresult nsMsgLocalMailFolder::ParseFolder(nsIMsgWindow *aMsgWindow, nsFileSpec& path)
 {
 	nsresult rv = NS_OK;
 
@@ -301,7 +301,7 @@ nsresult nsMsgLocalMailFolder::ParseFolder(nsFileSpec& path)
 	if(!parser)
 		return NS_ERROR_OUT_OF_MEMORY;
   
-	rv = mailboxService->ParseMailbox(path, parser, this, nsnull);
+	rv = mailboxService->ParseMailbox(aMsgWindow, path, parser, this, nsnull);
 
 	return rv;
 }
@@ -317,7 +317,7 @@ nsMsgLocalMailFolder::Enumerate(nsIEnumerator* *result)
   nsCOMPtr<nsIEnumerator> messages;
   rv = GetSubFolders(getter_AddRefs(folders));
   if (NS_FAILED(rv)) return rv;
-  rv = GetMessages(getter_AddRefs(messages));
+  rv = GetMessages(nsnull, getter_AddRefs(messages));
   if (NS_FAILED(rv)) return rv;
   return NS_NewConjoiningEnumerator(folders, messages, 
                                     (nsIBidirectionalEnumerator**)result);
@@ -443,13 +443,13 @@ nsMsgLocalMailFolder::ReplaceElement(nsISupports* element, nsISupports* newEleme
 NS_IMETHODIMP
 nsMsgLocalMailFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
 {
-  GetDatabase();
+  GetDatabase(nsnull);
   return nsMsgDBFolder::GetMsgDatabase(aMsgDatabase);
 }
 
 //Makes sure the database is open and exists.  If the database is valid then
 //returns NS_OK.  Otherwise returns a failure error value.
-nsresult nsMsgLocalMailFolder::GetDatabase()
+nsresult nsMsgLocalMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 {
 	nsresult rv = NS_OK;
 	if (!mDatabase)
@@ -490,7 +490,7 @@ nsresult nsMsgLocalMailFolder::GetDatabase()
 			// if we have to regenerate the folder, run the parser url.
 			if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
 			{
-				if(NS_FAILED(rv = ParseFolder(path)))
+				if(NS_FAILED(rv = ParseFolder(aMsgWindow, path)))
 					return rv;
 				else
 					return NS_ERROR_NOT_INITIALIZED;
@@ -514,16 +514,16 @@ nsMsgLocalMailFolder::UpdateFolder(nsIMsgWindow *aWindow)
 	//If we don't currently have a database, get it.  Otherwise, the folder has been updated (presumably this
 	//changes when we download headers when opening inbox).  If it's updated, send NotifyFolderLoaded.
 	if(!mDatabase)
-		rv = GetDatabase(); // this will cause a reparse, if needed.
+		rv = GetDatabase(aWindow); // this will cause a reparse, if needed.
 	else
 		NotifyFolderLoaded();
 	return rv;
 }
 
 NS_IMETHODIMP
-nsMsgLocalMailFolder::GetMessages(nsISimpleEnumerator* *result)
+nsMsgLocalMailFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
-	nsresult rv = GetDatabase();
+	nsresult rv = GetDatabase(aMsgWindow);
 
 	if(NS_SUCCEEDED(rv))
 	{
@@ -718,7 +718,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash()
 
 NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
 {
-	nsresult rv = GetDatabase();
+	nsresult rv = GetDatabase(nsnull);
 
 	if(NS_SUCCEEDED(rv))
 	{
@@ -1131,7 +1131,7 @@ nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages,
 		  if (txnMgr) SetTransactionManager(txnMgr);
 	  }
   	
-      rv = GetDatabase();
+      rv = GetDatabase(msgWindow);
       if(NS_SUCCEEDED(rv))
       {
           PRUint32 messageCount;
@@ -1663,7 +1663,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
     if(!mCopyState->m_parseMsgState)
     {
       if(NS_SUCCEEDED(rv))
-        rv = GetDatabase();
+        rv = GetDatabase(nsnull);
       
       if(NS_SUCCEEDED(rv))
       {

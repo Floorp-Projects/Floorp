@@ -112,7 +112,7 @@ public:
     // nsIMsgFolder methods:
     NS_IMETHOD AddUnique(nsISupports* element);
     NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
-    NS_IMETHOD GetMessages(nsISimpleEnumerator* *result);
+    NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
     
 	NS_IMETHOD CreateSubfolder(const char *folderName);
@@ -281,7 +281,7 @@ protected:
     nsresult AddDirectorySeparator(nsFileSpec &path);
     nsresult CreateDirectoryForFolder(nsFileSpec &path);
 	nsresult CreateSubFolders(nsFileSpec &path);
-	nsresult GetDatabase();
+	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
 	virtual const char *GetIncomingServerType() {return "imap";}
 
     // Uber message copy service

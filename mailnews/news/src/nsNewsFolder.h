@@ -59,7 +59,7 @@ public:
   // nsIMsgFolder methods:
   NS_IMETHOD AddUnique(nsISupports* element);
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
-  NS_IMETHOD GetMessages(nsISimpleEnumerator* *result);
+  NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
 
 	NS_IMETHOD CreateSubfolder(const char *folderName);
@@ -98,7 +98,7 @@ protected:
 	nsresult ParseFolder(nsFileSpec& path);
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
-	nsresult GetDatabase();
+	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
 
   nsresult LoadNewsrcFileAndCreateNewsgroups();
   PRInt32 RememberLine(char *line);

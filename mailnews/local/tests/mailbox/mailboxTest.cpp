@@ -550,7 +550,7 @@ nsresult nsMailboxTestDriver::OpenMailbox()
 	if (NS_SUCCEEDED(rv) && mailboxService)
 	{
 		nsIURI * url = nsnull;
-		mailboxService->ParseMailbox(filePath, m_mailboxParser, this /* register self as url listener */, &url);
+		mailboxService->ParseMailbox(nsnull, filePath, m_mailboxParser, this /* register self as url listener */, &url);
 		if (url)
 			url->QueryInterface(nsIMailboxUrl::GetIID(), (void **) &m_url);
 		NS_IF_RELEASE(url);

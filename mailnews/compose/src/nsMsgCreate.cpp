@@ -294,7 +294,7 @@ HackUpAURIToPlayWith(void)
     return nsnull;
 
   nsCOMPtr <nsISimpleEnumerator> enumerator;
-  rv = folder->GetMessages(getter_AddRefs(enumerator));
+  rv = folder->GetMessages(nsnull, getter_AddRefs(enumerator));
   if (NS_FAILED(rv) || (!enumerator))
   {
     // RICHIE - Possible bug that will bite us in this hack...

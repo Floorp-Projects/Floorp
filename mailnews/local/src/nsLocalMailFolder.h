@@ -92,7 +92,7 @@ public:
 	// nsIMsgFolder methods:
 	NS_IMETHOD AddUnique(nsISupports* element);
 	NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
-	NS_IMETHOD GetMessages(nsISimpleEnumerator* *result);
+	NS_IMETHOD GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result);
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
 
 	NS_IMETHOD CreateSubfolder(const char *folderName);
@@ -139,10 +139,10 @@ public:
   NS_IMETHOD GetMsgDatabase(nsIMsgDatabase **aMsgDatabase);
 
 protected:
-	nsresult ParseFolder(nsFileSpec& path);
+	nsresult ParseFolder(nsIMsgWindow *aMsgWindow, nsFileSpec& path);
 	nsresult CreateSubFolders(nsFileSpec &path);
 	nsresult AddDirectorySeparator(nsFileSpec &path);
-	nsresult GetDatabase();
+	nsresult GetDatabase(nsIMsgWindow *aMsgWindow);
     nsresult GetTrashFolder(nsIMsgFolder** trashFolder);
     nsresult WriteStartOfNewMessage();
 

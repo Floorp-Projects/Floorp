@@ -169,7 +169,7 @@ NS_IMETHODIMP nsImapMailFolder::Enumerate(nsIEnumerator* *result)
     nsIEnumerator* messages;
     rv = GetSubFolders(&folders);
     if (NS_FAILED(rv)) return rv;
-    rv = GetMessages(&messages);
+    rv = GetMessages(nsnull, &messages);
     if (NS_FAILED(rv)) return rv;
     return NS_NewConjoiningEnumerator(folders, messages, 
                                       (nsIBidirectionalEnumerator**)result);
@@ -377,13 +377,13 @@ NS_IMETHODIMP nsImapMailFolder::ReplaceElement(nsISupports* element,
 NS_IMETHODIMP
 nsImapMailFolder::GetMsgDatabase(nsIMsgDatabase** aMsgDatabase)
 {
-    GetDatabase();
+    GetDatabase(nsnull);
     return nsMsgDBFolder::GetMsgDatabase(aMsgDatabase);
 }
 
 //Makes sure the database is open and exists.  If the database is valid then
 //returns NS_OK.  Otherwise returns a failure error value.
-nsresult nsImapMailFolder::GetDatabase()
+nsresult nsImapMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 {
 	nsresult folderOpen = NS_OK;
 	if (!mDatabase)
@@ -449,7 +449,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
         }
         selectFolder = PR_FALSE;
     }
-    rv = GetDatabase();
+    rv = GetDatabase(nsnull);
 
 	// don't run select if we're already running a url/select...
 	if (NS_SUCCEEDED(rv) && !m_urlRunning && selectFolder)
@@ -466,7 +466,7 @@ nsImapMailFolder::UpdateFolder(nsIMsgWindow *msgWindow)
 }
 
 
-NS_IMETHODIMP nsImapMailFolder::GetMessages(nsISimpleEnumerator* *result)
+NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
 	if (result)
 		*result = nsnull;
@@ -966,7 +966,7 @@ nsImapMailFolder::MarkMessagesRead(nsISupportsArray *messages, PRBool markRead)
 NS_IMETHODIMP
 nsImapMailFolder::MarkAllMessagesRead(void)
 {
-	nsresult rv = GetDatabase();
+	nsresult rv = GetDatabase(nsnull);
 	
 	if(NS_SUCCEEDED(rv))
 	{
@@ -1586,7 +1586,7 @@ NS_IMETHODIMP nsImapMailFolder::SetupHeaderParseStream(
     nsresult rv = NS_ERROR_FAILURE;
 
 	if (!mDatabase)
-		GetDatabase();
+		GetDatabase(nsnull);
 
 	if (mFlags & MSG_FOLDER_FLAG_INBOX && !m_filterList)
 	{
@@ -2496,7 +2496,7 @@ nsresult nsImapMailFolder::GetMessageHeader(nsMsgKey key, nsIMsgDBHdr ** aMsgHdr
 	nsresult rv = NS_OK;
 	if (aMsgHdr)
 	{
-		rv = GetDatabase();
+		rv = GetDatabase(nsnull);
 		// In theory, there shouldn't be contention over
 		// m_curMsgUid, but it currently describes both the most
 		// recent header we downloaded, and most recent message we've
@@ -2602,7 +2602,7 @@ nsresult nsImapMailFolder::SyncFlags(nsIImapFlagAndUidState *flagState)
 NS_IMETHODIMP
 nsImapMailFolder::NotifyMessageFlags(PRUint32 flags, nsMsgKey msgKey)
 {
-	if (NS_SUCCEEDED(GetDatabase()) && mDatabase)
+	if (NS_SUCCEEDED(GetDatabase(nsnull)) && mDatabase)
     {
         mDatabase->MarkRead(msgKey, (flags & kImapMsgSeenFlag) != 0, nsnull);
         mDatabase->MarkReplied(msgKey, (flags & kImapMsgAnsweredFlag) != 0, nsnull);
@@ -2657,7 +2657,7 @@ nsImapMailFolder::NotifyMessageDeleted(const char *onlineFolderName,PRBool delet
 	{
 		if (affectedMessages.GetSize() > 0)	// perhaps Search deleted these messages
 		{
-			GetDatabase();
+			GetDatabase(nsnull);
 			if (mDatabase)
 				mDatabase->DeleteMessages(&affectedMessages, nsnull);
 		}
@@ -2665,7 +2665,7 @@ nsImapMailFolder::NotifyMessageDeleted(const char *onlineFolderName,PRBool delet
 	}
 	else if (doomedKeyString)	// && !imapDeleteIsMoveToTrash
 	{
-		GetDatabase();
+		GetDatabase(nsnull);
 		if (mDatabase)
 			SetIMAPDeletedFlag(mDatabase, affectedMessages, nsnull);
 	}

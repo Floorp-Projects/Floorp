@@ -371,7 +371,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 		if(showThreads)
 		{
 			nsCOMPtr<nsISimpleEnumerator> threads;
-			rv = folder->GetThreads(getter_AddRefs(threads));
+			rv = folder->GetThreads(mWindow, getter_AddRefs(threads));
 			if (NS_FAILED(rv)) return rv;
 			nsMessageViewThreadEnumerator * threadEnumerator = 
 				new nsMessageViewThreadEnumerator(threads, folder);
@@ -384,7 +384,7 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
 		else
 		{
 			nsCOMPtr<nsISimpleEnumerator> messages;
-			rv = folder->GetMessages(getter_AddRefs(messages));
+			rv = folder->GetMessages(mWindow, getter_AddRefs(messages));
 			if (NS_SUCCEEDED(rv))
 			{
 				PRUint32 viewType;
@@ -1370,7 +1370,7 @@ nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
                                                nsIRDFNode **target)
 {
   nsCOMPtr<nsISimpleEnumerator> messages;
-  nsresult rv = folder->GetMessages(getter_AddRefs(messages));
+  nsresult rv = folder->GetMessages(mWindow, getter_AddRefs(messages));
   if (NS_SUCCEEDED(rv) && rv != NS_RDF_CURSOR_EMPTY) {
 	PRBool hasMore = PR_FALSE;
 	rv = messages->HasMoreElements(&hasMore);

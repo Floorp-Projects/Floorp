@@ -49,7 +49,7 @@ public:
   
 	NS_IMETHOD  StartFolderLoading(void);
 	NS_IMETHOD  EndFolderLoading(void);
-	NS_IMETHOD GetThreads(nsISimpleEnumerator** threadEnumerator);
+	NS_IMETHOD GetThreads(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator** threadEnumerator);
 	NS_IMETHOD GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread);
 	NS_IMETHOD HasMessage(nsIMessage *message, PRBool *hasMessage);
 	NS_IMETHOD GetCharset(PRUnichar * *aCharset);
@@ -72,7 +72,7 @@ public:
 
 protected:
 	virtual nsresult ReadDBFolderInfo(PRBool force);
-	virtual nsresult GetDatabase() = 0;
+	virtual nsresult GetDatabase(nsIMsgWindow *aMsgWindow) = 0;
 	virtual nsresult SendFlagNotifications(nsISupports *item, PRUint32 oldFlags, PRUint32 newFlags);
 	nsresult OnKeyAddedOrDeleted(nsMsgKey aKeyChanged, nsMsgKey  aParentKey , PRInt32 aFlags, 
                         nsIDBChangeListener * aInstigator, PRBool added, PRBool doFlat, PRBool doThread);

@@ -50,7 +50,7 @@ nsMailboxService::~nsMailboxService()
 
 NS_IMPL_ISUPPORTS3(nsMailboxService, nsIMailboxService, nsIMsgMessageService, nsIProtocolHandler);
 
-nsresult nsMailboxService::ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
+nsresult nsMailboxService::ParseMailbox(nsIMsgWindow *aMsgWindow, nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
 										nsIUrlListener * aUrlListener, nsIURI ** aURL)
 {
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
@@ -66,6 +66,7 @@ nsresult nsMailboxService::ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListe
 		// okay now generate the url string
 		nsFilePath filePath(aMailboxPath); // convert to file url representation...
 		url->SetUpdatingFolder(PR_TRUE);
+		url->SetMsgWindow(aMsgWindow);
 		char * urlSpec = PR_smprintf("mailbox://%s", (const char *) filePath);
 		url->SetSpec(urlSpec);
 		PR_FREEIF(urlSpec);

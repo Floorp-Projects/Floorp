@@ -88,10 +88,7 @@ nsMsgStatusFeedback::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aUR
 		if (rootWebshell) 
 		{
 		  // Kick start the throbber
-		  if (!m_meteorsSpinning)
-            StartMeteors();
-		  else	// because of a bug, we're not stopping the meteors, so lets just stop them here.
-            StopMeteors();
+          StartMeteors();
 		  setAttribute( rootWebshell, "Messenger:Status", "value", "Loading Document..." );
 
 		  // Enable the Stop buton

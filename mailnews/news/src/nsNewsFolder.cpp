@@ -245,7 +245,7 @@ nsMsgNewsFolder::Enumerate(nsIEnumerator **result)
   nsIEnumerator* messages;
   rv = GetSubFolders(&folders);
   if (NS_FAILED(rv)) return rv;
-  rv = GetMessages(&messages);
+  rv = GetMessages(nsnull, &messages);
   if (NS_FAILED(rv)) return rv;
   return NS_NewConjoiningEnumerator(folders, messages, 
                                     (nsIBidirectionalEnumerator**)result);
@@ -322,7 +322,7 @@ nsMsgNewsFolder::ReplaceElement(nsISupports* element, nsISupports* newElement)
 
 //Makes sure the database is open and exists.  If the database is valid then
 //returns NS_OK.  Otherwise returns a failure error value.
-nsresult nsMsgNewsFolder::GetDatabase()
+nsresult nsMsgNewsFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
 {
 		nsresult rv;
 	if (!mDatabase)
@@ -370,7 +370,7 @@ nsresult nsMsgNewsFolder::GetDatabase()
 NS_IMETHODIMP
 nsMsgNewsFolder::UpdateFolder(nsIMsgWindow *aWindow)
 {
-  GetDatabase();	// want this cached...
+  GetDatabase(aWindow);	// want this cached...
   return GetNewMessages(aWindow);
 }
 
@@ -418,7 +418,7 @@ nsMsgNewsFolder::GetCanRename(PRBool *aResult)
 
 
 NS_IMETHODIMP
-nsMsgNewsFolder::GetMessages(nsISimpleEnumerator* *result)
+nsMsgNewsFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *result)
 {
 #ifdef DEBUG_NEWS
   printf("nsMsgNewsFolder::GetMessages(%s)\n",mURI);
@@ -426,7 +426,7 @@ nsMsgNewsFolder::GetMessages(nsISimpleEnumerator* *result)
 
   nsresult rv = NS_OK;
 
-  rv = GetDatabase();
+  rv = GetDatabase(aMsgWindow);
     *result = nsnull;
     
   if(NS_SUCCEEDED(rv)) {
@@ -1121,7 +1121,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetUnreadSetStr(char * *aUnreadSetStr)
   
   if (!aUnreadSetStr) return NS_ERROR_NULL_POINTER;
 
-  rv = GetDatabase();
+  rv = GetDatabase(nsnull);
   if (NS_FAILED(rv)) return rv;
 
   NS_ASSERTION(mDatabase, "no database!");

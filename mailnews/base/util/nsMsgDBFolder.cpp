@@ -131,9 +131,9 @@ NS_IMETHODIMP nsMsgDBFolder::EndFolderLoading(void)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgDBFolder::GetThreads(nsISimpleEnumerator** threadEnumerator)
+NS_IMETHODIMP nsMsgDBFolder::GetThreads(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator** threadEnumerator)
 {
-	nsresult rv = GetDatabase();
+	nsresult rv = GetDatabase(aMsgWindow);
 	
 	if(NS_SUCCEEDED(rv))
 		return mDatabase->EnumerateThreads(threadEnumerator);
@@ -144,7 +144,7 @@ NS_IMETHODIMP nsMsgDBFolder::GetThreads(nsISimpleEnumerator** threadEnumerator)
 NS_IMETHODIMP
 nsMsgDBFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
 {
-	nsresult rv = GetDatabase();
+	nsresult rv = GetDatabase(nsnull);
 	if(NS_SUCCEEDED(rv))
 	{
 		nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
@@ -166,7 +166,7 @@ nsMsgDBFolder::HasMessage(nsIMessage *message, PRBool *hasMessage)
 	if(!hasMessage)
 		return NS_ERROR_NULL_POINTER;
 
-	nsresult rv = GetDatabase();
+	nsresult rv = GetDatabase(nsnull);
 
 	if(NS_SUCCEEDED(rv))
 	{
@@ -703,7 +703,8 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
 NS_IMETHODIMP
 nsMsgDBFolder::MarkAllMessagesRead(void)
 {
-	nsresult rv = GetDatabase();
+	// ### fix me need nsIMsgWindow
+	nsresult rv = GetDatabase(nsnull);
 	
 	if(NS_SUCCEEDED(rv))
 		return mDatabase->MarkAllRead(nsnull);

@@ -345,6 +345,7 @@ char * nsMsgLineStreamBuffer::ReadNextLine(nsIInputStream * aInputStream, PRUint
                 m_startPos = 0;
                 startOfLine = m_dataBuffer;
                 numFreeBytesInBuffer = m_dataBufferSize - m_numBytesInBuffer;
+//				printf("moving data in read line around because buffer filling up\n");
             }
             NS_ASSERTION(m_startPos == 0, "m_startPos should be 0 .....\n");
 		}
