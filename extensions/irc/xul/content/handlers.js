@@ -1045,7 +1045,7 @@ function cli_icommand (e)
     if (ary.length == 0)
     {        
         var o = getObjectDetails(client.currentObject);
-        if (o.server)
+        if ("server" in o)
         {
             client.currentObject.display (getMsg("cli_icommandMsg",
                                                  e.command), "WARNING");

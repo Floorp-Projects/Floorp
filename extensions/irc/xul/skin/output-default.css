@@ -31,20 +31,8 @@
 
 @import url(chrome://chatzilla/content/output-base.css);
 
-.chatzilla-highlight[name="Bold"] {
-    font-weight: bold;
-}
-
 .chatzilla-highlight[name="Italic"] {
     font-style: italic;
-}
-
-.chatzilla-highlight[name="Large"] {
-    font-size: 12pt;
-}
-
-.chatzilla-highlight[name="Small"] {
-    font-size: 8pt;
 }
 
 .chatzilla-highlight[name="SmallCap"] {

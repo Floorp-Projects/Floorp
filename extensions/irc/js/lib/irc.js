@@ -111,6 +111,14 @@ CIRCNetwork.prototype.TYPE = "IRCNetwork";
 CIRCNetwork.prototype.getURL =
 function net_geturl ()
 {
+    if (this.serverList.length == 1 &&
+        this.serverList[0].name == this.name &&
+        this.serverList[0].port != 6667)
+    {
+        return "irc://" + this.serverList[0].name + ":" +
+            this.serverList[0].port + "/";
+    }
+    
     return "irc://" + escape(this.name) + "/";
 }
 

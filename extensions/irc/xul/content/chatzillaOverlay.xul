@@ -4,6 +4,8 @@
 
 <!-- This is the overlay that addes "Chatzilla" to the (global) task menu. -->
 
+<?xml-stylesheet href="chrome://chatzilla/skin/chatzillaOverlay.css" type="text/css"?> 
+
 <overlay id="ChatzillaTaskMenuID"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
@@ -24,15 +26,13 @@
         key="key_irc"
         command="Tasks:IRC"
         id="tasksMenuIRC"
+        class="menuitem-iconic"
         insertbefore="tasksMenuEditor"/>
 </menupopup>
 
 <statusbarpanel id="component-bar">
   <toolbarbutton class="taskbutton" id="mini-irc" oncommand="toIRC()"
-    image="chrome://chatzilla/skin/images/taskbar-irc.gif"
     position="5" tooltiptext="&ircCmd.label;"/>
 </statusbarpanel>
-
-
 
 </overlay>

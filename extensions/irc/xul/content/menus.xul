@@ -276,6 +276,9 @@
         <!-- Tasks menu -->
         <menu id="tasksMenu"/>
 
+        <!-- Window menu -->
+        <menu id="windowMenu"/>
+
         <menu id="menu_Help"/>
 
       </menubar>
