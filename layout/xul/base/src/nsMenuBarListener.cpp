@@ -20,6 +20,8 @@
  * Original Author: David W. Hyatt (hyatt@netscape.com)
  *
  * Contributor(s): 
+ *   Dean Tessman <dean_tessman@hotmail.com>
+ *   Mark Hammond <markh@ActiveState.com>
  */
 
 #include "nsMenuBarListener.h"
@@ -205,6 +207,26 @@ nsMenuBarListener::KeyPress(nsIDOMEvent* aKeyEvent)
           retVal = NS_ERROR_BASE;       // I am consuming event
         }
       }    
+#ifdef XP_WIN
+      // Also need to handle F10 specially on Windows.
+      else if (theChar == NS_VK_F10) {
+        PRBool alt,ctrl,shift,meta;
+        keyEvent->GetAltKey(&alt);
+        keyEvent->GetCtrlKey(&ctrl);
+        keyEvent->GetShiftKey(&shift);
+        keyEvent->GetMetaKey(&meta);
+        if (!(shift || alt || meta)) {
+          // The F10 key just went down by itself or with ctrl pressed.
+          // In Windows, both of these activate the menu bar.
+          mMenuBarFrame->ToggleMenuActiveState();
+
+          aKeyEvent->PreventBubble();
+          aKeyEvent->PreventCapture();
+          aKeyEvent->PreventDefault();
+          return NS_ERROR_BASE; // consume the event
+        }
+      }
+#endif   // XP_WIN
     } 
   }
   return retVal;
