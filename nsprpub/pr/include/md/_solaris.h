@@ -87,6 +87,10 @@
 #define AI_ALL      0x0002
 #define AI_ADDRCONFIG   0x0004
 #endif
+#if defined(_PR_GLOBAL_THREADS_ONLY) || defined(_PR_PTHREADS)
+#define _PR_HAVE_GETHOST_R
+#define _PR_HAVE_GETHOST_R_POINTER
+#endif
 
 #include "prinrval.h"
 NSPR_API(PRIntervalTime) _MD_Solaris_GetInterval(void);

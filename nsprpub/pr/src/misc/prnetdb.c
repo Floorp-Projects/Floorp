@@ -34,14 +34,32 @@ extern int h_errno;
 #define _MD_GETHOST_ERRNO() _MD_ERRNO()
 #endif
 
-#if defined(_PR_NO_PREEMPT)
+/*
+ * The meaning of the macros related to gethostbyname, gethostbyaddr,
+ * and gethostbyname2 is defined below.
+ * - _PR_HAVE_THREADSAFE_GETHOST: the gethostbyXXX functions return
+ *   the result in thread specific storage.  For example, AIX, HP-UX,
+ *   and OSF1.
+ * -  _PR_HAVE_GETHOST_R: have the gethostbyXXX_r functions. See next
+ *   two macros.
+ * - _PR_HAVE_GETHOST_R_INT: the gethostbyXXX_r functions return an
+ *   int.  For example, Linux glibc.
+ * - _PR_HAVE_GETHOST_R_POINTER: the gethostbyXXX_r functions return
+ *   a struct hostent* pointer.  For example, Solaris and IRIX.
+ */
+#if defined(_PR_NO_PREEMPT) || defined(_PR_HAVE_GETHOST_R) \
+    || defined(_PR_HAVE_THREADSAFE_GETHOST)
+#define _PR_NO_DNS_LOCK
+#endif
+
+#if defined(_PR_NO_DNS_LOCK)
 #define LOCK_DNS()
 #define UNLOCK_DNS()
 #else
 PRLock *_pr_dnsLock = NULL;
 #define LOCK_DNS() PR_Lock(_pr_dnsLock)
 #define UNLOCK_DNS() PR_Unlock(_pr_dnsLock)
-#endif  /* defined(_PR_NO_PREEMPT) */
+#endif  /* defined(_PR_NO_DNS_LOCK) */
 
 /*
  * Some platforms have the reentrant getprotobyname_r() and
@@ -134,7 +152,7 @@ void _PR_InitNet(void)
 	 (void)setnetconfig();
 #endif
 #endif
-#if !defined(_PR_NO_PREEMPT)
+#if !defined(_PR_NO_DNS_LOCK)
 	_pr_dnsLock = PR_NewLock();
 #endif
 #if !defined(_PR_HAVE_GETPROTO_R)
@@ -319,20 +337,74 @@ static PRStatus CopyProtoent(
 }
 #endif /* !defined(_PR_HAVE_GETPROTO_R) */
 
+/*
+ * #################################################################
+ * NOTE: tmphe, tmpbuf, bufsize, h, and h_err are local variables
+ * or arguments of PR_GetHostByName, PR_GetIPNodeByName, and
+ * PR_GetHostByAddr.  DO NOT CHANGE THE NAMES OF THESE LOCAL 
+ * VARIABLES OR ARGUMENTS.
+ * #################################################################
+ */
+#if defined(_PR_HAVE_GETHOST_R_INT)
+
+#define GETHOSTBYNAME(name) \
+    (gethostbyname_r(name, &tmphe, tmpbuf, bufsize, &h, &h_err), h)
+#define GETHOSTBYNAME2(name, af) \
+    (gethostbyname2_r(name, af, &tmphe, tmpbuf, bufsize, &h, &h_err), h)
+#define GETHOSTBYADDR(addr, addrlen, af) \
+    (gethostbyaddr_r(addr, addrlen, af, \
+    &tmphe, tmpbuf, bufsize, &h, &h_err), h)
+
+#elif defined(_PR_HAVE_GETHOST_R_POINTER)
+
+#define GETHOSTBYNAME(name) \
+    gethostbyname_r(name, &tmphe, tmpbuf, bufsize, &h_err)
+#define GETHOSTBYNAME2(name, af) \
+    gethostbyname2_r(name, af, &tmphe, tmpbuf, bufsize, &h_err)
+#define GETHOSTBYADDR(addr, addrlen, af) \
+    gethostbyaddr_r(addr, addrlen, af, &tmphe, tmpbuf, bufsize, &h_err)
+
+#else
+
+#define GETHOSTBYNAME(name) gethostbyname(name)
+#define GETHOSTBYNAME2(name, af) gethostbyname2(name, af)
+#define GETHOSTBYADDR(addr, addrlen, af) gethostbyaddr(addr, addrlen, af)
+
+#endif  /* definition of GETHOSTBYXXX */
+
 PR_IMPLEMENT(PRStatus) PR_GetHostByName(
     const char *name, char *buf, PRIntn bufsize, PRHostEnt *hp)
 {
 	struct hostent *h;
 	PRStatus rv = PR_FAILURE;
+#if defined(_PR_HAVE_GETHOST_R)
+    char localbuf[PR_NETDB_BUF_SIZE];
+    char *tmpbuf;
+    struct hostent tmphe;
+    int h_err;
+#endif
 
     if (!_pr_initialized) _PR_ImplicitInitialization();
+
+#if defined(_PR_HAVE_GETHOST_R)
+    tmpbuf = localbuf;
+    if (bufsize > sizeof(localbuf))
+    {
+        tmpbuf = PR_Malloc(bufsize);
+        if (NULL == tmpbuf)
+        {
+            PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+            return rv;
+        }
+    }
+#endif
 
 	LOCK_DNS();
 
 #ifdef XP_OS2_VACPP
-	h = gethostbyname((char *)name);
+	h = GETHOSTBYNAME((char *)name);
 #else
-    h = gethostbyname(name);
+    h = GETHOSTBYNAME(name);
 #endif
     
 	if (NULL == h)
@@ -347,6 +419,10 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByName(
 		    PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
 	}
 	UNLOCK_DNS();
+#if defined(_PR_HAVE_GETHOST_R)
+    if (tmpbuf != localbuf)
+        PR_Free(tmpbuf);
+#endif
 	return rv;
 }
 
@@ -407,6 +483,12 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 {
 	struct hostent *h = 0;
 	PRStatus rv = PR_FAILURE;
+#if defined(_PR_HAVE_GETHOST_R)
+    char localbuf[PR_NETDB_BUF_SIZE];
+    char *tmpbuf;
+    struct hostent tmphe;
+    int h_err;
+#endif
 #if defined(_PR_HAVE_GETIPNODEBYNAME)
 	PRUint16 md_af = af;
 	int error_num;
@@ -437,6 +519,19 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
     	md_af = af;
 #endif
 
+#if defined(_PR_HAVE_GETHOST_R)
+    tmpbuf = localbuf;
+    if (bufsize > sizeof(localbuf))
+    {
+        tmpbuf = PR_Malloc(bufsize);
+        if (NULL == tmpbuf)
+        {
+            PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+            return rv;
+        }
+    }
+#endif
+
     /* Do not need to lock the DNS lock if getipnodebyname() is called */
 #ifdef _PR_INET6
 #ifdef _PR_HAVE_GETHOSTBYNAME2
@@ -446,17 +541,17 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 #ifdef _PR_INET6_PROBE
       if (_pr_ipv6_is_present == PR_TRUE)
 #endif
-        h = gethostbyname2(name, AF_INET6); 
+        h = GETHOSTBYNAME2(name, AF_INET6); 
         if ((NULL == h) && (flags & PR_AI_V4MAPPED))
         {
             did_af_inet = PR_TRUE;
-            h = gethostbyname2(name, AF_INET);
+            h = GETHOSTBYNAME2(name, AF_INET);
         }
     }
     else
     {
         did_af_inet = PR_TRUE;
-        h = gethostbyname2(name, af);
+        h = GETHOSTBYNAME2(name, af);
     }
 #elif defined(_PR_HAVE_GETIPNODEBYNAME)
     h = getipnodebyname(name, md_af, tmp_flags, &error_num);
@@ -469,14 +564,14 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
     else
     {
         LOCK_DNS();
-    	h = gethostbyname(name);
+    	h = GETHOSTBYNAME(name);
     }
 #else /* _PR_INET6 */
     LOCK_DNS();
 #ifdef XP_OS2_VACPP
-	h = gethostbyname((char *)name);
+	h = GETHOSTBYNAME((char *)name);
 #else
-    h = gethostbyname(name);
+    h = GETHOSTBYNAME(name);
 #endif
 #endif /* _PR_INET6 */
     
@@ -510,7 +605,7 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
 #if defined(_PR_INET6) && defined(_PR_HAVE_GETHOSTBYNAME2)
 		if ((PR_SUCCESS == rv) && (flags & PR_AI_V4MAPPED)
 				&& (flags & (PR_AI_ALL|PR_AI_ADDRCONFIG))
-				&& !did_af_inet && (h = gethostbyname2(name, AF_INET)) != 0) {
+				&& !did_af_inet && (h = GETHOSTBYNAME2(name, AF_INET)) != 0) {
 			rv = AppendV4AddrsToHostent(h, &buf, &bufsize, hp);
 			if (PR_SUCCESS != rv)
 				PR_SetError(PR_INSUFFICIENT_RESOURCES_ERROR, 0);
@@ -530,6 +625,11 @@ PR_IMPLEMENT(PRStatus) PR_GetIPNodeByName(
     UNLOCK_DNS();
 #endif /* _PR_INET6 */
 
+#if defined(_PR_HAVE_GETHOST_R)
+    if (tmpbuf != localbuf)
+        PR_Free(tmpbuf);
+#endif
+
 	return rv;
 }
 
@@ -542,6 +642,12 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 	PRUint32 tmp_ip;
 	int addrlen;
 	PRInt32 af;
+#if defined(_PR_HAVE_GETHOST_R)
+    char localbuf[PR_NETDB_BUF_SIZE];
+    char *tmpbuf;
+    struct hostent tmphe;
+    int h_err;
+#endif
 #if defined(_PR_HAVE_GETIPNODEBYADDR)
 	int error_num;
 #endif
@@ -592,6 +698,19 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 		addrlen = sizeof(hostaddr->inet.ip);
 	}
 
+#if defined(_PR_HAVE_GETHOST_R)
+    tmpbuf = localbuf;
+    if (bufsize > sizeof(localbuf))
+    {
+        tmpbuf = PR_Malloc(bufsize);
+        if (NULL == tmpbuf)
+        {
+            PR_SetError(PR_OUT_OF_MEMORY_ERROR, 0);
+            return rv;
+        }
+    }
+#endif
+
     /* Do not need to lock the DNS lock if getipnodebyaddr() is called */
 #if defined(_PR_HAVE_GETIPNODEBYADDR) && defined(_PR_INET6)
 	h = getipnodebyaddr(addr, addrlen, af, &error_num);
@@ -602,14 +721,14 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 	else
     {
         LOCK_DNS();
-		h = gethostbyaddr(addr, addrlen, af);
+		h = GETHOSTBYADDR(addr, addrlen, af);
     }
 #else	/* _PR_HAVE_GETIPNODEBYADDR */
     LOCK_DNS();
 #ifdef XP_OS2_VACPP
-	h = gethostbyaddr((char *)addr, addrlen, af);
+	h = GETHOSTBYADDR((char *)addr, addrlen, af);
 #else
-	h = gethostbyaddr(addr, addrlen, af);
+	h = GETHOSTBYADDR(addr, addrlen, af);
 #endif
 #endif /* _PR_HAVE_GETIPNODEBYADDR */
 	if (NULL == h)
@@ -659,6 +778,11 @@ PR_IMPLEMENT(PRStatus) PR_GetHostByAddr(
 #else	/* _PR_HAVE_GETIPNODEBYADDR */
     UNLOCK_DNS();
 #endif /* _PR_HAVE_GETIPNODEBYADDR */
+
+#if defined(_PR_HAVE_GETHOST_R)
+    if (tmpbuf != localbuf)
+        PR_Free(tmpbuf);
+#endif
 
 	return rv;
 }
