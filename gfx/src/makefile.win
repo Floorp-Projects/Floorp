@@ -24,6 +24,8 @@ MODULE=raptor
 
 DIRS = windows
 
+include <$(DEPTH)\config\config.mak>
+
 MAKE_OBJ_TYPE = DLL
 DLLNAME = gkgfxwin
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
