@@ -286,7 +286,7 @@ function foundHeaderInfo(aSniffer, aData, aSkipPrompt)
                          persistArgs.contentType, encodingFlags, kWrapColumn);
   } else {
     dl.init(source, persistArgs.target, null, null, null, persist);
-    persist.saveURI(source, null, null, persistArgs.postData, null, persistArgs.target);
+    persist.saveURI(source, null, getReferrer(document), persistArgs.postData, null, persistArgs.target);
   }
 }
 
