@@ -540,7 +540,7 @@ ServiceImpl::GetResource(const char* aURI, nsIRDFResource** aResource)
         // Safely convert to a C-string for the XPCOM APIs
         char buf[128];
         char* progID = buf;
-        if (len >= sizeof(buf))
+        if (len >= PRInt32(sizeof buf))
             progID = new char[len + 1];
 
         if (progID == nsnull)
@@ -589,7 +589,7 @@ ServiceImpl::GetUnicodeResource(const PRUnichar* aURI, nsIRDFResource** aResourc
     char buf[128];
     char* uri = buf;
 
-    if (uriStr.Length() >= sizeof(buf))
+    if (uriStr.Length() >= PRInt32(sizeof buf))
         uri = new char[uriStr.Length() + 1];
 
     uriStr.ToCString(uri, uriStr.Length() + 1);
@@ -873,7 +873,7 @@ ServiceImpl::GetDataSource(const char* uri, nsIRDFDataSource** aDataSource)
         // Safely convert it to a C-string for the XPCOM APIs
         char buf[64];
         char* progID = buf, *p;
-        if (progIDStr.Length() >= sizeof(buf))
+        if (progIDStr.Length() >= PRInt32(sizeof buf))
             progID = new char[progIDStr.Length() + 1];
 
         if (progID == nsnull)
