@@ -142,11 +142,11 @@
            <!-- XXX lilmatt: Finish/localize this! -->
            <menuitem key="undo_key"
                      label="Undo"
-                     disabled="true"/>
+                     command="Edit:Undo"/>
            <!-- XXX lilmatt: Finish/localize this! -->
            <menuitem key="redo_key"
                      label="Redo"
-                     disabled="true"/>
+                     command="Edit:Redo"/>
            <menuseparator/>
            <menuitem id="calendar-cut-menu"
                      key="key_cut"
@@ -254,10 +254,9 @@
                      accesskey="&calendar.monthview.accesskey;"
                      observes="month_view_command"/>
            <menuseparator/>
-           <!-- XXX lilmatt: Localize this! label="&calendar.onlyworkday.checkbox.label;" -->
            <menuitem id="only-workday-checkbox-1"
                      type="checkbox"
-                     label="Only Show Work Days"
+                     label="&calendar.onlyworkday.checkbox.label;"
                      accesskey="&calendar.onlyworkday.checkbox.accesskey;"
                      oncommand="changeOnlyWorkdayCheckbox(1);"
                      persist="checked"
@@ -342,17 +341,13 @@
 #                     observes="wizard_command"/>
 #           <menuseparator/>
            <!-- XXX lilmatt: Finish/localize this! label="&extensions.label;" accesskey="&extensions.accesskey;" -->
-           <menuitem id="extensionsManager"
-                     label="Extensions"
-                     oncommand="openExtensions('extensions');"/>
-#                     disabled="true"/>
+           <menuitem id="extensionsManager" label="Extensions"
+                     command="Tools:Extensions"/>
            <!-- XXX lilmatt: Finish/localize this! label="&themes.label;" accesskey="&themes.accesskey;"-->
-           <menuitem id="themesManager"
-                     label="Themes"
-                     oncommand="openExtensions('themes');"/>
-#                     disabled="true"/>
-           <menuseparator/>
-           <menuitem id="javascriptConsole"
+           <menuitem id="themesManager" label="Themes"
+                     command="Tools:Themes"/>
+           <menuseparator id="devToolsSeparator"/>
+           <menuitem id="javascriptConsole" 
                      label="&javaScriptConsoleCmd.label;"
                      accesskey="&javaScriptConsoleCmd.accesskey;"
                      oncommand="toJavaScriptConsole();"/>
