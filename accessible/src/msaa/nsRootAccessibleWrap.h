@@ -46,27 +46,11 @@
 #include "nsCOMPtr.h"
 #include "nsRootAccessible.h"
 
-class nsRootAccessibleWrap: public nsIAccessibleEventListener,
-                            public nsRootAccessible
+class nsRootAccessibleWrap: public nsRootAccessible
 {
-public:
+  public:
     nsRootAccessibleWrap(nsIDOMNode *aNode, nsIWeakReference *aShell);
     virtual ~nsRootAccessibleWrap();
-
-    // nsISupports
-    NS_DECL_ISUPPORTS_INHERITED
-
-    // IAccessible
-    // Overrid get_accChild so that it can get any child via the unique ID
-    virtual /* [id][propget] */ HRESULT STDMETHODCALLTYPE get_accChild( 
-        /* [in] */ VARIANT varChild,
-        /* [retval][out] */ IDispatch __RPC_FAR *__RPC_FAR *ppdispChild);
-
-    // nsIAccessibleEventListener
-    NS_DECL_NSIACCESSIBLEEVENTLISTENER
-
-    PRUint32 GetIdFor(nsIAccessible* aAccessible);
-    virtual void GetXPAccessibleFor(VARIANT varChild, nsIAccessible **aXPAccessible);
 };
 
 #endif

@@ -27,7 +27,9 @@
 #include "nsIAccessible.idl"
 #include "domstubs.idl"
 #include "nsIAccessibleCaret.idl"
+
 interface nsIDocument;
+interface nsIAccessNode;
 
 [scriptable, uuid(8781FC88-355F-4439-881F-6504A0A1CEB6)]
 interface nsIAccessibleDocument : nsISupports
@@ -38,5 +40,7 @@ interface nsIAccessibleDocument : nsISupports
   readonly attribute AString docType;
   AString getNameSpaceURIForID(in short nameSpaceID);
   readonly attribute nsIAccessibleCaret caretAccessible;
-  [noscript] attribute voidPtr window;
+  [noscript] readonly attribute voidPtr window;
+  [noscript] nsIAccessNode getCachedAccessNode(in voidPtr aUniqueID);
+  [noscript] void cacheAccessNode(in voidPtr aUniqueID, in nsIAccessNode aAccessNode);
 };

@@ -18,3 +18,4 @@ ISimpleDOMNode_p.c
 ISimpleDOMNode_p.obj
 module.rc
 module.res
+dlldata.c

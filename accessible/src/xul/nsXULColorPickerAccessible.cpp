@@ -39,9 +39,6 @@
 
 // NOTE: alphabetically ordered
 #include "nsXULColorPickerAccessible.h"
-#include "nsReadableUtils.h"
-#include "nsString.h"
-#include "nsXULFormControlAccessible.h"
 #include "nsIDOMElement.h"
 
 

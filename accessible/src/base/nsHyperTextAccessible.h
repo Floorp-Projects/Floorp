@@ -43,9 +43,9 @@
 #include "nsAccessible.h"
 #include "nsIAccessibleHyperText.h"
 #include "nsTextAccessible.h"
+#include "nsISupportsArray.h"
 
 #ifdef MOZ_ACCESSIBILITY_ATK
-
 class nsAccessibleHyperText : public nsIAccessibleHyperText,
                               public nsIAccessibleText
 {

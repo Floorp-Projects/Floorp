@@ -38,8 +38,19 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLTableAccessible.h"
-#include "nsWeakReference.h"
-#include "nsReadableUtils.h"
+#include "nsIServiceManager.h"
+#include "nsIDocument.h"
+#include "nsIDOMElement.h"
+#include "nsIDOMHTMLTableElement.h"
+#include "nsIDOMHTMLTableCaptionElem.h"
+#include "nsIDOMHTMLTableRowElement.h"
+#include "nsIDOMHTMLTableCellElement.h"
+#include "nsIDOMHTMLTableSectionElem.h"
+#include "nsIDOMHTMLCollection.h"
+#include "nsITableLayout.h"
+#include "nsHyperTextAccessible.h"
+#include "nsIAccessibilityService.h"
+#include "nsIPresShell.h"
 
 #ifndef MOZ_ACCESSIBILITY_ATK
 
@@ -83,6 +94,7 @@ nsHTMLTableCaptionAccessible::nsHTMLTableCaptionAccessible
 (nsIDOMNode* aDomNode, nsIWeakReference* aShell):
 nsAccessibleWrap(aDomNode, aShell)
 {
+  Init(); // Make sure this generated accessible of the table is cached
 }
 
 NS_IMETHODIMP
@@ -155,6 +167,7 @@ NS_IMETHODIMP nsHTMLTableAccessible::GetAccName(nsAString& aResult)
 NS_IMETHODIMP
 nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
 {
+  *aCaption = nsnull;
   nsresult rv = NS_OK;
 
   nsCOMPtr<nsIDOMHTMLTableElement> table(do_QueryInterface(mDOMNode));
@@ -170,6 +183,10 @@ nsHTMLTableAccessible::GetCaption(nsIAccessible **aCaption)
   nsCOMPtr<nsIAccessibilityService>
     accService(do_GetService("@mozilla.org/accessibilityService;1"));
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
+
+  accService->GetCachedAccessible(captionNode, mWeakShell, aCaption);
+  if (*aCaption)
+    return NS_OK;
 
   return accService->CreateHTMLTableCaptionAccessible(captionNode, aCaption);
 }
@@ -243,8 +260,16 @@ nsHTMLTableAccessible::GetColumnHeader(nsIAccessibleTable **aColumnHeader)
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIAccessible> accHead;
-  rv = accService->CreateHTMLTableHeadAccessible(section,
-                                                 getter_AddRefs(accHead));
+  nsCOMPtr<nsIDOMNode> sectionNode(do_QueryInterface(section));
+  if (sectionNode) {
+    rv = accService->GetCachedAccessible(sectionNode, mWeakShell, 
+                                    getter_AddRefs(accHead));
+  }
+
+  if (!accHead) {
+    rv = accService->CreateHTMLTableHeadAccessible(section,
+                                                   getter_AddRefs(accHead));
+  }
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIAccessibleTable> accTableHead(do_QueryInterface(accHead));
@@ -359,7 +384,7 @@ nsHTMLTableAccessible::GetSelectedRows(PRUint32 *aNumRows, PRInt32 **aRows)
 
 NS_IMETHODIMP
 nsHTMLTableAccessible::CellRefAt(PRInt32 aRow, PRInt32 aColumn,
-                                 nsIAccessible **_retval)
+                                 nsIAccessible **aTableCellAccessible)
 {
   nsresult rv = NS_OK;
 
@@ -371,7 +396,8 @@ nsHTMLTableAccessible::CellRefAt(PRInt32 aRow, PRInt32 aColumn,
     accService(do_GetService("@mozilla.org/accessibilityService;1"));
   NS_ENSURE_TRUE(accService, NS_ERROR_FAILURE);
 
-  return accService->GetAccessibleFor(cellElement, _retval);
+  return accService->GetAccessibleInWeakShell(cellElement, mWeakShell,
+                                              aTableCellAccessible);
 }
 
 NS_IMETHODIMP
@@ -610,6 +636,7 @@ nsHTMLTableHeadAccessible::nsHTMLTableHeadAccessible(nsIDOMNode *aDomNode,
                                                      nsIWeakReference *aShell):
 nsHTMLTableAccessible(aDomNode, aShell)
 {
+  Init(); // Make sure this generated accessible of the table is cached
 }
 
 NS_IMETHODIMP

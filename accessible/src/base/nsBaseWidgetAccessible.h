@@ -41,10 +41,9 @@
 #define _nsBaseWidgetAccessible_H_
 
 #include "nsAccessibleWrap.h"
-#include "nsCOMPtr.h"
 #include "nsIContent.h"
-#include "nsIDOMNode.h"
-#include "nsIDOMXULListener.h"
+
+class nsIDOMNode;
 
 /**
   * This file contains a number of classes that are used as base
@@ -110,12 +109,13 @@ public:
   NS_IMETHOD GetAccValue(nsAString& _retval);
   NS_IMETHOD AccTakeFocus();
   NS_IMETHOD GetAccKeyboardShortcut(nsAString& _retval);
+  NS_IMETHOD Shutdown();
 
 protected:
   PRBool IsALink();
-  PRBool mIsALinkCached;  // -1 = unknown, 0 = not a link, 1 = is a link
   nsCOMPtr<nsIContent> mLinkContent;
-  PRBool mIsLinkVisited;
+  PRPackedBool mIsALinkCached;  // -1 = unknown, 0 = not a link, 1 = is a link
+  PRPackedBool mIsLinkVisited;
 };
 
 #endif  

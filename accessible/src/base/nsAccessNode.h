@@ -46,21 +46,127 @@
 #include "nsCOMPtr.h"
 #include "nsIAccessNode.h"
 #include "nsIDOMNode.h"
+#include "nsIStringBundle.h"
+#include "nsWeakReference.h"
+
+#define OLD_HASH 1
+
+#ifdef OLD_HASH
+class nsSupportsHashtable;
+class nsHashKey;
+#include "nsHashtable.h"
+#else
+#include "nsInterfaceHashtable.h"
+#include "pldhash.h"
+#endif
+
+class nsIPresShell;
+class nsIPresContext;
+class nsIAccessibleDocument;
+class nsIFrame;
+class nsIDOMNodeList;
+
+enum { eChildCountUninitialized = 0xffff };
+enum { eSiblingsUninitialized = -1, eSiblingsWalkNormalDOM = -2};
+
+#define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
+#define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
+
+#ifndef OLD_HASH
+/* hashkey wrapper using void* KeyType
+ *
+ * @see nsTHashtable::EntryType for specification
+ */
+class NS_COM nsVoidHashKey : public PLDHashEntryHdr
+{
+public:  typedef void* voidPointer;
+  typedef const voidPointer& KeyType;
+  typedef const voidPointer* KeyTypePointer;
+  
+  const voidPointer mValue;
+
+public:
+  nsVoidHashKey(KeyTypePointer aKey) : mValue(*aKey) { }
+  nsVoidHashKey(const nsVoidHashKey& toCopy) : mValue(toCopy.mValue) { }
+  ~nsVoidHashKey() { }
+
+  KeyType GetKey() const { return mValue; }
+  KeyTypePointer GetKeyPointer() const { return &mValue; }
+  PRBool KeyEquals(KeyTypePointer aKey) const { return *aKey == mValue; }
+
+  static KeyTypePointer KeyToPointer(KeyType aKey) { return &aKey; }
+  static PLDHashNumber HashKey(KeyTypePointer aKey) { return NS_PTR_TO_INT32(*aKey) >> 2; }
+  static PRBool AllowMemMove() { return PR_TRUE; }
+
+};
+#endif
 
 class nsAccessNode: public nsIAccessNode
 {
   public: // construction, destruction
-    nsAccessNode(nsIDOMNode *);
+    nsAccessNode(nsIDOMNode *, nsIWeakReference* aShell);
     virtual ~nsAccessNode();
 
-    NS_DECL_ISUPPORTS
+    NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+    NS_IMETHOD_(nsrefcnt) AddRef(void);
+    NS_IMETHOD_(nsrefcnt) Release(void);
     NS_DECL_NSIACCESSNODE
 
-  protected:
-    nsCOMPtr<nsIDOMNode> mDOMNode;
+    static void InitXPAccessibility();
+    static void ShutdownXPAccessibility();
 
-    // XXX aaronl: we should be able to remove this once we have hash table
-    nsIAccessibleDocument *mRootAccessibleDoc; 
+    // Static methods for handling per-document cache
+#ifdef OLD_HASH
+    static void PutCacheEntry(nsSupportsHashtable *aCache, 
+                              void* aUniqueID, nsIAccessNode *aAccessNode);
+    static void GetCacheEntry(nsSupportsHashtable *aCache, void* aUniqueID, 
+                              nsIAccessNode **aAccessNode);
+    static void ClearCache(nsSupportsHashtable *aCache);
+    static PRIntn PR_CALLBACK ClearCacheEntry(nsHashKey *aKey, void *aData, 
+                                              void* aClosure);
+#else
+    static void PutCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *aCache, 
+                              void* aUniqueID, nsIAccessNode *aAccessNode);
+    static void GetCacheEntry(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *aCache, void* aUniqueID, 
+                              nsIAccessNode **aAccessNode);
+    static void ClearCache(nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *aCache);
+
+    static PLDHashOperator PR_CALLBACK ClearCacheEntry(void *const& aKey, nsCOMPtr<nsIAccessNode> aAccessNode, void* aUserArg);
+#endif
+
+    // Static cache methods for global document cache
+    static void GetDocAccessibleFor(nsIWeakReference *aPresShell,
+                                    nsIAccessibleDocument **aDocAccessible);
+
+  protected:
+    already_AddRefed<nsIPresShell> GetPresShell();
+    already_AddRefed<nsIPresContext> GetPresContext();
+    already_AddRefed<nsIAccessibleDocument> GetDocAccessible();
+    nsIFrame* GetFrame();
+
+    nsCOMPtr<nsIDOMNode> mDOMNode;
+    nsCOMPtr<nsIWeakReference> mWeakShell;
+
+    PRInt16 mRefCnt;
+    PRUint16 mAccChildCount;
+    NS_DECL_OWNINGTHREAD
+
+#ifdef DEBUG
+    PRBool mIsInitialized;
+#endif
+
+    // Static data, we do our own refcounting for our static data
+    static nsIStringBundle *gStringBundle;
+    static nsIStringBundle *gKeyStringBundle;
+    static nsIDOMNode *gLastFocusedNode;
+    static PRBool gIsAccessibilityActive;
+    static PRBool gIsCacheDisabled;
+
+#ifdef OLD_HASH
+    static nsSupportsHashtable *gGlobalDocAccessibleCache;
+#else
+    static nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *gGlobalDocAccessibleCache;
+#endif
 };
 
 #endif

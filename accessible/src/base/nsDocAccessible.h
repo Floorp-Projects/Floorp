@@ -35,6 +35,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+
 #ifndef _nsDocAccessible_H_
 #define _nsDocAccessible_H_
 
@@ -42,13 +43,26 @@
 #include "nsIAccessibleDocument.h"
 #include "nsIDocument.h"
 #include "nsIAccessibleEventReceiver.h"
+#include "nsHashtable.h"
+#include "nsIWebProgressListener.h"
+#include "nsITimer.h"
+#include "nsIWebProgress.h"
+#include "nsIScrollPositionListener.h"
+#include "nsIWeakReference.h"
 
-class nsIWeakReference;
+class nsIScrollableView;
+
+const PRUint32 kDefaultCacheSize = 256;
 
 class nsDocAccessible : public nsAccessibleWrap,
                         public nsIAccessibleDocument,
-                        public nsIAccessibleEventReceiver
+                        public nsIAccessibleEventReceiver,
+                        public nsIWebProgressListener,
+                        public nsIScrollPositionListener,
+                        public nsSupportsWeakReference
 {
+  enum EBusyState {eBusyStateUninitialized, eBusyStateLoading, eBusyStateDone};
+
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLEDOCUMENT
   NS_DECL_NSIACCESSIBLEEVENTRECEIVER
@@ -60,6 +74,13 @@ class nsDocAccessible : public nsAccessibleWrap,
     NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
     NS_IMETHOD GetAccName(nsAString& aAccName);
     NS_IMETHOD GetAccValue(nsAString& aAccValue);
+    NS_IMETHOD GetAccState(PRUint32 *aAccState);
+
+    // ----- nsIScrollPositionListener ---------------------------
+    NS_IMETHOD ScrollPositionWillChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
+    NS_IMETHOD ScrollPositionDidChange(nsIScrollableView *aView, nscoord aX, nscoord aY);
+
+    NS_DECL_NSIWEBPROGRESSLISTENER
 
     // nsIAccessNode
     NS_IMETHOD Shutdown();
@@ -67,9 +88,27 @@ class nsDocAccessible : public nsAccessibleWrap,
   protected:  
     virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
     virtual nsIFrame* GetFrame();
+    void AddContentDocListeners();
+    void RemoveContentDocListeners();
+    void AddScrollListener(nsIPresShell *aPresShell);
+    void RemoveScrollListener(nsIPresShell *aPresShell);
+    void FireDocLoadFinished();
+    static void DocLoadCallback(nsITimer *aTimer, void *aClosure);
+    static void ScrollTimerCallback(nsITimer *aTimer, void *aClosure);
 
-    nsCOMPtr<nsIDocument> mDocument;
+#ifdef OLD_HASH
+    nsSupportsHashtable *mAccessNodeCache;
+#else
+    nsInterfaceHashtable<nsVoidHashKey, nsIAccessNode> *mAccessNodeCache;
+#endif
     void *mWnd;
+    nsCOMPtr<nsIDocument> mDocument;
+    nsCOMPtr<nsITimer> mScrollWatchTimer;
+    nsCOMPtr<nsITimer> mDocLoadTimer;
+    nsCOMPtr<nsIWebProgress> mWebProgress;
+    EBusyState mBusy;
+    PRUint16 mScrollPositionChangedTicks; // Used for tracking scroll events
+    PRPackedBool mIsNewDocument;
 };
 
 

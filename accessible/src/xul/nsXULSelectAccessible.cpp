@@ -37,17 +37,12 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsCOMPtr.h"
 #include "nsXULSelectAccessible.h"
-#include "nsIAccessibilityService.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMNodeList.h"
 #include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMXULMultSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIServiceManager.h"
-#include "nsLayoutAtoms.h"
 
 /**
   * Selects, Listboxes and Comboboxes, are made up of a number of different
@@ -147,7 +142,7 @@ NS_IMETHODIMP nsXULSelectableAccessible::GetSelectedChildren(nsISupportsArray **
       nsCOMPtr<nsIDOMXULSelectControlItemElement> tempNode;
       xulMultiSelect->GetSelectedItem(index, getter_AddRefs(tempNode));
       nsCOMPtr<nsIDOMNode> tempDOMNode (do_QueryInterface(tempNode));
-      accService->CreateXULListitemAccessible(tempDOMNode, getter_AddRefs(tempAccessible));
+      accService->GetAccessibleInWeakShell(tempDOMNode, mWeakShell, getter_AddRefs(tempAccessible));
       if (tempAccessible)
         selectedAccessibles->AppendElement(tempAccessible);
     }
@@ -183,7 +178,7 @@ NS_IMETHODIMP nsXULSelectableAccessible::RefSelection(PRInt32 aIndex, nsIAccessi
 
   if (tempDOMNode) {
     nsCOMPtr<nsIAccessible> tempAccess;
-    accService->CreateXULListitemAccessible(tempDOMNode, getter_AddRefs(tempAccess));
+    accService->GetAccessibleInWeakShell(tempDOMNode, mWeakShell, getter_AddRefs(tempAccess));
     *_retval = tempAccess;
     NS_ADDREF(*_retval);
     return NS_OK;
@@ -488,15 +483,6 @@ nsXULSelectableAccessible(aDOMNode, aShell)
 NS_IMETHODIMP nsXULComboboxAccessible::GetAccRole(PRUint32 *_retval)
 {
   *_retval = ROLE_COMBOBOX;
-  return NS_OK;
-}
-
-/**
-  * We always have 3 children: TextField, Button, Window. In that order
-  */
-NS_IMETHODIMP nsXULComboboxAccessible::GetAccChildCount(PRInt32 *_retval)
-{
-  *_retval = 3;
   return NS_OK;
 }
 

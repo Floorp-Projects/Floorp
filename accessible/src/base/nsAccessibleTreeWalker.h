@@ -36,39 +36,62 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsAccessNodeWrap.h"
+#ifndef _nsAccessibleTreeWalker_H_
+#define _nsAccessibleTreeWalker_H_
 
-/* For documentation of the accessibility architecture, 
- * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
+/* For documentation of the accessibility architecture,  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
+#include "nsCOMPtr.h"
+#include "nsIDocument.h"
+#include "nsIAccessible.h"
+#include "nsIDOMNodeList.h"
+#include "nsIAccessibilityService.h"
+#include "nsIBindingManager.h"
+#include "nsIWeakReference.h"
 
-/*
- * Class nsAccessNodeWrap
- */
+struct WalkState {
+  nsCOMPtr<nsIAccessible> accessible;
+  nsCOMPtr<nsIDOMNode> domNode;
+  nsCOMPtr<nsIDOMNodeList> siblingList;
+  PRInt32 siblingIndex;  // Holds a state flag or an index into the siblingList
+  WalkState *prevState;
+};
+ 
+/** This class is used to walk the DOM tree. It skips
+  * everything but nodes that either implement nsIAccessibleProvider
+  * or have primary frames that implement "GetAccessible"
+  */
 
-//-----------------------------------------------------
-// construction 
-//-----------------------------------------------------
+class nsAccessibleTreeWalker {
+public:
+  nsAccessibleTreeWalker(nsIWeakReference* aShell, nsIDOMNode* aContent, 
+    PRBool mWalkAnonymousContent);
+  virtual ~nsAccessibleTreeWalker();
 
-nsAccessNodeWrap::nsAccessNodeWrap(nsIDOMNode *aNode, nsIWeakReference* aShell): 
-  nsAccessNode(aNode, aShell)
-{
-}
+  NS_IMETHOD GetNextSibling();
+  NS_IMETHOD GetPreviousSibling();
+  NS_IMETHOD GetParent();
+  NS_IMETHOD GetFirstChild();
+  NS_IMETHOD GetLastChild();
+  WalkState mState;
+  WalkState mInitialState;
 
-//-----------------------------------------------------
-// destruction
-//-----------------------------------------------------
-nsAccessNodeWrap::~nsAccessNodeWrap()
-{
-}
+protected:
+  NS_IMETHOD GetChildBefore(nsIDOMNode* aParent, nsIDOMNode* aChild);
+  PRBool IsHidden();
+  PRBool GetAccessible();
+  NS_IMETHOD GetFullTreeParentNode(nsIDOMNode *aChildNode, nsIDOMNode **aParentNodeOut);
+  void GetSiblings(nsIDOMNode *aOneOfTheSiblings);
+  void GetKids(nsIDOMNode *aParent);
 
-void nsAccessNodeWrap::InitAccessibility()
-{
-  nsAccessNode::InitXPAccessibility();
-}
+  void ClearState();
+  NS_IMETHOD PushState();
+  NS_IMETHOD PopState();
 
-void nsAccessNodeWrap::ShutdownAccessibility()
-{
-  nsAccessNode::ShutdownXPAccessibility();
-}
+  nsCOMPtr<nsIWeakReference> mWeakShell;
+  nsCOMPtr<nsIAccessibilityService> mAccService;
+  nsCOMPtr<nsIBindingManager> mBindingManager;
+};
+
+#endif 

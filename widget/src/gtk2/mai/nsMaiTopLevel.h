@@ -42,8 +42,8 @@
 #ifndef __MAI_TOP_LEVEL_H__
 #define __MAI_TOP_LEVEL_H__
 
-#include "nsIAccessibleEventListener.h"
 #include "nsMaiWidget.h"
+#include "nsISupports.h"
 
 /* MaiTopLevel is the MaiObject class for toplevel Window. The instance of
  * MaiTopLevel will be child of MaiRoot instance. It is added into root when
@@ -51,7 +51,7 @@
  * window is destroyed.
  */
 
-class MaiTopLevel: public MaiWidget, public nsIAccessibleEventListener
+class MaiTopLevel: public MaiWidget, public nsISupports
 {
 public:
     MaiTopLevel(nsIAccessible *aAcc);
@@ -64,8 +64,6 @@ public:
     static MaiTopLevel * Create(nsIAccessible *aAcc);
 
     NS_DECL_ISUPPORTS
-    // nsIAccessibleEventListener
-    NS_DECL_NSIACCESSIBLEEVENTLISTENER
 
     static MaiTopLevel *CreateAndCache(nsIAccessible *aAcc);
 

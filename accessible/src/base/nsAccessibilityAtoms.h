@@ -20,7 +20,6 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *          John Gaunt (jgaunt@netscape.com)
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -36,63 +35,35 @@
  * the terms of any one of the NPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
+#ifndef nsAccessibilityAtoms_h___
+#define nsAccessibilityAtoms_h___
 
-#include "nsHTMLPluginAccessible.h"
-#include "nsIContent.h"
-#include "nsObjectFrame.h"
-#include "nsplugindefs.h"
-#include "nsAccessibilityService.h"
+#include "nsIAtom.h"
 
-nsHTMLPluginAccessible::nsHTMLPluginAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessibleWrap(aNode, aShell), mAccService(do_GetService("@mozilla.org/accessibilityService;1"))
-{
-}
+/**
+ * This class wraps up the creation (and destruction) of the standard
+ * set of atoms used in the accessibility module. These objects
+ * are created when the are needed by accessibility is being used and they
+ * are destroyed when the last nsRootAccessible is destroyed via 
+ * nsRootAccessible::ShutdownAll()
+ */
 
-NS_IMETHODIMP
-nsHTMLPluginAccessible::GetAccFirstChild(nsIAccessible **_retval)
-{
-  *_retval = nsnull;
-  nsIFrame* frame = nsnull;
-  nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-  shell->GetPrimaryFrameFor(content, &frame);
-  if (!frame)
-    return NS_ERROR_FAILURE;
+class nsAccessibilityAtoms {
+public:
 
-  nsObjectFrame* objectFrame = NS_STATIC_CAST(nsObjectFrame*, frame);
-#ifdef XP_WIN
-  HWND pluginPort = nsnull;
-  objectFrame->GetPluginPort(&pluginPort);
-  if (pluginPort) {
-    if (mAccService)
-      mAccService->CreateHTMLNativeWindowAccessible(mDOMNode, mPresShell, 
-                                                    NS_REINTERPRET_CAST(void*, pluginPort), 
-                                                    _retval);
-  }
-#else
-  *_retval = nsnull;
-#endif
-  NS_IF_ADDREF(*_retval);
-  return NS_OK;
-}
+  static void AddRefAtoms();
+  static void ReleaseAtoms();
 
-NS_IMETHODIMP
-nsHTMLPluginAccessible::GetAccLastChild(nsIAccessible **_retval)
-{
-  return GetAccFirstChild(_retval);
-}
+  /* Declare all atoms
 
-NS_IMETHODIMP
-nsHTMLPluginAccessible::GetAccChildCount(PRInt32 *_retval)
-{
-  *_retval = 1;
-  return NS_OK;
-}
+     The atom names and values are stored in nsAccessibilityAtomList.h and
+     are brought to you by the magic of C preprocessing
 
-NS_IMETHODIMP
-nsHTMLPluginAccessible::GetAccRole(PRUint32 *_retval)
-{
-  *_retval = ROLE_WINDOW;
-  return NS_OK;
-}
+     Add new atoms to nsAccessibilityAtomList and all support logic will be auto-generated
+   */
+#define ACCESSIBILITY_ATOM(_name, _value) static nsIAtom* _name;
+#include "nsAccessibilityAtomList.h"
+#undef ACCESSIBILITY_ATOM
+};
 
+#endif /* nsLayoutAtoms_h___ */

@@ -39,20 +39,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 // NOTE: alphabetically ordered
-#include "nsIDocument.h"
-#include "nsIDOMNodeList.h"
+#include "nsXULFormControlAccessible.h"
 #include "nsIDOMXULButtonElement.h"
 #include "nsIDOMXULCheckboxElement.h"
-#include "nsIDOMXULDocument.h"
-#include "nsIDOMXULLabelElement.h"
 #include "nsIDOMXULMenuListElement.h"
-#include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
-#include "nsReadableUtils.h"
-#include "nsString.h"
-#include "nsXULFormControlAccessible.h"
-#include "nsIAccessibilityService.h"
-#include "nsIServiceManager.h"
+#include "nsAccessibleTreeWalker.h"
 
 /**
   * XUL Button: can contain arbitrary HTML content
@@ -167,22 +159,25 @@ NS_IMETHODIMP nsXULButtonAccessible::GetAccState(PRUint32 *_retval)
   */
 NS_IMETHODIMP nsXULButtonAccessible::GetAccFirstChild(nsIAccessible **aResult)
 {
-  *aResult = nsnull;
+  if (!mFirstChild) {
+    nsAccessibleTreeWalker walker(mWeakShell, mDOMNode, PR_TRUE);
+    walker.GetLastChild();
 
-  nsCOMPtr<nsIAccessible> testAccessible;
-  nsAccessible::GetAccLastChild(getter_AddRefs(testAccessible));
+    // If the anonymous tree walker can find accessible children, 
+    // and the last one is a push button, then use it as the only accessible 
+    // child -- because this is the scenario where we have a dropmarker child
 
-  // If the anonymous tree walker can find accessible children, and the last one is a push button, 
-  // then use it as the only accessible child -- because this is the scenario where we have a dropmarker child
-
-  if (testAccessible) {    
-    PRUint32 role;
-    if (NS_SUCCEEDED(testAccessible->GetAccRole(&role)) && role == ROLE_PUSHBUTTON) {
-      *aResult = testAccessible;
-      NS_ADDREF(*aResult);
+    if (walker.mState.accessible) {    
+      PRUint32 role;
+      if (NS_SUCCEEDED(walker.mState.accessible->GetAccRole(&role)) && role == ROLE_PUSHBUTTON) {
+        mFirstChild = walker.mState.accessible;
+        mFirstChild->SetAccNextSibling(nsnull);
+      }
     }
   }
 
+  mAccChildCount = (mFirstChild != nsnull);
+  NS_IF_ADDREF(*aResult = mFirstChild);
   return NS_OK;
 }
 
@@ -193,12 +188,9 @@ NS_IMETHODIMP nsXULButtonAccessible::GetAccLastChild(nsIAccessible **aResult)
 
 NS_IMETHODIMP nsXULButtonAccessible::GetAccChildCount(PRInt32 *aResult)
 {
-  *aResult = 0;
-
   nsCOMPtr<nsIAccessible> accessible;
   GetAccFirstChild(getter_AddRefs(accessible));
-  if (accessible)
-    *aResult = 1;
+  *aResult = mAccChildCount;
 
   return NS_OK;
 }
@@ -352,7 +344,6 @@ NS_IMETHODIMP nsXULCheckboxAccessible::GetAccActionName(PRUint8 index, nsAString
 NS_IMETHODIMP nsXULCheckboxAccessible::AccDoAction(PRUint8 index)
 {
   if (index == eAction_Click) {
-    PRBool checked = PR_FALSE;
     nsCOMPtr<nsIDOMXULCheckboxElement> xulCheckboxElement(do_QueryInterface(mDOMNode));
     if (xulCheckboxElement) {
       xulCheckboxElement->Click();
@@ -575,7 +566,7 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetAccParent(nsIAccessible **  aAccPar
     nsCOMPtr<nsIAccessible> tempParent;
     nsAccessible::GetAccParent(getter_AddRefs(tempParent));
     if (tempParent)
-      tempParent->GetAccParent(getter_AddRefs(mParent));
+      tempParent->GetAccParent(&mParent);  // mParent is a weak pointer
   }
   NS_ASSERTION(mParent,"Whoa! This RadioButtonAcc doesn't have a parent! Better find out why.");
   *aAccParent = mParent;

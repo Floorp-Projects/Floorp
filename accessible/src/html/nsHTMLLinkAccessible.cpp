@@ -38,17 +38,9 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLLinkAccessible.h"
-#include "nsWeakReference.h"
-#include "nsIFrame.h"
 #include "nsILink.h"
-#include "nsILinkHandler.h"
-#include "nsISelection.h"
-#include "nsISelectionController.h"
-#include "nsIPresContext.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
-#include "nsReadableUtils.h"
-#include "nsIDOMElement.h"
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLLinkAccessible, nsLinkableAccessible, nsIAccessibleHyperLink)
 
@@ -110,7 +102,7 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetEndIndex(PRInt32 *aEndIndex)
 /* nsIURI getURI (in long i); */
 NS_IMETHODIMP nsHTMLLinkAccessible::GetURI(PRInt32 i, nsIURI **aURI)
 {
-  //I do not know why we have to retrun a nsIURI instead of
+  //I do not know why we have to return a nsIURI instead of
   //nsILink or just a string of url. Anyway, maybe nsIURI is
   //more powerful for the future.
   *aURI = nsnull;

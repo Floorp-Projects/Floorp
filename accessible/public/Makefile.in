@@ -42,7 +42,6 @@ XPIDLSRCS = \
       nsIAccessibleDocument.idl \
       nsIAccessibleEditableText.idl \
       nsIAccessibleEventReceiver.idl \
-      nsIAccessibleEventListener.idl \
       nsIAccessibleHyperLink.idl \
       nsIAccessibleHyperText.idl \
       nsIAccessibleProvider.idl \

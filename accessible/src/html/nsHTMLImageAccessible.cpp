@@ -38,8 +38,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsHTMLImageAccessible.h"
-#include "nsReadableUtils.h"
 #include "nsIHTMLDocument.h"
+#include "nsIPresShell.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLCollection.h"
 #include "nsIAccessibilityService.h"
@@ -56,7 +56,7 @@ nsLinkableAccessible(aDOMNode, aShell)
 { 
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(aDOMNode));
   nsCOMPtr<nsIDocument> doc;
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mWeakShell));
   if (!shell)
     return;
 
@@ -129,7 +129,7 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccRole(PRUint32 *_retval)
 }
 
 
-nsIAccessible *nsHTMLImageAccessible::CreateAreaAccessible(PRUint32 areaNum)
+nsIAccessible *nsHTMLImageAccessible::CreateAreaAccessible(PRInt32 areaNum)
 {
   if (!mMapElement) 
     return nsnull;
@@ -157,7 +157,10 @@ nsIAccessible *nsHTMLImageAccessible::CreateAreaAccessible(PRUint32 areaNum)
     return nsnull;
   if (accService) {
     nsIAccessible* acc = nsnull;
-    accService->CreateHTMLAreaAccessible(mPresShell, domNode, this, &acc);
+    accService->GetCachedAccessible(domNode, mWeakShell, &acc);
+    if (!acc) {
+      accService->CreateHTMLAreaAccessible(mWeakShell, domNode, this, &acc);
+    }
     return acc;
   }
   return nsnull;
@@ -179,14 +182,14 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccLastChild(nsIAccessible **_retval)
   return NS_OK;
 }
 
-
+#ifdef NEVER
 /* long getAccChildCount (); */
 NS_IMETHODIMP nsHTMLImageAccessible::GetAccChildCount(PRInt32 *_retval)
 {
   *_retval = 0;
   if (mMapElement) {
-    nsIDOMHTMLCollection *mapAreas;
-    mMapElement->GetAreas(&mapAreas);
+    nsCOMPtr<nsIDOMHTMLCollection> mapAreas;
+    mMapElement->GetAreas(getter_AddRefs(mapAreas));
     if (mapAreas) {
       PRUint32 length;
       mapAreas->GetLength(&length);
@@ -196,6 +199,7 @@ NS_IMETHODIMP nsHTMLImageAccessible::GetAccChildCount(PRInt32 *_retval)
 
   return NS_OK;
 }
+#endif
 
 // Image map hyperlink
 NS_IMPL_ISUPPORTS_INHERITED1(nsHTMLImageMapAccessible, nsHTMLImageAccessible, nsIAccessibleHyperLink)

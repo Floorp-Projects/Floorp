@@ -40,20 +40,11 @@
 #ifndef _nsHTMLTableAccessible_H_
 #define _nsHTMLTableAccessible_H_
 
-#include "nsAccessibleWrap.h"
 #include "nsBaseWidgetAccessible.h"
 #include "nsIAccessibleTable.h"
-#include "nsIServiceManager.h"
-#include "nsIDocument.h"
-#include "nsIDOMElement.h"
-#include "nsIDOMHTMLTableElement.h"
-#include "nsIDOMHTMLTableCaptionElem.h"
-#include "nsIDOMHTMLTableRowElement.h"
-#include "nsIDOMHTMLTableCellElement.h"
-#include "nsIDOMHTMLTableSectionElem.h"
-#include "nsIDOMHTMLCollection.h"
-#include "nsITableLayout.h"
 #include "nsHyperTextAccessible.h"
+
+class nsITableLayout;
 
 #ifndef MOZ_ACCESSIBILITY_ATK
 class nsHTMLTableCellAccessible : public nsBlockAccessible

@@ -42,7 +42,8 @@
 [scriptable, uuid(46820F9B-3088-4046-AB0F-56FDACDC7A82)]
 interface nsIAccessNode : nsISupports
 {
-  [noscript] void init(in nsIAccessibleDocument aAccessibleDocument);
+  [noscript] void init();
   [noscript] void shutdown();
   [noscript] readonly attribute voidPtr ownerWindow;
+  [noscript] readonly attribute voidPtr uniqueID;
 };

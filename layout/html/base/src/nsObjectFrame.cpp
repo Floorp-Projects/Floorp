@@ -438,8 +438,7 @@ NS_IMETHODIMP nsObjectFrame::GetAccessible(nsIAccessible** aAccessible)
   nsCOMPtr<nsIAccessibilityService> accService = do_GetService("@mozilla.org/accessibilityService;1");
 
   if (accService) {
-    nsCOMPtr<nsIDOMNode> node = do_QueryInterface(mContent);
-    return accService->CreateOuterDocAccessible(node, aAccessible);
+    return accService->CreateHTMLObjectFrameAccessible(this, aAccessible);
   }
 
   return NS_ERROR_FAILURE;

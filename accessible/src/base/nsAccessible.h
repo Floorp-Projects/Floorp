@@ -40,30 +40,21 @@
 #ifndef _nsAccessible_H_
 #define _nsAccessible_H_
 
-#include "nsCOMPtr.h"
 #include "nsAccessNodeWrap.h"
 #include "nsIAccessible.h"
-#include "nsIAccessibilityService.h"
-#include "nsIDOMNode.h"
-#include "nsIFocusController.h"
-#include "nsIPresContext.h"
-#include "nsIPresShell.h"
-#include "nsPoint.h"
-#include "nsRect.h"
 #include "nsWeakReference.h"
 #include "nsIDOMNodeList.h"
-#include "nsIBindingManager.h"
-#include "nsIStringBundle.h"
+#include "nsString.h"
 
-#define ACCESSIBLE_BUNDLE_URL "chrome://global-platform/locale/accessible.properties"
-#define PLATFORM_KEYS_BUNDLE_URL "chrome://global-platform/locale/platformKeys.properties"
-
+struct nsRect;
 class nsIContent;
-class nsIDocShell;
 class nsIFrame;
-class nsIWebShell;
+class nsIPresShell;
+class nsIDOMNode;
+class nsIAtom;
 
-enum { eSiblingsUninitialized = -1, eSiblingsWalkNormalDOM = -2};  // Used in sibling index field as flags
+// When mNextSibling is set to this, it indicates there ar eno more siblings
+#define DEAD_END_ACCESSIBLE NS_STATIC_CAST(nsIAccessible*, (void*)1)
 
 class nsAccessible : public nsAccessNodeWrap, public nsIAccessible
 {
@@ -79,20 +70,17 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIACCESSIBLE
 
-  // nsIAccessNode
-  NS_IMETHOD Shutdown();
-
   NS_IMETHOD GetFocusedNode(nsIDOMNode **aFocusedNode);
 
 #ifdef MOZ_ACCESSIBILITY_ATK
-    static nsresult GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode);
+  static nsresult GetParentBlockNode(nsIDOMNode *aCurrentNode, nsIDOMNode **aBlockNode);
 #endif
 
+  static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
+
 protected:
-  virtual nsIFrame* GetFrame();
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBounds(nsRect& aRect, nsIFrame** aRelativeFrame);
-  virtual void GetPresContext(nsIPresContext **aContext);
   PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 
   NS_IMETHOD AppendLabelText(nsIDOMNode *aLabelNode, nsAString& _retval);
   NS_IMETHOD AppendLabelFor(nsIContent *aLookNode, const nsAString *aId, nsAString *aLabel);
@@ -101,69 +89,18 @@ protected:
   NS_IMETHOD AppendFlatStringFromSubtree(nsIContent *aContent, nsAString *aFlatString);
   NS_IMETHOD AppendFlatStringFromContentNode(nsIContent *aContent, nsAString *aFlatString);
   NS_IMETHOD AppendStringWithSpaces(nsAString *aFlatString, const nsAString& textEquivalent);
+
   // helper method to verify frames
-  static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
   static nsresult GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut);
   static nsresult GetTranslatedString(const nsAString& aKey, nsAString& aStringOut);
   void GetScrollOffset(nsRect *aRect);
   void GetScreenOrigin(nsIPresContext *aPresContext, nsIFrame *aFrame, nsRect *aRect);
   nsresult AppendFlatStringFromSubtreeRecurse(nsIContent *aContent, nsAString *aFlatString);
+  void CacheChildren(PRBool aWalkNormalDOM);
 
   // Data Members
-  nsCOMPtr<nsIWeakReference> mPresShell;
-  nsCOMPtr<nsIAccessible> mParent;
-  nsCOMPtr<nsIDOMNodeList> mSiblingList; // If some of our computed siblings are anonymous content nodes, cache node list
-  PRInt32 mSiblingIndex; // Cache where we are in list of kids that we got from nsIBindingManager::GetContentList(parentContent)
-
-  static nsIStringBundle *gStringBundle;
-  static nsIStringBundle *gKeyStringBundle;
-};
-
-
-/** This class is used to walk the DOM tree. It skips
-  * everything but nodes that either implement nsIAccessible
-  * or have primary frames that implement "GetAccessible"
-  */
-
-struct WalkState {
-  nsCOMPtr<nsIAccessible> accessible;
-  nsCOMPtr<nsIDOMNode> domNode;
-  nsCOMPtr<nsIDOMNodeList> siblingList;
-  PRInt32 siblingIndex;  // Holds a state flag or an index into the siblingList
-  WalkState *prevState;
-};
-
- 
-class nsAccessibleTreeWalker {
-public:
-  nsAccessibleTreeWalker(nsIWeakReference* aShell, nsIDOMNode* aContent, 
-    PRInt32 aCachedSiblingIndex, nsIDOMNodeList *aCachedSiblingList, PRBool mWalkAnonymousContent);
-  virtual ~nsAccessibleTreeWalker();
-
-  NS_IMETHOD GetNextSibling();
-  NS_IMETHOD GetPreviousSibling();
-  NS_IMETHOD GetParent();
-  NS_IMETHOD GetFirstChild();
-  NS_IMETHOD GetLastChild();
-  PRInt32 GetChildCount();
-  WalkState mState;
-  WalkState mInitialState;
-
-protected:
-  NS_IMETHOD GetChildBefore(nsIDOMNode* aParent, nsIDOMNode* aChild);
-  PRBool IsHidden();
-  PRBool GetAccessible();
-  NS_IMETHOD GetFullTreeParentNode(nsIDOMNode *aChildNode, nsIDOMNode **aParentNodeOut);
-  void GetSiblings(nsIDOMNode *aOneOfTheSiblings);
-  void GetKids(nsIDOMNode *aParent);
-
-  void ClearState();
-  NS_IMETHOD PushState();
-  NS_IMETHOD PopState();
-
-  nsCOMPtr<nsIWeakReference> mPresShell;
-  nsCOMPtr<nsIAccessibilityService> mAccService;
-  nsCOMPtr<nsIBindingManager> mBindingManager;
+  nsIAccessible *mParent, *mFirstChild, *mNextSibling;
 };
 
 #endif  
+

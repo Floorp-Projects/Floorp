@@ -22,6 +22,7 @@
  * Original Author: Eric Vaughan (evaughan@netscape.com)
  *
  * Contributor(s):
+ *           Aaron Leventhal (aaronl@netscape.com)
  *           Kyle Yuan (kyle.yuan@sun.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -40,12 +41,12 @@
 #ifndef __nsHTMLSelectAccessible_h__
 #define __nsHTMLSelectAccessible_h__
 
-#include "nsCOMPtr.h"
 #include "nsIAccessibleSelectable.h"
 #include "nsIDOMHTMLOptionsCollection.h"
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMNode.h"
 #include "nsFormControlAccessible.h"
+#include "nsIAccessibilityService.h"
 
 /**
   *  Selects, Listboxes and Comboboxes, are made up of a number of different
@@ -69,7 +70,7 @@
 /** ------------------------------------------------------ */
 
 /*
- * The basic implemetation of nsIAccessibleSelectable.
+ * The HTML implementation of nsIAccessibleSelectable.
  */
 class nsHTMLSelectableAccessible : public nsAccessibleWrap,
                                    public nsIAccessibleSelectable
@@ -92,12 +93,14 @@ protected:
     PRUint32 mLength;
     PRUint32 mIndex;
     PRInt32 mSelCount;
-    nsHTMLSelectableAccessible *mParent;
     nsCOMPtr<nsIDOMHTMLOptionsCollection> mOptions;
     nsCOMPtr<nsIDOMHTMLOptionElement> mOption;
+    nsCOMPtr<nsIWeakReference> mWeakShell;
+    nsHTMLSelectableAccessible *mParentSelect;
 
   public:
-    iterator(nsHTMLSelectableAccessible *aParent);
+    void Shutdown();
+    iterator(nsHTMLSelectableAccessible *aParent, nsIWeakReference *aWeakShell);
 
     void CalcSelectionCount(PRInt32 *aSelectionCount);
     void Select(PRBool aSelect);
@@ -123,9 +126,9 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
+  NS_IMETHOD GetAccFirstChild(nsIAccessible **aAccFirstChild);
+  NS_IMETHOD GetAccLastChild(nsIAccessible **aAccFirstChild);
   NS_IMETHOD GetAccChildCount(PRInt32 *aAccChildCount) ;
-
 };
 
 /*
@@ -190,6 +193,15 @@ public:
   NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
   NS_IMETHOD GetAccValue(nsAString& _retval);
+  NS_IMETHOD Shutdown();
+  NS_IMETHOD Init();
+
+protected:
+  // Hold references to our generated children
+  // So that we can shut them down when we need to
+  nsCOMPtr<nsIAccessible> mComboboxTextFieldAccessible;
+  nsCOMPtr<nsIAccessible> mComboboxButtonAccessible;
+  nsCOMPtr<nsIAccessible> mComboboxListAccessible;
 };
 
 /*
@@ -210,11 +222,9 @@ public:
   NS_IMETHOD GetAccRole(PRUint32 *_retval);
   NS_IMETHOD GetAccValue(nsAString& _retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetUniqueID(void **aUniqueID);
 
   virtual void GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame);
-
-protected:
-  nsCOMPtr<nsIAccessible> mParent;
 };
 
 /**
@@ -238,11 +248,9 @@ public:
   NS_IMETHOD GetAccName(nsAString& _retval);
   NS_IMETHOD GetAccRole(PRUint32 *_retval);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetUniqueID(void **aUniqueID);
 
   virtual void GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame);
-
-protected:  
-  nsCOMPtr<nsIAccessible> mParent;
 };
 
 /*
@@ -262,11 +270,10 @@ public:
   /* ----- nsIAccessible ----- */
   NS_IMETHOD GetAccState(PRUint32 *aAccState);
   NS_IMETHOD GetAccParent(nsIAccessible **aParent);
+  NS_IMETHOD GetUniqueID(void **aUniqueID);
+  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **aAccPrevSibling);
 
   virtual void GetBounds(nsRect& aBounds, nsIFrame** aBoundingFrame);
-
-protected:
-  nsCOMPtr<nsIAccessible> mParent;
 };
 
 #endif

@@ -49,3 +49,8 @@ nsDocAccessibleWrap::~nsDocAccessibleWrap()
 {
 }
 
+NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent, nsIAccessible* aAccessible, void* aData)
+{
+  // XXX Bolian fire events from here
+  return NS_OK;
+}

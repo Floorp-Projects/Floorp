@@ -72,7 +72,8 @@ static char * pAtkPropertyNameArray[PROP_LAST] = {
 #endif
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS1(MaiTopLevel, nsIAccessibleEventListener)
+//NS_IMPL_ISUPPORTS1(MaiTopLevel, nsIAccessibleEventListener)
+NS_IMPL_ISUPPORTS0(MaiTopLevel)
 
 MaiTopLevel::MaiTopLevel(nsIAccessible *aAcc):MaiWidget(aAcc)
 {
@@ -81,27 +82,30 @@ MaiTopLevel::MaiTopLevel(nsIAccessible *aAcc):MaiWidget(aAcc)
 #endif
     MAI_LOG_DEBUG(("MaiTopLevel+++>%d, mycount=%d, acc=0x%x\n",
                    sMaiTopCount, mRefCnt.get(), aAcc));
-
+#ifdef OLD
     nsCOMPtr<nsIAccessibleEventReceiver>
         receiver(do_QueryInterface(mAccessible));
     if (receiver)
         receiver->AddAccessibleEventListener(this);
+#endif
 }
 
 MaiTopLevel::~MaiTopLevel()
 {
+#ifdef OLD
     nsCOMPtr<nsIAccessibleEventReceiver>
         receiver(do_QueryInterface(mAccessible));
-
+#endif
 #ifdef MAI_LOGGING
     --sMaiTopCount;
 #endif
 
     MAI_LOG_DEBUG(("MaiTopLevel--->%d, mycount=%d, acc=0x%x\n",
                    sMaiTopCount, mRefCnt.get(), GetNSAccessible()));
-
+#ifdef OLD
     if (receiver)
         receiver->RemoveAccessibleEventListener();
+#endif
 }
 
 void
@@ -176,6 +180,7 @@ MaiTopLevel::CreateAndCache(nsIAccessible *aAcc)
     return retWidget;
 }
 
+#ifdef OLD
 NS_IMETHODIMP
 MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
                          void * aEventData)
@@ -502,6 +507,7 @@ MaiTopLevel::HandleEvent(PRUint32 aEvent, nsIAccessible *aAccessible,
         g_object_unref(pMaiObject->GetAtkObject());
     return rv;
 }
+#endif
 
 /******************************************************************
  * MaiWidget *

@@ -47,7 +47,7 @@ extern CComModule _Module;
 #define _ATLCOM_IMPL
 #include <atlcom.h>
 
- /* For documentation of the accessibility architecture, 
+/* For documentation of the accessibility architecture, 
  * see http://lxr.mozilla.org/seamonkey/source/accessible/accessible-docs.html
  */
 
@@ -58,7 +58,7 @@ static gAccessibles = 0;
 #endif
 
 CComModule _Module;
-
+  
 EXTERN_C GUID CDECL CLSID_Accessible =
 { 0x61044601, 0xa811, 0x4e2b, { 0xbb, 0xba, 0x17, 0xbf, 0xab, 0xd3, 0x29, 0xd7 } };
 
@@ -70,7 +70,7 @@ EXTERN_C GUID CDECL CLSID_Accessible =
 // construction 
 //-----------------------------------------------------
 nsAccessibleWrap::nsAccessibleWrap(nsIDOMNode* aNode, nsIWeakReference *aShell): 
-  nsAccessible(aNode, aShell), mCachedChildCount(-1), mEnumVARIANTPosition(0)
+  nsAccessible(aNode, aShell)
 {
 }
 
@@ -81,8 +81,6 @@ nsAccessibleWrap::~nsAccessibleWrap()
 {
 }
 
-
-// Microsoft COM QueryInterface
 //-----------------------------------------------------
 // IUnknown interface methods - see iunknown.h for documentation
 //-----------------------------------------------------
@@ -96,6 +94,7 @@ STDMETHODIMP_(ULONG) nsAccessibleWrap::Release()
   return nsAccessNode::Release();
 }
 
+// Microsoft COM QueryInterface
 STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
 {
   *ppv = NULL;
@@ -103,8 +102,9 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
   if (IID_IUnknown == iid || IID_IDispatch == iid || IID_IAccessible == iid)
     *ppv = NS_STATIC_CAST(IAccessible*, this);
   else if (IID_IEnumVARIANT == iid && !gIsEnumVariantSupportDisabled) {
-    CacheMSAAChildren();
-    if (mCachedChildCount > 0)  // Don't support this interface for leaf elements
+    PRInt32 numChildren;
+    GetAccChildCount(&numChildren);
+    if (numChildren > 0)  // Don't support this interface for leaf elements
       *ppv = NS_STATIC_CAST(IEnumVARIANT*, this);
   }
   else if (IID_IServiceProvider == iid) {
@@ -156,6 +156,10 @@ STDMETHODIMP nsAccessibleWrap::NotifyWinEvent(DWORD event,
 
 STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
 {
+  *ppdispParent = NULL;
+  if (!mWeakShell)
+    return E_FAIL;  // We've been shut down
+
   nsCOMPtr<nsIAccessible> xpParentAccessible;
   GetAccParent(getter_AddRefs(xpParentAccessible));
 
@@ -163,8 +167,6 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
     *ppdispParent = NativeAccessible(xpParentAccessible);
     return S_OK;
   }
-
-  *ppdispParent = NULL;
 
   // If we have a widget but no parent nsIAccessible then we might have a native
   // widget parent that could give us a IAccessible. Lets check.
@@ -190,18 +192,11 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
   return E_FAIL;  
 }
 
-void nsAccessibleWrap::CacheMSAAChildren()
-{
-  mCachedChildCount = -1;  // Don't use old info
-  if (mCachedChildCount < 0)
-    GetCachedChild(-1); // This caches the children and sets mCachedChildCount
-}
-
 STDMETHODIMP nsAccessibleWrap::get_accChildCount( long __RPC_FAR *pcountChildren)
 {
-  CacheMSAAChildren();
-  
-  *pcountChildren = mCachedChildCount;
+  PRInt32 numChildren;
+  GetAccChildCount(&numChildren);
+  *pcountChildren = numChildren;
 
   return S_OK;
 }
@@ -212,18 +207,18 @@ STDMETHODIMP nsAccessibleWrap::get_accChild(
 {
   *ppdispChild = NULL;
 
-  if (varChild.vt != VT_I4)
+  if (!mWeakShell || varChild.vt != VT_I4)
     return E_FAIL;
 
   if (varChild.lVal == CHILDID_SELF) {
-    *ppdispChild = this;
+    *ppdispChild = NS_STATIC_CAST(IDispatch*, this);
     AddRef();
     return S_OK;
   }
 
-  CacheMSAAChildren();
-
-  *ppdispChild = GetCachedChild(varChild.lVal - 1); // already addrefed
+  nsCOMPtr<nsIAccessible> childAccessible;
+  GetChildAt(varChild.lVal - 1, getter_AddRefs(childAccessible));
+  *ppdispChild = NativeAccessible(childAccessible);
 
   return (*ppdispChild)? S_OK: E_FAIL;
 }
@@ -241,6 +236,7 @@ STDMETHODIMP nsAccessibleWrap::get_accName(
       return S_FALSE;
 
     *pszName = ::SysAllocString(name.get());
+    NS_ASSERTION(mIsInitialized, "Access node was not initialized");
   }
 
   return S_OK;
@@ -424,7 +420,6 @@ STDMETHODIMP nsAccessibleWrap::get_accSelection(VARIANT __RPC_FAR *pvarChildren)
 
   nsCOMPtr<nsIAccessibleSelectable> select;
   nsAccessNode::QueryInterface(NS_GET_IID(nsIAccessibleSelectable), getter_AddRefs(select));
-  //nsCOMPtr<nsIAccessibleSelectable> select(do_QueryInterface(this)); // aaronl is this correct?
 
   if (select) {  // do we have an nsIAccessibleSelectable?
     // we have an accessible that can have children selected
@@ -532,29 +527,6 @@ STDMETHODIMP nsAccessibleWrap::accLocation(
   return E_FAIL;  
 }
 
-IAccessible *
-nsAccessibleWrap::GetCachedChild(long aChildNum)
-{
-  // aChildNum of -1 just counts up the children
-  // and stores the value in mCachedChildCount
-  VARIANT varStart, varResult;
-  VariantInit(&varStart);
-  varStart.lVal = CHILDID_SELF;
-  varStart.vt = VT_I4;
-
-  accNavigate(NAVDIR_FIRSTCHILD, varStart, &varResult);
-  for (long index = 0; varResult.vt == VT_DISPATCH; ++index) {
-    IAccessible *msaaAccessible = NS_STATIC_CAST(IAccessible*, varResult.pdispVal);
-    if (aChildNum == index)
-      return msaaAccessible;
-    msaaAccessible->accNavigate(NAVDIR_NEXT, varStart, &varResult);
-    msaaAccessible->Release();
-  }
-  if (mCachedChildCount < 0)
-    mCachedChildCount = index;
-  return nsnull;
-}
-
 STDMETHODIMP nsAccessibleWrap::accNavigate( 
       /* [in] */ long navDir,
       /* [optional][in] */ VARIANT varStart,
@@ -562,13 +534,10 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
 {
   nsCOMPtr<nsIAccessible> xpAccessibleStart, xpAccessibleResult;
   GetXPAccessibleFor(varStart, getter_AddRefs(xpAccessibleStart));
-
-  nsCOMPtr<nsIAccessible> xpAccessibleThis(NS_STATIC_CAST(nsIAccessible*, this));
-  PRBool isNavigatingFromSelf = (xpAccessibleStart == xpAccessibleThis);
+  if (!xpAccessibleStart)
+    return E_FAIL;
 
   VariantInit(pvarEndUpAt);
-
-  IAccessible* msaaAccessible = nsnull;
 
   switch(navDir) {
     case NAVDIR_DOWN: 
@@ -632,9 +601,9 @@ STDMETHODIMP nsAccessibleWrap::accHitTest(
       pvarChild->pdispVal = NativeAccessible(xpAccessible);
     }
   } else {
-      // no child at that point
-      pvarChild->vt = VT_EMPTY;
-      return E_FAIL;
+    // no child at that point
+    pvarChild->vt = VT_EMPTY;
+    return E_FAIL;
   }
 
   return S_OK;
@@ -684,11 +653,18 @@ nsAccessibleWrap::QueryService(REFGUID guidService, REFIID iid, void** ppv)
 STDMETHODIMP
 nsAccessibleWrap::Next(ULONG aNumElementsRequested, VARIANT FAR* pvar, ULONG FAR* aNumElementsFetched)
 {
-  CacheMSAAChildren();
+  // If there are two clients using this at the same time, and they are
+  // each using a different mEnumVariant position it would be bad, because
+  // we have only 1 object and can only keep of mEnumVARIANT position once
+
+  // Children already cached via QI to IEnumVARIANT
   *aNumElementsFetched = 0;
 
+  PRInt32 numChildren;
+  GetAccChildCount(&numChildren);
+
   if (aNumElementsRequested <= 0 || !pvar ||
-      mEnumVARIANTPosition >= mCachedChildCount) {
+      mEnumVARIANTPosition >= numChildren) {
     return E_FAIL;
   }
 
@@ -720,13 +696,14 @@ nsAccessibleWrap::Next(ULONG aNumElementsRequested, VARIANT FAR* pvar, ULONG FAR
 STDMETHODIMP
 nsAccessibleWrap::Skip(ULONG aNumElements)
 {
-  CacheMSAAChildren();
-
   mEnumVARIANTPosition += aNumElements;
 
-  if (mEnumVARIANTPosition > mCachedChildCount)
+  PRInt32 numChildren;
+  GetAccChildCount(&numChildren);
+  
+  if (mEnumVARIANTPosition > numChildren)
   {
-    mEnumVARIANTPosition = mCachedChildCount;
+    mEnumVARIANTPosition = numChildren;
     return S_FALSE;
   }
   return NOERROR;
@@ -745,12 +722,10 @@ nsAccessibleWrap::Clone(IEnumVARIANT FAR* FAR* ppenum)
   // Clone could be bad, the cloned items aren't tracked for shutdown
   // Then again, as long as the client releases the items in time, we're okay
   *ppenum = nsnull;
-  CacheMSAAChildren();
 
-  nsAccessibleWrap *accessibleWrap = new nsAccessibleWrap(mDOMNode, mPresShell);
+  nsAccessibleWrap *accessibleWrap = new nsAccessibleWrap(mDOMNode, mWeakShell);
   if (!accessibleWrap)
     return E_FAIL;
-  accessibleWrap->Init(mRootAccessibleDoc);
 
   IAccessible *msaaAccessible = NS_STATIC_CAST(IAccessible*, accessibleWrap);
   msaaAccessible->AddRef();
@@ -798,7 +773,7 @@ STDMETHODIMP nsAccessibleWrap::Invoke(DISPID dispIdMember, REFIID riid,
 NS_IMETHODIMP nsAccessibleWrap::GetNativeInterface(void **aOutAccessible)
 {
   *aOutAccessible = NS_STATIC_CAST(IAccessible*, this);
-  NS_ADDREF_THIS();
+  NS_STATIC_CAST(IAccessible*, this)->AddRef();
   return NS_OK;
 }
 
@@ -820,7 +795,6 @@ IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
   }
 
   nsCOMPtr<nsIAccessNode> accessNode(do_QueryInterface(aXPAccessible));
-  accessNode->Init(mRootAccessibleDoc);
 
   IAccessible *msaaAccessible;
   aXPAccessible->GetNativeInterface((void**)&msaaAccessible);
@@ -829,12 +803,14 @@ IDispatch *nsAccessibleWrap::NativeAccessible(nsIAccessible *aXPAccessible)
 }
 
 
-void nsAccessibleWrap::GetXPAccessibleFor(VARIANT varChild, nsIAccessible **aXPAccessible)
+void nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessible **aXPAccessible)
 {
   *aXPAccessible = nsnull;
+  if (!mWeakShell)
+    return; // Fail, we don't want to do anything after we've shut down
 
   // if its us real easy - this seems to always be the case
-  if (varChild.lVal == CHILDID_SELF) {
+  if (aVarChild.lVal == CHILDID_SELF) {
     *aXPAccessible = NS_STATIC_CAST(nsIAccessible*, this);
   } 
   else {
@@ -845,7 +821,7 @@ void nsAccessibleWrap::GetXPAccessibleFor(VARIANT varChild, nsIAccessible **aXPA
     nsCOMPtr<nsIAccessible> xpAccessible, nextAccessible;
     GetAccFirstChild(getter_AddRefs(xpAccessible));
     for (PRInt32 index = 0; xpAccessible; index ++) {
-      if (varChild.lVal == index) {
+      if (aVarChild.lVal == index) {
         *aXPAccessible = xpAccessible;
         break;
       }

@@ -40,7 +40,6 @@
 
 // NOTE: alphabetically ordered
 #include "nsIDOMXULDescriptionElement.h"
-#include "nsWeakReference.h"
 #include "nsXULTextAccessible.h"
 
 /**
