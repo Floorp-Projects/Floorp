@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.9 2000/10/05 02:41:09 mcgreer%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.10 2000/10/06 21:45:01 nelsonb%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -46,6 +46,7 @@
 #include "cdbhdl.h"
 #include "secoid.h"
 #include "cms.h"
+#include "nss.h"
 #include "smime.h"
 
 #if defined(XP_UNIX)
@@ -1102,16 +1103,16 @@ main(int argc, char **argv)
 
     /* Call the libsec initialization routines */
     PR_Init(PR_SYSTEM_THREAD, PR_PRIORITY_NORMAL, 1);
-    SECU_PKCS11Init(PR_FALSE);
-    RNG_SystemInfoForRNG();     /* SECU_PKCS11Init does not call this */
-    SEC_Init();                 /* this does nothing, actually */
-
-    /* open cert database */
-    options.certHandle = OpenCertDB(progName);
-    if (options.certHandle == NULL) {
-	return -1;
+    rv = NSS_InitReadWrite(SECU_ConfigDirectory(NULL));
+    if (SECSuccess != rv) {
+	SECU_PrintError(progName, "NSS_Init failed");
+	exit(1);
     }
-    CERT_SetDefaultCertDB(options.certHandle);
+    options.certHandle = CERT_GetDefaultCertDB();
+    if (!options.certHandle) {
+	SECU_PrintError(progName, "No default cert DB");
+	exit(1);
+    }
 
     exitstatus = 0;
     switch (mode) {
