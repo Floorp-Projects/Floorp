@@ -20,6 +20,7 @@
 #include "nsVoidArray.h"
 #include "nsHTMLEditor.h"
 #include "nsIPresShell.h"
+#include "IMETextTxn.h"
 
 #if defined(NS_DEBUG) && defined(DEBUG_buster)
 static PRBool gNoisy = PR_TRUE;
@@ -31,7 +32,9 @@ static const PRBool gNoisy = PR_FALSE;
 PlaceholderTxn::PlaceholderTxn() :  EditAggregateTxn(), 
                                     mPresShellWeak(nsnull), 
                                     mAbsorb(PR_TRUE), 
-                                    mForwarding(nsnull)
+                                    mForwarding(nsnull),
+                                    mIMETextTxn(nsnull),
+                                    mCommitted(PR_FALSE)
 {
   SetTransactionDescriptionID( kTransactionID );
   /* log description initialized in parent constructor */
@@ -97,7 +100,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
   *aDidMerge=PR_FALSE;
     
   nsresult res = NS_OK;
-  
+    
   if (mForwarding) 
   {
     NS_NOTREACHED("tried to merge into a placeholder that was in forwarding mode!");
@@ -107,14 +110,45 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
   EditTxn *editTxn = (EditTxn*)aTransaction;  //XXX: hack, not safe!  need nsIEditTransaction!
   if (PR_TRUE==mAbsorb)
   { // yep, it's one of ours.  Assimilate it.
-    AppendChild(editTxn);
+    IMETextTxn*  otherTxn = nsnull;
+    if (NS_SUCCEEDED(aTransaction->QueryInterface(IMETextTxn::GetCID(),(void**)&otherTxn)) && otherTxn)
+    {
+      // special handling for IMETextTxn's: they need to merge with any previous
+      // IMETextTxn in this placeholder, if possible.
+      if (!mIMETextTxn) 
+      {
+        // this is the first IME txn in the placeholder
+        mIMETextTxn =otherTxn;
+        AppendChild(editTxn);
+      }
+      else  
+      {
+        PRBool didMerge;
+        mIMETextTxn->Merge(&didMerge, otherTxn);
+        if (!didMerge)
+        {
+          // it wouldn't merge.  Earlier IME txn is already commited and will 
+          // not absorb frther IME txns.  So just stack this one after it
+          // and remember it as a candidate for furthre merges.
+          mIMETextTxn =otherTxn;
+          AppendChild(editTxn);
+        }
+      }
+      NS_IF_RELEASE(otherTxn);
+    }
+    else
+    {
+      AppendChild(editTxn);
+    }
     *aDidMerge = PR_TRUE;
     if (gNoisy) { printf("Placeholder txn assimilated %p\n", aTransaction); }
   }
   else
-  { // merge typing or deletion transactions if the selection matches
-    if ( (mName.get() == nsHTMLEditor::gTypingTxnName) ||
-         (mName.get() == nsHTMLEditor::gDeleteTxnName) ) 
+  { // merge typing or IME or deletion transactions if the selection matches
+    if (((mName.get() == nsHTMLEditor::gTypingTxnName) ||
+         (mName.get() == nsHTMLEditor::gIMETxnName)    ||
+         (mName.get() == nsHTMLEditor::gDeleteTxnName)) 
+         && !mCommitted ) 
     {
       nsCOMPtr<nsIAbsorbingTransaction> plcTxn;// = do_QueryInterface(editTxn);
       // cant do_QueryInterface() above due to our broken transaction interfaces.
@@ -139,6 +173,7 @@ NS_IMETHODIMP PlaceholderTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransact
             *aDidMerge = PR_TRUE;
           }
         }
+        NS_IF_RELEASE(atom);
       }
     }
   }
@@ -168,8 +203,9 @@ NS_IMETHODIMP PlaceholderTxn::EndPlaceHolderBatch()
     if (plcTxn) plcTxn->EndPlaceHolderBatch();
   }
   
-  // if we are a typing or deleting transaction, remember our selection state
+  // if we are a typing or IME or deleting transaction, remember our selection state
   if ( (mName.get() == nsHTMLEditor::gTypingTxnName) ||
+       (mName.get() == nsHTMLEditor::gIMETxnName)    || 
        (mName.get() == nsHTMLEditor::gDeleteTxnName) ) 
   {
     nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
@@ -190,7 +226,11 @@ NS_IMETHODIMP PlaceholderTxn::ForwardEndBatchTo(nsIAbsorbingTransaction *aForwar
   return NS_OK;
 }
 
-
+NS_IMETHODIMP PlaceholderTxn::Commit()
+{
+  mCommitted = PR_TRUE;
+  return NS_OK;
+}
 
 
 

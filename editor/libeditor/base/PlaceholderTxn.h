@@ -32,6 +32,7 @@
 {0x86, 0xde, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
 class nsHTMLEditor;
+class IMETextTxn;
 
 /**
  * An aggregate transaction that knows how to absorb all subsequent
@@ -77,6 +78,8 @@ public:
 
   NS_IMETHOD ForwardEndBatchTo(nsIAbsorbingTransaction *aForwardingAddress);
 
+  NS_IMETHOD Commit();
+
   friend class TransactionFactory;
 
   enum { kTransactionID = 11260 };
@@ -84,11 +87,14 @@ public:
 protected:
 
   /** the presentation shell, which we'll need to get the selection */
-  nsWeakPtr mPresShellWeak;   // weak reference to the nsIPresShell
-  PRBool    mAbsorb;
+  nsWeakPtr   mPresShellWeak;   // weak reference to the nsIPresShell
+  PRBool      mAbsorb;          // do we auto absorb any and all transaction?
   nsCOMPtr<nsIDOMNode> mStartNode, mEndNode; // selection nodes at beginning and end of operation
-  PRInt32   mStartOffset, mEndOffset;      // selection offsets at beginning and end of operation
-  nsWeakPtr mForwarding;
+  PRInt32     mStartOffset, mEndOffset;      // selection offsets at beginning and end of operation
+  nsWeakPtr   mForwarding;
+  IMETextTxn *mIMETextTxn;      // first IME txn in this placeholder - used for IME merging
+                                // non-owning for now - cant nsCOMPtr it due to broken transaction interfaces
+  PRBool      mCommitted;       // do we stop auto absorbing any matching placeholder txns?
 };
 
 

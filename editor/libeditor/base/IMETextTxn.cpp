@@ -17,7 +17,6 @@
  */
 
 #include "IMETextTxn.h"
-#include "IMECommitTxn.h"
 #include "nsEditor.h"
 #include "nsIDOMCharacterData.h"
 #include "nsIPrivateTextRange.h"
@@ -176,23 +175,6 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
     return NS_OK;
   }
 
-  //
-  // second possible case is that we have a commit transaction
-  //
-  IMECommitTxn* commitTxn = nsnull;
-  result = aTransaction->QueryInterface(IMECommitTxn::GetCID(),(void**)&commitTxn);
-  if (commitTxn && NS_SUCCEEDED(NS_OK))
-  {
-    (void)CollapseTextSelectionOnCommit();
-    mFixed = PR_TRUE;
-    *aDidMerge = PR_TRUE;  // absorbe the commit transaction
-#ifdef DEBUG_TAGUE
-    printf("IMETextTxn assimilated IMECommitTxn%p\n", aTransaction);
-#endif
-    NS_RELEASE(commitTxn);
-    return NS_OK;
-  }
-
   *aDidMerge = PR_FALSE;
   return NS_OK;
 }
@@ -292,26 +274,29 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
 #endif
         
     //
-    // run through the text range list
+    // run through the text range list, if any
     //
-    result = mRangeList->GetLength(&textRangeListLength);
-    if (NS_SUCCEEDED(result)) 
+    if (mRangeList)
     {
-      for(i=0;i<textRangeListLength;i++) {
-        result = mRangeList->Item(i,&textRange);
-        if (NS_SUCCEEDED(result))
-        {
-          result = textRange->GetRangeType(&textRangeType);
-          if (textRangeType==nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT) 
+      result = mRangeList->GetLength(&textRangeListLength);
+      if (NS_SUCCEEDED(result)) 
+      {
+        for(i=0;i<textRangeListLength;i++) {
+          result = mRangeList->Item(i,&textRange);
+          if (NS_SUCCEEDED(result))
           {
-            haveSelectedRange = PR_TRUE;
-            textRange->GetRangeStart(&selectionStart);
-            textRange->GetRangeEnd(&selectionEnd);
-          }
-          if (textRangeType==nsIPrivateTextRange::TEXTRANGE_CARETPOSITION)
-          {
-            haveCaretPosition = PR_TRUE;
-            textRange->GetRangeStart(&caretPosition);
+            result = textRange->GetRangeType(&textRangeType);
+            if (textRangeType==nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT) 
+            {
+              haveSelectedRange = PR_TRUE;
+              textRange->GetRangeStart(&selectionStart);
+              textRange->GetRangeEnd(&selectionEnd);
+            }
+            if (textRangeType==nsIPrivateTextRange::TEXTRANGE_CARETPOSITION)
+            {
+              haveCaretPosition = PR_TRUE;
+              textRange->GetRangeStart(&caretPosition);
+            }
           }
         }
       }
@@ -336,15 +321,3 @@ NS_IMETHODIMP IMETextTxn::CollapseTextSelection(void)
     return result;
 }
 
-NS_IMETHODIMP IMETextTxn::CollapseTextSelectionOnCommit(void)
-{
-  nsCOMPtr<nsIDOMSelection> selection;
-  nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
-  if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  nsresult result = ps->GetSelection(SELECTION_NORMAL, getter_AddRefs(selection));
-  if (NS_SUCCEEDED(result) && selection){
-      result = selection->Collapse(mElement,mOffset+mStringToInsert.Length());
-  }
-
-  return result;
-}

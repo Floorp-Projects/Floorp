@@ -483,6 +483,7 @@ protected:
 
 public:
   static nsIAtom *gTypingTxnName;
+  static nsIAtom *gIMETxnName;
   static nsIAtom *gDeleteTxnName;
 
 // friends

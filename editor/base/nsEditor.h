@@ -284,10 +284,10 @@ protected:
     */
   NS_IMETHOD CreateTxnForInsertText(const nsString & aStringToInsert,
                                     nsIDOMCharacterData *aTextNode,
+                                    PRInt32 aOffset,
                                     InsertTextTxn ** aTxn);
 
   NS_IMETHOD CreateTxnForIMEText(const nsString & aStringToInsert,
-								 nsIPrivateTextRangeList* aTextRangeList,
                                  IMETextTxn ** aTxn);
 
   /** create a transaction for adding a style sheet
@@ -302,8 +302,7 @@ protected:
     */
   NS_IMETHOD DoInitialInsert(const nsString & aStringToInsert);
 
-  NS_IMETHOD DoInitialInputMethodInsert(const nsString & aStringToInsert, nsIPrivateTextRangeList* aTextRangeList);
-
+  NS_IMETHOD PrepareToInsertText(nsCOMPtr<nsIDOMCharacterData> *aOutTextNode, PRInt32 *aOutOffset);
 
   NS_IMETHOD DeleteText(nsIDOMCharacterData *aElement,
                         PRUint32             aOffset,
@@ -322,8 +321,6 @@ protected:
                                   nsIDOMNode  *aRightNode,
                                   JoinElementTxn **aTxn);
 
-
-  NS_IMETHOD SetInputMethodText(const nsString& aStringToInsert, nsIPrivateTextRangeList *aTextRangeList);
 
   // called each time we modify the document. Increments the mod
   // count of the doc.
@@ -622,9 +619,11 @@ protected:
   //
   // data necessary to build IME transactions
   //
-  nsCOMPtr<nsIDOMCharacterData> mIMETextNode;
-  PRUint32						mIMETextOffset;
-  PRUint32						mIMEBufferLength;
+  PRBool						mInIMEMode;          // are we inside an IME composition?
+  nsIPrivateTextRangeList*      mIMETextRangeList;   // IME special selection ranges
+  nsCOMPtr<nsIDOMCharacterData> mIMETextNode;        // current IME text node
+  PRUint32						mIMETextOffset;      // offset in text node where IME comp string begins
+  PRUint32						mIMEBufferLength;    // current length of IME comp string
 
   nsVoidArray*                  mActionListeners;
   nsCOMPtr<nsISupportsArray>    mDocStateListeners;
