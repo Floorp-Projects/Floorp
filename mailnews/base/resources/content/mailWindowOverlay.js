@@ -74,29 +74,18 @@ function menu_new_init()
     newAccountItem.setAttribute("disabled","true");
 
   // Change "New Folder..." menu according to the context
-  var startIndex = {};
-  var endIndex = {};
-  var folderTree = GetFolderTree();
-  folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
-  if (startIndex.value < 0)
-    return false;
-  var numSelected = endIndex.value - startIndex.value + 1;
-  var folderResource = GetFolderResource(folderTree, startIndex.value);
-  var specialFolder = GetFolderAttribute(folderTree, folderResource,
-    "SpecialFolder");
-  var isServer = GetFolderAttribute(folderTree, folderResource,
-    "IsServer") == 'true';
-  var serverType = GetFolderAttribute(folderTree, folderResource,
-    "ServerType");
-  var canCreateNew = GetFolderAttribute(folderTree, folderResource,
-    "CanCreateSubfolders") == "true";
-  var isInbox = specialFolder == "Inbox";
-  var isIMAPFolder = GetFolderAttribute(folderTree, folderResource,
-    "ServerType") == "imap";
+  var folderArray = GetSelectedMsgFolders();
+  if (folderArray.length == 0)
+    return;
+  var msgFolder = folderArray[0];
+  var isServer = msgFolder.isServer;
+  var serverType = msgFolder.server.type;
+  var canCreateNew = msgFolder.canCreateSubfolders;
+  var isInbox = IsSpecialFolder(msgFolder, MSG_FOLDER_FLAG_INBOX);
+  var isIMAPFolder = serverType == "imap";
   var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                          .getService(Components.interfaces.nsIIOService);
-  var showNew = ((numSelected <=1) && (serverType != 'nntp') &&
-    canCreateNew) || isInbox;
+  var showNew = ((serverType != 'nntp') && canCreateNew) || isInbox;
   ShowMenuItem("menu_newFolder", showNew);
   EnableMenuItem("menu_newFolder", !isIMAPFolder || !ioService.offline);
   if (showNew)
