@@ -52,6 +52,7 @@ public:
 protected:
 
 	nsresult WriteLineToMailbox(char *buffer);
+    nsresult ReleaseFolderLock();
 
     PRBool m_authed;
     PRInt32 m_msgOffset;

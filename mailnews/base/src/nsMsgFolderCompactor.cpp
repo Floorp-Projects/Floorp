@@ -291,6 +291,12 @@ void nsFolderCompactState::ShowCompactingStatusMsg()
 NS_IMETHODIMP nsFolderCompactState::StartCompacting()
 {
   nsresult rv = NS_OK;
+  PRBool isLocked;
+  m_folder->GetLocked(&isLocked);
+  if(!isLocked)
+    m_folder->AcquireSemaphore(m_folder);
+  else
+    FinishCompact();
   if (m_size > 0)
   {
     ShowCompactingStatusMsg();
@@ -354,6 +360,9 @@ nsFolderCompactState::FinishCompact()
     // database 
   m_fileSpec.Rename((const char*) idlName);
   newSummarySpec.Rename(dbName);
+ 
+  rv = ReleaseFolderLock();
+  NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
 
   // Make the front end reload the folder. Calling GetMsgDatabase on a folder whose
   // db isn't open will cause the folder to open the db and
@@ -363,8 +372,20 @@ nsFolderCompactState::FinishCompact()
   db = nsnull;
   if (m_compactAll)
     rv = CompactNextFolder();
-
+      
   return rv;
+}
+
+nsresult
+nsFolderCompactState::ReleaseFolderLock()
+{
+  nsresult result = NS_OK;
+  if (!m_folder) return result;
+  PRBool haveSemaphore;
+  result = m_folder->TestSemaphore(m_folder, &haveSemaphore);
+  if(NS_SUCCEEDED(result) && haveSemaphore)
+    result = m_folder->ReleaseSemaphore(m_folder);
+  return result;
 }
 
 nsresult
@@ -386,6 +407,7 @@ nsFolderCompactState::CompactNextFolder()
      }
      else
        return rv;
+       
    } 
    nsCOMPtr<nsISupports> supports = getter_AddRefs(m_folderArray->ElementAt(m_folderIndex));
    nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports, &rv);
@@ -436,6 +458,7 @@ nsFolderCompactState::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
     if (NS_SUCCEEDED(status))
     {
       CleanupTempFilesAfterError();
+      ReleaseFolderLock();
       Release();
     }
   }
@@ -444,6 +467,7 @@ done:
   if (NS_FAILED(rv)) {
     m_status = rv; // set the status to rv so the destructor can remove the
                    // temp folder and database
+    ReleaseFolderLock();
     Release(); // kill self
     return rv;
   }

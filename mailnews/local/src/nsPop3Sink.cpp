@@ -141,6 +141,15 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, PRBool* aBool)
 
     nsFileSpec fileSpec;
     // ### if we're doing a UIDL, then the fileSpec needs to be for the current folder
+
+    PRBool isLocked;
+
+	m_folder->GetLocked(&isLocked);
+	if(!isLocked)
+      m_folder->AcquireSemaphore(m_folder);
+	else
+      return NS_MSG_FOLDER_BUSY;
+
     if (uidlDownload)
     {
       nsCOMPtr<nsIFileSpec> path;
@@ -202,25 +211,40 @@ nsPop3Sink::BeginMailDelivery(PRBool uidlDownload, PRBool* aBool)
 nsresult
 nsPop3Sink::EndMailDelivery()
 {
-	if (m_newMailParser)
-	{
-		if (m_outFileStream)
-			m_outFileStream->flush();	// try this.
-		m_newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
-		delete m_newMailParser;
-		m_newMailParser = NULL;
-	}
+  if (m_newMailParser)
+  {
     if (m_outFileStream)
-    {
-        m_outFileStream->close();
-        delete m_outFileStream;
-        m_outFileStream = 0;
-    }
+      m_outFileStream->flush();	// try this.
+    m_newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
+    delete m_newMailParser;
+    m_newMailParser = NULL;
+  }
+  if (m_outFileStream)
+  {
+    m_outFileStream->close();
+    delete m_outFileStream;
+    m_outFileStream = 0;
+  }
+
+  nsresult rv = ReleaseFolderLock();
+  NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
 
 #ifdef DEBUG
     printf("End mail message delivery.\n");
 #endif 
     return NS_OK;
+}
+
+nsresult 
+nsPop3Sink::ReleaseFolderLock()
+{
+  nsresult result = NS_OK;
+  if (!m_folder) return result;
+  PRBool haveSemaphore;
+  result = m_folder->TestSemaphore(m_folder, &haveSemaphore);
+  if(NS_SUCCEEDED(result) && haveSemaphore)
+    result = m_folder->ReleaseSemaphore(m_folder);
+  return result;
 }
 
 nsresult 
@@ -233,6 +257,8 @@ nsPop3Sink::AbortMailDelivery()
         delete m_outFileStream;
         m_outFileStream = 0;
     }
+    nsresult rv = ReleaseFolderLock();
+    NS_ASSERTION(NS_SUCCEEDED(rv),"folder lock not released successfully");
 #ifdef DEBUG
     printf("Abort mail message delivery.\n");
 #endif 

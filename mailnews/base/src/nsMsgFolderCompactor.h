@@ -55,6 +55,7 @@ public:
   nsresult BuildMessageURI(const char *baseURI, PRUint32 key, nsCString& uri);  
   nsresult GetStatusFromMsgName(const char *statusMsgName, PRUnichar ** retval);
   nsresult ShowStatusMsg(const PRUnichar *aMsg);
+  nsresult ReleaseFolderLock();
   void     ShowCompactingStatusMsg();
   nsresult CompactNextFolder();
 

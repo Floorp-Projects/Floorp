@@ -71,5 +71,6 @@ private:
 #define DELETING_MSGS_STATUS                                4026
 #define COPYING_MSGS_STATUS                                 4027
 #define MOVING_MSGS_STATUS                                  4028
+#define POP3_MESSAGE_FOLDER_BUSY                            4029
 
 #endif /* _nsImapStringBundle_H__ */

@@ -1168,10 +1168,14 @@ nsPop3Protocol::GetStat()
         // write to somewhere we dont have write access error to (See bug 62480)
         // (Note: This is only a temp hack until the underlying XPCOM is fixed
         // to return errors)
-        if(NS_FAILED(m_nsIPop3Sink->BeginMailDelivery(m_pop3ConData->only_uidl != nsnull,
-                                                      &m_pop3ConData->msg_del_started)))
+        nsresult rv;
+        rv = m_nsIPop3Sink->BeginMailDelivery(m_pop3ConData->only_uidl != nsnull,
+                                                      &m_pop3ConData->msg_del_started);
+        if (NS_FAILED(rv))
+          if (rv == NS_MSG_FOLDER_BUSY)
+            return(Error(POP3_MESSAGE_FOLDER_BUSY));
+          else
             return(Error(POP3_MESSAGE_WRITE_ERROR));
-
         if(!m_pop3ConData->msg_del_started)
         {
             return(Error(POP3_MESSAGE_WRITE_ERROR));

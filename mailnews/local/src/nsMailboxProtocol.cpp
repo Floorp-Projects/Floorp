@@ -539,7 +539,7 @@ PRInt32 nsMailboxProtocol::ReadMessageResponse(nsIInputStream * inputStream, PRU
 	if (m_channelListener)
 	{
 		// just forward the data we read in to the listener...
-		m_channelListener->OnDataAvailable(this, m_channelContext, inputStream, sourceOffset, length);
+		rv = m_channelListener->OnDataAvailable(this, m_channelContext, inputStream, sourceOffset, length);
 	}
 	else
 	{
