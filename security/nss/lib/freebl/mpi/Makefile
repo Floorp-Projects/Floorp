@@ -36,7 +36,7 @@
 ## GPL.
 ## 
 ##
-## $Id: Makefile,v 1.6 2000/08/11 05:01:59 nelsonb%netscape.com Exp $
+## $Id: Makefile,v 1.7 2000/08/22 01:45:25 nelsonb%netscape.com Exp $
 ##
 
 ## Define CC to be the C compiler you wish to use.  The GNU cc
@@ -59,7 +59,7 @@ PERL=perl
 ## Conditional compilation options are no longer here; see
 ## the file 'mpi-config.h' instead.
 ##
-MPICMN = -I. -DMP_API_COMPATIBLE
+MPICMN = -I. -DMP_API_COMPATIBLE 
 CFLAGS= -O $(MPICMN)
 #CFLAGS=-ansi -fullwarn -woff 1521 -O3 $(MPICMN)
 #CFLAGS=-ansi -fullwarn -woff 1521 -L/usr/linguist/lib -g -DMP_DEBUG=1 $(MPICMN)
@@ -67,6 +67,9 @@ CFLAGS= -O $(MPICMN)
 #CFLAGS=-ansi -pedantic -Wall -g -O2 -DMP_DEBUG=1 $(MPICMN)
 
 #IRIX
+#MPICMN += -DMP_ASSEMBLY_MULTIPLY -DMP_MONT_USE_MP_MUL
+#AS_OBJS = mpi_mips.o
+#ASFLAGS = -O -OPT:Olimit=4000 -dollar -fullwarn -xansi -n32 -mips3 -exceptions -mips3 
 #CFLAGS=-ansi -n32 -O3 -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
 #CFLAGS=-ansi -n32 -O2 -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
 #CFLAGS=-ansi -n32 -g -fullwarn -woff 1429 -D_SGI_SOURCE -DMP_IOFUNC $(MPICMN)
@@ -136,21 +139,21 @@ HDRS=mpi.h mpi-config.h utils/mpi.h utils/mpi-config.h mpprime.h mplogic.h \
      utils/bbs_rand.h tests/mpi.h tests/mpprime.h
 
 ## These are the documentation files that go into the distribution file
-DOCS=README doc \
-	utils/README utils/PRIMES 
+DOCS=README doc utils/README utils/PRIMES 
 
 ## This is the list of tools built by 'make tools'
 TOOLS=gcd invmod isprime lap dec2hex hex2dec primegen prng \
 	basecvt fact exptmod pi makeprime
 
-LIBOBJS = mpprime.o mpmontg.o mplogic.o mpi.o
+LIBOBJS = mpprime.o mpmontg.o mplogic.o mpi.o $(AS_OBJS)
 LIBHDRS = mpi-config.h mpi-priv.h mpi.h
+APPHDRS = mpi-config.h mpi.h mplogic.h mpprime.h
 
 help:
 	@ echo ""
 	@ echo "The following targets can be built with this Makefile:"
 	@ echo ""
-	@ echo "libmpi       - arithmetic and prime testing library"
+	@ echo "libmpi.a     - arithmetic and prime testing library"
 	@ echo "mpi-test     - test driver (requires MP_IOFUNC)"
 	@ echo "tools        - command line tools"
 	@ echo "doc          - manual pages for tools"
@@ -167,103 +170,90 @@ help:
 #.c.o: $*.h $*.c
 #	$(CC) $(CFLAGS) -c $<
 
+#---------------------------------------
+
 $(LIBOBJS): $(LIBHDRS)
-
-mpi.o: mpi-config.h mpi-priv.h logtab.h mpi.h mpi.c
-	$(CC) $(CFLAGS) -c mpi.c
-
-libmpi.a: $(LIBOBJS)
-	ar -cvr libmpi.a mpprime.o mpmontg.o mplogic.o mpi.o
-	$(RANLIB) libmpi.a
 
 logtab.h: make-logtab
 	$(PERL) make-logtab > logtab.h
 
-mdxptest: mdxptest.c libmpi.a
-	$(CC) $(CFLAGS) -o mdxptest mdxptest.c libmpi.a $(LIBS)
+mpi.o: mpi.c logtab.h $(LIBHDRS)
 
-mptest1: mpi.o tests/mptest-1.c
-	$(CC) $(CFLAGS) -o mptest1 tests/mptest-1.c mpi.o $(LIBS)
+mplogic.o: mplogic.c mpi-priv.h mplogic.h $(LIBHDRS)
 
-mptest2: mpi.o tests/mptest-2.c
-	$(CC) $(CFLAGS) -o mptest2 tests/mptest-2.c mpi.o $(LIBS)
+mpmontg.o: mpmontg.c mpi-priv.h mplogic.h mpprime.h $(LIBHDRS)
 
-mptest3: mpi.o tests/mptest-3.c
-	$(CC) $(CFLAGS) -o mptest3 tests/mptest-3.c mpi.o $(LIBS)
+mpprime.o: mpprime.c mpi-priv.h mpprime.h mplogic.h primes.c $(LIBHDRS)
 
-mptest3a: libmpi.a tests/mptest-3a.c
-	$(CC) $(CFLAGS) -o mptest3a tests/mptest-3a.c libmpi.a $(LIBS)
+mpi_mips.o: mpi_mips.s
+	$(CC) -o $@ $(ASFLAGS) -c mpi_mips.s
 
-mptest4: mpi.o tests/mptest-4.c
-	$(CC) $(CFLAGS) -o mptest4 tests/mptest-4.c mpi.o $(LIBS)
+libmpi.a: $(LIBOBJS)
+	ar -cvr libmpi.a $(LIBOBJS)
+	$(RANLIB) libmpi.a
 
-mptest4a: libmpi.a tests/mptest-4a.c
-	$(CC) $(CFLAGS) -o mptest4a tests/mptest-4a.c libmpi.a $(LIBS)
+#---------------------------------------
 
-mptest4b: libmpi.a tests/mptest-4b.c
-	$(CC) $(CFLAGS) -o mptest4b tests/mptest-4b.c libmpi.a $(LIBS)
+MPTESTOBJS = mptest1.o mptest2.o mptest3.o mptest3a.o mptest4.o mptest4a.o \
+	mptest4b.o mptest6.o mptest7.o mptest8.o mptest9.o
+MPTESTS = $(MPTESTOBJS:.o=)
 
-mptest5: mpi.o tests/mptest-5.c
-	$(CC) $(CFLAGS) -o mptest5 tests/mptest-5.c mpi.o $(LIBS)
+$(MPTESTOBJS): mptest%.o: tests/mptest-%.c $(LIBHDRS)
+	$(CC) $(CFLAGS) -o $@ -c $<
 
-mptest5a: libmpi.a tests/mptest-5a.c
-	$(CC) $(CFLAGS) -o mptest5a tests/mptest-5a.c libmpi.a $(LIBS)
+$(MPTESTS): mptest%: mptest%.o libmpi.a $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ 
 
-mptest6: mpi.o tests/mptest-6.c
-	$(CC) $(CFLAGS) -o mptest6 tests/mptest-6.c mpi.o $(LIBS)
+tests: mptest1 mptest2 mptest3 mptest3a mptest4 mptest4a mptest4b mptest6 \
+	bbsrand
 
-mptest7: libmpi.a tests/mptest-7.c
-	$(CC) $(CFLAGS) -o mptest7 tests/mptest-7.c libmpi.a $(LIBS)
+utests: mptest7 mptest8 mptest9
 
-mptest8: libmpi.a tests/mptest-8.c
-	$(CC) $(CFLAGS) -o mptest8 tests/mptest-8.c libmpi.a $(LIBS)
+#---------------------------------------
 
-mptest9: libmpi.a tests/mptest-9.c
-	$(CC) $(CFLAGS) -o mptest9 tests/mptest-9.c libmpi.a $(LIBS)
+EXTRAOBJS = bbsrand.o bbs_rand.o prng.o
+UTILOBJS = primegen.o metime.o identest.o basecvt.o fact.o exptmod.o pi.o \
+	makeprime.o karatsuba.o gcd.o invmod.o lap.o isprime.o \
+	dec2hex.o hex2dec.o
+UTILS = $(UTILOBJS:.o=)
+
+$(UTILS): % : %.o libmpi.a $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^ 
+
+$(UTILOBJS) $(EXTRAOBJS): %.o : utils/%.c $(LIBHDRS)
+	$(CC) $(CFLAGS) -o $@ -c $<
+
+prng: prng.o bbs_rand.o libmpi.a $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^
+
+bbsrand: bbsrand.o bbs_rand.o libmpi.a $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^
+
+utils: $(UTILS) prng bbsrand
+
+#---------------------------------------
 
 test-info.c: test-arrays.txt
 	$(PERL) make-test-arrays test-arrays.txt > test-info.c
 
-mpi-test: libmpi.a test-info.c mpi-test.c
-	$(CC) $(CFLAGS) -o mpi-test mpi-test.c libmpi.a $(LIBS)
+mpi-test.o: mpi-test.c test-info.c $(LIBHDRS)
+	$(CC) $(CFLAGS) -o $@ -c $<
 
-bbsrand: utils/bbs_rand.o mpi.o utils/bbsrand.c
-	$(CC) $(CFLAGS) -o bbsrand mpi.o bbs_rand.o utils/bbsrand.c $(LIBS)
+mpi-test: mpi-test.o libmpi.a $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^
 
-primegen: libmpi.a utils/primegen.c primes.c
-	$(CC) $(CFLAGS) -o primegen utils/primegen.c libmpi.a $(LIBS)
+mdxptest.o: mdxptest.c $(LIBHDRS) mpi-priv.h
 
-metime: libmpi.a utils/metime.c
-	$(CC) $(CFLAGS) -o metime utils/metime.c libmpi.a $(LIBS)
+mdxptest: mdxptest.o libmpi.a $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^
 
-mulsqr: logtab.h mpi.h mpi-config.h mpi.c mpprime.h mpprime.c mulsqr.c
-	$(CC) $(CFLAGS) -DMP_SQUARE=1 -o mulsqr mpi.c mpprime.c mulsqr.c $(LIBS)
+mulsqr.o: mulsqr.c logtab.h mpi.h mpi-config.h mpprime.h 
+	$(CC) $(CFLAGS) -DMP_SQUARE=1 -o $@ -c mulsqr.c 
 
-basecvt: mpi.o utils/basecvt.c
-	$(CC) $(CFLAGS) -o basecvt utils/basecvt.c mpi.o $(LIBS)
+mulsqr: mulsqr.o libmpi.a $(LIBS)
+	$(CC) $(CFLAGS) -o $@ $^
 
-fact: mpi.o utils/fact.c
-	$(CC) $(CFLAGS) -o fact utils/fact.c mpi.o $(LIBS)
-
-exptmod: mpi.o utils/exptmod.c
-	$(CC) $(CFLAGS) -o exptmod utils/exptmod.c mpi.o $(LIBS)
-
-pi: mpi.o utils/pi.c
-	$(CC) $(CFLAGS) -o pi utils/pi.c mpi.o $(LIBS)
-
-makeprime: libmpi.a utils/makeprime.c
-	$(CC) $(CFLAGS) -o makeprime utils/makeprime.c libmpi.a $(LIBS)
-
-prng: utils/bbs_rand.o mpi.o utils/prng.c
-	$(CC) $(CFLAGS) -o prng utils/prng.c mpi.o bbs_rand.o $(LIBS)
-
-karatsuba: libmpi.a utils/karatsuba.c
-	$(CC) $(CFLAGS) -o karatsuba utils/karatsuba.c libmpi.a $(LIBS)
-
-tests: mptest1 mptest2 mptest3 mptest3a mptest4 mptest4a mptest4b \
-	mptest6 bbsrand
-
-utests: mptest7 mptest8 mptest9
+#---------------------------------------
 
 alltests: tests utests mpi-test
 
@@ -271,24 +261,6 @@ tools: $(TOOLS)
 
 doc:
 	(cd doc; ./build)
-
-gcd: mpi.o utils/gcd.c
-	$(CC) $(CFLAGS) -o gcd mpi.o utils/gcd.c $(LIBS)
-
-invmod: mpi.o utils/invmod.c
-	$(CC) $(CFLAGS) -o invmod mpi.o utils/invmod.c $(LIBS)
-
-lap: mpi.o utils/lap.c
-	$(CC) $(CFLAGS) -o lap mpi.o utils/lap.c $(LIBS)
-
-isprime: mpprime.o mpi.o utils/isprime.c
-	$(CC) $(CFLAGS) -o isprime mpprime.o mpi.o utils/isprime.c $(LIBS)
-
-dec2hex: mpi.o utils/dec2hex.c
-	$(CC) $(CFLAGS) -o dec2hex mpi.o utils/dec2hex.c $(LIBS)
-
-hex2dec: mpi.o utils/hex2dec.c
-	$(CC) $(CFLAGS) -o hex2dec mpi.o utils/hex2dec.c $(LIBS)
 
 clean:
 	rm -f *.o *.a 
