@@ -161,6 +161,8 @@ public:
 
   // nsRenderingContextImpl overrides
   NS_IMETHOD ReleaseBackbuffer(void);
+  NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer);
+
 
 #ifdef MOZ_MATHML
   /**
@@ -188,6 +190,9 @@ public:
   //locals
   nsresult   SetPortTextState();
   nsresult   Init(nsIDeviceContext* aContext, CGrafPtr aPort);
+
+    // useful for determining if we're running on MacOSX
+  static PRBool OnMacOSX();
 
 protected:
   enum GraphicStateChanges {

@@ -123,7 +123,8 @@ public:
   NS_IMETHOD GetBackbuffer(const nsRect &aRequestedSize, const nsRect &aMaxSize, nsDrawingSurface &aBackbuffer); 
   NS_IMETHOD ReleaseBackbuffer(void);
   NS_IMETHOD DestroyCachedBackbuffer(void);
-
+  NS_IMETHOD UseBackbuffer(PRBool* aUseBackbuffer);
+  
 #ifdef IBMBIDI
   /**
    * Let the device context know whether we want text reordered with

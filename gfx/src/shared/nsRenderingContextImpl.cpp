@@ -530,6 +530,13 @@ NS_IMETHODIMP nsRenderingContextImpl::DestroyCachedBackbuffer(void)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsRenderingContextImpl::UseBackbuffer(PRBool* aUseBackbuffer)
+{
+  *aUseBackbuffer = PR_TRUE;
+  return NS_OK;
+}
+
+
 PRBool nsRenderingContextImpl::RectFitsInside(const nsRect& aRect, PRInt32 aWidth, PRInt32 aHeight) const
 {
   if (aRect.width > aWidth)

@@ -81,11 +81,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // #define NO_DOUBLE_BUFFER
 
-// Cocoa never double buffers
-#ifdef MOZ_WIDGET_COCOA
-#define NO_DOUBLE_BUFFER
-#endif
-
 // if defined widget changes like moves and resizes are defered until and done
 // all in one pass.
 //#define CACHE_WIDGET_CHANGES
@@ -641,6 +636,14 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext, nsIReg
   aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
 #endif
 
+  // check if the rendering context wants double-buffering or not
+  if (aContext) {
+    PRBool contextWantsBackBuffer = PR_TRUE;
+    aContext->UseBackbuffer(&contextWantsBackBuffer);
+    if (!contextWantsBackBuffer)
+      aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
+  }
+  
   if (PR_FALSE == mAllowDoubleBuffering) {
     // Turn off double-buffering of the display
     aUpdateFlags &= ~NS_VMREFRESH_DOUBLE_BUFFER;
