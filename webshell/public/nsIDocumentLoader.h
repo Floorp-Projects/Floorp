@@ -94,11 +94,8 @@ public:
 };
 
 /* 057b04d0-0ccf-11d2-beba-00805f8a66dc */
-#define NS_DOCUMENTLOADER_CID   \
+#define NS_DOCUMENTLOADER_SERVICE_CID   \
 { 0x057b04d0, 0x0ccf, 0x11d2, \
   {0xbe, 0xba, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
-
-extern "C" NS_WEB nsresult
-NS_NewDocumentLoaderFactory(nsIFactory** aFactory);
 
 #endif /* nsIDocumentLoader_h___ */
