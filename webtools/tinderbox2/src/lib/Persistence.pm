@@ -9,8 +9,8 @@
 # but binary format.
 
 
-# $Revision: 1.3 $ 
-# $Date: 2000/11/09 19:30:32 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/11/28 17:54:45 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Persistence.pm,v $ 
 # $Name:  $ 
@@ -63,7 +63,6 @@ $VERSION = '#tinder_version#';
 $IMPLS = ( ($TinderConfig::PersistenceImpl) ||
            (
             'Persistence::Dumper',
-# storable has not been tested yet
             # 'Persistence::Storable',
            )
          );
