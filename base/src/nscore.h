@@ -164,8 +164,5 @@ typedef PRUcs2 PRUnichar;
 // No sense in making an NS_DYNAMIC_CAST() macro: you can't duplicate
 // the semantics. So if you want to dynamic_cast, then just use it
 // "straight", no macro.
-#if defined(AIX)
-#define explicit
-#endif
 
 #endif /* nscore_h___ */
