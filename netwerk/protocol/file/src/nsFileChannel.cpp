@@ -329,7 +329,7 @@ nsFileChannel::AsyncRead(nsIStreamListener *listener,
 
   done:
     if (NS_FAILED(rv)) {
-        nsresult rv2 = mLoadGroup->RemoveChannel(this);
+        nsresult rv2 = mLoadGroup->RemoveChannel(this, ctxt, rv, nsnull);       // XXX fix error message
         NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveChannel failed");
         // release the transport so that we don't think we're in progress
         mFileTransport = nsnull;
@@ -381,7 +381,7 @@ nsFileChannel::AsyncWrite(nsIInputStream *fromStream,
 
   done:
     if (NS_FAILED(rv)) {
-        nsresult rv2 = mLoadGroup->RemoveChannel(this);
+        nsresult rv2 = mLoadGroup->RemoveChannel(this, ctxt, rv, nsnull);       // XXX fix error message
         NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveChannel failed");
         // release the transport so that we don't think we're in progress
         mFileTransport = nsnull;
