@@ -830,7 +830,7 @@ nsMenuBarX::StyleSheetDisabledStateChanged(nsIDocument * aDocument, nsIStyleShee
 
 NS_IMETHODIMP
 nsMenuBarX::StyleRuleChanged( nsIDocument * aDocument, nsIStyleSheet * aStyleSheet,
-                              nsIStyleRule * aStyleRule, PRInt32 aHint)
+                              nsIStyleRule * aStyleRule, nsChangeHint aHint)
 {
   return NS_OK;
 }
@@ -859,13 +859,13 @@ nsMenuBarX::DocumentWillBeDestroyed( nsIDocument * aDocument )
 
 NS_IMETHODIMP
 nsMenuBarX::AttributeChanged( nsIDocument * aDocument, nsIContent * aContent, PRInt32 aNameSpaceID,
-                              nsIAtom * aAttribute, PRInt32 aModType, PRInt32 aHint)
+                              nsIAtom * aAttribute, PRInt32 aModType, nsChangeHint aHint)
 {
   // lookup and dispatch to registered thang.
   nsCOMPtr<nsIChangeObserver> obs;
   Lookup ( aContent, getter_AddRefs(obs) );
   if ( obs )
-    obs->AttributeChanged ( aDocument, aNameSpaceID, aAttribute, aHint );
+    obs->AttributeChanged ( aDocument, aNameSpaceID, aAttribute, (PRInt32)aHint );
 
   return NS_OK;
 }
