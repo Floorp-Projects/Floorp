@@ -143,16 +143,11 @@ gdk_superwin_new (GdkWindow *parent_window,
   attributes.width = width;
   attributes.height = height;
   attributes.wclass = GDK_INPUT_OUTPUT;
-#if defined (__hpux) || defined (_AIX) || defined(SUNOS4) || defined(SOLARIS) || defined(__osf__)
   attributes.colormap = gdk_rgb_get_cmap();
-#endif
   attributes.visual = gdk_rgb_get_visual();
   attributes.event_mask = GDK_VISIBILITY_NOTIFY_MASK;
 
-  attributes_mask = GDK_WA_VISUAL | GDK_WA_X | GDK_WA_Y;
-#if defined (__hpux) || defined (_AIX) || defined(SUNOS4) || defined(SOLARIS) || defined(__osf__)
-  attributes_mask = attributes_mask | GDK_WA_COLORMAP;
-#endif
+  attributes_mask = GDK_WA_VISUAL | GDK_WA_X | GDK_WA_Y | GDK_WA_COLORMAP;
 
   superwin->shell_window = gdk_window_new (parent_window,
 					   &attributes, attributes_mask);
