@@ -38,14 +38,23 @@
 #include "nsIFileChannel.h"
 #include "nsInputStreamChannel.h"
 #include "nsXPIDLString.h" 
+#include "nsISocketTransportService.h" 
+#include "nsIDNSService.h" 
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
-
+static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsIOService::nsIOService()
+    : mAppName(nsnull),
+      mAppCodeName(nsnull),
+      mAppVersion(nsnull),
+      mAppLanguage(nsnull),
+      mAppPlatform(nsnull),
+      mOffline(PR_FALSE)
 {
     NS_INIT_REFCNT();
 }
@@ -53,7 +62,6 @@ nsIOService::nsIOService()
 nsresult
 nsIOService::Init()
 {
-
     // initialize the version and app components
     mAppName = new nsCString("Netscape");
     if (!mAppName) return NS_ERROR_OUT_OF_MEMORY;
@@ -77,11 +85,12 @@ nsIOService::Init()
 
 nsIOService::~nsIOService()
 {
-    delete mAppName;
-    delete mAppCodeName;
-    delete mAppVersion;
-    delete mAppLanguage;
-    delete mAppPlatform;
+    (void)SetOffline(PR_TRUE);
+    if (mAppName) delete mAppName;
+    if (mAppCodeName) delete mAppCodeName;
+    if (mAppVersion) delete mAppVersion;
+    if (mAppLanguage) delete mAppLanguage;
+    if (mAppPlatform) delete mAppPlatform;
 }
 
 NS_METHOD
@@ -385,6 +394,20 @@ NS_IMETHODIMP
 nsIOService::SetOffline(PRBool offline)
 {
     mOffline = offline;
+    if (offline) {
+        // be sure to try and shutdown both (even if the first fails)
+        nsresult rv, rv1 = NS_OK, rv2 = NS_OK;
+        NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            rv1 = sts->Shutdown();
+        }
+        NS_WITH_SERVICE(nsIDNSService, dns, kDNSServiceCID, &rv);
+        if (NS_SUCCEEDED(rv)) {
+            rv2 = dns->Shutdown();
+        }
+        if (NS_FAILED(rv1)) return rv1;
+        if (NS_FAILED(rv2)) return rv2;
+    }
     return NS_OK;
 }
 
