@@ -99,15 +99,11 @@ public:
 	 NS_METHOD	CreateAnonymousResource(const nsString& aPrefixURI, nsCOMPtr<nsIRDFResource>* aResult);
 
 #ifdef NECKO
-	// nsIStreamObserver
-	NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports *ctxt);
-	NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports *ctxt, nsresult status, 
-							 const PRUnichar *errorMsg);
-
+    // nsIStreamObserver
+    NS_DECL_NSISTREAMOBSERVER
+	
 	// nsIStreamListener
-	NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
-							   nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
-
+    NS_DECL_NSISTREAMLISTENER
 #else
 	// stream observer
 

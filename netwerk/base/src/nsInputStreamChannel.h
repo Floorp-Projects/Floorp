@@ -30,26 +30,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIRequest methods:
-    NS_IMETHOD IsPending(PRBool *result);
-    NS_IMETHOD Cancel(void);
-    NS_IMETHOD Suspend(void);
-    NS_IMETHOD Resume(void);
+    NS_DECL_NSIREQUEST
     
     // nsIChannel methods:
-    NS_IMETHOD GetURI(nsIURI * *aURI);
-    NS_IMETHOD OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
-                               nsIInputStream **_retval);
-    NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
-    NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount,
-                         nsISupports *ctxt, nsIStreamListener *listener);
-    NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition,
-                          PRInt32 writeCount, nsISupports *ctxt,
-                          nsIStreamObserver *observer);
-    NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes);
-    NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes);
-    NS_IMETHOD GetContentType(char * *aContentType);
-    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
-    NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup);
+    NS_DECL_NSICHANNEL
 
     // nsInputStreamChannel methods:
     nsInputStreamChannel(); 

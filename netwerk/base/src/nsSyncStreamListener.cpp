@@ -30,16 +30,10 @@ public:
     NS_DECL_ISUPPORTS
 
     // nsIStreamObserver methods:
-    NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
-    NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
-                             nsresult aStatus,
-                             const PRUnichar* aMsg);
+    NS_DECL_NSISTREAMOBSERVER
 
     // nsIStreamListener methods:
-    NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
-                               nsIInputStream *aIStream, 
-                               PRUint32 aSourceOffset,
-                               PRUint32 aLength);
+    NS_DECL_NSISTREAMLISTENER
 
     // nsSyncStreamListener methods:
     nsSyncStreamListener()

@@ -46,10 +46,7 @@ class nsDNSRequest : public nsIRequest
     nsDNSLookup*    mHostNameLookup;
 
     // nsIRequest methods:
-    NS_IMETHOD IsPending(PRBool *result);
-    NS_IMETHOD Cancel(void);
-    NS_IMETHOD Suspend(void);
-    NS_IMETHOD Resume(void);
+    NS_DECL_NSIREQUEST
 };
 
 

@@ -60,100 +60,15 @@ public:
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIRequest:
-
-    /* boolean IsPending (); */
-    NS_IMETHOD IsPending(PRBool *result);
-    
-    /* void Cancel (); */
-    NS_IMETHOD Cancel();
-
-    /* void Suspend (); */
-    NS_IMETHOD Suspend();
-
-    /* void Resume (); */
-    NS_IMETHOD Resume();
+    NS_DECL_NSIREQUEST
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIChannel:
-
-    /* readonly attribute nsIURI URI; */
-    NS_IMETHOD GetURI(nsIURI * *aURI);
-
-    /* nsIInputStream OpenInputStream (); */
-    NS_IMETHOD OpenInputStream(PRUint32 startPosition, PRInt32 count, nsIInputStream **_retval);
-
-    /* nsIOutputStream OpenOutputStream (); */
-    NS_IMETHOD OpenOutputStream(PRUint32 startPosition, nsIOutputStream **_retval);
-
-    /* void AsyncRead (in unsigned long startPosition, in long readCount, in nsISupports ctxt, in nsIStreamListener listener); */
-    NS_IMETHOD AsyncRead(PRUint32 startPosition, PRInt32 readCount, nsISupports *ctxt, nsIStreamListener *listener);
-
-    /* void AsyncWrite (in nsIInputStream fromStream, in unsigned long startPosition, in long writeCount, in nsISupports ctxt, in nsIStreamObserver observer); */
-    NS_IMETHOD AsyncWrite(nsIInputStream *fromStream, PRUint32 startPosition, PRInt32 writeCount, nsISupports *ctxt, nsIStreamObserver *observer);
-
-    /* attribute boolean LoadQuiet; */
-    NS_IMETHOD GetLoadAttributes(PRUint32 *aLoadAttributes);
-    NS_IMETHOD SetLoadAttributes(PRUint32 aLoadAttributes);
-
-    /* readonly attribute string ContentType; */
-    NS_IMETHOD GetContentType(char * *aContentType);
-
-    NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup);
-    NS_IMETHOD SetLoadGroup(nsILoadGroup * aLoadGroup);
+    NS_DECL_NSICHANNEL
 
     ////////////////////////////////////////////////////////////////////////////
     // from nsIFileChannel:
-
-    /* readonly attribute PRTime CreationDate; */
-    NS_IMETHOD GetCreationDate(PRTime *aCreationDate);
-
-    /* readonly attribute PRTime ModDate; */
-    NS_IMETHOD GetModDate(PRTime *aModDate);
-
-    /* readonly attribute unsigned long FileSize; */
-    NS_IMETHOD GetFileSize(PRUint32 *aFileSize);
-
-    /* readonly attribute nsIFileChannel Parent; */
-    NS_IMETHOD GetParent(nsIFileChannel * *aParent);
-
-    /* readonly attribute nsISimpleEnumerator Children; */
-    NS_IMETHOD GetChildren(nsISimpleEnumerator * *aChildren);
-
-    /* readonly attribute string NativePath; */
-    NS_IMETHOD GetNativePath(char * *aNativePath);
-
-    /* boolean Exists (); */
-    NS_IMETHOD Exists(PRBool *_retval);
-
-    /* void Create (); */
-    NS_IMETHOD Create();
-
-    /* void Delete (); */
-    NS_IMETHOD Delete();
-
-    /* void MoveFrom (in nsIURI src); */
-    NS_IMETHOD MoveFrom(nsIURI *src);
-
-    /* void CopyFrom (in nsIURI src); */
-    NS_IMETHOD CopyFrom(nsIURI *src);
-
-    /* boolean IsDirectory (); */
-    NS_IMETHOD IsDirectory(PRBool *_retval);
-
-    /* boolean IsFile (); */
-    NS_IMETHOD IsFile(PRBool *_retval);
-
-    /* boolean IsLink (); */
-    NS_IMETHOD IsLink(PRBool *_retval);
-
-    /* nsIFileChannel ResolveLink (); */
-    NS_IMETHOD ResolveLink(nsIFileChannel **_retval);
-
-    /* string MakeUniqueFileName (in string baseName); */
-    NS_IMETHOD MakeUniqueFileName(const char *baseName, char **_retval);
-
-    /* void Execute (in string args); */
-    NS_IMETHOD Execute(const char *args);
+    NS_DECL_NSIFILECHANNEL
 
     ////////////////////////////////////////////////////////////////////////////
     // nsIRunnable methods:
