@@ -8,6 +8,10 @@ Requires Ant version 1.2 or later
 <project name="Rhino" default="help" basedir=".">
 
   <target name="properties">
+    <tstamp>
+      <!-- Specify date part of Context#getImplementationVersion() -->
+      <format property="implementation.date" pattern="yyyy MM dd"/>
+    </tstamp>
     <property file="build.properties"/>
 
     <property name="dist.file" value="rhino${version}.zip"/>
@@ -88,7 +92,6 @@ Requires Ant version 1.2 or later
   </target>
 
   <target name="copy-misc" depends="init">
-    <tstamp/>
     <filter token="datestamp" value="${TODAY}"/>
     <copy todir="${dist.dir}" filtering="yes">
       <fileset dir=".">
@@ -110,7 +113,7 @@ Requires Ant version 1.2 or later
     </copy>
   </target>
 
-  <target name="javadoc" depends="compile,copy-docs">
+  <target name="javadoc" depends="copy-docs">
     <mkdir dir="${dist.dir}/docs/apidocs"/>
     <javadoc sourcefiles="${apiClasses}"
              sourcepath="src"

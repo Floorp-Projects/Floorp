@@ -752,10 +752,16 @@ public class Context
      * @return a string that encodes the product, language version, release
      *         number, and date.
      */
-     public final String getImplementationVersion()
-     {
-        return "Rhino 1.6 release 1 2004 08 11";
-     }
+    public final String getImplementationVersion()
+    {
+        // XXX Probably it would be better to embed this directly into source
+        // with special build preprocessing but that would require some ant
+        // tweaking and then replacing token in resource files was simpler
+        if (implementationVersion == null) {
+            implementationVersion = getMessage0("implementation.version");
+        }
+        return implementationVersion;
+    }
 
     /**
      * Get the current error reporter.
@@ -2584,6 +2590,8 @@ public class Context
             } catch (Exception ex) { }
         }
     }
+
+    private static String implementationVersion;
 
     private ContextFactory factory;
     private boolean sealed;
