@@ -35,7 +35,7 @@
 #define NSSCKFT_H
 
 #ifdef DEBUG
-static const char NSSCKFT_CVS_ID[] = "@(#) $RCSfile: nssckft.h,v $ $Revision: 1.1 $ $Date: 2000/09/22 22:52:19 $ $Name:  $ ; @(#) $RCSfile: nssckft.h,v $ $Revision: 1.1 $ $Date: 2000/09/22 22:52:19 $ $Name:  $";
+static const char NSSCKFT_CVS_ID[] = "@(#) $RCSfile: nssckft.h,v $ $Revision: 1.2 $ $Date: 2000/10/14 01:29:12 $ $Name:  $ ; @(#) $RCSfile: nssckft.h,v $ $Revision: 1.2 $ $Date: 2000/10/14 01:29:12 $ $Name:  $";
 #endif /* DEBUG */
 
 /*

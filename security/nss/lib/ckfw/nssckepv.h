@@ -35,7 +35,7 @@
 #define NSSCKEPV_H
 
 #ifdef DEBUG
-static const char NSSCKEPV_CVS_ID[] = "@(#) $RCSfile: nssckepv.h,v $ $Revision: 1.1 $ $Date: 2000/09/22 22:52:18 $ $Name:  $ ; @(#) $RCSfile: nssckepv.h,v $ $Revision: 1.1 $ $Date: 2000/09/22 22:52:18 $ $Name:  $";
+static const char NSSCKEPV_CVS_ID[] = "@(#) $RCSfile: nssckepv.h,v $ $Revision: 1.2 $ $Date: 2000/10/14 01:29:11 $ $Name:  $ ; @(#) $RCSfile: nssckepv.h,v $ $Revision: 1.2 $ $Date: 2000/10/14 01:29:11 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -52,6 +52,8 @@ static const char NSSCKEPV_CVS_ID[] = "@(#) $RCSfile: nssckepv.h,v $ $Revision: 
 #ifndef NSSCKFT_H
 #include "nssckft.h"
 #endif /* NSSCKFT_H */
+
+#include "nssckp.h"
 
 struct CK_FUNCTION_LIST {
   CK_VERSION version;
@@ -124,5 +126,7 @@ struct CK_FUNCTION_LIST {
   CK_C_CancelFunction C_CancelFunction;
   CK_C_WaitForSlotEvent C_WaitForSlotEvent;
 };
+
+#include "nsscku.h"
 
 #endif /* NSSCKEPV_H */
