@@ -141,6 +141,12 @@ SpacerFrame::Reflow(nsIPresContext&          aPresContext,
     break;
   }
 
+  if (aMetrics.width || aMetrics.height) {
+    // Make sure that the other dimension is non-zero
+    if (!aMetrics.width) aMetrics.width = 1;
+    if (!aMetrics.height) aMetrics.height = 1;
+  }
+
   if (nsnull != aMetrics.maxElementSize) {
     aMetrics.maxElementSize->width = aMetrics.width;
     aMetrics.maxElementSize->height = aMetrics.height;
@@ -154,8 +160,8 @@ SpacerFrame::GetType()
 {
   PRUint8 type = TYPE_WORD;
   nsAutoString value;
-  // XXX this would be better served by storing as an enumerated value
-  if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, value)) {
+  if (NS_CONTENT_ATTR_HAS_VALUE ==
+      mContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::type, value)) {
     if (value.EqualsIgnoreCase("line") ||
         value.EqualsIgnoreCase("vert") ||
         value.EqualsIgnoreCase("vertical")) {
