@@ -444,7 +444,7 @@ CreateUtf7ConvertedString(const char * aSourceString,
       // convert from 8 bit ascii string to modified utf7
       nsString unicodeStr(aSourceString);
       nsIUnicodeEncoder* encoder = nsnull;
-      aCharset.SetString("x-imap4-modified-utf7");
+      aCharset.Assign("x-imap4-modified-utf7");
       res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
       if(NS_SUCCEEDED(res) && (nsnull != encoder)) 
       {
@@ -493,7 +493,7 @@ CreateUtf7ConvertedStringFromUnicode(const PRUnichar * aSourceString)
       // convert from 8 bit ascii string to modified utf7
       nsString unicodeStr(aSourceString);
       nsIUnicodeEncoder* encoder = nsnull;
-      aCharset.SetString("x-imap4-modified-utf7");
+      aCharset.Assign("x-imap4-modified-utf7");
       res = ccm->GetUnicodeEncoder(&aCharset, &encoder);
       if(NS_SUCCEEDED(res) && (nsnull != encoder)) 
       {

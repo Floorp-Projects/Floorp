@@ -1243,13 +1243,13 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
 
   NS_ASSERTION(NULL == mEncoder, "No reinitialization allowed.");
 
-  mInputCharset.SetString(from_charset);     // remember input charset for a hint
+  mInputCharset.Assign(from_charset);     // remember input charset for a hint
   if (mInputCharset.IsEmpty()) {
-    mInputCharset.SetString("ISO-8859-1");
+    mInputCharset.Assign("ISO-8859-1");
   }
-  mOutputCharset.SetString(to_charset);      // remember output charset
+  mOutputCharset.Assign(to_charset);      // remember output charset
   if (mOutputCharset.IsEmpty()) {
-    mOutputCharset.SetString("UTF-8");
+    mOutputCharset.Assign("UTF-8");
   }
   mAutoDetect = autoDetect;
   mMaxNumCharsDetect = maxNumCharsDetect;
@@ -1343,7 +1343,7 @@ PRInt32 MimeCharsetConverterClass::Convert(const char* inBuffer, const PRInt32 i
     nsDetectionConfident oConfident;
     res = mDetector->DoIt(inBuffer, inLength, &oCharset, oConfident);
     if (NS_SUCCEEDED(res) && (eBestAnswer == oConfident || eSureAnswer == oConfident)) {
-      aCharsetDetected.SetString(oCharset);
+      aCharsetDetected.Assign(oCharset);
 
       // Check if need a conversion.
       if (!NeedCharsetConversion(aCharsetDetected, mOutputCharset)) {

@@ -483,12 +483,12 @@ nsMimeXULEmitter::DumpAddBookIcon(char *fromLine)
   char *newNameValue = nsEscape(name, url_XAlphas);
   if (newNameValue) 
   {
-    newName.SetString(newNameValue);
+    newName.Assign(newNameValue);
     PR_FREEIF(newNameValue);
   }
   else
   {
-    newName.SetString(name);
+    newName.Assign(name);
   }
 
   // Strip off extra quotes...
