@@ -79,13 +79,13 @@ if (!defined $::FORM{'product'}) {
         }
         push(@prodlist, $p);
     }
-
     if (1 != @prodlist) {
         print "Content-type: text/html\n\n";
-
-        my $bProdFlag = 0;
-        my $tableContents = "";
-
+        PutHeader("Enter Bug");
+        
+        print "<H2>First, you must pick a product on which to enter\n";
+        print "a bug.</H2>\n";
+        print "<table>";
         foreach my $p (@prodlist) {
             if (defined $::proddesc{$p} && $::proddesc{$p} eq '0') {
                 # Special hack.  If we stuffed a "0" into proddesc, that means
@@ -93,7 +93,6 @@ if (!defined $::FORM{'product'}) {
                 # to allow people to specify that product here.
                 next;
             }
-    
             if(Param("usebuggroupsentry")
                && GroupExists($p)
                && !UserInGroup($p)) {
@@ -102,34 +101,16 @@ if (!defined $::FORM{'product'}) {
                 # group, we don't want to include that product in this list.
                 next;
             }
-
-            $bProdFlag = 1;
-            $tableContents .= "<tr><th align=right valign=top><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\">$p</a>:</th>\n";
-    
+            print "<tr><th align=right valign=top><a href=\"enter_bug.cgi?product=" . url_quote($p) . "\">$p</a>:</th>\n";
             if (defined $::proddesc{$p}) {
-                $tableContents .= "<td valign=top>$::proddesc{$p}</td>\n";
+                print "<td valign=top>$::proddesc{$p}</td>\n";
             }
-
-            $tableContents .= "</tr>";
+            print "</tr>";
         }
-
-        # display sensible message if no products were found for the user to enter bugs against
-        if ($bProdFlag) {
-            PutHeader("Enter Bug");
-            print "<H2>First, you must pick a product on which to enter a bug.</H2>\n";
-            print "<table>\n";
-            print $tableContents;
-            print "</table>\n";
-        } else {
-            PutHeader("Permission Denied");
-            print "Sorry. There are no products for which you may enter bugs\n";
-            print "<P>\n";
-        } 
-    
+        print "</table>\n";
         PutFooter();
         exit;
     }
-
     $::FORM{'product'} = $prodlist[0];
 }
 
