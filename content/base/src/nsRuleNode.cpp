@@ -1379,12 +1379,6 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   PRUint32 bit = nsCachedStyleData::GetBitForSID(aSID);
 
   while (ruleNode) {
-    startStruct = ruleNode->mStyleData.GetStyleData(aSID);
-    if (startStruct)
-      break; // We found a rule with fully specified data.  We don't
-             // need to go up the tree any further, since the remainder
-             // of this branch has already been computed.
-
     // See if this rule node has cached the fact that the remaining
     // nodes along this path specify no data whatsoever.
     if (ruleNode->mNoneBits & bit)
@@ -1403,6 +1397,14 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
         ruleNode = ruleNode->mParent;
         NS_ASSERTION(!(ruleNode->mNoneBits & bit), "can't have both bits set");
       }
+
+    // Check for cached data after the inner loop above -- otherwise
+    // we'll miss it.
+    startStruct = ruleNode->mStyleData.GetStyleData(aSID);
+    if (startStruct)
+      break; // We found a rule with fully specified data.  We don't
+             // need to go up the tree any further, since the remainder
+             // of this branch has already been computed.
 
     // Ask the rule to fill in the properties that it specifies.
     nsIStyleRule *rule = ruleNode->mRule;
@@ -1456,6 +1458,9 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     // from the highest node to the root node.  (We can only set this
     // bit if detail == eRuleNone because an explicit inherit value
     // could override a non-inherited value higher in the rule tree.)
+    // XXXldb But doesn't that mean we could propagate to |highestNode|
+    // (and along with that, break the invariant that the none bit always
+    // goes all the way to the top)?
     if (detail == eRuleNone)
       PropagateNoneBit(bit, ruleNode);
     
