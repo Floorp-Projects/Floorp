@@ -42,6 +42,7 @@
 #include "nsIDOMProcessingInstruction.h"
 #include "nsExpatDTD.h"
 #include "nsINameSpaceManager.h"
+#include "nsICSSLoader.h"
 
 // XXX The XML world depends on the html atoms
 #include "nsHTMLAtoms.h"
@@ -80,6 +81,7 @@ nsXMLDocument::nsXMLDocument()
   mParser = nsnull;
   mAttrStyleSheet = nsnull;
   mInlineStyleSheet = nsnull;
+  mCSSLoader = nsnull;
   
   // XXX The XML world depends on the html atoms
   nsHTMLAtoms::AddrefAtoms();
@@ -100,6 +102,7 @@ nsXMLDocument::~nsXMLDocument()
     mInlineStyleSheet->SetOwningDocument(nsnull);
     NS_RELEASE(mInlineStyleSheet);
   }
+  NS_IF_RELEASE(mCSSLoader);
 #ifdef INCLUDE_XUL
   nsXULAtoms::ReleaseAtoms();
 #endif
@@ -290,6 +293,12 @@ void nsXMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass ho
   }
 }
 
+void
+nsXMLDocument::InternalInsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex)
+{
+  mStyleSheets.InsertElementAt(aSheet, aIndex + 1); // offset one for the attr style sheet
+}
+
 // nsIDOMDocument interface
 NS_IMETHODIMP    
 nsXMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
@@ -448,4 +457,15 @@ nsXMLDocument::GetContentById(const nsString& aName, nsIContent** aContent)
 }
 
 
+NS_IMETHODIMP
+nsXMLDocument::GetCSSLoader(nsICSSLoader*& aLoader)
+{
+  nsresult result = NS_OK;
+  if (! mCSSLoader) {
+    result = NS_NewCSSLoader(this, &mCSSLoader);
+  }
+  aLoader = mCSSLoader;
+  NS_IF_ADDREF(aLoader);
+  return result;
+}
 
