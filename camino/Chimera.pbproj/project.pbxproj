@@ -240,6 +240,7 @@
 				F52D5CDC027D412A01A80166,
 				F52D5CDD027D412A01A80166,
 				F5FEDBCB02AD8DD101A967F3,
+				3F558E950552122E006156FD,
 			);
 			isa = PBXGroup;
 			name = "Linked Frameworks";
@@ -1350,6 +1351,18 @@
 		};
 		3F2CF8D0042A88B7005FD42F = {
 			fileRef = 3F2CF8CC042A88B7005FD42F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3F558E950552122E006156FD = {
+			isa = PBXFrameworkReference;
+			name = IOKit.framework;
+			path = /System/Library/Frameworks/IOKit.framework;
+			refType = 0;
+		};
+		3F558E960552122E006156FD = {
+			fileRef = 3F558E950552122E006156FD;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -8819,6 +8832,7 @@
 				F5BAABA202AC4AA701A967F3,
 				F55A4DF50380705A01A80166,
 				0FEBFCA2044F989900A96652,
+				3F558E960552122E006156FD,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
