@@ -25,22 +25,20 @@
  -->
 
 <?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/xpinstall/xpistatus.dtd" >
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/xpinstall/xpistatus.dtd">
 
-
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&progressTitle.label;"
         onload="onLoad()"
         onclose="return gCanClose"
         id="statusDlg"
-        class="dialog"
         style="width: 50em"
+        ondialogcancel="return onCancel();"
 >
 
     <script src="chrome://communicator/content/xpinstall/xpistatus.js"/>
-    <keyset id="dialogKeys"/>
+
     <stringbundle id="xpinstallBundle" src="chrome://communicator/locale/xpinstall/xpinstall.properties"/>
 
     <vbox id="mainProgressBox" flex="1">
@@ -56,10 +54,6 @@
                 </rows>
             </grid>
         </groupbox>
-
-        <separator class="thin"/>
-
-    <hbox id="okCancelButtonsRight"/>
     </vbox>
 
-</window>
+</dialog>
