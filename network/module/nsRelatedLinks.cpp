@@ -26,7 +26,7 @@ int32 gMaxDiff = 4;
 PRBool     enableRelatedLinksp = 1;
 
 struct _RL_Window {
-  char* url;
+  char* url; 
   char* rlurl;
   RL_LOAD_STATUS status;
   uint8 parseStatus;
@@ -50,6 +50,7 @@ struct _RL_Item {
   char* name;
   char* convertedName;
   char* url;
+  char* rurl;
   struct _RL_Item* child;
   struct _RL_Item* next;
 };
@@ -445,7 +446,7 @@ void cleanRLTree (RL_Item item) {
     RL_Item old = item;
     freeMem(item->name);
     PL_strfree(item->convertedName);
-    freeMem(item->url);
+    freeMem(item->rurl);
     item->name = item->url = NULL;    
     if (item->child) cleanRLTree(item->child);
     item->child = NULL;
@@ -463,6 +464,7 @@ void RL_AddItem (RL_Window win, char* nurl, char* name, uint8 type) {
 	if (nurl) url = strstr(&nurl[7], "http://");
 	if (!url) url = nurl;
     if (item == NULL) return;
+	item->rurl = nurl;
     item->name = name;
     item->url = url;
     item->type = type;
