@@ -55,3 +55,17 @@ li {
   /* we need to make anchors more visible */
   text-decoration: underline !important;
 }
+
+
+ul,ol {
+  display: block ! important;
+}
+li {
+  display: list-item ! important;
+}
+a {
+  background-image: none ! important;
+}
+img[src*="spacer"] {
+  display: none ! important;
+} 
