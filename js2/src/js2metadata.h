@@ -233,7 +233,7 @@ public:
 
     virtual CompoundAttribute *toCompoundAttribute();
 
-    const String *name;       // The namespace's name used by toString
+    const String *name;       // The namespace's name (used by toString)
 };
 
 // A QualifiedName is the combination of an identifier and a namespace
@@ -405,11 +405,12 @@ typedef DynamicPropertyMap::iterator DynamicPropertyIterator;
 // the other binding is for writing only).
 class LocalBinding {
 public:
-    LocalBinding(QualifiedName &qname, LocalMember *content) : qname(qname), content(content), xplicit(false) { }
+    LocalBinding(AccessSet accesses, LocalMember *content) : accesses(accesses), content(content), xplicit(false) { }
 
-    QualifiedName qname;        // The qualified name bound by this binding
-// implemented by having separate read & write binding sets
-//  AccessSet Accesses;
+// The qualified name is to be inferred from the map where this binding is kept
+//    QualifiedName qname;        // The qualified name bound by this binding
+
+    AccessSet accesses;
     LocalMember *content;       // The member to which this qualified name was bound
     bool xplicit;               // true if this binding should not be imported into the global scope by an import statement
 };
@@ -473,28 +474,34 @@ typedef std::pair<OverrideStatus *, OverrideStatus *> OverrideStatusPair;
 
 class LocalBindingEntry {
 public:
-    LocalBindingEntry(const String s) : first(s), second(NULL) { }
-    LocalBindingEntry(const String s, LocalBinding *b) : first(s), second(b) { }
+    LocalBindingEntry(const String s) : name(s) { }
 
-    const String key()  { return first; }
-    LocalBinding *value()  { return second; }
+    LocalBindingEntry *clone();
+    void clear();
 
-    const String first;
-    LocalBinding *second;
+    typedef std::pair<Namespace *, LocalBinding *> NamespaceLocalBinding;
+    typedef std::vector<NamespaceLocalBinding> NamespaceLocalBindingList;
+    typedef NamespaceLocalBindingList::iterator NS_Iterator;
+
+    NS_Iterator begin() { return localBindingList.begin(); }
+    NS_Iterator end() { return localBindingList.end(); }
+
+
+    const String name;
+    NamespaceLocalBindingList localBindingList;
+
 };
 
-inline bool operator==(const LocalBindingEntry &s1, const LocalBindingEntry &s2) {return s1.first == s2.first;}
-inline bool operator!=(const LocalBindingEntry &s1, const LocalBindingEntry &s2) {return s1.first != s2.first;}
+// for HashTable usage, since we're only distinguishing between id's at that level:
+inline bool operator==(const LocalBindingEntry &s1, const LocalBindingEntry &s2) {return s1.name == s2.name;}
+inline bool operator!=(const LocalBindingEntry &s1, const LocalBindingEntry &s2) {return s1.name != s2.name;}
 
-
-//typedef HashTable<LocalBindingEntry, String> LocalBindingMap;
-//typedef EntryIterator<LocalBindingEntry, String> LocalBindingIterator;
 
 
 // A LocalBindingMap maps names to a list of LocalBindings. Each LocalBinding in the list
 // will have the same QualifiedName.name, but (potentially) different QualifiedName.namespace values
-typedef std::multimap<String, LocalBinding *> LocalBindingMap;
-typedef LocalBindingMap::iterator LocalBindingIterator;
+typedef HashTable<LocalBindingEntry *, String> LocalBindingMap;
+typedef TableIterator<LocalBindingEntry *, String> LocalBindingIterator;
 
 typedef std::multimap<String, InstanceBinding *> InstanceBindingMap;
 typedef InstanceBindingMap::iterator InstanceBindingIterator;
@@ -530,8 +537,7 @@ public:
     NonWithFrame(ObjectKind kind) : Frame(kind), temps(NULL), pluralFrame(NULL) { }
     NonWithFrame(ObjectKind kind, NonWithFrame *pluralFrame) : Frame(kind), temps(NULL), pluralFrame(pluralFrame) { }
 
-    LocalBindingMap localReadBindings;        // Map of qualified names to readable members defined in this frame
-    LocalBindingMap localWriteBindings;       // Map of qualified names to writable members defined in this frame
+    LocalBindingMap localBindings;        // Map of qualified names to members defined in this frame
 
     std::vector<js2val> *temps;               // temporaries allocted in this frame
     uint16 allocateTemp();

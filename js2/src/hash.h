@@ -141,6 +141,25 @@ namespace JavaScript {
 //
 // Hash Tables
 //
+    // An iterator to be used for all the entries in the hashtable
+    // What's wrong with the one inside HashTable<>? I just couldn't
+    // get it to work with MSVC.
+    template<class Data, class Key, class H = Hash<Key> >
+    class TableIterator: public GenericHashTableIterator {
+      public:
+        explicit TableIterator(GenericHashTable &ht): GenericHashTableIterator(ht) {}
+      public:
+
+        // Go to next entry.
+        TableIterator &operator++() {return *static_cast<TableIterator*>(&GenericHashTableIterator::operator++());}
+        TableIterator &operator++(int) {return *static_cast<TableIterator*>(&GenericHashTableIterator::operator++());}
+        // Return current entry's data.
+        Data &operator*() const;
+        
+        void erase();
+        void end()  { entry = 0; }
+    };
+
 
     template<class Data, class Key, class H = Hash<Key> >
     class HashTable: private GenericHashTable {
@@ -149,6 +168,7 @@ namespace JavaScript {
         struct Entry: public GenericHashEntry {
             Data data;
             
+            Key key() { return data.key(); }
             Entry(HashNumber keyHash, Key key): GenericHashEntry(keyHash), data(key) {}
             template<class Value>
             Entry(HashNumber keyHash, Key key, Value value): GenericHashEntry(keyHash), data(key, value) {}
@@ -219,8 +239,7 @@ namespace JavaScript {
             // Return current entry's data.
             Data &operator*() const {ASSERT(entry); return static_cast<Entry *>(entry)->data;}
             
-            void erase();
-            
+            void erase();            
         };
 
         HashTable(uint32 nEntriesDefault = 0, const H &hasher = H()): GenericHashTable(nEntriesDefault), hasher(hasher) {}
@@ -229,12 +248,20 @@ namespace JavaScript {
         template<class Value> Data &insert(Reference &r, Key key, Value value);
         Data &insert(Reference &r, Key key);
         Data &insert(Key key);
+        Data &insert(Data data);
         void erase(Reference &r);
         void erase(Key key);
         Data *operator[](Key key);
         
         friend class Reference;
         friend class Iterator;
+
+        TableIterator<Data, Key, H> begin();
+        TableIterator<Data, Key, H> end();
+
+        // return number of entries in the table
+        uint32 size()    { return nEntries; }
+        void clear();     
 
 #ifndef _WIN32
         template<class Value> Data &insert(Key key, Value value);
@@ -250,6 +277,7 @@ namespace JavaScript {
         }
 #endif
     };
+
 
 
 //
@@ -359,6 +387,16 @@ namespace JavaScript {
     }
 
 
+    // Same as above but with just a Data argument.
+    template<class Data, class Key, class H>
+    Data &HashTable<Data, Key, H>::insert(Data data)
+    {
+        Key key = data.key();
+        Value value = data.value();
+        return insert(key, value);
+    }
+
+
     // Reference r must point to an existing entry.  Delete that entry.
     // The reference is not valid after this method is called.
     template<class Data, class Key, class H>
@@ -376,7 +414,6 @@ namespace JavaScript {
         maybeShrink();
     }
 
-
     // Remove the hash table entry, if any, matching the given key.
     template<class Data, class Key, class H>
     void HashTable<Data, Key, H>::erase(Key key)
@@ -384,6 +421,24 @@ namespace JavaScript {
         Reference r(*this, key);
         if (r)
             erase(r);
+    }
+
+    // Remove all entries, reset the table to empty
+    template<class Data, class Key, class H>
+    inline void HashTable<Data, Key, H>::clear()
+    {
+        GenericHashEntry **be = bucketsEnd;
+        for (GenericHashEntry **b = buckets; b != be; b++) {
+            Entry *e = static_cast<Entry *>(*b);
+            while (e) {
+                Entry *next = static_cast<Entry *>(e->next);
+                delete e;
+                e = next;
+            }
+            *b = 0;
+        }
+        nEntries = 0;
+        maybeShrink();
     }
 
 
@@ -398,6 +453,32 @@ namespace JavaScript {
         else
             return 0;
     }
+
+    // Return an iterator to the first entry in the table
+    template<class Data, class Key, class H>
+    TableIterator<Data, Key, H> HashTable<Data, Key, H>::begin()
+    {
+        return TableIterator<Data, Key, H>(*this);
+    }
+
+    // Return an iterator to the last entry in the table
+    template<class Data, class Key, class H>
+    TableIterator<Data, Key, H> HashTable<Data, Key, H>::end()
+    {
+        TableIterator<Data, Key, H> e(*this);
+        e.end();
+        return e;
+    }
+    
+    // Return the data associated with the current iterator position
+    template<class Data, class Key, class H>
+    Data &TableIterator<Data, Key, H>::operator*() const 
+    {
+        ASSERT(entry); 
+        return static_cast<HashTable<Data, Key, H>::Entry *>(entry)->data;
+    }
+
+
 
 }
 

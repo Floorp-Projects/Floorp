@@ -2476,36 +2476,15 @@ doUnary:
     // Clone the pluralFrame bindings into the singularFrame, instantiating new members for each binding
     void Environment::instantiateFrame(NonWithFrame *pluralFrame, NonWithFrame *singularFrame)
     {
-        singularFrame->localReadBindings.clear();
-        singularFrame->localWriteBindings.clear();
+        singularFrame->localBindings.clear();
 
-        for (LocalBindingIterator sbir = pluralFrame->localReadBindings.begin(), sbendr = pluralFrame->localReadBindings.end(); (sbir != sbendr); sbir++) {
-            sbir->second->content->cloneContent = NULL;
+        for (LocalBindingIterator bi = pluralFrame->localBindings.begin(), bend = pluralFrame->localBindings.end(); (bi != bend); bi++) {
+            LocalBindingEntry *lbe = *bi;
+            lbe->clear();
         }
-        for (LocalBindingIterator sbiw = pluralFrame->localWriteBindings.begin(), sbendw = pluralFrame->localWriteBindings.end(); (sbiw != sbendw); sbiw++) {
-            sbiw->second->content->cloneContent = NULL;
-        }
-        for (LocalBindingIterator sbir2 = pluralFrame->localReadBindings.begin(), sbendr2 = pluralFrame->localReadBindings.end(); (sbir2 != sbendr2); sbir2++) {
-            LocalBinding *sb;
-            LocalBinding *m = sbir2->second;
-            if (m->content->cloneContent == NULL) {
-                m->content->cloneContent = m->content->clone();
-            }
-            sb = new LocalBinding(m->qname, m->content->cloneContent);
-            sb->xplicit = m->xplicit;
-            const LocalBindingMap::value_type e(sbir2->first, sb);
-            singularFrame->localReadBindings.insert(e);
-        }
-        for (LocalBindingIterator sbiw2 = pluralFrame->localWriteBindings.begin(), sbendw2 = pluralFrame->localWriteBindings.end(); (sbiw2 != sbendw2); sbiw2++) {
-            LocalBinding *sb;
-            LocalBinding *m = sbiw2->second;
-            if (m->content->cloneContent == NULL) {
-                m->content->cloneContent = m->content->clone();
-            }
-            sb = new LocalBinding(m->qname, m->content->cloneContent);
-            sb->xplicit = m->xplicit;
-            const LocalBindingMap::value_type e(sbiw2->first, sb);
-            singularFrame->localWriteBindings.insert(e);
+        for (LocalBindingIterator bi2 = pluralFrame->localBindings.begin(), bend2 = pluralFrame->localBindings.end(); (bi2 != bend2); bi2++) {
+            LocalBindingEntry *lbe = *bi2;
+            singularFrame->localBindings.insert(lbe->name, lbe->clone());
         }
 
     }
@@ -2605,18 +2584,13 @@ doUnary:
         }
         Multiname *mn = new Multiname(id);
         mn->addNamespace(namespaces);
+
         // Search the local frame for an overlapping definition
-        if (access & ReadAccess) {
-            for (LocalBindingIterator b = localFrame->localReadBindings.lower_bound(*id),
-                    end = localFrame->localReadBindings.upper_bound(*id); (b != end); b++) {
-                if (mn->matches(b->second->qname))
-                    reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
-            }
-        }
-        if (access & WriteAccess) {
-            for (LocalBindingIterator b = localFrame->localWriteBindings.lower_bound(*id),
-                    end = localFrame->localWriteBindings.upper_bound(*id); (b != end); b++) {
-                if (mn->matches(b->second->qname))
+        LocalBindingEntry **lbeP = localFrame->localBindings[*id];
+        if (lbeP) {
+            for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
+                LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                if ((ns.second->accesses & access) && mn->listContains(ns.first))
                     reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
             }
         }
@@ -2631,17 +2605,13 @@ doUnary:
             while (true) {
                 if (fr->kind != WithFrameKind) {
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
-                    if (access & ReadAccess) {
-                        for (LocalBindingIterator b = nwfr->localReadBindings.lower_bound(*id),
-                                end = nwfr->localReadBindings.upper_bound(*id); (b != end); b++) {
-                            if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
-                                reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
-                        }
-                    }
-                    if (access & WriteAccess) {
-                        for (LocalBindingIterator b = nwfr->localWriteBindings.lower_bound(*id),
-                                end = nwfr->localWriteBindings.upper_bound(*id); (b != end); b++) {
-                            if (mn->matches(b->second->qname) && (b->second->content->kind != LocalMember::Forbidden))
+                    LocalBindingEntry **rbeP = nwfr->localBindings[*id];
+                    if (rbeP) {
+                        for (LocalBindingEntry::NS_Iterator i = (*rbeP)->begin(), end = (*rbeP)->end(); (i != end); i++) {
+                            LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                            if ((ns.second->accesses & access) 
+                                    && (ns.second->content->kind != LocalMember::Forbidden)
+                                    && mn->listContains(ns.first))
                                 reportError(Exception::definitionError, "Duplicate definition {0}", pos, id);
                         }
                     }
@@ -2654,14 +2624,16 @@ doUnary:
         }
 
         // Now insert the id, via all it's namespaces into the local frame
+        LocalBindingEntry *lbe;
+        if (lbeP == NULL) {
+            lbe = new LocalBindingEntry(*id);
+            localFrame->localBindings.insert(*id, lbe);
+        }
+        else
+            lbe = *lbeP;
         for (NamespaceListIterator nli = mn->nsList->begin(), nlend = mn->nsList->end(); (nli != nlend); nli++) {
-            QualifiedName qName(*nli, id);
-            LocalBinding *sb = new LocalBinding(qName, m);
-            const LocalBindingMap::value_type e(*id, sb);
-            if (access & ReadAccess)
-                localFrame->localReadBindings.insert(e);
-            if (access & WriteAccess)
-                localFrame->localWriteBindings.insert(e);
+            LocalBinding *new_b = new LocalBinding(access, m);
+            lbe->localBindingList.push_back(LocalBindingEntry::NamespaceLocalBinding(*nli, new_b));
         }
         // Mark the bindings of multiname as Forbidden in all non-innermost frames in the current
         // region if they haven't been marked as such already.
@@ -2672,39 +2644,23 @@ doUnary:
                 if (fr->kind != WithFrameKind) {
                     NonWithFrame *nwfr = checked_cast<NonWithFrame *>(fr);
                     for (NamespaceListIterator nli = mn->nsList->begin(), nlend = mn->nsList->end(); (nli != nlend); nli++) {
-                        if (access & ReadAccess) {
-                            bool foundEntry = false;
-                            for (LocalBindingIterator b = nwfr->localReadBindings.lower_bound(*id),
-                                    end = nwfr->localReadBindings.upper_bound(*id); (b != end); b++) {        
-                                if (b->second->qname.nameSpace == *nli) {
-                                    ASSERT(b->second->content->kind == LocalMember::Forbidden);
+                        bool foundEntry = false;
+                        LocalBindingEntry **rbeP = nwfr->localBindings[*id];
+                        if (rbeP) {
+                            for (LocalBindingEntry::NS_Iterator i = (*rbeP)->begin(), end = (*rbeP)->end(); (i != end); i++) {
+                                LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                                if ((ns.second->accesses & access) && (ns.first == *nli)) {
+                                    ASSERT(ns.second->content->kind == LocalMember::Forbidden);
                                     foundEntry = true;
                                     break;
                                 }
-                            }
-                            if (!foundEntry) {
-                                QualifiedName qName(*nli, id);
-                                LocalBinding *sb = new LocalBinding(qName, forbiddenMember);
-                                const LocalBindingMap::value_type e(*id, sb);
-                                nwfr->localReadBindings.insert(e);
                             }
                         }
-                        if (access & WriteAccess) {
-                            bool foundEntry = false;
-                            for (LocalBindingIterator b = nwfr->localWriteBindings.lower_bound(*id),
-                                    end = nwfr->localWriteBindings.upper_bound(*id); (b != end); b++) {        
-                                if (b->second->qname.nameSpace == *nli) {
-                                    ASSERT(b->second->content->kind == LocalMember::Forbidden);
-                                    foundEntry = true;
-                                    break;
-                                }
-                            }
-                            if (!foundEntry) {
-                                QualifiedName qName(*nli, id);
-                                LocalBinding *sb = new LocalBinding(qName, forbiddenMember);
-                                const LocalBindingMap::value_type e(*id, sb);
-                                nwfr->localWriteBindings.insert(e);
-                            }
+                        if (!foundEntry) {
+                            LocalBindingEntry *rbe = new LocalBindingEntry(*id);
+                            nwfr->localBindings.insert(*id, rbe);
+                            LocalBinding *new_b = new LocalBinding(access, forbiddenMember);
+                            rbe->localBindingList.push_back(LocalBindingEntry::NamespaceLocalBinding(*nli, new_b));
                         }
                     }
                 }
@@ -2896,37 +2852,24 @@ doUnary:
         NonWithFrame *regionalFrame = checked_cast<NonWithFrame *>(*regionalFrameMark);
         ASSERT((regionalFrame->kind == GlobalObjectKind) || (regionalFrame->kind == ParameterKind));
           
-        // run through all the existing bindings, both read and write, to see if this
-        // variable already exists.
-        LocalBindingIterator b, end;
-        for (b = regionalFrame->localReadBindings.lower_bound(*id),
-                end = regionalFrame->localReadBindings.upper_bound(*id); (b != end); b++) {
-            if (b->second->qname == qName) {
-                if (b->second->content->kind != LocalMember::DynamicVariableKind)
-                    reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-                else {
-                    if (result)
-                        reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-                    else
-                        result = checked_cast<DynamicVariable *>(b->second->content);
-                }
-            }
-        }
-        if (result == NULL) {
-            for (b = regionalFrame->localWriteBindings.lower_bound(*id),
-                    end = regionalFrame->localWriteBindings.upper_bound(*id); (b != end); b++) {
-                if (b->second->qname == qName) {
-                    if (b->second->content->kind != LocalMember::DynamicVariableKind)
+        // run through all the existing bindings, to see if this variable already exists.
+        LocalBindingEntry **lbeP = regionalFrame->localBindings[*id];
+        if (lbeP) {
+            for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
+                LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                if (ns.first == publicNamespace) {
+                    if (ns.second->content->kind != LocalMember::DynamicVariableKind)
                         reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
                     else {
                         if (result)
                             reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
                         else
-                            result = checked_cast<DynamicVariable *>(b->second->content);
+                            result = checked_cast<DynamicVariable *>(ns.second->content);
                     }
                 }
             }
         }
+        
         if (result == NULL) {
             if (regionalFrame->kind == GlobalObjectKind) {
                 GlobalObject *gObj = checked_cast<GlobalObject *>(regionalFrame);
@@ -2937,44 +2880,34 @@ doUnary:
             else { // ParameterFrame didn't have any bindings, scan the preceding 
                    // frame (should be the outermost function local block)
                 regionalFrame = checked_cast<NonWithFrame *>(*(regionalFrameMark - 1));
-                for (b = regionalFrame->localReadBindings.lower_bound(*id),
-                        end = regionalFrame->localReadBindings.upper_bound(*id); (b != end); b++) {
-                    if (b->second->qname == qName) {
-                        if (b->second->content->kind != LocalMember::DynamicVariableKind)
-                            reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-                        else {
-                            if (result)
-                                reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
-                            else
-                                result = checked_cast<DynamicVariable *>(b->second->content);
-                        }
-                    }
-                }
-                if (result == NULL) {
-                    for (b = regionalFrame->localWriteBindings.lower_bound(*id),
-                            end = regionalFrame->localWriteBindings.upper_bound(*id); (b != end); b++) {
-                        if (b->second->qname == qName) {
-                            if (b->second->content->kind != LocalMember::DynamicVariableKind)
+                LocalBindingEntry **rbeP = regionalFrame->localBindings[*id];
+                if (rbeP) {
+                    for (LocalBindingEntry::NS_Iterator i = (*rbeP)->begin(), end = (*rbeP)->end(); (i != end); i++) {
+                        LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                        if (ns.first == publicNamespace) {
+                            if (ns.second->content->kind != LocalMember::DynamicVariableKind)
                                 reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
                             else {
                                 if (result)
                                     reportError(Exception::definitionError, "Duplicate definition {0}", p->pos, id);
                                 else
-                                    result = checked_cast<DynamicVariable *>(b->second->content);
+                                    result = checked_cast<DynamicVariable *>(ns.second->content);
                             }
                         }
                     }
                 }
             }
             if (result == NULL) {
-                // XXX ok to use same binding in read & write maps?
+                LocalBindingEntry *lbe;
+                if (lbeP == NULL) {
+                    lbe = new LocalBindingEntry(*id);
+                    regionalFrame->localBindings.insert(*id, lbe);
+                }
+                else
+                    lbe = *lbeP;
                 result = new DynamicVariable();
-                LocalBinding *sb = new LocalBinding(qName, result);
-                const LocalBindingMap::value_type e(*id, sb);
-
-                // XXX ok to use same value_type in different multimaps?
-                regionalFrame->localReadBindings.insert(e);
-                regionalFrame->localWriteBindings.insert(e);
+                LocalBinding *sb = new LocalBinding(ReadWriteAccess, result);
+                lbe->localBindingList.push_back(LocalBindingEntry::NamespaceLocalBinding(publicNamespace, sb));
             }
         }
         //... A hoisted binding of the same var already exists, so there is no need to create another one
@@ -4085,34 +4018,18 @@ deleteClassProperty:
     LocalMember *JS2Metadata::findFlatMember(NonWithFrame *container, Multiname *multiname, Access access, Phase /* phase */)
     {
         LocalMember *found = NULL;
-        LocalBindingIterator b, end;
-        if (access & ReadAccess) {
-            b = container->localReadBindings.lower_bound(*multiname->name);
-            end = container->localReadBindings.upper_bound(*multiname->name);
-        }
-        else {
-            b = container->localWriteBindings.lower_bound(*multiname->name);
-            end = container->localWriteBindings.upper_bound(*multiname->name);
-        }
-        while (true) {
-            if (b == end) {
-                if (access == ReadWriteAccess) {
-                    access = WriteAccess;
-                    b = container->localWriteBindings.lower_bound(*multiname->name);
-                    end = container->localWriteBindings.upper_bound(*multiname->name);
-                    found = NULL;
-                    continue;
+        
+        LocalBindingEntry **lbeP = container->localBindings[*multiname->name];
+        if (lbeP) {
+            for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
+                LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
+                    if (found && (ns.second->content != found))
+                        reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
+                    else
+                        found = ns.second->content;
                 }
-                else
-                    break;
             }
-            if (multiname->matches(b->second->qname)) {
-                if (found && (b->second->content != found))
-                    reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
-                else
-                    found = b->second->content;
-            }
-            b++;
         }
         return found;
     }
@@ -4125,24 +4042,18 @@ deleteClassProperty:
         result->qname = NULL;
         JS2Class *s = c;
         while (s) {
-            LocalBindingIterator b, end;
-            if (access & ReadAccess) {
-                b = s->localReadBindings.lower_bound(*multiname->name);
-                end = s->localReadBindings.upper_bound(*multiname->name);
-            }
-            else {
-                b = s->localWriteBindings.lower_bound(*multiname->name);
-                end = s->localWriteBindings.upper_bound(*multiname->name);
-            }
             LocalMember *found = NULL;
-            while (b != end) {
-                if (multiname->matches(b->second->qname)) {
-                    if (found && (b->second->content != found))
-                        reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
-                    else
-                        found = b->second->content;
+            LocalBindingEntry **lbeP = s->localBindings[*multiname->name];
+            if (lbeP) {
+                for (LocalBindingEntry::NS_Iterator i = (*lbeP)->begin(), end = (*lbeP)->end(); (i != end); i++) {
+                    LocalBindingEntry::NamespaceLocalBinding &ns = *i;
+                    if ((ns.second->accesses & access) && multiname->listContains(ns.first)) {
+                        if (found && (ns.second->content != found))
+                            reportError(Exception::propertyAccessError, "Ambiguous reference to {0}", engine->errorPos(), multiname->name);
+                        else
+                            found = ns.second->content;
+                    }
                 }
-                b++;
             }
             if (found) {
                 result->localMember = found;
@@ -4460,6 +4371,39 @@ deleteClassProperty:
     }
 
 
+/************************************************************************************
+ *
+ *  LocalBindingEntry
+ *
+ ************************************************************************************/
+
+    // Clear all the clone contents for this entry
+    void LocalBindingEntry::clear()
+    {
+        for (NS_Iterator i = localBindingList.begin(), end = localBindingList.end(); (i != end); i++) {
+            NamespaceLocalBinding &ns = *i;
+            ns.second->content->cloneContent = NULL;
+        }
+    }
+
+    // This version of 'clone' is used to construct a duplicate LocalBinding entry 
+    // with each LocalBinding content copied from the (perhaps previously) cloned member.
+    // See 'instantiateFrame'.
+    LocalBindingEntry *LocalBindingEntry::clone()
+    {
+        LocalBindingEntry *new_e = new LocalBindingEntry(name);
+        for (NS_Iterator i = localBindingList.begin(), end = localBindingList.end(); (i != end); i++) {
+            NamespaceLocalBinding &ns = *i;
+            LocalBinding *m = ns.second;
+            if (m->content->cloneContent == NULL) {
+                m->content->cloneContent = m->content->clone();
+            }
+            LocalBinding *new_b = new LocalBinding(m->accesses, m->content->cloneContent);
+            new_b->xplicit = m->xplicit;
+            new_e->localBindingList.push_back(NamespaceLocalBinding(ns.first, new_b));
+        }
+    }
+
 
 /************************************************************************************
  *
@@ -4626,13 +4570,13 @@ deleteClassProperty:
     void NonWithFrame::markChildren()
     {
         GCMARKOBJECT(pluralFrame)
-        LocalBindingIterator sbi, end;
-        for (sbi = localReadBindings.begin(), end = localReadBindings.end(); (sbi != end); sbi++) {
-            sbi->second->content->mark();
-        }
-        for (sbi = localWriteBindings.begin(), end = localWriteBindings.end(); (sbi != end); sbi++) {
-            sbi->second->content->mark();
-        }
+        for (LocalBindingIterator bi = localBindings.begin(), bend = localBindings.end(); (bi != bend); bi++) {
+            LocalBindingEntry *lbe = *bi;
+            for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+                LocalBindingEntry::NamespaceLocalBinding ns = *i;
+                ns.second->content->mark();
+            }
+        }            
         if (temps) {
             for (std::vector<js2val>::iterator i = temps->begin(), end = temps->end(); (i != end); i++)
                 GCMARKVALUE(*i);
@@ -4682,10 +4626,11 @@ deleteClassProperty:
         PrototypeInstance *argsObj = new PrototypeInstance(meta, meta->objectClass->prototype, meta->objectClass);
 
         // Add the 'arguments' property
-        QualifiedName qn(meta->publicNamespace, &meta->world.identifiers["arguments"]);
-        LocalBinding *sb = new LocalBinding(qn, new Variable(meta->arrayClass, OBJECT_TO_JS2VAL(argsObj), true));
-        const LocalBindingMap::value_type e(*qn.id, sb);
-        localReadBindings.insert(e);
+        LocalBinding *sb = new LocalBinding(ReadAccess, new Variable(meta->arrayClass, OBJECT_TO_JS2VAL(argsObj), true));
+        String *name = &meta->world.identifiers["arguments"];
+        ASSERT(localBindings[*name] == NULL);
+        LocalBindingEntry *lbe = new LocalBindingEntry(*name);
+        lbe->localBindingList.push_back(LocalBindingEntry::NamespaceLocalBinding(meta->publicNamespace, sb));
 
         uint32 i;
         for (i = 0; (i < argCount); i++) {

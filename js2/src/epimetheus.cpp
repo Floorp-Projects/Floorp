@@ -237,27 +237,19 @@ void printFrameBindings(NonWithFrame *f)
 {
     stdOut << " Local Bindings:\n";   
 
-    for (LocalBindingIterator rsb = f->localReadBindings.begin(), rsend = f->localReadBindings.end(); (rsb != rsend); rsb++) {
-        stdOut << "\t" << *rsb->second->qname.nameSpace->name << "::" << *rsb->second->qname.id;
-        bool found = false;
-        for (LocalBindingIterator wsb = f->localWriteBindings.begin(), wsend = f->localWriteBindings.end(); (wsb != wsend); wsb++) {
-            if (rsb->second->qname == wsb->second->qname) {
-                found = true;
-                break;
-            }
+    for (LocalBindingIterator bi = f->localBindings.begin(), bend = f->localBindings.end(); (bi != bend); bi++) {
+        LocalBindingEntry *lbe = *bi;
+        for (LocalBindingEntry::NS_Iterator i = lbe->begin(), end = lbe->end(); (i != end); i++) {
+            LocalBindingEntry::NamespaceLocalBinding ns = *i;
+            stdOut << "\t" << *(ns.first->name) << "::" << lbe->name;
+            if (ns.second->accesses & ReadAccess)
+                if (ns.second->accesses & WriteAccess)
+                    stdOut << " [read/write]\n";
+                else
+                    stdOut << " [read-only]\n";
+            else
+                stdOut << " [write-only]\n";
         }
-        stdOut << ((found) ? " [read/write]" : " [read-only]") << "\n";
-    }
-    for (LocalBindingIterator wsb = f->localWriteBindings.begin(), wsend = f->localWriteBindings.end(); (wsb != wsend); wsb++) {
-        bool found = false;
-        for (LocalBindingIterator rsb = f->localReadBindings.begin(), rsend = f->localReadBindings.end(); (rsb != rsend); rsb++) {
-            if (rsb->second->qname == wsb->second->qname) {
-                found = true;
-                break;
-            }
-        }
-        if (!found)
-            stdOut << "\t" << *wsb->second->qname.nameSpace->name << "::" << *wsb->second->qname.id << " [write-only]" << "\n";
     }
 }
 
