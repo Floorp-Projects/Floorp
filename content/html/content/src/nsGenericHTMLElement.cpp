@@ -2273,6 +2273,18 @@ nsGenericHTMLElement::GetClasses(nsVoidArray& aArray) const
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsIAtom*)
+nsGenericHTMLElement::GetIDAttributeName() const
+{
+  return nsHTMLAtoms::id;
+}
+
+NS_IMETHODIMP_(nsIAtom*)
+nsGenericHTMLElement::GetClassAttributeName() const
+{
+  return nsHTMLAtoms::kClass;
+}
+
 NS_IMETHODIMP_(PRBool)
 nsGenericHTMLElement::HasClass(nsIAtom* aClass, PRBool aCaseSensitive) const
 {

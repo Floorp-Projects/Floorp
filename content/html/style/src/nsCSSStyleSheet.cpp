@@ -3759,7 +3759,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
       // case sensitivity: bug 93371
       PRBool isCaseSensitive = data.mCompatMode != eCompatibility_NavQuirks;
       nsAtomList* IDList = aSelector->mIDList;
-      if (nsnull == IDList || aAttribute == nsHTMLAtoms::id) {
+      if (nsnull == IDList ||
+          (aAttribute && aAttribute == data.mContent->GetIDAttributeName())) {
         result = PR_TRUE;
       }
       else if (nsnull != data.mContentID) {
@@ -3790,7 +3791,8 @@ static PRBool SelectorMatches(RuleProcessorData &data,
         }
       }
       
-      if (result && aAttribute != nsHTMLAtoms::kClass) {
+      if (result &&
+          (!aAttribute || aAttribute != data.mContent->GetClassAttributeName())) {
         nsAtomList* classList = aSelector->mClassList;
         while (nsnull != classList) {
           if (localTrue == (!data.mStyledContent->HasClass(classList->mAtom, isCaseSensitive))) {

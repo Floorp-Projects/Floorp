@@ -177,6 +177,8 @@ public:
   NS_IMETHOD_(PRBool) IsNativeAnonymous() const;
   NS_IMETHOD_(void) SetNativeAnonymous(PRBool aAnonymous);
   NS_IMETHOD GetNameSpaceID(PRInt32* aID) const;
+  NS_IMETHOD_(nsIAtom*) GetIDAttributeName() const;
+  NS_IMETHOD_(nsIAtom*) GetClassAttributeName() const;
   NS_IMETHOD NormalizeAttrString(const nsAString& aStr,
                                  nsINodeInfo** aNodeInfo);
   NS_IMETHOD SetAttr(PRInt32 aNameSpaceID, nsIAtom* aAttribute,

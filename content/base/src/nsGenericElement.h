@@ -373,6 +373,8 @@ public:
   NS_IMETHOD GetNameSpaceID(PRInt32* aNameSpaceID) const;
   NS_IMETHOD GetTag(nsIAtom** aResult) const;
   NS_IMETHOD_(nsINodeInfo *) GetNodeInfo() const;
+  NS_IMETHOD_(nsIAtom*) GetIDAttributeName() const;
+  NS_IMETHOD_(nsIAtom*) GetClassAttributeName() const;
   NS_IMETHOD RangeAdd(nsIDOMRange* aRange);
   NS_IMETHOD RangeRemove(nsIDOMRange* aRange);
   NS_IMETHOD GetRangeList(nsVoidArray** aResult) const;

@@ -682,6 +682,18 @@ nsGenericDOMDataNode::GetNameSpaceID(PRInt32* aID) const
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsIAtom*)
+nsGenericDOMDataNode::GetIDAttributeName() const
+{
+  return nsnull;
+}
+
+NS_IMETHODIMP_(nsIAtom*)
+nsGenericDOMDataNode::GetClassAttributeName() const
+{
+  return nsnull;
+}
+
 NS_IMETHODIMP
 nsGenericDOMDataNode::NormalizeAttrString(const nsAString& aStr,
                                           nsINodeInfo** aNodeInfo)

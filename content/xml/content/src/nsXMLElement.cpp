@@ -533,14 +533,13 @@ nsXMLElement::CloneNode(PRBool aDeep, nsIDOMNode** aReturn)
 NS_IMETHODIMP
 nsXMLElement::GetID(nsIAtom** aResult) const
 {
-  nsCOMPtr<nsIAtom> atom;
-  nsresult rv = mNodeInfo->GetIDAttributeAtom(getter_AddRefs(atom));
+  nsIAtom* atom = GetIDAttributeName();
 
   *aResult = nsnull;
-  if (NS_SUCCEEDED(rv) && atom) {
+  nsresult rv = NS_OK;
+  if (atom) {
     nsAutoString value;
-    rv = nsGenericContainerElement::GetAttr(kNameSpaceID_None, atom,
-                                            value);
+    rv = nsGenericContainerElement::GetAttr(kNameSpaceID_None, atom, value);
     if (NS_SUCCEEDED(rv)) {
       *aResult = NS_NewAtom(value);
     }

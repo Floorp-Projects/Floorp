@@ -812,6 +812,15 @@ XULContentSinkImpl::HandleStartElement(const PRUnichar *aName,
       break;
   }
 
+  // Set the ID attribute atom on the node info object for this node
+  if ((aIndex != (PRUint32)-1) && NS_SUCCEEDED(rv)) {
+    nsCOMPtr<nsIAtom> IDAttr = do_GetAtom(aAtts[aIndex]);
+
+    if (IDAttr) {
+      rv = nodeInfo->SetIDAttributeAtom(IDAttr);
+    }
+  }
+
   return rv;
 }
 

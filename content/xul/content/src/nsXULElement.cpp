@@ -3580,6 +3580,18 @@ nsXULElement::HasAttributeDependentStyle(const nsIAtom* aAttribute) const
     return PR_FALSE;
 }
 
+NS_IMETHODIMP_(nsIAtom *)
+nsXULElement::GetIDAttributeName() const
+{
+    return nsXULAtoms::id;
+}
+
+NS_IMETHODIMP_(nsIAtom *)
+nsXULElement::GetClassAttributeName() const
+{
+    return nsXULAtoms::clazz;
+}
+
 // Controllers Methods
 NS_IMETHODIMP
 nsXULElement::GetControllers(nsIControllers** aResult)

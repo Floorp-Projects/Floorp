@@ -201,7 +201,7 @@ public:
    * for the definition of an ID attribute.
    *
    */
-  NS_IMETHOD GetIDAttributeAtom(nsIAtom** aResult) const = 0;
+  NS_IMETHOD_(nsIAtom*) GetIDAttributeAtom() const = 0;
   NS_IMETHOD SetIDAttributeAtom(nsIAtom* aResult) = 0;
 
   /*
