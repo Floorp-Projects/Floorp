@@ -1223,6 +1223,39 @@ nsHTTPChannel::ReadFromCache()
     return rv;
 }
 
+nsresult
+nsHTTPChannel::CacheAbort(PRUint32 statusCode)
+{
+    nsresult rv = NS_OK;
+    if (mCacheEntry)
+    {
+        // Set the stored content length to zero
+        rv = mCacheEntry->SetStoredContentLength(0);
+
+        if (NS_FAILED(rv))
+        {
+            // HACK HACK HACK
+            // Set stored content length usually fails if there is no file. That would
+            // mean this might be an entry never flushed to disk and we have an error.
+            // We got two ways to go:
+            //	a. Delete() this entry. But then deleting this entry from all the tables
+            //     that it is in is hard and risky. APIs arent set for us to call this.
+            //  b. Mark this entry as zero length. This is what we do for other entries
+            //     that are already in cache and now we have an error. The only thing
+            //     is to ensure we commit this to disk. If not, there would be no record
+            //     associated with this recordID and that would cause all kinds of problems
+            //     during evict. To make that happen, we toggle the updateInProgress flag.
+            mCacheEntry->SetUpdateInProgress(PR_TRUE);
+            mCacheEntry->SetUpdateInProgress(PR_FALSE);
+        }
+
+        // Release our reference to it.
+        mCacheEntry = nsnull;
+    }
+    return rv;
+}
+
+
 // Cache the network response from the server, including both the content and
 // the HTTP headers.
 nsresult
@@ -1770,9 +1803,61 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
     }
 
     //
-    // First:
+    // Cache
+    //----------------------------------------------------------------
+
+    // Release the cache transport. This would free the entry's channelCount enabling changes
+    // to the cacheEntry
+    mCacheTransport = nsnull;
+
+    if (mCacheEntry)
+    {
+        // The no-store directive within the 'Cache-Control:' header indicates
+        // that we should not store the response in the cache
+        nsXPIDLCString header;
+        PRBool dontCache = PR_FALSE;
+
+        GetResponseHeader(nsHTTPAtoms::Cache_Control, getter_Copies(header));
+        if (header)
+        {
+            PRInt32 offset;
+            // XXX readable string
+            nsCAutoString cacheControlHeader(NS_STATIC_CAST(const char*, header));
+            offset = cacheControlHeader.Find("no-store", PR_TRUE);
+            if (offset != kNotFound)
+                dontCache = PR_TRUE;
+        }
+
+        // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
+        // a request header), caching is inhibited when this header is present so
+        // as to match existing Navigator behavior.
+        if (!dontCache)
+        {
+            GetResponseHeader(nsHTTPAtoms::Pragma, getter_Copies(header));
+            if (header)
+            {
+                PRInt32 offset;
+                // XXX readable string
+                nsCAutoString pragmaHeader(NS_STATIC_CAST(const char*, header));
+                offset = pragmaHeader.Find("no-cache", PR_TRUE);
+                if (offset != kNotFound)
+                    dontCache = PR_TRUE;
+            }
+        }
+    
+        if (dontCache)
+        {
+            mCacheEntry->SetStoredContentLength(0);
+        }
+    }
+
+    // Release the cache entry as soon as we are done. This helps as it can
+    // flush any cache records and do maintenance.
+    mCacheEntry = nsnull;
+
     //
     // Call the consumer OnStopRequest(...) to end the request...
+    //----------------------------------------------------------------
     if (aListener)
     {
         rv = aListener->OnStopRequest(this, mResponseContext, aStatus, aStatusArg);
@@ -1784,48 +1869,6 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
                 this, rv));
         }
     }
-
-    // Release the cache transport. This would free the entry's channelCount enabling changes
-    // to the cacheEntry
-    mCacheTransport = nsnull;
-
-    // The no-store directive within the 'Cache-Control:' header indicates
-    // that we should not store the response in the cache
-    nsXPIDLCString header;
-    GetResponseHeader(nsHTTPAtoms::Cache_Control, getter_Copies(header));
-    if (header) {
-        PRInt32 offset;
-
-        nsCAutoString cacheControlHeader(NS_STATIC_CAST(const char*, header));
-        offset = cacheControlHeader.Find("no-store", PR_TRUE);
-        if (offset != kNotFound) {
-            if (mCacheEntry)
-            {
-                mCacheEntry->SetStoredContentLength(0);
-            }
-        }
-    }
-
-    // Although 'Pragma:no-cache' is not a standard HTTP response header (it's
-    // a request header), caching is inhibited when this header is present so
-    // as to match existing Navigator behavior.
-    GetResponseHeader(nsHTTPAtoms::Pragma, getter_Copies(header));
-    if (header) {
-        PRInt32 offset;
-
-        nsCAutoString pragmaHeader(NS_STATIC_CAST(const char*, header));
-        offset = pragmaHeader.Find("no-cache", PR_TRUE);
-        if (offset != kNotFound) {
-            if (mCacheEntry)
-            {
-                mCacheEntry->SetStoredContentLength(0);
-            }
-        }
-    }
-
-    // Release the cache entry as soon as we are done. This helps as it can
-    // flush any cache records and do maintenance.
-    mCacheEntry = nsnull;
 
     //
     // After the consumer has been notified, remove the channel from its 
@@ -2334,6 +2377,8 @@ nsHTTPChannel::ProcessStatusCode(void)
         if ((401 == statusCode) || (407 == statusCode)) {
             rv = ProcessAuthentication(statusCode);
         }
+        // Eliminate any cached entry when this happens
+        CacheAbort(statusCode);
         break;
 
         //

@@ -103,6 +103,7 @@ public:
     nsresult            GetResponseContext(nsISupports** aContext);
     nsresult            CacheReceivedResponse(nsIStreamListener *aListener,
                                               nsIStreamListener* *aResult);
+    nsresult            CacheAbort(PRUint32 statusCode);
 
     nsresult            OnHeadersAvailable();
 
