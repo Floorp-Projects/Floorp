@@ -76,6 +76,8 @@ viewer:Components:caps.xpt
 viewer:Components:chardet.shlb 
 viewer:Components:ChomeRegistry.shlb 
 viewer:Components:chrome.xpt
+viewer:Components:content.shlb
+viewer:Components:content.xpt
 viewer:Components:Cookie.shlb 
 viewer:Components:appcomps.shlb 
 viewer:Components:Directory.xpt 
