@@ -636,26 +636,6 @@ sub GetSelectableClassifications {
     return (@selectable_classes);
 }
 
-sub GetFieldDefs {
-    my $extra = "";
-    if (!UserInGroup(Param('timetrackinggroup'))) {
-        $extra = "WHERE name NOT IN ('estimated time', 'remaining_time', " .
-                 "'work_time', 'percentage_complete', 'deadline')";
-    }
-
-    my @fields;
-    PushGlobalSQLState();
-    SendSQL("SELECT name, description FROM fielddefs $extra ORDER BY sortkey");
-    while (MoreSQLData()) {
-        my ($name, $description) = FetchSQLData();
-        push(@fields, { name => $name, description => $description });
-    }
-    PopGlobalSQLState();
-
-    return(@fields);
-}
-
-
 
 sub ValidatePassword {
     # Determines whether or not a password is valid (i.e. meets Bugzilla's

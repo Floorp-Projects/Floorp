@@ -351,7 +351,7 @@ $vars->{'bug_severity'} = \@::legal_severity;
 # Boolean charts
 my @fields;
 push(@fields, { name => "noop", description => "---" });
-push(@fields, GetFieldDefs());
+push(@fields, Bugzilla::DB::GetFieldDefs());
 $vars->{'fields'} = \@fields;
 
 # Creating new charts - if the cmd-add value is there, we define the field

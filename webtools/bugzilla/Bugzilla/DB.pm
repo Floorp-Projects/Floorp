@@ -183,6 +183,26 @@ sub server_version {
     return $cached_server_version;
 }
 
+sub GetFieldDefs {
+    my $dbh = Bugzilla->dbh;
+
+    my $extra = "";
+    if (!&::UserInGroup(Param('timetrackinggroup'))) {
+        $extra = "WHERE name NOT IN ('estimated time', 'remaining_time', " .
+                 "'work_time', 'percentage_complete', 'deadline')";
+    }
+
+    my @fields;
+    my $sth = $dbh->prepare("SELECT name, description
+                               FROM fielddefs $extra
+                           ORDER BY sortkey");
+    $sth->execute();
+    while (my $field_ref = $sth->fetchrow_hashref()) {
+        push(@fields, $field_ref);
+    }
+    return(@fields);
+}
+
 1;
 
 __END__
@@ -193,9 +213,14 @@ Bugzilla::DB - Database access routines, using L<DBI>
 
 =head1 SYNOPSIS
 
+  # Connection
   my $dbh = Bugzilla::DB->connect_main;
   my $shadow = Bugzilla::DB->connect_shadow;
 
+  # Schema Information
+  my @fields = GetFieldDefs();
+
+  # Deprecated
   SendSQL("SELECT COUNT(*) FROM bugs");
   my $cnt = FetchOneColumn();
 
@@ -208,6 +233,9 @@ to access the current C<dbh> instead.
 Access to the old SendSQL-based database routines are also provided by
 importing the C<:deprecated> tag. These routines should not be used in new
 code.
+
+The only functions that should be used by modern, regular Bugzilla code
+are the "Schema Information" functions.
 
 =head1 CONNECTION
 
@@ -227,6 +255,18 @@ Connects to the shadow database, returning a new dbh. This routine C<die>s if
 no shadow database is configured.
 
 =back
+
+=head1 SCHEMA INFORMATION
+
+Bugzilla::DB also contains routines to get schema information about the 
+database.
+
+=over 4
+
+=item C<GetFieldDefs>
+
+Returns a list of all the "bug" fields in Bugzilla. The list contains 
+hashes, with a 'name' key and a 'description' key.
 
 =head1 DEPRECATED ROUTINES
 

@@ -32,6 +32,7 @@ use strict;
 # Include the Bugzilla CGI and general utility library.
 use lib qw(.);
 require "CGI.pl";
+use Bugzilla::DB;
 
 # Retrieve this installation's configuration.
 GetVersionTable();
@@ -82,7 +83,7 @@ $vars->{'open_status'} = \@open_status;
 $vars->{'closed_status'} = \@closed_status;
 
 # Generate a list of fields that can be queried.
-$vars->{'field'} = [GetFieldDefs()];
+$vars->{'field'} = [Bugzilla::DB::GetFieldDefs()];
 
 # Determine how the user would like to receive the output; 
 # default is JavaScript.
