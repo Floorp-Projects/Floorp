@@ -94,12 +94,14 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #back-button:hover,
 #back-button > .classic-simplebutton-box > .classic-simplebutton:hover,
-#back-button > .menubutton-dual-ex-button:hover
+#back-button > .menubutton-dual-ex-button:hover,
+#back-button[open="true"] > .menubutton-dual-ex-button
   {
     list-style-image      : url("chrome://navigator/skin/back-hover.gif");
   }
 
 #back-button:hover:active,
+#back-button > .menubutton-dual-ex-button:hover:active,
 #back-button > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/back-hover-active.gif");
@@ -122,12 +124,14 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
 
 #forward-button:hover,
 #forward-button > .classic-simplebutton-box > .classic-simplebutton:hover,
-#forward-button > .menubutton-dual-ex-button:hover
+#forward-button > .menubutton-dual-ex-button:hover,
+#forward-button[open="true"] > .menubutton-dual-ex-button
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover.gif");
   }
 
 #forward-button:hover:active,
+#forward-button > .menubutton-dual-ex-button:hover:active,
 #forward-button > .classic-simplebutton-box > .classic-simplebutton:hover:active
   {
     list-style-image      : url("chrome://navigator/skin/forward-hover-active.gif");
