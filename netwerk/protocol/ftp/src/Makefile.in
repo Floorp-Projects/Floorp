@@ -29,7 +29,6 @@ IS_COMPONENT	= 1
 CPPSRCS		= \
 		nsFtpProtocolHandler.cpp \
 		nsFTPChannel.cpp \
-		nsFtpStreamListenerEvent.cpp \
 		nsFtpConnectionThread.cpp \
 		nsFtpModule.cpp \
 		$(NULL)

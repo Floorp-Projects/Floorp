@@ -22,18 +22,24 @@
 #include "nsIProtocolHandler.h"
 #include "nsHashtable.h"
 #include "nsVoidArray.h"
+#include "nsIConnectionCache.h"
+#include "nsConnectionCacheObj.h"
 
 // {25029490-F132-11d2-9588-00805F369F95}
 #define NS_FTPPROTOCOLHANDLER_CID \
     { 0x25029490, 0xf132, 0x11d2, { 0x95, 0x88, 0x0, 0x80, 0x5f, 0x36, 0x9f, 0x95 } }
 
-class nsFtpProtocolHandler : public nsIProtocolHandler
+class nsFtpProtocolHandler : public nsIProtocolHandler,
+                             public nsIConnectionCache
 {
 public:
     NS_DECL_ISUPPORTS
 
     // nsIProtocolHandler methods:
     NS_DECL_NSIPROTOCOLHANDLER
+
+    // nsIConnectionCache methods
+    NS_DECL_NSICONNECTIONCACHE
 
     // nsFtpProtocolHandler methods:
     nsFtpProtocolHandler();
@@ -46,7 +52,6 @@ public:
 protected:
     nsISupports*        mEventSinkGetter;
     nsHashtable*        mRootConnectionList;    // hash of FTP connections
-    nsVoidArray*        mThreadArray;           // array of FTP connection threads
 };
 
 #endif /* nsFtpProtocolHandler_h___ */

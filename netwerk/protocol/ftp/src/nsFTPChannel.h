@@ -32,6 +32,7 @@
 #include "nsILoadGroup.h"
 #include "nsCOMPtr.h"
 #include "nsHashtable.h"
+#include "nsIProtocolHandler.h"
 
 class nsIEventSinkGetter;
 class nsIProgressEventSink;
@@ -58,8 +59,8 @@ public:
     // and returns it so the protocol handler can cache it and
     // join() it on shutdown.
     nsresult Init(const char* verb, nsIURI* uri, nsILoadGroup *aGroup,
-                  nsIEventSinkGetter* getter, nsHashtable *aConnectionList,
-                  nsIThread **_retval);
+                  nsIEventSinkGetter* getter,
+                  nsIProtocolHandler* aHandler);
 
 protected:
     nsIURI*                 mUrl;
@@ -79,11 +80,11 @@ protected:
     nsAutoString            mContentType;
     PRInt32                 mContentLength;
     nsCOMPtr<nsISupports>   mOwner;
-    nsHashtable*            mConnectionList; // thread safe list of connections.
     nsIThread*              mConnectionThread; // the thread for this connection.
 
     nsIEventQueue*          mConnectionEventQueue;
     nsIRequest*             mThreadRequest; // the nsIRequest proxy object.
+    nsIProtocolHandler*     mHandler;
 };
 
 #define NS_FTP_SEGMENT_SIZE   (4*1024)

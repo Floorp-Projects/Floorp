@@ -26,7 +26,6 @@ LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 CPP_OBJS =                                        \
         .\$(OBJDIR)\nsFtpProtocolHandler.obj      \
         .\$(OBJDIR)\nsFTPChannel.obj              \
-        .\$(OBJDIR)\nsFtpStreamListenerEvent.obj  \
         .\$(OBJDIR)\nsFtpConnectionThread.obj	  \
         .\$(OBJDIR)\nsFtpModule.obj               \
         $(NULL)

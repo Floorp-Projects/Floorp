@@ -25,7 +25,7 @@
 #include "nsIServiceManager.h"
 #include "nsIEventSinkGetter.h"
 #include "nsIProgressEventSink.h"
-#include "nsFtpConnectionThread.h" // for nsConnCacheObj class
+#include "nsConnectionCacheObj.h"
 
 #if defined(PR_LOGGING)
 //
@@ -50,30 +50,21 @@ static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 nsFtpProtocolHandler::nsFtpProtocolHandler() {
     NS_INIT_REFCNT();
     NS_NEWXPCOM(mRootConnectionList, nsHashtable);
-    NS_NEWXPCOM(mThreadArray, nsVoidArray);
 }
 
 // cleans up a connection list entry
 PRBool CleanupConnEntry(nsHashKey *aKey, void *aData, void *closure) {
     // XXX do we need to explicitly close the streams?
-    delete (nsConnCacheObj*)aData;
+    delete (nsConnectionCacheObj*)aData;
     return PR_TRUE;
 }
 
 nsFtpProtocolHandler::~nsFtpProtocolHandler() {
     mRootConnectionList->Reset(CleanupConnEntry);
     NS_DELETEXPCOM(mRootConnectionList);
-
-    nsIThread *thread;
-    while ( (thread = (nsIThread*)mThreadArray->ElementAt(0)) ) {
-        thread->Join();
-        NS_RELEASE(thread);
-        mThreadArray->RemoveElementAt(0);
-    }
-    NS_DELETEXPCOM(mThreadArray);
 }
 
-NS_IMPL_ISUPPORTS(nsFtpProtocolHandler, NS_GET_IID(nsIProtocolHandler));
+NS_IMPL_ISUPPORTS2(nsFtpProtocolHandler, nsIProtocolHandler, nsIConnectionCache);
 
 NS_METHOD
 nsFtpProtocolHandler::Create(nsISupports* aOuter, const nsIID& aIID, void* *aResult)
@@ -189,23 +180,31 @@ nsFtpProtocolHandler::NewChannel(const char* verb, nsIURI* url,
     rv = nsFTPChannel::Create(nsnull, NS_GET_IID(nsIFTPChannel), (void**)&channel);
     if (NS_FAILED(rv)) return rv;
 
-    nsIThread* connThread = nsnull;
-    rv = channel->Init(verb, url, aGroup, eventSinkGetter, 
-                       mRootConnectionList, &connThread);
+    rv = channel->Init(verb, url, aGroup, eventSinkGetter, this);
     if (NS_FAILED(rv)) {
         NS_RELEASE(channel);
         PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpProtocolHandler::NewChannel() FAILED\n"));
         return rv;
     }
 
-    // add this thread to the array.
-    if (!mThreadArray->AppendElement(connThread)) {
-        NS_RELEASE(connThread);
-        NS_RELEASE(channel);
-        return NS_ERROR_FAILURE;
-    }
-
     *result = channel;
+    return NS_OK;
+}
+
+// nsIConnectionCache methods
+NS_IMETHODIMP
+nsFtpProtocolHandler::RemoveConn(const char *aKey, nsConnectionCacheObj* *_retval) {
+    NS_ASSERTION(_retval, "null pointer");
+    nsStringKey key(aKey);
+    *_retval = (nsConnectionCacheObj*)mRootConnectionList->Remove(&key);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpProtocolHandler::InsertConn(const char *aKey, nsConnectionCacheObj *aConn) {
+    NS_ASSERTION(aConn, "null pointer");
+    nsStringKey key(aKey);
+    mRootConnectionList->Put(&key, aConn);
     return NS_OK;
 }
 
