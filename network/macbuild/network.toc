@@ -22,7 +22,6 @@ mozilla/network/cnvts/cvmime.c
 mozilla/network/cnvts/cvsimple.c
 mozilla/network/cnvts/cvunzip.c
 mozilla/network/cnvts/txview.c
-mozilla/network/main/autoupdt.c
 mozilla/network/main/jsautocf.c
 mozilla/network/main/jscookie.c
 mozilla/network/main/MacBinSupport.c

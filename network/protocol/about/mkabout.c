@@ -742,6 +742,7 @@ PRIVATE Bool net_about_kludge(URL_Struct *URL_s)
 	 !PL_strcmp((char*)user, "\173\206\205") ||				/* don */
 	 !PL_strcmp((char*)user, "\173\206\211\170") ||				/* dora */
 	 !PL_strcmp((char*)user, "\173\206\214\176") ||				/* doug */
+     !PL_strcmp((char*)user, "\173\206\214\176\213") ||				/* dougt */
 	 !PL_strcmp((char*)user, "\173\207") ||					/* dp */
 	 !PL_strcmp((char*)user, "\174\171\200\205\170") ||			/* ebina */
 	 !PL_strcmp((char*)user, "\174\204\170\173\174\211") ||			/* emader */

@@ -2,7 +2,6 @@
 # This is a list of local files which get copied to the mozilla:dist directory
 #
 
-autoupdt.h
 mkstream.h
 mkparse.h
 mkfsort.h
