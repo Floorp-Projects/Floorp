@@ -31,7 +31,7 @@
 # GPL.
 #
 CORE_DEPTH = ..
-DEPTH      = ..
+DEPTH      = ../..
 
 RELEASE = security
 
