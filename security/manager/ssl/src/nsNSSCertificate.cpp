@@ -32,11 +32,12 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.16 2001/05/01 23:23:20 mcgreer%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.17 2001/05/02 05:38:26 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
 #include "prerror.h"
+#include "prprf.h"
 
 #include "nsNSSComponent.h" // for PIPNSS string bundle calls.
 #include "nsCOMPtr.h"
@@ -46,16 +47,20 @@
 #include "nsPKCS12Blob.h"
 #include "nsIX509Cert.h"
 #include "nsINSSDialogs.h"
+#include "nsNSSASN1Object.h"
 #include "nsString.h"
-#include "nsILocaleService.h"
+#include "nsXPIDLString.h"
 #include "nsIDateTimeFormat.h"
 #include "nsDateTimeFormatCID.h"
+#include "nsILocaleService.h"
 
 #include "pk11func.h"
 #include "certdb.h"
 #include "cert.h"
 #include "secerr.h"
 #include "nssb64.h"
+#include "secasn1.h"
+#include "secder.h"
 
 #ifdef PR_LOGGING
 extern PRLogModuleInfo* gPIPNSSLog;
@@ -609,7 +614,7 @@ nsNSSCertificate::GetOrganizationalUnit(PRUnichar **aOrganizationalUnit)
  * nsIEnumerator getChain(); 
  */
 NS_IMETHODIMP
-nsNSSCertificate::GetChain(nsIEnumerator **_rvChain)
+nsNSSCertificate::GetChain(nsISupportsArray **_rvChain)
 {
   nsresult rv;
   CERTCertListNode *node;
@@ -632,7 +637,9 @@ nsNSSCertificate::GetChain(nsIEnumerator **_rvChain)
     nsCOMPtr<nsIX509Cert> cert = new nsNSSCertificate(node->cert);
     array->AppendElement(cert);
   }
-  rv = array->Enumerate(_rvChain);
+  *_rvChain = array;
+  NS_IF_ADDREF(*_rvChain);
+  rv = NS_OK;
 done:
   if (nssChain)
     CERT_DestroyCertList(nssChain);
@@ -1002,6 +1009,477 @@ verify_failed:
   return NS_OK;
 }
 
+static nsresult
+GetIntValue(SECItem *versionItem, 
+            unsigned long *version)
+{
+  SECStatus srv;
+
+  srv = SEC_ASN1DecodeInteger(versionItem,version);
+  if (srv != SECSuccess) {
+    NS_ASSERTION(0,"Could not decode version of cert");
+    return NS_ERROR_FAILURE;
+  }
+  return NS_OK;
+}
+
+static nsresult
+ProcessVersion(SECItem         *versionItem,
+               nsINSSComponent *nssComponent,
+               nsIASN1PrintableItem **retItem)
+{
+  nsresult rv;
+  nsString text;
+  nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
+  if (printableItem == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+ 
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpVersion").get(),
+                                      text);
+  rv = printableItem->SetDisplayName(text.get());
+  if (NS_FAILED(rv))
+    return rv;
+
+  // Now to figure out what version this certificate is.
+  unsigned long version;
+
+  rv = GetIntValue(versionItem, &version);
+  if (NS_FAILED(rv))
+    return rv;
+
+  switch (version){
+  case 0:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpVersion1").get(),
+                                             text);
+    break;
+  case 1:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpVersion2").get(),
+                                             text);
+    break;
+  case 2:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpVersion3").get(),
+                                             text);
+    break;
+  default:
+    NS_ASSERTION(0,"Bad value for cert version");
+    rv = NS_ERROR_FAILURE;
+  }
+    
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = printableItem->SetDisplayValue(text.get());
+  if (NS_FAILED(rv))
+    return rv;
+
+  *retItem = printableItem;
+  NS_ADDREF(*retItem);
+  return NS_OK;
+}
+
+nsresult 
+ProcessSerialNumber(SECItem         *serialItem, 
+                    nsINSSComponent *nssComponent,
+                    nsIASN1PrintableItem **retItem)
+{
+  nsresult rv;
+  nsString text;
+  nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
+
+  if (printableItem == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSerialNo").get(),
+                                           text); 
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = printableItem->SetDisplayName(text.get());
+  if (NS_FAILED(rv))
+    return rv;
+
+  nsXPIDLCString serialNumber;
+  serialNumber = CERT_Hexify(serialItem, 1);
+  if (serialNumber == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  rv = printableItem->SetDisplayValue(NS_ConvertASCIItoUCS2(serialNumber).get());
+  *retItem = printableItem;
+  NS_ADDREF(*retItem);
+  return rv;
+}
+
+static nsresult
+GetDefaultOIDFormat(SECItem *oid,
+                    nsString &outString)
+{
+  char buf[300];
+  int len, written;
+    
+  unsigned long val  = oid->data[0];
+  unsigned int  i    = val % 40;
+  val /= 40;
+  written = PR_snprintf(buf, 300, "%lu %u ", val, i);
+  if (written < 0)
+    return NS_ERROR_FAILURE;	
+  len = written;
+
+  val = 0;
+  for (i = 1; i < oid->len; ++i) {
+    // In this loop, we have to parse a DER formatted 
+    // If the first bit is a 1, then the integer is 
+    // represented by more than one byte.  If the 
+    // first bit is set then we continue on and add
+    // the values of the later bytes until we get 
+    // a byte without the first bit set.
+    unsigned long j;
+
+    j = oid->data[i];
+    val = (val << 7) | (j & 0x7f);
+    if (j & 0x80)
+      continue;
+    written = PR_snprintf(&buf[len], sizeof(buf)-len, "%lu ", val);
+    if (written < 0)
+      return NS_ERROR_FAILURE;
+
+    len += written;
+    NS_ASSERTION(len < sizeof(buf), "OID data to big to display in 300 chars.");
+    val = 0;      
+  }
+
+  outString = NS_ConvertASCIItoUCS2(buf).get();
+  return NS_OK; 
+}
+
+static nsresult
+GetOIDText(SECItem *oid, nsINSSComponent *nssComponent, nsString &text)
+{ 
+  nsresult rv;
+  SECOidTag oidTag = SECOID_FindOIDTag(oid);
+
+  switch (oidTag) {
+  case SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpMD2WithRSA").get(),
+                                             text);
+    break;
+  case SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpMD5WithRSA").get(),
+                                             text);
+    break;
+  case SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSHA1WithRSA").get(),
+                                             text);
+    break;
+  case SEC_OID_AVA_COUNTRY_NAME:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVACountry").get(),
+                                             text);
+    break;
+  case SEC_OID_AVA_COMMON_NAME:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVACN").get(),
+                                             text);
+    break;
+  case SEC_OID_AVA_ORGANIZATIONAL_UNIT_NAME:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVAOU").get(),
+                                             text);
+    break;
+  case SEC_OID_AVA_ORGANIZATION_NAME:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVAOrg").get(),
+                                             text);
+    break;
+  case SEC_OID_AVA_LOCALITY:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVALocality").get(),
+                                             text);
+    break;
+  case SEC_OID_AVA_DN_QUALIFIER:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVADN").get(),
+                                             text);
+    break;
+  case SEC_OID_AVA_DC:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVADC").get(),
+                                             text);
+    break;
+  case SEC_OID_AVA_STATE_OR_PROVINCE:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAVAState").get(),
+                                             text);
+    break;
+  case SEC_OID_PKCS1_RSA_ENCRYPTION:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpRSAEncr").get(),
+                                             text);
+    break;
+  case SEC_OID_X509_KEY_USAGE:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKeyUsage").get(),
+                                             text);
+    break;
+  case SEC_OID_NS_CERT_EXT_CERT_TYPE:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpCertType").get(),
+                                             text);
+    break;
+  case SEC_OID_X509_AUTH_KEY_ID:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAuthKeyID").get(),
+                                             text);
+    break;
+  case SEC_OID_RFC1274_UID:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpUserID").get(),
+                                             text);
+    break;
+  case SEC_OID_PKCS9_EMAIL_ADDRESS:
+    rv = nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpPK9Email").get(),
+                                             text);
+    break;
+  default:
+    rv = GetDefaultOIDFormat(oid, text);
+    if (NS_FAILED(rv))
+      return rv;
+
+    const PRUnichar *params[1] = {text.get()};
+    nsXPIDLString text2;
+    rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("CertDumpDefOID").get(),
+                                                     params, 1,
+                                                     getter_Copies(text2));
+    text = text2;
+    break;
+  }
+  return rv;  
+}
+
+#define SEPARATOR "\n"
+
+static nsresult
+ProcessRawBytes(SECItem *data, nsString &text)
+{
+  // This function is used to display some DER bytes
+  // that we have not added support for decoding.
+  // It prints the value of the byte out into a 
+  // string that can later be displayed as a byte
+  // string.  We place a new line after 24 bytes
+  // to break up extermaly long sequence of bytes.
+  PRUint32 i;
+  char buffer[5];
+  for (i=0; i<data->len; i++) {
+    PR_snprintf(buffer, 5, "%02x ", data->data[i]);
+    text.Append(NS_ConvertASCIItoUCS2(buffer).get());
+    if ((i+1)%24 == 0) {
+      text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+    }
+  }
+  return NS_OK;
+}    
+
+static nsresult
+ProcessNSCertTypeExtensions(SECItem  *extData, 
+                            nsString &text,
+                            nsINSSComponent *nssComponent)
+{
+  SECItem decoded;
+  decoded.data = nsnull;
+  decoded.len  = 0;
+  SEC_ASN1DecodeItem(nsnull, &decoded, SEC_BitStringTemplate, extData);
+  unsigned char nsCertType = decoded.data[0];
+  nsString local;
+  nsMemory::Free(decoded.data);
+  if (nsCertType & NS_CERT_TYPE_SSL_CLIENT) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("VerifySSLClient").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (nsCertType & NS_CERT_TYPE_SSL_SERVER) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("VerifySSLServer").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (nsCertType & NS_CERT_TYPE_EMAIL) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpCertTypeEmail").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (nsCertType & NS_CERT_TYPE_OBJECT_SIGNING) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("VerifyObjSign").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (nsCertType & NS_CERT_TYPE_SSL_CA) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("VerifySSLCA").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (nsCertType & NS_CERT_TYPE_EMAIL_CA) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpEmailCA").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (nsCertType & NS_CERT_TYPE_OBJECT_SIGNING_CA) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("VerifyObjSign").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  return NS_OK;
+}
+
+static nsresult
+ProcessKeyUsageExtension(SECItem *extData, nsString &text,
+                         nsINSSComponent *nssComponent)
+{
+  SECItem decoded;
+  decoded.data = nsnull;
+  decoded.len  = 0;
+  SEC_ASN1DecodeItem(nsnull, &decoded, SEC_BitStringTemplate, extData);
+  unsigned char keyUsage = decoded.data[0];
+  nsString local;
+  nsMemory::Free(decoded.data);  
+  if (keyUsage & KU_DIGITAL_SIGNATURE) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUSign").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (keyUsage & KU_NON_REPUDIATION) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUNonRep").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (keyUsage & KU_KEY_ENCIPHERMENT) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUEnc").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (keyUsage & KU_DATA_ENCIPHERMENT) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUDEnc").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (keyUsage & KU_KEY_AGREEMENT) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUKA").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (keyUsage & KU_KEY_CERT_SIGN) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUCertSign").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+  if (keyUsage & KU_CRL_SIGN) {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpKUCRLSign").get(),
+                                        local);
+    text.Append(local.get());
+    text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  }
+
+  return NS_OK;
+}
+
+static nsresult
+ProcessExtensionData(SECOidTag oidTag, SECItem *extData, 
+                     nsString &text, nsINSSComponent *nssComponent)
+{
+  nsresult rv;
+  switch (oidTag) {
+  case SEC_OID_NS_CERT_EXT_CERT_TYPE:
+    rv = ProcessNSCertTypeExtensions(extData, text, nssComponent);
+    break;
+  case SEC_OID_X509_KEY_USAGE:
+    rv = ProcessKeyUsageExtension(extData, text, nssComponent);
+    break;
+  default:
+    rv = ProcessRawBytes(extData, text);
+    break; 
+  }
+  return rv;
+}
+
+static nsresult
+ProcessSingleExtension(CERTCertExtension *extension,
+                       nsINSSComponent *nssComponent,
+                       nsIASN1PrintableItem **retExtension)
+{
+  nsString text;
+  GetOIDText(&extension->id, nssComponent, text);
+  nsCOMPtr<nsIASN1PrintableItem>extensionItem = new nsNSSASN1PrintableItem();
+  if (extensionItem == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  extensionItem->SetDisplayName(text.get());
+  SECOidTag oidTag = SECOID_FindOIDTag(&extension->id);
+  text.Truncate();
+  if (extension->critical.data != nsnull) {
+    if (extension->critical.data[0]) {
+      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpCritical").get(),
+                                          text);
+    } else {
+      nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpNonCritical").get(),
+                                         text);
+    }
+  } else {
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpNonCritical").get(),
+                                        text);
+  }
+  text.Append(NS_LITERAL_STRING(SEPARATOR).get());
+  nsresult rv = ProcessExtensionData(oidTag, &extension->value, text, 
+                                     nssComponent);
+  if (NS_FAILED(rv))
+    return rv;
+
+  extensionItem->SetDisplayValue(text.get());
+  *retExtension = extensionItem;
+  NS_ADDREF(*retExtension);
+  return NS_OK;
+}
+
+#ifdef DEBUG_javi
+void
+DumpASN1Object(nsIASN1Object *object, unsigned int level)
+{
+  PRUnichar *dispNameU, *dispValU;
+  unsigned int i;
+  nsCOMPtr<nsISupportsArray> asn1Objects;
+  nsCOMPtr<nsISupports> isupports;
+  nsCOMPtr<nsIASN1Object> currObject;
+  PRBool processObjects;
+  PRUint32 numObjects;
+
+  for (i=0; i<level; i++)
+    printf ("  ");
+
+  object->GetDisplayName(&dispNameU);
+  nsCOMPtr<nsIASN1Sequence> sequence(do_QueryInterface(object));
+  if (sequence) {
+    printf ("%s ", NS_ConvertUCS2toUTF8(dispNameU).get());
+    sequence->GetProcessObjects(&processObjects);
+    if (processObjects) {
+      printf("\n");
+      sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
+      asn1Objects->Count(&numObjects);
+      for (i=0; i<numObjects;i++) {
+        isupports = dont_AddRef(asn1Objects->ElementAt(i));
+        currObject = do_QueryInterface(isupports);
+        DumpASN1Object(currObject, level+1);    
+      }
+    } else { 
+      object->GetDisplayValue(&dispValU);
+      printf("= %s\n", NS_ConvertUCS2toUTF8(dispValU).get()); 
+      PR_Free(dispValU);
+    }
+  } else { 
+    object->GetDisplayValue(&dispValU);
+    printf("%s = %s\n",NS_ConvertUCS2toUTF8(dispNameU).get(), 
+                       NS_ConvertUCS2toUTF8(dispValU).get()); 
+    PR_Free(dispValU);
+  }
+  PR_Free(dispNameU);
+}
+#endif
+
 /*
  * void getUsages(out PRUint32 verified,
  *                out PRUint32 count, 
@@ -1053,7 +1531,7 @@ nsNSSCertificate::GetPurposes(PRUint32   *_verified,
 }
 
 /* void view (); */
-NS_IMETHODIMP 
+NS_IMETHODIMP
 nsNSSCertificate::View()
 {
   nsresult rv;
@@ -1063,6 +1541,398 @@ nsNSSCertificate::View()
                        NS_GET_IID(nsICertificateDialogs));
   return certDialogs->ViewCert(this);
 }
+
+static nsresult
+ProcessSECAlgorithmID(SECAlgorithmID *algID,
+                      nsINSSComponent *nssComponent,
+                      nsIASN1Sequence **retSequence)
+{
+  nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence();
+  if (sequence == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  *retSequence = nsnull;
+  nsString text;
+  GetOIDText(&algID->algorithm, nssComponent, text);
+  if (algID->parameters.data[0] == nsIASN1Object::ASN1_NULL) {
+    sequence->SetDisplayValue(text.get());
+    sequence->SetProcessObjects(PR_FALSE);
+  } else {
+    nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
+    printableItem->SetDisplayValue(text.get());
+    nsCOMPtr<nsISupportsArray>asn1Objects;
+    sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
+    asn1Objects->AppendElement(printableItem);
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpAlgID").get(),
+                                        text);
+    printableItem->SetDisplayName(text.get());
+    printableItem = new nsNSSASN1PrintableItem();
+    asn1Objects->AppendElement(printableItem);
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpParams").get(),
+                                        text);
+    printableItem->SetDisplayName(text.get()); 
+    ProcessRawBytes(&algID->parameters,text);
+    printableItem->SetDisplayValue(text.get());
+  }
+  *retSequence = sequence;
+  NS_ADDREF(*retSequence);
+  return NS_OK;
+}
+
+static nsresult
+ProcessTime(PRTime dispTime, const PRUnichar *displayName, 
+            nsIASN1Sequence *parentSequence)
+{
+  nsresult rv;
+  nsCOMPtr<nsIDateTimeFormat> dateFormatter =
+     do_CreateInstance(kDateTimeFormatCID, &rv);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  nsString text;
+  dateFormatter->FormatPRTime(nsnull, kDateFormatShort, kTimeFormatNone,
+                              dispTime, text);
+  nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
+  if (printableItem == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  printableItem->SetDisplayValue(text.get());
+  printableItem->SetDisplayName(displayName);
+  nsCOMPtr<nsISupportsArray> asn1Objects;
+  parentSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
+  asn1Objects->AppendElement(printableItem);
+  return NS_OK;
+}
+
+static nsresult
+ProcessSubjectPublicKeyInfo(CERTSubjectPublicKeyInfo *spki, 
+                            nsIASN1Sequence *parentSequence,
+                            nsINSSComponent *nssComponent)
+{
+  nsCOMPtr<nsIASN1Sequence> spkiSequence = new nsNSSASN1Sequence();
+
+  if (spkiSequence == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsString text;
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSPKI").get(),
+                                      text);
+  spkiSequence->SetDisplayName(text.get());
+
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSPKIAlg").get(),
+                                      text);
+  nsCOMPtr<nsIASN1Sequence> sequenceItem;
+  nsresult rv = ProcessSECAlgorithmID(&spki->algorithm, nssComponent,
+                                      getter_AddRefs(sequenceItem));
+  if (NS_FAILED(rv))
+    return rv;
+  sequenceItem->SetDisplayName(text.get());
+  nsCOMPtr<nsISupportsArray> asn1Objects;
+  spkiSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
+  asn1Objects->AppendElement(sequenceItem);
+
+  // The subjectPublicKey field is encoded as a bit string.
+  // ProcessRawBytes expects the lenght to be in bytes, so 
+  // let's convert the lenght into a temporary SECItem.
+  SECItem data;
+  data.data = spki->subjectPublicKey.data;
+  data.len  = spki->subjectPublicKey.len / 8;
+  text.Truncate();
+  ProcessRawBytes(&data, text);
+  nsCOMPtr<nsIASN1PrintableItem> printableItem = new nsNSSASN1PrintableItem();
+  if (printableItem == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  printableItem->SetDisplayValue(text.get());
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubjPubKey").get(),
+                                      text);
+  printableItem->SetDisplayName(text.get());
+  asn1Objects->AppendElement(printableItem);
+  
+  parentSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
+  asn1Objects->AppendElement(spkiSequence);
+  return NS_OK;
+}
+
+static nsresult
+ProcessExtensions(CERTCertExtension **extensions, 
+                  nsIASN1Sequence *parentSequence, 
+                  nsINSSComponent *nssComponent)
+{
+  nsCOMPtr<nsIASN1Sequence> extensionSequence = new nsNSSASN1Sequence;
+  if (extensionSequence == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsString text;
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpExtensions").get(),
+                                      text);
+  extensionSequence->SetDisplayName(text.get());
+  PRInt32 i;
+  nsresult rv;
+  nsCOMPtr<nsIASN1PrintableItem> newExtension;
+  nsCOMPtr<nsISupportsArray> asn1Objects;
+  extensionSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
+  for (i=0; extensions[i] != nsnull; i++) {
+    rv = ProcessSingleExtension(extensions[i], nssComponent,
+                                getter_AddRefs(newExtension));
+    if (NS_FAILED(rv))
+      return rv;
+
+    asn1Objects->AppendElement(newExtension);
+  }
+  parentSequence->GetASN1Objects(getter_AddRefs(asn1Objects));
+  asn1Objects->AppendElement(extensionSequence);
+  return NS_OK;
+}
+
+nsresult
+nsNSSCertificate::CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
+                                                 nsINSSComponent *nssComponent)
+{
+  //
+  //   TBSCertificate  ::=  SEQUENCE  {
+  //        version         [0]  EXPLICIT Version DEFAULT v1,
+  //        serialNumber         CertificateSerialNumber,
+  //        signature            AlgorithmIdentifier,
+  //        issuer               Name,
+  //        validity             Validity,
+  //        subject              Name,
+  //        subjectPublicKeyInfo SubjectPublicKeyInfo,
+  //        issuerUniqueID  [1]  IMPLICIT UniqueIdentifier OPTIONAL,
+  //                             -- If present, version shall be v2 or v3
+  //        subjectUniqueID [2]  IMPLICIT UniqueIdentifier OPTIONAL,
+  //                             -- If present, version shall be v2 or v3
+  //        extensions      [3]  EXPLICIT Extensions OPTIONAL
+  //                            -- If present, version shall be v3
+  //        }
+  //
+  // This is the ASN1 structure we should be dealing with at this point.
+  // The code in this method will assert this is the structure we're dealing
+  // and then add more user friendly text for that field.
+  nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence();
+  if (sequence == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsString text;
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpCertificate").get(),
+                                      text);
+  sequence->SetDisplayName(text.get());
+  nsCOMPtr<nsIASN1PrintableItem> printableItem;
+  
+  nsCOMPtr<nsISupportsArray> asn1Objects;
+  sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
+
+  nsresult rv = ProcessVersion(&mCert->version, nssComponent,
+                               getter_AddRefs(printableItem));
+  if (NS_FAILED(rv))
+    return rv;
+
+  asn1Objects->AppendElement(printableItem);
+  
+  rv = ProcessSerialNumber(&mCert->serialNumber, nssComponent,
+                           getter_AddRefs(printableItem));
+
+  if (NS_FAILED(rv))
+    return rv;
+  asn1Objects->AppendElement(printableItem); 
+
+  nsCOMPtr<nsIASN1Sequence> algID;
+  rv = ProcessSECAlgorithmID(&mCert->signature,
+                             nssComponent, getter_AddRefs(algID));
+  if (NS_FAILED(rv))
+    return rv;
+
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSigAlg").get(),
+                                      text);
+  algID->SetDisplayName(text.get());
+  asn1Objects->AppendElement(algID);
+
+  nsXPIDLString value;
+  GetIssuerName(getter_Copies(value));
+
+  printableItem = new nsNSSASN1PrintableItem();
+  if (printableItem == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  printableItem->SetDisplayValue(value);
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpIssuer").get(),
+                                      text);
+  printableItem->SetDisplayName(text.get());
+  asn1Objects->AppendElement(printableItem);
+  
+  nsCOMPtr<nsIASN1Sequence> validitySequence = new nsNSSASN1Sequence();
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpValidity").get(),
+                                      text);
+  validitySequence->SetDisplayName(text.get());
+  asn1Objects->AppendElement(validitySequence);
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpNotBefore").get(),
+                                      text);
+  nsCOMPtr<nsIX509CertValidity> validityData;
+  GetValidity(getter_AddRefs(validityData));
+  PRTime notBefore, notAfter;
+
+  validityData->GetNotBefore(&notBefore);
+  validityData->GetNotAfter(&notAfter);
+  validityData = 0;
+  rv = ProcessTime(notBefore, text.get(), validitySequence);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpNotAfter").get(),
+                                      text);
+  rv = ProcessTime(notAfter, text.get(), validitySequence);
+  if (NS_FAILED(rv))
+    return rv;
+
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubject").get(),
+                                      text);
+
+  printableItem = new nsNSSASN1PrintableItem();
+  if (printableItem == nsnull)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  printableItem->SetDisplayName(text.get());
+  GetSubjectName(getter_Copies(value));
+  printableItem->SetDisplayValue(value);
+  asn1Objects->AppendElement(printableItem);
+
+  rv = ProcessSubjectPublicKeyInfo(&mCert->subjectPublicKeyInfo, sequence,
+                                   nssComponent); 
+  if (NS_FAILED(rv))
+    return rv;
+ 
+  SECItem data; 
+  // Is there an issuerUniqueID?
+  if (mCert->issuerID.data != nsnull) {
+    // The issuerID is encoded as a bit string.
+    // The function ProcessRawBytes expects the
+    // length to be in bytes, so let's convert the
+    // length in a temporary SECItem
+    data.data = mCert->issuerID.data;
+    data.len  = mCert->issuerID.len / 8;
+
+    ProcessRawBytes(&data, text);
+    printableItem = new nsNSSASN1PrintableItem();
+    if (printableItem == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    printableItem->SetDisplayValue(text.get());
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpIssuerUniqueID").get(),
+                                         text);
+    printableItem->SetDisplayName(text.get());
+    asn1Objects->AppendElement(printableItem);
+  }
+
+  if (mCert->subjectID.data) {
+    // The subjectID is encoded as a bit string.
+    // The function ProcessRawBytes expects the
+    // length to be in bytes, so let's convert the
+    // length in a temporary SECItem
+    data.data = mCert->issuerID.data;
+    data.len  = mCert->issuerID.len / 8;
+
+    ProcessRawBytes(&data, text);
+    printableItem = new nsNSSASN1PrintableItem();
+    if (printableItem == nsnull)
+      return NS_ERROR_OUT_OF_MEMORY;
+
+    printableItem->SetDisplayValue(text.get());
+    nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSubjectUniqueID").get(),
+                                         text);
+    printableItem->SetDisplayName(text.get());
+    asn1Objects->AppendElement(printableItem);
+
+  }
+  if (mCert->extensions) {
+    rv = ProcessExtensions(mCert->extensions, sequence, nssComponent);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  *retSequence = sequence;
+  NS_ADDREF(*retSequence);  
+  return NS_OK;
+}
+
+nsresult
+nsNSSCertificate::CreateASN1Struct()
+{
+  nsCOMPtr<nsIASN1Sequence> sequence = new nsNSSASN1Sequence();
+
+  mASN1Structure = sequence; 
+  if (mASN1Structure == nsnull) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  nsCOMPtr<nsISupportsArray> asn1Objects;
+  sequence->GetASN1Objects(getter_AddRefs(asn1Objects));
+  nsXPIDLCString title;
+  GetWindowTitle(getter_Copies(title));
+  
+  mASN1Structure->SetDisplayName(NS_ConvertASCIItoUCS2(title).get());
+  // This sequence will be contain the tbsCertificate, signatureAlgorithm,
+  // and signatureValue.
+  nsresult rv;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = CreateTBSCertificateASN1Struct(getter_AddRefs(sequence),
+                                      nssComponent);
+  if (NS_FAILED(rv))
+    return rv;
+
+  asn1Objects->AppendElement(sequence);
+  nsCOMPtr<nsIASN1Sequence> algID;
+
+  rv = ProcessSECAlgorithmID(&mCert->signatureWrap.signatureAlgorithm, 
+                             nssComponent, getter_AddRefs(algID));
+  if (NS_FAILED(rv))
+    return rv;
+  nsString text;
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpSigAlg").get(),
+                                      text);
+  algID->SetDisplayName(text.get());
+  asn1Objects->AppendElement(algID);
+  nsCOMPtr<nsIASN1PrintableItem>printableItem = new nsNSSASN1PrintableItem();
+  nssComponent->GetPIPNSSBundleString(NS_LITERAL_STRING("CertDumpCertSig").get(),
+                                      text);
+  printableItem->SetDisplayName(text.get());
+  // The signatureWrap is encoded as a bit string.
+  // The function ProcessRawBytes expects the
+  // length to be in bytes, so let's convert the
+  // length in a temporary SECItem
+  SECItem temp;
+  temp.data = mCert->signatureWrap.signature.data;
+  temp.len  = mCert->signatureWrap.signature.len / 8;
+  text.Truncate();
+  ProcessRawBytes(&temp,text);
+  printableItem->SetDisplayValue(text.get());
+  asn1Objects->AppendElement(printableItem);
+  return NS_OK;
+}
+
+/* readonly attribute nsIASN1Object ASN1Structure; */
+NS_IMETHODIMP 
+nsNSSCertificate::GetASN1Structure(nsIASN1Object * *aASN1Structure)
+{
+  nsresult rv = NS_OK;
+  NS_ENSURE_ARG_POINTER(aASN1Structure);
+  if (mASN1Structure == nsnull) {
+    // First create the recursive structure os ASN1Objects
+    // which tells us the layout of the cert.
+    rv = CreateASN1Struct();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+#ifdef DEBUG_javi
+    DumpASN1Object(mASN1Structure, 0);
+#endif
+  }
+  *aASN1Structure = mASN1Structure;
+  NS_IF_ADDREF(*aASN1Structure);
+  return rv;
+}
+
 
 /* nsNSSCertificateDB */
 

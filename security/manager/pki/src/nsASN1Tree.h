@@ -13,11 +13,10 @@
  * 
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are 
- * Copyright (C) 2000 Netscape Communications Corporation.  All
+ * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
  * Contributor(s):
- *  Ian McGreer <mcgreer@netscape.com>
  *  Javier Delgadillo <javi@netscape.com>
  * 
  * Alternatively, the contents of this file may be used under the
@@ -31,67 +30,44 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the
  * GPL.
- *
  */
+#ifndef _NSSASNOUTLINER_H_
+#define _NSSASNOUTLINER_H_
 
-#ifndef _NS_NSSCERTIFICATE_H_
-#define _NS_NSSCERTIFICATE_H_
-
+#include "nscore.h"
 #include "nsIX509Cert.h"
-#include "nsIX509CertDB.h"
+#include "nsIASN1Outliner.h"
+#include "nsIOutlinerView.h"
+#include "nsIOutlinerBoxObject.h"
+#include "nsIOutlinerSelection.h"
+#include "nsCOMPtr.h"
 
-#include "prtypes.h"
-#include "cert.h"
-#include "secitem.h"
+//4bfaa9f0-1dd2-11b2-afae-a82cbaa0b606
+#define NS_NSSASN1OUTINER_CID  {             \
+   0x4bfaa9f0,                               \
+   0x1dd2,                                   \
+   0x11b2,                                   \
+   {0xaf,0xae,0xa8,0x2c,0xba,0xa0,0xb6,0x06} \
+  }
+  
 
-class nsINSSComponent;
-
-/* Certificate */
-class nsNSSCertificate : public nsIX509Cert 
+class nsNSSASN1Outliner : public nsIASN1Outliner
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIX509CERT
-
-  nsNSSCertificate(char *certDER, int derLen);
-  nsNSSCertificate(CERTCertificate *cert);
-  /* from a request? */
-  virtual ~nsNSSCertificate();
-  CERTCertificate *GetCert();
-
-private:
-  CERTCertificate *mCert;
-  nsCOMPtr<nsIASN1Object> mASN1Structure;
-  nsresult CreateASN1Struct();
-  nsresult CreateTBSCertificateASN1Struct(nsIASN1Sequence **retSequence,
-                                          nsINSSComponent *nssComponent);
-
-  PRBool verifyFailed(PRUint32 *_verified);
-
-  nsresult GetUsageArray(char     *suffix,
-                         PRUint32 *_verified,
-                         PRUint32 *_count,
-                         PRUnichar **tmpUsages);
+  NS_DECL_NSIASN1OUTLINER
+  NS_DECL_NSIOUTLINERVIEW
+  
+  nsNSSASN1Outliner();
+  virtual ~nsNSSASN1Outliner();
+protected:
+  PRUint32 CountNumberOfVisibleRows(nsIASN1Object *asn1Object);
+  nsresult GetASN1ObjectAtIndex(PRUint32 index, nsIASN1Object *sourceObject,
+                                nsIASN1Object **retval);
+  PRInt32 GetParentOfObjectAtIndex(PRUint32 index, nsIASN1Object *sourceObject);
+  PRInt32 GetLevelsTilIndex(PRUint32 index, nsIASN1Object *sourceObject);
+  nsCOMPtr<nsIASN1Object> mASN1Object;
+  nsCOMPtr<nsIOutlinerSelection> mSelection;
+  nsCOMPtr<nsIOutlinerBoxObject> mOutliner;
 };
-
-class nsNSSCertificateDB : public nsIX509CertDB
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIX509CERTDB
-
-  nsNSSCertificateDB(); 
-  virtual ~nsNSSCertificateDB();
-
-private:
-
-  void getCertNames(CERTCertList *certList,
-                    PRUint32      type, 
-                    PRUint32     *_count,
-                    PRUnichar  ***_certNameList);
-
-  PRUint32 getCertType(CERTCertificate *cert);
-
-};
-
-#endif /* _NS_NSSCERTIFICATE_H_ */
+#endif //_NSSASNOUTLINER_H_

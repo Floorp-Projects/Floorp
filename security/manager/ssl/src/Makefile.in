@@ -60,6 +60,7 @@ CPPSRCS = 				\
 	nsPK11TokenDB.cpp		\
 	nsNSSCertificate.cpp		\
 	nsPKCS12Blob.cpp                \
+	nsNSSASN1Object.cpp		\
 	nsCertOutliner.cpp              \
 	$(NULL)
 

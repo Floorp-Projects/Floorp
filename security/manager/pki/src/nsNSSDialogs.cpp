@@ -116,7 +116,8 @@ NS_IMPL_THREADSAFE_ISUPPORTS6(nsNSSDialogs, nsINSSDialogs,
                                             nsISecurityWarningDialogs,
                                             nsIBadCertListener,
                                             nsICertificateDialogs,
-											nsIClientAuthDialogs)
+                                            nsIClientAuthDialogs);
+
 nsresult
 nsNSSDialogs::Init()
 {

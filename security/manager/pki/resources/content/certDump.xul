@@ -23,9 +23,7 @@
    -   Javier Delgadillo <javi@netscape.com>
   -->
 
-<?xml-stylesheet href="chrome://messenger/skin/messenger.css" type="text/css"?>
-
-<!DOCTYPE window SYSTEM "chrome://pippki/locale/certManager.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://pippki/locale/certManager.dtd">
 
 <overlay id="certDumpOverlay" 
          xmlns:html="http://www.w3.org/1999/xhtml" 
@@ -33,16 +31,27 @@
          xmlns:cert="http://netscape.com/rdf-cert#" 
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 <box id="certPrettyPrint" orient="vertical">
- <box orient="vertical" flex="1">
-  <box flex="0" height="100">
-    <tree id="treesetDump" debug="false" width="500" flex="1">
-      <treecolgroup flex="1">
-        <treecol flex="1"/>
-      </treecolgroup>
-      <treechildren id="chainDump" flex="1" />
-    </tree>
+  <box orient="vertical" flex="1">
+    <box flex="0" height="100">
+      <tree id="treesetDump" debug="false" width="500" flex="1">
+        <treecolgroup flex="1">
+          <treecol flex="1"/>
+        </treecolgroup>
+        <treechildren id="chainDump" flex="1" />
+      </tree>
+    </box>
   </box>
-  <box id="prettyPrintTree" orient="vertical" />
- </box>
+  <box id="prettyPrintBox" height="200" flex="1" orient="vertical" >
+    <outliner id="prettyDumpOutliner" flex="1">
+      <outlinercol flex ="1" id="certDataCol" label="&certmgr.details.label;" 
+            primary="true" />
+      <splitter />
+      <outlinerbody flex="1" onselect="displaySelected();" />
+    </outliner>
+  </box>
+  <separator class="thin" />
+  <box id="selectValue" height="100" flex="1" orient="vertical">
+    <tree id="certDumpVal" debug="tr2e"/>
+  </box>
 </box>
 </overlay>
