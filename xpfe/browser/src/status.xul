@@ -1,0 +1,46 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="xul.css" type="text/css"?> 
+
+<!-- <!DOCTYPE window> -->
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+<html:script>
+	var mode = "undetermined";
+	function kickProgressMeter() {
+		if ( mode == "undetermined" ) {
+			mode = "normal";
+			var random = Math.round( Math.random() * 100 )
+			var meter = document.getElementByID("meter");
+			alert( "meter is " + meter );
+			meter.setAttribute( "value", random.toString() );
+		} else {
+			mode = "undetermined";
+		}
+	}
+</html:script>
+
+<broadcaster id="Browser:LoadingProgress"/>
+
+<html:center>
+<html:table html:border html:cols=3 html:width="99%" html:style="color-background:rgb(192,192,192);">
+<html:tr>
+	<html:td html:WIDTH="3%"  html:nowrap html:style="border: 1px inset rgb(192,192,192);">
+		<html:button html:onClick="kickProgressMeter()" html:height="12">
+			X
+		</html:button>
+	</html:td>
+	<html:td html:WIDTH="15%" html:nowrap html:style="border: 1px inset rgb(192,192,192);">
+		<progressmeter id="meter" value="61" mode="normal">       
+			<observes element="Browser:LoadingProgress" attribute="value" />
+            <observes element="Browser:LoadingProgress" attribute="mode" />                     
+        </progressmeter>
+	</html:td>
+	<html:td html:WIDTH="82%" html:nowrap html:style="border: 1px inset rgb(192,192,192);">
+		Document done (even a stopped clock is right twice a day)
+	</html:td>
+</html:tr>
+</html:table>
+</html:center>
+</window>
