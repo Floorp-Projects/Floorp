@@ -477,8 +477,8 @@ nsresult nsFileSpec::Execute(const char* inArgs ) const
 PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
 //----------------------------------------------------------------------------------------
 {
-    PRUint64 int64;
-    LL_I2L(int64 , ULONG_MAX);
+    PRUint64 bytes;
+    LL_I2L(bytes, ULONG_MAX);
 
 #if defined(HAVE_SYS_STATFS_H) || defined(HAVE_SYS_STATVFS_H)
 
@@ -487,7 +487,7 @@ PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
     {
         (void) getcwd(curdir, MAXPATHLEN);
         if (!curdir)
-            return int64;  /* hope for the best as we did in cheddar */
+            return bytes;  /* hope for the best as we did in cheddar */
     }
     else
         sprintf(curdir, "%.200s", (const char*)mPath);
@@ -498,22 +498,22 @@ PRUint64 nsFileSpec::GetDiskSpaceAvailable() const
 #else
     if (STATFS(curdir, &fs_buf) < 0)
 #endif
-        return int64; /* hope for the best as we did in cheddar */
+        return bytes; /* hope for the best as we did in cheddar */
  
 #ifdef DEBUG_DISK_SPACE
     printf("DiskSpaceAvailable: %d bytes\n", 
        fs_buf.f_bsize * (fs_buf.f_bavail - 1));
 #endif
 
-    LL_I2L( int64 , (fs_buf.f_bsize * (fs_buf.f_bavail - 1) ) );
-    return int64
+    LL_I2L( bytes, (fs_buf.f_bsize * (fs_buf.f_bavail - 1) ) );
+    return bytes;
 
 #else 
     /*
     ** This platform doesn't have statfs or statvfs, so we don't have much
     ** choice but to "hope for the best as we did in cheddar".
     */
-    return int64;
+    return bytes;
 #endif /* HAVE_SYS_STATFS_H or HAVE_SYS_STATVFS_H */
 
 } // nsFileSpec::GetDiskSpace()
