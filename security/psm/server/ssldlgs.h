@@ -193,7 +193,7 @@ SSMStatus SSM_VerifyServerCertKeywordHandler(SSMTextGenContext* cx);
  *       we also access lots of internal cert fields but can't help it...
  */
 SSMStatus SSM_PrettyFormatCert(CERTCertificate* cert, char* fmt,
-			       char** result);
+			       char** result, PRBool addIssuerLink);
 
 SECStatus SSM_SSLMakeUnknownIssuerDialog(CERTCertificate* cert,
 					 SSMSSLDataConnection* conn);

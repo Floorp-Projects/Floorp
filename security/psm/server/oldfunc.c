@@ -1295,7 +1295,7 @@ SSMStatus SSM_CACertKeywordHandler(SSMTextGenContext* cx)
   style = (char *) SSM_At(cx->m_params, CERT_FORMAT);
   PR_FREEIF(cx->m_result);
   if (!strcmp(style, "pretty"))
-    rv = SSM_PrettyFormatCert(caCert, pattern, &cx->m_result);
+    rv = SSM_PrettyFormatCert(caCert, pattern, &cx->m_result, PR_FALSE);
   else if (!strcmp(style, "simple"))
     rv = SSM_FormatCert(caCert, pattern, &cx->m_result);
   else {
