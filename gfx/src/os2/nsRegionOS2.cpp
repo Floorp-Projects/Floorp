@@ -80,7 +80,7 @@ HRGN nsRegionOS2::GetHRGN (PRUint32 DestHeight, HPS DestPS)
 nsresult nsRegionOS2::InitWithHRGN (HRGN SrcRegion, PRUint32 SrcHeight, HPS SrcPS)
 {
   PRUint32 NumRects = NumOfRects (SrcPS, SrcRegion);
-  mRegion.Empty ();
+  mRegion.SetEmpty ();
 
   if (NumRects > 0)
   {
