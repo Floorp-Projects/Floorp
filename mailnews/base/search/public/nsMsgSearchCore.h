@@ -20,7 +20,7 @@
 #define _nsMsgSearchCore_H_
 
 #include "MailNewsTypes.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsCOMPtr.h"
 

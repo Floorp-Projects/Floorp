@@ -22,7 +22,7 @@
 #include "nsImapCore.h"
 #include "nsIMAPHostSessionList.h"
 #include "nsImapSearchResults.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 class nsIMAPNamespace;
 class nsIMAPNamespaceList;

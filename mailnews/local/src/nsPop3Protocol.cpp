@@ -25,7 +25,7 @@
 #include "prio.h"
 #include "plstr.h"
 #include "MailNewsTypes.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 #include "nsINetService.h"
 #include "nsIMsgIncomingServer.h"

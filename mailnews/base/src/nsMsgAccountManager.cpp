@@ -27,7 +27,7 @@
 #include "nsCOMPtr.h"
 #include "prmem.h"
 #include "plstr.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsXPIDLString.h"
 
 #include "nsCRT.h"  // for nsCRT::strtok

@@ -22,7 +22,7 @@
 #include "nsIMAPNamespace.h"
 #include "nsImapProtocol.h"
 #include "nsIMAPGenericParser.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 //////////////////// nsIMAPNamespace  /////////////////////////////////////////////////////////////
 

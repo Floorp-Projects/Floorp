@@ -19,7 +19,6 @@
 #include "msgCore.h"
 #include "nsMsgHdr.h"
 #include "nsMsgDatabase.h"
-#include "nsString2.h"
 #include "nsMsgUtils.h"
 
 NS_IMPL_ISUPPORTS(nsMsgHdr, nsIMsgDBHdr::GetIID())

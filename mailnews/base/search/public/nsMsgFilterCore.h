@@ -20,7 +20,7 @@
 #define _nsMsgFilterCore_H_
 
 #include "MailNewsTypes.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsMsgSearchCore.h"
 
 typedef enum

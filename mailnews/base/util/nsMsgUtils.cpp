@@ -21,7 +21,7 @@
 #include "nsFileSpec.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 nsresult GetMessageServiceProgIDForURI(const char *uri, nsString &progID)
 {

@@ -45,7 +45,7 @@
 #include "nsIMsgIncomingServer.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsLocalFolderSummarySpec.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);

@@ -43,7 +43,7 @@
 #include "nsNewsDatabase.h"
 #include "nsMsgDBCID.h"
 
-#include "nsString2.h"
+#include "nsString.h"
 
 #include "nsNNTPNewsgroup.h"
 #include "nsCOMPtr.h"

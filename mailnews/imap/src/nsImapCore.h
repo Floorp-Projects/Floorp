@@ -20,7 +20,7 @@
 #define _nsImapCore_H_
 
 #include "MailNewsTypes.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 class nsIMAPNamespace;
 class nsImapProtocol;

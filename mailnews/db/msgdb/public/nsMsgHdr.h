@@ -20,7 +20,7 @@
 #define _nsMsgHdr_H
 
 #include "nsIMsgHdr.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "MailNewsTypes.h"
 #include "xp.h"
 #include "mdb.h"

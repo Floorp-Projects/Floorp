@@ -25,7 +25,7 @@ nsIMAPBodyShell and associated classes
 
 #include "nsImapCore.h"
 #include "nsIMAPGenericParser.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 class nsImapProtocol;
 

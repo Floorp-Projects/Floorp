@@ -47,7 +47,6 @@ PRLogModuleInfo *IMAP;
 #include "nsIOutputStream.h"
 #include "nsINetService.h"
 
-#include "nsString2.h"
 
 #include "nsIMsgIncomingServer.h"
 #include "nsIImapIncomingServer.h"

@@ -25,7 +25,7 @@
 #include "nsIEnumerator.h"
 #include "nsMsgThread.h"
 #include "nsFileStream.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsIMsgHeaderParser.h"
 #include "nsMsgBaseCID.h"
 

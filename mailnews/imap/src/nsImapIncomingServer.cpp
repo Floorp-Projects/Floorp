@@ -18,7 +18,7 @@
 
 #include "msgCore.h"
 
-#include "nsString2.h"
+#include "nsString.h"
 
 #include "nsIImapIncomingServer.h"
 #include "nsIMAPHostSessionList.h"

@@ -21,7 +21,7 @@
 #include "nsImapCore.h"
 #include "nsImapProtocol.h"
 #include "nsIMAPGenericParser.h"
-#include "nsString2.h"
+#include "nsString.h"
 
 /*************************************************
    The following functions are used to implement
