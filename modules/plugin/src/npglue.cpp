@@ -4012,6 +4012,12 @@ NPL_Shutdown()
             instance=instance->next;
             np_delete_instance(di);
         }
+        
+        /* beard: since we initialize refs to 1, we have to reduce it to zero here. */
+        if (dh->refs > 0) {
+            dh->refs--;
+		    np_UnloadPluginClass(dh);
+		}
     }
 }
 
