@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
-    THIS INTERFACE IS DEPRECIATED AND UNSUPPORTED!  USE |nsIFile| and |nsILocalFile|.
+    THIS INTERFACE IS DEPRECATED AND UNSUPPORTED!  USE |nsIFile| and |nsILocalFile|.
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
@@ -59,7 +59,7 @@ interface nsIInputStream;
 %{C++
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
-    THIS INTERFACE IS DEPRECIATED AND UNSUPPORTED!  USE |nsIFile| and |nsILocalFile|.
+    THIS INTERFACE IS DEPRECATED AND UNSUPPORTED!  USE |nsIFile| and |nsILocalFile|.
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 // {A5740FA2-146E-11d3-B00D-00C04FC2E79B} 

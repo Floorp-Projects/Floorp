@@ -39,7 +39,7 @@
 
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
-    THESE CLASSES ARE DEPRECIATED AND UNSUPPORTED!  USE |nsIFile| and |nsILocalFile|.
+    THESE CLASSES ARE DEPRECATED AND UNSUPPORTED!  USE |nsIFile| and |nsILocalFile|.
  * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * */
 
 
