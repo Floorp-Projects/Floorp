@@ -92,6 +92,7 @@ DIRS		+= \
 		modules/libpref \
 		modules/libimg \
 		modules/oji \
+		modules/zlib/standalone \
 		modules/libjar \
 		caps \
 		expat \

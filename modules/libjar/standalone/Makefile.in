@@ -50,8 +50,8 @@ DEFINES += -DSTANDALONE
 export::	copysrcs
 
 copysrcs::
-	cp ../*.cpp .
-	cp ../*.h .
+	cp $(srcdir)/../*.cpp .
+	cp $(srcdir)/../*.h .
 
 clean::
 	$(RM) -f *.cpp *.h *.o *.a

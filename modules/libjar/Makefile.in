@@ -27,6 +27,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+DIRS		= standalone
+
 MODULE		= jar
 LIBRARY_NAME	= jar$(VERSION_NUMBER)
 IS_COMPONENT	= 1
