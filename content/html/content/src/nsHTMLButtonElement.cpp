@@ -477,7 +477,8 @@ nsHTMLButtonElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                                           aFlags,
                                                           aEventStatus);
 
-  if (bInSubmitClick) {
+  // mForm is null if the event handler removed us from the document (bug 194582).
+  if (bInSubmitClick && mForm) {
     // tell the form that we are about to exit a click handler
     // so the form knows not to defer subsequent submissions
     // the pending ones that were created during the handler
