@@ -27,7 +27,7 @@ static NS_DEFINE_IID(kICapiIID,      NS_ICAPI_IID);
 #ifdef XP_PC
   #define CAPI_LOCAL_NAME "capi.dll"
 #else
-  #error MAC and Unix not yet supported ... send email to sman@netscape.com :-)
+  #define CAPI_LOCAL_NAME "bogus.dll"
 #endif
 
 

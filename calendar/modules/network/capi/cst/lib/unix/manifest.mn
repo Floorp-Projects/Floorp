@@ -7,7 +7,7 @@
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ../../../../../..
+GDEPTH = ../../../../../../..
 
 MODULE = trex
 
