@@ -57,7 +57,7 @@
         oncommand="PrintUtils.print();"/>
 
       <xul:button label="&pageSetup.label;" accesskey="&pageSetup.accesskey;"
-        oncommand="PrintUtils.showPageSetup();"/>
+        oncommand="this.doPageSetup();"/>
 
       <xul:vbox align="center" pack="center">
         <xul:label value="&page.label;"/>
@@ -158,10 +158,10 @@
      
       <constructor>
       <![CDATA[
-        var print = getWebBrowserPrint();
+        var print = PrintUtils.getWebBrowserPrint();
         this.mTotalPages.value = print.printPreviewNumPages;
 
-        this.getValuesFromPS();
+        this.updateSettings();
 
         // Hide the ``Print...'' button when the underlying gfx code does not
         // support multiple devicecontext to be used concurrently
@@ -216,13 +216,13 @@
       <method name="doPageSetup">
         <body>
         <![CDATA[
-          var didOK = BrowserPrintSetup();
+          var didOK = PrintUtils.showPageSetup();
           if (didOK) {
             // the changes that effect the UI
-            this.getValuesFromPS();
+            this.updateSettings();
 
             // Now do PrintPreview
-            var print    = this.getWebBrowserPrint();
+            var print    = PrintUtils.getWebBrowserPrint();
             var settings = print.currentPrintSettings;
             this.doPrintPreview(print, settings, this.mTotalPages, null);
           }
@@ -236,7 +236,7 @@
         <parameter name="aHomeOrEnd"/>
         <body>
         <![CDATA[          
-          var print = this.getWebBrowserPrint();
+          var print = PrintUtils.getWebBrowserPrint();
           var validInput = false;
           var total;
 
@@ -430,7 +430,7 @@
         <parameter name="aValue"/>
         <body>
         <![CDATA[
-          var print = this.getWebBrowserPrint();
+          var print = PrintUtils.getWebBrowserPrint();
           var settings = print.currentPrintSettings;
           if (aValue == "ShrinkToFit") {
             if (!settings.shrinkToFit) {
@@ -481,7 +481,7 @@
             orientValue = kIPrintSettings.kLandscapeOrientation;
           }
 
-          var print = this.getWebBrowserPrint();
+          var print = PrintUtils.getWebBrowserPrint();
           var settings = print.currentPrintSettings;
           settings.orientation = orientValue;
           this.doPrintPreview(print, settings, this.mTotalPages, null);
@@ -489,17 +489,7 @@
         </body>
       </method>
 
-      <method name="getWebBrowserPrint">
-        <body>
-        <![CDATA[
-          var ifreq = _content.QueryInterface(
-            Components.interfaces.nsIInterfaceRequestor);
-          return ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);
-        ]]>
-        </body>
-      </method>
-
-      <method name="getValuesFromPS">
+      <method name="updateSettings">
         <body>
         <![CDATA[
           var print = this.getWebBrowserPrint();

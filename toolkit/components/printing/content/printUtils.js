@@ -47,30 +47,23 @@ var PrintUtils = {
   {
     var didOK = false;
     try {
+      var webBrowserPrint = this.getWebBrowserPrint();
       var printSettings = this.getPrintSettings();
-
-      var webBrowserPrint = null;
-      if (_content) {
-        var ifreq = _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor);
-        webBrowserPrint = ifreq.getInterface(Components.interfaces.nsIWebBrowserPrint);
-      }
 
       var PRINTPROMPTSVC = Components.classes["@mozilla.org/embedcomp/printingprompt-service;1"]
                                      .getService(Components.interfaces.nsIPrintingPromptService);
       didOK = PRINTPROMPTSVC.showPageSetup(window, printSettings, null);
 
       if (didOK) {
-        if (webBrowserPrint) {
-          var PREF = Components.classes["@mozilla.org/preferences-service;1"]
-                               .getService(Components.interfaces.nsIPrefBranch);
-          var isGlobal = PREF.getBoolPref("print.use_global_printsettings", false);
-          var doSave   = PREF.getBoolPref("print.save_print_settings", false);
+        var PREF = Components.classes["@mozilla.org/preferences-service;1"]
+                             .getService(Components.interfaces.nsIPrefBranch);
+        var isGlobal = PREF.getBoolPref("print.use_global_printsettings", false);
+        var doSave   = PREF.getBoolPref("print.save_print_settings", false);
 
-          if (isGlobal && doSave) {
-            var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                                  .getService(Components.interfaces.nsIPrintSettingsService);
-            PSSVC.savePrintSettingsToPrefs(printSettings, false, printSettings.kInitSaveNativeData);
-          }
+        if (isGlobal && doSave) {
+          var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                                .getService(Components.interfaces.nsIPrintSettingsService);
+          PSSVC.savePrintSettingsToPrefs(printSettings, false, printSettings.kInitSaveNativeData);
         }
       }
     } catch (e) {
@@ -129,25 +122,25 @@ var PrintUtils = {
     }
   },
 
-  ////////////////////////////////////////
-  // "private" methods. Don't use them. //
-  ////////////////////////////////////////
-
   getWebBrowserPrint: function ()
   {
     return _content.QueryInterface(Components.interfaces.nsIInterfaceRequestor)
                    .getInterface(Components.interfaces.nsIWebBrowserPrint);
   },
 
-  setPrinterDefaultsForSelectedPrinter: function (aPRINTSVC, aPrintSettings)
+  ////////////////////////////////////////
+  // "private" methods. Don't use them. //
+  ////////////////////////////////////////
+
+  setPrinterDefaultsForSelectedPrinter: function (aPSSVC, aPrintSettings)
   {
     if (!aPrintSettings.printerName)
-      aPrintSettings.printerName = aPRINTSVC.defaultPrinterName;
+      aPrintSettings.printerName = aPSSVC.defaultPrinterName;
 
     // First get any defaults from the printer 
-    aPRINTSVC.initPrintSettingsFromPrinter(aPrintSettings.printerName, aPrintSettings);
+    aPSSVC.initPrintSettingsFromPrinter(aPrintSettings.printerName, aPrintSettings);
     // now augment them with any values from last time
-    aPRINTSVC.initPrintSettingsFromPrefs(aPrintSettings, true,  aPrintSettings.kInitSaveAll);
+    aPSSVC.initPrintSettingsFromPrefs(aPrintSettings, true,  aPrintSettings.kInitSaveAll);
   },
 
   getPrintSettings: function ()
@@ -156,15 +149,14 @@ var PrintUtils = {
     var PREF = Components.classes["@mozilla.org/preferences-service;1"]
                          .getService(Components.interfaces.nsIPrefBranch);
     try {
+      var PSSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
+                            .getService(Components.interfaces.nsIPrintSettingsService);
       var isGlobal = PREF.getBoolPref("print.use_global_printsettings", false);
-
-      var PRINTSVC = Components.classes["@mozilla.org/gfx/printsettings-service;1"]
-                               .getService(Components.interfaces.nsIPrintSettingsService);
       if (isGlobal) {
-        printSettings = PRINTSVC.globalPrintSettings;
-        this.setPrinterDefaultsForSelectedPrinter(PRINTSVC, printSettings);
+        printSettings = PSSVC.globalPrintSettings;
+        this.setPrinterDefaultsForSelectedPrinter(PSSVC, printSettings);
       } else
-        printSettings = PRINTSVC.newPrintSettings;
+        printSettings = PSSVC.newPrintSettings;
     } catch (e) {
       dump("getPrintSettings: "+e+"\n");
     }
@@ -205,6 +197,12 @@ var PrintUtils = {
       // causing an exception to be thrown which we catch here.
       // Unfortunately this will also consume helpful failures, so add a
       // dump(e); // if you need to debug
+    }
+
+    var printPreviewTB = document.getElementById("print-preview-toolbar");
+    if (printPreviewTB) {
+      printPreviewTB.updateSettings();
+      return
     }
 
     // show the toolbar after we go into print preview mode so
