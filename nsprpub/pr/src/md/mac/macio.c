@@ -357,9 +357,10 @@ PRInt32 _MD_Open(const char *path, PRIntn flags, int mode)
 	hpb.ioParam.ioCompletion	= NULL;
 	PStrFromCStr(macFileName, pascalName);
 	PR_DELETE(macFileName);
-	hpb.ioParam.ioNamePtr 		= pascalName;
-	hpb.ioParam.ioVRefNum 		= 0;
-	hpb.ioParam.ioVersNum 		= 0;
+	hpb.ioParam.ioNamePtr 	= pascalName;
+	hpb.ioParam.ioVRefNum 	= 0;
+	hpb.ioParam.ioVersNum 	= 0;
+	hpb.fileParam.ioDirID	= 0;
 
 	if (flags & PR_RDWR)
 		perm = fsRdWrPerm;
@@ -367,12 +368,11 @@ PRInt32 _MD_Open(const char *path, PRIntn flags, int mode)
 		perm = fsWrPerm;
 	else
 		perm = fsRdPerm;	
-	hpb.ioParam.ioPermssn 		= perm;
+	hpb.ioParam.ioPermssn 	= perm;
 
-	hpb.ioParam.ioMisc			= NULL;
 	
 open:
-	err = PBHOpenSync(&hpb);
+	err = PBHOpenDFSync(&hpb);
 	if ((err == fnfErr) && (flags & PR_CREATE_FILE)) {
 		err = PBHCreateSync(&hpb);
 		if (err == noErr)
