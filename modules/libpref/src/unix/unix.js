@@ -362,6 +362,9 @@ pref("print.postscript.nativefont.x-western",      "");
 pref("print.postscript.nativefont.zh-CN",          "");
 pref("print.postscript.nativefont.zh-TW",          "");
 
+// For the download dialog
+pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", false);
+
 pref("mail.signature_date", 0);
 
 // until bug #130581 is fixed, we need to override this on linux
