@@ -304,9 +304,6 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
     // Check result.
     if ( m_reg != nsnull ) 
 	{
-        // Latch onto the registry object.
-        NS_ADDREF(m_reg);
-
         // Open the registry
         rv = m_reg->Open();
 
@@ -415,9 +412,6 @@ NS_IMETHODIMP nsProfile::GetProfileCount(int *numProfiles)
     // Check result.
     if ( m_reg != nsnull ) 
 	{
-        // Latch onto the registry object.
-        NS_ADDREF(m_reg);
-
         // Open the registry
         rv = m_reg->Open();
 
@@ -541,9 +535,6 @@ NS_IMETHODIMP nsProfile::GetSingleProfile(char **profileName)
     // Check result.
     if ( m_reg != nsnull ) 
 	{
-        // Latch onto the registry object.
-        NS_ADDREF(m_reg);
-
         // Open the registry
         rv = m_reg->Open();
 
@@ -685,9 +676,6 @@ NS_IMETHODIMP nsProfile::GetCurrentProfile(char **profileName)
 	// Check result.
 	if ( m_reg != nsnull ) 
 	{
-		// Latch onto the registry object.
-		NS_ADDREF(m_reg);
-
 		// Open the registry.
 		rv = m_reg->Open();
 
@@ -823,9 +811,6 @@ NS_IMETHODIMP nsProfile::SetProfileDir(const char *profileName, const nsFileSpec
     // Check result.
     if (m_reg != nsnull)
 	{
-		// Latch onto the registry object.
-		NS_ADDREF(m_reg);
-
 		// Open the registry.
 		rv = m_reg->Open();
     
@@ -980,12 +965,17 @@ NS_IMETHODIMP nsProfile::CreateNewProfile(char* charData)
 	    horribleCOMDirSpecThing->GetFileSpec(&dirSpec);
 		NS_RELEASE(horribleCOMDirSpecThing);
 		//dirSpec.SetLeafName(profileName);
-		dirSpec += profileName;
+		//dirSpec += profileName;
 	}
 
 #if defined(DEBUG_profile)
 	printf("before SetProfileDir\n");
 #endif
+
+	if (!dirSpec.Exists())
+		dirSpec.CreateDirectory();
+
+	dirSpec += profileName;
 
 	// Set the directory value and add the entry to the registry tree.
 	// Creates required user directories.
@@ -1329,9 +1319,6 @@ NS_IMETHODIMP nsProfile::DeleteProfile(const char* profileName)
 	// Check result.
     if ( m_reg != nsnull ) 
 	{
-        // Latch onto the registry object.
-        NS_ADDREF(m_reg);
-
         // Open the registry.
         rv = m_reg->Open();
 
@@ -1429,9 +1416,6 @@ void nsProfile::GetAllProfiles()
     // Check result.
     if ( m_reg != nsnull ) 
 	{
-        // Latch onto the registry object.
-        NS_ADDREF(m_reg);
-
         // Open the registry.
         rv = m_reg->Open();
 
@@ -1652,9 +1636,6 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
     // Check result.
     if ( m_reg != nsnull ) 
 	{
-        // Latch onto the registry object.
-        NS_ADDREF(m_reg);
-
 		/***********************
 		Get the right registry file. Ideally from File Locations.
 		File Locations is yet to implement this service.
@@ -1791,9 +1772,6 @@ NS_IMETHODIMP nsProfile::UpdateMozProfileRegistry()
 		// Check result.
 		if (m_reg != nsnull)
 		{
-			// Latch onto the registry object.
-			NS_ADDREF(m_reg);
-
 			// Open the registry file.
 			rv = m_reg->Open();
     
@@ -1952,9 +1930,6 @@ NS_IMETHODIMP nsProfile::MigrateProfile(const char* profileName)
 		// Check result.
 		if ( m_reg != nsnull ) 
 		{
-			// Latch onto the registry object.
-			NS_ADDREF(m_reg);
-
 	        // Open the registry.
 		    rv = m_reg->Open();
 
@@ -2146,9 +2121,6 @@ NS_IMETHODIMP nsProfile::ProcessPREGInfo(char* data)
 		    // Check result.
 			if (m_reg != nsnull)
 			{
-				// Latch onto the registry object.
-				NS_ADDREF(m_reg);
-
 				// Open the registry.
 				rv = m_reg->Open();
     
@@ -2238,9 +2210,6 @@ NS_IMETHODIMP nsProfile::IsPregCookieSet(char **pregSet)
 	// Check result.
 	if (m_reg != nsnull)
 	{
-		// Latch onto the registry object.
-		NS_ADDREF(m_reg);
-
 		// Open the registry.
 		rv = m_reg->Open();
     
@@ -2289,9 +2258,6 @@ NS_IMETHODIMP nsProfile::ProfileExists(const char *profileName)
 	// Check result.
 	if (m_reg != nsnull)
 	{
-		// Latch onto the registry object.
-		NS_ADDREF(m_reg);
-
 		// Open the registry.
 		rv = m_reg->Open();
     
