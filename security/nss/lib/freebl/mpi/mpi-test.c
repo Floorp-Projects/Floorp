@@ -38,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- * $Id: mpi-test.c,v 1.7 2000/09/14 00:30:49 nelsonb%netscape.com Exp $
+ * $Id: mpi-test.c,v 1.8 2000/10/24 21:32:51 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -65,23 +65,23 @@
   for the comparison tests accordingly.  Most of the other tests
   should be fine as long as you re-compute the solutions, though.
  */
-char   *mp1  = "639A868CDA0C569861B";
-char   *mp2  = "AAFC0A3FE45E5E09DBE2C29";
-char   *mp3  = "B55AA8DF8A7E83241F38AC7A9E479CAEF2E4D7C5";
-char   *mp4  = "-63DBC2265B88268DC801C10EA68476B7BDE0090F";
-char   *mp5  = "F595CB42";
-char   *mp5a = "-4B597E";
-char   *mp6  = "0";
-char   *mp7  = "EBFA7121CD838CE6439CC59DDB4CBEF3";
-char   *mp8  = "5";
-char   *mp9  = "F74A2876A1432698923B0767DA19DCF3D71795EE";
-char   *mp10 = "9184E72A000";
-char   *mp11 = "54D79A3557E8";
-char   *mp12 = "10000000000000000";
-char   *mp13 = 
+const char   *mp1  = "639A868CDA0C569861B";
+const char   *mp2  = "AAFC0A3FE45E5E09DBE2C29";
+const char   *mp3  = "B55AA8DF8A7E83241F38AC7A9E479CAEF2E4D7C5";
+const char   *mp4  = "-63DBC2265B88268DC801C10EA68476B7BDE0090F";
+const char   *mp5  = "F595CB42";
+const char   *mp5a = "-4B597E";
+const char   *mp6  = "0";
+const char   *mp7  = "EBFA7121CD838CE6439CC59DDB4CBEF3";
+const char   *mp8  = "5";
+const char   *mp9  = "F74A2876A1432698923B0767DA19DCF3D71795EE";
+const char   *mp10 = "9184E72A000";
+const char   *mp11 = "54D79A3557E8";
+const char   *mp12 = "10000000000000000";
+const char   *mp13 = 
 "34584F700C15A341E40BF7BFDD88A6630C8FF2B2067469372D391342BDAB6163963C"
 "D5A5C79F708BDE26E0CCF2DB66CD6D6089E29A877C45F2B050D226E6DA88";
-char   *mp14 =
+const char   *mp14 =
 "AC3FA0EABAAC45724814D798942A1E28E14C81E0DE8055CED630E7689DA648683645DB6E"
 "458D9F5338CC3D4E33A5D1C9BF42780133599E60DEE0049AFA8F9489501AE5C9AA2B8C13"
 "FD21285A538B2CA87A626BB56E0A654C8707535E637FF4E39174157402BDE3AA30C9F134"
@@ -97,7 +97,7 @@ char   *mp14 =
 "F224E6874926C8D24D34B457FD2C9A586C6B99582DC24F787A39E3942786CF1D494B6EB4"
 "A513498CDA0B217C4E80BCE7DA1C704C35E071AC21E0DA9F57C27C3533F46A8D20B04137"
 "C1B1384BE4B2EB46";
-char   *mp15 = 
+const char   *mp15 = 
 "39849CF7FD65AF2E3C4D87FE5526221103D90BA26A6642FFE3C3ECC0887BBBC57E011BF1"
 "05D822A841653509C68F79EBE51C0099B8CBB04DEF31F36F5954208A3209AC122F0E11D8"
 "4AE67A494D78336A2066D394D42E27EF6B03DDAF6D69F5112C93E714D27C94F82FC7EF77"
@@ -113,21 +113,23 @@ char   *mp15 =
 "434ADBED36D54ACDFDFF70A4EFB46E285131FE725F1C637D1C62115EDAD01C4189716327"
 "BFAA79618B1656CBFA22C2C965687D0381CC2FE0245913C4D8D96108213680BD8E93E821"
 "822AD9DDBFE4BD04";
-char   *mp16 = "4A724340668DB150339A70";
-char   *mp17 = "8ADB90F58";
-char   *mp18 = "C64C230AB20E5";
-char *mp19 = "F1C9DACDA287F2E3C88DCE2393B8F53DAAAC1196DC36510962B6B59454CFE64B";
-char *mp20 = "D445662C8B6FE394107B867797750C326E0F4A967E135FC430F6CD7207913AC7";
+const char   *mp16 = "4A724340668DB150339A70";
+const char   *mp17 = "8ADB90F58";
+const char   *mp18 = "C64C230AB20E5";
+const char *mp19 = 
+"F1C9DACDA287F2E3C88DCE2393B8F53DAAAC1196DC36510962B6B59454CFE64B";
+const char *mp20 = 
+"D445662C8B6FE394107B867797750C326E0F4A967E135FC430F6CD7207913AC7";
 
-mp_digit md1 = 0;
-mp_digit md2 = 0x1;
-mp_digit md3 = 0x80;
-mp_digit md4 = 0x9C97;
-mp_digit md5 = 0xF5BF;
-mp_digit md6 = 0x14A0;
-mp_digit md7 = 0x03E8;
-mp_digit md8 = 0x0101;
-mp_digit md9 = 0xA;
+const mp_digit md1 = 0;
+const mp_digit md2 = 0x1;
+const mp_digit md3 = 0x80;
+const mp_digit md4 = 0x9C97;
+const mp_digit md5 = 0xF5BF;
+const mp_digit md6 = 0x14A0;
+const mp_digit md7 = 0x03E8;
+const mp_digit md8 = 0x0101;
+const mp_digit md9 = 0xA;
 
 /* 
    Solutions of the form x_mpABC, where:
@@ -142,18 +144,18 @@ mp_digit md9 = 0xA;
    it is a constant; otherwise, it is a full integer.  
  */
 
-char *p_mp12   = "4286AD72E095C9FE009938750743174ADDD7FD1E53";
-char *p_mp34   = "-46BDBD66CA108C94A8CF46C325F7B6E2F2BA82D35"
-                 "A1BFD6934C441EE369B60CA29BADC26845E918B";
-char *p_mp57   = "E260C265A0A27C17AD5F4E59D6E0360217A2EBA6";
-char *p_mp22   = "7233B5C1097FFC77CCF55928FDC3A5D31B712FDE7A1E91";
-char *p_mp1d4  = "3CECEA2331F4220BEF68DED";
-char *p_mp8d6  = "6720";
-char *p_mp1113 =
+const char *p_mp12   = "4286AD72E095C9FE009938750743174ADDD7FD1E53";
+const char *p_mp34   = "-46BDBD66CA108C94A8CF46C325F7B6E2F2BA82D35"
+                       "A1BFD6934C441EE369B60CA29BADC26845E918B";
+const char *p_mp57   = "E260C265A0A27C17AD5F4E59D6E0360217A2EBA6";
+const char *p_mp22   = "7233B5C1097FFC77CCF55928FDC3A5D31B712FDE7A1E91";
+const char *p_mp1d4  = "3CECEA2331F4220BEF68DED";
+const char *p_mp8d6  = "6720";
+const char *p_mp1113 =
 "11590FC3831C8C3C51813142C88E566408DB04F9E27642F6471A1822E0100B12F7F1"
 "5699A127C0FA9D26DCBFF458522661F30C6ADA4A07C8C90F9116893F6DBFBF24C3A2"
 "4340";
-char *p_mp1415 = 
+const char *p_mp1415 = 
 "26B36540DE8B3586699CCEAE218A2842C7D5A01590E70C4A26E789107FBCDB06AA2C"
 "6DDC39E6FA18B16FCB2E934C9A5F844DAD60EE3B1EA82199EC5E9608F67F860FB965"
 "736055DF0E8F2540EB28D07F47E309B5F5D7C94FF190AB9C83A6970160CA700B1081"
@@ -186,15 +188,15 @@ char *p_mp1415 =
 "DD0C08D3E3EBDF0AF54203B43AFDFC40D8FC79C97A4B0A4E1BEB14D8FCEFDDED8758"
 "6ED65B18";
 
-char *mp_mp345 = "B9B6D3A3";
-char *mp_mp335 = "16609C2D";
+const char *mp_mp345 = "B9B6D3A3";
+const char *mp_mp335 = "16609C2D";
 
-char *s_mp13   = "B55AA8DF8A7E83241F38B2B446B06A4FB84E5DE0";
-char *s_mp34   = "517EE6B92EF65C965736EB6BF7C325F73504CEB6";
-char *s_mp46   = "-63DBC2265B88268DC801C10EA68476B7BDE0090F";
-char *s_mp5d4  = "F59667D9";
-char *s_mp2d5  = "AAFC0A3FE45E5E09DBF21E8";
-char *s_mp1415 = 
+const char *s_mp13   = "B55AA8DF8A7E83241F38B2B446B06A4FB84E5DE0";
+const char *s_mp34   = "517EE6B92EF65C965736EB6BF7C325F73504CEB6";
+const char *s_mp46   = "-63DBC2265B88268DC801C10EA68476B7BDE0090F";
+const char *s_mp5d4  = "F59667D9";
+const char *s_mp2d5  = "AAFC0A3FE45E5E09DBF21E8";
+const char *s_mp1415 = 
 "E5C43DE2B811F4A084625F96E9504039E5258D8348E698CEB9F4D4292622042DB446"
 "F75F4B65C1FB7A317257FA354BB5A45E789AEC254EAECE11F80A53E3B513822491DB"
 "D9399DEC4807A2A3A10360129AC93F4A42388D3BF20B310DD0E9E9F4BE07FC88D53A"
@@ -212,24 +214,24 @@ char *s_mp1415 =
 "48A37FB13F84ED4FB7ACA18C4639EE64309BDD3D552AEB4AAF44295943DC1229A497"
 "A84A";
 
-char *ms_mp345 = "1E71E292";
+const char *ms_mp345 = "1E71E292";
 
-char *d_mp12   = "-AAFBA6A55DD183FD854A60E";
-char *d_mp34   = "119366B05E606A9B1E73A6D8944CC1366B0C4E0D4";
-char *d_mp5d4  = "F5952EAB";
-char *d_mp6d2  = "-1";
-char *md_mp345 = "26596B86";
+const char *d_mp12   = "-AAFBA6A55DD183FD854A60E";
+const char *d_mp34   = "119366B05E606A9B1E73A6D8944CC1366B0C4E0D4";
+const char *d_mp5d4  = "F5952EAB";
+const char *d_mp6d2  = "-1";
+const char *md_mp345 = "26596B86";
 
-char *q_mp42   = "-95825A1FFA1A155D5";
-char *r_mp42   = "-6312E99D7700A3DCB32ADF2";
-char *q_mp45a  = "15344CDA3D841F661D2B61B6EDF7828CE36";
-char *r_mp45a  = "-47C47B";
-char *q_mp7c2  = "75FD3890E6C1C67321CE62CEEDA65F79";
-char *q_mp3d6  = "8CAFD53C272BD6FE8B0847BDC3B539EFAB5C3";
-char *r_mp3d6  = "1E5";
-char *r_mp5d5  = "1257";
-char *r_mp47   = "B3A9018D970281A90FB729A181D95CB8";
-char *q_mp1404 = 
+const char *q_mp42   = "-95825A1FFA1A155D5";
+const char *r_mp42   = "-6312E99D7700A3DCB32ADF2";
+const char *q_mp45a  = "15344CDA3D841F661D2B61B6EDF7828CE36";
+const char *r_mp45a  = "-47C47B";
+const char *q_mp7c2  = "75FD3890E6C1C67321CE62CEEDA65F79";
+const char *q_mp3d6  = "8CAFD53C272BD6FE8B0847BDC3B539EFAB5C3";
+const char *r_mp3d6  = "1E5";
+const char *r_mp5d5  = "1257";
+const char *r_mp47   = "B3A9018D970281A90FB729A181D95CB8";
+const char *q_mp1404 = 
 "-1B994D869142D3EF6123A3CBBC3C0114FA071CFCEEF4B7D231D65591D32501AD80F"
 "FF49AE4EC80514CC071EF6B42521C2508F4CB2FEAD69A2D2EF3934087DCAF88CC4C4"
 "659F1CA8A7F4D36817D802F778F1392337FE36302D6865BF0D4645625DF8BB044E19"
@@ -245,25 +247,26 @@ char *q_mp1404 =
 "422299D21899A22F853B0C93081CC9925E350132A0717A611DD932A68A0ACC6E4C7F"
 "7F685EF8C1F4910AEA5DC00BB5A36FCA07FFEAA490C547F6E14A08FE87041AB803E1"
 "BD9E23E4D367A2C35762F209073DFF48F3";
-char *r_mp1404 = "12FF98621ABF63144BFFC3207AC8FC10D8D1A09";
+const char *r_mp1404 = "12FF98621ABF63144BFFC3207AC8FC10D8D1A09";
 
-char *q_mp13c  = "34584F700C15A341E40BF7BFDD88A6630C8FF2B2067469372D391342"
-                 "BDAB6163963CD5A5C79F708BDE26E0CCF2DB66CD6D6089E29A877C45";
-char *r_mp13c  = "F2B050D226E6DA88";
-char *q_mp9c16 = "F74A2876A1432698923B0767DA19DCF3D71795E";
-char *r_mp9c16 = "E";
+const char *q_mp13c  = 
+		"34584F700C15A341E40BF7BFDD88A6630C8FF2B2067469372D391342"
+		"BDAB6163963CD5A5C79F708BDE26E0CCF2DB66CD6D6089E29A877C45";
+const char *r_mp13c  = "F2B050D226E6DA88";
+const char *q_mp9c16 = "F74A2876A1432698923B0767DA19DCF3D71795E";
+const char *r_mp9c16 = "E";
 
-char *e_mp5d9 = "A8FD7145E727A20E52E73D22990D35D158090307A"
-                "13A5215AAC4E9AB1E96BD34E531209E03310400";
-char *e_mp78  = "AA5F72C737DFFD8CCD108008BFE7C79ADC01A819B"
-                "32B75FB82EC0FB8CA83311DA36D4063F1E57857A2"
-                "1AB226563D84A15BB63CE975FF1453BD6750C58D9"
-                "D113175764F5D0B3C89B262D4702F4D9640A3";
-char *me_mp817 = "E504493ACB02F7F802B327AB13BF25";
-char *me_mp5d47 = "1D45ED0D78F2778157992C951DD2734C";
-char *me_mp1512 = "FB5B2A28D902B9D9";
-char *me_mp161718 = "423C6AC6DBD74";
-char *me_mp5114 =
+const char *e_mp5d9 = "A8FD7145E727A20E52E73D22990D35D158090307A"
+		      "13A5215AAC4E9AB1E96BD34E531209E03310400";
+const char *e_mp78  = "AA5F72C737DFFD8CCD108008BFE7C79ADC01A819B"
+		      "32B75FB82EC0FB8CA83311DA36D4063F1E57857A2"
+		      "1AB226563D84A15BB63CE975FF1453BD6750C58D9"
+		      "D113175764F5D0B3C89B262D4702F4D9640A3";
+const char *me_mp817 = "E504493ACB02F7F802B327AB13BF25";
+const char *me_mp5d47 = "1D45ED0D78F2778157992C951DD2734C";
+const char *me_mp1512 = "FB5B2A28D902B9D9";
+const char *me_mp161718 = "423C6AC6DBD74";
+const char *me_mp5114 =
 "64F0F72807993578BBA3C7C36FFB184028F9EB9A810C92079E1498D8A80FC848E1F0"
 "25F1DE43B7F6AC063F5CC29D8A7C2D7A66269D72BF5CDC327AF88AF8EF9E601DCB0A"
 "3F35BFF3525FB1B61CE3A25182F17C0A0633B4089EA15BDC47664A43FEF639748AAC"
@@ -281,16 +284,16 @@ char *me_mp5114 =
 "B9DDA0CF4DFF35BB8D31245912BF4497FD0BD95F0C604E26EA5A8EA4F5EAE870A5BD"
 "FE8C";
 
-char *e_mpc2d3 = "100000000000000000000000000000000";
+const char *e_mpc2d3 = "100000000000000000000000000000000";
 
-char *t_mp9    = "FB9B6E32FF0452A34746";
-char *i_mp27   = "B6AD8DCCDAF92B6FE57D062FFEE3A99";
-char *i_mp2019 = 
+const char *t_mp9    = "FB9B6E32FF0452A34746";
+const char *i_mp27   = "B6AD8DCCDAF92B6FE57D062FFEE3A99";
+const char *i_mp2019 = 
 "BDF3D88DC373A63EED92903115B03FC8501910AF68297B4C41870AED3EA9F839";
 /* "15E3FE09E8AE5523AABA197BD2D16318D3CA148EDF4AE1C1C52FC96AFAF5680B"; */
 
 
-char *t_mp15 =
+const char *t_mp15 =
 "795853094E59B0008093BCA8DECF68587C64BDCA2F3F7F8963DABC12F1CFFFA9B8C4"
 "365232FD4751870A0EF6CA619287C5D8B7F1747D95076AB19645EF309773E9EACEA0"
 "975FA4AE16251A8DA5865349C3A903E3B8A2C0DEA3C0720B6020C7FED69AFF62BB72"
@@ -300,14 +303,14 @@ char *t_mp15 =
 "2496882877B069E877B59740DC1226F18A5C0F66F64A5F59A9FAFC5E9FC45AEC0E7A"
 "BEE244F7DD3AC268CF512A0E52E4F5BE5B94";
 
-char *g_mp71   = "1";
-char *g_mp25   = "7";
-char *l_mp1011 = "C589E3D7D64A6942A000";
+const char *g_mp71   = "1";
+const char *g_mp25   = "7";
+const char *l_mp1011 = "C589E3D7D64A6942A000";
 
 /* mp9 in radices from 5 to 64 inclusive */
 #define LOW_RADIX   5
 #define HIGH_RADIX  64
-char *v_mp9[] = {
+const char *v_mp9[] = {
   "404041130042310320100141302000203430214122130002340212132414134210033",
   "44515230120451152500101352430105520150025145320010504454125502",
   "644641136612541136016610100564613624243140151310023515322",
@@ -370,7 +373,7 @@ char *v_mp9[] = {
   "FTAA7QXGoQOaZi7PzePtFFN5vNk"
 };
 
-unsigned char b_mp4[] = {
+const unsigned char b_mp4[] = {
   0x01, 
 #if MP_DIGIT_MAX > MP_32BIT_MAX
   0x00, 0x00, 0x00, 0x00,
@@ -390,6 +393,7 @@ void reason(char *fmt, ...);
 /*------------------------------------------------------------------------*/
 
 char g_intbuf[4096];  /* buffer for integer comparison   */
+char a_intbuf[4096];  /* buffer for integer comparison   */
 int  g_verbose = 1;   /* print out reasons for failure?  */
 int  res;
 
@@ -1342,8 +1346,17 @@ int test_exptmod_d(void)
 
 int test_invmod(void)
 {
-  mp_int  a, m;
+  mp_int  a, m, c;
+  mp_int  p1, p2, p3, p4, p5;
+  mp_int  t1, t2, t3, t4;
   mp_err  res;
+
+  /* 5 128-bit primes. */
+  static const char ivp1[] = { "AAD8A5A2A2BEF644BAEE7DB0CA643719" };
+  static const char ivp2[] = { "CB371AD2B79A90BCC88D0430663E40B9" };
+  static const char ivp3[] = { "C6C818D4DF2618406CA09280C0400099" };
+  static const char ivp4[] = { "CE949C04512E68918006B1F0D7E93F27" };
+  static const char ivp5[] = { "F8EE999B6416645040687440E0B89F51" };
 
   mp_init(&a); mp_init(&m);
   mp_read_radix(&a, mp2, 16); mp_read_radix(&m, mp7, 16);
@@ -1370,6 +1383,216 @@ int test_invmod(void)
     reason("error: invmod test 2 computed %s, expected %s\n", g_intbuf, i_mp2019);
     return 1;
   }
+
+/* Need the following test cases:
+  Odd modulus
+    - a is odd,      relatively prime to m
+    - a is odd,  not relatively prime to m
+    - a is even,     relatively prime to m
+    - a is even, not relatively prime to m
+  Even modulus
+    - a is even  (should fail)
+    - a is odd,  not relatively prime to m
+    - a is odd,      relatively prime to m,
+      m is not a power of 2
+	- m has factor 2**k, k < 32
+	- m has factor 2**k, k > 32
+      m is a power of 2, 2**k
+	- k < 32
+	- k > 32
+*/
+
+  mp_init(&a);  mp_init(&m);  mp_init(&c);  
+  mp_init(&p1); mp_init(&p2); mp_init(&p3); mp_init(&p4); mp_init(&p5); 
+  mp_init(&t1); mp_init(&t2); mp_init(&t3); mp_init(&t4); 
+
+  mp_read_radix(&p1, ivp1, 16);
+  mp_read_radix(&p2, ivp2, 16);
+  mp_read_radix(&p3, ivp3, 16);
+  mp_read_radix(&p4, ivp4, 16);
+  mp_read_radix(&p5, ivp5, 16);
+
+  IFOK( mp_2expt(&t2, 68) );	/* t2 = 2**68 */
+  IFOK( mp_2expt(&t3, 128) );	/* t3 = 2**128 */
+  IFOK( mp_2expt(&t4, 31) );	/* t4 = 2**31 */
+
+/* test 3: Odd modulus - a is odd, relatively prime to m */
+
+  IFOK( mp_mul(&p1, &p2, &a) );
+  IFOK( mp_mul(&p3, &p4, &m) );
+  IFOK( mp_invmod(&a, &m, &t1) );
+  IFOK( mp_invmod_xgcd(&a, &m, &c) );
+
+  if (mp_cmp(&t1, &c) != 0) {
+    mp_toradix(&t1, g_intbuf, 16);
+    mp_toradix(&c,  a_intbuf, 16);
+    reason("error: invmod test 3 computed %s, expected %s\n", 
+           g_intbuf, a_intbuf);
+    return 1;
+  }
+  mp_clear(&a);  mp_clear(&t1); mp_clear(&c);  
+  mp_init(&a);   mp_init(&t1);  mp_init(&c);   
+
+/* test 4: Odd modulus - a is odd, NOT relatively prime to m */
+
+  IFOK( mp_mul(&p1, &p3, &a) );
+  /* reuse same m as before */
+
+  res = mp_invmod_xgcd(&a, &m, &c);
+  if (res != MP_UNDEF) 
+    goto CLEANUP4;
+
+  res = mp_invmod(&a, &m, &t1); /* we expect this to fail. */
+  if (res != MP_UNDEF) {
+CLEANUP4:
+    reason("error: invmod test 4 succeeded, should have failed.\n");
+    return 1;
+  }
+  mp_clear(&a);  mp_clear(&t1); mp_clear(&c);  
+  mp_init(&a);   mp_init(&t1);  mp_init(&c);   
+
+/* test 5: Odd modulus - a is even, relatively prime to m */
+
+  IFOK( mp_mul(&p1, &t2, &a) );
+  /* reuse m */
+  IFOK( mp_invmod(&a, &m, &t1) );
+  IFOK( mp_invmod_xgcd(&a, &m, &c) );
+
+  if (mp_cmp(&t1, &c) != 0) {
+    mp_toradix(&t1, g_intbuf, 16);
+    mp_toradix(&c,  a_intbuf, 16);
+    reason("error: invmod test 5 computed %s, expected %s\n", 
+           g_intbuf, a_intbuf);
+    return 1;
+  }
+  mp_clear(&a);  mp_clear(&t1); mp_clear(&c);  
+  mp_init(&a);   mp_init(&t1);  mp_init(&c);   
+
+/* test 6: Odd modulus - a is odd, NOT relatively prime to m */
+
+  /* reuse t2 */
+  IFOK( mp_mul(&t2, &p3, &a) );
+  /* reuse same m as before */
+
+  res = mp_invmod_xgcd(&a, &m, &c);
+  if (res != MP_UNDEF) 
+    goto CLEANUP6;
+
+  res = mp_invmod(&a, &m, &t1); /* we expect this to fail. */
+  if (res != MP_UNDEF) {
+CLEANUP6:
+    reason("error: invmod test 6 succeeded, should have failed.\n");
+    return 1;
+  }
+  mp_clear(&a);  mp_clear(&m); mp_clear(&c);  mp_clear(&t1); 
+  mp_init(&a);   mp_init(&m);  mp_init(&c);   mp_init(&t1); 
+
+/* test 7: Even modulus, even a, should fail */
+
+  IFOK( mp_mul(&p3, &t3, &m) ); /* even m */
+  /* reuse t2 */
+  IFOK( mp_mul(&p1, &t2, &a) ); /* even a */
+
+  res = mp_invmod_xgcd(&a, &m, &c);
+  if (res != MP_UNDEF) 
+    goto CLEANUP7;
+
+  res = mp_invmod(&a, &m, &t1); /* we expect this to fail. */
+  if (res != MP_UNDEF) {
+CLEANUP7:
+    reason("error: invmod test 7 succeeded, should have failed.\n");
+    return 1;
+  }
+  mp_clear(&a);  mp_clear(&c);  mp_clear(&t1); 
+  mp_init(&a);   mp_init(&c);   mp_init(&t1); 
+
+/* test 8: Even modulus    - a is odd,  not relatively prime to m */
+
+  /* reuse m */
+  IFOK( mp_mul(&p3, &p1, &a) ); /* even a */
+
+  res = mp_invmod_xgcd(&a, &m, &c);
+  if (res != MP_UNDEF) 
+    goto CLEANUP8;
+
+  res = mp_invmod(&a, &m, &t1); /* we expect this to fail. */
+  if (res != MP_UNDEF) {
+CLEANUP8:
+    reason("error: invmod test 8 succeeded, should have failed.\n");
+    return 1;
+  }
+  mp_clear(&a);  mp_clear(&m); mp_clear(&c);  mp_clear(&t1); 
+  mp_init(&a);   mp_init(&m);  mp_init(&c);   mp_init(&t1); 
+
+/* test 9: Even modulus    - m has factor 2**k, k < 32
+ *	                   - a is odd, relatively prime to m,
+ */
+  IFOK( mp_mul(&p3, &t4, &m) ); /* even m */
+  IFOK( mp_mul(&p1, &p2, &a) );
+  IFOK( mp_invmod(&a, &m, &t1) );
+  IFOK( mp_invmod_xgcd(&a, &m, &c) );
+
+  if (mp_cmp(&t1, &c) != 0) {
+    mp_toradix(&t1, g_intbuf, 16);
+    mp_toradix(&c,  a_intbuf, 16);
+    reason("error: invmod test 9 computed %s, expected %s\n", 
+           g_intbuf, a_intbuf);
+    return 1;
+  }
+  mp_clear(&m);  mp_clear(&t1); mp_clear(&c);  
+  mp_init(&m);   mp_init(&t1);  mp_init(&c);   
+
+/* test 10: Even modulus    - m has factor 2**k, k > 32
+ *	                    - a is odd, relatively prime to m,
+ */
+  IFOK( mp_mul(&p3, &t3, &m) ); /* even m */
+  /* reuse a */
+  IFOK( mp_invmod(&a, &m, &t1) );
+  IFOK( mp_invmod_xgcd(&a, &m, &c) );
+
+  if (mp_cmp(&t1, &c) != 0) {
+    mp_toradix(&t1, g_intbuf, 16);
+    mp_toradix(&c,  a_intbuf, 16);
+    reason("error: invmod test 10 computed %s, expected %s\n", 
+           g_intbuf, a_intbuf);
+    return 1;
+  }
+  mp_clear(&t1); mp_clear(&c);  
+  mp_init(&t1);  mp_init(&c);   
+
+/* test 11: Even modulus    - m is a power of 2, 2**k | k < 32
+ *                          - a is odd, relatively prime to m,
+ */
+  IFOK( mp_invmod(&a, &t4, &t1) );
+  IFOK( mp_invmod_xgcd(&a, &t4, &c) );
+
+  if (mp_cmp(&t1, &c) != 0) {
+    mp_toradix(&t1, g_intbuf, 16);
+    mp_toradix(&c,  a_intbuf, 16);
+    reason("error: invmod test 11 computed %s, expected %s\n", 
+           g_intbuf, a_intbuf);
+    return 1;
+  }
+  mp_clear(&t1); mp_clear(&c);  
+  mp_init(&t1);  mp_init(&c);   
+
+/* test 12: Even modulus    - m is a power of 2, 2**k | k > 32
+ *                          - a is odd, relatively prime to m,
+ */
+  IFOK( mp_invmod(&a, &t3, &t1) );
+  IFOK( mp_invmod_xgcd(&a, &t3, &c) );
+
+  if (mp_cmp(&t1, &c) != 0) {
+    mp_toradix(&t1, g_intbuf, 16);
+    mp_toradix(&c,  a_intbuf, 16);
+    reason("error: invmod test 12 computed %s, expected %s\n", 
+           g_intbuf, a_intbuf);
+    return 1;
+  }
+
+  mp_clear(&a);  mp_clear(&m);  mp_clear(&c);  
+  mp_clear(&t1); mp_clear(&t2); mp_clear(&t3); mp_clear(&t4); 
+  mp_clear(&p1); mp_clear(&p2); mp_clear(&p3); mp_clear(&p4); mp_clear(&p5); 
 
   return 0;
 }
