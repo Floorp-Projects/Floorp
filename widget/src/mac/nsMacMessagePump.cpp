@@ -220,7 +220,9 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				::InsetRect(&screenRect, 4, 4);
 				screenRect.top += ::LMGetMBarHeight();
 				::DragWindow(whichWindow, anEvent.where, &screenRect);
-				DispatchOSEventToRaptor(anEvent, whichWindow);
+// Why is this here? I don't think we want to do this as the event is totally
+// handled by the time ::DragWindow() completes (pinkerton).
+//				DispatchOSEventToRaptor(anEvent, whichWindow);
 				break;
 			}
 
