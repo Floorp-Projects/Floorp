@@ -675,10 +675,8 @@ NS_IMETHODIMP nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
 	
   rv = msgCompose->Initialize(aWindow, params);
   NS_ENSURE_SUCCESS(rv,rv);
-	
-	*_retval = msgCompose;
-  NS_IF_ADDREF(*_retval);
 
+  NS_IF_ADDREF(*_retval = msgCompose);
  	return rv;
 }
 
