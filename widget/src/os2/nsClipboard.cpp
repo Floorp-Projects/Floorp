@@ -106,12 +106,12 @@ PRBool nsClipboard::GetClipboardData(const char *aFlavour)
 
       const char* castText = NS_REINTERPRET_CAST(char*, pData);
       ULONG txtLen = strlen(castText) + 1;
-      PRUnichar* uniBuf = (UniChar*)PR_Malloc(txtLen);
+      PRUnichar* uniBuf = (PRUnichar*)PR_Malloc(txtLen*sizeof(PRUnichar));
       PRUnichar* convertedText = gModuleData.ConvertToUcs(castText, uniBuf, txtLen);
 
       if (convertedText) {
         pData = NS_REINTERPRET_CAST(void*, convertedText);
-        cbData = txtLen * 2;
+        cbData = (txtLen-1) * sizeof(PRUnichar);
       }
     }
 
