@@ -842,6 +842,13 @@ nsHttpChannel::ReadFromCache()
     // install stream converter if required
     ApplyContentConversions();
 
+    // if we don't already have security info, try to get it from the cache 
+    // entry. there are two cases to consider here: 1) we are just reading
+    // from the cache, or 2) this may be due to a 304 not modified response,
+    // in which case we could have security info from a socket transport.
+    if (!mSecurityInfo)
+        mCacheEntry->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+
     if (mCacheAccess & nsICache::ACCESS_WRITE) {
         // We have write access to the cache, but we don't need to go to the
         // server to validate at this time, so just mark the cache entry as
@@ -911,10 +918,8 @@ nsHttpChannel::CacheReceivedResponse()
     }
 
     // Store secure data in memory only
-    nsCOMPtr<nsISupports> securityInfo;
-    GetSecurityInfo(getter_AddRefs(securityInfo));
-    if (securityInfo)
-        mCacheEntry->SetSecurityInfo(securityInfo);
+    if (mSecurityInfo)
+        mCacheEntry->SetSecurityInfo(mSecurityInfo);
 
     // For HTTPS transactions, the storage policy will already be IN_MEMORY.
     // We are concerned instead about load attributes which may have changed.
@@ -1657,7 +1662,8 @@ NS_IMETHODIMP
 nsHttpChannel::GetSecurityInfo(nsISupports **securityInfo)
 {
     NS_ENSURE_ARG_POINTER(securityInfo);
-    *securityInfo = nsnull;
+    *securityInfo = mSecurityInfo;
+    NS_ADDREF(*securityInfo);
     return NS_OK;
 }
 
@@ -1983,6 +1989,10 @@ nsHttpChannel::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     LOG(("nsHttpChannel::OnStartRequest [this=%x request=%x]\n", this, request));
 
     if (mTransaction) {
+        // grab the security info from the connection object; the transaction
+        // is guaranteed to own a reference to the connection.
+        mTransaction->Connection()->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
+
         // all of the response headers have been acquired, so we can take ownership
         // of them from the transaction.
         mResponseHead = mTransaction->TakeResponseHead();

@@ -270,6 +270,15 @@ nsHttpConnection::Resume()
     return NS_OK;
 }
 
+// not called from the socket thread
+nsresult
+nsHttpConnection::GetSecurityInfo(nsISupports **result)
+{
+    if (mSocketTransport)
+        mSocketTransport->GetSecurityInfo(result);
+    return NS_OK;
+}
+
 // called from the socket thread
 nsresult
 nsHttpConnection::ProxyStepUp()
