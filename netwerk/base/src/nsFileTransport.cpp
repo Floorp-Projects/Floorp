@@ -395,9 +395,12 @@ nsFileTransport::Cancel()
     nsAutoMonitor mon(mMonitor);
 
     nsresult rv = NS_OK;
-    mStatus = NS_BINDING_ABORTED;
     if (mSuspended) {
-        Resume();
+        rv = Resume();
+    }
+    if (NS_SUCCEEDED(rv)) {
+        // if there's no other error pending, say that we aborted
+        mStatus = NS_BINDING_ABORTED;
     }
     if (mState == READING)
         mState = END_READ;
