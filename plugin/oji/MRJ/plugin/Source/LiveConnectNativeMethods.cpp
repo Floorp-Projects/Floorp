@@ -30,7 +30,7 @@
 #include "MRJPlugin.h"
 #include "MRJContext.h"
 #include "MRJSession.h"
-#include "CSecureJNI2.h"
+#include "CSecureEnv.h"
 #include "JavaMessageQueue.h"
 #include "MRJMonitor.h"
 #include "NativeMonitor.h"
@@ -220,9 +220,9 @@ static void sendMessage(JNIEnv* env, JavaMessage* msg)
 	// the main thread gets its own secure env, so it won't contend with other threads. this
 	// is needed to handle finalization, which seems to get called from the main thread sometimes.
 	if (env == theJVMPlugin->getSession()->getMainEnv()) {
-		static CSecureJNI2* mainEnv = NULL;
+		static CSecureEnv* mainEnv = NULL;
 		if (mainEnv == NULL) {
-			mainEnv = new CSecureJNI2(NULL, theJVMPlugin, NULL, env);
+			mainEnv = new CSecureEnv(theJVMPlugin, NULL, env);
 			mainEnv->AddRef();
 		}
 		mainEnv->setJavaEnv(env);
@@ -232,7 +232,7 @@ static void sendMessage(JNIEnv* env, JavaMessage* msg)
 	
 	// If this is a call back into JavaScript from Java, there will be a secureEnv associated with this thread.
 	jobject thread = GetCurrentThread(env);
-	CSecureJNI2* secureEnv = GetSecureJNI(env, thread);
+	CSecureEnv* secureEnv = GetSecureJNI(env, thread);
 	env->DeleteLocalRef(thread);
 	if (secureEnv != NULL) {
 		secureEnv->sendMessageFromJava(env, msg);
@@ -242,9 +242,9 @@ static void sendMessage(JNIEnv* env, JavaMessage* msg)
 		// only 1 Java thread can use this at a time.
 		sharedMonitor.enter();
 		{
-			static CSecureJNI2* sharedEnv = NULL;
+			static CSecureEnv* sharedEnv = NULL;
 			if (sharedEnv == NULL) {
-				sharedEnv = new CSecureJNI2(NULL, theJVMPlugin, NULL, env);
+				sharedEnv = new CSecureEnv(theJVMPlugin, NULL, env);
 				sharedEnv->AddRef();
 			}
 			sharedEnv->setJavaEnv(env);

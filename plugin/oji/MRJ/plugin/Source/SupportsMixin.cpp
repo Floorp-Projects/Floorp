@@ -24,11 +24,72 @@
  */
 
 #include "SupportsMixin.h"
+#include "nsAgg.h"
 
-// Standard ISupported Method Implementations.
+// Standard nsISupport method implementations.
 
-SupportsMixin::SupportsMixin(nsISupports* instance, nsID* ids, UInt32 idCount)
-	: mInstance(instance), mRefCount(0), mIDs(ids), mIDCount(idCount)
+#ifdef SUPPORT_AGGREGATION
+
+SupportsMixin::SupportsMixin(void* instance, const InterfaceInfo interfaces[], UInt32 interfaceCount, nsISupports* outer)
+	: mInstance(instance), mRefCount(0), mInterfaces(interfaces), mInterfaceCount(interfaceCount), mOuter(outer)
+{
+	if (mOuter != NULL)
+		mInner = new Inner(this);
+}
+
+SupportsMixin::~SupportsMixin()
+{
+	if (mRefCount > 0) {
+		::DebugStr("\pmRefCount > 0!");
+	}
+	if (mInner != NULL)
+		delete mInner;
+}
+
+/**
+ * The uppercase versions QueryInterface, AddRef, and Release are meant to be called by subclass
+ * implementations. They take aggregation into account.
+ */
+nsresult SupportsMixin::OuterQueryInterface(const nsIID& aIID, void** aInstancePtr)
+{
+	// first, see if we really implement this interface.
+	nsresult result = queryInterface(aIID, aInstancePtr);
+	// if not, then delegate to the outer object, if any.
+	if (result != NS_OK && mOuter != NULL)
+		return mOuter->QueryInterface(aIID, aInstancePtr);
+	else
+		return result;
+}
+
+nsrefcnt SupportsMixin::OuterAddRef()
+{
+	nsrefcnt result = addRef();
+	if (mOuter != NULL)
+		return mOuter->AddRef();
+	return result;
+}
+
+nsrefcnt SupportsMixin::OuterRelease()
+{
+	if (mOuter != NULL) {
+		nsIOuter* outer = NULL;
+		nsISupports* supports = mOuter;
+		static NS_DEFINE_IID(kIOuterIID, NS_IOUTER_IID);
+		if (mRefCount == 1 && supports->QueryInterface(kIOuterIID, &outer) == NS_OK) {
+			outer->ReleaseInner(mInner);
+			outer->Release();
+		} else
+			release();
+		return supports->Release();
+	} else {
+		return release();
+	}
+}
+
+#else /* !SUPPORT_AGGREGATION */
+
+SupportsMixin::SupportsMixin(void* instance, const InterfaceInfo interfaces[], UInt32 interfaceCount, nsISupports* /* outer */)
+	: mInstance(instance), mRefCount(0), mInterfaces(interfaces), mInterfaceCount(interfaceCount)
 {
 }
 
@@ -39,18 +100,25 @@ SupportsMixin::~SupportsMixin()
 	}
 }
 
-nsresult SupportsMixin::queryInterface(const nsIID& aIID, void** aInstancePtr)
+#endif /* !SUPPORT_AGGREGATION */
+
+/**
+ * The lowercase implementations of queryInterface, addRef, and release all act locally
+ * on the current object, regardless of aggregation. They are meant to be called by
+ * aggregating outer objects.
+ */
+NS_IMETHODIMP SupportsMixin::queryInterface(const nsIID& aIID, void** aInstancePtr)
 {
 	if (aInstancePtr == NULL) {
 		return NS_ERROR_NULL_POINTER;
 	}
 	// first check to see if it's one of our known interfaces.
 	// need to solve the non-left inheritance graph case.
-	nsID* ids = mIDs;
-	UInt32 count = mIDCount;
+	const InterfaceInfo* interfaces = mInterfaces;
+	UInt32 count = mInterfaceCount;
 	for (UInt32 i = 0; i < count; i++) {
-		if (aIID.Equals(ids[i])) {
-			*aInstancePtr = (void*) mInstance;
+		if (aIID.Equals(interfaces[i].mIID)) {
+			*aInstancePtr = (void*) (UInt32(mInstance) + interfaces[i].mOffset);
 			addRef();
 			return NS_OK;
 		}
@@ -65,12 +133,12 @@ nsresult SupportsMixin::queryInterface(const nsIID& aIID, void** aInstancePtr)
 	return NS_NOINTERFACE;
 }
 
-nsrefcnt SupportsMixin::addRef()
+NS_IMETHODIMP_(nsrefcnt) SupportsMixin::addRef()
 {
 	return ++mRefCount;
 }
 
-nsrefcnt SupportsMixin::release()
+NS_IMETHODIMP_(nsrefcnt) SupportsMixin::release()
 {
 	if (--mRefCount == 0) {
 		delete this;

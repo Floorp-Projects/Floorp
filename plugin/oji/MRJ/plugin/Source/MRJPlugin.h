@@ -26,9 +26,12 @@
 
 #pragma once
 
+#include "nsIPlugin.h"
 #include "nsIJVMPlugin.h"
 #include "nsIThreadManager.h"
+#include "nsIPluginInstance.h"
 #include "nsIJVMPluginInstance.h"
+#include "nsIEventHandler.h"
 #include "SupportsMixin.h"
 
 class MRJPlugin;
@@ -39,8 +42,8 @@ class MRJConsole;
 
 class nsIJVMManager;
 
-class MRJPlugin :	public nsIJVMPlugin, public nsIRunnable,
-					public SupportsMixin {
+class MRJPlugin :	public nsIPlugin, public nsIJVMPlugin,
+					public nsIRunnable, public SupportsMixin {
 public:
 	MRJPlugin();
 	virtual ~MRJPlugin();
@@ -50,8 +53,8 @@ public:
 
 	// NS_DECL_ISUPPORTS
 	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-	NS_IMETHOD_(nsrefcnt) AddRef(void);
-	NS_IMETHOD_(nsrefcnt) Release(void);
+	NS_IMETHOD_(nsrefcnt) AddRef(void) { return addRef(); }
+	NS_IMETHOD_(nsrefcnt) Release(void) { return release(); }
 	
 	// The Release method on NPIPlugin corresponds to NPP_Shutdown.
 
@@ -77,23 +80,51 @@ public:
 
 	// nsIPlugin Methods.
 	
-    // This call initializes the plugin and will be called before any new
-    // instances are created. It is passed browserInterfaces on which QueryInterface
-    // may be used to obtain an nsIPluginManager, and other interfaces.
+    /**
+     * Initializes the plugin and will be called before any new instances are
+     * created. This separates out the phase when a plugin is loaded just to
+     * query for its mime type from the phase when a plugin is used for real.
+     * The plugin should load up any resources at this point.
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
-    Initialize(nsISupports* browserInterfaces);
+    Initialize(void);
 
-    // (Corresponds to NPP_Shutdown.)
-    // Called when the browser is done with the plugin factory, or when
-    // the plugin is disabled by the user.
+    /**
+     * Called when the browser is done with the plugin factory, or when
+     * the plugin is disabled by the user.
+     *
+     * (Corresponds to NPP_Shutdown.)
+     *
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     Shutdown(void) { return NS_OK; }
 
-    // (Corresponds to NPP_GetMIMEDescription.)
+    /**
+     * Returns the MIME description for the plugin. The MIME description 
+     * is a colon-separated string containg the plugin MIME type, plugin
+     * data file extension, and plugin name, e.g.:
+     *
+     * "application/x-simple-plugin:smp:Simple LiveConnect Sample Plug-in"
+     *
+     * (Corresponds to NPP_GetMIMEDescription.)
+     *
+     * @param resultingDesc - the resulting MIME description 
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     GetMIMEDescription(const char* *result);
 
-    // (Corresponds to NPP_GetValue.)
+    /**
+     * Returns the value of a variable associated with the plugin.
+     *
+     * (Corresponds to NPP_GetValue.)
+     *
+     * @param variable - the plugin variable to get
+     * @param value - the address of where to store the resulting value
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     GetValue(nsPluginVariable variable, void *value)
     {
@@ -115,7 +146,7 @@ public:
     // initializing the nsIJVMPlugin object (done by the Initialize
     // method).
     NS_IMETHOD
-    StartupJVM(nsJVMInitArgs* initargs);
+    StartupJVM(void);
 
     // This method us used to stop the Java virtual machine.
     // It tears down any global state necessary to host Java programs.
@@ -167,7 +198,7 @@ public:
 	 * @return	outSecureEnv	the secure environment used by the proxyEnv
 	 */
 	NS_IMETHOD
-	CreateSecureEnv(JNIEnv* proxyEnv, nsISecureJNI2* *outSecureEnv);
+	CreateSecureEnv(JNIEnv* proxyEnv, nsISecureEnv* *outSecureEnv);
 
 	/**
 	 * Gives time to the JVM from the main event loop of the browser. This is
@@ -201,65 +232,127 @@ private:
     PRUint32 mPluginThreadID;
 	Boolean mIsEnabled;
 	
-	// support for nsISupports.
-	static nsID sInterfaceIDs[];
+	// support for SupportsMixin.
+	static const InterfaceInfo sInterfaces[];
+	static const UInt32 kInterfaceCount;
 };
 
-class MRJPluginInstance :	public nsIJVMPluginInstance,
+class MRJPluginInstance :	public nsIPluginInstance,
+							public nsIJVMPluginInstance,
+							public nsIEventHandler,
 							private SupportsMixin {
 public:
 	MRJPluginInstance(MRJPlugin* plugin);
 	virtual ~MRJPluginInstance();
 
 	// NS_DECL_ISUPPORTS
-	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-	NS_IMETHOD_(nsrefcnt) AddRef(void);
-	NS_IMETHOD_(nsrefcnt) Release(void);
+	DECL_SUPPORTS_MIXIN
 
     // (Corresponds to NPP_HandleEvent.)
     NS_IMETHOD
     HandleEvent(nsPluginEvent* event, PRBool* handled);
 
-    // The Release method on NPIPluginInstance corresponds to NPP_Destroy.
-
+    /**
+     * Initializes a newly created plugin instance, passing to it the plugin
+     * instance peer which it should use for all communication back to the browser.
+     * 
+     * @param peer - the corresponding plugin instance peer
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     Initialize(nsIPluginInstancePeer* peer);
 
-    // Required backpointer to the peer.
+    /**
+     * Returns a reference back to the plugin instance peer. This method is
+     * used whenever the browser needs to obtain the peer back from a plugin
+     * instance. The implementation of this method should be sure to increment
+     * the reference count on the peer by calling AddRef.
+     *
+     * @param resultingPeer - the resulting plugin instance peer
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     GetPeer(nsIPluginInstancePeer* *result);
 
-    // See comment for nsIPlugin::CreateInstance, above.
+    /**
+     * Called to instruct the plugin instance to start. This will be called after
+     * the plugin is first created and initialized, and may be called after the
+     * plugin is stopped (via the Stop method) if the plugin instance is returned
+     * to in the browser window's history.
+     *
+     * @result - NS_OK if this operation was successful
+     */
     NS_IMETHOD
     Start(void);
 
-    // The old NPP_Destroy call has been factored into two plugin instance 
-    // methods:
-    //
-    // Stop -- called when the plugin instance is to be stopped (e.g. by 
-    // displaying another plugin manager window, causing the page containing 
-    // the plugin to become removed from the display).
-    //
-    // Destroy -- called once, before the plugin instance peer is to be 
-    // destroyed. This method is used to destroy the plugin instance.
-
+    /**
+     * Called to instruct the plugin instance to stop, thereby suspending its state.
+     * This method will be called whenever the browser window goes on to display
+     * another page and the page containing the plugin goes into the window's history
+     * list.
+     *
+     * @result - NS_OK if this operation was successful
+     */
 	NS_IMETHOD
 	Stop(void);
 
+    /**
+     * Called to instruct the plugin instance to destroy itself. This is called when
+     * it become no longer possible to return to the plugin instance, either because 
+     * the browser window's history list of pages is being trimmed, or because the
+     * window containing this page in the history is being closed.
+     *
+     * @result - NS_OK if this operation was successful
+     */
 	NS_IMETHOD
 	Destroy(void);
 
-    // (Corresponds to NPP_SetWindow.)
+    /**
+     * Called when the window containing the plugin instance changes.
+     *
+     * (Corresponds to NPP_SetWindow.)
+     *
+     * @param window - the plugin window structure
+     * @result - NS_OK if this operation was successful
+     */
 	NS_IMETHOD
 	SetWindow(nsPluginWindow* window);
 
-    // (Corresponds to NPP_NewStream.)
+#ifdef NEW_PLUGIN_STREAM_API
+    /**
+     * Called to tell the plugin that the initial src/data stream is
+	 * ready.  Expects the plugin to return a nsIPluginStreamListener.
+     *
+     * (Corresponds to NPP_NewStream.)
+     *
+     * @param listener - listener the browser will use to give the plugin the data
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    NewStream(nsIPluginStreamListener** listener)
+	{
+		*listener = NULL;
+		return NS_ERROR_NOT_IMPLEMENTED;
+	}
+#else
+    /**
+     * Called when a new plugin stream must be constructed in order for the plugin
+     * instance to receive a stream of data from the browser. 
+     *
+     * (Corresponds to NPP_NewStream.)
+     *
+     * @param peer - the plugin stream peer, representing information about the
+     * incoming stream, and stream-specific callbacks into the browser
+     * @param result - the resulting plugin stream
+     * @result - NS_OK if this operation was successful
+     */
 	NS_IMETHOD
 	NewStream(nsIPluginStreamPeer* peer, nsIPluginStream* *result)
 	{
 		*result = NULL;
 		return NS_ERROR_NOT_IMPLEMENTED;
 	}
+#endif
 
     // (Corresponds to NPP_Print.)
     NS_IMETHOD
@@ -311,8 +404,8 @@ public:
     MRJSession* getSession(void);
 
 private:
-	void pushInstance();
-	void popInstance();
+	void pushInstance(void);
+	void popInstance(void);
 
 private:
     nsIPluginInstancePeer* mPeer;
@@ -325,6 +418,7 @@ private:
     // maintain a list of instances.
     MRJPluginInstance* mNext;
 
-    // support for nsISupports.
-    static nsID sInterfaceIDs[];
+	// support for SupportsMixin.
+	static const InterfaceInfo sInterfaces[];
+	static const UInt32 kInterfaceCount;
 };

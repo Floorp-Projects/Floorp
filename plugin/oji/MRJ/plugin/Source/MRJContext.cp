@@ -657,7 +657,8 @@ GetURLMessage::GetURLMessage(MRJPluginInstance* pluginInstance, const char* url,
 void GetURLMessage::execute()
 {
 	// get the URL.
-	nsresult result = thePluginManager->GetURL(mPluginInstance, mURL, mTarget);
+	nsIPluginInstance* pluginInstance = mPluginInstance;
+	nsresult result = thePluginManager->GetURL(pluginInstance, mURL, mTarget);
 }
 
 void MRJContext::showURL(const char* url, const char* target)
@@ -684,7 +685,8 @@ SInt16 MRJContext::allocateMenuID(Boolean isSubmenu)
 	// FIXME:  can use more centralized approach to managing menu IDs which can be shared across all contexts.
 	if (thePluginManager2 != NULL) {
 		PRInt16 menuID = -1;
-		thePluginManager2->AllocateMenuID(mPluginInstance, isSubmenu, &menuID);
+		nsIEventHandler* eventHandler = mPluginInstance;
+		thePluginManager2->AllocateMenuID(eventHandler, isSubmenu, &menuID);
 		return menuID;
 	} else
 		return (isSubmenu ? nextMenuPopupId++ : nextMenuId++);
