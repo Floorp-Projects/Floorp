@@ -89,7 +89,7 @@ Flasher.prototype =
   get element() { return this.mElement; },
   set element(val) 
   { 
-    if (val && val.nodeType == 1) {
+    if (val && val.nodeType == Node.ELEMENT_NODE) {
       this.mElement = val; 
       if ("scrollIntoView" in val) {
         val.scrollIntoView(false);

@@ -124,9 +124,9 @@ InspectorApp.prototype =
     this.mObjectPanel = this.mPanelSet.getPanel(1);
 
     if (this.mInitTarget) {
-      if (this.mInitTarget.nodeType == 9)
+      if (this.mInitTarget.nodeType == Node.DOCUMENT_NODE)
         this.setTargetDocument(this.mInitTarget);
-      else if (this.mInitTarget.nodeType == 1) {
+      else if (this.mInitTarget.nodeType == Node.ELEMENT_NODE) {
         this.setTargetDocument(this.mInitTarget.ownerDocument);
         this.mDocPanel.params = this.mInitTarget;
       }
