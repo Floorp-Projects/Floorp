@@ -352,6 +352,9 @@
             if (this.docShell.contentViewer)
               docTitle = this.contentDocument.title;
             
+	    if (!docTitle)
+	      docTitle = this.ownerDocument.documentElement.getAttribute("titledefault");
+
             if (docTitle) {
               newTitle += this.ownerDocument.documentElement.getAttribute("titlepreface");
               newTitle += docTitle;
