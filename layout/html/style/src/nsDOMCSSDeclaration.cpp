@@ -233,6 +233,13 @@ nsDOMCSSDeclaration::SetProperty(const nsString& aPropertyName,
                                  const nsString& aValue, 
                                  const nsString& aPriority)
 {
+  if (!aValue.Length()) {
+     // If the new value of the property is an empty string we remove the
+     // property.
+    nsAutoString tmp;
+    return RemoveProperty(aPropertyName, tmp);
+  }
+
   nsAutoString declString;
 
   declString.Assign(aPropertyName);
