@@ -161,9 +161,8 @@ nsMathMLmoFrame::Init(nsIPresContext*  aPresContext,
   mMinSize = float(NS_UNCONSTRAINEDSIZE);
   mMaxSize = float(NS_UNCONSTRAINEDSIZE);
 
-  // get the text that we enclose. // XXX aData.CompressWhitespace() ?
-  nsAutoString aData;
-  // PRInt32 aLength = 0;
+  // get the text that we enclose
+  nsAutoString data;
   // kids can be comment-nodes, attribute-nodes, text-nodes...
   // we use the DOM to ensure that we only look at text-nodes...
   PRInt32 numKids;
@@ -174,17 +173,14 @@ nsMathMLmoFrame::Init(nsIPresContext*  aPresContext,
     if (kidContent.get()) {
       nsCOMPtr<nsIDOMText> kidText(do_QueryInterface(kidContent));
       if (kidText.get()) {
-        // PRUint32 kidLength;
-        // kidText->GetLength(&kidLength);
-        // aLength += kidLength;
         nsAutoString kidData;
         kidText->GetData(kidData);
-        aData += kidData;
+        data += kidData;
       }
     }
   }
   // cache the operator
-  mMathMLChar.SetData(aPresContext, aData);
+  mMathMLChar.SetData(aPresContext, data);
   PRBool isMutable = ResolveMathMLCharStyle(aPresContext, mContent, mStyleContext, &mMathMLChar);
   if (isMutable) {
     mFlags |= NS_MATHML_OPERATOR_MUTABLE;
@@ -235,7 +231,7 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
                      nsMathMLAtoms::accent_, value))
     {
       accentAttribute = PR_TRUE;
-      if (value.EqualsWithConversion("true"))
+      if (value.Equals(NS_LITERAL_STRING("true")))
       {
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
       }
@@ -246,7 +242,7 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
                      nsMathMLAtoms::movablelimits_, value))
     {
       movablelimitsAttribute = PR_TRUE;
-      if (value.EqualsWithConversion("true"))
+      if (value.Equals(NS_LITERAL_STRING("true")))
       {
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_MOVABLELIMITS;
       }
@@ -261,15 +257,15 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
     
       // all accent="true" in the dictionary have form="postfix"
       // XXX should we check if the form attribute is there?
-      nsAutoString aData;
-      mMathMLChar.GetData(aData);
-      nsOperatorFlags aForm = NS_MATHML_OPERATOR_FORM_POSTFIX;
-      nsOperatorFlags aFlags = 0;
-      float aLeftSpace, aRightSpace;
-      PRBool found = nsMathMLOperators::LookupOperator(aData, aForm,
-                                             &aFlags, &aLeftSpace, &aRightSpace);
+      nsAutoString data;
+      mMathMLChar.GetData(data);
+      nsOperatorFlags form = NS_MATHML_OPERATOR_FORM_POSTFIX;
+      nsOperatorFlags flags = 0;
+      float leftSpace, rightSpace;
+      PRBool found = nsMathMLOperators::LookupOperator(data, form,
+                                             &flags, &leftSpace, &rightSpace);
     
-      if (found && !accentAttribute && NS_MATHML_OPERATOR_IS_ACCENT(aFlags))
+      if (found && !accentAttribute && NS_MATHML_OPERATOR_IS_ACCENT(flags))
       {
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_ACCENT;
       }
@@ -277,7 +273,7 @@ nsMathMLmoFrame::SetInitialChildList(nsIPresContext* aPresContext,
       // all movablemits="true" in the dictionary have form="prefix",
       // but this doesn't matter here, as the lookup has returned whatever
       // is in the dictionary
-      if (found && !movablelimitsAttribute && NS_MATHML_OPERATOR_IS_MOVABLELIMITS(aFlags))
+      if (found && !movablelimitsAttribute && NS_MATHML_OPERATOR_IS_MOVABLELIMITS(flags))
       {
         mEmbellishData.flags |= NS_MATHML_EMBELLISH_MOVABLELIMITS;
       }
@@ -307,9 +303,9 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
 
   if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                    nsMathMLAtoms::form_, value)) {
-    if (value.EqualsWithConversion("prefix"))
+    if (value.Equals(NS_LITERAL_STRING("prefix")))
       form = NS_MATHML_OPERATOR_FORM_PREFIX;
-    else if (value.EqualsWithConversion("postfix"))
+    else if (value.Equals(NS_LITERAL_STRING("postfix")))
       form = NS_MATHML_OPERATOR_FORM_POSTFIX;
 
     // see if we have an embellished ancestor, and check that we are really
@@ -386,8 +382,8 @@ nsMathMLmoFrame::InitData(nsIPresContext* aPresContext)
   // For each attribute overriden by the user, turn off its bit flag.
   // symmetric|movablelimits|separator|largeop|accent|fence|stretchy|form
   nsAutoString kfalse, ktrue;
-  kfalse.AssignWithConversion("false");
-  ktrue.AssignWithConversion("true");
+  kfalse.Assign(NS_LITERAL_STRING("false"));
+  ktrue.Assign(NS_LITERAL_STRING("true"));
   if (NS_MATHML_OPERATOR_IS_STRETCHY(mFlags)) {
     if (NS_CONTENT_ATTR_HAS_VALUE == GetAttribute(mContent, mPresentationData.mstyle,
                      nsMathMLAtoms::stretchy_, value) && value == kfalse)
@@ -619,8 +615,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
 
       // some adjustments if the operator is symmetric and vertical
 
-      if (isVertical && NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags))
-      {
+      if (isVertical && NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags)) {
         // we need to center about the axis
         nscoord delta = PR_MAX(container.ascent - axisHeight,
                                container.descent + axisHeight);
@@ -660,8 +655,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
             PR_MIN(container.width, nscoord(initialSize.width * mMaxSize));
         }
 
-        if (isVertical && !NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags))
-        {
+        if (isVertical && !NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags)) {
           // re-adjust to align the char with the bottom of the initial container
           height = container.ascent + container.descent;
           container.descent = aContainerSize.descent;
@@ -691,8 +685,7 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
             PR_MAX(container.width, nscoord(initialSize.width * mMinSize));
         }
 
-        if (isVertical && !NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags))
-        {
+        if (isVertical && !NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags)) {
           // re-adjust to align the char with the bottom of the initial container
           height = container.ascent + container.descent;
           container.descent = aContainerSize.descent;
@@ -713,32 +706,30 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
       // update our bounding metrics... it becomes that of our MathML char
       mMathMLChar.GetBoundingMetrics(mBoundingMetrics);
 
-      if (isVertical || NS_MATHML_OPERATOR_IS_CENTERED(mFlags))
-      {
-        // the desired size returned by mMathMLChar maybe different
-        // from the size of the container.
-        // the mMathMLChar.mRect.y calculation is subtle, watch out!!!
+      // if the returned direction is 'unsupported', the char didn't actually change. 
+      // So we do the centering only if necessary
+      if ((mMathMLChar.GetStretchDirection() != NS_STRETCH_DIRECTION_UNSUPPORTED)
+          || NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
 
-        height = mBoundingMetrics.ascent + mBoundingMetrics.descent;
-        if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags) ||
-            NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
-          // For symmetric and vertical operators, or for operators that are always
-          // centered ('+', '*', etc) we want to center about the axis of the container
-          mBoundingMetrics.descent = height/2 - axisHeight;
-        }
-        else {
-          // Otherwise, align the char with the bottom of the container
-          mBoundingMetrics.descent = container.descent;
-        }
-        mBoundingMetrics.ascent = height - mBoundingMetrics.descent;
-      }
+        if (isVertical || NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
+          // the desired size returned by mMathMLChar maybe different
+          // from the size of the container.
+          // the mMathMLChar.mRect.y calculation is subtle, watch out!!!
 
-      if ((mMathMLChar.GetStretchDirection() == NS_STRETCH_DIRECTION_UNSUPPORTED)
-          && !NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
-        // reset
-        mBoundingMetrics = charSize;
-      }
-      else {
+          height = mBoundingMetrics.ascent + mBoundingMetrics.descent;
+          if (NS_MATHML_OPERATOR_IS_SYMMETRIC(mFlags) ||
+              NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
+            // For symmetric and vertical operators, or for operators that are always
+            // centered ('+', '*', etc) we want to center about the axis of the container
+            mBoundingMetrics.descent = height/2 - axisHeight;
+          }
+          else {
+            // Otherwise, align the char with the bottom of the container
+            mBoundingMetrics.descent = container.descent;
+          }
+          mBoundingMetrics.ascent = height - mBoundingMetrics.descent;
+        }
+
         // leave a leading at the top and the bottom of the stretched char
         aDesiredStretchSize.ascent = mBoundingMetrics.ascent + leading;
         aDesiredStretchSize.descent = mBoundingMetrics.descent + leading;
@@ -756,7 +747,6 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
       mReference.y = aDesiredStretchSize.ascent;
     }
   }
-
 
   if (!NS_MATHML_OPERATOR_GET_FORM(mFlags) &&
       !NS_MATHML_OPERATOR_IS_CENTERED(mFlags)) {
