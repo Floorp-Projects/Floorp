@@ -38,6 +38,9 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
   mRenderingSurface = nsnull ;
   mOffscreenSurface = nsnull ;
   mCurrentColor = 0;
+  mTMatrix = nsnull;
+  mP2T = 1.0f;
+  PushState();
 }
 
 nsRenderingContextUnix :: ~nsRenderingContextUnix()
@@ -45,6 +48,8 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mFontCache);
   NS_IF_RELEASE(mFontMetrics);
+  mTMatrix = nsnull;
+  PopState();
 }
 
 NS_IMPL_QUERY_INTERFACE(nsRenderingContextUnix, kRenderingContextIID)
@@ -68,6 +73,9 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   ((nsDeviceContextUnix *)aContext)->InstallColormap();
 
   mFontCache = mContext->GetFontCache();
+  mP2T = mContext->GetDevUnitsToAppUnits();
+  mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
+                     mContext->GetAppUnitsToDevUnits());
 
   // Select a default font here?
 }
@@ -79,6 +87,13 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   NS_IF_ADDREF(mContext);
 
   mRenderingSurface = (nsDrawingSurfaceUnix *) aSurface;
+  ((nsDeviceContextUnix *)aContext)->SetDrawingSurface(mRenderingSurface);
+  ((nsDeviceContextUnix *)aContext)->InstallColormap();
+
+  mFontCache = mContext->GetFontCache();
+  mP2T = mContext->GetDevUnitsToAppUnits();
+  mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
+                     mContext->GetAppUnitsToDevUnits());
 }
 
 nsresult nsRenderingContextUnix :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
@@ -100,10 +115,14 @@ nsIDeviceContext * nsRenderingContextUnix :: GetDeviceContext(void)
 
 void nsRenderingContextUnix :: PushState(void)
 {
+  mTMatrix = new nsTransform2D();
+  mTMatrix->SetToIdentity();  
 }
 
 void nsRenderingContextUnix :: PopState(void)
 {
+  delete mTMatrix;
+  mTMatrix = nsnull;
 }
 
 PRBool nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect)
@@ -113,7 +132,7 @@ PRBool nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect)
 
 PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
-  return PR_FALSE;
+  return PR_TRUE;
 }
 
 PRBool nsRenderingContextUnix :: GetClipRect(nsRect &aRect)
@@ -190,16 +209,18 @@ nsIFontMetrics* nsRenderingContextUnix :: GetFontMetrics()
 // add the passed in translation to the current translation
 void nsRenderingContextUnix :: Translate(nscoord aX, nscoord aY)
 {
+	mTMatrix->AddTranslation((float)aX,(float)aY);
 }
 
 // add the passed in scale to the current scale
 void nsRenderingContextUnix :: Scale(float aSx, float aSy)
 {
+	mTMatrix->AddScale(aSx, aSy);
 }
 
 nsTransform2D * nsRenderingContextUnix :: GetCurrentTransform()
 {
-  return nsnull ;
+  return mTMatrix;
 }
 
 nsDrawingSurface nsRenderingContextUnix :: CreateDrawingSurface(nsRect *aBounds)
@@ -233,6 +254,9 @@ void nsRenderingContextUnix :: DestroyDrawingSurface(nsDrawingSurface aDS)
 
 void nsRenderingContextUnix :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
+  mTMatrix->TransformCoord(&aX0,&aY0);
+  mTMatrix->TransformCoord(&aX1,&aY1);
+
   ::XDrawLine(mRenderingSurface->display, 
 	      mRenderingSurface->drawable,
 	      mRenderingSurface->gc,
@@ -246,10 +270,20 @@ void nsRenderingContextUnix :: DrawRect(const nsRect& aRect)
 
 void nsRenderingContextUnix :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
   ::XDrawRectangle(mRenderingSurface->display, 
 		   mRenderingSurface->drawable,
 		   mRenderingSurface->gc,
-		   aX, aY, aWidth, aHeight);
+		   x,y,w,h);
 }
 
 void nsRenderingContextUnix :: FillRect(const nsRect& aRect)
@@ -259,12 +293,19 @@ void nsRenderingContextUnix :: FillRect(const nsRect& aRect)
 
 void nsRenderingContextUnix :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
 
   ::XFillRectangle(mRenderingSurface->display, 
 		   mRenderingSurface->drawable,
 		   mRenderingSurface->gc,
-		   aX, aY,
-		   aWidth, aHeight);
+		   x,y,w,h);
 
 }
 
@@ -281,6 +322,7 @@ void nsRenderingContextUnix::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
     thispoint = (xpoints+i);
     thispoint->x = aPoints[i].x;
     thispoint->y = aPoints[i].y;
+    mTMatrix->TransformCoord((PRInt32*)&thispoint->x,(PRInt32*)&thispoint->y);
   }
 
   ::XDrawLines(mRenderingSurface->display,
@@ -296,13 +338,17 @@ void nsRenderingContextUnix::FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
   PRUint32 i ;
   XPoint * xpoints;
   XPoint * thispoint;
+  nscoord x,y;
   
   xpoints = (XPoint *) PR_Malloc(sizeof(XPoint) * aNumPoints);
 
   for (i = 0; i < aNumPoints; i++){
     thispoint = (xpoints+i);
-    thispoint->x = aPoints[i].x;
-    thispoint->y = aPoints[i].y;
+    x = aPoints[i].x;
+    y = aPoints[i].y;
+    mTMatrix->TransformCoord(&x,&y);
+    thispoint->x = x;
+    thispoint->y = y;
   }
 
   ::XFillPolygon(mRenderingSurface->display,
@@ -340,10 +386,19 @@ void nsRenderingContextUnix :: DrawArc(const nsRect& aRect,
 void nsRenderingContextUnix :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
   ::XDrawArc(mRenderingSurface->display, 
 	     mRenderingSurface->drawable,
 	     mRenderingSurface->gc,
-	     aX, aY, aWidth, aHeight, aStartAngle, aEndAngle);
+	     x,y,w,h, aStartAngle, aEndAngle);
 }
 
 void nsRenderingContextUnix :: FillArc(const nsRect& aRect,
@@ -355,10 +410,19 @@ void nsRenderingContextUnix :: FillArc(const nsRect& aRect,
 void nsRenderingContextUnix :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
+  nscoord x,y,w,h;
+
+  x = aX;
+  y = aY;
+  w = aWidth;
+  h = aHeight;
+
+  mTMatrix->TransformCoord(&x,&y,&w,&h);
+
   ::XFillArc(mRenderingSurface->display, 
 	     mRenderingSurface->drawable,
 	     mRenderingSurface->gc,
-	     aX, aY, aWidth, aHeight, aStartAngle, aEndAngle);
+	     x,y,w,h, aStartAngle, aEndAngle);
 }
 
 void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
@@ -368,10 +432,14 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
   // XXX Hack
   ::XLoadFont(mRenderingSurface->display, "fixed");
 
+  PRInt32 x = aX;
+  PRInt32 y = aY;
+  mTMatrix->TransformCoord(&x,&y);
+
   ::XDrawString(mRenderingSurface->display, 
 		mRenderingSurface->drawable,
 		mRenderingSurface->gc,
-		aX, aY, aString, aLength);
+		x, y, aString, aLength);
 }
 
 void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLength,
