@@ -54,6 +54,7 @@ public:
     nsDNSService();
     virtual ~nsDNSService();
     nsresult Init();
+    nsresult LateInit();
     nsresult InitDNSThread();
  
     // Define a Create method to be used with a factory:
@@ -65,6 +66,10 @@ public:
 
 protected:
     friend class nsDNSLookup;
+    
+    static nsDNSService * gService;
+    static PRBool         gNeedLateInitialization;
+    
     nsIThread *           mThread;
     PRLock *              mThreadLock;
     nsresult              mState;

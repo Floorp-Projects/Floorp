@@ -79,7 +79,8 @@ typedef struct nsLookupElement {
 // UNIX
 // XXX needs implementation
 
-static nsDNSService *  gService = nsnull;
+nsDNSService *   nsDNSService::gService = nsnull;
+PRBool           nsDNSService::gNeedLateInitialization = PR_FALSE;
 
 class nsDNSLookup
 {
@@ -258,14 +259,14 @@ nsDNSLookup::CallOnFound(void)
     mContext = 0;
 
 #ifdef DNS_TIMING
-    if (gService->mOut) {
+    if (nsDNSService::gService->mOut) {
         PRIntervalTime stopTime = PR_IntervalNow();
         double duration = PR_IntervalToMicroseconds(stopTime - mStartTime);
-        gService->mCount++;
-        gService->mTimes += duration;
-        gService->mSquaredTimes += duration * duration;
-        fprintf(gService->mOut, "DNS time #%d: %u us for %s\n", 
-                (PRInt32)gService->mCount,
+        nsDNSService::gService->mCount++;
+        nsDNSService::gService->mTimes += duration;
+        nsDNSService::gService->mSquaredTimes += duration * duration;
+        fprintf(nsDNSService::gService->mOut, "DNS time #%d: %u us for %s\n", 
+                (PRInt32)nsDNSService::gService->mCount,
                 (PRInt32)duration, HostName());
     }
 #endif
@@ -281,17 +282,17 @@ nsDNSLookup::InitiateDNSLookup(void)
 #if defined(XP_MAC)
 	OSErr   err;
 	
-    err = OTInetStringToAddress(gService->mServiceRef, (char *)mHostName, (InetHostInfo *)&mInetHostInfo);
+    err = OTInetStringToAddress(nsDNSService::gService->mServiceRef, (char *)mHostName, (InetHostInfo *)&mInetHostInfo);
     if (err != noErr)
         rv = NS_ERROR_UNEXPECTED;
 #endif /* XP_MAC */
 
 #if defined(XP_PC)
-    mMsgID = gService->AllocMsgID();
+    mMsgID = nsDNSService::gService->AllocMsgID();
     if (mMsgID == 0)
         return NS_ERROR_UNEXPECTED;
-	PR_Lock(gService->mThreadLock);  // protect against lookup completing before WSAAsyncGetHostByName returns, better to refcount lookup
-    mLookupHandle = WSAAsyncGetHostByName(gService->mDNSWindow, mMsgID,
+	PR_Lock(nsDNSService::gService->mThreadLock);  // protect against lookup completing before WSAAsyncGetHostByName returns, better to refcount lookup
+    mLookupHandle = WSAAsyncGetHostByName(nsDNSService::gService->mDNSWindow, mMsgID,
                                           mHostName, (char *)&mHostEntry.hostEnt, PR_NETDB_BUF_SIZE);
     // check for error conditions
     if (mLookupHandle == nsnull) {
@@ -304,7 +305,7 @@ nsDNSLookup::InitiateDNSLookup(void)
 		// the first two calls made to WSAAsyncGetHostByName), to avoid using the handle on
 		// those systems.  For more info, see bug 23709.
     }
-	PR_Unlock(gService->mThreadLock);
+	PR_Unlock(nsDNSService::gService->mThreadLock);
 #endif /* XP_PC */
 
 #ifdef XP_UNIX
@@ -370,10 +371,10 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         PRBool        rv;
         
 		// find matching lookup element
-		PR_Lock(gService->mThreadLock);	// so we don't collide with thread calling Lookup()
-		index = gService->mCompletionQueue.Count();
+		PR_Lock(nsDNSService::gService->mThreadLock);	// so we don't collide with thread calling Lookup()
+		index = nsDNSService::gService->mCompletionQueue.Count();
 		while (index) {
-			lookup = (nsDNSLookup *)gService->mCompletionQueue.ElementAt(index-1);
+			lookup = (nsDNSLookup *)nsDNSService::gService->mCompletionQueue.ElementAt(index-1);
 			if (lookup->mMsgID == uMsg) {
 				break;
 			}
@@ -381,7 +382,7 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 
 		if (lookup && (lookup->mMsgID == uMsg)) {
-			rv = gService->mCompletionQueue.RemoveElement(lookup);
+			rv = nsDNSService::gService->mCompletionQueue.RemoveElement(lookup);
 			NS_ASSERTION(rv == PR_TRUE, "error removing dns lookup element.");
 
 			lookup->mComplete = PR_TRUE;
@@ -389,15 +390,15 @@ nsDNSEventProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				lookup->mResult = NS_ERROR_UNKNOWN_HOST;
 			
 			(void)lookup->CallOnFound();
-			gService->FreeMsgID(lookup->mMsgID);
+			nsDNSService::gService->FreeMsgID(lookup->mMsgID);
 			delete lookup;  // until we implement the dns cache
 		}
         result = 0;
-		PR_Unlock(gService->mThreadLock);
+		PR_Unlock(nsDNSService::gService->mThreadLock);
     }
     else if (uMsg == WM_DNS_SHUTDOWN) {
         // dispose DNS EventHandler Window
-        (void) DestroyWindow(gService->mDNSWindow);
+        (void) DestroyWindow(nsDNSService::gService->mDNSWindow);
         PostQuitMessage(0);
         result = 0;
     }
@@ -434,6 +435,7 @@ nsDNSService::nsDNSService()
     mThreadLock = nsnull;
 
 #if defined(XP_MAC)
+    gNeedLateInitialization = PR_TRUE;
     mThreadRunning = PR_FALSE;
     mServiceRef = nsnull;
 
@@ -465,6 +467,36 @@ nsDNSService::Init()
 {
     nsresult rv = NS_OK;
 //    initialize DNS cache (persistent?)
+
+	mThreadLock = PR_NewLock();
+	if (!mThreadLock)
+		return NS_ERROR_OUT_OF_MEMORY;
+
+#if defined(XP_PC)
+    // sync with DNS thread to allow it to create the DNS window
+    PRMonitor * monitor;
+    PRStatus    status;
+
+    monitor = PR_CEnterMonitor(this);
+#endif
+
+#if defined(XP_MAC) || defined(XP_PC)
+    // create DNS thread
+    rv = NS_NewThread(&mThread, this, 0, PR_JOINABLE_THREAD);
+#endif
+
+
+#if defined(XP_PC)
+    status = PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
+    status = PR_CExitMonitor(this);
+#endif
+
+	return rv;
+}
+
+nsresult
+nsDNSService::LateInit()
+{
 #if defined(XP_MAC)
 //    create Open Transport Service Provider for DNS Lookups
     OSStatus    errOT;
@@ -498,30 +530,8 @@ nsDNSService::Init()
     }
 #endif
 
-	mThreadLock = PR_NewLock();
-	if (!mThreadLock)
-		return NS_ERROR_OUT_OF_MEMORY;
-
-#if defined(XP_PC)
-    // sync with DNS thread to allow it to create the DNS window
-    PRMonitor * monitor;
-    PRStatus    status;
-
-    monitor = PR_CEnterMonitor(this);
-#endif
-
-#if defined(XP_MAC) || defined(XP_PC)
-    // create DNS thread
-    rv = NS_NewThread(&mThread, this, 0, PR_JOINABLE_THREAD);
-#endif
-
-
-#if defined(XP_PC)
-    status = PR_CWait(this, PR_INTERVAL_NO_TIMEOUT);
-    status = PR_CExitMonitor(this);
-#endif
-
-	return rv;
+	gNeedLateInitialization = PR_FALSE;
+    return NS_OK;
 }
 
 
@@ -725,6 +735,12 @@ nsDNSService::Lookup(nsISupports*    clientContext,
     rv = ios->GetOffline(&offline);
     if (NS_FAILED(rv)) return rv;
     if (offline) return NS_ERROR_OFFLINE;
+
+	if (gNeedLateInitialization) {
+        rv = LateInit();
+        if (NS_FAILED(rv)) return rv;
+    }
+        
 
     PRStatus    status = PR_SUCCESS;
 
