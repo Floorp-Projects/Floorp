@@ -114,7 +114,9 @@ js_Disassemble(JSContext *cx, JSScript *script, JSBool lines, FILE *fp)
     while (pc < end) {
 	if (pc == script->main)
 	    fputs("main:\n", fp);
-	len = js_Disassemble1(cx, script, pc, pc - script->code, lines, fp);
+	len = js_Disassemble1(cx, script, pc,
+                              PTRDIFF(pc, script->code, jsbytecode),
+                              lines, fp);
 	if (!len)
 	    return;
 	pc += len;

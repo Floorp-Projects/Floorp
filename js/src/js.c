@@ -772,7 +772,7 @@ LineToPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     pc = JS_LineNumberToPC(cx, script, lineno);
     if (!pc)
 	return JS_FALSE;
-    *rval = INT_TO_JSVAL(pc - script->code);
+    *rval = INT_TO_JSVAL(PTRDIFF(pc, script->code, jsbytecode));
     return JS_TRUE;
 }
 
@@ -811,7 +811,8 @@ SrcNotes(JSContext *cx, JSScript *script)
 	    delta = SN_DELTA(sn);
 	    offset += delta;
 	    fprintf(gOutFile, "%3u: %5u [%4u] %-8s",
-		   sn - notes, offset, delta, js_SrcNoteName[SN_TYPE(sn)]);
+                    PTRDIFF(sn, notes, jssrcnote), offset, delta,
+                    js_SrcNoteName[SN_TYPE(sn)]);
 	    type = SN_TYPE(sn);
 	    switch (type) {
 	      case SRC_SETLINE:
@@ -988,8 +989,9 @@ DisassWithSrc(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 		}
 	    }
 
-	    len = js_Disassemble1(cx, script, pc, pc - script->code,
-				  JS_TRUE, stdout);
+	    len = js_Disassemble1(cx, script, pc,
+                                  PTRDIFF(pc, script->code, jsbytecode),
+                                  JS_TRUE, stdout);
 	    if (!len)
 		return JS_FALSE;
 	    pc += len;
@@ -1670,7 +1672,7 @@ my_ErrorReporter(JSContext *cx, const char *message, JSErrorReport *report)
             report->linebuf,
             (n > 0 && report->linebuf[n-1] == '\n') ? "" : "\n",
             prefix);
-    n = report->tokenptr - report->linebuf;
+    n = PTRDIFF(report->tokenptr, report->linebuf, char);
     for (i = j = 0; i < n; i++) {
 	if (report->linebuf[i] == '\t') {
             for (k = (j + 8) & ~7; j < k; j++) {
