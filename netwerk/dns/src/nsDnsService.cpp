@@ -650,65 +650,12 @@ nsDNSService::Lookup(nsISupports*    clientContext,
                      nsIDNSListener* listener,
                      nsIRequest*     *DNSRequest)
 {
-    nsresult	rv, result = NS_OK;
-
-#if defined(XP_MAC) || defined (XP_PC)
-    //    initateLookupNeeded = false;
-    //    lock dns service
-    //    search cache for existing nsDNSLookup with matching hostname
-    //    if (exists) {
-    //        if (complete) {
-    //            AddRef lookup
-    //            unlock cache
-    //            OnStartLookup
-    //            OnFound
-    //            OnStopLookup
-    //            Release lookup
-    //            return
-    //        }
-    //    } else {
-    //        create nsDNSLookup
-    //        iniateLookupNeeded = true
-    //    }
-    //    create nsDNSRequest & queue on nsDNSLookup
-    //    unlock dns service
-    //    OnStartLookup
-    //    if (iniateLookupNeeded) {
-    //        initiate async lookup
-    //    }
-    //    
-
-
-    // create nsDNSLookup
-    nsDNSLookup * lookup = new nsDNSLookup(clientContext, hostName, listener);
-
-    if (lookup == nsnull)
-    	return NS_ERROR_OUT_OF_MEMORY;
-
-#if defined(XP_PC)
-    // save on outstanding lookup queue
-    mCompletionQueue.AppendElement(lookup);
-#endif
-
-    rv = listener->OnStartLookup(clientContext, hostName);
-    // what do we do with the return value here?
-
-    // initiate async lookup
-    rv = lookup->InitiateDNSLookup(this);	
-
-    return rv;
-    
-#else
-    // temporary SYNC version
-
+    nsresult	rv = NS_OK;
     PRStatus    status = PR_SUCCESS;
-    nsHostEnt*  hostentry;
+    nsHostEnt*  hostentry = new nsHostEnt;
+    if (!hostentry) return NS_ERROR_OUT_OF_MEMORY;
 
-    hostentry = new nsHostEnt;
-    if (!hostentry)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    rv = listener->OnStartLookup(clientContext, hostName);
+    (void)listener->OnStartLookup(clientContext, hostName);
 	
     PRBool numeric = PR_TRUE;
     for (const char *hostCheck = hostName; *hostCheck; hostCheck++) {
@@ -718,11 +665,13 @@ nsDNSService::Lookup(nsISupports*    clientContext,
         }
     }
 
-    PRNetAddr *netAddr;
-
     if (numeric) {
         // If it is numeric then try to convert it into an IP-Address
-        netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
+        PRNetAddr *netAddr = (PRNetAddr*)nsAllocator::Alloc(sizeof(PRNetAddr));
+        if (!netAddr) {
+            delete hostentry;
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
         status = PR_StringToNetAddr(hostName, netAddr);
         if (PR_SUCCESS == status) {
             // slam the IP in and move on.
@@ -753,37 +702,81 @@ nsDNSService::Lookup(nsISupports*    clientContext,
                                                0);
             memcpy(ent->h_addr_list[0], &netAddr->inet.ip, ent->h_length);
             ent->h_addr_list[1] = '\0';
-        } else {
-            // If the hostname is numeric, but we couldn't create
-            // a net addr out of it, we're dealing w/ a purely numeric
-            // address (no dots), try a regular gethostbyname on it.
-            status = PR_GetHostByName(hostName, 
-                                      hostentry->buffer, 
-                                      PR_NETDB_BUF_SIZE, 
-                                      &hostentry->hostEnt);
+
+            (void)listener->OnFound(clientContext, hostName, hostentry);
+            
+            delete hostentry;
+            // XXX: The hostentry should really be reference counted so the 
+            //      listener does not need to copy it...
+	        
+            return listener->OnStopLookup(clientContext, hostName, NS_OK);
         }
-        nsAllocator::Free(netAddr);
-    } else {
-        status = PR_GetHostByName(hostName, 
-                                  hostentry->buffer, 
-                                  PR_NETDB_BUF_SIZE, 
-                                  &hostentry->hostEnt);
     }
+#if defined(XP_MAC) || defined (XP_PC)
+    //    initateLookupNeeded = false;
+    //    lock dns service
+    //    search cache for existing nsDNSLookup with matching hostname
+    //    if (exists) {
+    //        if (complete) {
+    //            AddRef lookup
+    //            unlock cache
+    //            OnStartLookup
+    //            OnFound
+    //            OnStopLookup
+    //            Release lookup
+    //            return
+    //        }
+    //    } else {
+    //        create nsDNSLookup
+    //        iniateLookupNeeded = true
+    //    }
+    //    create nsDNSRequest & queue on nsDNSLookup
+    //    unlock dns service
+    //    OnStartLookup
+    //    if (iniateLookupNeeded) {
+    //        initiate async lookup
+    //    }
+    //    
+
+
+    // create nsDNSLookup
+    nsDNSLookup * lookup = new nsDNSLookup(clientContext, hostName, listener);
+    if (!lookup) {
+        delete hostentry;
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+#if defined(XP_PC)
+    // save on outstanding lookup queue
+    mCompletionQueue.AppendElement(lookup);
+#endif
+    delete hostentry;
+    (void)listener->OnStartLookup(clientContext, hostName);
+
+    // initiate async lookup
+    return lookup->InitiateDNSLookup(this);	
+#else
+    // temporary SYNC version
+
+    status = PR_GetHostByName(hostName, 
+                              hostentry->buffer, 
+                              PR_NETDB_BUF_SIZE, 
+                              &hostentry->hostEnt);
     
     if (PR_SUCCESS == status) {
-        rv = listener->OnFound(clientContext, hostName, hostentry);
-        result = NS_OK;
+        (void)listener->OnFound(clientContext, hostName, hostentry);
+        rv = NS_OK;
     }
     else {
-        result = NS_ERROR_UNKNOWN_HOST;
+        rv = NS_ERROR_UNKNOWN_HOST;
     }
     // XXX: The hostentry should really be reference counted so the 
     //      listener does not need to copy it...
     delete hostentry;
 	
-    rv = listener->OnStopLookup(clientContext, hostName, result);
+    (void)listener->OnStopLookup(clientContext, hostName, result);
 	
-    return result;
+    return rv;
 #endif
 }
 
