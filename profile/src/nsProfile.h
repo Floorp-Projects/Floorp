@@ -102,6 +102,8 @@ private:
     PRBool mIsContentLocaleSpecified;
     nsCString mContentLocaleName;
     
+    PRBool mShutdownProfileToreDownNetwork;
+    
 public:
     nsProfile();
     virtual ~nsProfile();

@@ -215,16 +215,10 @@ NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const char *aTopic
   nsresult rv = NS_OK;
 
   if (!nsCRT::strcmp(aTopic, "profile-before-change")) {
-    // The profile is about to change.
+    // The profile is about to change,
+    // or is going away because the application is shutting down.
     
-    // Dump current cookies.  This will be done by calling 
-    // COOKIE_RemoveAll which clears the memory-resident
-    // cookie table.  The reason the cookie file does not
-    // need to be updated is because the file was updated every time
-    // the memory-resident table changed (i.e., whenever a new cookie
-    // was accepted).  If this condition ever changes, the cookie
-    // file would need to be updated here.
-
+    COOKIE_Write(mDir);
     COOKIE_RemoveAll();
     if (!nsCRT::strcmp(someData, NS_LITERAL_STRING("shutdown-cleanse").get()))
       COOKIE_DeletePersistentUserData();
@@ -232,9 +226,6 @@ NS_IMETHODIMP nsCookieService::Observe(nsISupports *aSubject, const char *aTopic
     // The profile has aleady changed.    
     // Now just read them from the new profile location.
     COOKIE_Read();
-  } else if (!nsCRT::strcmp(aTopic, "xpcom-shutdown")) {
-    // Leaving browser, need to save cookies
-    COOKIE_Write(mDir);
   } else if (!nsCRT::strcmp(aTopic, "cookieIcon")) {
     gCookieIconVisible = (!nsCRT::strcmp(someData, NS_LITERAL_STRING("on").get()));
   }
