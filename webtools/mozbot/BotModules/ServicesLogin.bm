@@ -44,7 +44,7 @@ sub Help {
     my $self = shift;
     my ($event) = @_;
     return {
-        '' => 'The ServicesLogin module logs mozbot into services such as X on Undernet, Q on Quakenet, or NickServ or K9 on other networks. To setup the ServicesLogin command, use the setupServicesLogin command. Type \'help setupServicesLogin\' for more information.',
+        '' => 'The ServicesLogin module logs mozbot into services such as X on Undernet, Q on Quakenet, or NickServ or K9 on other networks. To setup the ServicesLogin command, use the setupServicesLogin command. See \'help setupServicesLogin\'.',
 	'setupServicesLogin' => 'The syntax of this command is \'setupServicesLogin <servicesNick> <loginCommand>\'. If the services nick is \'q@cserve.quakenet.org\', and the login command is \'auth mozbot mypass\', then you would type \'setupServicesLogin q@cserve.quakenet.org auth mozbot mypass\'. This will then cause mozbot to do: /msg q@cserve.quakenet.org auth mozbot mypass',
     } if $self->isAdmin($event);
     return {};
