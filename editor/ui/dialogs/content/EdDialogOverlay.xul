@@ -32,7 +32,7 @@
   <box flex="1" style="margin-top: 0.2em" autostretch="never">
     <!-- This will right-align the button -->
     <spring flex="1"/>
-    <button id="AdvancedEditButton" class="dialog" oncommand="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
+    <button class="dialog" oncommand="onAdvancedEdit()" value="&AdvancedEditButton.label;"/>
   </box>
   <separator class="groove"/>
 </box>
@@ -42,13 +42,13 @@
      Placed here to use same attributes as AdvancedEditButton button
 -->
 <button
-  id        = "AdvancedEditButton2"
+  id        = "AdvancedEditButton"
   class     = "dialog"
   oncommand = "onAdvancedEdit()"
   value     = "&AdvancedEditButton.label;"/>
 
 <button 
-  id        = "AdvancedEditButton3" 
+  id        = "AdvancedEditButton2" 
   class     = "dialog" 
   oncommand = "onAdvancedEdit()" 
   value     = "&AdvancedEditButton.label;"/>

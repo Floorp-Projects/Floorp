@@ -168,7 +168,7 @@
         <box flex="1" autostretch="never">
           <spring flex="1"/>
           <!-- From EdDialogOvlerlay.xul -->
-          <button class="dialog" id="AdvancedEditButton2"/>
+          <button class="dialog" id="AdvancedEditButton"/>
         </box>
         <spring flex="1"/>
       </box>
@@ -300,7 +300,7 @@
         <box autostretch="never">
           <spring flex="1"/>
           <!-- From EdDialogOvlerlay.xul -->
-          <button class="dialog" id="AdvancedEditButton3"/>
+          <button class="dialog" id="AdvancedEditButton2"/>
         </box>
       </box>
 
