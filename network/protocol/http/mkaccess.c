@@ -26,7 +26,9 @@
  */
 
 #if defined(CookieManagement)
+#ifdef XP_WIN
 #define TRUST_LABELS 1
+#endif
 #endif
 
 #define alphabetize 1
@@ -3816,9 +3818,6 @@ struct _CookieViewerDialog {
  */
 char *GetTrustLabelString(char *CookieName)
 {
-#ifdef XP_MAC
-return NULL;
-#else
     XP_List * list_ptr, *Tptr;
     TrustEntry *TEntry;
     net_CookiePermissionStruct *cookperm;
@@ -4067,7 +4066,6 @@ return NULL;
     PR_FREEIF(szBy);
 
     return szTemp;
-#endif
 }
 
 
