@@ -696,48 +696,6 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
     return NS_OK;
   }
 
-  // We have anonymous content underneath
-  // that we need to hide.  We need to set the event target now
-  // to ourselves
-
-  // If the event is starting here that's fine.  If it's not
-  // init'ing here it started beneath us and needs modification.
-  if (!(NS_EVENT_FLAG_INIT & aFlags)) {
-    if (!*aDOMEvent) {
-      // We haven't made a DOMEvent yet.  Force making one now.
-      nsCOMPtr<nsIEventListenerManager> listenerManager;
-
-      rv = GetListenerManager(getter_AddRefs(listenerManager));
-
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      nsAutoString empty;
-
-      rv = listenerManager->CreateEvent(aPresContext, aEvent, empty,
-                                        aDOMEvent);
-
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-
-      if (!*aDOMEvent) {
-        return NS_ERROR_FAILURE;
-      }
-
-      nsCOMPtr<nsIPrivateDOMEvent> privateEvent(do_QueryInterface(*aDOMEvent));
-
-      if (!privateEvent) {
-        return NS_ERROR_FAILURE;
-      }
-
-      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIDOMHTMLTextAreaElement *, this)));
-
-      privateEvent->SetTarget(target);
-    }
-  }
-
   // If NS_EVENT_FLAG_NO_CONTENT_DISPATCH is set we will not allow content to handle
   // this event.  But to allow middle mouse button paste to work we must allow 
   // middle clicks to go to text fields anyway.
@@ -760,23 +718,6 @@ nsHTMLTextAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
 
   // Reset the flag for other content besides this text field
   aEvent->flags |= noContentDispatch ? NS_EVENT_FLAG_NO_CONTENT_DISPATCH : NS_EVENT_FLAG_NONE;
-
-  // Finish the special anonymous content processing...
-  // If the event is starting here that's fine.  If it's not
-  // init'ing here it started beneath us and needs modification.
-  if (!(NS_EVENT_FLAG_INIT & aFlags)) {
-    if (!*aDOMEvent) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(*aDOMEvent);
-    if (!privateEvent) {
-      return NS_ERROR_FAILURE;
-    }
-
-    // This will reset the target to its original value
-    privateEvent->SetTarget(nsnull);
-  }
 
   return rv;
 }

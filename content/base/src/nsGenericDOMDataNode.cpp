@@ -1007,7 +1007,8 @@ nsGenericDOMDataNode::RemoveFocus(nsIPresContext* aPresContext)
 NS_IMETHODIMP_(nsIContent*)
 nsGenericDOMDataNode::GetBindingParent() const
 {
-  return nsnull;
+  nsIContent* parent = GetParent();
+  return parent ? parent->GetBindingParent() : nsnull;
 }
 
 NS_IMETHODIMP
