@@ -1,3 +1,4 @@
+# -*- Mode: makefile -*-
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -129,7 +130,7 @@ LIBRARY = $(OBJDIR)/libfdm.a
 endif
 
 define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); fi
+if test ! -d $(@D); then rm -rf $(@D); mkdir -p $(@D); fi
 endef
 
 all: $(LIBRARY) 

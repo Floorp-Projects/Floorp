@@ -105,7 +105,7 @@ $(CLASSDIR)/$(OBJDIR)/$(JARPATH)/%.class: %.java
 	$(JAVAC) $(JAVAC_FLAGS) $<
 
 define MAKE_OBJDIR
-if test ! -d $(@D); then rm -rf $(@D); mkdir $(@D); fi
+if test ! -d $(@D); then rm -rf $(@D); mkdir -p $(@D); fi
 endef
 
 ifdef DIRS
