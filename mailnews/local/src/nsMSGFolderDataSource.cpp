@@ -259,9 +259,10 @@ NS_IMETHODIMP nsMSGFolderDataSource::GetTarget(nsIRDFResource* source,
     nsresult rv;
 
 		if (peq(kNC_Name, property)) {
-			nsString name;
-			rv = folder->GetName(name);
+			char *name;
+			rv = folder->GetName(&name);
 			createNode(name, target);
+      PR_FREEIF(name);
 		}
 		else {
 			rv = NS_ERROR_RDF_NO_VALUE;

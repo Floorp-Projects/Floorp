@@ -6,6 +6,17 @@
 #define __gen_nsIMsgHost_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsID.h" /* interface nsID */
+
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
+#include "nsDebug.h"
+#include "nsTraceRefcnt.h"
+#include "nsID.h"
+#include "nsIID.h"
+#include "nsError.h"
+#include "nsISupportsUtils.h"
 
 
 /* starting interface nsIMsgHost */
@@ -23,17 +34,22 @@ class nsIMsgHost : public nsISupports {
     return iid;
   }
 
-  /*  <IDL>  */
+  /* attribute string hostname; */
   NS_IMETHOD GetHostname(char * *aHostname) = 0;
   NS_IMETHOD SetHostname(char * aHostname) = 0;
 
-  /*  <IDL>  */
+  /* attribute string uiName; */
   NS_IMETHOD GetUiName(char * *aUiName) = 0;
   NS_IMETHOD SetUiName(char * aUiName) = 0;
 
-  /*  <IDL>  */
+  /* attribute long port; */
   NS_IMETHOD GetPort(PRInt32 *aPort) = 0;
   NS_IMETHOD SetPort(PRInt32 aPort) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgHost *priv);
+#endif
 };
 
 #endif /* __gen_nsIMsgHost_h__ */

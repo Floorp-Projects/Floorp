@@ -7,6 +7,17 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgCompFields.h" /* interface nsIMsgCompFields */
+#include "nsID.h" /* interface nsID */
+
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
+#include "nsDebug.h"
+#include "nsTraceRefcnt.h"
+#include "nsID.h"
+#include "nsIID.h"
+#include "nsError.h"
+#include "nsISupportsUtils.h"
 
 
 /* starting interface nsIMsgCompose */
@@ -24,14 +35,25 @@ class nsIMsgCompose : public nsISupports {
     return iid;
   }
 
+  /* void Test (); */
   NS_IMETHOD Test() = 0;
 
-/*
-  NS_IMETHOD CreateAndInit(PRInt32 a_context, PRInt32 old_context, PRInt32 prefs, const nsIMsgCompFields *initfields, PRInt32 master) = 0;
+  /* void CreateAndInit (in long a_context, in long old_context, in long prefs, in nsIMsgCompFields initfields, in long master); */
+  NS_IMETHOD CreateAndInit(PRInt32 a_context, PRInt32 old_context, PRInt32 prefs, nsIMsgCompFields *initfields, PRInt32 master) = 0;
+
+  /* void Create (in long a_context, in long prefs, in long master); */
   NS_IMETHOD Create(PRInt32 a_context, PRInt32 prefs, PRInt32 master) = 0;
-  NS_IMETHOD Initialize(PRInt32 old_context, const nsIMsgCompFields *initfields) = 0;
+
+  /* void Initialize (in long old_context, in nsIMsgCompFields initfields); */
+  NS_IMETHOD Initialize(PRInt32 old_context, nsIMsgCompFields *initfields) = 0;
+
+  /* void Dispose (); */
   NS_IMETHOD Dispose() = 0;
-*/
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgCompose *priv);
+#endif
 };
 
 #endif /* __gen_nsIMsgCompose_h__ */

@@ -7,8 +7,19 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
+#include "nsID.h" /* interface nsID */
 #include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
 #include "nsINNTPHost.h" /* interface nsINNTPHost */
+
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
+#include "nsDebug.h"
+#include "nsTraceRefcnt.h"
+#include "nsID.h"
+#include "nsIID.h"
+#include "nsError.h"
+#include "nsISupportsUtils.h"
 
 
 /* starting interface nsINNTPArticleList */
@@ -34,6 +45,11 @@ class nsINNTPArticleList : public nsISupports {
 
   /* void FinishAddingArticleKeys (); */
   NS_IMETHOD FinishAddingArticleKeys() = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsINNTPArticleList *priv);
+#endif
 };
 
 #endif /* __gen_nsINNTPArticleList_h__ */

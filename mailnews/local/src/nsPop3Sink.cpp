@@ -143,7 +143,8 @@ nsPop3Sink::EndMailDelivery()
 {
     if (m_outFileStream)
     {
-        m_outFileStream->close();
+        // new API - closes when it gets deleted?
+        //        m_outFileStream->close();
         delete m_outFileStream;
         m_outFileStream = 0;
     }
@@ -164,7 +165,8 @@ nsPop3Sink::AbortMailDelivery()
 {
     if (m_outFileStream)
     {
-        m_outFileStream->close();
+        // new API - closes when it gets deleted?
+        // m_outFileStream->close();
         delete m_outFileStream;
         m_outFileStream = 0;
     }

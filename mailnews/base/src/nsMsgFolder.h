@@ -30,7 +30,7 @@
 #include "nsRDFResource.h"
 #include "nsIRDFResourceFactory.h"
 #include "nsDBFolderInfo.h"
-#include "nsMsgDataBase.h"
+#include "nsMsgDatabase.h"
 
  /* 
   * MsgFolder
@@ -52,10 +52,10 @@ public:
   NS_IMETHOD Clear(void);
 
   // nsIFolder methods:
-  NS_IMETHOD GetURI(const char* *name) { return nsRDFResource::GetValue(name); }
-  NS_IMETHOD GetName(nsString& name);
-  NS_IMETHOD SetName(const nsString& name);
-  NS_IMETHOD GetChildNamed(const nsString& name, nsISupports* *result);
+  NS_IMETHOD GetURI(char* *name) { return nsRDFResource::GetValue((const char**)&name); }
+  NS_IMETHOD GetName(char **name);
+  NS_IMETHOD SetName(char *name);
+  NS_IMETHOD GetChildNamed(char *name, nsISupports* *result);
   NS_IMETHOD GetParent(nsIFolder* *parent);
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
 
@@ -64,8 +64,8 @@ public:
   NS_IMETHOD ReplaceElement(nsISupports* element, nsISupports* newElement);
   NS_IMETHOD GetVisibleSubFolders(nsIEnumerator* *result);
   NS_IMETHOD GetMessages(nsIEnumerator* *result);
-  NS_IMETHOD GetPrettyName(nsString& name);
-  NS_IMETHOD SetPrettyName(const nsString& name);
+  NS_IMETHOD GetPrettyName(char ** name);
+  NS_IMETHOD SetPrettyName(char * name);
 #if 0
   static nsresult GetRoot(nsIMsgFolder* *result);
 #endif
@@ -121,7 +121,7 @@ public:
   NS_IMETHOD BuildFolderURL(char ** url);
 
 
-  NS_IMETHOD GetPrettiestName(nsString& name);
+  NS_IMETHOD GetPrettiestName(char ** name);
 
 #ifdef HAVE_ADMINURL
   NS_IMETHOD GetAdminUrl(MWContext *context, MSG_AdminURLType type);
@@ -139,14 +139,14 @@ public:
 
   NS_IMETHOD CreateSubfolder(const char *leafNameFromuser, nsIMsgFolder** outFolder, PRUint32* outPos);
 
-  NS_IMETHOD Rename(const char *name);
+  NS_IMETHOD Rename(char *name);
   NS_IMETHOD Adopt(const nsIMsgFolder *srcFolder, PRUint32*);
 
-  NS_IMETHOD ContainsChildNamed(const char *name, PRBool *containsChild);
-  NS_IMETHOD FindParentOf(const nsIMsgFolder * aFolder, nsIMsgFolder ** aParent);
-  NS_IMETHOD IsParentOf(const nsIMsgFolder *, PRBool deep, PRBool *isParent);
+  NS_IMETHOD ContainsChildNamed(char *name, PRBool *containsChild);
+  NS_IMETHOD FindParentOf(nsIMsgFolder * aFolder, nsIMsgFolder ** aParent);
+  NS_IMETHOD IsParentOf(nsIMsgFolder *, PRBool deep, PRBool *isParent);
 
-  NS_IMETHOD GenerateUniqueSubfolderName(const char *prefix, const nsIMsgFolder *otherFolder,
+  NS_IMETHOD GenerateUniqueSubfolderName(char *prefix, nsIMsgFolder *otherFolder,
                                          char **name);
 
   NS_IMETHOD GetDepth(PRUint32 *depth);
@@ -205,7 +205,7 @@ public:
   NS_IMETHOD GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder** result,
                                 PRUint32 resultsize, PRUint32 *numFolders);
 
-  NS_IMETHOD GetExpansionArray(const nsISupportsArray *expansionArray);
+  NS_IMETHOD GetExpansionArray(nsISupportsArray *expansionArray);
 
 #ifdef HAVE_NET
   NS_IMETHOD EscapeMessageId(const char *messageId, const char **escapeMessageID);

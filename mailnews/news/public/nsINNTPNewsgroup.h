@@ -6,7 +6,18 @@
 #define __gen_nsINNTPNewsgroup_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsID.h" /* interface nsID */
 #include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
+
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
+#include "nsDebug.h"
+#include "nsTraceRefcnt.h"
+#include "nsID.h"
+#include "nsIID.h"
+#include "nsError.h"
+#include "nsISupportsUtils.h"
 
 
 /* starting interface nsINNTPNewsgroup */
@@ -24,47 +35,52 @@ class nsINNTPNewsgroup : public nsISupports {
     return iid;
   }
 
-  /*  <IDL>  */
+  /* attribute string name; */
   NS_IMETHOD GetName(char * *aName) = 0;
   NS_IMETHOD SetName(char * aName) = 0;
 
-  /*  <IDL>  */
+  /* attribute string prettyName; */
   NS_IMETHOD GetPrettyName(char * *aPrettyName) = 0;
   NS_IMETHOD SetPrettyName(char * aPrettyName) = 0;
 
-  /*  <IDL>  */
+  /* attribute string password; */
   NS_IMETHOD GetPassword(char * *aPassword) = 0;
   NS_IMETHOD SetPassword(char * aPassword) = 0;
 
-  /*  <IDL>  */
+  /* attribute string username; */
   NS_IMETHOD GetUsername(char * *aUsername) = 0;
   NS_IMETHOD SetUsername(char * aUsername) = 0;
 
-  /*  <IDL>  */
+  /* attribute boolean needsExtraInfo; */
   NS_IMETHOD GetNeedsExtraInfo(PRBool *aNeedsExtraInfo) = 0;
   NS_IMETHOD SetNeedsExtraInfo(PRBool aNeedsExtraInfo) = 0;
 
-  /*  <IDL>  */
+  /* boolean IsOfflineArticle (in long num); */
   NS_IMETHOD IsOfflineArticle(PRInt32 num, PRBool *_retval) = 0;
 
-  /*  <IDL>  */
+  /* attribute boolean category; */
   NS_IMETHOD GetCategory(PRBool *aCategory) = 0;
   NS_IMETHOD SetCategory(PRBool aCategory) = 0;
 
-  /*  <IDL>  */
+  /* attribute boolean subscribed; */
   NS_IMETHOD GetSubscribed(PRBool *aSubscribed) = 0;
   NS_IMETHOD SetSubscribed(PRBool aSubscribed) = 0;
 
-  /*  <IDL>  */
+  /* attribute boolean wantNewTotals; */
   NS_IMETHOD GetWantNewTotals(PRBool *aWantNewTotals) = 0;
   NS_IMETHOD SetWantNewTotals(PRBool aWantNewTotals) = 0;
 
-  /*  <IDL>  */
+  /* attribute nsINNTPNewsgroupList newsgroupList; */
   NS_IMETHOD GetNewsgroupList(nsINNTPNewsgroupList * *aNewsgroupList) = 0;
   NS_IMETHOD SetNewsgroupList(nsINNTPNewsgroupList * aNewsgroupList) = 0;
 
-  /*  <IDL>  */
+  /* void UpdateSummaryFromNNTPInfo (in long oldest, in long youngest, in long total_messages); */
   NS_IMETHOD UpdateSummaryFromNNTPInfo(PRInt32 oldest, PRInt32 youngest, PRInt32 total_messages) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsINNTPNewsgroup *priv);
+#endif
 };
 
 #endif /* __gen_nsINNTPNewsgroup_h__ */

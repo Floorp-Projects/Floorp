@@ -7,6 +7,17 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIMsgCompFields.h" /* interface nsIMsgCompFields */
+#include "nsID.h" /* interface nsID */
+
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
+#include "nsDebug.h"
+#include "nsTraceRefcnt.h"
+#include "nsID.h"
+#include "nsIID.h"
+#include "nsError.h"
+#include "nsISupportsUtils.h"
 
 
 /* starting interface nsIMsgSend */
@@ -24,11 +35,16 @@ class nsIMsgSend : public nsISupports {
     return iid;
   }
 
-  /*  <IDL>  */
+  /* void Test (); */
   NS_IMETHOD Test() = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SendMessage(const nsIMsgCompFields *fields) = 0;
+  /* void SendMessage (in nsIMsgCompFields fields); */
+  NS_IMETHOD SendMessage(nsIMsgCompFields *fields) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgSend *priv);
+#endif
 };
 
 #endif /* __gen_nsIMsgSend_h__ */

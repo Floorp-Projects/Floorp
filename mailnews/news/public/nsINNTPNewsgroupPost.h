@@ -6,6 +6,17 @@
 #define __gen_nsINNTPNewsgroupPost_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsID.h" /* interface nsID */
+
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
+#include "nsDebug.h"
+#include "nsTraceRefcnt.h"
+#include "nsID.h"
+#include "nsIID.h"
+#include "nsError.h"
+#include "nsISupportsUtils.h"
 
 
 /* starting interface nsINNTPNewsgroupPost */
@@ -23,92 +34,97 @@ class nsINNTPNewsgroupPost : public nsISupports {
     return iid;
   }
 
-  /*  <IDL>  */
+  /* attribute string relayVersion; */
   NS_IMETHOD GetRelayVersion(char * *aRelayVersion) = 0;
   NS_IMETHOD SetRelayVersion(char * aRelayVersion) = 0;
 
-  /*  <IDL>  */
+  /* attribute string postingVersion; */
   NS_IMETHOD GetPostingVersion(char * *aPostingVersion) = 0;
   NS_IMETHOD SetPostingVersion(char * aPostingVersion) = 0;
 
-  /*  <IDL>  */
+  /* attribute string from; */
   NS_IMETHOD GetFrom(char * *aFrom) = 0;
   NS_IMETHOD SetFrom(char * aFrom) = 0;
 
-  /*  <IDL>  */
+  /* attribute string date; */
   NS_IMETHOD GetDate(char * *aDate) = 0;
   NS_IMETHOD SetDate(char * aDate) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD AddNewsgroup(const char *newsgroupName) = 0;
+  /* void AddNewsgroup (in string newsgroupName); */
+  NS_IMETHOD AddNewsgroup(char *newsgroupName) = 0;
 
-  /*  <IDL>  */
+  /* readonly attribute string newsgroups; */
   NS_IMETHOD GetNewsgroups(char * *aNewsgroups) = 0;
 
-  /*  <IDL>  */
+  /* attribute string subject; */
   NS_IMETHOD GetSubject(char * *aSubject) = 0;
   NS_IMETHOD SetSubject(char * aSubject) = 0;
 
-  /*  <IDL>  */
+  /* readonly attribute string messageID; */
   NS_IMETHOD GetMessageID(char * *aMessageID) = 0;
 
-  /*  <IDL>  */
+  /* attribute string path; */
   NS_IMETHOD GetPath(char * *aPath) = 0;
   NS_IMETHOD SetPath(char * aPath) = 0;
 
-  /*  <IDL>  */
+  /* boolean isValid (); */
   NS_IMETHOD isValid(PRBool *_retval) = 0;
 
-  /*  <IDL>  */
+  /* attribute string replyTo; */
   NS_IMETHOD GetReplyTo(char * *aReplyTo) = 0;
   NS_IMETHOD SetReplyTo(char * aReplyTo) = 0;
 
-  /*  <IDL>  */
+  /* attribute string sender; */
   NS_IMETHOD GetSender(char * *aSender) = 0;
   NS_IMETHOD SetSender(char * aSender) = 0;
 
-  /*  <IDL>  */
+  /* attribute string followupTo; */
   NS_IMETHOD GetFollowupTo(char * *aFollowupTo) = 0;
   NS_IMETHOD SetFollowupTo(char * aFollowupTo) = 0;
 
-  /*  <IDL>  */
+  /* attribute string dateRecieved; */
   NS_IMETHOD GetDateRecieved(char * *aDateRecieved) = 0;
   NS_IMETHOD SetDateRecieved(char * aDateRecieved) = 0;
 
-  /*  <IDL>  */
+  /* attribute string expires; */
   NS_IMETHOD GetExpires(char * *aExpires) = 0;
   NS_IMETHOD SetExpires(char * aExpires) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD AddReference(const char *referenceID) = 0;
+  /* void AddReference (in string referenceID); */
+  NS_IMETHOD AddReference(char *referenceID) = 0;
 
-  /*  <IDL>  */
+  /* readonly attribute string references; */
   NS_IMETHOD GetReferences(char * *aReferences) = 0;
 
-  /*  <IDL>  */
+  /* attribute string control; */
   NS_IMETHOD GetControl(char * *aControl) = 0;
   NS_IMETHOD SetControl(char * aControl) = 0;
 
-  /*  <IDL>  */
+  /* attribute string distribution; */
   NS_IMETHOD GetDistribution(char * *aDistribution) = 0;
   NS_IMETHOD SetDistribution(char * aDistribution) = 0;
 
-  /*  <IDL>  */
+  /* attribute string organization; */
   NS_IMETHOD GetOrganization(char * *aOrganization) = 0;
   NS_IMETHOD SetOrganization(char * aOrganization) = 0;
 
-  /*  <IDL>  */
+  /* attribute string body; */
   NS_IMETHOD GetBody(char * *aBody) = 0;
   NS_IMETHOD SetBody(char * aBody) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD MakeControlCancel(const char *messageID) = 0;
+  /* void MakeControlCancel (in string messageID); */
+  NS_IMETHOD MakeControlCancel(char *messageID) = 0;
 
-  /*  <IDL>  */
+  /* readonly attribute boolean isControl; */
   NS_IMETHOD GetIsControl(PRBool *aIsControl) = 0;
 
-  /*  <IDL>  */
+  /* string GetFullMessage (); */
   NS_IMETHOD GetFullMessage(char **_retval) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsINNTPNewsgroupPost *priv);
+#endif
 };
 
 #endif /* __gen_nsINNTPNewsgroupPost_h__ */

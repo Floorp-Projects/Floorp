@@ -1,5 +1,3 @@
-XXX fix this to match the .h file
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -21,36 +19,31 @@ XXX fix this to match the .h file
 #include "nsISupportsArray.idl"
 #include "nsISupports.idl"
 #include "nsIMsg.idl"
+#include "nsIFolder.idl"
+
+%{ C++
+#include "nsFileSpec.h"
+%}
+
+native nsNativeFileSpec(nsNativeFileSpec*);
 
 [uuid(85e39ff0-b248-11d2-b7ef-00805f05ffa5)]
-interface nsIMsgFolder : nsISupports {
+interface nsIMsgFolder : nsIFolder {
 
-	readonly attribute string prettyName;
-	readonly attribute string name;  
-	void SetName(in string name);
-	readonly attribute string prettiestName;
+  /* already exists in nsIFolder */
+  /*	readonly attribute string name;   */
+  /*	void SetName(in string name); */
 
-	string BuildFolderURL();
 
-        // XXX should these 2 go on nsIFolder or nsICollection?
+        /* XXX should these 2 go on nsIFolder or nsICollection? */
         void AddUnique(in nsISupports element);
         void ReplaceElement(in nsISupports element, in nsISupports newElement);
 
-	boolean HasSubFolders();
-	unsigned long GetNumSubFolders() ;
-	unsigned long GetNumSubFoldersToDisplay();
-	nsIMsgFolder GetSubFolder(in unsigned long which) ;
-	nsISupportsArray  GetSubFolders();
-	void AddSubFolder(in nsIMsgFolder folder);
-	void RemoveSubFolder(in nsIMsgFolder folder);
-
-	boolean HasMessages();
-	unsigned long GetNumMessages() ;
-	unsigned long GetNumMessagesToDisplay();
-	nsIMsgFolder GetAMessage(in unsigned long which) ;
-	nsISupportsArray  GetMessages();
-	void AddMessage(in nsIMsg msg);
-	void RemoveMessage(in nsIMsg msg);
+	nsIEnumerator GetMessages();
+  nsIEnumerator GetVisibleSubFolders();
+	attribute string prettyName;
+	readonly attribute string prettiestName;
+	string BuildFolderURL();
 
 	readonly attribute boolean deleteIsMoveToTrash;
 	readonly attribute boolean showDeletedMessages;
@@ -67,7 +60,6 @@ interface nsIMsgFolder : nsISupports {
 	void Adopt(in nsIMsgFolder srcFolder, out unsigned long outPos);
 
 	boolean ContainsChildNamed(in string name);
-	nsIMsgFolder FindChildNamed(in string name);
 	nsIMsgFolder FindParentOf(in nsIMsgFolder childFolder);
 	boolean IsParentOf(in nsIMsgFolder folder, in boolean deep);
 
@@ -104,9 +96,6 @@ interface nsIMsgFolder : nsISupports {
 	string GetUsersName();
 	string GetHostName();
 
-	void AddSubfolderIfUnique(in nsIMsgFolder newSubfolder);
-	void ReplaceSubfolder(in nsIMsgFolder oldFolder,
-                        in nsIMsgFolder newFolder);
   
 	void SetFlag(in unsigned long flag);
 	void ClearFlag(in unsigned long flag);
@@ -123,16 +112,16 @@ interface nsIMsgFolder : nsISupports {
 
 };
 
+
 [uuid(27D2DE40-BAF1-11d2-9578-00805F8AC615)]
 interface nsIMsgLocalMailFolder : nsISupports {
 
-        readonly attribute nsNativeFileSpec pathName;
 };
 
 
 [uuid(FBFEBE79-C1DD-11d2-8A40-0060B0FC04D2)]
 interface nsIMsgImapMailFolder : nsISupports {
-
+  readonly attribute nsNativeFileSpec pathName;
 };
 
 

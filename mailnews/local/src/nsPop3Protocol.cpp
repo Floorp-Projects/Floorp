@@ -224,7 +224,8 @@ net_pop3_load_state(const char* searchhost,
         }
 	  }
 	}
-	fileStream.close();
+  // new API - closes when it goes out of scope?
+  //	fileStream.close();
 	PR_Free(buf);
   }
   
@@ -299,7 +300,8 @@ net_pop3_write_state(Pop3UidlHost* host, const char* mailDirectory)
                    net_pop3_write_mapper, &outFileStream);
     }
   }
-  outFileStream.close();
+  // new API - closes when it goes out of scope?
+  //  outFileStream.close();
 }
 
 /*

@@ -35,6 +35,7 @@ EXPORTS =				\
 		nsMsgMessageFlags.h	\
 		nsMsgLocalFolderHdrs.h  \
 		nsMsgMD5.h	\
+		nsIMsg.h \
 		nsIMsgRFC822Parser.h	\
 		nsIMsgHost.h		\
 		nsIMsgGroupRecord.h	\

@@ -23,7 +23,7 @@ URL_Struct *		NET_CreateURLStruct (const char *, NET_ReloadMethod) {return NULL;
 char *				NET_UnEscape (char * ) {return NULL;}
 char *				NET_EscapeHTML(const char * string) {return NULL;}
 char *				NET_ParseURL (const char *, int ) {return NULL;}
-int					NET_URL_Type (CONST char *) {return NULL;}
+int					NET_URL_Type (const char *) {return NULL;}
 XP_Bool				NET_IsLocalFileURL(char *address) {return PR_TRUE;}
 char *				NET_Escape (const char * str, int mask) {return PL_strdup(str);}
 int					NET_InterruptWindow(MWContext * window_id) {return 0;}
@@ -38,7 +38,7 @@ char *				XP_StripLine (char *) {return NULL;}
 XP_File				XP_FileOpen (const char* name, XP_FileType type, const XP_FilePerm permissions) {return NULL;}
 int					XP_Stat(const char * name, XP_StatStruct * outStat, XP_FileType type) {return 0;}
 int					XP_FileTruncate(const char* name, XP_FileType type, int32 length) {return 0;}
-char *				XP_AppVersion = "5.0a0";
+const char *				XP_AppVersion = "5.0a0";
 XP_BEGIN_PROTOS int					XP_LocalZoneOffset() {return -480;} XP_END_PROTOS
 Bool				XP_IsContextBusy(MWContext * context) {return PR_FALSE;}
 

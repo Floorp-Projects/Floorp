@@ -26,7 +26,7 @@
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsIEnumerator.h"
-#include "nsMailDataBase.h"
+#include "nsMailDatabase.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::IID() inside of a class
@@ -50,7 +50,7 @@ static const char kRootPrefix[] = "mailbox:/";
 static const char kMsgRootFolderPref[] = "mailnews.rootFolder";
 
 static nsresult
-nsURI2Path(const char* uriStr, nsNativeFileSpec& pathResult)
+nsURI2Path(char* uriStr, nsNativeFileSpec& pathResult)
 {
   nsAutoString path;
   nsAutoString uri = uriStr;
@@ -125,7 +125,7 @@ nsPath2URI(nsNativeFileSpec& path, const char* *uri)
 }
 
 static nsresult
-nsURI2Name(const char* uriStr, nsString& name)
+nsURI2Name(char* uriStr, nsString& name)
 {
   nsAutoString uri = uriStr;
   if (uri.Find(kRootPrefix) != 0)     // if doesn't start with kRootPrefix
@@ -207,7 +207,8 @@ nsMsgLocalMailFolder::CreateSubFolders(void)
   nsNativeFileSpec path;
   rv = GetPath(path);
   if (NS_FAILED(rv)) return rv;
-  for (nsDirectoryIterator dir(path); dir; dir++) {
+
+  for (nsDirectoryIterator dir(path); (const nsFileSpec&)dir; dir++) {
     nsNativeFileSpec currentFolderPath = (nsNativeFileSpec&)dir;
 #if 0
     if (currentFolderName)
@@ -343,15 +344,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::BuildFolderURL(char **url)
   if(!url)
     return NS_ERROR_NULL_POINTER;
 
-  nsNativeFileSpec path;
+  nsFileSpec path;
   nsresult rv = GetPath(path);
   if (NS_FAILED(rv)) return rv;
-  *url = PR_smprintf("%s%s", urlScheme, path);
+  const char *pathName = path;
+  *url = PR_smprintf("%s%s", urlScheme, pathName);
   return NS_OK;
 
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *leafNameFromUser,
+NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(char *leafNameFromUser,
                                                     nsIMsgFolder **outFolder,
                                                     PRUint32 *outPos)
 {
@@ -454,7 +456,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateSubfolder(const char *leafNameFromUser
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::RemoveSubFolder(const nsIMsgFolder *which)
+NS_IMETHODIMP nsMsgLocalMailFolder::RemoveSubFolder(nsIMsgFolder *which)
 {
 #if 0
   // Let the base class do list management
@@ -501,7 +503,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Delete()
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::Rename (const char *newName)
+NS_IMETHODIMP nsMsgLocalMailFolder::Rename (char *newName)
 {
 #ifdef HAVE_PORT
   // change the leaf name (stored separately)
@@ -572,7 +574,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename (const char *newName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(const nsIMsgFolder *srcFolder, PRUint32 *outPos)
+NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos)
 {
 #ifdef HAVE_PORT
   nsresult err = NS_OK;
@@ -641,14 +643,16 @@ nsMsgLocalMailFolder::GetChildNamed(nsString& name, nsISupports ** aChild)
     if(folder)
       NS_RELEASE(folder);
     if(NS_SUCCEEDED(supports->QueryInterface(kISupportsIID, (void**)&folder))) {
-      nsAutoString folderName;
+      char *folderName;
 
-      folder->GetName(folderName);
+      folder->GetName(&folderName);
       // case-insensitive compare is probably LCD across OS filesystems
-      if (!name.EqualsIgnoreCase(folderName)) {
+      if (folderName && !name.EqualsIgnoreCase(folderName)) {
         *aChild = folder;
+        PR_FREEIF(folderName);
         return NS_OK;
       }
+      PR_FREEIF(folderName);
     }
     NS_RELEASE(supports);
   }
@@ -686,8 +690,14 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(nsString& prettyName)
     // override the name here to say "Local Mail"
     prettyName = PL_strdup("Local Mail");
   }
-  else
-    return nsMsgFolder::GetPrettyName(prettyName);
+  else {
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    char *pName = prettyName.ToNewCString();
+    if (pName)
+      rv = nsMsgFolder::GetPrettyName(&pName);
+    delete[] pName;
+    return rv;
+  }
 
   return NS_OK;
 }
@@ -860,7 +870,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::UserNeedsToAuthenticateForFolder(PRBool disp
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::RememberPassword(const char *password)
+NS_IMETHODIMP nsMsgLocalMailFolder::RememberPassword(char *password)
 {
 #ifdef HAVE_DB
     MailDB *mailDb = NULL;

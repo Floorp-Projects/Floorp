@@ -37,7 +37,7 @@
 class nsNNTPHostStub : public nsINNTPHost 
 {
 public:
-    nsNNTPHostStub(const char *name, PRInt32 port);
+    nsNNTPHostStub(char *name, PRInt32 port);
                
 	virtual ~nsNNTPHostStub();
 
@@ -49,8 +49,8 @@ public:
     NS_IMETHOD	GetSupportsExtensions(PRBool *aSupportsExtensions);
 	NS_IMETHOD  SetSupportsExtensions(PRBool aSupportsExtensions);
     
-	NS_IMETHOD AddExtension (const char *ext);
-	NS_IMETHOD QueryExtension (const char *ext, PRBool *_retval);
+	NS_IMETHOD AddExtension (char *ext);
+	NS_IMETHOD QueryExtension (char *ext, PRBool *_retval);
     
 	NS_IMETHOD GetPostingAllowed(PRBool * aPostingAllowed);
 	NS_IMETHOD SetPostingAllowed(PRBool aPostingAllowed);
@@ -60,32 +60,32 @@ public:
     
     NS_IMPL_CLASS_GETSET(LastUpdatedTime, PRInt64, m_lastGroupUpdate);
 
-    NS_IMETHOD GetNewsgroupList(const char *groupname, nsINNTPNewsgroupList **_retval);
+    NS_IMETHOD GetNewsgroupList(char *groupname, nsINNTPNewsgroupList **_retval);
 
-    NS_IMETHOD GetNewsgroupAndNumberOfID(const char *message_id,
+    NS_IMETHOD GetNewsgroupAndNumberOfID(char *message_id,
                                          nsINNTPNewsgroup **group,
                                          PRUint32 *messageNumber);
 
     /* get this from MSG_Master::FindNewsFolder */
-    NS_IMETHOD FindNewsgroup(const char *groupname, PRBool create,
+    NS_IMETHOD FindNewsgroup(char *groupname, PRBool create,
 		nsINNTPNewsgroup **_retval) { return FindGroup(groupname, _retval);}
     
-	NS_IMETHOD AddPropertyForGet (const char *property, const char *value);
-	NS_IMETHOD QueryPropertyForGet (const char *property, char **_retval);
+	NS_IMETHOD AddPropertyForGet (char *property, char *value);
+	NS_IMETHOD QueryPropertyForGet (char *property, char **_retval);
 
-    NS_IMETHOD AddSearchableGroup(const char *groupname);
+    NS_IMETHOD AddSearchableGroup(char *groupname);
     // should these go into interfaces?
-	NS_IMETHOD QuerySearchableGroup (const char *group, PRBool *);
-    //NS_IMETHOD QuerySearchableGroupCharsets(const char *group, char **);
+	NS_IMETHOD QuerySearchableGroup (char *group, PRBool *);
+    //NS_IMETHOD QuerySearchableGroupCharsets(char *group, char **);
 
     // Virtual groups
-    NS_IMETHOD AddVirtualGroup(const char *responseText) { return NS_OK;}
-    NS_IMETHOD SetIsVirtualGroup(const char *groupname, PRBool isVirtual);
-    NS_IMETHOD GetIsVirtualGroup(const char *groupname, PRBool *_retval);
+    NS_IMETHOD AddVirtualGroup(char *responseText) { return NS_OK;}
+    NS_IMETHOD SetIsVirtualGroup(char *groupname, PRBool isVirtual);
+    NS_IMETHOD GetIsVirtualGroup(char *groupname, PRBool *_retval);
 
     // custom/searchable headers
-    NS_IMETHOD AddSearchableHeader(const char *headerName);
-    NS_IMETHOD QuerySearchableHeader(const char *headerName, PRBool *_retval);
+    NS_IMETHOD AddSearchableHeader(char *headerName);
+    NS_IMETHOD QuerySearchableHeader(char *headerName, PRBool *_retval);
     
 	// Go load the newsrc for this host.  Creates the subscribed hosts as
 	// children of the given nsIMsgFolder.
@@ -108,21 +108,21 @@ public:
     NS_IMETHOD SetNewsRCFilename(char *);
     
    
-    NS_IMETHOD FindGroup(const char* name, nsINNTPNewsgroup* *_retval);
-    NS_IMETHOD AddGroup(const char *groupname,
+    NS_IMETHOD FindGroup(char* name, nsINNTPNewsgroup* *_retval);
+    NS_IMETHOD AddGroup(char *groupname,
                         nsINNTPNewsgroup **retval);
     
-    //NS_IMETHOD AddGroup(const char *groupname,
+    //NS_IMETHOD AddGroup(char *groupname,
 //                        nsMsgGroupRecord *groupRecord,
 //                        nsINNTPNewsgroup **retval);
     
-    NS_IMETHOD RemoveGroupByName(const char *groupName);
-    NS_IMETHOD RemoveGroup(const nsINNTPNewsgroup*);
+    NS_IMETHOD RemoveGroupByName(char *groupName);
+    NS_IMETHOD RemoveGroup(nsINNTPNewsgroup*);
     
-    NS_IMETHOD AddNewNewsgroup(const char *groupName,
+    NS_IMETHOD AddNewNewsgroup(char *groupName,
                                PRInt32 first,
                                PRInt32 last,
-                               const char *flags,
+                               char *flags,
                                PRBool xactiveFlags);
 
 	/* Name of directory to store newsgroup
@@ -137,7 +137,7 @@ public:
        individual strings must not be free'd. */
     NS_IMETHOD GetGroupList(char **_retval);
 
-    NS_IMETHOD DisplaySubscribedGroup(const char *groupname,
+    NS_IMETHOD DisplaySubscribedGroup(char *groupname,
                                       PRInt32 first_message,
                                       PRInt32 last_message,
                                       PRInt32 total_messages,
@@ -169,19 +169,19 @@ private:
 	
 	// Returns the pretty name for the given group.  The resulting string
 	// must be free'd using delete[].
-	char* GetPrettyName(const char* groupname) { return m_prettyName;}
-	NS_IMETHOD SetPrettyName(const char* groupname, const char* prettyname);
+	char* GetPrettyName(char* groupname) { return m_prettyName;}
+	NS_IMETHOD SetPrettyName(char* groupname, char* prettyname);
 
-	NS_IMETHOD SetGroupNeedsExtraInfo(const char *groupname, PRBool value);
+	NS_IMETHOD SetGroupNeedsExtraInfo(char *groupname, PRBool value);
 	// Finds the container newsgroup for this category (or NULL if this isn't
 	// a category).  The resulting string must be free'd using delete[].
-	char* GetCategoryContainer(const char* groupname, nsMsgGroupRecord *inGroupRecord = NULL);
-	nsINNTPNewsgroup *GetCategoryContainerFolderInfo(const char *groupname);
+	char* GetCategoryContainer(char* groupname, nsMsgGroupRecord *inGroupRecord = NULL);
+	nsINNTPNewsgroup *GetCategoryContainerFolderInfo(char *groupname);
 
 
 	nsMsgGroupRecord* GetGroupTree() {return m_groupTree;}
 	
-	NS_IMETHOD GroupNotFound(const char *groupName, PRBool opening);
+	NS_IMETHOD GroupNotFound(char *groupName, PRBool opening);
 
 protected:
 
@@ -246,7 +246,7 @@ protected:
 
 NS_IMPL_ISUPPORTS(nsNNTPHostStub, nsINNTPHost::IID());
 
-nsNNTPHostStub::nsNNTPHostStub(const char * name, PRInt32 port)
+nsNNTPHostStub::nsNNTPHostStub(char * name, PRInt32 port)
 {
 	NS_INIT_REFCNT();
 	m_supportsExtensions = PR_FALSE;
@@ -276,13 +276,13 @@ nsresult nsNNTPHostStub::SetSupportsExtensions(PRBool aSupportsExtensions)
 }
 
 
-nsresult nsNNTPHostStub::AddExtension(const char * extension)
+nsresult nsNNTPHostStub::AddExtension(char * extension)
 {
 	printf("Adding extension: %s. \n", extension ? extension : "invalid extension");
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::QueryExtension(const char * extension, PRBool * aRetValue)
+nsresult nsNNTPHostStub::QueryExtension(char * extension, PRBool * aRetValue)
 {
 	printf("Querying extension %s. \n", extension ? extension : "invalid extension");
 	if (PL_strstr(extension, "SEARCH"))
@@ -323,7 +323,7 @@ nsresult nsNNTPHostStub::SetPushAuth(PRBool aPushAuth)
 }
 
 
-nsresult nsNNTPHostStub::AddPropertyForGet (const char *property, const char *value)
+nsresult nsNNTPHostStub::AddPropertyForGet (char *property, char *value)
 {
 	char *tmp = NULL;
 	
@@ -341,11 +341,11 @@ nsresult nsNNTPHostStub::AddPropertyForGet (const char *property, const char *va
     return NS_OK;
 }
 
-nsresult nsNNTPHostStub::QueryPropertyForGet (const char *property, char **retval)
+nsresult nsNNTPHostStub::QueryPropertyForGet (char *property, char **retval)
 {
     *retval=NULL;
 	for (int i = 0; i < m_propertiesForGet.Count(); i++)
-		if (!PL_strcasecmp(property, (const char *) m_propertiesForGet[i])) {
+		if (!PL_strcasecmp(property, (char *) m_propertiesForGet[i])) {
             *retval = (char *)m_valuesForGet[i];
 			printf("Retrieving property %s for get. \n", *retval);
 			return NS_OK;
@@ -354,7 +354,7 @@ nsresult nsNNTPHostStub::QueryPropertyForGet (const char *property, char **retva
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::AddSearchableGroup (const char *group)
+nsresult nsNNTPHostStub::AddSearchableGroup (char *group)
 {
     PRBool searchableGroup;
     nsresult rv = QuerySearchableGroup(group, &searchableGroup);
@@ -379,12 +379,12 @@ nsresult nsNNTPHostStub::AddSearchableGroup (const char *group)
     return NS_OK;
 }
 
-nsresult nsNNTPHostStub::QuerySearchableGroup (const char *group, PRBool *_retval)
+nsresult nsNNTPHostStub::QuerySearchableGroup (char *group, PRBool *_retval)
 {
     *_retval = PR_FALSE;
 	for (int i = 0; i < m_searchableGroups.Count(); i++)
 	{
-		const char *searchableGroup = (const char*) m_searchableGroups[i];
+		char *searchableGroup = (char*) m_searchableGroups[i];
 		char *starInSearchableGroup = NULL;
 
 		if (!PL_strcmp(searchableGroup, "*")) {
@@ -406,18 +406,18 @@ nsresult nsNNTPHostStub::QuerySearchableGroup (const char *group, PRBool *_retva
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::SetIsVirtualGroup(const char * groupname, PRBool isVirtual)
+nsresult nsNNTPHostStub::SetIsVirtualGroup(char * groupname, PRBool isVirtual)
 {
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::GetIsVirtualGroup(const char * groupname, PRBool  * isVirtual)
+nsresult nsNNTPHostStub::GetIsVirtualGroup(char * groupname, PRBool  * isVirtual)
 {
 	*isVirtual = PR_FALSE;
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::AddSearchableHeader (const char *header)
+nsresult nsNNTPHostStub::AddSearchableHeader (char *header)
 {
     PRBool searchable;
     nsresult rv = QuerySearchableHeader(header, &searchable);
@@ -432,7 +432,7 @@ nsresult nsNNTPHostStub::AddSearchableHeader (const char *header)
     return NS_OK;
 }
 
-nsresult nsNNTPHostStub::QuerySearchableHeader(const char *header, PRBool *retval)
+nsresult nsNNTPHostStub::QuerySearchableHeader(char *header, PRBool *retval)
 {
     *retval=PR_FALSE;
 	for (int i = 0; i < m_searchableHeaders.Count(); i++)
@@ -443,16 +443,16 @@ nsresult nsNNTPHostStub::QuerySearchableHeader(const char *header, PRBool *retva
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::GroupNotFound(const char *groupName, PRBool opening)
+nsresult nsNNTPHostStub::GroupNotFound(char *groupName, PRBool opening)
 {
 	printf("Group %s not found. \n", groupName);
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::AddNewNewsgroup(const char *groupName,
+nsresult nsNNTPHostStub::AddNewNewsgroup(char *groupName,
                             PRInt32 first,
                             PRInt32 last,
-                            const char *flags,
+                            char *flags,
                             PRBool xactiveFlags)
 {
 	printf ("Adding new newsgroup: %s. \n", groupName);
@@ -496,7 +496,7 @@ nsresult nsNNTPHostStub::GetFirstGroupNeedingCounts(char ** aFirstGroup)
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::DisplaySubscribedGroup(const char * groupname, PRInt32 first_message, PRInt32 last_message, PRInt32 total_messages,
+nsresult nsNNTPHostStub::DisplaySubscribedGroup(char * groupname, PRInt32 first_message, PRInt32 last_message, PRInt32 total_messages,
 												PRBool visit_now)
 {
 	printf("Displaying subscribed group %s which has %d total messages. \n", groupname, total_messages);
@@ -536,18 +536,18 @@ nsresult nsNNTPHostStub::GetFirstGroupNeedingExtraInfo(char ** retval)
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::SetGroupNeedsExtraInfo(const char * groupName, PRBool needsExtraInfo)
+nsresult nsNNTPHostStub::SetGroupNeedsExtraInfo(char * groupName, PRBool needsExtraInfo)
 {
 	printf("Setting group %s to need extra info.\n", groupName);
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::GetNewsgroupAndNumberOfID(const char *messageID, nsINNTPNewsgroup ** group, PRUint32 * messageNumber)
+nsresult nsNNTPHostStub::GetNewsgroupAndNumberOfID(char *messageID, nsINNTPNewsgroup ** group, PRUint32 * messageNumber)
 {
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::SetPrettyName(const char * groupname, const char * prettyname)
+nsresult nsNNTPHostStub::SetPrettyName(char * groupname, char * prettyname)
 {
 	printf("Setting group %s to have pretty name %s. \n", groupname, prettyname);
 	return NS_OK;
@@ -590,7 +590,7 @@ nsresult nsNNTPHostStub::SetNewsRCFilename(char * fileName)
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::GetNewsgroupList(const char *groupname, nsINNTPNewsgroupList **_retval)
+nsresult nsNNTPHostStub::GetNewsgroupList(char *groupname, nsINNTPNewsgroupList **_retval)
 {
 	nsresult rv = NS_OK;
 	// find group with the group name...
@@ -605,7 +605,7 @@ nsresult nsNNTPHostStub::GetNewsgroupList(const char *groupname, nsINNTPNewsgrou
 	return rv;
 }
 
-nsresult nsNNTPHostStub::FindGroup(const char * name, nsINNTPNewsgroup ** retVal)
+nsresult nsNNTPHostStub::FindGroup(char * name, nsINNTPNewsgroup ** retVal)
 {
 	PRBool found = PR_FALSE;
 	*retVal = nsnull;
@@ -637,7 +637,7 @@ nsresult nsNNTPHostStub::FindGroup(const char * name, nsINNTPNewsgroup ** retVal
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::AddGroup(const char *groupname, nsINNTPNewsgroup **retval)
+nsresult nsNNTPHostStub::AddGroup(char *groupname, nsINNTPNewsgroup **retval)
 {
 	nsresult rv = NS_OK;
 	printf ("Adding group %s to host.\n", groupname);
@@ -667,7 +667,7 @@ nsresult nsNNTPHostStub::AddGroup(const char *groupname, nsINNTPNewsgroup **retv
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::RemoveGroup(const nsINNTPNewsgroup * group)
+nsresult nsNNTPHostStub::RemoveGroup(nsINNTPNewsgroup * group)
 {
 	char * name = nsnull;
 	((nsINNTPNewsgroup *) group)->GetName(&name);
@@ -677,7 +677,7 @@ nsresult nsNNTPHostStub::RemoveGroup(const nsINNTPNewsgroup * group)
 	return NS_OK;
 }
 
-nsresult nsNNTPHostStub::RemoveGroupByName(const char *groupName)
+nsresult nsNNTPHostStub::RemoveGroupByName(char *groupName)
 {
 	printf ("Removing group %s. \n", groupName);
 	return NS_OK;
@@ -699,7 +699,7 @@ nsresult nsNNTPHostStub::GetGroupList(char ** retVal)
 
 NS_BEGIN_EXTERN_C
 
-nsresult NS_NewNNTPHost(nsINNTPHost ** aInstancePtr, const char * name, PRUint32 port)
+nsresult NS_NewNNTPHost(nsINNTPHost ** aInstancePtr, char * name, PRUint32 port)
 {
 	nsresult rv = NS_OK;
 	if (aInstancePtr)

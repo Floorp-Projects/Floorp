@@ -50,9 +50,9 @@ class nsNNTPNewsgroupListStub : public nsINNTPNewsgroupList {
 
 	NS_IMETHOD InitXOVER(PRInt32 first_message, PRInt32 last_message);
 
-	NS_IMETHOD ProcessXOVER(const char *line, PRInt32 *status);
+	NS_IMETHOD ProcessXOVER(char *line, PRInt32 *status);
 
-	NS_IMETHOD ProcessNonXOVER(const char *line);
+	NS_IMETHOD ProcessNonXOVER(char *line);
 	NS_IMETHOD ResetXOVER();
 
 	NS_IMETHOD FinishXOVER(PRInt32 status, PRInt32 *newstatus);
@@ -222,7 +222,7 @@ nsresult nsNNTPNewsgroupListStub::InitXOVER(PRInt32 first_msg, PRInt32 last_msg)
 
 #define NEWS_ART_DISPLAY_FREQ		10
 
-nsresult nsNNTPNewsgroupListStub::ProcessXOVER(const char *line, int *status)
+nsresult nsNNTPNewsgroupListStub::ProcessXOVER(char *line, int *status)
 {
 	const char *next;
 	PRUint32 message_number=0;
@@ -288,7 +288,7 @@ nsNNTPNewsgroupListStub::ResetXOVER()
    slow anyway that this just doesn't matter.
  */
 
-nsresult nsNNTPNewsgroupListStub::ProcessNonXOVER (const char * /*line*/)
+nsresult nsNNTPNewsgroupListStub::ProcessNonXOVER (char * /*line*/)
 {
 	// ### dmb write me
     return NS_OK;

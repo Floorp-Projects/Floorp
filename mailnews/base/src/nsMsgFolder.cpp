@@ -22,7 +22,7 @@
 #include "nsMsgFolderFlags.h"
 #include "prprf.h"
 #include "nsMsgKeyArray.h"
-#include "nsMsgDataBase.h"
+#include "nsMsgDatabase.h"
 #include "nsDBFolderInfo.h"
 #include "nsISupportsArray.h"
 
@@ -33,9 +33,11 @@
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsMsgFolder::nsMsgFolder(const char* uri)
-  : nsRDFResource(uri), mFlags(0), mDepth(0), 
+  : nsRDFResource(uri), mFlags(0),
     mNumUnreadMessages(-1),	mNumTotalMessages(0),
-    mPrefFlags(0), mCsid(0)
+    mCsid(0),
+    mDepth(0), 
+    mPrefFlags(0)
 {
 	NS_INIT_REFCNT();
 
@@ -359,13 +361,15 @@ NS_IMETHODIMP nsMsgFolder::SaveMessages(nsMsgKeyArray *, const char *fileName,
 }
 #endif
 
-NS_IMETHODIMP nsMsgFolder::GetPrettyName(nsString& name)
+NS_IMETHODIMP nsMsgFolder::GetPrettyName(char ** name)
 {
-  name = mName;
+  char *cmName = mName.ToNewCString();
+  if (name) *name = PL_strdup(cmName);
+  delete[] cmName;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::SetPrettyName(const nsString& name)
+NS_IMETHODIMP nsMsgFolder::SetPrettyName(char *name)
 {
   mName = name;
   return NS_OK;
@@ -398,19 +402,21 @@ NS_IMETHODIMP nsMsgFolder::Clear(void)
   return mSubFolders->Clear();
 }
 
-NS_IMETHODIMP nsMsgFolder::GetName(nsString& name)
+NS_IMETHODIMP nsMsgFolder::GetName(char **name)
 {
-  name = mName;
+  char *cmName = mName.ToNewCString();
+  if (name) *name = PL_strdup(cmName);
+  delete[] cmName;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::SetName(const nsString& name)
+NS_IMETHODIMP nsMsgFolder::SetName(char * name)
 {
 	mName = name;
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetChildNamed(const nsString& name, nsISupports* *result)
+NS_IMETHODIMP nsMsgFolder::GetChildNamed(char* name, nsISupports* *result)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -420,7 +426,7 @@ NS_IMETHODIMP nsMsgFolder::GetParent(nsIFolder* *parent)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetPrettiestName(nsString& name)
+NS_IMETHODIMP nsMsgFolder::GetPrettiestName(char **name)
 {
   if (NS_SUCCEEDED(GetPrettyName(name)))
     return NS_OK;
@@ -430,8 +436,8 @@ NS_IMETHODIMP nsMsgFolder::GetPrettiestName(nsString& name)
 static PRBool
 nsCanBeInFolderPane(nsISupports* element, void* data)
 {
-  nsIMsgFolder* subFolder = NS_STATIC_CAST(nsIMsgFolder*, element);
 #ifdef HAVE_PANE
+  nsIMsgFolder* subFolder = NS_STATIC_CAST(nsIMsgFolder*, element);
   return subFolder->CanBeInFolderPane(); 
 #else
   return PR_TRUE;
@@ -595,7 +601,7 @@ NS_IMETHODIMP nsMsgFolder::CreateSubfolder(const char *, nsIMsgFolder**, PRUint3
 }
 
 
-NS_IMETHODIMP nsMsgFolder::Rename(const char *name)
+NS_IMETHODIMP nsMsgFolder::Rename(char *name)
 {
     nsresult status = NS_OK;
 	status = SetName(name);
@@ -615,7 +621,7 @@ NS_IMETHODIMP nsMsgFolder::Adopt(const nsIMsgFolder *srcFolder, PRUint32* outPos
 
 }
 
-NS_IMETHODIMP nsMsgFolder::ContainsChildNamed(const char *name, PRBool* containsChild)
+NS_IMETHODIMP nsMsgFolder::ContainsChildNamed(char *name, PRBool* containsChild)
 {
 	nsIMsgFolder *child;
 	
@@ -634,7 +640,7 @@ NS_IMETHODIMP nsMsgFolder::ContainsChildNamed(const char *name, PRBool* contains
 		return NS_ERROR_NULL_POINTER;
 }
 
-NS_IMETHODIMP nsMsgFolder::FindParentOf(const nsIMsgFolder * aFolder, nsIMsgFolder ** aParent)
+NS_IMETHODIMP nsMsgFolder::FindParentOf(nsIMsgFolder * aFolder, nsIMsgFolder ** aParent)
 {
 	if(!aParent)
 		return NS_ERROR_NULL_POINTER;
@@ -678,7 +684,7 @@ NS_IMETHODIMP nsMsgFolder::FindParentOf(const nsIMsgFolder * aFolder, nsIMsgFold
 
 }
 
-NS_IMETHODIMP nsMsgFolder::IsParentOf(const nsIMsgFolder *child, PRBool deep, PRBool *isParent)
+NS_IMETHODIMP nsMsgFolder::IsParentOf(nsIMsgFolder *child, PRBool deep, PRBool *isParent)
 {
 	if(!isParent)
 		return NS_ERROR_NULL_POINTER;
@@ -708,7 +714,7 @@ NS_IMETHODIMP nsMsgFolder::IsParentOf(const nsIMsgFolder *child, PRBool deep, PR
 }
 
 
-NS_IMETHODIMP nsMsgFolder::GenerateUniqueSubfolderName(const char *prefix, const nsIMsgFolder *otherFolder,
+NS_IMETHODIMP nsMsgFolder::GenerateUniqueSubfolderName(char *prefix, nsIMsgFolder *otherFolder,
                                                        char **name)
 {
 	if(!name)
@@ -1002,7 +1008,7 @@ NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **res
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetExpansionArray(const nsISupportsArray *expansionArray)
+NS_IMETHODIMP nsMsgFolder::GetExpansionArray(nsISupportsArray *expansionArray)
 {
   // the application of flags in GetExpansionArray is subtly different
   // than in GetFoldersWithFlag 
@@ -1163,7 +1169,7 @@ NS_IMETHODIMP nsMsgFolder::ReadDBFolderInfo(PRBool force)
     {
         nsDBFolderInfo   *folderInfo;
         nsMsgDatabase       *db;
-        if(result = NS_SUCCEEDED(GetDBFolderInfoAndDB(&folderInfo, &db)))
+        if((result = NS_SUCCEEDED(GetDBFolderInfoAndDB(&folderInfo, &db))))
         {
 			mIsCachable = TRUE;
             if (folderInfo)

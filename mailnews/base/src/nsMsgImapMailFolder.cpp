@@ -117,28 +117,31 @@ nsMsgImapMailFolder::FindChildNamed(const char *name, nsIMsgFolder ** aChild)
 		if (NS_SUCCEEDED(supports->QueryInterface(kISupportsIID,
                                               (void**)&folder)))
 		{
-			nsString folderName;
+      char *folderName;
 
-			folder->GetName(folderName);
+			folder->GetName(&folderName);
       // IMAP INBOX is case insensitive
-      if (/* XXX type == FOLDER_IMAPSERVERCONTAINER && */
-          !folderName.EqualsIgnoreCase("INBOX")
-          //          !PL_strcasecmp(folderName, "INBOX")
+      if (//          !folderName.EqualsIgnoreCase("INBOX")
+          folderName &&
+          !PL_strcasecmp(folderName, "INBOX")
           )
       {
         NS_RELEASE(supports);
+        PR_FREEIF(folderName);
         continue;
       }
 
       // For IMAP, folder names are case sensitive
-      if (
-          !folderName.EqualsIgnoreCase(name)
-          //          !PL_strcmp(folderName, name)
+      if (folderName &&
+          //!folderName.EqualsIgnoreCase(name)
+          !PL_strcmp(folderName, name)
           )
       {
+        PR_FREEIF(folderName);
         *aChild = folder;
         return NS_OK;
       }
+      PR_FREEIF(folderName);
 		}
 		NS_RELEASE(supports);
   }

@@ -26,7 +26,7 @@
 #define nsMsgLocalMailFolder_h__
 
 #include "nsMsgFolder.h" /* include the interface we are going to support */
-#include "nsMailDataBase.h"
+#include "nsMailDatabase.h"
 #include "nsFileSpec.h"
 
 class nsMsgLocalMailFolder : public nsMsgFolder, public nsIMsgLocalMailFolder
@@ -68,12 +68,12 @@ public:
 																			msg_move_state *state);
 #endif
 
-	NS_IMETHOD CreateSubfolder(const char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos);
+	NS_IMETHOD CreateSubfolder(char *leafNameFromUser, nsIMsgFolder **outFolder, PRUint32 *outPos);
 
-	NS_IMETHOD RemoveSubFolder (const nsIMsgFolder *which);
+	NS_IMETHOD RemoveSubFolder (nsIMsgFolder *which);
 	NS_IMETHOD Delete ();
-	NS_IMETHOD Rename (const char *newName);
-	NS_IMETHOD Adopt(const nsIMsgFolder *srcFolder, PRUint32 *outPos);
+	NS_IMETHOD Rename (char *newName);
+	NS_IMETHOD Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos);
 
   NS_IMETHOD GetChildNamed(nsString& name, nsISupports ** aChild);
 
@@ -96,7 +96,7 @@ public:
 	NS_IMETHOD GetUsersName(char** userName);
 	NS_IMETHOD GetHostName(char** hostName);
 	NS_IMETHOD UserNeedsToAuthenticateForFolder(PRBool displayOnly, PRBool *authenticate);
-	NS_IMETHOD RememberPassword(const char *password);
+	NS_IMETHOD RememberPassword(char *password);
 	NS_IMETHOD GetRememberedPassword(char ** password);
 
     virtual nsresult GetDBFolderInfoAndDB(nsDBFolderInfo **folderInfo, nsMsgDatabase **db);

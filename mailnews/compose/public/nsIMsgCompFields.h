@@ -1,11 +1,22 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsImsgCompFields.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIMsgCompFields.idl
  */
 
-#ifndef __gen_nsImsgCompFields_h__
-#define __gen_nsImsgCompFields_h__
+#ifndef __gen_nsIMsgCompFields_h__
+#define __gen_nsIMsgCompFields_h__
 
 #include "nsISupports.h" /* interface nsISupports */
+#include "nsID.h" /* interface nsID */
+
+#ifdef XPIDL_JS_STUBS
+#include "jsapi.h"
+#endif
+#include "nsDebug.h"
+#include "nsTraceRefcnt.h"
+#include "nsID.h"
+#include "nsIID.h"
+#include "nsError.h"
+#include "nsISupportsUtils.h"
 
 
 /* starting interface nsIMsgCompFields */
@@ -23,179 +34,184 @@ class nsIMsgCompFields : public nsISupports {
     return iid;
   }
 
-  /*  <IDL>  */
+  /* void Test (); */
   NS_IMETHOD Test() = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD Copy(const nsIMsgCompFields *pMsgCompFields) = 0;
+  /* void Copy (in nsIMsgCompFields pMsgCompFields); */
+  NS_IMETHOD Copy(nsIMsgCompFields *pMsgCompFields) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetHeader(PRInt32 header, const char *value, PRInt32 *_retval) = 0;
+  /* long SetHeader (in long header, in string value); */
+  NS_IMETHOD SetHeader(PRInt32 header, char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetHeader (in long header); */
   NS_IMETHOD GetHeader(PRInt32 header, char **_retval) = 0;
 
-  /*  <IDL>  */
+  /* long SetBoolHeader (in long header, in boolean bValue); */
   NS_IMETHOD SetBoolHeader(PRInt32 header, PRBool bValue, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* boolean GetBoolHeader (in long header); */
   NS_IMETHOD GetBoolHeader(PRInt32 header, PRBool *_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetFrom(const char *value, PRInt32 *_retval) = 0;
+  /* long SetFrom (in string value); */
+  NS_IMETHOD SetFrom(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetFrom (); */
   NS_IMETHOD GetFrom(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetReplyTo(const char *value, PRInt32 *_retval) = 0;
+  /* long SetReplyTo (in string value); */
+  NS_IMETHOD SetReplyTo(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetReplyTo (); */
   NS_IMETHOD GetReplyTo(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetTo(const char *value, PRInt32 *_retval) = 0;
+  /* long SetTo (in string value); */
+  NS_IMETHOD SetTo(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetTo (); */
   NS_IMETHOD GetTo(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetCc(const char *value, PRInt32 *_retval) = 0;
+  /* long SetCc (in string value); */
+  NS_IMETHOD SetCc(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetCc (); */
   NS_IMETHOD GetCc(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetBcc(const char *value, PRInt32 *_retval) = 0;
+  /* long SetBcc (in string value); */
+  NS_IMETHOD SetBcc(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetBcc (); */
   NS_IMETHOD GetBcc(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetFcc(const char *value, PRInt32 *_retval) = 0;
+  /* long SetFcc (in string value); */
+  NS_IMETHOD SetFcc(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetFcc (); */
   NS_IMETHOD GetFcc(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetNewsFcc(const char *value, PRInt32 *_retval) = 0;
+  /* long SetNewsFcc (in string value); */
+  NS_IMETHOD SetNewsFcc(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetNewsFcc (); */
   NS_IMETHOD GetNewsFcc(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetNewsBcc(const char *value, PRInt32 *_retval) = 0;
+  /* long SetNewsBcc (in string value); */
+  NS_IMETHOD SetNewsBcc(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetNewsBcc (); */
   NS_IMETHOD GetNewsBcc(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetNewsgroups(const char *value, PRInt32 *_retval) = 0;
+  /* long SetNewsgroups (in string value); */
+  NS_IMETHOD SetNewsgroups(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetNewsgroups (); */
   NS_IMETHOD GetNewsgroups(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetFollowupTo(const char *value, PRInt32 *_retval) = 0;
+  /* long SetFollowupTo (in string value); */
+  NS_IMETHOD SetFollowupTo(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetFollowupTo (); */
   NS_IMETHOD GetFollowupTo(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetSubject(const char *value, PRInt32 *_retval) = 0;
+  /* long SetSubject (in string value); */
+  NS_IMETHOD SetSubject(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetSubject (); */
   NS_IMETHOD GetSubject(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetAttachments(const char *value, PRInt32 *_retval) = 0;
+  /* long SetAttachments (in string value); */
+  NS_IMETHOD SetAttachments(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetAttachments (); */
   NS_IMETHOD GetAttachments(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetOrganization(const char *value, PRInt32 *_retval) = 0;
+  /* long SetOrganization (in string value); */
+  NS_IMETHOD SetOrganization(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetOrganization (); */
   NS_IMETHOD GetOrganization(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetReferences(const char *value, PRInt32 *_retval) = 0;
+  /* long SetReferences (in string value); */
+  NS_IMETHOD SetReferences(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetReferences (); */
   NS_IMETHOD GetReferences(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetOtherRandomHeaders(const char *value, PRInt32 *_retval) = 0;
+  /* long SetOtherRandomHeaders (in string value); */
+  NS_IMETHOD SetOtherRandomHeaders(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetOtherRandomHeaders (); */
   NS_IMETHOD GetOtherRandomHeaders(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetNewspostUrl(const char *value, PRInt32 *_retval) = 0;
+  /* long SetNewspostUrl (in string value); */
+  NS_IMETHOD SetNewspostUrl(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetNewspostUrl (); */
   NS_IMETHOD GetNewspostUrl(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetDefaultBody(const char *value, PRInt32 *_retval) = 0;
+  /* long SetDefaultBody (in string value); */
+  NS_IMETHOD SetDefaultBody(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetDefaultBody (); */
   NS_IMETHOD GetDefaultBody(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetPriority(const char *value, PRInt32 *_retval) = 0;
+  /* long SetPriority (in string value); */
+  NS_IMETHOD SetPriority(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetPriority (); */
   NS_IMETHOD GetPriority(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetMessageEncoding(const char *value, PRInt32 *_retval) = 0;
+  /* long SetMessageEncoding (in string value); */
+  NS_IMETHOD SetMessageEncoding(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetMessageEncoding (); */
   NS_IMETHOD GetMessageEncoding(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetCharacterSet(const char *value, PRInt32 *_retval) = 0;
+  /* long SetCharacterSet (in string value); */
+  NS_IMETHOD SetCharacterSet(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetCharacterSet (); */
   NS_IMETHOD GetCharacterSet(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetMessageId(const char *value, PRInt32 *_retval) = 0;
+  /* long SetMessageId (in string value); */
+  NS_IMETHOD SetMessageId(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetMessageId (); */
   NS_IMETHOD GetMessageId(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetHTMLPart(const char *value, PRInt32 *_retval) = 0;
+  /* long SetHTMLPart (in string value); */
+  NS_IMETHOD SetHTMLPart(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetHTMLPart (); */
   NS_IMETHOD GetHTMLPart(char **_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetTemplateName(const char *value, PRInt32 *_retval) = 0;
+  /* long SetTemplateName (in string value); */
+  NS_IMETHOD SetTemplateName(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetTemplateName (); */
   NS_IMETHOD GetTemplateName(char **_retval) = 0;
 
-  /*  <IDL>  */
+  /* long SetReturnReceipt (in boolean value); */
   NS_IMETHOD SetReturnReceipt(PRBool value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* boolean GetReturnReceipt (); */
   NS_IMETHOD GetReturnReceipt(PRBool *_retval) = 0;
 
-  /*  <IDL>  */
+  /* long SetAttachVCard (in boolean value); */
   NS_IMETHOD SetAttachVCard(PRBool value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* boolean GetAttachVCard (); */
   NS_IMETHOD GetAttachVCard(PRBool *_retval) = 0;
 
-  /*  <IDL>  */
-  NS_IMETHOD SetBody(const char *value, PRInt32 *_retval) = 0;
+  /* long SetBody (in string value); */
+  NS_IMETHOD SetBody(char *value, PRInt32 *_retval) = 0;
 
-  /*  <IDL>  */
+  /* string GetBody (); */
   NS_IMETHOD GetBody(char **_retval) = 0;
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsIMsgCompFields *priv);
+#endif
 };
 
-#endif /* __gen_nsImsgCompFields_h__ */
+#endif /* __gen_nsIMsgCompFields_h__ */
