@@ -40,8 +40,6 @@
 #include "nsMsgCreate.h"    // For drafts...I know, awful file name...
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 static NS_DEFINE_CID(kCMsgComposeCID, NS_MSGCOMPOSE_CID);
 static NS_DEFINE_CID(kCMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 static NS_DEFINE_CID(kCMsgSendCID, NS_MSGSEND_CID);
@@ -154,7 +152,7 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 		nsSmtpService * smtpService = new nsSmtpService();
 		// okay now turn around and give inst a handle on it....
     if (smtpService)
-  		return smtpService->QueryInterface(kISupportsIID, aResult);
+  		return smtpService->QueryInterface(aIID, aResult);
     else
       return NS_ERROR_OUT_OF_MEMORY;
 	}
@@ -165,7 +163,7 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 		nsMsgCompose * msgCompose = new nsMsgCompose();
 		// okay now turn around and give inst a handle on it....
     if (msgCompose)
-  		return msgCompose->QueryInterface(kISupportsIID, aResult);
+  		return msgCompose->QueryInterface(aIID, aResult);
     else
       return NS_ERROR_OUT_OF_MEMORY;
 	}
@@ -199,7 +197,7 @@ nsresult nsMsgComposeFactory::CreateInstance(nsISupports *aOuter, const nsIID &a
 		nsMsgComposeService * aMsgCompService = new nsMsgComposeService();
 		// okay now turn around and give inst a handle on it....
     if (aMsgCompService)
-  		return aMsgCompService->QueryInterface(kISupportsIID, aResult);
+  		return aMsgCompService->QueryInterface(aIID, aResult);
     else
       return NS_ERROR_OUT_OF_MEMORY;
 	}
