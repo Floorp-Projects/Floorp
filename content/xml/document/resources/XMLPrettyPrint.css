@@ -62,7 +62,7 @@ td {
 }
 
 .expander {
-  cursor: default;
+  cursor: pointer;
   -moz-user-select: none;
   vertical-align: top;
   text-align: center;
