@@ -1233,6 +1233,7 @@ nsFtpState::R_syst() {
             ( mResponseMsg.Find("UNIX") > -1) || 
             ( mResponseMsg.Find("BSD") > -1) ||
             ( mResponseMsg.Find("MACOS Peter's Server") > -1) ||
+            ( mResponseMsg.Find("MACOS WebSTAR FTP") > -1) ||
             ( mResponseMsg.Find("MVS") > -1) ||
             ( mResponseMsg.Find("OS/390") > -1))
         {
