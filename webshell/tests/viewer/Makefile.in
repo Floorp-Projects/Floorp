@@ -99,7 +99,6 @@ BASE_LIBS		= \
 			$(NULL)
 
 GECKO_LIBS		= \
-			-lraptorwebwidget \
 			$(MOZ_WIDGET_TOOLKIT_LDFLAGS) \
 			-lraptorgfx \
 			$(MOZ_GFX_TOOLKIT_LDFLAGS) \

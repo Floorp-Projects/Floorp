@@ -71,7 +71,6 @@ LIBS		+= \
 		$(MONOLITHIC_GFX_FLAGS) \
 		$(TIMER_LIBS) \
 		-lmozreg \
-		-lraptorwebwidget \
 		-ljsdom \
 		-ljsurl \
 		-lsecfree \
