@@ -233,6 +233,24 @@ void InitMouseEvent(GdkEventButton *aGEB,
 }
 
 //==============================================================
+void InitDrawEvent(GdkRectangle *area,
+                            gpointer   p,
+                            nsPaintEvent &anEvent,
+                            PRUint32   aEventType)
+{
+  anEvent.message = aEventType;
+  anEvent.widget  = (nsWidget *) p;
+  NS_ADDREF(anEvent.widget);
+
+  anEvent.eventStructType = NS_PAINT_EVENT;
+
+  if (area != NULL) {
+    nsRect rect(area->x, area->y, area->width, area->height);
+    anEvent.rect = &rect;
+  }
+}
+
+//==============================================================
 void InitExposeEvent(GdkEventExpose *aGEE,
                             gpointer   p,
                             nsPaintEvent &anEvent,
@@ -416,6 +434,18 @@ gint handle_configure_event(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
   return PR_FALSE;
 }
 #endif
+
+gint handle_draw_event(GtkWidget *w, GdkRectangle *area, gpointer p)
+{
+  nsPaintEvent pevent;
+  InitDrawEvent(area, p, pevent, NS_PAINT);
+
+  nsWindow *win = (nsWindow *)p;
+
+  win->OnPaint(pevent);
+
+  return PR_TRUE;
+}
 
 gint handle_expose_event(GtkWidget *w, GdkEventExpose *event, gpointer p)
 {
