@@ -42,7 +42,7 @@ function initServerType() {
       index = 3;
   }
 
-  if (index) {
+  if (index != undefined) {
       var deck = document.getElementById("serverdeck");
       dump("deck index was " + deck.getAttribute("index") + "\n");
       deck.setAttribute("index", index);
@@ -58,6 +58,7 @@ function initServerType() {
 
 function setDivText(divname, value) {
     var div = document.getElementById(divname);
+    if (!div) return;
     if (div.firstChild)
         div.removeChild(div.firstChild);
     div.appendChild(document.createTextNode(value));

@@ -15,20 +15,22 @@
 
   <html:div>&serverSettings.label;</html:div>
   <box align="vertical">
-  <box align="horizontal">
-    <html:div flex="20%">&serverType.label;</html:div>
-    <html:div flex="80%" id="servertype.verbose"/>
-  </box>
+  <html:table width="100%">
+  <html:tr>
+    <html:td>&serverType.label;</html:td>
+    <html:td><html:div flex="80%" id="servertype.verbose"/></html:td>
+  </html:tr>
 
-  <box align="horizontal">
-    <html:div flex="20%">&serverName.label;</html:div>
-    <html:div flex="80%" id="servername.verbose"/>
-  </box>
+  <html:tr>
+    <html:td>&serverName.label;</html:td>
+    <html:td><html:div flex="80%" id="servername.verbose"/></html:td>
+  </html:tr>
 
-  <box>
-    <html:div flex="20%">&userName.label;</html:div>
-    <html:div flex="80%" id="username.verbose"/>
-  </box>
+    <html:tr>
+      <html:td>&userName.label;</html:td>
+      <html:td><html:div id="username.verbose"/></html:td>
+    </html:tr>
+  </html:table>
 
   <html:div><html:input name="server.rememberPassword"
                         type="checkbox"/>&savePassword.label;</html:div>
@@ -39,7 +41,7 @@
             <html:spacer/>&biffEnd.label;
   </html:div>
   </box>
-  <tabcontrol>
+  <tabcontrol flex="100%">
     <deck id="serverdeck">
       <!-- POP -->
       <box align="vertical" flex="100%">
@@ -73,4 +75,8 @@
       </box>
     </deck>
   </tabcontrol>
+  <box align="vertical">
+    <html:div>&localPath.label;</html:div>
+    <html:input type="text" name="server.localPath" datatype="nsIFileSpec"/>
+  </box>
 </window>
