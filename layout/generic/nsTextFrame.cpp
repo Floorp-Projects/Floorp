@@ -1807,13 +1807,20 @@ RenderSelectionCursor(nsIRenderingContext& aRenderingContext,
 
 // XXX letter-spacing
 // XXX word-spacing
-#if defined(XP_WIN) || defined(XP_OS2) || defined(XP_UNIX) || defined(XP_MAC)
+#if defined(XP_MACOSX)
+#define NO_INVERT
+#elif defined(XP_WIN) || defined(XP_OS2) || defined(XP_UNIX)
 #define USE_INVERT_FOR_SELECTION
 #endif
 
 // XXX we should get the following from style sheet or LookAndFeel later
+#if defined(NO_INVERT)
+#define IME_UNDERLINECOLOR NS_RGB(149,149,149)     //light gray
+#define IME_SELECTED_UNDERLINECOLOR NS_RGB(0,0,0)  //black
+#else
 #define IME_RAW_COLOR NS_RGB(198,33,66)
 #define IME_CONVERTED_COLOR NS_RGB(255,198,198)
+#endif
 
 void 
 nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
@@ -1973,7 +1980,32 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
               aRenderingContext.SetColor(NS_RGB(255,0,0));
               aRenderingContext.DrawLine(aX + startOffset, aY + baseline - offset, aX + startOffset + textWidth, aY + baseline - offset);
                                 }break;
-          case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:{
+
+#ifdef NO_INVERT
+           case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
+           case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:{
+              aTextStyle.mNormalFont->GetUnderline(offset, size);
+              aRenderingContext.SetColor(IME_SELECTED_UNDERLINECOLOR);
+#ifdef XP_MACOSX // underline thickness is 2 pixel
+              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, 2*size);
+#else
+              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
+#endif
+                                }break;
+           case nsISelectionController::SELECTION_IME_RAWINPUT:
+           case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:{
+              aTextStyle.mNormalFont->GetUnderline(offset, size);
+              aRenderingContext.SetColor(IME_UNDERLINECOLOR);
+#ifdef XP_MACOSX // underline thicness is 2 pixel
+              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, 2*size);
+#else
+              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
+#endif
+                                }break;
+// end NO_INVERT part
+
+#else             
+           case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:{
 #ifdef USE_INVERT_FOR_SELECTION
               aRenderingContext.SetColor(NS_RGB(255,255,255));
               aRenderingContext.InvertRect(aX + startOffset, aY, textWidth, rect.height);
@@ -2007,6 +2039,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
               aRenderingContext.SetColor(IME_CONVERTED_COLOR);
               aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size);
                                 }break;
+#endif
           default:
             NS_ASSERTION(0,"what type of selection do i not know about?");
             break;
