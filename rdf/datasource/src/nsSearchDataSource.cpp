@@ -1377,6 +1377,17 @@ SearchDataSource::GetInputs(nsString data, nsString text, nsString &input)
 							line.Mid(nameAttrib, startQuote+1, endQuote-startQuote-1);
 						}
 					}
+					else
+					{
+						nameAttrib = line;
+						nameAttrib.Cut(0, equal+1);
+						nameAttrib = nameAttrib.Trim(" \t");
+						PRInt32 space = nameAttrib.FindCharInSet(" \t");
+						if (space > 0)
+						{
+							nameAttrib.Truncate(space);
+						}
+					}
 				}
 			}
 			if (nameAttrib.Length() <= 0)	continue;
@@ -1402,11 +1413,21 @@ SearchDataSource::GetInputs(nsString data, nsString text, nsString &input)
 					else
 					{
 						// if value attribute's "value" isn't quoted, get the first word... ?
+/*
 						PRInt32 theEnd = line.FindCharInSet(" >\t", equal);
 						if (theEnd >= 0)
 						{
 							line.Mid(valueAttrib, equal+1, theEnd-equal-1);
 							valueAttrib.Trim(" \t");
+						}
+*/
+						valueAttrib = line;
+						valueAttrib.Cut(0, equal+1);
+						valueAttrib = valueAttrib.Trim(" \t");
+						PRInt32 space = valueAttrib.FindCharInSet(" \t>");
+						if (space > 0)
+						{
+							valueAttrib.Truncate(space);
 						}
 					}
 				}
@@ -1418,7 +1439,7 @@ SearchDataSource::GetInputs(nsString data, nsString text, nsString &input)
 			
 			// XXX should ignore if  mode=browser  is specified
 			// XXX need to do this better
-			if (line.Find("mode=browser", PR_TRUE) >= 0)
+			if (line.RFind("mode=browser", PR_TRUE) >= 0)
 				continue;
 
 			if ((nameAttrib.Length() > 0) && (valueAttrib.Length() > 0))
@@ -1662,7 +1683,7 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 
 	if (resultListStartStr.Length() > 0)
 	{
-		PRInt32	resultListStart = htmlResults.Find(resultListStartStr /* , PR_TRUE */);
+		PRInt32	resultListStart = htmlResults.Find(resultListStartStr, PR_TRUE);
 		if (resultListStart >= 0)
 		{
 			htmlResults.Cut(0, resultListStart + resultListStartStr.Length());
@@ -1670,7 +1691,7 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 	}
 	if (resultListEndStr.Length() > 0)
 	{
-		PRInt32	resultListEnd = htmlResults.RFind(resultListEndStr, PR_TRUE);
+		PRInt32	resultListEnd = htmlResults.Find(resultListEndStr, PR_TRUE);
 		if (resultListEnd >= 0)
 		{
 			htmlResults.Truncate(resultListEnd);
@@ -1688,9 +1709,11 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 #endif
 
 	PRInt32	resultItemStart;
-	while((resultItemStart = htmlResults.RFind(resultItemStartStr, PR_TRUE)) >= 0)
+	while((resultItemStart = htmlResults.Find(resultItemStartStr, PR_TRUE)) >= 0)
 	{
-		PRInt32	resultItemEnd = htmlResults.RFind(resultItemEndStr, PR_TRUE );
+		htmlResults.Cut(0, resultItemStart + resultItemStartStr.Length());
+
+		PRInt32	resultItemEnd = htmlResults.Find(resultItemEndStr, PR_TRUE );
 		if (resultItemEnd < 0)
 		{
 			resultItemEnd = htmlResults.Length()-1;
@@ -1698,9 +1721,12 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 		if (resultItemStart >= resultItemEnd)	break;
 
 		nsAutoString	resultItem("");
-		htmlResults.Mid(resultItem, resultItemStart + resultItemStartStr.Length(), resultItemEnd - resultItemStart - resultItemStartStr.Length());
+//		htmlResults.Mid(resultItem, resultItemStart + resultItemStartStr.Length(), resultItemEnd - resultItemStart - resultItemStartStr.Length());
+		htmlResults.Left(resultItem, resultItemEnd);
+
 		if (resultItem.Length() < 1)	break;
-		htmlResults.Truncate(resultItemStart);
+//		htmlResults.Truncate(resultItemStart);
+		htmlResults.Cut(0, resultItemEnd + resultItemEndStr.Length());
 
 #ifdef	DEBUG
 		char	*results = resultItem.ToNewCString();
@@ -1714,11 +1740,7 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 
 		// look for href
 		// XXX need to make this more resilient
-		PRInt32	hrefOffset = resultItem.Find("<a href=" /* , PR_TRUE */);
-		if (hrefOffset < 0)
-		{
-			hrefOffset = resultItem.Find("<A HREF=" /* , PR_TRUE */);
-		}
+		PRInt32	hrefOffset = resultItem.Find("<A HREF=", PR_TRUE);
 		if (hrefOffset < 0)
 		{
 #ifdef	DEBUG
@@ -1736,11 +1758,21 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 			continue;
 		}
 
-		PRInt32 quoteStartOffset = resultItem.FindCharInSet("\"\'", hrefOffset);
+		nsAutoString	hrefStr("");
+		PRInt32 quoteStartOffset = resultItem.FindCharInSet("\"\'>", hrefOffset);
 		if (quoteStartOffset < hrefOffset)	continue;
-		PRInt32 quoteEndOffset = resultItem.FindCharInSet("\"\'", quoteStartOffset + 1);
-		if (quoteEndOffset < hrefOffset)	continue;
-		nsAutoString	hrefStr;
+		PRInt32		quoteEndOffset;
+		if (resultItem[quoteStartOffset] == PRUnichar('>'))
+		{
+			// handle case where HREF isn't quoted
+			quoteEndOffset = quoteStartOffset;
+			quoteStartOffset = hrefOffset + strlen("<A HREF=") -1;
+		}
+		else
+		{
+			quoteEndOffset = resultItem.FindCharInSet("\"\'", quoteStartOffset + 1);
+			if (quoteEndOffset < hrefOffset)	continue;
+		}
 		resultItem.Mid(hrefStr, quoteStartOffset + 1, quoteEndOffset - quoteStartOffset - 1);
 		if (hrefStr.Length() < 1)	continue;
 
