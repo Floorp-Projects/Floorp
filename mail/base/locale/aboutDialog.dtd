@@ -1,5 +1,7 @@
 <!ENTITY aboutDialog.title      "About &brandShortName;">
 <!ENTITY credits                "Credits">
 <!ENTITY aboutLink              "&lt; About &brandShortName;">
-<!ENTITY copyrightText          "&#169;1998-2004 Contributors. All Rights Reserved.">
-<!ENTITY copyrightLink          "http://www.mozilla.org/products/thunderbird/">
+<!ENTITY aboutVersion           "version">
+<!ENTITY copyrightText          "&#169;1998-2004 Contributors. All Rights Reserved. Mozilla Thunderbird and the 
+                                 Thunderbird logos are trademarks of the Mozilla Foundation.  All rights 
+                                 reserved.">

@@ -51,18 +51,15 @@
         id="aboutDialog"
         buttons="accept,extra2"
         onload="onLoad();"
-        title="&aboutDialog.title;" creditslabel="&credits;" aboutlabel="&aboutLink;" 
+        title="&aboutDialog.title;" creditslabel="&credits;" aboutlabel="&aboutLink;" versionlabel="&aboutVersion;"
         style="width: 299px; height: 330px;"> 
 
     <script type="application/x-javascript">
       <![CDATA[
         function onLoad() {
           var versionField = document.getElementById("versionField");
-          var hidversionField = document.getElementById("hidversionField");
-          var brandFullNameEl = document.getElementById("brandFullName");          
-          hidversionField.value = brandFullNameEl.firstChild.nodeValue + ' ' + navigator.vendorSub + ' (' + navigator.productSub + ')';
-          versionField.value = hidversionField.value;
-          versionField.width = hidversionField.width;
+        versionField.value = document.documentElement.getAttribute("versionlabel") + ' ' 
+                             + navigator.vendorSub + ' (' + navigator.productSub + ')';
 
           var button = document.documentElement.getButton("extra2");
           button.setAttribute("label", document.documentElement.getAttribute("creditslabel"));
@@ -70,24 +67,12 @@
           button.addEventListener("command", switchPage, false);
         }
 
-        
         function uninit(aEvent)
         {
           if (aEvent.target != document)
             return;
           var iframe = document.getElementById("creditsIframe");
           iframe.setAttribute("src", "");
-        }
-
-        function loadExternalLink() {
-          try {
-            var messenger = Components.classes["@mozilla.org/messenger;1"].createInstance();
-            messenger = messenger.QueryInterface(Components.interfaces.nsIMessenger);
-            messenger.launchExternalURL(document.getElementById('copyrightLink').getAttribute("href"));  
-          } catch (ex) {}
-
-          // return false, so we don't load the href in the about dialog
-          return false;
         }
 
         function switchPage(aEvent)
@@ -115,30 +100,18 @@
 
     <deck id="modes" flex="1">
       <vbox flex="1" id="clientBox">
-        <vbox id="detailsBox" align="center" flex="1">
-          <separator class="thin"/>
-
-          <hbox>
-            <vbox>
-              <label id="hidversionField" style="padding: 0px; visibility: hidden; font-weight: bold;"/>
-              <textbox id="versionField" readonly="true" class="plain" style="padding-left: 6px !important;" tabindex="2"/>
+      <vbox id="versionWrapper">
+        <textbox id="versionField" readonly="true" class="plain" tabindex="2"/>
             </vbox>
-          </hbox>
-
           <separator class="thin"/>
-
-          <html:a id="copyrightLink" onclick="return loadExternalLink();" href="&copyrightLink;" style="display: block;" tabindex="3">&copyrightText;</html:a>
-        </vbox>
+      <description id="copyright">&copyrightText;</description>
       </vbox>
 
       <vbox flex="1" id="creditsBox">
         <html:iframe style="border: 0px;" id="creditsIframe" src="chrome://messenger/locale/credits.html" flex="1"/>
       </vbox> 
     </deck>   
+  
     <separator class="groove" id="groove"/>
     
-    <!-- Localizable strings (from .dtd) -->
-    <strings style="display:none;">
-      <string id="brandFullName">&brandFullName;</string>
-    </strings>
 </dialog>
