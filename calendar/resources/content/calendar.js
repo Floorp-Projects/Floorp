@@ -158,9 +158,6 @@ function calendarInit()
    {
       gCalendarWindow.calendarManager.checkCalendarURL( window.arguments[0].url );
    }
-
-   //a bit of a hack since the menulist doesn't remember the selected value
-   document.getElementById( 'event-filter-menulist' ).setAttribute( "label", document.getElementById( 'event-filter-menulist' ).selectedItem.getAttribute( 'label' ) );
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
@@ -222,7 +219,9 @@ function prepareChooseDate()
 
 function dayEventItemClick( eventBox, event )
 {
-   gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
+   //do this check, otherwise on double click you get into an infinite loop
+   if( event.detail == 1 )
+      gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
    
    if ( event ) 
    {
@@ -290,7 +289,9 @@ function dayViewHourDoubleClick( event )
 
 function weekEventItemClick( eventBox, event )
 {
-   gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
+   //do this check, otherwise on double click you get into an infinite loop
+   if( event.detail == 1 )
+      gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
 
    if ( event ) 
    {
@@ -369,7 +370,9 @@ function weekViewHourDoubleClick( event )
 
 function monthEventBoxClickEvent( eventBox, event )
 {
-   gCalendarWindow.monthView.clickEventBox( eventBox, event );
+   //do this check, otherwise on double click you get into an infinite loop
+   if( event.detail == 1 )
+      gCalendarWindow.EventSelection.replaceSelection( eventBox.calendarEventDisplay.event );
 
    if ( event ) 
    {
@@ -670,6 +673,14 @@ function closeCalendar()
 }
 
 
+function launchWizard()
+{
+   var args = new Object();
+
+   openDialog("chrome://calendar/content/calendarWizard.xul", "caWizard", "chrome,modal", args );
+}
+
+
 /**
 *  Called when a user hovers over an element and the text for the mouse over is changed.
 */
@@ -784,11 +795,7 @@ function printEventArray( calendarEventArray, stylesheetName )
 
 function print()
 {
-   // print sample monthcalendar if in month-view, and june is selected
-   if( gCalendarWindow.currentView == gCalendarWindow.monthView && gCalendarWindow.getSelectedDate().getMonth() == 5)
-      printEventArray( gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/ecsJune.xsl" );
-   else
-      printEventArray( gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/sortEvents.xsl" );
+   printEventArray( gCalendarWindow.EventSelection.selectedEvents, "chrome://calendar/content/converters/sortEvents.xsl" );
 }
 
 
