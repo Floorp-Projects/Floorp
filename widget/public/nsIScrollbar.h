@@ -35,64 +35,72 @@
  */
 
 
-class nsIScrollbar : public nsIWidget
+class nsIScrollbar : public nsISupports
 {
 public:
     
     /**
      * Set the scrollbar range
      * @param aEndRange set range for scrollbar from 0 to aEndRange
+     * @result NS_Ok if no errors
      *
      */
-    virtual void SetMaxRange(PRUint32 aEndRange) = 0;
+    NS_IMETHOD SetMaxRange(PRUint32 aEndRange) = 0;
     
     /**
      * Get the scrollbar range
      * @return the upper end of the scrollbar range
+     * @result NS_Ok if no errors
      */
-    virtual PRUint32 GetMaxRange() = 0;
+    NS_IMETHOD GetMaxRange(PRUint32& aMaxRange) = 0;
 
     /**
      * Set the thumb position. 
      * @param aPos a value between (startRange) and (endRange - thumbSize)
+     * @result NS_Ok if no errors
      *
      */
-    virtual void SetPosition(PRUint32 aPos) = 0;
+    NS_IMETHOD SetPosition(PRUint32 aPos) = 0;
 
     /**
      * Get the thumb position. 
      * @return a value between (startRange) and (endRange - thumbSize)
+     * @result NS_Ok if no errors
      *
      */
-    virtual PRUint32 GetPosition() = 0;
+    NS_IMETHOD GetPosition(PRUint32& aPos) = 0;
 
     /**
      * Set the thumb size. 
      * @param aSize size of the thumb. Must be a value between 
      *        startRange and endRange
+     * @result NS_Ok if no errors
      */
-    virtual void SetThumbSize(PRUint32 aSize) = 0;
+    NS_IMETHOD SetThumbSize(PRUint32 aSize) = 0;
     
     /**
      * Get the thumb size. 
      * @return size of the thumb. The value is between 
      *          startRange and endRange
+     * @result NS_Ok if no errors
      */
-    virtual PRUint32 GetThumbSize() = 0;
+    NS_IMETHOD GetThumbSize(PRUint32& aSize) = 0;
 
     /**
      * Set the line increment.
      * @param aSize size of the line increment. The value must
      *        be between startRange and endRange
-     */
-    virtual void SetLineIncrement(PRUint32 aSize) = 0;
+     * @result NS_Ok if no errors
+      */
+    NS_IMETHOD SetLineIncrement(PRUint32 aSize) = 0;
   
     /**
      * Get the line increment.
      * @return size of the line increment. The value is
      *          between startRange and endRange
+     * @result NS_Ok if no errors
      */
-    virtual PRUint32 GetLineIncrement() = 0;
+    NS_IMETHOD GetLineIncrement(PRUint32& aSize) = 0;
 
     /**
      * Set all scrollbar parameters at once
@@ -102,8 +110,9 @@ public:
      * @param aPosition a value between (startRange) and (endRange - thumbSize)
      * @param aLineIncrement size of the line increment. The value must
      *        be between startRange and endRange
+     * @result NS_Ok if no errors
      */
-    virtual void SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
+    NS_IMETHOD SetParameters(PRUint32 aMaxRange, PRUint32 aThumbSize,
                                PRUint32 aPosition, PRUint32 aLineIncrement) = 0;
 };
 

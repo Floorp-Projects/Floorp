@@ -45,33 +45,36 @@ struct nsLabelInitData : public nsWidgetInitData {
  * Label widget.
  * Automatically shows itself as depressed when clicked on.
  */
-class nsILabel : public nsIWidget {
+class nsILabel : public nsISupports {
 
   public:
  
-   /**
-    * Set the button label
+    /**
+    * Set the label
     *
-    * @param aText  button label
+    * @param  Set the label to aText
+    * @result NS_Ok if no errors
     */
   
-    virtual void SetLabel(const nsString &aText) = 0;
+    NS_IMETHOD SetLabel(const nsString &aText) = 0;
     
    /**
     * Get the button label
     *
     * @param aBuffer contains label upon return
+    * @result NS_Ok if no errors
     */
  
-    virtual void GetLabel(nsString &aBuffer) = 0;
+    NS_IMETHOD GetLabel(nsString &aBuffer) = 0;
 
 
    /**
     * Set the Label Alignemnt for creation
     *
     * @param aAlignment the alignment
+    * @result NS_Ok if no errors
     */
-    virtual void SetAlignment(nsLabelAlignment aAlignment) = 0;
+    NS_IMETHOD SetAlignment(nsLabelAlignment aAlignment) = 0;
 
 };
 

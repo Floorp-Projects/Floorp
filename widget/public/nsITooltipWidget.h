@@ -30,10 +30,8 @@
  * 
  */
 
-class nsITooltipWidget : public nsIWidget
+class nsITooltipWidget : public nsISupports
 {
-  public:
-
 };
 
 #endif // nsITooltipWidget_h__

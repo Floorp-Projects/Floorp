@@ -46,23 +46,25 @@ class nsIFileWidget : public nsISupports
 
 public:
 
+  
  /**
-  * Creates a file widget with the specified title and mode.
-  * @param aParent the owner of the widget
-  * @param aTitle the title of the widget
-  * @param aMode the mode of the widget
-  * @param aContext context for displaying widget
-  * @param aToolkit toolkit associated with file widget
-  * @param aInitData data that is used for widget initialization
-  */ 
+  * Create the file filter. This differs from the standard
+  * widget Create method because it passes in the mode
+  *
+  * @param      aParent  the parent to place this widget into
+  * @param      aTitle   The title for the file widget
+  * @param      aMode    load or save              
+  * @return     void
+  *
+  */
+  virtual void Create(nsIWidget *aParent,
+                      nsString& aTitle,
+                      nsMode aMode,
+                      nsIDeviceContext *aContext = nsnull,
+                      nsIAppShell *aAppShell = nsnull,
+                      nsIToolkit *aToolkit = nsnull,
+                      void *aInitData = nsnull) = 0;
 
-  virtual void  Create( nsIWidget *aParent,
-                        nsString& aTitle,
-                        nsMode aMode,
-                        nsIDeviceContext *aContext = nsnull,
-                        nsIAppShell *aAppShell = nsnull,
-                        nsIToolkit *aToolkit = nsnull,
-                        void *aInitData = 0) = 0;
 
  /**
   * Set the list of file filters 

@@ -48,7 +48,7 @@ public:
     eMetric_WindowBorderWidth,
     eMetric_WindowBorderHeight,
     eMetric_Widget3DBorder,
-    eMetric_TextFieldHeight,
+    eMetric_TextFieldHeight
   } nsMetricID;
 
   NS_IMETHOD GetColor(const nsColorID aID, nscolor &aColor) = 0;
