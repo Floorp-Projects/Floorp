@@ -23,7 +23,7 @@
 
 #if defined(_PR_PTHREADS)
 
-#if defined(OSF1) || defined(HPUX)
+#if defined(_PR_POLL_WITH_SELECT)
 /* set fd limit for select(), before including system header files */
 #define FD_SETSIZE (16 * 1024)
 #endif
@@ -195,7 +195,7 @@ static PRBool IsValidNetAddrLen(const PRNetAddr *addr, PRInt32 addr_len)
  * might hang up before an interrupt is noticed.
  */
 #define PT_DEFAULT_POLL_MSEC 5000
-#if defined(OSF1) || defined(HPUX)
+#if defined(_PR_POLL_WITH_SELECT)
 #define PT_DEFAULT_SELECT_SEC (PT_DEFAULT_POLL_MSEC/PR_MSEC_PER_SEC)
 #define PT_DEFAULT_SELECT_USEC							\
 		((PT_DEFAULT_POLL_MSEC % PR_MSEC_PER_SEC) * PR_USEC_PER_MSEC)
@@ -314,7 +314,7 @@ PR_IMPLEMENT(void) PT_FPrintStats(PRFileDesc *debug_out, const char *msg)
 
 #endif  /* DEBUG */
 
-#if defined(OSF1) || defined(HPUX)
+#if defined(_PR_POLL_WITH_SELECT)
 /*
  * OSF1 and HPUX report the POLLHUP event for a socket when the
  * shutdown(SHUT_WR) operation is called for the remote end, even though
@@ -457,7 +457,7 @@ static void pt_poll_now_with_select(pt_Continuation *op)
 
 }  /* pt_poll_now_with_select */
 
-#endif	/* OSF1  || HPUX */
+#endif	/* _PR_POLL_WITH_SELECT */
 
 static void pt_poll_now(pt_Continuation *op)
 {
@@ -466,7 +466,7 @@ static void pt_poll_now(pt_Continuation *op)
     PRThread *self = PR_GetCurrentThread();
     
 	PR_ASSERT(PR_INTERVAL_NO_WAIT != op->timeout);
-#if defined (OSF1) || defined(HPUX)
+#if defined (_PR_POLL_WITH_SELECT)
 	/*
  	 * If the fd is small enough call the select-based poll operation
 	 */
@@ -3339,7 +3339,7 @@ retry:
 
 } /* _pr_poll_with_poll */
 
-#if defined(OSF1) || defined(HPUX)
+#if defined(_PR_POLL_WITH_SELECT)
 /*
  * OSF1 and HPUX report the POLLHUP event for a socket when the
  * shutdown(SHUT_WR) operation is called for the remote end, even though
@@ -3619,12 +3619,12 @@ retry:
     return ready;
 
 } /* _pr_poll_with_select */
-#endif	/* OSF1 || HPUX */
+#endif	/* _PR_POLL_WITH_SELECT */
 
 PR_IMPLEMENT(PRInt32) PR_Poll(
     PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 {
-#if defined(OSF1) || defined(HPUX)
+#if defined(_PR_POLL_WITH_SELECT)
 	return(_pr_poll_with_select(pds, npds, timeout));
 #else
 	return(_pr_poll_with_poll(pds, npds, timeout));
