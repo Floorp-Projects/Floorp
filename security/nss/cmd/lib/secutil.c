@@ -1024,7 +1024,7 @@ SECU_PrintSet(FILE *out, SECItem *t, char *m, int level)
 
     if (type == SEC_ASN1_SET)
     	label = "Set ";
-    else if (type = SEC_ASN1_SEQUENCE)
+    else if (type == SEC_ASN1_SEQUENCE)
     	label = "Sequence ";
     else
     	label = "";
