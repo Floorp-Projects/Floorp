@@ -1212,10 +1212,12 @@ nsresult nsMsgSearchScopeTerm::InitializeAdapter (nsMsgSearchTermArray &termList
 		case nsMsgSearchScope::MailFolder:    
       // since we don't support offline, we're either doing an online imap search
       // or an offline mail search.
+#ifdef DOING_IMAP
 				if (!IsOfflineMail())   // Online IMAP && searching the server?
 				  m_adapter = new nsMsgSearchOnlineMail (this, termList);
 				else
 				  m_adapter = new nsMsgSearchOfflineMail (this, termList);
+#endif
 			break;
 #ifdef DOING_NEWS_YET
 		case nsMsgSearchScope::Newsgroup:
