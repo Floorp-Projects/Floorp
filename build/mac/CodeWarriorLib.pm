@@ -25,6 +25,7 @@ Replaces the AppleScript library I<CodeWarriorLib>.
 =cut
 
 use strict;
+use Cwd;
 use Mac::Types;
 use Mac::AppleEvents;
 use Mac::AppleEvents::Simple;
@@ -37,6 +38,7 @@ use vars qw($VERSION);
 $VERSION = '1.02';
 
 my($app)  = 'CWIE';
+my($scriptDir) = cwd();
 
 # 0 == don't switch CWIE to front app in do_event(), 1 == do switch
 # note: activate() still switches when called
@@ -187,16 +189,15 @@ sub activate () {
 	foreach $psi (values(%Process)) {
 		if ($psi->processSignature() eq $app) {
 			$appath = $psi->processAppSpec(), "\n";
-                        _save_appath($filepath, $appath);
-                        last;
+			_save_appath($filepath, $appath);
+			last;
 		}
 	}
 
-	if ((!$appath || ! -x $appath) && open(F, $filepath)) {
-		$appath = <F>;
-		close(F);
+	if (!$appath || !-x $appath) {
+		$appath = _read_appath($filepath);
 	}
-
+	
 	if (!$appath || ! -x $appath)
 	{
 		# make sure that MacPerl is a front process
@@ -369,10 +370,35 @@ sub _get_folder ($$) {
 }
 
 sub _save_appath ($$) {
+
+	my($cwd) = cwd();	# remember the current working dir
+	chdir($scriptDir);	# change dir to the script dir
+
 	open(F, '>' . $_[0]) or die $!;
 	print F $_[1];
 	close(F);
+		
+	chdir($cwd);		# restore the cwd
 }
+
+sub _read_appath ($) {
+
+	my($filepath) = @_;
+
+	my($cwd) = cwd();	# remember the current working dir
+	chdir($scriptDir);	# change dir to the script dir
+	
+	if (! -e $filepath) {
+		return "";
+	}
+	open(F, $filepath);
+	my($appath) = <F>;
+	close(F);
+		
+	chdir($cwd);		# restore the cwd
+	return($appath);
+}
+
 
 sub _test ($) {
 	activate();
