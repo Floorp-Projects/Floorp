@@ -40,7 +40,7 @@
 
 #include "nsImageWin.h"
 #include "nsRenderingContextWin.h"
-
+#include "nsDeviceContextWin.h"
 
 static nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,PRInt32 aWidth,PRInt32 aHeight,PRInt32 aDepth,PRInt8  *aNumBitPix);
 
@@ -554,7 +554,8 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
       nsIDeviceContext    *dx;
       aContext.GetDeviceContext(dx);
       nsDrawingSurface     ds;
-      dx->GetDrawingSurface(aContext, ds);
+      
+      NS_STATIC_CAST(nsDeviceContextWin*, dx)->GetDrawingSurface(aContext, ds);
       nsDrawingSurfaceWin *srcDS = (nsDrawingSurfaceWin *)ds;
       HDC                 srcDC;
 
