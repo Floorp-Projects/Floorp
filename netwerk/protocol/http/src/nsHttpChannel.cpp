@@ -2270,7 +2270,7 @@ nsHttpChannel::GetCacheAsFile(PRBool *value)
 NS_IMETHODIMP
 nsHttpChannel::SetCacheAsFile(PRBool value)
 {
-    if (!mCacheEntry)
+    if (!mCacheEntry || mLoadFlags & INHIBIT_PERSISTENT_CACHING)
         return NS_ERROR_NOT_AVAILABLE;
     nsCacheStoragePolicy policy;
     if (value)
