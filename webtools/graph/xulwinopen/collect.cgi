@@ -39,6 +39,11 @@ die "No 'value' parameter supplied"
 die "No 'data' parameter supplied" 
      unless $data;
 
+# If file doesn't exist, try creating empty file.
+unless (-f "db/$tbox") {
+  open(FILE, "> db/$tbox") || die "Can't create new file db/$tbox: $!";
+  close(FILE);
+}
 # record data
 open(FILE, ">> db/$tbox") ||
      die "Can't open $tbox: $!";
