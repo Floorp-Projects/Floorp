@@ -324,7 +324,8 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
                                      nsRowGroupReflowState& aReflowState,
                                      nsReflowStatus&        aStatus,
                                      nsTableRowFrame*       aStartFrame,
-                                     PRBool                 aDirtyOnly)
+                                     PRBool                 aDirtyOnly,
+                                     nsTableRowFrame**      aFirstRowReflowed)
 {
   nsTableFrame* tableFrame = nsnull;
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
@@ -332,6 +333,9 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
 
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
 
+  if (aFirstRowReflowed) {
+    *aFirstRowReflowed = nsnull;
+  }
   nsIFrame* lastReflowedRow = nsnull;
   PRBool    adjustSiblings  = PR_TRUE;
   nsIFrame* kidFrame = (aStartFrame) ? aStartFrame : mFrames.FirstChild();
@@ -372,12 +376,20 @@ nsTableRowGroupFrame::ReflowChildren(nsIPresContext*        aPresContext,
 
       rv = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState,
                        0, aReflowState.y, 0, aStatus);
-  
+
       // Place the child
       nsRect kidRect (0, aReflowState.y, desiredSize.width, desiredSize.height);
       PlaceChild(aPresContext, aReflowState, kidFrame, desiredSize);
       aReflowState.y += cellSpacingY;
       lastReflowedRow = kidFrame;
+
+      if (aFirstRowReflowed && !*aFirstRowReflowed) { 
+        nsCOMPtr<nsIAtom> fType;
+        kidFrame->GetFrameType(getter_AddRefs(fType));
+        if (nsLayoutAtoms::tableRowFrame == fType.get()) {
+          *aFirstRowReflowed = (nsTableRowFrame*)kidFrame;
+        }
+      }
     } else {
       // were done reflowing, so see if we need to reposition the rows that follow
       if (lastReflowedRow) { 
@@ -503,7 +515,8 @@ AllocateSpecialHeight(nsIPresContext* aPresContext,
 void 
 nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext, 
                                           nsHTMLReflowMetrics&     aDesiredSize,
-                                          const nsHTMLReflowState& aReflowState)
+                                          const nsHTMLReflowState& aReflowState,
+                                          nsTableRowFrame*         aStartRowFrameIn)
 {
   nsTableFrame* tableFrame = nsnull;
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
@@ -512,8 +525,32 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   // all table cells have the same top and bottom margins, namely cellSpacingY
   nscoord cellSpacingY = tableFrame->GetCellSpacingY();
 
+  // find the nearest row to the starting row (including the starting row) that isn't spanned into
+  nsTableRowFrame* startRowFrame = nsnull;
+  nsIFrame* childFrame = GetFirstFrame();
+  PRBool foundFirstRow = PR_FALSE;
+  while (childFrame) {
+    nsCOMPtr<nsIAtom> frameType;
+    childFrame->GetFrameType(getter_AddRefs(frameType));
+    if (nsLayoutAtoms::tableRowFrame == frameType.get()) {
+      PRInt32 rowIndex = ((nsTableRowFrame*)childFrame)->GetRowIndex();
+      if (!foundFirstRow || !tableFrame->RowIsSpannedInto(rowIndex)) {
+        startRowFrame = (nsTableRowFrame*)childFrame;
+        if (!aStartRowFrameIn || (aStartRowFrameIn == startRowFrame)) break;
+      }
+      else if (aStartRowFrameIn == (nsTableRowFrame*)childFrame) break;
+      foundFirstRow = PR_TRUE;
+    }
+    childFrame->GetNextSibling(&childFrame);
+  } 
+  if (!startRowFrame) return;
+
+  nsRect startRowRect;
+  startRowFrame->GetRect(startRowRect);
+  nscoord rowGroupHeight = startRowRect.y;
+
   PRBool  hasRowSpanningCell = PR_FALSE;
-  PRInt32 numRows = GetRowCount();
+  PRInt32 numRows = GetRowCount() - (startRowFrame->GetRowIndex() - GetStartRowIndex());
   // collect the current height of each row. rows which have 0 height because 
   // they have no cells originating in them without rowspans > 1, are referred to as
   // special rows. The current height of a special row will be a negative number until
@@ -528,7 +565,7 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   // Step 1:  get the height of the tallest cell in the row and save it for
   //          pass 2. This height is for table cells that originate in this
   //          row and that don't span into the rows that follow
-  nsIFrame* rowFrame = GetFirstFrame();
+  nsIFrame* rowFrame = startRowFrame;
   PRInt32 rowIndex = 0;
 
   // For row groups that are split across pages, the first row frame won't
@@ -569,10 +606,10 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   //          row-spanning cells didn't change prior calculations. Since we are guaranteed 
   //          to have found the max height spanners the first time through, we know we only 
   //          need two passes, not an arbitrary number.
-  nscoord yOrigin = 0;
+  nscoord yOrigin = rowGroupHeight;
   nscoord lastCount = (hasRowSpanningCell) ? 2 : 1;
   for (PRInt32 counter = 0; counter <= lastCount; counter++) {
-    rowFrame = GetFirstFrame();
+    rowFrame = startRowFrame;
     rowIndex = 0;
     while (rowFrame) {
       nsCOMPtr<nsIAtom> rowType;
@@ -726,8 +763,8 @@ nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext*          aPresContext,
   }
 
   // step 3: notify the rows of their new heights
-  nscoord rowGroupHeight = 0;
-  rowFrame = GetFirstFrame();
+  rowFrame = startRowFrame;
+
   rowIndex = 0;
   while (rowFrame) {
     if (NS_UNCONSTRAINEDSIZE != aReflowState.availableWidth) {
@@ -1238,8 +1275,10 @@ nsTableRowGroupFrame::IR_TargetIsMe(nsIPresContext*        aPresContext,
       nsRowGroupReflowState state(aReflowState);
       state.reason = eReflowReason_Resize;
       // Reflow the dirty child frames. Typically this is newly added frames.
+      nsTableRowFrame* firstRowReflowed;
       rv = ReflowChildren(aPresContext, aDesiredSize, state, aStatus,
-                          nsnull, PR_TRUE);
+                          nsnull, PR_TRUE, &firstRowReflowed);
+      CalculateRowHeights(aPresContext, aDesiredSize, aReflowState.reflowState, firstRowReflowed);
       break;
     }
     case nsIReflowCommand::StyleChanged :
