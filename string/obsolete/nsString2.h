@@ -583,12 +583,16 @@ class ConvertUTF8toUCS2
       typedef nsACString::char_type value_type;
       typedef nsAString::char_type  buffer_type;
 
-    ConvertUTF8toUCS2( buffer_type* aBuffer ) : mStart(aBuffer), mBuffer(aBuffer) {}
+    ConvertUTF8toUCS2( buffer_type* aBuffer )
+        : mStart(aBuffer), mBuffer(aBuffer), mErrorEncountered(PR_FALSE) {}
 
     size_t Length() const { return mBuffer - mStart; }
 
     PRUint32 write( const value_type* start, PRUint32 N )
       {
+        if ( mErrorEncountered )
+          return N;
+
         // algorithm assumes utf8 units won't
         // be spread across fragments
         const value_type* p = start;
@@ -640,7 +644,8 @@ class ConvertUTF8toUCS2
             else
               {
                 NS_ERROR("Not a UTF-8 string. This code should only be used for converting from known UTF-8 strings.");
-                break;
+                mErrorEncountered = PR_TRUE;
+                return N;
               }
 
             while ( state-- )
@@ -655,7 +660,8 @@ class ConvertUTF8toUCS2
                 else
                   {
                     NS_ERROR("not a UTF8 string");
-                    return p - start;
+                    mErrorEncountered = PR_TRUE;
+                    return N;
                   }
               }
 
@@ -694,6 +700,7 @@ class ConvertUTF8toUCS2
     private:
       buffer_type* mStart;
       buffer_type* mBuffer;
+      PRBool mErrorEncountered;
   };
 
 #endif /* !defined(nsString2_h__) */

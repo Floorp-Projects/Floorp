@@ -1330,22 +1330,20 @@ NS_ConvertUTF8toUCS2::Init( const nsACString& aCString )
   PRUint32 count = calculator.Length();
 
   if (count) {
-
     // Grow the buffer if we need to.
-    SetCapacity(count);
-      // |SetCapacity| normally doesn't guarantee the use we are putting it to here (see its interface comment in nsAString.h),
-      //  we can only use it since our local implementation, |nsString::SetCapacity|, is known to do what we want
+    SetLength(count);
 
     // All ready? Time to convert
 
     ConvertUTF8toUCS2 converter(mUStr);
     copy_string(aCString.BeginReading(start), aCString.EndReading(end), converter);
     mLength = converter.Length();
-    if (GetCapacity())
-      mUStr[mLength] = '\0'; // null terminate
+    if (mLength != count) {
+      NS_ERROR("Input wasn't UTF8 or incorrect length was calculated");
+      Truncate();
+    }
   }
 
-  NS_ASSERTION(count == mLength, "calculator calculated incorrect length");
 }
 
 /**
