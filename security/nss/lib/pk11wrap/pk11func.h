@@ -233,6 +233,10 @@ CK_OBJECT_HANDLE PK11_ImportPublicKey(PK11SlotInfo *slot,
 				SECKEYPublicKey *pubKey, PRBool isToken);
 PK11SymKey *PK11_KeyGen(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 				SECItem *param,	int keySize,void *wincx);
+
+/* Key Generation specialized for SDR (fixed DES3 key) */
+PK11SymKey *PK11_GenDES3TokenKey(PK11SlotInfo *slot, SECItem *keyid, void *cx);
+
 SECStatus PK11_PubWrapSymKey(CK_MECHANISM_TYPE type, SECKEYPublicKey *pubKey,
 				PK11SymKey *symKey, SECItem *wrappedKey);
 SECStatus PK11_WrapSymKey(CK_MECHANISM_TYPE type, SECItem *params,

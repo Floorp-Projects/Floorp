@@ -130,6 +130,7 @@ PK11_CreateNewObject(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
 	    PORT_SetError( PK11_MapError(crv) );
 	    rv = SECFailure;
 	}
+
 	if (session == CK_INVALID_SESSION) {
 	    if (token) {
 		PK11_RestoreROSession(slot, rwsession);
@@ -137,6 +138,7 @@ PK11_CreateNewObject(PK11SlotInfo *slot, CK_SESSION_HANDLE session,
 		PK11_ExitSlotMonitor(slot);
 	    }
         }
+
 	return rv;
 }
 
@@ -1132,58 +1134,78 @@ pk11_ForceSlot(PK11SymKey *symKey,CK_MECHANISM_TYPE type,
  * from this interface!
  */
 PK11SymKey *
-PK11_KeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
-						int keySize, void *wincx)
+PK11_TokenKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
+    int keySize, SECItem *keyid, PRBool isToken, void *wincx)
 {
-    CK_ULONG key_size = 0;
-    /* we have to use these native types because when we call PKCS 11 modules
-     * we have to make sure that we are using the correct sizes for all the
-     * parameters. */
+    PK11SymKey *symKey;
+    CK_ATTRIBUTE genTemplate[4];
+    CK_ATTRIBUTE *attrs = genTemplate;
+    int count = sizeof(genTemplate)/sizeof(genTemplate[0]);
+    CK_SESSION_HANDLE session;
+    CK_MECHANISM mechanism;
+    CK_RV crv;
+    PRBool weird = PR_FALSE;   /* hack for fortezza */
     CK_BBOOL ckfalse = CK_FALSE;
     CK_BBOOL cktrue = CK_TRUE;
-    CK_ATTRIBUTE genTemplate[2];
-    int count = sizeof(genTemplate)/sizeof(genTemplate[0]);
-    CK_MECHANISM mechanism;
-    CK_MECHANISM_TYPE key_gen_mechanism;
-    PK11SymKey *symKey;
-    CK_RV crv;
-    CK_ATTRIBUTE *attrs = genTemplate;
-    PRBool weird = PR_FALSE;   /* hack for fortezza */
 
     if ((keySize == -1) && (type == CKM_SKIPJACK_CBC64)) {
 	weird = PR_TRUE;
 	keySize = 0;
     }
 
+    /* TNH: Isn't this redundant, since "handleKey" will set defaults? */
     PK11_SETATTRS(attrs, (!weird) 
 	? CKA_ENCRYPT : CKA_DECRYPT, &cktrue, sizeof(CK_BBOOL)); attrs++;
-    key_size = keySize;
-    if (key_size != 0) {
+    
+    if (keySize != 0) {
+        CK_ULONG key_size = keySize; /* Convert to PK11 type */
+
         PK11_SETATTRS(attrs, CKA_VALUE_LEN, &key_size, sizeof(key_size)); 
 							attrs++;
     }
+
+    /* Include key id value if provided */
+    if (keyid) {
+        PK11_SETATTRS(attrs, CKA_ID, keyid->data, keyid->len); attrs++;
+    }
+
+    if (isToken) {
+        PK11_SETATTRS(attrs, CKA_TOKEN, &cktrue, sizeof(cktrue));  attrs++;
+    }
+
     count = attrs - genTemplate;
     PR_ASSERT(count <= sizeof(genTemplate)/sizeof(CK_ATTRIBUTE));
 
     /* find a slot to generate the key into */
-    if ((slot == NULL) || (!PK11_DoesMechanism(slot,type))) {
-        slot = PK11_GetBestSlot(type,wincx);
-        if (slot == NULL) {
+    /* Only do slot management if this is not a token key */
+    if (!isToken && (slot == NULL || !PK11_DoesMechanism(slot,type))) {
+        PK11SlotInfo *bestSlot;
+
+        bestSlot = PK11_GetBestSlot(type,wincx); /* TNH: references the slot? */
+        if (bestSlot == NULL) {
 	    PORT_SetError( SEC_ERROR_NO_MODULE );
 	    return NULL;
 	}
+
+        symKey = PK11_CreateSymKey(bestSlot,type,wincx);
+
+        PK11_FreeSlot(bestSlot);
     } else {
-	PK11_ReferenceSlot(slot);
+	symKey = PK11_CreateSymKey(slot, type, wincx);
     }
+    if (symKey == NULL) return NULL;
+
+    symKey->size = keySize;
+    symKey->origin = (!weird) ? PK11_OriginGenerated : PK11_OriginFortezzaHack;
 
     /* Initialize the Key Gen Mechanism */
-    key_gen_mechanism = PK11_GetKeyGen(type);
-    if (key_gen_mechanism == CKM_FAKE_RANDOM) {
-	PK11_FreeSlot(slot);
+    mechanism.mechanism = PK11_GetKeyGen(type);
+    if (mechanism.mechanism == CKM_FAKE_RANDOM) {
 	PORT_SetError( SEC_ERROR_NO_MODULE );
 	return NULL;
     }
-    mechanism.mechanism = key_gen_mechanism;
+
+    /* Set the parameters for the key gen if provided */
     mechanism.pParameter = NULL;
     mechanism.ulParameterLen = 0;
     if (param) {
@@ -1191,25 +1213,45 @@ PK11_KeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
 	mechanism.ulParameterLen = param->len;
     }
 
-    /* get our key Structure */
-    symKey = PK11_CreateSymKey(slot,type,wincx);
-    PK11_FreeSlot(slot);
-    if (symKey == NULL) {
-	return NULL;
+    /* Get session and perform locking */
+    if (isToken) {
+        session = PK11_GetRWSession(symKey->slot);  /* Should always be original slot */
+    } else {
+        session = symKey->session;
+        pk11_EnterKeyMonitor(symKey);
     }
-    symKey->size = keySize;
-    symKey->origin = (!weird) ? PK11_OriginGenerated : PK11_OriginFortezzaHack;
 
-    pk11_EnterKeyMonitor(symKey);
-    crv = PK11_GETTAB(symKey->slot)->C_GenerateKey(symKey->session,
+    crv = PK11_GETTAB(symKey->slot)->C_GenerateKey(session,
 			 &mechanism, genTemplate, count, &symKey->objectID);
-    pk11_ExitKeyMonitor(symKey);
+
+    /* Release lock and session */
+    if (isToken) {
+        PK11_RestoreROSession(symKey->slot, session);
+    } else {
+        pk11_ExitKeyMonitor(symKey);
+    }
+
     if (crv != CKR_OK) {
 	PK11_FreeSymKey(symKey);
 	PORT_SetError( PK11_MapError(crv) );
 	return NULL;
     }
+
     return symKey;
+}
+
+PK11SymKey *
+PK11_KeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *param,
+						int keySize, void *wincx)
+{
+    return PK11_TokenKeyGen(slot, type, param, keySize, 0, PR_FALSE, wincx);
+}
+
+/* --- */
+PK11SymKey *
+PK11_GenDES3TokenKey(PK11SlotInfo *slot, SECItem *keyid, void *cx)
+{
+  return PK11_TokenKeyGen(slot, CKM_DES3_CBC, 0, 0, keyid, PR_TRUE, cx);
 }
 
 /*

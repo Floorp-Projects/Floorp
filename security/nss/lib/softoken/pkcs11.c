@@ -966,19 +966,16 @@ pk11_handlePrivateKeyObject(PK11Object *object,CK_KEY_TYPE key_type)
 
 /* forward delcare the DES formating function for handleSecretKey */
 void pk11_FormatDESKey(unsigned char *key, int length);
+static SECKEYLowPrivateKey *pk11_mkSecretKeyRep(PK11Object *object);
 
-/*
- * check the consistancy and initialize a Secret Key Object 
- */
+/* Validate secret key data, and set defaults */
 static CK_RV
-pk11_handleSecretKeyObject(PK11Object *object,CK_KEY_TYPE key_type,
-								PRBool isFIPS)
+validateSecretKey(PK11Object *object, CK_KEY_TYPE key_type, PRBool isFIPS)
 {
     CK_RV crv;
     CK_BBOOL cktrue = CK_TRUE;
     CK_BBOOL ckfalse = CK_FALSE;
     PK11Attribute *attribute = NULL;
-
     crv = pk11_defaultAttribute(object,CKA_SENSITIVE,
 				isFIPS?&cktrue:&ckfalse,sizeof(CK_BBOOL));
     if (crv != CKR_OK)  return crv; 
@@ -1045,6 +1042,53 @@ pk11_handleSecretKeyObject(PK11Object *object,CK_KEY_TYPE key_type,
 
     return crv;
 }
+/*
+ * check the consistancy and initialize a Secret Key Object 
+ */
+static CK_RV
+pk11_handleSecretKeyObject(PK11Object *object,CK_KEY_TYPE key_type,
+								PRBool isFIPS)
+{
+    CK_RV crv;
+    CK_BBOOL cktrue = CK_TRUE;
+    CK_BBOOL ckfalse = CK_FALSE;
+    PK11Attribute *attribute = NULL;
+    SECKEYLowPrivateKey *privKey = NULL;
+    SECItem pubKey;
+
+    pubKey.data = 0;
+
+    /* First validate and set defaults */
+    crv = validateSecretKey(object, key_type, isFIPS);
+    if (crv != CKR_OK) goto loser;
+
+    /* If the object is a TOKEN object, store in the database */
+    if (pk11_isTrue(object,CKA_TOKEN)) {
+	char *label;
+	SECStatus rv = SECSuccess;
+
+	privKey=pk11_mkSecretKeyRep(object);
+	if (privKey == NULL) return CKR_HOST_MEMORY;
+
+	label = object->label = pk11_getString(object,CKA_LABEL);
+
+	crv = pk11_Attribute2SecItem(NULL,&pubKey,object,CKA_ID);  /* Should this be ID? */
+	if (crv != CKR_OK) goto loser;
+
+	rv = SECKEY_StoreKeyByPublicKey(SECKEY_GetDefaultKeyDB(),
+			privKey, &pubKey, label,
+			(SECKEYGetPasswordKey) pk11_givePass, object->slot);
+
+	object->inDB = PR_TRUE;
+        object->handle |= (PK11_TOKEN_MAGIC | PK11_TOKEN_TYPE_PRIV);
+    }
+
+loser:
+    if (privKey) SECKEY_LowDestroyPrivateKey(privKey);
+    if (pubKey.data) PORT_Free(pubKey.data);
+
+    return crv;
+}
 
 /*
  * check the consistancy and initialize a Key Object 
@@ -1057,18 +1101,6 @@ pk11_handleKeyObject(PK11Session *session, PK11Object *object)
     CK_BBOOL cktrue = CK_TRUE;
     CK_BBOOL ckfalse = CK_FALSE;
     CK_RV crv;
-
-    /* Only private keys can be private or token */
-    if ((object->objclass != CKO_PRIVATE_KEY) && (object->objclass != CKO_PUBLIC_KEY)
-    						&&
-          (pk11_isTrue(object,CKA_PRIVATE) || pk11_isTrue(object,CKA_TOKEN))) {
-	return CKR_ATTRIBUTE_VALUE_INVALID;
-    }
-
-    /* Make sure that the private key is CKA_PRIVATE if it's a token */
-    if (pk11_isTrue(object,CKA_TOKEN) && (object->objclass == CKO_SECRET_KEY)) {
-	return CKR_ATTRIBUTE_VALUE_INVALID;
-    }
 
     /* verify the required fields */
     if ( !pk11_hasAttribute(object,CKA_KEY_TYPE) ) {
@@ -2067,16 +2099,174 @@ pk11_IsWeakKey(unsigned char *key,CK_KEY_TYPE key_type)
 }
 
 
-	    
+/* make a fake private key representing a symmetric key */
+static SECKEYLowPrivateKey *
+pk11_mkSecretKeyRep(PK11Object *object)
+{
+    SECKEYLowPrivateKey *privKey;
+    PLArenaPool *arena = 0;
+    CK_RV crv;
+    SECStatus rv;
+    static unsigned char derZero[1] = { 0 };
+
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if (arena == NULL) { crv = CKR_HOST_MEMORY; goto loser; }
+
+    privKey = (SECKEYLowPrivateKey *)
+			PORT_ArenaAlloc(arena,sizeof(SECKEYLowPrivateKey));
+    if (privKey == NULL) { crv = CKR_HOST_MEMORY; goto loser; }
+
+    privKey->arena = arena;
+
+    /* Secret keys are represented in the database as "fake" RSA keys.  The RSA key
+     * is marked as a secret key representation by setting the public exponent field
+     * to 0, which is an invalid RSA exponent.  The other fields are set as follows:
+     *   modulus - CKA_ID value for the secret key
+     *   private exponent - CKA_VALUE (the key itself)
+     *   coefficient - CKA_KEY_TYPE, which indicates what encryption algorithm
+     *      is used for the key.
+     *   all others - set to integer 0
+     */
+    privKey->keyType = rsaKey;
+
+    /* The modulus is set to the key id of the symmetric key */
+    crv=pk11_Attribute2SecItem(arena,&privKey->u.rsa.modulus,object,CKA_ID);
+    if (crv != CKR_OK) goto loser;
+
+    /* The public exponent is set to 0 length to indicate a special key */
+    privKey->u.rsa.publicExponent.len = sizeof derZero;
+    privKey->u.rsa.publicExponent.data = derZero;
+
+    /* The private exponent is the actual key value */
+    crv=pk11_Attribute2SecItem(arena,&privKey->u.rsa.privateExponent,object,CKA_VALUE);
+    if (crv != CKR_OK) goto loser;
+
+    /* All other fields empty - needs testing */
+    privKey->u.rsa.prime1.len = sizeof derZero;
+    privKey->u.rsa.prime1.data = derZero;
+
+    privKey->u.rsa.prime2.len = sizeof derZero;
+    privKey->u.rsa.prime2.data = derZero;
+
+    privKey->u.rsa.exponent1.len = sizeof derZero;
+    privKey->u.rsa.exponent1.data = derZero;
+
+    privKey->u.rsa.exponent2.len = sizeof derZero;
+    privKey->u.rsa.exponent2.data = derZero;
+
+    /* Coeficient set to KEY_TYPE */
+    crv=pk11_Attribute2SecItem(arena,&privKey->u.rsa.coefficient,object,CKA_KEY_TYPE);
+    if (crv != CKR_OK) goto loser;
+
+    /* Private key version field set normally for compatibility */
+    rv = DER_SetUInteger(privKey->arena, &privKey->u.rsa.version,SEC_PRIVATE_KEY_VERSION);
+    if (rv != SECSuccess) { crv = CKR_HOST_MEMORY; goto loser; }
+
+loser:
+    if (crv != CKR_OK) {
+	PORT_FreeArena(arena,PR_FALSE);
+	privKey = 0;
+    }
+
+    return privKey;
+}
+
+static PRBool
+isSecretKey(SECKEYLowPrivateKey *privKey)
+{
+  if (privKey->keyType == rsaKey && privKey->u.rsa.publicExponent.len == 1 &&
+      privKey->u.rsa.publicExponent.data[0] == 0)
+    return PR_TRUE;
+
+  return PR_FALSE;
+}
+
+/* Import a Secret Key */
+static PRBool
+importSecretKey(PK11Slot *slot, SECKEYLowPrivateKey *priv)
+{
+    PK11Object *object;
+    CK_OBJECT_CLASS secretClass = CKO_SECRET_KEY;
+    CK_BBOOL cktrue = CK_TRUE;
+    CK_BBOOL ckfalse = CK_FALSE;
+    CK_KEY_TYPE key_type;
+
+    /* Check for secret key representation, return if it isn't one */
+    if (!isSecretKey(priv))
+        return PR_FALSE;
+
+    /*
+     * now lets create an object to hang the attributes off of
+     */
+    object = pk11_NewObject(slot); /* fill in the handle later */
+    if (object == NULL) {
+	goto loser;
+    }
+
+    /* Set the ID value */
+    if (pk11_AddAttributeType(object, CKA_ID, 
+          priv->u.rsa.modulus.data, priv->u.rsa.modulus.len)) {
+	 pk11_FreeObject(object);
+	 goto loser;
+    }
+
+    /* initalize the object attributes */
+    if (pk11_AddAttributeType(object, CKA_CLASS, &secretClass,
+					 sizeof(secretClass)) != CKR_OK) {
+	 pk11_FreeObject(object);
+	 goto loser;
+    }
+
+    if (pk11_AddAttributeType(object, CKA_TOKEN, &cktrue,
+					       sizeof(cktrue)) != CKR_OK) {
+	 pk11_FreeObject(object);
+	 goto loser;
+    }
+
+    if (pk11_AddAttributeType(object, CKA_PRIVATE, &ckfalse,
+					       sizeof(CK_BBOOL)) != CKR_OK) {
+	 pk11_FreeObject(object);
+	 goto loser;
+    }
+
+    if (pk11_AddAttributeType(object, CKA_VALUE, 
+			 	pk11_item_expand(&priv->u.rsa.privateExponent)) != CKR_OK) {
+	 pk11_FreeObject(object);
+	 goto loser;
+    }
+
+    if (pk11_AddAttributeType(object, CKA_KEY_TYPE, 
+			 	pk11_item_expand(&priv->u.rsa.coefficient)) != CKR_OK) {
+	 pk11_FreeObject(object);
+	 goto loser;
+    }
+    key_type = *(CK_KEY_TYPE*)priv->u.rsa.coefficient.data;
+
+    /* Validate and add default attributes */
+    validateSecretKey(object, key_type, (PRBool)(slot->slotID == FIPS_SLOT_ID));
+
+    /* now just verify the required date fields */
+    PK11_USE_THREADS(PR_Lock(slot->objectLock);)
+    object->handle = slot->tokenIDCount++;
+    object->handle |= (PK11_TOKEN_MAGIC | PK11_TOKEN_TYPE_PRIV);
+    PK11_USE_THREADS(PR_Unlock(slot->objectLock);)
+
+    object->objclass = secretClass;
+    object->slot = slot;
+    object->inDB = PR_TRUE;
+    pk11_AddSlotObject(slot, object);
+
+loser:
+    return PR_TRUE;
+}
+
 
 /**********************************************************************
  *
  *     Start of PKCS 11 functions 
  *
  **********************************************************************/
- 
- 
-    
+
 
 /* return the function list */
 CK_RV NSC_GetFunctionList(CK_FUNCTION_LIST_PTR *pFunctionList)
@@ -3316,6 +3506,94 @@ decodeKeyDBGlobalSalt(DBT *saltData)
 }
 #endif
 
+#if 0
+/*
+ * Create a (fixed) DES3 key [ testing ]
+ */
+static unsigned char keyValue[] = {
+  0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07,
+  0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f,
+  0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17
+};
+
+static SECItem keyItem = {
+  0,
+  keyValue,
+  sizeof keyValue
+};
+
+static unsigned char keyID[] = {
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+};
+
+static SECItem keyIDItem = {
+  0,
+  keyID,
+  sizeof keyID
+};
+/* +AAA */
+static CK_RV
+pk11_createFixedDES3Key(PK11Slot *slot)
+{
+    CK_RV rv = CKR_OK;
+    PK11Object *keyObject;
+    CK_BBOOL true = CK_TRUE;
+    CK_OBJECT_CLASS class = CKO_SECRET_KEY;
+    CK_KEY_TYPE keyType = CKK_DES3;
+
+    /*
+     * Create the object
+     */
+    keyObject = pk11_NewObject(slot); /* fill in the handle later */
+    if (keyObject == NULL) {
+	return CKR_HOST_MEMORY;
+    }
+
+    /* Add attributes to the object */
+    rv = pk11_AddAttributeType(keyObject, CKA_ID, keyID, sizeof keyID);
+    if (rv != CKR_OK) {
+	 pk11_FreeObject(keyObject);
+	 return rv;
+    }
+
+    rv = pk11_AddAttributeType(keyObject, CKA_VALUE, keyValue, sizeof keyValue);
+    if (rv != CKR_OK) {
+	 pk11_FreeObject(keyObject);
+	 return rv;
+    }
+
+    rv = pk11_AddAttributeType(keyObject, CKA_TOKEN, &true, sizeof true);
+    if (rv != CKR_OK) {
+	 pk11_FreeObject(keyObject);
+	 return rv;
+    }
+
+    rv = pk11_AddAttributeType(keyObject, CKA_CLASS, &class, sizeof class);
+    if (rv != CKR_OK) {
+	 pk11_FreeObject(keyObject);
+	 return rv;
+    }
+
+    rv = pk11_AddAttributeType(keyObject, CKA_KEY_TYPE, &keyType, sizeof keyType);
+    if (rv != CKR_OK) {
+	 pk11_FreeObject(keyObject);
+	 return rv;
+    }
+
+    pk11_handleSecretKeyObject(keyObject, keyType, PR_TRUE);
+
+    PK11_USE_THREADS(PR_Lock(slot->objectLock);)
+    keyObject->handle = slot->tokenIDCount++;
+    PK11_USE_THREADS(PR_Unlock(slot->objectLock);)
+    keyObject->slot = slot;
+    keyObject->objclass = CKO_SECRET_KEY;
+    pk11_AddSlotObject(slot, keyObject);
+
+    return rv;
+}
+#endif /* Fixed DES key */
+
 /*
  * load up our token database
  */
@@ -3360,6 +3638,11 @@ pk11_importKeyDB(PK11Slot *slot)
      * pkcs11 world
      */
     for (node = keylist.head;  node != NULL; node=node->next ) {
+        /* Check for "special" private key that wraps a symmetric key */
+        if (isSecretKey(node->privKey)) {
+          importSecretKey(slot, node->privKey);
+          goto end_loop;
+        }
 
 	/* create the private key object */
 	privateKeyObject = pk11_importPrivateKey(slot, node->privKey, 
@@ -3410,6 +3693,7 @@ end_loop:
 		
     }
     PORT_FreeArena(keylist.arena, PR_FALSE);
+
     return CKR_OK;
 }
 
