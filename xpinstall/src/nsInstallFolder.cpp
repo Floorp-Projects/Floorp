@@ -176,7 +176,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
 
                 directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mFileSpec));
 #ifdef XP_MAC
-                mFileSpec->Append("Plug-ins");
+                mFileSpec->Append("Plugins");
 #else
                 mFileSpec->Append("plugins");
 #endif
@@ -188,7 +188,7 @@ nsInstallFolder::SetDirectoryPath(const nsString& aFolderID, const nsString& aRe
                 if (NS_SUCCEEDED(rv))
                 {
 #ifdef XP_MAC
-                    mFileSpec->Append("Plug-ins");
+                    mFileSpec->Append("Plugins");
 #else
                     mFileSpec->Append("plugins");
 #endif
