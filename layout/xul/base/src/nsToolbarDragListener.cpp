@@ -19,100 +19,93 @@
 
 #include "nsToolbarDragListener.h"
 #include "nsToolbarFrame.h"
-#include "nsIDOMDragListener.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMEventListener.h"
 
-// Drag & Drop, Clipboard
 #include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
-#include "nsIClipboard.h"
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsITransferable.h"
-#include "nsIFormatConverter.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMUIEvent.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
 #include "nsXULAtoms.h"
-
 #include "nsIEventStateManager.h"
 
+#include "nsISupportsArray.h"
 #include "nsIViewManager.h"
 #include "nsIView.h"
+
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
-static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
 
-//static NS_DEFINE_IID(kISupportsIID,  NS_ISUPPORTS_IID);
-//static NS_DEFINE_IID(kIDOMEventReceiverIID,  NS_IDOMEVENTRECEIVER_IID);
-
-#include "nsISupportsArray.h"
-
-/*
- * nsToolbarDragListener implementation
- */
 
 NS_IMPL_ADDREF(nsToolbarDragListener)
-
 NS_IMPL_RELEASE(nsToolbarDragListener)
 
 
-////////////////////////////////////////////////////////////////////////
-nsToolbarDragListener::nsToolbarDragListener() 
+//
+// nsToolbarDragListener ctor
+//
+// Not much to do besides init member variables
+//
+nsToolbarDragListener :: nsToolbarDragListener ( nsToolbarFrame* inToolbar, nsIPresContext* inPresContext )
+  : mToolbar(inToolbar), mPresContext(inPresContext), mMouseDown(PR_FALSE), mMouseDrag(PR_FALSE),
+     mCurrentDropLoc(-1)
 {
   NS_INIT_REFCNT();
-  mPresContext = nsnull;
-  mMouseDown   = PR_FALSE;
-  mMouseDrag   = PR_FALSE;
 }
 
-////////////////////////////////////////////////////////////////////////
+
+//
+// nsToolbarDragListener dtor
+//
+// Cleanup.
+//
 nsToolbarDragListener::~nsToolbarDragListener() 
 {
 }
 
-////////////////////////////////////////////////////////////////////////
+
+//
+// QueryInterface
+//
+// Modeled after scc's reference implementation
+//   http://www.mozilla.org/projects/xpcom/QI.html
+//
 nsresult
 nsToolbarDragListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (nsnull == aInstancePtr) {
+  if ( !aInstancePtr)
     return NS_ERROR_NULL_POINTER;
-  }
 
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMEventReceiver>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMEventListener*)(nsIDOMMouseMotionListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
+  if (aIID.Equals(nsCOMTypeInfo<nsIDOMEventListener>::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsIDOMEventListener*, NS_STATIC_CAST(nsIDOMDragListener*, this));
+  else if (aIID.Equals(nsCOMTypeInfo<nsIDOMDragListener>::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsIDOMDragListener*, this);
+  else if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseMotionListener>::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsIDOMMouseMotionListener*, this);
+  else if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseListener>::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsIDOMMouseListener*, this);
+  else if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))                                   
+    *aInstancePtr = NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIDOMDragListener*, this));
+  else
+    *aInstancePtr = 0;
+  
+  nsresult status;
+  if ( !*aInstancePtr )
+    status = NS_NOINTERFACE;
+  else {
+    NS_ADDREF( NS_REINTERPRET_CAST(nsISupports*, *aInstancePtr) );
+    status = NS_OK;
   }
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMDragListener>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMDragListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseMotionListener>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMMouseMotionListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseListener>::GetIID())) {
-    *aInstancePtr = (void*)(nsIDOMMouseListener*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {                                      
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMMouseMotionListener*)this;                        
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }
-  return NS_NOINTERFACE;
+  return status;
 }
+
 
 ////////////////////////////////////////////////////////////////////////
 // This is temporary until the bubling of event for CSS actions work
@@ -188,9 +181,8 @@ nsToolbarDragListener::IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc, 
   // The mPresContext is set into this class from the nsToolbarFrame
   // It's needed here for figuring out twips & 
   // resetting the active state in the event manager after the drop takes place.
-  if (nsnull == mPresContext) {
+  if ( !mPresContext ) 
     return NS_OK;
-  }
 
   // translate the mouse coords into twips
   float p2t;
@@ -286,7 +278,14 @@ nsToolbarDragListener::IsOnToolbarItem(nsIDOMEvent* aDragEvent, nscoord& aXLoc, 
 
 }
 
-////////////////////////////////////////////////////////////////////////
+
+//
+// DragOver
+//
+// The mouse has moved over the toolbar. Update the drop feedback
+//
+//еее rewrite to not re-load the service on each mouse moved event. That
+//еее seriously blows.
 nsresult
 nsToolbarDragListener::DragOver(nsIDOMEvent* aDragEvent)
 {

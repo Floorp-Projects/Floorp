@@ -17,111 +17,56 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-//
-// Eric Vaughan
-// Netscape Communications
-//
-// See documentation in associated header file
-//
-
 #include "nsToolbarItemFrame.h"
-#include "nsIDeviceContext.h"
-#include "nsIFontMetrics.h"
-#include "nsHTMLAtoms.h"
-#include "nsXULAtoms.h"
-#include "nsIStyleContext.h"
-#include "nsStyleConsts.h"
 #include "nsCOMPtr.h"
-#include "nsIPresContext.h"
-#include "nsButtonFrameRenderer.h"
 
-#include "nsHTMLParts.h"
-#include "nsString.h"
-#include "nsBoxFrame.h"
-#include "nsIPresContext.h"
-#include "nsIRenderingContext.h"
-#include "nsIPresShell.h"
-#include "nsHTMLIIDs.h"
-#include "nsIImage.h"
-#include "nsIWidget.h"
-#include "nsHTMLAtoms.h"
-#include "nsIHTMLAttributes.h"
-#include "nsIDocument.h"
-#include "nsIHTMLDocument.h"
-#include "nsIStyleContext.h"
-#include "nsStyleConsts.h"
-#include "nsImageMap.h"
-#include "nsILinkHandler.h"
-#include "nsIURL.h"
-#include "nsIView.h"
-#include "nsIViewManager.h"
-#include "nsHTMLContainerFrame.h"
-#include "prprf.h"
-#include "nsISizeOfHandler.h"
-#include "nsIFontMetrics.h"
-#include "nsCSSRendering.h"
-#include "nsIDOMHTMLImageElement.h"
-#include "nsIDeviceContext.h"
-#include "nsINameSpaceManager.h"
-#include "nsTextFragment.h"
-#include "nsIDOMHTMLMapElement.h"
-#include "nsIStyleSet.h"
-#include "nsIStyleContext.h"
-#include "nsIPopUpMenu.h"
-
-#include "nsIDOMDragListener.h"
-#include "nsIDOMEventReceiver.h"
-
-// Drag & Drop, Clipboard
-#include "nsIServiceManager.h"
 #include "nsWidgetsCID.h"
-#include "nsIClipboard.h"
-#include "nsIDragService.h"
-#include "nsIDragSession.h"
-#include "nsITransferable.h"
-#include "nsIFormatConverter.h"
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_CID(kCDragServiceCID,         NS_DRAGSERVICE_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
 static NS_DEFINE_IID(kCDataFlavorCID,          NS_DATAFLAVOR_CID);
-static NS_DEFINE_IID(kCXIFFormatConverterCID,  NS_XIFFORMATCONVERTER_CID);
-
-#include "nsFormControlHelper.h"
-
-static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
-
 
 
 //
-// NS_NewToolbarFrame
+// NS_NewToolbarItemFrame (friend)
 //
-// Creates a new Toolbar frame and returns it in |aNewFrame|
+// Creates a new toolbar item frame and returns it in |aNewFrame|
 //
 nsresult
 NS_NewToolbarItemFrame ( nsIFrame** aNewFrame )
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
-  if (nsnull == aNewFrame) {
+  if ( !aNewFrame )
     return NS_ERROR_NULL_POINTER;
-  }
+
   nsToolbarItemFrame* it = new nsToolbarItemFrame;
-  if (nsnull == it)
+  if ( !it )
     return NS_ERROR_OUT_OF_MEMORY;
 
-  // it->SetFlags(aFlags);
   *aNewFrame = it;
   return NS_OK;
   
 } // NS_NewToolbarItemFrame
 
 
+//
+// nsToolbarItemFrame ctor and dtor
+//
 nsToolbarItemFrame::nsToolbarItemFrame()
 {
+}
 
+nsToolbarItemFrame::~nsToolbarItemFrame()
+{
 }
 
 
+//
+// Init
+//
+// Ummm, just forwards for now.
+//
 NS_IMETHODIMP
 nsToolbarItemFrame::Init(nsIPresContext&  aPresContext,
                           nsIContent*      aContent,
@@ -135,9 +80,14 @@ nsToolbarItemFrame::Init(nsIPresContext&  aPresContext,
 }
 
 
-
-
-
+//
+// Init
+//
+// Ummm, just forwards for now. Most of this code is now in the drag listener's
+// mouseMoved event.
+//
+// еее remove all this.
+//
 NS_IMETHODIMP
 nsToolbarItemFrame::HandleEvent(nsIPresContext& aPresContext, 
                                       nsGUIEvent* aEvent,

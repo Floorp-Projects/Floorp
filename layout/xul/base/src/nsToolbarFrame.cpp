@@ -28,11 +28,129 @@
 #include "nsCSSRendering.h"
 
 #include "nsToolbarDragListener.h"
-#include "nsIDOMDragListener.h"
-#include "nsIDOMMouseMotionListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIContent.h"
 #include "nsIPresContext.h"
+#include "nsIStyleContext.h"
+
+#define TEMP_HACK_FOR_BUG_11291 1
+#if TEMP_HACK_FOR_BUG_11291
+
+// for temp fix of bug 11291
+#include "nsIDOMNodeList.h"
+#include "nsIDOMElement.h"
+class nsTEMPMouseDownEater : public nsIDOMMouseListener
+{
+public:
+
+    // default ctor and dtor
+  nsTEMPMouseDownEater ( ) ;
+  virtual ~nsTEMPMouseDownEater() { };
+
+    // interfaces for addref and release and queryinterface
+  NS_DECL_ISUPPORTS
+
+    // nsIDOMMouseListener
+  virtual nsresult HandleEvent(nsIDOMEvent* aEvent);
+  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent);
+
+}; // class nsTEMPMouseDownEater
+
+NS_IMPL_ADDREF(nsTEMPMouseDownEater)
+NS_IMPL_RELEASE(nsTEMPMouseDownEater)
+
+nsTEMPMouseDownEater :: nsTEMPMouseDownEater (  )
+{
+  NS_INIT_REFCNT();
+}
+
+//
+// QueryInterface
+//
+// Modeled after scc's reference implementation
+//   http://www.mozilla.org/projects/xpcom/QI.html
+//
+nsresult
+nsTEMPMouseDownEater::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if ( !aInstancePtr)
+    return NS_ERROR_NULL_POINTER;
+
+  if (aIID.Equals(nsCOMTypeInfo<nsIDOMEventListener>::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsIDOMEventListener*, this);
+  else if (aIID.Equals(nsCOMTypeInfo<nsIDOMMouseListener>::GetIID()))
+    *aInstancePtr = NS_STATIC_CAST(nsIDOMMouseListener*, this);
+  else if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()))                                   
+    *aInstancePtr = NS_STATIC_CAST(nsISupports*, NS_STATIC_CAST(nsIDOMMouseListener*, this));
+  else
+    *aInstancePtr = 0;
+  
+  nsresult status;
+  if ( !*aInstancePtr )
+    status = NS_NOINTERFACE;
+  else {
+    NS_ADDREF( NS_REINTERPRET_CAST(nsISupports*, *aInstancePtr) );
+    status = NS_OK;
+  }
+  return status;
+}
+
+nsresult
+nsTEMPMouseDownEater :: HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+nsresult
+nsTEMPMouseDownEater::MouseDown(nsIDOMEvent* aMouseEvent)
+{
+  // we want the text widget to see this event, but not anyone above us that
+  // might be registered as a listener for mouse clicks. Therefore, don't
+  // allow this event to bubble.
+  aMouseEvent->PreventBubble();
+  return NS_OK; // means I am NOT consuming event
+}
+
+nsresult
+nsTEMPMouseDownEater::MouseUp(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK; // means I am NOT consuming event
+}
+
+nsresult
+nsTEMPMouseDownEater::MouseClick(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK; // means I am NOT consuming event
+}
+
+nsresult
+nsTEMPMouseDownEater::MouseDblClick(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK; // means I am NOT consuming event
+}
+
+nsresult
+nsTEMPMouseDownEater::MouseOver(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK; // means I am NOT consuming event
+}
+
+nsresult
+nsTEMPMouseDownEater::MouseOut(nsIDOMEvent* aMouseEvent)
+{
+  return NS_OK; // means I am NOT consuming event
+}
+
+#endif /* TEMP_HACK_FOR_BUG_11291 */
+
+#pragma mark -
+
+
 //
 // NS_NewToolbarFrame
 //
@@ -57,64 +175,86 @@ NS_NewToolbarFrame ( nsIFrame** aNewFrame )
 
 
 //
-// nsToolbarFrame cntr
+// nsToolbarFrame ctor
 //
-// Init, if necessary
+// Most of the work need to be delayed until Init(). Lame!
 //
 nsToolbarFrame :: nsToolbarFrame ( )
+  : mXDropLoc ( -1 )
 {
-	//*** anything?
-  mXDropLoc = -1;
 }
 
 
 //
-// nsToolbarFrame dstr
+// nsToolbarFrame dtor
 //
-// Cleanup, if necessary
+// Cleanup. Remove our registered event listener from the content model.
 //
 nsToolbarFrame :: ~nsToolbarFrame ( )
 {
-#ifdef NS_DEBUG
-  printf("Deleting toolbar frame\n");
-#endif
+  nsCOMPtr<nsIContent> content;
+  GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
+
+  // NOTE: the last Remove will delete the drag listener
+  reciever->RemoveEventListenerByIID((nsIDOMDragListener *)mDragListener, nsIDOMDragListener::GetIID());
+  reciever->RemoveEventListenerByIID((nsIDOMMouseListener *)mDragListener, nsIDOMMouseListener::GetIID());
+  reciever->RemoveEventListenerByIID((nsIDOMMouseMotionListener *)mDragListener, nsIDOMMouseMotionListener::GetIID());
 }
 
+
+//
+// Init
+//
+// Setup event listeners for drag and drop. Our frame's lifetime is bounded by the
+// lifetime of the content model, so we're guaranteed that the content node won't go away on us. As
+// a result, our drag listener can't go away before the frame is deleted. Since the content
+// node holds owning references to our drag listener, which we tear down in the dtor, there is no 
+// need to hold an owning ref to it ourselves.
+//
 NS_IMETHODIMP
-nsToolbarFrame::Init(nsIPresContext&  aPresContext,
-              nsIContent*      aContent,
-              nsIFrame*        aParent,
-              nsIStyleContext* aContext,
-              nsIFrame*        aPrevInFlow)
+nsToolbarFrame::Init ( nsIPresContext&  aPresContext, nsIContent* aContent,
+                        nsIFrame* aParent, nsIStyleContext* aContext,
+                        nsIFrame* aPrevInFlow)
 {
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
 
-  //nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(mContent));
   nsCOMPtr<nsIContent> content;
   GetContent(getter_AddRefs(content));
+  nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(content));
 
-  nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
+  mDragListener = new nsToolbarDragListener(this, &aPresContext);
+  receiver->AddEventListenerByIID((nsIDOMDragListener *)mDragListener, nsIDOMDragListener::GetIID());
+  receiver->AddEventListenerByIID((nsIDOMMouseListener *)mDragListener, nsIDOMMouseListener::GetIID());
+  receiver->AddEventListenerByIID((nsIDOMMouseMotionListener *)mDragListener, nsIDOMMouseMotionListener::GetIID());
 
-  mDragListener = new nsToolbarDragListener();
-  mDragListener->SetToolbar(this);
-
-  if (NS_OK == reciever->AddEventListenerByIID((nsIDOMDragListener *)mDragListener, nsIDOMDragListener::GetIID())) {
-    //printf("Toolbar registered as Drag Listener\n");
+#if TEMP_HACK_FOR_BUG_11291
+  // Ok, this is a hack until Ender lands. We need to have a mouse listener on text widgets
+  // in order to make sure that mouseDowns within the text widget don't bubble up to the toolbar
+  // listener. This would cause problems where selecting text and moving the mouse outside the text
+  // widget and into the toolbar would start a drag (bug #11291)
+  nsCOMPtr<nsIDOMElement> element ( do_QueryInterface(content) );
+  if ( element ) {
+    nsCOMPtr<nsIDOMNodeList> inputList;
+    element->GetElementsByTagName("INPUT", getter_AddRefs(inputList));
+    if ( inputList ) {
+      PRUint32 length = 0;
+      inputList->GetLength(&length);
+      for ( PRUint32 i = 0; i < length; ++i ) {
+        nsCOMPtr<nsIDOMNode> node;
+        inputList->Item(i, getter_AddRefs(node));
+        nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(node));
+        if ( receiver )
+          receiver->AddEventListenerByIID(new nsTEMPMouseDownEater, nsIDOMMouseListener::GetIID());
+        // yes, i know this will leak. That's ok, i don't care because this code will go away
+      }   
+    }
   }
-
-  if (NS_OK == reciever->AddEventListenerByIID((nsIDOMMouseListener *)mDragListener, nsIDOMMouseListener::GetIID())) {
-    //printf("Toolbar registered as Mouse Listener\n");
-  }
-
-  if (NS_OK == reciever->AddEventListenerByIID((nsIDOMMouseMotionListener *)mDragListener, nsIDOMMouseMotionListener::GetIID())) {
-    //printf("Toolbar registered as MouseMotion Listener\n");
-  }
-
-  //      nsCOMPtr<nsIDOMEventListener> eventListener = do_QueryInterface(popupListener);
-  //      AddEventListener("mousedown", eventListener, PR_FALSE);  
+#endif
 
   return rv;
 }
+
 
 //
 // Paint
@@ -128,38 +268,6 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
 {
-#if 0
-  if (eFramePaintLayer_Underlay == aWhichLayer) {
-    const nsStyleDisplay* disp = (const nsStyleDisplay*)
-      mStyleContext->GetStyleData(eStyleStruct_Display);
-    if (disp->mVisible && mRect.width && mRect.height) {
-      // Paint our background and border
-      PRIntn skipSides = GetSkipSides();
-      const nsStyleColor* color = (const nsStyleColor*)
-        mStyleContext->GetStyleData(eStyleStruct_Color);
-      const nsStyleSpacing* spacing = (const nsStyleSpacing*)
-        mStyleContext->GetStyleData(eStyleStruct_Spacing);
-
-      nsRect  rect(0, 0, mRect.width, mRect.height);
-      nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
-                                      aDirtyRect, rect, *color, *spacing, 0, 0);
-      nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *spacing, mStyleContext, skipSides);
-    }
-  }
-
-  //*** anything toolbar specific here???
-    
-  // Now paint the items. Note that child elements have the opportunity to
-  // override the visibility property and display even if their parent is
-  // hidden
-  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
-
-
-  return NS_OK;
-
-#endif
-
   nsresult res =  nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
 
   if (mXDropLoc != -1) {
@@ -189,29 +297,12 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
 
 
 //
-// Reflow
-//
-// Handle moving children around.
-//
-NS_IMETHODIMP
-nsToolbarFrame :: Reflow ( nsIPresContext&          aPresContext,
-                            nsHTMLReflowMetrics&     aDesiredSize,
-                            const nsHTMLReflowState& aReflowState,
-                            nsReflowStatus&          aStatus)
-{
-  return nsBoxFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
-
-} // Reflow 
-
-
-//
 // GetFrameForPoint
 //
 // Override to process events in our own frame
 //
 NS_IMETHODIMP
-nsToolbarFrame :: GetFrameForPoint(const nsPoint& aPoint, 
-                                  nsIFrame**     aFrame)
+nsToolbarFrame :: GetFrameForPoint ( const nsPoint& aPoint, nsIFrame** aFrame)
 {
   nsresult retVal = nsHTMLContainerFrame::GetFrameForPoint(aPoint, aFrame);
 
@@ -240,10 +331,6 @@ nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext,
                                    nsGUIEvent*     aEvent, 
                                    nsEventStatus&  aEventStatus) 
 { 
-  if(mDragListener) {
-    mDragListener->SetPresContext(&aPresContext); // not ref counted
-  }
-
   if ( !aEvent ) 
     return nsEventStatus_eIgnore; 
 
@@ -276,6 +363,8 @@ nsToolbarFrame :: HandleEvent ( nsIPresContext& aPresContext,
   
 } // HandleEvent
 
+
+#if NOT_YET_NEEDED
 /**
  * Call this when styles change
  */
@@ -301,3 +390,5 @@ nsToolbarFrame::ReResolveStyles(nsIPresContext& aPresContext,
   }*/
 
 }
+#endif
+
