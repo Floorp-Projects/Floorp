@@ -19,7 +19,7 @@ DEPTH=..\..\..
 include <$(DEPTH)/config/config.mak>
 
 LIBRARY_NAME=wallet
-DLLNAME=walletlib
+DLLNAME=wallet
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 CPP_OBJS= .\$(OBJDIR)\wallet.obj		\
 	.\$(OBJDIR)\singsign.obj		\
@@ -39,7 +39,6 @@ REQUIRES=wallet
 EXPORTS= $(NULL)
 
 LLIBS=$(LLIBS)  $(LIBNSPR)		\
-	$(WALLETLIBS)			\
 	$(DIST)\lib\xppref32.lib	\
 	$(DIST)\lib\xpcom.lib		\
 !ifndef NECKO

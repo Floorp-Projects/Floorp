@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 DEPTH=..\..\..
 MODULE = walletviewers
 
-LIBNAME = .\$(OBJDIR)\walletviewers
+LIBNAME = .\$(OBJDIR)\wlltvwrs
 DLL = $(LIBNAME).dll
 
 LINCS =                          \
