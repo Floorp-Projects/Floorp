@@ -49,30 +49,21 @@ static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_
 class nsGfxFactoryGTK : public nsIFactory
 {   
   public:   
-    // nsISupports methods   
-    NS_IMETHOD QueryInterface(const nsIID &aIID,    
-                                       void **aResult);   
-    NS_IMETHOD_(nsrefcnt) AddRef(void);   
-    NS_IMETHOD_(nsrefcnt) Release(void);   
+    // nsISupports methods
+    NS_DECL_ISUPPORTS
 
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                                       const nsIID &aIID,   
-                                       void **aResult);   
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
+    NS_DECL_NSIFACTORY
 
     nsGfxFactoryGTK(const nsCID &aClass);   
     virtual ~nsGfxFactoryGTK();   
 
   private:   
-    nsrefcnt  mRefCnt;   
     nsCID     mClassID;
 };   
 
 nsGfxFactoryGTK::nsGfxFactoryGTK(const nsCID &aClass)   
 {   
-  mRefCnt = 0;
+  NS_INIT_ISUPPORTS();
   mClassID = aClass;
 }   
 
@@ -154,15 +145,9 @@ nsresult nsGfxFactoryGTK::CreateInstance(nsISupports *aOuter,
     return NS_ERROR_OUT_OF_MEMORY;  
   }  
 
+  NS_ADDREF(inst);
   nsresult res = inst->QueryInterface(aIID, aResult);
-
-  if (res != NS_OK) {  
-    // We didn't get the right interface, so clean up  
-    delete inst;  
-  }  
-//  else {
-//    inst->Release();
-//  }
+  NS_RELEASE(inst);
 
   return res;  
 }  
