@@ -9,5 +9,4 @@ nsIStreamListener.h
 nsIStreamObserver.h
 nsIURL.h
 nsITransport.h
-
-
+nsIBlockingNotification.h

@@ -31,6 +31,7 @@ EXPORTS = nsIStreamListener.h           \
           nsIHttpURL.h                  \
           nsILoadAttribs.h              \
           nsITransport.h		\
+          nsIBlockingNotification.h     \
           $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

@@ -29,6 +29,7 @@ EXPORTS = nsIStreamObserver.h           \
           nsIHttpURL.h                  \
           nsILoadAttribs.h              \
 		  nsITransport.h				\
+      nsIBlockingNotification.h \
           $(NULL)
 
 #//------------------------------------------------------------------------
