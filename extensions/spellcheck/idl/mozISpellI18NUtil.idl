@@ -38,36 +38,43 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(12E6146C-B026-4F0C-A47D-7CCA9B52F4B3)]
+[scriptable, uuid(B075D5DC-1DF1-441A-BEBF-680D8CAAA19C)]
 
 /**
-  This interface contains various I18N related code used in various places by the spell checker.
-*/
+ * This interface contains various I18N related code used in various places by the spell checker.
+ */
 
 interface mozISpellI18NUtil : nsISupports {
 
     const PRUint32 kCheck=0;
     const PRUint32 kSuggest=1;
 
-    /* The language being spell checked*/
+   /**
+    * The language being used to check spelling
+    */
     readonly attribute wstring language;
     
-    /* Given a word return a list of possible root forms of that word */
+   /**
+    * Given a word return a list of possible root forms of that word
+    */
     void getRootForm(in wstring word,
                      in PRUint32 type,
                      [array, size_is(count)] out wstring words,
                      out PRUint32 count);
     
-    /* Given a word return a list of possible root forms of that word */
-    void FromRootForm(in wstring word,
+   /**
+    * Given a word return a list of possible root forms of that word
+    */
+    void fromRootForm(in wstring word,
                       [array, size_is(icount)] in wstring iwords,
                       in PRUint32 icount,
                       [array, size_is(ocount)] out wstring owords,
                       out PRUint32 ocount);
     
-    /* Given a unicode string and an offset find the beginning and end of the next word
-     * begin and end are -1 if there are no words remaining in the string 
-     * This should really be folded into the Line/WordBreaker.
-     **/
-    void FindNextWord(in wstring word, in PRUint32 length, in PRUint32 offset, out PRInt32 begin, out PRInt32 end); 
+    /**
+     * Given a unicode string and an offset, find the beginning and end of the
+     * next word. begin and end are -1 if there are no words remaining in the 
+     * string. This should really be folded into the Line/WordBreaker.
+     */
+    void findNextWord(in wstring word, in PRUint32 length, in PRUint32 offset, out PRInt32 begin, out PRInt32 end); 
 };
