@@ -19,6 +19,9 @@ DEPTH		= ../..
 MODULE		= xpcom
 LIBRARY_NAME	= xpcom
 
+CSRCS		= plvector.c \
+		  $(NULL)
+
 CPPSRCS		= nsDebug.cpp \
 		  nsHashtable.cpp \
 		  nsID.cpp \

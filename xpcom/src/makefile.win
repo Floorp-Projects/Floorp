@@ -41,6 +41,14 @@ DLL = $(LIBNAME).dll
 
 LCFLAGS = -D_IMPL_NS_COM -DUSE_NSREG -DWIN32_LEAN_AND_MEAN
 
+CSRCS =				\
+	plvector.c		\
+	$(NULL)
+
+C_OBJS = \
+	.\$(OBJDIR)\plvector.obj		\
+	$(NULL)
+
 CPPSRCS =			\
 	nsDebug.cpp		\
 	nsHashtable.cpp		\
