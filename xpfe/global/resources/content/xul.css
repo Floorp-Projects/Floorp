@@ -446,6 +446,7 @@ colorpicker {
       behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-single-right");
     }
     
+  menubutton.menubutton-dual,
   menubutton.menubutton-dual.left
     {
       behavior              : url("chrome://global/content/menulistBindings.xml#menubutton-dual-left");
