@@ -1,5 +1,6 @@
 #!/usr/bin/perl
 # -*- Mode: perl; indent-tabs-mode: nil -*-
+# vim:sw=4:ts=8:et:ai:
 #
 # Requires: tinder-defaults.pl
 #
@@ -23,7 +24,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.255 $ ';
+$::UtilsVersion = '$Revision: 1.256 $ ';
 
 package TinderUtils;
 
@@ -1650,7 +1651,7 @@ sub run_all_tests {
     #
     # Set prefs to run tests properly.
     #
-    if ($pref_file) { #XXX lame
+    if ($pref_file && $test_result eq 'success') { #XXX lame
         if($Settings::LayoutPerformanceTest  or
            $Settings::XULWindowOpenTest      or
            $Settings::StartupPerformanceTest or
@@ -1665,33 +1666,21 @@ sub run_all_tests {
             
             # Some tests need browser.dom.window.dump.enabled set to true, so
             # that JS dump() will work in optimized builds.
-            if (system("\\grep -s browser.dom.window.dump.enabled $pref_file > /dev/null")) {
-                print_log "Setting browser.dom.window.dump.enabled\n";
-                open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
-                print PREFS "user_pref(\"browser.dom.window.dump.enabled\", true);\n";
-                close PREFS;
-            } else {
-                print_log "Already set browser.dom.window.dump.enabled\n";
-            }
+            set_pref($pref_file, 'browser.dom.window.dump.enabled', 'true');
             
             # Set security prefs to allow us to close our own window,
             # pageloader test (and possibly other tests) needs this on.
-            if (system("\\grep -s dom.allow_scripts_to_close_windows $pref_file > /dev/null")) {
-                print_log "Setting dom.allow_scripts_to_close_windows to true.\n";
-                open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
-                print PREFS "user_pref(\"dom.allow_scripts_to_close_windows\", true);\n";
-                close PREFS;
-            } else {
-                print_log "Already set dom.allow_scripts_to_close_windows\n";
+            set_pref($pref_file, 'dom.allow_scripts_to_close_windows', 'true');
+
+            # Suppress firefox's popup blocking
+            if ($Settings::BinaryName =~ /^firefox/) {
+                set_pref($pref_file, 'privacy.popups.firstTime', 'false');
+                set_pref($pref_file, 'dom.disable_open_during_load', 'false');
             }
 
             # Suppress security warnings for QA test.
-            if ($Settings::QATest &&
-                system("\\grep -s security.warn_submit_insecure $pref_file > /dev/null")) {
-                print_log "Setting security.warn_submit_insecure to true.\n";
-                open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
-                print PREFS "user_pref(\"security.warn_submit_insecure\", true);\n";
-                close PREFS;
+            if ($Settings::QATest) {
+                set_pref($pref_file, 'security.warn_submit_insecure', 'true');
             }
             
         }
@@ -1700,7 +1689,7 @@ sub run_all_tests {
     #
     # Assume that we want to test modern skin for all tests.
     #
-    if ($pref_file and $Settings::UseMozillaProfile) { #XXX lame
+    if ($pref_file && $test_result eq 'success' and $Settings::UseMozillaProfile) { #XXX lame
         if (system("\\grep -s general.skins.selectedSkin $pref_file > /dev/null")) {
             print_log "Setting general.skins.selectedSkin to modern/1.0\n";
             open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
@@ -1752,7 +1741,8 @@ sub run_all_tests {
     # Bloat test (based on nsTraceRefcnt)
     if ($Settings::BloatTest and $test_result eq 'success') {
       my @app_args;
-      if($Settings::BinaryName eq "TestGtkEmbed") {
+      if($Settings::BinaryName eq "TestGtkEmbed" ||
+         $Settings::BinaryName =~ /^firefox/) {
         @app_args = ["resource:///res/bloatcycle.html"];
       } else {
         @app_args = ["-f", "bloaturls.txt"];
@@ -1846,7 +1836,8 @@ sub run_all_tests {
     # Layout performance test.
     if ($Settings::LayoutPerformanceTest and $test_result eq 'success') {
       my @app_args;
-      if($Settings::BinaryName eq "TestGtkEmbed") {
+      if($Settings::BinaryName eq "TestGtkEmbed" ||
+         $Settings::BinaryName =~ /^firefox/) {
         @app_args = [$binary];        
       } else {
         @app_args = [$binary, "-P", $Settings::MozProfileName];
@@ -1929,9 +1920,19 @@ sub run_all_tests {
                                             @app_args,
                                             "file:$startup_build_dir/../startup-test.html");
     }
-
-    # Done with tests.  Pass test result back.
     return $test_result;
+}
+
+sub set_pref {
+    my ($pref_file, $pref, $value) = @_;
+    if (system("\\grep -s $pref $pref_file > /dev/null")) {
+        print_log "Setting $pref to $value\n";
+        open PREFS, ">>$pref_file" or die "can't open $pref_file ($?)\n";
+        print PREFS "user_pref(\"$pref\", $value);\n";
+        close PREFS;
+    } else {
+        print_log "Already set $pref\n";
+    }
 }
 
 
@@ -2703,11 +2704,15 @@ sub BloatTest2 {
     rename($sdleak_log, $old_sdleak_log);
 
     my @args;
-    if($Settings::BinaryName eq "TestGtkEmbed") {
-      @args = ($binary_basename, "resource:///res/bloatcycle.html", "--trace-malloc", $malloc_log);
+    if($Settings::BinaryName eq "TestGtkEmbed" ||
+       $Settings::BinaryName =~ /^firefox/) {
+      @args = ($binary_basename, "-P", $Settings::MozProfileName,
+               "resource:///res/bloatcycle.html",
+               "--trace-malloc", $malloc_log);
     } else {
       @args = ($binary_basename, "-P", $Settings::MozProfileName,
-         "-f", "bloaturls.txt", "--trace-malloc", $malloc_log);
+               "-f", "bloaturls.txt",
+               "--trace-malloc", $malloc_log);
     }
 
     # win32 builds crash on multiple runs when --shutdown-leaks is used
