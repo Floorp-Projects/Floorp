@@ -755,6 +755,9 @@ var BookmarksController = {
 
   isCommandEnabled: function (aCommand, aSelection, aTarget)
   {
+    if (aTarget.parent.Value == "NC:BookmarksTopRoot")
+      return false;
+
     var item0, type0;
     var length = aSelection.length;
     if (length != 0) {

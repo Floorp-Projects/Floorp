@@ -321,8 +321,6 @@
         <body><![CDATA[
           var tree = document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-tree");
           var rootURI = tree.ref;
-          if (rootURI == "NC:BookmarksTopRoot")
-            rootURI = "NC:BookmarksRoot";
           return RDF.GetResource(rootURI);
         ]]></body>
       </method>
