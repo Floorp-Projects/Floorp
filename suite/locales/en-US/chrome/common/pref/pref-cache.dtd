@@ -14,6 +14,7 @@
 <!ENTITY clearMemcacheButton.label "Clear Memory Cache">
 <!ENTITY clearDiskcacheButton.label "Clear Disk Cache">
 <!ENTITY docCache "Document in cache is compared to document on network:">
+<!ENTITY chooseFolder "Choose Folder...">
 <!ENTITY oncePsessionRadio.label "Once per session">
 <!ENTITY everyTimeRadio.label "Every time">
 <!ENTITY neverRadio.label "Never">
