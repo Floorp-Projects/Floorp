@@ -349,58 +349,58 @@
   
   <menu accesskey="&helpMenuCmd.accesskey;" id="menu_Help"/>
   <!-- Menu for testing. -->
-  <menu id="debugMenu" accesskey="&debugMenu.accesskey;" label="&debugMenu.label;">
+  <menu id="debugMenu" accesskey="D" label="Debug">
     <menupopup>
-      <menu label="&debugVerCmd.label;">
+      <menu label="Verification">
         <menupopup>
-          <menuitem label="&ver1Cmd.label;"  oncommand="window._content.location.href='http://www.mozilla.org'"/>
-          <menuitem label="&ver2Cmd.label;"  oncommand="window._content.location.href='http://www.yahoo.com'"/>
-          <menuitem label="&ver3Cmd.label;"  oncommand="window._content.location.href='http://www.netscape.com'"/>
-          <menuitem label="&ver4Cmd.label;"  oncommand="window._content.location.href='http://www.excite.com'"/>
-          <menuitem label="&ver5Cmd.label;"  oncommand="window._content.location.href='http://www.microsoft.com'"/>
-          <menuitem label="&ver6Cmd.label;"  oncommand="window._content.location.href='http://www.city.net'"/>
-          <menuitem label="&ver7Cmd.label;"  oncommand="window._content.location.href='http://www.mirabilis.com'"/>
-          <menuitem label="&ver8Cmd.label;"  oncommand="window._content.location.href='http://www.time.com/time/index.html'"/>
-          <menuitem label="&ver9Cmd.label;"  oncommand="window._content.location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
-          <menuitem label="&ver10Cmd.label;" oncommand="window._content.location.href='http://www.cnn.com'"/>
-          <menuitem label="&ver11Cmd.label;" oncommand="window._content.location.href='http://www.usatoday.com'"/>
-          <menuitem label="&ver12Cmd.label;" oncommand="window._content.location.href='http://www.disney.go.com'"/>
-          <menuitem label="&ver13Cmd.label;" oncommand="window._content.location.href='http://www.hotwired.com'"/>
-          <menuitem label="&ver14Cmd.label;" oncommand="window._content.location.href='http://www.hotbot.com'"/>
+          <menuitem label="Mozilla"  oncommand="window._content.location.href='http://www.mozilla.org'"/>
+          <menuitem label="Yahoo"  oncommand="window._content.location.href='http://www.yahoo.com'"/>
+          <menuitem label="Netscape"  oncommand="window._content.location.href='http://www.netscape.com'"/>
+          <menuitem label="Excite"  oncommand="window._content.location.href='http://www.excite.com'"/>
+          <menuitem label="Microsoft"  oncommand="window._content.location.href='http://www.microsoft.com'"/>
+          <menuitem label="city.net"  oncommand="window._content.location.href='http://www.city.net'"/>
+          <menuitem label="Mirabilis"  oncommand="window._content.location.href='http://www.mirabilis.com'"/>
+          <menuitem label="Time"  oncommand="window._content.location.href='http://www.time.com/time/index.html'"/>
+          <menuitem label="Warner Bros."  oncommand="window._content.location.href='http://www.warnerbros.com/home_moz3_day.html'"/>
+          <menuitem label="CNN" oncommand="window._content.location.href='http://www.cnn.com'"/>
+          <menuitem label="USA Today" oncommand="window._content.location.href='http://www.usatoday.com'"/>
+          <menuitem label="Disney" oncommand="window._content.location.href='http://www.disney.go.com'"/>
+          <menuitem label="Hotwired" oncommand="window._content.location.href='http://www.hotwired.com'"/>
+          <menuitem label="Hotbot" oncommand="window._content.location.href='http://www.hotbot.com'"/>
           <menuseparator />
-          <menuitem label="&ver15Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_frame_index.html'"/>
-          <menuitem label="&ver16Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test6.html'"/>
-          <menuitem label="&ver17Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_applet.html'"/>
-          <menuitem label="&ver18Cmd.label;" oncommand="window._content.location.href='http://www.abcnews.com'"/>
-          <menuitem label="&ver19Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
-          <menuitem label="&ver20Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
-          <menuitem label="&ver21Cmd.label;" oncommand="window._content.location.href='http://www.libpng.org/pub/png/png-MagnoliaAlpha.html'"/>
-          <menuitem label="&ver22Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test13.html'"/>
-          <menuitem label="&ver23Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
-          <menuitem label="&ver24Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html'"/>
-          <menuitem label="&ver25Cmd.label;" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html'"/>
+          <menuitem label="Frames" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_frame_index.html'"/>
+          <menuitem label="Tables" oncommand="window._content.location.href='resource:/res/samples/test6.html'"/>
+          <menuitem label="Applets" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_applet.html'"/>
+          <menuitem label="JavaScript" oncommand="window._content.location.href='http://www.abcnews.com'"/>
+          <menuitem label="GIF Images" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_imagemap.html'"/>
+          <menuitem label="JPEG Images" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
+          <menuitem label="PNG Images" oncommand="window._content.location.href='http://www.libpng.org/pub/png/png-MagnoliaAlpha.html'"/>
+          <menuitem label="Transparency" oncommand="window._content.location.href='resource:/res/samples/test13.html'"/>
+          <menuitem label="Animation" oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
+          <menuitem label="Larger page" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html'"/>
+          <menuitem label="Smaller page" oncommand="window._content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html'"/>
         </menupopup>
       </menu>
 
-      <menu label="&viewDemoMenu.label;">
+      <menu label="Viewer Demos">
        <menupopup>
-        <menuitem label="&demo0Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test0.html'"/>
-        <menuitem label="&demo1Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test1.html'"/>
-        <menuitem label="&demo2Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
-        <menuitem label="&demo3Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test3.html'"/>
-        <menuitem label="&demo4Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test4.html'"/>
-        <menuitem label="&demo5Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test5.html'"/>
-        <menuitem label="&demo6Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test6.html'"/>
-        <menuitem label="&demo7Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test7.html'"/>
-        <menuitem label="&demo8Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test8.html'"/>
-        <menuitem label="&demo9Cmd.label;"  oncommand="window._content.location.href='resource:/res/samples/test9.html'"/>
-        <menuitem label="&demo10Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test10.html'"/>
-        <menuitem label="&demo11Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test11.html'"/>
-        <menuitem label="&demo12Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test12.html'"/>
-        <menuitem label="&demo13Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test13.html'"/>
-        <menuitem label="&demo14Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test14.html'"/>
-        <menuitem label="&demo15Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test15.html'"/>
-        <menuitem label="&demo16Cmd.label;" oncommand="window._content.location.href='resource:/res/samples/test16.html'"/>
+        <menuitem label="#0 Basic Styles"  oncommand="window._content.location.href='resource:/res/samples/test0.html'"/>
+        <menuitem label="#1 CSS Styles"  oncommand="window._content.location.href='resource:/res/samples/test1.html'"/>
+        <menuitem label="#2 Images"  oncommand="window._content.location.href='resource:/res/samples/test2.html'"/>
+        <menuitem label="#3 Basic Tables"  oncommand="window._content.location.href='resource:/res/samples/test3.html'"/>
+        <menuitem label="#4 Simple Tables"  oncommand="window._content.location.href='resource:/res/samples/test4.html'"/>
+        <menuitem label="#5 More Styles"  oncommand="window._content.location.href='resource:/res/samples/test5.html'"/>
+        <menuitem label="#6 Deeply Nested Tables"  oncommand="window._content.location.href='resource:/res/samples/test6.html'"/>
+        <menuitem label="#7 Scaled Anim Image"  oncommand="window._content.location.href='resource:/res/samples/test7.html'"/>
+        <menuitem label="#8 Form"  oncommand="window._content.location.href='resource:/res/samples/test8.html'"/>
+        <menuitem label="#9 Frames"  oncommand="window._content.location.href='resource:/res/samples/test9.html'"/>
+        <menuitem label="#10 Anim Images" oncommand="window._content.location.href='resource:/res/samples/test10.html'"/>
+        <menuitem label="#11 Fixed Positioning" oncommand="window._content.location.href='resource:/res/samples/test11.html'"/>
+        <menuitem label="#12 More Fixed Pos" oncommand="window._content.location.href='resource:/res/samples/test12.html'"/>
+        <menuitem label="#13 DHTML" oncommand="window._content.location.href='resource:/res/samples/test13.html'"/>
+        <menuitem label="#14 XML Sorting" oncommand="window._content.location.href='resource:/res/samples/test14.html'"/>
+        <menuitem label="#15 XML IRS" oncommand="window._content.location.href='resource:/res/samples/test15.html'"/>
+        <menuitem label="#16 Gfx Widgets" oncommand="window._content.location.href='resource:/res/samples/test16.html'"/>
        </menupopup>
       </menu>
 
@@ -427,37 +427,37 @@
 
      <menuitem label="Form Manager Samples" oncommand="window._content.location.href='chrome://communicator/locale/wallet/index.html';"/>
 
-     <menuitem label="&browserbuster.label;" oncommand="window._content.location.href='http://komodo.mozilla.org/buster/'"/>
-     <menuitem label="&editor-test-page.label;" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
-     <menuitem label="&flush-memory.label;" oncommand="Components.classes['@mozilla.org/xpcom/memory-service;1'].getService(Components.interfaces.nsIMemory).heapMinimize(true);" />
+     <menuitem label="chofmann's browser buster" oncommand="window._content.location.href='http://komodo.mozilla.org/buster/'"/>
+     <menuitem label="Composer with test page" oncommand="window.openDialog('chrome://editor/content','_blank','chrome,all,dialog=no','chrome://editor/content/EditorInitPage.html')"/>
+     <menuitem label="Flush Memory" oncommand="Components.classes['@mozilla.org/xpcom/memory-service;1'].getService(Components.interfaces.nsIMemory).heapMinimize(true);" />
 
     </menupopup>
   </menu>
 
-  <menu id="qaMenu" accesskey="&QA.accesskey;" label="&QA.label;">
+  <menu id="qaMenu" accesskey="Q" label="QA">
     <menupopup>
-      <menuitem label="&PrecheckinTests.label;"  oncommand="window._content.location.href='http://www.mozilla.org/quality/precheckin-tests.html'"/>
+      <menuitem label="Precheckin Tests"  oncommand="window._content.location.href='http://www.mozilla.org/quality/precheckin-tests.html'"/>
       <menuseparator />
-      <menuitem label="&QABugCmd.label;"        oncommand="window._content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
-      <menuitem label="&QATempCmd.label;"       oncommand="window._content.location.href='http://www.mozilla.org/quality/help/bug-form.html'"/>
-      <menuitem label="&QASmokeCmd.label;"      oncommand="window._content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
-      <menuitem label="&QAKnownBugCmd.label;"   oncommand="window._content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
+      <menuitem label="Bug Writing Guidelines"        oncommand="window._content.location.href='http://www.mozilla.org/quality/bug-writing-guidelines.html'"/>
+      <menuitem label="Bug Template"       oncommand="window._content.location.href='http://www.mozilla.org/quality/help/bug-form.html'"/>
+      <menuitem label="Smoke Tests"      oncommand="window._content.location.href='http://www.mozilla.org/quality/smoketests/'"/>
+      <menuitem label="Known Bugs"   oncommand="window._content.location.href='http://www.mozilla.org/quality/most-frequent-bugs/'"/>
       <menuseparator />
-      <menuitem label="&strresCmd.label;"       oncommand="window._content.location.href='resource:/res/strres-test.xul'"/>
+      <menuitem label="StringBundle Test"       oncommand="window._content.location.href='resource:/res/strres-test.xul'"/>
 
       <menuseparator />
-      <menuitem label="&BloatDumpNewCmd.label;" oncommand="window._content.location.href='about:bloat?new'"/>
-      <menuitem label="&BloatDumpAllCmd.label;" oncommand="window._content.location.href='about:bloat'"/>
-      <menuitem label="&BloatClearCmd.label;"   oncommand="window._content.location.href='about:bloat?clear'"/>
+      <menuitem label="Bloat: Dump New Stats" oncommand="window._content.location.href='about:bloat?new'"/>
+      <menuitem label="Bloat: Dump All Stats" oncommand="window._content.location.href='about:bloat'"/>
+      <menuitem label="Bloat: Clear Stats"   oncommand="window._content.location.href='about:bloat?clear'"/>
 
       <menuseparator />
 
       <menu label="Leak Detector">
        <menupopup>
-        <menuitem label="&LeaksDumpLeaksCmd.label;"   oncommand="dumpMemoryLeaks();"/>
-        <menuitem label="&LeaksTraceChromeCmd.label;" oncommand="traceChrome();"/>
-        <menuitem label="&LeaksTraceDocumentCmd.label;" oncommand="traceDocument();"/>
-        <menuitem label="&LeaksTraceVerboseCmd.label;" oncommand="traceVerbose(this.getAttribute('checked'))" type="checkbox" checked="false"/>
+        <menuitem label="Dump Memory Leaks"   oncommand="dumpMemoryLeaks();"/>
+        <menuitem label="Trace Chrome" oncommand="traceChrome();"/>
+        <menuitem label="Trace Document" oncommand="traceDocument();"/>
+        <menuitem label="Verbose" oncommand="traceVerbose(this.getAttribute('checked'))" type="checkbox" checked="false"/>
        </menupopup>
       </menu>
     </menupopup>

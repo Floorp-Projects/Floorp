@@ -57,8 +57,6 @@ Contributor(s): ______________________________________. -->
         persist="screenX screenY width height sizemode fullScreen"> 
 
   <!-- Generic Utility -->
-  <script type="application/x-javascript" src="chrome://global/content/nsJSSupportsUtils.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsJSComponentManager.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsTransferable.js"/>
   <script type="application/x-javascript" src="chrome://global/content/nsClipboard.js"/>

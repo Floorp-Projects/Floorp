@@ -83,7 +83,9 @@ var nsClipboard = {
    **/
   getClipboardTransferable: function (aFlavourList)
     {
-      var supportsArray = nsJSSupportsUtils.createSupportsArray();
+      const supportsContractID = "@mozilla.org/supports-array;1";
+      const supportsIID = Components.interfaces.nsISupportsArray;
+      var supportsArray = Components.classes[supportsContractID].createInstance(supportsIID);
       var trans = nsTransferable.createTransferable();
       for (var flavour in aFlavourList) 
         trans.addDataFlavor(flavour);
