@@ -212,7 +212,6 @@ NS_IMPL_RELEASE(nsBrowserInstance)
 NS_INTERFACE_MAP_BEGIN(nsBrowserInstance)
    NS_INTERFACE_MAP_ENTRY(nsIBrowserInstance)
    NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
-   NS_INTERFACE_MAP_ENTRY(nsIObserver)
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIURIContentListener)
@@ -242,9 +241,6 @@ nsBrowserAppCore::Init()
       printf("**** Successfully created new Session History ****\n");
     }
 #endif
-
-      // Add this object of observer of various events.
-      BeginObserving(); 
   }
 
   // register ourselves as a content listener with the uri dispatcher service
@@ -1712,7 +1708,7 @@ NS_IMETHODIMP
 nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIChannel* channel, nsString& aMsg)
 {
-  nsresult rv = setAttribute( mDocShell, "Browser:Status", "value", aMsg );
+  nsresult rv = setAttribute( mDocShell, "WebBrowserChrome", "status", aMsg );
    return rv;
 }
 
@@ -2003,8 +1999,6 @@ nsBrowserAppCore::Close()
   else
     mIsClosed = PR_TRUE;
 
-  EndObserving();
-
   // Undo other stuff we did in SetContentWindow.
   if ( mContentAreaWebShell ) {
       nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(mContentAreaWebShell));
@@ -2176,88 +2170,6 @@ FindNamedXULElement(nsIDocShell * aShell,
     } else {
        if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
     }
-    return rv;
-}
-
-static const char *prefix = "component://netscape/appshell/component/browser/window";
-
-void
-nsBrowserAppCore::BeginObserving() {
-    // Get observer service.
-    nsIObserverService *svc = 0;
-    nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
-                                                NS_GET_IID(nsIObserverService),
-                                                (nsISupports**)&svc );
-    if ( NS_SUCCEEDED( rv ) && svc ) {
-        // Add/Remove object as observer of web shell window topics.
-        nsAutoString topic1(prefix);
-        topic1 += ";status";
-        nsAutoString topic2(prefix);
-        topic2 += ";progress";
-        rv = svc->AddObserver( this, topic1.GetUnicode() );
-        rv = svc->AddObserver( this, topic2.GetUnicode() );
-        // Release the service.
-        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
-    }
-
-    return;
-}
-
-void
-nsBrowserAppCore::EndObserving() {
-    // Get observer service.
-    nsIObserverService *svc = 0;
-    nsresult rv = nsServiceManager::GetService( NS_OBSERVERSERVICE_PROGID,
-                                                NS_GET_IID(nsIObserverService),
-                                                (nsISupports**)&svc );
-    if ( NS_SUCCEEDED( rv ) && svc ) {
-        // Add/Remove object as observer of web shell window topics.
-        nsAutoString topic1(prefix);
-        topic1 += ";status";
-        nsAutoString topic2(prefix);
-        topic2 += ";progress";
-        rv = svc->RemoveObserver( this, topic1.GetUnicode() );
-        rv = svc->RemoveObserver( this, topic2.GetUnicode() );
-        // Release the service.
-        nsServiceManager::ReleaseService( NS_OBSERVERSERVICE_PROGID, svc );
-    }
-
-    return;
-}
-
-NS_IMETHODIMP
-nsBrowserAppCore::Observe( nsISupports *aSubject,
-                           const PRUnichar *aTopic,
-                           const PRUnichar *someData ) {
-    nsresult rv = NS_OK;
-
-    // We only are interested if aSubject is our web shell window.
-    if ( aSubject && mWebShellWin ) {
-        nsIWebShellWindow *window = 0;
-        rv = aSubject->QueryInterface( NS_GET_IID(nsIWebShellWindow), (void**)&window );
-        if ( NS_SUCCEEDED( rv ) && window ) {
-            nsString topic1 = prefix;
-            topic1 += ";status";
-            nsString topic2 = prefix;
-            topic2 += ";progress";
-            // Compare to our window.
-            if ( window == mWebShellWin ) {
-                // Get topic substring.
-                if ( topic1 == aTopic ) {
-                    // Update status text.
-                    nsAutoString v(someData);
-                    rv = setAttribute( mDocShell, "Browser:Status", "value", v );
-                } else if ( topic2 == aTopic ) {
-                    // We don't process this, yet.
-                }
-            } else {
-                // Not for this app core.
-            }
-            // Release the window.
-            window->Release();
-        }
-    }
-
     return rv;
 }
 
