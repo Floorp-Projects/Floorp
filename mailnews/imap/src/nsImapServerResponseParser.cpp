@@ -1324,11 +1324,11 @@ typedef enum _envelopeItemType
 
 typedef struct 
 {
-	const char *name;
+	const char * const name;
 	envelopeItemType type;
 } envelopeItem;
 
-static envelopeItem EnvelopeTable[] =
+static const envelopeItem EnvelopeTable[] =
 {
 	{"Date", envelopeString},
 	{"Subject", envelopeString},

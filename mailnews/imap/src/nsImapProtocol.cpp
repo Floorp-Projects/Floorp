@@ -126,8 +126,8 @@ static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 static const PRIntervalTime kImapSleepTime = PR_MillisecondsToInterval(1000);
 static PRInt32 gPromoteNoopToCheckCount = 0;
 nsXPIDLString nsImapProtocol::mAcceptLanguages;
-static PRInt32 kFlagChangesBeforeCheck = 10;
-static PRInt32 kMaxSecondsBeforeCheck = 600;
+static const PRInt32 kFlagChangesBeforeCheck = 10;
+static const PRInt32 kMaxSecondsBeforeCheck = 600;
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgImapHdrXferInfo, nsIImapHeaderXferInfo)
 

@@ -109,8 +109,8 @@ static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCacheServiceCID, NS_CACHESERVICE_CID);
 
 
-static const char *sequenceString = "SEQUENCE";
-static const char *uidString = "UID";
+static const char sequenceString[] = "SEQUENCE";
+static const char uidString[] = "UID";
 
 static PRBool gInitialized = PR_FALSE;
 static PRInt32 gMIMEOnDemandThreshold = 15000;
