@@ -38,6 +38,7 @@
 /* Forward declarations. */
 typedef struct fixElement fixElement;
 static int compare_IDEs_by_IID(const void *ap, const void *bp);
+static int compare_IDE_with_zero(const void *ap);
 static int compare_IDEs_by_name(const void *ap, const void *bp);
 static int compare_IDEs_by_name_space(const void *ap, const void *bp);
 static int compare_strings(const void *ap, const void *bp);
@@ -381,7 +382,9 @@ main(int argc, char **argv)
      */
     if (trueNumberOfInterfaces>1) {
         for (i=1; i<trueNumberOfInterfaces; i++) {
-            if (compare_IDEs_by_IID(&IDE_array[i-1], &IDE_array[i]) == 0) {
+            /* Only complain if the IIDs are identical and nonzero. */
+            if (compare_IDEs_by_IID(&IDE_array[i-1], &IDE_array[i]) == 0 &&
+                compare_IDE_with_zero(&IDE_array[i]) != 0) {
                 fprintf(stderr, "FATAL ERROR:\n"
                         "Duplicate IID detected (");
                 print_IID(&IDE_array[i-1].iid, stderr);
@@ -461,6 +464,18 @@ compare_IDEs_by_IID(const void *ap,
     
     return compare_IIDs(&ide1->iid, &ide2->iid);
 }  
+
+/* For detecting unresolved interfaces. */
+const nsID iid_zero = { 0x0, 0x0, 0x0,
+                        { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } };
+
+static int
+compare_IDE_with_zero(const void *ap)
+{
+    const XPTInterfaceDirectoryEntry *ide1 = ap;
+
+    return compare_IIDs(&ide1->iid, &iid_zero);
+}
 
 static int 
 compare_fixElements_by_IID(const void *ap,
