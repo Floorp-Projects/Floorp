@@ -37,8 +37,8 @@ DEPTH = ..\..\..\..\
 #//
 #// Rule to build mtbf.exe
 #//
-mtbf.exe: main.cpp
-    $(CC) main.cpp /o mtbf.exe
+mtbf.exe: mtbf.cpp
+    $(CC) mtbf.cpp
 
 
 install:: mtbf.exe
