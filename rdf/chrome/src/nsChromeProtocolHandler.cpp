@@ -431,7 +431,6 @@ nsCachedChromeChannel::SetLoadGroup(nsILoadGroup * aLoadGroup)
 NS_IMETHODIMP
 nsCachedChromeChannel::GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks)
 {
-    NS_NOTREACHED("don't do that");
     *aNotificationCallbacks = nsnull;
     return NS_ERROR_FAILURE;
 }
