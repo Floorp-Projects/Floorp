@@ -35,16 +35,61 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_P3PCIID_H__
-#define NS_P3PCIID_H__
+#include "nsISupports.idl"
 
-// {9A4077BB-F16F-49c2-8CFF-3CCEB94B5849}
-#define NS_P3PSERVICE_CID \
-{ 0x9a4077bb, 0xf16f, 0x49c2, { 0x8c, 0xff, 0x3c, 0xce, 0xb9, 0x4b, 0x58, 0x49 } }
+interface nsIURI;
 
-// {98F19E83-D11D-4f16-8E6E-E1E57CEB43D6}
-#define NS_POLICYREFERENCE_CID \
-{ 0x98f19e83, 0xd11d, 0x4f16, { 0x8e, 0x6e, 0xe1, 0xe5, 0x7c, 0xeb, 0x43, 0xd6 } }
+[scriptable,uuid(8C51E90D-CBE7-4a2c-B9F3-77BF3AF12694)]
+interface nsIPolicyReference : nsISupports {
+  /**
+   * Main URI or a URI with the same host as the main URI.
+   */
+  const unsigned long IS_MAIN_URI         = (1<<0);
+  /**
+   * URI with a domain different from the main URI.
+   */
+  const unsigned long IS_EMBEDDED_URI     = (1<<1);
+  /**
+   * URI referenced via LINK tag
+   */
+  const unsigned long IS_LINKED_URI       = (1<<2);
+  /**
+   * Signals a successful policy load
+   */
+  const unsigned long POLICY_LOAD_SUCCESS = (1<<3);
+  /**
+   * Signals a policy load failure
+   */
+  const unsigned long POLICY_LOAD_FAILURE = (1<<4);
+  /**
+   * Signals obsolete policy
+   */
+  const unsigned long POLICY_LIFE_EXPIRED = (1<<5);
+  /**
+   * Signals a syntax error ( Ex. xml error ) in the policy.
+   */
+  const unsigned long POLICY_SYNTAX_ERROR = (1<<6);  
 
-#endif
+  /**
+   * Initialize the object with the document's URI.
+   *
+   * @param aMailURI -> Current document's URI
+   *
+   */
+  void initialize(in nsIURI aMainURI);
 
+  /**
+   * Call this method to locate the policy reference file for the current uri.
+   *
+   * @param aCurrentURI -> URI that requests a privacy policy
+   * @paran aFlag       -> IS_SELECTED_URI | IS_EMBEDDED_URI | IS_LINKED_URI
+   *
+   */
+  void loadPolicyReferenceFileFor(in nsIURI aCurrentURI, in unsigned long aFlag);
+
+  /**
+   * This method releases all the objects used for policy reference.
+   *
+   */
+  void finalize();
+};

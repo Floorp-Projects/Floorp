@@ -35,16 +35,18 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_P3PCIID_H__
-#define NS_P3PCIID_H__
+#include "nsISupports.idl"
 
-// {9A4077BB-F16F-49c2-8CFF-3CCEB94B5849}
-#define NS_P3PSERVICE_CID \
-{ 0x9a4077bb, 0xf16f, 0x49c2, { 0x8c, 0xff, 0x3c, 0xce, 0xb9, 0x4b, 0x58, 0x49 } }
+interface nsIPolicyListener;
 
-// {98F19E83-D11D-4f16-8E6E-E1E57CEB43D6}
-#define NS_POLICYREFERENCE_CID \
-{ 0x98f19e83, 0xd11d, 0x4f16, { 0x8e, 0x6e, 0xe1, 0xe5, 0x7c, 0xeb, 0x43, 0xd6 } }
-
-#endif
+[scriptable,uuid(B15E7F1B-38F5-45e8-9D71-F4C47EC3B8C6)]
+interface nsIPolicyTarget : nsISupports {
+  /**
+   * Setup a listener that is to be notified when the policy location 
+   * becomes available
+   *
+   * @param aListener ->
+   */
+  void setupPolicyListener(in nsIPolicyListener aListener);
+};
 

@@ -35,16 +35,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef NS_P3PCIID_H__
-#define NS_P3PCIID_H__
+#include "nsISupports.idl"
 
-// {9A4077BB-F16F-49c2-8CFF-3CCEB94B5849}
-#define NS_P3PSERVICE_CID \
-{ 0x9a4077bb, 0xf16f, 0x49c2, { 0x8c, 0xff, 0x3c, 0xce, 0xb9, 0x4b, 0x58, 0x49 } }
+[scriptable,uuid(05D74F35-5081-4c01-B814-34F44DD8EB50)]
+interface nsIPolicyListener : nsISupports {
+  /**
+   * Notify listeners about the availabiltiy of a policy
+   *
+   * @param aPolicyLocation -> Points to the sites full p3p policy
+   * @param aError          -> POLICY_LOAD_SUCCESS | POLICY_LOAD_FAILURE | POLICY_LIFE_EXPIRED | POLICY_SYNTAX_ERROR
+   *
+   */
+  void notifyPolicyLocation(in string aPolicyLocation, in long aError);
 
-// {98F19E83-D11D-4f16-8E6E-E1E57CEB43D6}
-#define NS_POLICYREFERENCE_CID \
-{ 0x98f19e83, 0xd11d, 0x4f16, { 0x8e, 0x6e, 0xe1, 0xe5, 0x7c, 0xeb, 0x43, 0xd6 } }
-
-#endif
-
+  /**
+   * Notify an error to the listener
+   *
+   * @param aError          -> POLICY_LOAD_FAILURE | POLICY_LIFE_EXPIRED | POLICY_SYNTAX_ERROR
+   *
+   */
+  void notifyPolicyError(in long aError);
+};
