@@ -374,7 +374,7 @@ print "
 <br>
 <B>Additional Comments:</B>
 <BR>
-<TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
+<TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80></TEXTAREA><BR>";
 
 
 if ($::usergroupset ne '0') {
