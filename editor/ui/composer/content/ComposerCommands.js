@@ -661,9 +661,8 @@ var nsSaveCommand =
     //  when you first open a remote file.
     try {
       var docUrl = GetDocumentUrl();
-      var editor = GetCurrentEditor();
-      return editor && editor.isDocumentEditable &&
-        (editor.documentModified || window.gHTMLSourceChanged ||
+      return window.editorShell && window.editorShell.documentEditable &&
+        (window.editorShell.documentModified || window.gHTMLSourceChanged ||
          IsUrlAboutBlank(docUrl) || GetScheme(docUrl) != "file");
     } catch (e) {return false;}
   },
@@ -745,14 +744,11 @@ var nsSaveAsCharsetCommand =
     FinishHTMLSource();
     window.ok = false;
     window.exportToText = false;
+    var oldTitle = GetDocumentTitle();
     window.openDialog("chrome://editor/content/EditorSaveAsCharset.xul","_blank", "chrome,close,titlebar,modal,resizable=yes");
 
-    if (window.newTitle != null) {
-      try {
-        editorShell.SetDocumentTitle(window.newTitle);
-      } 
-      catch (ex) {}
-    }    
+    if (GetDocumentTitle() != oldTitle)
+      UpdateWindowTitle();
 
     if (window.ok)
     {
@@ -782,8 +778,7 @@ var nsPublishCommand =
       //  when you first open any local file.
       try {
         var docUrl = GetDocumentUrl();
-        var editor = GetCurrentEditor();
-        return editor.documentModified || window.gHTMLSourceChanged
+        return window.editorShell.documentModified || window.gHTMLSourceChanged
                || IsUrlAboutBlank(docUrl) || GetScheme(docUrl) == "file";
       } catch (e) {return false;}
     }
@@ -824,8 +819,12 @@ var nsPublishCommand =
         // Show the publish dialog
         publishData = {};
         window.ok = false;
+        var oldTitle = GetDocumentTitle();
         window.openDialog("chrome://editor/content/EditorPublish.xul","_blank", 
                           "chrome,close,titlebar,modal", "", "", publishData);
+        if (GetDocumentTitle() != oldTitle)
+          UpdateWindowTitle();
+
         window._content.focus();
         if (!window.ok)
           return false;
@@ -858,8 +857,12 @@ var nsPublishAsCommand =
 
       window.ok = false;
       publishData = {};
+      var oldTitle = GetDocumentTitle();
       window.openDialog("chrome://editor/content/EditorPublish.xul","_blank", 
                         "chrome,close,titlebar,modal", "", "", publishData);
+      if (GetDocumentTitle() != oldTitle)
+        UpdateWindowTitle();
+
       window._content.focus();
       if (window.ok)
         return Publish(publishData);
@@ -894,7 +897,7 @@ function GetExtensionBasedOnMimeType(aMIMEType)
   return "";
 }
 
-function GetSuggestedFileName(aDocumentURLString, aMIMEType, aHTMLDoc)
+function GetSuggestedFileName(aDocumentURLString, aMIMEType)
 {
   var extension = GetExtensionBasedOnMimeType(aMIMEType);
   if (extension)
@@ -918,8 +921,8 @@ function GetSuggestedFileName(aDocumentURLString, aMIMEType, aHTMLDoc)
   } 
 
   // check if there is a title we can use
-  var title = Components.lookupMethod(aHTMLDoc, 'title').call(aHTMLDoc);
-  if (title.length > 0) // we have a title; let's see if it's usable
+  var title = GetDocumentTitle();
+  if (title) // we have a title; let's see if it's usable
   {
     // clean up the title to make it a usable filename
     title = title.replace(/\"/g, "");  // Strip out quote character: "
@@ -934,7 +937,7 @@ function GetSuggestedFileName(aDocumentURLString, aMIMEType, aHTMLDoc)
 }
 
 // returns file picker result
-function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocument, aDocumentURLString)
+function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, aDocumentURLString)
 {
   var dialogResult = {};
   dialogResult.filepickerClick = nsIFilePicker.returnCancel;
@@ -964,7 +967,7 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
   fp.appendFilters(nsIFilePicker.filterAll);
 
   // now let's actually set the filepicker's suggested filename
-  var suggestedFileName = GetSuggestedFileName(aDocumentURLString, aMIMEType, ahtmlDocument);
+  var suggestedFileName = GetSuggestedFileName(aDocumentURLString, aMIMEType);
   if (suggestedFileName)
     fp.defaultString = suggestedFileName;
 
@@ -1018,12 +1021,9 @@ function PromptForSaveLocation(aDoSaveAsText, aEditorType, aMIMEType, ahtmlDocum
 }
 
 // returns a boolean (whether to continue (true) or not (false) because user canceled)
-function PromptAndSetTitleIfNone(aHTMLDoc)
+function PromptAndSetTitleIfNone()
 {
-  if (!aHTMLDoc) throw NS_ERROR_NULL_POINTER;
-
-  var title = Components.lookupMethod(aHTMLDoc, 'title').call(aHTMLDoc);
-  if (title.length > 0) // we have a title; no need to prompt!
+  if (GetDocumentTitle()) // we have a title; no need to prompt!
     return true;
 
   var promptService = GetPromptService();
@@ -1033,8 +1033,8 @@ function PromptAndSetTitleIfNone(aHTMLDoc)
   var captionStr = GetString("DocumentTitle");
   var msgStr = GetString("NeedDocTitle") + '\n' + GetString("DocTitleHelp");
   var confirmed = promptService.prompt(window, captionStr, msgStr, result, null, {value:0});
-  if (confirmed && result.value && result.value != "")
-    window.editorShell.SetDocumentTitle(result.value);
+  if (confirmed)
+    SetDocumentTitle(TrimString(result.value));
 
   return confirmed;
 }
@@ -1042,9 +1042,12 @@ function PromptAndSetTitleIfNone(aHTMLDoc)
 var gPersistObj;
 
 // Don't forget to do these things after calling OutputFileWithPersistAPI:
-//    window.editorShell.doAfterSave(doUpdateURLOnDocument, urlstring);  // we need to update the url before notifying listeners
-//    if (!aSaveCopy && success)
-//      window.editorShell.editor.resetModificationCount();
+// we need to update the uri before notifying listeners
+//    if (doUpdateURI)
+//      SetDocumentURI(docURI);
+//    UpdateWindowTitle();
+//    if (!aSaveCopy)
+//      editor.resetModificationCount();
       // this should cause notification to listeners that document has changed
 
 const webPersist = Components.interfaces.nsIWebBrowserPersist;
@@ -1170,6 +1173,8 @@ var gEditorOutputProgressListener =
 {
   onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
   {
+    var editor = GetCurrentEditor();
+
     // Use this to access onStateChange flags
     var requestSpec;
     try {
@@ -1266,11 +1271,11 @@ var gEditorOutputProgressListener =
         if (gRestoreDocumentSource)
         {
           try {
-            gEditor.rebuildDocumentFromSource(gRestoreDocumentSource);
+            editor.rebuildDocumentFromSource(gRestoreDocumentSource);
 
             // Clear transaction cache since we just did a potentially 
             //  very large insert and this will eat up memory
-            gEditor.transactionManager.clear();
+            editor.transactionManager.clear();
           }
           catch (e) {}
         }
@@ -1326,12 +1331,15 @@ var gEditorOutputProgressListener =
         {
           // All files are finished and publishing succeeded (some images may have failed)
           try {
-            // Get the new docUrl from the "browse location" in case "publish location" was FTP
-            var urlstring = GetDocUrlFromPublishData(gPublishData);
+            // Make a new docURI from the "browse location" in case "publish location" was FTP
+            // We need to set document uri before notifying listeners
+            var docUrl = GetDocUrlFromPublishData(gPublishData);
+            SetDocumentURI(GetIOService().newURI(docUrl, editor.documentCharacterSet, null));
 
-            window.editorShell.doAfterSave(true, urlstring);  // we need to update the url before notifying listeners
+            UpdateWindowTitle();
+
             // this should cause notification to listeners that doc has changed
-            gEditor.resetModificationCount();
+            editor.resetModificationCount();
 
             // Set UI based on whether we're editing a remote or local url
             SetSaveAndPublishUI(urlstring);
@@ -1726,10 +1734,11 @@ function UpdateUsernamePasswordFromPrompt(publishData, username, password, saveP
 // throws an error or returns true if user attempted save; false if user canceled save
 function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
 {
-  if (!aMimeType || aMimeType == "" || !window.editorShell)
+  var editor = GetCurrentEditor();
+  if (!aMimeType || aMimeType == "" || !editor || !window.editorShell)
     throw NS_ERROR_NOT_INITIALIZED;
 
-  var editorDoc = window.editorShell.editorDocument;
+  var editorDoc = editor.document;
   if (!editorDoc)
     throw NS_ERROR_NOT_INITIALIZED;
 
@@ -1757,23 +1766,21 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
 
   var replacing = !aSaveAs;
   var titleChanged = false;
-  var doUpdateURL = false;
+  var doUpdateURI = false;
   var tempLocalFile = null;
 
   if (mustShowFileDialog)
   {
 	  try {
-	    var domhtmldoc = editorDoc.QueryInterface(Components.interfaces.nsIDOMHTMLDocument);
-
 	    // Prompt for title if we are saving to HTML
 	    if (!saveAsTextFile && (editorType == "html"))
 	    {
-	      var userContinuing = PromptAndSetTitleIfNone(domhtmldoc); // not cancel
+	      var userContinuing = PromptAndSetTitleIfNone(); // not cancel
 	      if (!userContinuing)
 	        return false;
 	    }
 
-	    var dialogResult = PromptForSaveLocation(saveAsTextFile, editorType, aMimeType, domhtmldoc, urlstring);
+	    var dialogResult = PromptForSaveLocation(saveAsTextFile, editorType, aMimeType, urlstring);
 	    if (dialogResult.filepickerClick == nsIFilePicker.returnCancel)
 	      return false;
 
@@ -1783,7 +1790,7 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
  
       // update the new URL for the webshell unless we are saving a copy
       if (!aSaveCopy)
-        doUpdateURL = true;
+        doUpdateURI = true;
    } catch (e) {  return false; }
   } // mustShowFileDialog
 
@@ -1795,8 +1802,8 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     var docURI;
     if (!tempLocalFile)
     {
-      docURI = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
-      docURI.spec = urlstring;
+      ioService = GetIOService();
+      docURI = ioService.newURI(urlstring, editor.documentCharacterSet, null);
       
       if (docURI.schemeIs("file"))
       {
@@ -1806,7 +1813,7 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     }
 
     // this is the location where the related files will go
-    var parentDir = null;
+    var relatedFilesDir = null;
     
     // First check pref for saving associated files
     var saveAssociatedFiles = false;
@@ -1822,7 +1829,7 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
       try {
         if (tempLocalFile)
         {
-          // if we are saving to the same parent directory, don't set parentDir
+          // if we are saving to the same parent directory, don't set relatedFilesDir
           // grab old location, chop off file
           // grab new location, chop off file, compare
           var oldLocation = GetDocumentUrl();
@@ -1830,26 +1837,26 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
           if (oldLocationLastSlash != -1)
             oldLocation = oldLocation.slice(0, oldLocationLastSlash);
 
-          var curParentString = urlstring;
-          var newLocationLastSlash = curParentString.lastIndexOf("\/");
+          var relatedFilesDirStr = urlstring;
+          var newLocationLastSlash = relatedFilesDirStr.lastIndexOf("\/");
           if (newLocationLastSlash != -1)
-            curParentString = curParentString.slice(0, newLocationLastSlash);
-          if (oldLocation == curParentString || IsUrlAboutBlank(oldLocation))
-            parentDir = null;
+            relatedFilesDirStr = relatedFilesDirStr.slice(0, newLocationLastSlash);
+          if (oldLocation == relatedFilesDirStr || IsUrlAboutBlank(oldLocation))
+            relatedFilesDir = null;
           else
-            parentDir = tempLocalFile.parent;  // this is wrong if parent is the root!
+            relatedFilesDir = tempLocalFile.parent;  // this is wrong if parent is the root!
         }
         else
         {
           var lastSlash = urlstring.lastIndexOf("\/");
           if (lastSlash != -1)
           {
-            var parentDirString = urlstring.slice(0, lastSlash + 1);  // include last slash
+            var relatedFilesDirString = urlstring.slice(0, lastSlash + 1);  // include last slash
             ioService = GetIOService();
-            parentDir = ioService.newURI(parentDirString, window.editorShell.GetDocumentCharacterSet(), null);
+            relatedFilesDir = ioService.newURI(relatedFilesDirString, editor.documentCharacterSet, null);
           }
         }
-      } catch(e) { parentDir = null; }
+      } catch(e) { relatedFilesDir = null; }
     }
 
     var destinationLocation;
@@ -1858,7 +1865,7 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     else
       destinationLocation = docURI;
 
-    success = OutputFileWithPersistAPI(editorDoc, destinationLocation, parentDir, aMimeType);
+    success = OutputFileWithPersistAPI(editorDoc, destinationLocation, relatedFilesDir, aMimeType);
   }
   catch (e)
   {
@@ -1868,9 +1875,23 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
   if (success)
   {
     try {
-      window.editorShell.doAfterSave(doUpdateURL, urlstring);  // we need to update the url before notifying listeners
+      if (doUpdateURI)
+      {
+         // If a local file, we must create a new uri from nsILocalFile
+        if (tempLocalFile)
+          docURI = GetFileProtocolHandler().newFileURI(tempLocalFile);
+
+        // We need to set new document uri before notifying listeners
+        SetDocumentURI(docURI);
+      }
+
+      // Update window title to show possibly different filename
+      // This also covers problem that after undoing a title change,
+      //   window title loses the extra [filename] part that this adds
+      UpdateWindowTitle();
+
       if (!aSaveCopy)
-        window.editorShell.editor.resetModificationCount();
+        editor.resetModificationCount();
       // this should cause notification to listeners that document has changed
 
       // Set UI based on whether we're editing a remote or local url
@@ -1884,6 +1905,14 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
     AlertWithTitle(saveDocStr, failedStr);
   }
   return success;
+}
+
+function SetDocumentURI(uri)
+{
+  try {
+    // XXX WE'LL NEED TO GET "CURRENT" CONTENT FRAME ONCE MULTIPLE EDITORS ARE ALLOWED
+    document.getElementById("content-frame").docShell.setCurrentURI(uri);
+  } catch (e) { dump("SetDocumentURI:\n"+e +"\n"); }
 }
 
 
@@ -2133,9 +2162,8 @@ var nsRevertCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable &&
-            editor.documentModified &&
+    return (window.editorShell && window.editorShell.documentEditable &&
+            window.editorShell.documentModified &&
             !IsUrlAboutBlank(GetDocumentUrl()));
   },
 
@@ -2149,7 +2177,7 @@ var nsRevertCommand =
     if (promptService)
     {
       // Put the page title in the message string
-      var title = window.editorShell.GetDocumentTitle();
+      var title = GetDocumentTitle();
       if (!title)
         title = GetString("untitled");
 
@@ -2163,7 +2191,7 @@ var nsRevertCommand =
       // Reload page if first button (Revert) was pressed
       if(result == 0)
       {
-        SetEditMode(gPreviousNonSourceDisplayMode);
+        CancelHTMLSource();
         window.editorShell.LoadUrl(GetDocumentUrl());
       }
     }
@@ -2227,10 +2255,9 @@ var nsPreviewCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable && 
+    return (window.editorShell && window.editorShell.documentEditable && 
             isHTMLEditor() && 
-            (DocumentHasBeenSaved() || editor.documentModified));
+            (DocumentHasBeenSaved() || window.editorShell.documentModified));
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2285,9 +2312,8 @@ var nsSendPageCommand =
 {
   isCommandEnabled: function(aCommand, dummy)
   {
-    var editor = GetCurrentEditor();
-    return (editor && editor.isDocumentEditable &&
-            (DocumentHasBeenSaved() || editor.documentModified));
+    return (window.editorShell != null && window.editorShell.documentEditable &&
+            (DocumentHasBeenSaved() || window.editorShell.documentModified));
   },
 
   getCommandStateParams: function(aCommand, aParams, aRefCon) {},
@@ -2475,7 +2501,7 @@ var nsValidateCommand =
   {
     // If the document hasn't been modified,
     // then just validate the current url.
-    if (GetCurrentEditor().documentModified || gHTMLSourceChanged)
+    if (editorShell.documentModified || gHTMLSourceChanged)
     {
       if (!CheckAndSaveDocument("cmd_validate", false))
         return;
@@ -2941,7 +2967,14 @@ var nsPagePropertiesCommand =
 
   doCommand: function(aCommand)
   {
+    var oldTitle = GetDocumentTitle();
     window.openDialog("chrome://editor/content/EdPageProps.xul","_blank", "chrome,close,titlebar,modal", "");
+
+    // Update main window title and 
+    // recent menu data in prefs if doc title changed
+    if (GetDocumentTitle() != oldTitle)
+      UpdateWindowTitle();
+
     window._content.focus();
   }
 };
@@ -3247,9 +3280,7 @@ var nsNormalModeCommand =
 
   doCommand: function(aCommand)
   {
-    FinishHTMLSource();
-    if (gEditorDisplayMode != kDisplayModeNormal)
-      SetEditMode(kDisplayModeNormal);
+    SetEditMode(kDisplayModeNormal);
   }
 };
 
@@ -3265,9 +3296,7 @@ var nsAllTagsModeCommand =
 
   doCommand: function(aCommand)
   {
-    FinishHTMLSource();
-    if (gEditorDisplayMode != kDisplayModeAllTags)
-      SetEditMode(kDisplayModeAllTags);
+    SetEditMode(kDisplayModeAllTags);
   }
 };
 
@@ -3283,8 +3312,7 @@ var nsHTMLSourceModeCommand =
 
   doCommand: function(aCommand)
   {
-    if (gEditorDisplayMode != kDisplayModeSource)
-      SetEditMode(kDisplayModeSource);
+    SetEditMode(kDisplayModeSource);
   }
 };
 
@@ -3300,9 +3328,7 @@ var nsPreviewModeCommand =
 
   doCommand: function(aCommand)
   {
-    FinishHTMLSource();
-    if (gEditorDisplayMode != kDisplayModePreview)
-      SetEditMode(kDisplayModePreview);
+    SetEditMode(kDisplayModePreview);
   }
 };
 
@@ -3858,8 +3884,9 @@ var nsBuildRecentPagesMenu =
 
   doCommand: function(aCommand)
   {
-    // In editor.js. True means save menu to prefs
-    BuildRecentMenu(true);
+    // From editor.js, rebuild the menu and save to prefs
+    BuildRecentMenu();
+    SaveRecentFilesPrefs();
   }
 };
 

@@ -223,6 +223,32 @@ function isHTMLEditor()
   return window.gIsHTMLEditor;
 }
 
+function GetDocumentTitle()
+{
+  try {
+    var domhtmldoc = GetCurrentEditor().document.QueryInterface(Components.interfaces.nsIDOMHTMLDocument);
+    
+    // See bug 77315 for details on this wacky code! 
+    // (It seems DOM hasn't consistently returned title string, 
+    /// but "[xpconnect wrapped HTMLObjectElement]" instead! )
+    return Components.lookupMethod(domhtmldoc, 'title').call(domhtmldoc);
+  } catch (e) {}
+
+  return "";
+}
+
+function SetDocumentTitle(title)
+{
+
+  try {
+    GetCurrentEditor().setDocumentTitle(title);
+
+    // Update window title (doesn't work if called from a dialog)
+    if ("UpdateWindowTitle" in window)
+      window.UpdateWindowTitle();
+  } catch (e) {}
+}
+
 var gAtomService;
 function GetAtomService()
 {

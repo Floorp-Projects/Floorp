@@ -83,21 +83,6 @@ interface nsIEditorShell : nsISupports
   /* Setup */
   void LoadUrl(in wstring url);
 
-  /* Set the value of the <title> tag in the <head> of a document
-   * Also uses this to set the editing window caption
-   */
-  void    SetDocumentTitle(in wstring title);
-  /* Get value of the <title> tag */
-  wstring GetDocumentTitle();
-
-  /** 
-   * doAfterSave saves the new location on the web shell for subsequent
-   *     webshell queries and any other necessary functions that can't be done via JS
-   * @param aShouldUpdateURL   whether to update the url on the webshell
-   * @param aURL               url string; ignored if aShouldUpdateURL is false
-   */
-  void doAfterSave(in boolean aShouldUpdateURL, in wstring aURL);
-
   /** 
    * isSupportedTextType determines whether the mime type given is a type the editor
    *      supports (when editing as text)

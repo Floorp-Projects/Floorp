@@ -486,11 +486,6 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
   rv = editor->PostCreate();
   if (NS_FAILED(rv)) return rv;
 
-  if (!mMailCompose) {
-    // Set the editor-specific Window caption
-    UpdateWindowTitleAndRecentMenu(PR_TRUE);
-  }
-
 #ifdef DEBUG
   // Activate the debug menu only in debug builds
   // by removing the "hidden" attribute set "true" in XUL
@@ -1190,137 +1185,6 @@ nsEditorShell::Print()
   return NS_OK;
 }
 
-nsresult
-nsEditorShell::UpdateWindowTitleAndRecentMenu(PRBool aSaveToPrefs)
-{
-  nsresult res = NS_ERROR_NOT_INITIALIZED;
-
-  if (!mContentAreaDocShell || !mEditor)
-    return res;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor)
-    return res;
-
-  nsAutoString windowCaption;
-  res = GetDocumentTitleString(windowCaption);
-  // If title is empty, use "untitled"
-  if (windowCaption.Length() == 0)
-    GetBundleString(NS_LITERAL_STRING("untitled"), windowCaption);
-
-  // Append just the 'leaf' filename to the Doc. Title for the window caption
-  if (NS_SUCCEEDED(res))
-  {
-    // get the dom document
-    nsCOMPtr<nsIDOMDocument> doc;
-    res = editor->GetDocument(getter_AddRefs(doc));
-    if (NS_FAILED(res)) return res;
-    if (!doc) return NS_ERROR_NULL_POINTER;
-
-    // find out if the doc already has a fileSpec associated with it.
-    nsCOMPtr<nsIURI> docFileSpec;
-    if (NS_SUCCEEDED(GetDocumentURI(doc, getter_AddRefs(docFileSpec))))
-    {
-      nsCOMPtr<nsIURL> url = do_QueryInterface(docFileSpec);
-      if (url)
-      {
-        // Prefix filename with scheme so user can tell if editing a remote vs. local file
-        nsCAutoString schemeChar;
-        docFileSpec->GetScheme(schemeChar);
-        nsCAutoString fileNameChar;
-        url->GetFileName(fileNameChar);
-        if (fileNameChar.Length() > 0)
-        {
-          windowCaption += NS_LITERAL_STRING(" [") +
-                           NS_ConvertUTF8toUCS2(schemeChar) +
-                           NS_LITERAL_STRING(":/.../") +
-                           NS_ConvertUTF8toUCS2(fileNameChar) +
-                           NS_LITERAL_STRING("]");
-        }
-      }
-    }
-    nsCOMPtr<nsIBaseWindow> contentAreaAsWin(do_QueryInterface(mContentAreaDocShell));
-    NS_ASSERTION(contentAreaAsWin, "This object should implement nsIBaseWindow");
-    res = contentAreaAsWin->SetTitle(windowCaption.get());
-  }
-
-  // Rebuild Recent Pages menu and save any changed URLs or titles to editor prefs
-  // TODO: We need to pass on aSaveToPrefs to command, but must wait for
-  //    new command system before we can do that.
-  // For now, don't update the menu at all if aSaveToPrefs is false
-  if (aSaveToPrefs)
-  {
-    res = DoControllerCommand("cmd_buildRecentPagesMenu");
-  }
-   
-  return res;
-}
-
-nsresult
-nsEditorShell::GetDocumentTitleString(nsString& title)
-{
-  nsresult res = NS_ERROR_NOT_INITIALIZED;
-
-  if (!mEditor)
-    return res;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
-  if (!editor)
-    return res;
-
-  nsCOMPtr<nsIDOMDocument>  domDoc;
-  res = editor->GetDocument(getter_AddRefs(domDoc));
-  if (NS_SUCCEEDED(res) && domDoc)
-  {
-    // Get the document title
-    nsCOMPtr<nsIDOMHTMLDocument> HTMLDoc = do_QueryInterface(domDoc);
-    if (HTMLDoc)
-      res = HTMLDoc->GetTitle(title);
-  }
-  return res;
-}
-
-// JavaScript version
-NS_IMETHODIMP
-nsEditorShell::GetDocumentTitle(PRUnichar **title)
-{
-  if (!title)
-    return NS_ERROR_NULL_POINTER;
-
-  nsAutoString titleStr;
-  nsresult res = GetDocumentTitleString(titleStr);
-  if (NS_SUCCEEDED(res))
-  {
-    *title = ToNewUnicode(titleStr);
-  } else {
-    // Don't fail, just return an empty string    
-    nsAutoString empty;
-    *title = ToNewUnicode(empty);
-    res = NS_OK;
-  }
-  return res;
-}
-
-NS_IMETHODIMP
-nsEditorShell::SetDocumentTitle(const PRUnichar *title)
-{
-  nsresult res = NS_ERROR_NOT_INITIALIZED;
-
-  if (!mEditor && !mContentAreaDocShell)
-    return res;
-
-  // This should only be allowed for HTML documents
-  if (mEditorType == eHTMLTextEditorType)
-  {
-    res = mEditor->SetDocumentTitle(nsDependentString(title));
-    if (NS_FAILED(res)) return res;
-  }
-
-  // PR_FALSE means don't save menu to prefs
-  return UpdateWindowTitleAndRecentMenu(PR_FALSE);
-}
-
-
 NS_IMETHODIMP
 nsEditorShell::CloneAttributes(nsIDOMNode *destNode, nsIDOMNode *sourceNode)
 {
@@ -1800,28 +1664,6 @@ nsEditorShell::GetDocumentLength(PRInt32 *aDocumentLength)
 
   return NS_NOINTERFACE;
 }
-
-NS_IMETHODIMP
-nsEditorShell::DoAfterSave(PRBool aShouldUpdateURL, const PRUnichar *aURLString)
-{
-  if (aShouldUpdateURL)
-  {
-    NS_ENSURE_ARG_POINTER(aURLString);
-    nsCOMPtr<nsIURI> uri;
-    nsresult rv = NS_NewURI(getter_AddRefs(uri), nsDependentString(aURLString), nsnull);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "Failed to create a uri");
-    if (NS_SUCCEEDED(rv))
-    {
-      mContentAreaDocShell->SetCurrentURI(uri);
-    }
-  }
-
-  // Update window title to show possibly different filename
-  // This also covers problem that after undoing a title change,
-  //   window title loses the extra [filename] part that this adds
-  return UpdateWindowTitleAndRecentMenu(PR_TRUE);
-}
-
 
 NS_IMETHODIMP
 nsEditorShell::Indent(const PRUnichar *indent)
