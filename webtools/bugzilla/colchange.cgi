@@ -63,6 +63,7 @@ if (defined $::FORM{'rememberedquery'}) {
     print "Refresh: 0; URL=buglist.cgi?$::FORM{'rememberedquery'}\n";
     print "\n";
     print "<TITLE>What a hack.</TITLE>\n";
+    PutHeader ("Change columns");
     print "Resubmitting your query with new columns...\n";
     exit;
 }
@@ -84,6 +85,7 @@ $desc{'summaryfull'} = "Full Summary";
 
 
 print "\n";
+PutHeader ("Change columns");
 print "Check which columns you wish to appear on the list, and then click\n";
 print "on submit.\n";
 print "<p>\n";

@@ -29,7 +29,7 @@ require "CGI.pl";
 use vars %::FORM;
 
 print "Content-type: text/html\n\n";
-print "<TITLE>Full Text Bug Listing</TITLE>\n";
+PutHeader ("Full Text Bug Listing");
 
 ConnectToDatabase();
 quietly_check_login();

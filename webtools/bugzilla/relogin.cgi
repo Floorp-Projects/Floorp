@@ -30,7 +30,10 @@ Set-Cookie: Bugzilla_logincookie= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
 Set-Cookie: Bugzilla_password= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
 Content-type: text/html
 
-<H1>Your login has been forgotten.</H1>
+";
+PutHeader ("Relogin");
+
+print "<B>Your login has been forgotten</B>.</P>
 The cookie that was remembering your login is now gone.  The next time you
 do an action that requires a login, you will be prompted for it.
 <p>

@@ -320,7 +320,7 @@ sub CheckEmailSyntax {
     if ($addr !~ /$match/) {
         print "Content-type: text/html\n\n";
 
-        print "<H1>Invalid e-mail address entered.</H1>\n";
+        PutHeader("Check e-mail syntax");
         print "The e-mail address you entered\n";
         print "(<b>$addr</b>) didn't match our minimal\n";
         print "syntax checking for a legal email address.\n";
@@ -358,7 +358,7 @@ To use the wonders of bugzilla, you can use the following:
     close SENDMAIL;
 
     print "Content-type: text/html\n\n";
-    print "<H1>Password has been emailed.</H1>\n";
+    PutHeader("Password mailed");
     print "The password for the e-mail address\n";
     print "$login has been e-mailed to that address.\n";
     print "<p>When the e-mail arrives, you can click <b>Back</b>\n";
@@ -427,7 +427,7 @@ sub confirm_login {
 
     if ($loginok != 1) {
         print "Content-type: text/html\n\n";
-        print "<H1>Please log in.</H1>\n";
+        PutHeader("Login");
         print "I need a legitimate e-mail address and password to continue.\n";
         if (!defined $nexturl || $nexturl eq "") {
 	    # Sets nexturl to be argv0, stripping everything up to and

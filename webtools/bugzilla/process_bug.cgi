@@ -34,6 +34,8 @@ confirm_login();
 
 print "Content-type: text/html\n\n";
 
+PutHeader ("Bug processed");
+
 GetVersionTable();
 
 if ($::FORM{'product'} ne $::dontchange) {
