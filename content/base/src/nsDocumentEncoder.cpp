@@ -115,6 +115,7 @@ public:
   NS_IMETHOD SetNodeFixup(nsIDocumentEncoderNodeFixup *aFixup);
                                        
 protected:
+  void Initialize();
   nsresult SerializeNodeStart(nsIDOMNode* aNode, PRInt32 aStartOffset,
                               PRInt32 aEndOffset, nsAString& aStr);
   nsresult SerializeToStringRecursive(nsIDOMNode* aNode,
@@ -180,13 +181,19 @@ NS_INTERFACE_MAP_END
 
 nsDocumentEncoder::nsDocumentEncoder()
 {
-
+  Initialize();
   mMimeType.AssignLiteral("text/plain");
 
+}
+
+void nsDocumentEncoder::Initialize()
+{
   mFlags = 0;
   mWrapColumn = 72;
   mStartDepth = 0;
   mEndDepth = 0;
+  mStartRootIndex = 0;
+  mEndRootIndex = 0;
   mHaltRangeHint = PR_FALSE;
 }
 
@@ -201,6 +208,8 @@ nsDocumentEncoder::Init(nsIDocument* aDocument,
 {
   if (!aDocument)
     return NS_ERROR_INVALID_ARG;
+
+  Initialize();
 
   mDocument = aDocument;
 
@@ -1069,8 +1078,12 @@ nsHTMLCopyEncoder::Init(nsIDocument* aDocument,
   if (!aDocument)
     return NS_ERROR_INVALID_ARG;
 
+  mIsTextWidget = PR_FALSE;
+  Initialize();
+
   mIsCopying = PR_TRUE;
   mDocument = aDocument;
+
 
   mMimeType.AssignLiteral("text/html");
   
