@@ -89,6 +89,10 @@ nsRenderingContextUnix :: ~nsRenderingContextUnix()
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mFontCache);
   NS_IF_RELEASE(mFontMetrics);
+
+  if (mRegion)
+    ::XDestroyRegion(mRegion);
+
   mTMatrix = nsnull;
   PopState();
 
@@ -137,6 +141,7 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
                      mContext->GetAppUnitsToDevUnits());
 
   // Select a default font here?
+  return NS_OK;
 }
 
 nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
@@ -153,6 +158,7 @@ nsresult nsRenderingContextUnix :: Init(nsIDeviceContext* aContext,
   mP2T = mContext->GetDevUnitsToAppUnits();
   mTMatrix->AddScale(mContext->GetAppUnitsToDevUnits(),
                      mContext->GetAppUnitsToDevUnits());
+  return NS_OK;
 }
 
 nsresult nsRenderingContextUnix :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
@@ -215,6 +221,81 @@ PRBool nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect)
 
 PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
+
+  // Essentially, create the rect and select it into the GC. Get the current
+  // ClipRegion first
+
+  nsRect  trect = aRect;
+
+  mTMatrix->TransformCoord(&trect.x, &trect.y,
+                           &trect.width, &trect.height);
+
+  //how we combine the new rect with the previous?
+  if (aCombine == nsClipCombine_kIntersect)
+  {
+    Region a = ::XCreateRegion();
+    Region tRegion ;
+
+    ::XOffsetRegion(a, trect.x, trect.y);
+    ::XShrinkRegion(a, -trect.width, -trect.height);
+
+    ::XIntersectRegion(a, mRegion, tRegion);
+
+    ::XDestroyRegion(mRegion);
+    ::XDestroyRegion(a);
+
+    mRegion = tRegion;
+
+  }
+  else if (aCombine == nsClipCombine_kUnion)
+  {
+    Region a = ::XCreateRegion();
+    Region tRegion ;
+
+    ::XOffsetRegion(a, trect.x, trect.y);
+    ::XShrinkRegion(a, -trect.width, -trect.height);
+
+    ::XUnionRegion(a, mRegion, tRegion);
+
+    ::XDestroyRegion(mRegion);
+    ::XDestroyRegion(a);
+
+    mRegion = tRegion;
+  }
+  else if (aCombine == nsClipCombine_kSubtract)
+  {
+    Region a = ::XCreateRegion();
+    Region tRegion ;
+
+    ::XOffsetRegion(a, trect.x, trect.y);
+    ::XShrinkRegion(a, -trect.width, -trect.height);
+
+    ::XSubtractRegion(a, mRegion, tRegion);
+
+    ::XDestroyRegion(mRegion);
+    ::XDestroyRegion(a);
+
+    mRegion = tRegion;
+  }
+  else if (aCombine == nsClipCombine_kReplace)
+  {
+    Region a = ::XCreateRegion();
+
+    ::XOffsetRegion(a, trect.x, trect.y);
+    ::XShrinkRegion(a, -trect.width, -trect.height);
+
+    ::XDestroyRegion(mRegion);
+
+    mRegion = a;
+
+  }
+  else
+    NS_ASSERTION(PR_FALSE, "illegal clip combination");
+
+  ::XSetRegion(mRenderingSurface->display,
+	       mRenderingSurface->gc,
+	       mRegion);
+
   return PR_TRUE;
 }
 
