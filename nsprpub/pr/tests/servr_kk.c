@@ -63,7 +63,7 @@
 #include <string.h>
 
 #define PORT 15004
-#define STACKSIZE 0
+#define THREAD_STACKSIZE 0
 
 static int _iterations = 1000;
 static int _clients = 1;
@@ -191,7 +191,7 @@ WorkerThreadFunc(void *_listenSock)
                                   PR_PRIORITY_NORMAL,
                                   ServerScope,
                                   PR_UNJOINABLE_THREAD,
-                                  STACKSIZE);
+                                  THREAD_STACKSIZE);
 
                 if (!WorkerThread)
                     if (debug_mode) printf("Error creating client thread %d\n", workerThreads);
@@ -291,7 +291,7 @@ ServerSetup(void)
                       PR_PRIORITY_NORMAL,
                       ServerScope,
                       PR_UNJOINABLE_THREAD,
-                      STACKSIZE);
+                      THREAD_STACKSIZE);
 
     if (!WorkerThread) {
         if (debug_mode) printf("error creating working thread\n");
@@ -446,7 +446,7 @@ RunClients(void)
                           PR_PRIORITY_NORMAL,
                           ClientScope,
                           PR_UNJOINABLE_THREAD,
-                          STACKSIZE);
+                          THREAD_STACKSIZE);
 
         if (!clientThread) {
             if (debug_mode) printf("\terror creating client thread %d\n", index);
@@ -477,7 +477,7 @@ void do_work()
                       PR_PRIORITY_NORMAL,
                       ServerScope,
                       PR_JOINABLE_THREAD,
-                      STACKSIZE);
+                      THREAD_STACKSIZE);
     if (!ServerThread) {
         if (debug_mode) printf("error creating main server thread\n");
         return;
