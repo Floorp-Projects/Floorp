@@ -47,6 +47,8 @@ public:
 
     NS_IMETHOD ToUserVisibleString(char **result);
 
+    NS_IMETHOD ToStreamableForm(char** aName, char** aData);
+
     NS_IMETHOD Equals(nsIPrincipal *other, PRBool *result);
 
     NS_IMETHOD HashValue(PRUint32 *result);

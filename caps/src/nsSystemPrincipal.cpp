@@ -44,7 +44,6 @@ NSBASEPRINCIPALS_RELEASE(nsSystemPrincipal);
 NS_IMETHODIMP
 nsSystemPrincipal::ToString(char **result)
 {
-      // STRING USE WARNING: perhaps |buf| should be an |nsCAutoString|? -- scc
     nsAutoString buf;
     buf.AssignWithConversion("[System]");
 
@@ -56,6 +55,13 @@ NS_IMETHODIMP
 nsSystemPrincipal::ToUserVisibleString(char **result)
 {
     return ToString(result);
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::ToStreamambleForm(char** aName, char** aData)
+{
+    // The system principal should never be streamed out
+    return NS_ERROR_FAILURE; 
 }
 
 NS_IMETHODIMP
@@ -116,14 +122,6 @@ nsSystemPrincipal::DisableCapability(const char *capability, void **annotation)
     // XXX might be handy to be able to do so!
     return NS_ERROR_FAILURE;
 }
-
-NS_IMETHODIMP
-nsSystemPrincipal::Save(nsSupportsHashtable* aPrincipals, nsIPref* prefs)
-{
-    // The system principal should never be streamed out
-    return NS_ERROR_FAILURE; 
-}
-
 
 /////////////////////////////////////////////
 // Constructor, Destructor, initialization //

@@ -99,8 +99,7 @@ interface nsIZipReader : nsISupports
      * stored in the jar, verifyExternalFile (not yet implemented) must 
      * be called before getPrincipal.
      */
-    void getCertificatePrincipal(in string aEntryName, out nsIPrincipal aPrincipal,
-                                 out short result);
+    void getCertificatePrincipal(in string aEntryName, out nsIPrincipal aPrincipal);
 };
 
 ////////////////////////////////////////////////////////////////////////////////

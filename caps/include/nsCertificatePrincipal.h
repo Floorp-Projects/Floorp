@@ -48,6 +48,8 @@ public:
 
     NS_IMETHOD ToUserVisibleString(char **result);
 
+    NS_IMETHOD ToStreamableForm(char** aName, char** aData);
+
     NS_IMETHOD Equals(nsIPrincipal *other, PRBool *result);
 
     NS_IMETHOD HashValue(PRUint32 *result);
@@ -56,17 +58,15 @@ public:
 
     NS_IMETHOD InitFromPersistent(const char *name, const char* data);
 
-    NS_IMETHOD Init(const char* aIssuerName, const char* aSerialNumber,
-                    const char* aCompanyName);
+    NS_IMETHOD Init(const char* aCertificateID);
 
     nsCertificatePrincipal();
 
 	virtual ~nsCertificatePrincipal(void);
 
 protected:
-    char* mIssuerName;
-    char* mSerialNumber;
-    char* mCompanyName;
+    char* mCertificateID;
+    char* mCommonName;
 };
 
 #endif // _NS_CERTIFICATE_PRINCIPAL_H_
