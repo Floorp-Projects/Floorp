@@ -123,20 +123,20 @@ NS_IMETHODIMP InsertElementTxn::Write(nsIOutputStream *aOutputStream)
   return NS_OK;
 }
 
-NS_IMETHODIMP InsertElementTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP InsertElementTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Remove Element: ";
+    *aString="Remove Element: ";
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP InsertElementTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP InsertElementTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Insert Element: ";
+    *aString="Insert Element: ";
   }
   return NS_OK;
 }

@@ -261,16 +261,15 @@ nsJSEditorLog::GetString(nsITransaction *aTransaction)
 {
   static char buf[256];
 
-  nsString defaultStr = "<NULL>";
-  nsString *str = &defaultStr;
+  nsString str = "";
 
   aTransaction->GetRedoString(&str);
 
-  if (!str)
-    str = &defaultStr;
+  if (str.Length() == 0)
+    str = "<NULL>";
 
   buf[0] = '\0';
-  str->ToCString(buf, 256);
+  str.ToCString(buf, 256);
 
   return buf;
 }

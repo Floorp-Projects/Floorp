@@ -55,9 +55,9 @@ public:
 
   NS_IMETHOD Write(nsIOutputStream *aOutputStream);
 
-  NS_IMETHOD GetUndoString(nsString **aString);
+  NS_IMETHOD GetUndoString(nsString *aString);
 
-  NS_IMETHOD GetRedoString(nsString **aString);
+  NS_IMETHOD GetRedoString(nsString *aString);
 
 };
 

@@ -96,20 +96,20 @@ NS_IMETHODIMP nsInsertHTMLTxn::Write(nsIOutputStream *aOutputStream)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP nsInsertHTMLTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP nsInsertHTMLTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Remove HTML: ";
+    *aString="Remove HTML: ";
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP nsInsertHTMLTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP nsInsertHTMLTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
-    **aString="Insert HTML: ";
+    *aString="Insert HTML: ";
   }
   return NS_OK;
 }

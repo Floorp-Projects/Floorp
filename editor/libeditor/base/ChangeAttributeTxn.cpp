@@ -111,28 +111,28 @@ NS_IMETHODIMP ChangeAttributeTxn::Write(nsIOutputStream *aOutputStream)
   return NS_OK;
 }
 
-NS_IMETHODIMP ChangeAttributeTxn::GetUndoString(nsString **aString)
+NS_IMETHODIMP ChangeAttributeTxn::GetUndoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
     if (PR_FALSE==mRemoveAttribute)
-      **aString="Change Attribute: ";
+      *aString="Change Attribute: ";
     else
-      **aString="Remove Attribute: ";
-    **aString += mAttribute;
+      *aString="Remove Attribute: ";
+    *aString += mAttribute;
   }
   return NS_OK;
 }
 
-NS_IMETHODIMP ChangeAttributeTxn::GetRedoString(nsString **aString)
+NS_IMETHODIMP ChangeAttributeTxn::GetRedoString(nsString *aString)
 {
   if (nsnull!=aString)
   {
     if (PR_FALSE==mRemoveAttribute)
-      **aString="Change Attribute: ";
+      *aString="Change Attribute: ";
     else
-      **aString="Add Attribute: ";
-    **aString += mAttribute;
+      *aString="Add Attribute: ";
+    *aString += mAttribute;
   }
   return NS_OK;
 }
