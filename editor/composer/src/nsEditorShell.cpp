@@ -4569,7 +4569,7 @@ nsEditorShell::InitSpellChecker()
     if (!mSpellChecker)
       return NS_ERROR_NULL_POINTER;
 
-    result = mSpellChecker->SetDocument(tsDoc, PR_FALSE);
+    result = mSpellChecker->SetDocument(tsDoc, PR_TRUE);
 
     if (NS_FAILED(result))
       return result;
