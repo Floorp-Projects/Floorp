@@ -251,7 +251,7 @@ nsresult
 NS_NewDeckFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager = nsnull);
 
 nsresult
-NS_NewSpringFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
+NS_NewLeafBoxFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame );
 
 nsresult
 NS_NewStackFrame ( nsIPresShell* aPresShell, nsIFrame** aNewFrame, nsIBoxLayout* aLayoutManager = nsnull);
@@ -5256,7 +5256,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       else if (aTag == nsXULAtoms::spring ||
                aTag == nsHTMLAtoms::spacer) {
         isReplaced = PR_TRUE;
-        rv = NS_NewSpringFrame(aPresShell, &newFrame);
+        rv = NS_NewLeafBoxFrame(aPresShell, &newFrame);
       }
        else if (aTag == nsXULAtoms::treechildren) {
         isReplaced = PR_TRUE;
