@@ -18,8 +18,8 @@
   * Contributor(s): Myk Melez <myk@mozilla.org>
   */
 
-/* Right align bug IDs. */
-.bz_id_column { text-align: right; }
+.bz_id_column {
+}
 
 /* Style bug rows according to severity. */
 .bz_blocker { color: red; font-weight: bold; }
