@@ -572,7 +572,6 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
   aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
   nscoord leading, axisHeight, height;
   GetAxisHeight(aRenderingContext, fm, axisHeight);
-  fm->GetLeading(leading);
 
   // Operators that exist in the dictionary, or those that are to be centered
   // to cater for fonts that are not math-aware, are handled by the MathMLChar
@@ -730,7 +729,11 @@ nsMathMLmoFrame::Stretch(nsIPresContext*      aPresContext,
           mBoundingMetrics.ascent = height - mBoundingMetrics.descent;
         }
 
-        // leave a leading at the top and the bottom of the stretched char
+        // get the leading to be left at the top and the bottom of the stretched char
+        // this seems more reliable than using fm->GetLeading() on suspicious fonts               
+        float em = float(font.mFont.size);                                            
+        leading = nscoord(0.2f * em); 
+
         aDesiredStretchSize.ascent = mBoundingMetrics.ascent + leading;
         aDesiredStretchSize.descent = mBoundingMetrics.descent + leading;
       }
