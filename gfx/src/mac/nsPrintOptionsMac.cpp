@@ -29,6 +29,12 @@
  */
 nsPrintOptionsMac::nsPrintOptionsMac()
 {
+	// create the print style and print record
+	mPrintRecord = (THPrint)::NewHandle(sizeof(TPrint));
+	if(nsnull != mPrintRecord){
+		::PrintDefault(mPrintRecord);
+	}
+
 
 }
 
@@ -39,6 +45,10 @@ nsPrintOptionsMac::nsPrintOptionsMac()
 nsPrintOptionsMac::~nsPrintOptionsMac()
 {
 
+	// get rid of the print record
+	if(nsnull != mPrintRecord){
+		::DisposeHandle((Handle)mPrintRecord);
+	}
 
 }
 
@@ -50,5 +60,8 @@ NS_IMETHODIMP
 nsPrintOptionsMac::ShowNativeDialog(void) 
 { 
 	
+	if(nsnull != mPrintRecord){
+		::PrStlDialog(mPrintRecord);		// open up and process the style record
+	}
 	return (NS_OK);
 } 
