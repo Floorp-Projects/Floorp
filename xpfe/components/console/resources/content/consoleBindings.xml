@@ -124,14 +124,37 @@
       <method name="observe">
         <parameter name="aConsoleMessage"/>
         <body><![CDATA[
-          if (aConsoleMessage instanceof Components.interfaces.nsIScriptError) {
-            // filter chrome urls
-            if (!this.showChromeErrors && /^chrome:/.test(aConsoleMessage.sourceName))
-              return;
+          /* This method may be called in cases where the code
+           * called by this method has thrown an exception because
+           * some resource ran OUT OF MEMORY (OOM).
+           *
+           * This method must not throw an exception, because
+           * an exception thrown by it could be asynchrounously
+           * dispatched back to this method resulting in an
+           * asynchronous loop - bug 288544.
+           *
+           * If you need any try/catch handling for code in this
+           * function, please stick it in its own try block inside
+           * the main try block. Do *NOT* use the main try block.
+           */
+          try {
+            if (aConsoleMessage instanceof 
+                Components.interfaces.nsIScriptError) {
+              // filter chrome urls
+              if (!this.showChromeErrors &&
+                  /^chrome:/.test(aConsoleMessage.sourceName))
+                return;
  
-            this.appendError(aConsoleMessage);
-          } else if (aConsoleMessage.message) {
-            this.appendMessage(aConsoleMessage.message);
+              this.appendError(aConsoleMessage);
+            } else if (aConsoleMessage.message) {
+              this.appendMessage(aConsoleMessage.message);
+            }
+          } catch (e) {
+            /* This catch block is for bug 288544,
+             * if you want to handle some edge case, please
+             * make your own inner try block inside preceding
+             * try block. Do *NOT* stick any code in here.
+             */
           }
         ]]></body>
       </method>
