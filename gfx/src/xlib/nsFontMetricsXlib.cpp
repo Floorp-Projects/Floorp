@@ -364,7 +364,7 @@ static nsFontCharSetInfoXlib GBK =
     TT_OS2_CPR1_CHINESE_SIMP, 0 };
 static nsFontCharSetInfoXlib HKSCS =
   { "hkscs-1", DoubleByteConvert, 1,
-    TT_OS2_CPR1_CHINESE_SIMP, 0 };
+    TT_OS2_CPR1_CHINESE_TRAD, 0 };
 static nsFontCharSetInfoXlib JISX0208 =
   { "jis_0208-1983", DoubleByteConvert, 1,
     TT_OS2_CPR1_JAPANESE, 0 };
@@ -475,6 +475,7 @@ static nsFontCharSetMapXlib gCharSetMap[] =
   { "big5.hku-1",         &FLG_ZHTW,    &Big5          },
   { "big5.pc-0",          &FLG_ZHTW,    &Big5          },
   { "big5.shift-0",       &FLG_ZHTW,    &Big5          },
+  { "big5hkscs-0",        &FLG_ZHTW,    &HKSCS         },
   { "cns11643.1986-1",    &FLG_ZHTW,    &CNS116431     },
   { "cns11643.1986-2",    &FLG_ZHTW,    &CNS116432     },
   { "cns11643.1992-1",    &FLG_ZHTW,    &CNS116431     },

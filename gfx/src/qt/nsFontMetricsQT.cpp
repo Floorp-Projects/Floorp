@@ -229,6 +229,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "big5.hku-1",         &Big5          },
   { "big5.pc-0",          &Big5          },
   { "big5.shift-0",       &Big5          },
+  { "big5hkscs-0",        &HKSCS         },
   { "cns11643.1986-1",    &CNS116431     },
   { "cns11643.1986-2",    &CNS116432     },
   { "cns11643.1992-1",    &CNS116431     },
