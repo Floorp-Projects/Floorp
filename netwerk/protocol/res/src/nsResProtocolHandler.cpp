@@ -50,7 +50,6 @@
 #include "nsDirectoryServiceDefs.h"
 #include "nsNetUtil.h"
 
-static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 static nsResProtocolHandler *gResHandler = nsnull;
 
 #if defined(PR_LOGGING)
