@@ -41,7 +41,6 @@
 #include "nsIDOMNode.h"
 
 #include "nsCOMPtr.h"
-#include "nsWeakReference.h"
 #include "nsXULWindow.h"
 
 /* Forward declarations.... */
@@ -68,8 +67,7 @@ class nsWebShellWindow : public nsXULWindow,
                          public nsIDocumentLoaderObserver,
                          public nsIDocumentObserver,
                          public nsIPrompt,
-                         public nsINetPrompt,
-                         public nsSupportsWeakReference
+                         public nsINetPrompt
 
 {
 public:
@@ -250,7 +248,6 @@ protected:
   nsresult                NotifyObservers( const nsString &aTopic, const nsString &someData );
 
   nsIWebShell*            mWebShell;
-  nsCOMPtr<nsIWeakReference> mParentWindow;
   nsIXULWindowCallbacks*  mCallbacks;
   PRBool                  mLockedUntilChromeLoad;
   PRBool                  mLoadDefaultPage;

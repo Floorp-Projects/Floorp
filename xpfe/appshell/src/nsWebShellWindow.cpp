@@ -1135,19 +1135,7 @@ nsWebShellWindow::Show(PRBool aShow)
 NS_IMETHODIMP
 nsWebShellWindow::ShowModal()
 {
-  nsresult                    rv;
-  nsCOMPtr<nsIWebShellWindow> parentWindow;
-  nsCOMPtr<nsIWidget>         parentWidget;
-
-  parentWindow = do_QueryReferent(mParentWindow);
-  if (parentWindow)
-    parentWindow->GetWidget(*getter_AddRefs(parentWidget));
-  if (parentWidget)
-    parentWidget->Enable(PR_FALSE);
-  rv = nsXULWindow::ShowModal();
-  if (parentWidget)
-    parentWidget->Enable(PR_TRUE);
-  return rv;
+  return nsXULWindow::ShowModal();
 }
 
 
