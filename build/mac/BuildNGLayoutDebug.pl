@@ -1,4 +1,4 @@
-#!perl -w
+#!perl
 
 #
 # The contents of this file are subject to the Netscape Public License
@@ -82,7 +82,10 @@ if (0)
 else
 {
 	$pull{all} = 1;
-	$build{all} = 0;
+	$build{all} = 1;
+#	$build{projects} = 1;
+#	$build{dist} = 1;
+#	$pull{nglayout} = 1;
 }
 
 if ($pull{all})
@@ -105,10 +108,13 @@ if ($build{all})
 
 chdir("::::");
 $MOZ_SRC = cwd();
+Moz::StopForErrors();
+#Moz::DontStopForErrors();
+OpenErrorLog("::NGLayoutBuildLog");
 
-OpenErrorLog(":::BuildLog");
 Checkout();
 chdir($MOZ_SRC);
 BuildDist();
 chdir($MOZ_SRC);
 BuildProjects();
+print "Build layout complete\n";
