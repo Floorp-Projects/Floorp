@@ -46,10 +46,13 @@ PROGD = .\$(OBJDIR)\TestWriteSpeed.exe
 PROGE = .\$(OBJDIR)\TestCallbacks.exe
 PROGF = .\$(OBJDIR)\TestHttp.exe
 PROGG = .\$(OBJDIR)\TestIDN.exe
+PROGH = .\$(OBJDIR)\TestStandardURL.exe
+PROGI = .\$(OBJDIR)\TestURLParser.exe
 
 PROGRAMS = \
 $(PROG1) $(PROG2) $(PROG3) $(PROG4) $(PROG5) $(PROG6) $(PROG7) $(PROG8)\
-          $(PROGA) $(PROGB) $(PROGC) $(PROGD) $(PROGE) $(PROGF) $(PROGG)
+          $(PROGA) $(PROGB) $(PROGC) $(PROGD) $(PROGE) $(PROGF) $(PROGG)\
+          $(PROGH) $(PROGI)
 
 LCFLAGS=-DUSE_NSREG -GX
 
@@ -103,7 +106,9 @@ $(PROGF): $(OBJDIR) TestHttp.cpp
 
 $(PROGG): $(OBJDIR) TestIDN.cpp
 
+$(PROGH): $(OBJDIR) TestStandardURL.cpp
 
+$(PROGI): $(OBJDIR) TestURLParser.cpp
 
 
 

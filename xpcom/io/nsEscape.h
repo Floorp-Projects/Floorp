@@ -106,6 +106,22 @@ enum EscapeMask {
 NS_COM nsresult nsStdEscape(const char* str, PRInt16 mask, nsCString &result);
 NS_COM nsresult nsStdUnescape(char* str, char **result);
 
+/**
+ * NS_EscapeURL
+ *
+ * Escapes invalid char's in an URL segment.
+ *
+ * @param str       - the url string
+ * @param len       - optional string length (-1 if unknown)
+ * @param mask      - url segment type mask
+ * @param result    - result buffer, untouched if escaping & filtering not necessary
+ */
+NS_COM nsresult NS_EscapeURL(const char *str,
+                             PRInt32 len,
+                             PRInt16 mask,
+                             nsACString &result);
+
+#define NS_UnescapeURL(str) nsUnescape(str)
 
 #ifdef __cplusplus
 }

@@ -46,13 +46,11 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsFileTransportService.obj     \
         .\$(OBJDIR)\nsSimpleStreamListener.obj     \
         .\$(OBJDIR)\nsSimpleStreamProvider.obj     \
-        .\$(OBJDIR)\nsRequestObserverProxy.obj      \
+        .\$(OBJDIR)\nsRequestObserverProxy.obj     \
         .\$(OBJDIR)\nsStreamListenerProxy.obj      \
         .\$(OBJDIR)\nsStreamProviderProxy.obj      \
-        .\$(OBJDIR)\nsStdURLParser.obj             \
-        .\$(OBJDIR)\nsAuthURLParser.obj            \
-        .\$(OBJDIR)\nsNoAuthURLParser.obj          \
-        .\$(OBJDIR)\nsStdURL.obj                   \
+        .\$(OBJDIR)\nsURLParsers.obj               \
+        .\$(OBJDIR)\nsStandardURL.obj              \
         .\$(OBJDIR)\nsSimpleURI.obj                \
         .\$(OBJDIR)\nsNetModuleMgr.obj             \
         .\$(OBJDIR)\nsNetModRegEntry.obj           \

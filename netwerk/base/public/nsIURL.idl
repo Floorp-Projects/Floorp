@@ -149,8 +149,28 @@ interface nsIURL : nsIURI
 [scriptable, uuid(8793370a-311f-11d4-9876-00c04fa0cf4a)]
 interface nsIStandardURL : nsISupports
 {
+    /**
+     * blah:foo/bar    => blah://foo/bar
+     * blah:/foo/bar   => blah:///foo/bar
+     * blah://foo/bar  => blah://foo/bar
+     * blah:///foo/bar => blah:///foo/bar
+     */
     const unsigned long URLTYPE_STANDARD        = 1;
+
+    /**
+     * blah:foo/bar    => blah://foo/bar
+     * blah:/foo/bar   => blah://foo/bar
+     * blah://foo/bar  => blah://foo/bar
+     * blah:///foo/bar => blah://foo/bar
+     */
     const unsigned long URLTYPE_AUTHORITY       = 2;
+
+    /**
+     * blah:foo/bar    => blah:///foo/bar
+     * blah:/foo/bar   => blah:///foo/bar
+     * blah://foo/bar  => blah://foo/bar
+     * blah:///foo/bar => blah:///foo/bar
+     */
     const unsigned long URLTYPE_NO_AUTHORITY    = 3;
 
     void init(in unsigned long urlType,

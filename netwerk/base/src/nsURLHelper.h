@@ -42,10 +42,10 @@ nsresult ExtractString(char* i_Src, char* *o_Dest, PRUint32 length);
 nsresult DupString(char* *o_Dest, const char* i_Src);
 
 /* handle .. in dirs */
-void CoaleseDirs(char* io_Path);
+void CoalesceDirs(char* io_Path);
 
 /* convert to lower case */
-void ToLowerCase(char* str);
+void ToLowerCase(char* str, PRInt32 length=-1);
 
 /* Extract URI-Scheme if possible */
 nsresult ExtractURLScheme(const char* inURI, PRUint32 *startPos, 

@@ -93,7 +93,7 @@ DupString(char* *o_Dest, const char* i_Src)
 // Replace all /./ with a /
 // But only till #? 
 void 
-CoaleseDirs(char* io_Path)
+CoalesceDirs(char* io_Path)
 {
     /* Stolen from the old netlib's mkparse.c.
      *
@@ -164,19 +164,11 @@ CoaleseDirs(char* io_Path)
         *(urlPtr-1) = '\0';
 }
 
-void 
-ToLowerCase(char* str)
+void
+ToLowerCase(char *str, PRInt32 length)
 {
-    if (str) {
-        char* lstr = str;
-        PRInt8 shift = 'a' - 'A';
-        for(; (*lstr != '\0'); ++lstr)
-        {
-            // lowercase these 
-            if ( (*(lstr) <= 'Z') && (*(lstr) >= 'A') )
-                *(lstr) = *(lstr) + shift;
-        }
-    }
+    for (; length && *str; --length, ++str)
+        *str = nsCRT::ToLower(*str);
 }
 
 /* Extract URI-Scheme if possible */
