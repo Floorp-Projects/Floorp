@@ -41,6 +41,8 @@ endif
 
 ARCH			= freebsd
 
+DLL_SUFFIX		= so.1.0
+
 DSO_CFLAGS		= -fPIC
 DSO_LDOPTS		= -Bshareable
 DSO_LDFLAGS		=
