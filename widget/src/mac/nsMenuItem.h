@@ -58,8 +58,8 @@ public:
   NS_IMETHOD GetEnabled(PRBool *aIsEnabled);
   NS_IMETHOD SetChecked(PRBool aIsEnabled);
   NS_IMETHOD GetChecked(PRBool *aIsEnabled);
-  NS_IMETHOD SetCheckboxType(PRBool aIsCheckbox);
-  NS_IMETHOD GetCheckboxType(PRBool *aIsCheckbox);
+  NS_IMETHOD SetMenuItemType(EMenuItemType aIsCheckbox);
+  NS_IMETHOD GetMenuItemType(EMenuItemType *aIsCheckbox);
   NS_IMETHOD GetCommand(PRUint32 & aCommand);
   NS_IMETHOD GetTarget(nsIWidget *& aTarget);
   NS_IMETHOD GetNativeData(void*& aData);
@@ -89,17 +89,13 @@ public:
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
  
 protected:
+
   NS_IMETHOD Create(nsIPopUpMenu   *aParent, 
                     const nsString &aLabel, 
                     PRUint32        aCommand) ;
   NS_IMETHOD Create(nsIMenu * aParent);
   NS_IMETHOD Create(nsIPopUpMenu * aParent);
   
-  //void Create(nsIWidget * aMBParent, Widget aParent,
-              //const nsString &aLabel, PRUint32 aCommand);
-  nsIWidget * GetMenuBarParent(nsISupports * aParentSupports);
-  //Widget GetNativeParent();
-
   nsString   mLabel;
   nsString   mKeyEquivalent;
   PRUint32   mCommand;
@@ -118,8 +114,8 @@ protected:
   
   PRUint8           mModifiers;
   PRBool            mEnabled;
-  PRBool			mIsChecked;
-  PRBool            mIsCheckboxType;
+  PRBool            mIsChecked;
+  EMenuItemType     mMenuType;
 };
 
 #endif // nsMenuItem_h__
