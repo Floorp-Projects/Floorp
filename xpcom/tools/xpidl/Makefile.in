@@ -22,7 +22,7 @@ srcdir		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE_NAME = xpidl
+MODULE = xpidl
 
 CSRCS = \
 	xpidl.c \

@@ -130,7 +130,7 @@ struct input_callback_data {
 #define INPUT_IN_NONE   0x0
 #define INPUT_IN_FULL   0x1     /* we've already started one */
 #define INPUT_IN_START  0x2     /* we're about to start one */
-#define INPUT_IN_PART   0x3     /* we might be about to start one (check
+#define INPUT_IN_MAYBE  0x3     /* we might be about to start one (check
                                    last_read to be sure) */
 
 struct input_callback_stack {
@@ -203,9 +203,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
         if (!new_data)
             return -1;
 
-        /* XXX replace with IDL_set_file_position */
-        new_data->len = sprintf(new_data->buf, "# 1 \"%s\"\n",
-                                cb_data->init.filename);
+        IDL_file_set(new_data->filename, new_data->lineno);
         stack->top = new_data;
         return 0;
 	
@@ -241,6 +239,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
             data->buf[data->len] = 0;
         }
 
+    scan_for_special:
         check_point = data->point;
         end_copy = data->buf + data->len;
         /*
@@ -256,18 +255,26 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 
         if (!(data->f_raw || data->f_comment || data->f_include)) {
             /* look for first raw/comment/include */
-
+#ifdef DEBUG_shaver_bufmgmt
+            fprintf(stderr, "looking for specials\n");
+#endif
             /* raw block */
             if ((raw_start = strstr(check_point, "\n%{"))) {
+#ifdef DEBUG_shaver_bufmgmt
+                fprintf(stderr, "found raw at %x\n", raw_start);
+#endif
                 end_copy = raw_start;
             }
 
             /* comment */
             if ((comment_start = strstr(check_point, "/*")) &&
                 (!raw_start || comment_start < raw_start)) {
+#ifdef DEBUG_shaver_bufmgmt
+                fprintf(stderr, "comment starts with %.7s\n", comment_start);
+#endif
                 end_copy = comment_start;
             }
-
+                        
             /* include */
             if ((include_start = strstr(check_point, "#include")) &&
                 (!raw_start || include_start < raw_start) &&
@@ -277,23 +284,32 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 
             if (end_copy == raw_start)
                 data->f_raw = INPUT_IN_START;
-
             else if (end_copy == comment_start)
                 data->f_comment = INPUT_IN_START;
-
             else if (end_copy == include_start)
                 data->f_include = INPUT_IN_START;
+#ifdef DEBUG_shaver_bufmgmt
+            fprintf(stderr,
+                    "specials: %d/%d/%d, end = %x, buf = %x, b+l = %x\n",
+                    data->f_raw, data->f_comment, data->f_include,
+                    end_copy, data->buf, data->buf + data->len);
+#endif
+        } else {
+#ifdef DEBUG_shaver_bufmgmt
+            fprintf(stderr, "already have special %d/%d/%d\n", 
+                    data->f_raw, data->f_comment, data->f_include);
+#endif
         }
         
-        if ((end_copy == data->buf || /* just found one at the start */
+        if ((end_copy == data->point || /* just found one at the start */
              end_copy == data->buf + data->len /* left over */) &&
             (data->f_raw || data->f_comment || data->f_include)) {
 
             if (data->f_raw) {
-                ptr = strstr(check_point, "\n%}");
+                ptr = strstr(check_point, "\n%}\n");
                 if (ptr) {
                     data->f_raw = INPUT_IN_NONE;
-                    end_copy = ptr + 3;
+                    end_copy = ptr + 4;
 #ifdef DEBUG_shaver_bufmgmt
                     fprintf(stderr, "RAW->%.*s<-RAW\n", end_copy - data->point,
                             data->point);
@@ -304,6 +320,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
                 /* XXX process doc comment */
                 ptr = strstr(check_point, "*/");
                 if (ptr) {
+                    data->f_comment = INPUT_IN_NONE;
                     data->point = ptr + 2; /* star-slash */
 #ifdef DEBUG_shaver_bufmgmt
                     fprintf(stderr, "COMMENT->%.*s<-COMMENT\n",
@@ -311,11 +328,17 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 #endif
                 }
                 assert(!data->f_raw && !data->f_include);
+                /*
+                 * Now that we've advanced data->point to skip the comment,
+                 * we want to check for specials that were ``shadowed'' by
+                 * the comment.
+                 */
+                goto scan_for_special;
             } else if (data->f_include) {
                 /* process include */
                 const char *scratch;
                 char *filename;
-                include_start = data->buf;
+                include_start = data->point;
 
                 assert(!strncmp(include_start, "#include \"", 10));
                 filename = include_start + 10; /* skip #include " */
@@ -334,6 +357,7 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 #ifdef DEBUG_shaver_bufmgmt
                 fprintf(stderr, "found #include %s\n", filename);
 #endif
+                assert(stack->includes);
                 if (!g_hash_table_lookup(stack->includes, filename)) {
                     char *basename = filename;
                     filename = strdup(filename);
@@ -360,10 +384,25 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
                     goto fill_start;
                 }
             }
-        } else
+        } else {
+#ifdef DEBUG_shaver_bufmgmt
+            fprintf(stderr, "no specials\n");
+#endif
+        }
         
         avail = MIN(data->buf + data->len, end_copy) - data->point;
+#ifdef DEBUG_shaver_bufmgmt
+        fprintf(stderr,
+                "avail[%d] = MIN((data->buf[%x] + data->len[%d])[%x], "
+                "end_copy[%x])[%x] - data->point[%x]\n",
+                avail, data->buf, data->len, data->buf + data->len,
+                end_copy, MIN(data->buf + data->len, end_copy),
+                data->point);
+#endif
         copy = MIN(avail, cb_data->fill.max_size);
+#ifdef DEBUG_shaver_bufmgmt
+        fprintf(stderr, "COPYING->%.*s<-COPYING\n", copy, data->point);
+#endif
         memcpy(cb_data->fill.buffer, data->point, copy);
         data->point += copy;
         return copy;
@@ -384,18 +423,22 @@ input_callback(IDL_input_reason reason, union IDL_input_data *cb_data,
 }
 
 int
-xpidl_process_idl(char *filename, IncludePathEntry *include_path)
+xpidl_process_idl(char *filename, IncludePathEntry *include_path,
+                  char *basename)
 {
-    char *basename, *tmp;
+    char *tmp, *outname;
     IDL_tree top;
     TreeState state;
     int rv;
     struct input_callback_stack stack;
+    gboolean ok;
 
     stack.includes = g_hash_table_new(g_str_hash, g_str_equal);
-    stack.include_path = include_path;
-    if (!stack.includes)
+    if (!stack.includes) {
+        fprintf(stderr, "failed to create hashtable (EOM?)\n");
         return 0;
+    }
+    stack.include_path = include_path;
 
     rv = IDL_parse_filename_with_input(filename, input_callback, &stack,
                                        msg_callback, &top,
@@ -410,12 +453,15 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path)
         return 0;
     }
 
-    basename = g_strdup(filename);
-    tmp = strrchr(basename, '.');
-    if (tmp)
-        *tmp = '\0';
+    if (!basename) {
+        basename = g_strdup(filename);
+        tmp = strrchr(basename, '.');
+        if (tmp)
+            *tmp = '\0';
+    } else {
+        basename = strdup(basename);
+    }
 
-    state.file = stdout;	/* XXX */
     state.basename = basename;
     state.includes = stack.includes;
     state.include_path = include_path;
@@ -423,9 +469,24 @@ xpidl_process_idl(char *filename, IncludePathEntry *include_path)
     nodeDispatch[TREESTATE_INVOKE] = invokeDispatch();
     nodeDispatch[TREESTATE_DOC] = docDispatch();
     if (generate_headers) {
+        if (strcmp(basename, "-")) {
+            outname = g_strdup_printf("%s.h", basename);
+            state.file = fopen(outname, "w");
+            if (!state.file) {
+                perror("error opening output file");
+                free(outname);
+                return 0;
+            }
+        } else {
+            state.file = stdout;
+        }
         state.mode = TREESTATE_HEADER;
         state.tree = top;
-        if (!process_tree(&state))
+        ok = process_tree(&state);
+        free(outname);
+        if (state.file != stdout)
+            fclose(state.file);
+        if (!ok)
             return 0;
     }
     if (generate_invoke) {

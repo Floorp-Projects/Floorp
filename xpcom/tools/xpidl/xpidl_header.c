@@ -36,7 +36,7 @@
 static gboolean
 ident(TreeState *state)
 {
-    printf("%s", IDL_IDENT(state->tree).str);
+    fputs(IDL_IDENT(state->tree).str, state->file);
     return TRUE;
 }
 
@@ -100,10 +100,10 @@ interface(TreeState *state)
         if (strlen(iid) != 36)
             /* XXX report error */
             return FALSE;
-        fputs("#define ", state->file);
+        fprintf(state->file, "\n/* {%s} */\n#define ", iid);
         if (!output_classname_iid_define(state->file, className))
             return FALSE;
-        fprintf(state->file, "_STR \"%s\"\n\n/* {%s} */\n#define ", iid, iid);
+        fprintf(state->file, "_STR \"%s\"\n#define ", iid);
         if (!output_classname_iid_define(state->file, className))
             return FALSE;
         /* This is such a gross hack... */
@@ -125,13 +125,23 @@ interface(TreeState *state)
                 fputs(", ", state->file);
         }
     }
-    fputs(" {\n public:", state->file);
+    fputs(" {\n"
+          " private:\n"
+          "  void operator delete(void *); // NOT TO BE IMPLEMENTED\n\n"
+          " public: \n"
+          "  static const nsIID& IID() {\n"
+          "    static nsIID iid = ",
+          state->file);
+    if (!output_classname_iid_define(state->file, className))
+        return FALSE;
+    fputs(";\n    return iid;\n  }\n", state->file);
+
     state->tree = IDL_INTERFACE(iface).body;
 
     if (!process_node(state))
         return FALSE;
 
-    fprintf(state->file, "};\n");
+    fputs("};\n", state->file);
 
     return TRUE;
 }
@@ -453,6 +463,26 @@ op_dcl(TreeState *state)
     return TRUE;
 }
 
+static void
+dump_codefrag_line(gpointer data, gpointer user_data)
+{
+    TreeState *state = (TreeState *)user_data;
+    char *line = (char *)data;
+    fputs(line, state->file);
+    fputc('\n', state->file);
+}
+
+static gboolean
+codefrag(TreeState *state)
+{
+    if (strcmp(IDL_CODEFRAG(state->tree).desc, "C++"))
+        return TRUE;
+    g_slist_foreach(IDL_CODEFRAG(state->tree).lines, dump_codefrag_line,
+                    (gpointer)state);
+    fputc('\n', state->file);
+    return TRUE;
+}
+
 nodeHandler *headerDispatch()
 {
     static nodeHandler table[IDLN_LAST];
@@ -482,6 +512,7 @@ nodeHandler *headerDispatch()
         table[IDLN_TYPE_STRUCT] = type;
         table[IDLN_TYPE_UNION] = type;
         table[IDLN_INTERFACE] = interface;
+        table[IDLN_CODEFRAG] = codefrag;
         initialized = TRUE;
     }
   
