@@ -28,7 +28,7 @@
 	<box align="horizontal" style="width: 100%;" >
 		<spring align="horizontal" flex="100%" />
 		<titledbutton value="&words.label;" />
-		<html:input id="searchtext" width="20" onkeyup="if (event.which == 13) { doSearch(); }" />
+		<html:input id="searchtext" size="20" onkeyup="if (event.which == 13) { doSearch(); }" />
 		<html:button onclick="return doSearch();">&search.button.label;</html:button>
 		<spring align="horizontal" flex="100%" />
 	</box>

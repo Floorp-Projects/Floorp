@@ -16,7 +16,7 @@ function loadPage()
 			if (localStore)
 			{
 				// XXX activate last selected list of search engines
-				var treeNode = document.getElementById("NC:SearchEngineRoot");
+				var treeNode = document.getElementById("searchengines");
 				var treeChildrenNode = null;
 				var numChildren = treeNode.childNodes.length;
 				for (var x = 0; x<numChildren; x++)
@@ -90,7 +90,7 @@ function unloadPage()
 			if (localStore)
 			{
 				// remember last selected list of search engines
-				var treeNode = document.getElementById("NC:SearchEngineRoot");
+				var treeNode = document.getElementById("searchengines");
 				var treeChildrenNode = null;
 				var numChildren = treeNode.childNodes.length;
 				for (var x = 0; x<numChildren; x++)
@@ -179,7 +179,7 @@ function doSearch()
 	dump("Search text: " + text + "\n");
 
 	// get selected search engines
-	var treeNode = document.getElementById("NC:SearchEngineRoot");
+	var treeNode = document.getElementById("searchengines");
 	if (!treeNode)	return(false);
 	var treeChildrenNode = null;
 	var numChildren = treeNode.childNodes.length;
@@ -317,7 +317,7 @@ function doCheck(node)
 function doCheckAll(activeFlag)
 {
 	// get selected search engines
-	var treeNode = document.getElementById("NC:SearchEngineRoot");
+	var treeNode = document.getElementById("searchengines");
 	if (!treeNode)	return(false);
 	var treeChildrenNode = null;
 	var numChildren = treeNode.childNodes.length;

@@ -32,7 +32,7 @@
 		<titledbutton id="allEngines" onclick="doEngineClick(this)" class="engine" value="&allresults.title.label;" align="left" />
 	</box>
 
-	<tree id="internetresultstree" style="height: 70%; width: 100%;" flex="100%" datasources="rdf:internetsearch" onclick="doResultClick(event.target.parentNode.parentNode)" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
+	<tree id="internetresultstree" ref="" style="height: 70%; width: 100%;" flex="100%" datasources="rdf:internetsearch" onclick="doResultClick(event.target.parentNode.parentNode)" ondblclick="return OpenURL(event, event.target.parentNode.parentNode);">
 		<treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
 		<treecol id="RelevanceColumn" rdf:resource="http://home.netscape.com/NC-rdf#Relevance" sortActive="true" sortDirection="descending" />
 		<treecol id="SiteColumn" rdf:resource="http://home.netscape.com/NC-rdf#Site"/>
