@@ -19,12 +19,12 @@
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages.dtd" >
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-      onload="Init();">
+      onload="Init();"
+      headertitle="&languages.customize.lHeader;">
 
   <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-languages.js"/>
   <!-- XXX: Replace strres.js when pref-languages.js is converted -->
@@ -43,11 +43,6 @@
                 prefstring="intl.accept_languages"/>
 
                 
-    <hbox class="box-smallheader" title="&languages.customize.lHeader;"/>
-    <!--
-      description="&languages.customize.rHeader;    
-    -->
-
   <groupbox flex="1">
     <caption label="&langtitle.label;"/>
 

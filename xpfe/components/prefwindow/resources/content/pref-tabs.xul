@@ -22,19 +22,12 @@
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
-<?xml-stylesheet href="chrome://communicator/skin/prefpanels.css" type="text/css"?>
-
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-tabs.dtd">
 
-<window xmlns:html="http://www.w3.org/1999/xhtml"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="color-dialog"
-        orient="vertical"
-        onload="parent.initPanel('chrome://communicator/content/pref/pref-tabs.xul');">
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-tabs.xul');"
+      headertitle="&tabHeader.label;">
 
   <script type="application/x-javascript">
   <![CDATA[
@@ -42,41 +35,33 @@
   ]]>
   </script>
   
-  <hbox class="box-smallheader" title="&tabHeader.label;"/>
-
-  <groupbox id="generalTabPreferences" orient="vertical" align="start">
+  <groupbox id="generalTabPreferences" align="start">
     <caption label="&tabDisplay.label;"/>
     <checkbox id="tabStrip"
               label="&autoHide.label;" 
-              pref="true" preftype="bool" prefstring="browser.tabs.autoHide"
-              prefattribute="checked"/>
+              prefstring="browser.tabs.autoHide"/>
     <checkbox id="tabBackground"
               label="&background.label;" 
-              pref="true" preftype="bool" prefstring="browser.tabs.loadInBackground"
-              prefattribute="checked"/>
+              prefstring="browser.tabs.loadInBackground"/>
   </groupbox>
 
-  <groupbox id="useTabPreferences" orient="vertical" align="start">
+  <groupbox id="useTabPreferences" align="start">
     <caption label="&openTabs.label;"/>
       <checkbox id="middleClick"
                 label="&middleClick.label;" 
-                pref="true" preftype="bool" prefstring="browser.tabs.opentabfor.middleclick"
-                prefattribute="checked"/>
+                prefstring="browser.tabs.opentabfor.middleclick"/>
 
       <checkbox id="windowOpen"
                 label="&windowOpen.label;" 
-                pref="true" preftype="bool" prefstring="browser.tabs.opentabfor.windowopen"
-                prefattribute="checked"/>
+                prefstring="browser.tabs.opentabfor.windowopen"/>
 
       <checkbox id="bookmarkClick"
                 label="&bookmarks.label;" 
-                pref="true" preftype="bool" prefstring="browser.tabs.opentabfor.bookmarks"
-                prefattribute="checked"/>
+                prefstring="browser.tabs.opentabfor.bookmarks"/>
 
       <checkbox id="urlBar"
                 label="&urlbar.label;" 
-                pref="true" preftype="bool" prefstring="browser.tabs.opentabfor.urlbar"
-                prefattribute="checked"/>
+                prefstring="browser.tabs.opentabfor.urlbar"/>
   </groupbox>
 
-</window>
+</page>
