@@ -1264,6 +1264,7 @@ case "$target" in
         IMPLIB='emximp -o'
         FILTER='emxexp -o'
         MOZ_DEBUG_FLAGS="-g -fno-inline"
+        MOZ_OPTIMIZE_FLAGS="-O -s"
         MOZ_OPTIMIZE_LDFLAGS="-Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
         MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwdgt$(MOZ_WIDGET_TOOLKIT)'
         MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_WIDGET_TOOLKIT)'
