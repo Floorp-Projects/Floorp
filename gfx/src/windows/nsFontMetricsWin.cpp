@@ -2460,11 +2460,9 @@ nsFontMetricsWin::LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFont)
 }
 
 static int CALLBACK 
-enumProc(const ENUMLOGFONTEX* logFontEx, const NEWTEXTMETRICEX* metrics,
-         DWORD fontType, LPARAM closure)
+enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
+         DWORD fontType, LPARAM hasFontSig)
 {
-  const LOGFONT* logFont = &(logFontEx->elfLogFont);
-
   // XXX ignore vertical fonts
   if (logFont->lfFaceName[0] == '@') {
     return 1;
@@ -2481,8 +2479,8 @@ enumProc(const ENUMLOGFONTEX* logFontEx, const NEWTEXTMETRICEX* metrics,
       }
 
       // copy Unicode subrange bitfield (128bit) if it's a truetype font. 
-      if (fontType & TRUETYPE_FONTTYPE) {
-        memcpy(font->signature.fsUsb, metrics->ntmFontSig.fsUsb, 16);
+      if (fontType & hasFontSig) {
+        memcpy(font->signature.fsUsb, ((NEWTEXTMETRICEX*)metrics)->ntmFontSig.fsUsb, 16);
       }
       return 1;
     }
@@ -2508,10 +2506,10 @@ enumProc(const ENUMLOGFONTEX* logFontEx, const NEWTEXTMETRICEX* metrics,
   font->fonttype = eFontType_UNKNOWN;
   font->flags = 0;
 
-  if (fontType & TRUETYPE_FONTTYPE) {
+  if (fontType & hasFontSig) {
     font->flags |= NS_GLOBALFONT_TRUETYPE;
     // copy Unicode subrange bitfield (128 bits = 16 bytes)
-    memcpy(font->signature.fsUsb, metrics->ntmFontSig.fsUsb, 16);
+    memcpy(font->signature.fsUsb, ((NEWTEXTMETRICEX*)metrics)->ntmFontSig.fsUsb, 16);
   }
   if (logFont->lfCharSet == SYMBOL_CHARSET) {
     font->flags |= NS_GLOBALFONT_SYMBOL;
@@ -2567,9 +2565,11 @@ nsFontMetricsWin::InitializeGlobalFonts(HDC aDC)
 
     /*
      * msdn.microsoft.com/library states that
-     * EnumFontFamiliesExW is only on NT/2000
+     * EnumFontFamiliesExW is only on NT4+
      */
-    EnumFontFamiliesEx(aDC, &logFont, (FONTENUMPROC) enumProc, nsnull, 0);
+    EnumFontFamiliesEx(aDC, &logFont, enumProc, TRUETYPE_FONTTYPE, 0);
+    if (gGlobalFonts->Count() == 0)
+      EnumFontFamilies(aDC, nsnull, enumProc, 0);
 
     // Sort the global list of fonts to put the 'preferred' fonts first
     gGlobalFonts->Sort(CompareGlobalFonts, nsnull);
@@ -2943,6 +2943,8 @@ nsFontMetricsWin::GetFontWeightTable(HDC aDC, const nsString& aFontName)
   weightInfo.mWeights = 0;
   weightInfo.mFontCount = 0;
   ::EnumFontFamiliesEx(aDC, &logFont, nsFontWeightCallback, (LPARAM)&weightInfo, 0);
+  if (weightInfo.mFontCount == 0)
+    ::EnumFontFamilies(aDC, logFont.lfFaceName, nsFontWeightCallback, (LPARAM)&weightInfo);
   SearchSimulatedFontWeight(aDC, &weightInfo);
 //  printf("font weights for %s dec %d hex %x \n", logFont.lfFaceName, weightInfo.mWeights, weightInfo.mWeights);
   return weightInfo.mWeights;
