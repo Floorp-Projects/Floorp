@@ -142,7 +142,7 @@ Rights Reserved.
                     </menu>
                   </menupopup>
                 </rule>
-                 <rule nc:CanFileMessages="false" nc:ServerType="nntp"/>
+                 <rule nc:CanFileMessagesOnServer="false"/>
                  <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
                  <!-- note, there is no "file here" -->
                   <menupopup>

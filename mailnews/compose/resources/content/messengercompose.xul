@@ -375,7 +375,7 @@
                   </menu>
                 </menupopup>
               </rule>
-              <rule nc:CanFileMessages="false" nc:ServerType="nntp"/>
+              <rule nc:CanFileMessagesOnServer="false"/>
               <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
                 <menupopup>
                   <menu uri="..."  class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name"

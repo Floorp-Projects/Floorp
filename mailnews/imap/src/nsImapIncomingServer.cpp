@@ -1244,16 +1244,14 @@ NS_IMETHODIMP nsImapIncomingServer::GetTrashFolderByRedirectorType(char **specia
 
   // see if it has a predefined trash folder name. The pref setting is like:
   //    pref("imap.aol.treashFolder", "RECYCLE");  where the redirector type = 'aol'
+  nsCAutoString prefName;
+  rv = CreatePrefNameWithRedirectorType(".trashFolder", prefName);
+  if (NS_FAILED(rv)) 
+    return NS_OK; // return if no redirector type
+
   nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsXPIDLCString redirectorType;
-  GetRedirectorType(getter_Copies(redirectorType));
-  if (!redirectorType)
-    return NS_OK; // return if no redirector type
-  nsCAutoString prefName("imap.");
-  prefName.Append(redirectorType);
-  prefName.Append(".trashFolder");
   rv = prefs->GetCharPref(prefName.get(), specialTrashName);
   if (NS_SUCCEEDED(rv) && ((!*specialTrashName) || (!**specialTrashName)))
     return NS_ERROR_FAILURE;
@@ -1269,20 +1267,17 @@ NS_IMETHODIMP nsImapIncomingServer::AllowFolderConversion(PRBool *allowConversio
   PRInt32 stringId = 0;
   *allowConversion = PR_FALSE;
 
-  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
-
   // See if the redirector type allows folder name conversion. The pref setting is like:
   //    pref("imap.aol.convertFolders",true);     where the redirector type = 'aol'
   // Construct pref name (like "imap.aol.hideFolders.RECYCLE_OUT") and get the setting.
-  nsXPIDLCString redirectorType;
-  GetRedirectorType(getter_Copies(redirectorType));
-  if (!redirectorType)
+  nsCAutoString prefName;
+  rv = CreatePrefNameWithRedirectorType(".convertFolders", prefName);
+  if (NS_FAILED(rv)) 
     return NS_OK; // return if no redirector type
 
-  nsCAutoString prefName("imap.");
-  prefName.Append(redirectorType);
-  prefName.Append(".convertFolders");
+  nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
   // In case this pref is not set we need to return NS_OK.
   rv = prefs->GetBoolPref(prefName.get(), allowConversion);
   return NS_OK;
@@ -1338,19 +1333,16 @@ NS_IMETHODIMP nsImapIncomingServer::HideFolderName(const char *folderName, PRBoo
 
   if (!folderName || !*folderName) return NS_OK;
 
+  // See if the redirector type allows folder hiding. The pref setting is like:
+  //    pref("imap.aol.hideFolders.RECYCLE_OUT",true);    where the redirector type = 'aol'
+  nsCAutoString prefName;
+  rv = CreatePrefNameWithRedirectorType(".hideFolder.", prefName);
+  if (NS_FAILED(rv)) 
+    return NS_OK; // return if no redirector type
+
   nsCOMPtr <nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // See if the redirector type allows folder hiding. The pref setting is like:
-  //    pref("imap.aol.hideFolders.RECYCLE_OUT",true);    where the redirector type = 'aol'
-  nsXPIDLCString redirectorType;
-  GetRedirectorType(getter_Copies(redirectorType));
-  if (!redirectorType)
-    return NS_OK; // return if no redirector type
-
-  nsCAutoString prefName("imap.");
-  prefName.Append(redirectorType);
-  prefName.Append(".hideFolder.");
   prefName.Append(folderName);
   // In case this pref is not set we need to return NS_OK.
   prefs->GetBoolPref(prefName.get(), hideFolder);
@@ -1633,7 +1625,7 @@ nsresult nsImapIncomingServer::DeleteNonVerifiedFolders(nsIFolder *curFolder)
 {
 	PRBool autoUnsubscribeFromNoSelectFolders = PR_TRUE;
 	nsresult rv;
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
 	if(NS_SUCCEEDED(rv))
 	{
 		rv = prefs->GetBoolPref("mail.imap.auto_unsubscribe_from_noselect_folders", &autoUnsubscribeFromNoSelectFolders);
@@ -2995,7 +2987,7 @@ nsImapIncomingServer::GetSupportsDiskSpace(PRBool *aSupportsDiskSpace)
   nsresult rv = CreateHostSpecificPrefName("default_supports_diskspace", prefName);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
   if(NS_SUCCEEDED(rv)) {
      rv = prefs->GetBoolPref(prefName.get(), aSupportsDiskSpace);
   }
@@ -3007,6 +2999,42 @@ nsImapIncomingServer::GetSupportsDiskSpace(PRBool *aSupportsDiskSpace)
      *aSupportsDiskSpace = PR_TRUE;
   }
   return NS_OK;
+}
+
+/** 
+ * Get the preference that tells us whether the imap server in question allows
+ * us to create subfolders. Some ISPs might not want users to create any folders
+ * besides the existing ones. Then a pref in the format 
+ * imap.<redirector type>.canCreateFolders should be added as controller pref
+ * to mailnews.js
+ * We do want to identify all those servers that don't allow creation of subfolders 
+ * and take them out of the account picker in the Copies and Folder panel.
+ */
+NS_IMETHODIMP
+nsImapIncomingServer::GetCanCreateFoldersOnServer(PRBool *aCanCreateFoldersOnServer)
+{
+    NS_ENSURE_ARG_POINTER(aCanCreateFoldersOnServer);
+
+    // Initialize aCanCreateFoldersOnServer true, a default value for IMAP
+    *aCanCreateFoldersOnServer = PR_TRUE;
+
+    nsCAutoString prefName;
+    nsresult rv = CreatePrefNameWithRedirectorType(".canCreateFolders", prefName);
+    if (NS_FAILED(rv)) 
+        return NS_OK; // return if no redirector type
+
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if(NS_SUCCEEDED(rv)) {
+       rv = prefs->GetBoolPref(prefName.get(), aCanCreateFoldersOnServer);
+    }
+
+    // Couldn't get the default value with the hostname.
+    // Fall back on IMAP default value
+    if (NS_FAILED(rv)) {
+       // set default value
+       *aCanCreateFoldersOnServer = PR_TRUE;
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3022,7 +3050,7 @@ nsImapIncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
     rv = CreateHostSpecificPrefName("default_offline_support_level", prefName);
     NS_ENSURE_SUCCESS(rv,rv);
 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
     if(NS_SUCCEEDED(rv)) {
       rv = prefs->GetIntPref(prefName.get(), aSupportLevel);
     } 
@@ -3131,6 +3159,52 @@ nsImapIncomingServer::GetFormattedName(const PRUnichar *prettyName, PRUnichar **
     return rv;
 }
 
+nsresult
+nsImapIncomingServer::CreatePrefNameWithRedirectorType(const char *prefSuffix, nsCAutoString &prefName)
+{
+    NS_ENSURE_ARG_POINTER(prefSuffix);
+
+    nsXPIDLCString redirectorType;
+    nsresult rv = GetRedirectorType(getter_Copies(redirectorType));
+    if (NS_FAILED(rv)) 
+        return rv;
+    if (!redirectorType)
+        return NS_ERROR_FAILURE;
+ 
+    prefName.Assign("imap.");
+    prefName.Append(redirectorType);
+    prefName.Append(prefSuffix);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsImapIncomingServer::GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer)
+{
+    NS_ENSURE_ARG_POINTER(aCanFileMessagesOnServer);
+
+    // Initialize aCanFileMessagesOnServer true, a default value for IMAP
+    *aCanFileMessagesOnServer = PR_TRUE;
+
+    nsCAutoString prefName;
+    nsresult rv = CreatePrefNameWithRedirectorType(".canFileMessages", prefName);
+    if (NS_FAILED(rv)) 
+        return NS_OK; //  return if no redirector type
+
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if(NS_SUCCEEDED(rv)) {
+        rv = prefs->GetBoolPref(prefName.get(), aCanFileMessagesOnServer);
+    }
+
+    // Couldn't get the default value with the hostname.
+    // Fall back on IMAP default value
+    if (NS_FAILED(rv)) {
+        // set default value
+        *aCanFileMessagesOnServer = PR_TRUE;
+    }
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsImapIncomingServer::SetSearchValue(const char *searchValue)
 {
@@ -3143,3 +3217,4 @@ nsImapIncomingServer::GetSupportsSubscribeSearch(PRBool *retVal)
    *retVal = PR_FALSE;
    return NS_OK;
 }
+

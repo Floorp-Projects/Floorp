@@ -60,6 +60,8 @@ nsIRDFResource* nsMsgFolderDataSource::kNC_NameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_FolderTreeNameSort= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_SpecialFolder= nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_ServerType = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_CanCreateFoldersOnServer = nsnull;
+nsIRDFResource* nsMsgFolderDataSource::kNC_CanFileMessagesOnServer = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_IsServer = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_IsSecure = nsnull;
 nsIRDFResource* nsMsgFolderDataSource::kNC_CanSubscribe = nsnull;
@@ -117,6 +119,8 @@ nsMsgFolderDataSource::nsMsgFolderDataSource()
     rdf->GetResource(NC_RDF_FOLDERTREENAME_SORT,    &kNC_FolderTreeNameSort);
     rdf->GetResource(NC_RDF_SPECIALFOLDER, &kNC_SpecialFolder);
     rdf->GetResource(NC_RDF_SERVERTYPE, &kNC_ServerType);
+    rdf->GetResource(NC_RDF_CANCREATEFOLDERSONSERVER, &kNC_CanCreateFoldersOnServer);
+    rdf->GetResource(NC_RDF_CANFILEMESSAGESONSERVER, &kNC_CanFileMessagesOnServer);
     rdf->GetResource(NC_RDF_ISSERVER, &kNC_IsServer);
     rdf->GetResource(NC_RDF_ISSECURE, &kNC_IsSecure);
     rdf->GetResource(NC_RDF_CANSUBSCRIBE, &kNC_CanSubscribe);
@@ -178,6 +182,8 @@ nsMsgFolderDataSource::~nsMsgFolderDataSource (void)
 		NS_RELEASE2(kNC_FolderTreeNameSort, refcnt);
 		NS_RELEASE2(kNC_SpecialFolder, refcnt);
 		NS_RELEASE2(kNC_ServerType, refcnt);
+		NS_RELEASE2(kNC_CanCreateFoldersOnServer, refcnt);
+		NS_RELEASE2(kNC_CanFileMessagesOnServer, refcnt);
 		NS_RELEASE2(kNC_IsServer, refcnt);
 		NS_RELEASE2(kNC_IsSecure, refcnt);
 		NS_RELEASE2(kNC_CanSubscribe, refcnt);
@@ -408,6 +414,8 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTargets(nsIRDFResource* source,
              (kNC_CanRename == property) ||
              (kNC_CanCompact == property) ||
              (kNC_ServerType == property) ||
+             (kNC_CanCreateFoldersOnServer == property) ||
+             (kNC_CanFileMessagesOnServer == property) ||
              (kNC_NoSelect == property) ||
              (kNC_Synchronize == property) ||
              (kNC_SyncDisabled == property))
@@ -488,6 +496,8 @@ nsMsgFolderDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, 
                aArc == kNC_FolderTreeName ||
                aArc == kNC_SpecialFolder ||
                aArc == kNC_ServerType ||
+               aArc == kNC_CanCreateFoldersOnServer ||
+               aArc == kNC_CanFileMessagesOnServer ||
                aArc == kNC_IsServer ||
                aArc == kNC_IsSecure ||
                aArc == kNC_CanSubscribe ||
@@ -548,6 +558,8 @@ nsMsgFolderDataSource::getFolderArcLabelsOut(nsISupportsArray **arcs)
   (*arcs)->AppendElement(kNC_FolderTreeName);
   (*arcs)->AppendElement(kNC_SpecialFolder);
   (*arcs)->AppendElement(kNC_ServerType);
+  (*arcs)->AppendElement(kNC_CanCreateFoldersOnServer);
+  (*arcs)->AppendElement(kNC_CanFileMessagesOnServer);
   (*arcs)->AppendElement(kNC_IsServer);
   (*arcs)->AppendElement(kNC_IsSecure);
   (*arcs)->AppendElement(kNC_CanSubscribe);
@@ -935,6 +947,10 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 		rv = createFolderSpecialNode(folder,target);
   else if ((kNC_ServerType == property))
     rv = createFolderServerTypeNode(folder, target);
+  else if ((kNC_CanCreateFoldersOnServer == property))
+    rv = createFolderCanCreateFoldersOnServerNode(folder, target);
+  else if ((kNC_CanFileMessagesOnServer == property))
+    rv = createFolderCanFileMessagesOnServerNode(folder, target);
   else if ((kNC_IsServer == property))
     rv = createFolderIsServerNode(folder, target);
   else if ((kNC_IsSecure == property))
@@ -1095,6 +1111,53 @@ nsMsgFolderDataSource::createFolderServerTypeNode(nsIMsgFolder* folder,
   createNode(serverType, target, getRDFService());
   return NS_OK;
 }
+
+nsresult
+nsMsgFolderDataSource::createFolderCanCreateFoldersOnServerNode(nsIMsgFolder* folder,
+                                                                 nsIRDFNode **target)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = folder->GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv) || !server) return NS_ERROR_FAILURE;
+  
+  PRBool canCreateFoldersOnServer;
+  rv = server->GetCanCreateFoldersOnServer(&canCreateFoldersOnServer);
+  if (NS_FAILED(rv)) return rv;
+
+  if (canCreateFoldersOnServer)
+    *target = kTrueLiteral;
+  else
+    *target = kFalseLiteral;
+  NS_IF_ADDREF(*target);
+
+  return NS_OK;
+}
+
+nsresult
+nsMsgFolderDataSource::createFolderCanFileMessagesOnServerNode(nsIMsgFolder* folder,
+                                                                 nsIRDFNode **target)
+{
+  nsresult rv;
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = folder->GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv) || !server) return NS_ERROR_FAILURE;
+
+  PRBool canFileMessagesOnServer;
+  rv = server->GetCanFileMessagesOnServer(&canFileMessagesOnServer);
+  if (NS_FAILED(rv)) return rv;
+  
+  if (canFileMessagesOnServer)
+    *target = kTrueLiteral;
+  else
+    *target = kFalseLiteral;
+  NS_IF_ADDREF(*target);
+
+  return NS_OK;
+}
+
 
 nsresult
 nsMsgFolderDataSource::createFolderIsServerNode(nsIMsgFolder* folder,
@@ -1852,6 +1915,8 @@ nsresult nsMsgFolderDataSource::DoFolderHasAssertion(nsIMsgFolder *folder,
 			(kNC_FolderTreeName == property) ||
            (kNC_SpecialFolder == property) ||
            (kNC_ServerType == property) ||
+           (kNC_CanCreateFoldersOnServer == property) ||
+           (kNC_CanFileMessagesOnServer == property) ||
            (kNC_IsServer == property) ||
            (kNC_IsSecure == property) ||
            (kNC_CanSubscribe == property) ||

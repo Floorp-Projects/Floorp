@@ -5700,3 +5700,19 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubfolders(nsIMsgFolder *oldFolder)
   return rv;
 }
 
+NS_IMETHODIMP 
+nsImapMailFolder::GetCanFileMessages(PRBool *aCanFileMessages) 
+{
+  nsresult rv;
+  *aCanFileMessages = PR_TRUE;
+  
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = GetServer(getter_AddRefs(server));
+  if (NS_SUCCEEDED(rv) && server)
+    rv = server->GetCanFileMessagesOnServer(aCanFileMessages);
+
+  if (*aCanFileMessages)
+    rv = nsMsgFolder::GetCanFileMessages(aCanFileMessages);
+
+  return rv;
+}

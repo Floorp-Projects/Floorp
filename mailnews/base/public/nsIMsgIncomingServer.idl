@@ -254,6 +254,12 @@ interface nsIMsgIncomingServer : nsISupports {
    */
   attribute boolean defaultCopiesAndFoldersPrefsToServer;
 
+
+  /* can this server allows sub folder creation */
+  attribute boolean canCreateFoldersOnServer;
+
+  /* can this server allows message filing ? */
+  attribute boolean canFileMessagesOnServer;
 };
 
 %{C++

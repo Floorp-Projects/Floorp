@@ -354,8 +354,9 @@ Rights Reserved.
             </menu>
           </menupopup>
         </rule>
-        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-          <!-- don't show nntp servers in the file and copies menus -->
+        <rule nc:CanFileMessagesOnServer="false">
+          <!-- don't show servers (nntp & any others) which does not allow message filing -->
+          <!-- File, Move & Copy menus -->
         </rule>
         <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
           <!-- note, there is no "file here" -->
@@ -417,8 +418,9 @@ Rights Reserved.
             </menu>
           </menupopup>
         </rule>
-        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-          <!-- don't show nntp servers in the file and copies menus -->
+        <rule nc:CanFileMessagesOnServer="false">
+          <!-- don't show servers (nntp & any others) which does not allow message filing -->
+          <!-- File, Move & Copy menus -->
         </rule>
         <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
           <!-- note, there is no "file here" -->
@@ -593,8 +595,9 @@ Rights Reserved.
             </menu>
           </menupopup>
         </rule>
-        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-          <!-- don't show nntp servers in the file and copies menus -->
+        <rule nc:CanFileMessagesOnServer="false">
+          <!-- don't show servers (nntp & any others) which does not allow message filing -->
+          <!-- File, Move & Copy menus -->
         </rule>
         <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
           <!-- note, there is no "file here" -->
@@ -656,8 +659,9 @@ Rights Reserved.
             </menu>
           </menupopup>
         </rule>
-        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-          <!-- don't show nntp servers in the file and copies menus -->
+        <rule nc:CanFileMessagesOnServer="false">
+          <!-- don't show servers (nntp & any others) which does not allow message filing -->
+          <!-- File, Move & Copy menus -->
         </rule>
         <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
           <!-- note, there is no "file here" -->
@@ -1056,8 +1060,9 @@ Rights Reserved.
             </menu>
           </menupopup>
         </rule>
-        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-          <!-- don't show nntp servers in the file and copies menus -->
+        <rule nc:CanFileMessagesOnServer="false">
+          <!-- don't show servers (nntp & any others) which does not allow message filing -->
+          <!-- File, Move & Copy menus -->
         </rule>
         <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
           <!-- note, there is no "file here" -->
@@ -1116,8 +1121,9 @@ Rights Reserved.
             </menu>
           </menupopup>
         </rule>
-        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-          <!-- don't show nntp servers in the file and copies menus -->
+        <rule nc:CanFileMessagesOnServer="false">
+          <!-- don't show servers (nntp & any others) which does not allow message filing -->
+          <!-- File, Move & Copy menus -->
         </rule>
         <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
           <!-- note, there is no "file here" -->
@@ -1236,8 +1242,9 @@ Rights Reserved.
               </menu>
             </menupopup>
           </rule>
-          <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-          <!-- don't show nntp servers in the file and copies menus -->
+          <rule nc:CanFileMessagesOnServer="false">
+            <!-- don't show servers (nntp & any others) which does not allow message filing -->
+            <!-- File, Move & Copy menus -->
           </rule>
           <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
           <!-- note, there is no "file here" -->

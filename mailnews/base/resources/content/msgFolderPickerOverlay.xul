@@ -33,7 +33,7 @@ Rights Reserved.
   <menu class="push" label="&newfolderclickhere.label;" uri="" id="msgNewFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" ignore="http://home.netscape.com/NC-rdf#MessageChild"
     ref="msgaccounts:/">
         <template>
-          <rule nc:CanCreateSubfolders="true" iscontainer="true" isempty="false">
+          <rule nc:CanCreateSubfolders="true" nc:CanCreateFoldersOnServer="true" iscontainer="true" isempty="false">
             <menupopup>
               <menu uri="..." class="folderMenuItem menu-iconic" label="rdf:http://home.netscape.com/NC-rdf#Name" 
                                 oncommand="PickedMsgFolder(event.target,'msgNewFolderPicker')"
@@ -49,9 +49,9 @@ Rights Reserved.
               </menu>
             </menupopup>
           </rule>
-    <!-- prevent news servers with no newsgroups from showing up -->
-    <rule nc:CanCreateSubfolders="false" iscontainer="true" isempty="true" nc:ServerType="nntp">
-    </rule>
+
+    <rule nc:CanCreateFoldersOnServer="false"/>
+
     <!-- no subfolders for some inboxes --> 
     <rule nc:CanCreateSubfolders="false" iscontainer="true" isempty="true">
             <menupopup>
@@ -99,7 +99,7 @@ Rights Reserved.
             </menupopup>
           </rule>
           <rule nc:CanRename="false" nc:ServerType="nntp">
-    <!-- don't show nntp servers in the rename dialog -->
+    <!--  don't show nntp servers in the rename dialog -->
           </rule>
     <rule nc:CanRename="false" iscontainer="true" isempty="false">
       <!-- note, there is no "file here" -->
@@ -160,8 +160,8 @@ Rights Reserved.
               </menu>
             </menupopup>
           </rule>
-    <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-                <!-- don't show nntp servers in the file picker -->
+    <rule nc:CanFileMessagesOnServer="false">
+      <!-- don't show servers (nntp & any others) which does not allow message filing -->
           </rule>
     <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
       <!-- note, there is no "file here" -->
@@ -212,8 +212,8 @@ Rights Reserved.
               </menu>
             </menupopup>
           </rule>
-    <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-                <!-- don't show nntp servers in the file picker -->
+    <rule nc:CanFileMessagesOnServer="false">
+      <!-- don't show servers (nntp & any others) which does not allow message filing -->
           </rule>
     <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
       <!-- note, there is no "file here" -->
@@ -264,8 +264,8 @@ Rights Reserved.
               </menu>
             </menupopup>
           </rule>
-      <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-          <!-- don't show nntp servers in the file picker -->
+      <rule nc:CanFileMessagesOnServer="false">
+        <!-- don't show servers (nntp & any others) which does not allow message filing -->
       </rule>
     <rule nc:CanFileMessages="false" iscontainer="true" isempty="false">
       <!-- note, there is no "file here" -->
@@ -300,16 +300,14 @@ Rights Reserved.
         ignore="http://home.netscape.com/NC-rdf#MessageChild"
         ref="msgaccounts:/">
     <template>
-      <rule nc:IsServer="true" nc:ServerType="nntp">
-        <!-- don't show nntp servers in the picker -->
-      </rule>
-      <rule nc:IsServer="true">
+      <rule nc:IsServer="true" nc:CanCreateFoldersOnServer="true">
         <menupopup>
           <menuitem uri="..." class="folderMenuItem menuitem-iconic" 
                     label="rdf:http://home.netscape.com/NC-rdf#Name"
                     oncommand="PickedMsgFolder(event.target,'msgFccAccountPicker')"
                     IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                    CanCreateFoldersOnServer="rdf:http://home.netscape.com/NC-rdf#CanCreateFoldersOnServer"/>
         </menupopup>
       </rule>
     </template>
@@ -322,16 +320,14 @@ Rights Reserved.
         ignore="http://home.netscape.com/NC-rdf#MessageChild"
         ref="msgaccounts:/">
     <template>
-      <rule nc:IsServer="true" nc:ServerType="nntp">
-        <!-- don't show nntp servers in the picker -->
-      </rule>
-      <rule nc:IsServer="true">
+      <rule nc:IsServer="true" nc:CanCreateFoldersOnServer="true">
         <menupopup>
           <menuitem uri="..." class="folderMenuItem menuitem-iconic" 
                     label="rdf:http://home.netscape.com/NC-rdf#Name"
                     oncommand="PickedMsgFolder(event.target,'msgDraftsAccountPicker')"
                     IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                    CanCreateFoldersOnServer="rdf:http://home.netscape.com/NC-rdf#CanCreateFoldersOnServer"/>
         </menupopup>
       </rule>
     </template>
@@ -344,16 +340,14 @@ Rights Reserved.
         ignore="http://home.netscape.com/NC-rdf#MessageChild"
         ref="msgaccounts:/">
     <template>
-      <rule nc:IsServer="true" nc:ServerType="nntp">
-        <!-- don't show nntp servers in the picker -->
-      </rule>
-      <rule nc:IsServer="true">
+      <rule nc:IsServer="true" nc:CanCreateFoldersOnServer="true">
          <menupopup>
           <menuitem uri="..." class="folderMenuItem menuitem-iconic" 
                     label="rdf:http://home.netscape.com/NC-rdf#Name"
                     oncommand="PickedMsgFolder(event.target,'msgStationeryAccountPicker')"
                     IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
-                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
+                    ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"
+                    CanCreateFoldersOnServer="rdf:http://home.netscape.com/NC-rdf#CanCreateFoldersOnServer"/>
         </menupopup>
       </rule>
     </template>
@@ -401,8 +395,8 @@ Rights Reserved.
               datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
               ref="msgaccounts:/">
       <template>
-        <rule nc:CanFileMessages="false" nc:ServerType="nntp">
-            <!-- don't show nntp servers in the file picker -->
+        <rule nc:CanFileMessagesOnServer="false">
+          <!-- don't show servers (nntp & any others) which does not allow message filing -->
         </rule>
         <rule nc:CanFileMessages="true" iscontainer="true" isempty="false">
           <menupopup>

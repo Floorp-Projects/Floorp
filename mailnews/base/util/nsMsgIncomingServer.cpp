@@ -1357,6 +1357,14 @@ NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer,
                         DefaultCopiesAndFoldersPrefsToServer, 
                         "allows_specialfolders_usage");
 
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, 
+                        CanCreateFoldersOnServer, 
+                        "canCreateFolders");
+
+NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, 
+                        CanFileMessagesOnServer, 
+                        "canFileMessages");
+
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer,
                         LimitMessageSize,
                         "limit_message_size")

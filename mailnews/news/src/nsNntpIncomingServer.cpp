@@ -1580,6 +1580,32 @@ nsNntpIncomingServer::GetOfflineSupportLevel(PRInt32 *aSupportLevel)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNntpIncomingServer::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aCopiesAndFoldersOnServer)
+{
+    NS_ENSURE_ARG_POINTER(aCopiesAndFoldersOnServer);
+
+    /**
+     * When a news account is created, the copies and folder prefs for the 
+     * associated identity don't point to folders on the server. 
+     * This makes sense, since there is no "Drafts" folder on a news server.
+     * They'll point to the ones on "Local Folders"
+     */
+
+    *aCopiesAndFoldersOnServer = PR_FALSE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNntpIncomingServer::GetCanCreateFoldersOnServer(PRBool *aCanCreateFoldersOnServer)
+{
+    NS_ENSURE_ARG_POINTER(aCanCreateFoldersOnServer);
+
+    // No folder creation on news servers. Return false.
+    *aCanCreateFoldersOnServer = PR_FALSE;
+    return NS_OK;
+}
+
 PRBool
 buildSubscribeSearchResult(nsCString &aElement, void *aData)
 {
@@ -1827,17 +1853,11 @@ nsNntpIncomingServer::PerformActionOnCell(const PRUnichar *action, PRInt32 row, 
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::GetDefaultCopiesAndFoldersPrefsToServer(PRBool *aCopiesAndFoldersOnServer)
+nsNntpIncomingServer::GetCanFileMessagesOnServer(PRBool *aCanFileMessagesOnServer)
 {
-    NS_ENSURE_ARG_POINTER(aCopiesAndFoldersOnServer);
+    NS_ENSURE_ARG_POINTER(aCanFileMessagesOnServer);
 
-    /**
-     * When a news account is created, the copies and folder prefs for the 
-     * associated identity don't point to folders on the server. 
-     * This makes sense, since there is no "Drafts" folder on a news server.
-     * They'll point to the ones on "Local Folders"
-     */
-
-    *aCopiesAndFoldersOnServer = PR_FALSE;
+    // No folder creation on news servers. Return false.
+    *aCanFileMessagesOnServer = PR_FALSE;
     return NS_OK;
 }
