@@ -23,8 +23,7 @@
 }
 
 /* hide the content, but don't destroy the frames */
-*[collapsed="true"], 
-*[moz-collapsed="true"] {
+*[collapsed="true"] {
   visibility: collapse;
 }
 
@@ -208,15 +207,11 @@ caption {
 /******* toolbar *******/
 
 toolbox { 
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbox");
+  -moz-box-orient: vertical;
 }
   
 toolbar {
   -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbar");
-}
-
-toolbargrippy {
-  -moz-binding: url("chrome://global/content/bindings/toolbar.xml#toolbargrippy");
 }
 
 toolbarseparator {

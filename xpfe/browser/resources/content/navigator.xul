@@ -124,9 +124,9 @@ Contributor(s):
 
   <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
     <!-- Menu -->
-    <menubar id="main-menubar" persist="collapsed" grippytooltiptext="&menuBar.tooltip;"/>
+    <menubar id="main-menubar" grippytooltiptext="&menuBar.tooltip;"/>
 
-    <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
+    <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar"
              grippytooltiptext="&navigationToolbar.tooltip;"
              tbalign="stretch" fullscreentoolbar="true">
       <hbox id="nav-bar-buttons">
@@ -237,7 +237,7 @@ Contributor(s):
       </hbox>
     </toolbar>
   
-    <toolbar id="PersonalToolbar" class="chromeclass-directories" persist="collapsed" 
+    <toolbar id="PersonalToolbar" class="chromeclass-directories"
              grippytooltiptext="&personalToolbar.tooltip;" tbalign="stretch"
              ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarDNDObserver)"
              ondragdrop="nsDragAndDrop.drop(event, personalToolbarDNDObserver); event.preventBubble()"
