@@ -165,8 +165,8 @@ public:
 
 private:
     // not to be implemented
-    nsXPIDLString(nsXPIDLString& aXPIDLString) {}
-    nsXPIDLString& operator =(nsXPIDLString& aXPIDLString) { return *this; }
+    nsXPIDLString(nsXPIDLString& /* aXPIDLString */) {}
+    nsXPIDLString& operator =(nsXPIDLString& /* aXPIDLString */) { return *this; }
 };
 
 
@@ -270,8 +270,8 @@ public:
 
 private:
     // not to be implemented
-    nsXPIDLCString(nsXPIDLCString& aXPIDLString) {}
-    nsXPIDLCString& operator =(nsXPIDLCString& aXPIDLString) { return *this; }
+    nsXPIDLCString(nsXPIDLCString& /* aXPIDLString */) {}
+    nsXPIDLCString& operator =(nsXPIDLCString& /* aXPIDLCString */) { return *this; }
 };
 
 /**
