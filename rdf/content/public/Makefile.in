@@ -37,8 +37,7 @@ EXPORTS		= \
 		nsIXULContentSink.h \
 		nsIXULContentUtils.h \
 		nsIXULDocument.h \
-		nsIXULKeyListener.h \
-		nsIXULPopupListener.h \
+                nsIXULPopupListener.h \
 		nsIXULPrototypeCache.h \
 		nsIXULPrototypeDocument.h \
         nsIXULContent.h \

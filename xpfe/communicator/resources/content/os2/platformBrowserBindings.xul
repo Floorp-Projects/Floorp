@@ -9,33 +9,33 @@
 <keyset id="globalKeySet" xulkey="ctrl">
 
 <!-- other keybindings for cut/copy/paste -->
-<key id="os2AlternativeCutKey" keycode="VK_DELETE" shift="true" control="false" alt="false"
-  onkeypress="
+<key id="os2AlternativeCutKey" keycode="VK_DELETE"   
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-    controller.doCommand('cmd_cut');"/>
-<key id="os2AlternateCopy2Key" keycode="VK_DELETE" shift="false" control="true" alt="false"
-  onkeypress="
+    controller.doCommand('cmd_cut');" modifiers="shift"/>
+<key id="os2AlternateCopy2Key" keycode="VK_DELETE"   
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');"/>
-<key id="os2AlternativeCopyKey" keycode="VK_INSERT" control="true"
-  onkeypress="
+    controller.doCommand('cmd_copy');" modifiers="control"/>
+<key id="os2AlternativeCopyKey" keycode="VK_INSERT" 
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');"/>
-<key id="os2AlternativePasteKey" keycode="VK_INSERT" shift="true"
-  onkeypress="
+    controller.doCommand('cmd_copy');" modifiers="control"/>
+<key id="os2AlternativePasteKey" keycode="VK_INSERT" 
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
-    controller.doCommand('cmd_paste');"/>
+    controller.doCommand('cmd_paste');" modifiers="shift"/>
     
-<key id="key_homectrlshift" keycode="VK_HOME" shift="true" control="true" alt="false"
-    onkeypress="
+<key id="key_homectrlshift" keycode="VK_HOME"   
+    oncommand="
         var controller =
         document.commandDispatcher.getControllerForCommand('cmd_selectTop');
-        controller.doCommand('cmd_selectTop');"/>
-<key id="key_endctrlshift" keycode="VK_END" shift="true" control="true" alt="false"
-    onkeypress="
+        controller.doCommand('cmd_selectTop');" modifiers="shift, control"/>
+<key id="key_endctrlshift" keycode="VK_END"   
+    oncommand="
         var controller =
         document.commandDispatcher.getControllerForCommand('cmd_selectBottom');
-        controller.doCommand('cmd_selectBottom');"/>
+        controller.doCommand('cmd_selectBottom');" modifiers="shift, control"/>
 </keyset>
 
 <!-- End OS/2-specific keybindings -->

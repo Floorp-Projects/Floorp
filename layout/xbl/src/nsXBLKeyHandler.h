@@ -42,7 +42,7 @@ class nsXBLKeyHandler : public nsIDOMKeyListener,
                         public nsXBLEventHandler
 {
 public:
-  nsXBLKeyHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, nsIAtom* aEventName);
+  nsXBLKeyHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
 
   virtual ~nsXBLKeyHandler();
   
@@ -67,8 +67,7 @@ protected:
 
 extern nsresult
 NS_NewXBLKeyHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsIAtom* aEventName,
-                      nsXBLKeyHandler** aResult);
+                    nsXBLKeyHandler** aResult);
 
 
 #endif

@@ -6,7 +6,6 @@ nsIStreamLoadableDocument.h
 nsIXULContentSink.h
 nsIXULContentUtils.h
 nsIXULDocument.h
-nsIXULKeyListener.h
 nsIXULPopupListener.h
 nsIXULPrototypeCache.h
 nsIXULPrototypeDocument.h

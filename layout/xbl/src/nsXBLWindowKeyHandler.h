@@ -22,40 +22,40 @@
  * Contributor(s): 
  */
 
-#ifndef nsXBLKeyHandler_h__
-#define nsXBLKeyHandler_h__
+#ifndef nsXBLWindowKeyHandler_h__
+#define nsXBLWindowKeyHandler_h__
 
 #include "nsIDOMKeyListener.h"
-#include "nsXBLEventHandler.h"
+#include "nsIDOMElement.h"
 
-class nsIXBLBinding;
-class nsIDOMEvent;
-class nsIContent;
-class nsIDOMUIEvent;
-class nsIDOMKeyEvent;
-class nsIDOMMouseEvent;
 class nsIAtom;
-class nsIController;
-class nsIXBLPrototypeHandler;
+class nsIDOMEventReceiver;
+struct nsXBLSpecialDocInfo;
 
-class nsXBLKeyHandler : public nsIDOMKeyListener, 
-                        public nsXBLEventHandler
+class nsXBLWindowKeyHandler : public nsIDOMKeyListener
 {
 public:
-  nsXBLKeyHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
-
-  virtual ~nsXBLKeyHandler();
+  nsXBLWindowKeyHandler(nsIDOMElement* aElement, nsIDOMEventReceiver* aReceiver);
+  virtual ~nsXBLWindowKeyHandler();
   
   // nsIDOMetc.
   virtual nsresult HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
   
-  virtual nsresult KeyUp(nsIDOMEvent* aMouseEvent);
-  virtual nsresult KeyDown(nsIDOMEvent* aMouseEvent);
-  virtual nsresult KeyPress(nsIDOMEvent* aMouseEvent);
+  virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent);
+  virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
+  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent);
    
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
 protected:
+  NS_IMETHOD WalkHandlers(nsIDOMEvent* aKeyEvent, nsIAtom* aEventType);
+  NS_IMETHOD WalkHandlersInternal(nsIDOMKeyEvent* aKeyEvent, nsIAtom* aEventType, 
+                                  nsIXBLPrototypeHandler* aHandler);
+
+  NS_IMETHOD EnsureHandlers();
+
+  PRBool IsEditor();
+
   static PRUint32 gRefCnt;
   static nsIAtom* kKeyUpAtom;
   static nsIAtom* kKeyDownAtom;
@@ -63,11 +63,18 @@ protected:
 
 protected:
   // Members
+  nsIDOMElement* mElement;
+  nsCOMPtr<nsIXBLPrototypeHandler> mHandler;
+  nsCOMPtr<nsIXBLPrototypeHandler> mPlatformHandler;
+
+  nsXBLSpecialDocInfo* mXBLSpecialDocInfo;
+
+  nsIDOMEventReceiver* mReceiver;
 };
 
 extern nsresult
-NS_NewXBLKeyHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                    nsXBLKeyHandler** aResult);
-
+NS_NewXBLWindowKeyHandler(nsIDOMElement* aElement,
+                          nsIDOMEventReceiver* aReceiver,
+                          nsXBLWindowKeyHandler** aResult);
 
 #endif

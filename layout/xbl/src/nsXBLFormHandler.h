@@ -40,7 +40,7 @@ class nsXBLFormHandler : public nsIDOMFormListener,
                          public nsXBLEventHandler
 {
 public:
-  nsXBLFormHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, nsIAtom* aEventName);
+  nsXBLFormHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
   virtual ~nsXBLFormHandler();
   
   // nsIDOMetc.
@@ -68,8 +68,7 @@ protected:
 
 extern nsresult
 NS_NewXBLFormHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsIAtom* aEventName,
-                      nsXBLFormHandler** aResult);
+                     nsXBLFormHandler** aResult);
 
 
 #endif

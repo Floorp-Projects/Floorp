@@ -24,11 +24,14 @@
 
 #include "nsCOMPtr.h"
 #include "nsXBLService.h"
+#include "nsIXBLPrototypeHandler.h"
+#include "nsXBLWindowKeyHandler.h"
 #include "nsIInputStream.h"
 #include "nsINameSpace.h"
 #include "nsINameSpaceManager.h"
 #include "nsHashtable.h"
 #include "nsIURI.h"
+#include "nsIDOMElement.h"
 #include "nsIURL.h"
 #include "nsIChannel.h"
 #include "nsIHTTPChannel.h"
@@ -805,6 +808,41 @@ nsXBLService::GetXBLDocumentInfo(const nsCString& aURLStr, nsIContent* aBoundEle
 }
 
 NS_IMETHODIMP
+nsXBLService::AttachGlobalKeyHandler(nsIDOMEventReceiver* aReceiver)
+{
+  // Create the key handler
+  nsCOMPtr<nsIDOMEventReceiver> rec = aReceiver;
+  nsCOMPtr<nsIContent> element(do_QueryInterface(aReceiver));
+
+  if (element) {
+    nsCOMPtr<nsIDocument> doc;
+    element->GetDocument(*getter_AddRefs(doc));  
+    if (doc)
+      rec = do_QueryInterface(doc); // We're a XUL keyset. Attach to our document.
+  }
+  
+  if (!rec)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(element));
+
+  nsXBLWindowKeyHandler* handler;
+  NS_NewXBLWindowKeyHandler(elt, rec, &handler); // THis call addrefs us.
+
+  if (!handler)
+    return NS_ERROR_FAILURE;
+
+  rec->AddEventListener(NS_LITERAL_STRING("keydown"), handler, PR_FALSE);
+  rec->AddEventListener(NS_LITERAL_STRING("keyup"), handler, PR_FALSE);
+  rec->AddEventListener(NS_LITERAL_STRING("keypress"), handler, PR_FALSE);
+
+  // Release.  Do this so that only the event receiver holds onto the key handler.
+  NS_RELEASE(handler);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXBLService::Observe(nsISupports* aSubject, const PRUnichar* aTopic, const PRUnichar* aSomeData)
 {
   if (nsCRT::strcmp(aTopic, NS_MEMORY_PRESSURE_TOPIC) == 0)
@@ -972,19 +1010,23 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
   if (!info) {
     // The second line of defense is the binding manager's document table.
     nsCOMPtr<nsIBindingManager> bindingManager;
-    aBoundDocument->GetBindingManager(getter_AddRefs(bindingManager));
-    bindingManager->GetXBLDocumentInfo(aURLStr, getter_AddRefs(info));
+
+    if (aBoundDocument) {
+      aBoundDocument->GetBindingManager(getter_AddRefs(bindingManager));
+      bindingManager->GetXBLDocumentInfo(aURLStr, getter_AddRefs(info));
+    }
 
     nsCOMPtr<nsIAtom> tagName;
     if (aBoundElement)
       aBoundElement->GetTag(*getter_AddRefs(tagName));
-    if (!info && (tagName.get() != kScrollbarAtom) && (tagName.get() != kInputAtom) 
+    if (!info && bindingManager && (tagName.get() != kScrollbarAtom) && (tagName.get() != kInputAtom) 
         && !aForceSyncLoad) {
       // The third line of defense is to investigate whether or not the
       // document is currently being loaded asynchronously.  If so, there's no
       // document yet, but we need to glom on our request so that it will be
       // processed whenever the doc does finish loading.
       nsCOMPtr<nsIStreamListener> listener;
+      if (bindingManager)
       bindingManager->GetLoadingDocListener(aURLStr, getter_AddRefs(listener));
       if (listener) {
         nsIStreamListener* ilist = listener.get();
@@ -1034,10 +1076,8 @@ nsXBLService::LoadBindingDocumentInfo(nsIContent* aBoundElement, nsIDocument* aB
           }
         }
         
-        if (!cached) {
+        if (!cached && bindingManager) {
           // Otherwise we put it in our binding manager's document table.
-          nsCOMPtr<nsIBindingManager> bindingManager;
-          aBoundDocument->GetBindingManager(getter_AddRefs(bindingManager));
           bindingManager->PutXBLDocumentInfo(info);
         }
       }
@@ -1076,7 +1116,8 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
   // Now we have to synchronously load the binding file.
   // Create an XML content sink and a parser. 
   nsCOMPtr<nsILoadGroup> loadGroup;
-  aBoundDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
+  if (aBoundDocument)
+    aBoundDocument->GetDocumentLoadGroup(getter_AddRefs(loadGroup));
   
   nsCOMPtr<nsIChannel> channel;
   rv = NS_OpenURI(getter_AddRefs(channel), aURI, nsnull, loadGroup);
@@ -1220,6 +1261,33 @@ static void GetImmediateChild(nsIAtom* aTag, nsIContent* aParent, nsIContent** a
   }
 }
 
+nsresult
+nsXBLService::BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult)
+{
+  nsCOMPtr<nsIXBLPrototypeHandler> firstHandler;
+  nsCOMPtr<nsIXBLPrototypeHandler> currHandler;
+  PRInt32 handlerCount;
+  aContent->ChildCount(handlerCount);
+  for (PRInt32 j = 0; j < handlerCount; j++) {
+    nsCOMPtr<nsIContent> handler;
+    aContent->ChildAt(j, *getter_AddRefs(handler));
+    
+    nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
+    NS_NewXBLPrototypeHandler(handler, getter_AddRefs(newHandler));
+    if (newHandler) {
+      if (currHandler)
+        currHandler->SetNextHandler(newHandler);
+      else firstHandler = newHandler;
+      currHandler = newHandler;
+    }
+  }
+
+  *aResult = firstHandler;
+  NS_IF_ADDREF(*aResult);
+ 
+  return NS_OK;
+}
+
 nsresult 
 nsXBLService::ConstructPrototypeHandlers(nsIXBLDocumentInfo* aInfo)
 {
@@ -1237,24 +1305,8 @@ nsXBLService::ConstructPrototypeHandlers(nsIXBLDocumentInfo* aInfo)
     GetImmediateChild(kHandlersAtom, binding, getter_AddRefs(handlers));
     if (handlers) {
       nsCOMPtr<nsIXBLPrototypeHandler> firstHandler;
-      nsCOMPtr<nsIXBLPrototypeHandler> currHandler;
-
-      PRInt32 handlerCount;
-      handlers->ChildCount(handlerCount);
-      for (PRInt32 j = 0; j < handlerCount; j++) {
-        nsCOMPtr<nsIContent> handler;
-        handlers->ChildAt(j, *getter_AddRefs(handler));
-        
-        nsCOMPtr<nsIXBLPrototypeHandler> newHandler;
-        NS_NewXBLPrototypeHandler(handler, getter_AddRefs(newHandler));
-        if (newHandler) {
-          if (currHandler)
-            currHandler->SetNextHandler(newHandler);
-          else firstHandler = newHandler;
-          currHandler = newHandler;
-        }
-      }
-
+      nsXBLService::BuildHandlerChain(handlers, getter_AddRefs(firstHandler));
+ 
       if (firstHandler) {
         nsAutoString ref;
         binding->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, ref);

@@ -58,9 +58,8 @@ nsIAtom* nsXBLMouseHandler::kMouseDblClickAtom = nsnull;
 nsIAtom* nsXBLMouseHandler::kMouseOverAtom = nsnull;
 nsIAtom* nsXBLMouseHandler::kMouseOutAtom = nsnull;
 
-nsXBLMouseHandler::nsXBLMouseHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler,
-                                     nsIAtom* aEventName)
-:nsXBLEventHandler(aReceiver,aHandler,aEventName)
+nsXBLMouseHandler::nsXBLMouseHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
+:nsXBLEventHandler(aReceiver,aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -88,110 +87,59 @@ nsXBLMouseHandler::~nsXBLMouseHandler()
 
 NS_IMPL_ISUPPORTS_INHERITED1(nsXBLMouseHandler, nsXBLEventHandler, nsIDOMMouseListener)
 
-nsresult nsXBLMouseHandler::MouseDown(nsIDOMEvent* aMouseEvent)
+static inline nsresult DoMouse(nsIAtom* aEventType, nsIXBLPrototypeHandler* aHandler, nsIDOMEvent* aMouseEvent,
+                               nsIDOMEventReceiver* aReceiver)
 {
-  if (mEventName.get() != kMouseDownAtom)
+  if (!aHandler)
     return NS_OK;
 
   PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
+  nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
+  aHandler->MouseEventMatched(aEventType, mouse, &matched);
 
   if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
+    aHandler->ExecuteHandler(aReceiver, aMouseEvent);
+  
   return NS_OK;
+}
+
+nsresult nsXBLMouseHandler::MouseDown(nsIDOMEvent* aMouseEvent)
+{
+  return DoMouse(kMouseDownAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 nsresult nsXBLMouseHandler::MouseUp(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName.get() != kMouseUpAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
+  return DoMouse(kMouseUpAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 nsresult nsXBLMouseHandler::MouseClick(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName.get() != kMouseClickAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
+  return DoMouse(kMouseClickAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 nsresult nsXBLMouseHandler::MouseDblClick(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName.get() != kMouseDblClickAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
+  return DoMouse(kMouseDblClickAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 nsresult nsXBLMouseHandler::MouseOver(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName.get() != kMouseOverAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
+  return DoMouse(kMouseOverAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 nsresult nsXBLMouseHandler::MouseOut(nsIDOMEvent* aMouseEvent)
 {
-  if (mEventName.get() != kMouseOutAtom)
-    return NS_OK;
-
-  PRBool matched = PR_FALSE;
-  if (mProtoHandler) {
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    mProtoHandler->MouseEventMatched(mouse, &matched);
-  }
-
-  if (matched)
-    ExecuteHandler(mEventName, aMouseEvent);
-  return NS_OK;
+  return DoMouse(kMouseOutAtom, mProtoHandler, aMouseEvent, mEventReceiver);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLMouseHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
-                    nsIAtom* aEventName,
-                    nsXBLMouseHandler** aResult)
+NS_NewXBLMouseHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler,
+                      nsXBLMouseHandler** aResult)
 {
-  *aResult = new nsXBLMouseHandler(aRec, aHandler, aEventName);
+  *aResult = new nsXBLMouseHandler(aRec, aHandler);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

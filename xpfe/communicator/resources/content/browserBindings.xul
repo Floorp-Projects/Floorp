@@ -5,18 +5,18 @@
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <keyset id="browserKeySet">
-    <key id="key_page_up" keycode="VK_PAGE_UP" shift="false" control="false" alt="false"
-        onkeypress="
+    <key id="key_page_up" keycode="VK_PAGE_UP"   
+        oncommand="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageUp');
             controller.doCommand('cmd_scrollPageUp');"/>
-    <key id="key_page_down" keycode="VK_PAGE_DOWN" shift="false" control="false" alt="false"
-        onkeypress="
+    <key id="key_page_down" keycode="VK_PAGE_DOWN"   
+        oncommand="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollPageDown');
             controller.doCommand('cmd_scrollPageDown');"/>
-    <key id="space" key=" " shift="false" control="false" alt="false"
-        onkeypress="
+    <key id="space" key=" "   
+        oncommand="
 			var v = document.commandDispatcher.focusedElement;
 			
 			if (v &amp;&amp; (v.localName == 'INPUT' || v.localName == 'TEXTAREA')) {
@@ -28,47 +28,47 @@
             controller.doCommand('cmd_scrollPageDown');
     "/>
 
-    <key id="key_page_up" keycode="VK_UP" shift="false" control="false" alt="false"
-        onkeypress="
+    <key id="key_page_up" keycode="VK_UP"   
+        oncommand="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollLineUp');
             controller.doCommand('cmd_scrollLineUp');"/>
-    <key id="key_page_down" keycode="VK_DOWN" shift="false" control="false" alt="false"
-        onkeypress="
+    <key id="key_page_down" keycode="VK_DOWN"   
+        oncommand="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollLineDown');
             controller.doCommand('cmd_scrollLineDown');"/>
-    <key id="key_left" keycode="VK_LEFT" shift="false" control="false" alt="false" xulkey="false"
-        onkeypress="
+    <key id="key_left" keycode="VK_LEFT"    
+        oncommand="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollLeft');
             controller.doCommand('cmd_scrollLeft');"/>
-    <key id="key_right" keycode="VK_RIGHT" shift="false" control="false" alt="false" xulkey="false"
-        onkeypress="
+    <key id="key_right" keycode="VK_RIGHT"    
+        oncommand="
             var controller =
             document.commandDispatcher.getControllerForCommand('cmd_scrollRight');
             controller.doCommand('cmd_scrollRight');"/>
 
-    <key id="cutKey" key="x" xulkey="true" shift="false"
-      onkeypress="
+    <key id="cutKey" key="x"  
+      oncommand="
         var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-        controller.doCommand('cmd_cut');"/>
-    <key id="copyKey" key="c" xulkey="true" shift="false"
-      onkeypress="
+        controller.doCommand('cmd_cut');" modifiers="accel"/>
+    <key id="copyKey" key="c"  
+      oncommand="
         var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-        controller.doCommand('cmd_copy');"/>
-    <key id="pasteKey" key="v" xulkey="true" shift="false"
-      onkeypress="
+        controller.doCommand('cmd_copy');" modifiers="accel"/>
+    <key id="pasteKey" key="v"  
+      oncommand="
         var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
-        controller.doCommand('cmd_paste');"/>
-    <key id="undoKey" key="z" xulkey="true" shift="false"
-      onkeypress="
+        controller.doCommand('cmd_paste');" modifiers="accel"/>
+    <key id="undoKey" key="z"  
+      oncommand="
         var controller = document.commandDispatcher.getControllerForCommand('cmd_undo');
-        controller.doCommand('cmd_undo');"/>
-    <key id="redoKey" key="y" xulkey="true" shift="false"
-      onkeypress="
+        controller.doCommand('cmd_undo');" modifiers="accel"/>
+    <key id="redoKey" key="y"  
+      oncommand="
         var controller = document.commandDispatcher.getControllerForCommand('cmd_redo');
-        controller.doCommand('cmd_redo');"/>
+        controller.doCommand('cmd_redo');" modifiers="accel"/>
 
 	</keyset>
 </window>

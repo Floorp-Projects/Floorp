@@ -106,7 +106,6 @@
 #include "nsIXULContent.h"
 #include "nsIXULContentSink.h"
 #include "nsIXULContentUtils.h"
-#include "nsIXULKeyListener.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsLWBrkCIID.h"
 #include "nsLayoutCID.h"
@@ -162,7 +161,6 @@ static NS_DEFINE_CID(kWellFormedDTDCID,          NS_WELLFORMEDDTD_CID);
 static NS_DEFINE_CID(kXMLElementFactoryCID,      NS_XML_ELEMENT_FACTORY_CID);
 static NS_DEFINE_CID(kXULContentSinkCID,         NS_XULCONTENTSINK_CID);
 static NS_DEFINE_CID(kXULContentUtilsCID,        NS_XULCONTENTUTILS_CID);
-static NS_DEFINE_CID(kXULKeyListenerCID,         NS_XULKEYLISTENER_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 static NS_DEFINE_CID(kXULTemplateBuilderCID,     NS_XULTEMPLATEBUILDER_CID);
 static NS_DEFINE_CID(kDOMImplementationCID,      NS_DOM_IMPLEMENTATION_CID);
@@ -431,7 +429,6 @@ nsXULDocument::nsXULDocument(void)
       mScriptObject(nsnull),
       mNextSrcLoadWaiter(nsnull),
       mDisplaySelection(PR_FALSE),
-      mIsKeyBindingDoc(PR_FALSE),
       mIsPopup(PR_FALSE),
       mResolutionPhase(nsForwardReference::eStart),
       mNextContentID(NS_CONTENT_ID_COUNTER_BASE),
@@ -723,13 +720,6 @@ nsXULDocument::PrepareStyleSheets(nsIURI* anURL)
         return rv;
     }
 
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXULDocument::SetIsKeybindingDocument(PRBool aIsKeyBindingDoc)
-{
-    mIsKeyBindingDoc = aIsKeyBindingDoc;
     return NS_OK;
 }
 
@@ -1575,8 +1565,6 @@ nsXULDocument::EndLoad()
     rv = PrepareToWalk();
     if (NS_FAILED(rv)) return rv;
 
-    if (mIsKeyBindingDoc && (mCurrentPrototype != mMasterPrototype))
-      return NS_OK; // If we're a keybinding doc and we're loading an overlay
     return ResumeWalk();
 }
 
@@ -3934,21 +3922,20 @@ nsXULDocument::Init()
 
     mNodeInfoManager->Init(mNameSpaceManager);
 
-    if (!mIsKeyBindingDoc) {
-        // Create our focus tracker and hook it up.
-        rv = nsXULCommandDispatcher::Create(getter_AddRefs(mCommandDispatcher));
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a focus tracker");
-        if (NS_FAILED(rv)) return rv;
+    // Create our command dispatcher and hook it up.
+    rv = nsXULCommandDispatcher::Create(getter_AddRefs(mCommandDispatcher));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a focus tracker");
+    if (NS_FAILED(rv)) return rv;
 
-        nsCOMPtr<nsIDOMEventListener> CommandDispatcher =
-            do_QueryInterface(mCommandDispatcher);
+    nsCOMPtr<nsIDOMEventListener> commandDispatcher =
+        do_QueryInterface(mCommandDispatcher);
 
-        if (CommandDispatcher) {
-            // Take the focus tracker and add it as an event listener for focus and blur events.
-            AddEventListener(NS_LITERAL_STRING("focus"), CommandDispatcher, PR_TRUE);
-            AddEventListener(NS_LITERAL_STRING("blur"), CommandDispatcher, PR_TRUE);
-        }
+    if (commandDispatcher) {
+        // Take the focus tracker and add it as an event listener for focus and blur events.
+        AddEventListener(NS_LITERAL_STRING("focus"), commandDispatcher, PR_TRUE);
+        AddEventListener(NS_LITERAL_STRING("blur"), commandDispatcher, PR_TRUE);
     }
+   
     // Get the local store. Yeah, I know. I wish GetService() used a
     // 'void**', too.
     nsIRDFDataSource* localstore;
@@ -5392,59 +5379,11 @@ nsXULDocument::ResumeWalk()
             NS_ADDREF(parserObserver);
             parser->Parse(uri, parserObserver);
             NS_RELEASE(parserObserver);
-
-            // If we're a keybinding document, the overlay load must
-            // occur synchronously.
-            if (mIsKeyBindingDoc) {
-              nsCOMPtr<nsIChannel> channel;
-              rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull);
-              if (NS_FAILED(rv)) return rv;
-              nsCOMPtr<nsIInputStream> in;
-              PRUint32 sourceOffset = 0;
-              rv = channel->OpenInputStream(getter_AddRefs(in));
-
-              // If we couldn't open the channel, then just return.
-              if (NS_FAILED(rv)) return NS_OK;
-
-              NS_ASSERTION(in != nsnull, "no input stream");
-              if (! in) return NS_ERROR_FAILURE;
-
-              rv = NS_ERROR_OUT_OF_MEMORY;
-              nsProxyLoadStream* proxy = new nsProxyLoadStream();
-              if (! proxy)
-                return NS_ERROR_FAILURE;
   
-              listener->OnStartRequest(channel, nsnull);
-              while (PR_TRUE) {
-                char buf[1024];
-                PRUint32 readCount;
-
-                if (NS_FAILED(rv = in->Read(buf, sizeof(buf), &readCount)))
-                    break; // error
-
-                if (readCount == 0)
-                    break; // eof
-
-                proxy->SetBuffer(buf, readCount);
-
-                rv = listener->OnDataAvailable(channel, nsnull, proxy, sourceOffset, readCount);
-                sourceOffset += readCount;
-                if (NS_FAILED(rv))
-                    break;
-              }
-
-              listener->OnStopRequest(channel, nsnull, NS_OK, nsnull);
-
-              // don't leak proxy!
-              proxy->Close();
-              delete proxy;
-            }
-            else {
-              nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
-              rv = NS_OpenURI(listener, nsnull, uri, nsnull, group);
-              if (NS_FAILED(rv)) return rv;
-            }
-
+            nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
+            rv = NS_OpenURI(listener, nsnull, uri, nsnull, group);
+            if (NS_FAILED(rv)) return rv;
+          
             // Return to the main event loop and eagerly await the
             // overlay load's completion. When the content sink
             // completes, it will trigger an EndLoad(), which'll wind
@@ -5732,26 +5671,12 @@ nsXULDocument::CreateElement(nsXULPrototypeElement* aPrototype, nsIContent** aRe
         if (NS_FAILED(rv)) return rv;
 
         // We also need to pay special attention to the keyset tag to set up a listener
-        if (aPrototype->mNodeInfo->Equals(kKeysetAtom, kNameSpaceID_XUL) &&
-            ! mIsKeyBindingDoc) {
-            // Create our nsXULKeyListener and hook it up.
-            nsCOMPtr<nsIXULKeyListener> keyListener;
-            rv = nsComponentManager::CreateInstance(kXULKeyListenerCID,
-                                                    nsnull,
-                                                    NS_GET_IID(nsIXULKeyListener),
-                                                    getter_AddRefs(keyListener));
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create a key listener");
-            if (NS_FAILED(rv)) return rv;
-
-            nsCOMPtr<nsIDOMEventListener> domEventListener = do_QueryInterface(keyListener);
-            if (domEventListener) {
-                // Init the listener with the keyset node
-                nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(result);
-                keyListener->Init(domElement, this);
-
-                AddEventListener(NS_LITERAL_STRING("keypress"), domEventListener, PR_FALSE);
-                AddEventListener(NS_LITERAL_STRING("keydown"),  domEventListener, PR_FALSE);
-                AddEventListener(NS_LITERAL_STRING("keyup"),    domEventListener, PR_FALSE);
+        if (aPrototype->mNodeInfo->Equals(kKeysetAtom, kNameSpaceID_XUL)) {
+            // Create our XUL key listener and hook it up.    
+            NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+            if (xblService) {
+                nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(result));
+                xblService->AttachGlobalKeyHandler(rec);
             }
         }
     }

@@ -48,9 +48,8 @@ nsIAtom* nsXBLScrollHandler::kOverflowAtom = nsnull;
 nsIAtom* nsXBLScrollHandler::kUnderflowAtom = nsnull;
 nsIAtom* nsXBLScrollHandler::kOverflowChangedAtom = nsnull;
 
-nsXBLScrollHandler::nsXBLScrollHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler,
-                                     nsIAtom* aEventName)
-:nsXBLEventHandler(aReceiver,aHandler,aEventName)
+nsXBLScrollHandler::nsXBLScrollHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler)
+:nsXBLEventHandler(aReceiver,aHandler)
 {
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -74,28 +73,46 @@ NS_IMPL_ISUPPORTS_INHERITED1(nsXBLScrollHandler, nsXBLEventHandler, nsIDOMScroll
 
 nsresult nsXBLScrollHandler::Overflow(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kOverflowAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kOverflowAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLScrollHandler::Underflow(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kUnderflowAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kUnderflowAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
 nsresult nsXBLScrollHandler::OverflowChanged(nsIDOMEvent* aEvent)
 {
-  if (mEventName.get() != kOverflowChangedAtom)
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() != kOverflowChangedAtom)
     return NS_OK;
 
-  ExecuteHandler(mEventName, aEvent);
+  mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
   return NS_OK;
 }
 
@@ -103,10 +120,9 @@ nsresult nsXBLScrollHandler::OverflowChanged(nsIDOMEvent* aEvent)
 
 nsresult
 NS_NewXBLScrollHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
-                    nsIAtom* aEventName,
-                    nsXBLScrollHandler** aResult)
+                       nsXBLScrollHandler** aResult)
 {
-  *aResult = new nsXBLScrollHandler(aRec, aHandler, aEventName);
+  *aResult = new nsXBLScrollHandler(aRec, aHandler);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

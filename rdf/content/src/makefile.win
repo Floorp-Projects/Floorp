@@ -40,6 +40,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsXULAttributeValue.obj                 \
         .\$(OBJDIR)\nsXULCommandDispatcher.obj    \
         .\$(OBJDIR)\nsXULControllers.obj          \
+        .\$(OBJDIR)\nsXULMenuListElement.obj    \
         .\$(OBJDIR)\nsXULPopupListener.obj        \
         .\$(OBJDIR)\nsXULPrototypeDocument.obj    \
         .\$(OBJDIR)\nsXULPrototypeCache.obj       \
@@ -53,11 +54,9 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsXULContentUtils.obj         \
         .\$(OBJDIR)\nsXULContentSink.obj          \
         .\$(OBJDIR)\nsXULDocument.obj             \
-        .\$(OBJDIR)\nsXULKeyListener.obj          \
         .\$(OBJDIR)\nsXULSortService.obj          \
         .\$(OBJDIR)\nsXULTreeElement.obj          \
-        .\$(OBJDIR)\nsXULMenuListElement.obj      \
-	      $(NULL)
+        $(NULL)
 
 # XXX we are including layout\html\base\src to get HTML elements
 # constructed directly from Raptor. The hope is that this'll

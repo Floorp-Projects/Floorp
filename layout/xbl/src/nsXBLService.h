@@ -33,6 +33,7 @@
 
 class nsIXBLBinding;
 class nsIXBLDocumentInfo;
+class nsIXBLPrototypeHandler;
 class nsINameSpaceManager;
 class nsIContent;
 class nsIDocument;
@@ -77,6 +78,9 @@ class nsXBLService : public nsIXBLService, public nsIObserver, public nsSupports
                                      const nsCString& aURI, const nsCString& aRef,
                                      PRBool aForceSyncLoad, nsIXBLDocumentInfo** aResult);
 
+  // Used by XUL key bindings and for window XBL.
+  NS_IMETHOD AttachGlobalKeyHandler(nsIDOMEventReceiver* aElement);
+
   NS_DECL_NSIOBSERVER
 
 public:
@@ -100,6 +104,7 @@ public:
   // that contain only whitespace.
   static nsresult StripWhitespaceNodes(nsIContent* aContent);
   static nsresult ConstructPrototypeHandlers(nsIXBLDocumentInfo* aInfo);
+  static nsresult BuildHandlerChain(nsIContent* aContent, nsIXBLPrototypeHandler** aResult);
 
 // MEMBER VARIABLES
 public:

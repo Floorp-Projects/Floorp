@@ -73,13 +73,11 @@ nsIAtom* nsXBLEventHandler::kBindingAttachedAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kBindingDetachedAtom = nsnull;
 nsIAtom* nsXBLEventHandler::kModifiersAtom = nsnull;
 
-nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandler,
-                                     nsIAtom* aEventName)
+nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandler)
 {
   NS_INIT_REFCNT();
   mEventReceiver = aEventReceiver;
   mProtoHandler = aHandler;
-  mEventName = aEventName;
   mNextHandler = nsnull;
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -118,8 +116,14 @@ NS_IMPL_ISUPPORTS1(nsXBLEventHandler, nsISupports)
 NS_IMETHODIMP
 nsXBLEventHandler::BindingAttached()
 {
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
   nsresult ret;
-  if (mEventName.get() == kBindingAttachedAtom) {
+  if (eventName.get() == kBindingAttachedAtom) {
     nsMouseEvent event;
     event.eventStructType = NS_EVENT;
     event.message = NS_MENU_ACTION;
@@ -151,7 +155,7 @@ nsXBLEventHandler::BindingAttached()
       privateEvent->SetTarget(mEventReceiver);
     }
 
-    ExecuteHandler(mEventName, domEvent);
+    mProtoHandler->ExecuteHandler(mEventReceiver, domEvent);
   }
 
   if (mNextHandler)
@@ -163,8 +167,13 @@ nsXBLEventHandler::BindingAttached()
 NS_IMETHODIMP
 nsXBLEventHandler::BindingDetached()
 {
+  if (!mProtoHandler)
+    return NS_ERROR_FAILURE;
+
   nsresult ret;
-  if (mEventName.get() == kBindingDetachedAtom) {
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+  if (eventName.get() == kBindingDetachedAtom) {
     nsMouseEvent event;
     event.eventStructType = NS_EVENT;
     event.message = NS_MENU_ACTION;
@@ -196,169 +205,12 @@ nsXBLEventHandler::BindingDetached()
       privateEvent->SetTarget(mEventReceiver);
     }
 
-    ExecuteHandler(mEventName, domEvent);
+    mProtoHandler->ExecuteHandler(mEventReceiver, domEvent);
   }
 
   if (mNextHandler)
     return mNextHandler->BindingDetached();
   
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXBLEventHandler::ExecuteHandler(nsIAtom* aEventName, nsIDOMEvent* aEvent)
-{
-  if (!mProtoHandler)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIContent> handlerElement;
-  mProtoHandler->GetHandlerElement(getter_AddRefs(handlerElement));
-  if (!handlerElement)
-    return NS_ERROR_FAILURE;
-
-  // This is a special-case optimization to make command handling fast.
-  // It isn't really a part of XBL, but it helps speed things up.
-  nsAutoString command;
-  handlerElement->GetAttribute(kNameSpaceID_None, kCommandAtom, command);
-  if (!command.IsEmpty()) {
-    // Make sure the XBL doc is chrome.
-    // Fix for bug #45989
-    if (!mProtoHandler)
-      return NS_OK;
-    nsCOMPtr<nsIContent> handler;
-    mProtoHandler->GetHandlerElement(getter_AddRefs(handler));
-    nsCOMPtr<nsIDocument> document;
-    handler->GetDocument(*getter_AddRefs(document));
-    nsCOMPtr<nsIURI> url = getter_AddRefs(document->GetDocumentURL());
-    nsXPIDLCString scheme;
-    url->GetScheme(getter_Copies(scheme));
-    if (PL_strcmp(scheme, "chrome") != 0)
-      return NS_OK;
-
-    // We are the default action for this command.
-    // Stop any other default action from executing.
-    aEvent->PreventDefault();
-
-    nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aEvent);
-    if(privateEvent) 
-    {
-      PRBool dispatchStopped;
-      privateEvent->IsDispatchStopped(&dispatchStopped);
-      if(dispatchStopped)
-        return NS_OK;
-    }
-
-    // Instead of executing JS, let's get the controller for the bound
-    // element and call doCommand on it.
-    nsCOMPtr<nsIController> controller;
-    GetController(getter_AddRefs(controller));
-
-    if (controller) {
-      controller->DoCommand(command.GetUnicode());
-    }
-
-    return NS_OK;
-  }
-
-  // Look for a compiled handler on the element. 
-  // Should be compiled and bound with "on" in front of the name.
-  nsAutoString onEvent; onEvent.AssignWithConversion("onxbl");
-  nsAutoString str;
-  mEventName->ToString(str);
-  onEvent += str;
-  nsCOMPtr<nsIAtom> onEventAtom = getter_AddRefs(NS_NewAtom(onEvent));
-
-  void* handler = nsnull;
-  
-  // Compile the event handler.
-  nsAutoString handlerText;
-  handlerElement->GetAttribute(kNameSpaceID_None, kActionAtom, handlerText);
-  if (handlerText.IsEmpty()) {
-    // look to see if action content is contained by the handler element
-    GetTextData(handlerElement, handlerText);
-    if (handlerText.IsEmpty())
-      return NS_OK; // For whatever reason, they didn't give us anything to do.
-  }
-  
-  // Compile the handler and bind it to the element.
-  nsCOMPtr<nsIScriptGlobalObject> boundGlobal(do_QueryInterface(mEventReceiver));
-  if (!boundGlobal) {
-    nsCOMPtr<nsIDocument> boundDocument(do_QueryInterface(mEventReceiver));
-    if (!boundDocument) {
-      // We must be an element.
-      nsCOMPtr<nsIContent> content(do_QueryInterface(mEventReceiver));
-      content->GetDocument(*getter_AddRefs(boundDocument));
-      if (!boundDocument)
-        return NS_OK;
-    }
-
-    boundDocument->GetScriptGlobalObject(getter_AddRefs(boundGlobal));
-  }
-
-  nsCOMPtr<nsIScriptContext> boundContext;
-  boundGlobal->GetContext(getter_AddRefs(boundContext));
-
-  nsCOMPtr<nsIScriptObjectOwner> owner(do_QueryInterface(mEventReceiver));
-  void* scriptObject;
-  owner->GetScriptObject(boundContext, &scriptObject);
-  
-  boundContext->CompileEventHandler(scriptObject, onEventAtom, handlerText,
-                               PR_TRUE, &handler);
-
-  // Temporarily bind it to the bound element
-  boundContext->BindCompiledEventHandler(scriptObject, onEventAtom, handler);
-
-  // Execute it.
-  nsCOMPtr<nsIDOMEventListener> eventListener;
-  NS_NewJSEventListener(getter_AddRefs(eventListener), boundContext, owner);
-
-  nsCOMPtr<nsIJSEventListener> jsListener(do_QueryInterface(eventListener));
-  jsListener->SetEventName(onEventAtom);
-  eventListener->HandleEvent(aEvent);
-
-  // Now unbind it.
-  boundContext->BindCompiledEventHandler(scriptObject, onEventAtom, nsnull);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsXBLEventHandler::GetController(nsIController** aResult)
-{
-  // XXX Fix this so there's a generic interface that describes controllers, 
-  // This code should have no special knowledge of what objects might have controllers.
-  nsCOMPtr<nsIControllers> controllers;
-
-  nsCOMPtr<nsIDOMXULElement> xulElement(do_QueryInterface(mEventReceiver));
-  if (xulElement)
-    xulElement->GetControllers(getter_AddRefs(controllers));
-
-  if (!controllers) {
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea(do_QueryInterface(mEventReceiver));
-    if (htmlTextArea)
-      htmlTextArea->GetControllers(getter_AddRefs(controllers));
-  }
-
-  if (!controllers) {
-    nsCOMPtr<nsIDOMNSHTMLInputElement> htmlInputElement(do_QueryInterface(mEventReceiver));
-    if (htmlInputElement)
-      htmlInputElement->GetControllers(getter_AddRefs(controllers));
-  }
-
-  if (!controllers) {
-    nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(mEventReceiver));
-    if (domWindow)
-      domWindow->GetControllers(getter_AddRefs(controllers));
-  }
-
-  // Return the first controller.
-  // XXX This code should be checking the command name and using supportscommand and
-  // iscommandenabled.
-  if (controllers) {
-    controllers->GetControllerAt(0, aResult);
-  }
-  else *aResult = nsnull;
-
   return NS_OK;
 }
 
@@ -372,8 +224,11 @@ nsXBLEventHandler::RemoveEventHandlers()
   if (!mProtoHandler)
     return;
 
-  if (mEventName.get() == kBindingAttachedAtom ||
-      mEventName.get() == kBindingDetachedAtom) {
+  nsCOMPtr<nsIAtom> eventName;
+  mProtoHandler->GetEventName(getter_AddRefs(eventName));
+
+  if (eventName.get() == kBindingAttachedAtom ||
+      eventName.get() == kBindingDetachedAtom) {
     // Release and drop.
     mProtoHandler = nsnull;
     NS_RELEASE_THIS();
@@ -397,7 +252,7 @@ nsXBLEventHandler::RemoveEventHandlers()
  
   PRBool found = PR_FALSE;
   nsIID iid;
-  nsXBLBinding::GetEventHandlerIID(mEventName, &iid, &found);
+  nsXBLBinding::GetEventHandlerIID(eventName, &iid, &found);
 
   nsCOMPtr<nsIDOMEventListener> listener(do_QueryInterface(this));
 
@@ -433,10 +288,9 @@ nsXBLEventHandler::GetTextData(nsIContent *aParent, nsString& aResult)
 
 nsresult
 NS_NewXBLEventHandler(nsIDOMEventReceiver* aRec, nsIXBLPrototypeHandler* aHandler, 
-                      nsIAtom* aEventName,
                       nsXBLEventHandler** aResult)
 {
-  *aResult = new nsXBLEventHandler(aRec, aHandler, aEventName);
+  *aResult = new nsXBLEventHandler(aRec, aHandler);
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(*aResult);

@@ -26,6 +26,7 @@
 #define nsXBLPrototypeHandler_h__
 
 #include "nsIXBLPrototypeHandler.h"
+#include "nsIAtom.h"
 
 class nsIXBLBinding;
 class nsIDOMEvent;
@@ -33,7 +34,6 @@ class nsIContent;
 class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
-class nsIAtom;
 class nsString;
 
 class nsXBLPrototypeHandler : public nsIXBLPrototypeHandler
@@ -44,16 +44,38 @@ public:
   
   NS_DECL_ISUPPORTS
 
-  NS_IMETHOD MouseEventMatched(nsIDOMMouseEvent* aEvent, PRBool* aResult);
-  NS_IMETHOD KeyEventMatched(nsIDOMKeyEvent* aEvent, PRBool* aResult);
+  NS_IMETHOD MouseEventMatched(nsIAtom* aEventType, nsIDOMMouseEvent* aEvent, PRBool* aResult);
+  NS_IMETHOD KeyEventMatched(nsIAtom* aEventType, nsIDOMKeyEvent* aEvent, PRBool* aResult);
 
   NS_IMETHOD GetHandlerElement(nsIContent** aResult);
 
   NS_IMETHOD GetNextHandler(nsIXBLPrototypeHandler** aResult);
   NS_IMETHOD SetNextHandler(nsIXBLPrototypeHandler* aHandler);
 
+  NS_IMETHOD ExecuteHandler(nsIDOMEventReceiver* aReceiver, nsIDOMEvent* aEvent);
+
+  NS_IMETHOD GetEventName(nsIAtom** aResult);
+
+public:
+  static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
+
+  static PRUint32 gRefCnt;
+  static nsIAtom* kKeyAtom;
+  static nsIAtom* kKeyCodeAtom;
+  static nsIAtom* kCharCodeAtom;
+  static nsIAtom* kActionAtom;
+  static nsIAtom* kCommandAtom;
+  static nsIAtom* kOnCommandAtom;
+  static nsIAtom* kFocusCommandAtom;
+  static nsIAtom* kClickCountAtom;
+  static nsIAtom* kButtonAtom;
+  static nsIAtom* kModifiersAtom;
+  static nsIAtom* kTypeAtom;
+
 protected:
-  inline PRUint32 GetMatchingKeyCode(const nsString& aKeyName);
+  NS_IMETHOD GetController(nsIDOMEventReceiver* aReceiver, nsIController** aResult);
+  
+  inline PRInt32 GetMatchingKeyCode(const nsString& aKeyName);
   void ConstructMask();
   PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent);
 
@@ -62,16 +84,6 @@ protected:
 
   PRInt32 KeyToMask(PRInt32 key);
   
-  static PRUint32 gRefCnt;
-  static nsIAtom* kKeyAtom;
-  static nsIAtom* kKeyCodeAtom;
-  static nsIAtom* kCharCodeAtom;
-  static nsIAtom* kActionAtom;
-  static nsIAtom* kCommandAtom;
-  static nsIAtom* kClickCountAtom;
-  static nsIAtom* kButtonAtom;
-  static nsIAtom* kModifiersAtom;
-
   static PRInt32 kAccelKey;
   static PRInt32 kMenuAccessKey;
   static void InitAccessKeys();
@@ -87,7 +99,7 @@ protected:
   PRInt32 mKeyMask;          // Which modifier keys this event handler expects to have down
                              // in order to be matched.
 
-  PRUint32 mDetail;          // For key events, contains a charcode or keycode. For
+  PRInt32 mDetail;           // For key events, contains a charcode or keycode. For
                              // mouse events, stores the button info.
   
   PRInt32 mDetail2;          // Miscellaneous extra information.  For key events,
@@ -95,6 +107,7 @@ protected:
                              // For mouse events, stores the clickCount.
 
   nsCOMPtr<nsIXBLPrototypeHandler> mNextHandler; // Prototype handlers are chained. We own the next handler in the chain.
+  nsCOMPtr<nsIAtom> mEventName; // The type of the event, e.g., "keypress"
 };
 
 extern nsresult

@@ -30,6 +30,7 @@ CPPSRCS=					\
   nsXBLBinding.cpp \
   nsXBLService.cpp \
   nsXBLEventHandler.cpp \
+  nsXBLWindowKeyHandler.cpp \
   nsXBLKeyHandler.cpp \
   nsXBLMouseHandler.cpp \
   nsXBLMouseMotionHandler.cpp \
@@ -46,6 +47,7 @@ CPPSRCS=					\
 CPP_OBJS=					\
   .\$(OBJDIR)\nsXBLBinding.obj \
   .\$(OBJDIR)\nsXBLEventHandler.obj \
+  .\$(OBJDIR)\nsXBLWindowKeyHandler.obj \
   .\$(OBJDIR)\nsXBLKeyHandler.obj \
   .\$(OBJDIR)\nsXBLMouseHandler.obj \
   .\$(OBJDIR)\nsXBLMouseMotionHandler.obj \

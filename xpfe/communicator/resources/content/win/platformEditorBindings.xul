@@ -10,60 +10,60 @@
 
  
 <!-- alternate cut/copy/paste keys for Windows -->
-<key id="winAlternateCutKey" keycode="VK_DELETE" shift="true" control="false" alt="false"
-  onkeypress="
+<key id="winAlternateCutKey" keycode="VK_DELETE"   
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_cut');
-    controller.doCommand('cmd_cut');"/>
-<key id="winAlternateCopy2Key" keycode="VK_DELETE" shift="false" control="true" alt="false"
-  onkeypress="
+    controller.doCommand('cmd_cut');" modifiers="shift"/>
+<key id="winAlternateCopy2Key" keycode="VK_DELETE"   
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');"/>
-<key id="winAlternateCopyKey" keycode="VK_INSERT" control="true" shift="false" alt="false"
-  onkeypress="
+    controller.doCommand('cmd_copy');" modifiers="control"/>
+<key id="winAlternateCopyKey" keycode="VK_INSERT"   
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_copy');
-    controller.doCommand('cmd_copy');"/>
-<key id="winAlternatePasteKey" keycode="VK_INSERT" shift="true" control="false" alt="false"
-  onkeypress="
+    controller.doCommand('cmd_copy');" modifiers="control"/>
+<key id="winAlternatePasteKey" keycode="VK_INSERT"   
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_paste');
-    controller.doCommand('cmd_paste');"/>
+    controller.doCommand('cmd_paste');" modifiers="shift"/>
 
-<key id="key_leftcontrol" keycode="VK_LEFT" shift="false" xulkey="true" alt="false"
-  onkeypress="
+<key id="key_leftcontrol" keycode="VK_LEFT"   
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_wordPrevious');
-    controller.doCommand('cmd_wordPrevious');"/>
-<key id="key_rightcontrol" keycode="VK_RIGHT" shift="false" xulkey="true" alt="false"
-  onkeypress="
+    controller.doCommand('cmd_wordPrevious');" modifiers="accel"/>
+<key id="key_rightcontrol" keycode="VK_RIGHT"   
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_wordNext');
-    controller.doCommand('cmd_wordNext');"/>
-<key id="key_leftshiftcontrol" keycode="VK_LEFT" shift="true" xulkey="true" alt="false"
-  onkeypress="
+    controller.doCommand('cmd_wordNext');" modifiers="accel"/>
+<key id="key_leftshiftcontrol" keycode="VK_LEFT"   
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordPrevious');
-    controller.doCommand('cmd_selectWordPrevious');"/>
-<key id="key_rightshiftcontrol" keycode="VK_RIGHT" shift="true" xulkey="true" alt="false"
-  onkeypress="
+    controller.doCommand('cmd_selectWordPrevious');" modifiers="shift, accel"/>
+<key id="key_rightshiftcontrol" keycode="VK_RIGHT"   
+  oncommand="
     var controller = document.commandDispatcher.getControllerForCommand('cmd_selectWordNext');
-    controller.doCommand('cmd_selectWordNext');"/>
+    controller.doCommand('cmd_selectWordNext');" modifiers="shift, accel"/>
 
-<key id="key_homectrlshift" keycode="VK_HOME" shift="true" control="true" alt="false"
-    onkeypress="
+<key id="key_homectrlshift" keycode="VK_HOME"   
+    oncommand="
         var controller =
         document.commandDispatcher.getControllerForCommand('cmd_selectTop');
-        controller.doCommand('cmd_selectTop');"/>
-<key id="key_endctrlshift" keycode="VK_END" shift="true" control="true" alt="false"
-    onkeypress="
+        controller.doCommand('cmd_selectTop');" modifiers="shift, control"/>
+<key id="key_endctrlshift" keycode="VK_END"   
+    oncommand="
         var controller =
         document.commandDispatcher.getControllerForCommand('cmd_selectBottom');
-        controller.doCommand('cmd_selectBottom');"/>
-<key id="key_homectrl" keycode="VK_HOME" shift="false" control="true" alt="false"
-    onkeypress="
+        controller.doCommand('cmd_selectBottom');" modifiers="shift, control"/>
+<key id="key_homectrl" keycode="VK_HOME"   
+    oncommand="
         var controller =
         document.commandDispatcher.getControllerForCommand('cmd_moveTop');
-        controller.doCommand('cmd_moveTop');"/>
-<key id="key_endctrl" keycode="VK_END" shift="false" control="true" alt="false"
-    onkeypress="
+        controller.doCommand('cmd_moveTop');" modifiers="control"/>
+<key id="key_endctrl" keycode="VK_END"   
+    oncommand="
         var controller =
         document.commandDispatcher.getControllerForCommand('cmd_moveBottom');
-        controller.doCommand('cmd_moveBottom');"/>
+        controller.doCommand('cmd_moveBottom');" modifiers="control"/>
 </keyset>
 
 <!-- End Windows-specific keybindings -->

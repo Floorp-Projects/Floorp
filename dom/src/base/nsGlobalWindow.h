@@ -158,9 +158,7 @@ public:
    NS_IMETHOD Activate();
    NS_IMETHOD Deactivate();
 
-   NS_IMETHOD GetRootCommandDispatcher (
-     nsIDocument * aDoc,
-     nsIDOMXULCommandDispatcher ** aDispatcher);
+   NS_IMETHOD GetRootCommandDispatcher(nsIDOMXULCommandDispatcher ** aDispatcher);
 
 	
   NS_IMETHOD SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint);

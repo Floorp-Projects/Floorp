@@ -45,7 +45,6 @@
 #include "nsIXULDocument.h"
 #include "nsIXULSortService.h"
 #include "nsIXULPopupListener.h"
-#include "nsIXULKeyListener.h"
 #include "nsIServiceManager.h"
 #include "nsIElementFactory.h"
 #include "nsIControllerCommand.h"
@@ -92,7 +91,6 @@ NS_NewXULControllers(nsISupports* aOuter, REFNSIID aIID, void** aResult);
 MAKE_CTOR(RDFService,RDFService,RDFService)
 MAKE_CTOR(XULSortService,XULSortService,XULSortService)
 MAKE_CTOR(XULPopupListener,XULPopupListener,XULPopupListener)
-MAKE_CTOR(XULKeyListener,XULKeyListener,XULKeyListener)
 MAKE_CTOR(XULElementFactory, XULElementFactory, ElementFactory)
 MAKE_CTOR(RDFXMLDataSource,RDFXMLDataSource,RDFDataSource)
 MAKE_CTOR(RDFFileSystemDataSource,RDFFileSystemDataSource,RDFDataSource)
@@ -206,12 +204,6 @@ static nsModuleComponentInfo components[] =
       NS_XULPOPUPLISTENER_CID,
       NS_RDF_CONTRACTID "/xul-popup-listener;1", 
       CreateNewXULPopupListener
-    },
-    
-    { "XUL KeyListener", 
-      NS_XULKEYLISTENER_CID,
-      NS_RDF_CONTRACTID "/xul-key-listener;1", 
-      CreateNewXULKeyListener
     },
     
     { "XUL Controllers", 

@@ -1371,32 +1371,12 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
   
   if (!keyElement)
     return;
-  
-  nsAutoString keyAtom; keyAtom.AssignWithConversion("key");
-  nsAutoString shiftAtom; shiftAtom.AssignWithConversion("shift");
-  nsAutoString altAtom; altAtom.AssignWithConversion("alt");
-  nsAutoString commandAtom; commandAtom.AssignWithConversion("command");
-  nsAutoString controlAtom; controlAtom.AssignWithConversion("control");
-
-  nsAutoString shiftValue;
-  nsAutoString altValue;
-  nsAutoString commandValue;
-  nsAutoString controlValue;
-  nsAutoString keyChar; keyChar.AssignWithConversion(" ");
-	
-  keyElement->GetAttribute(keyAtom, keyChar);
-  keyElement->GetAttribute(shiftAtom, shiftValue);
-  keyElement->GetAttribute(altAtom, altValue);
-  keyElement->GetAttribute(commandAtom, commandValue);
-  keyElement->GetAttribute(controlAtom, controlValue);
-	  
-  PRInt32 accelKey = 0;
+ 	  
+  static PRInt32 accelKey = 0;
 
   PRBool prependPlus = PR_FALSE;
 
-  nsAutoString xulkey;
-  keyElement->GetAttribute(NS_LITERAL_STRING("xulkey"), xulkey);
-  if (xulkey.EqualsWithConversion("true"))
+  if (!accelKey)
   {
     // Compiled-in defaults, in case we can't get LookAndFeel --
     // command for mac, control for all other platforms.
@@ -1410,42 +1390,59 @@ nsMenuFrame::BuildAcceleratorText(nsString& aAccelString)
     nsresult rv;
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_CONTRACTID, &rv);
     if (NS_SUCCEEDED(rv) && prefs)
-    {
       rv = prefs->GetIntPref("ui.key.accelKey", &accelKey);
-    }
-#ifdef DEBUG_akkana
-    else
-    {
-      NS_ASSERTION(PR_FALSE,"Menu couldn't get accel key from prefs!\n");
-    }
-#endif
-
-    switch (accelKey)
-    {
-      case nsIDOMKeyEvent::DOM_VK_META:
-        prependPlus = PR_TRUE;
-        aAccelString.AppendWithConversion("Ctrl"); // Hmmm. Kinda defeats the point of having an abstraction.
-        break;
-
-      case nsIDOMKeyEvent::DOM_VK_ALT:
-        prependPlus = PR_TRUE;
-        aAccelString.AppendWithConversion("Alt");
-        break;
-
-      case nsIDOMKeyEvent::DOM_VK_CONTROL:
-      default:
-        prependPlus = PR_TRUE;
-        aAccelString.AppendWithConversion("Ctrl");
-        break;
-    }
   }
 
-  if (!shiftValue.IsEmpty() && !shiftValue.EqualsWithConversion("false")) {
+  nsAutoString modifiers;
+  keyElement->GetAttribute(NS_LITERAL_STRING("modifiers"), modifiers);
+  
+  nsAutoString keyChar;
+  keyElement->GetAttribute(NS_LITERAL_STRING("key"), keyChar);
+
+  if (keyChar.IsEmpty())
+    return;
+
+  char* str = modifiers.ToNewCString();
+  char* newStr;
+  char* token = nsCRT::strtok( str, ", ", &newStr );
+  while( token != NULL ) {
     if (prependPlus)
       aAccelString.AppendWithConversion("+");
     prependPlus = PR_TRUE;
-    aAccelString.AppendWithConversion("Shift");
+      
+    if (PL_strcmp(token, "shift") == 0)
+      aAccelString.AppendWithConversion("Shift"); 
+    else if (PL_strcmp(token, "alt") == 0) 
+      aAccelString.AppendWithConversion("Alt"); 
+    else if (PL_strcmp(token, "meta") == 0) 
+      aAccelString.AppendWithConversion("Meta"); 
+    else if (PL_strcmp(token, "control") == 0) 
+      aAccelString.AppendWithConversion("Ctrl"); 
+    else if (PL_strcmp(token, "accel") == 0) {
+      switch (accelKey)
+      {
+        case nsIDOMKeyEvent::DOM_VK_META:
+          prependPlus = PR_TRUE;
+          aAccelString.AppendWithConversion("Ctrl");
+          break;
+
+        case nsIDOMKeyEvent::DOM_VK_ALT:
+          prependPlus = PR_TRUE;
+          aAccelString.AppendWithConversion("Alt");
+          break;
+
+        case nsIDOMKeyEvent::DOM_VK_CONTROL:
+        default:
+          prependPlus = PR_TRUE;
+          aAccelString.AppendWithConversion("Ctrl");
+          break;
+      }
+    }
+    
+    token = nsCRT::strtok( newStr, ", ", &newStr );
   }
+
+  nsMemory::Free(str);
 
   keyChar.ToUpperCase();
   if (!keyChar.IsEmpty()) {

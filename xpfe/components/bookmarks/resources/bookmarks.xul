@@ -92,9 +92,9 @@
   <key id="key_paste"/>
   <key id="key_delete"/>
   <key id="key_selectAll"/>
-  <key id="bm_key_find" xulkey="true" key="&edit.find.keybinding;" shift="false" observes="bm_cmd_find"/>
-  <key id="bm_key_properties" xulkey="true"
-    key="&edit.properties.keybinding;" shift="false" observes="bm_cmd_properties"/>
+  <key id="bm_key_find"  key="&edit.find.keybinding;"  observes="bm_cmd_find" modifiers="accel"/>
+  <key id="bm_key_properties" 
+    key="&edit.properties.keybinding;"  observes="bm_cmd_properties" modifiers="accel"/>
 </keyset>
 <toolbox>
 <menubar id="main-menubar">

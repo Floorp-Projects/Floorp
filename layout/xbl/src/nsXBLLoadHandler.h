@@ -40,7 +40,7 @@ class nsXBLLoadHandler : public nsIDOMLoadListener,
                          public nsXBLEventHandler
 {
 public:
-  nsXBLLoadHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, nsIAtom* aEventName);
+  nsXBLLoadHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
   virtual ~nsXBLLoadHandler();
   
   // nsIDOMetc.
@@ -66,8 +66,7 @@ protected:
 
 extern nsresult
 NS_NewXBLLoadHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsIAtom* aEventName,
-                      nsXBLLoadHandler** aResult);
+                     nsXBLLoadHandler** aResult);
 
 
 #endif

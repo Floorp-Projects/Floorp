@@ -11,8 +11,8 @@
 <html:script language="JavaScript" src="chrome://xmlterm/content/xmltermOverlay.js"/>
 
 <keyset id="keyset">
-  <key id="key_xmlterm" xulkey="true" key="&xmltermCmd.commandkey;"
-       observes="Tasks:xmlterm"/>
+  <key id="key_xmlterm"  key="&xmltermCmd.commandkey;"
+       observes="Tasks:xmlterm" modifiers="accel"/>
 </keyset>
 
 <broadcasterset id="broadcasterset">

@@ -100,10 +100,13 @@
 #include "nsDOMCID.h"
 #include "nsDOMError.h"
 
-// XXX An unfortunate dependency exists here (two for XUL, one for XBL).
+// XXX An unfortunate dependency exists here (two XUL files).
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMXULCommandDispatcher.h"
+
 #include "nsIBindingManager.h"
+#include "nsIXBLService.h"
+
 
 // CIDs
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
@@ -276,10 +279,29 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
                                    (JSObject *) mScriptObject);
 
   if (mFirstDocumentLoad) {
-    if (aDocument)
+    if (aDocument) {
       mFirstDocumentLoad = PR_FALSE;
+    }
 
     mDocument = aDocument;
+
+    if (mDocument) {
+      // Get our private root. If it is equal to us, then we
+      // need to attach our global key bindings that handle 
+      // browser scrolling and other browser commands.
+      nsCOMPtr<nsIDOMWindowInternal> internal;
+      GetPrivateRoot(getter_AddRefs(internal));
+      nsCOMPtr<nsIDOMWindowInternal> us(do_QueryInterface((nsIDOMWindow*)this));
+      if (internal == us) {
+        nsresult rv;
+        NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
+        if (xblService) {
+          nsCOMPtr<nsIDOMEventReceiver> rec(do_QueryInterface(internal));
+          xblService->AttachGlobalKeyHandler(rec);
+        }
+      }
+    }
+
     return NS_OK;
   }
 
@@ -346,6 +368,9 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
 
 NS_IMETHODIMP GlobalWindowImpl::SetDocShell(nsIDocShell* aDocShell)
 {
+  if (aDocShell == mDocShell)
+    return NS_OK;
+
   /* SetDocShell(nsnull) means the window is being torn down. Set the
      "closed" JS property, Drop our reference to the script context,
      allowing it to be deleted later, and hand off our reference
@@ -2752,8 +2777,7 @@ NS_IMETHODIMP GlobalWindowImpl::Deactivate()
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::GetRootCommandDispatcher(nsIDocument *aDoc,
-                                           nsIDOMXULCommandDispatcher **
+GlobalWindowImpl::GetRootCommandDispatcher(nsIDOMXULCommandDispatcher **
                                            aDispatcher)
 {
   if (!aDispatcher)
@@ -2761,24 +2785,17 @@ GlobalWindowImpl::GetRootCommandDispatcher(nsIDocument *aDoc,
 
   *aDispatcher = nsnull;
 
-  if (!aDoc)
-    return NS_ERROR_FAILURE;
-
   nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-  nsCOMPtr<nsIScriptGlobalObject> ourGlobal;
-  aDoc->GetScriptGlobalObject(getter_AddRefs(ourGlobal));
   nsCOMPtr<nsIDOMWindowInternal> rootWindow;
-  nsCOMPtr<nsPIDOMWindow> ourWindow = do_QueryInterface(ourGlobal);
-  if (ourWindow) {
-    ourWindow->GetPrivateRoot(getter_AddRefs(rootWindow));
-    if (rootWindow) {
-      nsCOMPtr<nsIDOMDocument> rootDocument;
-      rootWindow->GetDocument(getter_AddRefs(rootDocument));
+  
+  GetPrivateRoot(getter_AddRefs(rootWindow));
+  if (rootWindow) {
+    nsCOMPtr<nsIDOMDocument> rootDocument;
+    rootWindow->GetDocument(getter_AddRefs(rootDocument));
 
-      nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
-      if (xulDoc) {
-        xulDoc->GetCommandDispatcher(aDispatcher);
-      }
+    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(rootDocument);
+    if (xulDoc) {
+      xulDoc->GetCommandDispatcher(aDispatcher);
     }
   }
   return NS_OK;

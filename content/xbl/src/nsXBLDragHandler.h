@@ -40,7 +40,7 @@ class nsXBLDragHandler : public nsIDOMDragListener,
                          public nsXBLEventHandler
 {
 public:
-  nsXBLDragHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler, nsIAtom* aEventName);
+  nsXBLDragHandler(nsIDOMEventReceiver* aReceiver, nsIXBLPrototypeHandler* aHandler);
   virtual ~nsXBLDragHandler();
   
   // nsIDOMetc.
@@ -68,8 +68,7 @@ protected:
 
 extern nsresult
 NS_NewXBLDragHandler(nsIDOMEventReceiver* aEventReceiver, nsIXBLPrototypeHandler* aHandlerElement, 
-                      nsIAtom* aEventName,
-                      nsXBLDragHandler** aResult);
+                     nsXBLDragHandler** aResult);
 
 
 #endif

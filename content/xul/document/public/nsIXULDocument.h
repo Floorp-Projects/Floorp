@@ -132,12 +132,6 @@ public:
    * Load inline and attribute style sheets
    */
   NS_IMETHOD PrepareStyleSheets(nsIURI* aURI) = 0;
-
-  /**
-   * Indicate that this doc will be used only to load a key binding
-   * document.
-   */
-  NS_IMETHOD SetIsKeybindingDocument(PRBool aIsKeyBindingDoc) = 0;
 };
 
 // factory functions

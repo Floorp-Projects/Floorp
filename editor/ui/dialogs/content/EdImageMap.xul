@@ -61,19 +61,19 @@
 
   <keyset id="defaultKeySet">
 
-    <key id="deletespot"   keycode="VK_DELETE"   onkeypress="deleteElement(currentElement)" />
-    <key id="nudgeup"      keycode="VK_UP"       onkeypress="nudge(event, 'up')" />
-    <key id="nudgeleft"    keycode="VK_LEFT"     onkeypress="nudge(event, 'left')" />
-    <key id="nudgedown"    keycode="VK_DOWN"     onkeypress="nudge(event, 'down')" />
-    <key id="nudgeright"   keycode="VK_RIGHT"    onkeypress="nudge(event, 'right')" />
-    <key id="mapclearkb"   xulkey="true" key="&clear.accesskey;" observes="Map:Clear" />
-    <key id="mapselectkb"  xulkey="true" key="&selectall.accesskey;" observes="Map:SelectAll" />
-    <key id="mapclosekb"   xulkey="true" key="&close.accesskey;" observes="Map:Close" />
-    <key id="mapcutkb"     xulkey="true" key="&cut.accesskey;" observes="Map:Cut" />
-    <key id="mapcopykb"    xulkey="true" key="&copy.accesskey;" observes="Map:Copy" />
-    <key id="mappastekb"   xulkey="true" key="&paste.accesskey;" observes="Map:Paste" />
-    <key id="mappropskb"   xulkey="true" key="&props.accesskey;" observes="Map:Props" />
-    <key id="maptbarkb"    xulkey="true" key="&tbar.accesskey;" observes="Map:ViewToolbar" />
+    <key id="deletespot"   keycode="VK_DELETE"   oncommand="deleteElement(currentElement)" />
+    <key id="nudgeup"      keycode="VK_UP"       oncommand="nudge(event, 'up')" />
+    <key id="nudgeleft"    keycode="VK_LEFT"     oncommand="nudge(event, 'left')" />
+    <key id="nudgedown"    keycode="VK_DOWN"     oncommand="nudge(event, 'down')" />
+    <key id="nudgeright"   keycode="VK_RIGHT"    oncommand="nudge(event, 'right')" />
+    <key id="mapclearkb"    key="&clear.accesskey;" observes="Map:Clear"  modifiers="accel"/>
+    <key id="mapselectkb"   key="&selectall.accesskey;" observes="Map:SelectAll"  modifiers="accel"/>
+    <key id="mapclosekb"    key="&close.accesskey;" observes="Map:Close"  modifiers="accel"/>
+    <key id="mapcutkb"      key="&cut.accesskey;" observes="Map:Cut"  modifiers="accel"/>
+    <key id="mapcopykb"     key="&copy.accesskey;" observes="Map:Copy"  modifiers="accel"/>
+    <key id="mappastekb"    key="&paste.accesskey;" observes="Map:Paste"  modifiers="accel"/>
+    <key id="mappropskb"    key="&props.accesskey;" observes="Map:Props"  modifiers="accel"/>
+    <key id="maptbarkb"     key="&tbar.accesskey;" observes="Map:ViewToolbar"  modifiers="accel"/>
 
   </keyset>
 

@@ -41,23 +41,23 @@
 
   <!--keyset id="platformOverlayKeyset" /--> <!-- Don't do that, only one keyset per window! Anyway, this keyset is not defined! -->
 
-  <key id="pastequotationkb" xulkey="true" key="&editpastequotation.keybinding;" shift="true"  observes="cmd_pasteQuote" />
-  <key id="findkb"           xulkey="true" key="&editfind.keybinding;"           shift="false" observes="cmd_find" />
-  <key id="findnextkb"       xulkey="true" key="&editfindnext.keybinding;"       shift="false" observes="cmd_findNext" />
-  <key id="checkspellingkb"  xulkey="true" key="&editcheckspelling.keybinding;"  shift="false" observes="cmd_spelling" />
+  <key id="pastequotationkb"  key="&editpastequotation.keybinding;"   observes="cmd_pasteQuote"  modifiers="accel, shift"/>
+  <key id="findkb"            key="&editfind.keybinding;"            observes="cmd_find"  modifiers="accel"/>
+  <key id="findnextkb"        key="&editfindnext.keybinding;"        observes="cmd_findNext"  modifiers="accel"/>
+  <key id="checkspellingkb"   key="&editcheckspelling.keybinding;"   observes="cmd_spelling"  modifiers="accel"/>
 
-  <key id="boldkb"        xulkey="true" key="&stylebold.keybinding;"      shift="false" observes="cmd_bold"/>
-  <key id="italickb"      xulkey="true" key="&styleitalic.keybinding;"    shift="false" observes="cmd_italic"/>
-  <key id="underlinekb"   xulkey="true" key="&styleunderline.keybinding;" shift="false" observes="cmd_underline"/>
+  <key id="boldkb"         key="&stylebold.keybinding;"       observes="cmd_bold" modifiers="accel"/>
+  <key id="italickb"       key="&styleitalic.keybinding;"     observes="cmd_italic" modifiers="accel"/>
+  <key id="underlinekb"    key="&styleunderline.keybinding;"  observes="cmd_underline" modifiers="accel"/>
 
-  <key id="fontfixedwidthkb" xulkey="true" key="&formatfontfixed.keybinding;" shift="true" oncommand="doStatefulCommand('cmd_fontFace', 'tt')" />
-  <key id="increaseindentkb" xulkey="true" key="&formatindent.keybinding;" shift="false" observes="cmd_indent" />
-  <key id="decreaseindentkb" xulkey="true" key="&formatoutdent.keybinding;" shift="false" observes="cmd_outdent" />
+  <key id="fontfixedwidthkb"  key="&formatfontfixed.keybinding;"  oncommand="doStatefulCommand('cmd_fontFace', 'tt')"  modifiers="accel, shift"/>
+  <key id="increaseindentkb"  key="&formatindent.keybinding;"  observes="cmd_indent"  modifiers="accel"/>
+  <key id="decreaseindentkb"  key="&formatoutdent.keybinding;"  observes="cmd_outdent"  modifiers="accel"/>
 
-  <key id="removestyleskb"     shift="true" xulkey="true" key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles" />
-  <key id="removelinkskb"      shift="true" xulkey="true" key="&formatremovelinks.keybinding;"    observes="cmd_removeLinks" />
-  <key id="decreasefontsizekb" shift="true" xulkey="true" key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont" />
-  <key id="increasefontsizekb" shift="true" xulkey="true" key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont" />
+  <key id="removestyleskb"       key="&formatremovestyles.keybinding;"   observes="cmd_removeStyles"  modifiers="shift, accel"/>
+  <key id="removelinkskb"        key="&formatremovelinks.keybinding;"    observes="cmd_removeLinks"  modifiers="shift, accel"/>
+  <key id="decreasefontsizekb"   key="&decreaseFontSize.keybinding;"     observes="cmd_decreaseFont"  modifiers="shift, accel"/>
+  <key id="increasefontsizekb"   key="&increaseFontSize.keybinding;"     observes="cmd_increaseFont"  modifiers="shift, accel"/>
 
   <keyset id="defaultKeySet">
 
@@ -65,12 +65,12 @@
     <key id="key_newNavigator"/>
     <key id="key_newBlankPage"/>
 
-    <key id="openeditorkb"  xulkey="true" key="&fileopen.keybinding;"  shift="false" observes="cmd_open" />
-    <key id="openremoteeditorkb" xulkey="true" key="&fileopenremote.keybinding;" shift="false" observes="cmd_openRemote" />
-    <key id="savekb"        xulkey="true" key="&filesave.keybinding;"  shift="false" observes="cmd_save"/>
-    <key id="closekb"       xulkey="true" key="&fileclose.keybinding;" shift="false" observes="cmd_close" />
-    <key id="printkb"       xulkey="true" key="&fileprint.keybinding;" shift="false" observes="cmd_print" />
-    <key id="exitkb"        xulkey="true" key="&fileexit.keybinding;"  shift="false" observes="cmd_quit" />
+    <key id="openeditorkb"   key="&fileopen.keybinding;"   observes="cmd_open"  modifiers="accel"/>
+    <key id="openremoteeditorkb"  key="&fileopenremote.keybinding;"  observes="cmd_openRemote"  modifiers="accel"/>
+    <key id="savekb"         key="&filesave.keybinding;"   observes="cmd_save" modifiers="accel"/>
+    <key id="closekb"        key="&fileclose.keybinding;"  observes="cmd_close"  modifiers="accel"/>
+    <key id="printkb"        key="&fileprint.keybinding;"  observes="cmd_print"  modifiers="accel"/>
+    <key id="exitkb"         key="&fileexit.keybinding;"   observes="cmd_quit"  modifiers="accel"/>
     <key id="key_undo"/>
     <key id="key_redo"/>
     <key id="key_cut"/>
@@ -82,8 +82,7 @@
     <key id="findkb"/>
     <key id="findnextkb"/>
     <key id="checkspellingkb"/>
-    <key id="key_preferences"/>
-
+    
     <key id="boldkb"/>
     <key id="italickb"/>
     <key id="underlinekb"/>
