@@ -358,6 +358,10 @@ img[usemap], object[usemap] {
   -moz-user-focus: normal;
 }
 
+object, embed, applet {
+  -moz-user-focus: normal;
+}
+
 frameset {
   display: block ! important;
   overflow: hidden;
