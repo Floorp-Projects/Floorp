@@ -895,16 +895,7 @@ nsImageFrame::GetFrameType(nsIAtom** aType) const
 NS_IMETHODIMP 
 nsImageFrame::GetIntrinsicImageSize(nsSize& aSize)
 {
-  nsIImage* image = mImageLoader.GetImage();
-  if (nsnull != image) {
-    aSize.width = image->GetWidth();
-    aSize.height = image->GetHeight();
-  }
-  else {
-    aSize.width = 0;
-    aSize.height = 0;
-  }
-
+  mImageLoader.GetIntrinsicSize(aSize);
   return NS_OK;
 }
 
