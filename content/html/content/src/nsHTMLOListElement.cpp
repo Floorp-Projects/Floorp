@@ -191,9 +191,7 @@ nsHTMLOListElement::ParseAttribute(nsIAtom* aAttribute,
            aResult.ParseEnumValue(aValue, kOldListTypeTable, PR_TRUE);
   }
   if (aAttribute == nsHTMLAtoms::start) {
-    if (aResult.ParseIntValue(aValue)) {
-      return NS_CONTENT_ATTR_HAS_VALUE;
-    }
+    return aResult.ParseIntValue(aValue);
   }
 
   return nsGenericHTMLElement::ParseAttribute(aAttribute, aValue, aResult);
