@@ -24,12 +24,9 @@ MODULE=nsprefm
 DLL=.\$(OBJDIR)\$(MODULE).dll
 EXPORTS=nsPrefMigration.h	 \
 	nsPrefMigrationFactory.h \
-	nsPMProgessDlgFactory.h  \
-	nsPMProgressDialog.h     \
 	$(NULL)
 
 DEFINES=-D_IMPL_NS_DOM 
-#        -DXP_MAC
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -82,5 +79,4 @@ clobber::
         rm -f $(DIST)\bin\$(MODULE).dll
 		rm -f $(OBJDIR)\nsPrefMigration.obj
 		rm -f $(OBJDIR)\nsPrefMigrationFactory.obj
-		rm -f $(OBJDIR)\nsPMProgressDlg.obj
 
