@@ -114,9 +114,11 @@ static id gSharedProgressController = nil;
 
 - (void)didStartDownload:(id <CHDownloadProgressDisplay>)progressDisplay
 {
-  [self showWindow:nil];		// make sure the window is visible
+  if (![[self window] isVisible]) {
+    [self showWindow:nil];		// make sure the window is visible
+  }
 
-	[self rebuildViews];
+  [self rebuildViews];
   [self setupDownloadTimer];
 }
 
