@@ -17216,14 +17216,14 @@ fi
 
 
 
-MOZ_CAIRO_CFLAGS='-I$(DIST)/include/cairo'
-MOZ_CAIRO_LIBS="-lcairo -lpixman"
-
-if test -z "$MACOSX"; then
-   MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lfreetype"
-fi;
-
 if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CAIRO" ; then
+   MOZ_CAIRO_CFLAGS='-I$(DIST)/include/cairo'
+   MOZ_CAIRO_LIBS="-lcairo -lpixman"
+
+   if test -z "$MACOSX"; then
+      MOZ_CAIRO_LIBS="$MOZ_CAIRO_LIBS -lfreetype"
+   fi
+
    MOZ_TREE_CAIRO=1
    # Check whether --enable-system-cairo or --disable-system-cairo was given.
 if test "${enable_system_cairo+set}" = set; then
