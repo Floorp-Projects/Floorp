@@ -82,6 +82,7 @@ class nsIURI;
 #define NS_RECONVERSION_EVENT             15
 #define NS_MOUSE_SCROLL_EVENT             16
 #define NS_SCROLLPORT_EVENT               18
+#define NS_MUTATION_EVENT                 19 // |nsMutationEvent| in content
 #define NS_ACCESSIBLE_EVENT               20
 #define NS_FORM_EVENT                     21
 #define NS_FOCUS_EVENT                    22

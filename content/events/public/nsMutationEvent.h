@@ -44,8 +44,6 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIContent.h"
 
-#define NS_MUTATION_EVENT     20
-
 struct nsMutationEvent : public nsEvent
 {             
   nsMutationEvent(PRUint32 msg = 0, PRUint8 structType = NS_MUTATION_EVENT)
