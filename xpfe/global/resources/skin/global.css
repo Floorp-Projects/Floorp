@@ -425,6 +425,11 @@ splitter {
    min-height: 5px;
 }
 
+splitter[state="dragging"]
+{
+   background-color: gray;
+}
+
 grippy{
 	margin: 0px;
 	border: 2px solid #003366;
