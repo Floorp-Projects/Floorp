@@ -54,7 +54,7 @@ private:
   virtual void SetRegionEmpty();
 
   PhTile_t             *mRegion;
-  nsRegionComplexity    mRegionType;
+  nsRegionComplexity    mRegionType;		// Not really used!
 };
 
 #endif  // nsRegionPh_h___ 
