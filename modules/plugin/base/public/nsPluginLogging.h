@@ -40,6 +40,9 @@
 #ifndef nsPluginLogging_h__
 #define nsPluginLogging_h__
 
+#define FORCE_PR_LOG /* Allow logging in the release build */
+#define PR_LOGGING 1
+
 #ifdef PR_LOGGING
 #include "prlog.h"
 

@@ -39,11 +39,6 @@
 
 /* nsPluginHostImpl.cpp - bulk of code for managing plugins */
 
-/* XdpX Really really force prlogging*/
-#define FORCE_PR_LOG /* Allow logging in the release build */
-#define PR_LOGGING 1
-#include "prlog.h"
-
 #include "nscore.h"
 #include "nsPluginHostImpl.h"
 #include "nsPluginProxyImpl.h"
