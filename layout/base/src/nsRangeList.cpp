@@ -822,10 +822,10 @@ nsRangeList::TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOff
       }
       else {
         if (aFrame == frame){ //drag to same frame
-          PRInt32 beginoffset;
-          PRInt32 begincontentoffset;
-          PRInt32 endoffset;
-          PRBool selected;
+          PRInt32 beginoffset = 0;
+          PRInt32 begincontentoffset = 0;
+          PRInt32 endoffset = 0;
+          PRBool selected = PR_FALSE;
           if (NS_SUCCEEDED(aFrame->GetSelected(&selected,&beginoffset,&endoffset, &begincontentoffset))){
             nsSelectionStruct ss={nsSelectionStruct::SELON, 0,0, beginoffset, aOffset, 0,0, eDirNext, PR_FALSE};
             aFrame->SetSelected(&ss);
