@@ -42,9 +42,6 @@ function doSort(sortColName)
 
 		rdfCore.Init("RDFCore");
                 dump("RDFCore inited\n");
-
-//                XPAppCoresManager.Add(rdfCore);
-//                dump("RDFCore added into XPAppCoresManager\n");
 	}
 
 	// sort!!!

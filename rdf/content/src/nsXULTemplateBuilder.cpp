@@ -67,7 +67,8 @@
 #include "nsIDOMXULElement.h"
 #include "nsVoidArray.h"
 #include "nsIXULSortService.h"
-
+#include "nsIHTMLElementFactory.h"
+#include "nsIHTMLContent.h"
 #include "nsRDFGenericBuilder.h"
 
 #define	XUL_TEMPLATES	1
@@ -91,16 +92,21 @@ static NS_DEFINE_CID(kRDFContainerUtilsCID,       NS_RDFCONTAINERUTILS_CID);
 static NS_DEFINE_IID(kXULSortServiceCID,         NS_XULSORTSERVICE_CID);
 static NS_DEFINE_IID(kIXULSortServiceIID,        NS_IXULSORTSERVICE_IID);
 
+static NS_DEFINE_CID(kHTMLElementFactoryCID,  NS_HTML_ELEMENT_FACTORY_CID);
+static NS_DEFINE_CID(kIHTMLElementFactoryIID, NS_IHTML_ELEMENT_FACTORY_IID);
+
 ////////////////////////////////////////////////////////////////////////
 
 nsrefcnt		RDFGenericBuilderImpl::gRefCnt = 0;
 nsIXULSortService*	RDFGenericBuilderImpl::XULSortService = nsnull;
 
 nsIAtom* RDFGenericBuilderImpl::kContainerAtom;
+nsIAtom* RDFGenericBuilderImpl::kXULContentsGeneratedAtom;
 nsIAtom* RDFGenericBuilderImpl::kItemContentsGeneratedAtom;
 nsIAtom* RDFGenericBuilderImpl::kIdAtom;
 nsIAtom* RDFGenericBuilderImpl::kOpenAtom;
 nsIAtom* RDFGenericBuilderImpl::kResourceAtom;
+nsIAtom* RDFGenericBuilderImpl::kURIAtom;
 nsIAtom* RDFGenericBuilderImpl::kContainmentAtom;
 nsIAtom* RDFGenericBuilderImpl::kNaturalOrderPosAtom;
 nsIAtom* RDFGenericBuilderImpl::kIgnoreAtom;
@@ -141,12 +147,14 @@ RDFGenericBuilderImpl::RDFGenericBuilderImpl(void)
 
     if (gRefCnt == 0) {
         kContainerAtom             = NS_NewAtom("container");
+	kXULContentsGeneratedAtom  = NS_NewAtom("xulcontentsgenerated");
         kItemContentsGeneratedAtom = NS_NewAtom("itemcontentsgenerated");
         kTreeContentsGeneratedAtom = NS_NewAtom("treecontentsgenerated");
 
         kIdAtom              = NS_NewAtom("id");
         kOpenAtom            = NS_NewAtom("open");
         kResourceAtom        = NS_NewAtom("resource");
+	kURIAtom             = NS_NewAtom("uri");
         kContainmentAtom     = NS_NewAtom("containment");
         kIgnoreAtom          = NS_NewAtom("ignore");
         kNaturalOrderPosAtom = NS_NewAtom("pos");
@@ -225,11 +233,13 @@ RDFGenericBuilderImpl::~RDFGenericBuilderImpl(void)
     --gRefCnt;
     if (gRefCnt == 0) {
         NS_RELEASE(kContainerAtom);
+	NS_RELEASE(kXULContentsGeneratedAtom);
         NS_RELEASE(kItemContentsGeneratedAtom);
 
         NS_RELEASE(kIdAtom);
         NS_RELEASE(kOpenAtom);
         NS_RELEASE(kResourceAtom);
+	NS_RELEASE(kURIAtom);
         NS_RELEASE(kContainmentAtom);
         NS_RELEASE(kIgnoreAtom);
         NS_RELEASE(kNaturalOrderPosAtom);
@@ -722,35 +732,66 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aR
 	PRInt32			count;
 
 	*matchingRuleFound = PR_FALSE;
-	if (NS_FAILED(rv = aRule->GetAttributeCount(count)))	return(rv);
+
+	if (NS_FAILED(rv = aRule->GetAttributeCount(count)))
+	{
+		return(rv);
+	}
+
+	*matchingRuleFound = PR_TRUE;
 	for (PRInt32 loop=0; loop<count; loop++)
 	{
 		PRInt32			attribNameSpaceID;
 		nsCOMPtr<nsIAtom>	attribAtom;
 		if (NS_FAILED(rv = aRule->GetAttributeNameAt(loop, attribNameSpaceID, *getter_AddRefs(attribAtom))))
-			continue;
+		{
+			*matchingRuleFound = PR_FALSE;
+			break;
+		}
 		nsAutoString		attribValue;
 		if (NS_FAILED(rv = aRule->GetAttribute(attribNameSpaceID, attribAtom, attribValue)))
-			continue;
+		{
+			*matchingRuleFound = PR_FALSE;
+			break;
+		}
+
+#ifdef	DEBUG
+		nsString	crap;
+		attribAtom->ToString(crap);
+		char		*crap2 = crap.ToNewCString();
+		if (crap2)
+		{
+			delete [] crap2;
+		}
+#endif
 
 		// Note: some attributes must be skipped on XUL template rule subtree
 
-		// never copy rdf:container attribute
+		// never compare against rdf:container attribute
 		if ((attribAtom.get() == kContainerAtom) && (attribNameSpaceID == kNameSpaceID_RDF))
 			continue;
-		// never copy rdf:property attribute
+		// never compare against rdf:property attribute
 		else if ((attribAtom.get() == kPropertyAtom) && (attribNameSpaceID == kNameSpaceID_RDF))
 			continue;
-		// never copy rdf:instanceOf attribute
+		// never compare against rdf:instanceOf attribute
 		else if ((attribAtom.get() == kInstanceOfAtom) && (attribNameSpaceID == kNameSpaceID_RDF))
 			continue;
-		// never copy {}:ID attribute
+		// never compare against {}:id attribute
 		else if ((attribAtom.get() == kIdAtom) && (attribNameSpaceID == kNameSpaceID_None))
 			continue;
-		// never copy {}:itemcontentsgenerated attribute (bogus)
+		// never compare against {}:rootcontainment attribute
+		else if ((attribAtom.get() == kRootcontainmentAtom) && (attribNameSpaceID == kNameSpaceID_None))
+			continue;
+		// never compare against {}:subcontainment attribute
+		else if ((attribAtom.get() == kSubcontainmentAtom) && (attribNameSpaceID == kNameSpaceID_None))
+			continue;
+		// never compare against {}:xulcontentsgenerated attribute
+		else if ((attribAtom.get() == kXULContentsGeneratedAtom) && (attribNameSpaceID == kNameSpaceID_None))
+			continue;
+		// never compare against {}:itemcontentsgenerated attribute (bogus)
 		else if ((attribAtom.get() == kItemContentsGeneratedAtom) && (attribNameSpaceID == kNameSpaceID_None))
 			continue;
-		// never copy {}:treecontentsgenerated attribute (bogus)
+		// never compare against {}:treecontentsgenerated attribute (bogus)
 		else if ((attribAtom.get() == kTreeContentsGeneratedAtom) && (attribNameSpaceID == kNameSpaceID_None))
 			continue;
 
@@ -758,22 +799,42 @@ RDFGenericBuilderImpl::IsTemplateRuleMatch(nsIRDFResource *aNode, nsIContent *aR
 		{
 			// check and see if aNode is a container
 			PRBool	containerFlag = IsContainer(aRule, aNode);
-			if (containerFlag && (!attribValue.EqualsIgnoreCase("true")))		break;
-			else if (!containerFlag && (!attribValue.EqualsIgnoreCase("false")))	break;
+			if (containerFlag && (!attribValue.EqualsIgnoreCase("true")))
+			{
+				*matchingRuleFound = PR_FALSE;
+				break;
+			}
+			else if (!containerFlag && (!attribValue.EqualsIgnoreCase("false")))
+			{
+				*matchingRuleFound = PR_FALSE;
+				break;
+			}
 		}
 		else
 		{
 			nsCOMPtr<nsIRDFResource>	attribAtomResource;
 			if (NS_FAILED(rv = GetResource(attribNameSpaceID, attribAtom, getter_AddRefs(attribAtomResource))))
+			{
+				*matchingRuleFound = PR_FALSE;
 				break;
+			}
 			nsCOMPtr<nsIRDFNode>	aResult;
 			if (NS_FAILED(rv = mDB->GetTarget(aNode, attribAtomResource, PR_TRUE, getter_AddRefs(aResult))))
+			{
+				*matchingRuleFound = PR_FALSE;
 				break;
-			nsCOMPtr<nsIRDFLiteral>		aLiteral = do_QueryInterface(aResult);
-			if (!aLiteral)	break;
-			PRUnichar	*val = nsnull;
-			if (NS_FAILED(aLiteral->GetValue(&val)))	break;
-			if (!attribValue.Equals(val))	break;
+			}
+			nsAutoString	resultStr;
+			if (NS_FAILED(rv = nsRDFContentUtils::GetTextForNode(aResult, resultStr)))
+			{
+				*matchingRuleFound = PR_FALSE;
+				break;
+			}
+			if (!attribValue.Equals(resultStr))
+			{
+				*matchingRuleFound = PR_FALSE;
+				break;
+			}
 		}
 	}
 	return(rv);
@@ -814,13 +875,13 @@ RDFGenericBuilderImpl::FindTemplateForResource(nsIRDFResource *aNode, nsIContent
 			nsCOMPtr<nsIContent>	aRule;
 			if (NS_FAILED(rv = aTemplate->ChildAt(ruleLoop, *getter_AddRefs(aRule))))
 				continue;
-			PRInt32 templateNameSpaceID;
-			if (NS_FAILED(rv = aTemplate->GetNameSpaceID(templateNameSpaceID)))
+			PRInt32	ruleNameSpaceID;
+			if (NS_FAILED(rv = aRule->GetNameSpaceID(ruleNameSpaceID)))
 				continue;
-			if (templateNameSpaceID != kNameSpaceID_XUL)
+			if (ruleNameSpaceID != kNameSpaceID_XUL)
 				continue;
 			nsCOMPtr<nsIAtom>	ruleTag;
-			if (NS_SUCCEEDED(rv = aTemplate->GetTag(*getter_AddRefs(ruleTag))))
+			if (NS_SUCCEEDED(rv = aRule->GetTag(*getter_AddRefs(ruleTag))))
 			{
 				if (ruleTag.get() == kRuleAtom)
 				{
@@ -861,19 +922,6 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 	nsresult	rv;
 
 	if (NS_FAILED(rv = aTemplate->ChildCount(count)))	return(rv);
-
-	// get REQUIRED containment="..." off of template root
-	nsAutoString	templateContainmentValue;
-	if (NS_FAILED(rv = aTemplateRoot->GetAttribute(kNameSpaceID_None,
-			kContainmentAtom, templateContainmentValue)))
-		return(rv);
-	if (rv != NS_CONTENT_ATTR_HAS_VALUE)
-		return(NS_ERROR_FAILURE);
-
-	nsCOMPtr<nsIAtom>	containmentAtom = NS_NewAtom(templateContainmentValue);
-	if (!containmentAtom)
-		return(NS_ERROR_OUT_OF_MEMORY);
-
 	for (PRInt32 loop=0; loop<count; loop++)
 	{
 		nsCOMPtr<nsIContent>	aTemplateKid;
@@ -883,14 +931,29 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 		if (NS_FAILED(rv = aTemplateKid->GetNameSpaceID(nameSpaceID)))
 			continue;
 
+		// check whether this item is a containment item for aValue 
+		PRBool		isContainmentElement = PR_FALSE;
+		if (nameSpaceID == kNameSpaceID_XUL)
+		{
+			nsAutoString	idValue;
+			if (NS_SUCCEEDED(rv = aTemplateKid->GetAttribute(kNameSpaceID_None,
+	                              kURIAtom, idValue)))
+			{
+				if (idValue.EqualsIgnoreCase("..."))
+				{
+					isContainmentElement = PR_TRUE;
+				}
+			}
+		}
+
 		nsCOMPtr<nsIAtom>	tag;
 		if (NS_SUCCEEDED(rv = aTemplateKid->GetTag(*getter_AddRefs(tag))))
 		{
 			nsCOMPtr<nsIContent>	treeGrandchild;
-			if ((tag.get() == containmentAtom.get()) && (nameSpaceID == kNameSpaceID_XUL))
+			if (isContainmentElement == PR_TRUE)
 			{
 				if (NS_FAILED(rv = CreateElement(nameSpaceID,
-					containmentAtom, aValue, getter_AddRefs(treeGrandchild))))
+					tag, aValue, getter_AddRefs(treeGrandchild))))
 					continue;
 				if (NS_FAILED(rv = SetAllAttributesOnElement(treeGrandchild, aValue)))
 					continue;
@@ -925,9 +988,48 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 			}
 			else
 			{
-				if (NS_FAILED(rv = NS_NewRDFElement(nameSpaceID, tag,
-							getter_AddRefs(treeGrandchild))))
-					continue;
+				if (nameSpaceID == kNameSpaceID_HTML)
+				{
+					nsIHTMLElementFactory	*mHTMLElementFactory;
+
+					rv = nsComponentManager::CreateInstance(kHTMLElementFactoryCID,
+						nsnull, kIHTMLElementFactoryIID, (void**) &mHTMLElementFactory);
+					if (NS_FAILED(rv))
+						continue;
+
+					nsCOMPtr<nsIHTMLContent>	element;
+					nsAutoString			tagName(tag->GetUnicode());
+					rv = mHTMLElementFactory->CreateInstanceByTag(tagName, getter_AddRefs(element));
+					if (NS_FAILED(rv))
+						continue;
+
+					nsCOMPtr<nsIDocument>		doc;
+					if (NS_FAILED(rv = mDocument->QueryInterface(kIDocumentIID, getter_AddRefs(doc))))
+						continue;
+
+					// XXX To do
+					// Make sure our ID is set. Unlike XUL elements, we want to make sure
+					// that our ID is relative if possible.
+					
+					if (NS_FAILED(rv = element->SetDocument(doc, PR_FALSE)))
+						continue;
+
+					treeGrandchild = do_QueryInterface(element);
+
+					NS_RELEASE(mHTMLElementFactory);
+				}
+				else
+				{
+					if (NS_FAILED(rv = NS_NewRDFElement(nameSpaceID, tag,
+								getter_AddRefs(treeGrandchild))))
+						continue;
+
+					nsCOMPtr<nsIDocument>	nsIDoc = do_QueryInterface(mDocument);
+					if (nsIDoc)
+					{
+						treeGrandchild->SetDocument(nsIDoc, PR_FALSE);
+					}
+				}
 			}
 
 			if (treeGrandchild && treeGrandchild.get())
@@ -963,8 +1065,20 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 							else if ((attribName.get() == kInstanceOfAtom) &&
 								(attribNameSpaceID == kNameSpaceID_RDF))
 								continue;
+							// never copy {}:rootcontainment attribute
+							else if ((attribName.get() == kRootcontainmentAtom) &&
+								(attribNameSpaceID == kNameSpaceID_None))
+								continue;
+							// never copy {}:subcontainment attribute
+							else if ((attribName.get() == kSubcontainmentAtom) &&
+								(attribNameSpaceID == kNameSpaceID_None))
+								continue;
 							// never copy {}:ID attribute
 							else if ((attribName.get() == kIdAtom) &&
+								(attribNameSpaceID == kNameSpaceID_None))
+								continue;
+							// never copy {}:uri attribute
+							else if ((attribName.get() == kURIAtom) &&
 								(attribNameSpaceID == kNameSpaceID_None))
 								continue;
 							// never copy {}:itemcontentsgenerated attribute (bogus)
@@ -1033,8 +1147,8 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 					}
 				}
 
-				// add into tree
-				if ((nsnull != XULSortService) && (tag == containmentAtom))
+				// Note: add into tree, but only sort if its a containment element!
+				if ((nsnull != XULSortService) && (isContainmentElement == PR_TRUE))
 				{
 					XULSortService->InsertContainerNode(treeChildren, treeGrandchild);
 				}

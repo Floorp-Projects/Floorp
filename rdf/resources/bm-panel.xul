@@ -12,17 +12,26 @@
       datasources="rdf:bookmarks rdf:files rdf:ftp rdf:find" 
       ondblclick="return OpenURL(event,event.target.parentNode);">
 
-  <template containment="treeitem" rootcontainment="treebody" subcontainment="treechildren">
-  	<treeitem>
-		<treecell>
-			<treeindentation />
-			<titledbutton />
-			<text rdf:resource="http://home.netscape.com/NC-rdf#Name" />
-		</treecell>
-		<treecell>
-			<text rdf:resource="http://home.netscape.com/NC-rdf#URL" />
-		</treecell>
-  	</treeitem>
+  <template>
+  	<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator" rootcontainment="treebody" subcontainment="treechildren">
+  		<treeitem uri="...">
+  			<treecell>
+  				<html:hr width="75%" align="center" size="1" />
+  			</treecell>
+		</treeitem>  		
+  	</rule>
+  	
+  	<rule rootcontainment="treebody" subcontainment="treechildren">
+	  	<treeitem uri="...">
+			<treecell>
+				<treeindentation />
+				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+			</treecell>
+			<treecell>
+				<titledbutton value="rdf:http://home.netscape.com/NC-rdf#URL" align="right" style="list-style-image: none;" />
+			</treecell>
+	  	</treeitem>
+	</rule>
   </template>
 
   <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>

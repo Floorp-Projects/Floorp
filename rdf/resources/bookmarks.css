@@ -2,6 +2,10 @@ window {
  display: block; 
 } 
 
+menubar { 
+ display: none; 
+} 
+
 tree { 
  display: table; 
  background-color: #FFFFFF; 
@@ -60,6 +64,10 @@ treecell[selectedcell] {
  background-color: yellow;
 }
 
+treeitem[container="true"][open="true"][loading="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
+}
+
 treeitem[type="http://home.netscape.com/NC-rdf#Folder"] > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/bookmark-folder-closed.gif");
 }
@@ -76,6 +84,42 @@ treeitem[type="http://home.netscape.com/NC-rdf#Folder"][id="NC:PersonalToolbarFo
  list-style-image: url("resource:/res/rdf/personal-folder-open.gif");
 }
 
+treeitem[type="http://home.netscape.com/NC-rdf#BookmarkSeparator"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/bookmark-item.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#IEFavorite"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/IEFavorite.gif");
+}
+
 treeitem[type="http://home.netscape.com/NC-rdf#Bookmark"] > treecell > titledbutton {
  list-style-image: url("resource:/res/rdf/bookmark-item.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"][open="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/folder-open.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"][container="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/folder-closed.gif");
+}
+
+treeitem[type="http://home.netscape.com/NC-rdf#FileSystemObject"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/article.gif");
+}
+
+treeitem[container="true"][open="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/folder-open.gif");
+}
+
+treeitem[container="true"] > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/folder-closed.gif");
+}
+
+treeitem > treecell > titledbutton {
+ list-style-image: url("resource:/res/rdf/document.gif");
+}
+
+titledbutton#bookmarks {
+	list-style-image:url("resource:/res/rdf/bookmark-item.gif");
 }

@@ -127,7 +127,7 @@ treeitem > treecell > titledbutton {
 }
 
 titledbutton#bookmarks {
-	list-style-image:url(resource:/res/rdf/bookmark-item.gif);
+	list-style-image:url("resource:/res/rdf/bookmark-item.gif");
 }
 
 toolbar#sidebarbar titledbutton{

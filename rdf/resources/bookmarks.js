@@ -100,7 +100,7 @@ function doSort(sortColName)
       return(false);
     }
     rdfCore.Init("RDFCore");
-    XPAppCoresManager.Add(rdfCore);
+//    XPAppCoresManager.Add(rdfCore);
   }
   // sort!!!
   rdfCore.doSort(node, sortResource, sortDirection);
