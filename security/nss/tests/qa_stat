@@ -72,6 +72,7 @@ Debug "NTDIST $NTDIST"
 Debug "UXDIST $UXDIST"
 Debug "TESTSCRIPTDIR $TESTSCRIPTDIR"
 Debug "RESULTDIR $RESULTDIR"
+Debug "RESULTDIRURL $RESULTDIRURL"
 
 ############################### watch_rsh ##############################
 # local shell function, deals with a hanging rsh (kills it...)
