@@ -18,8 +18,8 @@ while (<>) {
       # Ignore the first two windows (hidden window and first window).
       if ( $#end > 2 ) {
          # Display simple ascii graph.
-         $len = int ( ( $end[$#end] - $start[$#start] + 0.005 ) * 100 );
-         print '*' x ($len%80), "\n";
+         $len = int ( ( $end[$#end] - $start[$#end] + 0.005 ) * 100 );
+         print '*' x ($len%80), " ", $end[$#end]-$start[$#end],"\n";
       }
   }
 }
