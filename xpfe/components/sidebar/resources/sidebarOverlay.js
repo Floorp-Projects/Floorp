@@ -695,7 +695,7 @@ function get_remote_datasource_url() {
       debug("Unable to get system locale. What now? "+ex);
     }
   }
-  locale = locale.toLowerCase();
+  locale = locale.data.toLowerCase();
   url = url.replace(/%LOCALE%/g, locale);
 
   debug("Remote url is " + url);
