@@ -57,3 +57,11 @@ interface nsIScriptableInterfaces : nsISupports
 %}
 
 
+/**
+* interface of Components.interfacesByID
+* (interesting stuff only reflected into JavaScript)
+*/
+[scriptable, uuid(c99cffac-5aed-4267-ad2f-f4a4c9d4a081)]
+interface nsIScriptableInterfacesByID : nsISupports
+{
+};

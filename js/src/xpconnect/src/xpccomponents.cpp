@@ -310,6 +310,246 @@ nsXPCComponents_Interfaces::CanSetProperty(const nsIID * iid, const PRUnichar *p
     return NS_OK;
 }
 #endif
+
+/***************************************************************************/
+/***************************************************************************/
+/***************************************************************************/
+
+class nsXPCComponents_InterfacesByID :
+            public nsIScriptableInterfacesByID,
+            public nsIXPCScriptable
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+          , public nsISecurityCheckedComponent
+#endif
+{
+public:
+    // all the interface method declarations...
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSISCRIPTABLEINTERFACESBYID
+    NS_DECL_NSIXPCSCRIPTABLE
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+    NS_DECL_NSISECURITYCHECKEDCOMPONENT
+#endif
+
+public:
+    nsXPCComponents_InterfacesByID();
+    virtual ~nsXPCComponents_InterfacesByID();
+
+private:
+    nsCOMPtr<nsIInterfaceInfoManager> mManager;
+};
+
+
+nsXPCComponents_InterfacesByID::nsXPCComponents_InterfacesByID()
+{
+    mManager = dont_AddRef(XPTI_GetInterfaceInfoManager());
+}
+
+nsXPCComponents_InterfacesByID::~nsXPCComponents_InterfacesByID()
+{
+    // empty
+}
+
+NS_INTERFACE_MAP_BEGIN(nsXPCComponents_InterfacesByID)
+  NS_INTERFACE_MAP_ENTRY(nsIScriptableInterfacesByID)
+  NS_INTERFACE_MAP_ENTRY(nsIXPCScriptable)
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+  NS_INTERFACE_MAP_ENTRY(nsISecurityCheckedComponent)
+#endif
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIScriptableInterfacesByID)
+NS_INTERFACE_MAP_END_THREADSAFE
+
+NS_IMPL_THREADSAFE_ADDREF(nsXPCComponents_InterfacesByID)
+NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents_InterfacesByID)
+
+// The nsIXPCScriptable map declaration that will generate stubs for us...
+#define XPC_MAP_CLASSNAME           nsXPCComponents_InterfacesByID
+#define XPC_MAP_QUOTED_CLASSNAME   "nsXPCComponents_InterfacesByID"
+#define                             XPC_MAP_WANT_NEWRESOLVE
+#define                             XPC_MAP_WANT_NEWENUMERATE
+#define XPC_MAP_FLAGS               nsIXPCScriptable::DONT_ENUM_STATIC_PROPS |\
+                                    nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
+#include "xpc_map_end.h" /* This will #undef the above */
+
+/* PRBool newEnumerate (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in PRUint32 enum_op, in JSValPtr statep, out JSID idp); */
+NS_IMETHODIMP
+nsXPCComponents_InterfacesByID::NewEnumerate(nsIXPConnectWrappedNative *wrapper,
+                                             JSContext * cx, JSObject * obj,
+                                             PRUint32 enum_op, jsval * statep,
+                                             jsid * idp, PRBool *_retval)
+{
+    nsIEnumerator* e;
+
+    switch(enum_op)
+    {
+        case JSENUMERATE_INIT:
+        {
+            if(!mManager || 
+               NS_FAILED(mManager->EnumerateInterfaces(&e)) || !e ||
+               NS_FAILED(e->First()))
+
+            {
+                *statep = JSVAL_NULL;
+                return NS_ERROR_UNEXPECTED;
+            }
+
+            *statep = PRIVATE_TO_JSVAL(e);
+            if(idp)
+                *idp = JSVAL_ZERO; // indicate that we don't know the count
+            return NS_OK;
+        }
+        case JSENUMERATE_NEXT:
+        {
+            nsCOMPtr<nsISupports> isup;
+
+            e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
+            
+            while(1)
+            {
+                if(NS_ENUMERATOR_FALSE == e->IsDone() &&
+                   NS_SUCCEEDED(e->CurrentItem(getter_AddRefs(isup))) && isup)
+                {
+                    e->Next();
+                    nsCOMPtr<nsIInterfaceInfo> iface(do_QueryInterface(isup));
+                    if(iface)
+                    {
+                        nsIID const *iid;
+                        char* idstr;
+                        JSString* jsstr;
+                        PRBool scriptable;
+
+                        if(NS_SUCCEEDED(iface->IsScriptable(&scriptable)) && 
+                           !scriptable)
+                        {
+                            continue;
+                        }
+
+                        if(NS_SUCCEEDED(iface->GetIIDShared(&iid)) &&
+                           nsnull != (idstr = iid->ToString()))
+                        {
+                            jsstr = JS_NewStringCopyZ(cx, idstr);
+                            nsMemory::Free(idstr);
+                            if (jsstr &&
+                                JS_ValueToId(cx, STRING_TO_JSVAL(jsstr), idp))
+                            {
+                                return NS_OK;
+                            }
+                        }
+                    }
+                }
+                // else...
+                break;
+            }
+            // FALL THROUGH
+        }
+
+        case JSENUMERATE_DESTROY:
+        default:
+            e = (nsIEnumerator*) JSVAL_TO_PRIVATE(*statep);
+            NS_IF_RELEASE(e);
+            *statep = JSVAL_NULL;
+            return NS_OK;
+    }
+}
+
+/* PRBool newResolve (in nsIXPConnectWrappedNative wrapper, in JSContextPtr cx, in JSObjectPtr obj, in JSVal id, in PRUint32 flags, out JSObjectPtr objp); */
+NS_IMETHODIMP
+nsXPCComponents_InterfacesByID::NewResolve(nsIXPConnectWrappedNative *wrapper,
+                                           JSContext * cx, JSObject * obj,
+                                           jsval id, PRUint32 flags,
+                                           JSObject * *objp, PRBool *_retval)
+{
+    const jschar* name = nsnull;
+
+    if(mManager &&
+       JSVAL_IS_STRING(id) &&
+       38 == JS_GetStringLength(JSVAL_TO_STRING(id)) &&
+       nsnull != (name = JS_GetStringChars(JSVAL_TO_STRING(id))))
+    {
+        nsID iid;
+        if (!iid.Parse(NS_ConvertUCS2toUTF8(name).get()))
+            return NS_OK;
+
+        nsCOMPtr<nsIInterfaceInfo> info;
+        mManager->GetInfoForIID(&iid, getter_AddRefs(info));
+        if(!info)
+            return NS_OK;
+
+        nsCOMPtr<nsIJSIID> nsid = 
+            dont_AddRef(NS_STATIC_CAST(nsIJSIID*, nsJSIID::NewID(info)));
+
+        if (!nsid)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        nsCOMPtr<nsIXPConnect> xpc;
+        wrapper->GetXPConnect(getter_AddRefs(xpc));
+        if(xpc)
+        {
+            nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+            if(NS_SUCCEEDED(xpc->WrapNative(cx, obj,
+                                            NS_STATIC_CAST(nsIJSIID*,nsid),
+                                            NS_GET_IID(nsIJSIID),
+                                            getter_AddRefs(holder))))
+            {
+                JSObject* idobj;
+                if(holder && NS_SUCCEEDED(holder->GetJSObject(&idobj)))
+                {
+                    jsid idid;
+
+                    *objp = obj;
+                    *_retval = JS_ValueToId(cx, id, &idid) &&
+                        OBJ_DEFINE_PROPERTY(cx, obj, idid,
+                                            OBJECT_TO_JSVAL(idobj),
+                                            nsnull, nsnull,
+                                            JSPROP_ENUMERATE |
+                                            JSPROP_READONLY |
+                                            JSPROP_PERMANENT,
+                                            nsnull);
+                }
+            }
+        }
+    }
+    return NS_OK;
+}
+
+#ifdef XPC_USE_SECURITY_CHECKED_COMPONENT
+/* string canCreateWrapper (in nsIIDPtr iid); */
+NS_IMETHODIMP
+nsXPCComponents_InterfacesByID::CanCreateWrapper(const nsIID * iid, char **_retval)
+{
+    // We let anyone do this...
+    *_retval = xpc_CloneAllAccess();
+    return NS_OK;
+}
+
+/* string canCallMethod (in nsIIDPtr iid, in wstring methodName); */
+NS_IMETHODIMP
+nsXPCComponents_InterfacesByID::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canGetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsXPCComponents_InterfacesByID::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+
+/* string canSetProperty (in nsIIDPtr iid, in wstring propertyName); */
+NS_IMETHODIMP
+nsXPCComponents_InterfacesByID::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
+{
+    // If you have to ask, then the answer is NO
+    *_retval = nsnull;
+    return NS_OK;
+}
+#endif
+
 /***************************************************************************/
 /***************************************************************************/
 /***************************************************************************/
@@ -1538,6 +1778,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsXPCComponents)
 
 nsXPCComponents::nsXPCComponents()
     :   mInterfaces(nsnull),
+        mInterfacesByID(nsnull),
         mClasses(nsnull),
         mClassesByID(nsnull),
         mResults(nsnull),
@@ -1556,6 +1797,7 @@ void
 nsXPCComponents::ClearMembers()
 {
     NS_IF_RELEASE(mInterfaces);
+    NS_IF_RELEASE(mInterfacesByID);
     NS_IF_RELEASE(mClasses);
     NS_IF_RELEASE(mClassesByID);
     NS_IF_RELEASE(mResults);
@@ -1581,6 +1823,7 @@ NS_IMETHODIMP nsXPCComponents::Get##_n(_b##_n * *a##_n) { \
 }
 
 XPC_IMPL_GET_OBJ_METHOD(nsIScriptable,     Interfaces)
+XPC_IMPL_GET_OBJ_METHOD(nsIScriptable,     InterfacesByID)
 XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Classes)
 XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, ClassesByID)
 XPC_IMPL_GET_OBJ_METHOD(nsIXPCComponents_, Results)
@@ -1888,7 +2131,7 @@ nsXPCComponents::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, c
 NS_IMETHODIMP
 nsXPCComponents::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
 {
-    static const char* allowed[] = { "interfaces", "results", nsnull};
+    static const char* allowed[] = { "interfaces", "interfacesByID", "results", nsnull};
     *_retval = xpc_CheckAccessList(propertyName, allowed);
     return NS_OK;
 }
