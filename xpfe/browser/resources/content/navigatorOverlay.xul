@@ -86,7 +86,7 @@
 	<!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
 
 	<!-- Misc -->
-	<key id="stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
+	<key id="key_stop" keycode="VK_ESCAPE" oncommand="BrowserStop();"/>
 	
 </keyset>
 
@@ -218,7 +218,7 @@
       <menuseparator />
       <menuitem id="menuitem-reload" accesskey="&reloadCmd.accesskey;" key="key_reload" value="&reloadCmd.label;" observes="canReload" />
       <menuitem value="&showImagesCmd.label;" accesskey="&showImagesCmd.accesskey;" disabled="true" oncommand="BrowserReload();"/>
-      <menuitem value="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" oncommand="BrowserStop();"/>
+      <menuitem value="&stopCmd.label;" accesskey="&stopCmd.accesskey;" id="menuitem-stop" oncommand="BrowserStop();" key="key_stop"/>
       <menuseparator />
       <menuitem accesskey="&pageSourceCmd.accesskey;" value="&pageSourceCmd.label;" key="key_viewSource" observes="View:PageSource"/>
       <menuitem accesskey="&pageInfoCmd.accesskey;"   value="&pageInfoCmd.label;"   key="key_viewInfo"   observes="View:PageInfo"/>
