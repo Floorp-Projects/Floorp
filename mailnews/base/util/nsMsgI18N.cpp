@@ -220,9 +220,8 @@ const nsString& msgCompFileSystemCharset()
 
 	if (aPlatformCharset.Length() < 1) 
 	{
-		nsCOMPtr <nsIPlatformCharset> platformCharset;
-		nsresult rv = nsComponentManager::CreateInstance(NS_PLATFORMCHARSET_PROGID, nsnull, 
-	                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+		nsresult rv;
+		nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
 		if (NS_SUCCEEDED(rv)) 
 			rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, aPlatformCharset);
 
