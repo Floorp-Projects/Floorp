@@ -293,6 +293,7 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
 
   mDeviceContext = dont_QueryInterface(aDeviceContext);
 
+  mCharSets = do_GetService(NS_CHARSETCONVERTERMANAGER_PROGID);
   mPrefs = do_GetService(NS_PREF_PROGID);
   if (mPrefs) {
     // Register callbacks so we're notified when the preferences change
@@ -329,11 +330,12 @@ nsPresContext::SetShell(nsIPresShell* aShell)
       NS_ASSERTION(doc, "expect document here");
       if (doc) {
         doc->GetBaseURL(*getter_AddRefs(mBaseURL));
-        NS_ASSERTION(mDeviceContext, "expect device context here");
-        if (mDeviceContext) {
+        if (mCharSets) {
           nsAutoString charset;
           doc->GetDocumentCharacterSet(charset);
-          mDeviceContext->GetLangGroup(charset, getter_AddRefs(mLangGroup));
+          // XXX GetCharsetLangGroup ought to do the lower-casing for me
+          charset.ToLowerCase();
+          mCharSets->GetCharsetLangGroup(&charset, getter_AddRefs(mLangGroup));
           GetFontPreferences();
         }
       }
