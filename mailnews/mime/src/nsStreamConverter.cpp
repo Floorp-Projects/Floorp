@@ -126,6 +126,12 @@ bridge_new_new_uri(void *bridgeStream, nsIURI *aURI)
         nsAutoString charset(uniCharset);
         if (!charset.IsEmpty())
           msd->options->default_charset = charset.ToNewCString();
+
+        // check to see if we have a charset override...and if we do, set that field appropriately too...
+        nsresult rv = i18nUrl->GetCharsetOverRide(getter_Copies(uniCharset));
+        charset = uniCharset;
+        if (NS_SUCCEEDED(rv) && !charset.IsEmpty())
+          msd->options->override_charset = charset.ToNewCString();
       }
       char *urlString;
       if (NS_SUCCEEDED(aURI->GetSpec(&urlString)))
