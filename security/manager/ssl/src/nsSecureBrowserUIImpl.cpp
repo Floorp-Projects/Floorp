@@ -117,8 +117,6 @@ NS_IMETHODIMP
 nsSecureBrowserUIImpl::Init(nsIDOMWindow *window,
                             nsIDOMElement *button)
 {
-fprintf(stderr, "===> nsSecureBrowserUIImpl::Init\n");
-
   nsresult rv = NS_OK;
   mSecurityButton = button;  /* may be null */
   mWindow = window;
