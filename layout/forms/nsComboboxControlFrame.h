@@ -249,6 +249,7 @@ protected:
   nsresult RedisplayText(PRInt32 aIndex);
   nsresult ActuallyDisplayText(nsAString& aText, PRBool aNotify);
   nsresult GetPrimaryComboFrame(nsIPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
+  NS_IMETHOD ToggleList(nsIPresContext* aPresContext);
 
   void ReflowCombobox(nsIPresContext *         aPresContext,
                       const nsHTMLReflowState& aReflowState,
