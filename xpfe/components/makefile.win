@@ -36,6 +36,7 @@ DIRS= \
     shistory \
     console \
     autocomplete \
+    download-manager \
     urlbarhistory \
     winhooks \
     urlwidget \

@@ -19,6 +19,8 @@
 #
 # Contributor(s): 
 
+# copied in part from ../timebomb/makefile.win
+
 DEPTH         = ..\..\..
 
 include <$(DEPTH)/config/config.mak>

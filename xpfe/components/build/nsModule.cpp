@@ -14,7 +14,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
@@ -22,7 +22,7 @@
  * Contributor(s):
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -39,8 +39,10 @@
 #include "nsAutoComplete.h"
 #include "nsBookmarksService.h"
 #include "nsDirectoryViewer.h"
+#include "nsDownloadManager.h"
 #include "nsGlobalHistory.h"
 #include "rdf.h"
+#include "nsTimeBomb.h"
 #include "nsLocalSearchService.h"
 #include "nsInternetSearchService.h"
 #include "nsRelatedLinksHandlerImpl.h"
@@ -62,10 +64,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAutoCompleteResults)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsBookmarksService, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsHTTPIndex, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDirectoryViewerFactory)
+NS_GENERIC_FACTORY_CONSTRUCTOR(DownloadItem)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(LocalSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimeBomb)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsFontPackageHandler)
 #if defined(XP_WIN)
@@ -93,20 +98,20 @@ RegisterProc(nsIComponentManager *aCompMgr,
     nsXPIDLCString previous;
     rv = catman->AddCategoryEntry("Gecko-Content-Viewers", "application/http-index-format",
                                    NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/http-index-format",
-                                   PR_TRUE, 
-                                   PR_TRUE, 
+                                   PR_TRUE,
+                                   PR_TRUE,
                                    getter_Copies(previous));
     if (NS_FAILED(rv)) return rv;
 
     rv = catman->AddCategoryEntry("Gecko-Content-Viewers", "application/http-index-format; x-view-type=view-source",
                                   NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/http-index-format; x-view-type=view-source",
-                                  PR_TRUE, 
-                                  PR_TRUE, 
+                                  PR_TRUE,
+                                  PR_TRUE,
                                   getter_Copies(previous));
-    
+
     return rv;
 }
-static NS_METHOD 
+static NS_METHOD
 UnregisterProc(nsIComponentManager *aCompMgr,
                nsIFile *aPath,
                const char *registryLocation,
@@ -116,11 +121,11 @@ UnregisterProc(nsIComponentManager *aCompMgr,
     nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = catman->DeleteCategoryEntry("Gecko-Content-Viewers", 
+    rv = catman->DeleteCategoryEntry("Gecko-Content-Viewers",
                                      "application/http-index-format", PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    rv = catman->DeleteCategoryEntry("Gecko-Content-Viewers", 
+    rv = catman->DeleteCategoryEntry("Gecko-Content-Viewers",
                                      "application/http-index-format; x-view-type=view-source", PR_TRUE);
 
     return rv;
@@ -145,6 +150,10 @@ static const nsModuleComponentInfo components[] = {
       nsHTTPIndexConstructor },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,
       nsHTTPIndexConstructor },
+    { "Download Manager", NS_DOWNLOADMANAGER_CID, NS_DOWNLOADMANAGER_CONTRACTID,
+      nsDownloadManagerConstructor },
+    { "Download Manager Item", NS_DOWNLOADITEM_CID, NS_DOWNLOADITEM_CONTRACTID,
+      DownloadItemConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_CONTRACTID,
       nsGlobalHistoryConstructor },
     { "Global History", NS_GLOBALHISTORY_CID, NS_GLOBALHISTORY_DATASOURCE_CONTRACTID,
@@ -161,6 +170,7 @@ static const nsModuleComponentInfo components[] = {
       NS_INTERNETSEARCH_DATASOURCE_CONTRACTID, InternetSearchDataSourceConstructor },
     { "Related Links Handler", NS_RELATEDLINKSHANDLER_CID, NS_RELATEDLINKSHANDLER_CONTRACTID,
 	  RelatedLinksHandlerImplConstructor},
+	{ "Netscape TimeBomb", NS_TIMEBOMB_CID, NS_TIMEBOMB_CONTRACTID, nsTimeBombConstructor},
     { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
       NS_URLBARHISTORY_CONTRACTID, nsUrlbarHistoryConstructor },
     { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
@@ -172,14 +182,14 @@ static const nsModuleComponentInfo components[] = {
       "@mozilla.org/locale/default-font-package-handler;1",
       nsFontPackageHandlerConstructor },
 #if defined(XP_WIN)
-    { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID, 
-      nsUrlWidgetConstructor }, 
-    { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID, 
+    { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID,
+      nsUrlWidgetConstructor },
+    { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID,
       nsWindowsHooksConstructor },
 #endif // Windows
 #if defined(MOZ_LDAP_XPCOM)
     { "LDAP Autocomplete Session", NS_LDAPAUTOCOMPLETESESSION_CID,
-	  "@mozilla.org/autocompleteSession;1?type=ldap", 
+	  "@mozilla.org/autocompleteSession;1?type=ldap",
 	  nsLDAPAutoCompleteSessionConstructor },
 #endif
 };
