@@ -75,20 +75,20 @@
   -moz-image-region: rect(20px 76px 40px 57px) !important;
 }
 
-#print {
+#helpPrintButton {
   list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
   -moz-image-region: rect(0px 23px 21px 0px);
 }
 
-#print:hover {
+#helpPrintButton:hover {
   -moz-image-region: rect(0px 46px 21px 23px);
 }
 
-#print:hover:active {
+#helpPrintButton:hover:active {
   -moz-image-region: rect(0px 69px 21px 46px);
 }
 
-#print[disabled="true"] {
+#helpPrintButton[disabled="true"] {
   -moz-image-region: rect(0px 92px 21px 69px) !important;
 }
 

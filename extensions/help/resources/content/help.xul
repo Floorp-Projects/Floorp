@@ -9,15 +9,7 @@
 <?xul-overlay href="chrome://navigator/content/platformNavigationBindings.xul"?>
 <?xul-overlay href="chrome://communicator/content/viewZoomOverlay.xul"?>
 
-<!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-%brandDTD;
-<!ENTITY % helpDTD SYSTEM "chrome://help/locale/help.dtd" >
-%helpDTD;
-<!ENTITY % navigatorDTD SYSTEM "chrome://navigator/locale/navigator.dtd" >
-%navigatorDTD;
-]>
-
+<!DOCTYPE window SYSTEM "chrome://help/locale/help.dtd">
 
 <window id="help"
    windowtype="mozilla:help"
@@ -71,12 +63,8 @@
         key="&findAgainCmd.commandkey;" oncommand="find(true, false);" modifiers="accel"/>
     <key id="key_findPrev"
         key="&findPrevCmd.commandkey;" oncommand="find(true, true);" modifiers="accel, shift"/>
-    <key id="key_findAgain2" keycode="&findAgainCmd.commandkey2;" oncommand="find(true, false);" />
+    <key id="key_findAgain2" keycode="&findAgainCmd.commandkey2;" oncommand="find(true, false);"/>
     <key id="key_findPrev2"  keycode="&findPrevCmd.commandkey2;"  oncommand="find(true, true);"  modifiers="shift"/>
-    <key id="key_viewSource" key="&pageSourceCmd.commandkey;"
-        oncommand="BrowserViewSource();" modifiers="accel"/>
-    <key id="key_viewInfo" key="&pageInfoCmd.commandkey;"
-        oncommand="BrowserPageInfo();"   modifiers="accel"/>
     <key id="key_viewNextHelpPanel" keycode="VK_TAB" oncommand="showRelativePanel(true);" modifiers="control"/>
     <key id="key_viewPrevHelpPanel" keycode="VK_TAB" oncommand="showRelativePanel(false);" modifiers="control,shift"/>
   </keyset>
@@ -92,26 +80,26 @@
         tbalign="stretch" persist="collapsed">
 
         <toolbarbutton id="helpBackButton" type="menu-button" class="toolbarbutton-1"
-          label="&backBtn.label;" 
+          label="&backButton.label;" 
           oncommand="if (event.target==this) goBack(); else gotoHistoryIndex(event);"
           observes="canGoBack" context="backMenu"
           tooltiptext="&backButton.tooltip;">
           <menupopup context="" onpopupshowing="createBackMenu(event);"/>
         </toolbarbutton>
         <toolbarbutton id="helpForwardButton" type="menu-button" class="toolbarbutton-1"
-          label="&fwdBtn.label;" 
+          label="&forwardButton.label;" 
           tooltiptext="&forwardButton.tooltip;"
           oncommand="if (event.target==this) goForward(); else gotoHistoryIndex(event);"
           observes="canGoForward" context="forwardMenu">
           <menupopup context="" onpopupshowing="createForwardMenu(event);"/>
         </toolbarbutton>
         <toolbarbutton id="helpHomeButton" class="toolbarbutton-1"
-          label="&homeBtn.label;" oncommand="goHome();"
-          tooltiptext="&homeBtn.tooltip;"/>
+          label="&homeButton.label;" oncommand="goHome();"
+          tooltiptext="&homeButton.tooltip;"/>
 
         <spacer flex="1"/>
 
-        <toolbarbutton id="print" class="toolbarbutton-1"
+        <toolbarbutton id="helpPrintButton" class="toolbarbutton-1"
           label="&printButton.label;" oncommand="print();"
           tooltiptext="&printButton.tooltip;"/>
 
@@ -141,13 +129,13 @@
             <content uri="?uri"/>
             <triple subject="?uri"
               predicate="http://home.netscape.com/NC-rdf#subheadings"
-              object="?subheadings" />
+              object="?subheadings"/>
             <member container="?subheadings" child="?subheading"/>
           </conditions>
           <bindings>
             <binding subject="?subheading"
               predicate="http://home.netscape.com/NC-rdf#name"
-              object="?name" />
+              object="?name"/>
           </bindings>
 
           <action>
@@ -185,13 +173,13 @@
             <content uri="?uri"/>
             <triple subject="?uri"
               predicate="http://home.netscape.com/NC-rdf#subheadings"
-              object="?subheadings" />
+              object="?subheadings"/>
             <member container="?subheadings" child="?subheading"/>
           </conditions>
           <bindings>
             <binding subject="?subheading"
               predicate="http://home.netscape.com/NC-rdf#name"
-              object="?name" />
+              object="?name"/>
           </bindings>
 
           <action>
@@ -239,13 +227,13 @@
               <rule>
                 <conditions>
                   <content uri="?uri"/>
-                  <member container="?uri" child="?subheading" />
+                  <member container="?uri" child="?subheading"/>
                 </conditions>
 
                 <bindings>
                   <binding subject="?subheading"
                    predicate="http://home.netscape.com/NC-rdf#name"
-                   object="?name" />
+                   object="?name"/>
                 </bindings>
 
                 <action>
@@ -286,14 +274,14 @@
                <content uri="?uri"/>
                <triple subject="?uri"
                  predicate="http://home.netscape.com/NC-rdf#subheadings"
-                 object="?subheadings" />
+                 object="?subheadings"/>
                <member container="?subheadings" child="?subheading"/>
               </conditions>
 
               <bindings>
                <binding subject="?subheading"
                  predicate="http://home.netscape.com/NC-rdf#name"
-                 object="?name" />
+                 object="?name"/>
               </bindings>
 
               <action>

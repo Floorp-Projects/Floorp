@@ -114,20 +114,20 @@
 	list-style-image: url("chrome://communicator/skin/help/home-dis.gif") !important;
 }	
 
-#print {
+#helpPrintButton {
   list-style-image: url("chrome://communicator/skin/icons/btn1.gif");
   -moz-image-region: rect(0, 49px, 33px, 0);
 }
 
-#print:hover {
+#helpPrintButton:hover {
   -moz-image-region: rect(0, 99px, 33px, 50px);
 }
 
-#print:hover:active {
+#helpPrintButton:hover:active {
   -moz-image-region: rect(0, 149px, 33px, 100px);
 }
 
-#print[disabled="true"] {
+#helpPrintButton[disabled="true"] {
   -moz-image-region: rect(0, 199px, 33px, 150px) !important;
 }
 
