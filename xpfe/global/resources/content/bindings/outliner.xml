@@ -55,14 +55,14 @@
 
       <property name="firstOrdinalColumn">
         <getter><![CDATA[
-          var xulns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
-          var cols = this.getElementsByTagNameNS(xulns, "outlinercol");
-          for (var i = 0; i < cols.length; ++i) {
-            var parent = cols[i].boxObject.parentBox;
-            if (parent)
-              return parent.boxObject.firstChild;
-          }
-          return null;
+          var cols = this.firstChild;
+          while (cols && cols.localName != "outlinercols")
+            cols = cols.nextSibling;
+
+          if (cols)
+            return cols.boxObject.firstChild;
+          else
+            return null;
         ]]></getter>
       </property>
       
@@ -615,7 +615,8 @@
            click, so that drags work correctly. -->
       <handler event="mousedown">
       <![CDATA[
-         if (!event.ctrlKey && !event.shiftKey && !event.metaKey) {
+         if ((!event.ctrlKey && !event.shiftKey && !event.metaKey) ||
+             this.parentNode.singleSelection) {
            var row = {};
            var col = {};
            var obj = {};
@@ -628,16 +629,18 @@
            if (row.value == -1)
              return;
 
-		   if (obj.value != "twisty") {
-		     var column = document.getElementById(col.value);
-		     var cycler = column.hasAttribute('cycler');
+           if (obj.value != "twisty") {
+             var column = document.getElementById(col.value);
+             var cycler = column.hasAttribute('cycler');
 
-		     if (cycler)
-			   b.view.cycleCell(row.value, col.value);
-		     else
-			   if (!b.selection.isSelected(row.value))
-			     b.selection.select(row.value);
-		   }
+             if (cycler)
+               b.view.cycleCell(row.value, col.value);
+             else
+	       if (!b.selection.isSelected(row.value)) {
+                 b.selection.select(row.value);
+                 b.ensureRowIsVisible(row.value);
+               }
+           }
          }
       ]]>
       </handler>
@@ -649,40 +652,48 @@
          if (event.button != 0) return;
          var row = {};
          var col = {};
-		 var obj = {};
+         var obj = {};
          var b = this.parentNode.outlinerBoxObject;
          b.getCellAt(event.clientX, event.clientY, row, col, obj);
 
          if (row.value == -1)
            return;
 
-		 if (obj.value == "twisty") {
+         if (obj.value == "twisty") {
            b.view.toggleOpenState(row.value);
-		   return;
-		 }
-
-         var augment = event.ctrlKey || event.metaKey;
-         if (event.shiftKey)
-           b.selection.rangedSelect(-1, row.value, augment);
-         else if (augment) {
-           b.selection.toggleSelect(row.value);
-           b.selection.currentIndex = row.value;
+           return;
          }
-         else {
-          /* We want to deselect all the selected items except what was
+
+         if (! this.parentNode.singleSelection) {
+           var augment = event.ctrlKey || event.metaKey;
+           if (event.shiftKey) {
+             b.selection.rangedSelect(-1, row.value, augment);
+             b.ensureRowIsVisible(row.value);
+             return;
+           }
+           if (augment) {
+             b.selection.toggleSelect(row.value);
+             b.ensureRowIsVisible(row.value);
+             b.selection.currentIndex = row.value;
+             return;
+           }
+         }
+
+         /* We want to deselect all the selected items except what was
             clicked, UNLESS it was a right-click.  We have to do this
             in click rather than mousedown so that you can drag a
             selected group of items */
           
-           if (!col.value) return;
-           var column = document.getElementById(col.value);
-           var cycler = column.hasAttribute('cycler');
+         if (!col.value) return;
+         var column = document.getElementById(col.value);
+         var cycler = column.hasAttribute('cycler');
 
-           // if the last row has changed in between the time we 
-           // mousedown and the time we click, don't fire the select handler.
-           // see bug #92366
-           if (!cycler && this._lastSelectedRow == row.value)
-             b.selection.select(row.value);  
+         // if the last row has changed in between the time we 
+         // mousedown and the time we click, don't fire the select handler.
+         // see bug #92366
+         if (!cycler && this._lastSelectedRow == row.value) {
+           b.selection.select(row.value);  
+           b.ensureRowIsVisible(row.value);
          }
       ]]>
       </handler>
