@@ -147,6 +147,17 @@ public:
 	 */
 	OSErr Decode();
 	
+    /**
+     * DecodeFolder
+     *
+     * Traverses arbitrarily nested subdirs decoding any files
+     * in AppleSingle format and leaving other files alone.
+     *
+     * @param   aFolder  the folder whose contents to decode
+     * @return  err	     a standard MacOS err (dirNFErr if invalid dir, noErr = OK)
+     */
+    OSErr DecodeFolder(FSSpec *aFolder);
+     
 	/**
 	 * IsAppleSingleFile
 	 *
