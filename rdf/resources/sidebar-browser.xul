@@ -2,6 +2,13 @@
 <?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
 <?xml-stylesheet href="resource:/res/rdf/sidebar-browser.css" type="text/css"?>
 
+<!DOCTYPE window
+[
+<!ENTITY sidebar.title.label         "Sidebar">
+<!ENTITY sidebar.reload.label        "Reload">
+<!ENTITY sidebar.customize.label     "Customize">
+]>
+
 <window
   xmlns:html="http://www.w3.org/TR/REC-html40"
   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
@@ -10,6 +17,12 @@
 <html:script src="sidebar.js" />
 
 <box id="sidebox" align="vertical">
+ <box class="sidebartitle">
+  <titledbutton class="sidebartitle" value="&sidebar.title.label;"/>
+  <spring flex="100%"/>
+  <titledbutton value="&sidebar.reload.label;"
+                onclick="window.location.reload"/>
+  <titledbutton value="&sidebar.customize.label;"/>
+ </box>
 </box>
-
 </window>

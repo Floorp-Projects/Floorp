@@ -1,14 +1,11 @@
 iframe {
-  height: 100;
+  height: 110;
   border: 0px;
 }
 
 box.sidebartitle {
   background-color: #505888;
-  padding-left  : 2px;
-  padding-right : 2px;
-  padding-top   : 3px;
-  padding-bottom: 3px;
+  padding: 2px 3px 3px 3px;
   border: 0px;
   margin: 0px;
   font: 10pt sans-serif;
@@ -16,10 +13,7 @@ box.sidebartitle {
 
 box.panelbar {
   background-color: #006870;
-  padding-left  : 2px;
-  padding-right : 2px;
-  padding-top   : 3px;
-  padding-bottom: 3px;
+  padding: 2px 3px 3px 3px;
   border: 0px;
   margin: 0px;
   font: 10pt sans-serif;
@@ -27,11 +21,11 @@ box.panelbar {
 
 box#sidebox {
   width: 100%;
-  //height: 100%;
+  height: 100%;
   display:block;
 }
 
-titledbutton.sidebartitle[pseudoclass~="hover"] { 
+titledbutton.sidebartitle:hover { 
   border: 0px;
   margin: 1px; 
 }
@@ -49,7 +43,7 @@ titledbutton {
   padding-bottom: 1px;
 }
 
-titledbutton[pseudoclass~="hover"] {
+titledbutton:hover {
   border: 1px outset white;
   margin: 0px; 
 }

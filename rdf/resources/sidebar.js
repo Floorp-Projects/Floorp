@@ -15,18 +15,12 @@ var sidebar_resource = 'NC:BrowserSidebarRoot';
 function Init(sidebardb, sidebar_resource)
 {
   // Initialize the Sidebar
-  dump('Sidebar Init('+sidebardb+','+sidebar_resource+')\n');
-
-  //var tree = document.getElementById('tree');
 
   // Install all the datasources named in the Flash Registry into
   // the tree control. Datasources are listed as members of the
   // NC:FlashDataSources sequence, and are loaded in the order that
   // they appear in that sequence.
   var registry = RDF.GetDataSource(sidebardb);
-
-  // Add it to the tree control's composite datasource.
-  //tree.database.AddDataSource(registry);
 
   // Create a 'container' wrapper around the sidebar_resources
   // resource so we can use some utility routines that make access a
@@ -36,13 +30,7 @@ function Init(sidebardb, sidebar_resource)
 
   sb_datasource.Init(registry, RDF.GetResource(sidebar_resource));
   
-  //var sidebar_container = document.documentElement;
   var sidebox = document.getElementById('sidebox');
-
-  var sidebar_title = createSidebarTitle('Sidebar');
-  if (sidebar_title) {
-      sidebox.appendChild(sidebar_title);
-  }
 
   // Now enumerate all of the flash datasources.
   var enumerator = sb_datasource.GetElements();
@@ -58,34 +46,11 @@ function Init(sidebardb, sidebar_resource)
   }
 }
 
-function createSidebarTitle(title) {
-  var box        = document.createElement('box');
-  var titleB     = document.createElement('titledbutton');
-  var reloadB    = document.createElement('titledbutton');
-  var customizeB = document.createElement('titledbutton');
-  var spring     = document.createElement('spring');
-  box.setAttribute    ('class', 'sidebartitle');
-  titleB.setAttribute     ('value', title);
-  reloadB.setAttribute    ('value', 'Reload');
-  reloadB.setAttribute    ('onclick', 'window.location.reload()');
-  customizeB.setAttribute ('value', 'Customize');
-  titleB.setAttribute     ('class', 'sidebartitle');
-  spring.setAttribute     ('flex', '100%');
-
-  box.appendChild(titleB);
-  box.appendChild(spring);
-  box.appendChild(reloadB);
-  box.appendChild(customizeB);
-
-  return box;
-}
-
 function createPanel(registry, service) {
   var panel_title     = getAttr(registry, service, 'title');
   var panel_customize = getAttr(registry, service, 'customize');
   var panel_content   = getAttr(registry, service, 'content');
 
-  dump('Adding...' + panel_title + '\n');
   var box      = document.createElement('box');
   var panelbar = createPanelTitle(panel_title, panel_customize);
   var iframe   = document.createElement('html:iframe');
