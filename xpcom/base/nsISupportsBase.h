@@ -50,8 +50,8 @@
  * IID for the nsISupports interface
  * {00000000-0000-0000-c000-000000000046}
  *
- * To maintain binary compatibility with COM's nsIUnknown, we define the IID
- * of nsISupports to be the same as that of COM's nsIUnknown.
+ * To maintain binary compatibility with COM's IUnknown, we define the IID
+ * of nsISupports to be the same as that of COM's IUnknown.
  */
 #define NS_ISUPPORTS_IID                                                      \
   { 0x00000000, 0x0000, 0x0000,                                               \
@@ -60,10 +60,10 @@
 /**
  * Reference count values
  *
- * This is type of return value from Addref() and Release() in nsISupports.
- * nsIUnknown of COM returns a unsigned long from equivalent functions.
- * To maintain binary compatibility of nsISupports with nsIUnknown, we are
- * doing this ifdeffing.
+ * This is the return type for AddRef() and Release() in nsISupports.
+ * IUnknown of COM returns an unsigned long from equivalent functions.
+ * The following ifdef exists to maintain binary compatibility with
+ * IUnknown.
  */
 #if defined(XP_WIN) && PR_BYTES_PER_LONG == 4
 typedef unsigned long nsrefcnt;
