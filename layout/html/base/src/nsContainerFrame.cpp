@@ -517,10 +517,14 @@ nsContainerFrame::SyncFrameViewAfterReflow(nsIPresContext* aPresContext,
     //    element
     // - 'overflow-clip' which only applies to block-level elements and replaced
     //   elements that have 'overflow' set to 'hidden'. 'overflow-clip' is relative
-    //   to the content area and applies to content only (not border or background)
+    //   to the content area and applies to content only (not border or background).
+    //   Note that out-of-flow frames like floated or absolutely positioned frames
+    //   are block-level, but we can't rely on the 'display' value being set correctly
+    //   in the style context...
     PRBool  hasClip, hasOverflowClip;
+    PRBool  isBlockLevel = display->IsBlockLevel() || (0 != (kidState & NS_FRAME_OUT_OF_FLOW));
     hasClip = position->IsAbsolutelyPositioned() && (display->mClipFlags & NS_STYLE_CLIP_RECT);
-    hasOverflowClip = display->IsBlockLevel() && (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN);
+    hasOverflowClip = isBlockLevel && (display->mOverflow == NS_STYLE_OVERFLOW_HIDDEN);
     if (hasClip || hasOverflowClip) {
       nsRect  clipRect, overflowClipRect;
 
