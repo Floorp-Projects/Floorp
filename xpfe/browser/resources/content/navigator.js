@@ -1220,16 +1220,26 @@ function BrowserChangeTextSize(newSize)
     {
       var nodeName = node.localName;
       if (nodeName == "")
+	  {
+	  dump('****** returning null 1\n');
         return null;
+	}
       nodeName = nodeName.toLowerCase();
       if (nodeName == "" || nodeName == "body"
           || nodeName == "html" || nodeName == "#document")
+		  {
+	  dump('****** returning null 2\n');
         return null;
+		}
       var href = node.href;
       if (nodeName == "a" && href != "")
+	  {
+	  dump('****** returning :'+node+'\n');
         return node;
+		}
       node = node.parentNode;
     }
+	  dump('****** returning null 3\n');
     return null;
   }
 
@@ -1809,14 +1819,21 @@ function getNewThemes()
 window._content.location.href = brandBundle.GetStringFromName("getNewThemesURL");
 }
 
-function URLBarFocusHandler(aEvent)
+
+function URLBarLeftClickHandler(aEvent)
 {
-  var URLBar = aEvent.target;
-  URLBar.setSelectionRange(0, URLBar.value.length);
+  if (pref.GetBoolPref("browser.urlbar.clickSelectsAll"))
+  {
+    var URLBar = aEvent.target;
+    URLBar.setSelectionRange(0, URLBar.value.length);
+  }
 }
 
 function URLBarBlurHandler(aEvent)
 {
-  var URLBar = aEvent.target;
-  URLBar.setSelectionRange(0, 0);
+  if (pref.GetBoolPref("browser.urlbar.clickSelectsAll"))
+  {
+    var URLBar = aEvent.target;
+    URLBar.setSelectionRange(0, 0);
+  }
 }
