@@ -98,6 +98,7 @@
 #include "nsGUIEvent.h"
 #include "nsIDOMEventGroup.h"
 #include "nsIDOM3EventTarget.h"
+#include "nsIDOMNSEvent.h"
 #include "nsIDOMNSUIEvent.h"
 #include "nsIEventStateManager.h"
 
@@ -374,10 +375,16 @@ static PRBool
 DOMEventToNativeKeyEvent(nsIDOMEvent      *aDOMEvent,
                          nsNativeKeyEvent *aNativeEvent)
 {
-  nsCOMPtr<nsIDOMNSUIEvent> nsevent = do_QueryInterface(aDOMEvent);
+  nsCOMPtr<nsIDOMNSUIEvent> uievent = do_QueryInterface(aDOMEvent);
   PRBool defaultPrevented;
-  nsevent->GetPreventDefault(&defaultPrevented);
+  uievent->GetPreventDefault(&defaultPrevented);
   if (defaultPrevented)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIDOMNSEvent> nsevent = do_QueryInterface(aDOMEvent);
+  PRBool trusted = PR_FALSE;
+  nsevent->GetIsTrusted(&trusted);
+  if (!trusted)
     return PR_FALSE;
 
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aDOMEvent);
