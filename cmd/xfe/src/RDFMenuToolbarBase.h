@@ -86,7 +86,7 @@ public:
     time_t          getDropLastAccess    ();
 
     // Access methods
-    XFE_Frame *     getFrame             ();
+    XFE_Frame *     getFrame             () { return _frame; }
 
     virtual void    enableDropping       ();
     virtual void    disableDropping      ();
@@ -246,9 +246,6 @@ private:
     void             createPixmaps      ();
 
     Widget           getLastMoreMenu    (Widget menu);
-
-    // Bookmarks changed notice invoked by MozillaApp
-    XFE_CALLBACK_DECL(bookmarksChanged)
 
     // update the icon appearance
     XFE_CALLBACK_DECL(updateIconAppearance)

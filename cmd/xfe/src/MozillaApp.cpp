@@ -72,7 +72,6 @@ static XFE_MozillaApp *_app = NULL;
 const char *XFE_MozillaApp::appBusyCallback = "XFE_MozillaApp::appBusyCallback";
 const char *XFE_MozillaApp::appNotBusyCallback = "XFE_MozillaApp::appNotBusyCallback";
 const char *XFE_MozillaApp::changeInToplevelFrames = "XFE_MozillaApp::changeInToplevelFrames";
-const char *XFE_MozillaApp::bookmarksHaveChanged = "XFE_MozillaApp::bookmarksHaveChanged";
 const char *XFE_MozillaApp::biffStateChanged = "XFE_MozillaApp::biffStateChanged";
 const char *XFE_MozillaApp::updateToolbarAppearance = "XFE_MozillaApp::updateToolbarAppearance";
 const char *XFE_MozillaApp::linksAttributeChanged = "XFE_MozillaApp::linksAttributeChanged";

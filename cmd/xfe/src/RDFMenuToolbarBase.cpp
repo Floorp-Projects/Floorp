@@ -78,13 +78,6 @@ XFE_RDFMenuToolbarBase::XFE_RDFMenuToolbarBase( XFE_Frame *  frame,
 {
     XP_ASSERT( _frame != NULL );
 
-    // Ask MozillaApp to let us know when the bookmarks change
-    XFE_MozillaApp::theApp()->registerInterest(
-        XFE_MozillaApp::bookmarksHaveChanged,
-        this,
-        (XFE_FunctionNotification) bookmarksChanged_cb,
-        this);
-
     XFE_MozillaApp::theApp()->registerInterest(
         XFE_MozillaApp::updateToolbarAppearance,
         this,
@@ -97,12 +90,6 @@ XFE_RDFMenuToolbarBase::XFE_RDFMenuToolbarBase( XFE_Frame *  frame,
 XFE_RDFMenuToolbarBase::~XFE_RDFMenuToolbarBase()
 {
     HT_DeletePane(_ht_pane);
-
-    XFE_MozillaApp::theApp()->unregisterInterest(
-        XFE_MozillaApp::bookmarksHaveChanged,
-        this,
-        (XFE_FunctionNotification) bookmarksChanged_cb,
-        this);
 
     XFE_MozillaApp::theApp()->unregisterInterest(
         XFE_MozillaApp::updateToolbarAppearance,
@@ -480,16 +467,6 @@ XFE_RDFMenuToolbarBase::pane_mapping_eh(Widget        submenu,
     *cont = True;
 }
 //////////////////////////////////////////////////////////////////////////
-XFE_CALLBACK_DEFN(XFE_RDFMenuToolbarBase, bookmarksChanged)
-    (XFE_NotificationCenter *    /* obj */,
-     void *                        /* clientData */,
-     void *                        /* call_data */)
-{
-    D(printf("RDFMenuToolbarBase: Got bookmarksChanged notification\n"));
-    // Update the bookmarks since they have changed
-    prepareToUpdateRoot();
-}
-//////////////////////////////////////////////////////////////////////////
 XFE_CALLBACK_DEFN(XFE_RDFMenuToolbarBase,updateIconAppearance)
     (XFE_NotificationCenter *    /*obj*/, 
      void *                        /*clientData*/, 
@@ -499,12 +476,6 @@ XFE_CALLBACK_DEFN(XFE_RDFMenuToolbarBase,updateIconAppearance)
     updateAppearance();
 }
 //////////////////////////////////////////////////////////////////////////
-XFE_Frame *
-XFE_RDFMenuToolbarBase::getFrame()
-{
-    return _frame;
-}
-//////////////////////////////////////////////////////////////////////////
 void
 XFE_RDFMenuToolbarBase::getPixmapsForEntry(HT_Resource    entry,
                                      Pixmap *    pixmapOut,
@@ -512,84 +483,105 @@ XFE_RDFMenuToolbarBase::getPixmapsForEntry(HT_Resource    entry,
                                      Pixmap *    armedPixmapOut,
                                      Pixmap *    armedMaskOut)
 {
-    Pixmap pixmap        = _bookmarkPixmap;
+    Pixmap pixmap          = _bookmarkPixmap;
     Pixmap mask            = _bookmarkMask;
-    Pixmap armedPixmap    = XmUNSPECIFIED_PIXMAP;
-    Pixmap armedMask    = XmUNSPECIFIED_PIXMAP;
+    Pixmap armedPixmap     = XmUNSPECIFIED_PIXMAP;
+    Pixmap armedMask       = XmUNSPECIFIED_PIXMAP;
 
-    // Right now the only way an entry can be NULL os for the 
+    // Right now the only way an entry can be NULL is for the 
     // bookmarkMoreButton which kinda looks and acts like a folder so
     // we use folder pixmaps for it
     if (!entry)
     {
-        pixmap        = _folderPixmap;
-        mask        = _folderMask;
+        pixmap         = _folderPixmap;
+        mask           = _folderMask;
         armedPixmap    = _folderArmedPixmap;
-        armedMask    = _folderArmedMask;
+        armedMask      = _folderArmedMask;
     }
     else
     {
-        if (HT_IsContainer(entry))
+#ifdef NOT_YET
+        if (hasCustomIcon(entry)
         {
-            XP_Bool is_menu = (entry == getMenuFolder());
-            XP_Bool is_add = (entry == getAddFolder());
+        } else
+#endif /*NOT_YET*/
+        if (ht_IsFECommand(entry))
+        {
+            const char* url = HT_GetNodeURL(entry);
             
-            if (is_add && is_menu)
+            IconGroup *ig = IconGroup_findGroupForName(url + 8);
+            if (ig)
             {
-                pixmap        = _newMenuFolderPixmap;
-                mask        = _newMenuFolderMask;
-                armedPixmap    = _newMenuFolderArmedPixmap;
-                armedMask    = _newMenuFolderArmedMask;
+                pixmap        = ig->pixmap_icon.pixmap;
+                mask          = ig->pixmap_icon.mask;
+                armedPixmap   = ig->pixmap_mo_icon.pixmap;
+                armedMask     = ig->pixmap_mo_icon.mask;
             }
-            else if (is_add)
+        } 
+        else
+        {
+            if (HT_IsContainer(entry))
             {
-                pixmap        = _newFolderPixmap;
-                mask        = _newFolderMask;
-                armedPixmap    = _newFolderArmedPixmap;
-                armedMask    = _newFolderArmedMask;
-            }
-            else if (is_menu)
-            {
-                pixmap        = _menuFolderPixmap;
-                mask        = _menuFolderMask;
-                armedPixmap    = _menuFolderArmedPixmap;
-                armedMask    = _menuFolderArmedMask;
+                XP_Bool is_menu = (entry == getMenuFolder());
+                XP_Bool is_add  = (entry == getAddFolder());
+            
+                if (is_add && is_menu)
+                {
+                    pixmap         = _newMenuFolderPixmap;
+                    mask           = _newMenuFolderMask;
+                    armedPixmap    = _newMenuFolderArmedPixmap;
+                    armedMask      = _newMenuFolderArmedMask;
+                }
+                else if (is_add)
+                {
+                    pixmap         = _newFolderPixmap;
+                    mask           = _newFolderMask;
+                    armedPixmap    = _newFolderArmedPixmap;
+                    armedMask      = _newFolderArmedMask;
+                }
+                else if (is_menu)
+                {
+                    pixmap         = _menuFolderPixmap;
+                    mask           = _menuFolderMask;
+                    armedPixmap    = _menuFolderArmedPixmap;
+                    armedMask      = _menuFolderArmedMask;
+                }
+                else
+                {
+                    pixmap         = _folderPixmap;
+                    mask           = _folderMask;
+                    armedPixmap    = _folderArmedPixmap;
+                    armedMask      = _folderArmedMask;
+                }
             }
             else
             {
-                pixmap        = _folderPixmap;
-                mask        = _folderMask;
-                armedPixmap    = _folderArmedPixmap;
-                armedMask    = _folderArmedMask;
-            }
-        }
-        else
-        {
-            int url_type = NET_URL_Type(HT_GetNodeURL(entry));
-            
-            switch (url_type)
-            {
-            case IMAP_TYPE_URL:
-            case MAILBOX_TYPE_URL:
+                int url_type = NET_URL_Type(HT_GetNodeURL(entry));
                 
-                pixmap    = _mailBookmarkPixmap;
-                mask    = _mailBookmarkMask;
-                
-                break;
-                
-            case NEWS_TYPE_URL:
-                
-                pixmap    = _newsBookmarkPixmap;
-                mask    = _newsBookmarkMask;
-                
-                break;
-                
-            default:
-
-                pixmap    = _bookmarkPixmap;
-                mask    = _bookmarkMask;
-
-                break;
+                switch (url_type)
+                {
+                case IMAP_TYPE_URL:
+                case MAILBOX_TYPE_URL:
+                    
+                    pixmap    = _mailBookmarkPixmap;
+                    mask      = _mailBookmarkMask;
+                    
+                    break;
+                    
+                case NEWS_TYPE_URL:
+                    
+                    pixmap    = _newsBookmarkPixmap;
+                    mask      = _newsBookmarkMask;
+                    
+                    break;
+                    
+                default:
+                    
+                    pixmap    = _bookmarkPixmap;
+                    mask      = _bookmarkMask;
+                    
+                    break;
+                }
             }
         }
     }
@@ -692,6 +684,7 @@ XFE_RDFMenuToolbarBase::createItemTree(Widget menu,HT_Resource entry)
 {
     XP_ASSERT( HT_IsContainer(entry) );
 
+    D(printf("Create tree: %s\n",HT_GetNodeName(entry)));
     HT_SetOpenState(entry, PR_TRUE);
     HT_Cursor child_cursor = HT_NewCursor(entry);
     HT_Resource child;
@@ -781,13 +774,36 @@ XFE_RDFMenuToolbarBase::entryDisarmed(Widget /* button */,HT_Resource entry)
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_RDFMenuToolbarBase::entryActivated(Widget /*item*/,HT_Resource entry)
+XFE_RDFMenuToolbarBase::entryActivated(Widget w, HT_Resource entry)
 {
-    if (entry && !HT_IsContainer(entry) && !HT_IsSeparator(entry))
+    if (entry)
     {
-        char *s = HT_GetNodeURL(entry);
-        URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
-        fe_reuseBrowser (_frame->getContext(), url);
+        if (ht_IsFECommand(entry)) 
+        {
+            Cardinal numparams = 1;
+            CommandType cmd = ht_GetFECommand(entry);
+
+            XFE_CommandInfo info(XFE_COMMAND_EVENT_ACTION,
+                                 w, 
+                                 NULL /*event*/,
+                                 NULL /*params*/,
+                                 0    /*num_params*/);
+            if (_frame->handlesCommand(cmd, NULL /*calldata*/, &info)
+                && _frame->isCommandEnabled(cmd, NULL /*calldata*/, &info))
+            {
+                xfe_ExecuteCommand(_frame, cmd, NULL /*calldata*/, &info);
+		
+                //_frame->notifyInterested(Command::commandDispatchedCallback, 
+                //callData);
+            }
+
+        }
+        else if (!HT_IsContainer(entry) && !HT_IsSeparator(entry))
+        {
+            char *s = HT_GetNodeURL(entry);
+            URL_Struct *url = NET_CreateURLStruct (s, NET_DONT_RELOAD);
+            fe_reuseBrowser (_frame->getContext(), url);
+        }
     }
 }
 //////////////////////////////////////////////////////////////////////////
@@ -830,6 +846,8 @@ XFE_RDFMenuToolbarBase::createCascadeButton(Widget        menu,
 {
     XP_ASSERT( XfeIsAlive(menu) );
     XP_ASSERT( XmIsRowColumn(menu) );
+
+    D(printf("Create cascade: %s\n",HT_GetNodeName(entry)));
 
     Widget                  cascade = NULL;
     Widget                  pulldown = NULL;
@@ -946,6 +964,8 @@ XFE_RDFMenuToolbarBase::createPushButton(Widget menu, HT_Resource entry)
 {
     XP_ASSERT( XfeIsAlive(menu) );
     XP_ASSERT( XmIsRowColumn(menu) );
+
+    D(printf("Create push : %s\n",HT_GetNodeName(entry)));
 
     Widget                        non_full_menu;
     Widget                        button;
@@ -1073,6 +1093,8 @@ XFE_RDFMenuToolbarBase::createXfeCascade(Widget parent,HT_Resource entry)
 {
     XP_ASSERT( XfeIsAlive(parent) );
 
+    D(printf("Create xfe cascade : %s\n",HT_GetNodeName(entry)));
+
     Widget                  cascade;
     Widget                  submenu;
     Arg                     av[5];
@@ -1118,6 +1140,8 @@ Widget
 XFE_RDFMenuToolbarBase::createXfeButton(Widget parent,HT_Resource entry)
 {
     XP_ASSERT( XfeIsAlive(parent) );
+
+    D(printf("Create xfe push : %s\n",HT_GetNodeName(entry)));
 
     Widget                  button;
     Arg                     av[20];
@@ -1788,9 +1812,6 @@ void
 XFE_RDFMenuToolbarBase::notify(HT_Resource n, HT_Event whatHappened)
 {
   switch (whatHappened) {
-  case HT_EVENT_NODE_ADDED:
-      updateRoot();
-      break;
   case HT_EVENT_VIEW_SELECTED:
       _ht_view = HT_GetSelectedView(_ht_pane);
     break;

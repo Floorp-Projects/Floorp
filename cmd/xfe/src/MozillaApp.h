@@ -58,7 +58,6 @@ public:
   static const char *appNotBusyCallback;
 
   static const char *changeInToplevelFrames;
-  static const char *bookmarksHaveChanged;
   static const char *biffStateChanged;
   static const char *updateToolbarAppearance;
   static const char *linksAttributeChanged; 
