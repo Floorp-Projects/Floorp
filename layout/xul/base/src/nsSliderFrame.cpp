@@ -522,8 +522,8 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
          isHorizontal ? start -= r.x : start -= r.y;
 
          if (view) {
-           nsIWidget* widget = nsnull;
-           view->GetWidget(widget);
+           nsCOMPtr<nsIWidget> widget;
+           view->GetWidget(*getter_AddRefs(widget));
            if (widget) {
              nsWindowType windowType;
              widget->GetWindowType(windowType);

@@ -6724,7 +6724,8 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
 
     nsRect r1, r2;
     nsIView* v1, *v2;
-    nsIWidget* w1, *w2;
+    nsCOMPtr<nsIWidget> w1;
+    nsCOMPtr<nsIWidget> w2;
     for (;;) {
       if (((nsnull == k1) && (nsnull != k2)) ||
           ((nsnull != k1) && (nsnull == k2))) {
@@ -6759,8 +6760,8 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
             LogVerifyMessage(k1, k2, "(view rects)", r1, r2);
           }
 
-          v1->GetWidget(w1);
-          v2->GetWidget(w2);
+          v1->GetWidget(*getter_AddRefs(w1));
+          v2->GetWidget(*getter_AddRefs(w2));
           if (((nsnull == w1) && (nsnull != w2)) ||
               ((nsnull != w1) && (nsnull == w2))) {
             ok = PR_FALSE;
@@ -7035,8 +7036,8 @@ PresShell::VerifyIncrementalReflow()
   if (NS_OK == rv) {
     scrollView->GetScrollPreference(scrolling);
   }
-  nsIWidget* rootWidget;
-  rootView->GetWidget(rootWidget);
+  nsCOMPtr<nsIWidget> rootWidget;
+  rootView->GetWidget(*getter_AddRefs(rootWidget));
   void* nativeParentWidget = rootWidget->GetNativeData(NS_NATIVE_WIDGET);
 
   // Create a new view manager.
