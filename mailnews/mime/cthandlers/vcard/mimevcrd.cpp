@@ -49,7 +49,9 @@
 #include "nsCRT.h"
 
 // String bundles...
+#ifndef XP_MAC
 nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
+#endif
 
 static int MimeInlineTextVCard_parse_line (char *, PRInt32, MimeObject *);
 static int MimeInlineTextVCard_parse_eof (MimeObject *, PRBool);
@@ -1959,6 +1961,10 @@ VCardGetStringByID(PRInt32 aMsgId)
 {
   char          *tempString = nsnull;
 	nsresult res = NS_OK;
+
+#ifdef XP_MAC
+nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
+#endif
 
 	if (!stringBundle)
 	{
