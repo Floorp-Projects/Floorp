@@ -73,7 +73,9 @@
           <splitter class="tree-splitter"/>
           <treecol id="colNodeValue" label="nodeValue" persist="width,hidden,ordinal" flex="1"/>
         </treecols>
-        <treechildren id="olAttrBody" context="ppAttrContext"/>
+        <treechildren id="olAttrBody"
+                      alternatingbackground="true"
+                      context="ppAttrContext"/>
       </tree>
 
     </vbox>

@@ -42,7 +42,9 @@
         <treecols>
           <treecol id="olcMethodName" flex="1"/>
         </treecols>
-        <treechildren id="olbMethods" context="ppDOMContext"/>
+        <treechildren id="olbMethods"
+                      alternatingbackground="true"
+                      context="ppDOMContext"/>
       </tree>
     </multipanel>
   
@@ -57,7 +59,9 @@
           <treecols>
             <treecol id="olcPropName" label="&bindingProperty.label;" flex="1"/>
           </treecols>
-          <treechildren id="olbProps" context="ppDOMContext"/>
+          <treechildren id="olbProps"
+                        alternatingbackground="true"
+                        context="ppDOMContext"/>
         </tree>
       </vbox>
     </multipanel>
@@ -69,7 +73,9 @@
           <treecol id="olcHandlerEvent" flex="1"/>
           <treecol id="olcHandlerPhase"/>
         </treecols>
-        <treechildren id="olbHandlers" context="ppDOMContext"/>
+        <treechildren id="olbHandlers"
+                      alternatingbackground="true"
+                      context="ppDOMContext"/>
       </tree>
     </multipanel>
   
@@ -79,7 +85,9 @@
           <treecol id="olcResourceType" flex="1"/>
           <treecol id="olcResourceSrc" flex="2"/>
         </treecols>
-        <treechildren id="olbResources" context="ppDOMContext"/>
+        <treechildren id="olbResources"
+                      alternatingbackground="true"
+                      context="ppDOMContext"/>
       </tree>
     </multipanel>
 

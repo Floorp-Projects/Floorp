@@ -59,6 +59,7 @@
       <splitter class="tree-splitter"/>
       <treecol id="olcStyleValue" label="&propertyValue.label;" flex="1"/>
     </treecols>
-    <treechildren id="olbStyles"/>
+    <treechildren id="olbStyles"
+                  alternatingbackground="true"/>
   </tree>
 </page>

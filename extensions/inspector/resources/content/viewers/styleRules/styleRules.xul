@@ -52,7 +52,8 @@
       <splitter class="tree-splitter"/>
       <treecol id="olcLine" label="&styleRuleLineNumber.label;"/>
     </treecols>
-    <treechildren id="olbStyleRules"/>
+    <treechildren id="olbStyleRules"
+                  alternatingbackground="true"/>
   </tree>
   
   <splitter id="splTrees" collapse="after" persist="state">
@@ -68,7 +69,9 @@
       <splitter class="tree-splitter"/>
       <treecol id="olcPropValue" label="&styleRulePropValue.label;" flex="1"/>
     </treecols>
-    <treechildren id="olbStyleProps" ondblclick="viewer.cmdEditSelectedProperty()"/>
+    <treechildren id="olbStyleProps"
+                  alternatingbackground="true"
+                  ondblclick="viewer.cmdEditSelectedProperty()"/>
   </tree>
 
 </page>
