@@ -60,7 +60,6 @@ REQUIRES	= xpcom \
 		  js \
 		  content \
 		  widget \
-		  caps \
 		  necko \
 		  embedcomponents \
 		  xpconnect \

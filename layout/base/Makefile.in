@@ -72,7 +72,6 @@ REQUIRES	= xpcom \
 		  htmlparser \
 		  util \
 		  windowwatcher \
-		  intl \
 		  accessibility \
 		  $(NULL)
 

@@ -60,10 +60,7 @@ PROGRAM = firefox-bin$(BIN_SUFFIX)
 endif
 
 REQUIRES = \
-	appshell \
-	string \
 	xpcom \
-	xulapp \
 	$(NULL)
 
 CPPSRCS = nsBrowserApp.cpp

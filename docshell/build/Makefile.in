@@ -74,7 +74,6 @@ REQUIRES	= xpcom \
 		  composer \
 		  editor \
 		  commandhandler \
-		  history \
 		  uriloader \
 		  exthandler \
 		  mimetype \

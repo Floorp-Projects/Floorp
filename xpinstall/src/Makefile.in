@@ -82,7 +82,6 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  appshell \
 		  docshell \
-		  cookie \
 		  layout \
 		  chrome \
 		  extensions \

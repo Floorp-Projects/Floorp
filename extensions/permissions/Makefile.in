@@ -58,8 +58,6 @@ REQUIRES	= xpcom \
 		  content \
 		  pref \
 		  docshell \
-		  appshell \
-		  cookie \
 		  $(NULL)
 
 CPPSRCS		= \

@@ -48,20 +48,13 @@ REQUIRES	= \
 		  xpcom \
 		  string \
 		  dom \
-		  windowwatcher \
 		  intl \
-		  appshell \
 		  necko \
-		  layout \
 		  content \
-		  widget \
-		  appcomps \
-		  browsercomps \
 		  imglib2 \
+		  browsercomps \
 		  gfx \
-		  locale \
 		  pref \
-		  strres \
 		  $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)

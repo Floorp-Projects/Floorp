@@ -71,11 +71,9 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  intl \
 		  windowwatcher \
-		  browser \
 		  caps \
 		  unicharutil \
 		  uconv \
-		  exthandler \
 		  $(NULL)
 
 CPPSRCS		= \

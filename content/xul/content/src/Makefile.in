@@ -52,7 +52,6 @@ REQUIRES	= xpcom \
 		  layout \
 		  content \
 		  widget \
-		  htmlparser \
 		  necko \
 		  dom \
 		  js \
@@ -66,7 +65,6 @@ REQUIRES	= xpcom \
 		  xultmpl \
 		  webshell \
 		  view \
-		  pref \
 		  $(NULL)
 
 EXPORTS		= \

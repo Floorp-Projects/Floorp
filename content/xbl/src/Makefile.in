@@ -54,7 +54,6 @@ REQUIRES	= xpcom \
 		  layout \
 		  xultmpl \
 		  widget \
-		  view \
 		  caps \
 		  htmlparser \
 		  necko \
@@ -63,13 +62,11 @@ REQUIRES	= xpcom \
 		  docshell \
 		  webshell \
 		  lwbrk \
-		  xul \
 		  xuldoc \
 		  rdf \
 		  imglib2 \
 		  unicharutil \
 		  locale \
-		  intl \
 		  $(NULL)
 
 EXPORTS		= \

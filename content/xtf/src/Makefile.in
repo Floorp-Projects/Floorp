@@ -47,18 +47,16 @@ LIBRARY_NAME	= gkcontentxtf_s
 REQUIRES	= xpcom \
 		  string \
 		  layout \
-		  content \
 		  widget \
 		  gfx \
 		  dom \
 		  js \
 		  locale \
-		  htmlparser \
-		  view \
 		  pref \
 		  necko \
 		  xpconnect \
-		  webshell
+		  webshell \
+		  $(NULL)
 
 CPPSRCS		= \
 		nsXMLContentBuilder.cpp \

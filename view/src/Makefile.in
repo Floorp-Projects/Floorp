@@ -54,9 +54,7 @@ REQUIRES	= xpcom \
 		  gfx \
 		  widget \
 		  dom \
-		  locale \
 		  pref \
-		  necko \
 		  $(NULL)
 
 EXTRA_DSO_LIBS = gkgfx

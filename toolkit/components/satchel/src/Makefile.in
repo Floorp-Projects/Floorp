@@ -47,7 +47,7 @@ MODULE = satchel
 LIBRARY_NAME = satchel_s
 FORCE_STATIC_LIB = 1
 
-REQUIRES = 	\
+REQUIRES =	\
 		xpcom \
 		string \
 		autocomplete \
@@ -63,8 +63,6 @@ REQUIRES = 	\
 		locale \
 		mork \
 		unicharutil \
-		js \
-		windowwatcher \
 		intl \
 		pref \
 		$(NULL)

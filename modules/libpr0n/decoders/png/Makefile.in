@@ -51,7 +51,6 @@ LIBXUL_LIBRARY = 1
 EXTRA_DSO_LIBS	= gkgfx
 
 REQUIRES	= xpcom \
-		  string \
 		  gfx \
 		  imglib2 \
 		  $(PNG_REQUIRES) \

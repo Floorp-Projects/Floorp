@@ -58,15 +58,12 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  gfx \
 		  layout \
-		  content \
 		  locale \
 		  necko \
 		  dom \
 		  widget \
 		  js \
 		  appshell \
-		  appstartup \
-		  appcomps \
 		  toolkitcomps \
 		  caps \
 		  pref \

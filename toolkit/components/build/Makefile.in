@@ -75,16 +75,11 @@ REQUIRES = 	\
 		xpinstall \
 		xulapp \
 		embed_base \
-		embedcomponents \
 		content \
 		find \
 		gfx \
 		locale \
-		necko \
 		unicharutil \
-		view \
-		webshell \
-		webbrwsr \
 		xuldoc \
 		$(NULL)
 

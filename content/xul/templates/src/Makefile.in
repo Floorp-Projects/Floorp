@@ -52,7 +52,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  caps \
 		  gfx \
-		  htmlparser \
 		  layout \
 		  content \
 		  pref \
@@ -62,7 +61,6 @@ REQUIRES	= xpcom \
 		  necko \
 		  locale \
 		  unicharutil \
-		  xul \
 		  xuldoc \
 		  webshell \
 		  $(NULL)

@@ -50,7 +50,6 @@ REQUIRES = \
 	appcomps \
 	toolkitcomps \
 	appshell \
-	appstartup \
 	content \
 	docshell \
 	dom \
@@ -58,21 +57,15 @@ REQUIRES = \
 	embedcomponents \
 	extensions \
 	gfx \
-	intl \
 	js \
-	locale \
 	necko \
 	pref \
 	profile \
 	shellservice \
 	string \
-	uconv \
 	uriloader \
-	webbrwsr \
 	widget \
 	windowwatcher \
-  winhooks \
-	xulapp \
 	xpcom \
 	xpconnect \
 	xpinstall \

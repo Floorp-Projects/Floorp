@@ -60,10 +60,9 @@ REQUIRES  = xpcom \
             webbrowserpersist \
             appshell \
             dom \
-            toolkitcomps \
             xpinstall \
             $(NULL)
-            
+
 ifeq ($(OS_ARCH),WINNT)
 REQUIRES += alerts
 endif

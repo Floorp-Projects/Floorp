@@ -15,13 +15,9 @@ MODULE_NAME = nsBrowserCompsModule
 REQUIRES = \
 	xpcom \
 	string \
-	autocomplete \
-	mork \
 	pref \
 	rdf \
 	intl \
-	uriloader \
-	dom \
 	necko \
 	nkcache \
 	txmgr \

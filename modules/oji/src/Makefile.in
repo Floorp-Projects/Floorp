@@ -58,7 +58,6 @@ REQUIRES	= xpcom \
 		  plugin \
 		  caps \
 		  pref \
-		  jar \
 		  necko \
 		  dom \
 		  widget \

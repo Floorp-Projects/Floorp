@@ -47,7 +47,6 @@ REQUIRES	= string \
 		  xpcom \
 		  dom \
 		  widget \
-		  content \
 		  necko \
 		  xuldoc \
 		  caps \

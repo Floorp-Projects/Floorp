@@ -56,7 +56,6 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  webshell \
 		  docshell \
-		  htmlparser \
 		  pref \
 		  view \
 		  necko \

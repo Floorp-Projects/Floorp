@@ -65,7 +65,6 @@ REQUIRES	= xpcom \
 		  mimetype \
 		  webbrwsr \
 		  oji \
-		  util \
 		  unicharutil \
 		  lwbrk \
 		  imglib2 \

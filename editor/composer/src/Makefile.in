@@ -71,7 +71,6 @@ REQUIRES	= xpcom \
 		  imglib2 \
 		  commandhandler \
 		  composer \
-		  appshell \
 		  locale \
 		  $(NULL)
 
