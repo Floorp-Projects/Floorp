@@ -74,7 +74,8 @@ sub getArguments {
 # Returns the values given for that argument if it already exists,
 # otherwise undef. In a scalar context, returns the first value (or
 # undef if the argument was never given). In an array context, returns
-# all the values given.
+# all the values given. (i.e., the same as getArgument but without the
+# implicit call to createArgument)
 sub peekArgument {
     my $self = shift;
     my($argument) = @_;
@@ -151,7 +152,7 @@ sub propertyGet {
     if ($self->SUPER::propertyExists(@_)) {
         return $self->SUPER::propertyGet(@_);
     } else {
-        return $self->getArgument(@_); # XXX assumes that return propagates wantarray context...
+        return $self->peekArgument(@_); # XXX assumes that return propagates wantarray context...
         # if not: 
         # my @result = $self->getArgument(@_);
         # if (wantarray) {

@@ -53,7 +53,7 @@ sub getUserByCredentials {
     my $self = shift;
     my($app, $username, $password) = @_;
     my $object = $self->getUserByUsername($app, $username);
-    if ($object->checkPassword($password)) {
+    if (defined($object) and ($object->checkPassword($password))) {
         return $object;
     } else {
         return undef;

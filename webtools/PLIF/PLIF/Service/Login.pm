@@ -185,15 +185,15 @@ sub getDefaultString {
         } elsif ($string eq 'loginFailed') {
             return '<text><if lvalue="(data.tried)" condition="=" rvalue="1">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --><br/></text>';
         } elsif ($string eq 'loginDetailsSent') {
-            return '<text>Login details were sent. (Protocol: <text variable="(data.protocol)"/>; Address: <text variable="(data.address)"/>)<br/></text>';
+            return '<text>Login details were sent. (Protocol: <text value="(data.protocol)"/>; Address: <text value="(data.address)"/>)<br/></text>';
         }
     } elsif ($protocol eq 'http') {
         if ($string eq 'loginAccessDenied') {
             return '<text>HTTP/1.1 401 Access Denied<br/>Content-Type: text/plain<br/><br/>Access Denied</text>';
         } elsif ($string eq 'loginFailed') {
-            return '<text>HTTP/1.1 401 Login Required<br/>WWW-Authenticate: Basic realm="<text variable="(data.app.name)"/>"<br/>Content-Type: text/plain<br/><br/><if lvalue="(data.tried)" condition="=" rvalue="1">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --></text>';
+            return '<text>HTTP/1.1 401 Login Required<br/>WWW-Authenticate: Basic realm="<text value="(data.app.name)"/>"<br/>Content-Type: text/plain<br/><br/><if lvalue="(data.tried)" condition="=" rvalue="1">Wrong username or password.</if><else>You must give your username or password.</else><br/><!-- XXX offer to create an account or send the password --></text>';
         } elsif ($string eq 'loginDetailsSent') {
-            return '<text>HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>Login details were sent.<br/>Protocol: <text variable="(data.protocol)"/><br/>Address: <text variable="(data.address)"/>)</text>';
+            return '<text>HTTP/1.1 200 OK<br/>Content-Type: text/plain<br/><br/>Login details were sent.<br/>Protocol: <text value="(data.protocol)"/><br/>Address: <text value="(data.address)"/>)</text>';
         }
     }
     return; # nope, sorry

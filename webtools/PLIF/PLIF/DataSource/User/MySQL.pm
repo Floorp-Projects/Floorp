@@ -45,25 +45,33 @@ sub getUserIDByUsername {
     # example, for the field 'contact.icq', the type data field might
     # contain the string 'ICQ:' and the user field might be '55378571'
     # making the username 'ICQ:55378571'.
-    return $self->database($app)->execute('SELECT userData.userID
-                                           FROM userData, userDataTypes
-                                           WHERE userData.fieldID = userDataTypes.fieldID
-                                           AND userDataTypes.category = \'contact\'
-                                           AND CONCAT(userDataTypes.data, userData.data) = ?', $username)->row->[0];
-    # XXX no error checking!
+    my $row = $self->database($app)->execute('SELECT userData.userID
+                                              FROM userData, userDataTypes
+                                              WHERE userData.fieldID = userDataTypes.fieldID
+                                              AND userDataTypes.category = \'contact\'
+                                              AND CONCAT(userDataTypes.data, userData.data) = ?', $username)->row;
+    if (defined($row)) {
+        return $row->[0];
+    } else {
+        return undef;
+    }
     # return userID or undef
 }
 
 sub getUserIDByContactDetails {
     my $self = shift;
     my($app, $contactName, $address) = @_;
-    return $self->database($app)->execute('SELECT userData.userID
-                                           FROM userData, userDataTypes
-                                           WHERE userData.fieldID = userDataTypes.fieldID
-                                           AND userDataTypes.category = \'contact\'
-                                           AND userDataTypes.name = ?
-                                           AND userData.data = ?', $contactName, $address)->row->[0];
-    # XXX no error checking!
+    my $row = $self->database($app)->execute('SELECT userData.userID
+                                              FROM userData, userDataTypes
+                                              WHERE userData.fieldID = userDataTypes.fieldID
+                                              AND userDataTypes.category = \'contact\'
+                                              AND userDataTypes.name = ?
+                                              AND userData.data = ?', $contactName, $address)->row;
+    if (defined($row)) {
+        return $row->[0];
+    } else {
+        return undef;
+    }
     # return userID or undef
 }
 
@@ -218,8 +226,13 @@ sub getGroups {
 sub getGroupName {
     my $self = shift;
     my($app, $groupID) = @_;
-    return $self->database($app)->execute('SELECT name FROM groups WHERE groupID = ?', $groupID)->row->[0];
-    # return name
+    my $row = $self->database($app)->execute('SELECT name FROM groups WHERE groupID = ?', $groupID)->row;
+    if (defined($row)) {
+        return $row->[0];
+    } else {
+        return undef;
+    }
+    # return name or undef
 }
 
 sub setGroup {
@@ -271,7 +284,13 @@ sub addRight {
 sub getRightID {
     my $self = shift;
     my($app, $name) = @_;    
-    return $self->database($app)->execute('SELECT rightID FROM rights WHERE name = ?', $name)->row->[0];    
+    my $row = $self->database($app)->execute('SELECT rightID FROM rights WHERE name = ?', $name)->row;
+    if (defined($row)) {
+        return $row->[0];
+    } else {
+        return undef;
+    }
+    # return rightID or undef
 }
 
 sub setupInstall {
@@ -286,11 +305,11 @@ sub setupInstall {
             CREATE TABLE user (
                                userID integer unsigned auto_increment NOT NULL PRIMARY KEY,
                                password varchar(255) NOT NULL,
-                               mode integer unsigned DEFAULT 0,
+                               mode integer unsigned NOT NULL DEFAULT 0,
                                adminMessage varchar(255),
                                newFieldID integer unsigned,
                                newFieldValue varchar(255),
-                               newFieldKey varchar(255),
+                               newFieldKey varchar(255)
                                )
         ');
         # +-------------------+
@@ -338,7 +357,7 @@ sub setupInstall {
                                   name varchar(64) NOT NULL,
                                   type varchar(64) NOT NULL,
                                   data text,
-                                  mode integer unsigned DEFAULT 0,
+                                  mode integer unsigned NOT NULL DEFAULT 0,
                                   UNIQUE KEY (category, name)
                                   )
         ');

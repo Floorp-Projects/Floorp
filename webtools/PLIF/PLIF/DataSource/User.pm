@@ -48,8 +48,12 @@ sub getUserByUsername {
     my($app, $username) = @_;
     # decent databases can do this in one go. Those that can't can do
     # it in a generic two-step process:
-    return $self->getUserByID($app, $self->getUserIDByUsername($app, $username));
-    # XXX no error checking! if getUserID... return undef, return ()!
+    my $userID = $self->getUserIDByUsername($app, $username);
+    if (defined($userID)) {
+        return $self->getUserByID($app, $userID);
+    } else {
+        return ();
+    }
     # return the same as getUserByID()
 }
 
@@ -65,8 +69,12 @@ sub getUserByContactDetails {
     my($app, $contactName, $address) = @_;
     # decent databases can do this in one go. Those that can't can do
     # it in a generic two-step process:
-    return $self->getUserByID($app, $self->getUserIDByContactDetails($app, $contactName, $address));
-    # XXX no error checking! if getUserID... return undef, return ()!
+    my $userID = $self->getUserIDByContactDetails($app, $contactName, $address);
+    if (defined($userID)) {
+        return $self->getUserByID($app, $userID);
+    } else {
+        return ();
+    }
     # return the same as getUserByID()
 }
 
