@@ -134,6 +134,8 @@ public:
   NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle);
   NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList);
   NS_IMETHOD GetSelection(SelectionType aType, nsIDOMSelection** aSelection);
+  NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion);
+  NS_IMETHOD RepaintSelection(SelectionType aType);
   NS_IMETHOD GetFrameSelection(nsIFrameSelection** aSelection);
 
   NS_IMETHOD EnterReflowLock();
@@ -714,6 +716,24 @@ PresShell::GetSelection(SelectionType aType, nsIDOMSelection **aSelection)
   if (!aSelection || !mSelection)
     return NS_ERROR_NULL_POINTER;
   return mSelection->GetSelection(aType, aSelection);
+}
+
+NS_IMETHODIMP
+PresShell::ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion)
+{
+  if (!mSelection)
+    return NS_ERROR_NULL_POINTER;
+
+  return mSelection->ScrollSelectionIntoView(aType, aRegion);
+}
+
+NS_IMETHODIMP
+PresShell::RepaintSelection(SelectionType aType)
+{
+  if (!mSelection)
+    return NS_ERROR_NULL_POINTER;
+
+  return mSelection->RepaintSelection(aType);
 }
 
 NS_IMETHODIMP

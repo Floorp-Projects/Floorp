@@ -130,6 +130,20 @@ public:
    */
   NS_IMETHOD GetSelection(SelectionType aSelectionType, nsIDOMSelection **aDomSelection)=0;
 
+  /**
+   * ScrollSelectionIntoView scrolls a region of the selection,
+   * so that it is visible in the scrolled view.
+   *
+   * @param aType the selection to scroll into view.
+   * @param aRegion the region inside the selection to scroll into view.
+   */
+  NS_IMETHOD ScrollSelectionIntoView(SelectionType aSelectionType, SelectionRegion aRegion)=0;
+
+  /** RepaintSelection repaints the selected frames that are inside the selection
+   *  specified by aSelectionType.
+   * @param aSelectionType enum value defined in nsIDOMSelection for the domseleciton you want.
+   */
+  NS_IMETHOD RepaintSelection(SelectionType aSelectionType)=0;
 };
 
 
