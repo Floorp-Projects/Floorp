@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.222 $ ';
+$::UtilsVersion = '$Revision: 1.223 $ ';
 
 package TinderUtils;
 
@@ -1586,7 +1586,7 @@ sub run_all_tests {
                           "FAILED", 0, 0);  # Timeout means failure.
     }
 
-    # XpcomGlue test
+    # XpcomGlue test.  Do not run this on MacOSX.
     if ($Settings::XpcomGlueTest and $test_result eq 'success') {
       $test_result =
         FileBasedTest("XpcomGlueTest", $build_dir, $binary_dir,
