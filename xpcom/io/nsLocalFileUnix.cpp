@@ -350,7 +350,7 @@ nsLocalFile::OpenNSPRFileDesc(PRInt32 flags, PRInt32 mode, PRFileDesc **_retval)
 
     *_retval = PR_Open(mPath.get(), flags, mode);
     if (! *_retval)
-        return NS_ERROR_FAILURE;
+        return NS_ErrorAccordingToNSPR();
 
     return NS_OK;
 }

@@ -560,8 +560,9 @@ RDFXMLDataSourceImpl::BlockingParse(nsIURI* aURL, nsIStreamListener* aConsumer)
     PRUint32 sourceOffset = 0;
     rv = channel->Open(&in);
 
-    // If we couldn't open the channel, then just return.
-    if (NS_FAILED(rv)) return NS_OK;
+    // Report success if the file doesn't exist, but propagate other errors.
+    if (rv == NS_ERROR_FILE_NOT_FOUND) return NS_OK;
+    if (NS_FAILED(rv)) return rv;
 
     NS_ASSERTION(in != nsnull, "no input stream");
     if (! in) return NS_ERROR_FAILURE;
