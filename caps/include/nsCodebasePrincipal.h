@@ -80,12 +80,14 @@ public:
 
     nsresult
     InitFromPersistent(const char* aPrefName, const char* aID, 
-                       const char* aGrantedList, const char* aDeniedList);
+                       const char* aGrantedList, const char* aDeniedList,
+                       PRBool aTrusted);
 
     virtual ~nsCodebasePrincipal(void);
     
 protected:
     nsCOMPtr<nsIURI> mURI;
+    PRBool mTrusted;
 };
 
 #endif // _NS_CODEBASE_PRINCIPAL_H_

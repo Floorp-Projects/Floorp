@@ -105,28 +105,32 @@ NS_IMETHODIMP
 nsCodebasePrincipal::CanEnableCapability(const char *capability, 
                                          PRInt16 *result)
 {
-    // check to see if the codebase principal pref is enabled.
-    static char pref[] = "signed.applets.codebase_principal_support";
-    nsresult rv;
-	nsCOMPtr<nsIPref> prefs(do_GetService("@mozilla.org/preferences;1", &rv));
-	if (NS_FAILED(rv))
-		return NS_ERROR_FAILURE;
-	PRBool enabled;
-    if (NS_FAILED(prefs->GetBoolPref(pref, &enabled)) || !enabled) 
-	{
-        // Deny unless subject is executing from file: or resource: 
-        PRBool isFile = PR_FALSE;
-        PRBool isRes = PR_FALSE;
+    // Either this principal must be preconfigured as a trusted source
+    // (mTrusted), or else the codebase principal pref must be enabled
+    if (!mTrusted)
+    {
+        static char pref[] = "signed.applets.codebase_principal_support";
+        nsresult rv;
+	    nsCOMPtr<nsIPref> prefs(do_GetService("@mozilla.org/preferences;1", &rv));
+	    if (NS_FAILED(rv))
+		    return NS_ERROR_FAILURE;
+	    PRBool enabled;
+        if (NS_FAILED(prefs->GetBoolPref(pref, &enabled)) || !enabled) 
+	    {
+            // Deny unless subject is executing from file: or resource: 
+            PRBool isFile = PR_FALSE;
+            PRBool isRes = PR_FALSE;
 
-        if (NS_FAILED(mURI->SchemeIs("file", &isFile)) || 
-            NS_FAILED(mURI->SchemeIs("resource", &isRes)) ||
-            (!isFile && !isRes))
-        {
-            *result = nsIPrincipal::ENABLE_DENIED;
-            return NS_OK;
+            if (NS_FAILED(mURI->SchemeIs("file", &isFile)) || 
+                NS_FAILED(mURI->SchemeIs("resource", &isRes)) ||
+                (!isFile && !isRes))
+            {
+                *result = nsIPrincipal::ENABLE_DENIED;
+                return NS_OK;
+            }
         }
     }
-    rv = nsBasePrincipal::CanEnableCapability(capability, result);
+    nsBasePrincipal::CanEnableCapability(capability, result);
     if (*result == nsIPrincipal::ENABLE_UNKNOWN)
         *result = ENABLE_WITH_USER_PERMISSION;
     return NS_OK;
@@ -265,7 +269,7 @@ nsCodebasePrincipal::Write(nsIObjectOutputStream* aStream)
 // Constructor, Destructor, initialization //
 /////////////////////////////////////////////
 
-nsCodebasePrincipal::nsCodebasePrincipal()
+nsCodebasePrincipal::nsCodebasePrincipal() : mTrusted(PR_FALSE)
 {
     NS_INIT_ISUPPORTS();
 }
@@ -289,7 +293,8 @@ nsCodebasePrincipal::Init(nsIURI *uri)
 // This method overrides nsBasePrincipal::InitFromPersistent
 nsresult
 nsCodebasePrincipal::InitFromPersistent(const char* aPrefName, const char* aURLStr, 
-                                        const char* aGrantedList, const char* aDeniedList)
+                                        const char* aGrantedList, const char* aDeniedList,
+                                        PRBool aTrusted)
 {
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
@@ -298,6 +303,8 @@ nsCodebasePrincipal::InitFromPersistent(const char* aPrefName, const char* aURLS
     if (NS_FAILED(rv)) return rv;
 
     if (NS_FAILED(Init(uri))) return NS_ERROR_FAILURE;
+    // XXX: Add check for trusted = SSL only here?
+    mTrusted = aTrusted;
 
     return nsBasePrincipal::InitFromPersistent(aPrefName, aURLStr, 
                                                aGrantedList, aDeniedList);

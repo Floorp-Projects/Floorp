@@ -2301,11 +2301,16 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
                                         nsISecurityPref* aSecurityPref)
 {
     /* This is the principal preference syntax:
-     * capability.principal.[codebase|certificate].<name>.[id|granted|denied]
+     * capability.principal.[codebase|codebaseTrusted|certificate].<name>.[id|granted|denied]
      * For example:
      * user_pref("capability.principal.certificate.p1.id","12:34:AB:CD");
      * user_pref("capability.principal.certificate.p1.granted","Capability1 Capability2");
      * user_pref("capability.principal.certificate.p1.denied","Capability3");
+     */
+
+    /* codebaseTrusted means a codebase principal that can enable capabilities even if
+     * codebase principals are disabled. Don't use trustedCodebase except with unspoofable
+     * URLs such as HTTPS URLs.
      */
 
     static const char idSuffix[] = ".id";
@@ -2349,6 +2354,7 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
         //-- Create a principal based on the prefs
         static const char certificateName[] = "capability.principal.certificate";
         static const char codebaseName[] = "capability.principal.codebase";
+        static const char codebaseTrustedName[] = "capability.principal.codebaseTrusted";
         nsCOMPtr<nsIPrincipal> principal;
         if (PL_strncmp(aPrefNames[c], certificateName,
                        sizeof(certificateName)-1) == 0)
@@ -2362,13 +2368,16 @@ nsScriptSecurityManager::InitPrincipals(PRUint32 aPrefCount, const char** aPrefN
                 NS_RELEASE(certificate);
             }
         } else if(PL_strncmp(aPrefNames[c], codebaseName,
-                       sizeof(codebaseName)-1) == 0)
+                             sizeof(codebaseName)-1) == 0)
         {
             nsCodebasePrincipal *codebase = new nsCodebasePrincipal();
             if (codebase) {
                 NS_ADDREF(codebase);
+                PRBool trusted = (PL_strncmp(aPrefNames[c], codebaseTrustedName,
+                                             sizeof(codebaseTrustedName)-1) == 0);
                 if (NS_SUCCEEDED(codebase->InitFromPersistent(aPrefNames[c], id,
-                                                              grantedList, deniedList)))
+                                                              grantedList, deniedList,
+                                                              trusted)))
                     principal = do_QueryInterface((nsBasePrincipal*)codebase);
                 NS_RELEASE(codebase);
             }
