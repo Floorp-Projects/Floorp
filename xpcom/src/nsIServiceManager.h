@@ -35,11 +35,11 @@ class nsIShutdownListener;
  * of releasing the service object directly):
  *
  *    nsICacheManager* cm;
- *    NSServiceManager::GetService(kCacheManagerCID, kICacheManagerIID, (nsISupports**)&cm);
+ *    nsServiceManager::GetService(kCacheManagerCID, kICacheManagerIID, (nsISupports**)&cm);
  *
  *    ... use cm, and then sometime later ...
  *
- *    NSServiceManager::ReleaseService(kCacheManagerCID, cm);
+ *    nsServiceManager::ReleaseService(kCacheManagerCID, cm);
  *
  * A user of a service may keep references to particular services indefinitely
  * and only must call ReleaseService when it shuts down. However if the user
