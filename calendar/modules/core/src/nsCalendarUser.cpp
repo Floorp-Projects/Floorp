@@ -32,7 +32,6 @@ nsCalendarUser::nsCalendarUser(nsISupports* outer)
 {
   NS_INIT_REFCNT();
   mpUserSupports  = nsnull;
-  mpUser          = nsnull;
   mpLayer         = nsnull;
 }
 
@@ -64,13 +63,31 @@ nsresult nsCalendarUser::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 
 NS_IMPL_ADDREF(nsCalendarUser)
-NS_IMPL_RELEASE(nsCalendarUser)
+
+nsrefcnt nsCalendarUser::Release(void)                 
+{                                                      
+  NS_PRECONDITION(0 != mRefCnt, "dup release");        
+
+  --mRefCnt;
+
+  if (mRefCnt == 1) {                                
+    nsISupports * inner = mpUserSupports;
+    mpUserSupports = nsnull;
+    NS_IF_RELEASE(inner);
+    return 0;                                          
+  }                                                    
+  if (mRefCnt == 0) {                                
+    NS_DELETEXPCOM(this);                              
+    return 0;                                          
+  }                                                    
+  return mRefCnt;                                      
+}
+
 
 nsCalendarUser::~nsCalendarUser()
 {
   NS_IF_RELEASE(mpUserSupports); 
   NS_IF_RELEASE(mpLayer);
-  mpUser = nsnull; // Do Not Release
 }
 
 nsresult nsCalendarUser::Init()
@@ -80,30 +97,17 @@ nsresult nsCalendarUser::Init()
   /*
    * Aggregate in the XPFC User Implementation
    */
-  nsISupports * supports ;
-  res = QueryInterface(kISupportsIID, (void **) &supports);
-  if (NS_OK != res)
-    return res;
-
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
   res = nsRepository::CreateInstance(kCUserCID, 
-                                     supports, 
+                                     (nsISupports *)this, 
                                      kISupportsIID, 
                                      (void**)&mpUserSupports);
 
-  if (NS_OK == res) 
+  if (NS_OK != res) 
   {
-    res = mpUserSupports->QueryInterface(kIUserIID, (void**)&mpUser);
-    if (NS_OK != res) 
-    {
-	    mpUserSupports->Release();
-	    mpUserSupports = NULL;
-    }
-    else 
-    {
-      mpUser->Release();
-    }
+	  mpUserSupports->Release();
+	  mpUserSupports = NULL;
   }
 
   /*
@@ -117,8 +121,6 @@ nsresult nsCalendarUser::Init()
 
   if (NS_OK == res) 
     mpLayer->Init();
-
-  NS_RELEASE(supports);
 
   return res;
 }

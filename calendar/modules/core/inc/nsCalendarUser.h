@@ -51,7 +51,6 @@ public:
 
 protected:
   nsISupports * mpUserSupports;
-  nsIUser     * mpUser;
   nsILayer    * mpLayer;
 
 };
