@@ -136,6 +136,10 @@ public:
     operator PRInt32() const;
 
     PLHashNumber Hash() const;
+
+#ifdef DEBUG
+    void ToCString(nsACString& aResult);
+#endif
 };
 
 #ifdef DEBUG

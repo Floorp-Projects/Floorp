@@ -1267,6 +1267,24 @@ nsXULTemplateBuilder::SynchronizeAll(nsIRDFResource* aSource,
         if (0 == modified.GetCount())
             continue;
 
+#ifdef PR_LOGGING
+        PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+               ("xultemplate[%p] %d modified binding(s)",
+                this, modified.GetCount()));
+
+        for (PRInt32 i = 0; i < modified.GetCount(); ++i) {
+            PRInt32 var = modified.GetVariableAt(i);
+            Value val;
+            match->GetAssignmentFor(mConflictSet, var, &val);
+
+            nsCAutoString str;
+            val.ToCString(str);
+
+            PR_LOG(gXULTemplateLog, PR_LOG_DEBUG,
+                   ("xultemplate[%p]   %d <= %s", this, var, str.get()));
+        }
+#endif
+
         SynchronizeMatch(match.operator->(), modified);
     }
 

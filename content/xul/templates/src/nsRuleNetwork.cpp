@@ -359,6 +359,63 @@ Value::operator PRInt32() const
     return (mType == eInteger) ? mInteger : 0;
 }
 
+#ifdef DEBUG
+#include "nsIRDFResource.h"
+#include "nsIRDFLiteral.h"
+#include "nsString.h"
+#include "nsPrintfCString.h"
+
+void
+Value::ToCString(nsACString& aResult)
+{
+    switch (mType) {
+    case eUndefined:
+        aResult = "[(undefined)]";
+        break;
+
+    case eISupports:
+        do {
+            nsCOMPtr<nsIRDFResource> res = do_QueryInterface(mISupports);
+            if (res) {
+                aResult = "[nsIRDFResource ";
+                const char* s;
+                res->GetValueConst(&s);
+                aResult += s;
+                aResult += "]";
+                break;
+            }
+
+            nsCOMPtr<nsIRDFLiteral> lit = do_QueryInterface(mISupports);
+            if (lit) {
+                aResult = "[nsIRDFLiteral \"";
+                const PRUnichar* s;
+                lit->GetValueConst(&s);
+                aResult += NS_ConvertUCS2toUTF8(s);
+                aResult += "\"]";
+                break;
+            }
+
+            aResult = "[nsISupports ";
+            aResult += nsPrintfCString("%p", mISupports);
+            aResult += "]";
+        } while (0);
+        break;
+
+    case eString:
+        aResult = "[string \"";
+        aResult += NS_ConvertUCS2toUTF8(mString);
+        aResult += "\"]";
+        break;
+
+    case eInteger:
+        aResult = "[integer ";
+        aResult += nsPrintfCString("%d", mInteger);
+        aResult += "]";
+        break;
+    }
+}
+#endif
+
 
 //----------------------------------------------------------------------
 //
