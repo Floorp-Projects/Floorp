@@ -21,6 +21,7 @@ public:
 	enum { IDD = IDD_PICKBROWSER };
 	CListBox	m_lbPicker;
 	CString	m_szTestURL;
+	CString	m_szTestCGI;
 	//}}AFX_DATA
 
 	CLSID m_clsid;

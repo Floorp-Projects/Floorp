@@ -58,3 +58,20 @@ STDMETHODIMP CTestScriptHelper::put_Result(TestResult newVal)
 
 	return S_OK;
 }
+
+STDMETHODIMP CTestScriptHelper::get_TestURL(BSTR *pVal)
+{
+	AFX_MANAGE_STATE(AfxGetStaticModuleState())
+
+	if (pVal == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	if (m_pBrowserInfo)
+	{
+		USES_CONVERSION;
+		*pVal = SysAllocString(T2OLE(m_pBrowserInfo->szTestURL));
+	}
+
+	return S_OK;
+}

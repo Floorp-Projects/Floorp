@@ -59,7 +59,9 @@ extern CBrowseModule _Module;
 
 #define SECTION_TEST             _T("Test")
 #define KEY_TESTURL              _T("TestURL")
+#define KEY_TESTCGI              _T("TestCGI")
 #define KEY_TESTURL_DEFAULTVALUE _T("http://www.mozilla.org")
+#define KEY_TESTCGI_DEFAULTVALUE _T("http://www.mozilla.org")
 
 
 

@@ -22,7 +22,10 @@ public:
 
 	static CBrowseDlg *m_pBrowseDlg;
 
+	HRESULT CreateWebBrowser();
+	HRESULT DestroyWebBrowser();
 	HRESULT GetWebBrowser(IWebBrowser **pWebBrowser);
+
 	void RunTestSet(TestSet *pTestSet);
 	TestResult RunTest(Test *pTest);
 	void UpdateTest(HTREEITEM hItem, TestResult nResult);
@@ -51,6 +54,8 @@ protected:
 	HICON m_hIcon;
 	CImageList m_cImageList;
 	CString m_szTestURL;
+	CString m_szTestCGI;
+	DWORD m_dwCookie;
 
 	// Generated message map functions
 	//{{AFX_MSG(CBrowseDlg)

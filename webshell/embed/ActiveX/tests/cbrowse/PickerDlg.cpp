@@ -41,11 +41,13 @@ CPickerDlg::CPickerDlg(CWnd* pParent /*=NULL*/)
 {
 	//{{AFX_DATA_INIT(CPickerDlg)
 	m_szTestURL = _T("");
+	m_szTestCGI = _T("");
 	//}}AFX_DATA_INIT
 	m_clsid = CLSID_NULL;
 
 	CWinApp *pApp = AfxGetApp();
 	m_szTestURL = pApp->GetProfileString(SECTION_TEST, KEY_TESTURL, KEY_TESTURL_DEFAULTVALUE);
+	m_szTestCGI = pApp->GetProfileString(SECTION_TEST, KEY_TESTCGI, KEY_TESTCGI_DEFAULTVALUE);
 }
 
 
@@ -55,6 +57,7 @@ void CPickerDlg::DoDataExchange(CDataExchange* pDX)
 	//{{AFX_DATA_MAP(CPickerDlg)
 	DDX_Control(pDX, IDC_LISTBROWSER, m_lbPicker);
 	DDX_Text(pDX, IDC_TESTURL, m_szTestURL);
+	DDX_Text(pDX, IDC_TESTCGI, m_szTestCGI);
 	//}}AFX_DATA_MAP
 }
 
@@ -98,6 +101,7 @@ void CPickerDlg::OnOk()
 
 	CWinApp *pApp = AfxGetApp();
 	pApp->WriteProfileString(SECTION_TEST, KEY_TESTURL, m_szTestURL);
+	pApp->WriteProfileString(SECTION_TEST, KEY_TESTCGI, m_szTestCGI);
 
 	EndDialog(IDOK);
 }
