@@ -66,4 +66,30 @@
   <menuitem id="threadPaneContext-printpreview" hidden="true"/>
   <menuitem id="messagePaneContext-printpreview" hidden="true"/>
 
+  <!-- Tasks Commands -->
+  <commandset id="tasksCommands"> 
+    <command id="cmd_minimizeWindow" oncommand="window.minimize();"/>
+    <command id="cmd_zoomWindow" oncommand="ZoomCurrentWindow();"/>
+  </commandset>
+
+  <!-- Tasks Keys -->
+  <keyset id="tasksKeys">
+    <key id="key_minimizeWindow"
+         command="cmd_minimizeWindow"
+         key="&minimizeWindowCmd.key;"
+         modifiers="accel"/>
+  </keyset>
+
+  <!-- Window menu -->
+  <menupopup id="windowPopup">
+    <menuitem command="cmd_minimizeWindow"
+              label="&minimizeWindowCmd.label;"
+              key="key_minimizeWindow"
+              position="1"/>
+    <menuitem command="cmd_zoomWindow"
+              label="&zoomWindowCmd.label;"
+              position="2"/>
+    <menuseparator position="3"/>
+  </menupopup>
+
 </overlay>    
