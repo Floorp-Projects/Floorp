@@ -43,6 +43,7 @@
 #include "seccomon.h"
 #include "secmod.h"
 #include "secmodi.h"
+#include "secmodti.h"
 #include "pki3hack.h"
 #include "secerr.h"
    

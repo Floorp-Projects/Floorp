@@ -42,6 +42,7 @@
 #include "secmod.h"
 #include "nssilock.h"
 #include "secmodi.h"
+#include "secmodti.h"
 #include "pkcs11.h"
 #include "pk11func.h"
 #include "secitem.h"
@@ -78,9 +79,9 @@ pk11_KeyExchange(PK11SlotInfo *slot,CK_MECHANISM_TYPE type,
 {
     PK11SymKey *newSymKey = NULL;
     SECStatus rv;
-    /* performance improvement can go here --- use a generated key to as a
-     * per startup wrapping key. If it exists, use it, otherwise do a full
-     * key exchange. */
+    /* performance improvement can go here --- use a generated key at startup
+     * to generate a per token wrapping key. If it exists, use it, otherwise 
+     * do a full key exchange. */
 
     /* find a common Key Exchange algorithm */
     /* RSA */

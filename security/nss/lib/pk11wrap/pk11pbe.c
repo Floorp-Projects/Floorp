@@ -50,6 +50,12 @@
 #include "secmod.h"
 #include "pk11func.h"
 #include "secpkcs5.h"
+#include "secmodi.h"
+#include "secmodti.h"
+#include "pkcs11.h"
+#include "pk11func.h"
+#include "secitem.h"
+#include "key.h"
 
 typedef struct SEC_PKCS5PBEParameterStr SEC_PKCS5PBEParameter;
 struct SEC_PKCS5PBEParameterStr {
@@ -688,3 +694,152 @@ RSA_FormatBlock(SECItem *result, unsigned modulusLen,
     return SECFailure;
 }
 
+/****************************************************************************
+ *
+ * Now Do The PBE Functions Here...
+ *
+ ****************************************************************************/
+
+static void
+pk11_destroy_ck_pbe_params(CK_PBE_PARAMS *pbe_params)
+{
+    if (pbe_params) {
+	if (pbe_params->pPassword)
+	    PORT_ZFree(pbe_params->pPassword, PR_FALSE);
+	if (pbe_params->pSalt)
+	    PORT_ZFree(pbe_params->pSalt, PR_FALSE);
+	PORT_ZFree(pbe_params, PR_TRUE);
+    }
+}
+
+SECItem * 
+PK11_CreatePBEParams(SECItem *salt, SECItem *pwd, unsigned int iterations)
+{
+    CK_PBE_PARAMS *pbe_params = NULL;
+    SECItem *paramRV = NULL;
+    pbe_params = (CK_PBE_PARAMS *)PORT_ZAlloc(sizeof(CK_PBE_PARAMS));
+    pbe_params->pPassword = (CK_CHAR_PTR)PORT_ZAlloc(pwd->len);
+    if (pbe_params->pPassword != NULL) {
+	PORT_Memcpy(pbe_params->pPassword, pwd->data, pwd->len);
+	pbe_params->ulPasswordLen = pwd->len;
+    } else goto loser;
+    pbe_params->pSalt = (CK_CHAR_PTR)PORT_ZAlloc(salt->len);
+    if (pbe_params->pSalt != NULL) {
+	PORT_Memcpy(pbe_params->pSalt, salt->data, salt->len);
+	pbe_params->ulSaltLen = salt->len;
+    } else goto loser;
+    pbe_params->ulIteration = (CK_ULONG)iterations;
+    paramRV = SECITEM_AllocItem(NULL, NULL, sizeof(CK_PBE_PARAMS));
+    paramRV->data = (unsigned char *)pbe_params;
+    return paramRV;
+loser:
+    pk11_destroy_ck_pbe_params(pbe_params);
+    return NULL;
+}
+
+void
+PK11_DestroyPBEParams(SECItem *params)
+{
+    pk11_destroy_ck_pbe_params((CK_PBE_PARAMS *)params->data);
+}
+
+SECAlgorithmID *
+PK11_CreatePBEAlgorithmID(SECOidTag algorithm, int iteration, SECItem *salt)
+{
+    SECAlgorithmID *algid = NULL;
+    algid = SEC_PKCS5CreateAlgorithmID(algorithm, salt, iteration);
+    return algid;
+}
+
+PK11SymKey *
+PK11_RawPBEKeyGen(PK11SlotInfo *slot, CK_MECHANISM_TYPE type, SECItem *mech,
+			 SECItem *pwitem, PRBool faulty3DES, void *wincx)
+{
+    /* pbe stuff */
+    CK_PBE_PARAMS *pbe_params;
+    PK11SymKey *symKey;
+
+    if(faulty3DES && (type == CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC)) {
+	type = CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC;
+    }
+    if(mech == NULL) {
+	return NULL;
+    }
+
+    pbe_params = (CK_PBE_PARAMS *)mech->data;
+    pbe_params->pPassword = (CK_CHAR_PTR)PORT_ZAlloc(pwitem->len);
+    if(pbe_params->pPassword != NULL) {
+	PORT_Memcpy(pbe_params->pPassword, pwitem->data, pwitem->len);
+	pbe_params->ulPasswordLen = pwitem->len;
+    } else {
+	SECITEM_ZfreeItem(mech, PR_TRUE);
+	return NULL;
+    }
+
+    symKey = PK11_KeyGen(slot, type, mech, 0, wincx);
+
+    PORT_ZFree(pbe_params->pPassword, pwitem->len);
+    pbe_params->pPassword = NULL;
+    pbe_params->ulPasswordLen = 0;
+    return symKey;
+}
+
+PK11SymKey *
+PK11_PBEKeyGen(PK11SlotInfo *slot, SECAlgorithmID *algid, SECItem *pwitem,
+	       					PRBool faulty3DES, void *wincx)
+{
+    /* pbe stuff */
+    CK_MECHANISM_TYPE type;
+    SECItem *mech;
+    PK11SymKey *symKey;
+
+    mech = PK11_ParamFromAlgid(algid);
+    type = PK11_AlgtagToMechanism(SECOID_FindOIDTag(&algid->algorithm));
+    if(faulty3DES && (type == CKM_NETSCAPE_PBE_SHA1_TRIPLE_DES_CBC)) {
+	type = CKM_NETSCAPE_PBE_SHA1_FAULTY_3DES_CBC;
+    }
+    if(mech == NULL) {
+	return NULL;
+    }
+    symKey = PK11_RawPBEKeyGen(slot, type, mech, pwitem, faulty3DES, wincx);
+
+    SECITEM_ZfreeItem(mech, PR_TRUE);
+    return symKey;
+}
+
+SECItem *
+PK11_GetPBEIV(SECAlgorithmID *algid, SECItem *pwitem)
+{
+    /* pbe stuff */
+    CK_MECHANISM_TYPE type;
+    SECItem *mech;
+    PK11SymKey *symKey;
+    PK11SlotInfo *slot = PK11_GetInternalSlot();
+    int iv_len = 0;
+    CK_PBE_PARAMS_PTR pPBEparams;
+    SECItem src;
+    SECItem *iv;
+
+
+    mech = PK11_ParamFromAlgid(algid);
+    type = PK11_AlgtagToMechanism(SECOID_FindOIDTag(&algid->algorithm));
+    if(mech == NULL) {
+	return NULL;
+    }
+    symKey = PK11_RawPBEKeyGen(slot, type, mech, pwitem, PR_FALSE, NULL);
+    PK11_FreeSlot(slot);
+    if (symKey == NULL) {
+	SECITEM_ZfreeItem(mech, PR_TRUE);
+	return NULL;
+    }
+    PK11_FreeSymKey(symKey);
+    pPBEparams = (CK_PBE_PARAMS_PTR)mech->data;
+    iv_len = PK11_GetIVLength(type);
+
+    src.data = (unsigned char *)pPBEparams->pInitVector;
+    src.len = iv_len;
+    iv = SECITEM_DupItem(&src);
+
+    SECITEM_ZfreeItem(mech, PR_TRUE);
+    return iv;
+}

@@ -46,7 +46,7 @@
 #include "secdert.h"
 #include "certt.h"
 #include "secmodt.h"
-#include "secmodti.h"
+#include "keyt.h"
 
 #ifdef PKCS11_USE_THREADS
 #define PK11_USE_THREADS(x) x
@@ -59,6 +59,8 @@ SEC_BEGIN_PROTOS
 /* proto-types */
 extern SECStatus SECMOD_DeletePermDB(SECMODModule *module);
 extern SECStatus SECMOD_AddPermDB(SECMODModule *module);
+extern SECStatus SECMOD_Shutdown(void);
+void nss_DumpModuleLog(void);
 
 extern int secmod_PrivateModuleCount;
 
@@ -70,6 +72,10 @@ extern SECStatus SECMOD_AddModuleToDBOnlyList(SECMODModule *newModule);
 extern SECStatus SECMOD_AddModuleToUnloadList(SECMODModule *newModule);
 extern void SECMOD_RemoveList(SECMODModuleList **,SECMODModuleList *);
 extern void SECMOD_AddList(SECMODModuleList *,SECMODModuleList *,SECMODListLock *);
+extern SECMODListLock *SECMOD_NewListLock(void);
+extern void SECMOD_DestroyListLock(SECMODListLock *);
+extern void SECMOD_GetWriteLock(SECMODListLock *);
+extern void SECMOD_ReleaseWriteLock(SECMODListLock *);
 
 /* Operate on modules by name */
 extern SECMODModule *SECMOD_FindModuleByID(SECMODModuleID);
@@ -81,7 +87,7 @@ extern void SECMOD_DestroyModuleList(SECMODModuleList *);
 extern SECStatus SECMOD_AddModule(SECMODModule *newModule);
 SECStatus SECMOD_DeleteModuleEx(const char * name, SECMODModule *mod, int *type, PRBool permdb);
 
-extern unsigned long SECMOD_PubCipherFlagstoInternal(unsigned long publicFlags);
+extern unsigned long SECMOD_InternaltoPubMechFlags(unsigned long internalFlags);
 extern unsigned long SECMOD_InternaltoPubCipherFlags(unsigned long internalFlags);
 
 /* Library functions */
@@ -114,8 +120,39 @@ SECStatus PBE_PK11ParamToAlgid(SECOidTag algTag, SECItem *param,
 extern void pk11sdr_Init(void);
 extern void pk11sdr_Shutdown(void);
 
-PRBool pk11_LoginStillRequired(PK11SlotInfo *slot, void *wincx);
+/*
+ * Private to pk11wrap.
+ */
 
+PRBool pk11_LoginStillRequired(PK11SlotInfo *slot, void *wincx);
+CK_SESSION_HANDLE pk11_GetNewSession(PK11SlotInfo *slot, PRBool *owner);
+void pk11_CloseSession(PK11SlotInfo *slot, CK_SESSION_HANDLE sess, PRBool own);
+PK11SymKey *pk11_ForceSlot(PK11SymKey *symKey, CK_MECHANISM_TYPE type,
+						CK_ATTRIBUTE_TYPE operation);
+unsigned int pk11_FlagsToAttributes(CK_FLAGS flags, 
+				CK_ATTRIBUTE *attrs, CK_BBOOL *ckTrue);
+PRBool pk11_FindAttrInTemplate(CK_ATTRIBUTE *attr, unsigned int numAttrs,
+					CK_ATTRIBUTE_TYPE target);
+
+CK_MECHANISM_TYPE pk11_mapSignKeyType(KeyType keyType);
+CK_MECHANISM_TYPE pk11_mapWrapKeyType(KeyType keyType);
+PK11SymKey *pk11_KeyExchange(PK11SlotInfo *slot, CK_MECHANISM_TYPE type,
+		CK_ATTRIBUTE_TYPE operation, CK_FLAGS flags, PRBool isPerm,
+						PK11SymKey *symKey);
+
+PRBool pk11_HandleTrustObject(PK11SlotInfo *slot, CERTCertificate *cert,
+							 CERTCertTrust *trust);
+CK_OBJECT_HANDLE pk11_FindPubKeyByAnyCert(CERTCertificate *cert,
+					 PK11SlotInfo **slot, void *wincx);
+SECStatus pk11_AuthenticateUnfriendly(PK11SlotInfo *slot, PRBool loadCerts,
+							void *wincx);
+int PK11_NumberObjectsFor(PK11SlotInfo *slot, CK_ATTRIBUTE *findTemplate,
+						int templateCount);
+SECItem *pk11_GetLowLevelKeyFromHandle(PK11SlotInfo *slot, 
+						CK_OBJECT_HANDLE handle);
+SECStatus PK11_TraverseSlot(PK11SlotInfo *slot, void *arg);
+CK_OBJECT_HANDLE pk11_FindPrivateKeyFromCertID(PK11SlotInfo *slot, 
+							SECItem *keyID);
 SEC_END_PROTOS
 
 #endif

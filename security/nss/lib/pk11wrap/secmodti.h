@@ -54,6 +54,15 @@
 
 /* internal data structures */
 
+/* Traverse slots callback */
+typedef struct pk11TraverseSlotStr {
+    SECStatus (*callback)(PK11SlotInfo *,CK_OBJECT_HANDLE, void *);
+    void *callbackArg;
+    CK_ATTRIBUTE *findTemplate;
+    int templateCount;
+} pk11TraverseSlot;
+
+
 /* structure to allow us to implement the read/write locks for our
  * module lists  */
 struct SECMODListLockStr {
@@ -203,5 +212,12 @@ struct PK11GenericObjectStr {
     PK11SlotInfo *slot;
     CK_OBJECT_HANDLE objectID;
 };
+
+
+#define MAX_TEMPL_ATTRS 16 /* maximum attributes in template */
+
+/* This mask includes all CK_FLAGs with an equivalent CKA_ attribute. */
+#define CKF_KEY_OPERATION_FLAGS 0x000e7b00UL
+
 
 #endif /* _SECMODTI_H_ */

@@ -43,6 +43,7 @@
 #include "prlink.h"
 #include "pk11func.h"
 #include "secmodi.h"
+#include "secmodti.h"
 #include "nssilock.h"
 
 extern void FC_GetFunctionList(void);

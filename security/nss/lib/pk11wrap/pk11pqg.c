@@ -40,6 +40,7 @@
 #include "pk11func.h"
 #include "secmod.h"
 #include "secmodi.h"
+#include "secmodti.h"
 #include "pkcs11t.h"
 #include "pk11pqg.h"
 #include "pqgutil.h"

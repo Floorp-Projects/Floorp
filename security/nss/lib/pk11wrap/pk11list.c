@@ -40,10 +40,9 @@
 
 #include "seccomon.h"
 #include "nssilock.h"
-#include "prmon.h"
 #include "secmod.h"
 #include "secmodi.h"
-#include "prlong.h"
+#include "secmodti.h"
 
 #define ISREADING 1
 #define ISWRITING 2
