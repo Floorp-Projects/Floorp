@@ -85,8 +85,6 @@ nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 NS_METHOD nsListBox::SetMultipleSelection(PRBool aMultipleSelections)
 {
-  g_return_val_if_fail(GTK_IS_CLIST(mCList), NS_ERROR_FAILURE);
-
   mMultiSelect = aMultipleSelections;
 
   if (mMultiSelect)
@@ -125,8 +123,6 @@ NS_METHOD nsListBox::AddItemAt(nsString &aItem, PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 {
-  g_return_val_if_fail(GTK_IS_CLIST(mCList), NS_ERROR_FAILURE);
-
   int index = gtk_clist_find_row_from_data(GTK_CLIST(mCList), aItem);
 
   if (index < aStartPos) {
@@ -143,8 +139,6 @@ PRInt32  nsListBox::FindItem(nsString &aItem, PRInt32 aStartPos)
 //-------------------------------------------------------------------------
 PRInt32  nsListBox::GetItemCount()
 {
-  g_return_val_if_fail(GTK_IS_CLIST(mCList), NS_ERROR_FAILURE);
-
   return GTK_CLIST(mCList)->rows;
 }
 
@@ -155,8 +149,6 @@ PRInt32  nsListBox::GetItemCount()
 //-------------------------------------------------------------------------
 PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
 {
-  g_return_val_if_fail(GTK_IS_CLIST(mCList), NS_ERROR_FAILURE);
-
   gtk_clist_remove(GTK_CLIST(mCList), aPosition);
 /*
   int count = 0;
@@ -177,8 +169,6 @@ PRBool  nsListBox::RemoveItemAt(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 {
-  g_return_val_if_fail(GTK_IS_CLIST(mCList), NS_ERROR_FAILURE);
-
   PRBool result = PR_FALSE;
   char *text = NULL;
 
@@ -261,8 +251,6 @@ PRInt32 nsListBox::GetSelectedIndex()
 //-------------------------------------------------------------------------
 NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
 {
-  g_return_val_if_fail(GTK_IS_CLIST(mCList), NS_ERROR_FAILURE);
-
   gtk_clist_select_row(GTK_CLIST(mCList), aPosition, 0);
 /*
   int count = 0;
@@ -281,8 +269,6 @@ NS_METHOD nsListBox::SelectItem(PRInt32 aPosition)
 //-------------------------------------------------------------------------
 PRInt32 nsListBox::GetSelectedCount()
 {
-  g_return_val_if_fail(GTK_IS_CLIST(mCList), NS_ERROR_FAILURE);
-
   return (PRInt32)g_list_length(GTK_CLIST(mCList)->selection);
 }
 

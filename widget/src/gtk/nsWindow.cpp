@@ -499,10 +499,7 @@ void *nsWindow::GetNativeData(PRUint32 aDataType)
 {
     switch(aDataType) {
       case NS_NATIVE_WINDOW:
-	if (GTK_IS_LAYOUT(mWidget))
-	  return (void *)GTK_LAYOUT(mWidget)->bin_window;
-	else
-	  return (void *)mWidget->window;
+	return (void *)GTK_LAYOUT(mWidget)->bin_window;
       case NS_NATIVE_DISPLAY:
 	return (void *)GDK_DISPLAY();
       case NS_NATIVE_WIDGET:
