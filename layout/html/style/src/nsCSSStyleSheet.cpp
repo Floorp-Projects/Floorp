@@ -668,6 +668,7 @@ public:
   virtual PRBool ContainsStyleSheet(nsIURL* aURL) const;
 
   virtual void AppendStyleSheet(nsICSSStyleSheet* aSheet);
+  NS_IMETHOD InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex);
 
   // XXX do these belong here or are they generic?
   virtual void PrependStyleRule(nsICSSStyleRule* aRule);
@@ -678,6 +679,8 @@ public:
 
   virtual PRInt32   StyleSheetCount(void) const;
   virtual nsresult  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const;
+
+  NS_IMETHOD Clone(nsICSSStyleSheet*& aClone) const;
 
   virtual void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
@@ -719,10 +722,10 @@ protected:
   nsIURLPtr             mURL;
   nsString              mTitle;
   nsISupportsArray*     mMedia;
-  nsICSSStyleSheetPtr   mFirstChild;
+  CSSStyleSheetImpl*    mFirstChild;
   nsISupportsArrayPtr   mOrderedRules;
   nsISupportsArrayPtr   mWeightedRules;
-  nsICSSStyleSheetPtr   mNext;
+  CSSStyleSheetImpl*    mNext;
   nsICSSStyleSheet*     mParent;
   RuleHash*             mRuleHash;
   nsVoidArray           mStateSelectors;
@@ -815,13 +818,15 @@ CSSStyleSheetImpl::~CSSStyleSheetImpl()
   fprintf(stdout, "%d - CSSStyleSheet\n", gInstanceCount);
 #endif
   NS_IF_RELEASE(mMedia);
-  if (mFirstChild.IsNotNull()) {
-    nsICSSStyleSheet* child = mFirstChild;
-    while (nsnull != child) {
-      ((CSSStyleSheetImpl *)child)->mParent = nsnull;
-      child = ((CSSStyleSheetImpl*)child)->mNext;
-    }
+  if (mFirstChild) {
+    CSSStyleSheetImpl* child = mFirstChild;
+    do {
+      child->mParent = nsnull;
+      child = child->mNext;
+    } while (child);
+    NS_RELEASE(mFirstChild);
   }
+  NS_IF_RELEASE(mNext);
   if (nsnull != mRuleCollection) {
     mRuleCollection->DropReference();
     NS_RELEASE(mRuleCollection);
@@ -972,6 +977,8 @@ static PRBool ValueDashMatch(const nsString& aValueList, const nsString& aValue,
 static PRBool IsEventPseudo(nsIAtom* aAtom)
 {
   return PRBool ((nsCSSAtoms::activePseudo == aAtom) || 
+                 (nsCSSAtoms::dragOverPseudo == aAtom) || 
+//                 (nsCSSAtoms::dragPseudo == aAtom) ||   // not real yet
                  (nsCSSAtoms::focusPseudo == aAtom) || 
                  (nsCSSAtoms::hoverPseudo == aAtom)); 
   // XXX selected, enabled, disabled, selection?
@@ -1111,6 +1118,11 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
             else if (nsCSSAtoms::hoverPseudo == pseudoClass->mAtom) {
               result = PRBool(0 != (eventState & NS_EVENT_STATE_HOVER));
             }
+/*  XXX Rod, uncomment this to enable the drag over pseudo-class
+            else if (nsCSSAtoms::dragOverPseudo == pseudoClass->mAtom) {
+              result = PRBool(0 != (eventState & NS_EVENT_STATE_DRAG_OVER));
+            }
+*/
           }
         }
         else if (IsLinkPseudo(pseudoClass->mAtom)) {
@@ -1295,7 +1307,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   nsIAtom* presMedium = nsnull;
   aPresContext->GetMedium(&presMedium);
-  nsICSSStyleSheet*  child = mFirstChild;
+  CSSStyleSheetImpl*  child = mFirstChild;
   while (nsnull != child) {
     PRBool mediumOK = PR_FALSE;
     PRInt32 mediumCount;
@@ -1317,7 +1329,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
     if (mediumOK) {
       matchCount += child->RulesMatching(aPresContext, aContent, aParentContext, aResults);
     }
-    child = ((CSSStyleSheetImpl*)child)->mNext;
+    child = child->mNext;
   }
 
   if (mWeightedRules.IsNotNull()) {
@@ -1447,7 +1459,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   nsIAtom* presMedium = nsnull;
   aPresContext->GetMedium(&presMedium);
-  nsICSSStyleSheet*  child = mFirstChild;
+  CSSStyleSheetImpl*  child = mFirstChild;
   while (nsnull != child) {
     PRBool mediumOK = PR_FALSE;
     PRInt32 mediumCount;
@@ -1470,7 +1482,7 @@ PRInt32 CSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
       matchCount += child->RulesMatching(aPresContext, aParentContent, aPseudoTag, 
                                          aParentContext, aResults);
     }
-    child = ((CSSStyleSheetImpl*)child)->mNext;
+    child = child->mNext;
   }
 
   if (mWeightedRules.IsNotNull()) {
@@ -1538,7 +1550,7 @@ CSSStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
     nsIAtom* presMedium = nsnull;
     aPresContext->GetMedium(&presMedium);
 
-    nsICSSStyleSheet*  child = mFirstChild;
+    CSSStyleSheetImpl*  child = mFirstChild;
     while ((! isStateful) && (nsnull != child)) {
       PRBool mediumOK = PR_FALSE;
       PRInt32 mediumCount;
@@ -1561,7 +1573,7 @@ CSSStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
         nsresult result = child->HasStateDependentStyle(aPresContext, aContent);
         isStateful = (NS_OK == result);
       }
-      child = ((CSSStyleSheetImpl*)child)->mNext;
+      child = child->mNext;
     }
     NS_IF_RELEASE(presMedium);
   }
@@ -1721,10 +1733,10 @@ PRBool CSSStyleSheetImpl::ContainsStyleSheet(nsIURL* aURL) const
 
   PRBool result = mURL->Equals(aURL);
 
-  const nsICSSStyleSheet*  child = mFirstChild;
+  const CSSStyleSheetImpl*  child = mFirstChild;
   while ((PR_FALSE == result) && (nsnull != child)) {
     result = child->ContainsStyleSheet(aURL);
-    child = ((const CSSStyleSheetImpl*)child)->mNext;
+    child = child->mNext;
   }
   return result;
 }
@@ -1733,20 +1745,50 @@ void CSSStyleSheetImpl::AppendStyleSheet(nsICSSStyleSheet* aSheet)
 {
   NS_PRECONDITION(nsnull != aSheet, "null arg");
 
-  if (mFirstChild.IsNull()) {
-    mFirstChild.SetAddRef(aSheet);
+  NS_ADDREF(aSheet);
+  CSSStyleSheetImpl* sheet = (CSSStyleSheetImpl*)aSheet;
+
+  if (! mFirstChild) {
+    mFirstChild = sheet;
   }
   else {
-    nsICSSStyleSheet* child = mFirstChild;
-    while (((CSSStyleSheetImpl*)child)->mNext.IsNotNull()) {
-      child = ((CSSStyleSheetImpl*)child)->mNext;
+    CSSStyleSheetImpl* child = mFirstChild;
+    while (child->mNext) {
+      child = child->mNext;
     }
-    ((CSSStyleSheetImpl*)child)->mNext.SetAddRef(aSheet);
+    child->mNext = sheet;
   }
   
   // This is not reference counted. Our parent tells us when
   // it's going away.
-  ((CSSStyleSheetImpl*)aSheet)->mParent = this;
+  sheet->mParent = this;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::InsertStyleSheetAt(nsICSSStyleSheet* aSheet, PRInt32 aIndex)
+{
+  NS_PRECONDITION(nsnull != aSheet, "null arg");
+
+  NS_ADDREF(aSheet);
+  CSSStyleSheetImpl* sheet = (CSSStyleSheetImpl*)aSheet;
+  CSSStyleSheetImpl* child = mFirstChild;
+
+  if (aIndex && child) {
+    while ((0 < --aIndex) && child->mNext) {
+      child = child->mNext;
+    }
+    sheet->mNext = child->mNext;
+    child->mNext = sheet;
+  }
+  else {
+    sheet->mNext = mFirstChild;
+    mFirstChild = sheet; 
+  }
+
+  // This is not reference counted. Our parent tells us when
+  // it's going away.
+  sheet->mParent = this;
+  return NS_OK;
 }
 
 void CSSStyleSheetImpl::PrependStyleRule(nsICSSStyleRule* aRule)
@@ -1847,12 +1889,11 @@ PRInt32 CSSStyleSheetImpl::StyleSheetCount(void) const
   // it won't be done too often. If it is, we might want to 
   // consider storing the children in an array.
   PRInt32 count = 0;
-  if (mFirstChild.IsNotNull()) {
-    const nsICSSStyleSheet* child = mFirstChild;
-    while (nsnull != child) {
-      count++;
-      child = ((const CSSStyleSheetImpl*)child)->mNext;
-    }
+
+  const CSSStyleSheetImpl* child = mFirstChild;
+  while (child) {
+    count++;
+    child = child->mNext;
   }
 
   return count;
@@ -1864,17 +1905,27 @@ nsresult CSSStyleSheetImpl::GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& a
   // that this isn't done too often. If it is, we need to change the
   // underlying storage mechanism
   aSheet = nsnull;
-  if (mFirstChild.IsNotNull()) {
-    const nsICSSStyleSheet* child = mFirstChild;
-    while ((nsnull != child) && (0 != aIndex)) {
+
+  if (mFirstChild) {
+    const CSSStyleSheetImpl* child = mFirstChild;
+    while ((child) && (0 != aIndex)) {
       --aIndex;
-      child = ((const CSSStyleSheetImpl*)child)->mNext;
+      child = child->mNext;
     }
     
     aSheet = (nsICSSStyleSheet*)child;
     NS_IF_ADDREF(aSheet);
   }
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+CSSStyleSheetImpl::Clone(nsICSSStyleSheet*& aClone) const
+{
+  // XXX no, really need to clone
+  aClone = (nsICSSStyleSheet*)this;
+  NS_ADDREF(aClone);
   return NS_OK;
 }
 
@@ -1893,10 +1944,10 @@ void CSSStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
   fputs("\n", out);
   delete buffer;
 
-  const nsICSSStyleSheet*  child = mFirstChild;
+  const CSSStyleSheetImpl*  child = mFirstChild;
   while (nsnull != child) {
     child->List(out, aIndent + 1);
-    child = ((CSSStyleSheetImpl*)child)->mNext;
+    child = child->mNext;
   }
 
   PRInt32 count = 0;
@@ -1938,6 +1989,8 @@ PRBool IsStateSelector(nsCSSSelector& aSelector)
   while (pseudoClass) {
     if ((pseudoClass->mAtom == nsCSSAtoms::activePseudo) ||
         (pseudoClass->mAtom == nsCSSAtoms::disabledPseudo) || 
+        (pseudoClass->mAtom == nsCSSAtoms::dragOverPseudo) || 
+        (pseudoClass->mAtom == nsCSSAtoms::dragPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::enabledPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::focusPseudo) || 
         (pseudoClass->mAtom == nsCSSAtoms::hoverPseudo) || 
