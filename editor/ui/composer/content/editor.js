@@ -774,9 +774,6 @@ function SetEditMode(mode)
         var childCount = bodyNode.childNodes.length;
         if( childCount)
         {
-          // KLUDGE until we have an output flag that strips out <body> and </body> for us
-          //var sourceContent = editorShell.GetContentsAs("text/html", gOutputBodyOnly);
-          //gSourceContentWindow.value = sourceContent.replace(/<body>/,"").replace(/<\/body>/,"");
           gSourceContentWindow.value = editorShell.GetContentsAs("text/html", gOutputBodyOnly);
           gSourceContentWindow.focus();
           setTimeout("gSourceContentWindow.focus()", 10);
@@ -901,19 +898,18 @@ function EditorToggleParagraphMarks()
   var menuItem = document.getElementById("viewParagraphMarks");
   if (menuItem)
   {
+    // Note that the 'type="checbox"' mechanism automatically
+    //  toggles the "checked" state before the oncommand is called,
+    //  so if "checked" is true now, it was just switched to that mode
     var checked = menuItem.getAttribute("checked");
     try {
-      editorShell.DisplayParagraphMarks(checked != "true");
+      editorShell.DisplayParagraphMarks(checked == "true");
     }
     catch(e)
     {
       dump("Failed to load style sheet for paragraph marks\n");
       return;
     }
-    if (checked)
-      menuItem.removeAttribute("checked");
-    else
-      menuItem.setAttribute("checked", "true");
   }
 }
 
