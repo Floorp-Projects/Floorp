@@ -39,20 +39,6 @@
 #include "txIXPathContext.h"
 
 /**
- * Creates a new BooleanExpr using the given operator
-**/
-BooleanExpr::BooleanExpr(Expr* leftExpr, Expr* rightExpr, short op) {
-    this->op = op;
-    this->leftExpr = leftExpr;
-    this->rightExpr = rightExpr;
-} //-- BooleanExpr
-
-BooleanExpr::~BooleanExpr() {
-    delete leftExpr;
-    delete rightExpr;
-} //-- ~BooleanExpr
-
-/**
  * Evaluates this Expr based on the given context node and processor state
  * @param context the context node for evaluation of this Expr
  * @param ps the ContextState containing the stack information needed

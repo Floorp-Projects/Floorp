@@ -93,7 +93,7 @@ private:
         nsresult resolveFunctionCall(nsIAtom* aName, PRInt32 aID,
                                      FunctionCall*& aFunction);
         PRBool caseInsensitiveNameTests();
-        void receiveError(const nsAString& aMsg, nsresult aRes);
+        void SetErrorOffset(PRUint32 aOffset);
 
     private:
         nsIDOMXPathNSResolver* mResolver;

@@ -42,20 +42,6 @@
 #include "txIXPathContext.h"
 
 /**
- * Creates a new MultiplicativeExpr using the given operator
-**/
-MultiplicativeExpr::MultiplicativeExpr(Expr* leftExpr, Expr* rightExpr, short op) {
-    this->op = op;
-    this->leftExpr = leftExpr;
-    this->rightExpr = rightExpr;
-} //-- MultiplicativeExpr
-
-MultiplicativeExpr::~MultiplicativeExpr() {
-    delete leftExpr;
-    delete rightExpr;
-} //-- ~MultiplicativeExpr
-
-/**
  * Evaluates this Expr based on the given context node and processor state
  * @param context the context node for evaluation of this Expr
  * @param ps the ContextState containing the stack information needed

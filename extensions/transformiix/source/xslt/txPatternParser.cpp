@@ -47,8 +47,13 @@ txPattern* txPatternParser::createPattern(const nsAFlatString& aPattern,
                                           txIParseContext* aContext)
 {
     txPattern* pattern = 0;
-    ExprLexer lexer(aPattern);
-    nsresult rv = createUnionPattern(lexer, aContext, pattern);
+    txExprLexer lexer;
+    nsresult rv = lexer.parse(aPattern);
+    if (NS_FAILED(rv)) {
+        // XXX error report parsing error
+        return 0;
+    }
+    rv = createUnionPattern(lexer, aContext, pattern);
     if (NS_FAILED(rv)) {
         // XXX error report parsing error
         return 0;
@@ -56,7 +61,7 @@ txPattern* txPatternParser::createPattern(const nsAFlatString& aPattern,
     return pattern;
 }
 
-nsresult txPatternParser::createUnionPattern(ExprLexer& aLexer,
+nsresult txPatternParser::createUnionPattern(txExprLexer& aLexer,
                                              txIParseContext* aContext,
                                              txPattern*& aPattern)
 {
@@ -67,7 +72,7 @@ nsresult txPatternParser::createUnionPattern(ExprLexer& aLexer,
     if (NS_FAILED(rv))
         return rv;
 
-    short type = aLexer.peek()->type;
+    Token::Type type = aLexer.peek()->mType;
     if (type == Token::END) {
         aPattern = locPath;
         return NS_OK;
@@ -107,7 +112,7 @@ nsresult txPatternParser::createUnionPattern(ExprLexer& aLexer,
             return rv;
         }
 #endif
-        type = aLexer.nextToken()->type;
+        type = aLexer.nextToken()->mType;
     } while (type == Token::UNION_OP);
 
     if (type != Token::END) {
@@ -119,7 +124,7 @@ nsresult txPatternParser::createUnionPattern(ExprLexer& aLexer,
     return NS_OK;
 }
 
-nsresult txPatternParser::createLocPathPattern(ExprLexer& aLexer,
+nsresult txPatternParser::createLocPathPattern(txExprLexer& aLexer,
                                                txIParseContext* aContext,
                                                txPattern*& aPattern)
 {
@@ -130,7 +135,7 @@ nsresult txPatternParser::createLocPathPattern(ExprLexer& aLexer,
     txPattern* stepPattern = 0;
     txLocPathPattern* pathPattern = 0;
 
-    short type = aLexer.peek()->type;
+    Token::Type type = aLexer.peek()->mType;
     switch (type) {
         case Token::ANCESTOR_OP:
             isChild = MB_FALSE;
@@ -140,8 +145,8 @@ nsresult txPatternParser::createLocPathPattern(ExprLexer& aLexer,
         case Token::PARENT_OP:
             aLexer.nextToken();
             isAbsolute = MB_TRUE;
-            if (aLexer.peek()->type == Token::END || 
-                aLexer.peek()->type == Token::UNION_OP) {
+            if (aLexer.peek()->mType == Token::END || 
+                aLexer.peek()->mType == Token::UNION_OP) {
                 aPattern = new txRootPattern(MB_TRUE);
                 return aPattern ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
             }
@@ -149,7 +154,8 @@ nsresult txPatternParser::createLocPathPattern(ExprLexer& aLexer,
         case Token::FUNCTION_NAME:
             // id(Literal) or key(Literal, Literal)
             {
-                nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLexer.nextToken()->value);
+                nsCOMPtr<nsIAtom> nameAtom =
+                    do_GetAtom(aLexer.nextToken()->Value());
                 if (nameAtom == txXPathAtoms::id) {
                     rv = createIdPattern(aLexer, stepPattern);
                 }
@@ -169,7 +175,7 @@ nsresult txPatternParser::createLocPathPattern(ExprLexer& aLexer,
             return rv;
     }
 
-    type = aLexer.peek()->type;
+    type = aLexer.peek()->mType;
     if (!isAbsolute && type != Token::PARENT_OP
         && type != Token::ANCESTOR_OP) {
         aPattern = stepPattern;
@@ -221,40 +227,43 @@ nsresult txPatternParser::createLocPathPattern(ExprLexer& aLexer,
             return NS_ERROR_OUT_OF_MEMORY;
         }
         stepPattern = 0; // stepPattern is part of pathPattern now
-        type = aLexer.peek()->type;
+        type = aLexer.peek()->mType;
     }
     aPattern = pathPattern;
     return rv;
 }
 
-nsresult txPatternParser::createIdPattern(ExprLexer& aLexer,
+nsresult txPatternParser::createIdPattern(txExprLexer& aLexer,
                                           txPattern*& aPattern)
 {
     // check for '(' Literal ')'
-    if (aLexer.nextToken()->type != Token::L_PAREN && 
-        aLexer.peek()->type != Token::LITERAL)
+    if (aLexer.nextToken()->mType != Token::L_PAREN && 
+        aLexer.peek()->mType != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILURE;
-    const nsString& value = aLexer.nextToken()->value;
-    if (aLexer.nextToken()->type != Token::R_PAREN)
+    const nsDependentSingleFragmentSubstring& value =
+        aLexer.nextToken()->Value();
+    if (aLexer.nextToken()->mType != Token::R_PAREN)
         return NS_ERROR_XPATH_PARSE_FAILURE;
     aPattern  = new txIdPattern(value);
     return aPattern ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult txPatternParser::createKeyPattern(ExprLexer& aLexer,
+nsresult txPatternParser::createKeyPattern(txExprLexer& aLexer,
                                            txIParseContext* aContext,
                                            txPattern*& aPattern)
 {
     // check for '(' Literal, Literal ')'
-    if (aLexer.nextToken()->type != Token::L_PAREN && 
-        aLexer.peek()->type != Token::LITERAL)
+    if (aLexer.nextToken()->mType != Token::L_PAREN && 
+        aLexer.peek()->mType != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILURE;
-    const nsString& key = aLexer.nextToken()->value;
-    if (aLexer.nextToken()->type != Token::COMMA && 
-        aLexer.peek()->type != Token::LITERAL)
+    const nsDependentSingleFragmentSubstring& key =
+        aLexer.nextToken()->Value();
+    if (aLexer.nextToken()->mType != Token::COMMA && 
+        aLexer.peek()->mType != Token::LITERAL)
         return NS_ERROR_XPATH_PARSE_FAILURE;
-    const nsString& value = aLexer.nextToken()->value;
-    if (aLexer.nextToken()->type != Token::R_PAREN)
+    const nsDependentSingleFragmentSubstring& value =
+        aLexer.nextToken()->Value();
+    if (aLexer.nextToken()->mType != Token::R_PAREN)
         return NS_ERROR_XPATH_PARSE_FAILURE;
 
     if (!XMLUtils::isValidQName(key))
@@ -271,36 +280,36 @@ nsresult txPatternParser::createKeyPattern(ExprLexer& aLexer,
     return aPattern ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
+nsresult txPatternParser::createStepPattern(txExprLexer& aLexer,
                                             txIParseContext* aContext,
                                             txPattern*& aPattern)
 {
     nsresult rv = NS_OK;
     MBool isAttr = MB_FALSE;
     Token* tok = aLexer.peek();
-    if (tok->type == Token::AXIS_IDENTIFIER) {
-        if (TX_StringEqualsAtom(tok->value, txXPathAtoms::attribute)) {
+    if (tok->mType == Token::AXIS_IDENTIFIER) {
+        if (TX_StringEqualsAtom(tok->Value(), txXPathAtoms::attribute)) {
             isAttr = MB_TRUE;
         }
-        else if (!TX_StringEqualsAtom(tok->value, txXPathAtoms::child)) {
+        else if (!TX_StringEqualsAtom(tok->Value(), txXPathAtoms::child)) {
             // all done already for CHILD_AXIS, for all others
             // XXX report unexpected axis error
             return NS_ERROR_XPATH_PARSE_FAILURE;
         }
         aLexer.nextToken();
     }
-    else if (tok->type == Token::AT_SIGN) {
+    else if (tok->mType == Token::AT_SIGN) {
         aLexer.nextToken();
         isAttr = MB_TRUE;
     }
     tok = aLexer.nextToken();
 
     txNodeTest* nodeTest = 0;
-    if (tok->type == Token::CNAME) {
+    if (tok->mType == Token::CNAME) {
         // resolve QName
         nsCOMPtr<nsIAtom> prefix, lName;
         PRInt32 nspace;
-        rv = resolveQName(tok->value, getter_AddRefs(prefix), aContext,
+        rv = resolveQName(tok->Value(), getter_AddRefs(prefix), aContext,
                           getter_AddRefs(lName), nspace, PR_TRUE);
         if (NS_FAILED(rv)) {
             // XXX error report namespace resolve failed
@@ -320,11 +329,8 @@ nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
     }
     else {
         aLexer.pushBack();
-        nodeTest = createNodeTypeTest(aLexer);
-        if (!nodeTest) {
-            // XXX error report NodeTest expected
-            return NS_ERROR_XPATH_PARSE_FAILURE;
-        }
+        rv = createNodeTypeTest(aLexer, &nodeTest);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     txStepPattern* step = new txStepPattern(nodeTest, isAttr);
@@ -333,9 +339,10 @@ nsresult txPatternParser::createStepPattern(ExprLexer& aLexer,
         return NS_ERROR_OUT_OF_MEMORY;
     }
     nodeTest = 0;
-    if (!parsePredicates(step, aLexer, aContext)) {
+    rv = parsePredicates(step, aLexer, aContext);
+    if (NS_FAILED(rv)) {
         delete step;
-        return NS_ERROR_XPATH_PARSE_FAILURE;
+        return rv;
     }
 
     aPattern = step;

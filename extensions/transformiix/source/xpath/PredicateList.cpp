@@ -51,9 +51,15 @@ PredicateList::~PredicateList()
  * Adds the given Expr to the list
  * @param expr the Expr to add to the list
  */
-void PredicateList::add(Expr* expr)
+nsresult
+PredicateList::add(Expr* aExpr)
 {
-    predicates.add(expr);
+    NS_ASSERTION(aExpr, "missing expression");
+    nsresult rv = predicates.add(aExpr);
+    if (NS_FAILED(rv)) {
+        delete aExpr;
+    }
+    return rv;
 } // add
 
 nsresult
