@@ -280,7 +280,7 @@ sub mail_notification {
     get_response_code(220);
     print S "EHLO $hostname\n";
     get_response_code(250);
-    print S "MAIL FROM: bonsai-daemon@$hostname\n";
+    print S "MAIL FROM: bonsai-daemon\@$hostname\n";
     get_response_code(250);
     foreach $i (@mailto) {
 	print S "RCPT TO: $i\n";
