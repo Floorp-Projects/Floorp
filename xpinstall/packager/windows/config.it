@@ -91,6 +91,33 @@ Default Setup Type=Setup Type 1
 ;   TRUE
 Refresh Icons=FALSE
 
+; Setting to control whether or not GRE should be installed to app's dir
+; to be used as a private/local GRE.
+;
+; Possible values (default is 'Shared'):
+;   Local
+;   Shared
+;
+; If this key is set to 'Local', make
+; sure to provide a GRE Private Key= below!
+GRE Type=Local
+
+; Private key that overrides the default shared key
+; (HKEY_LOCAL_MACHINE\Software\mozilla.org\GRE) set by GRE's installer.
+; This key will be created under HKEY_LOCAL_MACHINE and should be 
+; declared in the following format:
+;
+;   Software\[company name]\[product name]
+;   (ie: Software\mozilla.org\GRE_PRIVATE)
+;
+; If it is not in the above format, the GRE installer/uninstaller can
+; fail to work properly.
+; The value to Prodduct Name Internal= (at the beginning of this
+; config.ini file) will be appended as follows:
+;
+;   Software\mozilla.org\GRE_PRIVATE_[Product Name Internal]
+GRE Private Key=Software\mozilla.org\GRE_PRIVATE
+
 ; This section contains info on how to send error information in case of
 ; either a download or xpinstall error.
 ; By default, this feature is enabled, unless disabled.
@@ -371,9 +398,9 @@ Show Dialog=AUTO
 Class Name=MozillaMessageWindow
 Window Name=
 ;*** LOCALIZE ME BABY ***
-Message=Download of $ProductName$ was successful. $ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
+Message=Download of $ProductName$ was successful. $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 ;*** LOCALIZE ME BABY ***
-Message Full Installer=$ProductNameNoVersion$ must be closed to proceed with installation. Click OK to exit $ProductNameNoVersion$ automatically and to begin installation.
+Message Full Installer=$ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 
 ; This key indicates whether or not to close all the windows associated with
 ; the process id of this app instance window found.

@@ -65,7 +65,6 @@ bin\defaults\messenger\mailViews.dat
 bin\README.txt,bin\readme.txt
 bin\LICENSE,bin\license.txt
 bin\jpeg3250.dll
-bin\jsj3250.dll
 bin\mozilla.exe
 bin\regxpcom.exe
 bin\xpicleanup.exe

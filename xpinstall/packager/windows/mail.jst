@@ -213,7 +213,7 @@ function createShortcuts()
     // Register as a windows XP mail application
     if( IsWinnt() )
     {
-      subkey = "Software\\Clients\\Mail\\$ProductNameNoVersion$";
+      subkey = "Software\\Clients\\Mail\\$ProductNameInternal$";
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
 
       winreg.createKey(subkey,"");

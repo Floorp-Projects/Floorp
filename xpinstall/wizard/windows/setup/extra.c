@@ -69,6 +69,7 @@ DWORD   PX_PROCESS;
 DWORD   PX_THREAD;
 HRESULT InitGre(greInfo *gre);
 void    DeInitGre(greInfo *gre);
+void    UpdateGreInstallerCmdLine(char *aParameter, DWORD aParameterBufSize);
 void    LaunchExistingGreInstaller(greInfo *gre);
 void    UpdateGREAppInstallerProgress(int percent);
 HRESULT GetInstalledGreConfigIni(greInfo *aGre, char *aGreConfigIni, DWORD aGreConfigIniBufSize);
@@ -2032,6 +2033,40 @@ void ParsePath(LPSTR szInput, LPSTR szOutput, DWORD dwOutputSize, BOOL bURLPath,
   }
 }
 
+/* Function: UpdateGreInstallerCmdLine()
+ *   in/out: char *aParameter.
+ *  purpose: To update the default GRE installer's command line parameters
+ *           with new defaults depending on config.ini or cmdline arguments
+ *           to this app's installer.
+ */
+void UpdateGreInstallerCmdLine(char *aParameter, DWORD aParameterBufSize)
+{
+  /* Force the install of GRE if '-greForce' is passed or if GRE
+   * is to be local.
+   *
+   * Passing '-f' to GRE's installer will force it to install
+   * regardless of version found on system.  If '-f' is already
+   * present in the parameter, it will do no harm to pass it again. */
+  if(gbForceInstallGre || (sgProduct.greType == GRE_LOCAL))
+    lstrcat(aParameter, " -f");
+
+  /* If GRE is to be local, then instruct the GRE's installer to
+   * install to this application's destination path stored in
+   * sgProduct.szPath.
+   *
+   * We need to also instruct the GRE's installer to create a
+   * private windows registry GRE key instead of the default one, so
+   * that other apps attempting to use the global GRE will not find
+   * this private, local copy.  They should not find this copy! */
+  if(sgProduct.greType == GRE_LOCAL)
+  {
+    char buf[MAX_BUF];
+
+    wsprintf(buf, " -dd \"%s\" -reg_path %s", sgProduct.szPath, sgProduct.grePrivateKey);
+    lstrcat(aParameter, buf);
+  }
+}
+
 /* Function: GetInstalledGreConfigIni()
  *       in: greInfo *aGre: gre class containing the location of GRE
  *           already installed.
@@ -2051,7 +2086,7 @@ HRESULT GetInstalledGreConfigIni(greInfo *aGre, char *aGreConfigIni, DWORD aGreC
   *aGreConfigIni = '\0';
   MozCopyStr(aGre->homePath, buf, sizeof(buf));
   AppendBackSlash(buf, sizeof(buf));
-  wsprintf(aGreConfigIni, "%sSetup\\%s", buf, FILE_INI_CONFIG);
+  wsprintf(aGreConfigIni, "%s%s\\%s", buf, GRE_SETUP_DIR_NAME, FILE_INI_CONFIG);
   return(WIZ_OK);
 }
 
@@ -2100,6 +2135,14 @@ void GetGrePathFromGreInstaller(char *aGreInstallerFile, greInfo *aGre)
 
   if(!aGre)
     return;
+
+  /* If GRE is to be installed locally, then set it to the
+   * application's destination path. */
+  if(sgProduct.greType == GRE_LOCAL)
+  {
+    MozCopyStr(sgProduct.szPath, aGre->homePath, sizeof(aGre->homePath));
+    return;
+  }
 
   *aGre->homePath = '\0';
 
@@ -2190,13 +2233,7 @@ void LaunchOneComponent(siC *siCObject, greInfo *aGre)
       if(aGre)
       {
         GetGrePathFromGreInstaller(szSpawnFile, aGre);
-
-        /* Force the install of GRE if '-fgre' is passed.
-         * Passing '-f' to GRE's installer will force it to install
-         * regardless of version found on system.  If '-f' is already
-         * present in the parameter, it will do no harm to pass it again. */
-        if(gbForceInstallGre)
-          lstrcat(szParameterBuf, " -f");
+        UpdateGreInstallerCmdLine(szParameterBuf, sizeof(szParameterBuf));
       }
 
       LogISLaunchAppsComponent(siCObject->szDescriptionShort);
@@ -2297,11 +2334,22 @@ HRESULT ProcessGre(greInfo *aGre)
    */
   if(GetInfoFromInstalledGreConfigIni(aGre) == WIZ_OK)
   {
-    wsprintf(greUninstallCommand,
-             "\"%s\" -mmi -ms -app %s -ua \"%s\"",
-             aGre->uninstallerAppPath,
-             sgProduct.szProductNameInternal,
-             aGre->userAgent);
+    /* If were installing GRE locally, then update the app's uninstall command
+     * to pass the local/private windows GRE key path to GRE's uninstaller
+     * during uninstall. */
+    if(sgProduct.greType == GRE_LOCAL)
+      wsprintf(greUninstallCommand,
+               "\"%s\" -mmi -ms -app %s -ua \"%s\" -reg_path %s",
+               aGre->uninstallerAppPath,
+               sgProduct.szProductNameInternal,
+               aGre->userAgent,
+               sgProduct.grePrivateKey);
+    else
+      wsprintf(greUninstallCommand,
+               "\"%s\" -mmi -ms -app %s -ua \"%s\"",
+               aGre->uninstallerAppPath,
+               sgProduct.szProductNameInternal,
+               aGre->userAgent);
     UpdateInstallLog(KEY_UNINSTALL_COMMAND, greUninstallCommand, DNU_UNINSTALL);
   }
   return(WIZ_OK);
@@ -2876,6 +2924,7 @@ HRESULT InitSetupGeneral()
   sgProduct.mode                 = NOT_SET;
   sgProduct.bSharedInst          = FALSE;
   sgProduct.bInstallFiles        = TRUE;
+  sgProduct.greType              = GRE_TYPE_NOT_SET;
   sgProduct.dwCustomType         = ST_RADIO0;
   sgProduct.dwNumberOfComponents = 0;
   sgProduct.bLockPath            = FALSE;
@@ -2917,6 +2966,8 @@ HRESULT InitSetupGeneral()
     return(1);
   if((sgProduct.szRegPath                     = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
+
+  *sgProduct.grePrivateKey = '\0';
 
   return(0);
 }
@@ -5291,9 +5342,12 @@ void PrintUsage(void)
    * -app: ID of application which is launching the installer  (Shared installs)
    * -app_path: Points to representative file of app (Shared installs)
    * -dd [path]: Suggested install destination directory. (Shared installs)
+   * -greLocal: Forces GRE to be installed into the application dir.
+   * -greShared: Forces GRE to be installed into a global, shared dir (normally
+   *    c:\program files\common files\mozilla.org\GRE
    * -f: Force install of GRE installer (Shared installs), though it'll work
    *    for non GRE installers too.
-   * -fgre: Force 'Component GRE' to be downloaded, run, and installed.  This
+   * -greForce: Force 'Component GRE' to be downloaded, run, and installed.  This
    *    bypasses GRE's logic of determining when to install by running its
    *    installer with a '-f' flag.
    * -n [filename]: setup's parent's process filename
@@ -5355,9 +5409,17 @@ DWORD ParseCommandLine(LPSTR lpszCmdLine)
       GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
       lstrcpy(sgProduct.szAlternateArchiveSearchPath, szArgVBuf);
     }
-    else if(!lstrcmpi(szArgVBuf, "-fgre") || !lstrcmpi(szArgVBuf, "/fgre"))
+    else if(!lstrcmpi(szArgVBuf, "-greForce") || !lstrcmpi(szArgVBuf, "/greForce"))
     {
       gbForceInstallGre = TRUE;
+    }
+    else if(!lstrcmpi(szArgVBuf, "-greLocal") || !lstrcmpi(szArgVBuf, "/greLocal"))
+    {
+      sgProduct.greType = GRE_LOCAL;
+    }
+    else if(!lstrcmpi(szArgVBuf, "-greShared") || !lstrcmpi(szArgVBuf, "/greShared"))
+    {
+      sgProduct.greType = GRE_SHARED;
     }
     else if(!lstrcmpi(szArgVBuf, "-f") || !lstrcmpi(szArgVBuf, "/f"))
     {
@@ -6254,6 +6316,26 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("General", "Refresh Icons", "", szBuf, sizeof(szBuf), szFileIniConfig);
   if(lstrcmpi(szBuf, "TRUE") == 0)
     gSystemInfo.bRefreshIcons = TRUE;
+
+  /* Set default value for greType if not already set. If already set,
+   * it was set via cmdline argumen. Do not override the setting. */
+  if(sgProduct.greType == GRE_TYPE_NOT_SET)
+  {
+    sgProduct.greType = GRE_SHARED; /* Always default to installing GRE to global area. */
+    GetPrivateProfileString("General", "GRE Type", "", szBuf, sizeof(szBuf), szFileIniConfig);
+    if(lstrcmpi(szBuf, "Local") == 0)
+      sgProduct.greType = GRE_LOCAL;
+    else
+      sgProduct.greType = GRE_SHARED;
+  }
+
+  GetPrivateProfileString("General", "GRE Private Key", "", szBuf, sizeof(szBuf), szFileIniConfig);
+  if(*szBuf != '\0')
+  {
+    DecryptString(sgProduct.grePrivateKey, szBuf);
+    lstrcat(sgProduct.grePrivateKey, "_");
+    lstrcat(sgProduct.grePrivateKey, sgProduct.szProductNameInternal);
+  }
 
   /* Welcome dialog */
   GetPrivateProfileString("Dialog Welcome",             "Show Dialog",     "", szShowDialog,                  sizeof(szShowDialog), szFileIniConfig);
@@ -7947,6 +8029,15 @@ char *GetSaveInstallerPath(char *szBuf, DWORD dwBufSize)
   else
 #endif
     lstrcat(szBuf, "Setup");
+
+  /* We need to have the product name be part of the Setup directory name.
+   * This is because if GRE is installed ontop of this app, GRE's saved files
+   * will overwrite files of the same name for this app. */
+  if(*sgProduct.szProductNameInternal != '\0')
+  {
+    lstrcat(szBuf, " ");
+    lstrcat(szBuf, sgProduct.szProductNameInternal);
+  }
 
   return(szBuf);
 }

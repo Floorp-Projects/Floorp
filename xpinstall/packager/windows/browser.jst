@@ -426,62 +426,67 @@ function upgradeCleanup()
   deleteThisFile("Chrome",     "chrome.rdf");
   deleteThisFolder("Chrome",   "overlayinfo");
 
-  // obsolete files that are now part of the GRE
-  // installer package.
-  deleteThisFile("Plugins",    "npnul32.dll");
-  deleteThisFile("Program",    "gkgfx.dll");
-  deleteThisFile("Program",    "js3250.dll");
-  deleteThisFile("Program",    "mozctl.dll");
-  deleteThisFile("Program",    "mozctlx.dll");
-  deleteThisFile("Program",    "nss3.dll");
-  deleteThisFile("Program",    "nssckbi.dll");
-  deleteThisFile("Program",    "smime3.dll");
-  deleteThisFile("Program",    "softokn3.dll");
-  deleteThisFile("Program",    "ssl3.dll");
-  deleteThisFile("Program",    "xpcom.dll");
-  deleteThisFile("Program",    "xpistub.dll");
-  deleteThisFile("Program",    "zlib.dll");
-  deleteThisFile("Components", "accessibility.dll");
-  deleteThisFile("Components", "appshell.dll");
-  deleteThisFile("Components", "caps.dll");
-  deleteThisFile("Components", "chrome.dll");
-  deleteThisFile("Components", "cookie.dll");
-  deleteThisFile("Components", "docshell.dll");
-  deleteThisFile("Components", "editor.dll");
-  deleteThisFile("Components", "embedcomponents.dll");
-  deleteThisFile("Components", "gkgfxwin.dll");
-  deleteThisFile("Components", "gklayout.dll");
-  deleteThisFile("Components", "gkparser.dll");
-  deleteThisFile("Components", "gkplugin.dll");
-  deleteThisFile("Components", "gkview.dll");
-  deleteThisFile("Components", "gkwidget.dll");
-  deleteThisFile("Components", "i18n.dll");
-  deleteThisFile("Components", "imgicon.dll");
-  deleteThisFile("Components", "imglib2.dll");
-  deleteThisFile("Components", "imgmng.dll");
-  deleteThisFile("Components", "jar50.dll");
-  deleteThisFile("Components", "jsdom.dll");
-  deleteThisFile("Components", "jsurl.dll");
-  deleteThisFile("Components", "necko.dll");
-  deleteThisFile("Components", "necko2.dll");
-  deleteThisFile("Components", "nsDownloadProgressListener.js");
-  deleteThisFile("Components", "nsHelperAppDlg.js");
-  deleteThisFile("Components", "nsProgressDialog.js");
-  deleteThisFile("Components", "oji.dll");
-  deleteThisFile("Components", "pipboot.dll");
-  deleteThisFile("Components", "pipnss.dll");
-  deleteThisFile("Components", "profile.dll");
-  deleteThisFile("Components", "rdf.dll");
-  deleteThisFile("Components", "shistory.dll");
-  deleteThisFile("Components", "uconv.dll");
-  deleteThisFile("Components", "ucvmath.dll");
-  deleteThisFile("Components", "urildr.dll");
-  deleteThisFile("Components", "wallet.dll");
-  deleteThisFile("Components", "webbrwsr.dll");
-  deleteThisFile("Components", "xmlextras.dll");
-  deleteThisFile("Components", "xpc3250.dll");
-  deleteThisFile("Components", "xpinstal.dll");
-  deleteThisFile("Components", "xppref32.dll");
+  if(!gGreLocal)
+  {
+    // If GRE is not local, meaning it's installed in a 
+    // global area, then cleanup  obsolete files that are
+    // now part of the GRE installer package.
+    deleteThisFile("Plugins",    "npnul32.dll");
+    deleteThisFile("Program",    "gkgfx.dll");
+    deleteThisFile("Program",    "js3250.dll");
+    deleteThisFile("Program",    "jsj3250.dll");
+    deleteThisFile("Program",    "mozctl.dll");
+    deleteThisFile("Program",    "mozctlx.dll");
+    deleteThisFile("Program",    "nss3.dll");
+    deleteThisFile("Program",    "nssckbi.dll");
+    deleteThisFile("Program",    "smime3.dll");
+    deleteThisFile("Program",    "softokn3.dll");
+    deleteThisFile("Program",    "ssl3.dll");
+    deleteThisFile("Program",    "xpcom.dll");
+    deleteThisFile("Program",    "xpistub.dll");
+    deleteThisFile("Program",    "zlib.dll");
+    deleteThisFile("Components", "accessibility.dll");
+    deleteThisFile("Components", "appshell.dll");
+    deleteThisFile("Components", "caps.dll");
+    deleteThisFile("Components", "chrome.dll");
+    deleteThisFile("Components", "cookie.dll");
+    deleteThisFile("Components", "docshell.dll");
+    deleteThisFile("Components", "editor.dll");
+    deleteThisFile("Components", "embedcomponents.dll");
+    deleteThisFile("Components", "gkgfxwin.dll");
+    deleteThisFile("Components", "gklayout.dll");
+    deleteThisFile("Components", "gkparser.dll");
+    deleteThisFile("Components", "gkplugin.dll");
+    deleteThisFile("Components", "gkview.dll");
+    deleteThisFile("Components", "gkwidget.dll");
+    deleteThisFile("Components", "i18n.dll");
+    deleteThisFile("Components", "imgicon.dll");
+    deleteThisFile("Components", "imglib2.dll");
+    deleteThisFile("Components", "imgmng.dll");
+    deleteThisFile("Components", "jar50.dll");
+    deleteThisFile("Components", "jsdom.dll");
+    deleteThisFile("Components", "jsurl.dll");
+    deleteThisFile("Components", "necko.dll");
+    deleteThisFile("Components", "necko2.dll");
+    deleteThisFile("Components", "nsDownloadProgressListener.js");
+    deleteThisFile("Components", "nsHelperAppDlg.js");
+    deleteThisFile("Components", "nsProgressDialog.js");
+    deleteThisFile("Components", "oji.dll");
+    deleteThisFile("Components", "pipboot.dll");
+    deleteThisFile("Components", "pipnss.dll");
+    deleteThisFile("Components", "profile.dll");
+    deleteThisFile("Components", "rdf.dll");
+    deleteThisFile("Components", "shistory.dll");
+    deleteThisFile("Components", "uconv.dll");
+    deleteThisFile("Components", "ucvmath.dll");
+    deleteThisFile("Components", "urildr.dll");
+    deleteThisFile("Components", "wallet.dll");
+    deleteThisFile("Components", "webbrwsr.dll");
+    deleteThisFile("Components", "xmlextras.dll");
+    deleteThisFile("Components", "xpc3250.dll");
+    deleteThisFile("Components", "xpinstal.dll");
+    deleteThisFile("Components", "xppref32.dll");
+  }
 }
 
 // main
@@ -494,6 +499,17 @@ var fileComponentRegStr;
 var fileComponentReg;
 var restrictedAccess;
 var fileToRegister;
+var args;
+var gGreLocal = false;
+
+args = new String(Install.arguments);
+logComment("args: " + args);
+
+// If -gGreLocal is passed in, then we need to *not* cleanup GRE files if they
+// exist in the browser dir.
+// The default is to delete any GRE files because we default GRE will be global.
+if(args == "-greLocal")
+  gGreLocal = true;
 
 srDest = $SpaceRequired$:bin;
 err    = initInstall("$ProductName$", "Browser", "$Version$"); 
