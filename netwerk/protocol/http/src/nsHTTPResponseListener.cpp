@@ -253,7 +253,8 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
     nsresult rv = NS_OK;
     PRUint32 actualBytesRead;
     NS_ASSERTION(i_pStream, "No stream supplied by the transport!");
-    nsCOMPtr<nsIBufferInputStream> bufferInStream = do_QueryInterface(i_pStream);
+    nsCOMPtr<nsIBufferInputStream> bufferInStream = 
+        do_QueryInterface(i_pStream);
 
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPServerListener::OnDataAvailable [this=%x].\n"
@@ -345,8 +346,8 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
                 if (cl != -1)
                 {
-                    nsresult rv;
-                    nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (channel, &rv);
+                    nsCOMPtr<nsISocketTransport> trans = 
+                            do_QueryInterface (channel, &rv);
 
                     if (NS_SUCCEEDED (rv))
 					    trans -> SetBytesExpected (cl - mBodyBytesReceived);
@@ -354,13 +355,19 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
 				if (!mChunkConverterPushed && mResponse -> isChunkedResponse ())
 				{
-					NS_WITH_SERVICE (nsIStreamConverterService, StreamConvService, kStreamConverterServiceCID, &rv);
+					NS_WITH_SERVICE (nsIStreamConverterService, 
+                            StreamConvService, kStreamConverterServiceCID, &rv);
 					if (NS_FAILED(rv)) return rv;
 
 					nsString2 fromStr ( "chunked" );
 					nsString2 toStr   ("unchunked");
 				    nsCOMPtr<nsIStreamListener> converterListener;
-					rv = StreamConvService -> AsyncConvertData (fromStr.GetUnicode(), toStr.GetUnicode(), mResponseDataListener, channel, getter_AddRefs (converterListener));
+					rv = StreamConvService->AsyncConvertData(
+                            fromStr.GetUnicode(), 
+                            toStr.GetUnicode(), 
+                            mResponseDataListener, 
+                            channel, 
+                            getter_AddRefs (converterListener));
 					if (NS_FAILED(rv)) return rv;
 					mResponseDataListener = converterListener;
 					mChunkConverterPushed = PR_TRUE;
@@ -387,7 +394,8 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 
 
 NS_IMETHODIMP
-nsHTTPServerListener::OnStartRequest(nsIChannel* channel, nsISupports* i_pContext)
+nsHTTPServerListener::OnStartRequest(nsIChannel* channel, 
+        nsISupports* i_pContext)
 {
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("nsHTTPServerListener::OnStartRequest [this=%x].\n", this));
@@ -629,8 +637,9 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
       if (NS_FAILED(rv)) return rv;
       if (bFoundString && offsetOfEnd >= aLength) bFoundString = PR_FALSE;
 
+      // Need to wait for more data to see if the header is complete
       if (!bFoundString && offsetOfEnd == 0) 
-          return NS_OK;     // Need to wait for more data to see if the header is complete
+          return NS_OK;     
 
       if (!bFoundString || offsetOfEnd != 0) {
           // then check for tab too
@@ -708,7 +717,8 @@ nsresult nsHTTPServerListener::FinishedResponseHeaders(void)
   // Fire the OnStartRequest notification - now that user data is available
   //
   if (NS_SUCCEEDED(rv) && mResponseDataListener) {
-    rv = mResponseDataListener->OnStartRequest(mChannel, mChannel->mResponseContext);
+    rv = mResponseDataListener->OnStartRequest(mChannel, 
+            mChannel->mResponseContext);
     if (NS_FAILED(rv)) {
       PR_LOG(gHTTPLog, PR_LOG_ERROR, 
              ("\tOnStartRequest [this=%x]. Consumer failed!"

@@ -92,7 +92,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mState(HS_IDLE),
     mLoadAttributes(LOAD_NORMAL),
     mLoadGroup(nsnull),
-    mTransport(nsnull)
+    mTransport(nsnull),
     mCachedResponse(nsnull),
     mCachedContentIsAvailable(PR_FALSE),
     mCachedContentIsValid(PR_FALSE),
@@ -102,7 +102,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL,
     mProxy(0),
     mProxyPort(-1),
     mBufferSegmentSize(bufferSegmentSize),
-    mBufferMaxSize(bufferMaxSize),
+    mBufferMaxSize(bufferMaxSize)
 {
     NS_INIT_REFCNT();
 
