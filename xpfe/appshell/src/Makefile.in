@@ -49,6 +49,7 @@ CPPSRCS		= \
 		nsCommonDialogs.cpp \
 		nsAbout.cpp \
 		nsAppShellFactory.cpp \
+        nsUserInfoUnix.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
