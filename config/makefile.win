@@ -55,14 +55,14 @@ include <$(DEPTH)/config/rules.mak>
 
 # update build number from within make script
 build_number::
+!ifdef MOZILLA_OFFICIAL 
     echo Generating build number...
     $(RM) $@
     $(PERL) bdate.pl > $@
-    $(PERL) build_header.pl nsBuildID.h $@
-!ifdef MOZILLA_OFFICIAL    
     echo Setting build number...
     $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/resources/locale/en-US/navigator.dtd $@
     $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/resources/content/viewSource.xul $@
+    $(PERL) aboutime.pl $(DEPTH)/xpfe/appshell/public/nsBuildID.h $@
 !endif
 
 #// Rule to set the timebomb on official mozilla builds
