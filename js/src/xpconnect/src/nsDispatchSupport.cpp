@@ -65,11 +65,11 @@ ClassIsListed(HKEY hkeyRoot, const TCHAR *szKey, const CLSID &clsid, PRBool &lis
         USES_CONVERSION;
         TCHAR szCLSID[64];
         const DWORD kBufLength = sizeof(szCLSID) / sizeof(szCLSID[0]);
+        memset(szCLSID, 0, sizeof(szCLSID));
         if(::RegEnumKey(keyList, i, szCLSID, kBufLength) != ERROR_SUCCESS)
         {
-            // An empty list
-            if(i == 0)
-                break;
+            // End of list
+            break;
         }
         ++i;
         listIsEmpty = PR_FALSE;
