@@ -2332,38 +2332,44 @@ nsListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, co
     } else {
       // Start by getting the num of options
       // to make sure the new index is within the bounds
+      // if selectedIndex is -1, deselect all (bug 28143)
       PRInt32 numOptions = 0;
       GetNumberOfOptions(&numOptions);
-      if (selectedIndex < 0 || selectedIndex >= numOptions) {
+      if (selectedIndex < -1 || selectedIndex >= numOptions) {
         return NS_ERROR_FAILURE;
       }
-      // Get the DOM interface for the select
-      // we will use this to see if it is a "multiple" select 
-      nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = getter_AddRefs(GetSelect(mContent));
-      if (selectElement) {
-        // check to see if it is a mulitple select
-        PRBool multiple = PR_FALSE;
-        if (NS_FAILED(GetMultiple(&multiple, selectElement))) {
-          multiple = PR_FALSE;
-        }
-        // if it is a multiple, select the new item
-        if (multiple) {
-          SetOptionSelected(selectedIndex, PR_TRUE);
-        } else {
-          // if it is a single select, 
-          // check to see if it is the currect selection
-          // if it is, then do nothing
-          if (mSelectedIndex != selectedIndex) {
-            ToggleSelected(selectedIndex); // sets mSelectedIndex
-            if (nsnull != mComboboxFrame && mIsAllFramesHere) {
-              mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
-	          }
+      if (selectedIndex == -1) {
+        Deselect();
+      }
+      else {
+        // Get the DOM interface for the select
+        // we will use this to see if it is a "multiple" select 
+        nsCOMPtr<nsIDOMHTMLSelectElement> selectElement = getter_AddRefs(GetSelect(mContent));
+        if (selectElement) {
+          // check to see if it is a mulitple select
+          PRBool multiple = PR_FALSE;
+          if (NS_FAILED(GetMultiple(&multiple, selectElement))) {
+            multiple = PR_FALSE;
+          }
+          // if it is a multiple, select the new item
+          if (multiple) {
+            SetOptionSelected(selectedIndex, PR_TRUE);
+          } else {
+            // if it is a single select, 
+            // check to see if it is the currect selection
+            // if it is, then do nothing
+            if (mSelectedIndex != selectedIndex) {
+              ToggleSelected(selectedIndex); // sets mSelectedIndex
+              if (nsnull != mComboboxFrame && mIsAllFramesHere) {
+                mComboboxFrame->UpdateSelection(PR_FALSE, PR_TRUE, selectedIndex); // don't dispatch event
+              }
+            }
           }
         }
       }
     }
   }
- 
+
   return NS_OK;
 }
 
