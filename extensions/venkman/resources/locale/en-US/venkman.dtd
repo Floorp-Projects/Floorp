@@ -65,6 +65,14 @@
 <!ENTITY TModeCycle.label "Cycle">
 <!ENTITY TModeCycle.aKey "C">
 
+<!ENTITY Cont.tooltip "Continue debugging">
+<!ENTITY Stop.tooltip "Stop the current operation">
+<!ENTITY StepOver.tooltip "Step over statement">
+<!ENTITY StepIn.tooltip "Step into statement">
+<!ENTITY StepOut.tooltip "Step out of statement">
+<!ENTITY DebugBar.tooltip "Debugging Toolbar">
+<!ENTITY MenuBar.tooltip "Menu Bar">
+
 <!-- source outliner -->
 <!ENTITY SourceCol0.display "Margin">
 <!ENTITY SourceCol1.display "Line Number">
