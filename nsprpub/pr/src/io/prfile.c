@@ -95,20 +95,20 @@ static PRInt32 PR_CALLBACK FileWrite(PRFileDesc *fd, const void *buf, PRInt32 am
     return count;
 }
 
-static PRInt32 PR_CALLBACK FileSeek(PRFileDesc *fd, PRInt32 offset, PRSeekWhence whence)
+static PROffset32 PR_CALLBACK FileSeek(PRFileDesc *fd, PROffset32 offset, PRSeekWhence whence)
 {
-    PRInt32 result;
+    PROffset32 result;
 
     result = _PR_MD_LSEEK(fd, offset, whence);
     return result;
 }
 
-static PRInt64 PR_CALLBACK FileSeek64(PRFileDesc *fd, PRInt64 offset, PRSeekWhence whence)
+static PROffset64 PR_CALLBACK FileSeek64(PRFileDesc *fd, PROffset64 offset, PRSeekWhence whence)
 {
 #ifdef XP_MAC
 #pragma unused( fd, offset, whence )
 #endif
-    PRInt64 result;
+    PROffset64 result;
 
     result = _PR_MD_LSEEK64(fd, offset, whence);
     return result;

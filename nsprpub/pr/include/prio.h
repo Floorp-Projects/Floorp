@@ -315,8 +315,8 @@ typedef PRInt32 (PR_CALLBACK *PRWriteFN)(PRFileDesc *fd, const void *buf, PRInt3
 typedef PRInt32 (PR_CALLBACK *PRAvailableFN)(PRFileDesc *fd);
 typedef PRInt64 (PR_CALLBACK *PRAvailable64FN)(PRFileDesc *fd);
 typedef PRStatus (PR_CALLBACK *PRFsyncFN)(PRFileDesc *fd);
-typedef PRInt32 (PR_CALLBACK *PRSeekFN)(PRFileDesc *fd, PRInt32 offset, PRSeekWhence how);
-typedef PRInt64 (PR_CALLBACK *PRSeek64FN)(PRFileDesc *fd, PRInt64 offset, PRSeekWhence how);
+typedef PROffset32 (PR_CALLBACK *PRSeekFN)(PRFileDesc *fd, PROffset32 offset, PRSeekWhence how);
+typedef PROffset64 (PR_CALLBACK *PRSeek64FN)(PRFileDesc *fd, PROffset64 offset, PRSeekWhence how);
 typedef PRStatus (PR_CALLBACK *PRFileInfoFN)(PRFileDesc *fd, PRFileInfo *info);
 typedef PRStatus (PR_CALLBACK *PRFileInfo64FN)(PRFileDesc *fd, PRFileInfo64 *info);
 typedef PRInt32 (PR_CALLBACK *PRWritevFN)(
@@ -746,14 +746,14 @@ typedef enum PRFileType
 
 struct PRFileInfo {
     PRFileType type;        /* Type of file */
-    PRUint32 size;          /* Size, in bytes, of file's contents */
+    PROffset32 size;        /* Size, in bytes, of file's contents */
     PRTime creationTime;    /* Creation time per definition of PRTime */
     PRTime modifyTime;      /* Last modification time per definition of PRTime */
 };
 
 struct PRFileInfo64 {
     PRFileType type;        /* Type of file */
-    PRUint64 size;          /* Size, in bytes, of file's contents */
+    PROffset64 size;        /* Size, in bytes, of file's contents */
     PRTime creationTime;    /* Creation time per definition of PRTime */
     PRTime modifyTime;      /* Last modification time per definition of PRTime */
 };
@@ -857,7 +857,7 @@ PR_EXTERN(PRStatus) PR_Access(const char *name, PRAccessHow how);
  * INPUTS:
  *     PRFileDesc *fd
  *         Pointer to a PRFileDesc object.
- *     PRInt32, PRInt64 offset
+ *     PROffset32, PROffset64 offset
  *         Specifies a value, in bytes, that is used in conjunction
  *         with the 'whence' parameter to set the file pointer.  A
  *         negative value causes seeking in the reverse direction.
@@ -873,7 +873,7 @@ PR_EXTERN(PRStatus) PR_Access(const char *name, PRAccessHow how);
  *                          file plus the value of the offset parameter.
  * OUTPUTS:
  *     None.
- * RETURN: PRInt32, PRInt64
+ * RETURN: PROffset32, PROffset64
  *     Upon successful completion, the resulting pointer location,
  *     measured in bytes from the beginning of the file, is returned.
  *     If the PR_Seek() function fails, the file offset remains
@@ -882,8 +882,8 @@ PR_EXTERN(PRStatus) PR_Access(const char *name, PRAccessHow how);
  *************************************************************************
  */
 
-PR_EXTERN(PRInt32) PR_Seek(PRFileDesc *fd, PRInt32 offset, PRSeekWhence whence);
-PR_EXTERN(PRInt64) PR_Seek64(PRFileDesc *fd, PRInt64 offset, PRSeekWhence whence);
+PR_EXTERN(PROffset32) PR_Seek(PRFileDesc *fd, PROffset32 offset, PRSeekWhence whence);
+PR_EXTERN(PROffset64) PR_Seek64(PRFileDesc *fd, PROffset64 offset, PRSeekWhence whence);
 
 /*
  ************************************************************************
@@ -1698,7 +1698,7 @@ PR_EXTERN(PRFileMap *) PR_CreateFileMap(
 
 PR_EXTERN(void *) PR_MemMap(
     PRFileMap *fmap,
-    PRInt64 offset,  /* must be aligned and sized to whole pages */
+    PROffset64 offset,  /* must be aligned and sized to whole pages */
     PRUint32 len);
 
 PR_EXTERN(PRStatus) PR_MemUnmap(void *addr, PRUint32 len);

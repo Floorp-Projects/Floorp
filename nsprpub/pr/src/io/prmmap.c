@@ -52,7 +52,7 @@ PR_IMPLEMENT(PRFileMap *) PR_CreateFileMap(
 
 PR_IMPLEMENT(void *) PR_MemMap(
     PRFileMap *fmap,
-    PRInt64 offset,
+    PROffset64 offset,
     PRUint32 len)
 {
     return _PR_MD_MEM_MAP(fmap, offset, len);

@@ -316,6 +316,15 @@ typedef double          PRFloat64;
 ************************************************************************/
 typedef size_t PRSize;
 
+
+/************************************************************************
+** TYPES:       PROffset32, PROffset64
+** DESCRIPTION:
+**  A type for representing byte offsets from some location. 
+************************************************************************/
+typedef PRInt32 PROffset32;
+typedef PRInt64 PROffset64;
+
 /************************************************************************
 ** TYPES:       PRPtrDiff
 ** DESCRIPTION:

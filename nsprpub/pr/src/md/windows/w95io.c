@@ -225,11 +225,11 @@ _PR_MD_WRITE(PRFileDesc *fd, const void *buf, PRInt32 len)
     return bytes;
 } /* --- end _PR_MD_WRITE() --- */
 
-PRInt32
-_PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, PRSeekWhence whence)
+PROffset32
+_PR_MD_LSEEK(PRFileDesc *fd, PROffset32 offset, PRSeekWhence whence)
 {
     DWORD moveMethod;
-    PRInt32 rv;
+    PROffset32 rv;
 
     switch (whence) {
         case PR_SEEK_SET:
@@ -258,8 +258,8 @@ _PR_MD_LSEEK(PRFileDesc *fd, PRInt32 offset, PRSeekWhence whence)
     return rv;
 }
 
-PRInt64
-_PR_MD_LSEEK64(PRFileDesc *fd, PRInt64 offset, PRSeekWhence whence)
+PROffset64
+_PR_MD_LSEEK64(PRFileDesc *fd, PROffset64 offset, PRSeekWhence whence)
 {
     DWORD moveMethod;
     LARGE_INTEGER li;
