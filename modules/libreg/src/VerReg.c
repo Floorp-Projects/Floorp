@@ -87,14 +87,13 @@
  */
 static int isInited = 0;
 static RKEY curver = 0;
-static char curstr[MAXREGNAMELEN];
+static char gCurstr[MAXREGNAMELEN];
 
 static HREG vreg = 0;
 
 static char *app_dir = NULL;
 
 char *verRegName = NULL;
-static char *versionName = NULL;
 
 
 #if defined(XP_UNIX)
@@ -507,7 +506,7 @@ static REGERR vr_SetCurrentNav( char *installation, char *programPath, char *ver
         goto done;
 
     /* ...look for "Current Version" entry */
-    err = NR_RegGetEntryString( vreg, navKey, CURRENT_VER, curstr, sizeof(curstr));
+    err = NR_RegGetEntryString( vreg, navKey, CURRENT_VER, gCurstr, sizeof(gCurstr));
     if ( err == REGERR_NOFIND )
     {
         /* No current installation, we can simply add a new one  */
@@ -535,7 +534,7 @@ static REGERR vr_SetCurrentNav( char *installation, char *programPath, char *ver
     {
         /* found one: if we're lucky we got the right one */
         bFound = FALSE;
-        err = NR_RegGetKey( vreg, navKey, curstr, &curver );
+        err = NR_RegGetKey( vreg, navKey, gCurstr, &curver );
         if ( REGERR_OK == err ) {
             err = vr_GetPathname( vreg, curver, NAVHOME, dirbuf, sizeof(dirbuf) );
             if ( REGERR_OK == err ) {
@@ -551,8 +550,8 @@ static REGERR vr_SetCurrentNav( char *installation, char *programPath, char *ver
         /* Look for an existing installation if not found */
         state = 0;
         while (!bFound && ((err == REGERR_OK) || (err == REGERR_NOFILE)) ) {
-            err = NR_RegEnumSubkeys( vreg, navKey, &state, curstr,
-                    sizeof(curstr), REGENUM_NORMAL );
+            err = NR_RegEnumSubkeys( vreg, navKey, &state, gCurstr,
+                    sizeof(gCurstr), REGENUM_NORMAL );
 
             if (REGERR_OK == err ) {
                 err = vr_GetPathname( vreg, state, NAVHOME, dirbuf, sizeof(dirbuf) );
@@ -571,7 +570,7 @@ static REGERR vr_SetCurrentNav( char *installation, char *programPath, char *ver
 
         /* found the right one, make it current */
         if (bFound) {
-            err = NR_RegSetEntryString( vreg, navKey, CURRENT_VER, curstr );
+            err = NR_RegSetEntryString( vreg, navKey, CURRENT_VER, gCurstr );
             /* update version (curver already set) */
             if ( REGERR_OK == err && versionStr != NULL && *versionStr != '\0' ) {
                 err = NR_RegSetEntryString( vreg, curver, VERSTR, versionStr );
@@ -1164,9 +1163,9 @@ static REGERR vr_GetUninstallItemPath(char *regPackageName, char *regbuf, uint32
     }
     else
     {
-        curstrlen = XP_STRLEN(curstr);
+        curstrlen = XP_STRLEN(gCurstr);
         if (curstrlen < (regbuflen - len))
-            XP_STRCAT( regbuf, curstr );
+            XP_STRCAT( regbuf, gCurstr );
         else 
             return REGERR_BUFTOOSMALL;
         if (1 < (regbuflen - len - curstrlen))
@@ -1775,7 +1774,7 @@ VR_INTERFACE(REGERR) VR_EnumUninstall(REGENUM *state, char* userPackageName,
     }
     else
     {
-        XP_STRCAT( regbuf, curstr );
+        XP_STRCAT( regbuf, gCurstr );
     }  
                    
     err = NR_RegGetKey( vreg, ROOTKEY_PRIVATE, regbuf, &key );
