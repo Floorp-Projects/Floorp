@@ -28,7 +28,6 @@
 #include "nsRect.h"
 #include "nsIViewManager.h"
 #include "nsIPresShell.h"
-#include "nsIFrameImageLoader.h"
 #include "nsIStyleContext.h"
 #include "nsStyleUtil.h"
 #include "nsIScrollableView.h"
@@ -40,7 +39,8 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDocument.h"
 #include "nsIScrollableFrame.h"
-
+#include "imgIRequest.h"
+#include "imgIContainer.h"
 
 #define BORDER_FULL    0        //entire side
 #define BORDER_INSIDE  1        //inside half
@@ -2149,7 +2149,51 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
   nsStyleCoord  bordStyleRadius[4];
   PRInt16       borderRadii[4],i;
 
-  if (0 < aColor.mBackgroundImage.Length()) {
+
+  // if there is no background image, try a color.
+  if (aColor.mBackgroundImage.IsEmpty()) {
+    // See if there's a background color specified. The background color
+    // is rendered over the 'border' 'padding' and 'content' areas
+    if (!transparentBG) {
+      // get the radius for our border
+      aBorder.mBorderRadius.GetTop(bordStyleRadius[0]);      //topleft
+      aBorder.mBorderRadius.GetRight(bordStyleRadius[1]);    //topright
+      aBorder.mBorderRadius.GetBottom(bordStyleRadius[2]);   //bottomright
+      aBorder.mBorderRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
+
+      for(i=0;i<4;i++) {
+        borderRadii[i] = 0;
+        switch ( bordStyleRadius[i].GetUnit()) {
+          case eStyleUnit_Inherit:
+            break;
+          case eStyleUnit_Percent:
+            percent = bordStyleRadius[i].GetPercentValue();
+            borderRadii[i] = (nscoord)(percent * aBorderArea.width);
+            break;
+          case eStyleUnit_Coord:
+            borderRadii[i] = bordStyleRadius[i].GetCoordValue();
+            break;
+          default:
+            break;
+        }
+      }
+
+
+      // rounded version of the border
+      for(i=0;i<4;i++){
+        if (borderRadii[i] > 0){
+          PaintRoundedBackground(aPresContext,aRenderingContext,aForFrame,aDirtyRect,
+                                 aBorderArea,aColor,aDX,aDY,borderRadii);
+          return;
+        }
+      }
+
+      aRenderingContext.SetColor(aColor.mBackgroundColor);
+      aRenderingContext.FillRect(aBorderArea);
+    }
+  } else {
+    // we have a background image
+
 
     // get the frame for the background image load to complete in
     // - this may be different than the frame we are rendering
@@ -2159,31 +2203,34 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     NS_ASSERTION(pBGFrame, "Background Frame must be set by GetFrameForBackgroundUpdate");
 
     // Lookup the image
-    nsSize imageSize;
-    nsCOMPtr<nsIImage> image;
-    nsIFrameImageLoader* loader = nsnull;
-    nsresult rv = aPresContext->StartLoadImage(aColor.mBackgroundImage,
-                                               transparentBG
-                                               ? nsnull
-                                               : &aColor.mBackgroundColor,
-                                               nsnull,
-                                               pBGFrame, 
-                                               nsnull, nsnull,
-                                               pBGFrame, &loader);
-    if ((NS_OK != rv) || (nsnull == loader) ||
-        (loader->GetImage(getter_AddRefs(image)), (!image))) {
-      NS_IF_RELEASE(loader);
-      // Redraw will happen later
-      if (!transparentBG) {
-        // The background color is rendered over the 'border' 'padding' and
-        // 'content' areas
-        aRenderingContext.SetColor(aColor.mBackgroundColor);
-        aRenderingContext.FillRect(aBorderArea);
-      }
+    nsCOMPtr<imgIRequest> req;
+    nsresult rv = aPresContext->LoadImage(aColor.mBackgroundImage, pBGFrame, getter_AddRefs(req));
+
+    PRUint32 status = imgIRequest::STATUS_ERROR;
+    if (req)
+      req->GetImageStatus(&status);
+
+    if (NS_FAILED(rv) || !req || !(status & imgIRequest::STATUS_SIZE_AVAILABLE)) {
+      // The background color is rendered over the 'border' 'padding' and
+      // 'content' areas
+      aRenderingContext.SetColor(aColor.mBackgroundColor);
+      aRenderingContext.FillRect(aBorderArea);
       return;
     }
-    loader->GetSize(imageSize);
-    NS_RELEASE(loader);
+
+    nsSize imageSize;
+    nsCOMPtr<imgIContainer> image;
+    req->GetImage(getter_AddRefs(image));
+
+    image->GetWidth(&imageSize.width);
+    image->GetHeight(&imageSize.height);
+
+    float p2t;
+    aPresContext->GetPixelsToTwips(&p2t);
+    imageSize.width = NSIntPixelsToTwips(imageSize.width, p2t);
+    imageSize.height = NSIntPixelsToTwips(imageSize.height, p2t);
+
+    req = nsnull;
 
     // Background images are tiled over the 'content' and 'padding' areas
     // only (not the 'border' area)
@@ -2489,166 +2536,22 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       y1 = y0 + tileHeight;
     }
 
-#if defined(XP_UNIX) || defined(XP_BEOS)
     // Take the intersection again to paint only the required area
     nsRect tileRect(x0,y0,(x1-x0),(y1-y0));
     nsRect drawRect;
     if (drawRect.IntersectRect(tileRect, dirtyRect)) {
       PRInt32 xOffset = drawRect.x - x0,
               yOffset = drawRect.y - y0;
-      aRenderingContext.DrawTile(image,xOffset,yOffset,drawRect);
+      aRenderingContext.DrawTile(image,xOffset,yOffset,&drawRect);
     }
-#else
-    aRenderingContext.DrawTile(image,x0,y0,x1,y1,tileWidth,tileHeight);
-#endif
-
-
-#ifdef DOTILE
-    nsIDrawingSurface  *theSurface,*ts=nsnull;
-    nsRect              srcRect,destRect,vrect,tvrect;
-    nscoord             x,y;
-    PRInt32             flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
-    PRUint32            dsFlag = NS_CREATEDRAWINGSURFACE_SHORTLIVED;
-    float               t2p,app2dev;
-    PRBool              clip,hasMask;
-    nsTransform2D       *theTransform;
-    nsIDeviceContext    *theDevContext;
-
-
-    aRenderingContext.GetDrawingSurface((void**)&theSurface);
-    aPresContext->GetVisibleArea(srcRect);
-    tvrect.SetRect(0,0,x1-x0,y1-y0);
-    aPresContext->GetTwipsToPixels(&t2p);
-
-    // check to see if the background image has a mask
-    hasMask = image->GetHasAlphaMask();
-
-    if(!hasMask &&  ((tileWidth<(tvrect.width/16)) || (tileHeight<(tvrect.height/16)))) {
-      //tvrect.width /=4;
-      //tvrect.height /=4;
-
-      tvrect.width = ((tvrect.width)/tileWidth);  //total x number of tiles
-      tvrect.width *=tileWidth;
-
-      tvrect.height = ((tvrect.height)/tileHeight); //total y number of tiles
-      tvrect.height *=tileHeight;
-
-      // create a new drawing surface... using pixels as the size
-      vrect.height = (nscoord)(tvrect.height * t2p);
-      vrect.width = (nscoord)(tvrect.width * t2p);
-      aRenderingContext.CreateDrawingSurface(&vrect,dsFlag,(nsDrawingSurface&)ts);
-    }
-
-    // did we need to create an offscreen drawing surface because the image was so small
-    if(!hasMask && (nsnull != ts) ) {
-      aRenderingContext.SelectOffScreenDrawingSurface(ts);
-
-      // create a bigger tile in our new drawingsurface                    
-      // XXX pushing state to fix clipping problem, need to look into why the clip is set here
-      aRenderingContext.PushState();
-      aRenderingContext.GetCurrentTransform(theTransform);
-      aRenderingContext.GetDeviceContext(theDevContext);
-      theDevContext->GetAppUnitsToDevUnits(app2dev);
-      NS_RELEASE(theDevContext);
-      theTransform->SetToIdentity();  
-      theTransform->AddScale(app2dev, app2dev);
-
-      // XXX this #ifdef needs to go away when we are sure that this works on windows and mac
-#if defined(XP_UNIX) || defined(XP_BEOS)
-      srcRect.SetRect(0,0,tvrect.width,tvrect.height);
-      aRenderingContext.SetClipRect(srcRect, nsClipCombine_kReplace, clip);
-#endif
-
-      // copy the initial image to our buffer, this takes twips and converts to pixels.. 
-      // which is what the image is in
-      aRenderingContext.DrawImage(image,0,0,tileWidth,tileHeight);
-
-      // duplicate the image in the upperleft corner to fill up the nsDrawingSurface
-      srcRect.SetRect(0,0,tileWidth,tileHeight);
-      TileImage(aRenderingContext,ts,srcRect,tvrect.width,tvrect.height);
-
-      // setting back the clip from the background clip push
-      aRenderingContext.PopState(clip);
-    
-      // set back to the old drawingsurface
-      aRenderingContext.SelectOffScreenDrawingSurface((void**)theSurface);
-
-     // now duplicate our tile into the background
-      destRect = srcRect;
-      for(y=y0;y<y1;y+=tvrect.height){
-        for(x=x0;x<x1;x+=tvrect.width){
-          destRect.x = x;
-          destRect.y = y;
-          aRenderingContext.CopyOffScreenBits(ts,0,0,destRect,flag);
-        }
-      } 
-
-      aRenderingContext.DestroyDrawingSurface(ts);
-    } else {
-      // slow blitting, one tile at a time....
-      for(y=y0;y<y1;y+=tileHeight){
-        for(x=x0;x<x1;x+=tileWidth){
-          aRenderingContext.DrawImage(image,x,y,tileWidth,tileHeight);
-        }
-      }
-    }
-
-#endif
-
-//#define NOTNOW
-#ifdef NOTNOW
-    nscoord x,y;
-    for(y=y0;y<y1;y+=tileHeight){
-      for(x=x0;x<x1;x+=tileWidth){
-        aRenderingContext.DrawImage(image,x,y,tileWidth,tileHeight);
-      }
-    }
-#endif
 
 #if !defined(XP_UNIX) && !defined(XP_BEOS)
     // Restore clipping
     aRenderingContext.PopState(clipState);
 #endif
-  } else {
-    // See if there's a background color specified. The background color
-    // is rendered over the 'border' 'padding' and 'content' areas
-    if (!transparentBG) {
-      // get the radius for our border
-      aBorder.mBorderRadius.GetTop(bordStyleRadius[0]);      //topleft
-      aBorder.mBorderRadius.GetRight(bordStyleRadius[1]);    //topright
-      aBorder.mBorderRadius.GetBottom(bordStyleRadius[2]);   //bottomright
-      aBorder.mBorderRadius.GetLeft(bordStyleRadius[3]);     //bottomleft
 
-      for(i=0;i<4;i++) {
-        borderRadii[i] = 0;
-        switch ( bordStyleRadius[i].GetUnit()) {
-          case eStyleUnit_Inherit:
-            break;
-          case eStyleUnit_Percent:
-            percent = bordStyleRadius[i].GetPercentValue();
-            borderRadii[i] = (nscoord)(percent * aBorderArea.width);
-            break;
-          case eStyleUnit_Coord:
-            borderRadii[i] = bordStyleRadius[i].GetCoordValue();
-            break;
-          default:
-            break;
-        }
-      }
-
-
-      // rounded version of the border
-      for(i=0;i<4;i++){
-        if (borderRadii[i] > 0){
-          PaintRoundedBackground(aPresContext,aRenderingContext,aForFrame,aDirtyRect,aBorderArea,aColor,aDX,aDY,borderRadii);
-          return;
-        }
-      }
-
-      aRenderingContext.SetColor(aColor.mBackgroundColor);
-      aRenderingContext.FillRect(aBorderArea);
-    }
   }
+
 }
 
 /** ---------------------------------------------------

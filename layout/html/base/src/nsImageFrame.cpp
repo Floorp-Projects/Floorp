@@ -25,7 +25,6 @@
 #include "nsString.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
-#include "nsIFrameImageLoader.h"
 #include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
 #include "nsIImage.h"
@@ -975,10 +974,12 @@ nsImageFrame::Paint(nsIPresContext* aPresContext,
       // indicating the status
       if (NS_FRAME_PAINT_LAYER_BACKGROUND == aWhichLayer &&
           !mInitialLoadCompleted) {
-        DisplayAltFeedback(aPresContext, aRenderingContext,
+        DisplayAltFeedback(aPresContext, aRenderingContext, 0);
+#ifndef USE_IMG2
                            (loadStatus & imgIRequest::STATUS_ERROR)
                            ? NS_ICON_BROKEN_IMAGE
                            : NS_ICON_LOADING_IMAGE);
+#endif
       }
     }
     else {

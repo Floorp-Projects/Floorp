@@ -31,6 +31,7 @@
 // Helper Classes
 #include "nsIGenericFactory.h"
 #include "nsStyleCoord.h"
+#include "nsSize.h"
 #include "nsHTMLReflowState.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"

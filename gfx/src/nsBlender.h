@@ -24,7 +24,6 @@
 #define nsBlender_h___
 
 #include "nsIBlender.h"
-#include "il_types.h"
 
 typedef enum
 {
@@ -34,6 +33,8 @@ typedef enum
   nsHighMedQual,
   nsHighQual
 } nsBlendQuality;
+
+class IL_ColorSpace;
 
 //----------------------------------------------------------------------
 

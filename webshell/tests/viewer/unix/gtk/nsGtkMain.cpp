@@ -26,7 +26,6 @@
 #include "nsBrowserWindow.h"
 #include "nsGtkMenu.h"
 #include "nsIServiceManager.h"
-#include "nsIImageManager.h"
 #include "nsIThread.h"
 #include "plevent.h"
 #include "prinit.h"

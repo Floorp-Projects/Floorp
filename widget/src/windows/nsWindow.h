@@ -399,7 +399,9 @@ protected:
     PRBool      mIsTopWidgetWindow;
     nsPoint     mLastPoint;
     HWND        mWnd;
+#if 0
     HPALETTE    mPalette;
+#endif
     WNDPROC     mPrevWndProc;
 
     PRBool      mHas3DBorder;

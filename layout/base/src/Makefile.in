@@ -34,7 +34,7 @@ CPPSRCS		= \
 		nsAutoCopy.cpp \
 		nsCaret.cpp \
 		nsCopySupport.cpp \
-		nsFrameImageLoader.cpp \
+		nsImageLoader.cpp \
 		nsFrameList.cpp \
 		nsFrameTraversal.cpp \
 		nsFrameUtil.cpp \

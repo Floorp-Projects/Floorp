@@ -30,18 +30,14 @@
 #include "nsIWidget.h"
 #include "nsWidgetsCID.h"
 #include "nsIComponentManager.h"
-#include "nsIImageGroup.h"
 #include "nsIDeviceContext.h"
 #include "nsITimer.h"
-#include "nsIImageRequest.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
-#include "nsIImage.h"
 #include "prprf.h"
 
 // CIDs
 static NS_DEFINE_IID(kChildCID,          NS_CHILD_CID);
-static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
 static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
 
 // Static variables
@@ -55,9 +51,7 @@ const PRUint32 kThrobFrequency = 66;   // animation frequency in milliseconds
 //*****************************************************************************
 
 CThrobber::CThrobber() :
-   mImages(nsnull),
-   mNumImages(2), mCompletedImages(0), mRunning(false),
-   mImageGroup(nsnull)
+   mNumImages(2), mCompletedImages(0), mRunning(false)
 {
    NS_INIT_REFCNT(); // caller must add ref as normal
    
@@ -67,9 +61,7 @@ CThrobber::CThrobber() :
 
 CThrobber::CThrobber(LStream*	inStream) :
    LControl(inStream),
-   mImages(nsnull),
-   mNumImages(2), mCompletedImages(0), mRunning(false),
-   mImageGroup(nsnull)
+   mNumImages(2), mCompletedImages(0), mRunning(false)
 {
    mRefCnt = 1; // PowerPlant is making us, and it sure isn't going to do an AddRef.
   
@@ -95,8 +87,10 @@ CThrobber::~CThrobber()
    RemoveThrobber(this);
 }
 
-NS_IMPL_ISUPPORTS(CThrobber, kIImageObserverIID)
+NS_IMPL_ISUPPORTS0(CThrobber)
 
+
+#if 0
 void CThrobber::Notify(nsIImageRequest *aImageRequest,
                        nsIImage *aImage,
                        nsImageNotification aNotificationType,
@@ -121,7 +115,8 @@ void  CThrobber::NotifyError(nsIImageRequest *aImageRequest,
 {
 }
 
-	
+#endif
+
 void CThrobber::FinishCreateSelf()
 {
    CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(GetMacPort()));
@@ -166,6 +161,7 @@ void CThrobber::HideSelf()
 
 void CThrobber::DrawSelf()
 {
+#if 0
    // Draw directly with the rendering context instead of passing an
    // update event through nsMacMessageSink. By the time this routine is
    // called, PowerPlant has taken care of the location, z order, and clipping
@@ -193,6 +189,7 @@ void CThrobber::DrawSelf()
      cx->DrawImage(img, 0, 0);
      NS_RELEASE(img);
    }
+#endif
 }
 
 
@@ -249,8 +246,9 @@ void CThrobber::AdjustFrame(Boolean inRefresh)
 
 NS_METHOD CThrobber::LoadImages()
 {
-  nsresult rv;
+  nsresult rv = NS_ERROR_FAILURE;
 
+#if 0
   mImages = new vector<nsIImageRequest*>(mNumImages, nsnull);
   if (nsnull == mImages) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -291,6 +289,7 @@ NS_METHOD CThrobber::LoadImages()
   }
 
   mWidget->Invalidate(PR_TRUE);
+#endif
 
   return rv;
 }
@@ -302,6 +301,7 @@ void CThrobber::DestroyImages()
     mTimer->Cancel();
   }
 
+#if 0
   if (mImageGroup)
   {
     mImageGroup->Interrupt();
@@ -318,6 +318,7 @@ void CThrobber::DestroyImages()
     delete mImages;
     mImages = nsnull;
   }
+#endif
 }
 
 void CThrobber::Tick()

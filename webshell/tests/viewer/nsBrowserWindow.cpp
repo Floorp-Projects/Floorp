@@ -41,7 +41,6 @@
 #include "nsIWidget.h"
 #include "nsITextWidget.h"
 #include "nsIButton.h"
-#include "nsIImageGroup.h"
 #include "nsITimer.h"
 #include "nsIDOMDocument.h"
 #include "nsIURL.h"

@@ -10,7 +10,6 @@ nsICaret.h
 nsIFocusTracker.h
 nsIFrame.h
 nsIFrameDebug.h
-nsIFrameImageLoader.h
 nsIFrameManager.h
 nsIFrameSelection.h
 nsIFrameUtil.h

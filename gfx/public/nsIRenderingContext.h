@@ -673,21 +673,6 @@ public:
    */
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)=0;
 
-
-
-  /**
-   * Copy an image to the RenderingContext in a tiled manner
-   * @param aImage image to copy
-   * @param aX0 starting x
-   * @param aY0 starting y
-   * @param aX1 ending x
-   * @param aY1 ending y
-   * @param aWidth tile width
-   * @param aHeight tile height
-   */
-  NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-                        nscoord aWidth,nscoord aHeight) = 0;
-
   /**
    * Draw a path.. given a point array.  The Path currently supported is a Quadratic
    * Bezier curve
@@ -723,17 +708,6 @@ public:
                                const nsRect &aDestBounds, PRUint32 aCopyFlags) = 0;
   //~~~
   NS_IMETHOD RetrieveCurrentNativeGraphicData(PRUint32 * ngd) = 0;
-
-  /**
-   * Copy an image to the RenderingContext in a tiled manner
-   * @param aImage image to copy
-   * @param aSrcXOffset x offset inside the source image to begin tiling from
-   * @param aSrcYOffset y offset inside the source image to begin tiling from
-   * @param aTileRect area to tile
-   */
-  NS_IMETHOD DrawTile(nsIImage *aImage, nscoord aSrcXOffset,
-                      nscoord aSrcYOffset, const nsRect &aTileRect) = 0;
-
 
 #ifdef MOZ_MATHML
   /**

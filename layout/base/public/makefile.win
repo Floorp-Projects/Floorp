@@ -34,7 +34,6 @@ EXPORTS =				\
 	nsIImageFrame.h			\
 	nsIFrameTraversal.h			\
 	nsIFrameDebug.h			\
-	nsIFrameImageLoader.h		\
 	nsIFrameManager.h		\
 	nsIIndependentSelection.h		\
 	nsILayoutDebugger.h		\

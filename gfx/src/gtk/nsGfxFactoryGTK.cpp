@@ -34,7 +34,6 @@
 #include "nsDeviceContextSpecFactoryG.h"
 #include "nsScreenManagerGtk.h"
 #include "nsScriptableRegion.h"
-#include "nsIImageManager.h"
 #include "nsDeviceContextGTK.h"
 #include "nsImageGTK.h"
 #include "nsPrintOptionsGTK.h"
@@ -98,26 +97,6 @@ static NS_IMETHODIMP nsScriptableRegionConstructor(nsISupports *aOuter, REFNSIID
   return rv;
 }
 
-static nsresult nsImageManagerConstructor(nsISupports *aOuter, REFNSIID aIID, void **aResult)
-{
-    nsresult rv;
-
-  if ( !aResult )
-  {
-    rv = NS_ERROR_NULL_POINTER;
-    return rv;
-  }
-  *aResult = nsnull;
-  if (aOuter)
-  {
-    rv = NS_ERROR_NO_AGGREGATION;
-    return rv;
-  }
-  // this will return an image manager with a count of 1
-  rv = NS_NewImageManager((nsIImageManager **)aResult);
-  return rv;
-}
-
 static nsModuleComponentInfo components[] =
 {
   { "Gtk Font Metrics",
@@ -164,11 +143,6 @@ static nsModuleComponentInfo components[] =
     //    "@mozilla.org/gfx/device_context_spec_factory/gtk;1",
     "@mozilla.org/gfx/devicecontextspecfactory;1",
     nsDeviceContextSpecFactoryGTKConstructor },
-  { "Image Manager",
-    NS_IMAGEMANAGER_CID,
-    //    "@mozilla.org/gfx/image_manager;1",
-    "@mozilla.org/gfx/imagemanager;1",
-    nsImageManagerConstructor },
   { "Print Options",
     NS_PRINTOPTIONS_CID,
     //    "@mozilla.org/gfx/printoptions;1",

@@ -25,7 +25,6 @@
 #include "nsFontMetricsWin.h"
 #include "nsRegionWin.h"
 #include <math.h>
-#include "libimg.h"
 #include "nsDeviceContextWin.h"
 #include "prprf.h"
 #include "nsDrawingSurfaceWin.h"
@@ -464,17 +463,6 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
     ::SelectClipRgn(aNewDC, pstate->mClipRegion);
 #endif
 
-  // If this is a palette device, then select and realize the palette
-  nsPaletteInfo palInfo;
-  mContext->GetPaletteInfo(palInfo);
-
-  if (palInfo.isPaletteDevice && palInfo.palette)
-  {
-    // Select the palette in the background
-    ::SelectPalette(aNewDC, (HPALETTE)palInfo.palette, PR_FALSE);
-    ::RealizePalette(aNewDC);
-  }
-
   return NS_OK;
 }
 
@@ -501,7 +489,6 @@ NS_IMETHODIMP nsRenderingContextWin :: LockDrawingSurface(PRInt32 aX, PRInt32 aY
                                                           PRInt32 *aWidthBytes, PRUint32 aFlags)
 {
   PRBool        destructive;
-  nsPaletteInfo palInfo;
 
   PushState();
 
@@ -519,13 +506,6 @@ NS_IMETHODIMP nsRenderingContextWin :: LockDrawingSurface(PRInt32 aX, PRInt32 aY
 
     if (nsnull != mOrigSolidPen)
       mCurrPen = (HPEN)::SelectObject(mDC, mOrigSolidPen);
-
-    mContext->GetPaletteInfo(palInfo);
-    if(palInfo.isPaletteDevice && palInfo.palette){
-      ::SelectPalette(mDC,(HPALETTE)palInfo.palette,PR_FALSE);
-      ::RealizePalette(mDC);
-      ::UpdateColors(mDC);
-    }
   }
 
   mSurface->ReleaseDC();
@@ -2583,40 +2563,6 @@ NS_IMETHODIMP nsRenderingContextWin :: DrawImage(nsIImage *aImage, const nsRect&
  *  See documentation in nsIRenderingContext.h
  *	@update 3/16/00 dwc
  */
-NS_IMETHODIMP 
-nsRenderingContextWin::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
-                                                    nscoord aWidth,nscoord aHeight)
-{
-nscoord     orgX,orgY,orgWidth,orgHeight;
-PRBool      didtile = FALSE;
-
-  // convert output platform, but no translation.. just scale
-  orgX = aX0;
-  orgY = aY0;
-  orgWidth = aX1 - aX0;
-  orgHeight = aY1 - aY0;
-  mTranMatrix->TransformCoord(&aX0,&aY0,&aWidth,&aHeight);
-  mTranMatrix->TransformCoord(&orgX,&orgY,&orgWidth,&orgHeight);
-  aX1 = aX0 + orgWidth;
-  aY1 = aY0 + orgHeight;
-
-  if ( PR_TRUE==CanTile(aWidth,aHeight) ) {    
-    didtile = ((nsImageWin*)aImage)->PatBltTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
-  }
-      
-  if (PR_FALSE ==didtile){
-    // rely on the slower tiler supported in nsRenderingContextWin.. don't have 
-    // to use xplatform which is really slow (slowest is the only one that supports transparency
-    didtile = ((nsImageWin*)aImage)->DrawTile(*this,mSurface,aX0,aY0,aX1,aY1,aWidth,aHeight);
-  }
-
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- *	@update 3/16/00 dwc
- */
 PRBool 
 nsRenderingContextWin::CanTile(nscoord aWidth,nscoord aHeight)
 {
@@ -2680,19 +2626,6 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSu
           ::SelectClipRgn(destdc, tregion);
 
         ::DeleteObject(tregion);
-      }
-
-      // If there's a palette make sure it's selected.
-      // XXX This doesn't seem like the best place to be doing this...
-
-      nsPaletteInfo palInfo;
-
-      mContext->GetPaletteInfo(palInfo);
-
-      if (palInfo.isPaletteDevice && palInfo.palette){
-        ::SelectPalette(destdc, (HPALETTE)palInfo.palette, PR_FALSE);
-        ::RealizePalette(destdc);
-        ::UpdateColors(destdc);
       }
 
       if (aCopyFlags & NS_COPYBITS_XFORM_SOURCE_VALUES)

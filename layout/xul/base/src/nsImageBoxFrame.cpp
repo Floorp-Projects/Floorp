@@ -82,21 +82,6 @@
 
 #define ONLOAD_CALLED_TOO_EARLY 1
 
-nsresult
-nsImageBoxFrame::UpdateImageFrame(nsIPresContext* aPresContext,
-                                      nsHTMLImageLoader* aLoader,
-                                      nsIFrame* aFrame,
-                                      void* aClosure,
-                                      PRUint32 aStatus)
-{
-  if (NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE & aStatus) {
-    nsImageBoxFrame* us = (nsImageBoxFrame*)aFrame;
-    nsBoxLayoutState state(aPresContext);
-    us->MarkDirty(state);
-  }
-  return NS_OK;
-}
-
 //
 // NS_NewToolbarFrame
 //

@@ -74,7 +74,6 @@ LLIBS = \
         $(DIST)\lib\gkgfx.lib                   \
         $(DIST)\lib\xpcom.lib	                \
         $(DIST)\lib\util.lib                    \
-        $(DIST)\lib\img32$(VERSION_NUMBER).lib  \
         $(DIST)\lib\timer_s.lib                 \
 !if defined(NGLAYOUT_DDRAW)
         $(NGLAYOUT_DDRAW)\lib\ddraw.lib         \
@@ -88,9 +87,7 @@ WIN_LIBS=                                       \
 !endif
          comdlg32.lib
 
-LLFLAGS = 	$(LLFLAGS) \
-		/INCLUDE:_NS_NewImageManager@4
-		 
+LLFLAGS = 	$(LLFLAGS)		 
 include <$(DEPTH)\config\rules.mak>
 
 install::

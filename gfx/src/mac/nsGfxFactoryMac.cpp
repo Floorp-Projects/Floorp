@@ -32,7 +32,6 @@
 #include "nsDeviceContextMac.h"
 #include "nsRegionMac.h"
 #include "nsScriptableRegion.h"
-#include "nsIImageManager.h"
 #if TARGET_CARBON
 #include "nsDeviceContextSpecX.h"
 #else
@@ -54,7 +53,6 @@ static NS_DEFINE_IID(kCRegion, NS_REGION_CID);
 static NS_DEFINE_IID(kCScriptableRegion, NS_SCRIPTABLE_REGION_CID);
 static NS_DEFINE_IID(kCDeviceContextSpec, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_IID(kCDeviceContextSpecFactory, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
-static NS_DEFINE_IID(kImageManagerImpl, NS_IMAGEMANAGER_CID);
 static NS_DEFINE_IID(kCBlender, NS_BLENDER_CID);
 static NS_DEFINE_IID(kCScreenManager, NS_SCREENMANAGER_CID);
 static NS_DEFINE_IID(kCPrintOptions, NS_PRINTOPTIONS_CID);
@@ -144,13 +142,6 @@ nsresult nsGfxFactoryMac::CreateInstance(nsISupports *aOuter,
   }
  	else if (mClassID.Equals(kCDeviceContextSpecFactory)) {
 		NS_NEWXPCOM(inst, nsDeviceContextSpecFactoryMac);
-	}
-	else if (mClassID.Equals(kImageManagerImpl))
-	{
-	  nsCOMPtr<nsIImageManager> iManager;
-	  nsresult res = NS_NewImageManager(getter_AddRefs(iManager));
-	  if (NS_FAILED(res)) return res;
-	  return iManager->QueryInterface(aIID, aResult);
 	}
 	else if (mClassID.Equals(kCFontEnumerator)) {
     nsFontEnumeratorMac* fe;

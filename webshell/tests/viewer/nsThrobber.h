@@ -22,7 +22,6 @@
 #ifndef nsThrobber_h___
 #define nsThrobber_h___
 
-#include "nsIImageObserver.h"
 #include "nsIWidget.h"
 #include "nsVoidArray.h"
 #include "nsCRT.h"
@@ -32,7 +31,8 @@
 class nsIImageGroup;
 struct nsRect;
 
-class nsThrobber : public nsIImageRequestObserver {
+class nsThrobber : public nsISupports
+{
 public:
   static nsThrobber* NewThrobber();
 
@@ -40,6 +40,7 @@ public:
 
   NS_DECL_ISUPPORTS
 
+#if 0
   // nsIImageRequestObserver
   virtual void Notify(nsIImageRequest *aImageRequest,
                       nsIImage *aImage,
@@ -49,6 +50,7 @@ public:
 
   virtual void NotifyError(nsIImageRequest *aImageRequest,
                            nsImageError aErrorType);
+#endif
 
   // nsThrobber
   nsresult Init(nsIWidget* aParent, const nsRect& aBounds,
@@ -77,7 +79,7 @@ protected:
   nsVoidArray*   mImages;
   PRInt32        mNumImages;
   PRInt32        mIndex;
-  nsIImageGroup* mImageGroup;
+//  nsIImageGroup* mImageGroup;
   nsCOMPtr<nsITimer> mTimer;
   PRBool         mRunning;
   PRUint32       mCompletedImages;

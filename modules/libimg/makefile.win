@@ -20,9 +20,9 @@
 
 DEPTH=..\.. 
 
-DIRS = public src public_com png pngcom jpgcom gifcom \
+DIRS = png \
 !if !defined(MOZ_DISABLE_MNG)
-	mng mngcom	\
+	mng \
 !endif
 	$(NULL)
 

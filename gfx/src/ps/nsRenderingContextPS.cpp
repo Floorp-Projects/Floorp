@@ -23,7 +23,6 @@
 #include "nsRenderingContextPS.h"
 #include "nsFontMetricsPS.h"
 #include <math.h>
-#include "libimg.h"
 #include "nsDeviceContextPS.h"
 #include "nsPostScriptObj.h"  
 #include "nsIRegion.h"      

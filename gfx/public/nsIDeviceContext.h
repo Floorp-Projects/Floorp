@@ -48,14 +48,6 @@ typedef void * nsNativeDeviceContext;
 //a cross platform way of specifying a native palette handle
 typedef void * nsPalette;
 
-//structure used to return information about a device's palette capabilities
-struct nsPaletteInfo {
-  PRPackedBool  isPaletteDevice;
-  PRUint16      sizePalette;  // number of entries in the palette
-  PRUint16      numReserved;  // number of reserved palette entries
-  nsPalette     palette;      // native palette handle
-};
-
 /**
  *
  *
@@ -110,19 +102,6 @@ struct nsPaletteInfo {
     nsFont   * mFont;
   } SystemAttrStruct;
 
-/**
- * Constants identifying pre-defined icons.
- * @see #LoadIcon()
- */
-#define NS_ICON_LOADING_IMAGE 0
-#define NS_ICON_BROKEN_IMAGE  1
-#define NS_NUMBER_OF_ICONS    2
-
-// XXX This is gross, but don't include libimg.h, because it includes ni_pixmap.h
-// which includes xp_core.h which includes windows.h
-struct _NI_ColorSpace;
-typedef _NI_ColorSpace NI_ColorSpace;
-typedef NI_ColorSpace IL_ColorSpace;
 
 class nsIDeviceContext : public nsISupports
 {
@@ -307,11 +286,6 @@ public:
   //XXX the return from this really needs to be ref counted somehow. MMP
   NS_IMETHOD  GetGammaTable(PRUint8 *&aGammaTable) = 0;
 
-  //load the specified icon. this is a blocking call that does not return
-  //until the icon is loaded.
-  //release the image when you're done
-  NS_IMETHOD LoadIconImage(PRInt32 aId, nsIImage*& aImage) = 0;
-
   /**
    * Check to see if a particular named font exists.
    * @param aFontName character string of font face name
@@ -334,19 +308,6 @@ public:
    * Return the bit depth of the device.
    */
   NS_IMETHOD GetDepth(PRUint32& aDepth) = 0;
-
-  /**
-   * Return the image lib color space that's appropriate for this rendering
-   * context.
-   *
-   * You must call IL_ReleaseSystemSpace() when you're done using the color space.
-   */
-  NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace) = 0;
-
-  /**
-   * Returns information about the device's palette capabilities.
-   */
-  NS_IMETHOD GetPaletteInfo(nsPaletteInfo&) = 0;
 
   /**
    * Returns Platform specific pixel value for an RGB value

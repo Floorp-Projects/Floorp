@@ -56,7 +56,6 @@ bin\components\ucharuti.dll
 bin\gkgfx.dll
 bin\components\gkgfxwin.dll
 bin\components\gkwidget.dll
-bin\img3250.dll
 bin\jpeg3250.dll
 bin\jsj3250.dll
 bin\mozilla.exe
@@ -165,11 +164,7 @@ bin\components\necko_ftp.xpt
 bin\components\necko_http.xpt
 bin\components\necko_jar.xpt
 bin\components\necko_res.xpt
-bin\components\nsgif.dll
-bin\components\nsjpg.dll
 bin\components\nslocale.dll
-bin\components\nsmng.dll
-bin\components\nspng.dll
 bin\components\nsprefm.dll
 bin\components\nsSidebar.js
 bin\components\oji.dll

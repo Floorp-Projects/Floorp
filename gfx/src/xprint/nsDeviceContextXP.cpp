@@ -35,7 +35,6 @@
 #include "nsIDeviceContext.h"
 #include "nsIDeviceContextSpecXPrint.h"
 #include "nsString.h"
-#include "il_util.h"
 #include "nspr.h"
 #include "nsXPrintContext.h"
 
@@ -186,53 +185,6 @@ void  nsDeviceContextXp :: SetDrawingSurface(nsDrawingSurface  aSurface)
 NS_IMETHODIMP nsDeviceContextXp :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
 {
   aSurface = nsnull;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- */
-NS_IMETHODIMP nsDeviceContextXp::GetILColorSpace(IL_ColorSpace*& aColorSpace)
-{
-#ifdef NOTNOW
-  if (nsnull == mColorSpace) {
-    mColorSpace = IL_CreateGreyScaleColorSpace(1, 1);
-
-    if (nsnull == mColorSpace) {
-      aColorSpace = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  // Return the color space
-  aColorSpace = mColorSpace;
-  IL_AddRefToColorSpace(aColorSpace);
-#endif /* NOTNOW */
-
-  if(!mColorSpace) {
-      IL_RGBBits colorRGBBits;
-    
-      // Create a 24-bit color space
-      colorRGBBits.red_shift   = 16;  
-      colorRGBBits.red_bits    =  8;
-      colorRGBBits.green_shift =  8;
-      colorRGBBits.green_bits  =  8; 
-      colorRGBBits.blue_shift  =  0; 
-      colorRGBBits.blue_bits   =  8;  
-    
-      mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-
-    if (nsnull == mColorSpace) {
-      aColorSpace = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-
-  // Return the color space
-  aColorSpace = mColorSpace;
-  IL_AddRefToColorSpace(aColorSpace);
-
   return NS_OK;
 }
 

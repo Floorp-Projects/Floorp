@@ -23,7 +23,6 @@
 #include "nsDeviceContextWin.h"
 #include "nsRenderingContextWin.h"
 #include "nsDeviceContextSpecWin.h"
-#include "il_util.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
@@ -51,10 +50,6 @@ nsDeviceContextWin :: nsDeviceContextWin()
   : DeviceContextImpl()
 {
   mSurface = NULL;
-  mPaletteInfo.isPaletteDevice = PR_FALSE;
-  mPaletteInfo.sizePalette = 0;
-  mPaletteInfo.numReserved = 0;
-  mPaletteInfo.palette = NULL;
   mDC = NULL;
   mPixelScale = 1.0f;
   mWidth = -1;
@@ -81,9 +76,6 @@ nsDeviceContextWin :: ~nsDeviceContextWin()
 
   NS_IF_RELEASE(surf);    //this clears the surf pointer...
   mSurface = nsnull;
-
-  if (NULL != mPaletteInfo.palette)
-    ::DeleteObject((HPALETTE)mPaletteInfo.palette);
 
   if (NULL != mDC)
   {
@@ -147,9 +139,6 @@ void nsDeviceContextWin :: CommonInit(HDC aDC)
   mPixelsToTwips = 1.0f / mTwipsToPixels;
 
   mDepth = (PRUint32)::GetDeviceCaps(aDC, BITSPIXEL);
-  mPaletteInfo.isPaletteDevice = RC_PALETTE == (rasterCaps & RC_PALETTE);
-  mPaletteInfo.sizePalette = (PRUint8)::GetDeviceCaps(aDC, SIZEPALETTE);
-  mPaletteInfo.numReserved = (PRUint8)::GetDeviceCaps(aDC, NUMRESERVED);
 
   mWidth = ::GetDeviceCaps(aDC, HORZRES);
   mHeight = ::GetDeviceCaps(aDC, VERTRES);
@@ -626,103 +615,6 @@ NS_IMETHODIMP nsDeviceContextWin::GetDepth(PRUint32& aDepth)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDeviceContextWin::GetILColorSpace(IL_ColorSpace*& aColorSpace)
-{
-  if (nsnull == mColorSpace) {
-    // See if we're dealing with an 8-bit palette device
-    if ((8 == mDepth) && mPaletteInfo.isPaletteDevice) {
-      // Create a color cube. We want to use DIB_PAL_COLORS because it's faster
-      // than DIB_RGB_COLORS, so make sure the indexes match that of the
-      // GDI physical palette
-      //
-      // Note: the image library doesn't use the reserved colors, so it doesn't
-      // matter what they're set to...
-      IL_RGB  reserved[10];
-      memset(reserved, 0, sizeof(reserved));
-      IL_ColorMap* colorMap = IL_NewCubeColorMap(reserved, 10, COLOR_CUBE_SIZE + 10);
-      if (nsnull == colorMap) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-  
-      // Create a pseudo color space
-      mColorSpace = IL_CreatePseudoColorSpace(colorMap, 8, 8);
-  
-    } else {
-      IL_RGBBits colorRGBBits;
-    
-      // Create a 24-bit color space
-      colorRGBBits.red_shift = 16;  
-      colorRGBBits.red_bits = 8;
-      colorRGBBits.green_shift = 8;
-      colorRGBBits.green_bits = 8; 
-      colorRGBBits.blue_shift = 0; 
-      colorRGBBits.blue_bits = 8;  
-    
-      mColorSpace = IL_CreateTrueColorSpace(&colorRGBBits, 24);
-    }
-
-    if (nsnull == mColorSpace) {
-      aColorSpace = nsnull;
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-  }
-
-  // Return the color space
-  aColorSpace = mColorSpace;
-  IL_AddRefToColorSpace(aColorSpace);
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsDeviceContextWin::GetPaletteInfo(nsPaletteInfo& aPaletteInfo)
-{
-  aPaletteInfo.isPaletteDevice = mPaletteInfo.isPaletteDevice;
-  aPaletteInfo.sizePalette = mPaletteInfo.sizePalette;
-  aPaletteInfo.numReserved = mPaletteInfo.numReserved;
-
-  if (NULL == mPaletteInfo.palette) {
-    IL_ColorSpace*  colorSpace;
-    GetILColorSpace(colorSpace);
-
-    if (NI_PseudoColor == colorSpace->type) {
-      // Create a logical palette
-      BYTE         tmp[sizeof(LOGPALETTE) + ((COLOR_CUBE_SIZE + 20) * sizeof(PALETTEENTRY))];
-      LPLOGPALETTE logPal = (LPLOGPALETTE)tmp;
-
-      logPal->palVersion = 0x300;
-      logPal->palNumEntries = COLOR_CUBE_SIZE + 20;
-  
-      // Initialize it from the default Windows palette
-      HPALETTE  hDefaultPalette = (HPALETTE)::GetStockObject(DEFAULT_PALETTE);
-  
-      // First ten system colors
-      ::GetPaletteEntries(hDefaultPalette, 0, 10, logPal->palPalEntry);
-
-      // Last ten system colors
-      ::GetPaletteEntries(hDefaultPalette, 10, 10, &logPal->palPalEntry[COLOR_CUBE_SIZE + 10]);
-  
-      // Now set the color cube entries.
-      PALETTEENTRY* entry = &logPal->palPalEntry[10];
-      NI_RGB*       map = colorSpace->cmap.map + 10;
-      for (PRInt32 i = 0; i < COLOR_CUBE_SIZE; i++) {
-        entry->peRed = map->red;
-        entry->peGreen = map->green;
-        entry->peBlue = map->blue; 
-        entry->peFlags = 0;
-  
-        entry++;
-        map++;
-      }
-  
-      // Create a GDI palette
-      mPaletteInfo.palette = ::CreatePalette(logPal);
-    }
-
-    IL_ReleaseColorSpace(colorSpace);
-  }
-
-  aPaletteInfo.palette = mPaletteInfo.palette;
-  return NS_OK;
-}
 
 NS_IMETHODIMP nsDeviceContextWin :: ConvertPixel(nscolor aColor, PRUint32 & aPixel)
 {

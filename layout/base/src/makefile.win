@@ -31,7 +31,7 @@ DEFINES = $(DEFINES) -DXP_NEW_SELECTION
 CPPSRCS =				\
 	nsAutoCopy.cpp			\
 	nsCopySupport.cpp   \
-	nsFrameImageLoader.cpp		\
+	nsImageLoader.cpp		\
 	nsFrameList.cpp                 \
 	nsFrameTraversal.cpp            \
 	nsFrameUtil.cpp			\
@@ -55,7 +55,7 @@ MODULE=raptor
 CPP_OBJS=					\
 	.\$(OBJDIR)\nsAutoCopy.obj		\
 	.\$(OBJDIR)\nsCopySupport.obj         \
-	.\$(OBJDIR)\nsFrameImageLoader.obj	\
+	.\$(OBJDIR)\nsImageLoader.obj	\
 	.\$(OBJDIR)\nsFrameList.obj		\
 	.\$(OBJDIR)\nsFrameTraversal.obj        \
 	.\$(OBJDIR)\nsFrameUtil.obj		\

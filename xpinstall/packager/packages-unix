@@ -121,11 +121,7 @@ bin/components/libmozbrwsr.so
 bin/components/libmozfind.so
 bin/components/libmozucth.so
 bin/components/libmozxfer.so
-bin/components/libnsgif.so
-bin/components/libnsjpg.so
 bin/components/libnslocale.so
-bin/components/libnsmng.so
-bin/components/libnspng.so
 bin/components/liboji.so
 bin/components/libpref.so
 bin/components/libprofile.so

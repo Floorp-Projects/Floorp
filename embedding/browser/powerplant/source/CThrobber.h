@@ -37,20 +37,18 @@
 #include "nsGUIEvent.h"
 #endif
 
+#include "nsITimer.h"
+
 #include "nsString.h"
-#include "nsIImageObserver.h"
 
 #include <map>
 #include <vector>
 using namespace std;
 
 class nsIWidget;
-class nsIImageGroup;
-class nsITimer;
-class nsIImageRequest;
 
 class CThrobber : public LControl,
-                  public nsIImageRequestObserver
+                  public nsISupports
 {
 public:
 	enum { class_ID = FOUR_CHAR_CODE('Thrb') };
@@ -62,16 +60,6 @@ public:
 
    NS_DECL_ISUPPORTS
 
-  // nsIImageRequestObserver
-  virtual void             Notify(nsIImageRequest *aImageRequest,
-                                  nsIImage *aImage,
-                                  nsImageNotification aNotificationType,
-                                  PRInt32 aParam1, PRInt32 aParam2,
-                                  void *aParam3);
-
-   virtual void            NotifyError(nsIImageRequest *aImageRequest,
-                                       nsImageError aErrorType);
-	
 	// CThrobber
 	virtual void            FinishCreateSelf();
 	virtual void	         ShowSelf();
@@ -101,10 +89,9 @@ public:
    char                    mDefImageURL[256], mAnimImageURL[256];
        
    nsCOMPtr<nsIWidget>     mWidget;
-   vector<nsIImageRequest*> *mImages;
+//   vector<nsIImageRequest*> *mImages;
    bool                    mRunning;
    SInt32                  mNumImages, mCompletedImages;
-   nsIImageGroup           *mImageGroup;
    nsCOMPtr<nsITimer>      mTimer;
    
    static map<nsIWidget*, CThrobber*> mgThrobberMap;
