@@ -50,8 +50,6 @@
 #include "nsContainerFrame.h"
 #include "nsContainerBox.h"
 class nsBoxLayoutState;
-class nsBoxFrameInner;
-class nsBoxDebugInner;
 
 class nsHTMLReflowCommand;
 class nsHTMLInfo;
@@ -122,14 +120,14 @@ public:
 
   // ----- public methods -------
   
-  NS_IMETHOD GetFrameForPoint(nsIPresContext* aPresContext,
-                              const nsPoint& aPoint,
+  NS_IMETHOD GetFrameForPoint(nsIPresContext*   aPresContext,
+                              const nsPoint&    aPoint,
                               nsFramePaintLayer aWhichLayer,    
-                              nsIFrame**     aFrame);
+                              nsIFrame**        aFrame);
 
   NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
-                                     nsPoint&        aPoint,
-                                     PRInt32&        aCursor);
+                       nsPoint&        aPoint,
+                       PRInt32&        aCursor);
 
 
   NS_IMETHOD ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild);
@@ -142,11 +140,11 @@ public:
 
  
   NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
-                              nsIContent* aChild,
-                              PRInt32 aNameSpaceID,
-                              nsIAtom* aAttribute,
-                              PRInt32 aModType, 
-                              PRInt32 aHint);
+                              nsIContent*     aChild,
+                              PRInt32         aNameSpaceID,
+                              nsIAtom*        aAttribute,
+                              PRInt32         aModType, 
+                              PRInt32         aHint);
 
 
   NS_IMETHOD Reflow(nsIPresContext*          aPresContext,
@@ -195,9 +193,9 @@ public:
   nsBoxFrame(nsIPresShell* aPresShell, PRBool aIsRoot = nsnull, nsIBoxLayout* aLayoutManager = nsnull);
  
   static nsresult CreateViewForFrame(nsIPresContext* aPresContext,
-                                   nsIFrame* aChild,
-                                   nsIStyleContext* aStyleContext,
-                                   PRBool aForce);
+                                     nsIFrame* aChild,
+                                     nsIStyleContext* aStyleContext,
+                                     PRBool aForce);
 
   NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
@@ -221,18 +219,18 @@ protected:
 
 
     // Paint one child frame
-    virtual void PaintChild(nsIPresContext*       aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsIFrame*            aFrame,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags = 0);
+    virtual void PaintChild(nsIPresContext*      aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect&        aDirtyRect,
+                            nsIFrame*            aFrame,
+                            nsFramePaintLayer    aWhichLayer,
+                            PRUint32             aFlags = 0);
 
-    virtual void PaintChildren(nsIPresContext*    aPresContext,
-                             nsIRenderingContext& aRenderingContext,
-                             const nsRect&        aDirtyRect,
-                             nsFramePaintLayer    aWhichLayer,
-                             PRUint32             aFlags = 0);
+    virtual void PaintChildren(nsIPresContext*      aPresContext,
+                               nsIRenderingContext& aRenderingContext,
+                               const nsRect&        aDirtyRect,
+                               nsFramePaintLayer    aWhichLayer,
+                               PRUint32             aFlags = 0);
 
     virtual PRIntn GetSkipSides() const { return 0; }
 
@@ -258,9 +256,57 @@ protected:
     void FireDOMEvent(nsIPresContext *aPresContext, const nsAString& aDOMEventName);
 
 private: 
-    friend class nsBoxFrameInner;
-    friend class nsBoxDebug;
-    nsBoxFrameInner* mInner;
+    nsresult SetDebug(nsIPresContext* aPresContext, PRBool aDebug);
+
+    // helper methods
+    void TranslateEventCoords(nsIPresContext* aPresContext,
+                                    const nsPoint& aPoint,
+                                    nsPoint& aResult);
+
+    static PRBool AdjustTargetToScope(nsIFrame* aParent, nsIFrame*& aTargetFrame);
+
+
+    PRBool GetInitialDebug(PRBool& aDebug);
+
+    void GetDebugPref(nsIPresContext* aPresContext);
+
+
+#ifdef DEBUG_LAYOUT
+    nsresult DisplayDebugInfoFor(nsIBox*         aBox, 
+                                 nsIPresContext* aPresContext,
+                                 nsPoint&        aPoint,
+                                 PRInt32&        aCursor);
+#endif
+
+    nsresult GetFrameSizeWithMargin(nsIBox* aBox, nsSize& aSize);
+
+    void GetDebugBorder(nsMargin& aInset);
+    void GetDebugPadding(nsMargin& aInset);
+    void GetDebugMargin(nsMargin& aInset);
+    void PixelMarginToTwips(nsIPresContext* aPresContext, nsMargin& aMarginPixels);
+
+#ifdef DEBUG_LAYOUT
+    void GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
+    void GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, char* value);
+#endif
+    void DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
+    void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
+    void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
+    void UpdateMouseThrough();
+
+    void CacheAttributes();
+
+    nsIBox* GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
+
+    // instance variables.
+    Halignment mHalign;
+    Valignment mValign;
+
+    nsIPresContext* mPresContext;
+
+    static PRBool gDebug;
+    static nsIBox* mDebugChild;
+
 }; // class nsBoxFrame
 
 #endif
