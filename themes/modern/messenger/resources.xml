@@ -22,6 +22,10 @@
       <image src="chrome://messenger/skin/btn1/delete-act.gif"/>
       <image src="chrome://messenger/skin/btn1/mark-hov.gif"/>
       <image src="chrome://messenger/skin/btn1/mark-act.gif"/>
+      <image src="chrome://messenger/skin/icons/readcol-read.gif"/>
+      <image src="chrome://messenger/skin/icons/readcol-unread.gif"/>
+      <image src="chrome://messenger/skin/icons/flagcol-flagged.gif"/>
+      <image src="chrome://messenger/skin/icons/readcol-read.gif"/>
       <image src="chrome://communicator/skin/btn1/print-hov.gif"/>
       <image src="chrome://communicator/skin/btn1/print-act.gif"/>
       <image src="chrome://communicator/skin/btn1/stop-hov.gif"/>

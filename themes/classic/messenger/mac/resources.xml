@@ -39,6 +39,10 @@
     	<image src="chrome://messenger/skin/trash-disabled.gif"/>
     	<image src="chrome://messenger/skin/trash-hover.gif"/>
     	<image src="chrome://messenger/skin/trash-hover-active.gif"/>
+        <image src="chrome://messenger/skin/readmail.gif"/>
+        <image src="chrome://messenger/skin/unreadmail.gif"/>
+        <image src="chrome://messenger/skin/flagcol.gif"/>
+        <image src="chrome://messenger/skin/readmail.gif"/>
     	<image src="chrome://global/skin/print.gif"/>
     	<image src="chrome://global/skin/print-disabled.gif"/>
     	<image src="chrome://global/skin/print-hover.gif"/>
