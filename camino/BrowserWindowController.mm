@@ -930,16 +930,8 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)updateLocationFields:(NSString *)locationString
 {
-/* //commenting this out because it doesn't work right yet.
-    if ( [locationString length] > 30 ) {
-        [[mLocationToolbarItem menuFormRepresentation] setTitle:
-            [NSString stringWithFormat:@"Location: %@...", [locationString substringToIndex:31]]];
-    } else {
-        [[mLocationToolbarItem menuFormRepresentation] setTitle:
-            [NSString stringWithFormat:@"Location: %@", locationString]];
-    }
-*/
-
+    if ( [locationString isEqual:@"about:blank"] ) 			// don't show about:blank to users
+      locationString = @"";
     [mURLBar setString:locationString];
     [mLocationSheetURLField setStringValue:locationString];
 
