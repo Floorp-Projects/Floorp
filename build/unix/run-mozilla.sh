@@ -410,8 +410,17 @@ then
   if [ -n "$LD_LIBRARY_PATH_64" ]; then
   	echo "LD_LIBRARY_PATH_64=$LD_LIBRARY_PATH_64"
   fi
+  if [ -n "$DISPLAY" ]; then
+       echo "DISPLAY=$DISPLAY"
+  fi
   if [ -n "$FONTCONFIG_PATH" ]; then
 	echo "FONTCONFIG_PATH=$FONTCONFIG_PATH"
+  fi
+  if [ -n "$XPSERVERLIST" ]; then
+       echo "XPSERVERLIST=$XPSERVERLIST"
+  fi
+  if [ -n "$MOZILLA_POSTSCRIPT_PRINTER_LIST" ]; then
+       echo "MOZILLA_POSTSCRIPT_PRINTER_LIST=$MOZILLA_POSTSCRIPT_PRINTER_LIST"
   fi
   echo "DYLD_LIBRARY_PATH=$DYLD_LIBRARY_PATH"
   echo "     LIBRARY_PATH=$LIBRARY_PATH"
