@@ -150,10 +150,8 @@ XFE_RDFView::XFE_RDFView(XFE_Component *toplevel, Widget parent,
                          HT_View htview)
   : XFE_View(toplevel, parent_view, context)
 {
-  if (my_commands != 0)
-      return;
-    
-  registerCommand(my_commands, new RdfPopupCommand);
+  if (!my_commands)
+      registerCommand(my_commands, new RdfPopupCommand);
 
   Widget tree = 
       XtVaCreateManagedWidget(TREE_NAME,
@@ -437,7 +435,9 @@ XFE_RDFView::doPopup(XEvent *event)
 void
 XFE_RDFView::fill_tree()
 {
-  if (!m_rdfview) return;
+  XP_ASSERT(m_widget);
+  if (!m_rdfview || !m_widget)
+      return;
   
   int item_count =  HT_GetItemListCount(m_rdfview);
 
