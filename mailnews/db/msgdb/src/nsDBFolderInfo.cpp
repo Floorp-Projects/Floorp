@@ -675,7 +675,7 @@ nsDBFolderInfo::GetCharPtrCharacterSet(char **result)
 {
     nsresult rv = GetCharPtrProperty(kCharacterSetColumnName, result);
 
-    if (NS_SUCCEEDED(rv) && *result == nsnull)
+    if (NS_SUCCEEDED(rv) && (*result == nsnull || **result == '\0'))
     {
         *result = gDefaultCharacterSet.ToNewCString();
     }
