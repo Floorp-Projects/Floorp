@@ -848,7 +848,9 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
         MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
         const nsString& theString=aNode.GetSkippedContent();
         if(0<theString.Length()) {
-          CViewSourceHTML::WriteText(theString,*mSink,PR_TRUE,PR_FALSE);
+          CTextToken *theToken=(CTextToken*)mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theString);
+          nsCParserNode theNode(theToken,0);
+          result=mSink->AddLeaf(theNode); //when the node get's destructed, so does the new token
         }
         MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
         START_TIMER()
