@@ -102,7 +102,7 @@
 
       <property name="minResultsForPopup"
                 onset="this.setAttribute('minresultsforpopup', val); return val;"
-                onget="var t = parseInt(this.getAttribute('minresultsforpopup')); return t ? t : 0;"/>
+                onget="return parseInt(this.getAttribute('minresultsforpopup')) || 0;"/>
 
       <property name="showCommentColumn"
                 onset="this.setAttribute('showcommentcolumn', val); return val;"
@@ -110,7 +110,7 @@
 
       <property name="timeout"
                 onset="this.setAttribute('timeout', val); return val;"
-                onget="var t = parseInt(this.getAttribute('timeout')); return t ? t : 50;"/>
+                onget="return parseInt(this.getAttribute('timeout')) || 50;"/>
 
       <property name="searchParam"
                 onget="return this.getAttribute('autocompletesearchparam');"
@@ -208,7 +208,7 @@
       <!-- maximum number of rows to display at a time -->
       <property name="maxRows"
                 onset="this.setAttribute('maxrows', val); return val;"
-                onget="var t = parseInt(this.getAttribute('maxrows')); return t ? t : 0;"/>
+                onget="return parseInt(this.getAttribute('maxrows')) || 0;"/>
 
       <!-- option to allow scrolling through the list via the tab key, rather than
            tab moving focus out of the textbox -->
@@ -504,8 +504,11 @@
         ]]></setter>
       </property>
 
-      <property name="maxRows" readonly="true"
-                onget="var t = parseInt(this.mInput.getAttribute('maxrows')); return t ? t : 6;"/>
+      <property name="maxRows" readonly="true">
+        <getter><![CDATA[
+          return (this.mInput && this.mInput.maxRows) || 6;
+        ]]></getter>
+      </property>
 
       <property name="showCommentColumn"
                 onget="return this.mShowCommentColumn;">
