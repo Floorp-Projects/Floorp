@@ -294,9 +294,7 @@ DocumentViewerImpl::DocumentViewerImpl(nsIPresContext* aPresContext)
   : mPresContext(dont_QueryInterface(aPresContext))
 {
   NS_INIT_REFCNT();
-  mHintCharset = "";
   mHintCharsetSource = kCharsetUninitialized;
-  mForceCharacterSet = "";
   mAllowPlugins = PR_TRUE;
   mEnableRendering = PR_TRUE;
   mFilePointer = nsnull;
@@ -1501,9 +1499,9 @@ NS_IMETHODIMP DocumentViewerImpl::GetDefaultCharacterSet(PRUnichar** aDefaultCha
       }
     }
     if ((nsnull == gDefCharset) || (nsnull == *gDefCharset))
-      mDefaultCharacterSet = "ISO-8859-1";
+      mDefaultCharacterSet.AssignWithConversion("ISO-8859-1");
     else
-      mDefaultCharacterSet = gDefCharset;
+      mDefaultCharacterSet.AssignWithConversion(gDefCharset);
   }
   *aDefaultCharacterSet = mDefaultCharacterSet.ToNewUnicode();
   return NS_OK;
@@ -1689,7 +1687,7 @@ NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged()
     nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject);
     if (!domWindow) return NS_ERROR_FAILURE;
     
-    domWindow->UpdateCommands(nsAutoString("select"));
+    domWindow->UpdateCommands(NS_ConvertToString("select"));
     mGotSelectionState = PR_TRUE;
     mSelectionWasCollapsed = selectionCollapsed;
   }  

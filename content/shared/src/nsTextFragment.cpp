@@ -198,7 +198,7 @@ nsTextFragment::AppendTo(nsString& aString) const
     aString.Append(m2b, mState.mLength);
   }
   else {
-    aString.Append((char*)m1b, mState.mLength);
+    aString.AppendWithConversion((char*)m1b, mState.mLength);
   }
 }
 

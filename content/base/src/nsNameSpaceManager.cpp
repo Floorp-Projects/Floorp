@@ -108,11 +108,11 @@ static void AddRefTable()
     gURIToIDTable = new nsHashtable();
     gURIArray = new nsVoidArray();
 
-    nsString* xmlns = new nsString(kXMLNSNameSpaceURI);
-    nsString* xml = new nsString(kXMLNameSpaceURI);
-    nsString* html = new nsString(kHTMLNameSpaceURI);
-    nsString* xhtml = new nsString(kXHTMLNameSpaceURI);
-    nsString* xlink = new nsString(kXLinkNameSpaceURI);
+    nsString* xmlns = new nsString( NS_ConvertToString(kXMLNSNameSpaceURI) );
+    nsString* xml = new nsString( NS_ConvertToString(kXMLNameSpaceURI) );
+    nsString* html = new nsString( NS_ConvertToString(kHTMLNameSpaceURI) );
+    nsString* xhtml = new nsString( NS_ConvertToString(kXHTMLNameSpaceURI) );
+    nsString* xlink = new nsString( NS_ConvertToString(kXLinkNameSpaceURI) );
     gURIArray->AppendElement(xmlns);  // ordering here needs to match IDs
     gURIArray->AppendElement(xml);
     gURIArray->AppendElement(html); 

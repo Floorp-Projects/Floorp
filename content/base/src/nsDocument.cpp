@@ -495,7 +495,7 @@ nsDOMImplementation::CreateDocumentType(const nsString& aQualifiedName,
   NS_ENSURE_ARG_POINTER(aReturn);
 
   return NS_NewDOMDocumentType(aReturn, aQualifiedName, nsnull, nsnull,
-                               aPublicId, aSystemId, nsAutoString(""));
+                               aPublicId, aSystemId, nsAutoString());
 }
 
 NS_IMETHODIMP
@@ -611,7 +611,7 @@ nsDocument::nsDocument()
   mArena = nsnull;
   mDocumentTitle = nsnull;
   mDocumentURL = nsnull;
-  mCharacterSet = "ISO-8859-1";
+  mCharacterSet.AssignWithConversion("ISO-8859-1");
   mParentDocument = nsnull;
   mRootContent = nsnull;
   mScriptObject = nsnull;
@@ -1002,7 +1002,7 @@ NS_IMETHODIMP nsDocument::GetLineBreaker(nsILineBreaker** aResult)
                                           (nsISupports **)&lf);
      if (NS_SUCCEEDED(result)) {
       nsILineBreaker *lb = nsnull ;
-      nsAutoString lbarg("");
+      nsAutoString lbarg;
       result = lf->GetBreaker(lbarg, &lb);
       if(NS_SUCCEEDED(result)) {
          mLineBreaker = lb;
@@ -1032,7 +1032,7 @@ NS_IMETHODIMP nsDocument::GetWordBreaker(nsIWordBreaker** aResult)
                                           (nsISupports **)&lf);
      if (NS_SUCCEEDED(result)) {
       nsIWordBreaker *lb = nsnull ;
-      nsAutoString lbarg("");
+      nsAutoString lbarg;
       result = lf->GetBreaker(lbarg, &lb);
       if(NS_SUCCEEDED(result)) {
          mWordBreaker = lb;
@@ -1082,7 +1082,7 @@ nsDocument::SetHeaderData(nsIAtom* aHeaderField, const nsString& aData)
       do {  // look for existing and replace
         if (data->mField == aHeaderField) {
           if (0 < aData.Length()) {
-            data->mData = aData;
+            data->mData.Assign(aData);
           }
           else {  // don't store empty string
             (*lastPtr)->mNext = data->mNext;
@@ -2197,7 +2197,7 @@ nsDocument::GetHeight(PRInt32* aHeight)
 NS_IMETHODIMP    
 nsDocument::GetNodeName(nsString& aNodeName)
 {
-  aNodeName.Assign("#document");
+  aNodeName.AssignWithConversion("#document");
   return NS_OK;
 }
 
@@ -2740,7 +2740,7 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, JSObject *aObj, jsval aID
     mPropName.Assign(JS_GetStringChars(JS_ValueToString(aContext, aID)));
     if (mPropName.Length() > 2)
       mPrefix.Assign(mPropName.GetUnicode(), 2);
-    if (mPrefix.Equals("on")) {
+    if (mPrefix.EqualsWithConversion("on")) {
       nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(mPropName));
       nsIEventListenerManager *mManager = nsnull;
 
@@ -2963,25 +2963,25 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
 
     converter.SetSelection(aSelection);
 
-    converter.AddStartTag("section"); 
-    converter.AddStartTag("section_head");
+    converter.AddStartTag( NS_ConvertToString("section") ); 
+    converter.AddStartTag( NS_ConvertToString("section_head") );
 
-    converter.BeginStartTag("document_info");
-    converter.AddAttribute(nsAutoString("charset"),mCharacterSet);
+    converter.BeginStartTag( NS_ConvertToString("document_info") );
+    converter.AddAttribute(NS_ConvertToString("charset"),mCharacterSet);
     nsCOMPtr<nsIURI> uri (getter_AddRefs(GetDocumentURL()));
     if (uri)
     {
       char* spec = 0;
       if (NS_SUCCEEDED(uri->GetSpec(&spec)) && spec)
       {
-        converter.AddAttribute(nsAutoString("uri"), spec);
+        converter.AddAttribute(NS_ConvertToString("uri"), NS_ConvertToString(spec));
         Recycle(spec);
       }
     }
-    converter.FinishStartTag("document_info",PR_TRUE,PR_TRUE);
+    converter.FinishStartTag(NS_ConvertToString("document_info"),PR_TRUE,PR_TRUE);
 
-    converter.AddEndTag("section_head");
-    converter.AddStartTag("section_body");
+    converter.AddEndTag(NS_ConvertToString("section_head"));
+    converter.AddStartTag(NS_ConvertToString("section_body"));
 
     nsCOMPtr<nsIDOMDocumentType> doctype;
     GetDoctype(getter_AddRefs(doctype));
@@ -2991,28 +2991,28 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
       doctype->GetName(tmpStr);
 
       if (tmpStr.Length()) {
-        docTypeStr.Append("DOCTYPE ");
+        docTypeStr.AppendWithConversion("DOCTYPE ");
         docTypeStr.Append(tmpStr);
 
         doctype->GetPublicId(tmpStr);
         if (tmpStr.Length()) {
-          docTypeStr.Append(" PUBLIC \"");
+          docTypeStr.AppendWithConversion(" PUBLIC \"");
           docTypeStr.Append(tmpStr);
-          docTypeStr.Append('"');
+          docTypeStr.AppendWithConversion('"');
         }
 
         doctype->GetSystemId(tmpStr);
         if (tmpStr.Length()) {
-          docTypeStr.Append(" SYSTEM \"");
+          docTypeStr.AppendWithConversion(" SYSTEM \"");
           docTypeStr.Append(tmpStr);
-          docTypeStr.Append('"');
+          docTypeStr.AppendWithConversion('"');
         }
 
         doctype->GetInternalSubset(tmpStr);
         if (tmpStr.Length()) {
-          docTypeStr.Append(" [\n");
+          docTypeStr.AppendWithConversion(" [\n");
           docTypeStr.Append(tmpStr);
-          docTypeStr.Append("\n]");
+          docTypeStr.AppendWithConversion("\n]");
         }
       }
 
@@ -3062,8 +3062,8 @@ nsDocument::CreateXIF(nsString & aBuffer, nsIDOMSelection* aSelection)
     #endif
         NS_RELEASE(root);
      }
-  converter.AddEndTag("section_body");
-  converter.AddEndTag("section");
+  converter.AddEndTag(NS_ConvertToString("section_body"));
+  converter.AddEndTag(NS_ConvertToString("section"));
   return result;
 }
 
@@ -3081,7 +3081,7 @@ nsDocument::OutputDocumentAs(nsIOutputStream* aStream, nsIDOMSelection* selectio
   {
 	  rv = GetDocumentCharacterSet(charsetStr);
 	  if(NS_FAILED(rv)) {
-	     charsetStr = "ISO-8859-1"; 
+	     charsetStr.AssignWithConversion("ISO-8859-1"); 
 	  }
   }
 
@@ -3119,7 +3119,7 @@ nsDocument::OutputDocumentAs(nsIOutputStream* aStream, nsIDOMSelection* selectio
         if (NS_SUCCEEDED(rv) && dtd)
         {
           parser->RegisterDTD(dtd);
-          parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);           
+          parser->Parse(buffer, 0, NS_ConvertToString("text/xif"), PR_FALSE, PR_TRUE);           
         }
       }
     }

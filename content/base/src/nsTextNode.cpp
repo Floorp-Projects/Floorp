@@ -130,7 +130,7 @@ nsTextNode::GetTag(nsIAtom*& aResult) const
 NS_IMETHODIMP
 nsTextNode::GetNodeName(nsString& aNodeName)
 {
-  aNodeName.Assign("#text");
+  aNodeName.AssignWithConversion("#text");
   return NS_OK;
 }
 

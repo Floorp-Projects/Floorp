@@ -71,7 +71,7 @@ public:
   {
     mField = aField;
     NS_IF_ADDREF(mField);
-    mData = aData;
+    mData.Assign(aData);
     mNext = nsnull;
   }
   ~nsDocHeaderData(void)

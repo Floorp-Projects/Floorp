@@ -70,7 +70,7 @@ nsPresState::GetStateProperty(const nsString& aName, nsString& aResult)
     aResult = data;
     nsAllocator::Free(data);
   } else {
-    aResult = "";
+    aResult.SetLength(0);
   }
   return NS_OK;
 }

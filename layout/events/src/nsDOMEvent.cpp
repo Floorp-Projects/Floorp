@@ -111,7 +111,7 @@ NS_METHOD nsDOMEvent::GetType(nsString& aType)
   const char* mName = GetEventName(mEvent->message);
 
   if (nsnull != mName) {
-    aType = mName;
+    aType.AssignWithConversion(mName);
     return NS_OK;
   }
   

@@ -85,9 +85,12 @@ protected:
 NS_IMPL_ADDREF(nsTextEncoder)
 NS_IMPL_RELEASE(nsTextEncoder)
 
-nsTextEncoder::nsTextEncoder() : mMimeType("text/plain")
+nsTextEncoder::nsTextEncoder()
 {
   NS_INIT_REFCNT();
+
+  mMimeType.AssignWithConversion("text/plain");
+
   mDocument = 0;
   mSelection = 0;
   mFlags = 0;
@@ -173,7 +176,7 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
   {
     nsString buffer;
 
-    if (mMimeType.Equals("text/xif"))
+    if (mMimeType.EqualsWithConversion("text/xif"))
     {
       mDocument->CreateXIF(aOutputString, mSelection);
       return NS_OK;
@@ -192,7 +195,7 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
     {
       nsIHTMLContentSink* sink = nsnull;
 
-      if (mMimeType.Equals("text/html"))
+      if (mMimeType.EqualsWithConversion("text/html"))
         rv = NS_New_HTML_ContentSinkStream(&sink, &aOutputString, mFlags);
 
       else  // default to text/plain
@@ -207,7 +210,7 @@ nsTextEncoder::EncodeToString(nsString& aOutputString)
         if (NS_SUCCEEDED(rv))
         {
           parser->RegisterDTD(dtd);
-          parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);
+          parser->Parse(buffer, 0, NS_ConvertToString("text/xif"), PR_FALSE, PR_TRUE);
         }
         NS_IF_RELEASE(dtd);
         NS_IF_RELEASE(sink);
@@ -235,8 +238,8 @@ nsTextEncoder::EncodeToStream(nsIOutputStream* aStream)
     mDocument->CreateXIF(buffer,mSelection);
     
     nsString*     charset = nsnull;
-    nsAutoString  defaultCharset("ISO-8859-1");
-    if (!mCharset.Equals("null") && !mCharset.Equals(""))
+    nsAutoString  defaultCharset; defaultCharset.AssignWithConversion("ISO-8859-1");
+    if (!mCharset.EqualsWithConversion("null") && !mCharset.IsEmpty())
       charset = &mCharset; 
 
     nsIParser* parser;
@@ -249,7 +252,7 @@ nsTextEncoder::EncodeToStream(nsIOutputStream* aStream)
     if (NS_SUCCEEDED(rv)) {
       nsIHTMLContentSink* sink = nsnull;
 
-      if (mMimeType.Equals("text/html"))
+      if (mMimeType.EqualsWithConversion("text/html"))
         rv = NS_New_HTML_ContentSinkStream(&sink, aStream, charset, mFlags);
 
       else
@@ -265,7 +268,7 @@ nsTextEncoder::EncodeToStream(nsIOutputStream* aStream)
         if (NS_SUCCEEDED(rv))
         {
           parser->RegisterDTD(dtd);
-          parser->Parse(buffer, 0, "text/xif", PR_FALSE, PR_TRUE);
+          parser->Parse(buffer, 0, NS_ConvertToString("text/xif"), PR_FALSE, PR_TRUE);
         }
         NS_IF_RELEASE(dtd);
         NS_IF_RELEASE(sink);

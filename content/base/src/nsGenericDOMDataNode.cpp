@@ -274,7 +274,7 @@ nsGenericDOMDataNode::GetData(nsString& aData)
     aData.Assign(mText.Get2b(), mText.GetLength());
   }
   else {
-    aData.Assign(mText.Get1b(), mText.GetLength());
+    aData.AssignWithConversion(mText.Get1b(), mText.GetLength());
   }
   return NS_OK;
 }
@@ -334,7 +334,7 @@ nsGenericDOMDataNode::SubstringData(PRUint32 aStart,
     aReturn.Assign(mText.Get2b() + aStart, amount);
   }
   else {
-    aReturn.Assign(mText.Get1b() + aStart, amount);
+    aReturn.AssignWithConversion(mText.Get1b() + aStart, amount);
   }
 
   return NS_OK;
@@ -642,15 +642,15 @@ nsGenericDOMDataNode::ToCString(nsString& aBuf, PRInt32 aOffset,
     while (cp < end) {
       PRUnichar ch = *cp++;
       if (ch == '\r') {
-        aBuf.Append("\\r");
+        aBuf.AppendWithConversion("\\r");
       } else if (ch == '\n') {
-        aBuf.Append("\\n");
+        aBuf.AppendWithConversion("\\n");
       } else if (ch == '\t') {
-        aBuf.Append("\\t");
+        aBuf.AppendWithConversion("\\t");
       } else if ((ch < ' ') || (ch >= 127)) {
         char buf[10];
         PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
-        aBuf.Append(buf);
+        aBuf.AppendWithConversion(buf);
       } else {
         aBuf.Append(ch);
       }
@@ -662,15 +662,15 @@ nsGenericDOMDataNode::ToCString(nsString& aBuf, PRInt32 aOffset,
     while (cp < end) {
       PRUnichar ch = *cp++;
       if (ch == '\r') {
-        aBuf.Append("\\r");
+        aBuf.AppendWithConversion("\\r");
       } else if (ch == '\n') {
-        aBuf.Append("\\n");
+        aBuf.AppendWithConversion("\\n");
       } else if (ch == '\t') {
-        aBuf.Append("\\t");
+        aBuf.AppendWithConversion("\\t");
       } else if ((ch < ' ') || (ch >= 127)) {
         char buf[10];
         PR_snprintf(buf, sizeof(buf), "\\u%04x", ch);
-        aBuf.Append(buf);
+        aBuf.AppendWithConversion(buf);
       } else {
         aBuf.Append(ch);
       }
@@ -971,7 +971,7 @@ nsGenericDOMDataNode::CopyText(nsString& aResult)
     aResult.Assign(mText.Get2b(), mText.GetLength());
   }
   else {
-    aResult.Assign(mText.Get1b(), mText.GetLength());
+    aResult.AssignWithConversion(mText.Get1b(), mText.GetLength());
   }
   return NS_OK;
 }

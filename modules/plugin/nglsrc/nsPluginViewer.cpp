@@ -362,7 +362,7 @@ PluginViewerImpl::CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds,
     rv = uri->GetSpec(&spec);
     NS_RELEASE(uri);
     if (NS_FAILED(rv)) return rv;
-    nsAutoString str(spec);
+    nsAutoString str; str.AssignWithConversion(spec);
     nsCRT::free(spec);
 
     char* ct;
@@ -803,11 +803,11 @@ NS_IMETHODIMP pluginInstanceOwner :: GetURL(const char *aURL, const char *aTarge
           // Create an absolute URL
           char* absURIStr;
           rv = NS_MakeAbsoluteURI(&absURIStr, aURL, uri);
-          nsAutoString fullurl(absURIStr);
+          nsAutoString fullurl; fullurl.AssignWithConversion(absURIStr);
           nsCRT::free(absURIStr);
 
           if (NS_OK == rv) {
-            nsAutoString  unitarget = nsAutoString(aTarget);
+            nsAutoString  unitarget; unitarget.AssignWithConversion(aTarget);
             rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, fullurl.GetUnicode(), unitarget.GetUnicode(), nsnull);
           }
         }
@@ -845,7 +845,7 @@ NS_IMETHODIMP pluginInstanceOwner :: ShowStatus(const char *aStatusMsg)
 
         if(browserChrome)
           {
-          nsAutoString  msg = nsAutoString(aStatusMsg);
+          nsAutoString  msg; msg.AssignWithConversion(aStatusMsg);
           browserChrome->SetJSStatus(msg.GetUnicode());
           }
         }
