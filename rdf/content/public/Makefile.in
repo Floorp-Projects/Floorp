@@ -33,6 +33,7 @@ EXPORTS		= \
 		nsIDOMXULDocument.h \
 		nsIDOMXULEditorElement.h \
 		nsIDOMXULElement.h \
+		nsIDOMXULPopupElement.h \
 		nsIDOMXULTreeElement.h \
 		nsIStreamLoadableDocument.h \
 		nsIXULContentSink.h \

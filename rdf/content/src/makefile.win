@@ -42,6 +42,7 @@ CPP_OBJS=\
         .\$(OBJDIR)\nsXULPrototypeCache.obj       \
         .\$(OBJDIR)\nsJSXULDocument.obj           \
         .\$(OBJDIR)\nsJSXULElement.obj            \
+		.\$(OBJDIR)\nsJSXULPopupElement.obj            \
         .\$(OBJDIR)\nsJSXULTreeElement.obj        \
         .\$(OBJDIR)\nsJSXULEditorElement.obj      \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \

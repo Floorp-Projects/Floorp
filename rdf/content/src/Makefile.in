@@ -36,6 +36,7 @@ CPPSRCS		= \
 		nsJSXULDocument.cpp \
 		nsJSXULElement.cpp \
 		nsJSXULCommandDispatcher.cpp \
+		nsJSXUIPopupElement.cpp \
 		nsJSXULTreeElement.cpp \
 		nsJSXULEditorElement.cpp \
 		nsRDFDOMNodeList.cpp \
