@@ -43,6 +43,7 @@
 <!ENTITY maxMessagesStart.label "Ask me before downloading more than">
 <!-- LOCALIZATION NOTE (maxMessagesEnd.label) : see note for maxMessagesStart.label -->
 <!ENTITY maxMessagesEnd.label "messages">
+<!ENTITY alwaysAuthenticate.label "Always request authentication when connecting to this server">
 <!ENTITY newsrcFilePath.label "newsrc file:">
 <!ENTITY localPath.label "Local directory:">
 <!ENTITY abbreviate.label "Show newsgroup names in the Mail Folder pane as:">

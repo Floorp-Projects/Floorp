@@ -201,6 +201,12 @@ Contributors:
              observes="broadcaster_notify"/>
     </hbox>
   </hbox>
+  <hbox iscontrolcontainer="true">
+    <checkbox hidable="true" hidefor="pop3,imap" wsm_persist="true" id="nntp.pushAuth"
+              label="&alwaysAuthenticate.label;"
+              prefattribute="value"
+              prefstring="mail.server.%serverkey%.always_authenticate"/>
+  </hbox>
 <!-- take out for now - bug 45079
     <hbox iscontrolcontainer="true" flex="100%">
       <groupbox>
