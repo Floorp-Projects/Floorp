@@ -26,6 +26,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsIWebShellServices.h"
 #include "nsIContentViewerContainer.h"
+#include "nsCURILoader.h"
 #include "nsObserverBase.h"
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
