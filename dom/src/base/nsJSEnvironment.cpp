@@ -355,7 +355,9 @@ LocaleToUnicode(JSContext *cx, char *src, jsval *rval)
           if (shrunkUnichars)
             unichars = shrunkUnichars;
         }
-        str = JS_NewUCString(cx, unichars, unicharLength);
+        str = JS_NewUCString(cx,
+                             NS_REINTERPRET_CAST(jschar*, unichars),
+                             unicharLength);
       }
       if (!str)
         free(unichars);
