@@ -29,6 +29,14 @@
 # file under either the NPL or the GPL.
 #
 
+#  Parses the nasty devedge document (jsref.htm) into somewhat nicer xml.
+#  The XML source, jsref.xml, located at
+#  http://www.mozilla.org/js/apidoc/jsapi.xml is now the authoritative place to
+#  make changes.
+#  This file should be considered dead.  Do not use it.  It is here for emergency
+#  use only.
+#  REPEAT: DO NOT USE THIS SCRIPT!
+
 my $API         = 0;
 my $ENTRY       = 1;
 my $TYPE        = 2;
@@ -56,6 +64,8 @@ my $NAMESPACE = ""; # "APIDOC";
 
 my $TAB = "    ";
 my $indent_pfx = "";
+
+die ("I said, dont use this script!  Don't you read the comments?\n");
 
 &parse_old_doc ();
 
