@@ -946,7 +946,7 @@ void BasicTableLayoutStrategy::SetMinAndMaxTableContentWidths()
   for (PRInt32 colX = 0; colX < mNumCols; colX++) { 
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
     mMinTableContentWidth += colFrame->GetMinWidth();
-    mMaxTableContentWidth += colFrame->GetDesWidth();
+    mMaxTableContentWidth += PR_MAX(colFrame->GetDesWidth(), colFrame->GetFixWidth());
     if (mTableFrame->GetNumCellsOriginatingInCol(colX) > 0) {
       mMaxTableContentWidth += spacingX;
       mMinTableContentWidth += spacingX;
