@@ -58,7 +58,7 @@
 
 	<box id="editFields" align="vertical" >
 
-		<box align="horizontal"  >
+		<box align="horizontal" id="loginEditField"  >
 
 			<html:div style="min-width: 6em;" id="login.text">&editfield1.label;</html:div>
 
@@ -70,7 +70,7 @@
 
 		<box align="horizontal"  id ="passwordEditfield">
 
-			<html:div style="min-width: 6em;">&editfield2.label;</html:div>
+			<html:div style="min-width: 6em;" id="password.text">&editfield2.label;</html:div>
 
 			<html:input accesskey="p" tabindex="1" type="password" id="dialog.password" flex="100%"/>
 

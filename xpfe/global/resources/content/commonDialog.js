@@ -22,6 +22,24 @@ function commonDialogOnLoad()
 		element.src = iconURL;
 	else
 		dump("couldn't find icon element \n");
+	// Set button names
+	var buttonText = param.GetString( 8 );
+	if ( buttonText != "" )
+	{
+		dump( "Setting OK Button to "+buttonText+"\n");
+		var okButton = document.getElementById("ok");
+		okButton.setAttribute("value", buttonText);
+	}
+	
+	buttonText = param.GetString( 9 );
+	if ( buttonText != "" )
+	{
+	
+		dump( "Setting Cancel Button to"+buttonText+"\n");
+		var cancelButton = document.getElementById("cancel");
+		cancelButton.setAttribute( "value",buttonText);
+	}
+	
 	// Adjust number buttons
 	var numButtons = param.GetInt( 2 );
 	if ( numButtons == 1 )
@@ -41,6 +59,7 @@ function commonDialogOnLoad()
 	// Set the Checkbox
 	dump(" set checkbox \n");
 	var checkMsg = param.GetString(  1 );
+	dump("check box msg is "+ checkMsg +"\n");
 	if ( checkMsg != "" )
 	{	
 		var prompt = (document.getElementById("checkboxLabel"));
@@ -56,7 +75,7 @@ function commonDialogOnLoad()
 	}
 	else
 	{
-		
+		dump("not visibile \n");
 		var element = document.getElementById("checkboxLabel");
 		element.setAttribute("style","display: none;" );
 	}
@@ -71,24 +90,49 @@ function commonDialogOnLoad()
 	
 	element = document.getElementById("dialog.loginname");
 	element.value = param.GetString( 6 );
-	var numEditFields = param.GetInt( 3 );
-	switch( numEditFields )
+	var numEditfields = param.GetInt( 3 );
+	switch( numEditfields )
 	{
-		
+		case 2:
+			var element = document.getElementById("dialog.loginname");
+			element.focus();
+			break;
 	 	case 1:
-	 		dump("hiding password");
-	 		var element = document.getElementById("passwordEditfield");
-			element.setAttribute("style","display: none;" );
-			// Now hide the meanless text
-			var element = document.getElementById("login.text","");
-			element.setAttribute("style", "display:none;"  );
+	 		var editfield1Password = param.GetInt( 4 );
+	 		if ( editfield1Password == 1 )
+		 	 {
+		 	 	dump("hiding password");
+		 		var element = document.getElementById("loginEditField");
+				element.setAttribute("style","display: none;" );
+				// Now hide the meanless text
+				var element = document.getElementById("password.text");
+				element.setAttribute("style", "display:none;"  );
+				var element = document.getElementById("dialog.password");
+				dump("give keyboard focus to password edit field \n");
+				element.focus();
+		 	 }
+		 	 else
+		 	 {
+		 		dump("hiding password");
+		 		var element = document.getElementById("passwordEditfield");
+				element.setAttribute("style","display: none;" );
+				// Now hide the meanless text
+				var element = document.getElementById("login.text");
+				element.setAttribute("style", "display:none;"  );
+				
+			}
 			break;
 	 	case 0:
-	 		dump("show password");
+	 		dump("hide editfields \n");
 			var element = document.getElementById("editFields");
 			element.setAttribute("style","display: none;" );
+			
 			break;
 	}
+	
+
+	// Move to the right location
+	moveToAlertPosition();
 }
 
 function onCheckboxClick()
@@ -115,11 +159,11 @@ function commonDialogOnOK()
 	dump("commonDialogOnOK \n");
 	param.SetInt(0, 0 );
 	var element = document.getElementById("dialog.loginname");
-	param.SetInt( 6, element.value );
+	param.SetString( 6, element.value );
 	dump(" login name - "+ element.value+ "\n");
 	
 	element = document.getElementById("dialog.password");
-	param.SetInt( 7, element.value );
+	param.SetString( 7, element.value );
 	dump(" password - "+ element.value+ "\n");
 	return true;
 }
