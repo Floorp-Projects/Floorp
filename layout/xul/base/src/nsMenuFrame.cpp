@@ -56,6 +56,8 @@ nsMenuFrame::nsMenuFrame()
 
 } // cntr
 
+// The following methods are all overridden to ensure that the xpmenuchildren frame
+// is placed in the appropriate list.
 NS_IMETHODIMP
 nsMenuFrame::FirstChild(nsIAtom*   aListName,
                         nsIFrame** aFirstChild) const
@@ -68,3 +70,16 @@ nsMenuFrame::FirstChild(nsIAtom*   aListName,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsMenuFrame::SetInitialChildList(nsIPresContext& aPresContext,
+                                               nsIAtom*        aListName,
+                                               nsIFrame*       aChildList)
+{
+  nsresult rv = NS_OK;
+  if (nsLayoutAtoms::popupList == aListName) {
+    mPopupFrames.SetFrames(aChildList);
+  } else {
+    rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
+  }
+  return rv;
+}

@@ -38,8 +38,12 @@ class nsMenuFrame : public nsBoxFrame
 public:
   nsMenuFrame();
 
-  NS_IMETHODIMP FirstChild(nsIAtom*   aListName,
-                           nsIFrame** aFirstChild) const;
+  NS_IMETHOD FirstChild(nsIAtom*   aListName,
+                        nsIFrame** aFirstChild) const;
+
+  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
+                                 nsIAtom*        aListName,
+                                 nsIFrame*       aChildList);
 
 protected:
   nsFrameList mPopupFrames;
