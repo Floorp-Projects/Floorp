@@ -129,6 +129,10 @@ static const size_t gMaxRecycledSize = 200;
 // Set via the "layout.reflow.async" pref
 static PRBool gDoAsyncReflow = PR_FALSE;
 
+// Flag for enabling/disabling asynchronous reflow after the document has loaded.
+// Set via the "layout.reflow.async.afterDocLoad" pref
+static PRBool gDoAsyncReflowAfterDocLoad = PR_FALSE;
+
 // Memory is allocated 4-byte aligned. We have recyclers for chunks up to
 // 200 bytes
 class FrameArena {
@@ -295,7 +299,7 @@ public:
   NS_IMETHOD GetFrameSelection(nsIFrameSelection** aSelection);
 
   NS_IMETHOD EnterReflowLock();
-  NS_IMETHOD ExitReflowLock(PRBool aTryToReflow, PRBool aDoSynchronousReflow);
+  NS_IMETHOD ExitReflowLock(PRBool aTryToReflow);
 
   NS_IMETHOD BeginObservingDocument();
   NS_IMETHOD EndObservingDocument();
@@ -605,9 +609,7 @@ PresShell::PresShell()
   mCurrentEventContent = nsnull;
   mCurrentEventFrame = nsnull;
   EnableScrolling();
-  mPendingReflowEvent = PR_FALSE;
-  // XXX This is temporary code that should be removed once we've tested
-  // the "async reflow after document load" code path.
+  mPendingReflowEvent = PR_FALSE;  
   mDocumentIsLoading = PR_TRUE;
 
 #ifdef DEBUG_nisheeth
@@ -789,12 +791,14 @@ PresShell::Init(nsIDocument* aDocument,
     // First, set the defaults
     gMaxRCProcessingTime = NS_MAX_REFLOW_TIME;
     gDoAsyncReflow = PR_FALSE;
+    gDoAsyncReflowAfterDocLoad = PR_FALSE;
 
     // Get the prefs service
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
     if (NS_SUCCEEDED(result)) {      
       prefs->GetIntPref("layout.reflow.timeslice", &gMaxRCProcessingTime);
       prefs->GetBoolPref("layout.reflow.async", &gDoAsyncReflow);
+      prefs->GetBoolPref("layout.reflow.async.afterDocLoad", &gDoAsyncReflowAfterDocLoad);
     }
   }
 
@@ -822,14 +826,24 @@ PresShell::EnterReflowLock()
 }
 
 NS_IMETHODIMP
-PresShell::ExitReflowLock(PRBool aTryToReflow, PRBool aDoSynchronousReflow)
+PresShell::ExitReflowLock(PRBool aTryToReflow)
 {
   PRUint32 newReflowLockCount = mReflowLockCount - 1;
   if (newReflowLockCount == 0 && aTryToReflow) {
-    if (aDoSynchronousReflow)
-      ProcessReflowCommands(PR_FALSE);
-    else
+    /* If a) layout.reflow.async is true, OR
+     *    b) layout.reflow.async.afterDocLoad is true AND the doc has finished loading
+     * Then
+     *    Process the reflow commands asynchronously
+     * Else
+     *    Process the reflow commands synchronously.
+     */
+    if (gDoAsyncReflow ||
+      (gDoAsyncReflowAfterDocLoad && !mDocumentIsLoading)) {      
       PostReflowEvent();
+    }      
+    else {
+      ProcessReflowCommands(PR_FALSE);
+    }
   }
   mReflowLockCount = newReflowLockCount;
   return NS_OK;
@@ -1164,7 +1178,7 @@ PresShell::InitialReflow(nscoord aWidth, nscoord aHeight)
     MOZ_TIMER_STOP(mReflowWatch);
   }
 
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE);
 
   if (mViewManager && mCaret && !mViewEventListener) {
     nsIScrollableView* scrollingView = nsnull;
@@ -1264,7 +1278,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     printf("PresShell::ResizeReflow: null root frame\n");
 #endif
   }
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE);
   
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -1317,6 +1331,9 @@ NS_IMETHODIMP PresShell::SetCaretEnabled(PRBool aInEnable)
 	
 	if (mCaret && (mCaretEnabled != oldEnabled))
 	{
+    // Update the document's content and frame models.
+    if (mDocument) mDocument->FlushPendingNotifications();
+
 		if (mCaretEnabled)
 			result = mCaret->SetCaretVisible(PR_TRUE);
 		else
@@ -1547,7 +1564,7 @@ PresShell::StyleChangeReflow()
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::StyleChangeReflow"));
   }
 
-  ExitReflowLock(PR_TRUE, !gDoAsyncReflow);
+  ExitReflowLock(PR_TRUE);
 
   return NS_OK; //XXX this needs to be real. MMP
 }
@@ -1672,9 +1689,8 @@ PresShell::EndLoad(nsIDocument *aDocument)
     watch->PrintTimer(NS_TIMER_STYLE_RESOLUTION);    
   }
 #endif
-
-  // XXX This is temporarily commented out so that this change can be tested locally.
-  // mDocumentIsLoading = PR_FALSE;
+  
+  mDocumentIsLoading = PR_FALSE;
   return NS_OK;
 }
 
@@ -1821,7 +1837,7 @@ struct ReflowEvent : public PLEvent {
       presShell->SetReflowEventStatus(PR_FALSE);
       presShell->EnterReflowLock();
       presShell->ProcessReflowCommands(PR_TRUE);
-      presShell->ExitReflowLock(PR_FALSE, PR_TRUE);      
+      presShell->ExitReflowLock(PR_FALSE);      
     }
     else
       mPresShell = 0;    
@@ -2359,11 +2375,8 @@ PresShell::SetReflowEventStatus(PRBool aPending)
 
 NS_IMETHODIMP 
 PresShell::FlushPendingNotifications()
-{
-  // XXX This is temporarily commented out so that this change can be
-  // tested locally.
-  // return ProcessReflowCommands(PR_FALSE);
-  return NS_OK;
+{  
+  return ProcessReflowCommands(PR_FALSE);  
 }
 
 NS_IMETHODIMP
@@ -2374,7 +2387,7 @@ PresShell::ContentChanged(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentChanged(mPresContext, aContent, aSubContent);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, (!gDoAsyncReflow && mDocumentIsLoading));
+  ExitReflowLock(PR_TRUE);
 
   return rv;
 }
@@ -2387,7 +2400,7 @@ PresShell::ContentStatesChanged(nsIDocument* aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->ContentStatesChanged(mPresContext, aContent1, aContent2);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, !gDoAsyncReflow);
+  ExitReflowLock(PR_TRUE);
 
   return rv;
 }
@@ -2403,7 +2416,7 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
   EnterReflowLock();
   nsresult rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aHint);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, !gDoAsyncReflow);
+  ExitReflowLock(PR_TRUE);
   return rv;
 }
 
@@ -2430,7 +2443,7 @@ PresShell::ContentAppended(nsIDocument *aDocument,
 
   MOZ_TIMER_DEBUGLOG(("Stop: Frame Creation: PresShell::ContentAppended(), this=%p\n", this));
   MOZ_TIMER_STOP(mFrameCreationWatch);
-  ExitReflowLock(PR_TRUE, (!gDoAsyncReflow && mDocumentIsLoading));
+  ExitReflowLock(PR_TRUE);
   return rv;
 }
 
@@ -2443,7 +2456,7 @@ PresShell::ContentInserted(nsIDocument* aDocument,
   EnterReflowLock();
   nsresult  rv = mStyleSet->ContentInserted(mPresContext, aContainer, aChild, aIndexInContainer);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, (!gDoAsyncReflow && mDocumentIsLoading));
+  ExitReflowLock(PR_TRUE);
   return rv;
 }
 
@@ -2458,7 +2471,7 @@ PresShell::ContentReplaced(nsIDocument* aDocument,
   nsresult  rv = mStyleSet->ContentReplaced(mPresContext, aContainer, aOldChild,
                                             aNewChild, aIndexInContainer);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE);
   return rv;
 }
 
@@ -2472,7 +2485,7 @@ PresShell::ContentRemoved(nsIDocument *aDocument,
   nsresult  rv = mStyleSet->ContentRemoved(mPresContext, aContainer,
                                            aChild, aIndexInContainer);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, mDocumentIsLoading);
+  ExitReflowLock(PR_TRUE);
   return rv;
 }
 
@@ -2484,7 +2497,7 @@ PresShell::ReconstructFrames(void)
   EnterReflowLock();
   rv = mStyleSet->ReconstructDocElementHierarchy(mPresContext);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE);
 
   return rv;
 }
@@ -2521,7 +2534,7 @@ PresShell::StyleRuleChanged(nsIDocument *aDocument,
   nsresult  rv = mStyleSet->StyleRuleChanged(mPresContext, aStyleSheet,
                                              aStyleRule, aHint);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE);
   return rv;
 }
 
@@ -2534,7 +2547,7 @@ PresShell::StyleRuleAdded(nsIDocument *aDocument,
   nsresult rv = mStyleSet->StyleRuleAdded(mPresContext, aStyleSheet,
                                           aStyleRule);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -2551,7 +2564,7 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
   nsresult  rv = mStyleSet->StyleRuleRemoved(mPresContext, aStyleSheet,
                                              aStyleRule);
   VERIFY_STYLE_TREE;
-  ExitReflowLock(PR_TRUE, PR_TRUE);
+  ExitReflowLock(PR_TRUE);
   if (NS_FAILED(rv)) {
     return rv;
   }

@@ -334,7 +334,7 @@ nsListControlFrame::Reflow(nsIPresContext*          aPresContext,
         if (NS_FAILED(rv)) { return rv; }
         rv = shell->AppendReflowCommand(cmd);
         // must do this next line regardless of result of AppendReflowCommand
-        shell->ExitReflowLock(PR_TRUE, PR_TRUE);
+        shell->ExitReflowLock(PR_TRUE);
       }
     }
 
