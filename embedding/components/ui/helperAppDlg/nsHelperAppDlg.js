@@ -242,6 +242,7 @@ nsHelperAppDialog.prototype = {
          if ( this.mDialog.opener ) {
              this.mDialog.moveToAlertPosition();
          } else {
+             this.mDialog.sizeToContent();
              this.mDialog.centerWindowOnScreen();
          }
 
