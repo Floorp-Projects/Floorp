@@ -293,24 +293,15 @@ PRStatus _pr_init_ipv6()
 #if !defined(_PR_INET6) && defined(_PR_HAVE_GETIPNODEBYNAME)
 	PRLibrary *lib;	
 #if defined(VMS)
-#define GETIPNODEBYNAME "DECC$GETIPNODEBYNAME"
-#define GETIPNODEBYADDR "DECC$GETIPNODEBYADDR"
-#define FREEHOSTENT     "DECC$FREEHOSTENT"
-#define GAISTRERROR     "DECC$GAISTRERROR"
-	typedef char * (*_pr_getstrerror_t)(int);
-	_pr_getstrerror_t _pr_gaistrerror_fp;
-	_pr_getipnodebyname_fp = NULL;
-	_pr_gaistrerror_fp = (_pr_getstrerror_t)PR_FindSymbolAndLibrary(GAISTRERROR, &lib);
-	if (NULL != _pr_gaistrerror_fp) {
-		if (NULL != (*_pr_gaistrerror_fp)(0))
-			_pr_getipnodebyname_fp = PR_FindSymbol(lib, GETIPNODEBYNAME);
-	}
+#define GETIPNODEBYNAME getenv("GETIPNODEBYNAME")
+#define GETIPNODEBYADDR getenv("GETIPNODEBYADDR")
+#define FREEHOSTENT     getenv("FREEHOSTENT")
 #else
 #define GETIPNODEBYNAME "getipnodebyname"
 #define GETIPNODEBYADDR "getipnodebyaddr"
 #define FREEHOSTENT     "freehostent"
-	_pr_getipnodebyname_fp = PR_FindSymbolAndLibrary(GETIPNODEBYNAME, &lib);
 #endif
+	_pr_getipnodebyname_fp = PR_FindSymbolAndLibrary(GETIPNODEBYNAME, &lib);
 	if (NULL != _pr_getipnodebyname_fp) {
 		_pr_freehostent_fp = PR_FindSymbol(lib, FREEHOSTENT);
 		if (NULL != _pr_freehostent_fp) {

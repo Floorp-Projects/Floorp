@@ -99,6 +99,7 @@ struct ip_mreq {
 #define _PR_NO_LARGE_FILES
 
 /* IPv6 support */
+#define _PR_HAVE_SOCKADDR_LEN
 #define _PR_HAVE_GETIPNODEBYNAME
 #define _PR_HAVE_GETIPNODEBYADDR
 #define _PR_INET6_PROBE
@@ -108,6 +109,24 @@ struct ip_mreq {
 #define AI_ALL      0x00000008
 #define AI_ADDRCONFIG 0x00000020
 #endif
+
+#define _PR_HAVE_MD_SOCKADDR_IN6
+/* if we have a quadword field defined in the structure, then its length */
+/* will be a multiple of 8, and connect() won't accept 32 (it wants 28) */
+struct _md_in6_addr {
+    union {
+        PRUint8  _S6_u8[16];
+        PRUint16 _S6_u16[8];
+        PRUint32 _S6_u32[4];
+    } _S6_un;
+};
+struct _md_sockaddr_in6 {
+    PRUint16 sin6_family;
+    PRUint16 sin6_port;
+    PRUint32 sin6_flowinfo;
+    struct _md_in6_addr sin6_addr;
+    PRUint32 sin6_scope_id;
+};
 
 #undef  USE_SETJMP
 
