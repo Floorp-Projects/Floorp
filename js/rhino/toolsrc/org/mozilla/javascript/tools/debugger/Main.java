@@ -771,7 +771,7 @@ class FileHeader extends JPanel implements MouseListener {
     }
     public void mouseReleased(MouseEvent e) {
         if (e.getComponent() == this &&
-          (e.getModifiers() & MouseEvent.BUTTON1_MASK) != 0) 
+          (e.getModifiers() & MouseEvent.BUTTON1_MASK) != 0)
         {
             int x = e.getX();
             int y = e.getY();
@@ -2619,7 +2619,6 @@ public class Main extends JFrame implements Debugger, ContextListener {
         return item;
     }
 
-
     void handleBreakpointHit(Context cx) {
         breakFlag = false;
         interrupted(cx);
@@ -2628,21 +2627,16 @@ public class Main extends JFrame implements Debugger, ContextListener {
     private static Object unwrapException(Object ex) {
         for (;;) {
             if (ex instanceof JavaScriptException) {
-                ex = ScriptRuntime.unwrapJavaScriptException
-                            ((JavaScriptException)ex);
-            }else if (ex instanceof EcmaError) {
+                ex = ((JavaScriptException)ex).getValue();
+            } else if (ex instanceof EcmaError) {
                 ex = ((EcmaError)ex).getErrorObject();
-            }else if (ex instanceof NativeJavaObject) {
+            } else if (ex instanceof NativeJavaObject) {
                 ex = ((NativeJavaObject)ex).unwrap();
                 break;
-            }else if (ex instanceof WrappedException) {
-                Object w = ((WrappedException)ex).unwrap();
-                if (w instanceof Throwable) {
-                    ex = w;
-                    continue;
-                }
-                break;
-            }else {
+            } else if (ex instanceof WrappedException) {
+                ex = ((WrappedException)ex).getWrappedException();
+                continue;
+            } else {
                 break;
             }
         }
