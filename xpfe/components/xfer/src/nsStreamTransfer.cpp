@@ -164,7 +164,7 @@ nsStreamTransfer::SelectFile( nsIFileSpec **aResult, const nsCString &suggested 
             }
 
             //XXX l10n
-            nsAutoCString title("Save File");
+            nsAutoCString title(NS_ConvertASCIItoUCS2("Save File"));
         
             rv = result->ChooseOutputFile( title,
                                            suggested.IsEmpty() ? 0 : suggested.GetBuffer(),

@@ -140,8 +140,8 @@ nsStreamXferOp::OnError( int operation, nsresult errorCode ) {
         char buf[32];
         PR_snprintf( buf, sizeof( buf ), "%d %X", operation, (int)errorCode );
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
-                                 nsAutoString( NS_ISTREAMTRANSFER_PROGID ";onError" ).GetUnicode(),
-                                 nsAutoString( buf ).GetUnicode() );
+                                 NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onError" ).GetUnicode(),
+                                 NS_ConvertASCIItoUCS2( buf ).GetUnicode() );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
                           (char*)__FILE__, (int)__LINE__, (int)rv );
@@ -379,8 +379,8 @@ nsStreamXferOp::OnProgress(nsIChannel* channel, nsISupports* aContext,
         char buf[32];
         PR_snprintf( buf, sizeof buf, "%lu %ld", (unsigned long)aProgress, (long)mContentLength );
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
-                                  nsString( NS_ISTREAMTRANSFER_PROGID ";onProgress" ).GetUnicode(),
-                                  nsString( buf ).GetUnicode() );
+                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onProgress" ).GetUnicode(),
+                                  NS_ConvertASCIItoUCS2( buf ).GetUnicode() );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
                           (char*)__FILE__, (int)__LINE__, (int)rv );
@@ -402,8 +402,8 @@ nsStreamXferOp::OnStatus( nsIChannel      *channel,
     if ( mObserver ) {
         nsString msg = aMsg;
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
-                                  nsString( NS_ISTREAMTRANSFER_PROGID ";onStatus" ).GetUnicode(),
-                                  nsString( msg ).GetUnicode() );
+                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onStatus" ).GetUnicode(),
+                                  msg.GetUnicode() );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
                           (char*)__FILE__, (int)__LINE__, (int)rv );
@@ -444,8 +444,8 @@ nsStreamXferOp::OnStopRequest( nsIChannel      *channel,
     if ( mObserver ) {
         nsString msg = aMsg;
         rv = mObserver->Observe( (nsIStreamTransferOperation*)this,
-                                  nsString( NS_ISTREAMTRANSFER_PROGID ";onCompletion" ).GetUnicode(),
-                                  nsString( msg ).GetUnicode() );
+                                  NS_ConvertASCIItoUCS2( NS_ISTREAMTRANSFER_PROGID ";onCompletion" ).GetUnicode(),
+                                  msg.GetUnicode() );
         if ( NS_FAILED( rv ) ) {
             DEBUG_PRINTF( PR_STDOUT, "%s %d: Observe failed, rv=0x%08X\n",
                           (char*)__FILE__, (int)__LINE__, (int)rv );
