@@ -3,10 +3,10 @@
 <assemblyIdentity
         version="1.0.0.0"
         processorArchitecture="X86"
-        name="Microsoft.Winweb.MantaRay"
+        name="Mozilla.Sunbird"
         type="win32"
 />
-<description>.NET control deployment tool</description>
+<description>Mozilla Sunbird</description>
 <dependency>
         <dependentAssembly>
                 <assemblyIdentity

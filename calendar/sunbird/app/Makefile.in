@@ -44,9 +44,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-PREF_JS_EXPORTS = \
-    $(srcdir)/profile/all.js \
-    $(NULL)
+DIRS		= profile
+
+PREF_FILES = $(srcdir)/profile/all.js
 
 ifeq ($(USE_SHORT_LIBNAME), 1)
 PROGRAM = MozillaSunbird$(BIN_SUFFIX)
@@ -140,6 +140,35 @@ ifdef BUILD_STATIC_LIBS
 include $(topsrcdir)/config/static-rules.mk
 endif
 
+APP_VERSION = $(shell cat $(srcdir)/../config/version.txt)
+DEFINES += -DAPP_VERSION=\"$(APP_VERSION)\"
+
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+ifdef BUILD_STATIC_LIBS
+LIBS	+= -framework QuickTime -framework IOKit
+endif
+endif
+
+ifeq ($(OS_ARCH),WINNT)
+#
+# Control the default heap size.
+# This is the heap returned by GetProcessHeap().
+# As we use the CRT heap, the default size is too large and wastes VM.
+#
+# The default heap size is 1MB on Win32.
+# The heap will grow if need be.
+#
+# Set it to 256k.  See bug 127069.
+#
+ifndef GNU_CC
+LDFLAGS += /HEAP:0x40000
+endif
+# Get rid of console window
+ifdef GNU_CC
+LDFLAGS += -mwindows
+endif
+endif
+
 $(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 
 ifeq ($(OS_ARCH),OS2)
@@ -174,18 +203,41 @@ GARBAGE += $(addprefix $(DIST)/bin/defaults/pref/, all.js)
 
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),gtk2)
+libs::
+	$(INSTALL) $(srcdir)/default.xpm $(DIST)/bin/chrome/icons
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(srcdir)/default.xpm $(DESTDIR)$(mozappdir)/icons
+endif
+
+export:: $(PREF_FILES)
+	@for i in $(PREF_FILES); do rm -f $(DIST)/bin/defaults/pref/`basename $$i`; $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DIST)/bin/defaults/pref/`basename $$i`; done
+
+export:: brand.dtd.in
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $^ > brand.dtd
+
+install:: $(PREF_FILES)
+	@for i in $(PREF_FILES); do rm -f $(DESTDIR)$(mozappdir)/defaults/pref/`basename $$i`; $(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $$i > $(DESTDIR)$(mozappdir)/defaults/pref/`basename $$i`; done
+
+libs::
+	touch $(DIST)/bin/.autoreg
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
 APP_NAME = Mozilla\ Sunbird
 
 libs:: $(PROGRAM)
 	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
-	rsync -a $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
+	rsync -a --exclude CVS --exclude "*.in" $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
+	sed -e "s/APP_VERSION/$(APP_VERSION)/" $(srcdir)/macbuild/Contents/Info.plist.in > $(DIST)/$(APP_NAME).app/Contents/Info.plist
 	rsync -a $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
 	rm -f $(DIST)/$(APP_NAME).app/Contents/MacOS/$(PROGRAM)
 	rsync -aL $(PROGRAM) $(DIST)/$(APP_NAME).app/Contents/MacOS
 	cp -RL $(srcdir)/macbuild/mach.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
-	echo -n APPLMOZZ > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+	echo -n APPLMOZB > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+#       remove CVS dirs from packaged app
+	find $(DIST)/$(APP_NAME).app -type d -name "CVS" -prune -exec rm -rf {} \;
 
 clean clobber::
 	rm -rf $(DIST)/$(APP_NAME).app

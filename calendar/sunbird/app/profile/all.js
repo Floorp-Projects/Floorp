@@ -38,27 +38,38 @@
 // SYNTAX HINTS:  dashes are delimiters.  Use underscores instead.
 //  The first character after a period must be alphabetic.
 
-pref("startup.homepage_override_url","chrome://navigator-region/locale/region.properties");
+// pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
 pref("browser.chromeURL","chrome://browser/content/");
+pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul");
+pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
+pref("xpinstall.dialog.progress", "chrome://mozapps/content/downloads/downloads.xul");
+pref("xpinstall.dialog.progress.type", "Download:Manager");
 
 pref("keyword.enabled", true);
 pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");
 
-pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
-pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
+pref("general.useragent.locale", "chrome://global/locale/intl.properties");
+pref("general.useragent.contentlocale", "chrome://browser-region/locale/region.properties");
 pref("general.useragent.vendor", "Mozilla Sunbird");
-pref("general.useragent.vendorSub", "0.1");
+pref("general.useragent.vendorSub",
+#expand __APP_VERSION__
+);
 
 pref("general.smoothScroll", false);
+#ifdef XP_UNIX
+pref("general.autoScroll", false);
+#else
+pref("general.autoScroll", true);
+#endif
 
 pref("backups.number_of_prefs_copies", 1);
 
 // 0 = blank, 1 = home (browser.startup.homepage), 2 = last
 // XXXBlake Remove this stupid pref
 pref("browser.startup.page",                1);
-pref("browser.startup.homepage",	          "chrome://navigator-region/locale/region.properties");
+pref("browser.startup.homepage",	          "chrome://browser-region/locale/region.properties");
 // "browser.startup.homepage_override" was for 4.x
-pref("browser.startup.homepage_override.1", true);
+pref("browser.startup.homepage_override.1", false);
 
 pref("browser.cache.enable",                true); // see also network.http.use-cache
 pref("browser.cache.disk.enable",           true);
@@ -80,8 +91,8 @@ pref("browser.display.force_inline_alttext", false); // true = force ALT text fo
 // 2 = add extra leading both internal leading and external leading are zero
 pref("browser.display.normal_lineheight_calc_control", 2);
 pref("browser.display.show_image_placeholders", true); // true = show image placeholders while image is loaded and when image is broken
-pref("browser.display.enable_marquee",      true);
 pref("browser.anchor_color",                "#0000EE");
+pref("browser.active_color",                "#EE0000");
 pref("browser.visited_color",               "#551A8B");
 pref("browser.underline_anchors",           true);
 pref("browser.blink_allowed",               true);
@@ -122,14 +133,21 @@ pref("accessibility.typeaheadfind.enabletimeout", true);
 pref("accessibility.typeaheadfind.soundURL", "default");
 pref("accessibility.typeaheadfind.enablesound", true);
 
-pref("browser.download.progressDnldDialog.keepAlive", true); // keep the dnload progress dialog up after dnload is complete
-pref("browser.download.progressDnldDialog.enable_launch_reveal_buttons", true);
-pref("browser.download.useProgressDialogs", true);
-pref("browser.download.openSidebar", false);
-pref("browser.download.useDownloadDir", false);
+pref("browser.download.useDownloadDir", true);
+pref("browser.download.folderList", 0);
+pref("browser.download.manager.showAlertOnComplete", true);
+pref("browser.download.manager.showAlertInterval", 2000);
+pref("browser.download.manager.retention", 2);
+pref("browser.download.manager.showWhenStarting", true);
+pref("browser.download.manager.useWindow", true);
+pref("browser.download.manager.closeWhenDone", true);
+pref("browser.download.manager.openDelay", 500);
 
-// various default search settings
+// pointer to the default engine name
+pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");
+// pointer to the Web Search url (content area context menu)
 pref("browser.search.defaulturl", "chrome://browser-region/locale/region.properties");
+
 // basic search popup constraint: minimum sherlock plugin version displayed
 // (note: must be a string representation of a float or it'll default to 0.0)
 pref("browser.search.basic.min_ver", "0.0");
@@ -188,9 +206,6 @@ pref("browser.fixup.alternate.suffix", ".com");
 pref("browser.bookmarks.sort.direction", "descending");
 pref("browser.bookmarks.sort.resource", "rdf:http://home.netscape.com/NC-rdf#Name");
 
-//Internet Search
-pref("browser.search.defaultenginename", "chrome://browser-region/locale/region.properties");
-
 // Print header customization
 // Use the following codes:
 // &T - Title
@@ -208,15 +223,8 @@ pref("print.print_footercenter", "");
 pref("print.print_footerright", "&D");
 pref("print.show_print_progress", true);
 
-// When this is set to false it means each window has its PrintSettings
-// and a change in one browser window does not effect the others
-pref("print.use_global_printsettings", true);
-
 // This indicates whether it should use the native dialog or the XP Dialog50
 pref("print.use_native_print_dialog", false);
-
-// Save the Printings after each print job
-pref("print.save_print_settings", true);
 
 pref("print.whileInPrintPreview", true);
 
@@ -447,10 +455,9 @@ pref("network.proxy.socks_port",            0);
 pref("network.proxy.socks_version",         5);
 pref("network.proxy.no_proxies_on",         "localhost, 127.0.0.1");
 pref("network.online",                      true); //online/offline
-pref("network.cookie.enable",               true);
+pref("network.cookie.cookieBehavior",       0); // cookies enabled
 pref("network.cookie.warnAboutCookies",     false);
 pref("network.cookie.enableForCurrentSessionOnly", false);
-pref("network.cookie.enableForOriginatingWebsiteOnly", false);
 pref("network.cookie.lifetime.days",        90);
 
 // The following default value is for p3p medium mode.
@@ -459,30 +466,33 @@ pref("network.cookie.p3p",                  "ffffaaaa");
 pref("network.cookie.p3plevel",             1); // 0=low, 1=medium, 2=high, 3=custom
 
 pref("network.enablePad",                   false); // Allow client to do proxy autodiscovery
-pref("network.enableIDN",                   false); // Turn on/off IDN (Internationalized Domain Name) resolution
+pref("network.enableIDN",                   true); // Turn on/off IDN (Internationalized Domain Name) resolution
 pref("converter.html2txt.structs",          true); // Output structured phrases (strong, em, code, sub, sup, b, i, u)
 pref("converter.html2txt.header_strategy",  1); // 0 = no indention; 1 = indention, increased with header level; 2 = numbering and slight indention
 pref("imageblocker.enabled",                true);
-pref("intl.accept_languages",               "chrome://navigator/locale/navigator.properties");
-pref("intl.accept_charsets",                "iso-8859-1,*,utf-8");
-pref("intl.collationOption",                "chrome://navigator-platform/locale/navigator.properties");
-pref("intl.menuitems.alwaysappendacceskeys","chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.static",     "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more1",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more2",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more3",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more4",      "chrome://navigator/locale/navigator.properties");
-pref("intl.charsetmenu.browser.more5",      "chrome://navigator/locale/navigator.properties");
+
+// l12n and i18n
+pref("intl.accept_languages", "chrome://global/locale/intl.properties");
+pref("intl.accept_charsets",  "iso-8859-1,*,utf-8");
+// collationOption is only set on linux for japanese. see bug 18338 and 62015
+// we need to check if this pref is still useful.
+pref("intl.collationOption",  "chrome://global-platform/locale/intl.properties");
+pref("intl.charsetmenu.browser.static", "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more1",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more2",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more3",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more4",  "chrome://global/locale/intl.properties");
+pref("intl.charsetmenu.browser.more5",  "chrome://global/locale/intl.properties");
 pref("intl.charsetmenu.browser.cache.size", 5);
-pref("intl.charset.detector",               "chrome://navigator/locale/navigator.properties");
-pref("intl.charset.default",                "chrome://navigator-platform/locale/navigator.properties");
-pref("intl.content.langcode",               "chrome://communicator-region/locale/region.properties");
-pref("intl.locale.matchOS",                 false);
+pref("intl.charset.detector", "chrome://global/locale/intl.properties");
+pref("intl.charset.default",  "chrome://global-platform/locale/intl.properties");
+pref("intl.locale.matchOS",   false);
 // fallback charset list for Unicode conversion (converting from Unicode)
 // currently used for mail send only to handle symbol characters (e.g Euro, trademark, smartquotes)
 // for ISO-8859-1
 pref("intl.fallbackCharsetList.ISO-8859-1", "windows-1252");
-pref("font.language.group",                 "chrome://navigator/locale/navigator.properties");
+pref("font.language.group", "chrome://global/locale/intl.properties");
+pref("intl.menuitems.alwaysappendaccesskeys","chrome://global/locale/intl.properties");
 
 // -- folders (Mac: these are binary aliases.)
 pref("security.directory",              "");
@@ -522,6 +532,7 @@ pref("mousewheel.withaltkey.numlines",1);
 pref("mousewheel.withaltkey.sysnumlines",false);
 
 pref("profile.confirm_automigration",true);
+pref("profile.allow_automigration", false);   // setting to false bypasses automigration in the profile code
 
 // the amount of time (in seconds) that must elapse
 // before we think your mozilla profile is defunct
@@ -531,6 +542,8 @@ pref("profile.confirm_automigration",true);
 // if -1, we never think your profile is defunct
 // and users will never see the remigrate UI.
 pref("profile.seconds_until_defunct", -1);
+// We can show it anytime from menus
+pref("profile.manage_only_at_launch",false);
 
 // Customizable toolbar stuff
 pref("custtoolbar.personal_toolbar_folder", "");
@@ -590,7 +603,7 @@ pref("bidi.support", 1);
 // 2 = defaultcharactersetBidi
 pref("bidi.characterset", 1);
 
-pref("browser.throbber.url","chrome://navigator-region/locale/region.properties");
+pref("browser.throbber.url","chrome://browser-region/locale/region.properties");
 
 // used for double-click word selection behavior. Win will override.
 pref("layout.word_select.eat_space_to_next_word", false);
@@ -611,7 +624,7 @@ pref("alerts.height", 50);
 // update notifications prefs
 pref("update_notifications.enabled", true);
 pref("update_notifications.provider.0.frequency", 7); // number of days
-pref("update_notifications.provider.0.datasource", "chrome://communicator-region/locale/region.properties");
+pref("update_notifications.provider.0.datasource", "chrome://browser-region/locale/region.properties");
 
 // if true, allow plug-ins to override internal imglib decoder mime types in full-page mode
 pref("plugin.override_internal_types", false);
@@ -631,18 +644,20 @@ pref("browser.xul.error_pages.enabled", false);
 
 pref("signon.rememberSignons",              true);
 pref("signon.expireMasterPassword",         false);
+pref("signon.SignonFileName", "signons.txt");
 
 pref("network.protocol-handler.external.mailto", true); // for mail
 pref("network.protocol-handler.external.news" , true); // for news 
 
-// By default, all protocol handlers are hidden.  This means
-// that calendar will not respond to X-remote openURL commands
-// and it will also defer all link clicks to the user's browser.
-pref("network.protocol-handler.expose-all", false);
+// By default, all protocol handlers are exposed.  This means that
+// the browser will respond to openURL commands for all URL types.
+// It will also try to open link clicks inside the browser before
+// failing over to the system handlers.
+pref("network.protocol-handler.expose-all", true);
 
-// Default security warning dialogs to off
-pref("security.warn_entering_secure", false);
-pref("security.warn_entering_weak", false);
-pref("security.warn_leaving_secure", false);
-pref("security.warn_viewing_mixed", false);
-pref("security.warn_submit_insecure", false);
+// Default security warning dialogs to show once.
+pref("security.warn_entering_secure.show_once", true);
+pref("security.warn_entering_weak.show_once", true);
+pref("security.warn_leaving_secure.show_once", true);
+pref("security.warn_viewing_mixed.show_once", true);
+pref("security.warn_submit_insecure.show_once", true);

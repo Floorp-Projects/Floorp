@@ -54,9 +54,7 @@ IDD_SPLASH DIALOGEX
 	FONT 8, "MS Sans Serif"
 	BEGIN
 		CONTROL
-#ifndef __MINGW32__
-            IDB_SPLASH,
-#endif
+            		IDB_SPLASH,
 			IDB_SPLASH,
 			"Static",
 			SS_BITMAP,
@@ -64,8 +62,8 @@ IDD_SPLASH DIALOGEX
 	END
 
 // Splash screen bitmap.
-//IDB_SPLASH BITMAP
-//	"splash.bmp"
+// IDB_SPLASH BITMAP
+// 	"splash.bmp"
 
 STRINGTABLE DISCARDABLE
 BEGIN
