@@ -32,6 +32,56 @@
 #include <string>
 #include <map>
 
+/**
+ * Represents the CGI argument list as an STL map<string, string>.
+ */
+typedef map<string, string> Arguments;
+
+static nsresult parseArguments(const string& path, Arguments& args)
+{
+    // str should be of the form:  widget?name1=value1&...&nameN=valueN
+    string::size_type questionMark = path.find('?');
+    if (questionMark == string::npos) return NS_OK;
+    
+    string::size_type first = questionMark + 1;
+    string::size_type equals = path.find('=', first);
+    while (equals != string::npos) {
+        string name(path.begin() + first, path.begin() + equals);
+        string::size_type last = path.find('&', equals + 1);
+        if (last == string::npos) last = path.length();
+        string value(path.begin() + equals + 1, path.begin() + last);
+        args[name] = value;
+        first = last + 1;
+        equals = path.find('=', first);
+    }
+    
+    return NS_OK;
+}
+
+static const char* getArgument(const Arguments& args, const char* name, const char* defaultValue)
+{
+    Arguments::const_iterator i = args.find(name);
+    if (i != args.end())
+        return i->second.c_str();
+    return defaultValue;
+}
+
+static int getIntArgument(const Arguments& args, const char* name, int defaultValue)
+{
+    const char* value = getArgument(args, name, NULL);
+    if (value != NULL)
+        return ::atoi(value);
+    return defaultValue;
+}
+
+static bool getBoolArgument(const Arguments& args, const char* name, bool defaultValue)
+{
+    const char* value = getArgument(args, name, NULL);
+    if (value != NULL)
+        return (nsCRT::strcasecmp(value, "true") == 0);
+    return defaultValue;
+}
+
 nsThemeHandler::nsThemeHandler()
 {
     NS_INIT_ISUPPORTS();
@@ -93,6 +143,20 @@ public:
     long* begin() { return mPixels;  }
     long* end() { return mLimit; }
 
+    void fill(long value)
+    {
+        for (long *pixels = mPixels, *limit = mLimit; pixels < limit; ++pixels)
+            *pixels = value;
+    }
+
+    void xorFill(long value)
+    {
+        for (long *pixels = mPixels, *limit = mLimit; pixels < limit; ++pixels)
+            *pixels ^= value;
+    }
+
+    void copy(TempGWorld& srcWorld, Rect& srcRect, const Rect& destRect, RgnHandle maskRgn = NULL);
+
 private:
     GWorldPtr mWorld;
     PixMapHandle mPixmap;
@@ -125,6 +189,12 @@ TempGWorld::~TempGWorld()
         ::UnlockPixels(mPixmap);
         ::DisposeGWorld(mWorld);
     }
+}
+
+void TempGWorld::copy(TempGWorld& srcWorld, Rect& srcRect, const Rect& destRect, RgnHandle maskRgn)
+{
+    ::CopyBits((BitMap*)*srcWorld.mPixmap, (BitMap*)*mPixmap,
+                &srcRect, &destRect, srcCopy, maskRgn);
 }
 
 class GraphicsExporter {
@@ -219,13 +289,18 @@ static void drawTitle(const Rect *bounds, ThemeButtonKind kind,
 static RoutineDescriptor drawTitleDescriptor = BUILD_ROUTINE_DESCRIPTOR(uppThemeButtonDrawProcInfo, &drawTitle);
 static ThemeButtonDrawUPP drawTitleUPP = ThemeButtonDrawUPP(&drawTitleDescriptor);
 
-static nsresult drawThemeButton(int width, int height, bool isActive,
-                                bool isPressed, bool isDefault, const char* title,
-                                nsIInputStream **result, PRInt32 *length)
+static nsresult drawThemeButton(Arguments& args, nsIInputStream **result, PRInt32 *length)
 {
+    int width = getIntArgument(args, "width", 40);
+    int height = getIntArgument(args, "height", 20);
+    bool isActive = getBoolArgument(args, "active", true);
+    bool isPressed = getBoolArgument(args, "pressed", false);
+    bool isDefault = getBoolArgument(args, "default", false);
+    const char* title = getArgument(args, "title", NULL);
+
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
     OSStatus status;
-        
+    
     ThemeButtonDrawInfo drawInfo = {
         (isActive ? (isPressed ? kThemeStatePressed : kThemeStateActive) : kThemeStateInactive),
         kThemeButtonOn,
@@ -233,21 +308,22 @@ static nsresult drawThemeButton(int width, int height, bool isActive,
     };
 
     Rect buttonBounds = { 0, 0, height, width }, backgroundBounds;
-    if (::GetThemeButtonBackgroundBounds(&buttonBounds, kThemePushButton, &drawInfo, &backgroundBounds) == noErr) {
+    status = ::GetThemeButtonBackgroundBounds(&buttonBounds, kThemePushButton, &drawInfo, &backgroundBounds);
+    if (status == noErr) {
         width = backgroundBounds.right - backgroundBounds.left;
         height = backgroundBounds.bottom - backgroundBounds.top;
         short dx = (buttonBounds.left - backgroundBounds.left);
         short dy = (buttonBounds.top - backgroundBounds.top);
         OffsetRect(&buttonBounds, dx, dy);
         SetRect(&backgroundBounds, 0, 0, width, height);
+    } else {
+        return rv;
     }
-
+    
     TempGWorld world(backgroundBounds);
     if (world.valid()) {
         // initialize the GWorld with all black, alpha=0xFF.
-        long* pixels = world.begin();
-        long* limit = world.end();
-        while (pixels < limit) *pixels++ = 0xFF000000;
+        world.fill(0xFF000000);
         
         ButtonInfo buttonInfo = {
             title, buttonBounds, drawInfo
@@ -255,18 +331,11 @@ static nsresult drawThemeButton(int width, int height, bool isActive,
         
         status = ::DrawThemeButton(&buttonBounds, kThemePushButton, &drawInfo,
                                    NULL, NULL, drawTitleUPP,
-                                   UInt32(&buttonInfo));
+                                   reinterpret_cast<UInt32>(&buttonInfo));
 
         // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
         // otherwise turn it off on the pixels that weren't touched.
-        pixels = world.begin();
-        while (pixels < limit) {
-            long& pixel = *pixels++;
-            if (pixel != 0xFF000000)
-                pixel |= 0xFF000000;
-            else
-                pixel = 0x00000000;
-        }
+        world.xorFill(0xFF000000);
         
         // now, encode the image as a 'PNGf' image, and return the encoded image
         // as an nsIInputStream.
@@ -275,13 +344,22 @@ static nsresult drawThemeButton(int width, int height, bool isActive,
     return rv;
 }
 
-static nsresult drawThemeScrollbar(int width, int height, 
-                                   int min, int max, int value, int viewSize,
-                                   bool isActive, bool isHorizontal, bool isThumbPressed,
-                                   bool isLeftArrowPressed, bool isRightArrowPressed,
-                                   nsIInputStream **result, PRInt32 *length)
+static nsresult drawThemeScrollbar(Arguments& args, nsIInputStream **result, PRInt32 *length)
 {
+    bool isHorizontal = getBoolArgument(args, "horizontal", true);
+    int width = getIntArgument(args, "width", (isHorizontal ? 200 : 16));
+    int height = getIntArgument(args, "height", (isHorizontal ? 16 : 200));
+    int min = getIntArgument(args, "min", 0);
+    int max = getIntArgument(args, "max", 255);
+    int value = getIntArgument(args, "value", 127);
+    int viewSize = getIntArgument(args, "viewSize", 0);
+    bool isActive = getBoolArgument(args, "active", true);
+    bool isThumbPressed = getBoolArgument(args, "thumb", false);
+    bool isLeftArrowPressed = getBoolArgument(args, "left", false);
+    bool isRightArrowPressed = getBoolArgument(args, "right", false);
+
     nsresult rv = NS_ERROR_OUT_OF_MEMORY;
+    OSStatus status;
     
     ThemeTrackEnableState enableState = (isActive ? kThemeTrackActive : kThemeTrackInactive);
     ThemeTrackPressState pressState = ((isThumbPressed ? kThemeThumbPressed : 0) |
@@ -293,12 +371,10 @@ static nsresult drawThemeScrollbar(int width, int height,
     TempGWorld world(scrollbarBounds);
     if (world.valid()) {
         // initialize the GWorld with all black, alpha=0xFF.
-        long* pixels = world.begin();
-        long* limit = world.end();
-        while (pixels < limit) *pixels++ = 0xFF000000;
+        world.fill(0xFF000000);
 
         ThemeTrackDrawInfo drawInfo;
-        DrawThemeScrollBarArrows(&scrollbarBounds, enableState, pressState, isHorizontal, &drawInfo.bounds);
+        status = ::DrawThemeScrollBarArrows(&scrollbarBounds, enableState, pressState, isHorizontal, &drawInfo.bounds);
         drawInfo.kind = kThemeScrollBar;
         drawInfo.min = min, drawInfo.max = max, drawInfo.value = value;
         drawInfo.reserved = 0;
@@ -306,72 +382,36 @@ static nsresult drawThemeScrollbar(int width, int height,
         drawInfo.enableState = enableState;
         drawInfo.trackInfo.scrollbar.viewsize = viewSize;
         drawInfo.trackInfo.scrollbar.pressState = pressState;
-        DrawThemeTrack(&drawInfo, NULL, NULL, 0);
-
-        // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
-        // otherwise turn it off on the pixels that weren't touched.
-        pixels = world.begin();
-        while (pixels < limit) {
-            long& pixel = *pixels++;
-            if (pixel != 0xFF000000)
-                pixel |= 0xFF000000;
-            else
-                pixel = 0x00000000;
-        }
+        status = ::DrawThemeTrack(&drawInfo, NULL, NULL, 0);
 
         // now, encode the image as a 'PNGf' image, and return the encoded image
         // as an nsIInputStream.
-        rv = encodeGWorld(world, 'PNGf', result, length);
+        const char* part = getArgument(args, "part", NULL);
+        if (part != NULL && nsCRT::strcasecmp(part, "thumb") == 0) {
+            RgnHandle thumbRgn = ::NewRgn();
+            if (thumbRgn != NULL) {
+                status = ::GetThemeTrackThumbRgn(&drawInfo, thumbRgn);
+                Rect srcBounds = (**thumbRgn).rgnBBox;
+                Rect thumbBounds = { 0, 0, srcBounds.bottom - srcBounds.top, srcBounds.right - srcBounds.left };
+                ::OffsetRgn(thumbRgn, -srcBounds.left, -srcBounds.top);
+                TempGWorld thumbWorld(thumbBounds);
+                if (thumbWorld.valid()) {
+                    thumbWorld.fill(0xFF000000);
+                    thumbWorld.copy(world, srcBounds, thumbBounds, thumbRgn);
+                    thumbWorld.xorFill(0xFF000000);
+                    rv = encodeGWorld(thumbWorld, 'PNGf', result, length);
+                }
+                ::DisposeRgn(thumbRgn);
+            }
+        } else {
+            // now, for all pixels that aren't 0xFF000000, turn on the alpha channel,
+            // otherwise turn it off on the pixels that weren't touched.
+            world.xorFill(0xFF000000);        
+            rv = encodeGWorld(world, 'PNGf', result, length);
+        }
     }
     
     return rv;
-}
-
-typedef map<string, string> Arguments;
-
-static nsresult parseArguments(string path, Arguments& args)
-{
-    // str should be of the form:  widget?name1=value1&...&nameN=valueN
-    string::size_type questionMark = path.find('?');
-    if (questionMark == string::npos) return NS_OK;
-    
-    string::size_type first = questionMark + 1;
-    string::size_type equals = path.find('=', first);
-    while (equals != string::npos) {
-        string name(path.begin() + first, path.begin() + equals);
-        string::size_type last = path.find('&', equals + 1);
-        if (last == string::npos) last = path.length();
-        string value(path.begin() + equals + 1, path.begin() + last);
-        args[name] = value;
-        first = last + 1;
-        equals = path.find('=', first);
-    }
-    
-    return NS_OK;
-}
-
-static const char* getArgument(const Arguments& args, const char* name, const char* defaultValue)
-{
-    Arguments::const_iterator i = args.find(name);
-    if (i != args.end())
-        return i->second.c_str();
-    return defaultValue;
-}
-
-static int getIntArgument(const Arguments& args, const char* name, int defaultValue)
-{
-    const char* value = getArgument(args, name, NULL);
-    if (value != NULL)
-        return ::atoi(value);
-    return defaultValue;
-}
-
-static bool getBoolArgument(const Arguments& args, const char* name, bool defaultValue)
-{
-    const char* value = getArgument(args, name, NULL);
-    if (value != NULL)
-        return (nsCRT::strcasecmp(value, "true") == 0);
-    return defaultValue;
 }
 
 /*
@@ -406,31 +446,9 @@ nsThemeHandler::NewChannel(nsIURI* url, nsIChannel* *result)
     nsCOMPtr<nsIInputStream> input;
 
     if (action == "button") {
-        int width = getIntArgument(args, "width", 40);
-        int height = getIntArgument(args, "height", 20);
-        bool isActive = getBoolArgument(args, "active", true);
-        bool isPressed = getBoolArgument(args, "pressed", false);
-        bool isDefault = getBoolArgument(args, "default", false);
-        const char* title = getArgument(args, "title", NULL);
-        rv = drawThemeButton(width, height, isActive,
-                             isPressed, isDefault, title,
-                             getter_AddRefs(input), &contentLength);
+        rv = drawThemeButton(args, getter_AddRefs(input), &contentLength);
     } else if (action == "scrollbar") {
-        bool isHorizontal = getBoolArgument(args, "horizontal", true);
-        int width = getIntArgument(args, "width", (isHorizontal ? 200 : 16));
-        int height = getIntArgument(args, "height", (isHorizontal ? 16 : 200));
-        int min = getIntArgument(args, "min", 0);
-        int max = getIntArgument(args, "max", 255);
-        int value = getIntArgument(args, "value", 127);
-        int viewSize = getIntArgument(args, "viewSize", 0);
-        bool isActive = getBoolArgument(args, "active", true);
-        bool isThumbPressed = getBoolArgument(args, "thumb", false);
-        bool isLeftArrowPressed = getBoolArgument(args, "left", false);
-        bool isRightArrowPressed = getBoolArgument(args, "right", false);
-        rv = drawThemeScrollbar(width, height, min, max, value, viewSize,
-                                isActive, isHorizontal, isThumbPressed,
-                                isLeftArrowPressed, isRightArrowPressed,
-                                getter_AddRefs(input), &contentLength);
+        rv = drawThemeScrollbar(args, getter_AddRefs(input), &contentLength);
     } else {
         rv = NS_ERROR_NOT_IMPLEMENTED;
     }
