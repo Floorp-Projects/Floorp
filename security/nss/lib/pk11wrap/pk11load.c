@@ -82,7 +82,7 @@ CK_RV PR_CALLBACK secmodUnlockMutext(CK_VOID_PTR mutext) {
 }
 
 static SECMODModuleID  nextModuleID = 1;
-static CK_C_INITIALIZE_ARGS secmodLockFunctions = {
+static const CK_C_INITIALIZE_ARGS secmodLockFunctions = {
     secmodCreateMutext, secmodDestroyMutext, secmodLockMutext, 
     secmodUnlockMutext, CKF_LIBRARY_CANT_CREATE_OS_THREADS|
 	CKF_OS_LOCKING_OK
@@ -141,7 +141,7 @@ SECMOD_LoadPKCS11Module(SECMODModule *mod) {
     char * full_name;
     CK_INFO info;
     CK_ULONG slotCount = 0;
-
+    CK_C_INITIALIZE_ARGS moduleArgs;
 
     if (mod->loaded) return SECSuccess;
 
@@ -227,12 +227,13 @@ SECMOD_LoadPKCS11Module(SECMODModule *mod) {
 
     mod->isThreadSafe = PR_TRUE;
     /* Now we initialize the module */
+    moduleArgs = secmodLockFunctions; /* use the default lock functions */
     if (mod->libraryParams) {
-	secmodLockFunctions.LibraryParameters = (void *) mod->libraryParams;
+	moduleArgs.LibraryParameters = (void *) mod->libraryParams;
     } else {
-	secmodLockFunctions.LibraryParameters = NULL;
+	moduleArgs.LibraryParameters = NULL;
     }
-    if (PK11_GETTAB(mod)->C_Initialize(&secmodLockFunctions) != CKR_OK) {
+    if (PK11_GETTAB(mod)->C_Initialize(&moduleArgs) != CKR_OK) {
 	mod->isThreadSafe = PR_FALSE;
     	if (PK11_GETTAB(mod)->C_Initialize(NULL) != CKR_OK) goto fail;
     }
