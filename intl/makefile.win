@@ -17,6 +17,6 @@
 
 DEPTH=..
 
-DIRS=uconv unicharutil locale strres lwbrk chardet
+DIRS=uconv unicharutil locale strres lwbrk chardet compatibility
 
 include <$(DEPTH)\config\rules.mak>
