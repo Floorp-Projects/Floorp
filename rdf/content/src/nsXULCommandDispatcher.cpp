@@ -87,26 +87,51 @@ public:
     NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
     NS_IMETHOD SetScriptObject(void *aScriptObject);
 
-private:
+protected:
     void*                      mScriptObject;       // ????
 
-    nsIDOMElement* mCurrentElement; // Weak. The focus must obviously be lost if the node goes away.
-    nsVoidArray* mFocusListeners; // Holds weak references to listener elements.
+    // XXX THis was supposed to be WEAK, but c'mon, that's an accident
+    // waiting to happen! If somebody deletes the node, then asks us
+    // for the focus, we'll get killed!
+    nsCOMPtr<nsIDOMElement> mCurrentElement; // [OWNER]
+
+    class Updater {
+    public:
+        Updater(nsIDOMElement* aElement,
+                const nsString& aEvents,
+                const nsString& aTargets)
+            : mElement(aElement),
+              mEvents(aEvents),
+              mTargets(aTargets),
+              mNext(nsnull)
+        {}
+
+        nsIDOMElement* mElement; // [WEAK]
+        nsString       mEvents;
+        nsString       mTargets;
+        Updater*       mNext;
+    };
+
+    Updater* mUpdaters;
+
+    PRBool Matches(const nsString& aList, const nsString& aElement);
 };
 
 ////////////////////////////////////////////////////////////////////////
 
 XULCommandDispatcherImpl::XULCommandDispatcherImpl(void)
-:mScriptObject(nsnull)
+    : mScriptObject(nsnull), mCurrentElement(nsnull), mUpdaters(nsnull)
 {
 	NS_INIT_REFCNT();
-  mCurrentElement = nsnull;
-  mFocusListeners = nsnull;
 }
 
 XULCommandDispatcherImpl::~XULCommandDispatcherImpl(void)
 {
-  delete mFocusListeners;
+    while (mUpdaters) {
+        Updater* doomed = mUpdaters;
+        mUpdaters = mUpdaters->mNext;
+        delete doomed;
+    }
 }
 
 NS_IMPL_ADDREF(XULCommandDispatcherImpl)
@@ -160,8 +185,8 @@ XULCommandDispatcherImpl::QueryInterface(REFNSIID iid, void** result)
 NS_IMETHODIMP
 XULCommandDispatcherImpl::GetFocusedElement(nsIDOMElement** aElement)
 {
-  NS_IF_ADDREF(mCurrentElement);
   *aElement = mCurrentElement;
+  NS_IF_ADDREF(*aElement);
   return NS_OK;
 }
 
@@ -169,7 +194,7 @@ NS_IMETHODIMP
 XULCommandDispatcherImpl::SetFocusedElement(nsIDOMElement* aElement)
 {
   mCurrentElement = aElement;
-  UpdateCommands();
+  UpdateCommands(nsAutoString(aElement ? "focus" : "blur"));
   return NS_OK;
 }
 
@@ -188,67 +213,120 @@ XULCommandDispatcherImpl::SetFocusedWindow(nsIDOMWindow* aElement)
 }
 
 NS_IMETHODIMP
-XULCommandDispatcherImpl::AddCommand(nsIDOMElement* aElement)
+XULCommandDispatcherImpl::AddCommandUpdater(nsIDOMElement* aElement,
+                                            const nsString& aEvents,
+                                            const nsString& aTargets)
 {
-  NS_PRECONDITION(aElement != nsnull, "null ptr");
-  if (! aElement)
-    return NS_ERROR_NULL_POINTER;
+    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
 
-  if (!mFocusListeners) {
-    mFocusListeners = new nsVoidArray();
-  }
+    Updater* updater = mUpdaters;
+    Updater** link = &mUpdaters;
 
-  mFocusListeners->AppendElement((void*)aElement); // Weak ref to element.
+    while (updater) {
+        if (updater->mElement == aElement) {
+            // If the updater was already in the list, then replace
+            // (?) the 'events' and 'targets' filters with the new
+            // specification.
+            updater->mEvents  = aEvents;
+            updater->mTargets = aTargets;
+            return NS_OK;
+        }
 
-  return NS_OK;
+        link = &(updater->mNext);
+        updater = updater->mNext;
+    }
+
+    // If we get here, this is a new updater. Append it to the list.
+    updater = new Updater(aElement, aEvents, aTargets);
+    if (! updater)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *link = updater;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-XULCommandDispatcherImpl::RemoveCommand(nsIDOMElement* aElement)
+XULCommandDispatcherImpl::RemoveCommandUpdater(nsIDOMElement* aElement)
 {
-  if (mFocusListeners) {
-    mFocusListeners->RemoveElement((void*)aElement); // Weak ref to element
-  }
- 
-  return NS_OK;
+    NS_PRECONDITION(aElement != nsnull, "null ptr");
+    if (! aElement)
+        return NS_ERROR_NULL_POINTER;
+
+    Updater* updater = mUpdaters;
+    Updater** link = &mUpdaters;
+
+    while (updater) {
+        if (updater->mElement == aElement) {
+            *link = updater->mNext;
+            delete updater;
+            return NS_OK;
+        }
+
+        link = &(updater->mNext);
+        updater = updater->mNext;
+    }
+
+    // Hmm. Not found. Oh well.
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-XULCommandDispatcherImpl::UpdateCommands()
+XULCommandDispatcherImpl::UpdateCommands(const nsString& aEventName)
 {
-  if (mFocusListeners) {
-    PRInt32 count = mFocusListeners->Count();
-    for (PRInt32 i = 0; i < count; i++) {
-      nsIDOMElement* domElement = (nsIDOMElement*)mFocusListeners->ElementAt(i);
+    nsresult rv;
 
-      nsCOMPtr<nsIContent> content;
-      content = do_QueryInterface(domElement);
-    
-      nsCOMPtr<nsIDocument> document;
-      content->GetDocument(*getter_AddRefs(document));
+    nsAutoString id;
+    if (mCurrentElement) {
+        rv = mCurrentElement->GetAttribute(nsAutoString("id"), id);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get element's id");
+        if (NS_FAILED(rv)) return rv;
+    }
 
-      PRInt32 count = document->GetNumberOfShells();
-      for (PRInt32 i = 0; i < count; i++) {
-        nsIPresShell* shell = document->GetShellAt(i);
-        if (nsnull == shell)
+    for (Updater* updater = mUpdaters; updater != nsnull; updater = updater->mNext) {
+        // Skip any nodes that don't match our 'events' or 'targets'
+        // filters.
+        if (! Matches(updater->mEvents, aEventName))
             continue;
 
-        // Retrieve the context in which our DOM event will fire.
-        nsCOMPtr<nsIPresContext> aPresContext;
-        shell->GetPresContext(getter_AddRefs(aPresContext));
-  
-        NS_RELEASE(shell);
+        if (! Matches(updater->mTargets, id))
+            continue;
 
-        // Handle the DOM event
-        nsEventStatus status = nsEventStatus_eIgnore;
-        nsEvent event;
-        event.eventStructType = NS_EVENT;
-        event.message = NS_FORM_CHANGE; // XXX: I feel dirty and evil for subverting this.
-        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
-      }
+        nsCOMPtr<nsIContent> content = do_QueryInterface(updater->mElement);
+        NS_ASSERTION(content != nsnull, "not an nsIContent");
+        if (! content)
+            return NS_ERROR_UNEXPECTED;
+
+        nsCOMPtr<nsIDocument> document;
+        rv = content->GetDocument(*getter_AddRefs(document));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get document");
+        if (NS_FAILED(rv)) return rv;
+
+        NS_ASSERTION(document != nsnull, "element has no document");
+        if (! document)
+            continue;
+
+        PRInt32 count = document->GetNumberOfShells();
+        for (PRInt32 i = 0; i < count; i++) {
+            nsCOMPtr<nsIPresShell> shell = dont_AddRef(document->GetShellAt(i));
+            if (! shell)
+                continue;
+
+            // Retrieve the context in which our DOM event will fire.
+            nsCOMPtr<nsIPresContext> context;
+            rv = shell->GetPresContext(getter_AddRefs(context));
+            if (NS_FAILED(rv)) return rv;
+
+            // Handle the DOM event
+            nsEventStatus status = nsEventStatus_eIgnore;
+            nsEvent event;
+            event.eventStructType = NS_EVENT;
+            event.message = NS_FORM_CHANGE; // XXX: I feel dirty and evil for subverting this.
+            content->HandleDOMEvent(*context, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+        }
     }
-  }
-  return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -289,7 +367,7 @@ XULCommandDispatcherImpl::Focus(nsIDOMEvent* aEvent)
   
   if (target) {
     SetFocusedElement(target);
-    UpdateCommands();
+    UpdateCommands("focus");
   }
 
   return NS_OK;
@@ -304,7 +382,7 @@ XULCommandDispatcherImpl::Blur(nsIDOMEvent* aEvent)
   
   if (target.get() == mCurrentElement) {
     SetFocusedElement(nsnull);
-    UpdateCommands();
+    UpdateCommands("blur");
   }
 
   return NS_OK;
@@ -333,6 +411,34 @@ XULCommandDispatcherImpl::SetScriptObject(void *aScriptObject)
 {
     mScriptObject = aScriptObject;
     return NS_OK;
+}
+
+
+PRBool
+XULCommandDispatcherImpl::Matches(const nsString& aList, const nsString& aElement)
+{
+    if (aList == "*")
+        return PR_TRUE; // match _everything_!
+
+    PRInt32 indx = aList.Find(aElement);
+    if (indx == -1)
+        return PR_FALSE; // not in the list at all
+
+    // okay, now make sure it's not a substring snafu; e.g., 'ur'
+    // found inside of 'blur'.
+    if (indx > 0) {
+        PRUnichar ch = aList[indx - 1];
+        if (! nsString::IsSpace(ch) && ch != PRUnichar(','))
+            return PR_FALSE;
+    }
+
+    if (indx + aElement.Length() < aList.Length()) {
+        PRUnichar ch = aList[indx + aElement.Length()];
+        if (! nsString::IsSpace(ch) && ch != PRUnichar(','))
+            return PR_FALSE;
+    }
+
+    return PR_TRUE;
 }
 
 

@@ -42,11 +42,11 @@ public:
   NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow)=0;
   NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow)=0;
 
-  NS_IMETHOD    AddCommand(nsIDOMElement* aListener)=0;
+  NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets)=0;
 
-  NS_IMETHOD    RemoveCommand(nsIDOMElement* aListener)=0;
+  NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater)=0;
 
-  NS_IMETHOD    UpdateCommands()=0;
+  NS_IMETHOD    UpdateCommands(const nsString& aEventName)=0;
 
   NS_IMETHOD    GetController(nsIController** aReturn)=0;
 
@@ -59,9 +59,9 @@ public:
   NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement);  \
   NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow);  \
   NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow);  \
-  NS_IMETHOD    AddCommand(nsIDOMElement* aListener);  \
-  NS_IMETHOD    RemoveCommand(nsIDOMElement* aListener);  \
-  NS_IMETHOD    UpdateCommands();  \
+  NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets);  \
+  NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater);  \
+  NS_IMETHOD    UpdateCommands(const nsString& aEventName);  \
   NS_IMETHOD    GetController(nsIController** aReturn);  \
   NS_IMETHOD    SetController(nsIController* aController);  \
 
@@ -72,9 +72,9 @@ public:
   NS_IMETHOD    SetFocusedElement(nsIDOMElement* aFocusedElement) { return _to SetFocusedElement(aFocusedElement); } \
   NS_IMETHOD    GetFocusedWindow(nsIDOMWindow** aFocusedWindow) { return _to GetFocusedWindow(aFocusedWindow); } \
   NS_IMETHOD    SetFocusedWindow(nsIDOMWindow* aFocusedWindow) { return _to SetFocusedWindow(aFocusedWindow); } \
-  NS_IMETHOD    AddCommand(nsIDOMElement* aListener) { return _to AddCommand(aListener); }  \
-  NS_IMETHOD    RemoveCommand(nsIDOMElement* aListener) { return _to RemoveCommand(aListener); }  \
-  NS_IMETHOD    UpdateCommands() { return _to UpdateCommands(); }  \
+  NS_IMETHOD    AddCommandUpdater(nsIDOMElement* aUpdater, const nsString& aEvents, const nsString& aTargets) { return _to AddCommandUpdater(aUpdater, aEvents, aTargets); }  \
+  NS_IMETHOD    RemoveCommandUpdater(nsIDOMElement* aUpdater) { return _to RemoveCommandUpdater(aUpdater); }  \
+  NS_IMETHOD    UpdateCommands(const nsString& aEventName) { return _to UpdateCommands(aEventName); }  \
   NS_IMETHOD    GetController(nsIController** aReturn) { return _to GetController(aReturn); }  \
   NS_IMETHOD    SetController(nsIController* aController) { return _to SetController(aController); }  \
 

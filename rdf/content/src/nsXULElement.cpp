@@ -419,27 +419,23 @@ private:
     static nsIXULContentUtils*  gXULUtils;
     static PRInt32              kNameSpaceID_RDF;
     static PRInt32              kNameSpaceID_XUL;
-    static nsIAtom*             kIdAtom;
-    static nsIAtom*             kRefAtom;
+
     static nsIAtom*             kClassAtom;
+    static nsIAtom*             kContextAtom;
+    static nsIAtom*             kIdAtom;
+    static nsIAtom*             kObservesAtom;
+    static nsIAtom*             kPopupAtom;
+    static nsIAtom*             kRefAtom;
+    static nsIAtom*             kSelectedAtom;
     static nsIAtom*             kStyleAtom;
-    
+    static nsIAtom*             kTitledButtonAtom;
+    static nsIAtom*             kTooltipAtom;
     static nsIAtom*             kTreeAtom;
-    static nsIAtom*             kTreeItemAtom;
-    static nsIAtom*             kTreeRowAtom;
     static nsIAtom*             kTreeCellAtom;
     static nsIAtom*             kTreeChildrenAtom;
     static nsIAtom*             kTreeColAtom;
-
-    static nsIAtom*             kTitledButtonAtom;
-
-    static nsIAtom*             kSelectedAtom;
-    
-    static nsIAtom*             kPopupAtom;
-    static nsIAtom*             kTooltipAtom;
-    static nsIAtom*             kContextAtom;
-    static nsIAtom*             kObservesAtom;
-    static nsIAtom*             kXULContentsGeneratedAtom;
+    static nsIAtom*             kTreeItemAtom;
+    static nsIAtom*             kTreeRowAtom;
 
 
     
@@ -471,25 +467,25 @@ nsrefcnt             RDFElementImpl::gRefCnt;
 nsIRDFService*       RDFElementImpl::gRDFService;
 nsINameSpaceManager* RDFElementImpl::gNameSpaceManager;
 nsIXULContentUtils*  RDFElementImpl::gXULUtils;
-nsIAtom*             RDFElementImpl::kIdAtom;
-nsIAtom*             RDFElementImpl::kRefAtom;
+PRInt32              RDFElementImpl::kNameSpaceID_RDF;
+PRInt32              RDFElementImpl::kNameSpaceID_XUL;
+
 nsIAtom*             RDFElementImpl::kClassAtom;
+nsIAtom*             RDFElementImpl::kContextAtom;
+nsIAtom*             RDFElementImpl::kIdAtom;
+nsIAtom*             RDFElementImpl::kObservesAtom;
+nsIAtom*             RDFElementImpl::kPopupAtom;
+nsIAtom*             RDFElementImpl::kRefAtom;
+nsIAtom*             RDFElementImpl::kSelectedAtom;
 nsIAtom*             RDFElementImpl::kStyleAtom;
+nsIAtom*             RDFElementImpl::kTitledButtonAtom;
+nsIAtom*             RDFElementImpl::kTooltipAtom;
 nsIAtom*             RDFElementImpl::kTreeAtom;
-nsIAtom*             RDFElementImpl::kTreeItemAtom;
-nsIAtom*             RDFElementImpl::kTreeRowAtom;
 nsIAtom*             RDFElementImpl::kTreeCellAtom;
 nsIAtom*             RDFElementImpl::kTreeChildrenAtom;
 nsIAtom*             RDFElementImpl::kTreeColAtom;
-nsIAtom*             RDFElementImpl::kSelectedAtom;
-nsIAtom*             RDFElementImpl::kTitledButtonAtom;
-nsIAtom*             RDFElementImpl::kPopupAtom;
-nsIAtom*             RDFElementImpl::kTooltipAtom;
-nsIAtom*             RDFElementImpl::kContextAtom;
-nsIAtom*             RDFElementImpl::kObservesAtom;
-nsIAtom*             RDFElementImpl::kXULContentsGeneratedAtom;
-PRInt32              RDFElementImpl::kNameSpaceID_RDF;
-PRInt32              RDFElementImpl::kNameSpaceID_XUL;
+nsIAtom*             RDFElementImpl::kTreeItemAtom;
+nsIAtom*             RDFElementImpl::kTreeRowAtom;
 
 // This is a simple datastructure that maps an event handler attribute
 // name to an appropriate IID. Atoms are computed to improve
@@ -571,23 +567,22 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
 
         NS_VERIFY(NS_SUCCEEDED(rv), "unable to get RDF service");
 
-        kIdAtom          = NS_NewAtom("id");
-        kRefAtom         = NS_NewAtom("ref");
-        kClassAtom       = NS_NewAtom("class");
-        kStyleAtom       = NS_NewAtom("style");
-        kTreeAtom        = NS_NewAtom("tree");
-        kTreeItemAtom    = NS_NewAtom("treeitem");
-        kTreeRowAtom     = NS_NewAtom("treerow");
-        kTreeCellAtom    = NS_NewAtom("treecell");
-        kTreeChildrenAtom = NS_NewAtom("treechildren");
-        kTreeColAtom     = NS_NewAtom("treecol");
-        kSelectedAtom    = NS_NewAtom("selected");
-        kTitledButtonAtom = NS_NewAtom("titledbutton");
-        kPopupAtom       = NS_NewAtom("popup");
-        kTooltipAtom     = NS_NewAtom("tooltip");
-        kContextAtom     = NS_NewAtom("context");
-        kObservesAtom    = NS_NewAtom("observes");
-        kXULContentsGeneratedAtom = NS_NewAtom("xulcontentsgenerated");
+        kClassAtom          = NS_NewAtom("class");
+        kContextAtom        = NS_NewAtom("context");
+        kIdAtom             = NS_NewAtom("id");
+        kObservesAtom       = NS_NewAtom("observes");
+        kPopupAtom          = NS_NewAtom("popup");
+        kRefAtom            = NS_NewAtom("ref");
+        kSelectedAtom       = NS_NewAtom("selected");
+        kStyleAtom          = NS_NewAtom("style");
+        kTitledButtonAtom   = NS_NewAtom("titledbutton");
+        kTooltipAtom        = NS_NewAtom("tooltip");
+        kTreeAtom           = NS_NewAtom("tree");
+        kTreeCellAtom       = NS_NewAtom("treecell");
+        kTreeChildrenAtom   = NS_NewAtom("treechildren");
+        kTreeColAtom        = NS_NewAtom("treecol");
+        kTreeItemAtom       = NS_NewAtom("treeitem");
+        kTreeRowAtom        = NS_NewAtom("treerow");
 
         EventHandlerMapEntry* entry = kEventHandlerMap;
         while (entry->mAttributeName) {
@@ -658,23 +653,22 @@ RDFElementImpl::~RDFElementImpl()
             gRDFService = nsnull;
         }
 
-        NS_IF_RELEASE(kIdAtom);
-        NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kClassAtom);
+        NS_IF_RELEASE(kContextAtom);
+        NS_IF_RELEASE(kIdAtom);
+        NS_IF_RELEASE(kObservesAtom);
+        NS_IF_RELEASE(kPopupAtom);
+        NS_IF_RELEASE(kRefAtom);
+        NS_IF_RELEASE(kSelectedAtom);
         NS_IF_RELEASE(kStyleAtom);
+        NS_IF_RELEASE(kTitledButtonAtom);
+        NS_IF_RELEASE(kTooltipAtom);
         NS_IF_RELEASE(kTreeAtom);
-        NS_IF_RELEASE(kTreeItemAtom);
-        NS_IF_RELEASE(kTreeRowAtom);
         NS_IF_RELEASE(kTreeCellAtom);
         NS_IF_RELEASE(kTreeChildrenAtom);
         NS_IF_RELEASE(kTreeColAtom);
-        NS_IF_RELEASE(kSelectedAtom);
-        NS_IF_RELEASE(kTitledButtonAtom);
-        NS_IF_RELEASE(kPopupAtom);
-        NS_IF_RELEASE(kContextAtom);
-        NS_IF_RELEASE(kTooltipAtom);
-        NS_IF_RELEASE(kObservesAtom);
-        NS_IF_RELEASE(kXULContentsGeneratedAtom);
+        NS_IF_RELEASE(kTreeItemAtom);
+        NS_IF_RELEASE(kTreeRowAtom);
 
         NS_IF_RELEASE(gNameSpaceManager);
 
@@ -2417,7 +2411,7 @@ RDFElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         for (i = 0; i < count; i++) {
             XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners->ElementAt(i);
             if (xulListener->ObservingAttribute(attribute) && 
-               (aName != kXULContentsGeneratedAtom && aName != kIdAtom)) {
+               (aName != kIdAtom)) {
                 // XXX Should have a function that knows which attributes are special.
                 // First we set the attribute in the observer.
                 xulListener->mListener->SetAttribute(attribute, aValue);
@@ -2647,7 +2641,7 @@ RDFElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNot
             nsAutoString str;
             aName->ToString(str);
             if (xulListener->ObservingAttribute(str) && 
-               (aName != kXULContentsGeneratedAtom && aName != kIdAtom)) {
+               (aName != kIdAtom)) {
                 // XXX Should have a function that knows which attributes are special.
                 // Unset the attribute in the broadcast listener.
                 nsCOMPtr<nsIDOMElement> element;
@@ -2968,7 +2962,7 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElem
         for (PRInt32 i = mAttributes->Count() - 1; i >= 0; --i) {
             const nsXULAttribute* attr = (const nsXULAttribute*) mAttributes->ElementAt(i);
             if ((attr->mNameSpaceID == kNameSpaceID_None) &&
-                (attr->mName == kIdAtom || attr->mName == kXULContentsGeneratedAtom))
+                (attr->mName == kIdAtom))
               continue;
 
             // We aren't the id atom, so it's ok to set us in the listener.
