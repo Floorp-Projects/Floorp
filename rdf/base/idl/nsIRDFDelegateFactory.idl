@@ -33,7 +33,7 @@ interface nsIRDFResource;
 
 /**
  * This interface should be implemented by an XPCOM factory that
- * is registered to handle "component:/rdf/delegate/[key]/[scheme]"
+ * is registered to handle "component:/rdf/delegate-factory/[key]/[scheme]"
  * ProgIDs.
  *
  * The factory will be invoked to create delegate objects from

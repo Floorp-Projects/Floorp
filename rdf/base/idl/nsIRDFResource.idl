@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 
+#include "nsrootidl.idl"
 #include "nsIRDFNode.idl"
 
 
@@ -51,5 +52,39 @@ interface nsIRDFResource : nsIRDFNode {
      * Determine if the resource has the given URI.
      */
     boolean EqualsString(in string aURI);
+
+    /**
+     * Retrieve the "delegate" object for this resource. A resource
+     * may have several delegate objects, each of whose lifetimes is
+     * bound to the life of the resource object.
+     *
+     * This method will return the delegate for the given key after
+     * QueryInterface()-ing it to the requested IID.
+     *
+     * If no delegate exists for the specified key, this method will
+     * attempt to create one using the component manager. Specifically,
+     * it will combine aKey with the resource's URI scheme to produce
+     * a ProgID as follows:
+     *
+     *   component:/rdf/delegate-factory/[key]/[scheme]
+     *
+     * This ProgID will be used to locate a factory using the
+     * FindFactory() method of nsIComponentManager. If the nsIFactory
+     * exists, it will be used to create a "delegate factory"; that
+     * is, an object that supports nsIRDFDelegateFactory. The delegate
+     * factory will be used to construct the delegate object.
+     */
+    void GetDelegate(in string aKey, in nsIIDRef aIID,
+                     [iid_is(aIID),retval] out nsQIResult aResult);
+
+    /**
+     * Force a delegate to be "unbound" from the resource.
+     *
+     * Normally, a delegate object's lifetime will be identical to
+     * that of the resource to which it is bound; this method allows a
+     * delegate to unlink itself from an RDF resource prematurely.
+     */
+    void ReleaseDelegate(in string aKey);
 };
+
 
