@@ -137,8 +137,11 @@ nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
     nsAutoLock lock(mLock);
 
     ObserverListEnumerator * enumerator= new ObserverListEnumerator(mObserverList);
-    NS_IF_ADDREF(enumerator);
     *anEnumerator = enumerator;
+    if (!enumerator)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(enumerator);
     return NS_OK;
 }
 
@@ -146,8 +149,8 @@ nsObserverList::GetObserverList(nsISimpleEnumerator** anEnumerator)
 ObserverListEnumerator::ObserverListEnumerator(nsISupportsArray* aValueArray)
     : mValueArray(aValueArray), mIndex(0)
 {
-    NS_IF_ADDREF(mValueArray);
     if (mValueArray) {
+        NS_ADDREF(mValueArray);
         PRUint32 total;
         mValueArray->Count(&total);
         mIndex = PRInt32(total);
