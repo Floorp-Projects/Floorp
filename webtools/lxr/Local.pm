@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: Local.pm,v 1.1 1998/07/28 19:16:34 jwz%netscape.com Exp $
+# $Id: Local.pm,v 1.2 1998/09/09 05:14:57 jwz%mozilla.org Exp $
 # Local.pm -- Subroutines that need to be customized for each installation
 #
 #	Dawn Endico <dawn@cannibal.mi.org>
@@ -382,7 +382,7 @@ sub dirdesc {
         $string =~ s/\s*\n$//gs;
         chomp($string);
 
-        print($string);
+        print($string . "<P>\n");
     }
 }
 
