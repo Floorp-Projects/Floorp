@@ -151,7 +151,7 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
   mNeedsLayout = PR_TRUE;
   UpdateAttributes(*aPresContext);
 
-#if 0
+#if 1 // added back in because boxes now handle only redraw what is reflowed.
   // reflow
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -704,6 +704,10 @@ nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
 {
   mNeedsLayout = PR_TRUE;
   nsresult result = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
+
+  // redraw us on a reflow
+  Invalidate(nsRect(0,0,mRect.width, mRect.height), PR_FALSE);
+
   return result;
 }
 

@@ -40,6 +40,8 @@
 #include "nsIViewManager.h"
 
 #define CONSTANT float(0.0)
+#define DEBUG_REFLOW 0
+#define DEBUG_REDRAW 0
 
 nsresult
 NS_NewBoxFrame ( nsIFrame** aNewFrame, PRUint32 aFlags )
@@ -107,12 +109,10 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIFrame* aFrame, nsBoxInfo& aSize)
     // see if the width or height was specifically set
     if (position->mWidth.GetUnit() == eStyleUnit_Coord)  {
         aSize.prefSize.width = position->mWidth.GetCoordValue();
-        aSize.prefWidthIntrinsic = PR_FALSE;
     }
 
     if (position->mHeight.GetUnit() == eStyleUnit_Coord) {
         aSize.prefSize.height = position->mHeight.GetCoordValue();     
-        aSize.prefHeightIntrinsic = PR_FALSE;
     }
     
     // same for min size. Unfortunately min size is always set to 0. So for now
@@ -179,11 +179,51 @@ nsBoxFrame::GetChildBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowStat
      return NS_OK;
   }   
 
-  // set the pref width and height to be intrinsic.
-  aSize.prefWidthIntrinsic = PR_TRUE;
-  aSize.prefHeightIntrinsic = PR_TRUE;
+ // start the preferred size as intrinsic
+  aSize.prefSize.width = NS_INTRINSICSIZE;
+  aSize.prefSize.height = NS_INTRINSICSIZE;
 
+  // redefine anything depending on css
   GetRedefinedMinPrefMax(aFrame, aSize);
+
+  // subtract out the childs margin and border 
+  const nsStyleSpacing* spacing;
+  nsresult rv = aFrame->GetStyleData(eStyleStruct_Spacing,
+                 (const nsStyleStruct*&) spacing);
+
+  nsMargin margin;
+  spacing->GetMargin(margin);
+  nsMargin border;
+  spacing->GetBorderPadding(border);
+  nsMargin total = margin + border;
+
+  // add in childs margin and border
+  if (aSize.prefSize.height != NS_INTRINSICSIZE)
+      aSize.prefSize.height += (total.left + total.right);
+
+  if (aSize.prefSize.height != NS_INTRINSICSIZE)
+      aSize.prefSize.height += (total.top + total.bottom);
+
+  // flow child at preferred size
+  nsHTMLReflowMetrics desiredSize(nsnull);
+
+  nsCalculatedBoxInfo info(aSize);
+
+  info.calculatedSize = aSize.prefSize;
+
+  nsReflowStatus status;
+  PRBool redraw;
+  nsString reason("To get pref size");
+  FlowChildAt(aFrame, aPresContext, desiredSize, aReflowState, status, info, redraw, reason);
+
+  // remove margin and border
+  desiredSize.height -= (total.top + total.bottom);
+  desiredSize.width -= (total.left + total.right);
+
+  // get the size returned and the it as the preferredsize.
+  aSize.prefSize.width = desiredSize.width;
+  aSize.prefSize.height = desiredSize.height;
+
 
   return NS_OK;
 }
@@ -204,6 +244,12 @@ nsBoxFrame::Reflow(nsIPresContext&   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+
+#if DEBUG_REFLOW
+  if (NS_BLOCK_DOCUMENT_ROOT & mFlags) 
+    printf("---------------- Begin Reflow ---------------\n");
+#endif
+
   // If we have a space manager, then set it in the reflow state
   if (mSpaceManager) {
     // Modify the reflow state and set the space manager
@@ -282,7 +328,7 @@ printf("\n");
   //-----------------------------------------------------------------------------------
 
   // flow each child at the new sizes we have calculated.
-  FlowChildren(aPresContext, aDesiredSize, aReflowState, aStatus, rect, incrementalChild);
+  FlowChildren(aPresContext, aDesiredSize, aReflowState, aStatus, rect);
 
   //-----------------------------------------------------------------------------------
   //------------------------- Adjust each childs x, y location-------------------------
@@ -312,9 +358,9 @@ printf("\n");
   damageArea.height = aDesiredSize.height;
   damageArea.width = aDesiredSize.width;
 
-  if ((NS_BLOCK_DOCUMENT_ROOT & mFlags) && !damageArea.IsEmpty()) {
-    Invalidate(damageArea);
-  }
+ // if ((NS_BLOCK_DOCUMENT_ROOT & mFlags) && !damageArea.IsEmpty()) {
+ //   Invalidate(damageArea);
+ // }
 #if 0
 ListTag(stdout); printf(": reflow done\n");
 #endif
@@ -332,22 +378,26 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
                      nsHTMLReflowMetrics&     aDesiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,
-                     nsRect& rect,
-                     nsIFrame*& incrementalChild)
+                     nsRect& rect)
 {
+  PRBool redraw = PR_FALSE;
+
   //-----------------------------------
   // first pass flow all fixed children
   //-----------------------------------
-
-  PRBool resized[100];
-  int i;
-  for (i=0; i < mSpringCount; i++)
-     resized[i] = PR_FALSE;
 
   PRBool finished;
   nscoord passes = 0;
   nscoord changedIndex = -1;
   nscoord count = 0;
+  nsString reason="initial";
+  nsString nextReason = "initial";
+  PRBool resized[100];
+
+  for (int i=0; i < mSpringCount; i++)
+      resized[i] = PR_FALSE;
+
+  /*
   nsIFrame* childFrame = mFrames.FirstChild(); 
   while (nsnull != childFrame) 
   {    
@@ -356,20 +406,25 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
       {
         // reflow only fixed children
         if (mSprings[count].flex == 0.0) {
-          FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, count, incrementalChild);
+          FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, mSprings[count], redraw, reason);
 
           // if its height greater than the max. Set the max to this height and set a flag
           // saying we will need to do another pass. But keep going there
           // may be another child that is bigger
-          if (!mHorizontal) {
-            if (rect.height == NS_INTRINSICSIZE || aDesiredSize.height > mSprings[count].calculatedSize.height) {
-                mSprings[count].calculatedSize.height = aDesiredSize.height;
-                resized[count] = PR_TRUE;
+          if (mHorizontal) {
+            if (aDesiredSize.height > rect.height) {
+                rect.height = aDesiredSize.height;
+                InvalidateChildren();
+                LayoutChildrenInRect(rect);
+                nextReason = "child's height got bigger";
             } 
           } else {
-            if (rect.width == NS_INTRINSICSIZE || aDesiredSize.width > mSprings[count].calculatedSize.width) {
-                mSprings[count].calculatedSize.width = aDesiredSize.width;
-                resized[count] = PR_TRUE;
+            if (aDesiredSize.width > rect.width) {
+                mSprings[count].minSize.width = aDesiredSize.width;
+                rect.width = aDesiredSize.width;
+                InvalidateChildren();
+                LayoutChildrenInRect(rect);
+                nextReason = "child's width got bigger";
             } 
           }
         }
@@ -378,6 +433,9 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
     count++;
   }
+  */
+
+  //reason = nextReason;
 
 
   // ----------------------
@@ -391,12 +449,8 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
 
   changedIndex = -1;
   InvalidateChildren();
-
-  for (i=0; i < mSpringCount; i++)
-     mSprings[i].sizeValid = resized[i];
-
   LayoutChildrenInRect(rect);
-
+ 
   passes = 0;
   do 
   {
@@ -412,66 +466,17 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
         if (!mSprings[count].collapsed)
         {
         // reflow if the child needs it or we are on a second pass
-      //  if (mSprings[count].needsReflow || passes > 0) {
-          FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, count, incrementalChild);
-
-          // if its height greater than the max. Set the max to this height and set a flag
-          // saying we will need to do another pass. But keep going there
-          // may be another child that is bigger
-          if (mHorizontal) {
-            if (rect.height == NS_INTRINSICSIZE || aDesiredSize.height > rect.height) {
-                rect.height = aDesiredSize.height;
-                finished = PR_FALSE;
-                changedIndex = count;
-                for (int i=0; i < mSpringCount; i++)
-                   resized[i] = PR_FALSE;
-            } 
-
-            // if we are wider than we anticipated then
-            // then this child can't get smaller then the size returned
-            // so set its minSize to be the desired and restretch. Then
-            // just start over because the springs are all messed up 
-            // anyway.
-            if (aDesiredSize.width > mSprings[count].calculatedSize.width) {
-                mSprings[count].calculatedSize.width = aDesiredSize.width;
-                resized[count] = PR_TRUE;
-
-                for (int i=0; i < mSpringCount; i++)
-                   mSprings[i].sizeValid = resized[i];
+          FlowChildAt(childFrame, aPresContext, aDesiredSize, aReflowState, aStatus, mSprings[count], redraw, reason);
  
-                finished = PR_FALSE;
-                changedIndex = count;
-            } 
-        
-
-          } else {
-            if (rect.width == NS_INTRINSICSIZE || aDesiredSize.width > rect.width) {
-                rect.width = aDesiredSize.width;
-                finished = PR_FALSE;
-                changedIndex = count;
-                for (int i=0; i < mSpringCount; i++)
-                    resized[i] = PR_FALSE;
-            } 
-
-        
-            if (aDesiredSize.height > mSprings[count].calculatedSize.height) {
-                mSprings[count].calculatedSize.height = aDesiredSize.height;
-
-                resized[count] = PR_TRUE;
-
-                for (int i=0; i < mSpringCount; i++)
-                   mSprings[i].sizeValid = resized[i];
-
-                LayoutChildrenInRect(rect);
-                finished = PR_FALSE;
-                changedIndex = count;
-            }     
+          // if the child got bigger then adjust our rect and all the children.
+          ChildResized(aDesiredSize, rect, mSprings[count], resized, changedIndex, finished, count, nextReason);
         }
-      }
+      
         
       nsresult rv = childFrame->GetNextSibling(&childFrame);
       NS_ASSERTION(rv == NS_OK,"failed to get next child");
       count++;
+      reason = nextReason;
     }
 
     // if we get over 10 passes something probably when wrong.
@@ -489,8 +494,183 @@ nsBoxFrame::FlowChildren(nsIPresContext&   aPresContext,
 
   } while (PR_FALSE == finished);
 
+  // redraw things if needed.
+  if (redraw) {
+#if DEBUG_REDRAW
+      ListTag(stdout);
+      printf("is being redrawn\n");
+#endif
+    Invalidate(nsRect(0,0,mRect.width, mRect.height), PR_FALSE);
+  }
+
   return NS_OK;
 }
+
+void
+nsBoxFrame::ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool* aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex, nsString& aReason)
+{
+  if (mHorizontal) {
+      // if we are a horizontal box see if the child will fit inside us.
+      if ( aDesiredSize.height > aRect.height) {
+            // if we are a horizontal box and the the child it bigger than our height
+
+            // ok if the height changed then we need to reflow everyone but us at the new height
+            // so we will set the changed index to be us. And signal that we need a new pass.
+            aRect.height = aDesiredSize.height;
+
+            // remember we do not need to clear the resized list because changing the height of a horizontal box
+            // will not affect the width of any of its children because block flow left to right, top to bottom. Just trust me
+            // on this one.
+            aFinished = PR_FALSE;
+            aChangedIndex = aIndex;
+
+            // relayout everything
+            InvalidateChildren();
+            LayoutChildrenInRect(aRect);
+            aReason = "child's height got bigger";
+      } else if (aDesiredSize.width > aInfo.calculatedSize.width) {
+            // if the child is wider than we anticipated. This can happend for children that we were not able to get a
+            // take on their min width. Like text, or tables.
+
+            // because things flow from left to right top to bottom we know that
+            // if we get wider that we can set the min size. This will only work
+            // for width not height. Height must always be recalculated!
+            aInfo.minSize.width = aDesiredSize.width;
+
+            // our width now becomes the new size
+            aInfo.calculatedSize.width = aDesiredSize.width;
+
+            InvalidateChildren();
+
+            // our index resized
+            aResized[aIndex] = PR_TRUE;
+
+            // if the width changed. mark our child as being resized
+            for (int i=0; i < mSpringCount; i++)
+              mSprings[i].sizeValid = aResized[i];
+
+            LayoutChildrenInRect(aRect);
+            aFinished = PR_FALSE;
+            aChangedIndex = aIndex;
+            aReason = "child's width got bigger";
+      }
+  } else {
+     if ( aDesiredSize.width > aRect.width) {
+            // ok if the height changed then we need to reflow everyone but us at the new height
+            // so we will set the changed index to be us. And signal that we need a new pass.
+            aRect.width = aDesiredSize.width;
+
+            // because things flow from left to right top to bottom we know that
+            // if we get wider that we can set the min size. This will only work
+            // for width not height. Height must always be recalculated!
+            aInfo.minSize.width = aDesiredSize.width;
+
+            // if the width changed then clear out the resized list
+            // but only do this if we are vertical box. On a horizontal box increasing the height will not change the
+            // width of its children.
+            for (int i=0; i < mSpringCount; i++)
+               aResized[i] = PR_FALSE;
+
+            aFinished = PR_FALSE;
+            aChangedIndex = aIndex;
+
+            // relayout everything
+            InvalidateChildren();
+            LayoutChildrenInRect(aRect);
+            aReason = "child's height got bigger";
+      } else if (aDesiredSize.height > aInfo.calculatedSize.height) {
+            // our width now becomes the new size
+            aInfo.calculatedSize.height = aDesiredSize.height;
+
+            InvalidateChildren();
+
+            // our index resized
+            aResized[aIndex] = PR_TRUE;
+
+            // if the width changed. mark our child as being resized
+            for (int i=0; i < mSpringCount; i++)
+              mSprings[i].sizeValid = aResized[i];
+
+            LayoutChildrenInRect(aRect);
+            aFinished = PR_FALSE;
+            aChangedIndex = aIndex;
+            aReason = "child's width got bigger";
+      }
+  }
+}
+
+
+/*
+void
+nsBoxFrame::ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCalculatedBoxInfo& aInfo, PRBool[] aResized, nscoord& aChangedIndex, PRBool& aFinished, nscoord aIndex)
+{
+    // this code is designed to work in both dimensions. It is written as if we were only dealing
+    // with a horizontal box. But if we get a vertical box the values will be inverted. 
+    // width becomes height and height becomes width. The purpose of this code is to correctly relayout
+    // if a child get larger than what we told it to layout as. This can happend a lot with text. Say
+    // we have a div and we layout it out in a vertical box with a width of 100px. The text must wrap.
+    // this will make the height of the div taller than expected. We would normally only expect it to 
+    // by its prefered height of 1 line. So we must shuffle things. The idea is to have a list of
+    // resized children. If a child gets gets bigger a bit will be set in the resized array. This
+    // tells the layout system not to recalculate the size of that child when we relayout out. 
+
+    nscoord& desiredHeight   = GET_HEIGHT(aDesiredSize);
+    nscoord& rectHeight      = GET_HEIGHT(aRect);
+    nscoord& desiredWidth    = GET_WIDTH(aDesiredSize);
+    nscoord& rectWidth       = GET_WIDTH(aRect);
+    nscoord& calculatedWidth = GET_WIDTH(aInfo.calculatedSize);
+
+    if (desiredHeight > rectHeight) {
+          // ok if the height changed then we need to reflow everyone but us at the new height
+          // so we will set the changed index to be us. And signal that we need a new pass.
+          rectHeight = desiredHeight;
+
+          // because things flow from left to right top to bottom we know that
+          // if we get wider that we can set the min size. This will only work
+          // for width not height. Height must always be recalculated!
+          if (!mHorizontal)
+             aInfo.minSize.width = desiredHeight;  
+
+          aFinished = PR_FALSE;
+          aChangedIndex = aIndex;
+
+          // if the height changed then clear out the resized list
+          // but only do this if we are horizontal box. In that case an increase in height
+          // can not affect
+          for (int i=0; i < mSprings; i++)
+            resized[i] = PR_FALSE;
+
+          // relayout everything
+          InvalidateChildren();
+          LayoutChildrenInRect(rect);
+          aReason = "child's height got bigger";
+    } else if (desiredWidth > calculatedWidth) {
+           
+          // because things flow from left to right top to bottom we know that
+          // if we get wider that we can set the min size. This will only work
+          // for width not height. Height must always be recalculated!
+          if (mHorizontal)
+             aInfo.minSize.width = desiredWidth;
+
+          // our width now becomes the new size
+          calculatedWidth = desiredWidth;
+
+          InvalidateChildren();
+
+          // our index resized
+          resized[index] = PR_TRUE;
+
+          // if the width changed. mark our child as being resized
+          for (int i=0; i < mSprings; i++)
+            mSprings[i].sizeValid = resized[i];
+
+          LayoutChildrenInRect(rect);
+          aFinished = PR_FALSE;
+          aChangedIndex = count;
+          aReason = "child's width got bigger";
+    }
+}
+*/
 
 /*
 void CollapseChildren(nsIFrame* frame)
@@ -590,6 +770,7 @@ nsBoxFrame::PlaceChildren(nsRect& boxRect)
   return NS_OK;
 }
 
+
 /**
  * Flow an individual child. Special args:
  * count: the spring that will be used to lay out the child
@@ -603,14 +784,21 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
                      nsHTMLReflowMetrics&     desiredSize,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus,
-                     nscoord spring,
-                     nsIFrame*& incrementalChild)
+                     nsCalculatedBoxInfo&     aInfo,
+                     PRBool& aRedraw,
+                     nsString& aReason)
 {
-#if 0
-ListTag(stdout); printf(": reflowing ");
-nsFrame::ListTag(stdout, childFrame);
-printf("\n");
-#endif
+
+      nsReflowReason reason = aReflowState.reason;
+      PRBool shouldReflow = PR_TRUE;
+
+      // if the reason is incremental and the child is not marked as incremental. Then relow the child
+      // as a resize instead.
+      if (aInfo.isIncremental)
+          reason = eReflowReason_Incremental;
+      else if (reason == eReflowReason_Incremental)
+          reason = eReflowReason_Resize;
+      
       // subtract out the childs margin and border 
       const nsStyleSpacing* spacing;
       nsresult rv = childFrame->GetStyleData(eStyleStruct_Spacing,
@@ -618,34 +806,31 @@ printf("\n");
 
       nsMargin margin;
       spacing->GetMargin(margin);
-      nsMargin border;
-      spacing->GetBorderPadding(border);
-      nsMargin total = margin + border;
 
-      const nsStylePosition* position;
-      rv = childFrame->GetStyleData(eStyleStruct_Position,
-                     (const nsStyleStruct*&) position);
-
-      nsReflowReason reason = aReflowState.reason;
-      PRBool shouldReflow = PR_TRUE;
-
-      // so if we are incremental and have already reflowed the incremental child or there is an incremental child
-      // and its not this one make sure we change the reason to resize.
-      if (reason == eReflowReason_Incremental && (nsnull == incrementalChild || incrementalChild != childFrame))
-          reason = eReflowReason_Resize;
+      // get the current size of the child
+      nsRect currentRect(0,0,0,0);
+      childFrame->GetRect(currentRect);
 
       // if we don't need a reflow then 
       // lets see if we are already that size. Yes? then don't even reflow. We are done.
-      if (!mSprings[spring].needsReflow) {
-          nsRect currentSize;
-          childFrame->GetRect(currentSize);
+      if (!aInfo.needsReflow && aInfo.calculatedSize.width != NS_INTRINSICSIZE && aInfo.calculatedSize.height != NS_INTRINSICSIZE) {
 
-          if (currentSize.width > 0 && currentSize.height > 0)
-          {
-            desiredSize.width = currentSize.width;
-            desiredSize.height = currentSize.height;
+          // if the new calculated size has a 0 width or a 0 height
+          if ((currentRect.width == 0 || currentRect.height == 0) && (aInfo.calculatedSize.width == 0 || aInfo.calculatedSize.height == 0)) {
+               shouldReflow = PR_FALSE;
+               desiredSize.width = aInfo.calculatedSize.width - (margin.left + margin.right);
+               desiredSize.height = aInfo.calculatedSize.height - (margin.top + margin.bottom);
+               childFrame->SizeTo(desiredSize.width, desiredSize.height);
+          } else {
+            desiredSize.width = currentRect.width;
+            desiredSize.height = currentRect.height;
 
-            if (currentSize.width == mSprings[spring].calculatedSize.width && currentSize.height == mSprings[spring].calculatedSize.height)
+            // remove the margin. The rect of our child does not include it but our calculated size does.
+            nscoord calcWidth = aInfo.calculatedSize.width - (margin.left + margin.right);
+            nscoord calcHeight = aInfo.calculatedSize.height - (margin.top + margin.bottom);
+
+            // don't reflow if we are already the right size
+            if (currentRect.width == calcWidth && currentRect.height == calcHeight)
                   shouldReflow = PR_FALSE;
           }
       }      
@@ -653,68 +838,56 @@ printf("\n");
       // ok now reflow the child into the springs calculated space
       if (shouldReflow) {
 
+        nsMargin border;
+        spacing->GetBorderPadding(border);
+        nsMargin total = margin + border;
+
+        const nsStylePosition* position;
+        rv = childFrame->GetStyleData(eStyleStruct_Position,
+                       (const nsStyleStruct*&) position);
+
         desiredSize.width = 0;
         desiredSize.height = 0;
 
+        nsSize size(aInfo.calculatedSize.width, aInfo.calculatedSize.height);
+
+        // only subrtact margin
+        if (size.height != NS_INTRINSICSIZE)
+            size.height -= (margin.top + margin.bottom);
+
+
+        if (size.width != NS_INTRINSICSIZE)
+            size.width -= (margin.left + margin.right);
+
         // create a reflow state to tell our child to flow at the given size.
-        nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, nsSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE));
+        nsHTMLReflowState   reflowState(aPresContext, aReflowState, childFrame, nsSize(size.width, NS_INTRINSICSIZE));
         reflowState.reason = reason;
 
+        if (size.height != NS_INTRINSICSIZE)
+            size.height -= (border.top + border.bottom);
+
+        if (size.width != NS_INTRINSICSIZE)
+            size.width -= (border.left + border.right);
+
         // tell the child what size they should be
-        reflowState.mComputedWidth = mSprings[spring].calculatedSize.width;
-        reflowState.mComputedHeight = mSprings[spring].calculatedSize.height;
+        reflowState.mComputedWidth = size.width;
+        reflowState.mComputedHeight = size.height;
 
-        // only subrtact margin and border.
-        if (reflowState.mComputedWidth != NS_INTRINSICSIZE)
-            reflowState.mComputedWidth -= (total.left + total.right);
-
-        if (reflowState.mComputedHeight != NS_INTRINSICSIZE)
-            reflowState.mComputedHeight -= (total.top + total.bottom);
-
-        // HTML frames do not implement nsIBox so unless they set both their width and height we do not know
-        // what there preferred size is. We can assume a preferred width or height of 0 when flexable but when
-        // not flexible we are in trouble. Why? Well if the child is fixed we really want its intrinsic size and
-        // the only way to get it is to flow with NS_INTRINSIC. So lets do that if we have to.
-        if (mSprings[spring].flex == CONSTANT) {
-          if (mHorizontal) {
-            if (mSprings[spring].prefWidthIntrinsic) 
-               reflowState.mComputedWidth = NS_INTRINSICSIZE;
-          } else {
-            if (mSprings[spring].prefHeightIntrinsic) 
-               reflowState.mComputedHeight = NS_INTRINSICSIZE;
-          }
-        }
-
-        // HTML block don't seem to return the actually size they layed themselves
-        // out in if they did not fit. So if the height is 0 indicating no one set it them. Get this 
-        // fixed in blocks themselves.
-        if (mHorizontal) {
-          // if we could not get the height of the child because it did not implement nsIBox and
-          // it did not provide a height via css and we are trying to lay it out with a height of 0
-          if (mSprings[spring].prefHeightIntrinsic && reflowState.mComputedHeight != NS_INTRINSICSIZE) {
-              nscoord oldHeight = mSprings[spring].calculatedSize.height;
-              mSprings[spring].calculatedSize.height = NS_INTRINSICSIZE;
-              FlowChildAt(childFrame, aPresContext, desiredSize, aReflowState, aStatus, spring, incrementalChild);
-
-              mSprings[spring].calculatedSize.height = oldHeight;
-
-              // remember that when we get the size back it has its margin and borderpadding
-              // added to it! So we must remove it before we make the comparison
-              desiredSize.width -= (total.left + total.right);
-              desiredSize.height -= (total.top + total.bottom);
-
-              // see if things are ok
-              if (reflowState.mComputedHeight < desiredSize.height)
-                 reflowState.mComputedHeight = desiredSize.height;
-
-          }
-            
-        } 
-
-        nsSize* oldMaxElementSize = desiredSize.maxElementSize;
-        nsSize maxElementSize(NS_INTRINSICSIZE, NS_INTRINSICSIZE);
-        desiredSize.maxElementSize = &maxElementSize;
+    //    nsSize maxElementSize(0, 0);
+      //  desiredSize.maxElementSize = &maxElementSize;
         
+#if DEBUG_REFLOW
+  ListTag(stdout); 
+  if (reason == eReflowReason_Incremental && aInfo.isIncremental) 
+     printf(": INCREMENTALLY reflowing ");
+  else
+     printf(": reflowing ");
+
+   nsFrame::ListTag(stdout, childFrame);
+   char ch[100];
+   aReason.ToCString(ch,100);
+   printf("because (%s)\n", ch);
+#endif
         // do the flow
         nsIHTMLReflow*      htmlReflow;
 
@@ -723,28 +896,73 @@ printf("\n");
 
         htmlReflow->WillReflow(aPresContext);
         htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+
         NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
 
-        if (maxElementSize.width != NS_INTRINSICSIZE && maxElementSize.width > desiredSize.width)
-            desiredSize.width = maxElementSize.width;
+        nsFrameState  kidState;
+        childFrame->GetFrameState(&kidState);
+
+       // printf("width: %d, height: %d\n", desiredSize.mCombinedArea.width, desiredSize.mCombinedArea.height);
+
+        if (kidState & NS_FRAME_OUTSIDE_CHILDREN) {
+             desiredSize.width = desiredSize.mCombinedArea.width;
+             desiredSize.height = desiredSize.mCombinedArea.height;
+        }
+
+        
+//        if (maxElementSize.width > desiredSize.width)
+  //          desiredSize.width = maxElementSize.width;
+
+        PRBool changedSize = PR_FALSE;
+
+        if (currentRect.width != desiredSize.width || currentRect.height != desiredSize.height)
+           changedSize = PR_TRUE;
+        
+        // if the child got bigger then make sure the new size in our min max range
+        if (changedSize) {
+          
+          // redraw if we changed size.
+          aRedraw = PR_TRUE;
+
+          if (aInfo.maxSize.width != NS_INTRINSICSIZE && desiredSize.width > aInfo.maxSize.width - (margin.left + margin.right))
+              desiredSize.width = aInfo.maxSize.width - (margin.left + margin.right);
+
+          // if the child was bigger than anticipated and there was a min size set thennn
+          if (aInfo.calculatedSize.width != NS_INTRINSICSIZE && position->mMinWidth.GetUnit() == eStyleUnit_Coord) {
+             nscoord min = position->mMinWidth.GetCoordValue();
+             if (min != 0)
+                 desiredSize.width = aInfo.calculatedSize.width - (margin.left + margin.right);
+          }
+
+          if (aInfo.maxSize.height != NS_INTRINSICSIZE && desiredSize.height > aInfo.maxSize.height - (margin.top + margin.bottom))
+              desiredSize.height = aInfo.maxSize.height - (margin.top + margin.bottom);
+
+          // if a min size was set we will always get the desired height
+          if (aInfo.calculatedSize.height != NS_INTRINSICSIZE && position->mMinHeight.GetUnit() == eStyleUnit_Coord) {
+             nscoord min = position->mMinHeight.GetCoordValue();
+             if (min != 0)
+                 desiredSize.height = aInfo.calculatedSize.height - (margin.top + margin.bottom);
+          }
+
+        }
 
           // set the rect
-        childFrame->SetRect(nsRect(0,0,desiredSize.width, desiredSize.height));
+        childFrame->SizeTo(desiredSize.width, desiredSize.height);
 
         // Stub out desiredSize.maxElementSize so that when go out of
         // scope, nothing bad happens!
-        desiredSize.maxElementSize = oldMaxElementSize;
+        desiredSize.maxElementSize = nsnull;
 
         // clear out the incremental child, so that we don't flow it incrementally again
-        if (reason == eReflowReason_Incremental && incrementalChild == childFrame)
-          incrementalChild = nsnull;
+        if (reason == eReflowReason_Incremental && aInfo.isIncremental) 
+          aInfo.isIncremental = PR_FALSE;
       
       }
       // add the margin back in. The child should add its border automatically
       desiredSize.height += (margin.top + margin.bottom);
       desiredSize.width += (margin.left + margin.right);
 
-      mSprings[spring].needsReflow = PR_FALSE;
+      aInfo.needsReflow = PR_FALSE;
 
       return NS_OK;
 }
@@ -764,7 +982,6 @@ nsBoxFrame::BoundsCheck(const nsBoxInfo& aBoxInfo, nsRect& aRect)
   if (aRect.width == NS_INTRINSICSIZE ) 
       aRect.width = aBoxInfo.prefSize.width;
 
-  
   // make sure the available size is no bigger than the max size
   if (aRect.height > aBoxInfo.maxSize.height)
      aRect.height = aBoxInfo.maxSize.height;
@@ -1045,14 +1262,6 @@ nsBoxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aR
    nscoord count = 0;
    nsIFrame* childFrame = mFrames.FirstChild(); 
 
-   /*
-   // if we have any children assume we are intrinsic unless a child is not
-   if (childFrame != nsnull) {
-       aSize.prefHeightIntrinsic = PR_TRUE;
-       aSize.prefWidthIntrinsic = PR_TRUE;
-   }
-   */
-
    while (nsnull != childFrame) 
    {  
     // if a child needs recalculation then ask it for its size. Otherwise
@@ -1088,30 +1297,28 @@ nsBoxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aR
         nsSize m(margin.left+margin.right,margin.top+margin.bottom);
         mSprings[count].minSize += m;
         mSprings[count].prefSize += m;
+        if (mSprings[count].maxSize.width != NS_INTRINSICSIZE)
+           mSprings[count].maxSize.width += m.width;
+
+        if (mSprings[count].maxSize.height != NS_INTRINSICSIZE)
+           mSprings[count].maxSize.height += m.height;
 
         spacing->GetBorderPadding(margin);
         nsSize b(margin.left+margin.right,margin.top+margin.bottom);
         mSprings[count].minSize += b;
         mSprings[count].prefSize += b;
+        if (mSprings[count].maxSize.width != NS_INTRINSICSIZE)
+           mSprings[count].maxSize.width += b.width;
+
+        if (mSprings[count].maxSize.height != NS_INTRINSICSIZE)
+           mSprings[count].maxSize.height += b.height;
       }
 
       // ok we don't need to calc this guy again
       mSprings[count].needsRecalc = PR_FALSE;
     } 
 
-    /*
-    // if a size is not intrinsic then our size is not intrinsic.
-    if (!mSprings[count].prefWidthIntrinsic)
-        aSize.prefWidthIntrinsic = PR_FALSE;
-
-    if (!mSprings[count].prefHeightIntrinsic)
-        aSize.prefHeightIntrinsic = PR_FALSE;
-    */
-
-    // now that we know our child's min, max, pref sizes figure OUR size from them.
-    AddSize(mSprings[count].minSize,  aSize.minSize,  PR_FALSE);
-    AddSize(mSprings[count].maxSize,  aSize.maxSize,  PR_TRUE);
-    AddSize(mSprings[count].prefSize, aSize.prefSize, PR_FALSE);
+    AddChildSize(aSize, mSprings[count]);
 
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(rv == NS_OK,"failed to get next child");
@@ -1135,9 +1342,20 @@ nsBoxFrame::GetBoxInfo(nsIPresContext& aPresContext, const nsHTMLReflowState& aR
   return rv;
 }
 
+void
+nsBoxFrame::AddChildSize(nsBoxInfo& aInfo, nsBoxInfo& aChildInfo)
+{
+    // now that we know our child's min, max, pref sizes figure OUR size from them.
+    AddSize(aChildInfo.minSize,  aInfo.minSize,  PR_FALSE);
+    AddSize(aChildInfo.maxSize,  aInfo.maxSize,  PR_TRUE);
+    AddSize(aChildInfo.prefSize, aInfo.prefSize, PR_FALSE);
+}
+
 /**
- * Called with a reflow command. This will dirty all boxes who need to be reflowed.
- * return the last child that is not a box. Part of nsIBox interface.
+ * Boxes work differently that regular HTML elements. Each box knows if it needs to be reflowed or not
+ * So when a box gets an incremental reflow. It runs down all the children and marks them for reflow. If it
+ * Reaches a child that is not a box then it marks that child as incremental so when it is flowed next it 
+ * will be flowed incrementally.
  */
 NS_IMETHODIMP
 nsBoxFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalChild)
@@ -1163,7 +1381,14 @@ nsBoxFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalC
             ibox->Dirty(aReflowState, incrementalChild);
         else
             incrementalChild = frame;
+
+        // if we found a leaf. Then mark it as being incremental. So when we
+        // flow it we will flow it incrementally
+        if (incrementalChild == childFrame)
+          mSprings[count].isIncremental = PR_TRUE;
+
         break;
+
     }
 
     rv = childFrame->GetNextSibling(&childFrame);
@@ -1176,6 +1401,41 @@ nsBoxFrame::Dirty(const nsHTMLReflowState& aReflowState, nsIFrame*& incrementalC
 
   return rv;
 }
+
+NS_IMETHODIMP
+nsBoxFrame :: Paint ( nsIPresContext& aPresContext,
+                      nsIRenderingContext& aRenderingContext,
+                      const nsRect& aDirtyRect,
+                      nsFramePaintLayer aWhichLayer)
+{
+  const nsStyleDisplay* disp = (const nsStyleDisplay*)
+  mStyleContext->GetStyleData(eStyleStruct_Display);
+
+  // if we aren't visible then we are done.
+  if (!disp->mVisible) 
+	   return NS_OK;  
+
+  // if we are visible then tell our superclass to paint
+  nsresult r = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                       aWhichLayer);
+
+   // paint the draw area
+  /*
+#if DEBUG_REDRAW
+  if (NS_BLOCK_DOCUMENT_ROOT & mFlags)  {
+     PRBool result = PR_FALSE;
+     nsRect rect(0,0,0,0);
+     aRenderingContext.GetClipRect(rect, result);
+     if (result) {
+       aRenderingContext.SetColor(NS_RGB(255,0,0));
+       aRenderingContext.DrawRect(rect);
+     }
+  }
+#endif
+*/
+  return r;
+}
+  
 
 NS_IMETHODIMP nsBoxFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
 {           
@@ -1216,6 +1476,19 @@ nsBoxFrame::GetFrameName(nsString& aResult) const
 nsCalculatedBoxInfo::nsCalculatedBoxInfo()
 {
    clear();
+}
+
+nsCalculatedBoxInfo::nsCalculatedBoxInfo(const nsBoxInfo& aInfo):nsBoxInfo(aInfo)
+{
+    needsReflow = PR_TRUE;
+    needsRecalc = PR_TRUE;
+    collapsed = PR_FALSE;
+
+    calculatedSize.width = 0;
+    calculatedSize.height = 0;
+
+    sizeValid = PR_FALSE;
+    isIncremental = PR_FALSE;
 }
 
 void 
