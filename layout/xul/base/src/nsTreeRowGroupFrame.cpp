@@ -880,7 +880,10 @@ nsTreeRowGroupFrame::GetFirstFrameForReflow(nsIPresContext& aPresContext)
     mBottomFrame = mTopFrame;
     const nsStyleDisplay *rowDisplay;
     mTopFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
-    if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP==rowDisplay->mDisplay && mContentChain) {
+    if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
+      DidAppendRow((nsTableRowFrame*)mTopFrame);
+    }
+    else if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP==rowDisplay->mDisplay && mContentChain) {
       // We have just instantiated a row group, and we have a content chain. This
       // means we need to potentially pass a sub-content chain to the instantiated
       // frame, so that it can also sync up with its children.
@@ -946,6 +949,11 @@ nsTreeRowGroupFrame::GetNextFrameForReflow(nsIPresContext& aPresContext, nsIFram
         // XXX Can be optimized if we detect that we're appending a row to the end of the tree.
         // Also the act of appending or inserting a row group is harmless.
 
+        const nsStyleDisplay *rowDisplay;
+        (*aResult)->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)rowDisplay);
+        if (NS_STYLE_DISPLAY_TABLE_ROW == rowDisplay->mDisplay) {
+          DidAppendRow((nsTableRowFrame*)(*aResult));
+        }
         nsTableFrame* tableFrame;
         nsTableFrame::GetTableFrame(this, tableFrame);
         nsTreeFrame* treeFrame = (nsTreeFrame*)tableFrame;
