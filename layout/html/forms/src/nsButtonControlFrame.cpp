@@ -322,7 +322,7 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     case NS_FORM_INPUT_RESET:
       event.message = NS_FORM_RESET;
       if (nsnull != formContent) {
-        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
       }
       if (nsEventStatus_eConsumeNoDefault != status) {
         mFormFrame->OnReset();
@@ -331,7 +331,7 @@ nsButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
     case NS_FORM_INPUT_SUBMIT:
       event.message = NS_FORM_SUBMIT;
       if (nsnull != formContent) {
-        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status); 
+        formContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
       }
       if (nsEventStatus_eConsumeNoDefault != status) {
         mFormFrame->OnSubmit(aPresContext, this);

@@ -1964,7 +1964,7 @@ PresShell::HandleEvent(nsIView         *aView,
           nsIContent* targetContent;
           if (NS_OK == mCurrentEventFrame->GetContent(&targetContent) && nsnull != targetContent) {
             rv = targetContent->HandleDOMEvent(*mPresContext, (nsEvent*)aEvent, nsnull, 
-                                               DOM_EVENT_INIT, aEventStatus);
+                                               NS_EVENT_FLAG_INIT, aEventStatus);
             NS_RELEASE(targetContent);
           }
 

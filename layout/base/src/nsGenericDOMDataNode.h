@@ -30,6 +30,7 @@
 extern const nsIID kIDOMCharacterDataIID;
 extern const nsIID kIDOMNodeIID;
 extern const nsIID kIDOMEventReceiverIID;
+extern const nsIID kIDOMEventTargetIID;
 extern const nsIID kIScriptObjectOwnerIID;
 extern const nsIID kISupportsIID;
 extern const nsIID kIContentIID;
@@ -102,11 +103,17 @@ struct nsGenericDOMDataNode {
   nsresult    ReplaceData(PRUint32 aOffset, PRUint32 aCount, const nsString& aArg);
 
   // nsIDOMEventReceiver interface
-  nsresult AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
-  nsresult RemoveEventListener(nsIDOMEventListener* aListener,
+  nsresult AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
+  nsresult RemoveEventListenerByIID(nsIDOMEventListener* aListener,
                                const nsIID& aIID);
   nsresult GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   nsresult GetNewListenerManager(nsIEventListenerManager** aInstancePtrResult);
+
+  // nsIDOMEventTarget interface
+  nsresult AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                            PRBool aPostProcess, PRBool aUseCapture);
+  nsresult RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                               PRBool aPostProcess, PRBool aUseCapture);
 
   // nsIScriptObjectOwner interface
   nsresult GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -213,6 +220,7 @@ struct nsGenericDOMDataNode {
   nsIContent* mParent;
   void* mScriptObject;
   nsIEventListenerManager* mListenerManager;
+  nsIContent* mCapturer;
 
   nsTextFragment mText;
   nsVoidArray *mRangeList;
@@ -314,21 +322,33 @@ struct nsGenericDOMDataNode {
  * generic content object (either nsGenericHTMLLeafElement or
  * nsGenericHTMLContainerContent)
  */
-#define NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC_DOM_DATA(_g)            \
-  NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener,           \
-                              const nsIID& aIID) {                      \
-    return _g.AddEventListener(aListener, aIID);                        \
-  }                                                                     \
-  NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener,        \
-                                 const nsIID& aIID) {                   \
-    return _g.RemoveEventListener(aListener, aIID);                     \
-  }                                                                     \
-  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) {    \
-    return _g.GetListenerManager(aResult);                              \
-  }                                                                     \
-  NS_IMETHOD GetNewListenerManager(nsIEventListenerManager** aResult) { \
-    return _g.GetNewListenerManager(aResult);                           \
-  }
+#define NS_IMPL_IDOMEVENTRECEIVER_USING_GENERIC_DOM_DATA(_g)                    \
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener,              \
+                                   const nsIID& aIID) {                         \
+    return _g.AddEventListenerByIID(aListener, aIID);                           \
+  }                                                                             \
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener,           \
+                                      const nsIID& aIID) {                      \
+    return _g.RemoveEventListenerByIID(aListener, aIID);                        \
+  }                                                                             \
+  NS_IMETHOD GetListenerManager(nsIEventListenerManager** aResult) {            \
+    return _g.GetListenerManager(aResult);                                      \
+  }                                                                             \
+  NS_IMETHOD GetNewListenerManager(nsIEventListenerManager** aResult) {         \
+    return _g.GetNewListenerManager(aResult);                                   \
+  }                                                                             \
+  NS_IMETHOD AddEventListener(const nsString& aType,                            \
+                              nsIDOMEventListener* aListener,                   \
+                              PRBool aPostProcess,                              \
+                              PRBool aUseCapture) {                             \
+    return _g.AddEventListener(aType, aListener, aPostProcess, aUseCapture);    \
+  }                                                                             \
+  NS_IMETHOD RemoveEventListener(const nsString& aType,                         \
+                                 nsIDOMEventListener* aListener,                \
+                                 PRBool aPostProcess,                           \
+                                 PRBool aUseCapture) {                          \
+    return _g.RemoveEventListener(aType, aListener, aPostProcess, aUseCapture); \
+  }                                                                     
 
 /**
  * Implement the nsIScriptObjectOwner API by forwarding the methods to a
@@ -470,6 +490,12 @@ struct nsGenericDOMDataNode {
   }                                                         \
   if (_id.Equals(kIDOMEventReceiverIID)) {                  \
     nsIDOMEventReceiver* tmp = _this;                       \
+    *_iptr = (void*) tmp;                                   \
+    NS_ADDREF_THIS();                                       \
+    return NS_OK;                                           \
+  }                                                         \
+  if (_id.Equals(kIDOMEventTargetIID)) {                    \
+    nsIDOMEventTarget* tmp = _this;                         \
     *_iptr = (void*) tmp;                                   \
     NS_ADDREF_THIS();                                       \
     return NS_OK;                                           \

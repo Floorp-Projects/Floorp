@@ -25,6 +25,7 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIDOMEventCapturer.h"
+#include "nsIDOMEventTarget.h"
 #include "nsXIFConverter.h"
 #include "nsIJSScriptObject.h"
 #include "nsIContent.h"
@@ -311,10 +312,17 @@ public:
   NS_IMETHOD    ReleaseEvent(const nsString& aType);
 
   // nsIDOMEventReceiver interface
-  NS_IMETHOD AddEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
-  NS_IMETHOD RemoveEventListener(nsIDOMEventListener *aListener, const nsIID& aIID);
+  NS_IMETHOD AddEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
+  NS_IMETHOD RemoveEventListenerByIID(nsIDOMEventListener *aListener, const nsIID& aIID);
   NS_IMETHOD GetListenerManager(nsIEventListenerManager** aInstancePtrResult);
   NS_IMETHOD GetNewListenerManager(nsIEventListenerManager **aInstancePtrResult);
+
+  // nsIDOMEventTarget interface
+  NS_IMETHOD AddEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                              PRBool aPostProcess, PRBool aUseCapture);
+  NS_IMETHOD RemoveEventListener(const nsString& aType, nsIDOMEventListener* aListener, 
+                                 PRBool aPostProcess, PRBool aUseCapture);
+
 
   NS_IMETHOD HandleDOMEvent(nsIPresContext& aPresContext, 
                             nsEvent* aEvent, 

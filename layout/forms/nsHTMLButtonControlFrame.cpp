@@ -337,7 +337,7 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
       nsEvent mEvent;
       mEvent.eventStructType = NS_EVENT;
       mEvent.message = NS_FORM_RESET;
-      mContent->HandleDOMEvent(*aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
+      mContent->HandleDOMEvent(*aPresContext, &mEvent, nsnull, NS_EVENT_FLAG_INIT, mStatus); 
 
       mFormFrame->OnReset();
     } else if (NS_FORM_BUTTON_SUBMIT == type) {
@@ -346,7 +346,7 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
       nsEvent mEvent;
       mEvent.eventStructType = NS_EVENT;
       mEvent.message = NS_FORM_SUBMIT;
-      mContent->HandleDOMEvent(*aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus); 
+      mContent->HandleDOMEvent(*aPresContext, &mEvent, nsnull, NS_EVENT_FLAG_INIT, mStatus); 
 
       mFormFrame->OnSubmit(aPresContext, this);
     }

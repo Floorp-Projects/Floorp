@@ -33,10 +33,6 @@ class nsIDOMRenderingContext;
 
 class nsDOMEvent : public nsIDOMEvent, public nsIDOMNSEvent, public nsIPrivateDOMEvent {
 
-#define DOM_EVENT_INIT      0x0001
-#define DOM_EVENT_BUBBLE    0x0002
-#define DOM_EVENT_CAPTURE   0x0004
-
 public:
   // Note: this enum must be kept in sync with mEventNames in nsDOMEvent.cpp
   enum nsDOMEvents {

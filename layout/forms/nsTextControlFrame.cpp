@@ -218,7 +218,7 @@ nsTextControlFrame::EnterPressed(nsIPresContext& aPresContext)
 
       event.eventStructType = NS_EVENT;
       event.message = NS_FORM_SUBMIT;
-      formContent->HandleDOMEvent(aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+      formContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
       NS_RELEASE(formContent);
     }
 

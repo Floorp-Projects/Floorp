@@ -261,6 +261,7 @@ NS_METHOD nsDOMEvent::GetCharCode(PRUint32* aCharCode)
 {
   switch (mEvent->message) {
   case NS_KEY_UP:
+  case NS_KEY_PRESS:
   case NS_KEY_DOWN:
     *aCharCode = ((nsKeyEvent*)mEvent)->charCode;
 #ifdef NS_DEBUG
@@ -283,6 +284,7 @@ NS_METHOD nsDOMEvent::GetKeyCode(PRUint32* aKeyCode)
 {
   switch (mEvent->message) {
   case NS_KEY_UP:
+  case NS_KEY_PRESS:
   case NS_KEY_DOWN:
     *aKeyCode = ((nsKeyEvent*)mEvent)->keyCode;
     break;
@@ -441,9 +443,9 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_keydown];
   case NS_KEY_PRESS:
     return mEventNames[eDOMEvents_keypress];
-  case NS_GOTFOCUS:
+  case NS_FOCUS_CONTENT:
     return mEventNames[eDOMEvents_focus];
-  case NS_LOSTFOCUS:
+  case NS_BLUR_CONTENT:
     return mEventNames[eDOMEvents_blur];
   case NS_PAGE_LOAD:
   case NS_IMAGE_LOAD:

@@ -1080,7 +1080,7 @@ nsSelectControlFrame::MouseClicked(nsIPresContext* aPresContext)
 
       event.message = NS_FORM_CHANGE;
       if (nsnull != mContent) {
-        mContent->HandleDOMEvent(*aPresContext, &event, nsnull, DOM_EVENT_INIT, status);
+        mContent->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
       }
     }
   }
