@@ -23,6 +23,7 @@
 #include "msgCore.h"
 #include "prprf.h" /* should be defined into msgCore.h? */
 #include "net.h" /* should be defined into msgCore.h? */
+#include "MailNewsTypes.h"
 #include "intl_csi.h"
 #include "msgcom.h"
 
@@ -66,9 +67,8 @@ public:
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
 
-#if 0 //JFD
-	NS_IMETHOD CreateAndInit(/*MWContext* */PRInt32 a_context, /* MWContext* */PRInt32 old_context,
-						/* MSG_Prefs* */PRInt32 prefs, const nsIMsgCompFields* initfields,
+	NS_IMETHOD CreateAndInitialize(/*MWContext* */PRInt32 a_context, /* MWContext* */PRInt32 old_context,
+						/* MSG_Prefs* */PRInt32 prefs, nsIMsgCompFields* initfields,
 						/* MSG_Master* */PRInt32 master);
 
 	// Or, if you prefer, construct using below constructor and be sure to
@@ -76,26 +76,24 @@ public:
 
 	NS_IMETHOD Create(/* MWContext* */PRInt32 a_context, /* MSG_Prefs* */PRInt32 prefs,
 						/* MSG_Master* */PRInt32 master);
-	NS_IMETHOD Initialize(/* MWContext* */PRInt32 old_context, const nsIMsgCompFields* initfields);
+	NS_IMETHOD Initialize(/* MWContext* */PRInt32 old_context, nsIMsgCompFields* initfields);
 
 	NS_IMETHOD Dispose();
 
-#endif  //JFD
 	virtual MSG_PaneType GetPaneType();
-#if 0 //JFD
 
 	virtual void NotifyPrefsChange(NotifyCode code);
 
 	MSG_CommandType PreviousSaveCommand();
 
-	virtual MsgERR	GetCommandStatus(MSG_CommandType command,
+	virtual nsresult	GetCommandStatus(MSG_CommandType command,
 										 const nsMsgViewIndex* indices,
 										 PRInt32 numindices,
 										 PRBool *selectable_p,
 										 MSG_COMMAND_CHECK_STATE *selected_p,
 										 const char **display_string,
 										 PRBool * plural_p);
-	virtual MsgERR DoCommand(MSG_CommandType command,
+	virtual nsresult DoCommand(MSG_CommandType command,
 							 nsMsgViewIndex* indices, PRInt32 numindices);
 
 	const char* GetDefaultURL();
@@ -105,7 +103,7 @@ public:
 
 	int SetCallbacks(MSG_CompositionPaneCallbacks* callbacks, void* closure);
 
-	MSG_CompositionFields* GetInitialFields();
+	nsIMsgCompFields* GetInitialFields();
 	
 
 	MSG_HEADER_SET GetInterestingHeaders();
@@ -113,20 +111,18 @@ public:
 	PRBool NoPendingAttachments() const;
 	char* GetAttachmentString();
 	PRBool ShouldAutoQuote();
-#endif //JFD
 	const char* GetCompHeader(MSG_HEADER_SET);
 	PRInt32 SetCompHeader(MSG_HEADER_SET, const char*);
 	PRBool GetCompBoolHeader(MSG_BOOL_HEADER_SET);
 	PRInt32 SetCompBoolHeader(MSG_BOOL_HEADER_SET, PRBool);
 	const char* GetCompBody();
 	int SetCompBody(const char*);
-#if 0 //JFD
 	void ToggleCompositionHeader(PRUint32 header);
 	PRBool ShowingAllCompositionHeaders();
 	PRBool ShowingCompositionHeader(PRUint32 mask);
     PRBool GetHTMLMarkup(void);
     void SetHTMLMarkup(PRBool flag);
-	MsgERR QuoteMessage(int (*func)(void* closure, const char* data),
+	nsresult QuoteMessage(int (*func)(void* closure, const char* data),
 						void* closure);
 	int PastePlaintextQuotation(const char* str);
 	const struct MSG_AttachmentData *GetAttachmentList();
@@ -145,10 +141,8 @@ public:
 	int SaveMessageAsTemplate();
 
 	PRBool IsDuplicatePost();
-#endif //JFD
 	const char* GetCompositionMessageID();
 	void ClearCompositionMessageID();
-#if 0 //JFD
 	HJ13591
 	HJ86782
 	HJ02278
@@ -176,13 +170,11 @@ public:
 	HJ37212
 	HJ42256
 
-#endif //JFD
 	int SetHTMLAction(MSG_HTMLComposeAction action) {
 		m_htmlaction = action;
 		return 0;
 	}
 	MSG_HTMLComposeAction GetHTMLAction() {return m_htmlaction;}
-#if 0 //JFD
 
   int PutUpRecipientsDialog(void *pWnd = NULL);
 
@@ -190,19 +182,16 @@ public:
 
   PRBool m_confirmed_uuencode_p; // Have we confirmed sending uuencoded data?
 
-#endif  //JFD
   // For qutoing plain text to html then convert back to plain text
   void SetLineWidth(int width) { m_lineWidth = width; }
   int GetLineWidth() { return m_lineWidth; }
   // #$@%&*
-#if 0 //JFD
 
 protected:
 	static void QuoteHTMLDone_S(URL_Struct* url, 
 								int status, MWContext* context);
 
-	void InitializeHeaders(MWContext* old_context,
-						   MSG_CompositionFields* fields);
+	void InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* fields);
 
 	char* FigureBcc(PRBool newsBcc);
 	const char* CheckForLosingFcc(const char* fcc);
@@ -260,7 +249,6 @@ protected:
 										   been downloaded, and some info about
 										   them. */
 
-#endif //JFD
 	char *m_defaultUrl;			/* Default URL for attaching, etc. */
 
 	nsMsgCompFields* m_initfields; // What all the fields were,
@@ -268,7 +256,6 @@ protected:
 	nsMsgCompFields* m_fields; // Current value of all the fields.
 
 	char* m_messageId;			// Message-Id to use for composition.
-#if 0 //JFD
 
 	char* m_attachmentString;	// Storage for string to display in UI for
 								// the list of attachments.
@@ -304,9 +291,7 @@ protected:
 
 	HJ92535
 
-#endif //JFD
 	MSG_HTMLComposeAction m_htmlaction;
-#if 0 //JFD
 	MSG_HTMLRecipients* m_htmlrecip;
 
 	int m_status;
@@ -324,7 +309,6 @@ protected:
 
 	MSG_CompositionPaneCallbacks m_callbacks;
 	void* m_callbackclosure;
-#endif //JFD
 	int m_lineWidth; // for quoting plain text to html then convert back
 						 // to plain text
 };

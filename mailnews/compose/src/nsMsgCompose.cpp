@@ -143,7 +143,6 @@ nsresult NS_NewMsgCompose(nsIMsgCompose** aInstancePtrResult)
 }
 
 
-#if 0 //JFD
 class RecipientEntry : public MSG_ZapIt {
 public:
 	RecipientEntry(const char* name, const char* description,
@@ -179,6 +178,8 @@ RecipientEntry::RecipientEntry(const char* name, const char* description,
 	}
 	m_type = type;
 	m_htmlok = htmlok;
+	m_newhtmlok = PR_FALSE;
+	m_touched = PR_FALSE;
 }
 
 RecipientEntry::~RecipientEntry()
@@ -220,6 +221,11 @@ protected:
 };
 
 MSG_HTMLRecipients::MSG_HTMLRecipients() {
+	m_list = NULL;
+	m_num = 0;
+	m_max = 0;
+	m_generatedList[0] = NULL;
+	m_generatedList[1] = NULL;
 }
 
 MSG_HTMLRecipients::~MSG_HTMLRecipients() {
@@ -382,10 +388,49 @@ msg_delete_attached_files(struct MSG_AttachedFile *attachments)
 	}
 	PR_FREEIF(attachments);
 }
-#endif //JFD
 
 nsMsgCompose::nsMsgCompose()
 {
+	m_replyType = 0;
+	m_markup = PR_FALSE;
+	m_attachData = NULL;
+	m_attachedFiles = NULL;
+	m_defaultUrl = NULL;
+	m_initfields = NULL;
+	m_fields = NULL;
+	m_messageId = NULL;
+	m_attachmentString = NULL;
+	m_quotedText = NULL;
+	m_print = NULL;
+	m_textContext = NULL;
+	m_context = NULL;
+	m_oldContext = NULL;
+	m_quoteUrl = NULL;
+	m_dummyUrl = NULL;
+	m_exitQuoting = NULL;
+	m_quotefunc = NULL;
+	m_quoteclosure = NULL;
+	m_deliveryInProgress = PR_FALSE;
+	m_attachmentInProgress = PR_FALSE;
+	m_pendingAttachmentsCount = 0;
+	m_deliver_mode = MSG_DeliverNow;
+	m_cited = PR_FALSE;
+	m_duplicatePost = PR_FALSE;
+	m_htmlaction = MSG_HTMLAskUser;
+	m_htmlrecip = NULL;
+	m_status = 0;
+	m_visible_headers = 0;
+	m_host = NULL;
+	m_closeAfterSave = PR_FALSE;
+	m_haveQuoted = PR_FALSE;
+	m_haveAttachedVcard = PR_FALSE;
+	m_callbacks.CreateAskHTMLDialog = NULL;
+	m_callbacks.CreateRecipientsDialog = NULL;
+	m_callbackclosure = NULL;
+	m_lineWidth = 0;
+
+	HJ58932
+
 	/* the following macro is used to initialize the ref counting data */
 	NS_INIT_REFCNT();
 }
@@ -398,35 +443,36 @@ nsMsgCompose::~nsMsgCompose()
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgCompose, nsIMsgCompose::GetIID());
 
-#if 0 //JFD
-nsMsgCompose::MSG_CompositionPaneCreate(MWContext* context,
-										 MWContext* old_context,
-										 MSG_Prefs* prefs,
-										 MSG_CompositionFields* fields,
-										 MSG_Master* master)
+nsresult nsMsgCompose::CreateAndInitialize(/*MWContext* */PRInt32 context,
+									 /*MWContext* */PRInt32 old_context,
+									 /*MSG_Prefs* */PRInt32 prefs,
+									 nsIMsgCompFields* fields,
+									 /*MSG_Master* */PRInt32 master)
 {
-	MSG_PaneCreate(context, master);	/*JFD*/
-	m_prefs = prefs;
+	MSG_PaneCreate((MWContext*)context, (MSG_Master*)master);	/*JFD*/
+	m_prefs = (MSG_Prefs*)prefs;
 	SetHTMLAction(MSG_HTMLAskUser);
 	Initialize(old_context, fields);
 	// make sure we have a valid folder tree - via side effect of getfoldertree
-	master->GetFolderTree();
+	if (master)
+		((MSG_Master*)master)->GetFolderTree();
+
+	return NS_OK;
 }
 
-nsMsgCompose::MSG_CompositionPaneCreate(MWContext* context,
-										 MSG_Prefs* prefs,
-										 MSG_Master* master)
+nsresult nsMsgCompose::Create(/*MWContext**/PRInt32 context, /*MSG_Prefs**/PRInt32 prefs, /*MSG_Master**/PRInt32 master)
 {
-	MSG_PaneCreate(context, master);	/*JFD*/
-	m_prefs = prefs;
+	MSG_PaneCreate((MWContext*)context, (MSG_Master*)master);	/*JFD*/
+	m_prefs = (MSG_Prefs*)prefs;
 	// make sure we have a valid folder tree - via side effect of getfoldertree
-	master->GetFolderTree();
+	if (master)
+		((MSG_Master*)master)->GetFolderTree();
+
+	return NS_OK;
 }
 
 
-int
-nsMsgCompose::Initialize(MWContext* old_context,
-								MSG_CompositionFields* fields)
+nsresult nsMsgCompose::Initialize(/*MWContext**/PRInt32 old_context, nsIMsgCompFields* fields)
 {
 /*JFD
 	m_print = new PrintSetup;
@@ -434,55 +480,67 @@ nsMsgCompose::Initialize(MWContext* old_context,
 
 	HJ22867
 
-	InitializeHeaders(old_context, fields);
+	InitializeHeaders((MWContext*)old_context, fields);
 	m_visible_headers = GetInterestingHeaders();
 	m_deliver_mode = MSG_DeliverNow;
 	m_haveAttachedVcard = PR_FALSE;
 
 	m_fields->SetForcePlainText(PR_FALSE);	// Coming into us, this field meant
-										// "bring up the editor in plaintext
-										// mode".  Well, that's already been
-										// done at this point.  Now, we want
-										// it to mean "convert this message
-										// to plaintext on send".  Which we
-										// do only if DetermineHTMLAction()
-										// tells us to.
-
-	return 0;
+											// "bring up the editor in plaintext
+											// mode".  Well, that's already been
+											// done at this point.  Now, we want
+											// it to mean "convert this message
+											// to plaintext on send".  Which we
+											// do only if DetermineHTMLAction()
+											// tells us to.
+	return NS_OK;
 }
 
 
 
-nsMsgCompose::Dispose() {
+nsresult nsMsgCompose::Dispose()
+{
 	// Don't interrupt if there's nothing to interrupt because we might lose
 	// mocha messages.
 	if (NET_AreThereActiveConnectionsForWindow(m_context))
 		msg_InterruptContext (m_context, PR_FALSE);
-	if (m_textContext != NULL) {
+	if (m_textContext != NULL)
 		msg_InterruptContext(m_textContext, PR_TRUE);
-	}
 
+/*JFD
 	msg_delete_attached_files (m_attachedFiles);
+*/
 
 	PR_FREEIF(m_defaultUrl);
 	PR_FREEIF(m_attachmentString);
 
+/*JFD
 	msg_free_attachment_list(m_attachData);
 
-	delete m_print;
-	m_print = NULL;
+	if (m_print) {
+		delete m_print;
+		m_print = NULL;
+	}
+*/
 
 	HJ09384
 
-	if (m_context) FE_DestroyMailCompositionContext(m_context);
+	if (m_context)
+		FE_DestroyMailCompositionContext(m_context);
 	m_context = NULL;
 
-	delete m_fields;
-	m_fields = NULL;
-	delete m_initfields;
-	m_initfields = NULL;
-	delete m_htmlrecip;
-	m_htmlrecip = NULL;
+	if (m_fields) {
+		m_fields->Release();
+		m_fields = NULL;
+	}
+	if (m_initfields) {
+		m_initfields->Release();
+		m_initfields = NULL;
+	}
+	if (m_htmlrecip) {
+		delete m_htmlrecip;
+		m_htmlrecip = NULL;
+	}
 
 /*JFD
 	DIR_Server* pab = NULL;
@@ -491,16 +549,16 @@ nsMsgCompose::Dispose() {
 
 	PR_FREEIF(m_quotedText);
 	PR_FREEIF(m_messageId);
+
+	return NS_OK;
 }
 
-#endif  //JFD
 
 MSG_PaneType nsMsgCompose::GetPaneType()
 {
 	return MSG_COMPOSITIONPANE;
 }
 
-#if 0 //JFD
 
 void nsMsgCompose::NotifyPrefsChange(NotifyCode) {
 	// ###tw  Write me!
@@ -638,7 +696,7 @@ nsMsgCompose::FigureBcc(PRBool newsBcc)
 		} else if (!tmp || !*tmp) {
 			result = PL_strdup(FE_UsersMailAddress());
 		} else {
-			result = PR_PR_smprintf("%s, %s", FE_UsersMailAddress(), tmp);
+			result = PR_smprintf("%s, %s", FE_UsersMailAddress(), tmp);
 		}
 	}
 	return result;
@@ -679,7 +737,7 @@ nsMsgCompose::CheckForLosingFcc(const char* fcc)
 	return fcc;
 }
 
-MsgERR
+nsresult
 nsMsgCompose::GetCommandStatus(MSG_CommandType command,
 										 const nsMsgViewIndex* indices,
 										 PRInt32 numindices,
@@ -779,8 +837,10 @@ nsMsgCompose::GetCommandStatus(MSG_CommandType command,
 		break;
 	default:
 		selectable_p = PR_FALSE;
+/*JFD
 		return MSG_Pane::GetCommandStatus(command, indices, numindices,
 			selectable_pP, selected_pP, display_stringP, plural_pP);
+*/return 0;
 	}
 	if (selectable_pP)
 		*selectable_pP = selectable_p;
@@ -807,11 +867,11 @@ nsMsgCompose::GetCommandStatus(MSG_CommandType command,
 }
 
 					 
-MsgERR
+nsresult
 nsMsgCompose::DoCommand(MSG_CommandType command, nsMsgViewIndex* indices,
 							   PRInt32 numindices)
 {
-	MsgERR status = 0;
+	nsresult status = 0;
 	InterruptContext(PR_FALSE);
 	switch (command) {
 	case MSG_SendMessage:
@@ -863,7 +923,9 @@ nsMsgCompose::DoCommand(MSG_CommandType command, nsMsgViewIndex* indices,
 		ToggleCompositionHeader(MSG_ATTACHMENTS_HEADER_MASK);
 		break;
 	default:
+/*JFD
 		status = MSG_Pane::DoCommand(command, indices, numindices);
+*/status=0;
 		break;
 	}
 	return status;
@@ -907,8 +969,7 @@ HJ99161
 HJ73123
 
 void
-nsMsgCompose::InitializeHeaders(MWContext* old_context,
-									   MSG_CompositionFields* fields)
+nsMsgCompose::InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* fields)
 {
 	PR_ASSERT(m_fields == NULL);
 	PR_ASSERT(m_initfields == NULL);
@@ -919,9 +980,12 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 	PRBool forward_quoted;
 	forward_quoted = PR_FALSE;
 
-	m_fields = new MSG_CompositionFields(fields);
+	m_fields = new nsMsgCompFields;
 	if (!m_fields)
 		return;
+	m_fields->AddRef();
+	if (fields)
+		m_fields->Copy((nsIMsgCompFields*)fields);
 	m_fields->SetOwner(this);
 
 	m_oldContext = old_context;
@@ -932,12 +996,12 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 
 	const char* attachment = m_fields->GetAttachments();
 
-	if (attachment) {
+	if (attachment && *attachment) {
 		if (!PL_strncmp(attachment, MSG_FORWARD_COOKIE,
 						PL_strlen(MSG_FORWARD_COOKIE))) {
 			attachment += PL_strlen(MSG_FORWARD_COOKIE);
 			forward_quoted = PR_TRUE;      /* set forward with quote flag */
-			m_fields->SetAttachments(attachment);
+			m_fields->SetAttachments((char *)attachment, NULL);
 			attachment = m_fields->GetAttachments();
 		}
 	}
@@ -950,11 +1014,13 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 
 /*JFD
 	real_return_address = MIME_MakeFromField(old_context->win_csid);
-*/
+*/ real_return_address = (char *)FE_UsersMailAddress();/*JFD*/
 
+/*JFD
 	PR_ASSERT (m_context->type == MWContextMessageComposition);
 	PR_ASSERT (XP_FindContextOfType(0, MWContextMessageComposition));
 	PR_ASSERT (!m_context->msg_cframe);
+*/
 
 	PRInt32 count = m_fields->GetNumForwardURL();
 	if (count > 0) {
@@ -1006,12 +1072,12 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 			MSG_Pane *msg_pane = MSG_FindPane(old_context,
 											  MSG_MESSAGEPANE);
 			if (msg_pane)
-				m_fields->SetHTMLPart(msg_pane->GetHTMLPart());
+				m_fields->SetHTMLPart((char *)msg_pane->GetHTMLPart(), NULL);
 		}
 	}
 
 	if (!*m_fields->GetFrom()) {
-		m_fields->SetFrom(real_return_address);
+		m_fields->SetFrom(real_return_address, NULL);
 	}
 
 	/* Guess what kind of reply this is based on the headers we passed in.
@@ -1051,13 +1117,13 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 	HJ77855
 
 	if (!*m_fields->GetOrganization()) {
-		m_fields->SetOrganization(FE_UsersOrganization());
+		m_fields->SetOrganization((char *)FE_UsersOrganization(), NULL);
 	}
 
 	if (!*m_fields->GetReplyTo()) {
 		m_fields->
-			SetReplyTo(GetPrefs()->
-					   GetDefaultHeaderContents(MSG_REPLY_TO_HEADER_MASK));
+			SetReplyTo((char *)GetPrefs()->
+					   GetDefaultHeaderContents(MSG_REPLY_TO_HEADER_MASK), NULL);
 	}
 	if (!*m_fields->GetFcc()) 
 	{
@@ -1066,26 +1132,26 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 											&useDefaultFcc);
 		if (useDefaultFcc)
 		{
-			m_fields->SetFcc(GetPrefs()->
+			m_fields->SetFcc((char *)GetPrefs()->
 				GetDefaultHeaderContents(*newsgroups ? 
-					 MSG_NEWS_FCC_HEADER_MASK : MSG_FCC_HEADER_MASK));
+					 MSG_NEWS_FCC_HEADER_MASK : MSG_FCC_HEADER_MASK), NULL);
 		}
 	}
 	if (!*m_fields->GetBcc()) {
 		char* bcc = FigureBcc(*newsgroups);
-		m_fields->SetBcc(bcc);
+		m_fields->SetBcc(bcc, NULL);
 		PR_FREEIF(bcc);
 	}
 
-	m_fields->SetFcc(CheckForLosingFcc(m_fields->GetFcc()));
+	m_fields->SetFcc((char *)CheckForLosingFcc(m_fields->GetFcc()), NULL);
 
 	{
-	  const char *body = m_fields->GetDefaultBody();
-	  if (body && *body)
+		const char *body = m_fields->GetDefaultBody();
+		if (body && *body)
 		{
-		  m_fields->AppendBody(body);
-		  m_fields->AppendBody(LINEBREAK);
-		  /* m_bodyEdited = PR_TRUE; */
+			m_fields->AppendBody((char *)body);
+			m_fields->AppendBody(LINEBREAK);
+			/* m_bodyEdited = PR_TRUE; */
 		}
 	}
 
@@ -1098,18 +1164,22 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context,
 			(sig[2] != ' ' && sig[2] != CR && sig[2] != LF)) {
 			m_fields->AppendBody("-- " LINEBREAK);
 		}
-		m_fields->AppendBody(sig);
+		m_fields->AppendBody((char *)sig);
 	}
 
 	PR_FREEIF (real_return_address);
 
 
-	FE_SetDocTitle(m_context, (char*) GetWindowTitle());
+	if (m_context)
+		FE_SetDocTitle(m_context, (char*) GetWindowTitle());
 
 
-	m_initfields = new MSG_CompositionFields(m_fields);
-	if (m_initfields)
+	m_initfields = new nsMsgCompFields;
+	if (m_initfields) {
+		m_initfields->AddRef();
+		m_fields->Copy((nsIMsgCompFields*)m_fields);
 		m_initfields->SetOwner(this);
+	}
 }
 
 
@@ -1146,15 +1216,14 @@ void nsMsgCompose::SetDefaultURL(const char *defaultURL,
 	PR_FREEIF(m_quotedText);
 	if (defaultURL)
 		m_defaultUrl = PL_strdup(defaultURL);
-	m_fields->SetHTMLPart(htmlPart);
+	m_fields->SetHTMLPart((char *)htmlPart, NULL);
 }
 
 
 
-MSG_CompositionFields*
-nsMsgCompose::GetInitialFields()
+nsIMsgCompFields* nsMsgCompose::GetInitialFields()
 {
-	return m_initfields;
+	return (nsIMsgCompFields*)m_initfields;
 }
 
 
@@ -1435,8 +1504,8 @@ protected:
 	PRUint32 m_fp;
 	PRBool m_insertedpre;
 	char* m_outbuf;
-	PRInt32 m_outbufsize;
-	int m_maxLineWidth;
+	PRUint32 m_outbufsize;
+	PRUint32 m_maxLineWidth;
 	PRInt32 m_replyOnTop;
 	PRInt32 m_replyWithExtraLines;
 };
@@ -1460,6 +1529,14 @@ QuotePlainIntoHTML::QuotePlainIntoHTML(MWContext* context)
 	}
 	PREF_GetIntPref("mailnews.reply_on_top", &m_replyOnTop);
 	PREF_GetIntPref("mailnews.reply_with_extra_lines", &m_replyWithExtraLines);
+
+	m_buffer = NULL;
+	m_size = 0;
+	m_fp = 0;
+	m_insertedpre = PR_FALSE;
+	m_outbuf = NULL;
+	m_outbufsize = 0;
+	m_maxLineWidth = 0;
 }
 
 QuotePlainIntoHTML::~QuotePlainIntoHTML()
@@ -1541,7 +1618,7 @@ QuotePlainIntoHTML::QuoteLine(char* line, PRUint32 length)
 	}
 	if (m_outbuf) {
 		*m_outbuf = '\0';
-		NET_ScanForURLs(NULL, line, length, m_outbuf, m_outbufsize, PR_TRUE);
+//JFD		NET_ScanForURLs(NULL, line, length, m_outbuf, m_outbufsize, PR_TRUE);
 		EDT_PasteQuote(m_context, m_outbuf);
 	}
 	return 0;
@@ -1565,11 +1642,11 @@ nsMsgCompose::QuoteHTMLDone_S(URL_Struct* url, int /*status*/, MWContext* /*cont
 
 
 
-MsgERR nsMsgCompose::QuoteMessage(int (*func)(void* closure,
+nsresult nsMsgCompose::QuoteMessage(int (*func)(void* closure,
 													 const char* data),
 										 void* closure)
 {
-	MsgERR status = 0;
+	nsresult status = 0;
 	char* ptr;
 	 m_haveQuoted = PR_TRUE;
 	if (!m_defaultUrl) return 0; /* Nothing to quote. */
@@ -2141,7 +2218,7 @@ FAIL:
 	}
 	else if (status != MK_INTERRUPTED) {
 		char *errmsg;
-		errmsg = PR_PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR), status);
+		errmsg = PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR), status);
 		if (errmsg) {
 			FE_Alert(context, errmsg);
 			PR_Free(errmsg);
@@ -2392,7 +2469,6 @@ nsMsgCompose::UpdateHeaderContents(MSG_HEADER_SET which_header,
   return NULL;
 }
 
-#endif //JFD
 PRInt32 nsMsgCompose::SetCompHeader(MSG_HEADER_SET header,
 								   const char *value)
 {
@@ -2443,7 +2519,6 @@ int nsMsgCompose::SetCompBody(const char* value)
 	return m_fields->SetBody((char *) value, NULL);
 }
 
-#if 0 //JFD
 const char*
 nsMsgCompose::GetWindowTitle()
 {
@@ -2662,7 +2737,7 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 			FE_Alert(context, error_message);
 		} else if (status != MK_INTERRUPTED) {
 			char *errmsg;
-			errmsg = PR_PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR),
+			errmsg = PR_smprintf(XP_GetString(MK_COMMUNICATIONS_ERROR),
 								 status);
 			if (errmsg) {
 				FE_Alert(context, errmsg);
@@ -2984,7 +3059,7 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 		m_duplicatePost = PR_TRUE;
 	}
 	
-	m_fields->SetMessageId(m_messageId);
+	m_fields->SetMessageId(m_messageId, NULL);
 	
 /*JFD
 	MSG_MimeRelatedSaver *fs = NULL;
@@ -3018,6 +3093,7 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 #endif // MSG_SEND_MULTIPART_RELATED
 */
 	{
+/*JFD
 		msg_StartMessageDeliveryWithAttachments(this, this,
 												m_fields,
 												digest_p, PR_FALSE, deliver_mode,
@@ -3030,6 +3106,7 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 												(void (_Optlink*) (MWContext*,void*,int,const char*))
 #endif
 												DeliveryDoneCB_s);
+JFD */
 	}
 	return 0; // Always success, because Errors were reported and handled by EDT_SaveFileTo.
 }
@@ -3301,7 +3378,6 @@ nsMsgCompose::IsDuplicatePost() {
   return m_duplicatePost;
 }
 
-#endif  //JFD
 void nsMsgCompose::ClearCompositionMessageID()
 {
   PR_FREEIF(m_messageId);
@@ -3311,7 +3387,6 @@ const char* nsMsgCompose::GetCompositionMessageID()
 {
   return m_messageId;
 }
-#if 0 //JFD
 
 int
 nsMsgCompose::RemoveNoCertRecipients()
@@ -3337,7 +3412,7 @@ nsMsgCompose::RemoveNoCertRecipientsFromList(MSG_HEADER_SET header)
 
 	const char* line = m_fields->GetHeader(header);
 	if (!line || !*line) return 0;
-	list = MSG_ExtractRFC822AddressMailboxes(line);
+//JFD	list = MSG_ExtractRFC822AddressMailboxes(line);
 	if (list && *list) {
 		newlist = (char *)PR_Malloc(PL_strlen(list) + 1);
 		if (!newlist) {
@@ -3359,7 +3434,7 @@ nsMsgCompose::RemoveNoCertRecipientsFromList(MSG_HEADER_SET header)
 
 			// Replace
 			if (changed) {
-				m_fields->SetHeader(header, newlist);
+				m_fields->SetHeader(header, newlist, NULL);
 			}
 			PR_Free(newlist);
 		}
@@ -3616,7 +3691,7 @@ nsMsgCompose::ResultsRecipients(PRBool cancelled, PRInt32* nohtml,
     {
       char* names = NULL;
       char* addresses = NULL;
-      int num = MSG_ParseRFC822Addresses(*tmp, &names, &addresses);
+      int num /*JFD = MSG_ParseRFC822Addresses(*tmp, &names, &addresses)*/;
       PR_ASSERT(num == 1);
       if (num == 1) 
       {
@@ -3909,7 +3984,7 @@ nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
 			goto FAIL;
 		}
 		
-		int num = MSG_ParseRFC822Addresses(value, &names, &addresses);
+		int num /*JFD = MSG_ParseRFC822Addresses(value, &names, &addresses)*/;
 		PR_Free(value);
 		value = NULL;
 		char* addr = NULL;
@@ -3971,7 +4046,7 @@ nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
 						}
 					}
 				}
-				char* tmp = PR_PR_smprintf("%s@%s",
+				char* tmp = PR_smprintf("%s@%s",
 										XP_GetString(MK_MSG_EVERYONE),
 										domain);
 				if (!tmp) return MK_OUT_OF_MEMORY;
@@ -4018,7 +4093,7 @@ nsMsgCompose::MungeThroughRecipients(PRBool* someNonHTML,
 /*JFD
 			PRBool found = m_host->IsHTMLOKTree(tmp);
 */
-			char* desc = PR_PR_smprintf("%s.*", tmp);
+			char* desc = PR_smprintf("%s.*", tmp);
 			if (!desc) {
 				status = MK_OUT_OF_MEMORY;
 				goto FAIL;
@@ -4153,6 +4228,5 @@ HJ27863
 
 HJ75043
 
-#endif //JFD
 
 
