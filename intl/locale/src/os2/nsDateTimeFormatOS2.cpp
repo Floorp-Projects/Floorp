@@ -71,8 +71,6 @@ nsresult nsDateTimeFormatOS2::FormatTMTime(nsILocale* locale,
       UniStrcat( uFmtD, (UniChar*)L"");
       break; 
     case kDateFormatLong:
-      UniStrcat( uFmtD, (UniChar*)L"%c");
-      break; 
     case kDateFormatShort:
       UniStrcat( uFmtD, (UniChar*)L"%x");
       break; 

@@ -83,6 +83,14 @@ interface nsIScriptableDateFormat : nsISupports {
     const long dateFormatYearMonth =3;             // formats using only the year and month 
     const long dateFormatWeekday = 4;              // week day (e.g. Mon, Tue)
 
+	// Notes:
+	// The original definitions of dateFormatLong and dateFormatShort are from windows platform. 
+	// dateFormatLong output will be like: Wednesday, January 29, 2003 4:02:14 PM
+	// dateFormatShort output will be like: 1/29/03 4:02:14 PM
+	// On platforms like Linux and OS2, it is rather difficult to achieve exact same output, and since we are aiming 
+	// at human readers, it does not make sense to achieve exact same result. We should do just enough as the platform
+	// allow us to do, unless there is other strong reasons for other approaches. 
+
     const long timeFormatNone = 0;                 // don't include the time in the format string
     const long timeFormatSeconds = 1;              // provides the time format with seconds in the  given locale 
     const long timeFormatNoSeconds = 2;            // provides the time format without seconds in the given locale
