@@ -36,7 +36,6 @@
 #include "nsXPIDLString.h"
 #include "nsString.h"
 #include "nsMemory.h"
-#include "nsIHttpProtocolHandler.h"
 #include "nsNetCID.h"
 // The order of these headers is important on Win2K because CreateDirectory
 // is |#undef|-ed in nsFileSpec.h, so we need to pull in windows.h for the
@@ -54,7 +53,6 @@ static ProtocolRegistryEntry
     ftp( "ftp" ),
     chrome( "chrome" ),
     gopher( "gopher" );
-static NS_DEFINE_CID(kHttpHandlerCID, NS_HTTPPROTOCOLHANDLER_CID);
 const char *jpgExts[] = { ".jpg", ".jpeg", 0 };
 const char *gifExts[] = { ".gif", 0 };
 const char *pngExts[] = { ".png", 0 };
@@ -528,14 +526,7 @@ NS_IMETHODIMP nsWindowsHooks::IsStartupTurboEnabled(PRBool *_retval)
     HKEY key;
     LONG result = ::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_QUERY_VALUE, &key );
     if ( result == ERROR_SUCCESS ) {
-        nsresult rv;
-        nsCOMPtr<nsIHttpProtocolHandler> http ( do_GetService( kHttpHandlerCID, &rv ) );
-        if ( NS_FAILED( rv ) ) return rv;
-        nsXPIDLCString appName;
-        http->GetAppName( getter_Copies( appName ) );
-        nsCString fullValue; fullValue.Assign( appName );
-        fullValue.Append( " Quick Launch" );
-        result = ::RegQueryValueEx( key, fullValue, NULL, NULL, NULL, NULL );
+        result = ::RegQueryValueEx( key, NS_QUICKLAUNCH_RUN_KEY, NULL, NULL, NULL, NULL );
         ::RegCloseKey( key );
         if ( result == ERROR_SUCCESS )
           *_retval = PR_TRUE;
@@ -560,13 +551,7 @@ NS_IMETHODIMP nsWindowsHooks::StartupTurboEnable()
     if ( rv ) {
       strcat( fileName, " -turbo" );
       nsresult rv;
-      nsCOMPtr<nsIHttpProtocolHandler> http ( do_GetService( kHttpHandlerCID, &rv ) );
-      if ( NS_FAILED( rv ) ) return rv;
-      nsXPIDLCString appName;
-      http->GetAppName( getter_Copies( appName ) );
-      nsCString fullValue; fullValue.Assign( appName );
-      fullValue.Append( " Quick Launch" );
-      ::RegSetValueEx( hKey, fullValue, 0, REG_SZ, ( LPBYTE )fileName, strlen( fileName ) );
+      ::RegSetValueEx( hKey, NS_QUICKLAUNCH_RUN_KEY, 0, REG_SZ, ( LPBYTE )fileName, strlen( fileName ) );
     }
     ::RegCloseKey( hKey );
     return NS_OK;
@@ -583,14 +568,7 @@ NS_IMETHODIMP nsWindowsHooks::StartupTurboDisable()
     LONG res = ::RegOpenKeyEx( HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Run", 0, KEY_SET_VALUE, &hKey );
     if ( res != ERROR_SUCCESS )
       return NS_OK;
-    nsresult rv;
-    nsCOMPtr<nsIHttpProtocolHandler> http ( do_GetService( kHttpHandlerCID, &rv ) );
-    if ( NS_FAILED( rv ) ) return rv;
-    nsXPIDLCString appName;
-    http->GetAppName( getter_Copies( appName ) );
-    nsCString fullValue; fullValue.Assign( appName );
-    fullValue.Append( " Quick Launch" );
-    res = ::RegDeleteValue( hKey, fullValue );
+    res = ::RegDeleteValue( hKey, NS_QUICKLAUNCH_RUN_KEY );
     ::RegCloseKey( hKey );
     return NS_OK;
 }
