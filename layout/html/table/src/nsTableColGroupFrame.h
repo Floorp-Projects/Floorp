@@ -66,18 +66,31 @@ public:
     * if there are col children, count them (taking into account the span of each)
     * else, check my own span attribute.
     */
-  virtual PRInt32 GetColumnCount ();
+  virtual PRInt32 GetColumnCount();
 
-  virtual nsTableColFrame * GetColumnAt (PRInt32 aColIndex);
+  virtual nsTableColFrame * GetFirstColumn();
 
-  virtual PRInt32 GetStartColumnIndex ();
+  virtual nsTableColFrame * GetNextColumn(nsIFrame *aChildFrame);
+
+  virtual nsTableColFrame * GetColumnAt(PRInt32 aColIndex);
+
+  virtual PRInt32 GetStartColumnIndex();
   
-  virtual void SetStartColumnIndex (PRInt32 aIndex);
+  /** sets mStartColIndex to aIndex.
+    * @return the col count
+    * has the side effect of setting all child COL indexes
+    */
+  virtual PRInt32 SetStartColumnIndex(PRInt32 aIndex);
 
   /** helper method to get the span attribute for this colgroup */
   PRInt32 GetSpan();
 
-  NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
+  /** helper method returns PR_TRUE if this colgroup exists without any
+    * colgroup or col content in the table backing it.
+    */
+  //PRBool IsManufactured();
+
+  NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
 
 protected:
 
@@ -104,11 +117,4 @@ protected:
 inline int nsTableColGroupFrame::GetStartColumnIndex ()
 {  return mStartColIndex;}
   
-inline void nsTableColGroupFrame::SetStartColumnIndex (int aIndex)
-{
-  if (aIndex != mStartColIndex)
-    mColCount = 0;  // our index is being changed, trigger reset of col indicies, don't propogate back to table
-  mStartColIndex = aIndex;
-}
-
 #endif

@@ -316,6 +316,32 @@ int nsTableColGroupFrame::GetColumnCount ()
   return mColCount;
 }
 
+nsTableColFrame * nsTableColGroupFrame::GetFirstColumn()
+{
+  return GetNextColumn(nsnull);
+}
+
+nsTableColFrame * nsTableColGroupFrame::GetNextColumn(nsIFrame *aChildFrame)
+{
+  nsTableColFrame *result = nsnull;
+  nsIFrame *childFrame = aChildFrame;
+  if (nsnull==childFrame)
+    childFrame = mFirstChild;
+  while (nsnull!=childFrame)
+  {
+    const nsStyleDisplay *childDisplay;
+    childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
+    if (NS_STYLE_DISPLAY_TABLE_COLUMN == childDisplay->mDisplay)
+    {
+      result = (nsTableColFrame *)childFrame;
+      break;
+    }
+    childFrame->GetNextSibling(childFrame);
+  }
+  return result;
+}
+
+
 nsTableColFrame * nsTableColGroupFrame::GetColumnAt (PRInt32 aColIndex)
 {
   nsTableColFrame *result = nsnull;
@@ -347,6 +373,34 @@ PRInt32 nsTableColGroupFrame::GetSpan()
     span = tableStyle->mSpan;
   }
   return span;
+}
+
+/* this may be needed when IsSynthetic is properly implemented 
+PRBool nsTableColGroupFrame::IsManufactured()
+{
+  PRBool result = PR_FALSE;
+  nsIFrame *firstCol =  GetFirstColumn();
+  if (nsTableFrame::IsSynthetic(this) && 
+      ((nsnull==firstCol) || nsTableFrame::IsSynthetic(firstCol)))
+    result = PR_TRUE;
+  return result;
+}
+*/
+
+/** returns colcount because it is frequently used in the context of 
+  * shuffling relative colgroup order, and it's convenient to not have to
+  * call GetColumnCount redundantly.
+  */
+PRInt32 nsTableColGroupFrame::SetStartColumnIndex (int aIndex)
+{
+  PRInt32 result = mColCount;
+  if (aIndex != mStartColIndex)
+  {  
+    mStartColIndex = aIndex;
+    mColCount=0;
+    result = GetColumnCount(); // has the side effect of setting each column index based on new start index
+  }
+  return result;
 }
 
 /* ----- global methods ----- */
