@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = include src
+DIRS = base content datasource build
 
 include $(topsrcdir)/config/config.mk
 
