@@ -49,7 +49,6 @@ import java.beans.*;
 import java.io.*;
 import java.util.Enumeration;
 import java.util.Hashtable;
-import java.util.Vector;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.text.MessageFormat;
@@ -113,8 +112,12 @@ public final class Context {
     private void init() {
         setLanguageVersion(VERSION_DEFAULT);
         optimizationLevel = codegenClass != null ? 0 : -1;
-        for (int i=0; contextListeners != null && i < contextListeners.size(); i++) 
-            ((ContextListener)contextListeners.elementAt(i)).contextCreated(this);
+        Object[] array = contextListeners;
+        if (array != null) {
+            for (int i = array.length; i-- != 0;) {
+                ((ContextListener)array[i]).contextCreated(this);
+            }
+        }
     }
         
     /**
@@ -166,11 +169,8 @@ public final class Context {
             synchronized (current) {
                 current.enterCount++;
             }
-            for (int i=0; contextListeners != null && i < contextListeners.size(); i++) 
-                ((ContextListener)contextListeners.elementAt(i)).contextEntered(current);
-            return current;
         }
-        if (cx != null) {
+        else if (cx != null) {
             synchronized (cx) {
                 if (cx.currentThread == null) {
                     cx.currentThread = t;
@@ -178,16 +178,20 @@ public final class Context {
                     cx.enterCount++;
                 }
             }
-            for (int i=0; contextListeners != null && i < contextListeners.size(); i++)
-                ((ContextListener)contextListeners.elementAt(i)).contextEntered(cx);
-            return cx;
+            current = cx;
         }
+        else {
         current = new Context();
         current.currentThread = t;
         threadContexts.put(t, current);
         current.enterCount = 1;
-        for (int i=0; contextListeners != null && i < contextListeners.size(); i++)
-            ((ContextListener)contextListeners.elementAt(i)).contextEntered(current);
+        }
+        Object[] array = contextListeners;
+        if (array != null) {
+            for (int i = array.length; i-- != 0;) {
+                ((ContextListener)array[i]).contextEntered(current);
+            }
+        }
         return current;
      }
         
@@ -215,10 +219,13 @@ public final class Context {
                     released = true;
                 }
             }
-            for (int i=0; contextListeners != null && i < contextListeners.size(); i++) {
-                ((ContextListener)contextListeners.elementAt(i)).contextExited(cx);
-                if (released)
-                    ((ContextListener)contextListeners.elementAt(i)).contextReleased(cx);
+            Object[] array = contextListeners;
+            if (array != null) {
+                for (int i = array.length; i-- != 0;) {
+                    ContextListener l = (ContextListener)array[i];
+                    l.contextExited(cx);
+                    if (released) { l.contextReleased(cx); }
+                }
             }
         }
     }
@@ -309,8 +316,9 @@ public final class Context {
      * @param version the version as specified by VERSION_1_0, VERSION_1_1, etc.
      */
     public void setLanguageVersion(int version) {
-        if (listeners != null && version != this.version) {
-            firePropertyChange(languageVersionProperty, 
+        Object[] array = listeners;
+        if (array != null && version != this.version) {
+            firePropertyChangeImpl(array, languageVersionProperty,
                                new Integer(this.version), 
                                new Integer(version));
         }
@@ -357,9 +365,10 @@ public final class Context {
      */
     public ErrorReporter setErrorReporter(ErrorReporter reporter) {
         ErrorReporter result = errorReporter;
-        if (listeners != null && errorReporter != reporter) {
-            firePropertyChange(errorReporterProperty, errorReporter, 
-                               reporter);
+        Object[] array = listeners;
+        if (array != null && errorReporter != reporter) {
+            firePropertyChangeImpl(array, errorReporterProperty,
+                                   errorReporter, reporter);
         }
         errorReporter = reporter;
         return result;
@@ -397,10 +406,9 @@ public final class Context {
      * @param  listener  the listener
      */
     public void addPropertyChangeListener(PropertyChangeListener listener) {
-        if (listeners == null) {
-            listeners = new ListenerCollection();
+        synchronized (this) {
+            listeners = ListenerArray.add(listeners, listener);
         }    
-        listeners.addListener(listener);
     }
     
     /**
@@ -411,7 +419,9 @@ public final class Context {
      * @param listener  the listener
      */
     public void removePropertyChangeListener(PropertyChangeListener listener) {
-        listeners.removeListener(listener);
+        synchronized (this) {
+            listeners = ListenerArray.remove(listeners, listener);
+        }
     }
     
     /**
@@ -424,16 +434,26 @@ public final class Context {
      * @param  oldValue  the old value
      * @param  newVale   the new value
      */
-    protected void firePropertyChange(String property, Object oldValue,
-                                      Object newValue) {
-            Class listenerClass = java.beans.PropertyChangeListener.class;
-            Object[] listenerList = listeners.getListeners(listenerClass);
-            for(int i = 0; i < listenerList.length; i++) {
-                PropertyChangeListener l = 
-                    (PropertyChangeListener)listenerList[i];    
+    void firePropertyChange(String property, Object oldValue,
+                            Object newValue)
+    {
+        Object[] array = listeners;
+        if (array != null) {
+            firePropertyChangeImpl(array, property, oldValue, newValue);
+        }
+    }
+
+    private void firePropertyChangeImpl(Object[] array, String property,
+                                        Object oldValue, Object newValue)
+    {
+        for (int i = array.length; i-- != 0;) {
+            Object obj = array[i];
+            if (obj instanceof PropertyChangeListener) {
+                PropertyChangeListener l = (PropertyChangeListener)obj;
                 l.propertyChange(new PropertyChangeEvent(
                     this, property, oldValue, newValue));
             }
+    }
     }
                                     
     /**
@@ -1348,10 +1368,9 @@ public final class Context {
      * Add a Context listener.
      */
     public static void addContextListener(ContextListener listener) {
-        if (contextListeners == null) {
-            contextListeners = new Vector();
+        synchronized (staticDataLock) {
+            contextListeners = ListenerArray.add(contextListeners, listener);
         }
-        contextListeners.addElement(listener);
     }
     
     /**
@@ -1359,11 +1378,8 @@ public final class Context {
      * @param listener the listener to remove.
      */
     public static void removeContextListener(ContextListener listener) {
-        if (contextListeners == null)
-            return;
-        for (int i=0; i < contextListeners.size(); i++) {
-            if (contextListeners.elementAt(i).equals(listener))
-                contextListeners.removeElementAt(i);
+        synchronized (staticDataLock) {
+            contextListeners = ListenerArray.remove(contextListeners, listener);
         }
     }
 
@@ -1943,9 +1959,13 @@ public final class Context {
     boolean inLineStepMode;
     java.util.Stack frameStack;    
     private int enterCount;
-    private ListenerCollection listeners;
+    private Object[] listeners;
     private Hashtable hashtable;
-    private static Vector contextListeners;
+
+    // Private lock for static fields to avoid a possibility of denial
+    // of service via synchronized (Context.class) { while (true) {} }
+    private static final Object staticDataLock = new Object();
+    private static Object[] contextListeners;
 
     // For the interpreter to indicate line/source for error reports.
     int interpreterLine;
