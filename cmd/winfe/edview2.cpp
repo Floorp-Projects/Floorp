@@ -1394,7 +1394,10 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
     BOOL bLinkProps = FALSE;
     
     // In Embeded Editor (Ender), first item is Undo/Redo
-    if( GetEmbedded() )
+    // but don't add item on initial page load.-- nothing to Undo
+    if( GetEmbedded() &&
+        (EDT_GetRedoCommandID(pMWContext, 0 ) != CEDITCOMMAND_ID_NULL || 
+         EDT_GetUndoCommandID(pMWContext, 0 ) != CEDITCOMMAND_ID_NULL) )
     {
         cmPopup.AppendMenu(MF_ENABLED, ID_EDIT_UNDO, szLoadString(IDS_UNDO));
 	    cmPopup.AppendMenu(MF_SEPARATOR);
@@ -2876,7 +2879,7 @@ void CNetscapeEditView::OnUpdateMergeTableCells(CCmdUI* pCmdUI)
 
 void CNetscapeEditView::OnUpdateSplitTableCell(CCmdUI* pCmdUI)
 {
-    pCmdUI->Enable(CAN_INTERACT && EDT_CanSplitTableCell);
+    pCmdUI->Enable(CAN_INTERACT && EDT_CanSplitTableCell(GET_MWCONTEXT));
 }
 
 void CNetscapeEditView::OnTableTextConvert()
