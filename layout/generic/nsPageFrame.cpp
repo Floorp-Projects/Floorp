@@ -457,7 +457,7 @@ nsPageFrame::Paint(nsIPresContext*      aPresContext,
             nsAutoString dateString;
             time_t ltime;
             time( &ltime );
-            rv = dateTime->FormatTMTime(locale, kDateFormatShort, kTimeFormatNoSeconds, localtime( &ltime ), dateString);
+            rv = dateTime->FormatTime(locale, kDateFormatShort, kTimeFormatNoSeconds, ltime, dateString);
             if (NS_SUCCEEDED(rv)) {
               DrawHeaderFooter(aRenderingContext, this, eFooter, nsIPrintOptions::kJustRight, dateString, rect, visibleHeight);
             }
