@@ -1,4 +1,4 @@
-<?xml version="1.0"?>  
+<?xml version="1.0"?>
 
 <!-- -*- Mode: HTML; indent-tabs-mode: nil; -*- -->
 <!--
@@ -7,20 +7,20 @@
   License Version 1.1 (the "License"); you may not use this file
   except in compliance with the License. You may obtain a copy of
   the License at http://www.mozilla.org/NPL/
- 
+
   Software distributed under the License is distributed on an "AS
   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
   implied. See the License for the specific language governing
   rights and limitations under the License.
- 
+
   The Original Code is mozilla.org code.
- 
+
   The Initial Developer of the Original Code is Netscape
   Communications Corporation.  Portions created by Netscape are
   Copyright (C) 1998 Netscape Communications Corporation. All
   Rights Reserved.
- 
-  Contributor(s): 
+
+  Contributor(s):
     Ben Goodger <ben@netscape.com>
     Blake Ross <blakeross@telocity.com>
     Dean Tessman <dean_tessman@hotmail.com>
@@ -44,7 +44,7 @@
 ]>
 
 <window id="bookmark-window" windowtype="bookmarks:manager"
-        title="&bookmarksWindowTitle.label;" 
+        title="&bookmarksWindowTitle.label;"
         xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         xmlns:web="http://home.netscape.com/WEB-rdf#"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -55,11 +55,11 @@
   <!-- The order of loading of these script files is IMPORTANT -->
 
   <!-- Shared Libraries -->
-  <script type="application/x-javascript" src="chrome://global/content/strres.js"></script>
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
 
   <!-- XXX - This should SO become an XBL widget -->
-  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"></script>
-  
+  <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
+
   <!-- Shared Bookmarks Utility Library -->
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
   <!-- Tree-based Bookmarks UI Utility Library -->
@@ -79,9 +79,9 @@
                 commandupdater="true"
                 events="focus,tree-select"
                 oncommandupdate="document.getElementById('bookmarks-view').onCommandUpdate();">
-    </commandset>                
+    </commandset>
 
-    <commandset id="tasksCommands"/> 
+    <commandset id="tasksCommands"/>
 
     <!-- File Menu -->
     <command id="cmd_close" oncommand="close()"/>
@@ -99,7 +99,7 @@
     <!-- Edit Menu -->
     <key id="key_undo"/>
 
-    <!-- These keybindings do not have a command specified in the overlay, 
+    <!-- These keybindings do not have a command specified in the overlay,
          which is good, but we need to specify it ourselves here -->
     <key id="key_cut" command="cmd_bm_cut"/>
     <key id="key_copy" command="cmd_bm_copy"/>
@@ -111,24 +111,24 @@
          is NOT what we want! -->
     <key id="key_bm_delete" keycode="VK_DELETE" command="cmd_bm_delete"/>
 
-    <key id="bm_key_find"  
-         key="&edit.find.keybinding;"  
+    <key id="bm_key_find"
+         key="&edit.find.keybinding;"
          command="cmd_bm_find" modifiers="accel"/>
-    <key id="bm_key_properties" 
-         key="&edit.properties.keybinding;"  
+    <key id="bm_key_properties"
+         key="&edit.properties.keybinding;"
          command="cmd_bm_properties" modifiers="accel"/>
   </keyset>
-  
+
   <toolbox id="bookmarks-toolbox">
     <menubar id="main-menubar" grippytooltiptext="&menuBar.tooltip;">
       <menu id="menu_File">
         <menupopup id="menu_FilePopup">
           <menu id="menu_New">
             <menupopup>
-              <menuitem label="&menuitem.newBookmark.label;" 
+              <menuitem label="&menuitem.newBookmark.label;"
                         accesskey="&command.newBookmark.accesskey;"
                         observes="cmd_bm_newbookmark"/>
-              <menuitem label="&menuitem.newFolder.label;" 
+              <menuitem label="&menuitem.newFolder.label;"
                         accesskey="&command.newFolder.accesskey;"
                         observes="cmd_bm_newfolder"/>
               <menuitem label="&menuitem.newSeparator.label;"
@@ -143,33 +143,33 @@
         <menupopup>
           <menuitem id="menu_undo" disabled="true"/>
           <menuseparator/>
-          <menuitem id="menu_bm_cut"    
-                    label="&cutCmd.label;" accesskey="&cutCmd.accesskey;" 
-          key="key_cut" command="cmd_bm_cut"/>
+          <menuitem id="menu_bm_cut"
+                    label="&cutCmd.label;" accesskey="&cutCmd.accesskey;"
+                    key="key_cut" command="cmd_bm_cut"/>
           <menuitem id="menu_bm_copy"
                     label="&copyCmd.label;" accesskey="&copyCmd.accesskey;"
                     key="key_copy" command="cmd_bm_copy"/>
-          <menuitem id="menu_bm_paste"  
-                    label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;"     
+          <menuitem id="menu_bm_paste"
+                    label="&pasteCmd.label;" accesskey="&pasteCmd.accesskey;"
                     key="key_paste" command="cmd_bm_paste"/>
-          <menuitem id="menu_bm_delete" 
-                    label="&deleteCmd.label;" accesskey="&deleteCmd.label;"     
+          <menuitem id="menu_bm_delete"
+                    label="&deleteCmd.label;" accesskey="&deleteCmd.accesskey;"
                     key="key_bm_delete" command="cmd_bm_delete"/>
           <menuseparator/>
-          <menuitem id="menu_bm_selectAll" 
-                label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
+          <menuitem id="menu_bm_selectAll"
+                    label="&selectAllCmd.label;" accesskey="&selectAllCmd.accesskey;"
                     key="key_selectAll" command="cmd_bm_selectAll"/>
           <menuseparator/>
           <menuitem label="&command.fileBookmark.label;"
                     accesskey="&command.fileBookmark.accesskey;"
                     command="cmd_bm_fileBookmark"/>
           <menuseparator/>
-            <menuitem observes="cmd_bm_properties" key="bm_key_properties" 
-                      label="&command.properties.label;" 
+            <menuitem observes="cmd_bm_properties" key="bm_key_properties"
+                      label="&command.properties.label;"
                       accesskey="&command.properties.accesskey;" />
         </menupopup>
       </menu>
-  
+
       <menu id="menu_View">
         <menupopup onpopupshowing="fillViewMenu(event)"
                    oncommand="onViewMenuSortItemSelected(event);">
@@ -199,13 +199,13 @@
                        oncommand="onViewMenuColumnItemSelected(event);"/>
           </menu>
           <menuseparator/>
-          <menuitem label="&menuitem.newbookmarkfolder.label;" 
+          <menuitem label="&menuitem.newbookmarkfolder.label;"
                     command="cmd_bm_setnewbookmarkfolder"
                     accesskey="&menuitem.newbookmarkfolder.accesskey;"/>
           <menuitem label="&menuitem.newinternetsearchfolder.label;"
                     command="cmd_bm_setnewsearchfolder"
                     accesskey="&menuitem.newinternetsearchfolder.accesskey;"/>
-          <menuitem label="&menuitem.personaltoolbarfolder.label;"    
+          <menuitem label="&menuitem.personaltoolbarfolder.label;"
                     command="cmd_bm_setpersonaltoolbarfolder"
                     accesskey="&menuitem.personaltoolbarfolder.accesskey;"/>
         </menupopup>
@@ -213,7 +213,7 @@
       <menu id="tasksMenu">
         <menupopup id="taskPopup">
           <menuitem command="cmd_bm_find" key="bm_key_find"
-                    label="&menuitem.find.label;" 
+                    label="&menuitem.find.label;"
                     accesskey="&menuitem.find.accesskey;"/>
           <menuitem label="&menuitem.import.label;"
                     accesskey="&menuitem.import.accesskey;"
@@ -229,9 +229,9 @@
     </menubar>
 
     <toolbar id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
-      <toolbarbutton id="newfolder" label="&button.newFolder.label;" 
+      <toolbarbutton id="newfolder" label="&button.newFolder.label;"
                      command="cmd_bm_newfolder"/>
-      <toolbarbutton id="newseparator" label="&button.newSeparator.label;" 
+      <toolbarbutton id="newseparator" label="&button.newSeparator.label;"
                      command="cmd_bm_newseparator"/>
       <toolbarseparator/>
       <toolbarbutton id="fileBookmark" label="&command.fileBookmark.label;"
@@ -245,7 +245,7 @@
                      command="cmd_bm_delete"/>
     </toolbar>
   </toolbox>
-  
+
   <bookmarks-tree id="bookmarks-view" flex="1"/>
 
 </window>
