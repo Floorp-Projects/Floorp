@@ -34,7 +34,7 @@
 /*
  * CMS contentInfo methods.
  *
- * $Id: cmscinfo.c,v 1.4 2003/11/18 06:16:25 nelsonb%netscape.com Exp $
+ * $Id: cmscinfo.c,v 1.5 2003/12/04 00:39:24 nelsonb%netscape.com Exp $
  */
 
 #include "cmslocal.h"
@@ -75,6 +75,11 @@ NSS_CMSContentInfo_Destroy(NSSCMSContentInfo *cinfo)
       default:
 	/* XXX Anything else that needs to be "manually" freed/destroyed? */
 	break;
+    }
+    if (cinfo->digcx) {
+	/* must destroy digest objects */
+	NSS_CMSDigestContext_Cancel(cinfo->digcx);
+	cinfo->digcx = NULL;
     }
     if (cinfo->bulkkey)
 	PK11_FreeSymKey(cinfo->bulkkey);
