@@ -787,7 +787,7 @@ RDFXMLDataSourceImpl::Flush(void)
         return NS_ERROR_NOT_INITIALIZED;
 
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] flush(%s)", this, mOriginalURLSpec));
+           ("rdfxml[%p] flush(%s)", this, mOriginalURLSpec.get()));
 
     nsresult rv;
 
@@ -847,13 +847,13 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Refresh(PRBool aBlocking)
 {
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] refresh(%s) %sblocking", this, mOriginalURLSpec, (aBlocking ? "" : "non")));
+           ("rdfxml[%p] refresh(%s) %sblocking", this, mOriginalURLSpec.get(), (aBlocking ? "" : "non")));
 
     // If an asynchronous load is already pending, then just let it do
     // the honors.
     if (IsLoading()) {
         PR_LOG(gLog, PR_LOG_ALWAYS,
-               ("rdfxml[%p] refresh(%s) a load was pending", this, mOriginalURLSpec));
+               ("rdfxml[%p] refresh(%s) a load was pending", this, mOriginalURLSpec.get()));
 
         if (aBlocking) {
             NS_WARNING("blocking load requested when async load pending");
@@ -895,7 +895,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::BeginLoad(void)
 {
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] begin-load(%s)", this, mOriginalURLSpec));
+           ("rdfxml[%p] begin-load(%s)", this, mOriginalURLSpec.get()));
 
     mLoadState = eLoadState_Loading;
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
@@ -911,7 +911,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Interrupt(void)
 {
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] interrupt(%s)", this, mOriginalURLSpec));
+           ("rdfxml[%p] interrupt(%s)", this, mOriginalURLSpec.get()));
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFXMLSinkObserver* obs =
@@ -926,7 +926,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::Resume(void)
 {
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] resume(%s)", this, mOriginalURLSpec));
+           ("rdfxml[%p] resume(%s)", this, mOriginalURLSpec.get()));
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         nsIRDFXMLSinkObserver* obs =
@@ -941,7 +941,7 @@ NS_IMETHODIMP
 RDFXMLDataSourceImpl::EndLoad(void)
 {
     PR_LOG(gLog, PR_LOG_ALWAYS,
-           ("rdfxml[%p] end-load(%s)", this, mOriginalURLSpec));
+           ("rdfxml[%p] end-load(%s)", this, mOriginalURLSpec.get()));
 
     mLoadState = eLoadState_Loaded;
 
