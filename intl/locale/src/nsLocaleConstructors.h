@@ -54,7 +54,7 @@
 #define USE_MAC_LOCALE
 #endif
 
-#if defined(XP_UNIX) && !defined(XP_MACOSX)
+#if (defined(XP_UNIX) && !defined(XP_MACOSX)) || defined(XP_BEOS)
 #define USE_UNIX_LOCALE
 #endif
 
