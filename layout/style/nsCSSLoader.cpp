@@ -31,6 +31,7 @@
 
 #include "nsHashtable.h"
 #include "nsIURL.h"
+#include "nsIURLGroup.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
@@ -609,6 +610,7 @@ CSSLoaderImpl::Cleanup(URLKey& aKey, SheetLoadData* aLoadData)
     }
   }
 
+
   delete aLoadData; // delete data last, it may have last ref on loader...
 }
 
@@ -949,6 +951,28 @@ CSSLoaderImpl::InsertChildSheet(nsICSSStyleSheet* aSheet, nsICSSStyleSheet* aPar
   return NS_ERROR_OUT_OF_MEMORY;
 }
 
+static nsIURL* CloneURL(nsIURL* aURL)
+{
+  nsIURL* result = nsnull;
+
+  PRUnichar*  urlStr;
+  aURL->ToString(&urlStr);
+  if (urlStr) {
+    nsAutoString buffer(urlStr);
+    delete [] urlStr;
+    nsIURLGroup* urlGroup = nsnull;
+    aURL->GetURLGroup(&urlGroup);
+    if (urlGroup) {
+      urlGroup->CreateURL(&result, aURL, buffer, nsnull);
+      NS_RELEASE(urlGroup);
+    }
+    else {
+      NS_NewURL(&result, buffer, aURL);
+    }
+  }
+  return result;
+}
+
 nsresult
 CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
 {
@@ -963,21 +987,25 @@ CSSLoaderImpl::LoadSheet(URLKey& aKey, SheetLoadData* aData)
   }
   else {  // not loading, go load it
     nsIUnicharStreamLoader* loader;
-    result = NS_NewUnicharStreamLoader(&loader, aKey.mURL, DoneLoadingStyle, aData);
-    if (NS_SUCCEEDED(result)) {
-      mLoadingSheets.Put(&aKey, aData);
-      // grab any pending alternates that have this URL
-      loadingData = aData;
-      PRInt32 index = 0;
-      while (index < mPendingAlternateSheets.Count()) {
-        SheetLoadData* data = (SheetLoadData*)mPendingAlternateSheets.ElementAt(index);
-        if (aKey.mURL->Equals(data->mURL)) {
-          mPendingAlternateSheets.RemoveElementAt(index);
-          loadingData->mNext = data;
-          loadingData = data;
-        }
-        else {
-          index++;
+    nsIURL* urlClone = CloneURL(aKey.mURL); // don't give the key to netlib, it munges it
+    if (urlClone) {
+      result = NS_NewUnicharStreamLoader(&loader, urlClone, DoneLoadingStyle, aData);
+      NS_RELEASE(urlClone);
+      if (NS_SUCCEEDED(result)) {
+        mLoadingSheets.Put(&aKey, aData);
+        // grab any pending alternates that have this URL
+        loadingData = aData;
+        PRInt32 index = 0;
+        while (index < mPendingAlternateSheets.Count()) {
+          SheetLoadData* data = (SheetLoadData*)mPendingAlternateSheets.ElementAt(index);
+          if (aKey.mURL->Equals(data->mURL)) {
+            mPendingAlternateSheets.RemoveElementAt(index);
+            loadingData->mNext = data;
+            loadingData = data;
+          }
+          else {
+            index++;
+          }
         }
       }
     }
@@ -1144,19 +1172,23 @@ CSSLoaderImpl::LoadAgentSheet(nsIURL* aURL,
   if (aURL) {
     // Get an input stream from the url
     nsIInputStream* in;
-    result = NS_OpenURL(aURL, &in);
-    if (NS_SUCCEEDED(result)) {
-      // Translate the input using the argument character set id into unicode
-      nsIUnicharInputStream* uin;
-      result = NS_NewConverterStream(&uin, nsnull, in);
+    nsIURL* urlClone = CloneURL(aURL);  // dont give key URL to netlib, it gets munged
+    if (urlClone) {
+      result = NS_OpenURL(urlClone, &in);
+      NS_RELEASE(urlClone);
       if (NS_SUCCEEDED(result)) {
-        SheetLoadData* data = new SheetLoadData(this, aURL, aCallback, aData);
-        URLKey  key(aURL);
-        mLoadingSheets.Put(&key, data);
-        result = ParseSheet(uin, data, aCompleted, aSheet);
-        NS_RELEASE(uin);
+        // Translate the input using the argument character set id into unicode
+        nsIUnicharInputStream* uin;
+        result = NS_NewConverterStream(&uin, nsnull, in);
+        if (NS_SUCCEEDED(result)) {
+          SheetLoadData* data = new SheetLoadData(this, aURL, aCallback, aData);
+          URLKey  key(aURL);
+          mLoadingSheets.Put(&key, data);
+          result = ParseSheet(uin, data, aCompleted, aSheet);
+          NS_RELEASE(uin);
+        }
+        NS_RELEASE(in);
       }
-      NS_RELEASE(in);
     }
   }
   return result;
