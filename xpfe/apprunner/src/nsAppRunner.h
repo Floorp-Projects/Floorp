@@ -20,8 +20,10 @@
 #define nsAppRunner_h__
 
 #include "nsIAppRunner.h"
+#include "nsIFactory.h"
 
 class string;
+class nsIAppShellService;
 
 // nsAppRunner
 //
@@ -44,9 +46,9 @@ public:
     //   ParseCommandLineOptions - Parses command line options.
     //   IsOptionSpecified       - Returns PR_TRUE if switch was present in command line args.
     //   ValueForOption          - Returns option value; e.g., -P"mozilla" -> string("mozilla")
-    virtual PRBool ParseCommandLine( int argc, char *argv[] );
-    virtual PRBool IsOptionSpecified( const char *key );
-    virtual string ValueForOption( const char *key );
+    virtual PRBool      ParseCommandLine( int argc, char *argv[] );
+    virtual PRBool      IsOptionSpecified( const char *key, PRBool ignoreCase = PR_TRUE );
+    virtual const char *ValueForOption( const char *key, PRBool ignoreCase = PR_TRUE );
 
     // Process management:
     //   Initialize       - Initialization; default does nothing.
@@ -61,20 +63,24 @@ public:
     //                  AppShellCID().
     //   RunShell     - Initialize/Run/Shutdown the app shell
     //   AppShell     - Returns pointer to app shell
-    virtual nsCID        AppShellCID() const;
-    virtual nsresult     LoadAppShell();
-    virtual nsresult     RunShell();
-    virtual nsIAppShell *AppShell() const;
+    virtual nsCID               AppShellCID() const;
+    virtual nsresult            LoadAppShell();
+    virtual nsresult            RunShell();
+    virtual nsIAppShellService *AppShell() const;
 
     // Utilities:
     //   DisplayMsg - Displays error/status message.  Default is to outpout to
     //                stderr.  Override to put up message box, etc.
     virtual void DisplayMsg( const char *title, const char *text );
             void DisplayMsg( const char *title, const char *text, ... );
-            void DisplayMsg( const char *title, const char *text, valist args );
 
 protected:
     virtual ~nsAppRunner();
+
+    // Utilities (for derived classes):
+    //   SetAppShell - Sets the mAppShell member (to whom things like RunShell() are
+    //                 delegated).
+    virtual nsAppRunner &SetAppShell( nsIAppShellService *newAppShellService );
 
 private:
     int mArgc;
@@ -82,6 +88,7 @@ private:
         const char *key;
         const char *value;
     } *mArg;
+    nsIAppShellService *mAppShell;
     int IndexOfArg( const char *key, PRBool ignoreCase );
 }; //  nsAppRunner
 
