@@ -1068,7 +1068,6 @@ digraph G {
     appshell -> xul;
     appshell -> uriloader;
     appshell -> xpconnect;
-    appshell -> rdf;
     appshell -> js;
     appshell -> profile;
     appshell -> browser;
