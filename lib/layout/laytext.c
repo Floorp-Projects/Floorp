@@ -8420,7 +8420,7 @@ Bool lo_GrowTextBlock ( LO_TextBlock * block, uint32 length )
 static void
 lo_CopyText ( uint8 * src, uint8 * dst, uint32 length )
 {
-	char	c;
+	uint8	c;
 	
 	/* copy a text string, converting non breaking spaces to normal spaces as we go */
 	while ( length-- )
