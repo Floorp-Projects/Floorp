@@ -4071,7 +4071,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       isAbsolutelyPositioned = PR_TRUE;
 
     // Create a frame based on the tag
-    if (aTag == nsXULAtoms::button)
+    if (aTag == nsXULAtoms::button)      
       rv = ConstructButtonControlFrame(aPresContext, newFrame);
     else if (aTag == nsXULAtoms::spinner)
       rv = NS_NewSpinnerFrame(&newFrame);
@@ -4085,6 +4085,18 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       rv = ConstructTextControlFrame(aPresContext, newFrame, aContent);
     else if (aTag == nsXULAtoms::widget)
       rv = NS_NewObjectFrame(&newFrame);
+    else if (aTag == nsXULAtoms::iframe) {
+      isReplaced = PR_TRUE;
+      rv = NS_NewHTMLFrameOuterFrame(&newFrame);
+    }
+    else if (aTag == nsXULAtoms::editor) {
+      isReplaced = PR_TRUE;
+      rv = NS_NewHTMLFrameOuterFrame(&newFrame);
+    }
+    else if (aTag == nsXULAtoms::browser) {
+      isReplaced = PR_TRUE;
+      rv = NS_NewHTMLFrameOuterFrame(&newFrame);
+    }
   
     // TREE CONSTRUCTION
     // The following code is used to construct a tree view from the XUL content
