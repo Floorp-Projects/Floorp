@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.48 $ 
-# $Date: 2002/05/06 21:53:57 $ 
+# $Revision: 1.49 $ 
+# $Date: 2002/05/06 21:55:17 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -500,7 +500,7 @@ sub trim_db_history {
     
     if ( 
          !(defined($rec)) ||
-         ($rec->{'starttime'} < $last_time)
+         ($rec->{'starttime'} < $last_time) ||
          0) {
         delete $DATABASE{$tree}{$buildname};
     }
