@@ -413,13 +413,13 @@ PK11_ReferenceSlot(PK11SlotInfo *slot)
 void
 PK11_DestroySlot(PK11SlotInfo *slot)
 {
-   /* first free up all the sessions on this slot */
+   /* free up the cached keys and sessions */
+   PK11_CleanKeyList(slot);
+   
+   /* free up all the sessions on this slot */
    if (slot->functionList) {
 	PK11_GETTAB(slot)->C_CloseAllSessions(slot->slotID);
    }
-
-   /* free up the cached keys and sessions */
-   PK11_CleanKeyList(slot);
 
    if (slot->mechanismList) {
 	PORT_Free(slot->mechanismList);
