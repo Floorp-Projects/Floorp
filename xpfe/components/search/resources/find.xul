@@ -73,10 +73,10 @@
 
 			<html:tr>
 				<html:td align="left">
-					<html:input id="SaveSearch" type="button" disabled="true" value="&save.button.label;" onclick="return saveSearch();" />
+					<html:button id="SaveSearch" disabled="true" onclick="return saveSearch();">&save.button.label;</html:button>
 				</html:td>
 				<html:td align="right">
-					<html:input type="button" value="&search.button.label;" onclick="return doFind();" />
+					<html:button onclick="return doFind();">&search.button.label;</html:button>
 				</html:td>
 			</html:tr>
 		</html:table>

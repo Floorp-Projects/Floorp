@@ -4,6 +4,18 @@ window {
  width: 100%;
 }
 
+titledbutton {
+  display: inline;
+  color:black; 
+  border: 0px outset white;
+  padding: 0px;
+  margin: 0px;
+  text-align: center;
+  font: inherit;
+  background-color: inherit;
+  background-image: inherit;
+}
+
 treecol[sortActive="true"] {
  background-color: lightgray;
 }
@@ -12,28 +24,6 @@ titledbutton.engine[loading="true"] {
  list-style-image: url("resource:/res/rdf/loading.gif") ! important ;
 }
 
-/* Icons */
-
-titledbutton.engine[value="AOL Netfind"] {
-	list-style-image: url("resource:/res/rdf/datasets/AOL_NetFind.gif");
-}
-
-titledbutton.engine[value="Google"] {
-	list-style-image: url("resource:/res/rdf/datasets/Google.gif");
-}
-
-titledbutton.engine[value="GoTo.com"] {
-	list-style-image: url("resource:/res/rdf/datasets/GoTo.com.gif");
-}
-
-titledbutton.engine[value="Netscape Open Directory"] {
-	list-style-image: url("resource:/res/rdf/datasets/Netscape_Open_Directory.gif");
-}
-
-titledbutton.engine[value="Snap.com"] {
-	list-style-image: url("resource:/res/rdf/datasets/Snap.com.gif");
-}
-
-titledbutton.engine {
-	list-style-image: url("resource:/res/rdf/document.gif");
+titledbutton.result {
+ list-style-image: url("resource:/res/rdf/document.gif") ! important ;
 }
