@@ -45,6 +45,7 @@
 #include "nsAppShellCIDs.h"
 #include "nsMsgBaseCID.h"
 #include "nsIMsgMailSession.h"
+#include "nsMsgMimeCID.h"
 
 #ifdef XP_PC
 #include <windows.h>
@@ -98,7 +99,7 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
 // Stream converter
-static NS_DEFINE_CID(kStreamConverterCID,    NS_STREAM_CONVERTER_CID);
+static NS_DEFINE_CID(kStreamConverterCID,    NS_MAILNEWS_MIME_STREAM_CONVERTER_CID);
 
 // Emitters converter
 static NS_DEFINE_CID(kHtmlEmitterCID, NS_HTML_MIME_EMITTER_CID);
