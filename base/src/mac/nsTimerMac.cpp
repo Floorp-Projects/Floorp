@@ -83,7 +83,7 @@ class TimerImpl : public nsITimer
 		eDeletedTimerSignature = 'oops'
 	};
 	
-  	Boolean			IsGoodTimer() { return (mSignature == eGoodTimerSignature); }
+  	Boolean			IsGoodTimer() const { return (mSignature == eGoodTimerSignature); }
 #endif
   	
   private:
@@ -140,7 +140,9 @@ TimerImpl::TimerImpl()
 ,  mClosure(nsnull)
 ,  mDelay(0)
 ,  mFireTime(0)
+#if DEBUG
 ,  mSignature(eGoodTimerSignature)
+#endif
 {
   NS_INIT_REFCNT();
 }
@@ -151,7 +153,9 @@ TimerImpl::~TimerImpl()
 {
   Cancel();
   NS_IF_RELEASE(mCallbackObject);
+#if DEBUG
   mSignature = eDeletedTimerSignature;
+#endif
 }
 
 //----------------------------------------------------------------------------------------
