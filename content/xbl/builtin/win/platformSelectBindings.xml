@@ -73,7 +73,7 @@
   <binding id="optgroup" extends="xul:menu">
     <!-- extends="resource:///res/builtin/selectBindings.xml#optgroup-size"> -->
     <content includes="*">
-      <xul:text inherits="value=xbl:text,value=label" crop="right"/>
+      <xul:text inherits="value=label" crop="right"/>
       <xul:menupopup style="overflow:auto; -moz-binding: none;" menugenerated="true">
         <children/>
       </xul:menupopup>

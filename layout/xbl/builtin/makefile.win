@@ -30,9 +30,11 @@ install:: $(LIBRARY)
 	$(MAKE_INSTALL) buttonBindings.xml $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) selectBindings.xml $(DIST)\bin\res\builtin
 	$(MAKE_INSTALL) checkboxBindings.xml $(DIST)\bin\res\builtin
+  $(MAKE_INSTALL) fieldsetBindings.xml $(DIST)\bin\res\builtin
 
 clobber::
 	rm -f $(DIST)\bin\res\builtin\htmlbindings.xml
 	rm -f $(DIST)\bin\res\builtin\buttonBindings.xml
 	rm -f $(DIST)\bin\res\builtin\selectBindings.xml
 	rm -f $(DIST)\bin\res\builtin\checkboxBindings.xml
+  rm -f $(DIST)\bin\res\builtin\fieldsetBindings.xml
