@@ -2202,6 +2202,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
     convertFileToURL(urlStr, urlSpec);
     rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
     if (NS_FAILED(rv)) {
+#if 0
       // keyword failover
       // we kick the following cases to the keyword server:
       //   * starts with a '?'
@@ -2215,6 +2216,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
 
           rv = NS_NewURI(getter_AddRefs(uri), keywordSpec, nsnull);
       }
+#endif // 0
 
       if (NS_FAILED(rv)) {
           PRInt32 colon, fSlash = urlSpec.FindChar('/');
