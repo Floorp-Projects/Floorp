@@ -195,8 +195,11 @@
     (:-infinity64 "MinusInfinity64" (:minus :infinity (:subscript "f64")))
     (:nan64 "NaN" ("NaN" (:subscript "f64")))
     
+    (:+zero "PlusZero" ("+zero"))
+    (:-zero "MinusZero" (:minus "zero"))
     (:+infinity "PlusInfinity" ("+" :infinity))
-    (:-infinity "MinusInfinity" (:minus :infinity))))
+    (:-infinity "MinusInfinity" (:minus :infinity))
+    (:nan "NaN" ("NaN"))))
 
 
 ; Return two values:
@@ -289,6 +292,23 @@
    (t (error "Bad type expression: ~S" type-expr))))
 
 
+; (integer-list <value> ... <value>)
+;   "{<value>, ..., <value>}"
+(defun depict-integer-list (markup-stream world level &rest value-exprs)
+  (declare (ignore level))
+  (depict-list
+   markup-stream
+   #'(lambda (markup-stream value-expr)
+       (let ((value-annotated-expr (nth-value 2 (scan-value world *null-type-env* value-expr))))
+         (depict-expression markup-stream world value-annotated-expr %expr%)))
+   value-exprs
+   :indent 1
+   :prefix "{"
+   :suffix "}"
+   :separator ","
+   :break 1))
+
+
 ; (integer-range <low-limit> <high-limit>)
 ;   "{<low-limit> ... <high-limit>}"
 (defun depict-integer-range (markup-stream world level low-limit-expr high-limit-expr)
@@ -338,7 +358,7 @@
 
 
 ; (tag <tag> ... <tag>)
-;   "{<tag> *, ..., <tag> *}"
+;   "{<tag>, ..., <tag>}"
 (defun depict-tag-type (markup-stream world level &rest tag-names)
   (declare (ignore level))
   (depict-list
@@ -429,7 +449,7 @@
     (depict markup-stream (symbol-upper-mixed-case-name action-name))))
 
 
-; Emit markup for the float32 or float64 value.
+; Emit markup for the float or float64 value.
 (defun depict-float (markup-stream x exponent-char suffix)
   (if (keywordp x)
     (depict-tag-name markup-stream x :reference)
@@ -590,6 +610,25 @@
   (depict-expr-parentheses (markup-stream level %factor%)
     (depict-char-style (markup-stream :wrap)
       (depict-styled-text markup-stream text))))
+
+
+(defvar *operand-depictor*)
+
+; (lisp-call <lisp-function> <arg-exprs> <result-type-expr> . <styled-text>)
+; <styled-text> can contain the entry (:operand <n>) to depict the nth operand, with n starting from 0.
+(defun depict-lisp-call (markup-stream world level arg-annotated-exprs &rest text)
+  (let ((*operand-depictor* #'(lambda (markup-stream n)
+                                (depict-expression markup-stream world (nth n arg-annotated-exprs) %expr%))))
+    (depict-expr-parentheses (markup-stream level %factor%)
+      (depict-char-style (markup-stream :wrap)
+        (depict-styled-text markup-stream text)))))
+
+; (:operand)
+(defun depict-operand (markup-stream n)
+  (depict-char-style (markup-stream :nowrap)
+    (funcall *operand-depictor* markup-stream n)))
+
+(setf (styled-text-depictor :operand) #'depict-operand)
 
 
 ; (expt <base> <exponent>)
@@ -977,8 +1016,8 @@
                                 (depict-expression markup-stream world (cdr field-and-parameter) %expr%)))
                           fields-and-parameters
                           :indent 4
-                          :prefix (if mutable :record-begin :tuple-begin)
-                          :suffix (if mutable :record-end :tuple-end)
+                          :prefix :tuple-begin
+                          :suffix :tuple-end
                           :separator ","
                           :break 1
                           :empty nil)))))
@@ -1041,8 +1080,8 @@
                                 (depict-expression markup-stream world record-annotated-expr %expr%)))))
                       (append annotated-fields '(nil))
                       :indent 4
-                      :prefix (if mutable :record-begin :tuple-begin)
-                      :suffix (if mutable :record-end :tuple-end)
+                      :prefix :tuple-begin
+                      :suffix :tuple-end
                       :separator ","
                       :break 1)))
       
@@ -1770,7 +1809,7 @@
           (when mutable
             (depict-semantic-keyword markup-stream 'new :after))
           (depict-type-name markup-stream type-name (if (symbol-type-user-defined symbol) :reference :external))
-          (depict markup-stream (if mutable :record-begin :tuple-begin))
+          (depict markup-stream :tuple-begin)
           (depict-label-name markup-stream world type (field-label (first fields)) nil)
           (depict markup-stream ":")
           (depict-break markup-stream 1)
@@ -1781,7 +1820,7 @@
           (depict markup-stream ":")
           (depict-break markup-stream 1)
           (depict-local-variable markup-stream param2)
-          (depict markup-stream (if mutable :record-end :tuple-end) "."))))))
+          (depict markup-stream :tuple-end "."))))))
 
 
 ; (defun <name> (-> (<type1> ... <typen>) <result-type>) (lambda ((<arg1> <type1>) ... (<argn> <typen>)) <result-type> . <statements>))
