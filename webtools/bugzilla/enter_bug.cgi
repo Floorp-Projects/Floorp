@@ -138,17 +138,41 @@ sub pickplatform {
     }
     if ( Param('usebrowserinfo') ) {
         for ($ENV{'HTTP_USER_AGENT'}) {
-            /Mozilla.*\(Windows/ && do {return "PC";};
-            /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
-            /Mozilla.*\(Win/ && do {return "PC";};
-            /Mozilla.*Windows NT/ && do {return "PC";};
-            /Mozilla.*Linux.*86/ && do {return "PC";};
-            /Mozilla.*BSD.*86/ && do {return "PC";};
-            /Mozilla.*Linux.*alpha/ && do {return "DEC";};
-            /Mozilla.*OSF/ && do {return "DEC";};
-            /Mozilla.*HP-UX/ && do {return "HP";};
-            /Mozilla.*IRIX/ && do {return "SGI";};
-            /Mozilla.*(SunOS|Solaris)/ && do {return "Sun";};
+        #PowerPC
+            /\(.*PowerPC.*\)/i && do {return "Macintosh";};
+            /\(.*PPC.*\)/ && do {return "Macintosh";};
+            /\(.*AIX.*\)/ && do {return "Macintosh";};
+        #Intel x86
+            /\(.*[ix0-9]86.*\)/ && do {return "PC";};
+        #Versions of Windows that only run on Intel x86
+            /\(.*Windows 9.*\)/ && do {return "PC";};
+            /\(.*Win9.*\)/ && do {return "PC";};
+            /\(.*Windows 3.*\)/ && do {return "PC";};
+            /\(.*Win16.*\)/ && do {return "PC";};
+        #Sparc
+            /\(.*sparc.*\)/ && do {return "Sun";};
+            /\(.*sun4.*\)/ && do {return "Sun";};
+        #Alpha
+            /\(.*Alpha.*\)/i && do {return "DEC";};
+        #MIPS
+            /\(.*IRIX.*\)/i && do {return "SGI";};
+            /\(.*MIPS.*\)/i && do {return "SGI";};
+        #68k
+            /\(.*68K.*\)/ && do {return "Macintosh";};
+            /\(.*680[x0]0.*\)/ && do {return "Macintosh";};
+        #ARM
+#            /\(.*ARM.*\) && do {return "ARM";};
+        #Stereotypical and broken
+            /\(.*Macintosh.*\)/ && do {return "Macintosh";};
+            /\(.*Mac OS [89].*\)/ && do {return "Macintosh";};
+            /\(Win.*\)/ && do {return "PC";};
+            /\(.*Windows NT.*\)/ && do {return "PC";};
+            /\(.*OSF.*\)/ && do {return "DEC";};
+            /\(.*HP-?UX.*\)/i && do {return "HP";};
+            /\(.*IRIX.*\)/i && do {return "SGI";};
+            /\(.*(SunOS|Solaris).*\)/ && do {return "Sun";};
+        #Braindead old browsers who didn't follow convention:
+            /Amiga/ && do {return "Macintosh";};
         }
     }
     # default
@@ -197,24 +221,41 @@ sub pickos {
     }
     if ( Param('usebrowserinfo') ) {
         for ($ENV{'HTTP_USER_AGENT'}) {
-            /Mozilla.*\(.*;.*; IRIX.*\)/    && do {return "IRIX";};
-            /Mozilla.*\(.*;.*; 32bit.*\)/   && do {return "Windows 95";};
-            /Mozilla.*\(.*;.*; 16bit.*\)/   && do {return "Windows 3.1";};
-            /Mozilla.*\(.*;.*; 68K.*\)/     && do {return "Mac System 8.5";};
-            /Mozilla.*\(.*;.*; PPC.*\)/     && do {return "Mac System 8.5";};
-            /Mozilla.*\(.*;.*; OSF.*\)/     && do {return "OSF/1";};
-            /Mozilla.*\(.*;.*; Linux.*\)/   && do {return "Linux";};
-            /Mozilla.*\(.*;.*; SunOS 5.*\)/ && do {return "Solaris";};
-            /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
-            /Mozilla.*\(.*;.*; HP-UX.*\)/   && do {return "HP-UX";};
-            /Mozilla.*\(.*;.*; BSD\/OS.*\)/ && do {return "BSDI";};
-            /Mozilla.*\(.*;.*; FreeBSD.*\)/ && do {return "FreeBSD";};
-            /Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
-            /Mozilla.*\(.*Win95.*\)/        && do {return "Windows 95";};
-            /Mozilla.*\(.*Win98.*\)/        && do {return "Windows 98";};
-            /Mozilla.*\(.*WinNT.*\)/        && do {return "Windows NT";};
-            /Mozilla.*Windows NT 5.*\)/     && do {return "Windows 2000";};
-            /Mozilla.*\(Windows.*NT/        && do {return "Windows NT";};
+            /\(.*IRIX.*\)/ && do {return "IRIX";};
+            /\(.*OSF.*\)/ && do {return "OSF/1";};
+            /\(.*Linux.*\)/ && do {return "Linux";};
+            /\(.*SunOS 5.*\)/ && do {return "Solaris";};
+            /\(.*SunOS.*\)/ && do {return "SunOS";};
+            /\(.*HP-?UX.*\)/ && do {return "HP-UX";};
+            /\(.*BSD\/OS.*\)/ && do {return "BSDI";};
+            /\(.*FreeBSD.*\)/ && do {return "FreeBSD";};
+            /\(.*OpenBSD.*\)/ && do {return "OpenBSD";};
+            /\(.*NetBSD.*\)/ && do {return "NetBSD";};
+            /\(.*BeOS.*\)/ && do {return "BeOS";};
+            /\(.*AIX.*\)/ && do {return "AIX";};
+            /\(.*IBM.*\)/ && do {return "OS/2";};
+            /\(.*QNX.*\)/ && do {return "Neutrino";};
+            /\(.*VMS.*\)/ && do {return "OpenVMS";};
+#            /\(.*Windows XP.*\)/ && do {return "Windows XP";};
+#            /\(.*Windows NT 5\.1.*\)/ && do {return "Windows XP";};
+            /\(.*Windows 2000.*\)/ && do {return "Windows 2000";};
+            /Windows NT 5.*\)/ && do {return "Windows 2000";};
+            /\(Windows.*NT/ && do {return "Windows NT";};
+            /\(.*Win.*98.*4\.9.*\)/ && do {return "Windows ME";};
+            /\(.*Win98.*\)/ && do {return "Windows 98";};
+            /\(.*Win95.*\)/ && do {return "Windows 95";};
+            /\(.*Win16.*\)/ && do {return "Windows 3.1";};
+            /\(.*WinNT.*\)/ && do {return "Windows NT";};
+            /\(.*32bit.*\)/ && do {return "Windows 95";};
+            /\(.*16bit.*\)/ && do {return "Windows 3.1";};
+            /\(.*Macintosh.*\)/ && do {return "Macintosh";};
+            /\(.*Mac OS 9.*\)/ && do {return "Mac System 9.x";};
+            /\(.*Mac OS 8\.6.*\)/ && do {return "Mac System 8.6";};
+            /\(.*Mac OS 8.*\)/ && do {return "Mac System 8.5";};
+#evil
+            /Amiga/i && do {return "other";};
+            /\(.*68K.*\)/ && do {return "Mac System 8.5";};
+            /\(.*PPC.*\)/ && do {return "Mac System 8.5";};
         }
     }
     # default
