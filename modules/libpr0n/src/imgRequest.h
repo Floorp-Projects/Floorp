@@ -128,6 +128,7 @@ private:
   PRTime mLoadTime;
 
   httpValidateChecker *mValidator;
+  PRBool   mIsMultiPartChannel;
 };
 
 #endif
