@@ -3471,19 +3471,48 @@ nsWindowSH::GlobalScopePolluterNewResolve(JSContext *cx, JSObject *obj,
 }
 
 // static
+JSObject *
+nsWindowSH::GetInvalidatedGlobalScopePolluter(JSContext *cx, JSObject *obj)
+{
+  JSObject *proto;
+
+  while ((proto = ::JS_GetPrototype(cx, obj))) {
+    if (JS_GET_CLASS(cx, proto) == &sGlobalScopePolluterClass) {
+      nsIHTMLDocument *doc = (nsIHTMLDocument *)::JS_GetPrivate(cx, proto);
+
+      NS_IF_RELEASE(doc);
+
+      ::JS_SetPrivate(cx, proto, nsnull);
+
+      ::JS_ClearScope(cx, proto);
+
+      break;
+    }
+
+    obj = proto;
+  }
+
+  return proto;
+}
+
+// static
 nsresult
 nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
+                                       JSObject *oldPolluter,
                                        nsIHTMLDocument *doc)
 {
-  // If we didn't get a document, don't bother setting up a global
-  // scope polluter.
-  if (!doc || sDisableGlobalScopePollutionSupport) {
+  // If global scope pollution is disabled, do nothing
+  if (sDisableGlobalScopePollutionSupport) {
     return NS_OK;
   }
 
-  JSObject *gsp = ::JS_NewObject(cx, &sGlobalScopePolluterClass, nsnull, obj);
+  JSObject *gsp = oldPolluter;
+
   if (!gsp) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    gsp = ::JS_NewObject(cx, &sGlobalScopePolluterClass, nsnull, obj);
+    if (!gsp) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   JSObject *o = obj, *proto;
@@ -3504,7 +3533,7 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
     o = proto;
   }
 
-  // And then set the ptototype of the object whose prototype was
+  // And then set the prototype of the object whose prototype was
   // Object.prototype to be the global scope polluter.
   if (!::JS_SetPrototype(cx, o, gsp)) {
     return NS_ERROR_UNEXPECTED;
@@ -3516,7 +3545,7 @@ nsWindowSH::InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
 
   // The global scope polluter will release doc on destruction (or
   // reinitialzation).
-  NS_ADDREF(doc);
+  NS_IF_ADDREF(doc);
 
   return NS_OK;
 }
@@ -4489,9 +4518,7 @@ nsWindowSH::OnDocumentChanged(JSContext *cx, JSObject *obj,
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMPtr<nsIHTMLDocument> html_doc(do_QueryInterface(document));
-
-  return InstallGlobalScopePolluter(cx, obj, html_doc);
+  return NS_OK;
 }
 
 NS_IMETHODIMP

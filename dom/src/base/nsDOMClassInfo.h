@@ -373,7 +373,10 @@ public:
   static JSBool JS_DLL_CALLBACK SecurityCheckOnSetProp(JSContext *cx,
                                                        JSObject *obj, jsval id,
                                                        jsval *vp);
+  static JSObject *GetInvalidatedGlobalScopePolluter(JSContext *cx,
+                                                     JSObject *obj);
   static nsresult InstallGlobalScopePolluter(JSContext *cx, JSObject *obj,
+                                             JSObject *oldPolluter,
                                              nsIHTMLDocument *doc);
 
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
