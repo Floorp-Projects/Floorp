@@ -26,5 +26,6 @@ XPIDLSRCS = .\nsISchema.idl  \
 	    $(NULL)
 
 MODULE=xmlextras
+XPIDL_MODULE=xmlschema
 
 include <$(DEPTH)\config\rules.mak>

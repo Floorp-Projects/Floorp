@@ -26,10 +26,12 @@
 
 #include "nsISchemaLoader.h"
 #include "nsSchemaPrivate.h"
+#include "nsDOMUtils.h"
 
 // DOM includes
 #include "nsIDOMElement.h"
 #include "nsIDOMNodeList.h"
+#include "nsIDOMNode.h"
 
 // XPCOM Includes
 #include "nsCOMPtr.h"
@@ -41,9 +43,6 @@
 
 // Loading includes
 #include "nsIURI.h"
-
-// Forward declarations
-class nsSchemaLoadingContext;
 
 class nsSchemaAtoms {
 public:
@@ -129,7 +128,8 @@ public:
   static nsIAtom* sPattern_atom;
 };
 
-class nsSchemaLoader : public nsISchemaLoader
+class nsSchemaLoader : public nsISchemaLoader,
+                       public nsISchemaCollection
 {
 public:
   nsSchemaLoader();
@@ -137,102 +137,86 @@ public:
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCHEMALOADER
+  NS_DECL_NSISCHEMACOLLECTION
 
 protected:
   nsresult ProcessElement(nsSchema* aSchema, 
-                          nsSchemaLoadingContext* aContext,
                           nsIDOMElement* aElement,
                           nsISchemaElement** aSchemaElement);
   nsresult ProcessComplexType(nsSchema* aSchema, 
-                              nsSchemaLoadingContext* aContext,
                               nsIDOMElement* aElement,
                               nsISchemaComplexType** aComplexType);
   nsresult ProcessComplexTypeBody(nsSchema* aSchema, 
-                                  nsSchemaLoadingContext* aContext,
                                   nsIDOMElement* aElement,
                                   nsSchemaComplexType* aComplexType,
                                   nsSchemaModelGroup* aSequence,
                                   PRUint16* aContentModel);
   nsresult ProcessSimpleContent(nsSchema* aSchema, 
-                                nsSchemaLoadingContext* aContext,
                                 nsIDOMElement* aElement,
                                 nsSchemaComplexType* aComplexType,
                                 PRUint16* aDerivation,
                                 nsISchemaType** aBaseType);
   nsresult ProcessSimpleContentRestriction(nsSchema* aSchema, 
-                                           nsSchemaLoadingContext* aContext, 
                                            nsIDOMElement* aElement,
                                            nsSchemaComplexType* aComplexType, 
                                            nsISchemaType* aBaseType,
                                            nsISchemaSimpleType** aSimpleBaseType);
   nsresult ProcessSimpleContentExtension(nsSchema* aSchema, 
-                                         nsSchemaLoadingContext* aContext, 
                                          nsIDOMElement* aElement,
                                          nsSchemaComplexType* aComplexType,
                                          nsISchemaType* aBaseType,
                                          nsISchemaSimpleType** aSimpleBaseType);
   nsresult ProcessComplexContent(nsSchema* aSchema, 
-                                 nsSchemaLoadingContext* aContext,
                                  nsIDOMElement* aElement,
                                  nsSchemaComplexType* aComplexType,
                                  PRUint16* aContentModel,
                                  PRUint16* aDerivation,
                                  nsISchemaType** aBaseType);
   nsresult ProcessSimpleType(nsSchema* aSchema, 
-                             nsSchemaLoadingContext* aContext,
                              nsIDOMElement* aElement,
                              nsISchemaSimpleType** aSimpleType);
   nsresult ProcessSimpleTypeRestriction(nsSchema* aSchema, 
-                                        nsSchemaLoadingContext* aContext,
                                         nsIDOMElement* aElement,
                                         const nsAReadableString& aName,
                                         nsISchemaSimpleType** aSimpleType);
   nsresult ProcessSimpleTypeList(nsSchema* aSchema, 
-                                 nsSchemaLoadingContext* aContext,
                                  nsIDOMElement* aElement,
                                  const nsAReadableString& aName,
                                  nsISchemaSimpleType** aSimpleType);
   nsresult ProcessSimpleTypeUnion(nsSchema* aSchema, 
-                                  nsSchemaLoadingContext* aContext,
                                   nsIDOMElement* aElement,
                                   const nsAReadableString& aName,
                                   nsISchemaSimpleType** aSimpleType);
   nsresult ProcessAttribute(nsSchema* aSchema, 
-                            nsSchemaLoadingContext* aContext,
                             nsIDOMElement* aElement,
                             nsISchemaAttribute** aAttribute);
   nsresult ProcessAttributeGroup(nsSchema* aSchema, 
-                                 nsSchemaLoadingContext* aContext,
                                  nsIDOMElement* aElement,
                                  nsISchemaAttributeGroup** aAttributeGroup);
   nsresult ProcessAttributeComponent(nsSchema* aSchema, 
-                                     nsSchemaLoadingContext* aContext,
                                      nsIDOMElement* aElement,
                                      nsIAtom* aTagName,
                                      nsISchemaAttributeComponent** aAttribute);
   nsresult ProcessModelGroup(nsSchema* aSchema, 
-                             nsSchemaLoadingContext* aContext,
                              nsIDOMElement* aElement,
                              nsIAtom* aTagName,
                              nsSchemaModelGroup* aParentSequence,
                              nsISchemaModelGroup** aModelGroup);
   nsresult ProcessParticle(nsSchema* aSchema, 
-                           nsSchemaLoadingContext* aContext,
                            nsIDOMElement* aElement,
                            nsIAtom* aTagName,
                            nsISchemaParticle** aModelGroup);
   nsresult ProcessFacet(nsSchema* aSchema, 
-                        nsSchemaLoadingContext* aContext, 
                         nsIDOMElement* aElement,
                         nsIAtom* aTagName,
                         nsISchemaFacet** aFacet);
 
-  nsresult GetBuiltinType(const nsAReadableString& aName,
-                          nsISchemaType** aType);
   nsresult GetNewOrUsedType(nsSchema* aSchema,
-                            nsSchemaLoadingContext* aContext,
+                            nsIDOMElement* aContext,
                             const nsAReadableString& aTypeName,
                             nsISchemaType** aType);
+  nsresult GetBuiltinType(const nsAReadableString& aName,
+                          nsISchemaType** aType);
 
   void GetUse(nsIDOMElement* aElement, 
               PRUint16* aUse);
@@ -247,20 +231,8 @@ protected:
 
 protected:
   nsSupportsHashtable mBuiltinTypesHash;
-};
-
-class nsSchemaLoadingContext {
-public:
-  nsSchemaLoadingContext();
-  ~nsSchemaLoadingContext();
-
-  nsresult PushNamespaceDecls(nsIDOMElement* aElement);
-  nsresult PopNamespaceDecls(nsIDOMElement* aElement);
-  PRBool GetNamespaceURIForPrefix(const nsAReadableString& aPrefix,
-                                  nsAWritableString& aURI);
-
-protected:
-  nsVoidArray mNamespaceStack;
+  nsSupportsHashtable mSOAPTypeHash;
+  nsSupportsHashtable mSchemas;
 };
 
 #endif // __nsSchemaLoader_h__

@@ -206,6 +206,44 @@ nsSchemaModelGroup::GetParticle(PRUint32 index, nsISchemaParticle **_retval)
                                    (void**)_retval);
 }
 
+/* nsISchemaElement getElementByName(in AString name); */
+NS_IMETHODIMP
+nsSchemaModelGroup::GetElementByName(const nsAReadableString& aName,
+                                     nsISchemaElement** _retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  PRUint32 i, count;
+  mParticles.Count(&count);
+
+  for (i = 0; i < count; i++) {
+    nsCOMPtr<nsISchemaParticle> particle;
+    GetParticle(i, getter_AddRefs(particle));
+    nsCOMPtr<nsISchemaElement> element(do_QueryInterface(particle));
+    if (element) {
+      nsAutoString name;
+      element->GetName(name);
+
+      if (name.Equals(aName)) {
+        *_retval = element;
+        NS_ADDREF(*_retval);
+        return NS_OK;
+      }
+    }
+    else {
+      nsCOMPtr<nsISchemaModelGroup> group(do_QueryInterface(particle));
+      if (group) {
+        nsresult rv = group->GetElementByName(aName, _retval);
+        if (NS_SUCCEEDED(rv)) {
+          return NS_OK;
+        }
+      }
+    }
+  }
+
+  return NS_ERROR_FAILURE; // No element of that name found
+}
+
 NS_IMETHODIMP
 nsSchemaModelGroup::SetCompositor(PRUint16 aCompositor)
 {
@@ -340,6 +378,19 @@ nsSchemaModelGroupRef::GetParticle(PRUint32 index, nsISchemaParticle **_retval)
   }
 
   return mModelGroup->GetParticle(index, _retval);
+}
+
+NS_IMETHODIMP
+nsSchemaModelGroupRef::GetElementByName(const nsAReadableString& aName,
+                                        nsISchemaElement** _retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+  
+  if (!mModelGroup) {
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
+  return mModelGroup->GetElementByName(aName, _retval);
 }
 
 ////////////////////////////////////////////////////////////

@@ -28,10 +28,12 @@
 // nsSchema implementation
 //
 ////////////////////////////////////////////////////////////
-nsSchema::nsSchema(const nsAReadableString& aTargetNamespace) 
+nsSchema::nsSchema(nsISchemaCollection* aCollection,
+                   const nsAReadableString& aTargetNamespace) 
   : mTargetNamespace(aTargetNamespace)
 {
   NS_INIT_ISUPPORTS();
+  mCollection = aCollection;  // Weak reference
 }
 
 nsSchema::~nsSchema()
@@ -372,6 +374,18 @@ nsSchema::GetModelGroupByName(const nsAReadableString& name, nsISchemaModelGroup
   return NS_OK;
 }
 
+/* readonly attribute nsISchemaCollection collection; */
+NS_IMETHODIMP
+nsSchema::GetCollection(nsISchemaCollection** _retval)
+{
+  NS_ENSURE_ARG_POINTER(_retval);
+
+  *_retval = mCollection;
+  NS_IF_ADDREF(*_retval);
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsSchema::AddType(nsISchemaType* aType)
 {
@@ -445,6 +459,12 @@ nsSchema::AddModelGroup(nsISchemaModelGroup* aModelGroup)
   mModelGroupsHash.Put(&key, aModelGroup);
 
   return NS_OK;
+}
+
+void 
+nsSchema::DropCollectionReference()
+{
+  mCollection = nsnull;
 }
 
 nsresult

@@ -37,7 +37,8 @@
 class nsSchema : public nsISchema 
 {
 public:
-  nsSchema(const nsAReadableString& aTargetNamespace);
+  nsSchema(nsISchemaCollection* aCollection,
+           const nsAReadableString& aTargetNamespace);
   virtual ~nsSchema();
 
   NS_DECL_ISUPPORTS
@@ -49,6 +50,7 @@ public:
   NS_IMETHOD AddElement(nsISchemaElement* aElement);
   NS_IMETHOD AddAttributeGroup(nsISchemaAttributeGroup* aAttributeGroup);
   NS_IMETHOD AddModelGroup(nsISchemaModelGroup* aModelGroup);
+  void DropCollectionReference();
   nsresult ResolveTypePlaceholder(nsISchemaType* aPlaceholder,
                                   nsISchemaType** aType);
 
@@ -64,6 +66,7 @@ protected:
   nsSupportsHashtable mAttributeGroupsHash;
   nsSupportsArray mModelGroups;
   nsSupportsHashtable mModelGroupsHash;
+  nsISchemaCollection* mCollection;  // [WEAK] it owns me
 };
 
 class nsSchemaComponentBase {
