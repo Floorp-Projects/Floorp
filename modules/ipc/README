@@ -1,0 +1,12 @@
+DAEMON ONLY DIRECTORIES:
+  daemon/
+  testmodule/
+
+CLIENT ONLY DIRECTORIES:
+  public/
+  src/
+  build/
+  test/
+
+SHARED CODE DIRECTORY:
+  common/
