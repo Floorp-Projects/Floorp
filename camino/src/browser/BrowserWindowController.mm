@@ -82,6 +82,8 @@ static NSString *PrintToolbarItemIdentifier	= @"Print Toolbar Item";
 static NSString *ThrobberToolbarItemIdentifier = @"Throbber Toolbar Item";
 static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
+static NSString *NavigatorWindowFrameSaveName = @"NavigatorWindow";
+
 // Cached toolbar defaults read in from a plist. If null, we'll use
 // hardcoded defaults.
 static NSArray* sToolbarDefaults = nil;
@@ -190,7 +192,7 @@ static NSArray* sToolbarDefaults = nil;
 -(void)autosaveWindowFrame
 {
   if (mShouldAutosave)
-    [[self window] saveFrameUsingName: @"NavigatorWindow"];
+    [[self window] saveFrameUsingName: NavigatorWindowFrameSaveName];
 }
 
 -(void)disableAutosave
@@ -273,7 +275,7 @@ static NSArray* sToolbarDefaults = nil;
     }
 
     // Get our saved dimensions.
-    [[self window] setFrameUsingName: @"NavigatorWindow"];
+    [[self window] setFrameUsingName: NavigatorWindowFrameSaveName];
     
     if (mModalSession)
       [NSApp stopModal];
