@@ -231,11 +231,7 @@ nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset)
 			res = domDoc->QueryInterface(nsIDocument::GetIID(), (void**)&doc);
 			if (NS_SUCCEEDED(res) && nsnull != doc) 
 			{
-				nsString *aNewCharset = new nsString(aCharset);
-				if (nsnull != aNewCharset) 
-				{
-					doc->SetDocumentCharacterSet(aNewCharset);
-				}
+				doc->SetDocumentCharacterSet(aCharset);
 				
 				NS_RELEASE(doc);
 			}
@@ -252,11 +248,7 @@ nsresult nsMsgAppCore::SetDocumentCharset(class nsString const & aCharset)
         // Get the document object
         nsCOMPtr<nsIDocument> doc;
         if (NS_SUCCEEDED(res = docViewer->GetDocument(*getter_AddRefs(doc)))) {
-          nsString *aNewCharset = new nsString(aCharset);
-          if (nsnull != aNewCharset) 
-          {
-            doc->SetDocumentCharacterSet(aNewCharset);
-          }
+            doc->SetDocumentCharacterSet(aCharset);
         }
       }
     }

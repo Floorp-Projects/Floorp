@@ -355,11 +355,7 @@ nsresult nsComposeAppCore::SetDocumentCharset(class nsString const & aCharset)
 			res = domDoc->QueryInterface(kIDocumentIID,(void**)&doc);
 			if (NS_SUCCEEDED(res) && nsnull != doc) 
 			{
-                nsString *aNewCharset = new nsString(aCharset);
-				if (nsnull != aNewCharset) 
-				{
-					doc->SetDocumentCharacterSet(aNewCharset);
-				}
+				doc->SetDocumentCharacterSet(aCharset);
 				
 				NS_RELEASE(doc);
 			}
