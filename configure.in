@@ -780,6 +780,8 @@ alpha*-*-osf*)
     ;;
 
 *-sco*) 
+    AC_DEFINE(NSCAP_DISABLE_TEST_DONTQUERY_CASES)
+    AC_DEFINE(NSCAP_DISABLE_DEBUG_PTR_TYPES)
     CXXFLAGS="$CXXFLAGS -I/usr/include/CC"
     if test ! "$GNU_CC"; then
        DSO_LDOPTS='-G -h $@'
