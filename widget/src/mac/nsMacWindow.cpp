@@ -30,6 +30,8 @@
 #include "nsIDragService.h"
 #include "nsIDragSession.h"
 #include "nsIDragSessionMac.h"
+#include "nsIScreen.h"
+#include "nsIScreenManager.h"
 #include "nsGUIEvent.h"
 #include "nsCarbonHelpers.h"
 #include "nsGFXUtils.h"
@@ -38,7 +40,7 @@
 
 // Define Class IDs -- i hate having to do this
 static NS_DEFINE_CID(kCDragServiceCID,  NS_DRAGSERVICE_CID);
-
+static const char *sScreenManagerContractID = "@mozilla.org/gfx/screenmanager;1";
 
 // from MacHeaders.c
 #ifndef topLeft
@@ -479,15 +481,21 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		else
 			::OffsetRect(&wRect, hOffset, vOffset);
 
-		// HACK!!!!! This really should be part of the window manager
-		// Make sure window bottom of window doesn't exceed max monitor size
-		Rect tempRect;
-		::GetRegionBounds(::GetGrayRgn(), &tempRect);
-
-		if (wRect.bottom > tempRect.bottom)
-		{
-			bottomPinDelta = wRect.bottom - tempRect.bottom;
-			wRect.bottom -= bottomPinDelta;
+		nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+		if (screenmgr) {
+			nsCOMPtr<nsIScreen> screen;
+			//screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
+			screenmgr->ScreenForRect(wRect.left, wRect.top,
+		                             wRect.right - wRect.left, wRect.bottom - wRect.top,
+		                             getter_AddRefs(screen));
+			if (screen) {
+		  		PRInt32 left, top, width, height;
+				screen->GetAvailRect(&left, &top, &width, &height);
+				if (wRect.bottom > top+height) {
+					bottomPinDelta = wRect.bottom - (top+height);
+					wRect.bottom -= bottomPinDelta;
+				}
+			}
 		}
 		mWindowPtr = ::NewCWindow(nil, &wRect, "\p", false, wDefProcID, (WindowRef)-1, goAwayFlag, (long)nsnull);
 		mWindowMadeHere = PR_TRUE;
@@ -635,33 +643,38 @@ NS_IMETHODIMP nsMacWindow::ConstrainPosition(PRInt32 *aX, PRInt32 *aY)
 	Rect screenRect;
 	::GetRegionBounds(::GetGrayRgn(), &screenRect);
 
-	// Need to use non-negative coordinates
-	PRInt32 screenWidth;
-	if(screenRect.left < 0)
-		screenWidth = screenRect.right - screenRect.left;
-	else
-		screenWidth = screenRect.right;
-
-	PRInt32 screenHeight;
-	if(screenRect.top < 0)
-		screenHeight = screenRect.bottom - screenRect.top;
-	else
-		screenHeight = screenRect.bottom;
-
 	Rect portBounds;
 	::GetWindowPortBounds(mWindowPtr, &portBounds);
+	short pos;
 	short windowWidth = portBounds.right - portBounds.left;
 	short windowHeight = portBounds.bottom - portBounds.top;
 
-	if (*aX <= screenRect.left - windowWidth + kWindowPositionSlop)
-		*aX = screenRect.left - windowWidth + kWindowPositionSlop;
-	else if (*aX >= screenWidth - kWindowPositionSlop)
-		*aX = screenWidth - kWindowPositionSlop;
-        
-	if (*aY < 0) // position is relative to screenRect.top
-		*aY = 0;
-	else if (*aY >= screenHeight - screenRect.top - kWindowPositionSlop)
-		*aY = screenHeight - screenRect.top - kWindowPositionSlop;
+	/* heh. as far as I can tell, the window size is always zero when
+	   this function is called. that's annoying, but we can mostly deal.
+	   one bit of extra grief it causes is that the screenRect generally
+	   starts below the menubar, while the coordinate system does not.
+	   here, we assume no window will ever actually remain at 0 size,
+	   and give it an artificial size large enough that it won't run
+	   aground on the menubar. the size we give it is about titlebar
+	   size, anyway, so there's not much danger. */
+	if (windowHeight == 0)
+		windowHeight = 20;
+
+	pos = screenRect.left;
+	if (windowWidth > 0) // sometimes it isn't during window creation
+		pos -= windowWidth + kWindowPositionSlop;
+	if (*aX < pos)
+		*aX = pos;
+	else if (*aX >= screenRect.right - kWindowPositionSlop)
+		*aX = screenRect.right - kWindowPositionSlop;
+
+	pos = screenRect.top;
+	if (windowHeight > 0)
+		pos -= windowHeight + kWindowPositionSlop;
+	if (*aY < pos)
+		*aY = pos;
+	else if (*aY >= screenRect.bottom - kWindowPositionSlop)
+		*aY = screenRect.bottom - kWindowPositionSlop;
 
 	return NS_OK;
 }
@@ -687,19 +700,16 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 		localRect.y = aY;
 		localRect.width = 100;
 		localRect.height = 100;	
-		
-		if(mOffsetParent != nsnull){
+
+		if(mOffsetParent != nsnull) {
 			mOffsetParent->WidgetToScreen(localRect,globalRect);
 			aX=globalRect.x;
 			aY=globalRect.y;
 			::MoveWindow(mWindowPtr, aX, aY, false);
 		}
-		
-		return NS_OK;
-	} else if (mWindowMadeHere){
-		Rect screenRect;
-		::GetRegionBounds(::GetGrayRgn(), &screenRect);
 
+		return NS_OK;
+	} else if (mWindowMadeHere) {
 		Rect portBounds;
 		::GetWindowPortBounds(mWindowPtr, &portBounds);
 
@@ -710,8 +720,25 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 			aX += kWindowMarginWidth;
 			aY += kWindowTitleBarHeight;
 		}
-		aX += screenRect.left;
-		aY += screenRect.top;
+
+		nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+		if (screenmgr) {
+			nsCOMPtr<nsIScreen> screen;
+			PRInt32 left, top, width, height, fullTop;
+			// adjust for unset bounds, which confuses the screen manager
+			width = portBounds.right - portBounds.left;
+			height = portBounds.bottom - portBounds.top;
+			if (height <= 0) height = 1;
+			if (width <= 0) width = 1;
+
+			screenmgr->ScreenForRect(aX, aY, width, height,
+			                         getter_AddRefs(screen));
+			if (screen) {
+				screen->GetAvailRect(&left, &top, &width, &height);
+				screen->GetRect(&left, &fullTop, &width, &height);
+				aY += top-fullTop;
+			}
+		}
 
 		// move the window if it has not been moved yet
 		// (ie. if this function isn't called in response to a DragWindow event)
@@ -793,8 +820,28 @@ NS_METHOD nsMacWindow::SetSizeMode(PRInt32 aMode)
 //-------------------------------------------------------------------------
 void nsMacWindow::MoveToGlobalPoint(PRInt32 aX, PRInt32 aY)
 {
-	Rect screenRect;
-	::GetRegionBounds(::GetGrayRgn(), &screenRect);
+	PRInt32 left, top, width, height, fullTop;
+	Rect portBounds;
+
+	StPortSetter doThatThingYouDo(mWindowPtr);
+	::GetWindowPortBounds(mWindowPtr, &portBounds);
+
+	width = portBounds.right - portBounds.left;
+	height = portBounds.bottom - portBounds.top;
+	::LocalToGlobal(&topLeft(portBounds));
+
+	nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+	if (screenmgr) {
+		nsCOMPtr<nsIScreen> screen;
+		//screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
+		screenmgr->ScreenForRect(portBounds.left, portBounds.top, width, height,
+		                         getter_AddRefs(screen));
+		if (screen) {
+			screen->GetAvailRect(&left, &top, &width, &height);
+			screen->GetRect(&left, &fullTop, &width, &height);
+			aY -= top-fullTop;
+		}
+	}
 
 	if (mIsDialog) {
 		aX -= kDialogMarginWidth;
@@ -803,7 +850,7 @@ void nsMacWindow::MoveToGlobalPoint(PRInt32 aX, PRInt32 aY)
 		aX -= kWindowMarginWidth;
 		aY -= kWindowTitleBarHeight;
 	}
-	Move(aX - screenRect.left, aY - screenRect.top);
+	Move(aX, aY);
 }
 
 //-------------------------------------------------------------------------
@@ -858,22 +905,36 @@ NS_IMETHODIMP nsMacWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepai
 }
 
 NS_IMETHODIMP nsMacWindow::GetScreenBounds(nsRect &aRect) {
+ 
+	nsRect localBounds;
+	PRInt32 yAdjust = 0;
 
-	Rect screenRect;
-	::GetRegionBounds(::GetGrayRgn(), &screenRect);
+	GetBounds(localBounds);
+	// nsMacWindow local bounds are always supposed to be local (0,0) but in the middle of a move
+	// can be global. This next adjustment assures they are in local coordinates, even then.
+	localBounds.MoveBy(-localBounds.x, -localBounds.y);
+	WidgetToScreen(localBounds, aRect);
 
-   nsRect localBounds;
+	nsCOMPtr<nsIScreenManager> screenmgr = do_GetService(sScreenManagerContractID);
+	if (screenmgr) {
+		nsCOMPtr<nsIScreen> screen;
+		//screenmgr->GetPrimaryScreen(getter_AddRefs(screen));
+		screenmgr->ScreenForRect(aRect.x, aRect.y, aRect.width, aRect.height,
+		                         getter_AddRefs(screen));
+		if (screen) {
+			PRInt32 left, top, width, height, fullTop;
+			screen->GetAvailRect(&left, &top, &width, &height);
+			screen->GetRect(&left, &fullTop, &width, &height);
+			yAdjust = top-fullTop;
+		}
+	}
+ 
+	if (mIsDialog)
+		aRect.MoveBy(-kDialogMarginWidth, -kDialogTitleBarHeight-yAdjust);
+	else
+		aRect.MoveBy(-kWindowMarginWidth, -kWindowTitleBarHeight-yAdjust);
 
-   GetBounds(localBounds);
-   // nsMacWindow local bounds are always supposed to be local (0,0) but in the middle of a move
-   // can be global. This next adjustment assures they are in local coordinates, even then.
-   localBounds.MoveBy(-localBounds.x, -localBounds.y);
-   WidgetToScreen(localBounds, aRect);
-   if (mIsDialog)
-     aRect.MoveBy(-kDialogMarginWidth-screenRect.left, -kDialogTitleBarHeight-screenRect.top);
-   else
-     aRect.MoveBy(-kWindowMarginWidth-screenRect.left, -kWindowTitleBarHeight-screenRect.top);
-   return NS_OK;
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
