@@ -101,18 +101,22 @@
   list-style-image: url("chrome://editor/skin/messengercompose/btn1/spell.gif");
 }
 
+#spellingButton {
+  list-style-image: url("chrome://editor/skin/btn1/spell.gif");
+}
+
 #spellingButton[disabled="true"],
 #spellingButton[disabled="true"]:hover,
 #spellingButton[disabled="true"]:hover:active {
-  list-style-image: url("chrome://editor/skin/messengercompose/btn1/spell-dis.gif");
-} 
+  list-style-image: url("chrome://editor/skin/btn1/spell-dis.gif");
+}
 
 #spellingButton:hover {
-  list-style-image: url("chrome://editor/skin/messengercompose/btn1/spell-hov.gif");
-} 
+  list-style-image: url("chrome://editor/skin/btn1/spell-hov.gif");
+}
 
 #spellingButton:hover:active {
-  list-style-image: url("chrome://editor/skin/messengercompose/btn1/spell-act.gif");
+  list-style-image: url("chrome://editor/skin/btn1/spell-act.gif");
 }
 
 #button-save {

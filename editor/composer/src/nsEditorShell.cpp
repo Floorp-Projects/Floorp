@@ -618,8 +618,10 @@ nsEditorShell::PrepareDocumentForEditing(nsIDOMWindow* aDOMWindow, nsIURI *aUrl)
     }
   }
 
-  // Set the editor-specific Window caption
-  UpdateWindowTitleAndRecentMenu(PR_TRUE);
+  if (!mMailCompose) {
+    // Set the editor-specific Window caption
+    UpdateWindowTitleAndRecentMenu(PR_TRUE);
+  }
 
   nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
   if (!styleSheets)

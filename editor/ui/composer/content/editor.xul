@@ -26,6 +26,10 @@
   -->
 
 <?xml-stylesheet href="chrome://editor/skin/" type="text/css"?> 
+
+<?xml-stylesheet href="chrome://editor/skin/editorPrimaryToolbar.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://editor/skin/editorFormatToolbar.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://editor/skin/editorModeToolbar.css" type="text/css"?> 
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/EditorContextMenuOverlay.xul"?>
 <?xul-overlay href="chrome://global/content/globalOverlay.xul"?>

@@ -195,26 +195,26 @@
     list-style-image      : url("chrome://messenger/skin/messengercompose/quote-hover-active.gif");
   } 
 
-#button-spelling 
+#spellingButton
   {
-          list-style-image      : url("chrome://messenger/skin/messengercompose/spelling.gif");
+    list-style-image  : url("chrome://editor/skin/images/spell.gif");
   }
 
-#button-spelling[disabled="true"],
-#button-spelling[disabled="true"]:hover,
-#button-spelling[disabled="true"]:hover:active
+#spellingButton[disabled="true"],
+#spellingButton[disabled="true"]:hover,
+#spellingButton[disabled="true"]:hover:active
   {
-    list-style-image      : url("chrome://messenger/skin/messengercompose/spelling-disabled.gif");
-  } 
+    list-style-image   : url("chrome://editor/skin/images/spell-disabled.gif");
+  }
 
-#button-spelling:hover
+#spellingButton:hover
   {
-    list-style-image      : url("chrome://messenger/skin/messengercompose/spelling-hover.gif");
-  } 
+    list-style-image   : url("chrome://editor/skin/images/spell-hover.gif");
+  }
 
-#button-spelling:hover:active
+#spellingButton:hover:active
   {
-    list-style-image      : url("chrome://messenger/skin/messengercompose/spelling-hover-active.gif");
+    list-style-image   : url("chrome://editor/skin/images/spell-hover-active.gif");
   }
 
 #button-save 

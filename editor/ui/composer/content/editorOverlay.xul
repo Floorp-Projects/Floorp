@@ -24,8 +24,6 @@
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
-<?xml-stylesheet href="chrome://editor/skin/EditorToolbars.css" type="text/css"?> 
-
 <overlay id="editorOverlay"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
