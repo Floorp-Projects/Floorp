@@ -47,7 +47,6 @@
 #include "nsSoftwareUpdateStream.h"
 #include "nsSoftwareUpdateRun.h"
 
-#include "nsIDOMInstall.h"
 #include "nsInstall.h"
 
 #include "nsIDOMInstallTriggerGlobal.h"
@@ -72,9 +71,6 @@ static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
 
 static NS_DEFINE_IID(kISoftwareUpdate_IID, NS_ISOFTWAREUPDATE_IID);
 static NS_DEFINE_IID(kSoftwareUpdate_CID,  NS_SoftwareUpdate_CID);
-
-static NS_DEFINE_IID(kIInstall_IID, NS_IDOMINSTALL_IID);
-static NS_DEFINE_IID(kInstall_CID, NS_SoftwareUpdateInstall_CID);
 
 static NS_DEFINE_IID(kIInstallTrigger_IID, NS_IDOMINSTALLTRIGGERGLOBAL_IID);
 static NS_DEFINE_IID(kInstallTrigger_CID, NS_SoftwareUpdateInstallTrigger_CID);
@@ -140,15 +136,14 @@ nsSoftwareUpdate::Startup()
     //   FIX:  Only add the Trigger Object to the JS NameSpace.  Then when before we run
     //         the InstallScript, add our other objects to just that env.
 
-    nsIScriptNameSetRegistry *registry;
+    nsIScriptNameSetRegistry *scriptNameSet;
     nsresult result = nsServiceManager::GetService(kCScriptNameSetRegistryCID,
                                                    kIScriptNameSetRegistryIID,
-                                                  (nsISupports **)&registry);
+                                                  (nsISupports **)&scriptNameSet);
     if (NS_OK == result) 
     {
         nsSoftwareUpdateNameSet* nameSet = new nsSoftwareUpdateNameSet();
-        registry->AddExternalNameSet(nameSet);
-        /* FIX - do we need to release this service?  When we do, it get deleted,and our name is lost. */
+        scriptNameSet->AddExternalNameSet(nameSet);
     }
 
     /***************************************/
@@ -315,7 +310,7 @@ nsSoftwareUpdateNameSet::InitializeClasses(nsIScriptContext* aScriptContext)
 {
     nsresult result = NS_OK;
 
-    result = NS_InitInstallClass(aScriptContext, nsnull);
+ //   result = NS_InitInstallClass(aScriptContext, nsnull);
     if (result != NS_OK) return result;
     
     result = NS_InitInstallVersionClass(aScriptContext, nsnull);
@@ -339,13 +334,13 @@ nsSoftwareUpdateNameSet::AddNameSet(nsIScriptContext* aScriptContext)
     result = aScriptContext->GetNameSpaceManager(&manager);
     if (NS_OK == result) 
     {
-
+/*
         result = manager->RegisterGlobalName("Install", 
                                              kInstall_CID, 
                                              PR_TRUE);
 
         if (result != NS_OK) return result;
-        
+*/        
         result = manager->RegisterGlobalName("InstallVersion", 
                                              kInstallVersion_CID, 
                                              PR_TRUE);
@@ -388,7 +383,6 @@ extern "C" NS_EXPORT nsresult
 NSRegisterSelf(const char *path)
 {
     nsRepository::RegisterFactory(kSoftwareUpdate_CID, path, PR_TRUE, PR_TRUE);
-    nsRepository::RegisterFactory(kInstall_CID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kInstallTrigger_CID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kInstallVersion_CID, path, PR_TRUE, PR_TRUE);
     nsRepository::RegisterFactory(kInstallFolder_CID, path, PR_TRUE, PR_TRUE);
@@ -399,7 +393,6 @@ extern "C" NS_EXPORT nsresult
 NSUnregisterSelf(const char *path)
 {
     nsRepository::UnregisterFactory(kSoftwareUpdate_CID, path);
-    nsRepository::UnregisterFactory(kInstall_CID, path);
     nsRepository::UnregisterFactory(kInstallTrigger_CID, path);
     nsRepository::UnregisterFactory(kInstallVersion_CID, path);
     nsRepository::UnregisterFactory(kInstallFolder_CID, path);
@@ -421,12 +414,8 @@ NSGetFactory(const nsCID &aClass, nsISupports* serviceMgr, nsIFactory **aFactory
     *aFactory = NULL;
     nsISupports *inst;
 
-
-    if ( aClass.Equals(kInstall_CID) )
-    {
-        inst = new nsInstallFactory();        
-    }
-    else if (aClass.Equals(kInstallTrigger_CID) )
+    
+    if (aClass.Equals(kInstallTrigger_CID) )
     {
         inst = new nsInstallTriggerFactory();
     }

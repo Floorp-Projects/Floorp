@@ -35,7 +35,7 @@ static NS_DEFINE_IID(kInetLibURLIID, NS_INETLIBURL_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 
-extern "C" nsresult su_DownloadJar(const nsString& aUrlString, const nsString& aSaveLocationString );
+extern "C" nsresult DownloadJar(const nsString& aUrlString, const nsString& aSaveLocationString );
 
 
 class nsSoftwareUpdateListener : public nsIStreamListener

@@ -76,7 +76,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
 
     if ((folderSpec == NULL) || (inInstall == NULL)  || (inVInfo == NULL)) 
     {
-        *error = nsIDOMInstall::SUERR_INVALID_ARGUMENTS;
+        *error = nsInstall::INVALID_ARGUMENTS;
         return;
     }
     
@@ -136,7 +136,7 @@ nsInstallFile::~nsInstallFile()
 PRInt32 nsInstallFile::Prepare()
 {
     if (mInstall == NULL || mFinalFile == NULL || mJarLocation == NULL) 
-        return nsIDOMInstall::SUERR_INVALID_ARGUMENTS;
+        return nsInstall::INVALID_ARGUMENTS;
 
     PRInt32 err;
     mInstall->ExtractFileFromJar(*mJarLocation, *mFinalFile, *mTempFile, &err);
@@ -157,7 +157,7 @@ PRInt32 nsInstallFile::Complete()
 
     if (mInstall == NULL || mVersionRegistryName == NULL || mFinalFile == NULL) 
     {
-       return nsIDOMInstall::SUERR_INVALID_ARGUMENTS;
+       return nsInstall::INVALID_ARGUMENTS;
     }
 
     /* Check the security for our target */
@@ -187,7 +187,7 @@ PRInt32 nsInstallFile::Complete()
   
     // Register file and log for Uninstall
   
-    if ( 0 == err || nsIDOMInstall::SU_REBOOT_NEEDED == err ) 
+    if ( 0 == err || nsInstall::REBOOT_NEEDED == err ) 
     {
         // we ignore all registry errors because they're not
         // important enough to abort an otherwise OK install.
@@ -291,9 +291,9 @@ PRInt32 nsInstallFile::Complete()
     delete final_file;
 
     if ( err != 0 ) 
-        return nsIDOMInstall::SUERR_UNEXPECTED_ERROR;
+        return nsInstall::UNEXPECTED_ERROR;
     
-    return nsIDOMInstall::SU_SUCCESS;
+    return nsInstall::SUCCESS;
 }
 
 void nsInstallFile::Abort()
@@ -315,11 +315,11 @@ char* nsInstallFile::toString()
 {
     if (mReplaceFile) 
     {
-        return nsInstallErrorMessages::GetString(nsIDOMInstall::SU_DETAILS_REPLACE_FILE_MSG_ID, mFinalFile);
+        return nsInstallErrorMessages::GetString(nsInstall::DETAILS_REPLACE_FILE_MSG_ID, mFinalFile);
     } 
     else 
     {
-        return nsInstallErrorMessages::GetString(nsIDOMInstall::SU_DETAILS_INSTALL_FILE_MSG_ID, mFinalFile);
+        return nsInstallErrorMessages::GetString(nsInstall::DETAILS_INSTALL_FILE_MSG_ID, mFinalFile);
   }
 }
 
@@ -382,7 +382,7 @@ int nsInstallFile::NativeComplete()
         {
             /* File already exists, need to remove the original */
             // FIX result = FE_ReplaceExistingFile(currentName, xpURL, finalName, xpURL, mForceInstall);
-            if ( result == nsIDOMInstall::SU_REBOOT_NEEDED ) 
+            if ( result == nsInstall::REBOOT_NEEDED ) 
             {
             }
         } 
@@ -397,9 +397,9 @@ int nsInstallFile::NativeComplete()
             {
                 end[0] = 0;
                 
-                // Lame use of nsNativeFileSpec, but NSPR does not support creation
+                // Lame use of nsFileSpec, but NSPR does not support creation
                 // of nested directories.
-                nsNativeFileSpec* directoryMaker = new nsNativeFileSpec(finalName, PR_TRUE);
+                nsFileSpec* directoryMaker = new nsFileSpec(finalName, PR_TRUE);
                 delete directoryMaker;
 
                 end[0] = separator;

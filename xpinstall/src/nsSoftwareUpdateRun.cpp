@@ -11,6 +11,10 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
 
+#include "nsInstall.h"
+
+extern PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, nsFileSpec* jarfile, PRInt32 flags, char* argc, PRInt32 argv);
+
 
 static NS_DEFINE_IID(kBrowserWindowCID, NS_BROWSER_WINDOW_CID);
 static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
@@ -18,7 +22,7 @@ static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
 
 
-/* su_ReadFileIntoBuffer
+/* ReadFileIntoBuffer
  * given a file name, reads it into buffer
  * returns an error code
  */
@@ -31,7 +35,7 @@ static short ReadFileIntoBuffer(char * fileName, char** buffer, unsigned long *b
 
     if ( stat( fileName, &st) != 0 )
     {
-        result = su_ErrInternalError;
+        result = ErrInternalError;
         goto fail;
     }
 
@@ -49,13 +53,13 @@ static short ReadFileIntoBuffer(char * fileName, char** buffer, unsigned long *b
 
     if ( file == NULL)
     {
-        result = su_ErrInternalError;
+        result = ErrInternalError;
         goto fail;
     }
 
     if ( PR_Read(file, *buffer, *bufferSize ) != st.st_size )
     {
-        result = su_ErrInternalError;
+        result = ErrInternalError;
         PR_Close( file );
         goto fail;
     }
@@ -108,10 +112,26 @@ int RunInstallJS(char* installJSFile)
             {
                 const char* url = "";
                 nsIScriptContext* scriptContext;
-                nsresult res = scriptContextOwner->GetScriptContext(&scriptContext);
+                rv = scriptContextOwner->GetScriptContext(&scriptContext);
 
-                if (NS_OK == res) 
+                if (NS_OK == rv) 
                 {
+
+                    ///////////////////////////////////////////////////////////////////////
+                    // Init Install Object
+                    /////////////////////////////////////////////////////////////////////// 
+                    nsFileSpec jarfile("c:\\temp\\jarfile.jar");
+                    PRInt32    flags   = 0;
+                    char*      argc    = nsnull;
+                    PRInt32    argv    = 0;
+
+                    InitXPInstallObjects(scriptContext, &jarfile, flags, argc, argv );
+                   
+                    ///////////////////////////////////////////////////////////////////////
+
+
+
+
                     char* buffer;
                     unsigned long bufferLength;
                     ReadFileIntoBuffer(installJSFile, &buffer, &bufferLength);

@@ -31,7 +31,7 @@
 
 
 nsresult
-su_DownloadJar(const nsString& aUrlString, const nsString& aSaveLocationString)
+DownloadJar(const nsString& aUrlString, const nsString& aSaveLocationString)
 {
     long            result=0;
     nsIURL          *pURL;

@@ -51,11 +51,11 @@ class nsSoftwareUpdateNameSet : public nsIScriptExternalNameSet
 #define LAST_REGPACK_TIME          "LastRegPackTime"
 
 /* error codes */
-#define su_ErrInvalidArgs          -1
-#define su_ErrUnknownInstaller     -2
-#define su_ErrInternalError        -3
-#define su_ErrBadScript            -4
-#define su_JarError                -5
-#define su_DiskSpaceError          -6
+#define ErrInvalidArgs          -1
+#define ErrUnknownInstaller     -2
+#define ErrInternalError        -3
+#define ErrBadScript            -4
+#define JarError                -5
+#define DiskSpaceError          -6
 
 #endif

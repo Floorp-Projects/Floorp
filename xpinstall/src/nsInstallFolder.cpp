@@ -61,12 +61,12 @@ static NS_DEFINE_IID(kIInstallFolder_IID, NS_IDOMINSTALLFOLDER_IID);
 	#endif
 #endif
 
-typedef enum su_SecurityLevel {
+typedef enum SecurityLevel {
 	eOneFolderAccess,
 	eAllFolderAccess
-} su_SecurityLevel;
+} SecurityLevel;
 
-struct su_DirectoryTable
+struct DirectoryTable
 {
 	char *  directoryName;			/* The formal directory name */
 	PRInt32 folderEnum;		        /* Directory ID */
@@ -80,7 +80,7 @@ struct su_DirectoryTable
  * DirectoryTable holds the info about built-in directories:
  * Text name, security level, enum
  */
-struct su_DirectoryTable DirectoryTable[] = 
+struct DirectoryTable DirectoryTable[] = 
 {
     {"Plugins",         nsIDOMInstallFolder::PluginFolder,              PR_TRUE},
 	{"Program",         nsIDOMInstallFolder::ProgramFolder,             PR_FALSE},
@@ -205,7 +205,7 @@ nsInstallFolder::Init(const nsString& aFolderID, const nsString& aVrPatch, const
 {
     /* Since urlPath is set to NULL, this FolderSpec is essentially the error message */
 	
-    if ( aFolderID == "null" || aVrPatch == "null" || aPackageName == "null") 
+    if ( aFolderID == "null" || aPackageName == "null") 
     {
         return NS_OK; // should we stop the script?
     }
