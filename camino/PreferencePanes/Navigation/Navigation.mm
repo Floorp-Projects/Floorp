@@ -368,6 +368,7 @@ const int kDefaultExpireDays = 9;
   [panel setCanChooseFiles:NO];
   [panel setCanChooseDirectories:YES];
   [panel setAllowsMultipleSelection:NO];
+  [panel setPrompt:NSLocalizedString(@"ChooseDirectoryOKButton", @"")];
   
   [panel beginSheetForDirectory:oldDLFolder file:nil types:nil modalForWindow:[mDownloadFolder window]
            modalDelegate:self didEndSelector:@selector(openPanelDidEnd:returnCode:contextInfo:)
