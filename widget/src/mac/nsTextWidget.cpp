@@ -124,9 +124,9 @@ PRInt32			offx,offy;
 	  destRect = viewRect;
 	  ::GetPort(&curport);
 	  ::SetPort(mWindowPtr);
-	  ::SetOrigin(-offx,-offy);
+	  //::SetOrigin(-offx,-offy);
 		WENew(&destRect,&viewRect,teFlags,&mTE_Data);
-		::SetOrigin(0,0);
+		//::SetOrigin(0,0);
 		::SetPort(curport);
 		
 	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
@@ -206,7 +206,7 @@ RgnHandle						thergn;
 	CalcOffset(offx,offy);
 	::GetPort(&theport);
 	::SetPort(mWindowPtr);
-	::SetOrigin(-offx,-offy);
+	//::SetOrigin(-offx,-offy);
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
 	thergn = ::NewRgn();
@@ -217,7 +217,7 @@ RgnHandle						thergn;
 	::PenSize(1,1);
 	::FrameRect(&macrect);
 	::SetClip(thergn);
-	::SetOrigin(0,0);
+	//::SetOrigin(0,0);
 	::SetPort(theport);
 	
   return PR_FALSE;
@@ -236,7 +236,7 @@ PRInt32				offx,offy;
 	CalcOffset(offx,offy);
 	::GetPort(&theport);
 	::SetPort(mWindowPtr);
-	::SetOrigin(-offx,-offy);
+	//::SetOrigin(-offx,-offy);
 
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
@@ -245,7 +245,7 @@ PRInt32				offx,offy;
 	::ClipRect(&macrect);
 	WEKey(aKey,aModifiers,mTE_Data);
 	::SetClip(thergn);
-	::SetOrigin(0,0);
+	//::SetOrigin(0,0);
 	::SetPort(theport);
 	
 }
@@ -256,26 +256,29 @@ PRInt32				offx,offy;
 PRBool 
 nsTextWidget::DispatchMouseEvent(nsMouseEvent &aEvent)
 {
-PRBool 	result=PR_TRUE;
-Point		mouseLoc;
-PRInt16 modifiers=0;
-nsRect	therect;
-Rect		macrect;
-PRInt32				offx,offy;
+PRBool 		result=PR_TRUE;
+Point			mouseLoc;
+PRInt16 	modifiers=0;
+nsRect		therect;
+Rect			macrect;
+PRInt32		offx,offy;
+GrafPtr		theport;
 	
 	switch (aEvent.message)
 		{
 		case NS_MOUSE_LEFT_BUTTON_DOWN:
 			CalcOffset(offx,offy);
+			::GetPort(&theport);
 			::SetPort(mWindowPtr);
-			::SetOrigin(-offx,-offy);
+			//::SetOrigin(-offx,-offy);
 			GetBounds(therect);
 			nsRectToMacRect(therect,macrect);
 			::ClipRect(&macrect);
 			mouseLoc.h = aEvent.point.x;
 			mouseLoc.v = aEvent.point.y;
 			WEClick(mouseLoc,modifiers,aEvent.time,mTE_Data);
-			::SetOrigin(0,0);
+			//::SetOrigin(0,0);
+			::SetPort(theport);
 			result = PR_FALSE;
 			break;
 		case NS_MOUSE_LEFT_BUTTON_UP:
@@ -450,6 +453,7 @@ LongRect			macRect;
 	return NS_OK;
 }
 
+
 //--------------------------------------------------------------
 PRUint32  nsTextWidget::SetText(const nsString& aText, PRUint32& aSize)
 { 
@@ -461,7 +465,7 @@ GrafPtr				theport;
 	CalcOffset(offx,offy);
 	::GetPort(&theport);
 	::SetPort(mWindowPtr);
-	::SetOrigin(-offx,-offy);
+	//::SetOrigin(-offx,-offy);
  
  	this->RemoveText();
 	aText.ToCString(buffer,255);
@@ -470,6 +474,7 @@ GrafPtr				theport;
 	WEInsert(buffer,len,0,0,mTE_Data);
 
 	aSize = len;
+	//::SetOrigin(0,0);
 	::SetPort(theport);
   return NS_OK;
 }
@@ -482,16 +487,17 @@ PRInt32 len;
 PRInt32				offx,offy;
 GrafPtr				theport;
 
-			CalcOffset(offx,offy);
-			::GetPort(&theport);
-			::SetPort(mWindowPtr);
-			::SetOrigin(-offx,-offy);
+	CalcOffset(offx,offy);
+	::GetPort(&theport);
+	::SetPort(mWindowPtr);
+	//::SetOrigin(-offx,-offy);
 
 	aText.ToCString(buffer,255);
 	len = strlen(buffer);
 	
 	WEInsert(buffer,len,0,0,mTE_Data);
 	aSize = len;
+	//::SetOrigin(0,0);
 	::SetPort(theport);
   return NS_OK;
 }

@@ -132,9 +132,6 @@ unsigned char	evtype;
 					evtype = (unsigned char) (theevent.message>>24)&0x00ff;
 					switch(evtype)
 						{
-						//case MOUSEMOVEDMESSAGE:
-							//DoMouseMove(&theevent);
-							//break;
 						case SUSPENDRESUMEMESSAGE:
 							if(theevent.message&0x00000001)
 								{
@@ -509,7 +506,7 @@ nsRefData			*theRefData;
 
 //=================================================================
 /*  Turns a null event into a raptor mousemove event
- *  @update  dc 08/31/98
+ *  @update  dc 10/02/98
  *  @param   aTheEvent -- A pointer to a Macintosh EventRecord
  *  @return  NONE
  */
@@ -553,9 +550,10 @@ nsRefData			*theRefData;
 		}
 
 
+	// the mouse is down, and moving
 	if(gGrabWindow)
 		{
-		if( /*(gGrabWindow==thewindow) ||*/ thewindow==lastwindow)
+		if(thewindow==lastwindow)
 			{
 			// JUST A MOUSE MOVE
 			mouseevent.message = NS_MOUSE_MOVE;
@@ -598,67 +596,67 @@ nsRefData			*theRefData;
 			}
 		return;
 		}
-
-
-	//partcode = FindWindow(aTheEvent->where,&whichwindow);
-	switch(partcode)
-		{
-		case inContent:
-			if(thewindow)
-				{
-				if(lastwindow == nsnull || thewindow != lastwindow)
+	else
+		{	
+		if(whichwindow)
+		switch(partcode)
+			{
+			case inContent:
+				if(thewindow)
 					{
-					// mouseexit
-					if(lastwindow != nsnull)
+					if(lastwindow == nsnull || thewindow != lastwindow)
 						{
-						mouseevent.message = NS_MOUSE_EXIT;
-						mouseevent.widget  = (nsWindow *) lastwindow;
+						// mouseexit
+						if(lastwindow != nsnull)
+							{
+							mouseevent.message = NS_MOUSE_EXIT;
+							mouseevent.widget  = (nsWindow *) lastwindow;
+							hitPoint = aTheEvent->where;
+							GlobalToLocal(&hitPoint);
+							mouseevent.point.x = hitPoint.h;
+							mouseevent.point.y = hitPoint.v;					
+							lastwindow->DispatchMouseEvent(mouseevent);
+							}
+
+						// mouseenter
+						this->SetCurrentWindow(thewindow);
+						mouseevent.message = NS_MOUSE_ENTER;
+						mouseevent.widget  = (nsWindow *) thewindow;
 						hitPoint = aTheEvent->where;
 						GlobalToLocal(&hitPoint);
 						mouseevent.point.x = hitPoint.h;
 						mouseevent.point.y = hitPoint.v;					
-						lastwindow->DispatchMouseEvent(mouseevent);
+						thewindow->DispatchMouseEvent(mouseevent);	
 						}
-
-					// mouseenter
-					this->SetCurrentWindow(thewindow);
-					mouseevent.message = NS_MOUSE_ENTER;
-					mouseevent.widget  = (nsWindow *) thewindow;
+					else
+						{
+						// mousedown inside the content region
+						mouseevent.message = NS_MOUSE_MOVE;
+						mouseevent.widget  = (nsWindow *) thewindow;
+						hitPoint = aTheEvent->where;
+						GlobalToLocal(&hitPoint);
+						mouseevent.point.x = hitPoint.h;
+						mouseevent.point.y = hitPoint.v;		
+						thewindow->DispatchMouseEvent(mouseevent);
+						break;
+						}
+					}
+				break;
+			default:
+				if(lastwindow != nsnull)
+					{
+					this->SetCurrentWindow(nsnull);
+					mouseevent.message = NS_MOUSE_EXIT;
+					mouseevent.widget  = (nsWindow *) lastwindow;
 					hitPoint = aTheEvent->where;
 					GlobalToLocal(&hitPoint);
 					mouseevent.point.x = hitPoint.h;
 					mouseevent.point.y = hitPoint.v;					
-					thewindow->DispatchMouseEvent(mouseevent);	
+					lastwindow->DispatchMouseEvent(mouseevent);
 					}
-				else
-					{
-					// mousedown inside the content region
-					mouseevent.message = NS_MOUSE_MOVE;
-					mouseevent.widget  = (nsWindow *) thewindow;
-					hitPoint = aTheEvent->where;
-					GlobalToLocal(&hitPoint);
-					mouseevent.point.x = hitPoint.h;
-					mouseevent.point.y = hitPoint.v;		
-					thewindow->DispatchMouseEvent(mouseevent);
-					break;
-					}
-				}
-			break;
-		default:
-			if(lastwindow != nsnull)
-				{
-				this->SetCurrentWindow(nsnull);
-				mouseevent.message = NS_MOUSE_EXIT;
-				mouseevent.widget  = (nsWindow *) lastwindow;
-				hitPoint = aTheEvent->where;
-				GlobalToLocal(&hitPoint);
-				mouseevent.point.x = hitPoint.h;
-				mouseevent.point.y = hitPoint.v;					
-				lastwindow->DispatchMouseEvent(mouseevent);
-				}
-			break;
+				break;
+			}
 		}
-
 }
 
 //=================================================================

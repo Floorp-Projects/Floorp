@@ -202,13 +202,19 @@ PRBool 	result;
 				result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_EXIT:
-			DrawWidget(PR_FALSE);
-			mWidgetArmed = PR_FALSE;
+			//if(mMouseDownInButton)
+				{
+				DrawWidget(PR_FALSE);
+				mWidgetArmed = PR_FALSE;
+				}
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		case NS_MOUSE_ENTER:
-			DrawWidget(PR_TRUE);
-			mWidgetArmed = PR_TRUE;
+			//if(mMouseDownInButton)
+				{
+				DrawWidget(PR_TRUE);
+				mWidgetArmed = PR_TRUE;
+				}
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
 		}
