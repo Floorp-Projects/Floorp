@@ -131,7 +131,7 @@ public:
     void SetNavToolbarButtonCommandID( BOOL bOpenNewWindow );
 
 	// Don't allow NavCenter windows to be placed in edit windows.
-	inline BOOL AllowDocking() { return FALSE; }
+	inline BOOL AllowDocking() { return TRUE; }
     
 	inline CComboBox* GetParagraphCombo() { return m_pToolBarController->GetParagraphCombo(); }
     inline CColorComboBox* GetFontColorCombo() { return m_pToolBarController->GetFontColorCombo(); }
