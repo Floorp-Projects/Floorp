@@ -67,6 +67,9 @@
 #include <OS.h>
 #include <image.h>
 #include "prenv.h"
+#elif defined(XP_MACOSX)
+#include <Processes.h>
+#include <CFBundle.h>
 #endif
 
 
