@@ -1887,7 +1887,7 @@ AC_MSG_CHECKING(for uint_t)
 AC_CACHE_VAL(ac_cv_uint_t,
  [AC_TRY_COMPILE([#include <stdio.h>
                   #include <sys/types.h>],
-                 [uint foo = 0;],
+                 [uint_t foo = 0;],
                  [ac_cv_uint_t=true],
                  [ac_cv_uint_t=false])])
 if test "$ac_cv_uint_t" = true ; then
