@@ -25,10 +25,16 @@
 #include <Gestalt.h>
 #include <Dialogs.h>
 #include <Resources.h>
+#include <TextUtils.h>
 
 #include "nsIObserver.h"
 
 #define rSplashDialog 512
+
+const OSType kNSCreator = 'MOSS';
+const OSType kMozCreator = 'MOZZ';
+const SInt16 kNSCanRunStrArrayID = 1000;
+const SInt16 kAnotherVersionStrIndex = 1;
 
 class nsSplashScreenMac : public nsISplashScreen,
                           public nsIObserver
@@ -76,30 +82,30 @@ NS_IMPL_ISUPPORTS2(nsSplashScreenMac, nsISplashScreen, nsIObserver);
 NS_IMETHODIMP
 nsSplashScreenMac::Show()
 {
-	mDialog = ::GetNewDialog(rSplashDialog, nil, (WindowPtr)-1L);
-	if (!mDialog) return NS_ERROR_FAILURE;
+  mDialog = ::GetNewDialog(rSplashDialog, nil, (WindowPtr)-1L);
+  if (!mDialog) return NS_ERROR_FAILURE;
 
 #if TARGET_CARBON
-	::ShowWindow(GetDialogWindow(mDialog));
-	::SetPortDialogPort(mDialog);
-#else	
-	::ShowWindow(mDialog);
-	::SetPort(mDialog);
+  ::ShowWindow(GetDialogWindow(mDialog));
+  ::SetPortDialogPort(mDialog);
+#else 
+  ::ShowWindow(mDialog);
+  ::SetPort(mDialog);
 #endif
 
-	::DrawDialog(mDialog);    // we don't handle events for this dialog, so we
-	                          // need to draw explicitly. Yuck.
+  ::DrawDialog(mDialog);    // we don't handle events for this dialog, so we
+                            // need to draw explicitly. Yuck.
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsSplashScreenMac::Hide()
 {
-	if (mDialog)
-	{
-		::DisposeDialog( mDialog );
+  if (mDialog)
+  {
+    ::DisposeDialog( mDialog );
     mDialog = nsnull;
-	}
+  }
   return NS_OK;
 }
 
@@ -136,7 +142,7 @@ nsSplashScreenMac::Observe(nsISupports *aSubject, const PRUnichar *aTopic, const
 
 nsresult NS_CreateSplashScreen(nsISplashScreen**aResult)
 {
-  if ( aResult ) {	
+  if ( aResult ) {  
       *aResult = new nsSplashScreenMac;
       if ( *aResult ) {
           NS_ADDREF( *aResult );
@@ -149,14 +155,110 @@ nsresult NS_CreateSplashScreen(nsISplashScreen**aResult)
   }
 }
 
+// Snagged from mozilla/xpinstall/wizrd/mac/src/SetupTypeWin.c
+// VersGreaterThan4 - utility function to test if it's >4.x running
+static Boolean VersGreaterThan4(FSSpec *fSpec)
+{
+  Boolean result = false;
+  short fRefNum = 0;
+  
+  ::SetResLoad(false);
+  fRefNum = ::FSpOpenResFile(fSpec, fsRdPerm);
+  ::SetResLoad(true);
+  if (fRefNum != -1)
+  {
+    Handle  h;
+    h = ::Get1Resource('vers', 2);
+    if (h && **(unsigned short**)h >= 0x0500)
+      result = true;
+    ::CloseResFile(fRefNum);
+  }
+    
+  return result;
+}
+
 PRBool NS_CanRun() 
 {
-	long response = 0;
-	OSErr err = ::Gestalt (gestaltSystemVersion, &response);
-	if ( err || response < 0x850)
-	{
-		::StopAlert (5000, NULL);
-		return PR_FALSE;
-	}
-	return PR_TRUE;
+  long response = 0;
+  OSErr err = ::Gestalt (gestaltSystemVersion, &response);
+  // check for at least MacOS 8.6
+  if ( err || response < 0x860)
+  {
+    ::StopAlert (5000, NULL);
+    return PR_FALSE;
+  }
+
+  // Check for running instances of Mozilla or Netscape. The real issue
+  // is having more than one app use the same profile directory. That would
+  // be REAL BAD!!!!!!!!
+
+  // The code below is a copy of nsLocalFile::FindRunningAppBySignature which is
+  // a non-static method. Sounds silly that I have to create an nsILocalFile
+  // just to call that method. At any rate, don't think we want to go through
+  // all that rigmarole during startup anyway.
+
+  ProcessInfoRec  info;
+  FSSpec          tempFSSpec;
+  ProcessSerialNumber psn, nextProcessPsn;
+
+  nextProcessPsn.highLongOfPSN = 0;
+  nextProcessPsn.lowLongOfPSN  = kNoProcess;
+
+  // first, get our psn so that we can exclude ourselves when searching
+  err = ::GetCurrentProcess(&psn);
+
+  if (err != noErr)
+    return PR_FALSE;
+
+  // We loop while err == noErr, which should mean all our calls are OK
+  // The ways of 'break'-ing out of the loop are:
+  //   GetNextProcess() fails (this includes getting procNotFound, meaning we're at the end of the process list),
+  //   GetProcessInformation() fails
+  // The ways we should fall out of the while loop are:
+  //   GetIndString() fails, err == resNotFound,
+  //   we found a running mozilla process or running Netscape > 4.x process, err == fnfErr
+  while (err == noErr)
+  {
+    err = ::GetNextProcess(&nextProcessPsn);
+    if (err != noErr)
+      break; // most likely, end of process list
+    info.processInfoLength = sizeof(ProcessInfoRec);
+    info.processName = nil;
+    info.processAppSpec = &tempFSSpec;
+    err = ::GetProcessInformation(&nextProcessPsn, &info);
+    if (err != noErr)
+      break; // aww crap, GetProcessInfo() failed, we're outta here
+
+    if (info.processSignature == kNSCreator || info.processSignature == kMozCreator)
+    {
+      // if the found process is us, obviously, it's okay if WE'RE running,
+      if (!(info.processNumber.lowLongOfPSN == psn.lowLongOfPSN &&
+            info.processNumber.highLongOfPSN == psn.highLongOfPSN))
+      {
+        // check to see if Netscape process is greater than Netscape 4.x or
+        // if process is Mozilla
+        if ((info.processSignature == kNSCreator && VersGreaterThan4(&tempFSSpec)) ||
+             info.processSignature == kMozCreator)
+        {
+          // put up error dialog
+          Str255 str;
+          ::GetIndString(str, kNSCanRunStrArrayID, kAnotherVersionStrIndex);
+          if (StrLength(str) == 0)
+            err = resNotFound; // set err to something so that we return false
+          else
+          {
+            SInt16 outItemHit;
+            if (str)
+              ::StandardAlert(kAlertStopAlert, str, nil, nil, &outItemHit);
+            err = fnfErr; // set err to something so that we return false
+          }
+        }
+      }
+    }
+  }
+
+  if (err == noErr || err == procNotFound)
+    return PR_TRUE;
+
+  return PR_FALSE;
 }
