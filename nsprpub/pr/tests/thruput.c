@@ -51,7 +51,7 @@ static PRInt32 protocol = 6;  /* TCP */
 static PRFileDesc *err = NULL;
 static PRIntn concurrency = 1;
 static PRInt32 xport_buffer = -1;
-static PRInt32 initial_streams = 1;
+static PRUint32 initial_streams = 1;
 static PRInt32 buffer_size = BUFFER_SIZE;
 static PRThreadScope thread_scope = PR_LOCAL_THREAD;
 
