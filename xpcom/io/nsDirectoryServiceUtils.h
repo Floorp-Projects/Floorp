@@ -36,16 +36,11 @@ NS_GetSpecialDirectory(const char* specialDirName, nsIFile* *result)
     nsresult rv;
     static NS_DEFINE_CID(kDirectoryServiceCID, NS_DIRECTORY_SERVICE_CID);
     nsCOMPtr<nsIProperties> serv(do_GetService(kDirectoryServiceCID, &rv));
-    if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv))
+        return rv;
 
-    nsCOMPtr<nsISupports> dir;
-    rv = serv->Get(specialDirName, NS_GET_IID(nsIFile), getter_AddRefs(dir));
-    if (NS_FAILED(rv)) return rv;
-
-    *result = NS_STATIC_CAST(nsIFile*, NS_STATIC_CAST(nsISupports*, dir));
-    if (*result)
-        NS_ADDREF(*result);
-    return NS_OK;
+    return serv->Get(specialDirName, NS_GET_IID(nsIFile),
+                     NS_REINTERPRET_CAST(void**, result));
 }
 
 #endif
