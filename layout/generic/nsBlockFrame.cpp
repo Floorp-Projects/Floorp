@@ -48,17 +48,88 @@
 #include "nsIFocusTracker.h"
 #include "nsIFrameSelection.h"
 #include "nsSpaceManager.h"
+#include "prenv.h"
+#include "plstr.h"
 
 // XXX HTML:P's that are empty yet have style indicating they should
 // clear floaters - we need to ignore the clear behavior.
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
+
+static PRBool gNoisy;
+static PRBool gNoisyReflow;
+static PRBool gNoisyMaxElementSize;
+static PRBool gNoisySpaceManager;
+
+struct BlockDebugFlags {
+  const char* name;
+  PRBool* on;
+};
+
+static BlockDebugFlags gFlags[] = {
+  { "reflow", &gNoisyReflow },
+  { "max-element-size", &gNoisyMaxElementSize },
+  { "space-manager", &gNoisySpaceManager },
+};
+#define NUM_DEBUG_FLAGS (sizeof(gFlags) / sizeof(gFlags[0]))
+
+static void
+ShowDebugFlags()
+{
+  printf("Here are the available GECKO_BLOCK_DEBUG_FLAGS:\n");
+  BlockDebugFlags* bdf = gFlags;
+  BlockDebugFlags* end = gFlags + NUM_DEBUG_FLAGS;
+  for (; bdf < end; bdf++) {
+    printf("  %s\n", bdf->name);
+  }
+  printf("Note: GECKO_BLOCK_DEBUG_FLAGS is a comma seperated list of flag\n");
+  printf("names (no whitespace)\n");
+}
+
+static void
+InitDebugFlags()
+{
+  static PRBool firstTime = PR_TRUE;
+  if (firstTime) {
+    firstTime = PR_FALSE;
+    char* flags = PR_GetEnv("GECKO_BLOCK_DEBUG_FLAGS");
+    if (flags) {
+      PRBool error = PR_FALSE;
+      for (;;) {
+        char* cm = PL_strchr(flags, ',');
+        if (cm) *cm = '\0';
+
+        PRBool found = PR_FALSE;
+        BlockDebugFlags* bdf = gFlags;
+        BlockDebugFlags* end = gFlags + NUM_DEBUG_FLAGS;
+        for (; bdf < end; bdf++) {
+          if (PL_strcasecmp(bdf->name, flags) == 0) {
+            *(bdf->on) = PR_TRUE;
+            gNoisy = PR_TRUE;
+            found = PR_TRUE;
+            break;
+          }
+        }
+        if (!found) {
+          error = PR_TRUE;
+        }
+
+        if (!cm) break;
+        *cm = ',';
+        flags = cm + 1;
+      }
+      if (error) {
+        ShowDebugFlags();
+      }
+    }
+  }
+}
+
 #undef NOISY_FIRST_LINE
 #undef  REALLY_NOISY_FIRST_LINE
 #undef NOISY_FIRST_LETTER
 #undef NOISY_MAX_ELEMENT_SIZE
 #undef NOISY_FLOATER_CLEARING
-#undef NOISY_INCREMENTAL_REFLOW
 #undef NOISY_FINAL_SIZE
 #undef NOISY_REMOVE_FRAME
 #undef NOISY_DAMAGE_REPAIR
@@ -67,28 +138,14 @@
 #undef NOISY_REFLOW_REASON
 #undef REFLOW_STATUS_COVERAGE
 #undef NOISY_SPACEMANAGER
-#else
-#undef NOISY_FIRST_LINE
-#undef REALLY_NOISY_FIRST_LINE
-#undef NOISY_FIRST_LETTER
-#undef NOISY_MAX_ELEMENT_SIZE
-#undef NOISY_FLOATER_CLEARING
-#undef NOISY_INCREMENTAL_REFLOW
-#undef NOISY_FINAL_SIZE
-#undef NOISY_REMOVE_FRAME
-#undef NOISY_DAMAGE_REPAIR
-#undef NOISY_COMBINED_AREA
-#undef NOISY_VERTICAL_MARGINS
-#undef NOISY_REFLOW_REASON
-#undef REFLOW_STATUS_COVERAGE
-#undef NOISY_SPACEMANAGER
+
 #endif
 
 //----------------------------------------------------------------------
 
 // Debugging support code
 
-#ifdef NOISY_INCREMENTAL_REFLOW
+#ifdef DEBUG
 static PRInt32 gNoiseIndent;
 static const char* kReflowCommandType[] = {
   "ContentChanged",
@@ -222,12 +279,14 @@ public:
 #endif
     mBand.GetAvailableSpace(mY - BorderPadding().top, mAvailSpaceRect);
 
-#ifdef NOISY_INCREMENTAL_REFLOW
-    nsFrame::IndentBy(stdout, gNoiseIndent);
-    printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
-           mAvailSpaceRect.x, mAvailSpaceRect.y,
-           mAvailSpaceRect.width, mAvailSpaceRect.height,
-           mBand.GetTrapezoidCount());
+#ifdef DEBUG
+    if (gNoisyReflow) {
+      nsFrame::IndentBy(stdout, gNoiseIndent);
+      printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
+             mAvailSpaceRect.x, mAvailSpaceRect.y,
+             mAvailSpaceRect.width, mAvailSpaceRect.height,
+             mBand.GetTrapezoidCount());
+    }
 #endif
   }
 
@@ -241,12 +300,14 @@ public:
 #endif
     mBand.GetAvailableSpace(aY - BorderPadding().top, mAvailSpaceRect);
 
-#ifdef NOISY_INCREMENTAL_REFLOW
-    nsFrame::IndentBy(stdout, gNoiseIndent);
-    printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
-           mAvailSpaceRect.x, mAvailSpaceRect.y,
-           mAvailSpaceRect.width, mAvailSpaceRect.height,
-           mBand.GetTrapezoidCount());
+#ifdef DEBUG
+    if (gNoisyReflow) {
+      nsFrame::IndentBy(stdout, gNoiseIndent);
+      printf("GetAvailableSpace: band=%d,%d,%d,%d count=%d\n",
+             mAvailSpaceRect.x, mAvailSpaceRect.y,
+             mAvailSpaceRect.width, mAvailSpaceRect.height,
+             mBand.GetTrapezoidCount());
+    }
 #endif
   }
 
@@ -829,40 +890,51 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
   nscoord newLineY = mY;
   nsRect lineCombinedArea;
   aLine->GetCombinedArea(&lineCombinedArea);
-  if ((0 == aLine->mBounds.height) && (0 == lineCombinedArea.height)) {
-    if (aLine->IsBlock() &&
-        nsBlockReflowContext::IsHTMLParagraph(aLine->mFirstChild)) {
-      // Empty HTML paragraphs disappear entirely - their margins go
-      // to zero.
+  if (aLine->IsBlock()) {
+    if ((0 == aLine->mBounds.height) && (0 == lineCombinedArea.height)) {
+      if (nsBlockReflowContext::IsHTMLParagraph(aLine->mFirstChild)) {
+        // Empty HTML paragraphs disappear entirely - their margins go
+        // to zero. Therefore we leave mPrevBottomMargin alone.
+      }
+      else {
+        // The line's top and bottom margin values need to be collapsed
+        // with the mPrevBottomMargin to determine a new
+        // mPrevBottomMargin value.
+        nscoord topMargin, bottomMargin;
+        RecoverVerticalMargins(aLine, aApplyTopMargin,
+                               &topMargin, &bottomMargin);
+        nscoord m = nsBlockReflowContext::MaxMargin(bottomMargin,
+                                                    mPrevBottomMargin);
+        m = nsBlockReflowContext::MaxMargin(m, topMargin);
+        mPrevBottomMargin = m;
+      }
     }
     else {
-      // The line's top and bottom margin values need to be collapsed
-      // with the mPrevBottomMargin to determine a new
-      // mPrevBottomMargin value.
+      // Recover the top and bottom margins for this line
       nscoord topMargin, bottomMargin;
       RecoverVerticalMargins(aLine, aApplyTopMargin,
                              &topMargin, &bottomMargin);
-      nscoord m = nsBlockReflowContext::MaxMargin(bottomMargin,
-                                                  mPrevBottomMargin);
-      m = nsBlockReflowContext::MaxMargin(m, topMargin);
-      mPrevBottomMargin = m;
+
+      // Compute the collapsed top margin value
+      nscoord collapsedTopMargin =
+        nsBlockReflowContext::MaxMargin(topMargin, mPrevBottomMargin);
+
+      // The lineY is just below the collapsed top margin value. The
+      // mPrevBottomMargin gets set to the bottom margin value for the
+      // line.
+      newLineY += collapsedTopMargin;
+      mPrevBottomMargin = bottomMargin;
     }
   }
+  else if (0 == aLine->GetHeight()) {
+    // For empty inline lines we leave the previous bottom margin
+    // alone so that it's collpased with the next line.
+  }
   else {
-    // Recover the top and bottom margins for this line
-    nscoord topMargin, bottomMargin;
-    RecoverVerticalMargins(aLine, aApplyTopMargin,
-                           &topMargin, &bottomMargin);
-
-    // Compute the collapsed top margin value
-    nscoord collapsedTopMargin =
-      nsBlockReflowContext::MaxMargin(topMargin, mPrevBottomMargin);
-
-    // The lineY is just below the collapsed top margin value. The
-    // mPrevBottomMargin gets set to the bottom margin value for the
-    // line.
-    newLineY += collapsedTopMargin;
-    mPrevBottomMargin = bottomMargin;
+    // For non-empty inline lines the previous margin is applied
+    // before the line. Therefore apply it now and zero it out.
+    newLineY += mPrevBottomMargin;
+    mPrevBottomMargin = 0;
   }
 
   // Save away the old combined area for later
@@ -892,14 +964,19 @@ nsBlockReflowState::RecoverStateFrom(nsLineBox* aLine,
       nsIFrame* floater = fc->mPlaceholder->GetOutOfFlowFrame();
       floater->GetRect(r);
       floater->MoveTo(r.x, r.y + finalDeltaY);
-#ifdef NOISY_SPACEMANAGER
-      nscoord tx, ty;
-      mSpaceManager->GetTranslation(tx, ty);
-      nsFrame::ListTag(stdout, mBlock);
-      printf(": RecoverStateFrom: AddRectRegion: txy=%d,%d (%d,%d) {%d,%d,%d,%d}\n",
-             tx, ty, mSpaceManagerX, mSpaceManagerY,
-             fc->mRegion.x, fc->mRegion.y,
-             fc->mRegion.width, fc->mRegion.height);
+#ifdef DEBUG
+      if (gNoisyReflow || gNoisySpaceManager) {
+        nscoord tx, ty;
+        mSpaceManager->GetTranslation(tx, ty);
+        nsFrame::IndentBy(stdout, gNoiseIndent);
+        printf("RecoverState: txy=%d,%d (%d,%d) ",
+               tx, ty, mSpaceManagerX, mSpaceManagerY);
+        nsFrame::ListTag(stdout, floater);
+        printf(" r.y=%d finalDeltaY=%d (sum=%d) region={%d,%d,%d,%d}\n",
+               r.y, finalDeltaY, r.y + finalDeltaY,
+               fc->mRegion.x, fc->mRegion.y,
+               fc->mRegion.width, fc->mRegion.height);
+      }
 #endif
       mSpaceManager->AddRectRegion(floater, fc->mRegion);
       fc = fc->Next();
@@ -956,6 +1033,9 @@ NS_NewBlockFrame(nsIFrame** aNewFrame, PRUint32 aFlags)
 
 nsBlockFrame::nsBlockFrame()
 {
+#ifdef DEBUG
+  InitDebugFlags();
+#endif
 }
 
 nsBlockFrame::~nsBlockFrame()
@@ -1212,6 +1292,17 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
+#ifdef DEBUG
+  if (gNoisy) {
+    IndentBy(stdout, gNoiseIndent);
+    ListTag(stdout);
+    printf(": begin reflow availSize=%d,%d computedSize=%d,%d\n",
+           aReflowState.availableWidth, aReflowState.availableHeight,
+           aReflowState.mComputedWidth, aReflowState.mComputedHeight);
+    gNoiseIndent++;
+  }
+#endif
+
   if (IsFrameTreeTooDeep(aReflowState, aMetrics)) {
 #ifdef DEBUG_kipp
     {
@@ -1436,23 +1527,29 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
     }
   }
 
-#if defined(NOISY_FINAL_SIZE) || defined(NOISY_INCREMENTAL_REFLOW)
-#ifdef NOISY_INCREMENTAL_REFLOW
-  IndentBy(stdout, gNoiseIndent);
-#endif
-  ListTag(stdout);
-  printf(": availSize=%d,%d computed=%d,%d metrics=%d,%d carriedMargin=%d xmost=%d",
-         aReflowState.availableWidth, aReflowState.availableHeight,
-         aReflowState.mComputedWidth, aReflowState.mComputedHeight,
-         aMetrics.width, aMetrics.height,
-         aMetrics.mCarriedOutBottomMargin,
-         state.mKidXMost);
-  if (aMetrics.maxElementSize) {
-    printf(" maxElementSize=%d,%d",
-           aMetrics.maxElementSize->width,
-           aMetrics.maxElementSize->height);
+#ifdef DEBUG
+  if (gNoisy) {
+    gNoiseIndent--;
+    IndentBy(stdout, gNoiseIndent);
+    ListTag(stdout);
+    printf(": status=%x (%scomplete) metrics=%d,%d carriedMargin=%d",
+           aStatus, NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not ",
+           aMetrics.width, aMetrics.height,
+           aMetrics.mCarriedOutBottomMargin);
+    if (mState & NS_FRAME_OUTSIDE_CHILDREN) {
+      printf(" combinedArea={%d,%d,%d,%d}",
+             aMetrics.mCombinedArea.x,
+             aMetrics.mCombinedArea.y,
+             aMetrics.mCombinedArea.width,
+             aMetrics.mCombinedArea.height);
+    }
+    if (aMetrics.maxElementSize) {
+      printf(" maxElementSize=%d,%d",
+             aMetrics.maxElementSize->width,
+             aMetrics.maxElementSize->height);
+    }
+    printf("\n");
   }
-  printf("\n");
 #endif
   return rv;
 }
@@ -1828,9 +1925,12 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
   // so that we reflow it.
   if (line->IsBlock()) {
     line->MarkDirty();
-#ifdef NOISY_INCREMENTAL_REFLOW
-    ListTag(stdout);
-    printf(": mark line %p dirty\n", line);
+#ifdef DEBUG
+    if (gNoisyReflow) {
+      IndentBy(stdout, gNoiseIndent);
+      ListTag(stdout);
+      printf(": mark line %p dirty\n", line);
+    }
 #endif
   }
   else {
@@ -1838,16 +1938,22 @@ nsBlockFrame::PrepareChildIncrementalReflow(nsBlockReflowState& aState)
     // maybe pullup something from the line just affected.
     if (prevLine && !prevLine->IsBlock()) {
       prevLine->MarkDirty();
-#ifdef NOISY_INCREMENTAL_REFLOW
-      ListTag(stdout);
-      printf(": mark prev-line %p dirty\n", prevLine);
+#ifdef DEBUG
+      if (gNoisyReflow) {
+        IndentBy(stdout, gNoiseIndent);
+        ListTag(stdout);
+        printf(": mark prev-line %p dirty\n", prevLine);
+      }
 #endif
     }
     else {
       line->MarkDirty();
-#ifdef NOISY_INCREMENTAL_REFLOW
-      ListTag(stdout);
-      printf(": mark line %p dirty\n", line);
+#ifdef DEBUG
+      if (gNoisyReflow) {
+        IndentBy(stdout, gNoiseIndent);
+        ListTag(stdout);
+        printf(": mark line %p dirty\n", line);
+      }
 #endif
     }
   }
@@ -1944,11 +2050,33 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
     }
   }
 
+#ifdef DEBUG
+  if (gNoisyReflow) {
+    if (!tryAndSkipLines) {
+      const nsStyleText* mStyleText = (const nsStyleText*)
+        mStyleContext->GetStyleData(eStyleStruct_Text);
+      IndentBy(stdout, gNoiseIndent);
+      ListTag(stdout);
+      printf(": marking all lines dirty: reason=%d availWidth=%d textAlign=%d\n",
+             aState.mReflowState.reason,
+             aState.mReflowState.availableWidth,
+             mStyleText->mTextAlign);
+    }
+  }
+#endif
+
   nsLineBox* line = mLines;
   if (tryAndSkipLines) {
     // The line's bounds are relative to the border edge of the frame
     nscoord newAvailWidth = aState.mReflowState.mComputedBorderPadding.left +
                             aState.mReflowState.mComputedWidth;
+#ifdef DEBUG
+    if (gNoisyReflow) {
+      IndentBy(stdout, gNoiseIndent);
+      ListTag(stdout);
+      printf(": trying to avoid marking all lines dirty\n");
+    }
+#endif
     
     while (nsnull != line) {
       // We don't have to mark the line dirty if all of the following are true:
@@ -1962,6 +2090,20 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
           (!aState.mNoWrap && line->mNext && !line->HasBreak()) ||
           line->HasFloaters() || line->IsImpactedByFloater() ||
           (line->mBounds.XMost() > newAvailWidth)) {
+
+#ifdef DEBUG
+        if (gNoisyReflow) {
+          IndentBy(stdout, gNoiseIndent + 1);
+          printf("dirty: line=%p next=%p %s %s %s%s%s xmost=%d\n",
+                 line, line->mNext,
+                 line->IsBlock() ? "block" : "inline",
+                 aState.mNoWrap ? "no-wrap" : "wrapping",
+                 line->HasBreak() ? "has-break " : "",
+                 line->HasFloaters() ? "has-floaters " : "",
+                 line->IsImpactedByFloater() ? "impacted " : "",
+                 line->mBounds.XMost());
+        }
+#endif
 
         // We have to mark the line dirty
         line->MarkDirty();
@@ -2121,22 +2263,24 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   nsresult rv = NS_OK;
   PRBool keepGoing = PR_TRUE;
 
-#ifdef NOISY_INCREMENTAL_REFLOW
-  if (aState.mReflowState.reason == eReflowReason_Incremental) {
-    nsIReflowCommand::ReflowType type;
-    aState.mReflowState.reflowCommand->GetType(type);
-    IndentBy(stdout, gNoiseIndent);
-    ListTag(stdout);
-    printf(": incrementally reflowing dirty lines: type=%s(%d)",
-           kReflowCommandType[type], type);
+#ifdef DEBUG
+  if (gNoisyReflow) {
+    if (aState.mReflowState.reason == eReflowReason_Incremental) {
+      nsIReflowCommand::ReflowType type;
+      aState.mReflowState.reflowCommand->GetType(type);
+      IndentBy(stdout, gNoiseIndent);
+      ListTag(stdout);
+      printf(": incrementally reflowing dirty lines: type=%s(%d)",
+             kReflowCommandType[type], type);
+    }
+    else {
+      IndentBy(stdout, gNoiseIndent);
+      ListTag(stdout);
+      printf(": reflowing dirty lines");
+    }
+    printf(" computedWidth=%d\n", aState.mReflowState.mComputedWidth);
+    gNoiseIndent++;
   }
-  else {
-    IndentBy(stdout, gNoiseIndent);
-    ListTag(stdout);
-    printf(": reflowing dirty lines");
-  }
-  printf(" computedWidth=%d\n", aState.mReflowState.mComputedWidth);
-  gNoiseIndent++;
 #endif
 
   // Check whether this is an incremental reflow
@@ -2148,15 +2292,21 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   nsLineBox* line = mLines;
   nscoord deltaY = 0;
   while (nsnull != line) {
-#ifdef NOISY_INCREMENTAL_REFLOW
-    IndentBy(stdout, gNoiseIndent);
-    printf("line=%p mY=%d dirty=%s oldBounds=%d,%d,%d,%d deltaY=%d mPrevBottomMargin=%d\n",
-           line, aState.mY, line->IsDirty() ? "yes" : "no",
-           line->mBounds.x, line->mBounds.y,
-           line->mBounds.width, line->mBounds.height,
-           deltaY, aState.mPrevBottomMargin);
-    gNoiseIndent++;
+#ifdef DEBUG
+    if (gNoisyReflow) {
+      nsRect lca;
+      line->GetCombinedArea(&lca);
+      IndentBy(stdout, gNoiseIndent);
+      printf("line=%p mY=%d dirty=%s oldBounds={%d,%d,%d,%d} oldCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d\n",
+             line, aState.mY, line->IsDirty() ? "yes" : "no",
+             line->mBounds.x, line->mBounds.y,
+             line->mBounds.width, line->mBounds.height,
+             lca.x, lca.y, lca.width, lca.height,
+             deltaY, aState.mPrevBottomMargin);
+      gNoiseIndent++;
+    }
 #endif
+
     if (line->IsDirty()) {
       // Compute the dirty lines "before" YMost, after factoring in
       // the running deltaY value - the running value is implicit in
@@ -2200,18 +2350,20 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
         Invalidate(damageRect);
       }
     }
-#ifdef NOISY_INCREMENTAL_REFLOW
-    gNoiseIndent--;
-    IndentBy(stdout, gNoiseIndent);
-    printf("line=%p mY=%d newBounds=%d,%d,%d,%d deltaY=%d mPrevBottomMargin=%d combinedArea=%d,%d,%d,%d\n",
-           line, aState.mY,
-           line->mBounds.x, line->mBounds.y,
-           line->mBounds.width, line->mBounds.height,
-           deltaY, aState.mPrevBottomMargin,
-           line->mCombinedArea.x,
-           line->mCombinedArea.y,
-           line->mCombinedArea.width,
-           line->mCombinedArea.height);
+
+#ifdef DEBUG
+    if (gNoisyReflow) {
+      gNoiseIndent--;
+      nsRect lca;
+      line->GetCombinedArea(&lca);
+      IndentBy(stdout, gNoiseIndent);
+      printf("line=%p mY=%d newBounds={%d,%d,%d,%d} newCombinedArea={%d,%d,%d,%d} deltaY=%d mPrevBottomMargin=%d\n",
+             line, aState.mY,
+             line->mBounds.x, line->mBounds.y,
+             line->mBounds.width, line->mBounds.height,
+             lca.x, lca.y, lca.width, lca.height,
+             deltaY, aState.mPrevBottomMargin);
+    }
 #endif
 
     // If this is an inline frame then its time to stop
@@ -2299,12 +2451,14 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     aState.mY += metrics.height;
   }
 
-#ifdef NOISY_INCREMENTAL_REFLOW
-  gNoiseIndent--;
-  IndentBy(stdout, gNoiseIndent);
-  ListTag(stdout);
-  printf(": done reflowing dirty lines (status=%x)\n",
-         aState.mReflowStatus);
+#ifdef DEBUG
+  if (gNoisyReflow) {
+    gNoiseIndent--;
+    IndentBy(stdout, gNoiseIndent);
+    ListTag(stdout);
+    printf(": done reflowing dirty lines (status=%x)\n",
+           aState.mReflowStatus);
+  }
 #endif
 
   return rv;
@@ -2871,10 +3025,6 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 
   nsIFrame* frame = aLine->mFirstChild;
 
-  // When reflowing a block frame we always get the available space
-  aState.GetAvailableSpace();
-  aLine->SetLineIsImpactedByFloater(aState.IsImpactedByFloater());
-
   // Prepare the block reflow engine
   const nsStyleDisplay* display;
   frame->GetStyleData(eStyleStruct_Display,
@@ -2913,17 +3063,76 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
 #endif
   }
 
+  nscoord topMargin = 0;
+  if (applyTopMargin) {
+    // Precompute the blocks top margin value so that we can get the
+    // correct available space (there might be a floater that's
+    // already been placed below the aState.mPrevBottomMargin
+
+    // Setup a reflowState to get the style computed margin-top value
+
+    // Get reflow reason set correctly. It's possible that a child was
+    // created and then it was decided that it could not be reflowed
+    // (for example, a block frame that isn't at the start of a
+    // line). In this case the reason will be wrong so we need to check
+    // the frame state.
+    nsReflowReason reason = eReflowReason_Resize;
+    nsFrameState state;
+    frame->GetFrameState(&state);
+    if (NS_FRAME_FIRST_REFLOW & state) {
+      reason = eReflowReason_Initial;
+    }
+    else if (aState.mNextRCFrame == frame) {
+      reason = eReflowReason_Incremental;
+    }
+
+    // The availSpace here is irrelevant to our needs - all we want
+    // out if this setup is the margin-top value which doesn't depend
+    // on the childs available space.
+    nsSize availSpace(aState.mContentArea.width, NS_UNCONSTRAINEDSIZE);
+    nsHTMLReflowState reflowState(*aState.mPresContext, aState.mReflowState,
+                                  frame, availSpace, reason);
+
+    // Now compute the collapsed margin-top value
+    topMargin =
+      nsBlockReflowContext::ComputeCollapsedTopMargin(aState.mPresContext,
+                                                      reflowState);
+
+    // And collapse it with the previous bottom margin to get the final value
+    topMargin =
+      nsBlockReflowContext::MaxMargin(topMargin, aState.mPrevBottomMargin);
+
+    // Temporarily advance the running Y value so that the
+    // GetAvailableSpace method will return the right available
+    // space. This undone as soon as the margin is computed.
+    aState.mY += topMargin;
+  }
+
   // Compute the available space for the block
+  aState.GetAvailableSpace();
+  aLine->SetLineIsImpactedByFloater(aState.IsImpactedByFloater());
   nsSplittableType splitType = NS_FRAME_NOT_SPLITTABLE;
   frame->IsSplittable(splitType);
   nsRect availSpace;
   aState.ComputeBlockAvailSpace(frame, splitType, display, availSpace);
 
+  // Now put the Y coordinate back and flow the block letting the
+  // block reflow context compute the same top margin value we just
+  // computed (sigh).
+  if (topMargin) {
+    aState.mY -= topMargin;
+    availSpace.y -= topMargin;
+    if (NS_UNCONSTRAINEDSIZE != availSpace.height) {
+      availSpace.height += topMargin;
+    }
+  }
+
   // Reflow the block into the available space
   nsReflowStatus frameReflowStatus=NS_FRAME_COMPLETE;
   nsMargin computedOffsets;
-  rv = brc.ReflowBlock(frame, availSpace, applyTopMargin,
-                       aState.mPrevBottomMargin, aState.IsAdjacentWithTop(),
+  rv = brc.ReflowBlock(frame, availSpace,
+                       applyTopMargin, aState.mPrevBottomMargin,
+                       aState.IsAdjacentWithTop(),
                        computedOffsets, frameReflowStatus);
   if (NS_FAILED(rv)) {
     return rv;
@@ -3082,9 +3291,9 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // Tall bullets won't look particularly nice here...
         nsRect bbox;
         mBullet->GetRect(bbox);
-        nscoord topMargin = applyTopMargin ? collapsedBottomMargin : 0;
+        nscoord bulletTopMargin = applyTopMargin ? collapsedBottomMargin : 0;
         bbox.y = aState.BorderPadding().top + ascent -
-          metrics.ascent + topMargin;
+          metrics.ascent + bulletTopMargin;
         mBullet->SetRect(bbox);
       }
     }
@@ -4769,8 +4978,8 @@ nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
 
   // Reflow the floater
   nsReflowStatus frameReflowStatus;
-  nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE,
-                                0, isAdjacentWithTop,
+  nsresult rv = brc.ReflowBlock(floater, availSpace, PR_TRUE, 0,
+                                isAdjacentWithTop,
                                 aComputedOffsetsResult, frameReflowStatus);
   if (NS_FAILED(rv)) {
     return rv;
@@ -5150,8 +5359,8 @@ nsBlockReflowState::PlaceFloater(nsFloaterCache* aFloaterCache,
   // Now restore mY
   mY = saveY;
 
-#ifdef NOISY_INCREMENTAL_REFLOW
-  {
+#ifdef DEBUG
+  if (gNoisyReflow) {
     nsRect r;
     floater->GetRect(r);
     nsFrame::IndentBy(stdout, gNoiseIndent);
@@ -5185,10 +5394,12 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsFloaterCacheList& aList)
 void
 nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 {
-#ifdef NOISY_INCREMENTAL_REFLOW
-  nsFrame::IndentBy(stdout, gNoiseIndent);
-  printf("clear floaters: in: mY=%d aY=%d(%d)\n",
-         mY, aY, aY - BorderPadding().top);
+#ifdef DEBUG
+  if (gNoisyReflow) {
+    nsFrame::IndentBy(stdout, gNoiseIndent);
+    printf("clear floaters: in: mY=%d aY=%d(%d)\n",
+           mY, aY, aY - BorderPadding().top);
+  }
 #endif
 
 #ifdef NOISY_FLOATER_CLEARING
@@ -5201,9 +5412,11 @@ nsBlockReflowState::ClearFloaters(nscoord aY, PRUint8 aBreakType)
   mY = newY + bp.top;
   GetAvailableSpace();
 
-#ifdef NOISY_INCREMENTAL_REFLOW
-  nsFrame::IndentBy(stdout, gNoiseIndent);
-  printf("clear floaters: out: mY=%d(%d)\n", mY, mY - bp.top);
+#ifdef DEBUG
+  if (gNoisyReflow) {
+    nsFrame::IndentBy(stdout, gNoiseIndent);
+    printf("clear floaters: out: mY=%d(%d)\n", mY, mY - bp.top);
+  }
 #endif
 }
 
