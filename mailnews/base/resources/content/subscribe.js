@@ -35,7 +35,7 @@ function SetServerTypeSpecificTextValues()
 	// XXX todo, fix this hack
 	// qi the server to get a nsISubscribable server
 	// and ask it for the delimiter
-	if (serverType == "news") {
+	if (serverType == "nntp") {
 		gFolderDelimiter = ".";
 	}
 	else {
