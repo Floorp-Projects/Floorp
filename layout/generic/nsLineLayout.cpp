@@ -206,6 +206,8 @@ nsLineLayout::TreatFrameAsBlock(const nsStyleDisplay* aDisplay,
   switch (aDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
   case NS_STYLE_DISPLAY_LIST_ITEM:
+  case NS_STYLE_DISPLAY_RUN_IN:
+  case NS_STYLE_DISPLAY_COMPACT:
   case NS_STYLE_DISPLAY_TABLE:
     return PR_TRUE;
   }
