@@ -39,6 +39,19 @@ function con_dusage (command)
     display (command.name + " " + command.usage, MT_ERROR);
 }
 
+console.doCommandNext =
+function con_next()
+{
+    if (!console.frames)
+    {
+        display (MSG_ERR_NO_STACK, MT_ERROR);
+        return false;
+    }
+
+    next();
+    return true;
+}
+
 console.doCommandStep =
 function con_step()
 {
@@ -49,6 +62,26 @@ function con_step()
     }
 
     step();
+    return true;
+}
+
+console.doCommandStepOut =
+function con_step()
+{
+    if (!console.frames)
+    {
+        display (MSG_ERR_NO_STACK, MT_ERROR);
+        return false;
+    }
+
+    stepOut();
+    return true;
+}
+
+console.doCommandToggleStop =
+function con_step()
+{
+    toggleStopState();
     return true;
 }
 
@@ -70,28 +103,15 @@ function con_ondt ()
 {
     var frame = getCurrentFrame();
     var url = frame.script.fileName;
-    
-    if (!console._sources[url])
-    {
-        function loaded ()
-        {
-            focusSource (url, frame.line);
-        }
-        loadSource (url, loaded);
-    }
-    else
-        focusSource (url, frame.line);
-
-    console._stackOutlinerView.setStack(console.frames);
-    console._stackOutlinerView.setCurrentFrame (getCurrentFrameIndex());
+    var sourceRec = console.scripts[url];
     enableDebugCommands()
+
 }
 
 console.onDebugContinue =
 function con_ondc ()
 {
-    console._stackOutlinerView.setStack(null);
-    console._sourceOutlinerView.setCurrentLine(null);
+    /* XXX */
 }
 
 console.onLoad =
@@ -109,16 +129,30 @@ function con_load (e)
     {
         window.alert (getMsg (MSN_ERR_STARTUP, formatException(ex)));
     }
-    
 }
 
 console.onFrameChanged =
 function con_fchanged (currentFrame, currentFrameIndex)
 {
+    var stack = console.stackView.stack;
+    
     if (currentFrame)
-        console._stackOutlinerView.setCurrentFrame (currentFrameIndex);
+    {
+        var frame = stack.childData[currentFrameIndex];
+        var vr = frame.calculateVisualRow();
+        console.stackView.selectedIndex = vr;
+        console.stackView.scrollTo (vr, 0);
+    }
     else
-        console._stackOutlinerView.setStack(null);
+    {
+        stack.close();
+        stack.childData = new Array();
+        stack.hide();
+    }
+
+    console.sourceView.outliner.invalidate();    /* invalidate to show the new 
+                                                  * currentLine */
+    return;
 }
 
 console.onInputCommand =
@@ -156,19 +190,22 @@ function con_icommand (e)
 console.onInputBreak =
 function cli_ibreak(e)
 {
+    var bplist = console.breakpoints.childData;
+    
     if (!e.inputData)
     {  /* if no input data, just list the breakpoints */
-        if (console._breakpoints.length == 0)
+        if (bplist.length == 0)
         {
             display (MSG_NO_BREAKPOINTS_SET);
             return true;
         }
-
-        display (getMsg(MSN_BP_HEADER, console._breakpoints.length));
-        for (var i = 0; i < console._breakpoints.length; ++i)
+        
+        display (getMsg(MSN_BP_HEADER, bplist.length));
+        for (var i = 0; i < bplist.length; ++i)
         {
-            var bp = console._breakpoints[i];
-            display (getMsg(MSN_BP_LINE, [i, bp.fileName, bp.line, bp.length]));
+            var bpr = bplist[i];
+            display (getMsg(MSN_BP_LINE, [i, bpr.fileName, bpr.line,
+                                          bpr.scriptMatches]));
         }
         return true;
     }
@@ -282,7 +319,7 @@ function con_ieval (e)
         {
             if (rv != null)
             {
-                refreshResultsArray();
+                refreshValues();
                 var l = $.length;
                 $[l] = rv;
                 display (getMsg(MSN_FMT_TMP_ASSIGN, [l, formatValue (rv)]),
@@ -377,6 +414,12 @@ function cli_ifclear (e)
     return true;
 }
 
+console.onInputFinish =
+function cli_ifinish (e)
+{
+    console.doCommand.stepOut();
+}
+
 console.onInputFrame =
 function con_iframe (e)
 {
@@ -390,11 +433,8 @@ function con_iframe (e)
     if (isNaN(idx))
         idx = getCurrentFrameIndex();
 
-    setCurrentFrameByIndex(idx);
-    
+    setCurrentFrameByIndex(idx);    
     displayFrame (console.frames[idx], idx, true);
-    focusSource (console.frames[idx].script.fileName, console.frames[idx].line);
-    
     return true;
 }
             
@@ -416,6 +456,12 @@ function cli_ihelp (e)
     }
 
     return true;    
+}
+
+console.onInputNext =
+function con_iwhere ()
+{
+    return console.doCommandNext();
 }
 
 console.onInputProps =
@@ -584,29 +630,105 @@ function con_slkeypress (e)
     }
 }
 
-console.onStackClick =
-function con_stackclick (e)
-{
-    var target = e.originalTarget;
-    
-    if (target.localName == "outlinerbody")
+console.onProjectSelect =
+function con_projsel (e)
+{    
+    var rowIndex = console.projectView.selectedIndex;
+    if (rowIndex == -1 || rowIndex > console.projectView.visualFootprint)
+        return;
+    var row =
+        console.projectView.childData.locateChildByVisualRow(rowIndex);
+    if (!row)
     {
-        var row = new Object();
-        var colID = new Object();
-        var childElt = new Object();
-        
-        var obo = console._stackOutliner.outlinerBoxObject;
-        obo.getCellAt(e.clientX, e.clientY, row, colID, childElt);
-        
-        colID = colID.value;
-        row = row.value;
-        
-        if (e.detail == 2 && console.frames)
+        ASSERT (0, "bogus row index " + rowIndex);
+        return;
+    }
+
+    if (row instanceof BPRecord)
+    {
+        var scriptRec = console.scripts[row.fileName];
+        if (!scriptRec)
         {
-            setCurrentFrameByIndex(row);
-            displayFrame (console.frames[row], row, true);
-            focusSource (console.frames[row].script.fileName,
-                         console.frames[row].line);
+            dd ("breakpoint in unknown source");
+            return;
+        }
+        
+        var sourceView = console.sourceView;
+        sourceView.displaySource (scriptRec);
+        sourceView.scrollTo (row.line - 3, -1);
+        if (sourceView.childData && sourceView.childData.isLoaded)
+        {
+            sourceView.outliner.selection.timedSelect (row.line - 1, 500);
+        }
+        else
+        {
+            sourceView.pendingSelect = row.line - 1;
+        }
+    }
+    else
+        dd ("not a bp record");
+}
+            
+console.onStackSelect =
+function con_stacksel (e)
+{
+    var rowIndex = console.stackView.selectedIndex;
+    if (rowIndex == -1 || rowIndex > console.stackView.visualFootprint)
+        return;
+    var row =
+        console.stackView.childData.locateChildByVisualRow(rowIndex);
+    if (!row)
+    {
+        ASSERT (0, "bogus row index " + rowIndex);
+        return;
+    }
+    
+    var source;
+    
+    var sourceView = console.sourceView;
+    if (row instanceof FrameRecord)
+    {        
+        var index = row.childIndex;
+        if (index != getCurrentFrameIndex())
+        {
+            setCurrentFrameByIndex(index);
+            displayFrame (console.frames[index], index, false);
+        }
+        source = console.scripts[row.frame.script.fileName];
+        if (!source)
+        {
+            dd ("frame from unknown source");
+            return;
+        }
+        sourceView.displaySource(source);
+        sourceView.softScrollTo(row.frame.line);
+    }
+    else if (row instanceof ValueRecord && row.jsType == jsdIValue.TYPE_OBJECT)
+    {
+        var objVal = row.value.objectValue;
+        if (!objVal.creatorURL)
+        {
+            dd ("object with no creator");
+            return;
+        }
+        
+        source = console.scripts[objVal.creatorURL];
+        if (!source)
+        {
+            dd ("object from unknown source");
+            return;
+        }
+
+        sourceView.displaySource(source);
+        sourceView.scrollTo (objVal.creatorLine);
+        if (sourceView.childData && sourceView.childData.isLoaded)
+        {
+            sourceView.outliner.selection.timedSelect (objVal.creatorLine -
+                                                       1, 500);
+        }
+        else
+        {
+            sourceView.pendingSelect = objVal.creatorLine - 1;
         }
     }
 }
@@ -614,46 +736,56 @@ function con_stackclick (e)
 console.onScriptClick =
 function con_scptclick (e)
 {
-    var target = e.originalTarget;
-    
-    if (target.localName == "outlinercol")
+    if (e.originalTarget.localName == "outlinercol")
     {
-        console._scriptsOutlinerView.toggleColumnMode();
-        console._scriptsOutlinerView.setScripts(console._scripts);
-    }
-    else if (e.detail == 2 && target.localName == "outlinerbody")
-    {
-        var row = new Object();
+        /* resort by column */
+        var rowIndex = new Object();
         var colID = new Object();
         var childElt = new Object();
         
-        var obo = console._scriptsOutliner.outlinerBoxObject;
-        obo.getCellAt(e.clientX, e.clientY, row, colID, childElt);
-        
-        row = row.value;
-        var fileName = console._scriptsOutlinerView.scripts[row].fileName;
-        
-        if (console._sources[fileName])
+        var obo = console.scriptsView.outliner;
+        obo.getCellAt(e.clientX, e.clientY, rowIndex, colID, childElt);
+        var prop;
+        switch (colID.value)
         {
-            focusSource(fileName, 0);
+            case "script-name":
+                prop = "functionName";
+                break;
+            case "script-line-start":
+                prop = "baseLineNumber";
+                break;
+            case "script-line-extent":
+                prop = "lineExtent";
+                break;
         }
-        else
-        {
-            function cb (data, url)
-            {
-                focusSource(url, 0);
-            }
-            loadSource (fileName, cb);
-        }
-    }
 
+        var scriptsRoot = console.scriptsView.childData;
+        var dir = (prop == scriptsRoot._share.sortColumn) ?
+            scriptsRoot._share.sortDirection * -1 : 1;
+        dd ("sort direction is " + dir);
+        scriptsRoot.setSortColumn (prop, dir);
+    }
+}
+
+console.onScriptSelect =
+function con_scptsel (e)
+{
+    var rowIndex = console.scriptsView.selectedIndex;
+    dd ("rowindex is " + rowIndex);
+    if (rowIndex == -1 || rowIndex > console.stackView.childData.length)
+        return;
+    var row =
+        console.scriptsView.childData.locateChildByVisualRow(rowIndex);
+    ASSERT (row, "bogus row");
+    
+    row.makeCurrent();
 }
 
 console.onScriptCreated =
 function con_scptcreate (script)
 {
-    if (script.functionName)
-        console._scriptsOutlinerView.setScripts(console._scripts);
+    //    if (script.functionName)
+    //    console._scriptsOutlinerView.setScripts(console._scripts);
 }
 
 console.onSourceClick =
@@ -667,8 +799,8 @@ function con_sourceclick (e)
         var colID = new Object();
         var childElt = new Object();
         
-        var obo = console._sourceOutliner.outlinerBoxObject;
-        obo.getCellAt(e.clientX, e.clientY, row, colID, childElt);
+        var outliner = console.sourceView.outliner;
+        outliner.getCellAt(e.clientX, e.clientY, row, colID, childElt);
         
         colID = colID.value;
         row = row.value;
@@ -676,27 +808,18 @@ function con_sourceclick (e)
         if (colID == "breakpoint-col")
         {
             var line = row + 1;
-            var url = console._sourceOutlinerView.url;
+            var url = console.sourceView.childData.fileName;
             if (url)
             {
                 if (getBreakpoint(url, line))
                 {
                     clearBreakpoint (url, line);
-                    if (isFutureBreakpoint (url, line))
-                        clearFutureBreakpoint (url, line);
-                }
-                else if (isFutureBreakpoint (url, line))
-                {
-                    clearFutureBreakpoint (url, line);
                 }
                 else
                 {
-                    if (console._scripts[url])
-                        setBreakpoint (url, line);
-                    else
-                        setFutureBreakpoint (url, line);
+                    setBreakpoint (url, line);
                 }
-                obo.invalidateRow(row);
+                outliner.invalidateRow(row);
             }
         }
     }
@@ -805,9 +928,8 @@ console.onUnload =
 function con_unload (e)
 {
     dd ("Application venkman, 'JavaScript Debugger' unloading.");
-    
-    detachDebugger();
-    
+
+    destroy();
     return true;
 }
 
