@@ -51,6 +51,7 @@
 #include "nsIMsgFolderCacheElement.h"
 #include "nsTextFormatter.h"
 #include "nsIPref.h"
+#include "nsMsgUtf7Utils.h"
 
 #include "nsIMsgFilter.h"
 #include "nsImapMoveCoalescer.h"
@@ -5618,8 +5619,14 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
 
         //Now let's create the actual new folder
         rv = AddSubfolderWithPath(&folderNameStr, dbFileSpec, getter_AddRefs(child));
+        if (!child || NS_FAILED(rv)) return rv;
+        nsXPIDLString unicodeName;
+        rv = CreateUnicodeStringFromUtf7(proposedDBName, getter_Copies(unicodeName));
+        if (NS_SUCCEEDED(rv) && unicodeName)
+          child->SetName(unicodeName);
 
         imapFolder = do_QueryInterface(child);
+
         if (imapFolder)
 		{
           nsCAutoString onlineName(m_onlineFolderName); 
@@ -5640,11 +5647,9 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient( nsIMsgFolder *msgFolder, const cha
              folderInfo->SetMailboxName(&unicodeOnlineName);
            }
         }
-
         unusedDB->SetSummaryValid(PR_TRUE);
         unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
         unusedDB->Close(PR_TRUE);
-
 	    imapFolder->RenameSubfolders(msgFolder);
 	  }
     }
@@ -5732,9 +5737,14 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubfolders(nsIMsgFolder *oldFolder)
      nsAutoString currentFolderNameStr;
      currentFolderNameStr.AssignWithConversion(leafName);
      nsAutoString utf7LeafName = currentFolderNameStr;
+     nsXPIDLString unicodeName;
 
-     AddSubfolderWithPath(&utf7LeafName, dbFileSpec, getter_AddRefs(child));
-	 
+     rv = AddSubfolderWithPath(&utf7LeafName, dbFileSpec, getter_AddRefs(child));
+     
+     if (!child || NS_FAILED(rv)) return rv;
+     rv = CreateUnicodeStringFromUtf7(leafName, getter_Copies(unicodeName));
+     if (NS_SUCCEEDED(rv) && unicodeName)
+       child->SetName(unicodeName);
      nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(child);
      nsXPIDLCString onlineName;
      GetOnlineName(getter_Copies(onlineName));
