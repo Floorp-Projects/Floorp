@@ -16,8 +16,6 @@
  * Reserved.
  */
 
-#include "nsCoord.h"
-
 // this class is used to gather caret properties from the OS. It
 // must be implemented by each platform that wants more than
 // the generic caret properties.
@@ -30,7 +28,7 @@ class nsCaretProperties
 												nsCaretProperties();
 		virtual							~nsCaretProperties() {}
 	
-		virtual nscoord			GetCaretWidth() 		{ return mCaretWidth; }
+		virtual PRUint32		GetCaretWidth() 		{ return mCaretWidth; }
 		virtual PRUint32		GetCaretBlinkRate()	{ return mBlinkRate; }
 		
 		
@@ -40,11 +38,11 @@ class nsCaretProperties
 	
 		enum {
 			eDefaulBlinkRate					= 500,		// twice a second
-			eDetaultCaretWidthTwips		= 20			// one pixel wide
+			eDefaultCaretWidth				= 1				// one pixel wide
 		};
 
 
-		nscoord					mCaretWidth;			// caret width in twips
+		PRUint32				mCaretWidth;			// caret width in twips
 		PRUint32				mBlinkRate;				// blink rate in milliseconds
 		
 		
