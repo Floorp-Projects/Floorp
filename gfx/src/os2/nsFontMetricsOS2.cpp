@@ -811,6 +811,7 @@ nsFontMetricsOS2::FindUserDefinedFont( HPS aPS )
 {
   if (mIsUserDefined) {
     nsFontOS2* font = LoadFont( aPS, &mUserDefined );
+    mIsUserDefined = PR_FALSE;
     if( font )
       return font;
   }

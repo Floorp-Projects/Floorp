@@ -5789,6 +5789,7 @@ nsFontMetricsGTK::FindUserDefinedFont(PRUint32 aChar)
   if (mIsUserDefined) {
     FIND_FONT_PRINTF(("        FindUserDefinedFont"));
     nsFontGTK* font = TryNode(&mUserDefined, aChar);
+    mIsUserDefined = PR_FALSE;
     if (font) {
       NS_ASSERTION(font->SupportsChar(aChar), "font supposed to support this char");
       return font;
