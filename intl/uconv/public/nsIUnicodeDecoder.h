@@ -28,6 +28,10 @@
 NS_DECLARE_ID(kIUnicodeDecoderIID,
   0xb2f178e1, 0x832a, 0x11d2, 0x8a, 0x8e, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36);
 
+#define NS_IUNICODEDECODER_IID	\
+	{ 0xb2f178e1, 0x832a, 0x11d2,	\
+		{ 0x8a, 0x8e, 0x0, 0x60, 0x8, 0x11, 0xa8, 0x36 }}
+
 // XXX deprecated
 /*---------- BEGIN DEPRECATED */ 
 #define NS_EXACT_LENGTH \
@@ -68,6 +72,7 @@ NS_DECLARE_ID(kIUnicodeDecoderIID,
 class nsIUnicodeDecoder : public nsISupports
 {
 public:
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_IUNICODEDECODER_IID)
 
   enum {
     kOnError_Recover,       // on an error, recover and continue
