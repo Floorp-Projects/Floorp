@@ -201,8 +201,9 @@ nsToolbarFrame :: ~nsToolbarFrame ( )
   GetContent(getter_AddRefs(content));
   nsCOMPtr<nsIDOMEventReceiver> reciever(do_QueryInterface(content));
 
-  // NOTE: the Remove will delete the drag listener
-  reciever->RemoveEventListenerByIID((nsIDOMDragListener *)mDragListener, nsIDOMDragListener::GetIID());
+  // NOTE: the last Remove will delete the drag listener
+  reciever->RemoveEventListener("dragover", mDragListener, PR_TRUE);
+  reciever->RemoveEventListener("dragexit", mDragListener, PR_TRUE);
 }
 
 
