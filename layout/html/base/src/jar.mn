@@ -1,3 +1,4 @@
 en-US.jar:
 	locale/en-US/global/printing.properties
+	locale/en-US/global/layout_errors.properties
 
