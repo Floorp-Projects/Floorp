@@ -88,13 +88,13 @@ Rights Reserved.
 <!ENTITY showFoldersCmd.label				"Folders">  
 <!ENTITY sortMenu.label "Sort"> 
 <!ENTITY sortByDateCmd.label "by Date">  
-<!ENTITY sortByFlagCmd.label ".by Flag">  
-<!ENTITY sortByPriorityCmd.label ".by Priority">  
+<!ENTITY sortByFlagCmd.label "by Flag">  
+<!ENTITY sortByPriorityCmd.label "by Priority">  
 <!ENTITY sortBySenderCmd.label "by Sender">  
-<!ENTITY sortBySizeCmd.label ".by Size">  
+<!ENTITY sortBySizeCmd.label "by Size">  
 <!ENTITY sortByStatusCmd.label "by Status">  
 <!ENTITY sortBySubjectCmd.label "by Subject">  
-<!ENTITY sortByThreadCmd.label ".by Thread">  
+<!ENTITY sortByThreadCmd.label "by Thread">  
 <!ENTITY sortByUnreadCmd.label ".by Unread">  
 <!ENTITY sortByOrderReceivedCmd.label ".by Order Received">  
 <!ENTITY sortAscendCmd.label ".Ascending">  
@@ -106,10 +106,10 @@ Rights Reserved.
 <!ENTITY threadsWithUnreadMsgsCmd.label ".Threads with Unread">  
 <!ENTITY watchedThreadsMsgsCmd.label ".Watched Threads with Unread">  
 <!ENTITY ignoreThreadMsgsCmd.label ".Ignore Thread">  
-<!ENTITY headersMenu.label ".Headers"> 
-<!ENTITY headersAllCmd.label ".All">  
-<!ENTITY headersNormalCmd.label ".Normal">  
-<!ENTITY headersBriefCmd.label ".Brief">  
+<!ENTITY headersMenu.label "Headers"> 
+<!ENTITY headersAllCmd.label "All">  
+<!ENTITY headersNormalCmd.label "Normal">  
+<!ENTITY headersBriefCmd.label "Brief">  
 <!ENTITY viewAttachmentsInlineCmd.label ".View Attachments Inline">  
 <!ENTITY wrapLongLinesCmd.label ".Wrap Long Lines">  
 <!ENTITY increaseFontCmd.label ".Enlarge Text Size">

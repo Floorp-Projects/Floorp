@@ -28,6 +28,9 @@ var msgComposeType = Components.interfaces.nsIMsgCompType;
 var msgComposFormat = Components.interfaces.nsIMsgCompFormat;
 var Bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
 
+var prefs = Components.classes['component://netscape/preferences'].getService();
+prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+
 // Controller object for folder pane
 var FolderPaneController =
 {
@@ -221,13 +224,6 @@ var viewShowRead = 1;
 var viewShowUnread =2;
 var viewShowWatched = 3;
 
-
-function MsgLoadNewsMessage(url)
-{
-  dump("\n\nMsgLoadNewsMessage from XUL\n");
-  OpenURL(url);
-}
-
 function MsgHome(url)
 {
   window.open( url, "_blank", "chrome,dependent=yes,all" );
@@ -326,8 +322,6 @@ function MsgReplyToAllMessage(event)
 function MsgForwardMessage(event)
 {
   dump("\nMsgForwardMessage from XUL\n");
-  var prefs = Components.classes['component://netscape/preferences'].getService();
-  prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
   var forwardType = 0;
   try {
   	var forwardType = prefs.GetIntPref("mail.forward_message_mode");
@@ -449,6 +443,48 @@ function MsgSortByStatus()
 function MsgSortBySubject()
 {
 	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');
+}
+
+function MsgSortByFlagged() 
+{
+	SortThreadPane('FlaggedButtonColumn', 'http://home.netscape.com/NC-rdf#Flagged');
+}
+function MsgSortByPriority()
+{
+	SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority');
+}
+function MsgSortBySize() 
+{
+	SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size');
+}
+function MsgSortByThread()
+{
+	ChangeThreadView()
+}
+function MsgSortByUnread()
+{
+	SortThreadPane('UnreadButtonColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages');
+}
+function MsgSortByOrderReceived()
+{
+	dump("not implemented yet.\n");
+}
+function MsgSortAscending() 
+{
+	dump("not implemented yet.\n");
+}
+function MsgSortDescending()
+{
+	dump("not implemented yet.\n");
+}
+function MsgSortByRead()
+{
+	dump("not implemented yet.\n");
+}
+
+function MsgSortByTotal()
+{
+	SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages');
 }
 
 function MsgNewFolder()
@@ -758,25 +794,36 @@ function MsgShowFolders()
 function MsgFolderProperties() {}
 
 function MsgShowLocationbar() {}
-function MsgSortByFlag() {}
-function MsgSortByPriority() {}
-function MsgSortBySize() {}
-function MsgSortByThread() {}
-function MsgSortByUnread() {}
-function MsgSortByOrderReceived() {}
-function MsgSortAscending() {}
-function MsgSortDescending() {}
 function MsgViewThreadsUnread() {}
 function MsgViewWatchedThreadsUnread() {}
 function MsgViewIgnoreThread() {}
-function MsgViewAllHeaders() {}
-function MsgViewNormalHeaders() {}
-function MsgViewBriefHeaders() {}
+
+function MsgViewAllHeaders() 
+{
+	prefs.SetIntPref("mail.show_headers",2);
+	MsgReload()
+}
+function MsgViewNormalHeaders() 
+{
+	prefs.SetIntPref("mail.show_headers",1);
+	MsgReload()
+}
+function MsgViewBriefHeaders() 
+{
+	prefs.SetIntPref("mail.show_headers",0);
+	MsgReload()
+}
+
 function MsgViewAttachInline() {}
 function MsgWrapLongLines() {}
 function MsgIncreaseFont() {}
 function MsgDecreaseFont() {}
-function MsgReload() {}
+
+function MsgReload() 
+{
+	ThreadPaneSelectionChange()
+}
+
 function MsgShowImages() {}
 function MsgRefresh() {}
 function MsgViewPageSource() {}

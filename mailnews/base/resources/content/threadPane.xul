@@ -84,16 +84,16 @@ Rights Reserved.
   <treehead>
     <treerow id="headRow">
 		<treecell display="Thread" onclick="return top.ChangeThreadView();" class='threadColumnHeader' id="ThreadColumnHeader"/> 
-		<treecell value="&subjectColumn.label;" onclick="return top.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');"/>
-		<treecell onclick="return top.SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender');" value="&senderColumn.label;"/>
-		<treecell display="Read" class="readColumnHeader"/> 
-		<treecell value="&dateColumn.label;" onclick="return top.SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date');"/>
-		<treecell value="&priorityColumn.label;" onclick="return top.SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority');"/>
-		<treecell display="Flag" class="flagColumnHeader"/> 
-		<treecell value="&statusColumn.label;" onclick="return top.SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status');"/>
-		<treecell value="&sizeColumn.label;" onclick="return top.SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size');"/>
-		<treecell value="&unreadColumn.label;" onclick="return top.SortThreadPane('UnreadColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages');"/>
-		<treecell value="&totalColumn.label;" onclick="return top.SortThreadPane('TotalColumn', 'http://home.netscape.com/NC-rdf#TotalMessages');"/>
+		<treecell value="&subjectColumn.label;" onclick="return top.MsgSortBySubject();"/>
+		<treecell onclick="return top.MsgSortBySender();" value="&senderColumn.label;"/>
+		<treecell display="Read" onclick="return top.MsgSortByRead();" class="readColumnHeader"/> 
+		<treecell value="&dateColumn.label;" onclick="return top.MsgSortByDate();"/>
+		<treecell value="&priorityColumn.label;" onclick="return top.MsgSortByPriority();"/>
+		<treecell display="Flag" onclick="return top.MsgSortByFlagged();" class="flagColumnHeader"/>
+		<treecell value="&statusColumn.label;" onclick="return top.MsgSortByStatus();"/>
+		<treecell value="&sizeColumn.label;" onclick="return top.MsgSortBySize();"/>
+		<treecell value="&unreadColumn.label;" onclick="return top.MsgSortByUnread();"/>
+		<treecell value="&totalColumn.label;" onclick="return top.MsgSortByTotal();"/>
 		<treecell allowevents="true" id="popupCell">
 		  <menu>
 		    <titledbutton src="chrome://global/skin/opentwisty.gif"/>
