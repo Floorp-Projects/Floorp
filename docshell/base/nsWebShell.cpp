@@ -1147,10 +1147,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
       }
 
       rv = NS_OpenURI(getter_AddRefs(pChannel), aUri, pNetService, loadGroup, requestor, aType);
-      if (NS_SUCCEEDED(rv)) {
-        // XXX wrong, but needed for now:
-        rv = pChannel->SetOriginalURI(referrer ? referrer.get() : aUri);  
-      }
       if (NS_FAILED(rv)) {
         if (rv == NS_ERROR_DOM_RETVAL_UNDEFINED) // if causing the channel changed the 
           return NS_OK;                        // dom and there is nothing else to do
@@ -2328,7 +2324,7 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
        if (NS_SUCCEEDED(rv)) {
          urlString = spec;
          if (nsnull != mContainer) {
-            rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), 0);
+            rv = mContainer->EndLoadURL(this, urlString.GetUnicode(), aStatus);
          }
          nsCRT::free(spec);
        }
