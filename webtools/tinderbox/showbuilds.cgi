@@ -996,11 +996,11 @@ sub do_hdml {
 
 sub do_vxml {
   print "Content-type: text/vxml\n\n";
-  print '<?xml version="1.0"?><!DOCTYPE vxml>';
+  print '<?xml version="1.0"?><!DOCTYPE vxml PUBLIC "-//Tellme Networks//Voice Markup Language 1.0//EN" "http://resources.tellme.com/toolbox/vxml-tellme.dtd">\n\n';
 
   %state_symbols = (success=>'green',busted=>'red',testfailed=>'test failed');
 
-  print "<vxml><block><form>";
+  print "<vxml><block><form>\n\n";
 
   if (is_tree_state_available()) {
     print "<audio>$::tree is " .
@@ -1010,9 +1010,9 @@ sub do_vxml {
   tb_loadquickparseinfo($::tree, \%build, \%times);
 
   foreach my $buildname (sort keys %build) {
-    print "<pause>100</pause>";
-    print "<audio>$buildname is $state_symbols{$build{$buildname}} </audio>";
+    print "<pause>500</pause>\n";
+    print "<audio>$buildname is $state_symbols{$build{$buildname}} </audio>\n";
   }
-  print "<pause>200</pause><audio>adios</audio>";
+  print "<pause>1000</pause><audio>adios</audio>\n\n";
   print "</form></block></vxml>";
 }
