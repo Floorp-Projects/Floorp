@@ -322,7 +322,7 @@ PluginViewerImpl::CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds,
 
     char* ct = mContentType.ToNewCString();
     nsAutoString str = fullurl;
-    rv = aHost->InstantiatePlugin(ct, str, aResult, mOwner);
+    rv = aHost->InstantiateFullPagePlugin(ct, str, aResult, mOwner);
     delete fullurl;
     delete ct;
   }
