@@ -45,6 +45,9 @@ static uint32 zero_methods_descriptor;
 //////////////////////////////////////////////////////////////////////////////////////////////////
 //  nsProxyEventClass
 //////////////////////////////////////////////////////////////////////////////////////////////////
+
+static NS_DEFINE_IID(kProxyEventClassIID, NS_PROXYEVENT_CLASS_IID);
+
 NS_IMPL_ISUPPORTS(nsProxyEventClass, kProxyEventClassIID)
 
 // static
@@ -61,7 +64,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
         return nsnull;
     }
 
-    nsProxyEventClass* clazz = nsnull;
+    nsProxyEventClass* clazz = NULL;
     nsIDKey key(aIID);
 
     if(iidToClassMap->Exists(&key))
@@ -71,20 +74,22 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
     }
     else
     {
-        nsCOMPtr<nsIInterfaceInfoManager> iimgr = getter_AddRefs(XPTI_GetInterfaceInfoManager());
-        if(iimgr)
+        nsIInterfaceInfoManager* iimgr;
+        if(NULL != (iimgr = XPTI_GetInterfaceInfoManager()))
         {
-            nsCOMPtr<nsIInterfaceInfo> info;
-            if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, getter_AddRefs(info))))
+            nsIInterfaceInfo* info;
+            if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, &info)))
             {
                 /* 
                    Check to see if isISupportsDescendent 
                 */
-                nsCOMPtr<nsIInterfaceInfo> oldest = info;
-                nsCOMPtr<nsIInterfaceInfo> parent;
+                nsIInterfaceInfo* oldest = info;
+                nsIInterfaceInfo* parent;
 
-                while(NS_SUCCEEDED(oldest->GetParent(getter_AddRefs(parent))))
+                NS_ADDREF(oldest);
+                while(NS_SUCCEEDED(oldest->GetParent(&parent)))
                 {
+                    NS_RELEASE(oldest);
                     oldest = parent;
                 }
 
@@ -95,7 +100,8 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
                     isISupportsDescendent = iid->Equals(nsCOMTypeInfo<nsISupports>::GetIID());
                     nsAllocator::Free(iid);
                 }
-                
+                NS_RELEASE(oldest);
+               
                 NS_VERIFY(isISupportsDescendent,"!isISupportsDescendent");
 
                 if (isISupportsDescendent)  
@@ -104,25 +110,24 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
                     if(!clazz->mDescriptors)
                         NS_RELEASE(clazz);  // sets clazz to NULL
                 }
+                NS_RELEASE(info);
             }
+            NS_RELEASE(iimgr);
         }
     }
     return clazz;
 }
 
-nsProxyEventClass::nsProxyEventClass()
-{
-    NS_WARNING("This constructor should never be called");
-}
 
 nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
-: mIID(aIID),
+: mInfo(aInfo),
+  mIID(aIID),
   mDescriptors(NULL)
 {
+    NS_ADDREF(mInfo);
+
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
-    
-    mInfo = aInfo;
 
     /* add use to the used classes */
     nsIDKey key(aIID);
@@ -167,6 +172,8 @@ nsProxyEventClass::~nsProxyEventClass()
     {
         iidToClassMap->Remove(&key);
     }
+    
+    NS_RELEASE(mInfo);
 }
 
 nsresult
@@ -211,9 +218,10 @@ nsProxyEventClass::CallQueryInterfaceOnProxy(nsProxyEventObject* self, REFNSIID 
 // This 'ProxyEventClassIdentity' class and singleton allow us to figure out if
 // any given nsISupports* is implemented by a nsProxy object. This is done
 // using a QueryInterface call on the interface pointer with our ID. If
-// that call returns NS_OK and the pointer is to a nsProxyEventObject.  It must
-// be released when done.
-
+// that call returns NS_OK and the pointer is to our singleton, then the
+// interface must be implemented by a nsProxy object. NOTE: the
+// 'ProxyEventClassIdentity' object is not a real XPCOM object and should not be
+// used for anything else 
 // NS_PROXYEVENT_IDENTITY_CLASS_IID defined in nsProxyEventPrivate.h
 class ProxyEventClassIdentity
 {
@@ -235,47 +243,24 @@ nsProxyEventClass::DelegatedQueryInterface(nsProxyEventObject* self,
                                           REFNSIID aIID,
                                           void** aInstancePtr)
 {
-    
-    if(aIID.Equals(ProxyEventClassIdentity::GetIID()))
+    if(NULL == aInstancePtr)
     {
-        *aInstancePtr = (void**)self;  //todo this should be a static cast
+        NS_PRECONDITION(0, "null pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    if(aIID.Equals(self->GetIID()))
+    {
+        *aInstancePtr = (void*) self;
         NS_ADDREF(self);
         return NS_OK;
     }
-
-    nsProxyEventObject* sibling;
-   
-    // This includes checking for nsISupports and the iid of self.
-    // And it also checks for other wrappers that have been constructed
-    // for this object.
-    if(nsnull != (sibling = self->Find(aIID)))
+    
+    if(aIID.Equals(ProxyEventClassIdentity::GetIID()))
     {
-        NS_ADDREF(sibling);
-        *aInstancePtr = (void*) sibling;
+        *aInstancePtr = ProxyEventClassIdentity::GetSingleton();
         return NS_OK;
     }
-
-    // check if asking for an interface that we inherit from
-    nsCOMPtr<nsIInterfaceInfo> current = GetInterfaceInfo();
-    nsCOMPtr<nsIInterfaceInfo> parent;
-
-    while(NS_SUCCEEDED(current->GetParent(getter_AddRefs(parent))) && parent)
-    {
-        current = parent;
-
-        nsIID* iid;
-        if(NS_SUCCEEDED(current->GetIID(&iid)) && iid)
-        {
-            PRBool found = aIID.Equals(*iid);
-            nsAllocator::Free(iid);
-            if(found)
-            {
-                *aInstancePtr = (void*) self;
-                NS_ADDREF(self);
-                return NS_OK;
-            }
-        }
-    }
-
+    
     return CallQueryInterfaceOnProxy(self, aIID, (nsProxyEventObject**)aInstancePtr);
 }
