@@ -276,6 +276,14 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 		short			vOffset;
 		switch (borderStyle)
 		{
+			case eBorderStyle_BorderlessTopLevel:
+			    // (pinkerton)
+			    // Added very very early support for |eBorderStyle_BorderlessTopLevel| but
+			    // it isn't correct because it takes the focus away from the main window
+			    // The main window must remain active.
+			    //
+			    // ...fall through...
+			    
 			case eBorderStyle_none:
 				wDefProcID = plainDBox;
 				goAwayFlag = false;
