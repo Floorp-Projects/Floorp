@@ -6,4 +6,6 @@ config.status
 .client-defs.mk
 config-defs.h
 .mozconfig
+.mozconfig.mk
+.mozconfig.out
 a.out
