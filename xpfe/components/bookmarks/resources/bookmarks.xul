@@ -37,6 +37,7 @@
   >
 
   <html:script src="chrome://bookmarks/content/bookmarks.js"/>
+  <html:script src="chrome://bookmarks/content/bookmarksDD.js"/>
 
   <menubar>
     <menu value="&menu.file.label;">
