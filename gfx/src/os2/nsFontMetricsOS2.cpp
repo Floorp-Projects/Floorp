@@ -1021,15 +1021,15 @@ nsFontMetricsOS2::InitializeGlobalFonts(HPS aPS)
       nsGlobalFont* font = &gGlobalFonts[gGlobalFontsCount];
       gGlobalFontsCount++;
 
-//      PRUnichar name[FACESIZE*2];
-//      name[0] = 0;
-//      strcpy(name, pFontMetrics[i].szFamilyname);
-      font->name = new nsString();
+      PRUnichar name[FACESIZE];
+      name[0] = 0;
+      MultiByteToWideChar(0, pFontMetrics[i].szFamilyname,
+         strlen(pFontMetrics[i].szFamilyname) + 1, name, sizeof(name)/sizeof(name[0]));
+      font->name = new nsString(name);
       if (!font->name) {
         gGlobalFontsCount--;
         continue;
       }
-      font->name->AssignWithConversion(pFontMetrics[i].szFamilyname);
       font->map = nsnull;
       font->fontMetrics = pFontMetrics[i];
       font->skip = 0;
