@@ -87,15 +87,15 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                                         Undefined.instance,
                                         ScriptableObject.DONTENUM);
 
-        String[] errorMethods = { "ConversionError",
-                                  "EvalError",
-                                  "RangeError",
-                                  "ReferenceError",
-                                  "SyntaxError",
-                                  "TypeError",
-                                  "URIError",
-                                  "InternalError"
-                                };
+        String[] errorMethods = ScriptRuntime.splitSC(""
+                                    +"ConversionError;"
+                                    +"EvalError;"
+                                    +"RangeError;"
+                                    +"ReferenceError;"
+                                    +"SyntaxError;"
+                                    +"TypeError;"
+                                    +"URIError;"
+                                    +"InternalError;");
 
         /*
             Each error constructor gets its own Error object as a prototype,
@@ -129,16 +129,16 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         if (scopeSlaveFlag) {
             switch (methodId) {
                 case Id_decodeURI:
-                    return js_decodeURI(cx, args);
-
-                case Id_decodeURIComponent:
-                    return js_decodeURIComponent(cx, args);
+                case Id_decodeURIComponent: {
+                    String str = ScriptRuntime.toString(args, 0);
+                    return decode(cx, str, methodId == Id_decodeURI);
+                }
 
                 case Id_encodeURI:
-                    return js_encodeURI(cx, args);
-
-                case Id_encodeURIComponent:
-                    return js_encodeURIComponent(cx, args);
+                case Id_encodeURIComponent: {
+                    String str = ScriptRuntime.toString(args, 0);
+                    return encode(cx, str, methodId == Id_encodeURI);
+                }
 
                 case Id_escape:
                     return js_escape(cx, args);
@@ -146,11 +146,23 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 case Id_eval:
                     return js_eval(cx, scope, args);
 
-                case Id_isFinite:
-                    return js_isFinite(cx, args);
+                case Id_isFinite: {
+                    if (args.length < 1)
+                        return Boolean.FALSE;
+                    double d = ScriptRuntime.toNumber(args[0]);
+                    return (d != d || d == Double.POSITIVE_INFINITY ||
+                            d == Double.NEGATIVE_INFINITY)
+                           ? Boolean.FALSE
+                           : Boolean.TRUE;
+                }
 
-                case Id_isNaN:
-                    return js_isNaN(cx, args);
+                case Id_isNaN: {
+                     // The global method isNaN, as per ECMA-262 15.1.2.6.
+                    if (args.length < 1)
+                        return Boolean.TRUE;
+                    double d = ScriptRuntime.toNumber(args[0]);
+                    return (d != d) ? Boolean.TRUE : Boolean.FALSE;
+                }
 
                 case Id_parseFloat:
                     return js_parseFloat(cx, args);
@@ -441,27 +453,6 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         return s;
     }
 
-    /**
-     * The global method isNaN, as per ECMA-262 15.1.2.6.
-     */
-
-    private Object js_isNaN(Context cx, Object[] args) {
-        if (args.length < 1)
-            return Boolean.TRUE;
-        double d = ScriptRuntime.toNumber(args[0]);
-        return (d != d) ? Boolean.TRUE : Boolean.FALSE;
-    }
-
-    private Object js_isFinite(Context cx, Object[] args) {
-        if (args.length < 1)
-            return Boolean.FALSE;
-        double d = ScriptRuntime.toNumber(args[0]);
-        return (d != d || d == Double.POSITIVE_INFINITY ||
-                d == Double.NEGATIVE_INFINITY)
-               ? Boolean.FALSE
-               : Boolean.TRUE;
-    }
-
     private Object js_eval(Context cx, Scriptable scope, Object[] args)
         throws JavaScriptException
     {
@@ -690,7 +681,7 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                         C = (char)ucs4Char;
                     }
                 }
-                if (fullUri && fullUriDecodeReserved(C)) {
+                if (fullUri && URI_DECODE_RESERVED.indexOf(C) >= 0) {
                     for (int x = start; x != k; x++) {
                         buf[bufTop++] = str.charAt(x);
                     }
@@ -708,61 +699,15 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         {
             return true;
         }
-        switch (c) {
-            case '-':
-            case '_':
-            case '.':
-            case '!':
-            case '~':
-            case '*':
-            case '\'':
-            case '(':
-            case ')':
-                return true;
-        }
+        if ("-_.!~*'()".indexOf(c) >= 0)
+            return true;
         if (fullUri) {
-            return fullUriDecodeReserved(c);
+            return URI_DECODE_RESERVED.indexOf(c) >= 0;
         }
         return false;
     }
 
-    private static boolean fullUriDecodeReserved(char c) {
-        switch (c) {
-            case ';':
-            case '/':
-            case '?':
-            case ':':
-            case '@':
-            case '&':
-            case '=':
-            case '+':
-            case '$':
-            case ',':
-            case '#':
-                return true;
-        }
-        return false;
-    }
-
-    private String js_decodeURI(Context cx, Object[] args) {
-        String str = ScriptRuntime.toString(args, 0);
-        return decode(cx, str, true);
-    }
-
-    private String js_decodeURIComponent(Context cx, Object[] args) {
-        String str = ScriptRuntime.toString(args, 0);
-        return decode(cx, str, false);
-    }
-
-    private Object js_encodeURI(Context cx, Object[] args) {
-        String str = ScriptRuntime.toString(args, 0);
-        return encode(cx, str, true);
-    }
-
-    private String js_encodeURIComponent(Context cx, Object[] args) {
-        String str = ScriptRuntime.toString(args, 0);
-        return encode(cx, str, false);
-    }
+    private static final String URI_DECODE_RESERVED = ";/?:@&=+$,#";
 
     /* Convert one UCS-4 char and write it into a UTF-8 buffer, which must be
     * at least 6 bytes long.  Return the number of UTF-8 bytes of data written.

@@ -58,7 +58,6 @@ final class NativeNumber extends IdScriptable {
      * Zero-parameter constructor: just used to create Number.prototype
      */
     private NativeNumber() {
-        doubleValue = defaultValue;
     }
 
     private NativeNumber(double number) {
@@ -76,7 +75,7 @@ final class NativeNumber extends IdScriptable {
                          ScriptableObject.PERMANENT |
                          ScriptableObject.READONLY;
 
-        ctor.defineProperty("NaN", wrap_double(ScriptRuntime.NaN), attr);
+        ctor.defineProperty("NaN", ScriptRuntime.NaNobj, attr);
         ctor.defineProperty("POSITIVE_INFINITY",
                             wrap_double(Double.POSITIVE_INFINITY), attr);
         ctor.defineProperty("NEGATIVE_INFINITY",
@@ -92,8 +91,8 @@ final class NativeNumber extends IdScriptable {
             switch (methodId) {
                 case Id_constructor:     return 1;
                 case Id_toString:        return 1;
-                case Id_valueOf:         return 0;
                 case Id_toLocaleString:  return 1;
+                case Id_valueOf:         return 0;
                 case Id_toFixed:         return 1;
                 case Id_toExponential:   return 1;
                 case Id_toPrecision:     return 1;
@@ -109,112 +108,83 @@ final class NativeNumber extends IdScriptable {
     {
         if (prototypeFlag) {
             switch (methodId) {
-                case Id_constructor:
-                    return jsConstructor(args, thisObj == null);
+                case Id_constructor: {
+                    double val = (args.length >= 1)
+                        ? ScriptRuntime.toNumber(args[0]) : 0.0;
+                    if (thisObj == null) {
+                        // new Number(val) creates a new Number object.
+                        return new NativeNumber(val);
+                    }
+                    // Number(val) converts val to a number value.
+                    return wrap_double(val);
+                }
 
                 case Id_toString:
-                    return realThis(thisObj, f).js_toString(toBase(args, 0));
+                case Id_toLocaleString: {
+                    // toLocaleString is just an alias for toString for now
+                    double val = realThisValue(thisObj, f);
+                    int base = (args.length == 0)
+                        ? 10 : ScriptRuntime.toInt32(args[0]);
+                    return ScriptRuntime.numberToString(val, base);
+                }
 
                 case Id_valueOf:
-                    return wrap_double(realThis(thisObj, f).doubleValue);
-
-                case Id_toLocaleString:
-                    return realThis(thisObj, f).
-                        js_toLocaleString(toBase(args, 0));
+                    return wrap_double(realThisValue(thisObj, f));
 
                 case Id_toFixed:
-                    return realThis(thisObj, f).js_toFixed(cx, args);
+                    return num_to(f, thisObj, args,
+                                  DToA.DTOSTR_FIXED, DToA.DTOSTR_FIXED,
+                                  -20, 0);
 
                 case Id_toExponential:
-                    return realThis(thisObj, f).js_toExponential(cx, args);
+                    return num_to(f, thisObj, args,
+                                  DToA.DTOSTR_STANDARD_EXPONENTIAL,
+                                  DToA.DTOSTR_EXPONENTIAL,
+                                  0, 1);
 
                 case Id_toPrecision:
-                    return realThis(thisObj, f).js_toPrecision(cx, args);
+                    return num_to(f, thisObj, args,
+                                  DToA.DTOSTR_STANDARD, DToA.DTOSTR_PRECISION,
+                                  1, 0);
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
     }
 
-    private static NativeNumber realThis(Scriptable thisObj, IdFunction f)
+    private static double realThisValue(Scriptable thisObj, IdFunction f)
     {
         if (!(thisObj instanceof NativeNumber))
             throw incompatibleCallError(f);
-        return (NativeNumber)thisObj;
-    }
-
-    private static int toBase(Object[] args, int index) {
-        return (index < args.length) ? ScriptRuntime.toInt32(args[index]) : 10;
-    }
-
-    private Object jsConstructor(Object[] args, boolean inNewExpr) {
-        double d = args.length >= 1
-                   ? ScriptRuntime.toNumber(args[0])
-                   : defaultValue;
-        if (inNewExpr) {
-            // new Number(val) creates a new Number object.
-            return new NativeNumber(d);
-        }
-        // Number(val) converts val to a number value.
-        return wrap_double(d);
+        return ((NativeNumber)thisObj).doubleValue;
     }
 
     public String toString() {
-        return js_toString(10);
+        return ScriptRuntime.numberToString(doubleValue, 10);
     }
 
-    private String js_toString(int base) {
-        return ScriptRuntime.numberToString(doubleValue, base);
-    }
-
-    private String js_toLocaleString(int base) {
-        return js_toString(base);
-    }
-
-    private String js_toFixed(Context cx, Object[] args) {
-        /* We allow a larger range of precision than
-           ECMA requires; this is permitted by ECMA. */
-        return num_to(cx, args, DToA.DTOSTR_FIXED, DToA.DTOSTR_FIXED,
-                      -20, MAX_PRECISION, 0);
-    }
-
-    private String js_toExponential(Context cx, Object[] args) {
-        /* We allow a larger range of precision than
-           ECMA requires; this is permitted by ECMA. */
-        return num_to(cx, args,
-                      DToA.DTOSTR_STANDARD_EXPONENTIAL,
-                      DToA.DTOSTR_EXPONENTIAL,
-                      0, MAX_PRECISION, 1);
-    }
-
-    private String js_toPrecision(Context cx, Object[] args) {
-        /* We allow a larger range of precision than
-           ECMA requires; this is permitted by ECMA. */
-        return num_to(cx, args, DToA.DTOSTR_STANDARD, DToA.DTOSTR_PRECISION,
-                      1, MAX_PRECISION, 0);
-    }
-
-    private String num_to(Context cx, Object[] args,
-                          int zeroArgMode, int oneArgMode,
-                          int precisionMin, int precisionMax,
-                          int precisionOffset)
+    private static String num_to(IdFunction f, Scriptable thisObj,
+                                 Object[] args,
+                                 int zeroArgMode, int oneArgMode,
+                                 int precisionMin, int precisionOffset)
     {
+        double val = realThisValue(thisObj, f);
         int precision;
-
         if (args.length == 0) {
             precision = 0;
             oneArgMode = zeroArgMode;
         } else {
+            /* We allow a larger range of precision than
+               ECMA requires; this is permitted by ECMA. */
             precision = ScriptRuntime.toInt32(args[0]);
-            if (precision < precisionMin || precision > precisionMax) {
+            if (precision < precisionMin || precision > MAX_PRECISION) {
                 String msg = ScriptRuntime.getMessage1(
                     "msg.bad.precision", ScriptRuntime.toString(args[0]));
                 throw ScriptRuntime.constructError("RangeError", msg);
             }
         }
-        StringBuffer result = new StringBuffer();
-        DToA.JS_dtostr(result, oneArgMode, precision + precisionOffset,
-                       doubleValue);
-        return result.toString();
+        StringBuffer sb = new StringBuffer();
+        DToA.JS_dtostr(sb, oneArgMode, precision + precisionOffset, val);
+        return sb.toString();
     }
 
     protected String getIdName(int id) {
@@ -222,8 +192,8 @@ final class NativeNumber extends IdScriptable {
             switch (id) {
                 case Id_constructor:     return "constructor";
                 case Id_toString:        return "toString";
-                case Id_valueOf:         return "valueOf";
                 case Id_toLocaleString:  return "toLocaleString";
+                case Id_valueOf:         return "valueOf";
                 case Id_toFixed:         return "toFixed";
                 case Id_toExponential:   return "toExponential";
                 case Id_toPrecision:     return "toPrecision";
@@ -261,8 +231,8 @@ final class NativeNumber extends IdScriptable {
     private static final int
         Id_constructor           = 1,
         Id_toString              = 2,
-        Id_valueOf               = 3,
-        Id_toLocaleString        = 4,
+        Id_toLocaleString        = 3,
+        Id_valueOf               = 4,
         Id_toFixed               = 5,
         Id_toExponential         = 6,
         Id_toPrecision           = 7,
@@ -270,7 +240,6 @@ final class NativeNumber extends IdScriptable {
 
 // #/string_id_map#
 
-    private static final double defaultValue = +0.0;
     private double doubleValue;
 
     private boolean prototypeFlag;

@@ -158,10 +158,12 @@ public class NativeArray extends IdScriptable {
                     return jsConstructor(cx, scope, args, f, thisObj == null);
 
                 case Id_toString:
-                    return js_toString(cx, thisObj, args);
+                    return toStringHelper(cx, thisObj,
+                        cx.hasFeature(Context.FEATURE_TO_STRING_AS_SOURCE),
+                        false);
 
                 case Id_toLocaleString:
-                    return js_toLocaleString(cx, thisObj, args);
+                    return toStringHelper(cx, thisObj, false, true);
 
                 case Id_join:
                     return js_join(cx, thisObj, args);
@@ -445,22 +447,6 @@ public class NativeArray extends IdScriptable {
         } else {
             ScriptRuntime.setElem(target, (int)index, value);
         }
-    }
-
-    private static String js_toString(Context cx, Scriptable thisObj,
-                                      Object[] args)
-        throws JavaScriptException
-    {
-        return toStringHelper(cx, thisObj,
-            cx.hasFeature(Context.FEATURE_TO_STRING_AS_SOURCE),
-            false);
-    }
-
-    private static String js_toLocaleString(Context cx, Scriptable thisObj,
-                                            Object[] args)
-        throws JavaScriptException
-    {
-        return toStringHelper(cx, thisObj, false, true);
     }
 
     private static String toStringHelper(Context cx, Scriptable thisObj,

@@ -52,7 +52,7 @@ package org.mozilla.javascript;
 final class NativeString extends IdScriptable {
 
     static void init(Context cx, Scriptable scope, boolean sealed) {
-        NativeString obj = new NativeString(defaultValue);
+        NativeString obj = new NativeString("");
         obj.prototypeFlag = true;
         obj.addAsPrototype(MAX_PROTOTYPE_ID, cx, scope, sealed);
     }
@@ -138,24 +138,46 @@ final class NativeString extends IdScriptable {
     {
         if (prototypeFlag) {
             switch (methodId) {
-                case ConstructorId_fromCharCode:
-                    return jsStaticFunction_fromCharCode(args);
+                case ConstructorId_fromCharCode: {
+                    int N = args.length;
+                    if (N < 1)
+                        return "";
+                    StringBuffer sb = new StringBuffer(N);
+                    for (int i = 0; i != N; ++i) {
+                        sb.append(ScriptRuntime.toUint16(args[i]));
+                    }
+                    return sb.toString();
+                }
 
-                case Id_constructor:
-                    return jsConstructor(args, thisObj == null);
+                case Id_constructor: {
+                    String s = (args.length >= 1)
+                        ? ScriptRuntime.toString(args[0]) : "";
+                    if (thisObj == null) {
+                        // new String(val) creates a new String object.
+                        return new NativeString(s);
+                    }
+                    // String(val) converts val to a string value.
+                    return s;
+                }
 
                 case Id_toString:
-                    return realThis(thisObj, f).js_toString();
-
                 case Id_valueOf:
-                    return realThis(thisObj, f).js_valueOf();
+                    // ECMA 15.5.4.2: 'the toString function is not generic.
+                    return realThis(thisObj, f).string;
 
                 case Id_charAt:
-                    return js_charAt(ScriptRuntime.toString(thisObj), args);
-
-                case Id_charCodeAt:
-                    return wrap_double(js_charCodeAt
-                        (ScriptRuntime.toString(thisObj), args));
+                case Id_charCodeAt: {
+                     // See ECMA 15.5.4.[4,5]
+                    String target = ScriptRuntime.toString(thisObj);
+                    double pos = ScriptRuntime.toInteger(args, 0);
+                    if (pos < 0 || pos >= target.length()) {
+                        if (methodId == Id_charAt) return "";
+                        else return ScriptRuntime.NaNobj;
+                    }
+                    char c = target.charAt((int)pos);
+                       if (methodId == Id_charAt) return String.valueOf(c);
+                    else return wrap_int(c);
+                }
 
                 case Id_indexOf:
                     return wrap_int(js_indexOf
@@ -174,10 +196,12 @@ final class NativeString extends IdScriptable {
                         (cx, ScriptRuntime.toString(thisObj), args);
 
                 case Id_toLowerCase:
-                    return js_toLowerCase(ScriptRuntime.toString(thisObj));
+                    // See ECMA 15.5.4.11
+                    return ScriptRuntime.toString(thisObj).toLowerCase();
 
                 case Id_toUpperCase:
-                    return js_toUpperCase(ScriptRuntime.toString(thisObj));
+                    // See ECMA 15.5.4.12
+                    return ScriptRuntime.toString(thisObj).toUpperCase();
 
                 case Id_substr:
                     return js_substr(ScriptRuntime.toString(thisObj), args);
@@ -228,14 +252,12 @@ final class NativeString extends IdScriptable {
                     return tagify(thisObj, "a", "name", args);
 
                 case Id_equals:
-                    return wrap_boolean(js_equals
-                        (ScriptRuntime.toString(thisObj),
-                         ScriptRuntime.toString(args, 0)));
-
-                case Id_equalsIgnoreCase:
-                    return wrap_boolean(js_equalsIgnoreCase
-                        (ScriptRuntime.toString(thisObj),
-                         ScriptRuntime.toString(args, 0)));
+                case Id_equalsIgnoreCase: {
+                    String s1 = ScriptRuntime.toString(thisObj);
+                    String s2 = ScriptRuntime.toString(args, 0);
+                    return wrap_boolean(methodId == Id_equals
+                        ? s1.equals(s2) : s1.equalsIgnoreCase(s2));
+                }
 
                 case Id_match:
                     return ScriptRuntime.checkRegExpProxy(cx).
@@ -285,39 +307,7 @@ final class NativeString extends IdScriptable {
         return result.toString();
     }
 
-    private static String jsStaticFunction_fromCharCode(Object[] args) {
-        int N = args.length;
-        if (N < 1)
-            return "";
-        StringBuffer s = new StringBuffer(N);
-        for (int i=0; i < N; i++) {
-            s.append(ScriptRuntime.toUint16(args[i]));
-        }
-        return s.toString();
-    }
-
-    private static Object jsConstructor(Object[] args, boolean inNewExpr) {
-        String s = args.length >= 1
-            ? ScriptRuntime.toString(args[0])
-            : defaultValue;
-        if (inNewExpr) {
-            // new String(val) creates a new String object.
-            return new NativeString(s);
-        }
-        // String(val) converts val to a string value.
-        return s;
-    }
-
     public String toString() {
-        return string;
-    }
-
-    /* ECMA 15.5.4.2: 'the toString function is not generic.' */
-    private String js_toString() {
-        return string;
-    }
-
-    private String js_valueOf() {
         return string;
     }
 
@@ -336,31 +326,6 @@ final class NativeString extends IdScriptable {
             return;
         }
         super.put(index, start, value);
-    }
-
-    /*
-     *
-     * See ECMA 15.5.4.[4,5]
-     */
-    private static String js_charAt(String target, Object[] args) {
-        // this'll return 0 if undefined... seems
-        // to be ECMA.
-        double pos = ScriptRuntime.toInteger(args, 0);
-
-        if (pos < 0 || pos >= target.length())
-            return "";
-
-        return target.substring((int)pos, (int)pos + 1);
-    }
-
-    private static double js_charCodeAt(String target, Object[] args) {
-        double pos = ScriptRuntime.toInteger(args, 0);
-
-        if (pos < 0 || pos >= target.length()) {
-            return ScriptRuntime.NaN;
-        }
-
-        return target.charAt((int)pos);
     }
 
     /*
@@ -657,18 +622,6 @@ final class NativeString extends IdScriptable {
         return target.substring((int)start, (int)end);
     }
 
-    /*
-     *
-     * See ECMA 15.5.4.[11,12]
-     */
-    private static String js_toLowerCase(String target) {
-        return target.toLowerCase();
-    }
-
-    private static String js_toUpperCase(String target) {
-        return target.toUpperCase();
-    }
-
     int getLength() {
         return string.length();
     }
@@ -765,16 +718,6 @@ final class NativeString extends IdScriptable {
             return target.substring((int)begin, (int)end);
         }
         return target;
-    }
-
-    private static boolean js_equals(String target, String strOther)
-    {
-        return target.equals(strOther);
-    }
-
-    private static boolean js_equalsIgnoreCase(String target, String strOther)
-    {
-        return target.equalsIgnoreCase(strOther);
     }
 
     protected String getIdName(int id)
@@ -941,8 +884,6 @@ final class NativeString extends IdScriptable {
         MAX_PROTOTYPE_ID             = MAX_INSTANCE_ID + 32;
 
 // #/string_id_map#
-
-    private static final String defaultValue = "";
 
     private String string;
 

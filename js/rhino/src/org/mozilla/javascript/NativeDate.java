@@ -775,62 +775,6 @@ final class NativeDate extends IdScriptable {
         //        return new Double(d);
     }
 
-    /*
-     * Use ported code from jsdate.c rather than the locale-specific
-     * date-parsing code from Java, to keep js and rhino consistent.
-     * Is this the right strategy?
-     */
-
-    /* for use by date_parse */
-
-    /* replace this with byte arrays?  Cheaper? */
-    private static String wtb[] = {
-        "am", "pm",
-        "monday", "tuesday", "wednesday", "thursday", "friday",
-        "saturday", "sunday",
-        "january", "february", "march", "april", "may", "june",
-        "july", "august", "september", "october", "november", "december",
-        "gmt", "ut", "utc", "est", "edt", "cst", "cdt",
-        "mst", "mdt", "pst", "pdt"
-        /* time zone table needs to be expanded */
-    };
-
-    private static int ttb[] = {
-        -1, -2, 0, 0, 0, 0, 0, 0, 0,     /* AM/PM */
-        2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
-        10000 + 0, 10000 + 0, 10000 + 0, /* UT/UTC */
-        10000 + 5 * 60, 10000 + 4 * 60,  /* EDT */
-        10000 + 6 * 60, 10000 + 5 * 60,
-        10000 + 7 * 60, 10000 + 6 * 60,
-        10000 + 8 * 60, 10000 + 7 * 60
-    };
-
-    /** helper for date_parse, return true if matches, otherwise, false */
-    private static boolean date_regionMatches(String pattern,
-                                              String s2, int s2off,
-                                              int count)
-    {
-        int s1off = 0;
-        int s1len = pattern.length();
-        int s2len = s2.length();
-
-        while (count > 0) {
-            if (s1off >= s1len || s2off >= s2len) {
-                return false;
-            }
-            int c = s2.charAt(s2off);
-            if ('A' <= c && c <= 'Z') { c += 'a' - 'A'; }
-            if (pattern.charAt(s1off) != c) {
-                return false;
-            }
-            s1off++;
-            s2off++;
-            count--;
-        }
-
-        return true;
-    }
-
     private static double date_parseString(String s) {
         int year = -1;
         int mon = -1;
@@ -847,8 +791,6 @@ final class NativeDate extends IdScriptable {
         int limit = 0;
         boolean seenplusminus = false;
 
-        if (s == null)  // ??? Will s be null?
-            return ScriptRuntime.NaN;
         limit = s.length();
         while (i < limit) {
             c = s.charAt(i);
@@ -948,48 +890,79 @@ final class NativeDate extends IdScriptable {
                 prevc = c;
             } else {
                 int st = i - 1;
-                int k;
                 while (i < limit) {
                     c = s.charAt(i);
                     if (!(('A' <= c && c <= 'Z') || ('a' <= c && c <= 'z')))
                         break;
                     i++;
                 }
-                if (i <= st + 1)
+                int letterCount = i - st;
+                if (letterCount < 2)
                     return ScriptRuntime.NaN;
-                for (k = wtb.length; --k >= 0;)
-                    if (date_regionMatches(wtb[k], s, st, i-st)) {
-                        int action = ttb[k];
-                        if (action != 0) {
-                            if (action < 0) {
-                                /*
-                                 * AM/PM. Count 12:30 AM as 00:30, 12:30 PM as
-                                 * 12:30, instead of blindly adding 12 if PM.
-                                 */
-                                if (hour > 12 || hour < 0) {
-                                    return ScriptRuntime.NaN;
-                                } else {
-                                    if (action == -1 && hour == 12) { // am
-                                        hour = 0;
-                                    } else if (action == -2 && hour != 12) {// pm
-                                        hour += 12;
-                                    }
-                                }
-                            } else if (action <= 13) { /* month! */
-                                if (mon < 0) {
-                                    mon = /*byte*/ (action - 2);
-                                } else {
-                                    return ScriptRuntime.NaN;
-                                }
-                            } else {
-                                tzoffset = action - 10000;
-                            }
-                        }
+               /*
+                * Use ported code from jsdate.c rather than the locale-specific
+                * date-parsing code from Java, to keep js and rhino consistent.
+                * Is this the right strategy?
+                */
+                String wtb = "am;pm;"
+                            +"monday;tuesday;wednesday;thursday;friday;"
+                            +"saturday;sunday;"
+                            +"january;february;march;april;may;june;"
+                            +"july;august;september;october;november;december;"
+                            +"gmt;ut;utc;est;edt;cst;cdt;mst;mdt;pst;pdt;";
+                int index = 0;
+                for (int wtbOffset = 0; ;) {
+                    int wtbNext = wtb.indexOf(';', wtbOffset);
+                    if (wtbNext < 0)
+                        return ScriptRuntime.NaN;
+                    if (wtb.regionMatches(true, wtbOffset, s, st, letterCount))
                         break;
+                    wtbOffset = wtbNext + 1;
+                    ++index;
+                }
+                if (index < 2) {
+                    /*
+                     * AM/PM. Count 12:30 AM as 00:30, 12:30 PM as
+                     * 12:30, instead of blindly adding 12 if PM.
+                     */
+                    if (hour > 12 || hour < 0) {
+                        return ScriptRuntime.NaN;
+                    } else if (index == 0) {
+                        // AM
+                        if (hour == 12)
+                            hour = 0;
+                    } else {
+                        // PM
+                        if (hour != 12)
+                            hour += 12;
                     }
-                if (k < 0)
-                    return ScriptRuntime.NaN;
-                prevc = 0;
+                } else if ((index -= 2) < 7) {
+                    // ignore week days
+                } else if ((index -= 7) < 12) {
+                    // month
+                    if (mon < 0) {
+                        mon = index;
+                    } else {
+                        return ScriptRuntime.NaN;
+                    }
+                } else {
+                    index -= 12;
+                    // timezones
+                    switch (index) {
+                      case 0 /* gmt */: tzoffset = 0; break;
+                      case 1 /* ut */:  tzoffset = 0; break;
+                      case 2 /* utc */: tzoffset = 0; break;
+                      case 3 /* est */: tzoffset = 5 * 60; break;
+                      case 4 /* edt */: tzoffset = 4 * 60; break;
+                      case 5 /* cst */: tzoffset = 6 * 60; break;
+                      case 6 /* cdt */: tzoffset = 5 * 60; break;
+                      case 7 /* mst */: tzoffset = 7 * 60; break;
+                      case 8 /* mdt */: tzoffset = 6 * 60; break;
+                      case 9 /* pst */: tzoffset = 8 * 60; break;
+                      case 10 /* pdt */:tzoffset = 7 * 60; break;
+                      default: Context.codeBug();
+                    }
+                }
             }
         }
         if (year < 0 || mon < 0 || mday < 0)
@@ -1093,16 +1066,16 @@ final class NativeDate extends IdScriptable {
 
         // if called with just one arg -
         if (args.length == 1) {
+            Object arg0 = args[0];
+            if (arg0 instanceof Scriptable)
+                arg0 = ((Scriptable) arg0).getDefaultValue(null);
             double date;
-            if (args[0] instanceof Scriptable)
-                args[0] = ((Scriptable) args[0]).getDefaultValue(null);
-            if (!(args[0] instanceof String)) {
-                // if it's not a string, use it as a millisecond date
-                date = ScriptRuntime.toNumber(args[0]);
-            } else {
+            if (arg0 instanceof String) {
                 // it's a string; parse it.
-                String str = (String) args[0];
-                date = date_parseString(str);
+                date = date_parseString((String)arg0);
+            } else {
+                // if it's not a string, use it as a millisecond date
+                date = ScriptRuntime.toNumber(arg0);
             }
             obj.date = TimeClip(date);
             return obj;

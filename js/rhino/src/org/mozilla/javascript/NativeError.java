@@ -105,23 +105,17 @@ final class NativeError extends IdScriptable
     {
         if (prototypeFlag) {
             if (methodId == Id_constructor) {
-                return jsConstructor(cx, args, f, thisObj == null);
+                NativeError result = new NativeError();
+                if (args.length >= 1)
+                    result.messageValue = ScriptRuntime.toString(args[0]);
+                result.setPrototype(getClassPrototype(scope, "Error"));
+                return result;
             }
             else if (methodId == Id_toString) {
                 return js_toString(thisObj);
             }
         }
         return super.execMethod(methodId, f, cx, scope, thisObj, args);
-    }
-
-    private static Object jsConstructor(Context cx, Object[] args,
-                                        Function funObj, boolean inNewExpr)
-    {
-        NativeError result = new NativeError();
-        if (args.length >= 1)
-            result.messageValue = ScriptRuntime.toString(args[0]);
-        result.setPrototype(getClassPrototype(funObj, "Error"));
-        return result;
     }
 
     private static String js_toString(Scriptable thisObj)
