@@ -319,6 +319,8 @@ nsBulletFrame::Paint(nsIPresContext*      aPresContext,
     case NS_STYLE_LIST_STYLE_MOZ_KHMER:
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
       aPresContext->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
       GetListItemText(aPresContext, *myList, text);
       aRenderingContext.SetFont(fm);
@@ -602,6 +604,21 @@ static PRUnichar gHangulConsonantChars[HANGUL_CONSONANT_CHARS_SIZE] =
 0x3145, 0x3147, 0x3148, 0x314a, 0x314b, 0x314c,
 0x314d, 0x314e
 };
+
+// Ge'ez set of Ethiopic ordered list. There are other locale-dependent sets.
+// For the time being, let's implement two Ge'ez sets only
+// per Momoi san's suggestion in bug 102252. 
+// For details, refer to http://www.ethiopic.org/Collation/OrderedLists.html.
+#define ETHIOPIC_HALEHAME_CHARS_SIZE 26
+static PRUnichar gEthiopicHalehameChars[ETHIOPIC_HALEHAME_CHARS_SIZE] =
+{                                      
+0x1200, 0x1208, 0x1210, 0x1218, 0x1220, 0x1228,
+0x1230, 0x1240, 0x1260, 0x1270, 0x1280, 0x1290,
+0x12a0, 0x12a8, 0x12c8, 0x12d0, 0x12d8, 0x12e8,
+0x12f0, 0x1308, 0x1320, 0x1330, 0x1338, 0x1340,
+0x1348, 0x1350
+};
+
 
 // We know cjk-ideographic need 31 characters to display 99,999,999,999,999,999
 // georgian and armenian need 6 at most
@@ -925,6 +942,64 @@ static void GeorgianToText(PRInt32 ordinal, nsString& result)
   }
 }
 
+// Convert ordinal to Ethiopic numeric representation.
+// The detail is available at http://www.ethiopic.org/Numerals/
+// The algorithm used here was almost a verbatim copy of 
+// the pseudo-code put up there by Daniel Yacob <yacob@geez.org>.
+// Another reference is Unicode 3.0 standard section 11.1. 
+
+static void EthiopicToText(PRInt32 ordinal, nsString& result)
+{  
+  nsAutoString asciiNumberString;      // decimal string representation of ordinal
+  DecimalToText(ordinal, asciiNumberString);
+  PRInt32 n = asciiNumberString.Length() - 1;
+
+  // Iterate from the lowest digit to higher digits
+  for (PRInt32 place = 0; place <= n; place++) {
+    PRUnichar asciiTen = '0'; 
+    PRUnichar asciiOne = asciiNumberString.CharAt(n - place);
+
+    place++;
+
+    if (place <= n) 
+      asciiTen = asciiNumberString.CharAt(n - place);
+
+    // '00' is not represented and has to be skipped.
+    if (asciiOne == '0' && asciiTen == '0' && place < n) 
+      continue;
+
+    nsAutoString ethioNumber;
+
+    // calculate digits at  10^(2*place) and 10^(2*place+1) 
+    if (asciiTen > '0' || asciiOne > '1' || place == 1) 
+    {
+      if (asciiTen > '0') 
+      {
+        // map onto Ethiopic "tens": U+1372=Ethiopic number ten
+        ethioNumber += (PRUnichar) ((PRInt32) asciiTen +  0x1372 - 0x31); 
+      }
+      if (asciiOne > '0') 
+      {
+        //map onto Ethiopic "ones": 0x1369=Ethiopic digit one
+        ethioNumber += (PRUnichar) ((PRInt32) asciiOne + 0x1369 - 0x31); 
+      }
+    }
+
+   // Now add 'cental-place' specifiers in terms of power of hundred
+
+   // if (place > 1) : The lowest two digits don't need 'cental-place' specifier
+     if (place & 2)   // if odd power of hundred 
+       ethioNumber += (PRUnichar) 0x137B;   // append Ethiopic number hundred 
+
+     // append Ethiopic number ten thousand every four decimal digits
+     for (PRInt32 j = 0; j < place / 4; j++) 
+       ethioNumber += (PRUnichar) 0x137C;   // 0x137C = Ethiopic number ten thousand
+
+     result.Insert(ethioNumber, 0);
+  }  
+}
+
+
 void
 nsBulletFrame::GetListItemText(nsIPresContext* aCX,
                                const nsStyleList& aListStyle,
@@ -1102,6 +1177,14 @@ nsBulletFrame::GetListItemText(nsIPresContext* aCX,
 
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
       CharListToText(mOrdinal, result, gHangulConsonantChars, HANGUL_CONSONANT_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
+      CharListToText(mOrdinal, result, gEthiopicHalehameChars, ETHIOPIC_HALEHAME_CHARS_SIZE);
+      break;
+
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC:
+      EthiopicToText(mOrdinal, result);
       break;
   }
 #ifdef IBMBIDI
@@ -1315,6 +1398,7 @@ nsBulletFrame::GetDesiredSize(nsIPresContext*  aCX,
     case NS_STYLE_LIST_STYLE_MOZ_KHMER:
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL:
     case NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT:
+    case NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME:
       GetListItemText(aCX, *myList, text);
       fm->GetHeight(aMetrics.height);
       aReflowState.rendContext->SetFont(fm);

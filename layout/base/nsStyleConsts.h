@@ -492,6 +492,8 @@
 #define NS_STYLE_LIST_STYLE_MOZ_KHMER                 47
 #define NS_STYLE_LIST_STYLE_MOZ_HANGUL                48
 #define NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT      49
+#define NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME     50
+#define NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC      51
 #define NS_STYLE_LIST_STYLE_BASIC                 100  // not in css
 
 // See nsStyleList

@@ -565,6 +565,8 @@ const PRInt32 nsCSSProps::kListStyleKTable[] = {
   eCSSKeyword__moz_khmer, NS_STYLE_LIST_STYLE_MOZ_KHMER,
   eCSSKeyword__moz_hangul, NS_STYLE_LIST_STYLE_MOZ_HANGUL,
   eCSSKeyword__moz_hangul_consonant, NS_STYLE_LIST_STYLE_MOZ_HANGUL_CONSONANT,
+  eCSSKeyword__moz_ethiopic_halehame, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_HALEHAME,
+  eCSSKeyword__moz_ethiopic_numeric, NS_STYLE_LIST_STYLE_MOZ_ETHIOPIC_NUMERIC,
   -1,-1
 };
 
