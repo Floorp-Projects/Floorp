@@ -71,6 +71,10 @@ class EmbedPrivate {
   void        Reload(int32_t flags);
   void        Back  (void);
   void        Forward  (void);
+  void 		  ScrollUp(int amount);
+  void 		  ScrollDown(int amount);
+  void 		  ScrollLeft(int amount);
+  void 		  ScrollRight(int amount);
   void        Cut  (void);
   void        Copy  (void);
   void        Paste  (void);
@@ -142,7 +146,7 @@ nsCOMPtr<nsISupports> context;
   // the currently loaded uri
   nsString                       mURI;
 
-  nsIPrintSettings				 *m_PrintSettings;
+  nsCOMPtr<nsIPrintSettings> m_PrintSettings;
 
   // the number of widgets that have been created
   static PRUint32                sWidgetCount;

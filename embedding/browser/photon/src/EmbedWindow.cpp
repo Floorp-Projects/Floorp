@@ -33,6 +33,7 @@
 // for do_CreateInstance
 #include <nsIComponentManager.h>
 #include "nsIWebProgressListener.h"
+#include "nsIDOMHTMLImageElement.h"
 
 #include <nsCWebBrowser.h>
 #include <nsIComponentManager.h>
@@ -188,7 +189,7 @@ EmbedWindow::SaveAs(char *fname)
   {
     nsCOMPtr<nsILocalFile> file;
     NS_NewLocalFile(fname, PR_TRUE, getter_AddRefs(file));
-    persist->SaveDocument(nsnull, file, nsnull);
+    persist->SaveDocument(nsnull, file, nsnull, nsnull, 0, 0);
     return (0);
   }
   return 1;
@@ -579,15 +580,15 @@ NS_IMETHODIMP EmbedWindow::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent
     memset(&cmenu, 0, sizeof(PtMozillaContextCb_t));
     if (aContextFlags & CONTEXT_NONE)
         cmenu.flags |= Pt_MOZ_CONTEXT_NONE;
-    if (aContextFlags & CONTEXT_LINK)
+    else if (aContextFlags & CONTEXT_LINK)
         cmenu.flags |= Pt_MOZ_CONTEXT_LINK;
-    if (aContextFlags & CONTEXT_IMAGE)
+    else if (aContextFlags & CONTEXT_IMAGE)
         cmenu.flags |= Pt_MOZ_CONTEXT_IMAGE;
-    if (aContextFlags & CONTEXT_DOCUMENT)
+    else if (aContextFlags & CONTEXT_DOCUMENT)
         cmenu.flags |= Pt_MOZ_CONTEXT_DOCUMENT;
-    if (aContextFlags & CONTEXT_TEXT)
+    else if (aContextFlags & CONTEXT_TEXT)
         cmenu.flags |= Pt_MOZ_CONTEXT_TEXT;
-    if (aContextFlags & CONTEXT_INPUT)
+    else if (aContextFlags & CONTEXT_INPUT)
         cmenu.flags |= Pt_MOZ_CONTEXT_INPUT;
 
     nsCOMPtr<nsIDOMMouseEvent> mouseEvent (do_QueryInterface( aEvent ));
@@ -597,24 +598,46 @@ NS_IMETHODIMP EmbedWindow::OnShowContextMenu(PRUint32 aContextFlags, nsIDOMEvent
 
     PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo);
 
-
     /* store the url we clicked on */
     nsAutoString rightClickUrl;
 
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsIDOMHTMLAnchorElement> linkElement(do_QueryInterface(aNode, &rv));
+    if (aContextFlags & CONTEXT_IMAGE)
+    {
+        // Get the IMG SRC
+        nsresult rv = NS_OK;
+        nsCOMPtr<nsIDOMHTMLImageElement> imgElement(do_QueryInterface(aNode, &rv));
+        if (NS_FAILED(rv))
+            return NS_OK;
 
-    if(NS_FAILED(rv)) return NS_OK;
-
-    // Note that this string is in UCS2 format
-    rv = linkElement->GetHref( rightClickUrl );
-    if(NS_FAILED(rv)) {
-        if( moz->rightClickUrl ) free( moz->rightClickUrl );
-        moz->rightClickUrl = NULL;
-        return NS_OK;
+        rv = imgElement->GetSrc(rightClickUrl);
+        if(NS_FAILED(rv)) 
+        {
+            if( moz->rightClickUrl ) 
+                free( moz->rightClickUrl );
+            moz->rightClickUrl = NULL;
+            return NS_OK;
         }
+    }
+    else
+    {
+        nsresult rv = NS_OK;
+        nsCOMPtr<nsIDOMHTMLAnchorElement> linkElement(do_QueryInterface(aNode, &rv));
+        if(NS_FAILED(rv)) 
+            return NS_OK;
 
-    if( moz->rightClickUrl ) free( moz->rightClickUrl );
+        // Note that this string is in UCS2 format
+        rv = linkElement->GetHref( rightClickUrl );
+        if(NS_FAILED(rv)) 
+        {
+            if( moz->rightClickUrl ) 
+                free( moz->rightClickUrl );
+            moz->rightClickUrl = NULL;
+            return NS_OK;
+        }
+    }
+
+    if( moz->rightClickUrl ) 
+        free( moz->rightClickUrl );
     moz->rightClickUrl = ToNewCString(rightClickUrl);
 
     return NS_OK;

@@ -159,8 +159,6 @@ EmbedPrivate::Init(PtWidget_t *aOwningWidget)
 	mPrintGuard = NS_STATIC_CAST(nsIWebProgressListener *, mPrint);
 	mPrint->Init(this);
 
-    m_PrintSettings = (nsIPrintSettings*)new nsPrintSettings();
-
 	// has the window creator service been set up?
 	static int initialized = PR_FALSE;
 	// Set up our window creator ( only once )
@@ -236,6 +234,10 @@ EmbedPrivate::Setup()
 	nsCOMPtr<nsIURIContentListener> uriListener;
 	uriListener = do_QueryInterface(mContentListenerGuard);
 	webBrowser->SetParentURIContentListener(uriListener);
+
+	nsCOMPtr<nsIWebBrowserPrint> print(do_GetInterface(webBrowser));
+	if (print)
+		print->GetPrintSettings(getter_AddRefs(m_PrintSettings));
 
 	return NS_OK;
 }
@@ -320,7 +322,7 @@ EmbedPrivate::Destroy(void)
   mNavigation = nsnull;
   mFixup = nsnull;
 
-  m_PrintSettings = nsnull;
+  //m_PrintSettings = nsnull;
 
   // release session history
   mSessionHistory = nsnull;
@@ -401,6 +403,60 @@ EmbedPrivate::Forward(void)
 		mNavigation->GoForward();
 }
 
+void
+EmbedPrivate::ScrollUp(int amount)
+{
+  	nsCOMPtr<nsIWebBrowser> webBrowser;
+  	mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+	nsCOMPtr<nsIDOMWindow> oDomWindow;
+	nsresult rv = webBrowser->GetContentDOMWindow(getter_AddRefs(oDomWindow));
+
+	if (oDomWindow)
+		rv = oDomWindow->ScrollBy(0, -amount);
+}
+void
+EmbedPrivate::ScrollDown(int amount)
+{
+  	nsCOMPtr<nsIWebBrowser> webBrowser;
+  	mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+	nsCOMPtr<nsIDOMWindow> oDomWindow;
+	nsresult rv = webBrowser->GetContentDOMWindow(getter_AddRefs(oDomWindow));
+
+	if (oDomWindow)
+		rv = oDomWindow->ScrollBy(0, amount);
+}
+void
+EmbedPrivate::ScrollLeft(int amount)
+{
+  	nsCOMPtr<nsIWebBrowser> webBrowser;
+  	mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+	nsCOMPtr<nsIDOMWindow> oDomWindow;
+	nsresult rv = webBrowser->GetContentDOMWindow(getter_AddRefs(oDomWindow));
+
+	if (oDomWindow)
+		rv = oDomWindow->ScrollBy(-amount, 0);
+}
+void
+EmbedPrivate::ScrollRight(int amount)
+{
+  	nsCOMPtr<nsIWebBrowser> webBrowser;
+  	mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+	nsCOMPtr<nsIDOMWindow> oDomWindow;
+	nsresult rv = webBrowser->GetContentDOMWindow(getter_AddRefs(oDomWindow));
+
+	if (oDomWindow)
+		rv = oDomWindow->ScrollBy(amount, 0);
+}
+
+
+
+
+
+
 PRBool
 EmbedPrivate::CanGoBack()
 {
@@ -471,7 +527,6 @@ EmbedPrivate::Print(PpPrintContext_t *pc)
   nsCOMPtr<nsIWebBrowserPrint> print( do_GetInterface( mWindow->mWebBrowser ) );
 
   m_PrintSettings->SetEndPageRange((PRInt32) pc);
-  m_PrintSettings->SetOrientation(1);
   print->Print(window, m_PrintSettings, mPrint);
 }
 
