@@ -257,6 +257,10 @@ function sv_lscroll (line)
     var fuzz = 2;
     if (line < (first + fuzz) || line > (last - fuzz))
         this.scrollTo (line, 0);
+    else
+        this.outliner.invalidate(); /* invalidate to show the new currentLine if
+                                     * we don't have to scroll. */
+
 }    
 
 /* nsIOutlinerView */
@@ -1124,6 +1128,8 @@ function sv_cellprops (index, colID, properties)
         if (row.property)
             return properties.AppendElement (row.property);
     }
+
+    return null;
 }
 
 console.stackView.stack = new TOLabelRecord ("stack-col-0", MSG_CALL_STACK);
@@ -1147,6 +1153,8 @@ function pv_cellprops (index, colID, properties)
         if (row.property)
             return properties.AppendElement (row.property);
     }
+
+    return null;
 }
 
 console.blacklist = new TOLabelRecord ("project-col-0", MSG_BLACKLIST);
