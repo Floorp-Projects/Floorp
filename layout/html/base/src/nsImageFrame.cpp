@@ -416,7 +416,7 @@ nsImageFrame::DisplayAltFeedback(nsIPresContext&      aPresContext,
   aRenderingContext.GetDeviceContext(dc);
   nsIImage*         icon;
 
-  if (NS_SUCCEEDED(dc->LoadIconImage(aIconId, icon))) {
+  if (NS_SUCCEEDED(dc->LoadIconImage(aIconId, icon)) && icon) {
     aRenderingContext.DrawImage(icon, inner.x, inner.y);
 
     // Reduce the inner rect by the width of the icon, and leave an
