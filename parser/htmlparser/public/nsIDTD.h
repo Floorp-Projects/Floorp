@@ -220,9 +220,6 @@ public:
    
     NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const = 0;
     
-    NS_IMETHOD ConvertEntityToUnicode(const nsAString& aEntity,
-                                      PRInt32* aUnicode) const = 0;
-    
     NS_IMETHOD_(PRBool) IsBlockElement(PRInt32 aTagID,
                                        PRInt32 aParentID) const = 0;
     
@@ -247,7 +244,6 @@ public:
     NS_IMETHOD_(PRInt32) GetType(); \
     NS_IMETHOD StringTagToIntTag(const nsAString &aTag, PRInt32* aIntTag) const ;\
     NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const ;\
-    NS_IMETHOD ConvertEntityToUnicode(const nsAString& aEntity, PRInt32* aUnicode) const ;\
     NS_IMETHOD_(PRBool)  IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const;\
     NS_IMETHOD_(PRBool)  IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const;
 #endif /* nsIDTD_h___ */

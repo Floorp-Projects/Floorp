@@ -78,7 +78,6 @@
 #include "nsIContentSink.h"
 #include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
-#include "nsHTMLEntities.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
 #include "nsUnicharUtils.h"
@@ -854,16 +853,6 @@ CViewSourceHTML::IntTagToStringTag(PRInt32 aIntTag) const
 
   return str_ptr;
 }
-
-NS_IMETHODIMP
-CViewSourceHTML::ConvertEntityToUnicode(const nsAString& aEntity,
-                                        PRInt32* aUnicode) const
-{
-  *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
-
-  return NS_OK;
-}
-
 
 PRBool CViewSourceHTML::IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const {
   PRBool result=PR_FALSE;
