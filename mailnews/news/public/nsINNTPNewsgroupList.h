@@ -34,7 +34,7 @@ class nsINNTPNewsgroupList : public nsISupports {
   NS_IMETHOD InitXOVER(PRInt32 first_message, PRInt32 last_message) = 0;
 
   /* void ProcessXOVER (in string line, out long status); */
-  NS_IMETHOD ProcessXOVER(const char *line, PRUint32 *status) = 0;
+  NS_IMETHOD ProcessXOVERLINE(const char *line, PRUint32 *status) = 0;
 
   /* void ProcessNonXOVER (in string line); */
   NS_IMETHOD ProcessNonXOVER(const char *line) = 0;
@@ -43,10 +43,13 @@ class nsINNTPNewsgroupList : public nsISupports {
   NS_IMETHOD ResetXOVER() = 0;
 
   /* void FinishXOVER (in long status, out long newstatus); */
-  NS_IMETHOD FinishXOVER(PRInt32 status, PRInt32 *newstatus) = 0;
+  NS_IMETHOD FinishXOVERLINE(PRInt32 status, PRInt32 *newstatus) = 0;
 
   /* void ClearXOVERState (); */
   NS_IMETHOD ClearXOVERState() = 0;
+
+  /* string GetGroupName (); */
+  NS_IMETHOD GetGroupName(char **retval) = 0;
 
 #ifdef XPIDL_JS_STUBS
   static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);

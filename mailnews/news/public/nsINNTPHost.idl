@@ -19,6 +19,10 @@
 #include "nsINNTPNewsgroupList.idl"
 #include "nsINNTPNewsgroup.idl"
 
+%{ C++
+#include prtime.h
+%}
+
 [object, uuid(6b128da0-d74f-11d2-b7f9-00805f05ffa5)]
 interface nsINNTPHost : nsISupports {
 
@@ -28,13 +32,13 @@ interface nsINNTPHost : nsISupports {
 
     attribute boolean postingAllowed;
     attribute boolean pushAuth;
-    attribute long long lastUpdatedTime;
+    attribute PRTime lastUpdatedTime;
 
     /* look up the newsgroup list for the given name */
-    nsINNTPNewsgroupList GetNewsgroupList(in string groupname);
+    nsINNTPNewsgroupList GetNewsgroupList(in string name);
 
-    /* given a newsgroup name, find or create the given groupname */
-    nsINNTPNewsgroup FindNewsgroup(in string groupname, in boolean create);
+    /* given a newsgroup name, find or create the given name */
+    nsINNTPNewsgroup FindNewsgroup(in string name, in boolean create);
     
     /* libnet callbacks for Dredd NNTP extensions
      * please document if you know how these work
@@ -42,12 +46,12 @@ interface nsINNTPHost : nsISupports {
     void AddPropertyForGet(in string name, in string value);
     string QueryPropertyForGet(in string name);
     
-    void AddSearchableGroup(in string groupname);
-    boolean QuerySearchableGroup(in string groupname);
+    void AddSearchableGroup(in string name);
+    boolean QuerySearchableGroup(in string name);
     
     void AddVirtualGroup(in string responseText);
-    void SetIsVirtualGroup(in string groupname, in boolean isVirtual);
-    boolean GetIsVirtualGroup(in string groupname
+    void SetIsVirtualGroup(in string name, in boolean isVirtual);
+    boolean GetIsVirtualGroup(in string name
                            /*, nsIMsgGroupRecord inGroupRecord */);
 
     
@@ -64,7 +68,7 @@ interface nsINNTPHost : nsISupports {
     
     /* Tell the subscribe pane about a new newsgroup we noticed. */
     /* XXX should xactive flags be a long? */
-    void AddNewNewsgroup(in string groupname,
+    void AddNewNewsgroup(in string name,
                          in long first, in long last,
                          in string flags, in boolean xactiveFlags);
     
@@ -89,13 +93,13 @@ interface nsINNTPHost : nsISupports {
      group (the user clicks on the newsgroup line), in case the data has
      changed since the initial passthrough.  The "nowvisiting" parameter
      is TRUE in the latter case, FALSE otherwise. */
-    void DisplaySubscribedGroup(in string groupname,
+    void DisplaySubscribedGroup(in string name,
                                 in long first_message, in long last_message,
                                 in long total_messages,
                                 in boolean visit_now);
 
     string GetFirstGroupNeedingExtraInfo();
-    void SetGroupNeedsExtraInfo(in string groupname, in boolean needsExtraInfo);
+    void SetGroupNeedsExtraInfo(in string name, in boolean needsExtraInfo);
 
   
     /* News servers work better if you ask for message numbers instead of IDs.
@@ -108,11 +112,11 @@ interface nsINNTPHost : nsISupports {
                                    out unsigned long message_number);
 
 
-    void SetPrettyName(in string groupName, in string prettyName);
+    void SetPrettyName(in string name, in string prettyName);
 
 	/* Go load the newsrc for this host.  Creates the subscribed hosts as
        children of the given nsIMsgFolder. */
-    void LoadNewsrc();
+    void LoadNewsrc(in string uri);
 	/* Write out the newsrc for this host right now.  In general, either
        MarkDirty() or WriteIfDirty() should be called instead. */
     void WriteNewsrc();
@@ -128,14 +132,14 @@ interface nsINNTPHost : nsISupports {
     attribute string newsRCFilename;
 
     nsINNTPNewsgroup FindGroup(in string name);
-    nsINNTPNewsgroup AddGroup(in string groupname
+    nsINNTPNewsgroup AddGroup(in string name
                               /* , msg_GroupRecord *inGroupRecord */ );
-    void RemoveGroupByName(in string groupName);
+    void RemoveGroupByName(in string name);
     void RemoveGroup(in nsINNTPNewsgroup group); 
 
     /* Name of directory to store newsgroup
        databases in.  This needs to have
-       "/groupname" appended to it, and the
+       "/name" appended to it, and the
        whole thing can be passed to the XP_File
        stuff with a type of xpXoverCache.
     */

@@ -45,7 +45,10 @@ class nsIUrlListener;
 class nsINntpService : public nsISupports
 {
 public:
-    static const nsIID& GetIID() { static nsIID iid = NS_INNTPSERVICE_IID; return iid; }
+    static const nsIID& GetIID() {
+      static nsIID iid = NS_INNTPSERVICE_IID; 
+      return iid; 
+    }
 	
 	/////////////////////////////////////////////////////////////////////////////////////
 	// We should have separate interface methods for each type of desired nntp action
@@ -54,7 +57,9 @@ public:
 	// groups for a host, etc.....
 	/////////////////////////////////////////////////////////////////////////////////////
 
-	NS_IMETHOD RunNewsUrl (const nsString& urlString, nsISupports * aConsumer, 
+  NS_IMETHOD PostMessage (nsFilePath &pathToFile, const char *subject, const char *newsgroup, nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
+
+  NS_IMETHOD RunNewsUrl (const nsString& urlString, nsISupports * aConsumer, 
 						   nsIUrlListener * aUrlListener, nsIURL ** aURL) = 0;
 };
 
