@@ -56,7 +56,7 @@ class basic_nsSharedString
       mutable nsrefcnt mRefCount;
   };
 
-NS_DEF_STRING_COMPARISONS(basic_nsStdStringWrapper)
+NS_DEF_STRING_COMPARISONS(basic_nsStdStringWrapper<CharT>)
 
 
 
