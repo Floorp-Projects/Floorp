@@ -34,6 +34,7 @@ CPPSRCS=				\
  nsDLLFactory.cpp			\
  nsDocumentViewer.cpp			\
  nsDocLoader.cpp			\
+ nsPluginViewer.cpp			\
  nsThrobber.cpp				\
  nsWebShell.cpp				\
  $(NULL)
