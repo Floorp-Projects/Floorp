@@ -69,6 +69,7 @@ NS_IMPL_ISUPPORTS(MyScriptable, kMyScriptableIID);
 
 // XPC_IMPLEMENT_FORWARD_IXPCSCRIPTABLE(MyScriptable);
     XPC_IMPLEMENT_FORWARD_CREATE(MyScriptable);
+    XPC_IMPLEMENT_IGNORE_GETFLAGS(MyScriptable);
     XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(MyScriptable);
     XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(MyScriptable);
     XPC_IMPLEMENT_FORWARD_GETPROPERTY(MyScriptable);
@@ -478,7 +479,7 @@ MyEcho::GetStack(nsIJSStackFrameLocation **_retval)
     if(NS_SUCCEEDED(rv))
     {
         nsIJSStackFrameLocation* jsstack;
-        if(NS_SUCCEEDED(xpc->GetCurrentJSStack(&jsstack)))
+        if(NS_SUCCEEDED(xpc->GetCurrentJSStack(&jsstack)) && jsstack)
         {
             xpc->CreateStackFrameLocation(JS_FALSE,
                                           __FILE__,

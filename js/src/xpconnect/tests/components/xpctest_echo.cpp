@@ -301,7 +301,7 @@ xpctestEcho::GetStack(nsIJSStackFrameLocation **_retval)
     if(NS_SUCCEEDED(rv))
     {
         nsIJSStackFrameLocation* jsstack;
-        if(NS_SUCCEEDED(xpc->GetCurrentJSStack(&jsstack)))
+        if(NS_SUCCEEDED(xpc->GetCurrentJSStack(&jsstack)) && jsstack)
         {
             xpc->CreateStackFrameLocation(JS_FALSE,
                                           __FILE__,

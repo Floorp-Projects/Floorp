@@ -66,10 +66,18 @@
 // forward declaration
 class nsIXPCScriptable;
 
+// bit flags used in result of GetFlags call
+#define XPCSCRIPTABLE_DONT_ENUM_STATIC_PROPS    (1 << 0)
+
+
 #define XPC_DECLARE_IXPCSCRIPTABLE \
 public: \
     NS_IMETHOD Create(JSContext *cx, JSObject *obj,                         \
                       nsIXPConnectWrappedNative* wrapper,                   \
+                      nsIXPCScriptable* arbitrary) COND_PURE ;              \
+    NS_IMETHOD GetFlags(JSContext *cx, JSObject *obj,                       \
+                      nsIXPConnectWrappedNative* wrapper,                   \
+                      JSUint32* flagsp,                                     \
                       nsIXPCScriptable* arbitrary) COND_PURE ;              \
     NS_IMETHOD LookupProperty(JSContext *cx, JSObject *obj, jsid id,        \
                               JSObject **objp, JSProperty **propp,          \
@@ -164,6 +172,13 @@ public:
                       nsIXPConnectWrappedNative* wrapper,                   \
                       nsIXPCScriptable* arbitrary)                          \
     {return arbitrary->Create(cx, obj, wrapper, NULL);}
+
+#define XPC_IMPLEMENT_FORWARD_GETFLAGS(_class) \
+    NS_IMETHODIMP _class::GetFlags(JSContext *cx, JSObject *obj,            \
+                      nsIXPConnectWrappedNative* wrapper,                   \
+                      JSUint32* flagsp,                                     \
+                      nsIXPCScriptable* arbitrary)                          \
+    {return arbitrary->GetFlags(cx, obj, wrapper, flagsp, NULL);}
 
 #define XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(_class) \
     NS_IMETHODIMP _class::LookupProperty(JSContext *cx, JSObject *obj,      \
@@ -296,6 +311,13 @@ public:
                       nsIXPCScriptable* arbitrary)                          \
     {return NS_OK;}
 
+#define XPC_IMPLEMENT_IGNORE_GETFLAGS(_class) \
+    NS_IMETHODIMP _class::GetFlags(JSContext *cx, JSObject *obj,            \
+                      nsIXPConnectWrappedNative* wrapper,                   \
+                      JSUint32* flagsp,                                     \
+                      nsIXPCScriptable* arbitrary)                          \
+    {*flagsp = 0; return NS_OK;}
+
 #define XPC_IMPLEMENT_IGNORE_LOOKUPPROPERTY(_class) \
     NS_IMETHODIMP _class::LookupProperty(JSContext *cx, JSObject *obj,      \
                               jsid id,                                      \
@@ -412,6 +434,7 @@ public:
 
 #define XPC_IMPLEMENT_FORWARD_IXPCSCRIPTABLE(_class)    \
     XPC_IMPLEMENT_FORWARD_CREATE(_class)                \
+    XPC_IMPLEMENT_FORWARD_GETFLAGS(_class)              \
     XPC_IMPLEMENT_FORWARD_LOOKUPPROPERTY(_class)        \
     XPC_IMPLEMENT_FORWARD_DEFINEPROPERTY(_class)        \
     XPC_IMPLEMENT_FORWARD_GETPROPERTY(_class)           \
@@ -428,6 +451,7 @@ public:
 
 #define XPC_IMPLEMENT_IGNORE_IXPCSCRIPTABLE(_class)     \
     XPC_IMPLEMENT_IGNORE_CREATE(_class)                 \
+    XPC_IMPLEMENT_IGNORE_GETFLAGS(_class)               \
     XPC_IMPLEMENT_IGNORE_LOOKUPPROPERTY(_class)         \
     XPC_IMPLEMENT_IGNORE_DEFINEPROPERTY(_class)         \
     XPC_IMPLEMENT_IGNORE_GETPROPERTY(_class)            \

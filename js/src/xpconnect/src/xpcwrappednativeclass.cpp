@@ -744,17 +744,21 @@ nsXPCWrappedNativeClass::StaticEnumerate(nsXPCWrappedNative* wrapper,
                                          JSIterateOp enum_op,
                                          jsval *statep, jsid *idp)
 {
+    int totalCount = (wrapper->GetDynamicScriptableFlags() & 
+                      XPCSCRIPTABLE_DONT_ENUM_STATIC_PROPS) ?
+                        0 : GetMemberCount();
+
     switch(enum_op) {
     case JSENUMERATE_INIT:
         *statep = INT_TO_JSVAL(0);
         if (idp)
-            *idp = INT_TO_JSVAL(GetMemberCount());
+            *idp = INT_TO_JSVAL(totalCount);
         return JS_TRUE;
 
     case JSENUMERATE_NEXT:
     {
         int index = JSVAL_TO_INT(*statep);
-        int count = GetMemberCount();
+        int count = totalCount;
 
         if (index < count) {
             *idp = GetMemberDescriptor(index)->id;
