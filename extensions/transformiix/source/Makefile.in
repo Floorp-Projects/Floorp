@@ -26,6 +26,10 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = base net xml xpath xslt main
+DIRS            = base net xml xpath xslt 
+
+ifndef MOZ_XSL
+DIRS += main
+endif
 
 include $(topsrcdir)/config/rules.mk

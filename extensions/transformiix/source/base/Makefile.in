@@ -45,4 +45,8 @@ CPPSRCS	= ArrayList.cpp             \
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef MOZ_XSL
+DEFINES += -DMOZILLA
+endif
+
 install:: $(OBJS)

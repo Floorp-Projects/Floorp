@@ -45,6 +45,10 @@ CPPSRCS = MozillaAttr.cpp \
         MozillaNotation.cpp \
         MozillaProcInstruction.cpp \
         MozillaText.cpp \
-        testMozDOM.cpp
 
 include $(topsrcdir)/config/rules.mk
+
+INCLUDES += -I$(srcdir)/../../../base
+DEFINES += -DMOZILLA
+
+install:: $(OBJS)
