@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  * Christopher Oliver
+ * Matt Gould
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -431,6 +432,8 @@ class FileTextArea extends JTextArea implements ActionListener,
     }
     public void mouseReleased(MouseEvent e) {
         checkPopup(e);
+        requestFocus();
+        getCaret().setVisible(true);
     }
 
     private void checkPopup(MouseEvent e) {
@@ -2311,7 +2314,7 @@ class SourceInfo {
     synchronized boolean removeBreakpoint(int line) {
         boolean wasBreakpoint = false;
         if (breakpoints != null && line < breakpoints.length) {
-            wasBreakpoint = (breakpoints[line] != BREAK_FLAG);
+            wasBreakpoint = (breakpoints[line] == BREAK_FLAG);
             breakpoints[line] = 0;
         }
         return wasBreakpoint;
