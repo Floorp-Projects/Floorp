@@ -39,6 +39,9 @@
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
+// Default timeout in seconds, if the server doesn't give us one (eg http/1.1)
+#define HTTP_DEFAULT_TIMEOUT 10
+
 //-----------------------------------------------------------------------------
 // nsHttpConnection <public>
 //-----------------------------------------------------------------------------
@@ -146,32 +149,50 @@ nsHttpConnection::OnHeadersAvailable(nsHttpTransaction *trans, PRBool *reset)
     const char *val = trans->ResponseHead()->PeekHeader(nsHttp::Connection);
     if (!val)
         val = trans->ResponseHead()->PeekHeader(nsHttp::Proxy_Connection);
-    if (val) {
-        // be pesimistic
-        mKeepAlive = PR_FALSE;
 
-        if (PL_strcasecmp(val, "keep-alive") == 0) {
+    if ((trans->ResponseHead()->Version() < NS_HTTP_VERSION_1_1) ||
+        (nsHttpHandler::get()->DefaultVersion() < NS_HTTP_VERSION_1_1)) {
+        // HTTP/1.0 connections are by default NOT persistent
+        if (val && !PL_strcasecmp(val, "keep-alive"))
             mKeepAlive = PR_TRUE;
+        else
+            mKeepAlive = PR_FALSE;
+    }
+    else {
+        // HTTP/1.1 connections are by default persistent
+        if (val && !PL_strcasecmp(val, "close")) 
+            mKeepAlive = PR_FALSE;
+        else
+            mKeepAlive = PR_TRUE;
+    }
 
-            val = trans->ResponseHead()->PeekHeader(nsHttp::Keep_Alive);
+    // if this connection is persistent, then the server may send a "Keep-Alive"
+    // header specifying the maximum number of times the connection can be
+    // reused as well as the maximum amount of time the connection can be idle
+    // before the server will close it.  If this header is not present, then we
+    // pick a suitably large number. Technically, any number > 0 will do, since
+    // we reset this each time, and with HTTP/1.1 connections continue until we
+    // get a {Proxy-,}Connection: close header. Don't just use 1 though, because
+    // of pipelining
+    if (mKeepAlive) {
+        val = trans->ResponseHead()->PeekHeader(nsHttp::Keep_Alive);
 
-            LOG(("val = [%s]\n", val));
+        LOG(("val = [%s]\n", val));
 
-            const char *cp = PL_strcasestr(val, "max=");
-            if (cp)
-                mMaxReuseCount = (PRUint32) atoi(cp + 4);
-            else
-                mMaxReuseCount = 100;
+        const char *cp = PL_strcasestr(val, "max=");
+        if (cp)
+            mMaxReuseCount = (PRUint32) atoi(cp + 4);
+        else
+            mMaxReuseCount = 100;
 
-            cp = PL_strcasestr(val, "timeout=");
-            if (cp)
-                mIdleTimeout = (PRUint32) atoi(cp + 8);
-            else
-                mIdleTimeout = 10;
-            
-            LOG(("Connection can be reused [this=%x max-reuse=%u "
-                 "keep-alive-timeout=%u\n", this, mMaxReuseCount, mIdleTimeout));
-        }
+        cp = PL_strcasestr(val, "timeout=");
+        if (cp)
+            mIdleTimeout = (PRUint32) atoi(cp + 8);
+        else
+            mIdleTimeout = HTTP_DEFAULT_TIMEOUT;
+        
+        LOG(("Connection can be reused [this=%x max-reuse=%u "
+             "keep-alive-timeout=%u\n", this, mMaxReuseCount, mIdleTimeout));
     }
 
     // if we're doing an SSL proxy connect, then we need to check whether or not

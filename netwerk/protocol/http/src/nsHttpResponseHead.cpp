@@ -390,6 +390,7 @@ nsHttpResponseHead::UpdateHeaders(nsHttpHeaderArray &headers)
 
         // Ignore any hop-by-hop headers...
         if (header == nsHttp::Connection          ||
+            header == nsHttp::Proxy_Connection    ||
             header == nsHttp::Keep_Alive          ||
             header == nsHttp::Proxy_Authenticate  ||
             header == nsHttp::Proxy_Authorization || // not a response header!
