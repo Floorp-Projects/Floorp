@@ -48,6 +48,7 @@
 
 static NS_DEFINE_IID(kIDOMRenderingContextIID, NS_IDOMRENDERINGCONTEXT_IID);
 static NS_DEFINE_IID(kIRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+static NS_DEFINE_IID(kIRenderingContextWinIID, NS_IRENDERING_CONTEXT_WIN_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 
 #define FLAG_CLIP_VALID       0x0001
@@ -311,8 +312,6 @@ nsresult nsDrawingSurfaceWin :: ReleaseDC()
 
 #endif
 
-static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
-
 #ifdef NGLAYOUT_DDRAW
 IDirectDraw *nsRenderingContextWin::mDDraw = NULL;
 IDirectDraw2 *nsRenderingContextWin::mDDraw2 = NULL;
@@ -488,6 +487,14 @@ nsRenderingContextWin :: QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (aIID.Equals(kIRenderingContextIID))
   {
     nsIRenderingContext* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(kIRenderingContextWinIID))
+  {
+    nsIRenderingContextWin* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -2049,5 +2056,20 @@ nsRenderingContextWin::DrawLine2(PRInt32 aX0, PRInt32 aY0,
                                  PRInt32 aX1, PRInt32 aY1)
 {
   DrawLine(aX0, aY0, aX1, aY1);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(HDC aDC, nsDrawingSurface &aSurface)
+{
+  nsDrawingSurfaceWin *surf = new nsDrawingSurfaceWin();
+
+  if (nsnull != surf)
+  {
+    NS_ADDREF(surf);
+    surf->Init(aDC, PR_FALSE);
+  }
+
+  aSurface = (nsDrawingSurface)surf;
+
   return NS_OK;
 }
