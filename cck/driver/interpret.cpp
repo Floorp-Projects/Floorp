@@ -996,24 +996,24 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 				else if (strcmp(pcmd, "toggleEnabled2") == 0)
 				{
 					// convert first parm into boolean...
-					char *p2 = strchr(parms, ',');
+                    char *p2 = strchr(parms, ',');
 					if (p2)
 					{
 						*p2++ = '\0';
 						CString value = replaceVars(parms, NULL);
 						BOOL newval = (!value.IsEmpty());
-						parms = p2;
-						p2 = strchr(parms, ',');
-						while (parms)
+						char *parms1 = p2;
+						p2 = strchr(parms1, ',');
+						while (parms1)
 						{
 							if (p2)
 								*p2++ = '\0';
 							WIDGET *w = findWidget(parms);
 							if (w)
 								w->control->EnableWindow(newval);
-							parms = p2;
-							if (parms)
-								p2 = strchr(parms, ',');
+							parms1 = p2;
+							if (parms1)
+								p2 = strchr(parms1, ',');
 						}
 					}
 				}
