@@ -1619,6 +1619,7 @@ NS_IMETHODIMP nsImapMailFolder::EndCopy(PRBool copySucceeded)
     if (copySucceeded && m_copyState && m_copyState->m_tmpFileSpec)
     {
         nsCOMPtr<nsIUrlListener> urlListener;
+        m_copyState->m_tmpFileSpec->flush();
         m_copyState->m_tmpFileSpec->closeStream();
         NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
         if (NS_FAILED(rv)) return rv;
