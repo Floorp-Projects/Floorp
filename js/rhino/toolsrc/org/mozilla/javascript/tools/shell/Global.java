@@ -942,10 +942,6 @@ class Runner implements Runnable {
                 f.call(cx, scope, scope, args);
             else
                 s.exec(cx, scope);
-        } catch (JavaScriptException e) {
-            Context.reportError(ToolErrorReporter.getMessage(
-                "msg.uncaughtJSException",
-                e.getMessage()));
         } finally {
             Context.exit();
         }

@@ -2894,9 +2894,7 @@ switch (op) {
         }
 
         if (javaException != null) {
-            if (javaException instanceof JavaScriptException) {
-                throw (JavaScriptException)javaException;
-            } else if (javaException instanceof RuntimeException) {
+            if (javaException instanceof RuntimeException) {
                 throw (RuntimeException)javaException;
             } else {
                 // Must be instance of Error or code bug

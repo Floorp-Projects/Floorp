@@ -207,21 +207,18 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
     }
 
     public Object getDefaultValue(Class hint) {
-        if (hint == null || hint == ScriptRuntime.StringClass)
-            return javaObject.toString();
-        try {
-            if (hint == ScriptRuntime.BooleanClass)
-                return callConverter("booleanValue");
-            if (hint == ScriptRuntime.NumberClass) {
-                return callConverter("doubleValue");
-            }
-            // fall through to error message
-        } catch (JavaScriptException jse) {
-            // fall through to error message
+        Object value;
+        if (hint == null || hint == ScriptRuntime.StringClass) {
+            value = javaObject.toString();
+        } else if (hint == ScriptRuntime.BooleanClass) {
+            value = callConverter("booleanValue");
+        } else if (hint == ScriptRuntime.NumberClass) {
+            value = callConverter("doubleValue");
+        } else {
+            throw Context.reportRuntimeError0("msg.default.value");
         }
-        throw Context.reportRuntimeError0("msg.default.value");
+        return value;
     }
-
 
     /**
      * Determine whether we can/should convert between the given type and the

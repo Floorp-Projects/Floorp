@@ -689,12 +689,8 @@ public class ScriptRuntime {
     {
         scope = ScriptableObject.getTopLevelScope(scope);
         Function ctor = getExistingCtor(cx, scope, constructorName);
-        try {
-            if (args == null) { args = ScriptRuntime.emptyArgs; }
-            return ctor.construct(cx, scope, args);
-        } catch (JavaScriptException e) {
-            throw cx.reportRuntimeError(e.getMessage());
-        }
+        if (args == null) { args = ScriptRuntime.emptyArgs; }
+        return ctor.construct(cx, scope, args);
     }
 
     /**
@@ -2036,8 +2032,6 @@ public class ScriptRuntime {
         ScriptableObject global = getGlobal(cx);
         try {
             script.exec(cx, global);
-        } catch (JavaScriptException e) {
-            throw new Error(e.toString());
         } finally {
             Context.exit();
         }

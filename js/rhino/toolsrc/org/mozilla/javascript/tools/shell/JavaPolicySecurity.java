@@ -196,7 +196,6 @@ public class JavaPolicySecurity extends SecurityProxy
                                  final Scriptable scope,
                                  final Scriptable thisObj,
                                  final Object[] args)
-        throws JavaScriptException
     {
         ProtectionDomain staticDomain = (ProtectionDomain)securityDomain;
         // There is no direct way in Java to intersect permitions according
@@ -218,16 +217,12 @@ public class JavaPolicySecurity extends SecurityProxy
         ProtectionDomain[] tmp = { dynamicDomain };
         AccessControlContext restricted = new AccessControlContext(tmp);
 
-        PrivilegedExceptionAction action = new PrivilegedExceptionAction() {
-            public Object run() throws JavaScriptException {
+        PrivilegedAction action = new PrivilegedAction() {
+            public Object run() {
                 return callable.call(cx, scope, thisObj, args);
             }
         };
 
-        try {
-            return AccessController.doPrivileged(action, restricted);
-        }catch (PrivilegedActionException ex) {
-            throw (JavaScriptException)(ex.getException());
-        }
+        return AccessController.doPrivileged(action, restricted);
     }
 }

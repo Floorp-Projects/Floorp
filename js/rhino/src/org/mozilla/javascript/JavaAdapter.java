@@ -635,11 +635,7 @@ public final class JavaAdapter
                 }
             }
         }
-        try {
-            return f.call(cx, scope, thisObj, args);
-        } catch (JavaScriptException ex) {
-            throw Context.throwAsScriptRuntimeEx(ex);
-        }
+        return f.call(cx, scope, thisObj, args);
     }
 
     private static void generateCtor(ClassFileWriter cfw, String adapterName,

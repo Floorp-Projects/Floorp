@@ -586,75 +586,70 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     public Object getDefaultValue(Class typeHint) {
         Object val;
         Context cx = null;
-        try {
-            for (int i=0; i < 2; i++) {
-                if (typeHint == ScriptRuntime.StringClass ? i == 0 : i == 1) {
-                    Object v = getProperty(this, "toString");
-                    if (!(v instanceof Function))
-                        continue;
-                    Function fun = (Function) v;
-                    if (cx == null)
-                        cx = Context.getContext();
-                    val = fun.call(cx, fun.getParentScope(), this,
-                                   ScriptRuntime.emptyArgs);
-                } else {
-                    String hint;
-                    if (typeHint == null)
-                        hint = "undefined";
-                    else if (typeHint == ScriptRuntime.StringClass)
-                        hint = "string";
-                    else if (typeHint == ScriptRuntime.ScriptableClass)
-                        hint = "object";
-                    else if (typeHint == ScriptRuntime.FunctionClass)
-                        hint = "function";
-                    else if (typeHint == ScriptRuntime.BooleanClass ||
-                                                typeHint == Boolean.TYPE)
-                        hint = "boolean";
-                    else if (typeHint == ScriptRuntime.NumberClass ||
-                             typeHint == ScriptRuntime.ByteClass ||
-                             typeHint == Byte.TYPE ||
-                             typeHint == ScriptRuntime.ShortClass ||
-                             typeHint == Short.TYPE ||
-                             typeHint == ScriptRuntime.IntegerClass ||
-                             typeHint == Integer.TYPE ||
-                             typeHint == ScriptRuntime.FloatClass ||
-                             typeHint == Float.TYPE ||
-                             typeHint == ScriptRuntime.DoubleClass ||
-                             typeHint == Double.TYPE)
-                        hint = "number";
-                    else {
-                        throw Context.reportRuntimeError1(
-                            "msg.invalid.type", typeHint.toString());
-                    }
-                    Object v = getProperty(this, "valueOf");
-                    if (!(v instanceof Function))
-                        continue;
-                    Function fun = (Function) v;
-                    Object[] args = { hint };
-                    if (cx == null)
-                        cx = Context.getContext();
-                    val = fun.call(cx, fun.getParentScope(), this, args);
+        for (int i=0; i < 2; i++) {
+            if (typeHint == ScriptRuntime.StringClass ? i == 0 : i == 1) {
+                Object v = getProperty(this, "toString");
+                if (!(v instanceof Function))
+                    continue;
+                Function fun = (Function) v;
+                if (cx == null)
+                    cx = Context.getContext();
+                val = fun.call(cx, fun.getParentScope(), this,
+                               ScriptRuntime.emptyArgs);
+            } else {
+                String hint;
+                if (typeHint == null)
+                    hint = "undefined";
+                else if (typeHint == ScriptRuntime.StringClass)
+                    hint = "string";
+                else if (typeHint == ScriptRuntime.ScriptableClass)
+                    hint = "object";
+                else if (typeHint == ScriptRuntime.FunctionClass)
+                    hint = "function";
+                else if (typeHint == ScriptRuntime.BooleanClass ||
+                                            typeHint == Boolean.TYPE)
+                    hint = "boolean";
+                else if (typeHint == ScriptRuntime.NumberClass ||
+                         typeHint == ScriptRuntime.ByteClass ||
+                         typeHint == Byte.TYPE ||
+                         typeHint == ScriptRuntime.ShortClass ||
+                         typeHint == Short.TYPE ||
+                         typeHint == ScriptRuntime.IntegerClass ||
+                         typeHint == Integer.TYPE ||
+                         typeHint == ScriptRuntime.FloatClass ||
+                         typeHint == Float.TYPE ||
+                         typeHint == ScriptRuntime.DoubleClass ||
+                         typeHint == Double.TYPE)
+                    hint = "number";
+                else {
+                    throw Context.reportRuntimeError1(
+                        "msg.invalid.type", typeHint.toString());
                 }
-                if (val != null && (val == Undefined.instance ||
-                                    !(val instanceof Scriptable) ||
-                                    typeHint == ScriptRuntime.ScriptableClass ||
-                                    typeHint == ScriptRuntime.FunctionClass))
-                {
-                    return val;
-                }
-                if (val instanceof NativeJavaObject) {
-                    // Let a wrapped java.lang.String pass for a primitive
-                    // string.
-                    Object u = ((Wrapper) val).unwrap();
-                    if (u instanceof String)
-                        return u;
-                }
+                Object v = getProperty(this, "valueOf");
+                if (!(v instanceof Function))
+                    continue;
+                Function fun = (Function) v;
+                Object[] args = { hint };
+                if (cx == null)
+                    cx = Context.getContext();
+                val = fun.call(cx, fun.getParentScope(), this, args);
             }
-            // fall through to error
+            if (val != null && (val == Undefined.instance ||
+                                !(val instanceof Scriptable) ||
+                                typeHint == ScriptRuntime.ScriptableClass ||
+                                typeHint == ScriptRuntime.FunctionClass))
+            {
+                return val;
+            }
+            if (val instanceof NativeJavaObject) {
+                // Let a wrapped java.lang.String pass for a primitive
+                // string.
+                Object u = ((Wrapper) val).unwrap();
+                if (u instanceof String)
+                    return u;
+            }
         }
-        catch (JavaScriptException jse) {
-            // fall through to error
-        }
+        // fall through to error
         String arg = (typeHint == null) ? "undefined" : typeHint.getName();
         throw ScriptRuntime.typeError1("msg.default.value", arg);
     }

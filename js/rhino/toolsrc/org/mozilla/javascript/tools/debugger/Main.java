@@ -730,11 +730,7 @@ public class Main {
             if (scope == null) {
                 scope = new ImporterTopLevel(cx);
             }
-            try {
-                cx.evaluateString(scope, text, url, 1, null);
-            } catch (JavaScriptException ex) {
-                throw new RuntimeException(ex.getMessage());
-            }
+            cx.evaluateString(scope, text, url, 1, null);
         } finally {
             Context.exit();
         }

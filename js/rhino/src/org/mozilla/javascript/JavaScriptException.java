@@ -44,7 +44,7 @@ package org.mozilla.javascript;
  *
  * @author Mike McCabe
  */
-public class JavaScriptException extends Exception
+public class JavaScriptException extends RuntimeException
 {
     /**
      * @deprecated
