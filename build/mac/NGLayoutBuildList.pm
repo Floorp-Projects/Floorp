@@ -269,6 +269,9 @@ sub BuildDist()
 	#HTMLPARSER
    InstallFromManifest(":mozilla:htmlparser:src:MANIFEST",							"$distdirectory:htmlparser:");
 
+	#EDITOR
+   InstallFromManifest(":mozilla:editor:public:MANIFEST",							"$distdirectory:editor:");
+
 	#// To get out defines in all the project, dummy alias NGLayoutConfigInclude.h into MacConfigInclude.h
 	MakeAlias(":mozilla:config:mac:NGLayoutConfigInclude.h",	":mozilla:dist:config:MacConfigInclude.h");
 }
