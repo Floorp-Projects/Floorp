@@ -31,12 +31,17 @@ MODULE=raptor
 REQUIRES=util img xpcom raptor netlib
 
 DEFINES += -D_IMPL_NS_GFXONXP 
-CFLAGS	+= $(TK_GTK_CFLAGS)
+CFLAGS	+= $(TK_CFLAGS)
 
 LLIBS+=$(DIST)/lib/libxpcom.a $(DIST)/lib/libraptorbase.a $(DIST)/lib/libraptorgfx.a
 
-CPPSRCS=nsDeviceContextGTK.cpp nsFontMetricsGTK.cpp nsGfxFactoryGTK.cpp \
-	nsRenderingContextGTK.cpp nsImageGTK.cpp nsRegionGTK.cpp
+CPPSRCS = \
+	nsDeviceContextGTK.cpp \
+	nsFontMetricsGTK.cpp \
+	nsGfxFactoryGTK.cpp \
+	nsRenderingContextGTK.cpp \
+	nsImageGTK.cpp \
+	nsRegionGTK.cpp \
 
 include $(topsrcdir)/config/rules.mk
 
