@@ -64,14 +64,14 @@ public:
 
     void GetLastFetched( PRTime * result)     { if (result) *result = mLastFetched; }
     void SetLastFetched( PRTime   lastFetched)
-              { if (lastFetched) mLastFetched = lastFetched; }
+              { if (!LL_IS_ZERO(lastFetched)) mLastFetched = lastFetched; }
 
     void GetLastValidated( PRTime * result)   { if (result) *result = mLastValidated; }
     void SetLastValidated( PRTime   lastValidated)
-              { if (lastValidated) mLastValidated = lastValidated; }
+              { if (!LL_IS_ZERO(lastValidated)) mLastValidated = lastValidated; }
 
     void GetExpirationTime( PRTime * result)  { if (result) *result = mExpirationTime; }
-    void SetExpirationTime( PRTime   expires) { if (expires) mExpirationTime = expires; }
+    void SetExpirationTime( PRTime   expires) { if (!LL_IS_ZERO(expires)) mExpirationTime = expires; }
 
     void GetDataSize( PRUint32 * result)      { if (result) *result = mDataSize; }
     void SetDataSize( PRUint32   size)        { mDataSize = size; }
