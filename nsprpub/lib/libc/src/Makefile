@@ -62,7 +62,7 @@ endif
 else
 DLLBASE=/BASE:0x30000000
 RES=$(OBJDIR)/plc.res
-RESNAME=$(MOD_DEPTH)/pr/src/nspr.rc
+RESNAME=plc.rc
 ifeq ($(OS_TARGET),WIN95)
 EXTRA_LIBS = $(DIST)/lib/nspr$(MOD_VERSION).lib
 else

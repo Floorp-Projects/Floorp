@@ -350,11 +350,8 @@ $(RES): $(RESNAME)
 ifeq ($(OS_TARGET),OS2)
 	$(RC) -DOS2 -r $(RESNAME) $(RES)
 else
-ifeq ($(OS_TARGET),WINNT)
-	$(RC) -dWINNT -Fo$(RES) $(RESNAME)
-else
-	$(RC) -Fo$(RES) $(RESNAME)
-endif
+# The resource compiler does not understand the -U option.
+	$(RC) $(filter-out -U%,$(DEFINES)) $(INCLUDES) -Fo$(RES) $(RESNAME)
 endif
 	@echo $(RES) finished
 endif
