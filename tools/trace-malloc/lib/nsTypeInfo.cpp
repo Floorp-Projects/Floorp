@@ -135,34 +135,16 @@ Signaller::~Signaller()
     signal(mSignal, mOldHandler);
 }
 
-// The following are pointers that bamboozle are otherwise feeble
+// The following are pointers that bamboozle our otherwise feeble
 // attempts to "safely" collect type names.
 //
 // XXX this kind of sucks because it means that anyone trying to use
 // this without NSPR will get unresolved symbols when this library
-// loads. It's also not very extensable. Oh well: FIX ME!
+// loads. It's also not very extensible. Oh well: FIX ME!
 extern "C" {
     // from nsprpub/pr/src/io/priometh.c (libnspr4.so)
     extern void* _pr_faulty_methods;
 };
-
-static int
-is_bamboozler(void* vt)
-{
-    static void* bamboolzers[] = {
-        _pr_faulty_methods,
-        0
-    };
-
-    for (void** fn = bamboolzers; *fn; ++fn) {
-        if (*fn == vt)
-            return 1;
-    }
-
-    return 0;
-}
-
-
 
 static inline int
 sanity_check_vtable_i386(void** vt)
@@ -181,11 +163,32 @@ sanity_check_vtable_i386(void** vt)
     //
     //    55     push %ebp
     //    89e5   mov  %esp,%ebp
+    //    53     push %ebx
+    //
+    //    or
+    //
+    //    55     push %ebp
+    //    89e5   mov  %esp,%ebp
+    //    56     push %esi
     //
     //    (which is the standard function prologue generated
-    //    by egcs).
-    unsigned** i = reinterpret_cast<unsigned**>(vt) + 1;
-    return !(unsigned(*i) & 3) && ((**i & 0xffffff) == 0xe58955);
+    //    by egcs, plus a ``signature'' instruction that appears
+    //    in the typeid() function's implementation).
+    unsigned char** fp1 = reinterpret_cast<unsigned char**>(vt) + 1;
+
+    // Does it look like an address?
+    unsigned char* ip = *fp1;
+    if ((unsigned(ip) & 3) != 0)
+        return 0;
+
+    // Does it look like it refers to the standard prologue?
+    static unsigned char prologue[] = { 0x55, 0x89, 0xE5 };
+    for (unsigned i = 0; i < sizeof(prologue); ++i)
+        if (*ip++ != prologue[i])
+            return 0;
+
+    // Is the next instruction a `push %ebx' or `push %esi'?
+    return (*ip == 0x53 || *ip == 0x56);
 }
 
 static inline int
@@ -207,7 +210,7 @@ const char* nsGetTypeName(void* ptr)
 {
     // sanity check the vtable pointer, before trying to use RTTI on the object.
     void** vt = *(void***)ptr;
-    if (vt && !(unsigned(vt) & 3) && !is_bamboozler(vt)) {
+    if (vt && !(unsigned(vt) & 3) && (vt != &_pr_faulty_methods)) {
         Signaller s1(SIGSEGV);
         if (attempt() == 0) {
             if (SANITY_CHECK_VTABLE(vt)) {
