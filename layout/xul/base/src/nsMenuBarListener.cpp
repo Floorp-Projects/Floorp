@@ -106,7 +106,9 @@ nsMenuBarListener::KeyDown(nsIDOMEvent* aKeyEvent)
   nsCOMPtr<nsIDOMKeyEvent> keyEvent = do_QueryInterface(aKeyEvent);
   PRUint32 theChar;
 	keyEvent->GetKeyCode(&theChar);
-  if (theChar == NS_VK_ALT) {
+  PRBool alt;
+  keyEvent->GetAltKey(&alt);
+  if (theChar == NS_VK_ALT && alt) {
     // No other modifiers can be down.
     // Especially CTRL.  CTRL+ALT == AltGR, and
     // we'll fuck up on non-US enhanced 102-key
