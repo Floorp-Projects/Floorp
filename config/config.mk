@@ -721,7 +721,7 @@ ifeq (,$(filter-out WINNT OS2, $(OS_ARCH)))
 ifeq ($(OS_ARCH),WINNT)
 NSINSTALL	= $(CYGWIN_WRAPPER) $(MOZ_TOOLS_DIR)/bin/nsinstall
 else
-NSINSTALL	= nsinstall
+NSINSTALL	= $(MOZ_TOOLS_DIR)/nsinstall
 endif
 INSTALL		= $(NSINSTALL)
 else
