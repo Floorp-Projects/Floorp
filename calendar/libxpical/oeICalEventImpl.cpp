@@ -55,7 +55,12 @@
 #define RECUR_MONTHLY_WDAY 4
 #define RECUR_YEARLY 5
 
-#define XPROP_LASTALARMACK "X-MOZILLA-LASTALARMACK"
+#define XPROP_SYNCID        "X-MOZILLA-SYNCID"
+#define XPROP_LASTALARMACK  "X-MOZILLA-LASTALARMACK"
+#define XPROP_RECURUNITS    "X-MOZILLA-RECUR-DEFAULT-UNITS"
+#define XPROP_RECURINTERVAL "X-MOZILLA-RECUR-DEFAULT-INTERVAL"
+#define XPROP_ALARMUNITS    "X-MOZILLA-ALARM-DEFAULT-UNITS"
+#define XPROP_ALARMLENGTH   "X-MOZILLA-ALARM-DEFAULT-LENGTH"
 
 char *EmptyReturn() {
     return (char*) nsMemory::Clone( "", 1 );
@@ -1593,25 +1598,6 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_alarmemail= nsnull;
     }
 
-    //lastalarmack
-
-    prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-    while ( prop ) {
-        const char *x_name = icalproperty_get_x_name ( prop );
-        if ( strcmp( x_name, XPROP_LASTALARMACK ) == 0) {
-            break;
-        }
-        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ); 
-    }
-
-    if ( prop != 0) {
-        tmpstr = icalproperty_get_value_as_string( prop );
-        m_lastalarmack = icaltime_from_string( tmpstr );
-
-    } else {
-        m_lastalarmack = icaltime_null_time();
-    }
-
 //inviteemail
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
             prop != 0 ;
@@ -1650,6 +1636,24 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     } else
         m_recurinterval= 0;
 
+//recurunits
+    for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
+            prop != 0 ;
+            prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
+            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
+            if ( tmppar != 0 ) {
+                tmpstr = icalparameter_get_member( tmppar );
+                if( strcmp( tmpstr, "RecurUnits" ) == 0 )
+                    break;
+            }
+    }
+
+    if ( prop != 0) {
+        tmpstr = (char *)icalproperty_get_value_as_string( prop );
+        SetRecurUnits( tmpstr );
+    } else
+        SetRecurUnits( "weeks" );
+
 //startdate
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTART_PROPERTY );
     if ( prop != 0) {
@@ -1663,6 +1667,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     } else {
         m_start->m_datetime = icaltime_null_time();
     }
+    
 //enddate
     prop = icalcomponent_get_first_property( vevent, ICAL_DTEND_PROPERTY );
     if ( prop != 0) {
@@ -1674,6 +1679,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     } else {
         m_end->m_datetime = icaltime_null_time();
     }
+    
 //stampdate
     prop = icalcomponent_get_first_property( vevent, ICAL_DTSTAMP_PROPERTY );
     if ( prop != 0) {
@@ -1681,6 +1687,49 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
     } else {
         m_stamp->m_datetime = icaltime_null_time();
     }
+
+
+// scan for X- properties
+
+    // first set the defaults
+    m_lastalarmack = icaltime_null_time();
+
+    const char *propvalue;
+    const char *x_name;
+
+    prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
+    while ( prop ) {
+        x_name = icalproperty_get_x_name ( prop );
+        propvalue = icalproperty_get_value_as_string( prop );
+        //lastalarmack
+        if ( strcmp( x_name, XPROP_LASTALARMACK ) == 0) {
+            m_lastalarmack = icaltime_from_string( propvalue );
+        }
+        //syncid
+        else if ( strcmp( x_name, XPROP_SYNCID ) == 0) {
+            SetSyncId( propvalue );
+        }
+        //alarmunits
+        else if ( strcmp( x_name, XPROP_ALARMUNITS ) == 0) {
+            SetAlarmUnits( propvalue );
+        }
+        //alarmlength
+        else if ( strcmp( x_name, XPROP_ALARMLENGTH ) == 0) {
+            m_alarmlength= atol( propvalue );
+        }
+        //recurunits
+        else if ( strcmp( x_name, XPROP_RECURUNITS ) == 0) {
+            SetRecurUnits( propvalue );
+        }
+        //recurinterval
+        else if ( strcmp( x_name, XPROP_RECURINTERVAL ) == 0) {
+            m_recurinterval= atol( propvalue );
+        }
+
+        prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY );
+    }
+
+
 //recurend & recurforever & recur & recurweekday & recurweeknumber
     m_recur = false;
     m_recurforever = true;
@@ -1694,39 +1743,30 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
         m_recurend->m_datetime = recur.until;
         m_recurend->m_datetime.is_date = false;
         m_recurend->m_datetime.is_utc = false;
+	    m_recurinterval = recur.interval;
         if( !icaltime_is_null_time( recur.until ) )
             m_recurforever = false;
-        if( recur.freq == ICAL_WEEKLY_RECURRENCE ) {
+        if( recur.freq == ICAL_DAILY_RECURRENCE ) {
+	        SetRecurUnits( "days" );
+	    } else if( recur.freq == ICAL_WEEKLY_RECURRENCE ) {
+	        SetRecurUnits( "weeks" );
             int k=0;
             while( recur.by_day[k] != ICAL_RECURRENCE_ARRAY_MAX ) {
                 m_recurweekdays += 1 << (recur.by_day[k]-1);
                 k++;
             }
         } else if( recur.freq == ICAL_MONTHLY_RECURRENCE ) {
+            SetRecurUnits( "months" );
             if( recur.by_day[0] != ICAL_RECURRENCE_ARRAY_MAX )
                 m_recurweeknumber = icalrecurrencetype_day_position(recur.by_day[0]);
             if( m_recurweeknumber < 0 )
                 m_recurweeknumber = 5;
         }
-    }
-//recurunits
-    for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
-            prop != 0 ;
-            prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
-            icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
-            if ( tmppar != 0 ) {
-                tmpstr = icalparameter_get_member( tmppar );
-                if( strcmp( tmpstr, "RecurUnits" ) == 0 )
-                    break;
-            }
+        else if( recur.freq == ICAL_YEARLY_RECURRENCE ) {
+	        SetRecurUnits( "years" );
+        }
     }
     
-    if ( prop != 0) {
-        tmpstr = (char *)icalproperty_get_value_as_string( prop );
-        SetRecurUnits( tmpstr );
-    } else
-        SetRecurUnits( "weeks" );
-
     //recur exceptions
     m_exceptiondates.clear();
     for( prop = icalcomponent_get_first_property( vevent, ICAL_EXDATE_PROPERTY );
@@ -1771,6 +1811,7 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
                 }
             }
     }
+
     return true;
 }
 
@@ -1860,13 +1901,10 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
         prop = icalproperty_new_class( ICAL_CLASS_PUBLIC );
     icalcomponent_add_property( vevent, prop );
 
-    icalparameter *tmppar;
-    
     //syncId
     if( m_syncid && strlen( m_syncid ) != 0 ){
-        icalparameter *tmppar = icalparameter_new_member( "SyncId" );
         prop = icalproperty_new_x( m_syncid );
-        icalproperty_add_parameter( prop, tmppar );
+        icalproperty_set_x_name( prop, XPROP_SYNCID);
         icalcomponent_add_property( vevent, prop );
     }
 
@@ -1906,9 +1944,8 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 
     //alarmunits
     if( m_alarmunits && strlen( m_alarmunits ) != 0 ){
-        icalparameter *tmppar = icalparameter_new_member( "AlarmUnits" );
         prop = icalproperty_new_x( m_alarmunits );
-        icalproperty_add_parameter( prop, tmppar );
+        icalproperty_set_x_name( prop, XPROP_ALARMUNITS);
         icalcomponent_add_property( vevent, prop );
     }
 
@@ -1916,9 +1953,8 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     //alarmlength
     if( m_alarmlength ) {
         sprintf( tmpstr, "%lu", m_alarmlength );
-        tmppar = icalparameter_new_member( "AlarmLength" );
         prop = icalproperty_new_x( tmpstr );
-        icalproperty_add_parameter( prop, tmppar );
+        icalproperty_set_x_name( prop, XPROP_ALARMLENGTH);
         icalcomponent_add_property( vevent, prop );
     }
 
@@ -1953,17 +1989,15 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
 
     //recurunits
     if( m_recurunits && strlen( m_recurunits ) != 0 ){
-        icalparameter *tmppar = icalparameter_new_member( "RecurUnits" );
         prop = icalproperty_new_x( m_recurunits );
-        icalproperty_add_parameter( prop, tmppar );
+        icalproperty_set_x_name( prop, XPROP_RECURUNITS);
         icalcomponent_add_property( vevent, prop );
     }
 
     //recurinterval
     sprintf( tmpstr, "%lu", m_recurinterval );
-    tmppar = icalparameter_new_member( "RecurInterval" );
     prop = icalproperty_new_x( tmpstr );
-    icalproperty_add_parameter( prop, tmppar );
+    icalproperty_set_x_name( prop, XPROP_RECURINTERVAL);
     icalcomponent_add_property( vevent, prop );
 
     //recurrence
