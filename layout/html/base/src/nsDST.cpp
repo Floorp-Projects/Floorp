@@ -350,7 +350,11 @@ keepLooping:
 nsresult
 nsDST::Clear()
 {
-  mArena->FreeArenaPool();
+  if (mArena->IsShared()) {
+    FreeTree(mRoot);
+  } else {
+    mArena->FreeArenaPool();
+  }
   mRoot = 0;
   return NS_OK;
 }
