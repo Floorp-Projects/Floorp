@@ -90,8 +90,7 @@ nsBlockBandData::ComputeAvailSpaceRect()
   nsBandTrapezoid* trapezoid = mData;
   nsBandTrapezoid* rightTrapezoid = nsnull;
 
-  PRInt32 leftFloaters = 0;
-  PRInt32 rightFloaters = 0;
+  PRInt32 floaters = 0;
   if (count > 1) {
     // If there's more than one trapezoid that means there are floaters
     PRInt32 i;
@@ -111,10 +110,10 @@ nsBlockBandData::ComputeAvailSpaceRect()
             f->GetStyleData(eStyleStruct_Display,
                             (const nsStyleStruct*&)display);
             if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
-              leftFloaters++;
+              floaters++;
             }
             else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-              rightFloaters++;
+              floaters++;
               if ((nsnull == rightTrapezoid) && (i > 0)) {
                 rightTrapezoid = &mData[i - 1];
               }
@@ -124,10 +123,10 @@ nsBlockBandData::ComputeAvailSpaceRect()
           trapezoid->frame->GetStyleData(eStyleStruct_Display,
                                     (const nsStyleStruct*&)display);
           if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
-            leftFloaters++;
+            floaters++;
           }
           else if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
-            rightFloaters++;
+            floaters++;
             if ((nsnull == rightTrapezoid) && (i > 0)) {
               rightTrapezoid = &mData[i - 1];
             }
@@ -136,8 +135,12 @@ nsBlockBandData::ComputeAvailSpaceRect()
       }
     }
   }
-  mLeftFloaters = leftFloaters;
-  mRightFloaters = rightFloaters;
+  else if (mData[0].state != nsBandTrapezoid::Available) {
+    // We have a floater using up all the available space
+    floaters = 1;
+  }
+  mFloaters = floaters;
+
   if (nsnull != rightTrapezoid) {
     trapezoid = rightTrapezoid;
   }
@@ -251,8 +254,7 @@ nsBlockBandData::GetFrameYMost(nsIFrame* aFrame)
   return y + r.height;
 }
 
-// XXX optimization? use mLeftFloaters && mRightFloaters to avoid
-// doing anything
+// XXX optimization? use mFloaters to avoid doing anything
 nscoord
 nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
 {
