@@ -37,9 +37,9 @@ Contributor(s): ______________________________________. -->
 	<key id="key_newNavigator"/>
 	<key id="key_newMessage"/>
   <key id="key_newBlankPage"/>
-  <key id="openBrowserKb"     disabled="false" xulkey="true" key="&openCmd.commandkey;" observes="Browser:OpenUrl" />
-  <key id="openFileKb"        disabled="false" xulkey="true" key="&openFileCmd.commandkey;" observes="Browser:OpenFile" />
-  <key id="printKb"           disabled="false" xulkey="true" key="&printCmd.commandkey;" observes="Browser:Print" />
+  <key id="openBrowserKb"     xulkey="true" key="&openCmd.commandkey;" observes="Browser:Open" />
+  <key id="openFileKb"        xulkey="true" key="&openFileCmd.commandkey;" observes="Browser:OpenFile" />
+  <key id="printKb"           xulkey="true" key="&printCmd.commandkey;" observes="Browser:Print" />
 	<key id="key_close"/>
 	<key id="key_quit"/>
 
@@ -53,12 +53,12 @@ Contributor(s): ______________________________________. -->
 	<key id="key_selectAll"/>
 	<key id="key_preferences"/>
 
-	<key id="goForwardKb"         disabled="false" xulkey="true" key="&goBackCmd.commandkey;" observes="Browser:GoForward" />
-	<key id="goBackwardKb"        disabled="false" xulkey="true" key="&goForwardCmd.commandkey;" observes="Browser:GoBackwards" />
-    <key id="goHomeKb"            disabled="false" xulkey="true" key="&goHomeCmd.commandkey;" observes="Browser:GoHome" />
+	<key id="goForwardKb"         xulkey="true" key="&goBackCmd.commandkey;" observes="Browser:GoForward" />
+	<key id="goBackwardKb"        xulkey="true" key="&goForwardCmd.commandkey;" observes="Browser:GoBackwards" />
+    <key id="goHomeKb"            xulkey="true" key="&goHomeCmd.commandkey;" observes="Browser:GoHome" />
     
-    <key id="addBookmarkKb"        disabled="false" xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
-    <key id="manBookmarkKb"        disabled="false" xulkey="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
+    <key id="addBookmarkKb"        xulkey="true" key="&addCurPageCmd.commandkey;" observes="Browser:AddBookmark" />
+    <key id="manBookmarkKb"        xulkey="true" key="&manBookmarksCmd.commandkey;" observes="Browser:ManageBookmark" />
 
 	<!-- how to handle return, enter, tab, function keys, arrow keys, others? saari working on solution -->
 </keyset>
@@ -414,7 +414,7 @@ Contributor(s): ______________________________________. -->
 			</rule>
 			<rule>
 			  <menupopup>
-				<menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, document.getElementById('BookmarksMenu').database)" />
+				<menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, 'BookmarksMenu')" />
 			  </menupopup>
 			</rule>
 		</template>
