@@ -47,6 +47,8 @@
 #include "nsICookieService.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindow.h"
+#include "nsIClipboard.h"
+
 static NS_DEFINE_IID(kIWindowMediatorIID,NS_IWINDOWMEDIATOR_IID);
 static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_IID(kWalletServiceCID,     NS_WALLETSERVICE_CID);
@@ -681,6 +683,15 @@ int main(int argc, char* argv[])
     printf("XXX WARNING: Number of webshells being leaked: %d \n", count);
   }
 #endif
+
+  // at this point, all that is on the clipboard is a proxy object, but that object
+  // won't be valid once the app goes away. As a result, we need to force the data
+  // out of that proxy and properly onto the clipboard. This can't be done in the
+  // clipboard service's shutdown routine because it requires the parser/etc which
+  // has already been shutdown by the time the clipboard is shut down.
+  NS_WITH_SERVICE(nsIClipboard, clipService, "component://netscape/widget/clipboard", &rv);
+  if ( clipService )
+    clipService->ForceDataToClipboard();
 
   rv = NS_ShutdownXPCOM( NULL );
   NS_ASSERTION(NS_SUCCEEDED(rv), "NS_ShutdownXPCOM failed");
