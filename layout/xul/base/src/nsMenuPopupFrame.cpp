@@ -294,6 +294,154 @@ nsMenuPopupFrame :: AdjustClientXYForNestedDocuments ( nsIDOMXULDocument* inPopu
 } // AdjustClientXYForNestedDocuments
 
 
+//
+// AdjustPositionForAnchorAlign
+// 
+// Uses the |popupanchor| and |popupalign| attributes on the popup to move the popup around and
+// anchor it to its parent. |outFlushWithTopBottom| will be TRUE if the popup is flush with either
+// the top or bottom edge of its parent, and FALSE if it is flush with the left or right edge of
+// the parent.
+// 
+void
+nsMenuPopupFrame :: AdjustPositionForAnchorAlign ( PRInt32* ioXPos, PRInt32* ioYPos, const nsRect & inParentRect,
+                                                    const nsString& aPopupAnchor, const nsString& aPopupAlign,
+                                                    PRBool* outFlushWithTopBottom )
+{
+  if (aPopupAnchor == "topright" && aPopupAlign == "topleft") {
+    *ioXPos += inParentRect.width;
+  }
+  else if (aPopupAnchor == "topright" && aPopupAlign == "bottomright") {
+    *ioXPos -= (mRect.width - inParentRect.width);
+    *ioYPos -= mRect.height;
+    *outFlushWithTopBottom = PR_TRUE;
+  }
+  else if (aPopupAnchor == "bottomright" && aPopupAlign == "bottomleft") {
+    *ioXPos += inParentRect.width;
+    *ioYPos -= (mRect.height - inParentRect.height);
+  }
+  else if (aPopupAnchor == "bottomright" && aPopupAlign == "topright") {
+    *ioXPos -= (mRect.width - inParentRect.width);
+    *ioYPos += inParentRect.height;
+    *outFlushWithTopBottom = PR_TRUE;
+  }
+  else if (aPopupAnchor == "topleft" && aPopupAlign == "topright") {
+    *ioXPos -= mRect.width;
+  }
+  else if (aPopupAnchor == "topleft" && aPopupAlign == "bottomleft") {
+    *ioYPos -= mRect.height;
+    *outFlushWithTopBottom = PR_TRUE;
+  }
+  else if (aPopupAnchor == "bottomleft" && aPopupAlign == "bottomright") {
+    *ioXPos -= mRect.width;
+    *ioYPos -= (mRect.height - inParentRect.height);
+  }
+  else if (aPopupAnchor == "bottomleft" && aPopupAlign == "topleft") {
+    *ioYPos += inParentRect.height;
+    *outFlushWithTopBottom = PR_TRUE;
+  }
+  else
+    NS_WARNING ( "Hmmm, looks like you've hit a anchor/align case we weren't setup for." );
+
+} // AdjustPositionForAnchorAlign
+
+
+//
+// IsMoreRoomOnOtherSideOfParent
+//
+// Determine if there is more room on the screen for the popup to live if it was positioned
+// on the flip side of the parent from the side it is flush against (ie, if it's top edge was
+// flush against the bottom, is there more room if its bottom edge were flush against the top)
+//
+PRBool
+nsMenuPopupFrame :: IsMoreRoomOnOtherSideOfParent ( PRBool inFlushAboveBelow, PRInt32 inScreenViewLocX, PRInt32 inScreenViewLocY,
+                                                     const nsRect & inScreenParentFrameRect, PRInt32 inScreenTopTwips, PRInt32 inScreenLeftTwips,
+                                                     PRInt32 inScreenBottomTwips, PRInt32 inScreenRightTwips )
+{
+  PRBool switchSides = PR_FALSE;
+  if ( inFlushAboveBelow ) {
+    PRInt32 availAbove = inScreenParentFrameRect.y - inScreenTopTwips;
+    PRInt32 availBelow = inScreenBottomTwips - (inScreenParentFrameRect.y + inScreenParentFrameRect.height) ;
+    if ( inScreenViewLocY > inScreenParentFrameRect.y )       // view is now below parent
+      switchSides = availAbove > availBelow;
+    else
+      switchSides = availBelow > availAbove;
+  }
+  else {
+    PRInt32 availLeft = inScreenParentFrameRect.x - inScreenLeftTwips;
+    PRInt32 availRight = inScreenRightTwips - (inScreenParentFrameRect.x + inScreenParentFrameRect.width) ;
+    if ( inScreenViewLocX > inScreenParentFrameRect.x )       // view is now to the right of parent
+      switchSides = availLeft > availRight;
+    else
+      switchSides = availRight > availLeft;           
+  }
+
+  return switchSides;
+  
+} // IsMoreRoomOnOtherSideOfParent
+
+
+//
+// MovePopupToOtherSideOfParent
+//
+// Move the popup to the other side of the parent (ie, if it the popup's top edge is flush against the
+// bottom of its parent, move the popup so that its bottom edge is now flush against the top of its
+// parent...same idea for left/right).
+//
+// NOTE: In moving the popup, it may need to change size in order to stay on the screen. This will
+//       have the side effect of touching |mRect|.
+//
+void
+nsMenuPopupFrame :: MovePopupToOtherSideOfParent ( PRBool inFlushAboveBelow, PRInt32* ioXPos, PRInt32* ioYPos, 
+                                                     PRInt32* ioScreenViewLocX, PRInt32* ioScreenViewLocY,
+                                                     const nsRect & inScreenParentFrameRect, PRInt32 inScreenTopTwips, PRInt32 inScreenLeftTwips,
+                                                     PRInt32 inScreenBottomTwips, PRInt32 inScreenRightTwips )
+{
+  if ( inFlushAboveBelow ) {
+    if ( *ioScreenViewLocY > inScreenParentFrameRect.y ) {     // view is currently below parent
+      // move it above.
+      PRInt32 shiftDistY = inScreenParentFrameRect.height + mRect.height;
+      *ioYPos -= shiftDistY;
+      *ioScreenViewLocY -= shiftDistY;
+      // trim it to fit.
+      if ( *ioScreenViewLocY < inScreenTopTwips ) {
+        PRInt32 trimY = inScreenTopTwips - *ioScreenViewLocY;
+        *ioYPos += trimY;
+        *ioScreenViewLocY += trimY;
+        mRect.height -= trimY;
+      }
+    }
+    else {                                               // view is currently above parent
+      // move it below
+      PRInt32 shiftDistY = inScreenParentFrameRect.height + mRect.height;
+      *ioYPos += shiftDistY;
+      *ioScreenViewLocY += shiftDistY;
+    }
+  }
+  else {
+    if ( *ioScreenViewLocX > inScreenParentFrameRect.x ) {     // view is currently to the right of the parent
+      // move it to the left.
+      PRInt32 shiftDistX = inScreenParentFrameRect.width + mRect.width;
+      *ioXPos -= shiftDistX;
+      *ioScreenViewLocX -= shiftDistX;
+      // trim it to fit.
+      if ( *ioScreenViewLocX < inScreenLeftTwips ) {
+        PRInt32 trimX = inScreenLeftTwips - *ioScreenViewLocX;
+        *ioXPos += trimX;
+        *ioScreenViewLocX += trimX;
+        mRect.width -= trimX;
+      }
+    }
+    else {                                               // view is currently to the right of the parent
+      // move it to the right
+      PRInt32 shiftDistX = inScreenParentFrameRect.width + mRect.width;
+      *ioXPos += shiftDistX;
+      *ioScreenViewLocX += shiftDistX;
+    }               
+  }
+
+} // MovePopupToOtherSideOfParent
+
+
 
 nsresult 
 nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
@@ -346,7 +494,15 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
   // in _twips_, in the coordinate system of the _parent view_.
   PRInt32 xpos = 0, ypos = 0;
 
-  if (aXPos != -1 || aYPos != -1) {
+  // if we are anchored to our parent, there are certain things we don't want to do
+  // when repositioning the view to fit on the screen, such as end up positioned over
+  // the parent. When doing this reposition, we want to move the popup to the side with
+  // the most room. The combination of anchor and alignment dictate if we readjst 
+  // above/below or to the left/right.
+  PRBool anchoredToParent = PR_FALSE;
+  PRBool readjustAboveBelow = PR_FALSE;
+  
+  if ( aXPos != -1 || aYPos != -1 ) {
   
     // for this case, we've been handed a specific x/y location (in client coordinates) for
     // the popup. However, we may be deeply nested in a frameset, etc and so the client coordinates
@@ -359,37 +515,14 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     ypos = NSIntPixelsToTwips(newYPos, p2t);
   } 
   else {
+    anchoredToParent = PR_TRUE;
+
     xpos = parentPos.x + offset.x;
     ypos = parentPos.y + offset.y;
-
-    if (aPopupAnchor == "topright" && aPopupAlign == "topleft") {
-      xpos += parentRect.width;
-    }
-    else if (aPopupAnchor == "topright" && aPopupAlign == "bottomright") {
-      xpos -= (mRect.width - parentRect.width);
-      ypos -= mRect.height;
-    }
-    else if (aPopupAnchor == "bottomright" && aPopupAlign == "bottomleft") {
-      xpos += parentRect.width;
-      ypos -= (mRect.height - parentRect.height);
-    }
-    else if (aPopupAnchor == "bottomright" && aPopupAlign == "topright") {
-      xpos -= (mRect.width - parentRect.width);
-      ypos += parentRect.height;
-    }
-    else if (aPopupAnchor == "topleft" && aPopupAlign == "topright") {
-      xpos -= mRect.width;
-    }
-    else if (aPopupAnchor == "topleft" && aPopupAlign == "bottomleft") {
-      ypos -= mRect.height;
-    }
-    else if (aPopupAnchor == "bottomleft" && aPopupAlign == "bottomright") {
-      xpos -= mRect.width;
-      ypos -= (mRect.height - parentRect.height);
-    }
-    else if (aPopupAnchor == "bottomleft" && aPopupAlign == "topleft") {
-      ypos += parentRect.height;
-    }
+    
+    // move the popup according to the anchor/alignment attributes. This will also tell us
+    // which axis the popup is flush against in case we have to move it around later.
+    AdjustPositionForAnchorAlign ( &xpos, &ypos, parentRect, aPopupAnchor, aPopupAlign, &readjustAboveBelow );    
   }
   
   nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(scriptGlobalObject));
@@ -417,42 +550,133 @@ nsMenuPopupFrame::SyncViewWithFrame(nsIPresContext* aPresContext,
     screenBottom = screenHeight + screenTop;
   else
     screenBottom = screenHeight - screenTop; 
+  PRInt32 screenTopTwips    = NSIntPixelsToTwips(screenTop, p2t);
+  PRInt32 screenLeftTwips   = NSIntPixelsToTwips(screenLeft, p2t);
   PRInt32 screenWidthTwips  = NSIntPixelsToTwips(screenWidth, p2t);
   PRInt32 screenHeightTwips = NSIntPixelsToTwips(screenHeight, p2t);
   PRInt32 screenRightTwips  = NSIntPixelsToTwips(screenRight, p2t);
   PRInt32 screenBottomTwips = NSIntPixelsToTwips(screenBottom, p2t);
-  
-  // shrink to fit onto the screen, vertically and horizontally
-  if(mRect.width > screenWidthTwips) 
-      mRect.width = screenWidthTwips;    
-  if(mRect.height > screenHeightTwips)
-      mRect.height = screenHeightTwips;   
   
   // Recall that |xpos| and |ypos| are in the coordinate system of the parent view. In
   // order to determine the screen coordinates of where our view will end up, we
   // need to find the x/y position of the parent view in screen coords. That is done
   // by getting the widget associated with the parent view and determining the offset 
   // based on converting (0,0) in its coordinate space to screen coords. We then
-  // offset that point by (|xpos|,|ypos|) to get the true screen coorindates of
+  // offset that point by (|xpos|,|ypos|) to get the true screen coordinates of
   // the view. *whew*
   nsCOMPtr<nsIWidget> parentViewWidget;
   GetWidgetForView ( parentView, *getter_AddRefs(parentViewWidget) );
-  nsRect localParentRect(0,0,0,0), screenParentRect;
-  parentViewWidget->WidgetToScreen ( localParentRect, screenParentRect );
-  PRInt32 screenViewLocX = screenParentRect.x + NSTwipsToIntPixels(xpos - parentPos.x, t2p);
-  PRInt32 screenViewLocY = screenParentRect.y + NSTwipsToIntPixels(ypos - parentPos.y, t2p);
+  nsRect localParentWidgetRect(0,0,0,0), screenParentWidgetRect;
+  parentViewWidget->WidgetToScreen ( localParentWidgetRect, screenParentWidgetRect );
+  PRInt32 screenViewLocX = NSIntPixelsToTwips(screenParentWidgetRect.x,p2t) + (xpos - parentPos.x);
+  PRInt32 screenViewLocY = NSIntPixelsToTwips(screenParentWidgetRect.y,p2t) + (ypos - parentPos.y);
 
-  // we now know where the view is...check that it's still onscreen at all!
-  if ( screenViewLocX < screenLeft )
-    xpos += NSIntPixelsToTwips(screenLeft - screenViewLocX,p2t);
-  if ( screenViewLocY < screenTop )
-    ypos += NSIntPixelsToTwips(screenTop - screenViewLocY,p2t);  
+  if ( anchoredToParent ) {
+    
+    //
+    // Popup is anchored to the parent, guarantee that it does not cover the parent. We
+    // shouldn't do anything funky if it will already fit on the screen as is.
+    //
 
-  // ensure it is not even partially offscreen.
-  if ((NSIntPixelsToTwips(screenViewLocX,p2t) + mRect.width) > screenRightTwips)
-    xpos -= (NSIntPixelsToTwips(screenViewLocX,p2t) + mRect.width) - screenRightTwips;  
-  if ((NSIntPixelsToTwips(screenViewLocY,p2t) + mRect.height) > screenBottomTwips)
-    ypos -= (NSIntPixelsToTwips(screenViewLocY,p2t) + mRect.height) - screenBottomTwips;
+    // compute screen coordinates of parent frame so we can play with it. Make sure we put it
+    // into twips as everything else is as well.
+    nsRect screenParentFrameRect ( NSTwipsToIntPixels(offset.x,t2p), NSTwipsToIntPixels(offset.y,t2p),
+                                    parentRect.width, parentRect.height );
+    parentViewWidget->WidgetToScreen ( screenParentFrameRect, screenParentFrameRect );
+    screenParentFrameRect.x = NSIntPixelsToTwips(screenParentFrameRect.x, p2t);
+    screenParentFrameRect.y = NSIntPixelsToTwips(screenParentFrameRect.y, p2t);
+    
+    // if it doesn't fit on the screen, do our magic.
+    if ( (screenViewLocX + mRect.width) > screenRightTwips ||
+          (screenViewLocY + mRect.height) > screenBottomTwips ) {
+      
+      // figure out which side of the parent has the most free space so we can move/resize
+      // the popup there. This should still work if the parent frame is partially screen.
+      PRBool switchSides = IsMoreRoomOnOtherSideOfParent ( readjustAboveBelow, screenViewLocX, screenViewLocY,
+                                                            screenParentFrameRect, screenTopTwips, screenLeftTwips,
+                                                            screenBottomTwips, screenRightTwips );
+      
+      // move the popup to the correct side, if necessary. Note that MovePopupToOtherSideOfParent() 
+      // can change width/height of |mRect|.
+      if ( switchSides )
+        MovePopupToOtherSideOfParent ( readjustAboveBelow, &xpos, &ypos, &screenViewLocX, &screenViewLocY, 
+                                        screenParentFrameRect, screenTopTwips, screenLeftTwips,
+                                        screenBottomTwips, screenRightTwips );
+                                        
+      // We are allowed to move the popup along the axis to which we're not anchored to the parent
+      // in order to get it to not spill off the screen.
+      if ( readjustAboveBelow ) {
+        // move left to be on screen.
+        if ( (screenViewLocX + mRect.width) > screenRightTwips ) {
+          PRInt32 moveDistX = (screenViewLocX + mRect.width) - screenRightTwips;
+          screenViewLocX -= moveDistX;
+          xpos -= moveDistX;
+        }
+      }
+      else {
+        // move it up to be on screen.
+        if ( (screenViewLocY + mRect.height) > screenBottomTwips ) {
+          PRInt32 moveDistY = (screenViewLocY + mRect.height) - screenBottomTwips;
+          screenViewLocY -= moveDistY;
+          ypos -= moveDistY; 
+        } 
+      }
+      
+      // Resize it to fit on the screen. By this point, we've given the popup as much
+      // room as we can w/out covering the parent. If it still can't be as big
+      // as it wants to be, well, it just has to suck up and deal. 
+      PRInt32 xSpillage = (screenViewLocX + mRect.width) - screenRightTwips;
+      if ( xSpillage > 0 )
+        mRect.width -= xSpillage;
+      PRInt32 ySpillage = (screenViewLocY + mRect.height) - screenBottomTwips;
+      if ( ySpillage > 0 )
+        mRect.height -= ySpillage;
+
+    } // if it doesn't fit on screen
+  } // if anchored to parent
+  else {
+  
+    //
+    // Popup not anchored to anything, just make sure it's on the screen by any
+    // means necessary
+    //
+
+    // add back in the parentPos offset. Not sure why, but we need this for mail/news
+    // context menus and we can't do this in the case where there popup is anchored.
+    screenViewLocX += parentPos.x;
+    screenViewLocY += parentPos.y;    
+    
+    // shrink to fit onto the screen, vertically and horizontally
+    if(mRect.width > screenWidthTwips) 
+        mRect.width = screenWidthTwips;    
+    if(mRect.height > screenHeightTwips)
+        mRect.height = screenHeightTwips;   
+    
+    // we now know where the view is...make sure that it's still onscreen at all!
+    if ( screenViewLocX < screenLeftTwips ) {
+      PRInt32 moveDistX = screenLeftTwips - screenViewLocX;
+      xpos += moveDistX;
+      screenViewLocX += moveDistX;
+    }
+    if ( screenViewLocY < screenTopTwips ) {
+      PRInt32 moveDistY = screenTopTwips - screenViewLocY;
+      ypos += moveDistY;
+      screenViewLocY += moveDistY;
+    }
+
+    // ensure it is not even partially offscreen.
+    if ( (screenViewLocX + mRect.width) > screenRightTwips ) {
+      // as a result of moving the popup, it might end up under the mouse. This
+      // would be bad as the subsequent mouse_up would trigger whatever
+      // unsuspecting item happens to be at that position. To get around this, make
+      // move it so the right edge is where the mouse is, as we're guaranteed
+      // that the mouse is on the screen!
+      xpos -= mRect.width;      
+    }
+    if ( (screenViewLocY + mRect.height) > screenBottomTwips )
+      ypos -= (screenViewLocY + mRect.height) - screenBottomTwips;
+      
+  }  
 
   // finally move and resize it
   viewManager->MoveViewTo(view, xpos, ypos); 
