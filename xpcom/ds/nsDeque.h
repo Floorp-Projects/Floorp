@@ -201,6 +201,8 @@ friend class nsDequeIterator;
    */
   const void* FirstThat(nsDequeFunctor& aFunctor) const;
 
+  void SetDeallocator(nsDequeFunctor* aDeallocator);
+
   /**
    * Perform automated selftest on the deque
    *
