@@ -38,8 +38,12 @@
     <NC:content>chrome://communicator/content/search/search-panel.xul</NC:content>
   </RDF:Description>
   <RDF:Description about="urn:sidebar:panel:tinderbox">
-    <NC:title>Tinderbox</NC:title>
-    <NC:content>http://tinderbox.mozilla.org/seamonkey/panel.html</NC:content>
+    <NC:title>Tinderbox: SeaMonkey</NC:title>
+    <NC:content>http://tinderbox.mozilla.org/SeaMonkey/panel.html</NC:content>
+  </RDF:Description>
+  <RDF:Description about="urn:sidebar:panel:tinderbox-ports">
+    <NC:title>Tinderbox: SeaMonkey-Ports</NC:title>
+    <NC:content>http://tinderbox.mozilla.org/SeaMonkey-Ports/panel.html</NC:content>
   </RDF:Description>
   <RDF:Description about="urn:sidebar:panel:bookmarks">
     <NC:title>&sidebar.panel.client-bookmarks;</NC:title>
