@@ -436,7 +436,14 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
 #else
   AtkStateChange stateData;
-  if (eventType.EqualsIgnoreCase("focus") || 
+  if (eventType.EqualsIgnoreCase("unload")) {
+    nsCOMPtr<nsPIAccessibleDocument> privateAccDoc = 
+      do_QueryInterface(accessible);
+    if (privateAccDoc) {
+      privateAccDoc->Destroy();
+    }
+  }
+  else if (eventType.EqualsIgnoreCase("focus") || 
       eventType.EqualsIgnoreCase("DOMMenuItemActive")) {
     if (treeItemAccessible) { // use focused treeitem
       privAcc = do_QueryInterface(treeItemAccessible);
