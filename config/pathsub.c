@@ -45,17 +45,15 @@
 #ifdef XP_OS2
 #include <direct.h>
 #include <io.h>
-#include <sys\utime.h>
-#include <sys\types.h>
+#include <sys/utime.h>
+#include <sys/types.h>
 #endif
 
 #ifdef SUNOS4
 #include "sunos4.h"
 #endif
 
-#if defined(__QNX__) && !defined(__QNXNTO__)
-#define D_INO	d_stat.st_ino
-#else
+#ifndef D_INO
 #define D_INO	d_ino
 #endif
 
