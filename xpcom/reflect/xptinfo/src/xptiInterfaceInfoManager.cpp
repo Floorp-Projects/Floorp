@@ -39,6 +39,23 @@ xptiInterfaceInfoManager::GetInterfaceInfoManager()
             NS_ADDREF(gInterfaceInfoManager);
         if(!gInterfaceInfoManager->mWorkingSet.IsValid())
             NS_RELEASE(gInterfaceInfoManager);
+
+
+        PRBool mustAutoReg = 
+                !xptiManifest::Read(gInterfaceInfoManager, 
+                                    &gInterfaceInfoManager->mWorkingSet);
+#ifdef DEBUG
+        {
+        // This sets what will be returned by GetOpenLogFile().
+        xptiAutoLog autoLog(gInterfaceInfoManager, 
+                            gInterfaceInfoManager->mAutoRegLogFile, PR_TRUE);
+        LOG_AUTOREG(("debug build forced autoreg after %s load of manifest\n", mustAutoReg ? "FAILED" : "successful"));
+        
+        mustAutoReg = PR_TRUE;
+        }
+#endif // DEBUG
+        if(mustAutoReg)
+            gInterfaceInfoManager->AutoRegisterInterfaces();
     }
     if(gInterfaceInfoManager)
         NS_ADDREF(gInterfaceInfoManager);
@@ -48,15 +65,59 @@ xptiInterfaceInfoManager::GetInterfaceInfoManager()
 void
 xptiInterfaceInfoManager::FreeInterfaceInfoManager()
 {
+    if(gInterfaceInfoManager)
+        gInterfaceInfoManager->LogStats();
+
     NS_IF_RELEASE(gInterfaceInfoManager);
 }
 
 xptiInterfaceInfoManager::xptiInterfaceInfoManager()
-    :   mWorkingSet()
+    :   mWorkingSet(),
+        mOpenLogFile(nsnull)
 {
     NS_INIT_ISUPPORTS();
-    if(!xptiManifest::Read(this, mWorkingSet))
-        AutoRegisterInterfaces();
+
+    nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_PROGID);
+    if(prefs)
+    {
+        char* statsFilename;
+        if(NS_SUCCEEDED(prefs->CopyCharPref("xptinfo.logging.statsfilename",
+                                            &statsFilename)) && statsFilename)
+        {
+            mStatsLogFile = do_CreateInstance(NS_LOCAL_FILE_PROGID);         
+            if(mStatsLogFile && 
+               NS_SUCCEEDED(mStatsLogFile->InitWithPath(statsFilename)))
+            {
+#ifdef DEBUG
+                printf("***** logging xptinfo stats to: %s\n", statsFilename);
+#endif
+            }
+            else
+            {
+                mStatsLogFile = nsnull;
+            }
+            nsCRT::free(statsFilename);
+        }
+
+        char* autoRegFilename;
+        if(NS_SUCCEEDED(prefs->CopyCharPref("xptinfo.logging.autoregfilename",
+                                            &autoRegFilename)) && autoRegFilename)
+        {
+            mAutoRegLogFile = do_CreateInstance(NS_LOCAL_FILE_PROGID);         
+            if(mAutoRegLogFile && 
+               NS_SUCCEEDED(mAutoRegLogFile->InitWithPath(autoRegFilename)))
+            {
+#ifdef DEBUG
+                printf("***** logging xptinfo stats to: %s\n", autoRegFilename);
+#endif
+            }
+            else
+            {
+                mAutoRegLogFile = nsnull;
+            }
+            nsCRT::free(autoRegFilename);
+        }
+    }
 }
 
 xptiInterfaceInfoManager::~xptiInterfaceInfoManager()
@@ -121,27 +182,26 @@ xptiInterfaceInfoManager::BuildFileList(nsISupportsArray** aFileList)
         if(!file)
             return PR_FALSE;
 
+        PRBool isFile;
+        if(NS_FAILED(file->IsFile(&isFile)) || !isFile)
+        {
+            continue;
+        }
+     
         char* name;
         if(NS_FAILED(file->GetLeafName(&name)))
             return PR_FALSE;
 
-        int flen = PL_strlen(name);
-        if (flen < 4 || 
-            (PL_strcasecmp(&(name[flen - 4]), ".xpt")) &&
-            (PL_strcasecmp(&(name[flen - 4]), ".zip")) &&
-            (PL_strcasecmp(&(name[flen - 4]), ".jar"))) {
-            nsAllocator::Free(name);
-            continue;
-        }
-        nsAllocator::Free(name);
-
-        PRBool isFile;
-        if(NS_FAILED(file->IsFile(&isFile)) || !isFile)
+        if(xptiFileType::IsUnknown(name))
         {
             nsAllocator::Free(name);
             continue;
         }
-     
+
+        LOG_AUTOREG(("found file: %s\n", name));
+
+        nsAllocator::Free(name);
+
         if(!fileList->InsertElementAt(file, count))
             return PR_FALSE;
         ++count;
@@ -151,47 +211,18 @@ xptiInterfaceInfoManager::BuildFileList(nsISupportsArray** aFileList)
     return PR_TRUE;
 }
 
-
-xptiInterfaceInfoManager::AutoRegMode 
-xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
-                                                 xptiWorkingSet& aWorkingSet)
-{
-    // XXX implement!
-    return FULL_VALIDATION_REQUIRED; 
-}
-
-#if 0
-PRBool 
-xptiInterfaceInfoManager::PopulateFileRecordsInWorkingSet(nsISupportsArray* aFileList,
-                                                        xptiWorkingSet& aWorkingSet)
-{
-    // XXX implement
-    return PR_FALSE;
-}        
-#endif
-
-PRBool 
-xptiInterfaceInfoManager::AttemptAddOnlyFromFileList(nsISupportsArray* aFileList,
-                                                   xptiWorkingSet& aWorkingSet,
-                                                   AutoRegMode* pmode)
-{
-    // XXX implement
-
-    return PR_TRUE;
-}        
-
 XPTHeader* 
 xptiInterfaceInfoManager::ReadXPTFile(nsILocalFile* aFile, 
-                                    xptiWorkingSet& aWorkingSet)
+                                      xptiWorkingSet* aWorkingSet)
 {
     NS_ASSERTION(aFile, "loser!");
 
     XPTHeader *header = nsnull;
     char *whole = nsnull;
-    FILE*   file = nsnull;
+    PRFileDesc*   fd = nsnull;
     XPTState *state = nsnull;
     XPTCursor cursor;
-    PRUint32 flen;
+    PRInt32 flen;
     PRInt64 fileSize;
 
     if(NS_FAILED(aFile->GetFileSize(&fileSize)) || !(flen = nsInt64(fileSize)))
@@ -207,12 +238,12 @@ xptiInterfaceInfoManager::ReadXPTFile(nsILocalFile* aFile,
 
     // all exits from on here should be via 'goto out' 
 
-    if(NS_FAILED(aFile->OpenANSIFileDesc("rb", &file)) || !file)
+    if(NS_FAILED(aFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &fd)) || !fd)
     {
         goto out;
     }
 
-    if(flen > fread(whole, 1, flen, file))
+    if(flen > PR_Read(fd, whole, flen))
     {
         goto out;
     }
@@ -227,14 +258,15 @@ xptiInterfaceInfoManager::ReadXPTFile(nsILocalFile* aFile,
         goto out;
     }
     
-    if (!XPT_DoHeader(aWorkingSet.GetStructArena(), &cursor, &header))
+    if (!XPT_DoHeader(aWorkingSet->GetStructArena(), &cursor, &header))
     {
+        header = nsnull;
         goto out;
     }
 
  out:
-    if(file)
-        fclose(file);
+    if(fd)
+        PR_Close(fd);
     if(state)
         XPT_DestroyXDRState(state);
     if(whole)
@@ -267,13 +299,13 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
     if(aTypelibRecord.IsZip())
     {
         zipItem = &aWorkingSet->GetZipItemAt(aTypelibRecord.GetZipItemIndex());
-        printf("# loading zip item %s::%s\n", fileRecord->GetName(), zipItem->GetName());
-        header = ReadXPTFileFromZip(file, zipItem->GetName(), *aWorkingSet);
+        LOG_LOAD(("# loading zip item %s::%s\n", fileRecord->GetName(), zipItem->GetName()));
+        header = xptiZipLoader::ReadXPTFileFromZip(file, zipItem->GetName(), aWorkingSet);
     } 
     else
     {
-        printf("^ loading file %s\n", fileRecord->GetName());
-        header = ReadXPTFile(file, *aWorkingSet);
+        LOG_LOAD(("^ loading file %s\n", fileRecord->GetName()));
+        header = ReadXPTFile(file, aWorkingSet);
     } 
 
     if(!header)
@@ -334,146 +366,20 @@ xptiInterfaceInfoManager::LoadFile(const xptiTypelib& aTypelibRecord,
     return PR_TRUE;
 }
 
-XPTHeader* 
-xptiInterfaceInfoManager::ReadXPTFileFromZip(nsILocalFile* file,
-                                           const char* itemName,
-                                           xptiWorkingSet& aWorkingSet)
-{
-    nsCOMPtr<nsIZipReader> zip = 
-                do_CreateInstance("component://netscape/libjar");
-    if(!zip)
-    {
-        return nsnull;
-    }
-
-    if(NS_FAILED(zip->Init(file)) || NS_FAILED(zip->Open()))
-    {
-        return nsnull;
-    }
-    
-    // This is required before getting streams for some reason.
-    if(NS_FAILED(zip->ParseManifest()))
-    {
-        return nsnull;
-    }
-
-    nsCOMPtr<nsIZipEntry> entry;
-    if(NS_FAILED(zip->GetEntry(itemName, getter_AddRefs(entry))) || !entry)
-    {
-        return nsnull;
-    }
-
-    return ReadXPTFileFromOpenZip(zip, entry, itemName, aWorkingSet);
-}
-
-XPTHeader* 
-xptiInterfaceInfoManager::ReadXPTFileFromOpenZip(nsIZipReader* zip,
-                                               nsIZipEntry* entry,
-                                               const char* itemName,
-                                               xptiWorkingSet& aWorkingSet)
-{
-    NS_ASSERTION(zip, "loser!");
-    NS_ASSERTION(entry, "loser!");
-    NS_ASSERTION(itemName, "loser!");
-
-
-    XPTHeader *header = nsnull;
-    char *whole = nsnull;
-    XPTState *state = nsnull;
-    XPTCursor cursor;
-    PRUint32 flen;
-    PRUint32 totalRead = 0;
-
-    if(NS_FAILED(entry->GetRealSize(&flen)) || !flen)
-    {
-        return nsnull;
-    }
-
-    nsCOMPtr<nsIInputStream> stream;
-    if(NS_FAILED(zip->GetInputStream(itemName, getter_AddRefs(stream))) || !stream)
-    {
-        return nsnull;
-    }
-
-    whole = new char[flen];
-    if (!whole)
-    {
-        return nsnull;
-    }
-
-    // all exits from on here should be via 'goto out' 
-
-    while(flen - totalRead)
-    {
-        PRUint32 avail;
-        PRUint32 read;
-
-        if(NS_FAILED(stream->Available(&avail)))
-        {
-            goto out;
-        }
-
-        if(avail > flen)
-        {
-            goto out;
-        }
-
-        if(NS_FAILED(stream->Read(whole+totalRead, avail, &read)))
-        {
-            goto out;
-        }
-
-        totalRead += read;
-    }
-    
-    // Go ahead and close the stream now.
-    stream = nsnull;
-
-    if(!(state = XPT_NewXDRState(XPT_DECODE, whole, flen)))
-    {
-        goto out;
-    }
-    
-    if(!XPT_MakeCursor(state, XPT_HEADER, 0, &cursor))
-    {
-        goto out;
-    }
-    
-    if (!XPT_DoHeader(aWorkingSet.GetStructArena(), &cursor, &header))
-    {
-        goto out;
-    }
-
- out:
-    if(state)
-        XPT_DestroyXDRState(state);
-    if(whole)
-        delete [] whole;
-    return header;
-}
-
-static PRBool
-IsXPTFile(const char* name)
-{
-    NS_ASSERTION(name, "bad name");
-    NS_ASSERTION(PL_strlen(name) >= 4, "bad name");
-    return 0 == PL_strcasecmp(&(name[PL_strlen(name) - 4]), ".xpt");
-}
-
 static int
-IndexOfFileWithName(const char* aName, const xptiWorkingSet& aWorkingSet)
+IndexOfFileWithName(const char* aName, const xptiWorkingSet* aWorkingSet)
 {
     NS_ASSERTION(aName, "loser!");
 
-    for(PRUint32 i = 0; i < aWorkingSet.GetFileCount(); ++i)
+    for(PRUint32 i = 0; i < aWorkingSet->GetFileCount(); ++i)
     {
-        if(!PL_strcmp(aName, aWorkingSet.GetFileAt(i).GetName()))
+        if(!PL_strcmp(aName, aWorkingSet->GetFileAt(i).GetName()))
             return i;     
     }
     return -1;        
 }        
 
-static PR_CALLBACK int
+PR_STATIC_CALLBACK(int)
 xptiSortFileList(const void * p1, const void *p2, void * closure)
 {
     nsILocalFile* pFile1 = *((nsILocalFile**) p1);
@@ -494,12 +400,12 @@ xptiSortFileList(const void * p1, const void *p2, void * closure)
         return 0;    
     }    
 
-    int index1 = IndexOfFileWithName(name1, *pWorkingSet); 
-    int index2 = IndexOfFileWithName(name2, *pWorkingSet); 
+    int index1 = IndexOfFileWithName(name1, pWorkingSet); 
+    int index2 = IndexOfFileWithName(name2, pWorkingSet); 
    
-    // Get thses now in case we need them later.
-    PRBool isXPT1 = IsXPTFile(name1);
-    PRBool isXPT2 = IsXPTFile(name2);
+    // Get these now in case we need them later.
+    PRBool isXPT1 = xptiFileType::IsXPT(name1);
+    PRBool isXPT2 = xptiFileType::IsXPT(name2);
     int nameOrder = PL_strcmp(name1, name2);
     
     nsAllocator::Free(name1);
@@ -545,51 +451,46 @@ xptiSortFileList(const void * p1, const void *p2, void * closure)
     return sizeDiff != 0  ? sizeDiff : nameOrder;
 }        
 
-PRBool 
-xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aFileList,
-                                                          xptiWorkingSet& aWorkingSet)
+nsILocalFile** 
+xptiInterfaceInfoManager::BuildOrderedFileArray(nsISupportsArray* aFileList,
+                                                xptiWorkingSet* aWorkingSet)
 {
-    // nsresult rv;
-    PRUint32 countOfFilesInFileList;
-    PRUint32 i;
-
-    NS_ASSERTION(aFileList, "loser!");
-
-    if(!aWorkingSet.IsValid())
-        return PR_FALSE;
-
-    if(NS_FAILED(aFileList->Count(&countOfFilesInFileList)))
-        return PR_FALSE;
-
-    if(!countOfFilesInFileList)
-    {
-        // XXX do the right thing here!    
-        return PR_FALSE;
-    }
-
     // We want to end up with a file list that starts with the files from
     // aWorkingSet (but only those that are in aFileList) in the order in 
-    // which they appeared in aWorkingSet. Following those files will be those
-    // files in aFileList which are not in aWorkingSet. These additional
+    // which they appeared in aWorkingSet-> Following those files will be those
+    // files in aFileList which are not in aWorkingSet-> These additional
     // files will be ordered by file size (larger first) but all .xpt files
     // will preceed all zipfile of those files not already in the working set.
     // To do this we will do a fancy sort on a copy of aFileList.
 
 
-    nsILocalFile** orderedFileList = (nsILocalFile**) 
-        XPT_MALLOC(aWorkingSet.GetStructArena(),
+    nsILocalFile** orderedFileList = nsnull;
+    PRUint32 countOfFilesInFileList;
+    PRUint32 i;
+
+    NS_ASSERTION(aFileList, "loser!");
+    NS_ASSERTION(aWorkingSet, "loser!");
+    NS_ASSERTION(aWorkingSet->IsValid(), "loser!");
+
+    if(NS_FAILED(aFileList->Count(&countOfFilesInFileList)) || 
+       0 == countOfFilesInFileList)
+        return nsnull;
+
+    orderedFileList = (nsILocalFile**) 
+        XPT_MALLOC(aWorkingSet->GetStructArena(),
                    sizeof(nsILocalFile*) * countOfFilesInFileList);
     
+    if(!orderedFileList)
+        return nsnull;
+
     // fill our list for sorting
     for(i = 0; i < countOfFilesInFileList; ++i)
     {
         nsCOMPtr<nsISupports> sup;
         aFileList->GetElementAt(i, getter_AddRefs(sup));
-        if(!sup)
-            return PR_FALSE;
+        NS_ASSERTION(sup, "loser!");
         nsCOMPtr<nsILocalFile> file = do_QueryInterface(sup);
-        if(!file)
-            return PR_FALSE;
+        NS_ASSERTION(file, "loser!");
 
         // Intentionally NOT addref'd cuz we know these are pinned in aFileList.
         orderedFileList[i] = file.get();
@@ -597,35 +498,166 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
 
     // sort the filelist
     NS_QuickSort(orderedFileList, countOfFilesInFileList, sizeof(nsILocalFile*),
-                 xptiSortFileList, &aWorkingSet);
-    
+                 xptiSortFileList, aWorkingSet);
      
-    // dump the sorted list
-    for(i = 0; i < countOfFilesInFileList; ++i)
+    return orderedFileList;
+}
+
+xptiInterfaceInfoManager::AutoRegMode 
+xptiInterfaceInfoManager::DetermineAutoRegStrategy(nsISupportsArray* aFileList,
+                                                   xptiWorkingSet* aWorkingSet)
+{
+    NS_ASSERTION(aFileList, "loser!");
+    NS_ASSERTION(aWorkingSet, "loser!");
+    NS_ASSERTION(aWorkingSet->IsValid(), "loser!");
+
+    PRUint32 countOfFilesInWorkingSet = aWorkingSet->GetFileCount();
+    PRUint32 countOfFilesInFileList;
+    PRUint32 i;
+    PRUint32 k;
+
+    if(0 == countOfFilesInWorkingSet)
     {
-        nsILocalFile* file = orderedFileList[i];
+        // Loading manifest might have failed. Better safe...     
+        return FULL_VALIDATION_REQUIRED;
+    }
+
+    if(NS_FAILED(aFileList->Count(&countOfFilesInFileList)))
+    {
+        NS_ASSERTION(0, "unexpected!");
+        return FULL_VALIDATION_REQUIRED;
+    }       
+
+
+    if(countOfFilesInFileList == countOfFilesInWorkingSet)
+    {
+        // try to determine if *no* files are new or changed.
+     
+        PRBool same = PR_TRUE;
+        for(i = 0; i < countOfFilesInFileList && same; ++i)
+        {
+            nsCOMPtr<nsISupports> sup;
+            aFileList->GetElementAt(i, getter_AddRefs(sup));
+            NS_ASSERTION(sup, "loser!");
+            nsCOMPtr<nsILocalFile> file = do_QueryInterface(sup);
+            NS_ASSERTION(file, "loser!");
     
-        char* name;
-        if(NS_FAILED(file->GetLeafName(&name)))
-            return PR_FALSE;
+            char*   name;
+            PRInt64 size;
+            PRInt64 date;
+            if(NS_FAILED(file->GetFileSize(&size)) ||
+               NS_FAILED(file->GetLastModificationDate(&date)) ||
+               NS_FAILED(file->GetLeafName(&name)))
+            {
+                NS_ASSERTION(0, "unexpected!");
+                return FULL_VALIDATION_REQUIRED;
+            }    
 
-        printf("* found %s\n", name);
-        nsAllocator::Free(name);
-    }        
+            for(k = 0; k < countOfFilesInWorkingSet; ++k)
+            {
+                xptiFile& target = aWorkingSet->GetFileAt(k);
+                
+                if(0 == PL_strcasecmp(name, target.GetName()))
+                {
+                    if(nsInt64(size) != target.GetSize() ||
+                       nsInt64(date) != target.GetDate())
+                        same = PR_FALSE;
+                    break;        
+                }
+                // failed to find our file in the workingset?
+                if(k == countOfFilesInWorkingSet)
+                    same = PR_FALSE;
+            }
+            nsAllocator::Free(name);
+        }
+        if(same)
+            return NO_FILES_CHANGED;
+    }
+    else if(countOfFilesInFileList > countOfFilesInWorkingSet)
+    {
+        // try to determine if the only changes are additional new files
+        // XXX Wimping out and doing this as a separate walk through the lists.
 
+        PRBool same = PR_TRUE;
 
-    // Make space in aWorkingset for a new xptiFile array.
+        for(i = 0; i < countOfFilesInWorkingSet && same; ++i)
+        {
+            xptiFile& target = aWorkingSet->GetFileAt(i);
+            
+            for(k = 0; k < countOfFilesInFileList; ++k)
+            {
+                nsCOMPtr<nsISupports> sup;
+                aFileList->GetElementAt(k, getter_AddRefs(sup));
+                NS_ASSERTION(sup, "loser!");
+                nsCOMPtr<nsILocalFile> file = do_QueryInterface(sup);
+                NS_ASSERTION(file, "loser!");
+                
+                char*   name;
+                PRInt64 size;
+                PRInt64 date;
+                if(NS_FAILED(file->GetFileSize(&size)) ||
+                   NS_FAILED(file->GetLastModificationDate(&date)) ||
+                   NS_FAILED(file->GetLeafName(&name)))
+                {
+                    NS_ASSERTION(0, "unexpected!");
+                    return FULL_VALIDATION_REQUIRED;
+                }    
+            
+                PRBool sameName = (0 == PL_strcasecmp(name, target.GetName()));
+                nsAllocator::Free(name);
+                if(sameName)
+                {
+                    if(nsInt64(size) != target.GetSize() ||
+                       nsInt64(date) != target.GetDate())
+                        same = PR_FALSE;
+                    break;        
+                }
+            }
+            // failed to find our file in the file list?
+            if(k == countOfFilesInFileList)
+                same = PR_FALSE;
+        }
+        if(same)
+            return FILES_ADDED_ONLY;
+    }
 
-    if(!aWorkingSet.NewFileArray(countOfFilesInFileList))   
+    return FULL_VALIDATION_REQUIRED; 
+}
+
+PRBool 
+xptiInterfaceInfoManager::AddOnlyNewFileFromFileList(nsISupportsArray* aFileList,
+                                                     xptiWorkingSet* aWorkingSet)
+{
+    nsILocalFile** orderedFileArray;
+    PRUint32 countOfFilesInFileList;
+    PRUint32 i;
+
+    NS_ASSERTION(aFileList, "loser!");
+    NS_ASSERTION(aWorkingSet, "loser!");
+    NS_ASSERTION(aWorkingSet->IsValid(), "loser!");
+
+    if(NS_FAILED(aFileList->Count(&countOfFilesInFileList)))
+        return PR_FALSE;
+    NS_ASSERTION(countOfFilesInFileList, "loser!");
+    
+    PRUint32 countOfFilesInWorkingSet = aWorkingSet->GetFileCount();
+    NS_ASSERTION(countOfFilesInFileList > countOfFilesInWorkingSet,"loser!");
+
+    orderedFileArray = BuildOrderedFileArray(aFileList, aWorkingSet);
+
+    if(!orderedFileArray)
         return PR_FALSE;
 
-    aWorkingSet.ClearHashTables();
+    // Make enough space in aWorkingset for additions to xptiFile array.
 
-    // For each file, add any valid interfaces that don't conflict with 
-    // previous interfaces added.
+    if(!aWorkingSet->ExtendFileArray(countOfFilesInFileList))   
+        return PR_FALSE;
+
+    // For each file that is not already in our working set, add any valid 
+    // interfaces that don't conflict with previous interfaces added.
     for(i = 0; i < countOfFilesInFileList; i++)
     {
-        nsILocalFile* file = orderedFileList[i];
+        nsILocalFile* file = orderedFileArray[i];
 
         char*   name;
         PRInt64 size;
@@ -637,13 +669,21 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
             return PR_FALSE;
         }    
     
-        xptiFile fileRecord(nsInt64(size), nsInt64(date), name, &aWorkingSet);
+
+        if(xptiWorkingSet::NOT_FOUND != aWorkingSet->FindFileWithName(name))
+        {
+            // This file was found in the working set, so skip it.       
+            nsAllocator::Free(name);
+            continue;
+        }
+
+        LOG_AUTOREG(("  finding interfaces in new file: %s\n", name));
+
+        xptiFile fileRecord = xptiFile(nsInt64(size), nsInt64(date),
+                                       name, aWorkingSet);
         nsAllocator::Free(name);
 
-//        printf("* found %s\n", fileRecord.GetName());
-
-
-        if(IsXPTFile(fileRecord.GetName()))
+        if(xptiFileType::IsXPT(fileRecord.GetName()))
         {
             XPTHeader* header = ReadXPTFile(file, aWorkingSet);
             if(!header)
@@ -652,17 +692,12 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
                 NS_ASSERTION(0,"");    
                 continue;
             }
-    
-            if(!header->num_interfaces)
-            {
-                // We are not interested in files without interfaces.
-                continue;
-            }
+
     
             xptiTypelib typelibRecord;
-            typelibRecord.Init(aWorkingSet.GetFileCount());
+            typelibRecord.Init(aWorkingSet->GetFileCount());
     
-            int countOfInterfacesAddedForFile = 0;
+            PRBool AddedFile = PR_FALSE;
             for(PRUint16 k = 0; k < header->num_interfaces; k++)
             {
                 xptiInterfaceInfo* info = nsnull;
@@ -678,152 +713,235 @@ xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aF
                 
                 // If this is the first interface we found for this file then
                 // setup the fileRecord for the header and infos.
-                if(!countOfInterfacesAddedForFile)
+                if(!AddedFile)
                 {
                     if(!fileRecord.SetHeader(header))
                     {
                         // XXX that would be bad.
                         return PR_FALSE;    
                     }
+                    AddedFile = PR_TRUE;
                 }
                 fileRecord.GetGuts()->SetInfoAt(k, info);
-                ++countOfInterfacesAddedForFile;
             }
             
-            if(countOfInterfacesAddedForFile)
-            {
-                // This will correspond to typelibRecord above.
-                aWorkingSet.AppendFile(fileRecord);
-            }
+            // This will correspond to typelibRecord above.
+            aWorkingSet->AppendFile(fileRecord);
         }
         else // It is a zip file, Oh boy!
         {
-            nsCOMPtr<nsIZipReader> zip = 
-                do_CreateInstance("component://netscape/libjar");
-            if(!zip)
-                return PR_FALSE;
-            if(NS_FAILED(zip->Init(file)) || NS_FAILED(zip->Open()))
-                return PR_FALSE;
-            
-            // This is required before getting streams for some reason.
-            if(NS_FAILED(zip->ParseManifest()))
-                return PR_FALSE;
-
-            nsCOMPtr<nsISimpleEnumerator> entries;
-            if(NS_FAILED(zip->FindEntries("*.xpt", getter_AddRefs(entries))) ||
-               !entries)
+            if(!xptiZipLoader::EnumerateZipEntries(file, 
+                          NS_STATIC_CAST(xptiEntrySink*, this), 
+                          aWorkingSet))
             {
-                // XXX We TRUST that this means there are no .xpt files.    
+                return PR_FALSE;    
+            }
+            // This will correspond to typelibRecord used in
+            // xptiInterfaceInfoManager::FoundEntry.
+            aWorkingSet->AppendFile(fileRecord);
+        }
+    }
+
+    return PR_TRUE;
+}        
+
+PRBool 
+xptiInterfaceInfoManager::DoFullValidationMergeFromFileList(nsISupportsArray* aFileList,
+                                                          xptiWorkingSet* aWorkingSet)
+{
+    nsILocalFile** orderedFileArray;
+    PRUint32 countOfFilesInFileList;
+    PRUint32 i;
+
+    NS_ASSERTION(aFileList, "loser!");
+
+    if(!aWorkingSet->IsValid())
+        return PR_FALSE;
+
+    if(NS_FAILED(aFileList->Count(&countOfFilesInFileList)))
+        return PR_FALSE;
+
+    if(!countOfFilesInFileList)
+    {
+        // XXX do the right thing here!    
+        return PR_FALSE;
+    }
+
+    orderedFileArray = BuildOrderedFileArray(aFileList, aWorkingSet);
+
+    if(!orderedFileArray)
+        return PR_FALSE;
+
+    // DEBUG_DumpFileArray(orderedFileArray, countOfFilesInFileList);
+
+    // Make space in aWorkingset for a new xptiFile array.
+
+    if(!aWorkingSet->NewFileArray(countOfFilesInFileList))   
+        return PR_FALSE;
+
+    aWorkingSet->ClearZipItems();
+    aWorkingSet->ClearHashTables();
+
+    // For each file, add any valid interfaces that don't conflict with 
+    // previous interfaces added.
+    for(i = 0; i < countOfFilesInFileList; i++)
+    {
+        nsILocalFile* file = orderedFileArray[i];
+
+        char*   name;
+        PRInt64 size;
+        PRInt64 date;
+        if(NS_FAILED(file->GetFileSize(&size)) ||
+           NS_FAILED(file->GetLastModificationDate(&date)) ||
+           NS_FAILED(file->GetLeafName(&name)))
+        {
+            return PR_FALSE;
+        }    
+
+        LOG_AUTOREG(("  finding interfaces in file: %s\n", name));
+
+    
+        xptiFile fileRecord = xptiFile(nsInt64(size), nsInt64(date),
+                                       name, aWorkingSet);
+        nsAllocator::Free(name);
+
+//        printf("* found %s\n", fileRecord.GetName());
+
+
+        if(xptiFileType::IsXPT(fileRecord.GetName()))
+        {
+            XPTHeader* header = ReadXPTFile(file, aWorkingSet);
+            if(!header)
+            {
+                // XXX do something!
+                NS_ASSERTION(0,"");    
                 continue;
             }
-
-            int countOfInterfacesAddedForFile = 0;
-
-            do
-            {
-                // For each item...
-                int countOfInterfacesAddedForItem = 0;
-                
-                PRBool hasMore;
-                if(NS_FAILED(entries->HasMoreElements(&hasMore)))
-                    return PR_FALSE;
-                if(!hasMore)
-                    break;
-
-                nsCOMPtr<nsISupports> sup;
-                if(NS_FAILED(entries->GetNext(getter_AddRefs(sup))) ||!sup)
-                    return PR_FALSE;
-                
-                nsCOMPtr<nsIZipEntry> entry = do_QueryInterface(sup);
-                if(!entry)
-                    return PR_FALSE;
-
-                // we have a zip entry!
-
-                char* itemName = nsnull;
-                
-                if(NS_FAILED(entry->GetName(&itemName)) || !itemName)
-                    return PR_FALSE;
-
-
-                xptiZipItem zipItemRecord(itemName, &aWorkingSet);
-                XPTHeader* header = 
-                    ReadXPTFileFromOpenZip(zip, entry, itemName, aWorkingSet);
-                nsAllocator::Free(itemName);
-
-                if(!header)
-                {
-                    // XXX do something!
-                    NS_ASSERTION(0,"");    
-                    continue;
-                }
-                
-                if(!header->num_interfaces)
-                {
-                    // We are not interested in files without interfaces.
-                    continue;
-                }
-                
-                xptiTypelib typelibRecord;
-                typelibRecord.Init(aWorkingSet.GetFileCount(),
-                                   aWorkingSet.GetZipItemCount());
-
-                for(PRUint16 k = 0; k < header->num_interfaces; k++)
-                {
-                    xptiInterfaceInfo* info = nsnull;
     
-                    if(!VerifyAndAddInterfaceIfNew(aWorkingSet,
-                                                   header->interface_directory + k,
-                                                   typelibRecord,
-                                                   &info))
+            xptiTypelib typelibRecord;
+            typelibRecord.Init(aWorkingSet->GetFileCount());
+    
+            PRBool AddedFile = PR_FALSE;
+            for(PRUint16 k = 0; k < header->num_interfaces; k++)
+            {
+                xptiInterfaceInfo* info = nsnull;
+    
+                if(!VerifyAndAddInterfaceIfNew(aWorkingSet,
+                                               header->interface_directory + k,
+                                               typelibRecord,
+                                               &info))
+                    return PR_FALSE;    
+    
+                if(!info)
+                    continue;
+                
+                // If this is the first interface we found for this file then
+                // setup the fileRecord for the header and infos.
+                if(!AddedFile)
+                {
+                    if(!fileRecord.SetHeader(header))
+                    {
+                        // XXX that would be bad.
                         return PR_FALSE;    
-    
-                    if(!info)
-                        continue;
-
-                    // If this is the first interface we found for this item
-                    // then setup the zipItemRecord for the header and infos.
-                    if(!countOfInterfacesAddedForItem)
-                    {
-                        // XXX fix this!
-                        if(!zipItemRecord.SetHeader(header))
-                        {
-                            // XXX that would be bad.
-                            return PR_FALSE;    
-                        }
                     }
-
-                    // zipItemRecord.GetGuts()->SetInfoAt(k, info);
-                    ++countOfInterfacesAddedForItem;
-                    ++countOfInterfacesAddedForFile;
-                }   
-
-                if(countOfInterfacesAddedForItem)
-                {
-                    if(!aWorkingSet.GetZipItemFreeSpace())
-                    {
-                        if(!aWorkingSet.ExtendZipItemArray(
-                            aWorkingSet.GetZipItemCount() + 20))
-                        {        
-                            // out of space!
-                            return PR_FALSE;
-                        }
-                    }
-                    aWorkingSet.AppendZipItem(zipItemRecord);
-                } 
-            } while(1);
-
-            if(countOfInterfacesAddedForFile)
-            {
-                // This will correspond to typelibRecord above.
-                aWorkingSet.AppendFile(fileRecord);
+                    AddedFile = PR_TRUE;
+                }
+                fileRecord.GetGuts()->SetInfoAt(k, info);
             }
+            
+            // This will correspond to typelibRecord above.
+            aWorkingSet->AppendFile(fileRecord);
+        }
+        else // It is a zip file, Oh boy!
+        {
+            if(!xptiZipLoader::EnumerateZipEntries(file, 
+                          NS_STATIC_CAST(xptiEntrySink*, this), 
+                          aWorkingSet))
+            {
+                return PR_FALSE;    
+            }
+            // This will correspond to typelibRecord used in
+            // xptiInterfaceInfoManager::FoundEntry.
+            aWorkingSet->AppendFile(fileRecord);
         }
     }
     return PR_TRUE;
 }        
+
+// implement xptiEntrySink
 PRBool 
-xptiInterfaceInfoManager::VerifyAndAddInterfaceIfNew(xptiWorkingSet& aWorkingSet,
+xptiInterfaceInfoManager::FoundEntry(const char* entryName,
+                                     int index,
+                                     XPTHeader* header,
+                                     xptiWorkingSet* aWorkingSet)
+{
+
+    NS_ASSERTION(entryName, "loser!");
+    NS_ASSERTION(header, "loser!");
+    NS_ASSERTION(aWorkingSet, "loser!");
+
+    int countOfInterfacesAddedForItem = 0;
+    xptiZipItem zipItemRecord(entryName, aWorkingSet);
+    
+    LOG_AUTOREG(("    finding interfaces in file: %s\n", entryName));
+
+    if(!header->num_interfaces)
+    {
+        // We are not interested in files without interfaces.
+        return PR_TRUE;
+    }
+    
+    xptiTypelib typelibRecord;
+    typelibRecord.Init(aWorkingSet->GetFileCount(),
+                       aWorkingSet->GetZipItemCount());
+
+    for(PRUint16 k = 0; k < header->num_interfaces; k++)
+    {
+        xptiInterfaceInfo* info = nsnull;
+    
+        if(!VerifyAndAddInterfaceIfNew(aWorkingSet,
+                                       header->interface_directory + k,
+                                       typelibRecord,
+                                       &info))
+            return PR_FALSE;    
+    
+        if(!info)
+            continue;
+
+        // If this is the first interface we found for this item
+        // then setup the zipItemRecord for the header and infos.
+        if(!countOfInterfacesAddedForItem)
+        {
+            // XXX fix this!
+            if(!zipItemRecord.SetHeader(header))
+            {
+                // XXX that would be bad.
+                return PR_FALSE;    
+            }
+        }
+
+        // zipItemRecord.GetGuts()->SetInfoAt(k, info);
+        ++countOfInterfacesAddedForItem;
+    }   
+
+    if(countOfInterfacesAddedForItem)
+    {
+        if(!aWorkingSet->GetZipItemFreeSpace())
+        {
+            if(!aWorkingSet->ExtendZipItemArray(
+                aWorkingSet->GetZipItemCount() + 20))
+            {        
+                // out of space!
+                return PR_FALSE;    
+            }
+        }
+        aWorkingSet->AppendZipItem(zipItemRecord);
+    } 
+    return PR_TRUE;
+}
+
+PRBool 
+xptiInterfaceInfoManager::VerifyAndAddInterfaceIfNew(xptiWorkingSet* aWorkingSet,
                                                    XPTInterfaceDirectoryEntry* iface,
                                                    const xptiTypelib& typelibRecord,
                                                    xptiInterfaceInfo** infoAdded)
@@ -841,18 +959,19 @@ xptiInterfaceInfoManager::VerifyAndAddInterfaceIfNew(xptiWorkingSet& aWorkingSet
     }
     
     xptiInterfaceInfo* info = (xptiInterfaceInfo*)
-        PL_HashTableLookup(aWorkingSet.mIIDTable, &iface->iid);
+        PL_HashTableLookup(aWorkingSet->mIIDTable, &iface->iid);
     
     if(info)
     {
         // XXX validate this info to find possible inconsistencies
+        LOG_AUTOREG(("      ignoring repeated interface: %s\n", iface->name));
         return PR_TRUE;
     }
     
     // Build a new xptiInterfaceInfo object and hook it up. 
 
     info = new xptiInterfaceInfo(iface->name, iface->iid,
-                               typelibRecord, aWorkingSet);
+                                 typelibRecord, aWorkingSet);
     if(!info)
     {
         // XXX bad!
@@ -867,15 +986,21 @@ xptiInterfaceInfoManager::VerifyAndAddInterfaceIfNew(xptiWorkingSet& aWorkingSet
         return PR_FALSE;    
     }
 
+    //XXX  We should SetHeader too as part of the validation, no?
+    info->SetScriptableFlag(XPT_ID_IS_SCRIPTABLE(iface->interface_descriptor->flags));
+
     // The name table now owns the reference we AddRef'd above
-    PL_HashTableAdd(aWorkingSet.mNameTable, iface->name, info);
-    PL_HashTableAdd(aWorkingSet.mIIDTable, &iface->iid, info);
+    PL_HashTableAdd(aWorkingSet->mNameTable, iface->name, info);
+    PL_HashTableAdd(aWorkingSet->mIIDTable, &iface->iid, info);
     
     *infoAdded = info;
+
+    LOG_AUTOREG(("      added interface: %s\n", iface->name));
+
     return PR_TRUE;
 }
 
-static PR_CALLBACK PRIntn 
+PR_STATIC_CALLBACK(PRIntn)
 xpti_Merger(PLHashEntry *he, PRIntn i, void *arg)
 {
     xptiInterfaceInfo* srcInfo = (xptiInterfaceInfo*) he->value;
@@ -892,14 +1017,20 @@ xpti_Merger(PLHashEntry *he, PRIntn i, void *arg)
     {
         // Clone the xptiInterfaceInfo into our WorkingSet.
 
-        uint16 srcIndex = srcInfo->GetTypelibRecord().GetFileIndex();
-
         xptiTypelib typelibRecord;
-        typelibRecord.Init(srcIndex + aWorkingSet->mMergeOffsetMap[srcIndex]);
+
+        uint16 fileIndex = srcInfo->GetTypelibRecord().GetFileIndex();
+        uint16 zipItemIndex = srcInfo->GetTypelibRecord().GetZipItemIndex();
+        
+        fileIndex += aWorkingSet->mFileMergeOffsetMap[fileIndex];
+        
+        // If it is not a zipItem, then the original index is fine.
+        if(srcInfo->GetTypelibRecord().IsZip())
+            zipItemIndex += aWorkingSet->mZipItemMergeOffsetMap[zipItemIndex];
+
+        typelibRecord.Init(fileIndex, zipItemIndex);
                     
-        destInfo = new xptiInterfaceInfo(srcInfo->GetTheName(), 
-                                       *srcInfo->GetTheIID(),
-                                       typelibRecord, *aWorkingSet);
+        destInfo = new xptiInterfaceInfo(*srcInfo, typelibRecord, aWorkingSet);
 
         if(!destInfo)
         {
@@ -925,65 +1056,115 @@ xpti_Merger(PLHashEntry *he, PRIntn i, void *arg)
 
 
 PRBool 
-xptiInterfaceInfoManager::MergeWorkingSets(xptiWorkingSet& aDestWorkingSet,
-                                         xptiWorkingSet& aSrcWorkingSet)
+xptiInterfaceInfoManager::MergeWorkingSets(xptiWorkingSet* aDestWorkingSet,
+                                           xptiWorkingSet* aSrcWorkingSet)
 {
     // Combine file lists.
 
-    PRUint32 originalTypelibFileCount = aDestWorkingSet.GetFileCount();
-    PRUint32 additionalTypelibFileCount = aSrcWorkingSet.GetFileCount();
     PRUint32 i;
-
-    if(!additionalTypelibFileCount)
-        return PR_TRUE;
+    PRUint32 originalFileCount = aDestWorkingSet->GetFileCount();
+    PRUint32 additionalFileCount = aSrcWorkingSet->GetFileCount();
 
     // Create a new array big enough to hold both lists and copy existing files
 
-    if(!aDestWorkingSet.ExtendFileArray(originalTypelibFileCount +
-                                        additionalTypelibFileCount))
+    if(!aDestWorkingSet->ExtendFileArray(originalFileCount +
+                                         additionalFileCount))
         return PR_FALSE;
 
     // Now we are where we started, but we know we have enough space.
 
     // Prepare offset array for later fixups. 
     // NOTE: Storing with dest, but alloc'ing from src. This is intentional.
-    aDestWorkingSet.mMergeOffsetMap = (PRUint32*)
-        XPT_CALLOC(aSrcWorkingSet.GetStructArena(),
-                   additionalTypelibFileCount * sizeof(PRUint32)); 
+    aDestWorkingSet->mFileMergeOffsetMap = (PRUint32*)
+        XPT_CALLOC(aSrcWorkingSet->GetStructArena(),
+                   additionalFileCount * sizeof(PRUint32)); 
+    if(!aDestWorkingSet->mFileMergeOffsetMap)
+        return PR_FALSE;
 
-    for(i = 0; i < additionalTypelibFileCount; ++i)
+    for(i = 0; i < additionalFileCount; ++i)
     {
-        xptiFile& srcFile = aSrcWorkingSet.GetFileAt(i);
+        xptiFile& srcFile = aSrcWorkingSet->GetFileAt(i);
         PRUint32 k;
-        for(k = 0; k < originalTypelibFileCount; ++k)
+        for(k = 0; k < originalFileCount; ++k)
         {
             // If file (with same name, date, and time) is in both lists
             // then reuse that record.
-            xptiFile& destFile = aDestWorkingSet.GetFileAt(k);
+            xptiFile& destFile = aDestWorkingSet->GetFileAt(k);
             if(srcFile.Equals(destFile))
             {
-                aDestWorkingSet.mMergeOffsetMap[i] = k - i;
+                aDestWorkingSet->mFileMergeOffsetMap[i] = k - i;
                 break;    
             }
         }
-        if(k == originalTypelibFileCount)
+        if(k == originalFileCount)
         {
             // No match found, tack it on the end.
 
-            PRUint32 newIndex = aDestWorkingSet.GetFileCount();
+            PRUint32 newIndex = aDestWorkingSet->GetFileCount();
 
-            aDestWorkingSet.AppendFile(
-                    xptiFile(srcFile, &aDestWorkingSet, PR_FALSE));
+            aDestWorkingSet->AppendFile(
+                    xptiFile(srcFile, aDestWorkingSet, PR_FALSE));
 
             // Fixup the merge offset map.
-            aDestWorkingSet.mMergeOffsetMap[i] = newIndex - i;
+            aDestWorkingSet->mFileMergeOffsetMap[i] = newIndex - i;
         }
     }
-    
-    // Now the dest file array is set up, migrate xptiInterfaceInfos
 
-    PL_HashTableEnumerateEntries(aSrcWorkingSet.mNameTable, xpti_Merger, 
-                                 &aDestWorkingSet);
+    // Combine ZipItem lists.
+
+    PRUint32 originalZipItemCount = aDestWorkingSet->GetZipItemCount();
+    PRUint32 additionalZipItemCount = aSrcWorkingSet->GetZipItemCount();
+
+    // Create a new array big enough to hold both lists and copy existing ZipItems
+
+    if(!aDestWorkingSet->ExtendZipItemArray(originalZipItemCount +
+                                            additionalZipItemCount))
+        return PR_FALSE;
+
+    // Now we are where we started, but we know we have enough space.
+
+    // Prepare offset array for later fixups. 
+    // NOTE: Storing with dest, but alloc'ing from src. This is intentional.
+    aDestWorkingSet->mZipItemMergeOffsetMap = (PRUint32*)
+        XPT_CALLOC(aSrcWorkingSet->GetStructArena(),
+                   additionalZipItemCount * sizeof(PRUint32)); 
+    if(!aDestWorkingSet->mZipItemMergeOffsetMap)
+        return PR_FALSE;
+
+
+    for(i = 0; i < additionalZipItemCount; ++i)
+    {
+        xptiZipItem& srcZipItem = aSrcWorkingSet->GetZipItemAt(i);
+        PRUint32 k;
+        for(k = 0; k < originalZipItemCount; ++k)
+        {
+            // If ZipItem (with same name) is in both lists
+            // then reuse that record.
+            xptiZipItem& destZipItem = aDestWorkingSet->GetZipItemAt(k);
+            if(srcZipItem.Equals(destZipItem))
+            {
+                aDestWorkingSet->mZipItemMergeOffsetMap[i] = k - i;
+                break;    
+            }
+        }
+        if(k == originalZipItemCount)
+        {
+            // No match found, tack it on the end.
+
+            PRUint32 newIndex = aDestWorkingSet->GetZipItemCount();
+
+            aDestWorkingSet->AppendZipItem(
+                    xptiZipItem(srcZipItem, aDestWorkingSet, PR_FALSE));
+
+            // Fixup the merge offset map.
+            aDestWorkingSet->mZipItemMergeOffsetMap[i] = newIndex - i;
+        }
+    }
+
+    // Migrate xptiInterfaceInfos
+
+    PL_HashTableEnumerateEntries(aSrcWorkingSet->mNameTable, xpti_Merger, 
+                                 aDestWorkingSet);
 
     return PR_TRUE;
 }        
@@ -1017,17 +1198,131 @@ xptiInterfaceInfoManager::DEBUG_DumpFileList(nsISupportsArray* aFileList)
 }
 
 PRBool 
-xptiInterfaceInfoManager::DEBUG_DumpFileListInWorkingSet(xptiWorkingSet& aWorkingSet)
+xptiInterfaceInfoManager::DEBUG_DumpFileListInWorkingSet(xptiWorkingSet* aWorkingSet)
 {
-    for(PRUint16 i = 0; i < aWorkingSet.GetFileCount(); ++i)
+    for(PRUint16 i = 0; i < aWorkingSet->GetFileCount(); ++i)
     {
-        xptiFile& record = aWorkingSet.GetFileAt(i);
+        xptiFile& record = aWorkingSet->GetFileAt(i);
     
         printf("! has %s\n", record.GetName());
     }        
     return PR_TRUE;
 }        
 
+PRBool 
+xptiInterfaceInfoManager::DEBUG_DumpFileArray(nsILocalFile** aFileArray, 
+                                              PRUint32 count)
+{
+    // dump the sorted list
+    for(PRUint32 i = 0; i < count; ++i)
+    {
+        nsILocalFile* file = aFileArray[i];
+    
+        char* name;
+        if(NS_FAILED(file->GetLeafName(&name)))
+            return PR_FALSE;
+
+        printf("found file: %s\n", name);
+        nsAllocator::Free(name);
+    }        
+    return PR_TRUE;        
+}        
+
+/***************************************************************************/
+
+// static 
+void 
+xptiInterfaceInfoManager::WriteToLog(const char *fmt, ...)
+{
+    if(!gInterfaceInfoManager)
+        return;
+
+    PRFileDesc* fd = gInterfaceInfoManager->GetOpenLogFile();
+    if(fd)
+    {
+        va_list ap;
+        va_start(ap, fmt);
+        PR_vfprintf(fd, fmt, ap);
+        va_end(ap);
+    }
+}        
+
+PR_STATIC_CALLBACK(PRIntn)
+xpti_ResolvedFileNameLogger(PLHashEntry *he, PRIntn i, void *arg)
+{
+    xptiInterfaceInfo* ii = (xptiInterfaceInfo*) he->value;
+    xptiInterfaceInfoManager* mgr = (xptiInterfaceInfoManager*) arg;
+
+    if(ii->IsFullyResolved())
+    {
+        xptiWorkingSet*  aWorkingSet = mgr->GetWorkingSet();
+        PRFileDesc* fd = mgr->GetOpenLogFile();
+
+        const xptiTypelib& typelib = ii->GetTypelibRecord();
+        const char* filename = 
+                aWorkingSet->GetFileAt(typelib.GetFileIndex()).GetName();
+        
+        if(typelib.IsZip())
+        {
+            const char* zipItemName = 
+                aWorkingSet->GetZipItemAt(typelib.GetZipItemIndex()).GetName();
+            PR_fprintf(fd, "xpti used interface: %s from %s::%s\n", 
+                       ii->GetTheName(), filename, zipItemName);
+        }    
+        else
+        {
+            PR_fprintf(fd, "xpti used interface: %s from %s\n", 
+                       ii->GetTheName(), filename);
+        }
+    }
+    return HT_ENUMERATE_NEXT;
+}
+
+void   
+xptiInterfaceInfoManager::LogStats()
+{
+    PRUint32 i;
+    
+    // This sets what will be returned by GetOpenLogFile().
+    xptiAutoLog autoLog(this, mStatsLogFile, PR_FALSE);
+
+    PRFileDesc* fd = GetOpenLogFile();
+    if(!fd)
+        return;
+
+    // Show names of xpt (only) files from which at least one interface 
+    // was resolved.
+
+    PRUint32 fileCount = mWorkingSet.GetFileCount();
+    for(i = 0; i < fileCount; ++i)
+    {
+        xptiFile& f = mWorkingSet.GetFileAt(i);
+        if(f.GetGuts())
+            PR_fprintf(fd, "xpti used file: %s\n", f.GetName());
+    }
+
+    PR_fprintf(fd, "\n");
+
+    // Show names of xptfiles loaded from zips from which at least 
+    // one interface was resolved.
+
+    PRUint32 zipItemCount = mWorkingSet.GetZipItemCount();
+    for(i = 0; i < zipItemCount; ++i)
+    {
+        xptiZipItem& zi = mWorkingSet.GetZipItemAt(i);
+        if(zi.GetGuts())                           
+            PR_fprintf(fd, "xpti used file from zip: %s\n", zi.GetName());
+    }
+
+    PR_fprintf(fd, "\n");
+
+    // Show name of each interface that was fully resolved and the name
+    // of the file and (perhaps) zip from which it was loaded.
+
+    PL_HashTableEnumerateEntries(mWorkingSet.mNameTable, 
+                                 xpti_ResolvedFileNameLogger, this);
+
+} 
 
 /***************************************************************************/
 
@@ -1105,7 +1400,7 @@ NS_IMETHODIMP xptiInterfaceInfoManager::GetNameForIID(const nsIID * iid, char **
     return info->GetName(_retval);
 }
 
-static PR_CALLBACK PRIntn 
+PR_STATIC_CALLBACK(PRIntn)
 xpti_ArrayAppender(PLHashEntry *he, PRIntn i, void *arg)
 {
     nsIInterfaceInfo* ii = (nsIInterfaceInfo*) he->value;
@@ -1142,14 +1437,22 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
     nsCOMPtr<nsISupportsArray> fileList;
     xptiWorkingSet workingSet;
     AutoRegMode mode;
+    PRBool ok;
 
     if(!workingSet.IsValid())
         return NS_ERROR_UNEXPECTED;
 
+    // This sets what will be returned by GetOpenLogFile().
+    xptiAutoLog autoLog(this, mAutoRegLogFile, PR_TRUE);
+
+    LOG_AUTOREG(("start AutoRegister\n"));
+
     // We re-read the manifest rather than muck with the 'live' one.
     // It is OK if this fails.
     // XXX But we should track failure as a warning.
-    xptiManifest::Read(this, workingSet);
+    ok = xptiManifest::Read(this, &workingSet);
+
+    LOG_AUTOREG(("read of manifest %s\n", ok ? "successful" : "FAILED"));
 
     // Grovel for all the typelibs we can find (in .xpt or .zip, .jar,...).
     if(!BuildFileList(getter_AddRefs(fileList)) || !fileList)
@@ -1158,22 +1461,29 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
     // DEBUG_DumpFileList(fileList);
 
     // Check to see how much work we need to do.
-    mode = DetermineAutoRegStrategy(fileList, workingSet);
+    mode = DetermineAutoRegStrategy(fileList, &workingSet);
 
     switch(mode)
     {
     case NO_FILES_CHANGED:
+        LOG_AUTOREG(("autoreg strategy: no files changed\n"));
+        LOG_AUTOREG(("successful end of AutoRegister\n"));
         return NS_OK;
-    case MAYBE_ONLY_ADDITIONS:
-        // This might fallback and do a full validation
-        // (by calling DoFullValidationMergeFromFileList) so we let
-        // it possibly modify 'mode'.
-        if(!AttemptAddOnlyFromFileList(fileList, workingSet, &mode))
+    case FILES_ADDED_ONLY:
+        LOG_AUTOREG(("autoreg strategy: files added only\n"));
+        if(!AddOnlyNewFileFromFileList(fileList, &workingSet))
+        {
+            LOG_AUTOREG(("FAILED to add new files\n"));
             return NS_ERROR_UNEXPECTED;
+        }
         break;
     case FULL_VALIDATION_REQUIRED:
-        if(!DoFullValidationMergeFromFileList(fileList, workingSet))
+        LOG_AUTOREG(("autoreg strategy: doing full validation merge\n"));
+        if(!DoFullValidationMergeFromFileList(fileList, &workingSet))
+        {
+            LOG_AUTOREG(("FAILED to do full validation\n"));
             return NS_ERROR_UNEXPECTED;
+        }
         break;
     default:
         NS_ASSERTION(0,"switch missing a case");
@@ -1181,13 +1491,21 @@ NS_IMETHODIMP xptiInterfaceInfoManager::AutoRegisterInterfaces()
     }
 
     // XXX Is failure to write the file a good reason to not merge?
-    if(!xptiManifest::Write(this, workingSet))
+    if(!xptiManifest::Write(this, &workingSet))
+    {
+        LOG_AUTOREG(("FAILED to write manifest\n"));
         return NS_ERROR_UNEXPECTED;
+    }
     
-    if(!MergeWorkingSets(mWorkingSet, workingSet))
+    if(!MergeWorkingSets(&mWorkingSet, &workingSet))
+    {
+        LOG_AUTOREG(("FAILED to merge into live workingset\n"));
         return NS_ERROR_UNEXPECTED;
+    }
 
 //    DEBUG_DumpFileListInWorkingSet(mWorkingSet);
+
+    LOG_AUTOREG(("successful end of AutoRegister\n"));
 
     return NS_OK;
 }

@@ -41,36 +41,15 @@ static const int  g_VERSION_MINOR          = 0;
 
 // This is used to make PR_sscanf for strings safer. We refuse to even 
 // attempt to do a PR_sscanf from a line longer than this.
-static const int  g_MAX_LINE_LEN = 256;
+static const PRUint32 g_MAX_LINE_LEN = 256;
 
 /***************************************************************************/
 
-static PRBool
-WriteFormatted(FILE* file, const char* fmt, ... )
-{
-    va_list ap;
-
-    va_start(ap, fmt);
-    char* buf = PR_vsmprintf(fmt, ap);
-    va_end(ap);
-
-    if(!buf)
-        return PR_FALSE;
-    
-    size_t len = PL_strlen(buf);
-
-    PRBool result = (len == fwrite(buf, 1, len, file));
-    
-    PR_smprintf_free(buf);
-
-    return result;
-}        
-
-static PR_CALLBACK PRIntn 
+PR_STATIC_CALLBACK(PRIntn)
 xpti_InterfaceWriter(PLHashEntry *he, PRIntn i, void *arg)
 {
     xptiInterfaceInfo* info = (xptiInterfaceInfo*) he->value;
-    FILE* file = (FILE*)  arg;
+    PRFileDesc* fd = (PRFileDesc*)  arg;
 
     if(!info->IsValid())
         return HT_ENUMERATE_STOP;
@@ -81,13 +60,14 @@ xpti_InterfaceWriter(PLHashEntry *he, PRIntn i, void *arg)
 
     const xptiTypelib& typelib = info->GetTypelibRecord();
 
-    PRBool success = WriteFormatted(file, "%d,%s,%s,%d,%d\n",
-                                    (int) i,
-                                    info->GetTheName(),
-                                    iidStr,
-                                    (int) typelib.GetFileIndex(),
-                                    (int) (typelib.IsZip() ? 
-                                        typelib.GetZipItemIndex() : -1));
+    PRBool success =  PR_fprintf(fd, "%d,%s,%s,%d,%d,%d\n",
+                                 (int) i,
+                                 info->GetTheName(),
+                                 iidStr,
+                                 (int) typelib.GetFileIndex(),
+                                 (int) (typelib.IsZip() ? 
+                                 typelib.GetZipItemIndex() : -1),
+                                 (int) info->GetScriptableFlag());
 
     nsCRT::free(iidStr);
 
@@ -96,11 +76,11 @@ xpti_InterfaceWriter(PLHashEntry *he, PRIntn i, void *arg)
 
 // static
 PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
-                           xptiWorkingSet&         aWorkingSet)
+                           xptiWorkingSet*           aWorkingSet)
 {
 
     PRBool succeeded = PR_FALSE;
-    FILE*   file = nsnull;
+    PRFileDesc* fd = nsnull;
     PRUint32 i;
     PRIntn interfaceCount = 0;
 
@@ -114,81 +94,83 @@ PRBool xptiManifest::Write(xptiInterfaceInfoManager* aMgr,
     // exist via "goto out;" from here on...
 
 
-    if(NS_FAILED(tempFile->OpenANSIFileDesc("w", &file)) || !file)
+    if(NS_FAILED(tempFile->
+                    OpenNSPRFileDesc(PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE,
+                                     0666, &fd)) || !fd)
     {
         goto out;
     }
 
     // write file header comments
 
-    if(!WriteFormatted(file, "%s\n", g_Disclaimer))
+    if(!PR_fprintf(fd, "%s\n", g_Disclaimer))
         goto out;
 
     // write the [Header] block and version number.
 
-    if(!WriteFormatted(file, "\n[%s,%d]\n", g_TOKEN_Header, 1))
+    if(!PR_fprintf(fd, "\n[%s,%d]\n", g_TOKEN_Header, 1))
         goto out;
 
-    if(!WriteFormatted(file, "%d,%s,%d,%d\n", 
+    if(!PR_fprintf(fd, "%d,%s,%d,%d\n", 
                        0, g_TOKEN_Version, g_VERSION_MAJOR, g_VERSION_MINOR))
         goto out;
 
     // write Files list
 
-    if(!WriteFormatted(file, "\n[%s,%d]\n", 
+    if(!PR_fprintf(fd, "\n[%s,%d]\n", 
                        g_TOKEN_Files, 
-                       (int) aWorkingSet.GetFileCount()))
+                       (int) aWorkingSet->GetFileCount()))
         goto out;
 
-    for(i = 0; i < aWorkingSet.GetFileCount(); i++)
+    for(i = 0; i < aWorkingSet->GetFileCount(); i++)
     {
-        if(!WriteFormatted(file, "%d,%s,%lld,%lld\n",
+        if(!PR_fprintf(fd, "%d,%s,%lld,%lld\n",
                            (int) i,
-                           aWorkingSet.GetFileAt(i).GetName(),
-                           PRInt64(aWorkingSet.GetFileAt(i).GetSize()),
-                           PRInt64(aWorkingSet.GetFileAt(i).GetDate())))
+                           aWorkingSet->GetFileAt(i).GetName(),
+                           PRInt64(aWorkingSet->GetFileAt(i).GetSize()),
+                           PRInt64(aWorkingSet->GetFileAt(i).GetDate())))
         goto out;
     }
 
     // write ArchiveItems list
 
-    if(!WriteFormatted(file, "\n[%s,%d]\n", 
+    if(!PR_fprintf(fd, "\n[%s,%d]\n", 
                        g_TOKEN_ArchiveItems, 
-                       (int) aWorkingSet.GetZipItemCount()))
+                       (int) aWorkingSet->GetZipItemCount()))
         goto out;
 
-    for(i = 0; i < aWorkingSet.GetZipItemCount(); i++)
+    for(i = 0; i < aWorkingSet->GetZipItemCount(); i++)
     {
-        if(!WriteFormatted(file, "%d,%s\n",
+        if(!PR_fprintf(fd, "%d,%s\n",
                            (int) i,
-                           aWorkingSet.GetZipItemAt(i).GetName()))
+                           aWorkingSet->GetZipItemAt(i).GetName()))
         goto out;
     }
 
     // write the Interfaces list
 
-    interfaceCount = aWorkingSet.mNameTable->nentries;
+    interfaceCount = aWorkingSet->mNameTable->nentries;
 
-    if(!WriteFormatted(file, "\n[%s,%d]\n", 
+    if(!PR_fprintf(fd, "\n[%s,%d]\n", 
                        g_TOKEN_Interfaces, 
                        (int) interfaceCount))
         goto out;
 
     if(interfaceCount != 
-        PL_HashTableEnumerateEntries(aWorkingSet.mNameTable, 
-                                     xpti_InterfaceWriter, file))
+        PL_HashTableEnumerateEntries(aWorkingSet->mNameTable, 
+                                     xpti_InterfaceWriter, fd))
         goto out;
 
 
-    if(0 == fclose(file))
+    if(PR_SUCCESS == PR_Close(fd))
     {
         succeeded = PR_TRUE;
     }
-    file = nsnull;
+    fd = nsnull;
 
 out:
-    if(file)
-        fclose(file);
+    if(fd)
+        PR_Close(fd);
 
     if(succeeded)
     {
@@ -227,8 +209,8 @@ static char*
 ReadManifestIntoMemory(xptiInterfaceInfoManager* aMgr,
                        PRUint32* pLength)
 {
-    FILE*   file = nsnull;
-    PRUint32 flen;
+    PRFileDesc* fd = nsnull;
+    PRInt32 flen;
     PRInt64 fileSize;
     char* whole = nsnull;
 
@@ -248,15 +230,15 @@ ReadManifestIntoMemory(xptiInterfaceInfoManager* aMgr,
 
     // all exits from on here should be via 'goto out' 
 
-    if(NS_FAILED(aFile->OpenANSIFileDesc("rb", &file)) || !file)
+    if(NS_FAILED(aFile->OpenNSPRFileDesc(PR_RDONLY, 0444, &fd)) || !fd)
         goto out;
 
-    if(flen > fread(whole, 1, flen, file))
+    if(flen > PR_Read(fd, whole, flen))
         goto out;
 
  out:
-    if(file)
-        fclose(file);
+    if(fd)
+        PR_Close(fd);
     *pLength = flen;
     return whole;
 }
@@ -344,7 +326,7 @@ PRBool ReadSectionHeader(ManifestLineReader& reader,
 
 // static
 PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
-                          xptiWorkingSet&           aWorkingSet)
+                          xptiWorkingSet*           aWorkingSet)
 {
     char* whole = nsnull;
     char* name = nsnull;
@@ -360,6 +342,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
     int index;
     int major;
     int minor;
+    int flags;
     PRInt64 size;
     PRInt64 date;
 
@@ -420,7 +403,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
 
     // Alloc room in the WorkingSet for the filearray.
 
-    if(!aWorkingSet.NewFileArray(fileCount))   
+    if(!aWorkingSet->NewFileArray(fileCount))   
         goto out;    
 
     // Read the file records
@@ -443,8 +426,8 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
         
         // Append a new file record to the array.
 
-        aWorkingSet.AppendFile(
-            xptiFile(nsInt64(size), nsInt64(date), name, &aWorkingSet));
+        aWorkingSet->AppendFile(
+            xptiFile(nsInt64(size), nsInt64(date), name, aWorkingSet));
     }
 
     // Look for "ZipItems" section
@@ -455,7 +438,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
     // Alloc room in the WorkingSet for the zipItemarray.
 
     if(zipItemCount)
-        if(!aWorkingSet.NewZipItemArray(zipItemCount))   
+        if(!aWorkingSet->NewZipItemArray(zipItemCount))   
             goto out;    
 
     // Read the zipItem records
@@ -478,7 +461,7 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
         
         // Append a new zipItem record to the array.
 
-        aWorkingSet.AppendZipItem(xptiZipItem(name, &aWorkingSet));
+        aWorkingSet->AppendZipItem(xptiZipItem(name, aWorkingSet));
     }
 
     // Look for "Interfaces" section
@@ -502,15 +485,17 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
         if(reader.LineLength() > g_MAX_LINE_LEN)
             goto out;
             
-        if(5 != PR_sscanf(reader.LinePtr(), "%d,%[^','],%[^','],%d,%d", 
-                          &index, name, iidStr, &fileIndex, &zipItemIndex) ||
+        if(6 != PR_sscanf(reader.LinePtr(), "%d,%[^','],%[^','],%d,%d,%d", 
+                          &index, name, iidStr, &fileIndex, &zipItemIndex,
+                          &flags) ||
            i != index ||
            !*name     ||
            !*iidStr   ||
            !iid.Parse(iidStr) ||
            fileIndex < 0 ||
            fileIndex >= fileCount ||
-           (zipItemIndex != -1 && zipItemIndex >= zipItemCount))
+           (zipItemIndex != -1 && zipItemIndex >= zipItemCount) ||
+           (flags != 0 && flags != 1))
         {
             goto out;    
         }
@@ -535,9 +520,11 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
             goto out;    
         }
 
+        info->SetScriptableFlag(flags==1);
+
         // The name table now owns the reference we AddRef'd above
-        PL_HashTableAdd(aWorkingSet.mNameTable, info->GetTheName(), info);
-        PL_HashTableAdd(aWorkingSet.mIIDTable, info->GetTheIID(), info);
+        PL_HashTableAdd(aWorkingSet->mNameTable, info->GetTheName(), info);
+        PL_HashTableAdd(aWorkingSet->mIIDTable, info->GetTheIID(), info);
     }
 
     // success!
@@ -555,9 +542,9 @@ PRBool xptiManifest::Read(xptiInterfaceInfoManager* aMgr,
     if(!succeeded)
     {
         // Cleanup the WorkingSet on failure.
-        aWorkingSet.InvalidateInterfaceInfos();
-        aWorkingSet.ClearHashTables();
-        aWorkingSet.ClearFiles();
+        aWorkingSet->InvalidateInterfaceInfos();
+        aWorkingSet->ClearHashTables();
+        aWorkingSet->ClearFiles();
     }
     return succeeded;
 }        
