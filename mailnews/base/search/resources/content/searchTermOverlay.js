@@ -306,6 +306,7 @@ function createSearchRow(index, scope, searchTerm)
     enclosingBox.appendChild(boolOp);
 
     searchAttr.setAttribute("for", searchOp.id + "," + searchVal.id);
+    searchOp.setAttribute("opfor", searchVal.id);
 
     var rowdata = new Array(enclosingBox, searchAttr,
                             null, searchOp,

@@ -393,18 +393,12 @@ function InitViewBodyMenu()
 
 function IsNewsMessage(messageUri)
 {
-    if (!messageUri) 
-      return false;
-    else 
-      return (messageUri.substring(0,14) == "news-message:/");
+  return (/^news-message:/.test(messageUri));
 }
 
 function IsImapMessage(messageUri)
 {
-    if (!messageUri) 
-      return false;
-    else
-      return (messageUri.substring(0,14) == "imap-message:/");
+  return (/^imap-message:/.test(messageUri));
 }
 
 function SetMenuItemLabel(menuItemId, customLabel)
@@ -1893,6 +1887,7 @@ function OnMsgLoaded(folder, msgURI)
     var currentMsgFolder = folder.QueryInterface(Components.interfaces.nsIMsgFolder);
     if (!IsImapMessage(msgURI))
       return;
+
     var imapServer = currentMsgFolder.server.QueryInterface(Components.interfaces.nsIImapIncomingServer);
     var storeReadMailInPFC = imapServer.storeReadMailInPFC;
     if (storeReadMailInPFC)
@@ -1904,16 +1899,7 @@ function OnMsgLoaded(folder, msgURI)
       // look in read mail PFC for msg with same msg id - if we find one,
       // don't put this message in the read mail pfc.
       var outputPFC = imapServer.GetReadMailPFC(true);
-      var messageURI = GetLoadedMessage();
-      if (messageURI != msgURI)
-      {
-//        XXX TODO
-//        bienvenu tells me:  
-//        if you have two message windows open, you can get multiple attempts
-//        to copy into the pfc.  the second will fail and assert.
-          dump("not loading msg into this window - loaded message = " + messageURI + "loading " + msgURI + "\n");
-//        return;
-      }
+
       var msgHdr = messenger.messageServiceFromURI(messageURI).messageURIToMsgHdr(messageURI);
       if (msgHdr)
       {

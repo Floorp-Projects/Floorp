@@ -181,7 +181,6 @@ var gFolderListener = {
         else if (eventType == "DeleteOrMoveMsgFailed") {
             HandleDeleteOrMoveMessageFailed(folder);
         }
-
     }
 }
 

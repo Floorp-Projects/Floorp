@@ -193,7 +193,7 @@ function GetRootFoldersInFolderPaneOrder()
   return serversMsgFolders;
 }
 
-function CrossFolderNavigation(type, supportsFolderPane )
+function CrossFolderNavigation(type)
 {
   if (type != nsMsgNavigationType.nextUnreadMessage) {
     // only do cross folder navigation for "next unread message"
@@ -214,16 +214,14 @@ function CrossFolderNavigation(type, supportsFolderPane )
       case 0:
         // do this unconditionally
         gNextMessageAfterLoad = type;
-        if (supportsFolderPane)
-          SelectFolder(folder.URI);
+        SelectFolder(folder.URI);
         break;
       case 1:
       default:
         var promptText = gMessengerBundle.getFormattedString("advanceNextPrompt", [ folder.name ], 1); 
         if (promptService.confirm(window, promptText, promptText)) {
           gNextMessageAfterLoad = type;
-          if (supportsFolderPane)
-            SelectFolder(folder.URI);
+          SelectFolder(folder.URI);
         }
         break;
     }
@@ -268,7 +266,7 @@ function GoNextMessage(type, startFromBeginning)
   try {
     var succeeded = ScrollToMessage(type, startFromBeginning, true);
     if (!succeeded) {
-      CrossFolderNavigation(type, true);
+      CrossFolderNavigation(type);
     }
   }
   catch (ex) {

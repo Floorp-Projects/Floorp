@@ -82,15 +82,12 @@ var folderListener = {
     else if (event.GetUnicode() == "DeleteOrMoveMsgFailed") {
       HandleDeleteOrMoveMsgFailed(folder);
     }
-    else if (event.GetUnicode() == "msgLoaded") {
-      OnMsgLoaded(folder, gCurrentMessageUri);
-    }
   }
 }
 
 var messagepaneObserver = {
 
-canHandleMultipleItems: false,
+  canHandleMultipleItems: false,
 
   onDrop: function (aEvent, aData, aDragSession)
   {
@@ -99,8 +96,7 @@ canHandleMultipleItems: false,
     {
       var msgHdr = GetMsgHdrFromUri(sourceUri);
       var folderUri = msgHdr.folder.URI;
-      if (folderUri != gCurrentFolderUri)
-        UpdateDBView(folderUri);
+      SelectFolder(folderUri);
       SelectMessage(sourceUri);
     }
   },
@@ -131,19 +127,6 @@ canHandleMultipleItems: false,
     return flavourSet;
   }
 };
-
-function UpdateDBView(folderUri)
-{
-  var dbview = GetDBView();  //close old folder view
-  if (dbview) {
-    dbview.close(); 
-  }
-
-  SelectFolder(folderUri);
-
-  CreateView(null);   //create new folder view
-} 
-  
 
 function nsMsgDBViewCommandUpdater()
 {}
@@ -521,8 +504,18 @@ function SetNextMessageAfterDelete()
 
 function SelectFolder(folderUri)
 {
-	gCurrentFolderUri = folderUri;
-}
+  if (folderUri == gCurrentFolderUri)
+    return;
+
+  var dbview = GetDBView();  // close old folder view
+  if (dbview) {
+    dbview.close(); 
+  }
+
+  gCurrentFolderUri = folderUri;
+
+  CreateView(null);   //create new folder view
+} 
 
 function GetMsgHdrFromUri(messageUri)
 {
@@ -905,14 +898,14 @@ var MessageWindowController =
 	}
 };
 
-function performNavigation(type)
+function LoadMessageByNavigationType(type)
 {
   var resultId = new Object;
   var resultIndex = new Object;
   var threadIndex = new Object;
 
   gDBView.viewNavigate(type, resultId, resultIndex, threadIndex, true /* wrap */);
-  
+
   // if we found something....display it.
   if ((resultId.value != nsMsgKey_None) && (resultIndex.value != nsMsgKey_None)) 
   {
@@ -920,11 +913,33 @@ function performNavigation(type)
     gDBView.loadMessageByMsgKey(resultId.value);
     // if we changed folders, the message counts changed.
     UpdateStandAloneMessageCounts();
-    return;
+
+    // new message has been loaded
+    return true;
   }
+
+  // no message found to load
+  return false;
+}
+   
+function performNavigation(type)
+{
+  // Try to load a message by navigation type if we can find
+  // the message in the same folder.
+  if (LoadMessageByNavigationType(type))
+    return;
    
   // we need to span another folder 
-  CrossFolderNavigation(type, false);
+  var folder = CrossFolderNavigation(type);
+  if (!folder)
+    return;
+
+  // Try again to load a message by nagivation by type if
+  // the folder has been changed.  If the folder was not changed,
+  // then the first call to LoadMessageByNavigationType() would
+  // have loaded the message.
+  if (folder.Value == gCurrentFolderUri)
+    LoadMessageByNavigationType(type);
 }
 
 function SetupCommandUpdateHandlers()

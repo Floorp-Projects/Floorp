@@ -34,10 +34,6 @@
 var msgHeaderParserContractID		   = "@mozilla.org/messenger/headerparser;1";
 var abAddressCollectorContractID	 = "@mozilla.org/addressbook/services/addressCollecter;1";
 
-// get the "msgLoad" atom
-var atomService = Components.classes["@mozilla.org/atom-service;1"].getService().QueryInterface(Components.interfaces.nsIAtomService);
-var gMsgLoadedAtom = atomService.getAtom("msgLoaded").QueryInterface(Components.interfaces.nsISupports);
-
 var gViewAllHeaders = false;
 var gNumAddressesToShow = 3;
 var gShowUserAgent = false;
@@ -297,7 +293,7 @@ var messageHeaderSink = {
     {
       this.onStartHeaders(); 
 
-      var index = 0; 
+      var index = 0;
       // process each header
       while (index < numHeaders)
       {
@@ -309,11 +305,19 @@ var messageHeaderSink = {
         foo.headerValue = headerValues[index];
         foo.headerName = headerNames[index];
 
-        // some times, you can have multiple To or cc lines....in this case, we want to APPEND 
-        // these headers into one. 
-        if ( (lowerCaseHeaderName == 'to' || lowerCaseHeaderName == 'cc') && ( lowerCaseHeaderName in currentHeaderData))
+        // according to RFC 2822, certain headers
+        // can occur "unlimited" times
+        if (lowerCaseHeaderName in currentHeaderData)
         {
-          currentHeaderData[lowerCaseHeaderName].headerValue = currentHeaderData[lowerCaseHeaderName].headerValue + ',' + foo.headerValue;
+          // sometimes, you can have multiple To or Cc lines....
+          // in this case, we want to append these headers into one.
+          if (lowerCaseHeaderName == 'to' || lowerCaseHeaderName == 'cc')
+            currentHeaderData[lowerCaseHeaderName].headerValue = currentHeaderData[lowerCaseHeaderName].headerValue + ',' + foo.headerValue;
+          else {  
+            // use the index to create a unique header name like:
+            // received5, received6, etc
+            currentHeaderData[lowerCaseHeaderName + index] = foo;
+          }
         }
         else
          currentHeaderData[lowerCaseHeaderName] = foo;
@@ -374,12 +378,12 @@ var messageHeaderSink = {
 
     onEndMsgDownload: function(url)
     {
-      var msgFolder;
       if (url)
       {
-        msgFolder = url.folder;
-        if (msgFolder)
-          msgFolder.NotifyFolderEvent(gMsgLoadedAtom);
+        var msgFolder = url.folder;
+        var msgURI = GetLoadedMessage();
+        if (msgFolder && msgURI)
+          OnMsgLoaded(msgFolder, msgURI);
       }
     },
 

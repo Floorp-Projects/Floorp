@@ -82,19 +82,23 @@ typedef struct
 
 nsMsgSearchAttribEntry SearchAttribEntryTable[] =
 {
-    {nsMsgSearchAttrib::Subject,		"subject"},
-    {nsMsgSearchAttrib::Sender,		"from"},
-    {nsMsgSearchAttrib::Body,		"body"},
-    {nsMsgSearchAttrib::Date,		"date"},
-    {nsMsgSearchAttrib::Priority,	"priority"},
-    {nsMsgSearchAttrib::MsgStatus,	"status"},	
-    {nsMsgSearchAttrib::To,			"to"},
-    {nsMsgSearchAttrib::CC,			"cc"},
-    {nsMsgSearchAttrib::ToOrCC,		"to or cc"},
-    {nsMsgSearchAttrib::AgeInDays,   "age in days"},
-    {nsMsgSearchAttrib::Label,       "label"},
-    {nsMsgSearchAttrib::SenderInAddressBook,		"from in ab"},
-    {nsMsgSearchAttrib::JunkStatus,       "junk status"},
+    {nsMsgSearchAttrib::Subject,    "subject"},
+    {nsMsgSearchAttrib::Sender,     "from"},
+    {nsMsgSearchAttrib::Body,       "body"},
+    {nsMsgSearchAttrib::Date,       "date"},
+    {nsMsgSearchAttrib::Priority,   "priority"},
+    {nsMsgSearchAttrib::MsgStatus,  "status"},
+    {nsMsgSearchAttrib::To,         "to"},
+    {nsMsgSearchAttrib::CC,         "cc"},
+    {nsMsgSearchAttrib::ToOrCC,     "to or cc"},
+    {nsMsgSearchAttrib::AgeInDays,  "age in days"},
+    {nsMsgSearchAttrib::Label,      "label"},
+    // this used to be nsMsgSearchAttrib::SenderInAddressBook
+    // we used to have two Sender menuitems
+    // for backward compatability, we can still parse
+    // the old style.  see bug #179803
+    {nsMsgSearchAttrib::Sender,     "from in ab"}, 
+    {nsMsgSearchAttrib::JunkStatus, "junk status"},
 };
 
 // Take a string which starts off with an attribute
@@ -570,40 +574,34 @@ nsMsgSearchTerm::ParseOperator(char *inStream, nsMsgSearchOpValue *value)
 // find the attribute code for this comma-delimited attribute. 
 nsresult
 nsMsgSearchTerm::ParseAttribute(char *inStream, nsMsgSearchAttribValue *attrib)
-{
-	nsCAutoString			attributeStr;
-	PRInt16				attributeVal;
-	nsresult		err;
+{   
+    while (nsString::IsSpace(*inStream))
+        inStream++;
+    
+    // if we are dealing with an arbitrary header, it may be quoted....
+    PRBool quoteVal = PR_FALSE;
+    if (*inStream == '"')
+    {
+        quoteVal = PR_TRUE;
+        inStream++;
+    }
+    
+    // arbitrary headers are quoted
+    char *separator = strchr(inStream, quoteVal ? '"' : ',');
 
-	while (nsString::IsSpace(*inStream))
-		inStream++;
-
-	// if we are dealing with an arbitrary header, it may be quoted....
-	PRBool quoteVal = PR_FALSE;
-	if (*inStream == '"')
-	{
-		quoteVal = PR_TRUE;
-		inStream++;
-	}
-
-	char *separator;
-	if (quoteVal)      // arbitrary headers are quoted...
-		separator = PL_strchr(inStream, '"');
-	else
-		separator = PL_strchr(inStream, ',');
-	
-	if (separator)
-		*separator = '\0';
-
-	err = NS_MsgGetAttributeFromString(inStream, &attributeVal);
-  NS_ENSURE_SUCCESS(err, err);
-
-	*attrib = (nsMsgSearchAttribValue) attributeVal;
-	
-	if (*attrib > nsMsgSearchAttrib::OtherHeader && *attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)  // if we are dealing with an arbitrary header....
-		m_arbitraryHeader =  inStream;
-	
-	return err;
+    if (separator)
+        *separator = '\0';
+    
+    PRInt16 attributeVal;
+    nsresult rv = NS_MsgGetAttributeFromString(inStream, &attributeVal);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    *attrib = (nsMsgSearchAttribValue) attributeVal;
+    
+    if (*attrib > nsMsgSearchAttrib::OtherHeader && *attrib < nsMsgSearchAttrib::kNumMsgSearchAttributes)  // if we are dealing with an arbitrary header....
+        m_arbitraryHeader = inStream;
+    
+    return rv;
 }
 
 // De stream one search term. If the condition looks like
@@ -854,7 +852,7 @@ nsresult nsMsgSearchTerm::InitializeAddressBook()
     nsXPIDLCString dirURI;
     mDirectory->GetDirUri(getter_Copies(dirURI));
     if (strcmp(dirURI.get(), m_value.string))
-      mDirectory = NULL; // clear out the directory....we are no longer pointing to the right one
+      mDirectory = nsnull; // clear out the directory....we are no longer pointing to the right one
   }
   if (!mDirectory)
   {  
@@ -904,7 +902,9 @@ nsresult nsMsgSearchTerm::MatchRfc2047String (const char *rfc2047string,
                                                    charset, charsetOverride,
                                                    PR_FALSE);
 
-    if (nsMsgSearchAttrib::SenderInAddressBook == m_attribute)
+    if (m_attribute == nsMsgSearchAttrib::Sender && 
+        (m_operator == nsMsgSearchOp::IsInAB ||
+         m_operator == nsMsgSearchOp::IsntInAB))
     {
       res = MatchInAddressBook(stringToMatch ? stringToMatch : rfc2047string, pResult);
     }
@@ -1067,7 +1067,9 @@ nsresult nsMsgSearchTerm::MatchRfc822String (const char *string, const char *cha
 		{
 			walkNames = names + namePos;
 			walkAddresses = addresses + addressPos;
-            if (nsMsgSearchAttrib::SenderInAddressBook == m_attribute)
+            if (m_attribute == nsMsgSearchAttrib::Sender && 
+                (m_operator == nsMsgSearchOp::IsInAB ||
+                 m_operator == nsMsgSearchOp::IsntInAB))
             {
               err = MatchRfc2047String (walkAddresses.get(), charset, charsetOverride, &result);
             }

@@ -461,6 +461,25 @@
         </getter>
       </property>
 
+      <property name="optargets" readonly="true">
+        <getter>
+          <![CDATA[
+            var forAttrs =  this.getAttribute("opfor");
+            if (!forAttrs) return null;
+            var optargetIds = forAttrs.split(",");
+            if (optargetIds.length == 0) return null;
+
+            var optargets = new Array;
+            var j=0;
+            for (var i=0; i<optargetIds.length;i++) {
+              var optarget = document.getElementById(optargetIds[i]);
+              if (optarget) optargets[j++] = optarget;
+            }
+            return optargets;
+          ]]>
+        </getter>
+      </property>
+
       <!-- value forwards to the internal menulist's "value" attribute -->
       <property name="value" onget="return document.getAnonymousNodes(this)[0].selectedItem.getAttribute('value');">
         <setter>
@@ -473,12 +492,19 @@
             // now notify targets of new parent's value
             var targets = this.targets;
             if (targets) {
-              for (var i=0; i< targets.length; i++) {
+              for (var i=0; i < targets.length; i++) {
                 targets[i].parentValue = val;
               }
-            } else {
-                //dump("Doh! No targets!\n");
             }
+
+            // now notify optargets of new op parent's value
+            var optargets = this.optargets;
+            if (optargets) {
+              for (i=0; i < optargets.length; i++) {
+                optargets[i].opParentValue = val;
+              }
+            }
+
             return val;
           ]]>
         </setter>
@@ -543,8 +569,15 @@
             // notify targets
             var targets = this.targets;
             if (targets) {
-              for (var i=0; i< targets.length; i++) {
+              for (var i=0; i < targets.length; i++) {
                 targets[i].parentValue = menulist.value;
+              }
+            }
+
+            var optargets = this.optargets;
+            if (optargets) {
+              for (i=0; i < optargets.length; i++) { 
+                optargets[i].opParentValue = menulist.value;
               }
             }
           ]]>
@@ -621,8 +654,8 @@
 
   <!-- searchvalue - a widget which dynamically changes it's user interface
        depending on what type of data it's supposed to be showing
-       currently handles arbitrary text entry, and menulists for priority and
-       status
+       currently handles arbitrary text entry, and menulists for 
+       priority, status, junk status and addressbook
   -->
   <binding id="searchvalue" name="searchValue">
     <content>
@@ -675,9 +708,56 @@
       </xul:menulist>
     </content>
     <implementation>
-
+      <field name="internalOperator">null</field>
       <field name="internalAttribute">null</field>
       <field name="internalValue">null</field>
+      
+      <property name="opParentValue" onget="return this.internalOperator;">
+        <setter>
+          <![CDATA[
+            // noop if we're not changing it
+            if (this.internalOperator == val) return val;
+            
+            // if it's not sender, we don't care
+            if (this.searchAttribute != Components.interfaces.nsMsgSearchAttrib.Sender) {
+              this.internalOperator = val;
+              return val;
+            }
+
+            var children = document.getAnonymousNodes(this);
+            if (val == Components.interfaces.nsMsgSearchOp.IsntInAB ||
+                val == Components.interfaces.nsMsgSearchOp.IsInAB) {
+              // if the old internalOperator was 
+              // IsntInAB or IsInAB, and the new internalOperator is
+              // IsntInAB or IsInAB, noop because the search value
+              // was an ab type, and it still is.
+              // otherwise, switch to the ab picker and select the PAB
+              if (this.internalOperator != Components.interfaces.nsMsgSearchOp.IsntInAB &&
+                  this.internalOperator != Components.interfaces.nsMsgSearchOp.IsInAB) {
+                var abs = children[4].getElementsByAttribute("value", "moz-abmdbdirectory://abook.mab");
+                if (abs.length > 0) 
+                  children[4].selectedItem = abs[0];   
+                this.setAttribute("selectedIndex", "4");
+              }
+            }
+            else {
+              // if the old internalOperator wasn't
+              // IsntInAB or IsInAB, and the new internalOperator isn't
+              // IsntInAB or IsInAB, noop because the search value
+              // wasn't an ab type, and it still isn't.
+              // otherwise, switch to the textbox and clear it
+              if (this.internalOperator == Components.interfaces.nsMsgSearchOp.IsntInAB ||
+                  this.internalOperator == Components.interfaces.nsMsgSearchOp.IsInAB) {
+                children[0].value = "";
+                this.setAttribute("selectedIndex", "0");
+              }
+            }
+
+            this.internalOperator = val;
+            return val;
+          ]]>
+        </setter>
+      </property>
       <!-- parentValue forwards to the attribute -->
       <property name="parentValue" onset="return this.searchAttribute=val;"
                                    onget="return this.searchAttribute;"/>
@@ -687,6 +767,10 @@
             // noop if we're not changing it
             if (this.internalAttribute == val) return val;
             this.internalAttribute = val;
+
+            // if the searchAttribute changing, null out the internalOperator
+            this.internalOperator = null; 
+
             // we inherit from a deck, so just use it's index attribute
             // to hide/show widgets
             if (val == Components.interfaces.nsMsgSearchAttrib.Priority)
@@ -695,13 +779,12 @@
               this.setAttribute("selectedIndex", "2");
             else if (val == Components.interfaces.nsMsgSearchAttrib.Date)
               this.setAttribute("selectedIndex", "3");
-            else if (val == Components.interfaces.nsMsgSearchAttrib.SenderInAddressBook)
-            {
-              var children = document.getAnonymousNodes(this);
-              var abs = children[4].getElementsByAttribute("value", "moz-abmdbdirectory://abook.mab");
-              if (abs.length > 0) 
-                children[4].selectedItem = abs[0];   
-              this.setAttribute("selectedIndex", "4");              
+            else if (val == Components.interfaces.nsMsgSearchAttrib.Sender) {
+              // since the internalOperator is null
+              // this is the same as the initial state
+              // the initial state for Sender isn't an ab type search
+              // it's a text search, so show the textbox
+              this.setAttribute("selectedIndex", "0");             
             }
             else if (val == Components.interfaces.nsMsgSearchAttrib.Label)
             {
@@ -747,11 +830,16 @@
             children[0].value = val.age;
           else if (attrib == nsMsgSearchAttrib.Date)
             children[3].value = convertPRTimeToString(val.date);
-          else if (attrib == nsMsgSearchAttrib.SenderInAddressBook)
-          {
-            var abs = children[4].getElementsByAttribute("value", val.str);
-            if (abs.length > 0) 
-              children[4].selectedItem = abs[0];    
+          else if (attrib == nsMsgSearchAttrib.Sender)
+          { 
+            if (this.internalOperator == Components.interfaces.nsMsgSearchOp.IsntInAB ||
+                this.internalOperator == Components.interfaces.nsMsgSearchOp.IsInAB) {
+              var abs = children[4].getElementsByAttribute("value", val.str);
+              if (abs.length > 0) 
+                children[4].selectedItem = abs[0];    
+            }
+            else
+              children[0].value = val.str;
           }
           else if (attrib == nsMsgSearchAttrib.Label)
           {
@@ -789,8 +877,13 @@
                searchValue.age = children[0].value;
             else if (searchAttribute == nsMsgSearchAttrib.Date)
                searchValue.date = convertStringToPRTime(children[3].value);
-            else if (searchAttribute == nsMsgSearchAttrib.SenderInAddressBook)
-              searchValue.str = children[4].selectedItem.value;
+            else if (searchAttribute == nsMsgSearchAttrib.Sender) {
+              if (this.internalOperator == Components.interfaces.nsMsgSearchOp.IsntInAB ||
+                  this.internalOperator == Components.interfaces.nsMsgSearchOp.IsInAB)
+                searchValue.str = children[4].selectedItem.value;
+              else
+                searchValue.str = children[0].value;
+            }
             else if (searchAttribute == nsMsgSearchAttrib.Label)
               searchValue.label = children[5].selectedItem.value;
             else if (searchAttribute == nsMsgSearchAttrib.JunkStatus)

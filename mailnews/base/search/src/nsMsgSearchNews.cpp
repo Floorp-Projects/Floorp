@@ -740,10 +740,10 @@ nsresult nsMsgSearchValidityManager::InitNewsFilterTable()
     m_newsFilterTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
     m_newsFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::EndsWith, 1);
     
-    m_newsFilterTable->SetAvailable (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsInAB, 1);
-    m_newsFilterTable->SetEnabled   (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsInAB, 1);
-    m_newsFilterTable->SetAvailable (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsntInAB, 1);
-    m_newsFilterTable->SetEnabled   (nsMsgSearchAttrib::SenderInAddressBook, nsMsgSearchOp::IsntInAB, 1);
+    m_newsFilterTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::IsInAB, 1);
+    m_newsFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::IsInAB, 1);
+    m_newsFilterTable->SetAvailable (nsMsgSearchAttrib::Sender, nsMsgSearchOp::IsntInAB, 1);
+    m_newsFilterTable->SetEnabled   (nsMsgSearchAttrib::Sender, nsMsgSearchOp::IsntInAB, 1);
     
     m_newsFilterTable->SetAvailable (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 1);
     m_newsFilterTable->SetEnabled   (nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 1);

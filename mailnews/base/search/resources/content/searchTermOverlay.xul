@@ -54,15 +54,15 @@
           <listitem id="searchListItem">
             <listcell id="preSearchAttr"/>
             <listcell allowevents="true">
-              <searchattribute id="searchAttr" for="searchOp,searchValue" flex="1"/>
+              <searchattribute id="searchAttr1" for="searchOp1,searchValue1" flex="1"/>
             </listcell>
             <listcell id="preSearchOp"/>
             <listcell allowevents="true">
-              <searchoperator id="searchOp" flex="1"/>
+              <searchoperator id="searchOp1" opfor="searchValue1" flex="1"/>
             </listcell>
             <listcell id="preSearchValue"/>
             <listcell allowevents="true" >
-              <searchvalue id="searchValue" flex="1"/>
+              <searchvalue id="searchValue1" flex="1"/>
             </listcell>
             <listcell id="postSearchValue"/>
           </listitem>

@@ -255,9 +255,6 @@ var folderListener = {
        else if(eventType == "RenameCompleted") {
          SelectFolder(folder.URI);
        }
-       else if (eventType == "msgLoaded") {
-        OnMsgLoaded(folder, gDBView.URIForFirstSelectedMessage);
-       }
     }
 }
 

@@ -492,7 +492,6 @@ nsresult nsMsgSearchOfflineMail::ProcessSearchTerm(nsIMsgDBHdr *msgToMatch,
 
     switch (attrib)
     {
-      case nsMsgSearchAttrib::SenderInAddressBook:
       case nsMsgSearchAttrib::Sender:
         msgToMatch->GetAuthor(getter_Copies(matchString));
         err = aTerm->MatchRfc822String (matchString, charset, charsetOverride, &result);
