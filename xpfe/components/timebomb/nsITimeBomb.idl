@@ -80,7 +80,6 @@
 #include "nsISupports.idl"
 
 [scriptable, uuid(93fabc84-e1bf-11d3-ac71-00c04fa0d26b)]
-
 interface nsITimeBomb : nsISupports
 {
     void init();
