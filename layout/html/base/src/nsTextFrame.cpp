@@ -124,7 +124,10 @@ public:
                          PRInt32&        aOffset);
 
   NS_IMETHOD SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffset, PRBool aForceRedraw);
-  NS_IMETHOD SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset, PRBool aForceRedraw, nsIFrame **aActualSelected);
+  NS_IMETHOD SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset,
+                                        PRInt32 aAnchorOffset, PRInt32 aFocusOffset, PRBool aForceRedraw, 
+                                        nsIFocusTracker *aTracker,
+                                        nsIFrame **aActualSelected);
   NS_IMETHOD GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOffset, PRInt32 *aBeginContentOffset);
   NS_IMETHOD GetOffsets(PRInt32 &start, PRInt32 &end)const;
 
@@ -785,7 +788,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   PRInt32* ip = indicies;
   PRUnichar* paintBuf = paintBufMem;
   if (mContentLength > TEXT_BUF_SIZE) {
-    ip = new PRInt32[mContentLength];
+    ip = new PRInt32[mContentLength+1];
     paintBuf = new PRUnichar[mContentLength];
   }
   nscoord width = mRect.width;
@@ -796,7 +799,7 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
   PrepareUnicodeText(aRenderingContext, tx,
                      displaySelection ? ip : nsnull,
                      paintBuf, textLength, width);
-
+  ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
   PRUnichar* text = paintBuf;
   if (0 != textLength) {
     if (!displaySelection || !mSelected || mSelectionOffset > mContentLength) { 
@@ -816,7 +819,9 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
         mSelectionOffset = 0;
       if (mSelectionEnd < 0)
         mSelectionEnd = mContentLength;
-      if (mSelectionOffset >= mContentLength)
+      if (mSelectionEnd >  mContentLength)
+        mSelectionEnd = mContentLength;
+      if (mSelectionOffset > mContentLength)
         mSelectionOffset = mContentLength;
       PRInt32 selectionEnd = mSelectionEnd;
       PRInt32 selectionOffset = mSelectionOffset;
@@ -825,10 +830,9 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
         selectionEnd = mSelectionOffset;
         selectionOffset = mSelectionEnd;
       }
-      if (selectionEnd > textLength)
-        selectionEnd = textLength;
-      if (selectionOffset > textLength)
-        selectionOffset = textLength;
+      //where are the selection points "really"
+      selectionOffset = ip[selectionOffset] - mContentOffset;
+      selectionEnd = ip[selectionEnd]  - mContentOffset;
       if (selectionOffset == selectionEnd){
         aRenderingContext.DrawString(text, textLength, dx, dy, width);
         PaintTextDecorations(aRenderingContext, aStyleContext,
@@ -1254,6 +1258,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   PrepareUnicodeText(aRenderingContext, tx,
                      displaySelection ? ip : nsnull,
                      rawPaintBuf, textLength, width);
+  ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
 
   // Translate unicode data into ascii for rendering
   char* dst = paintBuf;
@@ -1266,6 +1271,7 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
   char* text = paintBuf;
   if (0 != textLength) {
     if (!displaySelection || !mSelected || mSelectionOffset > mContentLength) { 
+      //if selection is > content length then selection has "slid off"
       // When there is no selection showing, use the fastest and
       // simplest rendering approach
       aRenderingContext.DrawString(text, textLength, dx, dy, width);
@@ -1281,7 +1287,9 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
         mSelectionOffset = 0;
       if (mSelectionEnd < 0)
         mSelectionEnd = mContentLength;
-      if (mSelectionOffset >= mContentLength)
+      if (mSelectionEnd >  mContentLength)
+        mSelectionEnd = mContentLength;
+      if (mSelectionOffset > mContentLength)
         mSelectionOffset = mContentLength;
       PRInt32 selectionEnd = mSelectionEnd;
       PRInt32 selectionOffset = mSelectionOffset;
@@ -1290,11 +1298,9 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
         selectionEnd = mSelectionOffset;
         selectionOffset = mSelectionEnd;
       }
-      if (selectionEnd > textLength)
-        selectionEnd = textLength;
-      if (selectionOffset > textLength)
-        selectionOffset = textLength;
-
+      //where are the selection points "really"
+      selectionOffset = ip[selectionOffset] - mContentOffset;
+      selectionEnd = ip[selectionEnd]  - mContentOffset;
       if (selectionOffset == selectionEnd){
         aRenderingContext.DrawString(text, textLength, dx, dy, width);
         PaintTextDecorations(aRenderingContext, aStyleContext,
@@ -1302,8 +1308,8 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
 //        aRenderingContext.GetWidth(text, PRUint32(si.mStartOffset), textWidth);
         aRenderingContext.GetWidth(text, PRUint32(selectionOffset), textWidth);
         RenderSelectionCursor(aRenderingContext,
-                              dx + textWidth, dy, mRect.height,
-                              CURSOR_COLOR);
+                            dx + textWidth, dy, mRect.height,
+                            CURSOR_COLOR);
       }
       else 
       {
@@ -1507,11 +1513,16 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   }
 
   aAcutalContentOffset = mContentOffset;//offset;//((TextFrame *)aNewFrame)->mContentOffset;
-  if (mFlags & TEXT_SKIP_LEADING_WS){ //we are really a little more "right" than we thought
-    aAcutalContentOffset ++;
-  }
   aOffset = index;
-
+  //reusing wordBufMem
+  PRInt32 i;
+  for (i = 0;i <= mContentLength; i ++){
+    if (ip[i] == aOffset + mContentOffset){ //reverse mapping
+        aOffset = i;
+        break;
+    }
+  }
+  NS_ASSERTION(i<= mContentLength, "offset we got from binary search is messed up");
   return NS_OK;
 }
 
@@ -1538,7 +1549,10 @@ TextFrame::SetSelected(PRBool aSelected, PRInt32 aBeginOffset, PRInt32 aEndOffse
 }
 
 NS_IMETHODIMP
-TextFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset, PRBool aForceRedraw, nsIFrame **aActualSelected)
+TextFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffset, PRInt32 aEndContentOffset,
+                                     PRInt32 aAnchorOffset, PRInt32 aFocusOffset, PRBool aForceRedraw, 
+                                     nsIFocusTracker *aTracker,
+                                     nsIFrame **aActualSelected)
 {
   if (!aActualSelected)
     return NS_ERROR_NULL_POINTER;
@@ -1548,47 +1562,58 @@ TextFrame::SetSelectedContentOffsets(PRBool aSelected, PRInt32 aBeginContentOffs
     beginOffset = aBeginContentOffset - mContentOffset;
     //haha you almost got me.  the content offset does include the ws but no one can see it.
     //here is where we aknowledge that it doesnt exist.
-    if (mFlags & TEXT_SKIP_LEADING_WS) 
-      beginOffset --;
   }
   if (beginOffset >= mContentLength){
     //this is not the droid we are looking for.
     SetSelected(PR_FALSE, 0, 0, aForceRedraw);
     nsIFrame *nextInFlow =GetNextInFlow();
     if (nextInFlow)
-      return nextInFlow->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw, aActualSelected);
+      return nextInFlow->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, 
+                                                   aAnchorOffset, aFocusOffset, aForceRedraw, aTracker, aActualSelected);
     else
       return NS_ERROR_FAILURE;
   }
   if (beginOffset <0)
     beginOffset = 0;  //start from the beginning
+  else{
+    if (aAnchorOffset == aBeginContentOffset )
+      aTracker->SetFocus(nsnull, this);
+    if (aFocusOffset == aBeginContentOffset )
+      aTracker->SetFocus(this, nsnull);
+  }
   *aActualSelected = this;
   PRInt32 endOffset(aEndContentOffset);
   if (endOffset != -1){ //-1 signified the end of the current content
     endOffset = aEndContentOffset - mContentOffset;
-    if (mFlags & TEXT_SKIP_LEADING_WS) 
-      endOffset --;
   }
 
   nsIFrame *nextInFlow =GetNextInFlow();
   if (nextInFlow){
     if (endOffset == -1 || endOffset > mContentLength){ //-1 means until the end of the content
-        nextInFlow->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset, aForceRedraw, aActualSelected);
+        nextInFlow->SetSelectedContentOffsets(aSelected, aBeginContentOffset, aEndContentOffset,
+                                              aAnchorOffset, aFocusOffset,aForceRedraw, aTracker ,aActualSelected);
     }
     else if (aSelected == PR_TRUE) { //we must shut off all folowing selected frames if we are selecting frames 
+      if (aAnchorOffset == aEndContentOffset )
+        aTracker->SetFocus(nsnull, this);
+      if (aFocusOffset == aEndContentOffset )
+        aTracker->SetFocus(this, nsnull);
       do {
         nextInFlow->SetSelected(PR_FALSE, 0, 0, aForceRedraw);
       }
       while (NS_SUCCEEDED(nextInFlow->GetNextInFlow(nextInFlow)) && nextInFlow);//this is ok because frames arent reference counted this is not a leak!
     }
   }
+  else {
+    if (aAnchorOffset == aEndContentOffset )
+      aTracker->SetFocus(nsnull, this);
+    if (aFocusOffset == aEndContentOffset )
+      aTracker->SetFocus(this, nsnull);
+  }
 #ifdef NS_DEBUG
   printf("mContentOffset:  %i  , mContentLength  %i \n", mContentOffset, mContentLength);
 #endif //NS_DEBUG
-  if (endOffset == beginOffset) //no single selection in this code.  this must be done on a per frame basis
-      return NS_OK;
-  else
-    return SetSelected(aSelected, beginOffset, endOffset, aForceRedraw);
+  return SetSelected(aSelected, beginOffset, endOffset, aForceRedraw);
 }
 
 NS_IMETHODIMP
@@ -1600,9 +1625,7 @@ TextFrame::GetSelected(PRBool *aSelected, PRInt32 *aBeginOffset, PRInt32 *aEndOf
   *aEndOffset = mSelectionEnd;
   *aSelected = mSelected;
   *aBeginContentOffset = mContentOffset;
-  if (mFlags & TEXT_SKIP_LEADING_WS){ //we are really a little more "right" than we thought
-    *aBeginContentOffset ++;
-  }
+//should we check for whitespace here? dont think so.
   return NS_OK;
 }
 
