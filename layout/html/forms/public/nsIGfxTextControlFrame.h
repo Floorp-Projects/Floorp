@@ -23,7 +23,7 @@
 #include "nsISupports.h"
 
 class nsIEditor;
-class nsIWebShell;
+class nsIDocShell;
 
 #define NS_IGFXTEXTCONTROLFRAME_IID \
 {/* d3ea33ea-9e00-11d3-bccc-0060b0fc76bd*/ \
@@ -36,6 +36,6 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IGFXTEXTCONTROLFRAME_IID; return iid; }
 
 	NS_IMETHOD GetEditor(nsIEditor **aEditor) = 0;
-  NS_IMETHOD GetWebShell(nsIWebShell** aWebShell) = 0;
+  NS_IMETHOD GetDocShell(nsIDocShell** aDocShell) = 0;
   NS_IMETHOD SetInnerFocus() = 0;
 };
