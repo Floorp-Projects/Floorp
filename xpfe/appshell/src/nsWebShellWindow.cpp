@@ -1000,6 +1000,53 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
       return NS_ERROR_FAILURE;
   }
 
+  nsCOMPtr<nsIPresShell> presShell;
+  if (NS_FAILED(rv = presContext->GetShell(getter_AddRefs(presShell)))) {
+      NS_ERROR("Unable to retrieve the pres shell.");
+      return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
+  if (anAnchorAlignment != "none") {
+    // We need to compute our screen coordinates.
+    nsIFrame* primaryFrame;
+    presShell->GetPrimaryFrameFor(content, &primaryFrame);
+    if (primaryFrame) {
+      // Get the coordinates within the view.
+      nsRect    rect;
+      nsIView * view;
+      nsPoint   pnt;
+      primaryFrame->GetOffsetFromView(pnt, &view);
+      primaryFrame->GetRect(rect);
+      rect.x = pnt.x;
+      rect.y = pnt.y;
+
+      float t2p;
+      presContext->GetTwipsToPixels(&t2p);
+      rect.x = NSToCoordRound((float)(rect.x)*t2p);
+      rect.y = NSToCoordRound((float)(rect.y)*t2p);
+      rect.width  = NSToCoordRound((float)(rect.width)*t2p);
+      rect.height = NSToCoordRound((float)(rect.height)*t2p);
+
+      if (anAnchorAlignment == "topleft") {
+        aXPos = rect.x + aXPos;
+        aYPos = rect.y + aYPos;
+      }
+      else if (anAnchorAlignment == "topright") {
+        aXPos = rect.x + rect.width + aXPos;
+        aYPos = rect.y + aYPos;
+      }
+      else if (anAnchorAlignment == "bottomleft") {
+        aXPos = rect.x + aXPos;
+        aYPos = rect.y + rect.height + aXPos;
+      }
+      else {
+        aXPos = rect.x + rect.width + aXPos;
+        aYPos = rect.y + rect.height + aYPos;
+      }
+    }
+  }
+
   nsCOMPtr<nsIContent> popupContent = do_QueryInterface(aPopupContent);
   
   // Fire the CONSTRUCT DOM event to give JS/C++ a chance to build the popup
@@ -1074,7 +1121,6 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   // content.  This new document must use the different root and a different global script 
   // context (window object) but everything else about it is the same (namespaces, URLs,
   // stylesheets).
-  nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
   nsCOMPtr<nsIDocument> document;
   content->GetDocument(*getter_AddRefs(document));
   if (document == nsnull)
