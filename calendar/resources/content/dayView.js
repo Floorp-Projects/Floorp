@@ -592,7 +592,7 @@ var gStartDate = null;
 
 var gEndDate = null;
 
-var eventEndObserver = {
+var dayEventEndObserver = {
   getSupportedFlavours : function () {
     var flavours = new FlavourSet();
     flavours.appendFlavour("text/unicode");
@@ -620,7 +620,7 @@ var eventEndObserver = {
   }
 };
 
-var eventStartObserver  = {
+var dayEventStartObserver  = {
   onDragStart: function (evt, transferData, action){
      gStartDate = new Date( gCalendarWindow.getSelectedDate() );
    

@@ -679,12 +679,13 @@ var gStartDate = null;
 
 var eventEndObserver = {
   getSupportedFlavours : function () {
-    var flavours = new FlavourSet();
-    flavours.appendFlavour("text/unicode");
-    return flavours;
+    var weekflavours = new FlavourSet();
+    weekflavours.appendFlavour("text/unicode");
+    return weekflavours;
   },
   onDragOver: function (evt,flavour,session){
-    evt.target.setAttribute( "draggedover", "true" );    
+      dump( "\nDragged Over" );
+      evt.target.setAttribute( "draggedover", "true" );    
   },
   onDrop: function (evt,dropdata,session){
       var EndDate = new Date( gStartDate.getTime() );
@@ -709,17 +710,15 @@ var eventStartObserver  = {
   onDragStart: function (evt, transferData, action){
       var dayIndex = evt.target.getAttribute( "day" );
 
-      newDate = gHeaderDateItemArray[dayIndex].getAttribute( "date" );
-
-      gCalendarWindow.setSelectedDate( newDate );
+      var newDate = gHeaderDateItemArray[dayIndex].getAttribute( "date" );
+      //gCalendarWindow.setSelectedDate( newDate );
    
-      gStartDate = newDate;
+      gStartDate = new Date( newDate );
       gStartDate.setHours( evt.target.getAttribute( "hour" ) );
       gStartDate.setMinutes( 0 );
       gStartDate.setSeconds( 0 );
-   
-     transferData.data=new TransferData();
-     transferData.data.addDataForFlavour("text/unicode",0);
+      transferData.data=new TransferData();
+      transferData.data.addDataForFlavour("text/unicode",0);
   }
 };
 
