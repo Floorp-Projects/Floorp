@@ -58,6 +58,7 @@ public:
 protected:
   void UpdateCursor(nsIPresContext& aPresContext, nsPoint& aPoint, nsIFrame* aTargetFrame, nsEventStatus& aStatus);
   void GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
+  void GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent);
   NS_IMETHOD DispatchKeyPressEvent(nsIPresContext& aPresContext, nsKeyEvent *aEvent, nsEventStatus& aStatus);  
   NS_IMETHOD CheckForAndDispatchClick(nsIPresContext& aPresContext, nsMouseEvent *aEvent, nsEventStatus& aStatus);  
   PRBool ChangeFocus(nsIContent* aFocus, PRBool aSetFocus);
@@ -70,6 +71,7 @@ protected:
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
   nsIFrame* mLastMouseOverFrame;
+  nsIFrame* mLastDragOverFrame;
 
   nsIContent* mLastLeftMouseDownContent;
   nsIContent* mLastMiddleMouseDownContent;
@@ -77,6 +79,7 @@ protected:
 
   nsIContent* mActiveContent;
   nsIContent* mHoverContent;
+  nsIContent* mDragOverContent;
   nsIContent* mCurrentFocus;
   PRInt32 mCurrentTabIndex;
  

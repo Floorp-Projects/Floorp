@@ -54,6 +54,7 @@ static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 
 nsEventStateManager::nsEventStateManager() {
   mLastMouseOverFrame = nsnull;
+  mLastDragOverFrame = nsnull;
   mCurrentTarget = nsnull;
   mLastLeftMouseDownContent = nsnull;
   mLastMiddleMouseDownContent = nsnull;
@@ -61,6 +62,7 @@ nsEventStateManager::nsEventStateManager() {
 
   mActiveContent = nsnull;
   mHoverContent = nsnull;
+  mDragOverContent = nsnull;
   mCurrentFocus = nsnull;
   mDocument = nsnull;
   mPresContext = nsnull;
@@ -71,6 +73,7 @@ nsEventStateManager::nsEventStateManager() {
 nsEventStateManager::~nsEventStateManager() {
   NS_IF_RELEASE(mActiveContent);
   NS_IF_RELEASE(mHoverContent);
+  NS_IF_RELEASE(mDragOverContent);
   NS_IF_RELEASE(mCurrentFocus);
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mLastLeftMouseDownContent);
@@ -384,6 +387,112 @@ nsEventStateManager::GenerateMouseEnterExit(nsIPresContext& aPresContext, nsGUIE
         if (nsnull != mLastMouseOverFrame) {
           //XXX Get the new frame
           mLastMouseOverFrame->HandleEvent(aPresContext, &event, status);   
+        }
+      }
+    }
+    break;
+  }
+  
+}
+
+void
+nsEventStateManager::GenerateDragDropEnterExit(nsIPresContext& aPresContext, nsGUIEvent* aEvent)
+{
+  switch(aEvent->message) {
+  case NS_DRAGDROP_OVER:
+    {
+      if (mLastDragOverFrame != mCurrentTarget) {
+        //We'll need the content, too, to check if it changed separately from the frames.
+        nsIContent *lastContent = nsnull;
+        nsIContent *targetContent;
+
+        mCurrentTarget->GetContent(&targetContent);
+
+        if (nsnull != mLastDragOverFrame) {
+          //fire mouseout
+          nsEventStatus status = nsEventStatus_eIgnore;
+          nsMouseEvent event;
+          event.eventStructType = NS_DRAGDROP_EVENT;
+          event.message = NS_DRAGDROP_EXIT;
+          event.widget = nsnull;
+
+          //The frame has change but the content may not have.  Check before dispatching to content
+          mLastDragOverFrame->GetContent(&lastContent);
+
+          if (lastContent != targetContent) {
+            //XXX This event should still go somewhere!!
+            if (nsnull != lastContent) {
+              lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+            }
+          }
+
+          if (nsEventStatus_eConsumeNoDefault != status) {
+            SetContentState(nsnull, NS_EVENT_STATE_DRAGOVER);
+          }
+
+          //Now dispatch to the frame
+          if (nsnull != mLastDragOverFrame) {
+            //XXX Get the new frame
+            mLastDragOverFrame->HandleEvent(aPresContext, &event, status);   
+          }
+        }
+
+        //fire dragover
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_DRAGDROP_EVENT;
+        event.message = NS_DRAGDROP_ENTER;
+        event.widget = nsnull;
+
+        //The frame has change but the content may not have.  Check before dispatching to content
+        if (lastContent != targetContent) {
+          //XXX This event should still go somewhere!!
+          if (nsnull != targetContent) {
+            targetContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+          }
+
+          if (nsEventStatus_eConsumeNoDefault != status) {
+            SetContentState(targetContent, NS_EVENT_STATE_DRAGOVER);
+          }
+        }
+
+        //Now dispatch to the frame
+        if (nsnull != mCurrentTarget) {
+          //XXX Get the new frame
+          mCurrentTarget->HandleEvent(aPresContext, &event, status);
+        }
+
+        NS_IF_RELEASE(lastContent);
+        NS_IF_RELEASE(targetContent);
+
+        mLastDragOverFrame = mCurrentTarget;
+      }
+    }
+    break;
+  case NS_MOUSE_EXIT:
+    {
+      //This is actually the window mouse exit event.  Such a think does not
+      // yet exist but it will need to eventually.
+      if (nsnull != mLastDragOverFrame) {
+        //fire mouseout
+        nsEventStatus status = nsEventStatus_eIgnore;
+        nsMouseEvent event;
+        event.eventStructType = NS_DRAGDROP_EVENT;
+        event.message = NS_DRAGDROP_EXIT;
+        event.widget = nsnull;
+
+        nsIContent *lastContent;
+        mLastDragOverFrame->GetContent(&lastContent);
+
+        if (nsnull != lastContent) {
+          lastContent->HandleDOMEvent(aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status); 
+          NS_RELEASE(lastContent);
+        }
+
+        //Now dispatch to the frame
+        if (nsnull != mLastDragOverFrame) {
+          //XXX Get the new frame
+          mLastDragOverFrame->HandleEvent(aPresContext, &event, status);   
         }
       }
     }
@@ -752,14 +861,24 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
   if (aContent == mCurrentFocus) {
     aState |= NS_EVENT_STATE_FOCUS;
   }
+  if (aContent == mDragOverContent) {
+    aState |= NS_EVENT_STATE_DRAGOVER;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 {
-  const PRInt32 maxNotify = 4;
-  nsIContent  *notifyContent[maxNotify] = {nsnull, nsnull, nsnull, nsnull};
+  const PRInt32 maxNotify = 5;
+  nsIContent  *notifyContent[maxNotify] = {nsnull, nsnull, nsnull, nsnull, nsnull};
+
+  if ((aState & NS_EVENT_STATE_DRAGOVER) && (aContent != mDragOverContent)) {
+    //transferring ref to notifyContent from mDragOverContent
+    notifyContent[4] = mDragOverContent; // notify dragover first, since more common case
+    mDragOverContent = aContent;
+    NS_IF_ADDREF(mDragOverContent);
+  }
 
   if ((aState & NS_EVENT_STATE_ACTIVE) && (aContent != mActiveContent)) {
     //transferring ref to notifyContent from mActiveContent
@@ -789,6 +908,10 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     NS_ADDREF(aContent);  // everything in notify array has a ref
   }
 
+  // remove duplicates
+  if ((notifyContent[4] == notifyContent[3]) || (notifyContent[4] == notifyContent[2]) || (notifyContent[4] == notifyContent[1])) {
+    notifyContent[4] = nsnull;
+  }
   // remove duplicates
   if ((notifyContent[3] == notifyContent[2]) || (notifyContent[3] == notifyContent[1])) {
     notifyContent[3] = nsnull;
@@ -834,6 +957,9 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
         // together by parent/child, only needed if more than two content changed
         // (ie: if [0] and [2] are parent/child, then notify (0,2) (1,3))
         document->ContentStatesChanged(notifyContent[2], notifyContent[3]);
+        if (notifyContent[4]) {  // more that two notifications are needed (should be rare)
+          document->ContentStatesChanged(notifyContent[4], nsnull);
+        }
       }
       NS_RELEASE(document);
     }
