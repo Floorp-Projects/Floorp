@@ -1144,6 +1144,8 @@ struct nsStyleSVG : public nsStyleStruct {
   nsStyleSVG(const nsStyleSVG& aSource);
   ~nsStyleSVG();
 
+  NS_DEFINE_STATIC_STYLESTRUCTID_ACCESSOR(eStyleStruct_SVG)
+
   void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
     void* result = nsnull;
     aContext->AllocateFromShell(sz, &result);
