@@ -401,6 +401,66 @@ case "$target" in
     RESOLVE_LINK_SYMBOLS=1
     ;;
 
+*-bsdi*)
+    AC_DEFINE(XP_UNIX)
+    AC_DEFINE(BSDI)
+    AC_DEFINE(NEED_BSDREGEX)
+
+    CFLAGS="$CFLAGS -Wall -Wno-format"
+    CXXFLAGS="$CXXFLAGS -Wall -Wno-format"
+
+    if echo "$OS_TEST" | grep -c 86 >/dev/null; then
+        CPU_ARCH=x86
+    elif echo "$OS_TEST" | grep -c sparc >/dev/null; then 
+        CPU_ARCH=sparc
+    fi
+
+    MDCPUCFG_H=_bsdi.cfg
+    PR_MD_CSRCS=bsdi.c
+
+    MKSHLIB='$(LD) -o $@ $(DSO_LDOPTS)'
+    DSO_LDOPTS=-r
+
+    case "$target_os" in
+    bsdi1.1*)
+        AC_DEFINE(_PR_BSDI_JMPBUF_IS_ARRAY)
+        AC_DEFINE(_PR_STAT_HAS_ONLY_ST_ATIME)
+        AC_DEFINE(_PR_NEED_H_ERRNO)
+        MKSHLIB=
+        DSO_CFLAGS=
+        DSO_LDOPTS=
+        ;;
+
+    bsdi2.1*)
+        AC_DEFINE(_PR_TIMESPEC_HAS_TS_SEC)
+        AC_DEFINE(_PR_BSDI_JMPBUF_IS_ARRAY)
+        AC_DEFINE(HAVE_DLL)
+        AC_DEFINE(USE_DLFCN)
+        AC_DEFINE(_PR_STAT_HAS_ST_ATIMESPEC)
+        PR_MD_ASFILES=os_BSD_OS_386_2.s
+        ;;
+
+    bsdi4.*)
+        AC_DEFINE(_PR_SELECT_CONST_TIMEVAL)
+        AC_DEFINE(_PR_BSDI_JMPBUF_IS_STRUCT)
+        AC_DEFINE(HAVE_DLL)
+        AC_DEFINE(USE_DLFCN)
+        AC_DEFINE(_PR_STAT_HAS_ST_ATIMESPEC)
+        MKSHLIB='$(CC) -o $@ $(DSO_LDOPTS)'
+        DSO_CFLAGS=-fPIC
+        DSO_LDOPTS='-shared -Wl,-soname,$(@:$(OBJDIR)/%.so=%.so)'
+        ;;
+    *)
+        AC_DEFINE(_PR_SELECT_CONST_TIMEVAL)
+        AC_DEFINE(_PR_BSDI_JMPBUF_IS_STRUCT)
+        AC_DEFINE(HAVE_DLL)
+        AC_DEFINE(USE_DLFCN)
+        AC_DEFINE(_PR_STAT_HAS_ST_ATIMESPEC)
+        ;;
+    esac
+
+    ;;
+
 *-dgux*)
     AC_DEFINE(XP_UNIX)
     AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
@@ -1053,6 +1113,14 @@ case "$target" in
         AC_DEFINE(HAVE_POINTER_LOCALTIME_R)
     fi
     ;;
+*-bsdi*)
+    if test -n "$USE_PTHREADS"; then
+        AC_DEFINE(_PR_NEED_PTHREAD_INIT)
+    else
+        AC_DEFINE(_PR_LOCAL_THREADS_ONLY)
+    fi
+    ;;
+
 *-hpux*)
     if test -n "$USE_USER_PTHREADS"; then
         AC_DEFINE(_POSIX_C_SOURCE=199506L)
