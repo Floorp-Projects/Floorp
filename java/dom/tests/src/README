@@ -29,7 +29,7 @@ For Solaris
           BW_XMLTEST    (URL where test.xml file are located. Used if you run 
                          tests through TestLoader applet)
 
-  5)  Copy redirect.html, test.html and test.xml files to your Web-Servers DOCUMENT_ROOT
+  5)  Copy redirect.html, redirectxml.html, test.html and test.xml files to your Web-Servers DOCUMENT_ROOT
       (By default it is assumed that they can be accessed as
         http://<server name>/redirect.html).
         or
@@ -53,7 +53,8 @@ NOTE: All Test Cases are reocorded in file BWTestClass.lst.ORIG
 Assumption:
 
  I  assume that u have copied the files test.xml  
- and redirect.html test.html to your DOCUMENT_ROOT of your WebServer.
+ and redirect.html, redirectxml.html,  test.html to your DOCUMENT_ROOT of 
+ your WebServer.
  The URL it tries to load is  http://<servername>/redirect.html.
 
  If it is set in users public_html then open file autorun.sh

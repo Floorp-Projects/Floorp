@@ -65,8 +65,8 @@ title()
    echo "################################################"
    echo
    echo "NOTE: You need to copy files redirect.html, test.html and"
-   echo "      test.xml to DOCUMENT_ROOT dir. of your"
-   echo "      Web-Server on this machine."
+   echo "      redirectxml.html, test.xml to DOCUMENT_ROOT dir. of"
+   echo "      your Web-Server on this machine."
    echo
    echo
 }
@@ -487,10 +487,10 @@ fi
 
 if [ "$runtype" = "2" ]
 then
-  DOCFILE="$DOCROOT/redirect.html"
+  DOCFILE="$DOCROOT/redirectxml.html"
   if [ -z "$appreg" ]
   then
-	DOCFILE="$DOCROOT/redirect.html";
+	DOCFILE="$DOCROOT/redirectxml.html";
   else
 	DOCFILE="$DOCROOT/TestLoaderXML.html";
   fi
@@ -636,7 +636,7 @@ do
 
  if [ "$runtype" = "3" ]
  then
-     DOCFILE="$DOCROOT/redirect.html"
+     DOCFILE="$DOCROOT/redirectxml.html"
      filename="$curdir/BWTestClass.lst.xml.ORIG"
      constructHTML
      appendEntries

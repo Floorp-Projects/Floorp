@@ -85,8 +85,8 @@ sub title() {
     print "   Automated Execution of DOM API TestSuite\n";
     print "################################################\n";
     print "\n";
-    print "NOTE: You need to copy files redirect.html, test.html and test.xml\n";
-    print "      into some document directory of HTTP server\n";
+    print "NOTE: You need to copy files redirect.html, test.html and test.xml,\n";
+    print "      redirectxml.html into some document directory of HTTP server\n";
     print "      TEST_URL environment variable should contain the URL of \n";
     print "      this directory.\n";
     print "\n";
@@ -377,7 +377,7 @@ if ($runtype == 2) {
     if (@ENV{"USE_APPLET_FOR_REGISTRATION"}) {
       $DOCFILE = "$DOCROOT/TestLoaderXML.html";
     } else {
-      $DOCFILE = "$DOCROOT/redirect.html";
+      $DOCFILE = "$DOCROOT/redirectxml.html";
     }
     $filename = "$curdir/BWTestClass.lst.xml.ORIG";
     $runcnt = 1;
@@ -489,7 +489,7 @@ while (true) {
     ( ++$currcnt < $runcnt ) || last;
     
     if ( $runtype == 3 ) {
-	$DOCFILE="$DOCROOT/redirect.html";
+	$DOCFILE="$DOCROOT/redirectxml.html";
 	$filename="$curdir/BWTestClass.lst.xml.ORIG";
 	constructHTML;
 	appendEntries;
