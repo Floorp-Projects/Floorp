@@ -3467,10 +3467,10 @@ void nsTableFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBo
   aSpacingStyle.mBorder.SetBottom(width);
   aSpacingStyle.mBorder.SetRight(width);
 
-  aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_OUTSET; 
-  aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_OUTSET; 
-  aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_OUTSET; 
-  aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_OUTSET; 
+   aSpacingStyle.SetBorderStyle(NS_SIDE_TOP, NS_STYLE_BORDER_STYLE_OUTSET);
+   aSpacingStyle.SetBorderStyle(NS_SIDE_LEFT, NS_STYLE_BORDER_STYLE_OUTSET);
+   aSpacingStyle.SetBorderStyle(NS_SIDE_BOTTOM, NS_STYLE_BORDER_STYLE_OUTSET);
+   aSpacingStyle.SetBorderStyle(NS_SIDE_RIGHT, NS_STYLE_BORDER_STYLE_OUTSET);
 
   nsIStyleContext* styleContext = mStyleContext; 
   const nsStyleColor* colorData = (const nsStyleColor*)
@@ -3508,10 +3508,10 @@ void nsTableFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBo
   if (borderColor == 0xFFFFFFFF)
     borderColor = 0xFFC0C0C0;
 
-  aSpacingStyle.mBorderColor[NS_SIDE_TOP]     = borderColor;
-  aSpacingStyle.mBorderColor[NS_SIDE_LEFT]    = borderColor;
-  aSpacingStyle.mBorderColor[NS_SIDE_BOTTOM]  = borderColor;
-  aSpacingStyle.mBorderColor[NS_SIDE_RIGHT]   = borderColor;
+  aSpacingStyle.SetBorderColor(NS_SIDE_TOP, borderColor);
+  aSpacingStyle.SetBorderColor(NS_SIDE_LEFT, borderColor);
+  aSpacingStyle.SetBorderColor(NS_SIDE_BOTTOM, borderColor);
+  aSpacingStyle.SetBorderColor(NS_SIDE_RIGHT, borderColor);
 
 }
 
