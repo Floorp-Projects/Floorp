@@ -62,7 +62,6 @@
 #include "nsISelection.h"
 #include "nsISelectionController.h"
 #include "nsIServiceManager.h"
-#include "nsIStringBundle.h"
 #include "nsXPIDLString.h"
 
 #include "nsIDOMComment.h"
@@ -97,6 +96,7 @@
 #include "nsIDOMXULSelectCntrlEl.h"
 #include "nsIDOMXULSelectCntrlItemEl.h"
 #include "nsString.h"
+#include "nsIPref.h"
 
 // IFrame Helpers
 #include "nsIDocShell.h"
@@ -111,11 +111,13 @@
 #include "nsIDOMCharacterData.h"
 #endif
 
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+
 //#define DEBUG_LEAKS
 
-#ifdef DEBUG_LEAKS
-static gnsAccessibles = 0;
-#endif
+PRUint32 nsAccessible::gInstanceCount = 0;
+nsIStringBundle *nsAccessible::gStringBundle = 0;
+nsIStringBundle *nsAccessible::gKeyStringBundle = 0;
 
 static NS_DEFINE_CID(kStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 
@@ -448,9 +450,21 @@ nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): mDOMNod
    }
 #endif
 
+   ++gInstanceCount;
 #ifdef DEBUG_LEAKS
-  printf("nsAccessibles=%d\n", ++gnsAccessibles);
+  printf("nsAccessibles=%d\n", gInstanceCount);
 #endif
+
+  if (gInstanceCount == 1) {
+    nsresult rv;
+    nsCOMPtr<nsIStringBundleService> stringBundleService(do_GetService(kStringBundleServiceCID, &rv));
+    if (stringBundleService) {
+      stringBundleService->CreateBundle(ACCESSIBLE_BUNDLE_URL, &gStringBundle);
+      NS_IF_ADDREF(gStringBundle);
+      stringBundleService->CreateBundle(PLATFORM_KEYS_BUNDLE_URL, &gKeyStringBundle);
+      NS_IF_ADDREF(gKeyStringBundle);
+    }
+  }
 }
 
 //-----------------------------------------------------
@@ -458,8 +472,13 @@ nsAccessible::nsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell): mDOMNod
 //-----------------------------------------------------
 nsAccessible::~nsAccessible()
 {
+  if (--gInstanceCount == 0) {
+    NS_IF_RELEASE(gStringBundle);
+    NS_IF_RELEASE(gKeyStringBundle);
+  }
+
 #ifdef DEBUG_LEAKS
-  printf("nsAccessibles=%d\n", --gnsAccessibles);
+  printf("nsAccessibles=%d\n", gInstanceCount);
 #endif
 }
 
@@ -469,6 +488,39 @@ NS_IMETHODIMP nsAccessible::GetAccName(nsAString& _retval)
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
   if (elt) 
     return elt->GetAttribute(NS_LITERAL_STRING("title"), _retval);
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsAccessible::GetAccKeyboardShortcut(nsAString& _retval)
+{
+  static PRInt32 gGeneralAccesskeyModifier = -1;  // magic value of -1 indicates unitialized state
+
+  nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
+  if (elt) {
+    nsAutoString accesskey;
+    elt->GetAttribute(NS_LITERAL_STRING("accesskey"), accesskey);
+    if (accesskey.IsEmpty())
+      return NS_OK;
+
+    if (gGeneralAccesskeyModifier == -1) {  // Need to initialize cached global accesskey pref
+      gGeneralAccesskeyModifier = 0;
+      nsresult result;
+      nsCOMPtr<nsIPref> prefService(do_GetService(kPrefCID, &result));
+      if (NS_SUCCEEDED(result) && prefService)
+        prefService->GetIntPref("ui.key.generalAccessKey", &gGeneralAccesskeyModifier);
+    }
+    nsAutoString propertyKey;
+    switch (gGeneralAccesskeyModifier) {
+      case nsIDOMKeyEvent::DOM_VK_CONTROL: propertyKey = NS_LITERAL_STRING("VK_CONTROL"); break;
+      case nsIDOMKeyEvent::DOM_VK_ALT: propertyKey = NS_LITERAL_STRING("VK_ALT"); break;
+      case nsIDOMKeyEvent::DOM_VK_META: propertyKey = NS_LITERAL_STRING("VK_META"); break;
+    }
+    if (!propertyKey.IsEmpty())
+      nsAccessible::GetFullKeyName(propertyKey, accesskey, _retval);
+    else
+      _retval= accesskey;
+    return NS_OK;
+  }
   return NS_ERROR_FAILURE;
 }
 
@@ -577,27 +629,29 @@ NS_IMETHODIMP nsAccessible::GetAccChildCount(PRInt32 *aAccChildCount)
 
 nsresult nsAccessible::GetTranslatedString(const nsAString& aKey, nsAString& aStringOut)
 {
-  static nsCOMPtr<nsIStringBundle> stringBundle;
-  static PRBool firstTime = PR_TRUE;
-
-  if (firstTime) {
-    firstTime = PR_FALSE;
-    nsresult rv;
-    nsCOMPtr<nsIStringBundleService> stringBundleService = 
-             do_GetService(kStringBundleServiceCID, &rv);
-    if (!stringBundleService) { 
-      NS_WARNING("ERROR: Failed to get StringBundle Service instance.\n");
-      return NS_ERROR_FAILURE;
-    }
-    stringBundleService->CreateBundle(ACCESSIBLE_BUNDLE_URL, getter_AddRefs(stringBundle));
-  }
-
   nsXPIDLString xsValue;
-  if (!stringBundle || 
-    NS_FAILED(stringBundle->GetStringFromName(PromiseFlatString(aKey).get(), getter_Copies(xsValue)))) 
+
+  if (!gStringBundle || 
+    NS_FAILED(gStringBundle->GetStringFromName(PromiseFlatString(aKey).get(), getter_Copies(xsValue)))) 
     return NS_ERROR_FAILURE;
 
   aStringOut.Assign(xsValue);
+  return NS_OK;
+}
+
+nsresult nsAccessible::GetFullKeyName(const nsAString& aModifierName, const nsAString& aKeyName, nsAString& aStringOut)
+{
+  nsXPIDLString modifierName, separator;
+
+  if (!gKeyStringBundle ||
+      NS_FAILED(gKeyStringBundle->GetStringFromName(PromiseFlatString(aModifierName).get(), 
+                                                    getter_Copies(modifierName))) ||
+      NS_FAILED(gKeyStringBundle->GetStringFromName(PromiseFlatString(NS_LITERAL_STRING("MODIFIER_SEPARATOR")).get(), 
+                                                    getter_Copies(separator)))) {
+    return NS_ERROR_FAILURE;
+  }
+
+  aStringOut = modifierName + separator + aKeyName; 
   return NS_OK;
 }
 

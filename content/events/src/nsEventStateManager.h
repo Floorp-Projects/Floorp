@@ -255,6 +255,7 @@ protected:
   nsSupportsHashtable *mAccessKeys;
 
   static PRUint32 mInstanceCount;
+  static PRInt32 gGeneralAccesskeyModifier;
 
   // For preferences handling
   nsCOMPtr<nsIPref> mPrefService;

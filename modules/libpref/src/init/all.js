@@ -592,7 +592,9 @@ pref("security.xpconnect.plugin.unrestricted", true);
 
 // Modifier key prefs: default to Windows settings,
 // menu access key = alt, accelerator key = control.
+// Use 17 for Ctrl, 18 for Alt, 224 for Meta, 0 for none. Mac settings in macprefs.js
 pref("ui.key.accelKey", 17);
+pref("ui.key.generalAccessKey", 18);
 pref("ui.key.menuAccessKey", 18);
 pref("ui.key.menuAccessKeyFocuses", false);
 pref("ui.key.saveLink.shift", true); // true = shift, false = meta

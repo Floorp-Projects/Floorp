@@ -180,9 +180,15 @@ pref("font.size.fixed.zh-CN", 16);
 pref("font.size.variable.zh-TW", 16);
 pref("font.size.fixed.zh-TW", 16);
 
-// Override the Windows settings: no menu key, meta accelerator key.
+// Override the Windows settings: no menu key, meta accelerator key. ctrl for general access key in HTML/XUL
+// Use 17 for Ctrl, 18 for Option, 224 for Cmd, 0 for none
 pref("ui.key.menuAccessKey", 0);
 pref("ui.key.accelKey", 224);
+// (pinkerton, joki, saari) IE5 for mac uses Control for access keys. The HTML4 spec
+// suggests to use command on mac, but this really sucks (imagine someone having a "q"
+// as an access key and not letting you quit the app!). As a result, we've made a 
+// command decision 1 day before tree lockdown to change it to the control key.
+pref("ui.key.generalAccessKey", 17);
 
 // print_extra_margin enables platforms to specify an extra gap or margin
 // around the content of the page for Print Preview only
