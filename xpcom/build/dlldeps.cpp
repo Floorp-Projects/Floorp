@@ -78,4 +78,5 @@ void XXXNeverCalled()
     XPTC_InvokeByIndex(NULL, 0, 0, NULL);
     NS_NewFileSpec(NULL);
     xptc_dummy();
+    XPTI_GetInterfaceInfoManager();
 }
