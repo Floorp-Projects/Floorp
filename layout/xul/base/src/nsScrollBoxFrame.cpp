@@ -820,7 +820,7 @@ nsScrollBoxFrame::RestoreState(nsIPresContext* aPresContext,
         return NS_ERROR_FAILURE;
 
       nsCOMPtr<nsIScrollableView> scrollingView(do_QueryInterface(view));
-      if (scrollingView);
+      if (scrollingView)
         scrollingView->GetScrollPosition(mLastPos.x, mLastPos.y);
     }
   }
