@@ -20,14 +20,13 @@
 * Date: 06 February 2001
 *
 * SUMMARY:  Arose from Bugzilla bug 67773: 
-* "Sub-expressions followed by + failing to run to completion"
+* "Regular subexpressions followed by + failing to run to completion"
 *
 *  See http://bugzilla.mozilla.org/show_bug.cgi?id=67773
-*
 */
 //-------------------------------------------------------------------------------------------------
 var bug = 67773;
-var summary = 'Test regular expressions with subexpressions followed by +';
+var summary = 'Testing regular subexpressions followed by ? or +';
 var statprefix = 'regexp = '; var statmiddle =  ', string = '; var statsuffix = ', $';
 var cnSingleQuote = "'"; var cnEmptyString = ''; var cnSingleSpace = ' ';
 var cnNoMatch = 'regexp FAILED to match anything!!!\n';
@@ -166,7 +165,7 @@ function test()
         // expectedmatch and actualmatch are array objects. Compare them element-by-element -
         for (j=0; j !=actualmatch.length; j++)
         {
-            reportCompare (expectedmatch[j],  actualmatch[j], getStatus(i, j));
+          reportCompare (expectedmatch[j],  actualmatch[j], getStatus(i, j));
         }
       }
       else // we did not expect a match -
@@ -182,7 +181,8 @@ function test()
       }
       else // we did not expect a match
       {
-        reportCompare (null, null, getStatus(i));
+        // Being ultra-cautious here. Presumably expectedmatch===actualmatch===null
+        reportCompare (expectedmatch, actualmatch, getStatus(i));
       }
     }
   }
