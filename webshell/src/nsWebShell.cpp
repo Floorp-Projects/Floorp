@@ -1755,7 +1755,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       /* Add yourself to the Session History */
    if (shist) {
       PRInt32  ret=0;
-      ret = shist->add(this, aType);
+      ret = shist->add(this);
    }
   }
    
