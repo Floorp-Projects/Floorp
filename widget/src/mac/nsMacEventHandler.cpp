@@ -1275,7 +1275,12 @@ PRBool nsMacEventHandler::HandleTextEvent(void)
 	textEvent.point.y = 0;
 	textEvent.time = PR_IntervalNow();
 	textEvent.theText = mIMECompositionString;
-
+	textEvent.rangeCount = 1;
+	textEvent.rangeArray = new nsTextRange[1];
+	textEvent.rangeArray[0].mStartOffset = 0;
+	textEvent.rangeArray[0].mEndOffset = 1;
+	textEvent.rangeArray[0].mRangeType = 0x01;
+	
 	//
 	// nsGUIEvent parts
 	//
