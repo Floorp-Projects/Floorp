@@ -28,6 +28,7 @@
 
 #include <fcntl.h>
 #include <sys/wait.h>
+#include <signal.h>
 
 #ifdef __sgi
 #include <bstring.h>			/* FD_ZERO uses bzero() which needs this */
