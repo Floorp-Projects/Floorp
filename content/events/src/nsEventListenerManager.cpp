@@ -1657,7 +1657,7 @@ nsEventListenerManager::CreateEvent(nsPresContext* aPresContext,
        return NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsMouseEvent*,aEvent));
     if (str.EqualsIgnoreCase("KeyboardEvent") ||
         str.EqualsIgnoreCase("KeyEvents"))
-       return NS_NewDOMMouseEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsKeyEvent*,aEvent));
+       return NS_NewDOMKeyboardEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsKeyEvent*,aEvent));
     if (str.EqualsIgnoreCase("MutationEvent") ||
         str.EqualsIgnoreCase("MutationEvents"))
        return NS_NewDOMMutationEvent(aDOMEvent, aPresContext, NS_STATIC_CAST(nsMutationEvent*,aEvent));
