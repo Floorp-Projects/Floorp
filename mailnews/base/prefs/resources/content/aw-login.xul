@@ -38,7 +38,7 @@ Rights Reserved.
     <html:div>&usernameDesc.label;</html:div>
     <html:div>
       &usernameLabel.label;
-      <html:input type="text" name="username" id="username"/>
+      <html:input type="text" name="server.username" id="server.username"/>
     </html:div>
   </box>
 
@@ -47,7 +47,8 @@ Rights Reserved.
     <html:div>&savePasswordDesc.label;</html:div>
     <html:div>&savePasswordLabel.label;</html:div>
     <html:div>
-      <html:input type="checkbox" value="savepassword" name="savepassword" id="savepassword"/>
+      <html:input type="checkbox" name="server.rememberPassword"
+                  id="server.rememberPassword"/>
       &savePasswordCheckbox.label;
     </html:div>
     <html:div style="padding-left: 15px">

@@ -40,7 +40,7 @@ Rights Reserved.
     <html:div>&incomingServerTypeDesc.label;</html:div>
     <html:div>
       &incomingServerTypeLabel.label;
-      <html:select id="servertype" name="servertype">
+      <html:select id="server.type" name="server.type">
         <html:option value="pop3">&popType.label;</html:option>
         <html:option value="imap">&imapType.label;</html:option>
         <html:option value="nntp">&nntpType.label;</html:option>
@@ -50,7 +50,7 @@ Rights Reserved.
     <html:div>&incomingServerNameDesc.label;</html:div>
     <html:div>
       &incomingServerLabel.label;
-      <html:input type="text" id="serverhostname" name="serverhostname"/>
+      <html:input type="text" id="server.hostName" name="server.hostName"/>
     </html:div>
   </box>
 
@@ -59,7 +59,7 @@ Rights Reserved.
     <html:div>&smtpServerDesc.label;</html:div>
     <html:div>
       &smtpServerLabel.label;
-      <html:input type="text" id="smtphostname" name="smtphostname"/>
+      <html:input type="text" id="identity.smtpHostname" name="identity.smtpHostname"/>
     </html:div>
   </box>
 </box>

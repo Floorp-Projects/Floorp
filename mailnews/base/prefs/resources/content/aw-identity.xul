@@ -42,7 +42,7 @@ Rights Reserved.
     <html:div>&fullnameExample.label;</html:div>
     <box align="horizontal">
       <html:div>&fullnameLabel.label;</html:div>
-      <html:input type="text" name="fullname" id="fullname"/>
+      <html:input type="text" name="identity.fullName" id="identity.fullName"/>
       <spring flex="100%"/>
     </box>
   </html:div>
@@ -52,7 +52,7 @@ Rights Reserved.
     <html:div>&emailExample.label;</html:div>
     <box align="horizontal">
       <html:div>&emailLabel.label;</html:div>
-      <html:input type="text" name="email" id="email"/>
+      <html:input type="text" name="identity.email" id="identity.email"/>
       <spring flex="100%"/>
     </box>
   </html:div>
