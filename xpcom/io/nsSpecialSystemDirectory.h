@@ -60,7 +60,32 @@ class NS_BASE nsSpecialSystemDirectory : public nsFileSpec
         
         ,   Win_SystemDirectory       =   201
         ,   Win_WindowsDirectory      =   202
-        
+
+        ,   Win_HomeDirectory         =   203
+        ,   Win_Desktop               =   204    
+        ,   Win_Programs              =   205    
+        ,   Win_Controls              =   206    
+        ,   Win_Printers              =   207    
+        ,   Win_Personal              =   208    
+        ,   Win_Favorites             =   209    
+        ,   Win_Startup               =   210    
+        ,   Win_Recent                =   211    
+        ,   Win_Sendto                =   212    
+        ,   Win_Bitbucket             =   213    
+        ,   Win_Startmenu             =   214    
+        ,   Win_Desktopdirectory      =   215    
+        ,   Win_Drives                =   216    
+        ,   Win_Network               =   217    
+        ,   Win_Nethood               =   218    
+        ,   Win_Fonts                 =   219    
+        ,   Win_Templates             =   220    
+        ,   Win_Common_Startmenu      =   221    
+        ,   Win_Common_Programs       =   222    
+        ,   Win_Common_Startup        =   223   
+        ,   Win_Common_Desktopdirectory = 224   
+        ,   Win_Appdata               =   225    
+        ,   Win_Printhood             =   226    
+         
         ,   Unix_LocalDirectory       =   301
         ,   Unix_LibDirectory         =   302
         ,   Unix_HomeDirectory        =   303
