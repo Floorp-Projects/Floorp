@@ -18,8 +18,10 @@
 
 -->
 
-<?xml-stylesheet href="chrome://communicator/skin/sidebar/sidebar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/sidebar/preview.css" type="text/css"?>
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://communicator/locale/sidebar/preview.dtd" >
 
@@ -29,26 +31,21 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   onload="Init();"
   class="dialog"
-  align="vertical">
+  title="&sidebar.preview.title.label;"
+  style="width: 26em;"
+  orient="vertical">
 
-<html:script src="chrome://communicator/content/sidebar/preview.js" />
+  <script src="chrome://communicator/content/sidebar/preview.js" />
 
-  <html:div class="title">
-    &sidebar.preview.title.label;
-  </html:div>
+  <box class="box-smallheader" id="paneltitle" title="&sidebar.preview.title.label;" description=""/>
 
-  <html:div>
-    <html:hr />
-  </html:div>
+  <iframe class="inset" id="previewframe" type="content" src="about:blank" flex="1"/>
 
-  <titledbutton id="paneltitle" class="plain paneltitle" align="left"/>
-
-  <html:iframe id="previewframe" type="content" src="about:blank" flex="1"/>
-
-  <box align="horizontal">
-    <spring flex="50%"/>
-    <titledbutton onclick="window.close()" class="push dialog"
-       value="&sidebar.preview.close.label;" />
-    <spring flex="50%"/>
+  <separator class="groove"/>
+  
+  <box halign="right">
+    <spring flex="1"/>
+    <button class="dialog" value="&sidebar.preview.close.label;" oncommand="window.close();"/>
   </box>
+
 </window>
