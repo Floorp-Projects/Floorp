@@ -267,8 +267,12 @@ typedef enum JSCharType {
 #define JS_ISUPPER(c)   (JS_CTYPE(c) == JSCT_UPPERCASE_LETTER)
 #define JS_ISLOWER(c)   (JS_CTYPE(c) == JSCT_LOWERCASE_LETTER)
 
-#define JS_TOUPPER(c)   ((JS_CCODE(c) & 0x00100000) ? (c) - ((int32)JS_CCODE(c) >> 22) : (c))
-#define JS_TOLOWER(c)   ((JS_CCODE(c) & 0x00200000) ? (c) + ((int32)JS_CCODE(c) >> 22) : (c))
+#define JS_TOUPPER(c)   ((jschar) ((JS_CCODE(c) & 0x00100000)                 \
+                                   ? (c) - ((int32)JS_CCODE(c) >> 22)         \
+                                   : (c)))
+#define JS_TOLOWER(c)   ((jschar) ((JS_CCODE(c) & 0x00200000)                 \
+                                   ? (c) + ((int32)JS_CCODE(c) >> 22)         \
+                                   : (c)))
 
 #define JS_TOCTRL(c)    ((c) ^ 64)      /* XXX unsafe! requires uppercase c */
 

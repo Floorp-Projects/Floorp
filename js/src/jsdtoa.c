@@ -2665,7 +2665,7 @@ js_dtoa(double d, int mode, JSBool biasUp, int ndigits,
                     *s++ = '9';
                     goto roundoff;
                 }
-                *s++ = dig + 1;
+                *s++ = (char)dig + 1;
                 goto ret;
             }
             *s++ = (char)dig;
