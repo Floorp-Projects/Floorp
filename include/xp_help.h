@@ -15,7 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* xp_help.h	                                                  *
+/* xp_help.h */
 
 
 /*
