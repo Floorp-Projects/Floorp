@@ -25,8 +25,8 @@
 #include "nsViewsCID.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
-#include "nsplugin.h"
 #include "nsIPluginHost.h"
+#include "nsplugin.h"
 #include "nsString.h"
 #include "nsIContentViewerContainer.h"
 #include "prmem.h"
@@ -59,6 +59,9 @@ protected:
 
   nsresult CreateWidget(nsIPresContext* aPresContext,
                         nscoord aWidth, nscoord aHeight);
+private:
+  nsPluginWindow    mPluginWindow;
+  nsIPluginInstance *mInstance;
 };
 
 nsObjectFrame::nsObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame)
@@ -68,6 +71,7 @@ nsObjectFrame::nsObjectFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 
 nsObjectFrame::~nsObjectFrame()
 {
+  NS_IF_RELEASE(mInstance);
 }
 
 static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
@@ -213,7 +217,6 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
     static NS_DEFINE_IID(kIContentViewerContainerIID, NS_ICONTENT_VIEWER_CONTAINER_IID);
 
     nsISupports               *container;
-    nsIPluginInstance         *pluginsup;
     nsIPluginHost             *pm;
     nsIContentViewerContainer *cv;
 
@@ -240,10 +243,43 @@ nsObjectFrame::Reflow(nsIPresContext&      aPresContext,
             if (nsnull != buf) {
               type.ToCString(buf, buflen + 1);
 
-              rv = pm->InstantiatePlugin(buf, &pluginsup);
+              rv = pm->InstantiatePlugin(buf, &mInstance);
 
               if (NS_OK == rv) {
-                pluginsup->Start();
+                mInstance->Start();
+
+                nsIView *view;
+                nsIWidget *widget;
+                nsRect  wrect;
+
+                GetView(view);
+
+                widget = view->GetWidget();
+                widget->GetBounds(wrect);
+
+                mPluginWindow.window = (nsPluginPort *)widget->GetNativeData(NS_NATIVE_WINDOW);
+                mPluginWindow.x = wrect.x;
+                mPluginWindow.y = wrect.y;
+                mPluginWindow.width = wrect.width;
+                mPluginWindow.height = wrect.height;
+                mPluginWindow.clipRect.top = wrect.y;
+                mPluginWindow.clipRect.left = wrect.x;
+                mPluginWindow.clipRect.bottom = wrect.YMost();
+                mPluginWindow.clipRect.right = wrect.XMost();
+#ifdef XP_UNIX
+                mPluginWindow.ws_info = nsnull;   //XXX need to figure out what this is. MMP
+#endif
+                //this will change with support for windowless plugins?... MMP
+                mPluginWindow.type = nsPluginWindowType_Window;
+
+                mInstance->SetWindow(&mPluginWindow);
+
+                //since the plugin is holding on to private data in the widget,
+                //we probably need to keep around the ref on the view and/or widget.
+                //(i.e. this is bad...) MMP
+
+                NS_RELEASE(view);
+                NS_RELEASE(widget);
               }
             }
           }
