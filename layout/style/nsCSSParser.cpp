@@ -900,7 +900,7 @@ CSSParserImpl::ParseMediaList(const nsSubstring& aBuffer,
                               PRBool aHTMLMode)
 {
   aMediaList->Clear();
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (aHTMLMode) {
     mHTMLMediaMode = PR_TRUE;
@@ -962,6 +962,7 @@ CSSParserImpl::DoParseMediaList(const nsSubstring& aBuffer,
   }
   CLEAR_ERROR();
   ReleaseScanner();
+  return rv;
 }
 
 //----------------------------------------------------------------------
