@@ -73,7 +73,6 @@ nsWindow::nsWindow()
 //-------------------------------------------------------------------------
 nsWindow::~nsWindow()
 {
-  OnDestroy();
   if (mWidget)
   {
     if (GTK_IS_WIDGET(mWidget))
@@ -248,6 +247,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   if (!parentWidget) {
 
     mainWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+    gtk_widget_show (mainWindow);
     gtk_signal_connect(GTK_OBJECT(mainWindow),
                        "realize",
                        GTK_SIGNAL_FUNC(window_realize_callback),
@@ -322,79 +322,6 @@ void nsWindow::InitCallbacks(char * aName)
                      "key_release_event",
 		     GTK_SIGNAL_FUNC(handle_key_release_event),
 		     this);
-}
-
-//-------------------------------------------------------------------------
-//
-// Hide or show this component
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Show(PRBool bState)
-{
-  if (bState) {
-    if (mVBox) {                  // Toplevel
-      gtk_widget_show (mVBox->parent);
-    }
-  }
-  return nsWidget::Show(bState);
-}
-
-//-------------------------------------------------------------------------
-//
-// Resize this component
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
-{
-  nsWidget::Resize(aWidth, aHeight, aRepaint);
-#if 0
-  NS_NOTYETIMPLEMENTED("nsWindow::Resize");
-  if (DBG) printf("$$$$$$$$$ %s::Resize %d %d   Repaint: %s\n",
-                  gInstanceClassName, aWidth, aHeight, (aRepaint?"true":"false"));
-  mBounds.width  = aWidth;
-  mBounds.height = aHeight;
-  // TODO
-  // gtk_layout_set_size(GTK_LAYOUT(layout), aWidth, aHeight);
-  XtVaSetValues(mWidget, XmNx, mBounds.x, XmNy, mBounds.y, XmNwidth, aWidth, XmNheight, aHeight, nsnull);
-#endif
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Resize this component
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
-{
-  nsWindow::Resize(aWidth, aHeight, aRepaint);
-  nsWidget::Move(aX,aY);
-
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Set this component dimension
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::SetBounds(const nsRect &aRect)
-{
-  mBounds = aRect;
-
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Get this component dimension
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsWindow::GetBounds(nsRect &aRect)
-{
-  aRect = mBounds;
-  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -658,24 +585,16 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
 
 NS_METHOD nsWindow::BeginResizingChildren(void)
 {
+  gtk_layout_freeze(GTK_LAYOUT(mWidget));
   return NS_OK;
 }
 
 NS_METHOD nsWindow::EndResizingChildren(void)
 {
+  gtk_layout_thaw(GTK_LAYOUT(mWidget));
   return NS_OK;
 }
 
-
-void nsWindow::OnDestroy()
-{
-    // release references to children, device context, toolkit, and app shell
-  //XXX: Why is there a problem releasing these
-  // NS_IF_RELEASE(mChildren);
-  //  NS_IF_RELEASE(mContext);
-  //   NS_IF_RELEASE(mToolkit);
-  //   NS_IF_RELEASE(mAppShell);
-}
 
 PRBool nsWindow::OnResize(nsRect &aWindowRect)
 {
@@ -718,101 +637,6 @@ PRBool nsWindow::DispatchFocus(nsGUIEvent &aEvent)
 PRBool nsWindow::OnScroll(nsScrollbarEvent &aEvent, PRUint32 cPos)
 {
   return PR_FALSE;
-}
-
-void nsWindow::SetIgnoreResize(PRBool aIgnore)
-{
-  mIgnoreResize = aIgnore;
-}
-
-PRBool nsWindow::IgnoreResize()
-{
-  return mIgnoreResize;
-}
-
-void nsWindow::SetResizeRect(nsRect& aRect)
-{
-  mResizeRect = aRect;
-}
-
-void nsWindow::GetResizeRect(nsRect* aRect)
-{
-  aRect->x = mResizeRect.x;
-  aRect->y = mResizeRect.y;
-  aRect->width = mResizeRect.width;
-  aRect->height = mResizeRect.height;
-}
-
-void nsWindow::SetResized(PRBool aResized)
-{
-  mResized = aResized;
-  if (mVBox) {
-    if (aResized)
-      GTK_PRIVATE_SET_FLAG(mVBox, GTK_RESIZE_NEEDED);
-    else
-      GTK_PRIVATE_UNSET_FLAG(mVBox, GTK_RESIZE_NEEDED);
-  } else {
-    if (mWidget) {
-      if (aResized)
-        GTK_PRIVATE_SET_FLAG(mWidget, GTK_RESIZE_NEEDED);
-      else
-        GTK_PRIVATE_UNSET_FLAG(mWidget, GTK_RESIZE_NEEDED);
-    }
-  }
-}
-
-PRBool nsWindow::GetResized()
-{
-  return(mResized);
-}
-
-void nsWindow::UpdateVisibilityFlag()
-{
-  GtkWidget *parent = mWidget->parent;
-
-  if (parent) {
-    mVisible = GTK_WIDGET_VISIBLE(parent);
-  }
-    /*
-    PRUint32 pWidth = 0;
-    PRUint32 pHeight = 0;
-    XtVaGetValues(parent, XmNwidth, &pWidth, XmNheight, &pHeight, nsnull);
-    if ((mBounds.y + mBounds.height) > pHeight) {
-      mVisible = PR_FALSE;
-      return;
-    }
-
-    if (mBounds.y < 0)
-     mVisible = PR_FALSE;
-  }
-
-  mVisible = PR_TRUE;
-  */
-}
-
-void nsWindow::UpdateDisplay()
-{
-  // If not displayed and needs to be displayed
-  if ((PR_FALSE==mDisplayed) && (PR_TRUE==mShown) && (PR_TRUE==mVisible)) {
-    gtk_widget_show(mWidget);
-    mDisplayed = PR_TRUE;
-  }
-
-  // Displayed and needs to be removed
-  if (PR_TRUE==mDisplayed) {
-    if ((PR_FALSE==mShown) || (PR_FALSE==mVisible)) {
-      gtk_widget_hide(mWidget);
-      mDisplayed = PR_FALSE;
-    }
-  }
-}
-
-PRUint32 nsWindow::GetYCoord(PRUint32 aNewY)
-{
-  if (PR_TRUE==mLowerLeft) {
-    return(aNewY - 12 /*KLUDGE fix this later mBounds.height */);
-  }
-  return(aNewY);
 }
 
 NS_METHOD nsWindow::SetMenuBar(nsIMenuBar * aMenuBar)
