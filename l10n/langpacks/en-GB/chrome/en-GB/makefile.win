@@ -22,7 +22,9 @@
 DEPTH=..\..\..\..\..
 THEME_ROOT_DEPTH = ..\..
 
+!if defined(MOZ_LANGPACKS)
 DIRS=communicator editor global messenger navigator necko
+!endif
 
 include <$(THEME_ROOT_DEPTH)\theme.mk>
 
