@@ -149,8 +149,4 @@ pref("font.min-size.fixed.zh-CN", 16);
 pref("font.min-size.variable.zh-TW", 16);
 pref("font.min-size.fixed.zh-TW", 16);
 
-// ps font
-pref("print.psnativecode.ja", "euc-jp");
-pref("print.psnativefont.ja", "Ryumin-Light-EUC-H");
-
 pref("mail.signature_date", 0);
