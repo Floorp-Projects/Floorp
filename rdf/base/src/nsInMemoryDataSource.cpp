@@ -29,6 +29,10 @@
      a special case for them to improve access time to individual
      elements.
 
+  3) Complete implementation of thread-safety; specifically, make
+     assertions be reference counted objects (so that a cursor can
+     still refer to an assertion that gets removed from the graph).
+
  */
 
 #include "nscore.h"
@@ -44,6 +48,15 @@
 #include "rdfutil.h"
 #include "plhash.h"
 #include "plstr.h"
+
+
+#if 1 // defined(MOZ_THREADSAFE_RDF)
+#include "nsAutoLock.h"
+#define NS_AUTOLOCK(__monitor) nsAutoLock __lock(__monitor)
+#else
+#define NS_AUTOLOCK(__monitor)
+#endif
+
 
 static NS_DEFINE_IID(kIRDFAssertionCursorIID,  NS_IRDFASSERTIONCURSOR_IID);
 static NS_DEFINE_IID(kIRDFArcsInCursorIID,     NS_IRDFARCSINCURSOR_IID);
@@ -121,6 +134,19 @@ protected:
 
     friend class InMemoryResourceCursor; // b/c it needs to enumerate mForwardArcs
 
+    // Thread-safe writer implementation methods.
+    nsresult
+    SafeAssert(nsIRDFResource* source, 
+               nsIRDFResource* property, 
+               nsIRDFNode* target,
+               PRBool tv);
+
+    nsresult
+    SafeUnassert(nsIRDFResource* source,
+                 nsIRDFResource* property,
+                 nsIRDFNode* target);
+
+
 public:
     InMemoryDataSource(void);
     virtual ~InMemoryDataSource(void);
@@ -194,6 +220,10 @@ public:
     Assertion* GetReverseArcs(nsIRDFNode* v);
     void       SetForwardArcs(nsIRDFResource* u, Assertion* as);
     void       SetReverseArcs(nsIRDFNode* v, Assertion* as);
+
+
+    // This datasource's monitor object.
+    PRLock* mLock;
 };
 
 const PRInt32 InMemoryDataSource::kInitialTableSize = 500;
@@ -248,10 +278,10 @@ public:
 ////////////////////////////////////////////////////////////////////////
 
 InMemoryAssertionCursor::InMemoryAssertionCursor(InMemoryDataSource* ds,
-                                                     nsIRDFNode* u,
-                                                     nsIRDFResource* label, 
-                                                     PRBool tv,
-                                                     Direction direction)
+                                                 nsIRDFNode* u,
+                                                 nsIRDFResource* label, 
+                                                 PRBool tv,
+                                                 Direction direction)
     : mDataSource(ds),
       mSource(nsnull),
       mLabel(label),
@@ -297,6 +327,8 @@ InMemoryAssertionCursor::Advance(void)
 {
     nsresult rv;
 
+    NS_AUTOLOCK(mDataSource->mLock);
+
     NS_IF_RELEASE(mValue);
 
     while (mNextAssertion) {
@@ -333,6 +365,8 @@ InMemoryAssertionCursor::GetValue(nsIRDFNode** aValue)
     if (! aValue)
         return NS_ERROR_NULL_POINTER;
 
+    NS_AUTOLOCK(mDataSource->mLock);
+
     NS_ADDREF(mValue);
     *aValue = mValue;
     return NS_OK;
@@ -357,6 +391,8 @@ InMemoryAssertionCursor::GetSubject(nsIRDFResource** aSubject)
     NS_PRECONDITION(aSubject != nsnull, "null ptr");
     if (! aSubject)
         return NS_ERROR_NULL_POINTER;
+
+    NS_AUTOLOCK(mDataSource->mLock);
 
     if (mDirection == eDirectionForwards) {
         NS_ADDREF(mSource);
@@ -393,6 +429,8 @@ InMemoryAssertionCursor::GetObject(nsIRDFNode** aObject)
     if (! aObject)
         return NS_ERROR_NULL_POINTER;
 
+    NS_AUTOLOCK(mDataSource->mLock);
+
     if (mDirection == eDirectionForwards) {
         if (! mValue)
             return NS_ERROR_UNEXPECTED;
@@ -414,6 +452,8 @@ InMemoryAssertionCursor::GetTruthValue(PRBool* aTruthValue)
     NS_PRECONDITION(aTruthValue != nsnull, "null ptr");
     if (! aTruthValue)
         return NS_ERROR_NULL_POINTER;
+
+    NS_AUTOLOCK(mDataSource->mLock);
 
     *aTruthValue = mTruthValue;
     return NS_OK;
@@ -797,7 +837,8 @@ InMemoryDataSource::InMemoryDataSource(void)
     : mURL(nsnull),
       mForwardArcs(nsnull),
       mReverseArcs(nsnull),
-      mObservers(nsnull)
+      mObservers(nsnull),
+      mLock(nsnull)
 {
     mForwardArcs = PL_NewHashTable(kInitialTableSize,
                             rdf_HashPointer,
@@ -812,6 +853,9 @@ InMemoryDataSource::InMemoryDataSource(void)
                             PL_CompareValues,
                             nsnull,
                             nsnull);
+
+    mLock = PR_NewLock();
+
     NS_INIT_REFCNT();
 }
 
@@ -838,6 +882,8 @@ InMemoryDataSource::~InMemoryDataSource(void)
         }
         delete mObservers;
     }
+
+    PR_DestroyLock(mLock);
 }
 
 PRIntn
@@ -909,6 +955,20 @@ InMemoryDataSource::GetSource(nsIRDFResource* property,
                               PRBool tv,
                               nsIRDFResource** source)
 {
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(target != nsnull, "null ptr");
+    if (! target)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_AUTOLOCK(mLock);
+
     nsresult rv;
     for (Assertion* as = GetReverseArcs(target); as != nsnull; as = as->mNext) {
         PRBool eq;
@@ -935,6 +995,20 @@ InMemoryDataSource::GetTarget(nsIRDFResource* source,
                               PRBool tv,
                               nsIRDFNode** target)
 {
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(target != nsnull, "null ptr");
+    if (! target)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_AUTOLOCK(mLock);
+
     nsresult rv;
     for (Assertion* as = GetForwardArcs(source); as != nsnull; as = as->mNext) {
         PRBool eq;
@@ -965,6 +1039,20 @@ InMemoryDataSource::HasAssertion(nsIRDFResource* source,
                                  PRBool tv,
                                  PRBool* hasAssertion)
 {
+    NS_PRECONDITION(source != nsnull, "null ptr");
+    if (! source)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(property != nsnull, "null ptr");
+    if (! property)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(target != nsnull, "null ptr");
+    if (! target)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_AUTOLOCK(mLock);
+
     nsresult rv;
     for (Assertion* as = GetForwardArcs(source); as != nsnull; as = as->mNext) {
         PRBool eq;
@@ -1003,6 +1091,8 @@ InMemoryDataSource::GetSources(nsIRDFResource* property,
     if (! sources)
         return NS_ERROR_NULL_POINTER;
 
+    NS_AUTOLOCK(mLock);
+
     InMemoryAssertionCursor* result
         = new InMemoryAssertionCursor(this, target, property, tv, eDirectionReverse);
 
@@ -1024,6 +1114,8 @@ InMemoryDataSource::GetTargets(nsIRDFResource* source,
     if (! targets)
         return NS_ERROR_NULL_POINTER;
 
+    NS_AUTOLOCK(mLock);
+
     InMemoryAssertionCursor* result
         = new InMemoryAssertionCursor(this, source, property, tv, eDirectionForwards);
 
@@ -1035,14 +1127,16 @@ InMemoryDataSource::GetTargets(nsIRDFResource* source,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-InMemoryDataSource::Assert(nsIRDFResource* source,
-                           nsIRDFResource* property, 
-                           nsIRDFNode* target,
-                           PRBool tv) 
-{
-    nsresult rv;
 
+nsresult
+InMemoryDataSource::SafeAssert(nsIRDFResource* source,
+                               nsIRDFResource* property,
+                               nsIRDFNode* target,
+                               PRBool tv)
+{
+    NS_AUTOLOCK(mLock);
+
+    nsresult rv;
     Assertion* next = GetForwardArcs(source);
     Assertion* prev = next;
     Assertion* as = nsnull;
@@ -1107,6 +1201,20 @@ InMemoryDataSource::Assert(nsIRDFResource* source,
         prev->mInvNext = as;
     }
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InMemoryDataSource::Assert(nsIRDFResource* source,
+                           nsIRDFResource* property, 
+                           nsIRDFNode* target,
+                           PRBool tv) 
+{
+    nsresult rv;
+
+    if (NS_FAILED(rv = SafeAssert(source, property, target, tv)))
+        return rv;
+
     // notify observers
     if (mObservers) {
         for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
@@ -1119,11 +1227,14 @@ InMemoryDataSource::Assert(nsIRDFResource* source,
     return NS_OK;
 }
 
-NS_IMETHODIMP
-InMemoryDataSource::Unassert(nsIRDFResource* source,
-                               nsIRDFResource* property,
-                               nsIRDFNode* target)
+
+nsresult
+InMemoryDataSource::SafeUnassert(nsIRDFResource* source,
+                                 nsIRDFResource* property,
+                                 nsIRDFNode* target)
 {
+    NS_AUTOLOCK(mLock);
+
     nsresult rv;
     Assertion* next = GetForwardArcs(source);
     Assertion* prev = next;
@@ -1178,6 +1289,19 @@ InMemoryDataSource::Unassert(nsIRDFResource* source,
     NS_RELEASE(as->mTarget);
     delete as;
 
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InMemoryDataSource::Unassert(nsIRDFResource* source,
+                             nsIRDFResource* property,
+                             nsIRDFNode* target)
+{
+    nsresult rv;
+
+    if (NS_FAILED(rv = SafeUnassert(source, property, target)))
+        return rv;
+
     // Notify the world
     if (mObservers) {
         for (PRInt32 i = mObservers->Count() - 1; i >= 0; --i) {
@@ -1198,6 +1322,8 @@ InMemoryDataSource::AddObserver(nsIRDFObserver* observer)
     if (! observer)
         return NS_ERROR_NULL_POINTER;
 
+    NS_AUTOLOCK(mLock);
+
     if (! mObservers) {
         if ((mObservers = new nsVoidArray()) == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
@@ -1213,6 +1339,8 @@ InMemoryDataSource::RemoveObserver(nsIRDFObserver* observer)
     NS_ASSERTION(observer != nsnull, "null ptr");
     if (! observer)
         return NS_ERROR_NULL_POINTER;
+
+    NS_AUTOLOCK(mLock);
 
     if (! mObservers)
         return NS_OK;
@@ -1246,6 +1374,8 @@ InMemoryDataSource::ArcLabelsOut(nsIRDFResource* source, nsIRDFArcsOutCursor** l
     if (! labels)
         return NS_ERROR_NULL_POINTER;
 
+    NS_AUTOLOCK(mLock);
+
     InMemoryArcsCursor* result =
         new InMemoryArcsCursor(this, source, eDirectionForwards);
 
@@ -1263,6 +1393,8 @@ InMemoryDataSource::GetAllResources(nsIRDFResourceCursor** aCursor)
     NS_PRECONDITION(aCursor != nsnull, "null ptr");
     if (! aCursor)
         return NS_ERROR_NULL_POINTER;
+
+    NS_AUTOLOCK(mLock);
 
     InMemoryResourceCursor* result = 
         new InMemoryResourceCursor(this);
