@@ -5111,6 +5111,10 @@ Bool lo_ProcessClick(MWContext *context, lo_TopState *top_state, lo_DocState *st
             case LO_HIT_ELEMENT_REGION_BEFORE:
                 {
 
+                    lo_SetInsertPoint(context, top_state, eptr, position, layer);
+                    return FALSE;
+#if 0
+/* Unfortunately, we hit this even when clicking within a text region - find another way to select line in a cell */
                     if( requireCaret || lo_GetParentTable(context, eptr) == 0 )
                     {
                         /* Not in a table cell or we need a caret 
@@ -5133,6 +5137,7 @@ Bool lo_ProcessClick(MWContext *context, lo_TopState *top_state, lo_DocState *st
                         lo_SetSelection(context, & result->lo_hitLine.selection, FALSE);
                         return TRUE;
                     }
+#endif
                 }
                 break;
             case LO_HIT_ELEMENT_REGION_MIDDLE:

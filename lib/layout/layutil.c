@@ -2141,7 +2141,8 @@ lo_NewElement(MWContext *context, lo_DocState *state, intn type,
 
 		if( EDT_IS_EDITOR(context) )
         {
-            if( lo_EditableElement( type ) )
+            /* if( lo_EditableElement( type ) ) Change from toshok: */
+            if( lo_EditableElement( type ) && type != LO_LINEFEED )
 		    {
 			    if( edit_element == 0 ){
 				    edit_element = state->edit_current_element;

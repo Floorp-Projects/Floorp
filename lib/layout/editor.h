@@ -4165,6 +4165,7 @@ private:
     XP_Bool m_bDontOverwriteAll;
     XP_Bool m_bDontOverwrite;
     int m_iCurFile; // 1-based
+    int m_iErrorCount;
     IStreamOut *m_pOutStream;
     XP_Bool m_bOpenOutputHandledError;
     CEditSaveToTempData *m_pSaveToTempData;

@@ -4505,14 +4505,7 @@ void CEditBuffer::SetParagraphAlign( ED_Alignment eAlign ){
     XP_Bool bDone;
     XP_ASSERT(m_pCurrent);
     
-    // To avoid extra HTML params, use default
-    //  for left align since that's how layout will do it
-    //cmanske: Windows FE was doing this - moved logic here for consistency
-    // TODO: This is messy for table cells: We need to check if ROW
-    //   has set alignment and NOT do this if it isn't already ED_ALIGN_DEFAULT,
-    //   otherwise cell gets the row's alignment
-    // BUT we must keep an explicit ED_ALIGN_LEFT if inside a table caption
-    // Use insert point instead of m_pCurrent in case we're selected
+    // Use insert point instead of m_pCurrent in case we're selected (m_pCurrent = 0)
     CEditElement *pParent = 0;
     CEditLeafElement *pInsertPoint;
     GetPropertyPoint(&pInsertPoint);
@@ -4530,10 +4523,14 @@ void CEditBuffer::SetParagraphAlign( ED_Alignment eAlign ){
         }
         pParent = pParent->GetParent();
     }
+    // To avoid extra HTML params, use ED_ALIGN_DEFAULT instead of ED_ALIGN_LEFT
+    //  for left align since that's how layout will do it
+    // But we must keep an explicit ED_ALIGN_LEFT if inside a table caption
     if( !bInCaption && eAlign == ED_ALIGN_LEFT )
         eAlign = ED_ALIGN_DEFAULT;
 
-    if( IsSelected() ){
+    if( IsSelected() )
+    {
         CEditLeafElement *pBegin, *pEnd, *pCurrent;
         CEditContainerElement *pContainer = NULL;
         ElementOffset iBeginPos, iEndPos;
@@ -4587,7 +4584,8 @@ void CEditBuffer::SetParagraphAlign( ED_Alignment eAlign ){
         if( pTable )
             Relayout( pTable, 0 );
     }
-    else {
+    else
+    {
         CEditElement *pContainer = m_pCurrent->FindContainer();
         // HACKOLA: just poke in a new tag type.
         pContainer->Container()->SetAlignment( eAlign );
@@ -7259,8 +7257,13 @@ void CEditBuffer::DeleteTableRows(intn number){
         BeginBatchChanges(kGroupOfChangesCommandID);
         // If we have entire rows selected, use that for number to delete
         if( number <= 0 )
-            number = max( 1, GetNumberOfSelectedRows());
-
+        {
+            intn iSelected = GetNumberOfSelectedRows();
+            number = max( 1, iSelected);
+            // If deleting selected rows -- move to the first selected cell
+            if( iSelected > 0 )
+                SetTableInsertPoint(m_SelectedEdCells[0], TRUE);
+        }
         AdoptAndDo(new CDeleteTableRowCommand(this, number));
 
         EndBatchChanges();
@@ -7885,7 +7888,13 @@ void CEditBuffer::DeleteTableColumns(intn number){
         BeginBatchChanges(kGroupOfChangesCommandID);
         // If we have entire columns selected, use that for number to delete
         if( number <= 0 )
-            number = max(1, GetNumberOfSelectedColumns());
+        {
+            intn iSelected = GetNumberOfSelectedColumns();
+            number = max(1, iSelected);
+            // Deleting selected columns - move to the first selected cell
+            if( iSelected > 0 )
+                SetTableInsertPoint(m_SelectedEdCells[0], TRUE);
+        }
 
         AdoptAndDo(new CDeleteTableColumnCommand(this, number));
         EndBatchChanges();
@@ -9347,6 +9356,22 @@ void CEditBuffer::DebugPrintTree(CEditElement* pElement){
     }
     else if( pElement->IsContainer() ){
         ED_Alignment alignment = pElement->Container()->GetAlignment();
+        // See we are inside a caption
+        XP_Bool bInCaption = FALSE;
+        CEditElement *pParent = pElement->GetParent();
+        while( pParent && pParent != m_pRoot )
+        {
+            if( pParent->IsCaption() )
+            {
+                bInCaption = TRUE;
+                break;
+            }
+            pParent = pParent->GetParent();
+        }
+        if( alignment == ED_ALIGN_DEFAULT )
+        {
+            alignment = bInCaption ? ED_ALIGN_ABSCENTER : ED_ALIGN_LEFT;
+        }
         if ( alignment < LO_ALIGN_CENTER || alignment > ED_ALIGN_ABSTOP ) {
             pData = "Bad alignment.";
         }

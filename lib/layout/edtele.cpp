@@ -1037,6 +1037,7 @@ CEditListElement* CEditElement::GetMailQuote() {
     return NULL;
 }
 
+// This is silly -- we never return anything other than ED_ALIGN_DEFAULT???
 ED_Alignment CEditElement::GetDefaultAlignment(){
     if ( m_pParent )
         return m_pParent->GetDefaultAlignment();
@@ -1863,7 +1864,7 @@ void CEditSubDocElement::FinishedLoad( CEditBuffer* pBuffer ){
         // Subdocs have to have children.
         // Put an empty paragraph into any empty subdoc.
         pChild = CEditContainerElement::NewDefaultContainer( this,
-                        IsCaption() ? ED_ALIGN_CENTER : GetDefaultAlignment() );
+                        IsCaption() ? ED_ALIGN_ABSCENTER : GetDefaultAlignment() );
         // Creating it inserts it.
         (void) new CEditTextElement(pChild, 0);
     }
@@ -5445,15 +5446,6 @@ EEditElementType CEditTableCellElement::GetElementType(){
 
 ED_Alignment CEditTableCellElement::GetDefaultAlignment(){
     return ED_ALIGN_DEFAULT;
-/*
-    EDT_TableCellData* pData = GetData();
-    ED_Alignment result = IsTableData() ? ED_ALIGN_LEFT : ED_ALIGN_ABSCENTER;
-    if ( pData->align != ED_ALIGN_DEFAULT ) {
-        result = pData->align;
-    }
-    FreeData(pData);
-    return result;
-*/
 }
 
 XP_Bool CEditTableCellElement::IsTableData(){
@@ -7673,19 +7665,29 @@ void CEditContainerElement::AdjustContainers( CEditBuffer *pBuffer ){
     CEditElement::AdjustContainers(pBuffer);
 }
 
-PA_Tag* CEditContainerElement::TagOpen( int iEditOffset ){
+PA_Tag* CEditContainerElement::TagOpen( int iEditOffset )
+{
     PA_Tag *pRet = 0;
     PA_Tag* pTag;
 
     // create the DIV tag if we need to.
-    if( m_align == ED_ALIGN_ABSCENTER || m_align == ED_ALIGN_RIGHT ){
+    if( m_align == ED_ALIGN_LEFT || m_align == ED_ALIGN_ABSCENTER || m_align == ED_ALIGN_RIGHT )
+    {
         pTag = XP_NEW( PA_Tag );
         XP_BZERO( pTag, sizeof( PA_Tag ) );
-        if( m_align== ED_ALIGN_RIGHT ){
+        // Explicitely create LEFT <DIV> element if not ED_ALIGN_DEFAULT
+        if( m_align== ED_ALIGN_LEFT )
+        {
+            SetTagData( pTag, "ALIGN=left>");
+            pTag->type = P_DIVISION;
+        }
+        else if( m_align== ED_ALIGN_RIGHT )
+        {
             SetTagData( pTag, "ALIGN=right>");
             pTag->type = P_DIVISION;
         }
-        else {
+        else 
+        {
             SetTagData( pTag, ">");
             pTag->type = P_CENTER;
         }
@@ -7693,44 +7695,51 @@ PA_Tag* CEditContainerElement::TagOpen( int iEditOffset ){
     }
 
     // create the actual paragraph tag
-    if( GetTagData() ){
+    if( GetTagData() )
+    {
         pTag = XP_NEW( PA_Tag );
         XP_BZERO( pTag, sizeof( PA_Tag ) );
         SetTagData( pTag, GetTagData() );
     }
-    else {
+    else
+    {
         pTag = CEditElement::TagOpen( iEditOffset );
     }
 
     // link the tags together.
-    if( pRet == 0 ){
+    if( pRet == 0 )
         pRet = pTag;
-    }
-    else {
+    else
         pRet->next = pTag;
-    }
+
     return pRet;
 }
 
-PA_Tag* CEditContainerElement::TagEnd( ){
+PA_Tag* CEditContainerElement::TagEnd( )
+{
     PA_Tag *pRet = CEditElement::TagEnd();
-    if( m_align == ED_ALIGN_ABSCENTER || m_align == ED_ALIGN_RIGHT ){
+    if( m_align == ED_ALIGN_LEFT || m_align == ED_ALIGN_ABSCENTER || m_align == ED_ALIGN_RIGHT )
+    {
         PA_Tag* pTag = XP_NEW( PA_Tag );
         XP_BZERO( pTag, sizeof( PA_Tag ) );
         pTag->is_end = TRUE;
-        if( m_align == ED_ALIGN_RIGHT ){
+        // Explicitely create LEFT <DIV> element if not ED_ALIGN_DEFAULT
+        if( m_align== ED_ALIGN_LEFT )
+        {
+            pTag->type = P_DIVISION;
+        }
+        else if( m_align == ED_ALIGN_RIGHT )
+        {
             pTag->type = P_DIVISION;
         }
         else {
             pTag->type = P_CENTER;
         }
 
-        if( pRet == 0 ){
+        if( pRet == 0 )
             pRet = pTag;
-        }
-        else {
+        else
             pRet->next = pTag;
-        }
     }
     return pRet;
 }
@@ -7863,9 +7872,9 @@ void CEditContainerElement::PrintOpen( CPrintState *pPrintState ){
         if (pPrevContainer && pPrevContainer->GetType()!=P_NSDT)
           pPrevContainer=NULL;//all bets are off
         
-        // We must set this explicitly for text in TableCaptions
-        // Hopefully, we will change ED_ALIGN_LEFT to ED_ALIGN_DEFAULT for regular paragraphs
-        //  so we don't clutter HTML with extra <DIV> alignment tags
+        // We must always set alignment explicitly for text in TableCaptions
+        // For this to work, we must change use ED_ALIGN_DEFAULT instead of ED_ALIGN_LEFT
+        //  when parsing regular paragraphs so we don't clutter HTML with extra <DIV> alignment tags
         if (( GetAlignment() == ED_ALIGN_LEFT && ! IsEmpty()) && ( !pPrevContainer || 
             (pPrevContainer->GetAlignment() != ED_ALIGN_LEFT) ))
         {
@@ -8096,7 +8105,8 @@ void CEditContainerElement::SetData( EDT_ContainerData *pData ){
     if( m_align == ED_ALIGN_CENTER ) m_align = ED_ALIGN_ABSCENTER;
 
     //
-    // Never generate ALIGN= stuff anymore.  Use the Div tag and Center Tags
+    // Never generate ALIGN= stuff anymore.  
+    // Use the Div tag for LEFT and RIGHT, and the CENTER tag
     //
     char* pExtra = "";
     if ( pData && pData->pExtra ) {
@@ -8131,7 +8141,7 @@ EDT_ContainerData* CEditContainerElement::ParseParams( PA_Tag *pTag, int16 csid 
     align = edt_FetchParamAlignment( pTag, m_defaultAlign, FALSE, csid );
     if( align == ED_ALIGN_CENTER ) align =  ED_ALIGN_ABSCENTER;
 
-    if( align == ED_ALIGN_RIGHT || align == ED_ALIGN_LEFT  || align == ED_ALIGN_ABSCENTER){
+    if( align == ED_ALIGN_DEFAULT || align == ED_ALIGN_RIGHT || align == ED_ALIGN_LEFT  || align == ED_ALIGN_ABSCENTER){
         pData->align = align;
     }
     pData->pExtra = edt_FetchParamExtras( pTag, containerParams, csid );
@@ -10627,6 +10637,10 @@ EDT_ImageData* CEditImageElement::GetImageData(){
     
     if( m_href != ED_LINK_ID_NONE ){
         pRet->pHREFData = m_href->GetData();
+        // The only way to consistently show the "default" 2-pixel border
+        // is to set it to 2 if it was missing in the tag params
+        if( pRet->iBorder == -1 )
+            pRet->iBorder = GetDefaultBorder();
     }
     pRet->align = m_align;
     PA_FreeTag( pTag );

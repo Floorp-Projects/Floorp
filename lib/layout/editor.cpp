@@ -668,13 +668,14 @@ ED_FileError EDT_PublishFile( MWContext * pContext,
         if (NET_MakeUploadURL(&pPrefLocation,pDestDirectory,pUsername,NULL)) {
             // Save as the "last location" in preferences
        		PREF_SetCharPref("editor.publish_last_loc", pPrefLocation);
-            
+
             //  Save the password if user wants us to (and we have one!)
             //  Also set the preference we use for initial state of "save password" checkbox
             if( pPassword && *pPassword ){
                 if( bSavePassword ){    
-                    // PROBLEM: If password was wrong, user may have
-                    // enterred it in prompted dialog, but we dont know that one!
+                    // NOTE: Password remembering is now handled by "Single Signon" system
+                    // All we do here is save the password in a pref so edt_SyncPublishingHistory
+                    // can get it and pass     
                     char * pass = HG99875(pPassword);
                     PREF_SetCharPref("editor.publish_last_pass",pass);
 			        PREF_SetBoolPref("editor.publish_save_password",TRUE);

@@ -304,11 +304,15 @@ CFileSaveObject::~CFileSaveObject(){
     if (m_tapeFS->GetType() == ITapeFileSystem::Publish && 
         m_status == ED_ERROR_NONE) {
       char *msg = NULL;
+      
       // Different message for 1 or multiple files.
-      if (m_tapeFS->GetNumFiles() > 1) {
+      // Subtract count of files that failed.
+      int iCount = m_tapeFS->GetNumFiles() - m_iErrorCount;
+
+      if ( iCount > 1) {
         char *tmplate = XP_GetString(XP_EDT_PUBLISH_REPORT_MSG);
         if (tmplate) {
-          msg = PR_smprintf(tmplate,m_tapeFS->GetNumFiles());
+            msg = PR_smprintf(tmplate, iCount);
         }
       }
       else {
@@ -460,6 +464,9 @@ ED_FileError CFileSaveObject::SaveFiles(){
       }
       FE_SaveDialogCreate( m_pContext, m_tapeFS->GetNumFiles(), saveType );
     }
+    // Count number of files we fail to save
+    //  to subtract from total number when reporting at the end
+    m_iErrorCount = 0;
 
     if (SaveFirstFile()) {
         // Child of CFileSaveObject took care of the first file.
@@ -558,6 +565,7 @@ void CFileSaveObject::NetFetchDone( int status ){
             // "Unknown" error default
             iError = ED_ERROR_FILE_READ;
         }
+        m_iErrorCount++;
     }
 
     // ED_ERROR_FILE_OPEN was already handled in CFileSaveObject::OpenOutputFile()
