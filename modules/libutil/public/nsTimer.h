@@ -92,6 +92,8 @@ private:
 #ifdef MOZ_TIMER_USE_QUANTIFY
 
 #include "pure.h"
+#include "prprf.h"
+
 #  define MOZ_TIMER_DECLARE(name)
 #  define MOZ_TIMER_CREATE(name)
 #  define MOZ_TIMER_RESET(name)  \
@@ -110,9 +112,9 @@ private:
  
 #  define MOZ_TIMER_LOG(msg)    \
 do {                            \
-  char* str = __mysprintf msg;  \
+  char* str = PR_smprintf msg;  \
   QuantifyAddAnnotation(str);   \
-  delete [] str;                \
+  PR_smprintf_free(str);        \
 } while (0)
 
 #  define MOZ_TIMER_DEBUGLOG(msg) \

@@ -24,11 +24,9 @@ DEPTH=..\..\..
 CSRCS=obs.c 
 LIBRARY_NAME=util 
 CPPSRCS=stopwatch.cpp \
-        nsTimer.cpp \
         $(NULL)
 
 CPP_OBJS=.\$(OBJDIR)\stopwatch.obj \
-         .\$(OBJDIR)\nsTimer.obj \
 	 $(NULL)
 
 C_OBJS=.\$(OBJDIR)\obs.obj 
