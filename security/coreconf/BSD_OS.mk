@@ -77,6 +77,11 @@ DSO_LDOPTS		+= -Wl,-R$(LIBRUNPATH)
 endif
 
 MKSHLIB			= $(CC) $(DSO_LDOPTS)
+ifdef MAPFILE
+# Add LD options to restrict exported symbols to those in the map file
+endif
+# Change PROCESS to put the mapfile in the correct format for this platform
+PROCESS_MAP_FILE = cp $(LIBRARY_NAME).def $@
 
 G++INCLUDES		= -I/usr/include/g++
 

@@ -377,27 +377,7 @@ endif
 
 $(MAPFILE): $(LIBRARY_NAME).def
 	@$(MAKE_OBJDIR)
-ifeq ($(OS_ARCH),SunOS)
-	grep -v ';-' $(LIBRARY_NAME).def | \
-	 sed -e 's,;+,,' -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,;,' > $@
-endif
-ifeq ($(OS_ARCH),Linux)
-	grep -v ';-' $(LIBRARY_NAME).def | \
-	 sed -e 's,;+,,' -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,;,' > $@
-endif
-ifeq ($(OS_ARCH),AIX)
-	grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
-		sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' > $@
-endif
-ifeq ($(OS_ARCH), HP-UX)
-	grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
-	 sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,^,+e ,' > $@
-endif
-ifeq ($(OS_ARCH), OSF1)
-	grep -v ';+' $(LIBRARY_NAME).def | grep -v ';-' | \
- sed -e 's; DATA ;;' -e 's,;;,,' -e 's,;.*,,' -e 's,^,-exported_symbol ,' > $@
-endif
-
+	$(PROCESS_MAP_FILE)
 
 
 $(OBJDIR)/$(PROG_PREFIX)%$(PROG_SUFFIX): $(OBJDIR)/$(PROG_PREFIX)%$(OBJ_SUFFIX)

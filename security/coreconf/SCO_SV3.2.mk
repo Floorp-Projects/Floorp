@@ -73,6 +73,11 @@ I2_LOCALE    = i2
 LOC_LIB_DIR  = /usr/lib/X11
 NOSUCHFILE   = /solaris-rm-f-sucks
 BSDECHO      = /bin/echo
+ifdef MAPFILE
+# Add LD options to restrict exported symbols to those in the map file
+endif
+# Change PROCESS to put the mapfile in the correct format for this platform
+PROCESS_MAP_FILE = cp $(LIBRARY_NAME).def $@
 
 #
 # These defines are for building unix plugins

@@ -109,6 +109,12 @@ OS_DLL_OPTION = CASEEXACT
 OS_DLLFLAGS  =
 OS_LIBS      =
 W16_EXPORTS  = #
+ifdef MAPFILE
+# Add LD options to restrict exported symbols to those in the map file
+endif
+# Change PROCESS to put the mapfile in the correct format for this platform
+PROCESS_MAP_FILE = copy $(LIBRARY_NAME).def $@
+
 
 #
 #  The following is NOT needed for the NSPR 2.0 library.

@@ -86,6 +86,12 @@ DSO_LDOPTS              = -Zomf -Zdll -Zmt -Zcrtdll -Zlinker /NOO
 # DLL_SUFFIX              = .dll
 SHLIB_LDSTARTFILE	= 
 SHLIB_LDENDFILE		= 
+ifdef MAPFILE
+# Add LD options to restrict exported symbols to those in the map file
+endif
+# Change PROCESS to put the mapfile in the correct format for this platform
+PROCESS_MAP_FILE = copy $(LIBRARY_NAME).def $@
+
 endif   #NO_SHARED_LIB
 
 OS_CFLAGS          = -Wall -W -Wno-unused -Wpointer-arith -Wcast-align -Zmtd -Zomf -Zmt  -DDEBUG -DDEBUG_wintrinh -DTRACING -g
