@@ -155,6 +155,7 @@ class nsStyleSet
   enum sheetType {
     eAgentSheet,
     eUserSheet,
+    ePresHintSheet,
     eDocSheet,
     eOverrideSheet,
     eSheetTypeCount

@@ -80,7 +80,6 @@
 #include "nsIScrollableView.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
-#include "nsStyleSet.h"
 #include "nsContentUtils.h"
 #include "nsNodeInfoManager.h"
 #include "nsIXBLService.h"
@@ -758,6 +757,8 @@ nsresult
 nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
 {
   NS_PRECONDITION(aURI, "Null URI passed to ResetStylesheetsToURI");
+
+  mozAutoDocUpdate(this, UPDATE_STYLE, PR_TRUE);
   
   // The stylesheets should forget us
   PRInt32 indx = mStyleSheets.Count();
@@ -781,15 +782,34 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   // already set their owning document to null in the loop above, but
   // we'll reset it when we call AddStyleSheet on them.
   nsresult rv;
+  nsStyleSet::sheetType attrSheetType = GetAttrSheetType();
   if (mAttrStyleSheet) {
+    // Remove this sheet from all style sets
+    PRInt32 count = mPresShells.Count();
+    for (indx = 0; indx < count; ++indx) {
+      NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
+        RemoveStyleSheet(attrSheetType, mAttrStyleSheet);
+    }
     rv = mAttrStyleSheet->Reset(aURI);
   } else {
     rv = NS_NewHTMLStyleSheet(getter_AddRefs(mAttrStyleSheet), aURI, this);
   }
   NS_ENSURE_SUCCESS(rv, rv);
-  
-  AddStyleSheet(mAttrStyleSheet, 0);
 
+  // Add mAttrStyleSheet to all the style sets.  Prepend it, since it should be
+  // the most significant sheet in its level (whether UA or preshint).
+  PRInt32 count = mPresShells.Count();
+  for (indx = 0; indx < count; ++indx) {
+    NS_STATIC_CAST(nsIPresShell*, mPresShells.ElementAt(indx))->StyleSet()->
+      PrependStyleSheet(attrSheetType, mAttrStyleSheet);
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // Don't use AddStyleSheet, since it'll put the sheet into style
+  // sets in the document level, which is not desirable here.
+  InternalAddStyleSheet(mAttrStyleSheet, 0);
+  mAttrStyleSheet->SetOwningDocument(this);
+  
   if (mStyleAttrStyleSheet) {
     rv = mStyleAttrStyleSheet->Reset(aURI);
   } else {
@@ -801,6 +821,12 @@ nsDocument::ResetStylesheetsToURI(nsIURI* aURI)
   AddStyleSheet(mStyleAttrStyleSheet, 0);
 
   return rv;
+}
+
+nsStyleSet::sheetType
+nsDocument::GetAttrSheetType()
+{
+  return nsStyleSet::eAgentSheet;
 }
 
 nsresult

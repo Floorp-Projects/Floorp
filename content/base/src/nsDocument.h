@@ -83,6 +83,8 @@
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLCSSStyleSheet.h"
 
+#include "nsStyleSet.h"
+
 #include "pldhash.h"
 
 
@@ -100,7 +102,6 @@ class nsIDTD;
 class nsXPathDocumentTearoff;
 class nsIRadioVisitor;
 class nsIFormControl;
-class nsStyleSet;
 struct nsRadioGroupStruct;
 
 
@@ -511,6 +512,7 @@ protected:
                          nsIPresShell** aInstancePtrResult);
 
   nsresult ResetStylesheetsToURI(nsIURI* aURI);
+  virtual nsStyleSet::sheetType GetAttrSheetType();
 
   nsresult CreateElement(nsINodeInfo *aNodeInfo, nsIDOMElement** aResult);
 
