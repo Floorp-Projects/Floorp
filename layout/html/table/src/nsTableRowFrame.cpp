@@ -707,15 +707,6 @@ nsTableRowFrame::GetFrameForPoint(nsIPresContext*        aPresContext,
     return NS_OK;
   }
 
-  if ( inThisFrame && (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND)) {
-    const nsStyleVisibility* vis = 
-      (const nsStyleVisibility*)mStyleContext->GetStyleData(eStyleStruct_Visibility);
-    if (vis->IsVisible()) {
-      *aFrame = this;
-      return NS_OK;
-    }
-  }
-
   return NS_ERROR_FAILURE;
 }
 
