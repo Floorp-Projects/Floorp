@@ -25,13 +25,13 @@
  *   -- added code in ::resolveFunctionCall to support the
  *      document() function.
  *
- * $Id: ProcessorState.cpp,v 1.8 2000/09/18 06:06:10 Peter.VanderBeken%pandora.be Exp $
+ * $Id: ProcessorState.cpp,v 1.9 2000/10/04 22:43:59 axel%pike.org Exp $
  */
 
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.8 $ $Date: 2000/09/18 06:06:10 $
+ * @version $Revision: 1.9 $ $Date: 2000/10/04 22:43:59 $
 **/
 
 #include "ProcessorState.h"
@@ -179,9 +179,14 @@ MBool ProcessorState::addToResultTree(Node* node) {
             Element* element = (Element*)current;
             Attr* attr = (Attr*)node;
 #ifdef MOZ_XSL
-            String nameSpaceURI;
-	    getNameSpaceURI(attr->getName() , nameSpaceURI);
-            element->setAttributeNS(nameSpaceURI, attr->getName(), attr->getValue());
+            String nameSpaceURI, name;
+            //-- Workaround for BUG 51656 Html rendered as xhtml
+            name = attr->getName();
+            if (getOutputFormat()->isHTMLOutput()) {
+                name.toLowerCase();
+            }
+            getNameSpaceURI(name , nameSpaceURI);
+            element->setAttributeNS(nameSpaceURI, name, attr->getValue());
 #else
             element->setAttribute(attr->getName(),attr->getValue());
 #endif
