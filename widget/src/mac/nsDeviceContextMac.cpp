@@ -38,10 +38,18 @@ double				pix_inch;
 
   NS_INIT_REFCNT();
   
-  // see IM Imaging with Quickdraw, chapter 5.  This is an imcomplete implementation
+  // see IM Imaging with Quickdraw, chapter 5.  This is an incomplete implementation
+  
+  // cps - see technote <http://developer.apple.com/technotes/tn/tn1118.html>
+  // Basically it says: don't unlock GDevice handles
   thegd = ::GetMainDevice();
-  HLock((Handle)thegd);
+  SInt8 hState = ::HGetState ((Handle) thegd);
+  ::HLock((Handle)thegd);
 	thepix = (**thegd).gdPMap;
+	
+    // Be sure to lock the PixMapHandle before dereferencing it
+    SInt8 PixMapHState = ::HGetState ((Handle) thepix);
+    ::HLock((Handle)thepix);
 	pix_inch = Fix2X((**thepix).hRes);
 	
 	mTwipsToPixels = pix_inch/(float)NSIntPointsToTwips(72);
@@ -49,7 +57,10 @@ double				pix_inch;
 	
 	mDepth = (**thepix).pixelSize;
 	
-	HUnlock((Handle)thegd);
+    ::HSetState ((Handle)thepix,PixMapHState);
+  // cps - Unlocking GDeviceHandles is a no - no. See above.
+  //::HUnlock((Handle)thegd);
+  ::HSetState ((Handle)thegd,hState);
 }
 
 //------------------------------------------------------------------------
