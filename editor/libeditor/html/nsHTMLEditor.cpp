@@ -2010,7 +2010,7 @@ nsHTMLEditor::GetElementOrParentByTagName(const nsString &aTagName, nsIDOMNode *
       break;
     } else {
       nsAutoString currentTagName; 
-      aNode->GetNodeName(currentTagName);
+      currentNode->GetNodeName(currentTagName);
       if (currentTagName.EqualsIgnoreCase(TagName))
       {
         bNodeFound = PR_TRUE;
