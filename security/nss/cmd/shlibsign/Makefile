@@ -83,6 +83,7 @@ endif
 
 CHECKLOC=$(addprefix $(DIST)/lib/$(LIB_PREFIX), $(CHECKFILES))
 
+MD_LIB_RELEASE_FILES = $(CHECKLOC)
 ALL_TRASH += $(CHECKLOC)
 
 
