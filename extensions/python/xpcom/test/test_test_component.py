@@ -285,6 +285,7 @@ def test_base_interface(c):
     test_constant(c, "Two", 2)
     test_constant(c, "MinusOne", -1)
     test_constant(c, "BigLong", 0x7FFFFFFF)
+    test_constant(c, "BiggerLong", 0xFFFFFFFF)
     test_constant(c, "BigULong", 0xFFFFFFFF)
     # Test the components.Interfaces semantics
     i = xpcom.components.interfaces.nsIPythonTestInterface
