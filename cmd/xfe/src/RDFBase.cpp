@@ -46,12 +46,15 @@ XFE_RDFBase::XFE_RDFBase()
 /*virtual*/
 XFE_RDFBase::~XFE_RDFBase() 
 {
-    XFE_RDFBase *  xfe_view = (XFE_RDFBase *)HT_GetViewFEData(_ht_view);
-    if (xfe_view == this) 
+    if (_ht_view)
     {
-        // HT is holding onto a pointer to this class.
-        // Since this is going away, clear the pointer from HT.
-        HT_SetViewFEData(_ht_view, NULL);
+        XFE_RDFBase *  xfe_view = (XFE_RDFBase *)HT_GetViewFEData(_ht_view);
+        if (xfe_view == this) 
+        {
+            // HT is holding onto a pointer to this class.
+            // Since this is going away, clear the pointer from HT.
+            HT_SetViewFEData(_ht_view, NULL);
+        }
     }
 
     if (isPaneCreator())
@@ -108,6 +111,7 @@ XFE_RDFBase::newBookmarksPane()
     newPane();
     HT_View view = HT_GetViewType(_ht_pane, HT_VIEW_BOOKMARK);
     HT_SetSelectedView(_ht_pane, view);
+    _ht_view = view;
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -116,6 +120,7 @@ XFE_RDFBase::newHistoryPane()
     newPane();
     HT_View view = HT_GetViewType(_ht_pane, HT_VIEW_HISTORY);
     HT_SetSelectedView(_ht_pane, view);
+    _ht_view = view;
 }
 //////////////////////////////////////////////////////////////////////////
 void
@@ -124,7 +129,9 @@ XFE_RDFBase::newToolbarPane()
     startPaneCreate();
 
     _ht_pane = HT_NewToolbarPane(_ht_ns);
-
+    HT_View view = HT_GetNthView(_ht_pane, 1);
+    HT_SetSelectedView(_ht_pane, view);
+    _ht_view = view;
     finishPaneCreate();
 }
 //////////////////////////////////////////////////////////////////////////
