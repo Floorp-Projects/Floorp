@@ -897,6 +897,18 @@ nsPrefMigration::GetDirFromPref(nsIFileSpec * oldProfilePath, nsIFileSpec * newP
   if (NS_FAILED(rv)) return rv;  
   
   nsCOMPtr <nsIFileSpec> oldPrefPath;
+  char *oldPrefPathStr = nsnull;
+  rv = m_prefs->CopyCharPref(pref,&oldPrefPathStr);
+  if (NS_FAILED(rv)) return rv;
+  
+  // the default on the mac was "".  doing GetFilePref on that would return
+  // the current working directory, like viewer_debug.  yikes!
+  if (!oldPrefPathStr || (PL_strlen(oldPrefPathStr) == 0)) {
+  	rv = NS_ERROR_FAILURE;
+  }
+  PR_FREEIF(oldPrefPathStr);
+  if (NS_FAILED(rv)) return rv;
+  
   rv = m_prefs->GetFilePref(pref, getter_AddRefs(oldPrefPath));
   if (NS_FAILED(rv)) return rv;
  
