@@ -25,3 +25,11 @@
 <!ENTITY newsPasswordTitle.label "News Server Password">
 <!ENTITY newsPasswordDesc.label "If your System Administrator or Internet Service Provider has given you a username and password for your news server and informed you that you must provide this information when accessing your news server, check the box below.">
 <!ENTITY newsUsePasswordCheckbox.label "Always use name and password">
+
+<!-- for when the user has an SMTP server pre-configured -->
+<!ENTITY currentSmtpBefore.label "Your outgoing (SMTP) server is currently set to &quot;">
+<!ENTITY currentSmtpAfter.label "&quot;.">
+
+<!ENTITY haveSmtp1.label "For multiple mail accounts, only one outgoing server needs to be specified. For most Internet Service Providers, you should use the SMTP server associated with the account you use most often to connect to the Internet.">
+
+<!ENTITY haveSmtp2.label "If you change the account you use to connect to the Internet or if you know that you can use your SMTP server from any Internet connection, you can go to Mail/News Account Settings | Outoing (SMTP) Server to configure another SMTP server.">

@@ -39,9 +39,55 @@ function validate() {
 
 function onInit() {
 
-  var smtpserver = document.getElementById("smtphostname");
+  var smtpTextField = document.getElementById("smtphostname");
 
-  if (smtpserver && smtpserver.value == "" &&
-      parent.smtpService.defaultServer.hostname)
-    smtpserver.value = parent.smtpService.defaultServer.hostname;
+  var smtpServer = parent.smtpService.defaultServer;
+  if (smtpTextField && smtpTextField.value == "" &&
+      smtpServer.hostname)
+    smtpTextField.value = smtpServer.hostname;
+
+  setDivText("smtpStaticText", smtpServer.hostname);
+
+  
+  hideShowSmtpSettings(smtpServer);
+}
+
+function setDivText(id, value) {
+  if (!value) return;
+  
+  var div = document.getElementById("smtpStaticText");
+  if (!div) return;
+  
+  if (div.firstChild)
+    div.removeChild(div.firstChild);
+  div.appendChild(document.createTextNode(value));
+}
+
+function hideShowSmtpSettings(smtpServer) {
+
+  var noSmtpBox = document.getElementById("noSmtp");
+  var haveSmtpBox = document.getElementById("haveSmtp");
+
+  var boxToHide;
+  var boxToShow;
+  
+  if (smtpServer && smtpServer.hostname &&
+      smtpServer.hostname != "") {
+    // we have a hostname, so show the static text
+    boxToShow = haveSmtpBox;
+    boxToHide = noSmtpBox;
+
+  } else {
+    // no default hostname yet
+    boxToShow = noSmtpBox;
+    boxToHide = haveSmtpBox;
+  }
+
+  if (boxToHide)
+    boxToHide.style.visibility = "collapse";
+
+  if (boxToShow)
+    boxToShow.style.visibility = "visible";
+
+
 }

@@ -28,8 +28,13 @@ function getFirstInvalidAccount(accounts)
     var numAccounts = accounts.Count();
     for (var i=0; i<numAccounts; i++) {
         var account = accounts.QueryElementAt(i, Components.interfaces.nsIMsgAccount);
-        if (!account.incomingServer.valid)
-            return account;
+        try {
+            if (!account.incomingServer.valid)
+                return account;
+        } catch (ex) {
+            // this account is busted, just keep going
+            continue;
+        }
 
         var identities = account.identities;
         var numIdentities = identities.Count();

@@ -61,6 +61,7 @@ Rights Reserved.
 
   <spring class="spacer"/>
   <spring class="spacer"/>
+  <html:div id="noSmtp">
   <box align="vertical">
     <html:div class="title">&smtpServerTitle.label;</html:div>
     <spring class="spacer"/>
@@ -71,4 +72,11 @@ Rights Reserved.
       <html:input type="text" id="smtphostname" name="smtphostname"/>
     </html:div>
   </box>
+  </html:div>
+
+  <html:div id="haveSmtp">
+    <html:p>&currentSmtpBefore.label;<html:span id="smtpStaticText"/>&currentSmtpAfter.label;</html:p>
+    <html:p>&haveSmtp1.label;</html:p>
+    <html:p>&haveSmtp2.label;</html:p>
+  </html:div>
 </window>
