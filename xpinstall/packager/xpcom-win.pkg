@@ -17,7 +17,7 @@ bin\plc4.dll
 bin\plds4.dll
 bin\xpcom.dll
 bin\xpistub.dll
-bin\zlib.dll
+bin\mozz.dll
 bin\components\jar50.dll
 bin\components\xpinstal.dll
 ;install\ren8dot3.exe,bin\ren8dot3.exe

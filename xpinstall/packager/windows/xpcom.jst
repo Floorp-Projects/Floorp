@@ -63,6 +63,7 @@ function updateWinReg()
 
 function upgradeCleanup()
 {
+  deleteThisFile("Program",    "zlib.dll");
   deleteThisFile("Program",    "component.reg");
   deleteThisFile("Components", "compreg.dat");
   deleteThisFile("Components", "xpti.dat");

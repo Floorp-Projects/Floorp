@@ -82,7 +82,7 @@ components\content_base.xpt
 ; Imaging:
 ; 
 ; in xpcom-win
-;zlib.dll
+;mozz.dll
 components\imglib2.dll
 
 ; 
