@@ -183,8 +183,9 @@ friend class CTokenHandler;
      */
     virtual nsresult Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE);
 
-    virtual PRBool IsValidFragment(nsString& aSourceBuffer,nsTagStack& aStack,nsHTMLTag aTag,const nsString& aContentType);
-    virtual PRBool ParseFragment(nsString& aSourceBuffer,void* aKey,nsTagStack& aStack,nsHTMLTag aTag,const nsString& aContentType);
+
+    virtual PRBool    IsValidFragment(nsString& aSourceBuffer,nsTagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType);
+    virtual nsresult  InsertFragment(nsString& aSourceBuffer,void* aKey,nsTagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType);
 
 
     /**

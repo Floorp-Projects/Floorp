@@ -47,7 +47,7 @@ class nsIContentSink;
 class nsIStreamObserver;
 class nsString;
 class nsIURL;
-
+class nsTagStack;
 
 enum  eParseMode {
   
@@ -150,7 +150,8 @@ class nsIParser : public nsISupports {
     virtual nsresult	Parse(nsIInputStream& aStream, PRBool aEnableVerify=PR_FALSE) = 0;
     virtual nsresult  Parse(nsString& aSourceBuffer,void* aKey,const nsString& aContentType,PRBool aEnableVerify,PRBool aLastCall) = 0;
 
-    //virtual PRBool    IsValid(nsString& aSourceBuffer,const nsString& aContentTypeaLastCall) = 0;
+    virtual PRBool    IsValidFragment(nsString& aSourceBuffer,nsTagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType)=0;
+    virtual nsresult  InsertFragment(nsString& aSourceBuffer,void* aKey,nsTagStack& aStack,PRUint32 anInsertPos,const nsString& aContentType)=0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time
