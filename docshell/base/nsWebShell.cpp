@@ -37,7 +37,6 @@ typedef unsigned long HMTX;
 #include "nsIInterfaceRequestor.h"
 #include "nsIWebProgress.h"
 #include "nsIDocumentLoader.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsIDocumentLoaderFactory.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
@@ -861,91 +860,6 @@ nsWebShell::GetLinkState(const char* aLinkURI, nsLinkState& aState)
       }
 
    return NS_OK;
-}
-
-//
-// XXX: This is a temporary method to emulate the mDocLoaderObserver
-//      notifications that are fired as a result of calling
-//      SetDocLoaderObserver(...)
-//
-//      This method will go away once all of the callers of SetDocLoaderObserver(...)
-//      are cleaned up.
-//
-NS_IMETHODIMP
-nsWebShell::OnStateChange(nsIWebProgress *aProgress, nsIRequest *request,
-                          PRInt32 aStateFlags, nsresult aStatus)
-{
-  if (!request) {
-    return NS_OK;
-  }
-
-  if (aStateFlags & STATE_IS_DOCUMENT) {
-    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
-
-    if (aProgress == webProgress.get()) {
-      nsCOMPtr<nsIURI> url;
-      
-      nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-      nsCOMPtr<nsIDocumentLoaderObserver> dlObserver;
-
-      (void) channel->GetURI(getter_AddRefs(url));
-
-      if(!mDocLoaderObserver && mParent) {
-        /* If this is a frame (in which case it would have a parent && doesn't
-         * have a documentloaderObserver, get it from the rootWebShell
-         */
-        nsCOMPtr<nsIDocShellTreeItem> rootItem;
-        GetSameTypeRootTreeItem(getter_AddRefs(rootItem));
-        nsCOMPtr<nsIDocShell> rootDocShell(do_QueryInterface(rootItem));
-        if(rootDocShell) {
-          rootDocShell->GetDocLoaderObserver(getter_AddRefs(dlObserver));
-        }
-      }
-      else {
-        dlObserver = do_QueryInterface(mDocLoaderObserver);  // we need this to addref
-      }
-
-      if (aStateFlags & STATE_START) {
-        /*
-         * Fire the OnStartDocumentLoad of the webshell observer
-         */
-        if(mContainer && dlObserver) {
-          dlObserver->OnStartDocumentLoad(mDocLoader, url, "command is bogus");
-        }
-      }
-      else if (aStateFlags & STATE_STOP) {
-        /*
-         * Fire the OnEndDocumentLoad of the DocLoaderobserver
-         */
-        if(dlObserver && url) {
-          dlObserver->OnEndDocumentLoad(mDocLoader, request, aStatus);
-        }
-      }
-    }
-  }
-
-  if (aStateFlags & STATE_IS_REQUEST) {
-    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-      
-    if (aStateFlags & STATE_START) {
-      /*
-       *Fire the OnStartDocumentLoad of the webshell observer
-       */
-      if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver)) {
-        mDocLoaderObserver->OnStartURLLoad(mDocLoader, request);
-      }
-    }
-    else if (aStateFlags & STATE_STOP) {
-      /*
-       *Fire the OnEndDocumentLoad of the webshell observer
-       */
-      if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver)) {
-        mDocLoaderObserver->OnEndURLLoad(mDocLoader, request, aStatus);
-      }
-    }
-  }
-
-  return nsDocShell::OnStateChange(aProgress, request, aStateFlags, aStatus);
 }
 
 //----------------------------------------------------------------------

@@ -89,19 +89,6 @@ protected:
     nsresult RemoveChildGroup(nsDocLoaderImpl *aLoader);
     void DocLoaderIsEmpty();
 
-    void FireOnStartDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
-                                 nsIRequest *request);
-
-    void FireOnEndDocumentLoad(nsDocLoaderImpl* aLoadInitiator,
-                               nsIRequest *aDocRequest,
-                               nsresult aStatus);
-							   
-    void FireOnStartURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                            nsIRequest *request);
-
-    void FireOnEndURLLoad(nsDocLoaderImpl* aLoadInitiator,
-                          nsIRequest *request, nsresult aStatus);
-
     void FireOnProgressChange(nsDocLoaderImpl* aLoadInitiator,
                               nsIRequest *request,
                               PRInt32 aProgress,
@@ -134,7 +121,6 @@ protected:
     // class, please make the ownership explicit (pinkerton, scc).
   
     nsCOMPtr<nsIRequest>       mDocumentRequest;       // [OWNER] ???compare with document
-    nsVoidArray                mDocObservers;
     nsCOMPtr<nsISupportsArray> mListenerList;
     nsISupports*               mContainer;             // [WEAK] it owns me!
 

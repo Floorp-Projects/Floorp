@@ -632,27 +632,6 @@ nsDocShell::StopLoad()
     return NS_OK;
 }
 
-
-NS_IMETHODIMP
-nsDocShell::GetDocLoaderObserver(nsIDocumentLoaderObserver *
-                                 *aDocLoaderObserver)
-{
-    NS_ENSURE_ARG_POINTER(aDocLoaderObserver);
-
-    *aDocLoaderObserver = mDocLoaderObserver;
-    NS_IF_ADDREF(*aDocLoaderObserver);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsDocShell::SetDocLoaderObserver(nsIDocumentLoaderObserver *
-                                 aDocLoaderObserver)
-{
-    // it's legal for aDocLoaderObserver to be null.  
-    mDocLoaderObserver = aDocLoaderObserver;
-    return NS_OK;
-}
-
 NS_IMETHODIMP
 nsDocShell::GetPresContext(nsIPresContext ** aPresContext)
 {
@@ -1870,8 +1849,6 @@ nsDocShell::Destroy()
         mDocLoader->SetContainer(nsnull);
     }
 
-    SetDocLoaderObserver(nsnull);
-
     // Save the state of the current document, before destroying the window.
     // This is needed to capture the state of a frameset when the new document
     // causes the frameset to be destroyed...
@@ -1900,7 +1877,6 @@ nsDocShell::Destroy()
     DestroyChildren();
 
     mDocLoader = nsnull;
-    mDocLoaderObserver = nsnull;
     mParentWidget = nsnull;
     mPrefs = nsnull;
     mCurrentURI = nsnull;

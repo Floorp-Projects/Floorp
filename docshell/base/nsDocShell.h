@@ -39,7 +39,6 @@
 #include "nsIDeviceContext.h"
 
 #include "nsIDocumentLoader.h"
-#include "nsIDocumentLoaderObserver.h"
 
 #include "nsWeakReference.h"
 
@@ -276,7 +275,6 @@ protected:
     nsCOMPtr<nsIDocumentCharsetInfo> mDocumentCharsetInfo;
     nsCOMPtr<nsIDeviceContext> mDeviceContext;
     nsCOMPtr<nsIDocumentLoader>mDocLoader;
-    nsCOMPtr<nsIDocumentLoaderObserver> mDocLoaderObserver;
     nsCOMPtr<nsIWidget>        mParentWidget;
     nsCOMPtr<nsIPref>          mPrefs;
     nsCOMPtr<nsIURI>           mCurrentURI;

@@ -41,7 +41,8 @@
 #include "nsFileSpec.h"
 #include "nsIDocumentViewer.h"
 #include "nsIDocumentLoader.h"
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIWebProgressListener.h"
+#include "nsIWebProgress.h"
 #include "nsCURILoader.h"
 //#include "nsIWebShell.h"
 #include "nsIWebShellServices.h"
@@ -126,11 +127,12 @@ typedef struct {
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsPICS : public nsIPICS, 
-               public nsIDocumentLoaderObserver {
+               public nsIWebProgressListener {
 public:
 
    // nsISupports
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIWEBPROGRESSLISTENER
 
   // nsIPICS
   static nsresult GetPICS(nsIPICS** aPICS);
@@ -144,16 +146,6 @@ public:
   nsPICS();
   virtual ~nsPICS(void);
 
-   // nsIDocumentLoaderObserver
-  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURI* aURL, const char* aCommand);
-  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus);
-  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIRequest *request);
-  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIRequest *request, PRUint32 aProgress, PRUint32 aProgressMax);
-  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, nsIRequest *request, nsString& aMsg);
-  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus);
-//  NS_IMETHOD OnConnectionsComplete();
-
-
 protected:
   void   GetUserPreferences();
     
@@ -165,7 +157,7 @@ private:
   nsIObserver* mPICSElementObserver;
   nsCOMPtr<nsIWebShellServices> mWebShellServices;
 
-  nsIDocumentLoader* mDocLoaderService;
+  nsCOMPtr<nsIDocumentLoader> mDocLoaderService;
 //  nsVoidArray* currentURLList;
   nsHashtable* mWebShellServicesURLTable;
 
@@ -325,7 +317,7 @@ PrefChangedCallback(const char* aPrefName, void* instance_data)
 // nsPICS Implementation
 
 
-NS_IMPL_ISUPPORTS2(nsPICS, nsIPICS, nsIDocumentLoaderObserver)
+NS_IMPL_ISUPPORTS2(nsPICS, nsIPICS, nsIWebProgressListener)
 
 NS_EXPORT nsresult NS_NewPICS(nsIPICS** aPICS)
 {
@@ -340,7 +332,6 @@ nsPICS::nsPICS()
   mPICSElementObserver = nsnull;
   mWebShellServicesURLTable = nsnull;
 //  currentURLList = nsnull;
-  mDocLoaderService = nsnull;
 
   mPICSRatingsEnabled = PR_FALSE;
   mPICSPagesMustBeRatedPref = PR_FALSE;
@@ -453,12 +444,12 @@ nsPICS::Init()
      
 
       // Get the global document loader service...  
-      rv = nsServiceManager::GetService(kDocLoaderServiceCID,
-                                        kIDocumentLoaderIID,
-                                        (nsISupports **)&mDocLoaderService);
+      mDocLoaderService = do_GetService(kDocLoaderServiceCID, &rv);
       if (NS_SUCCEEDED(rv)) {
-        //Register ourselves as an observer for the new doc loader
-        mDocLoaderService->AddObserver((nsIDocumentLoaderObserver*)this);
+        nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(mDocLoaderService, &rv));
+        if (NS_SUCCEEDED(rv)) {
+            (void) process->AddProgressListener((nsIWebProgressListener*)this);
+        }
       }
 
       if(mPICSRatingsEnabled) {
@@ -678,248 +669,213 @@ nsPICS::ParsePICSLabel(char * label)
 	return(new_rs);
 }
 
+
+// nsIWebProgressListener implementation
 NS_IMETHODIMP
-nsPICS::OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                            nsIURI* aURL, 
-                            const char* aCommand)
-{
-  nsresult rv = NS_ERROR_FAILURE;
-  
-  mWebShellServices = nsnull;
-  if(!mPICSRatingsEnabled)
-    return rv;
-  return rv;
-}
-
-
-
-NS_IMETHODIMP
-nsPICS::OnEndDocumentLoad(nsIDocumentLoader* loader, 
-                          nsIRequest *request, 
-                          nsresult aStatus)
+nsPICS::OnStateChange(nsIWebProgress* aWebProgress, 
+                      nsIRequest *aRequest, 
+                      PRInt32 progressStateFlags, 
+                      nsresult aStatus)
 {
   nsresult rv = NS_OK;
 
-  if(!mPICSRatingsEnabled)
-    return rv;
-  mWebShellServices = nsnull;
+  // XXX HACK-ALERT XXX
+  // I'm not adding this usage, just moving it around and I thought
+  // I'd note that the fact that you can get a nsIWebShellServices
+  // from here is an implementation detail and will likely fail at
+  // some point in the future.
+  nsCOMPtr<nsIDOMWindow> domWin;
+  rv = aWebProgress->GetDOMWindow(getter_AddRefs(domWin));
+  if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsISupports> cont;
-  rv = loader->GetContainer(getter_AddRefs(cont));
-  if (NS_OK == rv) {
-    nsCOMPtr<nsIWebShellServices> ws(do_QueryInterface(cont));
-    if(ws) {
-      mWebShellServices = ws;
-      ws->SetRendering(PR_TRUE);
+  nsCOMPtr<nsIWebShellServices> wsServices(do_GetInterface(domWin));
+  NS_ASSERTION(wsServices, "no nsIWebShellService available");
+
+  // top-level URL loads
+  if (progressStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
+    if (progressStateFlags & nsIWebProgressListener::STATE_STOP) {
+      if(!mPICSRatingsEnabled) return rv;
+      nsCOMPtr<nsISupports> cont;
+      if(wsServices) {
+          mWebShellServices = wsServices;
+          mWebShellServices->SetRendering(PR_TRUE);
+      }
     }
-  }
-  return rv;
+  } // END - STATE_IS_DOCUMENT
 
-}
+  // inline URL loads
+  if (progressStateFlags & nsIWebProgressListener::STATE_IS_REQUEST) {
+      rv = NS_OK;
+      if (progressStateFlags & nsIWebProgressListener::STATE_START) {
+          nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+          if (!channel) return NS_ERROR_FAILURE;
 
-NS_IMETHODIMP
-nsPICS::OnStartURLLoad(nsIDocumentLoader* loader, nsIRequest *request)
-{
-  nsresult rv = NS_OK;
-  
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-  if (!channel)
-    return NS_ERROR_FAILURE;
+          nsCOMPtr<nsIURI> uri;
+          rv = channel->GetURI(getter_AddRefs(uri));
+          if (NS_FAILED(rv)) return rv;
 
-  nsCOMPtr<nsIURI> aURL;
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
+          nsXPIDLCString aContentType;
+          rv = channel->GetContentType(getter_Copies(aContentType));
+          if (NS_FAILED(rv)) return rv;
 
-  char* aContentType;
-  rv = channel->GetContentType(&aContentType);
-  if (NS_FAILED(rv)) return rv;
-
-  if(!mPICSRatingsEnabled)
-    goto done;
+          if(!mPICSRatingsEnabled) return rv;
  
-  PICS_URLData* urlData;
-  nsVoidArray* currentURLList;
+          PICS_URLData* urlData;
+          nsVoidArray* currentURLList;
   
-  if(0 == PL_strcmp("text/html", aContentType)) {
-    mWebShellServices = nsnull;
+          if(0 == PL_strcmp("text/html", aContentType)) {
+             if (wsServices) {
+               mWebShellServices = wsServices;
+               mWebShellServices->SetRendering(PR_FALSE);
+             }
 
-    nsCOMPtr<nsISupports> cont;
-    rv = loader->GetContainer(getter_AddRefs(cont));
-    if (NS_OK == rv) {
-      nsCOMPtr<nsIWebShellServices> ws(do_QueryInterface(cont));
-        if (ws) {
-          mWebShellServices = ws;
-          ws->SetRendering(PR_FALSE);
-      }
-    }
+             if (nsnull != uri) {
+              urlData = PR_NEWZAP(PICS_URLData);
+              urlData->url = (nsIURI*)PR_Malloc(sizeof(uri));
+              urlData->url = uri;
+              urlData->notified = PR_FALSE;
+             }
 
-     if (nsnull != aURL) {
-      urlData = PR_NEWZAP(PICS_URLData);
-      urlData->url = (nsIURI*)PR_Malloc(sizeof(aURL));
-      urlData->url = aURL;
-      urlData->notified = PR_FALSE;
-      
-    }
+            nsVoidKey key((void*)ws);
 
-    nsVoidKey key((void*)ws);
+            if(mWebShellServicesURLTable == nsnull) {
+                mWebShellServicesURLTable = new nsHashtable(256, PR_TRUE);
+                if (mWebShellServicesURLTable == nsnull) return NS_ERROR_OUT_OF_MEMORY;
+            }
 
-    if(mWebShellServicesURLTable == nsnull) {
-        mWebShellServicesURLTable = new nsHashtable(256, PR_TRUE);
-        if (mWebShellServicesURLTable == nsnull) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          goto done;
-        }
-    }
+            if(mWebShellServicesURLTable->Exists(&key)) {
+              currentURLList = (nsVoidArray *) mWebShellServicesURLTable->Get(&key);
+              if (currentURLList != NULL) {
+	              currentURLList->AppendElement(urlData);   
+                mWebShellServicesURLTable->Put(&key, currentURLList);
+              } else {
+                currentURLList = new nsVoidArray();
+                if(!currentURLList) return NS_ERROR_OUT_OF_MEMORY;
 
-    if(mWebShellServicesURLTable->Exists(&key)) {
-      currentURLList = (nsVoidArray *) mWebShellServicesURLTable->Get(&key);
-      if (currentURLList != NULL) {
-	      currentURLList->AppendElement(urlData);   
-        mWebShellServicesURLTable->Put(&key, currentURLList);
-      } else {
-        currentURLList = new nsVoidArray();
-        if(!currentURLList) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-          goto done;
-        }
-        mWebShellServicesURLTable->Put(&key, currentURLList);
-      }
-    } else {
-      currentURLList = new nsVoidArray();
-      if (!currentURLList) {
-        rv = NS_ERROR_OUT_OF_MEMORY;
-        goto done;
-      }
-      mWebShellServicesURLTable->Put(&key, currentURLList);
-    }
+                mWebShellServicesURLTable->Put(&key, currentURLList);
+              }
+            } else {
+              currentURLList = new nsVoidArray();
+              if (!currentURLList) return NS_ERROR_OUT_OF_MEMORY;
+
+              mWebShellServicesURLTable->Put(&key, currentURLList);
+            }
   
-  }
-  done:
-  nsCRT::free(aContentType);
-  return rv;
-}
+          }
+          return rv;      
+      }
 
-NS_IMETHODIMP
-nsPICS::OnProgressURLLoad(nsIDocumentLoader* loader, 
-                          nsIRequest *request, 
-                          PRUint32 aProgress, 
-                          PRUint32 aProgressMax)
-{
-  if(!mPICSRatingsEnabled)
-    return NS_OK;
-  return NS_OK;
-}
+      if (progressStateFlags & nsIWebProgressListener::STATE_STOP) {
+          nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
 
-NS_IMETHODIMP
-nsPICS::OnStatusURLLoad(nsIDocumentLoader* loader, 
-                        nsIRequest *request, 
-                        nsString& aMsg)
-{
-  if(!mPICSRatingsEnabled)
-    return NS_OK;
-  return NS_OK;
-}
+          nsCOMPtr<nsIURI> aURL;
+          rv = channel->GetURI(getter_AddRefs(aURL));
+          if (NS_FAILED(rv)) return rv;
 
-NS_IMETHODIMP
-nsPICS::OnEndURLLoad(nsIDocumentLoader* loader, 
-                     nsIRequest *request, 
-                     nsresult aStatus)
-{
-  nsresult rv;
+          nsVoidArray* currentURLList;
 
-  nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-
-  nsCOMPtr<nsIURI> aURL;
-  rv = channel->GetURI(getter_AddRefs(aURL));
-  if (NS_FAILED(rv)) return rv;
-
-  char* uProtocol;
-  char* uHost;
-  char* uFile;
-
-  nsVoidArray* currentURLList;
-
-  if(!mPICSRatingsEnabled)
-    return NS_OK;
+          if(!mPICSRatingsEnabled) return NS_OK;
  
-  nsCOMPtr<nsISupports> cont;
-  NS_ENSURE_SUCCESS(loader->GetContainer(getter_AddRefs(cont)), NS_ERROR_FAILURE);
-  
-  nsCOMPtr<nsIWebShellServices> ws(do_QueryInterface(cont));
-  NS_ENSURE_TRUE(ws, NS_ERROR_FAILURE);
-  
-  mWebShellServices = ws;
+          mWebShellServices = wsServices;
 
-  nsVoidKey key((void*)ws);
+          nsVoidKey key((void*)wsServices);
 
-  if(mWebShellServicesURLTable == nsnull) {
-    return NS_ERROR_NULL_POINTER;
-  }
+          if(mWebShellServicesURLTable == nsnull) {
+            return NS_ERROR_NULL_POINTER;
+          }
 
-  
-  if(mWebShellServicesURLTable->Exists(&key)) {
-    currentURLList = (nsVoidArray *) mWebShellServicesURLTable->Get(&key);
-    if (currentURLList != NULL) {
-      PRInt32 count = currentURLList->Count();
-      for (PRInt32 i = 0; i < count; i++) {
-        PICS_URLData* urlData = (PICS_URLData*)currentURLList->ElementAt(i);
-        if(urlData == nsnull)
-          continue;
-        char* spec1;
-        char* spec2;
+          if(mWebShellServicesURLTable->Exists(&key)) {
+            currentURLList = (nsVoidArray *) mWebShellServicesURLTable->Get(&key);
+            if (currentURLList != NULL) {
+              PRInt32 count = currentURLList->Count();
+              for (PRInt32 i = 0; i < count; i++) {
+                PICS_URLData* urlData = (PICS_URLData*)currentURLList->ElementAt(i);
+                if(urlData == nsnull)
+                  continue;
+                nsXPIDLCString spec1;
+                nsXPIDLCString spec2;
         
-        if(aURL == nsnull)
-          continue;
-        aURL->GetSpec(&spec1);
+                if(aURL == nsnull)
+                  continue;
+                aURL->GetSpec(getter_Copies(spec1));
+                if(spec1 == nsnull)
+                  continue;
 
-        if(spec1 == nsnull)
-          continue;
+                if(urlData->url == nsnull) 
+                  continue;
 
-        if(urlData->url == nsnull) {
-          nsCRT::free(spec1);
-          continue;
-        }
-        (urlData->url)->GetSpec(&spec2);
+                (urlData->url)->GetSpec(getter_Copies(spec2));
+                if(spec2 == nsnull) 
+                  continue;
 
-        if(spec2 == nsnull) {
-          nsCRT::free(spec1);
-          continue;
-        }
+                if(0 == PL_strcmp(spec1, spec2)) {
+                  if(!urlData->notified) {
+                    currentURLList->RemoveElementAt(i);
+                    if (nsnull != aURL) {
+                      nsXPIDLCString uProtocol;
+                      nsXPIDLCString uHost;
+                      nsXPIDLCString uFile;
 
-        if(0 == PL_strcmp(spec1, spec2)) {
-          if(!urlData->notified) {
-            currentURLList->RemoveElementAt(i);
-            if (nsnull != aURL) {
-              aURL->GetScheme(&uProtocol);
-              aURL->GetHost(&uHost);
-              aURL->GetPath(&uFile);
-              if ((0 != PL_strcmp("/", uFile)) && (0 != PL_strcmp("/index.html", uFile))) {
-                if (0 != PL_strcmp("file", uProtocol)) {
-                  nsAutoString protocolStr(uProtocol);
-                  nsAutoString hostStr(uHost);
+                      aURL->GetScheme(getter_Copies(uProtocol));
+                      aURL->GetHost(getter_Copies(uHost));
+                      aURL->GetPath(getter_Copies(uFile));
+                      if ((0 != PL_strcmp("/", uFile)) && (0 != PL_strcmp("/index.html", uFile))) {
+                        if (0 != PL_strcmp("file", uProtocol)) {
+                          nsAutoString protocolStr(uProtocol);
+                          nsAutoString hostStr(uHost);
 
-                  // Construct a chrome URL and use it to look up a resource.
-                  nsAutoString rootStr(protocolStr + "://" + hostStr + "/");
+                          // Construct a chrome URL and use it to look up a resource.
+                          nsAutoString rootStr(protocolStr + "://" + hostStr + "/");
                 
-                  // XXX if we're no longer calling GetRootURL, these calls can go away
-                  // rv = NS_NewURI(&rootURL, rootStr);
-               //   rv = GetRootURL(rootURL);
+                          // XXX if we're no longer calling GetRootURL, these calls can go away
+                          // rv = NS_NewURI(&rootURL, rootStr);
+                       //   rv = GetRootURL(rootURL);
+                        }
+                      }
+                    }
+                  }
                 }
               }
-              nsCRT::free(uProtocol);
-              nsCRT::free(uHost);
-              nsCRT::free(uFile);
             }
           }
-        }
-        nsCRT::free(spec1);
-        nsCRT::free(spec2);
       }
-    }
-  }
+  } // END - STATE_IS_REQUEST
 
- 
-  return NS_OK;
+  return rv;
+}
+
+NS_IMETHODIMP
+nsPICS::OnProgressChange(nsIWebProgress *aWebProgress,
+                                     nsIRequest *aRequest,
+                                     PRInt32 aCurSelfProgress,
+                                     PRInt32 aMaxSelfProgress,
+                                     PRInt32 aCurTotalProgress,
+                                     PRInt32 aMaxTotalProgress) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsPICS::OnLocationChange(nsIWebProgress* aWebProgress,
+                         nsIRequest* aRequest,
+                         nsIURI *location) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsPICS::OnStatusChange(nsIWebProgress* aWebProgress,
+                       nsIRequest* aRequest,
+                       nsresult aStatus,
+                       const PRUnichar* aMessage) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsPICS::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                         nsIRequest *aRequest, 
+                         PRInt32 state) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 void

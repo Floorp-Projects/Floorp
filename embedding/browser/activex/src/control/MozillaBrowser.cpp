@@ -1015,7 +1015,6 @@ HRESULT CMozillaBrowser::CreateBrowser()
         SetStartupErrorMessage(IDS_CANNOTCREATEPREFS);
         return rv;
     }
-	rootDocShell->SetDocLoaderObserver(NS_STATIC_CAST(nsIDocumentLoaderObserver*, mWebBrowserContainer));
 	mWebBrowserAsWin->SetVisibility(PR_TRUE);
 
     // Subscribe for progress notifications

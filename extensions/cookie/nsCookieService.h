@@ -25,21 +25,21 @@
 
 #include "nsICookieService.h"
 #include "nsIObserver.h"
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIWebProgressListener.h"
 #include "nsWeakReference.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsCookieService : public nsICookieService,
                         public nsIObserver,
-                        public nsIDocumentLoaderObserver,
+                        public nsIWebProgressListener,
                         public nsSupportsWeakReference {
 public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
   NS_DECL_NSIOBSERVER
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
+  NS_DECL_NSIWEBPROGRESSLISTENER
   NS_DECL_NSICOOKIESERVICE
 
   nsCookieService();

@@ -307,12 +307,10 @@ nsMessenger::SetWindow(nsIDOMWindowInternal *aWin, nsIMsgWindow *aMsgWindow)
             nsCOMPtr<nsIMsgStatusFeedback> aStatusFeedback;
             
             aMsgWindow->GetStatusFeedback(getter_AddRefs(aStatusFeedback));
-            m_docLoaderObserver = do_QueryInterface(aStatusFeedback);
             if (aStatusFeedback)
             {
                 aStatusFeedback->SetDocShell(mDocShell, mWindow);
             }
-            mDocShell->SetDocLoaderObserver(m_docLoaderObserver);
             aMsgWindow->GetTransactionManager(getter_AddRefs(mTxnMgr));
         }
     }

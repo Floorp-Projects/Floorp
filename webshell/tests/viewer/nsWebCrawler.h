@@ -49,7 +49,7 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIDocumentLoaderObserver
+  // nsIWebProgressListener
   NS_DECL_NSIWEBPROGRESSLISTENER
 
   // Add a url to load

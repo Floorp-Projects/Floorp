@@ -45,6 +45,8 @@
 #include "nsIPrompt.h"
 #include "nsIChannel.h"
 #include "nsIWindowWatcher.h"
+#include "nsIWebProgress.h"
+#include "nsXPIDLString.h"
 
 // for making the leap from nsIDOMWindowInternal -> nsIPresShell
 #include "nsIScriptGlobalObject.h"
@@ -70,7 +72,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsWalletlibService,
                               nsIWalletService,
                               nsIObserver,
                               nsIFormSubmitObserver,
-                              nsIDocumentLoaderObserver,
+                              nsIWebProgressListener,
                               nsISupportsWeakReference)
 
 NS_IMETHODIMP nsWalletlibService::WALLET_PreEdit(nsAutoString& walletList) {
@@ -229,8 +231,9 @@ nsresult nsWalletlibService::Init()
   // Get the global document loader service...  
   NS_WITH_SERVICE(nsIDocumentLoader, docLoaderService, kDocLoaderServiceCID, &rv)
   if (NS_SUCCEEDED(rv) && docLoaderService) {
-    //Register ourselves as an observer for the new doc loader
-    docLoaderService->AddObserver((nsIDocumentLoaderObserver*)this);
+    nsCOMPtr<nsIWebProgress> progress(do_QueryInterface(docLoaderService, &rv));
+    if (NS_SUCCEEDED(rv))
+        (void) progress->AddProgressListener((nsIWebProgressListener*)this);
   }
   else
     NS_ASSERTION(PR_FALSE, "Could not get nsIDocumentLoader");
@@ -238,155 +241,136 @@ nsresult nsWalletlibService::Init()
   return NS_OK;
 }
 
+// nsIWebProgressListener implementation
 NS_IMETHODIMP
-nsWalletlibService::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, const char* aCommand)
+nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress, 
+                                  nsIRequest *aRequest, 
+                                  PRInt32 progressStateFlags, 
+                                  nsresult aStatus)
 {
-  return NS_OK;
-}
+     nsresult rv = NS_OK;
+    if (progressStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
+        if (progressStateFlags & nsIWebProgressListener::STATE_STOP) {
 
-#include "prmem.h"
+          nsCOMPtr<nsIDOMWindow> domWin;
+          rv = aWebProgress->GetDOMWindow(getter_AddRefs(domWin));
+          if (NS_FAILED(rv)) return rv;
 
-NS_IMETHODIMP
-nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIRequest *request, nsresult aStatus)
-{
-  nsresult rv = NS_OK;
+          nsCOMPtr<nsIDOMDocument> domDoc;
+          rv = domWin->GetDocument(getter_AddRefs(domDoc));
+          if (NS_FAILED(rv)) return rv;
 
-  if (aLoader == nsnull) {
-    return rv;
-  }
-  nsCOMPtr<nsISupports> cont;
-  rv = aLoader->GetContainer(getter_AddRefs(cont));
-  if (NS_FAILED(rv) || (cont == nsnull)) {
-    return rv;
-  }
-  nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(cont));
-  NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIContentViewer> cv;
-  rv = docShell->GetContentViewer(getter_AddRefs(cv));
-  if (NS_FAILED(rv) || (cv == nsnull)) {
-    return rv;
-  }
-  nsCOMPtr<nsIDocumentViewer> docViewer(do_QueryInterface(cv));
-  NS_ENSURE_TRUE(docViewer, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDocument> doc;
-  rv = docViewer->GetDocument(*getter_AddRefs(doc));
-  if (NS_FAILED(rv) || (doc == nsnull)) {
-    return rv;
-  }
+          // we only want to handle HTML documents as they're the
+          // only one's that can have forms which we might want to
+          // pre-fill.
+          nsCOMPtr<nsIDOMHTMLDocument> htmldoc(do_QueryInterface(domDoc, &rv));
+          if (NS_FAILED(rv)) return NS_OK;
+              
+          nsCOMPtr<nsIDocument> doc(do_QueryInterface(htmldoc, &rv));
+          if (NS_FAILED(rv)) {
+            NS_ASSERTION(0, "no document available");
+            return NS_OK;
+          }
   
-  /* get url name as ascii string */
-  char *URLName = nsnull;
-  nsIURI* docURL = nsnull;
-  char* spec;
-  if (!doc) {
-    return NS_OK;
-  }
-  docURL = doc->GetDocumentURL();
-  if (!docURL) {
-    return NS_OK;
-  }
-  (void)docURL->GetSpec(&spec);
-  URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
-  PL_strcpy(URLName, spec);
-  NS_IF_RELEASE(docURL);
-  nsCRT::free(spec);
-
-  nsCOMPtr<nsIDOMHTMLDocument> htmldoc(do_QueryInterface(doc));
-  if (htmldoc == nsnull) {
-    PR_Free(URLName);
-    return NS_ERROR_FAILURE;
-  }
-
-  nsCOMPtr<nsIDOMHTMLCollection> forms;
-  rv = htmldoc->GetForms(getter_AddRefs(forms));
-  if (NS_FAILED(rv) || (forms == nsnull)) {
-    PR_Free(URLName);
-    return rv;
-  }
-
-  PRUint32 elementNumber = 0;
-  PRUint32 numForms;
-  forms->GetLength(&numForms);
-  for (PRUint32 formX = 0; formX < numForms; formX++) {
-    nsCOMPtr<nsIDOMNode> formNode;
-    forms->Item(formX, getter_AddRefs(formNode));
-    if (nsnull != formNode) {
-      nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(formNode));
-      if ((nsnull != formElement)) {
-        nsCOMPtr<nsIDOMHTMLCollection> elements;
-        rv = formElement->GetElements(getter_AddRefs(elements));
-        if ((NS_SUCCEEDED(rv)) && (nsnull != elements)) {
-          /* got to the form elements at long last */ 
-          PRUint32 numElements;
-          elements->GetLength(&numElements);
-          /* get number of passwords on form */
-          PRInt32 passwordCount = 0;
-          for (PRUint32 elementXX = 0; elementXX < numElements; elementXX++) {
-            nsCOMPtr<nsIDOMNode> elementNode;
-            elements->Item(elementXX, getter_AddRefs(elementNode));
-            if (nsnull != elementNode) {
-              nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
-              if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
-                nsAutoString type;
-                rv = inputElement->GetType(type);
-                if (NS_SUCCEEDED(rv)) {
-                  if (type.CompareWithConversion("password", PR_TRUE) == 0) {
-                    passwordCount++;
-                  }
-                }
-              }
-            }
+          nsCOMPtr<nsIURI> uri(getter_AddRefs(doc->GetDocumentURL()));
+          if (!uri) {
+            NS_ASSERTION(0, "no URI available");
+            return NS_OK;
           }
-          /* don't prefill if there were no passwords on the form */
-          if (passwordCount == 0) {
-            continue;
-          }
-          for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
-            nsCOMPtr<nsIDOMNode> elementNode;
-            elements->Item(elementX, getter_AddRefs(elementNode));
-            if (nsnull != elementNode) {
-              nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
-              if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
-                nsAutoString type;
-                rv = inputElement->GetType(type);
-                if (NS_SUCCEEDED(rv)) {
-                  if ((type.IsEmpty()) || (type.CompareWithConversion("text", PR_TRUE) == 0) ||
-                    (type.CompareWithConversion("password", PR_TRUE) == 0)) {
-                    nsAutoString field;
-                    rv = inputElement->GetName(field);
-                    if (NS_SUCCEEDED(rv)) {
-                      PRUnichar* nameString = field.ToNewUnicode();
-                      if (nameString) {
-                        /* note: we do not want to prefill if there is a default value */
-                        nsAutoString value;
-                        rv = inputElement->GetValue(value);
-                        if (NS_FAILED(rv) || value.Length() == 0) {
-                          PRUnichar* valueString = NULL;
-                          nsCOMPtr<nsIInterfaceRequestor> interfaces;
-                          nsCOMPtr<nsIPrompt> prompter;
 
-                          nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
-                          if (channel)
-                            channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
-                          if (interfaces)
-                            interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
-                          if (!prompter) {
-                            nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-                            if (wwatch)
-                              wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
-                          }
-                          if (prompter) {
-                            SINGSIGN_RestoreSignonData(prompter, URLName, nameString, &valueString, elementNumber++);
-                          }
-                          if (valueString) {
-                            value = valueString;
-                            rv = inputElement->SetValue(value);
-                            // warning! don't delete valueString
+          nsXPIDLCString spec;
+          rv = uri->GetSpec(getter_Copies(spec));
+          if (NS_FAILED(rv)) return rv;
+
+          nsCOMPtr<nsIDOMHTMLCollection> forms;
+          rv = htmldoc->GetForms(getter_AddRefs(forms));
+          if (NS_FAILED(rv) || (forms == nsnull)) return rv;
+
+          PRUint32 elementNumber = 0;
+          PRUint32 numForms;
+          forms->GetLength(&numForms);
+          for (PRUint32 formX = 0; formX < numForms; formX++) {
+            nsCOMPtr<nsIDOMNode> formNode;
+            forms->Item(formX, getter_AddRefs(formNode));
+            if (nsnull != formNode) {
+              nsCOMPtr<nsIDOMHTMLFormElement> formElement(do_QueryInterface(formNode));
+              if ((nsnull != formElement)) {
+                nsCOMPtr<nsIDOMHTMLCollection> elements;
+                rv = formElement->GetElements(getter_AddRefs(elements));
+                if ((NS_SUCCEEDED(rv)) && (nsnull != elements)) {
+                  /* got to the form elements at long last */ 
+                  PRUint32 numElements;
+                  elements->GetLength(&numElements);
+                  /* get number of passwords on form */
+                  PRInt32 passwordCount = 0;
+                  for (PRUint32 elementXX = 0; elementXX < numElements; elementXX++) {
+                    nsCOMPtr<nsIDOMNode> elementNode;
+                    elements->Item(elementXX, getter_AddRefs(elementNode));
+                    if (nsnull != elementNode) {
+                      nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
+                      if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
+                        nsAutoString type;
+                        rv = inputElement->GetType(type);
+                        if (NS_SUCCEEDED(rv)) {
+                          if (type.CompareWithConversion("password", PR_TRUE) == 0) {
+                            passwordCount++;
                           }
                         }
-                        Recycle(nameString);
+                      }
+                    }
+                  }
+                  /* don't prefill if there were no passwords on the form */
+                  if (passwordCount == 0) {
+                    continue;
+                  }
+                  for (PRUint32 elementX = 0; elementX < numElements; elementX++) {
+                    nsCOMPtr<nsIDOMNode> elementNode;
+                    elements->Item(elementX, getter_AddRefs(elementNode));
+                    if (nsnull != elementNode) {
+                      nsCOMPtr<nsIDOMHTMLInputElement> inputElement(do_QueryInterface(elementNode));
+                      if ((NS_SUCCEEDED(rv)) && (nsnull != inputElement)) {
+                        nsAutoString type;
+                        rv = inputElement->GetType(type);
+                        if (NS_SUCCEEDED(rv)) {
+                          if ((type.IsEmpty()) || (type.CompareWithConversion("text", PR_TRUE) == 0) ||
+                            (type.CompareWithConversion("password", PR_TRUE) == 0)) {
+                            nsAutoString field;
+                            rv = inputElement->GetName(field);
+                            if (NS_SUCCEEDED(rv)) {
+                              PRUnichar* nameString = field.ToNewUnicode();
+                              if (nameString) {
+                                /* note: we do not want to prefill if there is a default value */
+                                nsAutoString value;
+                                rv = inputElement->GetValue(value);
+                                if (NS_FAILED(rv) || value.Length() == 0) {
+                                  PRUnichar* valueString = NULL;
+                                  nsCOMPtr<nsIInterfaceRequestor> interfaces;
+                                  nsCOMPtr<nsIPrompt> prompter;
+
+                                  nsCOMPtr<nsIChannel> channel = do_QueryInterface(aRequest);
+                                  if (channel)
+                                    channel->GetNotificationCallbacks(getter_AddRefs(interfaces));
+                                  if (interfaces)
+                                    interfaces->GetInterface(NS_GET_IID(nsIPrompt), getter_AddRefs(prompter));
+                                  if (!prompter) {
+                                    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+                                    if (wwatch)
+                                      wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
+                                  }
+                                  if (prompter) {
+                                    SINGSIGN_RestoreSignonData(prompter, spec, nameString, &valueString, elementNumber++);
+                                  }
+                                  if (valueString) {
+                                    value = valueString;
+                                    rv = inputElement->SetValue(value);
+                                    // warning! don't delete valueString
+                                  }
+                                }
+                                Recycle(nameString);
+                              }
+                            }
+                          }
+                        }
                       }
                     }
                   }
@@ -395,42 +379,48 @@ nsWalletlibService::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIRequest *re
             }
           }
         }
-      }
     }
-  }
-
-  PR_Free(URLName);
-  return rv;
+    return rv;
 }
 
 NS_IMETHODIMP
-nsWalletlibService::OnStartURLLoad
-  (nsIDocumentLoader* loader, nsIRequest *request)
+nsWalletlibService::OnProgressChange(nsIWebProgress *aWebProgress,
+                                     nsIRequest *aRequest,
+                                     PRInt32 aCurSelfProgress,
+                                     PRInt32 aMaxSelfProgress,
+                                     PRInt32 aCurTotalProgress,
+                                     PRInt32 aMaxTotalProgress)
 {
- return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsWalletlibService::OnProgressURLLoad
-  (nsIDocumentLoader* loader, nsIRequest *request, PRUint32 aProgress, PRUint32 aProgressMax)
+nsWalletlibService::OnLocationChange(nsIWebProgress* aWebProgress,
+                                     nsIRequest* aRequest,
+                                     nsIURI *location)
 {
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWalletlibService::OnStatusURLLoad
-  (nsIDocumentLoader* loader, nsIRequest *request, nsString& aMsg)
-{
-  return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 
 NS_IMETHODIMP
-nsWalletlibService::OnEndURLLoad
-  (nsIDocumentLoader* loader, nsIRequest *request, nsresult aStatus)
+nsWalletlibService::OnStatusChange(nsIWebProgress* aWebProgress,
+                                   nsIRequest* aRequest,
+                                   nsresult aStatus,
+                                   const PRUnichar* aMessage)
 {
-  return NS_OK;
+    return NS_ERROR_NOT_IMPLEMENTED;    
 }
+
+
+NS_IMETHODIMP
+nsWalletlibService::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                                     nsIRequest *aRequest, 
+                                     PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 NS_IMETHODIMP
 nsWalletlibService::GetPassword(PRUnichar **password)

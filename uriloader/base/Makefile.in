@@ -40,7 +40,6 @@ XPIDLSRCS = 							\
 				nsIURILoader.idl	 	\
 				nsCURILoader.idl		\
 				nsIDocumentLoader.idl		\
-				nsIDocumentLoaderObserver.idl 	\
 				nsIWebProgress.idl 	\
 				nsIWebProgressListener.idl 	\
 				$(NULL)

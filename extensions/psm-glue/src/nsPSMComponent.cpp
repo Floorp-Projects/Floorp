@@ -54,7 +54,6 @@
 #include "nsPSMUICallbacks.h"
 
 #include "nsISecureBrowserUI.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsICertificatePrincipal.h"
 

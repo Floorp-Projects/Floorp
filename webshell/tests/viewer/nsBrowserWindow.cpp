@@ -37,7 +37,6 @@
 #define NS_IMPL_IDS
 #include "nsBrowserWindow.h"
 #endif
-#include "nsIStreamListener.h"
 #include "nsIAppShell.h"
 #include "nsIWidget.h"
 #include "nsITextWidget.h"
@@ -76,6 +75,7 @@
 #include "nsIBaseWindow.h"
 #include "nsXPIDLString.h"
 #include "nsIViewManager.h"
+#include "nsIWebProgress.h"
 
 #include "nsCWebBrowser.h"
 
@@ -1547,18 +1547,16 @@ nsBrowserWindow::SetWebCrawler(nsWebCrawler* aCrawler)
 {
   if (mWebCrawler) {
     if (mDocShell) {
-      mDocShell->SetDocLoaderObserver(nsnull);
+      nsCOMPtr<nsIWebProgress> progress(do_GetInterface(mDocShell));
+      NS_ASSERTION(progress, "no web progress avail");
+
+      (void) progress->RemoveProgressListener(
+                                (nsIWebProgressListener*)mWebCrawler);
     }
     NS_RELEASE(mWebCrawler);
   }
   if (aCrawler) {
     mWebCrawler = aCrawler;
-    /* Nisheeth: the crawler registers as a document loader observer with
-     * the webshell when nsWebCrawler::Start() is called.
-    if (mDocShell) {
-      mDocShell->SetDocLoaderObserver(aCrawler);
-    }
-    */
     NS_ADDREF(aCrawler);
   }
 }

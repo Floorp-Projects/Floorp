@@ -100,11 +100,6 @@ interface nsIDocShell : nsISupports
 	*/
 	void stopLoad();
 
-  /* clients may get and set an nsIDocumentLoaderObserver, which will be notified
-   * during loadURI, loadURIVia, and setDocument
-   */
-   attribute nsIDocumentLoaderObserver docLoaderObserver;
-
 	/*
 	Presentation context for the currently loaded document.  This may be null.
 	*/

@@ -28,7 +28,6 @@
 #include "nsIMessenger.h"
 #include "nsCOMPtr.h"
 #include "nsITransactionManager.h"
-#include "nsIDocumentLoaderObserver.h"
 #include "nsFileSpec.h"
 #include "nsIDocShell.h"
 #include "nsIStringBundle.h"
@@ -70,8 +69,6 @@ private:
 
   // String bundles...
   nsCOMPtr<nsIStringBundle>   mStringBundle;
-
-  nsCOMPtr <nsIDocumentLoaderObserver> m_docLoaderObserver;
 
   PRBool      mCharsetInitialized;
   void        InitializeDisplayCharset();

@@ -24,10 +24,10 @@
 #include "nsIRobotSinkObserver.h"
 #include "nsIParser.h"
 #include "nsIDocShell.h"
-#include "nsIWebNavigation.h"
-#include "nsIWebShell.h"
-#include "nsIDocumentLoader.h"
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIWebNavigation.h" 
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
+#include "nsWeakReference.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
 #include "nsIURL.h"
@@ -37,6 +37,7 @@
 #include "nsNetCID.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
+#include "nsIInterfaceRequestor.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIRobotSinkObserverIID, NS_IROBOTSINKOBSERVER_IID);
@@ -125,7 +126,8 @@ NS_IMETHODIMP RobotSinkObserver::ProcessLink(const nsString& aURLSpec)
 
 extern "C" NS_EXPORT void SetVerificationDirectory(char * verify_dir);
 
-class CStreamListener:  public nsIDocumentLoaderObserver
+class CStreamListener:  public nsIWebProgressListener,
+                        public nsSupportsWeakReference
 {
 public:
   CStreamListener() {
@@ -138,69 +140,61 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  // nsIDocumentLoaderObserver
-  NS_DECL_NSIDOCUMENTLOADEROBSERVER
+  // nsIWebProgressListener
+  NS_DECL_NSIWEBPROGRESSLISTENER
 };
 
-// document loader observer implementation
+// nsIWebProgressListener implementation
 NS_IMETHODIMP
-CStreamListener::OnStartDocumentLoad(nsIDocumentLoader* loader, 
-                                     nsIURI* aURL, 
-                                     const char* aCommand)
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-CStreamListener::OnEndDocumentLoad(nsIDocumentLoader* loader,
-                                   nsIRequest *request,
-                                   nsresult aStatus)
-{
-  fputs("done.\n",stdout);
-  g_bReadyForNextUrl = PR_TRUE;
-  return NS_OK;
+CStreamListener::OnStateChange(nsIWebProgress* aWebProgress, 
+                   nsIRequest *aRequest, 
+                   PRInt32 progressStateFlags, 
+                   nsresult aStatus) {
+    if (progressStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT)
+        if (progressStateFlags & nsIWebProgressListener::STATE_STOP) {
+            fputs("done.\n",stdout);
+            g_bReadyForNextUrl = PR_TRUE;
+        }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
-CStreamListener::OnStartURLLoad(nsIDocumentLoader* loader,
-                                nsIRequest *request)
-{
-  return NS_OK;
+CStreamListener::OnProgressChange(nsIWebProgress *aWebProgress,
+                                     nsIRequest *aRequest,
+                                     PRInt32 aCurSelfProgress,
+                                     PRInt32 aMaxSelfProgress,
+                                     PRInt32 aCurTotalProgress,
+                                     PRInt32 aMaxTotalProgress) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-CStreamListener::OnProgressURLLoad(nsIDocumentLoader* loader,
-                                   nsIRequest *request,
-                                   PRUint32 aProgress, 
-                                   PRUint32 aProgressMax)
-{
-  return NS_OK;
+CStreamListener::OnLocationChange(nsIWebProgress* aWebProgress,
+                      nsIRequest* aRequest,
+                      nsIURI *location) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
+
 
 NS_IMETHODIMP
-CStreamListener::OnStatusURLLoad(nsIDocumentLoader* loader,
-                                 nsIRequest *request,
-                                 nsString& aMsg)
-{
-  return NS_OK;
+CStreamListener::OnStatusChange(nsIWebProgress* aWebProgress,
+                    nsIRequest* aRequest,
+                    nsresult aStatus,
+                    const PRUnichar* aMessage) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
+
 
 NS_IMETHODIMP
-CStreamListener::OnEndURLLoad(nsIDocumentLoader* loader,
-                              nsIRequest *request,
-                              nsresult aStatus)
-{
-  return NS_OK;
+CStreamListener::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                      nsIRequest *aRequest, 
+                      PRInt32 state) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-
-nsresult CStreamListener::QueryInterface(const nsIID& aIID, void** aInstancePtr)  
-{                                                                        
-  return NS_ERROR_NOT_IMPLEMENTED;      // never called
-}
-
-NS_IMPL_ADDREF(CStreamListener)
-NS_IMPL_RELEASE(CStreamListener)
+NS_IMPL_ISUPPORTS2(CStreamListener,
+                   nsIWebProgressListener,
+                   nsISupportsWeakReference)
 
 extern "C" NS_EXPORT void DumpVectorRecord(void);
 //----------------------------------------------------------------------
@@ -318,14 +312,11 @@ extern "C" NS_EXPORT int DebugRobot(
     }
     g_bReadyForNextUrl = PR_FALSE;
     if (docShell) {
-      nsIDocumentLoader *docLoader;
+      nsCOMPtr<nsIWebProgress> progress(do_GetInterface(docShell, &rv));
+      if (NS_FAILED(rv)) return rv;
 
-      nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-      webShell->GetDocumentLoader(docLoader);
-      if (docLoader) {
-        docLoader->AddObserver(pl);
-        NS_RELEASE(docLoader);
-      }
+      (void) progress->AddProgressListener(pl);
+
       char* spec;
       (void)url->GetSpec(&spec);
       nsAutoString theSpec; theSpec.AssignWithConversion(spec);

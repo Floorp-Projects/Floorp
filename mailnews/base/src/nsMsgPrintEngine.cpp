@@ -35,8 +35,8 @@
 #include "nsIContentViewer.h"
 #include "nsIMsgMessageService.h"
 #include "nsMsgUtils.h"
-#include "nsIDocumentLoader.h"
-#include "nsIDocumentLoaderObserver.h"
+#include "nsIWebProgress.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIMarkupDocumentViewer.h"
 #include "nsIMsgMailSession.h"
 #include "nsMsgPrintEngine.h"
@@ -57,9 +57,7 @@
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-nsMsgPrintEngine::nsMsgPrintEngine() :
-  mDocShell(nsnull),
-  mWindow(nsnull)
+nsMsgPrintEngine::nsMsgPrintEngine()
 {
   mCurrentlyPrintingURI = -1;
   mContentViewer = nsnull;
@@ -77,81 +75,93 @@ nsMsgPrintEngine::~nsMsgPrintEngine()
 NS_IMPL_ADDREF(nsMsgPrintEngine)
 NS_IMPL_RELEASE(nsMsgPrintEngine)
 
-NS_IMPL_QUERY_INTERFACE3(nsMsgPrintEngine, nsIMsgPrintEngine, nsIDocumentLoaderObserver, nsIPrintListener);
+NS_IMPL_QUERY_INTERFACE4(nsMsgPrintEngine,
+                         nsIMsgPrintEngine, 
+                         nsIWebProgressListener, 
+                         nsISupportsWeakReference,
+                         nsIPrintListener);
 
 nsresult nsMsgPrintEngine::Init()
 {
 	return NS_OK;
 }
 
+
+// nsIWebProgressListener implementation
 NS_IMETHODIMP
-nsMsgPrintEngine::OnStartDocumentLoad(nsIDocumentLoader *aLoader, nsIURI *aURL, const char *aCommand)
+nsMsgPrintEngine::OnStateChange(nsIWebProgress* aWebProgress, 
+                   nsIRequest *aRequest, 
+                   PRInt32 progressStateFlags, 
+                   nsresult aStatus)
 {
-  // Tell the user we are loading...
-  PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("LoadingMessageToPrint").GetUnicode());
-  SetStatusMessage( msg );
-  PR_FREEIF(msg);
+  nsresult rv = NS_OK;
 
-  return NS_OK;
-}
+  // top-level document load data
+  if (progressStateFlags & nsIWebProgressListener::STATE_IS_DOCUMENT) {
+    if (progressStateFlags & nsIWebProgressListener::STATE_START) {
+      // Tell the user we are loading...
+      PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("LoadingMessageToPrint").GetUnicode());
+      SetStatusMessage( msg );
+      PR_FREEIF(msg);
+    }
 
-NS_IMETHODIMP
-nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIRequest *request, PRUint32 aStatus)
-{
-  // Now, fire off the print operation!
-  nsresult rv = NS_ERROR_FAILURE;
+    if (progressStateFlags & nsIWebProgressListener::STATE_STOP) {
+      // Now, fire off the print operation!
+      rv = NS_ERROR_FAILURE;
 
-  // Tell the user the message is loaded...
-  PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("MessageLoaded").GetUnicode());
-  SetStatusMessage( msg );
-  PR_FREEIF(msg);
+      // Tell the user the message is loaded...
+      PRUnichar *msg = GetString(NS_ConvertASCIItoUCS2("MessageLoaded").GetUnicode());
+      SetStatusMessage( msg );
+      PR_FREEIF(msg);
 
-  NS_ASSERTION(mDocShell,"can't print, there is no docshell");
-  if ( (!mDocShell) || (!request) ) 
-  {
-    return StartNextPrintOperation();
-  }
-  nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-  if (!aChannel) return NS_ERROR_FAILURE;
-
-  // Make sure this isn't just "about:blank" finishing....
-  nsCOMPtr<nsIURI> originalURI = nsnull;
-  if (NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))))
-  {
-    nsXPIDLCString spec;
-
-    if (NS_SUCCEEDED(originalURI->GetSpec(getter_Copies(spec))) && spec)
-    {      
-      if (!nsCRT::strcasecmp(spec, "about:blank"))
+      NS_ASSERTION(mDocShell,"can't print, there is no docshell");
+      if ( (!mDocShell) || (!aRequest) ) 
       {
         return StartNextPrintOperation();
       }
-    }
-  }
+      nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(aRequest);
+      if (!aChannel) return NS_ERROR_FAILURE;
 
-  mDocShell->GetContentViewer(getter_AddRefs(mContentViewer));  
-  if (mContentViewer) 
-  {
-    mViewerFile = do_QueryInterface(mContentViewer);
-    if (mViewerFile) 
-    {
-      if (mCurrentlyPrintingURI == 0)
-        rv = mViewerFile->Print(PR_FALSE, nsnull, (nsIPrintListener *)this);
-      else
-        rv = mViewerFile->Print(PR_TRUE, nsnull, (nsIPrintListener *)this);
-
-      if (NS_FAILED(rv))
+      // Make sure this isn't just "about:blank" finishing....
+      nsCOMPtr<nsIURI> originalURI = nsnull;
+      if (NS_SUCCEEDED(aChannel->GetOriginalURI(getter_AddRefs(originalURI))))
       {
-        mViewerFile = nsnull;
-        mContentViewer = nsnull;
-        OnEndPrinting(rv);
+        nsXPIDLCString spec;
+
+        if (NS_SUCCEEDED(originalURI->GetSpec(getter_Copies(spec))) && spec)
+        {      
+          if (!nsCRT::strcasecmp(spec, "about:blank"))
+          {
+            return StartNextPrintOperation();
+          }
+        }
       }
-      else
+
+      mDocShell->GetContentViewer(getter_AddRefs(mContentViewer));  
+      if (mContentViewer) 
       {
-        // Tell the user we started printing...
-        msg = GetString(NS_LITERAL_STRING("PrintingMessage").get());
-        SetStatusMessage( msg );
-        PR_FREEIF(msg);
+        mViewerFile = do_QueryInterface(mContentViewer);
+        if (mViewerFile) 
+        {
+          if (mCurrentlyPrintingURI == 0)
+            rv = mViewerFile->Print(PR_FALSE, nsnull, (nsIPrintListener *)this);
+          else
+            rv = mViewerFile->Print(PR_TRUE, nsnull, (nsIPrintListener *)this);
+
+          if (NS_FAILED(rv))
+          {
+            mViewerFile = nsnull;
+            mContentViewer = nsnull;
+            OnEndPrinting(rv);
+          }
+          else
+          {
+            // Tell the user we started printing...
+            msg = GetString(NS_LITERAL_STRING("PrintingMessage").get());
+            SetStatusMessage( msg );
+            PR_FREEIF(msg);
+          }
+        }
       }
     }
   }
@@ -160,27 +170,37 @@ nsMsgPrintEngine::OnEndDocumentLoad(nsIDocumentLoader *loader, nsIRequest *reque
 }
 
 NS_IMETHODIMP
-nsMsgPrintEngine::OnStartURLLoad(nsIDocumentLoader *aLoader, nsIRequest *request)
-{
-  return NS_OK;
+nsMsgPrintEngine::OnProgressChange(nsIWebProgress *aWebProgress,
+                                     nsIRequest *aRequest,
+                                     PRInt32 aCurSelfProgress,
+                                     PRInt32 aMaxSelfProgress,
+                                     PRInt32 aCurTotalProgress,
+                                     PRInt32 aMaxTotalProgress) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP
-nsMsgPrintEngine::OnProgressURLLoad(nsIDocumentLoader *aLoader, nsIRequest *request, PRUint32 aProgress, PRUint32 aProgressMax)
-{
-  return NS_OK;
+nsMsgPrintEngine::OnLocationChange(nsIWebProgress* aWebProgress,
+                      nsIRequest* aRequest,
+                      nsIURI *location) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-NS_IMETHODIMP
-nsMsgPrintEngine::OnStatusURLLoad(nsIDocumentLoader *loader, nsIRequest *request, nsString & aMsg)
-{
-  return NS_OK;
-}
 
 NS_IMETHODIMP
-nsMsgPrintEngine::OnEndURLLoad(nsIDocumentLoader *aLoader, nsIRequest *request, PRUint32 aStatus)
-{
-  return NS_OK;
+nsMsgPrintEngine::OnStatusChange(nsIWebProgress* aWebProgress,
+                    nsIRequest* aRequest,
+                    nsresult aStatus,
+                    const PRUnichar* aMessage) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
+nsMsgPrintEngine::OnSecurityChange(nsIWebProgress *aWebProgress, 
+                      nsIRequest *aRequest, 
+                      PRInt32 state) {
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP    
@@ -348,7 +368,11 @@ nsMsgPrintEngine::SetupObserver()
 
   if (mDocShell)
   {
-    mDocShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
+    nsCOMPtr<nsIWebProgress> progress(do_GetInterface(mDocShell));
+    NS_ASSERTION(progress, "we were expecting a nsIWebProgress");
+    if (progress) {
+      (void) progress->AddProgressListener((nsIWebProgressListener *)this);
+    }
   }
 }
 

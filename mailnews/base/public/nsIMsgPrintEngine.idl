@@ -20,8 +20,6 @@
  * Contributor(s): 
  */
 
-#include "nsIStreamListener.idl"
-#include "nsIDocumentLoaderObserver.idl"
 #include "nsrootidl.idl"
 #include "domstubs.idl"
 #include "nsIMsgStatusFeedback.idl"
@@ -31,7 +29,7 @@
 %}
 
 [scriptable, uuid(91FD6B10-E0BC-11d3-8F97-000064657374)]
-interface nsIMsgPrintEngine : nsIDocumentLoaderObserver {
+interface nsIMsgPrintEngine : nsISupports {
 
     void SetWindow(in nsIDOMWindowInternal ptr);
 	void SetStatusFeedback(in nsIMsgStatusFeedback feedback);

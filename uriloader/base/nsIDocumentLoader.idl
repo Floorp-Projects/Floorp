@@ -26,7 +26,6 @@
 
 #include "nsISupports.idl"
 interface nsILoadGroup;
-interface nsIDocumentLoaderObserver;
 interface nsIContentViewerContainer;
 interface nsIChannel;
 interface nsIURI;
@@ -40,8 +39,6 @@ interface nsIDocumentLoader : nsISupports
   boolean isBusy();
   void createDocumentLoader(out nsIDocumentLoader anInstance);
 
-  void addObserver(in nsIDocumentLoaderObserver aObserver);
-  void removeObserver(in nsIDocumentLoaderObserver aObserver);
   attribute nsISupports container;
   
   [noscript] void getContentViewerContainer(in nsISupports aDocumentID, out nsIContentViewerContainer aResult);

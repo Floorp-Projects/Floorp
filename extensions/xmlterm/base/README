@@ -84,7 +84,7 @@ mozXMLTermShell.cpp        Implementation of mozIXMLTermShell
 
 mozXMLTerminal.h
 mozXMLTerminal.cpp         Implementation of mozIXMLTerminal,
-                                             nsIDocumentLoaderObserver, and
+                                             nsIWebProgressListener, and
                                              nsIObserver
                              Uses mozILineTermAux to create LineTerm
                              Uses mozXMLTermListeners to capture user input

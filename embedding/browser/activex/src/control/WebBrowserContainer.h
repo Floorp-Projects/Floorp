@@ -40,7 +40,6 @@ class CWebBrowserContainer :
 		public nsIWebProgressListener,
 		public nsIRequestObserver,
 		public nsIURIContentListener,
-		public nsIDocumentLoaderObserver,
 		public nsIDocShellTreeOwner,
 		public nsIInterfaceRequestor,
 		public nsIPrompt,
@@ -72,7 +71,6 @@ public:
 	NS_DECL_NSIDOCSHELLTREEOWNER
 	NS_DECL_NSIURICONTENTLISTENER
 	NS_DECL_NSIREQUESTOBSERVER
-	NS_DECL_NSIDOCUMENTLOADEROBSERVER
 	NS_DECL_NSIINTERFACEREQUESTOR
 	NS_DECL_NSIWEBPROGRESSLISTENER
     NS_DECL_NSICONTEXTMENULISTENER
