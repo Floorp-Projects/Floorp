@@ -69,7 +69,6 @@ DOM_ObjectForNode(JSContext *cx, DOM_Node *node)
     return DOM_NewNodeObject(cx, node);
 }
 
-
 JSBool
 dom_node_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
@@ -137,20 +136,20 @@ dom_node_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
-static void
-node_finalize(JSContext *cx, JSObject *obj)
+void
+dom_node_finalize(JSContext *cx, JSObject *obj)
 {
     DOM_Node *priv = (DOM_Node *)JS_GetPrivate(cx, obj);
     if (!priv)
         return;
     priv->mocha_object = NULL;
-    /* XXX walk tree, freeing until we find an object rooting a subgraph */
+    DOM_DestroyTree(cx, priv);
 }
 
 static JSClass DOM_NodeClass = {
     "Node", JSCLASS_HAS_PRIVATE,
     JS_PropertyStub,  JS_PropertyStub, dom_node_getter, dom_node_setter,
-    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  node_finalize
+    JS_EnumerateStub, JS_ResolveStub,  JS_ConvertStub,  dom_node_finalize
 };
 
 JSObject *
@@ -169,6 +168,17 @@ DOM_NewNodeObject(JSContext *cx, DOM_Node *node)
     node->mocha_object = obj;
 
     return obj;
+}
+
+void
+DOM_DestroyNode(JSContext *cx, DOM_Node *node)
+{
+    XP_ASSERT(!node->mocha_object);
+    if (node->ops->destroyNode)
+        node->ops->destroyNode(cx, node);
+    if (node->name && node->type != NODE_TYPE_TEXT)
+        JS_free(cx, node->name);
+    JS_free(cx, node);
 }
 
 #define REMOVE_FROM_TREE(node)                                                \

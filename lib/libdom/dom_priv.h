@@ -54,6 +54,9 @@ dom_node_getter(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 JSBool
 dom_node_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp);
 
+void
+dom_node_finalize(JSContext *cx, JSObject *obj);
+
 /* if you adjust these enums, be sure to adjust the various setters */
 enum {
     DOM_NODE_NODENAME = -1,

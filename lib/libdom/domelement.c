@@ -87,13 +87,19 @@ element_setter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     return JS_TRUE;
 }
 
+static JSClass DOM_ElementClass = {
+    "Element", JSCLASS_HAS_PRIVATE,
+    JS_PropertyStub,  JS_PropertyStub,  element_getter, element_setter,
+    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub, dom_node_finalize
+};
+
 static JSBool
 element_getAttribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                      jsval *rval)
 {
     DOM_Element *element;
     JSString *name;
-    char *value;
+    const char *value;
     JSBool cache;
 
     if (!JS_ConvertArguments(cx, argc, argv, "S", &name))
@@ -176,16 +182,14 @@ element_removeAttributeNode(JSContext *cx, JSObject *obj, uintN argc,
     return JS_TRUE;
 }
 
-static void
-element_finalize(JSContext *cx, JSObject *obj)
-{
-    return;
-}
-
-static JSClass DOM_ElementClass = {
-    "Element", JSCLASS_HAS_PRIVATE,
-    JS_PropertyStub,  JS_PropertyStub,  element_getter, element_setter,
-    JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub, element_finalize
+static JSFunctionSpec element_methods[] = {
+    {"setAttribute",	element_setAttribute, 2},
+    {"getAttribute",	element_getAttribute, 1},
+    {"removeAttribute", element_removeAttribute, 1},
+    {"setAttributeNode", element_setAttributeNode, 1},
+    {"getAttributeNode", element_getAttributeNode, 1},
+    {"removeAttributeNode", element_removeAttributeNode, 1},
+    {0}
 };
 
 JSObject *
@@ -223,7 +227,7 @@ dom_ElementInit(JSContext *cx, JSObject *scope, JSObject *node_proto)
 {
     JSObject *proto = JS_InitClass(cx, scope, node_proto, &DOM_ElementClass,
 				   Element, 0,
-				   element_props, NULL,
+				   element_props, element_methods,
 				   NULL, NULL);
     if (!JS_DefineProperties(cx, proto, dom_node_props))
         return NULL;

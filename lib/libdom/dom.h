@@ -192,8 +192,11 @@ struct DOM_Node {
 JSBool
 DOM_Init(JSContext *cx, JSObject *scope);
 
-JSBool
+void
 DOM_DestroyNode(JSContext *cx, DOM_Node *node);
+
+void
+DOM_DestroyTree(JSContext *cx, DOM_Node *top);
 
 JSObject *
 DOM_NewNodeObject(JSContext *cx, DOM_Node *node);
@@ -270,7 +273,8 @@ struct DOM_Text {
 };
 
 DOM_Text *
-DOM_NewText(const char *data, int64 len, DOM_CDataOp notify);
+DOM_NewText(const char *data, int64 len, DOM_CDataOp notify,
+            DOM_NodeOps *ops);
 
 JSObject *
 DOM_NewTextObject(JSContext *cx, DOM_Text *text);

@@ -355,10 +355,29 @@ DOM_NewTextObject(JSContext *cx, DOM_Text *text)
 }
 
 DOM_Text *
-DOM_NewText(const char *data, int64 length, DOM_CDataOp notify)
+DOM_NewText(const char *data, int64 length, DOM_CDataOp notify,
+            DOM_NodeOps *ops)
 {
-    XP_ASSERT((0 && "DOM_NewText NYI"));
-    return NULL;
+    DOM_Node *node;
+    DOM_CharacterData *cdata;
+    DOM_Text *text = XP_NEW_ZAP(DOM_Text);
+    if (!text)
+        return NULL;
+
+    node = (DOM_Node *)text;
+    node->type = NODE_TYPE_TEXT;
+    node->ops = ops;
+    node->name = "#text";
+
+    cdata = (DOM_CharacterData *)text;
+    cdata->data = XP_ALLOC(length);
+    cdata->notify = notify;
+    if (!cdata->data) {
+        XP_FREE(text);
+        return NULL;
+    }
+    XP_MEMCPY(cdata->data, data, length);
+    return text;
 }
 
 JSObject *

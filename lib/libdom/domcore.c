@@ -128,10 +128,26 @@ DOM_ObjectForNodeDowncast(JSContext *cx, DOM_Node *node)
     if (!node)
         return NULL;
 
-    if (node->mocha_object)
-        return node->mocha_object;
+    if (!node->mocha_object)
+        node->mocha_object = node->ops->reflectNode(cx, node);
+    return node->mocha_object;
+}
 
-    return node->ops->reflectNode(cx, node);
+void
+DOM_DestroyTree(JSContext *cx, DOM_Node *top)
+{
+    DOM_Node *iter;
+    for (iter = top->child; iter; iter = iter->sibling) {
+        if (!iter->mocha_object)
+            DOM_DestroyTree(cx, iter);
+#ifdef DEBUG_shaver
+        else {
+            fprintf(stderr, "node %s type %d has mocha_object\n",
+                    iter->name ? iter->name : "<none>", iter->type);
+        }
+#endif
+    }
+    DOM_DestroyNode(cx, top);
 }
 
 /*
