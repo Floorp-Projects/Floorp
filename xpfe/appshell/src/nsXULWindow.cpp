@@ -46,8 +46,9 @@ static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 //***    nsXULWindow: Object Management
 //*****************************************************************************
 
-nsXULWindow::nsXULWindow() : mContentTreeOwner(nsnull), 
-   mChromeTreeOwner(nsnull)
+nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull), 
+   mContentTreeOwner(nsnull), mPrimaryContentTreeOwner(nsnull) 
+   
 {
 	NS_INIT_REFCNT();
 }
@@ -260,6 +261,11 @@ NS_IMETHODIMP nsXULWindow::Destroy()
       mContentTreeOwner->XULWindow(nsnull);
       NS_RELEASE(mContentTreeOwner);
       }
+   if(mPrimaryContentTreeOwner)
+      {
+      mPrimaryContentTreeOwner->XULWindow(nsnull);
+      NS_RELEASE(mPrimaryContentTreeOwner);
+      }
    if(mChromeTreeOwner)
       {
       mChromeTreeOwner->XULWindow(nsnull);
@@ -461,12 +467,26 @@ NS_IMETHODIMP nsXULWindow::EnsureContentTreeOwner()
    if(mContentTreeOwner)
       return NS_OK;
 
-   mContentTreeOwner = new nsContentTreeOwner();
+   mContentTreeOwner = new nsContentTreeOwner(PR_FALSE);
    NS_ENSURE_TRUE(mContentTreeOwner, NS_ERROR_FAILURE);
 
    NS_ADDREF(mContentTreeOwner);
    mContentTreeOwner->XULWindow(this);
    
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsXULWindow::EnsurePrimaryContentTreeOwner()
+{
+   if(mPrimaryContentTreeOwner)
+      return NS_OK;
+
+   mPrimaryContentTreeOwner = new nsContentTreeOwner(PR_TRUE);
+   NS_ENSURE_TRUE(mPrimaryContentTreeOwner, NS_ERROR_FAILURE);
+
+   NS_ADDREF(mPrimaryContentTreeOwner);
+   mPrimaryContentTreeOwner->XULWindow(this);
+
    return NS_OK;
 }
 
@@ -572,8 +592,16 @@ NS_IMETHODIMP nsXULWindow::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
 
    if(!treeOwner)
       {
-      NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
-      aContentShell->SetTreeOwner(mContentTreeOwner);
+      if(aPrimary)
+         {
+         NS_ENSURE_SUCCESS(EnsurePrimaryContentTreeOwner(), NS_ERROR_FAILURE);
+         aContentShell->SetTreeOwner(mPrimaryContentTreeOwner);
+         }
+      else
+         {
+         NS_ENSURE_SUCCESS(EnsureContentTreeOwner(), NS_ERROR_FAILURE);
+         aContentShell->SetTreeOwner(mContentTreeOwner);
+         }
       }
 
    return NS_OK;
