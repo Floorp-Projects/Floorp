@@ -251,6 +251,21 @@ protected:
   /** returns true if the column is specified to have its min width */
   virtual PRBool ColIsSpecifiedAsMinimumWidth(PRInt32 aColIndex);
 
+  /** eturns a list and count of all columns that behave like they have width=auto
+    * this includes columns with no width specified (the normal definition of "auto"), 
+    * columns explicitly set to auto width, 
+    * and columns whose fixed width comes from a span (meaning the real width is indeterminate.)
+    *
+    * @param aOutNumColumns -- out param, the number of columns matching aType
+    * @param aOutColumnIndexes -- out param, the indexes of the columns matching aType
+    *                             
+    * @return       aOutNumColumns set to the number of auto columns, may be 0
+    *               allocates and fills aOutColumnIndexes
+    *               caller must "delete [] aOutColumnIndexes" if it is not null
+    */
+  void GetColumnsThatActLikeAutoWidth(PRInt32&  aOutNumColumns,
+                                      PRInt32*& aOutColumnIndexes);
+
 
 protected:
   nsTableFrame * mTableFrame;

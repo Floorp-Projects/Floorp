@@ -406,7 +406,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
         }
 
         nscoord width = cellDesiredSize.width;  // used below as the cell's "natural" width
-        if (PR_TRUE == haveColWidth)
+        if ((PR_TRUE == haveColWidth)) //XXX    && (PR_TRUE==cellGrantingWidth) ?
           width = colSpan*specifiedFixedColWidth;
 
         if (PR_TRUE==okToAdd)
@@ -450,14 +450,12 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
     // do all the global bookkeeping, factoring in margins
     nscoord colInset = mTableFrame->GetCellSpacing();
     // keep a running total of the amount of space taken up by all fixed-width columns
-    if (PR_TRUE==haveColWidth)
+    if ((PR_TRUE==haveColWidth) && (nsTableColFrame::eWIDTH_SOURCE_CELL==colFrame->GetWidthSource()))
     {
       mFixedTableWidth += specifiedFixedColWidth + colInset;
       if (0==colIndex)
         mFixedTableWidth += colInset;
     }
-    if (gsDebug)
-      printf ("after col %d, mFixedTableWidth = %d\n", colIndex, mFixedTableWidth);
 
     // cache the computed column info
     colFrame->SetMinColWidth(effectiveMinColumnWidth);
@@ -541,66 +539,68 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
             nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
             nscoord colMinWidth = colFrame->GetMinColWidth();
 
-
-            // compute the spanning cell's contribution to the column min width
-            // this is the "adjusted" column width, used in SetTableToMinWidth
-            nscoord spanCellMinWidth;
-            if (0!=spanInfo->effectiveMinWidthOfSpannedCols)
+            if (nsTableColFrame::eWIDTH_SOURCE_CELL!=colFrame->GetWidthSource())
             {
-              float percent = ((float)(colFrame->GetEffectiveMinColWidth())) /
-                                ((float)(spanInfo->effectiveMinWidthOfSpannedCols));
-              spanCellMinWidth = NSToCoordRound(((float)(spanInfo->cellMinWidth)) * percent);
-              if (gsDebug==PR_TRUE) 
-                printf ("spanCellMinWidth portion = %d from percent=%f, cellMW=%d, effMinColW=%d, sum=%d\n", 
-                         spanCellMinWidth, percent, spanInfo->cellMinWidth, colFrame->GetEffectiveMinColWidth(),
-                         spanInfo->effectiveMinWidthOfSpannedCols);
-              if (colMinWidth < spanCellMinWidth)
-                colFrame->SetAdjustedMinColWidth(spanCellMinWidth);     // set the new min width for the col
-            }
-            else
-            {
-              spanCellMinWidth = spanInfo->cellMinWidth/spanInfo->initialColSpan;
-              if (colMinWidth < spanCellMinWidth)
+              // compute the spanning cell's contribution to the column min width
+              // this is the "adjusted" column width, used in SetTableToMinWidth
+              nscoord spanCellMinWidth;
+              if (0!=spanInfo->effectiveMinWidthOfSpannedCols)
               {
-                colFrame->SetAdjustedMinColWidth(spanCellMinWidth);
-              }
-            }
-
-            // compute the spanning cell's contribution to the column max width
-            nscoord colMaxWidth = colFrame->GetMaxColWidth(); 
-            nscoord spanCellMaxWidth;
-            if (0!=spanInfo->effectiveMaxWidthOfSpannedCols)
-            {
-              float percent = ((float)(colFrame->GetEffectiveMaxColWidth())) /
-                                 ((float)(spanInfo->effectiveMaxWidthOfSpannedCols));
-              spanCellMaxWidth = NSToCoordRound(((float)(spanInfo->cellDesiredWidth)) * percent);
-              if (gsDebug==PR_TRUE) 
-                printf ("spanCellMaxWidth portion = %d with percent = %f from cellDW = %d, effMaxColW=%d and sum=%d\n", 
-                        spanCellMaxWidth, percent, spanInfo->cellDesiredWidth, colFrame->GetEffectiveMaxColWidth(),
-                        spanInfo->effectiveMaxWidthOfSpannedCols);
-              if (colMaxWidth < spanCellMaxWidth)
-              {
-                // make sure we're at least as big as our min
-                spanCellMaxWidth = PR_MAX(spanCellMaxWidth, colMinWidth);
-                colFrame->SetMaxColWidth(spanCellMaxWidth);     // set the new max width for the col
-                mTableFrame->SetColumnWidth(colIndex, spanCellMaxWidth);  // set the column to the new desired max width
+                float percent = ((float)(colFrame->GetEffectiveMinColWidth())) /
+                                  ((float)(spanInfo->effectiveMinWidthOfSpannedCols));
+                spanCellMinWidth = NSToCoordRound(((float)(spanInfo->cellMinWidth)) * percent);
                 if (gsDebug==PR_TRUE) 
+                  printf ("spanCellMinWidth portion = %d from percent=%f, cellMW=%d, effMinColW=%d, sum=%d\n", 
+                           spanCellMinWidth, percent, spanInfo->cellMinWidth, colFrame->GetEffectiveMinColWidth(),
+                           spanInfo->effectiveMinWidthOfSpannedCols);
+                if (colMinWidth < spanCellMinWidth)
+                  colFrame->SetAdjustedMinColWidth(spanCellMinWidth);     // set the new min width for the col
+              }
+              else
+              {
+                spanCellMinWidth = spanInfo->cellMinWidth/spanInfo->initialColSpan;
+                if (colMinWidth < spanCellMinWidth)
                 {
-                  printf ("for spanning cell into col %d with remaining span=%d, old max = %d, new max = %d\n", 
-                          colIndex, spanInfo->span, colMaxWidth, spanCellMaxWidth);
+                  colFrame->SetAdjustedMinColWidth(spanCellMinWidth);
                 }
               }
-            }
-            else
-            {
-              spanCellMaxWidth = spanInfo->cellDesiredWidth/spanInfo->initialColSpan;
-              nscoord minColWidth = colFrame->GetMinColWidth();
-              spanCellMaxWidth = PR_MAX(spanCellMaxWidth, minColWidth);
-              colFrame->SetMaxColWidth(spanCellMaxWidth);
-              mTableFrame->SetColumnWidth(colIndex, spanCellMaxWidth);
-              if (gsDebug==PR_TRUE) 
-                printf ("    for spanning cell into col %d with remaining span=%d, old max = %d, new max = %d\n", 
-                        colIndex, spanInfo->span, colMaxWidth, spanCellMaxWidth);
+
+              // compute the spanning cell's contribution to the column max width
+              nscoord colMaxWidth = colFrame->GetMaxColWidth(); 
+              nscoord spanCellMaxWidth;
+              if (0!=spanInfo->effectiveMaxWidthOfSpannedCols)
+              {
+                float percent = ((float)(colFrame->GetEffectiveMaxColWidth())) /
+                                   ((float)(spanInfo->effectiveMaxWidthOfSpannedCols));
+                spanCellMaxWidth = NSToCoordRound(((float)(spanInfo->cellDesiredWidth)) * percent);
+                if (gsDebug==PR_TRUE) 
+                  printf ("spanCellMaxWidth portion = %d with percent = %f from cellDW = %d, effMaxColW=%d and sum=%d\n", 
+                          spanCellMaxWidth, percent, spanInfo->cellDesiredWidth, colFrame->GetEffectiveMaxColWidth(),
+                          spanInfo->effectiveMaxWidthOfSpannedCols);
+                if (colMaxWidth < spanCellMaxWidth)
+                {
+                  // make sure we're at least as big as our min
+                  spanCellMaxWidth = PR_MAX(spanCellMaxWidth, colMinWidth);
+                  colFrame->SetMaxColWidth(spanCellMaxWidth);     // set the new max width for the col
+                  mTableFrame->SetColumnWidth(colIndex, spanCellMaxWidth);  // set the column to the new desired max width
+                  if (gsDebug==PR_TRUE) 
+                  {
+                    printf ("for spanning cell into col %d with remaining span=%d, old max = %d, new max = %d\n", 
+                            colIndex, spanInfo->span, colMaxWidth, spanCellMaxWidth);
+                  }
+                }
+              }
+              else
+              {
+                spanCellMaxWidth = spanInfo->cellDesiredWidth/spanInfo->initialColSpan;
+                nscoord minColWidth = colFrame->GetMinColWidth();
+                spanCellMaxWidth = PR_MAX(spanCellMaxWidth, minColWidth);
+                colFrame->SetMaxColWidth(spanCellMaxWidth);
+                mTableFrame->SetColumnWidth(colIndex, spanCellMaxWidth);
+                if (gsDebug==PR_TRUE) 
+                  printf ("    for spanning cell into col %d with remaining span=%d, old max = %d, new max = %d\n", 
+                          colIndex, spanInfo->span, colMaxWidth, spanCellMaxWidth);
+              }
             }
 
             spanInfo->span--;
@@ -1558,7 +1558,7 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aAvailWidth,
   // the trick here is to do the math excluding non-auto width columns
   PRInt32 numAutoColumns=0;
   PRInt32 *autoColumns=nsnull;
-  mTableFrame->GetColumnsByType(eStyleUnit_Auto, numAutoColumns, autoColumns);
+  GetColumnsThatActLikeAutoWidth(numAutoColumns, autoColumns);  // allocates autoColumns, be sure to delete it
   if (0!=numAutoColumns)
   {
     // there's at least one auto-width column, so give it (them) the extra space
@@ -1637,6 +1637,8 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aAvailWidth,
     if (PR_TRUE==gsDebug) 
       printf("lost a few twips due to rounding errors: excess=%d, totalAdded=%d\n", excess, totalAdded);
   }
+  if (nsnull!=autoColumns)
+    delete [] autoColumns;
 }
 
 /* assign columns widths for a table whose max size doesn't fit in the available space
@@ -2440,5 +2442,54 @@ PRBool BasicTableLayoutStrategy::ColIsSpecifiedAsMinimumWidth(PRInt32 aColIndex)
   return result;
 }
 
+// returns a list and count of all columns that behave like they have width=auto
+// this includes columns with no width specified, and columns whose fixed width comes from a span
+void BasicTableLayoutStrategy::GetColumnsThatActLikeAutoWidth(PRInt32 &aNumCols,  PRInt32 *&aColList)
+{
+  // initialize out params
+  aNumCols=0;
+  aColList=nsnull;
+
+  // get the auto columns
+  PRInt32 numAutoCols=0;
+  PRInt32 *autoColList=nsnull;
+  mTableFrame->GetColumnsByType(eStyleUnit_Auto, numAutoCols, autoColList);
+
+  // XXX: have to do next step for %-width as well?
+
+  // get the fixed columns 
+  PRInt32 numFixedCols=0;
+  PRInt32 *fixedColList=nsnull;
+  mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedCols, fixedColList);
+
+  if (0<numAutoCols+numFixedCols)
+  {
+    // allocate the out param aColList to the biggest it could be (usually a little wasteful, but it's 
+    // temp space and the numbers here are small, even for very big tables
+    aColList = new PRInt32[numAutoCols+numFixedCols];
+
+    // transfer the auto columns to aColList
+    PRInt32 i;
+    for (i=0; i<numAutoCols; i++)
+    {
+      aColList[i]=autoColList[i];
+      aNumCols++;
+    }
+
+    // get the columns whose fixed width is due to a colspan and transfer them to aColList
+    for (i=0; i<numFixedCols; i++)
+    {
+      nsTableColFrame *colFrame;
+      mTableFrame->GetColumnFrame(fixedColList[i], colFrame);
+      if (nsTableColFrame::eWIDTH_SOURCE_CELL_WITH_SPAN==colFrame->GetWidthSource())
+      {
+        aColList[aNumCols] = fixedColList[i];
+        aNumCols++;
+      }
+    }
+  }
+
+  return;
+}
 
 
