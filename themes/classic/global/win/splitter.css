@@ -71,11 +71,17 @@ splitter:hover:active
   box[orient="vertical"] > splitter > grippy,
   box[orient="vertical"] > splitter > grippy[collapse="before"]
     {
+      list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");
+    }
+    
+  window[orient="vertical"] > splitter > grippy[collapse="after"],
+  box[orient="vertical"] > splitter > grippy[collapse="after"]
+    {
       list-style-image    : url("chrome://global/skin/grippy-vertical-after.gif");
     }
     
-  window[orient="vertical"] > splitter[state="collapsed"] > grippy,
-  box[orient="vertical"] > splitter[state="collapsed"] > grippy
+  splitter[orient="vertical"][autostretch="never"] 
     {
-      list-style-image    : url("chrome://global/skin/grippy-vertical-before.gif");
+      text-align          : center;
     }
+

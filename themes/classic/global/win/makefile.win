@@ -57,3 +57,4 @@ install::
 	$(MAKE_INSTALL) message-icon.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) question-icon.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) alert-icon.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) dialogOverlay.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin

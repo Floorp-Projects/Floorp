@@ -132,7 +132,7 @@
    
   .indent
     {
-      margin-left         : 20px;
+      margin-left         : 23px;
     }
 
   .icon-dropmarker
@@ -148,4 +148,9 @@
   .spaced
     {
       margin              : 3px 5px 4px 5px;
+    }    
+
+  .wizard-box
+    {
+      padding             : 20px 44px 10px 44px;
     }    

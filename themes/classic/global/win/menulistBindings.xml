@@ -33,4 +33,15 @@
     </content>
   </binding>
    
+  <binding id="menulist-compact" extends="chrome://global/content/menulistBindings.xml#menulist">
+    <content excludes="template,observes,menupopup" flex="1">
+      <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
+        <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
+        <xul:spring flex="1"/>
+        <xul:text class="menulist-compact-text" inherits="value,accesskey,crop,disabled" crop="right"/>
+      </xul:box>
+    </content>
+  </binding>
+   
+   
 </bindings>

@@ -122,5 +122,21 @@
       <xul:text class="menu-iconic-accel" inherits="acceltext:value"/>
     </content>
   </binding>
+
+  <binding id="largeheader" extends="xul:box">
+    <content>
+      <xul:box class="largeheader-box" flex="1">
+        <xul:box class="largeheader-text-container" orient="vertical">
+          <xul:spring flex="1"/>
+          <xul:text class="largeheader-header-text" inherits="title:value" crop="right"/>
+          <xul:html class="largeheader-desc-text" inherits="description:value"/>
+          <xul:spring flex="1"/>
+        </xul:box>
+        <xul:box class="largeheader-icon-container" autostretch="never">
+          <xul:image class="largeheader-icon" inherits="src"/>
+        </xul:box>
+      </xul:box>
+    </content>
+  </binding>
   
 </bindings>
