@@ -314,9 +314,10 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 
       // fill-in rest of info struct
       int variantCount = info.fVariantCount;
-      info.fMimeTypeArray        = new char*[variantCount];
-      info.fMimeDescriptionArray = new char*[variantCount];
-      info.fExtensionArray       = new char*[variantCount];      
+      info.fMimeTypeArray  = new char*[variantCount];
+      info.fExtensionArray = new char*[variantCount];      
+      if (mi.infoStrings)
+        info.fMimeDescriptionArray = new char*[variantCount];
 
       short mimeIndex = 2, descriptionIndex = 2;
       for (int i = 0; i < variantCount; i++) {
@@ -341,19 +342,24 @@ nsresult nsPluginFile::GetPluginInfo(nsPluginInfo& info)
 
 nsresult nsPluginFile::FreePluginInfo(nsPluginInfo& info)
 {
-  if (info.fPluginInfoSize <= sizeof(nsPluginInfo)) 
-  {
+  if (info.fPluginInfoSize <= sizeof(nsPluginInfo)) {
     delete[] info.fName;
     delete[] info.fDescription;
+
     int variantCount = info.fVariantCount;
-    for (int i = 0; i < variantCount; i++) 
-    {
+    for (int i = 0; i < variantCount; i++) {
       delete[] info.fMimeTypeArray[i];
       delete[] info.fExtensionArray[i];
-      delete[] info.fMimeDescriptionArray[i];
     }
     delete[] info.fMimeTypeArray;
-    delete[] info.fMimeDescriptionArray;
+
+    if (info.fMimeDescriptionArray) {
+      for (int i = 0; i < variantCount; i++) {
+        delete[] info.fMimeDescriptionArray[i];
+      }
+      delete[] info.fMimeDescriptionArray;
+    }
+
     delete[] info.fExtensionArray;
     delete[] info.fFileName;
     delete[] info.fFullPath;
