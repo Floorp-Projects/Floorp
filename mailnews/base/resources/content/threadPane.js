@@ -59,11 +59,11 @@ function ThreadPaneOnClick(event)
     }
 	else if(event.detail == 2)
 	{
-		ThreadPaneDoubleClick(t.parentNode.parentNode);
+		ThreadPaneDoubleClick(t.parentNode.parentNode,true);
 	}
 }
 
-function ThreadPaneDoubleClick(treeitem)
+function ThreadPaneDoubleClick(treeitem,isClick)
 {
 	if(IsSpecialFolderSelected("Drafts"))
 	{
@@ -78,13 +78,35 @@ function ThreadPaneDoubleClick(treeitem)
 		var messageArray = GetSelectedMessages();
 		ComposeMessage(msgComposeType.Template, msgComposeFormat.Default, loadedFolder, messageArray);
 	}
-	else
+	else if(isClick)
 	{
 		var messageUri = treeitem.getAttribute("id");
 		MsgOpenNewWindowForMessage(messageUri, null);
 	}
+	else
+	{
+		var threadTree = GetThreadTree();
+		var selectedMessages = threadTree.selectedItems;
+		var numMessages = selectedMessages.length;
+
+		for(var i = 0; i < numMessages; i++)
+		{
+			var messageNode = selectedMessages[i];
+			var messageUri = messageNode.getAttribute("id");
+			if(messageUri)
+			{
+				MsgOpenNewWindowForMessage(messageUri, null);
+			}
+		}
+	}
 }
 
+function ThreadPaneKeyPress(event)
+{
+  if (event.keyCode == 13)
+	ThreadPaneDoubleClick(null,false);
+  return;
+}
 
 function MsgSortByDate()
 {

@@ -31,13 +31,13 @@ Rights Reserved.
 <script src="chrome://global/content/treePopups.js"/>
 <script src="chrome://messenger/content/threadPane.js"/>
 
-
 <tree datasources="rdf:null" id="threadTree"
 	          class="window-focusborder"
               onclick="ThreadPaneOnClick(event);"
               ondraggesture="return BeginDragThreadTree(event);"
               ondragdrop="return DropOnThreadTree(event);" 
 	  		  onselect="top.ThreadPaneSelectionChange();"
+			  onkeypress="ThreadPaneKeyPress(event);"
               onblur="goOnEvent(this,'blur')"
               containment="http://home.netscape.com/NC-rdf#MessageChild"
 			  allownegativeassertions="false"
