@@ -239,7 +239,7 @@ __hash_open(const char *file, int flags, int mode, const HASHINFO *info, int dfl
 		if (hashp->VERSION != HASHVERSION &&
 		    hashp->VERSION != OLDHASHVERSION)
 			RETURN_ERROR(EFTYPE, error1);
-		if (hashp->hash(CHARKEY, sizeof(CHARKEY)) != (unsigned)hashp->H_CHARKEY)
+		if (hashp->hash(CHARKEY, sizeof(CHARKEY)) != hashp->H_CHARKEY)
 			RETURN_ERROR(EFTYPE, error1);
 		if (hashp->NKEYS < 0) {
 		    /*
