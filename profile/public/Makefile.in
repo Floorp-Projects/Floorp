@@ -22,6 +22,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS = \
+    profileSwitch.h \
 	nsIProfile.h	\
 	$(NULL)
 
