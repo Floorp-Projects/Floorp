@@ -138,15 +138,15 @@ protected:
   ~nsTableColFrame();
 
   /** the starting index of the column (starting at 0) that this col object represents */
-  PRInt32  mColIndex;
-
-  PRBool  mIsAnonymous;
+  PRInt32           mColIndex;
 
   // Widths including MIN_CON, DES_CON, FIX_CON, MIN_ADJ, DES_ADJ, FIX_ADJ, PCT, PCT_ADJ, MIN_PRO
-  nscoord mWidths[NUM_WIDTHS];
-  nscoord mProportion; // proportion for porportional width col
-  nsColConstraint mConstraint;
+  nscoord           mWidths[NUM_WIDTHS];
+  nscoord           mProportion; // proportion for porportional width col
+  nsColConstraint   mConstraint;
   nsTableCellFrame* mConstrainingCell;
+  PRPackedBool      mIsAnonymous;
+  PRPackedBool      mNonPercentSpansPercent;
 };
 
 
@@ -179,6 +179,7 @@ inline void nsTableColFrame::SetConstrainingCell(nsTableCellFrame* aCellFrame)
 
 inline nsTableCellFrame* nsTableColFrame::GetConstrainingCell() const 
 { return mConstrainingCell; }
+
 
 #endif
 

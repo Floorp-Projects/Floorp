@@ -55,7 +55,9 @@ public:
     * @param aMaxElementSize  [OUT] if not null, the max element size is computed and returned in this param
     * @param aNumCols         the total number of columns in the table
     */
-  virtual PRBool Initialize(nsSize* aMaxElementSize, PRInt32 aNumCols, nscoord aMaxSize);
+  virtual PRBool Initialize(nsSize*      aMaxElementSize, 
+                           PRInt32       aNumCols, 
+                           nscoord       aMaxSize);
 
   /** compute the max element size of the table.
     * assumes that Initialize has been called
@@ -102,6 +104,7 @@ protected:
   void CalculateTotals(PRInt32& aCellSpacing,
                        PRInt32* aTotalCounts,
                        PRInt32* aTotalWidths,
+                       PRInt32* aTotalAvailWidths,
                        PRInt32* aMinWidths,
                        PRInt32& a0ProportionalCount);
 
@@ -112,8 +115,6 @@ protected:
 
   void AllocateConstrained(PRInt32  aAvailWidth,
                            PRInt32  aWidthType,
-                           PRInt32  aNumConstrainedCols,
-                           PRInt32  aSumMaxConstraints,
                            PRBool   aStartAtMin,        
                            PRInt32* aAllocTypes);
 
@@ -164,6 +165,8 @@ protected:
   PRBool ColumnsAreValidFor(const nsTableCellFrame& aCellFrame,
                             nscoord                 aPrevCellMin,
                             nscoord                 aPrevCellDes) const;
+
+  PRBool RecomputeAdjMinIfNecessary();
 
 #ifdef DEBUG
   void  SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const {
