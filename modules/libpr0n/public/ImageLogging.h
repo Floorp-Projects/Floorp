@@ -33,7 +33,7 @@ extern PRLogModuleInfo *gImgLog;
 
 class LogScope {
 public:
-  LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn) :
+  LogScope(PRLogModuleInfo *aLog, void *from, const nsACString &fn) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
     PR_LOG(mLog, PR_LOG_DEBUG, ("%d [this=%p] %s {ENTER}\n",
@@ -42,7 +42,7 @@ public:
   }
 
   /* const char * constructor */
-  LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
+  LogScope(PRLogModuleInfo *aLog, void *from, const nsACString &fn,
            const nsDependentCString &paramName, const char *paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
@@ -54,7 +54,7 @@ public:
   }
 
   /* void ptr constructor */
-  LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
+  LogScope(PRLogModuleInfo *aLog, void *from, const nsACString &fn,
            const nsDependentCString &paramName, const void *paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
@@ -66,7 +66,7 @@ public:
   }
 
   /* PRInt32 constructor */
-  LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
+  LogScope(PRLogModuleInfo *aLog, void *from, const nsACString &fn,
            const nsDependentCString &paramName, PRInt32 paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {
@@ -78,7 +78,7 @@ public:
   }
 
   /* PRUint32 constructor */
-  LogScope(PRLogModuleInfo *aLog, void *from, const nsAReadableCString &fn,
+  LogScope(PRLogModuleInfo *aLog, void *from, const nsACString &fn,
            const nsDependentCString &paramName, PRUint32 paramValue) :
     mLog(aLog), mFrom(from), mFunc(fn)
   {

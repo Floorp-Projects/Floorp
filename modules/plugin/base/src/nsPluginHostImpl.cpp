@@ -4115,7 +4115,7 @@ static nsresult CreateUnicodeDecoder(nsIUnicodeDecoder **aUnicodeDecoder)
 }
 
 static nsresult DoCharsetConversion(nsIUnicodeDecoder *aUnicodeDecoder, 
-                                     const char* aANSIString, nsAWritableString& aUnicodeString)
+                                     const char* aANSIString, nsAString& aUnicodeString)
 {
   NS_ENSURE_TRUE(aUnicodeDecoder, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(aANSIString, NS_ERROR_FAILURE);
@@ -4159,7 +4159,7 @@ public:
   virtual ~DOMMimeTypeImpl() {
   }
 
-  NS_METHOD GetDescription(nsAWritableString& aDescription)
+  NS_METHOD GetDescription(nsAString& aDescription)
   {
     aDescription.Assign(mDescription);
     return NS_OK;
@@ -4172,13 +4172,13 @@ public:
     return NS_OK;
   }
 
-  NS_METHOD GetSuffixes(nsAWritableString& aSuffixes)
+  NS_METHOD GetSuffixes(nsAString& aSuffixes)
   {
     aSuffixes.Assign(mSuffixes);
     return NS_OK;
   }
 
-  NS_METHOD GetType(nsAWritableString& aType)
+  NS_METHOD GetType(nsAString& aType)
   {
     aType.Assign(mType);
     return NS_OK;
@@ -4209,12 +4209,12 @@ public:
   virtual ~DOMPluginImpl() {
   }
 
-  NS_METHOD GetDescription(nsAWritableString& aDescription)
+  NS_METHOD GetDescription(nsAString& aDescription)
   {
     return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mDescription, aDescription);
   }
 
-  NS_METHOD GetFilename(nsAWritableString& aFilename)
+  NS_METHOD GetFilename(nsAString& aFilename)
   {
 #ifdef XP_MAC
     return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mFullPath, aFilename);
@@ -4223,7 +4223,7 @@ public:
 #endif
   }
 
-  NS_METHOD GetName(nsAWritableString& aName)
+  NS_METHOD GetName(nsAString& aName)
   {
     return DoCharsetConversion(mUnicodeDecoder, mPluginTag.mName, aName);
   }
@@ -4242,7 +4242,7 @@ public:
     return NS_OK;
   }
 
-  NS_METHOD NamedItem(const nsAReadableString& aName, nsIDOMMimeType** aReturn)
+  NS_METHOD NamedItem(const nsAString& aName, nsIDOMMimeType** aReturn)
   {
     for (int index = mPluginTag.mVariants - 1; index >= 0; --index) {
       if (aName.Equals(NS_ConvertASCIItoUCS2(mPluginTag.mMimeTypeArray[index])))

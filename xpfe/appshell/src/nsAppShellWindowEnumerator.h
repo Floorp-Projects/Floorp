@@ -63,7 +63,7 @@ struct nsWindowInfo
   nsWindowInfo              *mLower,   // next lower in z-order
                             *mHigher;
   
-  PRBool TypeEquals(nsAReadableString &aType);
+  PRBool TypeEquals(const nsAString &aType);
   void   InsertAfter(nsWindowInfo *inOlder, nsWindowInfo *inHigher);
   void   Unlink(PRBool inAge, PRBool inZ);
   void   ReferenceSelf(PRBool inAge, PRBool inZ);

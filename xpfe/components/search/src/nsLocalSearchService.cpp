@@ -348,7 +348,7 @@ LocalSearchDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenP
 
 PRBool
 LocalSearchDataSource::doMatch(nsIRDFLiteral *literal,
-                               const nsAReadableString &matchMethod,
+                               const nsAString &matchMethod,
                                const nsString &matchText)
 {
 	PRBool		found = PR_FALSE;
@@ -416,8 +416,8 @@ LocalSearchDataSource::doMatch(nsIRDFLiteral *literal,
 
 PRBool
 LocalSearchDataSource::doDateMatch(nsIRDFDate *aDate,
-                                   const nsAReadableString& matchMethod,
-                                   const nsAReadableString& matchText)
+                                   const nsAString& matchMethod,
+                                   const nsAString& matchText)
 {
     PRBool found = PR_FALSE;
     
@@ -435,7 +435,7 @@ LocalSearchDataSource::doDateMatch(nsIRDFDate *aDate,
 
 PRBool
 LocalSearchDataSource::doIntMatch(nsIRDFInt *aInt,
-                                  const nsAReadableString& matchMethod,
+                                  const nsAString& matchMethod,
                                   const nsString& matchText)
 {
     nsresult rv;
@@ -460,7 +460,7 @@ LocalSearchDataSource::doIntMatch(nsIRDFInt *aInt,
 }
 
 NS_METHOD
-LocalSearchDataSource::parseDate(const nsAReadableString& aDate,
+LocalSearchDataSource::parseDate(const nsAString& aDate,
                                  PRInt64 *aResult)
 {
     // date is in the form of msec since epoch, but use NSPR to
@@ -478,7 +478,7 @@ LocalSearchDataSource::parseDate(const nsAReadableString& aDate,
 
 PRBool
 LocalSearchDataSource::dateMatches(nsIRDFDate *aDate,
-                                   const nsAReadableString& method,
+                                   const nsAString& method,
                                    const PRInt64& matchDate)
 {
     PRInt64 date;
@@ -604,7 +604,7 @@ LocalSearchDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
 // to QI against that first
 PRBool
 LocalSearchDataSource::matchNode(nsIRDFNode *aValue,
-                                 const nsAReadableString& matchMethod,
+                                 const nsAString& matchMethod,
                                  const nsString& matchText)
 {
     nsCOMPtr<nsIRDFLiteral> literal(do_QueryInterface(aValue));

@@ -31,7 +31,7 @@ class nsNameSpaceMap
 public:
     class Entry {
     public:
-        Entry(const nsAReadableString& aURI, nsIAtom* aPrefix)
+        Entry(const nsAString& aURI, nsIAtom* aPrefix)
             : mURI(aURI), mPrefix(aPrefix), mNext(nsnull) {
             MOZ_COUNT_CTOR(nsNameSpaceMap::Entry); }
 
@@ -47,7 +47,7 @@ public:
     ~nsNameSpaceMap();
 
     nsresult
-    Put(const nsAReadableString& aURI, nsIAtom* aPrefix);
+    Put(const nsAString& aURI, nsIAtom* aPrefix);
 
     class const_iterator {
     protected:
@@ -100,7 +100,7 @@ public:
     const_iterator last() const {
         return const_iterator(nsnull); }
 
-    const_iterator GetNameSpaceOf(const nsAReadableString& aURI) const;
+    const_iterator GetNameSpaceOf(const nsAString& aURI) const;
 
 protected:
     Entry* mEntries;

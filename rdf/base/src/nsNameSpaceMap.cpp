@@ -40,7 +40,7 @@ nsNameSpaceMap::~nsNameSpaceMap()
 }
 
 nsresult
-nsNameSpaceMap::Put(const nsAReadableString& aURI, nsIAtom* aPrefix)
+nsNameSpaceMap::Put(const nsAString& aURI, nsIAtom* aPrefix)
 {
     Entry* entry;
 
@@ -60,7 +60,7 @@ nsNameSpaceMap::Put(const nsAReadableString& aURI, nsIAtom* aPrefix)
 }
 
 nsNameSpaceMap::const_iterator
-nsNameSpaceMap::GetNameSpaceOf(const nsAReadableString& aURI) const
+nsNameSpaceMap::GetNameSpaceOf(const nsAString& aURI) const
 {
     for (Entry* entry = mEntries; entry != nsnull; entry = entry->mNext) {
         if (Substring(aURI, 0, entry->mURI.Length()) == entry->mURI)

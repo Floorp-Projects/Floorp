@@ -53,7 +53,7 @@
 #include "nsVoidArray.h"
 #include "nsHashtable.h"
 #include "nsCOMPtr.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 #include "nsSharableString.h"
 #include "nsITimer.h"
 #include "nsIAutoCompleteSession.h"
@@ -190,7 +190,7 @@ protected:
   static PRBool IsFindResource(nsIRDFResource *aResource);
   void GetFindUriPrefix(const searchQuery& aQuery,
                         const PRBool aDoGroupBy,
-                        nsAWritableCString& aResult);
+                        nsACString& aResult);
   
   nsresult TokenListToSearchQuery(const nsVoidArray& tokens,
                                   searchQuery& aResult);
@@ -205,15 +205,15 @@ protected:
   nsStringArray mIgnoreSchemes;
   nsStringArray mIgnoreHostnames;
   
-  nsresult AutoCompleteSearch(const nsAReadableString& aSearchString,
+  nsresult AutoCompleteSearch(const nsAString& aSearchString,
                               AutocompleteExclude* aExclude,
                               nsIAutoCompleteResults* aPrevResults,
                               nsIAutoCompleteResults* aResults);
-  void AutoCompleteCutPrefix(nsAWritableString& aURL, AutocompleteExclude* aExclude);
-  void AutoCompleteGetExcludeInfo(nsAReadableString& aURL, AutocompleteExclude* aExclude);
-  nsSharableString AutoCompletePrefilter(const nsAReadableString& aSearchString);
+  void AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExclude* aExclude);
+  void AutoCompleteGetExcludeInfo(const nsAString& aURL, AutocompleteExclude* aExclude);
+  nsSharableString AutoCompletePrefilter(const nsAString& aSearchString);
   PRBool AutoCompleteCompare(nsAString& aHistoryURL, 
-                             const nsAReadableString& aUserURL,
+                             const nsAString& aUserURL,
                              AutocompleteExclude* aExclude);
 
   // caching of PR_Now() so we don't call it every time we do
@@ -294,8 +294,8 @@ protected:
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const char *aValue);
   nsresult SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRUnichar *aValue);
 
-  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAWritableString& aResult);
-  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAWritableCString& aResult);
+  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsAString& aResult);
+  nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, nsACString& aResult);
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt64* aResult);
   nsresult GetRowValue(nsIMdbRow *aRow, mdb_column aCol, PRInt32* aResult);
 
@@ -400,7 +400,7 @@ protected:
     mdb_column mTypedColumn;
     mdb_column mCommentColumn;
     AutocompleteExclude* mExclude;
-    const nsAReadableString& mSelectValue;
+    const nsAString& mSelectValue;
     PRBool mMatchOnlyTyped;
 
     virtual ~AutoCompleteEnumerator();
@@ -412,7 +412,7 @@ protected:
                            mdb_column aHiddenColumn,
                            mdb_column aTypedColumn,
                            PRBool aMatchOnlyTyped,
-                           const nsAReadableString& aSelectValue,
+                           const nsAString& aSelectValue,
                            AutocompleteExclude* aExclude) :
       mHistory(aHistory),
       mURLColumn(aURLColumn),

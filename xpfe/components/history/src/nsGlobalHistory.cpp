@@ -201,7 +201,7 @@ struct searchQuery {
 };
 
 static nsresult
-PRInt64ToChars(const PRInt64& aValue, nsAWritableCString& aResult)
+PRInt64ToChars(const PRInt64& aValue, nsACString& aResult)
 {
   // Convert an unsigned 64-bit value to a string of up to aSize
   // decimal digits, placed in aBuf.
@@ -829,7 +829,7 @@ nsGlobalHistory::SetRowValue(nsIMdbRow *aRow, mdb_column aCol, const PRInt32 aVa
 
 nsresult
 nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
-                             nsAWritableString& aResult)
+                             nsAString& aResult)
 {
   mdb_err err;
   
@@ -895,7 +895,7 @@ nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
 
 nsresult
 nsGlobalHistory::GetRowValue(nsIMdbRow *aRow, mdb_column aCol,
-                             nsAWritableCString& aResult)
+                             nsACString& aResult)
 {
   mdb_err err;
   
@@ -3535,7 +3535,7 @@ nsGlobalHistory::SearchEnumerator::~SearchEnumerator()
 void
 nsGlobalHistory::GetFindUriPrefix(const searchQuery& aQuery,
                                   const PRBool aDoGroupBy,
-                                  nsAWritableCString& aResult)
+                                  nsACString& aResult)
 {
   mdb_err err;
   
@@ -3976,7 +3976,7 @@ nsGlobalHistory::OnAutoComplete(const PRUnichar *searchString,
 //
 
 nsresult
-nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
+nsGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
                                     AutocompleteExclude* aExclude,
                                     nsIAutoCompleteResults* aPrevResults,
                                     nsIAutoCompleteResults* aResults)
@@ -4076,7 +4076,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAReadableString& aSearchString,
 // If aURL begins with a protocol or domain prefix from our lists,
 // then mark their index in an AutocompleteExclude struct.
 void
-nsGlobalHistory::AutoCompleteGetExcludeInfo(nsAReadableString& aURL, AutocompleteExclude* aExclude)
+nsGlobalHistory::AutoCompleteGetExcludeInfo(const nsAString& aURL, AutocompleteExclude* aExclude)
 {
   aExclude->schemePrefix = -1;
   aExclude->hostnamePrefix = -1;
@@ -4104,7 +4104,7 @@ nsGlobalHistory::AutoCompleteGetExcludeInfo(nsAReadableString& aURL, Autocomplet
 // Cut any protocol and domain prefixes from aURL, except for those which
 // are specified in aExclude
 void
-nsGlobalHistory::AutoCompleteCutPrefix(nsAWritableString& aURL, AutocompleteExclude* aExclude)
+nsGlobalHistory::AutoCompleteCutPrefix(nsAString& aURL, AutocompleteExclude* aExclude)
 {
   // This comparison is case-sensitive.  Therefore, it assumes that aUserURL is a 
   // potential URL whose host name is in all lower case.
@@ -4139,7 +4139,7 @@ nsGlobalHistory::AutoCompleteCutPrefix(nsAWritableString& aURL, AutocompleteExcl
 }
 
 nsSharableString
-nsGlobalHistory::AutoCompletePrefilter(const nsAReadableString& aSearchString)
+nsGlobalHistory::AutoCompletePrefilter(const nsAString& aSearchString)
 {
   nsAutoString url(aSearchString);
 
@@ -4162,7 +4162,7 @@ nsGlobalHistory::AutoCompletePrefilter(const nsAReadableString& aSearchString)
 
 PRBool
 nsGlobalHistory::AutoCompleteCompare(nsAString& aHistoryURL, 
-                                     const nsAReadableString& aUserURL, 
+                                     const nsAString& aUserURL, 
                                      AutocompleteExclude* aExclude)
 {
   AutoCompleteCutPrefix(aHistoryURL, aExclude);

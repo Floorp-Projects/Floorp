@@ -56,13 +56,13 @@ nsAutoCompleteItem::~nsAutoCompleteItem()
 {
 }
 
-NS_IMETHODIMP nsAutoCompleteItem::GetValue(nsAWritableString& aValue)
+NS_IMETHODIMP nsAutoCompleteItem::GetValue(nsAString& aValue)
 {
     aValue.Assign(mValue);
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAutoCompleteItem::SetValue(const nsAReadableString& aValue)
+NS_IMETHODIMP nsAutoCompleteItem::SetValue(const nsAString& aValue)
 {
     mValue.Assign(aValue);
     return NS_OK;

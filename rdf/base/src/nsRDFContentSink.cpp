@@ -161,7 +161,7 @@ public:
     NS_IMETHOD WillResume(void);
     NS_IMETHOD SetParser(nsIParser* aParser);  
     NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
-    NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset) { return NS_OK; }
+    NS_IMETHOD SetDocumentCharset(nsAString& aCharset) { return NS_OK; }
 
     // nsIRDFContentSink
     NS_IMETHOD Init(nsIURI* aURL);
@@ -216,7 +216,7 @@ protected:
 
     // namespace management
     nsresult PushNameSpacesFrom(const PRUnichar** aAttributes);
-    PRBool   IsXMLNSDirective(const nsAReadableString& aAttributeKey, nsIAtom** aPrefix = nsnull);
+    PRBool   IsXMLNSDirective(const nsAString& aAttributeKey, nsIAtom** aPrefix = nsnull);
     nsresult PopNameSpaces();
 
     PRUnichar* mText;
@@ -252,12 +252,12 @@ protected:
     GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI);
 
     nsresult
-    ParseTagString(const nsAReadableString& aTagName,
+    ParseTagString(const nsAString& aTagName,
                    const char** aNameSpaceURI,
                    nsIAtom** aTag);
 
     nsresult
-    ParseAttributeString(const nsAReadableString& aAttributeName,
+    ParseAttributeString(const nsAString& aAttributeName,
                          const char** aNameSpaceURI,
                          nsIAtom** aAttribute);
 
@@ -1462,7 +1462,7 @@ RDFContentSinkImpl::GetNameSpaceURI(nsIAtom* aPrefix, const char** aNameSpaceURI
 }
 
 nsresult
-RDFContentSinkImpl::ParseTagString(const nsAReadableString& aTagName,
+RDFContentSinkImpl::ParseTagString(const nsAString& aTagName,
                                    const char** aNameSpaceURI,
                                    nsIAtom** aTag)
 {
@@ -1477,7 +1477,7 @@ RDFContentSinkImpl::ParseTagString(const nsAReadableString& aTagName,
 
 
 nsresult
-RDFContentSinkImpl::ParseAttributeString(const nsAReadableString& aAttributeName,
+RDFContentSinkImpl::ParseAttributeString(const nsAString& aAttributeName,
                                          const char** aNameSpaceURI,
                                          nsIAtom** aAttribute)
 {
@@ -1661,7 +1661,7 @@ RDFContentSinkImpl::PopContext(nsIRDFResource         *&aResource,
 // Namespace management
 
 PRBool
-RDFContentSinkImpl::IsXMLNSDirective(const nsAReadableString& aAttributeKey, nsIAtom** aPrefix)
+RDFContentSinkImpl::IsXMLNSDirective(const nsAString& aAttributeKey, nsIAtom** aPrefix)
 {
     nsAutoString attr(aAttributeKey);
 

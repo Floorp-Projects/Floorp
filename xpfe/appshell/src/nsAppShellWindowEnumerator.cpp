@@ -101,8 +101,8 @@ nsCOMPtr<nsIDOMNode> GetDOMNodeFromDocShell(nsIDocShell *aShell)
 }
 
 // generic "retrieve the value of a XUL attribute" function
-void GetAttribute(nsIXULWindow* aWindow, const nsAReadableString &anAttribute,
-                  nsAWritableString &outValue)
+void GetAttribute(nsIXULWindow* aWindow, const nsAString &anAttribute,
+                  nsAString &outValue)
 {
   nsCOMPtr<nsIDocShell> shell;
   if (aWindow &&
@@ -141,7 +141,7 @@ nsWindowInfo::~nsWindowInfo()
   
 // return true if the window described by this WindowInfo has a type
 // equal to the given type
-PRBool nsWindowInfo::TypeEquals(nsAReadableString &aType)
+PRBool nsWindowInfo::TypeEquals(const nsAString &aType)
 { 
   nsAutoString rtnString;
   GetWindowType(mWindow, rtnString);

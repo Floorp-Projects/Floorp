@@ -138,7 +138,7 @@ nsRDFXMLSerializer::Init(nsIRDFDataSource* aDataSource)
 }
 
 NS_IMETHODIMP
-nsRDFXMLSerializer::AddNameSpace(nsIAtom* aPrefix, const nsAReadableString& aURI)
+nsRDFXMLSerializer::AddNameSpace(nsIAtom* aPrefix, const nsAString& aURI)
 {
     mNameSpaces.Put(aURI, aPrefix);
     return NS_OK;
@@ -163,7 +163,7 @@ rdf_BlockingWrite(nsIOutputStream* stream, const char* buf, PRUint32 size)
 }
 
 static nsresult
-rdf_BlockingWrite(nsIOutputStream* stream, const nsAReadableString& s)
+rdf_BlockingWrite(nsIOutputStream* stream, const nsAString& s)
 {
     NS_ConvertUCS2toUTF8 utf8(s);
     return rdf_BlockingWrite(stream, utf8.get(), utf8.Length());
