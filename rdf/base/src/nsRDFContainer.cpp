@@ -249,10 +249,8 @@ RDFContainerImpl::RemoveElement(nsIRDFNode *aElement, PRBool aRenumber)
     rv = IndexOf(aElement, &idx);
     if (NS_FAILED(rv)) return rv;
 
-    if (idx < 0) {
-        NS_WARNING("attempt to remove non-existant element");
+    if (idx < 0)
         return NS_OK;
-    }
 
     // Remove the element.
     nsCOMPtr<nsIRDFResource> ordinal;
@@ -416,7 +414,6 @@ RDFContainerImpl::IndexOf(nsIRDFNode *aElement, PRInt32 *aIndex)
         }
     }
 
-    NS_WARNING("element not found");
     *aIndex = -1;
     return NS_OK;
 }
