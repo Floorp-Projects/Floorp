@@ -88,24 +88,7 @@
 #define TURBO_DISABLE 5
 #define TURBO_EXIT 6
 
-/*************************************************************/
-/*                      MAPI SUPPORT                         */
-/*************************************************************/
-
-#define MAPI_DLL               "msgMapi.dll"
-#define MAPI_INIT_METHOD       "Init"
 #define MAPI_STARTUP_ARG       "/MAPIStartUp"
-
-typedef void (PASCAL InitMethod)();
-
-HINSTANCE mapiInstance = nsnull;
-
-void CheckMapiSupport()
-{
-    mapiInstance = LoadLibrary(MAPI_DLL);
-}
-
-/*************************************************************/
 
 static HWND hwndForDOMWindow( nsISupports * );
 
@@ -361,8 +344,6 @@ public:
     NS_IMETHOD StartServerMode();
     NS_IMETHOD OnLastWindowClosing( nsIXULWindow *aWindow );
     NS_IMETHOD SetIsServerMode( PRBool isServerMode );
-    NS_IMETHOD StartAddonFeatures();
-    NS_IMETHOD StopAddonFeatures();
     NS_IMETHOD EnsureProfile(nsICmdLineService* args);
 
     // The "old" Start method (renamed).
@@ -979,7 +960,6 @@ nsNativeAppSupportWin::Start( PRBool *aResult ) {
             this->StartDDE();
             // Tell caller to spin message loop.
             *aResult = PR_TRUE;
-            CheckMapiSupport();
         }
     }
 
@@ -1051,8 +1031,6 @@ nsNativeAppSupportWin::Stop( PRBool *aResult ) {
 
     nsresult rv = NS_OK;
     *aResult = PR_TRUE;
-
-    StopAddonFeatures();
 
     Mutex ddeLock( MOZ_STARTUP_MUTEX_NAME );
 
@@ -2109,34 +2087,4 @@ nsNativeAppSupportWin::GetStartupURL(nsICmdLineService *args, nsCString& taskURL
     return NS_OK;
 }
 
-/***************************************************************/
-/*                        MAPI SUPPORT                         */
-/***************************************************************/
 
-NS_IMETHODIMP
-nsNativeAppSupportWin::StartAddonFeatures()
-{
-    InitMethod *InitFunction = nsnull;
-    if (mapiInstance != nsnull)
-    {
-        InitFunction = (InitMethod *)GetProcAddress(mapiInstance, MAPI_INIT_METHOD);
-        if (InitFunction != nsnull)
-            InitFunction();
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsNativeAppSupportWin::StopAddonFeatures()
-{
-    if (mapiInstance != nsnull)
-    {
-        FreeLibrary(mapiInstance);
-        mapiInstance = nsnull;
-    }
-
-    return NS_OK;
-}
-
-/***************************************************************/

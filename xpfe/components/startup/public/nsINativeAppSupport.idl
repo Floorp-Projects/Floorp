@@ -176,10 +176,6 @@ interface nsINativeAppSupport : nsISupports {
     boolean stop();
     void    quit();
 
-    // Startup/Shutdown for features like MAPI
-
-    [noscript] void startAddonFeatures();
-    [noscript] void stopAddonFeatures();
     [noscript] void ensureProfile(in nsICmdLineService aCmdService);
 
     // Splash screen functions.
