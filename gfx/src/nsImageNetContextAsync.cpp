@@ -195,7 +195,7 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 
     NS_RELEASE(reader);
     return NS_ERROR_ABORT;
   }
-
+  
   nsresult err = 0;
   PRUint32 nb;
   do {
@@ -206,6 +206,10 @@ ImageConsumer::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 
     if (max_read > IMAGE_BUF_SIZE) {
       max_read = IMAGE_BUF_SIZE;
     }
+    
+    // make sure there's enough data available to decode the image.
+    if (mFirstRead && length < 4)
+      break;
 
     err = pIStream->Read(mBuffer,
                         max_read, &nb);
