@@ -52,6 +52,7 @@ class nsAutoConfig : public nsIAutoConfig,
   
  protected:
   
+  nsresult downloadAutoConfig();
   nsresult readOfflineFile();
   nsresult evaluateLocalFile(nsIFile * file);
   nsresult writeFailoverFile();
@@ -60,4 +61,5 @@ class nsAutoConfig : public nsIAutoConfig,
   nsCOMPtr<nsIPrefBranch> mPrefBranch;
   PRBool mLoaded;
   nsCOMPtr<nsITimer> mTimer;
+  nsCString mConfigURL;
 };
