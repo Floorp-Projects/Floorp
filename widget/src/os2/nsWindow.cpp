@@ -971,6 +971,14 @@ NS_METHOD nsWindow::Destroy()
       if( mWindowState == nsWindowState_eLive && mParent)
          nsBaseWidget::Destroy();
 
+      // just to be safe. If we're going away and for some reason we're still
+      // the rollup widget, rollup and turn off capture.
+      if (this == gRollupWidget) {
+         if (gRollupListener)
+            gRollupListener->Rollup();
+         CaptureRollupEvents(nsnull, PR_FALSE, PR_TRUE);
+      }
+
       if( mWnd)
       {
          gHwndBeingDestroyed = (mHackDestroyWnd ? mHackDestroyWnd : mWnd);
