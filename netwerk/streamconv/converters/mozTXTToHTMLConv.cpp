@@ -39,6 +39,7 @@
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
+#include "nsIExternalProtocolHandler.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -48,6 +49,13 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif
 
 const PRFloat64 growthRate = 1.2;
+
+// Bug 183111, editor now replaces multiple spaces with leading
+// 0xA0's and a single ending space, so need to treat 0xA0's as spaces.
+static inline PRBool IsSpace(const char aChar)
+{
+  return (nsCRT::IsAsciiSpace(aChar) || aChar == 0xA0);
+}
 
 // Escape Char will take ch, escape it and append the result to 
 // aStringToAppendTo
@@ -242,7 +250,7 @@ mozTXTToHTMLConv::FindURLStart(const PRUnichar * aInString, PRInt32 aInLength,
              && aInString[PRUint32(i)] != '{' && aInString[PRUint32(i)] != '['
              && aInString[PRUint32(i)] != '(' && aInString[PRUint32(i)] != '|'
              && aInString[PRUint32(i)] != '\\'
-             && !nsCRT::IsAsciiSpace(aInString[PRUint32(i)])
+             && !IsSpace(aInString[PRUint32(i)])
          ; i--)
       ;
     if
@@ -297,7 +305,7 @@ mozTXTToHTMLConv::FindURLEnd(const PRUnichar * aInString, PRInt32 aInStringLengt
              && aInString[i] != '`'
              && aInString[i] != '}' && aInString[i] != ']'
              && aInString[i] != ')' && aInString[i] != '|'
-             && !nsCRT::IsAsciiSpace(aInString[i])
+             && !IsSpace(aInString[i])
          ; i++)
       ;
     while (--i > pos && (
@@ -362,6 +370,33 @@ mozTXTToHTMLConv::CalculateURLBoundaries(const PRUnichar * aInString, PRInt32 aI
   return;
 }
 
+PRBool mozTXTToHTMLConv::ShouldLinkify(const nsCString& aURL)
+{
+  if (!mIOService)
+    return PR_FALSE;
+
+  nsCAutoString scheme;
+  nsresult rv = mIOService->ExtractScheme(aURL, scheme);
+  if(NS_FAILED(rv))
+    return PR_FALSE;
+
+  // Get the handler for this scheme.
+  nsCOMPtr<nsIProtocolHandler> handler;    
+  rv = mIOService->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
+  if(NS_FAILED(rv))
+    return PR_FALSE;
+
+  // Is it an external protocol handler? If not, linkify it.
+  nsCOMPtr<nsIExternalProtocolHandler> externalHandler = do_QueryInterface(handler, &rv);
+  if (!externalHandler)
+   return PR_TRUE; // handler is built-in, linkify it!
+
+  // If external app exists for the scheme then linkify it.
+  PRBool exists;
+  rv = externalHandler->ExternalAppExistsForScheme(scheme, &exists);
+  return(NS_SUCCEEDED(rv) && exists);
+}
+
 PRBool
 mozTXTToHTMLConv::CheckURLAndCreateHTML(
      const nsString& txtURL, const nsString& desc, const modetype mode,
@@ -376,9 +411,14 @@ mozTXTToHTMLConv::CheckURLAndCreateHTML(
   if (NS_FAILED(rv) || !mIOService)
     return PR_FALSE;
 
+  // See if the url should be linkified.
+  NS_ConvertUCS2toUTF8 utf8URL(txtURL);
+  if (!ShouldLinkify(utf8URL))
+    return PR_FALSE;
+
   // it would be faster if we could just check to see if there is a protocol
   // handler for the url and return instead of actually trying to create a url...
-  rv = mIOService->NewURI(NS_ConvertUCS2toUTF8(txtURL), nsnull, nsnull, getter_AddRefs(uri));
+  rv = mIOService->NewURI(utf8URL, nsnull, nsnull, getter_AddRefs(uri));
 
   // Real work
   if (NS_SUCCEEDED(rv) && uri)
@@ -636,11 +676,11 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool 
   PRUint32 delim = (col0 ? 0 : 1) + tagLen;
   if
     (
-      (col0 || nsCRT::IsAsciiSpace(aInString[0]))
+      (col0 || IsSpace(aInString[0]))
         &&
         (
           aLength <= PRInt32(delim) ||
-          nsCRT::IsAsciiSpace(aInString[delim]) ||
+          IsSpace(aInString[delim]) ||
           aLength > PRInt32(delim + 1)
             &&
             (
@@ -650,7 +690,7 @@ mozTXTToHTMLConv::SmilyHit(const PRUnichar * aInString, PRInt32 aLength, PRBool 
               aInString[delim] == '!' ||
               aInString[delim] == '?'
             )
-            && nsCRT::IsAsciiSpace(aInString[delim + 1])
+            && IsSpace(aInString[delim + 1])
         )
         && ItMatchesDelimited(aInString, aLength, tagTXT, aTagTxtLength, 
                               col0 ? LT_IGNORE : LT_DELIMITER, LT_IGNORE)
@@ -958,7 +998,7 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
     PRUint32 i = logLineStart;
 
 #ifdef QUOTE_RECOGNITION_AGGRESSIVE
-    for (; PRInt32(i) < lineLength && nsCRT::IsAsciiSpace(line[i]); i++)
+    for (; PRInt32(i) < lineLength && IsSpace(line[i]); i++)
       ;
     for (; PRInt32(i) < lineLength && nsCRT::IsAsciiAlpha(line[i])
                                    && nsCRT::IsUpper(line[i])   ; i++)

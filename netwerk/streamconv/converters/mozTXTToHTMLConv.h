@@ -316,6 +316,11 @@ private:
   PRBool GlyphHit(const PRUnichar * aInString, PRInt32 aInLength, PRBool col0,
        nsString& aOutString, PRInt32& glyphTextLen);
 
+/**
+  Check if a given url should be linkified.
+  @param aURL (in): url to be checked on.
+*/
+  PRBool ShouldLinkify(const nsCString& aURL);
 };
 
 // It's said, that Win32 and Mac don't like static const members
