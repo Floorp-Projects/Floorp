@@ -71,7 +71,7 @@ function updateWindowsRegistry(psmPath)
 var err = startInstall("Netscape Personal Security Manager", "/Netscape/Personal Security Manager", "1.1.0.00058"); 
 logComment("startInstall() returned: " + err);
 
-fPSM     = getFolder("Communicator","psm");
+fPSM     = getFolder("Communicator","");
 
 setPackageFolder(fPSM);
 err  = addDirectory("/Netscape/Personal Security Manager/Program",
