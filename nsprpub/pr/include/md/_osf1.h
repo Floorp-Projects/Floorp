@@ -70,6 +70,8 @@
 #define _PR_HAVE_INET_NTOP
 #else
 #define AF_INET6 26
+#ifndef AI_CANONNAME
+#define AI_CANONNAME 0x00000002
 struct addrinfo {
     int              ai_flags;
     int              ai_family;
@@ -80,7 +82,7 @@ struct addrinfo {
     struct sockaddr *ai_addr;
     struct addrinfo *ai_next;
 };
-#define AI_CANONNAME 0x00000002
+#endif
 #define AI_V4MAPPED 0x00000010
 #define AI_ALL      0x00000008
 #define AI_ADDRCONFIG 0x00000020
