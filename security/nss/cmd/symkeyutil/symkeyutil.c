@@ -557,7 +557,7 @@ enum {
     cmd_UnwrapKey,
     cmd_MoveKey,
     cmd_ListKeys,
-    cmd_PrintHelp,
+    cmd_PrintHelp
 };
 
 /*  Certutil options */
