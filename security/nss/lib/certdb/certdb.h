@@ -43,7 +43,7 @@
 /* version number of certificate database */
 #define CERT_DB_FILE_VERSION		7
 #ifdef USE_NS_ROOTS
-#define CERT_DB_CONTENT_VERSION		25
+#define CERT_DB_CONTENT_VERSION		28
 #else
 #define CERT_DB_CONTENT_VERSION		2
 #endif
