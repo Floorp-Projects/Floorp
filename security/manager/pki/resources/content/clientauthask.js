@@ -69,7 +69,7 @@ function setDetails()
 {
   var index = parseInt(document.getElementById("nicknames").value);
   details = dialogParams.GetString(index+itemCount+4);
-  document.getElementById("details").setAttribute("value", details);
+  document.getElementById("details").value = details;
 }
 
 function onCertSelected()
