@@ -34,6 +34,7 @@
 #include "world.h"
 #include "debugger.h"
 
+#include <iostream>
 #include <string>
 #include <ctype.h>
 #include <assert.h>
@@ -171,6 +172,13 @@ registers, or set the value of a single register."},
         }
     }    
 
+    static String widen(string& str)
+    {
+    	String s(str.size(), char16());
+    	std::transform(str.begin(), str.end(), s.begin(), JavaScript::widen);
+    	return s;
+    }
+
     void
     Shell::listen(Context* cx, InterpretStage stage)
     {
@@ -181,9 +189,9 @@ registers, or set the value of a single register."},
         if (!(mStopMask & stage))
             return;
 
-        static String lastLine (widenCString("help\n"));
-        String line;
-
+        static string lastLine("help\n");
+        string line;
+        
         do {            
             ICodeModule *iCode = cx->getICode();
             InstructionIterator pc = cx->getPC();
@@ -192,16 +200,16 @@ registers, or set the value of a single register."},
             printFormat (stdOut, "%04X", (pc - iCode->its_iCode->begin()));
             stdOut << "]> ";
         
-            getline(cin, line);
+            std::getline(mIn, line);
             if (line.size() == 0)
                 line = lastLine;
             else
             {
-                line.append(widenCString("\n"));
+                line.append("\n");
                 lastLine = line;
             }
 
-        } while (doCommand(cx, line));
+        } while (doCommand(cx, widen(line)));
     }
 
 
