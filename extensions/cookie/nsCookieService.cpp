@@ -57,7 +57,8 @@ public:
   nsresult Init();
   
 protected:
-    
+  PRBool   mInitted;
+  
 private:
   nsCOMPtr<nsIHTTPNotify> mCookieHTTPNotify;
 };
@@ -67,15 +68,26 @@ private:
 
 NS_IMPL_ISUPPORTS1(nsCookieService, nsICookieService);
 
-nsCookieService::nsCookieService() {
+nsCookieService::nsCookieService()
+: mInitted(PR_FALSE)
+{
   NS_INIT_REFCNT();
-  Init();
 }
 
-nsCookieService::~nsCookieService(void) {
+nsCookieService::~nsCookieService(void)
+{
 }
 
-nsresult nsCookieService::Init() {
+nsresult nsCookieService::Init()
+{
+  // make sure we're not initted twice, because this has the serious
+  // consequence of reading the cookies file twice
+  if (mInitted)
+  {
+    NS_ASSERTION(0, "Baking the cookies twice. Doesn't that make them biscuits?");
+    return NS_ERROR_ALREADY_INITIALIZED;
+  }
+    
   nsresult rv;
   NS_WITH_SERVICE(nsIEventQueueService, eventQService, kEventQueueServiceCID, &rv); 
   if (NS_FAILED(rv)) return rv;
@@ -87,7 +99,8 @@ nsresult nsCookieService::Init() {
   }
 
   COOKIE_RegisterCookiePrefCallbacks();
-  COOKIE_ReadCookies();     
+  COOKIE_ReadCookies();
+  mInitted = PR_TRUE;
   return rv;
 }
 
