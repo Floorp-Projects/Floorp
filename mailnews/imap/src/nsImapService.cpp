@@ -534,35 +534,6 @@ NS_IMETHODIMP nsImapService::DisplayMessage(const char* aMessageURI,
 
       rv = FetchMessage(imapUrl, nsIImapUrl::nsImapMsgFetch, folder, imapMessageSink,
                         aMsgWindow, aURL, aDisplayConsumer, msgKey, PR_TRUE);
-      if (NS_SUCCEEDED(rv))
-      {
-        imapUrl->GetMsgLoadingFromCache(&msgLoadingFromCache);
-        // we're reading this msg from the cache - mark it read on the server.
-        if (msgLoadingFromCache)
-        {
-          nsCOMPtr <nsIMsgDatabase> database;
-          if (NS_SUCCEEDED(folder->GetMsgDatabase(nsnull, getter_AddRefs(database))) && database)
-          {
-            PRBool msgRead = PR_TRUE;
-            database->IsRead(key, &msgRead);
-            if (!msgRead)
-            {
-              nsCOMPtr<nsISupportsArray> messages;
-              rv = NS_NewISupportsArray(getter_AddRefs(messages));
-              if (NS_FAILED(rv)) 
-                return rv;
-              nsCOMPtr<nsIMsgDBHdr> message;
-              GetMsgDBHdrFromURI(aMessageURI, getter_AddRefs(message));
-              nsCOMPtr<nsISupports> msgSupport(do_QueryInterface(message, &rv));
-              if (msgSupport)
-              {
-                messages->AppendElement(msgSupport);
-                folder->MarkMessagesRead(messages, PR_TRUE);
-              }
-            }
-          }
-        }
-      }
     }
 	}
 	return rv;

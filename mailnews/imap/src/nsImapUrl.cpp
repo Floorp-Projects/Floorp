@@ -1210,7 +1210,48 @@ NS_IMETHODIMP nsImapUrl::GetUri(char** aURI)
 
 NS_IMPL_GETSET(nsImapUrl, AddDummyEnvelope, PRBool, m_addDummyEnvelope);
 NS_IMPL_GETSET(nsImapUrl, CanonicalLineEnding, PRBool, m_canonicalLineEnding);
-NS_IMPL_GETSET(nsImapUrl, MsgLoadingFromCache, PRBool, m_msgLoadingFromCache);
+NS_IMPL_GETTER(nsImapUrl::GetMsgLoadingFromCache, PRBool, m_msgLoadingFromCache);
+
+NS_IMETHODIMP nsImapUrl::SetMsgLoadingFromCache(PRBool loadingFromCache)
+{
+  nsresult rv = NS_OK;
+  m_msgLoadingFromCache = loadingFromCache;
+  if (loadingFromCache)
+  {
+    nsCOMPtr<nsIMsgFolder> folder;
+	  nsMsgKey key;
+
+     nsresult rv = NS_OK;
+    nsCAutoString folderURI;
+    rv = nsParseImapMessageURI(mURI, folderURI, &key, nsnull);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = GetMsgFolder(getter_AddRefs(folder));
+
+    nsCOMPtr <nsIMsgDatabase> database;
+    if (folder && NS_SUCCEEDED(folder->GetMsgDatabase(nsnull, getter_AddRefs(database))) && database)
+    {
+      PRBool msgRead = PR_TRUE;
+      database->IsRead(key, &msgRead);
+      if (!msgRead)
+      {
+        nsCOMPtr<nsISupportsArray> messages;
+        rv = NS_NewISupportsArray(getter_AddRefs(messages));
+        if (NS_FAILED(rv)) 
+          return rv;
+        nsCOMPtr<nsIMsgDBHdr> message;
+        GetMsgDBHdrFromURI(mURI, getter_AddRefs(message));
+        nsCOMPtr<nsISupports> msgSupport(do_QueryInterface(message, &rv));
+        if (msgSupport)
+        {
+          messages->AppendElement(msgSupport);
+          folder->MarkMessagesRead(messages, PR_TRUE);
+        }
+      }
+    }
+  }
+  return rv;
+}
 
 NS_IMETHODIMP nsImapUrl::SetMessageFile(nsIFileSpec * aFileSpec)
 {
