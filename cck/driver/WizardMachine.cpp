@@ -147,6 +147,13 @@ BOOL CWizardMachineApp::InitInstance()
 		fprintf(out, "----------------** TERMINATED - Invalid INI file name **---------------\n");
 		exit(1);
 	}
+
+	for (i=iniFile.GetLength() -1; i >= 0 && iniFile[i] != '\\'; i--)
+	{
+		if (iniFile.GetAt(i) == '/' ) {
+			iniFile.SetAt(i,(TCHAR)'\\');
+		}
+	}
 	
 	char tmpStr[MAX_SIZE] = {'\0'};
 	if (strstr(iniFile,"iniFiles")) {
@@ -1082,7 +1089,7 @@ CString CWizardMachineApp::GetModulePath()
 
 	// get the cmd path
 	// Remove the filename from the path 
-	for (i=numBytes-1;i >= 0 && currPath[i] != '\\';i--); 
+	for (i=numBytes-1;i >= 0 && currPath[i] != '\\';i--);
 	// Terminate command line with 0 
 	if (i >= 0) 
 		currPath[i+1]= '\0';
