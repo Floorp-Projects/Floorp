@@ -86,6 +86,8 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIDocShell.h"
+#include "nsNetCID.h"
+#include "nsIIOService.h"
 
 // according to RFC 2849
 // SEP = (CR LF / LF)
@@ -2065,10 +2067,36 @@ NS_IMETHODIMP nsAddressBook::HandleContent(const char * aContentType,
         rv = NS_OK;
     }
   } 
-  else {
-    // The content-type was not x-application-addvcard...
-    return NS_ERROR_WONT_HANDLE_CONTENT;
+  else if (nsCRT::strcasecmp(aContentType, "text/x-vcard") == 0) {
+    // create a vcard stream listener that can parse the data stream
+    // and bring up the appropriate UI
+
+    // (1) cancel the current load operation. We'll restart it
+    request->Cancel(NS_ERROR_ABORT); 
+    // get the url we were trying to open
+    nsCOMPtr<nsIURI> uri;
+    nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
+    NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
+
+    rv = channel->GetURI(getter_AddRefs(uri));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // create a stream listener to handle the v-card data
+    nsCOMPtr<nsIStreamListener> strListener = do_CreateInstance(NS_MSGVCARDSTREAMLISTENER_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_WONT_HANDLE_CONTENT); // no registered v-card handler so just return that we won't handle the content
+
+    // create a new channel and run the url again
+    nsCOMPtr<nsIIOService> netService(do_GetService(NS_IOSERVICE_CONTRACTID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = netService->NewChannelFromURI(uri, getter_AddRefs(channel));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = channel->AsyncOpen(strListener, aWindowContext);
+
   }
+  else // The content-type was not x-application-addvcard...
+    return NS_ERROR_WONT_HANDLE_CONTENT;
 
   return rv;
 }
