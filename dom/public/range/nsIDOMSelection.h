@@ -72,6 +72,8 @@ public:
   NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove)=0;
 
   NS_IMETHOD    GetEnumerator(nsIEnumerator** aReturn)=0;
+
+  NS_IMETHOD    ToString(nsString& aReturn)=0;
 };
 
 
@@ -94,6 +96,7 @@ public:
   NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener);  \
   NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove);  \
   NS_IMETHOD    GetEnumerator(nsIEnumerator** aReturn);  \
+  NS_IMETHOD    ToString(nsString& aReturn);  \
 
 
 
@@ -116,6 +119,7 @@ public:
   NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener) { return _to AddSelectionListener(aNewListener); }  \
   NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove) { return _to RemoveSelectionListener(aListenerToRemove); }  \
   NS_IMETHOD    GetEnumerator(nsIEnumerator** aReturn) { return _to GetEnumerator(aReturn); }  \
+  NS_IMETHOD    ToString(nsString& aReturn) { return _to ToString(aReturn); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitSelectionClass(nsIScriptContext *aContext, void **aPrototype);

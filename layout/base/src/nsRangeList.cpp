@@ -109,6 +109,8 @@ public:
   NS_IMETHOD    AddSelectionListener(nsIDOMSelectionListener* aNewListener);
   NS_IMETHOD    RemoveSelectionListener(nsIDOMSelectionListener* aListenerToRemove);
   NS_IMETHOD    GetEnumerator(nsIEnumerator **aIterator);
+
+  NS_IMETHOD    ToString(nsString& aReturn);
 /*END nsIDOMSelection interface implementations*/
 
 /*BEGIN nsIScriptObjectOwner interface implementations*/
@@ -842,23 +844,22 @@ nsRangeList::HandleKeyEvent(nsGUIEvent *aGuiEvent)
   return result;
 }
 
-
-
-#ifdef DEBUG
-void nsRangeList::printSelection()
+NS_IMETHODIMP
+nsDOMSelection::ToString(nsString& aReturn)
 {
   PRInt32 cnt;
-  (void)mDomSelections[SELECTION_NORMAL]->GetRangeCount(&cnt);
-  printf("nsRangeList 0x%lx: %d items\n", (unsigned long)this,
-         mDomSelections[0] ? (int)cnt : -99);
+  GetRangeCount(&cnt);
+  aReturn = "nsRangeList: ";
+  aReturn += cnt;
+  aReturn += " items\n";
 
   // Get an iterator
-  nsRangeListIterator iter(mDomSelections[0]);
+  nsRangeListIterator iter(this);
   nsresult res = iter.First();
   if (!NS_SUCCEEDED(res))
   {
-    printf(" Can't get an iterator\n");
-    return;
+    aReturn += " Can't get an iterator\n";
+    return NS_ERROR_FAILURE;
   }
 
   while (iter.IsDone())
@@ -867,21 +868,27 @@ void nsRangeList::printSelection()
     res = iter.CurrentItem(getter_AddRefs(range));
     if (!NS_SUCCEEDED(res))
     {
-      printf(" OOPS\n");
-      return;
+      aReturn += " OOPS\n";
+      return NS_ERROR_FAILURE;
     }
-    printRange(range);
+    nsString rangeStr;
+    if (NS_SUCCEEDED(range->ToString(rangeStr)))
+      aReturn += rangeStr;
     iter.Next();
   }
 
-  printf("Anchor is 0x%lx, %d\n",
-         (unsigned long)(nsIDOMNode*)mDomSelections[SELECTION_NORMAL]->FetchAnchorNode(), mDomSelections[SELECTION_NORMAL]->FetchAnchorOffset());
-  printf("Focus is 0x%lx, %d\n",
-         (unsigned long)(nsIDOMNode*)mDomSelections[SELECTION_NORMAL]->FetchFocusNode(), mDomSelections[SELECTION_NORMAL]->FetchFocusOffset());
-  printf(" ... end of selection\n");
-}
-#endif /* DEBUG */
+  aReturn += "Anchor is ";
+  aReturn += (unsigned long)(nsIDOMNode*)FetchAnchorNode();
+  aReturn += ", ";
+  aReturn += FetchAnchorOffset();
+  aReturn += "Focus is";
+  aReturn.Append((unsigned long)(nsIDOMNode*)FetchFocusNode(), 16);
+  aReturn += ", ";
+  aReturn += FetchFocusOffset();
+  aReturn += "\n ... end of selection\n";
 
+  return NS_OK;
+}
 
 
 NS_IMETHODIMP
@@ -2405,7 +2412,6 @@ nsDOMSelection::FixupSelectionPoints(nsIDOMRange *aRange , nsDirection *aDir, PR
   nsCOMPtr<nsIDOMNode> tempNode2;
   PRBool cellMode = PR_FALSE;
   PRBool dirtystart = PR_FALSE;
-  PRBool dirtyend = PR_FALSE;
   nsCOMPtr<nsIAtom> atom;
   if (parent != startNode)
   {
