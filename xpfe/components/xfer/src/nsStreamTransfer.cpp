@@ -239,10 +239,10 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResu
             nsCID cid = NS_STRINGBUNDLESERVICE_CID;
             NS_WITH_SERVICE( nsIStringBundleService, bundleService, cid, &rv );
             if ( NS_SUCCEEDED( rv ) ) {
-                nsIStringBundle *bundle;
+                nsCOMPtr<nsIStringBundle> bundle;
                 PRUnichar *pString;
                 rv = bundleService->CreateBundle( "chrome://global/locale/downloadProgress.properties",
-                                                  getter_AddRefs( &bundle ) );
+                                                  getter_AddRefs(bundle) );
                 if ( NS_SUCCEEDED( rv ) ) {
                     rv = bundle->GetStringFromName( NS_ConvertASCIItoUCS2( "FilePickerTitle" ).GetUnicode(),
                                                     &pString );
@@ -267,7 +267,7 @@ nsStreamTransfer::SelectFile( nsIDOMWindowInternal *parent, nsILocalFile **aResu
 
             if ( rc != nsIFilePicker::returnCancel ) {
                 // Give result to caller.
-                rv = picker->GetFile( getter_AddRefs( aResult ) );
+                rv = picker->GetFile( aResult );
 
                 if ( NS_SUCCEEDED( rv ) && prefs ) {
                     // Save selected directory for next time.
