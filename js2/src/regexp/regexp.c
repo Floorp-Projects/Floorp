@@ -127,7 +127,7 @@ typedef struct RENode {
     REuint32 parenIndex;
 
         
-    REuint32 index;               /* runtime-data */
+    REint32 index;               /* runtime-data */
     REint32 count;
     
     union {
@@ -1330,12 +1330,14 @@ lexHex:
                 */
                 if (rangeStart < minch) minch = rangeStart;
                 if (thisCh < minch) minch = thisCh;
-                if (canonicalize(rangeStart) < minch) minch = canonicalize(rangeStart);
+                if (canonicalize(rangeStart) < minch) 
+                                            minch = canonicalize(rangeStart);
                 if (canonicalize(thisCh) < minch) minch = canonicalize(thisCh);
 
                 if (rangeStart > maxch) maxch = rangeStart;
                 if (thisCh > maxch) maxch = thisCh;
-                if (canonicalize(rangeStart) > maxch) maxch = canonicalize(rangeStart);
+                if (canonicalize(rangeStart) > maxch) 
+                                            maxch = canonicalize(rangeStart);
                 if (canonicalize(thisCh) > maxch) maxch = canonicalize(thisCh);
                 addCharacterRangeToCharSet(charSet, minch, maxch);
             }
@@ -1522,6 +1524,25 @@ static REState *executeRENode(RENode *t, REGlobalData *globalData, REState *x)
     REint32 k;
 
     currentContinuation.node = NULL;
+
+    /*
+     *   Simple anchoring optimization -
+     */
+    if (op == REOP_FLAT) {
+        REchar matchCh = t->data.flat.ch;
+        REbool foundAnchor = false;
+        if (t->child)
+            matchCh = *((REchar *)t->child);
+        for (k = x->endIndex; k < x->length; k++) {
+            if (globalData->input[k] == matchCh) {
+                x->length = k;
+                foundAnchor = true;
+                break;
+            }
+        }
+        if (!foundAnchor)
+            return NULL;
+    }
 
     while (true) {      /* loop over next links & current continuation */
         switch (op) {
@@ -1890,11 +1911,11 @@ static REState *executeRENode(RENode *t, REGlobalData *globalData, REState *x)
 * and NULL is returned. Otherwise the regexp is compiled and the completed 
 * ParseState returned.
 */
-REParseState *REParse(const REchar *source, REuint32 sourceLength, 
-                      const REchar *flags, REuint32 flagsLength, 
+REParseState *REParse(const REchar *source, REint32 sourceLength, 
+                      const REchar *flags, REint32 flagsLength, 
                       REbool oldSyntax)
 {
-    REuint32 i;
+    REint32 i;
     RENode *t;
     REParseState *pState = (REParseState *)malloc(sizeof(REParseState));
     pState->src = source;
@@ -1938,15 +1959,19 @@ REParseState *REParse(const REchar *source, REuint32 sourceLength,
     }
 }
 
-static REbool initStacks(REGlobalData *gData)
+static REState *initMatch(REGlobalData *gData, REParseState *parseState,
+                            const REchar *text, REint32 length)
 {
+    REState *result;
+    REint32 j;
+
     if (!backTrackStack) {
         maxBackTrack = INITIAL_BACKTRACK;
         backTrackStack = (REBackTrackData *)malloc(sizeof(REBackTrackData) 
                                                             * maxBackTrack);
         if (!backTrackStack) {
             reportRegExpError(&gData->error, OUT_OF_MEMORY);
-            return false;
+            return NULL;
         }
     }
     if (!nodeStateStack) {
@@ -1955,12 +1980,30 @@ static REbool initStacks(REGlobalData *gData)
                                                          * maxNodeStateStack);
         if (!nodeStateStack) {
             reportRegExpError(&gData->error, OUT_OF_MEMORY);
-            return false;
+            return NULL;
         }
     }
+
+    result = (REState *)malloc(sizeof(REState) 
+                        + (parseState->parenCount * sizeof(RECapture)));
+    if (!result) {
+        reportRegExpError(&gData->error, OUT_OF_MEMORY);
+        return NULL;
+    }
+
+    result->n = parseState->parenCount;
+    for (j = 0; j < result->n; j++)
+        result->parens[j].index = -1;
+    result->endIndex = 0;
+    
+    gData->flags = parseState->flags;
+    gData->input = text;
+    gData->length = length;
+    gData->error = NO_ERROR;
+    
     backTrackStackTop = 0;
     nodeStateStackTop = 0;
-    return true;
+    return result;
 }
 
 /*
@@ -1973,28 +2016,9 @@ REState *REMatch(REParseState *parseState, const REchar *text,
     REint32 j;
     REGlobalData gData;
     REState *result;
-    REState *x = (REState *)malloc(sizeof(REState) 
-                        + (parseState->parenCount * sizeof(RECapture)));
-
-    if (!x) {
-        reportRegExpError(&gData.error, OUT_OF_MEMORY);
+    REState *x = initMatch(&gData, parseState, text, length);
+    if (!x)
         return NULL;
-    }
-
-    gData.flags = parseState->flags;
-    gData.input = text;
-    gData.length = length;
-    gData.error = NO_ERROR;
-    
-    x->n = parseState->parenCount;
-    for (j = 0; j < x->n; j++)
-        x->parens[j].index = -1;
-    x->endIndex = 0;
-
-    if (!initStacks(&gData)) {
-        free(x);
-        return NULL;
-    }
 
     result = executeRENode(parseState->result, &gData, x);
     for (j = 0; j < backTrackStackTop; j++)
@@ -2016,73 +2040,40 @@ REState *REExecute(REParseState *parseState, const REchar *text,
     REint32 i;
     REint32 j;
     
-    REState *x = (REState *)malloc(sizeof(REState) 
-                        + (parseState->parenCount * sizeof(RECapture)));
-    if (!x) {
-        reportRegExpError(&gData.error, OUT_OF_MEMORY);
+    REState *x = initMatch(&gData, parseState, text, length);
+    if (!x)
         return NULL;
-    }
 
-    x->n = parseState->parenCount;
-    for (j = 0; j < x->n; j++)
-        x->parens[j].index = -1;
-
-    if (parseState->flags & GLOBAL)
+    if (parseState->flags & GLOBAL) {
         i = parseState->lastIndex;
-    else
-        i = 0;
-
-    if ((i < 0) || (i > (REint32)length)) {
-        parseState->lastIndex = 0;
-        free(x);
-        return NULL;
-    }
-        
-    gData.flags = parseState->flags;
-    gData.input = text;
-    gData.length = length;
-    gData.error = NO_ERROR;
-
-    if (!initStacks(&gData)) {
-        free(x);
-        return NULL;
-    }
-
-    /*
-        Simple anchoring optimization -
-    */
-    if (parseState->result->kind == REOP_FLAT) {
-        REchar matchCh = parseState->result->data.flat.ch;
-        if (parseState->result->child)
-            matchCh = *((REchar *)parseState->result->child);
-        for (j = i; j < length; j++) {
-            if (text[j] == matchCh) {
-                i = (REint32)j;
-                break;
-            }
-        }
-        if (j == length) {
+        if ((i < 0) || (i > (REint32)length)) {
             parseState->lastIndex = 0;
             free(x);
             return NULL;
         }
     }
+    else
+        i = 0;
+
+    if (!initMatch(&gData, parseState, text, length)) {
+        free(x);
+        return NULL;
+    }
 
     while (true) {
         x->endIndex = (REuint32)i;
-        backTrackStackTop = 0;
-        nodeStateStackTop = 0;
         result = executeRENode(parseState->result, &gData, x);
         for (j = 0; j < backTrackStackTop; j++)
             free(backTrackStack[j].state);
+        backTrackStackTop = 0;
+        nodeStateStackTop = 0;
         if (gData.error != NO_ERROR) return NULL;
         if (result == NULL) {
             i++;
-            if (i > (REint32)length) {
+            if (i > length) {
                 parseState->lastIndex = 0;
-                result = NULL;
                 free(x);
-                break;
+                return NULL;
             }
         }
         else {
