@@ -64,13 +64,22 @@ public:
 
   PRInt32 GetCurrentFrameNum() const { return mFrameNum; }
 
-  nscoord GetInnerBottomMargin() const { return mInnerBottomMargin; }
-
-  nscoord GetBottomMargin() const { return mBottomMargin; }
-
   PRBool GetIsBlock() const { return mIsBlock; }
 
   const nsSize& GetMaxElementSize() const { return mMaxElementSize; }
+
+  nscoord GetCarriedOutTopMargin() const { return mCarriedOutTopMargin; }
+
+  nscoord GetCarriedOutBottomMargin() const { return mCarriedOutBottomMargin; }
+
+  nscoord GetTopMargin() const { return mMargin.top; }
+
+  nscoord GetBottomMargin() const { return mMargin.bottom; }
+
+  static void CalculateBlockMarginsFor(nsIPresContext& aPresContext,
+                                       nsIFrame* aFrame,
+                                       const nsStyleSpacing* aSpacing,
+                                       nsMargin& aMargin);
 
 protected:
   void SetFrame(nsIFrame* aFrame);
@@ -147,18 +156,9 @@ protected:
   // The frame's computed margin values (includes auto value
   // computation)
   nsMargin mMargin;
-
-  // The computed delta top margin that has been applied for the
-  // frame.  This is the collapsed margin value.
-  nscoord mDeltaTopMargin;
-
-  // The sum ofthe previous top margin plus additional margin
-  // contributed by the frame being reflowed.
-  nscoord mTotalTopMargin;
-
-  nscoord mRightMargin;/* XXX why? */
-  nscoord mInnerBottomMargin;
-  nscoord mBottomMargin;
+  nscoord mRightMargin;/* XXX */
+  nscoord mCarriedOutTopMargin;
+  nscoord mCarriedOutBottomMargin;
 
   // The computed available size and location for the frame
   nscoord mFrameX, mFrameY;

@@ -80,6 +80,13 @@ public:
 
   virtual PRIntn GetSkipSides() const;
 
+  PRBool CalculateMargins(nsInlineReflowState& aState,
+                          nsInlineReflow& aInlineReflow,
+                          nscoord& aTopMarginResult,
+                          nscoord& aBottomMarginResult);
+
+  void SlideFrames(nsIFrame* aKid, nscoord aDY);
+
   nsresult InitialReflow(nsInlineReflowState& aState,
                          nsInlineReflow& aInlineReflow);
 
@@ -313,7 +320,6 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
                             nsHTMLReflowMetrics& aMetrics,
                             const nsHTMLReflowState& aReflowState)
 {
-//XXX ListTag(stdout); printf(": enter (runningMargin=%d)\n", aMetrics.mCarriedInTopMargin);
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
     ("enter nsInlineFrame::InlineReflow maxSize=%d,%d reason=%d nif=%p",
      aReflowState.maxSize.width, aReflowState.maxSize.height,
@@ -349,6 +355,7 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
   inlineReflow.Init(state.mBorderPadding.left, state.mBorderPadding.top,
                     width, height);
 
+// ListTag(stdout); printf(": enter isMarginRoot=%c\n", state.mIsMarginRoot?'T':'F');
   // Now translate in by our border and padding
   aLineLayout.mSpaceManager->Translate(state.mBorderPadding.left,
                                        state.mBorderPadding.top);
@@ -413,6 +420,7 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
     rv = ResizeReflow(state, inlineReflow);
   }
   ComputeFinalSize(state, inlineReflow, aMetrics);
+// ListTag(stdout); printf(": exit carriedMargins=%d,%d\n", aMetrics.mCarriedOutTopMargin, aMetrics.mCarriedOutBottomMargin);
 
   // Now translate in by our border and padding
   aLineLayout.mSpaceManager->Translate(-state.mBorderPadding.left,
@@ -421,12 +429,64 @@ nsInlineFrame::InlineReflow(nsLineLayout&        aLineLayout,
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("exit nsInlineFrame::InlineReflow size=%d,%d rv=%x nif=%p",
       aMetrics.width, aMetrics.height, rv, mNextInFlow));
-//XXX ListTag(stdout); printf(": exit (runningMargin=%d)\n", aMetrics.mCarriedOutBottomMargin);
   return rv;
 }
 
 // XXX factor this (into nsFrameReflowState?) so that both block and
 // inline can use most of the same logic
+
+PRBool
+nsInlineFrame::CalculateMargins(nsInlineReflowState& aState,
+                                nsInlineReflow& aInlineReflow,
+                                nscoord& aTopMarginResult,
+                                nscoord& aBottomMarginResult)
+{
+  PRBool haveCarriedMargins = PR_FALSE;
+
+  nscoord childsCarriedOutTopMargin = aInlineReflow.GetCarriedOutTopMargin();
+  nscoord childsCarriedOutBottomMargin = aInlineReflow.GetCarriedOutBottomMargin();
+
+  // If the inline-reflow is wrapped up around a block or we have some
+  // carried out margin information then we perform margin collapsing
+  // (pretending we are a block...)
+  if (aInlineReflow.GetIsBlock() ||
+      (0 != childsCarriedOutTopMargin) ||
+      (0 != childsCarriedOutBottomMargin)) {
+    // Compute the collapsed top margin value from the childs margin and
+    // its carried out top margin.
+    nscoord childsTopMargin = aInlineReflow.GetTopMargin();
+    nscoord collapsedTopMargin =
+      PR_MAX(childsCarriedOutTopMargin, childsTopMargin);
+
+    // If this frame is a root for margins then we will apply the
+    // collapsed top margin value ourselves. Otherwise, we pass it out
+    // to our parent to apply.
+    if (!aState.mIsMarginRoot) {
+      // We are not a root for margin collapsing and this is our first
+      // non-empty-line (with a block child presumably). Keep the
+      // collapsed margin value around to pass out to our parent. We
+      // don't apply the margin (our parent will) so zero it out.
+      aState.mCollapsedTopMargin = collapsedTopMargin;
+      collapsedTopMargin = 0;
+    }
+    aTopMarginResult = collapsedTopMargin;
+
+    // Compute the collapsed bottom margin value. This collapsed value
+    // will end up in aState.mPrevBottomMargin if the child frame ends
+    // up being placed in this block frame.
+    nscoord childsBottomMargin = aInlineReflow.GetBottomMargin();
+    nscoord collapsedBottomMargin =
+      PR_MAX(childsCarriedOutBottomMargin, childsBottomMargin);
+    aBottomMarginResult = collapsedBottomMargin;
+    haveCarriedMargins = PR_TRUE;
+  }
+  else {
+    aTopMarginResult = 0;
+    aBottomMarginResult = 0;
+    haveCarriedMargins = PR_FALSE;
+  }
+  return haveCarriedMargins;
+}
 
 void
 nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
@@ -457,7 +517,6 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
     aMetrics.ascent = 0;
     aMetrics.descent = 0;
     aMetrics.height = 0;
-    aMetrics.mCarriedOutBottomMargin = 0;
   }
   else {
 // XXX tip of the iceburg: when an inline is wrapping up a block frame
@@ -465,17 +524,12 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
 // coordinate system; apply horizontal alignment (in case the block
 // has a width set), etc. Of course the block code knows how to do
 // this already...
-//XXXprintf("bounds={%d,%d,%d,%d}\n", 
-//XXX       bounds.x, bounds.y, bounds.width, bounds.height);
     if (aInlineReflow.GetIsBlock()) {
       // Make sure the blocks top and bottom margins get applied; the
       // top margin will be in bounds.y; the bottom margin we get from
       // the inline reflow.
-      nscoord bottomMargin = aInlineReflow.GetBottomMargin();
-      nscoord newY = aState.mBorderPadding.top + bounds.YMost()
-        + bottomMargin + aState.mBorderPadding.bottom;
-//XXXprintf("newY=%d bounds={%d,%d,%d,%d} bottomMargin=%d\n", newY,
-//XXX       bounds.x, bounds.y, bounds.width, bounds.height, bottomMargin);
+      nscoord newY = aState.mBorderPadding.top + bounds.YMost() +
+        aState.mBorderPadding.bottom;
       aMetrics.height = newY;
       aMetrics.ascent = newY;
       aMetrics.descent = 0;
@@ -487,16 +541,16 @@ nsInlineFrame::ComputeFinalSize(nsInlineReflowState& aState,
         aState.mBorderPadding.bottom;
       aMetrics.height = aMetrics.ascent + aMetrics.descent;
     }
+  }
 
-    // Carry out to the caller the running bottom margin value
-    if (0 != aState.mBorderPadding.bottom) {
-      // Don't carry out a child margin when we have a border
-      aMetrics.mCarriedOutBottomMargin = 0;
-    }
-    else {
-      // Carry out our the total child bottom margin value
-      aMetrics.mCarriedOutBottomMargin = aState.mRunningMargin;
-    }
+  // Return top and bottom margin information
+  if (aState.mIsMarginRoot) {
+    aMetrics.mCarriedOutTopMargin = 0;
+    aMetrics.mCarriedOutBottomMargin = 0;
+  }
+  else {
+    aMetrics.mCarriedOutTopMargin = aState.mCollapsedTopMargin;
+    aMetrics.mCarriedOutBottomMargin = aState.mPrevBottomMargin;
   }
 
   if (aState.mComputeMaxElementSize) {
@@ -680,6 +734,18 @@ nsInlineFrame::PullUpChildren(nsInlineReflowState& aState,
   return reflowStatus;
 }
 
+void
+nsInlineFrame::SlideFrames(nsIFrame* aKid, nscoord aDY)
+{
+  while (nsnull != aKid) {
+    nsRect r;
+    aKid->GetRect(r);
+    r.y += aDY;
+    aKid->SetRect(r);
+    aKid->GetNextSibling(aKid);
+  }
+}
+
 PRBool
 nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
                            nsInlineReflow& aInlineReflow,
@@ -720,7 +786,20 @@ nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
     }
     return PR_FALSE;
   }
-  else if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus)) {
+
+  // Apply collapsing block margins. However, we only do this if a
+  // carried out margin was present.
+  nscoord topMargin, bottomMargin;
+  if (CalculateMargins(aState, aInlineReflow, topMargin, bottomMargin)) {
+    if (0 != topMargin) {
+      SlideFrames(mFirstChild, topMargin);
+    }
+    // Record bottom margin value for returning as our carried out
+    // bottom margin.
+    aState.mPrevBottomMargin = bottomMargin;
+  }
+
+  if (NS_FRAME_IS_NOT_COMPLETE(aReflowStatus)) {
     // We may be breaking after a frame here (e.g. a child inline
     // frame that contains a BR tag and more content after the BR
     // tag). We will propagate that upward so that this frame gets
@@ -748,7 +827,8 @@ nsInlineFrame::ReflowFrame(nsInlineReflowState& aState,
     }
     return PR_FALSE;
   }
-  else if (NS_INLINE_IS_BREAK_AFTER(aReflowStatus)) {
+
+  if (NS_INLINE_IS_BREAK_AFTER(aReflowStatus)) {
     // If we are breaking after a child that's complete, we may still
     // be incomplete if we have more children that need
     // reflowing. Check for this after advancing to the next frame.

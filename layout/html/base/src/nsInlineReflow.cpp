@@ -74,6 +74,8 @@ nsInlineReflow::Init(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
   else {
     mBottomEdge = aY + aHeight;
   }
+  mCarriedOutTopMargin = 0;
+  mCarriedOutBottomMargin = 0;
 
   mIsBlock = PR_FALSE;
   mIsFirstChild = PR_FALSE;
@@ -192,8 +194,8 @@ nsInlineReflow::ReflowFrame(nsIFrame* aFrame)
   nsReflowStatus result;
   nsSize innerMaxElementSize;
   nsHTMLReflowMetrics metrics(mComputeMaxElementSize
-                          ? &innerMaxElementSize
-                          : nsnull);
+                              ? &innerMaxElementSize
+                              : nsnull);
 
   // Prepare for reflowing the frame
   SetFrame(aFrame);
@@ -239,31 +241,49 @@ void
 nsInlineReflow::CalculateMargins()
 {
   const nsStyleSpacing* spacing = GetSpacing();
-
-  // Get the margins from the style system
-  spacing->CalcMarginFor(mFrame, mMargin);
-
   if (mTreatFrameAsBlock) {
-    // Get font height if we will be doing an auto margin. We use the
-    // default font height for the auto margin value.
-    nsStyleUnit topUnit = spacing->mMargin.GetTopUnit();
-    nsStyleUnit bottomUnit = spacing->mMargin.GetBottomUnit();
-    nscoord fontHeight = 0;
-    if ((eStyleUnit_Auto == topUnit) || (eStyleUnit_Auto == bottomUnit)) {
-      const nsFont& defaultFont = mPresContext.GetDefaultFont();
-      nsIFontMetrics* fm = mPresContext.GetMetricsFor(defaultFont);
-      fm->GetHeight(fontHeight);
-      NS_RELEASE(fm);
-    }
-
-    // For auto margins use the font height computed above
-    if (eStyleUnit_Auto == topUnit) {
-      mMargin.top = fontHeight;
-    }
-    if (eStyleUnit_Auto == bottomUnit) {
-      mMargin.bottom = fontHeight;
-    }
+    CalculateBlockMarginsFor(mPresContext, mFrame, spacing, mMargin);
   }
+  else {
+    // Get the margins from the style system
+    spacing->CalcMarginFor(mFrame, mMargin);
+  }
+}
+
+void
+nsInlineReflow::CalculateBlockMarginsFor(nsIPresContext& aPresContext,
+                                         nsIFrame* aFrame,
+                                         const nsStyleSpacing* aSpacing,
+                                         nsMargin& aMargin)
+{
+  aSpacing->CalcMarginFor(aFrame, aMargin);
+
+  // Get font height if we will be doing an auto margin. We use the
+  // default font height for the auto margin value.
+  nsStyleUnit topUnit = aSpacing->mMargin.GetTopUnit();
+  nsStyleUnit bottomUnit = aSpacing->mMargin.GetBottomUnit();
+  nscoord fontHeight = 0;
+  if ((eStyleUnit_Auto == topUnit) || (eStyleUnit_Auto == bottomUnit)) {
+    // XXX Use the font for the frame, not the default font???
+    const nsFont& defaultFont = aPresContext.GetDefaultFont();
+    nsIFontMetrics* fm = aPresContext.GetMetricsFor(defaultFont);
+    fm->GetHeight(fontHeight);
+    NS_RELEASE(fm);
+  }
+
+  // For auto margins use the font height computed above
+  if (eStyleUnit_Auto == topUnit) {
+    aMargin.top = fontHeight;
+  }
+  if (eStyleUnit_Auto == bottomUnit) {
+    aMargin.bottom = fontHeight;
+  }
+
+  // XXX Add in code to provide a zero top margin when the frame is
+  // the "first" block frame in a margin-root situation.?
+
+  // XXX Add in code to provide a zero bottom margin when the frame is
+  // the "last" block frame in a margin-root situation.?
 }
 
 void
@@ -291,26 +311,6 @@ nsInlineReflow::ApplyTopLeftMargins()
     break;
   }
   mFrameX += leftMargin;
-
-  // Apply top margin only if the child frame is to be treated as a
-  // block frame. Compute collapsed value to apply.
-  if (mTreatFrameAsBlock) {
-    // Collapse childs margin with previous running margin value
-    nscoord inTopMargin = mOuterReflowState.mRunningMargin;
-    nscoord deltaMargin = mMargin.top - inTopMargin;
-    if (deltaMargin < 0) {
-      deltaMargin = 0;
-    }
-    mDeltaTopMargin = deltaMargin;
-    mTotalTopMargin = mMargin.top + deltaMargin;
-
-    // Apply change in margin to this frame's Y coordinate
-    mFrameY += deltaMargin;
-  }
-  else {
-    mTotalTopMargin = 0;
-    mDeltaTopMargin = 0;
-  }
 }
 
 PRBool
@@ -536,6 +536,15 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
     mMaxDescent = aMetrics.descent;
   }
 
+  // Compute collapsed margin information
+  mCarriedOutTopMargin = aMetrics.mCarriedOutTopMargin;
+  mCarriedOutBottomMargin = aMetrics.mCarriedOutBottomMargin;
+#if 0
+  //XXX
+    mCarriedOutTopMargin = PR_MAX(mCarriedOutTopMargin, mMargin.top);
+    mCarriedOutBottomMargin = PR_MAX(mCarriedOutBottomMargin, mMargin.bottom);
+#endif
+
   // Advance to next X coordinate
   mX = aBounds.XMost() + mRightMargin;
 
@@ -548,20 +557,7 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
 
   // Compute the bottom margin to apply. Note that the margin only
   // applies if the frame ends up with a non-zero height.
-  mBottomMargin = 0;
-  mInnerBottomMargin = aMetrics.mCarriedOutBottomMargin;
   if (!emptyFrame) {
-    // Compute the effective amount of bottom margin by collapsing
-    // it with the inner margin returned from reflowing the frame.
-    nscoord inBottomMargin = aMetrics.mCarriedOutBottomMargin;
-    nscoord deltaMargin = mMargin.bottom - inBottomMargin;
-    if (deltaMargin < 0) {
-      deltaMargin = 0;
-    }
-    mBottomMargin = deltaMargin;/* XXX rename mBottomMargin? */
-    mInnerBottomMargin = inBottomMargin;/* XXX rename? */
-    mOuterReflowState.mRunningMargin = inBottomMargin + deltaMargin;
-
     // Inform line layout that we have placed a non-empty frame
 #ifdef NS_DEBUG
     mLineLayout.AddPlacedFrame(mFrame);
@@ -614,7 +610,7 @@ void
 nsInlineReflow::VerticalAlignFrames(nsRect& aLineBox)
 {
   nscoord x = mLeftEdge;
-  nscoord y0 = mTopEdge + mDeltaTopMargin;
+  nscoord y0 = mTopEdge;
   nscoord width = mX - mLeftEdge;
   nscoord height = mMaxAscent + mMaxDescent;
 

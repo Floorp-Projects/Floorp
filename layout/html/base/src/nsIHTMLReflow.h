@@ -32,21 +32,13 @@ class nsISpaceManager;
 struct nsHTMLReflowMetrics : nsReflowMetrics {
   // XXX Explain this better somehow!
 
-  // The caller of nsIFrame::Reflow will set these to the top margin
-  // value carried into the child frame. This allows the the child
-  // container to collapse the top margin with its first childs
-  // margin.
-  nscoord mCarriedInTopMargin;          // in
-
-  // These values are set by the child frame indicating its final
-  // inner bottom margin value (the value of the childs last child
-  // bottom margin)
-  nscoord mCarriedOutBottomMargin;      // out
+  nscoord mCarriedOutTopMargin;
+  nscoord mCarriedOutBottomMargin;
 
   nsHTMLReflowMetrics(nsSize* aMaxElementSize)
     : nsReflowMetrics(aMaxElementSize)
   {
-    mCarriedInTopMargin = 0;
+    mCarriedOutTopMargin = 0;
     mCarriedOutBottomMargin = 0;
   }
 };

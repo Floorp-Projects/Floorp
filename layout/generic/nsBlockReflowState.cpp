@@ -157,7 +157,6 @@ struct nsBlockReflowState : public nsFrameReflowState {
   PRUint8 mTextAlign;
 
   nsSize mStyleSize;
-
   PRIntn mStyleSizeFlags;
 
   nscoord mBottomEdge;          // maximum Y
@@ -279,6 +278,19 @@ public:
     mShrinkWrap = aShrinkWrap;
   }
 
+  void RecoverLineMargins(nsBlockReflowState& aState,
+                          LineData* aPrevLine,
+                          nscoord& aTopMarginResult,
+                          nscoord& aBottomMarginResult);
+
+  PRBool CalculateMargins(nsBlockReflowState& aState,
+                          LineData* aLine,
+                          PRBool aInlineContext,
+                          nscoord& aTopMarginResult,
+                          nscoord& aBottomMarginResult);
+
+  void SlideFrames(LineData* aLine, nscoord aDY);
+
   PRBool DrainOverflowLines();
 
   PRBool RemoveChild(LineData* aLines, nsIFrame* aChild);
@@ -381,6 +393,9 @@ public:
   // If true then this frame doesn't act like css says, instead it
   // shrink wraps around its contents instead of filling out to its
   // parents size.
+
+  // XXX This is a *good* place to use a subclass and not
+  // pay for the per-frame storage
   PRBool mShrinkWrap;
 };
 
@@ -872,9 +887,9 @@ struct LineData {
     mState = LINE_IS_DIRTY | LINE_NEED_DID_REFLOW | flags;
     mFloaters = nsnull;
     mNext = nsnull;
-    mInnerBottomMargin = 0;
-    mOuterBottomMargin = 0;
     mBounds.SetRect(0,0,0,0);
+    mCarriedOutTopMargin = 0;
+    mCarriedOutBottomMargin = 0;
   }
 
   ~LineData();
@@ -966,8 +981,8 @@ struct LineData {
   PRUint16 mChildCount;
   PRUint16 mState;
   nsRect mBounds;
-  nscoord mInnerBottomMargin;
-  nscoord mOuterBottomMargin;
+  nscoord mCarriedOutTopMargin;
+  nscoord mCarriedOutBottomMargin;
   nsVoidArray* mFloaters;
   LineData* mNext;
 };
@@ -1018,10 +1033,16 @@ LineData::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter,
   if (aOutputMe) {
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
     char cbuf[100];
-    fprintf(out, "line %p: count=%d state=%s {%d,%d,%d,%d} ibm=%d obm=%d <\n",
-            this, mChildCount, StateToString(cbuf, sizeof(cbuf)),
-            mBounds.x, mBounds.y, mBounds.width, mBounds.height,
-            mInnerBottomMargin, mOuterBottomMargin);
+    fprintf(out, "line %p: count=%d state=%s",
+            this, mChildCount, StateToString(cbuf, sizeof(cbuf)));
+    if (0 != mCarriedOutTopMargin) {
+      fprintf(out, " tm=%d", mCarriedOutTopMargin);
+    }
+    if (0 != mCarriedOutBottomMargin) {
+      fprintf(out, " bm=%d", mCarriedOutBottomMargin);
+    }
+    out << mBounds;
+    fprintf(out, "<\n");
   }
 
   nsIFrame* frame = mFirstChild;
@@ -1265,29 +1286,6 @@ nsBlockReflowState::BlockBandData::ComputeAvailSpaceRect()
 
 //----------------------------------------------------------------------
 
-static nscoord
-GetParentLeftPadding(const nsHTMLReflowState* aReflowState)
-{
-  nscoord leftPadding = 0;
-  while (nsnull != aReflowState) {
-    nsIFrame* frame = aReflowState->frame;
-    const nsStyleDisplay* styleDisplay;
-    frame->GetStyleData(eStyleStruct_Display,
-                        (const nsStyleStruct*&) styleDisplay);
-    if (NS_STYLE_DISPLAY_BLOCK == styleDisplay->mDisplay) {
-      const nsStyleSpacing* styleSpacing;
-      frame->GetStyleData(eStyleStruct_Spacing,
-                          (const nsStyleStruct*&) styleSpacing);
-      nsMargin padding;
-      styleSpacing->CalcPaddingFor(frame, padding);
-      leftPadding = padding.left;
-      break;
-    }
-    aReflowState = (nsHTMLReflowState*)aReflowState->parentReflowState;
-  }
-  return leftPadding;
-}
-
 nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
                                        const nsHTMLReflowState& aReflowState,
                                        const nsHTMLReflowMetrics& aMetrics)
@@ -1354,7 +1352,6 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
       mContentArea.width = maxSize.width - lr;
     }
   }
-
   mBorderArea.height = maxSize.height;
   mContentArea.height = maxSize.height;
   mBottomEdge = maxSize.height;
@@ -1706,6 +1703,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
   // Prepare inline-reflow engine
   nsInlineReflow inlineReflow(state.mLineLayout, state, this);
   state.mInlineReflow = &inlineReflow;
+// ListTag(stdout); printf(": enter isMarginRoot=%c\n", state.mIsMarginRoot?'T':'F');
 
   nsresult rv = NS_OK;
   if (eReflowReason_Initial == state.reason) {
@@ -1768,6 +1766,7 @@ nsBlockFrame::Reflow(nsIPresContext&          aPresContext,
 
   // Compute our final size
   ComputeFinalSize(state, aMetrics);
+// ListTag(stdout); printf(": exit carriedMargins=%d,%d\n", aMetrics.mCarriedOutTopMargin, aMetrics.mCarriedOutBottomMargin);
 
 #ifdef NS_DEBUG
   if (GetVerifyTreeEnable()) {
@@ -1870,14 +1869,24 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
   }
   else {
     // Shrink wrap our height around our contents.
-    if (0 != aState.mBorderPadding.bottom) {
-      aState.mY += aState.mBorderPadding.bottom;
-      aMetrics.mCarriedOutBottomMargin = 0;
+    if (aState.mIsMarginRoot) {
+      // When we are a margin root make sure that our last childs
+      // bottom margin is fully applied.
+      aState.mY += aState.mPrevBottomMargin;
     }
-    else {
-      aMetrics.mCarriedOutBottomMargin = aState.mRunningMargin;
-    }
+    aState.mY += aState.mBorderPadding.bottom;
     aMetrics.height = aState.mY;
+  }
+
+  // Return top and bottom margin information
+  if (aState.mIsMarginRoot) {
+    aMetrics.mCarriedOutTopMargin = 0;
+    aMetrics.mCarriedOutBottomMargin = 0;
+    aState.mCollapsedTopMargin = 0;
+  }
+  else {
+    aMetrics.mCarriedOutTopMargin = aState.mCollapsedTopMargin;
+    aMetrics.mCarriedOutBottomMargin = aState.mPrevBottomMargin;
   }
 
   // Special check for zero sized content: If our content is zero
@@ -1887,7 +1896,6 @@ nsBlockFrame::ComputeFinalSize(nsBlockReflowState&  aState,
        (0 == aState.mY - aState.mBorderPadding.top))) {
     aMetrics.width = 0;
     aMetrics.height = 0;
-    aMetrics.mCarriedOutBottomMargin = 0;
   }
 
   aMetrics.ascent = aMetrics.height;
@@ -2108,6 +2116,40 @@ nsBlockFrame::InitialReflow(nsBlockReflowState& aState)
   return ResizeReflow(aState);
 }
 
+void
+nsBlockFrame::RecoverLineMargins(nsBlockReflowState& aState,
+                                 LineData* aLine,
+                                 nscoord& aTopMarginResult,
+                                 nscoord& aBottomMarginResult)
+{
+  nscoord childsCarriedOutTopMargin = aLine->mCarriedOutTopMargin;
+  nscoord childsCarriedOutBottomMargin = aLine->mCarriedOutBottomMargin;
+  nscoord childsTopMargin = 0;
+  nscoord childsBottomMargin = 0;
+  if (aLine->IsBlock()) {
+    // Recover the block frames computed bottom margin value
+    nsIFrame* frame = aLine->mFirstChild;
+    if (nsnull != frame) {
+      const nsStyleSpacing* spacing;
+      frame->GetStyleData(eStyleStruct_Spacing,
+                          (const nsStyleStruct*&) spacing);
+      if (nsnull != spacing) {
+        nsMargin margin;
+        nsInlineReflow::CalculateBlockMarginsFor(aState.mPresContext, frame,
+                                                 spacing, margin);
+        childsTopMargin = margin.top;
+        childsBottomMargin = margin.bottom;
+      }
+    }
+  }
+
+  // Collapse the carried-out-margins with the childs margins
+  aBottomMarginResult =
+    PR_MAX(childsCarriedOutBottomMargin, childsBottomMargin);
+  aTopMarginResult =
+    PR_MAX(childsCarriedOutTopMargin, childsTopMargin);
+}
+
 nsresult
 nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
 {
@@ -2127,50 +2169,40 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
     return rv;
   }
 
-  // Recover our reflow state. First find the lastCleanLine and the
-  // firstDirtyLine which follows it. While we are looking, compute
-  // the maximum xmost of each line.
+  // Recover our reflow state
   LineData* firstDirtyLine = mLines;
   LineData* lastCleanLine = nsnull;
-  LineData* lastYLine = nsnull;
   while (nsnull != firstDirtyLine) {
     if (firstDirtyLine->IsDirty()) {
       break;
     }
+
+    // Recover xmost
     nscoord xmost = firstDirtyLine->mBounds.XMost();
     if (xmost > aState.mKidXMost) {
       aState.mKidXMost = xmost;
     }
-    if (firstDirtyLine->mBounds.height > 0) {
-      lastYLine = firstDirtyLine;
+
+    // Recover the mPrevBottomMargin and the mCollapsedTopMargin values
+    nscoord topMargin, bottomMargin;
+    RecoverLineMargins(aState, firstDirtyLine, topMargin, bottomMargin);
+    if (0 == firstDirtyLine->mBounds.height) {
+      // For zero height lines, collapse the lines top and bottom
+      // margins together to produce the effective bottomMargin value.
+      bottomMargin = PR_MAX(topMargin, bottomMargin);
+      bottomMargin = PR_MAX(aState.mPrevBottomMargin, bottomMargin);
     }
+    aState.mPrevBottomMargin = bottomMargin;
+
+    // Advance Y to be below the line.
+    aState.mY = firstDirtyLine->mBounds.YMost();
+
+    // Advance to the next line
     lastCleanLine = firstDirtyLine;
     firstDirtyLine = firstDirtyLine->mNext;
   }
 
-  // Recover the starting Y coordinate and the previous bottom margin
-  // value.
   if (nsnull != lastCleanLine) {
-    // If the lastCleanLine is not a block but instead is a zero
-    // height inline line then we need to backup to either a non-zero
-    // height line.
-    aState.mRunningMargin = 0;
-    if (nsnull != lastYLine) {
-      // XXX I have no idea if this is right any more!
-      aState.mRunningMargin = lastYLine->mInnerBottomMargin +
-        lastYLine->mOuterBottomMargin;
-    }
-
-    // Start the Y coordinate after the last clean line.
-    aState.mY = lastCleanLine->mBounds.YMost();
-
-    // Add in the outer margin to the Y coordinate (the inner margin
-    // will be present in the lastCleanLine's YMost so don't add it
-    // in again)
-    aState.mY += lastCleanLine->mOuterBottomMargin;
-
-    // XXX I'm not sure about the previous statement and floaters!!!
-
     // Place any floaters the line has
     if (nsnull != lastCleanLine->mFloaters) {
       aState.mCurrentLine = lastCleanLine;
@@ -2748,6 +2780,88 @@ nsBlockFrame::PrepareInlineReflow(nsBlockReflowState& aState,
 }
 
 PRBool
+nsBlockFrame::CalculateMargins(nsBlockReflowState& aState,
+                               LineData* aLine,
+                               PRBool aInlineContext,
+                               nscoord& aTopMarginResult,
+                               nscoord& aBottomMarginResult)
+{
+  PRBool haveCarriedMargins = PR_FALSE;
+  nsInlineReflow& ir = *aState.mInlineReflow;
+  PRBool isFirstNonEmptyLine = (aState.mY == aState.mBorderPadding.top);
+
+  nscoord childsCarriedOutTopMargin = ir.GetCarriedOutTopMargin();
+  nscoord childsCarriedOutBottomMargin = ir.GetCarriedOutBottomMargin();
+  if (aInlineContext &&
+      (0 == childsCarriedOutTopMargin) &&
+      (0 == childsCarriedOutBottomMargin)) {
+    // In an inline context, when there are no carried out margins we
+    // do not collapse the childs margins with the carried out
+    // margins; the childs margins are applied in a different manner
+    // in inline contexts.
+    aTopMarginResult = 0;
+    aBottomMarginResult = 0;
+  }
+  else {
+    haveCarriedMargins = PR_TRUE;
+
+    // Compute the collapsed top margin value from the childs margin and
+    // its carried out top margin.
+    nscoord childsTopMargin = aInlineContext ? 0 : ir.GetTopMargin();
+    nscoord collapsedTopMargin =
+      PR_MAX(childsCarriedOutTopMargin, childsTopMargin);
+    if (isFirstNonEmptyLine) {
+      // If this block is a root for margins then we will apply the
+      // collapsed top margin value ourselves. Otherwise, we pass it out
+      // to our parent to apply.
+      if (!aState.mIsMarginRoot) {
+        // We are not a root for margin collapsing and this is our first
+        // non-empty-line (with a block child presumably). Keep the
+        // collapsed margin value around to pass out to our parent. We
+        // don't apply the margin (our parent will) so zero it out.
+        aState.mCollapsedTopMargin = collapsedTopMargin;
+        collapsedTopMargin = 0;
+      }
+    }
+    else {
+      // For secondary lines we also collpase the sibling margins. The
+      // previous lines bottom margin is collapsed with the current
+      // lines collapsed top margin.
+      collapsedTopMargin = PR_MAX(aState.mPrevBottomMargin, collapsedTopMargin);
+    }
+    aTopMarginResult = collapsedTopMargin;
+
+    // Compute the collapsed bottom margin value. This collapsed value
+    // will end up in aState.mPrevBottomMargin if the child frame ends
+    // up being placed in this block frame.
+    nscoord childsBottomMargin = aInlineContext ? 0 : ir.GetBottomMargin();
+    nscoord collapsedBottomMargin =
+      PR_MAX(childsCarriedOutBottomMargin, childsBottomMargin);
+    aBottomMarginResult = collapsedBottomMargin;
+  }
+//ListTag(stdout); printf(": line=%p topMargin=%d bottomMargin=%d [%s,%s]\n", aLine, aTopMarginResult, aBottomMarginResult, isFirstNonEmptyLine ? "first" : "!first", aState.mIsMarginRoot ? "root" : "!root");
+  return haveCarriedMargins;
+}
+
+void
+nsBlockFrame::SlideFrames(LineData* aLine, nscoord aDY)
+{
+  // Adjust the Y coordinate of the frames in the line
+  nsIFrame* kid = aLine->mFirstChild;
+  PRIntn n = aLine->mChildCount;
+  while (--n >= 0) {
+    nsRect r;
+    kid->GetRect(r);
+    r.y += aDY;
+    kid->SetRect(r);
+    kid->GetNextSibling(kid);
+  }
+
+  // Slide line box too
+  aLine->mBounds.y += aDY;
+}
+
+PRBool
 nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
                                LineData* aLine,
                                nsIFrame* aFrame,
@@ -2791,33 +2905,57 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
   ir.HorizontalAlignFrames(aLine->mBounds);
   ir.RelativePositionFrames();
 
-  // Try to place the frame. It might not fit after factoring in the
-  // bottom margin.
-  if (aLine->mBounds.height == 0) {
-    // Leave aState.mPrevBottomMargin alone in this case so that it
-    // can carry forward to the next non-empty block.
-    aLine->mInnerBottomMargin = 0;
-    aLine->mOuterBottomMargin = 0;
+  // Calculate margins (XXX: identical copy is in PlaceLine)
+  nscoord topMargin = 0, bottomMargin = 0;
+  PRBool haveCarriedMargins = 
+    CalculateMargins(aState, aLine, PR_FALSE, topMargin, bottomMargin);
+  if (!haveCarriedMargins) {
+    // When the child being reflowed has no margin to give, we still
+    // need to make sure that the previous lines bottom margin is
+    // applied, but only if the line has a non-zero height (lines with
+    // no height and no carried margin need to not upset the margin
+    // state)
+    if (0 != aLine->mBounds.height) {
+      topMargin = aState.mPrevBottomMargin;
+    }
   }
   else {
-    nscoord innerBottomMargin = ir.GetInnerBottomMargin();
-    nscoord outerBottomMargin = ir.GetBottomMargin();
-    nscoord newY = aLine->mBounds.YMost() + outerBottomMargin;
-    // XXX running margin is advanced during reflow which means if the
-    // frame doesn't fit the wrong value will be used in
-    // ComputeFinalSize
-    if ((mLines != aLine) && (newY > aState.mBottomEdge)) {
-      // The frame doesn't fit inside our available space. Push the
-      // line to the next-in-flow and return our incomplete status to
-      // our parent.
-      PushLines(aState);
-      aReflowResult = NS_FRAME_NOT_COMPLETE;
-      return PR_FALSE;
+    // A special hack: if we have carried margins but the line has no
+    // height then collapse the carried margins down into a single
+    // (bottom margin) value.
+    if (0 == aLine->mBounds.height) {
+      bottomMargin = PR_MAX(topMargin, bottomMargin);
+      topMargin = 0;
     }
-    aState.mY = newY;
-    aLine->mInnerBottomMargin = innerBottomMargin;
-    aLine->mOuterBottomMargin = outerBottomMargin;
   }
+
+  // Try to place the frame
+  nscoord newY = aLine->mBounds.YMost() + topMargin;
+  if ((mLines != aLine) && (newY > aState.mBottomEdge)) {
+    // The frame doesn't fit inside our available space. Push the
+    // line to the next-in-flow and return our incomplete status to
+    // our parent.
+    PushLines(aState);
+    aReflowResult = NS_FRAME_NOT_COMPLETE;
+    return PR_FALSE;
+  }
+  aState.mY = newY;
+
+  // Apply collapsed top-margin value
+  if (0 != topMargin) {
+    SlideFrames(aLine, topMargin);
+  }
+
+  // Record bottom margin value for sibling to sibling compression
+  // or for returning as our carried out bottom margin.
+
+  // Adjust running margin value when either we have carried margins
+  // from the line or we have a non-zero height line.
+  if (haveCarriedMargins || (0 != aLine->mBounds.height)) {
+    aState.mPrevBottomMargin = bottomMargin;
+  }
+  aLine->mCarriedOutTopMargin = ir.GetCarriedOutTopMargin();
+  aLine->mCarriedOutBottomMargin = ir.GetCarriedOutBottomMargin();
 
   nscoord xmost = aLine->mBounds.XMost();
   if (xmost > aState.mKidXMost) {
@@ -3143,6 +3281,30 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     }
   }
 
+  // Apply margin collapsing when the line has some height
+  nscoord topMargin = 0, bottomMargin = 0;
+  PRBool haveCarriedMargins = 
+    CalculateMargins(aState, aLine, PR_TRUE, topMargin, bottomMargin);
+  if (!haveCarriedMargins) {
+    // When the child being reflowed has no margin to give, we still
+    // need to make sure that the previous lines bottom margin is
+    // applied, but only if the line has a non-zero height (lines with
+    // no height and no carried margin need to not upset the margin
+    // state)
+    if (0 != aLine->mBounds.height) {
+      topMargin = aState.mPrevBottomMargin;
+    }
+  }
+  else {
+    // A special hack: if we have carried margins but the line has no
+    // height then collapse the carried margins down into a single
+    // (bottom margin) value.
+    if (0 == aLine->mBounds.height) {
+      bottomMargin = PR_MAX(topMargin, bottomMargin);
+      topMargin = 0;
+    }
+  }
+
   // See if the line fit. If it doesn't we need to push it. Our first
   // line will always fit.
 
@@ -3152,7 +3314,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // XXX don't forget to factor in the top/bottom margin when sharing
   // this with the block code
-  nscoord newY = aState.mY + aLine->mBounds.height + lineBottomMargin;
+  nscoord newY = aLine->mBounds.YMost() + topMargin + lineBottomMargin;
   NS_FRAME_TRACE(NS_FRAME_TRACE_CHILD_REFLOW,
      ("nsBlockFrame::PlaceLine: newY=%d limit=%d lineHeight=%d",
       newY, aState.mBottomEdge, aLine->mBounds.height));
@@ -3162,6 +3324,20 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     PushLines(aState);
     return PR_FALSE;
   }
+
+  // Apply collapsed top-margin value
+  // XXX I bet the bullet placement just got broken by this code
+  if (0 != topMargin) {
+    SlideFrames(aLine, topMargin);
+  }
+
+  // Adjust running margin value when either we have carried margins
+  // from the line or we have a non-zero height line.
+  if (haveCarriedMargins || (0 != aLine->mBounds.height)) {
+    aState.mPrevBottomMargin = bottomMargin;
+  }
+  aLine->mCarriedOutTopMargin = ir.GetCarriedOutTopMargin();
+  aLine->mCarriedOutBottomMargin = ir.GetCarriedOutBottomMargin();
 
   // Now that we know the line is staying put, put in the outside
   // bullet if we have one.
@@ -3187,8 +3363,10 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
       aState.mStyleSpacing->CalcPaddingFor(this, padding);
       nscoord x = aState.mBorderPadding.left - (padding.left/2) -
         metrics.width;
+      // XXX This calculation is wrong, especially if
+      // vertical-alignment occurs on the line!
       nscoord y = aState.mBorderPadding.top + ir.GetMaxAscent() -
-        metrics.ascent;
+        metrics.ascent + topMargin;
       mBullet->SetRect(nsRect(x, y, metrics.width, metrics.height));
     }
   }
@@ -3832,7 +4010,6 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
         child->GetSize(size);
         if (size.width > 0) {
           // We found a non-zero sized child frame that precedes aFrame
-mBlock->ListTag(stdout); printf(": !left-most: size=%d,%d", size); child->ListTag(stdout); printf("\n");
           return PR_FALSE;
         }
         child->GetNextSibling(child);
@@ -3851,7 +4028,6 @@ mBlock->ListTag(stdout); printf(": !left-most: size=%d,%d", size); child->ListTa
         child->GetSize(size);
         if (size.width > 0) {
           // We found a non-zero sized child frame that precedes aFrame
-mBlock->ListTag(stdout); printf(": !left-most: size=%d,%d", size); child->ListTag(stdout); printf("\n");
           return PR_FALSE;
         }
         child->GetNextSibling(child);
@@ -4165,14 +4341,19 @@ nsBlockFrame::PaintChildren(nsIPresContext& aPresContext,
 
   // Iterate the lines looking for lines that intersect the dirty rect
   for (LineData* line = mLines; nsnull != line; line = line->mNext) {
+#if XXX
     // Stop when we get to a line that's below the dirty rect
     if (line->mBounds.y >= aDirtyRect.YMost()) {
       break;
     }
+#endif
 
     // If the line overlaps the dirty rect then iterate the child frames
     // and paint those frames that intersect the dirty rect
-    if (line->mBounds.YMost() > aDirtyRect.y) {
+#if XXX
+    if (line->mBounds.YMost() > aDirtyRect.y)
+#endif
+    {
       nsIFrame* kid = line->mFirstChild;
       for (PRUint16 i = 0; i < line->mChildCount; i++) {
         PaintChild(aPresContext, aRenderingContext, aDirtyRect, kid, PR_TRUE);
