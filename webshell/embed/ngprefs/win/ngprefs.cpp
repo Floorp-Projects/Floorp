@@ -36,6 +36,7 @@
 #include "winprefs/prefui.h"
 
 #include "prefapi.h"
+#include "globals.h"
 
 extern "C" {
 #include "xpgetstr.h"
@@ -46,7 +47,7 @@ BOOL    g_bReloadChangeColor;
 
 char *FE_GetProgramDirectory(char *buffer, int length)
 {
-    ::GetModuleFileName(NULL, buffer, length);
+    ::GetModuleFileName(g_hInst, buffer, length);
     char *tmp = strrchr(buffer, '\\');
     if (tmp) {
         *tmp = '\0';
