@@ -915,75 +915,84 @@ struct PubIDInfo {
 
 // These must be in nsCRT::strcmp order so binary-search can be used.
 // This is verified, |#ifdef DEBUG|, below.
+
+// Even though public identifiers should be case sensitive, we will do
+// all comparisons after converting to lower case in order to do
+// case-insensitive comparison since there are a number of existing web
+// sites that use the incorrect case.  Therefore all of the public
+// identifiers below are in lower case (with the correct case following,
+// in comments).  The case is verified, |#ifdef DEBUG|, below.
 static const PubIDInfo kPublicIDs[] = {
-  {"+//Silmaril//DTD HTML Pro v0r11 19970101//EN", PubIDInfo::eQuirks3},
-  {"-//AS//DTD HTML 3.0 asWedit + extensions//EN", PubIDInfo::eQuirks3},
-  {"-//AdvaSoft Ltd//DTD HTML 3.0 asWedit + extensions//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML 2.0 Level 1//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML 2.0 Level 2//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML 2.0 Strict Level 1//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML 2.0 Strict Level 2//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML 2.0 Strict//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML 2.0//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML 2.1E//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML 3.0//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML 3.0//EN//", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Level 0//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Level 0//EN//2.0", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Level 1//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Level 1//EN//2.0", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Level 2//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Level 2//EN//2.0", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Level 3//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Level 3//EN//3.0", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Strict Level 0//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Strict Level 0//EN//2.0", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Strict Level 1//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Strict Level 1//EN//2.0", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Strict Level 2//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Strict Level 2//EN//2.0", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Strict Level 3//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Strict Level 3//EN//3.0", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Strict//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Strict//EN//2.0", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML Strict//EN//3.0", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML//EN", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML//EN//2.0", PubIDInfo::eQuirks3},
-  {"-//IETF//DTD HTML//EN//3.0", PubIDInfo::eQuirks3},
-  {"-//Metrius//DTD Metrius Presentational//EN", PubIDInfo::eQuirks},
-  {"-//Microsoft//DTD Internet Explorer 2.0 HTML Strict//EN", PubIDInfo::eQuirks3},
-  {"-//Microsoft//DTD Internet Explorer 2.0 HTML//EN", PubIDInfo::eQuirks3},
-  {"-//Microsoft//DTD Internet Explorer 2.0 Tables//EN", PubIDInfo::eQuirks3},
-  {"-//Microsoft//DTD Internet Explorer 3.0 HTML Strict//EN", PubIDInfo::eQuirks3},
-  {"-//Microsoft//DTD Internet Explorer 3.0 HTML//EN", PubIDInfo::eQuirks3},
-  {"-//Microsoft//DTD Internet Explorer 3.0 Tables//EN", PubIDInfo::eQuirks3},
-  {"-//Netscape Comm. Corp.//DTD HTML//EN", PubIDInfo::eQuirks3},
-  {"-//Netscape Comm. Corp.//DTD Strict HTML//EN", PubIDInfo::eQuirks3},
-  {"-//O'Reilly and Associates//DTD HTML 2.0//EN", PubIDInfo::eQuirks3},
-  {"-//O'Reilly and Associates//DTD HTML Extended 1.0//EN", PubIDInfo::eQuirks3},
-  {"-//O'Reilly and Associates//DTD HTML Extended Relaxed 1.0//EN", PubIDInfo::eQuirks3},
-  {"-//SQ//DTD HTML 2.0 HoTMetaL + extensions//EN", PubIDInfo::eQuirks3},
-  {"-//SoftQuad Software//DTD HoTMetaL PRO 6.0::19990601::extensions to HTML 4.0//EN", PubIDInfo::eQuirks3},
-  {"-//Spyglass//DTD HTML 2.0 Extended//EN", PubIDInfo::eQuirks3},
-  {"-//Sun Microsystems Corp.//DTD HotJava HTML//EN", PubIDInfo::eQuirks3},
-  {"-//Sun Microsystems Corp.//DTD HotJava Strict HTML//EN", PubIDInfo::eQuirks3},
-  {"-//W3C//DTD HTML 3 1995-03-24//EN", PubIDInfo::eQuirks3},
-  {"-//W3C//DTD HTML 3.2 Draft//EN", PubIDInfo::eQuirks3},
-  {"-//W3C//DTD HTML 3.2 Final//EN", PubIDInfo::eQuirks3},
-  {"-//W3C//DTD HTML 3.2//EN", PubIDInfo::eQuirks3},
-  {"-//W3C//DTD HTML 3.2S Draft//EN", PubIDInfo::eQuirks3},
-  {"-//W3C//DTD HTML 4.0 Frameset//EN", PubIDInfo::eQuirks},
-  {"-//W3C//DTD HTML 4.0 Transitional//EN", PubIDInfo::eQuirks},
-  {"-//W3C//DTD HTML 4.01 Frameset//EN", PubIDInfo::eStrictIfSysID},
-  {"-//W3C//DTD HTML 4.01 Transitional//EN", PubIDInfo::eStrictIfSysID},
-  {"-//W3C//DTD HTML Experimental 19960712//EN", PubIDInfo::eQuirks3},
-  {"-//W3C//DTD HTML Experimental 970421//EN", PubIDInfo::eQuirks3},
-  {"-//W3O//DTD W3 HTML 3.0//EN", PubIDInfo::eQuirks3},
-  {"-//W3O//DTD W3 HTML 3.0//EN//", PubIDInfo::eQuirks3},
-  {"-//W3O//DTD W3 HTML Strict 3.0//EN//", PubIDInfo::eQuirks3},
-  {"-//WebTechs//DTD Mozilla HTML 2.0//EN", PubIDInfo::eQuirks3},
-  {"-//WebTechs//DTD Mozilla HTML//EN", PubIDInfo::eQuirks3},
-  {"HTML", PubIDInfo::eQuirks3},
+  {"+//silmaril//dtd html pro v0r11 19970101//en" /* "+//Silmaril//dtd html Pro v0r11 19970101//EN" */, PubIDInfo::eQuirks3},
+  {"-//advasoft ltd//dtd html 3.0 aswedit + extensions//en" /* "-//AdvaSoft Ltd//DTD HTML 3.0 asWedit + extensions//EN" */, PubIDInfo::eQuirks3},
+  {"-//as//dtd html 3.0 aswedit + extensions//en" /* "-//AS//DTD HTML 3.0 asWedit + extensions//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0 level 1//en" /* "-//IETF//DTD HTML 2.0 Level 1//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0 level 2//en" /* "-//IETF//DTD HTML 2.0 Level 2//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0 strict level 1//en" /* "-//IETF//DTD HTML 2.0 Strict Level 1//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0 strict level 2//en" /* "-//IETF//DTD HTML 2.0 Strict Level 2//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0 strict//en" /* "-//IETF//DTD HTML 2.0 Strict//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.0//en" /* "-//IETF//DTD HTML 2.0//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 2.1e//en" /* "-//IETF//DTD HTML 2.1E//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 3.0//en" /* "-//IETF//DTD HTML 3.0//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 3.0//en//" /* "-//IETF//DTD HTML 3.0//EN//" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html 3.2//en" /* "-//IETF//DTD HTML 3.2//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 0//en" /* "-//IETF//DTD HTML Level 0//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 0//en//2.0" /* "-//IETF//DTD HTML Level 0//EN//2.0" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 1//en" /* "-//IETF//DTD HTML Level 1//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 1//en//2.0" /* "-//IETF//DTD HTML Level 1//EN//2.0" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 2//en" /* "-//IETF//DTD HTML Level 2//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 2//en//2.0" /* "-//IETF//DTD HTML Level 2//EN//2.0" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 3//en" /* "-//IETF//DTD HTML Level 3//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html level 3//en//3.0" /* "-//IETF//DTD HTML Level 3//EN//3.0" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 0//en" /* "-//IETF//DTD HTML Strict Level 0//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 0//en//2.0" /* "-//IETF//DTD HTML Strict Level 0//EN//2.0" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 1//en" /* "-//IETF//DTD HTML Strict Level 1//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 1//en//2.0" /* "-//IETF//DTD HTML Strict Level 1//EN//2.0" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 2//en" /* "-//IETF//DTD HTML Strict Level 2//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 2//en//2.0" /* "-//IETF//DTD HTML Strict Level 2//EN//2.0" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 3//en" /* "-//IETF//DTD HTML Strict Level 3//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict level 3//en//3.0" /* "-//IETF//DTD HTML Strict Level 3//EN//3.0" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict//en" /* "-//IETF//DTD HTML Strict//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict//en//2.0" /* "-//IETF//DTD HTML Strict//EN//2.0" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html strict//en//3.0" /* "-//IETF//DTD HTML Strict//EN//3.0" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html//en" /* "-//IETF//DTD HTML//EN" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html//en//2.0" /* "-//IETF//DTD HTML//EN//2.0" */, PubIDInfo::eQuirks3},
+  {"-//ietf//dtd html//en//3.0" /* "-//IETF//DTD HTML//EN//3.0" */, PubIDInfo::eQuirks3},
+  {"-//metrius//dtd metrius presentational//en" /* "-//Metrius//DTD Metrius Presentational//EN" */, PubIDInfo::eQuirks},
+  {"-//microsoft//dtd internet explorer 2.0 html strict//en" /* "-//Microsoft//DTD Internet Explorer 2.0 HTML Strict//EN" */, PubIDInfo::eQuirks3},
+  {"-//microsoft//dtd internet explorer 2.0 html//en" /* "-//Microsoft//DTD Internet Explorer 2.0 HTML//EN" */, PubIDInfo::eQuirks3},
+  {"-//microsoft//dtd internet explorer 2.0 tables//en" /* "-//Microsoft//DTD Internet Explorer 2.0 Tables//EN" */, PubIDInfo::eQuirks3},
+  {"-//microsoft//dtd internet explorer 3.0 html strict//en" /* "-//Microsoft//DTD Internet Explorer 3.0 HTML Strict//EN" */, PubIDInfo::eQuirks3},
+  {"-//microsoft//dtd internet explorer 3.0 html//en" /* "-//Microsoft//DTD Internet Explorer 3.0 HTML//EN" */, PubIDInfo::eQuirks3},
+  {"-//microsoft//dtd internet explorer 3.0 tables//en" /* "-//Microsoft//DTD Internet Explorer 3.0 Tables//EN" */, PubIDInfo::eQuirks3},
+  {"-//netscape comm. corp.//dtd html//en" /* "-//Netscape Comm. Corp.//DTD HTML//EN" */, PubIDInfo::eQuirks3},
+  {"-//netscape comm. corp.//dtd strict html//en" /* "-//Netscape Comm. Corp.//DTD Strict HTML//EN" */, PubIDInfo::eQuirks3},
+  {"-//o'reilly and associates//dtd html 2.0//en" /* "-//O'Reilly and Associates//DTD HTML 2.0//EN" */, PubIDInfo::eQuirks3},
+  {"-//o'reilly and associates//dtd html extended 1.0//en" /* "-//O'Reilly and Associates//DTD HTML Extended 1.0//EN" */, PubIDInfo::eQuirks3},
+  {"-//o'reilly and associates//dtd html extended relaxed 1.0//en" /* "-//O'Reilly and Associates//DTD HTML Extended Relaxed 1.0//EN" */, PubIDInfo::eQuirks3},
+  {"-//softquad software//dtd hotmetal pro 6.0::19990601::extensions to html 4.0//en" /* "-//SoftQuad Software//DTD HoTMetaL PRO 6.0::19990601::extensions to HTML 4.0//EN" */, PubIDInfo::eQuirks3},
+  {"-//spyglass//dtd html 2.0 extended//en" /* "-//Spyglass//DTD HTML 2.0 Extended//EN" */, PubIDInfo::eQuirks3},
+  {"-//sq//dtd html 2.0 hotmetal + extensions//en" /* "-//SQ//DTD HTML 2.0 HoTMetaL + extensions//EN" */, PubIDInfo::eQuirks3},
+  {"-//sun microsystems corp.//dtd hotjava html//en" /* "-//Sun Microsystems Corp.//DTD HotJava HTML//EN" */, PubIDInfo::eQuirks3},
+  {"-//sun microsystems corp.//dtd hotjava strict html//en" /* "-//Sun Microsystems Corp.//DTD HotJava Strict HTML//EN" */, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 3 1995-03-24//en" /* "-//W3C//DTD HTML 3 1995-03-24//EN" */, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 3.2 draft//en" /* "-//W3C//DTD HTML 3.2 Draft//EN" */, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 3.2 final//en" /* "-//W3C//DTD HTML 3.2 Final//EN" */, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 3.2//en" /* "-//W3C//DTD HTML 3.2//EN" */, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 3.2s draft//en" /* "-//W3C//DTD HTML 3.2S Draft//EN" */, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html 4.0 frameset//en" /* "-//W3C//DTD HTML 4.0 Frameset//EN" */, PubIDInfo::eQuirks},
+  {"-//w3c//dtd html 4.0 transitional//en" /* "-//W3C//DTD HTML 4.0 Transitional//EN" */, PubIDInfo::eQuirks},
+  {"-//w3c//dtd html 4.01 frameset//en" /* "-//W3C//DTD HTML 4.01 Frameset//EN" */, PubIDInfo::eStrictIfSysID},
+  {"-//w3c//dtd html 4.01 transitional//en" /* "-//W3C//DTD HTML 4.01 Transitional//EN" */, PubIDInfo::eStrictIfSysID},
+  {"-//w3c//dtd html experimental 19960712//en" /* "-//W3C//DTD HTML Experimental 19960712//EN" */, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd html experimental 970421//en" /* "-//W3C//DTD HTML Experimental 970421//EN" */, PubIDInfo::eQuirks3},
+  {"-//w3c//dtd w3 html//en" /* "-//W3C//DTD W3 HTML//EN" */, PubIDInfo::eQuirks3},
+  {"-//w3o//dtd w3 html 3.0//en" /* "-//W3O//DTD W3 HTML 3.0//EN" */, PubIDInfo::eQuirks3},
+  {"-//w3o//dtd w3 html 3.0//en//" /* "-//W3O//DTD W3 HTML 3.0//EN//" */, PubIDInfo::eQuirks3},
+  {"-//w3o//dtd w3 html strict 3.0//en//" /* "-//W3O//DTD W3 HTML Strict 3.0//EN//" */, PubIDInfo::eQuirks3},
+  {"-//webtechs//dtd mozilla html 2.0//en" /* "-//WebTechs//DTD Mozilla HTML 2.0//EN" */, PubIDInfo::eQuirks3},
+  {"-//webtechs//dtd mozilla html//en" /* "-//WebTechs//DTD Mozilla HTML//EN" */, PubIDInfo::eQuirks3},
+  {"html" /* "HTML" */, PubIDInfo::eQuirks3},
 };
 
 #ifdef DEBUG
@@ -997,6 +1006,14 @@ static void VerifyPublicIDs()
         NS_NOTREACHED("doctypes out of order");
         printf("Doctypes %s and %s out of order.\n",
                kPublicIDs[i].name, kPublicIDs[i+1].name);
+      }
+    }
+    for (PRUint32 i = 0; i < ELEMENTS_OF(kPublicIDs); ++i) {
+      nsCAutoString lcPubID(kPublicIDs[i].name);
+      lcPubID.ToLowerCase();
+      if (nsCRT::strcmp(kPublicIDs[i].name, lcPubID.get()) != 0) {
+        NS_NOTREACHED("doctype not lower case");
+        printf("Doctype %s not lower case.\n", kPublicIDs[i].name);
       }
     }
   }
@@ -1039,6 +1056,10 @@ static void DetermineHTMLParseMode(nsString& aBuffer,
       // Yes, we want UCS2 to ASCII lossy conversion.
       nsCAutoString publicID;
       publicID.AssignWithConversion(publicIDUCS2);
+
+      // See comment above definition of kPublicIDs about case
+      // sensitivity.
+      publicID.ToLowerCase();
 
       // binary search to see if we can find the correct public ID
       PRUint32 minimum = 0;
