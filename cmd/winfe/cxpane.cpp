@@ -1576,8 +1576,11 @@ void CPaneCX::DisplayBuiltin(MWContext *pContext, int iLocation, LO_BuiltinStruc
 #else
 			CRDFContentView* pWnd = CRDFContentView::DisplayRDFTreeFromSHACK(pContext, cWnd, xPos, yPos, width, height, url == NULL ? "" :url , templateType, pBuiltin_struct->attribute_cnt, pBuiltin_struct->attribute_list, pBuiltin_struct->value_list);
 #endif
-			((CRDFOutliner*)pWnd->GetOutlinerParent()->GetOutliner())->SetWindowTarget(target);
+
+			CRDFOutliner *pOutliner = (CRDFOutliner *)pWnd->GetOutlinerParent()->GetOutliner();
+			pOutliner->SetWindowTarget(target);
 			pBuiltin_struct->FE_Data = pWnd;
+			pBuiltin_struct->htPane = HT_GetPane(pOutliner->GetHTView());
 		}
 #ifdef ENDER
     }
