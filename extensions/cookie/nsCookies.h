@@ -47,15 +47,16 @@
 #define NS_COOKIE NS_IMPORT
 #endif
 
+#include "nsIIOService.h"
 
 class nsIPrompt;
 
 extern nsresult COOKIE_Read();
 extern nsresult COOKIE_Write();
-extern char * COOKIE_GetCookie(char * address);
-extern char * COOKIE_GetCookieFromHttp(char * address, char * firstAddress);
-extern void COOKIE_SetCookieString(char * cur_url, nsIPrompt *aPrompter, const char * set_cookie_header);
-extern void COOKIE_SetCookieStringFromHttp(char * cur_url, char * first_url, nsIPrompt *aPRompter, const char * set_cookie_header, char * server_date);
+extern char * COOKIE_GetCookie(char * address, nsIIOService* ioService);
+extern char * COOKIE_GetCookieFromHttp(char * address, char * firstAddress, nsIIOService* ioService);
+extern void COOKIE_SetCookieString(char * cur_url, nsIPrompt *aPrompter, const char * set_cookie_header, nsIIOService* ioService);
+extern void COOKIE_SetCookieStringFromHttp(char * cur_url, char * first_url, nsIPrompt *aPRompter, const char * set_cookie_header, char * server_date, nsIIOService* ioService);
 extern void COOKIE_RegisterPrefCallbacks(void);
 
 extern void COOKIE_RemoveAll(void);

@@ -584,7 +584,7 @@ cookie_IsInDomain(char* domain, char* host, int hostLength) {
 **             to the caller to free any returned string
 */
 PUBLIC char *
-COOKIE_GetCookie(char * address) {
+COOKIE_GetCookie(char * address, nsIIOService* ioService) {
   char *name=0;
   cookie_CookieStruct * cookie_s;
   PRBool isSecure = PR_FALSE;
@@ -607,8 +607,17 @@ COOKIE_GetCookie(char * address) {
   if (cookie_list == nsnull) {
     return nsnull;
   }
-  char *host = CKutil_ParseURL(address, GET_HOST_PART);
-  char *path = CKutil_ParseURL(address, GET_PATH_PART);
+  char *host = nsnull;
+  char *path = nsnull;
+  PRUint32 start, end;
+  // Get host and path
+  nsresult result;
+  NS_ASSERTION(ioService, "IOService not available");
+  result = ioService->ExtractUrlPart(address, nsIIOService::url_Host |
+                                     nsIIOService::url_Port, &start, &end, 
+                                     &host);
+  result = ioService->ExtractUrlPart(address, nsIIOService::url_Path, 
+                                     &start, &end, &path);
   for (PRInt32 i = 0; i <cookie_list->Count(); i++) {
     cookie_s = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
     NS_ASSERTION(cookie_s, "corrupt cookie list");
@@ -727,12 +736,22 @@ cookie_SameDomain(char * currentHost, char * firstHost) {
 }
 
 PRBool
-cookie_isForeign (char * curURL, char * firstURL) {
+cookie_isForeign (char * curURL, char * firstURL, nsIIOService* ioService) {
   if (!firstURL) {
     return PR_FALSE;
   }
-  char * curHost = CKutil_ParseURL(curURL, GET_HOST_PART);
-  char * firstHost = CKutil_ParseURL(firstURL, GET_HOST_PART);
+  char *curHost = nsnull;
+  char *firstHost = nsnull;
+  PRUint32 start,end;
+  nsresult rv;
+  NS_ASSERTION(ioService, "IOService not available");
+  // Get hosts
+  rv = ioService->ExtractUrlPart(curURL, nsIIOService::url_Host |
+                                 nsIIOService::url_Port, &start, &end, 
+                                 &curHost);
+  rv = ioService->ExtractUrlPart(firstURL, nsIIOService::url_Host |
+                                 nsIIOService::url_Port, &start, &end, 
+                                 &firstHost);
   char * curHostColon = 0;
   char * firstHostColon = 0;
 
@@ -798,8 +817,9 @@ cookie_P3PUserPref(PRInt32 policy, PRBool foreign) {
  * returns P3P_Accept, P3P_Downgrade, or P3P_Reject based on user's preferences
  */
 int
-cookie_P3PDecision (char * curURL, char * firstURL) {
-  return cookie_P3PUserPref(P3P_SitePolicy(curURL), cookie_isForeign(curURL, firstURL));
+cookie_P3PDecision (char * curURL, char * firstURL, nsIIOService* ioService) {
+  return cookie_P3PUserPref(P3P_SitePolicy(curURL), 
+                            cookie_isForeign(curURL, firstURL, ioService));
 }
 
 /* returns PR_TRUE if authorization is required
@@ -809,15 +829,16 @@ cookie_P3PDecision (char * curURL, char * firstURL) {
 **             to the caller to free any returned string
 */
 PUBLIC char *
-COOKIE_GetCookieFromHttp(char * address, char * firstAddress) {
+COOKIE_GetCookieFromHttp(char * address, char * firstAddress, 
+                         nsIIOService* ioService) {
 
   if ((cookie_GetBehaviorPref() == PERMISSION_P3P) &&
-      (cookie_P3PDecision(address, firstAddress) == P3P_Reject)) {
+      (cookie_P3PDecision(address, firstAddress, ioService) == P3P_Reject)) {
     return nsnull;
   }
 
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
-      (!firstAddress || cookie_isForeign(address, firstAddress))) {
+      (!firstAddress || cookie_isForeign(address, firstAddress, ioService))) {
 
     /*
      * WARNING!!! This is a different behavior than 4.x.  In 4.x we used this pref to
@@ -830,7 +851,7 @@ COOKIE_GetCookieFromHttp(char * address, char * firstAddress) {
 
     return nsnull;
   }
-  return COOKIE_GetCookie(address);
+  return COOKIE_GetCookie(address, ioService);
 }
 
 MODULE_PRIVATE PRBool
@@ -878,12 +899,21 @@ cookie_Count(char * host) {
  * this via COOKIE_SetCookieStringFromHttp.
  */
 PRIVATE void
-cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader, time_t timeToExpire) {
+cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader, time_t timeToExpire, nsIIOService* ioService) {
   cookie_CookieStruct * prev_cookie;
   char *path_from_header=nsnull, *host_from_header=nsnull;
   char *name_from_header=nsnull, *cookie_from_header=nsnull;
-  char *cur_path = CKutil_ParseURL(curURL, GET_PATH_PART);
-  char *cur_host = CKutil_ParseURL(curURL, GET_HOST_PART);
+  char *cur_host = nsnull;
+  char *cur_path = nsnull;
+  PRUint32 start,end;
+  nsresult rv;
+  NS_ASSERTION(ioService, "IOService not available");
+  // Get host and path
+  rv = ioService->ExtractUrlPart(curURL, nsIIOService::url_Host | 
+                                 nsIIOService::url_Port, &start, &end, 
+                                 &cur_host);
+  rv = ioService->ExtractUrlPart(curURL, nsIIOService::url_Path, 
+                                 &start, &end, &cur_path);
   char *semi_colon, *ptr, *equal;
   char *setCookieHeaderInternal = (char *) setCookieHeader;
   PRBool isSecure=PR_FALSE, isDomain=PR_FALSE;
@@ -1228,8 +1258,8 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 }
 
 PUBLIC void
-COOKIE_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader) {
-  COOKIE_SetCookieStringFromHttp(curURL, nsnull, aPrompter, setCookieHeader, 0);
+COOKIE_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCookieHeader, nsIIOService* ioService) {
+  COOKIE_SetCookieStringFromHttp(curURL, nsnull, aPrompter, setCookieHeader, 0, ioService);
 }
 
 /* This function wrapper wraps COOKIE_SetCookieString for the purposes of 
@@ -1241,15 +1271,15 @@ COOKIE_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 */
 
 PUBLIC void
-COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPrompter, const char * setCookieHeader, char * server_date) {
+COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPrompter, const char * setCookieHeader, char * server_date, nsIIOService* ioService) {
 
   /* allow for multiple cookies separated by newlines */
    char *newline = PL_strchr(setCookieHeader, '\n');
    if(newline) {
      *newline = '\0';
-     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, setCookieHeader, server_date);
+     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, setCookieHeader, server_date, ioService);
      *newline = '\n';
-     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, newline+1, server_date);
+     COOKIE_SetCookieStringFromHttp(curURL, firstURL, aPrompter, newline+1, server_date, ioService);
      return;
    }
 
@@ -1266,7 +1296,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
 
   /* check to see if P3P pref is satisfied */
   if (cookie_GetBehaviorPref() == PERMISSION_P3P) {
-    PRInt32 decision = cookie_P3PDecision(curURL, firstURL);
+    PRInt32 decision = cookie_P3PDecision(curURL, firstURL, ioService);
     if (decision == P3P_Reject) {
       return;
     }
@@ -1277,7 +1307,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
  
   /* check for foreign cookie if pref says to reject such */
   if ((cookie_GetBehaviorPref() == PERMISSION_DontAcceptForeign) &&
-      cookie_isForeign(curURL, firstURL)) {
+      cookie_isForeign(curURL, firstURL, ioService)) {
     /* it's a foreign cookie so don't set the cookie */
     return;
   }
@@ -1329,7 +1359,7 @@ COOKIE_SetCookieStringFromHttp(char * curURL, char * firstURL, nsIPrompt *aPromp
     gmtCookieExpires = get_current_time() + atoi(ptr);
   }
 
-  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, gmtCookieExpires);
+  cookie_SetCookieString(curURL, aPrompter, setCookieHeader, gmtCookieExpires, ioService);
 }
 
 /* saves out the HTTP cookies to disk */

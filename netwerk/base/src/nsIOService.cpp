@@ -534,8 +534,9 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
     rv = GetParserForScheme(scheme, getter_AddRefs(parser));
     if (NS_FAILED(rv)) return rv;
     
-    PRInt32 port;
+    PRInt32 port = -1;
     nsXPIDLCString dummyScheme, username, password, host, path;
+    char* portstr = nsnull;
 
     rv = parser->ParseAtScheme(urlString, 
                                getter_Copies(dummyScheme), 
@@ -568,13 +569,39 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
         return NS_OK;
     }
 
+    if (flag == url_Port) {
+        if (port != -1) {
+            portstr = PR_smprintf("%d", port);
+            CalculateStartEndPos(urlString, portstr, startPos, endPos);
+        } else {
+            startPos = 0;
+            endPos = 0;
+        }
+        if (urlPart)
+            *urlPart = nsCRT::strdup(portstr);
+        PR_smprintf_free(portstr);
+        return NS_OK;
+    }
+
+    if (flag == (url_Host | url_Port)) {
+        nsCAutoString hostport(host);
+        if (port != -1) {
+            portstr = PR_smprintf(":%d", port);
+            hostport += portstr;
+        }
+        if (urlPart)
+            *urlPart = ToNewCString(hostport);
+        CalculateStartEndPos(urlString, *urlPart, startPos, endPos);
+        PR_smprintf_free(portstr);
+        return NS_OK;
+    }
+
     if (flag == url_Path) {
         CalculateStartEndPos(urlString, path, startPos, endPos);
         if (urlPart)
             *urlPart = nsCRT::strdup(path.get());
         return NS_OK;
     }
-
 
     nsXPIDLCString directory, fileBaseName, fileExtension, param, query, ref;
 
@@ -587,7 +614,6 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
                                   getter_Copies(ref));
 
     if (NS_FAILED(rv)) return rv;
-    
     
     if (flag == url_Directory) {
         CalculateStartEndPos(urlString, directory, startPos, endPos);
@@ -630,7 +656,6 @@ nsIOService::ExtractUrlPart(const char *urlString, PRInt16 flag, PRUint32 *start
             *urlPart = nsCRT::strdup(ref.get());
         return NS_OK;
     }
-    
     
     return NS_OK;
 }
@@ -846,8 +871,7 @@ nsIOService::AllowPort(PRInt32 inPort, const char *scheme, PRBool *_retval)
 NS_IMETHODIMP
 nsIOService::ExtractPort(const char *str, PRInt32 *result)
 {
-    PRInt32 returnValue = -1;
-    *result = (0 < PR_sscanf(str, "%d", &returnValue)) ? returnValue : -1;
+    *result = ExtractPortFrom(str);
     return NS_OK;
 }
 
