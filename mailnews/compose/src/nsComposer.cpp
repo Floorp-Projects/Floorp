@@ -23,7 +23,7 @@
 
 #include "nsDOMCID.h"
 
-static NS_DEFINE_IID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
+static NS_DEFINE_CID(kCScriptNameSetRegistryCID, NS_SCRIPT_NAMESET_REGISTRY_CID);
 
 class nsComposerBootstrap : public nsIAppShellComponent {
   

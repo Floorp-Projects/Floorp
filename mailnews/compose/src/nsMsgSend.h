@@ -19,103 +19,162 @@
 #ifndef __MSGSEND_H__
 #define __MSGSEND_H__
 
-/*JFD
-#include "msgpane.h"
-#include "mimeenc.h"	// For base64/QP encoder
-#include "mhtmlstm.h"
-*/
+/* Asynchronous mailing of messages with attached URLs.
+
+   - If there are any attachments, start their URLs going, and write each
+     of them to a temp file.
+
+   - While writing to their files, examine the data going by and decide
+     what kind of encoding, if any, they need.  Also remember their content
+     types.
+
+   - Once that URLs has been saved to a temp file (or, if there were no
+     attachments) generate a final temp file, of the actual message:
+
+	 -  Generate a string of the headers.
+	 -  Open the final temp file.
+	 -  Write the headers.
+     -  Examine the first part, and decide whether to encode it.
+	 -  Write the first part to the file, possibly encoded.
+	 -  Write the second and subsequent parts to the file, possibly encoded.
+        (Open the first temp file and copy it to the final temp file, and so
+		     on, through an encoding filter.)
+
+   - Delete the attachment temp file(s) as we finish with them.
+	 - Close the final temp file.
+	 - Open the news: url.
+	 - Send the final temp file to NNTP.
+	   If there's an error, run the callback with "failure" status.
+	 - If mail succeeded, open the mailto: url.
+	 - Send the final temp file to SMTP.
+	   If there's an error, run the callback with "failure" status.
+	 - Otherwise, run the callback with "success" status.
+	 - Free everything, delete the final temp file.
+
+  The theory behind the encoding logic:
+  =====================================
+
+  If the document is of type text/html, and the user has asked to attach it
+  as source or postscript, it will be run through the appropriate converter
+  (which will result in a document of type text/plain.)
+
+  An attachment will be encoded if:
+
+   - it is of a non-text type (in which case we will use base64); or
+   - The "use QP" option has been selected and high-bit characters exist; or
+   - any NULLs exist in the document; or
+   - any line is longer than 900 bytes.
+
+   - If we are encoding, and more than 10% of the document consists of
+     non-ASCII characters, then we always use base64 instead of QP.
+
+  We eschew quoted-printable in favor of base64 for documents which are likely
+  to always be binary (images, sound) because, on the off chance that a GIF
+  file (for example) might contain primarily bytes in the ASCII range, using
+  the quoted-printable representation might cause corruption due to the
+  translation of CR or LF to CRLF.  So, when we don't know that the document
+  has "lines", we don't use quoted-printable.
+ */
+/* It's better to send a message as news before sending it as mail, because
+   the NNTP server is more likely to reject the article (for any number of
+   reasons) than the SMTP server is. */
+#undef MAIL_BEFORE_NEWS
+/* Generating a message ID here is a good because it means that if a message
+   is sent to both mail and news, it will have the same ID in both places. */
+#define GENERATE_MESSAGE_ID
+/* For maximal compatibility, it helps to emit both
+      Content-Type: <type>; name="<original-file-name>"
+   as well as
+      Content-Disposition: inline; filename="<original-file-name>"
+
+  The lossage here is, RFC1341 defined the "name" parameter to Content-Type,
+  but then RFC1521 deprecated it in anticipation of RFC1806, which defines
+  Content-Type and the "filename" parameter.  But, RFC1521 is "Standards Track"
+  while RFC1806 is still "Experimental."  So, it's probably best to just
+  implement both.
+ */
+#define EMIT_NAME_IN_CONTENT_TYPE
+
+/* Whether the contents of the BCC header should be preserved in the FCC'ed
+   copy of a message.  See comments below, in mime_do_fcc_1().
+ */
+#define SAVE_BCC_IN_FCC_FILE
+
+/* When attaching an HTML document, one must indicate the original URL of
+   that document, if the receiver is to have any chance of being able to
+   retreive and display the inline images, or to click on any links in the
+   HTML.
+
+   The way we have done this in the past is by inserting a <BASE> tag as the
+   first line of all HTML documents we attach.  (This is kind of bad in that
+   we're actually modifying the document, and it really isn't our place to
+   do that.)
+
+   The sanctioned *new* way of doing this is to insert a Content-Base header
+   field on the attachment.  This is (will be) a part of the forthcoming MHTML
+   spec.
+
+   If GENERATE_CONTENT_BASE, we generate a Content-Base header.
+
+   We used to have a MANGLE_HTML_ATTACHMENTS_WITH_BASE_TAG symbol that we
+   defined, which added a BASE tag to the bodies.  We stopped doing this in
+   4.0.  */
+#define GENERATE_CONTENT_BASE
+
+
+//
+// Necessary includes
+//
 #include "rosetta_mailnews.h"
 #include "msgCore.h"
 #include "prprf.h" /* should be defined into msgCore.h? */
 #include "net.h" /* should be defined into msgCore.h? */
 #include "intl_csi.h"
-//#include "msgcom.h"
 #include "nsFileStream.h"
 #include "nsMsgMessageFlags.h"
 #include "MsgCompGlue.h"
 #include "nsIMsgSend.h"
+#include "nsIUrl.h"
+#include "nsMsgAttachmentHandler.h"
 
-class MSG_DeliverMimeAttachment;
+//
+// Some necessary defines...
+//
+#define TEN_K                 10240
+#define MIME_BUFFER_SIZE		  4096
+#define FCC_FAILURE				    0
+#define FCC_BLOCKING_SUCCESS	1
+#define FCC_ASYNC_SUCCESS		  2
+
+//
+// Utilities for string handling
+//
+#define PUSH_STRING(S) \
+ do { PL_strcpy (buffer_tail, S); buffer_tail += PL_strlen (S); } while(0)
+#define PUSH_NEWLINE() \
+ do { *buffer_tail++ = CR; *buffer_tail++ = LF; *buffer_tail = '\0'; } while(0)
+
+
+
+
+  //
+  ////////////////////////////////////////////////////////////////////////////////
+  // REWORK THIS STUF!!!!!!!!!
+  // REWORK THIS STUF!!!!!!!!!
+  // REWORK THIS STUF!!!!!!!!!
+  ////////////////////////////////////////////////////////////////////////////////
+  //
+
+
+
 class ParseOutgoingMessage;
 class MailDB;
-
 class nsMsgSendPart;
 class nsMsgCompFields;
 
-#define MIME_BUFFER_SIZE		4096
-#define FCC_FAILURE				0
-#define FCC_BLOCKING_SUCCESS	1
-#define FCC_ASYNC_SUCCESS		2
-
-#if 0 //JFD - We shouldn't use it anymore...
-extern "C" void
-msg_StartMessageDeliveryWithAttachments (MSG_Pane *pane,
-										 void      *fe_data,
-										 nsMsgCompFields *fields,
-										 PRBool digest_p,
-										 PRBool dont_deliver_p,
-										 nsMsgDeliverMode mode,
-										 const char *attachment1_type,
-										 const char *attachment1_body,
-										 PRUint32 attachment1_body_length,
-										 const struct nsMsgAttachedFile *attachments,
-//#ifdef MSG_SEND_MULTIPART_RELATED
-										 void *relatedPart,
-//#endif
-										 void (*message_delivery_done_callback)
-										      (MWContext *context,
-											   void *fe_data,
-											   int status,
-											   const char *error_message),
-										 const char *smtp
-											   );
-#endif //JFD
-
-class nsMsgSendMimeDeliveryState : public nsIMsgSend
+class nsMsgComposeAndSend : public nsIMsgSend
 {
 public:
-	nsMsgSendMimeDeliveryState();
-	virtual ~nsMsgSendMimeDeliveryState();
-
-	/* this macro defines QueryInterface, AddRef and Release for this class */
-	NS_DECL_ISUPPORTS
-
-  void	StartMessageDelivery(MSG_Pane *pane,
-									 void      *fe_data,
-									 nsMsgCompFields *fields,
-									 PRBool digest_p,
-									 PRBool dont_deliver_p,
-									 nsMsgDeliverMode mode,
-									 const char *attachment1_type,
-									 const char *attachment1_body,
-									 PRUint32 attachment1_body_length,
-									 const struct nsMsgAttachmentData
-									   *attachments,
-									 const struct nsMsgAttachedFile
-									   *preloaded_attachments,
-//#ifdef MSG_SEND_MULTIPART_RELATED
-									 nsMsgSendPart *relatedPart,
-//#endif
-									 void (*message_delivery_done_callback)
-									      (MWContext *context,
-										   void *fe_data,
-										   int status,
-										   const char *error_message));
-
-  NS_IMETHOD SendMessage(
- 						  nsIMsgCompFields                  *fields,
-              const char                        *smtp,
-						  PRBool                            digest_p,
-						  PRBool                            dont_deliver_p,
-						  PRInt32                           mode,
-						  const char                        *attachment1_type,
-						  const char                        *attachment1_body,
-						  PRUint32                          attachment1_body_length,
-						  const struct nsMsgAttachmentData  *attachments,
-						  const struct nsMsgAttachedFile    *preloaded_attachments,
-						  void                              *relatedPart,
-						  void                              (*message_delivery_done_callback)(void *context, void *fe_data,
-								                                                                  int status, const char *error_message));
 
   int	Init(MSG_Pane *pane,
 			 void      *fe_data,
@@ -128,11 +187,9 @@ public:
 			 PRUint32 attachment1_body_length,
 			 const struct nsMsgAttachmentData *attachments,
 			 const struct nsMsgAttachedFile *preloaded_attachments,
-//#ifdef MSG_SEND_MULTIPART_RELATED
 			 nsMsgSendPart *relatedPart,
-//#endif
 			 void (*message_delivery_done_callback)
-			 (MWContext *context,
+			 (
 			  void *fe_data,
 			  int status,
 			  const char *error_message));
@@ -170,17 +227,13 @@ public:
   int InitImapOfflineDB(PRUint32 flag);
   int SaveAsOfflineOp();
 
-  int DoFcc();
 
   int HackAttachments(const struct nsMsgAttachmentData *attachments,
 					  const struct nsMsgAttachedFile *preloaded_attachments);
 
   void	DeliverFileAsMail();
   void	DeliverFileAsNews();
-  void	DeliverAsMailExit(URL_Struct *url, int status);
   void	DeliverAsNewsExit(URL_Struct *url, int status);
-  void	Fail(int failure_code, char *error_msg);
-  void	Clear();
 
   HJ58534
 	  MWContext *GetContext() { return (m_pane ? m_pane->GetContext(): NULL); }
@@ -238,12 +291,10 @@ public:
   PRUint32 m_attachment1_body_length;
 
   // The plaintext form of the first attachment, if needed.
-  MSG_DeliverMimeAttachment* m_plaintext;
+  nsMsgAttachmentHandler* m_plaintext;
 
-//#ifdef MSG_SEND_MULTIPART_RELATED
 	// The multipart/related save object for HTML text.
   nsMsgSendPart *m_related_part;
-//#endif
 
   // File where we stored our HTML so that we could make the plaintext form.
   char* m_html_filename;
@@ -252,16 +303,16 @@ public:
    */
   PRInt32 m_attachment_count;
   PRInt32 m_attachment_pending_count;
-  MSG_DeliverMimeAttachment *m_attachments;
+  nsMsgAttachmentHandler *m_attachments;
   PRInt32 m_status; /* in case some attachments fail but not all */
 
   /* The caller's `exit' method. */
-  void (*m_message_delivery_done_callback) (MWContext *context,
+  void (*m_message_delivery_done_callback) (
 											void * fe_data, int status,
 											const char * error_msg);
 
   /* The exit method used when downloading attachments only. */
-  void (*m_attachments_done_callback) (MWContext *context,
+  void (*m_attachments_done_callback) (
 									   void * fe_data, int status,
 									   const char * error_msg,
 									   struct nsMsgAttachedFile *attachments);
@@ -273,104 +324,84 @@ public:
   ParseOutgoingMessage *m_imapOutgoingParser;
   MailDB *m_imapLocalMailDB;
   
+  //
+  ////////////////////////////////////////////////////////////////////////////////
+  // RICHIE - These are all calls that have been converted to the new world order!
+  // Once all done, we will reorganize the layout of the class definition for readability.
+  // Please bear with me.
+  ////////////////////////////////////////////////////////////////////////////////
+  //
 
-#if 0
-  /*  char *headers;					/ * The headers of the message */
+  //
+  // this macro defines QueryInterface, AddRef and Release for this class 
+  //
+	NS_DECL_ISUPPORTS
 
-  /* Some state to control the thermometer during message delivery.
-   */
-  PRInt32 m_msg_size;					/* Size of the final message. */
-  PRInt32 m_delivery_total_bytes;		/* How many bytes we will be delivering:
-									   for example, if we're sending the
-									   message to both mail and news, this
-									   will be 2x the size of the message.
-									 */
-  PRInt32 m_delivery_bytes;			/* How many bytes we have delivered so far.
-									 */
-#endif /* 0 */
+  nsMsgComposeAndSend();
+	virtual     ~nsMsgComposeAndSend();
+
+  void	      DeliverAsMailExit(nsIURL * aUrl, nsresult aExitCode);
+  void	      Fail(nsresult failure_code, char *error_msg);
+  nsresult    DoFcc();
+  void	      Clear();
+
+  //
+  ////////////////////////////////////////////////////////////////////////////////
+  // RICHIE - These are partly new world, but still need work...still they are better
+  // than before. Again...Please bear with me.
+  ////////////////////////////////////////////////////////////////////////////////
+  //
+
+  //
+  // The current nsIMsgSend Interface!
+  //
+  NS_IMETHOD SendMessage(
+ 						  nsIMsgCompFields                  *fields,
+              const char                        *smtp,
+						  PRBool                            digest_p,
+						  PRBool                            dont_deliver_p,
+						  PRInt32                           mode,
+						  const char                        *attachment1_type,
+						  const char                        *attachment1_body,
+						  PRUint32                          attachment1_body_length,
+						  const struct nsMsgAttachmentData  *attachments,
+						  const struct nsMsgAttachedFile    *preloaded_attachments,
+						  void                              *relatedPart,
+						  void                              (*message_delivery_done_callback)(void *fe_data,
+								                                                                  int status, const char *error_message));
+
+  nsresult    MimeDoFCC (
+			                   const char *input_file_name,  XP_FileType input_file_type,
+			                   const char *output_name, XP_FileType output_file_type,
+			                   nsMsgDeliverMode mode,
+			                   const char *bcc_header,
+			                   const char *fcc_header,
+			                   const char *news_url);
+
+  void	StartMessageDelivery(MSG_Pane *pane,
+                          void                *fe_data,
+                          nsMsgCompFields     *fields,
+                          PRBool              digest_p,
+                          PRBool              dont_deliver_p,
+                          nsMsgDeliverMode    mode,
+                          const char          *attachment1_type,
+                          const char          *attachment1_body,
+                          PRUint32            attachment1_body_length,
+                          const struct nsMsgAttachmentData  *attachments,
+                          const struct nsMsgAttachedFile    *preloaded_attachments,
+                          nsMsgSendPart       *relatedPart,
+                          void (*message_delivery_done_callback)
+                                                (void *fe_data,
+                                                 int status,
+                                                 const char *error_message));
 };
 
-class MSG_DeliverMimeAttachment
-{
-public:
-
-  MSG_DeliverMimeAttachment();
-  ~MSG_DeliverMimeAttachment();
-
-  void	UrlExit(URL_Struct *url, int status, MWContext *context);
-  PRInt32	SnarfAttachment ();
-  void  AnalyzeDataChunk (const char *chunk, PRInt32 chunkSize);
-  void  AnalyzeSnarfedFile ();      /* Analyze a previously-snarfed file.
-  									   (Currently only used for plaintext
-  									   converted from HTML.) */
-  int	PickEncoding (const char *charset);
-  
-  PRBool UseUUEncode_p(void);
-
-  char *m_url_string;
-  URL_Struct *m_url;
-  PRBool m_done;
-
-  nsMsgSendMimeDeliveryState		*m_mime_delivery_state;
-
-  char *m_charset;             /* charset name */
-  char *m_type;						/* The real type, once we know it. */
-  char *m_override_type;			/* The type we should assume it to be
-									   or 0, if we should get it from the
-									   URL_Struct (from the server) */
-  char *m_override_encoding;		/* Goes along with override_type */
-
-  char *m_desired_type;				/* The type it should be converted to. */
-  char *m_description;				/* For Content-Description header */
-  char *m_x_mac_type, *m_x_mac_creator; /* Mac file type/creator. */
-  char *m_real_name;				/* The name for the headers, if different
-									   from the URL. */
-  char *m_encoding;					/* The encoding, once we've decided. */
-  PRBool m_already_encoded_p;		/* If we attach a document that is already
-									   encoded, we just pass it through. */
-
-  char *m_file_name;					/* The temp file to which we save it */
-  PRFileDesc *m_file;
-
-#ifdef XP_MAC
-  char *m_ap_filename;				/* The temp file holds the appledouble
-									   encoding of the file we want to post. */
-#endif
-
-  PRBool m_decrypted_p;	/* S/MIME -- when attaching a message that was
-							   encrypted, it's necessary to decrypt it first
-							   (since nobody but the original recipient can
-							   read it -- if you forward it to someone in the
-							   raw, it will be useless to them.)  This flag
-							   indicates whether decryption occurred, so that
-							   libmsg can issue appropriate warnings about
-							   doing a cleartext forward of a message that was
-							   originally encrypted.
-							 */
-  PRUint32 m_size;					/* Some state used while filtering it */
-  PRUint32 m_unprintable_count;
-  PRUint32 m_highbit_count;
-  PRUint32 m_ctl_count;
-  PRUint32 m_null_count;
-  PRUint32 m_current_column;
-  PRUint32 m_max_column;
-  PRUint32 m_lines;
-
-  MimeEncoderData *m_encoder_data;  /* Opaque state for base64/qp encoder. */
-
-  PRBool m_graph_progress_started;
-
-/*JFD
-  PrintSetup m_print_setup;	*/		/* Used by HTML->Text and HTML->PS */
-};
-
-extern char * msg_generate_message_id (void);
-
+// 
 // These routines should only be used by the nsMsgSendPart class.
-
-extern PRBool mime_type_needs_charset (const char *type);
-extern int mime_write_message_body(nsMsgSendMimeDeliveryState *state,
-								   char *buf, PRInt32 size);
-extern char* mime_get_stream_write_buffer(void);
+//
+extern int    mime_write_message_body(nsMsgComposeAndSend *state, char *buf, PRInt32 size);
+extern char   *mime_get_stream_write_buffer(void);
+extern int    mime_encoder_output_fn (const char *buf, PRInt32 size, void *closure);
+extern PRBool UseQuotedPrintable(void);
 
 #endif /*  __MSGSEND_H__ */

@@ -15,7 +15,6 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-
 #include "rosetta_mailnews.h"
 #include "nsMsgLocalFolderHdrs.h"
 #include "nsMsgCompose.h"
@@ -24,11 +23,13 @@
 #include "nsIMimeConverter.h"
 #include "nsFileStream.h"
 #include "nsIMimeURLUtils.h"
+#include "nsMsgEncoders.h"
+#include "nsMsgI18N.h"
+#include "nsMsgUtils.h"
 
 #include "MsgCompGlue.h"
 
 // defined in msgCompGlue.cpp
-extern int MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p);
 static char *mime_mailto_stream_read_buffer = 0;
 
 PRInt32 nsMsgSendPart::M_counter = 0;
@@ -50,7 +51,7 @@ int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size)
   return NS_SUCCEEDED(res) ? 0 : -1;
 }
 
-nsMsgSendPart::nsMsgSendPart(nsMsgSendMimeDeliveryState* state, const char *part_charset)
+nsMsgSendPart::nsMsgSendPart(nsMsgComposeAndSend* state, const char *part_charset)
 {
   PL_strcpy(m_charset_name, part_charset ? part_charset : "us-ascii");
   m_children = NULL;
@@ -137,7 +138,7 @@ int nsMsgSendPart::SetOtherHeaders(const char* other)
   return CopyString(&m_other, other);
 }
 
-int nsMsgSendPart::SetMimeDeliveryState(nsMsgSendMimeDeliveryState *state)
+int nsMsgSendPart::SetMimeDeliveryState(nsMsgComposeAndSend *state)
 {
   m_state = state;
   if (GetNumChildren() > 0)
@@ -262,7 +263,7 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
   if (m_firstBlock) {
     if (m_needIntlConversion) {
       m_intlDocToMailConverter =
-        INTL_CreateDocToMailConverter(m_state->GetContext(),
+        nsMsgI18NCreateDocToMailConverter(m_state->GetContext(),
         (!PL_strcasecmp(m_type,
         TEXT_HTML)),
         (unsigned char*) buffer,
@@ -276,7 +277,7 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
           !PL_strcasecmp(m_type, TEXT_HTML) &&
           (m_encoder_data != NULL));
         if (Base64HtmlNoChconv) {
-          INTL_DestroyCharCodeConverter(m_intlDocToMailConverter);
+          nsMsgI18NDestroyCharCodeConverter(m_intlDocToMailConverter);
           m_intlDocToMailConverter = NULL;
         }
       }
@@ -286,7 +287,7 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
   
   if (m_intlDocToMailConverter) {
     encoded_data =
-      (char*)INTL_CallCharCodeConverter(m_intlDocToMailConverter,
+      (char*)nsMsgI18NCallCharCodeConverter(m_intlDocToMailConverter,
       (unsigned char*)buffer,
       length);
     /* the return buffer is different from the */
@@ -818,7 +819,7 @@ FAIL:
   if (file)
     PR_Close(file);
   if (m_intlDocToMailConverter) {
-    INTL_DestroyCharCodeConverter(m_intlDocToMailConverter);
+    nsMsgI18NDestroyCharCodeConverter(m_intlDocToMailConverter);
     m_intlDocToMailConverter = NULL;
   }
   return status;

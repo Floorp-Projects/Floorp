@@ -67,7 +67,7 @@
 #include "jsapi.h"
 
 static NS_DEFINE_IID(kIDOMAppCoresManagerIID, NS_IDOMAPPCORESMANAGER_IID);
-static NS_DEFINE_IID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
+static NS_DEFINE_CID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentIID, nsIDocument::GetIID());
@@ -86,7 +86,7 @@ static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID); 
 
 // defined in msgCompGlue.cpp
-extern char * INTL_GetDefaultMailCharset(void);
+extern char * nsMsgI18NGetDefaultMailCharset(void);
 extern nsresult ConvertFromUnicode(const nsString& aCharset, 
                                    const nsString& inString,
                                    char** outCString);
@@ -94,7 +94,7 @@ extern nsresult ConvertToUnicode(const nsString& aCharset,
                                  const char* inCString, 
                                  nsString& outString);
 extern const char *msgCompHeaderInternalCharset(void);
-extern nsresult INTL_DecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString);
+extern nsresult nsMsgI18NDecodeMimePartIIStr(const nsString& header, nsString& charset, nsString& decodedString);
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -762,7 +762,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                                    650);        // height
 	
   // Get the default charset from pref, use this as a mail charset.
-  default_mail_charset = INTL_GetDefaultMailCharset();
+  default_mail_charset = nsMsgI18NGetDefaultMailCharset();
   if (NULL != default_mail_charset) {
     mMsgCompFields->SetCharacterSet(default_mail_charset, NULL);
     PR_Free(default_mail_charset);
@@ -805,7 +805,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                     bString += "Re: ";
                     bString += aString;
 					mMsgCompFields->SetSubject(nsAutoCString(bString), NULL);
-                    if (NS_SUCCEEDED(rv = INTL_DecodeMimePartIIStr(bString, encodedCharset, decodedString))) {
+                    if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(bString, encodedCharset, decodedString))) {
                       if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
                         mMsgCompFields->SetSubject(aCString, NULL);
                         PR_Free(aCString);
@@ -814,7 +814,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                     
 					message->GetAuthor(aString);		
 					mMsgCompFields->SetTo(nsAutoCString(aString), NULL);
-                    if (NS_SUCCEEDED(rv = INTL_DecodeMimePartIIStr(aString, encodedCharset, decodedString))) {
+                    if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(aString, encodedCharset, decodedString))) {
                       if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
                         mMsgCompFields->SetTo(aCString, NULL);
                         PR_Free(aCString);
@@ -830,7 +830,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                             cString = cString + ", ";
                         cString = cString + dString;
 						mMsgCompFields->SetCc(nsAutoCString(cString), NULL);
-                        if (NS_SUCCEEDED(rv = INTL_DecodeMimePartIIStr(cString, encodedCharset, decodedString))) {
+                        if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(cString, encodedCharset, decodedString))) {
                           if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
                             mMsgCompFields->SetTo(aCString, NULL);
                             PR_Free(aCString);
@@ -852,7 +852,7 @@ nsComposeAppCore::NewMessage(nsAutoString& aUrl,
                     bString += "]";
 
 					mMsgCompFields->SetSubject(nsAutoCString(bString), NULL);
-                    if (NS_SUCCEEDED(rv = INTL_DecodeMimePartIIStr(bString, encodedCharset, decodedString))) {
+                    if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(bString, encodedCharset, decodedString))) {
                       if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString))) {
                         mMsgCompFields->SetSubject(aCString, NULL);
                         PR_Free(aCString);

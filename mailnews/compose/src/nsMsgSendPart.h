@@ -25,16 +25,16 @@
 #include "intl_csi.h"
 #include "msgcom.h"
 #include "MsgCompGlue.h"
+#include "nsMsgZapIt.h"
+#include "nsMsgSend.h"
 
-
-class nsMsgSendMimeDeliveryState;
 
 typedef int (*MSG_SendPartWriteFunc)(const char* line, PRInt32 size,
 									 PRBool isheader, void* closure);
 
-class nsMsgSendPart : public MSG_ZapIt {
+class nsMsgSendPart : public nsMsgZapIt {
 public:
-    nsMsgSendPart(nsMsgSendMimeDeliveryState* state, const char *part_charset = NULL);
+    nsMsgSendPart(nsMsgComposeAndSend* state, const char *part_charset = NULL);
     virtual ~nsMsgSendPart();	// Note that the destructor also destroys
 								// any children that were added.
 
@@ -56,7 +56,7 @@ public:
     const char* SetOtherHeaders() {return m_other;}
 	virtual int AppendOtherHeaders(const char* moreother);
 
-	virtual int SetMimeDeliveryState(nsMsgSendMimeDeliveryState* state);
+	virtual int SetMimeDeliveryState(nsMsgComposeAndSend* state);
 
 	// Note that the nsMsgSendPart class will take over ownership of the
 	// MimeEncoderData* object, deleting it when it chooses.  (This is
@@ -85,7 +85,7 @@ protected:
 	int CopyString(char** dest, const char* src);
 	int PushBody(char* buffer, PRInt32 length);
 
-	nsMsgSendMimeDeliveryState* m_state;
+	nsMsgComposeAndSend* m_state;
 	nsMsgSendPart* m_parent;
     char* m_filename;
 	XP_FileType m_filetype;

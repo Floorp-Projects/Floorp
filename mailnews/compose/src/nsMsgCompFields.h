@@ -19,11 +19,10 @@
 #ifndef _MsgCompFields_H_
 #define _MsgCompFields_H_
 
-/*JFD #include "msgzap.h" */
 #include "msgCore.h"
 #include "prprf.h" /* should be defined into msgCore.h? */
 #include "net.h" /* should be defined into msgCore.h? */
-#include "intl_csi.h"
+//#include "intl_csi.h"
 #include "msgcom.h"
 #include "nsMsgHeaderMasks.h"
 
@@ -36,7 +35,7 @@
    error, like an illegal parameter); rather, they return "" if things were set
    to NULL.  This makes it real handy for the callers. */
 
-class nsMsgCompFields : public nsIMsgCompFields, public MSG_ZapIt {
+class nsMsgCompFields : public nsIMsgCompFields, public nsMsgZapIt {
 public:
 	nsMsgCompFields();
 	virtual ~nsMsgCompFields();
@@ -202,6 +201,8 @@ protected:
 	PRBool		m_force_plain_text;
 	PRBool		m_multipart_alt;
 	PRInt32		m_receiptType; /* 0:None 1:DSN 2:MDN 3:BOTH */
+
+
 };
 
 
