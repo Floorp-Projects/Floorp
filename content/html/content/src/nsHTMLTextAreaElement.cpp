@@ -405,7 +405,11 @@ NS_IMETHODIMP
 nsHTMLTextAreaElement::GetValue(nsAWritableString& aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+
+  // No need to flush here, if there is no frame yet for this textarea
+  // there won't be a value in it we don't already have even if we
+  // force the frame to be created.
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
   if (formControlFrame) {
     formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
@@ -432,7 +436,10 @@ NS_IMETHODIMP
 nsHTMLTextAreaElement::SetValue(const nsAReadableString& aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+
+  // No need to flush here, if there is no frame for this yet forcing
+  // creation of one will not do us any good
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
 
   if (formControlFrame) {
     nsCOMPtr<nsIPresContext> presContext;

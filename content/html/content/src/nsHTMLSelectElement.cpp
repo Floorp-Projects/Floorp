@@ -251,6 +251,9 @@ protected:
                                     PRInt32 aEndIndex,
                                     PRInt32* aListIndex);
 
+  nsISelectControlFrame *GetPrimaryFrameInternal(PRBool aFlushContent,
+                                                 PRBool aFlushReflows);
+
   nsHTMLOptionCollection* mOptions;
   PRBool    mIsDoneAddingContent;
   PRUint32  mArtifactsAtTopLevel;
@@ -439,16 +442,16 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
       mSelectedIndex += (insertIndex - aListIndex);
     }
 
-    // Get the frame stuff for notification
+    // Get the frame stuff for notification. No need to flush here
+    // since if there's no frame for the select yet the select will
+    // get into the right state once it's created.
     nsIFormControlFrame* fcFrame = nsnull;
-    nsISelectControlFrame* selectFrame = nsnull;
+    nsISelectControlFrame* selectFrame =
+      GetPrimaryFrameInternal(PR_FALSE, PR_FALSE);
+
     nsCOMPtr<nsIPresContext> presContext;
-    GetPrimaryFrame(this, fcFrame, PR_FALSE, PR_FALSE);
-    if (fcFrame) {
-      CallQueryInterface(fcFrame, &selectFrame);
-      if (selectFrame) {
-        GetPresContext(this, getter_AddRefs(presContext));
-      }
+    if (selectFrame) {
+      GetPresContext(this, getter_AddRefs(presContext));
     }
 
     // Actually select the options if the added options warrant it
@@ -532,17 +535,13 @@ nsHTMLSelectElement::RemoveOptionsFromList(nsIContent* aOptions,
   RemoveOptionsFromListRecurse(aOptions, aListIndex, &numRemoved, aLevel);
   if (numRemoved) {
     // Tell the widget we removed the options
-    nsIFormControlFrame* fcFrame = nsnull;
-    GetPrimaryFrame(this, fcFrame, PR_FALSE, PR_FALSE);
-    if (fcFrame) {
-      nsISelectControlFrame* selectFrame = nsnull;
-      CallQueryInterface(fcFrame, &selectFrame);
-      if (selectFrame) {
-        nsCOMPtr<nsIPresContext> presContext;
-        GetPresContext(this, getter_AddRefs(presContext));
-        for (int i=aListIndex;i<aListIndex+numRemoved;i++) {
-          selectFrame->RemoveOption(presContext, i);
-        }
+    nsISelectControlFrame* selectFrame =
+      GetPrimaryFrameInternal(PR_FALSE, PR_FALSE);
+    if (selectFrame) {
+      nsCOMPtr<nsIPresContext> presContext;
+      GetPresContext(this, getter_AddRefs(presContext));
+      for (int i=aListIndex;i<aListIndex+numRemoved;i++) {
+        selectFrame->RemoveOption(presContext, i);
       }
     }
 
@@ -811,6 +810,22 @@ nsHTMLSelectElement::GetFirstChildOptionIndex(nsIContent* aOptions,
   return NS_OK;
 }
 
+nsISelectControlFrame *
+nsHTMLSelectElement::GetPrimaryFrameInternal(PRBool aFlushContent,
+                                             PRBool aFlushReflows)
+{
+  nsIFormControlFrame* form_control_frame = nsnull;
+  GetPrimaryFrame(this, form_control_frame, aFlushContent, aFlushReflows);
+
+  nsISelectControlFrame *select_frame = nsnull;
+
+  if (form_control_frame) {
+    form_control_frame->QueryInterface(NS_GET_IID(nsISelectControlFrame),
+                                       (void **)&select_frame);
+  }
+
+  return select_frame;
+}
 
 NS_IMETHODIMP
 nsHTMLSelectElement::Add(nsIDOMHTMLElement* aElement,
@@ -1156,12 +1171,8 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
   PRBool optionsSelected = PR_FALSE;
   PRBool optionsDeselected = PR_FALSE;
 
-  // To notify the frame if anything gets changed
-  nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
-
-  nsCOMPtr<nsISelectControlFrame> selectFrame =
-    do_QueryInterface(formControlFrame);
+  nsISelectControlFrame *selectFrame = nsnull;
+  PRBool did_get_frame = PR_FALSE;
 
   nsCOMPtr<nsIPresContext> presContext;
   GetPresContext(this, getter_AddRefs(presContext));
@@ -1217,6 +1228,14 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
           PRBool isSelected = PR_FALSE;
           option->GetSelected(&isSelected);
           if (!isSelected) {
+            // To notify the frame if anything gets changed. No need
+            // to flush here, if there's no frame yet we don't need to
+            // force it to be created just to notify it about a change
+            // in the select.
+            selectFrame = GetPrimaryFrameInternal(PR_FALSE, PR_FALSE);
+
+            did_get_frame = PR_TRUE;
+
             OnOptionSelected(selectFrame, presContext, optIndex, PR_TRUE);
             optionsSelected = PR_TRUE;
           }
@@ -1241,6 +1260,15 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
             PRBool isSelected = PR_FALSE;
             option->GetSelected(&isSelected);
             if (isSelected) {
+              if (!did_get_frame) {
+                // To notify the frame if anything gets changed, don't
+                // flush, if the frame doesn't exist we don't need to
+                // create it just to tell it about this change.
+                selectFrame = GetPrimaryFrameInternal(PR_FALSE, PR_FALSE);
+
+                did_get_frame = PR_TRUE;
+              }
+
               OnOptionSelected(selectFrame, presContext, optIndex, PR_FALSE);
               optionsDeselected = PR_TRUE;
 
@@ -1274,6 +1302,15 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
         PRBool isSelected = PR_FALSE;
         option->GetSelected(&isSelected);
         if (isSelected) {
+          if (!did_get_frame) {
+            // To notify the frame if anything gets changed, don't
+            // flush, if the frame doesn't exist we don't need to
+            // create it just to tell it about this change.
+            selectFrame = GetPrimaryFrameInternal(PR_FALSE, PR_FALSE);
+
+            did_get_frame = PR_TRUE;
+          }
+
           OnOptionSelected(selectFrame, presContext, optIndex, PR_FALSE);
           optionsDeselected = PR_TRUE;
         }
@@ -1630,8 +1667,7 @@ nsHTMLSelectElement::DoneAddingContent(PRBool aIsDone)
 {
   mIsDoneAddingContent = aIsDone;
 
-  nsIFormControlFrame* fcFrame = nsnull;
-  GetPrimaryFrame(this, fcFrame, PR_FALSE, PR_FALSE);
+  nsISelectControlFrame* sFrame = GetPrimaryFrameInternal(PR_FALSE, PR_FALSE);
 
   // If we foolishly tried to restore before we were done adding
   // content, restore the rest of the options proper-like
@@ -1641,12 +1677,8 @@ nsHTMLSelectElement::DoneAddingContent(PRBool aIsDone)
     mRestoreState = nsnull;
   }
 
-  if (fcFrame) {
-    nsISelectControlFrame* selectFrame = nsnull;
-    CallQueryInterface(fcFrame, &selectFrame);
-    if (selectFrame) {
-      selectFrame->DoneAddingContent(mIsDoneAddingContent);
-    }
+  if (sFrame) {
+    sFrame->DoneAddingContent(mIsDoneAddingContent);
   }
 
   // Now that we're done, select something
@@ -1837,7 +1869,10 @@ nsHTMLSelectElement::RestoreState(nsIPresContext* aPresContext,
     RestoreStateTo(&stateStr);
 
     nsIFormControlFrame* formControlFrame = nsnull;
-    GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+
+    // Don't flush, if the frame doesn't exist yet it doesn't care if
+    // we're reset or not.
+    GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
     if (formControlFrame) {
       formControlFrame->OnContentReset();
     }
@@ -1917,7 +1952,10 @@ nsHTMLSelectElement::Reset()
   }
 
   nsIFormControlFrame* formControlFrame = nsnull;
-  GetPrimaryFrame(this, formControlFrame, PR_TRUE, PR_FALSE);
+
+  // Don't flush, if there's no frame yet it won't care about us being
+  // reset even if we forced it to be created now.
+  GetPrimaryFrame(this, formControlFrame, PR_FALSE, PR_FALSE);
   if (formControlFrame) {
     formControlFrame->OnContentReset();
   }

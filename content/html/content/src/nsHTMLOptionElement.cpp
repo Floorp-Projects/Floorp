@@ -114,8 +114,8 @@ public:
 
 protected:
   // Get the primary frame associated with this content
-  nsresult GetPrimaryFrame(nsIFormControlFrame *&aFormControlFrame,
-                           PRBool aFlushContent, PRBool aFlushReflows);
+  nsresult GetPrimaryFrame(nsIFormControlFrame *&aFrame, PRBool aFlushContent,
+                           PRBool aFlushReflows);
 
   // Get the select content element that contains this option, this
   // intentionally does not return nsresult, all we care about is if
@@ -383,7 +383,10 @@ nsHTMLOptionElement::SetLabel(const nsAReadableString& aValue)
   if (NS_SUCCEEDED(result)) {
     nsIFormControlFrame* fcFrame = nsnull;
 
-    GetPrimaryFrame(fcFrame, PR_TRUE, PR_FALSE);
+    // No need to flush here, if the select element/frame doesn't
+    // exist yet we don't need to force it to be created only to
+    // notify it about this new label
+    GetPrimaryFrame(fcFrame, PR_FALSE, PR_FALSE);
 
     if (fcFrame) {
       nsIComboboxControlFrame* selectFrame = nsnull;
@@ -601,7 +604,10 @@ nsHTMLOptionElement::SetText(const nsAReadableString& aText)
 
   if (NS_SUCCEEDED(result)) {
     nsIFormControlFrame* fcFrame = nsnull;
-    GetPrimaryFrame(fcFrame, PR_TRUE, PR_FALSE);
+
+    // No need to flush here, if there's no frame yet we don't need to
+    // force it to be created just to update the selection in it.
+    GetPrimaryFrame(fcFrame, PR_FALSE, PR_FALSE);
 
     if (fcFrame) {
       nsIComboboxControlFrame* selectFrame = nsnull;
@@ -622,13 +628,13 @@ nsHTMLOptionElement::SetText(const nsAReadableString& aText)
 // then call nsGenericHTMLElement::GetPrimaryFrame()
 
 nsresult
-nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame,
+nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aFrame,
                                      PRBool aFlushContent,
                                      PRBool aFlushReflows)
 {
-  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
+  aFrame = nsnull;
 
-  nsresult res = NS_ERROR_FAILURE; // This should be NS_OK;
+  nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
 
   GetSelect(getter_AddRefs(selectElement));
 
@@ -636,14 +642,12 @@ nsHTMLOptionElement::GetPrimaryFrame(nsIFormControlFrame *&aIFormControlFrame,
     nsCOMPtr<nsIHTMLContent> selectContent(do_QueryInterface(selectElement));
 
     if (selectContent) {
-      res = nsGenericHTMLElement::GetPrimaryFrame(selectContent,
-                                                  aIFormControlFrame,
-                                                  aFlushContent,
-                                                  aFlushReflows);
+      nsGenericHTMLElement::GetPrimaryFrame(selectContent, aFrame,
+                                            aFlushContent, aFlushReflows);
     }
   }
 
-  return res;
+  return NS_OK;
 }
 
 // Get the select content element that contains this option
