@@ -38,7 +38,6 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile);
 #include <Script.h>
 #include <Processes.h>
 #include "nsILocalFileMac.h"
-static nsresult GetMacFolder(OSType folderType, nsILocalFile** aFile);
 #endif
 #if defined(XP_OS2)
 #define INCL_DOSPROCESS
@@ -47,7 +46,6 @@ static nsresult GetMacFolder(OSType folderType, nsILocalFile** aFile);
 #elif defined(XP_PC)
 #include <windows.h>
 #include <shlobj.h>
-static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile);
 #elif defined(XP_UNIX)
 #include <unistd.h>
 #include <stdlib.h>
@@ -58,8 +56,8 @@ static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile);
 #include <kernel/image.h>
 #include <storage/FindDirectory.h>
 #endif
+
 static nsresult GetChromeLocale(PRUnichar** localeName);
-static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile);
  
 // IDs
 
@@ -136,7 +134,7 @@ nsAppFileLocationProvider::nsAppFileLocationProvider()
     nsresult rv;
     
     // Get the mozilla bin directory
-    // 1. Check the directory service first for xpcom.currentProcessDirectory
+    // 1. Check the directory service first for NS_XPCOM_CURRENT_PROCESS_DIR
     //    This will be set if a directory was passed to NS_InitXPCOM
     // 2. If that doesn't work, set it to be the current process directory
     
@@ -145,10 +143,7 @@ nsAppFileLocationProvider::nsAppFileLocationProvider()
         rv = directoryService->Get(NS_XPCOM_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
 
     if (NS_FAILED(rv)) {
-        nsCOMPtr<nsILocalFile> aLocalFile;
-        rv = GetCurrentProcessDirectory(getter_AddRefs(aLocalFile));
-        if (NS_SUCCEEDED(rv))
-            mMozBinDirectory = do_QueryInterface(aLocalFile);
+        rv = directoryService->Get(NS_OS_CURRENT_PROCESS_DIR, NS_GET_IID(nsIFile), getter_AddRefs(mMozBinDirectory));
     }
 }
 
@@ -310,141 +305,6 @@ static nsresult GetChromeLocale(PRUnichar** localeName)
     return rv;
 }
 
-static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
-{
-    nsCOMPtr<nsILocalFile> localFile;
-    NS_NewLocalFile(nsnull, PR_FALSE, getter_AddRefs(localFile));
-    if (!localFile)
-        return NS_ERROR_OUT_OF_MEMORY;
-   
-
-#ifdef XP_PC
-#ifdef XP_OS2
-    PPIB ppib;
-    PTIB ptib;
-    char buffer[CCHMAXPATH];
-    DosGetInfoBlocks( &ptib, &ppib);
-    DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
-    *strrchr( buffer, '\\') = '\0'; // XXX DBCS misery
-    localFile->InitWithPath(buffer);
-    NS_IF_ADDREF(*aFile = localFile);
-    return NS_OK;
-#else
-    char buf[MAX_PATH];
-    if ( GetModuleFileName(0, buf, sizeof(buf)) ) 
-    {
-        // chop of the executable name by finding the rightmost backslash
-        char* lastSlash = PL_strrchr(buf, '\\');
-        if (lastSlash)
-            *(lastSlash + 1) = '\0';
-        
-        localFile->InitWithPath(buf);
-        NS_IF_ADDREF(*aFile = localFile);
-        return NS_OK;
-    }
-#endif
-
-#elif defined(XP_MAC)
-    // get info for the the current process to determine the directory
-    // its located in
-    OSErr err;
-    ProcessSerialNumber psn;
-    if (!(err = GetCurrentProcess(&psn)))
-    {
-        ProcessInfoRec pInfo;
-        FSSpec         tempSpec;
-
-        // initialize ProcessInfoRec before calling
-        // GetProcessInformation() or die horribly.
-        pInfo.processName = nil;
-        pInfo.processAppSpec = &tempSpec;
-        pInfo.processInfoLength = sizeof(ProcessInfoRec);
-
-        if (!(err = GetProcessInformation(&psn, &pInfo)))
-        {
-            FSSpec appFSSpec = *(pInfo.processAppSpec);
-            
-            // Truncate the nsame so the spec is just to the app directory
-            appFSSpec.name[0] = 0;
-
-        	nsCOMPtr<nsILocalFileMac> localFileMac = do_QueryInterface((nsIFile*)localFile);
-		    if (localFileMac) 
-            {
-                localFileMac->InitWithFSSpec(&appFSSpec);
-                NS_IF_ADDREF(*aFile = localFile);
-                return NS_OK;
-            }
-        }
-    }
-
-#elif defined(XP_UNIX)
-
-    // In the absence of a good way to get the executable directory let
-    // us try this for unix:
-    //	- if MOZILLA_FIVE_HOME is defined, that is it
-    //	- else give the current directory
-    char buf[MAXPATHLEN];
-    char *moz5 = PR_GetEnv("MOZILLA_FIVE_HOME");
-    if (moz5)
-    {
-        localFile->InitWithPath(moz5);
-        localFile->Normalize();
-        NS_IF_ADDREF(*aFile = localFile);
-        return NS_OK;
-    }
-    else
-    {
-        static PRBool firstWarning = PR_TRUE;
-
-        if(firstWarning) {
-            // Warn that MOZILLA_FIVE_HOME not set, once.
-            printf("Warning: MOZILLA_FIVE_HOME not set.\n");
-            firstWarning = PR_FALSE;
-        }
-
-        // Fall back to current directory.
-        if (getcwd(buf, sizeof(buf)))
-        {
-            localFile->InitWithPath(buf);
-            NS_IF_ADDREF(*aFile = localFile);
-            return NS_OK;
-        }
-    }
-
-#elif defined(XP_BEOS)
-
-    char *moz5 = getenv("MOZILLA_FIVE_HOME");
-    if (moz5)
-    {
-        localFile->InitWithPath(moz5);
-        NS_IF_ADDREF(*aFile = localFile);
-        return NS_OK;
-    }
-    else
-    {
-      static char buf[MAXPATHLEN];
-      int32 cookie = 0;
-      image_info info;
-      char *p;
-      *buf = 0;
-      if(get_next_image_info(0, &cookie, &info) == B_OK)
-      {
-        strcpy(buf, info.name);
-        if((p = strrchr(buf, '/')) != 0)
-        {
-          *p = 0;
-          localFile->InitWithPath(buf);
-          NS_IF_ADDREF(*aFile = localFile);
-          return NS_OK;
-        }
-      }
-    }
-
-#endif
-    
-    NS_ERROR("unable to get current process directory");
-    return NS_ERROR_FAILURE;
-}
 
 //----------------------------------------------------------------------------------------
 // GetDefaultUserProfileRoot - Gets the directory which contains each user profile dir
@@ -455,89 +315,44 @@ static nsresult GetCurrentProcessDirectory(nsILocalFile** aFile)
 //----------------------------------------------------------------------------------------
 static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
 {
-   nsresult rv;
-   PRBool exists;
-   nsILocalFile *pLocalFile;
+    NS_ENSURE_ARG_POINTER(aLocalFile);
+    
+    nsresult rv;
+    PRBool exists;
+    nsCOMPtr<nsILocalFile> localDir;
    
 #if defined(XP_MAC)
-    rv = GetMacFolder(kDocumentsFolderType, aLocalFile);
-    NS_ENSURE_SUCCESS(rv, rv);
-    pLocalFile = *aLocalFile;
-    pLocalFile->AppendRelativePath("Mozilla");
-    rv = pLocalFile->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!exists) {
-      rv = pLocalFile->Create(nsIFile::DIRECTORY_TYPE, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    pLocalFile->AppendRelativePath("Users50");
-    rv = pLocalFile->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!exists) {
-      rv = pLocalFile->Create(nsIFile::DIRECTORY_TYPE, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }    
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = directoryService->Get(NS_MAC_DOCUMENTS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
+    if (NS_FAILED(rv)) return rv;   
 #elif defined(XP_OS2)
-    PPIB ppib;
-    PTIB ptib;
-    char buffer[CCHMAXPATH];
-    DosGetInfoBlocks( &ptib, &ppib);
-    DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
-    *strrchr( buffer, '\\') = '\0'; // OS2TODO DBCS misery
-    *strrchr( buffer, '\\') = '\0'; // OS2TODO DBCS misery
-    rv = NS_NewLocalFile(buffer, PR_TRUE, aLocalFile);
-    NS_ENSURE_SUCCESS(rv, rv);
-    pLocalFile = *aLocalFile;
-    pLocalFile->AppendRelativePath("Users50");
-    rv = pLocalFile->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!exists) {
-      rv = pLocalFile->Create(nsIFile::DIRECTORY_TYPE, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = directoryService->Get(NS_OS2_HOME_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
+    if (NS_FAILED(rv)) return rv;
 #elif defined(XP_PC)
-    rv = GetWindowsFolder(CSIDL_APPDATA, aLocalFile);
-    if (NS_SUCCEEDED(rv)) {
-        rv = (*aLocalFile)->Exists(&exists);
-        if (NS_SUCCEEDED(rv) && !exists) {            
-            char path[_MAX_PATH];
-            PRInt32 len = GetWindowsDirectory( path, _MAX_PATH );
-            
-            // Need enough space to add the trailing backslash
-            if (len <= _MAX_PATH-2) {
-                path[len]   = '\\';
-                path[len+1] = '\0';
-            }
-            rv = NS_NewLocalFile(path, PR_TRUE, aLocalFile);
-        }
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    rv = directoryService->Get(NS_WIN_APPDATA_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
+    if (NS_SUCCEEDED(rv))
+        rv = localDir->Exists(&exists);
+    if (NS_FAILED(rv) || !exists)
+    {
+        // On some Win95 machines, NS_WIN_APPDATA_DIR does not exist - revert to NS_WIN_WINDOWS_DIR
+        localDir = nsnull;
+        rv = directoryService->Get(NS_WIN_WINDOWS_DIR, NS_GET_IID(nsILocalFile), getter_AddRefs(localDir));
     }
-    NS_ENSURE_SUCCESS(rv, rv);
-    pLocalFile = *aLocalFile;
-    pLocalFile->AppendRelativePath("Mozilla");
-    rv = pLocalFile->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!exists) {
-      rv = pLocalFile->Create(nsIFile::DIRECTORY_TYPE, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
-    pLocalFile->AppendRelativePath("Users50");
-    rv = pLocalFile->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!exists) {
-      rv = pLocalFile->Create(nsIFile::DIRECTORY_TYPE, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    if (NS_FAILED(rv)) return rv;
 #elif defined(XP_UNIX)
-    rv = NS_NewLocalFile(PR_GetEnv("HOME"), PR_TRUE, aLocalFile);
-    NS_ENSURE_SUCCESS(rv, rv);
-    pLocalFile = *aLocalFile;
-    pLocalFile->AppendRelativePath(".mozilla");
-    rv = pLocalFile->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!exists) {
-      rv = pLocalFile->Create(nsIFile::DIRECTORY_TYPE, 0775);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = NS_NewLocalFile(PR_GetEnv("HOME"), PR_TRUE, getter_AddRefs(localDir));
+    if (NS_FAILED(rv)) return rv;
+    rv = localDir->AppendRelativePath(".mozilla");
+    if (NS_FAILED(rv)) return rv;
+    rv = localDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && !exists)
+      rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    if (NS_FAILED(rv)) return rv;
 #elif defined(XP_BEOS)
     char path[MAXPATHLEN];
     find_directory(B_USER_SETTINGS_DIRECTORY, 0, 0, path, MAXPATHLEN);
@@ -547,157 +362,33 @@ static nsresult GetDefaultUserProfileRoot(nsILocalFile **aLocalFile)
         return NS_ERROR_FAILURE;
     path[len]   = '/';
     path[len+1] = '\0';
-    rv = NS_NewLocalFile(path, PR_TRUE, aLocalFile);
-    NS_ENSURE_SUCCESS(rv, rv);
-    pLocalFile = *aLocalFile;
-    pLocalFile->AppendRelativePath("mozilla");
-    rv = pLocalFile->Exists(&exists);
-    NS_ENSURE_SUCCESS(rv, rv);
-    if (!exists) {
-      rv = pLocalFile->Create(nsIFile::DIRECTORY_TYPE, 0);
-      NS_ENSURE_SUCCESS(rv, rv);
-    }
+    rv = NS_NewLocalFile(path, PR_TRUE, getter_AddRefs(localDir));
+    if (NS_FAILED(rv)) return rv;
+    rv = localDir->AppendRelativePath("mozilla");
+    if (NS_FAILED(rv)) return rv;
+    rv = localDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && !exists)
+      rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0);
+    if (NS_FAILED(rv)) return rv;
 #else
 #error dont_know_how_to_do_profiles_on_your_platform
 #endif
 
-   return rv; 
-}
-
-#if defined (XP_MAC)
-//----------------------------------------------------------------------------------------
-// GetMacFolder - Gets a folder which is defined by the OS
-//----------------------------------------------------------------------------------------
-static nsresult GetMacFolder(OSType folderType, nsILocalFile** aFile)
-{
-    OSErr   err;
-    CInfoPBRec cinfo;
-    DirInfo *dipb=(DirInfo *)&cinfo;
-    FSSpec  tempSpec;
-    
-    // Call FindFolder to fill in the vrefnum and dirid
-    for (int attempts = 0; attempts < 2; attempts++)
-    {
-        err = FindFolder(kOnSystemDisk, folderType, kCreateFolder,
-                         &dipb->ioVRefNum, &dipb->ioDrDirID);
-        if (err == noErr)
-            break;
-        if (attempts > 0)
-		    break;
-		
-		// This business with the Documents folder is probably wrong. If it
-		// didn't exist and we are running a system on which it is not called
-		// "Documents", the second pass through FindFolder is still not
-		// going to find it. In this case, we are probably better off having
-		// a Documents folder with the wrong name than not having one at all.
-		      
-		switch (folderType)
-		{		    
-    	    case kDocumentsFolderType:
-    	        {
-    	        const char* kDocumentsFolderName = "Documents";
-    	        // Find folder will find this, as long as it exists.
-    	        // The "create" parameter, however, is sadly ignored.
-    	        // How do we internationalize this?    	        
-    	        err = FindFolder(kOnSystemDisk, kVolumeRootFolderType, kCreateFolder,
-                                 &tempSpec.vRefNum, &tempSpec.parID);
-                
-                PRUint32 len = nsCRT::strlen(kDocumentsFolderName);
-                nsCRT::memcpy(&tempSpec.name[1], kDocumentsFolderName, len);
-                tempSpec.name[0] = len;                 
-                err = FSpDirCreate(&tempSpec, smSystemScript, &dipb->ioDrDirID);
-                }
-    	        break;
-		}
-    }
-    NS_ENSURE_TRUE(err == noErr, NS_ERROR_FILE_NOT_FOUND);
-
-    StrFileName filename;
-    filename[0] = '\0';
-    dipb->ioNamePtr = (StringPtr)&filename;
-    dipb->ioFDirIndex = -1;
-    
-    err = PBGetCatInfoSync(&cinfo);
-    NS_ENSURE_TRUE(err == noErr, NS_ERROR_FILE_NOT_FOUND);
-    err = FSMakeFSSpec(dipb->ioVRefNum, dipb->ioDrParID, filename, &tempSpec);
-    NS_ENSURE_TRUE(err == noErr, NS_ERROR_FILE_NOT_FOUND);
-
-	 nsCOMPtr<nsILocalFileMac> macDir;
-    nsresult rv = NS_NewLocalFileWithFSSpec(&tempSpec, PR_TRUE, getter_AddRefs(macDir));
-    NS_ENSURE_SUCCESS(rv, rv);
-    rv = macDir->QueryInterface(NS_GET_IID(nsILocalFile), aFile);
-
-    return rv;
-}
+#if defined(XP_MAC) || defined(XP_OS2) || defined(XP_PC)
+    // These 3 platforms share this part of the path - do them as one
+    rv = localDir->AppendRelativePath("Mozilla");
+    if (NS_FAILED(rv)) return rv;
+    rv = localDir->AppendRelativePath("Users50");
+    if (NS_FAILED(rv)) return rv;
+    rv = localDir->Exists(&exists);
+    if (NS_SUCCEEDED(rv) && !exists)
+        rv = localDir->Create(nsIFile::DIRECTORY_TYPE, 0775);
+    if (NS_FAILED(rv)) return rv;
 #endif
 
-#if defined (XP_PC) && !defined (XP_OS2)
-//----------------------------------------------------------------------------------------
-// MakeUpperCase - Windows does not care about case.  push to uppercase:
-//----------------------------------------------------------------------------------------
-static char* MakeUpperCase(char* aPath)
-{
-  int length = strlen(aPath);
-  for (int i = 0; i < length; i++)
-      if (islower(aPath[i]))
-        aPath[i] = _toupper(aPath[i]);
-    
-  return aPath;
+    *aLocalFile = localDir;
+    NS_ADDREF(*aLocalFile);
+
+   return rv; 
 }
-
-//----------------------------------------------------------------------------------------
-// GetWindowsFolder - Gets a folder which is defined by the OS
-//----------------------------------------------------------------------------------------
-static nsresult GetWindowsFolder(int folder, nsILocalFile** aFile)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    LPMALLOC pMalloc = NULL;
-    LPSTR pBuffer = NULL;
-    LPITEMIDLIST pItemIDList = NULL;
-    int len;
-    char *outDirectory = NULL;
-    nsCOMPtr<nsILocalFile> newFile;
- 
-    // Get the shell's allocator. 
-    if (!SUCCEEDED(SHGetMalloc(&pMalloc))) 
-        return NS_ERROR_FAILURE;
-
-    // Allocate a buffer
-    if ((pBuffer = (LPSTR) pMalloc->Alloc(MAX_PATH + 2)) == NULL) 
-        return NS_ERROR_OUT_OF_MEMORY; 
- 
-    // Get the PIDL for the folder. 
-    if (!SUCCEEDED(SHGetSpecialFolderLocation(NULL, folder, &pItemIDList)))
-        goto Clean;
- 
-    if (!SUCCEEDED(SHGetPathFromIDList(pItemIDList, pBuffer)))
-        goto Clean;
-
-    // Append the trailing slash
-    len = PL_strlen(pBuffer);
-    pBuffer[len]   = '\\';
-    pBuffer[len + 1] = '\0';
-
-    // Assign the directory
-    outDirectory = MakeUpperCase(pBuffer);
-    rv = NS_NewLocalFile(outDirectory, TRUE, getter_AddRefs(newFile));
-    if (NS_FAILED(rv))
-        goto Clean;
-    *aFile = newFile;
-    NS_ADDREF(*aFile);
-    
-    rv = NS_OK;
-    
-Clean:
-    // Clean up. 
-    if (pItemIDList)
-        pMalloc->Free(pItemIDList); 
-    if (pBuffer)
-        pMalloc->Free(pBuffer); 
-
-	 pMalloc->Release();
-	 
-	 return rv;
-}
-#endif // XP_PC && !XP_OS2
 
