@@ -37,6 +37,8 @@
  
 /* Common defines for both debug & non-debug versions NSStdLib */
 
-/* Nothing to do here */
-
 #define _MSL_IMP_EXP __declspec(export)
+
+// So we can continue to run on 8.6
+#define _MSL_USE_NEW_FILE_APIS 0
+#define _MSL_USE_OLD_FILE_APIS 1
