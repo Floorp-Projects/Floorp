@@ -1,7 +1,7 @@
 <!ENTITY  title.label               "History">
 <!ENTITY  lHeader                   "History">
 
-<!ENTITY  header3.label             "Browsing history">
+<!ENTITY  header3.label             "Browsing History">
 <!ENTITY  historyPages.label        "History is a list of pages you have previously visited.">
 <!ENTITY  pageHis.label             "Pages in history expire after:">
 <!ENTITY  pageHis.accesskey         "x">
@@ -9,7 +9,7 @@
 <!ENTITY  clearHistory.label        "Clear History">
 <!ENTITY  clearHistory.accesskey    "r">
 
-<!ENTITY  locationBarHistory.label  "Location Bar history">
+<!ENTITY  locationBarHistory.label  "Location Bar History">
 <!ENTITY  clearLocationBar.label    "Clear the list of sites stored in the location bar menu.">
 <!ENTITY  clearLocationBarButton.label      "Clear Location Bar">
 <!ENTITY  clearLocationBarButton.accesskey  "b">

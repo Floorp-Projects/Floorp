@@ -4,16 +4,16 @@
 <!ENTITY languages.customize.window.title               "Languages">
 <!ENTITY languages.customize.lHeader                    "Languages">
 <!ENTITY languages.customize.rHeader                    "Languages in which webpages are displayed">
-<!ENTITY langtitle.label                                "Languages for web pages">
+<!ENTITY langtitle.label                                "Languages for Web Pages">
 <!ENTITY languages.customize.prefAddLangDescript        "Select the language(s) you would like to add.">
 <!ENTITY languages.customize.engOrder.label             "1">
 <!ENTITY languages.customize.engOption.label            "English">
 <!ENTITY languages.customize.addButton.label            "Add...">
 <!ENTITY languages.customize.deleteButton.label         "Remove">
-<!ENTITY languages.customize.title.label			          "Customize Languages">
-<!ENTITY languages.customize.add.title.label		        "Add Languages">
-<!ENTITY languages.customize.left.header			          "Character Coding">
-<!ENTITY languages.customize.right.header			          "Select Supported Charsets">
+<!ENTITY languages.customize.title.label			    "Customize Languages">
+<!ENTITY languages.customize.add.title.label		    "Add Languages">
+<!ENTITY languages.customize.left.header			    "Character Coding">
+<!ENTITY languages.customize.right.header			    "Select Supported Charsets">
 <!ENTITY languages.customize.available.label            "Languages:">
 <!ENTITY languages.customize.active.label               "Languages in order of preference:">
 <!ENTITY languages.customize.reorder.label              "Reorder">

@@ -3,7 +3,7 @@
 <!--LOCALIZATION NOTE : FILE Cache prefs dialog -->
 <!ENTITY  title.label                   "Cache">
 <!ENTITY  lHeader                       "Cache">
-<!ENTITY  cacheTitle.label              "Set Cache size">
+<!ENTITY  cacheTitle.label              "Set Cache Size">
 <!ENTITY  cachePara                     "The cache keeps copies of frequently visited web pages on your hard disk. This reduces the amount of time you are connected to the Internet. (Clicking Reload always shows you the latest version of a page.)">
 <!ENTITY  memCache.label                "Memory Cache:">
 <!ENTITY  memCache.accesskey            "m">
