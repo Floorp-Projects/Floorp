@@ -416,7 +416,11 @@ else
       ifeq ($(OS_ARCH),BSD_OS)
       LIBPTHREAD =
       else
-      LIBPTHREAD = -lpthread
+        ifeq ($(OS_ARCH),NTO)
+         LIBPTHREAD =
+        else
+         LIBPTHREAD = -lpthread
+        endif
       endif
     endif
   endif

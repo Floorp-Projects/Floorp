@@ -57,6 +57,10 @@ endif
 ifeq ($(OS_ARCH),NCR)
 OS_RELEASE	:= $(shell awk '{print $$3}' /etc/.relid | sed 's/^\([0-9]\)\(.\)\(..\)\(.*\)$$/\2.\3/')
 endif
+ifeq ($(OS_ARCH),procnto)
+OS_ARCH      := NTO
+OS_RELEASE := _$(OS_TEST)$(OS_RELEASE)
+endif
 ifeq ($(OS_ARCH),UNIX_System_V)
 OS_ARCH		:= NEC
 endif

@@ -43,6 +43,8 @@
 #define HAVE_FCNTL_FILE_LOCKING
 #define _PR_NO_LARGE_FILES
 #define _PR_STAT_HAS_ONLY_ST_ATIME
+#define PR_HAVE_POSIX_NAMED_SHARED_MEMORY
+#define _PR_HAVE_POSIX_SEMAPHORES
 
 #include <sys/select.h>
 
