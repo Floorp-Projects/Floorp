@@ -42,6 +42,7 @@ EXPORTS		= \
 XPIDLSRCS	= \
 		nsIAppShellService.idl \
 		nsICmdLineService.idl \
+		nsICmdLineHandler.idl \
 		nsICommonDialogs.idl \
 		nsIDialogParamBlock.idl \
 		nsIFileLocator.idl \
