@@ -133,7 +133,7 @@ PRMonitor *getEditorMonitor() //if more than one person asks for the monitor at 
 nsIComponentManager* gCompMgr = NULL;
 
 /*
-we must be good providers of factories ect. this is where to put ALL editor exports
+we must be good providers of factories etc. this is where to put ALL editor exports
 */
 //BEGIN EXPORTS
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServMgr, 
@@ -148,7 +148,12 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports * aServMgr,
 
   *aFactory = nsnull;
 
-  nsresult rv = aServMgr->QueryInterface(nsIComponentManager::GetIID(), (void**)&gCompMgr);
+  nsresult rv;
+  nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = servMgr->GetService(kComponentManagerCID, nsIComponentManager::GetIID(), 
+                         (nsISupports**)&gCompMgr);
   if (NS_FAILED(rv)) return rv;
 
   if (aClass.Equals(kEditorCID)) {
@@ -352,10 +357,6 @@ nsEditor::EnableUndo(PRBool aEnable)
   nsITransactionManager *txnMgr = 0;
   nsresult result=NS_OK;
 
-/** -- temp code until the txn mgr auto-registers -- **/
-  gCompMgr->RegisterComponent(kCTransactionManagerFactoryCID, NULL, NULL,
-                              TRANSACTION_MANAGER_DLL, PR_FALSE, PR_FALSE);
-/** -- end temp code -- **/
   if (PR_TRUE==aEnable)
   {
     if (!mTxnMgr)
