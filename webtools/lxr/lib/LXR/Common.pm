@@ -1,4 +1,4 @@
-# $Id: Common.pm,v 1.21 2000/08/24 22:29:52 endico%mozilla.org Exp $
+# $Id: Common.pm,v 1.22 2000/08/24 22:43:47 endico%mozilla.org Exp $
 
 package LXR::Common;
 
@@ -43,7 +43,8 @@ sub fatal {
 
 sub abortall {
     print(STDERR "[",scalar(localtime),"] abortall: $_[0]\n");
-    print("<html>\n<head>\n<title>Abort</title>\n</head>\n",
+    print("Content-Type: text/html\n\n",
+	  "<html>\n<head>\n<title>Abort</title>\n</head>\n",
 	  "<body><h1>Abort!</h1>\n",
 	  "<b><i>** Aborting: $_[0]</i></b>\n",
 	  "</body>\n</html>\n") if $wwwdebug;
@@ -463,6 +464,9 @@ sub init_all {
     if (defined($readraw)) {
 	print("\n");
     } else {
+        print("Content-Type: text/html\n");
+
+	#
 	# Print out a Last-Modified date that is the larger of: the
 	# underlying file that we are presenting; and the "source" script
 	# itself (passed in as an argument to this function.)  If we can't
