@@ -27,9 +27,6 @@
 #include "nsIBufferOutputStream.h"
 #include "nsIStreamConverter.h"
 #include "nsIComponentManager.h"
-#include "nsCRT.h"
-
-#include "nsIAllocator.h"
 
 ////////////////////////////////////////////////////////////
 // nsISupports methods
