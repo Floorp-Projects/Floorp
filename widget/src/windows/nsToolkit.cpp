@@ -39,11 +39,10 @@ NS_IMPL_ISUPPORTS(nsToolkit, NS_ITOOLKIT_IID)
 static PRUintn gToolkitTLSIndex = 0;
 
 HINSTANCE nsToolkit::mDllInstance = 0;
+PRBool    nsToolkit::mIsNT        = PR_FALSE;
 
 #ifdef MOZ_AIMM
-//IUnknown                   *nsToolkit::gAIMM             = NULL;
 IActiveIMMApp              *nsToolkit::gAIMMApp          = NULL;
-//IActiveIMMMessagePumpOwner *nsToolkit::gAIMMMsgPumpOwner = NULL;
 #endif
 
 nsWindow     *MouseTrailer::mCaptureWindow  = NULL;
@@ -86,8 +85,18 @@ BOOL APIENTRY DllMain(  HINSTANCE hModule,
             // Initialize COM since create Active Input Method Manager object
             //
 
-            CoInitialize(NULL);
+            ::CoInitialize(NULL);
 #endif
+            //
+            // Set flag of nsToolkit::mIsNT due to using Unicode API.
+            //
+
+            OSVERSIONINFO osversion;
+            ::ZeroMemory(&osversion, sizeof(OSVERSIONINFO));
+            osversion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+            ::GetVersionEx(&osversion);
+            nsToolkit::mIsNT = (osversion.dwPlatformId == VER_PLATFORM_WIN32_NT) ? PR_TRUE : PR_FALSE;
+
             break;
 
         case DLL_THREAD_ATTACH:
@@ -147,9 +156,6 @@ void RunPump(void* arg)
     // Process messages
     MSG msg;
     while (GetMessage(&msg, NULL, 0, 0)) {
-//#ifdef MOZ_AIMM // not need?
-//      if (!nsToolkit::gAIMMMsgPumpOwner || (nsToolkit::gAIMMMsgPumpOwner->OnTranslateMessage(&msg) != S_OK))
-//#endif
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
@@ -267,10 +273,6 @@ NS_METHOD nsToolkit::Init(PRThread *aThread)
         // Start Active Input Method Manager on this thread
         if(nsToolkit::gAIMMApp)
             nsToolkit::gAIMMApp->Activate(TRUE);
-
-        // Start message pump, but not need?
-//      if(nsToolkit::gAIMMMsgPumpOwner)
-//          nsToolkit::gAIMMMsgPumpOwner->Start();
 #endif
 
         CreateInternalWindow(aThread);
