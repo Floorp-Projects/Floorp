@@ -192,6 +192,47 @@ function MsgCompactFolder(isAll)
   }
 }
 
+function openNewVirtualFolderDialogWithArgs(defaultViewName, aSearchTerms)
+{
+  var folderURI = GetSelectedFolderURI();
+  var folderTree = GetFolderTree();
+  var name = GetFolderNameFromUri(folderURI, folderTree);
+  name += "-" + defaultViewName;
+
+  var dialog = window.openDialog("chrome://messenger/content/virtualFolderProperties.xul", "",
+                                 "chrome,titlebar,modal,centerscreen",
+                                 {preselectedURI:folderURI,
+                                  searchTerms:aSearchTerms,
+                                  newFolderName:name});
+}
+
+
+function MsgVirtualFolderProperties(aEditExistingVFolder)
+{
+  var preselectedFolder = GetFirstSelectedMsgFolder();
+  var preselectedURI;
+  if(preselectedFolder)
+  {
+    var preselectedFolderResource = preselectedFolder.QueryInterface(Components.interfaces.nsIRDFResource);
+    if(preselectedFolderResource)
+      preselectedURI = preselectedFolderResource.Value;
+  }
+
+  var dialog = window.openDialog("chrome://messenger/content/virtualFolderProperties.xul", "",
+                                 "chrome,titlebar,modal,centerscreen",
+                                 {preselectedURI:preselectedURI,
+                                  editExistingFolder: aEditExistingVFolder,
+                                  onOKCallback:onEditVirtualFolderPropertiesCallback,
+                                  msgWindow:msgWindow});
+}
+
+function onEditVirtualFolderPropertiesCallback(aVirtualFolder)
+{
+  // we need to reload the folder if it is the currently loaded folder...
+  FolderPaneSelectionChange();
+}
+
+
 function MsgFolderProperties() 
 {
   var preselectedURI = GetSelectedFolderURI();

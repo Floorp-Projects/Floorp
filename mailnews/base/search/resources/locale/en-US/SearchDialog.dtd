@@ -26,8 +26,8 @@
 <!ENTITY fileButton.accesskey        "i">
 <!ENTITY goToFolderButton.label      "Open Message Folder">
 <!ENTITY goToFolderButton.accesskey  "r">
-<!ENTITY saveAsVFButton.label      "Save as Virtual Folder">
-<!ENTITY saveAsVFButton.accesskey  "v">
+<!ENTITY saveAsVFButton.label      "Save as Search Folder">
+<!ENTITY saveAsVFButton.accesskey  "a">
 
 <!-- for ABSearchDialog.xul -->
 <!ENTITY abSearchHeading.label       "Search in:">
