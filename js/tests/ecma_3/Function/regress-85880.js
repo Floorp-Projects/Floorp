@@ -22,7 +22,7 @@
 * SUMMARY: Regression test for Bugzilla bug 85880
 *
 * Rhino interpreted mode was nulling out the arguments object of a
-* function if  it happened to call another function inside its body.
+* function if it happened to call another function inside its body.
 *
 * See http://bugzilla.mozilla.org/show_bug.cgi?id=85880
 *
@@ -35,11 +35,11 @@ var cnNonNull = 'Arguments != null';
 var cnNull = 'Arguments == null';
 var cnRecurse = true;
 var status = '';
-var statusitems = [ ];
+var statusitems = [];
 var actual = '';
-var actualvalues = [ ];
+var actualvalues = [];
 var expect= '';
-var expectedvalues = [ ];
+var expectedvalues = [];
 
 
 function f1(x)
