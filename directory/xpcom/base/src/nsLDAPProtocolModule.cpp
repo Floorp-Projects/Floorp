@@ -108,19 +108,17 @@ nsLDAPInitialize(nsIModule *aSelf)
         return NS_ERROR_FAILURE;
     }
 
-#if 0
-    // XXXdmose - for some reason, turning on this code causes connects to 
-    // fail
+    // Never block for more than 10000 milliseconds (ie 10 seconds) doing any 
+    // sort of I/O operation.
     //
     rv = prldap_set_session_option(0, 0, PRLDAP_OPT_IO_MAX_TIMEOUT, 
-                                   LDAP_X_IO_TIMEOUT_NO_WAIT);
+                                   10000);
     if (rv != LDAP_SUCCESS) {
         PR_LOG(gLDAPLogModule, PR_LOG_ERROR,
-               ("LDAPInitialize(): error setting LDAP_X_IO_TIMEOUT_NO_WAIT:"
-                " %s\n",ldap_err2string(rv)));
+               ("LDAPInitialize(): error setting PRLDAP_OPT_IO_MAX_TIMEOUT:"
+                " %s\n", ldap_err2string(rv)));
         return NS_ERROR_FAILURE;
     }
-#endif
 
     return NS_OK;
 }
