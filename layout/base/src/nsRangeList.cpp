@@ -73,7 +73,7 @@ static nsresult ParentOffset(nsIDOMNode *aNode, nsIDOMNode **aParent, PRInt32 *a
 class nsRangeListIterator;
 class nsRangeList;
 
-class nsDOMSelection : public nsIDOMSelection
+class nsDOMSelection : public nsIDOMSelection , public nsIScriptObjectOwner
 {
 public:
   nsDOMSelection(nsRangeList *aList);
@@ -103,6 +103,10 @@ public:
   NS_IMETHOD    GetEnumerator(nsIEnumerator **aIterator);
 /*END nsIDOMSelection interface implementations*/
 
+/*BEGIN nsIScriptObjectOwner interface implementations*/
+  NS_IMETHOD 		GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD 		SetScriptObject(void *aScriptObject);
+/*END nsIScriptObjectOwner interface implementations*/
 
 
   NS_IMETHOD    ScrollIntoView();
@@ -152,11 +156,14 @@ private:
   PRBool mFixupState; //was there a fixup?
 
   nsRangeList *mRangeList;
+
+  // for nsIScriptContextOwner
+  void*		mScriptObject;
 };
 
 
-class nsRangeList : public nsIFrameSelection,
-                    public nsIScriptObjectOwner
+class nsRangeList : public nsIFrameSelection
+                    
 {
 public:
   /*interfaces for addref and release and queryinterface*/
@@ -179,10 +186,6 @@ public:
 /*END nsIFrameSelection interfacse*/
 
 
-/*BEGIN nsIScriptObjectOwner interface implementations*/
-  NS_IMETHOD 		GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
-  NS_IMETHOD 		SetScriptObject(void *aScriptObject);
-/*END nsIScriptObjectOwner interface implementations*/
 
   nsRangeList();
   virtual ~nsRangeList();
@@ -223,8 +226,6 @@ private:
   
   nsCOMPtr<nsISupportsArray> mSelectionListeners;
   
-  // for nsIScriptContextOwner
-  void*		mScriptObject;
   nsIFocusTracker *mTracker;
   PRBool mMouseDownState; //for drag purposes
   PRInt32 mDesiredX;
@@ -477,7 +478,6 @@ nsRangeList::nsRangeList()
   mBatching = 0;
   mChangesDuringBatching = PR_FALSE;
   mNotifyFrames = PR_TRUE;
-  mScriptObject = nsnull;
     
   if (sInstanceCount <= 0)
   {
@@ -535,12 +535,6 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
-    nsIScriptObjectOwner* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
   if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
     // use *first* base class for ISupports
     nsIFrameSelection* tmp1 = this;
@@ -549,6 +543,7 @@ nsRangeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
+  NS_ASSERTION(PR_FALSE,"bad query interface in RangeList");
   return NS_NOINTERFACE;
 }
 
@@ -1158,30 +1153,6 @@ nsRangeList::DeleteFromDocument()
 #pragma mark -
 #endif
 
-// BEGIN nsIScriptContextOwner interface implementations
-NS_IMETHODIMP
-nsRangeList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
-{
-  nsresult res = NS_OK;
-  nsIScriptGlobalObject *globalObj = aContext->GetGlobalObject();
-
-  if (nsnull == mScriptObject) {
-    res = NS_NewScriptSelection(aContext, (nsISupports *)(nsIDOMSelection *)this, globalObj, (void**)&mScriptObject);
-  }
-  *aScriptObject = mScriptObject;
-
-  NS_RELEASE(globalObj);
-  return res;
-}
-
-NS_IMETHODIMP
-nsRangeList::SetScriptObject(void *aScriptObject)
-{
-  mScriptObject = aScriptObject;
-  return NS_OK;
-}
-
-// END nsIScriptContextOwner interface implementations
 
 
 
@@ -1197,6 +1168,7 @@ nsDOMSelection::nsDOMSelection(nsRangeList *aList)
   mRangeList = aList;
   mFixupState = PR_FALSE;
   nsresult result = NS_NewISupportsArray(getter_AddRefs(mRangeArray));
+  mScriptObject = nsnull;
   NS_INIT_REFCNT();
 }
 
@@ -1228,25 +1200,37 @@ nsDOMSelection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID())) {
-    *aInstancePtr = (void*)(nsISupports *)this;
+    nsIDOMSelection *temp = (nsIDOMSelection *)this;
+    *aInstancePtr = (void*)(nsISupports *)temp;
     NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(nsIDOMSelection::GetIID())) {
     *aInstancePtr = (void*) this;
     NS_ADDREF_THIS();
+    return NS_OK;
   }
   if (aIID.Equals(nsIEnumerator::GetIID())) {
     nsRangeListIterator *iter = new nsRangeListIterator(this);
     *aInstancePtr = (void*) (nsIEnumerator *) iter;
     NS_ADDREF_THIS();
+    return NS_OK;
   }
   if (aIID.Equals(nsIBidirectionalEnumerator::GetIID())) {
     nsRangeListIterator *iter = new nsRangeListIterator(this);
     *aInstancePtr = (void*) (nsIBidirectionalEnumerator *) iter;
     NS_ADDREF_THIS();
+    return NS_OK;
   }
-  return NS_OK;
+  if (aIID.Equals(nsIScriptObjectOwner::GetIID())) {
+    nsIScriptObjectOwner* tmp = this;
+    *aInstancePtr = (void*) tmp;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  //NS_ASSERTION(PR_FALSE,"bad query interface in nsDOMSelection");
+  //do not assert here javascript will assert here sometimes thats OK
+  return NS_NOINTERFACE;
 }
 
 
@@ -2542,3 +2526,27 @@ nsDOMSelection::DeleteFromDocument()
   return mRangeList->DeleteFromDocument();
 }
 
+// BEGIN nsIScriptContextOwner interface implementations
+NS_IMETHODIMP
+nsDOMSelection::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+{
+  nsresult res = NS_OK;
+  nsIScriptGlobalObject *globalObj = aContext->GetGlobalObject();
+
+  if (nsnull == mScriptObject) {
+    res = NS_NewScriptSelection(aContext, (nsISupports *)(nsIDOMSelection *)this, globalObj, (void**)&mScriptObject);
+  }
+  *aScriptObject = mScriptObject;
+
+  NS_RELEASE(globalObj);
+  return res;
+}
+
+NS_IMETHODIMP
+nsDOMSelection::SetScriptObject(void *aScriptObject)
+{
+  mScriptObject = aScriptObject;
+  return NS_OK;
+}
+
+// END nsIScriptContextOwner interface implementations
