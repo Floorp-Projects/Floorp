@@ -193,10 +193,12 @@ $ENV{HOME} = cwd();
 # Create a profile to test with.
 run_system_cmd(["./".$app_name.$bin_suffix, "-createProfile", "testprofile"], 45);
 
-# Add allow_scripts_to_close_windows; this lets us cleanly exit.
 my $pref_file = find_pref_file(".".$app_name);
 open PREFS, ">>$pref_file";
+# Add allow_scripts_to_close_windows; this lets us cleanly exit.
 print PREFS "user_pref(\"dom.allow_scripts_to_close_windows\", true);\n";
+# Suppress the default browser dialog since it keeps the test from starting.
+print PREFS "user_pref(\"browser.shell.checkDefaultBrowser\", false);\n";
 close PREFS;
 
 # Run the pageload test.
