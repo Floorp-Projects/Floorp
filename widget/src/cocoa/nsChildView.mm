@@ -2210,6 +2210,36 @@ const PRInt32 kNumLines = 4;
   return NS_STATIC_CAST(nsIWidget*, mGeckoChild);
 }
 
+static void convertCocoaEventToMacEvent(NSEvent* cocoaEvent, EventRecord& macEvent)
+{
+    // XXX Revisit this fast and dirty conversion!
+    macEvent.what = ([cocoaEvent type] == NSKeyDown ? keyDown : keyUp);
+    UInt32 charCode = [[cocoaEvent characters] characterAtIndex: 0];
+    if (charCode >= 0x0080) {
+        switch (charCode) {
+        case NSUpArrowFunctionKey:
+            charCode = 0x0000001E;
+            break;
+        case NSDownArrowFunctionKey:
+            charCode = 0x0000001F;
+            break;
+        case NSLeftArrowFunctionKey:
+            charCode = 0x0000001C;
+            break;
+        case NSRightArrowFunctionKey:
+            charCode = 0x0000001D;
+            break;
+        default:
+            printf("### FIX ME - Convert NSString to C string with current encoding... ###\n");
+            break;
+        }
+    }
+    macEvent.message = (charCode & 0x00FF) | ([cocoaEvent keyCode] << 8);
+    macEvent.when = ::TickCount();
+    GetGlobalMouse(&macEvent.where);
+    macEvent.modifiers = GetCurrentKeyModifiers();
+}
+
 - (void)keyDown:(NSEvent*)theEvent;
 {
   PRBool isChar = PR_FALSE;
@@ -2222,6 +2252,14 @@ const PRInt32 kNumLines = 4;
           isChar: &isChar
           toGeckoEvent: &geckoEvent];
     geckoEvent.isChar = isChar;
+
+    // As an optimisation, only do this when there is a plugin present.
+    EventRecord macEvent;
+    convertCocoaEventToMacEvent(theEvent, macEvent);
+    geckoEvent.nativeMsg = &macEvent;
+
+    // fprintf(stdout, "keyDown/autoKey received: message = 0x%08X\n", macEvent.message);
+
     mGeckoChild->DispatchWindowEvent(geckoEvent);
   }
   
@@ -2266,6 +2304,12 @@ const PRInt32 kNumLines = 4;
   [self convert: theEvent message: NS_KEY_UP
         isChar: &isChar
         toGeckoEvent: &geckoEvent];
+
+  // As an optimisation, only do this when there is a plugin present.
+  EventRecord macEvent;
+  convertCocoaEventToMacEvent(theEvent, macEvent);
+  geckoEvent.nativeMsg = &macEvent;
+  
   mGeckoChild->DispatchWindowEvent(geckoEvent);
 }
 
