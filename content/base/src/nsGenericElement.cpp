@@ -3128,27 +3128,42 @@ nsGenericElement::PostQueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 //----------------------------------------------------------------------
+nsresult
+nsGenericElement::LeaveLink(nsIPresContext* aPresContext)
+{
+  nsCOMPtr<nsILinkHandler> handler;
+  nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
+  if (NS_FAILED(rv) || (nsnull == handler)) {
+    return rv;
+  }
+
+  return handler->OnLeaveLink();
+}
 
 nsresult
 nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
                               nsLinkVerb aVerb,
                               nsIURI* aBaseURL,
-                              const nsString& aURLSpec,
-                              const nsString& aTargetSpec,
+                              const nsAString& aURLSpec,
+                              const nsAFlatString& aTargetSpec,
                               PRBool aClick)
 {
   nsCOMPtr<nsILinkHandler> handler;
   nsresult rv = aPresContext->GetLinkHandler(getter_AddRefs(handler));
-  if (NS_FAILED(rv) || (nsnull == handler)) return rv;
+  if (NS_FAILED(rv) || !handler) return rv;
 
   // Resolve url to an absolute url
-  nsAutoString absURLSpec;
-  if (nsnull != aBaseURL) {
-    rv = NS_MakeAbsoluteURI(absURLSpec, aURLSpec, aBaseURL);
-    if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIURI> targetURI;
+  nsAutoString docCharset;
+  if (mDocument &&
+      NS_SUCCEEDED(mDocument->GetDocumentCharacterSet(docCharset))) {
+    rv = NS_NewURI(getter_AddRefs(targetURI), aURLSpec,
+                   NS_LossyConvertUCS2toASCII(docCharset).get(), aBaseURL);
   } else {
-    absURLSpec.Assign(aURLSpec);
+    rv = NS_NewURI(getter_AddRefs(targetURI), aURLSpec, nsnull, aBaseURL);
   }
+
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // Now pass on absolute url to the click handler
   if (aClick) {
@@ -3156,27 +3171,18 @@ nsGenericElement::TriggerLink(nsIPresContext* aPresContext,
     // Check that this page is allowed to load this URI.
     nsCOMPtr<nsIScriptSecurityManager> securityManager = 
              do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-    nsCOMPtr<nsIURI> absURI;
-    if (NS_SUCCEEDED(rv)) {
-      nsAutoString docCharset;
-      if (mDocument &&
-          NS_SUCCEEDED(mDocument->GetDocumentCharacterSet(docCharset))) {
-        rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec,
-                       NS_LossyConvertUCS2toASCII(docCharset).get(), aBaseURL);
-      } else {
-        rv = NS_NewURI(getter_AddRefs(absURI), absURLSpec, nsnull, aBaseURL);
-      }
-    }
     if (NS_SUCCEEDED(rv))
-      proceed = securityManager->CheckLoadURI(aBaseURL, absURI, nsIScriptSecurityManager::STANDARD);
+      proceed =
+        securityManager->CheckLoadURI(aBaseURL, targetURI,
+                                      nsIScriptSecurityManager::STANDARD);
 
     // Only pass off the click event if the script security manager
     // says it's ok.
     if (NS_SUCCEEDED(proceed))
-      handler->OnLinkClick(this, aVerb, absURLSpec.get(),
+      handler->OnLinkClick(this, aVerb, targetURI,
                            aTargetSpec.get());
   } else {
-    handler->OnOverLink(this, absURLSpec.get(),
+    handler->OnOverLink(this, targetURI,
                         aTargetSpec.get());
   }
   return rv;

@@ -464,25 +464,25 @@ nsWebShell::SetRendering(PRBool aRender)
 
 struct OnLinkClickEvent : public PLEvent {
   OnLinkClickEvent(nsWebShell* aHandler, nsIContent* aContent,
-                   nsLinkVerb aVerb, const PRUnichar* aURLSpec,
+                   nsLinkVerb aVerb, nsIURI* aURI,
                    const PRUnichar* aTargetSpec, nsIInputStream* aPostDataStream = 0, 
                    nsIInputStream* aHeadersDataStream = 0);
   ~OnLinkClickEvent();
 
   void HandleEvent() {
-    mHandler->OnLinkClickSync(mContent, mVerb, mURLSpec.get(),
+    mHandler->OnLinkClickSync(mContent, mVerb, mURI,
                               mTargetSpec.get(), mPostDataStream,
                               mHeadersDataStream,
                               nsnull, nsnull);
   }
 
-  nsWebShell*     mHandler;
-  nsString       mURLSpec;
-  nsString       mTargetSpec;
+  nsWebShell*              mHandler;
+  nsCOMPtr<nsIURI>         mURI;
+  nsString                 mTargetSpec;
   nsCOMPtr<nsIInputStream> mPostDataStream;
   nsCOMPtr<nsIInputStream> mHeadersDataStream;
   nsCOMPtr<nsIContent>     mContent;
-  nsLinkVerb      mVerb;
+  nsLinkVerb               mVerb;
 };
 
 static void PR_CALLBACK HandlePLEvent(OnLinkClickEvent* aEvent)
@@ -498,14 +498,14 @@ static void PR_CALLBACK DestroyPLEvent(OnLinkClickEvent* aEvent)
 OnLinkClickEvent::OnLinkClickEvent(nsWebShell* aHandler,
                                    nsIContent *aContent,
                                    nsLinkVerb aVerb,
-                                   const PRUnichar* aURLSpec,
+                                   nsIURI* aURI,
                                    const PRUnichar* aTargetSpec,
                                    nsIInputStream* aPostDataStream,
                                    nsIInputStream* aHeadersDataStream)
 {
   mHandler = aHandler;
   NS_ADDREF(aHandler);
-  mURLSpec.Assign(aURLSpec);
+  mURI = aURI;
   mTargetSpec.Assign(aTargetSpec);
   mPostDataStream = aPostDataStream;
   mHeadersDataStream = aHeadersDataStream;
@@ -533,7 +533,7 @@ OnLinkClickEvent::~OnLinkClickEvent()
 NS_IMETHODIMP
 nsWebShell::OnLinkClick(nsIContent* aContent,
                         nsLinkVerb aVerb,
-                        const PRUnichar* aURLSpec,
+                        nsIURI* aURI,
                         const PRUnichar* aTargetSpec,
                         nsIInputStream* aPostDataStream,
                         nsIInputStream* aHeadersDataStream)
@@ -541,7 +541,7 @@ nsWebShell::OnLinkClick(nsIContent* aContent,
   OnLinkClickEvent* ev;
   nsresult rv = NS_OK;
 
-  ev = new OnLinkClickEvent(this, aContent, aVerb, aURLSpec,
+  ev = new OnLinkClickEvent(this, aContent, aVerb, aURI,
                             aTargetSpec, aPostDataStream, aHeadersDataStream);
   if (nsnull == ev) {
     rv = NS_ERROR_OUT_OF_MEMORY;
@@ -564,7 +564,7 @@ nsWebShell::GetEventQueue(nsIEventQueue **aQueue)
 NS_IMETHODIMP
 nsWebShell::OnLinkClickSync(nsIContent *aContent,
                             nsLinkVerb aVerb,
-                            const PRUnichar* aURLSpec,
+                            nsIURI* aURI,
                             const PRUnichar* aTargetSpec,
                             nsIInputStream* aPostDataStream,
                             nsIInputStream* aHeadersDataStream,
@@ -590,52 +590,7 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
       // Fall through, this seems like the most reasonable action
     case eLinkVerb_Replace:
       {
-        // get a charset of the document and use is as originCharset
-        nsAutoString docCharset;
-        nsCOMPtr<nsIPresShell> presShell;
-        nsDocShell::GetPresShell(getter_AddRefs(presShell));
-        if (presShell)
-        {
-          nsCOMPtr<nsIDocument> doc;
-          presShell->GetDocument(getter_AddRefs(doc));
-          if (doc &&
-              NS_FAILED(doc->GetDocumentCharacterSet(docCharset)))
-            docCharset.Truncate();
-        }
-
-        // for now, just hack the verb to be view-link-clicked
-        // and down in the load document code we'll detect this and
-        // set the correct uri loader command
-        nsCOMPtr<nsIURI> uri;
-        NS_NewURI(getter_AddRefs(uri), nsDependentString(aURLSpec), 
-                  docCharset.IsEmpty()
-                  ? nsnull
-                  : NS_LossyConvertUCS2toASCII(docCharset).get());
-
-        // No URI object? This may indicate the URLspec is for an
-        // unrecognized protocol. Embedders might still be interested
-        // in handling the click, so we fire a notification before
-        // throwing the click away.
-        if (!uri && NS_SUCCEEDED(EnsureContentListener()))
-        {
-            NS_ConvertUCS2toUTF8 spec(aURLSpec);
-            PRBool abort = PR_FALSE;
-            uri = do_CreateInstance(kSimpleURICID, &rv);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "can't create simple uri");
-            if (NS_SUCCEEDED(rv))
-            {
-                rv = uri->SetSpec(spec);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "spec is invalid");
-                if (NS_SUCCEEDED(rv))
-                {
-                    mContentListener->OnStartURIOpen(uri, &abort);
-                }
-            }
-            // We didn't load the URI, so we failed
-            return NS_ERROR_FAILURE;
-        }
-
-        return InternalLoad(uri,                // New URI
+        return InternalLoad(aURI,               // New URI
                             mCurrentURI,        // Referer URI
                             nsnull,             // No onwer
                             PR_TRUE,            // Inherit owner from document
@@ -660,35 +615,43 @@ nsWebShell::OnLinkClickSync(nsIContent *aContent,
 
 NS_IMETHODIMP
 nsWebShell::OnOverLink(nsIContent* aContent,
-                       const PRUnichar* aURLSpec,
+                       nsIURI* aURI,
                        const PRUnichar* aTargetSpec)
 {
-    nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
   nsresult rv = NS_ERROR_FAILURE;
 
-  if(browserChrome)  {
+  if (browserChrome)  {
     nsCOMPtr<nsITextToSubURI> textToSubURI = do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    // use doc charset to unescape the URL
-    nsCOMPtr<nsIPresShell> presShell;
-    nsDocShell::GetPresShell(getter_AddRefs(presShell));
-    NS_ENSURE_TRUE(presShell, NS_ERROR_FAILURE);
+    // use url origin charset to unescape the URL
+    nsCAutoString charset;
+    rv = aURI->GetOriginCharset(charset);
+    NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDocument> doc;
-    presShell->GetDocument(getter_AddRefs(doc));
-    NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-
-    nsAutoString charset;
-    rv = doc->GetDocumentCharacterSet(charset);
+    nsCAutoString spec;
+    rv = aURI->GetSpec(spec);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsAutoString uStr;
-    rv = textToSubURI->UnEscapeURIForUI(NS_LossyConvertUCS2toASCII(charset),
-                                        NS_ConvertUCS2toUTF8(aURLSpec), uStr);    
+    rv = textToSubURI->UnEscapeURIForUI(charset, spec, uStr);    
 
     if (NS_SUCCEEDED(rv))
       rv = browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK, uStr.get());
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsWebShell::OnLeaveLink()
+{
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (browserChrome)  {
+      rv = browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_LINK,
+                                    NS_LITERAL_STRING("").get());
   }
   return rv;
 }

@@ -499,7 +499,8 @@ nsXMLElement::MaybeTriggerAutoLink(nsIWebShell *aShell)
             nsCOMPtr<nsIPresContext> pc;
             rv = WebShellToPresContext(aShell,getter_AddRefs(pc));
             if (NS_SUCCEEDED(rv)) {
-              rv = TriggerLink(pc, verb, base, value, nsAutoString(), PR_TRUE);
+              rv = TriggerLink(pc, verb, base, value,
+                               NS_LITERAL_STRING(""), PR_TRUE);
 
               return SpecialAutoLoadReturn(rv,verb);
             }
@@ -643,9 +644,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
       // XXX this doesn't seem to do anything yet
     case NS_MOUSE_EXIT_SYNTH:
       {
-        nsAutoString empty;
-        ret = TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty,
-                          empty, PR_FALSE);
+        ret = LeaveLink(aPresContext);
         *aEventStatus = nsEventStatus_eConsumeDoDefault; 
       }
       break;

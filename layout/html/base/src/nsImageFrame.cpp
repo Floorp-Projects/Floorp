@@ -38,6 +38,7 @@
 #include "nsCOMPtr.h"
 #include "nsImageFrame.h"
 #include "nsString.h"
+#include "nsPrintfCString.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresShell.h"
@@ -46,6 +47,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLContent.h"
 #include "nsIDocument.h"
+#include "nsINodeInfo.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsImageMap.h"
@@ -1516,13 +1518,13 @@ nsImageFrame::GetImageMap(nsIPresContext* aPresContext)
 
 void
 nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
-                          const nsString& aURLSpec,
+                          nsIURI* aURI,
                           const nsString& aTargetSpec,
                           PRBool aClick)
 {
   // We get here with server side image map
-  nsILinkHandler* handler = nsnull;
-  aPresContext->GetLinkHandler(&handler);
+  nsCOMPtr<nsILinkHandler> handler;
+  aPresContext->GetLinkHandler(getter_AddRefs(handler));
   if (nsnull != handler) {
     if (aClick) {
       nsresult proceed = NS_OK;
@@ -1542,22 +1544,18 @@ nsImageFrame::TriggerLink(nsIPresContext* aPresContext,
       nsCOMPtr<nsIURI> baseURI;
       if (NS_SUCCEEDED(rv) && doc) 
         doc->GetDocumentURL(getter_AddRefs(baseURI));
-      nsCOMPtr<nsIURI> absURI;
-      if (NS_SUCCEEDED(rv)) 
-        rv = NS_NewURI(getter_AddRefs(absURI), aURLSpec, nsnull, baseURI);
       
       if (NS_SUCCEEDED(rv)) 
-        proceed = securityManager->CheckLoadURI(baseURI, absURI, nsIScriptSecurityManager::STANDARD);
+        proceed = securityManager->CheckLoadURI(baseURI, aURI, nsIScriptSecurityManager::STANDARD);
 
       // Only pass off the click event if the script security manager
       // says it's ok.
       if (NS_SUCCEEDED(proceed))
-        handler->OnLinkClick(mContent, eLinkVerb_Replace, aURLSpec.get(), aTargetSpec.get());
+        handler->OnLinkClick(mContent, eLinkVerb_Replace, aURI, aTargetSpec.get());
     }
     else {
-      handler->OnOverLink(mContent, aURLSpec.get(), aTargetSpec.get());
+      handler->OnOverLink(mContent, aURI, aTargetSpec.get());
     }
-    NS_RELEASE(handler);
   }
 }
 
@@ -1738,7 +1736,20 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
             // element to provide the basis for the destination url.
             nsAutoString src;
             if (GetAnchorHREFAndTarget(src, target)) {
-              NS_MakeAbsoluteURI(absURL, src, baseURL);
+              nsCOMPtr<nsINodeInfo> nodeInfo;
+              mContent->GetNodeInfo(*getter_AddRefs(nodeInfo));
+              NS_ASSERTION(nodeInfo, "Image content without a nodeinfo?");
+              nsCOMPtr<nsIDocument> doc;
+              nodeInfo->GetDocument(*getter_AddRefs(doc));
+              nsAutoString charset;
+              if (doc) {
+                doc->GetDocumentCharacterSet(charset);
+              } 
+              nsCOMPtr<nsIURI> uri;
+              nsresult rv = NS_NewURI(getter_AddRefs(uri), src,
+                                      NS_LossyConvertUCS2toASCII(charset).get(),
+                                      baseURL);
+              NS_ENSURE_SUCCESS(rv, rv);
             
               // XXX if the mouse is over/clicked in the border/padding area
               // we should probably just pretend nothing happened. Nav4
@@ -1747,15 +1758,22 @@ nsImageFrame::HandleEvent(nsIPresContext* aPresContext,
               // mouse is over the border.
               if (p.x < 0) p.x = 0;
               if (p.y < 0) p.y = 0;
-              char cbuf[50];
-              PR_snprintf(cbuf, sizeof(cbuf), "?%d,%d", p.x, p.y);
-              absURL.AppendWithConversion(cbuf);
+              nsCOMPtr<nsIURL> url = do_QueryInterface(uri);
+              if (url) {
+                url->SetQuery(nsPrintfCString("%d,%d", p.x, p.y));
+              } else {
+                nsCAutoString spec;
+                uri->GetSpec(spec);
+                spec += nsPrintfCString("?%d,%d", p.x, p.y);
+                uri->SetSpec(spec);                
+              }
+              
               PRBool clicked = PR_FALSE;
               if (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
                 *aEventStatus = nsEventStatus_eConsumeDoDefault; 
                 clicked = PR_TRUE;
               }
-              TriggerLink(aPresContext, absURL, target, clicked);
+              TriggerLink(aPresContext, uri, target, clicked);
             }
           } 
           else 

@@ -1147,15 +1147,13 @@ NS_IMETHODIMP pluginInstanceOwner::GetURL(const char *aURL, const char *aTarget,
   nsCOMPtr<nsILinkHandler> lh = do_QueryInterface(container);
   NS_ENSURE_TRUE(lh, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIURI> uri;
-  rv = mViewer->GetURI(getter_AddRefs(uri));
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv),NS_ERROR_FAILURE);
+  nsCOMPtr<nsIURI> baseURI;
+  rv = mViewer->GetURI(getter_AddRefs(baseURI));
+  NS_ENSURE_SUCCESS(rv,NS_ERROR_FAILURE);
 
-  char* absURIStr;
-  NS_MakeAbsoluteURI(&absURIStr, aURL, uri);
-  nsAutoString fullurl; fullurl.AssignWithConversion(absURIStr);
-  nsCRT::free(absURIStr);
-  NS_ENSURE_TRUE(NS_SUCCEEDED(rv),NS_ERROR_FAILURE);
+  nsCOMPtr<nsIURI> targetURI;
+  rv = NS_NewURI(getter_AddRefs(targetURI), aURL, baseURI);
+  NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIInputStream> postDataStream;
   nsCOMPtr<nsIInputStream> headersDataStream;
@@ -1180,7 +1178,7 @@ NS_IMETHODIMP pluginInstanceOwner::GetURL(const char *aURL, const char *aTarget,
 
   nsAutoString  unitarget; unitarget.AssignWithConversion(aTarget);
   rv = lh->OnLinkClick(nsnull, eLinkVerb_Replace, 
-                       fullurl.get(), unitarget.get(), 
+                       targetURI, unitarget.get(), 
                        postDataStream, headersDataStream);
 
   return rv;

@@ -466,7 +466,11 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
     nsCOMPtr<nsIURI> actionURL;
     nsXPIDLCString scheme;
     PRBool isJSURL = PR_FALSE;
-    if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href, nsnull, docURL))) {
+    nsAutoString docCharset;
+    document->GetDocumentCharacterSet(docCharset);
+    if (NS_SUCCEEDED(result = NS_NewURI(getter_AddRefs(actionURL), href,
+                                        NS_LossyConvertUCS2toASCII(docCharset).get(),
+                                        docURL))) {
       result = actionURL->SchemeIs("javascript", &isJSURL);
     }
     // Append the URI encoded variable/value pairs for GET's
@@ -480,14 +484,15 @@ nsIsIndexFrame::OnSubmit(nsIPresContext* aPresContext)
         }
         href.Append(data);
     }
-    nsAutoString absURLSpec;
-    result = NS_MakeAbsoluteURI(absURLSpec, href, docURL);
+    nsCOMPtr<nsIURI> uri;
+    result = NS_NewURI(getter_AddRefs(uri), href,
+                       NS_LossyConvertUCS2toASCII(docCharset).get(), docURL);
     if (NS_FAILED(result)) return result;
 
     // Now pass on absolute url to the click handler
     if (handler) {
       handler->OnLinkClick(mContent, eLinkVerb_Replace,
-                           absURLSpec.get(),
+                           uri,
                            nsnull, nsnull);
     }
   }
