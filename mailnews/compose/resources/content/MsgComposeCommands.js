@@ -144,7 +144,9 @@ function ReleaseGlobalVariables()
 
 function disableEditableFields()
 {
-  editorShell.editor.SetFlags(nsIPlaintextEditor.eEditorReadonlyMask);
+  var flags = new Object;
+  editorShell.editor.GetFlags(flags);
+  editorShell.editor.SetFlags(flags.value | nsIPlaintextEditor.eEditorReadonlyMask);
   var disableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<disableElements.length;i++)
   {
@@ -154,7 +156,9 @@ function disableEditableFields()
 
 function enableEditableFields()
 {
-  editorShell.editor.SetFlags(nsIPlaintextEditor.eEditorMailMask);
+  var flags = new Object;
+  editorShell.editor.GetFlags(flags);
+  editorShell.editor.SetFlags(flags.value ^ nsIPlaintextEditor.eEditorReadonlyMask);
   var enableElements = document.getElementsByAttribute("disableonsend", "true");
   for (i=0;i<enableElements.length;i++)
   {
@@ -185,10 +189,9 @@ var gComposeRecyclingListener = {
 	},
 
 	onReopen: function(params) {
-	  dump("This is a recycled compose window!\n");
     InitializeGlobalVariables();
-    enableEditableFields();
     window.editorShell.contentWindow.focus();
+    enableEditableFields();
     ComposeStartup(true, params);
 	}
 };
@@ -1142,6 +1145,9 @@ function ComposeStartup(recycled, aParams)
   var params = null; // New way to pass parameters to the compose window as a nsIMsgComposeParameters object
   var args = null;   // old way, parameters are passed as a string
   
+  if (recycled)
+    dump("This is a recycled compose window!\n");
+
   if (aParams)
     params = aParams;
   else
@@ -1251,7 +1257,7 @@ function ComposeStartup(recycled, aParams)
       // set the close listener
       gMsgCompose.recyclingListener = gComposeRecyclingListener;
       
-      //Lets the compose object know that we are dealing with a recycled window
+      //Lets the compose object knows that we are dealing with a recycled window
       gMsgCompose.recycledWindow = recycled;
 
       //Creating a Editor Shell
@@ -1408,11 +1414,13 @@ function ComposeUnload()
 {
   dump("\nComposeUnload from XUL\n");
   RemoveMessageComposeOfflineObserver();
-    RemoveDirectoryServerObserver(null);
+  RemoveDirectoryServerObserver(null);
+  if (gCurrentIdentity)
     RemoveDirectoryServerObserver("mail.identity." + gCurrentIdentity.key);
-    if (gCurrentAutocompleteDirectory)
-       RemoveDirectorySettingsObserver(gCurrentAutocompleteDirectory);
-  gMsgCompose.UnregisterStateListener(stateListener);
+  if (gCurrentAutocompleteDirectory)
+    RemoveDirectorySettingsObserver(gCurrentAutocompleteDirectory);
+  if (gMsgCompose)
+    gMsgCompose.UnregisterStateListener(stateListener);
 }
 
 function SetDocumentCharacterSet(aCharset)
@@ -2567,4 +2575,3 @@ function DisplaySaveFolderDlg(folderURI)
   }//if
   return;
 }
-
