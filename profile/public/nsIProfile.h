@@ -67,6 +67,9 @@ public:
 
     // Creators
     NS_IMETHOD CreateNewProfile(char* data) = 0;
+	NS_IMETHOD RenameProfile(const char* aOldName, const char* aNewName) = 0;  
+	NS_IMETHOD DeleteProfile(const char* aProfileName) = 0; 
+	NS_IMETHOD GetProfileList(nsString& aProfileList) = 0;
 };
 
 #endif /* nsIProfile_h__ */
