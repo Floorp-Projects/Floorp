@@ -942,7 +942,7 @@ nsresult nsCharsetMenu::AddFromStringToMenu(
     // if this charset is not on the accepted list of charsets, ignore it
     PRInt32 index;
     res = aDecs->GetIndexOf(atom, &index);
-    if (NS_SUCCEEDED(res) && (index > 0)) {
+    if (NS_SUCCEEDED(res) && (index >= 0)) {
 
       // else, add it to the menu
       res = AddCharsetToContainer(aRDFServ, aCCMan, aArray, aContainer, atom, 
