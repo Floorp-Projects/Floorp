@@ -30,13 +30,13 @@ chdir $bonsaidir || die "Couldn't chdir to $bonsaidir";
 require "utils.pl";
 
 if( $ARGV[0] eq '' ){
-    $CVS_ROOT = pickDefaultRepository();
+    $::CVS_ROOT = pickDefaultRepository();
 }
 else {
-    $CVS_ROOT = $ARGV[0];
+    $::CVS_ROOT = $ARGV[0];
 }
 
-$CVS_REPOS_SUFIX = $CVS_ROOT;
+$CVS_REPOS_SUFIX = $::CVS_ROOT;
 $CVS_REPOS_SUFIX =~ s:/:_:g;
 
 

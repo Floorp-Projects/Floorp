@@ -19,38 +19,56 @@
 require 'globals.pl';
 require 'get_line.pl';
 
+use diagnostics;
+use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub cvsquery_pl_sillyness {
+    my $zz;
+    $zz = $::CI_BRANCH;
+    $zz = $::CI_CHANGE;
+    $zz = $::CI_DATE;
+    $zz = $::CI_STICKY;
+    $zz = $::TreeID;
+    $zz = $::query_debug;
+    $zz = $::query_filetype;
+    $zz = $::versioninfo;
+};
+
 #
 # Constants
 #
-$CI_CHANGE=0;
-$CI_DATE=1;
-$CI_WHO=2;
-$CI_REPOSITORY=3;
-$CI_DIR=4;
-$CI_FILE=5;
-$CI_REV=6;
-$CI_STICKY=7;
-$CI_BRANCH=8;
-$CI_LINES_ADDED=9;
-$CI_LINES_REMOVED=10;
-$CI_LOG=11;
+$::CI_CHANGE=0;
+$::CI_DATE=1;
+$::CI_WHO=2;
+$::CI_REPOSITORY=3;
+$::CI_DIR=4;
+$::CI_FILE=5;
+$::CI_REV=6;
+$::CI_STICKY=7;
+$::CI_BRANCH=8;
+$::CI_LINES_ADDED=9;
+$::CI_LINES_REMOVED=10;
+$::CI_LOG=11;
 
-$NOT_LOCAL = 1;
-$IS_LOCAL = 2;
+my $NOT_LOCAL = 1;
+my $IS_LOCAL = 2;
 
-chomp($CVS_ROOT) if defined($CVS_ROOT);
-if (!defined($CVS_ROOT) || $CVS_ROOT eq "" ){
-    $CVS_ROOT = pickDefaultRepository();
+chomp($::CVS_ROOT) if defined($::CVS_ROOT);
+if (!defined($::CVS_ROOT) || $::CVS_ROOT eq "" ){
+    $::CVS_ROOT = pickDefaultRepository();
 }
 
 #global variables
 
-$lines_added = 0;
-$lines_removed = 0;
+$::lines_added = 0;
+$::lines_removed = 0;
 
-$modules = {};
+$::modules = {};
 
-$CVS_MODULES="${CVS_ROOT}/CVSROOT/modules";
+my $CVS_MODULES="$::CVS_ROOT/CVSROOT/modules";
 
 open( MOD, "<$CVS_MODULES") || die "can't open ${CVS_MODULES}";
 &parse_modules;
@@ -64,17 +82,18 @@ close( MOD );
 sub query_checkins {
     my (%mod_map) = @_;
     my ($ci,$result,$lastlog,$rev,$begin_tag,$end_tag);
+    my $have_mod_map;
 
-    if( $query_module ne 'all' && $query_module ne 'allrepositories' && @query_dirs == 0 ){
+    if( $::query_module ne 'all' && $::query_module ne 'allrepositories' && @::query_dirs == 0 ){
         $have_mod_map = 1;
-        %mod_map = &get_module_map( $query_module );
+        %mod_map = &get_module_map( $::query_module );
     }
     else {
         $have_mod_map = 0;
         %mod_map = ();
     }
 
-    for $i (@query_dirs ){
+    for my $i (@::query_dirs ){
         $i =~ s:^/::;           # Strip leading slash.
         $i =~ s:/$::;           # Strip trailing slash.
 
@@ -85,19 +104,19 @@ sub query_checkins {
         $mod_map{$i} = $NOT_LOCAL;
     }
 
-    if( $query_branch =~ /^[ ]*HEAD[ ]*$/i ){
-        $query_branch_head = 1;
+    if( $::query_branch =~ /^[ ]*HEAD[ ]*$/i ){
+        $::query_branch_head = 1;
     }
 
     $begin_tag = "";
     $end_tag = "";
 
-    if (defined($query_begin_tag) && $query_begin_tag ne '') {
-        $begin_tag = load_tag($query_begin_tag);
+    if (defined($::query_begin_tag) && $::query_begin_tag ne '') {
+        $begin_tag = load_tag($::query_begin_tag);
     }
 
-    if (defined($query_end_tag) &&  $query_end_tag ne '') {
-        $end_tag = load_tag($query_end_tag);
+    if (defined($::query_end_tag) &&  $::query_end_tag ne '') {
+        $end_tag = load_tag($::query_end_tag);
     }
 
 
@@ -107,49 +126,49 @@ sub query_checkins {
 
     my $qstring = "select type, UNIX_TIMESTAMP(ci_when), people.who, repositories.repository, dirs.dir, files.file, revision, stickytag, branches.branch, addedlines, removedlines, descs.description from checkins,people,repositories,dirs,files,branches,descs where people.id=whoid and repositories.id=repositoryid and dirs.id=dirid and files.id=fileid and branches.id=branchid and descs.id=descid";
 
-    if( $query_module ne 'allrepositories' ){
-        $qstring .= " and repositories.repository = '$CVS_ROOT'";
+    if( $::query_module ne 'allrepositories' ){
+        $qstring .= " and repositories.repository = '$::CVS_ROOT'";
     }
 
-    if ($query_date_min) {
-        my $t = formatSqlTime($query_date_min);
+    if ($::query_date_min) {
+        my $t = formatSqlTime($::query_date_min);
         $qstring .= " and ci_when >= '$t'";
     }
-    if ($query_date_max) {
-        my $t = formatSqlTime($query_date_max);
+    if ($::query_date_max) {
+        my $t = formatSqlTime($::query_date_max);
         $qstring .= " and ci_when <= '$t'";
     }
-    if ($query_branch_head) {
+    if ($::query_branch_head) {
         $qstring .= " and branches.branch = ''";
-    } elsif ($query_branch ne '') {
-        my $q = SqlQuote($query_branch);
-        if ($query_branchtype eq 'regexp') {
+    } elsif ($::query_branch ne '') {
+        my $q = SqlQuote($::query_branch);
+        if ($::query_branchtype eq 'regexp') {
             $qstring .=
                 " and branches.branch regexp $q";
-        } elsif ($query_branchtype eq 'notregexp') {
+        } elsif ($::query_branchtype eq 'notregexp') {
             $qstring .=
                 " and not (branches.branch regexp $q) ";
         } else {
             $qstring .=
                 " and (branches.branch = $q or branches.branch = ";
-            $qstring .= SqlQuote("T$query_branch") . ")";
+            $qstring .= SqlQuote("T$::query_branch") . ")";
         }
     }
 
-    if (defined $query_file && $query_file ne '') {
-        my $q = SqlQuote($query_file);
-        if ($query_filetype eq 'regexp') {
+    if (defined $::query_file && $::query_file ne '') {
+        my $q = SqlQuote($::query_file);
+        if ($::query_filetype eq 'regexp') {
             $qstring .= " and files.file regexp $q";
         } else {
             $qstring .= " and files.file = $q";
         }
     }
-    if (defined $query_who && $query_who ne '') {
-        my $q = SqlQuote($query_who);
-        if ($query_whotype eq 'regexp') {
+    if (defined $::query_who && $::query_who ne '') {
+        my $q = SqlQuote($::query_who);
+        if ($::query_whotype eq 'regexp') {
             $qstring .= " and people.who regexp $q";
         }
-        elsif ($query_whotype eq 'notregexp') {
+        elsif ($::query_whotype eq 'notregexp') {
             $qstring .= " and not (people.who regexp $q)";
 
         } else {
@@ -157,12 +176,12 @@ sub query_checkins {
         }
     }
 
-    if (defined($query_logexpr) && $query_logexpr ne '') {
-        my $q = SqlQuote($query_logexpr);
+    if (defined($::query_logexpr) && $::query_logexpr ne '') {
+        my $q = SqlQuote($::query_logexpr);
         $qstring .= " and descs.description regexp $q";
     }
     
-    if ($query_debug) {
+    if ($::query_debug) {
         print "<pre wrap> Query: $qstring\nTreeID is $::TreeID\n";
         if ($have_mod_map) {
             print "Dump of module map:\n";
@@ -176,30 +195,31 @@ sub query_checkins {
     SendSQL($qstring);
 
     $lastlog = 0;
+    my @row;
     while (@row = FetchSQLData()) {
 #print "<pre>";
         $ci = [];
-        for ($i=0 ; $i<=$CI_LOG ; $i++) {
+        for (my $i=0 ; $i<=$::CI_LOG ; $i++) {
             $ci->[$i] = $row[$i];
 #print "$row[$i] ";
         }
 #print "</pre>";
 
 
-        $key = "$ci->[$CI_DIR]/$ci->[$CI_FILE]";
-        if (IsHidden("$ci->[$CI_REPOSITORY]/$key")) {
+        my $key = "$ci->[$::CI_DIR]/$ci->[$::CI_FILE]";
+        if (IsHidden("$ci->[$::CI_REPOSITORY]/$key")) {
             next;
         }
 
         if( $have_mod_map &&
-           !&in_module(\%mod_map, $ci->[$CI_DIR], $ci->[$CI_FILE] ) ){
+           !&in_module(\%mod_map, $ci->[$::CI_DIR], $ci->[$::CI_FILE] ) ){
             next;
         }
 
         if( $begin_tag) {
             $rev = $begin_tag->{$key};
             print "<BR>$key begintag is $rev<BR>\n";
-            if ($rev == "" || rev_is_after($ci->[$CI_REV], $rev)) {
+            if ($rev == "" || rev_is_after($ci->[$::CI_REV], $rev)) {
                 next;
             }
         }
@@ -207,14 +227,14 @@ sub query_checkins {
         if( $end_tag) {
             $rev = $end_tag->{$key};
             print "<BR>$key endtag is $rev<BR>\n";
-            if ($rev == "" || rev_is_after($rev, $ci->[$CI_REV])) {
+            if ($rev == "" || rev_is_after($rev, $ci->[$::CI_REV])) {
                 next;
             }
         }
 
-        if (defined($query_logexpr) && 
-            $query_logexpr ne '' &&
-            !($ci->[$CI_LOG] =~ /$query_logexpr/i) ){
+        if (defined($::query_logexpr) && 
+            $::query_logexpr ne '' &&
+            !($ci->[$::CI_LOG] =~ /$::query_logexpr/i) ){
             next;
         }
 
@@ -222,9 +242,9 @@ sub query_checkins {
     }
 
     for $ci (@{$result}) {
-        $lines_added += $ci->[$CI_LINES_ADDED];
-        $lines_removed += $ci->[$CI_LINES_REMOVED];
-        $versioninfo .= "$ci->[$CI_WHO]|$ci->[$CI_DIR]|$ci->[$CI_FILE]|$ci->[$CI_REV],";
+        $::lines_added += $ci->[$::CI_LINES_ADDED];
+        $::lines_removed += $ci->[$::CI_LINES_REMOVED];
+        $::versioninfo .= "$ci->[$::CI_WHO]|$ci->[$::CI_DIR]|$ci->[$::CI_FILE]|$ci->[$::CI_REV],";
     }
     return $result;
 }
@@ -240,7 +260,7 @@ sub load_tag {
     my $cmd;
     my $dir;
 
-    $cvssuffix = $CVS_ROOT;
+    $cvssuffix = $::CVS_ROOT;
     $cvssuffix =~ s/\//_/g;
 
     $s = $tagname;
@@ -254,7 +274,7 @@ sub load_tag {
     $tagfile = "data/taginfo/$cvssuffix/$s";
 
     open(TAG, "<$tagfile") || die "Unknown tag $tagname";
-    $result = {};
+    my $result = {};
 
 
 print "<br>parsing tag $tagname</br>\n";
@@ -268,13 +288,13 @@ print "<br>parsing tag $tagname</br>\n";
             next;
         }
         $dir = shift @line;
-        $dir =~ s:^$CVS_ROOT/::;
+        $dir =~ s@^$::CVS_ROOT/@@;
         $dir =~ s:^\./::;
         
         while (@line) {
-            $file = shift @line;
+            my $file = shift @line;
             $file = "$dir/$file";
-            $version = shift @line;
+            my $version = shift @line;
             $result->{$file} = $version;
 print "<br>Added ($file,$version) for tag $tagname<br>\n";
         }
@@ -309,47 +329,10 @@ sub rev_is_after {
     
 
 
-sub find_date_offset {
-    local( $o, $d, $done, $line );
-    $done = 0;
-    local($dev,$ino,$mode,$nlink,$uid,$gid,$rdev,$size,
-     $atime,$mtime,$ctime,$blksize,$blocks) = stat($CHECKIN_INDEX_FILE);
-    if ($mtime eq "" || time() - $mtime> 24 * 60 * 60) {
-        print "<h1>Please wait -- rebuilding index file...</h1>\n";
-        system "./cvsindex.pl $CVS_ROOT";
-        print "<h1>...OK, done.</h1>\n";
-    }
-    Lock();
-    if(! open(IDX , "<$CHECKIN_INDEX_FILE") ){
-        print "<h1>can't open index</h1>";
-        Unlock();
-        return 0;
-    }
-    $i = 0;
-    while(<IDX>) {
-        last if $done;
-        $line = $_;
-        chop($line);
-
-        ($o,$d) = split(/\|/,$line);
-        if( $d && $query_date_min > $d ){
-            $done = 1;
-        }
-        $i++;
-    }
-    if( $F_DEBUG ){
-        print "seekdate($d) seekoffset($o) readcount($i)\n";
-    }
-    close IDX;
-    Unlock();
-    return $o;
-}
-
-
 sub in_module {
-    local($mod_map, $dirname, $filename ) = @_;
-    local( @path );
-    local( $i, $fp, $local );
+    my ($mod_map, $dirname, $filename ) = @_;
+    my ( @path );
+    my ( $i, $fp, $local );
 
     #
     #quick check if it is already in there.
@@ -401,32 +384,34 @@ sub get_module_map {
 
 
 sub parse_modules {
+    my $l;
     while( $l = &get_line ){
-        ($mod_name, $flag, @params) = split(/[ \t]+/,$l);
+        my ($mod_name, $flag, @params) = split(/[ \t]+/,$l);
 
         if ( $#params eq -1 ) {
             @params = $flag;
             $flag = "";
         }
 	elsif( $flag eq '-d' ){
+            my $dummy;
 	    ($mod_name, $dummy, $dummy, @params) = split(/[ \t]+/,$l);
 	}
         elsif( $flag ne '-a' ){
             next;
         }
-        $modules->{$mod_name} = [@params];
+        $::modules->{$mod_name} = [@params];
     }
 }
 
 
 sub build_map {
-    local($name,$mod_map) = @_;
-    local($bFound, $local);
+    my ($name,$mod_map) = @_;
+    my ($bFound, $local);
 
     $local = $NOT_LOCAL;
     $bFound = 0;
 
-    for $i ( @{$modules->{$name}} ){
+    for my $i ( @{$::modules->{$name}} ){
         $bFound = 1;
         if( $i eq '-l' ){
             $local = $IS_LOCAL;

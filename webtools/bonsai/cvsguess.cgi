@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -16,6 +16,9 @@
 # The Initial Developer of the Original Code is Netscape Communications
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
+
+use diagnostics;
+use strict;
 
 require 'CGI.pl';
 
@@ -39,7 +42,7 @@ $CVS_REPOS_SUFIX =~ s/\//_/g;
 ConnectToDatabase();
 
 my $f = SqlQuote($file);
-$qstring = "select distinct dirs.dir from checkins,dirs,files,repositories where dirs.id=dirid and files.id=fileid and repositories.id=repositoryid and repositories.repository='$CVS_ROOT' and files.file=$f order by dirs.dir";
+my $qstring = "select distinct dirs.dir from checkins,dirs,files,repositories where dirs.id=dirid and files.id=fileid and repositories.id=repositoryid and repositories.repository='$CVS_ROOT' and files.file=$f order by dirs.dir";
 
 if ($debug) {
     print "<pre wrap>$qstring</pre>\n";

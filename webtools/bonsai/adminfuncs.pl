@@ -16,6 +16,17 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+use strict;
+use diagnostics;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub adminfuncs_pl_sillyness {
+    my $zz;
+    $zz = $::TreeID;
+}
+
 require 'globals.pl';
 
 use Mail::Internet;
@@ -46,7 +57,7 @@ sub SendHookMail {
      my (%substs, %headers, $body, $mail);
      local *MAIL;
 
-     $pathname = DataDir() . "/$filename";
+     my $pathname = DataDir() . "/$filename";
 
      return unless $hooklist;
      return unless -f $pathname;

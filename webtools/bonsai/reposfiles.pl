@@ -18,14 +18,17 @@
 # Netscape Communications Corporation. All Rights Reserved.
 
 
+use diagnostics;
+use strict;
+
 if( $ARGV[0] eq '' ){
-    $CVS_ROOT = '/m/src';
+    $::CVS_ROOT = '/m/src';
 }
 else {
-    $CVS_ROOT = $ARGV[0];
+    $::CVS_ROOT = $ARGV[0];
 }
 
-$CVS_REPOS_SUFIX = $CVS_ROOT;
+$CVS_REPOS_SUFIX = $::CVS_ROOT;
 $CVS_REPOS_SUFIX =~ s/\//_/g;
     
 
@@ -33,7 +36,7 @@ $FILE_LIST = "/d/webdocs/projects/bonsai/data/reposfiles${CVS_REPOS_SUFIX}";
 
 open FL, ">$FILE_LIST";
 
-GoDir($CVS_ROOT);
+GoDir($::CVS_ROOT);
 
 sub GoDir {
     local($dir) = @_;

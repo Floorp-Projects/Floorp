@@ -17,6 +17,9 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+use diagnostics;
+use strict;
+
 require 'CGI.pl';
 print "Content-type: text/html\n\n";
 
@@ -58,7 +61,7 @@ Change the free-for-all whiteboard:<br>
 
 my $newwhiteboard = trim(FormData('whiteboard'));
 
-MailDiffs("whiteboard", $whiteboard, $newwhiteboard);
+MailDiffs("whiteboard", $::WhiteBoard, $newwhiteboard);
 
 $::WhiteBoard = $newwhiteboard;
 WriteWhiteboard();

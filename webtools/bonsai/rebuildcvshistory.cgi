@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bonsaitools/bin/perl -w
 #
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -15,6 +15,18 @@
 # The Initial Developer of the Original Code is Netscape Communications
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
+
+use diagnostics;
+use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::RepositoryID;
+    $zz = $::StartingDir;
+}
 
 use File::Basename;
 
@@ -97,7 +109,7 @@ sub ProcessOneFile {
                                    $datestr =~ s!^(\d+)/(\d+/\d+)!$2/$1!;
                                    $date = str2time($datestr, "GMT");
                                    if ($date >= $::StartFrom) {
-                                        AddToDatabase("C|$date|$author|$Repository|$filehead|$filetail|$revision||$branch|+$pluscount|-$minuscount", $desc);
+                                        AddToDatabase("C|$date|$author|$::Repository|$filehead|$filetail|$revision||$branch|+$pluscount|-$minuscount", $desc);
                                    }
                               }
                               $indesc = 0;
@@ -144,8 +156,10 @@ sub ProcessOneFile {
                          }
                     }
 
-                    last
-                         unless ($line = <RLOG_PROC>);
+		    $line = <RLOG_PROC>;
+		    if (!defined $line) {
+			last;
+		    }
                     chop($line);
                }
           }
@@ -175,11 +189,11 @@ sub ProcessDirectory {
           } else {
                next unless ($file =~ /,v$/);
 
-               if ($FirstFile && ($FirstFile ne $file)) {
+               if ($::FirstFile && ($::FirstFile ne $file)) {
                     print "Skipping $file...\n";
                     next;
                }
-               $FirstFile = 0;
+               $::FirstFile = 0;
                ProcessOneFile($file);
           }
      }
@@ -232,13 +246,14 @@ Rebuilding entire checkin history in $::Description, (`$::TreeID' tree) ...
 Log("Rebuilding cvs history in $::Description, (`$::TreeID' tree)...");
 
 LoadDirList();
-@Dirs = grep(!/\*$/, @::LegalDirs);
+my @Dirs = grep(!/\*$/, @::LegalDirs);
 @Dirs = split(/,\s*/, $::Modules) if $::Modules;
+my $StartingDir;
 ($StartingDir = "$::Repository/$::SubDir") =~ s!/.?$!! if $::SubDir;
 
 
 print "Doing directories: @Dirs ...\n";
-foreach $Dir (@Dirs) {
+foreach my $Dir (@Dirs) {
      my $dir = "$::Repository/$Dir";
 
      unless (grep $Dir, @::LegalDirs) {

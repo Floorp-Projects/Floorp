@@ -17,6 +17,18 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+use diagnostics;
+use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::TreeID;
+    $zz = $::TreeInfo;
+}
+
 require 'CGI.pl';
 
 print "Content-type: text/html\n\n";
@@ -48,11 +60,11 @@ open(FILE, "> $RealFilename")
 print FILE $Text;
 chmod(0666, $RealFilename);
 close(FILE);
-Log("$RealFilename set to $text");
+Log("$RealFilename set to $Text");
 Unlock();
 
 LoadTreeConfig();
 PutsHeader("New $Filename", "New $Filename",
            "$Filename - $::TreeInfo{$::TreeID}{shortdesc}");
-print "The file <b>$filename</b> has been changed.";
+print "The file <b>$Filename</b> has been changed.";
 PutsTrailer();

@@ -17,6 +17,17 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+use diagnostics;
+use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::TreeID;
+}
+
 require 'CGI.pl';
 
 LoadCheckins();
@@ -89,7 +100,7 @@ foreach my $i (sort(keys(%$info))) {
 
 print "<INPUT TYPE=HIDDEN NAME=id VALUE=\"$::FORM{'id'}\">";
 
-print "<INPUT TYPE=HIDDEN NAME=treeid VALUE=\"" . value_quote($treeid) . "\">";
+print "<INPUT TYPE=HIDDEN NAME=treeid VALUE=\"" . value_quote($::TreeID) . "\">";
 
 
 

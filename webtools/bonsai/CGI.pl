@@ -228,7 +228,8 @@ sub make_popup {
 }
 
 sub make_cgi_args {
-    my ($k,$v,$ret);
+    my ($k,$v);
+    my $ret = "";
 
     for $k (sort keys %::FORM){
         $ret .= ($ret eq "" ? '?' : '&');

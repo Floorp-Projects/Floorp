@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -18,6 +18,9 @@
 # Netscape Communications Corporation. All Rights Reserved.
 
 
+use strict;
+use diagnostics;
+
 require 'CGI.pl';
 require 'adminfuncs.pl';
 
@@ -28,7 +31,7 @@ CheckPassword(FormData('password'));
 Lock();
 LoadCheckins();
 
-$cmd = FormData('command');
+my $cmd = FormData('command');
 
 if ($cmd eq 'close') {
      close_tree();

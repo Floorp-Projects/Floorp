@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -26,6 +26,9 @@
 #               ...
 #
 
+use diagnostics;
+use strict;
+
 use CGI;
 use SourceChecker;
 
@@ -35,7 +38,7 @@ use SourceChecker;
         # Global
         #
 
-$query = new CGI;
+my $query = new CGI;
 
 
 
@@ -65,11 +68,11 @@ END_OF_TRAILER
 
 
 
-$error_header = '<HR><H2>I couldn\'t process your request...</H2>';
+my $error_header = '<HR><H2>I couldn\'t process your request...</H2>';
 
 sub print_error($)
         {
-                local $message = shift;
+                my $message = shift;
                 print "$error_header<P><EM>Error</EM>: $message</P>";
                 $error_header = '';
         }
@@ -119,7 +122,7 @@ sub print_query_building_form()
 
 sub do_add_good_words($)
         {
-                local $file = shift;
+                my $file = shift;
                 
                 while ( <$file> )
                         {
@@ -131,7 +134,7 @@ sub do_add_good_words($)
 
 sub do_add_bad_words($)
         {
-                local $file = shift;
+                my $file = shift;
                 
                 while ( <$file> )
                         {
@@ -143,7 +146,7 @@ sub do_add_bad_words($)
 
 sub do_add_good_english($)
         {
-                local $file = shift;
+                my $file = shift;
                 
                 while ( <$file> )
                         {
@@ -155,7 +158,7 @@ sub do_add_good_english($)
 
 sub do_add_names($)
         {
-                local $file = shift;
+                my $file = shift;
                 
                 while ( <$file> )
                         {
@@ -167,7 +170,7 @@ sub do_add_names($)
 
 sub handle_query()
         {
-                $dictionary_path = $query->param('dictionary');
+                my $dictionary_path = $query->param('dictionary');
                 if ( ! $dictionary_path )
                         {
                                 print_error('You didn\'t supply a path to the dictionary file.');
@@ -177,8 +180,10 @@ sub handle_query()
                 dbmopen %SourceChecker::token_dictionary, "$dictionary_path", 0666
                         || print_error("The dictionary you named could not be opened.");
 
-                $added_some_words = 0;
+                my $added_some_words = 0;
 
+                my ($file_of_good_english, $file_of_good_words,
+                    $file_of_bad_words, $file_of_names);
                 if ( $file_of_good_english = $query->param('ignore_english') )
                         {
                                 do_add_good_english($file_of_good_english);

@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -21,11 +21,23 @@
 #
 # Query the CVS database.
 #
+
+use diagnostics;
+use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::Setup_String;
+}
+
 require 'CGI.pl';
 
 $|=1;
 
-$CVS_ROOT = $::FORM{"cvsroot"};
+my $CVS_ROOT = $::FORM{"cvsroot"};
 $CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
 
 LoadTreeConfig();
@@ -40,11 +52,11 @@ $::TreeID = 'default'
 
 # get dir, remove leading and trailing slashes
 
-$dir = $::FORM{"dir"};
+my $dir = $::FORM{"dir"};
 $dir =~ s/^\/([^:]*)/$1/;
 $dir =~ s/([^:]*)\/$/$1/;
 
-$rev = $::FORM{"rev"};
+my $rev = $::FORM{"rev"};
 
 if(!defined($rev)) {
     $rev='';
@@ -53,8 +65,10 @@ if(!defined($rev)) {
 print "Content-type: text/html\n\n";
 
 
+my $script_str;
+
 &setup_script;
-$Setup_String = $script_str;
+$::Setup_String = $script_str;
 
 
 if( $CVS_ROOT eq ""  ){
@@ -63,26 +77,30 @@ if( $CVS_ROOT eq ""  ){
 
 validateRepository($CVS_ROOT);
 
+my $s = "";
+
 if( $rev ne "" ){
     $s = "for branch <i>$rev</i>";
 }
 
 CheckHidden("$CVS_ROOT/$dir");
 
-$revstr = '';
+my $revstr = '';
 $revstr = "&rev=$rev" unless $rev eq '';
-$rootstr = '';
+my $rootstr = '';
 $rootstr .= "&cvsroot=$::FORM{'cvsroot'}" if defined $::FORM{'cvsroot'};
 $rootstr .= "&module=$::TreeID";
-$module = $::TreeInfo{$::TreeID}{'module'};
+my $module = $::TreeInfo{$::TreeID}{'module'};
 
-$toplevel = Param('toplevel');
+my $toplevel = Param('toplevel');
 
-$output = "<DIV ALIGN=LEFT>";
+my $output = "<DIV ALIGN=LEFT>";
 $output .= "<A HREF='toplevel.cgi" . BatchIdPart('?') . "'>$toplevel</a>/ ";
 
-($dir_head, $dir_tail) = $dir =~ m@(.*/)?(.+)@;
-foreach $path (split('/',$dir_head)) {
+my ($dir_head, $dir_tail) = $dir =~ m@(.*/)?(.+)@;
+$dir_head = "" unless defined $dir_head;
+my $link_path = "";
+foreach my $path (split('/',$dir_head)) {
     $link_path .= $path;
     $output .= "<A HREF='rview.cgi?dir=$link_path$rootstr$revstr'>$path</A>/ ";
     $link_path .= '/';
@@ -95,8 +113,10 @@ PutsHeader("Repository Directory $toplevel/$dir $s", $output);
 
 cvsmenu("align=right width=30%");
 
+my $other_dir;
+
 ($other_dir = $dir) =~ s!^$module/?!!;
-$other_dir_used = 1;
+my $other_dir_used = 1;
 
 LoadDirList();
 if (-d "$CVS_ROOT/$dir") {
@@ -130,7 +150,7 @@ Branch:
 
 ";
 
-@dirs = ();
+my @dirs = ();
 
 
 DIR:
@@ -142,15 +162,18 @@ while( <*> ){
 
 
 
+my $j;
+my $split;
+
 if( @dirs != 0 ){
     $j = 1;
     $split = int(@dirs/4)+1;
     print "<P><FONT SIZE=+1><B>Directories:</B></FONT><table><TR VALIGN=TOP><td>";
 
 
-    for $i (@dirs){
+    for my $i (@dirs){
         $::FORM{"dir"} = ($dir ne "" ? "$dir/$i" : $i);
-        $anchor = &make_cgi_args;
+        my $anchor = &make_cgi_args;
         print "<dt><a href=rview.cgi${anchor}>$i</a>\n";
         if( $j % $split == 0 ){
             print "\n<td>\n";
@@ -164,7 +187,7 @@ if( @dirs != 0 ){
 
 print "<P><FONT SIZE=+1><B>Files:</B></FONT>";
 print "<table><TR VALIGN=TOP><td>";
-@files = <*,v>;
+my @files = <*,v>;
 $j = 1;
 $split = int(@files/4)+1;
 

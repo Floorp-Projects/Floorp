@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -17,17 +17,29 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-
 #
 # Unroll a module
 #
+
+use diagnostics;
+use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::TreeID;
+    $zz = $::TreeInfo;
+}
+
 require 'CGI.pl';
 
 $|=1;
 
 print "Content-type: text/html\n\n";
 
-$CVS_ROOT = $::FORM{'cvsroot'};
+my $CVS_ROOT = $::FORM{'cvsroot'};
 $CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
 
 PutsHeader("CVS Module Analyzer", $CVS_ROOT);
@@ -55,7 +67,7 @@ print "
 <SELECT name='module' size=5>
 ";
 
-$Module = 'default';
+my $Module = 'default';
 if( $::FORM{module} eq 'all' || $::FORM{module} eq '' ){
     print "<OPTION SELECTED VALUE='all'>All Files in the Repository\n";
 }
@@ -70,7 +82,7 @@ else {
 #
 $::TreeID = $Module if (exists($::TreeInfo{$Module}{'repository'}));
 LoadDirList();
-for $k  (sort( grep(!/\*$/, @::LegalDirs) ) ){
+for my $k  (sort( grep(!/\*$/, @::LegalDirs) ) ){
     print "<OPTION value='$k'>$k\n" if ($k ne $Module);
 }
 
@@ -86,10 +98,10 @@ print "
 
 
 if( $::FORM{module} ne ''  ){
-    $mod = $::FORM{module};
+    my $mod = $::FORM{module};
     print "<h1>Examining Module '$mod'</h1>\n\n";
 
-    for $i (sort( grep(!/\*$/, @::LegalDirs) ) ){
+    for my $i (sort( grep(!/\*$/, @::LegalDirs) ) ){
         if( -d "$CVS_ROOT/$i"){
             print "<dt><tt>Dir:&nbsp;&nbsp;&nbsp;</tt>";
             print "<a href=rview.cgi?dir=$i&cvsroot=$CVS_ROOT>$i</a>";
@@ -103,9 +115,9 @@ if( $::FORM{module} ne ''  ){
             print "$i : Not a file or a directory.";
         }
 
-        if( $mod_map->{$i} == $IS_LOCAL ){
-            print "<font color=blue><tt> LOCAL</tt></font>";
-        }
+#          if( $mod_map->{$i} == $IS_LOCAL ){
+#              print "<font color=blue><tt> LOCAL</tt></font>";
+#          }
         print "\n";
     }
 }

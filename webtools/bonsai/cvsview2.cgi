@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 # cvsview.cgi - fake up some HTML based on RCS logs and diffs
 #
@@ -36,25 +36,44 @@
 # SRCROOTS is an array of repository roots under which to look for CVS files.
 #
 
+use diagnostics;
+use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::TreeInfo;
+    $zz = $::TreeList;
+    $zz = $::file_description;
+    $zz = $::principal_branch;
+    $zz = %::timestamp;
+}
+
+my $opt_command;
+my $anchor_num = 0;
+my $font_tag = "";
 # Figure out which directory bonsai is in by looking at argv[0]
 
-$bonsaidir = $0;
+my $bonsaidir = $0;
 $bonsaidir =~ s:/[^/]*$::;      # Remove last word, and slash before it.
 if ($bonsaidir eq '') {
     $bonsaidir = '.';
 }
 
-chdir $bonsaidir || die "Couldn't chdir to $bonsaidir";
+chdir $bonsaidir || die "Can't chdir to $bonsaidir";
 require 'CGI.pl';
 
-$cocommand = Param('cocommand');
-$rcsdiffcommand = Param('rcsdiffcommand');
+my $cocommand = Param('cocommand');
+my $rcsdiffcommand = Param('rcsdiffcommand');
 
 LoadTreeConfig();
 
-NEXTTREE: foreach $i (@::TreeList) {
-    $r = $::TreeInfo{$i}->{'repository'};
-    foreach $j (@SRCROOTS) {
+my @SRCROOTS;
+NEXTTREE: foreach my $i (@::TreeList) {
+    my $r = $::TreeInfo{$i}->{'repository'};
+    foreach my $j (@SRCROOTS) {
         if ($r eq $j) {
             next NEXTTREE;
         }
@@ -62,16 +81,16 @@ NEXTTREE: foreach $i (@::TreeList) {
     push @SRCROOTS, $r;
 }
 
-$opt_rev1 = '';
-$opt_rev2 = '';
-$opt_root = '';
-$opt_files = '';
-$opt_branch = '';
-$opt_skip = 0;
-$debug = 0;
+my $opt_rev1 = '';
+my $opt_rev2 = '';
+my $opt_root = '';
+my $opt_files = '';
+my $opt_branch = '';
+my $opt_skip = 0;
+my $debug = 0;
 
 
-$MAX_REVS = 8;
+my $MAX_REVS = 8;
 
 
 #
@@ -79,11 +98,14 @@ $MAX_REVS = 8;
 # XXX dup stdout onto stderr and flush stdout after the following prints
 #
 # Until then, replace standard die built-in with our own.
-sub die {
-    print 'fatal error: ';
-    print @_;
-    exit;
-}
+#  sub die {
+#      print 'fatal error: ';
+#      print @_;
+#      exit;
+#  }
+
+
+my $line_buffer;
 
 # Consume one token from the already opened RCSFILE filehandle.
 # Unescape string tokens, if necessary.
@@ -103,7 +125,7 @@ sub get_token {
 
     # ...or an RCS-encoded string that starts with an @ character.
     $line_buffer =~ s/^@([^@]*)//o;
-    $token = $1;
+    my $token = $1;
 
     # Detect single @ character used to close RCS-encoded string.
     while ($line_buffer !~ /^@[^@]*$/o) {
@@ -124,9 +146,9 @@ sub get_token {
 # Consume a token from RCS filehandle and ensure that it matches
 # the given string constant.
 sub match_token {
-    local ($match) = @_;
+    my ($match) = @_;
 
-    local ($token) = &get_token;
+    my ($token) = &get_token;
     &die ("Unexpected parsing error in RCS file.\n",
           "Expected token: $match, but saw: $token\n")
             if ($token ne $match);
@@ -134,29 +156,29 @@ sub match_token {
 
 # Push RCS token back into the input buffer.
 sub unget_token {
-    local ($token) = @_;
+    my ($token) = @_;
     $line_buffer = "$token $line_buffer";
 }
 
 # Parses "administrative" header of RCS files, setting these globals:
 # 
-# $head_revision           -- Revision for which cleartext is stored
-# $principal_branch
-# $file_description
-# %revision_symbolic_name  -- mapping from numerical revision # to symbolic tag
-# %tag_revision            -- mapping from symbolic tag to numerical revision #
+# $::head_revision           -- Revision for which cleartext is stored
+# $::principal_branch
+# $::file_description
+# %::revision_symbolic_name  -- maps from numerical revision # to symbolic tag
+# %::tag_revision            -- maps from symbolic tag to numerical revision #
 #
 sub parse_rcs_admin {
-    local ($token, $tag, $tag_name, $tag_revision);
-    local (@tags);
+    my ($token, $tag, $tag_name, $tag_revision);
+    my (@tags);
 
     # Undefine variables, because we may have already read another RCS file
-    undef %tag_revision;
-    undef %revision_symbolic_name;
+    undef %::tag_revision;
+    undef %::revision_symbolic_name;
 
     while (1) {
         # Read initial token at beginning of line
-        $token = &get_token(RCSFILE);
+        $token = &get_token();
 
         # We're done once we reach the description of the RCS tree
         if ($token =~ /^\d/o) {
@@ -167,10 +189,10 @@ sub parse_rcs_admin {
 #       print "token: $token\n";
 
         if ($token eq 'head') {
-            $head_revision = &get_token;
+            $::head_revision = &get_token;
             &get_token;         # Eat semicolon
         } elsif ($token eq 'branch') {
-            $principal_branch = &get_token;
+            $::principal_branch = &get_token;
             &get_token;         # Eat semicolon
         } elsif ($token eq 'symbols') {
 
@@ -179,11 +201,11 @@ sub parse_rcs_admin {
             while (($tag = &get_token) ne ';') {
                 ($tag_name, $tag_revision) = split(':', $tag);
                 
-                $tag_revision{$tag_name} = $tag_revision;
-                $revision_symbolic_name{$tag_revision} = $tag_name;
+                $::tag_revision{$tag_name} = $tag_revision;
+                $::revision_symbolic_name{$tag_revision} = $tag_name;
             }
         } elsif ($token eq 'comment') {
-            $file_description = &get_token;
+            $::file_description = &get_token;
             &get_token;         # Eat semicolon
 
         # Ignore all these other fields - We don't care about them.         
@@ -204,38 +226,38 @@ sub parse_rcs_admin {
 # and other arrays that contain info about individual revisions.
 #
 # The following associative arrays are created, keyed by revision number:
-#   %revision_date     -- e.g. "96.02.23.00.21.52"
-#   %timestamp         -- seconds since 12:00 AM, Jan 1, 1970 GMT
-#   %revision_author   -- e.g. "tom"
-#   %revision_branches -- descendant branch revisions, separated by spaces,
+#   %::revision_date     -- e.g. "96.02.23.00.21.52"
+#   %::timestamp         -- seconds since 12:00 AM, Jan 1, 1970 GMT
+#   %::revision_author   -- e.g. "tom"
+#   %::revision_branches -- descendant branch revisions, separated by spaces,
 #                         e.g. "1.21.4.1 1.21.2.6.1"
-#   %prev_revision     -- revision number of previous *ancestor* in RCS tree.
+#   %::prev_revision     -- revision number of previous *ancestor* in RCS tree.
 #                         Traversal of this array occurs in the direction
 #                         of the primordial (1.1) revision.
-#   %prev_delta        -- revision number of previous revision which forms the
+#   %::prev_delta        -- revision number of previous revision which forms the
 #                         basis for the edit commands in this revision.
 #                         This causes the tree to be traversed towards the
 #                         trunk when on a branch, and towards the latest trunk
 #                         revision when on the trunk.
-#   %next_delta        -- revision number of next "delta".  Inverts %prev_delta.
+#   %::next_delta        -- revision number of next "delta".  Inverts %::prev_delta.
 #
-# Also creates %last_revision, keyed by a branch revision number, which
+# Also creates %::last_revision, keyed by a branch revision number, which
 # indicates the latest revision on a given branch,
-#   e.g. $last_revision{"1.2.8"} == 1.2.8.5
+#   e.g. $::last_revision{"1.2.8"} == 1.2.8.5
 #
 sub parse_rcs_tree {
-    local($revision, $date, $author, $branches, $next);
-    local($branch, $is_trunk_revision);
+    my($revision, $date, $author, $branches, $next);
+    my($branch, $is_trunk_revision);
 
     # Undefine variables, because we may have already read another RCS file
-    undef %revision_date;
-    undef %timestamp;
-    undef %revision_author;
-    undef %revision_branches;
-    undef %prev_revision;
-    undef %prev_delta;
-    undef %next_delta;
-    undef %last_revision;
+    undef %::revision_date;
+    undef %::timestamp;
+    undef %::revision_author;
+    undef %::revision_branches;
+    undef %::prev_revision;
+    undef %::prev_delta;
+    undef %::next_delta;
+    undef %::last_revision;
 
     while (1) {
         $revision = &get_token;
@@ -248,25 +270,25 @@ sub parse_rcs_tree {
 
         $is_trunk_revision = ($revision =~ /^[0-9]+\.[0-9]+$/);
         
-        $tag_revision{$revision} = $revision;
+        $::tag_revision{$revision} = $revision;
         ($branch) = $revision =~ /(.*)\.[0-9]+/o;
-        $last_revision{$branch} = $revision;
+        $::last_revision{$branch} = $revision;
 
         # Parse date
         &match_token('date');
         $date = &get_token;
-        $revision_date{$revision} = $date;
+        $::revision_date{$revision} = $date;
         &match_token(';');
         
         # Convert date into timestamp
 #       @date_fields = reverse(split(/\./, $date));
 #       $date_fields[4]--;      # Month ranges from 0-11, not 1-12
-#       $timestamp{$revision} = &timegm(@date_fields);
+#       $::timestamp{$revision} = &timegm(@date_fields);
 
         # Parse author
         &match_token('author');
         $author = &get_token;
-        $revision_author{$revision} = $author;
+        $::revision_author{$revision} = $author;
         &match_token(';');
 
         # Parse state;
@@ -276,12 +298,13 @@ sub parse_rcs_tree {
         # Parse branches
         &match_token('branches');
         $branches = '';
+        my $token;
         while (($token = &get_token) ne ';') {
-            $prev_revision{$token} = $revision;
-            $prev_delta{$token} = $revision;
+            $::prev_revision{$token} = $revision;
+            $::prev_delta{$token} = $revision;
             $branches .= "$token ";
         }
-        $revision_branches{$revision} = $branches;
+        $::revision_branches{$revision} = $branches;
 
         # Parse revision of next delta in chain
         &match_token('next');
@@ -289,12 +312,12 @@ sub parse_rcs_tree {
         if (($token = &get_token) ne ';') {
             $next = $token;
             &get_token;         # Eat semicolon
-            $next_delta{$revision} = $next;
-            $prev_delta{$next} = $revision;
+            $::next_delta{$revision} = $next;
+            $::prev_delta{$next} = $revision;
             if ($is_trunk_revision) {
-                $prev_revision{$revision} = $next;
+                $::prev_revision{$revision} = $next;
             } else {
-                $prev_revision{$next} = $revision;
+                $::prev_revision{$next} = $revision;
             }
         }
 
@@ -310,7 +333,7 @@ sub parse_rcs_tree {
 
 # Reads and parses complete RCS file from already-opened RCSFILE descriptor.
 sub parse_rcs_file {
-    local ($file) = @_;
+    my ($file) = @_;
     &die("Couldn't open $file\n") if !open(RCSFILE, "< $file");
     $line_buffer = '';
     print "Reading RCS admin...\n" if ($debug);
@@ -325,15 +348,15 @@ sub parse_rcs_file {
 # branch tag, a symbolic revision tag, or an ordinary numerical
 # revision number.
 sub map_tag_to_revision {
-    local($tag_or_revision) = @_;
+    my($tag_or_revision) = @_;
 
-    local ($revision) = $tag_revision{$tag_or_revision};
+    my ($revision) = $::tag_revision{$tag_or_revision};
     
     # Is this a branch tag, e.g. xxx.yyy.0.zzz
     if ($revision =~ /(.*)\.0\.([0-9]+)/o) {
-        $branch = $1 . '.' . $2;
+        my $branch = $1 . '.' . $2;
         # Return latest revision on the branch, if any.
-        return $last_revision{$branch} if (defined($last_revision{$branch}));
+        return $::last_revision{$branch} if (defined($::last_revision{$branch}));
         return $1;              # No revisions on branch - return branch point
     } else {
         return $revision;
@@ -345,11 +368,11 @@ sub map_tag_to_revision {
 #
 print "Content-type: text/html\n\n";
 
-$request_method = $ENV{'REQUEST_METHOD'};       # e.g., "GET", "POST", etc.
-$script_name = $ENV{'SCRIPT_NAME'};
-$prefix = $script_name . '?'; # prefix for HREF= entries
+my $request_method = $ENV{'REQUEST_METHOD'};       # e.g., "GET", "POST", etc.
+my $script_name = $ENV{'SCRIPT_NAME'};
+my $prefix = $script_name . '?'; # prefix for HREF= entries
 $prefix = $script_name . $ENV{PATH_INFO} . '?' if (exists($ENV{PATH_INFO}));
-$query_string = $ENV{QUERY_STRING};
+my $query_string = $ENV{QUERY_STRING};
 
 # Undo % URL-encoding
 while ($query_string =~ /(.*)\%([0-9a-fA-F][0-9a-fA-F])(.*)/) {
@@ -361,13 +384,17 @@ while ($query_string =~ /(.*)\%([0-9a-fA-F][0-9a-fA-F])(.*)/) {
     if ($request_method ne 'GET');
 
 # Default option values
-$opt_diff_mode         = 'context';
-$opt_whitespace_mode   = 'show';
+my $opt_diff_mode         = 'context';
+my $opt_whitespace_mode   = 'show';
+
+my $opt_file;
+my $opt_rev;
+my $opt_subdir;
 
 # Parse options in URL.  For example,
 # http://w3/cgi/cvsview.pl?subdir=foo&file=bar would assign
 #   $opt_subdir = foo and $opt_file = bar.
-foreach $option (split(/&/, $query_string)) {
+foreach my $option (split(/&/, $query_string)) {
     &die("command $opt_command: garbled option $option\n")
         if ($option !~ /^([^=]+)=(.*)/);
     eval('$opt_' . $1 . '="' . $2 . '";');
@@ -377,13 +404,13 @@ if (defined($opt_branch) && $opt_branch eq 'HEAD' ) { $opt_branch = ''; }
 
 # Configuration colors for diff output.
 
-$stable_bg_color   = 'White';
-$skipping_bg_color = '#c0c0c0';
-$header_bg_color   = 'Orange';
-$change_bg_color   = 'LightBlue';
-$addition_bg_color = 'LightGreen';
-$deletion_bg_color = 'LightGreen';
-$diff_bg_color     = 'White';
+my $stable_bg_color   = 'White';
+my $skipping_bg_color = '#c0c0c0';
+my $header_bg_color   = 'Orange';
+my $change_bg_color   = 'LightBlue';
+my $addition_bg_color = 'LightGreen';
+my $deletion_bg_color = 'LightGreen';
+my $diff_bg_color     = 'White';
 
 # Ensure that necessary arguments are present
 &die("command not defined in URL\n") if $opt_command eq '';
@@ -403,15 +430,16 @@ $prefix .= "&whitespace_mode=$opt_whitespace_mode";
 $prefix .= "&root=$opt_root";
 
 # Create a shorthand for the longest common initial substring of our URL.
-$magic_url = "$prefix&subdir=$opt_subdir";
+my $magic_url = "$prefix&subdir=$opt_subdir";
 
 # Now that we've munged QUERY_STRING into perl variables, set rcsdiff options.
-$rcsdiff = "$rcsdiffcommand -f";
+my $rcsdiff = "$rcsdiffcommand -f";
 $rcsdiff .= ' -w' if ($opt_whitespace_mode eq 'ignore');
 
 # Handle the "root" argument
 #
-if (defined($root = $opt_root) && $root ne '') {
+my $root = $opt_root;
+if (defined $root && $root ne '') {
     $root =~ s|/$||;
     if (-d $root) {
         unshift(@SRCROOTS, $root);
@@ -421,6 +449,9 @@ if (defined($root = $opt_root) && $root ne '') {
         exit;
     }
 }
+
+my $found = 0;
+my $dir;
 foreach $root (@SRCROOTS) {
     $dir = "$root/$opt_subdir";
     if (-d $dir) {
@@ -487,7 +518,8 @@ sub do_diff_links {
 
     my $lxr_path = "$opt_subdir/$opt_file";
     my $lxr_link = Fix_LxrLink($lxr_path);
-    my $blame_link = "$blame_base?root=$CVS_ROOT\&file=$opt_subdir/$opt_file";
+    my $blame_link = "$blame_base?file=$opt_subdir/$opt_file";
+    $blame_link .= "&root=$opt_root" if defined($opt_root);
     my $diff_link = "$magic_url&command=DIRECTORY&file=$opt_file&rev1=$opt_rev1&rev2=$opt_rev2";
     $diff_link .= "&root=$opt_root" if defined($opt_root);
 
@@ -515,6 +547,7 @@ sub do_diff_links {
     $anchor_num = 0;
     while (<RCSDIFF>) {
         # Get one command from the diff file
+        my $line = "";
         if (/^(c|a)(\d+)/) {
             $line = $2;
             while (<RCSDIFF>) {
@@ -544,10 +577,10 @@ sub do_diff_links {
 
 
 # Default tab width, although it's frequently 4.
-$tab_width = 8;
+my $tab_width = 8;
 
 sub next_tab_stop {
-    local ($pos) = @_;
+    my ($pos) = @_;
 
     return int(($pos + $tab_width) / $tab_width) * $tab_width;
 }
@@ -558,9 +591,9 @@ sub next_tab_stop {
 # In the latter case, set $tab_width to 4.
 #
 sub guess_tab_width {
-    local ($opt_file) = @_;
-    local ($found_tab_width) = 0;
-    local ($many_tabs, $any_tabs) = (0, 0);
+    my ($opt_file) = @_;
+    my ($found_tab_width) = 0;
+    my ($many_tabs, $any_tabs) = (0, 0);
 
     open(RCSFILE, "$opt_file");
     while (<RCSFILE>) {
@@ -593,7 +626,7 @@ sub do_diff {
 
     chdir($dir);
 
-    local ($rcsfile) = "$opt_file,v";
+    my ($rcsfile) = "$opt_file,v";
     $rcsfile = "Attic/$opt_file,v" if (! -r $rcsfile);
     &guess_tab_width($rcsfile);
 
@@ -634,9 +667,10 @@ sub do_log {
 #
 sub do_directory {
 
-    $output = "<DIV ALIGN=LEFT>";
+    my $output = "<DIV ALIGN=LEFT>";
+    my $link_path = "";
 
-    foreach $path (split('/',$opt_subdir)) {
+    foreach my $path (split('/',$opt_subdir)) {
         $link_path .= $path;
         $output .= "<A HREF='rview.cgi?dir=$link_path";
         $output .= "&cvsroot=$opt_root" if defined $opt_root;
@@ -659,8 +693,8 @@ sub do_directory {
 
     print "<TABLE BORDER CELLPADDING=2>\n";
 
-    foreach $file (split(/\+/, $opt_files)) {
-        local ($path) = "$dir/$file,v";
+    foreach my $file (split(/\+/, $opt_files)) {
+        my ($path) = "$dir/$file,v";
 
         CheckHidden($path);
         $path = "$dir/Attic/$file,v" if (! -r $path);
@@ -676,18 +710,20 @@ sub do_directory {
         print "&root=$opt_root" if defined($opt_root);
         print "\">Change Log</A></B></TD>\n";
         
+        my $first_rev;
         if ($opt_branch) {
             $first_rev = &map_tag_to_revision($opt_branch);
             &die("$0: error: -r: No such revision: $opt_branch\n")
                 if ($first_rev eq '');
         } else {
-            $first_rev = $head_revision;
+            $first_rev = $::head_revision;
         }
         
-        $skip = $opt_skip;
-        $revs_remaining = $MAX_REVS;
-        for ($rev = $first_rev; $rev; $rev = $prev) {
-            $prev = $prev_revision{$rev};
+        my $skip = $opt_skip;
+        my $revs_remaining = $MAX_REVS;
+        my $prev;
+        for (my $rev = $first_rev; $rev; $rev = $prev) {
+            $prev = $::prev_revision{$rev};
             next if $skip-- > 0;
             if (!$revs_remaining--) {
                 #print '<TD ROWSPAN=2 VALIGN=TOP>';
@@ -707,7 +743,7 @@ sub do_directory {
                 $href_close = "</A>";
             }
             print "<TD>$href_open$rev$href_close<BR>";
-            print "$revision_author{$rev}</TD>";
+            print "$::revision_author{$rev}</TD>";
         }
 
         print "</TR>\n";
@@ -716,12 +752,12 @@ sub do_directory {
         print "<TR>\n";
         $skip = $opt_skip;
         $revs_remaining = $MAX_REVS;
-        for ($rev = $first_rev; $rev; $rev = $prev_revision{$rev}) {
+        for (my $rev = $first_rev; $rev; $rev = $::prev_revision{$rev}) {
             next if $skip-- > 0;
             last if !$revs_remaining--;
             print "<TD><A HREF=$magic_url&command=LOG";
             print "root=$opt_root" if defined($opt_root);
-            print "&file=$file&rev=$rev>$revision_author{$rev}</A>",
+            print "&file=$file&rev=$rev>$::revision_author{$rev}</A>",
             "</TD>\n";
         }
         print "</TR>\n";}
@@ -783,8 +819,10 @@ sub do_directory {
 # a later version of OLDREV's file.
 #
 sub html_diff {
-    local ($file, $rev1, $rev2) = @_;
-    local ($old_line_num) = 1;
+    my ($file, $rev1, $rev2) = @_;
+    my ($old_line_num) = 1;
+    my ($old_line);
+    my ($point, $mark); 
 
     open(DIFF, "$rcsdiff -f -r$rev1 -r$rev2 $file 2>/dev/null |");
     open(OLDREV, "$cocommand -p$rev1 $file 2>/dev/null |");
@@ -804,7 +842,7 @@ sub html_diff {
         $mark = 0;
         if (/^a(\d+)/) {
             $point = $1;
-            &skip_to_line($point + 1, *OLDREV, *old_line_num);
+            $old_line_num = skip_to_line($point + 1, *OLDREV, $old_line_num);
             while (<DIFF>) {
                 last if (/^\.$/);
                 &print_row('', $stable_bg_color, $_, $addition_bg_color);
@@ -812,7 +850,7 @@ sub html_diff {
         } elsif ((($point, $mark) = /^c(\d+) (\d+)$/) ||
                  (($point) = /^c(\d+)$/)) {
             $mark = $point if (!$mark);
-            &skip_to_line($point, *OLDREV, *old_line_num);
+            $old_line_num = skip_to_line($point, *OLDREV, $old_line_num);
             while (<DIFF>) {
                 last if (/^\.$/);
                 if ($old_line_num <= $mark) {
@@ -831,7 +869,7 @@ sub html_diff {
         } elsif ((($point, $mark) = /^d(\d+) (\d+)$/) ||
                  (($point) = /^d(\d+)$/)) {
             $mark = $point if (!$mark);
-            &skip_to_line($point, *OLDREV, *old_line_num);
+            $old_line_num = skip_to_line($point, *OLDREV, $old_line_num);
             while ($old_line = <OLDREV>) {
                 $old_line_num++;
                 &print_row($old_line, $deletion_bg_color, '', $stable_bg_color);
@@ -849,7 +887,7 @@ sub html_diff {
     # Print the remaining lines in the original file.  These are lines that
     # were not modified in the later revision
     #
-    local ($base_old_line_num) = $old_line_num;
+    my ($base_old_line_num) = $old_line_num;
     while ($old_line = <OLDREV>) {
         $old_line_num++;
         &print_row($old_line, $stable_bg_color, $old_line, $stable_bg_color)
@@ -867,10 +905,12 @@ sub html_diff {
 }
 
 sub skip_to_line {
-    local ($line_num, *OLDREV, *old_line_num) = @_;
-    local ($anchor_printed) = 0;
-    local ($skip_line_printed) = ($line_num - $old_line_num <= 10);
-    local ($base_old_line_num) = $old_line_num;
+    my ($line_num, $old_line_num);
+    local (*OLDREV);
+    ($line_num, *OLDREV, $old_line_num) = @_;
+    my ($anchor_printed) = 0;
+    my ($skip_line_printed) = ($line_num - $old_line_num <= 10);
+    my ($base_old_line_num) = $old_line_num;
 
 
     while ($old_line_num < $line_num) {
@@ -889,7 +929,7 @@ sub skip_to_line {
             $skip_line_printed = 1;
         }
 
-        $old_line = <OLDREV>;
+        my $old_line = <OLDREV>;
         $old_line_num++;
 
         &print_row($old_line, $stable_bg_color, $old_line, $stable_bg_color)
@@ -901,12 +941,13 @@ sub skip_to_line {
     print "<A NAME=$anchor_num>" if (!$anchor_printed);
     print '</A>';
     $anchor_num++;
+    return $old_line_num;
 }
 
 sub print_cell {
-    local ($line, $color) = @_;
-    local ($i, $j, $k, $n);
-    local ($c, $newline);
+    my ($line, $color) = @_;
+    my ($i, $j, $k, $n);
+    my ($c, $newline);
 
     if ($color eq $stable_bg_color) {
         print "<TD>$font_tag";
@@ -941,8 +982,10 @@ sub print_cell {
 }
 
 sub print_row {
-    local ($line1, $color1, $line2, $color2) = @_;
+    my ($line1, $color1, $line2, $color2) = @_;
     print "<TR>";
+    $line1 = "" unless defined $line1;
+    $line2 = "" unless defined $line2;
     &print_cell($line1, $color1);
     &print_cell($line2, $color2);
 }

@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bonsaitools/bin/perl -w
 #  cvsblame.cgi -- cvsblame with logs as popups and allowing html in comments.
 
 # -*- Mode: perl; indent-tabs-mode: nil -*-
@@ -37,9 +37,24 @@
 #    mark - highlight a line
 #
 
+use diagnostics;
+use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::progname;
+    $zz = $::revision_ctime;
+    $zz = $::revision_log;
+}
+
 require 'CGI.pl';
 require 'cvsblame.pl';
 use SourceChecker;
+
+
 
 $| = 1;
 
@@ -57,22 +72,22 @@ print "\n";
 
 # Some Globals
 #
-$Head = 'CVS Blame';
-$SubHead = '';
+my $Head = 'CVS Blame';
+my $SubHead = '';
 
-@src_roots = getRepositoryList();
+my @src_roots = getRepositoryList();
 
 # Do not use layers if the client does not support them.
-$useLayers = 1;
-$user_agent = $ENV{HTTP_USER_AGENT};
+my $useLayers = 1;
+my $user_agent = $ENV{HTTP_USER_AGENT};
 if (not $user_agent =~ m@^Mozilla/4.@ or $user_agent =~ /MSIE/) {
   $useLayers = 0;
 }
 
 # Init sanitiazation source checker
 #
-$sanitization_dictionary = $::FORM{'sanitize'};
-$opt_sanitize = defined $sanitization_dictionary;
+my $sanitization_dictionary = $::FORM{'sanitize'};
+my $opt_sanitize = defined $sanitization_dictionary;
 if ( $opt_sanitize )
 {
     dbmopen %SourceChecker::token_dictionary, "$sanitization_dictionary", 0664;
@@ -80,32 +95,33 @@ if ( $opt_sanitize )
 
 # Init byrd's 'feature' to allow html in comments
 #
-$opt_html_comments = &html_comments_init();
+my $opt_html_comments = &html_comments_init();
 
 
 # Handle the "file" argument
 #
-$filename = '';
+my $filename = '';
 $filename = $::FORM{'file'} if defined($::FORM{'file'});
 if ($filename eq '') 
 {
     &print_usage;
     exit;
 }
-($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
+my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 
 # Handle the "rev" argument
 #
-$opt_rev = '';
-$opt_rev = $::FORM{'rev'} if defined($::FORM{'rev'} && $::FORM{'rev'} ne 'HEAD');
-$browse_revtag = "HEAD";
-$browse_revtag = $opt_rev if ($opt_rev =~ /[A-Za-z]/);
-$revision = '';
+$::opt_rev = '';
+$::opt_rev = $::FORM{'rev'} if defined($::FORM{'rev'} && $::FORM{'rev'} ne 'HEAD');
+my $browse_revtag = "HEAD";
+$browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]/);
+my $revision = '';
 
 
 # Handle the "root" argument
 #
-if (defined($root = $::FORM{'root'}) && $root ne '') {
+my $root = $::FORM{'root'};
+if (defined $root && $root ne '') {
     $root =~ s|/$||;
     validateRepository($root);
     if (-d $root) {
@@ -122,6 +138,7 @@ if (defined($root = $::FORM{'root'}) && $root ne '') {
 
 # Find the rcs file
 #
+my $rcs_filename;
 foreach (@src_roots) {
     $root = $_;
     $rcs_filename = "$root/$filename,v";
@@ -139,21 +156,22 @@ exit;
 
 found_file:
 
+    my $rcs_path;
     ($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
 
 CheckHidden($rcs_filename);
 
 
-# Parse the rcs file ($opt_rev is passed as a global)
+# Parse the rcs file ($::opt_rev is passed as a global)
 #
 $revision = &parse_cvs_file($rcs_filename);
-$file_rev = $revision;
+my $file_rev = $revision;
 
 # Handle the "line_nums" argument
 #
-$opt_line_nums = 1;
+my $opt_line_nums = 1;
 if (exists($::COOKIE{'line_nums'})) {
-$opt_line_nums = 1 if $::COOKIE{'line_nums'} eq 'on';
+    $opt_line_nums = 1 if $::COOKIE{'line_nums'} eq 'on';
 }
 if (exists($::FORM{'line_nums'})) {
      $opt_line_nums = 0 if $::FORM{'line_nums'} =~ /off|no|0/i;
@@ -161,20 +179,24 @@ if (exists($::FORM{'line_nums'})) {
 }
 
 # Option to make links to included files
-$opt_includes = 0;
+my $opt_includes = 0;
 $opt_includes = 1 if (exists($::FORM{'includes'}) && 
                       $::FORM{'includes'} =~ /on|yes|1/i);
 $opt_includes = 1 if $opt_includes && $file_tail =~ /(.c|.h|.cpp)$/;
 
-@text = &extract_revision($revision);
-die "$progname: Internal consistency error" if ($#text != $#revision_map);
+my @text = &extract_revision($revision);
+die "$::progname: Internal consistency error" if ($#text != $#::revision_map);
 
+my $use_html = 0;
+$use_html = 1 if exists($::FORM{'use_html'}) && $::FORM{'use_html'} eq '1';
 
 # Handle the "mark" argument
 #
-$mark_arg = '';
+my %mark_line;
+my $mark_arg = '';
 $mark_arg = $::FORM{'mark'} if defined($::FORM{'mark'});
-foreach $mark (split(',',$mark_arg)) {
+foreach my $mark (split(',',$mark_arg)) {
+    my ($begin, $end);
     if (($begin, $end) = $mark =~ /(\d*)\-(\d*)/) {
         $begin = 1 if $begin eq '';
         $end = $#text + 1 if $end eq '' || $end > $#text + 1;
@@ -203,23 +225,24 @@ print q(
    <BR><B>
 );
 
-foreach $path (split('/',$rcs_path)) {
+my $link_path;
+foreach my $path (split('/',$rcs_path)) {
 
-# Customize this translation
+    # Customize this translation
     $link_path .= url_encode2($path).'/';
-    $lxr_path = Fix_LxrLink($link_path);
+    my $lxr_path = Fix_LxrLink($link_path);
     print "<A HREF='$lxr_path'>$path</a>/ ";
 }
 print "<A HREF='$link_path$file_tail'>$file_tail</a> ";
 
 print " (<A HREF='cvsblame.cgi?file=$filename&rev=$revision&root=$root'";
-print " onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
+print " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $useLayers;
 print ">";
 print "$browse_revtag:" unless $browse_revtag eq 'HEAD';
 print $revision if $revision;
 print "</A>)";
 
-$lxr_path = Fix_LxrLink("$link_path$file_tail");
+my $lxr_path = Fix_LxrLink("$link_path$file_tail");
 print qq(
 </B>
   </TD>
@@ -246,26 +269,30 @@ print qq(
 </TABLE>
 );
 
-$open_table_tag = '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">';
+my $open_table_tag =
+    '<TABLE BORDER=0 CELLPADDING=0 CELLSPACING=0 WIDTH="100%">';
 print "$open_table_tag<TR><TD colspan=3><PRE>";
 
 # Print each line of the revision, preceded by its annotation.
 #
-$count = $#revision_map;
+my $count = $#::revision_map;
 if ($count == 0) {
     $count = 1;
 }
-$line_num_width = int(log($count)/log(10)) + 1;
-$revision_width = 3;
-$author_width = 5;
-$line = 0;
+my $line_num_width = int(log($count)/log(10)) + 1;
+my $revision_width = 3;
+my $author_width = 5;
+my $line = 0;
+my %usedlog;
 $usedlog{$revision} = 1;
-$old_revision = 0;
-$row_color = '';
-$lines_in_table = 0;
-foreach $revision (@revision_map)
+my $old_revision = 0;
+my $row_color = '';
+my $lines_in_table = 0;
+my $inMark = 0;
+my $rev_count = 0;
+foreach $revision (@::revision_map)
 {
-    $text = $text[$line++];
+    my $text = $text[$line++];
     $usedlog{$revision} = 1;
     $lines_in_table++;
 
@@ -283,9 +310,10 @@ foreach $revision (@revision_map)
     # Add a link to traverse to included files
     $text = &link_includes($text) if $opt_includes;
 
-    $output = '';
+    my $output = '';
 
     # Highlight lines
+    my $mark_cmd;
     if (defined($mark_cmd = $mark_line{$line})
         && $mark_cmd ne 'end') {
 	$output .= '</TD></TR><TR><TD BGCOLOR=LIGHTGREEN WIDTH="100%"><PRE>';
@@ -320,15 +348,15 @@ foreach $revision (@revision_map)
         $revision_width = max($revision_width,length($revision));
 
 #        $output .= "<A HREF=\"cvsblame.cgi?file=$filename&rev=$revision&root=$root\"";
-	if (defined $prev_revision{$revision}) {
-	  $output .= "<A HREF=\"cvsview2.cgi?diff_mode=context&whitespace_mode=show&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET&file=$file_tail&rev2=$revision&rev1=$prev_revision{$revision}\"";
+	if (defined $::prev_revision{$revision}) {
+	  $output .= "<A HREF=\"cvsview2.cgi?diff_mode=context&whitespace_mode=show&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET&file=$file_tail&rev2=$revision&rev1=$::prev_revision{$revision}\"";
 	} else {
 	  $output .= "<A HREF=\"cvsview2.cgi?root=$root&subdir=$rcs_path&command=DIRECTORY&files=$file_tail\"";
-          $prev_revision{$revision} = '';
+          $::prev_revision{$revision} = '';
 	}
-	$output .= " onmouseover='return log(event,\"$prev_revision{$revision}\",\"$revision\");'" if $useLayers;
+	$output .= " onmouseover='return log(event,\"$::prev_revision{$revision}\",\"$revision\");'" if $useLayers;
         $output .= ">";
-	$author = $revision_author{$revision};
+	my $author = $::revision_author{$revision};
 	$author =~ s/%.*$//;
         $author_width = max($author_width,length($author));
         $output .= sprintf("%-${author_width}s ", $author);
@@ -347,8 +375,8 @@ foreach $revision (@revision_map)
     # Close the highlighted section
     if (defined($mark_cmd) and $mark_cmd ne 'begin') {
         chop($output);
-        #if( defined($prev_revision{$file_rev})) {
-        #    $output .= "</TD><TD ALIGN=RIGHT$row_color><A HREF=\"cvsblame.cgi?file=$filename&rev=$prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($prev_revision{$file_rev})</A></TD><TD BGCOLOR=LIGHTGREEN>&nbsp;";
+        #if( defined($::prev_revision{$file_rev})) {
+        #    $output .= "</TD><TD ALIGN=RIGHT$row_color><A HREF=\"cvsblame.cgi?file=$filename&rev=$::prev_revision{$file_rev}&root=$root&mark=$mark_arg\">Previous&nbsp;Revision&nbsp;($::prev_revision{$file_rev})</A></TD><TD BGCOLOR=LIGHTGREEN>&nbsp;";
         #}
         $output .= "</TD></TR><TR><TD colspan=3$row_color><PRE>";
 	$inMark = 0;
@@ -362,25 +390,25 @@ if ($useLayers) {
   # Write out cvs log messages as a JS variables
   #
   print "<SCRIPT>";
-  while (($revision, $junk) = each %usedlog) {
+  while (my ($revision, $junk) = each %usedlog) {
     
     # Create a safe variable name for a revision log
-    $revisionName = $revision;
+    my $revisionName = $revision;
     $revisionName =~ tr/./_/;
     
-    $log = $revision_log{$revision};
+    my $log = $::revision_log{$revision};
     $log =~ s/([^\n\r]{80})([^\n\r]*)/$1\n$2/g;
     $log = MarkUpText($log);
     $log =~ s/\n|\r|\r\n/<BR>/g;
     $log =~ s/"/\\"/g;
     
     # Write JavaScript variable for log entry (e.g. log1_1 = "New File")
-    $author = $revision_author{$revision};
+    my $author = $::revision_author{$revision};
     $author =~ tr/%/@/;
-    $author_email = EmailFromUsername($author);
+    my $author_email = EmailFromUsername($author);
     print "log$revisionName = \""
       ."<b>$revision</b> &lt;<a href='mailto:$author_email'>$author</a>&gt;"
-	." <b>$revision_ctime{$revision}</b><BR>"
+	." <b>$::revision_ctime{$revision}</b><BR>"
 	  ."<SPACER TYPE=VERTICAL SIZE=5>$log\";\n";
   }
   print "</SCRIPT>";
@@ -492,12 +520,13 @@ sub print_usage {
     if ($ENV{"REQUEST_METHOD"} eq 'POST' && defined($::FORM{'set_line'})) {
   
         # Expire the cookie 5 months from now
-        $set_cookie = "Set-Cookie: line_nums=$::FORM{'set_line'}; expires="
+        my $set_cookie = "Set-Cookie: line_nums=$::FORM{'set_line'}; expires="
             .&toGMTString(time + 86400 * 152)."; path=/";
+	# XXX Hey, nothing is done with this handy cookie string! ### XXX
     }
-    if (!defined($cookie_jar{'line_nums'}) && !defined($::FORM{'set_line'})) {
+    if (!defined($::COOKIE{'line_nums'}) && !defined($::FORM{'set_line'})) {
         $new_linenum = 'on';
-    } elsif ($cookie_jar{'line_nums'} eq 'off' || $::FORM{'set_line'} eq 'off') {
+    } elsif ($::COOKIE{'line_nums'} eq 'off' || $::FORM{'set_line'} eq 'off') {
         $linenum_message = 'Line numbers are currently <b>off</b>.';
         $new_linenum = 'on';
     } else {
@@ -607,7 +636,7 @@ sub link_includes {
     my ($text) = $_[0];
 
     if ($text =~ /\#(\s*)include(\s*)"(.*?)"/) {
-        foreach $trial_root (($rcs_path, 'ns/include', 
+        foreach my $trial_root (($rcs_path, 'ns/include', 
                               "$rcs_path/Attic", "$rcs_path/..")) {
             if (-r "$root/$trial_root/$3,v") {
                 $text = "$`#$1include$2\"<A HREF='cvsblame.cgi"
@@ -620,8 +649,13 @@ sub link_includes {
     return $text;
 }
 
+my $in_comments = 0;
+my $open_delim;
+my $close_delim;
+my $expected_delim;
+
 sub html_comments_init {
-    return 0 unless defined($::FORM{'use_html'}) && $::FORM{'use_html'};
+    return 0 unless $use_html;
                                                       
     # Initialization for C comment context switching
     $in_comments = 0;
@@ -638,8 +672,8 @@ sub leave_html_comments {
     my ($text) = $_[0];
     # Allow HTML in the comments.
     #
-    $newtext = "";
-    $oldtext = $text;
+    my $newtext = "";
+    my $oldtext = $text;
     while ($oldtext =~ /(.*$expected_delim)(.*\n)/) {
         $a = $1;
         $b = $2;

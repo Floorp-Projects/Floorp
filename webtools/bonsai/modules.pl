@@ -16,22 +16,27 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+use diagnostics;
+use strict;
+
 require 'get_line.pl';
 
-$NOT_LOCAL = 1;
-$IS_LOCAL = 2;
+my $NOT_LOCAL = 1;
+my $IS_LOCAL = 2;
 
-$modules = {};
+$::modules = {};
 
-if( $CVS_ROOT eq "" ){
-    $CVS_ROOT = pickDefaultRepository();
+if( $::CVS_ROOT eq "" ){
+    $::CVS_ROOT = pickDefaultRepository();
 }
+
+my $CVS_MODULES;
 
 if( defined($ENV{"OS"}) && $ENV{"OS"} eq "Windows_NT" ){
     $CVS_MODULES='modules';
 }
 else {
-    $CVS_MODULES="${CVS_ROOT}/CVSROOT/modules";
+    $CVS_MODULES="$::CVS_ROOT/CVSROOT/modules";
 }
 
 open( MOD, "<$CVS_MODULES") || die "can't open $CVS_MODULES";
@@ -41,14 +46,14 @@ close( MOD );
 1;
 
 sub in_module {
-    local($mod_map, $dirname, $filename ) = @_;
-    local( @path );
-    local( $i, $fp, $local );
+    my($mod_map, $dirname, $filename ) = @_;
+    my( @path );
+    my( $i, $fp, $local );
 
     #
     #quick check if it is already in there.
     #
-    if( $mod_map{$dirname} ){
+    if( $mod_map->{$dirname} ){
         return 1;
     }
 
@@ -70,8 +75,8 @@ sub in_module {
             else {
                 # Add directories to the map as we encounter them so we go
                 #  faster
-                if( $mod_map{$dirname} == 0 ){
-                    $mod_map{$dirname} = $IS_LOCAL;
+                if( $mod_map->{$dirname} == 0 ){
+                    $mod_map->{$dirname} = $IS_LOCAL;
                 }
                 return 1;
             }
@@ -87,19 +92,20 @@ sub in_module {
 
 
 sub get_module_map {
-    local($name) = @_;
-    local($mod_map);
+    my($name) = @_;
+    my($mod_map);
     $mod_map = {};
     &build_map( $name, $mod_map );
     return $mod_map;
 }
 
 sub parse_modules {
-    local @finaloptions=();
+    my @finaloptions=();
+    my $l;
     while( $l = &get_line ){
         @finaloptions=();
 
-        ($mod_name, $flag, @params) = split(/[ \t]+/,$l);
+        my ($mod_name, $flag, @params) = split(/[ \t]+/,$l);
         while ( $flag =~ /^-.$/){
             if( $flag eq '-a' ){
                 $flag="";
@@ -118,19 +124,19 @@ sub parse_modules {
             last; # No options found...
         }
         unshift @params, $flag if ( $flag ne "" );
-        $modules->{$mod_name} = [(@finaloptions,@params)];
+        $::modules->{$mod_name} = [(@finaloptions,@params)];
     }
 }
 
 sub build_map {
-    local($name,$mod_map) = @_;
-    local($bFound, $local);
+    my ($name,$mod_map) = @_;
+    my ($bFound, $local);
 
     $local = $NOT_LOCAL;
     $bFound = 0;
 
-#    printf "looking for $name in %s<br>\n",join(",", @{$modules->{$name}});
-    for $i ( @{$modules->{$name}} ){
+#    printf "looking for $name in %s<br>\n",join(",", @{$::modules->{$name}});
+    for my $i ( @{$::modules->{$name}} ){
         $bFound = 1;
         if( $i eq '-l' ){
             $local = $IS_LOCAL;

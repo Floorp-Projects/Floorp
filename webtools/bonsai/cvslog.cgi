@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -29,6 +29,20 @@
 #    author - filter based on author
 #
 
+use diagnostics;
+use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::CVS_ROOT;
+    $zz = $::head_revision;
+    $zz = $::revision_ctime;
+    $zz = $::revision_log;
+}
+
 require 'CGI.pl';
 require 'cvsblame.pl';
 use SourceChecker;
@@ -39,32 +53,33 @@ $| = 1;
 
 print "Content-Type:text/html\n\n";
 
-@src_roots = getRepositoryList();
+my @src_roots = getRepositoryList();
 
 
 # Handle the "file" argument
 #
-$filename = '';
+my $filename = '';
 $filename = $::FORM{'file'} if defined($::FORM{'file'});
 if ($filename eq '') 
 {
     &print_usage;
     exit;
 }
-($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
+my ($file_head, $file_tail) = $filename =~ m@(.*/)?(.+)@;
 
 
 # Handle the "rev" argument
 #
-$opt_rev = $::FORM{'rev'} if defined($::FORM{'rev'} && $::FORM{'rev'} ne 'HEAD');
-$browse_revtag = 'HEAD';
-$browse_revtag = $opt_rev if ($opt_rev =~ /[A-Za-z]/);
-$revision = '';
+$::opt_rev = $::FORM{'rev'} if defined($::FORM{'rev'} && $::FORM{'rev'} ne 'HEAD');
+my $browse_revtag = 'HEAD';
+$browse_revtag = $::opt_rev if ($::opt_rev =~ /[A-Za-z]/);
+my $revision = '';
 
 
 # Handle the "root" argument
 #
-if (defined($root = $::FORM{'root'}) && $root ne '') {
+my $root = $::FORM{'root'};
+if (defined $root && $root ne '') {
     $root =~ s|/$||;
     validateRepository($root);
     if (-d $root) {
@@ -82,6 +97,7 @@ if (defined($root = $::FORM{'root'}) && $root ne '') {
 
 # Find the rcs file
 #
+my $rcs_filename;
 foreach (@src_roots) {
     $root = $_;
     $rcs_filename = "$root/$filename,v";
@@ -98,36 +114,40 @@ print "</BODY></HTML>\n";
 exit;
 
 found_file:
-    ($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
+
+my $rcs_path;
+($rcs_path) = $rcs_filename =~ m@$root/(.*)/.+?,v@;
 
 
-# Parse the rcs file ($opt_rev is passed as a global)
+# Parse the rcs file ($::opt_rev is passed as a global)
 #
 $revision = &parse_cvs_file($rcs_filename);
-$file_rev = $revision;
+my $file_rev = $revision;
 
 
 # Handle the "mark" argument
 #
-$mark_arg = '';
+my %mark;
+my $mark_arg = '';
 $mark_arg = $::FORM{'mark'} if defined($::FORM{'mark'});
-foreach $rev (split(',',$mark_arg)) {
-        $mark{$rev} = 1;
+foreach my $rev (split(',',$mark_arg)) {
+    $mark{$rev} = 1;
 }
 
 
 # Handle the "author" argument
 #
-$author_arg = '';
+my %use_author;
+my $author_arg = '';
 $author_arg = $::FORM{'author'} if defined($::FORM{'author'});
-foreach $author (split(',',$author_arg)) {
+foreach my $author (split(',',$author_arg)) {
     $use_author{$author} = 1;
 }
 
 
 # Handle the "sort" argument
-$opt_sort = '';
-$opt_sort = $::FORM{'sort'};
+my $opt_sort = '';
+$opt_sort = $::FORM{'sort'} if defined $::FORM{'sort'};
 
 
 # Start printing out the page
@@ -148,7 +168,9 @@ print q(
    <BR><B>
 );
 
-foreach $path (split('/',$rcs_path)) {
+my $link_path;
+my $lxr_path;
+foreach my $path (split('/',$rcs_path)) {
     $link_path .= url_encode2($path).'/';
     $lxr_path = Fix_LxrLink($link_path);
     print "<A HREF='$lxr_path'>$path</a>/ ";
@@ -202,7 +224,8 @@ print qq(
  
 # Create a table with header links to sort by column.
 #
-$table_tag = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3 WIDTH='100%'>";
+my $table_tag = "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3 WIDTH='100%'>";
+my $table_header_tag = "";
 if ($opt_sort eq 'author') {
     $table_header_tag .= "<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$filename&root=$root&rev=$browse_revtag&sort=revision&author=$author_arg'>Rev</A><TH ALIGN=LEFT>Author<TH ALIGN=LEFT><A HREF='cvslog.cgi?file=$filename&root=$root&rev=$browse_revtag&sort=date&author=$author_arg'>Date</A><TH><TH ALIGN=LEFT>Log";
 } else {
@@ -214,23 +237,25 @@ print "$table_tag$table_header_tag";
 
 # Print each line of the revision, preceded by its annotation.
 #
+my $start_rev;
 if ($browse_revtag eq 'HEAD') {
-    $start_rev = $head_revision;  # $head_revision is a global from cvsblame.pl
+    $start_rev = $::head_revision;  # $::head_revision is a global from cvsblame.pl
 } else {
     $start_rev = map_tag_to_revision($browse_revtag);
 }
-$row_count = 0;
-$max_rev_length = length($start_rev);
-$max_author_length = 8;
-@revisions = ($start_rev, ancestor_revisions($start_rev));
+my $row_count = 0;
+my $max_rev_length = length($start_rev);
+my $max_author_length = 8;
+my @revisions = ($start_rev, ancestor_revisions($start_rev));
 @revisions = sort by_author @revisions if $opt_sort eq 'author';
 #@revisions = sort by_author @revisions if $opt_sort eq 'date' && $rev eq 'all';
+my $bgcolor;
 foreach $revision (@revisions)
 {
-    $author = $revision_author{$revision};
+    my $author = $::revision_author{$revision};
     next unless $author_arg eq '' || $use_author{$author};
 
-    $log = $revision_log{$revision};
+    my $log = $::revision_log{$revision};
     $log =~ s/&/&amp;/g;
     $log =~ s/</&lt;/g;
     $log =~ s/>/&gt;/g;
@@ -244,7 +269,7 @@ foreach $revision (@revisions)
         $bgcolor = '';
     }
     
-    $output = '';
+    my $output = '';
     $row_count++;
     if ($row_count > 20) {
         $output .= "</TABLE>\n$table_tag";
@@ -254,12 +279,12 @@ foreach $revision (@revisions)
     $output .= "<TR$bgcolor VALIGN=TOP><TD>"
         ."<A NAME=$revision>";
 
-    $anchor = "<A HREF=cvsview2.cgi";
+    my $anchor = "<A HREF=cvsview2.cgi";
 
-    if (defined($prev_revision{$revision})) {
+    if (defined($::prev_revision{$revision})) {
         $anchor .= "?diff_mode=context&whitespace_mode=show&file=$file_tail"
             ."&root=$root&subdir=$rcs_path&command=DIFF_FRAMESET"
-            ."&rev1=$prev_revision{$revision}&rev2=$revision";
+            ."&rev1=$::prev_revision{$revision}&rev2=$revision";
     } else {
         $anchor .= "?files=$file_tail"
             ."&root=$root&subdir=$rcs_path\&command=DIRECTORY\&rev2=$revision";
@@ -275,7 +300,7 @@ foreach $revision (@revisions)
 
     $output .= "<TD>".$author
         .'&nbsp' x ($max_author_length - length($author)).'</TD>';
-    $rev_time = $revision_ctime{$revision};
+    my $rev_time = $::revision_ctime{$revision};
 #    $rev_time =~ s/(19\d\d) (.\d:\d\d)/$1<BR><FONT SIZE=-2>$2<\/FONT>/;
 
     # jwz: print the date the way "ls" does.
@@ -328,11 +353,11 @@ print "</TABLE>";
 ## END of main script
 
 sub by_revision {
-    local (@a_parts) = split(/\./,$a);
-    local (@b_parts) = split(/\./,$b);
+    my (@a_parts) = split(/\./,$a);
+    my (@b_parts) = split(/\./,$b);
     while(1) {
-        local ($aa) = shift @a_parts;
-        local ($bb) = shift @b_parts;
+        my ($aa) = shift @a_parts;
+        my ($bb) = shift @b_parts;
         return  1 if $aa eq '';
         return -1 if $bb eq '';
         return $bb <=> $aa if $aa ne $bb;
@@ -340,28 +365,28 @@ sub by_revision {
 }
 
 sub by_author {
-    local ($a_author) = $revision_author{$a};
-    local ($b_author) = $revision_author{$b};
+    my ($a_author) = $::revision_author{$a};
+    my ($b_author) = $::revision_author{$b};
 
     return $a_author cmp $b_author if $a_author ne $b_author;
     return by_revision;
 }
 
 sub revision_pad {
-    local ($revision) = @_;
+    my ($revision) = @_;
     return '&nbsp' x ($max_rev_length - length($revision));
 }
 
 sub sprint_author {
-    local ($revision) = @_;
-    local ($author) = $revision_author{$revision};
+    my ($revision) = @_;
+    my ($author) = $::revision_author{$revision};
 
     return 
 }
 
 
 sub print_top {
-    local ($title_text) = "for $file_tail (";
+    my ($title_text) = "for $file_tail (";
     $title_text .= "$browse_revtag:" unless $browse_revtag eq 'HEAD';
     $title_text .= $revision if $revision;
     $title_text .= ")";
@@ -378,9 +403,9 @@ __TOP__
 } # print_top
 
 sub print_usage {
-    local ($linenum_message) = '';
-    local ($new_linenum, $src_roots_list);
-    local ($title_text) = "Usage";
+    my ($linenum_message) = '';
+    my ($new_linenum, $src_roots_list);
+    my ($title_text) = "Usage";
 
     $src_roots_list = join('<BR>', @src_roots);
 
@@ -473,7 +498,7 @@ sub print_useful_links {
     my $lxr_path = $path;
     my $lxr_link = Fix_LxrLink($lxr_path);
     my $diff_link = "$diff_base?command=DIRECTORY\&subdir=$dir\&files=$file";
-    my $blame_link = "$blame_base?root=$CVS_ROOT\&file=$path";
+    my $blame_link = "$blame_base?root=$::CVS_ROOT\&file=$path";
 
 print "<DIV ALIGN=RIGHT>
  <TABLE BORDER CELLPADDING=10 CELLSPACING=0>

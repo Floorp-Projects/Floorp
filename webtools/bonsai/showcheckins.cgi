@@ -17,6 +17,9 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+use diagnostics;
+use strict;
+
 require 'CGI.pl';
 use vars qw(@TreeList);
 
@@ -118,7 +121,8 @@ my $total_removed = 0;
 # Calculate delta information
 #
 CHECKIN:
-foreach $info (@list) {
+foreach my $infoname (@list) {
+     $info = eval("\\\%$infoname");
      $$info{added} = 0;
      $$info{removed} = 0;
 

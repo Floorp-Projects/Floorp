@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -17,11 +17,35 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+use diagnostics;
+use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::CI_BRANCH;
+    $zz = $::CI_REPOSITORY;
+    $zz = $::lines_added;
+    $zz = $::lines_removed;
+    $zz = $::query_begin_tag;
+    $zz = $::query_branchtype;
+    $zz = $::query_date_max;
+    $zz = $::query_debug;
+    $zz = $::query_end_tag;
+    $zz = $::query_filetype;
+    $zz = $::query_logexpr;
+    $zz = $::query_whotype;
+}
+
+
+
 require 'CGI.pl';
 require 'cvsquery.pl';
 
-$CVS_ROOT = $::FORM{'cvsroot'};
-$CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
+$::CVS_ROOT = $::FORM{'cvsroot'};
+$::CVS_ROOT = pickDefaultRepository() unless $::CVS_ROOT;
 $::TreeID = $::FORM{'module'} 
      if (!exists($::FORM{'treeid'}) && 
          exists($::FORM{'module'}) &&
@@ -35,7 +59,7 @@ LoadTreeConfig();
 my $userdomain = Param('userdomain');
 $| = 1;
 
-$sm_font_tag = "<font face='Arial,Helvetica' size=-2>";
+my $sm_font_tag = "<font face='Arial,Helvetica' size=-2>";
 
 my $generateBackoutCVSCommands = 0;
 if (defined $::FORM{'generateBackoutCVSCommands'}) {
@@ -47,23 +71,20 @@ if (!$generateBackoutCVSCommands) {
 
 ";
 
-    $script_str='';
-    &setup_script;
-
-    print "$script_str";
+    print setup_script();
 }
 
 #print "<pre>";
 
 
-$CVS_REPOS_SUFIX = $CVS_ROOT;
+my $CVS_REPOS_SUFIX = $::CVS_ROOT;
 $CVS_REPOS_SUFIX =~ s/\//_/g;
 
-$CHECKIN_DATA_FILE = "data/checkinlog${CVS_REPOS_SUFIX}";
-$CHECKIN_INDEX_FILE = "data/index${CVS_REPOS_SUFIX}";
+my $CHECKIN_DATA_FILE = "data/checkinlog${CVS_REPOS_SUFIX}";
+my $CHECKIN_INDEX_FILE = "data/index${CVS_REPOS_SUFIX}";
 
 
-$SORT_HEAD="bgcolor=\"#DDDDDD\"";
+my $SORT_HEAD="bgcolor=\"#DDDDDD\"";
 
 #
 # Log the query
@@ -72,106 +93,112 @@ Log("Query [$ENV{'REMOTE_ADDR'}]: $ENV{'QUERY_STRING'}");
 #
 # build a module map
 #
-$query_module = $::FORM{'module'};
+$::query_module = $::FORM{'module'};
 
 #
 # allow ?file=/a/b/c/foo.c to be synonymous with ?dir=/a/b/c&file=foo.c
 #
-if ( $::FORM{'dir'} eq '' ) {
+$::FORM{'file'} = "" unless defined $::FORM{'file'};
+unless ($::FORM{'dir'}) {
     $::FORM{'file'} = Fix_BonsaiLink($::FORM{'file'});
     if ($::FORM{'file'} =~ m@(.*?/)([^/]*)$@) {
         $::FORM{'dir'} = $1;
         $::FORM{'file'} = $2;
+    } else {
+        $::FORM{'dir'} = "";
     }
 }
 
 #
 # build a directory map
 #
-@query_dirs = split(/[;, \t]+/, $::FORM{'dir'});
+@::query_dirs = split(/[;, \t]+/, $::FORM{'dir'});
 
-$query_file = $::FORM{'file'};
-$query_filetype = $::FORM{'filetype'};
-$query_logexpr = $::FORM{'logexpr'};
+$::query_file = $::FORM{'file'};
+$::query_filetype = $::FORM{'filetype'};
+$::query_logexpr = $::FORM{'logexpr'};
 
 #
 # date
 #
-$query_date_type = $::FORM{'date'};
-if( $query_date_type eq 'hours' ){
-    $query_date_min = time - $::FORM{'hours'}*60*60;
+$::query_date_type = $::FORM{'date'};
+if( $::query_date_type eq 'hours' ){
+    $::query_date_min = time - $::FORM{'hours'}*60*60;
 }
-elsif( $query_date_type eq 'day' ){
-    $query_date_min = time - 24*60*60;
+elsif( $::query_date_type eq 'day' ){
+    $::query_date_min = time - 24*60*60;
 }
-elsif( $query_date_type eq 'week' ){
-    $query_date_min = time - 7*24*60*60;
+elsif( $::query_date_type eq 'week' ){
+    $::query_date_min = time - 7*24*60*60;
 }
-elsif( $query_date_type eq 'month' ){
-    $query_date_min = time - 30*24*60*60;
+elsif( $::query_date_type eq 'month' ){
+    $::query_date_min = time - 30*24*60*60;
 }
-elsif( $query_date_type eq 'all' ){
-    $query_date_min = 0;
+elsif( $::query_date_type eq 'all' ){
+    $::query_date_min = 0;
 }
-elsif( $query_date_type eq 'explicit' ){
+elsif( $::query_date_type eq 'explicit' ){
     if ($::FORM{'mindate'} ne "") {
-        $query_date_min = parse_date($::FORM{'mindate'});
+        $::query_date_min = parse_date($::FORM{'mindate'});
     }
 
     if ($::FORM{'maxdate'} ne "") {
-        $query_date_max = parse_date($::FORM{'maxdate'});
+        $::query_date_max = parse_date($::FORM{'maxdate'});
     }
 }
 else {
-    $query_date_min = time-60*60*2;
+    $::query_date_min = time-60*60*2;
 }
 
 #
 # who
 #
-$query_who = $::FORM{'who'};
-$query_whotype = $::FORM{'whotype'};
+$::query_who = $::FORM{'who'};
+$::query_whotype = $::FORM{'whotype'};
 
 
-$show_raw = 0;
+my $show_raw = 0;
 $show_raw = $::FORM{'raw'} ne ''
      if $::FORM{'raw'};
 
 #
 # branch
 #
-$query_branch = $::FORM{'branch'};
-if (!defined $query_branch) {
-    $query_branch = 'HEAD';
+$::query_branch = $::FORM{'branch'};
+if (!defined $::query_branch) {
+    $::query_branch = 'HEAD';
 }
-$query_branchtype = $::FORM{'branchtype'};
+$::query_branchtype = $::FORM{'branchtype'};
 
 
 #
 # tags
 #
-$query_begin_tag = $::FORM{'begin_tag'};
-$query_end_tag = $::FORM{'end_tag'};
+$::query_begin_tag = $::FORM{'begin_tag'};
+$::query_end_tag = $::FORM{'end_tag'};
 
 
 #
 # Get the query in english and print it.
 #
+my ($t, $e);
 $t = $e = &query_to_english;
 $t =~ s/<[^>]*>//g;
 
-$query_debug = $::FORM{'debug'};
+$::query_debug = $::FORM{'debug'};
 
 my %mod_map = ();
-$result= &query_checkins( %mod_map );
+my $result= &query_checkins( %mod_map );
 
-for $i (@{$result}) {
-    $w{"$i->[$CI_WHO]\@$userdomain"} = 1;
+my %w;
+
+for my $i (@{$result}) {
+    $w{"$i->[$::CI_WHO]\@$userdomain"} = 1;
 }
 
-@p = sort keys %w;
-$pCount = @p;
-$s = join(",%20", @p);
+my @p = sort keys %w;
+my $pCount = @p;
+my $s = join(",%20", @p);
 
 $e =~ s/Checkins in/In/;
 
@@ -193,12 +220,12 @@ if (defined $::FORM{'generateBackoutCVSCommands'}) {
 
 ";
     foreach my $ci (@{$result}) {
-        if ($ci->[$CI_REV] eq "") {
-            print "echo 'Changes made to $ci->[$CI_DIR]/$ci->[$CI_FILE] need to be backed out by hand'\n";
+        if ($ci->[$::CI_REV] eq "") {
+            print "echo 'Changes made to $ci->[$::CI_DIR]/$ci->[$::CI_FILE] need to be backed out by hand'\n";
             next;
         }
-        my $prev_revision = PrevRev($ci->[$CI_REV]);
-        print "cvs update -j$ci->[$CI_REV] -j$prev_revision $ci->[$CI_DIR]/$ci->[$CI_FILE]\n";
+        my $prev_revision = PrevRev($ci->[$::CI_REV]);
+        print "cvs update -j$ci->[$::CI_REV] -j$prev_revision $ci->[$::CI_DIR]/$ci->[$::CI_FILE]\n";
     }
     exit;
 }
@@ -212,48 +239,48 @@ PutsHeader($t, "CVS Checkins", "$menu");
 
 $|=1;
 
-$head_who = '';
-$head_file = '';
-$head_directory = '';
-$head_delta = '';
-$head_date = '';
+my $head_who = '';
+my $head_file = '';
+my $head_directory = '';
+my $head_delta = '';
+my $head_date = '';
 
 if( !$show_raw ) {
 
     if( $::FORM{"sortby"} eq "Who" ){
         $result = [sort {
-                   $a->[$CI_WHO] cmp $b->[$CI_WHO]
-                || $b->[$CI_DATE] <=> $a->[$CI_DATE]
+                   $a->[$::CI_WHO] cmp $b->[$::CI_WHO]
+                || $b->[$::CI_DATE] <=> $a->[$::CI_DATE]
             } @{$result}] ;
         $head_who = $SORT_HEAD;
     }
     elsif( $::FORM{"sortby"} eq "File" ){
         $result = [sort {
-                   $a->[$CI_FILE] cmp $b->[$CI_FILE]
-                || $b->[$CI_DATE] <=> $a->[$CI_DATE]
-                || $a->[$CI_DIRECTORY] cmp $b->[$CI_DIRECTORY]
+                   $a->[$::CI_FILE] cmp $b->[$::CI_FILE]
+                || $b->[$::CI_DATE] <=> $a->[$::CI_DATE]
+                || $a->[$::CI_DIRECTORY] cmp $b->[$::CI_DIRECTORY]
             } @{$result}] ;
         $head_file = $SORT_HEAD;
     }
     elsif( $::FORM{"sortby"} eq "Directory" ){
         $result = [sort {
-                   $a->[$CI_DIRECTORY] cmp $b->[$CI_DIRECTORY]
-                || $a->[$CI_FILE] cmp $b->[$CI_FILE]
-                || $b->[$CI_DATE] <=> $a->[$CI_DATE]
+                   $a->[$::CI_DIRECTORY] cmp $b->[$::CI_DIRECTORY]
+                || $a->[$::CI_FILE] cmp $b->[$::CI_FILE]
+                || $b->[$::CI_DATE] <=> $a->[$::CI_DATE]
             } @{$result}] ;
         $head_directory = $SORT_HEAD;
     }
     elsif( $::FORM{"sortby"} eq "Change Size" ){
         $result = [sort {
 
-                        ($b->[$CI_LINES_ADDED]- $b->[$CI_LINES_REMOVED])
-                    <=> ($a->[$CI_LINES_ADDED]- $a->[$CI_LINES_REMOVED])
-                #|| $b->[$CI_DATE] <=> $a->[$CI_DATE]
+                        ($b->[$::CI_LINES_ADDED]- $b->[$::CI_LINES_REMOVED])
+                    <=> ($a->[$::CI_LINES_ADDED]- $a->[$::CI_LINES_REMOVED])
+                #|| $b->[$::CI_DATE] <=> $a->[$::CI_DATE]
             } @{$result}] ;
         $head_delta = $SORT_HEAD;
     }
     else{
-        $result = [sort {$b->[$CI_DATE] <=> $a->[$CI_DATE]} @{$result}] ;
+        $result = [sort {$b->[$::CI_DATE] <=> $a->[$::CI_DATE]} @{$result}] ;
         $head_date = $SORT_HEAD;
     }
 
@@ -261,8 +288,8 @@ if( !$show_raw ) {
 }
 else {
     print "<pre>";
-    for $ci (@$result) {
-        $ci->[$CI_LOG] = '';
+    for my $ci (@$result) {
+        $ci->[$::CI_LOG] = '';
         $s = join("|",@$ci);
         print "$s\n";
     }
@@ -272,8 +299,8 @@ else {
 #
 #
 sub print_result {
-    local($result) = @_;
-    local($ci,$i,$k,$j,$max, $l, $span);
+    my ($result) = @_;
+    my ($ci,$i,$k,$j,$max, $l, $span);
 
     &print_head;
 
@@ -284,14 +311,14 @@ sub print_result {
     while( $k < $max ){
         $ci = $result->[$k];
         $span = 1;
-        if( ($l = $ci->[$CI_LOG]) ne '' ){
+        if( ($l = $ci->[$::CI_LOG]) ne '' ){
             #
             # Calculate the number of consequitive logs that are
             #  the same and nuke them
             #
             $j = $k+1;
-            while( $j < $max && $result->[$j]->[$CI_LOG] eq $l ){
-                $result->[$j]->[$CI_LOG] = '';
+            while( $j < $max && $result->[$j]->[$::CI_LOG] eq $l ){
+                $result->[$j]->[$::CI_LOG] = '';
                 $j++;
             }
 
@@ -320,58 +347,60 @@ sub print_result {
     &print_foot;
 }
 
+my $descwidth;
+
 sub print_ci {
-    local($ci, $span) = @_;
-    local($sec,$minute,$hour,$mday,$mon,$year,$t);
-    local($log);
+    my ($ci, $span) = @_;
 
-    ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $ci->[$CI_DATE] );
-    $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
+    my ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $ci->[$::CI_DATE] );
+    my $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
 
-    $log = &html_log($ci->[$CI_LOG]);
-    $rev = $ci->[$CI_REV];
+    my $log = &html_log($ci->[$::CI_LOG]);
+    my $rev = $ci->[$::CI_REV];
 
     print "<tr>\n";
     print "<TD width=2%>${sm_font_tag}$t</font>";
-    print "<TD width=2%><a href='../registry/who.cgi?email=$ci->[$CI_WHO]' "
-          . "onClick=\"return js_who_menu('$ci->[$CI_WHO]','',event);\" >"
-          . "$ci->[$CI_WHO]</a>\n";
-    print "<TD width=45%><a href='cvsview2.cgi?subdir=$ci->[$CI_DIR]&files=$ci->[$CI_FILE]\&command=DIRECTORY&branch=$query_branch&root=$CVS_ROOT'\n"
-          . " onclick=\"return js_file_menu('$CVS_ROOT', '$ci->[$CI_DIR]','$ci->[$CI_FILE]','$ci->[$CI_REV]','$query_branch',event)\">\n";
-#     if( (length $ci->[$CI_FILE]) + (length $ci->[$CI_DIR])  > 30 ){
-#         $d = $ci->[$CI_DIR];
-#         if( (length $ci->[$CI_DIR]) > 30 ){
+    print "<TD width=2%><a href='../registry/who.cgi?email=$ci->[$::CI_WHO]' "
+          . "onClick=\"return js_who_menu('$ci->[$::CI_WHO]','',event);\" >"
+          . "$ci->[$::CI_WHO]</a>\n";
+    print "<TD width=45%><a href='cvsview2.cgi?subdir=$ci->[$::CI_DIR]&files=$ci->[$::CI_FILE]\&command=DIRECTORY&branch=$::query_branch&root=$::CVS_ROOT'\n"
+          . " onclick=\"return js_file_menu('$::CVS_ROOT', '$ci->[$::CI_DIR]','$ci->[$::CI_FILE]','$ci->[$::CI_REV]','$::query_branch',event)\">\n";
+#     if( (length $ci->[$::CI_FILE]) + (length $ci->[$::CI_DIR])  > 30 ){
+#         $d = $ci->[$::CI_DIR];
+#         if( (length $ci->[$::CI_DIR]) > 30 ){
 #             $d =~ s/([^\n]*\/)(classes\/)/$1classes\/<br>&nbsp;&nbsp/;
 #                               # Insert a <BR> before any directory named
 #                               # 'classes.'
 #         }
-#         print "   $d/<br>&nbsp;&nbsp;$ci->[$CI_FILE]<a>\n";
+#         print "   $d/<br>&nbsp;&nbsp;$ci->[$::CI_FILE]<a>\n";
 #     }
 #     else{
-#         print "   $ci->[$CI_DIR]/$ci->[$CI_FILE]<a>\n";
+#         print "   $ci->[$::CI_DIR]/$ci->[$::CI_FILE]<a>\n";
 #     }
-    $d = "$ci->[$CI_DIR]/$ci->[$CI_FILE]";
-    if( $query_module eq 'allrepositories' ){ $d = "$ci->[$CI_REPOSITORY]/$d"; }
+    my $d = "$ci->[$::CI_DIR]/$ci->[$::CI_FILE]";
+    if ($::query_module eq 'allrepositories') {
+        $d = "$ci->[$::CI_REPOSITORY]/$d";
+    }
     $d =~ s:/:/ :g;             # Insert a whitespace after any slash, so that
                                 # we'll break long names at a reasonable place.
     print "$d\n";
 
     if( $rev ne '' ){
-        $prevrev = &PrevRev( $rev );
+        my $prevrev = &PrevRev( $rev );
         print "<TD width=2%>${sm_font_tag}<a href='cvsview2.cgi?diff_mode=".
               "context\&whitespace_mode=show\&subdir=".
-              $ci->[$CI_DIR] . "\&command=DIFF_FRAMESET\&file=" .
-              $ci->[$CI_FILE] . "\&rev1=$prevrev&rev2=$rev&root=$CVS_ROOT'>$rev</a></font>\n";
+              $ci->[$::CI_DIR] . "\&command=DIFF_FRAMESET\&file=" .
+              $ci->[$::CI_FILE] . "\&rev1=$prevrev&rev2=$rev&root=$::CVS_ROOT'>$rev</a></font>\n";
     }
     else {
         print "<TD width=2%>\&nbsp;\n";
     }
 
-    if( !$query_branch_head ){
-        print "<TD width=2%><TT><FONT SIZE=-1>$ci->[$CI_BRANCH]&nbsp</FONT></TT>\n";
+    if( !$::query_branch_head ){
+        print "<TD width=2%><TT><FONT SIZE=-1>$ci->[$::CI_BRANCH]&nbsp</FONT></TT>\n";
     }
 
-    print "<TD width=2%>${sm_font_tag}$ci->[$CI_LINES_ADDED]/$ci->[$CI_LINES_REMOVED]</font>&nbsp\n";
+    print "<TD width=2%>${sm_font_tag}$ci->[$::CI_LINES_ADDED]/$ci->[$::CI_LINES_REMOVED]</font>&nbsp\n";
     if( $log ne '' ){
         $log = MarkUpText($log);
                     # Makes numbers into links to bugsplat.
@@ -391,16 +420,16 @@ sub print_ci {
 
 sub print_head {
 
-if ($versioninfo ne "") {
+if ($::versioninfo ne "") {
     print "<FORM action='multidiff.cgi' method=post>";
-    print "<INPUT TYPE='HIDDEN' name='allchanges' value = '$versioninfo'>";
-    print "<INPUT TYPE='HIDDEN' name='cvsroot' value = '$CVS_ROOT'>";
+    print "<INPUT TYPE='HIDDEN' name='allchanges' value = '$::versioninfo'>";
+    print "<INPUT TYPE='HIDDEN' name='cvsroot' value = '$::CVS_ROOT'>";
     print "<INPUT TYPE=SUBMIT VALUE='Show me ALL the Diffs'>";
     print "</FORM>";
-    print "<tt>(+$lines_added/$lines_removed)</tt> Lines changed.";
+    print "<tt>(+$::lines_added/$::lines_removed)</tt> Lines changed.";
 }
 
-$anchor = $ENV{QUERY_STRING};
+my $anchor = $ENV{QUERY_STRING};
 $anchor =~ s/\&sortby\=[A-Za-z\ \+]*//g;
 $anchor = "<a href=cvsquery.cgi?$anchor";
 
@@ -412,7 +441,7 @@ print "<TH width=45% $head_file>${anchor}&sortby=File>File</a>\n";
 print "<TH width=2%>Rev\n";
 
 $descwidth = 47;
-if( !$query_branch_head ){
+if( !$::query_branch_head ){
     print "<TH width=2%>Branch\n";
     $descwidth -= 2;
 }
@@ -429,15 +458,15 @@ sub print_foot {
 }
 
 sub html_log {
-    local( $log ) = @_;
+    my ( $log ) = @_;
     $log =~ s/&/&amp;/g;
     $log =~ s/</&lt;/g;
     return $log;
 }
 
 sub PrevRev {
-    local( $rev ) = @_;
-    local( $i, $j, $ret, @r );
+    my( $rev ) = @_;
+    my( $i, $j, $ret, @r );
 
     @r = split( /\./, $rev );
 
@@ -473,7 +502,7 @@ sub parse_date {
 
 sub setup_script {
 
-$script_str =<<'ENDJS';
+    my $script_str =<<'ENDJS';
 <script>
 var event = 0;	// Nav3.0 compatibility
 
@@ -528,6 +557,7 @@ function js_file_menu(repos,dir,file,rev,branch,d) {
 
 ENDJS
 
+    return $script_str;
 }
 
 #
@@ -536,57 +566,58 @@ ENDJS
 sub query_to_english {
     my $english = 'Checkins ';
 
-    if( $query_module eq 'allrepositories' ){
+    if( $::query_module eq 'allrepositories' ){
         $english .= "to <i>All Repositories</i> ";
     }
-    elsif( $query_module ne 'all' && @query_dirs == 0 ){
-        $english .= "to module <i>$query_module</i> ";
+    elsif( $::query_module ne 'all' && @::query_dirs == 0 ){
+        $english .= "to module <i>$::query_module</i> ";
     }
     elsif( $::FORM{dir} ne "" ) {
         my $word = "directory";
-        if (@query_dirs > 1) {
+        if (@::query_dirs > 1) {
             $word = "directories";
         }
         $english .= "to $word <i>$::FORM{dir}</i> ";
     }
 
-    if ($query_file ne "") {
+    if ($::query_file ne "") {
         if ($english ne 'Checkins ') {
             $english .= "and ";
         }
-        $english .= "to file $query_file ";
+        $english .= "to file $::query_file ";
     }
 
-    if( ! ($query_branch =~ /^[ ]*HEAD[ ]*$/i) ){
-        if($query_branch eq '' ){
+    if( ! ($::query_branch =~ /^[ ]*HEAD[ ]*$/i) ){
+        if($::query_branch eq '' ){
             $english .= "on all branches ";
         }
         else {
-            $english .= "on branch <i>$query_branch</i> ";
+            $english .= "on branch <i>$::query_branch</i> ";
         }
     }
 
-    if( $query_who ne '' ){
-        $english .= "by $query_who ";
+    if( $::query_who ne '' ){
+        $english .= "by $::query_who ";
     }
 
-    $query_date_type = $::FORM{'date'};
-    if( $query_date_type eq 'hours' ){
+    $::query_date_type = $::FORM{'date'};
+    if( $::query_date_type eq 'hours' ){
         $english .="in the last $::FORM{hours} hours";
     }
-    elsif( $query_date_type eq 'day' ){
+    elsif( $::query_date_type eq 'day' ){
         $english .="in the last day";
     }
-    elsif( $query_date_type eq 'week' ){
+    elsif( $::query_date_type eq 'week' ){
         $english .="in the last week";
     }
-    elsif( $query_date_type eq 'month' ){
+    elsif( $::query_date_type eq 'month' ){
         $english .="in the last month";
     }
-    elsif( $query_date_type eq 'all' ){
+    elsif( $::query_date_type eq 'all' ){
         $english .="since the beginning of time";
     }
-    elsif( $query_date_type eq 'explicit' ){
+    elsif( $::query_date_type eq 'explicit' ){
+        my ($w1, $w2);
         if ( $::FORM{mindate} ne "" && $::FORM{maxdate} ne "" ) {
             $w1 = "between";
             $w2 = "and" ;
@@ -597,16 +628,16 @@ sub query_to_english {
         }
 
         if( $::FORM{'mindate'} ne "" ){
-            $dd = &parse_date($::FORM{'mindate'});
-            ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
-            $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
+            my $dd = &parse_date($::FORM{'mindate'});
+            my ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
+            my $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
             $english .= "$w1 <i>$t</i> ";
         }
 
         if( $::FORM{'maxdate'} ne "" ){
-            $dd = &parse_date($::FORM{'maxdate'});
-            ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
-            $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
+            my $dd = &parse_date($::FORM{'maxdate'});
+            my ($sec,$minute,$hour,$mday,$mon,$year) = localtime( $dd );
+            my $t = sprintf("%02d/%02d/%04d&nbsp;%02d:%02d",$mon+1,$mday,$year+1900,$hour,$minute);
             $english .= "$w2 <i>$t</i> ";
         }
     }

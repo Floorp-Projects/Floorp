@@ -16,18 +16,21 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+use diagnostics;
+use strict;
+
 if( $ARGV[0] eq '' ){
-    $CVS_ROOT = '/m/src';
+    $::CVS_ROOT = '/m/src';
 }
 else {
-    $CVS_ROOT = $ARGV[0];
+    $::CVS_ROOT = $ARGV[0];
 }
 
-$CVS_REPOS_SUFIX = $CVS_ROOT;
+$CVS_REPOS_SUFIX = $::CVS_ROOT;
 $CVS_REPOS_SUFIX =~ s/\//_/g;
 
-$CHECKIN_DATA_FILE = "data/checkinlog${CVS_REPOS_SUFIX}";
-$CHECKIN_INDEX_FILE = "data/index${CVS_REPOS_SUFIX}";
+my $CHECKIN_DATA_FILE = "data/checkinlog${CVS_REPOS_SUFIX}";
+my $CHECKIN_INDEX_FILE = "data/index${CVS_REPOS_SUFIX}";
 
 
     open(INDEX , "<$CHECKIN_INDEX_FILE");

@@ -20,6 +20,9 @@
 # Query the CVS database.
 #
 
+use diagnostics;
+use strict;
+
 require 'CGI.pl';
 
 $|=1;
@@ -27,19 +30,19 @@ $|=1;
 print "Content-type: text/html\n\n";
 
 LoadTreeConfig();
-$CVS_ROOT = $::FORM{'cvsroot'};
-$CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
+$::CVS_ROOT = $::FORM{'cvsroot'};
+$::CVS_ROOT = pickDefaultRepository() unless $::CVS_ROOT;
 if (exists $::FORM{'module'}) {
     if (exists($::TreeInfo{$::FORM{'module'}}{'repository'})) {
         $::TreeID = $::FORM{'module'} 
     }
 }
 
-$modules = {};
+$::modules = {};
 require 'modules.pl';
 
 PutsHeader("Bonsai - CVS Query Form", "CVS Query Form",
-           "$CVS_ROOT - $::TreeInfo{$::TreeID}{shortdesc}");
+           "$::CVS_ROOT - $::TreeInfo{$::TreeID}{shortdesc}");
 
 print "
 <p>
@@ -63,13 +66,13 @@ print "
 #
 # check to see if there are multple repositories
 #
-@reposList = &getRepositoryList();
-$bMultiRepos = (@reposList > 1);
+my @reposList = &getRepositoryList();
+my $bMultiRepos = (@reposList > 1);
 
 #
 # This code sucks, I should rewrite it to be shorter
 #
-$Module = 'default';
+my $Module = 'default';
 
 if (!exists $::FORM{module} || $::FORM{module} eq 'all' ||
       $::FORM{module} eq '') {
@@ -96,7 +99,7 @@ else {
 #
 # Print out all the Different Modules
 #
-for $k  (sort( keys( %$modules ) ) ){
+for my $k  (sort( keys( %$::modules ) ) ){
     print "<OPTION value='$k'>$k\n";
 }
 
@@ -197,10 +200,7 @@ print "
 # Print the date selector
 #
 
-$CVS_REPOS_SUFFIX = $CVS_ROOT;
-$CVS_REPOS_SUFFIX =~ s:/:_:g;
-
-$startdate = fetchCachedStartDate($CVS_ROOT);
+my $startdate = fetchCachedStartDate($::CVS_ROOT);
 
 if (!defined($::FORM{date}) || $::FORM{date} eq "") {
     $::FORM{date} = "hours";
@@ -255,7 +255,7 @@ print "
 <tr>
 <th><BR></th>
 <td colspan=2>
-<INPUT TYPE=HIDDEN NAME=cvsroot VALUE='$CVS_ROOT'>
+<INPUT TYPE=HIDDEN NAME=cvsroot VALUE='$::CVS_ROOT'>
 <INPUT TYPE=SUBMIT VALUE='Run Query'>
 </td>
 </tr>
@@ -273,7 +273,7 @@ sub sortTest {
      return " SELECTED";
 }
 
-refigureStartDateIfNecessary($CVS_ROOT);
+refigureStartDateIfNecessary($::CVS_ROOT);
 
 sub dateTest {
     if( $_[0] eq $::FORM{date} ){
@@ -310,6 +310,8 @@ sub regexpradio {
 }
 
 
+my $rememberedcachedate;
+
 sub fetchCachedStartDate {
     my ($repository) = @_;
     open(CACHE, "<data/cachedstartdates") || return "unknown";
@@ -337,7 +339,7 @@ sub refigureStartDateIfNecessary {
     SendSQL("select min(ci_when) 
                from checkins,repositories 
                where repositories.id = repositoryid and 
-                     repository = '$CVS_ROOT'");
+                     repository = '$::CVS_ROOT'");
 
     my $startdate = FetchOneColumn();
     if ($startdate eq "") {

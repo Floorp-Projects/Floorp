@@ -1,4 +1,4 @@
-#!/usr/bonsaitools/bin/perl --
+#!/usr/bonsaitools/bin/perl -w
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Netscape Public License
@@ -22,18 +22,21 @@
 # Multi file diff cgi
 #
 
-require 'utils.pl';
+use diagnostics;
+use strict;
+
+require 'globals.pl';
 
 $|=1;
 
-loadConfigData();
+my %form;
 
 print "Content-type: text/html
 
 <PRE><FONT FACE='Lucida Console'>
 ";
 
-@revs = ();
+my @revs = ();
 
 #if( $ENV{"QUERY_STRING"} eq "" ){
 #    $ENV{"QUERY_STRING"}="brendan%2Cns%2Fjs%2Fsrc%2Cjsapi.c%2C-1=on&brendan%2Cns%2Fjs%2Fsrc%2Cjsapi.h%2C-1=on&brendan%2Cns%2Fjs%2Fsrc%2Cjsarray.c%2C-106=on&brendan%2Cns%2Fjs%2Fsrc%2Cjsarray.h%2C-0=on&brendan%2Cns%2Fjs%2Fsrc%2Cjsatom.c%2C-9=on";
@@ -45,32 +48,35 @@ print "Content-type: text/html
 #    print "$k='$v'\n";
 #}
 
-if( $form{"cvsroot"} ne "" ){
+my $cvsroot;
+if( $form{"cvsroot"} ){
     $cvsroot = $form{"cvsroot"};
 }
 else {
     $cvsroot = pickDefaultRepository();
 }
 
-if( $form{"allchanges"} ne "" ){
+if( $form{"allchanges"} ){
     @revs = split(/,/, $form{"allchanges"} );
 }
 else {
-    while( ($k, $v) = each( %form ) ){
+    while( my ($k, $v) = each( %form ) ){
         push( @revs, $k );
     }
 }
 
-$didone = 0;
-for $k (@revs) {
-    ($who,$dir,$file,$rev) = split(/\|/, $k );
+my $didone = 0;
+
+my $rcsdiffcommand = Param('rcsdiffcommand');
+for my $k (@revs) {
+    my ($who,$dir,$file,$rev) = split(/\|/, $k );
     if ($rev eq "") {
         next;
     }
-    $prevrev = &PrevRev($rev);
+    my $prevrev = &PrevRev($rev);
     
     # this doesn't handle files in the attic
-    $fullname = "$cvsroot/$dir/$file,v";
+    my $fullname = "$cvsroot/$dir/$file,v";
     if (IsHidden($fullname)) {
         next;
     }
@@ -91,7 +97,7 @@ if ($didone == 0) {
 
 
 sub split_cgi_args {
-    local($i,$var,$value, $s);
+    my ($i,$var,$value, $s);
 
     if( $ENV{"REQUEST_METHOD"} eq 'POST'){
         while(<> ){
@@ -102,10 +108,10 @@ sub split_cgi_args {
         $s = $ENV{"QUERY_STRING"};
     }
 
-    @args= split(/\&/, $s );
+    my @args= split(/\&/, $s );
 
-    for $i (@args) {
-        ($var, $value) = split(/=/, $i);
+    for my $i (@args) {
+        my ($var, $value) = split(/=/, $i);
         $var =~ tr/+/ /;
         $var =~ s/%([a-fA-F0-9][a-fA-F0-9])/pack("C", hex($1))/eg;
         $value =~ tr/+/ /;
@@ -115,8 +121,8 @@ sub split_cgi_args {
 }
 
 sub PrevRev {
-    local( $rev ) = @_;
-    local( $i, $j, $ret, @r );
+    my( $rev ) = @_;
+    my( $i, $j, $ret, @r );
 
     @r = split( /\./, $rev );
 

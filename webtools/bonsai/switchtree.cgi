@@ -17,6 +17,18 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+use diagnostics;
+use strict;
+
+# Shut up misguided -w warnings about "used only once".  "use vars" just
+# doesn't work for me.
+
+sub sillyness {
+    my $zz;
+    $zz = $::TreeID;
+    $zz = $::TreeList;
+}
+
 require 'CGI.pl';
 print "Content-type: text/html\n\n";
 LoadTreeConfig();

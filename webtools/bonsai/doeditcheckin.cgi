@@ -17,6 +17,9 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
+use diagnostics;
+use strict;
+
 require 'CGI.pl';
 
 print "Content-type: text/html
@@ -37,11 +40,11 @@ if (!exists $::FORM{'id'}) {
 } else {
     $info = eval("\\%" . $::FORM{'id'});
     
-    if (!exists $info{'notes'}) {
-        $info{'notes'} = "";
+    if (!exists $info->{'notes'}) {
+        $info->{'notes'} = "";
     }
     
-    foreach $i (sort(keys(%$info))) {
+    foreach my $i (sort(keys(%$info))) {
         if (FormData("orig$i") ne $info->{$i}) {
             $busted = 1;
             last;
