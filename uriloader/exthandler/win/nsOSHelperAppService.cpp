@@ -354,7 +354,7 @@ already_AddRefed<nsMIMEInfoWin> nsOSHelperAppService::GetByExtension(const char 
   if (err == ERROR_SUCCESS)
   {
     nsCAutoString typeToUse;
-    if (aTypeHint) {
+    if (aTypeHint && *aTypeHint) {
       typeToUse.Assign(aTypeHint);
     }
     else {
