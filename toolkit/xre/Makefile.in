@@ -72,6 +72,10 @@ REQUIRES = \
 	xremoteservice \
 	$(NULL)
 
+ifdef MOZ_JPROF
+REQUIRES += jprof
+endif
+
 FORCE_STATIC_LIB = 1
 
 EXPORTS = nsXULAppAPI.h
