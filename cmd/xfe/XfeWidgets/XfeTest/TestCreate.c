@@ -113,14 +113,17 @@ XfeLoadToolBar(Widget			tool_bar,
 			XtAddCallback(tool_items[i],XmNactivateCallback,activate_cb,NULL);
 		}
 
-		if ((i % sep_offset) == 0)
-		{
-			Widget sep = XmCreateSeparator(tool_bar,
-										   (orientation == XmVERTICAL) ? 
-										   "vsep" : "hsep",
-										   NULL,0);
-			
-			XtManageChild(sep);
+        if (sep_count > 0)
+        {
+          if ((i % sep_offset) == 0)
+          {
+			  Widget sep = XmCreateSeparator(tool_bar,
+											 (orientation == XmVERTICAL) ? 
+											 "vsep" : "hsep",
+											 NULL,0);
+			  
+			  XtManageChild(sep);
+		  }
 		}
     }
 
@@ -154,7 +157,7 @@ XfeCreateLoadedToolBar(Widget			pw,
 		xfeToolBarWidgetClass,
 		pw,
 		XmNbackground,		XfeBackground(pw),
-		XmNbuttonLayout,	XmBUTTON_LABEL_ON_BOTTOM,
+/* 		XmNbuttonLayout,	XmBUTTON_LABEL_ON_BOTTOM, */
 		NULL);
 
 	if (tool_count > 0)

@@ -31,15 +31,6 @@ MODULE			= XfeTest/Xfe
 
 LIBRARY_NAME	= XfeTest
 
-
-ifdef XFE_WIDGETS_BUILD_DEMO
-XFE_EXTRA_DEFINES += -DXFE_WIDGETS_BUILD_DEMO
-endif
-
-ifdef XFE_WIDGETS_BUILD_UNUSED
-XFE_EXTRA_DEFINES += -DXFE_WIDGETS_BUILD_UNUSED
-endif
-
 CSRCS			= \
 				TestAnim.c \
 				TestApp.c \
@@ -62,5 +53,6 @@ EXPORTS			= \
 
 include $(DEPTH)/config/rules.mk
 
+include $(DEPTH)/cmd/xfe/XfeWidgets/XfeWidgets.mk
+
 INCLUDES	+= -I../icons
-DEFINES		+= $(XFE_EXTRA_DEFINES)
