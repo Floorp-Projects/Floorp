@@ -1,41 +1,50 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="am.css" type="text/css"?>
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
 
 <!DOCTYPE window>
 
-<xul:window xmlns="http://www.w3.org/TR/REC-html40"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload = "">
-<form>
 
-<h2>Copy and Folder settings</h2>
-<p>When sending messages, automatically</p>
+<html:div>Copy and Folder settings</html:div>
+<box align="vertical" class="bigbox">
+<html:div>When sending messages, automatically</html:div>
 
-<table width="100%">
-  <tr>
-    <td><input type="checkbox"/>Place a copy in folder Sent on Local Mail</td>
-    <td><button type="button">Choose Folder..</button></td>
-  </tr>
-  <tr><td colspan="2">Bcc &lt;account's e-mail address&gt;</td></tr>
-  <tr><td>Bcc these addresses:</td>
-      <td><input type="text"/></td></tr>
-</table>
+  <box align="horizontal">
+    <html:input type="checkbox"/>
+    <html:div>Place a copy in folder Sent on Local Mail</html:div>
+    <spring flex="100%"/>
+    <html:button type="button">Choose Folder..</html:button>
+  </box>
+  <box align="horizontal">
+    <html:input type="checkbox"/>
+    <html:div>Bcc &lt;account's e-mail address&gt;</html:div>
+  </box>
+  <box align="horizontal">
+    <html:input type="checkbox"/>
+    <html:div>Bcc these addresses:</html:div>
+    <html:input type="text"/>
+  </box>
+</box>
 
-<h2>Special Folders</h2>
-<table width="100%">
-  <tr>
-    <td>Keep junk mail in Junk Mail in Earthlink Inbox</td>
-    <td><button type="button">Choose Folder...</button></td>
-  </tr>
-  <tr>
-    <td>Keep message drafts in Drafts in Local Mail</td>
-    <td><button type="button">Choose Folder...</button></td>
-  </tr>
-  <tr>
-    <td>Keep message templates in Templates in Local Mail</td>
-    <td><button type="button">Choose Folder...</button></td>
-  </tr>
-</table>
-
-</form>
+<html:div>Special Folders</html:div>
+<box align="vertical" class="bigbox">
+  <box align="horizontal">
+    <html:div>Keep junk mail in Junk Mail in Earthlink Inbox</html:div>
+    <spring flex="100%"/>
+    <html:button type="button">Choose Folder...</html:button>
+  </box>
+  <box align="horizontal">
+    <html:div>Keep message drafts in Drafts in Local Mail</html:div>
+    <spring flex="100%"/>
+    <html:button type="button">Choose Folder...</html:button>
+  </box>
+  <box align="horizontal">
+    <html:div>Keep message templates in Templates in Local Mail</html:div>
+    <spring flex="100%"/>
+    <html:button type="button">Choose Folder...</html:button>
+  </box>
+</box>
 </xul:window>

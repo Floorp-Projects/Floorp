@@ -58,6 +58,7 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/AccountManager.js		\
 	$(srcdir)/accounttree.xul	\
 	$(srcdir)/am-main.xul		\
+	$(srcdir)/am-test.xul		\
 	$(srcdir)/am-server.xul		\
 	$(srcdir)/am-server-top.xul	\
 	$(srcdir)/am-server-pop3.xul	\

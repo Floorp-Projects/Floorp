@@ -1,27 +1,25 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="am.css" type="text/css"?>
+<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?>
 
 <!DOCTYPE window>
 
-<xul:window xmlns="http://www.w3.org/TR/REC-html40"
-      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<xul:window xmlns:html="http://www.w3.org/TR/REC-html40"
+      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      style="width: 100%; height: 100%"
       onload = "">
 
-<form>
-<h2>Server Settings</h2>
-  <table>
-    <tr>
-      <td>Account Type</td>
-      <td>
-        <select>
-          <option name="pop3">POP Mail Server</option>
-          <option name="imap">IMAP Mail Server</option>
-          <option name="news">News Server</option>
-          <option name="webmail">Web mail account</option>
-        </select>
-      </td>
-    </tr>
-  </table>
-
-</form>
+<box align="vertical" class="bigbox" flex="100%" style="width: 100%; height: 100%">
+  <html:div>Server Settings</html:div>
+  <html:div>
+    <spring flex="100%"/>
+    Account Type
+    <html:select>
+      <html:option name="pop3">POP Mail Server</html:option>
+      <html:option name="imap">IMAP Mail Server</html:option>
+      <html:option name="news">News Server</html:option>
+      <html:option name="webmail">Web mail account</html:option>
+    </html:select>
+  </html:div>
+</box>
 </xul:window>

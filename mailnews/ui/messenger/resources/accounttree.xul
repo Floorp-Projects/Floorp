@@ -13,7 +13,7 @@
   <treecol rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treehead>
     <treecell>Name</treecell>
-  </treecell>
+  </treehead>
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#settings">
     <treeitem id="msgaccounts:/" open="true">
