@@ -155,6 +155,7 @@ NS_IMETHODIMP nsPICSElementObserver::Notify(PRUint32 aDocumentID, eHTMLTags aTag
               nsString mtemplateURL = text ? text : "resource:/res/samples/picstest1.html";
             //  ws->LoadURL(mtemplateURL, nsnull, nsnull);
               nsCharsetSource s;
+              ws->SetRendering(PR_TRUE);
               ws->StopDocumentLoad();
               ws->LoadDocument("resource:/res/samples/picstest1.html", nsnull, s);
             }
