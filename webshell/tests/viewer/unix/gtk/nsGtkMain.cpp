@@ -157,9 +157,6 @@ int main(int argc, char **argv)
     // code linked into the viewer.
     putenv("MOZ_TOOLKIT=gtk");
 
-    rv = nsIThread::SetMainThread();
-    NS_ABORT_IF_FALSE(NS_SUCCEEDED(rv), "couldn't set main thread");
-
     gTheApp = new nsNativeViewerApp();
     gTheApp->Initialize(argc, argv);
     gTheApp->Run();
