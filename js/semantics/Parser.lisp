@@ -377,48 +377,46 @@
 ; (the transitions were ordered by finish-transitions).
 (defun report-and-fix-ambiguities (grammar stream)
   (let ((found-ambiguities nil))
-    (pprint-logical-block (stream nil)
-      (dolist (state (grammar-states grammar))
-        (labels
-          
-          ((report-ambiguity (transition-cons other-transition-conses)
-             (unless found-ambiguities
-               (setq found-ambiguities t)
-               (format stream "~&Ambiguities:")
-               (pprint-indent :block 2 stream))
-             (pprint-newline :mandatory stream)
+    (dolist (state (grammar-states grammar))
+      (labels
+        
+        ((report-ambiguity (transition-cons other-transition-conses)
+           (unless found-ambiguities
+             (setq found-ambiguities t)
+             (format stream "~&Ambiguities:"))
+           (write-char #\newline stream)
+           (pprint-logical-block (stream nil)
+             (format stream "S~D: ~W => " (state-number state) (car transition-cons))
              (pprint-logical-block (stream nil)
-               (format stream "S~D: ~W ~:_=> ~:_" (state-number state) (car transition-cons))
-               (pprint-logical-block (stream nil)
-                 (dolist (a (cons transition-cons other-transition-conses))
-                   (print-transition (cdr a) stream)
-                   (format stream "   ~:_")))))
-           
-           ; Check the list of transition-conses and report ambiguities.
-           ; start is the start of a possibly larger list of transition-conses whose tail
-           ; is the given list.  If ambiguities exist, return a copy of start up to the
-           ; position of list in it followed by list with ambiguities removed.  If not,
-           ; return start unchanged.
-           (check (transition-conses start)
-             (if transition-conses
-               (let* ((transition-cons (first transition-conses))
-                      (transition-terminal (car transition-cons))
-                      (transition-conses-rest (rest transition-conses)))
-                 (if transition-conses-rest
-                   (if (grammar-symbol-= transition-terminal (car (first transition-conses-rest)))
-                     (let ((unrelated-transitions
-                            (member-if #'(lambda (a) (not (grammar-symbol-= transition-terminal (car a))))
-                                       transition-conses-rest)))
-                       (report-ambiguity transition-cons (ldiff transition-conses-rest unrelated-transitions))
-                       (check unrelated-transitions (append (ldiff start transition-conses-rest) unrelated-transitions)))
-                     (check transition-conses-rest start))
-                   start))
-               start)))
-          
-          (let ((transition-conses (state-transitions state)))
-            (setf (state-transitions state) (check transition-conses transition-conses))))))
+               (dolist (a (cons transition-cons other-transition-conses))
+                 (print-transition (cdr a) stream)
+                 (format stream "   ~:_")))))
+         
+         ; Check the list of transition-conses and report ambiguities.
+         ; start is the start of a possibly larger list of transition-conses whose tail
+         ; is the given list.  If ambiguities exist, return a copy of start up to the
+         ; position of list in it followed by list with ambiguities removed.  If not,
+         ; return start unchanged.
+         (check (transition-conses start)
+           (if transition-conses
+             (let* ((transition-cons (first transition-conses))
+                    (transition-terminal (car transition-cons))
+                    (transition-conses-rest (rest transition-conses)))
+               (if transition-conses-rest
+                 (if (grammar-symbol-= transition-terminal (car (first transition-conses-rest)))
+                   (let ((unrelated-transitions
+                          (member-if #'(lambda (a) (not (grammar-symbol-= transition-terminal (car a))))
+                                     transition-conses-rest)))
+                     (report-ambiguity transition-cons (ldiff transition-conses-rest unrelated-transitions))
+                     (check unrelated-transitions (append (ldiff start transition-conses-rest) unrelated-transitions)))
+                   (check transition-conses-rest start))
+                 start))
+             start)))
+        
+        (let ((transition-conses (state-transitions state)))
+          (setf (state-transitions state) (check transition-conses transition-conses)))))
     (when found-ambiguities
-      (pprint-newline :mandatory stream))))
+      (write-char #\newline stream))))
 
 
 ; Erase the existing parser, if any, for the given grammar.
