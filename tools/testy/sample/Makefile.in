@@ -20,7 +20,7 @@ CPPSRCS		= \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		../tstysupt.lib \
+		-ltstysupt \
 		$(NSPR_LIBS) \
 		$(NULL)
 

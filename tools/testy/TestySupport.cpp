@@ -5,7 +5,7 @@ FILE* gLogFile = NULL;
 
 int Testy_LogInit(const char* fileName)
 {
-  gLogFile = fopen(fileName, "r+b");
+  gLogFile = fopen(fileName, "w+b");
   if (!gLogFile) return -1;
   return 0;
 }
