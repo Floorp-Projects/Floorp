@@ -308,6 +308,7 @@ bin\components\palmsync.xpt
 bin\components\bayesflt.dll
 bin\components\mailview.dll
 bin\components\mailview.xpt
+bin\components\offlineStartup.js 
 bin\palm.html
 
 [chatzilla]

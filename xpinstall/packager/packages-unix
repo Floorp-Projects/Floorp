@@ -383,6 +383,8 @@ bin/components/mdn-service.js
 bin/components/libbayesflt.so
 bin/components/mailview.xpt
 bin/components/libmailview.so
+bin/components/offlineStartup.js
+
 
 ; window icons
 bin/chrome/icons/default/abcardWindow*.xpm

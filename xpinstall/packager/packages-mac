@@ -371,6 +371,7 @@ viewer:Components:mdn-service.js
 viewer:Components:bayesianFilter.shlb
 viewer:Components:mailviews.xpt
 viewer:Components:mailviews.shlb
+viewer:Components:offlineStartup.js
 
 [chatzilla]
 viewer:Components:chatzilla-service.js

@@ -422,6 +422,7 @@ bin/components/mdn-service.js
 bin/components/bayesflt.dll
 bin/components/mailview.xpt
 bin/components/mailview.dll
+bin/components/offlineStartup.js 
 
 [chatzilla]
 bin/components/chatzilla-service.js

@@ -298,6 +298,7 @@ bin\components\msgmdn.xpt
 bin\components\mdn-service.js
 bin\components\mapihook.xpt
 bin\components\mailview.xpt
+bin/components\offlineStartup.js 
 bin\chrome\messenger.jar
 bin\chrome\messenger\*
 
