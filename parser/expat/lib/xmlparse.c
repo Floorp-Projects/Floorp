@@ -967,6 +967,12 @@ int XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
       XmlUpdatePosition(encoding, positionPtr, bufferPtr, &position);
     return 1;
   }
+  else if (errorCode == XML_ERROR_PARSER_BLOCKED) {
+    bufferPtr = eventPtr;
+    parseEndPtr = eventEndPtr;
+    XmlUpdatePosition(encoding, positionPtr, eventEndPtr, &position);
+    return 0;
+  }
   else {
     eventEndPtr = eventPtr;
     processor = errorProcessor;
