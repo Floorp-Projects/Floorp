@@ -32,6 +32,10 @@
 #define socklen_t int
 #endif
 
+#ifndef SHUT_RDWR
+#define SHUT_RDWR 2
+#endif
+
 nsFTPConn::nsFTPConn(char *aHost) :
     mHost(aHost),
     mState(CLOSED),
@@ -390,10 +394,8 @@ nsFTPConn::RawClose(int aFd)
 {
     int err = OK;
 
-#if 0
     err = shutdown(aFd, SHUT_RDWR);
     if (err != 0) err = E_SOCK_CLOSE;
-#endif
 
     return err;
 }
