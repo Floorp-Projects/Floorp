@@ -37,7 +37,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.47 2004/07/07 00:48:53 wchang0222%aol.com Exp $
+ * $Id: cert.h,v 1.48 2004/11/09 06:13:32 wchang0222%aol.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -322,6 +322,14 @@ extern SECStatus CERT_NameFromDERCert(SECItem *derCert, SECItem *derName);
 */
 extern SECStatus CERT_IssuerNameFromDERCert(SECItem *derCert, 
 					    SECItem *derName);
+
+extern SECItem *
+CERT_EncodeGeneralName(CERTGeneralName *genName, SECItem *dest,
+		       PRArenaPool *arena);
+
+extern CERTGeneralName *
+CERT_DecodeGeneralName(PRArenaPool *arena, SECItem *encodedName,
+		       CERTGeneralName  *genName);
 
 
 

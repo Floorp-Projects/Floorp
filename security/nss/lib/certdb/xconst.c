@@ -45,7 +45,7 @@
 #include "secoidt.h"
 #include "secasn1t.h"
 #include "secasn1.h"
-#include "certt.h"
+#include "cert.h"
 #include "secder.h"
 #include "prprf.h"
 #include "xconst.h"
