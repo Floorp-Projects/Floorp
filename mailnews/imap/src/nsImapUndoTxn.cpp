@@ -20,6 +20,11 @@
 
 static NS_DEFINE_CID(kCImapService, NS_IMAPSERVICE_CID);
 
+nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn() :
+    m_srcMsgIdString("", eOneByte), m_dstMsgIdString("", eOneByte)
+{
+}
+
 nsImapMoveCopyMsgTxn::nsImapMoveCopyMsgTxn(
 	nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray, 
 	const char* srcMsgIdString, nsIMsgFolder* dstFolder,

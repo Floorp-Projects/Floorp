@@ -38,6 +38,7 @@ class nsImapMoveCopyMsgTxn : public nsMsgTxn
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IMAPMOVECOPYMSGTXN_IID)
 
+    nsImapMoveCopyMsgTxn();
     nsImapMoveCopyMsgTxn(nsIMsgFolder* srcFolder, nsMsgKeyArray* srcKeyArray,
                          const char* srcMsgIdString, nsIMsgFolder* dstFolder,
                          PRBool idsAreUids, PRBool isMove, 
