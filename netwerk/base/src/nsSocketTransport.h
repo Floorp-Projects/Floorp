@@ -198,8 +198,8 @@ private:
         mReadWriteState &= ~aFlag;
     } 
 
-    PRBool  mOnStartReadFired;
     PRBool  mOnStartWriteFired;
+    PRBool  mOnStartReadFired;
     
 protected:
     

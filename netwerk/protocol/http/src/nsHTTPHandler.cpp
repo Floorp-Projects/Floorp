@@ -325,13 +325,13 @@ nsHTTPHandler::NewPostDataStream(PRBool isFile,
         rv = NS_NewCStringInputStream(getter_AddRefs(in), data);
         if (NS_FAILED(rv)) return rv;
 
-        rv = in->QueryInterface(NS_GET_IID(nsIInputStream), (void**)result);
+        rv = in->QueryInterface(NS_GET_IID(nsIInputStream),(void**)result);
         return rv;
     }
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetAcceptLanguages (const char* i_AcceptLanguages) 
+nsHTTPHandler::SetAcceptLanguages(const char* i_AcceptLanguages) 
 {
     CRTFREEIF(mAcceptLanguages);
     if (i_AcceptLanguages)
@@ -343,7 +343,7 @@ nsHTTPHandler::SetAcceptLanguages (const char* i_AcceptLanguages)
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetAcceptLanguages (char* *o_AcceptLanguages)
+nsHTTPHandler::GetAcceptLanguages(char* *o_AcceptLanguages)
 {
     if (!o_AcceptLanguages)
         return NS_ERROR_NULL_POINTER;
@@ -360,19 +360,19 @@ nsHTTPHandler::GetAcceptLanguages (char* *o_AcceptLanguages)
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetAcceptEncodings (const char* i_AcceptEncodings) 
+nsHTTPHandler::SetAcceptEncodings(const char* i_AcceptEncodings) 
 {
     CRTFREEIF (mAcceptEncodings);
     if (i_AcceptEncodings)
     {
-        mAcceptEncodings = nsCRT::strdup (i_AcceptEncodings);
+        mAcceptEncodings = nsCRT::strdup(i_AcceptEncodings);
         return (mAcceptEncodings == nsnull) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetAcceptEncodings (char* *o_AcceptEncodings)
+nsHTTPHandler::GetAcceptEncodings(char* *o_AcceptEncodings)
 {
     if (!o_AcceptEncodings)
         return NS_ERROR_NULL_POINTER;
@@ -390,14 +390,14 @@ nsHTTPHandler::GetAcceptEncodings (char* *o_AcceptEncodings)
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetHttpVersion (unsigned int i_HttpVersion) 
+nsHTTPHandler::SetHttpVersion(unsigned int i_HttpVersion) 
 {
 	mHttpVersion = i_HttpVersion;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetHttpVersion (unsigned int * o_HttpVersion)
+nsHTTPHandler::GetHttpVersion(unsigned int * o_HttpVersion)
 {
     if (!o_HttpVersion)
         return NS_ERROR_NULL_POINTER;
@@ -407,7 +407,7 @@ nsHTTPHandler::GetHttpVersion (unsigned int * o_HttpVersion)
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetCapabilities (PRUint32 * o_Capabilities)
+nsHTTPHandler::GetCapabilities(PRUint32 * o_Capabilities)
 {
     if (!o_Capabilities)
         return NS_ERROR_NULL_POINTER;
@@ -417,7 +417,7 @@ nsHTTPHandler::GetCapabilities (PRUint32 * o_Capabilities)
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetKeepAliveTimeout (unsigned int * o_keepAliveTimeout)
+nsHTTPHandler::GetKeepAliveTimeout(unsigned int * o_keepAliveTimeout)
 {
     if (!o_keepAliveTimeout)
         return NS_ERROR_NULL_POINTER;
@@ -790,11 +790,11 @@ nsHTTPHandler::~nsHTTPHandler()
     PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
            ("Deleting nsHTTPHandler [this=%x].\n", this));
 
-    mIdleTransports     -> Clear ();
-    mTransportList      -> Clear ();
-    mPipelinedRequests  -> Clear ();
-    mPendingChannelList -> Clear ();    
-    mConnections        -> Clear ();
+    mIdleTransports    ->Clear();
+    mTransportList     ->Clear();
+    mPipelinedRequests ->Clear();
+    mPendingChannelList->Clear();
+    mConnections       ->Clear();
 
     // Release the Atoms used by the HTTP protocol...
     nsHTTPAtoms::ReleaseAtoms();
@@ -807,7 +807,7 @@ nsHTTPHandler::~nsHTTPHandler()
     CRTFREEIF (mAcceptEncodings);
 }
 
-nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
+nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
                                          nsHTTPChannel* i_Channel,
                                          PRUint32 bufferSegmentSize,
                                          PRUint32 bufferMaxSize,
@@ -826,27 +826,25 @@ nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
 
     // Ask the channel for proxy info... since that overrides
     PRBool usingProxy = PR_FALSE;
-    i_Channel -> GetUsingProxy (&usingProxy);
+    i_Channel->GetUsingProxy(&usingProxy);
 
     if (usingProxy)
     {
-        rv = i_Channel -> GetProxyHost (getter_Copies (proxy));
+        rv = i_Channel->GetProxyHost(getter_Copies(proxy));
         if (NS_FAILED (rv)) return rv;
         
-        rv = i_Channel -> GetProxyPort (&proxyPort);
+        rv = i_Channel->GetProxyPort(&proxyPort);
         if (NS_FAILED (rv)) return rv;
     }
-    else
-    {
-        rv = i_Uri -> GetHost (getter_Copies (host));
-        if (NS_FAILED(rv)) return rv;
-        
-        rv = i_Uri -> GetPort (&port);
-        if (NS_FAILED(rv)) return rv;
-        
-        if (port == -1)
-            GetDefaultPort (&port);
-    }
+
+    rv = i_Uri->GetHost(getter_Copies(host));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = i_Uri->GetPort(&port);
+    if (NS_FAILED(rv)) return rv;
+
+    if (port == -1)
+        GetDefaultPort (&port);
 
     nsIChannel* trans = nsnull;
     // Check in the idle transports for a host/port match
@@ -854,7 +852,7 @@ nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
     PRInt32 index = 0;
     if ((mCapabilities & ALLOW_KEEPALIVE) && (flags & TRANSPORT_REUSE_ALIVE))
     {
-        mIdleTransports -> Count (&count);
+        mIdleTransports->Count(&count);
 
         // remove old and dead transports first
 
@@ -862,41 +860,40 @@ nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
         {
             for (index = count - 1; index >= 0; --index)
             {
-                nsCOMPtr<nsIChannel> cTrans = dont_AddRef ((nsIChannel*) mIdleTransports -> ElementAt (index) );
+                nsCOMPtr<nsIChannel> cTrans = 
+                    dont_AddRef ((nsIChannel*) mIdleTransports->ElementAt(index));
 
                 if (cTrans)
                 {
-                    nsresult rv;
                     nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface (cTrans, &rv);
                     PRBool isAlive = PR_TRUE;
 
-                    if (NS_FAILED (rv) || NS_FAILED (sTrans -> IsAlive (mKeepAliveTimeout, &isAlive))
+                    if (NS_FAILED (rv) || NS_FAILED (sTrans->IsAlive(mKeepAliveTimeout, &isAlive))
                         || !isAlive)
-                        mIdleTransports -> RemoveElement (cTrans);
-
+                        mIdleTransports->RemoveElement(cTrans);
                 }
             }
         }
 
-        mIdleTransports -> Count (&count);
+        mIdleTransports->Count(&count);
 
         if (count > 0)
         {
             for (index = count - 1; index >= 0; --index)
             {
                 nsCOMPtr<nsIURI> uri;
-                nsCOMPtr<nsIChannel> cTrans = dont_AddRef ((nsIChannel*) mIdleTransports -> ElementAt (index) );
+                nsCOMPtr<nsIChannel> cTrans = dont_AddRef ((nsIChannel*) mIdleTransports->ElementAt(index) );
             
                 if (cTrans && 
-                        (NS_SUCCEEDED (cTrans -> GetURI (getter_AddRefs (uri)))))
+                        (NS_SUCCEEDED (cTrans->GetURI(getter_AddRefs(uri)))))
                 {
                     nsXPIDLCString idlehost;
-                    if (NS_SUCCEEDED (uri -> GetHost (getter_Copies (idlehost))))
+                    if (NS_SUCCEEDED (uri->GetHost(getter_Copies(idlehost))))
                     {
                         if (!PL_strcasecmp (usingProxy ? proxy : host, idlehost))
                         {
                             PRInt32 idleport;
-                            if (NS_SUCCEEDED (uri -> GetPort (&idleport)))
+                            if (NS_SUCCEEDED (uri->GetPort(&idleport)))
                             {
                                 if (idleport == -1)
                                     GetDefaultPort (&idleport);
@@ -907,7 +904,7 @@ nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
                                     trans = cTrans;
                                     NS_ADDREF (trans);
                                     // Remove it from the idle
-                                    mIdleTransports -> RemoveElement (trans);
+                                    mIdleTransports->RemoveElement(trans);
                                     break;// break out of the for loop 
                                 }
                             }
@@ -923,12 +920,12 @@ nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
         if (! (flags & TRANSPORT_OPEN_ALWAYS) )
         {
             count = 0;
-            mTransportList -> Count (&count);
+            mTransportList->Count(&count);
             if (count >= (PRUint32) mMaxConnections)
             {
 
                 // XXX this method incorrectly returns a bool
-                rv = mPendingChannelList -> AppendElement((nsISupports*)(nsIRequest*)i_Channel)
+                rv = mPendingChannelList->AppendElement((nsISupports*)(nsIRequest*)i_Channel)
                         ? NS_OK : NS_ERROR_FAILURE;  
                 NS_ASSERTION (NS_SUCCEEDED(rv), "AppendElement failed");
 
@@ -941,9 +938,11 @@ nsresult nsHTTPHandler::RequestTransport (nsIURI* i_Uri,
         }
 
         if (usingProxy)
-            rv = CreateTransport (proxy, proxyPort, host, bufferSegmentSize, bufferMaxSize, &trans);
+            rv = CreateTransport(proxy, proxyPort, host, bufferSegmentSize, 
+                    bufferMaxSize, &trans);
         else
-            rv = CreateTransport (host, port, host, bufferSegmentSize, bufferMaxSize, &trans);
+            rv = CreateTransport(host, port, host, bufferSegmentSize, 
+                    bufferMaxSize, &trans);
 
         if (NS_FAILED(rv)) return rv;
     }
@@ -974,18 +973,19 @@ nsresult nsHTTPHandler::CreateTransport(const char* host,
 {
     nsresult rv;
 
-    NS_WITH_SERVICE (nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
     if (NS_FAILED (rv))
         return rv;
 
-    rv = sts -> CreateTransport (host, port, aPrintHost, bufferSegmentSize, bufferMaxSize, o_pTrans);
+    rv = sts->CreateTransport(host, port, aPrintHost, bufferSegmentSize, 
+            bufferMaxSize, o_pTrans);
     if (NS_SUCCEEDED (rv))
     {
         nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (*o_pTrans, &rv);
         if (NS_SUCCEEDED (rv))
         {
-            trans -> SetSocketTimeout        (mRequestTimeout);
-            trans -> SetSocketConnectTimeout (mConnectTimeout);
+            trans->SetSocketTimeout(mRequestTimeout);
+            trans->SetSocketConnectTimeout(mConnectTimeout);
         }
     }
     return rv;
@@ -1030,12 +1030,12 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
     PRInt32 port    = -1;
     nsXPIDLCString  host;
 
-    i_pTrans -> GetURI (getter_AddRefs (uri));
+    i_pTrans->GetURI (getter_AddRefs (uri));
 
     if (uri)
     {
-        uri -> GetHost (getter_Copies (host));
-        uri -> GetPort (&port);
+        uri->GetHost (getter_Copies (host));
+        uri->GetPort (&port);
     }
     if (port == -1)
         GetDefaultPort (&port);
@@ -1047,7 +1047,7 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
     
     // remove old dead transports
     
-    mIdleTransports -> Count (&count);
+    mIdleTransports->Count (&count);
     if (count > 0)
     {
         PRInt32 keepAliveMaxCon = 0;
@@ -1055,28 +1055,27 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
 
         for (index = count - 1; index >= 0; --index)
         {
-            nsCOMPtr<nsIChannel> cTrans = dont_AddRef ((nsIChannel*) mIdleTransports -> ElementAt (index) );
+            nsCOMPtr<nsIChannel> cTrans = dont_AddRef ((nsIChannel*) mIdleTransports->ElementAt (index) );
 
             if (cTrans)
             {
-                nsresult rv;
                 nsCOMPtr<nsISocketTransport> sTrans = do_QueryInterface (cTrans, &rv);
                 PRBool isAlive = PR_TRUE;
 
-                if (NS_FAILED (rv) || NS_FAILED (sTrans -> IsAlive (mKeepAliveTimeout, &isAlive))
+                if (NS_FAILED (rv) || NS_FAILED (sTrans->IsAlive (mKeepAliveTimeout, &isAlive))
                     || !isAlive)
-                    mIdleTransports -> RemoveElement (cTrans);
+                    mIdleTransports->RemoveElement (cTrans);
                 else
                 if (capabilities & (ALLOW_KEEPALIVE|ALLOW_PROXY_KEEPALIVE))
                 {        
-                    cTrans -> GetURI (getter_AddRefs (uri));
+                    cTrans->GetURI (getter_AddRefs (uri));
                     if (uri)
                     {
                         PRInt32 lPort    = -1;
                         nsXPIDLCString  lHost;
 
-                        uri -> GetHost (getter_Copies (lHost));
-                        uri -> GetPort (&lPort);
+                        uri->GetHost (getter_Copies (lHost));
+                        uri->GetPort (&lPort);
                         if (lPort == -1)
                             GetDefaultPort (&lPort);
 
@@ -1084,7 +1083,7 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
                             keepAliveMaxCon++;
 
                         if (keepAliveMaxCon >= aKeepAliveMaxCon)
-                            mIdleTransports -> RemoveElement (cTrans);
+                            mIdleTransports->RemoveElement (cTrans);
                     }
                 } /* IsAlive */
             } /* cTrans */
@@ -1093,30 +1092,29 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
 
     if (capabilities & (ALLOW_KEEPALIVE|ALLOW_PROXY_KEEPALIVE))
     {
-        nsresult rv;
         nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (i_pTrans, &rv);
 
         if (NS_SUCCEEDED (rv))
         {
             PRBool alive = PR_FALSE;
-            rv = trans -> IsAlive (0, &alive);
+            rv = trans->IsAlive(0, &alive);
         
             if (NS_SUCCEEDED (rv) && alive)
             {
                 // remove the oldest connection when we hit the maximum
-                mIdleTransports -> Count (&count);
+                mIdleTransports->Count(&count);
 
                 if (count >= (PRUint32) mMaxAllowedKeepAlives)
-                    mIdleTransports -> RemoveElementAt (0);
+                    mIdleTransports->RemoveElementAt(0);
 
-                PRBool added = mIdleTransports -> AppendElement (i_pTrans);
+                PRBool added = mIdleTransports->AppendElement(i_pTrans);
                 NS_ASSERTION(added, 
                     "Failed to add a socket to idle transports list!");
 
-                trans -> SetReuseConnection (PR_TRUE);
-                trans -> SetIdleTimeout (aKeepAliveTimeout);
+                trans->SetReuseConnection(PR_TRUE);
+                trans->SetIdleTimeout(aKeepAliveTimeout);
 
-                mIdleTransports -> Count (&count);
+                mIdleTransports->Count(&count);
                 if (count > sMaxKeepAlives)
                     sMaxKeepAlives = count;
             }
@@ -1129,7 +1127,7 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
     // to the transport and the transport which references the HTTPChannel
     // through the event sink...
     //
-    rv = i_pTrans -> SetNotificationCallbacks (nsnull);
+    rv = i_pTrans->SetNotificationCallbacks(nsnull);
 
     rv = mTransportList->RemoveElement(i_pTrans);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Transport not in table...");
@@ -1143,10 +1141,10 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
         // pending channels or all transports are in use
 
         count = 0;
-        mPendingChannelList->Count (&count);
-        mTransportList->Count (&transportsInUseCount);
+        mPendingChannelList->Count(&count);
+        mTransportList->Count(&transportsInUseCount);
 
-        PR_LOG (gHTTPLog, PR_LOG_ALWAYS, ("nsHTTPHandler::ReleaseTransport ():"
+        PR_LOG (gHTTPLog, PR_LOG_ALWAYS, ("nsHTTPHandler::ReleaseTransport():"
                 "pendingChannels=%d, InUseCount=%d\n", count, transportsInUseCount));
 
         if (!count || (transportsInUseCount >= (PRUint32) mMaxConnections))
@@ -1164,7 +1162,7 @@ nsHTTPHandler::ReleaseTransport (nsIChannel* i_pTrans  ,
         PR_LOG (gHTTPLog, PR_LOG_ALWAYS, ("nsHTTPHandler::ReleaseTransport."
                 "\tRestarting nsHTTPChannel [%x]\n", channel));
 
-        channel -> Open ();
+        channel->Open();
     }
 
     return rv;
@@ -1269,8 +1267,8 @@ nsHTTPHandler::PrefsChanged(const char* pref)
 
     nsresult rv = NS_OK;
 
-    mPrefs -> GetIntPref ("network.http.keep-alive.timeout", &mKeepAliveTimeout);
-    mPrefs -> GetIntPref ("network.http.max-connections"   ,   &mMaxConnections);
+    mPrefs->GetIntPref("network.http.keep-alive.timeout", &mKeepAliveTimeout);
+    mPrefs->GetIntPref("network.http.max-connections"   ,   &mMaxConnections);
 
     if (bChangedAll || !PL_strcmp(pref, "network.sendRefererHeader"))
     {
@@ -1281,7 +1279,7 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     }
 
 	nsXPIDLCString httpVersion;
-    rv = mPrefs -> CopyCharPref("network.http.version", getter_Copies (httpVersion));
+    rv = mPrefs->CopyCharPref("network.http.version", getter_Copies(httpVersion));
 	
     if (NS_SUCCEEDED (rv) && httpVersion)
 	{
@@ -1300,7 +1298,7 @@ nsHTTPHandler::PrefsChanged(const char* pref)
         mCapabilities = 0;
 
     PRInt32 cVar = 0;
-    rv = mPrefs -> GetIntPref ("network.http.keep-alive", &cVar);
+    rv = mPrefs->GetIntPref("network.http.keep-alive", &cVar);
     if (NS_SUCCEEDED (rv))
     {
         if (cVar)
@@ -1310,7 +1308,7 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     }
 
     cVar = 0;
-    rv = mPrefs -> GetIntPref ("network.http.proxy.keep-alive", &cVar);
+    rv = mPrefs->GetIntPref("network.http.proxy.keep-alive", &cVar);
     if (NS_SUCCEEDED (rv))
     {
         if (cVar)
@@ -1320,7 +1318,7 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     }
 
     cVar = 0;
-    rv = mPrefs -> GetIntPref ("network.http.pipelining", &cVar);
+    rv = mPrefs->GetIntPref("network.http.pipelining", &cVar);
     if (NS_SUCCEEDED (rv))
     {
         if (cVar)
@@ -1330,7 +1328,7 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     }
 
     cVar = 0;
-    rv = mPrefs -> GetIntPref ("network.http.proxy.pipelining", &cVar);
+    rv = mPrefs->GetIntPref("network.http.proxy.pipelining", &cVar);
     if (NS_SUCCEEDED (rv))
     {
         if (cVar)
@@ -1339,10 +1337,10 @@ nsHTTPHandler::PrefsChanged(const char* pref)
             mCapabilities &= ~ALLOW_PROXY_PIPELINING;
     }
 
-    mPrefs -> GetIntPref ("network.http.connect.timeout", &mConnectTimeout);
-    mPrefs -> GetIntPref ("network.http.request.timeout", &mRequestTimeout);
-    mPrefs -> GetIntPref ("network.http.keep-alive.max-connections", &mMaxAllowedKeepAlives);
-    mPrefs -> GetIntPref ("network.http.keep-alive.max-connections-per-server",
+    mPrefs->GetIntPref("network.http.connect.timeout", &mConnectTimeout);
+    mPrefs->GetIntPref("network.http.request.timeout", &mRequestTimeout);
+    mPrefs->GetIntPref("network.http.keep-alive.max-connections", &mMaxAllowedKeepAlives);
+    mPrefs->GetIntPref("network.http.keep-alive.max-connections-per-server",
                 &mMaxAllowedKeepAlivesPerServer);
 
     // Things read only during initialization...
@@ -1356,7 +1354,7 @@ nsHTTPHandler::PrefsChanged(const char* pref)
     }
 
     nsXPIDLCString acceptEncodings;
-    rv = mPrefs -> CopyCharPref ("network.http.accept-encoding", getter_Copies (acceptEncodings));
+    rv = mPrefs->CopyCharPref("network.http.accept-encoding", getter_Copies(acceptEncodings));
     if (NS_SUCCEEDED (rv))
         SetAcceptEncodings (acceptEncodings);
 
@@ -1372,22 +1370,29 @@ PRInt32 PR_CALLBACK HTTPPrefsCallback(const char* pref, void* instance)
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::SetServerCapabilities (const char *host, PRInt32 port, PRUint32 aCapabilities)
+nsHTTPHandler::SetServerCapabilities(
+        const char *host, 
+        PRInt32 port,
+        PRUint32 aCapabilities)
 {
     if (host)
     {
-        nsCString hStr (host);
-        hStr.Append ( ':');
-        hStr.AppendInt (port);
+        nsCString hStr(host);
+        hStr.Append( ':');
+        hStr.AppendInt(port);
 
-        nsStringKey key (hStr);
-        mCapTable.Put (&key, (void *) aCapabilities);
+        nsStringKey key(hStr);
+        mCapTable.Put(&key, (void *)aCapabilities);
     }
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsHTTPHandler::GetServerCapabilities (const char *host, PRInt32 port, PRUint32 defCap, PRUint32 *o_Cap)
+nsHTTPHandler::GetServerCapabilities (
+        const char *host, 
+        PRInt32 port, 
+        PRUint32 defCap, 
+        PRUint32 *o_Cap)
 {
     if (o_Cap == nsnull)
         return NS_ERROR_NULL_POINTER;
@@ -1410,7 +1415,7 @@ nsHTTPHandler::GetServerCapabilities (const char *host, PRInt32 port, PRUint32 d
 
 
 nsresult
-nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRequest ** o_Req)
+nsHTTPHandler::GetPipelinedRequest(nsIHTTPChannel* i_Channel, nsHTTPPipelinedRequest ** o_Req)
 {
     if (o_Req == NULL)
         return NS_ERROR_NULL_POINTER;
@@ -1418,14 +1423,14 @@ nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRe
     nsCOMPtr<nsIURI> uri;
     nsXPIDLCString  host;
     PRInt32         port = -1;
-    nsresult rv = i_Channel -> GetURI (getter_AddRefs (uri));
+    nsresult rv = i_Channel->GetURI(getter_AddRefs(uri));
 
     if (NS_SUCCEEDED (rv))
     {
-        rv = uri -> GetHost (getter_Copies (host));
+        rv = uri->GetHost(getter_Copies(host));
         if (NS_SUCCEEDED (rv) && host)
         {
-            uri -> GetPort (&port);
+            uri->GetPort(&port);
             if (port == -1)
                 GetDefaultPort (&port);
         }
@@ -1433,21 +1438,21 @@ nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRe
 
     PRUint32 count = 0;
     PRUint32 index = 0;
-    mPipelinedRequests -> Count (&count);
+    mPipelinedRequests->Count(&count);
     
     nsHTTPPipelinedRequest *pReq = nsnull;
 
     for (index = 0; index < count; index++, pReq = nsnull)
     {
-        pReq = (nsHTTPPipelinedRequest *)mPipelinedRequests -> ElementAt (index);
+        pReq = (nsHTTPPipelinedRequest *)mPipelinedRequests->ElementAt(index);
         if (pReq != NULL)
         {
             PRBool same = PR_TRUE;
-            pReq -> GetSameRequest (host, port, &same);
+            pReq->GetSameRequest(host, port, &same);
             if (same)
             {
                 PRBool commit = PR_FALSE;
-                pReq -> GetMustCommit (&commit);
+                pReq->GetMustCommit(&commit);
 
                 if (!commit)
                     break;
@@ -1459,7 +1464,7 @@ nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRe
     if (pReq == nsnull)
     {
         PRBool usingProxy = PR_FALSE;
-        i_Channel -> GetUsingProxy (&usingProxy);
+        i_Channel->GetUsingProxy(&usingProxy);
         PRUint32 capabilities;
 
         if (usingProxy)
@@ -1470,7 +1475,7 @@ nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRe
         pReq = new nsHTTPPipelinedRequest (this, host, port, capabilities);
         NS_ADDREF (pReq);
 
-        mPipelinedRequests -> AppendElement (pReq);
+        mPipelinedRequests->AppendElement(pReq);
     }
     *o_Req = pReq;
 
@@ -1478,23 +1483,23 @@ nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRe
 }
 
 nsresult
-nsHTTPHandler::AddPipelinedRequest     (nsHTTPPipelinedRequest *pReq)
+nsHTTPHandler::AddPipelinedRequest(nsHTTPPipelinedRequest *pReq)
 {
     if (pReq == NULL)
         return NS_ERROR_NULL_POINTER;
 
-    mPipelinedRequests -> AppendElement (pReq);
+    mPipelinedRequests->AppendElement(pReq);
 
     return NS_OK;
 }
 
 nsresult
-nsHTTPHandler::ReleasePipelinedRequest (nsHTTPPipelinedRequest *pReq)
+nsHTTPHandler::ReleasePipelinedRequest(nsHTTPPipelinedRequest *pReq)
 {
     if (pReq == NULL)
         return NS_ERROR_NULL_POINTER;
 
-    mPipelinedRequests -> RemoveElement (pReq);
+    mPipelinedRequests->RemoveElement(pReq);
 
     return NS_OK;
 }
@@ -1506,7 +1511,7 @@ static BrokenServersTable brokenServers_well_known [] =
 };
 
 NS_IMETHODIMP
-nsHTTPHandler::Check4BrokenHTTPServers (const char * a_Server, PRUint32 * a_Capabilities)
+nsHTTPHandler::Check4BrokenHTTPServers(const char * a_Server, PRUint32 * a_Capabilities)
 {
     if (a_Capabilities == NULL)
         return NS_ERROR_NULL_POINTER;
@@ -1514,15 +1519,15 @@ nsHTTPHandler::Check4BrokenHTTPServers (const char * a_Server, PRUint32 * a_Capa
     for (int i = 0; i < sizeof (brokenServers_well_known) / sizeof (BrokenServersTable); i++)
     {
         BrokenServersTable *tP = &brokenServers_well_known[i];
-        if (tP -> matchFlags == BAD_SERVERS_MATCH_EXACT && !PL_strcmp (tP -> serverHeader, a_Server))
+        if (tP->matchFlags == BAD_SERVERS_MATCH_EXACT && !PL_strcmp(tP->serverHeader, a_Server))
         {
-            *a_Capabilities = tP -> capabilities;
+            *a_Capabilities = tP->capabilities;
             break;
         }
         else
-        if (tP -> matchFlags == BAD_SERVERS_MATCH_ALL && !PL_strncmp (tP -> serverHeader, a_Server, strlen (tP -> serverHeader)))
+        if (tP->matchFlags == BAD_SERVERS_MATCH_ALL && !PL_strncmp(tP->serverHeader, a_Server, strlen(tP->serverHeader)))
         {
-            *a_Capabilities = tP -> capabilities;
+            *a_Capabilities = tP->capabilities;
             break;
         }
     }

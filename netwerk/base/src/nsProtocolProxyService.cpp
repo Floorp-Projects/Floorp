@@ -38,6 +38,22 @@ PRInt32 PR_CALLBACK ProxyPrefsCallback(const char* pref, void* instance)
 NS_IMPL_ISUPPORTS1(nsProtocolProxyService, nsIProtocolProxyService);
 
 
+nsProtocolProxyService::nsProtocolProxyService():
+    mUseProxy(PR_FALSE)
+{
+    NS_INIT_REFCNT();
+}
+
+nsProtocolProxyService::~nsProtocolProxyService()
+{
+    if (mFiltersArray.Count() > 0) 
+    {
+        mFiltersArray.EnumerateForwards(
+                (nsVoidArrayEnumFunc)this->CleanupFilterArray, nsnull);
+        mFiltersArray.Clear();
+    }
+}
+
 // nsProtocolProxyService methods
 NS_IMETHODIMP
 nsProtocolProxyService::Init() {
@@ -74,13 +90,13 @@ nsProtocolProxyService::Create(nsISupports *aOuter, REFNSIID aIID, void **aResul
 
 void
 nsProtocolProxyService::PrefsChanged(const char* pref) {
-    PRBool bChangeAll = (pref) ? PR_FALSE : PR_TRUE;
     NS_ASSERTION(mPrefs, "No preference service available!");
     if (!mPrefs) return;
 
     nsresult rv = NS_OK;
+    nsXPIDLCString tempString;
 
-    if (bChangeAll || !PL_strcmp(pref, "network.proxy.type"))
+    if (!pref || !PL_strcmp(pref, "network.proxy.type"))
     {
         PRInt32 type = -1;
         rv = mPrefs->GetIntPref("network.proxy.type",&type);
@@ -88,8 +104,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
             mUseProxy = (type == 1); // type == 2 is autoconfig stuff
     }
 
-    nsXPIDLCString tempString;
-    if (bChangeAll || !PL_strcmp(pref, "network.proxy.http"))
+    if (!pref || !PL_strcmp(pref, "network.proxy.http"))
     {
         mHTTPProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.http", 
@@ -98,7 +113,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
             mHTTPProxyHost = nsCRT::strdup(tempString);
     }
 
-    if (bChangeAll || !PL_strcmp(pref, "network.proxy.http_port"))
+    if (!pref || !PL_strcmp(pref, "network.proxy.http_port"))
     {
         mHTTPProxyPort = -1;
         PRInt32 proxyPort = -1;
@@ -107,7 +122,25 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
             mHTTPProxyPort = proxyPort;
     }
 
-    if (bChangeAll || !PL_strcmp(pref, "network.proxy.ftp"))
+    if (!pref || !PL_strcmp(pref, "network.proxy.ssl"))
+    {
+        mHTTPSProxyHost = "";
+        rv = mPrefs->CopyCharPref("network.proxy.ssl", 
+                getter_Copies(tempString));
+        if (NS_SUCCEEDED(rv) && tempString && *tempString)
+            mHTTPSProxyHost = nsCRT::strdup(tempString);
+    }
+
+    if (!pref || !PL_strcmp(pref, "network.proxy.ssl_port"))
+    {
+        mHTTPSProxyPort = -1;
+        PRInt32 proxyPort = -1;
+        rv = mPrefs->GetIntPref("network.proxy.ssl_port",&proxyPort);
+        if (NS_SUCCEEDED(rv) && proxyPort>0) 
+            mHTTPSProxyPort = proxyPort;
+    }
+
+    if (!pref || !PL_strcmp(pref, "network.proxy.ftp"))
     {
         mFTPProxyHost = "";
         rv = mPrefs->CopyCharPref("network.proxy.ftp", 
@@ -116,7 +149,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
             mFTPProxyHost = nsCRT::strdup(tempString);
     }
 
-    if (bChangeAll || !PL_strcmp(pref, "network.proxy.ftp_port"))
+    if (!pref || !PL_strcmp(pref, "network.proxy.ftp_port"))
     {
         mFTPProxyPort = -1;
         PRInt32 proxyPort = -1;
@@ -125,20 +158,19 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
             mFTPProxyPort = proxyPort;
     }
 
-    if (bChangeAll || !PL_strcmp(pref, "network.proxy.no_proxies_on"))
+    if (!pref || !PL_strcmp(pref, "network.proxy.no_proxies_on"))
     {
-        CRTFREEIF(mFilters);
         rv = mPrefs->CopyCharPref("network.proxy.no_proxies_on",
                 getter_Copies(tempString));
         if (NS_SUCCEEDED(rv) && tempString && *tempString)
-            mFilters = nsCRT::strdup(tempString);
+            (void)LoadFilters((const char*)tempString);
     }
 }
 
 PRBool
 nsProtocolProxyService::CanUseProxy(nsIURI* aURI) 
 {
-    if (!mFilters || !*mFilters) 
+    if (mFiltersArray.Count() == 0)
         return PR_TRUE;
 
     PRInt32 port;
@@ -153,38 +185,24 @@ nsProtocolProxyService::CanUseProxy(nsIURI* aURI)
         return PR_FALSE;
     }
 
-    // TODO this parsing should occur when mFilters is read in from the pref
-    // into an array of hosts/port combinations.
-    // so that we just compare the strings and be quicker. -Gagan
-    char* np= mFilters; 
-    while (*np)
+    PRInt32 index = -1;
+    int host_len = PL_strlen(host);
+    int filter_host_len;
+
+    while (++index < mFiltersArray.Count()) 
     {
-        while (*np && (*np == ',' || nsCRT::IsAsciiSpace(*np)))
-            np++;
-
-        char* endproxy = np+1;
-        char* portLocation = 0;
-        PRInt32 nport = 0; // no proxy port
-        // find the end of this element. 
-        while (*endproxy && (*endproxy != ',' && 
-          !nsCRT::IsAsciiSpace(*endproxy)))
+        host_port* hp = (host_port*) mFiltersArray[index];
+        
+        // only if port doesn't exist or matches
+        if (((hp->port == -1) || (hp->port == port)) &&
+                hp->host)
         {
-            if (*endproxy == ':')
-                portLocation=endproxy;
-            endproxy++;
-        }
-
-        if (portLocation)
-            nport = atoi(portLocation+1);
-
-        if (!nport || (nport == port)) // ports match...
-        {
-            int nlength = (portLocation ? portLocation : endproxy) - np;
-            // compare the trailing portion of the host-
-            if (0 == PL_strncasecmp(host+PL_strlen(host)-nlength, np, nlength))
+            filter_host_len = hp->host->Length();
+            if ((host_len >= filter_host_len) && 
+                    (0 == PL_strncasecmp(host + host_len - filter_host_len, 
+                        hp->host->GetBuffer(), filter_host_len)))
                 return PR_FALSE;
         }
-        np = endproxy;
     }
     return PR_TRUE;
 }
@@ -210,6 +228,12 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
     rv = aURI->GetScheme(getter_Copies(scheme));
     if (NS_FAILED(rv)) return rv;
 
+    if (!PL_strcasecmp(scheme, "ftp")) {
+        rv = aProxy->SetProxyHost(mFTPProxyHost);
+        if (NS_FAILED(rv)) return rv;
+        return aProxy->SetProxyPort(mFTPProxyPort);
+    }
+
     if (!PL_strcasecmp(scheme, "http")) {
         rv = aProxy->SetProxyHost(mHTTPProxyHost);
         if (NS_FAILED(rv)) return rv;
@@ -217,12 +241,12 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
         return aProxy->SetProxyPort(mHTTPProxyPort);
     }
 
-    if (!PL_strcasecmp(scheme, "ftp")) {
-        rv = aProxy->SetProxyHost(mFTPProxyHost);
+    if (!PL_strcasecmp(scheme, "https")) {
+        rv = aProxy->SetProxyHost(mHTTPSProxyHost);
         if (NS_FAILED(rv)) return rv;
-
-        return aProxy->SetProxyPort(mFTPProxyPort);
+        return aProxy->SetProxyPort(mHTTPSProxyPort);
     }
+
     return NS_OK;
 }
 
@@ -234,3 +258,105 @@ nsProtocolProxyService::GetProxyEnabled(PRBool* o_Enabled)
     *o_Enabled = mUseProxy;
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsProtocolProxyService::AddNoProxyFor(const char* iHost, PRInt32 iPort)
+{
+    if (!iHost)
+        return NS_ERROR_NULL_POINTER;
+
+    host_port* hp = new host_port();
+    if (!hp)
+        return NS_ERROR_OUT_OF_MEMORY;
+    hp->host = new nsCString(iHost);
+    hp->port = iPort;
+
+    return (mFiltersArray.AppendElement(hp)) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsProtocolProxyService::RemoveNoProxyFor(const char* iHost, PRInt32 iPort)
+{
+    if (!iHost)
+        return NS_ERROR_NULL_POINTER;
+
+    if (mFiltersArray.Count()==0)
+        return NS_ERROR_FAILURE;
+
+    PRInt32 index = -1;
+    while (++index < mFiltersArray.Count())
+    {
+        host_port* hp = (host_port*) mFiltersArray[index];
+        if ((hp && hp->host) &&
+            (iPort == hp->port) && 
+            (0 == PL_strcasecmp((const char*)hp->host, iHost))) 
+        {
+            delete hp->host;
+            delete hp;
+            mFiltersArray.RemoveElementAt(index);
+            return NS_OK;
+        }
+    }
+    return NS_ERROR_FAILURE; // not found
+}
+
+PRBool 
+nsProtocolProxyService::CleanupFilterArray(void* aElement, void* aData) 
+{
+    if (aElement) 
+    {
+        host_port* hp = (host_port*)aElement;
+        delete hp->host;
+        delete hp;
+    }
+    return PR_TRUE;
+}
+
+void
+nsProtocolProxyService::LoadFilters(const char* filters)
+{
+    host_port* hp;
+    // check to see the owners flag? /!?/ TODO
+    if (mFiltersArray.Count() > 0) 
+    {
+        mFiltersArray.EnumerateForwards(
+            (nsVoidArrayEnumFunc)this->CleanupFilterArray, nsnull);
+        mFiltersArray.Clear();
+    }
+
+    if (!filters)
+        return ;//fail silently...
+
+    char* np = (char*)filters;
+    while (*np)
+    {
+        // skip over spaces and ,
+        while (*np && (*np == ',' || nsCRT::IsAsciiSpace(*np)))
+            np++;
+
+        char* endproxy = np+1; // at least that...
+        char* portLocation = 0; 
+        PRInt32 nport = 0; // no proxy port
+        while (*endproxy && (*endproxy != ',' && !nsCRT::IsAsciiSpace(*endproxy)))
+        {
+            if (*endproxy == ':')
+                portLocation = endproxy;
+            endproxy++;
+        }
+        if (portLocation)
+            nport = atoi(portLocation+1);
+
+        hp = new host_port();
+        if (!hp)
+            return; // fail silently
+        hp->host = new nsCString(np, endproxy-np);
+        if (!hp->host)
+            return;
+        hp->port = nport>0 ? nport : -1;
+
+        mFiltersArray.AppendElement(hp);
+        np = endproxy;
+    }
+}
+
+

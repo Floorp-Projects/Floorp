@@ -36,5 +36,12 @@ interface nsIProtocolProxyService : nsISupports
     readonly attribute PRBool proxyEnabled;
 
     void examineForProxy(in nsIURI aURI, in nsIProxy aProxy);
+    /**
+    * Add additional items in the "No proxy for" list. This is above
+    * the list specified the user-pref. 
+    */
+    void addNoProxyFor(in string host, in long port);
+    void removeNoProxyFor(in string host, in long port);
+
 };
 

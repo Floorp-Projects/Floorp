@@ -312,8 +312,31 @@ nsHTTPChannel::AsyncWrite(nsIInputStream *fromStream,
                           nsIStreamObserver *observer,
                           nsISupports *ctxt)
 {
-    NS_NOTREACHED("nsHTTPChannel::AsyncWrite");
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv = NS_OK;
+
+    // parameter validation
+    if (!fromStream) return NS_ERROR_NULL_POINTER;
+    // currently we are allowing a null observer... fire and forget...
+
+    if (mResponseDataListener) {
+        return NS_ERROR_IN_PROGRESS; // too late...
+    } 
+
+    // Ensure that AsyncWrite is only called for POST or PUT requests...
+    if ((mRequest->GetMethod() != HM_POST) && 
+        (mRequest->GetMethod() != HM_PUT))
+    {
+        NS_ASSERTION(0, "You have to setMethod to PUT or POST for AsyncWrite!");
+        return NS_ERROR_FAILURE; // ? TODO
+    }
+
+    mResponseContext = ctxt;
+    mRequestStream = fromStream;
+    mWriteObserver = observer;
+
+    Open();
+
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -689,18 +712,6 @@ nsHTTPChannel::GetCharset(char* *o_String)
 }
 
 NS_IMETHODIMP
-nsHTTPChannel::SetPostDataStream(nsIInputStream* aPostStream)
-{
-  return mRequest->SetPostDataStream(aPostStream);
-}
-
-NS_IMETHODIMP
-nsHTTPChannel::GetPostDataStream(nsIInputStream **o_postStream)
-{ 
-  return mRequest->GetPostDataStream(o_postStream);
-}
-
-NS_IMETHODIMP
 nsHTTPChannel::SetAuthTriedWithPrehost(PRBool iTried)
 {
     mAuthTriedWithPrehost = iTried;
@@ -1026,7 +1037,7 @@ nsHTTPChannel::ReadFromCache()
 #endif /* PR_LOGGING */
 
     // Create a cache transport to read the cached response...
-    rv = mCacheEntry -> NewChannel(mLoadGroup, getter_AddRefs (mCacheTransport));
+    rv = mCacheEntry->NewChannel(mLoadGroup, getter_AddRefs(mCacheTransport));
     if (NS_FAILED(rv)) return rv;
 
     // Fake it so that HTTP headers come from cached versions
@@ -1071,7 +1082,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     nsCOMPtr<nsISupports> securityInfo;
 
     // ruslan/hack: don't cache secure connections in case of the persistent cache
-    PRBool dontCache = (mCacheEntry -> GetSecurityInfo (getter_AddRefs (securityInfo))
+    PRBool dontCache = (mCacheEntry->GetSecurityInfo(getter_AddRefs(securityInfo))
                     == NS_ERROR_NOT_IMPLEMENTED);
 
     if (NS_SUCCEEDED (GetSecurityInfo (getter_AddRefs (securityInfo))) &&
@@ -1128,7 +1139,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     if (NS_FAILED(rv)) return rv;
 
     if (securityInfo)
-        mCacheEntry -> SetSecurityInfo (securityInfo);
+        mCacheEntry->SetSecurityInfo(securityInfo);
 
     // Retrieve the value of the 'Last-Modified:' header, if present
     PRTime lastModified;
@@ -1204,7 +1215,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
 }
 
 nsresult
-nsHTTPChannel::Open(void)
+nsHTTPChannel::Open(PRBool bIgnoreCache)
 {
     if (mConnected || (mState > HS_WAITING_FOR_OPEN))
         return NS_ERROR_ALREADY_CONNECTED;
@@ -1219,18 +1230,21 @@ nsHTTPChannel::Open(void)
             mLoadGroup->AddChannel(this, nsnull);
 
         // See if there's a cache entry for the given URL
-        CheckCache();
+        if (!bIgnoreCache) 
+        {
+            CheckCache();
 
-        // If the data in the cache is usable, i.e it hasn't expired, then
-        // there's no need to request a socket transport.
-        if (mCachedContentIsValid)
-            return NS_OK;
+            // If the data in the cache is usable, i.e it hasn't expired, then
+            // there's no need to request a socket transport.
+            if (mCachedContentIsValid)
+                return NS_OK;
+        }
     }
      
     // If this request was deferred because there was no available socket
     // transport, check the cache again since another HTTP request could have
     // filled in the cache entry while this request was pending.
-    if (mState == HS_WAITING_FOR_OPEN) {
+    if (!bIgnoreCache && (mState == HS_WAITING_FOR_OPEN)) {
         CheckCache();
 
         // If the data in the cache is usable, i.e it hasn't expired, then
@@ -1324,19 +1338,20 @@ nsHTTPChannel::Open(void)
     nsHTTPPipelinedRequest * pReq;
 
     if (mState != HS_WAITING_FOR_OPEN)
-        mHandler -> GetPipelinedRequest (this, &pReq);
+        mHandler->GetPipelinedRequest(this, &pReq);
     else
         pReq = mPipelinedRequest;
 
     if (pReq)
     {
         if (mState != HS_WAITING_FOR_OPEN)
-            pReq -> AddToPipeline (mRequest);
+            pReq->AddToPipeline(mRequest);
 
         if (!mPipeliningAllowed)
-            pReq -> SetMustCommit (PR_TRUE);
+            pReq->SetMustCommit(PR_TRUE);
 
-        rv = pReq -> WriteRequest ();
+        // if a request stream was provided from AsyncWrite use it
+        rv = pReq->WriteRequest(mRequestStream);
 
         if (NS_ERROR_BUSY == rv)
         {
@@ -1367,7 +1382,7 @@ nsHTTPChannel::Open(void)
 }
 
 PRUint32
-nsHTTPChannel::getChannelState ()
+nsHTTPChannel::getChannelState()
 {
     return mState;
 }
@@ -1394,13 +1409,13 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   if (NS_FAILED(rv)) return rv;
 
   PRBool eq = PR_FALSE;
-  rv = mURI -> Equals (newURI, &eq);
+  rv = mURI->Equals(newURI, &eq);
 
   if (eq)
   {
     // loop detected
     // ruslan/24884
-    rv = serv->NewURI (LOOPING_REDIRECT_ERROR_URI, mURI, getter_AddRefs (newURI));
+    rv = serv->NewURI(LOOPING_REDIRECT_ERROR_URI, mURI, getter_AddRefs(newURI));
     if (NS_FAILED(rv)) return rv;
     
     checkSecurity = PR_FALSE;
@@ -1499,12 +1514,14 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
   return rv;
 }
 
-nsresult nsHTTPChannel::ResponseCompleted (nsIStreamListener *aListener,
-                                           nsresult aStatus, const PRUnichar* aMsg)
+nsresult nsHTTPChannel::ResponseCompleted(
+        nsIStreamListener *aListener,
+        nsresult aStatus, 
+        const PRUnichar* aMsg)
 {
     nsresult rv = NS_OK;
 
-    PR_LOG(gHTTPLog, PR_LOG_ERROR, ("nsHTTPChannel::ResponseComplete () [this=%x] "
+    PR_LOG(gHTTPLog, PR_LOG_ERROR, ("nsHTTPChannel::ResponseComplete() [this=%x] "
                 " mDataListenet=%x, Status=%o\n",
                 this, mResponseDataListener, aStatus));
 
@@ -1536,7 +1553,7 @@ nsresult nsHTTPChannel::ResponseCompleted (nsIStreamListener *aListener,
     // Call the consumer OnStopRequest(...) to end the request...
     if (aListener)
     {
-        rv = aListener -> OnStopRequest (this, mResponseContext, aStatus, aMsg);
+        rv = aListener->OnStopRequest(this, mResponseContext, aStatus, aMsg);
 
         if (NS_FAILED (rv))
         {
@@ -1552,13 +1569,13 @@ nsresult nsHTTPChannel::ResponseCompleted (nsIStreamListener *aListener,
     //
     
     if (mLoadGroup)
-        mLoadGroup -> RemoveChannel (this, nsnull, aStatus, nsnull);
+        mLoadGroup->RemoveChannel(this, nsnull, aStatus, nsnull);
 
     //
     // Finally, notify the OpenObserver that the request has completed.
     //
     if (mOpenObserver)
-        mOpenObserver -> OnStopRequest (this, mOpenContext, aStatus, aMsg);
+        mOpenObserver->OnStopRequest(this, mOpenContext, aStatus, aMsg);
 
     // Null out pointers that are no longer needed...
 
@@ -1957,7 +1974,7 @@ nsHTTPChannel::ProcessStatusCode(void)
 }
 
 nsresult
-nsHTTPChannel::ProcessNotModifiedResponse (nsIStreamListener *aListener)
+nsHTTPChannel::ProcessNotModifiedResponse(nsIStreamListener *aListener)
 {
     // if there is no cached entry - bail right away
     if (!mCachedResponse)
@@ -2012,7 +2029,7 @@ nsHTTPChannel::ProcessNotModifiedResponse (nsIStreamListener *aListener)
     SetResponse(mCachedResponse);
 
     // Create a cache transport to read the cached response...
-    rv = mCacheEntry -> NewChannel (mLoadGroup, getter_AddRefs (mCacheTransport));
+    rv = mCacheEntry->NewChannel(mLoadGroup, getter_AddRefs(mCacheTransport));
     if (NS_FAILED (rv)) return rv;
 
     // Create a new HTTPCacheListener...
@@ -2180,7 +2197,7 @@ nsresult DupString(char* *o_Dest, const char* i_Src)
 }
 
 NS_IMETHODIMP 
-nsHTTPChannel::GetUsingProxy (PRBool *aUsingProxy)
+nsHTTPChannel::GetUsingProxy(PRBool *aUsingProxy)
 {
     if (!aUsingProxy)
         return NS_ERROR_NULL_POINTER;
@@ -2190,7 +2207,7 @@ nsHTTPChannel::GetUsingProxy (PRBool *aUsingProxy)
 
 
 NS_IMETHODIMP 
-nsHTTPChannel::GetSecurityInfo (nsISupports * *aSecurityInfo)
+nsHTTPChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
 {
     *aSecurityInfo = nsnull;
     
@@ -2201,12 +2218,12 @@ nsHTTPChannel::GetSecurityInfo (nsISupports * *aSecurityInfo)
     {
         nsCOMPtr<nsIChannel> trans;
 
-        mRequest -> GetTransport (getter_AddRefs (trans));
+        mRequest->GetTransport(getter_AddRefs(trans));
         if (trans)
-            trans -> GetSecurityInfo (getter_AddRefs (mSecurityInfo));
+            trans->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
         else
         if (mCacheEntry)
-            mCacheEntry -> GetSecurityInfo (getter_AddRefs (mSecurityInfo));
+            mCacheEntry->GetSecurityInfo(getter_AddRefs(mSecurityInfo));
 
         if (mSecurityInfo)
         {
@@ -2217,3 +2234,16 @@ nsHTTPChannel::GetSecurityInfo (nsISupports * *aSecurityInfo)
     }
     return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTTPChannel::GetUploadStream(nsIInputStream * *aUploadStream)
+{
+    return mRequest->GetUploadStream(aUploadStream);
+}
+
+NS_IMETHODIMP
+nsHTTPChannel::SetUploadStream(nsIInputStream * aUploadStream) 
+{
+    return mRequest->SetUploadStream(aUploadStream);
+}
+
