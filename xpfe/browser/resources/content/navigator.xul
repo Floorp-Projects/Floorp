@@ -571,7 +571,7 @@ Contributor(s): ______________________________________. -->
 		<separator/>
 	</menu>
 	 <menu name="&tasksMenu.label;" onclick="ShowWindowFromResource(event.target)" datasources="rdf:window-mediator" id="NC:WindowMediatorRoot" open="true" >
-      <menuitem name="&navigatorCmd.label;" onclick="BrowserReload();"/>
+      <menuitem name="&navigatorCmd.label;" onclick="CycleWindow('navigator:browser', 'chrome://navigator/content/');"/>
       <menuitem name="&messengerCmd.label;" onclick="OpenMessenger();" />
       <menuitem name="&editorCmd.label;"    onclick="OpenEditor();" />
       <menuitem name="&textEditorCmd.label;"    onclick="BrowserNewTextEditorWindow();" />
