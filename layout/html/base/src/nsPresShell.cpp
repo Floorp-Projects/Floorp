@@ -1105,7 +1105,7 @@ public:
                                     nsIRenderingContext** aContext);
   NS_IMETHOD CantRenderReplacedElement(nsIPresContext* aPresContext,
                                        nsIFrame*       aFrame);
-  NS_IMETHOD GoToAnchor(const nsAString& aAnchorName);
+  NS_IMETHOD GoToAnchor(const nsAString& aAnchorName, PRBool aScroll);
 
   NS_IMETHOD ScrollFrameIntoView(nsIFrame *aFrame,
                                  PRIntn   aVPercent, 
@@ -3930,8 +3930,18 @@ PresShell::CantRenderReplacedElement(nsIPresContext* aPresContext,
 }
 
 NS_IMETHODIMP
-PresShell::GoToAnchor(const nsAString& aAnchorName)
+PresShell::GoToAnchor(const nsAString& aAnchorName, PRBool aScroll)
 {
+  nsCOMPtr<nsIEventStateManager> esm;
+  mPresContext->GetEventStateManager(getter_AddRefs(esm));
+  if (aAnchorName.IsEmpty()) {
+    NS_ASSERTION(!aScroll, "can't scroll to empty anchor name");
+    if (esm) {
+      esm->SetContentState(nsnull, NS_EVENT_STATE_URLTARGET);
+    }
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDOMDocument> doc = do_QueryInterface(mDocument);
   nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(mDocument);
   nsresult rv = NS_OK;
@@ -4025,11 +4035,16 @@ PresShell::GoToAnchor(const nsAString& aAnchorName)
     }
   }
  
-  if (content) {
-    nsIFrame* frame = nsnull;
+  if (esm) {
+    esm->SetContentState(content, NS_EVENT_STATE_URLTARGET);
+  }
 
+  if (content) {
     // Get the primary frame
-    if (NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame)) && frame) {
+    nsIFrame* frame = nsnull;
+    if (aScroll &&
+        NS_SUCCEEDED(GetPrimaryFrameFor(content, &frame)) &&
+        frame) {
       rv = ScrollFrameIntoView(frame, NS_PRESSHELL_SCROLL_TOP,
                                NS_PRESSHELL_SCROLL_ANYWHERE);
 
@@ -4055,8 +4070,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName)
           SelectRange(jumpToRange);
         }
         
-        nsCOMPtr<nsIEventStateManager> esm;
-        if (NS_SUCCEEDED(mPresContext->GetEventStateManager(getter_AddRefs(esm))) && esm) {
+        if (esm) {
           PRBool isSelectionWithFocus;
           esm->MoveFocusToCaret(PR_TRUE, &isSelectionWithFocus);
         }
@@ -4071,15 +4085,18 @@ PresShell::GoToAnchor(const nsAString& aAnchorName)
     mPresContext->GetCompatibilityMode(&compatMode);
    
     if ((NS_LossyConvertUCS2toASCII(aAnchorName).EqualsIgnoreCase("top")) &&
-        (compatMode == eCompatibility_NavQuirks) && 
-        (mViewManager)) { 
-      // Get the viewport scroller
-      nsIScrollableView* scrollingView;
-      mViewManager->GetRootScrollableView(&scrollingView);
-      if (scrollingView) {
-        // Scroll to the top of the page
-        scrollingView->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
-        rv = NS_OK;
+        (compatMode == eCompatibility_NavQuirks)) {
+      rv = NS_OK;
+      // Check |aScroll| after setting |rv| so we set |rv| to the same
+      // thing whether or not |aScroll| is true.
+      if (aScroll && mViewManager) {
+        // Get the viewport scroller
+        nsIScrollableView* scrollingView;
+        mViewManager->GetRootScrollableView(&scrollingView);
+        if (scrollingView) {
+          // Scroll to the top of the page
+          scrollingView->ScrollTo(0, 0, NS_VMREFRESH_IMMEDIATE);
+        }
       }
     }
   }

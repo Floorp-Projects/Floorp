@@ -3803,13 +3803,16 @@ nsEventStateManager::GetContentState(nsIContent *aContent, PRInt32& aState)
   if (aContent == mDragOverContent) {
     aState |= NS_EVENT_STATE_DRAGOVER;
   }
+  if (aContent == mURLTargetContent) {
+    aState |= NS_EVENT_STATE_URLTARGET;
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 {
-  const PRInt32 maxNotify = 5;
+  const PRInt32 maxNotify = 6;
   // We must initialize this array with memset for the sake of the boneheaded
   // OS X compiler.  See bug 134934.
   nsIContent  *notifyContent[maxNotify];
@@ -3829,6 +3832,12 @@ nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
     notifyContent[4] = mDragOverContent; // notify dragover first, since more common case
     NS_IF_ADDREF(notifyContent[4]);
     mDragOverContent = aContent;
+  }
+
+  if ((aState & NS_EVENT_STATE_URLTARGET) && (aContent != mURLTargetContent)) {
+    notifyContent[5] = mURLTargetContent;
+    NS_IF_ADDREF(notifyContent[5]);
+    mURLTargetContent = aContent;
   }
 
   if ((aState & NS_EVENT_STATE_ACTIVE) && (aContent != mActiveContent)) {

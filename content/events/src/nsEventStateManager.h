@@ -257,6 +257,7 @@ protected:
   nsCOMPtr<nsIContent> mActiveContent;
   nsCOMPtr<nsIContent> mHoverContent;
   nsCOMPtr<nsIContent> mDragOverContent;
+  nsCOMPtr<nsIContent> mURLTargetContent;
   nsCOMPtr<nsIContent> mCurrentFocus;
   PRInt32 mLastFocusedWith;
   PRInt32 mCurrentTabIndex;
