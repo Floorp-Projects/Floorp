@@ -20,10 +20,6 @@
  * Contributor(s): 
  *  thayes@netscape.com
  */
-/*
-#include "nsIModule.h"
-#include "nsIGenericFactory.h"
-*/
 
 #include "stdlib.h"
 #include "plstr.h"
@@ -36,46 +32,6 @@
 #include "nsIPSMComponent.h"
 
 #include "nsSDR.h"
-
-/* Test version */
-static const char *kSuccess = "Success:";
-static const char *kFailure = "Failure:";
-
-
-#if 0
-// ===============================================
-// nsSecretDecoderRing - implementation of nsISecretDecoderRing
-// ===============================================
-
-#define NS_SDR_PROGID "netscape.security.sdr.1"
-
-// {0D9A0341-0CE7-11d4-9FDD-000064657374}
-#define NS_SDR_CID \
-  { 0xd9a0341, 0xce7, 0x11d4, { 0x9f, 0xdd, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
-
-class nsSecretDecoderRing : public nsISecretDecoderRing
-{
-public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSISECRETDECODERRING
-
-  nsSecretDecoderRing();
-  virtual ~nsSecretDecoderRing();
-
-  nsresult init();
-
-private:
-  nsIPSMComponent *mPSM;
-
-  static const char *kPrefix;
-  static const char *kFailed;
-  static const char *kPSMComponentProgID;
-
-  nsresult encode(const unsigned char *data, PRInt32 dataLen, char **_retval);
-  nsresult decode(const char *data, unsigned char **result, PRInt32 * _retval);
-};
-
-#endif /* 0 */
 
 NS_IMPL_ISUPPORTS1(nsSecretDecoderRing, nsISecretDecoderRing)
 
@@ -97,14 +53,15 @@ init()
 {
   nsresult rv;
   nsISupports *psm;
-  CMT_CONTROL *control;
 
   rv = nsServiceManager::GetService(kPSMComponentProgID, NS_GET_IID(nsIPSMComponent),
                                     &psm);
-  if (rv == NS_OK) mPSM = (nsIPSMComponent *)psm;
+  if (rv != NS_OK) goto loser;  /* Should promote error */
 
-  rv = mPSM->GetControlConnection(&control);
-  return NS_OK;
+  mPSM = (nsIPSMComponent *)psm;
+
+loser:
+  return rv;
 }
 
 /* [noscript] long encrypt (in buffer data, in long dataLen, out buffer result); */
@@ -117,13 +74,24 @@ Encrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
     CMTStatus status;
     CMUint32 cLen;
 
+    if (data == nsnull || result == nsnull || _retval == nsnull) {
+       rv = NS_ERROR_INVALID_POINTER;
+       goto loser;
+    }
+
+    /* Check object initialization */
+    NS_ASSERTION(mPSM != nsnull, "SDR object not initialized");
+    if (mPSM == nsnull) { rv = NS_ERROR_NOT_INITIALIZED; goto loser; }
+
+    /* Get the control connect to use for the request */
     rv = mPSM->GetControlConnection(&control);
-    if (rv != CMTSuccess) { rv = NS_ERROR_NULL_POINTER; goto loser; } /* XXX */
+    if (rv != NS_OK) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
    
     status = CMT_SDREncrypt(control, (const unsigned char *)0, 0, 
                data, dataLen, result, &cLen);
-    if (status != CMTSuccess) { rv = NS_ERROR_NULL_POINTER; goto loser; } /* XXX */
+    if (status != CMTSuccess) { rv = NS_ERROR_FAILURE; goto loser; } /* XXX */
 
+    /* Copy returned data to nsAllocator buffer ? */
     *_retval = cLen;
 
 loser:
@@ -139,14 +107,24 @@ Decrypt(unsigned char * data, PRInt32 dataLen, unsigned char * *result, PRInt32 
     CMT_CONTROL *control;
     CMUint32 len;
 
+    if (data == nsnull || result == nsnull || _retval == nsnull) {
+       rv = NS_ERROR_INVALID_POINTER;
+       goto loser;
+    }
+
+    /* Check object initialization */
+    NS_ASSERTION(mPSM != nsnull, "SDR object not initialized");
+    if (mPSM == nsnull) { rv = NS_ERROR_NOT_INITIALIZED; goto loser; }
+
     /* Get the control connection */
     rv = mPSM->GetControlConnection(&control);
-    if (rv != NS_OK) goto loser;
+    if (rv != NS_OK) { rv = NS_ERROR_NOT_AVAILABLE; goto loser; }
     
     /* Call PSM to decrypt the value */
     status = CMT_SDRDecrypt(control, data, dataLen, result, &len);
-    if (status != CMTSuccess) { rv = NS_ERROR_NULL_POINTER; goto loser; }
+    if (status != CMTSuccess) { rv = NS_ERROR_FAILURE; goto loser; } /* Promote? */
 
+    /* Copy returned data to nsAllocator buffer ? */
     *_retval = len;
 
 loser:
@@ -161,6 +139,11 @@ EncryptString(const char *text, char **_retval)
     unsigned char *encrypted = 0;
     PRInt32 eLen;
 
+    if (text == nsnull || _retval == nsnull) {
+        rv = NS_ERROR_INVALID_POINTER;
+        goto loser;
+    }
+
     rv = Encrypt((unsigned char *)text, PL_strlen(text), &encrypted, &eLen);
     if (rv != NS_OK) { goto loser; }
 
@@ -169,7 +152,7 @@ EncryptString(const char *text, char **_retval)
 loser:
     if (encrypted) nsAllocator::Free(encrypted);
 
-    return NS_OK;
+    return rv;
 }
 
 /* string decryptString (in string crypt); */
@@ -182,6 +165,11 @@ DecryptString(const char *crypt, char **_retval)
     PRInt32 decodedLen;
     unsigned char *decrypted = 0;
     PRInt32 decryptedLen;
+
+    if (crypt == nsnull || _retval == nsnull) {
+      rv = NS_ERROR_INVALID_POINTER;
+      goto loser;
+    }
 
     rv = decode(crypt, &decoded, &decodedLen);
     if (rv != NS_OK) goto loser;
@@ -253,80 +241,4 @@ loser:
     return rv;
 }
 
-const char * nsSecretDecoderRing::kPrefix = "PSMtest:";
-const char * nsSecretDecoderRing::kFailed = "Failed:";
 const char * nsSecretDecoderRing::kPSMComponentProgID = PSM_COMPONENT_PROGID;
-
-#if 0
-
-// *** MODULE *** ///
-
-////////////////////////////////////////////////////////////////////////
-// Define the contructor function for the object nsSampleImpl
-//
-// What this does is defines a function nsSampleImplConstructor which we
-// will specific in the nsModuleComponentInfo table. This function will
-// be used by the generic factory to create an instance of nsSampleImpl.
-//
-// NOTE: This creates an instance of nsSampleImpl by using the default
-//		 constructor nsSampleImpl::nsSampleImpl()
-//
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsSecretDecoderRing, init)
-
-////////////////////////////////////////////////////////////////////////
-// Define a table of CIDs implemented by this module along with other
-// information like the function to create an instance, progid, and
-// class name.
-//
-// The Registration and Unregistration proc are optional in the structure.
-//
-static NS_METHOD nsSDRRegistrationProc(nsIComponentManager *aCompMgr,
-                                          nsIFile *aPath,
-                                          const char *registryLocation,
-                                          const char *componentType)
-{
-    // Do any registration specific activity like adding yourself to a
-    // category. The Generic Module will take care of registering your
-    // component with xpcom. You dont need to do that. Only any component
-    // specific additional activity needs to be done here.
-
-    // This functions is optional. If you dont need it, dont add it to the structure.
-
-    return NS_OK;
-}
-
-static NS_METHOD nsSDRUnregistrationProc(nsIComponentManager *aCompMgr,
-                                            nsIFile *aPath,
-                                            const char *registryLocation)
-{
-    // Undo any component specific registration like adding yourself to a
-    // category here. The Generic Module will take care of unregistering your
-    // component from xpcom. You dont need to do that. Only any component
-    // specific additional activity needs to be done here.
-
-    // This functions is optional. If you dont need it, dont add it to the structure.
-
-    // Return value is not used from this function.
-    return NS_OK;
-}
-
-static nsModuleComponentInfo components[] =
-{
-  { "SDR Component", NS_SDR_CID, NS_SDR_PROGID, nsSecretDecoderRingConstructor,
-    nsSDRRegistrationProc /* NULL if you dont need one */,
-    nsSDRUnregistrationProc /* NULL if you dont need one */
-  }
-};
-
-////////////////////////////////////////////////////////////////////////
-// Implement the NSGetModule() exported function for your module
-// and the entire implementation of the module object.
-//
-// NOTE: If you want to use the module shutdown to release any
-//		module specific resources, use the macro
-//		NS_IMPL_NSGETMODULE_WITH_DTOR() instead of the vanilla
-//		NS_IMPL_NSGETMODULE()
-//
-NS_IMPL_NSGETMODULE("nsSecretDecoderRing", components)
-
-#endif /* 0 */
