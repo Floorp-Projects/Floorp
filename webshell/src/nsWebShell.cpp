@@ -354,6 +354,9 @@ public:
   NS_IMETHOD GetDefaultCharacterSet (const PRUnichar** aDefaultCharacterSet);
   NS_IMETHOD SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet);
 
+  NS_IMETHOD GetForceCharacterSet (const PRUnichar** aForceCharacterSet);
+  NS_IMETHOD SetForceCharacterSet (const PRUnichar*  aForceCharacterSet);
+
   NS_IMETHOD GetCharacterSetHint (const PRUnichar** oHintCharset, nsCharsetSource* oSource);
 
 protected:
@@ -416,6 +419,7 @@ protected:
   // XXX store mHintCharset and mHintCharsetSource here untill we find out a good cood path
   nsString mHintCharset;
   nsCharsetSource mHintCharsetSource; 
+  nsString mForceCharacterSet;
 };
 
 //----------------------------------------------------------------------
@@ -534,6 +538,7 @@ nsWebShell::nsWebShell()
   mProcessedEndDocumentLoad = PR_FALSE;
   mHintCharset = "";
   mHintCharsetSource = kCharsetUninitialized;
+  mForceCharacterSet = "";
 }
 
 nsWebShell::~nsWebShell()
@@ -1261,6 +1266,7 @@ nsWebShell::AddChild(nsIWebShell* aChild)
   mChildren.AppendElement(aChild);
   aChild->SetParent(this);
   aChild->SetDefaultCharacterSet(mDefaultCharacterSet.GetUnicode()); 
+  aChild->SetForceCharacterSet(mForceCharacterSet.GetUnicode()); 
   NS_ADDREF(aChild);
 
   return NS_OK;
@@ -2955,6 +2961,32 @@ nsWebShell::SetDefaultCharacterSet (const PRUnichar*  aDefaultCharacterSet)
     nsIWebShell* child = (nsIWebShell*) mChildren.ElementAt(i);
     if (nsnull != child) {
       child->SetDefaultCharacterSet(aDefaultCharacterSet);
+    }
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsWebShell::GetForceCharacterSet (const PRUnichar** aForceCharacterSet)
+{
+  nsString emptyStr = "";
+  if (mForceCharacterSet.Equals(emptyStr)) {
+    *aForceCharacterSet = nsnull;
+  }
+  else {
+    *aForceCharacterSet = mForceCharacterSet.GetUnicode();
+  }
+  return NS_OK;
+}
+NS_IMETHODIMP 
+nsWebShell::SetForceCharacterSet (const PRUnichar*  aForceCharacterSet)  
+{
+  mForceCharacterSet = aForceCharacterSet;
+  PRInt32 i, n = mChildren.Count();
+  for (i = 0; i < n; i++) {
+    nsIWebShell* child = (nsIWebShell*) mChildren.ElementAt(i);
+    if (nsnull != child) {
+      child->SetForceCharacterSet(aForceCharacterSet);
     }
   }
   return NS_OK;
