@@ -98,7 +98,7 @@ int main()
     else
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->AddTwoLLs(LL_INIT(0,1),LL_INIT(0,1),&out64)))
-        printf("\t1L + 1L = %dL\n", out);
+        printf("\t1L + 1L = %d\n", (int)out64);
     else
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->MultTwoInts(2,2,&out)))
@@ -106,7 +106,7 @@ int main()
     else
         printf("\tFAILED");
     if(NS_SUCCEEDED(test->MultTwoLLs(LL_INIT(0,2),LL_INIT(0,2),&out64)))
-        printf("\t2L * 2L = %dL\n", out);
+        printf("\t2L * 2L = %d\n", (int)out64);
     else
         printf("\tFAILED");
 
@@ -146,7 +146,7 @@ int main()
     var[2].ptr = &var[2].val.i64;
 
     if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 5, 3, var)))
-        printf("\t1L + 1L = %dL\n", var[2].val.i64);
+        printf("\t1L + 1L = %d\n", (int)var[2].val.i64);
     else
         printf("\tFAILED");
 
@@ -182,7 +182,7 @@ int main()
     var[2].ptr = &var[2].val.i64;
 
     if(NS_SUCCEEDED(XPTC_InvokeByIndex(test, 6, 3, var)))
-        printf("\t2L * 2L = %dL\n", var[2].val.i64);
+        printf("\t2L * 2L = %d\n", (int)var[2].val.i64);
     else
         printf("\tFAILED");
 
