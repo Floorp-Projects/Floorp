@@ -307,31 +307,45 @@ sub dir_lookup
 }
 
 
+# The only way to find the object directory is
+# to find it in '.mozconfig'.
 sub find_objdir {
-  my ($topsrcdir) = $_[0];
-  my ($objdir) = '';
+  my $topsrcdir = $_[0];
+  my $objdir    = '';
+  my $home      = $ENV{HOME};
+  my $mozconfig = '';
 
-  $objdir_script = q{
+  foreach $config ("$ENV{MOZCONFIG}","$ENV{MOZ_MYCONFIG}",
+		 "$topsrcdir/.mozconfig",
+		 "$topsrcdir/mozconfig", "topsrcdir/mozconfig.sh",
+		 "$home/.mozconfig","$home/.mozconfig.sh") {
+    next if $config eq '';
+    if (-f $config) {
+      $mozconfig = $config;
+      last;
+  } }
+  $objdir_script = qq{
     # sh
-    ac_add_options() { : }
+    MOZCONFIG=$mozconfig
+    TOPSRCDIR=$topsrcdir
+  }.q{
+    ac_add_options() { :; }
     mk_add_options() {
-      for _opt; do
+      for _opt
+      do
 	case $_opt in
-	  MOZ_OBJDIR=*) echo `expr $_opt : "MOZ_OBJDIR=\(.*\)"`; exit ;;
+	  MOZ_OBJDIR=*) _objdir=`expr "$_opt" : "MOZ_OBJDIR=\(.*\)"` ;;
         esac
       done
     }
-
-    # find-mozconfig.sh 
-    #   In params:   $TOPSRCDIR $OBJDIR $MOZCONFIG $HOME ($MOZ_MYCONFIG)
-    MOZCONFIG=`$TOPSRCDIR/build/autoconf/find-mozconfig.sh`
-    if [ "$MOZCONFIG" ]; then
-      . $MOZCONFIG
-    fi
+    . $MOZCONFIG
+    echo $_objdir
   };
 
-  $objdir = `TOPSRCDIR=$topsrcdir $objdir_script`;
-  chomp($objdir);  
+  if ($mozconfig ne '') {
+    $objdir = `$objdir_script`;
+    chomp($objdir);  
+  }
 
   if ($objdir eq '')
   {
@@ -341,8 +355,10 @@ sub find_objdir {
     $objdir =~ s/\@TOPSRCDIR\@/$topsrcdir/;
     if ($objdir =~ /\@CONFIG_GUESS\@/)
     {
-      $config_guess = `$topsrcdir/build/autoconf/config.guess`;
-      chomp($config_guess);
+      if (not defined($config_guess = $ENV{MOZ_CONFIG_GUESS})) {
+	$config_guess = `$topsrcdir/build/autoconf/config.guess`;
+	chomp($config_guess);
+      }
       $objdir =~ s/\@CONFIG_GUESS\@/$config_guess/;
   } }
   return $objdir;
@@ -351,6 +367,7 @@ sub find_objdir {
 # end 'trees'
 ######################################################################
 __END__
+#! perl
 # .moztrees - Defines the following perl variables for 'trees.pl' script,
 #
 #     @tree_parent_dirs   - Where to look for source trees.
