@@ -1068,7 +1068,13 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     return NS_ERROR_NULL_POINTER;
 
   nsresult rv;
+
+  // Initialize return value.
   *aTarget = nsnull;
+
+  // Only "positive" assertions here.
+  if (! aTruthValue)
+    return NS_RDF_NO_VALUE;
 
   if ((aSource == kNC_HistoryRoot) && (aProperty == kNC_child)) {
     // If they're asking for all the children of the HistoryRoot, call
@@ -1204,31 +1210,33 @@ nsGlobalHistory::GetTargets(nsIRDFResource* aSource,
   if (! aProperty)
     return NS_ERROR_NULL_POINTER;
 
-  if ((aSource == kNC_HistoryRoot) && (aProperty == kNC_child) && (aTruthValue)) {
-    URLEnumerator* result = new URLEnumerator(kToken_URLColumn);
-    if (! result)
-      return NS_ERROR_OUT_OF_MEMORY;
+  if (aTruthValue) {
+    if ((aSource == kNC_HistoryRoot) && (aProperty == kNC_child) && (aTruthValue)) {
+      URLEnumerator* result = new URLEnumerator(kToken_URLColumn);
+      if (! result)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv;
-    rv = result->Init(mEnv, mTable);
-    if (NS_FAILED(rv)) return rv;
+      nsresult rv;
+      rv = result->Init(mEnv, mTable);
+      if (NS_FAILED(rv)) return rv;
 
-    *aTargets = result;
-    NS_ADDREF(*aTargets);
-    return NS_OK;
-  }
-  else if ((aProperty == kNC_Date) ||
-           (aProperty == kNC_VisitCount) ||
-           (aProperty == kNC_Name) ||
-           (aProperty == kNC_Referrer)) {
-    nsresult rv;
+      *aTargets = result;
+      NS_ADDREF(*aTargets);
+      return NS_OK;
+    }
+    else if ((aProperty == kNC_Date) ||
+             (aProperty == kNC_VisitCount) ||
+             (aProperty == kNC_Name) ||
+             (aProperty == kNC_Referrer)) {
+      nsresult rv;
 
-    nsCOMPtr<nsIRDFNode> target;
-    rv = GetTarget(aSource, aProperty, aTruthValue, getter_AddRefs(target));
-    if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIRDFNode> target;
+      rv = GetTarget(aSource, aProperty, aTruthValue, getter_AddRefs(target));
+      if (NS_FAILED(rv)) return rv;
 
-    if (rv == NS_OK) {
-      return NS_NewSingletonEnumerator(aTargets, target);
+      if (rv == NS_OK) {
+        return NS_NewSingletonEnumerator(aTargets, target);
+      }
     }
   }
 
@@ -1279,28 +1287,47 @@ nsGlobalHistory::HasAssertion(nsIRDFResource* aSource,
                               PRBool aTruthValue,
                               PRBool* aHasAssertion)
 {
-  nsresult rv;
+  NS_PRECONDITION(aSource != nsnull, "null ptr");
+  if (! aSource)
+    return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsISimpleEnumerator> targets;
-  rv = GetTargets(aSource, aProperty, aTruthValue, getter_AddRefs(targets));
-  if (NS_FAILED(rv)) return rv;
+  NS_PRECONDITION(aProperty != nsnull, "null ptr");
+  if (! aProperty)
+    return NS_ERROR_NULL_POINTER;
 
-  while (1) {
-    PRBool hasMore;
-    rv = targets->HasMoreElements(&hasMore);
+  NS_PRECONDITION(aTarget != nsnull, "null ptr");
+  if (! aTarget)
+    return NS_ERROR_NULL_POINTER;
+
+  // Only "positive" assertions here.
+  if (aTruthValue) {
+    // Do |GetTargets()| and grovel through the results to see if we
+    // have the assertion.
+    //
+    // XXX *AHEM*, this could be implemented much more efficiently...
+    nsresult rv;
+
+    nsCOMPtr<nsISimpleEnumerator> targets;
+    rv = GetTargets(aSource, aProperty, aTruthValue, getter_AddRefs(targets));
     if (NS_FAILED(rv)) return rv;
 
-    if (! hasMore)
-      break;
+    while (1) {
+      PRBool hasMore;
+      rv = targets->HasMoreElements(&hasMore);
+      if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsISupports> isupports;
-    rv = targets->GetNext(getter_AddRefs(isupports));
-    if (NS_FAILED(rv)) return rv;
+      if (! hasMore)
+        break;
 
-    nsCOMPtr<nsIRDFNode> node = do_QueryInterface(isupports);
-    if (node.get() == aTarget) {
-      *aHasAssertion = PR_TRUE;
-      return NS_OK;
+      nsCOMPtr<nsISupports> isupports;
+      rv = targets->GetNext(getter_AddRefs(isupports));
+      if (NS_FAILED(rv)) return rv;
+
+      nsCOMPtr<nsIRDFNode> node = do_QueryInterface(isupports);
+      if (node.get() == aTarget) {
+        *aHasAssertion = PR_TRUE;
+        return NS_OK;
+      }
     }
   }
 
