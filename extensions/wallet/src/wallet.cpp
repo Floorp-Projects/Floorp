@@ -69,7 +69,6 @@ static NS_DEFINE_IID(kIDOMHTMLInputElementIID, NS_IDOMHTMLINPUTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLSelectElementIID, NS_IDOMHTMLSELECTELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLOptionElementIID, NS_IDOMHTMLOPTIONELEMENT_IID);
 
-static NS_DEFINE_IID(kIIOServiceIID, NS_IIOSERVICE_IID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
@@ -108,7 +107,6 @@ static const char *pref_WalletNotified = "wallet.Notified";
 #endif /* AutoCapture */
 static const char *pref_WalletSchemaValueFileName = "wallet.SchemaValueFileName";
 static const char *pref_WalletServer = "wallet.Server";
-static const char *pref_WalletFetchPatches = "wallet.fetchPatches";
 static const char *pref_WalletVersion = "wallet.version";
 static const char *pref_WalletLastModified = "wallet.lastModified";
 
@@ -651,69 +649,25 @@ Wallet_Localize(char* genericString) {
   nsresult ret;
   nsAutoString v;
 
-  /* create a URL for the string resource file */
-  nsIIOService* pNetService = nsnull;
-  ret = nsServiceManager::GetService(kIOServiceCID, kIIOServiceIID,
-    (nsISupports**) &pNetService);
-
-  if (NS_FAILED(ret)) {
-    printf("cannot get net service\n");
-    return v.ToNewUnicode();
-  }
-  nsIURI *url = nsnull;
-
-  nsIURI *uri = nsnull;
-  ret = pNetService->NewURI(PROPERTIES_URL, nsnull, &uri);
-  if (NS_FAILED(ret)) {
-    printf("cannot create URI\n");
-    nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
-    return v.ToNewUnicode();
-  }
-
-  ret = uri->QueryInterface(NS_GET_IID(nsIURI), (void**)&url);
-  NS_RELEASE(uri);
-  nsServiceManager::ReleaseService(kIOServiceCID, pNetService);
-
-  if (NS_FAILED(ret)) {
-    printf("cannot create URL\n");
-    return v.ToNewUnicode();
-  }
-
   /* create a bundle for the localization */
-  nsIStringBundleService* pStringService = nsnull;
-  ret = nsServiceManager::GetService(kStringBundleServiceCID,
-    kIStringBundleServiceIID, (nsISupports**) &pStringService);
+  nsCOMPtr<nsIStringBundleService> pStringService = do_GetService(kStringBundleServiceCID, &ret);
   if (NS_FAILED(ret)) {
     printf("cannot get string service\n");
-    NS_RELEASE(url);
     return v.ToNewUnicode();
   }
-  nsILocale* locale = nsnull;
-  nsIStringBundle* bundle = nsnull;
-  char* spec = nsnull;
-  ret = url->GetSpec(&spec);
-  NS_RELEASE(url);
-  if (NS_FAILED(ret)) {
-    printf("cannot get url spec\n");
-    nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
-    nsCRT::free(spec);
-    return v.ToNewUnicode();
-  }
-  ret = pStringService->CreateBundle(spec, locale, &bundle);
-  nsCRT::free(spec);
+  nsCOMPtr<nsILocale> locale;
+  nsCOMPtr<nsIStringBundle> bundle;
+  ret = pStringService->CreateBundle(PROPERTIES_URL, locale, getter_AddRefs(bundle));
   if (NS_FAILED(ret)) {
     printf("cannot create instance\n");
-    nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
     return v.ToNewUnicode();
   }
-  nsServiceManager::ReleaseService(kStringBundleServiceCID, pStringService);
 
   /* localize the given string */
   nsAutoString   strtmp; strtmp.AssignWithConversion(genericString);
   const PRUnichar *ptrtmp = strtmp.GetUnicode();
   PRUnichar *ptrv = nsnull;
   ret = bundle->GetStringFromName(ptrtmp, &ptrv);
-  NS_RELEASE(bundle);
   if (NS_FAILED(ret)) {
     printf("cannot get string from name\n");
     return v.ToNewUnicode();
@@ -2236,12 +2190,6 @@ wallet_GetPrefills(
   return -1;
 }
 
-static PRBool
-IsDigit (PRUnichar c) {
-  return (c >= '0' && c <= '9');
-}
-
-
 static void
 wallet_UseFileFetchedDuringPreviousBrowserSession() {
 
@@ -3402,7 +3350,7 @@ WLLT_RequestToCapture(nsIPresShell* shell, nsIDOMWindow* win, PRUint32* status) 
 
   if (gEncryptionFailure) {
     message = Wallet_Localize("UnableToCapture");
-    *status = -1;
+    *status = 0;
   } else if (captureCount) {
     /* give caveat if this is the first time data is being captured */
     Wallet_GiveCaveat(win, nsnull);
