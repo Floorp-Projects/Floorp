@@ -205,11 +205,6 @@ __CERT_NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert,
     }
     context = STAN_GetDefaultCryptoContext();
     NSSCryptoContext_ImportCertificate(context, c);
-    /* This is a hack to work around the fact that an instance of the cert
-     * doesn't really exist until the import
-     */
-    cc->nssCertificate = NULL;
-    cc = STAN_GetCERTCertificate(c);
     return cc;
 loser:
     nssArena_Destroy(arena);

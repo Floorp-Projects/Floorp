@@ -412,6 +412,10 @@ loser:
     nssUsage.nss3usage = usage;
     nssUsage.nss3lookingForCA = PR_TRUE;
     memset(chain, 0, 3*sizeof(NSSCertificate *));
+    if (!me) {
+	PORT_SetError (SEC_ERROR_BAD_DATABASE);
+	return NULL;
+    }
     (void)NSSCertificate_BuildChain(me, nssTime, &nssUsage, NULL, 
                                     chain, 2, NULL, &status);
     nss_ZFreeIf(nssTime);
@@ -433,6 +437,8 @@ loser:
 		return CERT_DupCertificate(rvc);
 	    }
 	}
+    } else {
+	PORT_SetError (SEC_ERROR_UNKNOWN_ISSUER);
     }
     return NULL;
 #endif
