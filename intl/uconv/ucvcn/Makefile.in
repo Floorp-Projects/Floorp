@@ -34,8 +34,6 @@ REQUIRES	= xpcom string uconv
 CPPSRCS		= \
 		nsGB2312ToUnicodeV2.cpp \
 		nsUnicodeToGB2312V2.cpp \
-		nsGB2312ToUnicode.cpp \
-		nsUnicodeToGB2312.cpp \
 		nsUnicodeToGB2312GL.cpp \
 		nsGBKToUnicode.cpp \
 		nsUnicodeToGBK.cpp \

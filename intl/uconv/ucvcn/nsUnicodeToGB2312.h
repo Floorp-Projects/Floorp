@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */
-
+#if 0 // obsoleted code
 #ifndef nsUnicodeToGB2312_h___
 #define nsUnicodeToGB2312_h___
 
@@ -53,3 +53,4 @@ protected:
 };
 
 #endif /* nsUnicodeToGB2312_h___ */
+#endif

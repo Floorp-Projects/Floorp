@@ -19,7 +19,7 @@
  *
  * Contributor(s): 
  */
-
+#if 0 // obsoleted code
 #include "nsUnicodeToGB2312.h"
 #include "nsUCvCnDll.h"
 
@@ -66,3 +66,4 @@ NS_IMETHODIMP nsUnicodeToGB2312::GetMaxLength(const PRUnichar * aSrc,
   *aDestLength = 2 * aSrcLength;
   return NS_OK;
 }
+#endif

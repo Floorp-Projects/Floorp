@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#if 0 // obsoleted code
 
 #include "nsGB2312ToUnicode.h"
 #include "nsUCvCnDll.h"
@@ -74,3 +75,4 @@ NS_IMETHODIMP nsGB2312ToUnicode::GetMaxLength(const char * aSrc,
   *aDestLength = aSrcLength;
   return NS_OK_UDEC_EXACTLENGTH;
 }
+#endif
