@@ -25,7 +25,7 @@ include $(DEPTH)/config/autoconf.mk
 SAMPLES_DIR	= $(DIST)/bin/chrome/messenger/skin/default
 
 EXPORT_RESOURCE_SAMPLES = \
-		accounttree.css \
+		accountmanager.css \
 		AccountManager.css \
 		wizard.css \
 		winclassic.gif \
