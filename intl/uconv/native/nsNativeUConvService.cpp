@@ -64,7 +64,7 @@ public:
     
     nsresult Init(const char* from, const char* to);
     
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
     
     // Decoder methods:
     
@@ -122,7 +122,7 @@ private:
 NS_IMPL_ISUPPORTS3(IConvAdaptor, 
                    nsIUnicodeEncoder, 
                    nsIUnicodeDecoder,
-                   nsICharRepresentable);
+                   nsICharRepresentable)
 
 IConvAdaptor::IConvAdaptor()
 {
@@ -313,12 +313,12 @@ IConvAdaptor::ConvertInternal(void * aSrc,
                 if (mReplaceOnError) {
                     if (aDestCharSize == 1) {
                         (*(char*)aDest) = (char)mReplaceChar;
-                        ((char*)aDest)++;
+                        aDest = (char*)aDest + sizeof(char);
                     }
                     else
                     {
                         (*(PRUnichar*)aDest) = (PRUnichar)mReplaceChar;
-                        ((PRUnichar*)aDest)++;
+                        aDest = (PRUnichar*)aDest + sizeof(PRUnichar);
                     
                     }
                     inLeft -= aSrcCharSize;
@@ -363,8 +363,7 @@ IConvAdaptor::ConvertInternal(void * aSrc,
     return NS_ERROR_UENC_NOMAPPING;
 }
 
-NS_IMPL_ISUPPORTS1(NativeUConvService, 
-                   nsINativeUConvService);
+NS_IMPL_ISUPPORTS1(NativeUConvService, nsINativeUConvService)
 
 NS_IMETHODIMP 
 NativeUConvService::GetNativeConverter(const char* from,
