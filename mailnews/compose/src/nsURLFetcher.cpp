@@ -251,7 +251,10 @@ nsURLFetcher::OnStopRequest(nsIChannel *aChannel, nsISupports * /* ctxt */, nsre
 
   // First close the output stream...
   if (mOutStream)
+  {
     mOutStream->close();
+    mOutStream = nsnull;
+  }
 
   // Check the content type!
   if (aChannel)
