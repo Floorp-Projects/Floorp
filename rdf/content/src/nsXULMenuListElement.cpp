@@ -128,7 +128,7 @@ nsXULMenuListElement::GetDisabled(PRBool* aDisabled)
 {
   nsAutoString value;
   mOuter->GetAttribute("disabled", value);
-  if(value == "true")
+  if(value.Equals("true"))
     *aDisabled = PR_TRUE;
   else
     *aDisabled = PR_FALSE;
@@ -215,7 +215,7 @@ nsXULMenuListElement::GetSelectedItem(nsIDOMElement** aResult)
     nsAutoString value;
     GetValue(value);
   
-    if (value == "") {
+    if (value.IsEmpty()) {
       nsCOMPtr<nsIContent> parent(do_QueryInterface(mOuter));
       nsCOMPtr<nsIContent> child;
       GetMenuChildrenElement(parent, getter_AddRefs(child));
@@ -230,7 +230,7 @@ nsXULMenuListElement::GetSelectedItem(nsIDOMElement** aResult)
 
           nsAutoString isSelected;
           selectedElement->GetAttribute(nsAutoString("selected"), isSelected);
-          if (isSelected == "true") {
+          if (isSelected.Equals("true")) {
             SetSelectedItem(selectedElement);
             break;
           }

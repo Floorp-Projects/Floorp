@@ -143,7 +143,7 @@ rdf_MakeAbsoluteURI(nsIURI* aURL, nsCString& aURI)
     rv = NS_MakeAbsoluteURI(aURI.GetBuffer(), aURL, getter_Copies(result));
 
     if (NS_SUCCEEDED(rv)) {
-        aURI = result;
+        aURI.Assign(result);
     }
     else {
         // There are some ugly URIs (e.g., "NC:Foo") that netlib can't

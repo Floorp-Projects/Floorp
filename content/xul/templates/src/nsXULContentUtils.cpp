@@ -747,7 +747,7 @@ nsXULContentUtils::MakeElementURI(nsIDocument* aDocument, const nsString& aEleme
         if (! spec)
             return NS_ERROR_FAILURE;
 
-        aURI = spec;
+        aURI.Assign(spec);
 
         if (aElementID.First() != '#') {
             aURI.Append('#');

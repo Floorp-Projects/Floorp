@@ -3650,7 +3650,7 @@ nsXULDocument::GetElementsByAttribute(nsIDOMNode* aNode,
         return rv;
     }
 
-    if ((attrValue == aValue) || (attrValue.Length() > 0 && aValue == "*")) {
+    if ((attrValue == aValue) || (attrValue.Length() > 0 && aValue.Equals("*"))) {
         if (NS_FAILED(rv = aElements->AppendNode(aNode))) {
             NS_ERROR("unable to append element to node list");
             return rv;
@@ -5822,7 +5822,7 @@ nsXULDocument::GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResu
   gNameSpaceManager->GetNameSpaceURI(aNameSpaceID, nameSpace);
 
   nsCAutoString progID = NS_ELEMENT_FACTORY_PROGID_PREFIX;
-  progID += nameSpace;
+  progID.Append(nameSpace);
 
   // Retrieve the appropriate factory.
   NS_WITH_SERVICE(nsIElementFactory, elementFactory, progID, &rv);
