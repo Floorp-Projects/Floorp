@@ -255,6 +255,9 @@ ifeq ($(OS_ARCH),Linux)
     ifeq ($(CPU_ARCH),x86)
         ASFILES   = os_Linux_x86.s
     endif
+    ifeq ($(CPU_ARCH),ia64)
+        ASFILES   = os_Linux_ia64.s
+    endif
 endif
 
 ifeq ($(OS_ARCH), SINIX)
