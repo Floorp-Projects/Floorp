@@ -229,7 +229,7 @@ static nsresult IsChildOfDomWindow(nsIDOMWindow *parent, nsIDOMWindow *child, PR
     nsCOMPtr<nsIDOMWindow> childsParent;
     child->GetParent(getter_AddRefs(childsParent));
         
-    if (parent)
+    if (childsParent && childsParent.get() != child)
         IsChildOfDomWindow(parent, childsParent, value);
     
     return NS_OK;
