@@ -244,7 +244,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
   if (sun_enc_info && !nsCRT::strncasecmp (sun_enc_info, "adpcm-compress", 14))
 	{
 	  sun_enc_info += 14;
-	  while (IS_SPACE(*sun_enc_info) || *sun_enc_info == ',')
+	  while (nsString::IsSpace(*sun_enc_info) || *sun_enc_info == ',')
 		sun_enc_info++;
 	}
 
@@ -259,7 +259,7 @@ MimeSunAttachment_create_child(MimeObject *obj)
 		{
 		  const char *start = sun_enc_info;
 		  sun_enc_info = end + 1;
-		  while (IS_SPACE(*sun_enc_info))
+		  while (nsString::IsSpace(*sun_enc_info))
 			sun_enc_info++;
 		  for (prev = end-1; prev > start && *prev != ','; prev--)
 			;

@@ -146,7 +146,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   if (! id)
   {
     PR_FREEIF(*data);
-    return MIME_OUT_OF_MEMORY;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   if (obj->options && obj->options->url)
@@ -170,7 +170,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
     {
       PR_FREEIF(*data);
       PR_FREEIF(id);
-      return MIME_OUT_OF_MEMORY;
+      return NS_ERROR_OUT_OF_MEMORY;
     }
   }
 

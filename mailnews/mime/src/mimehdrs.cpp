@@ -365,7 +365,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 
 	  /* Back up over whitespace before the colon. */
 	  ocolon = colon;
-	  for (; colon > head && IS_SPACE(colon[-1]); colon--)
+	  for (; colon > head && nsString::IsSpace(colon[-1]); colon--)
 		;
 
 	  /* If the strings aren't the same length, it doesn't match. */
@@ -382,7 +382,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		char *s;
 
 		/* Skip over whitespace after colon. */
-		while (contents <= end && IS_SPACE(*contents))
+		while (contents <= end && nsString::IsSpace(*contents))
 		  contents++;
 
 		/* If we're supposed to strip at the frist token, pull `end' back to
@@ -391,7 +391,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		if (strip_p)
 		  {
 			for (s = contents;
-				 s <= end && *s != ';' && *s != ',' && !IS_SPACE(*s);
+				 s <= end && *s != ';' && *s != ',' && !nsString::IsSpace(*s);
 				 s++)
 			  ;
 			end = s;
@@ -434,7 +434,7 @@ MimeHeaders_get (MimeHeaders *hdrs, const char *header_name,
 		  }
 
 		/* Take off trailing whitespace... */
-		while (end > contents && IS_SPACE(end[-1]))
+		while (end > contents && nsString::IsSpace(end[-1]))
 		  end--;
 
 		if (end > contents)
@@ -489,7 +489,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
   if (*str)
 	str++;
   /* Skip over following whitespace */
-  for (; *str && IS_SPACE(*str); str++)
+  for (; *str && nsString::IsSpace(*str); str++)
 	;
   if (!*str)
 	return 0;
@@ -501,24 +501,24 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 	  const char *value_start = str;
 	  const char *value_end = 0;
 
-	  PR_ASSERT(!IS_SPACE(*str)); /* should be after whitespace already */
+	  PR_ASSERT(!nsString::IsSpace(*str)); /* should be after whitespace already */
 
 	  /* Skip forward to the end of this token. */
-	  for (; *str && !IS_SPACE(*str) && *str != '=' && *str != ';'; str++)
+	  for (; *str && !nsString::IsSpace(*str) && *str != '=' && *str != ';'; str++)
 		;
 	  token_end = str;
 
 	  /* Skip over whitespace, '=', and whitespace */
-	  while (IS_SPACE (*str)) str++;
+	  while (nsString::IsSpace (*str)) str++;
 	  if (*str == '=') str++;
-	  while (IS_SPACE (*str)) str++;
+	  while (nsString::IsSpace (*str)) str++;
 
 	  if (*str != '"')
 		{
 		  /* The value is a token, not a quoted string. */
 		  value_start = str;
 		  for (value_end = str;
-			   *value_end && !IS_SPACE (*value_end) && *value_end != ';';
+			   *value_end && !nsString::IsSpace (*value_end) && *value_end != ';';
 			   value_end++)
 			;
 		  str = value_end;
@@ -644,9 +644,9 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 
 	  /* str now points after the end of the value.
 		 skip over whitespace, ';', whitespace. */
-	  while (IS_SPACE (*str)) str++;
+	  while (nsString::IsSpace (*str)) str++;
 	  if (*str == ';') str++;
-	  while (IS_SPACE (*str)) str++;
+	  while (nsString::IsSpace (*str)) str++;
 	}
   return s;
 }
@@ -747,18 +747,18 @@ MimeHeaders_write_all_headers (MimeHeaders *hdrs, MimeDisplayOptions *opt, PRBoo
         
         /* Back up over whitespace before the colon. */
         ocolon = colon;
-        for (; colon > head && IS_SPACE(colon[-1]); colon--)
+        for (; colon > head && nsString::IsSpace(colon[-1]); colon--)
           ;
         
         contents = ocolon + 1;
     }
     
     /* Skip over whitespace after colon. */
-    while (contents <= end && IS_SPACE(*contents))
+    while (contents <= end && nsString::IsSpace(*contents))
       contents++;
     
     /* Take off trailing whitespace... */
-    while (end > contents && IS_SPACE(end[-1]))
+    while (end > contents && nsString::IsSpace(end[-1]))
       end--;
     
     name = (char *)PR_MALLOC(colon - head + 1);
@@ -822,7 +822,7 @@ MIME_StripContinuations(char *original)
 			{
 				p2++;
 			}
-			while((*p2 == CR) || (*p2 == LF) || IS_SPACE(*p2));
+			while((*p2 == CR) || (*p2 == LF) || nsString::IsSpace(*p2));
 
 			if (*p2 == '\0') continue; /* drop out of loop at end of string*/
 		}

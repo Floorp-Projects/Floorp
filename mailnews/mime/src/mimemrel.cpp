@@ -108,6 +108,7 @@
 #include "mimemrel.h"
 #include "prmem.h"
 #include "prprf.h"
+#include "prlog.h"
 #include "plstr.h"
 #include "mimemoz2.h"
 #include "nsMimeTransition.h"
@@ -368,7 +369,7 @@ MimeThisIsStartPart(MimeObject *obj, MimeObject* child)
 }
 /* rhp - gotta support the "start" parameter */
 
-PUBLIC char *
+char *
 MakeAbsoluteURL(char * absolute_url, char * relative_url)
 {
   nsMimeURLUtils myUtil;
@@ -714,7 +715,7 @@ flush_tag(MimeMultipartRelated* relobj)
 				isquote = PR_TRUE;
 				/* Take up the double quote and leading space here as well. */
 				/* Safe because there's a '>' at the end */
-				do {ptr++;} while (IS_SPACE(*ptr));
+				do {ptr++;} while (nsString::IsSpace(*ptr));
 			}
 		}
 		status = real_write(relobj, buf, ptr - buf);
@@ -726,7 +727,7 @@ flush_tag(MimeMultipartRelated* relobj)
 			ptr = mime_strnchr(buf, '"', length - (buf - relobj->curtag));
 		} else {
 			for (ptr = buf; *ptr ; ptr++) {
-				if (*ptr == '>' || IS_SPACE(*ptr)) break;
+				if (*ptr == '>' || nsString::IsSpace(*ptr)) break;
 			}
 			PR_ASSERT(*ptr);
 		}
@@ -739,7 +740,7 @@ flush_tag(MimeMultipartRelated* relobj)
 							substitute the appropriate mailbox part URL in
 							its place. */
 			ptr2=buf; /* walk from the left end rightward */
-			while((ptr2<ptr) && (!IS_SPACE(*ptr2)))
+			while((ptr2<ptr) && (!nsString::IsSpace(*ptr2)))
 				ptr2++;
 			/* Compare the beginning of the word with "cid:". Yuck. */
 			if (((ptr2 - buf) > 4) && 
@@ -805,7 +806,7 @@ flush_tag(MimeMultipartRelated* relobj)
 
 			/* Advance to the beginning of the next word, or to
 			   the end of the value string. */
-			while((ptr2<ptr) && (IS_SPACE(*ptr2)))
+			while((ptr2<ptr) && (nsString::IsSpace(*ptr2)))
 				ptr2++;
 
 			/* Write whatever original text remains after

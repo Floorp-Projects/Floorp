@@ -106,7 +106,7 @@ MimeInlineTextHTML_parse_begin (MimeObject *obj)
 
 		  for (in = base_hdr; *in; in++)
 			/* ignore whitespace and quotes */
-			if (!IS_SPACE(*in) && *in != '"')
+			if (!nsString::IsSpace(*in) && *in != '"')
 			  *out++ = *in;
 
 		  /* Close the tag and argument. */

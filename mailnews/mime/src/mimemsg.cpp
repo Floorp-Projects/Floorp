@@ -582,7 +582,7 @@ MimeMessage_write_headers_html (MimeObject *obj)
     HG00919 
 #endif /* MOZ_SECURITY */
 
-  status = MimeHeaders_write_all_headers (msg->hdrs, obj->options, FALSE);
+  status = MimeHeaders_write_all_headers (msg->hdrs, obj->options, PR_FALSE);
   if (status < 0) 
   {
     mimeEmitterEndHeader(obj->options);

@@ -662,18 +662,18 @@ mime_insert_all_headers(char            **body,
 
 		  /* Back up over whitespace before the colon. */
 		  ocolon = colon;
-		  for (; colon > head && IS_SPACE(colon[-1]); colon--)
+		  for (; colon > head && nsString::IsSpace(colon[-1]); colon--)
 			;
 
 		  contents = ocolon + 1;
 		}
 
 	  /* Skip over whitespace after colon. */
-	  while (contents <= end && IS_SPACE(*contents))
+	  while (contents <= end && nsString::IsSpace(*contents))
 		contents++;
 
 	  /* Take off trailing whitespace... */
-	  while (end > contents && IS_SPACE(end[-1]))
+	  while (end > contents && nsString::IsSpace(end[-1]))
 		end--;
 
 	  name = (char *)PR_MALLOC(colon - head + 1);

@@ -28,6 +28,7 @@
 #include "comi18n.h"
 #include "prmem.h"
 #include "prprf.h"
+#include "prlog.h"
 #include "plstr.h"
 #include "mimemoz2.h"
 #include "nsMimeTypes.h"

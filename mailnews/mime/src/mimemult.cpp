@@ -247,7 +247,7 @@ MimeMultipart_check_boundary(MimeObject *obj, const char *line, PRInt32 length)
   term_p = PR_FALSE;
 
   /* strip trailing whitespace (including the newline.) */
-  while(length > 2 && XP_IS_SPACE(line[length-1]))
+  while(length > 2 && nsString::IsSpace(line[length-1]))
 	length--;
 
   /* Could this be a terminating boundary? */

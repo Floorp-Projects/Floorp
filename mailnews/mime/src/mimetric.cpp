@@ -97,7 +97,7 @@ MimeRichtextConvert (char *line, PRInt32 length,
   if (enriched_p)
 	{
 	  for (this_start = line; this_start < line + length; this_start++)
-		if (!IS_SPACE (*this_start)) break;
+		if (!nsString::IsSpace (*this_start)) break;
 	  if (this_start >= line + length) /* blank line */
 		{
 		  PL_strcpy (*obufferP, "<BR>");
@@ -127,7 +127,7 @@ MimeRichtextConvert (char *line, PRInt32 length,
 		{
 		  this_end++;
 		  while (this_end < data_end &&
-				 !IS_SPACE (*this_end) &&
+				 !nsString::IsSpace (*this_end) &&
 				 *this_end != '<' && *this_end != '>' &&
 				 *this_end != '&')
 			this_end++;

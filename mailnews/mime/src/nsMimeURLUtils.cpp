@@ -75,7 +75,7 @@ FindAmbitiousMailToTag(const char *line, PRInt32 line_size)
   --ptr;
   while (ptr >= workLine)
   {
-    if (IS_SPACE(*ptr) ||
+    if (nsString::IsSpace(*ptr) ||
 				  *ptr == '<' || *ptr == '>' ||
           *ptr == '`' || *ptr == ')' ||
           *ptr == '\'' || *ptr == '"' ||
@@ -651,7 +651,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
 		    LOSER] blah blah blah
 	   */
 	  const char *s = input;
-	  while (s < end && IS_SPACE (*s)) s++;
+	  while (s < end && nsString::IsSpace (*s)) s++;
 	  while (s < end && *s >= 'A' && *s <= 'Z') s++;
 
 	  if (s >= end)
@@ -812,7 +812,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
     else
       ambitiousHit = PR_TRUE;
 
-	  if(!IS_SPACE(*cp) &&
+	  if(!nsString::IsSpace(*cp) &&
 		 (cp == input || (!IS_ALPHA(cp[-1]) && !IS_DIGIT(cp[-1]))) &&
 		 (type) != 0)
 		{
@@ -820,7 +820,7 @@ nsMimeURLUtils::ScanForURLs(const char *input, PRInt32 input_size,
 		  for(cp2=cp; cp2 < end; cp2++)
 			{
 			  /* These characters always mark the end of the URL. */
-			  if (IS_SPACE(*cp2) ||
+			  if (nsString::IsSpace(*cp2) ||
 				  *cp2 == '<' || *cp2 == '>' ||
 				  *cp2 == '`' || *cp2 == ')' ||
 				  *cp2 == '\'' || *cp2 == '"' ||
