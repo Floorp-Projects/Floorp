@@ -89,4 +89,7 @@ public:
 extern "C" NS_GFX_(nsresult)
   NS_NewImageManager(nsIImageManager **aInstancePtrResult);
 
+extern "C" NS_GFX_(void)
+  NS_FreeImageManager();
+
 #endif
