@@ -322,13 +322,13 @@ XFE_View::getCommandView(XFE_Command* command)
 }
 
 
-static XFE_View *
+/*static*/ XFE_View *
 XFE_View::getNavCenterView(XFE_View * parent)
 {
    return getViewOfType(parent, VIEW_NAVCENTER);
 }
 
-static XFE_View *
+/*static*/ XFE_View *
 XFE_View::getViewOfType(XFE_View * parent, EViewType viewType)
 {
     int numSubViews=0, i = 0;
