@@ -132,4 +132,12 @@ interface nsISelectElement : nsISupports
    */
   [noscript] void saveState();
   [noscript] void restoreState(in nsIPresState aState);
+
+  /**
+   * Finds the index of a given option element
+   */
+  long getOptionIndex(in nsIDOMHTMLOptionElement aOption,
+                      in long aStartIndex, in boolean aForward);
+
+  readonly attribute boolean hasOptGroups;
 };

@@ -1499,6 +1499,24 @@ nsTreeBodyFrame::IsCellCropped(PRInt32 aRow, const nsAString& aColID, PRBool *_r
   return NS_OK;
 }
 
+void
+nsTreeBodyFrame::MarkDirtyIfSelect()
+{
+  nsCOMPtr<nsIContent> baseElement;
+  GetBaseElement(getter_AddRefs(baseElement));
+  nsCOMPtr<nsIAtom> tag;
+  baseElement->GetTag(*getter_AddRefs(tag));
+  if (tag == nsHTMLAtoms::select) {
+    // If we are an intrinsically sized select widget, we may need to
+    // resize, if the widest item was removed or a new item was added.
+    // XXX optimize this more
+
+    mStringWidth = -1;
+    nsBoxLayoutState state(mPresContext);
+    MarkDirty(state);
+  }
+}
+
 NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
 {
   if (aCount == 0 || !mView)
@@ -1523,6 +1541,7 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
     // Just update the scrollbar and return.
     InvalidateScrollbar();
     CheckVerticalOverflow(PR_FALSE);
+    MarkDirtyIfSelect();
     return NS_OK;
   }
 
@@ -1552,6 +1571,8 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
 
   InvalidateScrollbar();
   CheckVerticalOverflow(PR_FALSE);
+  MarkDirtyIfSelect();
+
   return NS_OK;
 }
 

@@ -53,13 +53,22 @@ select, select[size="1"] {
   font: list;
 }
 
-select[size] > option {
+select[size] > option,
+select[size] > optgroup {
   -moz-binding: none;
 }
 
-select > option,
-select[size="1"] > option {
+select option,
+select[size="1"] option {
   -moz-binding: url("chrome://forms/content/select.xml#select-option");
+}
+
+select > optgroup,
+select[size="1"] > optgroup {
+  -moz-binding: url("chrome://forms/content/select.xml#select-optgroup");
+  display: -moz-box;
+  -moz-box-orient: horizontal;
+  -moz-user-focus: normal;
 }
 
 xul|*.select-treecol {
@@ -79,9 +88,18 @@ xul|*.select-scrollbar[disabled="true"] {
   visibility: hidden;
 }
 
+xul|*.select-menupopup,
+xul|*.select-optgrouppopup {
+  display:-moz-popup!important;
+}
+
+/* note: theme css MUST set the background color on 
+   select-optgrouppopup.  we can't set it to inherit
+   because it will inherit the highlight color if the
+   optgroup is open. */
+
 xul|*.select-menupopup {
   background-color: inherit !important; 
-  display:-moz-popup!important;
 }
 
 input[type="checkbox"],

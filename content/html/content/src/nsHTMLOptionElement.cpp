@@ -69,6 +69,7 @@
 #include "nsCOMPtr.h"
 #include "nsLayoutAtoms.h"
 #include "nsIEventStateManager.h"
+#include "nsXULAtoms.h"
 
 class nsHTMLOptionElement : public nsGenericHTMLContainerElement,
                             public nsIDOMHTMLOptionElement,
@@ -489,8 +490,13 @@ nsHTMLOptionElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, PRInt32
     } else if (!GetCommonMappedAttributesImpact(aAttribute, aHint)) {
       aHint = NS_STYLE_HINT_CONTENT;
     }
-  } else  // XXX fix me
-    aHint = NS_STYLE_HINT_NONE;
+  } else {
+    if (aAttribute == nsXULAtoms::menuactive) {
+      aHint = NS_STYLE_HINT_CONTENT;
+    } else {
+      aHint = NS_STYLE_HINT_NONE;
+    }
+  }
 
   return NS_OK;
 }

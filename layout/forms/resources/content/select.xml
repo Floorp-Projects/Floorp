@@ -64,10 +64,8 @@
            // save off the last selected row
            this._lastSelectedRow = row.value;
 
-           if (row.value == -1)
-             return;
-
-           if (!selection.isSelected(row.value)) {
+           if (row.value != -1 && !box.view.isContainer(row.value) &&
+               obj.value != "twisty" && !selection.isSelected(row.value)) {
              selection.select(row.value);
              select.selectElement.setOptionsSelectedByIndex(row.value, row.value,
                                                             true, true, false, false);
@@ -88,13 +86,21 @@
          var obj = {};
          var select = this.parentNode.parentNode.parentNode;
          var box = select.treeBoxObject;
-         select = select.selectElement;
          var selection = box.selection;
          box.getCellAt(event.clientX, event.clientY, row, col, obj);
 
-         if (row.value == -1)
+         if (row.value == -1 || select.contentView.getItemAtIndex(row.value).disabled)
            return;
 
+         if (obj.value == "twisty") {
+           box.view.toggleOpenState(row.value);
+           return;
+         }
+
+         if (box.view.isContainer(row.value))
+           return;
+
+         select = select.selectElement;
          var augment = event.ctrlKey || event.metaKey;
          if (event.shiftKey) {
            selection.rangedSelect(-1, row.value, augment);
@@ -139,11 +145,11 @@
   <binding id="select-size" extends="xul:tree">
     <content>
       <xul:hbox>
-        <xul:treecol class="select-treecol" flex="1"/>
+        <xul:treecol class="select-treecol" flex="1" primary="true"/>
       </xul:hbox>
       <xul:treerows class="select-treerows tree-rows" flex="1">
         <xul:hbox flex="1" class="tree-bodybox">
-          <xul:treechildren class="select-treebody">
+          <xul:treechildren class="select-treebody" anonid="treebody">
             <children/>
           </xul:treechildren>
         </xul:hbox>
@@ -155,6 +161,12 @@
       <property name="treeBoxObject"
                 onget="return this.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);"
                 readonly="true"/>
+      <property name="view"
+                onget="return this.treeBoxObject.view;"
+                onset="return this.treeBoxObject.view=val;"/>
+      <property name="contentView"
+                onget="return this.view.QueryInterface(Components.interfaces.nsITreeContentView);"
+                readonly="true"/>
       <property name="selectElement"
                 onget="return this.QueryInterface(Components.interfaces.nsISelectElement);"
                 readonly="true"/>
@@ -164,12 +176,84 @@
       <property name="singleSelection"
                 onget="return this.getAttribute('seltype') == 'single'"
                 readonly="true"/>
+      <property name="firstSelectableOption" readonly="true"
+                onget="return this.getNextOptionIndex(-1);"/>
+      <property name="lastSelectableOption" readonly="true"
+                onget="return this.getPrevOptionIndex(this.view.rowCount);"/>
+          
       <field name="selectionHead">
         -1
       </field>
       <field name="selectionTail">
         -1
       </field>
+      <method name="getNextOptionIndex">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          var lastRow = this.view.rowCount - 1;
+          for (var i = aIndex + 1; i <= lastRow; ++i) {
+            var elem = this.contentView.getItemAtIndex(i);
+            if (elem.tagName.toLowerCase() == "option" && !elem.disabled)
+              break;
+           }
+           return i;
+         ]]></body>
+       </method>
+      <method name="getPrevOptionIndex">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          for (var i = aIndex - 1; i >= 0; --i) {
+            var elem = this.contentView.getItemAtIndex(i);
+            if (elem.tagName.toLowerCase() == "option" && !elem.disabled)
+              break;
+           }
+           return i;
+         ]]></body>
+       </method>
+      <method name="adjustIndexForNesting">
+        <parameter name="aIndex"/>
+        <body><![CDATA[
+          return this.selectElement.getOptionIndex(this.contentView.getItemAtIndex(aIndex),
+                                                   aIndex, false);
+         ]]></body>
+       </method>
+       <method name="computePageUpIndex">
+         <parameter name="aCurrentIndex"/>
+         <body><![CDATA[
+           var f = this.treeBoxObject.getFirstVisibleRow();
+           var i = 0;
+           if (f > 0) {
+             var p = this.treeBoxObject.getPageCount();
+             if (f - p >= 0)
+               i = aCurrentIndex - p;
+             else
+               i = aCurrentIndex - f;
+           }
+           return this.getPrevOptionIndex(i+1);
+         ]]></body>
+       </method>
+       <method name="computePageDownIndex">
+         <parameter name="aCurrentIndex"/>
+         <body><![CDATA[
+           var l = this.view.rowCount - 1;
+           var f = this.treeBoxObject.getFirstVisibleRow();
+           var p = this.treeBoxObject.getPageCount();
+           var i = l;
+           var lastTopRowIndex = l - p;
+           if (f <= lastTopRowIndex) {
+             if (f + p <= lastTopRowIndex)
+               i = aCurrentIndex + p;
+             else
+               i = lastTopRowIndex + aCurrentIndex - f + 1;
+           }
+           return this.getNextOptionIndex(i-1);
+         ]]></body>
+       </method>
+       <constructor>
+         /* Update our hasgroups attribute */
+         if (this.selectElement.hasOptGroups)
+           document.getAnonymousElementByAttribute(this, "anonid", "treebody").setAttribute("hasgroups", "true");
+       </constructor>
     </implementation>
 
     <handlers>
@@ -180,13 +264,15 @@
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          if (c == -1 || c == 0)
+          var i = this.getPrevOptionIndex(c);
+          if (i == -1)
             return;
-          this.selectionHead = -1;
-          this.selectionTail = -1;
-          this.treeBoxObject.selection.timedSelect(c-1, 500);
-          this.treeBoxObject.ensureRowIsVisible(c-1);
-          this.selectElement.setOptionsSelectedByIndex(c-1, c-1, true, true, false, false);
+          this.selectionHead = this.selectionTail = -1;
+          this.treeBoxObject.selection.timedSelect(i, 500);
+          this.treeBoxObject.ensureRowIsVisible(i);
+          var selIndex = this.adjustIndexForNesting(i);
+          this.selectElement.setOptionsSelectedByIndex(selIndex, selIndex, true, true,
+                                                       false, false);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -195,14 +281,16 @@
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          try { if (c+1 == this.treeBoxObject.view.rowCount)
+          var i = this.getNextOptionIndex(c);
+          try { if (i >= this.view.rowCount)
             return;
           } catch (e) {}
-          this.selectionHead = -1;
-          this.selectionTail = -1;
-          this.treeBoxObject.selection.timedSelect(c+1, 500);
-          this.treeBoxObject.ensureRowIsVisible(c+1);
-          this.selectElement.setOptionsSelectedByIndex(c+1, c+1, true, true, false, false);
+          this.selectionHead = this.selectionTail = -1;
+          this.treeBoxObject.selection.timedSelect(i, 500);
+          this.treeBoxObject.ensureRowIsVisible(i);
+          var selIndex = this.adjustIndexForNesting(i);
+          this.selectElement.setOptionsSelectedByIndex(selIndex, selIndex, true, true, false,
+                                                      false);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -213,30 +301,35 @@
           if (this.singleSelection)
             return;
           var c = this.currentIndex;
-          if (c == -1 || c == 0)
+          var i = this.getPrevOptionIndex(c);
+          if (i == -1)
             return;
+
           var selection = this.treeBoxObject.selection;
           var select = this.selectElement;
+          var selIndex = this.adjustIndexForNesting(c);
+
           if (c == this.selectionTail) {
             if (this.selectionHead < this.selectionTail) {
               selection.toggleSelect(c);
-              select.setOptionsSelectedByIndex(c, c, selection.isSelected(c), 
+              select.setOptionsSelectedByIndex(selIndex, selIndex, selection.isSelected(c), 
                                                false, false, false);
-              this.currentIndex = c - 1;
+              this.currentIndex = i;
             }
             else {
-              selection.toggleSelect(c - 1);
-              select.setOptionsSelectedByIndex(c, c, true, false, false, false);
+              selection.toggleSelect(i);
+              select.setOptionsSelectedByIndex(selIndex, selIndex, true, false, false, false);
             }
           }
           else {
             selection.clearSelection();
             this.selectionHead = c;
-            selection.rangedSelect(c, c - 1, true);
-            select.setOptionsSelectedByIndex(c, c-1, true, true, false, false);
+            selection.rangedSelect(c, i, true);
+            var prevSelIndex = this.adjustIndexForNesting(i);
+            select.setOptionsSelectedByIndex(selIndex, prevSelIndex, true, true, false, false);
           }
-          this.selectionTail = c - 1;
-          this.treeBoxObject.ensureRowIsVisible(c - 1);
+          this.selectionTail = i;
+          this.treeBoxObject.ensureRowIsVisible(i);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -247,30 +340,35 @@
           if (this.singleSelection)
             return;
           var c = this.currentIndex;
-          try { if (c+1 == this.treeBoxObject.view.rowCount)
+          var i = this.getNextOptionIndex(c);
+          try { if (i >= this.view.rowCount)
             return;
           } catch (e) {}
+ 
           var selection = this.treeBoxObject.selection;
           var select = this.selectElement;
+          var selIndex = this.adjustIndexForNesting(c);
+          var nextSelIndex = this.adjustIndexForNesting(i);
+
           if (c == this.selectionTail) {
             if (this.selectionHead > this.selectionTail) {
               selection.toggleSelect(c);
-              select.setOptionsSelectedByIndex(c, c, selection.isSelected(c), false, false, false);
-              this.currentIndex = c + 1;
+              select.setOptionsSelectedByIndex(selIndex, selIndex, selection.isSelected(c), false, false, false);
+              this.currentIndex = i;
             }
             else {
-              selection.toggleSelect(c + 1);
-              select.setOptionsSelectedByIndex(c+1, c+1, selection.isSelected(c), false, false, false);
+              selection.toggleSelect(i);
+              select.setOptionsSelectedByIndex(nextSelIndex, nextSelIndex, selection.isSelected(i), false, false, false);
             }
           }
           else {
             selection.clearSelection();
             this.selectionHead = c;
-            selection.rangedSelect(c, c + 1, true);
-            select.setOptionsSelectedByIndex(c, c+1, true, true, false, false);
+            selection.rangedSelect(c, i, true);
+            select.setOptionsSelectedByIndex(selIndex, nextSelIndex, true, true, false, false);
           }
-          this.selectionTail = c + 1;
-          this.treeBoxObject.ensureRowIsVisible(c + 1);
+          this.selectionTail = i;
+          this.treeBoxObject.ensureRowIsVisible(i);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -279,43 +377,39 @@
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          if (c == -1 || c == 0)
+          var i = this.getPrevOptionIndex(c);
+          if (i == -1)
             return;
-          this.currentIndex = c-1;
-          this.treeBoxObject.ensureRowIsVisible(c-1);
+          this.currentIndex = i;
+          this.treeBoxObject.ensureRowIsVisible(i);
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_down" modifiers="control">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          try { if (c+1 == this.treeBoxObject.view.rowCount)
+          var i = this.getNextOptionIndex(c);
+          try { if (i >= this.view.rowCount)
             return;
           } catch (e) {}
-          this.currentIndex = c+1;
-          this.treeBoxObject.ensureRowIsVisible(c+1);
+          this.currentIndex = i;
+          this.treeBoxObject.ensureRowIsVisible(i);
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_up">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          if (c == 0)
+          if (this.getPrevOptionIndex(c) == -1)
             return;
-          this.selectionHead = -1;
-          this.selectionTail = -1;
-          var f = this.treeBoxObject.getFirstVisibleRow();
-          var i = 0;
-          if (f > 0) {
-            var p = this.treeBoxObject.getPageCount();
-            if (f - p >= 0)
-              i = c - p;
-            else
-              i = c - f;
-            this.treeBoxObject.scrollByPages(-1);
-          }
+          this.selectionHead = this.selectionTail = -1;
+          var i = this.computePageUpIndex(c);
+
+          this.treeBoxObject.scrollByPages(-1);
           this.treeBoxObject.selection.timedSelect(i, 500);
-          this.selectElement.setOptionsSelectedByIndex(i, i, true, true, false, false);
+          var selIndex = this.adjustIndexForNesting(i);
+          this.selectElement.setOptionsSelectedByIndex(selIndex, selIndex, true, true,
+                                                       false, false);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -324,24 +418,16 @@
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          var l = this.treeBoxObject.view.rowCount - 1;
-          if (c == l)
+          var l = this.view.rowCount - 1;
+          if (this.getNextOptionIndex(c) >= l)
             return;
-          this.selectionHead = -1;
-          this.selectionTail = -1;
-          var f = this.treeBoxObject.getFirstVisibleRow();
-          var p = this.treeBoxObject.getPageCount();
-          var i = l;
-          var lastTopRowIndex = l - p;
-          if (f <= lastTopRowIndex) {
-            if (f + p <= lastTopRowIndex)
-              i = c + p;
-            else
-              i = lastTopRowIndex + c - f + 1;
-            this.treeBoxObject.scrollByPages(1);
-          }
+          this.selectionHead = this.selectionTail = -1;
+          var i = this.computePageDownIndex(c);
+          this.treeBoxObject.scrollByPages(1);
           this.treeBoxObject.selection.timedSelect(i, 500);
-          this.selectElement.setOptionsSelectdByIndex(i, i, true, true, false, false);
+          var selIndex = this.adjustIndexForNesting(i);
+          this.selectElement.setOptionsSelectdByIndex(selIndex, selIndex, true, true,
+                                                      false, false);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -352,45 +438,51 @@
           if (this.singleSelection)
             return;
           var c = this.currentIndex;
-          if (c == 0)
+          if (this.getPrevOptionIndex(c) == -1)
             return;
           var box = this.treeBoxObject;
           var selection = box.selection;
           var select = this.selectElement;
-          var f = box.getFirstVisibleRow();
-          var i = 0;
-          if (f > 0) {
-            var p = box.getPageCount();
-            if (f - p >= 0)
-              i = c - p;
-            else
-              i = c - f;
-            box.scrollByPages(-1);
-          }
+          var i = this.computePageUpIndex(c);
+          box.scrollByPages(-1);
+
+          var selIndex = this.adjustIndexForNesting(c);
+          var selIndexEnd = this.adjustIndexForNesting(i);
+          var selHeadNext = this.getNextOptionIndex(this.selectionHead);
+          var selHeadPrev = this.getPrevOptionIndex(this.selectionHead);
+          var selHeadNextIndex = this.adjustIndexForNesting(selHeadNext);
+          var selHeadPrevIndex = this.adjustIndexForNesting(selHeadPrev);
+          var curPrevIndex = this.adjustIndexForNesting(this.getPrevOptionIndex(c));
+
           if (c == this.selectionTail) {
             if (this.selectionHead < this.selectionTail) {
               if (i < this.selectionHead) {
                 selection.clearRange(c, this.selectionHead + 1);
-                selection.rangedSelect(this.selectionHead - 1, i, true);
-                select.setOptionsSelectedByIndex(c, this.selectionHead + 1, false, false, false, false);
-                select.setOptionsSelectedByIndex(this.selectionHead - 1, i, true, false, false, false);
+                selection.rangedSelect(selHeadPrev, i, true);
+                select.setOptionsSelectedByIndex(selIndex, selHeadNextIndex, false, false,
+                                                 false, false);
+                select.setOptionsSelectedByIndex(selHeadPrevIndex, selIndexEnd, true, false,
+                                                 false, false);
               }
               else {
                 selection.clearRange(c, i + 1);
-                select.setOptionsSelectedByIndex(c, i+1, false, false, false, false);
+                var selIndexEndNext = this.adjustIndexForNesting(this.getNextOptionIndex(i));
+                select.setOptionsSelectedByIndex(selIndex, selIndexEndNext, false, false,
+                                                 false, false);
                 this.currentIndex = i;
               }
             }
             else {
               selection.rangedSelect(c - 1, i, true);
-              select.setOptionsSelectedByIndex(c-1, i, true, false, false, false);
+              select.setOptionsSelectedByIndex(curPrevIndex, selIndexEnd, true, false,
+                                               false, false);
             }
           }
           else {
             selection.clearSelection();
             this.selectionHead = c;
             selection.rangedSelect(c, i, true);
-            select.setOptionsSelectedByIndex(c, i, true, true, false, false);
+            select.setOptionsSelectedByIndex(selIndex, selIndexEnd, true, true, false, false);
           }
           this.selectionTail = i;
           if ("onchange" in this)
@@ -403,47 +495,49 @@
           if (this.singleSelection)
             return;
           var c = this.currentIndex;
-          var box = this.treeBoxObject;
-          var l = box.view.rowCount - 1;
-          if (c == l)
+          if (this.getNextOptionIndex(c) >= l)
             return;
-          var f = box.getFirstVisibleRow();
-          var p = box.getPageCount();
-          var i = l;
-          var lastTopRowIndex = l - p;
-          if (f <= lastTopRowIndex) {
-            if (f + p <= lastTopRowIndex)
-              i = c + p;
-            else
-              i = lastTopRowIndex + c - f + 1;
-            box.scrollByPages(1);
-          }
+
+          var i = this.getPageDownIndex(c);
+          var box = this.treeBoxObject;
+          box.scrollByPages(1);
+
           var selection = box.selection;
           var select = this.selectElement;
+          var selIndex = this.adjustIndexForNesting(c);
+          var selEndIndex = this.adjustIndexforNesting(i);
+          var selHeadPrevIndex = this.adjustIndexForNesting(this.getPrevOptionIndex(this.selectionHead));
+          var selHeadNextIndex = this.adjustIndexForNesting(this.getNextOptionIndex(this.selectionHead));
+          var selEndPrevIndex = this.adjustIndexForNesting(this.getPrevOptionIndex(i));
+          var curNextIndex = this.adjustIndexForNesting(this.getNextOptionIndex(c));
+
           if (c == this.selectionTail) {
             if (this.selectionHead > this.selectionTail) {
               if (i > this.selectionHead) {
                 selection.clearRange(c, this.selectionHead - 1);
                 selection.rangedSelect(this.selectionHead + 1, i, true);
-                select.setOptionsSelectedByIndex(c, this.selectionHead - 1, false, false, false, false);
-                select.setOptionsSelectedByIndex(this.selectionHead + 1, i, true, false, false, false);
+                select.setOptionsSelectedByIndex(selIndex, selHeadPrevIndex, false, false,
+                                                 false, false);
+                select.setOptionsSelectedByIndex(selHeadNextIndex, selEndIndex, true, false,
+                                                 false, false);
               }
               else {
                 selection.clearRange(c, i - 1);
-                select.setOptionsSelectedByIndex(c, i-1, false, false, false, false);
+                select.setOptionsSelectedByIndex(selIndex, selEndPrevIndex, false, false,
+                                                 false, false);
                 this.currentIndex = i;
               }
             }
             else {
               selection.rangedSelect(c + 1, i, true);
-              select.setOptionsSelectedByIndex(c+1, i, true, false, false, false);
+              select.setOptionsSelectedByIndex(curNextIndex, i, true, false, false, false);
             }
           }
           else {
             selection.clearSelection();
             this.selectionHead = c;
             selection.rangedSelect(c, i, true);
-            select.setOptionsSelectedByIndex(c, i, true, true, false, false);
+            select.setOptionsSelectedByIndex(selIndex, selEndIndex, true, true, false, false);
           }
           this.selectionTail = i;
           if ("onchange" in this)
@@ -454,53 +548,41 @@
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          if (c == 0)
+          if (this.getPrevOptionIndex(c) == -1)
             return;
-          var f = this.treeBoxObject.getFirstVisibleRow();
-          var i = 0;
-          if (f > 0) {
-            var p = this.treeBoxObject.getPageCount();
-            if (f - p >= 0)
-              i = c - p;
-            else
-              i = c - f;
-            this.treeBoxObject.scrollByPages(-1);
-          }
-          this.currentIndex = i;
+
+          this.treeBoxObject.scrollByPages(-1);
+          this.currentIndex = this.computePageUpIndex(c);
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_page_down" modifiers="control">
         <![CDATA[
           event.preventDefault();
           var c = this.currentIndex;
-          var l = this.treeBoxObject.view.rowCount - 1;
-          if (c == l)
+          var l = this.view.rowCount - 1;
+          if (this.getNextOptionIndex(c) >= l)
             return;
-          var f = this.treeBoxObject.getFirstVisibleRow();
-          var p = this.treeBoxObject.getPageCount();
-          var i = l;
-          var lastTopRowIndex = l - p;
-          if (f <= lastTopRowIndex) {
-            if (f + p <= lastTopRowIndex)
-              i = c + p;
-            else
-              i = lastTopRowIndex + c - f + 1;
-            this.treeBoxObject.scrollByPages(1);
-          }
-          this.currentIndex = i;
+
+          this.treeBoxObject.scrollByPages(1);
+          this.currentIndex = this.computePageDownIndex(c);
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_home">
         <![CDATA[
           event.preventDefault();
-          if (this.currentIndex == 0)
+
+          var firstOptionIndex = this.firstSelectableOption;
+          if (firstOptionIndex >= this.view.rowCount ||
+              this.currentIndex == firstOptionIndex)
             return;
-          this.selectionHead = -1;
-          this.selectionTail = -1;
+          this.selectionHead = this.selectionTail = -1;
+
           var box = this.treeBoxObject;
-          box.selection.timedSelect(0, 500);
-          this.selectElement.setOptionsSelectedByIndex(0, 0, true, true, false, false);
-          box.ensureRowIsVisible(0);
+          box.selection.timedSelect(firstOptionIndex, 500);
+          var selIndex = this.adjustIndexForNesting(firstOptionIndex);
+          this.selectElement.setOptionsSelectedByIndex(selIndex, selIndex, true, true,
+                                                       false, false);
+          box.ensureRowIsVisible(firstOptionIndex);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -509,14 +591,15 @@
         <![CDATA[
           event.preventDefault();
           var box = this.treeBoxObject;
-          var l = box.view.rowCount - 1;
-          if (this.currentIndex == l)
+          var lastOptionIndex = this.lastSelectableOption;
+          if (lastOptionIndex == -1 || this.currentIndex == lastOptionIndex)
             return;
-          this.selectionHead = -1;
-          this.selectionTail = -1;
-          box.selection.timedSelect(l, 500);
-          this.selectElement.setOptionsSelectedByIndex(l, l, true, true, false, false);
-          box.ensureRowIsVisible(l);
+          this.selectionHead = this.selectionTail = -1;
+          box.selection.timedSelect(lastOptionIndex, 500);
+          var selIndex = this.adjustIndexForNesting(lastOptionIndex);
+          this.selectElement.setOptionsSelectedByIndex(selIndex, selIndex, true, true,
+                                                       false, false);
+          box.ensureRowIsVisible(lastOptionIndex);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -527,7 +610,9 @@
           if (this.singleSelection)
             return;
           var c = this.currentIndex;
-          if (c == 0)
+          var firstOptionIndex = this.firstSelectableOption;
+          if (firstOptionIndex >= this.view.rowCount ||
+              c == firstOptionIndex)
             return;
           var box = this.treeBoxObject;
           var selection = box.selection;
@@ -537,10 +622,11 @@
             select.setOptionsSelectedByIndex(-1, -1, true, true, false, false);
             this.selectionHead = c;
           }
-          selection.rangedSelect(c, 0, true);
-          select.setOptionsSelectedByIndex(c, 0, true, false, false, false);
-          this.selectionTail = 0;
-          box.ensureRowIsVisible(0);
+          selection.rangedSelect(c, firstOptionIndex, true);
+          var selIndex = this.adjustIndexForNesting(firstOptionIndex);
+          select.setOptionsSelectedByIndex(c, selIndex, true, false, false, false);
+          this.selectionTail = firstOptionIndex;
+          box.ensureRowIsVisible(firstOptionIndex);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -552,8 +638,8 @@
             return;
           var c = this.currentIndex;
           var box = this.treeBoxObject;
-          var l = box.view.rowCount - 1;
-          if (c == l)
+          var lastOptionIndex = this.lastSelectableOption;
+          if (lastOptionIndex == -1 || c == lastOptionIndex)
             return;
           var selection = box.selection;
           var select = this.selectElement;
@@ -562,10 +648,11 @@
             select.setOptionsSelectedByIndex(-1, -1, true, true, false, false);
             this.selectionHead = c;
           }
-          selection.rangedSelect(c, l, true);
-          select.setOptionsSelectedByIndex(c, l, true, false, false, false);
-          this.selectionTail = l;
-          box.ensureRowIsVisible(l);
+          selection.rangedSelect(c, lastOptionIndex, true);
+          var selIndex = this.adjustIndexForNesting(lastOptionIndex);
+          select.setOptionsSelectedByIndex(c, selIndex, true, false, false, false);
+          this.selectionTail = lastOptionIndex;
+          box.ensureRowIsVisible(lastOptionIndex);
           if ("onchange" in this)
             this.onchange();
          ]]>
@@ -573,20 +660,21 @@
       <handler event="keypress" keycode="vk_home" modifiers="control">
         <![CDATA[
           event.preventDefault();
-          if (this.currentIndex == 0)
+          var firstOptionIndex = this.firstSelectableOption;
+          if (firstOptionIndex >= this.view.rowCount)
             return;
-          this.currentIndex = 0;
-          this.treeBoxObject.ensureRowIsVisible(0);
+          this.currentIndex = firstOptionIndex;
+          this.treeBoxObject.ensureRowIsVisible(firstOptionIndex);
          ]]>
       </handler>
       <handler event="keypress" keycode="vk_end" modifiers="control">
         <![CDATA[
           event.preventDefault();
-          var l = this.treeBoxObject.view.rowCount - 1;
-          if (this.currentIndex == l)
+          var lastOptionIndex = this.lastSelectableOption;
+          if (lastOptionIndex == -1)
             return;
-          this.currentIndex = l;
-          this.treeBoxObject.ensureRowIsVisible(l);
+          this.currentIndex = lastOptionIndex;
+          this.treeBoxObject.ensureRowIsVisible(lastOptionIndex);
          ]]>
       </handler>
       <handler event="keypress">
@@ -597,14 +685,40 @@
             var selection = this.treeBoxObject.selection;
             if (event.ctrlKey || !selection.isSelected(c)) {
               selection.toggleSelect(c);
-              this.selectElement.setOptionsSelectedByIndex(c, c,
+              var selIndex = this.adjustIndexForNesting(c);
+              this.selectElement.setOptionsSelectedByIndex(selIndex, selIndex,
                                                            selection.isSelected(c),
                                                            false, false, false);
               if ("onchange" in this)
                 this.onchange();
             }
+          } else if (event.keyCode == '+' || event.keyCode == '-') {
+             event.preventDefault();
+             var c = this.currentIndex;
+             var view = this.view;
+             var elem = this.contentView.getItemAtIndex(c);
+             if (elem.tagName.toLowerCase() == "optgroup" && !elem.disabled &&
+                ((event.keyCode == '+' && !view.isContainerOpen()) ||
+                 (event.keyCode == '-' && view.isContainerOpen())))
+               view.toggleOpenState(c);
           }
           ]]>
+      </handler>
+
+      <handler event="selectHasGroups">
+        <![CDATA[
+          document.getAnonymousElementByAttribute(this, "anonid", "treebody").setAttribute("hasgroups", "true");
+          // force the tree to clear its cached twisty width
+          this.treeBoxObject.clearStyleAndImageCaches();
+        ]]>
+      </handler>
+
+      <handler event="selectHasNoGroups">
+        <![CDATA[
+          document.getAnonymousElementByAttribute(this, "anonid", "treebody").removeAttribute("hasgroups");
+          // force the tree to clear its cached twisty width
+          this.treeBoxObject.clearStyleAndImageCaches();
+        ]]>
       </handler>
 
     </handlers>
@@ -637,9 +751,8 @@
       <method name="updateLabel">
         <body>
         <![CDATA[
-          var selectedIndex = this.selectedIndex;
-          if (selectedIndex >= 0 && selectedIndex < this.childNodes.length) {
-            var item = this.childNodes[selectedIndex];
+          var item = this.options.item(this.selectedIndex);
+          if (item) {
             var newLabel = item.label;
             if (!newLabel)
               newLabel = item.text;
@@ -667,26 +780,17 @@
     <handlers>
       <handler event="command" phase="capturing">
       <![CDATA[
-        if (event.originalTarget.localName != 'OPTION')
+        var option = event.originalTarget;
+        if (option.localName.toLowerCase() != 'option')
           return;
 
         // Notify the select element that the selected item has changed.
         // It will then give us a selectedItemChanged event.
-        var itemIndex = 0;
-        for (itemIndex = 0; itemIndex < this.childNodes.length; ++itemIndex) {
-          if (this.childNodes[itemIndex] == event.originalTarget)
-            break;
-        }
+        var optionIndex = this.selectElement.getOptionIndex(option, 0, true);
+        var changed = this.selectElement.setOptionsSelectedByIndex(optionIndex, optionIndex,
+                                                                   true, false, false, true);
 
-        if (itemIndex == this.childNodes.length) // not found
-          return;
-
-        if (itemIndex == this.selectedIndex) // nothing was changed
-          return;
-
-        this.selectElement.setOptionsSelectedByIndex(itemIndex, itemIndex, true,
-                                                     true, false, false);
-        if ("onchange" in this)
+        if (changed && ("onchange" in this))
           this.onchange();
         ]]>
       </handler>
@@ -697,9 +801,19 @@
 
   <binding id="select-option" extends="xul:menuitem">
     <content>
-      <xul:label xbl:inherits="value=label" class="select-menuitem">
+      <xul:label xbl:inherits="value=label">
         <children/>
       </xul:label>
+    </content>
+  </binding>
+
+  <binding id="select-optgroup">
+    <content>
+      <xul:menu flex="1" inherits="label" class="select-menuitem">
+        <xul:menupopup class="select-optgrouppopup">
+          <children/>
+        </xul:menupopup>
+      </xul:menu>
     </content>
   </binding>
 

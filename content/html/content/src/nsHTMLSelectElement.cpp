@@ -192,8 +192,6 @@ public:
 
 protected:
   // Helper Methods
-  nsresult GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
-                          PRInt32 * anIndex);
   nsresult IsOptionSelectedByIndex(PRInt32 index, PRBool* aIsSelected);
   nsresult FindSelectedIndex(PRInt32 aStartIndex);
   nsresult SelectSomething();
@@ -237,9 +235,13 @@ protected:
 
   nsISelectControlFrame *GetSelectFrame();
 
+  // Helper method for dispatching custom DOM events to our anonymous subcontent
+  void DispatchDOMEvent(const nsAString& aName);
+
   nsHTMLOptionCollection* mOptions;
   PRBool    mIsDoneAddingChildren;
   PRUint32  mArtifactsAtTopLevel;
+  PRUint32  mOptGroupCount;
   PRInt32   mSelectedIndex;
   nsString* mRestoreState;
 };
@@ -286,6 +288,7 @@ nsHTMLSelectElement::nsHTMLSelectElement(PRBool aFromParser)
   // otherwise it is
   mIsDoneAddingChildren = !aFromParser;
   mArtifactsAtTopLevel = 0;
+  mOptGroupCount = 0;
 
   mOptions = new nsHTMLOptionCollection(this);
   NS_IF_ADDREF(mOptions);
@@ -577,6 +580,13 @@ nsHTMLSelectElement::InsertOptionsIntoListRecurse(nsIContent* aOptions,
     mArtifactsAtTopLevel++;
   }
 
+  nsCOMPtr<nsIAtom> tag;
+  aOptions->GetTag(*getter_AddRefs(tag));
+  if (tag == nsHTMLAtoms::optgroup) {
+    mOptGroupCount++;
+    DispatchDOMEvent(NS_LITERAL_STRING("selectHasGroups"));
+  }
+
   // Recurse down into optgroups
   //
   // I *would* put a restriction in here to only search under
@@ -617,6 +627,15 @@ nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
   // Yay, one less artifact at the top level.
   if (aLevel == 0) {
     mArtifactsAtTopLevel--;
+  }
+
+  if (mOptGroupCount) {
+    nsCOMPtr<nsIAtom> tag;
+    aOptions->GetTag(*getter_AddRefs(tag));
+    if (tag == nsHTMLAtoms::optgroup) {
+      mOptGroupCount--;
+      DispatchDOMEvent(NS_LITERAL_STRING("selectHasNoGroups"));
+    }
   }
 
   // Recurse down deeper for options
@@ -763,7 +782,7 @@ nsHTMLSelectElement::GetFirstOptionIndex(nsIContent* aOptions,
 {
   nsCOMPtr<nsIDOMHTMLOptionElement> optElement(do_QueryInterface(aOptions));
   if (optElement) {
-    GetOptionIndex(optElement, aListIndex);
+    GetOptionIndex(optElement, 0, PR_TRUE, aListIndex);
     // If you nested stuff under the option, you're just plain
     // screwed.  *I'm* not going to aid and abet your evil deed.
     return NS_OK;
@@ -960,11 +979,12 @@ nsHTMLSelectElement::SetSelectedIndex(PRInt32 aIndex)
                                    PR_FALSE, PR_TRUE, PR_TRUE, nsnull);
 }
 
-nsresult
+NS_IMETHODIMP
 nsHTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
-                                    PRInt32 * anIndex)
+                                    PRInt32 aStartIndex, PRBool aForward,
+                                    PRInt32* aIndex)
 {
-  NS_ENSURE_ARG_POINTER(anIndex);
+  NS_ENSURE_ARG_POINTER(aIndex);
 
   PRUint32 numOptions;
 
@@ -973,14 +993,17 @@ nsHTMLSelectElement::GetOptionIndex(nsIDOMHTMLOptionElement* aOption,
     return rv;
   }
 
+  aStartIndex = PR_MIN(aStartIndex, numOptions - 1);
+  aStartIndex = PR_MAX(0, aStartIndex);
+
   nsCOMPtr<nsIDOMNode> node;
 
-  for (PRUint32 i = 0; i < numOptions; i++) {
+  for (PRUint32 i = aStartIndex; (aForward ? i < numOptions : i != -1); i += (aForward ? 1 : -1)) {
     rv = Item(i, getter_AddRefs(node));
     if (NS_SUCCEEDED(rv) && node) {
       nsCOMPtr<nsIDOMHTMLOptionElement> option(do_QueryInterface(node));
       if (option && option.get() == aOption) {
-        *anIndex = i;
+        *aIndex = i;
         return NS_OK;
       }
     }
@@ -998,7 +1021,7 @@ nsHTMLSelectElement::IsOptionSelected(nsIDOMHTMLOptionElement* aOption,
 
   // first find the index of the incoming option
   PRInt32 index = -1;
-  if (NS_FAILED(GetOptionIndex(aOption, &index))) {
+  if (NS_FAILED(GetOptionIndex(aOption, 0, PR_TRUE, &index))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1079,7 +1102,7 @@ nsHTMLSelectElement::SetOptionSelected(nsIDOMHTMLOptionElement* anOption,
 {
   PRInt32 index;
 
-  nsresult rv = GetOptionIndex(anOption, &index);
+  nsresult rv = GetOptionIndex(anOption, 0, PR_TRUE, &index);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -1313,18 +1336,7 @@ nsHTMLSelectElement::SetOptionsSelectedByIndex(PRInt32 aStartIndex,
       *aChangedSomething = PR_TRUE;
 
     // Dispatch an event to notify the subcontent that the selected item has changed
-    nsCOMPtr<nsIDocument> document;
-    GetDocument(*getter_AddRefs(document));
-    nsCOMPtr<nsIDOMDocumentEvent> domDoc = do_QueryInterface(document);
-    if (domDoc) {
-      nsCOMPtr<nsIDOMEvent> selectEvent;
-      domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(selectEvent));
-      selectEvent->InitEvent(NS_LITERAL_STRING("selectedItemChanged"),
-                             PR_TRUE, PR_TRUE);
-      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this)));
-      PRBool noDefault;
-      target->DispatchEvent(selectEvent, &noDefault);
-    }
+    DispatchDOMEvent(NS_LITERAL_STRING("selectedItemChanged"));
   }
 
   return NS_OK;
@@ -2038,6 +2050,30 @@ nsHTMLSelectElement::SubmitNamesValues(nsIFormSubmission* aFormSubmission,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsHTMLSelectElement::GetHasOptGroups(PRBool* aHasGroups)
+{
+  *aHasGroups = (mOptGroupCount > 0);
+  return NS_OK;
+}
+
+void
+nsHTMLSelectElement::DispatchDOMEvent(const nsAString& aName)
+{
+  nsCOMPtr<nsIDocument> document;
+  GetDocument(*getter_AddRefs(document));
+  nsCOMPtr<nsIDOMDocumentEvent> domDoc = do_QueryInterface(document);
+  if (domDoc) {
+    nsCOMPtr<nsIDOMEvent> selectEvent;
+    domDoc->CreateEvent(NS_LITERAL_STRING("Events"), getter_AddRefs(selectEvent));
+    if (selectEvent) {
+      selectEvent->InitEvent(aName, PR_TRUE, PR_TRUE);
+      nsCOMPtr<nsIDOMEventTarget> target(do_QueryInterface(NS_STATIC_CAST(nsIDOMNode*, this)));
+      PRBool noDefault;
+      target->DispatchEvent(selectEvent, &noDefault);
+    }
+  }
+}
 
 //----------------------------------------------------------------------
 //

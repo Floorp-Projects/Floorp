@@ -8011,6 +8011,43 @@ FindNextSibling(nsIPresShell* aPresShell,
   return nsnull;
 }
 
+inline PRBool
+ShouldIgnoreSelectChild(nsIContent* aContainer)
+{
+  // Ignore options and optgroups inside a select (size > 1)
+  nsCOMPtr<nsIAtom> containerTag;
+  aContainer->GetTag(*getter_AddRefs(containerTag));
+
+  if (containerTag == nsHTMLAtoms::optgroup ||
+      containerTag == nsHTMLAtoms::select) {
+    nsCOMPtr<nsIContent> selectContent = aContainer;
+    nsCOMPtr<nsIContent> tmpContent;
+    
+    while (selectContent) {
+      if (containerTag == nsHTMLAtoms::select)
+        break;
+      
+      tmpContent = selectContent;
+      tmpContent->GetParent(*getter_AddRefs(selectContent));
+      if (selectContent)
+        selectContent->GetTag(*getter_AddRefs(containerTag));
+    }
+    
+    nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(selectContent);
+    if (selectElement) {
+      nsAutoString selSize;
+      aContainer->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, selSize);
+      if (!selSize.IsEmpty()) {
+        PRInt32 err;
+        return (selSize.ToInteger(&err) > 1);
+      }
+    }
+  }
+
+  return PR_FALSE;
+}
+
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
                                        nsIContent*     aContainer,
@@ -8041,22 +8078,10 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     // Just ignore tree tags, anyway we don't create any frames for them.
     if (tag == nsXULAtoms::treechildren ||
         tag == nsXULAtoms::treeitem ||
-        tag == nsXULAtoms::treerow)
+        tag == nsXULAtoms::treerow ||
+        (UseXBLForms() && ShouldIgnoreSelectChild(aContainer)))
       return NS_OK;
 
-    // Ignore option elements inside a select (size > 1), if we are using XBL forms
-    if (UseXBLForms()) {
-      nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(aContainer);
-      if (selectElement) {
-        nsAutoString selSize;
-        aContainer->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, selSize);
-        if (!selSize.IsEmpty()) {
-          PRInt32 err;
-          if (selSize.ToInteger(&err) > 1)
-            return NS_OK;
-        }
-      }
-    }
   }
 #endif // INCLUDE_XUL
 
@@ -8605,22 +8630,10 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
     // Just ignore tree tags, anyway we don't create any frames for them.
     if (tag == nsXULAtoms::treechildren ||
         tag == nsXULAtoms::treeitem ||
-        tag == nsXULAtoms::treerow)
+        tag == nsXULAtoms::treerow ||
+        (UseXBLForms() && ShouldIgnoreSelectChild(aContainer)))
       return NS_OK;
 
-    // Ignore option elements inside a select (size > 1), if we are using XBL forms
-    if (UseXBLForms()) {
-      nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(aContainer);
-      if (selectElement) {
-        nsAutoString selSize;
-        aContainer->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, selSize);
-        if (!selSize.IsEmpty()) {
-          PRInt32 err;
-          if (selSize.ToInteger(&err) > 1)
-            return NS_OK;
-        }
-      }
-    }
   }
 #endif // INCLUDE_XUL
   
@@ -9444,22 +9457,10 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     // Just ignore tree tags, anyway we don't create any frames for them.
     if (tag == nsXULAtoms::treechildren ||
         tag == nsXULAtoms::treeitem ||
-        tag == nsXULAtoms::treerow)
+        tag == nsXULAtoms::treerow ||
+        (UseXBLForms() && ShouldIgnoreSelectChild(aContainer)))
       return NS_OK;
 
-    // Ignore option elements inside a select (size > 1), if we are using XBL forms
-    if (UseXBLForms()) {
-      nsCOMPtr<nsISelectElement> selectElement = do_QueryInterface(aContainer);
-      if (selectElement) {
-        nsAutoString selSize;
-        aContainer->GetAttr(kNameSpaceID_None, nsHTMLAtoms::size, selSize);
-        if (!selSize.IsEmpty()) {
-          PRInt32 err;
-          if (selSize.ToInteger(&err) > 1)
-            return NS_OK;
-        }
-      }
-    }
   }
 #endif // INCLUDE_XUL
 
