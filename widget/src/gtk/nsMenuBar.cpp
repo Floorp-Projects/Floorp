@@ -207,3 +207,12 @@ nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
+nsEventStatus nsMenuBar::MenuConstruct(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}

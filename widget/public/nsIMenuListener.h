@@ -56,6 +56,8 @@ class nsIMenuListener : public nsISupports {
      */
     virtual nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent) = 0;
 
+    virtual nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent) = 0;
+    virtual nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent) = 0;
 };
 
 #endif // nsIMenuListener_h__

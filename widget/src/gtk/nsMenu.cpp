@@ -327,3 +327,20 @@ nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
+//-------------------------------------------------------------------------
+nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent)
+{
+  if (nsnull != mListener) {
+    mListener->MenuDeselected(aMenuEvent);
+  }
+  return nsEventStatus_eIgnore;
+}
+
+//-------------------------------------------------------------------------
+nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
+{
+  if (nsnull != mListener) {
+    mListener->MenuDeselected(aMenuEvent);
+  }
+  return nsEventStatus_eIgnore;
+}
