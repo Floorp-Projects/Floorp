@@ -2,6 +2,7 @@
 
 // the rdf service
 var RDF;
+var NC = "http://home.netscape.com/NC-rdf#";
 
 var sidebar;
 
@@ -85,7 +86,7 @@ function createOptionTitle(titletext)
 
 function getAttr(registry,service,attr_name) {
   var attr = registry.GetTarget(service,
-           RDF.GetResource('http://home.netscape.com/NC-rdf#' + attr_name),
+           RDF.GetResource(NC + attr_name),
            true);
   if (attr)
     attr = attr.QueryInterface(Components.interfaces.nsIRDFLiteral);
@@ -108,6 +109,7 @@ function moveUp() {
     list.insertBefore(selectedOption, optionBefore);
     list.selectedIndex = index - 1;
     enableButtons();
+    enableSave();
   }
 }
    
@@ -121,6 +123,7 @@ function moveDown() {
     list.remove(index+1);
     list.insertBefore(optionAfter, selectedOption);
     enableButtons();
+    enableSave();
   }
 }
 
@@ -158,7 +161,7 @@ function enableButtons() {
   }
 }
 
-function deleteOption()
+function RemovePanel()
 {
   var list  = document.getElementById('selectList');	
   var index = list.selectedIndex;
@@ -166,78 +169,74 @@ function deleteOption()
     // XXX prompt user
     list.options[index] = null;
   }
-}
-
-function DumpIt() {
-  var list = document.getElementById('selectList'); 
-  var listLen = list.childNodes.length;
-	
-  for (var i=0;i<listLen; ++i) {
-    dump('length:' + listLen + '\n');
-    dump(list.childNodes.item(i).getAttribute('title') + '\n');
-
-    writeRDF(list.childNodes.item(i).getAttribute('title'),list.childNodes.item(i).getAttribute('content'),list.childNodes.item(i).getAttribute('customize'),0);
-  }
-}
-
-function save() {
-  self.close();
+  enableSave();
 }
 
 // Note that there is a bug with resource: URLs right now.
-var FileURL = "file:///C:/matt/rdf/sidebar-browser.rdf";
+var FileURL = "file:////u/slamm/tt/sidebar-browser.rdf";
 
 // var the "NC" namespace. Used to construct resources
-var NC = "http://home.netscape.com/NC-rdf#";
-
-function writeRDF(title,content,customize,append)
+function Save()
 {
-    // Get the RDF service
-    var RDF = Components.classes["component://netscape/rdf/rdf-service"].getService();
-    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
-    dump("RDF = " + RDF + "\n");
+  // Open the RDF file synchronously. This is tricky, because
+  // GetDataSource() will do it asynchronously. So, what we do is
+  // this. First try to manually construct the RDF/XML datasource
+  // and read it in. This might throw an exception if the datasource
+  // has already been read in once. In which case, we'll just get
+  // the existing datasource from the RDF service.
+  var datasource;
 
-    // Open the RDF file synchronously. This is tricky, because
-    // GetDataSource() will do it asynchronously. So, what we do is
-    // this. First try to manually construct the RDF/XML datasource
-    // and read it in. This might throw an exception if the datasource
-    // has already been read in once. In which case, we'll just get
-    // the existing datasource from the RDF service.
-    var datasource;
+  try {
+    datasource = Components.classes["component://netscape/rdf/datasource?name=xml-datasource"].createInstance();
+    datasource = datasource.QueryInterface(Components.interfaces.nsIRDFXMLDataSource);
+    //datasource.Init(FileURL);
+    datasource.Init(sidebar.db);
+    datasource.Open(true);
+    dump("datasource = " + datasource + ", opened for the first time.\n");
+  }
+  catch (ex) {
+      //datasource = RDF.GetDataSource(FileURL);
+    datasource = RDF.GetDataSource(sidebar.db);
+    dump("datasource = " + datasource + ", using registered datasource.\n");
+  }
 
-    try {
-        datasource = Components.classes["component://netscape/rdf/datasource?name=xml-datasource"].createInstance();
-        datasource = datasource.QueryInterface(Components.interfaces.nsIRDFXMLDataSource);
-        datasource.Init(FileURL);
-        datasource.Open(true);
+  // Create a "container" wrapper around the "NC:BrowserSidebarRoot"
+  // object. This makes it easier to manipulate the RDF:Seq correctly.
+  var container = Components.classes["component://netscape/rdf/container"].createInstance();
+  container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
 
-        dump("datasource = " + datasource + ", opened for the first time.\n");
-    }
-    catch (ex) {
-        datasource = RDF.GetDataSource(FileURL);
-        dump("datasource = " + datasource + ", using registered datasource.\n");
-    }
+  container.Init(datasource, RDF.GetResource(sidebar.resource));
+  dump("initialized container " + container + " on " + sidebar.resource+"\n");
 
+  // Remove all the current panels
+  //
+  var enumerator = container.GetElements();
 
-    // Create a "container" wrapper around the "NC:BrowserSidebarRoot"
-    // object. This makes it easier to manipulate the RDF:Seq correctly.
-    var container = Components.classes["component://netscape/rdf/container"].createInstance();
-    container = container.QueryInterface(Components.interfaces.nsIRDFContainer);
+  while (enumerator.HasMoreElements()) {
+    var service = enumerator.GetNext();
+    service = service.QueryInterface(Components.interfaces.nsIRDFResource);
+    container.RemoveElement(service, true);
+  }
 
-    container.Init(datasource, RDF.GetResource("NC:BrowserSidebarRoot"));
-    dump("initialized container " + container + " on NC:BrowserSidebarRoot\n");
+  // Add the new panel list
+  //
+  var count = container.GetCount();
+  dump("container has " + count + " elements\n");
 
-    // Now append a new resource to it. The resource will have the URI
-    // "file:///D:/tmp/container.rdf#3".
-    var count = container.GetCount();
-    dump("container has " + count + " elements\n");
+  var list = document.getElementById('selectList'); 
+  var list_length = list.childNodes.length;
+	
+  for (var ii=0; ii < list_length; ii++, count++) {
+    dump(list.childNodes.item(ii).getAttribute('title') + '\n');
+
+    var title     = list.childNodes.item(ii).getAttribute('title');
+    var content   = list.childNodes.item(ii).getAttribute('content');
+    var customize = list.childNodes.item(ii).getAttribute('customize');
 
     var element = RDF.GetResource(FileURL + "#" + count);
-	dump(FileURL + "#" + count + "\n");
+    dump(FileURL + "#" + count + "\n");
 	
-  if (append == 0 ) {
-	container.AppendElement(element);
-	//container.RemoveElement(element,true);
+    container.AppendElement(element);
     dump("appended " + element + " to the container\n");
 
     // Now make some sidebar-ish assertions about it...
@@ -245,27 +244,23 @@ function writeRDF(title,content,customize,append)
                       RDF.GetResource(NC + "title"),
                       RDF.GetLiteral(title + ' ' + count),
                       true);
-
     datasource.Assert(element,
                       RDF.GetResource(NC + "content"),
                       RDF.GetLiteral(content),
                       true);
-
     datasource.Assert(element,
                       RDF.GetResource(NC + "customize"),
                       RDF.GetLiteral(customize),
                       true);
 
     dump("added assertions about " + element + "\n");
-   }  else {
-    var element = 'file://C:/matt/rdf/sidebar-browser.rdf#bookmarks';
-	dump(element);
-     container.RemoveElement(element,true);
-	 }
+  }
 
-    // Now serialize it back to disk
-    datasource.Flush();
-    dump("wrote " + FileURL + " back to disk.\n");
+  // Now serialize it back to disk
+  datasource.Flush();
+  dump("wrote " + FileURL + " back to disk.\n");
+
+  //window.close();
 }
 
 function selected()
@@ -282,7 +277,7 @@ function selected()
   }
 }
 
-function Addit() 
+function AddPanel() 
 {
   var tree = document.getElementById('other-panels');
   var database = tree.database;
@@ -296,4 +291,10 @@ function Addit()
     if (!rdfNode) break;
     addOption(database,rdfNode);
   }
+  enableSave();
+}
+
+function enableSave() {
+  var save_button = document.getElementById('save_button');
+  save_button.setAttribute('disabled','');  
 }

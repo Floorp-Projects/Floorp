@@ -37,7 +37,7 @@
     <box align="vertical" class="button-group">
       <spring flex="50%"/>
       <titledbutton id="customize-button" onclick="" value="Customize..." />
-      <titledbutton onclick="deleteOption()" value="Remove" />
+      <titledbutton onclick="RemovePanel()" value="Remove" />
       <spring flex="50%"/>
     </box>
 
@@ -82,7 +82,7 @@
   
     <box align="vertical" class="button-group">
       <spring flex="50%"/>
-      <titledbutton id="add_button" onclick="Addit()" value="Add"
+      <titledbutton id="add_button" onclick="AddPanel()" value="Add"
          disabled="true"/>
       <titledbutton id="preview_button" onclick="" value="Preview..."
          disabled="true"/>
@@ -105,7 +105,8 @@
     <spring flex="48%"/>
     <titledbutton onclick="window.close()" value="Cancel" />
     <spring flex="4%"/>
-    <titledbutton onclick="Save();" value="Save" disabled="true"/>
+    <titledbutton id="save_button" onclick="Save();" value="Save"
+       disabled="true"/>
     <spring flex="48%"/>
   </box>
 
