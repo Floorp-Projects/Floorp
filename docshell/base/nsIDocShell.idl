@@ -37,19 +37,6 @@
  * The nsIDocShell
  */
 
- /*
- {69E5DE00-7B8B-11d3-AF61-00A024FFC08C} -
- {69E5DE99-7B8B-11d3-AF61-00A024FFC08C} have been reserved for DocShell
-													Interfaces.
-
- Currently Used:
- {69E5DE00-7B8B-11d3-AF61-00A024FFC08C} - nsIDocShell
- {69E5DE01-7B8B-11d3-AF61-00A024FFC08C} - nsIDocShellFile
- {69E5DE02-7B8B-11d3-AF61-00A024FFC08C} - nsIDocShellEdit
- {69E5DE03-7B8B-11d3-AF61-00A024FFC08C} - nsIHTMLDocShell
- {69E5DE04-7B8B-11d3-AF61-00A024FFC08C} - nsIDocShellContainer
- */
-
 [ptr] native nsIPresContext(nsIPresContext);
 [ptr] native nsIDocumentLoaderObserver(nsIDocumentLoaderObserver);
 [ptr] native nsIContentViewer(nsIContentViewer);

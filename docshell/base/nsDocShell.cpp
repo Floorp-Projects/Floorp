@@ -1546,6 +1546,8 @@ nsresult nsDocShell::CreateContentViewer(const char* aContentType,
 {
    NS_ENSURE_STATE(mCreated);
 
+   //XXX We should return NS_ERROR_FAILURE if we can't create a new 
+   // one and then leave our window in tact....
    //XXXQ Can we check the content type of the current content viewer
    // and reuse it without destroying it and re-creating it?
 
