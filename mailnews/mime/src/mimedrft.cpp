@@ -1878,7 +1878,7 @@ mime_bridge_create_draft_stream(
     return nsnull;
   }
 
-  mdd->options->url = mdd->url_name;
+  mdd->options->url = nsCRT::strdup(mdd->url_name);
   mdd->options->format_out = format_out;     // output format
   mdd->options->decompose_file_p = PR_TRUE;	/* new field in MimeDisplayOptions */
   mdd->options->stream_closure = mdd;
