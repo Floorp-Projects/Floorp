@@ -58,7 +58,7 @@ EXPORTS		= \
 		nsThemeConstants.h \
 		$(NULL)
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXPORTS		+= nsIPrintingContext.h
 endif
 

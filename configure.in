@@ -448,6 +448,7 @@ XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
 MOZ_COMPONENT_NSPR_LIBS='-L$(DIST)/bin $(NSPR_LIBS)'
 MOZ_COMPONENT_XPCOM_LIBS='-L$(DIST)/bin -lxpcom'
 
+_PLATFORM_DEFAULT_TOOLKIT=gtk
 MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwidget_$(MOZ_WIDGET_TOOLKIT)'
 MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_WIDGET_TOOLKIT) $(MOZ_XLIBRGB_LDFLAGS)'
 WIDGET_DLL='\"libwidget_$(MOZ_WIDGET_TOOLKIT)$(DLL_SUFFIX)\"'
@@ -723,7 +724,7 @@ case "$target" in
 *-beos*)
     no_x=yes
     MKSHLIB='$(CXX) $(CXXFLAGS) $(DSO_LDOPTS) -o $@'
-    MOZ_WIDGET_TOOLKIT="beos"
+    _PLATFORM_DEFAULT_TOOLKIT="beos"
     DSO_LDOPTS='-nostart -Wl,-h -Wl,$@'
     TK_LIBS='-lbe -lroot'
     LIBS="$LIBS -lbe"
@@ -772,7 +773,7 @@ case "$target" in
         AC_DEFINE(TARGET_API_MAC_CARBON)
         no_x=yes
         MACOSX=1
-        MOZ_WIDGET_TOOLKIT='mac'
+        _PLATFORM_DEFAULT_TOOLKIT='mac'
         DSO_LDOPTS="$DSO_LDOPTS -arch ppc -install_name @executable_path/\$@"
         TK_LIBS='-framework Carbon /System/Library/Frameworks/Carbon.framework/Carbon'
         TK_CFLAGS="-I/Developer/Headers/FlatCarbon -F/System/Library/Frameworks"
@@ -948,7 +949,7 @@ case "$target" in
     AC_DEFINE(STDC_HEADERS)
     TARGET_MD_ARCH=win32
     OS_TARGET=WINNT
-    MOZ_WIDGET_TOOLKIT='windows'
+    _PLATFORM_DEFAULT_TOOLKIT='windows'
     BIN_SUFFIX='.exe'
     USE_SHORT_LIBNAME=1
 
@@ -1025,7 +1026,7 @@ case "$target" in
 	_DEFINES_CXXFLAGS='-DMOZILLA_CLIENT -Wp,-include -Wp,$(DEPTH)/config-defs.h -D_POSIX_C_SOURCE=199506'
 	if test "$with_x" != "yes"
 	then
-		MOZ_WIDGET_TOOLKIT="photon"
+		_PLATFORM_DEFAULT_TOOLKIT="photon"
     	AC_DEFINE(NO_X11)
 	    TK_CFLAGS='-I/usr/include/photon'
 		TK_LIBS='-lph'
@@ -1086,7 +1087,7 @@ case "$target" in
     DSO_PIC_CFLAGS=''
     OS_ARCH=OS2
     OS_TARGET=OS2
-    MOZ_WIDGET_TOOLKIT=os2
+    _PLATFORM_DEFAULT_TOOLKIT=os2
     MOZ_WIDGET_TOOLKIT_LDFLAGS='$(DIST)/lib/wdgt$(MOZ_WIDGET_TOOLKIT)'
     MOZ_GFX_TOOLKIT_LDFLAGS='$(DIST)/lib/gfx_$(MOZ_WIDGET_TOOLKIT)'
     WIDGET_DLL='\"wdgt$(MOZ_WIDGET_TOOLKIT)$(DLL_SUFFIX)\"'
@@ -1193,7 +1194,7 @@ alpha*-*-osf*)
     dnl Explicit set STDC_HEADERS to workaround QNX 6.0's failing of std test
     AC_DEFINE(STDC_HEADERS)
     if test "$no_x" = "yes"; then
-	    MOZ_WIDGET_TOOLKIT='photon'
+	    _PLATFORM_DEFAULT_TOOLKIT='photon'
 	    TK_CFLAGS='-I/usr/nto/include/photon'
 	    TK_LIBS='-lphoton -lphrender'
 	    AC_DEFINE(NO_X11)
@@ -2602,9 +2603,8 @@ dnl =
 dnl ========================================================
 MOZ_ARG_HEADER(Toolkit Options)
 
-if test "$no_x" != "yes"; then
     dnl ========================================================
-    dnl = Select the default x toolkit
+    dnl = Select the default toolkit
     dnl ========================================================
     dnl XXX - remove this next milestone
     if test -z "$enable_default_toolkit" && test "$enable_toolkit"; then
@@ -2612,22 +2612,33 @@ if test "$no_x" != "yes"; then
     fi
 	MOZ_ARG_ENABLE_STRING(default-toolkit,
 	[  --enable-default-toolkit=TK
-                          Select default toolkit (default=gtk)],
+                          Select default toolkit (default=<platform specific>)],
     [ _DEFAULT_TOOLKIT=$enableval ],
-    [ _DEFAULT_TOOLKIT=gtk ])
+    [ _DEFAULT_TOOLKIT=$_PLATFORM_DEFAULT_TOOLKIT])
 
     if test "$_DEFAULT_TOOLKIT" = "gtk" \
         -o "$_DEFAULT_TOOLKIT" = "qt" \
         -o "$_DEFAULT_TOOLKIT" = "gtk2" \
-        -o "$_DEFAULT_TOOLKIT" = "xlib"
+        -o "$_DEFAULT_TOOLKIT" = "xlib" \
+        -o "$_DEFAULT_TOOLKIT" = "os2" \
+        -o "$_DEFAULT_TOOLKIT" = "beos" \
+        -o "$_DEFAULT_TOOLKIT" = "photon" \
+        -o "$_DEFAULT_TOOLKIT" = "mac" \
+        -o "$_DEFAULT_TOOLKIT" = "windows" \
+        -o "$_DEFAULT_TOOLKIT" = "cocoa"
     then
         dnl nglayout only supports building with one toolkit,
         dnl so ignore everything after the first comma (",").
         MOZ_WIDGET_TOOLKIT=`echo "$_DEFAULT_TOOLKIT" | sed -e "s/,.*$//"`
     else
-        AC_MSG_ERROR(Toolkit must be xlib, gtk, gtk2 or qt.)
+        if test "$no_x" != "yes"; then
+            AC_MSG_ERROR([Toolkit must be xlib, gtk, gtk2 or qt.])
+        else
+            AC_MSG_ERROR([Toolkit must be $_PLATFORM_DEFAULT_TOOLKIT.])
+        fi
     fi
 
+if test "$no_x" != "yes"; then
     dnl ========================================================
     dnl = Gtk support hackery                                  =
     dnl ========================================================
@@ -2708,6 +2719,10 @@ qt)
 photon)
 	MOZ_ENABLE_PHOTON=1
 	AC_DEFINE(MOZ_WIDGET_PHOTON)
+    ;;
+cocoa)
+    MOZ_ENABLE_COCOA=1
+    AC_DEFINE(MOZ_WIDGET_COCOA)
     ;;
 esac
 
@@ -2880,6 +2895,7 @@ AC_SUBST(MOZ_ENABLE_XLIB)
 AC_SUBST(MOZ_ENABLE_GTK2)
 AC_SUBST(MOZ_ENABLE_QT)
 AC_SUBST(MOZ_ENABLE_PHOTON)
+AC_SUBST(MOZ_ENABLE_COCOA)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
 AC_SUBST(MOZ_GTK_CFLAGS)
 AC_SUBST(MOZ_GTK_LDFLAGS)

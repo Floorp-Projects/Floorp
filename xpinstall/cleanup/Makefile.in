@@ -62,7 +62,7 @@ DEFINES += -DSTANDALONE_REGISTRY
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 LIBS += -lmacmorefiles_s
 LDFLAGS += $(TK_LIBS)
 endif

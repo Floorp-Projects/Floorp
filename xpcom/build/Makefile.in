@@ -38,7 +38,7 @@ EXPORTS		= \
 		$(NULL)			
 
 # pull in MoreFiles for MacOSX
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES += macmorefiles
 endif
 
@@ -89,7 +89,7 @@ EXTRA_DSO_LDOPTS += -liberty
 endif
 
 # pull in MoreFiles for MacOSX
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += $(DEPTH)/dist/lib/libmacmorefiles_s.a
 endif
 
@@ -118,7 +118,7 @@ ifdef GC_LEAK_DETECTOR
 DEFINES += -DGC_LEAK_DETECTOR
 endif
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CXXFLAGS	+= $(TK_CFLAGS)
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif

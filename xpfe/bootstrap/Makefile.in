@@ -329,7 +329,7 @@ nsStaticComponents.cpp: nsStaticComponents.cpp.in Makefile Makefile.in $(FINAL_L
 	sed -e "s|%MODULE_LIST%|$(foreach m, $(_COMPONENT_LIST),MODULE($(m)),)|" \
 	> $@
 
-ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
 ifdef MOZ_DEBUG
 APP_NAME = MozillaDebug
@@ -343,7 +343,6 @@ libs:: $(PROGRAM)
 	cp -R $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
 	cp -RL $(DIST)/bin $(DIST)/$(APP_NAME).app/Contents/MacOS
 	cp -RL $(srcdir)/macbuild/mach.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
-
 endif
 
 echo_objs:

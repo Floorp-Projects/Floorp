@@ -32,7 +32,7 @@ CHROME_DEPS	= build.dtd
 
 include $(topsrcdir)/config/rules.mk
 
-ifeq (mac,$(MOZ_WIDGET_TOOLKIT))
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 CHROME_PLATFORM = mac
 else
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
