@@ -20,7 +20,7 @@
 
 #include "nsImapCore.h"
 #include "nsMsgFolder.h"
-#include "nsIImapMailfolderSink.h"
+#include "nsIImapMailFolderSink.h"
 #include "nsIImapMessageSink.h"
 #include "nsIImapExtensionSink.h"
 #include "nsIImapMiscellaneousSink.h"
