@@ -43,6 +43,7 @@ struct HMACContextStr {
     const SECHashObject *hashobj;
     unsigned char ipad[HMAC_PAD_SIZE];
     unsigned char opad[HMAC_PAD_SIZE];
+    PRBool isFIPS;
 };
 
 void
@@ -58,12 +59,17 @@ HMAC_Destroy(HMACContext *cx)
 
 HMACContext *
 HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret, 
-            unsigned int   secret_len)
+            unsigned int secret_len, PRBool isFIPS)
 {
     HMACContext *cx;
     int i;
     unsigned char hashed_secret[SHA1_LENGTH];
 
+    /* required by FIPS 198 Section 3 */
+    if (isFIPS && secret_len < hash_obj->length/2) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return NULL;
+    }
     cx = (HMACContext*)PORT_ZAlloc(sizeof(HMACContext));
     if (cx == NULL)
 	return NULL;
@@ -93,6 +99,7 @@ HMAC_Create(const SECHashObject *hash_obj, const unsigned char *secret,
 	cx->opad[i] ^= secret[i];
     }
     PORT_Memset(hashed_secret, 0, sizeof hashed_secret);
+    cx->isFIPS = isFIPS;
     return cx;
 
 loser:
