@@ -65,6 +65,10 @@ static gboolean mai_remove_toplevel_accessible(nsIAccessible *toplevel);
 /* Misc */
 
 static void _listener_info_destroy(gpointer data);
+static guint add_listener (GSignalEmissionHook listener,
+                           const gchar *object_type,
+                           const gchar *signal,
+                           const gchar *hook_data);
 
 static GHashTable *listener_list = NULL;
 static gint listener_idx = 1;
@@ -142,45 +146,29 @@ static guint
 mai_util_add_global_event_listener(GSignalEmissionHook listener,
                                    const gchar *event_type)
 {
-    GType type;
-    guint signal_id;
+    guint rc = 0;
     gchar **split_string;
-    gint rc = 0;
 
-    split_string = g_strsplit(event_type, ":", 3);
+    split_string = g_strsplit (event_type, ":", 3);
 
-    type = g_type_from_name(split_string[1]);
-    if (type > 0) {
-        signal_id = g_signal_lookup(split_string[2], type);
-        if (signal_id > 0) {
-            MaiUtilListenerInfo *listener_info;
+    if (split_string) {
+        if (!strcmp ("window", split_string[0])) {
+            /*  ???
+                static gboolean initialized = FALSE;
 
-            rc = listener_idx;
-
-            listener_info = (MaiUtilListenerInfo *)
-                g_malloc(sizeof(MaiUtilListenerInfo));
-            listener_info->key = listener_idx;
-            listener_info->hook_id =
-                g_signal_add_emission_hook(signal_id, 0, listener,
-                                           g_strdup(event_type),
-                                           (GDestroyNotify) g_free);
-            listener_info->signal_id = signal_id;
-
-            g_hash_table_insert(listener_list, &(listener_info->key),
-                                listener_info);
-            listener_idx++;
+                if (!initialized) {
+                do_window_event_initialization ();
+                initialized = TRUE;
+                }
+                rc = add_listener (listener, "MaiWindow",
+                split_string[1], event_type);
+            */
         }
         else {
-            g_warning("Invalid signal type %s\n", split_string[2]);
+            rc = add_listener (listener, split_string[1], split_string[2],
+                               event_type);
         }
     }
-    else {
-        g_warning("Invalid object type %s\n", split_string[1]);
-    }
-
-    if (split_string != NULL)
-        g_strfreev(split_string);
-
     return rc;
 }
 
@@ -226,7 +214,7 @@ mai_util_remove_global_event_listener(guint remove_listener)
     }
 }
 
-static AtkObject *
+AtkObject *
 mai_util_get_root(void)
 {
     static AtkObject *gRootAtkObject = NULL;
@@ -237,22 +225,63 @@ mai_util_get_root(void)
     return gRootAtkObject;
 }
 
-static G_CONST_RETURN gchar *
+G_CONST_RETURN gchar *
 mai_util_get_toolkit_name(void)
 {
     return MAI_NAME;
 }
 
-static G_CONST_RETURN gchar *
+G_CONST_RETURN gchar *
 mai_util_get_toolkit_version(void)
 {
     return MAI_VERSION;
 }
 
-static void
+void
 _listener_info_destroy(gpointer data)
 {
     free(data);
+}
+
+guint
+add_listener (GSignalEmissionHook listener,
+              const gchar *object_type,
+              const gchar *signal,
+              const gchar *hook_data)
+{
+    GType type;
+    guint signal_id;
+    gint rc = 0;
+
+    type = g_type_from_name(object_type);
+    if (type) {
+        signal_id = g_signal_lookup(signal, type);
+        if (signal_id > 0) {
+            MaiUtilListenerInfo *listener_info;
+
+            rc = listener_idx;
+
+            listener_info =  (MaiUtilListenerInfo *)
+                g_malloc(sizeof(MaiUtilListenerInfo));
+            listener_info->key = listener_idx;
+            listener_info->hook_id =
+                g_signal_add_emission_hook(signal_id, 0, listener,
+                                           g_strdup(hook_data),
+                                           (GDestroyNotify)g_free);
+            listener_info->signal_id = signal_id;
+
+            g_hash_table_insert(listener_list, &(listener_info->key),
+                                listener_info);
+            listener_idx++;
+        }
+        else {
+            g_warning("Invalid signal type %s\n", signal);
+        }
+    }
+    else {
+        g_warning("Invalid object type %s\n", object_type);
+    }
+    return rc;
 }
 
 gboolean
@@ -314,10 +343,14 @@ static MaiAppRoot *gRootAccessible = NULL;
 MaiAppRoot *
 mai_get_root(void)
 {
-    if (gRootAccessible || (gRootAccessible = new MaiAppRoot()))
-        return gRootAccessible;
-
-    return NULL;
+    if (!mai_initialized) {
+        return NULL;
+    }
+    if (!gRootAccessible) {
+        gRootAccessible = new MaiAppRoot();
+        NS_ASSERTION(gRootAccessible, "Fail to create MaiAppRoot");
+    }
+    return gRootAccessible;
 }
 
 void
@@ -334,6 +367,9 @@ mai_delete_root(void)
 MaiCache *
 mai_get_cache(void)
 {
+    if (!mai_initialized) {
+        return NULL;
+    }
     MaiAppRoot *root = mai_get_root();
     if (root)
         return root->GetCache();
@@ -345,6 +381,7 @@ mai_add_toplevel_accessible(nsIAccessible *toplevel)
 {
     g_return_val_if_fail(toplevel != NULL, TRUE);
 
+#if 1
     MaiAppRoot *root;
     root = mai_get_root();
     if (!root)
@@ -356,6 +393,23 @@ mai_add_toplevel_accessible(nsIAccessible *toplevel)
     /* root will add ref for itself use */
     g_object_unref(mai_top_level->GetAtkObject());
     return res;
+#endif
+
+#if 0
+    MaiAppRoot *root;
+    root = mai_get_root();
+    if (!root)
+        return FALSE;
+
+    MaiTopLevel *mai_top_level =
+        NS_STATIC_CAST(MaiTopLevel*, MaiTopLevel::CreateAndCache(toplevel));
+
+    g_return_val_if_fail(mai_top_level != NULL, PR_FALSE);
+    gboolean res = root->AddMaiTopLevel(mai_top_level);
+
+    return res;
+#endif
+
 }
 
 gboolean

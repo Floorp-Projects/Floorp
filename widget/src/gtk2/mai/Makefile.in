@@ -51,6 +51,7 @@ EXPORT_LIBRARY	= 1
 REQUIRES	= xpcom \
 		  string \
 		  dom \
+		  necko \
 		  accessibility
 
 # Add you C source file here
@@ -67,10 +68,22 @@ CPPSRCS		= \
                 nsMaiTopLevel.cpp \
                 nsMaiWidget.cpp \
                 nsMaiInterfaceComponent.cpp \
+                nsMaiInterfaceAction.cpp \
+                nsMaiInterfaceValue.cpp \
+                nsMaiInterfaceSelection.cpp \
+                nsMaiInterfaceHypertext.cpp \
+                nsMaiInterfaceTable.cpp \
+                nsMaiInterfaceText.cpp \
+                nsMaiInterfaceEditableText.cpp \
+                nsMaiHyperlink.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
 		    -L.. -lwidget_gtk2
+
+# Add you header files need to be exported  here
+EXPORTS		= \
+		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 

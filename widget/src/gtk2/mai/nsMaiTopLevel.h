@@ -61,7 +61,7 @@ public:
     // nsIAccessibleEventListener
     NS_DECL_NSIACCESSIBLEEVENTLISTENER
 
-    /* virtual functions called by callbacks */
+    static MaiTopLevel *CreateAndCache(nsIAccessible *aAcc);
 
 private:
     MaiObject *CreateMaiObjectFor(nsIAccessible* aAccessible);

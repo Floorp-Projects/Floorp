@@ -101,7 +101,7 @@ MaiInterfaceAction::GetActionCount()
 
     PRUint8 num = 0;
     nsresult rv = accessible->GetAccNumActions(&num);
-    return (NS_FAILED(rv)) ? 0 : gint(num);
+    return (NS_FAILED(rv)) ? 0 : NS_STATIC_CAST(gint, num);
 }
 
 const gchar *

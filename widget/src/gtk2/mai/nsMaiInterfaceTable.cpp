@@ -168,9 +168,7 @@ MaiInterfaceTable::RefAt(gint aRow, gint aColumn)
     if (NS_FAILED(rv) || !cell)
         return NULL;
 
-    /* ??? when the new one get freed? */
-    MaiWidget *maiObj = new MaiWidget(cell);
-    return maiObj;
+    return MaiWidget::CreateAndCache(cell);
 }
 
 gint
@@ -267,9 +265,7 @@ MaiInterfaceTable::GetCaption()
     if (NS_FAILED(rv) || !caption)
         return NULL;
 
-    /* ??? when the new one get freed? */
-    MaiWidget *maiObj = new MaiWidget(caption);
-    return maiObj;
+    return MaiWidget::CreateAndCache(caption);
 }
 
 const gchar*
@@ -301,9 +297,8 @@ MaiInterfaceTable::GetColumnHeader(gint aColumn)
     nsCOMPtr<nsIAccessible> accHeader(do_QueryInterface(header));
     if (!accHeader)
         return NULL;
-    /* ??? when the new one get freed? */
-    MaiWidget *maiObj = new MaiWidget(accHeader);
-    return maiObj;
+
+    return MaiWidget::CreateAndCache(accHeader);
 }
 
 const gchar*
@@ -335,9 +330,8 @@ MaiInterfaceTable::GetRowHeader(gint aRow)
     nsCOMPtr<nsIAccessible> accHeader(do_QueryInterface(header));
     if (!accHeader)
         return NULL;
-    /* ??? when the new one get freed? */
-    MaiWidget *maiObj = new MaiWidget(accHeader);
-    return maiObj;
+
+    return MaiWidget::CreateAndCache(accHeader);
 }
 
 MaiWidget*
@@ -350,13 +344,51 @@ MaiInterfaceTable::GetSummary()
 gint
 MaiInterfaceTable::GetSelectedColumns(gint **aSelected)
 {
-    return 0;
+    MAI_IFACE_RETURN_VAL_IF_FAIL(accessIface, NULL);
+
+    PRUint32 size = 0;
+    PRInt32 *columns = NULL;
+    nsresult rv = accessIface->GetSelectedColumns(&size, &columns);
+    if (NS_FAILED(rv) || (size == 0) || !columns) {
+        *aSelected = NULL;
+        return 0;
+    }
+
+    gint *atkColumns = g_new(gint, size);
+    NS_ASSERTION(atkColumns, "Fail to get memory for columns");
+
+    //copy
+    for (int index = 0; index < size; ++index)
+        atkColumns[index] = NS_STATIC_CAST(gint, columns[index]);
+    nsMemory::Free(columns);
+
+    *aSelected = atkColumns;
+    return size;
 }
 
 gint
 MaiInterfaceTable::GetSelectedRows(gint **aSelected)
 {
-    return 0;
+    MAI_IFACE_RETURN_VAL_IF_FAIL(accessIface, NULL);
+
+    PRUint32 size = 0;
+    PRInt32 *rows = NULL;
+    nsresult rv = accessIface->GetSelectedRows(&size, &rows);
+    if (NS_FAILED(rv) || (size == 0) || !rows) {
+        *aSelected = NULL;
+        return 0;
+    }
+
+    gint *atkRows = g_new(gint, size);
+    NS_ASSERTION(atkRows, "Fail to get memory for rows");
+
+    //copy
+    for (int index = 0; index < size; ++index)
+        atkRows[index] = NS_STATIC_CAST(gint, rows[index]);
+    nsMemory::Free(rows);
+
+    *aSelected = atkRows;
+    return size;
 }
 
 gboolean
