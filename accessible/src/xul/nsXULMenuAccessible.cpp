@@ -179,6 +179,34 @@ NS_IMETHODIMP nsXULMenuitemAccessible::GetRole(PRUint32 *_retval)
 
 NS_IMETHODIMP nsXULMenuitemAccessible::GetChildCount(PRInt32 *aAccChildCount)
 {
+  // Set menugenerated="true" on the menupopup node to generate the
+  // sub-menu items if they have not been generated
+  PRUint32 childIndex, numChildren = 0;
+  nsCOMPtr<nsIDOMNode> childNode;
+  nsCOMPtr<nsIDOMNodeList> nodeList;
+  mDOMNode->GetChildNodes(getter_AddRefs(nodeList));
+  if (nodeList && NS_OK == nodeList->GetLength(&numChildren)) {
+    for (childIndex = 0; childIndex < numChildren; childIndex++) {
+      nodeList->Item(childIndex, getter_AddRefs(childNode));
+      nsAutoString nodeName;
+      childNode->GetNodeName(nodeName);
+      if (nodeName.Equals(NS_LITERAL_STRING("menupopup"))) {
+        break;
+      }
+    }
+
+    if (childIndex < numChildren) {
+      nsCOMPtr<nsIDOMElement> element(do_QueryInterface(childNode));
+      if (element) {
+        nsAutoString attr;
+        element->GetAttribute(NS_LITERAL_STRING("menugenerated"), attr);
+        if (!attr.Equals(NS_LITERAL_STRING("true"))) {
+          element->SetAttribute(NS_LITERAL_STRING("menugenerated"), NS_LITERAL_STRING("true"));
+        }
+      }
+    }
+  }
+
   // Argument of PR_FALSE indicates we don't walk anonymous children for menuitems
   CacheChildren(PR_FALSE);
   *aAccChildCount = mAccChildCount;
