@@ -178,6 +178,8 @@ nsHTMLReflowState::Init(nsIPresContext* aPresContext,
                       (const nsStyleStruct*&)mStyleDisplay);
   frame->GetStyleData(eStyleStruct_Spacing,
                       (const nsStyleStruct*&)mStyleSpacing);
+  frame->GetStyleData(eStyleStruct_Text,
+                      (const nsStyleStruct*&)mStyleText);
   mFrameType = DetermineFrameType(frame, mStylePosition, mStyleDisplay);
   InitConstraints(aPresContext, aContainingBlockWidth, aContainingBlockHeight);
 }
@@ -2001,6 +2003,16 @@ nsHTMLReflowState::CalculateBlockSideMargins(nscoord aAvailWidth,
       const nsHTMLReflowState* prs = (const nsHTMLReflowState*)
         parentReflowState;
       if (prs) {
+
+        // First check if there is an HTML alignment that we should honor
+        if ((prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER) ||
+            (prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_RIGHT))
+        {
+          isAutoLeftMargin = PR_TRUE;
+          isAutoRightMargin =
+            (prs->mStyleText->mTextAlign == NS_STYLE_TEXT_ALIGN_MOZ_CENTER);
+        } else
+        // Otherwise apply the CSS rules
         if (NS_STYLE_DIRECTION_LTR == prs->mStyleDisplay->mDirection) {
           // The specified value of margin-right is ignored (== forced
           // to auto)

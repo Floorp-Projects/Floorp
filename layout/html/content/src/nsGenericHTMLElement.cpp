@@ -2425,20 +2425,11 @@ static nsGenericHTMLElement::EnumTable kAlignTable[] = {
   { 0 }
 };
 
-static nsGenericHTMLElement::EnumTable kCompatDivAlignTable[] = {
+static nsGenericHTMLElement::EnumTable kDivAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
   { "right", NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
   { "middle", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
-  { "justify", NS_STYLE_TEXT_ALIGN_JUSTIFY },
-  { 0 }
-};
-
-static nsGenericHTMLElement::EnumTable kDivAlignTable[] = {
-  { "left", NS_STYLE_TEXT_ALIGN_LEFT },
-  { "right", NS_STYLE_TEXT_ALIGN_RIGHT },
-  { "center", NS_STYLE_TEXT_ALIGN_CENTER },
-  { "middle", NS_STYLE_TEXT_ALIGN_CENTER },
   { "justify", NS_STYLE_TEXT_ALIGN_JUSTIFY },
   { 0 }
 };
@@ -2550,12 +2541,18 @@ nsGenericHTMLElement::TableHAlignValueToString(const nsHTMLValue& aValue,
 
 //----------------------------------------
 
-// This table is used for TD,TH,TR, etc (but not TABLE) when in
-// compatability mode
+// These tables are used for TD,TH,TR, etc (but not TABLE)
+static nsGenericHTMLElement::EnumTable kTableCellHAlignTable[] = {
+  { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
+  { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
+  { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
+  { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
+  { "justify",NS_STYLE_TEXT_ALIGN_JUSTIFY },
+  { 0 }
+};
+
 static nsGenericHTMLElement::EnumTable kCompatTableCellHAlignTable[] = {
   { "left",   NS_STYLE_TEXT_ALIGN_LEFT },
-  // Note: use compatible version of alignment constants so that
-  // nested tables will be right aligned or center aligned.
   { "right",  NS_STYLE_TEXT_ALIGN_MOZ_RIGHT },
   { "center", NS_STYLE_TEXT_ALIGN_MOZ_CENTER },
   { "char",   NS_STYLE_TEXT_ALIGN_CHAR },
@@ -2578,7 +2575,7 @@ nsGenericHTMLElement::ParseTableCellHAlignValue(const nsString& aString,
   if (InNavQuirksMode(mDocument)) {
     return ParseEnumValue(aString, kCompatTableCellHAlignTable, aResult);
   }
-  return ParseEnumValue(aString, kTableHAlignTable, aResult);
+  return ParseEnumValue(aString, kTableCellHAlignTable, aResult);
 }
 
 PRBool
@@ -2588,7 +2585,7 @@ nsGenericHTMLElement::TableCellHAlignValueToString(const nsHTMLValue& aValue,
   if (InNavQuirksMode(mDocument)) {
     return EnumValueToString(aValue, kCompatTableCellHAlignTable, aResult);
   }
-  return EnumValueToString(aValue, kTableHAlignTable, aResult);
+  return EnumValueToString(aValue, kTableCellHAlignTable, aResult);
 }
 
 //----------------------------------------
@@ -2618,9 +2615,6 @@ PRBool
 nsGenericHTMLElement::ParseDivAlignValue(const nsString& aString,
                                          nsHTMLValue& aResult) const
 {
-  if (InNavQuirksMode(mDocument)) {
-    return ParseEnumValue(aString, kCompatDivAlignTable, aResult);
-  }
   return ParseEnumValue(aString, kDivAlignTable, aResult);
 }
 
@@ -2628,9 +2622,6 @@ PRBool
 nsGenericHTMLElement::DivAlignValueToString(const nsHTMLValue& aValue,
                                             nsString& aResult) const
 {
-  if (InNavQuirksMode(mDocument)) {
-    return EnumValueToString(aValue, kCompatDivAlignTable, aResult);
-  }
   return EnumValueToString(aValue, kDivAlignTable, aResult);
 }
 
