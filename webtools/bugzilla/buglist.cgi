@@ -764,7 +764,9 @@ if (exists $ENV{'HTTP_USER_AGENT'} && $ENV{'HTTP_USER_AGENT'} =~ /Mozilla.[3-9]/
     # Note! HTML header is complete!
 } else {
     print "Content-type: text/html\n";
-    print "Content-disposition: attachment; filename=bugzilla_bug_list.html\n";
+    #Changing attachment to inline to resolve 46897
+    #zach@zachlipton.com
+    print "Content-disposition: inline; filename=bugzilla_bug_list.html\n";
     # Note! Don't finish HTML header yet!  Only one newline so far!
 }
 

@@ -60,7 +60,9 @@ my %reports =
 quietly_check_login();
 
 print "Content-type: text/html\n";
-print "Content-disposition: attachment; filename=bugzilla_report.html\n\n";
+  #Changing attachment to inline to resolve 46897
+    #zach@zachlipton.com
+print "Content-disposition: inline; filename=bugzilla_report.html\n\n";
 
 # If we're here for the first time, give a banner.  Else respect the banner flag.
 if ( (!defined $::FORM{'product'}) || ($::FORM{'banner'})  )

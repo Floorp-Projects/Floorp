@@ -37,7 +37,9 @@ sub sillyness {
 }
 
 print "Content-type: text/html\n";
-print "Content-disposition: attachement; filename=bugzilla_bug_list.html\n\n";
+#Changing attachment to inline to resolve 46897
+#zach@zachlipton.com
+print "Content-disposition: inline; filename=bugzilla_bug_list.html\n\n";
 PutHeader ("Full Text Bug Listing");
 
 ConnectToDatabase();
