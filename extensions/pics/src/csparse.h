@@ -259,7 +259,7 @@ struct TargetObject_s {
     Close_t * pClose;   /* call this function to close structure */
     Destroy_t * pDestroy;
     StateToken_t * stateTokens; /* array of sub states */
-    int stateTokenCount;        /* number of sub states */
+    PRInt32 stateTokenCount;        /* number of sub states */
     CSParseTC_t targetChange; /* target change signal for opening this parse state */
     };
 /*
@@ -305,7 +305,7 @@ typedef struct {
     PRBool observeQuotes; 
     PRBool observedQuotes;
     char * legalChars;
-    int legalCharCount;
+    PRInt32 legalCharCount;
     } ParseContext_t;
 /*
 
@@ -319,8 +319,8 @@ struct CSParse_s {
     NowIn_t nowIn;
     HTChunk * token;
     char demark;
-    int offset;
-    int depth;
+    PRInt32 offset;
+    PRInt32 depth;
     ParseContext_t * pParseContext;
     union { /* all the types this parse engine fills */
         CSMachRead_t * pCSMachRead; /* defined in CSMacRed.c */

@@ -33,7 +33,7 @@ with copyright holders.
 **
 **	(c) COPYRIGHT MIT 1995.
 **	Please first read the full copyright statement in the file COPYRIGH.
-**	@(#) $Id: htstring.c,v 1.1 1999/03/18 22:32:50 neeti%netscape.com Exp $
+**	@(#) $Id: htstring.c,v 1.2 1999/05/07 05:26:12 neeti%netscape.com Exp $
 **
 **	Original version came with listserv implementation.
 **	Version TBL Oct 91 replaces one which modified the strings.
@@ -55,7 +55,7 @@ PUBLIC FILE *WWWTrace = NULL;
 #endif
 
 #ifndef WWW_WIN_DLL
-PUBLIC int WWW_TraceFlag = 0;		/* Global trace flag for ALL W3 code */
+PUBLIC PRInt32 WWW_TraceFlag = 0;		/* Global trace flag for ALL W3 code */
 #endif
 
 
@@ -80,7 +80,7 @@ PUBLIC char * HTSACat (char ** dest, const char * src)
 {
   if (src && *src) {
     if (*dest) {
-      int length = PL_strlen (*dest);
+      PRInt32 length = PL_strlen (*dest);
       if ((*dest  = (char  *) HT_REALLOC(*dest, length + PL_strlen(src) + 1)) == NULL)
           HT_OUTOFMEM("HTSACat");
       PL_strcpy (*dest + length, src);
@@ -153,7 +153,7 @@ PUBLIC HTTraceCallback * HTTrace_getCallback(void)
     return PHTTraceCallback;
 }
 
-PUBLIC int HTTrace(const char * fmt, ...)
+PUBLIC PRInt32 HTTrace(const char * fmt, ...)
 {
     va_list pArgs;
     va_start(pArgs, fmt);

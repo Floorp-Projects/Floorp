@@ -18,7 +18,7 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
+DEFINES=-D_IMPL_NS_PICS -DWIN32_LEAN_AND_MEAN
 MODULE=pics 
 
 CSRCS=				\
@@ -32,6 +32,7 @@ CSRCS=				\
 
 CPPSRCS=				\
  nsPICS.cpp			\
+ nsPICSElementObserver.cpp			\
  $(NULL)
 
 C_OBJS=				\
@@ -46,6 +47,7 @@ C_OBJS=				\
 
 CPP_OBJS=				\
  .\$(OBJDIR)\nspics.obj	\
+ .\$(OBJDIR)\nsPICSElementObserver.obj	\
  $(NULL)
 
 LINCS = -I$(PUBLIC)/js \
@@ -75,6 +77,7 @@ LLIBS	= \
  $(DIST)\lib\xpcom32.lib \
  $(DIST)\lib\xppref32.lib \
  $(DIST)\lib\raptorbase.lib \
+ $(DIST)\lib\raptorhtmlpars.lib \
  $(HASHLIBS)
 
 include <$(DEPTH)\config\rules.mak>

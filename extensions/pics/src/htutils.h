@@ -67,10 +67,10 @@ DEBUG MESSAGE CONTROL
  */
 #ifdef DEBUG
 #ifdef WWW_WIN_DLL
-extern int *            WWW_TraceFlag;   /* In DLLs, we need the indirection */
+extern PRInt32 *            WWW_TraceFlag;   /* In DLLs, we need the indirection */
 #define WWWTRACE        (*WWW_TraceFlag)
 #else
-extern int              WWW_TraceFlag;       /* Global flag for all W3 trace */
+extern PRInt32              WWW_TraceFlag;       /* Global flag for all W3 trace */
 #define WWWTRACE        (WWW_TraceFlag)
 #endif /* WWW_WIN_DLL */
 #else
@@ -132,13 +132,13 @@ typedef enum _HTTraceFlags {
    MyAppSpecificTrace
    
  */
-typedef int (*HTTraceCallback)();  /* jhines--7/9/97 */
-/* typedef int HTTraceCallback(const char * fmt, va_list pArgs); */
+typedef PRInt32 (*HTTraceCallback)();  /* jhines--7/9/97 */
+/* typedef PRInt32 HTTraceCallback(const char * fmt, va_list pArgs); */
 
 extern void HTTrace_setCallback(HTTraceCallback * pCall);
 extern HTTraceCallback * HTTrace_getCallback(void);
 
-extern int HTTrace(const char * fmt, ...);
+extern PRInt32 HTTrace(const char * fmt, ...);
 /*
 
 MACROS FOR FUNCTION DECLARATIONS
@@ -210,7 +210,7 @@ UPPER- AND LOWERCASE MACROS
 /* #ifndef TOLOWER */
 /* #define TOLOWER(c) tolower(c) */
 /* #define TOUPPER(c) toupper(c) */
-#define TOUPPER(x) ((((unsigned int) (x)) > 0x7f) ? x : toupper(x))
+#define TOUPPER(x) ((((PRUint32) (x)) > 0x7f) ? x : toupper(x))
 /* #endif */
 /*
 
@@ -260,6 +260,6 @@ LIBRARY DYNAMIC MEMORY MAGEMENT
    
    ___________________________________
    
-                           @(#) $Id: htutils.h,v 1.1 1999/03/18 22:32:50 neeti%netscape.com Exp $
+                           @(#) $Id: htutils.h,v 1.2 1999/05/07 05:26:12 neeti%netscape.com Exp $
                                                                                           
     */

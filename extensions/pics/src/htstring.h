@@ -76,8 +76,8 @@ CASE-INSENSITIVE STRING COMPARISON
    The usual routines (comp instead of cmp) had some problem.
    
  */
-/* extern int strcasecomp  (const char *a, const char *b); */
-/* extern int strncasecomp (const char *a, const char *b, int n); */
+/* extern PRInt32 strcasecomp  (const char *a, const char *b); */
+/* extern PRInt32 strncasecomp (const char *a, const char *b, PRInt32 n); */
 /*
 
 STRING COMPARISON WITH WILD CARD MATCH
@@ -126,6 +126,6 @@ PR_END_EXTERN_C
    
    ___________________________________
    
-                          @(#) $Id: htstring.h,v 1.1 1999/03/18 22:32:50 neeti%netscape.com Exp $
+                          @(#) $Id: htstring.h,v 1.2 1999/05/07 05:26:12 neeti%netscape.com Exp $
                                                                                           
     */

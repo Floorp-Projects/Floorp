@@ -129,7 +129,7 @@ extern void FVal_clear(FVal_t * pFVal);
       
       PRBool isZero - see if value is zero
       
-      int isInfinite - -1 or 1 for negative or positive infinity
+      PRInt32 isInfinite - -1 or 1 for negative or positive infinity
       
       PRBool nearerZero - see if check is nearer zero than check
       
@@ -141,7 +141,7 @@ extern void FVal_clear(FVal_t * pFVal);
 extern void FVal_set(FVal_t * pFVal, float value);
 extern void FVal_setInfinite(FVal_t * pFVal, PRBool negative);
 extern PRBool FVal_isZero(const FVal_t * pFVal);
-extern int FVal_isInfinite(const FVal_t * pFVal);
+extern PRInt32 FVal_isInfinite(const FVal_t * pFVal);
 extern PRBool FVal_nearerZero(const FVal_t * pRef, const FVal_t * pCheck);
 extern FVal_t FVal_minus(const FVal_t * pBig, const FVal_t * pSmall);
 extern char * FVal_toStr(FVal_t * pFVal);
@@ -188,13 +188,13 @@ DVAL
 typedef struct {
     char * value; /* keep the string around for debugging and output */
     PRBool initialized;
-    int year;
-    int month;
-    int day;
-    int hour;
-    int minute;
-    int timeZoneHours;
-    int timeZoneMinutes;
+    PRInt32 year;
+    PRInt32 month;
+    PRInt32 day;
+    PRInt32 hour;
+    PRInt32 minute;
+    PRInt32 timeZoneHours;
+    PRInt32 timeZoneMinutes;
     } DVal_t;
 
 extern PRBool DVal_readVal(DVal_t * pDVal, const char * valueStr);
@@ -205,10 +205,10 @@ extern void DVal_clear(DVal_t * pDVal);
 
   additional methods
   
-      int compare - -1 or 1 for a before or after b, 0 for equivilence
+      PRInt32 compare - -1 or 1 for a before or after b, 0 for equivilence
       
  */
-extern int DVal_compare(const DVal_t * a, const DVal_t * b);
+extern PRInt32 DVal_compare(const DVal_t * a, const DVal_t * b);
 /*
 
 RANGE
@@ -254,7 +254,7 @@ CSPARSE_PARSECHUNK
 typedef struct CSParse_s CSParse_t;
 typedef enum {CSDoMore_more, CSDoMore_done, CSDoMore_error} CSDoMore_t;
 extern CSDoMore_t CSParse_parseChunk (CSParse_t * pCSParse, const char * ptr,
-                                      int len, void * pVoid);
+                                      PRInt32 len, void * pVoid);
 /*
 
                                      PARSE CALLBACKS
@@ -268,7 +268,7 @@ CSPARSETC
    object. It is used in the TargetChangeCallback
    
  */
-typedef unsigned int CSParseTC_t;
+typedef PRUint32 CSParseTC_t;
 
 
 /*

@@ -184,7 +184,7 @@ struct CSLLData_s {
     /* some usefull flags */
     PRBool complete;
     PRBool hasTree; /* so it can't make a list of labels */
-    int mandatoryExtensions;
+    PRInt32 mandatoryExtensions;
     };
 /*
 

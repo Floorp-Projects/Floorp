@@ -64,9 +64,9 @@ THE CHUNK CLASS
    
  */
 typedef struct {
-        int     size;           /* In bytes                     */
-        int     growby;         /* Allocation unit in bytes     */
-        int     allocated;      /* Current size of *data        */
+        PRInt32     size;           /* In bytes                     */
+        PRInt32     growby;         /* Allocation unit in bytes     */
+        PRInt32     allocated;      /* Current size of *data        */
         char *  data;           /* Pointer to malloced area or 0 */
 } HTChunk;
 /*
@@ -78,7 +78,7 @@ CREATE NEW CHUNK
    
  */
 #define HTChunkCreate(growby) HTChunk_new(growby)
-extern HTChunk * HTChunk_new (int growby);
+extern HTChunk * HTChunk_new (PRInt32 growby);
 /*
 
 FREE A CHUNK
@@ -107,7 +107,7 @@ ENSURE A CHUNK HAS A CERTAIN AMOUNT OF FREE SPACE
    
  */
 #define HTChunkEnsure(ch, s) HTChunk_ensure(ch, s)
-extern void HTChunk_ensure (HTChunk * ch, int s);
+extern void HTChunk_ensure (HTChunk * ch, PRInt32 s);
 /*
 
 APPEND A CHARACTER TO A CHUNK
@@ -134,7 +134,7 @@ APPEND A BLOCK TO A CHUNK
    Add the block and increment the size of the chunk by the len
    
  */
-extern void HTChunk_putb (HTChunk * ch, const char *block, int len);
+extern void HTChunk_putb (HTChunk * ch, const char *block, PRInt32 len);
 
 /*
 
@@ -167,7 +167,7 @@ CSTRING CONVERSIONS
    Once a string is built, the chunk may be destroyed and the string kept around.
    
  */
-extern HTChunk * HTChunk_fromCString    (char * str, int grow);
+extern HTChunk * HTChunk_fromCString    (char * str, PRInt32 grow);
 extern char * HTChunk_toCString         (HTChunk * ch);
 /*
 
@@ -187,6 +187,6 @@ RETURN CURRENT SIZE
    
    ___________________________________
    
-                           @(#) $Id: htchunk.h,v 1.1 1999/03/18 22:32:48 neeti%netscape.com Exp $
+                           @(#) $Id: htchunk.h,v 1.2 1999/05/07 05:26:11 neeti%netscape.com Exp $
                                                                                           
     */
