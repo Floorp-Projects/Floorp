@@ -22,6 +22,18 @@
 
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
+static PRBool
+IsWindowsNT()
+{
+  OSVERSIONINFO versionInfo;
+
+  versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+  ::GetVersionEx(&versionInfo);
+  return versionInfo.dwPlatformId = VER_PLATFORM_WIN32_NT;
+}
+
+PRBool nsImageWin::gIsWinNT = IsWindowsNT();
+
 //------------------------------------------------------------
 
 nsImageWin :: nsImageWin()
@@ -222,8 +234,15 @@ struct MONOBITMAPINFO {
   }
 };
 
+// Raster op used with MaskBlt(). Assumes our transparency mask has 0 for the
+// opaque pixels and 1 for the transparent pixels. That means we want the
+// background raster op (value of 0) to be SRCCOPY, and the foreground raster
+// (value of 1) to just use the destination bits
+#define MASKBLT_ROP MAKEROP4((DWORD)0x00AA0029, SRCCOPY)
+
 // Draw the bitmap, this method has a source and destination coordinates
-PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                          PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
                           PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
   HDC   the_hdc = (HDC)aSurface;
@@ -261,6 +280,12 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
         oldbits = ::SelectObject(srcdc, mHBitmap);
         ::StretchBlt(the_hdc, aDX, aDY, aDWidth, aDHeight, srcdc, aSX, aSY,
                      aSWidth, aSHeight, SRCCOPY);
+      }
+      else if (gIsWinNT && (aDWidth == aSWidth) && (aDHeight == aSHeight))
+      {
+        oldbits = ::SelectObject(srcdc, mHBitmap);
+        ::MaskBlt(the_hdc, aDX, aDY, aDWidth, aDHeight,
+                  srcdc, aSX, aSY, mAlphaHBitmap, aSX, aSY, MASKBLT_ROP);
       }
       else
       {
@@ -323,6 +348,12 @@ PRBool nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurfa
         oldbits = ::SelectObject(srcdc, mHBitmap);
         ::StretchBlt(the_hdc, aX, aY, aWidth, aHeight, srcdc, 0, 0,
                      mBHead->biWidth, mBHead->biHeight, SRCCOPY);
+      }
+      else if (gIsWinNT && (aWidth == mBHead->biWidth) && (aHeight == mBHead->biHeight))
+      {
+        oldbits = ::SelectObject(srcdc, mHBitmap);
+        ::MaskBlt(the_hdc, aX, aY, aWidth, aHeight,
+                  srcdc, 0, 0, mAlphaHBitmap, 0, 0, MASKBLT_ROP);
       }
       else
       {
