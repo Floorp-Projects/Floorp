@@ -61,7 +61,8 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartBinding(nsIURL* aURL, const char *aCont
 		{	
 			nsFileSpec dbName(fileName);
 
-			(void)nsMailDatabase::Open(dbName, PR_TRUE, &m_mailDB, PR_FALSE);
+			(void)nsMailDatabase::Open(dbName, PR_TRUE, &m_mailDB, PR_TRUE);
+			NS_ASSERTION(m_mailDB, "failed to open mail db parsing folder");
 			printf("url file = %s\n", fileName);
 		}
 	}
@@ -186,7 +187,7 @@ int nsMsgMailboxParser::ProcessMailboxInputStream(nsIURL* aURL, nsIInputStream *
 		// which means a couple buffer copies.
 		ret = aIStream->Read(m_inputStream.GetBuffer(), aLength, &bytesRead);
 		if (ret == NS_OK)
-			ret = BufferInput(m_inputStream.GetBuffer(), m_inputStream.GetSize());
+			ret = BufferInput(m_inputStream.GetBuffer(), bytesRead);
 	}
 	if (m_graph_progress_total > 0)
 	{
@@ -208,7 +209,6 @@ void nsMsgMailboxParser::DoneParsingFolder()
 
 //	if (m_folder != NULL)
 //		m_folder->SummaryChanged();
-
 	FreeBuffers();
 }
 
@@ -338,6 +338,7 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 		PublishMsgHeader();
 		Clear();
 		status = StartNewEnvelope(line, lineLength);
+		NS_ASSERTION(status >= 0, " error starting envelope parsing mailbox");
 		if (status < 0)
 			return status;
 	}
@@ -411,10 +412,12 @@ PRInt32 nsParseMailMessageState::ParseFolderLine(const char *line, PRUint32 line
 		{
 		  /* End of headers.  Now parse them. */
 			status = ParseHeaders();
+			 NS_ASSERTION(status >= 0, "error parsing headers parsing mailbox");
 			if (status < 0)
 				return status;
 
 			 status = FinalizeHeaders();
+			 NS_ASSERTION(status >= 0, "error finalizing headers parsing mailbox");
 			if (status < 0)
 				return status;
 			 m_state = MBOX_PARSE_BODY;
@@ -1186,7 +1189,10 @@ int nsParseMailMessageState::FinalizeHeaders()
 			}
 		} 
 		else
+		{
+			NS_ASSERTION(FALSE, "error creating message header");
 			status = NS_ERROR_OUT_OF_MEMORY;	
+		}
 	}
 	else
 		status = 0;
