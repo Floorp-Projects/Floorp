@@ -93,10 +93,39 @@ public abstract class SecurityController {
      * Any call to {@link #getDynamicSecurityDomain(Object)} during
      * execution of <tt>callable.call(cx, scope, thisObj, args)</tt>
      * should return a domain incorporate restrictions imposed by
-     * <i>securityDomain</i>.
+     * <i>securityDomain</i> and Java stack on the moment of callWithDomain
+     * invocation.
+     * <p>
+     * The method should always be overridden, it is not declared abstract
+     * for compatibility reasons.
      */
-    public abstract Object callWithDomain(Object securityDomain, Context cx,
-                                          Callable callable, Scriptable scope,
-                                          Scriptable thisObj, Object[] args)
-        throws JavaScriptException;
+    public Object callWithDomain(Object securityDomain, Context cx,
+                                 final Callable callable, Scriptable scope,
+                                 final Scriptable thisObj, final Object[] args)
+        throws JavaScriptException
+    {
+        return execWithDomain(cx, scope, new Script()
+        {
+            public Object exec(Context cx, Scriptable scope)
+                throws JavaScriptException
+            {
+                return callable.call(cx, scope, thisObj, args);
+            }
+
+        }, securityDomain);
+    }
+
+    /**
+     * @deprecated The application should not override this method and instead
+     * override
+     * {@link callWithDomain(Object securityDomain, Context cx, Callable callable, Scriptable scope, Scriptable thisObj, Object[] args)}.
+     */
+    public Object execWithDomain(Context cx, Scriptable scope,
+                                 Script script, Object securityDomain)
+        throws JavaScriptException
+    {
+        throw new IllegalStateException("callWithDomain should be overridden");
+    }
+
+
 }

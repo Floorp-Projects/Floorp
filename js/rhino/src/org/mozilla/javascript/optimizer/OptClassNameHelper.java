@@ -66,13 +66,13 @@ public class OptClassNameHelper extends ClassNameHelper {
     }
 
     public String getTargetClassFileName() {
-		throw new IllegalArgumentException(
-			"The method depends on removed deprecated future.");
+        throw new IllegalArgumentException(
+            "The method depends on removed deprecated future.");
     }
 
     public void setTargetClassFileName(String classFileName) {
-		throw new IllegalArgumentException(
-			"The method depends on removed deprecated future.");
+        throw new IllegalArgumentException(
+            "The method depends on removed deprecated future.");
     }
 
     public String getTargetPackage() {
