@@ -438,8 +438,6 @@ nsViewManager::nsViewManager()
   mVMCount++;
   // NOTE:  we use a zeroing operator new, so all data members are
   // assumed to be cleared here.
-  mX = 0;
-  mY = 0;
   mCachingWidgetChanges = 0;
   mDefaultBackgroundColor = NS_RGBA(0, 0, 0, 0);
   mAllowDoubleBuffering = PR_TRUE; 
@@ -461,8 +459,6 @@ nsViewManager::~nsViewManager()
   NS_ASSERTION(nsnull != eventQueue, "Event queue is null"); 
   eventQueue->RevokeEvents(this);
   mInvalidateEventQueue = nsnull;  
-
-  NS_IF_RELEASE(mRootWindow);
 
   mRootScrollable = nsnull;
 
@@ -575,64 +571,25 @@ NS_IMETHODIMP nsViewManager::GetRootView(nsIView *&aView)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView, nsIWidget* aWidget)
+NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView)
 {
   nsView* view = NS_STATIC_CAST(nsView*, aView);
+
+  NS_ASSERTION(view, "Must have a root view");
 
   // Do NOT destroy the current root view. It's the caller's responsibility
   // to destroy it
   mRootView = view;
 
-  //now get the window too.
-  NS_IF_RELEASE(mRootWindow);
-
-  // The window must be specified through one of the following:
-  //* a) The aView has a nsIWidget instance or
-  //* b) the aWidget parameter is an nsIWidget instance to render into 
-  //*    that is not owned by a view.
-  //* c) aView has a parent view managed by a different view manager or
-
-  if (nsnull != aWidget) {
-    mRootWindow = aWidget;
-    NS_ADDREF(mRootWindow);
-    return NS_OK;
-  }
-
-  // case b) The aView has a nsIWidget instance
-  if (nsnull != mRootView) {
+  if (mRootView) {
     nsView* parent = mRootView->GetParent();
     if (parent) {
       parent->InsertChild(mRootView, nsnull);
     }
 
     mRootView->SetZIndex(PR_FALSE, 0, PR_FALSE);
-
-    mRootWindow = mRootView->GetWidget();
-    if (mRootWindow) {
-      NS_ADDREF(mRootWindow);
-      return NS_OK;
-    }
   }
 
-  // case c)  aView has a parent view managed by a different view manager
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager::GetWindowOffset(nscoord *aX, nscoord *aY)
-{
-  NS_ASSERTION(aX != nsnull, "aX pointer is null");
-  NS_ASSERTION(aY != nsnull, "aY pointer is null");
-
-  *aX = mX;
-  *aY = mY;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsViewManager::SetWindowOffset(nscoord aX, nscoord aY)
-{
-  mX = aX;
-  mY = aY;
   return NS_OK;
 }
 
@@ -1585,9 +1542,7 @@ NS_IMETHODIMP nsViewManager::Composite()
 {
   if (mUpdateCnt > 0)
     {
-      if (nsnull != mRootWindow)
-        mRootWindow->Update();
-  
+      ForceUpdate();
       mUpdateCnt = 0;
     }
 
@@ -3286,15 +3241,9 @@ NS_IMETHODIMP nsViewManager::GetWidgetForView(nsIView *aView, nsIWidget **aWidge
     *aWidget = view->GetWidget();
     NS_ADDREF(*aWidget);
   } else {
-    // No widget was found in the view hierachy, so use try to use the mRootWindow
-    if (nsnull != mRootWindow) {
-      NS_ASSERTION(this == view->GetViewManager(),
-                   "Must use the view instance's view manager when calling GetWidgetForView");
-      *aWidget = mRootWindow;
-      NS_ADDREF(mRootWindow);
-    } else {
-      *aWidget = nsnull;
-    }
+    // If there was a widget associated with our root view, we'd have found it
+    // above. So there are no widgets anywhere.
+    *aWidget = nsnull;
   }
 
   return NS_OK;
@@ -3303,15 +3252,16 @@ NS_IMETHODIMP nsViewManager::GetWidgetForView(nsIView *aView, nsIWidget **aWidge
 
 NS_IMETHODIMP nsViewManager::GetWidget(nsIWidget **aWidget)
 {
-  NS_IF_ADDREF(mRootWindow);
-  *aWidget = mRootWindow;
+  *aWidget = GetWidget();
+  NS_IF_ADDREF(*aWidget);
   return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager::ForceUpdate()
 {
-  if (mRootWindow)
-    mRootWindow->Update();
+  nsIWidget* widget = GetWidget();
+  if (widget)
+    widget->Update();
   return NS_OK;
 }
 

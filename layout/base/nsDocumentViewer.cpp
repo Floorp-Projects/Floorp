@@ -1857,9 +1857,6 @@ DocumentViewerImpl::MakeWindow(nsIWidget* aParentWidget,
   rv = mViewManager->Init(dx);
   if (NS_FAILED(rv))
     return rv;
-  rv = mViewManager->SetWindowOffset(tbounds.x, tbounds.y);
-  if (NS_FAILED(rv))
-    return rv;
 
   // Reset the bounds offset so the root view is set to 0,0. The
   // offset is specified in nsIViewManager::Init above.
