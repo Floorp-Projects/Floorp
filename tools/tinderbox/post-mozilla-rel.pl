@@ -358,13 +358,9 @@ sub packit_l10n {
       }
   
       # the one operation we care about saving status of
-      if ($Settings::sea_installer || $Settings::stub_installer) {
-        $status = run_locale_shell_command "$Settings::Make -C $objdir/browser/locales installers-$locale";
-        if ($status != 0) {
-          $tinderstatus = 'busted';
-        }
-      } else {
-        $status = 0;
+      $status = run_locale_shell_command "$Settings::Make -C $objdir/browser/locales installers-$locale";
+      if ($status != 0) {
+        $tinderstatus = 'busted';
       }
   
       if ($tinderstatus eq 'success') {
