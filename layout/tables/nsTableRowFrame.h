@@ -127,13 +127,13 @@ protected:
 
   void FixMinCellHeight();
 
-  nsresult RecoverState(nsIPresContext* aPresContext,
+  nsresult RecoverState(nsIPresContext& aPresContext,
                         RowReflowState& aState,
                         nsIFrame*       aKidFrame,
                         nscoord&        aMaxCellTopMargin,
                         nscoord&        aMaxCellBottomMargin);
 
-  void PlaceChild(nsIPresContext* aPresContext,
+  void PlaceChild(nsIPresContext& aPresContext,
                   RowReflowState& aState,
                   nsIFrame*       aKidFrame,
                   const nsRect&   aKidRect,
@@ -150,7 +150,7 @@ protected:
    * Called for a resize reflow. Typically because the column widths have
    * changed. Reflows all the existing table cell frames
    */
-  nsresult ResizeReflow(nsIPresContext*  aPresContext,
+  nsresult ResizeReflow(nsIPresContext&  aPresContext,
                         RowReflowState&  aState,
                         nsReflowMetrics& aDesiredSize);
 
@@ -158,14 +158,14 @@ protected:
    * Called for the initial reflow. Creates each table cell frame, and
    * reflows the cell frame to gets its minimum and maximum sizes
    */
-  nsresult InitialReflow(nsIPresContext*  aPresContext,
+  nsresult InitialReflow(nsIPresContext&  aPresContext,
                          RowReflowState&  aState,
                          nsReflowMetrics& aDesiredSize);
 
   /**
    * Called for incremental reflow
    */
-  nsresult IncrementalReflow(nsIPresContext*  aPresContext,
+  nsresult IncrementalReflow(nsIPresContext&  aPresContext,
                              RowReflowState&  aState,
                              nsReflowMetrics& aDesiredSize);
 
