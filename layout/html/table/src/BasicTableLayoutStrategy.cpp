@@ -197,7 +197,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnWidths(nsIStyleContext *aTableStyl
   }
 
   // Step 2 - determine how much space is really available
-  PRInt32 availWidth = aMaxWidth;                         // start with the max width I've been given
+  nscoord availWidth = aMaxWidth;                         // start with the max width I've been given
   if (NS_UNCONSTRAINEDSIZE!=availWidth)                   // if that's not infinite, subtract the fixed columns
     availWidth -= mFixedTableWidth;                       // that have already been accounted for
   if (PR_FALSE==tableIsAutoWidth)                         // if the table has a specified width
@@ -776,8 +776,10 @@ PRBool BasicTableLayoutStrategy::BalanceProportionalColumns(const nsReflowState&
   if (NS_UNCONSTRAINEDSIZE==aMaxWidth  ||  NS_UNCONSTRAINEDSIZE==mMinTableWidth)
   { // the max width of the table fits comfortably in the available space
     if (gsDebug) printf ("  * auto table laying out in NS_UNCONSTRAINEDSIZE, calling BalanceColumnsTableFits\n");
-    result = BalanceColumnsTableFits(aReflowState, aAvailWidth, 
-                                     aMaxWidth, aTableSpecifiedWidth, aTableIsAutoWidth);
+    nscoord bigSpace = 100000;
+    bigSpace = PR_MAX(bigSpace, mMaxTableWidth);
+    result = BalanceColumnsTableFits(aReflowState, bigSpace, 
+                                     bigSpace, aTableSpecifiedWidth, aTableIsAutoWidth);
   }
   else if (mMinTableWidth >= actualMaxWidth)
   { // the table doesn't fit in the available space
@@ -1071,7 +1073,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
           const nsStylePosition* cellPosition;
           cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)cellPosition);
           if (eStyleUnit_Percent==cellPosition->mWidth.GetUnit()) 
-          { //QQQ what if table is auto width?
+          { //XXX what if table is auto width?
             float percent = cellPosition->mWidth.GetPercentValue();
             specifiedCellWidth = (PRInt32)(aTableSpecifiedWidth*percent);
             if (gsDebug) printf("specified percent width %f of %d = %d\n", 
@@ -1222,6 +1224,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
     }
     else
     { // need to maintain this so we know how much we have left over at the end
+      mTableFrame->SetColumnWidth(colIndex, colFrame->GetMaxColWidth());
       widthOfFixedTableColumns += colFrame->GetMaxColWidth() + colInset;
     }
     tableWidth += mTableFrame->GetColumnWidth(colIndex) + colInset;
@@ -1510,7 +1513,7 @@ void BasicTableLayoutStrategy::DistributeExcessSpace(nscoord  aAvailWidth,
         totalEffectiveWidthOfAutoColumns += mTableFrame->GetColumnWidth(autoColumns[i]);
     }
     // excess is the amount of space that was available minus the computed available width
-    // QQQ shouldn't it just be aMaxWidth - aTableWidth???
+    // XXX shouldn't it just be aMaxWidth - aTableWidth???
     excess = aAvailWidth - widthMinusFixedColumns;
 
     // 2. next, compute the proportion to be added to each column, and add it
@@ -1761,7 +1764,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
           const nsStylePosition* cellPosition;
           cellFrame->GetStyleData(eStyleStruct_Position, (const nsStyleStruct*&)cellPosition);
           if (eStyleUnit_Percent==cellPosition->mWidth.GetUnit()) 
-          { //QQQ what if table is auto width?
+          { //XXX what if table is auto width?
             float percent = cellPosition->mWidth.GetPercentValue();
             specifiedCellWidth = (PRInt32)(aMaxWidth*percent);
             if (gsDebug) printf("specified percent width %f of %d = %d\n", 
@@ -1927,13 +1930,17 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
         }
       }
     }
+    else
+    {
+      mTableFrame->SetColumnWidth(colIndex, colFrame->GetMaxColWidth());
+    }
     tableWidth += mTableFrame->GetColumnWidth(colIndex) + colInset;
   }
   /* --- post-process if necessary --- */
   // first, assign autoWidth columns a width
   if (PR_TRUE==atLeastOneAutoWidthColumn)
   { // proportionately distribute the remaining space to autowidth columns
-    DistributeRemainingSpace(aMaxWidth, tableWidth);
+    DistributeRemainingSpace(aMaxWidth, tableWidth, aTableIsAutoWidth);
   }
   
   // second, fix up tables where column width attributes give us a table that is too wide or too narrow
@@ -1949,7 +1956,9 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
     }
     if (computedWidth<aMaxWidth) 
     { // then widen the table because it's too narrow
-      AdjustTableThatIsTooNarrow(computedWidth, aMaxWidth);
+      // do not widen auto-width tables, they shrinkwrap to their content's width
+      if (PR_FALSE==aTableIsAutoWidth)
+        AdjustTableThatIsTooNarrow(computedWidth, aMaxWidth);
     }
     else if (computedWidth>aMaxWidth) 
     { // then shrink the table width because its too wide
@@ -2002,7 +2011,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsConstrained( const nsReflowState&
 // take the remaining space in the table and distribute it proportionately 
 // to the auto-width cells in the table (based on desired width)
 void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecifiedWidth,
-                                                        nscoord  aComputedTableWidth)
+                                                        nscoord  aComputedTableWidth, 
+                                                        PRBool   aTableIsAutoWidth)
 {
   if (PR_TRUE==gsDebug) 
     printf ("DistributeRemainingSpace: fixed width %d > computed table width %d\n",
@@ -2010,9 +2020,6 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
   // if there are auto-sized columns, give them the extra space
   PRInt32 numAutoColumns=0;
   PRInt32 *autoColumns=nsnull;
-  // availWidth is the difference between the total available width and the 
-  // amount of space already assigned, assuming auto col widths were assigned 0.
-  nscoord availWidth = aTableSpecifiedWidth - aComputedTableWidth;
   mTableFrame->GetColumnsByType(eStyleUnit_Auto, numAutoColumns, autoColumns);
   if (0!=numAutoColumns)
   {
@@ -2030,6 +2037,10 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
       else
         totalEffectiveWidthOfAutoColumns += mTableFrame->GetColumnWidth(autoColumns[i]);
     }
+    // availWidth is the difference between the total available width and the 
+    // amount of space already assigned, assuming auto col widths were assigned 0.
+    nscoord availWidth;
+    availWidth = aTableSpecifiedWidth - aComputedTableWidth;
     if (gsDebug==PR_TRUE) 
       printf("  aTableSpecifiedWidth specified as %d, availWidth is = %d\n", 
              aTableSpecifiedWidth, availWidth);
@@ -2049,6 +2060,11 @@ void BasicTableLayoutStrategy::DistributeRemainingSpace(nscoord  aTableSpecified
         else
           percent = ((float)1)/((float)numAutoColumns);
         nscoord colWidth = (nscoord)(availWidth*percent);
+        // in an auto width table, the column cannot be wider than its max width
+        if (PR_TRUE==aTableIsAutoWidth)
+        { // since the table shrinks to the content width, don't be wider than the content max width
+          colWidth = PR_MIN(colWidth, colFrame->GetMaxColWidth()); // XXX can this legally be 0?
+        }
         if (gsDebug==PR_TRUE) 
           printf("  distribute width to auto columns:  column %d was %d, now set to %d\n", 
                  colIndex, colFrame->GetEffectiveMaxColWidth(), colWidth);
@@ -2294,37 +2310,46 @@ void BasicTableLayoutStrategy::AdjustTableThatIsTooNarrow(nscoord aComputedWidth
     {
       if ((PR_FALSE==expandFixedCols) && 
           (PR_TRUE==IsColumnInList(colIndex, fixedColumns, numFixedColumns)))
+          // skip fixed-width cells if we're told to
+        continue;
+      if (PR_TRUE==ColIsSpecifiedAsMinimumWidth(colIndex))
+        // skip columns that are forced by their attributes to be their minimum width
         continue;
       colsToGrow[numColsToGrow] = colIndex;
       numColsToGrow++;
     }    
-    nscoord excessPerColumn;
-    if (excess<numColsToGrow)
-      excessPerColumn=1;
-    else
-      excessPerColumn = excess/numColsToGrow;  
-    for (colIndex = 0; colIndex<mNumCols; colIndex++)
+    if (0!=numColsToGrow)
     {
-      if ((PR_TRUE==IsColumnInList(colIndex, colsToGrow, numColsToGrow)))
+      nscoord excessPerColumn;
+      if (excess<numColsToGrow)
+        excessPerColumn=1;
+      else
+        excessPerColumn = excess/numColsToGrow;  
+      for (colIndex = 0; colIndex<mNumCols; colIndex++)
       {
-        nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
-        nscoord colWidth = mTableFrame->GetColumnWidth(colIndex);
-        colWidth += excessPerColumn;
-        if (colWidth > colFrame->GetMinColWidth())
+        if ((PR_TRUE==IsColumnInList(colIndex, colsToGrow, numColsToGrow)))
         {
-          excess -= excessPerColumn;
-          mTableFrame->SetColumnWidth(colIndex, colWidth);
+          nsTableColFrame *colFrame = mTableFrame->GetColFrame(colIndex);
+          nscoord colWidth = mTableFrame->GetColumnWidth(colIndex);
+          colWidth += excessPerColumn;
+          if (colWidth > colFrame->GetMinColWidth())
+          {
+            excess -= excessPerColumn;
+            mTableFrame->SetColumnWidth(colIndex, colWidth);
+          }
+          else
+          {
+            excess -= mTableFrame->GetColumnWidth(colIndex) - colFrame->GetMinColWidth();   
+            mTableFrame->SetColumnWidth(colIndex, colFrame->GetMinColWidth());
+          }
+          if (0>excess)
+            break;
         }
-        else
-        {
-          excess -= mTableFrame->GetColumnWidth(colIndex) - colFrame->GetMinColWidth();   
-          mTableFrame->SetColumnWidth(colIndex, colFrame->GetMinColWidth());
-        }
-        if (0>excess)
-          break;
       }
     }
     delete [] colsToGrow;
+    if (0==numColsToGrow)
+      break;
   } // end while (0<excess)
   if (PR_TRUE==gsDebug)
   {
@@ -2356,5 +2381,37 @@ PRBool BasicTableLayoutStrategy::IsColumnInList(const PRInt32 colIndex,
   }
   return result;
 }
+
+PRBool BasicTableLayoutStrategy::ColIsSpecifiedAsMinimumWidth(PRInt32 aColIndex)
+{
+  PRBool result = PR_FALSE;
+  nsTableColFrame* colFrame;
+  mTableFrame->GetColumnFrame(aColIndex, colFrame);
+  const nsStylePosition* colPosition;
+  colFrame->GetStyleData(eStyleStruct_Position, (nsStyleStruct*&)colPosition);
+  switch (colPosition->mWidth.GetUnit())
+  {
+  case eStyleUnit_Coord:
+    if (0==colPosition->mWidth.GetCoordValue())
+      result = PR_TRUE;
+    break;
+  case eStyleUnit_Percent:
+    {
+      // total hack for now for 0% and 1% specifications
+      // should compare percent to available parent width and see that it is below minimum
+      // for this column
+      float percent = colPosition->mWidth.GetPercentValue();
+      if (0.0f == percent || 0.01f == percent)  
+        result = PR_TRUE;
+      break;
+    }
+  case eStyleUnit_Proportional:
+    if (0==colPosition->mWidth.GetIntValue())
+      result=PR_TRUE;
+  }
+
+  return result;
+}
+
 
 

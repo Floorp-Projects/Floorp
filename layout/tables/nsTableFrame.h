@@ -350,6 +350,11 @@ protected:
     */
   virtual void ResetCellMap ();
 
+  /** Get the cell map for this table frame.  It is not always mCellMap.
+    * Only the firstInFlow has a legit cell map
+    */
+  virtual nsCellMap *GetCellMap();
+
   /** for debugging only
     * prints out information about the cell map
     */

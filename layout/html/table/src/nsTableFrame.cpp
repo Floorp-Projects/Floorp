@@ -348,8 +348,9 @@ PRInt32 nsTableFrame::GetRowCount ()
 {
   PRInt32 rowCount = 0;
 
-  if (nsnull != mCellMap)
-    return mCellMap->GetRowCount();
+  nsCellMap *cellMap = GetCellMap();
+  if (nsnull != cellMap)
+    return cellMap->GetRowCount();
 
   nsIFrame *child=mFirstChild;
   while (nsnull!=child)
@@ -368,9 +369,10 @@ PRInt32 nsTableFrame::GetRowCount ()
 /* return the effective col count */
 PRInt32 nsTableFrame::GetColCount ()
 {
-  NS_ASSERTION(nsnull!=mCellMap, "GetColCount can only be called after cellmap has been created");
+  nsCellMap *cellMap = GetCellMap();
+  NS_ASSERTION(nsnull!=cellMap, "GetColCount can only be called after cellmap has been created");
 
-  if (nsnull!=mCellMap)
+  if (nsnull!=cellMap)
   {
     if (-1==mEffectiveColCount)
       SetEffectiveColCount();
@@ -380,17 +382,18 @@ PRInt32 nsTableFrame::GetColCount ()
 
 void nsTableFrame::SetEffectiveColCount()
 {
-  if (nsnull!=mCellMap)
+  nsCellMap *cellMap = GetCellMap();
+  if (nsnull!=cellMap)
   {
-    PRInt32 colCount = mCellMap->GetColCount();
+    PRInt32 colCount = cellMap->GetColCount();
     mEffectiveColCount = colCount;
-    PRInt32 rowCount = mCellMap->GetRowCount();
+    PRInt32 rowCount = cellMap->GetRowCount();
     for (PRInt32 colIndex=colCount-1; colIndex>0; colIndex--)
     {
       PRBool deleteCol=PR_TRUE;
       for (PRInt32 rowIndex=0; rowIndex<rowCount; rowIndex++)
       {
-        CellData *cell = mCellMap->GetCellAt(rowIndex, colIndex);
+        CellData *cell = cellMap->GetCellAt(rowIndex, colIndex);
         if ((nsnull!=cell) && (cell->mCell != nsnull))
         { // found a real cell, so we're done
           deleteCol = PR_FALSE;
@@ -405,14 +408,13 @@ void nsTableFrame::SetEffectiveColCount()
   }
 }
 
-
-
 nsTableColFrame * nsTableFrame::GetColFrame(PRInt32 aColIndex)
 {
   nsTableColFrame *result = nsnull;
-  if (nsnull!=mCellMap)
+  nsCellMap *cellMap = GetCellMap();
+  if (nsnull!=cellMap)
   {
-    result = mCellMap->GetColumnFrame(aColIndex);
+    result = cellMap->GetColumnFrame(aColIndex);
   }
   return result;
 }
@@ -421,9 +423,10 @@ nsTableColFrame * nsTableFrame::GetColFrame(PRInt32 aColIndex)
 nsTableCellFrame * nsTableFrame::GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex)
 {
   nsTableCellFrame *result = nsnull;
-  if (nsnull!=mCellMap)
+  nsCellMap *cellMap = GetCellMap();
+  if (nsnull!=cellMap)
   {
-    CellData * cellData = mCellMap->GetCellAt(aRowIndex, aColIndex);
+    CellData * cellData = cellMap->GetCellAt(aRowIndex, aColIndex);
     if (nsnull!=cellData)
     {
       result = cellData->mCell;
@@ -433,7 +436,6 @@ nsTableCellFrame * nsTableFrame::GetCellAt(PRInt32 aRowIndex, PRInt32 aColIndex)
   }
   return result;
 }
-
 
 // return the number of rows spanned by aCell starting at aRowIndex
 // note that this is different from just the rowspan of aCell
@@ -463,10 +465,11 @@ PRInt32 nsTableFrame::GetEffectiveRowSpan (PRInt32 aRowIndex, nsTableCellFrame *
 PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *aCell)
 {
   NS_PRECONDITION (nsnull!=aCell, "bad cell arg");
-  NS_PRECONDITION (nsnull!=mCellMap, "bad call, mCellMap not yet allocated.");
+  nsCellMap *cellMap = GetCellMap();
+  NS_PRECONDITION (nsnull!=cellMap, "bad call, mCellMap not yet allocated.");
   NS_PRECONDITION (0<=aColIndex && aColIndex<GetColCount(), "bad col index arg");
 
-  if (mCellMap->GetRowCount()==1)
+  if (cellMap->GetRowCount()==1)
     return 1;
   PRInt32 colSpan = aCell->GetColSpan();
   PRInt32 colCount = GetColCount();
@@ -477,7 +480,8 @@ PRInt32 nsTableFrame::GetEffectiveColSpan (PRInt32 aColIndex, nsTableCellFrame *
 
 PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
 {
-  NS_PRECONDITION (nsnull!=mCellMap, "bad call, mCellMap not yet allocated.");
+  nsCellMap *cellMap = GetCellMap();
+  NS_PRECONDITION (nsnull!=cellMap, "bad call, mCellMap not yet allocated.");
   PRInt32 result;
   nsIFrame *tableFrame = this;
 // begin REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!   XXX
@@ -496,6 +500,7 @@ PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
 /* call when the cell structure has changed.  mCellMap will be rebuilt on demand. */
 void nsTableFrame::ResetCellMap ()
 {
+  // XXX: SEC should this call ResetCellMap on firstInFlow?
   if (nsnull!=mCellMap)
     delete mCellMap;
   mCellMap = nsnull; // for now, will rebuild when needed
@@ -516,6 +521,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
                                  const nsReflowState& aReflowState,
                                  nsReflowStatus&      aStatus)
 {
+  // XXX sec should only be called on firstInFlow
   EnsureCellMap();
   if (nsnull==mCellMap)
     return; // no info yet, so nothing useful to do
@@ -607,6 +613,19 @@ void nsTableFrame::EnsureColumns(nsIPresContext*      aPresContext,
     NS_RELEASE(lastColGroup);                       // ADDREF: lastColGroup--
     lastColGroupFrame->Reflow(*aPresContext, aDesiredSize, aReflowState, aStatus);
   }
+}
+
+/** Get the cell map for this table frame.  It is not always mCellMap.
+  * Only the firstInFlow has a legit cell map
+  */
+nsCellMap * nsTableFrame::GetCellMap()
+{
+  nsTableFrame * firstInFlow = (nsTableFrame *)GetFirstInFlow();
+  if (this!=firstInFlow)
+  {
+    return firstInFlow->GetCellMap();
+  }
+  return mCellMap;
 }
 
 void nsTableFrame::EnsureCellMap()
@@ -1301,12 +1320,15 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     }
     mPass = kPASS_SECOND;
 
-    // assign column widths, and assign aMaxElementSize->width
-    BalanceColumnWidths(&aPresContext, aReflowState, aReflowState.maxSize,
-                        aDesiredSize.maxElementSize);
+    if (nsnull==mPrevInFlow)
+    {
+      // assign column widths, and assign aMaxElementSize->width
+      BalanceColumnWidths(&aPresContext, aReflowState, aReflowState.maxSize,
+                          aDesiredSize.maxElementSize);
 
-    // assign table width
-    SetTableWidth(&aPresContext);
+      // assign table width
+      SetTableWidth(&aPresContext);
+    }
 
     // Constrain our reflow width to the computed table width
     nsReflowState    reflowState(aReflowState);
