@@ -79,11 +79,20 @@ calendarManager.prototype.addActiveCalendars = function calMan_addActiveCalendar
 /*
 ** Launch the new calendar file dialog
 */
-calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCalendarDialog( )
+calendarManager.prototype.launchAddCalendarDialog = function calMan_launchAddCalendarDialog( aName, aUrl )
 {
    // set up a bunch of args to pass to the dialog
    var ThisCalendarObject = new CalendarObject();
    
+   if( aName )
+      ThisCalendarObject.name = aName;
+
+   if( aUrl )
+   {
+      ThisCalendarObject.remote = true;
+      ThisCalendarObject.remotePath = aUrl;
+   }
+
    var args = new Object();
    args.mode = "new";
 
@@ -452,3 +461,102 @@ function deleteCalendar( )
 
    gCalendarWindow.currentView.refreshEvents();
 }
+
+
+const nsIDragService = Components.interfaces.nsIDragService;
+
+var calendarManagerDNDObserver = {
+
+   // This function should return a list of flavours that the object being dragged over can accept.
+   getSupportedFlavours : function ()
+   {
+      var flavourSet = new FlavourSet();
+      // flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
+      flavourSet.appendFlavour("text/x-moz-url");
+      return flavourSet;
+   },
+
+   //Define this function to have something happen when a drag starts
+   onDragStart: function (aEvent, aXferData, aDragAction)
+   {
+   },
+
+
+   // The onDragOver function defines what happens when an object is dragged over.
+   onDragOver: function (aEvent, aFlavour, aDragSession)
+   {
+   },
+
+
+   onDrop: function (aEvent, aXferData, aDragSession)
+   {
+      var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
+      // trans.addDataFlavor("application/x-moz-file");
+      trans.addDataFlavor("text/x-moz-url");
+
+      aDragSession.getData (trans, i);
+
+      var dataObj = new Object();
+      var bestFlavor = new Object();
+      var len = new Object();
+      trans.getAnyTransferData(bestFlavor, dataObj, len);
+
+      switch (bestFlavor.value)
+      {
+
+      case "text/x-moz-url":
+         var droppedUrl = this.retrieveURLFromData(aXferData.data, aXferData.flavour.contentType);
+         if (!droppedUrl)
+             return;
+
+         // url has spec, fileName, fileBaseName, fileExtension and others
+         var url = Components.classes["@mozilla.org/network/standard-url;1"].createInstance();
+         url = url.QueryInterface(Components.interfaces.nsIURL);
+	      url.spec = droppedUrl;
+	      gCalendarWindow.calendarManager.launchAddCalendarDialog(url.fileBaseName, url.spec )
+
+         break;
+
+      case "application/x-moz-file": // file from OS, we expect it to be iCalendar data
+         try {
+            var fileObj = dataObj.value.QueryInterface(Components.interfaces.nsIFile);
+            var aDataStream = readDataFromFile( fileObj.path );
+         }
+         catch(ex) {
+            alert(ex.message);
+         }
+	 break;
+      }
+      
+  },
+
+  onDragExit: function (aEvent, aDragSession)
+  {
+     // nothing, doesn't fire for cancel? needed for interval-drag cleanup
+  },
+
+  retrieveURLFromData: function(aData, flavour)
+  {
+     switch (flavour) 
+     {
+         case "text/unicode":
+            if (aData.search(client.linkRE) != -1)
+                 return aData;
+             else
+                 return null;
+ 
+         case "text/x-moz-url":
+             var data = aData.toString();
+             var separator = data.indexOf("\n");
+             if (separator != -1)
+                 data = data.substr(0, separator);
+             return data;
+ 
+         case "application/x-moz-file":
+             return aData.URL;
+     }
+ 
+    return null;                                                   
+  }
+
+};

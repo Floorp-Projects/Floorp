@@ -79,24 +79,24 @@
 	    <vbox id="month-title-container" flex="1">
 		<hbox id="month-title-box" flex="1">
 		    <vbox class="month-title-label-box" flex="1">
-			<label id="-2-month-title" onclick="gCalendarWindow.goToPrevious( 2 )" value="" />
+			<label id="-2-month-title" onclick="gCalendarWindow.goToPrevious( 2 )"/>
 		    </vbox>
 		    <vbox class="month-title-label-box" flex="1">
-			<label id="-1-month-title" onclick="gCalendarWindow.goToPrevious( 1 )" value="" />
+			<label id="-1-month-title" onclick="gCalendarWindow.goToPrevious( 1 )"/>
 		    </vbox>
 		    <vbox class="month-title-label-box" flex="1">
-			<label id="0-month-title"  value="" />
+			<label id="0-month-title" />
 		    </vbox>
 		    <vbox class="month-title-label-box" flex="1">
-			<label id="1-month-title" onclick="gCalendarWindow.goToNext( 1 )" value="" />
+			<label id="1-month-title" onclick="gCalendarWindow.goToNext( 1 )"/>
 		    </vbox>
 		    <vbox class="month-title-label-box" flex="1">
-			<label id="2-month-title" onclick="gCalendarWindow.goToNext( 2 )" value="" />
+			<label id="2-month-title" onclick="gCalendarWindow.goToNext( 2 )"/>
 		    </vbox>
 	        </hbox>
 		<hbox id="year-title-box" flex="1">
 		    <vbox class="month-title-label-box" flex="1">
-   			<label id="0-year-title" value="" />
+   			<label id="0-year-title"/>
 		    </vbox>
 		</hbox>
 	    </vbox>
@@ -114,15 +114,15 @@
 	    <!-- Month View: Calendar Grid -->
 
 	    <box id="month-grid-box" flex="1">    
-		<grid id="month-grid" flex="1">
+         <grid id="month-grid" flex="1">
 		    <columns>
-			<column class="month-column-class" flex="1"/>
-			<column class="month-column-class" flex="1"/>
-			<column class="month-column-class" flex="1"/>
-			<column class="month-column-class" flex="1"/>
-			<column class="month-column-class" flex="1"/>
-			<column class="month-column-class" flex="1"/>
-			<column class="month-column-class" flex="1"/>
+   			<column class="month-column-class" flex="1"/>
+   			<column class="month-column-class" flex="1"/>
+   			<column class="month-column-class" flex="1"/>
+   			<column class="month-column-class" flex="1"/>
+   			<column class="month-column-class" flex="1"/>
+   			<column class="month-column-class" flex="1"/>
+   			<column class="month-column-class" flex="1"/>
 		    </columns>
 
 		    <rows >
@@ -151,261 +151,185 @@
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class" flex="1" id="month-week-1-day-1-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-1-day-1" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1" id="month-week-1-day-1-box">
+   			   <label class="month-day-number-class" id="month-week-1-day-1"/>
+   			</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1" id="month-week-1-day-2-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-1-day-2" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1" id="month-week-1-day-2-box">
+				   <label class="month-day-number-class" id="month-week-1-day-2"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1" id="month-week-1-day-3-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-1-day-3" value="" />
-				</hbox>
-			    </vbox>
+			   <vbox class="month-day-box-class" flex="1" id="month-week-1-day-3-box">
+				   <label class="month-day-number-class" id="month-week-1-day-3"/>
+				</vbox>
 
-			    <vbox class="month-day-box-class" flex="1" id="month-week-1-day-4-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-1-day-4" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1" id="month-week-1-day-4-box">
+				   <label class="month-day-number-class" id="month-week-1-day-4"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-1-day-5-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-1-day-5" value="" />
-				</hbox>                   
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-1-day-5-box">
+				   <label class="month-day-number-class" id="month-week-1-day-5"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-1-day-6-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-1-day-6" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-1-day-6-box">
+				   <label class="month-day-number-class" id="month-week-1-day-6"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-1-day-7-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-1-day-7" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-1-day-7-box">
+				   <label class="month-day-number-class" id="month-week-1-day-7"/>
+				</vbox>    
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-1-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-2-day-1" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-1-box">
+				   <label class="month-day-number-class" id="month-week-2-day-1"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-2-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-2-day-2" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-2-box">
+				   <label class="month-day-number-class" id="month-week-2-day-2"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-3-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-2-day-3" value="" />
-				</hbox>                   
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-3-box">
+				   <label class="month-day-number-class" id="month-week-2-day-3"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-4-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-2-day-4" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-4-box">
+				   <label class="month-day-number-class" id="month-week-2-day-4"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-5-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-2-day-5" value="" />
-				</hbox>                   
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-2-day-5-box">
+				   <label class="month-day-number-class" id="month-week-2-day-5"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1" id="month-week-2-day-6-box"  >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-2-day-6" value="" />
-				</hbox>                    
-			    </vbox>    
+			    <vbox class="month-day-box-class" flex="1" id="month-week-2-day-6-box">
+				   <label class="month-day-number-class" id="month-week-2-day-6"/>
+				 </vbox>    
 
 			    <vbox class="month-day-box-class" flex="1" id="month-week-2-day-7-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-2-day-7" value="" />
-				</hbox>                    
-			    </vbox>    
+				   <label class="month-day-number-class" id="month-week-2-day-7"/>
+				 </vbox>    
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class" flex="1" id="month-week-3-day-1-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-3-day-1" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1" id="month-week-3-day-1-box">
+				   <label class="month-day-number-class" id="month-week-3-day-1"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1" id="month-week-3-day-2-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-3-day-2" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1" id="month-week-3-day-2-box">
+				   <label class="month-day-number-class" id="month-week-3-day-2"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-3-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-3-day-3" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-3-box">
+				   <label class="month-day-number-class" id="month-week-3-day-3"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-4-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-3-day-4" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-4-box">
+				   <label class="month-day-number-class" id="month-week-3-day-4"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-5-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-3-day-5" value="" />
-				</hbox>                   
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-5-box">
+				    <label class="month-day-number-class" id="month-week-3-day-5"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-6-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-3-day-6" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-6-box">
+				   <label class="month-day-number-class" id="month-week-3-day-6"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-7-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-3-day-7" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-3-day-7-box">
+				   <label class="month-day-number-class" id="month-week-3-day-7"/>
+				</vbox>    
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-1-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-4-day-1" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-1-box">
+				   <label class="month-day-number-class" id="month-week-4-day-1"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-2-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-4-day-2" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-2-box">
+				    <label class="month-day-number-class" id="month-week-4-day-2"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-3-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-4-day-3" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-3-box">
+				   <label class="month-day-number-class" id="month-week-4-day-3"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"   id="month-week-4-day-4-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-4-day-4" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"   id="month-week-4-day-4-box">
+				   <label class="month-day-number-class" id="month-week-4-day-4"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-5-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-4-day-5" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-5-box">
+				   <label class="month-day-number-class" id="month-week-4-day-5"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-6-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-4-day-6" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-6-box">
+				   <label class="month-day-number-class" id="month-week-4-day-6"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-7-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-4-day-7" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-4-day-7-box">
+				   <label class="month-day-number-class" id="month-week-4-day-7"/>
+				</vbox>    
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class" flex="1" id="month-week-5-day-1-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-5-day-1" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1" id="month-week-5-day-1-box">
+				   <label class="month-day-number-class" id="month-week-5-day-1"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1" id="month-week-5-day-2-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-5-day-2" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1" id="month-week-5-day-2-box">
+				   <label class="month-day-number-class" id="month-week-5-day-2"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-3-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-5-day-3" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-3-box">
+				   <label class="month-day-number-class" id="month-week-5-day-3"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-4-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-5-day-4" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-4-box">
+				   <label class="month-day-number-class" id="month-week-5-day-4"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-5-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-5-day-5" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-5-box">
+				   <label class="month-day-number-class" id="month-week-5-day-5"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-6-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-5-day-6" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-6-box">
+				   <label class="month-day-number-class" id="month-week-5-day-6"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-7-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-5-day-7" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-5-day-7-box">
+				   <label class="month-day-number-class" id="month-week-5-day-7"/>
+				</vbox>    
 			</row>
 
 			<row flex="1"  >
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-1-box">
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-6-day-1" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-1-box">
+				   <label class="month-day-number-class" id="month-week-6-day-1"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-2-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-6-day-2" value="" />
-				</hbox>                    
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-2-box" >
+				   <label class="month-day-number-class" id="month-week-6-day-2"/>
+				</vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-3-box" >
-				<hbox>
-				    <label class="month-day-number-class" id="month-week-6-day-3" value="" />
-				</hbox>
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-3-box" >
+				   <label class="month-day-number-class" id="month-week-6-day-3"/>
+				</vbox>    
+            
+            <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-4-box" >
+				   <label  class="month-day-number-class" id="month-week-6-day-4"/>
+			   </vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-4-box" >
-				<label  class="month-day-number-class" id="month-week-6-day-4" value="" />
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"   id="month-week-6-day-5-box">
+				   <label  class="month-day-number-class" id="month-week-6-day-5"/>
+			   </vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"   id="month-week-6-day-5-box">
-				<label  class="month-day-number-class" id="month-week-6-day-5" value="" />
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"   id="month-week-6-day-6-box">
+			      <label  class="month-day-number-class" id="month-week-6-day-6"/>
+			   </vbox>    
 
-			    <vbox class="month-day-box-class" flex="1"   id="month-week-6-day-6-box">
-				<label  class="month-day-number-class" id="month-week-6-day-6" value="" />
-			    </vbox>    
-
-			    <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-7-box">
-				<label  class="month-day-number-class" id="month-week-6-day-7" value="" />
-			    </vbox>    
+			   <vbox class="month-day-box-class" flex="1"  id="month-week-6-day-7-box">
+				   <label  class="month-day-number-class" id="month-week-6-day-7"/>
+			   </vbox>    
 			</row>
-		    </rows>
+		   </rows>
 		</grid>
 
 	    </box>  <!-- End: Month grid box -->
