@@ -52,13 +52,13 @@
    "Test/BaseExampleSemantics.rtf"
    "Base Example Semantics"
    #'(lambda (rtf-stream)
-       (depict-world-commands rtf-stream *bew*)))
+       (depict-world-commands rtf-stream *bew* :heading-offset 1)))
   (depict-html-to-local-file
    "Test/BaseExampleSemantics.html"
    "Base Example Semantics"
    t
    #'(lambda (html-stream)
-       (depict-world-commands html-stream *bew*))
+       (depict-world-commands html-stream *bew* :heading-offset 1))
    :external-link-base ""))
 
 

@@ -63,7 +63,7 @@
               ((character-value character nil identity)
                ($digit-value integer digit-value digit-char-36)))
        
-       (%section "Comments")
+       (%heading 1 "Comments")
        (production :line-comment (#\/ #\/ :line-comment-characters) line-comment)
        
        (production :line-comment-characters () line-comment-characters-empty)
@@ -90,14 +90,14 @@
        (production :multi-line-block-comment-characters (:multi-line-block-comment-characters :block-comment-characters :line-terminator)
                    multi-line-block-comment-characters-rest)
        
-       (%section "White space")
+       (%heading 1 "White space")
        
        (production :white-space () white-space-empty)
        (production :white-space (:white-space :white-space-character) white-space-character)
        (production :white-space (:white-space :single-line-block-comment) white-space-single-line-block-comment)
        (%charclass :white-space-character)
        
-       (%section "Line breaks")
+       (%heading 1 "Line breaks")
        
        (production :line-break (:line-terminator) line-break-line-terminator)
        (production :line-break (:line-comment :line-terminator) line-break-line-comment)
@@ -107,7 +107,7 @@
        (production :line-breaks (:line-break) line-breaks-first)
        (production :line-breaks (:line-breaks :white-space :line-break) line-breaks-rest)
        
-       (%section "Tokens")
+       (%heading 1 "Tokens")
        
        (declare-action token :next-token token)
        (production :next-token (:white-space :token) next-token
@@ -133,7 +133,7 @@
        (deftype token (oneof (identifier string) (reserved-word string) (punctuator string) (number float64) (string string) line-breaks end))
        (%print-actions)
        
-       (%section "Keywords")
+       (%heading 1 "Keywords")
        
        (declare-action name :identifier-name string)
        (production :identifier-name (:identifier-letter) identifier-name-letter
@@ -172,7 +172,7 @@
                     (oneof identifier id)))))
        (%print-actions)
        
-       (%section "Punctuators")
+       (%heading 1 "Punctuators")
        
        (declare-action punctuator :punctuator string)
        (production :punctuator (#\=) punctuator-assignment (punctuator "="))
@@ -225,7 +225,7 @@
        (production :punctuator (#\;) punctuator-semicolon (punctuator ";"))
        (%print-actions)
        
-       (%section "Numeric literals")
+       (%heading 1 "Numeric literals")
        
        (declare-action float64-value :numeric-literal float64)
        (production :numeric-literal (:decimal-literal) numeric-literal-decimal
@@ -320,7 +320,7 @@
        (%charclass :octal-digit)
        (%print-actions)
        
-       (%section "String literals")
+       (%heading 1 "String literals")
        
        (grammar-argument :quote single double)
        (declare-action string-value :string-literal string)
@@ -443,14 +443,14 @@
  "JSECMA/LexerSemantics.rtf"
  "ECMAScript 1 Lexer Semantics"
  #'(lambda (rtf-stream)
-     (depict-world-commands rtf-stream *lw*)))
+     (depict-world-commands rtf-stream *lw* :heading-offset 1)))
 
 (depict-html-to-local-file
  "JSECMA/LexerSemantics.html"
  "ECMAScript 1 Lexer Semantics"
  t
- #'(lambda (rtf-stream)
-     (depict-world-commands rtf-stream *lw*)))
+ #'(lambda (html-stream)
+     (depict-world-commands html-stream *lw* :heading-offset 1)))
 
 (with-local-output (s "JSECMA/LexerGrammar.txt") (print-lexer *ll* s) (print-grammar *lg* s))
 

@@ -47,14 +47,14 @@
  "Test/WritableActionSemantics.rtf"
  "Writable Action Semantics"
  #'(lambda (rtf-stream)
-     (depict-world-commands rtf-stream *waw*)))
+     (depict-world-commands rtf-stream *waw* :heading-offset 1)))
 
 (depict-html-to-local-file
  "Test/WritableActionSemantics.html"
  "Writable Action Semantics"
  t
  #'(lambda (html-stream)
-     (depict-world-commands html-stream *waw*))
+     (depict-world-commands html-stream *waw* :heading-offset 1))
  :external-link-base "")
 
 

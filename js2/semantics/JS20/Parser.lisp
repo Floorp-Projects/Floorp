@@ -9,7 +9,8 @@
 (defparameter *jw-source* 
   '((line-grammar code-grammar :lr-1 :program)
     
-    (%section :semantics "Errors")
+    (%heading (1 :semantics) "Data Model")
+    (%heading (2 :semantics) "Errors")
     
     (deftag syntax-error)
     (deftag reference-error)
@@ -27,25 +28,25 @@
     (deftype semantic-exception (union early-exit semantic-error))
     
     
-    (%section :semantics "Objects")
-    (%subsection :semantics "Undefined")
+    (%heading (2 :semantics) "Objects")
+    (%heading (3 :semantics) "Undefined")
     (deftag undefined)
     (deftype undefined (tag undefined))
     
     
-    (%subsection :semantics "Null")
+    (%heading (3 :semantics) "Null")
     (deftag null)
     (deftype null (tag null))
     
     
-    (%subsection :semantics "Namespaces")
+    (%heading (3 :semantics) "Namespaces")
     (defrecord namespace (name string))
     (deftype namespace-opt (union null namespace))
     
     (define public-namespace namespace (new namespace "public"))
     
     
-    (%subsection :semantics "Attributes")
+    (%heading (3 :semantics) "Attributes")
     (deftag dynamic)
     (deftag fixed)
     (deftype class-modifier (tag null dynamic fixed))
@@ -74,7 +75,7 @@
       (unused boolean))
     
     
-    (%subsection :semantics "Classes")
+    (%heading (3 :semantics) "Classes")
     (defrecord class
       (super class-opt)
       (prototype object)
@@ -129,13 +130,13 @@
       (return (and (is-ancestor c d) (/= c d class))))
     
     
-    (%subsection :semantics "Method Closures")
+    (%heading (3 :semantics) "Method Closures")
     (deftuple method-closure
       (this object)
       (method method))
     
     
-    (%subsection :semantics "General Instances")
+    (%heading (3 :semantics) "Class Instances")
     (defrecord instance
       (type class)
       (model instance-opt)
@@ -151,7 +152,7 @@
       (value object))
     
     
-    (%subsection :semantics "Objects")
+    (%heading (3 :semantics) "Objects")
     
     (deftype object (union undefined null boolean float64 string namespace attribute class method-closure instance))
     
@@ -239,7 +240,7 @@
       (return (u-int32-to-int32 (to-u-int32 x))))
     
     
-    (%subsection :semantics "Slots")
+    (%heading (3 :semantics) "Slots")
     (defrecord slot-id (type class))
     
     (defrecord slot
@@ -259,7 +260,7 @@
       (value object :var))
     
     
-    (%section :semantics "References")
+    (%heading (2 :semantics) "References")
     (deftuple qualified-name (namespace namespace) (name string))
     
     (deftuple partial-name (namespaces (list-set namespace)) (name string))
@@ -305,7 +306,7 @@
         (:narrow reference (return (& base r)))))
     
     
-    (%section :semantics "Signatures")
+    (%heading (2 :semantics) "Signatures")
     (deftuple signature
       (required-positional (vector class))
       (optional-positional (vector class))
@@ -319,7 +320,7 @@
       (type class))
     
     
-    (%section :semantics "Argument Lists")
+    (%heading (2 :semantics) "Argument Lists")
     (deftuple named-argument (name string) (value object))
     
     (deftuple argument-list
@@ -330,7 +331,7 @@
     (deftype invoker (-> (object argument-list) object))
     
     
-    (%subsection :semantics "Members")
+    (%heading (3 :semantics) "Members")
     (defrecord method
       (type signature)
       (f instance-opt)) ;Method code (may be undefined)
@@ -460,7 +461,7 @@
       (todo))
     
     
-    (%section :semantics "Validation Environments")
+    (%heading (2 :semantics) "Validation Environments")
     (deftuple validation-env
       (enclosing-class class-opt)
       (labels (vector string))
@@ -478,7 +479,7 @@
       (return (/= (& enclosing-class v) null class-opt)))
     
     
-    (%section :semantics "Dynamic Environments")
+    (%heading (2 :semantics) "Dynamic Environments")
     (defrecord dynamic-env
       (parent dynamic-env-opt)
       (enclosing-class class-opt)
@@ -517,7 +518,7 @@
       (todo))
     
     
-    (%section :semantics "Unary Operators")
+    (%heading (2 :semantics) "Unary Operators")
     (deftuple unary-method 
       (operand-type class)
       (f (-> (object object argument-list) object)))
@@ -546,7 +547,7 @@
         (throw property-not-found-error)))
     
     
-    (%subsection :semantics "Unary Operator Tables")
+    (%heading (3 :semantics) "Unary Operator Tables")
     
     (define (plus-object (this object :unused) (a object) (args argument-list :unused)) object
       (return (to-number a)))
@@ -617,7 +618,7 @@
       (return (not (to-boolean a))))
     
     
-    (%section :semantics "Binary Operators")
+    (%heading (2 :semantics) "Binary Operators")
     (deftuple binary-method
       (left-type class)
       (right-type class)
@@ -645,7 +646,7 @@
         (throw property-not-found-error)))
     
     
-    (%subsection :semantics "Binary Operator Tables")
+    (%heading (3 :semantics) "Binary Operator Tables")
     
     (define (add-objects (a object) (b object)) object
       (const ap object (to-primitive a null))
@@ -764,7 +765,11 @@
     (defvar bitwise-or-table (list-set binary-method) (list-set (new binary-method object-class object-class bitwise-or-objects)))
     
     
-    (%section "Terminal Actions")
+    (%heading 1 "Expressions")
+    (grammar-argument :beta allow-in no-in)
+    
+    
+    (%heading (2 :semantics) "Terminal Actions")
     
     (declare-action name $identifier string :action nil
       (terminal-action name $identifier identity))
@@ -775,10 +780,7 @@
     (%print-actions)
     
     
-    (%section "Expressions")
-    (grammar-argument :beta allow-in no-in)
-    
-    (%subsection "Identifiers")
+    (%heading 2 "Identifiers")
     (rule :identifier ((name string))
       (production :identifier ($identifier) identifier-identifier (name (name $identifier)))
       (production :identifier (get) identifier-get (name "get"))
@@ -788,7 +790,7 @@
       (production :identifier (named) identifier-named (name "named")))
     (%print-actions)
     
-    (%subsection "Qualified Identifiers")
+    (%heading 2 "Qualified Identifiers")
     (rule :qualifier ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) namespace)))
       (production :qualifier (:identifier) qualifier-identifier
         ((validate (v :unused)) (todo))
@@ -848,7 +850,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Unit Expressions")
+    (%heading 2 "Unit Expressions")
     (rule :unit-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :unit-expression (:paren-list-expression) unit-expression-paren-list-expression
         ((validate v) ((validate :paren-list-expression) v))
@@ -861,7 +863,7 @@
         ((eval (e :unused)) (todo))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
-    (%subsection "Primary Expressions")
+    (%heading 2 "Primary Expressions")
     (rule :primary-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :primary-expression (null) primary-expression-null
         ((validate (v :unused)))
@@ -926,7 +928,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Function Expressions")
+    (%heading 2 "Function Expressions")
     (rule :function-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :function-expression (function :function-signature :block) function-expression-anonymous
         ((validate (v :unused)) (todo))
@@ -937,7 +939,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Object Literals")
+    (%heading 2 "Object Literals")
     (production :object-literal (\{ \}) object-literal-empty)
     (production :object-literal (\{ :field-list \}) object-literal-list)
     
@@ -972,7 +974,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Array Literals")
+    (%heading 2 "Array Literals")
     (production :array-literal ([ :element-list ]) array-literal-list)
     
     (production :element-list (:literal-element) element-list-one)
@@ -983,7 +985,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Super Expressions")
+    (%heading 2 "Super Expressions")
     (rule :super-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) object)) (super (-> (dynamic-env) class)))
       (production :super-expression (super) super-expression-super
         ((validate v)
@@ -1012,7 +1014,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Postfix Expressions")
+    (%heading 2 "Postfix Expressions")
     (rule :postfix-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :postfix-expression (:attribute-expression) postfix-expression-attribute-expression
         (validate (validate :attribute-expression))
@@ -1187,7 +1189,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Member Operators")
+    (%heading 2 "Member Operators")
     (rule :member-operator ((validate (-> (validation-env) void)) (eval (-> (dynamic-env object) obj-or-ref)))
       (production :member-operator (:dot-operator) member-operator-dot-operator
         ((validate v) ((validate :dot-operator) v))
@@ -1269,7 +1271,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Unary Operators")
+    (%heading 2 "Unary Operators")
     (rule :unary-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :unary-expression (:postfix-expression) unary-expression-postfix
         ((validate v) ((validate :postfix-expression) v))
@@ -1350,7 +1352,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Multiplicative Operators")
+    (%heading 2 "Multiplicative Operators")
     (rule :multiplicative-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :multiplicative-expression (:unary-expression) multiplicative-expression-unary
         ((validate v) ((validate :unary-expression) v))
@@ -1398,7 +1400,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Additive Operators")
+    (%heading 2 "Additive Operators")
     (rule :additive-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :additive-expression (:multiplicative-expression) additive-expression-multiplicative
         ((validate v) ((validate :multiplicative-expression) v))
@@ -1436,7 +1438,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Bitwise Shift Operators")
+    (%heading 2 "Bitwise Shift Operators")
     (rule :shift-expression ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production :shift-expression (:additive-expression) shift-expression-additive
         ((validate v) ((validate :additive-expression) v))
@@ -1484,7 +1486,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Relational Operators")
+    (%heading 2 "Relational Operators")
     (rule (:relational-expression :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production (:relational-expression :beta) (:shift-expression) relational-expression-shift
         ((validate v) ((validate :shift-expression) v))
@@ -1562,7 +1564,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Equality Operators")
+    (%heading 2 "Equality Operators")
     (rule (:equality-expression :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production (:equality-expression :beta) ((:relational-expression :beta)) equality-expression-relational
         ((validate v) ((validate :relational-expression) v))
@@ -1620,7 +1622,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Binary Bitwise Operators")
+    (%heading 2 "Binary Bitwise Operators")
     (rule (:bitwise-and-expression :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production (:bitwise-and-expression :beta) ((:equality-expression :beta)) bitwise-and-expression-equality
         ((validate v) ((validate :equality-expression) v))
@@ -1699,7 +1701,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Binary Logical Operators")
+    (%heading 2 "Binary Logical Operators")
     (rule (:logical-and-expression :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production (:logical-and-expression :beta) ((:bitwise-or-expression :beta)) logical-and-expression-bitwise-or
         ((validate v) ((validate :bitwise-or-expression) v))
@@ -1745,7 +1747,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Conditional Operator")
+    (%heading 2 "Conditional Operator")
     (rule (:conditional-expression :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production (:conditional-expression :beta) ((:logical-or-expression :beta)) conditional-expression-logical-or
         ((validate v) ((validate :logical-or-expression) v))
@@ -1765,7 +1767,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Assignment Operators")
+    (%heading 2 "Assignment Operators")
     (rule (:assignment-expression :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)))
       (production (:assignment-expression :beta) ((:conditional-expression :beta)) assignment-expression-conditional
         ((validate v) ((validate :conditional-expression) v))
@@ -1827,7 +1829,7 @@
       (return result))
     
     
-    (%subsection "Comma Expressions")
+    (%heading 2 "Comma Expressions")
     (rule (:list-expression :beta) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) obj-or-ref)) (eval-as-list (-> (dynamic-env) (vector object))))
       (production (:list-expression :beta) ((:assignment-expression :beta)) list-expression-assignment
         ((validate v) ((validate :assignment-expression) v))
@@ -1852,12 +1854,12 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Type Expressions")
+    (%heading 2 "Type Expressions")
     (production (:type-expression :beta) ((:non-assignment-expression :beta)) type-expression-non-assignment-expression)
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%section "Statements")
+    (%heading 1 "Statements")
     
     (grammar-argument :omega
                       abbrev       ;optional semicolon when followed by a '}', 'else', or 'while' in a do-while
@@ -1930,11 +1932,11 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Empty Statement")
+    (%heading 2 "Empty Statement")
     (production :empty-statement (\;) empty-statement-semicolon)
     
     
-    (%subsection "Expression Statement")
+    (%heading 2 "Expression Statement")
     (rule :expression-statement ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) object)))
       (production :expression-statement ((:- function {) (:list-expression allow-in)) expression-statement-list-expression
         ((validate v) ((validate :list-expression) v))
@@ -1942,12 +1944,12 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Super Statement")
+    (%heading 2 "Super Statement")
     (production :super-statement (super :arguments) super-statement-super-arguments)
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Block Statement")
+    (%heading 2 "Block Statement")
     (rule :annotated-block ((validate (-> (validation-env) void)) (eval (-> (dynamic-env object) object)))
       (production :annotated-block (:attributes :block) annotated-block-attributes-and-block
         (validate (validate :block)) ;******
@@ -1984,7 +1986,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Labeled Statements")
+    (%heading 2 "Labeled Statements")
     (rule (:labeled-statement :omega) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env object) object)))
       (production (:labeled-statement :omega) (:identifier \: (:substatement :omega)) labeled-statement-label
         ((validate v) ((validate :substatement) (add-label v (name :identifier))))
@@ -1996,7 +1998,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "If Statement")
+    (%heading 2 "If Statement")
     (rule (:if-statement :omega) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env object) object)))
       (production (:if-statement abbrev) (if :paren-list-expression (:substatement abbrev)) if-statement-if-then-abbrev
         ((validate v)
@@ -2027,7 +2029,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Switch Statement")
+    (%heading 2 "Switch Statement")
     (production :switch-statement (switch :paren-list-expression { :case-statements }) switch-statement-cases)
     
     (production :case-statements () case-statements-none)
@@ -2045,17 +2047,17 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Do-While Statement")
+    (%heading 2 "Do-While Statement")
     (production :do-statement (do (:substatement abbrev) while :paren-list-expression) do-statement-do-while)
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "While Statement")
+    (%heading 2 "While Statement")
     (production (:while-statement :omega) (while :paren-list-expression (:substatement :omega)) while-statement-while)
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "For Statements")
+    (%heading 2 "For Statements")
     (production (:for-statement :omega) (for \( :for-initialiser \; :optional-expression \; :optional-expression \)
                                              (:substatement :omega)) for-statement-c-style)
     (production (:for-statement :omega) (for \( :for-in-binding in (:list-expression allow-in) \) (:substatement :omega)) for-statement-in)
@@ -2069,12 +2071,12 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "With Statement")
+    (%heading 2 "With Statement")
     (production (:with-statement :omega) (with :paren-list-expression (:substatement :omega)) with-statement-with)
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Continue and Break Statements")
+    (%heading 2 "Continue and Break Statements")
     (rule :continue-statement ((validate (-> (validation-env) void)) (eval (-> (dynamic-env object) object)))
       (production :continue-statement (continue) continue-statement-unlabeled
         ((validate (v :unused)) (todo))
@@ -2093,7 +2095,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Return Statement")
+    (%heading 2 "Return Statement")
     (rule :return-statement ((validate (-> (validation-env) void)) (eval (-> (dynamic-env) object)))
       (production :return-statement (return) return-statement-default
         ((validate v)
@@ -2109,12 +2111,12 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Throw Statement")
+    (%heading 2 "Throw Statement")
     (production :throw-statement (throw :no-line-break (:list-expression allow-in)) throw-statement-throw)
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Try Statement")
+    (%heading 2 "Try Statement")
     (production :try-statement (try :block :catch-clauses) try-statement-catch-clauses)
     (production :try-statement (try :block :finally-clause) try-statement-finally-clause)
     (production :try-statement (try :block :catch-clauses :finally-clause) try-statement-catch-clauses-finally-clause)
@@ -2128,7 +2130,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%section "Directives")
+    (%heading 1 "Directives")
     (rule (:directive :omega_2) ((validate (-> (validation-env) void)) (eval (-> (dynamic-env object) object)))
       (production (:directive :omega_2) ((:statement :omega_2)) directive-statement
         ((validate v) ((validate :statement) v))
@@ -2162,7 +2164,7 @@
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
-    (%subsection "Attributes")
+    (%heading 2 "Attributes")
     (production :attributes () attributes-none)
     (production :attributes (:attribute :no-line-break :attributes) attributes-more)
     
@@ -2178,7 +2180,7 @@
     
     
     
-    (%subsection "Use Directive")
+    (%heading 2 "Use Directive")
     (production :use-directive (use namespace :paren-list-expression :includes-excludes) use-directive-normal)
     
     (production :includes-excludes () includes-excludes-none)
@@ -2209,7 +2211,7 @@
     |#
     
     
-    (%subsection "Import Directive")
+    (%heading 2 "Import Directive")
     (production :import-directive (import :import-binding :includes-excludes) import-directive-import)
     (production :import-directive (import :import-binding \, namespace :paren-list-expression :includes-excludes)
                 import-directive-import-namespaces)
@@ -2222,11 +2224,11 @@
     
     
     (? js2
-      (%subsection "Include Directive")
+      (%heading 2 "Include Directive")
       (production :include-directive (include :no-line-break $string) include-directive-include))
     
     
-    (%subsection "Pragma")
+    (%heading 2 "Pragma")
     (production :pragma (use :pragma-items) pragma-pragma-items)
     
     (production :pragma-items (:pragma-item) pragma-items-one)
@@ -2239,8 +2241,8 @@
     (production :pragma-expr (:identifier :paren-list-expression) pragma-expr-identifier-and-arguments)
     
     
-    (%section "Definitions")
-    (%subsection "Export Definition")
+    (%heading 1 "Definitions")
+    (%heading 2 "Export Definition")
     (production :export-definition (export :export-binding-list) export-definition-definition)
     
     (production :export-binding-list (:export-binding) export-binding-list-one)
@@ -2250,7 +2252,7 @@
     (production :export-binding (:function-name = :function-name) export-binding-initialiser)
     
     
-    (%subsection "Variable Definition")
+    (%heading 2 "Variable Definition")
     (production :variable-definition (:variable-definition-kind (:variable-binding-list allow-in)) variable-definition-definition)
     
     (production :variable-definition-kind (var) variable-definition-kind-var)
@@ -2286,7 +2288,7 @@
     (production :untyped-variable-binding (:identifier = (:variable-initialiser allow-in)) untyped-variable-binding-initialised)
     
     
-    (%subsection "Function Definition")
+    (%heading 2 "Function Definition")
     (production (:function-definition :omega_2) (:function-declaration :block) function-definition-definition)
     (production (:function-definition :omega_2) (:function-declaration (:semicolon :omega_2)) function-definition-declaration)
     
@@ -2343,7 +2345,7 @@
     ;(production :result-signature ((:- {) (:type-expression allow-in)) result-signature-type-expression)
     
     
-    (%subsection "Class Definition")
+    (%heading 2 "Class Definition")
     (production (:class-definition :omega_2) (class :identifier :inheritance :block) class-definition-definition)
     (production (:class-definition :omega_2) (class :identifier (:semicolon :omega_2)) class-definition-declaration)
     
@@ -2353,7 +2355,7 @@
       (production :inheritance (implements :type-expression-list) inheritance-implements)
       (production :inheritance (extends (:type-expression allow-in) implements :type-expression-list) inheritance-extends-implements)
       
-      (%subsection "Interface Definition")
+      (%heading 2 "Interface Definition")
       (production (:interface-definition :omega_2) (interface :identifier :extends-list :block) interface-definition-definition)
       (production (:interface-definition :omega_2) (interface :identifier (:semicolon :omega_2)) interface-definition-declaration)
       
@@ -2364,11 +2366,11 @@
       (production :type-expression-list (:type-expression-list \, (:type-expression allow-in)) type-expression-list-more))
     
     
-    (%subsection "Namespace Definition")
+    (%heading 2 "Namespace Definition")
     (production :namespace-definition (namespace :identifier) namespace-definition-normal)
     
     
-    (%subsection "Package Definition")
+    (%heading 2 "Package Definition")
     (production :package-definition (package :block) package-definition-anonymous)
     (production :package-definition (package :package-name :block) package-definition-named)
     
@@ -2376,7 +2378,7 @@
     (production :package-name (:package-name \. :identifier) package-name-more)
     
     
-    (%section "Programs")
+    (%heading 1 "Programs")
     (rule :program ((eval-program object))
       (production :program (:directives) program-directives
         (eval-program
@@ -2452,7 +2454,7 @@
        (terminalset-list grammar (terminalset-intersection (terminalset-union regexp-predecessors virtual-predecessors) div-predecessors))))))
 
 
-(defun depict-js-terminals (markup-stream grammar)
+(defun depict-js-terminals (markup-stream grammar heading)
   (labels
     ((production-first-terminal (production)
        (first (production-rhs production)))
@@ -2492,7 +2494,7 @@
             (setf (svref bins 2) (delete terminal (svref bins 2)))
             (setf (svref bins 4) (delete terminal (svref bins 4)))
             (push terminal (svref bins (terminal-bin terminal))))))
-      (depict-paragraph (markup-stream :section-heading)
+      (depict-paragraph (markup-stream heading)
         (depict-link (markup-stream :definition "terminals" "" nil)
           (depict markup-stream "Terminals")))
       (mapc #'depict-terminal-bin '("General tokens: " "Punctuation tokens: " "Future punctuation tokens: "
@@ -2507,26 +2509,26 @@
   "JS20/ParserGrammarJS2.rtf"
   "JavaScript 2.0 Syntactic Grammar"
   #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *jg*)
+      (depict-js-terminals markup-stream *jg* :heading1)
       (depict-world-commands markup-stream *jw* :visible-semantics nil)))
  (depict-rtf-to-local-file
   "JS20/ParserSemanticsJS2.rtf"
   "JavaScript 2.0 Syntactic Semantics"
   #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *jg*)
+      (depict-js-terminals markup-stream *jg* :heading1)
       (depict-world-commands markup-stream *jw*)))
  (compute-ecma-subset)
  (depict-rtf-to-local-file
   "JS20/ParserGrammarES4.rtf"
   "ECMAScript Edition 4 Syntactic Grammar"
   #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *eg*)
+      (depict-js-terminals markup-stream *eg* :heading1)
       (depict-world-commands markup-stream *ew* :visible-semantics nil)))
  (depict-rtf-to-local-file
   "JS20/ParserSemanticsES4.rtf"
   "ECMAScript Edition 4 Syntactic Semantics"
   #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *eg*)
+      (depict-js-terminals markup-stream *eg* :heading1)
       (depict-world-commands markup-stream *ew*)))
  
  (length (grammar-states *jg*))
@@ -2535,15 +2537,15 @@
   "JavaScript 2.0 Syntactic Grammar"
   t
   #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *jg*)
-      (depict-world-commands markup-stream *jw* :visible-semantics nil))
+      (depict-js-terminals markup-stream *jg* :heading2)
+      (depict-world-commands markup-stream *jw* :heading-offset 1 :visible-semantics nil))
   :external-link-base "notation.html")
  (depict-html-to-local-file
   "JS20/ParserSemanticsJS2.html"
   "JavaScript 2.0 Syntactic Semantics"
   t
   #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *jg*)
+      (depict-js-terminals markup-stream *jg* :heading1)
       (depict-world-commands markup-stream *jw*))
   :external-link-base "notation.html")
  (compute-ecma-subset)
@@ -2552,15 +2554,15 @@
   "ECMAScript Edition 4 Syntactic Grammar"
   t
   #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *eg*)
-      (depict-world-commands markup-stream *ew* :visible-semantics nil))
+      (depict-js-terminals markup-stream *eg* :heading2)
+      (depict-world-commands markup-stream *ew* :heading-offset 1 :visible-semantics nil))
   :external-link-base "notation.html")
  (depict-html-to-local-file
   "JS20/ParserSemanticsES4.html"
   "ECMAScript Edition 4 Syntactic Semantics"
   t
   #'(lambda (markup-stream)
-      (depict-js-terminals markup-stream *eg*)
+      (depict-js-terminals markup-stream *eg* :heading1)
       (depict-world-commands markup-stream *ew*))
   :external-link-base "notation.html"))
 
@@ -2569,7 +2571,7 @@
  "JS20/ParserSemanticsJS2.rtf"
  "JavaScript 2.0 Syntactic Semantics"
  #'(lambda (markup-stream)
-     (depict-js-terminals markup-stream *jg*)
+     (depict-js-terminals markup-stream *jg* :heading1)
      (depict-world-commands markup-stream *jw*)))
 
 (depict-html-to-local-file
@@ -2577,7 +2579,7 @@
  "JavaScript 2.0 Syntactic Semantics"
  t
  #'(lambda (markup-stream)
-     (depict-js-terminals markup-stream *jg*)
+     (depict-js-terminals markup-stream *jg* :heading1)
      (depict-world-commands markup-stream *jw*))
  :external-link-base "notation.html")
 

@@ -44,7 +44,7 @@
        (deftag syntax-error)
        (deftype semantic-exception (tag syntax-error))
        
-       (%section "Unicode Character Classes")
+       (%heading 1 "Unicode Character Classes")
        (%charclass :unicode-character)
        (%charclass :unicode-alphanumeric)
        (%charclass :line-terminator)
@@ -56,7 +56,7 @@
        (%print-actions)
        
        
-       (%section "Regular Expression Definitions")
+       (%heading 1 "Regular Expression Definitions")
        (deftuple r-e-input (str string) (ignore-case boolean) (multiline boolean) (span boolean))
        (%text :semantics
          "Field " (:label r-e-input str) " is the input string. "
@@ -133,7 +133,7 @@
        (%print-actions)
        
        
-       (%section "Regular Expression Patterns")
+       (%heading 1 "Regular Expression Patterns")
        
        (rule :regular-expression-pattern ((execute (-> (r-e-input integer) r-e-result)))
          (production :regular-expression-pattern (:disjunction) regular-expression-pattern-disjunction
@@ -154,7 +154,7 @@
            (return (append (fill-capture (- i 1)) (vector-of capture undefined)))))
        
        
-       (%subsection "Disjunctions")
+       (%heading 2 "Disjunctions")
        
        (rule :disjunction ((gen-matcher (-> (integer) matcher)) (count-parens integer))
          (production :disjunction (:alternative) disjunction-one
@@ -175,7 +175,7 @@
        (%print-actions)
        
        
-       (%subsection "Alternatives")
+       (%heading 2 "Alternatives")
        
        (rule :alternative ((gen-matcher (-> (integer) matcher)) (count-parens integer))
          (production :alternative () alternative-none
@@ -198,7 +198,7 @@
        (%print-actions)
        
        
-       (%subsection "Terms")
+       (%heading 2 "Terms")
        
        (rule :term ((gen-matcher (-> (integer) matcher)) (count-parens integer))
          (production :term (:assertion) term-assertion
@@ -308,7 +308,7 @@
        (%print-actions)
        
        
-       (%subsection "Assertions")
+       (%heading 2 "Assertions")
        
        (rule :assertion ((test-assertion (-> (r-e-input r-e-match) boolean)))
          (production :assertion (#\^) assertion-beginning
@@ -339,7 +339,7 @@
            (return (set-in (nth s i) re-word-characters))))
        
        
-       (%section "Atoms")
+       (%heading 1 "Atoms")
        
        (rule :atom ((gen-matcher (-> (integer) matcher)) (count-parens integer))
          (production :atom (:pattern-character) atom-pattern-character
@@ -410,7 +410,7 @@
        (%print-actions)
        
        
-       (%section "Escapes")
+       (%heading 1 "Escapes")
        
        (production :null-escape (#\\ #\_) null-escape-underscore)
        
@@ -471,7 +471,7 @@
        (%print-actions)
        
        
-       (%subsection "Decimal Escapes")
+       (%heading 2 "Decimal Escapes")
        
        (rule :decimal-escape ((escape-value integer))
          (production :decimal-escape (:decimal-integer-literal (:- :decimal-digit)) decimal-escape-integer
@@ -493,7 +493,7 @@
        (%print-actions)
        
        
-       (%subsection "Hexadecimal Escapes")
+       (%heading 2 "Hexadecimal Escapes")
        
        (rule :hex-escape ((character-value character))
          (production :hex-escape (#\x :hex-digit :hex-digit) hex-escape-2
@@ -508,7 +508,7 @@
        (%print-actions)
        
        
-       (%subsection "Character Class Escapes")
+       (%heading 2 "Character Class Escapes")
        
        (rule :character-class-escape ((acceptance-set (range-set character)))
          (production :character-class-escape (#\s) character-class-escape-whitespace
@@ -526,7 +526,7 @@
        (%print-actions)
        
        
-       (%section "User-Specified Character Classes")
+       (%heading 1 "User-Specified Character Classes")
        
        (rule :character-class ((acceptance-set (range-set character)) (invert boolean))
          (production :character-class (#\[ (:- #\^) :class-ranges #\]) character-class-positive
@@ -569,7 +569,7 @@
            (throw syntax-error)))
        
        
-       (%subsection "Character Class Range Atoms")
+       (%heading 2 "Character Class Range Atoms")
        
        (rule (:class-atom :delta) ((acceptance-set (range-set character)))
          (production (:class-atom :delta) ((:class-character :delta)) class-atom-character
@@ -615,25 +615,25 @@
   "JS20/RegExpGrammar.rtf"
   "Regular Expression Grammar"
   #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *rw* :visible-semantics nil)))
+      (depict-world-commands rtf-stream *rw* :heading-offset 1 :visible-semantics nil)))
  (depict-rtf-to-local-file
   "JS20/RegExpSemantics.rtf"
   "Regular Expression Semantics"
   #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *rw*)))
+      (depict-world-commands rtf-stream *rw* :heading-offset 1)))
  (depict-html-to-local-file
   "JS20/RegExpGrammar.html"
   "Regular Expression Grammar"
   t
   #'(lambda (html-stream)
-      (depict-world-commands html-stream *rw* :visible-semantics nil))
+      (depict-world-commands html-stream *rw* :heading-offset 1 :visible-semantics nil))
   :external-link-base "notation.html")
  (depict-html-to-local-file
   "JS20/RegExpSemantics.html"
   "Regular Expression Semantics"
   t
   #'(lambda (html-stream)
-      (depict-world-commands html-stream *rw*))
+      (depict-world-commands html-stream *rw* :heading-offset 1))
   :external-link-base "notation.html"))
 
 (with-local-output (s "JS20/RegExpGrammar.txt") (print-lexer *rl* s) (print-grammar *rg* s))

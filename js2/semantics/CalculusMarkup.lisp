@@ -88,8 +88,9 @@
 ;;; DEPICT-ENV
 
 ; A depict-env holds state that helps in depicting a grammar or lexer.
-(defstruct (depict-env (:constructor make-depict-env (visible-semantics)))
-  (visible-semantics t :type bool)                               ;Nil if semantics are not to be depicted
+(defstruct (depict-env (:constructor make-depict-env (visible-semantics heading-offset)))
+  (visible-semantics t :type bool :read-only t)                  ;Nil if semantics are not to be depicted
+  (heading-offset 0 :type integer :read-only t)                  ;Offset to be added to each heading level when depicting it
   (grammar-info nil :type (or null grammar-info))                ;The current grammar-info or nil if none
   (seen-nonterminals nil :type (or null hash-table))             ;Hash table (nonterminal -> t) of nonterminals already depicted
   (seen-grammar-arguments nil :type (or null hash-table))        ;Hash table (grammar-argument -> t) of grammar-arguments already depicted
@@ -158,8 +159,8 @@
 
 
 ; Emit markup paragraphs for the world's commands.
-(defun depict-world-commands (markup-stream world &key (visible-semantics t))
-  (let ((depict-env (make-depict-env visible-semantics)))
+(defun depict-world-commands (markup-stream world &key (visible-semantics t) (heading-offset 0))
+  (let ((depict-env (make-depict-env visible-semantics heading-offset)))
     (depict-commands markup-stream world depict-env (world-commands-source world))
     (depict-clear-grammar markup-stream world depict-env)))
 
@@ -1243,39 +1244,27 @@
       (depict-commands markup-stream world depict-env commands))))
 
 
-; (%section "section-name")
-; (%section <mode> "section-name")
+; (%heading <level> "heading-name")
+; (%heading (<level <mode>) "heading-name")
 ; <mode> is one of:
 ;   :syntax     This is a comment about the syntax
 ;   :semantics  This is a comment about the semantics (not displayed when semantics are not displayed)
 ;   nil         This is a general comment
-(defun depict-%section (markup-stream world depict-env mode &optional section-name)
+(defun depict-%heading (markup-stream world depict-env level-mode heading-name)
   (declare (ignore world))
-  (depict-section-or-subsection markup-stream depict-env mode section-name :section-heading))
-
-
-; (%subsection "subsection-name")
-; (%subsection <mode> "subsection-name")
-; <mode> is one of:
-;   :syntax     This is a comment about the syntax
-;   :semantics  This is a comment about the semantics (not displayed when semantics are not displayed)
-;   nil         This is a general comment
-(defun depict-%subsection (markup-stream world depict-env mode &optional section-name)
-  (declare (ignore world))
-  (depict-section-or-subsection markup-stream depict-env mode section-name :subsection-heading))
-
-
-; Common routine for depict-%section and depict-%subsection.
-(defun depict-section-or-subsection (markup-stream depict-env mode section-name paragraph-style)
-  (when (stringp mode)
-    (when section-name
-      (error "Bad %section or %subsection"))
-    (setq section-name mode)
-    (setq mode nil))
-  (assert-type section-name string)
-  (when (quiet-depict-mode depict-env mode)
-    (depict-paragraph (markup-stream paragraph-style)
-      (depict markup-stream section-name))))
+  (let ((level level-mode)
+        (mode nil))
+    (unless (integerp level-mode)
+      (assert-type level-mode (tuple integer symbol))
+      (setq level (first level-mode))
+      (setq mode (second level-mode)))
+    (unless (stringp heading-name)
+      (error "~S should be a string" heading-name))
+    (let* ((heading-level (+ level (depict-env-heading-offset depict-env)))
+           (heading-style (svref #(:heading1 :heading2 :heading3 :heading4 :heading5 :heading6) (1- heading-level))))
+      (when (quiet-depict-mode depict-env mode)
+        (depict-paragraph (markup-stream heading-style)
+          (depict markup-stream heading-name))))))
 
 
 ; (%text <mode> . <styled-text>)

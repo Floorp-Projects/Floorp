@@ -48,13 +48,13 @@
   "Test/StandardFunctionSemantics.rtf"
   "Standard Function Semantics"
   #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *sfw*)))
+      (depict-world-commands rtf-stream *sfw* :heading-offset 1)))
  (depict-html-to-local-file
   "Test/StandardFunctionSemantics.html"
   "Standard Function Semantics"
   t
   #'(lambda (html-stream)
-      (depict-world-commands html-stream *sfw*))
+      (depict-world-commands html-stream *sfw* :heading-offset 1))
   :external-link-base ""))
 |#
 

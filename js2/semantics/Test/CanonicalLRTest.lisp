@@ -48,14 +48,14 @@
  "Test/CanonicalLRTestGrammar.rtf"
  "Canonical LR(1) Test Grammar"
  #'(lambda (markup-stream)
-     (depict-world-commands markup-stream *clrtw* :visible-semantics nil)))
+     (depict-world-commands markup-stream *clrtw* :heading-offset 1 :visible-semantics nil)))
 
 (depict-html-to-local-file
  "Test/CanonicalLRTestGrammar.html"
  "Canonical LR(1) Test Grammar"
  t
  #'(lambda (markup-stream)
-     (depict-world-commands markup-stream *clrtw* :visible-semantics nil)))
+     (depict-world-commands markup-stream *clrtw* :heading-offset 1 :visible-semantics nil)))
 
 (print-grammar *clrtg*)
 (with-local-output (s "Test/CanonicalLRTestGrammar.txt") (print-grammar *clrtg* s))

@@ -36,14 +36,14 @@
  "Test/ThrowCatchSemantics.rtf"
  "Throw-Catch Semantics"
  #'(lambda (rtf-stream)
-     (depict-world-commands rtf-stream *tcw*)))
+     (depict-world-commands rtf-stream *tcw* :heading-offset 1)))
 
 (depict-html-to-local-file
  "Test/ThrowCatchSemantics.html"
  "Throw-Catch Semantics"
  t
  #'(lambda (html-stream)
-     (depict-world-commands html-stream *tcw*))
+     (depict-world-commands html-stream *tcw* :heading-offset 1))
  :external-link-base "")
 
 

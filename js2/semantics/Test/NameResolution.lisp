@@ -15,12 +15,12 @@
        (deftype getter (-> (value) value))
        (deftype setter (-> (value value) value))
 
-       (%section "Namespaces")
+       (%heading 1 "Namespaces")
 
        (define (create-namespace (supernamespaces (vector namespace))) namespace
          (bottom))
 
-       (%section "Classes and Intefaces")
+       (%heading 1 "Classes and Intefaces")
 
        (define (create-class (interface boolean) (superclasses (vector class)) (implementees (vector class))) class
          (bottom))
@@ -37,7 +37,7 @@
        (define (create-instance (c class)) value
          (bottom))
 
-       (%section "Members")
+       (%heading 1 "Members")
 
        (define (add-getter-member (visibility scope) (n namespace) (c class) (name string) (g getter)) void
          (bottom))
@@ -57,7 +57,7 @@
  "Test/NameResolutionSemantics.rtf"
  "Name Resolution Semantics"
  #'(lambda (rtf-stream)
-     (depict-world-commands rtf-stream *nw*)))
+     (depict-world-commands rtf-stream *nw* :heading-offset 1)))
 |#
 
 (depict-html-to-local-file
@@ -65,7 +65,7 @@
  "Name Resolution Semantics"
  t
  #'(lambda (html-stream)
-     (depict-world-commands html-stream *nw*))
+     (depict-world-commands html-stream *nw* :heading-offset 1))
  :external-link-base "")
 
 (length (grammar-states *ng*))

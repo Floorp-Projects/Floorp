@@ -44,7 +44,7 @@
        (%print-actions)
        
        
-       (%section "White Space")
+       (%heading 1 "White Space")
        
        (grammar-argument :sigma wsopt wsreq)
        
@@ -59,7 +59,7 @@
        (production (:white-space :sigma) (:required-white-space) white-space-required-white-space)
        (production (:white-space wsopt) () white-space-empty)
        
-       (%section "Unit Patterns")
+       (%heading 1 "Unit Patterns")
        
        (rule :unit-pattern ((value unit-list))
          (production :unit-pattern ((:white-space wsopt) :unit-quotient) unit-pattern-quotient
@@ -98,7 +98,7 @@
        (%print-actions)
        
        
-       (%section "Signed Integers")
+       (%heading 1 "Signed Integers")
        (rule :signed-integer ((integer-value integer))
          (production :signed-integer (:decimal-digits) signed-integer-no-sign
            (integer-value (integer-value :decimal-digits)))
@@ -117,7 +117,7 @@
        (%print-actions)
        
        
-       (%section "Identifiers")
+       (%heading 1 "Identifiers")
        (rule :identifier ((name string))
          (production :identifier (:initial-identifier-character) identifier-initial
            (name (vector ($default-action :initial-identifier-character))))
@@ -155,25 +155,25 @@
   "JS20/UnitGrammar.rtf"
   "JavaScript 2 Unit Grammar"
   #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *uw* :visible-semantics nil)))
+      (depict-world-commands rtf-stream *uw* :heading-offset 1 :visible-semantics nil)))
  (depict-rtf-to-local-file
   "JS20/UnitSemantics.rtf"
   "JavaScript 2 Unit Semantics"
   #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *uw*)))
+      (depict-world-commands rtf-stream *uw* :heading-offset 1)))
  (depict-html-to-local-file
   "JS20/UnitGrammar.html"
   "JavaScript 2 Unit Grammar"
   t
-  #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *uw* :visible-semantics nil))
+  #'(lambda (html-stream)
+      (depict-world-commands html-stream *uw* :heading-offset 1 :visible-semantics nil))
   :external-link-base "notation.html")
  (depict-html-to-local-file
   "JS20/UnitSemantics.html"
   "JavaScript 2 Unit Semantics"
   t
-  #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *uw*))
+  #'(lambda (html-stream)
+      (depict-world-commands html-stream *uw* :heading-offset 1))
   :external-link-base "notation.html"))
 
 (with-local-output (s "JS20/UnitGrammar.txt") (print-lexer *ul* s) (print-grammar *ug* s))

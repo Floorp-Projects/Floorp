@@ -50,14 +50,14 @@
  "Test/LineTestGrammar.rtf"
  "Line Test Grammar"
  #'(lambda (markup-stream)
-     (depict-world-commands markup-stream *ltw* :visible-semantics nil)))
+     (depict-world-commands markup-stream *ltw* :heading-offset 1 :visible-semantics nil)))
 
 (depict-html-to-local-file
  "Test/LineTestGrammar.html"
  "Line Test Grammar"
  t
  #'(lambda (markup-stream)
-     (depict-world-commands markup-stream *ltw* :visible-semantics nil)))
+     (depict-world-commands markup-stream *ltw* :heading-offset 1 :visible-semantics nil)))
 
 (print-grammar *ltg*)
 (with-local-output (s "Test/LineTestGrammar.txt") (print-grammar *ltg* s))

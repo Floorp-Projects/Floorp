@@ -31,7 +31,7 @@
      "G"
      '((grammar code-grammar :lr-1 :program)
        
-       (%section "Types")
+       (%heading 1 "Types")
        
        (deftype value (oneof undefined-value
                              null-value
@@ -67,7 +67,7 @@
        (deftype reference-or-exception (oneof (normal reference) (abrupt exception)))
        (deftype value-list-or-exception (oneof (normal (vector value)) (abrupt exception)))
        
-       (%section "Helper Functions")
+       (%heading 1 "Helper Functions")
        
        (define (object-or-null-to-value (o object-or-null)) value
          (case o
@@ -89,7 +89,7 @@
        (define (object-result (o object)) value-or-exception
          (oneof normal (oneof object-value o)))
        
-       (%section "Exceptions")
+       (%heading 1 "Exceptions")
        
        (deftype exception (oneof (exception value) (error error)))
        (deftype error (oneof coerce-to-primitive-error
@@ -101,10 +101,10 @@
        (define (make-error (err error)) exception
          (oneof error err))
        
-       (%section "Objects")
+       (%heading 1 "Objects")
        
        
-       (%section "Conversions")
+       (%heading 1 "Conversions")
        
        (define (reference-get-value (rv reference)) value-or-exception
          (case rv
@@ -118,7 +118,7 @@
            ((place-reference r place) ((& put (& base r)) (& property r) v))
            (virtual-reference (bottom))))
        
-       (%section "Coercions")
+       (%heading 1 "Coercions")
        
        (define (coerce-to-boolean (v value)) boolean
          (case v
@@ -184,13 +184,13 @@
            (string-value (bottom))
            ((object-value o object) (oneof normal o))))
        
-       (%section "Environments")
+       (%heading 1 "Environments")
        
        (deftype env (tuple (this object-or-null)))
        (define (lookup-identifier (e env :unused) (id string :unused)) reference-or-exception
          (bottom))
        
-       (%section "Terminal Actions")
+       (%heading 1 "Terminal Actions")
        
        (declare-action eval-identifier $identifier string)
        (declare-action eval-number $number float64)
@@ -201,7 +201,7 @@
        (terminal-action eval-string $string cdr)
        (%print-actions)
        
-       (%section "Primary Expressions")
+       (%heading 1 "Primary Expressions")
        
        (declare-action eval :primary-rvalue (-> (env) value-or-exception))
        (production :primary-rvalue (this) primary-rvalue-this
@@ -233,7 +233,7 @@
          (eval (eval :lvalue)))
        (%print-actions)
        
-       (%section "Left-Side Expressions")
+       (%heading 1 "Left-Side Expressions")
        
        (grammar-argument :expr-kind any-value no-l-value)
        (grammar-argument :member-expr-kind call no-call)
@@ -335,7 +335,7 @@
             (letexc (res object ((& construct o) arguments))
               (object-result res)))))
        
-       (%section "Postfix Expressions")
+       (%heading 1 "Postfix Expressions")
        
        (declare-action eval (:postfix-expression :expr-kind) (-> (env) value-or-exception))
        (production (:postfix-expression :expr-kind) ((:new-expression :expr-kind)) postfix-expression-new
@@ -360,7 +360,7 @@
                   (float64-result operand)))))))
        (%print-actions)
        
-       (%section "Unary Operators")
+       (%heading 1 "Unary Operators")
        
        (declare-action eval (:unary-expression :expr-kind) (-> (env) value-or-exception))
        (production (:unary-expression :expr-kind) ((:postfix-expression :expr-kind)) unary-expression-postfix
@@ -437,7 +437,7 @@
            (string-value "string")
            ((object-value o object) (& typeof-name o))))
        
-       (%section "Multiplicative Operators")
+       (%heading 1 "Multiplicative Operators")
        
        (declare-action eval (:multiplicative-expression :expr-kind) (-> (env) value-or-exception))
        (production (:multiplicative-expression :expr-kind) ((:unary-expression :expr-kind)) multiplicative-expression-unary
@@ -464,7 +464,7 @@
            (letexc (right-number float64 (coerce-to-float64 right-value))
              (float64-result (operator left-number right-number)))))
        
-       (%section "Additive Operators")
+       (%heading 1 "Additive Operators")
        
        (declare-action eval (:additive-expression :expr-kind) (-> (env) value-or-exception))
        (production (:additive-expression :expr-kind) ((:multiplicative-expression :expr-kind)) additive-expression-multiplicative
@@ -487,7 +487,7 @@
               (apply-binary-float64-operator float64-subtract left-value right-value)))))
        (%print-actions)
        
-       (%section "Bitwise Shift Operators")
+       (%heading 1 "Bitwise Shift Operators")
        
        (declare-action eval (:shift-expression :expr-kind) (-> (env) value-or-exception))
        (production (:shift-expression :expr-kind) ((:additive-expression :expr-kind)) shift-expression-additive
@@ -516,7 +516,7 @@
                   (integer-result (bitwise-shift bitmap (neg (bitwise-and count #x1F))))))))))
        (%print-actions)
        
-       (%section "Relational Operators")
+       (%heading 1 "Relational Operators")
        
        (declare-action eval (:relational-expression :expr-kind) (-> (env) value-or-exception))
        (production (:relational-expression :expr-kind) ((:shift-expression :expr-kind)) relational-expression-shift
@@ -568,7 +568,7 @@
                      greater
                      (compare-strings (subseq left 1) (subseq right 1) less equal greater))))))))
        
-       (%section "Equality Operators")
+       (%heading 1 "Equality Operators")
        
        (declare-action eval (:equality-expression :expr-kind) (-> (env) value-or-exception))
        (production (:equality-expression :expr-kind) ((:relational-expression :expr-kind)) equality-expression-relational
@@ -675,7 +675,7 @@
                (address-equal (& properties left-obj) (& properties right-obj)))
               (((undefined-value null-value boolean-value number-value string-value)) false)))))
        
-       (%section "Binary Bitwise Operators")
+       (%heading 1 "Binary Bitwise Operators")
        
        (declare-action eval (:bitwise-and-expression :expr-kind) (-> (env) value-or-exception))
        (production (:bitwise-and-expression :expr-kind) ((:equality-expression :expr-kind)) bitwise-and-expression-equality
@@ -710,7 +710,7 @@
            (letexc (right-int integer (coerce-to-int32 right-value))
              (integer-result (operator left-int right-int)))))
        
-       (%section "Binary Logical Operators")
+       (%heading 1 "Binary Logical Operators")
        
        (declare-action eval (:logical-and-expression :expr-kind) (-> (env) value-or-exception))
        (production (:logical-and-expression :expr-kind) ((:bitwise-or-expression :expr-kind)) logical-and-expression-bitwise-or
@@ -733,7 +733,7 @@
               ((eval :logical-and-expression) e)))))
        (%print-actions)
        
-       (%section "Conditional Operator")
+       (%heading 1 "Conditional Operator")
        
        (declare-action eval (:conditional-expression :expr-kind) (-> (env) value-or-exception))
        (production (:conditional-expression :expr-kind) ((:logical-or-expression :expr-kind)) conditional-expression-logical-or
@@ -746,7 +746,7 @@
               ((eval :assignment-expression 2) e)))))
        (%print-actions)
        
-       (%section "Assignment Operators")
+       (%heading 1 "Assignment Operators")
        
        (declare-action eval (:assignment-expression :expr-kind) (-> (env) value-or-exception))
        (production (:assignment-expression :expr-kind) ((:conditional-expression :expr-kind)) assignment-expression-conditional
@@ -786,7 +786,7 @@
              (letexc (right-number float64 (coerce-to-float64 right-value))
                (oneof normal (oneof number-value (operator left-number right-number)))))))
        |#
-       (%section "Expressions")
+       (%heading 1 "Expressions")
        
        (declare-action eval (:comma-expression :expr-kind) (-> (env) value-or-exception))
        (production (:comma-expression :expr-kind) ((:assignment-expression :expr-kind)) comma-expression-assignment
@@ -798,7 +798,7 @@
          (eval (eval :comma-expression)))
        (%print-actions)
        
-       (%section "Programs")
+       (%heading 1 "Programs")
        
        (declare-action eval :program value-or-exception)
        (production :program (:expression $end) program
@@ -837,14 +837,14 @@
  "JSECMA/ParserSemantics.rtf"
  "ECMAScript 1 Parser Semantics"
  #'(lambda (rtf-stream)
-     (depict-world-commands rtf-stream *gw*)))
+     (depict-world-commands rtf-stream *gw* :heading-offset 1)))
 
 (depict-html-to-local-file
  "JSECMA/ParserSemantics.html"
  "ECMAScript 1 Parser Semantics"
  t
- #'(lambda (rtf-stream)
-     (depict-world-commands rtf-stream *gw*)))
+ #'(lambda (html-stream)
+     (depict-world-commands html-stream *gw* :heading-offset 1)))
 
 (with-local-output (s "JSECMA/ParserGrammar.txt") (print-grammar *gg* s))
 

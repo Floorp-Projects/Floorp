@@ -54,14 +54,14 @@
  "Test/ConstraintTestGrammar.rtf"
  "Constraint Test Grammar"
  #'(lambda (markup-stream)
-     (depict-world-commands markup-stream *ctw* :visible-semantics nil)))
+     (depict-world-commands markup-stream *ctw* :heading-offset 1 :visible-semantics nil)))
 
 (depict-html-to-local-file
  "Test/ConstraintTestGrammar.html"
  "Constraint Test Grammar"
  t
  #'(lambda (markup-stream)
-     (depict-world-commands markup-stream *ctw* :visible-semantics nil)))
+     (depict-world-commands markup-stream *ctw* :heading-offset 1 :visible-semantics nil)))
 
 (with-local-output (s "Test/ConstraintTestGrammar.txt") (print-grammar *ctg* s))
 

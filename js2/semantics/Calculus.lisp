@@ -4442,8 +4442,7 @@
     
     (:command
      (%highlight scan-%highlight depict-%highlight) ;For internal use only; use ? instead.
-     (%section scan-% depict-%section)
-     (%subsection scan-% depict-%subsection)
+     (%heading scan-% depict-%heading)
      (%text scan-% depict-%text)
      (grammar-argument scan-% depict-grammar-argument)
      (%rule scan-% depict-%rule)

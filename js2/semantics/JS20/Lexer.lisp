@@ -89,7 +89,7 @@
        (deftag syntax-error)
        (deftype semantic-exception (tag syntax-error))
        
-       (%section "Unicode Character Classes")
+       (%heading 1 "Unicode Character Classes")
        (%charclass :unicode-character)
        (%charclass :unicode-initial-alphabetic)
        (%charclass :unicode-alphanumeric)
@@ -98,7 +98,7 @@
        (%charclass :a-s-c-i-i-digit)
        (%print-actions)
        
-       (%section "Comments")
+       (%heading 1 "Comments")
        (production :line-comment (#\/ #\/ :line-comment-characters) line-comment)
        
        (production :line-comment-characters () line-comment-characters-empty)
@@ -126,13 +126,13 @@
                    multi-line-block-comment-characters-rest)
        (%print-actions)
        
-       (%section "White space")
+       (%heading 1 "White Space")
        
        (production :white-space () white-space-empty)
        (production :white-space (:white-space :white-space-character) white-space-character)
        (production :white-space (:white-space :single-line-block-comment) white-space-single-line-block-comment)
        
-       (%section "Line breaks")
+       (%heading 1 "Line Breaks")
        
        (production :line-break (:line-terminator) line-break-line-terminator)
        (production :line-break (:line-comment :line-terminator) line-break-line-comment)
@@ -141,7 +141,7 @@
        (production :line-breaks (:line-break) line-breaks-first)
        (production :line-breaks (:line-breaks :white-space :line-break) line-breaks-rest)
        
-       (%section "Input elements")
+       (%heading 1 "Input Elements")
        
        (grammar-argument :nu re div unit)
        (grammar-argument :nu_2 re div)
@@ -184,7 +184,7 @@
        (production :end-of-input (:line-comment $end) end-of-input-line-comment)
        (%print-actions)
        
-       (%section "Keywords and identifiers")
+       (%heading 1 "Keywords and Identifiers")
        
        (rule :identifier-name
              ((lex-name string) (contains-escapes boolean))
@@ -261,7 +261,7 @@
                    (return (new identifier id)))))))
        (%print-actions)
        
-       (%section "Punctuators")
+       (%heading 1 "Punctuators")
        
        (rule :punctuator ((lex token))
          (production :punctuator (#\!) punctuator-not (lex (new punctuator "!")))
@@ -326,7 +326,7 @@
          (production :division-punctuator (#\/ #\=) punctuator-divide-equals (lex (new punctuator "/="))))
        (%print-actions)
        
-       (%section "Numeric literals")
+       (%heading 1 "Numeric Literals")
        
        (rule :numeric-literal ((lex token))
          (production :numeric-literal (:decimal-literal) numeric-literal-decimal
@@ -402,7 +402,7 @@
        (%charclass :hex-digit)
        (%print-actions)
        
-       (%section "String literals")
+       (%heading 1 "String Literals")
        
        (grammar-argument :theta single double)
        (rule :string-literal ((lex token))
@@ -469,7 +469,7 @@
        
        (%print-actions)
        
-       (%section "Regular expression literals")
+       (%heading 1 "Regular Expression Literals")
        
        (rule :reg-exp-literal ((lex token))
          (production :reg-exp-literal (:reg-exp-body :reg-exp-flags) reg-exp-literal
@@ -527,25 +527,25 @@
   "JS20/LexerGrammar.rtf"
   "JavaScript 2 Lexical Grammar"
   #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *lw* :visible-semantics nil)))
+      (depict-world-commands rtf-stream *lw* :heading-offset 1 :visible-semantics nil)))
  (depict-rtf-to-local-file
   "JS20/LexerSemantics.rtf"
   "JavaScript 2 Lexical Semantics"
   #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *lw*)))
+      (depict-world-commands rtf-stream *lw* :heading-offset 1)))
  (depict-html-to-local-file
   "JS20/LexerGrammar.html"
   "JavaScript 2 Lexical Grammar"
   t
   #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *lw* :visible-semantics nil))
+      (depict-world-commands rtf-stream *lw* :heading-offset 1 :visible-semantics nil))
   :external-link-base "notation.html")
  (depict-html-to-local-file
   "JS20/LexerSemantics.html"
   "JavaScript 2 Lexical Semantics"
   t
   #'(lambda (rtf-stream)
-      (depict-world-commands rtf-stream *lw*))
+      (depict-world-commands rtf-stream *lw* :heading-offset 1))
   :external-link-base "notation.html"))
 
 (with-local-output (s "JS20/LexerGrammar.txt") (print-lexer *ll* s) (print-grammar *lg* s))

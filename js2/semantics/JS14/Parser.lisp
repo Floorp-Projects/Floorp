@@ -12,11 +12,11 @@
      "J"
      '((grammar code-grammar :lr-1 :program)
        
-       (%section "Expressions")
+       (%heading 1 "Expressions")
        (grammar-argument :alpha normal initial)
        (grammar-argument :beta allow-in no-in)
        
-       (%subsection "Primary Expressions")
+       (%heading 2 "Primary Expressions")
        (production (:primary-expression :alpha) (:simple-expression) primary-expression-simple-expression)
        (production (:primary-expression normal) (:function-expression) primary-expression-function-expression)
        (production (:primary-expression normal) (:object-literal) primary-expression-object-literal)
@@ -35,12 +35,12 @@
        (production :parenthesized-expression (\( (:expression normal allow-in) \)) parenthesized-expression-expression)
        
        
-       (%subsection "Function Expressions")
+       (%heading 2 "Function Expressions")
        (production :function-expression (:anonymous-function) function-expression-anonymous-function)
        (production :function-expression (:named-function) function-expression-named-function)
        
        
-       (%subsection "Object Literals")
+       (%heading 2 "Object Literals")
        (production :object-literal (\{ \}) object-literal-empty)
        (production :object-literal (\{ :field-list \}) object-literal-list)
        
@@ -50,7 +50,7 @@
        (production :literal-field ($identifier \: (:assignment-expression normal allow-in)) literal-field-assignment-expression)
        
        
-       (%subsection "Array Literals")
+       (%heading 2 "Array Literals")
        (production :array-literal ([ ]) array-literal-empty)
        (production :array-literal ([ :element-list ]) array-literal-list)
        
@@ -60,7 +60,7 @@
        (production :literal-element ((:assignment-expression normal allow-in)) literal-element-assignment-expression)
        
        
-       (%subsection "Left-Side Expressions")
+       (%heading 2 "Left-Side Expressions")
        (production (:left-side-expression :alpha) ((:call-expression :alpha)) left-side-expression-call-expression)
        (production (:left-side-expression :alpha) (:short-new-expression) left-side-expression-short-new-expression)
        
@@ -90,13 +90,13 @@
        (production :argument-list (:argument-list \, (:assignment-expression normal allow-in)) argument-list-more)
        
        
-       (%subsection "Postfix Operators")
+       (%heading 2 "Postfix Operators")
        (production (:postfix-expression :alpha) ((:left-side-expression :alpha)) postfix-expression-left-side-expression)
        (production (:postfix-expression :alpha) ((:left-side-expression :alpha) ++) postfix-expression-increment)
        (production (:postfix-expression :alpha) ((:left-side-expression :alpha) --) postfix-expression-decrement)
        
        
-       (%subsection "Unary Operators")
+       (%heading 2 "Unary Operators")
        (production (:unary-expression :alpha) ((:postfix-expression :alpha)) unary-expression-postfix)
        (production (:unary-expression :alpha) (delete (:left-side-expression normal)) unary-expression-delete)
        (production (:unary-expression :alpha) (void (:unary-expression normal)) unary-expression-void)
@@ -109,27 +109,27 @@
        (production (:unary-expression :alpha) (! (:unary-expression normal)) unary-expression-logical-not)
        
        
-       (%subsection "Multiplicative Operators")
+       (%heading 2 "Multiplicative Operators")
        (production (:multiplicative-expression :alpha) ((:unary-expression :alpha)) multiplicative-expression-unary)
        (production (:multiplicative-expression :alpha) ((:multiplicative-expression :alpha) * (:unary-expression normal)) multiplicative-expression-multiply)
        (production (:multiplicative-expression :alpha) ((:multiplicative-expression :alpha) / (:unary-expression normal)) multiplicative-expression-divide)
        (production (:multiplicative-expression :alpha) ((:multiplicative-expression :alpha) % (:unary-expression normal)) multiplicative-expression-remainder)
        
        
-       (%subsection "Additive Operators")
+       (%heading 2 "Additive Operators")
        (production (:additive-expression :alpha) ((:multiplicative-expression :alpha)) additive-expression-multiplicative)
        (production (:additive-expression :alpha) ((:additive-expression :alpha) + (:multiplicative-expression normal)) additive-expression-add)
        (production (:additive-expression :alpha) ((:additive-expression :alpha) - (:multiplicative-expression normal)) additive-expression-subtract)
        
        
-       (%subsection "Bitwise Shift Operators")
+       (%heading 2 "Bitwise Shift Operators")
        (production (:shift-expression :alpha) ((:additive-expression :alpha)) shift-expression-additive)
        (production (:shift-expression :alpha) ((:shift-expression :alpha) << (:additive-expression normal)) shift-expression-left)
        (production (:shift-expression :alpha) ((:shift-expression :alpha) >> (:additive-expression normal)) shift-expression-right-signed)
        (production (:shift-expression :alpha) ((:shift-expression :alpha) >>> (:additive-expression normal)) shift-expression-right-unsigned)
        
        
-       (%subsection "Relational Operators")
+       (%heading 2 "Relational Operators")
        (exclude (:relational-expression initial no-in))
        (production (:relational-expression :alpha :beta) ((:shift-expression :alpha)) relational-expression-shift)
        (production (:relational-expression :alpha :beta) ((:relational-expression :alpha :beta) < (:shift-expression normal)) relational-expression-less)
@@ -140,7 +140,7 @@
        (production (:relational-expression :alpha allow-in) ((:relational-expression :alpha allow-in) in (:shift-expression normal)) relational-expression-in)
        
        
-       (%subsection "Equality Operators")
+       (%heading 2 "Equality Operators")
        (exclude (:equality-expression initial no-in))
        (production (:equality-expression :alpha :beta) ((:relational-expression :alpha :beta)) equality-expression-relational)
        (production (:equality-expression :alpha :beta) ((:equality-expression :alpha :beta) == (:relational-expression normal :beta)) equality-expression-equal)
@@ -149,7 +149,7 @@
        (production (:equality-expression :alpha :beta) ((:equality-expression :alpha :beta) !== (:relational-expression normal :beta)) equality-expression-strict-not-equal)
        
        
-       (%subsection "Binary Bitwise Operators")
+       (%heading 2 "Binary Bitwise Operators")
        (exclude (:bitwise-and-expression initial no-in))
        (production (:bitwise-and-expression :alpha :beta) ((:equality-expression :alpha :beta)) bitwise-and-expression-equality)
        (production (:bitwise-and-expression :alpha :beta) ((:bitwise-and-expression :alpha :beta) & (:equality-expression normal :beta)) bitwise-and-expression-and)
@@ -163,7 +163,7 @@
        (production (:bitwise-or-expression :alpha :beta) ((:bitwise-or-expression :alpha :beta) \| (:bitwise-xor-expression normal :beta)) bitwise-or-expression-or)
        
        
-       (%subsection "Binary Logical Operators")
+       (%heading 2 "Binary Logical Operators")
        (exclude (:logical-and-expression initial no-in))
        (production (:logical-and-expression :alpha :beta) ((:bitwise-or-expression :alpha :beta)) logical-and-expression-bitwise-or)
        (production (:logical-and-expression :alpha :beta) ((:logical-and-expression :alpha :beta) && (:bitwise-or-expression normal :beta)) logical-and-expression-and)
@@ -173,13 +173,13 @@
        (production (:logical-or-expression :alpha :beta) ((:logical-or-expression :alpha :beta) \|\| (:logical-and-expression normal :beta)) logical-or-expression-or)
        
        
-       (%subsection "Conditional Operator")
+       (%heading 2 "Conditional Operator")
        (exclude (:conditional-expression initial no-in))
        (production (:conditional-expression :alpha :beta) ((:logical-or-expression :alpha :beta)) conditional-expression-logical-or)
        (production (:conditional-expression :alpha :beta) ((:logical-or-expression :alpha :beta) ? (:assignment-expression normal :beta) \: (:assignment-expression normal :beta)) conditional-expression-conditional)
        
        
-       (%subsection "Assignment Operators")
+       (%heading 2 "Assignment Operators")
        (exclude (:assignment-expression initial no-in))
        (production (:assignment-expression :alpha :beta) ((:conditional-expression :alpha :beta)) assignment-expression-conditional)
        (production (:assignment-expression :alpha :beta) ((:left-side-expression :alpha) = (:assignment-expression normal :beta)) assignment-expression-assignment)
@@ -198,7 +198,7 @@
        (production :compound-assignment (\|=) compound-assignment-xor)
        
        
-       (%subsection "Expressions")
+       (%heading 2 "Expressions")
        (exclude (:expression initial no-in))
        (production (:expression :alpha :beta) ((:assignment-expression :alpha :beta)) expression-assignment)
        (production (:expression :alpha :beta) ((:expression :alpha :beta) \, (:assignment-expression normal :beta)) expression-comma)
@@ -207,7 +207,7 @@
        (production :optional-expression () optional-expression-empty)
        
        
-       (%section "Statements")
+       (%heading 1 "Statements")
        
        (grammar-argument :omega
                          no-short-if ;optional semicolon, but statement must not end with an if without an else
@@ -233,15 +233,15 @@
        (production :optional-semicolon (\;) optional-semicolon-semicolon)
        
        
-       (%subsection "Empty Statement")
+       (%heading 2 "Empty Statement")
        (production :empty-statement (\;) empty-statement-semicolon)
        
        
-       (%subsection "Expression Statement")
+       (%heading 2 "Expression Statement")
        (production :expression-statement ((:expression initial allow-in)) expression-statement-expression)
        
        
-       (%subsection "Variable Definition")
+       (%heading 2 "Variable Definition")
        (production :variable-definition (var (:variable-declaration-list allow-in)) variable-definition-declaration)
        
        (production (:variable-declaration-list :beta) ((:variable-declaration :beta)) variable-declaration-list-one)
@@ -253,7 +253,7 @@
        (production (:variable-initializer :beta) (= (:assignment-expression normal :beta)) variable-initializer-assignment-expression)
        
        
-       (%subsection "Block")
+       (%heading 2 "Block")
        (production :block ({ :block-statements }) block-block-statements)
        
        (production :block-statements () block-statements-one)
@@ -263,17 +263,17 @@
        (production :block-statements-prefix (:block-statements-prefix (:statement full)) block-statements-prefix-more)
        
        
-       (%subsection "Labeled Statements")
+       (%heading 2 "Labeled Statements")
        (production (:labeled-statement :omega) ($identifier \: (:statement :omega)) labeled-statement-label)
        
        
-       (%subsection "If Statement")
+       (%heading 2 "If Statement")
        (production (:if-statement full) (if :parenthesized-expression (:statement full)) if-statement-if-then-full)
        (production (:if-statement :omega) (if :parenthesized-expression (:statement no-short-if)
                                               else (:statement :omega)) if-statement-if-then-else)
        
        
-       (%subsection "Switch Statement")
+       (%heading 2 "Switch Statement")
        (production :switch-statement (switch :parenthesized-expression { }) switch-statement-empty)
        (production :switch-statement (switch :parenthesized-expression { :case-groups :last-case-group }) switch-statement-cases)
        
@@ -291,15 +291,15 @@
        (production :case-guard (default \:) case-guard-default)
        
        
-       (%subsection "Do-While Statement")
+       (%heading 2 "Do-While Statement")
        (production :do-statement (do (:statement full) while :parenthesized-expression) do-statement-do-while)
        
        
-       (%subsection "While Statement")
+       (%heading 2 "While Statement")
        (production (:while-statement :omega) (while :parenthesized-expression (:statement :omega)) while-statement-while)
        
        
-       (%subsection "For Statements")
+       (%heading 2 "For Statements")
        (production (:for-statement :omega) (for \( :for-initializer \; :optional-expression \; :optional-expression \)
                                                 (:statement :omega)) for-statement-c-style)
        (production (:for-statement :omega) (for \( :for-in-binding in (:expression normal allow-in) \) (:statement :omega)) for-statement-in)
@@ -312,11 +312,11 @@
        (production :for-in-binding (var (:variable-declaration no-in)) for-in-binding-variable-declaration)
        
        
-       (%subsection "With Statement")
+       (%heading 2 "With Statement")
        (production (:with-statement :omega) (with :parenthesized-expression (:statement :omega)) with-statement-with)
        
        
-       (%subsection "Continue and Break Statements")
+       (%heading 2 "Continue and Break Statements")
        (production :continue-statement (continue :optional-label) continue-statement-optional-label)
        
        (production :break-statement (break :optional-label) break-statement-optional-label)
@@ -325,15 +325,15 @@
        (production :optional-label ($identifier) optional-label-identifier)
        
        
-       (%subsection "Return Statement")
+       (%heading 2 "Return Statement")
        (production :return-statement (return :optional-expression) return-statement-optional-expression)
        
        
-       (%subsection "Throw Statement")
+       (%heading 2 "Throw Statement")
        (production :throw-statement (throw (:expression normal allow-in)) throw-statement-throw)
        
        
-       (%subsection "Try Statement")
+       (%heading 2 "Try Statement")
        (production :try-statement (try :block :catch-clauses) try-statement-catch-clauses)
        (production :try-statement (try :block :finally-clause) try-statement-finally-clause)
        (production :try-statement (try :block :catch-clauses :finally-clause) try-statement-catch-clauses-finally-clause)
@@ -346,7 +346,7 @@
        (production :finally-clause (finally :block) finally-clause-block)
        
        
-       (%subsection "Function Definition")
+       (%heading 2 "Function Definition")
        (production :function-definition (:named-function) function-definition-named-function)
        
        (production :anonymous-function (function :formal-parameters-and-body) anonymous-function-formal-parameters-and-body)
@@ -364,8 +364,7 @@
        (production :formal-parameter ($identifier) formal-parameter-identifier)
        
        
-       (%section "Programs")
-       
+       (%heading 1 "Programs")
        (production :program (:top-statements) program)
        
        (production :top-statements () top-statements-one)
@@ -387,14 +386,14 @@
  "JS14/ParserGrammar.rtf"
  "JavaScript 1.4 Parser Grammar"
  #'(lambda (markup-stream)
-     (depict-world-commands markup-stream *jw* :visible-semantics nil)))
+     (depict-world-commands markup-stream *jw* :heading-offset 1 :visible-semantics nil)))
 
 (depict-html-to-local-file
  "JS14/ParserGrammar.html"
  "JavaScript 1.4 Parser Grammar"
  t
  #'(lambda (markup-stream)
-     (depict-world-commands markup-stream *jw* :visible-semantics nil)))
+     (depict-world-commands markup-stream *jw* :heading-offset 1 :visible-semantics nil)))
 
 (with-local-output (s "JS14/ParserGrammar.txt") (print-grammar *jg* s))
 |#
