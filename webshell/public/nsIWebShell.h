@@ -41,7 +41,6 @@ class nsIDocumentLoader;
 class nsIDocumentLoaderObserver;
 class nsIWebShell;
 class nsIWebShellContainer;
-class nsIPref;
 class nsIContent;
 class nsIURIContentListener;
 class nsIDOMDocument;
