@@ -32,8 +32,10 @@
 #ifndef NECKO
 #include "nsINetService.h"
 #else
+#include "nsIBufferInputStream.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
+#include "nsIChannel.h"
 #include "nsCOMPtr.h"
 #endif // NECKO
 
@@ -471,14 +473,21 @@ public:
   NS_DECL_ISUPPORTS
 
 #ifdef NECKO
+	// nsIProgressEventSink methods
+	NS_IMETHOD OnProgress(nsISupports* context, PRUint32 progress, 
+		PRUint32 maxProgress);
+	NS_IMETHOD OnStatus(nsISupports* context, const PRUnichar* aMsg);
     // nsIStreamObserver methods:
 	NS_IMETHOD OnStartBinding(nsISupports *ctxt);
-	NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+	NS_IMETHOD OnStopBinding(nsISupports *ctxt, nsresult status, 
+		const PRUnichar *errorMsg);
 	NS_IMETHOD OnStartRequest(nsISupports *ctxt);
-	NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg);
+	NS_IMETHOD OnStopRequest(nsISupports *ctxt, nsresult status, 
+		const PRUnichar *errorMsg);
 	
 	// nsIStreamListener methods:
-	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, PRUint32 sourceOffset, PRUint32 count);
+	NS_IMETHOD OnDataAvailable(nsISupports *ctxt, nsIBufferInputStream *inStr, 
+		PRUint32 sourceOffset, PRUint32 count);
 
 #else
   //nsIStreamObserver interface
@@ -777,6 +786,9 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
 	const char* spec;
 	(void)mURL->GetSpec(&spec);
 	printf("killing stream for %s\n", mURL ? spec : "(unknown URL)");
+#ifdef NECKO
+	nsCRT::free(spec);
+#endif
   }
 #endif
 
@@ -918,7 +930,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStartBinding(nsIURI* aURL, const cha
 	rv = channel->GetContentType(&aContentType);
 	if (NS_FAILED(rv)) return rv;
 	nsCOMPtr<nsIURI> aURL;
-	rv = channel->GetURI(getter_doesnt_AddRef(aURL));
+	rv = channel->GetURI(dont_AddRef(aURL));
 	if (NS_FAILED(rv)) return rv;
 #endif
 
@@ -986,7 +998,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnProgress(nsIURI* aURL, PRUint32 aPro
 	if (channel)
 	{
 		nsCOMPtr<nsIURI> aURL;
-		rv = channel->GetURI(getter_doesnt_AddRef(aURL));
+		rv = channel->GetURI(dont_AddRef(aURL));
 		if (NS_FAILED(rv)) return rv;
 #endif
   mPluginStreamInfo->SetLength(aProgressMax);
@@ -1036,7 +1048,7 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnDataAvailable(nsIURI* aURL, nsIInput
 	if (channel)
 	{
 		nsCOMPtr<nsIURI> aURL;
-		rv = channel->GetURI(getter_doesnt_AddRef(aURL));
+		rv = channel->GetURI(dont_AddRef(aURL));
 		if (NS_FAILED(rv)) return rv;
 #endif
   const char* url;
@@ -1080,11 +1092,11 @@ NS_IMETHODIMP nsPluginStreamListenerPeer::OnStopBinding(nsIURI* aURL, nsresult a
 {
   nsresult rv = NS_OK;
 #ifdef NECKO
-  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aContext);
+  nsCOMPtr<nsIChannel> channel(do_QueryInterface(aContext));
   if (channel) 
   {
   	nsCOMPtr<nsIURI> aURL;
-	rv = channel->GetURI(getter_doesnt_AddRef(aURL));
+	rv = channel->GetURI(dont_AddRef(aURL));
 	if (NS_FAILED(rv)) return rv;
 #endif // NECKO
   nsPluginReason  reason = nsPluginReason_NoReason;
@@ -1760,7 +1772,11 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
 		const char* filename;
 		char* extension;
 			
+#ifdef NECKO
+		aURL->GetPath(&filename);
+#else
 		aURL->GetFile(&filename);
+#endif
 		extension = PL_strrchr(filename, '.');
 		if(extension)
 			++extension;
