@@ -17,6 +17,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Modified: syd@netscape.com 10/18/99 wired in margins 
  * Contributor(s): 
  */
 
@@ -368,7 +369,7 @@ DoPrintGTK (GtkWidget *widget, UnixPrOps *prOps)
         	GTK_EXPAND | GTK_FILL, GTK_EXPAND | GTK_FILL, 0, 0);
 	label = gtk_label_new( "Top: " );
       	gtk_box_pack_start (GTK_BOX (hbox), label, PR_TRUE, PR_FALSE, 0);
-        adj = (GtkAdjustment *) gtk_adjustment_new (1.0, 0.0, 999.0,
+        adj = (GtkAdjustment *) gtk_adjustment_new (0.5, 0.0, 999.0,
         	0.25, 1.0, 0.0);
         prOps->widgets.topSpinner = spinner1 = 
 		gtk_spin_button_new (adj, 1.0, 2);
@@ -378,7 +379,7 @@ DoPrintGTK (GtkWidget *widget, UnixPrOps *prOps)
 
 	label = gtk_label_new( "Bottom: " );
       	gtk_box_pack_start (GTK_BOX (hbox), label, PR_TRUE, PR_FALSE, 0);
-        adj = (GtkAdjustment *) gtk_adjustment_new (1.0, 0.0, 999.0,
+        adj = (GtkAdjustment *) gtk_adjustment_new (0.0, 0.0, 999.0,
         	0.25, 1.0, 0.0);
         prOps->widgets.bottomSpinner = spinner1 = 
 		gtk_spin_button_new (adj, 1.0, 2);
@@ -392,7 +393,7 @@ DoPrintGTK (GtkWidget *widget, UnixPrOps *prOps)
 
 	label = gtk_label_new( "Left: " );
       	gtk_box_pack_start (GTK_BOX (hbox), label, PR_TRUE, PR_FALSE, 0);
-        adj = (GtkAdjustment *) gtk_adjustment_new (0.75, 0.0, 999.0,
+        adj = (GtkAdjustment *) gtk_adjustment_new (0.5, 0.0, 999.0,
         	0.25, 1.0, 0.0);
         prOps->widgets.leftSpinner = spinner1 = 
 		gtk_spin_button_new (adj, 1.0, 2);
@@ -402,7 +403,7 @@ DoPrintGTK (GtkWidget *widget, UnixPrOps *prOps)
 
 	label = gtk_label_new( "Right: " );
       	gtk_box_pack_start (GTK_BOX (hbox), label, PR_TRUE, PR_FALSE, 0);
-        adj = (GtkAdjustment *) gtk_adjustment_new (0.75, 0.0, 999.0,
+        adj = (GtkAdjustment *) gtk_adjustment_new (0.0, 0.0, 999.0,
         	0.25, 1.0, 0.0);
         prOps->widgets.rightSpinner = spinner1 = 
 		gtk_spin_button_new (adj, 1.0, 2);

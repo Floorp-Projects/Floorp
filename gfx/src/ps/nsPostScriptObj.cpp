@@ -94,6 +94,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
 {
   PRBool isGray, isAPrinter, isFirstPageFirst;
   int printSize;
+  float top, bottom, left, right;
   char *buf;
 
   PrintInfo* pi = new PrintInfo(); 
@@ -112,6 +113,12 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
         mPrintSetup->color = PR_FALSE; 
         mPrintSetup->deep_color = PR_FALSE; 
       }
+      aSpec->GetTopMargin( top );
+      aSpec->GetBottomMargin( bottom );
+      aSpec->GetLeftMargin( left );
+      aSpec->GetRightMargin( right );
+
+printf( "top %f bottom %f left %f right %f\n", top, bottom, left, right );
       aSpec->GetFirstPageFirst( isFirstPageFirst );
       if ( isFirstPageFirst == PR_FALSE )
         mPrintSetup->reverse = 1;
@@ -137,11 +144,7 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     mPrintContext = new PSContext();
     memset(mPrintContext, 0, sizeof(struct PSContext_));
     memset(pi, 0, sizeof(struct PrintInfo_));
- 
-    mPrintSetup->top = 32;                      // Margins  (PostScript Only) 
-    mPrintSetup->bottom = 0;
-    mPrintSetup->left = 32;
-    mPrintSetup->right = 0;
+
     mPrintSetup->width = PAGE_WIDTH;           // Paper size, # of cols for text xlate 
     mPrintSetup->height = PAGE_HEIGHT;
     mPrintSetup->header = "header";
@@ -152,6 +155,13 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
     mPrintSetup->scale_images = TRUE;          // Scale unsized images which are too big 
     mPrintSetup->scale_pre = FALSE;		        // do the pre-scaling thing 
     mPrintSetup->dpi = 72.0f;                  // dpi for externally sized items 
+    // scale margins (specified in inches) to dots.
+
+    mPrintSetup->top = (int) (top * mPrintSetup->dpi);     
+    mPrintSetup->bottom = (int) (bottom * mPrintSetup->dpi);
+    mPrintSetup->left = (int) (left * mPrintSetup->dpi);
+    mPrintSetup->right = (int) (right * mPrintSetup->dpi); 
+printf( "dpi %f top %d bottom %d left %d right %d\n", mPrintSetup->dpi, mPrintSetup->top, mPrintSetup->bottom, mPrintSetup->left, mPrintSetup->right );
     mPrintSetup->rules = 1.0f;			            // Scale factor for rulers 
     mPrintSetup->n_up = 0;                     // cool page combining 
     mPrintSetup->bigger = 1;                   // Used to init sizes if sizesin NULL 
@@ -252,9 +262,9 @@ char* charset_name = NULL;
   XP_FilePrintf(f, "%%!PS-Adobe-3.0\n");
   XP_FilePrintf(f, "%%%%BoundingBox: %d %d %d %d\n",
               PAGE_TO_POINT_I(mPrintContext->prSetup->left),
-	            PAGE_TO_POINT_I(mPrintContext->prSetup->bottom),
+	            PAGE_TO_POINT_I(mPrintContext->prSetup->top),
 	            PAGE_TO_POINT_I(mPrintContext->prSetup->width-mPrintContext->prSetup->right),
-	            PAGE_TO_POINT_I(mPrintContext->prSetup->height-mPrintContext->prSetup->top));
+	            PAGE_TO_POINT_I(mPrintContext->prSetup->height-(mPrintContext->prSetup->bottom + mPrintContext->prSetup->top)));
   XP_FilePrintf(f, "%%%%Creator: Mozilla (NetScape) HTML->PS\n");
   XP_FilePrintf(f, "%%%%DocumentData: Clean8Bit\n");
   XP_FilePrintf(f, "%%%%DocumentPaperSizes: %s\n",
@@ -438,7 +448,7 @@ XP_File f;
 #if 0
   annotate_page( mPrintContext->prSetup->header, 0, -1, pn);
 #endif
-  XP_FilePrintf(f, "newpath 0 %d moveto ", PAGE_TO_POINT_I(mPrintContext->prSetup->bottom));
+  XP_FilePrintf(f, "newpath 0 %d moveto ", PAGE_TO_POINT_I(mPrintContext->prSetup->top));
   XP_FilePrintf(f, "%d 0 rlineto 0 %d rlineto -%d 0 rlineto ",
 			PAGE_TO_POINT_I(mPrintContext->prInfo->page_width),
 			PAGE_TO_POINT_I(mPrintContext->prInfo->page_height),
