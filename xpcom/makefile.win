@@ -15,11 +15,10 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
+DEPTH=.. 
+
 IGNORE_MANIFEST=1
 
-# 
-
-DEPTH=.. 
-DIRS=src tests
+DIRS=src tests tools
 
 include <$(DEPTH)\config\rules.mak>
