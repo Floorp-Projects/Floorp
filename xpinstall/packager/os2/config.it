@@ -707,7 +707,7 @@ Decrypt Key=FALSE
 Decrypt Key Value=TRUE
 Timing=pre smartupdate
 
-[Cleanup Previous Product RegKeys]
+[Cleanup Previous Product INIApps]
 Product Name0=Mozilla
 Product INI App0=Mozilla
 Current Version0=$UserAgent$
