@@ -274,7 +274,7 @@ LPCTSTR nsListBox::WindowClass()
 //-------------------------------------------------------------------------
 DWORD nsListBox::WindowStyle()
 {
-  DWORD style = (WS_BORDER | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL);
+  DWORD style = (LBS_NOINTEGRALHEIGHT | WS_BORDER | WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_VSCROLL);
   if (mMultiSelect) 
     style = LBS_MULTIPLESEL | style;
 
