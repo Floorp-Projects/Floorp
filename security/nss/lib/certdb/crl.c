@@ -37,7 +37,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.43 2005/02/15 06:26:42 julien.pierre.bugs%sun.com Exp $
+ * $Id: crl.c,v 1.44 2005/02/24 00:22:59 julien.pierre.bugs%sun.com Exp $
  */
  
 #include "cert.h"
@@ -1869,7 +1869,6 @@ static int SortCRLsByThisUpdate(const void* arg1, const void* arg2)
     PRTime timea, timeb;
     SECStatus rv = SECSuccess;
     CachedCrl* a, *b;
-    PRBool agood = PR_FALSE, bgood = PR_FALSE;
 
     a = (CachedCrl*) arg1;
     b = (CachedCrl*) arg2;
@@ -1916,7 +1915,6 @@ static int SortCRLsByThisUpdate(const void* arg1, const void* arg2)
 static int SortImperfectCRLs(const void* arg1, const void* arg2)
 {
     CachedCrl* a, *b;
-    PRBool agood = PR_FALSE, bgood = PR_FALSE;
 
     a = (CachedCrl*) arg1;
     b = (CachedCrl*) arg2;
@@ -2214,7 +2212,6 @@ static SECStatus CRLCache_GetIssuerCache(CRLCache* cache, SECItem* subject,
 /* retrieve the full CRL object that best matches the content of a DPCache */
 static CERTSignedCrl* GetBestCRL(CRLDPCache* cache, PRBool entries)
 {
-    PRInt32 i = 0;
     CachedCrl* acrl = NULL;
 
     PORT_Assert(cache);
