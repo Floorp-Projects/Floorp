@@ -115,6 +115,12 @@ $ops{"NEW_OBJECT"} =
    rem    => "dest",
    params => [ ("TypedRegister") ]
   };
+$ops{"NEW_FUNCTION"} =
+  {
+   super  => "Instruction_2",
+   rem    => "dest, ICodeModule", 
+   params => [ ("TypedRegister", "ICodeModule *") ]
+  };
 $ops{"NEW_ARRAY"} =
   {
    super  => "Instruction_1",
@@ -216,9 +222,15 @@ $ops{"RETURN_VOID"} =
   };
 $ops{"CALL"} =
   {
-   super  => "Instruction_3",
-   rem    => "result, target, args",
-   params => [ ("TypedRegister" , "TypedRegister", "RegisterList") ]
+   super  => "Instruction_4",
+   rem    => "result, target, name, args",
+   params => [ ("TypedRegister" , "TypedRegister", "const StringAtom*", "RegisterList") ]
+  };
+$ops{"METHOD_CALL"} =
+  {
+   super  => "Instruction_4",
+   rem    => "result, target base, target value, args",
+   params => [ ("TypedRegister" , "TypedRegister" , "TypedRegister", "RegisterList") ]
   };
 $ops{"THROW"} =
   {
@@ -452,6 +464,8 @@ sub get_print_body {
             push (@oplist, "\"'\" << *mOp$op << \"'\"");
         } elsif ($type =~ /bool/) {
             push (@oplist, "\"'\" << ((mOp$op) ? \"true\" : \"false\") << \"'\"");
+        } elsif ($type =~ /ICodeModule/) {
+            push (@oplist, "\"ICodeModule\"");
         } else {
             push (@oplist, "mOp$op");
         }

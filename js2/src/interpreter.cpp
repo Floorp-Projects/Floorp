@@ -89,23 +89,18 @@ struct Activation : public gc_base {
         }
     }
 
-    Activation(ICodeModule* iCode, Activation* caller, 
+    Activation(ICodeModule* iCode, Activation* caller, const JSValue thisArg,
                  const RegisterList& list)
         : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
     {
         // copy caller's parameter list to initial registers.
         JSValues::iterator dest = mRegisters.begin();
+        *dest++ = thisArg;
         const JSValues& params = caller->mRegisters;
         for (RegisterList::const_iterator src = list.begin(), 
                  end = list.end(); src != end; ++src, ++dest) {
             *dest = params[(*src).first];
         }
-    }
-
-    Activation(ICodeModule* iCode, const JSValue arg)
-        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
-    {
-        mRegisters[0] = arg;
     }
 
     Activation(ICodeModule* iCode, const JSValue arg1, const JSValue arg2)
@@ -489,26 +484,78 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 }
                 break;
 
-            case CALL:
+            case METHOD_CALL:
                 {
-                    Call* call = static_cast<Call*>(instruction);
-                    JSFunction *target = (*registers)[op2(call).first].function;
+                    MethodCall* call = static_cast<MethodCall*>(instruction);
+                    ASSERT((*registers)[op3(call).first].isString());
+
+                    JSValue base;
+                    JSValue prop;
+                    if (op2(call).first == NotARegister) {
+                        base = mGlobal->getReference(prop, *((*registers)[op3(call).first].string));
+                    
+                    }
+                    else {
+                        base = (*registers)[op2(call).first];
+                        ASSERT(base.tag == JSValue::object_tag);        // XXX runtime error
+                        base = base.object->getReference(prop, *((*registers)[op3(call).first].string));
+                    }
+                    ASSERT(prop.isFunction()); // XXX runtime error
+                    JSFunction *target = prop.function;
                     if (target->isNative()) {
-                        RegisterList &params = op3(call);
-                        JSValues argv(params.size());
-                        JSValues::size_type i = 0;
+                        RegisterList &params = op4(call);
+                        JSValues argv(params.size() + 1);
+                        argv[0] = base;
+                        JSValues::size_type i = 1;
                         for (RegisterList::const_iterator src = params.begin(), end = params.end();
                                         src != end; ++src, ++i) {
                             argv[i] = (*registers)[src->first];
                         }
-                        if (op2(call).first != NotARegister)
-                            (*registers)[op2(call).first] = static_cast<JSNativeFunction*>(target)->mCode(argv);
+                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(argv);
+                        if (op1(call).first != NotARegister)
+                            (*registers)[op1(call).first] = result;
                         break;
                     }
                     else {
                         mLinkage = new Linkage(mLinkage, ++mPC,
                                                mActivation, op1(call));
-                        mActivation = new Activation(target->getICode(), mActivation, op3(call));
+                        mActivation = new Activation(target->getICode(), mActivation, base, op4(call));
+                        registers = &mActivation->mRegisters;
+                        mPC = mActivation->mICode->its_iCode->begin();
+                        continue;
+                    }
+                }
+
+            case CALL:
+                {
+                    Call* call = static_cast<Call*>(instruction);
+                    JSFunction *target;
+                    if (op2(call).first == NotARegister) {
+                        ASSERT(mGlobal->getVariable(*op3(call)).isFunction());
+                        target = mGlobal->getVariable(*op3(call)).function;
+                    }
+                    else {
+                        ASSERT((*registers)[op2(call).first].isFunction()); // XXX runtime error
+                        target = (*registers)[op2(call).first].function;
+                    }
+                    if (target->isNative()) {
+                        RegisterList &params = op4(call);
+                        JSValues argv(params.size() + 1);
+                        argv[0] = kNull;
+                        JSValues::size_type i = 1;
+                        for (RegisterList::const_iterator src = params.begin(), end = params.end();
+                                        src != end; ++src, ++i) {
+                            argv[i] = (*registers)[src->first];
+                        }
+                        JSValue result = static_cast<JSNativeFunction*>(target)->mCode(argv);
+                        if (op1(call).first != NotARegister)
+                            (*registers)[op1(call).first] = result;
+                        break;
+                    }
+                    else {
+                        mLinkage = new Linkage(mLinkage, ++mPC,
+                                               mActivation, op1(call));
+                        mActivation = new Activation(target->getICode(), mActivation, kNull, op4(call));
                         registers = &mActivation->mRegisters;
                         mPC = mActivation->mICode->its_iCode->begin();
                         continue;
@@ -577,6 +624,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     (*registers)[dst(no).first] = JSValue(new JSObject());
                 }
                 break;
+            case NEW_FUNCTION:
+                {
+                    NewFunction* nf = static_cast<NewFunction*>(instruction);
+                    (*registers)[dst(nf).first] = JSValue(new JSFunction(src1(nf)));
+                }
+                break;
             case NEW_ARRAY:
                 {
                     NewArray* na = static_cast<NewArray*>(instruction);
@@ -591,6 +644,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         JSObject* object = value.object;
                         (*registers)[dst(gp).first] = object->getProperty(*src2(gp));
                     }
+                    // XXX runtime error
                 }
                 break;
             case SET_PROP:
@@ -787,6 +841,7 @@ using JSString throughout.
                     (*registers)[dst(bn).first] = JSValue(~(*registers)[src1(bn).first].toInt32().i32);
                 }
                 break;
+
             case NOT:
                 {
                     Not* nt = static_cast<Not*>(instruction);
@@ -794,6 +849,7 @@ using JSString throughout.
                     (*registers)[dst(nt).first] = JSValue(!(*registers)[src1(nt).first].boolean);
                 }
                 break;
+
             case THROW:
                 {
                     Throw* thrw = static_cast<Throw*>(instruction);

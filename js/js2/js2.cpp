@@ -89,9 +89,9 @@ const bool showTokens = false;
 static JSValue print(const JSValues &argv)
 {
     size_t n = argv.size();
-    if (n > 0) {
-        stdOut << argv[0];
-        for (size_t i = 1; i < n; ++i)
+    if (n > 1) {                // the 'this' parameter in un-interesting
+        stdOut << argv[1];
+        for (size_t i = 2; i < n; ++i)
             stdOut << ' ' << argv[i];
     }
     stdOut << "\n";
@@ -99,13 +99,13 @@ static JSValue print(const JSValues &argv)
 }
 
 
-static void genCode(World &world, Context &cx, StmtNode *p)
+static void genCode(Context &cx, StmtNode *p)
 {
-    JSScope glob;
-    ICodeGenerator icg(&world, &glob);
+    ICodeGenerator icg(&cx.getWorld(), cx.getGlobalObject());
     icg.isScript();
     TypedRegister ret(NotARegister, &None_Type);
     while (p) {
+        icg.preprocess(p);
         ret = icg.genStmt(p);
         p = p->next;
     }
@@ -160,7 +160,7 @@ static void readEvalPrint(FILE *in, World &world)
         	    stdOut << '\n';
 #if 0
 				// Generate code for parsedStatements, which is a linked list of zero or more statements
-                genCode(world, cx, parsedStatements);
+                genCode(cx, parsedStatements);
 #endif
             }
             clear(buffer);
@@ -232,9 +232,15 @@ void testCompile()
         JSScope glob;
         ICodeGenerator icg(&world, &glob);
         icg.isScript();
-        while (parsedStatements) {
-            icg.genStmt(parsedStatements);
-            parsedStatements = parsedStatements->next;
+        StmtNode *s = parsedStatements;
+        while (s) {
+            icg.preprocess(s);
+            s = s->next;
+        }
+        s = parsedStatements;
+        while (s) {
+            icg.genStmt(s);
+            s = s->next;
         }
         cx.interpret(icg.complete(), JSValues());
     }
@@ -253,7 +259,7 @@ int main(int argc, char **argv)
   #endif
     using namespace JavaScript;
     using namespace Shell;
-  #if 0
+  #if 1
     testCompile();
   #endif
     readEvalPrint(stdin, world);

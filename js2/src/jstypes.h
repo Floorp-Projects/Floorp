@@ -93,6 +93,7 @@ namespace JSTypes {
             i32_tag, u32_tag,
             i64_tag, u64_tag,
             f32_tag, f64_tag,
+            integer_tag,
             object_tag, array_tag, function_tag, string_tag, boolean_tag, type_tag,
             undefined_tag
         } tag;
@@ -122,10 +123,12 @@ namespace JSTypes {
         bool isObject() const                           { return ((tag == object_tag) || (tag == function_tag) || (tag == array_tag)); }
         bool isString() const                           { return (tag == string_tag); }
         bool isBoolean() const                          { return (tag == boolean_tag); }
-        bool isNumber() const                           { return (tag == f64_tag); }
+        bool isNumber() const                           { return (tag == f64_tag) || (tag == integer_tag); }
+
                                                         /* this is correct wrt ECMA, The i32 & u32 kinds
-                                                           will have to be converted to doubles anyway because
+                                                           will have to be converted (to doubles?) anyway because
                                                            we can't have overflow happening in generic arithmetic */
+
         bool isUndefined() const                        { return (tag == undefined_tag); }
         bool isNull() const                             { return ((tag == object_tag) && (this->object == NULL)); }
         bool isNaN() const;
@@ -139,9 +142,12 @@ namespace JSTypes {
 
         JSValue toPrimitive(ECMA_type hint = NoHint) const;
 
+        JSValue convert(const JSType *toType);
+
         
         static JSValue valueToString(const JSValue& value);
         static JSValue valueToNumber(const JSValue& value);
+        static JSValue valueToInteger(const JSValue& value);
         static JSValue valueToInt32(const JSValue& value);
         static JSValue valueToUInt32(const JSValue& value);
         static JSValue valueToBoolean(const JSValue& value);
@@ -176,6 +182,20 @@ namespace JSTypes {
     extern const JSValue kNaN;
     extern const JSValue kTrue;
     extern const JSValue kFalse;
+    extern const JSValue kNull;
+
+    extern const JSType Any_Type;
+    extern const JSType Integer_Type;
+    extern const JSType Number_Type;
+    extern const JSType Character_Type;
+    extern const JSType String_Type;
+    extern const JSType Function_Type;
+    extern const JSType Array_Type;
+    extern const JSType Type_Type;
+    extern const JSType Boolean_Type;
+    extern const JSType Null_Type;
+    extern const JSType Void_Type;
+    extern const JSType None_Type;
 
     /**
      * Basic behavior of all JS objects, mapping a name to a value,
@@ -193,7 +213,7 @@ namespace JSTypes {
         {
             return (mProperties.count(name) != 0);
         }
-    
+
         const JSValue& getProperty(const String& name)
         {
             JSProperties::const_iterator i = mProperties.find(name);
@@ -201,6 +221,20 @@ namespace JSTypes {
                 return i->second;
             if (mPrototype)
                 return mPrototype->getProperty(name);
+            return kUndefinedValue;
+        }
+
+        // return the property AND the object it's found in
+        // (would rather return references, but couldn't get that to work)
+        const JSValue getReference(JSValue &prop, const String& name)
+        {
+            JSProperties::const_iterator i = mProperties.find(name);
+            if (i != mProperties.end()) {
+                prop = i->second;
+                return JSValue(this);
+            }
+            if (mPrototype)
+                return mPrototype->getReference(prop, name);
             return kUndefinedValue;
         }
         
@@ -329,6 +363,8 @@ namespace JSTypes {
         explicit JSString(const String& str);
         explicit JSString(const String* str);
         explicit JSString(const char* str);
+
+        operator String();
     };
 
     class JSException : public gc_base {
@@ -412,20 +448,6 @@ namespace JSTypes {
 
         int32 distance(const JSType *other) const;
     };
-
-
-    extern const JSType Any_Type;
-    extern const JSType Integer_Type;
-    extern const JSType Number_Type;
-    extern const JSType Character_Type;
-    extern const JSType String_Type;
-    extern const JSType Function_Type;
-    extern const JSType Array_Type;
-    extern const JSType Type_Type;
-    extern const JSType Boolean_Type;
-    extern const JSType Null_Type;
-    extern const JSType Void_Type;
-    extern const JSType None_Type;
 
     
 } /* namespace JSTypes */    

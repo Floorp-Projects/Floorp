@@ -45,6 +45,7 @@ const JSValue kUndefinedValue;
 const JSValue kNaN = JSValue(nan);
 const JSValue kTrue = JSValue(true);
 const JSValue kFalse = JSValue(false);
+const JSValue kNull = JSValue((JSObject*)NULL);
 
 const JSType Any_Type = JSType(NULL);
 const JSType Integer_Type = JSType(&Any_Type);
@@ -94,6 +95,8 @@ const JSType *JSValue::getType() const
         return &Integer_Type;
     case JSValue::u32_tag:
         return &Integer_Type;
+    case JSValue::integer_tag:
+        return &Integer_Type;
     case JSValue::f64_tag:
         return &Number_Type;
     case JSValue::object_tag:
@@ -123,6 +126,7 @@ bool JSValue::isNaN() const
     case i32_tag:
     case u32_tag:
         return false;
+    case integer_tag:
     case f64_tag:
         return JSDOUBLE_IS_NaN(f64);
     default:
@@ -143,6 +147,7 @@ int JSValue::operator==(const JSValue& value) const
         CASE(object); CASE(array); CASE(function); CASE(string);
         CASE(boolean);
         #undef CASE
+        case integer_tag : return (this->f64 == value.f64);
         // question:  are all undefined values equal to one another?
         case undefined_tag: return 1;
         }
@@ -173,6 +178,7 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
     case JSValue::u32_tag:
         f << float64(value.u32);
         break;
+    case JSValue::integer_tag:
     case JSValue::f64_tag:
         f << value.f64;
         break;
@@ -197,6 +203,34 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
     case JSValue::undefined_tag:
         f << "undefined";
         break;
+    case JSValue::type_tag:
+        if (value.type == &Any_Type)        // yuck (see yuck comment below)
+            f << "Any_Type";
+        else if (value.type == &Integer_Type)
+            f << "Integer_Type";
+        else if (value.type == &Number_Type)
+            f << "Number_Type";
+        else if (value.type == &Character_Type)
+            f << "Character_Type";
+        else if (value.type == &String_Type)
+            f << "String_Type";
+        else if (value.type == &Function_Type)
+            f << "Function_Type";
+        else if (value.type == &Array_Type)
+            f << "Array_Type";
+        else if (value.type == &Type_Type)
+            f << "Type_Type";
+        else if (value.type == &Boolean_Type)
+            f << "Boolean_Type";
+        else if (value.type == &Null_Type)
+            f << "Null_Type";
+        else if (value.type == &Void_Type)
+            f << "Void_Type";
+        else if (value.type == &None_Type)
+            f << "None_Type";
+        else
+            f << "Unknown_Type";
+        break;
     default:
         NOT_REACHED("Bad tag");
     }
@@ -209,6 +243,7 @@ JSValue JSValue::toPrimitive(ECMA_type /*hint*/) const
     switch (tag) {
     case i32_tag:
     case u32_tag:
+    case integer_tag:
     case f64_tag:
     case string_tag:
     case boolean_tag:
@@ -258,6 +293,7 @@ JSValue JSValue::valueToString(const JSValue& value) // can assume value is not 
     case u32_tag:
         chrp = doubleToStr(buf, dtosStandardBufferSize, value.u32, dtosStandard, 0);
         break;
+    case integer_tag:
     case f64_tag:
         chrp = doubleToStr(buf, dtosStandardBufferSize, value.f64, dtosStandard, 0);
         break;
@@ -291,6 +327,7 @@ JSValue JSValue::valueToNumber(const JSValue& value) // can assume value is not 
         return JSValue((float64)value.i32);
     case u32_tag:
         return JSValue((float64)value.u32);
+    case integer_tag:
     case f64_tag:
         return value;
     case string_tag: 
@@ -316,6 +353,18 @@ JSValue JSValue::valueToNumber(const JSValue& value) // can assume value is not 
     }
 }
 
+JSValue JSValue::valueToInteger(const JSValue& value)
+{
+    JSValue result = valueToNumber(value);
+    ASSERT(result.tag == f64_tag);
+    result.tag = i64_tag;
+    bool neg = (result.f64 < 0);
+    result.f64 = floor((neg) ? -result.f64 : result.f64);
+    result.f64 = (neg) ? -result.f64 : result.f64;
+    return result;
+}
+
+
 JSValue JSValue::valueToBoolean(const JSValue& value)
 {
     switch (value.tag) {
@@ -323,6 +372,7 @@ JSValue JSValue::valueToBoolean(const JSValue& value)
         return JSValue(value.i32 != 0);
     case u32_tag:
         return JSValue(value.u32 != 0);
+    case integer_tag:
     case f64_tag:
         return JSValue(!(value.f64 == 0.0) || JSDOUBLE_IS_NaN(value.f64));
     case string_tag: 
@@ -354,6 +404,7 @@ JSValue JSValue::valueToInt32(const JSValue& value)
     case u32_tag:
         d = value.u32;
         break;
+    case integer_tag:
     case f64_tag:
         d = value.f64;
         break;
@@ -425,6 +476,22 @@ JSValue JSValue::valueToUInt32(const JSValue& value)
     return JSValue((uint32)d);
 }
 
+
+JSValue JSValue::convert(const JSType *toType)
+{
+    if (toType == &Any_Type)    // yuck, something wrong with this
+                                // maybe the base types should be 
+                                // a family of classes, not just instances
+                                // of JSType ???
+        return *this;
+    else if (toType == &Integer_Type)
+        return valueToInteger(*this);
+    else
+        //  etc...
+        return kUndefinedValue;
+}
+
+
 JSFunction::~JSFunction()
 {
     delete mICode;
@@ -450,6 +517,13 @@ JSString::JSString(const char* str)
     resize(n);
     std::transform(str, str + n, begin(), JavaScript::widen);
 }
+
+
+JSString::operator String()
+{
+    return String(begin(), size());
+}
+
 
 // # of sub-type relationship between this type and the other type 
 // (== MAX_INT if other is not a base type)

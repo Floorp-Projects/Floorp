@@ -159,6 +159,14 @@ TypedRegister ICodeGenerator::loadString(String &value)
     return dest;
 }
 
+TypedRegister ICodeGenerator::loadString(const StringAtom &value)
+{
+    TypedRegister dest(getRegister(), &String_Type);
+    LoadString *instr = new LoadString(dest, new JSString(value));
+    iCode->push_back(instr);
+    return dest;
+}
+
 TypedRegister ICodeGenerator::loadBoolean(bool value)
 {
     TypedRegister dest(getRegister(), &Boolean_Type);
@@ -175,6 +183,14 @@ TypedRegister ICodeGenerator::newObject()
     return dest;
 }
 
+TypedRegister ICodeGenerator::newFunction(ICodeModule *icm)
+{
+    TypedRegister dest(getRegister(), &Function_Type);
+    NewFunction *instr = new NewFunction(dest, icm);
+    iCode->push_back(instr);
+    return dest;
+}
+
 TypedRegister ICodeGenerator::newArray()
 {
     TypedRegister dest(getRegister(), &Array_Type);
@@ -182,8 +198,6 @@ TypedRegister ICodeGenerator::newArray()
     iCode->push_back(instr);
     return dest;
 }
-
-
 
 TypedRegister ICodeGenerator::loadName(const StringAtom &name)
 {
@@ -343,18 +357,20 @@ TypedRegister ICodeGenerator::op(ICodeOp op, TypedRegister source1,
     return dest;
 } 
     
-TypedRegister ICodeGenerator::call(TypedRegister target, RegisterList args)
+TypedRegister ICodeGenerator::call(TypedRegister target, const StringAtom &name, RegisterList args)
 {
     TypedRegister dest(getRegister(), &Any_Type);
-    Call *instr = new Call(dest, target, args);
+    Call *instr = new Call(dest, target, &name, args);
     iCode->push_back(instr);
     return dest;
 }
 
-void ICodeGenerator::callVoid(TypedRegister target, RegisterList args)
+TypedRegister ICodeGenerator::methodCall(TypedRegister targetBase, TypedRegister targetValue, RegisterList args)
 {
-    Call *instr = new Call(TypedRegister(NotARegister, &Void_Type), target, args);
+    TypedRegister dest(getRegister(), &Any_Type);
+    MethodCall *instr = new MethodCall(dest, targetBase, targetValue, args);
     iCode->push_back(instr);
+    return dest;
 }
 
 void ICodeGenerator::branch(Label *label)
@@ -514,8 +530,6 @@ static bool generatedBoolean(ExprNode *p)
     return false;
 }
 
-
-
 /*
     if trueBranch OR falseBranch are not null, the sub-expression should generate
     a conditional branch to the appropriate target. If either branch is NULL, it
@@ -563,14 +577,36 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::call : 
         {
             InvokeExprNode *i = static_cast<InvokeExprNode *>(p);
-            TypedRegister fn = genExpr(i->op);
             RegisterList args;
             ExprPairList *p = i->pairs;
             while (p) {
                 args.push_back(genExpr(p->value));
                 p = p->next;
             }
-            ret = call(fn, args);
+
+            if (i->op->getKind() == ExprNode::dot) {
+                BinaryExprNode *b = static_cast<BinaryExprNode *>(i->op);
+                ret = methodCall(genExpr(b->op1), loadString(static_cast<IdentifierExprNode *>(b->op2)->name), args);
+            }
+            else 
+                if (i->op->getKind() == ExprNode::identifier) {
+                    if (!mWithinWith) {
+                        TypedRegister v = findVariable((static_cast<IdentifierExprNode *>(i->op))->name);
+                        if (v.first != NotARegister)
+                            ret = call(v, static_cast<IdentifierExprNode *>(i->op)->name, args);
+                        else
+                            ret = call(TypedRegister(NotARegister, &Null_Type), static_cast<IdentifierExprNode *>(i->op)->name, args);
+                    }
+                    else
+                        ret = methodCall(TypedRegister(NotARegister, &Null_Type), loadString(static_cast<IdentifierExprNode *>(i->op)->name), args);
+                }
+                else 
+                    if (i->op->getKind() == ExprNode::index) {
+                        BinaryExprNode *b = static_cast<BinaryExprNode *>(i->op);
+                        ret = methodCall(genExpr(b->op1), genExpr(b->op2), args);
+                    }
+                    else
+                        ASSERT("WAH!");
         }
         break;
     case ExprNode::index :
@@ -586,6 +622,11 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
             TypedRegister base = genExpr(b->op1);            
             ret = getProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name);
+        }
+        break;
+    case ExprNode::This :
+        {
+            ret = TypedRegister(0, &Any_Type);
         }
         break;
     case ExprNode::identifier :
@@ -644,6 +685,8 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         ret = op(ADD, ret, loadImmediate(1.0));
                         setElement(base, index, ret);
                     }
+                    else
+                        ASSERT("WAH!");
         }
         break;
     case ExprNode::postIncrement: 
@@ -673,6 +716,8 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         TypedRegister index = genExpr(b->op2);
                         ret = elementInc(base, index);
                     }
+                    else
+                        ASSERT("WAH!");
         }
         break;
     case ExprNode::preDecrement: 
@@ -712,6 +757,8 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         ret = op(SUBTRACT, ret, loadImmediate(1.0));
                         setElement(base, index, ret);
                     }
+                    else
+                        ASSERT("WAH!");
         }
         break;
     case ExprNode::postDecrement: 
@@ -741,6 +788,8 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         TypedRegister index = genExpr(b->op2);
                         ret = elementInc(base, index);
                     }
+                    else
+                        ASSERT("WAH!");
         }
         break;
     case ExprNode::plus:
@@ -798,6 +847,8 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         TypedRegister index = genExpr(lb->op2);
                         setElement(base, index, ret);
                     }
+                    else
+                        ASSERT("WAH!");
         }
         break;
     case ExprNode::addEquals:
@@ -850,6 +901,8 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                         ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
                         setElement(base, index, ret);
                     }
+                    else
+                        ASSERT("WAH!");
         }
         break;
     case ExprNode::equal:
@@ -988,7 +1041,6 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::objectLiteral:
         {
             ret = newObject();
-
             PairListExprNode *plen = static_cast<PairListExprNode *>(p);
             ExprPairList *e = plen->pairs;
             while (e) {
@@ -996,6 +1048,25 @@ TypedRegister ICodeGenerator::genExpr(ExprNode *p,
                     setProperty(ret, (static_cast<IdentifierExprNode *>(e->field))->name, genExpr(e->value));
                 e = e->next;
             }
+        }
+        break;
+
+    case ExprNode::functionLiteral:
+        {
+            FunctionExprNode *f = static_cast<FunctionExprNode *>(p);
+            ICodeGenerator icg(mWorld, mGlobal);
+            icg.allocateParameter(mWorld->identifiers[widenCString("this")]);   // always parameter #0
+            VariableBinding *v = f->function.parameters;
+            while (v) {
+                if (v->name && (v->name->getKind() == ExprNode::identifier))
+                    icg.allocateParameter((static_cast<IdentifierExprNode *>(v->name))->name);
+                v = v->next;
+            }
+            icg.preprocess(f->function.body);
+            icg.genStmt(f->function.body);
+            //stdOut << icg;
+            ICodeModule *icm = icg.complete();
+            ret = newFunction(icm);
         }
         break;
 
@@ -1044,7 +1115,7 @@ void ICodeGenerator::preprocess(StmtNode *p)
             VariableBinding *v = vs->bindings;
             while (v)  {
                 if (v->name && (v->name->getKind() == ExprNode::identifier))
-                    if (v->type->getKind() == ExprNode::identifier)
+                    if (v->type && (v->type->getKind() == ExprNode::identifier))
                         allocateVariable((static_cast<IdentifierExprNode *>(v->name))->name,
                                             (static_cast<IdentifierExprNode *>(v->type))->name);
                     else 
@@ -1141,6 +1212,7 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
         {
             FunctionStmtNode *f = static_cast<FunctionStmtNode *>(p);
             ICodeGenerator icg(mWorld, mGlobal);
+            icg.allocateParameter(mWorld->identifiers[widenCString("this")]);   // always parameter #0
             VariableBinding *v = f->function.parameters;
             while (v) {
                 if (v->name && (v->name->getKind() == ExprNode::identifier))
@@ -1469,6 +1541,11 @@ TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 rts();
             }
             setLabel(beyondLabel);
+        }
+        break;
+
+    case StmtNode::Class:
+        {
         }
         break;
 
