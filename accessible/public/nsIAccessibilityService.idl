@@ -93,6 +93,7 @@ interface nsIAccessibilityService : nsISupports
   nsIAccessible createXULTabPanelsAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULTabsAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULTextAccessible(in nsIDOMNode aNode);
+  nsIAccessible createXULTextBoxAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULTreeAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULTreeColumnsAccessible(in nsIDOMNode aNode);
   nsIAccessible createXULTreeColumnitemAccessible(in nsIDOMNode aNode);
