@@ -689,13 +689,21 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
     rv = PrepareStyleSheets(mDocumentURL);
     if (NS_FAILED(rv)) return rv;
 
-    // Look in the chrome cache: see if we've got this puppy loaded
-    // already.
-    nsCOMPtr<nsIXULPrototypeDocument> proto;
-    rv = gXULCache->GetPrototype(mDocumentURL, getter_AddRefs(proto));
+    nsXPIDLCString contentType;
+    rv = aChannel->GetContentType(getter_Copies(contentType));
     if (NS_FAILED(rv)) return rv;
 
-    if (proto) {
+    if (PL_strcmp("text/cached-xul", (const char*) contentType) == 0) {
+        // Look in the chrome cache: we've got this puppy loaded
+        // already.
+        nsCOMPtr<nsIXULPrototypeDocument> proto;
+        rv = gXULCache->GetPrototype(mDocumentURL, getter_AddRefs(proto));
+        if (NS_FAILED(rv)) return rv;
+
+        NS_ASSERTION(proto != nsnull, "no prototype on cached load");
+        if (! proto)
+            return NS_ERROR_UNEXPECTED;
+
         mMasterPrototype = mCurrentPrototype = proto;
 
         rv = AddPrototypeSheets();
@@ -706,6 +714,8 @@ nsXULDocument::StartDocumentLoad(const char* aCommand,
             return NS_ERROR_OUT_OF_MEMORY;
     }
     else {
+        // It's just a vanilla document load. Create a parser to deal
+        // with the stream n' stuff.
         nsCOMPtr<nsIParser> parser;
         rv = PrepareToLoad(aContainer, aCommand, aChannel, aLoadGroup, getter_AddRefs(parser));
         if (NS_FAILED(rv)) return rv;
