@@ -43,7 +43,6 @@ CPPSRCS		= \
 		nsObserver.cpp \
 		nsObserverList.cpp \
 		nsObserverService.cpp \
-		nsPageMgr.cpp \
 		nsProperties.cpp \
 		nsQuickSort.cpp \
 		nsSizeOfHandler.cpp \
@@ -72,7 +71,6 @@ EXPORTS		= \
 		nsIArena.h \
 		nsIByteBuffer.h \
 		nsIObserverList.h \
-		nsIPageManager.h \
 		nsIProperties.h \
 		nsISimpleEnumerator.h \
 		nsISizeOfHandler.h \

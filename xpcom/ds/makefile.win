@@ -35,7 +35,6 @@ EXPORTS =                          \
         nsIArena.h                 \
         nsIByteBuffer.h            \
         nsIObserverList.h          \
-        nsIPageManager.h           \
         nsIProperties.h            \
         nsISimpleEnumerator.h      \
         nsISizeOfHandler.h         \
@@ -96,7 +95,6 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsObserver.obj                \
         .\$(OBJDIR)\nsObserverList.obj            \
         .\$(OBJDIR)\nsObserverService.obj         \
-        .\$(OBJDIR)\nsPageMgr.obj                 \
         .\$(OBJDIR)\nsProperties.obj              \
         .\$(OBJDIR)\nsQuickSort.obj               \
         .\$(OBJDIR)\nsSizeOfHandler.obj           \

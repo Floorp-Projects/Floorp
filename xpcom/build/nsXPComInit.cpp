@@ -29,7 +29,9 @@
 #include "nsBuffer.h"
 #endif
 #include "nsByteBuffer.h"
+#ifdef PAGE_MANAGER
 #include "nsPageMgr.h"
+#endif
 #include "nsSupportsArray.h"
 #include "nsSupportsPrimitives.h"
 #include "nsUnicharBuffer.h"
@@ -54,7 +56,9 @@ static NS_DEFINE_CID(kArenaCID, NS_ARENA_CID);
 static NS_DEFINE_CID(kBufferCID, NS_BUFFER_CID);
 #endif
 static NS_DEFINE_CID(kByteBufferCID, NS_BYTEBUFFER_CID);
+#ifdef PAGE_MANAGER
 static NS_DEFINE_CID(kPageManagerCID, NS_PAGEMANAGER_CID);
+#endif
 static NS_DEFINE_CID(kPropertiesCID, NS_PROPERTIES_CID);
 static NS_DEFINE_CID(kSupportsArrayCID, NS_SUPPORTSARRAY_CID);
 static NS_DEFINE_CID(kUnicharBufferCID, NS_UNICHARBUFFER_CID);
@@ -251,11 +255,13 @@ nsresult NS_COM NS_InitXPCOM(nsIServiceManager* *result,
                                 nsDirectoryIteratorImpl::Create);
     if (NS_FAILED(rv)) return rv;
 
+#ifdef PAGE_MANAGER
     rv = RegisterGenericFactory(compMgr, kPageManagerCID,
                                 NS_PAGEMANAGER_CLASSNAME,
                                 NS_PAGEMANAGER_PROGID,
                                 nsPageMgr::Create);
     if (NS_FAILED(rv)) return rv;
+#endif
 
     rv = RegisterGenericFactory(compMgr, kPropertiesCID,
                                 NS_PROPERTIES_CLASSNAME,
