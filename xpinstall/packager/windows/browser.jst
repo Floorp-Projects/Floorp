@@ -37,6 +37,7 @@ function createShortcuts()
   var szFolderDesktop;
   var szFolderQuickLaunch;
   var szFolderSendTo;
+  var szStartupFolder;
   var winreg;
   var fWindows;
   var fTemp;
@@ -89,7 +90,9 @@ function createShortcuts()
       szStartMenu         = winreg.getValueString(subkey, valname);
       valname             = "Desktop";
       szFolderDesktop     = winreg.getValueString(subkey, valname);
-    }
+      valname             = "Startup";
+      szStartupFolder     = winreg.getValueString(subkey, valname);
+	}
     else
     {
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
@@ -100,7 +103,9 @@ function createShortcuts()
       szStartMenu         = winreg.getValueString(subkey, valname);
       valname             = "Common Desktop";
       szFolderDesktop     = winreg.getValueString(subkey, valname);
-    }
+      valname             = "Common Startup";
+      szStartupFolder     = winreg.getValueString(subkey, valname);
+   }
 
     winreg.setRootKey(winreg.HKEY_CURRENT_USER);
     subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
@@ -155,6 +160,39 @@ function createShortcuts()
 
     winreg.setRootKey(winreg.HKEY_CURRENT_USER);
     registerProgramFolderKey(winreg, fFolderPath);
+
+	/* setup turbo mode */
+
+	subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Setup";
+	valname = "browserargs";
+	regvalue = winreg.getValueString(subkey, valname);
+	if (regvalue && regvalue != undefined && regvalue.length != 0) {
+		var value = new String(regvalue);
+		var index = value.indexOf("turbo");
+		if (index != -1) {
+			var index2 = value.indexOf("=", index);
+			if (index2 != -1) {
+				var turboarg = value.slice(index2 + 1, index2 + 2);
+ 				fFolderPath = getFolder("file:///", szStartupFolder);
+ 				if (turboarg == "y" || turboarg == "Y") {
+					/* add shortcut in the startup folder if doesn't exist */
+
+					logComment("Adding Quick Launch shortcut to Windows startup folder\n");
+					File.windowsShortcut(fileExe, fFolderPath, "$MainExeFile$", fProgram, "-turbo", fileExe, 0); 
+				} else {
+					/* remove shortcut from the startup folder */
+
+					basename = "$MainExeFile$"
+					fTemp = fFolderPath + basename + ".lnk";
+					fFolderPath = getFolder("file:///", fTemp);
+					if (File.exists(fFolderPath)) { 
+						logComment("Removing Quick Launch shortcut from Windows startup folder\n");
+						fileDelete(fFolderPath);
+					} 
+				}
+			}
+		}
+	}
   }
   else
   {

@@ -421,6 +421,18 @@ HRESULT CleanupXpcomFile()
   return(FO_SUCCESS);
 }
 
+#define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
+
+HRESULT CleanupArgsRegistry()
+{
+  char  szKey[MAX_BUF];
+
+  wsprintf(szKey, SETUP_STATE_REG_KEY, sgProduct.szCompanyName, sgProduct.szProductName,
+    sgProduct.szUserAgent);
+  DeleteWinRegValue(HKEY_CURRENT_USER, szKey, "browserargs");
+  return(FO_SUCCESS);
+}
+
 HRESULT ProcessUncompressFile(DWORD dwTiming, char *szSectionPrefix)
 {
   DWORD   dwIndex;
@@ -1596,6 +1608,114 @@ void SetWinReg(HKEY hkRootKey,
           UpdateInstallLog(KEY_STORE_REG_NUMBER, szBuf, bDnu);
         }
       }
+    }
+
+    RegCloseKey(hkResult);
+  }
+}
+
+/* Name: AppendWinRegString
+ *
+ * Arguments:
+ *
+ * HKEY hkRootKey -- root key, e.g., HKEY_LOCAL_MACHINE
+ * LPSTR szKey -- subkey
+ * LPSTR szName -- value name
+ * DWORD dwType -- value type, should be REG_SZ
+ * LPBYTE lpbData -- value data
+ * BYTE delimiter -- e.g., ':'. If 0, then don't apply delimiter
+ * DWORD dwSize -- size of the value data
+ * BOOL bLogForUninstall -- if true, update install log
+ * BOOL bDnu -- what to update the install log with
+ *
+ * Description:
+ *
+ * This function should be called to append a string (REG_SZ) to the
+ * string already stored in the specified key. If the key does not
+ * exist, then simply store the key (ignoring the delimiter). If the
+ * key does exist, read the current value, append the delimiter (if
+ * not zero), and append the data passed in.
+ *
+ * Return Value: void
+ *
+ * Original Code: Clone of SetWinReg(), syd@netscape.com 6/11/2001
+ *
+ */
+
+void AppendWinReg(HKEY hkRootKey,
+               LPSTR szKey,
+               LPSTR szName,
+               DWORD dwType,
+               LPBYTE lpbData,
+               BYTE delimiter,
+               DWORD dwSize,
+               BOOL bLogForUninstall,
+               BOOL bDnu)
+{
+  HKEY    hkResult;
+  DWORD   dwErr;
+  DWORD   dwDisp;
+  BOOL    bKeyExists;
+  BOOL    bNameExists;
+  char    szBuf[MAX_BUF];
+  char    szRootKey[MAX_BUF_TINY]; 
+
+  bKeyExists  = WinRegKeyExists(hkRootKey, szKey);
+  bNameExists = WinRegNameExists(hkRootKey, szKey, szName);
+  dwErr       = RegOpenKeyEx(hkRootKey, szKey, 0, KEY_WRITE, &hkResult);
+
+  if (dwType != REG_SZ) // this function is void. How do we pass errors to caller?
+      return;
+
+  if(dwErr != ERROR_SUCCESS)
+  {
+    dwErr = RegCreateKeyEx(hkRootKey, szKey, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hkResult, &dwDisp);
+    /* log the win reg command */
+    if(bLogForUninstall &&
+       ParseRootKeyString(hkRootKey, szRootKey, sizeof(szRootKey)))
+    {
+      wsprintf(szBuf, "%s\\%s []", szRootKey, szKey);
+      UpdateInstallLog(KEY_CREATE_REG_KEY, szBuf, bDnu);
+    }
+  }
+
+  if(dwErr == ERROR_SUCCESS)
+  {
+    if((bNameExists == FALSE))
+    {
+      /* first time, so just write it, ignoring the delimiter */
+
+      dwErr = RegSetValueEx(hkResult, szName, 0, dwType, lpbData, dwSize);
+      /* log the win reg command */
+      if(bLogForUninstall &&
+         ParseRootKeyString(hkRootKey, szRootKey, sizeof(szRootKey)))
+      {
+        if(ParseRegType(szBuf, &dwType))
+        {
+          wsprintf(szBuf, "%s\\%s [%s]", szRootKey, szKey, szName);
+          UpdateInstallLog(KEY_STORE_REG_STRING, szBuf, bDnu);
+        }
+        else
+        {
+          wsprintf(szBuf, "%s\\%s [%s]", szRootKey, szKey, szName);
+          UpdateInstallLog(KEY_STORE_REG_NUMBER, szBuf, bDnu);
+        }
+      }
+    } else {
+      /* already exists, so read the prrevious value, append the delimiter if 
+         specified, append the new value, and rewrite the key */
+      
+      GetWinReg(hkRootKey, szKey, szName, szBuf, sizeof(szBuf));  // func is void, assume success
+      if ( delimiter != 0 ) {
+          char delim[ 2 ];
+          delim[0] = delimiter;
+          delim[1] = '\0';
+          strcat( szBuf, delim );
+      }
+      strcat( szBuf, lpbData );
+      RegCloseKey(hkResult);
+      SetWinReg(hkRootKey, szKey, TRUE, szName, TRUE, dwType, szBuf, strlen( szBuf ) + 1, bLogForUninstall, bDnu);
+      return;
     }
 
     RegCloseKey(hkResult);
