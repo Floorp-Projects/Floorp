@@ -310,11 +310,7 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
       SetFlag(newFlags);
       rv = CreateSubFolders(path);
     }
-    else {
-      UpdateSummaryTotals();
-      // Look for a directory for this mail folder, and recurse into it.
-      // e.g. if the folder is "inbox", look for "inbox.sbd". 
-    }
+    UpdateSummaryTotals();
 
     if (NS_FAILED(rv)) return rv;
     mInitialized = PR_TRUE;      // XXX do this on failure too?
