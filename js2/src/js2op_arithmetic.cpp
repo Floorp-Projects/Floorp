@@ -682,6 +682,13 @@
         }
         break;
 
+    case eLogicalNot: 
+        {
+	    a = pop();
+            push(BOOLEAN_TO_JS2VAL(!toBoolean(a)));
+        }
+        break;
+
     case eLess:
         {
 	    b = pop();

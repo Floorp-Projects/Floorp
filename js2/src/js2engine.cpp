@@ -490,6 +490,7 @@ namespace MetaData {
         case ePlus:
         case eComplement:
         case eTypeof:
+        case eLogicalNot:
             return 0;
 
         case eString:
@@ -500,6 +501,7 @@ namespace MetaData {
         case eInt64:
         case eNull:
         case eThis:
+        case eRegExp:
             return 1;       // push literal value
 
         case eLexicalRead:

@@ -84,6 +84,7 @@ public:
 
 class Multiname;
 class Frame;
+class RegExpInstance;
 
 class BytecodeContainer {
 public:
@@ -147,6 +148,9 @@ public:
     // XXX We lose StringAtom here (and is it safe to stash the address of a StringAtom?)
     // - is there any way of keeping StringAtoms themselves in a bytecodeContainer?
     
+    void addRegExp(RegExpInstance *x, size_t pos)       { emitOp(eRegExp, pos); addPointer(x); }
+
+
     typedef std::vector<uint8> CodeBuffer;
 
     CodeBuffer mBuffer;

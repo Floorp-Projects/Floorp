@@ -61,6 +61,7 @@ enum JS2Op {
     eLessEqual,
     eGreaterEqual,
     eLogicalXor,
+    eLogicalNot,
     eMinus,
     ePlus,
     eComplement,
@@ -74,6 +75,7 @@ enum JS2Op {
     eFalse,
     eNull,
     eNumber,
+    eRegExp,
     eUInt64,
     eInt64,
     eString,            // <string pointer:u32>

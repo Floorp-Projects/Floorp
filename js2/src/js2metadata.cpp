@@ -1351,6 +1351,7 @@ namespace MetaData {
         switch (p->getKind()) {
         case ExprNode::Null:
         case ExprNode::number:
+        case ExprNode::regExp:
         case ExprNode::numUnit:
         case ExprNode::string:
         case ExprNode::boolean:
@@ -1443,6 +1444,7 @@ namespace MetaData {
         case ExprNode::preDecrement:
         case ExprNode::parentheses:
         case ExprNode::Typeof:
+        case ExprNode::logicalNot:
             {
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
                 ValidateExpression(cxt, env, u->op);
@@ -1644,6 +1646,9 @@ doBinary:
                 bCon->emitOp(op, p->pos);
             }
             break;
+        case ExprNode::logicalNot:
+            op = eLogicalNot;
+            goto doUnary;
         case ExprNode::minus:
             op = eMinus;
             goto doUnary;
@@ -1743,7 +1748,6 @@ doUnary:
             }
             break;
 
-
         case ExprNode::This:
             {
                 bCon->emitOp(eThis, p->pos);
@@ -1769,6 +1773,19 @@ doUnary:
         case ExprNode::number:
             {
                 bCon->addFloat64(checked_cast<NumberExprNode *>(p)->value, p->pos);
+            }
+            break;
+        case ExprNode::regExp:
+            {
+                RegExpExprNode *v = checked_cast<RegExpExprNode *>(p);
+                js2val args[2];
+                args[0] = engine->allocString(v->re);
+                args[1] = engine->allocString(&v->flags);
+                // XXX error handling during this parse? The RegExp_Constructor is
+                // going to call errorPos() on the current bCon.
+                js2val reValue = RegExp_Constructor(this, JS2VAL_NULL, args, 2);
+                RegExpInstance *reInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(reValue));
+                bCon->addRegExp(reInst, p->pos);
             }
             break;
         case ExprNode::string:
@@ -2482,6 +2499,8 @@ doUnary:
 
     js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
     {
+        // XXX Change constructors to take js2val pointer for the result (which would be an already
+        // rooted pointer).
         RegExpInstance *thisInst = new RegExpInstance(meta->regexpClass);
         JS2Object::RootIterator ri = JS2Object::addRoot(&thisInst);
         js2val thatValue = OBJECT_TO_JS2VAL(thisInst);
