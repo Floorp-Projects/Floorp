@@ -2451,6 +2451,7 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                    const nsAString& aLocalName,
                                    nsIDOMNodeList** aReturn)
 {
+
   PRInt32 nameSpaceId = kNameSpaceID_Unknown;
 
   nsCOMPtr<nsIContentList> list;
@@ -2460,7 +2461,7 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
                                                           nameSpaceId);
 
     if (nameSpaceId == kNameSpaceID_Unknown) {
-      // Unknown namespace means no matches, we create an empty list...
+      // Unkonwn namespace means no matches, we create an empty list...
       NS_GetContentList(this, nsnull, kNameSpaceID_None, nsnull,
                         getter_AddRefs(list));
       NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
@@ -2469,8 +2470,6 @@ nsDocument::GetElementsByTagNameNS(const nsAString& aNamespaceURI,
 
   if (!list) {
     nsCOMPtr<nsIAtom> nameAtom = do_GetAtom(aLocalName);
-    NS_ENSURE_TRUE(nameAtom, NS_ERROR_OUT_OF_MEMORY);
-    
     NS_GetContentList(this, nameAtom, nameSpaceId, nsnull,
                       getter_AddRefs(list));
     NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
