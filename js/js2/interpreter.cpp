@@ -709,6 +709,8 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
 
                                     }
                                 }
+                                else
+                                    newArgs[a] = args[a];
                             }
                             args = newArgs;
                         }
