@@ -182,10 +182,10 @@ viewer:res:charsetData.properties
 viewer:res:langGroups.properties
 viewer:res:language.properties
 viewer:res:entityTables:*
-viewer:res:SchemaConcat.tbl
-viewer:res:FieldSchema.tbl
-viewer:res:URLFieldSchema.tbl
-viewer:res:DistinguishedSchema.tbl
+viewer:defaults:wallet:SchemaConcat.tbl
+viewer:defaults:wallet:FieldSchema.tbl
+viewer:defaults:wallet:URLFieldSchema.tbl
+viewer:defaults:wallet:DistinguishedSchema.tbl
 viewer:res:html:*
 viewer:res:html.css
 viewer:res:quirk.css
