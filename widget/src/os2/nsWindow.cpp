@@ -503,7 +503,7 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 
    // check to see if we have a rollup listener registered
    if (nsnull != gRollupListener && nsnull != gRollupWidget) {
-      if (msg == WM_ACTIVATE || msg == WM_BUTTON1DOWN || 
+      if (msg == WM_ACTIVATE || msg == WM_BUTTON1DOWN ||
           msg == WM_BUTTON2DOWN || msg == WM_BUTTON3DOWN) {
          // Rollup if the event is outside the popup
          if (PR_FALSE == nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget)) {
@@ -511,12 +511,17 @@ MRESULT EXPENTRY fnwpNSWindow( HWND hwnd, ULONG msg, MPARAM mp1, MPARAM mp2)
 
             // if we are supposed to be consuming events and it is
             // a Mouse Button down, let it go through
-            if (gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
+//            if (gRollupConsumeRollupEvent && msg != WM_BUTTON1DOWN) {
 //               return FALSE;
-            }
+//            }
          } 
       }
-    }
+      else if (msg == WM_SETFOCUS) {
+         if (!mp2 && hwnd != WinQueryWindow((HWND)mp1, QW_OWNER)) {
+            gRollupListener->Rollup();
+         }
+      }
+   }
 
    // Messages which get re-routed if their source was an nsWindow
    // (it's very bad to reroute messages whose source isn't an nsWindow,
