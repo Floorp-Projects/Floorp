@@ -82,6 +82,7 @@
 #include "nsIXBLBinding.h"
 #include "nsIElementFactory.h"
 #include "nsContentCID.h"
+#include "nsIDocShell.h"
 #include "nsFormControlHelper.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
@@ -4834,15 +4835,66 @@ nsCSSFrameConstructor::ConstructFrameByTag(nsIPresShell*            aPresShell,
         if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
           ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
         }
-        rv = NS_NewHTMLFramesetFrame(aPresShell, &newFrame);
+        
         canBePositioned = PR_FALSE;
+        
+        PRBool allowSubframes = PR_TRUE;
+        if (aPresContext) {
+          nsCOMPtr<nsISupports> container;
+          aPresContext->GetContainer(getter_AddRefs(container));
+          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+          if (docShell) {
+            docShell->GetAllowSubframes(&allowSubframes);
+          }
+        }
+        if (allowSubframes) {
+          rv = NS_NewHTMLFramesetFrame(aPresShell, &newFrame);
+        }
       }
       else if (nsHTMLAtoms::iframe == aTag) {
         if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
           ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
         }
+        
         isReplaced = PR_TRUE;
-        rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
+        PRBool allowSubframes = PR_TRUE;
+        if (aPresContext) {
+          nsCOMPtr<nsISupports> container;
+          aPresContext->GetContainer(getter_AddRefs(container));
+          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+          if (docShell) {
+            docShell->GetAllowSubframes(&allowSubframes);
+          }
+        }
+        if (allowSubframes) {
+          rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
+        }
+      }
+      else if (nsHTMLAtoms::noframes == aTag) {
+        if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
+          ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
+        }
+        isReplaced = PR_TRUE;
+
+        PRBool allowSubframes = PR_TRUE;
+        if (aPresContext) {
+          nsCOMPtr<nsISupports> container;
+          aPresContext->GetContainer(getter_AddRefs(container));
+          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+          if (docShell) {
+            docShell->GetAllowSubframes(&allowSubframes);
+          }
+        }
+        if (allowSubframes) {
+          // make <noframes> be display:none if frames are enabled
+          nsStyleDisplay* display = (nsStyleDisplay*)aStyleContext->GetMutableStyleData(eStyleStruct_Display);
+          display->mDisplay = NS_STYLE_DISPLAY_NONE;
+          aState.mFrameManager->SetUndisplayedContent(aContent, aStyleContext);
+        } 
+        else {
+          processChildren = PR_TRUE;
+          rv = NS_NewBlockFrame(aPresShell, &newFrame);
+        }
       }
       else if (nsHTMLAtoms::spacer == aTag) {
         if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
@@ -5449,7 +5501,20 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
       else if (aTag == nsXULAtoms::iframe || aTag == nsXULAtoms::editor ||
                aTag == nsXULAtoms::browser) {
         isReplaced = PR_TRUE;
-        rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
+
+        // XXX should turning off frames allow XUL iframes?
+        PRBool allowSubframes = PR_TRUE;
+        if (aPresContext) {
+          nsCOMPtr<nsISupports> container;
+          aPresContext->GetContainer(getter_AddRefs(container));
+          nsCOMPtr<nsIDocShell> docShell(do_QueryInterface(container));
+          if (docShell) {
+            docShell->GetAllowSubframes(&allowSubframes);
+          }
+        }
+        if (allowSubframes) {
+           rv = NS_NewHTMLFrameOuterFrame(aPresShell, &newFrame);
+        }
       }
       else if (aTag == nsXULAtoms::treeindentation)
       {

@@ -139,6 +139,7 @@ nsDocShell::nsDocShell() :
   mAllowPlugins(PR_TRUE),
   mAllowJavascript(PR_TRUE),
   mAllowMetaRedirects(PR_TRUE),
+  mAllowSubframes(PR_TRUE),
   mAppType(nsIDocShell::APP_TYPE_UNKNOWN), 
   mBusyFlags(BUSY_FLAGS_NONE),
   mEODForCurrentDocument (PR_FALSE),
@@ -750,6 +751,21 @@ nsDocShell::SetAllowMetaRedirects(PRBool aValue)
   return NS_OK;
 }
 
+NS_IMETHODIMP 
+nsDocShell::GetAllowSubframes(PRBool* aAllowSubframes)
+{
+   NS_ENSURE_ARG_POINTER(aAllowSubframes);
+
+   *aAllowSubframes = mAllowSubframes;
+   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsDocShell::SetAllowSubframes(PRBool aAllowSubframes)
+{
+   mAllowSubframes = aAllowSubframes;
+   return NS_OK;
+}
 
 NS_IMETHODIMP nsDocShell::GetAppType(PRUint32* aAppType)
 {
@@ -1687,6 +1703,8 @@ NS_IMETHODIMP nsDocShell::Create()
    // so read it in once here and be done with it...
    mPrefs->GetBoolPref("network.protocols.useSystemDefaults", &mUseExternalProtocolHandler);
    mPrefs->GetBoolPref("browser.target_new_blocked", &mDisallowPopupWindows);
+   mPrefs->GetBoolPref("javascript.enabled", &mAllowJavascript);
+   mPrefs->GetBoolPref("browser.frames.enabled", &mAllowSubframes);
 
    return NS_OK;
 }

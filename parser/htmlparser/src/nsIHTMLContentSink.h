@@ -191,23 +191,6 @@ public:
   NS_IMETHOD CloseFrameset(const nsIParserNode& aNode)=0;
 
   /**
-   * This method is used in opening a NOSCRIPT container.
-   *
-   * @update harishd 08/25/00
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD OpenNoscript(const nsIParserNode& aNode)=0;
-
-  
-  /**
-   * This method is used in closing a NOSCRIPT container.
-   *
-   * @update harishd 08/25/00
-   * @param  nsIParserNode reference to parser node interface
-   */     
-  NS_IMETHOD CloseNoscript(const nsIParserNode& aNode)=0;
-
-  /**
    * This method tells the sink whether or not it is 
    * encoding an HTML fragment or the whole document.
    * By default, the entire document is encoded.
@@ -235,6 +218,14 @@ public:
    * @param aPosition - Validates the end of a context.
    */
   NS_IMETHOD EndContext(PRInt32 aPosition)=0;
+  
+  /**
+   * Use this method to retrieve pref. for the tag. 
+   *
+   * @update 04/11/01 harishd
+   * @param aTag - Check pref. for this tag.
+   */
+  NS_IMETHOD GetPref(PRInt32 aTag,PRBool& aPref)=0;
 
 };
 

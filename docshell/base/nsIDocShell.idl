@@ -148,10 +148,15 @@ interface nsIDocShell : nsISupports
 	*/
 	attribute boolean allowJavascript;
 
-  /**
-   * Attribute stating if refresh based redirects can be allowed
-   */
-  attribute  boolean allowMetaRedirects;
+    /*
+    Attribute stating if refresh based redirects can be allowed
+    */
+    attribute  boolean allowMetaRedirects;
+ 
+    /*
+    Attribute stating if it should allow subframes (framesets/iframes) or not.
+    */
+    attribute boolean allowSubframes;
 
 
 	/*
