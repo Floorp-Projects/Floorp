@@ -45,6 +45,13 @@ REQUIRES	= xpcom \
 		  intl \
 		  necko \
 		  $(NULL)
+      
+ifdef MOZ_PROFILESHARING
+REQUIRES	+= transmngr \
+		  ipcd \
+		  profilesharingsetup \
+		  $(NULL)
+endif
 
 include $(topsrcdir)/config/config.mk
 
@@ -55,6 +62,11 @@ CPPSRCS		= nsPref.cpp \
 			  nsSafeSaveFile.cpp	\
 			  prefapi.cpp \
 			 $(NULL)
+
+ifdef MOZ_PROFILESHARING
+CPPSRCS	+= nsSharedPrefHandler.cpp
+SHARED_LIBRARY_LIBS	= $(DIST)/lib/$(LIB_PREFIX)ipcdutil_s.$(LIB_SUFFIX)
+endif
 
 PREF_JS_EXPORTS	= \
 		$(srcdir)/init/all.js \
@@ -85,6 +97,10 @@ endif
 
 ifeq ($(OS_ARCH),OpenVMS)
 PREF_JS_EXPORTS	+= $(srcdir)/unix/openvms.js
+endif
+
+ifdef MOZ_PROFILESHARING
+PREF_JS_EXPORTS	+= $(srcdir)/init/non-shared.txt
 endif
 
 ifeq ($(OS_ARCH),AIX)

@@ -69,6 +69,10 @@
 #include "nsPrintfCString.h"
 #include "prlink.h"
 
+#ifdef MOZ_PROFILESHARING
+#include "nsSharedPrefHandler.h"
+#endif
+
 #ifdef XP_OS2
 #define INCL_DOS
 #include <os2.h>
@@ -542,7 +546,7 @@ PREF_SetDefaultBoolPref(const char *pref_name,PRBool value)
 PLDHashOperator
 pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
 {
-    char **prefArray = (char**) arg;
+    pref_saveArgs *argData = NS_STATIC_CAST(pref_saveArgs *, arg);
     PrefHashEntry *pref = NS_STATIC_CAST(PrefHashEntry *, heh);
 
     PR_ASSERT(pref);
@@ -565,6 +569,14 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
         // do not save default prefs that haven't changed
         return PL_DHASH_NEXT;
 
+#if MOZ_PROFILESHARING
+  if ((argData->saveTypes == SAVE_SHARED &&
+      !gSharedPrefHandler->IsPrefShared(pref->key)) ||
+      (argData->saveTypes == SAVE_NONSHARED &&
+      gSharedPrefHandler->IsPrefShared(pref->key)))
+    return PL_DHASH_NEXT;
+#endif
+
     // strings are in quotes!
     if (pref->flags & PREF_STRING) {
         prefValue = '\"';
@@ -581,7 +593,7 @@ pref_savePref(PLDHashTable *table, PLDHashEntryHdr *heh, PRUint32 i, void *arg)
     nsCAutoString prefName;
     str_escape(pref->key, prefName);
 
-    prefArray[i] = ToNewCString(NS_LITERAL_CSTRING("user_pref(\"") +
+    argData->prefArray[i] = ToNewCString(NS_LITERAL_CSTRING("user_pref(\"") +
                                 prefName +
                                 NS_LITERAL_CSTRING("\", ") +
                                 prefValue +
@@ -1017,6 +1029,10 @@ PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAc
             if (result2 < 0)
                 result = result2;
         }
+#ifdef MOZ_PROFILESHARING
+        if (gSharedPrefHandler)
+            gSharedPrefHandler->OnPrefChanged(action, pref, value);
+#endif
     }
     return result;
 }
