@@ -3974,7 +3974,7 @@ XULDocumentImpl::StartLayout(void)
         
 		  nsRect r;
       cx->GetVisibleArea(r);
-      if (r.width == 0 || r.height == 0) {
+      if (r.width < 5 || r.height < 5) {
         // Flow at an unconstrained width and height
         r.width = NS_UNCONSTRAINEDSIZE;
         r.height = NS_UNCONSTRAINEDSIZE;
