@@ -743,7 +743,7 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
     card->preferMailFormat = m_PreferMailFormat;
 
     card->isMailList = m_IsMailList;
-    card->mailListURI = m_MailListURI;
+    card->mailListURI = ToNewCString(m_MailListURI);
 
     return NS_OK;
 }
