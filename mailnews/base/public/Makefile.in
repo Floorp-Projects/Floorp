@@ -46,6 +46,7 @@ EXPORTS =				\
 		nsIMsgMailNewsUrl.h	\
 		nsIUrlListener.h	\
 		nsIUrlListenerManager.h \
+		nsIFolderListener.h	\
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

@@ -23,6 +23,8 @@ IDLSRCS =                                         \
 			nsIMsgHost.idl            \
 			nsIMsgGroupRecord.idl     \
 			nsIMsgFolder.idl          \
+			nsIFolder.idl		  \
+			nsIFolderListener.idl	  \
 			$(NULL)
 
 EXPORTS =                                       \
@@ -42,6 +44,7 @@ EXPORTS =                                       \
 			nsIMsgMailNewsUrl.h		\
 			nsIUrlListenerManager.h \
 			nsIUrlListener.h		\
+			nsIFolderListener.h	\
 			nsIMsgMailSession.h		\
 			nsIMsgIdentity.h		\
 			nsIDOMMsgAppCore.h		\
