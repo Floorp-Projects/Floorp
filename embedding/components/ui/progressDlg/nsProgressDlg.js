@@ -149,11 +149,11 @@ var progressListener = {
       var status = getString( "progressMsg" );
 
       // Insert 1 is the number of kilobytes downloaded so far.
-      status = replaceInsert( status, 1, parseInt( overallProgress/1024 + .5 ) );
+      status = replaceInsert( status, 1, Math.round( overallProgress/1024 ) );
 
       // Insert 2 is the total number of kilobytes to be downloaded (if known).
       if ( aMaxTotalProgress != "-1" )
-         status = replaceInsert( status, 2, parseInt( aMaxTotalProgress/1024 + .5 ) );
+         status = replaceInsert( status, 2, Math.round( aMaxTotalProgress/1024 ) );
       else
          status = replaceInsert( status, 2, "??" );
 
@@ -161,7 +161,7 @@ var progressListener = {
       {
         // rate is bytes/sec
         var kRate = rate / 1024; // K bytes/sec;
-        kRate = parseInt( kRate * 10 + .5 ); // xxx (3 digits)
+        kRate = Math.round( kRate * 10 ); // xxx (3 digits)
         // Don't update too often!
         if ( kRate != priorRate )
         {
@@ -181,7 +181,7 @@ var progressListener = {
           rateChanges = 0;
 
          var fraction = kRate % 10;
-         kRate = parseInt( ( kRate - fraction ) / 10 );
+         kRate = Math.floor( kRate / 10 );
 
          // Insert 3 is the download rate (in kilobytes/sec).
          status = replaceInsert( status, 3, kRate + "." + fraction );
@@ -205,8 +205,7 @@ var progressListener = {
       // Update time remaining.
       if ( rate && (aMaxTotalProgress > 0) )
       {
-        var rem = ( aMaxTotalProgress - aCurTotalProgress ) / rate;
-        rem = parseInt( rem + .5 );
+        var rem = Math.round( ( aMaxTotalProgress - aCurTotalProgress ) / rate );
         dialog.timeLeft.setAttribute("value", formatSeconds( rem ));
       }
       else
@@ -259,10 +258,10 @@ function getString( stringId ) {
 function formatSeconds( secs )
 {
   // Round the number of seconds to remove fractions.
-  secs = parseInt( secs + .5 );
-  var hours = parseInt( secs/3600 );
+  secs = Math.round( secs );
+  var hours = Math.floor( secs/3600 );
   secs -= hours*3600;
-  var mins = parseInt( secs/60 );
+  var mins = Math.floor( secs/60 );
   secs -= mins*60;
   var result;
   if ( hours )
