@@ -1,21 +1,26 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- *
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
  * for the specific language governing rights and limitations under the
- * NPL.
+ * License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * The Original Code is Mozilla Communicator client code, 
+ * released March 31, 1998. 
+ *
+ * The Initial Developer of the Original Code is Netscape Communications 
+ * Corporation.  Portions created by Netscape are 
+ * Copyright (C) 1998-1999 Netscape Communications Corporation.  All Rights
  * Reserved.
+ *
+ * Contributors:
+ *     Doug Turner <dougt@netscape.com>
  */
-
 #include "nsISupports.h"
 #include "nsIServiceManager.h"
 #include "nsCOMPtr.h"
@@ -189,24 +194,43 @@ nsXPINotifierImpl::NotificationEnabled(PRBool* aReturn)
         {
             // check to see the last time we did anything.  Since flash does not have a persistant
             // way to do poll invervals longer than a session, we will implemented that here by using the
-            // preferences.  The interval hardcoded here is max 7 days.
-*aReturn = value;
-#if 0
-            PRInt32 date;
+            // preferences.  
 
-            rv = prefs->GetIntPref( (const char*) XPINSTALL_NOTIFICATIONS_LASTDATE, &date);
-            if (NS_SUCCEEDED(rv)
+            PRInt32 intervalHours = 0;
+            
+            PRTime now            = 0;
+            PRInt32 nowSec        = 0;
+
+            PRInt32 lastTime      = 0;
+            
+            rv = prefs->GetIntPref(XPINSTALL_NOTIFICATIONS_INTERVAL, &intervalHours);
+
+            if (NS_FAILED(rv))
             {
-
+                intervalHours = 7*24;  // default at once a week
+                rv = prefs->SetIntPref(XPINSTALL_NOTIFICATIONS_INTERVAL, intervalHours);
             }
-            else
-            {  // it was never set.
 
+            rv = prefs->GetIntPref(XPINSTALL_NOTIFICATIONS_LASTDATE, &lastTime);
+    
+            now = PR_Now();
+
+            // nowSec = now / 1000000
+            LL_DIV(nowSec, now, 1000000);
+
+            if (NS_FAILED(rv) || lastTime == 0)
+            {
+                rv = prefs->SetIntPref(XPINSTALL_NOTIFICATIONS_LASTDATE, nowSec);
+                return NS_OK;
             }
-#endif
+            
+            if ((lastTime + (intervalHours*60*24)) <= nowSec)
+            {
+                *aReturn = PR_TRUE;
+            }
+
+            NS_RELEASE(prefs);
         }
-
-        NS_RELEASE(prefs);
     }
     
     return NS_OK;
