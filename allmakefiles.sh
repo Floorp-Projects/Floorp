@@ -863,6 +863,8 @@ toolkit/components/build/Makefile
 toolkit/components/satchel/Makefile
 toolkit/components/satchel/public/Makefile
 toolkit/components/satchel/src/Makefile
+toolkit/content/mac/Makefile
+toolkit/skin/mac/Makefile
 toolkit/skin/unix/Makefile
 toolkit/skin/win/Makefile
 toolkit/xre/Makefile
