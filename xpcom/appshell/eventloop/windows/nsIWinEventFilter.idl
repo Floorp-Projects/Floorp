@@ -9,7 +9,7 @@
 [scriptable, uuid(2EFB5006-4508-11d3-AEDA-00A024FFC08C)]
 interface nsIWinEventFilter : nsIEventFilter
 {
-	attribute voidStar hwnd;
+	[noscript] attribute voidStar hwnd;
 	attribute unsigned long MsgFilterMin;
 	attribute unsigned long MsgFilterMax;
 	attribute unsigned long RemoveFlags;
