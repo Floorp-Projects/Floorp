@@ -402,6 +402,9 @@ nsEventStatus nsCalMultiDayViewCanvas::Action(nsIXPFCCommand * aCommand)
       static NS_DEFINE_IID(kCalDateTimeIID, NS_IDATETIME_IID);
       nsresult res = nsRepository::CreateInstance(kCalDateTimeCID,nsnull, kCalDateTimeCID, (void **)&nsdatetime);
 
+      if (NS_OK == res)
+        nsdatetime->Init();
+
       /*
        * Apply to all children ....
        */

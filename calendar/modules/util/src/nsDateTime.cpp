@@ -28,7 +28,9 @@ static NS_DEFINE_IID(kCDateTimeCID, NS_DATETIME_CID);
 nsDateTime :: nsDateTime()
 {
   NS_INIT_REFCNT();
-  Init();
+
+  mUnicodeString = nsnull;
+  mDateTime = nsnull;
 }
 
 nsDateTime :: ~nsDateTime()
@@ -50,10 +52,11 @@ NS_IMPL_RELEASE(nsDateTime)
 
 nsresult nsDateTime :: Init()
 {
-  mUnicodeString = nsnull;
-    
-  mDateTime = new DateTime();
-  mUnicodeString = new UnicodeString();
+  if (nsnull == mDateTime)    
+    mDateTime = new DateTime();
+
+  if (nsnull == mUnicodeString)    
+    mUnicodeString = new UnicodeString();
 
   return NS_OK ;
 }
@@ -238,13 +241,12 @@ nsIDateTime * nsDateTime :: Copy()
   static NS_DEFINE_IID(kCalDateTimeIID, NS_IDATETIME_IID);
 
   nsresult res = nsRepository::CreateInstance(kCalDateTimeCID, 
-                                     nsnull, 
-                                     kCalDateTimeCID, 
-                                     (void **)&datetime);
+                                              nsnull, 
+                                              kCalDateTimeCID, 
+                                              (void **)&datetime);
 
   if (NS_OK != res)
     return nsnull;
-
      
   datetime->mDateTime = new DateTime(*mDateTime);
   datetime->mUnicodeString = new UnicodeString(*mUnicodeString);

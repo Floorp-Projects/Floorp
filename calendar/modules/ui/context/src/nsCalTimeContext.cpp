@@ -211,6 +211,8 @@ nsresult nsCalTimeContext::SetDefaultDateTime()
   if (NS_OK != res)
     return res;
 
+  mDate->Init();
+
   y  = mDate->GetYear();
   mo = mDate->GetMonth();
   d  = mDate->GetDay();
@@ -253,6 +255,8 @@ nsresult nsCalTimeContext::SetStartTime(PRUint32 aYear,
 
     if (NS_OK != res)
       return res;
+
+    mStartTime->Init();
   }
 
   mStartTime->SetYear(aYear);
@@ -285,6 +289,9 @@ nsresult nsCalTimeContext::SetEndTime(PRUint32 aYear,
 
     if (NS_OK != res)
       return res;
+
+    mEndTime->Init();
+
   }
 
   mEndTime->SetYear(aYear);
@@ -317,6 +324,9 @@ nsresult nsCalTimeContext::SetFirstVisibleTime(PRUint32 aYear,
 
     if (NS_OK != res)
       return res;
+
+    mFirstVisibleTime->Init();
+
   }
 
   mFirstVisibleTime->SetYear(aYear);
@@ -349,6 +359,9 @@ nsresult nsCalTimeContext::SetLastVisibleTime(PRUint32 aYear,
 
     if (NS_OK != res)
       return res;
+
+    mLastVisibleTime->Init();
+
   }
 
   mLastVisibleTime->SetYear(aYear);
@@ -381,6 +394,9 @@ nsresult nsCalTimeContext::SetMajorIncrement(PRUint32 aYear,
 
     if (NS_OK != res)
       return res;
+
+    mMajorIncrement->Init();
+
   }
   mMajorIncrement->SetYear(aYear);
   mMajorIncrement->SetMonth(aMonth);
@@ -412,6 +428,9 @@ nsresult nsCalTimeContext::SetMinorIncrement(PRUint32 aYear,
 
     if (NS_OK != res)
       return res;
+
+    mMinorIncrement->Init();
+
   }
   mMinorIncrement->SetYear(aYear);
   mMinorIncrement->SetMonth(aMonth);

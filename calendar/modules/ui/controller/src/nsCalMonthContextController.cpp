@@ -1234,7 +1234,7 @@ nsresult nsCalMonthContextController::AddToActionList(DateTime d)
     nsresult res = nsRepository::CreateInstance(kCalDateTimeCID,nsnull, kCalDateTimeCID, (void **)&nsdatetime);
     if (NS_OK == res) 
     {
-        // XXX Deal with ref counting here
+        nsdatetime->Init();
         DateTime * dstar = new DateTime(d.getTime());
         nsdatetime->SetDateTime(dstar);
         if ( -1 == m_ActionDateList->InsertBinary(nsdatetime,(nsVectorCompareProc)nsDateTime_SortAscending, PR_FALSE /* do not allow dups */))
