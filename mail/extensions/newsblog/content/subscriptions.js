@@ -29,6 +29,39 @@ function openFeedEditor(feedProperties)
 {
     window.openDialog('feed-properties.xul', 'feedproperties', 'modal,titlebar,chrome,center', feedProperties);
     return feedProperties;
+} 
+
+function finishedDownloadingFeed(feed)
+{
+  // feed is null if our attempt to parse the feed failed
+  if (feed)
+  {
+    debug("after download, feed name = " + feed.name + "\n");
+
+    var server = getIncomingServer();
+    var folder;
+    try {
+        var folder = server.rootMsgFolder.getChildNamed(feed.name);
+    }
+    catch(e) {
+        // If we're here, it's probably because the folder doesn't exist yet,
+        // so create it.
+        debug("folder for new feed " + feed.name + " doesn't exist; creating");
+			  debug("creating " + feed.name + "as child of " + server.rootMsgFolder + "\n");
+        server.rootMsgFolder.createSubfolder(feed.name, getMessageWindow());
+        folder = server.rootMsgFolder.FindSubFolder(feed.name);
+        var msgdb = folder.getMsgDatabase(null);
+        var folderInfo = msgdb.dBFolderInfo;
+        folderInfo.setCharPtrProperty("feedUrl", feed.url);
+    }
+
+    // XXX This should be something like "subscribe to feed".
+	  debug ("feed name = " + feed.name + "\n");
+    addFeed(feed.url, feed.name, null, folder); // add feed flushes the subscription database
+
+    // download the feed items now that we have a folder
+    feed.download();
+  }
 }
 
 function doAdd() {
@@ -52,32 +85,7 @@ function doAdd() {
 
     var itemResource = rdf.GetResource(feedProperties.feedLocation);
     feed = new Feed(itemResource);
-    feed.download(false, false);
-    debug("after download, feed name = " + feed.name + "\n");
-
-    var server = getIncomingServer();
-    var folder;
-    try {
-        var folder = server.rootMsgFolder.getChildNamed(feed.name);
-    }
-    catch(e) {
-        // If we're here, it's probably because the folder doesn't exist yet,
-        // so create it.
-        debug("folder for new feed " + feed.name + " doesn't exist; creating");
-				debug("creating " + feed.name + "as child of " + server.rootMsgFolder + "\n");
-        server.rootMsgFolder.createSubfolder(feed.name, getMessageWindow());
-        folder = server.rootMsgFolder.FindSubFolder(feed.name);
-        var msgdb = folder.getMsgDatabase(null);
-        var folderInfo = msgdb.dBFolderInfo;
-        folderInfo.setCharPtrProperty("feedUrl", feedProperties.feedLocation);
-    }
-
-    // XXX This should be something like "subscribe to feed".
-		dump ("feed name = " + feed.name + "\n");
-    addFeed(feedProperties.feedLocation, feed.name, null, folder); // add feed flushes the subscription database
-
-    // now download it for real, now that we have a folder.
-    feed.download();
+    feed.download(false, finishedDownloadingFeed);
 }
 
 function doEdit() {
