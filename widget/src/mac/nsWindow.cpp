@@ -815,6 +815,8 @@ void nsWindow::SetTitle(const nsString& aTitle)
 //-------------------------------------------------------------------------
 void nsWindow::AddMouseListener(nsIMouseListener * aListener)
 {
+  NS_PRECONDITION(mMouseListener == nsnull, "Null mouse listener");
+  mMouseListener = aListener;
 }
 
 //-------------------------------------------------------------------------
@@ -824,6 +826,8 @@ void nsWindow::AddMouseListener(nsIMouseListener * aListener)
 //-------------------------------------------------------------------------
 void nsWindow::AddEventListener(nsIEventListener * aListener)
 {
+  NS_PRECONDITION(mEventListener == nsnull, "Null event listener");
+  mEventListener = aListener;
 }
 
 PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
