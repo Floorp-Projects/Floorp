@@ -5882,7 +5882,7 @@ nsXULDocument::ParserObserver::ParserObserver(nsXULDocument* aDocument)
 
 nsXULDocument::ParserObserver::~ParserObserver()
 {
-    NS_RELEASE(mDocument);
+    NS_IF_RELEASE(mDocument);
 }
 
 NS_IMPL_ISUPPORTS(nsXULDocument::ParserObserver, NS_GET_IID(nsIStreamObserver));
