@@ -27,7 +27,7 @@
 /* Forward declarations... */
 class nsIFactory;
 class nsIURL;
-class nsIWidget;
+class nsIWebShellWindow;
 class nsString;
 class nsIStreamObserver;
 class nsIXULWindowCallbacks;
@@ -45,25 +45,25 @@ public:
 
   NS_IMETHOD Initialize(void) = 0;
   NS_IMETHOD Run(void) = 0;
-  NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWidget* aWidget, PRBool &aIsInWindow, PRBool &aIsMouseEvent) = 0;
+  NS_IMETHOD GetNativeEvent(void *& aEvent, nsIWebShellWindow* aWindow, PRBool &aIsInWindow, PRBool &aIsMouseEvent) = 0;
   NS_IMETHOD DispatchNativeEvent(void * aEvent) = 0;
   NS_IMETHOD Shutdown(void) = 0;
 
-  NS_IMETHOD CreateTopLevelWindow(nsIWidget * aParent,
+  NS_IMETHOD CreateTopLevelWindow(nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
                                   nsString& aControllerIID,
-                                  nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
-  NS_IMETHOD CreateDialogWindow(  nsIWidget * aParent,
+  NS_IMETHOD CreateDialogWindow(  nsIWebShellWindow * aParent,
                                   nsIURL* aUrl, 
                                   nsString& aControllerIID,
-                                  nsIWidget*& aResult, nsIStreamObserver* anObserver,
+                                  nsIWebShellWindow*& aResult, nsIStreamObserver* anObserver,
                                   nsIXULWindowCallbacks *aCallbacks,
                                   PRInt32 aInitialWidth, PRInt32 aInitialHeight) = 0;
-  NS_IMETHOD CloseTopLevelWindow(nsIWidget* aWindow) = 0;
-  NS_IMETHOD RegisterTopLevelWindow(nsIWidget* aWindow) = 0;
-  NS_IMETHOD UnregisterTopLevelWindow(nsIWidget* aWindow) = 0;
+  NS_IMETHOD CloseTopLevelWindow(nsIWebShellWindow* aWindow) = 0;
+  NS_IMETHOD RegisterTopLevelWindow(nsIWebShellWindow* aWindow) = 0;
+  NS_IMETHOD UnregisterTopLevelWindow(nsIWebShellWindow* aWindow) = 0;
 };
 
 #endif /* nsIAppShellService_h__ */

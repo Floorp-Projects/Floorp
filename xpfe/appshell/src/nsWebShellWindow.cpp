@@ -47,6 +47,11 @@
 // For JS Execution
 #include "nsIScriptContextOwner.h"
 
+#include "nsXPComCIID.h"
+#include "nsIEventQueueService.h"
+#include "plevent.h"
+#include "prmem.h"
+
 // XXX: Only needed for the creation of the widget controller...
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
@@ -69,12 +74,14 @@
 static NS_DEFINE_IID(kWindowCID,           NS_WINDOW_CID);
 static NS_DEFINE_IID(kWebShellCID,         NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kAppShellServiceCID,  NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kAppShellCID,         NS_APPSHELL_CID);
 
 static NS_DEFINE_IID(kMenuBarCID,          NS_MENUBAR_CID);
 static NS_DEFINE_IID(kMenuCID,             NS_MENU_CID);
 static NS_DEFINE_IID(kMenuItemCID,         NS_MENUITEM_CID);
 
 static NS_DEFINE_CID(kPrefCID,             NS_PREF_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 
 /* Define Interface IDs */
@@ -84,6 +91,7 @@ static NS_DEFINE_IID(kIWidgetIID,             NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIWebShellIID,           NS_IWEB_SHELL_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIAppShellServiceIID,    NS_IAPPSHELL_SERVICE_IID);
+static NS_DEFINE_IID(kIAppShellIID,           NS_IAPPSHELL_IID);
 static NS_DEFINE_IID(kIWidgetControllerIID,   NS_IWIDGETCONTROLLER_IID);
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID,     NS_IDOCUMENT_VIEWER_IID);
@@ -99,6 +107,7 @@ static NS_DEFINE_IID(kIMenuBarIID,    NS_IMENUBAR_IID);
 static NS_DEFINE_IID(kIMenuItemIID,   NS_IMENUITEM_IID);
 static NS_DEFINE_IID(kIXULCommandIID, NS_IXULCOMMAND_IID);
 static NS_DEFINE_IID(kIContentIID,    NS_ICONTENT_IID);
+static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 #define DEBUG_MENUSDEL 1
 
@@ -106,6 +115,11 @@ static NS_DEFINE_IID(kIContentIID,    NS_ICONTENT_IID);
 
 const char * kThrobberOnStr  = "resource:/res/throbber/anims07.gif";
 const char * kThrobberOffStr = "resource:/res/throbber/anims00.gif";
+
+struct ThreadedWindowEvent {
+  PLEvent           event;
+  nsWebShellWindow  *window;
+};
 
 nsWebShellWindow::nsWebShellWindow()
 {
@@ -115,6 +129,7 @@ nsWebShellWindow::nsWebShellWindow()
   mWindow   = nsnull;
   mController = nsnull;
   mCallbacks = nsnull;
+  mContinueModalLoop = PR_FALSE;
 }
 
 
@@ -166,7 +181,7 @@ nsWebShellWindow::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 
-nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
+nsresult nsWebShellWindow::Initialize(nsIWebShellWindow* aParent,
                                       nsIAppShell* aShell, nsIURL* aUrl, 
                                       nsString& aControllerIID, nsIStreamObserver* anObserver,
                                       nsIXULWindowCallbacks *aCallbacks,
@@ -175,6 +190,7 @@ nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
   nsresult rv;
 
   nsString urlString;
+  nsIWidget *parentWidget;
   const char *tmpStr = NULL;
   nsIID iid;
   char str[40];
@@ -204,8 +220,11 @@ nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
 
   initData.mBorderStyle = eBorderStyle_dialog;
 
+  if (!aParent || NS_FAILED(aParent->GetWidget(parentWidget)))
+    parentWidget = nsnull;
+
   mWindow->SetClientData(this);
-  mWindow->Create((nsIWidget*)aParent,                // Parent nsIWidget
+  mWindow->Create(parentWidget,                       // Parent nsIWidget
                   r,                                  // Widget dimensions
                   nsWebShellWindow::HandleEvent,      // Event handler function
                   nsnull,                             // Device context
@@ -281,6 +300,7 @@ nsresult nsWebShellWindow::Initialize(nsIWidget* aParent,
 NS_METHOD
 nsWebShellWindow::Close()
 {
+  ExitModalLoop();
   NS_IF_RELEASE(mWindow);
   NS_IF_RELEASE(mWebShell);
   /* note: this next Release() seems like the right thing to do, but it doesn't
@@ -338,7 +358,11 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
                                           kIAppShellServiceIID,
                                           (nsISupports**)&appShell);
         if (NS_SUCCEEDED(rv)) {
-          appShell->CloseTopLevelWindow(aEvent->widget);
+          void             *data;
+
+          aEvent->widget->GetClientData(data);
+          if (data != nsnull)
+            appShell->CloseTopLevelWindow((nsWebShellWindow *)data);
           nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
         }
         break;
@@ -652,6 +676,76 @@ nsWebShellWindow::Show(PRBool aShow)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsWebShellWindow::ShowModal()
+{
+  nsresult  rv;
+
+#if 0
+  // a nice though unnecessary shortcut should we happen to already be in the right thread
+  if (PR_CurrentThread() == mozilla_thread)
+    rv = ShowModalInternal();
+  else {
+    ThreadedWindowEvent *event = PR_NEW(ThreadedWindowEvent);
+    if (!event)
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    else {
+      PL_InitEvent(&event->event, NULL, HandleModalDialogEvent, DestroyModalDialogEvent);
+      event->window = this;
+
+      nsIEventQueueService *eQueueService;
+      PLEventQueue         *eQueue;
+      rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                        kIEventQueueServiceIID,
+                                        (nsISupports **)&eQueueService);
+      if (NS_SUCCEEDED(rv)) {
+        rv = eQueueService->GetThreadEventQueue(mozilla_thread, &eQueue);
+        NS_RELEASE(eQueueService);
+//        nsServiceManager::ReleaseService(kEventQueueServiceCID, eQueue); (?)
+        PL_PostSynchronousEvent(eQueue, &event->event);
+      }
+      rv = NS_OK;
+    }
+  }
+#else
+  rv = ShowModalInternal();
+#endif
+
+  return rv;
+}
+
+
+NS_IMETHODIMP
+nsWebShellWindow::ShowModalInternal()
+{
+  nsresult    rv;
+  nsIAppShell *subshell;
+
+  // spin up a new application shell: event loops live there
+  rv = nsComponentManager::CreateInstance(kAppShellCID, nsnull, kIAppShellIID, (void**)&subshell);
+  if (NS_SUCCEEDED(rv))
+    subshell->Create(0, nsnull);
+
+//  subshell->RunModal(GetWidget());
+
+  nsIWidget *window = GetWidget();
+  mContinueModalLoop = PR_TRUE;
+  while (NS_SUCCEEDED(rv) && mContinueModalLoop == PR_TRUE) {
+    void      *data;
+    PRBool    inWindow,
+              isMouseEvent;
+
+    rv = subshell->GetNativeEvent(data, window, inWindow, isMouseEvent);
+    if (NS_SUCCEEDED(rv) && (inWindow || !isMouseEvent))
+      subshell->DispatchNativeEvent(data);
+  }
+
+  NS_IF_RELEASE(subshell);
+
+  return rv;
+}
+
+
 NS_IMETHODIMP 
 nsWebShellWindow::GetWebShell(nsIWebShell *& aWebShell)
 {
@@ -664,9 +758,25 @@ NS_IMETHODIMP
 nsWebShellWindow::GetWidget(nsIWidget *& aWidget)
 {
   aWidget = mWindow;
-  NS_ADDREF(mWindow); // XXX Why?
+  NS_ADDREF(mWindow);
   return NS_OK;
 }
+
+void *
+nsWebShellWindow::HandleModalDialogEvent(PLEvent *aEvent)
+{
+  ThreadedWindowEvent *event = (ThreadedWindowEvent *) aEvent;
+
+  event->window->ShowModalInternal();
+  return 0;
+}
+
+void
+nsWebShellWindow::DestroyModalDialogEvent(PLEvent *aEvent)
+{
+  PR_Free(aEvent);
+}
+
 
 //----------------------------------------
 //----------------------------------------

@@ -37,9 +37,10 @@ public:
   static const nsIID& GetIID() { static nsIID iid = NS_IWEBSHELL_WINDOW_IID; return iid; }
 
   NS_IMETHOD Show(PRBool aShow) = 0;
+  NS_IMETHOD ShowModal() = 0;
+  NS_IMETHOD Close() = 0;
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell) = 0;
   NS_IMETHOD GetWidget(nsIWidget *& aWidget) = 0;
-
 };
 
 

@@ -6,4 +6,5 @@ interface ToolkitCore : BaseAppCore
 	void ToolkitCore();
 	void ShowDialog(in wstring url, in Window parent);
 	void ShowWindow(in wstring url, in Window parent);
+	void ShowModalDialog(in wstring url, in Window parent);
 };

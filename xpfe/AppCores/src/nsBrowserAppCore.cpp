@@ -265,7 +265,7 @@ newWindow(char* urlName) {
    */
   ///write me...
   nsIURL* url;
-  nsIWidget* newWindow;
+  nsIWebShellWindow* newWindow;
   
   rv = NS_NewURL(&url, urlstr);
   if (NS_FAILED(rv)) {
@@ -631,7 +631,7 @@ nsBrowserAppCore::NewWindow()
    */
   ///write me...
   nsIURL* url;
-  nsIWidget* newWindow;
+  nsIWebShellWindow* newWindow;
   
   rv = NS_NewURL(&url, urlstr);
   if (NS_FAILED(rv)) {
@@ -792,15 +792,13 @@ nsBrowserAppCore::DoDialog()
    */
   ///write me...
   nsIURL* url;
-  nsIWidget* newWindow;
+  nsIWebShellWindow* newWindow;
   
   rv = NS_NewURL(&url, urlstr);
   if (NS_FAILED(rv)) {
     goto done;
   }
 
-  nsIWidget * parent;
-  mWebShellWin->GetWidget(parent);
 
   /*
    * XXX: Currently, the CID for the "controller" is passed in as an argument 
@@ -808,11 +806,10 @@ nsBrowserAppCore::DoDialog()
    *      components this will be specified in the XUL description...
    */
   controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
-  appShell->CreateDialogWindow(parent, url, controllerCID, newWindow,
+  appShell->CreateDialogWindow(mWebShellWin, url, controllerCID, newWindow,
               (nsIStreamObserver *)this, nsnull, 516, 650);
-  newWindow->Resize(300, 200, PR_TRUE);
+//  newWindow->Resize(300, 200, PR_TRUE); (until Resize gets moved into nsIWebShellWindow)
   NS_RELEASE(url);
-  NS_RELEASE(parent);
   
    /*
     * Start up the main event loop...

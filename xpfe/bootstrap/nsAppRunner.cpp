@@ -244,7 +244,7 @@ int main(int argc, char* argv[])
    * deal with GUI initialization...
    */
   ///write me...
-  nsIWidget* newWindow;
+  nsIWebShellWindow* newWindow;
   
   rv = NS_NewURL(&url, urlstr);
   if (NS_FAILED(rv)) {

@@ -36,19 +36,20 @@
 #include "nsCOMPtr.h"
 
 /* Forward declarations.... */
+struct PLEvent;
+
 class nsIURL;
 class nsIAppShell;
+class nsIContent;
+class nsIDocument;
+class nsIDOMCharacterData;
+class nsIDOMElement;
+class nsIDOMHTMLImageElement;
+class nsIDOMHTMLInputElement;
+class nsIStreamObserver;
 class nsIWidget;
 class nsIWidgetController;
-class nsIDOMCharacterData;
-class nsIDOMHTMLInputElement;
-class nsIDOMHTMLImageElement;
-class nsIDOMElement;
-class nsIStreamObserver;
-class nsIDocument;
 class nsIXULWindowCallbacks;
-
-class nsIContent;
 
 class nsWebShellWindow : public nsIWebShellWindow,
                          public nsIWebShellContainer,
@@ -90,15 +91,16 @@ public:
 
   // nsIWebShellWindow methods...
   NS_IMETHOD Show(PRBool aShow);
+  NS_IMETHOD ShowModal();
+  NS_IMETHOD Close();
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell);
   NS_IMETHOD GetWidget(nsIWidget *& aWidget);
 
   // nsWebShellWindow methods...
-  nsresult Initialize(nsIWidget * aParent, nsIAppShell* aShell, nsIURL* aUrl,
+  nsresult Initialize(nsIWebShellWindow * aParent, nsIAppShell* aShell, nsIURL* aUrl,
                       nsString& aControllerIID, nsIStreamObserver* anObserver,
                       nsIXULWindowCallbacks *aCallbacks,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight);
-  NS_IMETHOD Close();
   nsIWidget* GetWidget(void) { return mWindow; }
 
   // nsIDocumentLoaderObserver
@@ -177,13 +179,21 @@ protected:
   virtual ~nsWebShellWindow();
 
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
+  NS_IMETHODIMP           ShowModalInternal();
+  void                    ExitModalLoop() { mContinueModalLoop = PR_FALSE; }
 
   nsIWidget*              mWindow;
   nsIWebShell*            mWebShell;
   nsIWidgetController*    mController;
   nsIXULWindowCallbacks*  mCallbacks;
+  PRBool                  mContinueModalLoop;
 
   nsVoidArray mMenuDelegates;
+
+private:
+
+  static void * HandleModalDialogEvent(PLEvent *aEvent);
+  static void DestroyModalDialogEvent(PLEvent *aEvent);
 };
 
 
