@@ -2620,7 +2620,7 @@ nsresult
 nsBookmarksService::InsertResource(nsIRDFResource* aResource,
                                    nsIRDFResource* aParentFolder, PRInt32 aIndex)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
   // Add to container if the parent folder is non null 
   if (aParentFolder) {
     nsCOMPtr<nsIRDFContainer> container(do_GetService("@mozilla.org/rdf/container;1", &rv));
@@ -2863,6 +2863,13 @@ nsBookmarksService::IsBookmarkedInternal(nsIRDFResource *bookmark, PRBool *isBoo
 	if (!bookmark)		return(NS_ERROR_UNEXPECTED);
 	if (!isBookmarkedFlag)	return(NS_ERROR_UNEXPECTED);
 	if (!mInner)		return(NS_ERROR_UNEXPECTED);
+
+	// bookmark root is special (it isn't contained in a rdf seq)
+	if (bookmark == kNC_BookmarksRoot)
+	{
+		*isBookmarkedFlag = PR_TRUE;
+		return(NS_OK);
+	}
 
 	*isBookmarkedFlag = PR_FALSE;
 
@@ -4277,7 +4284,9 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *aRelativeNode,
 
 
 nsresult
-nsBookmarksService::deleteBookmarkItem(nsIRDFResource *src, nsISupportsArray *aArguments, PRInt32 parentArgIndex, nsIRDFResource *objType)
+nsBookmarksService::deleteBookmarkItem(nsIRDFResource *src,
+                                       nsISupportsArray *aArguments,
+                                       PRInt32 parentArgIndex)
 {
 	nsresult			rv;
 
@@ -4287,13 +4296,6 @@ nsBookmarksService::deleteBookmarkItem(nsIRDFResource *src, nsISupportsArray *aA
 		return(rv);
 	nsCOMPtr<nsIRDFResource>	argParent = do_QueryInterface(aNode);
 	if (!argParent)	return(NS_ERROR_NO_INTERFACE);
-
-	// make sure its an object of the correct type (bookmark, folder, separator, ...)
-	PRBool	isCorrectObjectType = PR_FALSE;
-	if (NS_FAILED(rv = mInner->HasAssertion(src, kRDF_type,
-			objType, PR_TRUE, &isCorrectObjectType)))
-		return(rv);
-	if (!isCorrectObjectType)	return(NS_ERROR_UNEXPECTED);
 
 	nsCOMPtr<nsIRDFContainer>	container;
 	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFContainerCID, nsnull,
@@ -4538,22 +4540,11 @@ nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 			if (NS_FAILED(rv))	return(rv);
 			break;
 		}
-		else if (aCommand == kNC_BookmarkCommand_DeleteBookmark)
+		else if (aCommand == kNC_BookmarkCommand_DeleteBookmark ||
+			aCommand == kNC_BookmarkCommand_DeleteBookmarkFolder ||
+			aCommand == kNC_BookmarkCommand_DeleteBookmarkSeparator)
 		{
-			if (NS_FAILED(rv = deleteBookmarkItem(src, aArguments,
-					loop, kNC_Bookmark)))
-				return(rv);
-		}
-		else if (aCommand == kNC_BookmarkCommand_DeleteBookmarkFolder)
-		{
-			if (NS_FAILED(rv = deleteBookmarkItem(src, aArguments,
-					loop, kNC_Folder)))
-				return(rv);
-		}
-		else if (aCommand == kNC_BookmarkCommand_DeleteBookmarkSeparator)
-		{
-			if (NS_FAILED(rv = deleteBookmarkItem(src, aArguments,
-					loop, kNC_BookmarkSeparator)))
+			if (NS_FAILED(rv = deleteBookmarkItem(src, aArguments, loop)))
 				return(rv);
 		}
 		else if (aCommand == kNC_BookmarkCommand_SetNewBookmarkFolder)
@@ -5459,13 +5450,12 @@ nsBookmarksService::CanAccept(nsIRDFResource* aSource,
 			      nsIRDFResource* aProperty,
 			      nsIRDFNode* aTarget)
 {
-	// XXX This is really crippled, and needs to be stricter. We want
-	// to exclude any property that isn't talking about a known
-	// bookmark.
 	nsresult	rv;
-	PRBool		canAcceptFlag = PR_FALSE, isOrdinal;
+	PRBool		isBookmarkedFlag = PR_FALSE, canAcceptFlag = PR_FALSE, isOrdinal;
 
-	if (NS_SUCCEEDED(rv = gRDFC->IsOrdinalProperty(aProperty, &isOrdinal)))
+	if (NS_SUCCEEDED(rv = IsBookmarkedInternal(aSource, &isBookmarkedFlag)) &&
+		(isBookmarkedFlag == PR_TRUE) &&
+		(NS_SUCCEEDED(rv = gRDFC->IsOrdinalProperty(aProperty, &isOrdinal))))
 	{
 		if (isOrdinal == PR_TRUE)
 		{

@@ -990,8 +990,9 @@
             argsArray.AppendElement(rValue);
           }
       
-          // Exec the command in the Bookmarks datasource. 
-          this.bookmarksDS.DoCommand(sourcesArray, rCommand, argsArray);
+          // Exec the command in the Composite (not Bookmarks) datasource
+          // so that command aggregation works
+          this.db.DoCommand(sourcesArray, rCommand, argsArray);
         ]]></body>
       </method>
       
@@ -1289,8 +1290,24 @@
                 // assume its parent is the root
                 parent = ksRDF.GetResource("NC:BookmarksRoot");
               }
-              ksRDFC.Init(this.bookmarksDS, parent); 
-              ksRDFC.RemoveElement(resource, true);
+
+              /*
+                Use RDF datasource command APIs instead of trying to
+                directly manipulate the bookmarks datasource graph via:
+
+                ksRDFC.Init(this.bookmarksDS, parent); 
+                ksRDFC.RemoveElement(resource, true);
+              */
+
+              try {
+                var args = [{ property: this.NC_NS + "parent",
+                              resource: parent.Value }];
+                this.doBookmarksCommand(resource.Value, this.NC_NS_CMD + "deletebookmark", args);
+              }
+              catch (e) {
+              }
+
+
               nextIndex = j;
             }
           }
