@@ -23,10 +23,10 @@
 <!ENTITY isSecure.label "Use secure connection (SSL)">
 <!ENTITY useSecAuth.label "Use secure authentication">
 <!ENTITY leaveOnServer.label "Leave messages on server">
-<!ENTITY deleteOnServer.label "Delete messages on server when they are deleted or moved from Inbox">
-<!ENTITY downloadOnBiff.label "Automatically download new messages">
-<!ENTITY deleteByAgeFromServer.label "Delete messages on server after">
+<!ENTITY deleteByAgeFromServer.label "For at most">
 <!ENTITY daysEnd.label "days">
+<!ENTITY deleteOnServer.label "Until I delete or move them from Inbox">
+<!ENTITY downloadOnBiff.label "Automatically download new messages">
 <!ENTITY hostname.label "Server Hostname">
 <!ENTITY username.label "Your Login Name">
 <!-- LOCALIZATION NOTE (popServerTitle.label) : do not translate "POP" in below line -->

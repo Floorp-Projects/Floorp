@@ -245,6 +245,7 @@ function setupAgeMsgOnServerUI()
    var checked = document.getElementById("pop3.deleteByAgeFromServer").checked;
    var locked = getAccountValueIsLocked(document.getElementById("pop3.deleteByAgeFromServer"));
    document.getElementById("pop3.deleteByAgeFromServer").disabled = locked || !leaveMsgsChecked;
+   document.getElementById("daysEnd").disabled = locked || !leaveMsgsChecked;
    document.getElementById("pop3.numDaysToLeaveOnServer").disabled = locked || !checked || !leaveMsgsChecked;
 }
 

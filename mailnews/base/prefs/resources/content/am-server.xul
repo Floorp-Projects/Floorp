@@ -136,22 +136,23 @@ Contributors:
               prefattribute="value"
               prefstring="mail.server.%serverkey%.leave_on_server"/>
 
+    <hbox align="center">
+      <checkbox wsm_persist="true" id="pop3.deleteByAgeFromServer" class="indent"
+                label="&deleteByAgeFromServer.label;" oncommand="setupAgeMsgOnServerUI();"
+                hidable="true" hidefor="imap,nntp,movemail"
+                prefattribute="value"
+                prefstring="mail.server.%serverkey%.delete_by_age_from_server"/>
+      <textbox wsm_persist="true" id="pop3.numDaysToLeaveOnServer" size="3" 
+               preftype="int"
+               prefstring="mail.server.%serverkey%.num_days_to_leave_on_server"/>
+      <label id="daysEnd" control="pop3.numDaysToLeaveOnServer" value="&daysEnd.label;"/>
+    </hbox>
+
     <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer" class="indent"
               label="&deleteOnServer.label;"
               hidable="true" hidefor="imap,nntp,movemail"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.delete_mail_left_on_server"/>
-  <hbox align="center">
-    <checkbox wsm_persist="true" id="pop3.deleteByAgeFromServer" class="indent"
-              label="&deleteByAgeFromServer.label;" oncommand="setupAgeMsgOnServerUI();"
-              hidable="true" hidefor="imap,nntp,movemail"
-              prefattribute="value"
-              prefstring="mail.server.%serverkey%.delete_by_age_from_server"/>
-    <textbox wsm_persist="true" id="pop3.numDaysToLeaveOnServer" size="3" 
-             preftype="int"
-             prefstring="mail.server.%serverkey%.num_days_to_leave_on_server"/>
-    <label id="daysEnd" control="pop3.numDaysToLeaveOnServer" value="&daysEnd.label;"/>
-  </hbox>
   </vbox>
   <!-- IMAP -->
   <hbox iscontrolcontainer="true" align="center" id="imap.deleteModel.box">
