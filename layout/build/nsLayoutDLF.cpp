@@ -29,10 +29,7 @@
 #include "prprf.h"
 
 #include "nsRDFCID.h"
-#include "nsIXULParentDocument.h"
-#include "nsIXULChildDocument.h"
 #include "nsIRDFResource.h"
-#include "nsIXULDocumentInfo.h"
 #include "nsIXULContentSink.h"
 #include "nsIStreamLoadableDocument.h"
 #include "nsIDocStreamLoaderFactory.h"
@@ -406,57 +403,21 @@ nsLayoutDLF::CreateRDFDocument(nsISupports* aExtraInfo,
                                nsCOMPtr<nsIDocumentViewer>* docv)
 {
   nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIXULDocumentInfo> xulDocumentInfo;
-  xulDocumentInfo = do_QueryInterface(aExtraInfo);
     
+  // Create the XUL document
+  rv = nsComponentManager::CreateInstance(kXULDocumentCID, nsnull,
+                                          kIDocumentIID,
+                                          getter_AddRefs(*doc));
+  if (NS_FAILED(rv)) return rv;
+
+  // Create the image content viewer...
+  rv = NS_NewDocumentViewer(getter_AddRefs(*docv));
+  if (NS_FAILED(rv)) return rv;
+
   // Load the UA style sheet if we haven't already done that
-  do {
-    // Create the XUL document
-    rv = nsComponentManager::CreateInstance(kXULDocumentCID, nsnull,
-                                            kIDocumentIID,
-                                            getter_AddRefs(*doc));
-    if (NS_FAILED(rv))
-      break;
+  (*docv)->SetUAStyleSheet(nsLayoutModule::GetUAStyleSheet());
 
-    /*
-     * Create the image content viewer...
-     */
-    rv = NS_NewDocumentViewer(getter_AddRefs(*docv));
-    if (NS_FAILED(rv))
-      break;
-    (*docv)->SetUAStyleSheet(nsLayoutModule::GetUAStyleSheet());
-
-    // We are capable of being a XUL overlay. If we have extra
-    // info that supports the XUL document info interface, then we'll
-    // know for sure.
-    if (xulDocumentInfo) {
-      // We are a XUL overlay. Retrieve the parent content sink.
-      nsCOMPtr<nsIXULContentSink> parentSink;
-      rv = xulDocumentInfo->GetContentSink(getter_AddRefs(parentSink));
-      if (NS_FAILED(rv))
-        break;
-      
-	  // Retrieve the parent document.
-	  nsCOMPtr<nsIDocument> parentDocument;
-      rv = xulDocumentInfo->GetDocument(getter_AddRefs(parentDocument));
-      if (NS_FAILED(rv))
-        break;
-
-      // We were able to obtain a resource and a parent document.
-      parentDocument->AddSubDocument(*doc);
-      (*doc)->SetParentDocument(parentDocument);
-
-      // We need to set our content sink as well.  The
-      // XUL child document interface is required to do this.
-      nsCOMPtr<nsIXULChildDocument> xulChildDoc;
-      xulChildDoc = do_QueryInterface(*doc);
-      if (xulChildDoc) {
-        xulChildDoc->SetContentSink(parentSink);
-      }
-    }
-  } while (PR_FALSE);
-
-  return rv;
+  return NS_OK;
 }
 
 // ...note, this RDF document _may_ be XUL :-)
