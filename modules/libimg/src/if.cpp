@@ -1464,9 +1464,10 @@ il_image_complete(il_container *ic)
                            ic->image->header.color_space->cmap.num_colors));
 
                 /* 3 cases: simple, multipart MIME, multi-image animation */
-                if (!ic->loop_count && !ic->is_multipart) {
-                /* A single frame, single part image. */
-                il_container_complete(ic);
+                if((ic->animate_request == eImageAnimation_LoopOnce)
+                    ||(!ic->loop_count && !ic->is_multipart)) {
+                        /* A single frame, single part image. */
+                        il_container_complete(ic);
             }
             else {
                 /* Display the rest of the last image before starting a new one */
@@ -1951,6 +1952,30 @@ PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver
     return permission;
 }
 
+/* Get requested animation policy from presContext 
+ *  normal = 0
+ *  one frame = 1
+ *  one loop = 2
+ */
+nsImageAnimation 
+il_check_requested_animation(nsIImageRequestObserver * aObserver) {
+
+    nsresult rv;
+    nsImageAnimation req_animate = eImageAnimation_Normal; //default value
+
+    nsCOMPtr<nsIFrameImageLoader> frameImageLoader = do_QueryInterface(aObserver);
+    if (frameImageLoader) {
+        nsCOMPtr<nsIPresContext> presContext;
+        rv = frameImageLoader->GetPresContext(getter_AddRefs(presContext));
+        if (presContext) {
+            rv = presContext->GetImageAnimationMode(&req_animate);
+        }
+    }
+
+    return req_animate;
+}
+
+
 IL_IMPLEMENT(IL_ImageReq *)
 IL_GetImage(const char* image_url,
             IL_GroupContext *img_cx,
@@ -2040,6 +2065,9 @@ IL_GetImage(const char* image_url,
         il_icon_notify(image_req, IL_IMAGE_DELAYED, IL_ERROR_INTERNAL);
         return image_req;
     }
+
+
+    ic->animate_request = il_check_requested_animation(aObserver);
      
     /* Give the client a handle into the imagelib world. */
     image_req->ic = ic;
