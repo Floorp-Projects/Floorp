@@ -35,7 +35,7 @@
  * Nathan Pride, npride@wavo.com
  *    -- fixed a document base issue
  *
- * $Id: XSLTProcessor.cpp,v 1.8 2000/04/20 10:14:05 kvisco%ziplink.net Exp $
+ * $Id: XSLTProcessor.cpp,v 1.9 2000/04/20 22:10:03 Peter.VanderBeken%pandora.be Exp $
  */
 
 #include "XSLTProcessor.h"
@@ -48,7 +48,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL styelsheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.8 $ $Date: 2000/04/20 10:14:05 $
+ * @version $Revision: 1.9 $ $Date: 2000/04/20 22:10:03 $
 **/
 
 /**
@@ -1006,7 +1006,7 @@ void XSLTProcessor::processAction
                 ps->getNodeStack()->push(dfrag);
                 processTemplate(node, actionElement, ps);
                 ps->getNodeStack()->pop();
-                String value;
+                DOMString value;
                 if (!getText(dfrag, value, MB_FALSE,MB_TRUE)) {
                     String warning(NON_TEXT_TEMPLATE_WARNING);
                     warning.append(COMMENT);
@@ -1184,7 +1184,7 @@ void XSLTProcessor::processAction
                     ps->getNodeStack()->push(dfrag);
                     processTemplate(node, actionElement, ps);
                     ps->getNodeStack()->pop();
-                    String value;
+                    DOMString value;
                     if (!getText(dfrag, value, MB_FALSE,MB_TRUE)) {
                         String warning(NON_TEXT_TEMPLATE_WARNING);
                         warning.append(PI);
@@ -1216,7 +1216,7 @@ void XSLTProcessor::processAction
                 DOMString exprAtt = actionElement->getAttribute(EXPR_ATTR);
                 Expr* expr = ps->getExpr(exprAtt);
                 ExprResult* exprResult = expr->evaluate(node, ps);
-                String data("expr debug: ");
+                DOMString data("expr debug: ");
                 expr->toString(data);
                 cout << data << endl;
                 data.clear();
@@ -1243,7 +1243,7 @@ void XSLTProcessor::processAction
 
                 Expr* expr = ps->getExpr(selectAtt);
                 ExprResult* exprResult = expr->evaluate(node, ps);
-                String value;
+                DOMString value;
                 if ( !exprResult ) {
                     notifyError("null ExprResult");
                     break;
@@ -1370,7 +1370,7 @@ void XSLTProcessor::processAttributeSets
  * @param ps the current ProcessorState
 **/
 void XSLTProcessor::processAttrValueTemplate
-    (const String& attValue, String& result, Node* context, ProcessorState* ps)
+    (const String& attValue, DOMString& result, Node* context, ProcessorState* ps)
 {
     AttributeValueTemplate* avt = 0;
     avt = exprParser.createAttributeValueTemplate(attValue);
@@ -1574,7 +1574,7 @@ void XSLTProcessor::xslCopyOf(ExprResult* exprResult, ProcessorState* ps) {
         }
         default:
         {
-            String value;
+            DOMString value;
             exprResult->stringValue(value);
             ps->addToResultTree(resultDoc->createTextNode(value));
             break;
