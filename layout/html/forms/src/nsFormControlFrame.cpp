@@ -278,6 +278,13 @@ nsFormControlFrame::Reflow(nsIPresContext&      aPresContext,
     PRInt32 type;
     GetType(&type);
     const nsIID& id = GetCID();
+
+#ifdef NS_GFX_RENDER_FORM_ELEMENTS
+    RequiresWidget(supportsWidgets);   
+#else
+    supportsWidgets = PR_TRUE;
+#endif
+
     if ((NS_FORM_INPUT_HIDDEN != type) && (PR_TRUE == supportsWidgets)) {
 	    // Do the following only if a widget is created
       nsWidgetInitData* initData = GetWidgetInitData(aPresContext); // needs to be deleted
@@ -743,6 +750,18 @@ nsresult nsFormControlFrame::GetDefaultCheckState(PRBool *aState)
 	return res;
 }
 
+nsresult nsFormControlFrame::SetDefaultCheckState(PRBool aState)
+{
+	nsresult res = NS_OK;
+  nsIDOMHTMLInputElement* inputElement;
+  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
+    res = inputElement->SetDefaultChecked(aState);
+    NS_RELEASE(inputElement);
+  }
+	return res;
+}
+
+
 nsresult nsFormControlFrame::GetCurrentCheckState(PRBool *aState)
 {
 	nsresult res = NS_OK;
@@ -772,6 +791,12 @@ NS_IMETHODIMP nsFormControlFrame::SetProperty(nsIAtom* aName, const nsString& aV
 
 NS_IMETHODIMP nsFormControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
 {
+  return NS_OK;
+}
+
+nsresult nsFormControlFrame::RequiresWidget(PRBool & aRequiresWidget)
+{
+  aRequiresWidget = PR_TRUE;
   return NS_OK;
 }
 

@@ -57,6 +57,14 @@ NS_NewRadioControlFrame(nsIFrame*& aResult)
   return NS_OK;
 }
 
+nsRadioControlFrame::nsRadioControlFrame()
+{
+   // Initialize GFX-rendered state
+  mChecked = PR_FALSE;
+}
+
+
+
 const nsIID&
 nsRadioControlFrame::GetIID()
 {
@@ -361,10 +369,13 @@ void nsRadioControlFrame::GetRadioControlFrameState(nsString& aValue)
         aValue = "0";
       NS_RELEASE(radio);
     }
-    else {
-    //XXX: This should return the local field for GFX-rendered widgets
+  }
+  else {   
+      // Get the state for GFX-rendered widgets
+    if (PR_TRUE == mChecked)
+      aValue = "1";
+    else
       aValue = "0";
-    }
   }
 }         
 
@@ -380,9 +391,13 @@ void nsRadioControlFrame::SetRadioControlFrameState(const nsString& aValue)
 
       NS_RELEASE(radio);
     }
-    else {
-    //XXX: This should set he local field for GFX-rendered widgets
-    }
+  }
+  else {    
+       // Set the state for GFX-rendered widgets
+    if (aValue == "1")
+      mChecked = PR_TRUE;
+    else
+      mChecked = PR_FALSE;
   }
 }         
 
@@ -413,3 +428,9 @@ NS_IMETHODIMP nsRadioControlFrame::GetProperty(nsIAtom* aName, nsString& aValue)
   return NS_OK;    
 }
 
+
+nsresult nsRadioControlFrame::RequiresWidget(PRBool& aRequiresWidget)
+{
+  aRequiresWidget = PR_FALSE;
+  return NS_OK;
+}
