@@ -114,6 +114,8 @@ class nsXBLBinding: public nsIXBLBinding
   NS_IMETHOD GetBindingElement(nsIContent** aResult);
   NS_IMETHOD SetBindingElement(nsIContent* aElement);
 
+  NS_IMETHOD GetInsertionPoint(nsIContent** aResult);
+
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement);
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement);
 
@@ -139,7 +141,6 @@ public:
   static nsIAtom* kCapturerAtom;
   static nsIAtom* kExtendsAtom;
   static nsIAtom* kChildrenAtom;
-  static nsIAtom* kHasChildrenAtom;
   static nsIAtom* kHTMLAtom;
   static nsIAtom* kValueAtom;
 
@@ -171,8 +172,10 @@ protected:
   nsCOMPtr<nsIContent> mBinding; // Strong. As long as we're around, the binding can't go away.
   nsCOMPtr<nsIContent> mContent; // Strong. Our anonymous content stays around with us.
   nsCOMPtr<nsIXBLBinding> mNextBinding; // Strong. The derived binding owns the base class bindings.
+  nsCOMPtr<nsIContent> mChildrenElement; // Strong. One of our anonymous content children.
 
   nsIContent* mBoundElement; // [WEAK] We have a reference, but we don't own it.
+  
   nsSupportsHashtable* mAttributeTable; // A table for attribute entries.
 };
 
@@ -188,7 +191,6 @@ nsIAtom* nsXBLBinding::kTypeAtom = nsnull;
 nsIAtom* nsXBLBinding::kCapturerAtom = nsnull;
 nsIAtom* nsXBLBinding::kExtendsAtom = nsnull;
 nsIAtom* nsXBLBinding::kChildrenAtom = nsnull;
-nsIAtom* nsXBLBinding::kHasChildrenAtom = nsnull;
 nsIAtom* nsXBLBinding::kValueAtom = nsnull;
 nsIAtom* nsXBLBinding::kHTMLAtom = nsnull;
 
@@ -260,7 +262,6 @@ nsXBLBinding::nsXBLBinding(void)
     kCapturerAtom = NS_NewAtom("capturer");
     kExtendsAtom = NS_NewAtom("extends");
     kChildrenAtom = NS_NewAtom("children");
-    kHasChildrenAtom = NS_NewAtom("haschildren");
     kHTMLAtom = NS_NewAtom("html");
     kValueAtom = NS_NewAtom("value");
 
@@ -287,7 +288,6 @@ nsXBLBinding::~nsXBLBinding(void)
     NS_RELEASE(kCapturerAtom);
     NS_RELEASE(kExtendsAtom);
     NS_RELEASE(kChildrenAtom);
-    NS_RELEASE(kHasChildrenAtom);
     NS_RELEASE(kHTMLAtom);
     NS_RELEASE(kValueAtom);
 
@@ -371,6 +371,14 @@ nsXBLBinding::SetBindingElement(nsIContent* aElement)
 }
 
 NS_IMETHODIMP
+nsXBLBinding::GetInsertionPoint(nsIContent** aResult)
+{
+  *aResult = mChildrenElement;
+  NS_IF_ADDREF(*aResult);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
 {
   // Set our bound element.
@@ -397,40 +405,37 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     // in the excludes list.
     nsAutoString excludes;
     content->GetAttribute(kNameSpaceID_None, kExcludesAtom, excludes);
-    if (excludes != "") {
-      // Walk the children and ensure that all of them
-      // are in the excludes array.
-      for (PRInt32 i = 0; i < childCount; i++) {
-        nsCOMPtr<nsIContent> child;
-        aBoundElement->ChildAt(i, *getter_AddRefs(child));
-        nsCOMPtr<nsIAtom> tag;
-        child->GetTag(*getter_AddRefs(tag));
-        if (!IsInExcludesList(tag, excludes)) {
-          buildContent = PR_FALSE;
-          break;
+    if (excludes != "*") {
+      if (!excludes.IsEmpty()) {
+        // Walk the children and ensure that all of them
+        // are in the excludes array.
+        for (PRInt32 i = 0; i < childCount; i++) {
+          nsCOMPtr<nsIContent> child;
+          aBoundElement->ChildAt(i, *getter_AddRefs(child));
+          nsCOMPtr<nsIAtom> tag;
+          child->GetTag(*getter_AddRefs(tag));
+          if (!IsInExcludesList(tag, excludes)) {
+            buildContent = PR_FALSE;
+            break;
+          }
         }
       }
+      else buildContent = PR_FALSE;
     }
-    else buildContent = PR_FALSE;
   }
   
+  nsCOMPtr<nsIContent> childrenElement;
+      
   if (!buildContent) {
-    nsAutoString hasChildren;
-    mBinding->GetAttribute(kNameSpaceID_None, kHasChildrenAtom, hasChildren);
-    if (hasChildren == "") {
-      // see if we have a <children/> element
-      nsCOMPtr<nsIContent> child;
-      GetNestedChild(kChildrenAtom, content, getter_AddRefs(child));
-      if (child) {
-        buildContent = PR_TRUE;
-        mBinding->SetAttribute(kNameSpaceID_None, kHasChildrenAtom, "true", PR_FALSE);
-      }
-    }
-    else
+    // see if we have a <children/> element
+    GetNestedChild(kChildrenAtom, content, getter_AddRefs(childrenElement));
+    if (childrenElement) {
       buildContent = PR_TRUE;
+    }
   }
-
+  
   if (buildContent) {
+     // Always check the content element for potential attributes.
     nsCOMPtr<nsIDOMNode> node(do_QueryInterface(content));
     nsCOMPtr<nsIDOMNamedNodeMap> namedMap;
 
@@ -449,15 +454,15 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
         nsAutoString value;
         nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mBoundElement));
         element->GetAttribute(name, value);
-        if (value == "") {
+        if (value.IsEmpty()) {
           nsAutoString value2;
           attr->GetValue(value2);
-          element->SetAttribute(name, value2);
+          nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(name));
+          mBoundElement->SetAttribute(kNameSpaceID_None, atom, value2, PR_FALSE);
         }
       }
     }
-
-    
+  
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(content);
 
     nsCOMPtr<nsIDOMNode> clonedNode;
@@ -465,6 +470,10 @@ nsXBLBinding::GenerateAnonymousContent(nsIContent* aBoundElement)
     
     nsCOMPtr<nsIContent> clonedContent = do_QueryInterface(clonedNode);
     SetAnonymousContent(clonedContent);
+
+    if (childrenElement) {
+      GetNestedChild(kChildrenAtom, clonedContent, getter_AddRefs(mChildrenElement));
+    }
   }
   
   if (mNextBinding) {
@@ -701,7 +710,7 @@ nsXBLBinding::GetNestedChild(nsIAtom* aTag, nsIContent* aContent, nsIContent** a
     nsCOMPtr<nsIAtom> tag;
     child->GetTag(*getter_AddRefs(tag));
     if (aTag == tag.get()) {
-      *aResult = child;
+      *aResult = aContent; // We return the parent of the correct child.
       NS_ADDREF(*aResult);
       return;
     }

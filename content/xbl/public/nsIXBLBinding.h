@@ -55,6 +55,8 @@ public:
   NS_IMETHOD GetBindingElement(nsIContent** aResult) = 0;
   NS_IMETHOD SetBindingElement(nsIContent* aElement) = 0;
 
+  NS_IMETHOD GetInsertionPoint(nsIContent** aResult) = 0;
+  
   NS_IMETHOD GenerateAnonymousContent(nsIContent* aBoundElement) = 0;
   NS_IMETHOD InstallEventHandlers(nsIContent* aBoundElement) = 0;
 

@@ -312,9 +312,7 @@ nsXBLService::GetContentList(nsIContent* aContent, nsISupportsArray** aResult, n
         (*aResult)->AppendElement(anonymousChild);
       }
 
-      nsCOMPtr<nsIContent> bindingElement;
-      binding->GetBindingElement(getter_AddRefs(bindingElement));
-
+      binding->GetInsertionPoint(aParent);
       return NS_OK;
     }
 
