@@ -127,10 +127,8 @@ JS_DHashTableInit(JSDHashTable *table, JSDHashTableOps *ops, void *data,
     table->entryCount = table->removedCount = 0;
     nbytes = capacity * entrySize;
     table->entryStore = ops->allocTable(table, nbytes);
-    if (!table->entryStore) {
-        memset(table, 0, sizeof *table);
+    if (!table->entryStore)
         return JS_FALSE;
-    }
     memset(table->entryStore, 0, nbytes);
     METER(memset(&table->stats, 0, sizeof table->stats));
     return JS_TRUE;
@@ -141,7 +139,6 @@ JS_DHashTableFinish(JSDHashTable *table)
 {
     table->ops->finalize(table);
     table->ops->freeTable(table, table->entryStore);
-    memset(table, 0, sizeof *table);
 }
 
 /*
