@@ -572,6 +572,7 @@ nsCertOutliner::ToggleOpenState(PRInt32 index)
   if (el) el->open = !el->open;
   PRInt32 fac = (el->open) ? 1 : -1;
   if (mOutliner) mOutliner->RowCountChanged(index, fac * el->numChildren);
+  mSelection->Select(index);
   return NS_OK;
 }
 
