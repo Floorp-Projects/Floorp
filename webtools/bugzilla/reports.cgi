@@ -22,28 +22,52 @@
 
 use diagnostics;
 use strict;
+use Chart::Lines;
 
 require "CGI.pl";
 require "globals.pl";
 
 use vars @::legal_product;
 
+my $dir = "data/mining";
 my $week = 60 * 60 * 24 * 7;
 my @status = qw (NEW ASSIGNED REOPENED);
 
-ConnectToDatabase();
+# while this looks odd/redundant, it allows us to name
+# functions differently than the value passed in
 
+my %reports = 
+	( 
+	"most_doomed" => \&most_doomed,
+	"show_chart" => \&show_chart,
+	);
+
+# patch from Sam Ziegler <ziegler@mediaguaranty.com>:
+#
+# "reports.cgi currently has it's own idea of what 
+# the header should be. This patch sets it to the 
+# system wide header." 
+
+print "Content-type: text/html\n\n";
+
+if (defined $::FORM{'nobanner'})
+	{
 print <<FIN;
-Content-type: text/html
-
 <html>
-<head>
-<title>Bugzilla Reports</title>
-</head>
+<head><title>Bug Reports</title></head>
 <body bgcolor="#FFFFFF">
 FIN
+	}
+else
+	{
+	PutHeader ("Bug Reports") unless (defined $::FORM{'nobanner'});
+	}
 
-&header unless (defined $::FORM{'nobanner'});
+ConnectToDatabase();
+
+# $::FORM{'product'} = "Mozilla";
+# &show_chart(); 
+# exit;
 
 if (! defined $::FORM{'product'})
 	{
@@ -51,7 +75,29 @@ if (! defined $::FORM{'product'})
 	}
 else
 	{
-	&most_doomed;
+	# we want to be careful about what subroutines 
+	# can be called from outside. modify %reports
+	# accordingly when a new report type is added
+
+	if (! defined $reports{$::FORM{'output'}})
+		{
+		$::FORM{'output'} = "most_doomed"; # a reasonable default
+		}
+	
+	my $f = $reports{$::FORM{'output'}};
+
+	if (! defined $f)
+		{
+		print "start over, your form data was all messed up.<p>\n";
+		foreach (keys %::FORM)
+			{
+			print "<font color=blue>$_</font> : " . 
+				($::FORM{$_} ? $::FORM{$_} : "undef") . "<br>\n";
+			}
+		exit;
+		}
+
+	&{$f};
 	}
 
 print <<FIN;
@@ -84,6 +130,13 @@ $product_popup
 </td>
 </tr>
 <tr>
+<td align=center><b>Output:</b></td>
+<td align=center>
+<select name="output">
+<option value="most_doomed">Bug Counts
+<option value="show_chart">Bug Charts
+</select>
+<tr>
 <td align=center><b>Switches:</b></td>
 <td align=left>
 <input type=checkbox name=links value=1>&nbsp;Links to Bugs<br>
@@ -100,10 +153,6 @@ $product_popup
 <p>
 FIN
 	}
-
-##########################
-# they sent us a project #
-##########################
 
 sub most_doomed
 	{
@@ -323,3 +372,103 @@ sub header
  BORDER=0 WIDTH=600 HEIGHT=58></A></TD></TR></TABLE>
 FIN
 	}
+
+sub show_chart
+	{
+  my $when = localtime (time);
+
+  print <<FIN;
+<center>
+FIN
+	
+	my @dates;
+	my @open; my @assigned; my @reopened;
+
+	my $file = join '/', $dir, $::FORM{'product'};
+	my $image = "$file.gif";
+
+	if (! open FILE, $file)
+		{
+		&die_politely ("The tool which gathers bug counts has not been run yet.");
+		}
+	
+	while (<FILE>)
+		{
+		chomp;
+		next if ($_ =~ /^#/ or ! $_);
+		my ($date, $open, $assigned, $reopened) = split /\|/, $_;
+		my ($yy, $mm, $dd) = $date =~ /^\d{2}(\d{2})(\d{2})(\d{2})$/;
+
+		push @dates, "$mm/$dd/$yy";
+		push @open, $open;
+		push @assigned, $assigned;
+		push @reopened, $reopened;
+		}
+	
+	close FILE;
+
+	if ($#dates < 1)
+		{
+		&die_politely ("We don't have enough data points to make a graph (yet)");
+		}
+	
+	my $img = Chart::Lines->new (800, 600);
+	my @labels = qw (New Assigned Reopened);
+	my @when;
+	my $i = 0;
+	my @data;
+
+	push @data, \@dates;
+	push @data, \@open;
+	push @data, \@assigned;
+	push @data, \@reopened;
+
+	my %settings =
+		(
+		"title" => "Bug Charts for $::FORM{'product'}",
+		"x_label" => "Dates",
+		"y_label" => "Bug Count",
+		"grey_background" => 1,
+		"legend_labels" => \@labels,
+		);
+	
+	$img->set (%settings);
+	
+	open IMAGE, ">$image" or die "$image: $!";
+	$img->gif (*IMAGE, \@data);
+	close IMAGE;
+
+	print <<FIN;
+<img src="$image">
+<br clear=left>
+<br>
+FIN
+	}
+
+sub die_politely
+	{
+	my $msg = shift;
+
+	print <<FIN;
+<p>
+<table border=1 cellpadding=10>
+<tr>
+<td align=center>
+<font color=blue>Sorry, but ...</font>
+<p>
+There is no graph available for <b>$::FORM{'product'}</b><p>
+
+<font size=-1>
+$msg
+<p>
+</font>
+</td>
+</tr>
+</table>
+<p>
+FIN
+	
+	exit;
+	}
+
+
