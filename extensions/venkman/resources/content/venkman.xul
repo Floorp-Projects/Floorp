@@ -103,6 +103,7 @@
   <commandset id="venkmanCommands">
     <command id="cmd_reload_ui"
       oncommand="if (DEBUG) window.location.href = window.location.href;"/>
+    <command id="cmd_focus" oncommand="console._slInputElement.focus();"/>
   </commandset>
 
   <commandset id="venkmanDebuggerCommands">
@@ -113,6 +114,8 @@
   <keyset id="venkmanKeys">
     <key id="key_reload_ui" observes="cmd_reload_ui" 
       modifiers="control alt" key="R"/>
+    <key id="key_focus" observes="cmd_focus" keycode="VK_TAB"/>
+    <key id="key_cont" observes="cmd_cont" keycode="VK_F5"/>
     <key id="key_cont" observes="cmd_cont" keycode="VK_F5"/>
     <key id="key_step_in" observes="cmd_step_in" keycode="VK_F10"/>
   </keyset>
