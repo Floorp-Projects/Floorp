@@ -2420,4 +2420,4 @@ static nsModuleComponentInfo components[] = {
 
 NS_IMPL_NSGETMODULE("nsBrowserModule", components)
 
-CMDLINEHANDLER_IMPL(nsBrowserInstance,"-chrome","general.startup.browser","chrome://navigator/content/","Start with browser",NS_IBROWSERINSTANCE_PROGID,"Browser Cmd Line Handler", PR_FALSE, "")
+CMDLINEHANDLER_IMPL(nsBrowserInstance,"-chrome","general.startup.browser","chrome://navigator/content/","Start with browser",NS_IBROWSERINSTANCE_PROGID,"Browser Cmd Line Handler", PR_TRUE, "", PR_FALSE)

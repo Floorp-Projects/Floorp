@@ -1246,4 +1246,4 @@ function EditorSetSelectionFromOffsets(selRanges)
 
 #endif
 
-CMDLINEHANDLER_IMPL(nsHTMLEditorLog,"-edit","general.startup.editor","chrome://editor/content/","Start with editor","component://netscape/editor/htmleditor","Editor Cmd Line Handler", PR_TRUE,"about:blank")
+CMDLINEHANDLER_IMPL(nsHTMLEditorLog,"-edit","general.startup.editor","chrome://editor/content/","Start with editor","component://netscape/editor/htmleditor","Editor Cmd Line Handler", PR_TRUE,"about:blank", PR_TRUE)

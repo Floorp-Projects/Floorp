@@ -1270,4 +1270,4 @@ NS_IMETHODIMP nsAddressBook::ImportAddressBook()
 	return rv;
 }
 
-CMDLINEHANDLER_IMPL(nsAddressBook,"-addressbook","general.startup.addressbook","chrome://addressbook/content/","Start with the addressbook.",NS_ADDRESSBOOK_PROGID,"Addressbook Cmd Line Handler",PR_FALSE,"")
+CMDLINEHANDLER_IMPL(nsAddressBook,"-addressbook","general.startup.addressbook","chrome://addressbook/content/","Start with the addressbook.",NS_ADDRESSBOOK_PROGID,"Addressbook Cmd Line Handler",PR_FALSE,"", PR_TRUE)

@@ -1376,4 +1376,4 @@ nsSaveAsListener::OnDataAvailable(nsIChannel* aChannel,
   return rv;
 }
 
-CMDLINEHANDLER_IMPL(nsMessenger,"-mail","general.startup.mail","chrome://messenger/content/","Start with mail.",NS_MESSENGER_PROGID,"Mail Cmd Line Handler",PR_FALSE,"")
+CMDLINEHANDLER_IMPL(nsMessenger,"-mail","general.startup.mail","chrome://messenger/content/","Start with mail.",NS_MESSENGER_PROGID,"Mail Cmd Line Handler",PR_FALSE,"", PR_TRUE)
