@@ -336,7 +336,27 @@ public:
 
 	virtual	Boolean ObeyCommand( CommandT inCommand, void *ioParam );
 	virtual	void 	BeTarget();
+	virtual	void 	DontBeTarget();
 };
+
+//---------------------------------------------------------------------------
+// class CNonPrintingView
+//---------------------------------------------------------------------------
+
+// An experiment with putting forms in a non-printing view
+
+class CNonPrintingView : public LView
+{
+	public:
+	enum { class_ID = 'npvw' };
+
+	CNonPrintingView(LStream * inStream);
+	~CNonPrintingView();
+
+	virtual void PrintPanel( const PanelSpec &inPanel, RgnHandle inSuperPrintRgnH);
+	virtual void SuperPrintPanel( const PanelSpec &inSuperPanel, RgnHandle inSuperPrintRgnH);
+};
+
 
 
 /*****************************************************************************

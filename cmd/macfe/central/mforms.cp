@@ -837,9 +837,58 @@ void CFormHTMLArea::BeTarget()
 		toolbar->SetEditView(this);
 		
 	}
-	inherited::BeTarget();
+	MochaFocus(true);
+	CEditView::BeTarget();
 }
 
+void CFormHTMLArea::DontBeTarget()
+{
+	MWContext*	context = *GetNSContext();
+	if (context)
+	{
+		if (EDT_DirtyFlag(context))
+		{
+			MochaChanged();
+			EDT_SetDirtyFlag( context, false );
+		}
+	}
+	// Must call MochaChanged() BEFORE MochaFocus(false), because MochaChanged 
+	// merely lights a bit - MochaFocus() is what sees that and actually sends the 
+	// CHANGE event to javascript.
+	MochaFocus(false);
+	CEditView::DontBeTarget();
+}
+
+#pragma mark == CNonPrintingView ==
+
+//---------------------------------------------------------------------------
+// class CNonPrintingView
+//---------------------------------------------------------------------------
+
+// An experiment with putting forms in a non-printing view
+
+CNonPrintingView::CNonPrintingView(LStream * inStream) : LView(inStream) 
+{
+}
+
+CNonPrintingView::~CNonPrintingView() 
+{
+}
+
+void
+CNonPrintingView::PrintPanel(
+	const PanelSpec	&inPanel,
+	RgnHandle		inSuperPrintRgnH)
+{
+}
+
+
+void
+CNonPrintingView::SuperPrintPanel(
+	const PanelSpec	&inSuperPanel,
+	RgnHandle		inSuperPrintRgnH)
+{
+}
 
 
 #pragma mark == CFormList ==
@@ -3396,6 +3445,7 @@ LFormElement::LFormElement()
 	fLayoutElement 				= NULL; 
 	fContext 					= NULL; 
 	fPane						= NULL;
+	fMochaChanged				= false;
 	fReflectOnChange 			= false; 
 	fInFocusCallAlready 		= false; 
 	fMarkedForDeath 			= false;
