@@ -910,6 +910,21 @@ nsGfxScrollFrameInner::CalculateScrollAreaSize(nsIPresContext*          aPresCon
     vert = PR_TRUE;
     horiz = PR_TRUE;
   } 
+  else if (aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_NONE) 
+  {
+    vert = PR_FALSE;
+    horiz = PR_FALSE;
+  } 
+  else if (aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) 
+  {
+    vert = PR_TRUE;
+    horiz = PR_FALSE;
+  }
+  else if (aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL)
+  {
+    vert = PR_FALSE;
+    horiz = PR_TRUE;
+  }
 
   // add in the scrollbars.
   if (horiz)
@@ -1323,14 +1338,16 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext*          aPresContext
 
               // if we were auto and have a vertical scrollbar remove it because we
               // can have whatever size we wanted.
-              if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
+              if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL
+                  && aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) {
                 RemoveVerticalScrollbar(sbSize, scrollAreaSize);
               }
         } else {
           // if we are not shrink wrapping
 
           // if we have 'auto' scrollbars
-          if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
+          if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL
+              && aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) {
             // get the ara frame is the scrollarea
             nsSize size;
             GetScrolledContentSize(aPresContext, size);
@@ -1338,7 +1355,9 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext*          aPresContext
             PRBool  mustReflow = PR_FALSE;
 
             // There are two cases to consider
-              if (size.height <= scrollAreaSize.height) {
+              if (size.height <= scrollAreaSize.height
+                  || aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL
+                  || aReflowState.mStyleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_NONE) {
                 if (mHasVerticalScrollbar) {
                   // We left room for the vertical scrollbar, but it's not needed;
                   // remove it.
@@ -1380,12 +1399,14 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext*          aPresContext
              scrollAreaSize.width = scrollAreaDesiredSize.width;
 
              // if we have auto scrollbars the remove the horizontal scrollbar
-             if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL) {
+             if (aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLL
+                 && aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL) {
                  RemoveHorizontalScrollbar(sbSize, scrollAreaSize);
              }
           } else {
             // if scrollbars are auto
-            if ((NS_STYLE_OVERFLOW_SCROLL != aReflowState.mStyleDisplay->mOverflow))
+            if ((NS_STYLE_OVERFLOW_SCROLL != aReflowState.mStyleDisplay->mOverflow)
+                && (NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL != aReflowState.mStyleDisplay->mOverflow))
             {
               // get the ara frame is the scrollarea
               nsSize size;
@@ -1393,7 +1414,9 @@ nsGfxScrollFrameInner::ReflowScrollArea(   nsIPresContext*          aPresContext
 
               // if the child is wider that the scroll area
               // and we don't have a scrollbar add one.
-              if (size.width > scrollAreaSize.width) { 
+              if (size.width > scrollAreaSize.width
+                  && aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL
+                  && aReflowState.mStyleDisplay->mOverflow != NS_STYLE_OVERFLOW_SCROLLBARS_NONE) { 
 
                 if (!mHasHorizontalScrollbar) {
                      AddHorizontalScrollbar(sbSize, scrollAreaSize);
