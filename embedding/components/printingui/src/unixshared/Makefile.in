@@ -52,16 +52,9 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  widget \
 		  gfx \
-		  js \
-		  xpconnect \
-		  caps \
 		  layout \
-		  necko \
 		  uriloader \
-		  docshell \
 		  webbrwsr \
-		  embed_base \
-		  intl \
 		  $(NULL)
 
 CPPSRCS		= \

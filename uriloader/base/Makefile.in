@@ -59,7 +59,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  caps \
 		  intl \
-		  webshell \
 		  xpconnect \
 		  mimetype \
 		  locale \

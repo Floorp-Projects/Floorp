@@ -72,9 +72,7 @@ REQUIRES	= xpcom \
 		  caps \
 		  mimetype \
 		  js \
-		  pref \
 		  xpconnect \
-		  uconv \
 		  necko \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)

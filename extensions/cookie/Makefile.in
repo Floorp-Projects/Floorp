@@ -58,7 +58,6 @@ REQUIRES	= xpcom \
 		  widget \
 		  content \
 		  pref \
-		  uriloader \
 		  windowwatcher \
 		  docshell \
 		  appshell \

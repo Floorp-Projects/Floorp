@@ -54,10 +54,7 @@ REQUIRES	= xpcom \
 		  widget \
 		  dom \
 		  locale \
-		  view \
-		  pref \
 		  necko \
-		  unicharutil \
 		  webshell \
 		  $(NULL)
 

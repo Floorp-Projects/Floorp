@@ -48,14 +48,11 @@ LIBRARY_NAME	= gtkembedmoz
 REQUIRES	= xpcom \
 		  string \
 		  docshell \
-		  webshell \
 		  necko \
 		  widget \
 		  dom \
-		  js \
 		  gfx \
 		  layout \
-		  content \
 		  uriloader \
 		  webbrwsr \
 		  shistory \

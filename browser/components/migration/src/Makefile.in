@@ -62,7 +62,6 @@ REQUIRES	= \
 		  windowwatcher \
 		  dom \
 		  docshell \
-		  cookie \
 		  xulapp \
 		  $(NULL)
 

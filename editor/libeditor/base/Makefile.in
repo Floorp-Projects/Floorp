@@ -60,7 +60,6 @@ REQUIRES	= xpcom \
 		  view \
 		  gfx \
 		  widget \
-		  lwbrk \
 		  unicharutil \
 		  commandhandler \
 		  docshell \

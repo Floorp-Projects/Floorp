@@ -62,9 +62,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  necko \
 		  content \
-		  dom \
 		  layout \
-		  imglib2 \
 		  $(NULL)
 
 # Sun's Complex Text Layout support

@@ -48,9 +48,6 @@ LIBRARY_NAME	= bookmarks_s
 REQUIRES	= xpcom \
 		  string \
 		  rdf \
-		  appshell \
-      appcomps \
-      appstartup \
 		  widget \
 		  necko \
 		  nkcache \
@@ -58,7 +55,6 @@ REQUIRES	= xpcom \
 		  pref \
 		  dom \
 		  intl \
-		  webshell \
 		  windowwatcher \
 		  unicharutil \
 		  txmgr \

@@ -62,21 +62,13 @@ REQUIRES	= xpcom \
 		  caps \
 		  lwbrk \
 		  uconv \
-		  chrome \
 		  docshell \
 		  pref \
-		  profile \
 		  xpconnect \
-		  util \
 		  unicharutil \
-		  xuldoc \
 		  intl \
-		  windowwatcher \
 		  webbrowserpersist \
 		  imglib2 \
-		  uriloader \
-		  webbrwsr \
-		  plugin \
 		  prefetch \
 		  $(NULL)
 

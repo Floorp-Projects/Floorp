@@ -58,7 +58,6 @@ REQUIRES	= xpcom \
 		  xlibrgb \
 		  xprintutil \
 		  widget \
-		  view \
 		  pref \
 		  locale \
 		  uconv \

@@ -62,7 +62,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  htmlparser \
 		  content \
-		  dom \
 		  widget \
 		  webshell \
 		  necko \

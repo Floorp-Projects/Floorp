@@ -62,7 +62,6 @@ REQUIRES	= xpcom \
 		  locale \
 		  unicharutil \
 		  chardet \
-		  ucnative \
 		  $(NULL)
 
 CSRCS		= \
@@ -96,6 +95,9 @@ CPPSRCS         += \
 		nsUnicodeToMacRoman.cpp \
 		nsUnicodeToUTF8.cpp \
 		$(NULL)
+
+REQUIRES	+= ucnative
+
 endif
 
 EXPORT_RESOURCE	= \

@@ -111,7 +111,6 @@ REQUIRES	= nspr \
 		  layout \
 		  content \
 		  xpconnect \
-		  jar \
 		  unicharutil \
 		  pipboot \
 		  $(NULL)

@@ -81,7 +81,6 @@ REQUIRES	= xpcom \
 		  composer \
 		  commandhandler \
 		  editor \
-		  history \
 		  $(NULL)
 
 SDK_XPIDLSRCS = \

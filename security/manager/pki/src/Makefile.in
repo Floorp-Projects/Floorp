@@ -68,7 +68,6 @@ REQUIRES	= nspr \
 		  xpcom \
 		  string \
 		  dom \
-		  pref \
 		  intl \
 		  locale \
 		  windowwatcher \
