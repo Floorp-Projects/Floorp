@@ -109,7 +109,8 @@ enum Pop3CapabilityEnum {
     POP3_HAS_AUTH_NTLM          = 0x00008000,
     POP3_HAS_AUTH_MSN           = 0x00010000,
     POP3_HAS_RESP_CODES         = 0x00020000,
-    POP3_HAS_AUTH_RESP_CODE     = 0x00040000
+    POP3_HAS_AUTH_RESP_CODE     = 0x00040000,
+    POP3_HAS_STLS               = 0x00080000
 };
 
 #define POP3_HAS_AUTH_ANY         0x00001C00
@@ -169,7 +170,8 @@ enum Pop3StatesEnum {
 
     POP3_GURL_RESPONSE,                         // 42
     POP3_QUIT_RESPONSE,                         // 43
-    POP3_INTERRUPTED                            // 44
+    POP3_INTERRUPTED,                           // 44
+    POP3_TLS_RESPONSE                           // 45
 };
 
 
@@ -345,6 +347,8 @@ private:
 
   PRBool m_parsingMultiLineMessageId;
 
+  PRBool m_tlsEnabled;
+  PRInt32 m_socketType;
   PRBool m_useSecAuth;
   PRBool m_password_already_sent;
 
@@ -377,6 +381,7 @@ private:
   PRInt32 AuthResponse(nsIInputStream* inputStream, PRUint32 length);
   PRInt32 SendCapa();
   PRInt32 CapaResponse(nsIInputStream* inputStream, PRUint32 length);
+  PRInt32 SendTLSResponse();
   PRInt32 ProcessAuth();
   PRInt32 AuthFallback();
   PRInt32 AuthLogin();

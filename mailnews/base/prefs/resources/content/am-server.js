@@ -65,10 +65,6 @@ function onPreInit(account, accountValues)
     hideShowControls(type);
 
     gServer = account.incomingServer;
-    if(!(account.incomingServer.isSecureServer))
-      document.getElementById("server.isSecure").setAttribute("hidden", "true");
-    else
-      document.getElementById("server.isSecure").removeAttribute("hidden");
     
     if(!account.incomingServer.canEmptyTrashOnExit)
     {
@@ -91,7 +87,8 @@ function onPreInit(account, accountValues)
       document.getElementById("server.advancedbutton").removeAttribute("hidden");  
 }
 
-function initServerType() {
+function initServerType()
+{
   var serverType = document.getElementById("server.type").getAttribute("value");
   
   var propertyName = "serverType-" + serverType;
@@ -100,7 +97,12 @@ function initServerType() {
   var verboseName = messengerBundle.getString(propertyName);
   setDivText("servertype.verbose", verboseName);
  
-  var isSecureSelected = document.getElementById("server.isSecure").checked;
+  var isSecureSelected;
+  if (document.getElementById("server.isSecure").hidden == true)
+    // if socketType set to alwaysSSL
+    isSecureSelected = document.getElementById("server.socketType").value == 3;
+  else
+    isSecureSelected = document.getElementById("server.isSecure").checked;
   var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + serverType].getService(Components.interfaces.nsIMsgProtocolInfo);
   document.getElementById("defaultPort").value = protocolInfo.getDefaultServerPort(isSecureSelected);
 }
@@ -196,23 +198,32 @@ function onAdvanced()
   }
 }
 
-function secureSelect() {
+function secureSelect()
+{
     var serverType   = document.getElementById("server.type").getAttribute("value");
     var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + serverType].getService(Components.interfaces.nsIMsgProtocolInfo);
-    var isSecureSelected = document.getElementById("server.isSecure").checked;
+
+    var isSecureSelected;
+    if (document.getElementById("server.isSecure").hidden == true)
+      // if socketType set to alwaysSSL
+      isSecureSelected = document.getElementById("server.socketType").value == 3;
+    else
+      isSecureSelected = document.getElementById("server.isSecure").checked;
+
     var defaultPort = protocolInfo.getDefaultServerPort(false);
     var defaultPortSecure = protocolInfo.getDefaultServerPort(true);
-    var previouslyDisplayedPort = document.getElementById("server.port").value;
+    var port = document.getElementById("server.port");
+    var portDefault = document.getElementById("defaultPort");
+    var prevDefaultPort = portDefault.value;
 
     if (isSecureSelected) {
-      document.getElementById("defaultPort").value = defaultPortSecure;
-      if (previouslyDisplayedPort == defaultPort)
-        document.getElementById("server.port").value = defaultPortSecure;
-    }
-    else {
-      document.getElementById("defaultPort").value = defaultPort;
-      if (previouslyDisplayedPort == defaultPortSecure)
-        document.getElementById("server.port").value = defaultPort;
+      portDefault.value = defaultPortSecure;
+      if (port.value == "" || (port.value == defaultPort && prevDefaultPort != portDefault.value))
+        port.value = defaultPortSecure;
+    } else {
+        portDefault.value = defaultPort;
+        if (port.value == "" || (port.value == defaultPortSecure && prevDefaultPort != portDefault.value))
+          port.value = defaultPort;
     } 
 }
 

@@ -1,5 +1,6 @@
 <!-- extracted from am-server-top.xul -->
 
+<!ENTITY securitySettings.label "Security Settings">
 <!ENTITY serverSettings.label "Server Settings">
 <!-- LOCALIZATION NOTE (popServer.label) : do not translate "POP" in below line -->
 <!ENTITY popServer.label "POP Mail Server">
@@ -27,6 +28,15 @@
 <!ENTITY biffEnd.label "minutes">
 <!ENTITY isSecure.label "Use secure connection (SSL)">
 <!ENTITY isSecure.accesskey "U">
+<!ENTITY socketType.label "Use secure connection:">
+<!ENTITY neverSecure.label "Never">
+<!ENTITY neverSecure.accesskey "N">
+<!ENTITY sometimesSecure.label "TLS, if available">
+<!ENTITY sometimesSecure.accesskey "a">
+<!ENTITY alwaysSecure.label "TLS">
+<!ENTITY alwaysSecure.accesskey "T">
+<!ENTITY alwaysSSL.label "SSL">
+<!ENTITY alwaysSSL.accesskey "L">
 <!ENTITY useSecAuth.label "Use secure authentication">
 <!ENTITY useSecAuth.accesskey "i">
 <!ENTITY leaveOnServer.label "Leave messages on server">

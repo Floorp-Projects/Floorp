@@ -95,5 +95,6 @@ private:
 #define MOVEMAIL_CANT_TRUNCATE_SPOOL_FILE                   4036
 #define MOVEMAIL_SPOOL_FILE_NOT_FOUND                       4037
 #define POP3_TMP_DOWNLOAD_FAILED                            4038
+#define NS_ERROR_COULD_NOT_CONNECT_VIA_TLS                  4039
 
 #endif /* _nsLocalStringBundle_H__ */

@@ -108,11 +108,28 @@
 
   <separator class="thin"/>
 
-  <groupbox>
-  <caption label="&serverSettings.label;"/>
-  <vbox align="start">
+  <groupbox hidefor="movemail">
+    <caption label="&securitySettings.label;"/>
+    <vbox align="start" hidefor="nntp,movemail">
+      <label value="&socketType.label;"/>
+      <radiogroup wsm_persist="true" id="server.socketType"
+                  prefattribute="value"
+                  prefstring="mail.server.%serverkey%.socketType"
+                  oncommand="secureSelect();"
+                  orient="horizontal" class="indent">
+        <radio value="0" id="neverSecure"
+               label="&neverSecure.label;" accesskey="&neverSecure.accesskey;"/>
+        <radio value="1" id="sometimesSecure"
+               label="&sometimesSecure.label;" accesskey="&sometimesSecure.accesskey;"/>
+        <radio value="2" id="alwaysSecure"
+               label="&alwaysSecure.label;" accesskey="&alwaysSecure.accesskey;"/>
+        <radio value="3" id="alwaysSSL"
+               label="&alwaysSSL.label;" accesskey="&alwaysSSL.accesskey;"/>
+      </radiogroup>
+    </vbox>
     <checkbox wsm_persist="true" id="server.isSecure"
-              label="&isSecure.label;" oncommand="secureSelect();"
+              label="&isSecure.label;" hidefor="pop3,imap,movemail"
+              oncommand="secureSelect();"
               accesskey="&isSecure.accesskey;"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.isSecure"/>
@@ -121,6 +138,11 @@
               accesskey="&useSecAuth.accesskey;"
               prefattribute="value"
               prefstring="mail.server.%serverkey%.useSecAuth"/>
+  </groupbox>
+
+  <groupbox>
+    <caption label="&serverSettings.label;"/>
+    <vbox align="start">
     <checkbox wsm_persist="true"
               id="server.loginAtStartUp" hidefor="nntp"
               label="&loginAtStartup.label;"

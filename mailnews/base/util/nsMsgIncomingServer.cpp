@@ -1819,7 +1819,11 @@ NS_IMETHODIMP nsMsgIncomingServer::GetSocketType(PRInt32 *aSocketType)
 
 NS_IMETHODIMP nsMsgIncomingServer::SetSocketType(PRInt32 aSocketType)
 {
-  return SetIntValue("socketType", aSocketType);
+  nsCAutoString fullPrefName;
+  getPrefName(m_serverKey.get(), "socketType", fullPrefName);
+  nsresult rv = m_prefBranch->SetIntPref(fullPrefName.get(), aSocketType);
+
+  return rv;
 }
 
 // Check if the password is available and return a boolean indicating whether 

@@ -81,6 +81,7 @@
 #include "nsIPrefService.h"
 #include "nsIPrefLocalizedString.h"
 #include "nsISocketTransport.h"
+#include "nsISSLSocketControl.h"
 
 #define EXTRA_SAFETY_SPACE 3096
 
@@ -535,11 +536,11 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
   m_totalDownloadSize = 0;
   m_totalBytesReceived = 0;
   m_responseTimeout = 45;
+  m_tlsEnabled = PR_FALSE;
+  m_socketType = nsIMsgIncomingServer::tryTLS;
 
   if (aURL)
   {
-    PRBool isSecure = PR_FALSE;
-
     // extract out message feedback if there is any.
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aURL);
     if (mailnewsUrl)
@@ -549,7 +550,7 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
       mailnewsUrl->GetServer(getter_AddRefs(server));
       NS_ENSURE_TRUE(server, NS_MSG_INVALID_OR_MISSING_SERVER);
 
-      rv = server->GetIsSecure(&isSecure);
+      rv = server->GetSocketType(&m_socketType);
       NS_ENSURE_SUCCESS(rv,rv);
 
       rv = server->GetUseSecAuth(&m_useSecAuth);
@@ -566,7 +567,7 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
     // pass an interface requestor down to the socket transport so that PSM can
     // retrieve a nsIPrompt instance if needed.
     nsCOMPtr<nsIInterfaceRequestor> ir;
-    if (isSecure)
+    if (m_socketType != nsIMsgIncomingServer::defaultSocket)
     {
       nsCOMPtr<nsIMsgWindow> msgwin;
       mailnewsUrl->GetMsgWindow(getter_AddRefs(msgwin));
@@ -589,8 +590,19 @@ nsresult nsPop3Protocol::Initialize(nsIURI * aURL)
     rv = NS_ExamineForProxy("pop", hostName.get(), port, getter_AddRefs(proxyInfo));
     if (NS_FAILED(rv)) proxyInfo = nsnull;
 
-    rv = OpenNetworkSocketWithInfo(hostName.get(), port, 
-                                  (isSecure) ? "ssl" : nsnull, proxyInfo, ir);
+    const char *connectionType = nsnull;
+    if (m_socketType == nsIMsgIncomingServer::useSSL)
+      connectionType = "ssl";
+    else if (m_socketType == nsIMsgIncomingServer::tryTLS ||
+          m_socketType == nsIMsgIncomingServer::alwaysUseTLS)
+        connectionType = "starttls";
+
+    rv = OpenNetworkSocketWithInfo(hostName.get(), port, connectionType, proxyInfo, ir);
+    if (NS_FAILED(rv) && m_socketType == nsIMsgIncomingServer::tryTLS)
+    {
+      m_socketType = nsIMsgIncomingServer::defaultSocket;
+      rv = OpenNetworkSocketWithInfo(hostName.get(), port, nsnull, proxyInfo, ir);
+    }
 
     if(NS_FAILED(rv))
       return rv;
@@ -1127,7 +1139,7 @@ PRInt32 nsPop3Protocol::SendData(nsIURI * aURL, const char * dataBuffer, PRBool 
 }
 
 /*
- * POP3 AUTH LOGIN extention
+ * POP3 AUTH extension
  */
 
 PRInt32 nsPop3Protocol::SendAuth()
@@ -1216,7 +1228,7 @@ PRInt32 nsPop3Protocol::AuthResponse(nsIInputStream* inputStream,
 }
 
 /*
- * POP3 CAPA extention, see RFC 2449, chapter 5
+ * POP3 CAPA extension, see RFC 2449, chapter 5
  */
 
 PRInt32 nsPop3Protocol::SendCapa()
@@ -1289,6 +1301,19 @@ PRInt32 nsPop3Protocol::CapaResponse(nsIInputStream* inputStream,
         m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
     }
     else
+    // see RFC 2595, chapter 4
+    if (!PL_strcasecmp(line, "STLS")) 
+    {
+        nsresult rv;
+        nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
+        // this checks if psm is installed...
+        if (NS_SUCCEEDED(rv))
+        {
+            SetCapFlag(POP3_HAS_STLS);
+            m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+        }
+    }
+    else
     // see RFC 2449, chapter 6.3
     if (!PL_strncasecmp(line, "SASL", 4))
     {
@@ -1325,8 +1350,71 @@ PRInt32 nsPop3Protocol::CapaResponse(nsIInputStream* inputStream,
     return 0;
 }
 
+PRInt32 nsPop3Protocol::SendTLSResponse()
+{
+  // only tear down our existing connection and open a new one if we received
+  // a +OK response from the pop server after we issued the STLS command
+  nsresult rv = NS_OK;
+  if (m_pop3ConData->command_succeeded) 
+  {
+      nsCOMPtr<nsISupports> secInfo;
+      nsCOMPtr<nsISocketTransport> strans = do_QueryInterface(m_transport, &rv);
+      if (NS_FAILED(rv)) return rv;
+
+      rv = strans->GetSecurityInfo(getter_AddRefs(secInfo));
+
+      if (NS_SUCCEEDED(rv) && secInfo)
+      {
+          nsCOMPtr<nsISSLSocketControl> sslControl = do_QueryInterface(secInfo, &rv);
+
+          if (NS_SUCCEEDED(rv) && sslControl)
+              rv = sslControl->StartTLS();
+      }
+
+    if (NS_SUCCEEDED(rv))
+    {
+      m_pop3ConData->next_state = POP3_SEND_AUTH;
+      m_tlsEnabled = PR_TRUE;
+      m_pop3ConData->capability_flags =     // resetting the flags
+        POP3_AUTH_MECH_UNDEFINED |
+        POP3_HAS_AUTH_USER |                // should be always there
+        POP3_GURL_UNDEFINED |
+        POP3_UIDL_UNDEFINED |
+        POP3_TOP_UNDEFINED |
+        POP3_XTND_XLST_UNDEFINED;
+      m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
+      return rv;
+    }
+  }
+
+  ClearFlag(POP3_HAS_STLS);
+  m_pop3ConData->next_state = POP3_PROCESS_AUTH;
+
+  return rv;
+}
+
 PRInt32 nsPop3Protocol::ProcessAuth()
 {
+    if (!m_tlsEnabled)
+    {
+      if(TestCapFlag(POP3_HAS_STLS))
+      {
+        if (m_socketType == nsIMsgIncomingServer::tryTLS ||
+            m_socketType == nsIMsgIncomingServer::alwaysUseTLS)
+        {
+            nsCAutoString command("CAPA" CRLF);
+
+            m_pop3ConData->next_state_after_response = POP3_TLS_RESPONSE;
+            return SendData(m_url, command.get());
+        }
+      }
+      else if (m_socketType == nsIMsgIncomingServer::alwaysUseTLS)
+      {
+          m_pop3ConData->next_state = POP3_ERROR_DONE;
+          return(Error(NS_ERROR_COULD_NOT_CONNECT_VIA_TLS));
+      }
+    }
+
     m_password_already_sent = PR_FALSE;
 
     if(m_useSecAuth)
@@ -3513,6 +3601,10 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
       status = CapaResponse(aInputStream, aLength);
       break;
       
+    case POP3_TLS_RESPONSE:
+      status = SendTLSResponse();
+      break;
+
     case POP3_PROCESS_AUTH:
       status = ProcessAuth();
       break;
