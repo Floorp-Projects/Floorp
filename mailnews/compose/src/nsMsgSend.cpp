@@ -35,6 +35,7 @@
 #include "nsIMimeConverter.h"
 #include "nsEscape.h"
 #include "nsIPref.h"
+#include "nsMsgTransition.h"
 
 /* use these macros to define a class IID for our component. Our object currently supports two interfaces 
    (nsISupports and nsIMsgCompose) so we want to define constants for these two interfaces */
