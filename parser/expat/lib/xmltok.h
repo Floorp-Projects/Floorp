@@ -94,6 +94,10 @@ extern "C" {
 /* The following token is returned only by XmlCdataSectionTok */
 #define XML_TOK_CDATA_SECT_CLOSE 40
 
+/* With namespace processing this is returned by XmlPrologTok
+   for a name with a colon. */
+#define XML_TOK_PREFIXED_NAME 41
+
 #define XML_N_STATES 3
 #define XML_PROLOG_STATE 0
 #define XML_CONTENT_STATE 1
@@ -269,6 +273,23 @@ XmlInitUnknownEncoding(void *mem,
 		       int (*convert)(void *userData, const char *p),
 		       void *userData);
 
+int XMLTOKAPI XmlParseXmlDeclNS(int isGeneralTextEntity,
+			        const ENCODING *enc,
+			        const char *ptr,
+	  		        const char *end,
+			        const char **badPtr,
+			        const char **versionPtr,
+			        const char **encodingNamePtr,
+			        const ENCODING **namedEncodingPtr,
+			        int *standalonePtr);
+int XMLTOKAPI XmlInitEncodingNS(INIT_ENCODING *, const ENCODING **, const char *name);
+const ENCODING XMLTOKAPI *XmlGetUtf8InternalEncodingNS();
+const ENCODING XMLTOKAPI *XmlGetUtf16InternalEncodingNS();
+ENCODING XMLTOKAPI *
+XmlInitUnknownEncodingNS(void *mem,
+		         int *table,
+		         int (*convert)(void *userData, const char *p),
+		         void *userData);
 #ifdef __cplusplus
 }
 #endif

@@ -149,6 +149,7 @@ int doctype0(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
+  case XML_TOK_PREFIXED_NAME:
     state->handler = doctype1;
     return XML_ROLE_DOCTYPE_NAME;
   }
@@ -610,6 +611,7 @@ int attlist0(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
+  case XML_TOK_PREFIXED_NAME:
     state->handler = attlist1;
     return XML_ROLE_ATTLIST_ELEMENT_NAME;
   }
@@ -630,6 +632,7 @@ int attlist1(PROLOG_STATE *state,
     state->handler = internalSubset;
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
+  case XML_TOK_PREFIXED_NAME:
     state->handler = attlist2;
     return XML_ROLE_ATTRIBUTE_NAME;
   }
@@ -689,6 +692,7 @@ int attlist3(PROLOG_STATE *state,
     return XML_ROLE_NONE;
   case XML_TOK_NMTOKEN:
   case XML_TOK_NAME:
+  case XML_TOK_PREFIXED_NAME:
     state->handler = attlist4;
     return XML_ROLE_ATTRIBUTE_ENUM_VALUE;
   }
@@ -836,6 +840,7 @@ int element0(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
+  case XML_TOK_PREFIXED_NAME:
     state->handler = element1;
     return XML_ROLE_ELEMENT_NAME;
   }
@@ -893,6 +898,7 @@ int element2(PROLOG_STATE *state,
     state->handler = element6;
     return XML_ROLE_GROUP_OPEN;
   case XML_TOK_NAME:
+  case XML_TOK_PREFIXED_NAME:
     state->handler = element7;
     return XML_ROLE_CONTENT_ELEMENT;
   case XML_TOK_NAME_QUESTION:
@@ -940,6 +946,7 @@ int element4(PROLOG_STATE *state,
   case XML_TOK_PROLOG_S:
     return XML_ROLE_NONE;
   case XML_TOK_NAME:
+  case XML_TOK_PREFIXED_NAME:
     state->handler = element5;
     return XML_ROLE_CONTENT_ELEMENT;
   }
@@ -980,6 +987,7 @@ int element6(PROLOG_STATE *state,
     state->level += 1;
     return XML_ROLE_GROUP_OPEN;
   case XML_TOK_NAME:
+  case XML_TOK_PREFIXED_NAME:
     state->handler = element7;
     return XML_ROLE_CONTENT_ELEMENT;
   case XML_TOK_NAME_QUESTION:

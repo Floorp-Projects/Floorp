@@ -42,6 +42,7 @@ enum {
   BT_LSQB,
   BT_S,
   BT_NMSTRT,
+  BT_COLON,
   BT_HEX,
   BT_DIGIT,
   BT_NAME,
