@@ -159,45 +159,42 @@ NS_IMETHODIMP nsImapUrl::SetImapAction(nsImapAction aImapAction)
 NS_IMETHODIMP nsImapUrl::GetImapMailFolderSink(nsIImapMailFolderSink **
                                            aImapMailFolderSink)
 {
-	if (aImapMailFolderSink)
-	{
-		*aImapMailFolderSink = m_imapMailFolderSink;
-		NS_IF_ADDREF(*aImapMailFolderSink);
-	}
+    NS_ENSURE_ARG_POINTER(aImapMailFolderSink);
+    NS_ENSURE_ARG_POINTER(m_imapMailFolderSink);
 
-	return NS_OK;
+    nsCOMPtr<nsIImapMailFolderSink> folderSink = do_QueryReferent(m_imapMailFolderSink);
+    *aImapMailFolderSink = folderSink;
+    NS_IF_ADDREF(*aImapMailFolderSink);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::SetImapMailFolderSink(nsIImapMailFolderSink  * aImapMailFolderSink)
 {
-    // ** jt - not ref counted; talk to me before you change the code
-    m_imapMailFolderSink = aImapMailFolderSink;
-
+    m_imapMailFolderSink = getter_AddRefs(NS_GetWeakReference(aImapMailFolderSink));
 	return NS_OK;
 }
  
 NS_IMETHODIMP nsImapUrl::GetImapMessageSink(nsIImapMessageSink ** aImapMessageSink)
 {
-	if (aImapMessageSink)
-	{
-		*aImapMessageSink = m_imapMessageSink;
-		NS_IF_ADDREF(*aImapMessageSink);
-	}
+    NS_ENSURE_ARG_POINTER(aImapMessageSink);
+    NS_ENSURE_ARG_POINTER(m_imapMessageSink);
 
-	return NS_OK;
+    nsCOMPtr<nsIImapMessageSink> messageSink = do_QueryReferent(m_imapMessageSink);
+    *aImapMessageSink = messageSink;
+    NS_IF_ADDREF(*aImapMessageSink);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::SetImapMessageSink(nsIImapMessageSink  * aImapMessageSink)
 {
-    // ** jt - not ref counted; talk to me before you change the code
-    m_imapMessageSink = aImapMessageSink;
-
+    m_imapMessageSink = getter_AddRefs(NS_GetWeakReference(aImapMessageSink));
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::GetImapServerSink(nsIImapServerSink ** aImapServerSink)
 {
     NS_ENSURE_ARG_POINTER(aImapServerSink);
+    NS_ENSURE_ARG_POINTER(m_imapServerSink);
 
     nsCOMPtr<nsIImapServerSink> serverSink = do_QueryReferent(m_imapServerSink);
     *aImapServerSink = serverSink;
@@ -208,46 +205,42 @@ NS_IMETHODIMP nsImapUrl::GetImapServerSink(nsIImapServerSink ** aImapServerSink)
 NS_IMETHODIMP nsImapUrl::SetImapServerSink(nsIImapServerSink  * aImapServerSink)
 {
     m_imapServerSink = getter_AddRefs(NS_GetWeakReference(aImapServerSink));
-
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::GetImapExtensionSink(nsIImapExtensionSink ** aImapExtensionSink)
 {
-	if (aImapExtensionSink)
-	{
-		*aImapExtensionSink = m_imapExtensionSink;
-		NS_IF_ADDREF(*aImapExtensionSink);
-	}
+    NS_ENSURE_ARG_POINTER(aImapExtensionSink);
+    NS_ENSURE_ARG_POINTER(m_imapExtensionSink);
 
-	return NS_OK;
+    nsCOMPtr<nsIImapExtensionSink> extensionSink = do_QueryReferent(m_imapExtensionSink);
+    *aImapExtensionSink = extensionSink;
+    NS_IF_ADDREF(*aImapExtensionSink);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::SetImapExtensionSink(nsIImapExtensionSink  * aImapExtensionSink)
 {
-  // ** jt - not ref counted; talk to me before you change the code
-  m_imapExtensionSink = aImapExtensionSink;
-
+    m_imapExtensionSink = getter_AddRefs(NS_GetWeakReference(aImapExtensionSink));
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::GetImapMiscellaneousSink(nsIImapMiscellaneousSink **
                                               aImapMiscellaneousSink)
 {
-	if (aImapMiscellaneousSink)
-	{
-		*aImapMiscellaneousSink = m_imapMiscellaneousSink;
-		NS_IF_ADDREF(*aImapMiscellaneousSink);
-	}
+    NS_ENSURE_ARG_POINTER(aImapMiscellaneousSink);
+    NS_ENSURE_ARG_POINTER(m_imapMiscellaneousSink);
 
-	return NS_OK;
+    nsCOMPtr<nsIImapMiscellaneousSink> miscSink = do_QueryReferent(m_imapMiscellaneousSink);
+    *aImapMiscellaneousSink = miscSink;
+    NS_IF_ADDREF(*aImapMiscellaneousSink);
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsImapUrl::SetImapMiscellaneousSink(nsIImapMiscellaneousSink  *
                                               aImapMiscellaneousSink)
 {
-  // ** jt - not ref counted; talk to me before you change the code
-  m_imapMiscellaneousSink = aImapMiscellaneousSink;
+    m_imapMiscellaneousSink = getter_AddRefs(NS_GetWeakReference(aImapMiscellaneousSink));
 	return NS_OK;
 }
 
@@ -1308,3 +1301,4 @@ NS_IMETHODIMP nsImapUrl::SetCharsetOverRide(const PRUnichar * aCharacterSet)
   mCharsetOverride = aCharacterSet;
   return NS_OK;
 }
+

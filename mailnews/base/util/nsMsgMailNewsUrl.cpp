@@ -33,10 +33,12 @@
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIIOService.h"
 
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 {
@@ -450,7 +452,13 @@ NS_IMETHODIMP nsMsgMailNewsUrl::Equals(nsIURI *other, PRBool *_retval)
 
 NS_IMETHODIMP nsMsgMailNewsUrl::Clone(nsIURI **_retval)
 {
-	return m_baseURL->Clone(_retval);
+  nsresult rv;
+  nsXPIDLCString urlSpec;
+  nsCOMPtr<nsIIOService> ioService = do_GetService(kIOServiceCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  rv = GetSpec(getter_Copies(urlSpec));
+  if (NS_FAILED(rv)) return rv;
+  return ioService->NewURI(urlSpec, nsnull, _retval);
 }	
 
 NS_IMETHODIMP nsMsgMailNewsUrl::Resolve(const char *relativePath, char **result) 

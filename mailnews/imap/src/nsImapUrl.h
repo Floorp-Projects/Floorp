@@ -103,14 +103,10 @@ protected:
 	imapMessageFlagsType	m_flags;
 	nsImapAction			m_imapAction;
     
-  // ** jt -- I am not usring nsCOMPtr here because I don't know when the
-  // usr get deleted; netlib has a strange manipulation over the transport
-  // layer; the runningUrl can get swapped; using nsCOMPtr can cause object
-  // never gets freed. 
-  nsIImapMailFolderSink* m_imapMailFolderSink;   // not ref counted
-  nsIImapMessageSink*	m_imapMessageSink;   // not ref counted
-  nsIImapExtensionSink*	m_imapExtensionSink;  // not ref counted
-  nsIImapMiscellaneousSink* m_imapMiscellaneousSink;  // not ref counted
+  nsWeakPtr m_imapMailFolderSink;
+  nsWeakPtr	m_imapMessageSink;
+  nsWeakPtr	m_imapExtensionSink;
+  nsWeakPtr m_imapMiscellaneousSink;
 
   nsWeakPtr m_imapServerSink;
 
