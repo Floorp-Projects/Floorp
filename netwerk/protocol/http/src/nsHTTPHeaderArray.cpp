@@ -148,7 +148,8 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
     }
     NS_ADDREF(entry);
     // XXX this method incorrectly returns a bool
-    nsresult rv = mHTTPHeaders->AppendElement(entry) ? NS_OK : NS_ERROR_FAILURE;
+    nsresult rv = mHTTPHeaders->AppendElement(entry) ? 
+        NS_OK : NS_ERROR_FAILURE;
     NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
   } 
   // 
@@ -164,7 +165,8 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
         entry->mValue.Append(LF);
         entry->mValue.Append(aValue);
     } else {
-        // delimit each value from the others using a comma(HTTP spec delimiter)
+        // delimit each value from the others using a comma
+        // (HTTP spec delimiter)
         entry->mValue.Append(", ");
         entry->mValue.Append(aValue);
     }
@@ -258,29 +260,22 @@ nsresult nsHTTPHeaderArray::GetEnumerator(nsISimpleEnumerator** aResult)
 
 PRBool nsHTTPHeaderArray::IsHeaderMultiple(nsIAtom* aHeader)
 {
-  PRBool bIsMultiple;
-
   //
   // The following Request headers *must* have a single value.
   //
-  if ((nsHTTPAtoms::Accept_Charset      == aHeader) ||
+  return ((nsHTTPAtoms::Accept_Charset      == aHeader) ||
+      (nsHTTPAtoms::Authorization       == aHeader) ||
       (nsHTTPAtoms::From                == aHeader) || 
       (nsHTTPAtoms::Host                == aHeader) ||
       (nsHTTPAtoms::If_Modified_Since   == aHeader) ||
       (nsHTTPAtoms::If_Unmodified_Since == aHeader) ||
+      (nsHTTPAtoms::Location            == aHeader) ||
       (nsHTTPAtoms::Max_Forwards        == aHeader) ||
       (nsHTTPAtoms::Referer             == aHeader) ||
-      (nsHTTPAtoms::User_Agent          == aHeader) ||
-      (nsHTTPAtoms::Authorization       == aHeader)) {
-    bIsMultiple = PR_FALSE;
-  } else {
-    bIsMultiple = PR_TRUE;
-  }
-
-  return bIsMultiple;
+      (nsHTTPAtoms::User_Agent          == aHeader)
+      ) ? 
+    PR_FALSE : PR_TRUE;
 }
-
-
 
 
 nsHTTPHeaderEnumerator::nsHTTPHeaderEnumerator(nsISupportsArray* aHeaderArray)
@@ -451,6 +446,8 @@ nsHTTPHeaderArray::GetStandardHeaderName(nsIAtom* aAtom, const char** aResult)
         *aResult = "Retry-After";
     else if (nsHTTPAtoms::Server == aAtom)
         *aResult = "Server";
+    else if (nsHTTPAtoms::Set_Cookie == aAtom)
+        *aResult = "Set-Cookie";
     else if (nsHTTPAtoms::TE == aAtom)
         *aResult = "TE";
     else if (nsHTTPAtoms::Title == aAtom)
@@ -471,8 +468,6 @@ nsHTTPHeaderArray::GetStandardHeaderName(nsIAtom* aAtom, const char** aResult)
         *aResult = "Warning";
     else if (nsHTTPAtoms::WWW_Authenticate == aAtom)
         *aResult = "WWW-Authenticate";
-    else if (nsHTTPAtoms::Set_Cookie == aAtom)
-        *aResult = "Set-Cookie";
     else
         *aResult = nsnull;
 }
