@@ -240,31 +240,31 @@ static Components gComponents[] = {
   { "Charset Detection Adaptor", &kCharsetDetectionAdaptorCID,
     NS_CHARSET_DETECTION_ADAPTOR_PROGID, },
   { "PSM based Japanese Charset Detector", &kJAPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "japsm", },
+    NS_CHARSET_DETECTOR_PROGID_BASE "ja_parallel_state_machine", },
   { "PSM based Japanese String Charset Detector", &kJAStringPSMDetectorCID,
-    NS_STRCDETECTOR_PROGID_BASE "japsm", },
+    NS_STRCDETECTOR_PROGID_BASE "ja_parallel_state_machine", },
   { "PSM based Korean Charset Detector", &kKOPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "kopsm", },
+    NS_CHARSET_DETECTOR_PROGID_BASE "ko_parallel_state_machine", },
   { "PSM based Korean String Charset Detector", &kKOStringPSMDetectorCID,
-    NS_STRCDETECTOR_PROGID_BASE "kopsm", },
+    NS_STRCDETECTOR_PROGID_BASE "ko_parallel_state_machine", },
   { "PSM based Traditional Chinese Charset Detector", &kZHTWPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "zhtwpsm", },
+    NS_CHARSET_DETECTOR_PROGID_BASE "zhtw_parallel_state_machine", },
   { "PSM based Traditional Chinese String Charset Detector",
     &kZHTWStringPSMDetectorCID, 
-    NS_STRCDETECTOR_PROGID_BASE "zhtwpsm", },
+    NS_STRCDETECTOR_PROGID_BASE "zhtw_parallel_state_machine", },
   { "PSM based Simplified Chinese Charset Detector", &kZHCNPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "zhcnpsm", },
+    NS_CHARSET_DETECTOR_PROGID_BASE "zhcn_parallel_state_machine", },
   { "PSM based Simplified Chinese String Charset Detector",
     &kZHCNStringPSMDetectorCID, 
-    NS_STRCDETECTOR_PROGID_BASE "zhcnpsm", },
+    NS_STRCDETECTOR_PROGID_BASE "zhcn_parallel_state_machine", },
   { "PSM based Chinese Charset Detector", &kZHPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "zhpsm", },
+    NS_CHARSET_DETECTOR_PROGID_BASE "zh_parallel_state_machine", },
   { "PSM based Chinese String Charset Detector", &kZHStringPSMDetectorCID,
-    NS_STRCDETECTOR_PROGID_BASE "zhpsm", },
+    NS_STRCDETECTOR_PROGID_BASE "zh_parallel_state_machine", },
   { "PSM based CJK Charset Detector", &kCJKPSMDetectorCID,
-    NS_CHARSET_DETECTOR_PROGID_BASE "cjkpsm", },
+    NS_CHARSET_DETECTOR_PROGID_BASE "cjk_parallel_state_machine", },
   { "PSM based CJK String Charset Detector", &kCJKStringPSMDetectorCID,
-    NS_STRCDETECTOR_PROGID_BASE "cjkpsm", },
+    NS_STRCDETECTOR_PROGID_BASE "cjk_parallel_state_machine", },
   { "Probability based Russian Charset Detector", &kRUProbDetectorCID,
     NS_CHARSET_DETECTOR_PROGID_BASE "ruprob", },
   { "Probability based Ukrainian Charset Detector", &kUKProbDetectorCID,
@@ -338,39 +338,39 @@ nsCharDetModule::RegisterSelf(nsIComponentManager *aCompMgr,
     rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Off");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
-                              NS_CHARSET_DETECTOR_REG_BASE "japsm" ,&key);
+                              NS_CHARSET_DETECTOR_REG_BASE "ja_parallel_state_machine" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "japsm");
+    rv = registry-> SetStringUTF8(key, "type", "ja_parallel_state_machine");
     rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Japanese");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
-                              NS_CHARSET_DETECTOR_REG_BASE "kopsm" ,&key);
+                              NS_CHARSET_DETECTOR_REG_BASE "ko_parallel_state_machine" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "kopsm");
+    rv = registry-> SetStringUTF8(key, "type", "ko_parallel_state_machine");
     rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Korean");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
-                           NS_CHARSET_DETECTOR_REG_BASE "zhtwpsm" ,&key);
+                           NS_CHARSET_DETECTOR_REG_BASE "zhtw_parallel_state_machine" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "zhtwpsm");
+    rv = registry-> SetStringUTF8(key, "type", "zhtw_parallel_state_machine");
     rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Traditional Chinese");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
-                           NS_CHARSET_DETECTOR_REG_BASE "zhcnpsm" ,&key);
+                           NS_CHARSET_DETECTOR_REG_BASE "zhcn_parallel_state_machine" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "zhtwpsm");
+    rv = registry-> SetStringUTF8(key, "type", "zhtw_parallel_state_machine");
     rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Simplified Chinese");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
-                           NS_CHARSET_DETECTOR_REG_BASE "zhpsm" ,&key);
+                           NS_CHARSET_DETECTOR_REG_BASE "zh_parallel_state_machine" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "zhpsm");
+    rv = registry-> SetStringUTF8(key, "type", "zh_parallel_state_machine");
     rv = registry-> SetStringUTF8(key, "defaultEnglishText", "Chinese");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
-                           NS_CHARSET_DETECTOR_REG_BASE "cjkpsm" ,&key);
+                           NS_CHARSET_DETECTOR_REG_BASE "cjk_parallel_state_machine" ,&key);
   if (NS_SUCCEEDED(rv)) {
-    rv = registry-> SetStringUTF8(key, "type", "cjkpsm");
+    rv = registry-> SetStringUTF8(key, "type", "cjk_parallel_state_machine");
     rv = registry-> SetStringUTF8(key, "defaultEnglishText", "East Asian");
   }
   rv = registry -> AddSubtree(nsIRegistry::Common, 
