@@ -146,7 +146,7 @@ protected:
   void StartTimeout();
   nsresult Init();
   void Shutdown();
-  nsresult UseInWindow(nsIDOMWindow *aDomWin, nsIDOMWindow **aStartWin);
+  nsresult UseInWindow(nsIDOMWindow *aDomWin);
   void SetSelectionLook(nsIPresShell *aPresShell, PRBool aChangeColor, 
                         PRBool aEnabled);
   void ResetGlobalAutoStart(PRBool aAutoStart);

@@ -473,17 +473,16 @@ nsTypeAheadFind::Observe(nsISupports *aSubject, const char *aTopic,
 
 
 nsresult
-nsTypeAheadFind::UseInWindow(nsIDOMWindow *aDOMWin, nsIDOMWindow **aStartWindow)
+nsTypeAheadFind::UseInWindow(nsIDOMWindow *aDOMWin)
 {
   NS_ENSURE_ARG_POINTER(aDOMWin);
-  NS_ENSURE_ARG_POINTER(aStartWindow);
 
   // Set member variables and listeners up for new window and doc
 
   mFindNextBuffer.Truncate();
   CancelFind();
 
-  GetStartWindow(aDOMWin, aStartWindow);
+  GetStartWindow(aDOMWin, getter_AddRefs(mFocusedWindow));
 
   nsCOMPtr<nsIDOMDocument> domDoc;
   aDOMWin->GetDocument(getter_AddRefs(domDoc));
@@ -513,7 +512,6 @@ nsTypeAheadFind::UseInWindow(nsIDOMWindow *aDOMWin, nsIDOMWindow **aStartWindow)
   RemoveDocListeners();
 
   mIsFindAllowedInWindow = PR_TRUE;
-  mFocusedWindow = aDOMWin;
   mFocusedWeakShell = do_GetWeakReference(presShell);
 
   // Add scroll position and selection listeners, so we can cancel
@@ -1801,17 +1799,16 @@ nsTypeAheadFind::StartNewFind(nsIDOMWindow *aWindow, PRBool aLinksOnly)
 
   // This routine will set up the doc listeners
   // Do it first, it does a CancelFind()
-  nsCOMPtr<nsIDOMWindow> startWindow;
-  UseInWindow(aWindow, getter_AddRefs(startWindow));
+  UseInWindow(aWindow);
 
   mLinksOnly = aLinksOnly;
   mLinksOnlyManuallySet = PR_TRUE;
   mRepeatingMode = eRepeatingNone;
 
   PRBool isAutoStartWin;
-  GetAutoStart(startWindow, &isAutoStartWin);
+  GetAutoStart(mFocusedWindow, &isAutoStartWin);
   if (!isAutoStartWin) {
-    AttachWindowListeners(startWindow);
+    AttachWindowListeners(mFocusedWindow);
   }
 
   if (mFocusedDocSelection) {
@@ -2420,18 +2417,6 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
   nsCOMPtr<nsIDOMWindow> topContentWin;
   GetStartWindow(domWin, getter_AddRefs(topContentWin));
 
-  if (topContentWin != mFocusedWindow) {
-    mFocusedWindow = topContentWin;
-    GetAutoStart(topContentWin, &mIsFindAllowedInWindow);
-    if (mIsFindAllowedInWindow) {
-      UseInWindow(topContentWin, getter_AddRefs(mFocusedWindow));
-    }
-  }
-  if (!mIsFindAllowedInWindow) {
-    return NS_OK;
-  }
-
-
   // ---------- Get presshell -----------
 
   nsCOMPtr<nsIPresShell> presShell;
@@ -2441,6 +2426,16 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
   }
 
   nsCOMPtr<nsIPresShell> lastShell(do_QueryReferent(mFocusedWeakShell));
+
+  if (lastShell != presShell || topContentWin != mFocusedWindow) {
+    GetAutoStart(topContentWin, &mIsFindAllowedInWindow);
+    if (mIsFindAllowedInWindow) {
+      UseInWindow(topContentWin);
+    }
+  }
+  if (!mIsFindAllowedInWindow) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsIPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
@@ -2456,11 +2451,6 @@ nsTypeAheadFind::GetTargetIfTypeAheadOkay(nsIDOMEvent *aEvent,
     return NS_OK;
   }
   
-  if (lastShell != presShell) {
-    // Same window, but a new document, so start fresh
-    UseInWindow(domWin, getter_AddRefs(mFocusedWindow));
-  }
-
   NS_ADDREF(*aTargetPresShell = presShell);  
   return NS_OK;
 }
