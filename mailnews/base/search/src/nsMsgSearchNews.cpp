@@ -37,6 +37,7 @@
 #include "msgCore.h"
 #include "nsMsgSearchAdapter.h"
 #include "nsXPIDLString.h"
+#include "nsUnicharUtils.h"
 #include "nsReadableUtils.h"
 #include "nsMsgSearchScopeTerm.h"
 #include "nsMsgResultElement.h"
@@ -107,8 +108,8 @@ PRUnichar *nsMsgSearchNews::EncodeToWildmat (const PRUnichar *value)
 			if (nsCRT::IsAsciiAlpha(*value))
 			{
 				*walkValue++ = (PRUnichar)'[';
-				*walkValue++ = nsCRT::ToUpper((PRUnichar)*value);
-				*walkValue++ = nsCRT::ToLower((PRUnichar)*value);
+				*walkValue++ = ToUpperCase((PRUnichar)*value);
+				*walkValue++ = ToLowerCase((PRUnichar)*value);
 				*walkValue++ = (PRUnichar)']';
 			}
 			else

@@ -43,6 +43,7 @@
 #include "nsSplittableFrame.h"
 #include "nsLineLayout.h"
 #include "nsString.h"
+#include "nsUnicharUtils.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
 #include "nsStyleConsts.h"
@@ -2571,7 +2572,8 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
     nsIFontMetrics* nextFont;
     nscoord nextY, glyphWidth;
     PRUnichar ch = *aBuffer;
-    if (aTextStyle.mSmallCaps && (nsCRT::IsLower(ch) || (ch == kSZLIG))) {
+    if (aTextStyle.mSmallCaps &&
+        (IsLowerCase(ch) || (ch == kSZLIG))) {
       nextFont = aTextStyle.mSmallFont;
       nextY = smallY;
       PRUnichar upper_ch;
@@ -2579,7 +2581,7 @@ nsTextFrame::RenderString(nsIRenderingContext& aRenderingContext,
       if (ch == kSZLIG)
         upper_ch = (PRUnichar)'S';
       else
-        upper_ch = nsCRT::ToUpper(ch);
+        upper_ch = ToUpperCase(ch);
       if (lastFont != aTextStyle.mSmallFont) {
         aRenderingContext.SetFont(aTextStyle.mSmallFont);
         aRenderingContext.GetWidth(upper_ch, charWidth);
@@ -2707,13 +2709,14 @@ nsTextFrame::GetTextDimensionsOrLength(nsIRenderingContext& aRenderingContext,
   nsTextDimensions sum, glyphDimensions;
   while (--length >= 0) {
     PRUnichar ch = *inBuffer++;
-    if (aStyle.mSmallCaps && (nsCRT::IsLower(ch) || (ch == kSZLIG))) {
+    if (aStyle.mSmallCaps &&
+        (IsLowerCase(ch) || (ch == kSZLIG))) {
       PRUnichar upper_ch;
       // German szlig should be expanded to "SS".
       if (ch == kSZLIG)
         upper_ch = (PRUnichar)'S';
       else
-        upper_ch = nsCRT::ToUpper(ch);
+        upper_ch = ToUpperCase(ch);
       if (lastFont != aStyle.mSmallFont) {
         lastFont = aStyle.mSmallFont;
         aRenderingContext.SetFont(lastFont);
