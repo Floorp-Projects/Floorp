@@ -165,8 +165,6 @@ toolkit.jar:
     content/global/finddialog.xul                               (find/resources/finddialog.xul)
     content/global/replacedialog.js                                (find/resources/replacedialog.js)
     content/global/replacedialog.xul                               (find/resources/replacedialog.xul)
-    content/global/helperAppDldProgress.js                      (ucth/resources/helperAppDldProgress.js)
-    content/global/helperAppDldProgress.xul                     (ucth/resources/helperAppDldProgress.xul)
     content/global/downloadProgress.xul                         (xfer/resources/downloadProgress.xul)
     content/global/downloadProgress.js                          (xfer/resources/downloadProgress.js)
     content/global/autocomplete.xml                             (autocomplete/resources/content/autocomplete.xml)
