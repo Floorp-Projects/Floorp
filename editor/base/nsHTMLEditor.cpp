@@ -3128,12 +3128,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
       return rv;
     nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
 
-    nsCOMPtr<nsIPresShell> shell;
-
- 	  rv = GetPresShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv))
-      return rv;
-    rv = encoder->Init(shell, doc, aFormatType, aFlags);
+    rv = encoder->Init(doc, aFormatType, aFlags);
     if (NS_FAILED(rv))
       return rv;
 
@@ -3205,14 +3200,9 @@ NS_IMETHODIMP nsHTMLEditor::OutputToStream(nsIOutputStream* aOutputStream,
   if (aCharset && aCharset->Length() != 0 && aCharset->Equals("null")==PR_FALSE)
     encoder->SetCharset(*aCharset);
 
-  nsCOMPtr<nsIPresShell> shell;
-
- 	rv = GetPresShell(getter_AddRefs(shell));
-  if (NS_SUCCEEDED(rv)) {
-    rv = encoder->Init(shell,doc, aFormatType, aFlags);
+    rv = encoder->Init(doc, aFormatType, aFlags);
     if (NS_FAILED(rv))
       return rv;
-  }
 
   // Set the selection, if appropriate:
   if (aFlags & nsIDocumentEncoder::OutputSelectionOnly)
