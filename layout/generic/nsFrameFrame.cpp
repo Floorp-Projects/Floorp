@@ -543,6 +543,13 @@ PRInt32 nsHTMLFrameInnerFrame::GetScrolling(nsIContent* aContent, PRBool aStanda
         }
       }      
     }
+
+    // Check style for overflow
+    const nsStyleDisplay* display;
+    GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+    if (display->mOverflow)
+      returnValue = display->mOverflow;
+
   }
   return returnValue;
 }
