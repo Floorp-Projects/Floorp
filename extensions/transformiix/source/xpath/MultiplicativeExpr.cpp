@@ -68,7 +68,7 @@ MultiplicativeExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
     switch ( op ) {
         case DIVIDE:
             if (rightDbl == 0) {
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
                 /* XXX MSVC miscompiles such that (NaN == 0) */
                 if (Double::isNaN(rightDbl))
                     result = Double::NaN;
@@ -89,7 +89,7 @@ MultiplicativeExpr::evaluate(txIEvalContext* aContext, txAExprResult** aResult)
                 result = Double::NaN;
             }
             else {
-#if defined(XP_WIN) || defined(XP_OS2)
+#if defined(XP_WIN)
                 /* Workaround MS fmod bug where 42 % (1/0) => NaN, not 42. */
                 if (!Double::isInfinite(leftDbl) && Double::isInfinite(rightDbl))
                     result = leftDbl;
