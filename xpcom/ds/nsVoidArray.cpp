@@ -1306,6 +1306,7 @@ nsSmallVoidArray::InsertElementAt(void* aElement, PRInt32 aIndex)
 {
   nsVoidArray* vector;
   NS_ASSERTION(!(PtrBits(aElement) & 0x1),"Attempt to add element with 0x1 bit set to nsSmallVoidArray");
+  NS_ASSERTION(aElement != nsnull,"Attempt to add a NULL element to an nsSmallVoidArray");
 
   if (HasSingleChild())
   {
@@ -1337,7 +1338,10 @@ PRBool nsSmallVoidArray::InsertElementsAt(const nsVoidArray &other, PRInt32 aInd
 
 #ifdef DEBUG  
   for (int i = 0; i < count; i++)
+  {
     NS_ASSERTION(!(PtrBits(other.ElementAt(i)) & 0x1),"Attempt to add element with 0x1 bit set to nsSmallVoidArray");
+    NS_ASSERTION(other.ElementAt(i) != nsnull,"Attempt to add a NULL element to an nsSmallVoidArray");
+  }
 #endif
 
   if (!HasVector())
@@ -1369,6 +1373,7 @@ PRBool
 nsSmallVoidArray::ReplaceElementAt(void* aElement, PRInt32 aIndex)
 {
   NS_ASSERTION(!(PtrBits(aElement) & 0x1),"Attempt to add element with 0x1 bit set to nsSmallVoidArray");
+  NS_ASSERTION(aElement != nsnull,"Attempt to add a NULL element to an nsSmallVoidArray");
 
   if (HasSingleChild())
   {
@@ -1393,6 +1398,7 @@ PRBool
 nsSmallVoidArray::AppendElement(void* aElement)
 {
   NS_ASSERTION(!(PtrBits(aElement) & 0x1),"Attempt to add element with 0x1 bit set to nsSmallVoidArray");
+  NS_ASSERTION(aElement != nsnull,"Attempt to add a NULL element to an nsSmallVoidArray");
 
   nsVoidArray* vector;
   if (HasSingleChild())
