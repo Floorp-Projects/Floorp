@@ -85,7 +85,7 @@
 
   <rows>
     <row align="center">
-      <label value="&textInput.label;"/>
+      <label value="&textInput.label;" id="textInputLabel"/>
       <textbox id="textInput" flex="1" oninput="doEnabling()" 
                onfocus="onTextFieldFocus();"/>
     </row>
