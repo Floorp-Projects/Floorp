@@ -59,7 +59,6 @@ NS_IMPL_ISUPPORTS1(nsOS2Charset, nsIPlatformCharset);
 nsOS2Charset::nsOS2Charset()
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
   PR_AtomicIncrement(&gCnt); // count for gInfo
 
   // XXX We should make the following block critical section
@@ -91,7 +90,6 @@ nsOS2Charset::nsOS2Charset()
 
 nsOS2Charset::~nsOS2Charset()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
   PR_AtomicDecrement(&gCnt);
   if(0 == gCnt) {
      delete gInfo;
@@ -113,10 +111,8 @@ class nsOS2CharsetFactory : public nsIFactory {
 public:
    nsOS2CharsetFactory() {
      NS_INIT_REFCNT();
-     PR_AtomicIncrement(&g_InstanceCount);
    }
    virtual ~nsOS2CharsetFactory() {
-     PR_AtomicDecrement(&g_InstanceCount);
    }
 
    NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
@@ -148,10 +144,6 @@ NS_IMETHODIMP nsOS2CharsetFactory::CreateInstance(
 }
 NS_IMETHODIMP nsOS2CharsetFactory::LockFactory(PRBool aLock)
 {
-  if(aLock)
-     PR_AtomicIncrement( &g_LockCount );
-  else
-     PR_AtomicDecrement( &g_LockCount );
   return NS_OK;
 }
 

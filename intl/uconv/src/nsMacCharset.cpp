@@ -57,7 +57,6 @@ NS_IMPL_ISUPPORTS(nsMacCharset, kIPlatformCharsetIID);
 nsMacCharset::nsMacCharset()
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
   PR_AtomicIncrement(&gCnt);
   
   // XXX we should make the following block critical section
@@ -94,7 +93,6 @@ nsMacCharset::nsMacCharset()
 }
 nsMacCharset::~nsMacCharset()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
   PR_AtomicDecrement(&gCnt);
   if((0 == gCnt) && (nsnull != gInfo)) {
   	delete gInfo;

@@ -94,14 +94,12 @@ nsCyrXPCOMDetector:: nsCyrXPCOMDetector(PRUint8 aItems,
 	     : nsCyrillicDetector(aItems, aCyrillicClass, aCharsets)
 {
     NS_INIT_REFCNT();
-    PR_AtomicIncrement(&g_InstanceCount);
     mObserver = nsnull;
 }
 
 //---------------------------------------------------------------------
 nsCyrXPCOMDetector::~nsCyrXPCOMDetector() 
 {
-    PR_AtomicDecrement(&g_InstanceCount);
 }
 
 //---------------------------------------------------------------------
@@ -152,13 +150,11 @@ nsCyrXPCOMStringDetector:: nsCyrXPCOMStringDetector(PRUint8 aItems,
 	     : nsCyrillicDetector(aItems, aCyrillicClass, aCharsets)
 {
     NS_INIT_REFCNT();
-    PR_AtomicIncrement(&g_InstanceCount);
 }
 
 //---------------------------------------------------------------------
 nsCyrXPCOMStringDetector::~nsCyrXPCOMStringDetector() 
 {
-    PR_AtomicDecrement(&g_InstanceCount);
 }
 
 //---------------------------------------------------------------------

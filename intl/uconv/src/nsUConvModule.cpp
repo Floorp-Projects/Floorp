@@ -67,9 +67,6 @@ NS_DEFINE_CID(kUnicodeToCP1252CID, NS_UNICODETOCP1252_CID);
 NS_DEFINE_CID(kUnicodeToMacRomanCID, NS_UNICODETOMACROMAN_CID);
 NS_DEFINE_CID(kUnicodeToUTF8CID, NS_UNICODETOUTF8_CID);
 
-PRInt32 g_InstanceCount = 0;
-PRInt32 g_LockCount = 0;
-
 class nsUConvModule : public nsIModule {
 public:
   nsUConvModule();
@@ -86,8 +83,6 @@ protected:
 
   PRBool mInitialized;
 };
-
-static NS_DEFINE_IID(kIModuleIID, NS_IMODULE_IID);
 
 nsUConvModule::nsUConvModule()
   : mInitialized(PR_FALSE)

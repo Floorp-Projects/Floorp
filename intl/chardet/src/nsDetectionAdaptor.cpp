@@ -86,13 +86,11 @@ NS_IMPL_ISUPPORTS1 ( nsMyObserver ,nsICharsetDetectionObserver);
 nsDetectionAdaptor::nsDetectionAdaptor( void ) 
 {
      NS_INIT_REFCNT();
-     PR_AtomicIncrement(& g_InstanceCount);
      mDontFeedToDetector = PR_TRUE;
 }
 //--------------------------------------------------------------
 nsDetectionAdaptor::~nsDetectionAdaptor()
 {
-     PR_AtomicDecrement(& g_InstanceCount);
 }
 
 //--------------------------------------------------------------

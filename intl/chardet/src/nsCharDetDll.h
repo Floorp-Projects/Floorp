@@ -30,10 +30,4 @@
 #include "nsIStringCharsetDetector.h"
 #include "nsICharsetDetectionAdaptor.h"
 
-#define g_InstanceCount nsCharDetModule_g_InstanceCount
-#define g_LockCount nsCharDetModule_g_LockCount
-
-extern "C" PRInt32 g_InstanceCount;
-extern "C" PRInt32 g_LockCount;
-
 #endif /* nsCharDetDll_h__ */

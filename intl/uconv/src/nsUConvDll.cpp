@@ -58,7 +58,7 @@ NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 {
-  return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+  return PR_FALSE;
 }
 
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,

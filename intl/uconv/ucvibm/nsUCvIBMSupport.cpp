@@ -50,12 +50,10 @@
 nsBasicDecoderSupport::nsBasicDecoderSupport() 
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 
 nsBasicDecoderSupport::~nsBasicDecoderSupport() 
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 //----------------------------------------------------------------------
@@ -364,12 +362,10 @@ NS_IMETHODIMP nsOneByteDecoderSupport::Reset()
 nsBasicEncoder::nsBasicEncoder() 
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 
 nsBasicEncoder::~nsBasicEncoder() 
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 //----------------------------------------------------------------------

@@ -37,12 +37,10 @@ nsDebugDetector::nsDebugDetector( nsDebugDetectorSel aSel)
   mObserver = nsnull;
   mStop = PR_FALSE;
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 //--------------------------------------------------------------------
 nsDebugDetector::~nsDebugDetector()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 //--------------------------------------------------------------------
 NS_IMETHODIMP nsDebugDetector::Init(nsICharsetDetectionObserver* aObserver)

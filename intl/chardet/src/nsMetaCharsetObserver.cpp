@@ -43,7 +43,6 @@ nsMetaCharsetObserver::nsMetaCharsetObserver()
 {
   NS_INIT_REFCNT();
   bMetaCharsetObserverStarted = PR_FALSE;
-  PR_AtomicIncrement(& g_InstanceCount);
   nsresult res;
   mAlias = nsnull;
   NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
@@ -55,7 +54,6 @@ nsMetaCharsetObserver::nsMetaCharsetObserver()
 nsMetaCharsetObserver::~nsMetaCharsetObserver()
 {
   // should we release mAlias
-  PR_AtomicDecrement(& g_InstanceCount);
   if (bMetaCharsetObserverStarted == PR_TRUE)  {
     // call to end the ObserverService
     End();

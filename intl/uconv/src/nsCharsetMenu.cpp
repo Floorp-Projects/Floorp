@@ -371,7 +371,6 @@ nsIRDFResource * nsCharsetMenu::kRDF_type = NULL;
 nsCharsetMenu::nsCharsetMenu() 
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 
   nsresult res = NS_OK;
 
@@ -396,8 +395,6 @@ nsCharsetMenu::~nsCharsetMenu()
   FreeMenuItemArray(&mComposerMenu);
 
   FreeResources();
-
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 // XXX collapse these 2 in one

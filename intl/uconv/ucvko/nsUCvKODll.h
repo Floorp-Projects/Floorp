@@ -25,10 +25,6 @@
 
 #include "prtypes.h"
 
-extern "C" PRInt32 g_InstanceCount;
-extern "C" PRInt32 g_LockCount;
-
-
 extern "C" PRUint16 g_utKSC5601Mapping[];
 extern "C" PRUint16 g_ufKSC5601Mapping[];
 #define g_AsciiMapping ucvko_g_AsciiMapping

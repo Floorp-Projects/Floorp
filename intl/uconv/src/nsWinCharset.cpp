@@ -56,7 +56,6 @@ NS_IMPL_ISUPPORTS1(nsWinCharset, nsIPlatformCharset)
 nsWinCharset::nsWinCharset()
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
   PR_AtomicIncrement(&gCnt); // count for gInfo
 
   // XXX We should make the following block critical section
@@ -87,7 +86,6 @@ nsWinCharset::nsWinCharset()
 }
 nsWinCharset::~nsWinCharset()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
   PR_AtomicDecrement(&gCnt);
   if(0 == gCnt) {
      delete gInfo;

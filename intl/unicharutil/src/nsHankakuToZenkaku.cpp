@@ -129,11 +129,9 @@ NS_IMPL_ISUPPORTS1(nsHankakuToZenkaku, nsITextTransform)
 nsHankakuToZenkaku::nsHankakuToZenkaku()
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 nsHankakuToZenkaku::~nsHankakuToZenkaku()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 NS_IMETHODIMP nsHankakuToZenkaku::Change( nsString& aText, nsString& aResult)

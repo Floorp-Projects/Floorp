@@ -44,10 +44,6 @@ static NS_DEFINE_CID(kKONativeStringDetectorCID,   NS_KO_NATIVE_STRING_DETECTOR_
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
 
-PRInt32 g_InstanceCount = 0;
-PRInt32 g_LockCount = 0;
-
-
 extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
                                            const nsCID &aClass,
                                            const char *aClassName,
@@ -83,7 +79,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 }
 
 extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) {
-  return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+  return PR_FALSE;
 }
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {

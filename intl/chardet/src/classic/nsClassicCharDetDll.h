@@ -25,7 +25,4 @@
 
 #include "prtypes.h"
 
-extern "C" PRInt32 g_InstanceCount;
-extern "C" PRInt32 g_LockCount;
-
 #endif /* nsClassicCharDetDll_h__ */

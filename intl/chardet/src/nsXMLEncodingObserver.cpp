@@ -41,14 +41,11 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 nsXMLEncodingObserver::nsXMLEncodingObserver()
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(& g_InstanceCount);
   bXMLEncodingObserverStarted = PR_FALSE;
 }
 //-------------------------------------------------------------------------
 nsXMLEncodingObserver::~nsXMLEncodingObserver()
 {
-  PR_AtomicDecrement(& g_InstanceCount);
-
   // call to end the ObserverService
   if (bXMLEncodingObserverStarted == PR_TRUE) {
     End();

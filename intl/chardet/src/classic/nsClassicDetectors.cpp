@@ -205,12 +205,10 @@ nsClassicDetector::nsClassicDetector(const char* language)
   NS_INIT_REFCNT();
   mObserver = nsnull;
   PL_strcpy(mLanguage, language);
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
 nsClassicDetector::~nsClassicDetector()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
 NS_IMETHODIMP nsClassicDetector::Init(
@@ -261,12 +259,10 @@ nsClassicStringDetector::nsClassicStringDetector(const char* language)
 {
   NS_INIT_REFCNT();
   PL_strcpy(mLanguage, language);
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
 nsClassicStringDetector::~nsClassicStringDetector()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 //----------------------------------------------------------

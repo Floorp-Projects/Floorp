@@ -213,12 +213,10 @@ static PRUint16 gArabicLigatureMap[] =
 nsBidiUtilsImp::nsBidiUtilsImp()
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 
 nsBidiUtilsImp::~nsBidiUtilsImp()
 {
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 NS_IMETHODIMP nsBidiUtilsImp::GetBidiCategory(PRUnichar aChar, eBidiCategory* oResult)

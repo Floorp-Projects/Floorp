@@ -28,7 +28,6 @@
 nsCharsOrderIdFormater::nsCharsOrderIdFormater( nsCharsList* aList)
 {
   NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
   mList = aList;
   mBase = aList->Length();
 }
@@ -36,7 +35,6 @@ nsCharsOrderIdFormater::nsCharsOrderIdFormater( nsCharsList* aList)
 nsCharsOrderIdFormater::~nsCharsOrderIdFormater()
 {
   delete mList;
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 NS_IMETHOD ToString( PRUint32 aOrder, nsString& aResult) 
@@ -64,20 +62,14 @@ class nsCharsOrderIdFormaterFactory : public nsIFactory {
 public:
   nsCharsOrderIdFormaterFactory(const nsCID &aCID) {
     NS_INIT_REFCNT();
-    PR_AutomicIncrement(&g_InstanceCount);
     mCID = aCID;
   };
   virtual ~nsCharsOrderIdFormaterFactory() {
-    PR_AutomicDecrement(&g_InstanceCount);
   };
   NS_IMETHOD CreateInstance(nsISupports *aDelegate,
                             const nsIID &aIID,
                             void **aResult);
   NS_IMETHOD LockFactory(PRBool aLock) {
-    if(aLock) 
-      PR_AutomicIncrement(&g_LockCount);
-    else
-      PR_AutomicDecrement(&g_LockCount);
     return NS_OK;
   };
 

@@ -151,12 +151,10 @@ nsUnicodeToX11Johab::nsUnicodeToX11Johab()
    v = 0;
    t = 0;
    NS_INIT_REFCNT();
-   PR_AtomicIncrement(&g_InstanceCount);
 
 }
 nsUnicodeToX11Johab::~nsUnicodeToX11Johab()
 {
-   PR_AtomicDecrement(&g_InstanceCount);
 }
 
 //  41	
