@@ -162,7 +162,7 @@ PRBool nsFileSpec::IsFile() const
 //----------------------------------------------------------------------------------------
 {
     struct stat st;
-    return 0 == !mPath.IsEmpty() && stat(mPath, &st) && S_ISREG(st.st_mode); 
+    return !mPath.IsEmpty() && stat(mPath, &st) == 0 && S_ISREG(st.st_mode); 
 } // nsFileSpec::IsFile
 
 //----------------------------------------------------------------------------------------
