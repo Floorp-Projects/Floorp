@@ -45,12 +45,31 @@ public:
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
-                                    PRUint32        aFlagsToUpdate);
+                                    PRUint32        aFlagsToUpdate)
+  {
+    PRInt32 index = 0;
+    nsIFrame* childFrame;
+    FirstChild(aPresContext, nsnull, &childFrame);
+    while (childFrame) {
+      if ((index >= aFirstIndex) &&
+          ((aLastIndex <= 0) || ((aLastIndex > 0) && (index <= aLastIndex)))) {
+        nsMathMLContainerFrame::PropagatePresentationDataFor(aPresContext,
+          childFrame, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+      }
+      index++;
+      childFrame->GetNextSibling(&childFrame);
+    }
+    return NS_OK;
+  }
 
   NS_IMETHOD
   ReResolveScriptStyle(nsIPresContext*  aPresContext,
                        nsIStyleContext* aParentContext,
-                       PRInt32          aParentScriptLevel);
+                       PRInt32          aParentScriptLevel)
+  {
+    nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, aParentScriptLevel);
+    return NS_OK;
+  }
 
   // overloaded nsTableOuterFrame methods
 
@@ -82,10 +101,41 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
+  // Overloaded nsIMathMLFrame methods
+
+  NS_IMETHOD
+  UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
+                                    PRInt32         aFirstIndex,
+                                    PRInt32         aLastIndex,
+                                    PRInt32         aScriptLevelIncrement,
+                                    PRUint32        aFlagsValues,
+                                    PRUint32        aFlagsToUpdate)
+  {
+    PRInt32 index = 0;
+    nsIFrame* childFrame;
+    FirstChild(aPresContext, nsnull, &childFrame);
+    while (childFrame) {
+      if ((index >= aFirstIndex) &&
+          ((aLastIndex <= 0) || ((aLastIndex > 0) && (index <= aLastIndex)))) {
+        nsMathMLContainerFrame::PropagatePresentationDataFor(aPresContext,
+          childFrame, aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+      }
+      index++;
+      childFrame->GetNextSibling(&childFrame);
+    }
+    return NS_OK;
+  }
+
   NS_IMETHOD
   ReResolveScriptStyle(nsIPresContext*  aPresContext,
                        nsIStyleContext* aParentContext,
-                       PRInt32          aParentScriptLevel);
+                       PRInt32          aParentScriptLevel)
+  {
+    nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, aParentScriptLevel);
+    return NS_OK;
+  }
+
+  // overloaded nsBlockFrame methods
 
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,

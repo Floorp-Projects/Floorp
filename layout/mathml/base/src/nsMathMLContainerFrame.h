@@ -25,7 +25,6 @@
 #define nsMathMLContainerFrame_h___
 
 #include "nsCOMPtr.h"
-#include "nsIViewManager.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsBlockFrame.h"
 #include "nsInlineFrame.h"
@@ -34,8 +33,6 @@
 #include "nsMathMLChar.h"
 #include "nsMathMLFrame.h"
 #include "nsMathMLParts.h"
-
-#include "nsCSSValue.h"
 
 /*
  * Base class for MathML container frames. It acts like an inferred 
@@ -91,12 +88,30 @@ public:
                                     PRInt32         aLastIndex,
                                     PRInt32         aScriptLevelIncrement,
                                     PRUint32        aFlagsValues,
-                                    PRUint32        aFlagsToUpdate);
+                                    PRUint32        aFlagsToUpdate)
+  {
+    PRInt32 index = 0;
+    nsIFrame* childFrame = mFrames.FirstChild();
+    while (childFrame) {
+      if ((index >= aFirstIndex) &&
+          ((aLastIndex <= 0) || ((aLastIndex > 0) && (index <= aLastIndex)))) {
+        PropagatePresentationDataFor(aPresContext, childFrame,
+          aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+      }
+      index++;
+      childFrame->GetNextSibling(&childFrame);
+    }
+    return NS_OK;
+  }
 
   NS_IMETHOD
   ReResolveScriptStyle(nsIPresContext*  aPresContext,
                        nsIStyleContext* aParentContext,
-                       PRInt32          aParentScriptLevel);
+                       PRInt32          aParentScriptLevel)
+  {
+    PropagateScriptStyleFor(aPresContext, this, aParentScriptLevel);
+    return NS_OK;
+  }
 
   // --------------------------------------------------------------------------
   // Overloaded nsHTMLContainerFrame methods -- see documentation in nsIFrame.h
@@ -225,20 +240,6 @@ public:
                  nsIRenderingContext& aRenderingContext,
                  nsHTMLReflowMetrics& aDesiredSize);
 
-  // helper to give a style context suitable for doing the stretching to the
-  // MathMLChar. Frame classes that use this should make the extra style contexts
-  // accessible to the Style System via Get/Set AdditionalStyleContext.
-  // return true if the char is a mutable char
-  static PRBool
-  ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
-                         nsIContent*      aContent,
-                         nsIStyleContext* aParenStyleContext,
-                         nsMathMLChar*    aMathMLChar);
-
-  // helper to check if a frame is an embellished container
-  static PRBool
-  IsEmbellishOperator(nsIFrame* aFrame);
-
   // helper method to facilitate getting the reflow and bounding metrics
   // IMPORTANT: This function is only meant to be called in Place() methods 
   // where it is assumed that the frame's rect is still acting as place holder
@@ -248,223 +249,21 @@ public:
                                  nsHTMLReflowMetrics& aReflowMetrics,
                                  nsBoundingMetrics&   aBoundingMetrics);
 
-  // helper to check if a content has an attribute. If content is nsnull or if
-  // the attribute is not there, check if the attribute is on the mstyle hierarchy
-  // @return NS_CONTENT_ATTR_HAS_VALUE --if attribute has non-empty value, attr="value"
-  //         NS_CONTENT_ATTR_NO_VALUE  --if attribute has empty value, attr=""
-  //         NS_CONTENT_ATTR_NOT_THERE --if attribute is not there
-  static nsresult
-  GetAttribute(nsIContent* aContent,
-               nsIFrame*   aMathMLmstyleFrame,          
-               nsIAtom*    aAttributeAtom,
-               nsString&   aValue);
-
-  // utilities to parse and retrieve numeric values in CSS units
-  // All values are stored in twips.
-  static PRBool
-  ParseNumericValue(nsString&   aString,
-                    nsCSSValue& aCSSValue);
-
-  static nscoord 
-  CalcLength(nsIPresContext*   aPresContext,
-             nsIStyleContext*  aStyleContext,
-             const nsCSSValue& aCSSValue);
-
-  static PRBool
-  ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
-                       nsString&   aString,
-                       nsCSSValue& aCSSValue);
-
-  // estimate of the italic correction
+  // helper to let the scriptstyle re-resolution pass through
+  // a subtree that may contain non-MathML container frames
   static void
-  GetItalicCorrection(nsBoundingMetrics& aBoundingMetrics,
-                      nscoord&           aItalicCorrection)
-  {
-    aItalicCorrection = aBoundingMetrics.rightBearing - aBoundingMetrics.width;
-    if (0 > aItalicCorrection) {
-      aItalicCorrection = 0;
-    }
-  }
+  PropagateScriptStyleFor(nsIPresContext* aPresContext,
+                          nsIFrame*       aFrame,
+                          PRInt32         aFrameScriptLevel);
 
+  // helper to let the update of presentation data pass through
+  // a subtree that may contain non-MathML container frames
   static void
-  GetItalicCorrection(nsBoundingMetrics& aBoundingMetrics,
-                      nscoord&           aLeftItalicCorrection,
-                      nscoord&           aRightItalicCorrection)
-  {
-    aRightItalicCorrection = aBoundingMetrics.rightBearing - aBoundingMetrics.width;
-    if (0 > aRightItalicCorrection) {
-      aRightItalicCorrection = 0;
-    }
-    aLeftItalicCorrection = -aBoundingMetrics.leftBearing;
-    if (0 > aLeftItalicCorrection) {
-      aLeftItalicCorrection = 0;
-    }
-  }
-
-  // helper methods for getting sup/subdrop's from a child
-  static void 
-    GetSubDropFromChild (nsIPresContext* aPresContext,
-                         nsIFrame*       aChild, 
-                         nscoord&        aSubDrop) 
-    {
-      const nsStyleFont *font;
-      aChild->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
-      nsCOMPtr<nsIFontMetrics> fm;
-      aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
-
-      GetSubDrop (fm, aSubDrop);
-    }
-
-  static void 
-    GetSupDropFromChild (nsIPresContext* aPresContext,
-                         nsIFrame*       aChild, 
-                         nscoord&        aSupDrop) 
-    {
-      const nsStyleFont *font;
-      aChild->GetStyleData(eStyleStruct_Font, (const nsStyleStruct *&)font);
-      nsCOMPtr<nsIFontMetrics> fm;
-      aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
-
-      GetSupDrop (fm, aSupDrop);
-    }
-
-  static void 
-  GetSkewCorrectionFromChild (nsIPresContext* aPresContext,
-                              nsIFrame*       aChild, 
-                              nscoord&        aSkewCorrection) 
-    {
-      // default is 0
-      // individual classes should over-ride this method if necessary
-      aSkewCorrection = 0;
-    }
-
-  // 2 levels of subscript shifts
-  static void
-    GetSubScriptShifts (nsIFontMetrics *fm, 
-                        nscoord& aSubScriptShift1, 
-                        nscoord& aSubScriptShift2)
-    {
-      nscoord xHeight = 0;
-      fm->GetXHeight (xHeight);
-      aSubScriptShift1 = NSToCoordRound (150.000f/430.556f * xHeight);
-      aSubScriptShift2 = NSToCoordRound (247.217f/430.556f * xHeight);
-    }
-
-  // 3 levels of superscript shifts
-  static void
-    GetSupScriptShifts (nsIFontMetrics *fm, 
-                        nscoord& aSupScriptShift1, 
-                        nscoord& aSupScriptShift2, 
-                        nscoord& aSupScriptShift3)
-    {
-      nscoord xHeight = 0;
-      fm->GetXHeight (xHeight);
-      aSupScriptShift1 = NSToCoordRound (412.892f/430.556f * xHeight);
-      aSupScriptShift2 = NSToCoordRound (362.892f/430.556f * xHeight);
-      aSupScriptShift3 = NSToCoordRound (288.889f/430.556f * xHeight);
-    }
-
-  // these are TeX specific params not found in ordinary fonts
-
-  static void
-  GetSubDrop (nsIFontMetrics *fm, nscoord& aSubDrop)
-    {
-      nscoord xHeight;
-      fm->GetXHeight (xHeight);
-      aSubDrop = NSToCoordRound(50.000f/430.556f * xHeight);
-    }
-
-  static void
-  GetSupDrop (nsIFontMetrics *fm, nscoord& aSupDrop)
-    {
-      nscoord xHeight;
-      fm->GetXHeight (xHeight);
-      aSupDrop = NSToCoordRound(386.108f/430.556f * xHeight);
-    }
-
-  static void
-  GetNumeratorShifts (nsIFontMetrics *fm, 
-                      nscoord& numShift1, 
-                      nscoord& numShift2, 
-                      nscoord& numShift3)
-    {
-      nscoord xHeight = 0;
-      fm->GetXHeight (xHeight);
-      numShift1 = NSToCoordRound (676.508f/430.556f * xHeight);
-      numShift2 = NSToCoordRound (393.732f/430.556f * xHeight);
-      numShift3 = NSToCoordRound (443.731f/430.556f * xHeight);
-    }
-
-  static void
-  GetDenominatorShifts (nsIFontMetrics *fm, 
-                        nscoord& denShift1, 
-                        nscoord& denShift2)
-    {
-      nscoord xHeight = 0;
-      fm->GetXHeight (xHeight);
-      denShift1 = NSToCoordRound (685.951f/430.556f * xHeight);
-      denShift2 = NSToCoordRound (344.841f/430.556f * xHeight);
-    }
-
-  static void
-  GetEmHeight (nsIFontMetrics *fm,
-               nscoord& emHeight)
-    {
-#if 0 // should switch to this API in order to scale with changes of TextZoom
-      fm->GetEmHeight (emHeight);
-#else
-      const nsFont* font;
-      fm->GetFont(font);
-      emHeight = NSToCoordRound(float(font->size));
-#endif
-    }
-
-  static void
-  GetAxisHeight (nsIFontMetrics *fm,
-                 nscoord& axisHeight)
-    {
-      fm->GetXHeight (axisHeight);
-      axisHeight = NSToCoordRound (250.000f/430.556f * axisHeight);
-    }
-
-  static void
-  GetBigOpSpacings (nsIFontMetrics *fm, 
-                    nscoord& bigOpSpacing1,
-                    nscoord& bigOpSpacing2,
-                    nscoord& bigOpSpacing3,
-                    nscoord& bigOpSpacing4,
-                    nscoord& bigOpSpacing5)
-    {
-      nscoord xHeight = 0;
-      fm->GetXHeight (xHeight);
-      bigOpSpacing1 = NSToCoordRound (111.111f/430.556f * xHeight);
-      bigOpSpacing2 = NSToCoordRound (166.667f/430.556f * xHeight);
-      bigOpSpacing3 = NSToCoordRound (200.000f/430.556f * xHeight);
-      bigOpSpacing4 = NSToCoordRound (600.000f/430.556f * xHeight);
-      bigOpSpacing5 = NSToCoordRound (100.000f/430.556f * xHeight);
-    }
-
-  static void
-  GetRuleThickness(nsIFontMetrics* fm,
-                   nscoord& ruleThickness)
-    {
-      nscoord xHeight;
-      fm->GetXHeight (xHeight);
-      ruleThickness = NSToCoordRound (40.000f/430.556f * xHeight);
-    }
-
-  // Some parameters are not accurately obtained using the x-height.
-  // Here are some slower variants to obtain the desired metrics
-  // by actually measuring some characters
-  static void
-  GetRuleThickness(nsIRenderingContext& aRenderingContext, 
-                   nsIFontMetrics*      aFontMetrics,
-                   nscoord&             aRuleThickness);
-
-  static void
-  GetAxisHeight(nsIRenderingContext& aRenderingContext, 
-                nsIFontMetrics*      aFontMetrics,
-                nscoord&             aAxisHeight);
+  PropagatePresentationDataFor(nsIPresContext* aPresContext,
+                               nsIFrame*       aFrame,
+                               PRInt32         aScriptLevelIncrement,
+                               PRUint32        aFlagsValues,
+                               PRUint32        aFlagsToUpdate);
 
 protected:
   virtual PRIntn GetSkipSides() const { return 0; }
@@ -483,6 +282,8 @@ class nsMathMLmathBlockFrame : public nsBlockFrame {
 public:
   friend nsresult NS_NewMathMLmathBlockFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
+  // beware, mFrames is not set by nsBlockFrame, FirstChild() is your friend
+  // when you need to access the child list of the block
   NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
@@ -492,17 +293,17 @@ public:
 
     rv = nsBlockFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
-    // re-resolve our subtree to set any mathml-expected scriptsizes
-    nsIFrame* childFrame = aChildList; // mFrames is not used by nsBlockFrame
+    // notify our children that they are now in displaystyle=true
+    nsIFrame* childFrame = aChildList;
     while (childFrame) {
-      nsIMathMLFrame* mathMLFrame;
-      nsresult res = childFrame->QueryInterface(
-        NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-      if (NS_SUCCEEDED(res) && mathMLFrame) {
-        mathMLFrame->ReResolveScriptStyle(aPresContext, mStyleContext, 0);
-      }
+      nsMathMLContainerFrame::PropagatePresentationDataFor(aPresContext,
+        childFrame, 0, NS_MATHML_DISPLAYSTYLE, NS_MATHML_DISPLAYSTYLE);
       childFrame->GetNextSibling(&childFrame);
     }
+
+    // re-resolve our subtree to set any mathml-expected scriptsizes
+    nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
+
     return rv;
   }
 
@@ -524,16 +325,8 @@ public:
     rv = nsInlineFrame::SetInitialChildList(aPresContext, aListName, aChildList);
 
     // re-resolve our subtree to set any mathml-expected scriptsizes
-    nsIFrame* childFrame = mFrames.FirstChild();
-    while (childFrame) {
-      nsIMathMLFrame* mathMLFrame;
-      nsresult res = childFrame->QueryInterface(
-        NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-      if (NS_SUCCEEDED(res) && mathMLFrame) {
-        mathMLFrame->ReResolveScriptStyle(aPresContext, mStyleContext, 0);
-      }
-      childFrame->GetNextSibling(&childFrame);
-    }
+    nsMathMLContainerFrame::PropagateScriptStyleFor(aPresContext, this, 0);
+
     return rv;
   }
 

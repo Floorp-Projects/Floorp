@@ -42,6 +42,9 @@
 #include "nsIDOMText.h"
 #include "nsITextContent.h"
 
+#include "nsIFrameManager.h"
+#include "nsStyleChangeList.h"
+
 #include "nsMathMLAtoms.h"
 #include "nsMathMLParts.h"
 #include "nsMathMLChar.h"
@@ -60,308 +63,33 @@ NS_IMPL_QUERY_INTERFACE_INHERITED1(nsMathMLContainerFrame, nsHTMLContainerFrame,
 
 // =============================================================================
 
-// helper to get an attribute from the content or the surrounding <mstyle> hierarchy
-nsresult
-nsMathMLContainerFrame::GetAttribute(nsIContent* aContent,
-                                     nsIFrame*   aMathMLmstyleFrame,
-                                     nsIAtom*    aAttributeAtom,
-                                     nsString&   aValue)
+// This is the method used to set the frame as an embellished container.
+// It checks if the first (non-empty) child is embellished. Hence, calls
+// must be bottom-up. The method must only be called from within frames who are
+// entitled to be potential embellished operators as per the MathML REC.
+NS_IMETHODIMP
+nsMathMLContainerFrame::EmbellishOperator()
 {
-  nsresult rv = NS_CONTENT_ATTR_NOT_THERE;
-
-  // see if we can get the attribute from the content
-  if (aContent) {
-    rv = aContent->GetAttr(kNameSpaceID_None, aAttributeAtom, aValue);
+  nsIFrame* firstChild = mFrames.FirstChild();
+  if (firstChild && IsEmbellishOperator(firstChild)) {
+    // Cache the first child
+    mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
+    mEmbellishData.firstChild = firstChild;
+    // Cache also the inner-most embellished frame at the core of the hierarchy
+    nsIMathMLFrame* mathMLFrame;
+    firstChild->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+    nsEmbellishData embellishData;
+    mathMLFrame->GetEmbellishData(embellishData);
+    mEmbellishData.core = embellishData.core ? embellishData.core : firstChild;
+    mEmbellishData.direction = embellishData.direction;
   }
-
-  if (NS_CONTENT_ATTR_NOT_THERE == rv) {
-    // see if we can get the attribute from the mstyle frame
-    if (aMathMLmstyleFrame) {
-      nsCOMPtr<nsIContent> mstyleContent;
-      aMathMLmstyleFrame->GetContent(getter_AddRefs(mstyleContent));
-
-      nsIFrame* mstyleParent;
-      aMathMLmstyleFrame->GetParent(&mstyleParent);
-
-      nsPresentationData mstyleParentData;
-      mstyleParentData.mstyle = nsnull;
-
-      if (mstyleParent) {
-        nsIMathMLFrame* mathMLFrame;
-        rv = mstyleParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-        if (NS_SUCCEEDED(rv) && mathMLFrame) {
-          mathMLFrame->GetPresentationData(mstyleParentData);
-        }
-      }
-
-      // recurse all the way up into the <mstyle> hierarchy
-      rv = GetAttribute(mstyleContent, mstyleParentData.mstyle, aAttributeAtom, aValue);
-    }
+  else {
+    mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_OPERATOR;
+    mEmbellishData.firstChild = nsnull;
+    mEmbellishData.core = nsnull;
+    mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
   }
-  return rv;
-}
-
-void
-nsMathMLContainerFrame::GetRuleThickness(nsIRenderingContext& aRenderingContext,
-                                         nsIFontMetrics*      aFontMetrics,
-                                         nscoord&             aRuleThickness)
-{
-  // get the bounding metrics of the overbar char, the rendering context
-  // is assumed to have been set with the font of the current style context
-  nscoord xHeight;
-  aFontMetrics->GetXHeight(xHeight);
-  PRUnichar overBar = 0x00AF;
-  nsBoundingMetrics bm;
-  nsresult rv = aRenderingContext.GetBoundingMetrics(&overBar, PRUint32(1), bm);
-  if (NS_SUCCEEDED(rv)) {
-    aRuleThickness = bm.ascent + bm.descent;
-  }
-  if (NS_FAILED(rv) || aRuleThickness <= 0 || aRuleThickness >= xHeight) {
-    // fall-back to the other version
-    GetRuleThickness(aFontMetrics, aRuleThickness);
-  }
-
-#if 0
-  nscoord oldRuleThickness;
-  GetRuleThickness(aFontMetrics, oldRuleThickness);
-
-  PRUnichar sqrt = 0xE063; // a sqrt glyph from TeX's CMEX font
-  rv = aRenderingContext.GetBoundingMetrics(&sqrt, PRUint32(1), bm);
-  nscoord sqrtrule = bm.ascent; // according to TeX, the ascent should be the rule
-
-  printf("xheight:%4d rule:%4d oldrule:%4d  sqrtrule:%4d\n",
-          xHeight, aRuleThickness, oldRuleThickness, sqrtrule);
-#endif
-}
-
-void
-nsMathMLContainerFrame::GetAxisHeight(nsIRenderingContext& aRenderingContext,
-                                     nsIFontMetrics*       aFontMetrics,
-                                     nscoord&              aAxisHeight)
-{
-  // get the bounding metrics of the minus sign, the rendering context
-  // is assumed to have been set with the font of the current style context
-  nscoord xHeight;
-  aFontMetrics->GetXHeight(xHeight);
-  PRUnichar minus = '-';
-  nsBoundingMetrics bm;
-  nsresult rv = aRenderingContext.GetBoundingMetrics(&minus, PRUint32(1), bm);
-  if (NS_SUCCEEDED(rv)) {
-    aAxisHeight = bm.ascent - (bm.ascent + bm.descent)/2;
-  }
-  if (NS_FAILED(rv) || aAxisHeight <= 0 || aAxisHeight >= xHeight) {
-    // fall-back to the other version
-    GetAxisHeight(aFontMetrics, aAxisHeight);
-  }
-
-#if 0
-  nscoord oldAxis;
-  GetAxisHeight(aFontMetrics, oldAxis);
-
-  PRUnichar plus = '+';
-  rv = aRenderingContext.GetBoundingMetrics(&plus, PRUint32(1), bm);
-  nscoord plusAxis = bm.ascent - (bm.ascent + bm.descent)/2;;
-
-  printf("xheight:%4d Axis:%4d oldAxis:%4d  plusAxis:%4d\n",
-          xHeight, aAxisHeight, oldAxis, plusAxis);
-#endif
-}
-
-// ================
-// Utilities for parsing and retrieving numeric values
-// All returned values are in twips.
-
-/*
-The REC says:
-  An explicit plus sign ('+') is not allowed as part of a numeric value
-  except when it is specifically listed in the syntax (as a quoted '+'  or "+"),
-
-  Units allowed
-  ID  Description
-  em  ems (font-relative unit traditionally used for horizontal lengths)
-  ex  exs (font-relative unit traditionally used for vertical lengths)
-  px  pixels, or pixel size of a "typical computer display"
-  in  inches (1 inch = 2.54 centimeters)
-  cm  centimeters
-  mm  millimeters
-  pt  points (1 point = 1/72 inch)
-  pc  picas (1 pica = 12 points)
-  %   percentage of default value
-
-Implementation here:
-  The numeric value is valid only if it is of the form nnn.nnn [h/v-unit]
-*/
-
-// Adapted from nsCSSScanner.cpp & CSSParser.cpp
-PRBool
-nsMathMLContainerFrame::ParseNumericValue(nsString&   aString,
-                                          nsCSSValue& aCSSValue)
-{
-  aCSSValue.Reset();
-  aString.CompressWhitespace(); //  aString is not a const in this code...
-
-  PRInt32 stringLength = aString.Length();
-
-  if (!stringLength) return PR_FALSE;
-
-  nsAutoString number(aString);
-  number.SetLength(0);
-
-  nsAutoString unit(aString);
-  unit.SetLength(0);
-
-  // Gather up characters that make up the number
-  PRBool gotDot = PR_FALSE;
-  PRUnichar c;
-  for (PRInt32 i = 0; i < stringLength; i++) {
-    c = aString[i];
-    if (gotDot && c == '.')
-      return PR_FALSE;  // two dots encountered
-    else if (c == '.')
-      gotDot = PR_TRUE;
-    else if (!nsCRT::IsAsciiDigit(c)) {
-      aString.Right(unit, stringLength - i);
-      unit.CompressWhitespace(); // some authors leave blanks before the unit
-      break;
-    }
-    number.Append(c);
-  }
-
-#if 0
-char s1[50], s2[50], s3[50];
-aString.ToCString(s1, 50);
-number.ToCString(s2, 50);
-unit.ToCString(s3, 50);
-printf("String:%s,  Number:%s,  Unit:%s\n", s1, s2, s3);
-#endif
-
-  // Convert number to floating point
-  PRInt32 errorCode;
-  float floatValue = number.ToFloat(&errorCode);
-  if (NS_FAILED(errorCode)) return PR_FALSE;
-
-  nsCSSUnit cssUnit;
-  if (0 == unit.Length()) {
-    cssUnit = eCSSUnit_Number; // no explicit unit, this is a number that will act as a multiplier
-  }
-  else if (unit.Equals(NS_LITERAL_STRING("%"))) {
-    floatValue = floatValue / 100.0f;
-    aCSSValue.SetPercentValue(floatValue);
-    return PR_TRUE;
-  }
-  else if (unit.Equals(NS_LITERAL_STRING("em"))) cssUnit = eCSSUnit_EM;
-  else if (unit.Equals(NS_LITERAL_STRING("ex"))) cssUnit = eCSSUnit_XHeight;
-  else if (unit.Equals(NS_LITERAL_STRING("px"))) cssUnit = eCSSUnit_Pixel;
-  else if (unit.Equals(NS_LITERAL_STRING("in"))) cssUnit = eCSSUnit_Inch;
-  else if (unit.Equals(NS_LITERAL_STRING("cm"))) cssUnit = eCSSUnit_Centimeter;
-  else if (unit.Equals(NS_LITERAL_STRING("mm"))) cssUnit = eCSSUnit_Millimeter;
-  else if (unit.Equals(NS_LITERAL_STRING("pt"))) cssUnit = eCSSUnit_Point;
-  else if (unit.Equals(NS_LITERAL_STRING("pc"))) cssUnit = eCSSUnit_Pica;
-  else // unexpected unit
-    return PR_FALSE;
-
-  aCSSValue.SetFloatValue(floatValue, cssUnit);
-  return PR_TRUE;
-}
-
-// Adapted from nsCSSStyleRule.cpp
-nscoord
-nsMathMLContainerFrame::CalcLength(nsIPresContext*   aPresContext,
-                                   nsIStyleContext*  aStyleContext,
-                                   const nsCSSValue& aCSSValue)
-{
-  NS_ASSERTION(aCSSValue.IsLengthUnit(), "not a length unit");
-
-  if (aCSSValue.IsFixedLengthUnit()) {
-    return aCSSValue.GetLengthTwips();
-  }
-
-  nsCSSUnit unit = aCSSValue.GetUnit();
-
-  if (eCSSUnit_Pixel == unit) {
-    float p2t;
-    aPresContext->GetScaledPixelsToTwips(&p2t);
-    return NSFloatPixelsToTwips(aCSSValue.GetFloatValue(), p2t);
-  }
-  else if (eCSSUnit_EM == unit) {
-    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-      aStyleContext->GetStyleData(eStyleStruct_Font));
-    return NSToCoordRound(aCSSValue.GetFloatValue() * (float)font->mFont.size);
-  }
-  else if (eCSSUnit_XHeight == unit) {
-    nscoord xHeight;
-    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-      aStyleContext->GetStyleData(eStyleStruct_Font));
-    nsCOMPtr<nsIFontMetrics> fm;
-    aPresContext->GetMetricsFor(font->mFont, getter_AddRefs(fm));
-    fm->GetXHeight(xHeight);
-    return NSToCoordRound(aCSSValue.GetFloatValue() * (float)xHeight);
-  }
-
-  return 0;
-}
-
-PRBool
-nsMathMLContainerFrame::ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
-                                             nsString&   aString,
-                                             nsCSSValue& aCSSValue)
-{
-  aCSSValue.Reset();
-  aString.CompressWhitespace(); //  aString is not a const in this code...
-  if (!aString.Length()) return PR_FALSE;
-
-  // See if it is one of the 'namedspace' (ranging 1/18em...7/18em)
-  PRInt32 i = 0;
-  nsIAtom* namedspaceAtom;
-  if (aString.Equals(NS_LITERAL_STRING("veryverythinmathspace"))) {
-    i = 1;
-    namedspaceAtom = nsMathMLAtoms::veryverythinmathspace_;
-  }
-  else if (aString.Equals(NS_LITERAL_STRING("verythinmathspace"))) {
-    i = 2;
-    namedspaceAtom = nsMathMLAtoms::verythinmathspace_;
-  }
-  else if (aString.Equals(NS_LITERAL_STRING("thinmathspace"))) {
-    i = 3;
-    namedspaceAtom = nsMathMLAtoms::thinmathspace_;
-  }
-  else if (aString.Equals(NS_LITERAL_STRING("mediummathspace"))) {
-    i = 4;
-    namedspaceAtom = nsMathMLAtoms::mediummathspace_;
-  }
-  else if (aString.Equals(NS_LITERAL_STRING("thickmathspace"))) {
-    i = 5;
-    namedspaceAtom = nsMathMLAtoms::thickmathspace_;
-  }
-  else if (aString.Equals(NS_LITERAL_STRING("verythickmathspace"))) {
-    i = 6;
-    namedspaceAtom = nsMathMLAtoms::verythickmathspace_;
-  }
-  else if (aString.Equals(NS_LITERAL_STRING("veryverythickmathspace"))) {
-    i = 7;
-    namedspaceAtom = nsMathMLAtoms::veryverythickmathspace_;
-  }
-
-  if (0 != i) {
-    if (aMathMLmstyleFrame) {
-      // see if there is a <mstyle> that has overriden the default value
-      // GetAttribute() will recurse all the way up into the <mstyle> hierarchy
-      nsAutoString value;
-      if (NS_CONTENT_ATTR_HAS_VALUE ==
-          GetAttribute(nsnull, aMathMLmstyleFrame, namedspaceAtom, value)) {
-        if (ParseNumericValue(value, aCSSValue) &&
-            aCSSValue.IsLengthUnit()) {
-          return PR_TRUE;
-        }
-      }
-    }
-
-    // fall back to the default value
-    aCSSValue.SetFloatValue(float(i)/float(18), eCSSUnit_EM);
-    return PR_TRUE;
-  }
-
-  return PR_FALSE;
+  return NS_OK;
 }
 
 // -------------------------
@@ -809,47 +537,6 @@ nsMathMLContainerFrame::FinalizeReflow(nsIPresContext*      aPresContext,
   return NS_OK;
 }
 
-// This is the method used to set the frame as an embellished container.
-// It checks if the first (non-empty) child is embellished. Hence, calls
-// must be bottom-up. The method must only be called from within frames who are
-// entitled to be potential embellished operators as per the MathML REC.
-NS_IMETHODIMP
-nsMathMLContainerFrame::EmbellishOperator()
-{
-  nsIFrame* firstChild = mFrames.FirstChild();
-  if (firstChild && IsEmbellishOperator(firstChild)) {
-    // Cache the first child
-    mEmbellishData.flags |= NS_MATHML_EMBELLISH_OPERATOR;
-    mEmbellishData.firstChild = firstChild;
-    // Cache also the inner-most embellished frame at the core of the hierarchy
-    nsIMathMLFrame* mathMLFrame;
-    firstChild->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    nsEmbellishData embellishData;
-    mathMLFrame->GetEmbellishData(embellishData);
-    mEmbellishData.core = embellishData.core ? embellishData.core : firstChild;
-    mEmbellishData.direction = embellishData.direction;
-  }
-  else {
-    mEmbellishData.flags &= ~NS_MATHML_EMBELLISH_OPERATOR;
-    mEmbellishData.firstChild = nsnull;
-    mEmbellishData.core = nsnull;
-    mEmbellishData.direction = NS_STRETCH_DIRECTION_UNSUPPORTED;
-  }
-  return NS_OK;
-}
-
-PRBool
-nsMathMLContainerFrame::IsEmbellishOperator(nsIFrame* aFrame)
-{
-  NS_PRECONDITION(aFrame, "null arg");
-  if (!aFrame) return PR_FALSE;
-  nsIMathMLFrame* mathMLFrame;
-  nsresult rv = aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-  if (NS_FAILED(rv) || !mathMLFrame) return PR_FALSE;
-  nsEmbellishData embellishData;
-  mathMLFrame->GetEmbellishData(embellishData);
-  return NS_MATHML_IS_EMBELLISH_OPERATOR(embellishData.flags);
-}
 
 /* /////////////
  * nsIMathMLFrame - support methods for scripting elements (nested frames
@@ -858,152 +545,145 @@ nsMathMLContainerFrame::IsEmbellishOperator(nsIFrame* aFrame)
  * =============================================================================
  */
 
-NS_IMETHODIMP
-nsMathMLContainerFrame::UpdatePresentationDataFromChildAt(nsIPresContext* aPresContext,
-                                                          PRInt32         aFirstIndex,
-                                                          PRInt32         aLastIndex,
-                                                          PRInt32         aScriptLevelIncrement,
-                                                          PRUint32        aFlagsValues,
-                                                          PRUint32        aFlagsToUpdate)
+// helper to let the update of presentation data pass through
+// a subtree that may contain non-mathml container frames
+/* static */ void
+nsMathMLContainerFrame::PropagatePresentationDataFor(nsIPresContext* aPresContext,
+                                                     nsIFrame*       aFrame,
+                                                     PRInt32         aScriptLevelIncrement,
+                                                     PRUint32        aFlagsValues,
+                                                     PRUint32        aFlagsToUpdate)
 {
-  PRInt32 index = 0;
-  nsIFrame* childFrame = mFrames.FirstChild();
+  nsIMathMLFrame* mathMLFrame;
+  aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+  if (mathMLFrame) {
+    // update
+    mathMLFrame->UpdatePresentationData(aPresContext,
+      aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+  }
+  // propagate down the subtrees
+  nsIFrame* childFrame;
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
   while (childFrame) {
-    if ((index >= aFirstIndex) &&
-        ((aLastIndex <= 0) || ((aLastIndex > 0) && (index <= aLastIndex)))) {
-      nsIMathMLFrame* mathMLFrame;
-      nsresult rv = childFrame->QueryInterface(
-        NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-      if (NS_SUCCEEDED(rv) && mathMLFrame) {
-        // update
-        mathMLFrame->UpdatePresentationData(
-          aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
-        // propagate down the subtrees
-        mathMLFrame->UpdatePresentationDataFromChildAt(aPresContext, 0, -1,
-          aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
-      }
-    }
-    index++;
+    PropagatePresentationDataFor(aPresContext, childFrame,
+      aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
     childFrame->GetNextSibling(&childFrame);
   }
-  return NS_OK;
 }
 
-// Helper to give a style context suitable for doing the stretching of
-// a MathMLChar. Frame classes that use this should ensure that the 
-// extra leaf style contexts given to the MathMLChars are acessible to
-// the Style System via the Get/Set AdditionalStyleContext() APIs.
-PRBool
-nsMathMLContainerFrame::ResolveMathMLCharStyle(nsIPresContext*  aPresContext,
-                                               nsIContent*      aContent,
-                                               nsIStyleContext* aParentStyleContext,
-                                               nsMathMLChar*    aMathMLChar)
+// helper to let the scriptstyle re-resolution pass through
+// a subtree that may contain non-mathml container frames.
+// This function is *very* expensive. Unfortunately, there isn't much
+// to do about it at the moment. For background on the problem @see 
+// http://groups.google.com/groups?selm=3A9192B5.D22B6C38%40maths.uq.edu.au
+/* static */ void
+nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
+                                                nsIFrame*       aFrame,
+                                                PRInt32         aParentScriptLevel)
 {
-  nsAutoString data;
-  aMathMLChar->GetData(data);
-  PRBool isStretchy = nsMathMLOperators::IsMutableOperator(data);
-  nsIAtom* fontAtom = (isStretchy) ?
-    nsMathMLAtoms::fontstyle_stretchy :
-    nsMathMLAtoms::fontstyle_anonymous;
-  nsCOMPtr<nsIStyleContext> newStyleContext;
-  nsresult rv = aPresContext->ResolvePseudoStyleContextFor(aContent, fontAtom, 
-                                             aParentStyleContext, PR_FALSE,
-                                             getter_AddRefs(newStyleContext));
-  if (NS_SUCCEEDED(rv) && newStyleContext)
-    aMathMLChar->SetStyleContext(newStyleContext);
+  nsIMathMLFrame* mathMLFrame;
+  aFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+  if (mathMLFrame) {
+    // we will re-resolve our style data based on our current scriptlevel
+    nsPresentationData presentationData;
+    mathMLFrame->GetPresentationData(presentationData);
+    PRInt32 gap = presentationData.scriptLevel - aParentScriptLevel;
 
-  return isStretchy;
-}
+    // since we are a MathML frame, our current scriptlevel becomes
+    // the one to use when we will propagate the recursion
+    aParentScriptLevel = presentationData.scriptLevel;
 
-NS_IMETHODIMP
-nsMathMLContainerFrame::ReResolveScriptStyle(nsIPresContext*  aPresContext,
-                                             nsIStyleContext* aParentContext,
-                                             PRInt32          aParentScriptLevel)
-{
-  PRInt32 gap = mPresentationData.scriptLevel - aParentScriptLevel;
-  if (gap) {
-  	// By default scriptminsize=8pt and scriptsizemultiplier=0.71
-    nscoord scriptminsize = NSIntPointsToTwips(NS_MATHML_SCRIPTMINSIZE);
-    float scriptsizemultiplier = NS_MATHML_SCRIPTSIZEMULTIPLIER;
-#if 0
-    // XXX Bug 44201
-    // user-supplied scriptminsize and scriptsizemultiplier that are
-    // restricted to particular elements are not supported because our
-    // css rules are fixed in mathml.css and are applicable to all elements.
+    nsCOMPtr<nsIStyleContext> oldStyleContext;
+    aFrame->GetStyleContext(getter_AddRefs(oldStyleContext));
+    nsCOMPtr<nsIStyleContext> parentContext(dont_AddRef(oldStyleContext->GetParent()));
 
-    // see if there is a scriptminsize attribute on a <mstyle> that wraps us
-    if (NS_CONTENT_ATTR_HAS_VALUE ==
-        GetAttribute(nsnull, mPresentationData.mstyle,
-                     nsMathMLAtoms::scriptminsize_, fontsize)) {
-      nsCSSValue cssValue;
-      if (ParseNumericValue(fontsize, cssValue)) {
-        nsCSSUnit unit = cssValue.GetUnit();
-        if (eCSSUnit_Number == unit)
-          scriptminsize = nscoord(float(scriptminsize) * cssValue.GetFloatValue());
-        else if (eCSSUnit_Percent == unit)
-          scriptminsize = nscoord(float(scriptminsize) * cssValue.GetPercentValue());
-        else if (eCSSUnit_Null != unit)
-          scriptminsize = CalcLength(aPresContext, mStyleContext, cssValue);
-      }
+    nsCOMPtr<nsIContent> content;
+    aFrame->GetContent(getter_AddRefs(content));
+    if (0 == gap) {
+      // unset any -moz-math-font-size attribute without notifying that we want a reflow
+      content->UnsetAttr(kNameSpaceID_None, nsMathMLAtoms::fontsize, PR_FALSE);
     }
+    else {
+      // By default scriptminsize=8pt and scriptsizemultiplier=0.71
+      nscoord scriptminsize = NSIntPointsToTwips(NS_MATHML_SCRIPTMINSIZE);
+      float scriptsizemultiplier = NS_MATHML_SCRIPTSIZEMULTIPLIER;
+#if 0
+       // XXX Bug 44201
+       // user-supplied scriptminsize and scriptsizemultiplier that are
+       // restricted to particular elements are not supported because our
+       // css rules are fixed in mathml.css and are applicable to all elements.
+
+       // see if there is a scriptminsize attribute on a <mstyle> that wraps us
+       if (NS_CONTENT_ATTR_HAS_VALUE ==
+           GetAttribute(nsnull, presentationData.mstyle,
+                        nsMathMLAtoms::scriptminsize_, fontsize)) {
+         nsCSSValue cssValue;
+         if (ParseNumericValue(fontsize, cssValue)) {
+           nsCSSUnit unit = cssValue.GetUnit();
+           if (eCSSUnit_Number == unit)
+             scriptminsize = nscoord(float(scriptminsize) * cssValue.GetFloatValue());
+           else if (eCSSUnit_Percent == unit)
+             scriptminsize = nscoord(float(scriptminsize) * cssValue.GetPercentValue());
+           else if (eCSSUnit_Null != unit)
+             scriptminsize = CalcLength(aPresContext, mStyleContext, cssValue);
+         }
+       }
 #endif
 
-    // get the incremental factor
-    nsAutoString fontsize;
-    if (0 > gap) { // the size is going to be increased
-      if (gap < NS_MATHML_CSS_NEGATIVE_SCRIPTLEVEL_LIMIT)
-        gap = NS_MATHML_CSS_NEGATIVE_SCRIPTLEVEL_LIMIT;
-      gap = -gap;
-      scriptsizemultiplier = 1.0f / scriptsizemultiplier;
-      fontsize.Assign(NS_LITERAL_STRING("-"));
-    }
-    else { // the size is going to be decreased
-      if (gap > NS_MATHML_CSS_POSITIVE_SCRIPTLEVEL_LIMIT)
-        gap = NS_MATHML_CSS_POSITIVE_SCRIPTLEVEL_LIMIT;
-      fontsize.Assign(NS_LITERAL_STRING("+"));
-    }
-    fontsize.AppendInt(gap, 10);
-    // we want to make sure that the size will stay readable
-    const nsStyleFont *font = NS_STATIC_CAST(const nsStyleFont*,
-      aParentContext->GetStyleData(eStyleStruct_Font));
-    nscoord newFontSize = font->mFont.size;
-    while (0 < gap--) {
-      newFontSize = (nscoord)((float)(newFontSize) * scriptsizemultiplier);
-    }
-    if (newFontSize <= scriptminsize) {
-      fontsize.Assign(NS_LITERAL_STRING("scriptminsize"));
+      // figure out the incremental factor
+      nsAutoString fontsize;
+      if (0 > gap) { // the size is going to be increased
+        if (gap < NS_MATHML_CSS_NEGATIVE_SCRIPTLEVEL_LIMIT)
+          gap = NS_MATHML_CSS_NEGATIVE_SCRIPTLEVEL_LIMIT;
+        gap = -gap;
+        scriptsizemultiplier = 1.0f / scriptsizemultiplier;
+        fontsize.Assign(NS_LITERAL_STRING("-"));
+      }
+      else { // the size is going to be decreased
+        if (gap > NS_MATHML_CSS_POSITIVE_SCRIPTLEVEL_LIMIT)
+          gap = NS_MATHML_CSS_POSITIVE_SCRIPTLEVEL_LIMIT;
+        fontsize.Assign(NS_LITERAL_STRING("+"));
+      }
+      fontsize.AppendInt(gap, 10);
+      // we want to make sure that the size will stay readable
+      const nsStyleFont* font = NS_STATIC_CAST(const nsStyleFont*,
+        parentContext->GetStyleData(eStyleStruct_Font));
+      nscoord newFontSize = font->mFont.size;
+      while (0 < gap--) {
+        newFontSize = (nscoord)((float)(newFontSize) * scriptsizemultiplier);
+      }
+      if (newFontSize <= scriptminsize) {
+        fontsize.Assign(NS_LITERAL_STRING("scriptminsize"));
+      }
+
+      // set the -moz-math-font-size attribute without notifying that we want a reflow
+      content->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontsize,
+                       fontsize, PR_FALSE);
     }
 
-    // set the -moz-math-font-size attribute without notifying that we want a reflow
-    mContent->SetAttr(kNameSpaceID_None, nsMathMLAtoms::fontsize,
-                      fontsize, PR_FALSE);
-    // then, re-resolve the style contexts in our subtree
-    nsCOMPtr<nsIStyleContext> newStyleContext;
-    aPresContext->ResolveStyleContextFor(mContent, aParentContext,
-                                         PR_FALSE, getter_AddRefs(newStyleContext));
-    if (newStyleContext && newStyleContext.get() != mStyleContext) {
-      SetStyleContext(aPresContext, newStyleContext);
-      nsIFrame* childFrame = mFrames.FirstChild();
-      while (childFrame) {
-        aPresContext->ReParentStyleContext(childFrame, newStyleContext);
-        childFrame->GetNextSibling(&childFrame);
+    // now, re-resolve the style contexts in our subtree
+    nsCOMPtr<nsIPresShell> presShell;
+    aPresContext->GetShell(getter_AddRefs(presShell));
+    if (presShell) {
+      nsCOMPtr<nsIFrameManager> fm;
+      presShell->GetFrameManager(getter_AddRefs(fm));
+      if (fm) {
+        PRInt32 maxChange, minChange = NS_STYLE_HINT_NONE;
+        nsStyleChangeList changeList;
+        fm->ComputeStyleChangeFor(aPresContext, aFrame,
+                                  kNameSpaceID_None, nsMathMLAtoms::fontsize,
+                                  changeList, minChange, maxChange);
       }
     }
   }
 
-  // let children with different scriptsizes handle that themselves 
-  nsIFrame* childFrame = mFrames.FirstChild();
+  // recurse down the subtrees for changes that may arise deep down
+  nsIFrame* childFrame;
+  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
   while (childFrame) {
-    nsIMathMLFrame* mathMLFrame;
-    nsresult res = childFrame->QueryInterface(
-      NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-    if (NS_SUCCEEDED(res) && mathMLFrame) {
-      mathMLFrame->ReResolveScriptStyle(aPresContext, mStyleContext,
-                                        mPresentationData.scriptLevel);
-    }
+    PropagateScriptStyleFor(aPresContext, childFrame, aParentScriptLevel);
     childFrame->GetNextSibling(&childFrame);
   }
-  return NS_OK;
 }
 
 
@@ -1106,27 +786,22 @@ nsMathMLContainerFrame::Init(nsIPresContext*  aPresContext,
   // with other values, it will do so in its SetInitialChildList() method.
 
   nsIMathMLFrame* mathMLFrame;
-  nsresult res = aParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
-  if (NS_SUCCEEDED(res) && mathMLFrame) {
+  aParent->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
+  if (mathMLFrame) {
     nsPresentationData parentData;
     mathMLFrame->GetPresentationData(parentData);
     mPresentationData.mstyle = parentData.mstyle;
     mPresentationData.scriptLevel = parentData.scriptLevel;
-    if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags))
-      mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
-    else
-      mPresentationData.flags &= ~NS_MATHML_DISPLAYSTYLE;
-  }
-  else {
-    // see if our parent has 'display: block'
-    // XXX should we restrict this to the top level <math> parent ?
-    const nsStyleDisplay* display;
-    aParent->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
-    if (display->mDisplay == NS_STYLE_DISPLAY_BLOCK) {
+    if (NS_MATHML_IS_DISPLAYSTYLE(parentData.flags)) {
       mPresentationData.flags |= NS_MATHML_DISPLAYSTYLE;
     }
   }
-
+  else {
+    // It could be that we are wrapped by several non-MathML frames.
+    // So we retain displaystyle=false, knowing that if our root <math>
+    // is in displaystyle=true, it will propagate an update to us
+    // later and we will recover the right displaystyle state anyway.
+  }
   return rv;
 }
 

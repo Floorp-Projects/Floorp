@@ -87,6 +87,25 @@ nsMathMLmoverFrame::Init(nsIPresContext*  aPresContext,
 }
 
 NS_IMETHODIMP
+nsMathMLmoverFrame::UpdatePresentationData(nsIPresContext* aPresContext,
+                                           PRInt32         aScriptLevelIncrement,
+                                           PRUint32        aFlagsValues,
+                                           PRUint32        aFlagsToUpdate)
+{
+  nsMathMLContainerFrame::UpdatePresentationData(aPresContext,
+    aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
+  // disable the stretch-all flag if we are going to act like a superscript
+  if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
+      !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
+    mEmbellishData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
+  }
+  else {
+    mEmbellishData.flags |= NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMathMLmoverFrame::SetInitialChildList(nsIPresContext* aPresContext,
                                         nsIAtom*        aListName,
                                         nsIFrame*       aChildList)
@@ -200,7 +219,7 @@ XXX The winner is the outermost in conflicting settings like these:
                       ? 0 : 1;
     PRUint32 compress = NS_MATHML_IS_ACCENTOVER(mPresentationData.flags)
                       ? NS_MATHML_COMPRESSED : 0;
-    overscriptMathMLFrame->UpdatePresentationData(increment,
+    overscriptMathMLFrame->UpdatePresentationData(aPresContext, increment,
       ~NS_MATHML_DISPLAYSTYLE | compress,
        NS_MATHML_DISPLAYSTYLE | compress);
     overscriptMathMLFrame->UpdatePresentationDataFromChildAt(aPresContext, 0, -1, increment,
