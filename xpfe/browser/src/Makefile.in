@@ -33,19 +33,20 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/contentframe.html \
 	$(srcdir)/sidebar.html \
 	$(srcdir)/xul.css \
-        $(srcdir)/navigator.css \
+	$(srcdir)/dialogs.css \
+	$(srcdir)/navigator.css \
 	$(srcdir)/navigator.xul \
 	$(srcdir)/saveToDisk.xul \
 	$(srcdir)/viewSource.xul \
 	$(srcdir)/downloadProgress.xul \
 	$(srcdir)/downloadProgress.css \
-        $(srcdir)/navigator-shiny.css \
+	$(srcdir)/navigator-shiny.css \
 	$(srcdir)/navigator-mozillazine0.css \
-        $(srcdir)/navigator-goofy.css \
-        $(srcdir)/navigator-test1.xul \
-        $(srcdir)/raindrops_light.gif \
-        $(srcdir)/skindemo.xul \
-        $(NULL)
+	$(srcdir)/navigator-goofy.css \
+	$(srcdir)/navigator-test1.xul \
+	$(srcdir)/raindrops_light.gif \
+	$(srcdir)/skindemo.xul \
+	$(NULL)
 
 install:: 
 	$(INSTALL) $(EXPORT_RESOURCE_SAMPLES) $(DIST)/bin/res/samples
