@@ -319,16 +319,15 @@ PRBool nsTextAddress::GetField( const char *pLine, PRInt32 maxLen, PRInt32 index
         if (len >= maxLen)
             break;
         if (*pChar == '"') {
-            pChar++;
-            len++;
-            while ((len < maxLen) && (*pChar != '"')) {
+            len = -1;
+            do {
                 len++;
                 pChar++;
                 if (((len + 1) < maxLen) && (*pChar == '"') && (*(pChar + 1) == '"')) {
                     len += 2;
                     pChar += 2;
                 }
-            }
+            } while ((len < maxLen) && (*pChar != '"'));
             if (len < maxLen) {
                 pChar++;
                 len++;
@@ -365,20 +364,19 @@ PRBool nsTextAddress::GetField( const char *pLine, PRInt32 maxLen, PRInt32 index
     PRInt32        fLen = 0;
     PRBool        quoted = PR_FALSE;
     if (*pChar == '"') {
-        quoted = PR_TRUE;
         pStart++;
-        pChar++;
-        len++;
-        while ((len < maxLen) && (*pChar != '"')) {
+        fLen = -1;
+        do {
             pChar++;
             len++;
             fLen++;
             if (((len + 1) < maxLen) && (*pChar == '"') && (*(pChar + 1) == '"')) {
+                quoted = PR_TRUE;
                 len += 2;
                 pChar += 2;
                 fLen += 2;
             }
-        }
+        } while ((len < maxLen) && (*pChar != '"'));
     }
     else {
         while ((len < maxLen) && (*pChar != delim)) {

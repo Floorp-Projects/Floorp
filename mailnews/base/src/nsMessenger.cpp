@@ -860,6 +860,10 @@ enum MESSENGER_SAVEAS_FILE_TYPE
  TEXT_FILE_TYPE = 2,
  ANY_FILE_TYPE =  3
 };
+#define HTML_FILE_EXTENSION ".htm" 
+#define HTML_FILE_EXTENSION2 ".html"
+#define TEXT_FILE_EXTENSION ".txt"
+#define EML_FILE_EXTENSION  ".eml"
 
 NS_IMETHODIMP
 nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity, nsIMsgWindow *aMsgWindow)
@@ -921,49 +925,80 @@ nsMessenger::SaveAs(const char *aURI, PRBool aAsFile, nsIMsgIdentity *aIdentity,
     rv = filePicker->GetFile(getter_AddRefs(localFile));
     if (NS_FAILED(rv)) 
       goto done;
+
+    if (dialogResult == nsIFilePicker::returnReplace) {
+      // be extra safe and only delete when the file is really a file
+      PRBool isFile;
+      rv = localFile->IsFile(&isFile);
+      if (NS_SUCCEEDED(rv) && isFile) {
+        rv = localFile->Remove(PR_FALSE /* recursive delete */);
+        NS_ENSURE_SUCCESS(rv, rv);
+      }
+    }
     
     rv = SetLastSaveDirectory(localFile);
     if (NS_FAILED(rv)) 
       goto done;
     
-    PRInt32 filterIndex;
-    rv = filePicker->GetFilterIndex(&filterIndex);
+    rv = filePicker->GetFilterIndex(&saveAsFileType);
     if (NS_FAILED(rv)) 
       goto done;
-    
-    // let filterIndex determine the saveAsFileType
-    // unless the users chose "nsIFilePicker::filterAll", in which case 
-    // try to determine the type from the filename extension        
-    // see bug #96134 for details
-    if (filterIndex == ANY_FILE_TYPE)
+
+    nsAutoString fileName;
+    rv = localFile->GetLeafName(fileName);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    switch ( saveAsFileType )
     {
-      nsAutoString fileName;
-      rv = localFile->GetLeafName(fileName);
-      if (NS_FAILED(rv)) 
-        goto done;
-      
-      // First, check if they put ANY extension on the file, if not,
-      // then we should look at the type of file they have chosen and
-      // tack on the file extension for them.
-      if (fileName.RFind(".", PR_TRUE) != kNotFound)
-      {
-        if (fileName.RFind(".htm", PR_TRUE) != kNotFound)
-          saveAsFileType = HTML_FILE_TYPE;
-        else if (fileName.RFind(".txt", PR_TRUE) != kNotFound)
-          saveAsFileType = TEXT_FILE_TYPE;
-        else
-          saveAsFileType = EML_FILE_TYPE;   
-      } 
-      else 
-      {
-        saveAsFileType = EML_FILE_TYPE; 
-      }
+      // Add the right extenstion based on filter index and build a new localFile.
+      case HTML_FILE_TYPE:
+          if ( (fileName.RFind(HTML_FILE_EXTENSION, PR_TRUE, -1, sizeof(HTML_FILE_EXTENSION)-1) == kNotFound) &&
+               (fileName.RFind(HTML_FILE_EXTENSION2, PR_TRUE, -1, sizeof(HTML_FILE_EXTENSION2)-1) == kNotFound) ) {
+           fileName.Append(NS_LITERAL_STRING(HTML_FILE_EXTENSION2));
+           localFile->SetLeafName(fileName);
+        }
+        break;
+      case TEXT_FILE_TYPE:
+        if (fileName.RFind(TEXT_FILE_EXTENSION, PR_TRUE, -1, sizeof(TEXT_FILE_EXTENSION)-1) == kNotFound) {
+         fileName.Append(NS_LITERAL_STRING(TEXT_FILE_EXTENSION));
+         localFile->SetLeafName(fileName);
+        }
+        break;
+      case EML_FILE_TYPE:
+        if (fileName.RFind(EML_FILE_EXTENSION, PR_TRUE, -1, sizeof(EML_FILE_EXTENSION)-1) == kNotFound) {
+         fileName.Append(NS_LITERAL_STRING(EML_FILE_EXTENSION));
+         localFile->SetLeafName(fileName);
+        }
+        break;
+      case ANY_FILE_TYPE:
+      default:
+        // If no extension found then default it to .eml. Otherwise, 
+        // set the right file type based on the specified extension.
+        PRBool noExtensionFound = PR_FALSE;
+        if (fileName.RFind(".", 1) != kNotFound)
+        {
+          if ( (fileName.RFind(HTML_FILE_EXTENSION, PR_TRUE, -1, sizeof(HTML_FILE_EXTENSION)-1) != kNotFound) ||
+               (fileName.RFind(HTML_FILE_EXTENSION2, PR_TRUE, -1, sizeof(HTML_FILE_EXTENSION2)-1) != kNotFound) )
+            saveAsFileType = HTML_FILE_TYPE;
+          else if (fileName.RFind(TEXT_FILE_EXTENSION, PR_TRUE, -1, sizeof(TEXT_FILE_EXTENSION)-1) != kNotFound)
+            saveAsFileType = TEXT_FILE_TYPE;
+          else if (fileName.RFind(EML_FILE_EXTENSION, PR_TRUE, -1, sizeof(EML_FILE_EXTENSION)-1) != kNotFound)
+            saveAsFileType = EML_FILE_TYPE;
+          else
+            noExtensionFound = PR_TRUE;  
+        } 
+        else 
+          noExtensionFound = PR_TRUE;
+        // Set default file type here.
+        if (noExtensionFound)
+        {
+          saveAsFileType = EML_FILE_TYPE; 
+          fileName.Append(NS_LITERAL_STRING(EML_FILE_EXTENSION));
+          localFile->SetLeafName(fileName);
+        }
+        break;
     }
-    else 
-    {
-      saveAsFileType = filterIndex;
-    }
-    
+   
     // XXX argh!  converting from nsILocalFile to nsFileSpec ... oh baby, lets drop from unicode to ascii too
     //        nsXPIDLString path;
     //        localFile->GetUnicodePath(getter_Copies(path));

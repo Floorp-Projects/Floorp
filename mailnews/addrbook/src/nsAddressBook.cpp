@@ -1269,7 +1269,14 @@ NS_IMETHODIMP nsAddressBook::ConvertLDIFtoMAB(nsIFileSpec *fileSpec, PRBool migr
 #define TAB_FILE_EXTENSION ".tab"
 #define TXT_FILE_EXTENSION ".txt"
 #define LDIF_FILE_EXTENSION ".ldi"
-#define EXTENSION_LENGTH 4
+#define LDIF_FILE_EXTENSION2 ".ldif"
+
+enum ADDRESSBOOK_EXPORT_FILE_TYPE 
+{
+ LDIF_EXPORT_TYPE =  0,
+ CSV_EXPORT_TYPE = 1,
+ TAB_EXPORT_TYPE = 2,
+};
 
 NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIAbDirectory *aDirectory)
 {
@@ -1330,36 +1337,55 @@ NS_IMETHODIMP nsAddressBook::ExportAddressBook(nsIAbDirectory *aDirectory)
     }
   }
 
-  nsCAutoString leafName;
-  rv = localFile->GetNativeLeafName(leafName);
+  // The type of export is determined by the drop-down in
+  // the file picker dialog.
+  PRInt32 exportType;
+  rv = filePicker->GetFilterIndex(&exportType);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  // we're looking for .tab, .txt, .csv, .ldi or .ldif
-  // since .ldif is the desired default, we can do this:
-  // get the last four characters of the filename.
-  // check if they equal .tab,.txt, or .csv, if so, use those
-  // otherwise, treat as LDIF
-  if (leafName.Length() > EXTENSION_LENGTH) {
-    nsCAutoString extension(Substring(leafName, leafName.Length() - EXTENSION_LENGTH, EXTENSION_LENGTH));
-
-    // treat .TXT, .Tab, .csV like .txt, .tab, and .csv
-    ToLowerCase(extension);
+  nsAutoString fileName;
+  rv = localFile->GetLeafName(fileName);
+  NS_ENSURE_SUCCESS(rv, rv);
     
-    if (extension.Equals(CSV_FILE_EXTENSION))
-      rv = ExportDirectoryToDelimitedText(aDirectory, CSV_DELIM, CSV_DELIM_LEN, localFile);
-    else if (extension.Equals(TAB_FILE_EXTENSION) || extension.Equals(TXT_FILE_EXTENSION)) {
-      // .tab and .txt are both tab separated
-      rv = ExportDirectoryToDelimitedText(aDirectory, TAB_DELIM, TAB_DELIM_LEN, localFile);
+  switch ( exportType )
+  {
+    default:
+    case LDIF_EXPORT_TYPE: // ldif
+      // If filename does not have the correct ext, add one.
+      if ((fileName.RFind(LDIF_FILE_EXTENSION, PR_TRUE, -1, sizeof(LDIF_FILE_EXTENSION)-1) == kNotFound) &&
+       (fileName.RFind(LDIF_FILE_EXTENSION2, PR_TRUE, -1, sizeof(LDIF_FILE_EXTENSION2)-1) == kNotFound)) {
+
+       // Add the extenstion and build a new localFile.
+       fileName.Append(NS_LITERAL_STRING(LDIF_FILE_EXTENSION2));
+       localFile->SetLeafName(fileName);
     }
-    else {
-      // it's ".ldi", "ldif", or something else.  we default to LDIF
       rv = ExportDirectoryToLDIF(aDirectory, localFile);
+      break;
+
+    case CSV_EXPORT_TYPE: // csv
+      // If filename does not have the correct ext, add one.
+      if (fileName.RFind(CSV_FILE_EXTENSION, PR_TRUE, -1, sizeof(CSV_FILE_EXTENSION)-1) == kNotFound) {
+
+       // Add the extenstion and build a new localFile.
+       fileName.Append(NS_LITERAL_STRING(CSV_FILE_EXTENSION));
+       localFile->SetLeafName(fileName);
     }
+      rv = ExportDirectoryToDelimitedText(aDirectory, CSV_DELIM, CSV_DELIM_LEN, localFile);
+      break;
+
+    case TAB_EXPORT_TYPE: // tab & text
+      // If filename does not have the correct ext, add one.
+      if ( (fileName.RFind(TXT_FILE_EXTENSION, PR_TRUE, -1, sizeof(TXT_FILE_EXTENSION)-1) == kNotFound) &&
+          (fileName.RFind(TAB_FILE_EXTENSION, PR_TRUE, -1, sizeof(TAB_FILE_EXTENSION)-1) == kNotFound) ) {
+
+       // Add the extenstion and build a new localFile.
+       fileName.Append(NS_LITERAL_STRING(TXT_FILE_EXTENSION));
+       localFile->SetLeafName(fileName);
   }
-  else {
-    // the file name is too short for a proper extension, so default to LDIF
-    rv = ExportDirectoryToLDIF(aDirectory, localFile);
-  }
+      rv = ExportDirectoryToDelimitedText(aDirectory, TAB_DELIM, TAB_DELIM_LEN, localFile);
+      break;
+  };
+ 
   return rv;
 }
 
@@ -1447,6 +1473,25 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
               rv = card->GetCardValue(EXPORT_ATTRIBUTES_TABLE[i].abColName, getter_Copies(value));
               NS_ENSURE_SUCCESS(rv,rv);
 
+              // If a string contains at least one comma, tab or double quote then
+              // we need to quote the entire string. Also if double quote is part
+              // of the string we need to quote the double quote(s) as well.  
+              nsAutoString newValue(value);
+              PRBool needsQuotes = PR_FALSE;
+              if(newValue.FindChar('"') != kNotFound)
+              {
+                needsQuotes = PR_TRUE;
+                newValue.ReplaceSubstring(NS_LITERAL_STRING("\"").get(), NS_LITERAL_STRING("\"\"").get());
+              }
+              if (!needsQuotes && (newValue.FindChar(',') != kNotFound || newValue.FindChar('\x09') != kNotFound))
+                needsQuotes = PR_TRUE;
+
+              if (needsQuotes)
+              {
+                newValue.Insert(NS_LITERAL_STRING("\""), 0);
+                newValue.Append(NS_LITERAL_STRING("\""));
+              }
+
               // For notes, make sure CR/LF is converted to spaces 
               // to avoid creating multiple lines for a single card.
               //
@@ -1461,16 +1506,13 @@ nsAddressBook::ExportDirectoryToDelimitedText(nsIAbDirectory *aDirectory, const 
               // non-ASCII data is treated as base64 encoded UTF-8 in LDIF
               if (!strcmp(EXPORT_ATTRIBUTES_TABLE[i].abColName, kNotesColumn))
               {
-                nsAutoString tempStr(value.get());
-                if (!tempStr.IsEmpty())
+                if (!newValue.IsEmpty())
                 {
-                  tempStr.ReplaceChar(nsCRT::CR, ' ');
-                  tempStr.ReplaceChar(nsCRT::LF, ' ');
+                  newValue.ReplaceChar(nsCRT::CR, ' ');
+                  newValue.ReplaceChar(nsCRT::LF, ' ');
                 }
-                rv = importService->SystemStringFromUnicode(tempStr.get(), valueCStr);
               }
-              else
-                rv = importService->SystemStringFromUnicode(value.get(), valueCStr);
+              rv = importService->SystemStringFromUnicode(newValue.get(), valueCStr);
 
               if (NS_FAILED(rv)) {
                 NS_ASSERTION(0, "failed to convert string to system charset.  use LDIF");
