@@ -387,7 +387,7 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
     if (!registered)
         return NS_ERROR_NULL_POINTER;
 
-    const char jsExtension[] = ".cjs";
+    const char jsExtension[] = ".js";
     int jsExtensionLen = 4;
     char *nativePath = nsnull, *leafName = nsnull, *registryLocation = nsnull;
     nsIModule *module;
