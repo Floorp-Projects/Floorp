@@ -248,6 +248,17 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   PRBool  leftIsAuto = eStyleUnit_Auto == aPosition->mOffset.GetLeftUnit();
   PRBool  rightIsAuto = eStyleUnit_Auto == aPosition->mOffset.GetRightUnit();
 
+  // Check for percentage based values and an unconstrained containing
+  // block width. Treat them like 'auto'
+  if (NS_UNCONSTRAINEDSIZE == cbrs->computedWidth) {
+    if (eStyleUnit_Percent == aPosition->mOffset.GetLeftUnit()) {
+      leftIsAuto = PR_TRUE;
+    }
+    if (eStyleUnit_Percent == aPosition->mOffset.GetRightUnit()) {
+      rightIsAuto = PR_TRUE;
+    }
+  }
+
   // If neither 'left' not 'right' are auto, then we're over-constrained and
   // we ignore one of them
   if (!leftIsAuto && !rightIsAuto) {
@@ -300,6 +311,17 @@ nsHTMLReflowState::ComputeRelativeOffsets(const nsHTMLReflowState* cbrs,
   // other's negative
   PRBool  topIsAuto = eStyleUnit_Auto == aPosition->mOffset.GetTopUnit();
   PRBool  bottomIsAuto = eStyleUnit_Auto == aPosition->mOffset.GetBottomUnit();
+
+  // Check for percentage based values and a containing block height that
+  // depends on the content height. Treat them like 'auto'
+  if (NS_AUTOHEIGHT == cbrs->computedHeight) {
+    if (eStyleUnit_Percent == aPosition->mOffset.GetTopUnit()) {
+      topIsAuto = PR_TRUE;
+    }
+    if (eStyleUnit_Percent == aPosition->mOffset.GetBottomUnit()) {
+      bottomIsAuto = PR_TRUE;
+    }
+  }
 
   // If neither is 'auto', 'bottom' is ignored
   if (!topIsAuto && !bottomIsAuto) {
