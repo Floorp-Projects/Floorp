@@ -26,6 +26,7 @@
 #include "plstr.h"
 #include "plevent.h"
 
+#include "nsIProtocolConnection.h"
 #include "nsIStreamListener.h"
 #include "nsIInputStream.h"
 #include "nsIUrl.h"
@@ -287,7 +288,18 @@ int main(int argc, char **argv)
             urlLoaded = 1;
         }
 #else
-		return 1;
+        // Start the URL load...
+        nsIProtocolConnection* protoConn = nsnull;
+        result = NS_NewConnection(pURL, 
+            // nsISupports* eventSink,
+            nsnull,
+            // nsIConnectionGroup* group,
+            nsnull,
+            // nsIProtocolConnection* *result
+            &protoConn);
+
+        if (NS_FAILED(result)) return 1;
+
 #endif // 0
         
         
