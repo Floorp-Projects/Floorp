@@ -1849,17 +1849,15 @@ bool oeICalEventImpl::ParseIcalComponent( icalcomponent *comp )
 
     //title
     prop = icalcomponent_get_first_property( vevent, ICAL_SUMMARY_PROPERTY );
-    if ( prop != 0) {
-        tmpstr = icalproperty_get_summary( prop );
+    if ( prop != 0 && (tmpstr = icalproperty_get_summary( prop ) ) ) {
         SetTitle( nsDependentCString( strForceUTF8( tmpstr ) ) );
     } else if( !m_title.IsEmpty() ) {
-	    m_title.Truncate();
+        m_title.Truncate();
     }
 
     //description
     prop = icalcomponent_get_first_property( vevent, ICAL_DESCRIPTION_PROPERTY );
-    if ( prop != 0) {
-        tmpstr = icalproperty_get_description( prop );
+    if ( prop != 0 && (tmpstr = icalproperty_get_description( prop ) ) ) {
         SetDescription( nsDependentCString( strForceUTF8( tmpstr ) ) );
     } else if( !m_description.IsEmpty() ) {
         m_description.Truncate();
