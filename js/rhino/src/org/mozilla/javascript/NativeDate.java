@@ -844,11 +844,13 @@ public class NativeDate extends ScriptableObject {
         // if called with just one arg -
         if (args.length == 1) {
             double date;
-            // if it's not a string, use it as a millisecond date
+            if (args[0] instanceof Scriptable) 
+                args[0] = ((Scriptable) args[0]).getDefaultValue(null);
             if (!(args[0] instanceof String)) {
+                // if it's not a string, use it as a millisecond date
                 date = ScriptRuntime.toNumber(args[0]);
             } else {
-            // it's a string; parse it.
+                // it's a string; parse it.
                 String str = (String) args[0];
                 date = date_parseString(str);
             }
