@@ -230,6 +230,40 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
 	return urlString;
 }
 
+JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetDOM
+(JNIEnv *env, jobject obj, jint webShellPtr)
+{
+    WebShellInitContext* initContext = (WebShellInitContext *) webShellPtr;
+    jobject result = nsnull;
+    jlong documentLong = nsnull;
+    jclass clazz = nsnull;
+    jmethodID mid = nsnull;
+
+	if (initContext == nsnull) {
+		::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellGetDOM");
+		return nsnull;
+	}
+    if (nsnull == initContext->currentDocument ||
+        nsnull == (documentLong = (jlong) initContext->currentDocument.get())){
+        return nsnull;
+    }
+    
+	if (nsnull == (clazz = ::util_FindClass(env, 
+                                            "org/mozilla/dom/DOMAccessor"))) {
+		::util_ThrowExceptionToJava(env, "Exception: Can't get DOMAccessor class");
+		return nsnull;
+	}
+    if (nsnull == (mid = env->GetStaticMethodID(clazz, "getNodeByHandle",
+                                                "(J)Lorg/w3c/dom/Node;"))) {
+		::util_ThrowExceptionToJava(env, "Exception: Can't get DOM Node.");
+		return nsnull;
+	}
+    result = env->CallStaticObjectMethod(clazz, mid, documentLong);
+    
+    return result;
+}
+
+
 /*
  * Class:     org_mozilla_webclient_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeGetSource

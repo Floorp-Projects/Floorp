@@ -23,6 +23,7 @@
 package org.mozilla.webclient;
 
 import java.util.Properties;
+import org.w3c.dom.Document;
 
 public interface CurrentPage
 {
@@ -34,7 +35,7 @@ public void findNextInPage(boolean forward);
             
 public String getCurrentURL();
             
-    //    org.w3c.dom.Document getDOM();
+public Document getDOM();
 
 public Properties getPageInfo();
             

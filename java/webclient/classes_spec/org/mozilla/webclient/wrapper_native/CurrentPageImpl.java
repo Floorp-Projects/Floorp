@@ -35,7 +35,11 @@ import java.util.Properties;
 import java.io.*;
 import java.net.*;
 
+import org.w3c.dom.Document;
+
 import org.mozilla.webclient.UnimplementedException; 
+
+import org.mozilla.dom.DOMAccessor;
 
 public class CurrentPageImpl extends ImplObjectNative implements CurrentPage
 {
@@ -47,11 +51,14 @@ public class CurrentPageImpl extends ImplObjectNative implements CurrentPage
 // Class Variables
 //
 
+private static boolean domInitialized = false;
+
 //
 // Instance Variables
 //
 
 // Attribute Instance Variables
+
 
 // Relationship Instance Variables
 
@@ -63,6 +70,10 @@ public CurrentPageImpl(WrapperFactory yourFactory,
                        BrowserControl yourBrowserControl)
 {
     super(yourFactory, yourBrowserControl);
+    // force the class to be loaded, thus loading the JNI library
+    if (!domInitialized) {
+        DOMAccessor.initialize();
+    }
 }
 
 //
@@ -116,7 +127,11 @@ public String getCurrentURL()
     return result;
 }
             
-//    org.w3c.dom.Document getDOM();
+public Document getDOM()
+{
+    Document result = nativeGetDOM(nativeWebShell);
+    return result;
+}
 
 public Properties getPageInfo()
 {
@@ -221,7 +236,7 @@ native public void nativeFindNextInPage(int webShellPtr, boolean forward);
             
 native public String nativeGetCurrentURL(int webShellPtr);
             
-//    org.w3c.dom.Document getDOM();
+native public Document nativeGetDOM(int webShellPtr);
 
 // webclient.PageInfo getPageInfo();
             
@@ -245,7 +260,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("CurrentPageImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.5 2000/05/23 21:06:11 ashuk%eng.sun.com Exp $");
+    Log.setApplicationVersionDate("$Id: CurrentPageImpl.java,v 1.6 2000/06/04 22:16:05 edburns%acm.org Exp $");
     
 }
 

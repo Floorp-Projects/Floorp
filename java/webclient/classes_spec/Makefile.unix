@@ -7,7 +7,7 @@ JAVAC = ${JDK_LOCATION}/bin/javac
 JAVAH = ${JDK_LOCATION}/bin/javah
 OUTPUT_DIR = ../../../dist/classes
 # If you're using JDK 1.2
-CLASSES = ${OUTPUT_DIR}:${JDK_LOCATION}/lib/tools.jar:${JDK_LOCATION}/lib/rt.jar
+CLASSES = ${OUTPUT_DIR}:${JDK_LOCATION}/lib/tools.jar:${JDK_LOCATION}/lib/rt.jar:${CLASSPATH}
 JAVA_FILES = ./org/mozilla/webclient/*.java ./org/mozilla/webclient/wrapper_native/*.java ./org/mozilla/webclient/wrapper_native/motif/*.java ./org/mozilla/webclient/test/*.java
 JAVAH_OUTPUT_DIR = ../src_moz
 CP = cp

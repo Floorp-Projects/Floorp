@@ -44,6 +44,7 @@
 #include "nsIWebShell.h" // for nsIWebShell
 #include "nsIEventQueueService.h" // for PLEventQueue
 #include "nsISearchContext.h" // for Find
+#include "nsIDOMDocument.h"
 
 #include "ns_globals.h"
 
@@ -84,6 +85,7 @@ struct WebShellInitContext {
 	int					h;
         int                                     gtkWinPtr;
   nsCOMPtr<nsISearchContext> searchContext;
+  nsCOMPtr<nsIDOMDocument> currentDocument;
 };
 
 enum {

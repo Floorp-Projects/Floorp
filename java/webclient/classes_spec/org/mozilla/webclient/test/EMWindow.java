@@ -43,6 +43,8 @@ import java.util.*;
 import org.mozilla.webclient.*;
 import org.mozilla.util.Assert;
 
+import org.w3c.dom.Document;
+
 
 /**
  *
@@ -50,7 +52,7 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.9 2000/06/01 23:42:35 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.10 2000/06/04 22:16:04 edburns%acm.org Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -68,14 +70,17 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 
 	private CurrentPage	    currentPage;
 	private Bookmarks	    bookmarks;
-        private BookmarksFrame bookmarksFrame = null;
+    private BookmarksFrame bookmarksFrame = null;
 	private TreeModel	    bookmarksTree;
+    private DOMViewerFrame  domViewer;
 	private Panel			controlPanel;
 	private Panel			statusPanel;
 	private Panel			buttonsPanel;
     private FindDialog           findDialog = null;
     private MenuBar             menuBar;
     private Label          statusLabel;
+
+  private Document       currentDocument = null;
 
   private EmbeddedMozilla creator;
   private boolean viewMode = true;
@@ -143,6 +148,7 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		makeItem(buttonsPanel, "Stop",    2, 0, 1, 1, 0.0, 0.0);
 		makeItem(buttonsPanel, "Refresh", 3, 0, 1, 1, 0.0, 0.0);
 		makeItem(buttonsPanel, "Bookmarks",    4, 0, 1, 1, 0.0, 0.0);
+		makeItem(buttonsPanel, "DOMViewer",    5, 0, 1, 1, 0.0, 0.0);
 
 		// Create the control panel
 		controlPanel = new Panel();
@@ -284,6 +290,11 @@ public void delete()
 	bookmarksFrame.dispose();
 	bookmarksFrame = null;
     }
+    if (null != domViewer) {
+	domViewer.setVisible(false);
+	domViewer.dispose();
+	domViewer = null;
+    }
     BrowserControlFactory.deleteBrowserControl(browserControl);
     browserControl = null;
     System.out.println("debug: edburns: about to hide");
@@ -297,92 +308,108 @@ public void delete()
     bookmarksTree = null;
     controlPanel = null;
     buttonsPanel = null;
+    currentDocument = null;
 }
 
 
- public void actionPerformed (ActionEvent evt) {
-    	String command = evt.getActionCommand();
-	
+public void actionPerformed (ActionEvent evt) 
+{
+    String command = evt.getActionCommand();
+    
+    try {
+        Navigation navigation = (Navigation)
+            browserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
+        CurrentPage currentPage = (CurrentPage)
+            browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
+        History history = (History)
+            browserControl.queryInterface(BrowserControl.HISTORY_NAME);
 
-        try {
-            Navigation navigation = (Navigation)
-                browserControl.queryInterface(BrowserControl.NAVIGATION_NAME);
-            CurrentPage currentPage = (CurrentPage)
-               browserControl.queryInterface(BrowserControl.CURRENT_PAGE_NAME);
-            History history = (History)
-                browserControl.queryInterface(BrowserControl.HISTORY_NAME);
-            if (evt.getSource() instanceof MenuItem) {
-	      if (command.equals("New Window")) {
-		creator.CreateEMWindow();
-	      }
-	      else if (command.equals("Close")) {
-		System.out.println("Got windowClosing");
-		System.out.println("destroying the BrowserControl");
-		EMWindow.this.delete();
+        // deal with the menu item commands
+        if (evt.getSource() instanceof MenuItem) {
+            if (command.equals("New Window")) {
+                creator.CreateEMWindow();
+            }
+            else if (command.equals("Close")) {
+                System.out.println("Got windowClosing");
+                System.out.println("destroying the BrowserControl");
+                EMWindow.this.delete();
 				// should close the BrowserControlCanvas
-		creator.DestroyEMWindow(winNum);
-	      }
-	      else if (command.equals("Find")) {
+                creator.DestroyEMWindow(winNum);
+            }
+            else if (command.equals("Find")) {
 				if (null == findDialog) {
-				  Frame f = new Frame();
-			       	  f.setSize(350,150);
-				  findDialog = new FindDialog(this, this, 
-							      "Find in Page", "Find  ", 
-							      "", 20, false);
-				  findDialog.setModal(false);
+                    Frame f = new Frame();
+                    f.setSize(350,150);
+                    findDialog = new FindDialog(this, this, 
+                                                "Find in Page", "Find  ", 
+                                                "", 20, false);
+                    findDialog.setModal(false);
 	       		}
 				findDialog.setVisible(true);
-		//		currentPage.findInPage("Sun", true, true);
-	      }
-	      else if (command.equals("Find Next")) {
-		currentPage.findNextInPage(false);
-	      }
-	      else if (command.equals("View Page Source")) {
-		currentPage.getSourceBytes(viewMode);
-		viewMode = !viewMode;
-	      }
-	      else if (command.equals("View Page Info")) {
-		currentPage.getPageInfo();
-	      }
-	      else if (command.equals("Select All")) {
-		currentPage.selectAll();
-	      }
+                //		currentPage.findInPage("Sun", true, true);
+            }
+            else if (command.equals("Find Next")) {
+                currentPage.findNextInPage(false);
+            }
+            else if (command.equals("View Page Source")) {
+                currentPage.getSourceBytes(viewMode);
+                viewMode = !viewMode;
+            }
+            else if (command.equals("View Page Info")) {
+                currentPage.getPageInfo();
+            }
+            else if (command.equals("Select All")) {
+                currentPage.selectAll();
+            }
 	    }
-	
+        // deal with the button bar commands
 	    else if(command.equals("Stop")) {
-	    		navigation.stop();
-	    	}
-            else if (command.equals("Refresh")) {
-                navigation.refresh(Navigation.LOAD_NORMAL);
-            }
-            else if (command.equals("Bookmarks")) {
-                if (null == bookmarksTree) {
-                    bookmarksTree = bookmarks.getBookmarks();
-                }
-		if (null == bookmarksFrame) {
-		    bookmarksFrame = new BookmarksFrame(bookmarksTree);
-		    bookmarksFrame.setSize(new Dimension(320,480));
-		}
-                bookmarksFrame.setVisible(true);
-            }
-	    	else if (command.equals("Back")) {
-	    		if (history.canBack()) {
-		    		history.back();
-		    	}
-        	}
-	    	else if (command.equals("Forward")) {
-	    		if (history.canForward()) {
-		    		history.forward();
-		    	}
-            }
-	    	else {
-		        navigation.loadURL(urlField.getText());
-		    }
+            navigation.stop();
         }
-        catch (Exception e) {
-            System.out.println(e.getMessage());
+        else if (command.equals("Refresh")) {
+            navigation.refresh(Navigation.LOAD_NORMAL);
         }
-    } // actionPerformed()
+        else if (command.equals("Bookmarks")) {
+            if (null == bookmarksTree) {
+                bookmarksTree = bookmarks.getBookmarks();
+            }
+            
+            if (null == bookmarksFrame) {
+                bookmarksFrame = new BookmarksFrame(bookmarksTree);
+                bookmarksFrame.setSize(new Dimension(320,480));
+                bookmarksFrame.setLocation(defaultWidth + 5, 0);
+            }
+            bookmarksFrame.setVisible(true);
+        }
+        else if (command.equals("DOMViewer")) {
+            if (null == domViewer) {
+                domViewer = new DOMViewerFrame("DOM Viewer", creator);
+                domViewer.setSize(new Dimension(300, 600));
+                domViewer.setLocation(defaultWidth + 5, 0);
+            }
+            if (null != currentDocument) {
+                domViewer.setDocument(currentDocument);
+                domViewer.setVisible(true);
+            }
+        }
+        else if (command.equals("Back")) {
+            if (history.canBack()) {
+                history.back();
+            }
+        }
+        else if (command.equals("Forward")) {
+            if (history.canForward()) {
+                history.forward();
+            }
+        }
+        else {
+            navigation.loadURL(urlField.getText());
+        }
+    }
+    catch (Exception e) {
+        System.out.println(e.getMessage());
+    }
+} // actionPerformed()
 
 
 public void dialogDismissed(Dialog d) {
@@ -482,9 +509,14 @@ public void eventDispatched(WebclientEvent event)
                                currentURL);
             statusLabel.setText("Starting to load " + currentURL);
             urlField.setText(currentURL);
+            currentDocument = null;
             break;
         case ((int) DocumentLoadEvent.END_DOCUMENT_LOAD_EVENT_MASK):
             statusLabel.setText("Done.");
+            currentDocument = currentPage.getDOM();
+            if (null != domViewer) {
+                domViewer.setDocument(currentDocument);
+            }
             break;
         }
     }

@@ -93,6 +93,10 @@ include <$(DEPTH)\config\rules.mak>
 
 include <$(DEPTH)\java\config\localdefs.mak>
 
+!ifdef CLASSPATH
+JAVAC_CLASSPATH=$(JAVAC_CLASSPATH);$(CLASSPATH)
+!endif
+
 !ifdef BAL_INTERFACE
 INCS = \
 	-I..\bal\ \
@@ -188,3 +192,4 @@ clobber::
 	rm -f nsSetupRegistry.cpp
 	rm -f .\$(OBJDIR)\runem.bat
 	rm -f .\$(OBJDIR)\swingem.bat
+

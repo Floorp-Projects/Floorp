@@ -161,22 +161,23 @@ NS_IMETHODIMP DocumentLoaderObserverImpl::OnEndDocumentLoad(nsIDocumentLoader* l
                ("!!DocumentLoaderObserverImpl.cpp: OnEndDocumentLoad\n"));
     }
 #endif
+    nsCOMPtr<nsIDOMDocument> doc;
+    if (nsnull == loader) {
+        // NOT really ok, but we can't do anything.
+        return NS_OK;
+    }
+    if (!(doc = dom_getDocumentFromLoader(loader))) {
+        // NOT really ok, but we can't do anything.
+        return NS_OK;
+    }
+    mInitContext->currentDocument = doc;
+
     // if we have a mouse listener
     if (mMouseListener) {
         // install the mouse listener into mozilla
         
-        nsCOMPtr<nsIDOMDocument> doc;
         PR_ASSERT(mMouseListener);
         
-        if (nsnull == loader) {
-            // NOT really ok, but we can't do anything.
-            return NS_OK;
-        }
-        
-        if (!(doc = dom_getDocumentFromLoader(loader))) {
-            // NOT really ok, but we can't do anything.
-            return NS_OK;
-        }
         nsresult rv;
         
         rv = doc->QueryInterface(NS_GET_IID(nsIDOMEventTarget),

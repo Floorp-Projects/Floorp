@@ -62,9 +62,21 @@ WEBCLIENT_JAR_NAME=webclient(VERSION_NUMBER).jar
 JAVAC_PROG=$(JDKHOME)\bin\javac
 
 export::
+	@echo +++ NOTE, you must have the org.w3c.dom classes in your classpath!
+	@echo +++ If you do not have org.w3c.dom classes, webclient will not build.
+	@echo +++ You can get the required dom classes at 
+	@echo +++ http://www.mozilla.org/projects/blackwood/webclient/bin/m3/dom2-20000307.jar
+	@echo +++
+	@echo +++ checking that org.mozilla.dom classes have been built...
+	if not exist $(MOZ_SRC)\mozilla\dist\classes\org\mozilla\dom\DOMAccessor.class \
+	stopbuild.exe
 	@echo +++ Checking that org.mozilla.util classes have been built...
 	if not exist $(MOZ_SRC)\mozilla\dist\classes\org\mozilla\util\Assert.class \
 	stopbuild.exe
+
+!ifdef CLASSPATH
+JAVAC_CLASSPATH=$(JAVAC_CLASSPATH);$(CLASSPATH)
+!endif
 
 include <$(DEPTH)\config\rules.mak>
 
