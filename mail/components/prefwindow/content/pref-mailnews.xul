@@ -39,7 +39,7 @@
   <script type="application/x-javascript">
   <![CDATA[
 
-    var _elementIDs = ["mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailPaneConfig", "mailRememberLastMsg",
+    var _elementIDs = ["mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailPaneConfig", "mailnewsDoubleClick2NewWindow", "mailRememberLastMsg",
                        "mailnewsSoundFileUrl", "newMailNotification", "newMailNotificationType",
                         "newMailNotificationAlert"];
   ]]>
@@ -60,6 +60,8 @@
     
   </groupbox>
   
+  <hbox flex="1">
+
   <groupbox>
     <caption label="&windowSettings.label;"/>
     <label value="&selectWindowLayout.label;" accesskey="&selectWindowLayout.accesskey;" control="mailPaneConfig"/>
@@ -70,6 +72,21 @@
       </radiogroup>
     </hbox> 
   </groupbox>
+
+  <spring flex="1"/>
+
+  <groupbox>
+    <caption label="&windowBehavior.label;"/>
+    <label value="&reuseExp.label;"/>
+    <hbox class="indent" align="center">
+      <radiogroup id="mailnewsDoubleClick2NewWindow" preftype="bool" prefstring="mailnews.reuse_message_window" orient="vertical">
+        <radio value="false" label="&reuseExpRadio0.label;" accesskey="&reuseExpRadio0.accesskey;" id="new"/>
+        <radio value="true" label="&reuseExpRadio1.label;" accesskey="&reuseExpRadio1.accesskey;" id="existing"/>
+      </radiogroup>
+    </hbox>
+  </groupbox>
+
+  </hbox>
 
   <groupbox>
     <caption label="&messengerStartPage.label;"/>
@@ -105,7 +122,7 @@
          oncommand="PlaySoundCheck()"/>
 
     <hbox>
-      <hbox align="center" class="indent">
+      <hbox align="center">
         <radiogroup id="newMailNotificationType" prefstring="mail.biff.play_sound.type" orient="vertical">
           <radio class="iconic" value="0" oncommand="PlaySoundCheck()" label="&systemsound.label;" id="system"/>
           <radio class="iconic" value="1" oncommand="PlaySoundCheck()" label="&customsound.label;" id="custom"/>
