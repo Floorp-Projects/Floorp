@@ -322,27 +322,36 @@ jschar js_EscapeMap[] = {
     '\t', 't',
     '\v', 'v',
     '"',  '"',
-    '\'', '\''
+    '\'', '\'',
+    '\\', '\\',
+    0
 };
 
 static char *
 QuoteString(Sprinter *sp, JSString *str, jschar quote)
 {
     ptrdiff_t off, len, nb;
-    const jschar *s, *t, *u;
+    const jschar *s, *t, *u, *z;
     char *bp;
     jschar c;
     JSBool ok;
 
+    /* Sample off first for later return value pointer computation. */
     off = sp->offset;
-    s = str->chars;
-    t = s;
-    c = *t;
     if (Sprint(sp, "%c", (char)quote) < 0)
 	return NULL;
-    do {
-	while (JS_ISPRINT(c) && c != quote && !(c >> 8))
+
+    /* Loop control variables: z points at end of string sentinel. */
+    s = str->chars;
+    z = s + str->length;
+    for (t = s; t < z; s = ++t) {
+	/* Move t forward from s past un-quote-worthy characters. */
+	c = *t;
+	while (JS_ISPRINT(c) && c != quote && c != '\\' && !(c >> 8)) {
 	    c = *++t;
+	    if (t == z)
+		break;
+	}
 	len = PTRDIFF(t, s, jschar);
 
 	/* Allocate space for s, including the '\0' at the end. */
@@ -357,17 +366,19 @@ QuoteString(Sprinter *sp, JSString *str, jschar quote)
 	    *bp++ = (char) *s++;
 	*bp = '\0';
 
-	if (c == 0)
+	if (t == z)
 	    break;
+
+	/* Use js_EscapeMap, \u, or \x only if necessary. */
 	if ((u = js_strchr(js_EscapeMap, c)) != NULL)
 	    ok = Sprint(sp, "\\%c", (char)u[1]) >= 0;
 	else
 	    ok = Sprint(sp, (c >> 8) ? "\\u%04X" : "\\x%02X", c) >= 0;
 	if (!ok)
 	    return NULL;
-	s = ++t;
-	c = *t;
-    } while (c != 0);
+    }
+
+    /* Sprint the closing quote and return the quoted string. */
     if (Sprint(sp, "%c", (char)quote) < 0)
 	return NULL;
     return OFF2STR(sp, off);
@@ -690,7 +701,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 {
     JSContext *cx;
     JSPrinter *jp;
-    jsbytecode *endpc, *done;
+    jsbytecode *endpc, *done, *forelem_tgt;
     ptrdiff_t len, todo, oplen, cond, next, tail;
     JSOp op, lastop, saveop;
     JSCodeSpec *cs, *topcs;
@@ -717,7 +728,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
     op = JSOP_NOP;
     while (pc < endpc) {
 	lastop = op;
-	op = saveop = *pc;
+	op = saveop = (JSOp) *pc;
 	if (op >= JSOP_LIMIT) {
 	    switch (op) {
 	      case JSOP_GETPROP2:
@@ -1231,8 +1242,6 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
 	      case JSOP_FORELEM:
 		rval = POP_STR();
-		/* FALL THROUGH */
-	      case JSOP_FORELEM2:
 		xval = POP_STR();
 		atom = NULL;
 		lval = POP_STR();
@@ -1243,6 +1252,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		LOCAL_ASSERT(*pc == JSOP_IFEQ);
 		oplen = js_CodeSpec[JSOP_IFEQ].length;
 		len = GET_JUMP_OFFSET(pc);
+              do_forinbody:
 		js_printf(jp, "\tfor (%s%s",
 			  (sn && SN_TYPE(sn) == SRC_VAR) ? "var " : "", lval);
 		if (atom)
@@ -1259,6 +1269,32 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		js_printf(jp, "\t}\n");
 		todo = -2;
 		break;
+
+              case JSOP_FORELEM2:
+		pc++;
+		LOCAL_ASSERT(*pc == JSOP_IFEQ);
+		len = js_CodeSpec[JSOP_IFEQ].length;
+                /*
+                    this gets a little wacky. Only the length of the body of
+                    the for statement PLUS the indexing expression is known
+                    here, so we pass it to the enumelem decompilation via this
+                    local. Hopefully no intervening code can mess up the value?
+                */
+		forelem_tgt = pc + GET_JUMP_OFFSET(pc);
+                break;
+
+              case JSOP_ENUMELEM:
+                /*
+                    the stack has the object and the index expression.
+                    The for body length can now be adjusted to account for
+                    the length of the indexing epxression.
+                */
+                atom = NULL;
+		xval = POP_STR();
+		lval = POP_STR();
+                rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-1]);
+                len = forelem_tgt - pc;
+                goto do_forinbody;
 
 	      case JSOP_DUP2:
 		rval = OFF2STR(&ss->sprinter, ss->offsets[ss->top-2]);
@@ -1304,7 +1340,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 
 	      case JSOP_NEW:
 	      case JSOP_CALL:
-	      case JSOP_CALLSPECIAL:
+	      case JSOP_EVAL:
 		saveop = op;
 		op = JSOP_NOP;           /* turn off parens */
 		argc = GET_ARGC(pc);
@@ -1845,7 +1881,7 @@ Decompile(SprintStack *ss, jsbytecode *pc, intN nb)
 		(void) PopOff(ss, op);
 		lval = POP_STR();
 #if JS_HAS_SHARP_VARS
-		op = pc[len];
+		op = (JSOp)pc[len];
 		if (op == JSOP_DEFSHARP) {
 		    pc += len;
 		    cs = &js_CodeSpec[op];

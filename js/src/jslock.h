@@ -100,7 +100,7 @@ extern void js_LockObj(JSContext *cx, JSObject *obj);
 extern void js_UnlockObj(JSContext *cx, JSObject *obj);
 extern void js_LockScope(JSContext *cx, JSScope *scope);
 extern void js_UnlockScope(JSContext *cx, JSScope *scope);
-extern int js_SetupLocks(int);
+extern int js_SetupLocks(int,int);
 extern void js_CleanupLocks();
 extern JS_PUBLIC_API(void) js_InitContextForLocking(JSContext *);
 extern void js_TransferScopeLock(JSContext *, JSScope *, JSScope *);

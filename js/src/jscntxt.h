@@ -48,6 +48,7 @@ struct JSRuntime {
     uint32              gcNumber;
     JSBool              gcPoke;
     JSGCCallback        gcCallback;
+    uint32              gcMallocBytes;
 #ifdef JS_GCMETER
     JSGCStats           gcStats;
 #endif

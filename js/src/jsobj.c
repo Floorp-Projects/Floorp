@@ -593,8 +593,7 @@ obj_eval(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     caller = cx->fp->down;
     implicitWith = JS_FALSE; /* Unnecessary init to kill gcc warning */
 
-    if ((cx->version == JSVERSION_DEFAULT || cx->version >= JSVERSION_1_4)
-            && (*caller->pc != JSOP_CALLSPECIAL)) {
+    if (JSVERSION_IS_ECMA(cx->version) && *caller->pc != JSOP_EVAL) {
 	JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
 			     JSMSG_BAD_INDIRECT_CALL, js_eval_str);
         return JS_FALSE;
@@ -2661,7 +2660,7 @@ void printObj(JSObject *jsobj) {
 }
 
 void printVal(jsval val) {
-    fprintf(stderr, "val %d (0x%p) = ", val, (void *) val);
+    fprintf(stderr, "val %d (0x%p) = ", val, (void *)val);
     if (JSVAL_IS_NULL(val)) {
 	fprintf(stderr, "null\n");
     } else if (JSVAL_IS_VOID(val)) {
@@ -2683,7 +2682,7 @@ void printVal(jsval val) {
 }
 
 void printId(jsid id) {
-    fprintf(stderr, "id %d (0x%p) is ", id, (void *) id);
+    fprintf(stderr, "id %d (0x%p) is ", id, (void *)id);
     printVal(js_IdToValue(id));
 }
 

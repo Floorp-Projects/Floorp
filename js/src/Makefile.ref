@@ -34,7 +34,7 @@ ifdef JS_THREADSAFE
 DEFINES += -DJS_THREADSAFE
 INCLUDES += -I../../dist/$(OBJDIR)/include
 ifdef USE_MSVC
-OTHER_LIBS += ../../dist/$(OBJDIR)/lib/nspr3.lib
+OTHER_LIBS += ../../dist/$(OBJDIR)/lib/libnspr3.lib
 else
 OTHER_LIBS += -L../../dist/$(OBJDIR)/lib -lnspr3
 endif
@@ -53,6 +53,20 @@ endif
 #
 CFLAGS          += $(OPTIMIZER) $(OS_CFLAGS) $(DEFINES) $(INCLUDES) $(XCFLAGS)
 LDFLAGS		= -lm $(XLDFLAGS)
+
+#
+# Ask perl what flags it was built with, so we can build js with similar flags
+# and link properly.  Viva gmake.
+#
+ifdef JS_PERLCONNECT
+DEFINES += -DPERLCONNECT
+
+PERLCFLAGS := $(shell perl -MExtUtils::Embed -e ccopts)
+PERLLDFLAGS := $(shell perl -MExtUtils::Embed -e ldopts)
+
+CFLAGS += $(PERLCFLAGS)
+LDFLAGS += $(PERLLDFLAGS)
+endif
 
 # For purify
 PURE_CFLAGS     = -DXP_UNIX $(OPTIMIZER) $(PURE_OS_CFLAGS) $(DEFINES) \
@@ -102,7 +116,26 @@ API_HFILES =		\
 	jsdbgapi.h	\
 	$(NULL)
 
-HFILES = $(JS_HFILES) $(API_HFILES)
+OTHER_HFILES =		\
+	jsaddr.h	\
+	jsbit.h		\
+	jscompat.h	\
+	jscpucfg.h	\
+	jsotypes.h	\
+	jsprhash.h	\
+	jsstddef.h	\
+	prmjtime.h	\
+	resource.h	\
+	jsopcode.tbl	\
+	js.msg		\
+	jsshell.msg	\
+	$(NULL)
+
+ifndef PREBUILT_CPUCFG
+OTHER_HFILES += $(OBJDIR)/jsautocfg.h
+endif
+
+HFILES = $(JS_HFILES) $(API_HFILES) $(OTHER_HFILES)
 
 JS_CFILES =		\
 	jsapi.c		\
@@ -145,7 +178,7 @@ DIRS      += liveconnect
 endif
 
 ifdef JS_PERLCONNECT
-DIRS      += perlconnect
+JS_CFILES += jsperl.c
 endif
 
 ifdef JS_HAS_FILE_OBJECT
@@ -163,7 +196,7 @@ SHARED_LIBRARY = $(OBJDIR)/js32.dll
 PROGRAM = $(OBJDIR)/js.exe
 else
 LIBRARY = $(OBJDIR)/libjs.a
-SHARED_LIBRARY = $(OBJDIR)/libjs.so
+SHARED_LIBRARY = $(OBJDIR)/libjs.$(SO_SUFFIX)
 PROGRAM = $(OBJDIR)/js
 endif
 

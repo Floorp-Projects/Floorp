@@ -31,6 +31,10 @@
 #include "jsj_private.h"        /* LiveConnect internals */
 #include "jsjava.h"             /* LiveConnect external API */
 
+#ifdef JSJ_THREADSAFE
+#    include "prmon.h"
+#endif
+
 /*
  * At certain times during initialization, there may be no JavaScript context
  * available to direct error reports to, in which case the error messages
@@ -382,6 +386,12 @@ init_netscape_java_classes(JSJavaVM *jsjava_vm, JNIEnv *jEnv)
 
 JSJavaVM *jsjava_vm_list = NULL;
 
+static JSJavaThreadState *thread_list = NULL;
+
+#ifdef JSJ_THREADSAFE
+static PRMonitor *thread_list_monitor = NULL;
+#endif
+
 /*
  * Called once per Java VM, this function initializes the classes, fields, and
  * methods required for Java reflection.  If java_vm is NULL, a new Java VM is
@@ -454,7 +464,7 @@ JSJ_ConnectToJavaVM(SystemJavaVM *java_vm_arg, void* initargs)
 #ifdef JSJ_THREADSAFE
     if (jsjava_vm_list == NULL) {
         thread_list_monitor =
-            (struct PRMonitor *) PR_NewNamedMonitor("thread_list_monitor");
+            (struct PRMonitor *) PR_NewMonitor();
     }
 #endif JSJ_THREADSAFE
 
@@ -574,12 +584,6 @@ JSJ_DisconnectFromJavaVM(JSJavaVM *jsjava_vm)
     
     free(jsjava_vm);
 }
-
-static JSJavaThreadState *thread_list = NULL;
-
-#ifdef JSJ_THREADSAFE
-static PRMonitor *thread_list_monitor = NULL;
-#endif
 
 static JSJavaThreadState *
 new_jsjava_thread_state(JSJavaVM *jsjava_vm, const char *thread_name, JNIEnv *jEnv)

@@ -309,7 +309,7 @@ JSBool
 js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic)
 {
     JSScript *script = *scriptp;
-    uint32 length, lineno, depth, magicval;
+    uint32 length, lineno, depth, magicval, notelen, numtrys = 0;
 
     if (xdr->mode == JSXDR_ENCODE)
 	magicval = SCRIPT_XDRMAGIC;
@@ -321,9 +321,20 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic)
     }
     *magic = JS_TRUE;
     if (xdr->mode == JSXDR_ENCODE) {
+        jssrcnote *end = script->notes;
 	length = script->length;
 	lineno = (uint32)script->lineno;
 	depth = (uint32)script->depth;
+        /* count the trynotes */
+        if (script->trynotes) {
+            for (; script->trynotes[numtrys].catchStart; numtrys++)
+                ;               /* count the trynotes */
+            numtrys++;          /* room for the end marker */
+        }
+        /* count the src notes */
+        while (!SN_IS_TERMINATOR(end))
+            end = SN_NEXT(end);
+        notelen = end - script->notes;
     }
     if (!JS_XDRUint32(xdr, &length))
 	return JS_FALSE;
@@ -335,21 +346,43 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *magic)
     }
     if (!JS_XDRBytes(xdr, (char **)&script->code, length) ||
 	!XDRAtomMap(xdr, &script->atomMap) ||
-	!JS_XDRCStringOrNull(xdr, (char **)&script->notes) ||
+        !JS_XDRUint32(xdr, &notelen) ||
+        /* malloc on decode only */
+        (!(xdr->mode == JSXDR_ENCODE ||
+           (script->notes = JS_malloc(xdr->cx, notelen)) != NULL)) ||
+        !JS_XDRBytes(xdr, (char **)&script->notes, notelen) ||
 	!JS_XDRCStringOrNull(xdr, (char **)&script->filename) ||
 	!JS_XDRUint32(xdr, &lineno) ||
-	!JS_XDRUint32(xdr, &depth)) {
-	if (xdr->mode == JSXDR_DECODE) {
-	    js_DestroyScript(xdr->cx, script);
-	    *scriptp = NULL;
-	}
-	return JS_FALSE;
+	!JS_XDRUint32(xdr, &depth) ||
+        !JS_XDRUint32(xdr, &numtrys)) {
+        goto error;
     }
     if (xdr->mode == JSXDR_DECODE) {
 	script->lineno = (uintN)lineno;
 	script->depth = (uintN)depth;
+        if (numtrys) {
+            script->trynotes = JS_malloc(xdr->cx,
+                                         sizeof(JSTryNote) * (numtrys + 1));
+            if (!script->trynotes)
+                goto error;
+        } else {
+            script->trynotes = NULL;
+        }
+    }
+    for (; numtrys; numtrys--) {
+        JSTryNote *tn = &script->trynotes[numtrys - 1];
+        if (!JS_XDRUint32(xdr, (uint32*)&tn->start) ||
+            !JS_XDRUint32(xdr, (uint32*)&tn->length) ||
+            !JS_XDRUint32(xdr, (uint32*)&tn->catchStart))
+            goto error;
     }
     return JS_TRUE;
+ error:
+    if (xdr->mode == JSXDR_DECODE) {
+        js_DestroyScript(xdr->cx, script);
+        *scriptp = NULL;
+    }
+    return JS_FALSE;
 }
 
 static JSBool

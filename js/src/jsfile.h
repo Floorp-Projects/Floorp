@@ -21,12 +21,9 @@
 
 #if JS_HAS_FILE_OBJECT
 JS_EXTERN_API(JSObject*)
-js_InitFileClass(JSContext *cx, JSObject* obj);
+js_InitFileClass(JSContext *cx, JSObject* obj, JSBool initStandardStreams);
 
 JS_EXTERN_API(JSObject*)
 js_NewFileObject(JSContext *cx, char *bytes);
-
-JS_EXTERN_API(JSObject*)
-js_NewFileObjectFromFILE(JSContext *cx, FILE *nativehandle, char *filename, JSBool open);
 #endif /* JS_HAS_FILE_OBJECT */
 #endif /* _jsfile_h__ */

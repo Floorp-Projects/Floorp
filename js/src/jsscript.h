@@ -31,13 +31,12 @@ JS_BEGIN_EXTERN_C
  *
  * All fields except length are code offsets, relative to the beginning of
  * the script.  If script->trynotes is not null, it points to a vector of
- * these structs terminated by one with start, catchStart, and finallyStart
- * all equal to 0, and length == script->length.
+ * these structs terminated by one with catchStart == 0.
  */
 struct JSTryNote {
     ptrdiff_t    start;         /* start of try statement */
     ptrdiff_t    length;        /* count of try statement bytecodes */
-    ptrdiff_t    catchStart;    /* start of catch block (0 if none) */
+    ptrdiff_t    catchStart;    /* start of catch block (0 if end) */
 };
 
 struct JSScript {

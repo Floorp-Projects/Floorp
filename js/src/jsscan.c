@@ -49,9 +49,9 @@
 
 static struct keyword {
     char        *name;
-    int16       tokentype;      /* JSTokenType */
-    int8        op;             /* JSOp */
-    uint8       version;        /* JSVersion */
+    JSTokenType tokentype;      /* JSTokenType */
+    JSOp        op;             /* JSOp */
+    JSVersion   version;        /* JSVersion */
 } keywords[] = {
     {"break",           TOK_BREAK,              JSOP_NOP},
     {"case",            TOK_CASE,               JSOP_NOP},
@@ -120,7 +120,7 @@ static struct keyword {
     {"public",          TOK_RESERVED,           JSOP_NOP},
     {"short",           TOK_RESERVED,           JSOP_NOP},
     {"static",          TOK_RESERVED,           JSOP_NOP},
-    {"super",           TOK_PRIMARY,            JSOP_NOP},
+    {"super",           TOK_RESERVED,           JSOP_NOP},
     {"synchronized",    TOK_RESERVED,           JSOP_NOP},
     {"throws",          TOK_RESERVED,           JSOP_NOP},
     {"transient",       TOK_RESERVED,           JSOP_NOP},
@@ -473,9 +473,6 @@ js_ReportCompileError(JSContext *cx, JSTokenStream *ts, uintN flags,
 	(*onError)(cx, message, &report);
 #if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800
     } else {
-	if (!(ts->flags & TSF_INTERACTIVE))
-	    fprintf(stderr, "JavaScript %s: ",
-		    JSREPORT_IS_WARNING(flags) ? "warning" : "error");
 	if (ts->filename)
 	    fprintf(stderr, "%s, ", ts->filename);
 	if (ts->lineno)
@@ -576,12 +573,9 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
         }
         if (onError)
             (*onError)(cx, message, &report);
-
+#if 0
 #if !defined XP_PC || !defined _MSC_VER || _MSC_VER > 800
     } else {
-	if (!(ts->flags & TSF_INTERACTIVE))
-	    fprintf(stderr, "JavaScript %s: ",
-		    JSREPORT_IS_WARNING(flags) ? "warning" : "error");
 	if (ts->filename)
 	    fprintf(stderr, "%s, ", ts->filename);
 	if (ts->lineno)
@@ -589,6 +583,7 @@ js_ReportCompileErrorNumber(JSContext *cx, JSTokenStream *ts, uintN flags,
 	fprintf(stderr, "%s:\n%s\n",message,
 		js_DeflateString(cx, ts->linebuf.base,
 				 ts->linebuf.limit - ts->linebuf.base));
+#endif
 #endif
     }
     if (lastc == '\n')
@@ -613,15 +608,11 @@ js_PeekToken(JSContext *cx, JSTokenStream *ts)
 JSTokenType
 js_PeekTokenSameLine(JSContext *cx, JSTokenStream *ts)
 {
-    uintN newlines;
     JSTokenType tt;
 
-    newlines = ts->flags & TSF_NEWLINES;
-    if (!newlines)
-	SCAN_NEWLINES(ts);
+    SCAN_NEWLINES(ts);
     tt = js_PeekToken(cx, ts);
-    if (!newlines)
-	HIDE_NEWLINES(ts);
+    HIDE_NEWLINES(ts);
     return tt;
 }
 
@@ -638,7 +629,7 @@ GrowTokenBuf(JSContext *cx, JSTokenBuf *tb)
     base = tb->base;
     offset = PTRDIFF(tb->ptr, base, jschar);
     length = PTRDIFF(tb->limit, base, jschar);
-    tbincr = TBINCR * sizeof(jschar);
+    tbincr = (length + TBINCR) * sizeof(jschar);
     pool = &cx->tempPool;
     if (!base) {
 	JS_ARENA_ALLOCATE(base, pool, tbincr);
@@ -651,7 +642,7 @@ GrowTokenBuf(JSContext *cx, JSTokenBuf *tb)
 	return JS_FALSE;
     }
     tb->base = base;
-    tb->limit = base + length + TBINCR;
+    tb->limit = base + length + length + TBINCR;
     tb->ptr = base + offset;
     return JS_TRUE;
 }
@@ -725,7 +716,7 @@ retry:
 	    struct keyword *kw;
 
 	    kw = &keywords[atom->kwindex];
-	    ts->token.t_op = kw->op;
+	    ts->token.t_op = (JSOp) kw->op;
 	    RETURN(kw->tokentype);
 	}
 	ts->token.t_op = JSOP_NAME;
@@ -949,7 +940,7 @@ retry:
       case '=':
 	if (MatchChar(ts, c)) {
 #if JS_HAS_TRIPLE_EQOPS
-	    ts->token.t_op = MatchChar(ts, c) ? JSOP_NEW_EQ : cx->jsop_eq;
+	    ts->token.t_op = MatchChar(ts, c) ? JSOP_NEW_EQ : (JSOp)cx->jsop_eq;
 #else
 	    ts->token.t_op = cx->jsop_eq;
 #endif
@@ -963,7 +954,7 @@ retry:
       case '!':
 	if (MatchChar(ts, '=')) {
 #if JS_HAS_TRIPLE_EQOPS
-	    ts->token.t_op = MatchChar(ts, '=') ? JSOP_NEW_NE : cx->jsop_ne;
+	    ts->token.t_op = MatchChar(ts, '=') ? JSOP_NEW_NE : (JSOp)cx->jsop_ne;
 #else
 	    ts->token.t_op = cx->jsop_ne;
 #endif
@@ -1061,6 +1052,8 @@ skipline:
 		    flags |= JSREG_GLOB;
 		else if (MatchChar(ts, 'i'))
 		    flags |= JSREG_FOLD;
+		else if (MatchChar(ts, 'm'))
+		    flags |= JSREG_MULTILINE;
 		else
 		    break;
 	    }
@@ -1157,7 +1150,7 @@ skipline:
     }
 
     JS_ASSERT(c < TOK_LIMIT);
-    RETURN(c);
+    RETURN((JSTokenType)c);
 
 #undef INIT_TOKENBUF
 #undef FINISH_TOKENBUF

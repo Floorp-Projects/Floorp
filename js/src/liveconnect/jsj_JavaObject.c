@@ -69,9 +69,9 @@ jsj_InitJavaObjReflectionsTable(void)
 
 #ifdef JSJ_THREADSAFE
     java_obj_reflections_monitor = 
-	(struct PRMonitor *) PR_NewNamedMonitor("java_obj_reflections");
+	(struct PRMonitor *) PR_NewMonitor();
     if (!java_obj_reflections_monitor) {
-        JS_HashTableDestroy(java_obj_reflections);
+        JSJ_HashTableDestroy(java_obj_reflections);
         return JS_FALSE;
     }
 #endif
@@ -221,6 +221,8 @@ enumerate_remove_java_obj(JSJHashEntry *he, JSIntn i, void *arg)
     JSObject *java_wrapper_obj;
 
     java_wrapper_obj = (JSObject *)he->value;
+
+    /* Warning: NULL argument may cause assertion in JS engine, but it's actually OK */
     java_wrapper = JS_GetPrivate(NULL, java_wrapper_obj);
     java_obj = java_wrapper->java_obj;
     (*jEnv)->DeleteGlobalRef(jEnv, java_obj);
@@ -234,6 +236,8 @@ enumerate_remove_java_obj(JSJHashEntry *he, JSIntn i, void *arg)
 void
 jsj_DiscardJavaObjReflections(JNIEnv *jEnv)
 {
+#if 0
+    /* Causes assert-botch in JS_GetPrivate, so disable for now */
     if (java_obj_reflections) {
         JSJ_HashTableEnumerateEntries(java_obj_reflections,
                                       enumerate_remove_java_obj,
@@ -241,6 +245,7 @@ jsj_DiscardJavaObjReflections(JNIEnv *jEnv)
         JSJ_HashTableDestroy(java_obj_reflections);
         java_obj_reflections = NULL;
     }
+#endif
 }
 
 JS_DLL_CALLBACK JSBool

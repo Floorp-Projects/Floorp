@@ -154,7 +154,6 @@ struct JSTokenStream {
 #define TSF_EOF         0x02            /* hit end of file */
 #define TSF_NEWLINES    0x04            /* tokenize newlines */
 #define TSF_REGEXP      0x08            /* looking for a regular expression */
-#define TSF_INTERACTIVE 0x10            /* interactive parsing mode */
 #define TSF_NLFLAG      0x20            /* last linebuf ended with \n */
 #define TSF_CRFLAG      0x40            /* linebuf would have ended with \r */
 #define TSF_BADCOMPILE  0x80            /* compile failed, stop throwing exns */ 

@@ -23,7 +23,7 @@
 #  Initial DG/UX port by Marc Fraioli (fraioli@dg-rtp.dg.com)
 #
 
-ifdef NS_USE_GCC
+ifndef NS_USE_NATIVE
 CC = gcc
 CCC = g++
 CFLAGS +=  -mieee -Wall -Wno-format
@@ -31,10 +31,11 @@ else
 CC  = cc
 CCC = cxx
 CFLAGS += -ieee -std
+# LD  = cxx
 endif
 
 RANLIB = echo
-MKSHLIB = $(LD) -shared -all -expect_unresolved "*"
+MKSHLIB = $(LD) -shared -taso -all -expect_unresolved "*"
 
 #
 #  _DGUX_SOURCE is needed to turn on a lot of stuff in the headers if 

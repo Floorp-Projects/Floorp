@@ -13,43 +13,9 @@
 # Communications Corporation.  Portions created by Netscape are
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
-#
 
-#
-# Config stuff for HPUX
-#
+JDK = /share/builds/components/jdk/1.1.6/IRIX
 
-# CC = gcc
-# CCC = g++
-# CFLAGS +=  -Wall -Wno-format -fPIC
+INCLUDES   += -I$(JDK)/include -I$(JDK)/include/irix
 
-CC  = cc -Ae +Z
-CCC = CC -Ae +a1 +eh +Z
-
-RANLIB = echo
-MKSHLIB = $(LD) -b
-
-SO_SUFFIX = sl
-
-#.c.o:
-#	$(CC) -c -MD $*.d $(CFLAGS) $<
-
-CPU_ARCH = hppa
-GFX_ARCH = x
-
-OS_CFLAGS = -DXP_UNIX -DHPUX -DSYSV
-OS_LIBS = -ldld
-
-ifeq ($(OS_RELEASE),B.10)
-PLATFORM_FLAGS		+= -DHPUX10 -Dhpux10
-PORT_FLAGS		+= -DRW_NO_OVERLOAD_SCHAR -DHAVE_MODEL_H
-ifeq ($(OS_VERSION),.10)
-PLATFORM_FLAGS		+= -DHPUX10_10
-endif
-ifeq ($(OS_VERSION),.20)
-PLATFORM_FLAGS		+= -DHPUX10_20
-endif
-ifeq ($(OS_VERSION),.30)
-PLATFORM_FLAGS		+= -DHPUX10_30
-endif
-endif
+OTHER_LIBS += -L$(JDK)/lib32/sgi/native_threads -ljava

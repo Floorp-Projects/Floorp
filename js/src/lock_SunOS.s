@@ -35,6 +35,7 @@
 
         ENTRY(compare_and_swap)         ! standard assembler/ELF prologue
 
+	stbar
 	mov -1,%o3                      ! busy flag
 	swap [%o0],%o3                  ! get current value
 l1:	cmp %o3,-1                      ! busy?
@@ -61,6 +62,7 @@ l2:	retl
 
         ENTRY(compare_and_swap)         ! standard assembler/ELF prologue
 
+	stbar
 	cas [%o0],%o1,%o2               ! compare *w with old value and set to new if equal
 	cmp %o1,%o2                     ! did we succeed?
 	be,a m1                         ! yes

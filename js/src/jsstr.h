@@ -264,6 +264,12 @@ js_SetStringBytes(JSString *str, char *bytes, size_t length);
 extern char *
 js_GetStringBytes(JSString *str);
 
+/*
+ * Returns an escaped version of character string str.
+ * */
+char*
+js_escape(JSContext *cx, JSObject *obj, char *str);
+
 JS_END_EXTERN_C
 
 #endif /* jsstr_h___ */

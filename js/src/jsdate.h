@@ -16,11 +16,12 @@
  * Reserved.
  */
 
-#ifndef jsdate_h___
-#define jsdate_h___
 /*
  * JS Date class interface.
  */
+
+#ifndef jsdate_h___
+#define jsdate_h___
 
 JS_BEGIN_EXTERN_C
 
@@ -33,6 +34,9 @@ js_InitDateClass(JSContext *cx, JSObject *obj);
 extern JS_FRIEND_API(JSObject*)
 js_NewDateObject(JSContext* cx, int year, int mon, int mday,
 				int hour, int min, int sec);
+
+extern JS_FRIEND_API(JSBool)
+js_DateIsValid(JSContext *cx, JSObject* obj);
 
 extern JS_FRIEND_API(int)
 js_DateGetYear(JSContext *cx, JSObject* obj);

@@ -32,18 +32,21 @@
 #include "jspubtd.h"
 #include "jslock.h"
 
-static PRLock *_global_lock;
+static PRLock **_global_locks;
+static int _nr_of_globals=1;
 
 static void
-js_LockGlobal()
+js_LockGlobal(void *id)
 {
-  PR_Lock(_global_lock);
+    int i = ((int)id/4)%_nr_of_globals;
+    PR_Lock(_global_locks[i]);
 }
 
 static void
-js_UnlockGlobal()
+js_UnlockGlobal(void *id)
 {
-  PR_Unlock(_global_lock);
+    int i = ((int)id/4)%_nr_of_globals;
+    PR_Unlock(_global_locks[i]);
 }
 
 #define ReadWord(W) (W)
@@ -188,16 +191,6 @@ js_AtomicAdd(jsword *p, jsword i)
     AtomicAddBody(p,i);
 }
 
-static JS_INLINE jsword
-js_AtomicSet(jsword *p, jsword n)
-{
-    jsword o;
-    do {
-	o = ReadWord(*p);
-    } while (!js_CompareAndSwap(p,o,n));
-    return o;
-}
-
 jsword
 js_CurrentThreadId()
 {
@@ -319,54 +312,6 @@ freeFatlock(JSFatLock *fl)
     free(fl);
 }
 
-static int
-js_SuspendThread(JSThinLock *p)
-{
-    JSFatLock *fl;
-    JSStatus stat;
-
-    while ((fl = (JSFatLock*)js_AtomicSet((jsword*)&p->fat,1)) == (JSFatLock*)1) /* busy wait */
-	PR_Sleep(PR_INTERVAL_NO_WAIT);
-    if (fl == NULL)
-	return 1;
-    PR_Lock(fl->slock);
-    js_AtomicSet((jsword*)&p->fat,(jsword)fl);
-    fl->susp++;
-    if (fl->susp < 1) {
-	PR_Unlock(fl->slock);
-	return 1;
-    }
-    stat = (JSStatus)PR_WaitCondVar(fl->svar,PR_INTERVAL_NO_TIMEOUT);
-    if (stat == JS_FAILURE) {
-	fl->susp--;
-	return 0;
-    }
-    PR_Unlock(fl->slock);
-    return 1;
-}
-
-static void
-js_ResumeThread(JSThinLock *p)
-{
-    JSFatLock *fl;
-    JSStatus stat;
-
-    while ((fl = (JSFatLock*)js_AtomicSet((jsword*)&p->fat,1)) == (JSFatLock*)1)
-	PR_Sleep(PR_INTERVAL_NO_WAIT);
-    if (fl == NULL)
-	return;
-    PR_Lock(fl->slock);
-    js_AtomicSet((jsword*)&p->fat,(jsword)fl);
-    fl->susp--;
-    if (fl->susp < 0) {
-	PR_Unlock(fl->slock);
-	return;
-    }
-    stat = (JSStatus)PR_NotifyCondVar(fl->svar);
-    JS_ASSERT(stat != JS_FAILURE);
-    PR_Unlock(fl->slock);
-}
-
 static JSFatLock *
 listOfFatlocks(int l)
 {
@@ -400,7 +345,6 @@ allocateFatlock()
 {
   JSFatLock *m;
 
-  js_LockGlobal();
   if (_fl_table.free == NULL) {
 #ifdef DEBUG
       printf("Ran out of fat locks!\n");
@@ -416,7 +360,6 @@ allocateFatlock()
   if (_fl_table.taken != NULL)
 	_fl_table.taken->prev = m;
   _fl_table.taken = m;
-  js_UnlockGlobal();
   return m;
 }
 
@@ -425,7 +368,6 @@ deallocateFatlock(JSFatLock *m)
 {
   if (m == NULL)
 	return;
-  js_LockGlobal();
   if (m->prev != NULL)
 	m->prev->next = m->next;
   if (m->next != NULL)
@@ -434,52 +376,65 @@ deallocateFatlock(JSFatLock *m)
 	_fl_table.taken = m->next;
   m->next = _fl_table.free;
   _fl_table.free = m;
-  js_UnlockGlobal();
 }
 
 int
-js_SetupLocks(int l)
+js_SetupLocks(int l, int g)
 {
-  if (l > 10000)       /* l equals number of initially allocated fat locks */
+    int i;
+
+    if (_global_locks)
+        return 1;
+    if (l > 10000 || l < 0)       /* l equals number of initially allocated fat locks */
 #ifdef DEBUG
-    printf("Number %d very large in js_SetupLocks()!\n",l);
+        printf("Bad number %d in js_SetupLocks()!\n",l);
 #endif
-  if (_global_lock)
-    return 1;
-  _global_lock = PR_NewLock();
-  JS_ASSERT(_global_lock);
+    if (g > 100 || g < 0)       /* g equals number of global locks */
+#ifdef DEBUG
+        printf("Bad number %d in js_SetupLocks()!\n",l);
+#endif
+    _nr_of_globals = g;
+    _global_locks = (PRLock**)malloc(_nr_of_globals * sizeof(PRLock*));
+    JS_ASSERT(_global_locks != NULL);
+    for (i=0; i<_nr_of_globals; i++) {
+        _global_locks[i] = PR_NewLock();
+        JS_ASSERT(_global_locks[i] != NULL);
+    }
 #ifdef UsingCounterLock
-  _counter_lock = PR_NewLock();
-  JS_ASSERT(_counter_lock);
+    _counter_lock = PR_NewLock();
+    JS_ASSERT(_counter_lock);
 #endif
 #ifdef UsingCompareAndSwapLock
-  _compare_and_swap_lock = PR_NewLock();
-  JS_ASSERT(_compare_and_swap_lock);
+    _compare_and_swap_lock = PR_NewLock();
+    JS_ASSERT(_compare_and_swap_lock);
 #endif
-  _fl_table.free = listOfFatlocks(l);
-  _fl_table.taken = NULL;
-  return 1;
+    _fl_table.free = listOfFatlocks(l);
+    _fl_table.taken = NULL;
+    return 1;
 }
 
 void
 js_CleanupLocks()
 {
-  if (_global_lock != NULL) {
-    deleteListOfFatlocks(_fl_table.free);
-    _fl_table.free = NULL;
-    deleteListOfFatlocks(_fl_table.taken);
-    _fl_table.taken = NULL;
-    PR_DestroyLock(_global_lock);
-    _global_lock = NULL;
+    int i;
+
+    if (_global_locks != NULL) {
+        deleteListOfFatlocks(_fl_table.free);
+        _fl_table.free = NULL;
+        deleteListOfFatlocks(_fl_table.taken);
+        _fl_table.taken = NULL;
+        for (i=0; i<_nr_of_globals; i++)
+            PR_DestroyLock(_global_locks[i]);
+        _global_locks = NULL;
 #ifdef UsingCounterLock
-    PR_DestroyLock(_counter_lock);
-    _counter_lock = NULL;
+        PR_DestroyLock(_counter_lock);
+        _counter_lock = NULL;
 #endif
 #ifdef UsingCompareAndSwapLock
-    PR_DestroyLock(_compare_and_swap_lock);
-    _compare_and_swap_lock = NULL;
+        PR_DestroyLock(_compare_and_swap_lock);
+        _compare_and_swap_lock = NULL;
 #endif
-  }
+    }
 }
 
 JS_PUBLIC_API(void)
@@ -487,54 +442,6 @@ js_InitContextForLocking(JSContext *cx)
 {
 	cx->thread = CurrentThreadId();
 	JS_ASSERT(Thin_GetWait(cx->thread) == 0);
-}
-
-/*
-
-  It is important that emptyFatlock() clears p->fat in the empty case
-  while holding p->slock. This serializes the access of p->fat wrt
-  js_SuspendThread(), which also requires p->slock.  There would
-  otherwise be a race condition as follows.  Thread A is about to
-  clear p->fat, having woken up after being suspended in a situation
-  where no other thread has yet suspended on p. However, suppose
-  thread B is about to suspend on p, having just released the global
-  lock, and is currently calling js_SuspendThread(). In the unfortunate
-  case where A precedes B ever so slightly, A will think that it
-  should clear p->fat (being currently empty but not for long), at the
-  same time as B is about to suspend on p->fat.  Now, A deallocates
-  p->fat while B is about to suspend on it. Thus, the suspension of B
-  is lost and B will not be properly activated.
-
-  Using p->slock as below (and correspondingly in js_SuspendThread()),
-  js_SuspendThread() will notice that p->fat is empty, and hence return
-  immediately.
-
-  */
-
-static int
-emptyFatlock(JSThinLock *p)
-{
-    JSFatLock *fl;
-    int i;
-    PRLock* lck;
-
-    while ((fl = (JSFatLock*)js_AtomicSet((jsword*)&p->fat,1)) == (JSFatLock*)1)
-       PR_Sleep(PR_INTERVAL_NO_WAIT);
-    if (fl == NULL) {
-	js_AtomicSet((jsword*)&p->fat,(jsword)fl);
-	return 1;
-    }
-    lck = fl->slock;
-    PR_Lock(lck);
-    i = fl->susp;
-    if (i < 1) {
-	fl->susp = -1;
-	deallocateFatlock(fl);
-	fl = NULL;
-    }
-    js_AtomicSet((jsword*)&p->fat,(jsword)fl);
-    PR_Unlock(lck);
-    return i < 1;
 }
 
 /*
@@ -558,43 +465,84 @@ emptyFatlock(JSThinLock *p)
   compare-and-swap(p,me,NULL) succeeds this implies that p is
   uncontended (no one is waiting because the wait bit is not set).
 
-  Furthermore, when enqueueing (after the compare-and-swap has failed
-  to lock the object), p->fat is used to serialize the different
-  accesses to the fat lock. The four function thus synchronized are
-  js_Enqueue, emptyFatLock, js_SuspendThread, and js_ResumeThread.
-
   When dequeueing, the lock is released, and one of the threads
   suspended on the lock is notified.  If other threads still are
   waiting, the wait bit is kept (in js_Enqueue), and if not, the fat
-  lock is deallocated (in emptyFatlock()).
+  lock is deallocated.
 
-  p->fat is set to 1 by enqueue and emptyFatlock to signal that the pointer
-  is being accessed.
-
+  The functions js_Enqueue, js_Dequeque, js_SuspendThread, and js_ResumeThread
+  are serialized using a global lock. For further
+  scalability an array of global locks is used, which is index modulo the
+  thin lock pointer.
 */
+
+/* (i) global lock is held
+   (ii) fl->susp >= 0
+*/
+static int
+js_SuspendThread(JSThinLock *p)
+{
+    JSFatLock *fl;
+    JSStatus stat;
+    int o;
+    
+    if (p->fat == NULL)
+        fl = p->fat = allocateFatlock();
+    else
+        fl = p->fat;
+    JS_ASSERT(fl->susp >= 0);
+    fl->susp++;
+    PR_Lock(fl->slock);
+    js_UnlockGlobal(p);
+    stat = (JSStatus)PR_WaitCondVar(fl->svar,PR_INTERVAL_NO_TIMEOUT);
+    JS_ASSERT(stat != JS_FAILURE);
+    PR_Unlock(fl->slock);
+    js_LockGlobal(p);
+    return p->fat == NULL;
+}
+
+/* (i) global lock is held 
+   (ii) fl->susp > 0
+*/
+static void
+js_ResumeThread(JSThinLock *p)
+{
+    JSFatLock *fl = p->fat;
+    JSStatus stat;
+    int o;
+
+    JS_ASSERT(fl != NULL);
+    JS_ASSERT(fl->susp > 0);
+    fl->susp--;
+    if (fl->susp == 0) {
+        deallocateFatlock(fl);
+        p->fat = NULL;
+    }
+    PR_Lock(fl->slock);
+    js_UnlockGlobal(p);
+    stat = (JSStatus)PR_NotifyCondVar(fl->svar);
+    JS_ASSERT(stat != JS_FAILURE);
+    PR_Unlock(fl->slock);
+}
 
 static void
 js_Enqueue(JSThinLock *p, jsword me)
 {
-    jsword o, n;
+    jsword o, n, i;
+    JSFatLock *fl;
 
+    js_LockGlobal(p);
     while (1) {
 	o = ReadWord(p->owner);
 	n = Thin_SetWait(o);
 	if (o != 0 && js_CompareAndSwap(&p->owner,o,n)) {
-	    JSFatLock* fl;
-	    while ((fl = (JSFatLock*)js_AtomicSet((jsword*)&p->fat,1)) == (JSFatLock*)1)
-		PR_Sleep(PR_INTERVAL_NO_WAIT);
-	    if (fl == NULL)
-		fl = allocateFatlock();
-	    js_AtomicSet((jsword*)&p->fat,(jsword)fl);
-	    js_SuspendThread(p);
-	    if (emptyFatlock(p))
-		me = Thin_RemoveWait(me);
+	    if (js_SuspendThread(p))
+                me = Thin_RemoveWait(me);
 	    else
 		me = Thin_SetWait(me);
 	}
 	else if (js_CompareAndSwap(&p->owner,0,me)) {
+            js_UnlockGlobal(p);
 	    return;
 	}
     }
@@ -603,8 +551,12 @@ js_Enqueue(JSThinLock *p, jsword me)
 static void
 js_Dequeue(JSThinLock *p)
 {
-    int o = ReadWord(p->owner);
-    JS_ASSERT(Thin_GetWait(o));
+    int o;
+
+    js_LockGlobal(p);
+    o = ReadWord(p->owner);
+    JS_ASSERT(Thin_GetWait(o) != 0);
+    JS_ASSERT(p->fat != NULL);
     if (!js_CompareAndSwap(&p->owner,o,0)) /* release it */
 	JS_ASSERT(0);
     js_ResumeThread(p);
