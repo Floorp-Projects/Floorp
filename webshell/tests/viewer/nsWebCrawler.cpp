@@ -175,6 +175,7 @@ nsWebCrawler::~nsWebCrawler()
   NS_IF_RELEASE(mLinkTag);
   NS_IF_RELEASE(mFrameTag);
   NS_IF_RELEASE(mIFrameTag);
+  delete mVisited;
 }
 
 NS_IMPL_ISUPPORTS(nsWebCrawler, kISupportsIID)
