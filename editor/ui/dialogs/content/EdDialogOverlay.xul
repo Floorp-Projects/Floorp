@@ -70,9 +70,14 @@
 
 <vbox id="LinkLocationBox">
   <label control="hrefInput" accesskey="&LinkURLEditField.accessKey;" width="1">&LinkURLEditField.label;</label>
-  <menulist editable="true" id="hrefInput" style="min-width: 30em" class="uri-element" oninput="ChangeLinkLocation();">
-    <menupopup/>
-  </menulist>
+  <textbox id="hrefInput" type="autocomplete"
+           searchSessions="history" timeout="50" maxrows="6"
+           disablehistory="false" class="uri-element"
+           oninput="ChangeLinkLocation();">
+    <menupopup class="autocomplete-history-popup"
+               popupalign="topleft" popupanchor="bottomleft"
+               oncommand="this.parentNode.value = event.target.getAttribute('label');"/>
+  </textbox>
   <hbox align="center">
     <!-- from EdDialogOverlay.xul 'for' identifies the textfield to get URL from -->
     <checkbox id="MakeRelativeLink"

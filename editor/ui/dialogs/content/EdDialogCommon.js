@@ -974,6 +974,7 @@ function RemoveContainer(element)
 
 function FillLinkMenulist(linkMenulist, headingsArray)
 {
+  var menupopup = linkMenulist.firstChild;
   var editor = GetCurrentEditor();
   try {
     var NamedAnchorNodeList = editor.document.anchors;
@@ -981,7 +982,7 @@ function FillLinkMenulist(linkMenulist, headingsArray)
     if (NamedAnchorCount > 0)
     {
       for (var i = 0; i < NamedAnchorCount; i++)
-        linkMenulist.appendItem("#" + NamedAnchorNodeList.item(i).name);
+        createMenuItem(menupopup, "#" + NamedAnchorNodeList.item(i).name);
     } 
     for (var j = 1; j <= 6; j++)
     {
@@ -1010,19 +1011,27 @@ function FillLinkMenulist(linkMenulist, headingsArray)
           // Append "_" to any name already in the list
           while (linkMenulist.getElementsByAttribute("label", text).length)
             text += "_";
-          linkMenulist.appendItem(text);
+          createMenuItem(menupopup, text);
 
           // Save nodes in an array so we can create anchor node under it later
           headingsArray[text] = heading;
         }
       }
     }
-    if (!linkMenulist.firstChild.hasChildNodes()) 
+    if (!menupopup.hasChildNodes()) 
     {
-      var item = linkMenulist.appendItem(GetString("NoNamedAnchorsOrHeadings"));
+      var item = createMenuItem(menupopup, GetString("NoNamedAnchorsOrHeadings"));
       item.setAttribute("disabled", "true");
     }
   } catch (e) {}
+}
+
+function createMenuItem(aMenuPopup, aLabel)
+{
+  var menuitem = document.createElement("menuitem");
+  menuitem.setAttribute("label", aLabel);
+  aMenuPopup.appendChild(menuitem);
+  return menuitem;
 }
 
 // Shared by Image and Link dialogs for the "Choose" button for links
