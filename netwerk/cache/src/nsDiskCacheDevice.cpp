@@ -157,7 +157,7 @@ nsDiskCacheDevice::FindEntry(nsCString * key)
     nsCacheEntry * entry = mInactiveEntries.GetEntry(key);
     if (!entry)  return nsnull;
 
-    //** need entry->UpdateFrom(ourEntry);
+    //** need nsCacheService::CreateEntry();
     entry->MarkActive(); // so we don't evict it
     //** find eviction element and move it to the tail of the queue
     
@@ -175,7 +175,7 @@ nsDiskCacheDevice::DeactivateEntry(nsCacheEntry * entry)
     if (!ourEntry)
         return NS_ERROR_INVALID_POINTER;
 
-    //** need ourEntry->UpdateFrom(entry);
+    //** update disk entry from nsCacheEntry
     //** MarkInactive(); // to make it evictable again
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -277,8 +277,9 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
 }
 
 nsresult
-nsDiskCacheDevice::OnDataSizeChanged(nsCacheEntry * entry)
+nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 {
+    //** keep track of totals
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 

@@ -48,7 +48,7 @@ public:
                                           nsCacheAccessMode mode,
                                           nsITransport ** result);
 
-    virtual nsresult OnDataSizeChanged(nsCacheEntry * entry);
+    virtual nsresult OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize);
 
     void setCacheDirectory(nsILocalFile* directory);
 

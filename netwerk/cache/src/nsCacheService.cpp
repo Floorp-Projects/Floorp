@@ -408,10 +408,9 @@ nsCacheService::DoomEntry_Internal(nsCacheEntry * entry)
     return rv;
 }
 
+
 nsresult
-nsCacheService::GetTransportForEntry(nsCacheEntry * entry,
-                                     nsCacheAccessMode mode,
-                                     nsITransport **result)
+nsCacheService::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 {
     nsAutoLock lock(mCacheServiceLock);
     nsresult   rv = NS_OK;
@@ -423,7 +422,25 @@ nsCacheService::GetTransportForEntry(nsCacheEntry * entry,
 
         device = entry->CacheDevice();
     }
-    
+    return device->OnDataSizeChange(entry, deltaSize);
+}
+
+
+nsresult
+nsCacheService::GetTransportForEntry(nsCacheEntry *     entry,
+                                     nsCacheAccessMode  mode,
+                                     nsITransport    ** result)
+{
+    nsAutoLock lock(mCacheServiceLock);
+    nsresult   rv = NS_OK;
+
+    nsCacheDevice * device = entry->CacheDevice();
+    if (!device) {
+        rv = BindEntry(entry);
+        if (NS_FAILED(rv)) return rv;
+
+        device = entry->CacheDevice();
+    }
     return device->GetTransportForEntry(entry, mode, result);
 }
 

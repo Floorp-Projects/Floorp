@@ -108,9 +108,9 @@ nsMemoryCacheDevice::DoomEntry(nsCacheEntry * entry)
 
 
 nsresult
-nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry * entry,
+nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry *    entry,
                                            nsCacheAccessMode mode,
-                                           nsITransport **transport )
+                                           nsITransport   ** transport )
 {
     NS_ENSURE_ARG_POINTER(entry);
     NS_ENSURE_ARG_POINTER(transport);
@@ -136,10 +136,12 @@ nsMemoryCacheDevice::GetTransportForEntry( nsCacheEntry * entry,
     }
 }
 
+
 nsresult
-nsMemoryCacheDevice::OnDataSizeChanged( nsCacheEntry * entry )
+nsMemoryCacheDevice::OnDataSizeChange( nsCacheEntry * entry, PRInt32 deltaSize)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    //** keep track of totals
+    return NS_OK;
 }
 
 //** need methods for enumerating entries

@@ -174,6 +174,11 @@ NS_IMETHODIMP nsCacheEntryDescriptor::SetDataSize(PRUint32 dataSize)
 {
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
+    //** check for signed/unsigned math errors
+    PRInt32  deltaSize = dataSize - mCacheEntry->DataSize();
+
+    // ignore return value, this call instance is advisory
+    (void) nsCacheService::GlobalInstance()->OnDataSizeChange(mCacheEntry, deltaSize);
     mCacheEntry->SetDataSize(dataSize);
     return NS_OK;
 }
@@ -436,6 +441,10 @@ nsCacheEntryDescriptor::AsyncWrite(nsIStreamProvider * provider,
                                    PRUint32            flags, 
                                    nsIRequest       ** result)
 {
+    // we're not planning on implementing this
+    return NS_ERROR_NOT_IMPLEMENTED;
+
+#if 0
     NS_ENSURE_ARG_POINTER(result);
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     if (!(mAccessGranted & nsICache::ACCESS_WRITE))
@@ -450,4 +459,5 @@ nsCacheEntryDescriptor::AsyncWrite(nsIStreamProvider * provider,
     }
     
     return mTransport->AsyncWrite(provider, ctxt, offset, count, flags, result);
+#endif
 }
