@@ -92,17 +92,17 @@ list:
 	echo $(MOZ_STATIC_COMPONENTS)
 
 ifdef MOZ_STATIC_COMPONENTS
-nsStaticModule.cpp: nsStaticModule.cpp.in Makefile Makefile.in $(DEPTH)/config/autoconf.mk
-	rm -f $@
-	cat $< | sed -e "s|%COMPONENT_NS_GET_MODULE%|$(foreach m, $(MOZ_STATIC_COMPONENTS), REGISTER_MODULE_USING($(m)_NSGetModule);)|" | \
-	sed -e "s|%COMPONENT_LIST%|$(foreach m, $(MOZ_STATIC_COMPONENTS), { $(m)_NSGM_comps, $(m)_NSGM_comp_count }, )|" | \
-	sed -e "s|%DECLARE_COMPONENT_LIST%|$(foreach m,$(MOZ_STATIC_COMPONENTS), extern \"C\" nsresult $(m)_NSGetModule(nsIComponentManager *servMgr, nsIFile* aPath, nsIModule** return_cobj); extern nsModuleComponentInfo*  $(m)_NSGM_comps; extern PRUint32 $(m)_NSGM_comp_count;)|" > $@
-endif
-
-nsMetaModule_%.cpp: nsMetaModule_%.cpp.in Makefile Makefile.in $(topsrcdir)/config/config.mk
+nsStaticModule.cpp: nsMetaModule.cpp.in Makefile Makefile.in $(DEPTH)/config/autoconf.mk
 	rm -f $@
 	cat $< | \
-	sed -e "s|%COMPONENT_NS_GET_MODULE%|$(foreach m, $($(_META_COMPONENT_NAMES)), REGISTER_MODULE_USING($(m)_NSGetModule);)|" | \
-	sed -e "s|%COMPONENT_LIST%|$(foreach m, $($(_META_COMPONENT_NAMES)), { $(m)_NSGM_comps, $(m)_NSGM_comp_count }, )|" | \
-	sed -e "s|%DECLARE_COMPONENT_LIST%|$(foreach m,$($(_META_COMPONENT_NAMES)), extern \"C\" nsresult $(m)_NSGetModule(nsIComponentManager *servMgr, nsIFile* aPath, nsIModule** return_cobj); extern nsModuleComponentInfo*  $(m)_NSGM_comps; extern PRUint32 $(m)_NSGM_comp_count;)|" > $@
+	sed -e "s|%DECLARE_SUBMODULE_INFOS%|$(foreach m, $(MOZ_STATIC_COMPONENTS), extern nsModuleInfo NSMODULEINFO($(m));)|" | \
+	sed -e "s|%SUBMODULE_INFOS%|$(foreach m, $(MOZ_STATIC_COMPONENTS), \\& NSMODULEINFO($(m)),)|" | \
+	> $@
+endif
 
+nsMetaModule_%.cpp: nsMetaModule.cpp.in Makefile Makefile.in $(topsrcdir)/config/config.mk
+	rm -f $@
+	cat $< | \
+	sed -e "s|%DECLARE_SUBMODULE_INFOS%|$(foreach m, $($(_META_COMPONENT_NAMES)), extern nsModuleInfo NSMODULEINFO($(m));)|" | \
+	sed -e "s|%SUBMODULE_INFOS%|$(foreach m, $($(_META_COMPONENT_NAMES)), \\& NSMODULEINFO($(m),)|" | \
+	> $@

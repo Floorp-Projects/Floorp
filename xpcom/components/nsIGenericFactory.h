@@ -106,25 +106,46 @@ struct nsModuleComponentInfo {
     PRUint32                                    mFlags;
 };
 
-typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);
 typedef nsresult (PR_CALLBACK *nsModuleConstructorProc) (nsIModule *self);
+typedef void (PR_CALLBACK *nsModuleDestructorProc) (nsIModule *self);
+
+/**
+ * Use this structure to define meta-information about the module
+ * itself, including the name, its components, and an optional
+ * module-level initialization or shutdown routine.
+ */
+struct nsModuleInfo {
+    PRUint32                mVersion;
+    const char*             mModuleName;
+    nsModuleComponentInfo*  mComponents;
+    PRUint32                mCount;
+    nsModuleConstructorProc mCtor;
+    nsModuleDestructorProc  mDtor;
+};
+
+/**
+ * Rev this if you change the nsModuleInfo, and are worried about
+ * binary compatibility. (Ostensibly fix NS_NewGenericModule() to deal
+ * with older rev's at the same time.)
+ */
+#define NS_MODULEINFO_VERSION 0x00010000UL // 1.0
 
 extern NS_COM nsresult
-NS_NewGenericModule(const char* moduleName,
-                    PRUint32 componentCount,
-                    nsModuleComponentInfo* components,
-                    nsModuleConstructorProc ctor,
-                    nsModuleDestructorProc dtor,
-                    nsIModule* *result);
+NS_NewGenericModule(nsModuleInfo *info, nsIModule* *result);
 
 #if defined(XPCOM_TRANSLATE_NSGM_ENTRY_POINT)
-#  define NSGETMODULE_ENTRY_POINT(_name) _name##_NSGetModule
-#  define NSGETMODULE_COMPONENTS(_name) _name##_NSGM_comps
-#  define NSGETMODULE_COMPONENTS_COUNT(_name) _name##_NSGM_comp_count
+#  define NSMODULEINFO(_name)             _name##_gModuleInfo
+#  define NSGETMODULE_ENTRY_POINT(_info)
 #else
-#  define NSGETMODULE_ENTRY_POINT(_name) NSGetModule
-#  define NSGETMODULE_COMPONENTS(_name) NSGetModule_components
-#  define NSGETMODULE_COMPONENTS_COUNT(_name) NSGetModule_components_count
+#  define NSMODULEINFO(_name)             gModuleInfo
+#  define NSGETMODULE_ENTRY_POINT(_info)                                      \
+extern "C" NS_EXPORT nsresult                                                 \
+NSGetModule(nsIComponentManager *servMgr,                                     \
+            nsIFile* location,                                                \
+            nsIModule** result)                                               \
+{                                                                             \
+    return NS_NewGenericModule(&(_info), result);                             \
+}
 #endif
 
 #define NS_IMPL_NSGETMODULE(_name, _components)                               \
@@ -137,24 +158,15 @@ NS_NewGenericModule(const char* moduleName,
     NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, nsnull, _dtor)
 
 #define NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(_name, _components, _ctor, _dtor)  \
-                                                                              \
-PRUint32                                                                      \
-   NSGETMODULE_COMPONENTS_COUNT(_name) =                                      \
-           sizeof(_components) / sizeof(_components[0]);                      \
-                                                                              \
-                                                                              \
-nsModuleComponentInfo* NSGETMODULE_COMPONENTS(_name) = (_components);         \
-                                                                              \
-extern "C" NS_EXPORT nsresult                                                 \
-NSGETMODULE_ENTRY_POINT(_name) (nsIComponentManager *servMgr,                 \
-                                nsIFile* location,                            \
-                                nsIModule** result)                           \
-{                                                                             \
-    return NS_NewGenericModule((#_name),                                      \
-                               NSGETMODULE_COMPONENTS_COUNT(_name),           \
-                               NSGETMODULE_COMPONENTS(_name),                 \
-                               _ctor, _dtor, result);                         \
-}
+nsModuleInfo NSMODULEINFO(_name) = {                                          \
+    NS_MODULEINFO_VERSION,                                                    \
+    (#_name),                                                                 \
+    (_components),                                                            \
+    (sizeof(_components) / sizeof(_components[0])),                           \
+    (_ctor),                                                                  \
+    (_dtor)                                                                   \
+};                                                                            \
+NSGETMODULE_ENTRY_POINT(NSMODULEINFO(_name))
 
 ////////////////////////////////////////////////////////////////////////////////
 
