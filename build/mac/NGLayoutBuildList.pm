@@ -685,6 +685,8 @@ sub MakeResourceAliases()
 	#//
 	MakeAlias(":mozilla:layout:html:document:src:ua.css",								"$resource_dir");
 	MakeAlias(":mozilla:webshell:tests:viewer:resources:viewer.properties",				"$resource_dir");
+	MakeAlias(":mozilla:intl:uconv:src:charsetalias.properties",						"$resource_dir");
+	MakeAlias(":mozilla:intl:uconv:src:maccharset.properties",							"$resource_dir");
 	MakeAlias(":mozilla:extensions:wallet:src:wallet.properties",				"$resource_dir");
 
 	my($html_dir) = "$resource_dir" . "html:";
