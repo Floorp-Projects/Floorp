@@ -1024,7 +1024,6 @@
     "windowinternal.unescape", \
     "windowinternal.updatecommands", \
     "windowinternal.window", \
-    "xulbrowserelement.webbrowser", \
     "xulcommanddispatcher.active", \
     "xulcommanddispatcher.addcommandupdater", \
     "xulcommanddispatcher.focusedelement", \
@@ -1044,7 +1043,6 @@
     "xuldocument.popupnode", \
     "xuldocument.tooltipnode", \
     "xuldocument.width", \
-    "xuleditorelement.editorshell", \
     "xulelement.addbroadcastlistener", \
     "xulelement.anonymouscontent", \
     "xulelement.blur", \
@@ -1061,16 +1059,6 @@
     "xulelement.removebroadcastlistener", \
     "xulelement.resource", \
     "xulelement.style", \
-    "xuliframeelement.docshell", \
-    "xulmenulistelement.crop", \
-    "xulmenulistelement.data", \
-    "xulmenulistelement.disabled", \
-    "xulmenulistelement.selectedindex", \
-    "xulmenulistelement.selecteditem", \
-    "xulmenulistelement.src", \
-    "xulmenulistelement.value", \
-    "xulpopupelement.closepopup", \
-    "xulpopupelement.openpopup", \
     "xultreeelement.addcelltoselection", \
     "xultreeelement.additemtoselection", \
     "xultreeelement.clearcellselection", \

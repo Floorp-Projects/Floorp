@@ -35,7 +35,6 @@ IDLSRCS		= \
 		XULCommandDispatcher.idl \
 		XULDocument.idl \
 		XULElement.idl \
-		XULMenuListElement.idl \
 		XULTreeElement.idl \
 		$(NULL)
 

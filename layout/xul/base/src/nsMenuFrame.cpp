@@ -48,7 +48,6 @@
 #include "nsIDOMNSDocument.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMXULDocument.h"
-#include "nsIDOMXULMenuListElement.h"
 #include "nsIDOMElement.h"
 #include "nsISupportsArray.h"
 #include "nsIDOMText.h"
@@ -645,33 +644,12 @@ nsMenuFrame::OpenMenuInternal(PRBool aActivateFlag)
       nsCOMPtr<nsIContent> menuPopupContent;
       menuPopup->GetContent(getter_AddRefs(menuPopupContent));
 
-      // See if we're a menulist and set our selection accordingly.
-      nsCOMPtr<nsIDOMXULMenuListElement> list = do_QueryInterface(mContent);
-      if (list) {
-        nsCOMPtr<nsIDOMElement> element;
-        list->GetSelectedItem(getter_AddRefs(element));
-        if (element) {
-          nsCOMPtr<nsIContent> selectedContent = do_QueryInterface(element);
-          nsIFrame* curr;
-          nsCOMPtr<nsIPresShell> shell;
-          mPresContext->GetShell(getter_AddRefs(shell));
-          shell->GetPrimaryFrameFor(selectedContent, &curr);
-
-          nsCOMPtr<nsIMenuFrame> menuframe(do_QueryInterface(curr));
-          if (menuframe)
-            menuPopup->SetCurrentMenuItem(menuframe);
-        }
-      }
-      // End of menulist stuff.  We now return to our regularly scheduled
-      // programming.
-
       // Sync up the view.
       nsAutoString popupAnchor, popupAlign;
       
       menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupanchor, popupAnchor);
       menuPopupContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::popupalign, popupAlign);
 
-      
       if (onMenuBar) {
         if (popupAnchor.IsEmpty())
           popupAnchor.AssignWithConversion("bottomleft");
@@ -810,9 +788,10 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
   nsIFrame* popupChild = mPopupFrames.FirstChild();
 
   if (popupChild) {
-
-    nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(mContent);
-
+    nsAutoString sizedToPopup;
+    mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
+    PRBool sizeToPopup = (sizedToPopup.EqualsIgnoreCase("true"));
+    
     nsIBox* ibox = nsnull;
     nsresult rv2 = popupChild->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
     NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
@@ -828,7 +807,7 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
 
     BoundsCheck(minSize, prefSize, maxSize);
 
-    if (menulist && prefSize.width < contentRect.width)
+    if (sizeToPopup && prefSize.width < contentRect.width)
         prefSize.width = contentRect.width;
 
     // if the pref size changed then set bounds to be the pref size
@@ -909,121 +888,6 @@ nsMenuFrame::MarkChildrenStyleChange()
 
   return rv;
 }
-
-/** Replaced by Layout
-NS_IMETHODIMP
-nsMenuFrame::Reflow(nsIPresContext*   aPresContext,
-                    nsHTMLReflowMetrics&     aDesiredSize,
-                    const nsHTMLReflowState& aReflowState,
-                    nsReflowStatus&          aStatus)
-{
-  //NS_ASSERTION(aReflowState.reason != eReflowReason_Incremental,"Incremental Reflow not supported!");
-
-  nsIFrame* popupChild = mPopupFrames.FirstChild();
-
-  nsHTMLReflowState boxState(aReflowState);
-
-  if (aReflowState.reason == eReflowReason_Incremental) {
-    nsIFrame* incrementalChild;
-
-    // get the child but don't pull it off
-    aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
-    
-    // see if it is in the mPopupFrames list
-    nsIFrame* child = mPopupFrames.FirstChild();
-    popupChild = nsnull;
-
-    while (nsnull != child) 
-    { 
-      // if it is then flow the popup incrementally then flow
-      // us with a resize just to get our correct desired size.
-      if (child == incrementalChild) {
-        // pull it off now
-        aReflowState.reflowCommand->GetNext(incrementalChild);
-
-        // we know what child
-        popupChild = child;
-
-        // relow the box with resize just to get the
-        // aDesiredSize set correctly
-        boxState.reason = eReflowReason_Resize;
-        break;
-      }
-
-      nsresult rv = child->GetNextSibling(&child);
-      NS_ASSERTION(rv == NS_OK,"failed to get next child");
-    }   
-  } else if (aReflowState.reason == eReflowReason_Dirty) {
-    // sometimes incrementals are converted to dirty. This is done in the case just above this. So lets check
-    // to see if this was converted. If it was it will still have a reflow state.
-    if (aReflowState.reflowCommand) {
-        // it was converted so lets see if the next child is this one. If it is then convert it back and
-        // pass it down.
-        nsIFrame* incrementalChild = nsnull;
-        aReflowState.reflowCommand->GetNext(incrementalChild, PR_FALSE);
-        if (incrementalChild == popupChild) 
-        {
-            nsHTMLReflowState state(aReflowState);
-            state.reason = eReflowReason_Incremental;
-            return Reflow(aPresContext, aDesiredSize, state, aStatus);
-            
-        } 
-    }
-  }
-
-  // Handle reflowing our subordinate popup
-  nsHTMLReflowMetrics kidDesiredSize(aDesiredSize);  
-  if (popupChild) {         
-      // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
-      nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, popupChild,
-                                       availSize);
-      kidReflowState.mComputedWidth = NS_UNCONSTRAINEDSIZE;
-      kidReflowState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
-      
-      nsRect rect;
-      popupChild->GetRect(rect);
-      ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
-                                  rect.x, rect.y, NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS, aStatus);
-
-      // Set the child's width and height to its desired size
-      // Note: don't position or size the view now, we'll do that in the
-      // DidReflow() function
-      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, 
-                           NS_FRAME_NO_SIZE_VIEW |NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS);
-  }
-
-  nsresult rv = nsBoxFrame::Reflow(aPresContext, aDesiredSize, boxState, aStatus);
-
-  // If we're a menulist, then we might potentially flow the popup a second time
-  // (its width may be too small).
-  nsCOMPtr<nsIDOMXULMenuListElement> menulist = do_QueryInterface(mContent);
-  if (menulist && popupChild) {
-    if (kidDesiredSize.width < aDesiredSize.width) {
-      // Flow the popup again.
-      // Constrain the child's width and height to aAvailableWidth and aAvailableHeight
-      nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, popupChild,
-                                       availSize);
-      kidReflowState.mComputedWidth = aDesiredSize.width;
-      kidReflowState.mComputedHeight = NS_UNCONSTRAINEDSIZE;
-    
-      nsRect rect;
-      popupChild->GetRect(rect);
-      ReflowChild(popupChild, aPresContext, kidDesiredSize, kidReflowState,
-                                  rect.x, rect.y, 
-                                  NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS, aStatus);
-
-      // Set the child's width and height to its desired size
-      // Note: don't position or size the view now, we'll do that in the
-      // DidReflow() function
-      FinishReflowChild(popupChild, aPresContext, kidDesiredSize, rect.x, rect.y, 
-                        NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_MOVE_VIEW | NS_FRAME_NO_MOVE_CHILD_VIEWS);
-    }
-  }
-  return rv;
-}
-*/
 
 NS_IMETHODIMP
 nsMenuFrame::SetDebug(nsBoxLayoutState& aState, PRBool aDebug)
@@ -1687,51 +1551,32 @@ nsMenuFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   aSize.height = 0;
   nsresult rv = nsBoxFrame::GetPrefSize(aState, aSize);
 
-  nsCOMPtr<nsIDOMXULMenuListElement> menulist(do_QueryInterface(mContent));
-  if (menulist) {
-      nsCOMPtr<nsIDOMElement> element;
-      menulist->GetSelectedItem(getter_AddRefs(element));
-      if (!element) {
-        nsAutoString value;
-        menulist->GetValue(value);
-        if (value.IsEmpty()) {
-          nsCOMPtr<nsIContent> child;
-          GetMenuChildrenElement(getter_AddRefs(child));
-          if (child) {
-            PRInt32 count;
-            child->ChildCount(count);
-            if (count > 0) {
-              nsCOMPtr<nsIContent> item;
-              child->ChildAt(0, *getter_AddRefs(item));
-              nsCOMPtr<nsIDOMElement> selectedElement(do_QueryInterface(item));
-              if (selectedElement) 
-                menulist->SetSelectedItem(selectedElement);
-            }
-          }
-        }
+  nsAutoString sizedToPopup;
+  mContent->GetAttribute(kNameSpaceID_None, nsXULAtoms::sizetopopup, sizedToPopup);
+  PRBool sizeToPopup = (sizedToPopup.EqualsIgnoreCase("true"));
+
+  if (sizeToPopup) {
+    nsSize tmpSize(-1,0);
+    nsIBox::AddCSSPrefSize(aState, this, tmpSize);
+    nscoord flex;
+    GetFlex(aState, flex);
+
+    if (tmpSize.width == -1 && flex==0) {
+      nsIFrame* frame = mPopupFrames.FirstChild();
+      if (!frame) {
+        MarkAsGenerated();
+        frame = mPopupFrames.FirstChild();
+        // No child - just return
+        if (!frame) return NS_OK;
       }
+    
+      nsIBox* ibox = nsnull;
+      nsresult rv2 = frame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
+      NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
 
-     nsSize tmpSize(-1,0);
-     nsIBox::AddCSSPrefSize(aState, this, tmpSize);
-     nscoord flex;
-     GetFlex(aState, flex);
-
-     if (tmpSize.width == -1 && flex==0) {
-        nsIFrame* frame = mPopupFrames.FirstChild();
-        if (!frame) {
-          MarkAsGenerated();
-          frame = mPopupFrames.FirstChild();
-          // No child - just return
-          if (!frame) return NS_OK;
-        }
-      
-        nsIBox* ibox = nsnull;
-        nsresult rv2 = frame->QueryInterface(NS_GET_IID(nsIBox), (void**)&ibox);
-        NS_ASSERTION(NS_SUCCEEDED(rv2) && ibox,"popupChild is not box!!");
-
-        ibox->GetPrefSize(aState, tmpSize);
-        aSize.width = tmpSize.width;
-     }
+      ibox->GetPrefSize(aState, tmpSize);
+      aSize.width = tmpSize.width;
+    }
   }
 
   return rv;
