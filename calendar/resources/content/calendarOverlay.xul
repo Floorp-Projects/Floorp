@@ -49,7 +49,6 @@
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://calendar/content/calendarOverlay.js"/>
-<!--<script type="application/x-javascript" src="chrome://calendar/content/calendarService.js"/>-->
 
 <keyset id="tasksKeys">
   <key id="key_calendar"  key="&calendarCmd.commandkey;" command="Tasks:Calendar" modifiers="accel"/>

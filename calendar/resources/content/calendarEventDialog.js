@@ -329,7 +329,8 @@ function onOKCommand()
    gEvent.title       = getFieldValue( "title-field" );
    gEvent.description = getFieldValue( "description-field" );
    gEvent.location    = getFieldValue( "location-field" );
-   gEvent.status      = eval( "gEvent."+getFieldValue( "status-field" ) );
+   if( getFieldValue( "status-field" ) != "" )
+      gEvent.status      = eval( "gEvent."+getFieldValue( "status-field" ) );
    
    gEvent.allDay      = getFieldValue( "all-day-event-checkbox", "checked" );
    var startDate = getDateTimeFieldValue( "start-date-text" );

@@ -118,6 +118,8 @@ function MonthView( calendarWindow )
    
    this.superConstructor( calendarWindow );
    
+   this.numberOfEventsToShow = false;
+
    var monthViewEventSelectionObserver = 
    {
       onSelectionChanged : function( EventSelectionArray )
@@ -251,7 +253,12 @@ MonthView.prototype.refreshEvents = function monthView_refreshEvents( )
       
       dayBoxItem.numEvents +=  1;
       
-      if( dayBoxItem.numEvents == 1 || dayBoxItem.numEvents < this.getNumberOfEventsToShow() )
+      if( this.numberOfEventsToShow == false && dayBoxItem.numEvents > 1 )
+      {
+         this.setNumberOfEventsToShow();
+      }
+
+      if( dayBoxItem.numEvents == 1 || dayBoxItem.numEvents < this.numberOfEventsToShow )
       {
          // Make a text item to show the event title
          
@@ -822,6 +829,8 @@ MonthView.prototype.selectBoxForEvent = function monthView_selectBoxForEvent( ca
 MonthView.prototype.doResize = function monthView_doResize( )
 {
    this.setCalendarSize(this.getViewHeight());
+
+   this.setNumberOfEventsToShow();
 }
 
 /*Takes in a height, sets the calendar's container box to that height, the grid expands and contracts to fit it.*/
@@ -842,7 +851,7 @@ MonthView.prototype.getViewHeight = function monthView_getViewHeight( )
 }
 
 
-MonthView.prototype.getNumberOfEventsToShow = function monthView_getNumberOfEventsToShow( )
+MonthView.prototype.setNumberOfEventsToShow = function monthView_getNumberOfEventsToShow( )
 {
    //get the style height of the month view box.
    var MonthViewBoxHeight = document.defaultView.getComputedStyle(document.getElementById("month-week-4-day-4-box"), "").getPropertyValue("height");
@@ -850,6 +859,9 @@ MonthView.prototype.getNumberOfEventsToShow = function monthView_getNumberOfEven
    
    //get the height of an event box.
    var Element = document.getElementsByAttribute( "eventbox", "monthview" )[0];
+   if( !Element )
+      return;
+
    var EventBoxHeight = document.defaultView.getComputedStyle( Element, "" ).getPropertyValue( "height" );
    EventBoxHeight = parseInt( EventBoxHeight ); //strip off the px at the end
 
@@ -857,5 +869,5 @@ MonthView.prototype.getNumberOfEventsToShow = function monthView_getNumberOfEven
    dump( "\n\n"+( MonthViewBoxHeight - EventBoxHeight ) / EventBoxHeight );
    dump( "\n"+MonthViewBoxHeight );
    dump( "\n"+EventBoxHeight );
-   return( parseInt( ( MonthViewBoxHeight - EventBoxHeight ) / EventBoxHeight ) );
+   this.numberOfEventsToShow = parseInt( ( MonthViewBoxHeight - EventBoxHeight ) / EventBoxHeight ); 
 }

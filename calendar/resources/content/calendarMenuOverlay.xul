@@ -144,7 +144,8 @@
       <menupopup id="taskPopup">
          <menuitem id="calendar-import-menu" key="import_key" label="&calendar.import.label;" accesskey="&calendar.import.accesskey;" observes="import_command"/>
          <menuitem id="calendar-export-menu" key="export_key" label="&calendar.export.label;" accesskey="&calendar.export.accesskey;" observes="export_command"/>
-         <menuitem id="calendar-addserver-menu" label="&calendar.context.newserver.label;"    observes="new_server_command"/>
+         <menuitem id="calendar-addserver-menu" label="&calendar.subscribe.label;"    observes="new_server_command"/>
+         <menuitem id="calendar-publish-menu" label="&calendar.publish.label;"    observes="publish_events_command"/>
          <menuseparator/>
       </menupopup>
    </menu>

@@ -110,6 +110,7 @@
    <command id="export_command" oncommand="saveEventsToFile()"/>
    
    <command id="refresh_remote_calendars" oncommand="gCalendarWindow.calendarManager.refreshAllRemoteCalendars()"/>
+   <command id="publish_events_command" oncommand="publishCalendarData()"/>
    
    <command id="close_calendar_command" oncommand="closeCalendar()"/>
 </commandset>

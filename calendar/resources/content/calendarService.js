@@ -19,7 +19,6 @@
  * Contributor(s): 
  * Seth Spitzer <sspitzer@netscape.com>
  * Robert Ginda <rginda@netscape.com>
- * Mike Potter <mikep@oeone.com>
  */
 
 /*
@@ -29,22 +28,22 @@
  * 2. Content handler for responding to content of type x-application-irc
  *    (IRCContentHandler)
  * 3. Protocol handler for supplying a channel to the browser when an irc://
- *    link is clicked. (ICalProtocolHandler)
+ *    link is clicked. (IRCProtocolHandler)
  * 4. A (nearly empty) imeplementation of nsIChannel for telling the browser
  *    that irc:// links have the content type x-application-irc (BogusChannel)
  */
 
 /* components defined in this file */
 const CLINE_SERVICE_CONTRACTID =
-    "@mozilla.org/commandlinehandler/general-startup;1?type=chat";
+    "@mozilla.org/commandlinehandler/general-startup;1?type=webcal";
 const CLINE_SERVICE_CID =
     Components.ID("{65ef4b0b-d116-4b93-bf8a-84525992bf27}");
-const ICALCNT_HANDLER_CONTRACTID =
-    "@mozilla.org/uriloader/content-handler;1?type=x-application-irc";
-const ICALCNT_HANDLER_CID =
+const IRCCNT_HANDLER_CONTRACTID =
+    "@mozilla.org/uriloader/content-handler;1?type=x-application-webcal";
+const IRCCNT_HANDLER_CID =
     Components.ID("{9ebf4c8a-7770-40a6-aeed-e1738129535a}");
-const ICALPROT_HANDLER_CONTRACTID =
-    "@mozilla.org/network/protocol;1?name=ical";
+const IRCPROT_HANDLER_CONTRACTID =
+    "@mozilla.org/network/protocol;1?name=webcal";
 const IRCPROT_HANDLER_CID =
     Components.ID("{d320ba05-88cf-44a6-b718-87a72ef05918}");
 
@@ -73,8 +72,8 @@ const nsISupports        = Components.interfaces.nsISupports;
 function CLineService()
 {}
 
-CLineService.prototype.commandLineArgument = "-calendar";
-CLineService.prototype.prefNameForStartup = "general.startup.calendar";
+CLineService.prototype.commandLineArgument = "-webcal";
+CLineService.prototype.prefNameForStartup = "general.startup.webal";
 CLineService.prototype.chromeUrlForTask="chrome://calendar/content";
 CLineService.prototype.helpText = "Start with an Calendar client";
 CLineService.prototype.handlesArgs=false;
@@ -96,10 +95,10 @@ function (outer, iid) {
 }
 
 /* x-application-irc content handler */
-function ICALContentHandler ()
+function IRCContentHandler ()
 {}
 
-ICALContentHandler.prototype.QueryInterface =
+IRCContentHandler.prototype.QueryInterface =
 function (iid) {
 
     if (!iid.equals(nsIContentHandler))
@@ -108,14 +107,14 @@ function (iid) {
     return this;
 }
 
-ICALContentHandler.prototype.handleContent =
+IRCContentHandler.prototype.handleContent =
 function (aContentType, aCommand, aWindowTarget, aRequest)
 {
     var e;
     var channel = aRequest.QueryInterface(nsIChannel);
     
     /*
-    debug ("ircLoader.handleContent (" + aContentType + ", " +
+    dump ("ircLoader.handleContent (" + aContentType + ", " +
           aCommand + ", " + aWindowTarget + ", " + channel.URI.spec + ")\n");
     */
 
@@ -127,7 +126,7 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
     if (w)
     {
         w.focus();
-        w.focusEvent(channel.URI.spec);
+        w.gCalendarWindow.calendarManager.launchAddCalendarDialog( "TestCalendar", channel.URI.spec );
     }
     else
     {
@@ -138,16 +137,16 @@ function (aContentType, aCommand, aWindowTarget, aRequest)
         var args = new Object ();
         args.url = channel.URI.spec;
 
-        w.open("chrome://calendar/content/calendar.xul", "_blank",
-                     "chrome,extrachrome,menubar,resizable,scrollbars,status,toolbar", args);
+        w.openDialog("chrome://calendar/content/calendar.xul", "_blank",
+                     "chrome,menubar,toolbar,resizable,dialog=no", args);
     }
     
 }
 
 /* content handler factory object (IRCContentHandler) */
-var ICALContentHandlerFactory = new Object();
+var IRCContentHandlerFactory = new Object();
 
-ICALContentHandlerFactory.createInstance =
+IRCContentHandlerFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -155,45 +154,52 @@ function (outer, iid) {
     if (!iid.equals(nsIContentHandler) && !iid.equals(nsISupports))
         throw Components.results.NS_ERROR_INVALID_ARG;
 
-    return new ICALContentHandler();
+    return new IRCContentHandler();
 }
 
 /* irc protocol handler component */
-function ICalProtocolHandler()
+function IRCProtocolHandler()
 {
 }
 
-ICalProtocolHandler.prototype.scheme = "ical";
-ICalProtocolHandler.prototype.protocolFlags = 
+IRCProtocolHandler.prototype.scheme = "webcal";
+IRCProtocolHandler.prototype.defaultPort = 8080;
+IRCProtocolHandler.prototype.protocolFlags = 
                    nsIProtocolHandler.URI_NORELATIVE |
                    nsIProtocolHandler.ALLOWS_PROXY;
 
-ICalProtocolHandler.prototype.allowPort =
+IRCProtocolHandler.prototype.allowPort =
 function (aPort, aScheme)
 {
     return false;
 }
 
-ICalProtocolHandler.prototype.newURI =
+IRCProtocolHandler.prototype.newURI =
 function (aSpec, aCharset, aBaseURI)
 {
     if (aBaseURI)
     {
-        debug ("-*- ircHandler: aBaseURI passed to newURI, bailing.\n");
+        dump ("-*- ircHandler: aBaseURI passed to newURI, bailing.\n");
         return null;
     }
     
     var url = Components.classes[STANDARDURL_CONTRACTID].
       createInstance(nsIStandardURL);
-    url.init(nsIStandardURL.URLTYPE_STANDARD, 0, aSpec, aCharset, aBaseURI);
+    url.init(nsIStandardURL.URLTYPE_STANDARD, 8080, aSpec, aCharset, aBaseURI);
     
     return url.QueryInterface(nsIURI);
 }
 
-/* protocol handler factory object (IRCProtocolHandler) */
-var ICalProtocolHandlerFactory = new Object();
+IRCProtocolHandler.prototype.newChannel =
+function (aURI)
+{
+    return new BogusChannel (aURI);
+}
 
-ICalProtocolHandlerFactory.createInstance =
+/* protocol handler factory object (IRCProtocolHandler) */
+var IRCProtocolHandlerFactory = new Object();
+
+IRCProtocolHandlerFactory.createInstance =
 function (outer, iid) {
     if (outer != null)
         throw Components.results.NS_ERROR_NO_AGGREGATION;
@@ -201,15 +207,82 @@ function (outer, iid) {
     if (!iid.equals(nsIProtocolHandler) && !iid.equals(nsISupports))
         throw Components.results.NS_ERROR_INVALID_ARG;
 
-    return new ICalProtocolHandler();
+    return new IRCProtocolHandler();
 }
 
-var CalendarModule = new Object();
+/* bogus IRC channel used by the IRCProtocolHandler */
+function BogusChannel (aURI)
+{
+    this.URI = aURI;
+    this.originalURI = aURI;
+}
 
-CalendarModule.registerSelf =
+BogusChannel.prototype.QueryInterface =
+function (iid) {
+
+    if (!iid.equals(nsIChannel) && !iid.equals(nsIRequest) &&
+        !iid.equals(nsISupports))
+        throw Components.results.NS_ERROR_NO_INTERFACE;
+
+    return this;
+}
+
+/* nsIChannel */
+BogusChannel.prototype.loadAttributes = null;
+BogusChannel.prototype.contentType = "x-application-webcal";
+BogusChannel.prototype.contentLength = 0;
+BogusChannel.prototype.owner = null;
+BogusChannel.prototype.loadGroup = null;
+BogusChannel.prototype.notificationCallbacks = null;
+BogusChannel.prototype.securityInfo = null;
+
+BogusChannel.prototype.open =
+BogusChannel.prototype.asyncOpen =
+function ()
+{
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+}
+
+BogusChannel.prototype.asyncOpen =
+function (observer, ctxt)
+{
+    observer.onStartRequest (this, ctxt);
+}
+
+BogusChannel.prototype.asyncRead =
+function (listener, ctxt)
+{
+    return listener.onStartRequest (this, ctxt);
+}
+
+/* nsIRequest */
+BogusChannel.prototype.isPending =
+function ()
+{
+    return true;
+}
+
+BogusChannel.prototype.status = Components.results.NS_OK;
+
+BogusChannel.prototype.cancel =
+function (aStatus)
+{
+    this.status = aStatus;
+}
+
+BogusChannel.prototype.suspend =
+BogusChannel.prototype.resume =
+function ()
+{
+    throw Components.results.NS_ERROR_NOT_IMPLEMENTED;
+}
+
+var ChatzillaModule = new Object();
+
+ChatzillaModule.registerSelf =
 function (compMgr, fileSpec, location, type)
 {
-    debug("*** Registering -chat handler.\n");
+    dump("*** Registering -webcal handler.\n");
     
     compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
@@ -226,9 +299,17 @@ function (compMgr, fileSpec, location, type)
                             "calendar command line handler",
                             CLINE_SERVICE_CONTRACTID, true, true);
 
-    debug("*** Registering ical protocol handler.\n");
+    dump("*** Registering x-application-webcal handler.\n");
+    compMgr.registerFactoryLocation(IRCCNT_HANDLER_CID,
+                                    "Webcal Content Handler",
+                                    IRCCNT_HANDLER_CONTRACTID, 
+                                    fileSpec,
+                                    location, 
+                                    type);
+
+    dump("*** Registering webcal protocol handler.\n");
     compMgr.registerFactoryLocation(IRCPROT_HANDLER_CID,
-                                    "ICAL protocol handler",
+                                    "Webcal protocol handler",
                                     IRCPROT_HANDLER_CONTRACTID, 
                                     fileSpec, 
                                     location,
@@ -236,7 +317,7 @@ function (compMgr, fileSpec, location, type)
 
 }
 
-CalendarModule.unregisterSelf =
+ChatzillaModule.unregisterSelf =
 function(compMgr, fileSpec, location)
 {
 
@@ -250,7 +331,7 @@ function(compMgr, fileSpec, location)
                                CLINE_SERVICE_CONTRACTID, true);
 }
 
-CalendarModule.getClassObject =
+ChatzillaModule.getClassObject =
 function (compMgr, cid, iid) {
     if (cid.equals(CLINE_SERVICE_CID))
         return CLineFactory;
@@ -268,7 +349,7 @@ function (compMgr, cid, iid) {
     
 }
 
-CalendarModule.canUnload =
+ChatzillaModule.canUnload =
 function(compMgr)
 {
     return true;
@@ -276,6 +357,5 @@ function(compMgr)
 
 /* entrypoint */
 function NSGetModule(compMgr, fileSpec) {
-    return CalendarModule;
+    return ChatzillaModule;
 }
-

@@ -137,11 +137,12 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
   {
     var ioService = GetIOService();
     if (!ioService)
-      return;
+    {
+       return;
+    }
 
     // create a channel for the destination location
     var fullurl = destinationDirectoryLocation + fileName;
-    dump("location is "+fullurl+"\n");
     destChannel = create_channel_from_url(ioService, fullurl, login, password);
     if (!destChannel)
     {
@@ -154,15 +155,25 @@ function get_destination_channel(destinationDirectoryLocation, fileName, login, 
     dump("notification callbacks set\n");
     }
     catch(e) {dump(e+"\n");}
-
-    var ftpChannel = destChannel.QueryInterface(Components.interfaces.nsIFTPChannel);
+    
+    /*var ftpChannel = destChannel.QueryInterface(Components.interfaces.nsIFTPChannel);
     if (ftpChannel) dump("ftp channel found\n");
     if (ftpChannel)
       return ftpChannel;
-    var httpChannel = destChannel.QueryInterface(Components.interfaces.nsIHTTPChannel);
-    if (httpChannel) dump("http channel found\n");
-    if (httpChannel)
-      return httpChannel;
+    */
+    try {
+       var httpChannel = destChannel.QueryInterface(Components.interfaces.nsIHttpChannel);
+    }
+    catch( e )
+    {
+       alert( e );
+    }
+    
+    if (httpChannel) 
+    {
+       dump("http channel found\n");
+       return httpChannel;
+    }
     var httpsChannel = destChannel.QueryInterface(Components.interfaces.nsIHTTPSChannel);
     if (httpsChannel) dump("https channel found\n");
     if (httpsChannel)
@@ -196,7 +207,7 @@ function create_channel_from_url(ioService, aURL, aLogin, aPassword)
   }
   catch (e) 
   {
-    dump(e+"\n");
+    alert(e+"\n");
     return null;
   }
 }

@@ -243,7 +243,8 @@ function onOKCommand()
    
    gToDo.title       = getFieldValue( "title-field" );
    gToDo.description = getFieldValue( "description-field" );
-   gToDo.status      = eval( "gToDo."+getFieldValue( "status-field" ) );
+   if( getFieldValue( "status-field" ) != "" )
+      gToDo.status      = eval( "gToDo."+getFieldValue( "status-field" ) );
 
    var dueDate = getDateTimeFieldValue( "due-date-text" );
    gToDo.due.year = dueDate.getYear()+1900;

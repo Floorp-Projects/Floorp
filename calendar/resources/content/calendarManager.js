@@ -142,6 +142,8 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
    CalendarObject.serverNumber = this.nextCalendarNumber;
    this.nextCalendarNumber++;
 
+   CalendarObject.path = CalendarObject.path.replace( "webcal:", "http:" );
+
    if( CalendarObject.path.indexOf( "http://" ) != -1 )
    {
       var profileComponent = Components.classes["@mozilla.org/profile/manager;1"].createInstance();
@@ -157,11 +159,11 @@ calendarManager.prototype.addServerDialogResponse = function calMan_addServerDia
       
       this.retrieveAndSaveRemoteCalendar( CalendarObject, onResponseAndRefresh );
 
-      alert( "Remote Calendar Number "+CalendarObject.serverNumber+" Added" );
+      dump( "Remote Calendar Number "+CalendarObject.serverNumber+" Added" );
    }
    else
    {
-      alert( "Calendar Number "+CalendarObject.serverNumber+" Added" );
+      dump( "Calendar Number "+CalendarObject.serverNumber+" Added" );
    }
   
    

@@ -567,8 +567,20 @@ treeView.prototype.isSeparator = function()
 {return false;}
 treeView.prototype.getImageSrc = function()
 {return false;}
-treeView.prototype.cycleHeader = function()
-{return false;}
+treeView.prototype.cycleHeader = function( ColId, element )
+{
+   /*
+   **  NOT IMPLEMENTED YET
+   */
+   return false;
+   this.eventArray.sort( sortEventByTitle );
+}
+
+function sortEventByTitle( EventA, EventB )
+{
+   return( EventA.title - EventB.title );
+}
+
 treeView.prototype.setTree = function( tree )
 {
    this.tree = tree;
@@ -600,9 +612,10 @@ treeView.prototype.getCellText = function(row,column)
          return( startText );
       break;
       case "unifinder-search-results-tree-col-enddate":
-         var eventEndDate = getNextOrPreviousRecurrence( calendarEvent );
+         var eventEndDate = new Date( calendarEvent.end.getTime() );
          var endTime = formatUnifinderEventTime( eventEndDate );
-         var endDate = formatUnifinderEventDate( eventEndDate );
+         var eventStartDate = getNextOrPreviousRecurrence( calendarEvent );
+         var endDate = formatUnifinderEventDate( eventStartDate );
          if( calendarEvent.allDay )
          {
             endText = "All day " + endDate;

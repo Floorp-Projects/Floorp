@@ -212,7 +212,7 @@ function CalendarWindow( calendarDataSource )
 
 CalendarWindow.prototype.close = function calWin_close( )
 {
-   this.eventSource.removeObserver(  this.calendarEventDataSourceObserver ); 
+   gICalLib.removeObserver(  this.calendarEventDataSourceObserver ); 
 }
 
 
@@ -525,9 +525,30 @@ CalendarView.prototype.superConstructor = CalendarView;
 
 CalendarView.prototype.goToDay = function calView_goToDay( newDate, ShowEvent )
 {
+   var oldDate = this.calendarWindow.selectedDate;
+   
    this.calendarWindow.setSelectedDate( newDate ); 
    
-   this.refresh( ShowEvent )
+   switch( this.calendarWindow.currentView )
+   {
+      case this.calendarWindow.monthView:
+         if( newDate.getFullYear() != oldDate.getFullYear() ||
+             newDate.getMonth() != oldDate.getMonth() )
+         {
+            this.refresh( ShowEvent )
+         }
+         break;
+   
+      case this.calendarWindow.weekView:
+      case this.calendarWindow.dayView:
+         if( newDate.getFullYear() != oldDate.getFullYear() ||
+             newDate.getMonth() != oldDate.getMonth() ||
+             newDate.getDate() != oldDate.getDate() )
+         {
+            this.refresh( ShowEvent )
+         }
+         break;
+   }
 }
 
 /** PUBLIC

@@ -153,6 +153,15 @@ function calendarInit()
    update_date();
    	
 	checkForMailNews();
+
+   if( window.arguments && window.arguments[0].url )
+   {
+      var arrayForNames = window.arguments[0].url.split( "/" );
+      var CalendarNameWithExtension = arrayForNames[ arrayForNames.length - 1 ];
+      var CalendarName = CalendarNameWithExtension.replace( ".ics", "" );
+
+      gCalendarWindow.calendarManager.launchAddCalendarDialog( CalendarName, window.arguments[0].url );
+   }
 }
 
 // Set the date and time on the clock and set up a timeout to refresh the clock when the 
@@ -651,13 +660,24 @@ function closeCalendar()
 
 function getPreviewTextForRepeatingEvent( calendarEventDisplay )
 {
-	var HolderBox = document.createElement( "vbox" );
+	showTooltip = true;
+      
+   var HolderBox = document.createElement( "vbox" );
 
    if (calendarEventDisplay.event.title)
    {
       var TitleHtml = document.createElement( "description" );
-      var TitleText = document.createTextNode( "Title: "+calendarEventDisplay.event.title );
-      TitleHtml.appendChild( TitleText );
+      var TitleText = "Title: "+calendarEventDisplay.event.title;
+      
+      /*
+      if( calendarEventDisplay.event.recurUnits == "years" )
+      {
+         //count the number of years to figure out
+         
+         TitleText = TitleText+" "+getNumberOfRepeatTimes( calendarEventDisplay.event, false );
+      }*/
+      var TitleTextNode = document.createTextNode( TitleText );
+      TitleHtml.appendChild( TitleTextNode );
       HolderBox.appendChild( TitleHtml );
    }
 
@@ -676,6 +696,26 @@ function getPreviewTextForRepeatingEvent( calendarEventDisplay )
    }
 
    return ( HolderBox );
+}
+
+
+function getNumberOfRepeatTimes( Event, DateToCompare )
+{
+   if( !DateToCompare )
+   {
+      DateToCompare = new Date();
+   }
+   
+   var startDate = new Date( Event.start.getTime() );
+   
+   //get the difference in the number of years from now.
+   var NumberOfYears = DateToCompare.getFullYear() - startDate.getFullYear();
+
+   //find out if the event has happened this year or not.
+
+   //add on the proper extension.
+   
+   return( NumberOfYears );
 }
 
 function reloadApplication()
@@ -741,7 +781,8 @@ function print()
 function publishCalendarData()
 {
    var calendarString = eventArrayToICalString( gCalendarWindow.EventSelection.selectedEvents );
-   calendarPublish(calendarString, Server, FilePath, UserName, Password, "text/calendar");
+   
+   calendarPublish(calendarString, "http://localhost/webdav/", "TestCalendar.ics", "", "", "text/calendar");
 }
 
 /*
