@@ -779,20 +779,36 @@ nsBindingManager::ProcessAttachedQueue()
 }
 
 PR_STATIC_CALLBACK(PLDHashOperator)
-ExecuteDetachedHandler(nsISupports *aKey,
-                       nsXBLBinding *aBinding, void* aClosure)
+AccumulateBindingsToDetach(nsISupports *aKey, nsXBLBinding *aBinding,
+                           void* aVoidArray)
 {
-  aBinding->ExecuteDetachedHandler();
+  nsVoidArray* arr = NS_STATIC_CAST(nsVoidArray*, aVoidArray);
+  // Hold an owning reference to this binding, just in case
+  if (arr->AppendElement(aBinding))
+    NS_ADDREF(aBinding);
   return PL_DHASH_NEXT;
 }
 
+PR_STATIC_CALLBACK(PRBool)
+ExecuteDetachedHandler(void* aBinding, void* aClosure)
+{
+  NS_PRECONDITION(aBinding, "Null binding in list?");
+  nsXBLBinding* binding = NS_STATIC_CAST(nsXBLBinding*, aBinding);
+  binding->ExecuteDetachedHandler();
+  // Drop our ref to the binding now
+  NS_RELEASE(binding);
+  return PR_TRUE;
+}
 
 NS_IMETHODIMP
 nsBindingManager::ExecuteDetachedHandlers()
 {
   // Walk our hashtable of bindings.
-  if (mBindingTable.IsInitialized())
-    mBindingTable.EnumerateRead(ExecuteDetachedHandler, nsnull);
+  if (mBindingTable.IsInitialized()) {
+    nsVoidArray bindingsToDetach;
+    mBindingTable.EnumerateRead(AccumulateBindingsToDetach, &bindingsToDetach);
+    bindingsToDetach.EnumerateForwards(ExecuteDetachedHandler, nsnull);
+  }
   return NS_OK;
 }
 
