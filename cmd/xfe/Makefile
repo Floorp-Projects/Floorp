@@ -315,7 +315,6 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/lib$(LITE_PREFIX)plug.a \
 		  $(DIST)/lib/libutil.a \
 		  $(DIST)/lib/libfont.a \
-		  $(DIST)/lib/libprgrss.a \
 		  $(NULL)
 
 ifndef NO_LAYERS
@@ -351,6 +350,7 @@ BASIC_LIBS	+= \
 		  $(DIST)/lib/libiawt.a \
 		  $(DIST)/lib/libmmedia.a \
 		  $(DIST)/lib/libsoftupdate.a \
+		  $(DIST)/lib/libprgrss.a \
 		  $(DIST)/lib/libcon.a \
 		  $(DIST)/lib/libjbn.a \
 		  $(NULL)
