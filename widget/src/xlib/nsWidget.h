@@ -97,9 +97,9 @@ public:
   NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
-  PRBool                  OnPaint(nsPaintEvent &event);
-  PRBool                  OnResize(nsSizeEvent &event);
-  PRBool                  DispatchMouseEvent(nsMouseEvent &aEvent);
+  virtual PRBool          OnPaint(nsPaintEvent &event);
+  virtual PRBool          OnResize(nsSizeEvent &event);
+  virtual PRBool          DispatchMouseEvent(nsMouseEvent &aEvent);
   static nsWidget        *getWidgetForWindow(Window aWindow);
 protected:
   // create the native window for this class
