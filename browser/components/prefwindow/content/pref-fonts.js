@@ -211,6 +211,40 @@ function Startup()
     // it if an invalid selection is made (select "Other...", hit Cancel)
     resolution.selectedItem.setAttribute("current", "true");
 
+    var defaultResolution;
+    var otherResolution;
+
+    // On OS/2, 120 is the default system resolution.
+    // 96 is valid, but used only for for 640x480.
+    if (navigator.appVersion.indexOf("OS/2") != -1)
+      {
+        defaultResolution = "120";
+        otherResolution = "96";
+        document.getElementById( "arbitraryResolution" ).setAttribute( "hidden", "true" ); 
+        document.getElementById( "resolutionSeparator" ).setAttribute( "hidden", "true" ); 
+      } else {
+        defaultResolution = "96";
+        otherResolution = "72";
+      }
+
+    var dpi = resolution.getAttribute( "dpi" );
+    resolution = document.getElementById( "defaultResolution" );
+    resolution.setAttribute( "value", defaultResolution );
+    resolution.setAttribute( "label", dpi.replace(/\$val/, defaultResolution ) );
+    resolution = document.getElementById( "otherResolution" );
+    resolution.setAttribute( "value", otherResolution );
+    resolution.setAttribute( "label", dpi.replace(/\$val/, otherResolution ) );
+
+    // Get the pref and set up the dialog appropriately. Startup is called
+    // after SetFields so we can't rely on that call to do the business.
+    var prefvalue = gPrefWindow.getPref( "int", "browser.display.screen_resolution" );
+    if( prefvalue != "!/!ERROR_UNDEFINED_PREF!/!" )
+        resolution = prefvalue;
+    else
+        resolution = 96; // If it all goes horribly wrong, fall back on 96.
+    
+    setResolution( resolution );
+
     // This prefstring is a contrived pref whose sole purpose is to lock some
     // elements in this panel.  The value of the pref is not used and does not matter.
     if ( gPrefWindow.getPrefIsLocked( "browser.display.languageList" ) ) {
