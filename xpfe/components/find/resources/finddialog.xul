@@ -22,6 +22,7 @@ Rights Reserved.
 Contributor(s): Stuart Parmenter <pavlov@netscape.com>
                 Simon Fraser <sfraser@netscape.com>
                 Bill Law <law@netscape.com>
+                Ben Goodger <rgoodger@ihug.co.nz>
 -->
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
@@ -34,26 +35,26 @@ Contributor(s): Stuart Parmenter <pavlov@netscape.com>
   onunload="onUnload();"
   title="&findDialog.title;"
   align="vertical"
+  class="dialog"
   style="padding:5px;">
 
   <html:script language="JavaScript" src="chrome://global/content/finddialog.js"/>
 
   <box align="horizontal">
     <html:label style="padding-top:5px; padding-right:5px;">&findField.label;</html:label>
+    <box align="vertical" style="padding:0px; width: 250px;">
+      <html:input id="dialog.findKey" type="text" flex="100%" onkeyup="onTyping(event.which)"/>
 
-    <box align="vertical" style="padding:0px;">
-      <html:input id="dialog.findKey" type="text" size="30" onkeyup="onTyping(event.which)"/>
-
-      <html:div>
+      <html:div style="padding-left: 4px;">
         <html:input type="checkbox" id="dialog.caseSensitive"/>
         <html:label class="disabled" for="dialog.caseSensitive">&caseSensitiveCheckbox.label;</html:label>
       </html:div>
     
-      <html:div>
+      <html:div style="padding-left: 4px;">
         <html:input type="checkbox" id="dialog.wrap"/>
         <html:label class="disabled" for="dialog.wrap">&wrapCheckbox.label;</html:label>
       </html:div>
-      <html:div>
+      <html:div style="padding-left: 4px;">
         <html:input type="checkbox" id="dialog.searchBackwards"/>
         <html:label class="disabled" for="dialog.searchBackwards">&backwardsCheckbox.label;</html:label>
       </html:div>
