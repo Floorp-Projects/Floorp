@@ -49,14 +49,15 @@ class CSSLoaderImpl;
  * inline style from <style> elements, linked style, @import-ed child
  * sheets, agent sheets.  The loader handles the following tasks:
  *
- * 1) Creation of the actual style sheet objects: CreateSheet()
- * 2) setting of the right media, title, enabled state, etc on the
+ * 1) Checking whether the load is allowed: CheckLoadAllowed()
+ * 2) Creation of the actual style sheet objects: CreateSheet()
+ * 3) setting of the right media, title, enabled state, etc on the
  *    sheet: PrepareSheet()
- * 3) Insertion of the sheet in the proper cascade order:
+ * 4) Insertion of the sheet in the proper cascade order:
  *    InsertSheetInDoc() and InsertChildSheet()
- * 4) Load of the sheet: LoadSheet()
- * 5) Parsing of the sheet: ParseSheet()
- * 6) Cleanup: SheetComplete()
+ * 5) Load of the sheet: LoadSheet()
+ * 6) Parsing of the sheet: ParseSheet()
+ * 7) Cleanup: SheetComplete()
  *
  * The detailed documentation for these functions is found with the
  * function implementations.
@@ -303,6 +304,10 @@ public:
   PRBool IsAlternate(const nsAString& aTitle);
 
 private:
+  nsresult CheckLoadAllowed(nsIURI* aSourceURI,
+                            nsIURI* aTargetURI,
+                            nsISupports* aContext);
+  
   nsresult CreateSheet(nsIURI* aURI,
                        PRUint32 aDefaultNameSpaceID,
                        PRBool aSyncLoad,

@@ -29,6 +29,7 @@
  */
 #include "nsIContent.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMWindow.h"
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIUnicharInputStream.h"
@@ -43,6 +44,8 @@
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsContentPolicyUtils.h"
+#include "nsIScriptGlobalObject.h"
 #include "nsITimelineService.h"
 #include "nsIHttpChannel.h"
 #include "nsIConsoleService.h"
@@ -903,6 +906,63 @@ CSSLoaderImpl::IsAlternate(const nsAString& aTitle)
 }
 
 /**
+ * CheckLoadAllowed will return success if the load is allowed,
+ * failure otherwise. 
+ *
+ * @param aSourceURI the uri of the document or parent sheet loading the sheet
+ * @param aTargetURI the uri of the sheet to be loaded
+ * @param aContext the context.  This is the element or the @import
+ *        rule doing the loading
+ */
+nsresult
+CSSLoaderImpl::CheckLoadAllowed(nsIURI* aSourceURI,
+                                nsIURI* aTargetURI,
+                                nsISupports* aContext)
+{
+  LOG(("CSSLoaderImpl::CheckLoadAllowed"));
+  
+  // Check with the security manager
+  nsresult rv;
+  nsCOMPtr<nsIScriptSecurityManager> secMan =
+           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = secMan->CheckLoadURI(aSourceURI, aTargetURI,
+                            nsIScriptSecurityManager::ALLOW_CHROME);
+  if (NS_FAILED(rv)) { // failure is normal here; don't warn
+    return rv;
+  }
+
+  LOG(("  Passed security check"));
+
+  // Check with content policy
+
+  if (!mDocument) {
+    return NS_OK;
+  }
+  
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  rv = mDocument->GetScriptGlobalObject(getter_AddRefs(globalObject));
+  if (NS_FAILED(rv) || !globalObject) {
+    LOG(("  No script global object"));
+    return rv;
+  }
+  
+  nsCOMPtr<nsIDOMWindow> domWin(do_QueryInterface(globalObject));
+  NS_ASSERTION(domWin, "Global object not DOM window?");
+
+  PRBool shouldLoad = PR_TRUE;
+  rv = NS_CheckContentLoadPolicy(nsIContentPolicy::STYLESHEET, aTargetURI,
+                                 aContext, domWin, &shouldLoad);
+  if (NS_SUCCEEDED(rv) && !shouldLoad) {
+    LOG(("  Blocked by content policy"));
+    return NS_ERROR_FAILURE;
+  }
+
+  return rv;
+}
+
+/**
  * CreateSheet() creates an nsICSSStyleSheet object for the given URI,
  * if any.  If there is no URI given, we just create a new style sheet
  * object.  Otherwise, we check for an existing style sheet object for
@@ -1593,18 +1653,14 @@ CSSLoaderImpl::LoadStyleLink(nsIContent* aElement,
   
   NS_ENSURE_TRUE(mDocument, NS_ERROR_NOT_INITIALIZED);
 
-  //-- Make sure this page is allowed to load this URL
-  nsresult rv;
-  nsCOMPtr<nsIScriptSecurityManager> secMan = 
-           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  // Check whether we should even load
   nsCOMPtr<nsIURI> docURI;
-  rv = mDocument->GetDocumentURL(getter_AddRefs(docURI));
+  nsresult rv = mDocument->GetDocumentURL(getter_AddRefs(docURI));
   if (NS_FAILED(rv) || !docURI) return NS_ERROR_FAILURE;
-  rv = secMan->CheckLoadURI(docURI, aURL, nsIScriptSecurityManager::ALLOW_CHROME);
+  rv = CheckLoadAllowed(docURI, aURL, aElement);
   if (NS_FAILED(rv)) return rv;
 
-  LOG(("  Passed security check"));
+  LOG(("  Passed load check"));
   
   StyleSheetState state;
   nsCOMPtr<nsICSSStyleSheet> sheet;
@@ -1675,18 +1731,14 @@ CSSLoaderImpl::LoadChildSheet(nsICSSStyleSheet* aParentSheet,
   
   LOG_URI("  Child uri: '%s'", aURL);
 
-  //-- Make sure this page is allowed to load this URL
-  nsresult rv;
-  nsCOMPtr<nsIScriptSecurityManager> secMan = 
-           do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  if (NS_FAILED(rv)) return rv;
+  // Check whether we should even load
   nsCOMPtr<nsIURI> sheetURI;
-  rv = aParentSheet->GetURL(*getter_AddRefs(sheetURI));
+  nsresult rv = aParentSheet->GetURL(*getter_AddRefs(sheetURI));
   if (NS_FAILED(rv) || !sheetURI) return NS_ERROR_FAILURE;
-  rv = secMan->CheckLoadURI(sheetURI, aURL, nsIScriptSecurityManager::ALLOW_CHROME);
+  rv = CheckLoadAllowed(sheetURI, aURL, aParentRule);
   if (NS_FAILED(rv)) return rv;
 
-  LOG(("  Passed security check"));
+  LOG(("  Passed load check"));
   
   SheetLoadData* parentData = nsnull;
   nsCOMPtr<nsICSSLoaderObserver> observer;
