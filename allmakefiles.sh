@@ -102,6 +102,8 @@ expat/Makefile
 expat/xmlparse/Makefile
 expat/xmltok/Makefile
 extensions/Makefile
+extensions/cookie/Makefile
+extensions/cookie/tests/Makefile
 extensions/irc/Makefile
 extensions/irc/libbs/Makefile
 extensions/wallet/Makefile
@@ -132,6 +134,7 @@ gfx/src/xlibrgb/Makefile
 gfx/tests/Makefile
 htmlparser/Makefile
 htmlparser/robot/Makefile
+htmlparser/robot/test/Makefile
 htmlparser/src/Makefile
 htmlparser/tests/Makefile
 htmlparser/tests/grabpage/Makefile
@@ -277,6 +280,52 @@ nav-java/stubs/Makefile
 nav-java/stubs/include/Makefile
 nav-java/stubs/jri/Makefile
 nav-java/stubs/src/Makefile
+netwerk/Makefile
+netwerk/base/Makefile
+netwerk/base/public/Makefile
+netwerk/base/src/Makefile
+netwerk/build/Makefile
+netwerk/dns/Makefile
+netwerk/dns/public/Makefile
+netwerk/dns/src/Makefile
+netwerk/protocol/Makefile
+netwerk/protocol/about/Makefile
+netwerk/protocol/about/public/Makefile
+netwerk/protocol/about/src/Makefile
+netwerk/protocol/data/Makefile
+netwerk/protocol/data/public/Makefile
+netwerk/protocol/data/src/Makefile
+netwerk/protocol/file/Makefile
+netwerk/protocol/file/public/Makefile
+netwerk/protocol/file/src/Makefile
+netwerk/protocol/ftp/Makefile
+netwerk/protocol/ftp/public/Makefile
+netwerk/protocol/ftp/src/Makefile
+netwerk/protocol/http/Makefile
+netwerk/protocol/http/public/Makefile
+netwerk/protocol/http/src/Makefile
+netwerk/protocol/jar/Makefile
+netwerk/protocol/jar/public/Makefile
+netwerk/protocol/jar/src/Makefile
+netwerk/protocol/keyword/Makefile
+netwerk/protocol/keyword/src/Makefile
+netwerk/protocol/resource/Makefile
+netwerk/protocol/resource/src/Makefile
+netwerk/mime/Makefile
+netwerk/mime/public/Makefile
+netwerk/mime/src/Makefile
+netwerk/socket/Makefile
+netwerk/socket/base/Makefile
+netwerk/streamconv/Makefile
+netwerk/streamconv/converters/Makefile
+netwerk/streamconv/public/Makefile
+netwerk/streamconv/src/Makefile
+netwerk/streamconv/test/Makefile
+netwerk/test/Makefile
+netwerk/testserver/Makefile
+netwerk/util/Makefile
+netwerk/util/public/Makefile
+netwerk/util/src/Makefile
 network/Makefile
 network/cache/Makefile
 network/cache/nu/Makefile
@@ -561,21 +610,11 @@ editor/ui/dialogs/content/Makefile
 editor/ui/dialogs/skin/Makefile
 editor/ui/dialogs/locale/Makefile
 editor/ui/dialogs/locale/en-US/Makefile
-
 END_EDITOR_MAKEFILES
 fi
 
 if [ "$MOZ_MAIL_NEWS" ]; then
   add_makefiles < ${srcdir}/mailnews/makefiles
-fi
-
-if [ "$NECKO" ]; then
-  add_makefiles < ${srcdir}/netwerk/makefiles
-  add_makefiles <<END_NECKO_MAKEFILES
-  extensions/cookie/Makefile
-  extensions/cookie/tests/Makefile
-  htmlparser/robot/test/Makefile
-END_NECKO_MAKEFILES
 fi
 
 #
