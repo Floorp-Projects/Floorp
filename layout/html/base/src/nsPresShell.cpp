@@ -5036,10 +5036,16 @@ PresShell::AttributeChanged(nsIDocument *aDocument,
                             PRInt32      aModType, 
                             PRInt32      aHint)
 {
-  WillCauseReflow();
-  nsresult rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aModType, aHint);
-  VERIFY_STYLE_TREE;
-  DidCauseReflow();
+  nsresult rv = NS_OK;
+  // XXXwaterson it might be more elegant to wait until after the
+  // initial reflow to begin observing the document. That would
+  // squelch any other inappropriate notifications as well.
+  if (mDidInitialReflow) {
+    WillCauseReflow();
+    rv = mStyleSet->AttributeChanged(mPresContext, aContent, aNameSpaceID, aAttribute, aModType, aHint);
+    VERIFY_STYLE_TREE;
+    DidCauseReflow();
+  }
   return rv;
 }
 
