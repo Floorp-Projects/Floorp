@@ -1537,7 +1537,7 @@ nsGenericHTMLElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult,
   sum += (PRUint32) aInstanceSize;
   if (mAttributes) {
     PRUint32 attrs = 0;
-    mAttributes->SizeOf(aSizer, &attrs);
+    mAttributes->SizeOf(aSizer, attrs);
     sum += attrs;
   }
 #endif
@@ -2416,10 +2416,18 @@ nsGenericHTMLElement::GetCommonMappedAttributesImpact(const nsIAtom* aAttribute,
     aHint = NS_STYLE_HINT_REFLOW;  // XXX really? possibly FRAMECHANGE?
     return PR_TRUE;
   }
+  /* 
+     We should not REFRAME for a class change; 
+     let the resulting style decide the impact
+     (bug 21225, mja)
+  */
+#if 0
   else if (nsHTMLAtoms::kClass == aAttribute) {		// bug 8862
     aHint = NS_STYLE_HINT_FRAMECHANGE;
     return PR_TRUE;
   }
+#endif
+
   else if (nsHTMLAtoms::_baseHref == aAttribute) {
     aHint = NS_STYLE_HINT_VISUAL; // at a minimum, elements may need to override
     return PR_TRUE;
