@@ -25,6 +25,7 @@
 #include "nsISelectControlFrame.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMKeyListener.h"
 
 class nsIDOMHTMLSelectElement;
 class nsIDOMHTMLCollection;
@@ -42,6 +43,7 @@ class nsListControlFrame : public nsScrollFrame,
                            public nsIListControlFrame,
                            public nsIDOMMouseListener,
                            public nsIDOMMouseMotionListener,
+                           public nsIDOMKeyListener,
                            public nsISelectControlFrame
 {
 public:
@@ -117,8 +119,8 @@ public:
   NS_IMETHOD SetOptionSelected(PRInt32 aIndex, PRBool aValue);
 
   //nsIDOMEventListener
-  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);//{ printf("-MouseDown\n"); return NS_OK; };
-  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);// { printf("-MouseUp\n"); return NS_OK; };
+  virtual nsresult MouseDown(nsIDOMEvent* aMouseEvent);
+  virtual nsresult MouseUp(nsIDOMEvent* aMouseEvent);
   virtual nsresult MouseClick(nsIDOMEvent* aMouseEvent)    { return NS_OK; }
   virtual nsresult MouseDblClick(nsIDOMEvent* aMouseEvent) { return NS_OK; }
   virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent)     { return NS_OK; }
@@ -129,13 +131,17 @@ public:
   virtual nsresult MouseMove(nsIDOMEvent* aMouseEvent);
   virtual nsresult DragMove(nsIDOMEvent* aMouseEvent) { return NS_OK; }
 
+  //nsIDOMKeyListener
+  virtual nsresult KeyDown(nsIDOMEvent* aKeyEvent);
+  virtual nsresult KeyUp(nsIDOMEvent* aKeyEvent)    { return NS_OK; }
+  virtual nsresult KeyPress(nsIDOMEvent* aKeyEvent) { return NS_OK; }
 
     // Static Methods
   static nsIDOMHTMLSelectElement* GetSelect(nsIContent * aContent);
   static nsIDOMHTMLCollection*    GetOptions(nsIContent * aContent, nsIDOMHTMLSelectElement* aSelect = nsnull);
-  static nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLCollection& aOptions, PRUint32 aIndex);
-  static nsIContent* GetOptionAsContent(nsIDOMHTMLCollection* aCollection,PRUint32 aIndex);
-  static PRBool                   GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRUint32 aIndex, nsString& aValue);
+  static nsIDOMHTMLOptionElement* GetOption(nsIDOMHTMLCollection& aOptions, PRInt32 aIndex);
+  static nsIContent* GetOptionAsContent(nsIDOMHTMLCollection* aCollection,PRInt32 aIndex);
+  static PRBool                   GetOptionValue(nsIDOMHTMLCollection& aCollecton, PRInt32 aIndex, nsString& aValue);
 
 protected:
   NS_IMETHOD GetSelectedIndexFromDOM(PRInt32* aIndex); // from DOM
@@ -154,11 +160,11 @@ protected:
   nsresult GetSizeAttribute(PRInt32 *aSize);
   PRInt32  GetNumberOfSelections();
   nsIContent* GetOptionFromContent(nsIContent *aContent);
-  nsresult GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent);
+  nsresult GetIndexFromDOMEvent(nsIDOMEvent* aMouseEvent, PRInt32& aOldIndex, PRInt32& aCurIndex);
   PRInt32  GetSelectedIndexFromContent(nsIContent *aContent);
-  nsIContent* GetOptionContent(PRUint32 aIndex);
+  nsIContent* GetOptionContent(PRInt32 aIndex);
   PRBool   IsContentSelected(nsIContent* aContent);
-  PRBool   IsContentSelectedByIndex(PRUint32 aIndex);
+  PRBool   IsContentSelectedByIndex(PRInt32 aIndex);
   void     SetContentSelected(PRInt32 aIndex, PRBool aSelected);
   void     GetViewOffset(nsIViewManager* aManager, nsIView* aView, nsPoint& aPoint);
   nsresult Deselect();
