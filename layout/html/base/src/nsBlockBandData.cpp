@@ -213,6 +213,10 @@ nsBlockBandData::ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType)
   return result;
 }
 
+// XXX doesn't work because of margins around floaters and because of
+// % margins we can't really re-compute them here (nor would we want
+// too...)
+#if 0
 /**
  * Get the frames YMost, in the space managers "root" coordinate
  * system. Because the floating frame may have been placed in a
@@ -254,6 +258,7 @@ nsBlockBandData::GetFrameYMost(nsIFrame* aFrame)
 
   return y + r.height;
 }
+#endif
 
 // XXX optimization? use mFloaters to avoid doing anything
 nscoord
@@ -280,13 +285,21 @@ nsBlockBandData::ClearFloaters(nscoord aY, PRUint8 aBreakType)
           for (fn = 0; fn < numFrames; fn++) {
             nsIFrame* frame = (nsIFrame*) trapezoid->frames->ElementAt(fn);
             if (ShouldClearFrame(frame, aBreakType)) {
+#if 0
               nscoord ym = GetFrameYMost(frame);
+#else
+              nscoord ym = trapezoid->yBottom;
+#endif
               if (ym > yMost) yMost = ym;
             }
           }
         }
         else if (ShouldClearFrame(trapezoid->frame, aBreakType)) {
+#if 0
           nscoord ym = GetFrameYMost(trapezoid->frame);
+#else
+          nscoord ym = trapezoid->yBottom;
+#endif
           if (ym > yMost) yMost = ym;
         }
       }

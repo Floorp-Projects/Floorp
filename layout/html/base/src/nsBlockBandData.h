@@ -80,7 +80,9 @@ protected:
 
   void ComputeAvailSpaceRect();
   PRBool ShouldClearFrame(nsIFrame* aFrame, PRUint8 aBreakType);
+#if 0
   nscoord GetFrameYMost(nsIFrame* aFrame);
+#endif
 };
 
 #endif /* nsBlockBandData_h___ */
