@@ -357,7 +357,7 @@ char					*str;
 NS_IMETHODIMP nsTextAreaWidget::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 nsSizeEvent 	event;
-nsEventStatus	eventStatus;
+//nsEventStatus	eventStatus;
 LongRect			macRect;
 
   mBounds.width  = aWidth;
@@ -404,7 +404,7 @@ LongRect			macRect;
 NS_IMETHODIMP nsTextAreaWidget::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
 nsSizeEvent 	event;
-nsEventStatus	eventStatus;
+//nsEventStatus	eventStatus;
 LongRect			macRect;
 
   mBounds.x      = aX;
