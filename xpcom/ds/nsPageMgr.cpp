@@ -29,6 +29,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <malloc.h>
 
 #ifndef MAP_FAILED
 #if defined (__STDC__) && __STDC__
@@ -398,7 +399,7 @@ nsPageMgr::InitPages(nsPageCount minPages, nsPageCount maxPages)
 
     nsPage* addr = NULL;
     nsPageCount size = maxPages;
-    mZero_fd = NULL;
+    mZero_fd = 0;
 
 #ifdef HAVE_DEV_ZERO
     mZero_fd = open("/dev/zero", O_RDWR);
