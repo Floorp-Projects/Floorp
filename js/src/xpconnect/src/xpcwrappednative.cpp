@@ -451,11 +451,9 @@ nsXPCWrappedNative::SetFinalizeListener(nsIXPConnectFinalizeListener* aListener)
     if(mFinalizeListener && aListener)
         return NS_ERROR_FAILURE;
 
-    if(mFinalizeListener)
-        NS_RELEASE(mFinalizeListener);
+    NS_IF_ADDREF(aListener);
+    NS_IF_RELEASE(mFinalizeListener);
     mFinalizeListener = aListener;
-    if(mFinalizeListener)
-        NS_ADDREF(mFinalizeListener);
     return NS_OK;
 }
 

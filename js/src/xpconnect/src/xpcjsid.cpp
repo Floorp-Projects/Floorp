@@ -613,6 +613,7 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
     nsJSCID* cidObj;
     nsCID*  cid;
     PRBool valid;
+    nsID iid;
 
     if(!(cidObj = GetCID()) ||
        NS_FAILED(cidObj->GetValid(&valid)) ||
@@ -645,25 +646,29 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
     }
 
     // If an IID was passed in then use it
-    // XXX should it be JS error to pass something that is *not* and JSID?
-    const nsID* piid = nsnull;
     if(argc)
     {
         JSObject* iidobj;
         jsval val = *argv;
-        if(!JSVAL_IS_VOID(val) && !JSVAL_IS_NULL(val) &&
-            JSVAL_IS_OBJECT(val) && nsnull != (iidobj = JSVAL_TO_OBJECT(val)))
+        nsID* piid = nsnull;
+        if(JSVAL_IS_PRIMITIVE(val) || 
+           !(iidobj = JSVAL_TO_OBJECT(val)) ||
+           !(piid = xpc_JSObjectToID(cx, iidobj)))
         {
-            piid = xpc_JSObjectToID(cx, iidobj);
+            ThrowException(NS_ERROR_XPC_BAD_IID, cx);
+            *retval = JS_FALSE;
+            return NS_OK;
         }
+        iid = *piid;
+        delete piid;
     }
-    if(!piid)
-        piid = &(nsCOMTypeInfo<nsISupports>::GetIID());
+    else
+        iid = NS_GET_IID(nsISupports);
 
     nsISupports* inst;
     nsresult rv;
 
-    rv = nsComponentManager::CreateInstance(*cid, nsnull, *piid, (void**) &inst);
+    rv = nsComponentManager::CreateInstance(*cid, nsnull, iid, (void**) &inst);
     NS_ASSERTION(NS_FAILED(rv) || inst, "component manager returned success, but instance is null!");
     nsAllocator::Free(cid);
 
@@ -679,7 +684,7 @@ CIDCreateInstance::Call(JSContext *cx, JSObject *obj,
     nsIXPConnect* xpc = nsXPConnect::GetXPConnect();
     if(xpc)
     {
-        rv = xpc->WrapNative(cx, inst, *piid, &instWrapper);
+        rv = xpc->WrapNative(cx, inst, iid, &instWrapper);
         NS_RELEASE(xpc);
     }
 
@@ -809,6 +814,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
     nsJSCID* cidObj;
     nsCID*  cid;
     PRBool valid;
+    nsID iid;
 
     if(!(cidObj = GetCID()) ||
        NS_FAILED(cidObj->GetValid(&valid)) ||
@@ -841,25 +847,29 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
     }
 
     // If an IID was passed in then use it
-    // XXX should it be JS error to pass something that is *not* a JSID?
-    const nsID* piid = nsnull;
     if(argc)
     {
         JSObject* iidobj;
         jsval val = *argv;
-        if(!JSVAL_IS_VOID(val) && !JSVAL_IS_NULL(val) &&
-            JSVAL_IS_OBJECT(val) && nsnull != (iidobj = JSVAL_TO_OBJECT(val)))
+        nsID* piid = nsnull;
+        if(JSVAL_IS_PRIMITIVE(val) || 
+           !(iidobj = JSVAL_TO_OBJECT(val)) ||
+           !(piid = xpc_JSObjectToID(cx, iidobj)))
         {
-            piid = xpc_JSObjectToID(cx, iidobj);
+            ThrowException(NS_ERROR_XPC_BAD_IID, cx);
+            *retval = JS_FALSE;
+            return NS_OK;
         }
+        iid = *piid;
+        delete piid;
     }
-    if(!piid)
-        piid = &(nsCOMTypeInfo<nsISupports>::GetIID());
+    else
+        iid = NS_GET_IID(nsISupports);
 
     nsISupports* srvc;
     nsresult rv;
 
-    rv = nsServiceManager::GetService(*cid, *piid, &srvc, nsnull);
+    rv = nsServiceManager::GetService(*cid, iid, &srvc, nsnull);
     NS_ASSERTION(NS_FAILED(rv) || srvc, "service manager returned success, but service is null!");
 
     if(NS_FAILED(rv) || !srvc)
@@ -874,7 +884,7 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
     nsIXPConnect* xpc = nsXPConnect::GetXPConnect();
     if(xpc)
     {
-        rv = xpc->WrapNative(cx, srvc, *piid, &srvcWrapper);
+        rv = xpc->WrapNative(cx, srvc, iid, &srvcWrapper);
         NS_RELEASE(xpc);
     }
 
@@ -897,11 +907,11 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
         {
             // Failure means that we are using a preexisting wrapper on
             // this service that has already setup a listener. So, we just
-            // release our extra ref and trust the lister that is already in
+            // release our extra ref and trust the listener that is already in
             // place to do the right thing.
             NS_RELEASE(srvc);
-            NS_RELEASE(releaser);
         }
+        NS_RELEASE(releaser);
     }
     nsAllocator::Free(cid);
 
@@ -918,7 +928,6 @@ CIDGetService::Call(JSContext *cx, JSObject *obj,
 /***************************************************************************/
 
 NS_IMPL_ISUPPORTS3(nsJSCID, nsIJSID, nsIJSCID, nsIXPCScriptable)
-
 
 XPC_IMPLEMENT_FORWARD_CREATE(nsJSCID)
 XPC_IMPLEMENT_IGNORE_GETFLAGS(nsJSCID)
