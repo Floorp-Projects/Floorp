@@ -509,14 +509,8 @@ BOOL
 nsWindow :: DealWithPopups ( ULONG inMsg, MRESULT* outResult )
 {
   if ( gRollupListener && gRollupWidget) {
-#ifdef XP_OS2
-    if( inMsg == WM_ACTIVATE || inMsg == WM_BUTTON1DOWN ||
+    if(inMsg == WM_BUTTON1DOWN ||
         inMsg == WM_BUTTON2DOWN || inMsg == WM_BUTTON3DOWN) {
-#else
-    if (inMsg == WM_ACTIVATE || inMsg == WM_NCLBUTTONDOWN || inMsg == WM_LBUTTONDOWN ||
-      inMsg == WM_RBUTTONDOWN || inMsg == WM_MBUTTONDOWN || 
-      inMsg == WM_NCMBUTTONDOWN || inMsg == WM_NCRBUTTONDOWN || inMsg == WM_MOUSEACTIVATE) {
-#endif
       // Rollup if the event is outside the popup.
       PRBool rollup = !nsWindow::EventIsInsideWindow((nsWindow*)gRollupWidget);
       
