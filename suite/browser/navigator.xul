@@ -188,26 +188,7 @@ Contributor(s): ______________________________________. -->
 <html:script language="javascript">
   var gBookmarkPopup = null;
 </html:script>
-<html:script src="chrome://bookmarks/content/bookmark-popup.js" />
 
-<popupset>
-  <popup id="bookmark-popup" popupanchor='bottomleft'
-    oncreate="dump(document.popupElement);"
-    datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" ref="NC:BookmarksRoot">
-      <template>
-        <rule iscontainer="true">
-            <menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
-        </rule>
-        <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-            <menuseparator uri="..." />
-        </rule>
-        <rule>
-            <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, 'BookmarksMenu')" />
-        </rule>
-      </template>
-  </popup>
-</popupset>
- 
 <broadcaster id="canReload" value="&reloadCmd.label;"  oncommand="BrowserReallyReload(0);"/>
 <broadcaster id="canStop"/>
 <broadcaster id="canPrint"/>
@@ -687,6 +668,7 @@ Contributor(s): ______________________________________. -->
             <menu uri="...">
               <titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name"
                 align="left" />
+              <menupopup />
             </menu>
           </rule>
           <rule parent="toolbar">
@@ -698,7 +680,9 @@ Contributor(s): ______________________________________. -->
           <rule iscontainer="true">
             <menupopup>
               <menu uri="..." align="left"
-                value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                value="rdf:http://home.netscape.com/NC-rdf#Name" >
+                <menupopup />
+              </menu>
             </menupopup>
           </rule>
           <rule>

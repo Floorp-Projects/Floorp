@@ -138,17 +138,19 @@ Contributor(s): ______________________________________. -->
 		<template>
 			<rule iscontainer="true">
 			  <menupopup>
-				<menu uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+				<menu uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name">
+                                        <menupopup />
+                                </menu>
 			  </menupopup>
 			</rule>
 			<rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
 			  <menupopup> 
-				<menuseparator uri="..." />
+				<menuseparator uri="rdf:*" />
 			  </menupopup>
 			</rule>
 			<rule>
 			  <menupopup>
-				<menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, 'BookmarksMenu')" />
+				<menuitem uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" oncommand="OpenBookmarkURL(event.target, 'BookmarksMenu')" />
 			  </menupopup>
 			</rule>
 		</template>
