@@ -150,17 +150,17 @@ pref("browser.search.defaultenginename", "chrome://navigator/locale/navigator.pr
 // Editing these may create a security risk - be sure you know what you're doing
 //pref("capability.policy.default.barprop.visible.set", "UniversalBrowserWrite");
 
-pref("capability.policy.default.Domexception.code", "allAccess");
-pref("capability.policy.default.Domexception.message", "allAccess");
-pref("capability.policy.default.Domexception.name", "allAccess");
-pref("capability.policy.default.Domexception.result", "allAccess");
-pref("capability.policy.default.Domexception.tostring", "allAccess");
+pref("capability.policy.default.DOMException.code", "allAccess");
+pref("capability.policy.default.DOMException.message", "allAccess");
+pref("capability.policy.default.DOMException.name", "allAccess");
+pref("capability.policy.default.DOMException.result", "allAccess");
+pref("capability.policy.default.DOMException.toString", "allAccess");
 
 pref("capability.policy.default.History.back", "allAccess");
 pref("capability.policy.default.History.current", "UniversalBrowserRead");
 pref("capability.policy.default.History.forward", "allAccess");
 pref("capability.policy.default.History.go", "allAccess");
-//pref("capability.policy.default.History.item", "UniversalBrowserRead");
+pref("capability.policy.default.History.item", "UniversalBrowserRead");
 pref("capability.policy.default.History.length", "UniversalBrowserRead");
 pref("capability.policy.default.History.next", "UniversalBrowserRead");
 pref("capability.policy.default.History.previous", "UniversalBrowserRead");
@@ -199,10 +199,29 @@ pref("capability.policy.default.Window.openDialog", "noAccess");
 pref("capability.policy.default.Window.self", "allAccess");
 pref("capability.policy.default.Window.window", "allAccess");
 
-pref("capability.policy.mailnews.Domexception.tostring", "noAccess");
+// Restrictions on the DOM for mail/news - see bug 66938
+pref("capability.policy.mailnews.DOMException.toString", "noAccess");;
+pref("capability.policy.mailnews.HTMLAnchorElement.hash", "noAccess");
+pref("capability.policy.mailnews.HTMLAnchorElement.host", "noAccess");
+pref("capability.policy.mailnews.HTMLAnchorElement.hostname", "noAccess");
+pref("capability.policy.mailnews.HTMLAnchorElement.href", "noAccess");
+pref("capability.policy.mailnews.HTMLAnchorElement.pathname", "noAccess");
+pref("capability.policy.mailnews.HTMLAnchorElement.port", "noAccess");
+pref("capability.policy.mailnews.HTMLAnchorElement.protocol", "noAccess");
+pref("capability.policy.mailnews.HTMLAnchorElement.search", "noAccess");
+pref("capability.policy.mailnews.HTMLAnchorElement.text", "noAccess");
+pref("capability.policy.mailnews.HTMLAnchorElement.getAttribute", "noAccess");
+pref("capability.policy.mailnews.HTMLAnchorElement.attributes", "noAccess");
+pref("capability.policy.mailnews.HTMLDocument.location", "noAccess");
 pref("capability.policy.mailnews.HTMLDocument.domain", "noAccess");
 pref("capability.policy.mailnews.HTMLDocument.URL", "noAccess");
-//pref("capability.policy.mailnews.nsdocument.location", "noAccess");
+pref("capability.policy.mailnews.Text.nodeValue", "noAccess");
+pref("capability.policy.mailnews.Text.data", "noAccess");
+pref("capability.policy.mailnews.Text.substringData", "noAccess");
+pref("capability.policy.mailnews.CDATASection.nodeValue", "noAccess");
+pref("capability.policy.mailnews.CDATASection.data", "noAccess");
+pref("capability.policy.mailnews.CDATASection.substringData", "noAccess");
+pref("capability.policy.mailnews.Range.toString", "noAccess");
 pref("capability.policy.mailnews.sites", "mailbox: imap: news:");
 pref("capability.policy.mailnews.Window.name.set", "noAccess");
 pref("capability.policy.mailnews.Window.location", "noAccess");
