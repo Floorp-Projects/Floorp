@@ -416,8 +416,10 @@ endloop:
 
 	/* Send a UI event to client */
 	rv = SSMControlConnection_SendUIEvent(ctrl, "get", 
-					  "cert_renewal", 
-					  &(certRes->super), NULL, &(&(ctrl->super.super))->m_clientContext);
+				     "cert_renewal", 
+				     &(certRes->super), NULL,
+				     &(&(ctrl->super.super))->m_clientContext, 
+				     PR_TRUE);
 	if (rv != SSM_SUCCESS) {
 		goto loser;
     }

@@ -2393,7 +2393,8 @@ SSMControlConnection_SendUIEvent(SSMControlConnection *conn,
                                  char *baseRef,
                                  SSMResource *target, /* can pass NULL */
                                  char *otherParams /* can pass NULL */,
-                                 CMTItem * clientContext /* can pass NULL */)
+                                 CMTItem * clientContext /* can pass NULL */,
+                                 PRBool isModal)
 {
     char *url;
     SECItem event;
@@ -2423,7 +2424,7 @@ SSMControlConnection_SendUIEvent(SSMControlConnection *conn,
     reply.resourceID = rid;
     reply.width = width;
     reply.height = height;
-	reply.isModal = CM_TRUE;
+	reply.isModal = isModal;
     reply.url = url;
     if (clientContext) {
         reply.clientContext = *clientContext;

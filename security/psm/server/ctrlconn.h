@@ -131,7 +131,8 @@ SSMStatus SSMControlConnection_SendUIEvent(SSMControlConnection *conn,
                                            char *baseRef, 
                                            SSMResource *target, /* can pass NULL */
                                            char *otherParams /* can pass NULL */,
-                                           CMTItem * clientContext /* can pass NULL */);
+                                           CMTItem * clientContext /* can pass NULL */,
+                                           PRBool isModal);
 
 /*
  * NOTES

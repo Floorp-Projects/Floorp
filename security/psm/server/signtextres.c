@@ -248,11 +248,14 @@ SSMSignTextResource_ServiceThread(void *arg)
 
     /* Send UI event to client */
     if (signTextRes->m_autoFlag == PR_TRUE) {
-        rv = SSMControlConnection_SendUIEvent(signTextRes->m_conn, "get", "signtext_auto", SSMRESOURCE(signTextRes), NULL,
-            &SSMRESOURCE(signTextRes)->m_clientContext);
+        rv = SSMControlConnection_SendUIEvent(signTextRes->m_conn, "get", 
+					      "signtext_auto", 
+					      SSMRESOURCE(signTextRes), NULL,
+					      &SSMRESOURCE(signTextRes)->m_clientContext,
+					      PR_TRUE);
     } else {
         rv = SSMControlConnection_SendUIEvent(signTextRes->m_conn, "get", "signtext_ask", SSMRESOURCE(signTextRes), NULL,
-            &SSMRESOURCE(signTextRes)->m_clientContext);
+            &SSMRESOURCE(signTextRes)->m_clientContext, PR_TRUE);
     }
     if (rv != PR_SUCCESS) {
         goto loser;

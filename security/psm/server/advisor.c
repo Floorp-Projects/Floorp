@@ -848,7 +848,8 @@ SSMSecurityAdvisorContext_FindCertByNickname(SSMSecurityAdvisorContext *cx,
                                               "choose_cert", 
                                               &cx->super,
                                               params,
-                                              &cx->super.m_clientContext);
+                                              &cx->super.m_clientContext,
+                                              PR_TRUE);
         /* Now wait until we are notified by the handler that the user 
          * has selected a cert.
          */

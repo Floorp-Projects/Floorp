@@ -655,7 +655,8 @@ SSMStatus SSM_ReSetPasswordKeywordHandler(SSMTextGenContext * cx)
       SSM_LockUIEvent(target);
       rv = SSMControlConnection_SendUIEvent(cx->m_request->ctrlconn,
                                             "get", "select_token",
-                                            target,mech,&target->m_clientContext);
+                                            target,mech,
+                                            &target->m_clientContext, PR_TRUE);
       SSM_WaitUIEvent(target, PR_INTERVAL_NO_TIMEOUT);
       slot = (PK11SlotInfo *) target->m_uiData;
       if (!slot) 
@@ -861,7 +862,8 @@ SSMStatus SSM_SetDBPasswordHandler(HTTPRequest * req)
     SSMControlConnection_SendUIEvent(req->ctrlconn, "get", 
                                      "show_followup", NULL, 
                                      result, 
-                                     &((SSMResource *)req->ctrlconn)->m_clientContext);
+                                     &((SSMResource *)req->ctrlconn)->m_clientContext,
+                                     PR_TRUE);
   
   PR_FREEIF(responseKey);
 done:
@@ -906,7 +908,8 @@ SSMStatus SSM_SetUserPassword(PK11SlotInfo * slot, SSMResource * ct)
   rv = SSMControlConnection_SendUIEvent(ct->m_connection,
                                         "get", "set_password",
                                         ct, params,
-                                        &ct->m_clientContext);
+                                        &ct->m_clientContext,
+                                        PR_TRUE);
   if (rv != SSM_SUCCESS) 
     goto loser;
   SSM_WaitUIEvent(ct, PR_INTERVAL_NO_TIMEOUT);
@@ -934,7 +937,8 @@ SSMStatus SSM_ProcessPasswordWindow(HTTPRequest * req)
   rv = SSMControlConnection_SendUIEvent(req->ctrlconn, "get", 
                                         "set_password", target, 
                                         "slot=all&mech=1", 
-                                        &target->m_clientContext);
+                                        &target->m_clientContext,
+                                        PR_TRUE);
   if (rv != SSM_SUCCESS) { 
     SSM_UnlockUIEvent(&req->ctrlconn->super.super);
     goto loser;
