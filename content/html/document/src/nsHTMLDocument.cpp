@@ -482,14 +482,58 @@ NS_IMETHODIMP nsHTMLDocument::GetInlineStyleSheet(nsIHTMLCSSStyleSheet** aResult
   return NS_OK;
 }
 
-void nsHTMLDocument::AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet)
+void nsHTMLDocument::InternalAddStyleSheet(nsIStyleSheet* aSheet)  // subclass hook for sheet ordering
 {
-  if ((nsnull != mStyleAttrStyleSheet) && (aSheet != mStyleAttrStyleSheet)) {
-    aSet->InsertDocStyleSheetAfter(aSheet, mStyleAttrStyleSheet);
+  if (aSheet == mAttrStyleSheet) {  // always first
+    mStyleSheets.InsertElementAt(aSheet, 0);
+  }
+  else if (aSheet == mStyleAttrStyleSheet) {  // always last
+    mStyleSheets.AppendElement(aSheet);
   }
   else {
-    aSet->InsertDocStyleSheetBefore(aSheet, nsnull);  // put it in front
+    if (mStyleAttrStyleSheet == mStyleSheets.ElementAt(mStyleSheets.Count() - 1)) {
+      // keep attr sheet last
+      mStyleSheets.InsertElementAt(aSheet, mStyleSheets.Count() - 1);
+    }
+    else {
+      mStyleSheets.AppendElement(aSheet);
+    }
   }
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::InsertStyleSheetAt(nsIStyleSheet* aSheet, PRInt32 aIndex, PRBool aNotify)
+{
+  NS_PRECONDITION(nsnull != aSheet, "null ptr");
+  mStyleSheets.InsertElementAt(aSheet, aIndex + 1); // offset one for the attr style sheet
+
+  NS_ADDREF(aSheet);
+  aSheet->SetOwningDocument(this);
+
+  PRBool enabled = PR_TRUE;
+  aSheet->GetEnabled(enabled);
+
+  PRInt32 count;
+  PRInt32 index;
+  if (enabled) {
+    count = mPresShells.Count();
+    for (index = 0; index < count; index++) {
+      nsIPresShell* shell = (nsIPresShell*)mPresShells.ElementAt(index);
+      nsIStyleSet* set = shell->GetStyleSet();
+      if (nsnull != set) {
+        set->AddDocStyleSheet(aSheet, this);
+        NS_RELEASE(set);
+      }
+    }
+  }
+  if (aNotify) {  // notify here even if disabled, there may have been others that weren't notified
+    count = mObservers.Count();
+    for (index = 0; index < count; index++) {
+      nsIDocumentObserver*  observer = (nsIDocumentObserver*)mObservers.ElementAt(index);
+      observer->StyleSheetAdded(this, aSheet);
+    }
+  }
+  return NS_OK;
 }
 
 
@@ -572,6 +616,37 @@ nsHTMLDocument::SetDTDMode(nsDTDMode aMode)
   mDTDMode = aMode;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsHTMLDocument::SetHeaderData(nsIAtom* aHeaderField, const nsString& aData)
+{
+  nsresult result = nsMarkupDocument::SetHeaderData(aHeaderField, aData);
+
+  if (NS_SUCCEEDED(result)) {
+    if (aHeaderField == nsHTMLAtoms::headerDefaultStyle) {
+      // switch alternate style sheets based on default
+      nsAutoString type;
+      nsAutoString title;
+      nsAutoString textHtml("text/html");
+      PRInt32 index;
+      PRInt32 count = mStyleSheets.Count();
+      for (index = 0; index < count; index++) {
+        nsIStyleSheet* sheet = (nsIStyleSheet*)mStyleSheets.ElementAt(index);
+        sheet->GetType(type);
+        if (PR_FALSE == type.Equals(textHtml)) {
+          sheet->GetTitle(title);
+          if (0 < title.Length()) {  // if sheet has title
+            PRBool disabled = ((0 == aData.Length()) || 
+                               (PR_FALSE == aData.EqualsIgnoreCase(title)));
+            SetStyleSheetDisabledState(sheet, disabled);
+          }
+        }
+      }
+    }
+  }
+  return result;
+}
+
 
 NS_IMETHODIMP 
 nsHTMLDocument::ContentAppended(nsIContent* aContainer,
