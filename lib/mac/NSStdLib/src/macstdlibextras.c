@@ -146,6 +146,8 @@ void InitializeMacToolbox(void)
 	static Boolean alreadyInitialized = false;
 	if (!alreadyInitialized)
 	{
+		long CMMavail = 0;
+
 		alreadyInitialized = true;
 #if !TARGET_CARBON
 // pinkerton - don't need to init toolbox under Carbon. They finally do that for us!
@@ -156,7 +158,9 @@ void InitializeMacToolbox(void)
 		TEInit();
 		InitDialogs(0);
 		InitCursor();
-		InitContextualMenus();
+		Gestalt(gestaltContextualMenuAttr, &CMMavail);
+		if ( CMMavail == gestaltContextualMenuTrapAvailable )
+		  InitContextualMenus();
 		InitTSMAwareApplication();
 		// init QuickTime if we have it
 		if ((long)EnterMovies != kUnresolvedCFragSymbolAddress)
