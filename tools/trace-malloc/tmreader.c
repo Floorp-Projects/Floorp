@@ -372,7 +372,11 @@ int tmreader_eventloop(tmreader *tmr, const char *filename,
     if (strcmp(filename, "-") == 0) {
         fp = stdin;
     } else {
+#if defined(XP_WIN32)
+        fp = fopen(filename, "rb");
+#else
         fp = fopen(filename, "r");
+#endif
         if (!fp) {
             fprintf(stderr, "%s: can't open %s: %s.\n",
                     tmr->program, filename, strerror(errno));

@@ -1501,7 +1501,7 @@ static const char SDLOG_OPTION[] = "--shutdown-leaks";
 
 PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
 {
-    int i, logfd = -1, consumed;
+    int i, logfd = -1, consumed, logflags;
     char *tmlogname = NULL; /* note global |sdlogname| */
 
     /*
@@ -1594,7 +1594,14 @@ PR_IMPLEMENT(int) NS_TraceMallocStartupArgs(int argc, char* argv[])
             /* FALL THROUGH */
 
           default:
-            logfd = open(tmlogname, O_CREAT | O_WRONLY | O_TRUNC, 0644);
+            logflags = O_CREAT | O_WRONLY | O_TRUNC;
+#if defined(XP_WIN32)
+            /*
+             * Avoid translations on WIN32.
+             */
+            logflags |= O_BINARY;
+#endif
+            logfd = open(tmlogname, logflags, 0644);
             if (logfd < 0) {
                 fprintf(stderr,
                     "%s: can't create trace-malloc log named %s: %s\n",
