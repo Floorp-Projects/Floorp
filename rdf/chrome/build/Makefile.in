@@ -39,9 +39,6 @@ LOCAL_INCLUDES	= -I$(srcdir)/../src
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libchrome_s.$(LIB_SUFFIX)
 
 EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
 
@@ -50,6 +47,4 @@ EXTRA_DSO_LDOPTS += $(MOZ_TIMER_LIBS)
 endif
 
 include $(topsrcdir)/config/rules.mk
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 

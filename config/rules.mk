@@ -301,6 +301,14 @@ CPP_PROG_LINK		= 1
 endif
 
 #
+# Make sure to wrap static libs inside linker specific flags to turn on & off
+# inclusion of all symbols inside the static libs
+#
+ifdef SHARED_LIBRARY_LIBS
+EXTRA_DSO_LDOPTS := $(MKSHLIB_FORCE_ALL) $(SHARED_LIBRARY_LIBS) $(MKSHLIB_UNFORCE_ALL) $(EXTRA_DSO_LDOPTS)
+endif
+
+#
 # This will strip out symbols that the component shouldnt be 
 # exporting from the .dynsym section.
 #
@@ -667,7 +675,7 @@ endif
 SUB_LOBJS	= $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib} $(CLEANUP1); done;)
 endif
 
-$(LIBRARY): $(OBJS) $(LOBJS) Makefile Makefile.in
+$(LIBRARY): $(OBJS) $(LOBJS) $(SHARED_LIBRARY_LIBS) Makefile Makefile.in
 	rm -f $@
 ifdef SHARED_LIBRARY_LIBS
 	@rm -f $(SUB_LOBJS)
@@ -710,26 +718,21 @@ $(HOST_LIBRARY): $(HOST_OBJS) Makefile
 	$(HOST_AR) $(HOST_AR_FLAGS) $@ $(HOST_OBJS)
 	$(HOST_RANLIB) $@
 
-ifneq ($(OS_ARCH),OS2)
-$(SHARED_LIBRARY): $(OBJS) $(LOBJS) Makefile Makefile.in
+ifdef NO_LD_ARCHIVE_FLAGS
+SUB_SHLOBJS = $(SUB_LOBJS)
+endif
+
+$(SHARED_LIBRARY): $(OBJS) $(LOBJS) $(DEF_FILE) $(SHARED_LIBRARY_LIBS) Makefile Makefile.in
 	rm -f $@
 ifneq ($(OS_ARCH),OpenVMS)
-ifeq ($(NO_LD_ARCHIVE_FLAGS),1)
+ifdef NO_LD_ARCHIVE_FLAGS
 ifdef SHARED_LIBRARY_LIBS
-	@rm -f $(SUB_LOBJS)
+	@rm -f $(SUB_SHLOBJS)
 	@for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; $(CLEANUP2); done
-ifeq ($(TARGET_MD_ARCH), win32)
-	$(MKSHLIB) $(OBJS) $(LOBJS) $(SUB_LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
-else
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(SUB_LOBJS) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
-endif # TARGET_MD_ARCH
-else
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
-endif
-else
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(LDFLAGS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS)
-endif
-	@rm -f foodummyfilefoo $(SUB_LOBJS)
+endif # SHARED_LIBRARY_LIBS
+endif # NO_LD_ARCHIVE_FLAGS
+	$(MKSHLIB) $(OBJS) $(LOBJS) $(SUB_SHLOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
+	@rm -f foodummyfilefoo $(SUB_SHLOBJS)
 else
 	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
 ifndef IS_COMPONENT
@@ -745,13 +748,6 @@ endif
 endif
 	chmod +x $@
 	$(MOZ_POST_DSO_LIB_COMMAND) $@
-else
-$(SHARED_LIBRARY): $(OBJS) $(DEF_FILE) Makefile Makefile.in
-	rm -f $@
-	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
-	chmod +x $@
-	$(MOZ_POST_DSO_LIB_COMMAND) $@
-endif
 
 ifeq ($(OS_ARCH),OS2)
 $(DLL): $(OBJS) $(EXTRA_LIBS)

@@ -33,12 +33,6 @@ REQUIRES	= gtkxtbin
 CSRCS           = \
                 gtkxtbin.c \
 
-EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
-		$(NULL)
-
 ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
 else
@@ -64,6 +58,4 @@ endif
 INCLUDES	+= \
 		-I$(srcdir) \
 		$(NULL)
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 

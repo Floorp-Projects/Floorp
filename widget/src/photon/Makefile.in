@@ -68,9 +68,6 @@ SHARED_LIBRARY_LIBS = $(DIST)/lib/libraptorbasewidget_s.a
 
 EXTRA_DSO_LDOPTS = \
 		$(TOOLKIT_DSO_LDOPTS) \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
 		$(TK_LIBS) \
 		$(NULL)
 
@@ -79,6 +76,4 @@ include $(topsrcdir)/config/rules.mk
 DEFINES		+= -D_IMPL_NS_WIDGET -I$(srcdir)/../xpwidgets -I$(srcdir)
 
 CXXFLAGS	+= $(TK_CFLAGS)
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 

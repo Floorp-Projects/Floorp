@@ -86,5 +86,3 @@ DEFINES		+= -D_IMPL_NS_WIDGET -I$(srcdir)/../xpwidgets -I$(srcdir)
 
 CXXFLAGS	+= $(TK_CFLAGS)
 
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
-

@@ -50,9 +50,6 @@ SHARED_LIBRARY_LIBS = \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
-		$(MKSHLIB_FORCE_ALL) \
-		$(SHARED_LIBRARY_LIBS) \
-		$(MKSHLIB_UNFORCE_ALL) \
 		$(MOZ_TIMER_LIBS) \
 		-L$(DIST)/bin \
 		$(EXTRA_DSO_LIBS) \
@@ -67,6 +64,4 @@ INCLUDES	+= \
 		-I$(srcdir)/../content/src \
 		-I$(srcdir)/../datasource/src \
 		$(NULL)
-
-$(LIBRARY) $(SHARED_LIBRARY): $(SHARED_LIBRARY_LIBS) Makefile
 
