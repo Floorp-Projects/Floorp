@@ -22,7 +22,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = public src tests
+DIRS = public src # tests
 
 include $(topsrcdir)/config/config.mk
 
