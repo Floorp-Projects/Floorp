@@ -41,12 +41,17 @@
     <div [% "class=\"bz_private\"" IF comment.isprivate %]>
       [% IF count > 0 %]
         <br>
-        <i>------- Additional Comment
+        ------- <i>Additional Comment
         <a name="c[% count %]" href="#c[% count %]">#[% count %]</a> From 
-        <a href="mailto:[% comment.email FILTER html %]">[% comment.name FILTER html %]</a>
+        <a href="mailto:[% comment.email FILTER html %]">
+          [% comment.name FILTER html %]</a>
         [%+ comment.time FILTER time %] 
-        -------
         </i>
+        [% IF mode == "edit" %]
+        <script type="text/javascript" language="JavaScript"><!-- 
+          addReplyLink([% count %]); //--></script>
+        [% END %]
+        -------
       [% END %]
         
       [% IF mode == "edit" && isinsider %]
@@ -64,10 +69,11 @@
          Additional hours worked: 
          [% PROCESS formattimeunit time_unit=comment.work_time %]
       [% END %]
+
 [%# Don't indent the <pre> block, since then the spaces are displayed in the
   # generated HTML
   #%]
-<pre>
+<pre[% ' id="comment_text_' _ count _ '"' IF mode == "edit" %]>
   [%- comment.body FILTER quoteUrls -%]
 </pre>
     </div>

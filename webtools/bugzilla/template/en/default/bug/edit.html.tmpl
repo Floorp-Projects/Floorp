@@ -24,9 +24,68 @@
 
 [% PROCESS bug/time.html.tmpl %]
 
-[% IF UserInGroup(Param('timetrackinggroup')) %]
   <script type="text/javascript" language="JavaScript">
   <!--
+
+  /* Outputs a link to call replyToComment(); used to reduce HTML output */
+  function addReplyLink(id) {
+    /* XXX this should really be updated to use the DOM Core's
+     * createElement, but finding a container isn't trivial */
+    document.write('[<a href="#add_comment" onclick="replyToComment(' + 
+        id + ');">reply<' + '/a>]');
+  }
+
+  /* Adds the reply text to the `comment' textarea */
+  function replyToComment(id) {
+    /* pre id="comment_name_N" */
+    var text_elem = document.getElementById('comment_text_'+id);
+    var text = getText(text_elem);
+
+    /* make sure we split on all newlines -- IE or Moz use \r and \n
+     * respectively */
+    text = text.split(/\r|\n/);
+
+    var replytext = "";
+    for (var i=0; i < text.length; i++) {
+        replytext += "> " + text[i] + "\n"; 
+    }
+
+    replytext = "(In reply to comment #" + id + ")\n" + replytext + "\n";
+
+    /* <textarea id="comment"> */
+    var textarea = document.getElementById('comment');
+    textarea.value += replytext;
+
+    textarea.focus();
+  }
+
+  if (!Node) {
+    /* MSIE doesn't define Node, so provide a compatibility array */
+    var Node = {
+        TEXT_NODE: 3,
+        ENTITY_REFERENCE_NODE: 5
+    };
+  }
+
+  /* Concatenates all text from element's childNodes. This is used
+   * instead of innerHTML because we want the actual text (and
+   * innerText is non-standard) */
+  function getText(element) {
+    var child, text = "";
+    for (var i=0; i < element.childNodes.length; i++) {
+        child = element.childNodes[i];
+        var type = child.nodeType;
+        if (type == Node.TEXT_NODE || type == Node.ENTITY_REFERENCE_NODE) {
+            text += child.nodeValue;
+        } else {
+            /* recurse into nodes of other types */
+            text += getText(child);
+        }
+    }
+    return text;
+  }
+
+[% IF UserInGroup(Param('timetrackinggroup')) %]
   var fRemainingTime = [% bug.remaining_time %]; // holds the original value
   function adjustRemainingTime() {
      // subtracts time spent from remaining time
@@ -44,9 +103,10 @@
      fRemainingTime = document.changeform.remaining_time.value;
   }
 
+[% END %]
+
   //-->
   </script>
-[% END %]
 
 <form name="changeform" method="post" action="process_bug.cgi">
 
@@ -389,7 +449,8 @@
     <input type="checkbox" name="commentprivacy" value="1"> Private
   [% END %]
   <br>
-  <textarea wrap="hard" name="comment" rows="10" cols="80"
+  <a name="add_comment"></a>
+  <textarea wrap="hard" name="comment" id="comment" rows="10" cols="80"
             accesskey="c"></textarea>
   <br>
 
@@ -575,19 +636,20 @@
 
 [%# *** Additional Comments *** %]
 
+<hr>
 <table>
   <tr>
     <td align="left">
-      <b>
-        <a name="c0" href="#c0">Description</a>:
-      </b>
+      <b><a name="c0" href="#c0">Description</a>:</b>&nbsp;&nbsp;<script 
+        type="text/javascript" language="JavaScript"><!-- 
+          addReplyLink(0);
+        //--></script>
     </td>
     <td align="right" width="100%">
       Opened: [% bug.creation_ts FILTER time %]
     </td>
   </tr>
 </table>
-<hr>
 
 [% PROCESS bug/comments.html.tmpl
    comments = bug.longdescs
