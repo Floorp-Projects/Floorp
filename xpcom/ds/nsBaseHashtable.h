@@ -182,7 +182,7 @@ public:
    */
   PRUint32 EnumerateRead(EnumReadFunction enumFunc, void* userArg) const
   {
-    NS_ASSERTION(mTable.entrySize,
+    NS_ASSERTION(this->mTable.entrySize,
                  "nsBaseHashtable was not initialized properly.");
 
     s_EnumReadArgs enumData = { enumFunc, userArg };
@@ -215,7 +215,7 @@ public:
    */
   PRUint32 Enumerate(EnumFunction enumFunc, void* userArg)
   {
-    NS_ASSERTION(mTable.entrySize,
+    NS_ASSERTION(this->mTable.entrySize,
                  "nsBaseHashtable was not initialized properly.");
 
     s_EnumArgs enumData = { enumFunc, userArg };
