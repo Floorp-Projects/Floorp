@@ -30,21 +30,28 @@ interface nsIHTTPProtocolHandler : nsIProtocolHandler
                           in unsigned long port, 
                           in nsIChannel transport);
 
-    /**
-     *
-     */
-    nsIInputStream NewEncodeStream(in nsIInputStream rawStream);
+    const unsigned long ENCODE_NORMAL      = 0;
+    const unsigned long ENCODE_ADD_CRLF    = (1 << 0);
+    const unsigned long ENCODE_QUOTE_LINES = (1 << 1);
 
     /**
      *
      */
-    nsIInputStream NewDecodeStream(in nsIInputStream encodedStream);
+    nsIInputStream NewEncodeStream(in nsIInputStream rawStream,
+                                   in unsigned long encodeFlags);
 
     /**
      *
      */
-    nsIInputStream NewPostDataStream(in boolean isFile, 
-                                     in string data);
+    nsIInputStream NewDecodeStream(in nsIInputStream encodedStream,
+                                   in unsigned long encodeFlags);
+
+    /**
+     *
+     */
+    nsIInputStream NewPostDataStream(in boolean isFile,
+                                     in string data, 
+                                     in unsigned long encodeFlags);
     
 };
 
