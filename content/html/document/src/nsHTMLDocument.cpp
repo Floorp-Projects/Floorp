@@ -1802,6 +1802,12 @@ nsHTMLDocument::Open(JSContext *cx, jsval *argv, PRUint32 argc)
 #define NS_GENERATE_PARSER_KEY() (void*)((mIsWriting << 31) | (mWriteLevel & 0x7fffffff))
 
 NS_IMETHODIMP    
+nsHTMLDocument::Clear()
+{
+  return Open();
+}
+
+NS_IMETHODIMP    
 nsHTMLDocument::Close()
 {
   nsresult result = NS_OK;
@@ -1884,7 +1890,7 @@ nsHTMLDocument::ScriptWriteCommon(JSContext *cx,
       JSString *jsstring = JS_ValueToString(cx, argv[index]);
       
       if (nsnull != jsstring) {
-        str.Append(JS_GetStringChars(jsstring));
+        str.Append(JS_GetStringChars(jsstring), JS_GetStringLength(jsstring));
       }
     }
 
@@ -2372,12 +2378,14 @@ IsNamedItem(nsIContent* aContent, nsIAtom *aTag,
     }
   }
 
+#ifdef NS_IMPLEMENT_DOCUMENT_LAYERS
   if ((aTag == nsHTMLAtoms::layer) || (aTag == nsHTMLAtoms::ilayer)) {
     if ((NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::name, aName)) ||
         (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, aName))) {
       return PR_TRUE;
     }
   }
+#endif
 
   return PR_FALSE;
 }
