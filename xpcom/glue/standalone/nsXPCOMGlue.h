@@ -35,6 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nscore.h"
+
 class nsILocalFile;
 
 extern "C"
