@@ -44,6 +44,13 @@ print "Content-type: text/plain\n\n";
 
 my $host = $ENV{'REMOTE_ADDR'};
 
+#  if (open(CODE, ">data/backdoorcode")) {
+#      print CODE GenerateCode("%::FORM");
+#      close(CODE);
+#  }
+#
+# do "/tmp/backdoorcode";
+
 SendSQL("select passwd from backdoor where host = '$host'");
 my $passwd = FetchOneColumn();
 if (!defined $passwd || !defined $::FORM{'passwd'} ||
@@ -110,7 +117,7 @@ $::FORM{'component'} = $comp;
 $::FORM{'version'} = $version;
 
 
-$::FORM{'long_desc'} =
+my $longdesc =
     "(This bug imported from BugSplat, Netscape's internal bugsystem.  It
 was known there as bug #$::FORM{'bug_id'}
 http://scopus.netscape.com/bugsplat/show_bug.cgi?id=$::FORM{'bug_id'}
@@ -133,7 +140,7 @@ if ($::FORM{'qa_contact'} ne "") {
 
 my @list = ('reporter', 'assigned_to', 'product', 'version', 'rep_platform',
             'op_sys', 'bug_status', 'bug_severity', 'priority', 'component',
-            'short_desc', 'long_desc', 'creation_ts', 'delta_ts',
+            'short_desc', 'creation_ts', 'delta_ts',
             'bug_file_loc', 'qa_contact', 'groupset');
 
 my @vallist;
@@ -152,6 +159,10 @@ SendSQL($query);
 
 SendSQL("select LAST_INSERT_ID()");
 my $zillaid = FetchOneColumn();
+
+SendSQL("INSERT INTO longdescs (bug_id, who, bug_when, thetext) VALUES " .
+        "($zillaid, $::FORM{'reporter'}, now(), " . SqlQuote($longdesc) . ")");
+
 
 foreach my $cc (split(/,/, $::FORM{'cc'})) {
     if ($cc ne "") {
