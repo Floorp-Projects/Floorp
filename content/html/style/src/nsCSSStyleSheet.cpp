@@ -3918,7 +3918,7 @@ static PRBool SelectorMatchesTree(RuleProcessorData &data,
         // pretend the selector didn't match, and step through content
         // while testing the same selector
 
-        // This approach is slightly strange is that when it recurs
+        // This approach is slightly strange in that when it recurs
         // it tests from the top of the content tree, down.  This
         // doesn't matter much for performance since most selectors
         // don't match.  (If most did, it might be faster...)
