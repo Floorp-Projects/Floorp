@@ -60,9 +60,6 @@ NS_IMETHODIMP nsMsgSearchDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeVal
     m_folders = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    m_hdrs = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
-    NS_ENSURE_SUCCESS(rv,rv);
-
     m_dbToUseList = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
@@ -160,7 +157,6 @@ nsMsgSearchDBView::OnSearchHit(nsIMsgDBHdr* aMsgHdr, nsIMsgFolder *folder)
   m_folders->AppendElement(supports);
   nsMsgKey msgKey;
   PRUint32 msgFlags;
-  m_hdrs->AppendElement(aMsgHdr);
   aMsgHdr->GetMessageKey(&msgKey);
   aMsgHdr->GetFlags(&msgFlags);
   m_keys.Add(msgKey);
@@ -192,7 +188,6 @@ nsMsgSearchDBView::OnNewSearch()
   m_keys.RemoveAll();
   m_levels.RemoveAll();
   m_flags.RemoveAll();
-  m_hdrs->Clear();
 
 //    mSearchResults->Clear();
     return NS_OK;
@@ -230,7 +225,6 @@ nsresult nsMsgSearchDBView::RemoveByIndex(nsMsgViewIndex index)
         return NS_MSG_INVALID_DBVIEW_INDEX;
 
     m_folders->RemoveElementAt(index);
-    m_hdrs->RemoveElementAt(index);
     
     return nsMsgDBView::RemoveByIndex(index);
 }
@@ -331,7 +325,10 @@ nsMsgSearchDBView::InitializeGlobalsForDeleteAndFile(nsMsgViewIndex *indices, PR
        nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryInterface(folderSupports, &rv);
        if (NS_SUCCEEDED(rv) && msgFolder && msgFolder == curFolder) 
        {
-          nsCOMPtr <nsISupports> hdrSupports = getter_AddRefs(m_hdrs->ElementAt(indices[i]));
+          nsCOMPtr<nsIMsgDBHdr> msgHdr; 
+          rv = GetMsgHdrForViewIndex(indices[i],getter_AddRefs(msgHdr));
+          NS_ENSURE_SUCCESS(rv,rv);
+          nsCOMPtr <nsISupports> hdrSupports = do_QueryInterface(msgHdr);
           msgHdrsForOneFolder->AppendElement(hdrSupports);
        }
      }
@@ -468,4 +465,5 @@ NS_IMETHODIMP nsMsgSearchDBView::Sort(nsMsgViewSortTypeValue sortType, nsMsgView
     NS_ENSURE_SUCCESS(rv,rv);
     return rv;
 }
+
 

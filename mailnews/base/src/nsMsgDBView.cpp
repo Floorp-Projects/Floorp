@@ -669,17 +669,7 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, const PRUnichar *colI
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
   nsresult rv = NS_OK;
 
-  if (key == m_cachedMsgKey)
-    msgHdr = m_cachedHdr;
-  else
-  {
-    rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
-    if (NS_SUCCEEDED(rv))
-    {
-      m_cachedHdr = msgHdr;
-      m_cachedMsgKey = key;
-    }
-  }
+  rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
 
   if (NS_FAILED(rv) || !msgHdr) {
     ClearHdrCache();
@@ -858,11 +848,25 @@ NS_IMETHODIMP nsMsgDBView::GetLevel(PRInt32 index, PRInt32 *_retval)
 // search view will override this since headers can span db's
 nsresult nsMsgDBView::GetMsgHdrForViewIndex(nsMsgViewIndex index, nsIMsgDBHdr **msgHdr)
 {
+  nsresult rv = NS_OK;
   nsMsgKey key = m_keys.GetAt(index);
   if (key == nsMsgKey_None || !m_db)
     return NS_MSG_INVALID_DBVIEW_INDEX;
+  
+  if (key == m_cachedMsgKey)
+    *msgHdr = m_cachedHdr;
+  else
+  {
+    rv = m_db->GetMsgHdrForKey(key, msgHdr);
+    if (NS_SUCCEEDED(rv))
+    {
+      m_cachedHdr = *msgHdr;
+      m_cachedMsgKey = key;
+    }
+  }
+  NS_IF_ADDREF(*msgHdr);
 
-  return m_db->GetMsgHdrForKey(key, msgHdr);
+  return rv;
 }
 
 nsresult nsMsgDBView::GetFolderForViewIndex(nsMsgViewIndex index, nsIMsgFolder **aFolder)
@@ -888,18 +892,8 @@ NS_IMETHODIMP nsMsgDBView::GetCellText(PRInt32 aRow, const PRUnichar * aColID, P
 
   nsMsgKey key = m_keys.GetAt(aRow);
   nsCOMPtr <nsIMsgDBHdr> msgHdr;
-  if (key == m_cachedMsgKey)
-    msgHdr = m_cachedHdr;
-  else
-  {
-    rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
-    if (NS_SUCCEEDED(rv))
-    {
-      m_cachedHdr = msgHdr;
-      m_cachedMsgKey = key;
-    }
-  }
-
+  rv = GetMsgHdrForViewIndex(aRow, getter_AddRefs(msgHdr));
+  
   if (NS_FAILED(rv) || !msgHdr) {
     ClearHdrCache();
     return NS_MSG_INVALID_DBVIEW_INDEX;
