@@ -1035,7 +1035,7 @@ NS_IMPL_ISUPPORTS1(nsHistoryObserver, nsIHistoryObserver);
   {
     id item = [toDrag objectAtIndex: 0];
     // if we have just one item, we add some more flavours
-    NSString* title = [item name];
+    NSString* title = [item title];
     NSString *cleanedTitle = [title stringByReplacingCharactersInSet:[NSCharacterSet controlCharacterSet] withString:@" "];
     [pboard declareURLPasteboardWithAdditionalTypes:[NSArray array] owner:self];
     [pboard setDataForURL:[item url] title:cleanedTitle];
