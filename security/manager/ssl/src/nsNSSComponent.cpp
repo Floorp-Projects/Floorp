@@ -132,6 +132,8 @@ nsNSSComponent::~nsNSSComponent()
 #endif /*DEBUG*/ 
 #endif /*XP_MAC*/
 
+static void setOCSPOptions(nsIPref * pref);
+
 NS_IMETHODIMP
 nsNSSComponent::PIPBundleFormatStringFromName(const PRUnichar *name,
                                               const PRUnichar **params,
@@ -166,6 +168,22 @@ nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
     nsMemory::Free(ptrv);
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::DisableOCSP()
+{
+  CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
+
+  SECStatus rv = CERT_DisableOCSPChecking(certdb);
+  return (rv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::EnableOCSP()
+{
+  setOCSPOptions(mPref);
+  return NS_OK;
 }
 
 void

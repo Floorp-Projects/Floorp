@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nsNSSCertificate.cpp,v 1.43 2001/08/09 01:38:48 kaie%netscape.com Exp $
+ * $Id: nsNSSCertificate.cpp,v 1.44 2001/08/10 01:05:55 javi%netscape.com Exp $
  */
 
 #include "prmem.h"
@@ -992,6 +992,25 @@ nsNSSCertificate::GetTokenName(PRUnichar **aTokenName)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsNSSCertificate::GetUsesOCSP(PRBool *aUsesOCSP)
+{
+  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
+ 
+  PRInt32 ocspEnabled; 
+  prefService->GetIntPref("security.OCSP.enabled", &ocspEnabled);
+  if (ocspEnabled == 2) {
+    *aUsesOCSP = PR_TRUE;
+  } else if (ocspEnabled == 1) {
+    nsXPIDLCString ocspLocation;
+    ocspLocation.Adopt(CERT_GetOCSPAuthorityInfoAccessLocation(mCert));
+    *aUsesOCSP = (ocspLocation) ? PR_TRUE : PR_FALSE;
+  } else {
+    *aUsesOCSP = PR_FALSE;
+  }
+  return NS_OK;
+}
+
 /* [noscript] long getRawDER (out charPtr result) */
 NS_IMETHODIMP
 nsNSSCertificate::GetRawDER(char **result, PRUint32 *_retval)
@@ -1314,7 +1333,8 @@ GetDefaultOIDFormat(SECItem *oid,
                     nsString &outString)
 {
   char buf[300];
-  int len, written;
+  unsigned int len;
+  int written;
     
   unsigned long val  = oid->data[0];
   unsigned int  i    = val % 40;
@@ -2630,7 +2650,7 @@ nsNSSCertificateDB::ImportUserCertificate(char *data, PRUint32 length, nsIInterf
   collectArgs->arena = arena;
   sec_rv = CERT_DecodeCertPackage(data, length, collect_certs, 
 			      (void *)collectArgs);
-  if (sec_rv != PR_SUCCESS)
+  if (sec_rv != SECSuccess)
     goto loser;
 
   cert = CERT_NewTempCertificate(CERT_GetDefaultCertDB(), collectArgs->rawCerts,
@@ -3255,7 +3275,6 @@ nsNSSCertificateDB::GetCrls(nsISupportsArray ** aCrls)
   SECStatus sec_rv;
   CERTCrlHeadNode *head = nsnull;
   CERTCrlNode *node = nsnull;
-  CERTCertificate *caCert = nsnull;
   nsAutoString org;
   nsAutoString orgUnit;
   PRTime tmpDate;
@@ -3358,4 +3377,40 @@ nsNSSCertificateDB::DeleteCrl(PRUint32 aCrlIndex)
   return NS_OK;
 loser:
   return NS_ERROR_FAILURE;;
+}
+
+/* readonly attribute boolean ocspOn; */
+NS_IMETHODIMP 
+nsNSSCertificateDB::GetOcspOn(PRBool *aOcspOn)
+{
+  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
+
+  PRInt32 ocspEnabled;
+  prefService->GetIntPref("security.OCSP.enabled", &ocspEnabled);
+  *aOcspOn = ( ocspEnabled == 0 ) ? PR_FALSE : PR_TRUE; 
+  return NS_OK;
+}
+
+/* void disableOCSP (); */
+NS_IMETHODIMP 
+nsNSSCertificateDB::DisableOCSP()
+{
+  nsresult rv;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return nssComponent->DisableOCSP();
+}
+
+/* void enableOCSP (); */
+NS_IMETHODIMP 
+nsNSSCertificateDB::EnableOCSP()
+{
+  nsresult rv;
+  nsCOMPtr<nsINSSComponent> nssComponent(do_GetService(kNSSComponentCID, &rv));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return nssComponent->EnableOCSP();
 }

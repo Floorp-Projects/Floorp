@@ -224,5 +224,23 @@ interface nsIX509CertDB : nsISupports {
    */
   void deleteCrl(in PRUint32 crlIndex);
 
+  /*
+   * Query about the status of OCSP
+   */
+  readonly attribute boolean ocspOn;
+
+  /*
+   * Use this to temporarily disable OCSP checking.
+   * Needed if OCSP checks slow down UI rendering too much.
+   * A call to this should be followed with a call to 
+   * enableOCSP soon afterwards.
+   */
+  void disableOCSP();
+
+  /*
+   * Sets the OCSP options to correspond with the preferences 
+   * values.
+   */
+  void enableOCSP();
  };
 

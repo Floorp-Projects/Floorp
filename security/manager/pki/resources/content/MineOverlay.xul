@@ -45,7 +45,7 @@
                    class="outlinercol-header outlinercell-inset-header" 
                    flex="1"/>
       <splitter class="tree-splitter"/>
-      <outlinercol id="verifiedcol" label="&certmgr.verified;"
+      <outlinercol id="verifiedcol" 
                    class="outlinercol-header outlinercell-inset-header" 
                    flex="1"/>
       <splitter class="tree-splitter"/>
@@ -69,7 +69,7 @@
               disabled="true" onclick="viewCerts();"/>
       <button id="mine_backupButton" class="normal" 
               label="&certmgr.backup.label;" orient="horizontal" 
-              disabled="true" onclick="backupCerts();"/>
+              disabled="true" oncommand="backupCerts();"/>
       <button id="mine_backupAllButton" class="normal" 
               label="&certmgr.backupall.label;" orient="horizontal" 
               onclick="backupAllCerts();"/>

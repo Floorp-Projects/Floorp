@@ -500,6 +500,11 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
     nsCOMPtr<nsINSSComponent> nssComponent(
                                       do_GetService(kNSSComponentCID, &rv));
     if (NS_FAILED(rv)) return rv;
+    PRBool ocspEnabled;
+    cert->GetUsesOCSP(&ocspEnabled);
+    if (ocspEnabled) {
+      nssComponent->DisableOCSP();
+    }
     rv = cert->GetPurposes(&verified, NULL);
     if (verified == nsIX509Cert::VERIFIED_OK) {
       nsAutoString vfy;
@@ -514,9 +519,24 @@ nsCertOutliner::GetCellText(PRInt32 row, const PRUnichar *colID,
       if (!NS_FAILED(rv))
         wstr = vfy.ToNewUnicode();
     }
+    if (ocspEnabled) {
+      nssComponent->EnableOCSP();
+    }
   } else if (strcmp(col, "purposecol") == 0) {
     PRUint32 verified;
+    PRBool ocspEnabled;
+    nsCOMPtr<nsINSSComponent> nssComponent(
+                                      do_GetService(kNSSComponentCID, &rv));
+    if (NS_FAILED(rv)) return rv;
+  
+    cert->GetUsesOCSP(&ocspEnabled);
+    if (ocspEnabled) {
+      nssComponent->DisableOCSP();
+    }
     rv = cert->GetPurposes(&verified, &wstr);
+    if (ocspEnabled) {
+      nssComponent->EnableOCSP();
+    }
   } else if (strcmp(col, "issuedcol") == 0) {
     rv = cert->GetIssuedDate(&wstr);
   } else if (strcmp(col, "expiredcol") == 0) {

@@ -69,7 +69,6 @@
 
 <!ENTITY certmgr.certname "Certificate Name">
 <!ENTITY certmgr.tokenname "Security Device">
-<!ENTITY certmgr.verified "Verified">
 <!ENTITY certmgr.purpose "Purpose">
 <!ENTITY certmgr.issued "Issued On">
 <!ENTITY certmgr.expires "Expires On">
