@@ -2736,6 +2736,7 @@ HRESULT ErrorMsgDiskSpace(ULONGLONG ullDSAvailable, ULONGLONG ullDSRequired, LPS
     ShowMessage(szBufMsg, TRUE);
     Delay(5);
     ShowMessage(szBufMsg, FALSE);
+    exit(1);
   }
 
   return(IDCANCEL);
@@ -3873,12 +3874,13 @@ BOOL CheckLegacy(HWND hDlg)
   verBlock  vbVersionNew;
   verBlock  vbVersionOld;
 
-  bRv          = FALSE;
-  szMessage[0] = NULL;
-  szMessage[1] = NULL;
-  szMessage[2] = NULL;
-  bContinue    = TRUE;
-  iIndex       = -1;
+  bRv             = FALSE;
+  gdwUpgradeValue = UG_NONE;
+  szMessage[0]    = NULL;
+  szMessage[1]    = NULL;
+  szMessage[2]    = NULL;
+  bContinue       = TRUE;
+  iIndex          = -1;
   while(bContinue)
   {
     ZeroMemory(szFilename,      sizeof(szFilename));
