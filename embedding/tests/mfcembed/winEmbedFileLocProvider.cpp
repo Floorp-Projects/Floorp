@@ -204,7 +204,7 @@ char * winEmbedFileLocProvider::GetGreLocationFromRegistry()
     // Please see http://www.mozilla.org/projects/embedding/MRE.html for
     // more info.
     //
-    strcpy(szKey, "Software\\mozilla.org\\GRE\\1.2b");
+    strcpy(szKey, "Software\\mozilla.org\\GRE\\1.3a");
 
     if (::RegOpenKeyEx(HKEY_LOCAL_MACHINE, szKey, 0, KEY_QUERY_VALUE, &hRegKey) == ERROR_SUCCESS) 
     {
