@@ -2487,8 +2487,11 @@ nsPluginInstanceOwner::HandleEvent(nsIDOMEvent* aEvent)
 nsEventStatus nsPluginInstanceOwner::ProcessEvent(const nsGUIEvent& anEvent)
 {
 	nsEventStatus rv = nsEventStatus_eIgnore;
+  if (!mInstance)   // if mInstance is null, we shouldn't be here
+    return rv;
+
 #ifdef XP_MAC
-	if (mInstance != NULL) {
+	if (mWidget != NULL) {  // check for null mWidget
 		EventRecord* event = (EventRecord*)anEvent.nativeMsg;
 		if (event == NULL || event->what == nullEvent) {
 			EventRecord macEvent;
