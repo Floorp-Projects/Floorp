@@ -21,8 +21,8 @@
 
 DEPTH=..\..\..\..
 
-EXPORTS =				\
-	$(NULL)
+XPIDLSRCS = .\nsIWyciwygChannel.idl \
+            $(NULL)
 
 MODULE=content
 
