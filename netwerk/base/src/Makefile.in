@@ -13,8 +13,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-
 DEPTH = ../../..
+
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -26,12 +26,12 @@ include $(DEPTH)/config/autoconf.mk
 CPPSRCS =                              \
         nsAsyncStreamListener.cpp      \
         nsSyncStreamListener.cpp       \
+        nsIOService.cpp                \
         nsFileTransport.cpp            \
         nsFileTransportService.cpp     \
         nsSocketTransport.cpp          \
         nsSocketTransportStreams.cpp   \
         nsSocketTransportService.cpp   \
-        nsIOService.cpp                \
         nsStandardUrl.cpp              \
 	nsNetModuleMgr.cpp             \
 	nsNetModRegEntry.cpp           \
@@ -42,6 +42,7 @@ EXPORTS = 				\
 	nsFileTransportService.h	\
 	nsSocketTransportService.h	\
 	nsStandardUrl.h			\
+	nsNetModuleMgr.h		\
 	$(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
