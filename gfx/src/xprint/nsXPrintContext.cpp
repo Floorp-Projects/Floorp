@@ -60,11 +60,19 @@
 /* misc defines */
 #define XPRINT_MAKE_24BIT_VISUAL_AVAILABLE_FOR_TESTING 1
 
-#ifdef XPRINT_NOT_YET /* ToDo: make this dynamically */
-#define NS_XPRINT_RGB_DITHER XLIB_RGB_DITHER_NONE
-#else
-#define NS_XPRINT_RGB_DITHER ((mDepth>12)?(XLIB_RGB_DITHER_NONE):(XLIB_RGB_DITHER_MAX))
-#endif
+/* NS_XPRINT_RGB_DITHER: Macro to check whether we should dither or not.
+ * In theory we only have to look at the visual and depth ("TrueColor" with 
+ * enougth bits for the colors or GrayScale/StaticGray with enougth bits for
+ * the grayscale shades).
+ * In real life some Xprt DDX do not have the GrayScale/StaticGray visuals and
+ * we emulate grayscale support with a PseudoColor visual+grayscale palette
+ * (that's why we test for |mIsGrayscale| explicitly)...
+ */
+#define NS_XPRINT_RGB_DITHER \
+    (((mDepth >  12 && mVisual->c_class==TrueColor)  || \
+      (mDepth >=  7 && mVisual->c_class==GrayScale)  || \
+      (mDepth >=  7 && mVisual->c_class==StaticGray) || \
+      (mIsGrayscale == PR_TRUE)) ?(XLIB_RGB_DITHER_NONE):(XLIB_RGB_DITHER_MAX))
 
 #ifdef PR_LOGGING 
 /* DEBUG: use 
