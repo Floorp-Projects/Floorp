@@ -384,9 +384,15 @@ nsMacMemoryCushion::nsMacMemoryCushion()
 
 nsMacMemoryCushion::~nsMacMemoryCushion()
 {
+  StopRepeating();
   ::SetGrowZone(nsnull);
+
+  NS_ASSERTION(sMemoryReserve, "Memory reserve was nil");
   if (sMemoryReserve)
+  {
     ::DisposeHandle(sMemoryReserve);
+    sMemoryReserve = nil;
+  }
 
   if (mBufferHandle)
     ::DisposeHandle(mBufferHandle);
@@ -458,5 +464,28 @@ pascal long nsMacMemoryCushion::GrowZoneProc(Size amountNeeded)
   }
   
   return freedMem;
+}
+
+std::auto_ptr<nsMacMemoryCushion>    gMemoryCushion;
+
+Boolean nsMacMemoryCushion::EnsureMemoryCushion()
+{
+    if (!gMemoryCushion.get())
+    {
+        nsMacMemoryCushion* softFluffyCushion = new nsMacMemoryCushion();
+        if (!softFluffyCushion) return false;
+        
+        OSErr   err = softFluffyCushion->Init(nsMacMemoryCushion::kMemoryBufferSize, nsMacMemoryCushion::kMemoryReserveSize);
+        if (err != noErr)
+        {
+            delete softFluffyCushion;
+            return false;
+        }
+        
+        gMemoryCushion.reset(softFluffyCushion);
+        softFluffyCushion->StartRepeating();
+    }
+    
+    return true;
 }
 

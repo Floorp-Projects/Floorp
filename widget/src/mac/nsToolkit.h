@@ -38,6 +38,8 @@
 #ifndef TOOLKIT_H      
 #define TOOLKIT_H
 
+#include <memory>
+
 #include "nsIToolkit.h"
 #include "nsRepeater.h"
 
@@ -166,10 +168,11 @@ protected:
   Boolean       RecoverMemoryReserve(Size reserveSize);
 
 
+  static pascal long  GrowZoneProc(Size amountNeeded);
+
 public:
 
-  static pascal long  GrowZoneProc(Size amountNeeded);
-  
+  static Boolean  EnsureMemoryCushion();
   
 protected:
 

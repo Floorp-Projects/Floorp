@@ -93,22 +93,17 @@ NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListe
 
 NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 {
-	nsresult rv;
-	rv = NS_GetCurrentToolkit(getter_AddRefs(mToolkit));
-	if (NS_FAILED(rv))
-		return rv;
-	nsIToolkit* toolkit = mToolkit.get();
-	mMacPump.reset(new nsMacMessagePump(static_cast<nsToolkit*>(toolkit)));
-  mMacMemoryCushion.reset(new nsMacMemoryCushion());
+  nsresult rv = NS_GetCurrentToolkit(getter_AddRefs(mToolkit));
+  if (NS_FAILED(rv))
+   return rv;
 
-  if (!mMacPump.get() || !mMacMemoryCushion.get())
+  nsIToolkit* toolkit = mToolkit.get();
+  mMacPump.reset(new nsMacMessagePump(static_cast<nsToolkit*>(toolkit)));
+
+  if (!mMacPump.get() || ! nsMacMemoryCushion::EnsureMemoryCushion())
     return NS_ERROR_OUT_OF_MEMORY;
-  
-  OSErr err = mMacMemoryCushion->Init(nsMacMemoryCushion::kMemoryBufferSize, nsMacMemoryCushion::kMemoryReserveSize);
-  if (err != noErr)
-    return NS_ERROR_FAILURE;
-  
-	return NS_OK;
+
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -121,7 +116,6 @@ NS_IMETHODIMP nsAppShell::Run(void)
 	if (!mMacPump.get())
 		return NS_ERROR_NOT_INITIALIZED;
 
-  mMacMemoryCushion->StartRepeating();
 	mMacPump->StartRunning();
 	mMacPump->DoMessagePump();
 
