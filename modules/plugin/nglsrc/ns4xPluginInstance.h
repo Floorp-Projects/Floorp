@@ -105,6 +105,9 @@ public:
     // Use Release() to destroy this
     virtual ~ns4xPluginInstance(void);
 
+    // returns the state of mStarted
+    PRBool IsStarted(void);
+
 protected:
 
     nsresult InitializePlugin(nsIPluginInstancePeer* peer);
