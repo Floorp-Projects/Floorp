@@ -41,14 +41,14 @@ function Startup() {
 
   /* fetch the input */
 
-  list = walletpreview.GetPrefillValue();
-  BREAK = list[0];
+  var list = walletpreview.GetPrefillValue();
+  var BREAK = list[0];
   prefillList = list.split(BREAK);
 
   /* create the heading */
 
-  var heading = document.getElementById("walletpreview");
-  heading.setAttribute("title", bundle.GetStringFromName("title"));
+  var title = document.getElementById("walletpreview");
+  title.setAttribute("title", bundle.GetStringFromName("title"));
   var heading = document.getElementById("heading");
   heading.setAttribute("value", bundle.GetStringFromName("heading"));
   var fieldHeading = document.getElementById("fieldHeading");
@@ -61,7 +61,7 @@ function Startup() {
 
   /* create the fill-in entries */
 
-  for (i=1; i<prefillList.length-2; i+=3) {
+  for (var i=1; i<prefillList.length-2; i+=3) {
 
     if(prefillList[i] != 0) {
       count = prefillList[i];
@@ -88,21 +88,17 @@ function Startup() {
       menuList.setAttribute("allowevents", "true");
       menuList.appendChild(menuPopup);
 
-      var treeCell0 = document.createElement("treecell");
-      treeCell0.setAttribute("value", prefillList[i+1])
+      var textField = document.createElement("textfield");
+      textField.setAttribute("value", prefillList[i+1]);
+      textField.setAttribute("readonly", "true");
 
-      var treeCell = document.createElement("treecell");
-      treeCell.appendChild(menuList);
+      var row = document.createElement("row");
+      row.appendChild(textField);
+      row.appendChild(menuList);
 
-      var treeRow = document.createElement("treerow");
-      treeRow.appendChild(treeCell0);
-      treeRow.appendChild(treeCell);
+      var rows = document.getElementById("rows");
+      rows.appendChild(row);
 
-      var treeItem = document.createElement("treeitem");
-      treeItem.appendChild(treeRow);
-
-      var treeChildren = document.getElementById("combolists");
-      treeChildren.appendChild(treeItem);
     }
   }
 

@@ -38,32 +38,46 @@
 
   <keyset id="keyset"/>
            
-  <spring style="height: 10px;"/>
-  <box align="vertical" flex="100%">
-      <title>
-        <text id="heading"/>
-      </title>
-      <tree class="inset" style="height: 300px; width: 440px;" align="vertical">
-        <treecolgroup>
-              <treecol width="0" flex="45"/>
-              <treecol width="0" flex="55"/>
-        </treecolgroup>
-        <treehead>
-          <treerow>
-            <treecell class="treecell-header" id="fieldHeading"/>
-            <treecell class="treecell-header" id="valueHeading"/>
-           </treerow>          
-        </treehead>
-        <treechildren flex="1" id="combolists"/>
-      </tree>
+  <title>
+    <text id="heading"/>
+  </title>
+
+  <spring style="height: 20px;"/>
+
+  <grid class="indent">
+    <columns>
+      <column width="150"/>
+      <column width="250"/>
+    </columns>
+    <rows>
+      <row>
+        <text id="fieldHeading"/>
+        <text id="valueHeading"/>
+      </row>
+    </rows>
+  </grid>
+
+  <spring style="height: 20px;"/>
+
+  <box class="tabpanel" autostretch="never" style="overflow: auto; height: 260px;">
+    <grid class="indent">
+      <columns>
+        <column width="150"/>
+        <column width="250"/>
+      </columns>
+      <rows id="rows">
+      </rows>
+    </grid>
   </box>
 
-  <spring style="height: 10px;"/>
+  <spring style="height: 20px;"/>
+
   <box align="horizontal">
     <checkbox id="checkbox"/>
     <spring flex="100%"/>
   </box>
 
+  <spring style="height: 20px;"/>
+
   <box id="okCancelButtons"/>
-  <spring style="height: 10px;"/>
 </window>
