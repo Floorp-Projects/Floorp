@@ -64,6 +64,7 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
 	fCapabilityFlag = kCapabilityUndefined; 
 	fLastAlert = nsnull;
 	fDownloadingHeaders = PR_FALSE;
+	fFolderUIDValidity = 0;
 }
 
 nsImapServerResponseParser::~nsImapServerResponseParser()
