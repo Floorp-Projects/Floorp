@@ -463,7 +463,7 @@ nsMsgAppCore::OpenURL(const char * url)
 	{
 		if (PL_strncmp(url, "news:", 5) == 0) // is it a news url?
 			NS_MailNewsLoadUrl(url, mWebShell); 
-		else if (PL_strncmp(url, "mailbox:", 8) == 0)
+		else if (PL_strncmp(url, "mailbox:", 8) == 0 || PL_strncmp(url, kMessageRootURI, PL_strlen(kMessageRootURI)) == 0)
 		{
 			PRUint32 msgIndex;
 		  nsFileSpec folderPath; 
@@ -483,7 +483,7 @@ nsMsgAppCore::OpenURL(const char * url)
 				nsString folderURI;
 				nsParseLocalMessageURI(url, folderURI, &msgIndex);
 				char *rootURI = folderURI.ToNewCString();
-				nsURI2Path(kMailboxRootURI, rootURI, folderPath);
+				nsURI2Path(kMessageRootURI, rootURI, folderPath);
 				displayNumber = PR_FALSE;
 			}
 			nsIMailboxService * mailboxService = nsnull;
