@@ -124,6 +124,7 @@ interface nsIMsgFolder : nsIFolder {
 
 	nsIMessage CreateMessageFromMsgDBHdr(in nsIMsgDBHdr msgDBHdr);
 	void GetNewMessages();
+	attribute wstring charset;
 };
 
 

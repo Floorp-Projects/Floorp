@@ -214,6 +214,10 @@ class nsIMsgFolder : public nsIFolder {
 
   /* void GetNewMessages (); */
   NS_IMETHOD GetNewMessages() = 0;
+
+  /* attribute wstring charset; */
+  NS_IMETHOD GetCharset(PRUnichar * *aCharset) = 0;
+  NS_IMETHOD SetCharset(PRUnichar * aCharset) = 0;
 };
 
 /* starting interface:    nsIMsgLocalMailFolder */
