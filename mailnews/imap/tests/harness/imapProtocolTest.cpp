@@ -535,18 +535,6 @@ nsresult nsIMAP4TestDriver::OnGet()
 
 	m_urlString[0] = '\0';
 	PL_strcpy(m_urlString, m_urlSpec);
-#ifdef HAVE_SERVICE_MGR
-	nsIIMAP4Service * IMAP4Service = nsnull;
-	nsServiceManager::GetService(kIMAP4ServiceCID, nsIIMAP4Service::GetIID(),
-                                 (nsISupports **)&IMAP4Service); // XXX probably need shutdown listener here
-
-	if (IMAP4Service)
-	{
-		IMAP4Service->GetNewMail(nsnull, nsnull);
-	}
-
-	nsServiceManager::ReleaseService(kIMAP4ServiceCID, IMAP4Service);
-#endif // HAVE_SERVICE_MGR
 #if 0
 
 	if (m_protocolInitialized == PR_FALSE)
