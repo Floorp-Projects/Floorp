@@ -455,7 +455,10 @@ endif
 endif
 
 
-PERL ?= perl
+ifndef PERL
+PERL = perl
+endif
+
 #
 # shared library symbol export definitions
 #

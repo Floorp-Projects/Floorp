@@ -51,6 +51,8 @@ all:	FORCE
 	@echo "   USE_64=1		for building 64 bit versions"
 	@echo "   BUILD_CLU=1		build command line utilities"
 	@echo "   COMPS_FROM_OBJDIR=1	use components from ../dist/$(OBJDIR_NAME)"
+	@echo "   SOLARIS_USE_FORTE6=1	use Sun Workshop 6/Forte compiler on SunOS 5.6"
+
 	@echo "   VENDOR_NAME=string	SDK vendor name (default $(DEFAULT_VENDOR_NAME))"
 	@echo "   VENDOR_VERSION=#	vendor specific version number * 100 (default $(DEFAULT_VENDOR_VERSION))"
 	@echo 
