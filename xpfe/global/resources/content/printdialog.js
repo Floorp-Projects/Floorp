@@ -153,7 +153,7 @@ listElement.prototype =
           if (strDefaultPrinterName != "") {
             this.listElement.removeAttribute("disabled");
           } else {
-            var stringBundle = srGetStrBundle("chrome://communicator/locale/printing.properties");
+            var stringBundle = srGetStrBundle("chrome://global/locale/printing.properties");
             this.listElement.setAttribute("value", strDefaultPrinterName);
             this.listElement.setAttribute("label", stringBundle.GetStringFromName("noprinter"));
 
@@ -399,7 +399,7 @@ function onAccept()
     var print_howToEnableUI = gPrintSetInterface.kFrameEnableNone;
 
     if (dialog.fileRadio.selected && dialog.fileInput.value == "") {
-      var stringBundle = srGetStrBundle("chrome://communicator/locale/printing.properties");
+      var stringBundle = srGetStrBundle("chrome://global/locale/printing.properties");
       var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
       promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService)
       var titleText = stringBundle.GetStringFromName("noPrintFilename.title");

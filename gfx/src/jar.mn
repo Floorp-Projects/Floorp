@@ -1,5 +1,5 @@
-en-win.jar:
-    locale/en-US/communicator-platform/gfx/printdialog.properties
+en-US.jar:
+    locale/en-US/global/printdialog.properties
 
 
 
