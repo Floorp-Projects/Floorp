@@ -37,15 +37,15 @@ Contributor(s): ______________________________________. -->
 <!ENTITY newBlankPageCmd.label "Blank Window">
 <!ENTITY newPageFromTemplateCmd.label "Page Using Template">
 <!ENTITY newPageFromDraftCmd.label "Page using Draft">
-<!ENTITY openCmd.label "Open">
+<!ENTITY openCmd.label "Open ...">
 <!ENTITY sendPageCmd.label "Send Page">
 <!ENTITY editPageCmd.label "Edit Page">
 <!ENTITY offlineMenu.label "Offline">
 <!ENTITY offlineGoOfflineCmd.label "Go Offline">
 <!ENTITY offlineSynchronizeCmd.label "Synchronize">
-<!ENTITY printSetupCmd.label "Print Setup">
+<!ENTITY printSetupCmd.label "Print Setup ...">
 <!ENTITY printPreviewCmd.label "Print Preview">
-<!ENTITY printCmd.label "Print">
+<!ENTITY printCmd.label "Print...">
 <!ENTITY closeCmd.label "Close">
 <!ENTITY quitCmd.label "Quit">
 <!ENTITY editMenu.label "Edit">
