@@ -88,13 +88,14 @@ CPP_OBJS =					\
 
 MODULE=editor 
 
-REQUIRES=xpcom raptor dom base
+REQUIRES=xpcom raptor dom base netlib
 
 LINCS=-I$(PUBLIC)\editor \
     -I$(PUBLIC)\xpcom \
     -I$(PUBLIC)\raptor \
     -I$(PUBLIC)\js \
     -I$(PUBLIC)\txmgr \
+    -I$(PUBLIC)\netlib \
     -I$(PUBLIC)\dom
 
 MAKE_OBJ_TYPE = DLL
@@ -111,6 +112,7 @@ LLIBS=				\
  $(DIST)\lib\xpcom32.lib	\
  $(DIST)\lib\libplc21.lib       \
  $(DIST)\lib\raptorbase.lib       \
+ $(DIST)\lib\raptorhtmlpars.lib		\
  $(LIBNSPR)  
 !if "$(MOZ_BITS)"=="32" && defined(MOZ_DEBUG) && defined(GLOWCODE)
 LLIBS=$(LLIBS) $(GLOWDIR)\glowcode.lib

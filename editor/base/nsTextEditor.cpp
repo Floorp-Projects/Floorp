@@ -20,6 +20,17 @@
 #include "nsIEditorSupport.h"
 #include "nsEditorEventListeners.h"
 #include "nsIEditProperty.h"
+
+#include "nsIStreamListener.h"
+#include "nsIParser.h"
+#include "nsParserCIID.h"
+#include "nsIDocument.h"
+#include "nsIHTMLContentSink.h"
+#include "nsHTMLContentSinkStream.h"
+#include "nsHTMLToTXTSinkStream.h"
+#include "nsXIFDTD.h"
+
+
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventReceiver.h" 
 #include "nsIDOMKeyListener.h" 
@@ -36,7 +47,22 @@
 #include "nsLayoutCID.h"
 #include "nsIPresShell.h"
 #include "nsIStyleContext.h"
+
+
 class nsIFrame;
+
+#ifdef XP_UNIX
+#include <strstream.h>
+#endif
+
+#ifdef XP_MAC
+#include <sstream>
+#include <string>
+#endif
+
+#ifdef XP_PC
+#include <strstrea.h>
+#endif
 
 #include "CreateElementTxn.h"
 
@@ -543,22 +569,179 @@ NS_IMETHODIMP nsTextEditor::Insert(nsIInputStream *aInputStream)
   return result;
 }
 
+
+#ifdef XP_MAC 
+void WriteFromStringstream(stringstream& aIn, nsIOutputStream* aOut)
+{
+  if (aOut != nsnull)
+  {
+    string      theString = aIn.str();
+    PRInt32     len = theString.length();
+    const char* str = theString.data();
+    PRUint32 outCount = 0;
+
+    if (len)
+    {
+      char * ptr = NS_CONST_CAST(char*,str);
+      for (PRInt32 plen = len; plen > 0; plen --, ptr ++)
+        if (*ptr == '\n')
+          *ptr = '\r';
+      aOut->Write(ptr, 0, len, &outCount); 
+    }
+  }
+}
+#else
+static 
+void WriteFromOstrstream(ostrstream& aIn, nsIOutputStream* aOut)
+{
+  if (aOut != nsnull)
+  {
+    char* str = aIn.str();
+    PRUint32 inCount = aIn.pcount();
+    PRUint32 outCount = 0;
+    if (str != nsnull)
+    {
+      aOut->Write(str, 0, inCount, &outCount); 
+      // in ostrstreams if you call the str() function
+      // then you are responsible for deleting the string
+      delete str;
+    }
+  }
+}
+#endif
+
 NS_IMETHODIMP nsTextEditor::OutputText(nsIOutputStream *aOutputStream)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
+#ifdef XP_MAC
+  stringstream out;
+#else
+  ostrstream out;
+#endif
+
+  nsresult result=NS_ERROR_FAILURE;
   if (mEditor)
   {
-    result = NS_ERROR_NOT_IMPLEMENTED;
+    nsIPresShell* shell = nsnull;
+    
+    mEditor->GetPresShell(&shell);
+    if (nsnull != shell) {
+      nsCOMPtr<nsIDocument> doc;
+      shell->GetDocument(getter_AddRefs(doc));
+      if (doc) {
+        nsString buffer;
+
+        doc->CreateXIF(buffer);
+
+        nsIParser* parser;
+
+        static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+        static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+        nsresult rv = nsRepository::CreateInstance(kCParserCID, 
+                                                   nsnull, 
+                                                   kCParserIID, 
+                                                   (void **)&parser);
+
+        if (NS_OK == rv) {
+          nsIHTMLContentSink* sink = nsnull;
+
+          rv = NS_New_HTMLToTXT_SinkStream(&sink);
+	  
+          if (aOutputStream != nsnull)
+            ((nsHTMLContentSinkStream*)sink)->SetOutputStream(out);
+
+          if (NS_OK == rv) {
+            parser->SetContentSink(sink);
+	    
+            nsIDTD* dtd = nsnull;
+            rv = NS_NewXIFDTD(&dtd);
+            if (NS_OK == rv) {
+              parser->RegisterDTD(dtd);
+              parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
+            }
+            #ifdef XP_MAC
+            WriteFromStringstream(out,aOutputStream);
+            #else
+            WriteFromOstrstream(out,aOutputStream);
+            #endif
+
+            NS_IF_RELEASE(dtd);
+            NS_IF_RELEASE(sink);
+          }
+          NS_RELEASE(parser);
+        }
+      }
+      NS_RELEASE(shell);
+    }
   }
   return result;
 }
 
+
+
 NS_IMETHODIMP nsTextEditor::OutputHTML(nsIOutputStream *aOutputStream)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
+#ifdef XP_MAC
+  stringstream out;
+#else
+  ostrstream out;
+#endif
+
+  
+  nsresult result=NS_ERROR_FAILURE;
   if (mEditor)
   {
-    result = NS_ERROR_NOT_IMPLEMENTED;
+    nsIPresShell* shell = nsnull;
+    
+    mEditor->GetPresShell(&shell);
+    if (nsnull != shell) {
+      nsCOMPtr<nsIDocument> doc;
+      shell->GetDocument(getter_AddRefs(doc));
+      if (doc) {
+        nsString buffer;
+
+        doc->CreateXIF(buffer);
+
+        nsIParser* parser;
+
+        static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+        static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+        nsresult rv = nsRepository::CreateInstance(kCParserCID, 
+                                                   nsnull, 
+                                                   kCParserIID, 
+                                                   (void **)&parser);
+
+        if (NS_OK == rv) {
+          nsIHTMLContentSink* sink = nsnull;
+
+          rv = NS_New_HTML_ContentSinkStream(&sink);
+	  
+          if (aOutputStream)
+            ((nsHTMLContentSinkStream*)sink)->SetOutputStream(out);
+
+          if (NS_OK == rv) {
+            parser->SetContentSink(sink);
+	    
+            nsIDTD* dtd = nsnull;
+            rv = NS_NewXIFDTD(&dtd);
+            if (NS_OK == rv) {
+              parser->RegisterDTD(dtd);
+              parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
+            }
+            #ifdef XP_MAC
+            WriteFromStringstream(out,aOutputStream);
+            #else
+            WriteFromOstrstream(out,aOutputStream);
+            #endif
+            NS_IF_RELEASE(dtd);
+            NS_IF_RELEASE(sink);
+          }
+          NS_RELEASE(parser);
+        }
+      }
+      NS_RELEASE(shell);
+    }
   }
   return result;
 }
@@ -617,7 +800,7 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
   }
   if (NS_SUCCEEDED(result))
   {
-    if (aEndOffset!=count)
+    if (aEndOffset!=(PRInt32)count)
     {
       result = mEditor->SplitNode(aNode, aEndOffset-aStartOffset, getter_AddRefs(newTextNode));
     }
@@ -673,7 +856,7 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
     PRUint32 count;
     endNodeAsChar->GetLength(&count);
     nsCOMPtr<nsIDOMNode>newRightTextNode;  // this will be the middle text node
-    if (count!=aEndOffset) {
+    if ((PRInt32)count!=aEndOffset) {
       result = mEditor->SplitNode(aEndNode, aEndOffset, getter_AddRefs(newRightTextNode));
     }
     else {
