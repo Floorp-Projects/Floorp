@@ -683,10 +683,10 @@ PRInt32 nsSmtpProtocol::SendEhloResponse(nsIInputStream * inputStream, PRUint32 
             if (m_responseText.Find("LOGIN", PR_TRUE, 5) >= 0)  
                 SetFlag(SMTP_AUTH_LOGIN_ENABLED);
 
-            if (m_responseText.Find("EXTERNAL", PR_TRUE, 8) >= 0)  
+            if (m_responseText.Find("EXTERNAL", PR_TRUE, 5) >= 0)  
                 SetFlag(SMTP_AUTH_EXTERNAL_ENABLED);
 
-            if (m_responseText.Find("CRAM-MD5", PR_TRUE, 8) >= 0)
+            if (m_responseText.Find("CRAM-MD5", PR_TRUE, 5) >= 0)
             {
                 nsresult rv;
                 nsCOMPtr<nsISignatureVerifier> verifier = do_GetService(SIGNATURE_VERIFIER_CONTRACTID, &rv);
