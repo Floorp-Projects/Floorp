@@ -1,0 +1,67 @@
+MOZ_SRC = c:\m\source_1.4
+
+WXDIR  = $(WXWIN)
+MOZDIR = $(MOZ_SRC)\mozilla
+MOZSDK = $(MOZDIR)\dist
+
+PROGRAM = wxEmbed
+OBJECTS = \
+    EmbedApp.obj \
+    BrowserFrame.obj \
+    MailFrame.obj \
+    GeckoContainer.obj \
+    GeckoContainerUI.obj \
+    GeckoWindow.obj \
+    GeckoWindowCreator.obj \
+    GeckoProtocolHandler.obj \
+    resource.obj \
+    $(NULL)
+
+XRC = \
+    rc\mail.xrc \
+    rc\browser.xrc \
+    $(NULL)
+
+# Needing to include this big long list of includes STINKS!!!
+MOZINC = \
+  -I$(MOZSDK)\include \
+  -I$(MOZSDK)\include\nspr \
+  -I$(MOZSDK)\include\xpcom \
+  -I$(MOZSDK)\include\string \
+  -I$(MOZSDK)\include\necko \
+  -I$(MOZSDK)\include\docshell \
+  -I$(MOZSDK)\include\dom \
+  -I$(MOZSDK)\include\widget \
+  -I$(MOZSDK)\include\gfx \
+  -I$(MOZSDK)\include\uriloader \
+  -I$(MOZSDK)\include\shistory \
+  -I$(MOZSDK)\include\profile \
+  -I$(MOZSDK)\include\webbrwsr \
+  -I$(MOZSDK)\include\embed_base \
+  $(NULL)
+
+# This isn't much better either!
+MOZLIBS = \
+  $(MOZSDK)\lib\xpcom.lib \
+  $(MOZSDK)\lib\embed_base_s.lib \
+  $(NULL)
+#  $(MOZSDK)\lib\xpcomglue_s.lib \
+
+MOZDEFS = \
+  -DXPCOM_GLUE \
+  $(NULL)
+
+EXTRALIBS = $(WXDIR)\lib\wxxrc$(LIBEXT).lib $(MOZLIBS)
+EXTRAINC = -I$(WXDIR)\contrib\include $(MOZINC)
+
+!include $(WXDIR)\src\makeprog.vc
+
+# CPPFLAGS = $(CPPFLAGS) $(MOZDEFS)
+
+all:
+    -copy $(PROGRAM).exe $(MOZDIR)\dist\bin
+    
+resource.cpp: $(XRC)
+    $(WXDIR)\contrib\utils\wxrc\wxrc.exe -v -c -o  $@ $(XRC)
+
+
