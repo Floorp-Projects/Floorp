@@ -3293,7 +3293,7 @@ nsComponentManagerImpl::EnumerateCLSIDs(nsIEnumerator** aEnumerator)
     if (NS_FAILED(rv))
         return rv;
 
-    *aEnumerator = NS_REINTERPRET_CAST(nsIEnumerator*, aEnum);
+    *aEnumerator = NS_STATIC_CAST(nsIEnumerator*, aEnum);
     return NS_OK;
 }
 
@@ -3323,7 +3323,7 @@ nsComponentManagerImpl::EnumerateContractIDs(nsIEnumerator** aEnumerator)
     if (NS_FAILED(rv))
         return rv;
 
-    *aEnumerator = NS_REINTERPRET_CAST(nsIEnumerator*, aEnum);
+    *aEnumerator = NS_STATIC_CAST(nsIEnumerator*, aEnum);
     return NS_OK;
 }
 
@@ -3454,7 +3454,7 @@ nsComponentManagerImpl::EnumerateCIDs(nsISimpleEnumerator **aEnumerator)
     if (NS_FAILED(rv))
         return rv;
 
-    *aEnumerator = NS_REINTERPRET_CAST(nsISimpleEnumerator*, aEnum);
+    *aEnumerator = NS_STATIC_CAST(nsISimpleEnumerator*, aEnum);
     return NS_OK;
 }
 
@@ -3483,7 +3483,7 @@ nsComponentManagerImpl::EnumerateContractIDs(nsISimpleEnumerator **aEnumerator)
     if (NS_FAILED(rv))
         return rv;
 
-    *aEnumerator = NS_REINTERPRET_CAST(nsISimpleEnumerator*, aEnum);
+    *aEnumerator = NS_STATIC_CAST(nsISimpleEnumerator*, aEnum);
     return NS_OK;
 }
 
