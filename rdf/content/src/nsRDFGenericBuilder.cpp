@@ -527,18 +527,18 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
         if (NS_FAILED(rv)) return rv;
 
         while (1) {
-            PRBool hasMore;
-            rv = targets->HasMoreElements(&hasMore);
+            PRBool hasMoreElements;
+            rv = targets->HasMoreElements(&hasMoreElements);
             if (NS_FAILED(rv)) return rv;
 
-            if (! hasMore)
+            if (! hasMoreElements)
                 break;
 
-            nsCOMPtr<nsISupports> isupports;
-            rv = targets->GetNext(getter_AddRefs(isupports));
+            nsCOMPtr<nsISupports> isupportsNext;
+            rv = targets->GetNext(getter_AddRefs(isupportsNext));
             if (NS_FAILED(rv)) return rv;
 
-            nsCOMPtr<nsIRDFResource> valueResource = do_QueryInterface(isupports);
+            nsCOMPtr<nsIRDFResource> valueResource = do_QueryInterface(isupportsNext);
             if (valueResource && IsContainmentProperty(aElement, property)) {
 			/* XXX hack: always append value resource 1st!
 			       due to sort callback implementation */
@@ -546,7 +546,7 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
                 	tempArray->AppendElement(property);
             }
             else {
-                nsCOMPtr<nsIRDFNode> value = do_QueryInterface(isupports);
+                nsCOMPtr<nsIRDFNode> value = do_QueryInterface(isupportsNext);
                 rv = SetWidgetAttribute(aElement, property, value);
                 if (NS_FAILED(rv)) return rv;
             }
@@ -734,10 +734,10 @@ RDFGenericBuilderImpl::FindTemplateForElement(nsIContent *aNode, nsIContent **th
 			nsCOMPtr<nsIContent>	aRule;
 			if (NS_FAILED(rv = aTemplate->ChildAt(ruleLoop, *getter_AddRefs(aRule))))
 				continue;
-			PRInt32 nameSpaceID;
-			if (NS_FAILED(rv = aTemplate->GetNameSpaceID(nameSpaceID)))
+			PRInt32 templateNameSpaceID;
+			if (NS_FAILED(rv = aTemplate->GetNameSpaceID(templateNameSpaceID)))
 				continue;
-			if (nameSpaceID != kNameSpaceID_XUL)
+			if (templateNameSpaceID != kNameSpaceID_XUL)
 				continue;
 			nsCOMPtr<nsIAtom>	ruleTag;
 			if (NS_SUCCEEDED(rv = aTemplate->GetTag(*getter_AddRefs(ruleTag))))
@@ -845,7 +845,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 			}
 #endif
 
-			if ((tag == containmentAtom.get()) && (nameSpaceID == kNameSpaceID_XUL))
+			if ((tag.get() == containmentAtom.get()) && (nameSpaceID == kNameSpaceID_XUL))
 			{
 				if (NS_FAILED(rv = CreateResourceElement(nameSpaceID,
 					containmentAtom, aValue, getter_AddRefs(treeGrandchild))))
@@ -853,7 +853,7 @@ RDFGenericBuilderImpl::PopulateWidgetItemSubtree(nsIContent *aTemplateRoot, nsIC
 				if (NS_FAILED(rv = SetAllAttributesOnElement(treeGrandchild, aValue)))
 					continue;
 			}
-			else if ((tag == kTextAtom) && (nameSpaceID == kNameSpaceID_XUL))
+			else if ((tag.get() == kTextAtom) && (nameSpaceID == kNameSpaceID_XUL))
 			{
 				// <xul:text rdf:resource="..."> is replaced by text of the
 				// actual value of the rdf:resource attribute for the given node
@@ -1363,13 +1363,13 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
             return rv;
         }
 
-        PRInt32 index;
-        if (NS_FAILED(rv = parent->IndexOf(element, index))) {
+        PRInt32 elementIndex;
+        if (NS_FAILED(rv = parent->IndexOf(element, elementIndex))) {
             NS_ERROR("unable to get element's index within parent");
             return rv;
         }
 
-        if (NS_FAILED(rv = parent->RemoveChildAt(index, PR_TRUE))) {
+        if (NS_FAILED(rv = parent->RemoveChildAt(elementIndex, PR_TRUE))) {
             NS_ERROR("unable to remove element");
             return rv;
         }
@@ -1412,7 +1412,7 @@ RDFGenericBuilderImpl::OnSetAttribute(nsIDOMElement* aElement, const nsString& a
 
         // Now insert the new element into the parent. This should
         // trigger a reflow and cause the contents to be regenerated.
-        if (NS_FAILED(rv = parent->InsertChildAt(newElement, index, PR_TRUE))) {
+        if (NS_FAILED(rv = parent->InsertChildAt(newElement, elementIndex, PR_TRUE))) {
             NS_ERROR("unable to add new element to the parent");
             return rv;
         }
