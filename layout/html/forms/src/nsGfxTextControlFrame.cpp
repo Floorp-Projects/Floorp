@@ -2988,6 +2988,7 @@ nsGfxTextControlFrame::GetAdditionalChildListName(PRInt32 aIndex,
   if (aIndex == 0) {
     *aListName = nsLayoutAtoms::editorDisplayList;
     NS_IF_ADDREF(*aListName);
+    return NS_OK;
   }
 
   return nsTextControlFrame::GetAdditionalChildListName(aIndex, aListName);
