@@ -201,6 +201,8 @@ function toObject(v, r, rn) {
             return v;
     }
     var message = r + " (type " + (typeof v) + ") has no properties";
+    if (r instanceof Reference)
+        message += ", not even " + r.propertyName;
     throw rn ? new TypeError(message, rn.filename, rn.lineno)
              : new TypeError(message);
 }
@@ -797,6 +799,7 @@ var FOp = FunctionObject.prototype = {
         while ((o = v.__proto__)) {
             if (o == p)
                 return true;
+            v = o;
         }
         return false;
     },
