@@ -38,8 +38,10 @@ nsMsgHdr::nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow)
 	m_mdbRow = dbRow;
 }
 
+
 void nsMsgHdr::Init()
 {
+
 	m_statusOffset = -1;
 	m_messageKey = nsMsgKey_None;
 	m_date = 0;
@@ -47,7 +49,25 @@ void nsMsgHdr::Init()
 	m_csID = 0;
 	m_flags = 0;
 	m_mdbRow = NULL;
+
 }
+
+//The next two functions are temporary changes until we remove RDF from nsMsgHdr
+nsMsgHdr::nsMsgHdr()
+    : nsRDFResource()
+{
+    NS_INIT_REFCNT();
+	Init();
+}
+
+void nsMsgHdr::Init(nsMsgDatabase *db, nsIMdbRow *dbRow)
+{
+	m_mdb = db;
+	if(m_mdb)
+		m_mdb->AddRef();
+	m_mdbRow = dbRow;
+}
+
 
 nsMsgHdr::~nsMsgHdr()
 {

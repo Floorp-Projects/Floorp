@@ -23,6 +23,11 @@
 #include "nsDBFolderInfo.h"
 #include "nsNewsSet.h"
 #include "nsIEnumerator.h"
+#include "nsIRDFService.h"
+#include "nsRDFCID.h"
+#include "nsIRDFResource.h"
+
+static NS_DEFINE_CID(kRDFServiceCID,              NS_RDFSERVICE_CID);
 
 #ifdef WE_HAVE_MDBINTERFACES
 static NS_DEFINE_CID(kIMBBCID, NS_IMBB_IID);
@@ -61,25 +66,35 @@ nsresult
 nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, nsIMessage* *result,
 							PRBool getKeyFromHeader)
 {
-    nsMsgHdr* msgHdr = new nsMsgHdr(this, hdrRow);
-	msgHdr->AddRef();	// why weren't we doing this????
+    nsresult rv;
 
-	if(getKeyFromHeader)
-		msgHdr->GetMessageKey(&key);
+	nsIRDFService *rdf;
+	rv = nsServiceManager::GetService(kRDFServiceCID, 
+										nsIRDFService::GetIID(), 
+                                     (nsISupports**)&rdf);
+
+    if (NS_FAILED(rv)) return rv;
+
     char *folderURI;
-    nsresult rv = nsPath2URI(kMailboxRootURI, path, &folderURI);
+    rv = nsPath2URI(kMessageRootURI, path, &folderURI);
     if (NS_FAILED(rv)) return rv;
 
     char* msgURI = PR_smprintf("%s#%d", folderURI, key);
     delete[] folderURI;
 
-    NS_STATIC_CAST(nsRDFResource*, msgHdr)->Init(msgURI);
+    nsIRDFResource* res;
+    rv = rdf->GetResource(msgURI, &res);
     delete[] msgURI;
-
-    NS_ADDREF(msgHdr);
+    if (NS_FAILED(rv)) return rv;
+    
+    nsMsgHdr* msgHdr = (nsMsgHdr*)res;
+    msgHdr->Init(this, hdrRow);
     msgHdr->SetMessageKey(key);
     *result = msgHdr;
-    return NS_OK;
+  
+    nsServiceManager::ReleaseService(kRDFServiceCID, rdf);
+
+    return rv;
 }
 
 NS_IMETHODIMP nsMsgDatabase::AddListener(nsIDBChangeListener *listener)
@@ -1280,8 +1295,13 @@ nsresult	nsMsgDatabase::ListNext(ListContext *pContext, nsMsgHdr **pResultHdr)
 	err = pContext->m_rowCursor->NextRow(GetEnv(), &hdrRow, &rowPos);
     if (NS_FAILED(err)) return err;
 
-    //currently GetMessageKey isn't working so just use rowPos
-    err = CreateMsgHdr(hdrRow, m_dbName, -1, pResultHdr, PR_TRUE);
+	//Get key from row
+	mdbOid outOid;
+	nsMsgKey key;
+	if (hdrRow->GetOid(GetEnv(), &outOid) == NS_OK)
+		key = outOid.mOid_Id;
+
+    err = CreateMsgHdr(hdrRow, m_dbName, key, pResultHdr, PR_TRUE);
 	return err;
 }
 
@@ -1364,7 +1384,13 @@ NS_IMETHODIMP nsMsgDBEnumerator::Next(void)
             mDone = PR_TRUE;
             return rv;
         }
-        rv = mDB->CreateMsgHdr(hdrRow, mDB->m_dbName, -1, &mResultHdr, PR_TRUE);
+		//Get key from row
+		mdbOid outOid;
+		nsMsgKey key;
+		if (hdrRow->GetOid(mDB->GetEnv(), &outOid) == NS_OK)
+		key = outOid.mOid_Id;
+
+        rv = mDB->CreateMsgHdr(hdrRow, mDB->m_dbName, key, &mResultHdr, PR_TRUE);
         if (NS_FAILED(rv)) return rv;
     } while (mFilter && mFilter(mResultHdr, mClosure) != NS_OK);
 	return rv;

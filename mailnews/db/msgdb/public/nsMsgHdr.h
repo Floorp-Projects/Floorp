@@ -79,8 +79,10 @@ public:
     ////////////////////////////////////////////////////////////////////////////
     // nsMsgHdr methods:
     nsMsgHdr(nsMsgDatabase *db, nsIMdbRow *dbRow);
-    void		Init();
+	nsMsgHdr();
 
+    void		Init();
+	void		Init(nsMsgDatabase *db, nsIMdbRow *dbRow);
     virtual		~nsMsgHdr();
 
     NS_DECL_ISUPPORTS_INHERITED
