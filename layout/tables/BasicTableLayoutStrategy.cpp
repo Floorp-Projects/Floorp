@@ -1095,12 +1095,12 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
   }
   PRBool* pctRequest = (hasPctCol) ? nsnull : &hasPctCol;
   ComputeNonPctColspanWidths(aReflowState, PR_FALSE, aPixelToTwips, pctRequest);
-
+  PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
   // figure the proportional widths for porportional cols
   if (rawPropTotal > 0)  {
     // get the total desired widths
     nscoord desTotal = 0;
-    for (colX = 0; colX < numCols; colX++) { 
+    for (colX = 0; colX < numEffCols; colX++) { 
       nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
       if (!colFrame) continue;
       // consider 1*, 2*, etc cols, but ignore 0* cols
@@ -1111,7 +1111,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
     // find the largest combined prop size considering each prop col and
     // its desired size
     nscoord maxPropTotal = 0;
-    for (colX = 0; colX < numCols; colX++) { 
+    for (colX = 0; colX < numEffCols; colX++) { 
       nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
       nscoord rawProp = colFrame->GetWidth(MIN_PRO);
       if (rawProp > 0) {
@@ -1122,7 +1122,7 @@ BasicTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
       }
     }
     // set MIN_PRO widths based on the maxPropTotal
-    for (colX = 0; colX < numCols; colX++) { 
+    for (colX = 0; colX < numEffCols; colX++) { 
       nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
       if (!colFrame) continue;
       nscoord rawProp = colFrame->GetWidth(MIN_PRO);
