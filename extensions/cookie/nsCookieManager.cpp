@@ -88,7 +88,7 @@ class nsCookieEnumerator : public nsISimpleEnumerator
           nsCookieStatus status;
           nsCookiePolicy policy;
           nsresult rv = COOKIE_Enumerate
-            (mCookieIndex++, name, value, &isDomain, host, path, &isSecure, &expires,
+            (mCookieIndex++, name, value, isDomain, host, path, isSecure, expires,
               status, policy);
           if (NS_SUCCEEDED(rv)) {
             nsICookie *cookie =
