@@ -814,7 +814,6 @@ extensions/inspector/resources/Makefile
 MAKEFILES_sroaming="
 extensions/sroaming/Makefile
 extensions/sroaming/src/Makefile
-extensions/sroaming/resources/Makefile
 "
 
 MAKEFILES_transformiix="
@@ -907,8 +906,6 @@ toolkit/components/passwordmgr/Makefile
 toolkit/components/passwordmgr/base/Makefile
 toolkit/components/passwordmgr/resources/Makefile
 toolkit/components/printing/Makefile
-toolkit/components/profile/Makefile
-toolkit/components/profile/public/Makefile
 toolkit/components/satchel/Makefile
 toolkit/components/satchel/public/Makefile
 toolkit/components/satchel/src/Makefile
