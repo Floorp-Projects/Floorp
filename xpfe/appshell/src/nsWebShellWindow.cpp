@@ -1803,7 +1803,7 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     contextMenuTest = FindNamedDOMNode(nsAutoString("contextmenu"), window, endCount, 1);
     // End Context Menu test
     #else
-    //DynamicLoadMenus(menubarDOMDoc, mWindow);
+    DynamicLoadMenus(menubarDOMDoc, mWindow);
     #endif
   }
 
