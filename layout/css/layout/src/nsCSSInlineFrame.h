@@ -64,6 +64,10 @@ public:
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
 
   // nsIFrame
+  NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aCX,
+                                   nsIFrame*        aParent,
+                                   nsIStyleContext* aStyleContext,
+                                   nsIFrame*&       aContinuingFrame);
 #if XXX_not_yet
   NS_IMETHOD  Reflow(nsIPresContext*      aPresContext,
                      nsReflowMetrics&     aDesiredSize,
@@ -99,6 +103,9 @@ protected:
 
   nsInlineReflowStatus PullUpChildren(nsCSSInlineReflowState& aState);
 
+  nsresult MaybeCreateNextInFlow(nsCSSInlineReflowState& aState,
+                                 nsIFrame*               aFrame);
+
   void PushKids(nsCSSInlineReflowState& aState,
                 nsIFrame* aPrevChild, nsIFrame* aPushedChild);
 
@@ -110,6 +117,5 @@ protected:
 extern nsresult NS_NewCSSInlineFrame(nsIFrame**  aInstancePtrResult,
                                      nsIContent* aContent,
                                      nsIFrame*   aParent);
-
 
 #endif /* nsCSSInlineFrame_h___ */

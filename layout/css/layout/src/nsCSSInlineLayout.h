@@ -48,7 +48,13 @@ struct nsCSSInlineLayout {
 
   nsInlineReflowStatus ReflowAndPlaceFrame(nsIFrame* aFrame);
 
-  nscoord AlignFrames(nsIFrame* aFrame, PRInt32 aFrameCount, nsRect& aBounds);
+  /**
+   * Align the frames that have been reflowed by this object.
+   * aBounds is filled in with the size of the "line" before any
+   * horziontal alignment or relative positioning. aBounds.width will
+   * be the line width, aBounds.height will be the line height.
+   */
+  void AlignFrames(nsIFrame* aFrame, PRInt32 aFrameCount, nsRect& aBounds);
 
   PRBool IsFirstChild();
 
@@ -68,6 +74,9 @@ struct nsCSSInlineLayout {
                                   const nsReflowMetrics& kidMetrics,
                                   const nsMargin& kidMargin,
                                   nsInlineReflowStatus kidReflowStatus);
+
+  nsresult MaybeCreateNextInFlow(nsIFrame*  aFrame,
+                                 nsIFrame*& aNextInFlowResult);
 
   nsCSSLineLayout& mLineLayout;
   nsIFrame* mContainerFrame;
