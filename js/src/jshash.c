@@ -393,12 +393,12 @@ out:
 JS_PUBLIC_API(void)
 JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
 {
-    double mean, variance;
-    uint32 nchains, nbuckets;
+    double sqsum, mean, variance, sigma;
+    uint32 nchains, nbuckets, nentries;
     uint32 i, n, maxChain, maxChainLen;
     JSHashEntry *he;
 
-    variance = 0;
+    sqsum = 0;
     nchains = 0;
     maxChainLen = 0;
     nbuckets = NBUCKETS(ht);
@@ -409,14 +409,20 @@ JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
         nchains++;
         for (n = 0; he; he = he->next)
             n++;
-        variance += n * n;
+        sqsum += n * n;
         if (n > maxChainLen) {
             maxChainLen = n;
             maxChain = i;
         }
     }
-    mean = (double)ht->nentries / nchains;
-    variance = fabs(variance / nchains - mean * mean);
+    nentries = ht->nentries;
+    mean = (double)nentries / nchains;
+    variance = nchains * sqsum - nentries * nentries;
+    if (variance < 0 || nchains == 1)
+        variance = 0;
+    else
+        variance /= nchains * (nchains - 1);
+    sigma = sqrt(variance);
 
     fprintf(fp, "\nHash table statistics:\n");
     fprintf(fp, "     number of lookups: %u\n", ht->nlookups);
@@ -426,7 +432,7 @@ JS_HashTableDumpMeter(JSHashTable *ht, JSHashEnumerator dump, FILE *fp)
     fprintf(fp, "   mean steps per hash: %g\n", (double)ht->nsteps
                                                 / ht->nlookups);
     fprintf(fp, "mean hash chain length: %g\n", mean);
-    fprintf(fp, "    standard deviation: %g\n", sqrt(variance));
+    fprintf(fp, "    standard deviation: %g\n", sigma);
     fprintf(fp, " max hash chain length: %u\n", maxChainLen);
     fprintf(fp, "        max hash chain: [%u]\n", maxChain);
 
