@@ -27,6 +27,8 @@ install::
 	$(MAKE_INSTALL) AccountManager.xul	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) AccountManager.js	$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-main.xul			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-identity-advanced.xul	$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) am-identity-advanced.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-server.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-serverwithnoidentities.xul		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) am-serverwithnoidentities.js    $(DIST)\bin\chrome\messenger\content\default

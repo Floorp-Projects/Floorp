@@ -34,6 +34,8 @@ EXPORT_RESOURCE_SAMPLES = \
 		ispUtils.js \
 		accountUtils.js \
 		am-main.xul \
+		am-identity-advanced.xul \
+		am-identity-advanced.js \
 		am-server.xul \
         am-serverwithnoidentities.xul \
         am-serverwithnoidentities.js \
