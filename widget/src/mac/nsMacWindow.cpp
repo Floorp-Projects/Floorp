@@ -654,6 +654,35 @@ NS_IMETHODIMP nsMacWindow::Move(PRInt32 aX, PRInt32 aY)
 
 //-------------------------------------------------------------------------
 //
+// Resize this window to a point given in global (screen) coordinates. This
+// differs from simple Move(): that method makes JavaScript place windows
+// like other browsers: it puts the top-left corner of the outer edge of the
+// window border at the given coordinates, offset from the menubar.
+// MoveToGlobalPoint expects the top-left corner of the portrect, which
+// is inside the border, and is not offset by the menubar height.
+//
+//-------------------------------------------------------------------------
+void nsMacWindow::MoveToGlobalPoint(PRInt32 aX, PRInt32 aY)
+{
+#if TARGET_CARBON
+	Rect screenRect;
+	::GetRegionBounds(::GetGrayRgn(), &screenRect);
+#else
+	Rect screenRect = (**::GetGrayRgn()).rgnBBox;
+#endif
+
+	if (mIsDialog) {
+		aX -= kDialogMarginWidth;
+		aY -= kDialogTitleBarHeight;
+	} else {
+		aX -= kWindowMarginWidth;
+		aY -= kWindowTitleBarHeight;
+	}
+	Move(aX - screenRect.left, aY - screenRect.top);
+}
+
+//-------------------------------------------------------------------------
+//
 // Resize this window
 //
 //-------------------------------------------------------------------------
