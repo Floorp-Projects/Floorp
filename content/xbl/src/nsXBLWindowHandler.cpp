@@ -323,8 +323,12 @@ nsXBLWindowHandler::EnsureHandlers(PRBool *aIsEditor)
 {
   if (!sXBLSpecialDocInfo)
     sXBLSpecialDocInfo = new nsXBLSpecialDocInfo();    
-  if (!sXBLSpecialDocInfo)
+  if (!sXBLSpecialDocInfo) {
+    if (aIsEditor) {
+      *aIsEditor = PR_FALSE;
+    }
     return NS_ERROR_OUT_OF_MEMORY;
+  }
   sXBLSpecialDocInfo->LoadDocInfo();
 
   // Now determine which handlers we should be using.

@@ -110,12 +110,11 @@ nsXBLWindowKeyHandler::EnsureHandlers(PRBool *aIsEditor)
 {
   if (mElement) {
     // We are actually a XUL <keyset>.
-    if (mHandler) {
-      if (aIsEditor)
-        *aIsEditor = PR_FALSE;
+    if (aIsEditor)
+      *aIsEditor = PR_FALSE;
 
+    if (mHandler)
       return NS_OK;
-    }
 
     nsCOMPtr<nsIContent> content(do_QueryInterface(mElement));
     BuildHandlerChain(content, &mHandler);
