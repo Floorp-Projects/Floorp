@@ -87,7 +87,7 @@
   <binding id="menu-iconic" extends="chrome://global/content/bindings/menu.xml#menuitem-base">
     <content>
       <xul:hbox class="menu-iconic-left" align="center" pack="center">
-        <xul:image inherits="src"/>
+        <xul:image inherits="src=image"/>
       </xul:hbox>
       <xul:label class="menu-iconic-text" flex="1" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:label class="menu-iconic-accel" inherits="value=acceltext"/>
