@@ -72,14 +72,13 @@ public:
 
   /**
    * Init tells is to tell the implementation of nsIEditor to begin its services
-   * @param aDomInterface   The dom interface being observed
+   * @param aDoc            The dom document interface being observed
    * @param aPresShell      TEMP: The presentation shell displaying the document
    *                        once events can tell us from what pres shell they originated, 
    *                        this will no longer be necessary and the editor will no longer be
    *                        linked to a single pres shell.
    */
-  NS_IMETHOD Init(nsIDOMDocument *aDomInterface,
-                        nsIPresShell   *aPresShell) = 0;
+  NS_IMETHOD Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell )=0;
 
   /**
    * return the DOM Document this editor is associated with
@@ -303,15 +302,6 @@ public:
     */
   NS_IMETHOD ScrollIntoView(PRBool aScrollToBegin)=0;
 
-  /** Create an aggregate transaction for deleting current selection
-   *  Used by all methods that need to delete current selection,
-   *    then insert something new to replace it
-   *  @param nsString& aTxnName is the name of the aggregated transaction
-   *  @param EditTxn **aAggTxn is the return location of the aggregate TXN,
-   *    with the DeleteSelectionTxn as the first child ONLY
-   *    if there was a selection to delete.
-   */
-  NS_IMETHOD CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, nsISupports **aAggTxn)=0;
 };
 
 #endif //nsIEditor_h__

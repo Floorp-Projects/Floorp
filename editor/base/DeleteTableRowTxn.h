@@ -59,6 +59,7 @@ private:
 	DeleteTableRowTxn();
 
 public:
+  virtual ~DeleteTableRowTxn();
 	
   NS_IMETHOD Do(void);
 

@@ -85,55 +85,72 @@ static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 
 nsTextEditor::nsTextEditor()
 {
-  NS_INIT_REFCNT();
+// Done in nsEditor
+//  NS_INIT_REFCNT();
 }
 
 nsTextEditor::~nsTextEditor()
 {
   //the autopointers will clear themselves up. 
   //but we need to also remove the listeners or we have a leak
-  if (mEditor)
+  nsCOMPtr<nsIDOMDocument> doc;
+  Inherited::GetDocument(getter_AddRefs(doc));
+  if (doc)
   {
-    nsCOMPtr<nsIDOMDocument> doc;
-    mEditor->GetDocument(getter_AddRefs(doc));
-    if (doc)
+    nsCOMPtr<nsIDOMEventReceiver> erP;
+    nsresult result = doc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
+    if (NS_SUCCEEDED(result) && erP) 
     {
-      nsCOMPtr<nsIDOMEventReceiver> erP;
-      nsresult result = doc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
-      if (NS_SUCCEEDED(result) && erP) 
-      {
-        if (mKeyListenerP) {
-          erP->RemoveEventListener(mKeyListenerP, kIDOMKeyListenerIID);
-        }
-        if (mMouseListenerP) {
-          erP->RemoveEventListener(mMouseListenerP, kIDOMMouseListenerIID);
-        }
+      if (mKeyListenerP) {
+        erP->RemoveEventListener(mKeyListenerP, kIDOMKeyListenerIID);
       }
-      else
-        NS_NOTREACHED("~nsTextEditor");
+      if (mMouseListenerP) {
+        erP->RemoveEventListener(mMouseListenerP, kIDOMMouseListenerIID);
+      }
     }
+    else
+      NS_NOTREACHED("~nsTextEditor");
   }
 }
 
-NS_IMETHODIMP nsTextEditor::InitTextEditor(nsIDOMDocument *aDoc, 
-                                      nsIPresShell   *aPresShell,
-                                      nsIEditorCallback *aCallback)
+// Adds appropriate AddRef, Release, and QueryInterface methods for derived class
+//NS_IMPL_ISUPPORTS_INHERITED(nsTextEditor, nsEditor, nsITextEditor)
+
+//NS_IMPL_ADDREF_INHERITED(Class, Super)
+NS_IMETHODIMP_(nsrefcnt) nsTextEditor::AddRef(void)
+{
+  return Inherited::AddRef();
+}
+
+//NS_IMPL_RELEASE_INHERITED(Class, Super)
+NS_IMETHODIMP_(nsrefcnt) nsTextEditor::Release(void)
+{
+  return Inherited::Release();
+}
+
+//NS_IMPL_QUERY_INTERFACE_INHERITED(Class, Super, AdditionalInterface)
+NS_IMETHODIMP nsTextEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+  if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
+ 
+  if (aIID.Equals(nsITextEditor::GetIID())) {
+    *aInstancePtr = NS_STATIC_CAST(nsITextEditor*, this);
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  return Inherited::QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP nsTextEditor::Init(nsIDOMDocument *aDoc, nsIPresShell *aPresShell)
 {
   NS_PRECONDITION(nsnull!=aDoc && nsnull!=aPresShell, "bad arg");
   nsresult result=NS_ERROR_NULL_POINTER;
   if ((nsnull!=aDoc) && (nsnull!=aPresShell))
   {
-    // get the editor
-    nsIEditor *editor = nsnull;
-    result = nsRepository::CreateInstance(kEditorCID, nsnull,
-                                          kIEditorIID, (void **)&editor);
-    if (NS_FAILED(result) || !editor) {
-      return NS_ERROR_OUT_OF_MEMORY;
-    }
-    mEditor = do_QueryInterface(editor); // CreateInstance did our addRef
-
-    mEditor->Init(aDoc, aPresShell);
-    mEditor->EnableUndo(PR_TRUE);
+    // Init the base editor
+    result = Inherited::Init(aDoc, aPresShell);
+    if (NS_OK != result) 
+      return result;
 
     result = NS_NewEditorKeyListener(getter_AddRefs(mKeyListenerP), this);
     if (NS_OK != result) {
@@ -145,6 +162,7 @@ NS_IMETHODIMP nsTextEditor::InitTextEditor(nsIDOMDocument *aDoc,
       mKeyListenerP = do_QueryInterface(0); 
       return result;
     }
+
     nsCOMPtr<nsIDOMEventReceiver> erP;
     result = aDoc->QueryInterface(kIDOMEventReceiverIID, getter_AddRefs(erP));
     if (NS_OK != result) 
@@ -153,10 +171,13 @@ NS_IMETHODIMP nsTextEditor::InitTextEditor(nsIDOMDocument *aDoc,
       mMouseListenerP = do_QueryInterface(0); //dont need these if we cant register them
       return result;
     }
+    //cmanske: Shouldn't we check result from this?
     erP->AddEventListener(mKeyListenerP, kIDOMKeyListenerIID);
     //erP->AddEventListener(mMouseListenerP, kIDOMMouseListenerIID);
 
     result = NS_OK;
+
+		EnableUndo(PR_TRUE);
   }
   return result;
 }
@@ -169,80 +190,77 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom *aProperty)
     return NS_ERROR_NULL_POINTER;
 
   nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
+  nsCOMPtr<nsIDOMSelection>selection;
+  result = Inherited::GetSelection(getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
   {
-    nsCOMPtr<nsIDOMSelection>selection;
-    result = mEditor->GetSelection(getter_AddRefs(selection));
-    if ((NS_SUCCEEDED(result)) && selection)
+    Inherited::BeginTransaction();
+    nsCOMPtr<nsIEnumerator> enumerator;
+    enumerator = do_QueryInterface(selection, &result);
+    if ((NS_SUCCEEDED(result)) && enumerator)
     {
-      mEditor->BeginTransaction();
-      nsCOMPtr<nsIEnumerator> enumerator;
-      enumerator = do_QueryInterface(selection, &result);
-      if ((NS_SUCCEEDED(result)) && enumerator)
+      enumerator->First(); 
+      nsISupports *currentItem;
+      result = enumerator->CurrentItem(&currentItem);
+      if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
       {
-        enumerator->First(); 
-        nsISupports *currentItem;
-        result = enumerator->CurrentItem(&currentItem);
-        if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+        nsCOMPtr<nsIDOMNode>commonParent;
+        result = range->GetCommonParent(getter_AddRefs(commonParent));
+        if ((NS_SUCCEEDED(result)) && commonParent)
         {
-          nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-          nsCOMPtr<nsIDOMNode>commonParent;
-          result = range->GetCommonParent(getter_AddRefs(commonParent));
-          if ((NS_SUCCEEDED(result)) && commonParent)
+          PRInt32 startOffset, endOffset;
+          range->GetStartOffset(&startOffset);
+          range->GetEndOffset(&endOffset);
+          nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
+          range->GetStartParent(getter_AddRefs(startParent));
+          range->GetEndParent(getter_AddRefs(endParent));
+          if (startParent.get()==endParent.get()) 
+          { // the range is entirely contained within a single text node
+            result = SetTextPropertiesForNode(startParent, commonParent, 
+                                              startOffset, endOffset,
+                                              aProperty);
+          }
+          else
           {
-            PRInt32 startOffset, endOffset;
-            range->GetStartOffset(&startOffset);
-            range->GetEndOffset(&endOffset);
-            nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
-            range->GetStartParent(getter_AddRefs(startParent));
-            range->GetEndParent(getter_AddRefs(endParent));
-            if (startParent.get()==endParent.get()) 
-            { // the range is entirely contained within a single text node
-              result = SetTextPropertiesForNode(startParent, commonParent, 
-                                                startOffset, endOffset,
-                                                aProperty);
-            }
-            else
+            nsCOMPtr<nsIDOMNode> startGrandParent;
+            startParent->GetParentNode(getter_AddRefs(startGrandParent));
+            nsCOMPtr<nsIDOMNode> endGrandParent;
+            endParent->GetParentNode(getter_AddRefs(endGrandParent));
+            if (NS_SUCCEEDED(result))
             {
-              nsCOMPtr<nsIDOMNode> startGrandParent;
-              startParent->GetParentNode(getter_AddRefs(startGrandParent));
-              nsCOMPtr<nsIDOMNode> endGrandParent;
-              endParent->GetParentNode(getter_AddRefs(endGrandParent));
-              if (NS_SUCCEEDED(result))
-              {
-                if (endGrandParent.get()==startGrandParent.get())
-                { // the range is between 2 nodes that have a common (immediate) grandparent
-                  result = SetTextPropertiesForNodesWithSameParent(startParent,startOffset,
-                                                                   endParent,  endOffset,
-                                                                   commonParent,
-                                                                   aProperty);
-                }
-                else
-                { // the range is between 2 nodes that have no simple relationship
-                  result = SetTextPropertiesForNodeWithDifferentParents(range,
-                                                                        startParent,startOffset, 
-                                                                        endParent,  endOffset,
-                                                                        commonParent,
-                                                                        aProperty);
-                }
+              if (endGrandParent.get()==startGrandParent.get())
+              { // the range is between 2 nodes that have a common (immediate) grandparent
+                result = SetTextPropertiesForNodesWithSameParent(startParent,startOffset,
+                                                                 endParent,  endOffset,
+                                                                 commonParent,
+                                                                 aProperty);
+              }
+              else
+              { // the range is between 2 nodes that have no simple relationship
+                result = SetTextPropertiesForNodeWithDifferentParents(range,
+                                                                      startParent,startOffset, 
+                                                                      endParent,  endOffset,
+                                                                      commonParent,
+                                                                      aProperty);
               }
             }
-            if (NS_SUCCEEDED(result))
-            { // compute a range for the selection
-              // don't want to actually do anything with selection, because
-              // we are still iterating through it.  Just want to create and remember
-              // an nsIDOMRange, and later add the range to the selection after clearing it.
-              // XXX: I'm blocked here because nsIDOMSelection doesn't provide a mechanism
-              //      for setting a compound selection yet.
-            }
+          }
+          if (NS_SUCCEEDED(result))
+          { // compute a range for the selection
+            // don't want to actually do anything with selection, because
+            // we are still iterating through it.  Just want to create and remember
+            // an nsIDOMRange, and later add the range to the selection after clearing it.
+            // XXX: I'm blocked here because nsIDOMSelection doesn't provide a mechanism
+            //      for setting a compound selection yet.
           }
         }
       }
-      mEditor->EndTransaction();
-      if (NS_SUCCEEDED(result))
-      { // set the selection
-        // XXX: can't do anything until I can create ranges
-      }
+    }
+    Inherited::EndTransaction();
+    if (NS_SUCCEEDED(result))
+    { // set the selection
+      // XXX: can't do anything until I can create ranges
     }
   }
   return result;
@@ -256,71 +274,68 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty, PRBool &aAny, PR
   nsresult result=NS_ERROR_NOT_INITIALIZED;
   aAny=PR_FALSE;
   aAll=PR_TRUE;
-  if (mEditor)
+  nsCOMPtr<nsIDOMSelection>selection;
+  result = Inherited::GetSelection(getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
   {
-    nsCOMPtr<nsIDOMSelection>selection;
-    result = mEditor->GetSelection(getter_AddRefs(selection));
-    if ((NS_SUCCEEDED(result)) && selection)
+    nsCOMPtr<nsIEnumerator> enumerator;
+    enumerator = do_QueryInterface(selection, &result);
+    if ((NS_SUCCEEDED(result)) && enumerator)
     {
-      nsCOMPtr<nsIEnumerator> enumerator;
-      enumerator = do_QueryInterface(selection, &result);
-      if ((NS_SUCCEEDED(result)) && enumerator)
+      enumerator->First(); 
+      nsISupports *currentItem;
+      result = enumerator->CurrentItem(&currentItem);
+      if ((NS_SUCCEEDED(result)) && currentItem)
       {
-        enumerator->First(); 
-        nsISupports *currentItem;
-        result = enumerator->CurrentItem(&currentItem);
-        if ((NS_SUCCEEDED(result)) && currentItem)
+        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+        nsCOMPtr<nsIContentIterator> iter;
+        result = nsRepository::CreateInstance(kCContentIteratorCID, nsnull,
+                                              kIContentIteratorIID, 
+                                              getter_AddRefs(iter));
+        if ((NS_SUCCEEDED(result)) && iter)
         {
-          nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
-          nsCOMPtr<nsIContentIterator> iter;
-          result = nsRepository::CreateInstance(kCContentIteratorCID, nsnull,
-                                                kIContentIteratorIID, 
-                                                getter_AddRefs(iter));
-          if ((NS_SUCCEEDED(result)) && iter)
+          iter->Init(range);
+          return 0;
+          // loop through the content iterator for each content node
+          // for each text node:
+          // get the frame for the content, and from it the style context
+          // ask the style context about the property
+          nsCOMPtr<nsIContent> content;
+          result = iter->CurrentNode(getter_AddRefs(content));
+          int i=0;
+          while (NS_COMFALSE == iter->IsDone())
           {
-            iter->Init(range);
-            return 0;
-            // loop through the content iterator for each content node
-            // for each text node:
-            // get the frame for the content, and from it the style context
-            // ask the style context about the property
-            nsCOMPtr<nsIContent> content;
-            result = iter->CurrentNode(getter_AddRefs(content));
-            int i=0;
-            while (NS_COMFALSE == iter->IsDone())
+            nsCOMPtr<nsIDOMCharacterData>text;
+            text = do_QueryInterface(content);
+            if (text)
             {
-              nsCOMPtr<nsIDOMCharacterData>text;
-              text = do_QueryInterface(content);
-              if (text)
+              nsCOMPtr<nsIPresShell>presShell;
+              Inherited::GetPresShell(getter_AddRefs(presShell));
+              NS_ASSERTION(presShell, "bad state, null pres shell");
+              if (presShell)
               {
-                nsCOMPtr<nsIPresShell>presShell;
-                mEditor->GetPresShell(getter_AddRefs(presShell));
-                NS_ASSERTION(presShell, "bad state, null pres shell");
-                if (presShell)
+                nsIFrame *frame;
+                result = presShell->GetPrimaryFrameFor(content, &frame);
+                if ((NS_SUCCEEDED(result)) && frame)
                 {
-                  nsIFrame *frame;
-                  result = presShell->GetPrimaryFrameFor(content, &frame);
-                  if ((NS_SUCCEEDED(result)) && frame)
+                  nsCOMPtr<nsIStyleContext> sc;
+                  result = presShell->GetStyleContextFor(frame, getter_AddRefs(sc));
+                  if ((NS_SUCCEEDED(result)) && sc)
                   {
-                    nsCOMPtr<nsIStyleContext> sc;
-                    result = presShell->GetStyleContextFor(frame, getter_AddRefs(sc));
-                    if ((NS_SUCCEEDED(result)) && sc)
-                    {
-                      PRBool isSet;
-                      IsTextStyleSet(sc, aProperty, isSet);
-                      if (PR_TRUE==isSet) {
-                        aAny = PR_TRUE;
-                      }
-                      else {
-                        aAll = PR_FALSE;
-                      }
+                    PRBool isSet;
+                    IsTextStyleSet(sc, aProperty, isSet);
+                    if (PR_TRUE==isSet) {
+                      aAny = PR_TRUE;
+                    }
+                    else {
+                      aAll = PR_FALSE;
                     }
                   }
                 }
               }
-              iter->Next();
-              result = iter->CurrentNode(getter_AddRefs(content));
             }
+            iter->Next();
+            result = iter->CurrentNode(getter_AddRefs(content));
           }
         }
       }
@@ -352,223 +367,121 @@ void nsTextEditor::IsTextStyleSet(nsIStyleContext *aSC,
 NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty)
 {
   nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsTextEditor::DeleteSelection(nsIEditor::Direction aDir)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->DeleteSelection(aDir);
-  }
-  return result;
+  return Inherited::DeleteSelection(aDir);
 }
 
 NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->InsertText(aStringToInsert);
-  }
-  return result;
+  return Inherited::InsertText(aStringToInsert);
 }
 
 NS_IMETHODIMP nsTextEditor::InsertBreak(PRBool aCtrlKey)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    // Note: Code that does most of the deletion work was 
-    // moved to nsEditor::DeleteSelectionAndCreateNode
-    // Only difference is we now do BeginTransaction()/EndTransaction()
-    //  even if we fail to get a selection
-    result = mEditor->BeginTransaction();
+  // Note: Code that does most of the deletion work was 
+  // moved to nsEditor::DeleteSelectionAndCreateNode
+  // Only difference is we now do BeginTransaction()/EndTransaction()
+  //  even if we fail to get a selection
+  nsresult result = Inherited::BeginTransaction();
 
-    nsCOMPtr<nsIDOMNode> newNode;
-    nsAutoString tag("BR");
-    mEditor->DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
-    // Are we supposed to release newNode?
+  nsCOMPtr<nsIDOMNode> newNode;
+  nsAutoString tag("BR");
+  Inherited::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
 
-    result = mEditor->EndTransaction();
-  }
+  // Are we supposed to release newNode?
+  result = Inherited::EndTransaction();
+
   return result;
 }
 
 NS_IMETHODIMP nsTextEditor::EnableUndo(PRBool aEnable)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->EnableUndo(aEnable);
-  }
-  return result;
+  return Inherited::EnableUndo(aEnable);
 }
 
 NS_IMETHODIMP nsTextEditor::Undo(PRUint32 aCount)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor) {
-    result = mEditor->Undo(aCount);
-  }
-  return result;
+  return Inherited::Undo(aCount);
 }
 
 NS_IMETHODIMP nsTextEditor::CanUndo(PRBool &aIsEnabled, PRBool &aCanUndo)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->CanUndo(aIsEnabled, aCanUndo);
-  }
-  return result;
+  return Inherited::CanUndo(aIsEnabled, aCanUndo);
 }
 
 NS_IMETHODIMP nsTextEditor::Redo(PRUint32 aCount)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->Redo(aCount);
-  }
-  return result;
+  return Inherited::Redo(aCount);
 }
 
 NS_IMETHODIMP nsTextEditor::CanRedo(PRBool &aIsEnabled, PRBool &aCanRedo)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->CanRedo(aIsEnabled, aCanRedo);
-  }
-  return result;
+  return Inherited::CanRedo(aIsEnabled, aCanRedo);
 }
 
 NS_IMETHODIMP nsTextEditor::BeginTransaction()
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->BeginTransaction();
-  }
-  return result;
+  return Inherited::BeginTransaction();
 }
 
 NS_IMETHODIMP nsTextEditor::EndTransaction()
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->EndTransaction();
-  }
-  return result;
+  return Inherited::EndTransaction();
 }
 
 NS_IMETHODIMP nsTextEditor::MoveSelectionUp(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsTextEditor::MoveSelectionDown(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsTextEditor::MoveSelectionNext(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsTextEditor::MoveSelectionPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsTextEditor::SelectNext(nsIAtom *aIncrement, PRBool aExtendSelection) 
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsTextEditor::SelectPrevious(nsIAtom *aIncrement, PRBool aExtendSelection)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsTextEditor::ScrollUp(nsIAtom *aIncrement)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsTextEditor::ScrollDown(nsIAtom *aIncrement)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsTextEditor::ScrollIntoView(PRBool aScrollToBegin)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = mEditor->ScrollIntoView(aScrollToBegin);
-  }
-  return result;
+  return Inherited::ScrollIntoView(aScrollToBegin);
 }
 
 NS_IMETHODIMP nsTextEditor::Insert(nsIInputStream *aInputStream)
 {
-  nsresult result=NS_ERROR_NOT_INITIALIZED;
-  if (mEditor)
-  {
-    result = NS_ERROR_NOT_IMPLEMENTED;
-  }
-  return result;
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
-
 
 #ifdef XP_MAC 
 void WriteFromStringstream(stringstream& aIn, nsIOutputStream* aOut)
@@ -619,60 +532,57 @@ NS_IMETHODIMP nsTextEditor::OutputText(nsIOutputStream *aOutputStream)
 #endif
 
   nsresult result=NS_ERROR_FAILURE;
-  if (mEditor)
-  {
-    nsIPresShell* shell = nsnull;
-    
-    mEditor->GetPresShell(&shell);
-    if (nsnull != shell) {
-      nsCOMPtr<nsIDocument> doc;
-      shell->GetDocument(getter_AddRefs(doc));
-      if (doc) {
-        nsString buffer;
+  nsIPresShell* shell = nsnull;
+  Inherited::GetPresShell(&shell);
 
-        doc->CreateXIF(buffer);
+  if (nsnull != shell) {
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      nsString buffer;
 
-        nsIParser* parser;
+      doc->CreateXIF(buffer);
 
-        static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-        static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+      nsIParser* parser;
 
-        nsresult rv = nsRepository::CreateInstance(kCParserCID, 
-                                                   nsnull, 
-                                                   kCParserIID, 
-                                                   (void **)&parser);
+      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+      nsresult rv = nsRepository::CreateInstance(kCParserCID, 
+                                                 nsnull, 
+                                                 kCParserIID, 
+                                                 (void **)&parser);
+
+      if (NS_OK == rv) {
+        nsIHTMLContentSink* sink = nsnull;
+
+        rv = NS_New_HTMLToTXT_SinkStream(&sink);
+	
+        if (aOutputStream != nsnull)
+          ((nsHTMLContentSinkStream*)sink)->SetOutputStream(out);
 
         if (NS_OK == rv) {
-          nsIHTMLContentSink* sink = nsnull;
-
-          rv = NS_New_HTMLToTXT_SinkStream(&sink);
+          parser->SetContentSink(sink);
 	  
-          if (aOutputStream != nsnull)
-            ((nsHTMLContentSinkStream*)sink)->SetOutputStream(out);
-
+          nsIDTD* dtd = nsnull;
+          rv = NS_NewXIFDTD(&dtd);
           if (NS_OK == rv) {
-            parser->SetContentSink(sink);
-	    
-            nsIDTD* dtd = nsnull;
-            rv = NS_NewXIFDTD(&dtd);
-            if (NS_OK == rv) {
-              parser->RegisterDTD(dtd);
-              parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
-            }
-            #ifdef XP_MAC
-            WriteFromStringstream(out,aOutputStream);
-            #else
-            WriteFromOstrstream(out,aOutputStream);
-            #endif
-
-            NS_IF_RELEASE(dtd);
-            NS_IF_RELEASE(sink);
+            parser->RegisterDTD(dtd);
+            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
           }
-          NS_RELEASE(parser);
+          #ifdef XP_MAC
+          WriteFromStringstream(out,aOutputStream);
+          #else
+          WriteFromOstrstream(out,aOutputStream);
+          #endif
+
+          NS_IF_RELEASE(dtd);
+          NS_IF_RELEASE(sink);
         }
+        NS_RELEASE(parser);
       }
-      NS_RELEASE(shell);
     }
+    NS_RELEASE(shell);
   }
   return result;
 }
@@ -689,93 +599,58 @@ NS_IMETHODIMP nsTextEditor::OutputHTML(nsIOutputStream *aOutputStream)
 
   
   nsresult result=NS_ERROR_FAILURE;
-  if (mEditor)
-  {
-    nsIPresShell* shell = nsnull;
-    
-    mEditor->GetPresShell(&shell);
-    if (nsnull != shell) {
-      nsCOMPtr<nsIDocument> doc;
-      shell->GetDocument(getter_AddRefs(doc));
-      if (doc) {
-        nsString buffer;
+  nsIPresShell* shell = nsnull;
+  Inherited::GetPresShell(&shell);
 
-        doc->CreateXIF(buffer);
+  if (nsnull != shell) {
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      nsString buffer;
 
-        nsIParser* parser;
+      doc->CreateXIF(buffer);
 
-        static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-        static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+      nsIParser* parser;
 
-        nsresult rv = nsRepository::CreateInstance(kCParserCID, 
-                                                   nsnull, 
-                                                   kCParserIID, 
-                                                   (void **)&parser);
+      static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+      static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+      nsresult rv = nsRepository::CreateInstance(kCParserCID, 
+                                                 nsnull, 
+                                                 kCParserIID, 
+                                                 (void **)&parser);
+
+      if (NS_OK == rv) {
+        nsIHTMLContentSink* sink = nsnull;
+
+        rv = NS_New_HTML_ContentSinkStream(&sink);
+	
+        if (aOutputStream)
+          ((nsHTMLContentSinkStream*)sink)->SetOutputStream(out);
 
         if (NS_OK == rv) {
-          nsIHTMLContentSink* sink = nsnull;
-
-          rv = NS_New_HTML_ContentSinkStream(&sink);
+          parser->SetContentSink(sink);
 	  
-          if (aOutputStream)
-            ((nsHTMLContentSinkStream*)sink)->SetOutputStream(out);
-
+          nsIDTD* dtd = nsnull;
+          rv = NS_NewXIFDTD(&dtd);
           if (NS_OK == rv) {
-            parser->SetContentSink(sink);
-	    
-            nsIDTD* dtd = nsnull;
-            rv = NS_NewXIFDTD(&dtd);
-            if (NS_OK == rv) {
-              parser->RegisterDTD(dtd);
-              parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
-            }
-            #ifdef XP_MAC
-            WriteFromStringstream(out,aOutputStream);
-            #else
-            WriteFromOstrstream(out,aOutputStream);
-            #endif
-            NS_IF_RELEASE(dtd);
-            NS_IF_RELEASE(sink);
+            parser->RegisterDTD(dtd);
+            parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
           }
-          NS_RELEASE(parser);
+          #ifdef XP_MAC
+          WriteFromStringstream(out,aOutputStream);
+          #else
+          WriteFromOstrstream(out,aOutputStream);
+          #endif
+          NS_IF_RELEASE(dtd);
+          NS_IF_RELEASE(sink);
         }
+        NS_RELEASE(parser);
       }
-      NS_RELEASE(shell);
     }
+    NS_RELEASE(shell);
   }
   return result;
-}
-
-
-NS_IMPL_ADDREF(nsTextEditor)
-
-NS_IMPL_RELEASE(nsTextEditor)
-
-NS_IMETHODIMP
-nsTextEditor::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kITextEditorIID)) {
-    *aInstancePtr = (void*)(nsITextEditor*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIEditorIID) && (mEditor)) {
-    nsCOMPtr<nsIEditor> editor;
-    nsresult result = mEditor->QueryInterface(kIEditorIID, getter_AddRefs(editor));
-    if (NS_SUCCEEDED(result) && editor) {
-      *aInstancePtr = (void*)editor;
-      return NS_OK;
-    }
-  }
-  return NS_NOINTERFACE;
 }
 
 
@@ -796,13 +671,13 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
   nsCOMPtr<nsIDOMNode>newTextNode;  // this will be the text node we move into the new style node
   if (aStartOffset!=0)
   {
-    result = mEditor->SplitNode(aNode, aStartOffset, getter_AddRefs(newTextNode));
+    result = Inherited::SplitNode(aNode, aStartOffset, getter_AddRefs(newTextNode));
   }
   if (NS_SUCCEEDED(result))
   {
     if (aEndOffset!=(PRInt32)count)
     {
-      result = mEditor->SplitNode(aNode, aEndOffset-aStartOffset, getter_AddRefs(newTextNode));
+      result = Inherited::SplitNode(aNode, aEndOffset-aStartOffset, getter_AddRefs(newTextNode));
     }
     else
     {
@@ -819,12 +694,12 @@ NS_IMETHODIMP nsTextEditor::SetTextPropertiesForNode(nsIDOMNode *aNode,
         if (NS_SUCCEEDED(result))
         {
           nsCOMPtr<nsIDOMNode>newStyleNode;
-          result = mEditor->CreateNode(tag, aParent, offsetInParent, getter_AddRefs(newStyleNode));
+          result = Inherited::CreateNode(tag, aParent, offsetInParent, getter_AddRefs(newStyleNode));
           if (NS_SUCCEEDED(result))
           {
-            result = mEditor->DeleteNode(newTextNode);
+            result = Inherited::DeleteNode(newTextNode);
             if (NS_SUCCEEDED(result)) {
-              result = mEditor->InsertNode(newTextNode, newStyleNode, 0);
+              result = Inherited::InsertNode(newTextNode, newStyleNode, 0);
             }
           }
         }
@@ -845,7 +720,7 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
   nsresult result=NS_OK;
   nsCOMPtr<nsIDOMNode>newLeftTextNode;  // this will be the middle text node
   if (0!=aStartOffset) {
-    result = mEditor->SplitNode(aStartNode, aStartOffset, getter_AddRefs(newLeftTextNode));
+    result = Inherited::SplitNode(aStartNode, aStartOffset, getter_AddRefs(newLeftTextNode));
   }
   if (NS_SUCCEEDED(result))
   {
@@ -857,7 +732,7 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
     endNodeAsChar->GetLength(&count);
     nsCOMPtr<nsIDOMNode>newRightTextNode;  // this will be the middle text node
     if ((PRInt32)count!=aEndOffset) {
-      result = mEditor->SplitNode(aEndNode, aEndOffset, getter_AddRefs(newRightTextNode));
+      result = Inherited::SplitNode(aEndNode, aEndOffset, getter_AddRefs(newRightTextNode));
     }
     else {
       newRightTextNode = do_QueryInterface(aEndNode);
@@ -878,18 +753,18 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
         if (NS_SUCCEEDED(result))
         { // create the new style node, which will be the new parent for the selected nodes
           nsCOMPtr<nsIDOMNode>newStyleNode;
-          result = mEditor->CreateNode(tag, aParent, offsetInParent+1, getter_AddRefs(newStyleNode));
+          result = Inherited::CreateNode(tag, aParent, offsetInParent+1, getter_AddRefs(newStyleNode));
           if (NS_SUCCEEDED(result))
           { // move the right half of the start node into the new style node
             nsCOMPtr<nsIDOMNode>intermediateNode;
             result = aStartNode->GetNextSibling(getter_AddRefs(intermediateNode));
             if (NS_SUCCEEDED(result))
             {
-              result = mEditor->DeleteNode(aStartNode);
+              result = Inherited::DeleteNode(aStartNode);
               if (NS_SUCCEEDED(result)) 
               { 
                 PRInt32 childIndex=0;
-                result = mEditor->InsertNode(aStartNode, newStyleNode, childIndex);
+                result = Inherited::InsertNode(aStartNode, newStyleNode, childIndex);
                 childIndex++;
                 if (NS_SUCCEEDED(result))
                 { // move all the intermediate nodes into the new style node
@@ -903,19 +778,19 @@ nsTextEditor::SetTextPropertiesForNodesWithSameParent(nsIDOMNode *aStartNode,
                     }
                     // get the next sibling before moving the current child!!!
                     intermediateNode->GetNextSibling(getter_AddRefs(nextSibling));
-                    result = mEditor->DeleteNode(intermediateNode);
+                    result = Inherited::DeleteNode(intermediateNode);
                     if (NS_SUCCEEDED(result)) {
-                      result = mEditor->InsertNode(intermediateNode, newStyleNode, childIndex);
+                      result = Inherited::InsertNode(intermediateNode, newStyleNode, childIndex);
                       childIndex++;
                     }
                     intermediateNode = do_QueryInterface(nextSibling);
                   }
                   if (NS_SUCCEEDED(result))
                   { // move the left half of the end node into the new style node
-                    result = mEditor->DeleteNode(newRightTextNode);
+                    result = Inherited::DeleteNode(newRightTextNode);
                     if (NS_SUCCEEDED(result)) 
                     {
-                      result = mEditor->InsertNode(newRightTextNode, newStyleNode, childIndex);
+                      result = Inherited::InsertNode(newRightTextNode, newStyleNode, childIndex);
                     }
                   }
                 }
@@ -1008,13 +883,13 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
             parentContent->IndexOf(content, offsetInParent);
 
             nsCOMPtr<nsIDOMNode>newStyleNode;
-            result = mEditor->CreateNode(tag, parent, offsetInParent, getter_AddRefs(newStyleNode));
+            result = Inherited::CreateNode(tag, parent, offsetInParent, getter_AddRefs(newStyleNode));
             if (NS_SUCCEEDED(result) && newStyleNode) {
               nsCOMPtr<nsIDOMNode>contentNode;
               contentNode = do_QueryInterface(content);
-              result = mEditor->DeleteNode(contentNode);
+              result = Inherited::DeleteNode(contentNode);
               if (NS_SUCCEEDED(result)) {
-                result = mEditor->InsertNode(contentNode, newStyleNode, 0);
+                result = Inherited::InsertNode(contentNode, newStyleNode, 0);
               }
             }
           }

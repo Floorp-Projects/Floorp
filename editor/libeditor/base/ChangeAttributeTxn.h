@@ -36,6 +36,7 @@
 class ChangeAttributeTxn : public EditTxn
 {
 public:
+  virtual ~ChangeAttributeTxn();
 
   /** Initialize the transaction.
     * @param aEditor the object providing core editing operations

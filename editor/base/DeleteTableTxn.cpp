@@ -40,6 +40,10 @@ DeleteTableTxn::DeleteTableTxn()
 {
 }
 
+DeleteTableTxn::~DeleteTableTxn()
+{
+}
+
 NS_IMETHODIMP DeleteTableTxn::Init(nsIDOMCharacterData *aElement,
                              nsIDOMNode *aNode,
                              nsIPresShell* aPresShell)

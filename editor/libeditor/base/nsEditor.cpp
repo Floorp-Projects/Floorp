@@ -811,32 +811,20 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
   return result;
 }
 
-NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, nsISupports **aAggTxn)
+NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, EditAggregateTxn **aAggTxn) 
 {
   nsresult result = NS_ERROR_NULL_POINTER;
   if (aAggTxn)
   {
     *aAggTxn = nsnull;
-    EditAggregateTxn *aTxn = nsnull;
+    result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn**)aAggTxn); 
 
-    result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn**)&aTxn);
-
-    if ((NS_FAILED(result)) || !aTxn) {
+    if (NS_FAILED(result) || !*aAggTxn) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-    // Return transaction pointer
-    *aAggTxn = (nsISupports*)aTxn;
-
-#if 0
-    //Test to be sure the Return the transaction pointer as nsISupports*
-    result = aTxn->QueryInterface(kISupportsIID, (void**)aAggTxn);
-    if (!NS_SUCCEEDED(result))
-      return NS_ERROR_UNEXPECTED;      
-#endif    
-
     // Set the name for the aggregate transaction  
-    aTxn->SetName(aTxnName);
+    (*aAggTxn)->SetName(aTxnName);
 
     // Get current selection and setup txn to delete it,
     //  but only if selection exists (is not a collapsed "caret" state)
@@ -850,7 +838,7 @@ NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, 
         EditAggregateTxn *delSelTxn;
         result = CreateTxnForDeleteSelection(nsIEditor::eLTR, &delSelTxn);
         if (NS_SUCCEEDED(result) && delSelTxn) {
-          aTxn->AppendChild(delSelTxn);
+          (*aAggTxn)->AppendChild(delSelTxn);
         }
       }
     }
@@ -864,7 +852,7 @@ nsEditor::InsertText(const nsString& aStringToInsert)
 {
   EditAggregateTxn *aggTxn = nsnull;
   // Create the "delete current selection" txn
-  nsresult result = CreateAggregateTxnForDeleteSelection(InsertTextTxn::gInsertTextTxnName, (nsISupports**)&aggTxn);
+  nsresult result = CreateAggregateTxnForDeleteSelection(InsertTextTxn::gInsertTextTxnName, &aggTxn);
   if ((NS_FAILED(result)) || (nsnull==aggTxn)) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

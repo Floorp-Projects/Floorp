@@ -75,7 +75,7 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
       NS_ASSERTION(((NS_SUCCEEDED(result)) && children), "bad start child list");
       children->GetLength(&count);
     }
-    NS_ASSERTION(mStartOffset<=count, "bad start offset");
+    NS_ASSERTION(mStartOffset<=(PRInt32)count, "bad start offset");
 
     textNode = do_QueryInterface(mEndParent, &result);
     if (textNode)
@@ -87,7 +87,7 @@ NS_IMETHODIMP DeleteRangeTxn::Init(nsIEditor *aEditor, nsIDOMRange *aRange)
       NS_ASSERTION(((NS_SUCCEEDED(result)) && children), "bad end child list");
       children->GetLength(&count);
     }
-    NS_ASSERTION(mEndOffset<=count, "bad end offset");
+    NS_ASSERTION(mEndOffset<=(PRInt32)count, "bad end offset");
     if (gNoisy)
       printf ("DeleteRange: %d of %p to %d of %p\n", 
                mStartOffset, (void *)mStartParent, mEndOffset, (void *)mEndParent);

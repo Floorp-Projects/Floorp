@@ -40,6 +40,10 @@ InsertTextTxn::InsertTextTxn()
 {
 }
 
+InsertTextTxn::~InsertTextTxn()
+{
+}
+
 NS_IMETHODIMP InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,
                              const nsString& aStringToInsert,

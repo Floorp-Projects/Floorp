@@ -26,6 +26,10 @@ DeleteTextTxn::DeleteTextTxn()
 {
 }
 
+DeleteTextTxn::~DeleteTextTxn()
+{
+}
+
 NS_IMETHODIMP DeleteTextTxn::Init(nsIEditor *aEditor,
                              nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,

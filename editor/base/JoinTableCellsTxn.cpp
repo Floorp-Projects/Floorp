@@ -40,6 +40,10 @@ JoinTableCellsTxn::JoinTableCellsTxn()
 {
 }
 
+JoinTableCellsTxn::~JoinTableCellsTxn()
+{
+}
+
 NS_IMETHODIMP JoinTableCellsTxn::Init(nsIDOMCharacterData *aElement,
                              nsIDOMNode *aNode,
                              nsIPresShell* aPresShell)

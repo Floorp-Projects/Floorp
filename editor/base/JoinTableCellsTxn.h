@@ -37,7 +37,7 @@ class nsIPresShell;
 class JoinTableCellsTxn : public EditTxn
 {
 public:
-
+  virtual ~JoinTableCellsTxn();
   /** used to name aggregate transactions that consist only of a single JoinTableCellsTxn,
     * or a DeleteSelection followed by an JoinTableCellsTxn.
     */

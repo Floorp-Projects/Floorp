@@ -86,8 +86,13 @@ nsTextEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aRe
 
 
   if (mCID.Equals(kTextEditorCID))
-    obj = (nsISupports *)new nsTextEditor();
+  {
+    //Need to cast to interface first to avoid "ambiguous conversion..." error
+    //  because of multiple nsISupports in the class hierarchy
+    obj = (nsISupports *)(nsITextEditor*)new nsTextEditor();
+  }
   //more class ids to support. here
+
 
   if (obj && NS_FAILED(obj->QueryInterface(aIID, (void**)aResult)) ) 
   {

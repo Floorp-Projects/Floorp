@@ -51,7 +51,8 @@ private:
   DeleteTextTxn();
 
 public:
-	
+	virtual ~DeleteTextTxn();
+
   NS_IMETHOD Do(void);
 
   NS_IMETHOD Undo(void);

@@ -86,7 +86,11 @@ nsHTMLEditFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void **aRe
 
 
   if (mCID.Equals(kHTMLEditorCID))
-    obj = (nsISupports *)new nsHTMLEditor();
+  {
+    //Need to cast to interface first to avoid "ambiguous conversion..." error
+    //  because of multiple nsISupports in the class hierarchy
+    obj = (nsISupports *)(nsIHTMLEditor*)new nsHTMLEditor();
+  }
   //more class ids to support. here
 
   if (obj && NS_FAILED(obj->QueryInterface(aIID, (void**)aResult)) ) 
