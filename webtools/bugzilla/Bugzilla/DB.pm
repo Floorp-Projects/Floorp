@@ -100,11 +100,10 @@ sub FetchSQLData {
 
     # This is really really ugly, but its what we get for not doing
     # error checking for 5 years. See bug 189446.
-    my @ret;
-    eval {
-        @ret = $_current_sth->fetchrow_array;
-    };
-    return @ret;
+    {
+        local $_current_sth->{RaiseError};
+        return $_current_sth->fetchrow_array;
+    }
 }
 
 sub FetchOneColumn {
