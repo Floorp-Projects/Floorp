@@ -1,0 +1,50 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+#include "nsIConsoleListener.idl"
+#include "nsIConsoleMessage.idl"
+
+
+[scriptable, uuid(a647f184-1dd1-11b2-a9d1-8537b201161b)]
+interface nsIConsoleService : nsISupports
+{
+    void logMessage(in nsIConsoleMessage message);
+    // Needed for folks who need to avoid nsIConsoleMessage hassle
+    void logStringMessage(in wstring message);
+
+    void getMessageArray([array, size_is(count)] out nsIConsoleMessage messages,
+                         out PRUint32 count);
+
+    void registerListener(in nsIConsoleListener listener);
+
+    void unregisterListener(in nsIConsoleListener listener);
+   
+};
+
+
+%{ C++
+#define NS_CONSOLESERVICE_CID \
+{ 0x7e3ff85c, 0x1dd2, 0x11b2, { 0x8d, 0x4b, 0xeb, 0x45, 0x2c, 0xb0, 0xff, 0x40 }}
+
+#define NS_CONSOLESERVICE_PROGID "consoleservice"
+%}
