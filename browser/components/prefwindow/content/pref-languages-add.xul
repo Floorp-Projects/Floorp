@@ -1,0 +1,51 @@
+<?xml version="1.0"?> <!-- -*- Mode: SGML; indent-tabs-mode: nil; -*- -->
+<!--
+
+  The contents of this file are subject to the Netscape Public License
+  Version 1.1 (the "NPL"); you may not use this file except in
+  compliance with the NPL.  You may obtain a copy of the NPL at
+  http://www.mozilla.org/NPL/
+
+  Software distributed under the NPL is distributed on an "AS IS" basis,
+  WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+  for the specific language governing rights and limitations under the
+  NPL.
+
+  The Initial Developer of this code under the NPL is Netscape
+  Communications Corporation.  Portions created by Netscape are
+  Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+  Reserved.
+
+ Contributor(s):
+   Adrian Havill <havill@redhat.com>
+-->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-languages.dtd" >
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      title="&languages.customize.add.title.label;"
+      onload="Init();"
+      ondialogaccept="return AddAvailableLanguage();"
+      style="width: 25em;height: 25em;">
+
+  <script type="application/x-javascript" src="pref-languages.js"/>
+  <!-- XXX: Replace strres.js when pref-languages is converted -->
+  <script type="application/x-javascript" src="chrome://global/content/strres.js"/>
+ 
+  <description>&languages.customize.prefAddLangDescript;</description>
+  <separator class="thin"/>
+  <description>&languages.customize.available.label;</description>
+
+  <listbox id="available_languages" flex="1" seltype="multiple"
+           ondblclick="HandleDoubleClick(event.target)"/>
+
+  <hbox align="center">
+    <label value="&languages.customize.others.label;" control="languages.other"/>
+    <textbox id="languages.other" size="6" />
+    <label value="&languages.customize.others.examples;" control="languages.other"/>
+  </hbox>
+
+</dialog>
+

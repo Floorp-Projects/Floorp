@@ -1,0 +1,135 @@
+<?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+     Ben Goodger <ben@netscape.com>, original implementor
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-applications.dtd" >
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-applications.xul');"
+      headertitle="&lHeader;">
+
+  <stringbundle id="bundle_prefApplications"
+                src="chrome://communicator/locale/pref/pref-applications.properties"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/pref-applications.js"/>
+  <script type="application/x-javascript" src="chrome://communicator/content/pref/overrideHandler.js"/>
+
+    <script type="application/x-javascript">
+    <![CDATA[  
+    var _elementIDs = ["useNSPluginFinder"];
+    ]]>
+    </script>
+        
+  <groupbox flex="1">
+    <caption label="&descript;"/>
+    <label value="&fileTypes.label;"/>
+    <hbox flex="1">
+      <vbox flex="1">
+        <listbox id="appList" flex="1"
+              sortResource="http://home.netscape.com/NC-rdf#value"
+              sortDirection="ascending"
+              datasources="rdf:null" ref="urn:mimetypes"
+              onselect="selectApplication();">
+          <template>
+            <rule>
+              <conditions>
+                <content uri="?uri"/>
+                <!-- the RDF Seq of MIME types -->
+                <triple subject="?uri" object="?MIME-types"
+                        predicate="http://home.netscape.com/NC-rdf#MIME-types"/>
+                <!-- each MIME type -->
+                <member container="?MIME-types" child="?type"/>
+                <!-- MIME type value -->
+                <triple subject="?type" object="?value"
+                        predicate="http://home.netscape.com/NC-rdf#value"/>
+                <triple subject="?type" object="?editable"
+                        predicate="http://home.netscape.com/NC-rdf#editable"/>
+              </conditions>
+              <action> 
+                <listitem uri="?type" label="?value"/>
+              </action>
+            </rule>        
+          </template>
+        </listbox>
+        
+        <hbox>
+          <vbox><image id="contentTypeImage"/></vbox>
+          <grid orient="horizontal">
+            <columns>
+              <column/>
+              <column flex="1"/>
+            </columns>
+            <rows>
+              <row>
+                <label value="&exten;"/>
+                <label id="extension"/>
+              </row>
+              <row>
+                <label value="&mimeType;"/>
+                <label id="mimeType"/>
+              </row>
+              <row>
+                <label value="&handle;"/>
+                <label id="handler"/>
+              </row>
+            </rows>
+          </grid>
+        </hbox>
+      </vbox>    
+      <vbox>
+        <button id="newTypeButton" 
+                label="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" 
+                oncommand="newType();"
+                prefstring="pref.application.disable_button.new_type"/>
+        <button id="editButton" 
+                label="&editButton.label;" accesskey="&editButton.accesskey;" 
+                oncommand="editType();"
+                prefstring="pref.application.disable_button.edit"/>
+        <button id="removeButton" 
+                label="&removeButton.label;" accesskey="&removeButton.accesskey;" 
+                oncommand="removeType();"
+                prefstring="pref.application.disable_button.remove"/>
+      </vbox>
+    </hbox>
+  </groupbox>
+  <groupbox id="pluginFinderBox">
+    <caption label="&plugins.label;"/>
+    <vbox>
+      <hbox pack="start" align="center">
+        <checkbox id="useNSPluginFinder" label="&pluginFinder.label;"
+                  prefstring="application.use_ns_plugin_finder"/>
+      </hbox>
+      <description>&pluginFinderDesc.label;</description>
+    </vbox>
+  </groupbox>
+  <groupbox>
+    <caption label="&fileOpening.label;"/>
+    <hbox pack="start" align="center">
+      <description flex="1">&resetText.label;</description>
+      <spacer flex="1"/>
+      <button label="&resetButton.label;" oncommand="clearRememberedSettings();"/>
+    </hbox>
+  </groupbox>
+</page>

@@ -1,0 +1,116 @@
+<?xml version="1.0"?> 
+<!--
+   The contents of this file are subject to the Netscape Public
+   License Version 1.1 (the "License"); you may not use this file
+   except in compliance with the License. You may obtain a copy of
+   the License at http://www.mozilla.org/NPL/
+    
+   Software distributed under the License is distributed on an "AS
+   IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   implied. See the License for the specific language governing
+   rights and limitations under the License.
+    
+   The Original Code is Mozilla Communicator client code, released
+   March 31, 1998.
+   
+   The Initial Developer of the Original Code is Netscape
+   Communications Corporation. Portions created by Netscape are
+   Copyright (C) 1998-1999 Netscape Communications Corporation. All
+   Rights Reserved.
+   
+   Contributor(s): 
+     Jason Eager <jce2@po.cwru.edu>
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://communicator/locale/pref/pref-history.dtd" >
+
+<page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+      onload="parent.initPanel('chrome://communicator/content/pref/pref-history.xul');"
+      headertitle="&lHeader;">
+
+  <script type="application/x-javascript">
+
+  <![CDATA[
+    var _elementIDs = ["histDay"];
+
+  function Startup()
+  { 
+    var urlbarHistButton = document.getElementById("ClearUrlBarHistoryButton");
+    try {
+      var urlBarHist = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
+                                 .getService(Components.interfaces.nsIUrlbarHistory);
+      var isBtnLocked = parent.hPrefWindow.getPrefIsLocked(urlbarHistButton.getAttribute("prefstring"));
+      var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                           .getService(Components.interfaces.nsIPrefBranch);
+      var lastUrl = pref.getComplexValue("general.open_location.last_url",
+                                         Components.interfaces.nsISupportsWString).data;
+      urlbarHistButton.disabled = ( urlBarHist.count == 0 && !lastUrl ) || isBtnLocked ;
+    }
+    catch(ex) {
+    }
+    
+    var globalHistButton = document.getElementById("browserClearHistory");
+    var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                                  .getService(Components.interfaces.nsIBrowserHistory);
+    if (globalHistory.count == 0)
+      globalHistButton.disabled = true;
+
+  }
+
+  function prefClearGlobalHistory()
+  {
+    var globalHistory = Components.classes["@mozilla.org/browser/global-history;1"]
+                                  .getService(Components.interfaces.nsIBrowserHistory);
+    globalHistory.removeAllPages();
+  }
+
+  function prefClearUrlbarHistory()
+  {
+    var button = document.getElementById("ClearUrlBarHistoryButton");
+    var urlBarHistory = Components.classes["@mozilla.org/browser/urlbarhistory;1"]
+                                  .getService(Components.interfaces.nsIUrlbarHistory);
+    urlBarHistory.clearHistory();
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    var str = Components.classes["@mozilla.org/supports-wstring;1"]
+                         .createInstance(Components.interfaces.nsISupportsWString);
+    str.data = "";
+    pref.setComplexValue("general.open_location.last_url",
+                         Components.interfaces.nsISupportsWString,
+                         str);
+  }
+  ]]>
+  </script>
+ 
+  <groupbox>
+    <caption label="&header3.label;"/>
+    <description>&historyPages.label;</description>
+    <hbox align="center">
+      <label value="&pageHis.label;" accesskey="&pageHis.accesskey;" control="histDay"/>
+      <textbox id="histDay" size="3"
+                 preftype="int" prefstring="browser.history_expire_days"/>
+      <label value="&days.label;"/>
+      <spacer flex="1"/>
+      <button label="&clearHistory.label;" accesskey="&clearHistory.accesskey;"
+        oncommand="prefClearGlobalHistory(); this.disabled = true;"
+        id="browserClearHistory"
+        prefstring="pref.browser.history.disable_button.clear_hist"/>
+    </hbox>
+  </groupbox>  
+  
+  <!-- no honey, I haven't been viewing porn, honest! -->
+  <groupbox>
+    <caption label="&locationBarHistory.label;"/>
+    <hbox align="center">
+      <description flex="1">&clearLocationBar.label;</description>
+      <hbox align="center" pack="end">
+        <button id="ClearUrlBarHistoryButton" label="&clearLocationBarButton.label;" accesskey="&clearLocationBarButton.accesskey;"
+         oncommand="prefClearUrlbarHistory(); this.disabled = true;"
+         prefstring="pref.browser.history.disable_button.clear_urlbar"/>
+      </hbox>
+    </hbox>
+  </groupbox>  
+</page>
+
