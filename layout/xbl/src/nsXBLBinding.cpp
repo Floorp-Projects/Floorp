@@ -68,7 +68,17 @@
 #include "nsIDOMNamedNodeMap.h"
 
 #include "nsIXBLPrototypeHandler.h"
-#include "nsXBLEventHandler.h"
+
+#include "nsXBLKeyHandler.h"
+#include "nsXBLFocusHandler.h"
+#include "nsXBLMouseHandler.h"
+#include "nsXBLMouseMotionHandler.h"
+#include "nsXBLXULHandler.h"
+#include "nsXBLScrollHandler.h"
+#include "nsXBLFormHandler.h"
+#include "nsXBLDragHandler.h"
+#include "nsXBLLoadHandler.h"
+
 #include "nsXBLBinding.h"
 
 // Static IIDs/CIDs. Try to minimize these.
@@ -255,7 +265,9 @@ nsXBLBinding::kEventHandlerMap[] = {
     { "input",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
 
     { "paint",         nsnull, &NS_GET_IID(nsIDOMPaintListener)       },
-    
+    { "resize",        nsnull, &NS_GET_IID(nsIDOMPaintListener)       },
+    { "scroll",        nsnull, &NS_GET_IID(nsIDOMPaintListener)       },
+
     { "dragenter",     nsnull, &NS_GET_IID(nsIDOMDragListener)        },
     { "dragover",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
     { "dragexit",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
@@ -666,18 +678,85 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
             receiver = do_QueryInterface(otherElement);
           }
 
-          PRBool supported = PR_FALSE;
-          if (!special)
-            supported = PR_TRUE;
-          else supported = IsSupportedHandler(&iid);
+          // Figure out if we're using capturing or not.
+          PRBool useCapture = PR_FALSE;
+          nsAutoString capturer;
+          child->GetAttribute(kNameSpaceID_None, kPhaseAtom, capturer);
+          if (capturer == NS_LITERAL_STRING("capturing"))
+            useCapture = PR_TRUE;
 
-          if (supported) {
-            // Create a new nsXBLEventHandler.
-            nsXBLEventHandler* handler;
+          // Create a new nsXBLEventHandler.
+          nsXBLEventHandler* handler = nsnull;
+          
+          // Add the event listener.
+          if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
+            nsXBLMouseHandler* mouseHandler;
+            NS_NewXBLMouseHandler(receiver, curr, eventAtom, &mouseHandler);
+            receiver->AddEventListener(type, (nsIDOMMouseListener*)mouseHandler, useCapture);
+            handler = mouseHandler;
+          }
+          else if(iid.Equals(NS_GET_IID(nsIDOMKeyListener))) {
+            nsXBLKeyHandler* keyHandler;
+            NS_NewXBLKeyHandler(receiver, curr, eventAtom, &keyHandler);
+            receiver->AddEventListener(type, (nsIDOMKeyListener*)keyHandler, useCapture);
+            handler = keyHandler;
+          }
+          else if (iid.Equals(NS_GET_IID(nsIDOMMouseMotionListener))) {
+            nsXBLMouseMotionHandler* mouseHandler;
+            NS_NewXBLMouseMotionHandler(receiver, curr, eventAtom, &mouseHandler);
+            receiver->AddEventListener(type, (nsIDOMMouseListener*)mouseHandler, useCapture);
+            handler = mouseHandler;
+          }
+          else if(iid.Equals(NS_GET_IID(nsIDOMFocusListener))) {
+            nsXBLFocusHandler* focusHandler;
+            NS_NewXBLFocusHandler(receiver, curr, eventAtom, &focusHandler);
+            receiver->AddEventListener(type, (nsIDOMFocusListener*)focusHandler, useCapture);
+            handler = focusHandler;
+          }
+          else if (iid.Equals(NS_GET_IID(nsIDOMMenuListener))) {
+            nsXBLXULHandler* xulHandler;
+            NS_NewXBLXULHandler(receiver, curr, eventAtom, &xulHandler);
+            receiver->AddEventListener(type, (nsIDOMMenuListener*)xulHandler, useCapture);
+            handler = xulHandler;
+          }
+          else if (iid.Equals(NS_GET_IID(nsIDOMScrollListener))) {
+            nsXBLScrollHandler* scrollHandler;
+            NS_NewXBLScrollHandler(receiver, curr, eventAtom, &scrollHandler);
+            receiver->AddEventListener(type, (nsIDOMScrollListener*)scrollHandler, useCapture);
+            handler = scrollHandler;
+          }
+          else if (iid.Equals(NS_GET_IID(nsIDOMFormListener))) {
+            nsXBLFormHandler* formHandler;
+            NS_NewXBLFormHandler(receiver, curr, eventAtom, &formHandler);
+            receiver->AddEventListener(type, (nsIDOMFormListener*)formHandler, useCapture);
+            handler = formHandler;
+          }
+          else if(iid.Equals(NS_GET_IID(nsIDOMDragListener))) {
+            nsXBLDragHandler* dragHandler;
+            NS_NewXBLDragHandler(receiver, curr, eventAtom, &dragHandler);
+            receiver->AddEventListener(type, (nsIDOMDragListener*)dragHandler, useCapture);
+            handler = dragHandler;
+          }
+          else if(iid.Equals(NS_GET_IID(nsIDOMLoadListener))) {
+            nsXBLLoadHandler* loadHandler;
+            NS_NewXBLLoadHandler(receiver, curr, eventAtom, &loadHandler);
+            receiver->AddEventListener(type, (nsIDOMLoadListener*)loadHandler, useCapture);
+            handler = loadHandler;
+          }
+          else if (special)
             NS_NewXBLEventHandler(receiver, curr, eventAtom, &handler);
+          else {
+            NS_WARNING("***** Non-compliant XBL event listener attached! *****");
+            nsAutoString value;
+            child->GetAttribute(kNameSpaceID_None, kActionAtom, value);
+            if (value.IsEmpty())
+              GetTextData(child, value);
+            AddScriptEventListener(mBoundElement, eventAtom, value, iid);
+          }
 
-            // We chain all our event handlers together for easy
-            // removal later (if/when the binding dies).
+          // We chain all our event handlers together for easy
+          // removal later (if/when the binding dies).
+          if (handler) {
             if (!currHandler)
               mFirstHandler = handler;
             else 
@@ -685,41 +764,9 @@ nsXBLBinding::InstallEventHandlers(nsIContent* aBoundElement, nsIXBLBinding** aB
 
             currHandler = handler;
 
-            // Figure out if we're using capturing or not.
-            PRBool useCapture = PR_FALSE;
-            nsAutoString capturer;
-            child->GetAttribute(kNameSpaceID_None, kPhaseAtom, capturer);
-            if (capturer == NS_LITERAL_STRING("capturing"))
-              useCapture = PR_TRUE;
-
-            // Add the event listener.
-            if (iid.Equals(NS_GET_IID(nsIDOMMouseListener)))
-              receiver->AddEventListener(type, (nsIDOMMouseListener*)handler, useCapture);
-            else if(iid.Equals(NS_GET_IID(nsIDOMKeyListener)))
-              receiver->AddEventListener(type, (nsIDOMKeyListener*)handler, useCapture);
-            else if(iid.Equals(NS_GET_IID(nsIDOMFocusListener)))
-              receiver->AddEventListener(type, (nsIDOMFocusListener*)handler, useCapture);
-            else if (iid.Equals(NS_GET_IID(nsIDOMMenuListener)))
-              receiver->AddEventListener(type, (nsIDOMMenuListener*)handler, useCapture);
-            else if (iid.Equals(NS_GET_IID(nsIDOMScrollListener)))
-              receiver->AddEventListener(type, (nsIDOMScrollListener*)handler, useCapture);
-            else if (iid.Equals(NS_GET_IID(nsIDOMFormListener)))
-              receiver->AddEventListener(type, (nsIDOMFormListener*)handler, useCapture);
-            
             if (!special) // Let the listener manager hold on to the handler.
               NS_RELEASE(handler);
           }
-        }
-        else {
-          // Call AddScriptEventListener for other IID types
-          // XXX Want this to all go away!
-          NS_WARNING("***** Non-compliant XBL event listener attached! *****");
-          nsAutoString value;
-          child->GetAttribute(kNameSpaceID_None, kActionAtom, value);
-          if (value.IsEmpty())
-              GetTextData(child, value);
-
-          AddScriptEventListener(mBoundElement, eventAtom, value, iid);
         }
       }
 
@@ -1653,18 +1700,7 @@ nsXBLBinding::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
     ++entry;
   }
 }
-
-PRBool
-nsXBLBinding::IsSupportedHandler(const nsIID* aIID)
-{
-  return (aIID->Equals(NS_GET_IID(nsIDOMMouseListener)) ||
-    aIID->Equals(NS_GET_IID(nsIDOMKeyListener)) ||
-    aIID->Equals(NS_GET_IID(nsIDOMFocusListener)) ||
-    aIID->Equals(NS_GET_IID(nsIDOMMenuListener)) ||
-    aIID->Equals(NS_GET_IID(nsIDOMScrollListener)) ||
-    aIID->Equals(NS_GET_IID(nsIDOMFormListener)));
-}
-          
+    
 NS_IMETHODIMP
 nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName, const nsString& aValue, REFNSIID aIID)
 {

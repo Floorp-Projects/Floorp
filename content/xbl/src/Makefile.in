@@ -33,6 +33,15 @@ CPPSRCS		= \
     nsXBLBinding.cpp \
     nsXBLEventHandler.cpp \
     nsXBLPrototypeHandler.cpp \
+    nsXBLFocusHandler.cpp \
+    nsXBLDragHandler.cpp \
+    nsXBLMouseHandler.cpp \
+    nsXBLMouseMotionHandler.cpp \
+    nsXBLKeyHandler.cpp \
+    nsXBLLoadHandler.cpp \
+    nsXBLXULHandler.cpp \
+    nsXBLFormHandler.cpp \
+    nsXBLScrollHandler.cpp \
 		nsXBLService.cpp \
 		nsBindingManager.cpp \
 		$(NULL)
