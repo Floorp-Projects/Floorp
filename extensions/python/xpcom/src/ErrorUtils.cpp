@@ -42,6 +42,8 @@ void LogMessage(const char *prefix, const char *pszMessageText)
 	NS_ABORT_IF_FALSE(consoleService, "Where is the console service?");
 	if (consoleService)
 		consoleService->LogStringMessage(NS_ConvertASCIItoUCS2(pszMessageText).get());
+	else
+		printf("%s\n", pszMessageText);
 }
 
 void LogMessage(const char *prefix, nsACString &text)
