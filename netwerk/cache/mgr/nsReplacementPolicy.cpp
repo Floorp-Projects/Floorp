@@ -44,6 +44,20 @@ nsReplacementPolicy::nsReplacementPolicy()
 
 nsReplacementPolicy::~nsReplacementPolicy()
 {
+#ifdef NS_BUILD_REFCNT_LOGGING
+    // #ifdef since this is a no-op unless NS_LOG_RELEASE does something.
+
+    // Tell the refcount logging tools that all non-recycled entries
+    // in the arena are going to go away with the arena, even though
+    // they have a refcount of 1.
+    PRUint32 i;
+    for (i = 0; i < mNumEntries; i++) {
+        nsCachedNetData* entry = mRankedEntries[i];
+        if (entry && !entry->GetFlag(nsCachedNetData::RECYCLED)) {
+            NS_LOG_RELEASE(entry, 0, "nsCachedNetData");
+        }
+    }
+#endif
     if (mRankedEntries)
         nsMemory::Free(mRankedEntries);
     if (mMapRecordIdToEntry)
