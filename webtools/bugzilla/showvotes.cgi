@@ -95,8 +95,8 @@ if (defined $::FORM{'bug_id'}) {
             print qq{
 <tr>
 <td></td>
-<td><a href="showvotes.cgi?bug_id=$id">$id</a></td>
-<td><a href="show_bug.cgi?id=$id">$strike$summary$endstrike</a></td>
+<td>$strike<a href="showvotes.cgi?bug_id=$id">$id</a>$endstrike</td>
+<td><a href="show_bug.cgi?id=$id">$summary</a></td>
 <td align=right>$count</td>
 </tr>
 };
