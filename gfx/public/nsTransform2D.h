@@ -121,6 +121,20 @@ public:
   void GetTranslationCoord(nscoord *ptX, nscoord *ptY) { *ptX = NSToCoordRound(m20); *ptY = NSToCoordRound(m21); }
 
  /**
+  * set the translation portion of this transform
+  *
+  * @param      tx, x translation
+  * @param      ty, y translation
+  * @exception
+  **/
+
+  void SetTranslation(float tX, float tY) {
+    m20 = tX;
+    m21 = tY;
+    type |= MG_2DTRANSLATION;
+  }
+
+ /**
   * get the X translation portion of this transform
   *
   * @param
