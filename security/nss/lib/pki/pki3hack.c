@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.62 $ $Date: 2002/07/31 02:00:13 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.63 $ $Date: 2002/07/31 18:50:11 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -433,27 +433,18 @@ nssDecodedPKIXCertificate_Destroy
 )
 {
     CERTCertificate *cert = (CERTCertificate *)dc->data;
-    PRBool freeSlot = PR_FALSE; 
-    PK11SlotInfo *slot = NULL;
-    PRArenaPool *arena;
-
-    /* The decoder may only be half initialized (the case where we find we 
-     * could not decode the certificate). In this case, there is not cert to
-     * free, just free the dc structure. */
-    if (cert) {
-	freeSlot = cert->ownSlot;
-	slot = cert->slot;
-	arena  = cert->arena;
-	/* zero cert before freeing. Any stale references to this cert
-	 * after this point will probably cause an exception.  */
-	PORT_Memset(cert, 0, sizeof *cert);
-	/* free the arena that contains the cert. */
-	PORT_FreeArena(arena, PR_FALSE);
-	if (slot && freeSlot) {
-	    PK11_FreeSlot(slot);
-	}
-    }
+    PRBool freeSlot = cert->ownSlot;
+    PK11SlotInfo *slot = cert->slot;
+    PRArenaPool *arena  = cert->arena;
+    /* zero cert before freeing. Any stale references to this cert
+     * after this point will probably cause an exception.  */
+    PORT_Memset(cert, 0, sizeof *cert);
+    /* free the arena that contains the cert. */
+    PORT_FreeArena(arena, PR_FALSE);
     nss_ZFreeIf(dc);
+    if (slot && freeSlot) {
+	PK11_FreeSlot(slot);
+    }
     return PR_SUCCESS;
 }
 
