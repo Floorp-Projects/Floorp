@@ -218,7 +218,8 @@ struct nsWidgetInitData {
       mListenForResizes(PR_FALSE),
       mWindowType(eWindowType_child),
       mBorderStyle(eBorderStyle_default),
-      mContentType(1)  // nsIDocShellTreeItem::typeContent
+      mContentType(1),  // nsIDocShellTreeItem::typeContent
+      mUnicode(PR_TRUE)
   {
   }
 
@@ -228,6 +229,7 @@ struct nsWidgetInitData {
   nsWindowType mWindowType;
   nsBorderStyle mBorderStyle;
   PRUint32 mContentType; // from nsIDocShellTreeItem.idl content types - typeChrome, typeContent, etc.
+  PRPackedBool mUnicode;
 };
 
 /**
