@@ -44,6 +44,86 @@ static NS_DEFINE_IID(kIDOMHTMLTableSectionElementIID, NS_IDOMHTMLTABLESECTIONELE
 static NS_DEFINE_IID(kIDOMHTMLTableCellElementIID, NS_IDOMHTMLTABLECELLELEMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLCollectionIID, NS_IDOMHTMLCOLLECTION_IID);
 
+// nsTableCellCollection is needed because GenericElementCollection 
+// only supports element of a single tag. This collection supports
+// elements <td> or <th> elements.
+
+class nsTableCellCollection : public GenericElementCollection
+{
+public:
+
+  nsTableCellCollection(nsIContent* aParent, 
+                        nsIAtom*    aTag);
+  NS_IMETHOD GetLength(PRUint32* aLength);
+  NS_IMETHOD Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+};
+
+nsTableCellCollection::nsTableCellCollection(nsIContent* aParent, 
+                                             nsIAtom*    aTag)
+  : GenericElementCollection(aParent, aTag)
+{
+}
+
+NS_IMETHODIMP 
+nsTableCellCollection::GetLength(PRUint32* aLength)
+{
+  if (!aLength) {
+    return NS_ERROR_NULL_POINTER;
+  }
+  *aLength = 0;
+  nsresult result = NS_OK;
+  if (mParent) {
+    nsIContent* child = nsnull;
+    PRUint32 childIndex = 0;
+    mParent->ChildAt(childIndex, child);
+    while (child) {
+      nsIAtom* childTag;
+      child->GetTag(childTag);
+      if ((nsHTMLAtoms::td ==childTag) || (nsHTMLAtoms::th ==childTag)) {
+        (*aLength)++;
+      }
+      NS_RELEASE(childTag);
+      NS_RELEASE(child);
+      childIndex++;
+      mParent->ChildAt(childIndex, child);
+    }
+  }
+  return result;
+}
+
+NS_IMETHODIMP 
+nsTableCellCollection::Item(PRUint32     aIndex, 
+                            nsIDOMNode** aReturn)
+{
+  *aReturn = nsnull;
+  PRUint32 theIndex = 0;
+  nsresult rv = NS_OK;
+  if (mParent) {
+    nsIContent* child = nsnull;
+    PRUint32 childIndex = 0;
+    mParent->ChildAt(childIndex, child);
+    while (child) {
+      nsIAtom* childTag;
+      child->GetTag(childTag);
+      if ((nsHTMLAtoms::td ==childTag) || (nsHTMLAtoms::th ==childTag)) {
+        if (aIndex == theIndex) {
+          child->QueryInterface(kIDOMNodeIID, (void**)aReturn);   // out-param addref
+          NS_ASSERTION(aReturn, "content element must be an nsIDOMNode");
+          NS_RELEASE(childTag);
+          NS_RELEASE(child);
+          break;
+        }
+        theIndex++;
+      }
+      NS_RELEASE(childTag);
+      NS_RELEASE(child);
+      childIndex++;
+      mParent->ChildAt(childIndex, child);
+    }
+  }
+  return rv;
+}
+
 class nsHTMLTableRowElement : public nsIDOMHTMLTableRowElement,
                               public nsIScriptObjectOwner,
                               public nsIDOMEventReceiver,
@@ -101,7 +181,7 @@ protected:
   nsresult GetSection(nsIDOMHTMLTableSectionElement** aSection);
   nsresult GetTable(nsIDOMHTMLTableElement** aTable);
   nsGenericHTMLContainerElement mInner;
-  GenericElementCollection* mCells;
+  nsTableCellCollection* mCells;
 };
 
 #ifdef XXX_debugging
@@ -396,7 +476,7 @@ NS_IMETHODIMP
 nsHTMLTableRowElement::GetCells(nsIDOMHTMLCollection** aValue)
 {
   if (nsnull == mCells) {
-    mCells = new GenericElementCollection(this, nsHTMLAtoms::td);
+    mCells = new nsTableCellCollection(this, nsHTMLAtoms::td);
     NS_ADDREF(mCells); // this table's reference, released in the destructor
   }
   mCells->QueryInterface(kIDOMHTMLCollectionIID, (void **)aValue);   // caller's addref 
@@ -643,4 +723,6 @@ nsHTMLTableRowElement::HandleDOMEvent(nsIPresContext& aPresContext,
   return mInner.HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
                                aFlags, aEventStatus);
 }
+
+
 
