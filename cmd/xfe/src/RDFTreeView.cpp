@@ -31,6 +31,11 @@
 #include "xpgetstr.h"
 #include "RDFImage.h"
 
+#include "felocale.h"		// fe_ConvertToXmString()
+#include "RDFUtils.h"
+
+
+
 #include <XmL/Tree.h>
 #include <Xfe/Xfe.h>
 
@@ -661,21 +666,17 @@ XFE_RDFTreeView::add_row(int row)
 }
 
 void
-XFE_RDFTreeView::add_row
-(HT_Resource node)
+XFE_RDFTreeView::add_row(HT_Resource node)
 {
-  //HT_Resource node = GetNthItem (_ht_view, row);
     int row = HT_GetNodeIndex(_ht_view, node);
     char *name = HT_GetNodeName(node);
     int  depth = HT_GetItemIndentation(node);
     Boolean expands =    HT_IsContainer(node);
     Boolean isExpanded = HT_IsContainerOpen(node);
 
-    /*D( fprintf(stderr,"XFE_RDFTreeView::add_row(0x%x %d) name(%s) depth(%d)\n",
-             node,row, name, depth);)*/
     Pixmap pixmap, mask;
 
-#if 0
+#if DEBUG_mcafeexxx
     // Using this for debugging. -mcafee
     static PRBool firstRow = PR_TRUE;
 
@@ -687,8 +688,6 @@ XFE_RDFTreeView::add_row
     }
 #endif
 
-	//pixmap = XmUNSPECIFIED_PIXMAP;
-	//pixmask = XmUNSPECIFIED_PIXMAP;
     if (expands && isExpanded) {
       pixmap = openedFolder.pixmap;
       mask   = openedFolder.mask;
@@ -700,68 +699,76 @@ XFE_RDFTreeView::add_row
       mask   = bookmark.mask;
     }
 
-  	XmString xmstr = XmStringCreateSimple(name);
-
-    XmLTreeAddRow(_tree,
-				  depth,
-				  expands,
-				  isExpanded,
-				  row,
-				  pixmap,
-				  mask,
-				  xmstr);
-
-	XmStringFree(xmstr);
+    XmLTreeAddRow(_tree, depth, expands, isExpanded, row, pixmap, mask, NULL);
 
     int column_count;
-    // Should only need to do this for visible columns
     XtVaGetValues(_tree, XmNcolumns, &column_count, NULL);
-    void *data;
     for (int ii = 0; ii < column_count; ii++) 
     {
-        XFE_ColumnData *column_data = getColumnData(ii);
-        
-        if (column_data)
-        {
-            Boolean is_editable = False;
-            if (isStandAlone())
-            {
-                is_editable = HT_IsNodeDataEditable(node,
-                                                    column_data->token,
-                                                    column_data->token_type);
-            }
-            XtVaSetValues(_tree,
-                          XmNrow,          row,
-                          XmNcolumn,       ii,
-                          XmNcellEditable, is_editable,
-                          NULL);
+        initCell(node, row, ii);
+    }
+}
 
-            if (HT_GetNodeData (node, column_data->token,
-                                column_data->token_type, &data)
-                && data) 
+// Format the label of a cell
+// Also set whether it is editable.
+void
+XFE_RDFTreeView::initCell(HT_Resource node, int row, int column)
+{
+    XFE_ColumnData *column_data = getColumnData(column);
+
+    XP_ASSERT(column_data);
+    if (!column_data) return;
+
+    // Set editing behavior
+    //
+    Boolean is_editable = False;
+    if (isStandAlone())
+    {
+        is_editable = HT_IsNodeDataEditable(node, column_data->token,
+                                            column_data->token_type);
+    }
+        
+    // Set the label.
+    //
+    XmString xmstr = NULL;
+    int16 charset = INTL_DefaultWinCharSetID(m_contextData);
+
+    if (column == 0)
+    {
+        xmstr = XFE_RDFUtils::formatItem(node, charset);
+    }
+    else
+    {
+        void *data;
+        if (HT_GetNodeData(node, column_data->token, column_data->token_type,
+                           &data) && data) 
+        {
+            char buffer[1024];
+            
+            switch (column_data->token_type)
             {
-                time_t dateVal;
-                struct tm* time;
-                char buffer[200];
-                
-                switch (column_data->token_type)
-                {
-                case HT_COLUMN_DATE_INT:
-                case HT_COLUMN_INT:
-                    sprintf(buffer,"%d",(int)data);
-                    break;
-                case HT_COLUMN_DATE_STRING:
-                case HT_COLUMN_STRING:
-                    strcpy(buffer, (char*)data);
-                    break;
-                }
-                XmLGridSetStringsPos(_tree, 
-                                     XmCONTENT, row,
-                                     XmCONTENT, ii, 
-                                     buffer);
+            case HT_COLUMN_DATE_INT:
+            case HT_COLUMN_INT:
+                sprintf(buffer,"%d",(int)data);
+                break;
+            case HT_COLUMN_DATE_STRING:
+            case HT_COLUMN_STRING:
+                strcpy(buffer, (char*)data);
+                break;
             }
+            XmFontList font_list;
+            xmstr = fe_ConvertToXmString ((unsigned char *) buffer, charset, 
+                                          NULL, XmFONT_IS_FONT, &font_list);
         }
     }
+    XtVaSetValues(_tree,
+                  XmNrow,            row,
+                  XmNcolumn,         column,
+                  XmNcellString,     xmstr,
+                  XmNcellEditable,   is_editable,
+                  NULL);
+    if (xmstr)
+        XmStringFree(xmstr);
 }
 
 void

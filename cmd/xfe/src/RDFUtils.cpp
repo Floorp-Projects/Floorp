@@ -299,14 +299,16 @@ XFE_RDFUtils::entryToXmString(HT_Resource			entry,
     XmString            tmp;
     char *                psz;
 
-    tmp = XFE_RDFUtils::formatItem(entry,INTL_DefaultWinCharSetID(NULL));
+    int16 charset = INTL_GetCSIWinCSID(char_set_info);
+
+    tmp = XFE_RDFUtils::formatItem(entry,charset);
     
     // Mid truncate the name
     if (XmStringGetLtoR(tmp,XmSTRING_DEFAULT_CHARSET,&psz))
     {
         XmStringFree(tmp);
 
-        INTL_MidTruncateString(INTL_GetCSIWinCSID(char_set_info),psz,psz,40);
+        INTL_MidTruncateString(charset, psz, psz, 40);
 
         result = XmStringCreateLtoR(psz,XmSTRING_DEFAULT_CHARSET);
 
@@ -324,7 +326,7 @@ XFE_RDFUtils::entryToXmString(HT_Resource			entry,
 }
 //////////////////////////////////////////////////////////////////////////
 /* static */ XmString
-XFE_RDFUtils::formatItem(HT_Resource entry,int16 charset)
+XFE_RDFUtils::formatItem(HT_Resource entry, int16 charset)
 {
   XmString xmstring;
   char buf [1024];

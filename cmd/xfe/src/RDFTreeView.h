@@ -124,6 +124,9 @@ private:
 
   void init_pixmaps();
 
+  // Set editing behavior and label.
+  void initCell(HT_Resource node, int row, int column);
+
   void fill_tree();
   void destroy_tree();
 
