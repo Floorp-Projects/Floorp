@@ -19,7 +19,7 @@
 #include "nsNetService.h"
 #include "nsIProtocolHandler.h"
 #include "nsIProtocolConnection.h"
-#include "nsUrl.h"
+#include "nsStandardUrl.h"
 #include "nscore.h"
 #include "nsString2.h"
 #include "nsXPComCIID.h"
