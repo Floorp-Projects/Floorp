@@ -97,6 +97,8 @@
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 
+#define THROBBING_N
+
 // XXX greasy constants
 #ifdef THROBBING_N
 #define THROBBER_WIDTH 32
