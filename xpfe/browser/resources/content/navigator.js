@@ -1209,18 +1209,16 @@ function selectFileToOpen(label, prefRoot)
   fp.filterIndex = index;
 
   // use a pref to remember the displayDirectory selected by the user.
-  var dir = null;
   try {
-    dir = pref.getComplexValue(lastDirPref, Components.interfaces.nsILocalFile);
+    fp.displayDirectory = pref.getComplexValue(lastDirPref, Components.interfaces.nsILocalFile);
   } catch (ex) {
   }
-  fp.displayDirectory = dir;
 
   if (fp.show() == nsIFilePicker.returnOK) {
     pref.setIntPref(filterIndexPref, fp.filterIndex);
     pref.setComplexValue(lastDirPref,
                          Components.interfaces.nsILocalFile,
-                         fp.file.parent.QueryInterface(Components.interfaces.nsILocalFile));
+                         fp.file.parent);
     fileURL = fp.fileURL;
   }
 
@@ -1230,7 +1228,7 @@ function selectFileToOpen(label, prefRoot)
 function BrowserOpenFileWindow()
 {
   try {
-    openTopWin(selectFileToOpen("openFile", "browser.open."));
+    openTopWin(selectFileToOpen("openFile", "browser.open.").spec);
   } catch (e) {}
 }
 
