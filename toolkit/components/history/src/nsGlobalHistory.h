@@ -178,7 +178,6 @@ protected:
   //
   // expiration/removal stuff
   //
-  nsresult RemovePage(const char *aURL);
   PRInt32   mExpireDays;
   nsresult ExpireEntries(PRBool notify);
   nsresult RemoveMatchingRows(rowMatchCallback aMatchFunc,
