@@ -5,7 +5,8 @@
 <!ENTITY popServer.label "POP Mail server">
 <!-- LOCALIZATION NOTE (imapServer.label) : do not translate "IMAP" in below line -->
 <!ENTITY imapServer.label "IMAP Mail server">
-<!ENTITY newsServer.label "News Server">
+<!-- LOCALIZATION NOTE (newsServer.label) : do not translate "NNTP" in below line -->
+<!ENTITY newsServer.label "News Server (NNTP)">
 <!ENTITY webmail.label "Web mail account">
 <!ENTITY serverType.label "Server Type:">
 <!ENTITY serverName.label "Server Name:">
