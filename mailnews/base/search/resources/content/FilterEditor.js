@@ -528,5 +528,5 @@ function SetBusyCursor(window, enable)
 
 function doHelpButton()
 {
-  openHelp("send-filter");
+  openHelp("mail-filters");
 }

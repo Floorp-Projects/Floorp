@@ -345,5 +345,5 @@ function onCancel()
 // called by Help button in platform overlay
 function doHelpButton()
 {
-  openHelp("mail_ldap_properties");
+  openHelp("mail-ldap-properties");
 }
