@@ -476,7 +476,8 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
  *
  * To compute the number of JSSrcNotes to allocate and pass in via notes, use
  * the CG_COUNT_FINAL_SRCNOTES macro.  This macro knows a lot about details of
- * js_FinishTakingSrcNotes.
+ * js_FinishTakingSrcNotes, SO DON'T CHANGE jsemit.c's js_FinishTakingSrcNotes
+ * FUNCTION WITHOUT CHECKING WHETHER THIS MACRO NEEDS CORRESPONDING CHANGES!
  */
 #define CG_COUNT_FINAL_SRCNOTES(cg, cnt)                                      \
     JS_BEGIN_MACRO                                                            \
@@ -487,15 +488,14 @@ js_SetSrcNoteOffset(JSContext *cx, JSCodeGenerator *cg, uintN index,
             if (diff_ > SN_DELTA_MASK)                                        \
                 cnt += JS_HOWMANY(diff_ - SN_DELTA_MASK, SN_XDELTA_MASK);     \
             cnt += 2 + (((cg)->firstLine > SN_3BYTE_OFFSET_MASK) << 1);       \
-        } else {                                                              \
+        } else if (diff_ > 0) {                                               \
             if (cg->main.noteCount) {                                         \
                 jssrcnote *sn_ = (cg)->main.notes;                            \
-                ptrdiff_t delta_ = SN_IS_XDELTA(sn_)                          \
-                                   ? SN_XDELTA_MASK - (*sn_ & SN_XDELTA_MASK) \
-                                   : SN_DELTA_MASK - (*sn_ & SN_DELTA_MASK);  \
-                diff_ -= JS_MIN(delta_, diff_);                               \
+                diff_ -= SN_IS_XDELTA(sn_)                                    \
+                         ? SN_XDELTA_MASK - (*sn_ & SN_XDELTA_MASK)           \
+                         : SN_DELTA_MASK - (*sn_ & SN_DELTA_MASK);            \
             }                                                                 \
-            if (diff_)                                                        \
+            if (diff_ > 0)                                                    \
                 cnt += JS_HOWMANY(diff_, SN_XDELTA_MASK);                     \
         }                                                                     \
     JS_END_MACRO

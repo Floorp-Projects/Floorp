@@ -4300,6 +4300,12 @@ void DumpSrcNoteSizeHist()
 }
 #endif
 
+/*
+ * Fill in the storage at notes with prolog and main srcnotes; the space at
+ * notes was allocated using the CG_COUNT_FINAL_SRCNOTES macro from jsemit.h.
+ * SO DON'T CHANGE THIS FUNCTION WITHOUT AT LEAST CHECKING WHETHER jsemit.h's
+ * CG_COUNT_FINAL_SRCNOTES MACRO NEEDS CORRESPONDING CHANGES!
+ */
 JSBool
 js_FinishTakingSrcNotes(JSContext *cx, JSCodeGenerator *cg, jssrcnote *notes)
 {
