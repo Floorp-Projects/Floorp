@@ -168,78 +168,17 @@ HasSameMapping(nsIFrame* aFrame, nsIContent* aContent)
   return result;
 }
 
-enum ContentChangeType  {ContentInserted, ContentDeleted};
-
-static void AdjustIndexInParents(nsIFrame*         aContainerFrame,
-                                 nsIContent*       aContainer,
-                                 PRInt32           aIndexInParent,
-                                 ContentChangeType aChange)
+NS_IMETHODIMP
+nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
+                                      nsIPresContext* aPresContext,
+                                      nsIContent*     aContainer,
+                                      nsIContent*     aChild,
+                                      PRInt32         aIndexInParent)
 {
-  // Walk each child and check if its index-in-parent needs to be
-  // adjusted
-  nsIFrame* childFrame;
-  for (aContainerFrame->FirstChild(childFrame);
-       nsnull != childFrame;
-       childFrame->GetNextSibling(childFrame))
-  {
-    // Is the child a pseudo-frame?
-    if (HasSameMapping(childFrame, aContainer)) {
-      // Don't change the pseudo frame's index-in-parent, but go change the
-      // index-in-parent of its children
-      AdjustIndexInParents(childFrame, aContainer, aIndexInParent, aChange);
-    } else {
-      PRInt32 index;
+  NS_ASSERTION(!IsPseudoFrame(), "pseudos not supported here");
 
-      childFrame->GetContentIndex(index);
-
-#if 0
-      if (::ContentInserted == aChange) {
-        if (index >= aIndexInParent) {
-          childFrame->SetIndexInParent(index + 1);
-        }
-      } else {
-        if (index > aIndexInParent) {
-          childFrame->SetIndexInParent(index - 1);
-        }
-      }
-#endif
-    }
-  }
-}
-
-NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
-                                                nsIPresContext* aPresContext,
-                                                nsIContent*     aContainer,
-                                                nsIContent*     aChild,
-                                                PRInt32         aIndexInParent)
-{
-  // Adjust the index-in-parent of each frame that follows the child that was
-  // inserted
-  PRBool                isPseudoFrame = IsPseudoFrame();
-  nsHTMLContainerFrame* frame = this;
-
-  while (nsnull != frame) {
-    // Do a quick check to see whether any of the child frames need their
-    // index-in-parent adjusted. Note that this assumes a linear mapping of
-    // content to frame
-    if (mLastContentOffset >= aIndexInParent) {
-      AdjustIndexInParents(frame, aContainer, aIndexInParent, ::ContentInserted);
-  
-#if XXX
-      // If the frame is being used as a pseudo-frame then make sure to propagate
-      // the content offsets back up the tree
-      if (isPseudoFrame) {
-        frame->PropagateContentOffsets();
-      }
-#endif
-    }
-
-    frame->GetNextInFlow((nsIFrame*&)frame);
-  }
-
-  // Find the frame that precedes this frame
+  // Find the frame that precedes the insertion point
   nsIFrame* prevSibling = nsnull;
-
   if (aIndexInParent > 0) {
     nsIContent* precedingContent = aContainer->ChildAt(aIndexInParent - 1);
     prevSibling = aShell->FindFrameWithContent(precedingContent);
@@ -255,61 +194,56 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
     } while (nsnull != nextInFlow);
   }
 
-  // Get the geometric parent. We expect it to be this frame or one of its
-  // next-in-flow(s). It could be a pseudo-frame, but then it better also be
-  // a nsHTMLContainerFrame...
-  nsHTMLContainerFrame* parent = this;
+  // Get the geometric parent for the prevSibling. We expect it to be
+  // this frame or one of its next-in-flow(s).
+  nsHTMLContainerFrame* flow = this;
   if (nsnull != prevSibling) {
-    prevSibling->GetGeometricParent((nsIFrame*&)parent);
+    prevSibling->GetGeometricParent((nsIFrame*&)flow);
   }
 
-  // Create the new frame
+  // Create the new frame as a child of the same parent as prevSibling
   nsIFrame* newFrame;
-  nsresult rv = nsHTMLBase::CreateFrame(aPresContext, this, aChild, nsnull,
+  nsresult rv = nsHTMLBase::CreateFrame(aPresContext, flow, aChild, nsnull,
                                         newFrame);
   if (NS_OK != rv) {
     return rv;
   }
+  flow->mChildCount++;
 
-  // Insert the frame
+  // Place the new frame into the parents sibling list
   if (nsnull == prevSibling) {
-    // If there's no preceding frame, then this is the first content child
-    NS_ASSERTION(0 == aIndexInParent, "unexpected index-in-parent");
-    NS_ASSERTION(0 == parent->mFirstContentOffset, "unexpected first content offset");
-    newFrame->SetNextSibling(parent->mFirstChild);
-    parent->mFirstChild = newFrame;
-
-  } else {
+    newFrame->SetNextSibling(flow->mFirstChild);
+    flow->mFirstChild = newFrame;
+  }
+  else {
     nsIFrame* nextSibling;
-
-    // Link the new frame into
     prevSibling->GetNextSibling(nextSibling);
     newFrame->SetNextSibling(nextSibling);
     prevSibling->SetNextSibling(newFrame);
-
     if (nsnull == nextSibling) {
-      // The new frame is the last child frame
-      parent->SetLastContentOffset(newFrame);
-
-#if XXX
-      if (parent->IsPseudoFrame()) {
-        parent->PropagateContentOffsets();
-      }
-#endif
+      // newFrame ended up being flow's last child
+      flow->mLastContentIsComplete = PR_TRUE;
     }
   }
-  parent->mChildCount++;
+  flow->mLastContentOffset++;
 
   // Generate a reflow command
   nsIReflowCommand* cmd;
-                                               
-  rv = NS_NewHTMLReflowCommand(&cmd, parent, nsIReflowCommand::FrameAppended,
+  rv = NS_NewHTMLReflowCommand(&cmd, flow,
+                               nsIReflowCommand::FrameInserted,
                                newFrame);
-  if (NS_OK == rv) {
-    aShell->AppendReflowCommand(cmd);
-    NS_RELEASE(cmd);
+  if (NS_OK != rv) {
+    return rv;
   }
+  aShell->AppendReflowCommand(cmd);
+  NS_RELEASE(cmd);
 
+  // Fix up the next-in-flows of parent now that it has a new child
+  flow = (nsHTMLContainerFrame*) flow->mNextInFlow;
+  while (nsnull != flow) {
+    flow->mFirstContentOffset++;
+    flow->mLastContentOffset++;
+  }
   return rv;
 }
 
