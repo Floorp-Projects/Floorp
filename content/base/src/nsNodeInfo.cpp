@@ -45,18 +45,6 @@
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsReadableUtils.h"
-#include NEW_H
-#include "nsFixedSizeAllocator.h"
-
-static const size_t kNodeInfoPoolSizes[] = {
-  sizeof(nsNodeInfo)
-};
-
-static const PRInt32 kNodeInfoPoolInitialSize = 
-  (NS_SIZE_IN_HEAP(sizeof(nsNodeInfo))) * 64;
-
-// static
-nsFixedSizeAllocator* nsNodeInfo::sNodeInfoPool = nsnull;
 
 // static
 nsNodeInfo*
@@ -69,29 +57,33 @@ nsNodeInfo::Create()
     sCachedNodeInfo = nsnull;
     return nodeInfo;
   }
-  
-  if (!sNodeInfoPool) {
-    sNodeInfoPool = new nsFixedSizeAllocator();
-    if (!sNodeInfoPool)
-      return nsnull;
-
-    nsresult rv = sNodeInfoPool->Init("NodeInfo Pool", kNodeInfoPoolSizes,
-                                      1, kNodeInfoPoolInitialSize);
-    if (NS_FAILED(rv)) {
-      delete sNodeInfoPool;
-      sNodeInfoPool = nsnull;
-      return nsnull;
-    }
-  }
 
   // Create a new one
-  void* place = sNodeInfoPool->Alloc(sizeof(nsNodeInfo));
-  return place ? new (place) nsNodeInfo() : nsnull;
+  return new nsNodeInfo();
 }
 
 nsNodeInfo::nsNodeInfo()
 {
 }
+
+
+nsNodeInfo::~nsNodeInfo()
+{
+  Clear();
+}
+
+void
+nsNodeInfo::Clear()
+{
+  if (mOwnerManager) {
+    mOwnerManager->RemoveNodeInfo(this);
+    NS_RELEASE(mOwnerManager);
+  }
+
+  NS_IF_RELEASE(mInner.mName);
+  NS_IF_RELEASE(mInner.mPrefix);
+}
+
 
 nsresult
 nsNodeInfo::Init(nsIAtom *aName, nsIAtom *aPrefix, PRInt32 aNamespaceID,
@@ -277,39 +269,25 @@ void
 nsNodeInfo::ClearCache()
 {
   // Clear our cache.
-  if (sNodeInfoPool) {
-    if (sCachedNodeInfo) {
-      sNodeInfoPool->Free(sCachedNodeInfo, sizeof(nsNodeInfo));
-      sCachedNodeInfo = nsnull;
-    }
-
-    delete sNodeInfoPool;
-    sNodeInfoPool = nsnull;
-  }
+  delete sCachedNodeInfo;
+  sCachedNodeInfo = nsnull;
 }
 
 void
 nsNodeInfo::LastRelease()
 {
-  // Clear object so that we have no references to anything external
-  if (mOwnerManager) {
-    mOwnerManager->RemoveNodeInfo(this);
-    NS_RELEASE(mOwnerManager);
-  }
-
-  NS_IF_RELEASE(mInner.mName);
-  NS_IF_RELEASE(mInner.mPrefix);
-  mIDAttributeAtom = nsnull;
-
   if (sCachedNodeInfo) {
     // No room in cache
-    sNodeInfoPool->Free(this, sizeof(nsNodeInfo));
+    delete this;
     return;
   }
 
   // There's space in the cache for one instance. Put
   // this instance in the cache instead of deleting it.
   sCachedNodeInfo = this;
+
+  // Clear object so that we have no references to anything external
+  Clear();
 
   // The refcount balancing and destructor re-entrancy protection
   // code in Release() sets mRefCnt to 1 so we have to set it to 0
