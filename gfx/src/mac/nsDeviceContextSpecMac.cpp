@@ -328,6 +328,13 @@ NS_IMETHODIMP nsDeviceContextSpecMac::Init(PRBool aQuiet)
 {
 #if !TARGET_CARBON
 
+  if (aQuiet)
+  {
+    // If aQuiet is true, then we're being called through
+    // the print preview path, so don't put up the print dialog.
+    return NS_ERROR_ABORT;
+  }
+
   THPrint     hPrintRec;    // handle to print record
   GrafPtr     oldport;
   PDlgInitUPP theInitProcPtr;
