@@ -150,6 +150,7 @@
 
 #include "imgILoader.h"
 #include "nsDefaultPlugin.h"
+#include "nsWeakReference.h"
 
 #ifdef XP_UNIX
 #if defined(MOZ_WIDGET_GTK)
@@ -1207,7 +1208,8 @@ private:
 
 class nsPluginStreamListenerPeer : public nsIStreamListener,
                                    public nsIProgressEventSink,
-                                   public nsIHttpHeaderVisitor
+                                   public nsIHttpHeaderVisitor,
+                                   public nsSupportsWeakReference
 {
 public:
   nsPluginStreamListenerPeer();
@@ -1238,8 +1240,7 @@ public:
 
   nsresult SetLocalFile(nsIFile* aFile);
 
-  nsresult ServeStreamAsFile(nsIRequest *request, nsISupports *ctxt,
-                              nsresult status);
+  nsresult ServeStreamAsFile(nsIRequest *request, nsISupports *ctxt);
 
 private:
   nsresult SetUpCache(nsIURI* aURL); // todo: see about removing this...
@@ -1285,7 +1286,7 @@ public:
 ////////////////////////////////////////////////////////////////////////
 class nsPluginByteRangeStreamListener : public nsIStreamListener {
 public:
-  nsPluginByteRangeStreamListener(nsPluginStreamListenerPeer* aPluginStreamListenerPeer);
+  nsPluginByteRangeStreamListener(nsIWeakReference* aWeakPtr);
   virtual ~nsPluginByteRangeStreamListener();
 
   // nsISupports
@@ -1299,7 +1300,8 @@ public:
 
 private:
   nsCOMPtr<nsIStreamListener> mStreamConverter;
-  nsPluginStreamListenerPeer* mFinalPluginStreamListener;
+  nsWeakPtr mWeakPtrPluginStreamListenerPeer;
+  PRBool mRemoveMagicNumber;
 };
 
 ////////////////////////////////////////////////////////////////////////
@@ -1463,59 +1465,70 @@ nsPluginStreamInfo::RequestRead(nsByteRange* rangeList)
 {    
   nsCAutoString rangeString;
   PRInt32 numRequests;
+  
+  //first of all lets see if mPluginStreamListenerPeer is still alive
+  nsCOMPtr<nsISupportsWeakReference> suppWeakRef(
+    do_QueryInterface((nsISupportsWeakReference *)(mPluginStreamListenerPeer)));
+  if (!suppWeakRef)
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIWeakReference> pWeakRefPluginStreamListenerPeer = 
+    getter_AddRefs(NS_GetWeakReference(suppWeakRef));
+  if (!pWeakRefPluginStreamListenerPeer)
+    return NS_ERROR_FAILURE;
 
   MakeByteRangeString(rangeList, rangeString, &numRequests);
   
   if(numRequests == 0)
     return NS_ERROR_FAILURE;
-
+  
   nsresult rv = NS_OK;
   nsCOMPtr<nsIURI> url;
-
+  
   rv = NS_NewURI(getter_AddRefs(url), nsDependentCString(mURL));
-
+  
   nsCOMPtr<nsIChannel> channel;
   rv = NS_NewChannel(getter_AddRefs(channel), url, nsnull, nsnull, nsnull);
   if (NS_FAILED(rv)) 
     return rv;
-
+  
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
   if(!httpChannel)
     return NS_ERROR_FAILURE;
-
-
+  
   httpChannel->SetRequestHeader(NS_LITERAL_CSTRING("Range"), rangeString);
   
-
   mPluginStreamListenerPeer->mAbort = PR_TRUE; // instruct old stream listener to cancel
-                                               // the request on the next ODA. 
+                                               // the request on the next ODA.
 
   nsCOMPtr<nsIStreamListener> converter;
   
   if (numRequests == 1) {
-      converter = mPluginStreamListenerPeer;
-
+    converter = mPluginStreamListenerPeer;
+    
     // set current stream offset equal to the first offset in the range list
     // it will work for single byte range request
     // for multy range we'll reset it in ODA 
     SetStreamOffset(rangeList->offset);
   } else {
     nsPluginByteRangeStreamListener *brrListener = 
-      new nsPluginByteRangeStreamListener(mPluginStreamListenerPeer);
+      new nsPluginByteRangeStreamListener(pWeakRefPluginStreamListenerPeer);
     if (brrListener)
       converter = brrListener;
     else
       return NS_ERROR_OUT_OF_MEMORY;
   }
-
+  
   mPluginStreamListenerPeer->mPendingRequests += numRequests;
-
-   nsCOMPtr<nsISupportsPRUint32> container = do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
-   if (NS_FAILED(rv)) return rv;
-   rv = container->SetData(MAGIC_REQUEST_CONTEXT);
-   if (NS_FAILED(rv)) return rv;
-
-   return channel->AsyncOpen(converter, container);
+  
+  nsCOMPtr<nsISupportsPRUint32> container = do_CreateInstance(NS_SUPPORTS_PRUINT32_CONTRACTID, &rv);
+  if (NS_FAILED(rv))
+    return rv;
+  rv = container->SetData(MAGIC_REQUEST_CONTEXT);
+  if (NS_FAILED(rv))
+    return rv;
+  
+  return channel->AsyncOpen(converter, container);
 }
 
 NS_IMETHODIMP
@@ -1767,10 +1780,11 @@ nsPluginStreamListenerPeer::~nsPluginStreamListenerPeer()
 
 
 ////////////////////////////////////////////////////////////////////////
-NS_IMPL_ISUPPORTS3(nsPluginStreamListenerPeer,
+NS_IMPL_ISUPPORTS4(nsPluginStreamListenerPeer,
                    nsIStreamListener,
                    nsIRequestObserver,
-                   nsIHttpHeaderVisitor)
+                   nsIHttpHeaderVisitor,
+                   nsISupportsWeakReference)
 ////////////////////////////////////////////////////////////////////////
 
 
@@ -6576,8 +6590,7 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
 
 ////////////////////////////////////////////////////////////////////////////////////
 nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request, 
-                                                        nsISupports* aContext,
-                                                        nsresult aStatus)
+                                                        nsISupports* aContext)
 {
   if (!mInstance)
     return NS_ERROR_FAILURE;
@@ -6621,22 +6634,25 @@ nsresult nsPluginStreamListenerPeer::ServeStreamAsFile(nsIRequest *request,
   }
 #endif
 
+  // unset mPendingRequests 
+  mPendingRequests = 0;
+
   return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////
 NS_IMPL_ISUPPORTS1(nsPluginByteRangeStreamListener, nsIStreamListener)
-
-nsPluginByteRangeStreamListener::nsPluginByteRangeStreamListener(nsPluginStreamListenerPeer* aPluginStreamListenerPeer)
+nsPluginByteRangeStreamListener::nsPluginByteRangeStreamListener(nsIWeakReference* aWeakPtr)
 {
   NS_INIT_REFCNT();
-  // don't addref
-  mFinalPluginStreamListener = aPluginStreamListenerPeer;
+  mWeakPtrPluginStreamListenerPeer = aWeakPtr;
+  mRemoveMagicNumber = PR_FALSE;
 }
 
 nsPluginByteRangeStreamListener::~nsPluginByteRangeStreamListener()
 {
   mStreamConverter = 0;
+  mWeakPtrPluginStreamListenerPeer = 0;
 }
 
 NS_IMETHODIMP
@@ -6644,11 +6660,15 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
 {
   nsresult rv;
 
+  nsCOMPtr<nsIStreamListener> finalStreamListener = do_QueryReferent(mWeakPtrPluginStreamListenerPeer);
+  if (!finalStreamListener)
+     return NS_ERROR_FAILURE;
+
   nsCOMPtr<nsIStreamConverterService> serv = do_GetService(kStreamConverterServiceCID, &rv);
   if (NS_SUCCEEDED(rv)) {
     rv = serv->AsyncConvertData(NS_LITERAL_STRING(MULTIPART_BYTERANGES).get(),
                                 NS_LITERAL_STRING("*/*").get(),
-                                mFinalPluginStreamListener,
+                                finalStreamListener,
                                 nsnull,
                                 getter_AddRefs(mStreamConverter));
     if (NS_SUCCEEDED(rv)) {
@@ -6656,14 +6676,29 @@ nsPluginByteRangeStreamListener::OnStartRequest(nsIRequest *request, nsISupports
       if (NS_SUCCEEDED(rv))
         return rv;
     }
-    mStreamConverter = 0;
+  }
+  mStreamConverter = 0;
+
+  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(request));
+  if (!httpChannel) {
+    return NS_ERROR_FAILURE;
+  }
+     
+  PRUint32 responseCode = 0;
+  rv = httpChannel->GetResponseStatus(&responseCode);
+  if (NS_FAILED(rv) || responseCode != 200) {
+    return NS_ERROR_FAILURE;
   }
 
   // if server cannot continue with byte range (206 status) and sending us whole object (200 status)
   // reset this seekable stream & try serve it to plugin instance as a file
-  rv = mFinalPluginStreamListener->ServeStreamAsFile(request, ctxt, rv);
-  // always use mFinalPluginStreamListener
-  mStreamConverter = mFinalPluginStreamListener;
+  mStreamConverter = finalStreamListener;
+  mRemoveMagicNumber = PR_TRUE;
+
+  //get nsPluginStreamListenerPeer* ptr from finalStreamListener 
+  nsPluginStreamListenerPeer *pslp = NS_REINTERPRET_CAST(nsPluginStreamListenerPeer*,
+                                     *(NS_REINTERPRET_CAST(void**, &finalStreamListener)));
+  rv = pslp->ServeStreamAsFile(request, ctxt);
   return rv;
 }
 
@@ -6671,23 +6706,27 @@ NS_IMETHODIMP
 nsPluginByteRangeStreamListener::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
                               nsresult status)
 {
-  if (mStreamConverter == mFinalPluginStreamListener) {
+  if (!mStreamConverter)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIStreamListener> finalStreamListener = do_QueryReferent(mWeakPtrPluginStreamListenerPeer);
+  if (!finalStreamListener) 
+    return NS_ERROR_FAILURE;
+
+  if (mRemoveMagicNumber) {
     // remove magic number from container
     nsCOMPtr<nsISupportsPRUint32> container = do_QueryInterface(ctxt);
     if (container) {
       PRUint32 magicNumber = 0;
       container->GetData(&magicNumber);
       if (magicNumber == MAGIC_REQUEST_CONTEXT) {
-        // to allow properly finish mFinalPluginStreamListener->OnStopRequest()
+        // to allow properly finish nsPluginStreamListenerPeer->OnStopRequest()
         // set it to something that is not the magic number.
         container->SetData(0);
-        // also unset mPendingRequests 
-        mFinalPluginStreamListener->mPendingRequests = 0;
-     
-        return mFinalPluginStreamListener->OnStopRequest(request, ctxt, status);
       }
+    } else {
+      NS_WARNING("Bad state of nsPluginByteRangeStreamListener");
     }
-    NS_WARNING("Bad state of nsPluginByteRangeStreamListener");
   }
   
   return mStreamConverter->OnStopRequest(request, ctxt, status);
@@ -6697,5 +6736,12 @@ NS_IMETHODIMP
 nsPluginByteRangeStreamListener::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
                                 nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
+  if (!mStreamConverter)
+    return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIStreamListener> finalStreamListener = do_QueryReferent(mWeakPtrPluginStreamListenerPeer);
+  if (!finalStreamListener)
+    return NS_ERROR_FAILURE;
+      
   return mStreamConverter->OnDataAvailable(request, ctxt, inStr, sourceOffset, count);
 }
