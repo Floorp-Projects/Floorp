@@ -747,18 +747,31 @@ if (regexp.anchorCh >= 0) {
     }
 
     private static int
-    getDecimalValue(char c, CompilerState state)
+    getDecimalValue(char c, CompilerState state, int maxValue,
+                    String overflowMessageId)
     {
+        boolean overflow = false;
+        int start = state.cp;
         char[] src = state.cpbegin;
         int value = c - '0';
-        while (state.cp < state.cpend) {
+        for (; state.cp != state.cpend; ++state.cp) {
             c = src[state.cp];
-            if (isDigit(c)) {
-                value = (10 * value) + (c - '0');
-                ++state.cp;
-            }
-            else
+            if (!isDigit(c)) {
                 break;
+            }
+            if (!overflow) {
+                int digit = c - '0';
+                if (value < (maxValue - digit) / 10) {
+                    value = value * 10 + digit;
+                } else {
+                    overflow = true;
+                    value = maxValue;
+                }
+            }
+        }
+        if (overflow) {
+            reportError(overflowMessageId,
+                        String.valueOf(src, start, state.cp - start));
         }
         return value;
     }
@@ -834,7 +847,8 @@ if (regexp.anchorCh >= 0) {
                 case '8':
                 case '9':
                     termStart = state.cp - 1;
-                    num = getDecimalValue(c, state);
+                    num = getDecimalValue(c, state, 0xFFFF,
+                                          "msg.overlarge.backref");
                     /*
                      * n > 9 and > count of parentheses,
                      * then treat as octal instead.
@@ -1043,16 +1057,6 @@ if (regexp.anchorCh >= 0) {
         case '?':
             reportError("msg.bad.quant", String.valueOf(src[state.cp - 1]));
             return false;
-        case '{':
-            /* Treat left-curly in a non-quantifier context as an error only
-             * if it's followed immediately by a decimal digit.
-             * This is an Perl extension.
-             */
-            if ((state.cp != state.cpend) && isDigit(src[state.cp])) {
-                reportError("msg.bad.quant", String.valueOf(src[state.cp - 1]));
-                return false;
-            }
-            // fall thru...
         default:
             state.result = new RENode(REOP_FLAT);
             state.result.chr = c;
@@ -1063,9 +1067,11 @@ if (regexp.anchorCh >= 0) {
         }
 
         term = state.result;
+        if (state.cp == state.cpend) {
+            return true;
+        }
         boolean hasQ = false;
-        if (state.cp < state.cpend) {
-            switch (src[state.cp]) {
+        switch (src[state.cp]) {
             case '+':
                 state.result = new RENode(REOP_QUANT);
                 state.result.min = 1;
@@ -1090,72 +1096,55 @@ if (regexp.anchorCh >= 0) {
                 state.progLength += 8;
                 hasQ = true;
                 break;
-            case '{':
-                {
-                    int min = 0;
-                    int max = -1;
-                    int errIndex = state.cp++;
+            case '{':  /* balance '}' */
+            {
+                int min = 0;
+                int max = -1;
+                int leftCurl = state.cp;
 
+               /* For Perl etc. compatibility, if quntifier does not match
+                * \{\d+(,\d*)?\} exactly back off from it
+                * being a quantifier, and chew it up as a literal
+                * atom next time instead.
+                */
+
+                c = src[++state.cp];
+                if (isDigit(c)) {
+                    ++state.cp;
+                    min = getDecimalValue(c, state, 0xFFFF,
+                                          "msg.overlarge.min");
                     c = src[state.cp];
-                    if (isDigit(c)) {
-                        ++state.cp;
-                        min = getDecimalValue(c, state);
-                        c = src[state.cp];
-                    } else {
-                        /* For Perl etc. compatibility, if a curly is not
-                         * followed by a proper digit, back off from it
-                         * being a quantifier, and chew it up as a literal
-                         * atom next time instead.
-                         */
-                        --state.cp;
-                        return true;
-                    }
-                    state.result = new RENode(REOP_QUANT);
-                    if ((min >> 16) != 0) {
-                        reportError("msg.overlarge.max",
-                                    String.valueOf(src[state.cp]));
-                        return false;
-                    }
                     if (c == ',') {
                         c = src[++state.cp];
                         if (isDigit(c)) {
                             ++state.cp;
-                            max = getDecimalValue(c, state);
+                            max = getDecimalValue(c, state, 0xFFFF,
+                                                  "msg.overlarge.max");
                             c = src[state.cp];
-                            if ((max >> 16) != 0) {
-                                reportError("msg.overlarge.max",
-                                            String.valueOf(src[state.cp]));
-                                return false;
-                            }
                             if (min > max) {
                                 reportError("msg.max.lt.min",
                                             String.valueOf(src[state.cp]));
                                 return false;
                             }
                         }
-                        if (max == 0) {
-                            reportError("msg.zero.quant",
-                                        String.valueOf(src[state.cp]));
-                            return false;
-                        }
                     } else {
                         max = min;
                     }
-                    state.result.min = min;
-                    state.result.max = max;
-                    /* QUANT, <min>, <max>, <parencount>,
-                                            <parenindex>, <next> ... <ENDCHILD> */
-                    state.progLength += 12;
+                    /* balance '{' */
                     if (c == '}') {
+                        state.result = new RENode(REOP_QUANT);
+                        state.result.min = min;
+                        state.result.max = max;
+                        // QUANT, <min>, <max>, <parencount>,
+                        // <parenindex>, <next> ... <ENDCHILD>
+                        state.progLength += 12;
                         hasQ = true;
-                        break;
-                    }
-                    else {
-                        reportError("msg.unterm.quant",
-                                    String.valueOf(src[state.cp]));
-                        return false;
                     }
                 }
+                if (!hasQ) {
+                    state.cp = leftCurl;
+                }
+                break;
             }
         }
         if (!hasQ)
