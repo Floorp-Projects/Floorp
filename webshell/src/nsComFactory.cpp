@@ -39,6 +39,8 @@
 #include "plevent.h"
 #include "prthread.h"
 #include "private/pprthred.h"
+#include "nsIServiceManager.h"
+#include "nsIEventQueueService.h"
 
 static HMODULE g_DllInst = NULL;
 
@@ -131,9 +133,26 @@ STDAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, void** ppv)
       PR_Free(newpath);
       
       //        PR_AttachThread(PR_USER_THREAD, PR_PRIORITY_NORMAL, NULL);
-      PL_InitializeEventsLib("");
       NS_SetupRegistry();
       
+      // Create the Event Queue for the UI thread...
+      //
+      // If an event queue already exists for the thread, then 
+      // CreateThreadEventQueue(...) will fail...
+      static NS_DEFINE_IID(kEventQueueServiceCID,   NS_EVENTQUEUESERVICE_CID);
+      static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
+
+      nsIEventQueueService* eventQService = nsnull;
+
+      rv = nsServiceManager::GetService(kEventQueueServiceCID,
+                                        kIEventQueueServiceIID,
+                                        (nsISupports **)&eventQService);
+      if (NS_SUCCEEDED(rv)) {
+        rv = eventQService->CreateThreadEventQueue();
+        nsServiceManager::ReleaseService(kEventQueueServiceCID, eventQService);
+      }
+
+
       isFirstTime = PR_FALSE;
     }
 
