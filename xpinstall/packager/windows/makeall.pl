@@ -101,7 +101,7 @@ exit(0);
 sub MakeConfigFile
 {
   # Make config.ini file
-  if(system("perl makecfgini.pl config.it $inStagePath $inDistPath\\xpi $inURLPath") != 0)
+  if(system("perl makecfgini.pl config.it $inDefaultVersion $inStagePath $inDistPath\\xpi $inURLPath") != 0)
   {
     exit(1);
   }

@@ -29,21 +29,27 @@
 #
 # Input: .it file
 #             - which is a .ini template
+#        version
+#             - version to display on the blue background
 #        Path to staging area
 #             - path on where the seamonkey built bits are staged to
+#        xpi path
+#             - path on where xpi files will be located at
 #        URL path
 #             - path to where the .xpi files are staged.  can be
 #               either ftp:// or http://
 #
-#   ie: perl makecfgini.pl z:\exposed\windows\32bit\en\5.0 ftp://sweetlou/products/client/seamonkey/windows/32bit/x86/1999-09-13-10-M10
+#   ie: perl makecfgini.pl config.it 5.0.0.1999120608 z:\exposed\windows\32bit\en\5.0 d:\builds\mozilla\dist\win32_0.obj\install\xpi ftp://sweetlou/products/client/seamonkey/windows/32bit/x86/1999-09-13-10-M10
 #
 
 # Make sure there are at least two arguments
-if($#ARGV < 3)
+if($#ARGV < 4)
 {
-  die "usage: $0 <.it file> <staging path> <.xpi path> <URL path>
+  die "usage: $0 <.it file> <version> <staging path> <.xpi path> <URL path>
 
        .it file     : input ini template file
+       version      : version to be shown in setup.  Typically the same version
+                      as show in mozilla.exe.
        staging path : path to where the components are staged at
        .xpi path    : path to where the .xpi files have been built to
        URL path     : URL path to where the .xpi files will be staged at.
@@ -52,9 +58,10 @@ if($#ARGV < 3)
 }
 
 $inItFile         = $ARGV[0];
-$inStagePath      = $ARGV[1];
-$inXpiPath        = $ARGV[2];
-$inURLPath        = $ARGV[3];
+$inVersion        = $ARGV[1];
+$inStagePath      = $ARGV[2];
+$inXpiPath        = $ARGV[3];
+$inURLPath        = $ARGV[4];
 
 # Get the name of the file replacing the .it extension with a .ini extension
 @inItFileSplit    = split(/\./,$inItFile);
@@ -125,13 +132,18 @@ while($line = <fpInIt>)
 
     print fpOutIni "Install Size Archive=$installSizeArchive\n";
   }
+  elsif($line =~ /\$Version\$/i)
+  {
+    # For each line read, search and replace $Version$ with the version passed in
+    $line =~ s/\$Version\$/$inVersion/i;
+    print fpOutIni $line;
+  }
   else
   {
     # For each line read, search and replace $InstallSizeSystem$ with the calulated size
     $line =~ s/\$URLPath\$/$inURLPath/i;
     print fpOutIni $line;
   }
-
 }
 
 print " done!\n";
