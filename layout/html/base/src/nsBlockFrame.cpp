@@ -164,6 +164,36 @@ RecordReflowStatus(PRBool aChildIsBlock, nsReflowStatus aFrameReflowStatus)
 
 //----------------------------------------------------------------------
 
+inline void CombineRects(const nsRect& r1, nsRect& r2)
+{
+  nscoord x0 = r2.x;
+  nscoord y0 = r2.y;
+  nscoord x1 = x0 + r2.width;
+  nscoord y1 = y0 + r2.height;
+  nscoord x = r1.x;
+  nscoord y = r1.y;
+  nscoord xmost = x + r1.width;
+  nscoord ymost = y + r1.height;
+  if (x < x0) {
+    x0 = x;
+  }
+  if (xmost > x1) {
+    x1 = xmost;
+  }
+  if (y < y0) {
+    y0 = y;
+  }
+  if (ymost > y1) {
+    y1 = ymost;
+  }
+  r2.x = x0;
+  r2.y = y0;
+  r2.width = x1 - x0;
+  r2.height = y1 - y0;
+}
+
+//----------------------------------------------------------------------
+
 class nsBlockReflowState {
 public:
   nsBlockReflowState(const nsHTMLReflowState& aReflowState,
@@ -184,9 +214,10 @@ public:
   void AddFloater(nsPlaceholderFrame* aPlaceholderFrame,
                   PRBool aInitialReflow);
 
-  void PlaceFloater(nsPlaceholderFrame* aFloater, PRBool& aIsLeftFloater);
+  void PlaceFloater(nsPlaceholderFrame* aFloater, PRBool* aIsLeftFloater);
 
-  void PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters);
+  void PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters,
+                                     PRBool aReflowFloaters);
 
   void PlaceCurrentLineFloaters(nsVoidArray* aFloaters);
 
@@ -224,6 +255,7 @@ public:
   PRBool mUnconstrainedHeight;
   nscoord mY;
   nscoord mKidXMost;
+  nsRect mFloaterCombinedArea;
 
   // Previous child. This is used when pulling up a frame to update
   // the sibling list.
@@ -334,15 +366,27 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
   // the availableHeight is constrained (this situation occurs when we
   // are paginated).
   mUnconstrainedHeight = PR_FALSE;
-  if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
+  if (NS_UNCONSTRAINEDSIZE != aReflowState.availableHeight) {
+    // We are in a paginated situation
     mContentArea.height = aReflowState.availableHeight;
+  }
+  else {
+    // When we are not in a paginated situation then we always use
+    // an constrained height.
     mUnconstrainedHeight = PR_TRUE;
+    mContentArea.height = NS_UNCONSTRAINEDSIZE;
+  }
+#if 0
+  if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
+    mUnconstrainedHeight = PR_TRUE;
+    mContentArea.height = aReflowState.availableHeight;
   }
   else {
     // Use constrained height
     nscoord tb = borderPadding.top + borderPadding.bottom;
     mContentArea.height = aReflowState.availableHeight - tb;
   }
+#endif
 
   mY = borderPadding.top;
   mBottomEdge = mContentArea.height;
@@ -1425,7 +1469,7 @@ nsBlockFrame::RecoverStateFrom(nsBlockReflowState& aState,
     aState.mY = aLine->mBounds.y;
     aState.PlaceCurrentLineFloaters(aLine->mFloaters);
     aState.mY = aLine->mBounds.YMost();
-    aState.PlaceBelowCurrentLineFloaters(aLine->mFloaters);
+    aState.PlaceBelowCurrentLineFloaters(aLine->mFloaters, PR_FALSE);
   }
 
   // Advance Y to be below the line.
@@ -1723,6 +1767,7 @@ nsBlockFrame::ReflowLine(nsBlockReflowState& aState,
   if (nsnull != aLine->mFloaters) {
     aLine->mFloaters->Clear();
   }
+  aState.mFloaterCombinedArea.SetRect(0, 0, 0, 0);
 
   // If the line is empty then first pull a frame into it so that we
   // know what kind of line it is (block or inline).
@@ -2899,46 +2944,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     lineLayout->RemoveBulletFrame(mBullet);
   }
 
-  // When a line has floaters, factor them into the combined-area
-  // computations.
-  if (nsnull != aLine->mFloaters) {
-    nscoord x0 = aLine->mCombinedArea.x;
-    nscoord y0 = aLine->mCombinedArea.y;
-    nscoord x1 = x0 + aLine->mCombinedArea.width;
-    nscoord y1 = y0 + aLine->mCombinedArea.height;
-    nsRect r;
-    nsVoidArray& floaters = *aLine->mFloaters;
-    PRInt32 i, n = floaters.Count();
-    for (i = 0; i < n; i++) {
-      // XXX This is an approximation! The floater may have a combined
-      // area that exceeds its bounding box!
-      // XXX Move this logic into the ReflowFloater pathway...
-      nsPlaceholderFrame* ph = (nsPlaceholderFrame*) floaters[i];
-      nsIFrame* floater = ph->GetAnchoredItem();
-      floater->GetRect(r);
-      nscoord x = r.x;
-      nscoord y = r.y;
-      nscoord xmost = x + r.width;
-      nscoord ymost = y + r.height;
-      if (x < x0) {
-        x0 = x;
-      }
-      if (xmost > x1) {
-        x1 = xmost;
-      }
-      if (y < y0) {
-        y0 = y;
-      }
-      if (ymost > y1) {
-        y1 = ymost;
-      }
-    }
-    aLine->mCombinedArea.x = x0;
-    aLine->mCombinedArea.y = y0;
-    aLine->mCombinedArea.width = x1 - x0;
-    aLine->mCombinedArea.height = y1 - y0;
-  }
-
   // Calculate the bottom margin for the line.
   nscoord lineBottomMargin = 0;
   if (0 == aLine->mBounds.height) {
@@ -3030,8 +3035,18 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 
   // Any below current line floaters to place?
   if (0 != aState.mPendingFloaters.Count()) {
-    aState.PlaceBelowCurrentLineFloaters(&aState.mPendingFloaters);
+    // Now is the time that we reflow them and update the computed
+    // line combined area.
+    aState.PlaceBelowCurrentLineFloaters(&aState.mPendingFloaters, PR_TRUE);
     aState.mPendingFloaters.Clear();
+  }
+
+  // When a line has floaters, factor them into the combined-area
+  // computations.
+  if (nsnull != aLine->mFloaters) {
+    // Combine the floater combined area (stored in aState) and the
+    // value computed by the line layout code.
+    CombineRects(aState.mFloaterCombinedArea, aLine->mCombinedArea);
   }
 
   // Apply break-after clearing if necessary
@@ -3980,56 +3995,47 @@ nsBlockFrame::DeleteChildsNextInFlow(nsIPresContext& aPresContext,
 // Floater support
 
 void
-nsBlockFrame::ReflowFloater(nsIPresContext& aPresContext,
-                            nsBlockReflowState& aState,
-                            nsIFrame* aFloaterFrame,
-                            nsHTMLReflowState& aFloaterReflowState)
+nsBlockFrame::ReflowFloater(nsBlockReflowState& aState,
+                            nsPlaceholderFrame* aPlaceholder,
+                            nsHTMLReflowMetrics& aMetrics)
 {
-  // If either dimension is constrained then get the border and
-  // padding values in advance.
-  const nsMargin& bp = aFloaterReflowState.mComputedBorderPadding;
-
-  // Compute the available width for the floater
-  if (aFloaterReflowState.HaveFixedContentWidth()) {
-    // When the floater has a contrained width, give it just enough
-    // space for its styled width plus its borders and paddings.
-    aFloaterReflowState.availableWidth = aFloaterReflowState.computedWidth +
-      bp.left + bp.right;
+  // Reflow the floater. Since floaters are continued we given them an
+  // unbounded height. Floaters with an auto width are sized to zero
+  // according to the css2 spec.
+  nsSize kidAvailSize(aState.mAvailSpaceRect.width, NS_UNCONSTRAINEDSIZE);
+  nsIFrame* floater = aPlaceholder->GetAnchoredItem();
+  nsHTMLReflowState reflowState(aState.mPresContext, aState.mReflowState,
+                                floater, kidAvailSize);
+  reflowState.lineLayout = nsnull;
+  if ((nsnull == aState.mReflowState.reflowCommand) ||
+      (floater != aState.mNextRCFrame)) {
+    // Stub out reflowCommand and repair reason in the reflowState
+    // when incremental reflow doesn't apply to the floater.
+    reflowState.reflowCommand = nsnull;
+    reflowState.reason =
+      (aState.mReflowState.reason == eReflowReason_Initial)
+      ? eReflowReason_Initial
+      : eReflowReason_Resize;
   }
-  else {
-    // CSS2 section 10.3.5: Floating non-replaced elements with an
-    // auto width have the computed value of zero. Therefore, don't
-    // bother reflowing them.
-    if (!NS_FRAME_IS_REPLACED(aFloaterReflowState.frameType)) {
-      // XXX Tables are weird and special, so check for them here...
-      const nsStyleDisplay* floaterDisplay;
-      aFloaterFrame->GetStyleData(eStyleStruct_Display,
-                                  (const nsStyleStruct*&)floaterDisplay);
-      if (NS_STYLE_DISPLAY_TABLE != floaterDisplay->mDisplay) {
-        return;
+  nsIHTMLReflow* ihr;
+  nsresult rv = floater->QueryInterface(kIHTMLReflowIID, (void**)&ihr);
+  if (NS_SUCCEEDED(rv)) {
+    nsReflowStatus status;
+    ihr->WillReflow(aState.mPresContext);
+    ihr->Reflow(aState.mPresContext, aMetrics, reflowState, status);
+    if (!NS_FRAME_IS_REPLACED(reflowState.frameType)) {
+      // CSS 10.3.5: If 'left', 'right', 'width', 'margin-left', or
+      // 'margin-right' are specified as 'auto', their computed value
+      // is '0'.
+      if (0 == reflowState.computedWidth) {
+#ifdef DEBUG
+        nsFrame::ListTag(stdout, floater);
+        printf(": auto sized floating element forced to zero width\n");
+#endif
+        aMetrics.width = 0;
       }
     }
-    aFloaterReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
-  }
-
-  // Compute the available height for the floater
-  if (aFloaterReflowState.HaveFixedContentHeight()) {
-    aFloaterReflowState.availableHeight = aFloaterReflowState.computedHeight + bp.top + bp.bottom;
-  }
-  else {
-    aFloaterReflowState.availableHeight = NS_UNCONSTRAINEDSIZE;
-  }
-
-  // Resize reflow the anchored item into the available space
-  nsIHTMLReflow*  floaterReflow;
-  if (NS_OK == aFloaterFrame->QueryInterface(kIHTMLReflowIID,
-                                             (void**)&floaterReflow)) {
-    nsHTMLReflowMetrics desiredSize(nsnull);
-    nsReflowStatus status;
-    floaterReflow->WillReflow(aPresContext);
-    floaterReflow->Reflow(aPresContext, desiredSize, aFloaterReflowState,
-                          status);
-    aFloaterFrame->SizeTo(desiredSize.width, desiredSize.height);
+    floater->SizeTo(aMetrics.width, aMetrics.height);
   }
 }
 
@@ -4054,36 +4060,19 @@ void
 nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder,
                                PRBool aInitialReflow)
 {
+  NS_PRECONDITION(nsnull != mCurrentLine, "null ptr");
+
   // Update the current line's floater array
-  NS_ASSERTION(nsnull != mCurrentLine, "null ptr");
   if (nsnull == mCurrentLine->mFloaters) {
     mCurrentLine->mFloaters = new nsVoidArray();
   }
   mCurrentLine->mFloaters->AppendElement(aPlaceholder);
 
-  // Reflow the floater
-  nsIFrame* floater = aPlaceholder->GetAnchoredItem();
-  nsSize kidAvailSize(0, 0);
-  nsHTMLReflowState reflowState(mPresContext, mReflowState, floater,
-                                kidAvailSize);
-  reflowState.lineLayout = nsnull;
-  if ((nsnull == mReflowState.reflowCommand) || (floater != mNextRCFrame)) {
-    // Stub out reflowCommand and repair reason in the reflowState
-    // when incremental reflow doesn't apply to the floater.
-    reflowState.reflowCommand = nsnull;
-    reflowState.reason =
-      ((mReflowState.reason == eReflowReason_Initial) || aInitialReflow)
-      ? eReflowReason_Initial
-      : eReflowReason_Resize;
-  }
-  mBlock->ReflowFloater(mPresContext, *this, floater, reflowState);
-
   // Now place the floater immediately if possible. Otherwise stash it
   // away in mPendingFloaters and place it later.
   if (mLineLayout->LineIsEmpty()) {
-    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-       ("nsBlockReflowState::AddFloater: IsLeftMostChild, placeHolder=%p",
-        aPlaceholder));
+    nsHTMLReflowMetrics metrics(nsnull);
+    mBlock->ReflowFloater(*this, aPlaceholder, metrics);
 
     // Flush out pending bottom margin before placing floater
     if (0 != mPrevBottomMargin) {
@@ -4102,12 +4091,15 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder,
     nscoord dx = ox - mSpaceManagerX;
     nscoord dy = oy - mSpaceManagerY;
     mSpaceManager->Translate(-dx, -dy);
-    PlaceFloater(aPlaceholder, isLeftFloater);
+    PlaceFloater(aPlaceholder, &isLeftFloater);
+
+    // Update the floater combined-area
+    // XXX SlideFrames will muck this up!
+    CombineRects(metrics.mCombinedArea, mFloaterCombinedArea);
 
     // Pass on updated available space to the current inline reflow engine
     GetAvailableSpace();
-    mLineLayout->UpdateBand(mAvailSpaceRect.x + BorderPadding().left,
-                            mY,
+    mLineLayout->UpdateBand(mAvailSpaceRect.x + BorderPadding().left, mY,
                             mAvailSpaceRect.width,
                             mAvailSpaceRect.height,
                             isLeftFloater);
@@ -4118,9 +4110,6 @@ nsBlockReflowState::AddFloater(nsPlaceholderFrame* aPlaceholder,
   else {
     // This floater will be placed after the line is done (it is a
     // below current line floater).
-    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
-       ("nsBlockReflowState::AddFloater: pending, placeHolder=%p",
-        aPlaceholder));
     mPendingFloaters.AppendElement(aPlaceholder);
   }
 }
@@ -4174,7 +4163,7 @@ nsBlockReflowState::IsLeftMostChild(nsIFrame* aFrame)
 
 void
 nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
-                                 PRBool& aIsLeftFloater)
+                                 PRBool* aIsLeftFloater)
 {
   // Save away the Y coordinate before placing the floater. We will
   // restore mY at the end after placing the floater. This is
@@ -4249,11 +4238,11 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
   // spacemanager</b> which means that the impacted region will be
   // <b>inside</b> the border/padding area.
   if (NS_STYLE_FLOAT_LEFT == floaterDisplay->mFloats) {
-    aIsLeftFloater = PR_TRUE;
+    *aIsLeftFloater = PR_TRUE;
     region.x = mAvailSpaceRect.x;
   }
   else {
-    aIsLeftFloater = PR_FALSE;
+    *aIsLeftFloater = PR_FALSE;
     region.x = mAvailSpaceRect.XMost() - region.width;
 
     // In case the floater is too big, don't go past the left edge
@@ -4300,7 +4289,8 @@ nsBlockReflowState::PlaceFloater(nsPlaceholderFrame* aPlaceholder,
  * Place below-current-line floaters.
  */
 void
-nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters)
+nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters,
+                                                  PRBool aReflowFloaters)
 {
   NS_PRECONDITION(aFloaters->Count() > 0, "no floaters");
 
@@ -4309,8 +4299,22 @@ nsBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaters)
     nsPlaceholderFrame* placeholderFrame = (nsPlaceholderFrame*)
       aFloaters->ElementAt(i);
     if (!IsLeftMostChild(placeholderFrame)) {
-      PRBool isLeftFloater;
-      PlaceFloater(placeholderFrame, isLeftFloater);
+      if (aReflowFloaters) {
+        // Before we can place it we have to reflow it
+        nsHTMLReflowMetrics metrics(nsnull);
+        mBlock->ReflowFloater(*this, placeholderFrame, metrics);
+
+        PRBool isLeftFloater;
+        PlaceFloater(placeholderFrame, &isLeftFloater);
+
+        // Update the floater combined-area
+        // XXX SlideFrames will muck this up!
+        CombineRects(metrics.mCombinedArea, mFloaterCombinedArea);
+      }
+      else {
+        PRBool isLeftFloater;
+        PlaceFloater(placeholderFrame, &isLeftFloater);
+      }
     }
   }
 }
@@ -4329,7 +4333,7 @@ nsBlockReflowState::PlaceCurrentLineFloaters(nsVoidArray* aFloaters)
       aFloaters->ElementAt(i);
     if (IsLeftMostChild(placeholderFrame)) {
       PRBool isLeftFloater;
-      PlaceFloater(placeholderFrame, isLeftFloater);
+      PlaceFloater(placeholderFrame, &isLeftFloater);
     }
   }
 }
