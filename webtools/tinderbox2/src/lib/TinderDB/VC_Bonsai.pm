@@ -94,7 +94,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.13 $ )[1];
+$VERSION = ( qw $Revision: 1.14 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -469,6 +469,11 @@ sub status_table_row {
       }
       $table .= "</table>";
 
+      # Do not display the full mail address in the status column
+
+      my $display_author=$author;
+      $display_author =~ s/\%.*//;
+
       # we display the list of names in 'teletype font' so that the
       # names do not bunch together. It seems to make a difference if
       # there is a <cr> between each link or not, but it does make a
@@ -476,7 +481,7 @@ sub status_table_row {
       # the group of links.
 
       my (%popup_args) = (
-                          "linktxt" => "\t\t<tt>$author</tt>",
+                          "linktxt" => "\t\t<tt>$display_author</tt>",
                           
                           "windowtxt" => $table,
                           "windowtitle" => ("$VC_NAME Info ".
@@ -489,11 +494,6 @@ sub status_table_row {
 
       my $mailto_author=$author;
       $mailto_author =~ s/\%/\@/;
-
-      # Do not display the full mail address in the status column
-
-      my $display_author=$author;
-      $display_author =~ s/\%.*//;
 
       # If you have a VCDisplay implementation you should make the
       # link point to its query method otherwise you want a 'mailto:'
@@ -519,7 +519,7 @@ sub status_table_row {
                            'tree' => $tree,
                            'mindate' => $mindate,
                            'maxdate' => $maxdate,
-                           'who' => $display_author,
+                           'who' => $author,
                            
                            %popup_args,
                              );
