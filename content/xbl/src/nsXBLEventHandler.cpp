@@ -20,6 +20,11 @@ nsXBLEventHandler::nsXBLEventHandler(nsIContent* aBoundElement, nsIContent* aHan
     kKeyCodeAtom = NS_NewAtom("keycode");
     kKeyAtom = NS_NewAtom("key");
     kCharCodeAtom = NS_NewAtom("charcode");
+    kPrimaryAtom = NS_NewAtom("primary");
+    kShiftAtom = NS_NewAtom("shift");
+    kControlAtom = NS_NewAtom("control");
+    kAltAtom = NS_NewAtom("alt");
+    kMetaAtom = NS_NewAtom("meta");
   }
 }
 
@@ -30,6 +35,11 @@ nsXBLEventHandler::~nsXBLEventHandler()
     NS_RELEASE(kKeyAtom);
     NS_RELEASE(kKeyCodeAtom);
     NS_RELEASE(kCharCodeAtom);
+    NS_RELEASE(kPrimaryAtom);
+    NS_RELEASE(kShiftAtom);
+    NS_RELEASE(kControlAtom);
+    NS_RELEASE(kAltAtom);
+    NS_RELEASE(kMetaAtom);
   }
 }
 
@@ -128,17 +138,17 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
   PRBool keyMatched = PR_FALSE;
 
   nsAutoString key;
-  mBoundElement->GetAttribute(kNameSpaceID_None, kKeyAtom, key);
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyAtom, key);
   if (!key.IsEmpty())
     keyMatched = IsMatchingCharCode(charCode, key);
   
   key = "";
-  mBoundElement->GetAttribute(kNameSpaceID_None, kKeyCodeAtom, key);
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kKeyCodeAtom, key);
   if (!key.IsEmpty())
     keyMatched = IsMatchingKeyCode(keyCode, key);
   
   key = "";
-  mBoundElement->GetAttribute(kNameSpaceID_None, kCharCodeAtom, key);
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kCharCodeAtom, key);
   if (!key.IsEmpty())
     keyMatched = IsMatchingCharCode(charCode, key);
   
@@ -146,6 +156,53 @@ nsXBLEventHandler::KeyEventMatched(nsIDOMKeyEvent* aKeyEvent)
     return PR_FALSE;
 
   // Now check modifier keys
+  nsAutoString modifier;
+  PRBool isModifierPresent;
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kPrimaryAtom, modifier);
+  if (modifier == trueString) {
+    // The XUL key must be set.  Hard code for now.
+    // XXX Eventually pick up using CSS3 key-equivalent property or somesuch
+#ifdef XP_MAC
+    aKeyEvent->GetMetaKey(&isModifierPresent);
+#else
+    aKeyEvent->GetCtrlKey(&isModifierPresent);
+#endif
+
+    if (!isModifierPresent)
+      return PR_FALSE;
+  }
+
+  // Check for shift.
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kShiftAtom, modifier);
+  if (modifier == trueString) {
+    aKeyEvent->GetShiftKey(&isModifierPresent);
+    if (!isModifierPresent)
+      return PR_FALSE;
+  }
+
+  // Check for ctrl.
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kControlAtom, modifier);
+  if (modifier == trueString) {
+    aKeyEvent->GetCtrlKey(&isModifierPresent);
+    if (!isModifierPresent)
+      return PR_FALSE;
+  }
+
+  // Check for meta.
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kMetaAtom, modifier);
+  if (modifier == trueString) {
+    aKeyEvent->GetMetaKey(&isModifierPresent);
+    if (!isModifierPresent)
+      return PR_FALSE;
+  }
+
+  // Check for alt.
+  mHandlerElement->GetAttribute(kNameSpaceID_None, kAltAtom, modifier);
+  if (modifier == trueString) {
+    aKeyEvent->GetAltKey(&isModifierPresent);
+    if (!isModifierPresent)
+      return PR_FALSE;
+  }
 
   return PR_TRUE;
 }
@@ -155,6 +212,8 @@ nsXBLEventHandler::MouseEventMatched(nsIDOMUIEvent* aMouseEvent)
 {
   nsAutoString trueString = "true";
   nsAutoString falseString = "false";
+
+  // XXX Check for button and modifier keys.
 
   return PR_TRUE;
 }
