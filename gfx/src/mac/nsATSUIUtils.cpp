@@ -432,6 +432,56 @@ nsATSUIToolkit::GetTextDimensions(
   return NS_OK;
 }
 
+#ifdef MOZ_MATHML
+//------------------------------------------------------------------------
+// GetBoundingMetrics
+//
+//------------------------------------------------------------------------
+nsresult 
+nsATSUIToolkit::GetBoundingMetrics(
+  const PRUnichar *aCharPt, 
+  nsBoundingMetrics &oBoundingMetrics,
+  short aSize, short aFontNum,
+  PRBool aBold, PRBool aItalic, 
+  nscolor aColor)
+{
+  if(!nsATSUIUtils::IsAvailable())
+    return NS_ERROR_NOT_INITIALIZED;
+
+  StPortSetter setter(mPort);
+
+  ATSUTextLayout aTxtLayout;
+  StartDraw(aCharPt, aSize, aFontNum, aBold, aItalic, aColor, aTxtLayout);
+  if(nsnull == aTxtLayout)
+    return NS_ERROR_FAILURE;
+
+  OSStatus err = noErr;
+  Rect rect;
+  ATSUTextMeasurement width;
+
+  if((err = ATSUMeasureTextImage(aTxtLayout, 
+    kATSUFromTextBeginning, kATSUToTextEnd, 0, 0, &rect)) != noErr)
+  {
+    NS_WARNING("ATSUMeasureTextImage failed");
+    return NS_ERROR_FAILURE;
+  }
+
+  oBoundingMetrics.leftBearing = rect.left;
+  oBoundingMetrics.rightBearing = rect.right;
+  oBoundingMetrics.ascent = -rect.top;
+  oBoundingMetrics.descent = rect.bottom;
+
+  if((err = ATSUMeasureText(aTxtLayout, kATSUFromTextBeginning, kATSUToTextEnd, 
+    NULL, &width, NULL, NULL)) != noErr)
+  {
+    oBoundingMetrics.width = oBoundingMetrics.rightBearing;
+  }
+  else
+    oBoundingMetrics.width = FixRound(width);
+
+  return NS_OK;
+}
+#endif // MOZ_MATHML
 
 //------------------------------------------------------------------------
 //	DrawString
