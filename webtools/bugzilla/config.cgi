@@ -32,7 +32,6 @@ use strict;
 # Include the Bugzilla CGI and general utility library.
 use lib qw(.);
 require "CGI.pl";
-use Bugzilla::DB;
 
 # Retrieve this installation's configuration.
 GetVersionTable();
