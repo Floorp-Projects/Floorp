@@ -1,5 +1,5 @@
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
- * 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -21,6 +21,7 @@
  *               Ian Wilkinson <iw@ennoble.com>
  *               Ashutosh Kulkarni <ashuk@eng.sun.com>
  *               Ed Burns <edburns@acm.org>
+ *               Kyle Yuan <kyle.yuan@sun.com>
  */
 
 /*
@@ -52,22 +53,29 @@ wsRealizeBrowserEvent::wsRealizeBrowserEvent(WebShellInitContext * yourInitConte
 void *
 wsRealizeBrowserEvent::handleEvent ()
 {
-  nsresult rv = nsnull;
+    nsresult rv = nsnull;
 
     nsCOMPtr<nsIWebBrowser> webBrowser = nsnull;
     webBrowser = do_CreateInstance(NS_WEBBROWSER_CONTRACTID);
-    
     mInitContext->webBrowser = webBrowser;
-    
+
+    // create our BrowserContainer, which implements many many things.
+
+    CBrowserContainer *browserContainer =
+        new CBrowserContainer(mInitContext->webBrowser, mInitContext->env,
+                              mInitContext);
+    mInitContext->browserContainer = browserContainer;
+
+    webBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, browserContainer));
+
     // Get the BaseWindow from the DocShell - upcast
     //  nsCOMPtr<nsIBaseWindow> docShellAsWin(do_QueryInterface(webBrowser));
-	nsCOMPtr<nsIBaseWindow> docShellAsWin;
-	rv = webBrowser->QueryInterface(NS_GET_IID(nsIBaseWindow), getter_AddRefs(docShellAsWin));
-    
-    mInitContext->baseWindow = docShellAsWin;
-    
+    nsCOMPtr<nsIBaseWindow> baseWindow;
+    baseWindow = do_QueryInterface(webBrowser, &rv);
+    mInitContext->baseWindow = baseWindow;
+
     printf ("Init the baseWindow\n");
-    
+
 #ifdef XP_UNIX
     GtkWidget * bin;
     bin = (GtkWidget *) mInitContext->gtkWinPtr;
@@ -78,51 +86,33 @@ wsRealizeBrowserEvent::handleEvent ()
     if (prLogModuleInfo) {
         PR_LOG(prLogModuleInfo, 3, ("Ashu Debugs - Inside InitMozillaStuff(%lx): - after Init Call...\n", mInitContext));
     }
-#else    
+#else
     rv = mInitContext->baseWindow->InitWindow((nativeWindow) mInitContext->parentHWnd, nsnull,
                                              mInitContext->x, mInitContext->y, mInitContext->w, mInitContext->h);
 #endif
-    
+
     printf("Create the BaseWindow...\n");
-    
+
     rv = mInitContext->baseWindow->Create();
-    
+
     if (NS_FAILED(rv)) {
         mInitContext->initFailCode = kInitWebShellError;
         return (void *) rv;
     }
-    
+
     // Create the DocShell
-    
+
     mInitContext->docShell = do_GetInterface(mInitContext->webBrowser);
-    
+
     if (!mInitContext->docShell) {
         mInitContext->initFailCode = kCreateDocShellError;
         return (void *) rv;
     }
-    
-    // create our BrowserContainer, which implements many many things.
-    
-    mInitContext->browserContainer = 
-        new CBrowserContainer(mInitContext->webBrowser, mInitContext->env, 
-                              mInitContext);
-    
-    // set the WebShellContainer.  This is a pain.  It's necessary
-    // because nsWebShell.cpp still checks for mContainer all over the
-    // place.
-    nsCOMPtr<nsIWebShellContainer> wsContainer(do_QueryInterface(mInitContext->browserContainer));
-    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mInitContext->docShell));
-    webShell->SetContainer(wsContainer);
-    
-    // set the TreeOwner
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mInitContext->docShell));
-    nsCOMPtr<nsIDocShellTreeOwner> treeOwner(do_QueryInterface(mInitContext->browserContainer));
-    docShellAsItem->SetTreeOwner(treeOwner);
-    
+
     // set the docloaderobserver PENDING(edburns): how to we make our
     // presence as a nsIWebProgressListener know?n
 
-	printf("Creation Done.....\n");
+    printf("Creation Done.....\n");
     // Get the WebNavigation Object from the DocShell
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mInitContext->docShell));
     mInitContext->webNavigation = webNav;
@@ -134,14 +124,14 @@ wsRealizeBrowserEvent::handleEvent ()
             return (void *) rv;
         }
     }
-    
-    
+
+
     // Set the History
     //    mInitContext->webNavigation->SetSessionHistory(gHistory);
-    
+
     // Save the sessionHistory in the initContext
     //    mInitContext->sHistory = gHistory;
-    
+
     printf("Show the webBrowser\n");
     // Show the webBrowser
     rv = mInitContext->baseWindow->SetVisibility(PR_TRUE);
@@ -149,8 +139,8 @@ wsRealizeBrowserEvent::handleEvent ()
         mInitContext->initFailCode = kShowWebShellError;
         return (void *) rv;
     }
-    
-    mInitContext->initComplete = TRUE;  
+
+    mInitContext->initComplete = TRUE;
 
     // we will check this value in WindowCreator::CreateChromeWindow
     gNewWindowInitContext = mInitContext;
