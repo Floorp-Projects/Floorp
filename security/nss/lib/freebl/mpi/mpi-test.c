@@ -38,7 +38,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- * $Id: mpi-test.c,v 1.5 2000/08/29 04:26:23 nelsonb%netscape.com Exp $
+ * $Id: mpi-test.c,v 1.6 2000/09/12 00:41:08 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -116,6 +116,8 @@ char   *mp15 =
 char   *mp16 = "4A724340668DB150339A70";
 char   *mp17 = "8ADB90F58";
 char   *mp18 = "C64C230AB20E5";
+char *mp19 = "F1C9DACDA287F2E3C88DCE2393B8F53DAAAC1196DC36510962B6B59454CFE64B";
+char *mp20 = "D445662C8B6FE394107B867797750C326E0F4A967E135FC430F6CD7207913AC7";
 
 mp_digit md1 = 0;
 mp_digit md2 = 0x1;
@@ -283,6 +285,11 @@ char *e_mpc2d3 = "100000000000000000000000000000000";
 
 char *t_mp9    = "FB9B6E32FF0452A34746";
 char *i_mp27   = "B6AD8DCCDAF92B6FE57D062FFEE3A99";
+char *i_mp2019 = 
+"BDF3D88DC373A63EED92903115B03FC8501910AF68297B4C41870AED3EA9F839";
+/* "15E3FE09E8AE5523AABA197BD2D16318D3CA148EDF4AE1C1C52FC96AFAF5680B"; */
+
+
 char *t_mp15 =
 "795853094E59B0008093BCA8DECF68587C64BDCA2F3F7F8963DABC12F1CFFFA9B8C4"
 "365232FD4751870A0EF6CA619287C5D8B7F1747D95076AB19645EF309773E9EACEA0"
@@ -1341,7 +1348,20 @@ int test_invmod(void)
   mp_clear(&a); mp_clear(&m);
 
   if(strcmp(g_intbuf, i_mp27) != 0) {
-    reason("error: computed %s, expected %s\n", g_intbuf, i_mp27);
+    reason("error: invmod test 1 computed %s, expected %s\n", g_intbuf, i_mp27);
+    return 1;
+  }
+
+  mp_init(&a); mp_init(&m);
+  mp_read_radix(&a, mp20, 16); mp_read_radix(&m, mp19, 16);
+
+  IFOK( mp_invmod(&a, &m, &a) );
+
+  mp_toradix(&a, g_intbuf, 16);
+  mp_clear(&a); mp_clear(&m);
+
+  if(strcmp(g_intbuf, i_mp2019) != 0) {
+    reason("error: invmod test 2 computed %s, expected %s\n", g_intbuf, i_mp2019);
     return 1;
   }
 
