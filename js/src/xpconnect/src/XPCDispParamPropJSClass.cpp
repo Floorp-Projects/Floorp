@@ -103,7 +103,17 @@ XPC_PP_SetProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
     params->SetNamedPropID();
     // params will own var
     params->InsertParam(var);
-    return paramProp->Invoke(ccx, XPCDispObject::CALL_SETTER, vp);
+    // Save off the value passed in so we can return it.
+    // Invoke resets the value to what ever IDispatch returns, in this
+    // case empty, converted to undefined
+    jsval retJSVal = *vp;
+    AUTO_MARK_JSVAL(ccx, retJSVal);
+    if (paramProp->Invoke(ccx, XPCDispObject::CALL_SETTER, vp))
+    {
+        *vp = retJSVal;
+        return JS_TRUE;
+    }
+    return JS_FALSE;
 }
 
 /**
