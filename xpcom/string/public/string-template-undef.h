@@ -54,5 +54,6 @@
 #undef nsTDependentSubstring_CharT
 #undef nsTXPIDLString_CharT
 #undef nsTGetterCopies_CharT
+#undef nsTAdoptingString_CharT
 #undef nsTPromiseFlatString_CharT
 #undef TPromiseFlatString_CharT

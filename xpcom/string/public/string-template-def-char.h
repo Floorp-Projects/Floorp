@@ -53,5 +53,6 @@
 #define nsTDependentSubstring_CharT         nsDependentCSubstring
 #define nsTXPIDLString_CharT                nsXPIDLCString
 #define nsTGetterCopies_CharT               nsCGetterCopies
+#define nsTAdoptingString_CharT             nsAdoptingCString
 #define nsTPromiseFlatString_CharT          nsPromiseFlatCString
 #define TPromiseFlatString_CharT            PromiseFlatCString
