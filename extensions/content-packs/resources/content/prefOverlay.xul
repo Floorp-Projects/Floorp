@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE window SYSTEM "chrome://content-packs/locale/prefOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://content-packs/locale/prefOverlay.dtd">
 
 <overlay id="contentPackPrefOverlay"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
