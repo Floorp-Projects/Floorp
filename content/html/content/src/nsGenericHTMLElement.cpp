@@ -2159,6 +2159,12 @@ nsGenericHTMLElement::ParseValueOrPercentOrProportional(const nsString& aString,
       if (val > 100) val = 100;
       aResult.SetPercentValue(float(val)/100.0f);
     } else if (tmp.Length() && tmp.Last() == '*') {
+      if (tmp.Length() == 1) {
+        // special case: HTML spec says a value '*' == '1*'
+        // see http://www.w3.org/TR/html4/types.html#type-multi-length
+        // b=29061
+        val = 1;
+      }
       aResult.SetIntValue(val, eHTMLUnit_Proportional); // proportional values are integers
     } else {
       if (eHTMLUnit_Pixel == aValueUnit) {
