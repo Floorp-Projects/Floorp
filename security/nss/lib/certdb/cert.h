@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.29 2002/11/15 05:03:53 jpierre%netscape.com Exp $
+ * $Id: cert.h,v 1.30 2002/12/10 17:41:16 relyea%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -784,6 +784,11 @@ extern SECStatus CERT_EncodeAndAddExtension
 
 extern SECStatus CERT_EncodeAndAddBitStrExtension
    (void *exthandle, int idtag, SECItem *value, PRBool critical);
+
+
+extern SECStatus
+CERT_EncodeAltNameExtension(PRArenaPool *arena,  CERTGeneralName  *value, SECItem *encodedValue);
+
 
 /*
 ** Finish adding cert extensions.  Does final processing on extension

@@ -58,9 +58,6 @@ CERT_EncodePublicKeyUsagePeriod(PRArenaPool *arena, PKUPEncodedContext *pkup,
 				SECItem *encodedValue);
 
 extern SECStatus
-CERT_EncodeAltNameExtension(PRArenaPool *arena,  CERTGeneralName  *value, SECItem *encodedValue);
-
-extern SECStatus
 CERT_EncodeNameConstraintsExtension(PRArenaPool *arena, CERTNameConstraints  *value,
 			    SECItem *encodedValue);
 extern CERTGeneralName *
