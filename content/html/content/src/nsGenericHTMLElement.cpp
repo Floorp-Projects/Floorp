@@ -216,7 +216,7 @@ nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsString& aDecl)
       result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl, &hint);
       if (NS_SUCCEEDED(result)) {
         if (doc) {
-          doc->AttributeChanged(mContent, nsHTMLAtoms::style, hint);
+          doc->AttributeChanged(mContent, kNameSpaceID_None, nsHTMLAtoms::style, hint);
         }
       }
       if (cssLoader) {
@@ -312,42 +312,42 @@ nsGenericHTMLElement::GetTagName(nsString& aTagName)
 nsresult
 nsGenericHTMLElement::GetId(nsString& aId)
 {
-  GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, aId);
+  GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, aId);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetId(const nsString& aId)
 {
-  SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::id, aId, PR_TRUE);
+  SetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, aId, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::GetTitle(nsString& aTitle)
 {
-  GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::title, aTitle);
+  GetAttribute(kNameSpaceID_None, nsHTMLAtoms::title, aTitle);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetTitle(const nsString& aTitle)
 {
-  SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::title, aTitle, PR_TRUE);
+  SetAttribute(kNameSpaceID_None, nsHTMLAtoms::title, aTitle, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::GetLang(nsString& aLang)
 {
-  GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::lang, aLang);
+  GetAttribute(kNameSpaceID_None, nsHTMLAtoms::lang, aLang);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetLang(const nsString& aLang)
 {
-  SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::lang, aLang, PR_TRUE);
+  SetAttribute(kNameSpaceID_None, nsHTMLAtoms::lang, aLang, PR_TRUE);
   return NS_OK;
 }
 
@@ -373,21 +373,21 @@ nsGenericHTMLElement::GetDir(nsString& aDir)
 nsresult
 nsGenericHTMLElement::SetDir(const nsString& aDir)
 {
-  SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::dir, aDir, PR_TRUE);
+  SetAttribute(kNameSpaceID_None, nsHTMLAtoms::dir, aDir, PR_TRUE);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::GetClassName(nsString& aClassName)
 {
-  GetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, aClassName);
+  GetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, aClassName);
   return NS_OK;
 }
 
 nsresult
 nsGenericHTMLElement::SetClassName(const nsString& aClassName)
 {
-  SetAttribute(kNameSpaceID_HTML, nsHTMLAtoms::kClass, aClassName, PR_TRUE);
+  SetAttribute(kNameSpaceID_None, nsHTMLAtoms::kClass, aClassName, PR_TRUE);
   return NS_OK;
 }
 
@@ -588,7 +588,7 @@ nsGenericHTMLElement::ParseAttributeString(const nsString& aStr,
   nsAutoString  lower;
   aStr.ToLowerCase(lower);  
   aName = NS_NewAtom(lower);
-  aNameSpaceID = kNameSpaceID_HTML;
+  aNameSpaceID = kNameSpaceID_None;
   
   return NS_OK;
 }
@@ -720,7 +720,7 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
   NS_RELEASE(htmlContent);
 
   if (aNotify && (nsnull != mDocument)) {
-    mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
+    mDocument->AttributeChanged(mContent, aNameSpaceID, aAttribute, NS_STYLE_HINT_UNKNOWN);
   }
 
   return result;
@@ -782,7 +782,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
         NS_RELEASE(sheet);
     }
     if (aNotify) {
-      mDocument->AttributeChanged(mContent, aAttribute, impact);
+      mDocument->AttributeChanged(mContent, kNameSpaceID_None, aAttribute, impact);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
@@ -840,7 +840,7 @@ nsGenericHTMLElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aAttribute, 
       NS_RELEASE(sheet);
     }
     if (aNotify) {
-      mDocument->AttributeChanged(mContent, aAttribute, impact);
+      mDocument->AttributeChanged(mContent, aNameSpaceID, aAttribute, impact);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
@@ -955,7 +955,7 @@ nsGenericHTMLElement::GetAttributeNameAt(PRInt32 aIndex,
                                          PRInt32& aNameSpaceID, 
                                          nsIAtom*& aName) const
 {
-  aNameSpaceID = kNameSpaceID_HTML;
+  aNameSpaceID = kNameSpaceID_None;
   if (nsnull != mAttributes) {
     return mAttributes->GetAttributeNameAt(aIndex, aName);
   }
@@ -1272,7 +1272,7 @@ nsGenericHTMLElement::ToHTMLString(nsString& aBuf) const
       aBuf.Append(' ');
       aBuf.Append(name);
       value.Truncate();
-      GetAttribute(kNameSpaceID_HTML, atom, value);
+      GetAttribute(kNameSpaceID_None, atom, value);
       NS_RELEASE(atom);
       if (value.Length() > 0) {
         aBuf.Append('=');
@@ -2350,7 +2350,7 @@ nsGenericHTMLLeafElement::BeginConvertToXIF(nsXIFConverter& aConverter) const
       atom->ToString(name);
 
       value.Truncate();
-      GetAttribute(kNameSpaceID_HTML, atom, value);
+      GetAttribute(kNameSpaceID_None, atom, value);
       NS_RELEASE(atom);
       
       aConverter.AddHTMLAttribute(name,value);
@@ -2813,7 +2813,7 @@ nsGenericHTMLContainerElement::BeginConvertToXIF(nsXIFConverter& aConverter) con
       atom->ToString(name);
 
       value.Truncate();
-      GetAttribute(kNameSpaceID_HTML, atom, value);
+      GetAttribute(kNameSpaceID_None, atom, value);
       NS_RELEASE(atom);
       
       aConverter.AddHTMLAttribute(name,value);
