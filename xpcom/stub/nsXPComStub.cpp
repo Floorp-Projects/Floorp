@@ -77,10 +77,12 @@ static const XPCOMFunctions kFrozenFunctions = {
     &NS_StringCloneData,
     &NS_CStringCloneData,
 
-    // these functions were added post 1.7 (Firefox 1.0)
+    // these functions were added post 1.7 (post Firefox 1.0)
     &NS_Alloc_P,
     &NS_Realloc_P,
-    &NS_Free_P
+    &NS_Free_P,
+    &NS_StringContainerInit2,
+    &NS_CStringContainerInit2
 };  
 
 extern "C" NS_EXPORT nsresult

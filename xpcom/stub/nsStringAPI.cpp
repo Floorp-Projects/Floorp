@@ -55,6 +55,51 @@ NS_StringContainerInit(nsStringContainer &aContainer)
   return NS_OK;
 }
 
+NS_STRINGAPI(nsresult)
+NS_StringContainerInit2(nsStringContainer &aContainer,
+                        const PRUnichar   *aData,
+                        PRUint32           aDataLength,
+                        PRUint32           aFlags)
+{
+  NS_ASSERTION(sizeof(nsStringContainer) >= sizeof(nsString),
+      "nsStringContainer is not large enough");
+
+  if (!aData)
+  {
+    new (&aContainer) nsString();
+  }
+  else
+  {
+    if (aDataLength == PR_UINT32_MAX)
+    {
+      NS_ENSURE_ARG(!(aFlags & NS_STRING_CONTAINER_INIT_SUBSTRING));
+      aDataLength = nsCharTraits<PRUnichar>::length(aData);
+    }
+
+    if (aFlags & (NS_STRING_CONTAINER_INIT_DEPEND |
+                  NS_STRING_CONTAINER_INIT_ADOPT))
+    {
+      PRUint32 flags;
+      if (aFlags & NS_STRING_CONTAINER_INIT_SUBSTRING)
+        flags = nsSubstring::F_NONE;
+      else
+        flags = nsSubstring::F_TERMINATED;
+
+      if (aFlags & NS_STRING_CONTAINER_INIT_ADOPT)
+        flags |= nsSubstring::F_OWNED;
+
+      new (&aContainer) nsSubstring(NS_CONST_CAST(PRUnichar *, aData),
+                                    aDataLength, flags);
+    }
+    else
+    {
+      new (&aContainer) nsString(aData, aDataLength);
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_STRINGAPI(void)
 NS_StringContainerFinish(nsStringContainer &aContainer)
 {
@@ -136,6 +181,51 @@ NS_CStringContainerInit(nsCStringContainer &aContainer)
 
   // use placement new to avoid heap allocating nsCString object
   new (&aContainer) nsCString();
+
+  return NS_OK;
+}
+
+NS_STRINGAPI(nsresult)
+NS_CStringContainerInit2(nsCStringContainer &aContainer,
+                         const char         *aData,
+                         PRUint32            aDataLength,
+                         PRUint32            aFlags)
+{
+  NS_ASSERTION(sizeof(nsCStringContainer) >= sizeof(nsCString),
+      "nsStringContainer is not large enough");
+
+  if (!aData)
+  {
+    new (&aContainer) nsCString();
+  }
+  else
+  {
+    if (aDataLength == PR_UINT32_MAX)
+    {
+      NS_ENSURE_ARG(!(aFlags & NS_CSTRING_CONTAINER_INIT_SUBSTRING));
+      aDataLength = nsCharTraits<char>::length(aData);
+    }
+
+    if (aFlags & (NS_CSTRING_CONTAINER_INIT_DEPEND |
+                  NS_CSTRING_CONTAINER_INIT_ADOPT))
+    {
+      PRUint32 flags;
+      if (aFlags & NS_CSTRING_CONTAINER_INIT_SUBSTRING)
+        flags = nsCSubstring::F_NONE;
+      else
+        flags = nsCSubstring::F_TERMINATED;
+
+      if (aFlags & NS_CSTRING_CONTAINER_INIT_ADOPT)
+        flags |= nsCSubstring::F_OWNED;
+
+      new (&aContainer) nsCSubstring(NS_CONST_CAST(char *, aData),
+                                     aDataLength, flags);
+    }
+    else
+    {
+      new (&aContainer) nsCString(aData, aDataLength);
+    }
+  }
 
   return NS_OK;
 }
