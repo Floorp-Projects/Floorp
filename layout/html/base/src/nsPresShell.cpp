@@ -5951,6 +5951,19 @@ PresShell::HandleEvent(nsIView         *aView,
     return NS_OK;
   }
 
+
+  // We really don't want to just drop a focus event on the floor here,
+  // because the widget-level focus change will have already happened
+  // by the time we get the event.  Rather than dropping it, force an
+  // initial reflow if we haven't done one yet, so that we can process
+  // the event.
+
+  if (aEvent->message == NS_GOTFOCUS && !mDidInitialReflow && mViewManager) {
+    nscoord width, height;
+    mViewManager->GetWindowDimensions(&width, &height);
+    InitialReflow(width, height);
+  }
+
   aView->GetClientData(clientData);
   frame = (nsIFrame *)clientData;
 
