@@ -60,3 +60,4 @@ public:
 };
 
 #endif //nsUnicodeNormalizer_h__
+
