@@ -3642,6 +3642,10 @@ pk11_cert_collect(NSSLOWCERTCertificate *cert,void *arg)
 {
     pk11CertData *cd = (pk11CertData *)arg;
 
+    if (cert == NULL) {
+	return SECSuccess;
+    }
+
     if (cd->certs == NULL) {
 	return SECFailure;
     }
