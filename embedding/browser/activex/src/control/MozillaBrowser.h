@@ -348,6 +348,7 @@ protected:
 	virtual HRESULT OnEditorCommand(DWORD nCmdID);
 	virtual BOOL IsValid();
 	virtual int MessageBox(LPCTSTR lpszText, LPCTSTR lpszCaption = _T(""), UINT nType = MB_OK);
+	virtual HRESULT CheckBinDirPath();
 
 	virtual HRESULT LoadBrowserHelpers();
 	virtual HRESULT UnloadBrowserHelpers();

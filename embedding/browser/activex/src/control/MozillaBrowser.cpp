@@ -26,6 +26,7 @@
 #include <string>
 #include <objidl.h>
 //#include <comdef.h>
+#include <shlobj.h>
 
 #include "MozillaControl.h"
 #include "MozillaBrowser.h"
@@ -122,6 +123,8 @@ CMozillaBrowser::CMozillaBrowser()
 	// Open registry keys
 	m_SystemKey.Create(HKEY_LOCAL_MACHINE, MOZ_CONTROL_REG_KEY);
 	m_UserKey.Create(HKEY_CURRENT_USER, MOZ_CONTROL_REG_KEY);
+
+	CheckBinDirPath();//szBinDirPath, dwBinDirPath);
 
 	// Initialise the web shell
 	Initialize();
@@ -560,31 +563,35 @@ BOOL CMozillaBrowser::IsValid()
 	return m_bValidBrowser;
 }
 
-/////////////////////////////////////////////////////////////////////////////
-
-static NS_DEFINE_IID(kIWebShellIID, NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 // Initialises the web shell engine
 HRESULT CMozillaBrowser::Initialize()
 {
-	// Initialise XPCOM
-	TCHAR szBinDirPath[MAX_PATH];
-	DWORD dwBinDirPath = sizeof(szBinDirPath) / sizeof(szBinDirPath[0]);
 
+	// Initialise XPCOM
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
 	// Can't call NS_InitXPCom more than once or things go boom!
 	if (!m_bXPCOMInitialised)
 #endif
 	{
+		TCHAR szBinDirPath[MAX_PATH];
+		DWORD dwBinDirPath = sizeof(szBinDirPath) / sizeof(szBinDirPath[0]);
+
+		// Get the bin directory path
 		memset(szBinDirPath, 0, sizeof(szBinDirPath));
-		if (m_SystemKey.QueryValue(szBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH, &dwBinDirPath) == ERROR_SUCCESS)
+		m_SystemKey.QueryValue(szBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH, &dwBinDirPath);
+
+		// Create an object to represent the path
+		nsILocalFile *pBinDirPath = nsnull;
+		if (_tcslen(szBinDirPath) > 0)
 		{
 			USES_CONVERSION;
-			nsILocalFile *pBinDirPath = nsnull;
 			nsresult res = NS_NewLocalFile(T2A(szBinDirPath), &pBinDirPath);
+		}
+
+		// Initialise XPCOM
+		if (pBinDirPath)
+		{
 			NS_InitXPCOM(&m_pIServiceManager, pBinDirPath);
 			NS_RELEASE(pBinDirPath);
 		}
@@ -592,6 +599,7 @@ HRESULT CMozillaBrowser::Initialize()
 		{
 			NS_InitXPCOM(&m_pIServiceManager, nsnull);
 		}
+
 #ifdef HACK_AROUND_NONREENTRANT_INITXPCOM
 		m_bXPCOMInitialised = TRUE;
 #endif
@@ -621,6 +629,7 @@ HRESULT CMozillaBrowser::Initialize()
 	return S_OK;
 }
 
+
 // Terminates the web shell engine
 HRESULT CMozillaBrowser::Terminate()
 {
@@ -643,6 +652,85 @@ HRESULT CMozillaBrowser::Terminate()
 
 	return S_OK;
 }
+
+
+// Shows a dialog that the user can pick the bin directory from
+HRESULT CMozillaBrowser::CheckBinDirPath()
+{
+	TCHAR szBinDirPath[MAX_PATH];
+	DWORD dwBinDirPath = sizeof(szBinDirPath) / sizeof(szBinDirPath[0]);
+
+	// Get the bin directory path
+	memset(szBinDirPath, 0, sizeof(szBinDirPath));
+	if (m_SystemKey.QueryValue(szBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH, &dwBinDirPath) == ERROR_SUCCESS)
+	{
+		return S_OK;
+	}
+
+	// TODO store string in resource
+	UINT nAnswer = ::MessageBox(NULL,
+		_T("The browser control does not know where the Mozilla is installed "
+		   "and may not function correctly.\n"
+ 		   "Do you want to locate Mozilla now?"),
+		_T(""), MB_ICONQUESTION | MB_YESNO);
+	
+	if (nAnswer == IDNO)
+	{
+		return S_FALSE;
+	}
+
+	// Show a folder picker for the user to choose the bin directory
+	TCHAR szNewBinDirPath[MAX_PATH+1];
+	memset(szNewBinDirPath, 0, sizeof(szNewBinDirPath));
+
+	BROWSEINFO bi;
+	memset(&bi, 0, sizeof(bi));
+	bi.hwndOwner = m_hWnd;
+	bi.pidlRoot = NULL;
+	bi.pszDisplayName = szNewBinDirPath;
+	bi.lpszTitle = _T("Pick where the Mozilla bin directory is located, e.g. (c:\\mozilla\\bin)");
+	LPITEMIDLIST pItemList = SHBrowseForFolder(&bi);
+	if (pItemList == NULL)
+	{
+		return S_FALSE;
+	}
+
+	// Get the path from the user selection
+	IMalloc *pShellAllocator = NULL;
+	SHGetMalloc(&pShellAllocator);
+	if (pShellAllocator)
+	{
+		char szPath[MAX_PATH + 1];
+
+		if (SHGetPathFromIDList(pItemList, szPath))
+		{
+			// Chop off the end path seperator
+			int nPathSize = strlen(szPath);
+			if (nPathSize > 0)
+			{
+				if (szPath[nPathSize - 1] == '\\')
+				{
+					szPath[nPathSize - 1] = '\0';
+				}
+			}
+
+			// Form the file pattern
+			USES_CONVERSION;
+			_tcscpy(szNewBinDirPath, A2T(szPath));
+		}
+		pShellAllocator->Free(pItemList);
+		pShellAllocator->Release();
+	}
+
+	// TODO check if the chosen folder looks like the Mozilla bin directory, e.g.
+	// by looking for component.reg
+
+	// Set the value and copy it
+	m_SystemKey.SetValue(szNewBinDirPath, MOZ_CONTROL_REG_VALUE_BIN_DIRECTORY_PATH);
+
+	return S_OK;
+}
+
 
 // Create and initialise the web shell
 HRESULT CMozillaBrowser::CreateBrowser() 
