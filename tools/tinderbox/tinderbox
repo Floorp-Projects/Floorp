@@ -38,6 +38,10 @@ tinderbox_usage() {
   exit 1
 }
 
+run_in_bg() {
+  nohup /bin/sh -c "exec $* > /dev/null 2>&1" &
+}
+
 if [ $# != 2 ]; then
   echo "Wrong number of arguments."
   tinderbox_usage
@@ -69,22 +73,22 @@ case "$build_action" in
 
 	  # Grab and use mozconfig if it exists.
       if test "$build_type" = "multi"; then
-        nohup ./multi-tinderbox.pl &
+        run_in_bg ./multi-tinderbox.pl
       elif test -f mozconfig; then
         echo "Found mozconfig..."
-        nohup ./build-seamonkey.pl --$build_type --mozconfig mozconfig &
+        run_in_bg ./build-seamonkey.pl --$build_type --mozconfig mozconfig
       elif test -f .mozconfig; then
         echo "Found .mozconfig..."
-        nohup ./build-seamonkey.pl --$build_type --mozconfig .mozconfig &
+        run_in_bg ./build-seamonkey.pl --$build_type --mozconfig .mozconfig
       else
-        nohup ./build-seamonkey.pl --$build_type &
+        run_in_bg ./build-seamonkey.pl --$build_type
       fi
 	  # Write out PID so we can shut things down later.
 	  # This needs to be right after the ./build-seamonkey.pl call to
 	  # get the right PID.
       echo "PID $!"
       echo $! > $build_type.pid
-	  \rm -f nohup.out
+      /bin/sh -c "sleep 5; \rm -f nohup.out" &
     fi
     ;;
   stop)
