@@ -32,7 +32,6 @@ XPIDL_MODULE	= layout_xul_tree
 XPIDLSRCS=      nsITreeView.idl               \
                 nsITreeSelection.idl    \
                 nsITreeBoxObject.idl \
-                nsITreeColFrame.idl \
                 nsITreeContentView.idl \
                 $(NULL)
 

@@ -37,7 +37,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsBoxFrame.h"
-#include "nsITreeColFrame.h"
 #include "nsITreeBoxObject.h"
 
 class nsSupportsHashtable;
@@ -48,11 +47,10 @@ nsresult NS_NewTreeColFrame(nsIPresShell* aPresShell,
                                 nsIBoxLayout* aLayoutManager = nsnull);
 
 // The actual frame that paints the cells and rows.
-class nsTreeColFrame : public nsBoxFrame, public nsITreeColFrame
+class nsTreeColFrame : public nsBoxFrame
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSITREECOLFRAME
 
   friend nsresult NS_NewTreeColFrame(nsIPresShell* aPresShell, 
                                          nsIFrame** aNewFrame, 
