@@ -390,9 +390,10 @@ Contributor(s): ______________________________________. -->
       <!-- this box is temporary, pending XBLified <browser> -->
       <hbox id="browser" flex="1">
         <tabbrowser id="content"
-                 flex="1" contenttooltip="aHTMLTooltip"
-                 contentcontextmenu="contentAreaContextMenu"
-                 onclick="return contentAreaClick(event);"/>
+                    flex="1" contenttooltip="aHTMLTooltip"
+                    contentcontextmenu="contentAreaContextMenu"
+                    onnewtab="BrowserOpenTab();"
+                    onclick="return contentAreaClick(event);"/>
       </hbox>
     </vbox>  
   </hbox>
