@@ -13,17 +13,6 @@ function FindMsgAppCore()
   return msgAppCore;
 }
 
-function FindComposeAppCore()
-{
-  composeAppCore = XPAppCoresManager.Find("ComposeAppCore");
-  if (composeAppCore == null) {
-    dump("FindComposeAppCore: Creating ComposeAppCore\n");
-    composeAppCore = new ComposeAppCore();
-    dump("Initializing ComposeAppCore and setting Window\n");
-    composeAppCore.Init("ComposeAppCore");
-  }
-  return composeAppCore;
-}
 function OpenURL(url)
 {
   dump("\n\nOpenURL from XUL\n\n\n");
@@ -36,13 +25,27 @@ function OpenURL(url)
 
 function ComposeMessage(tree, nodeList, msgAppCore, type)
 {
-  dump("\nComposeMessage from XUL\n");
-  var appCore = FindComposeAppCore();
-  if (appCore != null) {
-    appCore.SetWindow(window);
-    appCore.NewMessage("chrome://messengercompose/content/", tree,
-		       nodeList, msgAppCore, type); 
-  }
+	dump("\nComposeMessage from XUL\n");
+
+	// Generate a unique number, do we have a better way?
+	// I don't think so a user can create two message compositions
+	// in the same millisecond!!
+	var date = new Date();
+	sessionID = date.getTime();
+	
+	var composeAppCoreName = "ComposeAppCore:" + sessionID;
+	var composeAppCore = XPAppCoresManager.Find(composeAppCoreName);
+	if (! composeAppCore)
+	{
+		composeAppCore = new ComposeAppCore();
+		if (composeAppCore)
+		{
+			var args = "name=" + composeAppCoreName;
+			composeAppCore.Init(composeAppCoreName);
+			composeAppCore.NewMessage("chrome://messengercompose/content/", args, tree, nodeList, msgAppCore, type);
+			dump("Created a compose appcore from Messenger, " + args);
+		}
+	}
 }
 
 function NewMessage()
