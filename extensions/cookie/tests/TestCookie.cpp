@@ -479,7 +479,7 @@ main(PRInt32 argc, char *argv[])
     SetACookie(cookieService, "http://parser.test/", nsnull, "test=parser; domain=.parser.test; max-age=0", nsnull);
     GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
     rv[1] = CheckResult(cookie, MUST_BE_NULL);
-    SetACookie(cookieService, "http://parser.test/", nsnull, "test=\"fubar! = foo;bar\\\";\" parser; domain=.parser.test; max-age=6\nfive max-age=2.63,", nsnull);
+    SetACookie(cookieService, "http://parser.test/", nsnull, "test=\"fubar! = foo;bar\\\";\" parser; domain=.parser.test; max-age=6\nfive; max-age=2.63,", nsnull);
     GetACookie(cookieService, "http://parser.test/", nsnull, getter_Copies(cookie));
     rv[2] = CheckResult(cookie, MUST_CONTAIN, "test=\"fubar! = foo;bar\\\";\"");
     rv[3] = CheckResult(cookie, MUST_CONTAIN, "five");
