@@ -898,11 +898,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EmptyTrash(nsIMsgWindow *msgWindow,
         trashFolder->RecursiveSetDeleteIsMoveToTrash(PR_FALSE);
         PRInt32 totalMessages = 0;
         rv = trashFolder->GetTotalMessages(PR_TRUE, &totalMessages);
-        PRUint32 cnt = 0;
-        if (mSubFolders)
-            mSubFolders->Count(&cnt);
-
-        if (totalMessages <= 0 && cnt == 0 ) return NS_OK;
+                  
+        if (totalMessages <= 0) 
+        {
+          nsCOMPtr<nsIEnumerator> aEnumerator;
+          rv =trashFolder->GetSubFolders(getter_AddRefs(aEnumerator));
+          NS_ENSURE_SUCCESS(rv,rv);
+          rv = aEnumerator->First();    //will fail if no subfolders 
+          if (NS_FAILED(rv)) return NS_OK;
+        }
 
         nsCOMPtr<nsIFolder> parent;
         rv = trashFolder->GetParent(getter_AddRefs(parent));
@@ -3012,4 +3016,6 @@ nsMsgLocalMailFolder::setSubfolderFlag(PRUnichar* aFolderName,
 
   return NS_OK;
 }
+
+
 
