@@ -181,8 +181,8 @@ GlobalWindowImpl::GlobalWindowImpl()
   mWebShell = nsnull;
 }
 
-GlobalWindowImpl::~GlobalWindowImpl() 
-{  
+void GlobalWindowImpl::CleanUp()
+{
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mNavigator);
@@ -198,6 +198,11 @@ GlobalWindowImpl::~GlobalWindowImpl()
   NS_IF_RELEASE(mFrames);
   NS_IF_RELEASE(mOpener);
   NS_IF_RELEASE(mListenerManager);
+}
+
+GlobalWindowImpl::~GlobalWindowImpl() 
+{  
+  CleanUp();
 }
 
 NS_IMPL_ADDREF(GlobalWindowImpl)
@@ -1348,6 +1353,8 @@ GlobalWindowImpl::Close()
     mBrowser->Close();
     NS_RELEASE(mBrowser);
   }
+
+  CleanUp();
   return NS_OK;
 }
 
