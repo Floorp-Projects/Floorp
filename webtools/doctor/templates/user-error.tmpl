@@ -20,7 +20,8 @@
   # %]
 
 [% DEFAULT 
-  message = "An unknown CVS error occurred."
+  message = "An unknown error occurred."
+  title = "Error"
 %]
 
 <html>
@@ -31,15 +32,32 @@
 
   <body>
     <h1>Doctor - [% title %]</h1>
+    
     <p>
-      [% message FILTER html %]
+      Doctor couldn't process your request because of the following problem:
     </p>
+    
+    <p><big><b>[% message %]</b></big></p>
+    
+    [% IF cvs_error_code %]
+      <p>
+        The problem occurred when Doctor tried to execute the CVS command:
+      </p>
 
-    <strong>Command:</strong> <em>[% cvs_command FILTER html %]</em><br>
-    [% IF cvs_error_code.exists %]
-      <strong>Error Code:</strong> <em>[% cvs_error_code %]</em><br>
-    [% END %] 
-    <strong>Error Message:</strong> <pre>[% cvs_error_message FILTER html %]</pre>
+      <p>
+        <em>[% cvs_command FILTER html %]</em>
+      </p>
+      
+      <p>
+        CVS returned the error code <em>[% cvs_error_code %]</em> and the message:
+      </p>
+
+      <pre>[% cvs_error_message FILTER html %]</pre>
+    [% END %]
+    
+    <p>
+      Please go back and try again.
+    </p>
   </body>
 
 </html>

@@ -19,15 +19,17 @@
   # Contributor(s): Myk Melez <myk@mozilla.org>
   # %]
 
+[% is_new = (version == "new" ? 1 : 0) %]
+
 <html>
 
   <head>
-    <title>Doctor - edit [% (file_url ? file_url : file) FILTER html %]</title>
+    <title>Doctor - [% is_new ? "create" : "edit" %] [% (file_url ? file_url : file) FILTER html %]</title>
   </head>
 
   <body bgcolor="white" color="black">
 
-    <big><b>Doctor - edit <em>
+    <big><b>Doctor - [% is_new ? "create" : "edit" %] <em>
       [% IF file_url %]
         <a href="[% file_url FILTER html %]">[% file_url FILTER html %]</a>
       [% ELSE %]
@@ -39,15 +41,21 @@
 
   <form method="post" action="doctor.cgi">
 
-    <input type="hidden" name="action" value="review">
+    <input type="hidden" name="action" value="[% is_new ? "create" : "review" %]">
     <input type="hidden" name="file" value="[% file FILTER html %]">
     <input type="hidden" name="version" value="[% version %]">
     <input type="hidden" name="line_endings" value="[% line_endings %]">
 
     <textarea name="content" style="width: 100%; height: 85%" rows="16" cols="100">[% content FILTER html %]</textarea><br>
 
-    <input type="submit" value="Review Changes">
-
+    [% IF is_new %]
+      Username: <input type="text" name="username" size="10">
+      Password: <input type="text" name="password" size="10">
+      Check-in Comment: <input type="text" name="comment" size="50">
+      <input type="submit" value="Create">
+    [% ELSE %]
+      <input type="submit" value="Review Changes">
+    [% END %]
   </form>
 
   </body>

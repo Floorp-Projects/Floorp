@@ -22,33 +22,24 @@
 <html>
 
   <head>
-    <title>Doctor - select file to edit</title>
+    <title>Doctor - created [% (file_url ? file_url : file) FILTER html %]</title>
   </head>
 
   <body bgcolor="white" color="black">
 
-    <big><b>Doctor - select file to edit</b></big>
-
-    <br><br>
+    <big><b>Doctor - created <em>
+      [% IF file_url %]
+        <a href="[% file_url FILTER html %]">[% file_url FILTER html %]</a>
+      [% ELSE %]
+        [% file FILTER html %]
+      [% END %]
+    </em></b></big>
 
     <p>
-      Welcome to Doctor, a tool for editing the mozilla.org web site.
+      The file was created:
     </p>
 
-    <p>
-      To edit a file on the web site, enter its URL or the path
-      to the file in the CVS repository.  To create a new file, 
-      enter the URL or path where you would like it to be.
-    </p>
-
-    <form method="get" action="doctor.cgi">
-
-      <input type="hidden" name="action" value="edit">
-      <input type="text" name="file" value="" size="60">
-
-      <input type="submit" value="Edit">
-
-  </form>
+    <pre style="background-color: #CCCCCC;">[% checkin_results FILTER html%]</pre>
 
   </body>
 

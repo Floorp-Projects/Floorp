@@ -104,6 +104,22 @@ my $WRITE_CVS_SERVER = $config->get('WRITE_CVS_SERVER');
 my $WEB_BASE_URI = $config->get('WEB_BASE_URI');
 my $WEB_BASE_URI_PATTERN = $config->get('WEB_BASE_URI_PATTERN');
 my $WEB_BASE_PATH = $config->get('WEB_BASE_PATH');
+my $ADMIN_EMAIL = $config->get('ADMIN_EMAIL');
+
+# !!! Switch use of the global variables above to this hash!
+my $CONFIG = {
+  TEMP_DIR              => $TEMP_DIR              , 
+  READ_CVS_SERVER       => $READ_CVS_SERVER       ,
+  READ_CVS_USERNAME     => $READ_CVS_USERNAME     ,
+  READ_CVS_PASSWORD     => $READ_CVS_PASSWORD     ,
+  WRITE_CVS_SERVER      => $WRITE_CVS_SERVER      ,
+  WEB_BASE_URI          => $WEB_BASE_URI          ,
+  WEB_BASE_URI_PATTERN  => $WEB_BASE_URI_PATTERN  ,
+  WEB_BASE_PATH         => $WEB_BASE_PATH         ,
+  ADMIN_EMAIL           => $ADMIN_EMAIL           ,
+};
+
+$vars->{'CONFIG'} = $CONFIG;
 
 # Store the home directory so we can get back to it after changing directories
 # in certain places in the code.
@@ -114,25 +130,40 @@ my $HOME = cwd;
 # Main Body Execution
 ################################################################################
 
-# Note: All calls to this script should contain an "action" variable 
-# whose value determines what the user wants to do.  The code below 
-# checks the value of that variable and runs the appropriate code.
+# Note: All calls to this script should contain an "action" variable whose 
+# value determines what the user wants to do.  The code below checks the value 
+# of that variable and runs the appropriate code.
 
-# Determine whether to use the action specified by the user or the default.
-my $action = lc($request->param('action')) || "edit";
-
-# If the user wants to edit a file, but they haven't specified the name
+# Determine whether to use the action specified by the user or the default,
+# and if the user wants to edit a file, but they haven't specified the name
 # of the file, prompt them for it.
-if ($action eq "edit" && !$request->param('file')) { $action = "select" }
+my $action = 
+  lc($request->param('action')) || ($request->param('file') ? "edit" : "choose");
 
-if ($action eq "select")
+if    ($action eq "choose") {   choose()   }
+elsif ($action eq "edit")   {   edit()     }
+elsif ($action eq "review") {   review()   }
+elsif ($action eq "commit") {   commit()   }
+elsif ($action eq "create") {   create()   }
+else
+{
+  ThrowCodeError("couldn't recognize the value of the action parameter", "Unknown Action");
+}
+
+exit;
+
+################################################################################
+# Main Execution Functions
+################################################################################
+
+sub choose
 {
   print $request->header;
   $template->process("select.tmpl", $vars)
-    || DisplayError("Template Process Failed", $template->error())
-    && exit;
+    || ThrowCodeError($template->error(), "Template Processing Failed");
 }
-elsif ($action eq "edit")
+
+sub edit
 {
   ValidateFile();
  
@@ -153,28 +184,180 @@ elsif ($action eq "edit")
   
   print $request->header;
   $template->process("edit.tmpl", $vars)
-    || DisplayError("Template Process Failed", $template->error())
-    && exit;
+    || ThrowCodeError($template->error(), "Template Processing Failed");
 }
-elsif ($action eq "review")
+
+sub review
 {
+  # Displays a diff between the version of a file in the repository
+  # and the version submitted by the user so the user can review the
+  # changes they are making to the file.  Offers the user the option
+  # to either commit their changes or edit the file some more.
+  
   ValidateFile();
-  ReviewChanges();
+  
+  # Create and change to a temporary sub-directory into which 
+  # we will check out the file being reviewed.
+  CreateTempDir();
+  
+  # Check out the file from the repository.
+  my $file = $request->param('file');
+  my $oldversion = $request->param('version');
+  my $newversion = CheckOutFile($file);
+  
+  # Throw an error if the version of the file that was edited
+  # does not match the version in the repository.  In the future
+  # we should try to merge the user's changes if possible.
+  if ($oldversion && $newversion && $oldversion != $newversion) 
+  {
+    ThrowCodeError("You edited version <em>$oldversion</em> of the file,
+      but version <em>$newversion</em> is in the repository.  Reload the edit 
+      page and make your changes again (and bother the authors of this script 
+      to implement change merging
+      (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
+  }
+  
+  # Replace the checked out file with the edited version, generate
+  # a diff between the edited file, and display it to the user.
+  ReplaceFile($file);
+  $vars->{'diff'} = DiffFile($file);
+  
+  # Delete the temporary directory into which we checked out the file.
+  DeleteTempDir();
+  
+  $vars->{'file'} = $file;
+  $vars->{'content'} = $request->param('content');
+  $vars->{'version'} = $request->param('version');
+  $vars->{'line_endings'} = $request->param('line_endings');
+  
+  print $request->header;
+  $template->process("review.tmpl", $vars)
+    || ThrowCodeError("Template Process Failed", $template->error());
 }
-elsif ($action eq "commit")
+
+sub commit 
 {
+  # Commit a file to the repository.  Checks out the file via cvs, 
+  # applies the changes, generates a diff, and then checks the file 
+  # back in.  It would be easier if we could commit a file by piping
+  # it into standard input, but cvs does not provide for this.
+  
+  ValidateFile();
   ValidateContent();
   ValidateUsername();
   ValidatePassword();
   ValidateComment();
-  CommitFile();
-}
-else
-{
-  DisplayError("I could not figure out what you wanted to do.", "Unknown action");
+  
+  # Create and change to a temporary sub-directory into which 
+  # we will check out the file being committed.
+  CreateTempDir();
+  
+  # Check out the file from the repository.
+  my $file = $request->param('file');
+  my $oldversion = $request->param('version');
+  my $newversion = CheckOutFile($file);
+  
+  # Throw an error if the version of the file that was edited
+  # does not match the version in the repository.  In the future
+  # we should try to merge the user's changes if possible.
+  if ($oldversion && $newversion && $oldversion != $newversion) 
+  {
+    ThrowCodeError("You edited version <em>$oldversion</em> of the file,
+      but version <em>$newversion</em> is in the repository.  Reload the edit 
+      page and make your changes again (and bother the authors of this script 
+      to implement change merging
+      (<a href=\"http://bugzilla.mozilla.org/show_bug.cgi?id=164342\">bug 164342</a>).");
+  }
+  
+  # Replace the checked out file with the edited version, generate
+  # a diff between the edited file and the version in the repository,
+  # and check in the edited file.
+  ReplaceFile($file);
+  $vars->{'diff'} = DiffFile($file);
+  $vars->{'checkin_results'} = CheckInFile($file);
+  
+  # Delete the temporary directory into which we checked out the file.
+  DeleteTempDir();
+  
+  $vars->{'file'} = $file;
+  
+  print $request->header;
+  $template->process("committed.tmpl", $vars)
+    || ThrowCodeError($template->error(), "Template Processing Failed");
 }
 
-exit;
+sub create
+{
+  # Creates a new file in the repository.
+  
+  ValidateFile();
+  ValidateContent();
+  ValidateUsername();
+  ValidatePassword();
+  ValidateComment();
+  
+  # Create and change to a temporary directory where we'll do all our file
+  # and CVS manipulation.
+  CreateTempDir();
+  
+  # Separate the name of the file from its path.
+  $request->param('file') =~ /^(.*)\/([^\/]+)$/;
+  my $filename = $2;
+  my $path = $1;
+    
+  # Write the file to the temporary directory.  "ReplaceFile" is an unfortunate
+  # name.  !!! Replace it with a new fortunate name!
+  ReplaceFile($filename);
+    
+  # Create a fake CVS directory that makes the temporary directory look like
+  # a local working copy of the directory in the repository where this file
+  # will be created.  This way we just have to commit the file to create it;
+  # we avoid having to first check out the directory and then add the file.  
+  
+  # Make the CVS directory and change to it.
+  mkdir("CVS") || ThrowCodeError("couldn't create directory 'CVS': $!");
+  chdir("CVS");
+
+  # Make the Entries file and add an entry for the new file.
+  open(FILE, ">Entries") || ThrowCodeError("couldn't create file 'Entries': $!");
+  print FILE "/$filename/0/Initial $filename//\nD\n";
+  close(FILE);
+  
+  # Make an empty file named after the new file but with a ",t" appended
+  # to the name.  I don't know what this is for, but the CVS client creates it,
+  # so I figure I should too.
+  #
+  # UPDATE: Commenting out this code didn't make it fail, so I'm leaving it
+  # commented out--less code means less things to break.
+  #
+  #open(FILE, ">${filename},t")
+  #  || ThrowCodeError("couldn't create file '${filename},t': $!");
+  #close(FILE);
+  
+  # Make the Repository file, which contains the path to the directory
+  # in the CVS repository.
+  open(FILE, ">Repository") 
+    || ThrowCodeError("couldn't create file 'Repository': $!");
+  print FILE "$path\n";
+  close(FILE);
+  
+  # Note that we don't have to create a Root file with information about
+  # the repository (authentication type, server address, root path, etc.)
+  # since we add that information to the command line.
+  
+  # Change back to the directory containing the file and check it in.
+  chdir("..");
+  $vars->{'checkin_results'} = CheckInFile($filename);
+  
+  # Delete the temporary directory where we did all our file and CVS manipulation.
+  DeleteTempDir();
+  
+  $vars->{'file'} = $request->param('file');
+  
+  print $request->header;
+  $template->process("created.tmpl", $vars)
+    || ThrowCodeError($template->error(), "Template Processing Failed");
+}
 
 ################################################################################
 # Input Validation
@@ -185,8 +368,7 @@ sub ValidateFile
   # Make sure a path was entered.
   my $file = $request->param("file");
   $file
-    || DisplayError("You must include the name of the file.")
-    && exit;
+    || ThrowUserError("You must include the name/path or the URL of the file.");
   
 
   # URL -> Path Conversion
@@ -239,8 +421,7 @@ sub ValidateFile
 sub ValidateUsername
 {
   $request->param('username')
-    || DisplayError("You must enter a username.")
-    && exit;
+    || ThrowUserError("You must enter your username.");
 
   my $username = $request->param('username');
 
@@ -255,15 +436,13 @@ sub ValidateUsername
 sub ValidatePassword
 {
   $request->param('password')
-    || DisplayError("You must enter a password.")
-    && exit;
+    || ThrowUserError("You must enter your password.");
 }
 
 sub ValidateComment
 {
   $request->param('comment')
-    || DisplayError("You must enter a check-in comment.")
-    && exit;
+    || ThrowUserError("You must enter a check-in comment describing your changes.");
 }
 
 sub ValidateContent
@@ -292,7 +471,7 @@ sub ValidateContent
 }
 
 ################################################################################
-# Utility Functions
+# CVS Glue
 ################################################################################
 
 sub RetrieveFile
@@ -312,128 +491,41 @@ sub RetrieveFile
   my $error_code = system("cvs", @args);
   my $output = $CAPTURE_OUT->capture;
   my $errors = $CAPTURE_ERR->capture;
-
-  if ($error_code != 0) 
+  
+  # If the CVS server returned an error, stop further processing and notify
+  # the user.  The only error we don't stop for is a "not found" error, 
+  # since in that case we want to give the user the option to create a new 
+  # file at this location.
+  if ($error_code != 0 && $errors !~ /cannot find/) 
   {
     # Include the command in the error message (but hide the username/password).
     my $command = join(" ", "cvs", @args);
     $command =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     $errors =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     
-    DisplayCVSError("I could not check the file out from the repository.",
-                    $command,
-                    $error_code,
-                    $errors);
-    exit;
+    ThrowUserError("Doctor could not check out the file from the repository.",
+                   undef,
+                   $command,
+                   $error_code,
+                   $errors);
   }
   
-  # Extract the file version from the errors/notices.
   my $version = "";
-  if ($errors =~ /VERS:\s([0-9.]+)\s/) { $version = $1 }
-  
-  # Figure out the line-ending style by examining the content of the file.
   my $line_endings = "unix";
-  if ($output =~ /\r\n/s) { $line_endings = "windows" }
-  elsif ($output =~ /\r[^\n]/s) { $line_endings = "mac" }
-
+  
+  # If the file doesn't exist, hack the version string to reflect that.
+  if ($error_code != 0 && $errors =~ /cannot find/) { $version = "new" }
+  
+  # Otherwise, try to determine the file's version and line-ending style 
+  # (unix, mac, or windows) from the "error" messages and content.
+  else {
+    if ($errors =~ /VERS:\s([0-9.]+)\s/) { $version = $1 }
+    
+    if ($output =~ /\r\n/s) { $line_endings = "windows" }
+    elsif ($output =~ /\r[^\n]/s) { $line_endings = "mac" }
+  }
+  
   return ($output, $version, $line_endings);
-}
-
-sub ReviewChanges 
-{
-  # Displays a diff between the version of a file in the repository
-  # and the version submitted by the user so the user can review the
-  # changes they are making to the file.  Offers the user the option
-  # to either commit their changes or edit the file some more.
-  
-  # Create and change to a temporary sub-directory into which 
-  # we will check out the file being reviewed.
-  CreateTempDir();
-  
-  # Check out the file from the repository.
-  my $file = $request->param('file');
-  my $oldversion = $request->param('version');
-  my $newversion = CheckOutFile($file);
-  
-  # Throw an error if the version of the file that was edited
-  # does not match the version in the repository.  In the future
-  # we should try to merge the user's changes if possible.
-  if ($oldversion && $newversion && $oldversion != $newversion) 
-  {
-    DisplayError("You edited version <em>$oldversion</em> of the file,
-                  but version <em>$newversion</em> is in the repository.
-                  Reload the edit page and make your changes again
-                  (and bother the authors of this script to implement
-                  change merging).");
-    DeleteTempDir();
-    exit;
-  }
-  
-  # Replace the checked out file with the edited version, generate
-  # a diff between the edited file, and display it to the user.
-  ReplaceFile($file);
-  $vars->{'diff'} = DiffFile($file);
-  
-  # Delete the temporary directory into which we checked out the file.
-  DeleteTempDir();
-  
-  $vars->{'file'} = $file;
-  $vars->{'content'} = $request->param('content');
-  $vars->{'version'} = $request->param('version');
-  $vars->{'line_endings'} = $request->param('line_endings');
-  
-  print $request->header;
-  $template->process("review.tmpl", $vars)
-    || DisplayError("Template Process Failed", $template->error())
-    && exit;
-}
-
-sub CommitFile 
-{
-  # Commit a file to the repository.  Checks out the file via cvs, 
-  # applies the changes, generates a diff, and then checks the file 
-  # back in.  It would be easier if we could commit a file by piping
-  # it into standard input, but cvs does not provide for this.
-  
-  # Create and change to a temporary sub-directory into which 
-  # we will check out the file being committed.
-  CreateTempDir();
-  
-  # Check out the file from the repository.
-  my $file = $request->param('file');
-  my $oldversion = $request->param('version');
-  my $newversion = CheckOutFile($file);
-  
-  # Throw an error if the version of the file that was edited
-  # does not match the version in the repository.  In the future
-  # we should try to merge the user's changes if possible.
-  if ($oldversion && $newversion && $oldversion != $newversion) 
-  {
-    DisplayError("You edited version <em>$oldversion</em> of the file,
-                  but version <em>$newversion</em> is in the repository.
-                  Reload the edit page and make your changes again
-                  (and bother the authors of this script to implement
-                  change merging).");
-    DeleteTempDir();
-    exit;
-  }
-  
-  # Replace the checked out file with the edited version, generate
-  # a diff between the edited file and the version in the repository,
-  # and check in the edited file.
-  ReplaceFile($file);
-  $vars->{'diff'} = DiffFile($file);
-  $vars->{'checkin_results'} = CheckInFile($file);
-  
-  # Delete the temporary directory into which we checked out the file.
-  DeleteTempDir();
-  
-  $vars->{'file'} = $file;
-  
-  print $request->header;
-  $template->process("committed.tmpl", $vars)
-    || DisplayError("Template Process Failed", $template->error())
-    && exit;
 }
 
 sub CheckOutFile
@@ -463,13 +555,11 @@ sub CheckOutFile
     $command =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     $errors =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     
-    DisplayCVSError("I could not check the file out from the repository.",
-                    $command,
-                    undef,
-                    $errors);
-    
-    DeleteTempDir();
-    exit;
+    ThrowUserError("Doctor could not check out the file from the repository.",
+                   undef,
+                   $command,
+                   undef,
+                   $errors);
   }
 
   # Extract the file version from the errors/notices.
@@ -477,32 +567,6 @@ sub CheckOutFile
   if ($errors =~ /\Q$file\E,v,\s([0-9.]+),/) { $version = $1 }
   
   return $version;
-}
-
-sub ReplaceFile
-{
-  # Replaces the file checked out from the repository with the edited version.
-  
-  my ($file) = @_;
-  
-  my $content = $request->param('content');
-  my $line_endings = $request->param('line_endings');
-
-  # Replace the Windows-style line endings in which browsers send content
-  # with line endings appropriate to the file being replaced if the file
-  # has Unix- or Mac-style line endings.
-  if ($line_endings eq "unix") { $content =~ s/\r\n/\n/g }
-  if ($line_endings eq "mac") { $content =~ s/\r\n/\r/g }
-  
-  if (!open(DOC, ">$file"))
-  {
-    DisplayError("I could not open the temporary file <em>$file</em> 
-                  for writing: $!");
-    DeleteTempDir();
-    exit;
-  }
-  print DOC $content;
-  close(DOC);
 }
 
 sub DiffFile
@@ -535,22 +599,15 @@ sub DiffFile
     $command =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     $errors =~ s/\Q$READ_CVS_PASSWORD\E/[password]/g;
     
-    DisplayCVSError("I could not diff your version of the file against 
-                     the version in the repository.",
-                    $command,
-                    undef,
-                    $errors);
-    
-    DeleteTempDir();
-    exit;
+    ThrowUserError("Doctor could not diff your version of the file 
+                    against the version in the repository.",
+                   undef,
+                   $command,
+                   undef,
+                   $errors);
   }
   
-  if (!$output)
-  {
-    DisplayError("You didn't change anything!");
-    DeleteTempDir();
-    exit;
-  }
+  $output || ThrowUserError("You didn't change anything!");
   
   return $output;
 }
@@ -586,82 +643,137 @@ sub CheckInFile
     $command =~ s/\Q$password\E/[password]/g;
     $errors =~ s/\Q$password\E/[password]/g;
     
-    DisplayCVSError("I could not check your version of the file
-                     into the repository.",
-                    $command,
-                    undef,
-                    $errors);
-    
-    DeleteTempDir();
-    exit;
+    ThrowUserError("Doctor could not check the file into the repository.",
+                   undef,
+                   $command,
+                   $error_code,
+                   $errors);
   }
   
   return $output;
 }
 
-sub DisplayError 
-{
-  ($vars->{'message'}, $vars->{'title'}) = @_;
-  
-  chdir($HOME) 
-    || die("Could not change back to original working directory 
-            to deliver error message <strong>$vars->{'title'}</strong>: 
-            <em>$vars->{'message'}</em>.");
-  
-  print $request->header;
-  $template->process("error.tmpl", $vars)
-    || die("<strong>Template Error</strong>: <em>" . $template->error() . "</em>
-            while trying to deliver error message <strong>$vars->{'title'}</strong>: 
-            <em>$vars->{'message'}</em>.");
-}
+################################################################################
+# Error Handling
+################################################################################
 
-sub DisplayCVSError 
+sub ThrowUserError
 {
+  # Throw an error about a problem with the user's request.  This function
+  # should avoid mentioning system problems displaying the error message, since
+  # the user isn't going to care about them and probably doesn't need to deal
+  # with them after fixing their own mistake.  Errors should be gentle on 
+  # the user, since many "user" errors are caused by bad UI that trip them up.
+  
+  # !!! Mail code errors to the system administrator!
+  
   ($vars->{'message'}, 
+   $vars->{'title'}, 
    $vars->{'cvs_command'}, 
    $vars->{'cvs_error_code'}, 
-   $vars->{'cvs_error_message'},
-   $vars->{'title'}) = @_;
+   $vars->{'cvs_error_message'}) = @_;
   
-  $vars->{'title'} ||= "CVS Error";
-
-  chdir($HOME) 
-    || die("Could not change back to original working directory 
-            to deliver error message <strong>$vars->{'title'}</strong>: 
-            <em>$vars->{'message'}</em>.");
+  # Return to the original working directory and delete the temporary
+  # working directory (if any; generally all user errors should be caught
+  # before we do anything requiring the creation of a temporary directory).
+  chdir($HOME);
+  rmtree("$TEMP_DIR/$PID", 0, 1) if -e "$TEMP_DIR/$PID";
   
   print $request->header;
-  $template->process("cvs-error.tmpl", $vars)
-    || die("<strong>Template Error</strong>: <em>" . $template->error() . "</em>
-            while trying to deliver error message <strong>$vars->{'title'}</strong>: 
-            <em>$vars->{'message'}</em>.");
+  $template->process("user-error.tmpl", $vars)
+    || print( ($vars->{'title'} ? "<h1>$vars->{'title'}</h1>" : "") . 
+              "<p>$vars->{'message'}</p><p>Please go back and try again.</p>" );
+  exit;
+}
+
+sub ThrowCodeError
+{
+  # Throw error about a problem with the code.  This function should be
+  # apologetic and deferent to the user, since it isn't the user's fault
+  # the code didn't work.
+  
+  # !!! Mail code errors to the system administrator!
+  
+  ($vars->{'message'}, $vars->{'title'}) = @_;
+  
+  # Return to the original working directory and delete the temporary
+  # working directory.
+  (chdir($HOME) && (-e "$TEMP_DIR/$PID" ? rmtree("$TEMP_DIR/$PID", 0, 1) : 1))
+    || ($vars->{'message'} = 
+         ("couldn't return to original working directory '$HOME' " . 
+          "and delete temporary working directory '$TEMP_DIR/$PID': $!" . 
+          "; error occurred while trying to display error message: " . 
+          ($vars->{'title'} ? "$vars->{'title'}: ": "") . $vars->{'message'}));
+  
+  print $request->header;
+  $template->process("code-error.tmpl", $vars)
+    || print("
+         <p>
+         Unfortunately Doctor has experienced an internal error from which
+         it was unable to recover.  More information about the error is
+         provided below. Please forward this information along with any
+         other information that would help diagnose and fix this problem
+         to the system administrator at
+         <a href=\"mailto:$CONFIG->{'ADMIN_EMAIL'}\">$CONFIG->{'ADMIN_EMAIL'}</a>.
+         </p>
+         <p>
+         couldn't process error.tmpl template: " . $template->error() . 
+         "; error occurred while trying to display error message: " . 
+         ($vars->{'title'} ? "$vars->{'title'}: ": "") . $vars->{'message'} . 
+         "</p>");
+  exit;
+}
+
+################################################################################
+# File and Directory Manipulation
+################################################################################
+
+sub ReplaceFile
+{
+  # Replaces the file checked out from the repository with the edited version.
+  
+  my ($file) = @_;
+  
+  my $content = $request->param('content');
+  my $line_endings = $request->param('line_endings');
+
+  # Replace the Windows-style line endings in which browsers send content
+  # with line endings appropriate to the file being replaced if the file
+  # has Unix- or Mac-style line endings.
+  if ($line_endings eq "unix") { $content =~ s/\r\n/\n/g }
+  if ($line_endings eq "mac") { $content =~ s/\r\n/\r/g }
+  
+  open(DOC, ">$file")
+    || ThrowCodeError("I could not open the temporary file <em>$file</em> 
+                       for writing: $!");
+  print DOC $content;
+  close(DOC);
 }
 
 sub CreateTempDir
 {
   # Creates and changes to a temporary sub-directory unique to this process
-  # that can be used for CVS activities requiring the checking out of files.
+  # that can be used for CVS activities requiring the manipulation of files.
   
   if (!-e $TEMP_DIR and !mkdir($TEMP_DIR))
   {
-    DisplayError("I could not create the temporary directory <em>$TEMP_DIR</em>: $!");
-    exit;
+    ThrowCodeError("couldn't create the temporary directory 
+                    <em>$TEMP_DIR</em>: $!");
   }
   elsif (!-d $TEMP_DIR)
   {
-    DisplayError("I could not use the temporary directory <em>$TEMP_DIR</em> 
-                  because it is not a directory.");
-    exit;
+    ThrowCodeError("couldn't use the temporary directory <em>$TEMP_DIR</em> 
+                    because it isn't a directory.");
   }
   
   # Create and change to a unique sub-directory in the temporary directory.
   mkdir("$TEMP_DIR/$PID") 
-    || DisplayError("I could not create a temporary sub-directory <em>$TEMP_DIR/$PID</em>: $!") 
-    && exit;
+    || ThrowCodeError("couldn't create a temporary sub-directory 
+                       <em>$TEMP_DIR/$PID</em>: $!");
   
   chdir("$TEMP_DIR/$PID") 
-    || DisplayError("I could not change to the temporary sub-directory <em>$TEMP_DIR/$PID</em>: $!") 
-    && exit;
+    || ThrowCodeError("couldn't change to the temporary sub-directory 
+                       <em>$TEMP_DIR/$PID</em>: $!");
 }
 
 sub DeleteTempDir
@@ -670,6 +782,6 @@ sub DeleteTempDir
   
   chdir($HOME);
   rmtree("$TEMP_DIR/$PID", 0, 1)
-    || DisplayError("I could not delete the temporary sub-directory <em>$TEMP_DIR/$PID</em>: $!") 
-    && exit;
+    || ThrowCodeError("couldn't delete the temporary sub-directory 
+                       <em>$TEMP_DIR/$PID</em>: $!");
 }
