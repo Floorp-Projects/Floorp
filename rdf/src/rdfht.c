@@ -97,6 +97,9 @@ RDF_Init()
   createVocabs();
   sRDFInitedB = PR_TRUE;
 
+  /* XXX Bookmark hack */
+  gBookmarkURL = copyString("file://G:/tmp/bookmarks.html");
+
   return NS_OK;
 }
 #else /* XXX */
