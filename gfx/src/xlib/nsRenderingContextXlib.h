@@ -168,8 +168,7 @@ class nsRenderingContextXlib : public nsIRenderingContext,
   nsresult CommonInit(void);
 
 private:
-  nsDrawingSurfaceXlib    *mOffscreenSurface;
-  nsDrawingSurfaceXlib    *mRenderingSurface;
+  nsDrawingSurfaceXlib    *mSurface;
   nsIDeviceContext        *mContext;
   nsIFontMetrics          *mFontMetrics;
   nsRegionXlib            *mClipRegion;
