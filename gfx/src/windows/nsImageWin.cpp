@@ -343,6 +343,12 @@ struct ALPHA32BITMAPINFO {
   }
 };
 
+
+static void CompositeBitsInMemory(HDC aTheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
+                    int aSX, int aSY, int aSWidth, int aSHeight,PRInt32 aSrcy,
+                    PRUint8 *aAlphaBits,MONOBITMAPINFO  *aBMI,PRUint8* aImageBits,LPBITMAPINFOHEADER aBHead,PRInt16 aNumPaletteColors);
+
+
 // Raster op used with MaskBlt(). Assumes our transparency mask has 0 for the
 // opaque pixels and 1 for the transparent pixels. That means we want the
 // background raster op (value of 0) to be SRCCOPY, and the foreground raster
@@ -480,21 +486,31 @@ nsImageWin :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
       if (nsnull != mAlphaBits){
         if (1==mAlphaDepth){
-          MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+          if(canRaster == DT_RASPRINTER){
+            MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+              CompositeBitsInMemory(TheHDC,aDX,aDY,aDWidth,aDHeight,aSX,aSY,aSWidth,aSHeight,srcy,
+                    mAlphaBits,&bmi,mImageBits,mBHead,mNumPaletteColors);
+          } else {
 
-          ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy,aSWidth, aSHeight, mAlphaBits,
-                                          (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
-           rop = SRCPAINT;
-        }
+            MONOBITMAPINFO  bmi(mAlphaWidth, mAlphaHeight);
+
+            ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy,aSWidth, aSHeight, mAlphaBits,
+                                            (LPBITMAPINFO)&bmi, DIB_RGB_COLORS, SRCAND);
+             rop = SRCPAINT;
+          }  
+		}
       }
 
-      if (8==mAlphaDepth) {              
-         DrawComposited(TheHDC, aDX, aDY, aDWidth, aDHeight,
-           aSX, srcy, aSWidth, aSHeight);
-      } else {
-        ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy, aSWidth, aSHeight, mImageBits,
-          (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
-          DIB_RGB_COLORS, rop);
+      
+      if (canRaster != DT_RASPRINTER){
+        if (8==mAlphaDepth) {              
+           DrawComposited(TheHDC, aDX, aDY, aDWidth, aDHeight,
+             aSX, srcy, aSWidth, aSHeight);
+        } else {
+          ::StretchDIBits(TheHDC, aDX, aDY, aDWidth, aDHeight,aSX, srcy, aSWidth, aSHeight, mImageBits,
+            (LPBITMAPINFO)mBHead, 256 == mNumPaletteColors ? DIB_PAL_COLORS :
+            DIB_RGB_COLORS, rop);
+        }
       }
 
     }else{
@@ -1349,3 +1365,49 @@ NS_IMETHODIMP nsImageWin::DrawToImage(nsIImage* aDstImage, nscoord aDX, nscoord 
 }
 
 #endif
+
+
+/** ---------------------------------------------------
+ *  copy the mask and the image to the passed in DC, do the raster operation in memory before going to the 
+ *  printer
+ */
+void 
+CompositeBitsInMemory(HDC aTheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
+                    int aSX, int aSY, int aSWidth, int aSHeight,PRInt32 aSrcy,
+                    PRUint8 *aAlphaBits,MONOBITMAPINFO  *aBMI,PRUint8* aImageBits,LPBITMAPINFOHEADER aBHead,PRInt16 aNumPaletteColors)
+{
+  unsigned char *screenBits;
+
+  HDC memDC = ::CreateCompatibleDC(NULL);
+
+  if(0!=memDC){
+    ALPHA24BITMAPINFO offbmi(aSWidth, aSHeight);
+    HBITMAP tmpBitmap = ::CreateDIBSection(memDC, (LPBITMAPINFO)&offbmi, DIB_RGB_COLORS,
+                                           (LPVOID *)&screenBits, NULL, 0);
+
+    if(0 != tmpBitmap){
+      HBITMAP oldBitmap = (HBITMAP)::SelectObject(memDC, tmpBitmap);
+
+      if(0!=oldBitmap) {
+        // pop in the alpha channel
+        ::StretchDIBits(memDC, 0, 0, aSWidth, aSHeight,aSX, aSrcy,aSWidth, aSHeight, aAlphaBits,
+                                                (LPBITMAPINFO)aBMI, DIB_RGB_COLORS, SRCCOPY); 
+
+        // paint in the image
+        ::StretchDIBits(memDC, 0, 0, aSWidth, aSHeight,aSX, aSrcy, aSWidth, aSHeight, aImageBits,
+                (LPBITMAPINFO)aBHead, 256 == aNumPaletteColors ? DIB_PAL_COLORS :DIB_RGB_COLORS, SRCPAINT);
+
+
+
+        // output the composed image
+        ::StretchDIBits(aTheHDC, aDX, aDY, aDWidth, aDHeight,aSX, aSrcy, aSWidth, aSHeight, screenBits,
+                (LPBITMAPINFO)&offbmi, 256 == aNumPaletteColors ? DIB_PAL_COLORS : DIB_RGB_COLORS, SRCCOPY);
+
+
+        ::SelectObject(memDC, oldBitmap);
+      }
+      ::DeleteObject(tmpBitmap);
+    }
+    ::DeleteObject(memDC);
+  }
+}
