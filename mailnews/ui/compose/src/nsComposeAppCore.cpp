@@ -120,6 +120,11 @@ nsComposeAppCore::~nsComposeAppCore()
   NS_IF_RELEASE(mWindow);
 }
 
+nsresult nsComposeAppCore::SetDocumentCharset(class nsString const &) 
+{
+	return NS_OK;
+}
+
 nsIScriptContext *    
 nsComposeAppCore::GetScriptContext(nsIDOMWindow * aWin)
 {
