@@ -76,7 +76,9 @@ public:
 
 class PermanentAtomImpl : public AtomImpl {
 public:
+#ifdef AIX
   PermanentAtomImpl() : AtomImpl() {}
+#endif
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
