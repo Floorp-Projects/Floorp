@@ -241,7 +241,11 @@ NS_IMETHODIMP nsViewManager :: SetFrameRate(PRUint32 aFrameRate)
 
   if (aFrameRate != mFrameRate)
   {
-    NS_IF_RELEASE(mTimer);
+    if (nsnull != mTimer)
+    {
+      mTimer->Cancel();     //XXX this should not be necessary. MMP
+      NS_RELEASE(mTimer);
+    }
 
     mFrameRate = aFrameRate;
     mTrueFrameRate = aFrameRate;
@@ -291,18 +295,8 @@ NS_IMETHODIMP nsViewManager :: SetWindowDimensions(nscoord width, nscoord height
 
 NS_IMETHODIMP nsViewManager :: ResetScrolling(void)
 {
-  if (nsnull != mRootView)
-  {
-    nsIScrollableView *scroller;
-    nsresult           retval;
-
-    retval = mRootView->QueryInterface(kIScrollableViewIID, (void **)&scroller);
-    if (NS_SUCCEEDED(retval)) {
-      scroller->ComputeContainerSize();
-    }
-
-    return retval;
-  }
+  if (nsnull != mRootScrollable)
+    mRootScrollable->ComputeContainerSize();
 
   return NS_OK;
 }
@@ -1700,71 +1694,26 @@ nsDrawingSurface nsViewManager :: GetDrawingSurface(nsIRenderingContext &aContex
 
 NS_IMETHODIMP nsViewManager :: ShowQuality(PRBool aShow)
 {
-  nsIScrollableView *scroller;
-  nsresult          retval = NS_ERROR_FAILURE;
+  if (nsnull != mRootScrollable)
+    mRootScrollable->ShowQuality(aShow);
 
-  if (nsnull != mRootView)
-  {
-    nsIView *child;
-
-    mRootView->GetChild(0, child);
-
-    if (nsnull != child)
-    {
-      retval = child->QueryInterface(kIScrollableViewIID, (void **)&scroller);
-
-      if (NS_SUCCEEDED(retval))
-        scroller->ShowQuality(aShow);
-    }
-  }
-
-  return retval;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager :: GetShowQuality(PRBool &aResult)
 {
-  nsIScrollableView *scroller;
-  nsresult          retval = NS_ERROR_FAILURE;
+  if (nsnull != mRootScrollable)
+    mRootScrollable->GetShowQuality(aResult);
 
-  if (nsnull != mRootView)
-  {
-    nsIView *child;
-
-    mRootView->GetChild(0, child);
-
-    if (nsnull != child)
-    {
-      retval = child->QueryInterface(kIScrollableViewIID, (void **)&scroller);
-
-      if (NS_SUCCEEDED(retval))
-        scroller->GetShowQuality(aResult);
-    }
-  }
-
-  return retval;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsViewManager :: SetQuality(nsContentQuality aQuality)
 {
-  nsIScrollableView *scroller;
-  nsresult          retval = NS_ERROR_FAILURE;
+  if (nsnull != mRootScrollable)
+    mRootScrollable->SetQuality(aQuality);
 
-  if (nsnull != mRootView)
-  {
-    nsIView *child;
-
-    mRootView->GetChild(0, child);
-
-    if (nsnull != child)
-    {
-      retval = child->QueryInterface(kIScrollableViewIID, (void **)&scroller);
-
-      if (NS_SUCCEEDED(retval))
-        scroller->SetQuality(aQuality);
-    }
-  }
-
-  return retval;
+  return NS_OK;
 }
 
 nsIRenderingContext * nsViewManager :: CreateRenderingContext(nsIView &aView)

@@ -279,8 +279,10 @@ NS_IMETHODIMP CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
         rc.SetColor(NS_RGB(0, 255, 0));
       else if (mQuality == nsContentQuality_kFair)
         rc.SetColor(NS_RGB(255, 176, 0));
-      else
+      else if (mQuality == nsContentQuality_kPoor)
         rc.SetColor(NS_RGB(255, 0, 0));
+      else
+        rc.SetColor(NS_RGB(0, 0, 255));
 
       //hey, notice that these numbers don't add up... that's because
       //something funny happens on windows when the *right* numbers are
