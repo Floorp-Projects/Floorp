@@ -183,12 +183,14 @@ function onFinish() {
     for (i in wizardContents) {
         dump("wizardContents[" + i + "] = " + wizardContents[i] + "\n");
     }
-    createAccount(wizardContents);
+    if (createAccount(wizardContents))
+        window.arguments[0].refresh = true;
     window.close();
 }
 
 function createAccount(hash) {
 
+    try {
     var mail = Components.classes["component://netscape/messenger/services/session"].getService(Components.interfaces.nsIMsgMailSession);
     var am = mail.accountManager;
 
@@ -217,5 +219,12 @@ function createAccount(hash) {
     account.addIdentity(identity);
 
     return true;
+    
+    } catch (ex) {
+        // return false (meaning we did not create the account)
+        // on any error
+        dump("Error creating account: ex\n");
+        return false;
+    }
 }
 
