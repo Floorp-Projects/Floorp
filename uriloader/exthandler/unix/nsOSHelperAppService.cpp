@@ -45,12 +45,15 @@ public:
   // in order to launch the application.
   void SetAppRegistryName(const char * aAppRegistryName);
 
+  void SetLocalFile(nsIFile * aApplicationToUse);
+
   // used to launch the application passing in the location of the temp file
   // to be associated with this app.
   nsresult LaunchApplication(nsIFile * aTempFile);
 
 protected:
   nsCString mAppRegistryName;
+  nsCOMPtr<nsIFile> mApplicationToUse;
 };
 
 
@@ -74,16 +77,26 @@ void nsExternalApplication::SetAppRegistryName(const char * aAppRegistryName)
   mAppRegistryName = aAppRegistryName;
 }
 
+void nsExternalApplication::SetLocalFile(nsIFile * aApplicationToUse)
+{
+  mApplicationToUse = aApplicationToUse;
+}
 
 nsresult nsExternalApplication::LaunchApplication(nsIFile * aTempFile)
 {
   nsresult rv = NS_OK;
+  nsXPIDLCString path;
+  aTempFile->GetPath(getter_Copies(path));
 
-  if (!mAppRegistryName.IsEmpty() && aTempFile)
+  // if we were given an application to use then use it....otherwise
+  if (mApplicationToUse)
   {
-	nsCAutoString command;
-    nsXPIDLCString path;
-    aTempFile->GetPath(getter_Copies(path));
+    const char * strPath = (const char *) path;
+    mApplication->Spawn(&strPath, 1);
+  }
+  else if (!mAppRegistryName.IsEmpty() && aTempFile)
+  {
+	  nsCAutoString command;
  
 	// build the command to run   
 	command =  (const char *)mAppRegistryName;
@@ -184,4 +197,45 @@ NS_IMETHODIMP nsOSHelperAppService::ExternalProtocolHandlerExists(const char * a
 NS_IMETHODIMP nsOSHelperAppService::LoadUrl(nsIURI * aURL)
 {
   return NS_ERROR_FAILURE;
+}
+
+nsresult nsOSHelperAppService::GetFileTokenForPath(const PRUnichar * platformAppPath, nsIFile ** aFile)
+{
+  nsCOMPtr<nsILocalFile> localFile (do_CreateInstance(NS_LOCAL_FILE_PROGID));
+  nsresult rv = NS_OK;
+
+  if (localFile)
+  {
+    if (localFile)
+      localFile->InitWithUnicodePath(platformAppPath);
+    *aFile = localFile;
+    NS_IF_ADDREF(*aFile);
+  }
+  else
+    rv = NS_ERROR_FAILURE;
+
+  return rv;
+}
+
+nsresult nsOSHelperAppService::CreateStreamListenerWithApp(nsIFile * aApplicationToUse, const char * aFileExtension, nsIStreamListener ** aStreamListener)
+{
+  nsresult rv = NS_OK;
+  
+  // create an application that represents this app name...
+  nsExternalApplication * application = nsnull;
+  NS_NEWXPCOM(application, nsExternalApplication);
+  NS_IF_ADDREF(application);
+
+  if (application)
+  {
+    application->SetLocalFile(aApplicationToUse);
+    nsCOMPtr<nsISupports> appSupports = do_QueryInterface(application);    
+    // this code is incomplete and just here to get things started..
+    nsExternalAppHandler * handler = CreateNewExternalHandler(appSupports, aFileExtension);
+    handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
+  }
+
+  NS_IF_RELEASE(application);
+  
+  return rv;
 }
