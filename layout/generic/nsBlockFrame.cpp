@@ -5309,14 +5309,14 @@ found_frame:;
 
     // Destroy frame; capture its next-in-flow first in case we need
     // to destroy that too.
-    nsIFrame* nextInFlow = aDeletedFrame->GetNextInFlow();
+    nsIFrame* deletedNextInFlow = aDeletedFrame->GetNextInFlow();
 #ifdef NOISY_REMOVE_FRAME
-    printf("DoRemoveFrame: line=%p frame=", line);
+    printf("DoRemoveFrame: line=%p frame=", line.get());
     nsFrame::ListTag(stdout, aDeletedFrame);
-    printf(" prevSibling=%p nextInFlow=%p\n", prevSibling, nextInFlow);
+    printf(" prevSibling=%p deletedNextInFlow=%p\n", prevSibling, deletedNextInFlow);
 #endif
     aDeletedFrame->Destroy(aPresContext);
-    aDeletedFrame = nextInFlow;
+    aDeletedFrame = deletedNextInFlow;
 
     // If line is empty, remove it now.
     if (0 == lineChildCount) {
@@ -5352,28 +5352,30 @@ found_frame:;
     } else {
       // Make the line that just lost a frame dirty, and advance to
       // the next line.
-      line->MarkDirty();
-      ++line;
-    }
-
-    // If we just removed the last frame on the line then we need
-    // to advance to the next line.
-    if (isLastFrameOnLine) {
-      TryAllLines(&line, &line_end, &searchingOverflowList);
-      // Detect the case when we've run off the end of the normal line
-      // list and we're starting the overflow line list
-      if (prevSibling && !prevSibling->GetNextSibling()) {
-        prevSibling = nsnull;
+      if (!deletedNextInFlow || !line->Contains(deletedNextInFlow)) {
+        line->MarkDirty();
+        ++line;
       }
     }
 
-    // See if we should keep looking in the current flow's line list.
-    if (nsnull != aDeletedFrame) {
-      if (aDeletedFrame->GetParent() != this) {
+    if (nsnull != deletedNextInFlow) {
+      // See if we should keep looking in the current flow's line list.
+      if (deletedNextInFlow->GetParent() != this) {
         // The deceased frames continuation is not a child of the
         // current block. So break out of the loop so that we advance
         // to the next parent.
         break;
+      }
+
+      // If we just removed the last frame on the line then we need
+      // to advance to the next line.
+      if (isLastFrameOnLine) {
+        TryAllLines(&line, &line_end, &searchingOverflowList);
+        // Detect the case when we've run off the end of the normal line
+        // list and we're starting the overflow line list
+        if (prevSibling && !prevSibling->GetNextSibling()) {
+          prevSibling = nsnull;
+        }
       }
     }
   }
