@@ -108,6 +108,9 @@ char * errorMessages[] = {
 
  * PENDING(): this should probably live in EventRegistration.h
 
+ * PENDING(edburns): need to abstract this out so we can use it from uno
+ * and JNI.
+
  */
 
 const char *gSupportedListenerInterfaces[] = {
@@ -140,7 +143,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
         return;
     }
     if (nsnull == gVm) { // declared in jni_util.h
-        env->GetJavaVM(&gVm);  // save this vm reference
+        ::util_GetJavaVM(env, &gVm);  // save this vm reference
     }
 
     rv = InitMozillaStuff(initContext);
@@ -155,7 +158,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
         ::PR_Sleep(PR_INTERVAL_NO_WAIT);
         
         if (initContext->initFailCode != 0) {
-            ::util_ThrowExceptionToJava(initContext->env, errorMessages[initContext->initFailCode]);
+            ::util_ThrowExceptionToJava(env, errorMessages[initContext->initFailCode]);
             return;
         }
     }
@@ -217,10 +220,11 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
     while (nsnull != gSupportedListenerInterfaces[listenerType]) {
         if (nsnull == 
             (clazz = 
-             env->FindClass(gSupportedListenerInterfaces[listenerType]))) {
+             ::util_FindClass(env, 
+                              gSupportedListenerInterfaces[listenerType]))) {
             return;
         }
-        if (env->IsInstanceOf(typedListener, clazz)) {
+        if (::util_IsInstanceOf(env, typedListener, clazz)) {
             // We've got a winner!
             break;
         }
@@ -235,7 +239,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NativeEventThr
     jobject globalRef = nsnull;
 
     // PENDING(edburns): make sure do DeleteGlobalRef on the removeListener
-    if (nsnull == (globalRef = env->NewGlobalRef(typedListener))) {
+    if (nsnull == (globalRef = ::util_NewGlobalRef(env, typedListener))) {
         ::util_ThrowExceptionToJava(env, "Exception: NativeEventThread.nativeAddListener(): can't create NewGlobalRef\n\tfor argument");
         return;
     }
@@ -466,8 +470,6 @@ nsresult InitMozillaStuff (WebShellInitContext * initContext)
     
     if (NS_FAILED(rv)) {
         initContext->initFailCode = kHistoryWebShellError;
-        ::util_ThrowExceptionToJava(initContext->env, 
-                                    "Exception: Can't get DocShell from nsIWebShell");
         return rv;
     }
     

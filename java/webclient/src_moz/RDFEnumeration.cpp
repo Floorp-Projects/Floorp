@@ -121,37 +121,24 @@ JNIEXPORT void JNICALL
 Java_org_mozilla_webclient_wrapper_1native_RDFEnumeration_nativeFinalize
 (JNIEnv *env, jobject obj)
 {
-    jclass objClass;
-    jfieldID nativeEnumFieldID;
-    jfieldID nativeContainerFieldID;
     jint nativeEnum, nativeContainer;
-    
-    objClass = env->GetObjectClass(obj);
-    if (nsnull == objClass) {
-        printf("nativeFinalize: Can't get object class for RDFEnumeration.\n");
-        return;
-    }
 
     // release the nsISimpleEnumerator
-    nativeEnumFieldID = env->GetFieldID(objClass, "nativeEnum", "I");
-    if (nsnull == nativeEnumFieldID) {
+    if (-1 == (nativeEnum = 
+               ::util_GetIntValueFromInstance(env, obj, "nativeEnum"))) {
         printf("nativeFinalize: Can't get fieldID for nativeEnum.\n");
         return;
     }
-
-    nativeEnum = env->GetIntField(obj, nativeEnumFieldID);
     nsCOMPtr<nsISimpleEnumerator> enumerator = 
         (nsISimpleEnumerator *) nativeEnum;
     ((nsISupports *)enumerator.get())->Release();
     
     // release the nsIRDFContainer
-    nativeContainerFieldID = env->GetFieldID(objClass, "nativeContainer", "I");
-    if (nsnull == nativeContainerFieldID) {
-        printf("nativeFinalize: Can't get fieldID for nativeContainer.\n");
+    if (-1 == (nativeContainer = 
+               ::util_GetIntValueFromInstance(env, obj, "nativeContainer"))) {
+        printf("nativeFinalize: Can't get fieldID for nativeContainerFieldID.\n");
         return;
     }
-
-    nativeContainer = env->GetIntField(obj, nativeContainerFieldID);
     nsCOMPtr<nsIRDFContainer> container = 
         (nsIRDFContainer *) nativeContainer;
     ((nsISupports *)container.get())->Release();
@@ -169,23 +156,8 @@ jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
 {
     nsresult rv;
     jint result = -1;
-    jclass objClass;
-    jfieldID nativeEnumFieldID;
-    jfieldID nativeContainerFieldID;
 
-    objClass = env->GetObjectClass(obj);
-    if (nsnull == objClass) {
-        printf("getNativeEnumFromJava: Can't get object class for RDFEnumeration.\n");
-        return -1;
-    }
-
-    nativeEnumFieldID = env->GetFieldID(objClass, "nativeEnum", "I");
-    if (nsnull == nativeEnumFieldID) {
-        printf("getNativeEnumFromJava: Can't get fieldID for nativeEnum.\n");
-        return -1;
-    }
-
-    result = env->GetIntField(obj, nativeEnumFieldID);
+    result = ::util_GetIntValueFromInstance(env, obj, "nativeEnum");
 
     // if the field has been initialized, just return the value
     if (-1 != result) {
@@ -229,7 +201,7 @@ jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
     }
 
     // IMPORTANT: Store the enum back into java
-    env->SetIntField(obj, nativeEnumFieldID, (jint) enumerator.get());
+    ::util_SetIntValueForInstance(env,obj,"nativeEnum",(jint)enumerator.get());
     // IMPORTANT: make sure it doesn't get deleted when it goes out of scope
     ((nsISupports *)enumerator.get())->AddRef(); 
 
@@ -237,12 +209,8 @@ jint getNativeEnumFromJava(JNIEnv *env, jobject obj, jint nativeRDFNode)
     // nsIRDFContainer from being destructed in order to maintain the
     // validity of the nsISimpleEnumerator that came from the container.
     // Just to be safe, I'm doing so.
-    nativeContainerFieldID = env->GetFieldID(objClass, "nativeContainer", "I");
-    if (nsnull == nativeContainerFieldID) {
-        printf("getNativeEnumFromJava: Can't get fieldID for nativeContainer.\n");
-        return -1;
-    }
-    env->SetIntField(obj, nativeContainerFieldID, (jint) container.get());
+    ::util_SetIntValueForInstance(env, obj, "nativeContainer", 
+                                  (jint) container.get());
     ((nsISupports *)container.get())->AddRef();
     
     // NORMAL EXIT 2

@@ -35,17 +35,19 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
 (JNIEnv *env, jobject obj, jint webShellPtr, jstring urlString)
 {
     jobject			jobj = obj;
-    const char	*	urlChars = (char *) env->GetStringUTFChars(urlString, 0);
+    const char	*	urlChars = (char *) ::util_GetStringUTFChars(env, 
+                                                                 urlString);
     
     printf("Native URL = \"%s\"\n", urlChars);
-    env->ReleaseStringUTFChars(urlString, urlChars);
+    ::util_ReleaseStringUTFChars(env, urlString, urlChars);
     
-    PRUnichar	*	urlStringChars = (PRUnichar *) env->GetStringChars(urlString, 0);
+    PRUnichar	*	urlStringChars = (PRUnichar *) ::util_GetStringChars(env,
+                                                                         urlString);
     
-    if (env->ExceptionOccurred()) {
+    if (::util_ExceptionOccurred(env)) {
 	::util_ThrowExceptionToJava(env, "raptorWebShellLoadURL Exception: unable to extract Java string");
 	if (urlStringChars != nsnull)
-	  env->ReleaseStringChars(urlString, urlStringChars);
+	  ::util_ReleaseStringChars(env, urlString, urlStringChars);
 	return;
       }
     
@@ -54,7 +56,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
     if (initContext == nsnull) {
       ::util_ThrowExceptionToJava(env, "Exception: null webShellPtr passed to raptorWebShellLoadURL");
       if (urlStringChars != nsnull)
-	env->ReleaseStringChars(urlString, urlStringChars);
+	::util_ReleaseStringChars(env, urlString, urlStringChars);
       return;
     }
     
@@ -65,7 +67,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl
       ::util_PostEvent(initContext, event);
     }
     
-    env->ReleaseStringChars(urlString, urlStringChars);
+    ::util_ReleaseStringChars(env, urlString, urlStringChars);
 }
 
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_NavigationImpl_nativeRefresh

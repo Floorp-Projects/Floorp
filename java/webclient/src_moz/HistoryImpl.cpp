@@ -304,7 +304,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_HistoryImpl
       charResult = (char *) ::util_PostSynchronousEvent(initContext, event);
       
       if (charResult != nsnull) {
-	urlString = env->NewStringUTF((const char *) charResult);
+	urlString = ::util_NewStringUTF(env, (const char *) charResult);
       }
       else {
 	::util_ThrowExceptionToJava(env, "raptorWebShellGetURL Exception: GetURL() returned nsnull");

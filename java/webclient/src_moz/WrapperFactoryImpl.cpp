@@ -27,6 +27,8 @@
 
 #include "WrapperFactoryImpl.h"
 
+#include "jni_util.h"
+
 #include "nsIServiceManager.h"  // for NS_InitXPCOM
 #include "nsAppShellCIDs.h" // for NS_SESSIONHISTORY_CID
 #include "nsCRT.h" // for nsCRT::strcmp
@@ -83,7 +85,8 @@ Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeAppInitializ
   jobject			jobj = obj;
   static PRBool	gFirstTime = PR_TRUE;
   if (gFirstTime) {
-    const char *nativePath = (const char *) env->GetStringUTFChars(verifiedBinDirAbsolutePath, 0);
+    const char *nativePath = (const char *) ::util_GetStringUTFChars(env, 
+                                                                     verifiedBinDirAbsolutePath);
     gBinDir = nativePath;
     
     NS_InitXPCOM(nsnull, &gBinDir);
@@ -93,7 +96,7 @@ Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeAppInitializ
 					     PR_FALSE, PR_FALSE);
     NS_AutoregisterComponents();
     gFirstTime = PR_FALSE;
-    env->ReleaseStringUTFChars(verifiedBinDirAbsolutePath, nativePath);
+    ::util_ReleaseStringUTFChars(env, verifiedBinDirAbsolutePath, nativePath);
 
   }
 }
@@ -109,8 +112,8 @@ JNIEXPORT jboolean JNICALL
 Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeDoesImplement
 (JNIEnv *env, jobject obj, jstring interfaceName)
 {
-    const char *iName = (const char *) env->GetStringUTFChars(interfaceName, 
-                                                              0);
+    const char *iName = (const char *) ::util_GetStringUTFChars(env, 
+                                                                interfaceName);
     jboolean result = JNI_FALSE;
     
     int i = 0;
@@ -125,7 +128,7 @@ Java_org_mozilla_webclient_wrapper_1native_WrapperFactoryImpl_nativeDoesImplemen
             break;
         }
     }
-    env->ReleaseStringUTFChars(interfaceName, iName);
+    ::util_ReleaseStringUTFChars(env, interfaceName, iName);
     
     return result;
 }

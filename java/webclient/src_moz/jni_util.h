@@ -70,7 +70,7 @@ struct WebShellInitContext {
 	nsISessionHistory*	sessionHistory;
 	PLEventQueue	*	actionQueue;
 	PRThread		*	embeddedThread;
-	JNIEnv			*	env;
+    JNIEnv          *   env;
     jobject             nativeEventThread;
 	int					stopThread;
 	int					initComplete;
@@ -145,6 +145,49 @@ char *util_GetCurrentThreadName(JNIEnv *env);
 void util_DumpJavaStack(JNIEnv *env);
 
 //
+// Functions to wrap JNIEnv functions.
+//
+
+const char *util_GetStringUTFChars(JNIEnv *env, jstring inString);
+
+void util_ReleaseStringUTFChars(JNIEnv *env, jstring inString, 
+                                const char *stringFromGet);
+
+const jchar *util_GetStringChars(JNIEnv *env, jstring inString);
+
+void util_ReleaseStringChars(JNIEnv *env, jstring inString, 
+                             const jchar *stringFromGet);
+
+jstring util_NewStringUTF(JNIEnv *env, const char * inString);
+
+jstring util_NewString(JNIEnv *env, const jchar *inString, jsize len);
+
+jobject util_NewGlobalRef(JNIEnv *env, jobject toAddRef);
+
+void util_DeleteGlobalRef(JNIEnv *env, jobject toAddRef);
+
+jthrowable util_ExceptionOccurred(JNIEnv *env);
+
+jint util_GetJavaVM(JNIEnv *env, JavaVM **vm);
+
+jclass util_FindClass(JNIEnv *env, const char *fullyQualifiedClassName);
+
+jfieldID util_GetStaticFieldID(JNIEnv *env, jclass clazz, 
+                               const char *fieldName, 
+                               const char *signature);
+
+jlong util_GetStaticLongField(JNIEnv *env, jclass clazz, jfieldID id);
+
+jboolean util_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz);
+
+jint util_GetIntValueFromInstance(JNIEnv *env, jobject instance,
+                                  const char *fieldName);
+
+void util_SetIntValueForInstance(JNIEnv *env, jobject instance,
+                                 const char *fieldName, jint newValue);
+
+
+//
 // Functions from secret JDK files
 //
 
@@ -166,5 +209,10 @@ JNU_CallMethodByNameV(JNIEnv *env,
 
 JNIEXPORT void * JNICALL
 JNU_GetEnv(JavaVM *vm, jint version);
+
+// hack functions to get around mozilla oddities
+#ifdef XP_UNIX
+jint util_GetGTKWinPtrFromCanvas(JNIEnv *env, jobject browserControlCanvas);
+#endif
 
 #endif // jni_util_h

@@ -47,11 +47,11 @@ OBJS =                              \
     .\$(OBJDIR)\nsSetupRegistry.obj  \
     $(NULL)
 
-LINCS = \
+INCS = \
 	-I$(JDKHOME)\include \
 	-I$(JDKHOME)\include\win32 \
+	$(INCS) \
 	$(NULL)
-
 
 LCFLAGS = \
 	-DDEBUG_RAPTOR_CANVAS \
@@ -134,6 +134,7 @@ buildRunems:
 
 install:: $(DLL) buildRunems
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
 
 clobber_all:: clobber
 

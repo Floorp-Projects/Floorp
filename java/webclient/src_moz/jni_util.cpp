@@ -165,6 +165,240 @@ void util_DumpJavaStack(JNIEnv *env)
 	}
 }
 
+const char * util_GetStringUTFChars(JNIEnv *env, jstring inString)
+{
+    const char *result = nsnull;
+    
+#ifdef BAL_INTERFACE
+#else
+    result = (const char *) env->GetStringUTFChars(inString, 0);
+#endif    
+    
+    return result;
+}
+
+void util_ReleaseStringUTFChars(JNIEnv *env, jstring inString,
+                                const char *stringFromGet)
+{
+
+#ifdef BAL_INTERFACE
+#else
+    env->ReleaseStringUTFChars(inString, stringFromGet);
+#endif
+
+}
+
+const jchar * util_GetStringChars(JNIEnv *env, jstring inString)
+{
+    const jchar *result = nsnull;
+
+#ifdef BAL_INTERFACE
+#else
+    result = (const jchar *) env->GetStringChars(inString, 0);
+#endif    
+
+    return result;
+}
+
+void util_ReleaseStringChars(JNIEnv *env, jstring inString,
+                             const jchar *stringFromGet)
+{
+
+#ifdef BAL_INTERFACE
+#else
+    env->ReleaseStringChars(inString, stringFromGet);
+#endif
+
+}
+
+jstring util_NewStringUTF(JNIEnv *env, const char *inString)
+{
+    jstring result;
+#ifdef BAL_INTERFACE
+#else
+    result = env->NewStringUTF(inString);
+#endif
+
+    return result;
+}
+
+jstring util_NewString(JNIEnv *env, const jchar *inString, jsize len)
+{
+    jstring result;
+#ifdef BAL_INTERFACE
+#else
+    result = env->NewString(inString, len);
+#endif
+
+    return result;
+}
+
+jobject util_NewGlobalRef(JNIEnv *env, jobject obj)
+{
+    jobject result = nsnull;
+#ifdef BAL_INTERFACE
+#else
+    result = env->NewGlobalRef(obj);
+#endif
+    return result;
+}
+
+void util_DeleteGlobalRef(JNIEnv *env, jobject obj)
+{
+#ifdef BAL_INTERFACE
+#else
+    env->DeleteGlobalRef(obj);
+#endif
+}
+
+jthrowable util_ExceptionOccurred(JNIEnv *env)
+{
+    jthrowable result = nsnull;
+#ifdef BAL_INTERFACE
+#else
+    result = env->ExceptionOccurred();
+#endif
+    return result;
+}
+
+jint util_GetJavaVM(JNIEnv *env, JavaVM **vm)
+{
+    int result = -1;
+#ifdef BAL_INTERFACE
+#else
+    result = env->GetJavaVM(vm);
+#endif
+    return result;
+}
+
+jclass util_FindClass(JNIEnv *env, const char *fullyQualifiedClassName)
+{
+    jclass result = nsnull;
+#ifdef BAL_INTERFACE
+#else
+    result = env->FindClass(fullyQualifiedClassName);
+#endif
+    return result;
+}
+
+jfieldID util_GetStaticFieldID(JNIEnv *env, jclass clazz, 
+                               const char *fieldName, 
+                               const char *signature)
+{
+    jfieldID result = nsnull;
+#ifdef BAL_INTERFACE
+#else
+    result = env->GetStaticFieldID(clazz, fieldName, signature);
+#endif
+    return result;
+}
+
+jlong util_GetStaticLongField(JNIEnv *env, jclass clazz, jfieldID id)
+{
+    jlong result = -1;
+#ifdef BAL_INTERFACE
+#else
+    result = env->GetStaticLongField(clazz, id);
+#endif
+    return result;
+}
+
+jboolean util_IsInstanceOf(JNIEnv *env, jobject obj, jclass clazz)
+{
+    jboolean result = JNI_FALSE;
+#ifdef BAL_INTERFACE
+#else
+    result = env->IsInstanceOf(obj, clazz);
+#endif
+    return result;
+}
+
+#ifdef XP_UNIX
+jint util_GetGTKWinPtrFromCanvas(JNIEnv *env, jobject browserControlCanvas)
+{
+    jint result = -1;
+#ifdef BAL_INTERFACE
+#else
+    jclass cls = env->GetObjectClass(browserControlCanvas);  // Get Class for BrowserControlImpl object
+    jclass clz = env->FindClass("org/mozilla/webclient/BrowserControlImpl");
+    if (nsnull == clz) {
+        ::util_ThrowExceptionToJava(env, "Exception: Could not find class for BrowserControlImpl");
+        return (jint) 0;
+    }
+    jboolean ans = env->IsInstanceOf(browserControlCanvas, clz);
+    if (JNI_FALSE == ans) {
+        ::util_ThrowExceptionToJava(env, "Exception: We have a problem");
+        return (jint) 0;
+    }
+    // Get myCanvas IVar
+    jfieldID fid = env->GetFieldID(cls, "myCanvas", "Lorg/mozilla/webclient/BrowserControlCanvas;");
+    if (nsnull == fid) {
+        ::util_ThrowExceptionToJava(env, "Exception: field myCanvas not found in the jobject for BrowserControlImpl");
+        return (jint) 0;
+    }
+    jobject canvasObj = env->GetObjectField(browserControlCanvas, fid);
+    jclass canvasCls = env->GetObjectClass(canvasObj);
+    if (nsnull == canvasCls) {
+        ::util_ThrowExceptionToJava(env, "Exception: Could Not find Class for CanvasObj");
+        return (jint) 0;
+    }
+    jfieldID gtkfid = env->GetFieldID(canvasCls, "gtkWinPtr", "I");
+    if (nsnull == gtkfid) {
+        ::util_ThrowExceptionToJava(env, "Exception: field gtkWinPtr not found in the jobject for BrowserControlCanvas");
+        return (jint) 0;
+    }
+    result = env->GetIntField(canvasObj, gtkfid);
+#endif
+    return result;
+}
+#endif
+
+jint util_GetIntValueFromInstance(JNIEnv *env, jobject obj,
+                                  const char *fieldName)
+{
+    int result = -1;
+#ifdef BAL_INTERFACE
+#else
+    jclass objClass = env->GetObjectClass(obj);
+    if (nsnull == objClass) {
+        printf("util_GetIntValueFromInstance: Can't get object class from instance.\n");
+        return result;
+    }
+
+    jfieldID theFieldID = env->GetFieldID(objClass, fieldName, "I");
+    if (nsnull == theFieldID) {
+        printf("util_GetIntValueFromInstance: Can't get fieldID for fieldName.\n");
+        return result;
+    }
+
+    result = env->GetIntField(obj, theFieldID);
+#endif
+    return result;
+}
+
+void util_SetIntValueForInstance(JNIEnv *env, jobject obj,
+                                 const char *fieldName, jint newValue)
+{
+#ifdef BAL_INTERFACE
+#else
+    jclass objClass = env->GetObjectClass(obj);
+    if (nsnull == objClass) {
+        printf("util_SetIntValueForInstance: Can't get object class from instance.\n");
+        return;
+    }
+
+    jfieldID fieldID = env->GetFieldID(objClass, fieldName, "I");
+    if (nsnull == fieldID) {
+        printf("util_SetIntValueForInstance: Can't get fieldID for fieldName.\n");
+        return;
+    }
+    
+    env->SetIntField(obj, fieldID, newValue);
+#endif;
+}
+
+
+
 JNIEXPORT jvalue JNICALL
 JNU_CallMethodByName(JNIEnv *env, 
 					 jboolean *hasException,

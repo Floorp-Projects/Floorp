@@ -78,23 +78,8 @@ DocumentLoaderObserverImpl::DocumentLoaderObserverImpl(JNIEnv *env,
   mJNIEnv(env), mInitContext(yourInitContext), mTarget(yourTarget)
 {
     if (nsnull == gVm) { // declared in jni_util.h
-      env->GetJavaVM(&gVm);  // save this vm reference away for the callback!
+      ::util_GetJavaVM(env, &gVm);  // save this vm reference away for the callback!
     }
-
-#ifdef XP_PC
-    // debug: edburns:
-    DWORD nativeThreadID = GetCurrentThreadId();
-    printf("debug: edburns: DocumentLoaderObserverImpl ctor nativeThreadID: %d\n",
-           nativeThreadID);
-#endif
-    
-	char *currentThreadName = nsnull;
-
-	if (nsnull != (currentThreadName = util_GetCurrentThreadName(env))) {
-        printf("debug: edburns: DocumentLoaderObserverImpl ctor threadName: %s\n",
-               currentThreadName);
-        delete currentThreadName;
-	}
 
     if (-1 == maskValues[0]) {
       InitializeMaskValues();
@@ -115,7 +100,8 @@ void DocumentLoaderObserverImpl::InitializeMaskValues()
       return;
     }
 
-    jclass documentLoadEventClass = env->FindClass("org/mozilla/webclient/DocumentLoadEvent");
+    jclass documentLoadEventClass = ::util_FindClass(env, 
+                                                     "org/mozilla/webclient/DocumentLoadEvent");
 
     if (nsnull == documentLoadEventClass) {
       return;
@@ -125,14 +111,15 @@ void DocumentLoaderObserverImpl::InitializeMaskValues()
     jfieldID fieldID;
 
     while (nsnull != maskNames[i]) {
-      fieldID = env->GetStaticFieldID(documentLoadEventClass, maskNames[i],
-				      "J");
+      fieldID = ::util_GetStaticFieldID(env, documentLoadEventClass, 
+                                        maskNames[i], "J");
 
       if (nsnull == fieldID) {
 	return;
       }
 
-      maskValues[i] = env->GetStaticLongField(documentLoadEventClass, fieldID);
+      maskValues[i] = ::util_GetStaticLongField(env, documentLoadEventClass, 
+                                                fieldID);
       i++;
     }
 }
