@@ -480,12 +480,12 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
                     nsIMenuItem * pnsMenuItem = nsnull;
                     rv = nsRepository::CreateInstance(kMenuItemCID, nsnull, kIMenuItemIID, (void**)&pnsMenuItem);
                     if (NS_OK == rv) {
-                      pnsMenuItem->Create(pnsMenu, menuitemName, 0);
-/*                  
+                      pnsMenuItem->Create(pnsMenu, menuitemName, 0);                 
                       // Set nsMenuItem Name
                       pnsMenuItem->SetLabel(menuitemName);
                       // Make nsMenuItem a child of nsMenu
                       //pnsMenu->AddMenuItem(pnsMenuItem); // XXX adds an additional item
+                      /*
                       ConnectCommandToOneGUINode(menuitemNode);
 
                       //-----------------------------------------------------------
