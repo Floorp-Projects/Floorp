@@ -17,179 +17,80 @@
  * Copyright (C) 1999, Mozilla.  All Rights Reserved.
  * 
  * Contributor(s):
- *   Conrad Carlen <conrad@ingress.com>
+ *   Conrad Carlen <ccarlen@netscape.com>
  */
 
 #include "CThrobber.h"
-#include "CBrowserWindow.h"
 
 #include <LString.h>
 #include <LStream.h>
 #include <UDrawingState.h>
+#include <UResourceMgr.h>
 
-#include "nsIWidget.h"
-#include "nsWidgetsCID.h"
-#include "nsIComponentManager.h"
-#include "nsIDeviceContext.h"
-#include "nsITimer.h"
-#include "nsFont.h"
-#include "nsIFontMetrics.h"
-#include "prprf.h"
-
-// CIDs
-static NS_DEFINE_IID(kChildCID,          NS_CHILD_CID);
-static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
-
-// Static variables
-map<nsIWidget*, CThrobber*> CThrobber::mgThrobberMap;
-
-// Constants
-const PRUint32 kThrobFrequency = 66;   // animation frequency in milliseconds
+#include <QuickTimeComponents.h>
 
 //*****************************************************************************
 //***    CThrobber: constructors/destructor
 //*****************************************************************************
 
 CThrobber::CThrobber() :
-   mNumImages(2), mCompletedImages(0), mRunning(false)
+   mMovieResID(-1), mMovieHandle(nil),
+   mMovie(nil), mMovieController(nil)
 {
-   NS_INIT_REFCNT(); // caller must add ref as normal
-   
-   AddThrobber(this);
 }
 
 
 CThrobber::CThrobber(LStream*	inStream) :
    LControl(inStream),
-   mNumImages(2), mCompletedImages(0), mRunning(false)
+   mMovieResID(-1), mMovieHandle(nil),
+   mMovie(nil), mMovieController(nil)
 {
-   mRefCnt = 1; // PowerPlant is making us, and it sure isn't going to do an AddRef.
-  
-   LStr255  tempStr;
-
-   mDefImageURL[0] = '\0';
-   *inStream >> (StringPtr) tempStr;
-   memcpy(mDefImageURL, (char *)&tempStr[1], (PRInt32)tempStr.Length());
-   mDefImageURL[(PRInt32)tempStr.Length()] = '\0';
-   
-   mAnimImageURL[0] = '\0';
-   *inStream >> (StringPtr) tempStr;
-   memcpy(mAnimImageURL, (char *)&tempStr[1], (PRInt32)tempStr.Length());
-   mAnimImageURL[(PRInt32)tempStr.Length()] = '\0';
+   *inStream >> mMovieResID;
 }
 
 
 CThrobber::~CThrobber()
 {
-   if (mWidget)
-      mWidget->Destroy();
-   DestroyImages();
-   RemoveThrobber(this);
+    if (mMovieController)
+        ::DisposeMovieController(mMovieController);
+    if (mMovieHandle)
+        ::DisposeHandle(mMovieHandle);   
 }
 
-NS_IMPL_ISUPPORTS0(CThrobber)
-
-
-#if 0
-void CThrobber::Notify(nsIImageRequest *aImageRequest,
-                       nsIImage *aImage,
-                       nsImageNotification aNotificationType,
-                       PRInt32 aParam1, PRInt32 aParam2,
-                       void *aParam3)
-{
-   if (aNotificationType == nsImageNotification_kImageComplete)
-   {
-      mCompletedImages++;
-      
-      // Remove ourselves as an observer of the image request object, because
-      // the image request objects each hold a reference to us. This avoids a
-      // circular reference problem. If we don't, our ref count will never reach
-      // 0 and we won't get destroyed and neither will the image request objects
-
-      aImageRequest->RemoveObserver((nsIImageRequestObserver*)this);
-   }
-}
-
-void  CThrobber::NotifyError(nsIImageRequest *aImageRequest,
-                             nsImageError aErrorType)
-{
-}
-
-#endif
 
 void CThrobber::FinishCreateSelf()
 {
-   CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(Compat_GetMacWindow()));
-   ThrowIfNil_(ourWindow);
-   
-   // Get the widget from the browser window
-   nsCOMPtr<nsIWidget>  parentWidget;
-   ourWindow->GetWidget(getter_AddRefs(parentWidget));
-   ThrowIfNil_(parentWidget);
-   
-   FocusDraw();
-   
-	Rect portFrame;
-	CalcPortFrameRect(portFrame);
-	nsRect r(portFrame.left, portFrame.top, portFrame.right - portFrame.left, portFrame.bottom - portFrame.top);
-   
-  // Create widget
-   nsresult rv;
-   
-   mWidget = do_CreateInstance(kChildCID, &rv);
-   if (!mWidget)
-      Throw_(NS_ERROR_GET_CODE(rv));
-   mWidget->Create(parentWidget, r, HandleThrobberEvent, NULL);
-   
-   rv = LoadImages();
-   if (NS_SUCCEEDED(rv))
-      AddThrobber(this); 
+   CreateMovie();
 }
 
 
 void CThrobber::ShowSelf()
 {
-   mWidget->Show(PR_TRUE);
+    LControl::ShowSelf();
+    
+    if (!mMovieController)
+        return;
+    
+    ::MCSetClip(mMovieController, NULL, NULL);
 }
 
 
 void CThrobber::HideSelf()
 {
-   mWidget->Show(PR_FALSE);
+    LControl::HideSelf();
+    
+    if (!mMovieController)
+        return;    
+    
+    StRegion emptyRgn;
+    ::MCSetClip(mMovieController, NULL, emptyRgn);
 }
 
 
 void CThrobber::DrawSelf()
 {
-#if 0
-   // Draw directly with the rendering context instead of passing an
-   // update event through event sink. By the time this routine is
-   // called, PowerPlant has taken care of the location, z order, and clipping
-   // of each view. Since focusing puts the the origin at our top left corner,
-   // all we have to do is get the bounds of the widget and put that at (0,0)
-
-   StColorPortState	origState(UQDGlobals::GetCurrentPort());
-
-   nsCOMPtr<nsIRenderingContext> cx = getter_AddRefs(mWidget->GetRenderingContext());
-   nsRect bounds;
-   nsIImageRequest *imgreq;
-   nsIImage *img;
-
-   mWidget->GetClientBounds(bounds);
-   bounds.x = bounds.y = 0;
-
-   //cx->SetClipRect(bounds, nsClipCombine_kReplace, clipState);
-
-   PRUint32 index = mRunning ? kAnimImageIndex : kDefaultImageIndex;
-   imgreq = index < mImages->size() ? (*mImages)[index] : nsnull;
-   img = imgreq ? imgreq->GetImage() : nsnull;
-   
-   if (img)
-   {
-     cx->DrawImage(img, 0, 0);
-     NS_RELEASE(img);
-   }
-#endif
+    if (mMovieController)
+        ::MCDraw(mMovieController, Compat_GetMacWindow());
 }
 
 
@@ -198,7 +99,17 @@ void CThrobber::ResizeFrameBy(SInt16		inWidthDelta,
                 					Boolean	   inRefresh)
 {
 	LControl::ResizeFrameBy(inWidthDelta, inHeightDelta, inRefresh);
-	AdjustFrame(inRefresh);
+	
+	if (!mMovieController)
+	    return;
+	    
+	FocusDraw();
+
+	Rect newFrame;
+	::MCGetControllerBoundsRect(mMovieController, &newFrame);
+	newFrame.right += inWidthDelta;
+	newFrame.bottom += inHeightDelta;
+	::MCSetControllerBoundsRect(mMovieController, &newFrame);
 }
 
 
@@ -207,191 +118,97 @@ void CThrobber::MoveBy(SInt32		inHorizDelta,
 							  Boolean	inRefresh)
 {
 	LControl::MoveBy(inHorizDelta, inVertDelta, inRefresh);
-	AdjustFrame(inRefresh);
+
+	if (!mMovieController)
+	    return;
+ 
+ 	FocusDraw();
+ 
+	Rect newFrame;	
+	::MCGetControllerBoundsRect(mMovieController, &newFrame);
+	::OffsetRect(&newFrame, inHorizDelta, inVertDelta);
+	::MCSetControllerBoundsRect(mMovieController, &newFrame);
+}
+
+
+void CThrobber::SpendTime(const EventRecord	&inMacEvent)
+{
+	FocusDraw();
+	::MCIsPlayerEvent(mMovieController, &inMacEvent);
 }
 
 	
 void CThrobber::Start()
 {
-   mRunning = true;
+	if (!mMovieController)
+	    return;
+ 
+    ::StartMovie(mMovie);
+    StartRepeating();
 }
 
 
 void CThrobber::Stop()
 {
-   mRunning = false;
-   FocusDraw();
-   mWidget->Invalidate(PR_TRUE);
+	if (!mMovieController)
+	    return;
+ 
+    StopRepeating();
+    ::StopMovie(mMovie);
+    ::GoToBeginningOfMovie(mMovie);
+    Refresh();
 }
 
 
-void CThrobber::AdjustFrame(Boolean inRefresh)
+void CThrobber::CreateMovie()
 {
-	FocusDraw();
+    OSErr err;
+    Handle dataRef = NULL;
+        
+    try {
+        // Get the movie from our resource
+        StApplicationContext appResContext;
+        
+        mMovieHandle = ::Get1Resource('GIF ', 128);
+        ThrowIfResFail_(mMovieHandle);
+        ::DetachResource(mMovieHandle);
+        
+        // Create a dataRef handle - from TN2018
+    	err = ::PtrToHand(&mMovieHandle, &dataRef, sizeof(Handle));
+    	ThrowIfError_(err);
+    	err = ::PtrAndHand("\p", dataRef, 1); 
+    	ThrowIfError_(err);
+        long	fileTypeAtom[3];
+    	fileTypeAtom[0] = sizeof(long) * 3;
+    	fileTypeAtom[1] = kDataRefExtensionMacOSFileType;
+    	fileTypeAtom[2] = kQTFileTypeGIF;
+    	err = ::PtrAndHand(fileTypeAtom, dataRef, sizeof(long) * 3);
+    	ThrowIfError_(err);
+    	
+    	err = ::NewMovieFromDataRef(&mMovie, newMovieActive, NULL, dataRef, HandleDataHandlerSubType);
+        ThrowIfError_(err);
+    	DisposeHandle(dataRef);
+    	dataRef = NULL;
+    	
+    	// Make a controller for the movie
+    	Rect	movieBounds;
+    	::GetMovieBox(mMovie, &movieBounds);
+    	::MacOffsetRect(&movieBounds, (SInt16) -movieBounds.left, (SInt16) -movieBounds.top);
+    	::SetMovieBox(mMovie, &movieBounds);
 
-	Rect portFrame;
-	CalcPortFrameRect(portFrame);
-	nsRect r(portFrame.left, portFrame.top, portFrame.right - portFrame.left, portFrame.bottom - portFrame.top);
-   
-   mWidget->Resize(r.x, r.y, r.width, r.height, inRefresh); 		
-}
+    	::SetMovieGWorld(mMovie, (CGrafPtr) GetMacPort(), nil);
 
-
-NS_METHOD CThrobber::LoadImages()
-{
-  nsresult rv = NS_ERROR_FAILURE;
-
-#if 0
-  mImages = new vector<nsIImageRequest*>(mNumImages, nsnull);
-  if (nsnull == mImages) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  rv = NS_NewImageGroup(&mImageGroup);
-  if (NS_OK != rv) {
-    return rv;
-  }
-
-  nsIDeviceContext *deviceCtx = mWidget->GetDeviceContext();
-  mImageGroup->Init(deviceCtx, nsnull);
-  NS_RELEASE(deviceCtx);
-
-  mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  if (NS_OK != rv) {
-    return rv;
-  }
-  mTimer->Init(ThrobTimerCallback, this, kThrobFrequency, NS_PRIORITY_NORMAL, NS_TYPE_REPEATING_SLACK);
-    
-    nscolor bgcolor = NS_RGB(0, 0, 0);
-  
-  // Get the default image
-  if (strlen(mDefImageURL)) {
-      (*mImages)[kDefaultImageIndex] = mImageGroup->GetImage(mDefImageURL,
-                                               (nsIImageRequestObserver *)this,
-                                               nsnull /*&bgcolor*/,
-                                               mFrameSize.width,
-                                               mFrameSize.height, 0);
-  }
-
-  // Get the animated image
-  if (strlen(mAnimImageURL)) {
-      (*mImages)[kAnimImageIndex] = mImageGroup->GetImage(mAnimImageURL,
-                                               (nsIImageRequestObserver *)this,
-                                               nsnull /*&bgcolor*/,
-                                               mFrameSize.width,
-                                               mFrameSize.height, 0);
-  }
-
-  mWidget->Invalidate(PR_TRUE);
-#endif
-
-  return rv;
-}
-
-void CThrobber::DestroyImages()
-{
-  if (mTimer)
-  {
-    mTimer->Cancel();
-  }
-
-#if 0
-  if (mImageGroup)
-  {
-    mImageGroup->Interrupt();
-    
-    for (vector<nsIImageRequest*>::iterator iter = mImages->begin(); iter < mImages->end(); ++iter)
-    {
-      NS_IF_RELEASE(*iter);
+    	Rect	frame;
+    	CalcLocalFrameRect(frame);
+    	mMovieController = ::NewMovieController(mMovie, &frame, mcTopLeftMovie + mcNotVisible);
+        
+    	::MCDoAction(mMovieController, mcActionSetLooping, (void *)1);
+    	::MCMovieChanged(mMovieController, mMovie);
     }
-    NS_RELEASE(mImageGroup);
-  }
-
-  if (mImages)
-  {
-    delete mImages;
-    mImages = nsnull;
-  }
-#endif
-}
-
-void CThrobber::Tick()
-{
-  if (mRunning) {
-    FocusDraw();
-    mWidget->Invalidate(PR_TRUE);
-  } else if (mCompletedImages == (PRUint32)mNumImages) {
-      FocusDraw();
-    mWidget->Invalidate(PR_TRUE);
-    mCompletedImages = 0;
-  }
-
-#ifndef REPEATING_TIMERS
-  nsresult rv;
-  mTimer = do_CreateInstance("@mozilla.org/timer;1", &rv);
-  if (NS_OK == rv) {
-    mTimer->Init(ThrobTimerCallback, this, kThrobFrequency);
-  }
-#endif
-}
-
-
-
-CThrobber* CThrobber::FindThrobberForWidget(nsIWidget* aWidget)
-{
-   map<nsIWidget*, CThrobber*>::iterator iter = mgThrobberMap.find(aWidget);
-   if (iter == mgThrobberMap.end())
-      return nsnull;
-   else
-      return iter->second;
-}
-
-
-void CThrobber::AddThrobber(CThrobber* aThrobber)
-{
-   pair<nsIWidget*, CThrobber*>  entry(aThrobber->mWidget, aThrobber);
-   mgThrobberMap[aThrobber->mWidget] = aThrobber;
-}
-
-
-void CThrobber::RemoveThrobber(CThrobber* aThrobber)
-{
-   map<nsIWidget*, CThrobber*>::iterator iter = mgThrobberMap.find(aThrobber->mWidget);
-   if (iter != mgThrobberMap.end())
-      mgThrobberMap.erase(iter);
-}
-
-
-nsEventStatus PR_CALLBACK CThrobber::HandleThrobberEvent(nsGUIEvent *aEvent)
-{
-  CThrobber* throbber = FindThrobberForWidget(aEvent->widget);
-  if (nsnull == throbber) {
-    return nsEventStatus_eIgnore;
-  }
-
-  switch (aEvent->message)
-  {
-    case NS_PAINT:
-      break;
-
-    case NS_MOUSE_LEFT_BUTTON_UP:
-      // Broadcast a message
-      break;
-
-    case NS_MOUSE_ENTER:
-      aEvent->widget->SetCursor(eCursor_hyperlink);
-      break;
-
-    case NS_MOUSE_EXIT:
-      aEvent->widget->SetCursor(eCursor_standard);
-      break;
-  }
-
-  return nsEventStatus_eIgnore;
-}
-
-
-void CThrobber::ThrobTimerCallback(nsITimer *aTimer, void *aClosure)
-{
-  CThrobber* throbber = (CThrobber*)aClosure;
-  throbber->Tick();
+    catch (...) {
+        if (dataRef)
+            DisposeHandle(dataRef);
+        
+        // Don't rethrow
+    }
 }

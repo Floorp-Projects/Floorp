@@ -45,6 +45,8 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsIDocument.h"
 #include "nsIDOMHTMLCollection.h"
+#include "nsIDOMHTMLLinkElement.h"
+#include "nsIDOMHTMLAnchorElement.h"
 #include "nsIWebBrowserFind.h"
 #include "nsIWebBrowserFocus.h"
 #include "nsIWebBrowserPersist.h"
@@ -54,31 +56,188 @@
 #include "nsReadableUtils.h"
 #include "nsILocalFile.h"
 #include "nsILocalFileMac.h"
+#include "nsWeakReference.h"
+#include "nsIChannel.h"
+#include "nsIWidget.h"
 
-#include <UModalDialogs.h>
-#include <LStream.h>
-#include <UNavServicesDialogs.h>
-
+// Local
 #include "ApplIDs.h"
-#include "CBrowserWindow.h"
+#include "CBrowserMsgDefs.h"
+#include "CBrowserChrome.h"
+#include "CWebBrowserCMAttachment.h"
 #include "UMacUnicode.h"
 
 // PowerPlant
-#ifndef _H_LEditText
-#include "LEditText.h"
-#endif
+#include <UModalDialogs.h>
+#include <LStream.h>
+#include <UNavServicesDialogs.h>
+#include <LEditText.h>
+#include <LCheckBox.h>
+#include <UEventMgr.h>
 
-#ifndef _H_LCheckBox
-#include "LCheckBox.h"
-#endif
+// ToolBox
+#include <InternetConfig.h>
 
 static NS_DEFINE_IID(kWindowCID, NS_WINDOW_CID);
+
+//*****************************************************************************
+//***    CBrowserShellProgressListener
+//*****************************************************************************
+
+class CBrowserShellProgressListener : public nsIWebProgressListener,
+                                      public nsSupportsWeakReference
+{
+  public:
+                                CBrowserShellProgressListener(CBrowserShell* itsOwner);
+                                
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWEBPROGRESSLISTENER
+    
+    void                        SetOwner(CBrowserShell* itsOwner)
+                                { mpOwner = itsOwner; }
+                                
+    PRBool                      GetIsLoading()
+                                { return mLoading; }
+                                
+  protected:
+    virtual                     ~CBrowserShellProgressListener();
+    
+  protected:
+    CBrowserShell               *mpOwner;
+    PRBool                      mLoading;
+    PRBool                      mUseRealProgFlag;
+    PRInt32                     mFinishedRequests, mTotalRequests;                       
+};
+
+NS_IMPL_ISUPPORTS2(CBrowserShellProgressListener, nsIWebProgressListener, nsISupportsWeakReference)
+
+CBrowserShellProgressListener::CBrowserShellProgressListener(CBrowserShell* itsOwner) :
+    mpOwner(itsOwner),
+    mLoading(PR_FALSE), mUseRealProgFlag(PR_FALSE),
+    mFinishedRequests(0), mTotalRequests(0)
+{
+    NS_INIT_ISUPPORTS();
+}
+
+CBrowserShellProgressListener::~CBrowserShellProgressListener()
+{
+}
+
+NS_IMETHODIMP CBrowserShellProgressListener::OnStateChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aStateFlags, PRUint32 aStatus)
+{
+    NS_ENSURE_TRUE(mpOwner, NS_ERROR_NULL_POINTER);
+
+    if (aStateFlags & STATE_START)
+    {
+        if (aStateFlags & STATE_IS_NETWORK)
+        {
+            MsgNetStartInfo startInfo(mpOwner);
+            mpOwner->BroadcastMessage(msg_OnNetStartChange, &startInfo);            
+            mLoading = true;
+            
+            // Init progress vars
+            mUseRealProgFlag = false;
+            mTotalRequests = 0;
+            mFinishedRequests = 0;
+        }
+        if (aStateFlags & STATE_IS_REQUEST)
+            mTotalRequests++;
+    }
+    else if (aStateFlags & STATE_STOP)
+    {
+        if (aStateFlags & STATE_IS_REQUEST)
+        {
+            mFinishedRequests += 1;
+        
+            if (!mUseRealProgFlag)
+            {
+                MsgOnProgressChangeInfo progInfo(mpOwner, mFinishedRequests, mTotalRequests);    
+                mpOwner->BroadcastMessage(msg_OnProgressChange, &progInfo);
+            }
+        }
+        if (aStateFlags & STATE_IS_NETWORK)
+        {
+            MsgNetStopInfo stopInfo(mpOwner);
+            mpOwner->BroadcastMessage(msg_OnNetStopChange, &stopInfo);
+            mLoading = false;
+        }
+    }
+    else if (aStateFlags & STATE_TRANSFERRING)
+    {
+
+        if (aStateFlags & STATE_IS_DOCUMENT)
+        {
+            nsCOMPtr<nsIChannel> channel(do_QueryInterface(aRequest));
+            NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
+            nsXPIDLCString contentType;
+            channel->GetContentType(getter_Copies(contentType));
+            if (strcmp(contentType.get(), "text/html"))
+                mUseRealProgFlag = true;
+        }
+        
+        if (aStateFlags & STATE_IS_REQUEST)
+        {
+            if (!mUseRealProgFlag)
+            {
+                MsgOnProgressChangeInfo progInfo(mpOwner, mFinishedRequests, mTotalRequests);    
+                mpOwner->BroadcastMessage(msg_OnProgressChange, &progInfo);
+            }
+        }
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserShellProgressListener::OnProgressChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 aCurSelfProgress, PRInt32 aMaxSelfProgress, PRInt32 aCurTotalProgress, PRInt32 aMaxTotalProgress)
+{
+    NS_ENSURE_TRUE(mpOwner, NS_ERROR_NULL_POINTER);
+
+    if (!mUseRealProgFlag)
+        return NS_OK;
+    
+    MsgOnProgressChangeInfo progInfo(mpOwner, aCurTotalProgress, aMaxTotalProgress);    
+    mpOwner->BroadcastMessage(msg_OnProgressChange, &progInfo);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserShellProgressListener::OnLocationChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsIURI *location)
+{
+    NS_ENSURE_TRUE(mpOwner, NS_ERROR_NULL_POINTER);
+    
+    nsXPIDLCString spec;
+    
+	if (location)
+		location->GetSpec(getter_Copies(spec));
+		
+	MsgLocationChangeInfo info(mpOwner, spec.get());
+    mpOwner->BroadcastMessage(msg_OnLocationChange, &info);
+    
+    return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserShellProgressListener::OnStatusChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, nsresult aStatus, const PRUnichar *aMessage)
+{
+    NS_ENSURE_TRUE(mpOwner, NS_ERROR_NULL_POINTER);
+
+    MsgStatusChangeInfo info(mpOwner, aStatus, aMessage);
+    mpOwner->BroadcastMessage(msg_OnStatusChange, &info);
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP CBrowserShellProgressListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 //*****************************************************************************
 //***    CBrowserShell: constructors/destructor
 //*****************************************************************************
 
-CBrowserShell::CBrowserShell()
+CBrowserShell::CBrowserShell() :
+    mChromeFlags(nsIWebBrowserChrome::CHROME_DEFAULT), mIsMainContent(true),
+    mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE), mContextMenuDOMNode(nsnull)
 {
 	nsresult rv = CommonConstruct();
 	if (rv != NS_OK)
@@ -87,8 +246,12 @@ CBrowserShell::CBrowserShell()
 
 
 CBrowserShell::CBrowserShell(const SPaneInfo	&inPaneInfo,
-						  	 const SViewInfo	&inViewInfo) :
-    LView(inPaneInfo, inViewInfo)
+						  	 const SViewInfo	&inViewInfo,
+						  	 const UInt32       inChromeFlags,
+						  	 const Boolean      inIsMainContent) :
+    LView(inPaneInfo, inViewInfo),
+    mChromeFlags(inChromeFlags), mIsMainContent(inIsMainContent),
+    mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE), mContextMenuDOMNode(nsnull)
 {
 	nsresult rv = CommonConstruct();
 	if (rv != NS_OK)
@@ -97,9 +260,11 @@ CBrowserShell::CBrowserShell(const SPaneInfo	&inPaneInfo,
 
 
 CBrowserShell::CBrowserShell(LStream*	inStream) :
-	LView(inStream)
+	LView(inStream),
+    mContextMenuContext(nsIContextMenuListener::CONTEXT_NONE), mContextMenuDOMNode(nsnull)
 {
-	*inStream >> (StringPtr) mInitURL;
+	*inStream >> mChromeFlags;
+	*inStream >> mIsMainContent;
 	
 	nsresult rv = CommonConstruct();
 	if (rv != NS_OK)
@@ -109,7 +274,19 @@ CBrowserShell::CBrowserShell(LStream*	inStream) :
 
 CBrowserShell::~CBrowserShell()
 {
-    // nsCOMPtr destructors, do your thing
+    if (mWebBrowser)
+        mWebBrowser->SetContainerWindow(nsnull);
+    
+    if (mChrome)
+    {
+        mChrome->SetBrowserShell(nsnull);
+        NS_RELEASE(mChrome);
+    }
+    if (mProgressListener)
+    {
+        mProgressListener->SetOwner(nsnull);
+        NS_RELEASE(mProgressListener);
+    }
 }
 
 
@@ -127,8 +304,63 @@ NS_IMETHODIMP CBrowserShell::CommonConstruct()
     nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mWebBrowser));
     NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
     mWebBrowserAsWebNav = webNav;
+    
+    mChrome = new CBrowserChrome(this, mChromeFlags, mIsMainContent);
+    NS_ENSURE_TRUE(mChrome, NS_ERROR_FAILURE);
+    NS_ADDREF(mChrome);
+    AddListener(mChrome);
+    mWebBrowser->SetContainerWindow(mChrome);
+        
+    mProgressListener = new CBrowserShellProgressListener(this);
+    NS_ENSURE_TRUE(mProgressListener, NS_ERROR_FAILURE);
+    NS_ADDREF(mProgressListener);
 
     return NS_OK;
+}
+
+/**
+ * It is a nescesary evil to create a top level window widget in order to
+ * have a parent for our nsIBaseWindow. In order to not put that responsibility
+ * onto the PowerPlant window which contains us, we do it ourselves here by
+ * creating the widget if it does not exist and storing it as a window property.
+ */
+ 
+NS_IMETHODIMP CBrowserShell::EnsureTopLevelWidget(nsIWidget **aWidget)
+{
+    NS_ENSURE_ARG_POINTER(aWidget);
+    *aWidget = nsnull;
+    
+    OSStatus err;
+    nsresult rv;
+    nsIWidget *widget = nsnull;
+
+    err = ::GetWindowProperty(Compat_GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), nsnull, (void*)&widget);
+    if (err == noErr && widget) {
+        *aWidget = widget;
+        NS_ADDREF(*aWidget);
+        return NS_OK;
+    }
+
+	// Create it with huge bounds. The actual bounds that matters is that of the
+	// nsIBaseWindow. The bounds of the top level widget clips its children so
+	// we just have to make sure it is big enough to always contain the children.
+    
+    nsCOMPtr<nsIWidget> newWidget(do_CreateInstance(kWindowCID, &rv));
+    NS_ENSURE_SUCCESS(rv, rv);
+	    
+	nsRect r(0, 0, 32000, 32000);
+	rv = newWidget->Create(Compat_GetMacWindow(), r, nsnull, nsnull, nsnull, nsnull, nsnull);
+	NS_ENSURE_SUCCESS(rv, rv);
+
+	widget = newWidget;
+    err = ::SetWindowProperty(Compat_GetMacWindow(), 'PPMZ', 'WIDG', sizeof(nsIWidget*), (void*)&widget);
+    if (err == noErr) {
+        *aWidget = newWidget;
+        NS_ADDREF(*aWidget);
+        return NS_OK;
+    }
+    
+    return NS_ERROR_FAILURE;
 }
 
 
@@ -139,14 +371,9 @@ NS_IMETHODIMP CBrowserShell::CommonConstruct()
 void CBrowserShell::FinishCreateSelf()
 {
 	FocusDraw();
-	
-	CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(Compat_GetMacWindow()));
-	ThrowIfNil_(ourWindow);
-	ourWindow->AddListener(this);
-	
-	nsCOMPtr<nsIWidget>  aWidget;
-	ourWindow->GetWidget(getter_AddRefs(aWidget));
-	ThrowIfNil_(aWidget);
+		
+	nsCOMPtr<nsIWidget> aWidget;
+	ThrowIfError_(EnsureTopLevelWidget(getter_AddRefs(aWidget)));
 	
 	// the widget is also our avenue for dispatching events into Gecko via
 	// nsIEventSink. Save this sink for later.
@@ -159,21 +386,16 @@ void CBrowserShell::FinishCreateSelf()
 	
 	nsresult rv;
 	
-	nsCOMPtr<nsIWebBrowserChrome> ourChrome;
-	ourWindow->GetIWebBrowserChrome(getter_AddRefs(ourChrome));
-	ThrowIfNil_(ourChrome);
-
-    mWebBrowser->SetContainerWindow(ourChrome);  		
     mWebBrowserAsBaseWin->InitWindow(aWidget->GetNativeData(NS_NATIVE_WIDGET), nsnull, r.x, r.y, r.width, r.height);
     mWebBrowserAsBaseWin->Create();
-    
-    nsWeakPtr weakling(dont_AddRef(NS_GetWeakReference(ourChrome)));
+        
+    // Hook up our progress listener
+    nsWeakPtr weakling(dont_AddRef(NS_GetWeakReference((nsIWebProgressListener *)mProgressListener)));
     rv = mWebBrowser->AddWebBrowserListener(weakling, NS_GET_IID(nsIWebProgressListener));
     NS_ASSERTION(NS_SUCCEEDED(rv), "Call to AddWebBrowserListener failed");
       
     AdjustFrame();   
 	StartRepeating();
-	StartListening();
 }
 
 
@@ -302,6 +524,22 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
 
     switch (inCommand)
     {
+        case cmd_Back:
+            Back();
+            break;
+ 
+        case cmd_Forward:
+            Forward();
+            break;
+            
+        case cmd_Stop:
+            Stop();
+            break;
+            
+        case cmd_Reload:
+            Reload();
+            break;
+
         case cmd_SaveAs:
             rv = SaveCurrentURI();
             ThrowIfError_(rv);
@@ -344,6 +582,23 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
 			FindNext();
 			break;
 
+        case cmd_OpenLinkInNewWindow:
+            {               
+                // Get the URL from the link
+                ThrowIfNil_(mContextMenuDOMNode);
+                nsCOMPtr<nsIDOMHTMLAnchorElement> linkElement(do_QueryInterface(mContextMenuDOMNode, &rv));
+                ThrowIfError_(rv);
+                
+                nsAutoString href;
+                rv = linkElement->GetHref(href);
+                ThrowIfError_(rv);
+                
+                nsCAutoString urlSpec;
+                CopyUCS2toASCII(href, urlSpec);
+                PostOpenURLEvent(urlSpec);
+            }
+            break;
+            
 		case cmd_SaveFormData:
             {
                 nsCOMPtr<nsIDOMWindow> domWindow;
@@ -379,6 +634,16 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
             }
             break;
 
+        case cmd_ViewPageSource:
+            {
+                nsCAutoString currentURL;
+                rv = GetCurrentURL(currentURL);
+                ThrowIfError_(rv);
+                currentURL.Insert("view-source:", 0);
+                PostOpenURLEvent(currentURL);
+            }
+            break;
+
         default:
             cmdHandled = LCommander::ObeyCommand(inCommand, ioParam);
             break;
@@ -393,59 +658,100 @@ void CBrowserShell::FindCommandStatus(PP_PowerPlant::CommandT inCommand,
 {
     nsresult rv;
     nsCOMPtr<nsIClipboardCommands> clipCmd;
-    PRBool canDo;
+    PRBool haveContent, canDo;
     nsCOMPtr<nsIURI> currURI;
 
+    rv = mWebBrowserAsWebNav->GetCurrentURI(getter_AddRefs(currURI));
+    haveContent = NS_SUCCEEDED(rv) && currURI;
+    
     switch (inCommand)
     {
+        case cmd_Back:
+            outEnabled = CanGoBack();
+            break;
+ 
+        case cmd_Forward:
+            outEnabled = CanGoForward();
+            break;
+            
+        case cmd_Stop:
+            outEnabled = IsBusy();
+            break;
+            
+        case cmd_Reload:
+            outEnabled = haveContent;
+            break;
+
         case cmd_SaveAs:
         case cmd_SaveAllAs:
-            rv = mWebBrowserAsWebNav->GetCurrentURI(getter_AddRefs(currURI));
-            outEnabled = NS_SUCCEEDED(rv);
+            outEnabled = haveContent;
             break;
             
         case cmd_Cut:
-            rv = GetClipboardHandler(getter_AddRefs(clipCmd));
-            if (NS_SUCCEEDED(rv)) {
-                rv = clipCmd->CanCutSelection(&canDo);
-                outEnabled = NS_SUCCEEDED(rv) && canDo;
+            if (haveContent) {
+                rv = GetClipboardHandler(getter_AddRefs(clipCmd));
+                if (NS_SUCCEEDED(rv)) {
+                    rv = clipCmd->CanCutSelection(&canDo);
+                    outEnabled = NS_SUCCEEDED(rv) && canDo;
+                }
             }
             break;
 
         case cmd_Copy:
-            rv = GetClipboardHandler(getter_AddRefs(clipCmd));
-            if (NS_SUCCEEDED(rv)) {
-                rv = clipCmd->CanCopySelection(&canDo);
-                outEnabled = NS_SUCCEEDED(rv) && canDo;
+            if (haveContent) {
+                rv = GetClipboardHandler(getter_AddRefs(clipCmd));
+                if (NS_SUCCEEDED(rv)) {
+                    rv = clipCmd->CanCopySelection(&canDo);
+                    outEnabled = NS_SUCCEEDED(rv) && canDo;
+                }
             }
             break;
 
         case cmd_Paste:
-            rv = GetClipboardHandler(getter_AddRefs(clipCmd));
-            if (NS_SUCCEEDED(rv)) {
-                rv = clipCmd->CanPaste(&canDo);
-                outEnabled = NS_SUCCEEDED(rv) && canDo;
+            if (haveContent) {
+                rv = GetClipboardHandler(getter_AddRefs(clipCmd));
+                if (NS_SUCCEEDED(rv)) {
+                    rv = clipCmd->CanPaste(&canDo);
+                    outEnabled = NS_SUCCEEDED(rv) && canDo;
+                }
             }
             break;
 
         case cmd_SelectAll:
-            outEnabled = PR_TRUE;
+            outEnabled = haveContent;
             break;
 
 		case cmd_Find:
-			outEnabled = true;
+			outEnabled = haveContent;
 			break;
 
 		case cmd_FindNext:
-			outEnabled = CanFindNext();
+			outEnabled = haveContent && CanFindNext();
 			break;
+
+        case cmd_OpenLinkInNewWindow:
+            outEnabled = haveContent && ((mContextMenuContext & nsIContextMenuListener::CONTEXT_LINK) != 0);
+            break;
+            
+        case cmd_ViewPageSource:
+            outEnabled = haveContent && ((mChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME) == 0);
+            break;
+            
+        case cmd_ViewImage:
+        case cmd_CopyImageLocation:
+            outEnabled = haveContent && ((mContextMenuContext & nsIContextMenuListener::CONTEXT_IMAGE) != 0);
+            break;
+            
+        case cmd_CopyLinkLocation:
+            outEnabled = haveContent && ((mContextMenuContext & nsIContextMenuListener::CONTEXT_LINK) != 0);
+            break;
         
 		case cmd_SaveFormData:
-		    outEnabled = HasFormElements();
+		    outEnabled = haveContent && HasFormElements();
 		    break;
 
 		case cmd_PrefillForm:
-		    outEnabled = HasFormElements();
+		    outEnabled = haveContent && HasFormElements();
 		    break;
 
         default:
@@ -479,31 +785,24 @@ void CBrowserShell::SpendTime(const EventRecord&		inMacEvent)
     }
 }
 
-//*****************************************************************************
-//***    CBrowserShell: LListener overrides
-//*****************************************************************************
-
-void CBrowserShell::ListenToMessage(MessageT			inMessage,
-									void*				ioParam)
-{
-	switch (inMessage)
-	{
-		case msg_OnStartLoadDocument:
-		case msg_OnEndLoadDocument:
-			break;
-	}
-}
-
 
 //*****************************************************************************
 //***    CBrowserShell:
 //*****************************************************************************
 
-NS_IMETHODIMP CBrowserShell::SetTopLevelWindow(nsIWebBrowserChrome * aTopLevelWindow)
+void CBrowserShell::AddAttachments()
 {
-    return mWebBrowser->SetContainerWindow(aTopLevelWindow);
+    // Only add a context menu attachment for full browser windows -
+    // not view-source and chrome dialogs.
+    if ((mChromeFlags & (nsIWebBrowserChrome::CHROME_TOOLBAR |
+                         nsIWebBrowserChrome::CHROME_STATUSBAR)) != 0)
+    {
+        CWebBrowserCMAttachment *cmAttachment = new CWebBrowserCMAttachment(this);
+        ThrowIfNil_(cmAttachment);
+        cmAttachment->SetCommandList(mcmd_BrowserShellContextMenuCmds);
+        AddAttachment(cmAttachment);
+    }
 }
-
 
 NS_METHOD CBrowserShell::GetWebBrowser(nsIWebBrowser** aBrowser)
 {
@@ -521,12 +820,17 @@ NS_METHOD CBrowserShell::SetWebBrowser(nsIWebBrowser* aBrowser)
 
     FocusDraw();
 
+    /*
     CBrowserWindow *ourWindow = dynamic_cast<CBrowserWindow*>(LWindow::FetchWindowObject(Compat_GetMacWindow()));
     NS_ENSURE_TRUE(ourWindow, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsIWidget>  aWidget;
     ourWindow->GetWidget(getter_AddRefs(aWidget));
     NS_ENSURE_TRUE(aWidget, NS_ERROR_FAILURE);
+    */
+    
+	nsCOMPtr<nsIWidget> aWidget;
+	ThrowIfError_(EnsureTopLevelWidget(getter_AddRefs(aWidget)));
 
     mWebBrowser = aBrowser;
 
@@ -550,6 +854,12 @@ NS_METHOD CBrowserShell::SetWebBrowser(nsIWebBrowser* aBrowser)
     return NS_OK;
 }
 
+NS_METHOD CBrowserShell::GetWebBrowserChrome(nsIWebBrowserChrome** aChrome)
+{
+    NS_ENSURE_ARG_POINTER(aChrome);
+    return mChrome->QueryInterface(NS_GET_IID(nsIWebBrowserChrome), (void **)aChrome);
+}
+
 NS_METHOD CBrowserShell::GetContentViewer(nsIContentViewer** aViewer)
 {
     nsCOMPtr<nsIDocShell> ourDocShell(do_GetInterface(mWebBrowser));
@@ -561,6 +871,12 @@ NS_METHOD CBrowserShell::GetContentViewer(nsIContentViewer** aViewer)
 //*****************************************************************************
 //***    CBrowserShell: Navigation
 //*****************************************************************************
+
+Boolean CBrowserShell::IsBusy()
+{
+    return mProgressListener->GetIsLoading();
+}
+
 
 Boolean CBrowserShell::CanGoBack()
 {
@@ -807,8 +1123,7 @@ Boolean CBrowserShell::Find()
     return result;
 }
 
-
-Boolean CBrowserShell::Find(const nsString& searchString,
+Boolean CBrowserShell::Find(const nsAString& searchString,
                             Boolean findBackwards,
                             Boolean wrapFind,
                             Boolean entireWord,
@@ -821,7 +1136,7 @@ Boolean CBrowserShell::Find(const nsString& searchString,
     nsCOMPtr<nsIWebBrowserFind> finder(do_GetInterface(mWebBrowser));
     if (!finder) return FALSE;
 
-    finder->SetSearchString(searchString.get());
+    finder->SetSearchString(PromiseFlatString(searchString).get());
     finder->SetFindBackwards(findBackwards);    
     finder->SetWrapFind(wrapFind);    
     finder->SetEntireWord(entireWord);    
@@ -865,6 +1180,54 @@ Boolean CBrowserShell::FindNext()
 }
 
 
+NS_METHOD CBrowserShell::OnShowContextMenu(PRUint32 aContextFlags,
+                                           nsIDOMEvent *aEvent,
+                                           nsIDOMNode *aNode)
+{
+    // Find our CWebBrowserCMAttachment, if any
+    CWebBrowserCMAttachment *aCMAttachment = nsnull;
+    const TArray<LAttachment*>* theAttachments = GetAttachmentsList();
+    
+    if (theAttachments) {
+        TArrayIterator<LAttachment*> iterate(*theAttachments);
+        
+        LAttachment*    theAttach;
+        while (iterate.Next(theAttach)) {
+            aCMAttachment = dynamic_cast<CWebBrowserCMAttachment*>(theAttach);
+            if (aCMAttachment != nil)
+                break;
+        }
+    }
+    if (!aCMAttachment) {
+        NS_ASSERTION(PR_FALSE, "No CWebBrowserCMAttachment");
+        return NS_OK;
+    }
+                
+    EventRecord macEvent;        
+    UEventMgr::GetMouseAndModifiers(macEvent);
+    
+    mContextMenuContext = aContextFlags;
+    mContextMenuDOMNode = aNode;
+    aCMAttachment->DoContextMenuClick(macEvent);
+    mContextMenuContext = 0;
+    mContextMenuDOMNode = nsnull;
+
+    return NS_OK;
+}
+                                          
+NS_METHOD CBrowserShell::OnShowTooltip(PRInt32 aXCoords,
+                                       PRInt32 aYCoords,
+                                       const PRUnichar *aTipText)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_METHOD CBrowserShell::OnHideTooltip()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 void CBrowserShell::HandleMouseMoved(const EventRecord& inMacEvent)
 {
     if (IsActive())
@@ -888,7 +1251,7 @@ void CBrowserShell::AdjustFrame()
 }
 
 
-Boolean CBrowserShell::DoFindDialog(nsString& searchText,
+Boolean CBrowserShell::DoFindDialog(nsAString& searchText,
                                      PRBool& findBackwards,
                                      PRBool& wrapFind,
                                      PRBool& entireWord,
@@ -911,11 +1274,11 @@ Boolean CBrowserShell::DoFindDialog(nsString& searchText,
 
         StDialogHandler	theHandler(dlog_FindDialog, this);
         LWindow			*theDialog = theHandler.GetDialog();
-      Str255      aStr;
+        Str255          aStr;
 
         // Set initial text for string in dialog box
 
-    CPlatformUCSConversion::GetInstance()->UCSToPlatform(searchText, aStr);
+        CPlatformUCSConversion::GetInstance()->UCSToPlatform(searchText, aStr);
 
         LEditText	*editField = dynamic_cast<LEditText*>(theDialog->FindPaneByID(kSearchTextEdit));
         editField->SetDescriptor(aStr);
@@ -951,7 +1314,7 @@ Boolean CBrowserShell::DoFindDialog(nsString& searchText,
             else if (hitMessage == msg_OK)
             {
                 editField->GetDescriptor(aStr);
-            CPlatformUCSConversion::GetInstance()->PlatformToUCS(aStr, searchText);
+                CPlatformUCSConversion::GetInstance()->PlatformToUCS(aStr, searchText);
 
                 caseSensitive = caseSensCheck->GetValue() ? TRUE : FALSE;
                 entireWord = entireWordCheck->GetValue() ? TRUE : FALSE;
@@ -1007,4 +1370,44 @@ Boolean CBrowserShell::HasFormElements()
         }
     }
     return false;
+}
+
+void CBrowserShell::PostOpenURLEvent(const nsACString& url)
+{    
+    // Send an AppleEvent to ourselves to open a new window with the given URL
+    
+    // IMPORTANT: We need to make our target address using a ProcessSerialNumber
+    // from GetCurrentProcess. This will cause our AppleEvent to be handled from
+    // the event loop. Creating and showing a new window before the context menu
+    // click is done being processed is fatal. If we make the target address with a
+    // ProcessSerialNumber in which highLongOfPSN == 0 && lowLongOfPSN == kCurrentProcess,
+    // the event will be dispatched to us directly and we die.
+    
+    OSErr err;
+    ProcessSerialNumber currProcess;
+    StAEDescriptor selfAddrDesc;
+    
+    err = ::GetCurrentProcess(&currProcess);
+    ThrowIfOSErr_(err);
+    err = ::AECreateDesc(typeProcessSerialNumber, (Ptr) &currProcess,
+                         sizeof(currProcess), selfAddrDesc);
+    ThrowIfOSErr_(err);
+
+    AppleEvent  getURLEvent;
+    err = ::AECreateAppleEvent(kInternetEventClass, kAEGetURL,
+                            selfAddrDesc,
+                            kAutoGenerateReturnID,
+                            kAnyTransactionID,
+                            &getURLEvent);
+    ThrowIfOSErr_(err);
+
+    const nsPromiseFlatCString& flatURL = PromiseFlatCString(url);  
+    StAEDescriptor urlDesc(typeChar, flatURL.get(), flatURL.Length());
+    
+    err = ::AEPutParamDesc(&getURLEvent, keyDirectObject, urlDesc);
+    if (err) {
+        ::AEDisposeDesc(&getURLEvent);
+        Throw_(err);
+    }
+    UAppleEventsMgr::SendAppleEvent(getURLEvent);
 }

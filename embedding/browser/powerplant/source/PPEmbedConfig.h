@@ -25,6 +25,31 @@
 #ifndef __PPEmbedConfig_h
 #define __PPEmbedConfig_h
 
-#define USE_PROFILES 1
+/*
+    USE_PROFILES
+    
+    If defined, the application will use nsIProfileManager to allow
+    distinct user profiles. It also demonstrates dynamic profile switching in this case.
+    
+    If undefined, the application will construct and register an
+    nsIDirectoryServiceProvider which provides profile-relative file locations to one
+    fixed directory.
+*/
+    
+#define USE_PROFILES
+
+/*
+    NATIVE_PROMPTS
+    
+    If defined, the application will override Gecko's prompt service
+    component with the implementation in PromptService.cpp. This implementation uses
+    PowerPlant dialogs.
+    
+    If undefined, the application will use Gecko's default prompt service. This implementation
+    creates chrome dialogs through the nsIWindowCreator interface. Undefining this
+    is useful for testing the implementation of nsIWindowCreator, nsIWebBrowserChrome, etc.
+*/
+
+#define NATIVE_PROMPTS
 
 #endif

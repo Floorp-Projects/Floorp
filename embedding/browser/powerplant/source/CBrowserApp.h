@@ -31,7 +31,7 @@
  
 class	CBrowserApp : public PP_PowerPlant::LApplication
 
-#if USE_PROFILES
+#ifdef USE_PROFILES
                       ,public nsIObserver
                       ,public nsSupportsWeakReference
 #endif
@@ -42,7 +42,7 @@ public:
 					                CBrowserApp();	// constructor registers PPobs
 	virtual 			          ~CBrowserApp();	// stub destructor
 
-#if USE_PROFILES
+#ifdef USE_PROFILES
     NS_DECL_ISUPPORTS
     NS_DECL_NSIOBSERVER
 #endif
@@ -77,7 +77,7 @@ protected:
     virtual Boolean         SelectFileObject(PP_PowerPlant::CommandT	inCommand,
                                              FSSpec& outSpec);
     
-#if USE_PROFILES
+#ifdef USE_PROFILES
     Boolean                 ConfirmProfileSwitch();
 #endif
 

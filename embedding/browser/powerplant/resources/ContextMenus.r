@@ -24,22 +24,16 @@
 #include <Types.r>
 #include "ApplIDs.h"
 
-resource 'Mcmd' (mcmd_ContextLinkCmds, "Link") { {
+/*
+    These are all of the commands which can be done by CBrowserShell in
+    any possible context. PowerPlant's LCMAttachment takes care
+    of removing any commands which should not be enabled for the current
+    click by means of FindCommandStatus of the target (CBrowserShell)
+*/
+
+resource 'Mcmd' (mcmd_BrowserShellContextMenuCmds, "BrowserShellContextMenu") { {
     cmd_OpenLinkInNewWindow,
     msg_Nothing,
-	cmd_Back,
-	cmd_Forward,
-	cmd_Reload,
-	cmd_Stop,
-	msg_Nothing,
-	cmd_ViewPageSource,
-	msg_Nothing,
-	cmd_SelectAll,
-	cmd_Copy,
-	cmd_CopyLinkLocation,
-} };
-
-resource 'Mcmd' (mcmd_ContextImageCmds, "Image") { {
 	cmd_Back,
 	cmd_Forward,
 	cmd_Reload,
@@ -50,33 +44,10 @@ resource 'Mcmd' (mcmd_ContextImageCmds, "Image") { {
 	msg_Nothing,
 	cmd_SelectAll,
 	cmd_Copy,
+	cmd_CopyLinkLocation,
 	cmd_CopyImageLocation,
-} };
-
-resource 'Mcmd' (mcmd_ContextDocumentCmds, "Document") { {
-	cmd_Back,
-	cmd_Forward,
-	cmd_Reload,
-	cmd_Stop,
 	msg_Nothing,
-	cmd_ViewPageSource,
-	msg_Nothing,
-	cmd_SelectAll,
-	cmd_Copy,
-	msg_Nothing,
-	cmd_PrefillForm,	
-} };
-
-resource 'Mcmd' (mcmd_ContextTextCmds, "Text") { {
-	cmd_Back,
-	cmd_Forward,
-	cmd_Reload,
-	cmd_Stop,
-	msg_Nothing,
-	cmd_ViewPageSource,
-	msg_Nothing,
-	cmd_SelectAll,
-	cmd_Copy,
+	cmd_PrefillForm
 } };
 
 /*
