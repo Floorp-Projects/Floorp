@@ -875,13 +875,13 @@ sub skip_to_line {
 
     while ($old_line_num < $line_num) {
         if (!$anchor_printed && $old_line_num >= $line_num - 10) {
-            print "\n<A NAME=$anchor_num>";
+            print "<A NAME=$anchor_num>";
             $anchor_printed = 1;
         }
 
         if ($opt_diff_mode eq 'context' && !$skip_line_printed &&
             $line_num - 5 <= $old_line_num) {
-            print "\n</TABLE>\n";
+            print "</TABLE>";
             print "<TABLE BGCOLOR=$stable_bg_color "
                 .'CELLPADDING=0 CELLSPACING=0 WIDTH="100%" COLS=2>';
             print "<TR BGCOLOR=$skipping_bg_color><TD>",
@@ -914,9 +914,7 @@ sub print_cell {
         print "<TD BGCOLOR=$color>$font_tag";
     }
 
-    while (($c = substr($line, -1)) && ($c eq "\n" || $c eq "\r")) {
-        chop $line;
-    }
+    chomp $line;
     $n = length($line);
     $newline = '';
     for ($i = $j = 0; $i < $n; $i++) {
@@ -944,7 +942,7 @@ sub print_cell {
 
 sub print_row {
     local ($line1, $color1, $line2, $color2) = @_;
-    print "\n<TR>";
+    print "<TR>";
     &print_cell($line1, $color1);
     &print_cell($line2, $color2);
 }
