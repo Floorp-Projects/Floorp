@@ -70,14 +70,16 @@ public:
     virtual ~nsHttpProtocolConnection();
 
     nsresult Init(nsIUrl* url, nsISupports* eventSink, 
-                  nsHttpProtocolHandler* handler);
+                  nsHttpProtocolHandler* handler,
+                  PLEventQueue* eventQueue);
     nsresult GetExistingTransport(const char* host, PRInt32 port,
                                   nsITransport* *result);
 
     enum State {
         UNCONNECTED,
         POSTING,
-        CONNECTED
+        CONNECTED,
+        WAITING_REPLY
     };
 
 protected:
@@ -86,6 +88,7 @@ protected:
     nsIHttpEventSink*           mEventSink;
     State                       mState;
     nsITransport*               mTransport;
+    PLEventQueue*               mEventQueue;
 };
 
 #endif /* nsHttpProtocolConnection_h___ */

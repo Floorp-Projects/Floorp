@@ -110,13 +110,14 @@ nsHttpProtocolHandler::NewUrl(const char* aSpec,
 NS_IMETHODIMP
 nsHttpProtocolHandler::NewConnection(nsIUrl* url,
                                      nsISupports* eventSink,
+                                     PLEventQueue* eventQueue,
                                      nsIProtocolConnection* *result)
 {
     nsresult rv;
     nsHttpProtocolConnection* connection = new nsHttpProtocolConnection();
     if (connection == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    rv = connection->Init(url, eventSink, this);
+    rv = connection->Init(url, eventSink, this, eventQueue);
     if (NS_FAILED(rv)) {
         delete connection;
         return rv;
