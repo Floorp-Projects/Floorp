@@ -2089,7 +2089,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
     nsString args;
 
     nsresult rv;
-    nsXPIDLCString url;
+    nsXPIDLString url;
     static PRBool timebombChecked = PR_FALSE;
 
     if (timebombChecked == PR_FALSE)
@@ -2113,7 +2113,7 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
             rv = timeBomb->GetTimebombURL(&urlString);
             if ( NS_FAILED(rv) ) return rv;
 
-            *aDefaultArgs =  NS_ConvertASCIItoUCS2(url).ToNewUnicode();
+            *aDefaultArgs =  nsXPIDLString::Copy(url);
             nsMemory::Free(urlString);
             return rv;
         }
@@ -2130,23 +2130,27 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
     PRBool override = PR_FALSE;
     rv = prefs->GetBoolPref(PREF_HOMEPAGE_OVERRIDE, &override);
     if (NS_SUCCEEDED(rv) && override) {
-        rv = prefs->CopyCharPref(PREF_HOMEPAGE_OVERRIDE_URL, getter_Copies(url));
-        if (NS_SUCCEEDED(rv) && (const char *)url) {
+        rv = prefs->GetLocalizedUnicharPref(PREF_HOMEPAGE_OVERRIDE_URL, getter_Copies(url));
+        if (NS_SUCCEEDED(rv) && (const PRUnichar *)url) {
             rv = prefs->SetBoolPref(PREF_HOMEPAGE_OVERRIDE, PR_FALSE);
         }
     }
-        
-    if (!((const char *)url) || (PL_strlen((const char *)url) == 0)) {
+    
+    nsAutoString tmp(url);
+    if (!url || !tmp.Length()) {
         PRInt32 choice = 0;
         rv = prefs->GetIntPref(PREF_BROWSER_STARTUP_PAGE, &choice);
         if (NS_SUCCEEDED(rv)) {
             switch (choice) {
                 case 1:
-                    rv = prefs->CopyCharPref(PREF_BROWSER_STARTUP_HOMEPAGE, getter_Copies(url));
+                    rv = prefs->GetLocalizedUnicharPref(PREF_BROWSER_STARTUP_HOMEPAGE, getter_Copies(url));
+                    tmp = url;
                     break;
                 case 2:
                     if (history) {
-                        rv = history->GetLastPageVisted(getter_Copies(url));
+                        nsXPIDLCString curl;
+                        rv = history->GetLastPageVisted(getter_Copies(curl));
+                        tmp = NS_ConvertUTF8toUCS2((const char *)curl);
                     }
                     break;
                 case 0:
@@ -2157,8 +2161,8 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
         }
     }
 
-    if (NS_SUCCEEDED(rv) && (const char *)url && (PL_strlen((const char *)url))) {              
-        args.AssignWithConversion((const char *) url);
+    if (NS_SUCCEEDED(rv) && tmp.Length()) {              
+        args = tmp;
     }
 
     *aDefaultArgs = args.ToNewUnicode(); 

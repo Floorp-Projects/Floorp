@@ -392,7 +392,7 @@ var homeButtonObserver = {
         
   onDragStart: function ()
     {
-      var homepage = nsPreferences.copyUnicharPref("browser.startup.homepage", "about:blank");
+      var homepage = nsPreferences.getLocalizedUnicharPref("browser.startup.homepage", "about:blank");
       var flavourList = { };
       flavourList["text/unicode"] = { width: 2, data: homepage };
       flavourList["text/x-moz-url"] = { width: 2, data: homepage };

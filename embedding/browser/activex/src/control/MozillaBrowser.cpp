@@ -1450,13 +1450,13 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
 	// Find the home page stored in prefs
 	if (mPrefs)
 	{
-		char *szBuffer;
+		nsXPIDLString szBuffer;
 		nsresult rv;
-		rv = mPrefs->CopyCharPref(c_szPrefsHomePage, &szBuffer);
+		rv = mPrefs->GetLocalizedUnicharPref(c_szPrefsHomePage, getter_Copies(szBuffer));
 		if (rv == NS_OK)
 		{
 			USES_CONVERSION;
-			sUrl = A2OLE(szBuffer);
+			sUrl = A2OLE(NS_ConvertUCS2toUTF8(szBuffer));
 		}
 	}
 	// Navigate to the home page

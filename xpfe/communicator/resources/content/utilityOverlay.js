@@ -122,7 +122,7 @@ function goClickThrobber( urlPref )
 		var pref = Components.classes["component://netscape/preferences"].getService();
 		if( pref )
 		pref = pref.QueryInterface( Components.interfaces.nsIPref );
-		url = pref.CopyCharPref(urlPref);
+		url = pref.getLocalizedUnicharPref(urlPref);
 	}
 
 	catch(e) {

@@ -43,7 +43,7 @@ pref("editor.table.delete_key", 0);
 
 pref("editor.prettyprint_html", 1);
 
-pref("editor.throbber.url","http://www.mozilla.org");
+pref("editor.throbber.url","chrome://editor/locale/editor.properties");
 
 pref("editor.auto_save",                    false);
 pref("editor.auto_save_delay",              10);    // minutes
