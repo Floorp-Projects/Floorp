@@ -146,11 +146,13 @@
 #define EnumChildWindows          mozce_EnumChildWindows
 #define EnumFontFamiliesEx        mozce_EnumFontFamiliesEx
 #define EnumThreadWindows         mozce_EnumThreadWindows
+#define ExpandEnvironmentStrings  mozce_ExpandEnvironmentStrings
 #define ExtSelectClipRgn          mozce_ExtSelectClipRgn
 #define FIXED                     mozce_FIXED
 #define FlashWindow               mozce_FlashWindow
 #define FrameRect                 mozce_FrameRect
 #define GLYPHMETRICS              mozce_GLYPHMETRICS
+#define GdiFlush                  mozce_GdiFlush
 #define GetACP                    mozce_GetACP
 #define GetCurrentProcess         mozce_GetCurrentProcess
 #define GetCurrentThreadId        mozce_GetCurrentThreadId
@@ -395,8 +397,11 @@ extern "C" {
   MOZCE_SHUNT_API int mozce_SetPolyFillMode(HDC inDC, int inPolyFillMode);
   MOZCE_SHUNT_API int mozce_SetStretchBltMode(HDC inDC, int inStretchMode);
   MOZCE_SHUNT_API int mozce_ExtSelectClipRgn(HDC inDC, HRGN inRGN, int inMode);
+  MOZCE_SHUNT_API DWORD mozce_ExpandEnvironmentStrings(LPCTSTR lpSrc, LPTSTR lpDst, DWORD nSize);
+
   MOZCE_SHUNT_API BOOL mozce_LineDDA(int inXStart, int inYStart, int inXEnd, int inYEnd, mozce_LINEDDAPROC inLineFunc, LPARAM inData);
   MOZCE_SHUNT_API int mozce_FrameRect(HDC inDC, CONST RECT *inRect, HBRUSH inBrush);
+  MOZCE_SHUNT_API BOOL mozce_GdiFlush(void);
   MOZCE_SHUNT_API int mozce_SetArcDirection(HDC inDC, int inArcDirection);
   MOZCE_SHUNT_API BOOL mozce_Arc(HDC inDC, int inLeftRect, int inTopRect, int inRightRect, int inBottomRect, int inXStartArc, int inYStartArc, int inXEndArc, int inYEndArc);
   MOZCE_SHUNT_API BOOL mozce_Pie(HDC inDC, int inLeftRect, int inTopRect, int inRightRect, int inBottomRect, int inXRadial1, int inYRadial1, int inXRadial2, int inYRadial2);
