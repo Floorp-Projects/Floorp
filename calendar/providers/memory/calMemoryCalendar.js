@@ -102,15 +102,14 @@ calMemoryCalendar.prototype = {
     // void addItem( in calIItemBase aItem, in calIOperationListener aListener );
     addItem: function (aItem, aListener) {
         if (aItem.id == null) {
-            // is this an error?  Or should we generate an IID?
             aItem.id = "uuid:" + (new Date()).getTime();
         }
         if (this.mItems[aItem.id] != null) {
             // is this an error?
             if (aListener)
                 aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                               aItem.id,
                                                aListener.ADD,
+                                               aItem.id,
                                                "ID already eists for addItem");
             return;
         }
@@ -123,8 +122,8 @@ calMemoryCalendar.prototype = {
         // notify the listener
         if (aListener)
             aListener.onOperationComplete (Components.results.NS_OK,
-                                           aItem.id,
                                            aListener.ADD,
+                                           aItem.id,
                                            aItem);
     },
 
@@ -136,8 +135,8 @@ calMemoryCalendar.prototype = {
             // this is definitely an error
             if (aListener)
                 aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                               aItem.id,
                                                aListener.MODIFY,
+                                               aItem.id,
                                                "ID for modifyItem doesn't exist or is null");
             return;
         }
@@ -151,8 +150,8 @@ calMemoryCalendar.prototype = {
 
         if (aListener)
             aListener.onOperationComplete (Components.results.NS_OK,
-                                           aItem.id,
                                            aListener.MODIFY,
+                                           aItem.id,
                                            aItem);
     },
 
@@ -163,8 +162,8 @@ calMemoryCalendar.prototype = {
         {
             if (aListener)
                 aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                               aId,
                                                aListener.DELETE,
+                                               aId,
                                                "ID doesn't exist for deleteItem");
             return;
         }
@@ -177,8 +176,8 @@ calMemoryCalendar.prototype = {
 
         if (aListener)
             aListener.onOperationComplete (Components.results.NS_OK,
-                                           aId,
                                            aListener.DELETE,
+                                           aId,
                                            null);
 
     },
@@ -191,9 +190,10 @@ calMemoryCalendar.prototype = {
         if (aId == null ||
             this.mItems[aId] == null)
         {
-            aListener.onGetComplete(Components.results.NS_ERROR_FAILURE,
-                                    null,
-                                    "IID doesn't exist for getItem", 0, []);
+            aListener.onOperationComplete(Components.results.NS_ERROR_FAILURE,
+                                          aListener.GET,
+                                          null,
+                                          "IID doesn't exist for getItem");
             return;
         }
 
@@ -205,27 +205,38 @@ calMemoryCalendar.prototype = {
         } else if (item.QueryInterface(Components.interfaces.calITodo)) {
             iid = Components.interfaces.calITodo;
         } else {
-            aListener.onGetComplete(Components.results.NS_ERROR_FAILURE,
-                                    null,
-                                    "Can't deduce item type based on QI", 0, []);
+            aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                                           aListener.GET,
+                                           aId,
+                                           "Can't deduce item type based on QI");
             return;
         }
 
-        aListener.onGetComplete(Components.results.NS_OK,
-                                iid,
-                                null, 1, [item]);
+        aListener.onGetResult (Components.results.NS_OK,
+                               iid,
+                               null, 1, [item]);
+
+        aListener.onOperationComplete (Components.results.NS_OK,
+                                       aListener.GET,
+                                       aId,
+                                       null);
+
     },
 
-    // void getItems( in nsIIDRef aItemType, in unsigned long aItemFilter, 
-    //                in unsigned long aCount, in calIDateTime aRangeStart,
-    //                in calIDateTime aRangeEnd, 
+    // void getItems( in unsigned long aItemFilter, in unsigned long aCount, 
+    //                in calIDateTime aRangeStart, in calIDateTime aRangeEnd,
     //                in calIOperationListener aListener );
-    getItems: function (aItemType, aItemFilter, aCount,
+    getItems: function (aItemFilter, aCount,
                         aRangeStart, aRangeEnd, aListener)
     {
-        // we ignore aItemFilter; we always return all items.  if
-        // aCount != 0, we don't attempt to sort anything, and instead
-        // return the first aCount items that match.
+        if (!aListener)
+            return;
+
+        const calICalendar = Components.interfaces.calICalendar;
+        const calIItemBase = Components.interfaces.calIItemBase;
+        const calIEvent = Components.interfaces.calIEvent;
+        const calITodo = Components.interfaces.calITodo;
+        const calIItemOccurrence = Components.interfaces.calIItemOccurrence;
 
         var itemsFound = Array();
         var startTime = 0;
@@ -236,29 +247,77 @@ calMemoryCalendar.prototype = {
         if (aRangeEnd)
             endTime = aRangeEnd.utcTime;
 
-        const calIEvent = Components.interfaces.calIEvent;
-        const calITodo = Components.interfaces.calITodo;
+        //
+        // filters
+        //
+
+        // item base type
+        var itemTypeFilter = null;
+        if (aItemFilter & calICalendar.ITEM_FILTER_TYPE_ALL)
+            itemTypeFilter = calIItemBase;
+        else if (aItemFilter & calICalendar.ITEM_FILTER_TYPE_EVENT)
+            itemTypeFilter = calIEvent;
+        else if (aItemFilter & calICalendar.ITEM_FILTER_TYPE_TODO)
+            itemTypeFilter = calITodo;
+        else {
+            // bail.
+            aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                                           aListener.GET,
+                                           null,
+                                           "Bad aItemFilter passed to getItems");
+            return;
+        }
+
+        // completed?
+        var itemCompletedFilter = ((aItemFilter & calICalendar.ITEM_FILTER_COMPLETED_YES) != 0);
+        var itemNotCompletedFilter = ((aItemFilter & calICalendar.ITEM_FILTER_COMPLETED_YES) != 0);
+
+        // return occurrences?
+        var itemReturnOccurrences = ((aItemFilter & calICalendar.ITEM_FILTER_CLASS_OCCURRENCES) != 0);
+
+        //  if aCount != 0, we don't attempt to sort anything, and
+        //  instead return the first aCount items that match.
 
         for (var i = 0; i < this.mItems.length; i++) {
             var item = this.mItems[i];
+            var itemtoadd = null;
 
-            if (aItemType)
-                item = item.QueryInterface(aItemType);
+            if (itemTypeFilter)
+                item = item.QueryInterface(itemTypeFilter);
+
             if (item) {
                 var itemStartTime = 0;
                 var itemEndTime = 0;
 
                 var tmpitem = item;
-                if (aItemType == calIEvent ||
-                    (tmpitem = item.QueryInterface(calIEvent)) != null)
+                if ((tmpitem = item.QueryInterface(calIEvent)) != null)
                 {
                     itemStartTime = tmpitem.startDate.utcTime;
                     itemEndTime = tmpitem.endDate.utcTime;
-                } else if (aItemType == calITodo ||
-                           (tmpitem = item.QueryInterface(calITodo)) != null)
+
+                    if (itemReturnOccurrences) {
+                        itemtoadd = Components.classes["@mozilla.org/calendar/item-occurrence;1"].createInstance(calIItemOccurrence);
+                        itemtoadd.wrappedJSObject.item = item;
+                        itemtoadd.wrappedJSObject.occurrenceStartDate = tmpitem.startDate;
+                        itemtoadd.wrappedJSObject.occurrenceEndDate = tmpitem.endDate;
+                    }
+                } else if ((tmpitem = item.QueryInterface(calITodo)) != null)
                 {
+                    // if it's a todo, also filter based on completeness
+                    if (tmpitem.percentComplete == 100 && !itemCompletedFilter)
+                        continue;
+                    else if (tmpitem.percentComplete < 100 && !itemNotCompletedFilter)
+                        continue;
+
                     itemStartTime = tmpitem.entryTime.utcTime;
                     itemEndTime = tmpitem.entryTime.utcTime;
+
+                    if (itemReturnOccurrences) {
+                        itemtoadd = Components.classes["@mozilla.org/calendar/item-occurrence;1"].createInstance(calIItemOccurrence);
+                        itemtoadd.wrappedJSObject.item = item;
+                        itemtoadd.wrappedJSObject.occurrenceStartDate = tmpitem.entryTime;
+                        itemtoadd.wrappedJSObject.occurrenceEndDate = tmpitem.entryTime;
+                    }
                 } else {
                     // XXX unknown item type, wth do we do?
                     continue;
@@ -266,20 +325,27 @@ calMemoryCalendar.prototype = {
 
                 // determine whether any endpoint falls within the range
                 if (itemStartTime <= endTime && itemEndTime >= startTime) {
-                    itemsFound.push(item);
-                }
+                    if (itemtoadd == null)
+                        itemtoadd = item;
 
-                if (aCount && itemsFound.length >= aCount)
-                    break;
+                    itemsFound.push(itemtoadd);
+                }
             }
+
+            if (aCount && itemsFound.length >= aCount)
+                break;
         }
 
-        if (aListener)
-            aListener.onGetComplete (Components.results.NS_OK,
-                                     aItemType,
-                                     null,
-                                     itemsFound.length,
-                                     itemsFound);
+        aListener.onGetResult (Components.results.NS_OK,
+                               itemReturnOccurrences ? calIItemOccurrence : itemTypeFilter,
+                               null,
+                               itemsFound.length,
+                               itemsFound);
+
+        aListener.onOperationComplete (Components.results.NS_OK,
+                                       aListener.GET,
+                                       null,
+                                       null);
     },
 
     //

@@ -197,8 +197,8 @@ calStorageCalendar.prototype = {
             // is this an error?
             if (aListener)
                 aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                               aItem.id,
                                                aListener.ADD,
+                                               aItem.id,
                                                "ID already eists for addItem");
             return;
         }
@@ -209,8 +209,8 @@ calStorageCalendar.prototype = {
             flushEvent (event);
         } else {
             aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                           aItem.id,
                                            aListener.ADD,
+                                           aItem.id,
                                            "Don't know how to add items of the given type");
             return;
         }
@@ -221,8 +221,8 @@ calStorageCalendar.prototype = {
         // notify the listener
         if (aListener)
             aListener.onOperationComplete (Components.results.NS_OK,
-                                           aItem.id,
                                            aListener.ADD,
+                                           aItem.id,
                                            aItem);
     },
 
@@ -233,8 +233,8 @@ calStorageCalendar.prototype = {
             // this is definitely an error
             if (aListener)
                 aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                               aItem.id,
                                                aListener.MODIFY,
+                                               aItem.id,
                                                "ID for modifyItem item is null");
             return;
         }
@@ -245,8 +245,8 @@ calStorageCalendar.prototype = {
             flushEvent (event);
         } else {
             aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                           aItem.id,
                                            aListener.MODIFY,
+                                           aItem.id,
                                            "Don't know how to modify items of the given type");
             return;
         }
@@ -256,8 +256,8 @@ calStorageCalendar.prototype = {
 
         if (aListener)
             aListener.onOperationComplete (Components.results.NS_OK,
-                                           aItem.id,
                                            aListener.MODIFY,
+                                           aItem.id,
                                            aItem);
     },
 
@@ -267,8 +267,8 @@ calStorageCalendar.prototype = {
         {
             if (aListener)
                 aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                               aId,
                                                aListener.DELETE,
+                                               aId,
                                                "ID is null for deleteItem");
             return;
         }
@@ -280,8 +280,8 @@ calStorageCalendar.prototype = {
             deleteEvent (aId);
         } else {
             aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
-                                           aItem.id,
                                            aListener.DELETE,
+                                           aItem.id,
                                            "Don't know how to delete items of the given type");
             return;
         }
@@ -291,8 +291,8 @@ calStorageCalendar.prototype = {
 
         if (aListener)
             aListener.onOperationComplete (Components.results.NS_OK,
-                                           aId,
                                            aListener.DELETE,
+                                           aId,
                                            null);
 
     },
@@ -303,42 +303,46 @@ calStorageCalendar.prototype = {
             return;
 
         var item = getItemByHash (aId);
-        if (item) {
-            var item_iid = null;
-            if (item.QueryInterface (kCalEventIID)) {
-                item_iid = kCalEventIID;
-            } else if (item.QueryInterface (kCalTodoIID)) {
-                item_iid = kCalTodoIID;
-            } else {
-                aListener.onGetComplete(Components.results.NS_ERROR_FAILURE,
-                                        null,
-                                        "Unknown IID type", 0, []);
-                return;
-            }
-
-            aListener.onGetComplete(Components.results.NS_OK,
-                                    item_iid,
-                                    null, 1, [item]);
-        } else {
-            aListener.onGetComplete (Components.results.NS_ERROR_FAILURE,
-                                     null,
-                                     "ID not found", 0, []);
+        if (!item) {
         }
+
+        var item_iid = null;
+        if (item.QueryInterface (kCalEventIID)) {
+            item_iid = kCalEventIID;
+        } else if (item.QueryInterface (kCalTodoIID)) {
+            item_iid = kCalTodoIID;
+        } else {
+            aListener.onOperationComplete (Components.results.NS_ERROR_FAILURE,
+                                           aListener.GET,
+                                           aId,
+                                           "Can't deduce item type based on QI");
+            return;
+        }
+
+        aListener.onGetResult (Components.results.NS_OK,
+                               iid,
+                               null, 1, [item]);
+
+        aListener.onOperationComplete (Components.results.NS_OK,
+                                       aListener.GET,
+                                       aId,
+                                       null);
     },
 
-    // void getItems( in nsIIDRef aItemType, in unsigned long aItemFilter, 
-    //                in unsigned long aCount, in calIDateTime aRangeStart,
-    //                in calIDateTime aRangeEnd, 
+    // void getItems( in unsigned long aItemFilter, in unsigned long aCount, 
+    //                in calIDateTime aRangeStart, in calIDateTime aRangeEnd,
     //                in calIOperationListener aListener );
-    getItems: function (aItemType, aItemFilter, aCount,
+    getItems: function (aItemFilter, aCount,
                         aRangeStart, aRangeEnd, aListener)
     {
         if (!aListener)
             return;
 
-        // we ignore aItemFilter; we always return all items.  if
-        // aCount != 0, we don't attempt to sort anything, and instead
-        // return the first aCount items that match.
+        const calICalendar = Components.interfaces.calICalendar;
+        const calIItemBase = Components.interfaces.calIItemBase;
+        const calIEvent = Components.interfaces.calIEvent;
+        const calITodo = Components.interfaces.calITodo;
+        const calIItemOccurrence = Components.interfaces.calIItemOccurrence;
 
         var itemsFound = Array();
         var startTime = 0;
@@ -349,16 +353,20 @@ calStorageCalendar.prototype = {
         if (aRangeEnd)
             endTime = aRangeEnd.utcTime;
 
-        if (aItemType != null && aItemType != kCalEventIID) {
-            // we don't know what to do with anything but events for now
-            aListener.onGetComplete(Components.results.NS_ERROR_FAILURE,
-                                    aItemType,
-                                    "Don't know how to get the requested item type",
-                                    aCount, Array());
+        // only events for now
+        if (!(aItemFilter & calICalendar.ITEM_FILTER_TYPE_EVENT)) {
+            aListener.onOperationComplete(Components.results.NS_ERROR_FAILURE,
+                                          aListener.GET,
+                                          null,
+                                          "Don't know how to getItems for anything other than events");
             return;
         }
 
-        var events = getEventsByRange();
+        var asOccurrences = false;
+        if (aItemFilter & calICalendar.ITEM_FILTER_CLASS_OCCURRENCES)
+            asOccurrences = true;
+
+        var events = getEventsByRange(startTime, endTime, aCount, asOccurrences);
 
         if (aListener)
             aListener.onGetComplete (Components.results.NS_OK,
@@ -541,25 +549,31 @@ calStorageCalendar.prototype = {
     },
 
     // get a list of events from the db in the given range
-    getEventsByRange: function (aRangeStart, aRangeEnd, aCount) {
+    getEventsByRange: function (aRangeStart, aRangeEnd, aCount, aAsOccurrences) {
         var stmt = mSelectEventsByRange;
         if (aCount)
             stmt = mSelectEventsByRangeAndLimit;
 
         stmt.bindInt64Parameter(0, aRangeStart);
         stmt.bindInt64Parameter(1, aRangeEnd);
-        stmt.bindInt64Parameter(2, aRangeStart);
-        stmt.bindInt64Parameter(3, aRangeStart);
-        stmt.bindInt64Parameter(4, aRangeEnd);
-        stmt.bindInt64Parameter(5, aRangeEnd);
         if (aCount)
-            stmt.bindInt32Parameter(6, aCount);
+            stmt.bindInt32Parameter(3, aCount);
 
         var events = Array();
         while (stmt.executeStep()) {
             var e = getEventFromRow(stmt);
-            events.push (e);
             mItemHash[e.id] = e;
+
+            if (aAsOccurrences) {
+                var rec = Components.classes["@mozilla.org/calendar/item-occurrence;1"].createInstance(calIItemOccurrence);
+                rec.wrappedJSObject.item = e;
+                rec.wrappedJSObject.occurrenceStartDate = e.startDate;
+                rec.wrappedJSObject.occurrenceEndDate = e.endDate;
+
+                events.push (rec);
+            } else {
+                events.push (e);
+            }
         }
 
         return events;
