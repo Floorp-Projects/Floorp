@@ -294,6 +294,14 @@ public:
   static nsresult CheckQName(const nsAString& aQualifiedName,
                              PRBool aNamespaceAware = PR_TRUE);
 
+  static nsresult SplitQName(nsIContent* aNamespaceResolver,
+                             const nsAFlatString& aQName,
+                             PRInt32 *aNamespace, nsIAtom **aLocalName);
+
+  static nsresult LookupNamespaceURI(nsIContent* aNamespaceResolver,
+                                     const nsAString& aNamespacePrefix,
+                                     nsAString& aNamespaceURI);
+
   static nsresult GetNodeInfoFromQName(const nsAString& aNamespaceURI,
                                        const nsAString& aQualifiedName,
                                        nsNodeInfoManager* aNodeInfoManager,

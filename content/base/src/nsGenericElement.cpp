@@ -460,28 +460,11 @@ NS_IMETHODIMP
 nsNode3Tearoff::LookupNamespaceURI(const nsAString& aNamespacePrefix,
                                    nsAString& aNamespaceURI)
 {
-  nsCOMPtr<nsIAtom> name;
-
-  if (!aNamespacePrefix.IsEmpty()) {
-    name = do_GetAtom(aNamespacePrefix);
-    NS_ENSURE_TRUE(name, NS_ERROR_OUT_OF_MEMORY);
-  } else {
-    name = nsLayoutAtoms::xmlnsNameSpace;
+  if (NS_FAILED(nsContentUtils::LookupNamespaceURI(mContent,
+                                                   aNamespacePrefix,
+                                                   aNamespaceURI))) {
+    SetDOMStringToNull(aNamespaceURI);
   }
-
-  // Trace up the content parent chain looking for the namespace
-  // declaration that declares aNamespacePrefix.
-  for (nsIContent* content = mContent; content;
-       content = content->GetParent()) {
-    nsresult rv = content->GetAttr(kNameSpaceID_XMLNS, name, aNamespaceURI);
-
-    if (rv == NS_CONTENT_ATTR_HAS_VALUE) {
-      return NS_OK;
-    }
-  }
-
-  SetDOMStringToNull(aNamespaceURI);
-
   return NS_OK;
 }
 

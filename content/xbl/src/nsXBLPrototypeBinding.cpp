@@ -73,6 +73,7 @@
 #include "nsXBLAtoms.h"
 #include "nsXBLProtoImpl.h"
 #include "nsCRT.h"
+#include "nsContentUtils.h"
 
 #include "nsIScriptContext.h"
 
@@ -88,6 +89,7 @@ class nsXBLAttributeEntry {
 public:
   nsIAtom* GetSrcAttribute() { return mSrcAttribute; }
   nsIAtom* GetDstAttribute() { return mDstAttribute; }
+  PRInt32 GetDstNameSpace() { return mDstNameSpace; }
   
   nsIContent* GetElement() { return mElement; }
 
@@ -95,9 +97,10 @@ public:
   void SetNext(nsXBLAttributeEntry* aEntry) { mNext = aEntry; }
 
   static nsXBLAttributeEntry*
-  Create(nsIAtom* aSrcAtom, nsIAtom* aDstAtom, nsIContent* aContent) {
+  Create(nsIAtom* aSrcAtom, nsIAtom* aDstAtom, PRInt32 aDstNameSpace, nsIContent* aContent) {
     void* place = nsXBLPrototypeBinding::kAttrPool->Alloc(sizeof(nsXBLAttributeEntry));
-    return place ? ::new (place) nsXBLAttributeEntry(aSrcAtom, aDstAtom, aContent) : nsnull;
+    return place ? ::new (place) nsXBLAttributeEntry(aSrcAtom, aDstAtom, aDstNameSpace, 
+                                                     aContent) : nsnull;
   }
 
   static void
@@ -111,13 +114,15 @@ protected:
 
   nsCOMPtr<nsIAtom> mSrcAttribute;
   nsCOMPtr<nsIAtom> mDstAttribute;
+  PRInt32 mDstNameSpace;
   nsXBLAttributeEntry* mNext;
 
-  nsXBLAttributeEntry(nsIAtom* aSrcAtom, nsIAtom* aDstAtom,
+  nsXBLAttributeEntry(nsIAtom* aSrcAtom, nsIAtom* aDstAtom, PRInt32 aDstNameSpace,
                       nsIContent* aContent)
     : mElement(aContent),
       mSrcAttribute(aSrcAtom),
       mDstAttribute(aDstAtom),
+      mDstNameSpace(aDstNameSpace),
       mNext(nsnull) { }
 
   ~nsXBLAttributeEntry() { delete mNext; }
@@ -226,7 +231,7 @@ nsXBLPrototypeBinding::nsXBLPrototypeBinding()
   mHasBaseProto(PR_TRUE),
   mKeyHandlersRegistered(PR_FALSE),
   mResources(nsnull),
-  mAttributeTable(nsnull), 
+  mAttributeTable(nsnull),
   mInsertionPointTable(nsnull),
   mInterfaceTable(nsnull)
 {
@@ -436,9 +441,15 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
 {
   if (!mAttributeTable)
     return;
+  nsPRUint32Key nskey(aNameSpaceID);
+  nsObjectHashtable *attributesNS = NS_STATIC_CAST(nsObjectHashtable*, 
+                                                   mAttributeTable->Get(&nskey));
+  if (!attributesNS)
+    return;
 
   nsISupportsKey key(aAttribute);
-  nsXBLAttributeEntry* xblAttr = NS_STATIC_CAST(nsXBLAttributeEntry*, mAttributeTable->Get(&key));
+  nsXBLAttributeEntry* xblAttr = NS_STATIC_CAST(nsXBLAttributeEntry*,
+                                                attributesNS->Get(&key));
   if (!xblAttr)
     return;
 
@@ -453,15 +464,16 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
 
     if (realElement) {
       nsIAtom* dstAttr = xblAttr->GetDstAttribute();
+      PRInt32 dstNs = xblAttr->GetDstNameSpace();
 
       if (aRemoveFlag)
-        realElement->UnsetAttr(aNameSpaceID, dstAttr, aNotify);
+        realElement->UnsetAttr(dstNs, dstAttr, aNotify);
       else {
         PRBool attrPresent = PR_TRUE;
         nsAutoString value;
         // Check to see if the src attribute is xbl:text.  If so, then we need to obtain the 
         // children of the real element and get the text nodes' values.
-        if (aAttribute == nsXBLAtoms::xbltext) {
+        if (aAttribute == nsHTMLAtoms::text && aNameSpaceID == kNameSpaceID_XBL) {
           nsXBLBinding::GetTextData(aChangedElement, value);
           value.StripChar(PRUnichar('\n'));
           value.StripChar(PRUnichar('\r'));
@@ -477,14 +489,14 @@ nsXBLPrototypeBinding::AttributeChanged(nsIAtom* aAttribute,
         }
 
         if (attrPresent)
-          realElement->SetAttr(aNameSpaceID, dstAttr, value, aNotify);
+          realElement->SetAttr(dstNs, dstAttr, value, aNotify);
       }
 
       // See if we're the <html> tag in XUL, and see if value is being
       // set or unset on us.  We may also be a tag that is having
       // xbl:text set on us.
 
-      if (dstAttr == nsXBLAtoms::xbltext ||
+      if ((dstAttr == nsHTMLAtoms::text && dstNs == kNameSpaceID_XBL) ||
           realElement->GetNodeInfo()->Equals(nsHTMLAtoms::html,
                                              kNameSpaceID_XUL) &&
           dstAttr == nsHTMLAtoms::value) {
@@ -833,6 +845,7 @@ struct nsXBLAttrChangeData
   nsXBLPrototypeBinding* mProto;
   nsIContent* mBoundElement;
   nsIContent* mContent;
+  PRInt32 mSrcNamespace;
 
   nsXBLAttrChangeData(nsXBLPrototypeBinding* aProto,
                       nsIContent* aElt, nsIContent* aContent) 
@@ -841,15 +854,15 @@ struct nsXBLAttrChangeData
 
 PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
 {
-  // XXX How to deal with NAMESPACES!!!?
   nsXBLAttributeEntry* entry = NS_STATIC_CAST(nsXBLAttributeEntry*, aData);
   nsXBLAttrChangeData* changeData = NS_STATIC_CAST(nsXBLAttrChangeData*, aClosure);
 
   nsIAtom* src = entry->GetSrcAttribute();
+  PRInt32 srcNs = changeData->mSrcNamespace;
   nsAutoString value;
   PRBool attrPresent = PR_TRUE;
 
-  if (src == nsXBLAtoms::xbltext) {
+  if (src == nsHTMLAtoms::text && srcNs == kNameSpaceID_XBL) {
     nsXBLBinding::GetTextData(changeData->mBoundElement, value);
     value.StripChar(PRUnichar('\n'));
     value.StripChar(PRUnichar('\r'));
@@ -860,7 +873,7 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
       attrPresent = PR_FALSE;
   }
   else {
-    nsresult result = changeData->mBoundElement->GetAttr(kNameSpaceID_None, src, value);
+    nsresult result = changeData->mBoundElement->GetAttr(srcNs, src, value);
     attrPresent = (result == NS_CONTENT_ATTR_NO_VALUE ||
                    result == NS_CONTENT_ATTR_HAS_VALUE);
   }
@@ -872,6 +885,7 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
     nsXBLAttributeEntry* curr = entry;
     while (curr) {
       nsIAtom* dst = curr->GetDstAttribute();
+      PRInt32 dstNs = curr->GetDstNameSpace();
       nsIContent* element = curr->GetElement();
 
       nsCOMPtr<nsIContent> realElement;
@@ -880,9 +894,9 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
                                                        changeData->mContent,
                                                        element);
       if (realElement) {
-        realElement->SetAttr(kNameSpaceID_None, dst, value, PR_FALSE);
+        realElement->SetAttr(dstNs, dst, value, PR_FALSE);
 
-        if (dst == nsXBLAtoms::xbltext ||
+        if ((dst == nsHTMLAtoms::text && dstNs == kNameSpaceID_XBL) ||
             (realElement->GetNodeInfo()->Equals(nsHTMLAtoms::html,
                                                 kNameSpaceID_XUL) &&
              dst == nsHTMLAtoms::value && !value.IsEmpty())) {
@@ -904,12 +918,26 @@ PRBool PR_CALLBACK SetAttrs(nsHashKey* aKey, void* aData, void* aClosure)
   return PR_TRUE;
 }
 
+PRBool PR_CALLBACK SetAttrsNS(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  if (aData && aClosure) {
+    nsPRUint32Key * key = NS_STATIC_CAST(nsPRUint32Key*, aKey);
+    nsObjectHashtable* xblAttributes =
+      NS_STATIC_CAST(nsObjectHashtable*, aData);
+    nsXBLAttrChangeData * changeData = NS_STATIC_CAST(nsXBLAttrChangeData *,
+                                                      aClosure);
+    changeData->mSrcNamespace = key->GetValue();
+    xblAttributes->Enumerate(SetAttrs, (void*)changeData);
+  }
+  return PR_TRUE;
+}
+
 void
 nsXBLPrototypeBinding::SetInitialAttributes(nsIContent* aBoundElement, nsIContent* aAnonymousContent)
 {
   if (mAttributeTable) {
     nsXBLAttrChangeData data(this, aBoundElement, aAnonymousContent);
-    mAttributeTable->Enumerate(SetAttrs, (void*)&data);
+    mAttributeTable->Enumerate(SetAttrsNS, (void*)&data);
   }
 }
 
@@ -936,9 +964,14 @@ nsXBLPrototypeBinding::GetStyleSheets()
 PRBool
 nsXBLPrototypeBinding::ShouldBuildChildFrames()
 {
-  if (mAttributeTable) {
-    nsISupportsKey key(nsXBLAtoms::xbltext);
-    void* entry = mAttributeTable->Get(&key);
+  if (!mAttributeTable)
+    return PR_TRUE;
+  nsPRUint32Key nskey(kNameSpaceID_XBL);
+  nsObjectHashtable* xblAttributes =
+    NS_STATIC_CAST(nsObjectHashtable*, mAttributeTable->Get(&nskey));
+  if (xblAttributes) {
+    nsISupportsKey key(nsHTMLAtoms::text);
+    void* entry = xblAttributes->Get(&key);
     return !entry;
   }
 
@@ -952,6 +985,13 @@ DeleteAttributeEntry(nsHashKey* aKey, void* aData, void* aClosure)
   return PR_TRUE;
 }
 
+static PRBool PR_CALLBACK
+DeleteAttributeTable(nsHashKey* aKey, void* aData, void* aClosure)
+{
+  delete NS_STATIC_CAST(nsObjectHashtable*, aData);
+  return PR_TRUE;
+}
+
 void
 nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
 {
@@ -961,7 +1001,7 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
   if (!inherits.IsEmpty()) {
     if (!mAttributeTable) {
       mAttributeTable = new nsObjectHashtable(nsnull, nsnull,
-                                              DeleteAttributeEntry, nsnull, 4);
+                                              DeleteAttributeTable, nsnull, 4);
       if (!mAttributeTable)
         return;
     }
@@ -976,38 +1016,66 @@ nsXBLPrototypeBinding::ConstructAttributeTable(nsIContent* aElement)
     while( token != NULL ) {
       // Build an atom out of this attribute.
       nsCOMPtr<nsIAtom> atom;
+      PRInt32 atomNsID = kNameSpaceID_None;
       nsCOMPtr<nsIAtom> attribute;
+      PRInt32 attributeNsID = kNameSpaceID_None;
 
       // Figure out if this token contains a :. 
       nsAutoString attrTok; attrTok.AssignWithConversion(token);
       PRInt32 index = attrTok.Find("=", PR_TRUE);
+      nsresult rv;
       if (index != -1) {
         // This attribute maps to something different.
         nsAutoString left, right;
         attrTok.Left(left, index);
         attrTok.Right(right, attrTok.Length()-index-1);
 
-        atom = do_GetAtom(right);
-        attribute = do_GetAtom(left);
+        rv = nsContentUtils::SplitQName(aElement, left, &attributeNsID,
+                                        getter_AddRefs(attribute));
+        if (NS_FAILED(rv))
+          return;
+
+        rv = nsContentUtils::SplitQName(aElement, right, &atomNsID,
+                                        getter_AddRefs(atom));
+        if (NS_FAILED(rv))
+          return;
       }
       else {
         nsAutoString tok;
         tok.AssignWithConversion(token);
-        atom = do_GetAtom(tok);
+        rv = nsContentUtils::SplitQName(aElement, tok, &atomNsID, 
+                                        getter_AddRefs(atom));
+        if (NS_FAILED(rv))
+          return;
         attribute = atom;
+        attributeNsID = atomNsID;
+      }
+
+      nsPRUint32Key nskey(atomNsID);
+      nsObjectHashtable* attributesNS =
+        NS_STATIC_CAST(nsObjectHashtable*, mAttributeTable->Get(&nskey));
+      if (!attributesNS) {
+        attributesNS = new nsObjectHashtable(nsnull, nsnull,
+                                             DeleteAttributeEntry, nsnull, 4);
+        if (!attributesNS)
+          return;
+
+         mAttributeTable->Put(&nskey, attributesNS);
       }
       
       // Create an XBL attribute entry.
-      nsXBLAttributeEntry* xblAttr = nsXBLAttributeEntry::Create(atom, attribute, aElement);
+      nsXBLAttributeEntry* xblAttr =
+        nsXBLAttributeEntry::Create(atom, attribute, attributeNsID, aElement);
 
       // Now we should see if some element within our anonymous
       // content is already observing this attribute.
       nsISupportsKey key(atom);
-      nsXBLAttributeEntry* entry = NS_STATIC_CAST(nsXBLAttributeEntry*, mAttributeTable->Get(&key));
+      nsXBLAttributeEntry* entry = NS_STATIC_CAST(nsXBLAttributeEntry*,
+                                                  attributesNS->Get(&key));
 
       if (!entry) {
         // Put it in the table.
-        mAttributeTable->Put(&key, xblAttr);
+        attributesNS->Put(&key, xblAttr);
       } else {
         while (entry->GetNext())
           entry = entry->GetNext();
@@ -1250,7 +1318,7 @@ nsXBLPrototypeBinding::CreateKeyHandlers()
 
       PRInt32 count = mKeyHandlers.Count();
       PRInt32 i;
-      nsXBLKeyEventHandler* handler;
+      nsXBLKeyEventHandler* handler = nsnull;
       for (i = 0; i < count; ++i) {
         handler = mKeyHandlers[i];
         if (handler->Matches(eventAtom, phase, type))
