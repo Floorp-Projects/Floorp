@@ -211,7 +211,7 @@ typedef struct nsMsgSearchValue
    _a == nsMsgSearchAttrib::MsgStatus || _a == nsMsgSearchAttrib::MessageKey || \
    _a == nsMsgSearchAttrib::Size || _a == nsMsgSearchAttrib::AgeInDays || \
    _a == nsMsgSearchAttrib::FolderInfo || _a == nsMsgSearchAttrib::Location || \
-   _a == nsMsgSearchAttrib::Label))
+   _a == nsMsgSearchAttrib::Label || _a == nsMsgSearchAttrib::JunkStatus))
 %}
 
 [ptr] native nsSearchMenuItem(nsSearchMenuItem);
