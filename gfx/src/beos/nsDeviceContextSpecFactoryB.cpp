@@ -40,6 +40,7 @@
 #include "nsDeviceContextSpecFactoryB.h"
 #include "nsDeviceContextSpecB.h"
 #include "nsGfxCIID.h"
+#include "nsReadableUtils.h"
 #include "plstr.h"
 
 /** -------------------------------------------------------
