@@ -478,7 +478,7 @@ static char gVerifyDir[_MAX_PATH];
 static BOOL gVisualDebug = TRUE;
 
 extern JSConsole *gConsole;
-extern HANDLE gInstance, gPrevInstance;
+extern HINSTANCE gInstance, gPrevInstance;
 
 extern "C" NS_EXPORT int DebugRobot(
   nsVoidArray * workList, nsIWebShell * ww,
@@ -553,7 +553,7 @@ NS_IMETHODIMP
 nsViewerApp::CreateRobot(nsBrowserWindow* aWindow)
 {
 #if defined(XP_PC) && defined(NS_DEBUG)
-  if (CreateRobotDialog(aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET)))
+  if (CreateRobotDialog((HWND)aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET)))
   {
     nsIPresShell* shell = aWindow->GetPresShell();
     if (nsnull != shell) {
@@ -788,7 +788,7 @@ nsViewerApp::CreateSiteWalker(nsBrowserWindow* aWindow)
   if (nsnull == gWinData) {
     gWinData = aWindow;
     NS_ADDREF(aWindow);
-    CreateSiteWalkerDialog(aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET));
+    CreateSiteWalkerDialog((HWND)aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET));
   }
 #endif
   return NS_OK;
@@ -812,7 +812,7 @@ static void DestroyConsole()
 
 static void ShowConsole(nsBrowserWindow* aWindow)
 {
-    HWND hWnd = aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET);
+    HWND hWnd = (HWND)aWindow->mWindow->GetNativeData(NS_NATIVE_WIDGET);
     if (!gConsole) {
 
       // load the accelerator table for the console

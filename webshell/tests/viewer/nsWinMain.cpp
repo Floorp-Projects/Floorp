@@ -24,7 +24,7 @@
 #include "plevent.h"
 
 JSConsole *gConsole;
-HANDLE gInstance, gPrevInstance;
+HINSTANCE gInstance, gPrevInstance;
 static nsITimer* gNetTimer;
 
 nsNativeViewerApp::nsNativeViewerApp()
@@ -69,7 +69,7 @@ nsresult
 nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 {
   HMENU menu = ::LoadMenu(gInstance, "Viewer");
-  HWND hwnd = mWindow->GetNativeData(NS_NATIVE_WIDGET);
+  HWND hwnd = (HWND)mWindow->GetNativeData(NS_NATIVE_WIDGET);
   ::SetMenu(hwnd, menu);
 
   return NS_OK;
@@ -99,7 +99,8 @@ int main(int argc, char **argv)
 }
 
 int PASCAL
-WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
+WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, 
+        int nCmdShow)
 {
   gInstance = instance;
   gPrevInstance = prevInstance;

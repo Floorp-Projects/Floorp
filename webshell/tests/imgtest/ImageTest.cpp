@@ -47,7 +47,7 @@ static NS_DEFINE_IID(kCScrollbarIID, NS_VERTSCROLLBAR_CID);
 
 static char* class1Name = "ImageTest";
 
-static HANDLE gInstance, gPrevInstance;
+static HINSTANCE gInstance, gPrevInstance;
 static nsIImageManager *gImageManager = nsnull;
 static nsIImageGroup *gImageGroup = nsnull;
 static nsIImageRequest *gImageReq = nsnull;
@@ -353,7 +353,7 @@ static HWND CreateTopLevel(const char* clazz, const char* title,
 #define GFXWIN_DLL "raptorgfxwin.dll"
 
 int PASCAL
-WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
+WinMain(HINSTANCE instance, HINSTANCE prevInstance, LPSTR cmdParam, int nCmdShow)
 {
   gInstance = instance;
 
