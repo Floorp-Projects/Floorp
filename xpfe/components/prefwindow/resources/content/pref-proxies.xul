@@ -49,12 +49,12 @@
   
   <hbox class="box-smallheader" title="&lHeader;"/>
 
-  <groupbox>
+  <groupbox flex="1">
     <caption label="&proxyTitle.label;"/>
 
-    <radiogroup id="networkProxyType" prefstring="network.proxy.type">
-        <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;"                oncommand="DoEnabling();"/>
-        <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;"                oncommand="DoEnabling();"/>
+    <radiogroup id="networkProxyType" prefstring="network.proxy.type" align="stretch">
+        <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+        <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
       <grid class="indent" flex="1">
         <columns>
           <column/>
@@ -63,7 +63,7 @@
         
         <rows>
           <row align="center">
-            <hbox align="right">
+            <hbox align="center" pack="end">
               <label value="&ftp.label;" accesskey="&ftp.accesskey;" control="networkProxyFTP"/>
             </hbox>
             <hbox align="center">
@@ -75,7 +75,7 @@
             </hbox>
           </row>
           <row align="center">
-            <hbox align="right">
+            <hbox align="center" pack="end">
               <label value="&gopher.label;" accesskey="&gopher.accesskey;" control="networkProxyGopher"/>
             </hbox>
             <hbox align="center">
@@ -88,7 +88,7 @@
             </hbox>
           </row>
           <row align="center">
-            <hbox align="right">
+            <hbox align="center" pack="end">
               <label value="&http.label;" accesskey="&http.accesskey;" control="networkProxyHTTP"/>
             </hbox>
             <hbox align="center">
@@ -100,7 +100,7 @@
             </hbox>
           </row>
           <row align="center">
-            <hbox align="right">
+            <hbox align="center" pack="end">
               <label value="&ssl.label;" accesskey="&ssl.accesskey;" control="networkProxySSL"/>
             </hbox>
             <hbox align="center">
@@ -112,7 +112,7 @@
             </hbox>
           </row>
           <row align="center">
-            <hbox align="right">
+            <hbox align="center" pack="end">
               <label value="&socks.label;" accesskey="&socks.accesskey;" control="networkProxySOCKS"/>
             </hbox>
             <hbox align="center">
@@ -133,7 +133,7 @@
           </row>
 
           <row align="center"> 
-            <hbox align="right">
+            <hbox align="center" pack="end">
               <label value="&noproxy.label;" accesskey="&noproxy.accesskey;" control="networkProxyNone"/>
             </hbox>
             <textbox id="networkProxyNone" preftype="string" prefstring="network.proxy.no_proxies_on"/>
@@ -144,8 +144,8 @@
           </row>
         </rows>
       </grid>
-      <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;"                        oncommand="DoEnabling();"/>
-      <hbox class="indent" flex="1">
+      <radio value="2" label="&autoTypeRadio.label;" accesskey="&autoTypeRadio.accesskey;" oncommand="DoEnabling();"/>
+      <hbox class="indent" flex="1" align="center">
         <textbox id="networkProxyAutoconfigURL" flex="1" 
                  preftype="string" prefstring="network.proxy.autoconfig_url"/>
         <button id="autoReload" label="&reload.label;" accesskey="&reload.accesskey;"
