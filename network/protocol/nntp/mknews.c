@@ -4760,7 +4760,8 @@ net_ProcessNews (ActiveEntry *ce)
 						ce->window_id,
 						&ce->URL_s->error_msg,
 						ce->socks_host,
-						ce->socks_port);
+						ce->socks_port,
+                        ce->URL_s->localIP);
 
 					if(ce->socket != NULL)
 						NET_TotalNumberOfOpenConnections++;
@@ -4810,7 +4811,8 @@ HG33086
 							  &ce->socket, 
 							  &cd->tcp_con_data, 
 							  ce->window_id,
-							  &ce->URL_s->error_msg);
+							  &ce->URL_s->error_msg,
+                              ce->URL_s->localIP);
   
                 cd->pause_for_read = TRUE;
                 if(ce->status == MK_CONNECTED)

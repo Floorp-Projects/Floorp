@@ -20,6 +20,7 @@
 
 #include "nscore.h"
 #include "nsISupports.h"
+#include "nsILoadAttribs.h"
 
 class nsIInputStream;
 class nsIStreamListener;
@@ -48,6 +49,8 @@ public:
   virtual nsresult Set(const char *aNewSpec) = 0;
 
   virtual nsresult SetReloadType(const PRInt32 type) = 0;
+
+  virtual nsresult SetLoadAttribs(nsILoadAttribs *aLoadAttrib) = 0;
 
   /** Accessors */
   //@{
@@ -78,6 +81,9 @@ public:
 
   /** @return the reload type for this url */
   virtual PRInt32 GetReloadType() const = 0;
+
+  /** @return the loadAttributes pointer */
+  virtual nsILoadAttribs* GetLoadAttribs() const = 0;
   //@}
 
   /** Write the URL to aString, overwriting previous contents. */

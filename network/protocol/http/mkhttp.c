@@ -489,7 +489,8 @@ net_start_http_connect(ActiveEntry * ce) {
                     ce->window_id, 
                     &ce->URL_s->error_msg,
                     ce->socks_host,
-                    ce->socks_port);
+                    ce->socks_port,
+                    ce->URL_s->localIP);
     } else {
         ce->status = NET_BeginConnect (ce->URL_s->address,
                     ce->URL_s->IPAddressString,
@@ -501,7 +502,8 @@ net_start_http_connect(ActiveEntry * ce) {
                     ce->window_id, 
                     &ce->URL_s->error_msg,
                     ce->socks_host,
-                    ce->socks_port);
+                    ce->socks_port,
+                    ce->URL_s->localIP);
     }
 
     /* set this so mkgeturl can select on it */
@@ -609,7 +611,8 @@ net_finish_http_connect(ActiveEntry * ce)
                     &cd->connection->sock, 
                     &cd->tcp_con_data, 
                     ce->window_id,
-                    &ce->URL_s->error_msg);
+                    &ce->URL_s->error_msg,
+                    ce->URL_s->localIP);
     } else {
         ce->status = NET_FinishConnect(ce->URL_s->address,
                     "HTTP",
@@ -617,7 +620,8 @@ net_finish_http_connect(ActiveEntry * ce)
                     &cd->connection->sock,  
                     &cd->tcp_con_data, 
                     ce->window_id,
-                    &ce->URL_s->error_msg);
+                    &ce->URL_s->error_msg,
+                    ce->URL_s->localIP);
     }
 
     if (ce->status < 0) {

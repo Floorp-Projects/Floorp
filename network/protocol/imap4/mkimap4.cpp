@@ -1355,7 +1355,8 @@ void StartIMAPConnection(TNavigatorImapConnection *imapConnection)
                 ce->window_id,
                 &ce->URL_s->error_msg,
                                  ce->socks_host,
-                                 ce->socks_port);
+                                 ce->socks_port,
+                                 ce->URL_s->localIP);
 
     imapConnection->SetIOSocket(ce->socket);
     if(ce->socket != 0)
@@ -1411,7 +1412,8 @@ void FinishIMAPConnection(void *blockingConnectionVoid,
                 &ce->socket,
                 imapConnection->GetTCPConData(),
                 ce->window_id,
-                &ce->URL_s->error_msg);
+                &ce->URL_s->error_msg,
+                ce->URL_s->localIP);
 
     imapConnection->SetIOSocket(ce->socket);
     if(ce->status == MK_CONNECTED)

@@ -892,7 +892,8 @@ net_start_first_connect(const char   *host,
 						PRFileDesc   *sock, 
 						MWContext    *window_id, 
 						TCP_ConData  *tcp_con_data,
-						char        **error_msg)
+						char        **error_msg,
+                        PRUint32     localIP)
 {
 
     /* malloc the string to prevent overflow
@@ -919,6 +920,25 @@ net_start_first_connect(const char   *host,
 	tcp_con_data->begin_time = time(NULL);
 
 #define CONNECT_TIMEOUT  0
+    
+    /* Bind to a user specified local IP address if specified.
+     * Netlib does not check the validity of this address.
+     * The user is guaranteing it's existence and usability. */
+    if ( localIP > 0 ) {
+        PRStatus status;
+        PRNetAddr *addr = (PRNetAddr *)PR_Malloc(sizeof(PRNetAddr));
+        PRErrorCode errorCode; /* see http://www.mozilla.org/docs/refList/refNSPR/prerr.htm#1027954 */
+        status = PR_InitializeNetAddr(PR_IpAddrNull, 0, addr);
+        if (status != PR_SUCCESS) {
+            errorCode = PR_GetError();
+        } else {
+            addr->inet.ip = localIP;
+            status = PR_Bind(sock, addr);
+            if (status != PR_SUCCESS) {
+                errorCode = PR_GetError();
+            }
+        }
+    }
 
     /* if it's not equal to PR_SUCCESS something went wrong
 	 *
@@ -1050,7 +1070,8 @@ NET_BeginConnect (CONST char   *url,
           	      MWContext    *window_id,
 			      char        **error_msg,
 				  u_long		socks_host,
-				  short			socks_port)
+				  short			socks_port,
+                  PRUint32 localIP)
 {
 
 	char * proxy=NULL;
@@ -1263,7 +1284,7 @@ HG71089
     TIMING_STARTCLOCK_NAME("tcp:connect", url);
 
     status = net_start_first_connect(host, *sock, window_id, 
-									 *tcp_con_data, error_msg);
+									 *tcp_con_data, error_msg, localIP);
 
 	if(status != MK_WAITING_FOR_CONNECTION)
 	  {
@@ -1308,7 +1329,8 @@ NET_FinishConnect (CONST char   *url,
                    PRFileDesc   **sock, 
 			       TCP_ConData **tcp_con_data,
                    MWContext    *window_id,
-				   char        **error_msg)
+				   char        **error_msg,
+                   PRUint32 localIP)
 {
 	int status;
 	char *host=NULL;
@@ -1382,7 +1404,7 @@ NET_FinishConnect (CONST char   *url,
         TIMING_STARTCLOCK_NAME("tcp:connect", url);
 
         status = net_start_first_connect(host, *sock, window_id, 
-										 *tcp_con_data, error_msg);
+										 *tcp_con_data, error_msg, localIP);
 
         if(status != MK_WAITING_FOR_CONNECTION)
           {
@@ -1427,6 +1449,25 @@ NET_FinishConnect (CONST char   *url,
 		}
 
 #if defined(XP_WIN16)
+        /* Bind to a user specified local IP address if specified.
+         * Netlib does not check the validity of this address.
+         * The user is guaranteing it's existence and usability. */
+        if ( localIP > 0 ) {
+            PRStatus status;
+            PRNetAddr *addr = (PRNetAddr *)PR_Malloc(sizeof(PRNetAddr));
+            PRErrorCode errorCode; /* see http://www.mozilla.org/docs/refList/refNSPR/prerr.htm#1027954 */
+            status = PR_InitializeNetAddr(PR_IpAddrNull, 0, addr);
+            if (status != PR_SUCCESS) {
+                errorCode = PR_GetError();
+            } else {
+                addr->inet.ip = localIP;
+                status = PR_Bind(sock, addr);
+                if (status != PR_SUCCESS) {
+                    errorCode = PR_GetError();
+                }
+            }
+        }
+
     	if(PR_SUCCESS != PR_Connect (*sock,
 								 &(*tcp_con_data)->net_addr,
 								 CONNECT_TIMEOUT))
@@ -1512,7 +1553,8 @@ error_out:
                                  				window_id,
 								 				error_msg,
 												0,
-												0));
+												0,
+                                                localIP));
 					/* else fall through to the error */
 				}
 				else

@@ -4130,7 +4130,8 @@ net_ProcessFTP(ActiveEntry * ce)
 										 ce->window_id,
 										 &ce->URL_s->error_msg,
 										  ce->socks_host,
-										  ce->socks_port);
+										  ce->socks_port,
+                                          ce->URL_s->localIP);
             ce->socket = cd->cc->csock;
 
 			if(cd->cc->csock != NULL)
@@ -4160,7 +4161,8 @@ net_ProcessFTP(ActiveEntry * ce)
 										  &cd->cc->csock, 
 										  &cd->tcp_con_data, 
 										  ce->window_id,
-										  &ce->URL_s->error_msg);
+										  &ce->URL_s->error_msg,
+                                          ce->URL_s->localIP);
     
             cd->pause_for_read = TRUE;
     
@@ -4302,7 +4304,8 @@ net_ProcessFTP(ActiveEntry * ce)
 										 ce->window_id,
 										 &ce->URL_s->error_msg,
 										  ce->socks_host,
-										  ce->socks_port);
+										  ce->socks_port,
+                                          ce->URL_s->localIP);
     
             if(ce->status == MK_CONNECTED)
               {
@@ -4324,7 +4327,8 @@ net_ProcessFTP(ActiveEntry * ce)
 											  &cd->dsock,
 											  &cd->tcp_con_data,
 											  ce->window_id,
-											  &ce->URL_s->error_msg);
+											  &ce->URL_s->error_msg,
+                                              ce->URL_s->localIP);
                 TRACEMSG(("FTP: got pasv data connection on port #%d\n",cd->cc->csock));
     
                 if(ce->status == MK_CONNECTED)

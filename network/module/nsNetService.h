@@ -22,6 +22,7 @@
 #include "nspr.h"
 #include "nsIPref.h"
 #include "nsINetService.h"
+#include "net.h"
 
 class nsINetContainerApplication;
 class nsITimer;
@@ -53,6 +54,7 @@ protected:
     static void NetPollSocketsCallback(nsITimer* aTimer, void* aClosure);
 
 private:
+    void SetupURLStruct(nsIURL *aURL, URL_Struct *aURL_s);
     /* XXX: This is temporary until bamwrap.cpp is removed... */
     void *m_stubContext;
     nsINetContainerApplication *mContainer;

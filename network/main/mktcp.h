@@ -102,7 +102,8 @@ NET_BeginConnect  (CONST char   *url,
 				   MWContext    *window_id,
 				   char        **error_msg,
 				   u_long        socks_host,
-				   short         socks_port);
+				   short         socks_port,
+                   PRUint32 localIP);
 
 
 /*
@@ -122,7 +123,8 @@ NET_FinishConnect (CONST char   *url,
 				   PRFileDesc  **s,  
 				   TCP_ConData **tcp_con_data, 
 				   MWContext    *window_id,
-				   char        **error_msg);
+				   char        **error_msg,
+                   PRUint32 localIP);
 
 /* 
  * Echo to stderr as well as the socket

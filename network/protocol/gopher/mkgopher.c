@@ -1007,7 +1007,8 @@ net_ProcessGopher(ActiveEntry * cur_entry)
 										 CE_WINDOW_ID,
 										 &CE_URL_S->error_msg,
 										 cur_entry->socks_host,
-										 cur_entry->socks_port);
+										 cur_entry->socks_port,
+                                         cur_entry->URL_s->localIP);
 
 			if(CE_SOCK != NULL)
 				NET_TotalNumberOfOpenConnections++;
@@ -1033,7 +1034,8 @@ net_ProcessGopher(ActiveEntry * cur_entry)
 										  &CE_SOCK, 
 										  &CD_TCP_CON_DATA, 
 										  CE_WINDOW_ID,
-										  &CE_URL_S->error_msg);
+										  &CE_URL_S->error_msg,
+                                          cur_entry->URL_s->localIP);
             if(CE_STATUS == MK_CONNECTED)
               {
         	    CD_NEXT_STATE = GOPHER_SEND_REQUEST;
