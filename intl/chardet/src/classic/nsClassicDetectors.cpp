@@ -197,26 +197,6 @@ static nsresult JA_AutoCharsetDetectBuffer(const char* aBuffer, const PRInt32 aL
 }
 
 //==========================================================
-
-
-class nsClassicDetector : 
-      public nsICharsetDetector // Implement the interface 
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  nsClassicDetector(const char* language);
-  virtual ~nsClassicDetector();
-  NS_IMETHOD Init(nsICharsetDetectionObserver* aObserver);
-  NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, PRBool* oDontFeedMe);
-  NS_IMETHOD Done();
- 
-private:
-  nsICharsetDetectionObserver* mObserver;
-  char mCharset[65];
-  char mLanguage[32];
-};
-
 NS_IMPL_ISUPPORTS(nsClassicDetector, NS_GET_IID(nsICharsetDetector));
 
 //----------------------------------------------------------
@@ -230,7 +210,6 @@ nsClassicDetector::nsClassicDetector(const char* language)
 //----------------------------------------------------------
 nsClassicDetector::~nsClassicDetector()
 {
-  NS_IF_RELEASE(mObserver);
   PR_AtomicDecrement(&g_InstanceCount);
 }
 //----------------------------------------------------------
@@ -241,7 +220,6 @@ NS_IMETHODIMP nsClassicDetector::Init(
   if(nsnull == aObserver)
      return NS_ERROR_ILLEGAL_VALUE;
 
-  NS_IF_ADDREF(aObserver);
   mObserver = aObserver;
 
   return NS_OK;
@@ -275,21 +253,6 @@ NS_IMETHODIMP nsClassicDetector::Done()
 }
 
 //==========================================================
-class nsClassicStringDetector : 
-      public nsIStringCharsetDetector // Implement the interface 
-{
-public:
-  NS_DECL_ISUPPORTS
-
-  nsClassicStringDetector(const char* language);
-  virtual ~nsClassicStringDetector();
-  NS_IMETHOD DoIt(const char* aBuf, PRUint32 aLen, 
-                  const char** oCharset, 
-                  nsDetectionConfident &oConfident);
-protected:
-  char mCharset[65];
-  char mLanguage[32];
-};
 
 NS_IMPL_ISUPPORTS(nsClassicStringDetector, NS_GET_IID(nsIStringCharsetDetector));
 
@@ -323,76 +286,3 @@ NS_IMETHODIMP nsClassicStringDetector::DoIt(const char* aBuf, PRUint32 aLen,
   return NS_OK;
 }
 
-//==========================================================
-class nsClassicDetectorFactory : public nsIFactory {
-   NS_DECL_ISUPPORTS
-
-public:
-   nsClassicDetectorFactory(const char* language, PRBool stringBase) {
-     NS_INIT_REFCNT();
-     PL_strcpy(mLanguage, language);
-     mStringBase = stringBase;
-     PR_AtomicIncrement(&g_InstanceCount);
-   }
-   virtual ~nsClassicDetectorFactory() {
-     PR_AtomicDecrement(&g_InstanceCount);
-   }
-
-   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
-   NS_IMETHOD LockFactory(PRBool aLock);
-private:
-   char mLanguage[32];
-   PRBool mStringBase;
-};
-
-//--------------------------------------------------------------
-NS_DEFINE_IID( kIFactoryIID, NS_IFACTORY_IID);
-NS_IMPL_ISUPPORTS( nsClassicDetectorFactory , kIFactoryIID);
-
-NS_IMETHODIMP nsClassicDetectorFactory::CreateInstance(
-    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
-{
-  if(NULL == aResult)
-        return NS_ERROR_NULL_POINTER;
-  if(NULL != aDelegate)
-        return NS_ERROR_NO_AGGREGATION;
-
-  *aResult = NULL;
-
-  nsISupports *inst = nsnull;
-  if (mStringBase)
-    inst = (nsISupports *) new nsClassicStringDetector(mLanguage);
-   else
-    inst = (nsISupports *) new nsClassicDetector(mLanguage);
-  if(NULL == inst) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  NS_ADDREF(inst);  // Stabilize
-  nsresult res =inst->QueryInterface(aIID, aResult);
-  NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>
-
-  return res;
-}
-//--------------------------------------------------------------
-NS_IMETHODIMP nsClassicDetectorFactory::LockFactory(PRBool aLock)
-{
-  if(aLock)
-     PR_AtomicIncrement( &g_LockCount );
-  else
-     PR_AtomicDecrement( &g_LockCount );
-  return NS_OK;
-}
-
-//==========================================================
-nsIFactory* NEW_JA_CLASSICDETECTOR_FACTORY() {
-  return new nsClassicDetectorFactory("ja", PR_FALSE);
-}
-nsIFactory* NEW_JA_STRING_CLASSICDETECTOR_FACTORY() {
-  return new nsClassicDetectorFactory("ja", PR_TRUE);
-}
-nsIFactory* NEW_KO_CLASSICDETECTOR_FACTORY() {
-  return new nsClassicDetectorFactory("ko", PR_FALSE);
-}
-nsIFactory* NEW_KO_STRING_CLASSICDETECTOR_FACTORY() {
-  return new nsClassicDetectorFactory("ko", PR_TRUE);
-}

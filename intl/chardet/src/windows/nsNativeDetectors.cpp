@@ -138,7 +138,6 @@ NS_IMETHODIMP nsNativeDetector::Init(
   if(nsnull == aObserver)
      return NS_ERROR_ILLEGAL_VALUE;
 
-  NS_IF_ADDREF(aObserver);
   mObserver = aObserver;
 
   HRESULT hr = CoCreateInstance(CLSID_CMultiLanguage, NULL, CLSCTX_INPROC_SERVER, 

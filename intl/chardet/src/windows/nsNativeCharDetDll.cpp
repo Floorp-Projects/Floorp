@@ -92,10 +92,7 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           NS_GET_IID(nsIComponentManager), 
-                           (nsISupports**)&compMgr);
+  nsCOMPtr<nsIComponentManager> compMgr = do_GetService(kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->RegisterComponent(kJANativeDetectorCID, 
@@ -121,8 +118,6 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                                   NS_STRCDETECTOR_CONTRACTID_BASE "koms", 
                                   path,
                                   PR_TRUE, PR_TRUE);
-
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 
@@ -133,10 +128,7 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  nsIComponentManager* compMgr;
-  rv = servMgr->GetService(kComponentManagerCID, 
-                           NS_GET_IID(nsIComponentManager), 
-                           (nsISupports**)&compMgr);
+  nsCOMPtr<nsIComponentManager> compMgr = do_GetService(kComponentManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
   rv = compMgr->UnregisterComponent(kJANativeDetectorCID, path);
@@ -144,7 +136,6 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
   rv = compMgr->UnregisterComponent(kKONativeDetectorCID, path);
   rv = compMgr->UnregisterComponent(kKONativeStringDetectorCID, path);
 
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
   return rv;
 }
 

@@ -23,6 +23,66 @@
 #define nsMetaCharsetObserverFactory_h__
 
 #include "nsIFactory.h"
-nsIFactory* NEW_META_CHARSET_OBSERVER_FACTORY();
+#include "nsIMetaCharsetService.h"
+#include "nsIElementObserver.h"
+#include "nsIObserver.h"
+#include "nsObserverBase.h"
+#include "nsWeakReference.h"
+
+//========================================================================== 
+//
+// Class declaration for the class 
+//
+//========================================================================== 
+class nsMetaCharsetObserver: public nsIElementObserver, 
+                             public nsIObserver, 
+                             public nsObserverBase,
+                             public nsIMetaCharsetService,
+                             public nsSupportsWeakReference {
+public:
+  nsMetaCharsetObserver();
+  virtual ~nsMetaCharsetObserver();
+
+  /* methode for nsIElementObserver */
+  /*
+   *   This method return the tag which the observer care about
+   */
+  NS_IMETHOD_(const char*)GetTagNameAt(PRUint32 aTagIndex);
+
+  /*
+   *   Subject call observer when the parser hit the tag
+   *   @param aDocumentID- ID of the document
+   *   @param aTag- the tag
+   *   @param numOfAttributes - number of attributes
+   *   @param nameArray - array of name. 
+   *   @param valueArray - array of value
+   */
+  NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag, PRUint32 numOfAttributes, 
+                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
+  NS_IMETHOD Notify(PRUint32 aDocumentID, const PRUnichar* aTag, PRUint32 numOfAttributes, 
+                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
+
+  NS_IMETHOD Notify(nsISupports* aDocumentID, const PRUnichar* aTag, const nsStringArray* keys, const nsStringArray* values);
+
+  NS_DECL_ISUPPORTS
+
+  /* methode for nsIObserver */
+  NS_DECL_NSIOBSERVER
+
+  /* methode for nsIMetaCharsetService */
+  NS_IMETHOD Start();
+  NS_IMETHOD End();
+ 
+private:
+
+  NS_IMETHOD Notify(PRUint32 aDocumentID, PRUint32 numOfAttributes, 
+                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
+
+  NS_IMETHOD Notify(nsISupports* aDocumentID, const nsStringArray* keys, const nsStringArray* values);
+
+  nsCOMPtr<nsICharsetAlias> mAlias;
+
+  PRBool bMetaCharsetObserverStarted;
+};
 
 #endif // nsMetaCharsetObserverFactory_h__

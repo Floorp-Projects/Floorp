@@ -22,9 +22,96 @@
 #ifndef nsDetectionAdaptor_h__
 #define nsDetectionAdaptor_h__
 
-#include "nsIFactory.h"
+#include "nsCOMPtr.h"
+#include "nsIDocument.h"
+#include "nsIWebShellServices.h"
+
+#ifdef IMPL_NS_IPARSERFILTER
+#include "nsIParserFilter.h"
+static NS_DEFINE_IID(kIParserFilterIID, NS_IPARSERFILTER_IID);
+
+#endif /* IMPL_NS_IPARSERFILTER */
+
+class CToken;
+extern "C" PRInt32 g_InstanceCount;
+extern "C" PRInt32 g_LockCount;
+
+//--------------------------------------------------------------
+class nsMyObserver : public nsICharsetDetectionObserver
+{
+ public:
+   NS_DECL_ISUPPORTS
+
+ public:
+   nsMyObserver( void )
+   {
+     NS_INIT_REFCNT();
+     PR_AtomicIncrement(& g_InstanceCount);
+     mWebShellSvc = nsnull;
+     mNotifyByReload = PR_FALSE;
+     mWeakRefDocument = nsnull;
+     mWeakRefParser = nsnull;
+   }
+   virtual  ~nsMyObserver( void )
+   {
+     PR_AtomicDecrement(& g_InstanceCount);
+     // do not release nor delete mWeakRefDocument
+     // do not release nor delete mWeakRefParser
+   }
 
 
-nsIFactory* NEW_DETECTION_ADAPTOR_FACTORY();
+   // Methods to support nsICharsetDetectionAdaptor
+   NS_IMETHOD Init(nsIWebShellServices* aWebShellSvc, 
+                   nsIDocument* aDocument,
+                   nsIParser* aParser,
+                   const PRUnichar* aCharset,
+                   const char* aCommand);
+
+   // Methods to support nsICharsetDetectionObserver
+   NS_IMETHOD Notify(const char* aCharset, nsDetectionConfident aConf);
+   void SetNotifyByReload(PRBool aByReload) { mNotifyByReload = aByReload; };
+ private:
+     nsCOMPtr<nsIWebShellServices> mWebShellSvc;
+     PRBool mNotifyByReload;
+     nsCOMPtr<nsIDocument> mWeakRefDocument;
+     nsCOMPtr<nsIParser> mWeakRefParser;
+     nsAutoString mCharset;
+     nsCAutoString mCommand;
+};
+
+class nsDetectionAdaptor : 
+#ifdef IMPL_NS_IPARSERFILTER
+                           public nsIParserFilter,
+#endif /* IMPL_NS_IPARSERFILTER */
+                           public nsICharsetDetectionAdaptor
+{
+ public:
+   NS_DECL_ISUPPORTS
+
+ public:
+   nsDetectionAdaptor( void );
+   virtual  ~nsDetectionAdaptor( void );
+
+   // Methods to support nsICharsetDetectionAdaptor
+   NS_IMETHOD Init(nsIWebShellServices* aWebShellSvc, nsICharsetDetector *aDetector, 
+                   nsIDocument* aDocument,
+                   nsIParser* aParser,
+                   const PRUnichar* aCharset,
+                   const char* aCommand=nsnull);
+  
+   // Methode to suppor nsIParserFilter
+   NS_IMETHOD RawBuffer(const char * buffer, PRUint32 * buffer_length) ;
+   NS_IMETHOD Finish();
+
+   // really don't care the following two, only because they are defined
+   // in nsIParserFilter.h
+   NS_IMETHOD WillAddToken(CToken & token) { return NS_OK; };
+   NS_IMETHOD ProcessTokens( void ) {return NS_OK;};
+
+  private:
+     nsCOMPtr<nsICharsetDetector> mDetector;
+     PRBool mDontFeedToDetector;
+     nsMyObserver* mObserver; 
+};
 
 #endif /* nsDetectionAdaptor_h__ */

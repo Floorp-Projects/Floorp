@@ -23,6 +23,57 @@
 #define nsXMLEncodingObserverFactory_h__
 
 #include "nsIFactory.h"
-nsIFactory* NEW_XML_ENCODING_OBSERVER_FACTORY();
+#include "nsIXMLEncodingService.h"
+#include "nsIElementObserver.h"
+#include "nsIObserver.h"
+#include "nsIObserverService.h"
+#include "nsObserverBase.h"
+#include "nsWeakReference.h"
+
+class nsXMLEncodingObserver: public nsIElementObserver, 
+                             public nsIObserver, 
+                             public nsObserverBase,
+                             public nsIXMLEncodingService,
+                             public nsSupportsWeakReference {
+public:
+  nsXMLEncodingObserver();
+  virtual ~nsXMLEncodingObserver();
+
+  /* methode for nsIElementObserver */
+  /*
+   *   This method return the tag which the observer care about
+   */
+  NS_IMETHOD_(const char*)GetTagNameAt(PRUint32 aTagIndex);
+
+  /*
+   *   Subject call observer when the parser hit the tag
+   *   @param aDocumentID- ID of the document
+   *   @param aTag- the tag
+   *   @param numOfAttributes - number of attributes
+   *   @param nameArray - array of name. 
+   *   @param valueArray - array of value
+   */
+  NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag, PRUint32 numOfAttributes, 
+                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
+  NS_IMETHOD Notify(PRUint32 aDocumentID, const PRUnichar* aTag, PRUint32 numOfAttributes, 
+                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
+  NS_IMETHOD Notify(nsISupports* aDocumentID, const PRUnichar* aTag, const nsStringArray* keys, const nsStringArray* values)
+      { return NS_ERROR_NOT_IMPLEMENTED; }
+
+  NS_DECL_ISUPPORTS
+
+  /* methode for nsIObserver */
+  NS_DECL_NSIOBSERVER
+
+  /* methode for nsIXMLEncodingService */
+  NS_IMETHOD Start();
+  NS_IMETHOD End();
+
+private:
+  NS_IMETHOD Notify(PRUint32 aDocumentID, PRUint32 numOfAttributes, 
+                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
+
+  PRBool bXMLEncodingObserverStarted;
+};
 
 #endif // nsXMLEncodingObserverFactory_h__

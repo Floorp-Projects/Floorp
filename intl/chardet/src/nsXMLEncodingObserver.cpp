@@ -37,81 +37,34 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-//========================================================================== 
-//
-// Class declaration for the class 
-//
-//========================================================================== 
-class nsXMLEncodingObserver: public nsIElementObserver, 
-                             public nsIObserver, 
-                             public nsObserverBase,
-                             public nsIXMLEncodingService,
-                             public nsSupportsWeakReference {
-
-  NS_DECL_ISUPPORTS
-
-public:
-
-  nsXMLEncodingObserver();
-  virtual ~nsXMLEncodingObserver();
-
-  /* methode for nsIElementObserver */
-  /*
-   *   This method return the tag which the observer care about
-   */
-  NS_IMETHOD_(const char*)GetTagNameAt(PRUint32 aTagIndex);
-
-  /*
-   *   Subject call observer when the parser hit the tag
-   *   @param aDocumentID- ID of the document
-   *   @param aTag- the tag
-   *   @param numOfAttributes - number of attributes
-   *   @param nameArray - array of name. 
-   *   @param valueArray - array of value
-   */
-  NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag, PRUint32 numOfAttributes, 
-                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
-  NS_IMETHOD Notify(PRUint32 aDocumentID, const PRUnichar* aTag, PRUint32 numOfAttributes, 
-                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
-  NS_IMETHOD Notify(nsISupports* aDocumentID, const PRUnichar* aTag, const nsStringArray* keys, const nsStringArray* values)
-      { return NS_ERROR_NOT_IMPLEMENTED; }
-
-  /* methode for nsIObserver */
-  NS_DECL_NSIOBSERVER
-
-  /* methode for nsIXMLEncodingService */
-  NS_IMETHOD Start();
-  NS_IMETHOD End();
-private:
-
-  NS_IMETHOD Notify(PRUint32 aDocumentID, PRUint32 numOfAttributes, 
-                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
-
-};
-
 //-------------------------------------------------------------------------
 nsXMLEncodingObserver::nsXMLEncodingObserver()
 {
   NS_INIT_REFCNT();
   PR_AtomicIncrement(& g_InstanceCount);
+  bXMLEncodingObserverStarted = PR_FALSE;
 }
 //-------------------------------------------------------------------------
 nsXMLEncodingObserver::~nsXMLEncodingObserver()
 {
   PR_AtomicDecrement(& g_InstanceCount);
+
+  // call to end the ObserverService
+  if (bXMLEncodingObserverStarted == PR_TRUE) {
+    End();
+  }
 }
 
 //-------------------------------------------------------------------------
 NS_IMPL_ADDREF ( nsXMLEncodingObserver );
 NS_IMPL_RELEASE ( nsXMLEncodingObserver );
 
-NS_INTERFACE_MAP_BEGIN(nsXMLEncodingObserver)
-	NS_INTERFACE_MAP_ENTRY(nsIElementObserver)
-	NS_INTERFACE_MAP_ENTRY(nsIObserver)
-	NS_INTERFACE_MAP_ENTRY(nsIXMLEncodingService)
-	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIElementObserver)
-NS_INTERFACE_MAP_END
+// Use the new scheme
+NS_IMPL_QUERY_INTERFACE4(nsXMLEncodingObserver, 
+                         nsIElementObserver, 
+                         nsIObserver, 
+                         nsIXMLEncodingService, 
+                         nsISupportsWeakReference);
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP_(const char*) nsXMLEncodingObserver::GetTagNameAt(PRUint32 aTagIndex)
@@ -205,11 +158,7 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
       {
            if(! encoding.Equals(currentCharset)) 
            {
-               nsICharsetAlias* calias = nsnull;
-               res = nsServiceManager::GetService(
-                              kCharsetAliasCID,
-                              NS_GET_IID(nsICharsetAlias),
-                              (nsISupports**) &calias);
+              nsCOMPtr<nsICharsetAlias> calias = do_GetService(kCharsetAliasCID, &res);
                if(NS_SUCCEEDED(res) && (nsnull != calias) ) 
                {
                     PRBool same = PR_FALSE;
@@ -228,7 +177,6 @@ NS_IMETHODIMP nsXMLEncodingObserver::Notify(
                               }
                           } // if check for GetPreferred
                     } // if check res for Equals
-                    nsServiceManager::ReleaseService(kCharsetAliasCID, calias);
                 } // if check res for GetService
             } // if Equals
        } // if 
@@ -246,19 +194,19 @@ NS_IMETHODIMP nsXMLEncodingObserver::Observe(nsISupports*, const PRUnichar*, con
 NS_IMETHODIMP nsXMLEncodingObserver::Start() 
 {
     nsresult res = NS_OK;
-    nsAutoString xmlTopic; xmlTopic.AssignWithConversion("xmlparser");
-    nsIObserverService* anObserverService = nsnull;
 
-    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID, 
-                                       NS_GET_IID(nsIObserverService),
-                                       (nsISupports**) &anObserverService);
+    if (bXMLEncodingObserverStarted == PR_TRUE) 
+      return res;
+
+    nsAutoString xmlTopic; xmlTopic.AssignWithConversion("xmlparser");
+
+    nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
     if(NS_FAILED(res)) 
         goto done;
      
     res = anObserverService->AddObserver(this, xmlTopic.GetUnicode());
 
-    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_CONTRACTID, 
-                                    anObserverService);
+    bXMLEncodingObserverStarted = PR_TRUE;
 done:
     return res;
 }
@@ -266,80 +214,19 @@ done:
 NS_IMETHODIMP nsXMLEncodingObserver::End() 
 {
     nsresult res = NS_OK;
-    nsAutoString xmlTopic; xmlTopic.AssignWithConversion("xmlparser");
-    nsIObserverService* anObserverService = nsnull;
+    
+    if (bXMLEncodingObserverStarted == PR_FALSE) 
+      return res;
 
-    res = nsServiceManager::GetService(NS_OBSERVERSERVICE_CONTRACTID, 
-                                       NS_GET_IID(nsIObserverService),
-                                       (nsISupports**) &anObserverService);
+    nsAutoString xmlTopic; xmlTopic.AssignWithConversion("xmlparser");
+    nsCOMPtr<nsIObserverService> anObserverService = do_GetService(NS_OBSERVERSERVICE_CONTRACTID, &res);
     if(NS_FAILED(res)) 
         goto done;
      
     res = anObserverService->RemoveObserver(this, xmlTopic.GetUnicode());
 
-    nsServiceManager::ReleaseService(NS_OBSERVERSERVICE_CONTRACTID, 
-                                    anObserverService);
+    bXMLEncodingObserverStarted = PR_FALSE;
 done:
     return res;
 }
-//========================================================================== 
 
-class nsXMLEncodingObserverFactory : public nsIFactory {
-   NS_DECL_ISUPPORTS
-
-public:
-   nsXMLEncodingObserverFactory() {
-     NS_INIT_REFCNT();
-     PR_AtomicIncrement(&g_InstanceCount);
-   }
-   virtual ~nsXMLEncodingObserverFactory() {
-     PR_AtomicDecrement(&g_InstanceCount);
-   }
-
-   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
-   NS_IMETHOD LockFactory(PRBool aLock);
-
-};
-
-//--------------------------------------------------------------
-
-NS_IMPL_ISUPPORTS1( nsXMLEncodingObserverFactory , nsIFactory);
-
-NS_IMETHODIMP nsXMLEncodingObserverFactory::CreateInstance(
-    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
-{
-  if(NULL == aResult)
-        return NS_ERROR_NULL_POINTER;
-  if(NULL != aDelegate)
-        return NS_ERROR_NO_AGGREGATION;
-
-  *aResult = NULL;
-
-  nsXMLEncodingObserver *inst = new nsXMLEncodingObserver();
-
-
-  if(NULL == inst) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res =inst->QueryInterface(aIID, aResult);
-  if(NS_FAILED(res)) {
-     delete inst;
-  }
-
-  return res;
-}
-//--------------------------------------------------------------
-NS_IMETHODIMP nsXMLEncodingObserverFactory::LockFactory(PRBool aLock)
-{
-  if(aLock)
-     PR_AtomicIncrement( &g_LockCount );
-  else
-     PR_AtomicDecrement( &g_LockCount );
-  return NS_OK;
-}
-
-//==============================================================
-nsIFactory* NEW_XML_ENCODING_OBSERVER_FACTORY()
-{
-  return new nsXMLEncodingObserverFactory();
-}

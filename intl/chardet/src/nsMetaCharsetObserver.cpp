@@ -37,74 +37,17 @@
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
-//========================================================================== 
-//
-// Class declaration for the class 
-//
-//========================================================================== 
-class nsMetaCharsetObserver: public nsIElementObserver, 
-                             public nsIObserver, 
-                             public nsObserverBase,
-                             public nsIMetaCharsetService,
-                             public nsSupportsWeakReference {
-
-  NS_DECL_ISUPPORTS
-
-public:
-
-  nsMetaCharsetObserver();
-  virtual ~nsMetaCharsetObserver();
-
-  /* methode for nsIElementObserver */
-  /*
-   *   This method return the tag which the observer care about
-   */
-  NS_IMETHOD_(const char*)GetTagNameAt(PRUint32 aTagIndex);
-
-  /*
-   *   Subject call observer when the parser hit the tag
-   *   @param aDocumentID- ID of the document
-   *   @param aTag- the tag
-   *   @param numOfAttributes - number of attributes
-   *   @param nameArray - array of name. 
-   *   @param valueArray - array of value
-   */
-  NS_IMETHOD Notify(PRUint32 aDocumentID, eHTMLTags aTag, PRUint32 numOfAttributes, 
-                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
-  NS_IMETHOD Notify(PRUint32 aDocumentID, const PRUnichar* aTag, PRUint32 numOfAttributes, 
-                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
-
-  NS_IMETHOD Notify(nsISupports* aDocumentID, const PRUnichar* aTag, const nsStringArray* keys, const nsStringArray* values);
-
-  /* methode for nsIObserver */
-  NS_DECL_NSIOBSERVER
-
-  /* methode for nsIMetaCharsetService */
-  NS_IMETHOD Start();
-  NS_IMETHOD End();
-
-private:
-
-  NS_IMETHOD Notify(PRUint32 aDocumentID, PRUint32 numOfAttributes, 
-                    const PRUnichar* nameArray[], const PRUnichar* valueArray[]);
-
-  NS_IMETHOD Notify(nsISupports* aDocumentID, const nsStringArray* keys, const nsStringArray* values);
-
-  nsICharsetAlias *mAlias;
-
-};
-
 //-------------------------------------------------------------------------
 nsMetaCharsetObserver::nsMetaCharsetObserver()
 {
   NS_INIT_REFCNT();
+  bMetaCharsetObserverStarted = PR_FALSE;
   PR_AtomicIncrement(& g_InstanceCount);
   nsresult res;
   mAlias = nsnull;
   NS_WITH_SERVICE(nsICharsetAlias, calias, kCharsetAliasCID, &res);
   if(NS_SUCCEEDED(res)) {
      mAlias = calias;
-     NS_ADDREF(mAlias);
   }
 }
 //-------------------------------------------------------------------------
@@ -112,20 +55,22 @@ nsMetaCharsetObserver::~nsMetaCharsetObserver()
 {
   // should we release mAlias
   PR_AtomicDecrement(& g_InstanceCount);
-  NS_IF_RELEASE(mAlias);
+  if (bMetaCharsetObserverStarted == PR_TRUE)  {
+    // call to end the ObserverService
+    End();
+  }
 }
 
 //-------------------------------------------------------------------------
 NS_IMPL_ADDREF ( nsMetaCharsetObserver );
 NS_IMPL_RELEASE ( nsMetaCharsetObserver );
 
-NS_INTERFACE_MAP_BEGIN(nsMetaCharsetObserver)
-	NS_INTERFACE_MAP_ENTRY(nsIElementObserver)
-	NS_INTERFACE_MAP_ENTRY(nsIObserver)
-	NS_INTERFACE_MAP_ENTRY(nsIMetaCharsetService)
-	NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
-	NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIElementObserver)
-NS_INTERFACE_MAP_END
+// Use the new scheme
+NS_IMPL_QUERY_INTERFACE4(nsMetaCharsetObserver, 
+                         nsIElementObserver, 
+                         nsIObserver, 
+                         nsIMetaCharsetService, 
+                         nsISupportsWeakReference);
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP_(const char*) nsMetaCharsetObserver::GetTagNameAt(PRUint32 aTagIndex)
@@ -320,81 +265,38 @@ NS_IMETHODIMP nsMetaCharsetObserver::Start()
 {
     nsresult res = NS_OK;
 
+  if (bMetaCharsetObserverStarted == PR_FALSE)  {
+    bMetaCharsetObserverStarted = PR_TRUE;
+
+    // get the observer service
     NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_CONTRACTID, &res);
     if (NS_FAILED(res)) return res;
 
-    nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);    
-    return anObserverService->AddObserver(this, htmlTopic.GetUnicode());
+    nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);
+    
+    // add self to ObserverService
+    res = anObserverService->AddObserver(this, htmlTopic.GetUnicode());
+  }
+
+  return res;
 }
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMetaCharsetObserver::End() 
 {
     nsresult res = NS_OK;
+  if (bMetaCharsetObserverStarted == PR_TRUE)  {
+    bMetaCharsetObserverStarted = PR_FALSE;
 
     NS_WITH_SERVICE(nsIObserverService, anObserverService, NS_OBSERVERSERVICE_CONTRACTID, &res);
     if (NS_FAILED(res)) return res;
      
     nsAutoString htmlTopic; htmlTopic.AssignWithConversion(kHTMLTextContentType);
-    return anObserverService->RemoveObserver(this, htmlTopic.GetUnicode());
+    res = anObserverService->RemoveObserver(this, htmlTopic.GetUnicode());
+  }
+  return res;
 }
 //========================================================================== 
 
-class nsMetaCharsetObserverFactory : public nsIFactory {
-   NS_DECL_ISUPPORTS
-
-public:
-   nsMetaCharsetObserverFactory() {
-     NS_INIT_REFCNT();
-     PR_AtomicIncrement(&g_InstanceCount);
-   }
-   virtual ~nsMetaCharsetObserverFactory() {
-     PR_AtomicDecrement(&g_InstanceCount);
-   }
-
-   NS_IMETHOD CreateInstance(nsISupports* aDelegate, const nsIID& aIID, void** aResult);
-   NS_IMETHOD LockFactory(PRBool aLock);
-
-};
-
-//--------------------------------------------------------------
-
-NS_IMPL_ISUPPORTS1( nsMetaCharsetObserverFactory , nsIFactory);
-
-NS_IMETHODIMP nsMetaCharsetObserverFactory::CreateInstance(
-    nsISupports* aDelegate, const nsIID &aIID, void** aResult)
-{
-  if(NULL == aResult)
-        return NS_ERROR_NULL_POINTER;
-  if(NULL != aDelegate)
-        return NS_ERROR_NO_AGGREGATION;
-
-  *aResult = NULL;
-
-  nsMetaCharsetObserver *inst = new nsMetaCharsetObserver();
 
 
-  if(NULL == inst) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  nsresult res =inst->QueryInterface(aIID, aResult);
-  if(NS_FAILED(res)) {
-     delete inst;
-  }
 
-  return res;
-}
-//--------------------------------------------------------------
-NS_IMETHODIMP nsMetaCharsetObserverFactory::LockFactory(PRBool aLock)
-{
-  if(aLock)
-     PR_AtomicIncrement( &g_LockCount );
-  else
-     PR_AtomicDecrement( &g_LockCount );
-  return NS_OK;
-}
-
-//==============================================================
-nsIFactory* NEW_META_CHARSET_OBSERVER_FACTORY()
-{
-  return new nsMetaCharsetObserverFactory();
-}
