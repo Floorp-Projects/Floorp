@@ -182,12 +182,9 @@ NS_IMETHODIMP nsMsgFolderDataSource::GetTarget(nsIRDFResource* source,
   if (! tv)
     return NS_RDF_NO_VALUE;
 
-  nsIMsgFolder *folder;
-  rv = source->QueryInterface(nsIMsgFolder::GetIID(),
-                              (void **)&folder);
-  if (NS_SUCCEEDED(rv)) {
+  nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(source));
+  if (folder) {
     rv = createFolderNode(folder, property, target);
-    NS_RELEASE(folder);
   }
   else
 	  return NS_RDF_NO_VALUE;
