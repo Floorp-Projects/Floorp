@@ -160,11 +160,15 @@ STATIC_MAKEFILES := $(NSPRPUB_DIR)
 GARBAGE_DIRS += dist
 DIST_GARBAGE = config.cache config.log config.status config-defs.h \
    dependencies.beos config/autoconf.mk config/myrules.mk config/myconfig.mk \
-   $(shell cat unallmakefiles) unallmakefiles \
+   unallmakefiles \
    $(topsrcdir)/.mozconfig.mk $(topsrcdir)/.mozconfig.out 
 
 include $(topsrcdir)/config/rules.mk
 
 export::
 	+$(LOOP_OVER_EXPORT_DIRS)
+
+distclean::
+	cat unallmakefiles | $(XARGS) rm -f
+	rm -f unallmakefiles $(DIST_GARBAGE)
 

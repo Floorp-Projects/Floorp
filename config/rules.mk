@@ -574,10 +574,10 @@ distclean:: $(SUBMAKEFILES)
 	+$(LOOP_OVER_EXPORT_DIRS)
 	rm -f $(ALL_TRASH) ; \
 	rm -rf $(ALL_TRASH_DIRS) ;
-	echo $(wildcard *.map) \
-	Makefile .HSancillary $(DIST_GARBAGE) \
+	rm -rf $(wildcard *.map) \
+	Makefile .HSancillary \
 	$(wildcard *.$(OBJ_SUFFIX)) $(wildcard *.ho) \
-	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX)) | $(XARGS) rm -f
+	$(wildcard *.$(LIB_SUFFIX)) $(wildcard *$(DLL_SUFFIX))
 
 alltags:
 	rm -f TAGS
