@@ -989,6 +989,10 @@ HTMLContentSink::WillBuildModel(void)
 NS_IMETHODIMP
 HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
+  if (nsnull == mTitle) {
+    ((nsHTMLDocument*)mDocument)->SetTitle("");
+  }
+
   PRInt32 i, ns = mDocument->GetNumberOfShells();
   for (i = 0; i < ns; i++) {
     nsIPresShell* shell = mDocument->GetShellAt(i);
