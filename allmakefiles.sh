@@ -122,6 +122,7 @@ dom/src/Makefile
 dom/src/base/Makefile
 dom/src/events/Makefile
 dom/src/jsurl/Makefile
+dom/locales/Makefile
 "
 
 MAKEFILES_editor="
@@ -454,6 +455,7 @@ netwerk/streamconv/test/Makefile
 netwerk/test/Makefile
 netwerk/testserver/Makefile
 netwerk/resources/Makefile
+netwerk/locales/Makefile
 uriloader/exthandler/Makefile
 intl/strres/public/Makefile
 intl/locale/idl/Makefile
