@@ -75,7 +75,8 @@ nsSupportsArray::operator=(nsISupportsArray const& aOther)
   PRUint32 otherCount = 0;
   nsresult rv = ((nsISupportsArray&)aOther).Count(&otherCount);
   NS_ASSERTION(NS_SUCCEEDED(rv), "this method should return an error!");
-
+  if (NS_FAILED(rv)) return *this;
+  
   if (otherCount > mArraySize) {
     DeleteArray();
     mArraySize = otherCount;
