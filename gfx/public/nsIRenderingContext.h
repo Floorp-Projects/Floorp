@@ -623,6 +623,9 @@ public:
 //who have selected an alternate drawing surface and
 //wish the copy to happen to that buffer rather than
 //the "front" buffer. i'm not proud of this. MMP
+//XXX: This is no longer needed by the XPCODE. It will
+//be removed once all of the platform specific nsRenderingContext's
+//stop using it.
 #define NS_COPYBITS_TO_BACK_BUFFER          0x0008
 
 #endif /* nsIRenderingContext_h___ */
