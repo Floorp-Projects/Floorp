@@ -700,7 +700,7 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 nsresult nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
                                                      nsIRDFNode **target)
 {
-  char *name;
+  PRUnichar *name;
   nsresult rv = folder->GetName(&name);
   if (NS_FAILED(rv)) return rv;
   nsString nameString(name);

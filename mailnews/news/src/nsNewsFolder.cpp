@@ -806,12 +806,12 @@ nsMsgNewsFolder::GetChildNamed(const char *name, nsISupports ** aChild)
     supports = mSubFolders->ElementAt(i);
 
     if(NS_SUCCEEDED(supports->QueryInterface(kISupportsIID, getter_AddRefs(folder)))) {
-      char *folderName;
+      PRUnichar *folderName;
       
       folder->GetName(&folderName);
       
       // case-insensitive compare is probably LCD across OS filesystems
-      if (folderName && PL_strcasecmp(name, folderName)!=0) {
+      if (folderName && nsCRT::strcasecmp(folderName, name)!=0) {
         *aChild = folder;
         PR_FREEIF(folderName);
         return NS_OK;
@@ -822,32 +822,25 @@ nsMsgNewsFolder::GetChildNamed(const char *name, nsISupports ** aChild)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetName(char **name)
+NS_IMETHODIMP nsMsgNewsFolder::GetName(PRUnichar **name)
 {
   if(!name)
     return NS_ERROR_NULL_POINTER;
 
 	nsAutoString folderName;
 	nsNewsURI2Name(kNewsRootURI, mURI, folderName);
-	*name = folderName.ToNewCString();
+	*name = folderName.ToNewUnicode();
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::GetPrettyName(char ** prettyName)
+NS_IMETHODIMP nsMsgNewsFolder::GetPrettyName(PRUnichar ** prettyName)
 {
   if (!prettyName)
     return NS_ERROR_NULL_POINTER;
   
   nsresult rv = NS_OK;;
-  char *pName = PL_strdup(*prettyName);
-  if (pName) {
-    rv = nsMsgFolder::GetPrettyName(&pName); 
-    delete[] pName;
-  }
-  else {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
+  rv = nsMsgFolder::GetPrettyName(prettyName); 
   return rv;
 }
 
@@ -1087,14 +1080,15 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
     char *hostname;
     rv = GetHostname(&hostname);
     if (NS_FAILED(rv)) return rv;
-    char *newsgroupname;
+    PRUnichar *newsgroupname;
     rv = GetName(&newsgroupname);
+	nsString2 asciiName(newsgroupname, eOneByte);
     if (NS_FAILED(rv)) {
       PR_FREEIF(hostname);
       return rv;
     }
     
-    rv = nntpService->CancelMessages(hostname, newsgroupname, messages, nsnull, nsnull, nsnull);
+    rv = nntpService->CancelMessages(hostname, asciiName.GetBuffer(), messages, nsnull, nsnull, nsnull);
     
     PR_FREEIF(hostname);
     PR_FREEIF(newsgroupname);

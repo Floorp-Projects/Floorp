@@ -432,7 +432,8 @@ nsIMAP4TestDriver::SetupInbox()
                 rdfResource(do_QueryInterface(m_inbox, &rv));
             if (NS_SUCCEEDED(rv))
                 rdfResource->Init("imap:/Inbox");
-            m_inbox->SetName("Inbox");
+			nsString2 inboxName("Inbox", eTwoByte);
+            m_inbox->SetName((PRUnichar *) inboxName.GetUnicode());
 		}
     }
 }

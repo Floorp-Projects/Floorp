@@ -337,39 +337,29 @@ NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
 	return rv;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetPrettyName(char ** name)
+NS_IMETHODIMP nsMsgFolder::GetPrettyName(PRUnichar ** name)
 {
-  char *cmName = mName.ToNewCString();
-	if(cmName)
-	{
-		if (name) *name = PL_strdup(cmName);
-		delete[] cmName;
-	  return NS_OK;
-	}
-	else
+	if (!name)
 		return NS_ERROR_OUT_OF_MEMORY;
+	*name = mName.ToNewUnicode();
+	return (*name) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP nsMsgFolder::SetPrettyName(char *name)
+NS_IMETHODIMP nsMsgFolder::SetPrettyName(PRUnichar *name)
 {
   mName = name;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgFolder::GetName(char **name)
+NS_IMETHODIMP nsMsgFolder::GetName(PRUnichar **name)
 {
-  char *cmName = mName.ToNewCString();
-	if(cmName)
-	{
-		if (name) *name = PL_strdup(cmName);
-		delete[] cmName;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_OUT_OF_MEMORY;
+	if (!name)
+		return NS_ERROR_NULL_POINTER;
+	*name = mName.ToNewUnicode();
+	return (*name) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP nsMsgFolder::SetName(char * name)
+NS_IMETHODIMP nsMsgFolder::SetName(PRUnichar * name)
 {
 	mName = name;
 	return NS_OK;
@@ -394,11 +384,11 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 		folder = do_QueryInterface(supports, &rv);
 		if(NS_SUCCEEDED(rv))
 		{
-			char *folderName;
+			PRUnichar *folderName;
 
 			folder->GetName(&folderName);
 			// case-insensitive compare is probably LCD across OS filesystems
-			if (folderName && PL_strcasecmp(name, folderName)!=0)
+			if (folderName && nsCRT::strcasecmp(folderName, name)!=0)
 			{
 				*aChild = folder;
 				delete[] folderName;
@@ -411,7 +401,7 @@ NS_IMETHODIMP nsMsgFolder::GetChildNamed(const char *name, nsISupports ** aChild
 }
 
 
-NS_IMETHODIMP nsMsgFolder::GetPrettiestName(char **name)
+NS_IMETHODIMP nsMsgFolder::GetPrettiestName(PRUnichar **name)
 {
   if (NS_SUCCEEDED(GetPrettyName(name)))
     return NS_OK;
@@ -599,7 +589,8 @@ NS_IMETHODIMP nsMsgFolder::CreateSubfolder(const char *folderName)
 NS_IMETHODIMP nsMsgFolder::Rename(const char *name)
 {
     nsresult status = NS_OK;
-	status = SetName((char*)name);
+	nsAutoString2 unicharString(name);
+	status = SetName((PRUnichar *) unicharString.GetUnicode());
 	//After doing a SetName we need to make sure that broadcasting this message causes a
 	//new sort to happen.
 #ifdef HAVE_MASTER

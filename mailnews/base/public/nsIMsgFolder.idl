@@ -53,8 +53,8 @@ interface nsIMsgFolder : nsIFolder {
 	nsIMsgThread GetThreadForMessage(in nsIMessage message);
 	boolean HasMessage(in nsIMessage message);
   nsIEnumerator GetVisibleSubFolders();
-	attribute string prettyName;
-	readonly attribute string prettiestName;
+	attribute wstring prettyName;
+	readonly attribute wstring prettiestName;
 	string BuildFolderURL();
 
 	readonly attribute boolean deleteIsMoveToTrash;

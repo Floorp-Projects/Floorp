@@ -431,11 +431,7 @@ NS_IMETHODIMP nsImapMailFolder::GetMessages(nsIEnumerator* *result)
 
 	if (NS_FAILED(rv)) return rv;
 
-    char *folderName = nsnull;
-    rv = GetName(&folderName);
 	selectFolder = PR_TRUE;
-
-    delete [] folderName;
 
     if (mDepth == 0)
     {
@@ -586,7 +582,7 @@ NS_IMETHODIMP nsImapMailFolder::GetChildNamed(const char * name, nsISupports **
     return rv;
 }
 
-NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
+NS_IMETHODIMP nsImapMailFolder::GetName(PRUnichar ** name)
 {
 	nsresult result = NS_OK;
 
@@ -599,10 +595,11 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
         {
             char *hostName = nsnull;
             GetHostname(&hostName);
-            SetName(hostName);
+			nsString2 unicodeHostName(hostName);
+            SetName((PRUnichar *) unicodeHostName.GetUnicode());
             PR_FREEIF(hostName);
             m_haveReadNameFromDB = PR_TRUE;
-            *name = mName.ToNewCString();
+            *name = mName.ToNewUnicode();
             return NS_OK;
         }
 #if 0
@@ -630,7 +627,7 @@ NS_IMETHODIMP nsImapMailFolder::GetName(char ** name)
     }
 	nsAutoString folderName;
 	nsImapURI2Name(kImapRootURI, mURI, folderName);
-	*name = folderName.ToNewCString();
+	*name = folderName.ToNewUnicode();
     
     return result;
 }
@@ -912,9 +909,9 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
         nsCOMPtr<nsIMsgFolder> aMsgFolder(do_QueryInterface(aItem, &rv));
         if (NS_SUCCEEDED(rv))
         {
-            char* aName = nsnull;
+            PRUnichar* aName = nsnull;
             rv = aMsgFolder->GetName(&aName);
-            if (NS_SUCCEEDED(rv) && PL_strcmp("Trash", aName) == 0)
+            if (NS_SUCCEEDED(rv) && nsCRT::strcmp(aName, "Trash") == 0)
             {
                 delete [] aName;
                 trashFolder = aMsgFolder;
@@ -1084,12 +1081,12 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
 		aFolder = do_QueryInterface(aItem, &rv);
         if (rv == NS_OK && aFolder)
         {
-            char* aName = nsnull;
+            PRUnichar* aName = nsnull;
             aFolder->GetName(&aName);
             PRBool isInbox = 
                 PL_strcasecmp("inbox", aSpec->allocatedPathName) == 0;
-            if (PL_strcmp(aName, aSpec->allocatedPathName) == 0 || 
-                (isInbox && PL_strcasecmp(aName, aSpec->allocatedPathName) == 0))
+            if (nsCRT::strcmp(aName, aSpec->allocatedPathName) == 0 || 
+                (isInbox && nsCRT::strcasecmp(aName, aSpec->allocatedPathName) == 0))
             {
 				delete [] aName;
                 found = PR_TRUE;

@@ -22,11 +22,12 @@
 #include "nsMsgFolderFlags.h"
 #include "nsISupportsArray.h"
 #include "prprf.h"
-
+#include "nsMsgDBCID.h"
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 nsMsgImapMailFolder::nsMsgImapMailFolder(nsString& name)
   : nsMsgFolder(/*name*/)
@@ -148,7 +149,7 @@ nsMsgImapMailFolder::FindChildNamed(const char *name, nsIMsgFolder ** aChild)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgImapMailFolder::GetName(char** name)
+NS_IMETHODIMP nsMsgImapMailFolder::GetName(PRUnichar** name)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

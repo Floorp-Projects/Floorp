@@ -1639,8 +1639,9 @@ NS_IMETHODIMP nsParseNewMailState::ApplyFilterHit(nsIMsgFilter *filter, PRBool *
 			{
 				// this sucks - but we need value to live past this scope
 				// so we use an nsString from above.
-				char *folderName = nsnull;
+				PRUnichar *folderName = nsnull;
 				rv = trash->GetName(&folderName);
+				// ### woa, is this right?. will the eOneByte nsString do the right unichar conversion?.
 				trashNameVal = folderName;
 				PR_FREEIF(folderName);
 				value = (void *) trashNameVal.GetBuffer();
@@ -1804,7 +1805,9 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	nsresult rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, nsIMsgDatabase::GetIID(), (void **) getter_AddRefs(mailDBFactory));
 	if (NS_SUCCEEDED(rv) && mailDBFactory)
 	{
-		rv = mailDBFactory->Open(destFolderSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(destMailDB), PR_TRUE);
+		nsCOMPtr <nsIFileSpec> dbFileSpec;
+		NS_NewFileSpecWithSpec(destFolderSpec, getter_AddRefs(dbFileSpec));
+		rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(destMailDB), PR_TRUE);
 	}
 	NS_ASSERTION(destMailDB, "failed to open mail db parsing folder");
 	// don't force upgrade in place - open the db here before we start writing to the 

@@ -71,8 +71,8 @@ public:
 
   // nsIFolder methods:
   NS_IMETHOD GetURI(char* *name) { return nsRDFResource::GetValue(name); }
-  NS_IMETHOD GetName(char **name);
-  NS_IMETHOD SetName(char *name);
+  NS_IMETHOD GetName(PRUnichar **name);
+  NS_IMETHOD SetName(PRUnichar *name);
   NS_IMETHOD GetChildNamed(const char *name, nsISupports* *result);
   NS_IMETHOD GetSubFolders(nsIEnumerator* *result);
   NS_IMETHOD GetHasSubFolders(PRBool *_retval);
@@ -95,8 +95,8 @@ public:
   NS_IMETHOD GetServer(nsIMsgIncomingServer ** aServer);
 
 
-  NS_IMETHOD GetPrettyName(char ** name);
-  NS_IMETHOD SetPrettyName(char * name);
+  NS_IMETHOD GetPrettyName(PRUnichar ** name);
+  NS_IMETHOD SetPrettyName(PRUnichar * name);
 #if 0
   static nsresult GetRoot(nsIMsgFolder* *result);
 #endif
@@ -117,7 +117,7 @@ public:
   NS_IMETHOD BuildFolderURL(char ** url);
 
 
-  NS_IMETHOD GetPrettiestName(char ** name);
+  NS_IMETHOD GetPrettiestName(PRUnichar ** name);
 
 #ifdef HAVE_ADMINURL
   NS_IMETHOD GetAdminUrl(MWContext *context, MSG_AdminURLType type);

@@ -81,7 +81,7 @@ public:
     NS_IMETHOD GetChildNamed(const char * name, nsISupports ** aChild);
     
     // this override pulls the value from the db
-	NS_IMETHOD GetName(char ** name);   // Name of this folder (as presented to user).
+	NS_IMETHOD GetName(PRUnichar ** name);   // Name of this folder (as presented to user).
 	NS_IMETHOD GetPrettyName(char ** prettyName);	// Override of the base, for top-level mail folder
     
     NS_IMETHOD BuildFolderURL(char **url);

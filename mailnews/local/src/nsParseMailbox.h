@@ -32,7 +32,7 @@
 
 
 #ifdef DEBUG_bienvenu
-//#define DOING_FILTERS
+#define DOING_FILTERS
 #endif
 
 #ifdef DOING_FILTERS

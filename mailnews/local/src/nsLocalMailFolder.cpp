@@ -728,7 +728,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *out
 }
 
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetName(char **name)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetName(PRUnichar **name)
 {
   if(!name)
     return NS_ERROR_NULL_POINTER;
@@ -737,9 +737,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetName(char **name)
   {
     if (mDepth == 1) 
     {
-      SetName("Local Mail");
+		nsString localMailStr("Local Mail");
+      SetName((PRUnichar *) localMailStr.GetUnicode());
       mHaveReadNameFromDB = TRUE;
-      *name = mName.ToNewCString();
+      *name = mName.ToNewUnicode();
 	  if(!(*name))
 		  return NS_ERROR_OUT_OF_MEMORY;
       return NS_OK;
@@ -751,17 +752,18 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetName(char **name)
   }
 	nsAutoString folderName;
 	nsLocalURI2Name(kMailboxRootURI, mURI, folderName);
-	*name = folderName.ToNewCString();
+	*name = folderName.ToNewUnicode();
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(char ** prettyName)
+NS_IMETHODIMP nsMsgLocalMailFolder::GetPrettyName(PRUnichar ** prettyName)
 {
   if (mDepth == 1) {
     // Depth == 1 means we are on the mail server level
     // override the name here to say "Local Mail"
-    *prettyName = PL_strdup("Local Mail");
+	nsString2 localMailStr("Local Mail");
+    *prettyName = localMailStr.ToNewUnicode();
 	if(!(*prettyName))
 		return NS_ERROR_OUT_OF_MEMORY;
   }

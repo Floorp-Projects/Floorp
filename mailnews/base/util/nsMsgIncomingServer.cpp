@@ -296,4 +296,6 @@ NS_IMPL_SERVERPREF_STR(nsMsgIncomingServer, LocalPath, "directory")
 
 
 /* what was this called in 4.x? */
+// pref("mail.pop3_gets_new_mail",				true);
+
 NS_IMPL_SERVERPREF_BOOL(nsMsgIncomingServer, DownloadOnBiff, "download_on_biff");
