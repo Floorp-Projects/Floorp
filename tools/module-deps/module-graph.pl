@@ -23,9 +23,11 @@
 #   in the graph "a -> b <-> c -> d", b and c are strongly connected, and
 #   they depend on d, so b, c, and d should be grouped together.
 
-my %clustered;
+use strict;
 
+my %clustered;
 my %deps;
+my %toplevel_modules;
 
 my $makecommand;
 
@@ -36,12 +38,14 @@ if ($^O eq "linux") {
 }
 
 use Cwd;
-$curdir = getcwd();
+my @dirs;
+my $curdir = getcwd();
 if (!@ARGV) {
   @dirs = (getcwd());
 } else {
   @dirs = @ARGV;
   # XXX does them in reverse order..
+  my $arg;
   foreach $arg (@ARGV) {
     push @dirs, "$curdir/$arg";
   }
@@ -68,16 +72,19 @@ while ($#dirs != -1) {
     # now keep a list of all dependancies of the module
     #
     my @require_list = split(/\s+/,$current_requires);
+    my $req;
     foreach $req (@require_list) {
       $deps{$current_module}{$req}++;
     }
+
+    $toplevel_modules{$current_module}++;
   }
   
 
   next if !$current_dirs;
 
   # now push all child directories onto the list
-  @local_dirs = split(/\s+/,$current_dirs);
+  my @local_dirs = split(/\s+/,$current_dirs);
   for (@local_dirs) {
     push @dirs,"$curdir/$_" if $_;
   }
@@ -90,29 +97,40 @@ print "    concentrate=true;\n";
 
 # figure out the internal nodes, and place them in a cluster
 
-print "    subgraph cluster0 {\n";
-print "        node [style=filled];\n";
-print "        color=blue;\n";
+#print "    subgraph cluster0 {\n";
+#print "        color=blue;\n"; # blue outline around cluster
 
-foreach $module (sort { scalar keys %{$deps{$b}} <=> scalar keys %{$deps{$a}} } keys %deps) {
-  foreach $depmod ( keys %deps ) {
-    # only in cluster if they are a child too
-    if ($deps{$depmod}{$module}) {
-      print "        $module;\n";
-      $clustered{$module}++;
-      last;
-    }
-  }
+my $module;
+# ** new method: just list all modules that came from MODULE=foo
+foreach $module (sort keys %toplevel_modules) {
+  print "        $module [style=filled];\n"
 }
-print "    };\n";
+
+# ** old method: find only internal nodes
+# (nodes with both parents and children)
+
+# foreach $module (sort { scalar keys %{$deps{$b}} <=> scalar keys %{$deps{$a}} } keys %deps) {
+#   foreach $depmod ( keys %deps ) {
+#     # only in cluster if they are a child too
+#     if ($deps{$depmod}{$module}) {
+#       print "        $module;\n";
+#       $clustered{$module}++;
+#       last;
+#     }
+#   }
+# }
+
+#print "    };\n";
 
 foreach $module (sort sortby_deps keys %deps) {
+  my $req;
   foreach $req ( sort { $deps{$module}{$b} <=> $deps{$module}{$a} }
                  keys %{ $deps{$module} } ) {
 #    print "    $module -> $req [weight=$deps{$module}{$req}];\n";
     print "    $module -> $req;\n";
   }
 }
+
 
 print "}";
 
@@ -127,8 +145,8 @@ print "}";
 # We'll keep all the logic here, in case we come up with a better scheme later
 sub sortby_deps() {
 
-  $keys_a = scalar keys %{$deps{$a}};
-  $keys_b = scalar keys %{$deps{$b}};
+  my $keys_a = scalar keys %{$deps{$a}};
+  my $keys_b = scalar keys %{$deps{$b}};
   
   # determine if they are the same or not
   if ($clustered{$a} && $clustered{$b}) {
