@@ -1431,7 +1431,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   InitFrameData(PR_FALSE);
 
   const char *cmd = mViewSource ? "view-source" : "view" ;
-  mViewSource = PR_FALSE; // reset it
+
   return LoadURL(aURLSpec, cmd, aPostDataStream,
                  aModifyHistory,aType, aLocalIP, aHistoryState,
                  aReferrer);
@@ -1992,6 +1992,9 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
      If you insist that this should be here, then put in URL parsing 
      optimizations here. -Gagan
   */
+
+  mViewSource = (0==PL_strcmp("view-source", aCommand));
+
   nsAutoString urlStr(aURLSpec);
   // first things first. try to create a uri out of the string.
   nsCOMPtr<nsIURI> uri;
@@ -2545,7 +2548,6 @@ nsWebShell::ReloadDocument(const char* aCharset,
         nsAutoString inputCharSet(aCharset);
          muDV->SetHintCharacterSet(inputCharSet.GetUnicode());
          muDV->SetHintCharacterSetSource((PRInt32)aSource);
-         mViewSource = (0==PL_strcmp("view-source", aCmd));
          if(eCharsetReloadRequested != mCharsetReloadState) 
          {
             mCharsetReloadState = eCharsetReloadRequested;
