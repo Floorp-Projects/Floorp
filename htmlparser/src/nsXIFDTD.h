@@ -630,7 +630,9 @@ private:
 
 protected:
 
-    PRBool  CanContainFormElement(eXIFTags aParent,eXIFTags aChild) const;
+    PRBool			CanContainFormElement(eXIFTags aParent,eXIFTags aChild) const;
+		PRInt32			CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
+		PRInt32			CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
     
     nsParser*             mParser;
     nsIHTMLContentSink*   mSink;

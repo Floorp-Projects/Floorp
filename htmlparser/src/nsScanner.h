@@ -254,6 +254,7 @@ class CScanner {
       static void SelfTest();
 
   protected:
+    enum {eBufferSizeThreshold=512};
 
       /**
        * Internal method used to cause the internal buffer to

@@ -122,52 +122,11 @@ CHTMLToken::CHTMLToken(eHTMLTags aTag) : CToken(aTag) {
  * @param   name is a char* value containing new string value
  */
 void CHTMLToken::SetStringValue(const char* name){
-  mTextValue=name;
-  mStringInit=PR_TRUE;
-}
-
-/**
- *  This method retrieves the value of this internal string. 
- *  
- *  @update gess 3/25/98
- *  @return nsString reference to internal string value
- */
-static nsAutoString gTagName;
-nsString& CHTMLToken::GetStringValueXXX(void) {
-
-  if(!mStringInit) {
-    if((mTypeID>eHTMLTag_unknown) && (mTypeID<eHTMLTag_userdefined)) {
-      const char* str=GetTagName(mTypeID);
-      if(str)
-        gTagName=str;
-      else gTagName="";
-      return gTagName;
-    }
+  if(name) {
+    mTextValue=name;
+    mTypeID = NS_TagToEnum(name);
   }
-  return mTextValue;
 }
-
-/**
- *  This method retrieves the value of this internal string
- *  as a cstring.
- *  
- *  @update gess 3/25/98
- *  @return char* rep of internal string value
- */
-char* CHTMLToken::GetCStringValue(char* aBuffer, PRInt32 aMaxLen) {
-
-  if(!mStringInit) {
-    if((mTypeID>eHTMLTag_unknown) && (mTypeID<eHTMLTag_userdefined)) {
-      const char* str=GetTagName(mTypeID);
-      if(str) 
-        strcpy(aBuffer,str);
-      else aBuffer[0]=0;
-    }
-  }
-  else mTextValue.ToCString(aBuffer,aMaxLen);
-  return aBuffer;
-}
-
 
 /*
  *  constructor from tag id
@@ -305,12 +264,7 @@ nsresult CStartToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   nsresult result=aScanner.ReadWhile(mTextValue,gIdentChars,PR_FALSE);
   char buffer[300];
   mTextValue.ToCString(buffer,sizeof(buffer)-1);
-  eHTMLTags theTag= NS_TagToEnum(buffer);
-  if((theTag>eHTMLTag_unknown) && (theTag<eHTMLTag_userdefined)) {
-    mTypeID=theTag;
-  } 
-  else mStringInit=PR_TRUE;
-
+  mTypeID = NS_TagToEnum(buffer);
 
    //Good. Now, let's skip whitespace after the identifier,
    //and see if the next char is ">". If so, we have a complete
@@ -390,11 +344,7 @@ nsresult CEndToken::Consume(PRUnichar aChar, CScanner& aScanner) {
 
   char buffer[300];
   mTextValue.ToCString(buffer,sizeof(buffer)-1);
-  eHTMLTags theTag= NS_TagToEnum(buffer);
-  if((theTag>eHTMLTag_unknown) && (theTag<eHTMLTag_userdefined)) {
-    mTypeID=theTag;
-  } 
-  else mStringInit=PR_TRUE;
+  mTypeID= NS_TagToEnum(buffer);
 
   if(NS_OK==result)
     result=aScanner.GetChar(aChar); //eat the closing '>;
@@ -519,7 +469,6 @@ PRInt32 CTextToken::GetTokenType(void) {
  */
 nsresult CTextToken::Consume(PRUnichar, CScanner& aScanner) {
   static nsAutoString terminals("&<\r\n");
-  mStringInit=PR_TRUE;
   nsresult result=aScanner.ReadUntil(mTextValue,terminals,PR_FALSE);
   return result;
 };
@@ -582,7 +531,6 @@ nsresult CCommentToken::Consume(PRUnichar, CScanner& aScanner) {
      //if you're here, we're consuming a "short-form" comment
   mTextValue+=ch;
   result=aScanner.ReadUntil(mTextValue,terminals,PR_TRUE);
-  mStringInit=PR_TRUE;
   return result;
 };
 
@@ -696,7 +644,6 @@ nsresult CNewlineToken::Consume(PRUnichar aChar, CScanner& aScanner) {
         break;
     }
   }  
-  mStringInit=PR_TRUE;
   return result;
 }
 
@@ -890,7 +837,6 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, CScanner& aScanner) {
       mLastAttribute= PRBool((kGreaterThan==aChar) || (kEOF==result));
     }
   }
-  mStringInit=PR_TRUE;
   return result;
 }
 
@@ -974,7 +920,6 @@ nsresult CWhitespaceToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   if(NS_OK==result) {
     mTextValue.StripChars("\r");
   }
-  mStringInit=PR_TRUE;
   return result;
 }
 
@@ -1016,7 +961,6 @@ nsresult CEntityToken::Consume(PRUnichar aChar, CScanner& aScanner) {
   if(aChar)
     mTextValue=aChar;
   nsresult result=ConsumeEntity(aChar,mTextValue,aScanner);
-  mStringInit=PR_TRUE;
   return result;
 }
 

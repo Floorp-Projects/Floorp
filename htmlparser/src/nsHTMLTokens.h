@@ -73,9 +73,7 @@ class CHTMLToken : public CToken {
 public:
                         CHTMLToken(eHTMLTags aTag);
                         CHTMLToken(const nsString& aString);
-    virtual void        SetStringValue(const char* aValue);
-    virtual nsString&   GetStringValueXXX(void);
-    virtual char*       GetCStringValue(char* aBuffer, PRInt32 aMaxLen);
+    virtual void        SetStringValue(const char* name);
 
 protected:
 };

@@ -119,6 +119,7 @@ CTagStack::CTagStack(int aDefaultSize) {
   mSize=eStackSize;
 #endif
   mCount=0;
+	mPrevious=0;
   nsCRT::zero(mTags,mSize*sizeof(eHTMLTags));
   nsCRT::zero(mBits,mSize*sizeof(PRBool));
 }
@@ -207,6 +208,108 @@ eHTMLTags CTagStack::Last() const {
   return eHTMLTag_unknown;
 }
 
+
+
+/************************************************************************
+  CTokenFactory class implementation.
+  This class is used to create and destroy our tokens. 
+  By using this simple class, we cut WAY down on the number of tokens
+  that get created during the run of the system.
+ ************************************************************************/
+class CTokenFactory {
+public:
+  
+      enum {eCacheSize=50}; 
+
+            CTokenFactory();
+            ~CTokenFactory();
+    CToken* CreateToken(eHTMLTokenTypes aType, eHTMLTags aTag, const nsString& aString);
+    void    RecycleToken(CToken* aToken);
+protected:
+    CToken* mTokenCache[eToken_last-1][eCacheSize];
+    PRInt32 mCount[eToken_last-1];
+};
+
+
+/**
+ * 
+ * @update	gess7/25/98
+ * @param 
+ */
+CTokenFactory::CTokenFactory() {
+  nsCRT::zero(mTokenCache,sizeof(mTokenCache));
+  nsCRT::zero(mCount,sizeof(mCount));    
+}
+
+/**
+ * Destructor for the token factory
+ * @update	gess7/25/98
+ */
+CTokenFactory::~CTokenFactory() {
+}
+
+/**
+ * This method is used as the factory for all HTML tokens. 
+ * There will be a corresponding recycler method, so that we can
+ * cut down on the number of tokens we create.
+ * @update	gess7/24/98
+ * @param   aType
+ * @param   aTag
+ * @param   aString
+ * @return  newly created token or null
+ */
+CToken* CTokenFactory::CreateToken(eHTMLTokenTypes aType, eHTMLTags aTag, const nsString& aString) {
+  CToken* result;
+
+  if(mCount[aType-1]>0){
+    result=mTokenCache[aType-1][--mCount[aType-1]];
+    mTokenCache[aType-1][mCount[aType-1]]=0;
+    result->Reinitialize(aTag,aString);
+  }
+  else 
+  {
+    switch(aType){
+      case eToken_start:      result=new CStartToken(aTag); break;
+      case eToken_end:        result=new CEndToken(aTag); break;
+      case eToken_comment:    result=new CCommentToken(); break;
+      case eToken_attribute:  result=new CAttributeToken(); break;
+      case eToken_entity:     result=new CEntityToken(); break;
+      case eToken_whitespace: result=new CWhitespaceToken(); break;
+      case eToken_newline:    result=new CNewlineToken(); break;
+      case eToken_text:       result=new CTextToken(aString); break;
+      case eToken_script:     result=new CScriptToken(); break;
+      case eToken_style:      result=new CStyleToken(); break;
+      case eToken_skippedcontent: result=new CSkippedContentToken(aString); break;
+        default:
+          break;
+    }
+  }
+  return result;
+}
+
+/**
+ * This method gets called when the DTD wants to recycle a token
+ * it has finished using.
+ * @update	gess7/24/98
+ * @param   aToken -- token to be recycled.
+ * @return  nada
+ */
+void CTokenFactory::RecycleToken(CToken* aToken) {
+  if(aToken) {
+    eHTMLTokenTypes aType=(eHTMLTokenTypes)aToken->GetTokenType();
+    if(mCount[aType-1]<eCacheSize) {
+      mTokenCache[aType-1][mCount[aType-1]]=aToken;
+      mCount[aType-1]++;
+    } else {
+        //this is an overflow condition. More tokens of a given 
+        //type have been created than we can store in our recycler.
+        //In this case, just destroy the extra token.
+      delete aToken;
+    }
+  }
+}
+
+CTokenFactory gTokenFactory;
 
 /************************************************************************
   And now for the main class -- CNavDTD...
@@ -356,12 +459,13 @@ static CNavTokenDeallocator gTokenKiller;
  *  @param   
  *  @return  
  */
-CNavDTD::CNavDTD() : nsIDTD(), mContextStack(), mStyleStack(), mTokenDeque(gTokenKiller)  {
+CNavDTD::CNavDTD() : nsIDTD(), mContextStack(), mTokenDeque(gTokenKiller)  {
   NS_INIT_REFCNT();
   mParser=0;
   mSink = nsnull;
   mDTDDebug=0;
   mLineNumber=1;
+	mStyleStack=new CTagStack();
   nsCRT::zero(mTokenHandlers,sizeof(mTokenHandlers));
   mHasOpenForm=PR_FALSE;
   mHasOpenMap=PR_FALSE;
@@ -377,7 +481,7 @@ CNavDTD::CNavDTD() : nsIDTD(), mContextStack(), mStyleStack(), mTokenDeque(gToke
  */
 CNavDTD::~CNavDTD(){
   DeleteTokenHandlers();
-
+	delete mStyleStack;
   NS_IF_RELEASE(mDTDDebug);
 
 }
@@ -415,6 +519,34 @@ PRBool CNavDTD::Verify(nsString& aURLRef){
     mDTDDebug->Verify(this,mParser,mContextStack.mCount,mContextStack.mTags,aURLRef);
   }
   return result;
+}
+
+
+/**
+ * This method adds a new parser context to the list,
+ * pushing the current one to the next position.
+ * @update	gess7/22/98
+ * @param   ptr to new context
+ * @return  nada
+ */
+void CNavDTD::PushStack(CTagStack& aStack) {
+  aStack.mPrevious=mStyleStack;  
+  mStyleStack=&aStack;
+}
+
+/**
+ * This method pops the topmost context off the stack,
+ * returning it to the user. The next context  (if any)
+ * becomes the current context.
+ * @update	gess7/22/98
+ * @return  prev. context
+ */
+CTagStack* CNavDTD::PopStack() {
+  CTagStack* oldStack=mStyleStack;
+  if(oldStack) {
+    mStyleStack=oldStack->mPrevious;
+  }
+  return oldStack;
 }
 
 /**
@@ -594,7 +726,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
   PRInt32       theCount;
   nsresult      result=(0==attrCount)
     ? NS_OK
-    : mParser->CollectAttributes(attrNode,attrCount);
+    : CollectAttributes(attrNode,attrCount);
 
   if(NS_OK==result) {
       //now check to see if this token should be omitted...
@@ -610,7 +742,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
             nsCParserNode theNode(st,mLineNumber);
             result=OpenHead(theNode); //open the head...
             if(NS_OK==result) {
-              result=mParser->CollectSkippedContent(attrNode,theCount);
+              result=CollectSkippedContent(attrNode,theCount);
               mSink->SetTitle(attrNode.GetSkippedContent());
               result=CloseHead(theNode); //close the head...
             }
@@ -619,7 +751,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
 
         case eHTMLTag_textarea:
           {
-            mParser->CollectSkippedContent(attrNode,theCount);
+            CollectSkippedContent(attrNode,theCount);
             result=AddLeaf(attrNode);
           }
           break;
@@ -645,7 +777,7 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
             nsCParserNode theNode((CHTMLToken*)aToken,mLineNumber);
             result=OpenHead(theNode);
             if(NS_OK==result) {
-              mParser->CollectSkippedContent(attrNode,theCount);
+              CollectSkippedContent(attrNode,theCount);
               if(NS_OK==result) {
                 result=AddLeaf(attrNode);
                 if(NS_OK==result)
@@ -725,7 +857,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
 
     //now check to see if this token should be omitted, or 
     //if it's gated from closing by the presence of another tag.
-  if(PR_TRUE==CanOmitEndTag(GetTopNode(),tokenTagType)) {
+	  if(PR_TRUE==CanOmitEndTag(GetTopNode(),tokenTagType)) {
     UpdateStyleStackForCloseTag(tokenTagType,tokenTagType);
     return result;
   }
@@ -743,16 +875,10 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
       break;
 
     case eHTMLTag_map:
-      {
-        nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
-        result=CloseMap(aNode);
-      }
-      break;
-
     case eHTMLTag_form:
       {
         nsCParserNode aNode((CHTMLToken*)aToken,mLineNumber);
-        result=CloseForm(aNode);
+        result=CloseContainer(aNode,tokenTagType,PR_FALSE);
       }
       break;
 
@@ -762,7 +888,7 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
       // Empty the transient style stack (we just closed any extra
       // ones off so it's safe to do it now) because they don't carry
       // forward across table cell boundaries.
-      mStyleStack.mCount=0;
+      mStyleStack->mCount=0;
       break;
 
     default:
@@ -870,7 +996,7 @@ nsresult CNavDTD::HandleScriptToken(CToken* aToken, nsCParserNode& aNode) {
     // We're in the HEAD
     result=OpenHead(aNode);
     if(NS_OK==result) {
-      mParser->CollectSkippedContent(aNode,attrCount);
+      CollectSkippedContent(aNode,attrCount);
       if(NS_OK==result) {
         result=AddLeaf(aNode);
         if(NS_OK==result)
@@ -880,7 +1006,7 @@ nsresult CNavDTD::HandleScriptToken(CToken* aToken, nsCParserNode& aNode) {
   }
   else {
     // We're in the BODY
-    mParser->CollectSkippedContent(aNode,attrCount);
+    CollectSkippedContent(aNode,attrCount);
     if(NS_OK==result) {
       result=AddLeaf(aNode);
     }
@@ -904,6 +1030,93 @@ nsresult CNavDTD::HandleStyleToken(CToken* aToken){
   return NS_OK;
 }
 
+
+/**
+ * Retrieve the attributes for this node, and add then into
+ * the node.
+ *
+ * @update  gess4/22/98
+ * @param   aNode is the node you want to collect attributes for
+ * @param   aCount is the # of attributes you're expecting
+ * @return error code (should be 0)
+ */
+PRInt32 CNavDTD::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
+/*
+  nsDequeIterator end=mParserContext->mTokenDeque.End();
+
+  int attr=0;
+  for(attr=0;attr<aCount;attr++) {
+    if(*mParserContext->mCurrentPos<end) {
+      CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
+      if(tkn){
+        if(eToken_attribute==eHTMLTokenTypes(tkn->GetTokenType())){
+          aNode.AddAttribute(tkn);
+        } 
+        else (*mParserContext->mCurrentPos)--;
+      }
+      else return kInterrupted;
+    }
+    else return kInterrupted;
+  }
+*/
+  int attr=0;
+  for(attr=0;attr<aCount;attr++){
+    CToken* theToken=mParser->PeekToken();
+    if(theToken)  {
+      eHTMLTokenTypes theType=eHTMLTokenTypes(theToken->GetTokenType());
+      if(eToken_attribute==theType){
+        mParser->PopToken(); //pop it for real...
+        aNode.AddAttribute(theToken);
+      } 
+    }
+    else return kInterrupted;
+  }
+  return kNoError;
+}
+
+
+/**
+ * Causes the next skipped-content token (if any) to
+ * be consumed by this node.
+ * @update	gess5/11/98
+ * @param   node to consume skipped-content
+ * @param   holds the number of skipped content elements encountered
+ * @return  Error condition.
+ */
+PRInt32 CNavDTD::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
+  PRInt32         result=kNoError;
+  eHTMLTokenTypes theType;
+  CToken*         theToken;
+  aCount=0;
+  do{
+    CToken* theToken=mParser->PeekToken();
+    if(theToken) {
+      theType=eHTMLTokenTypes(theToken->GetTokenType());
+      if(eToken_skippedcontent==theType) {
+        mParser->PopToken();
+        aNode.SetSkippedContent(theToken);
+        aCount++;
+      } 
+    }
+  } while(theToken && (eToken_skippedcontent==theType));
+
+/*
+  eHTMLTokenTypes   subtype=eToken_attribute;
+  nsDequeIterator   end=mParserContext->mTokenDeque.End();
+
+  aCount=0;
+  while((*mParserContext->mCurrentPos!=end) && (eToken_attribute==subtype)) {
+    CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
+    subtype=eHTMLTokenTypes(tkn->GetTokenType());
+    if(eToken_skippedcontent==subtype) {
+      aNode.SetSkippedContent(tkn);
+      aCount++;
+    } 
+    else (*mParserContext->mCurrentPos)--;
+  }
+*/
+  return result;
+}
 
 /**
  *  Finds a tag handler for the given tag type, given in string.
@@ -1978,8 +2191,8 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
 
     eHTMLTags parentTag=GetTopNode();
     if(CanContainStyles(parentTag)) {
-      for(pos=0;pos<mStyleStack.mCount;pos++) {
-        eHTMLTags theTag=mStyleStack.mTags[pos]; 
+      for(pos=0;pos<mStyleStack->mCount;pos++) {
+        eHTMLTags theTag=mStyleStack->mTags[pos]; 
         if(PR_FALSE==HasOpenContainer(theTag)) {
 
           CStartToken   token(theTag);
@@ -2019,10 +2232,10 @@ nsresult CNavDTD::OpenTransientStyles(eHTMLTags aTag){
 nsresult CNavDTD::CloseTransientStyles(eHTMLTags aTag){
   nsresult result=NS_OK;
 
-  if((mStyleStack.mCount>0) && (mContextStack.mBits[mContextStack.mCount-1])) {
+  if((mStyleStack->mCount>0) && (mContextStack.mBits[mContextStack.mCount-1])) {
     if(0==strchr(gWhitespaceTags,aTag)){
 
-      result=CloseContainersTo(mStyleStack.mTags[0],PR_FALSE);
+      result=CloseContainersTo(mStyleStack->mTags[0],PR_FALSE);
       mContextStack.mBits[mContextStack.mCount-1]=PR_FALSE;
 
     }//if
@@ -2516,8 +2729,9 @@ nsresult CNavDTD::CreateContextStackFor(eHTMLTags aChildTag){
   if(NS_OK==result){
     int i=0;
     for(i=pos;i<cnt;i++) {
-      CStartToken* st=new CStartToken((eHTMLTags)theVector[cnt-1-i]);
-      HandleStartToken(st);
+//      CStartToken* st=new CStartToken((eHTMLTags)theVector[cnt-1-i]);
+      CToken* theToken=gTokenFactory.CreateToken(eToken_start,(eHTMLTags)theVector[cnt-1-i],gEmpty);
+      HandleStartToken(theToken);
     }
   }
   return result;
@@ -2562,7 +2776,7 @@ CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
   nsresult   result=0;
   
   if (0 != strchr(gStyleTags, aTag)) {
-    mStyleStack.Push(aTag);
+    mStyleStack->Push(aTag);
   }
   else {
     switch (aTag) {
@@ -2575,9 +2789,9 @@ CNavDTD::UpdateStyleStackForOpenTag(eHTMLTags aTag,eHTMLTags anActualTag){
       break;
     }
   }
-
   return result;
 } //update...
+
 
 /**
  * This method gets called when an explicit style close-tag is encountered.
@@ -2591,10 +2805,10 @@ nsresult
 CNavDTD::UpdateStyleStackForCloseTag(eHTMLTags aTag,eHTMLTags anActualTag){
   nsresult result=0;
   
-  if(mStyleStack.mCount>0) {
+  if(mStyleStack->mCount>0) {
     if (0 != strchr(gStyleTags, aTag)) {
       if(aTag==anActualTag)
-        mStyleStack.Pop();
+        mStyleStack->Pop();
     }
     else {
       switch (aTag) {
@@ -2642,12 +2856,12 @@ CNavDTD::ConsumeTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
         result=aScanner.Peek(ch);
         if(NS_OK==result) {
           if(nsString::IsAlpha(ch))
-            aToken=new CEndToken(eHTMLTag_unknown);
-          else aToken=new CCommentToken(); //Special case: </ ...> is treated as a comment
+            aToken=gTokenFactory.CreateToken(eToken_end,eHTMLTag_unknown,gEmpty);
+          else aToken=gTokenFactory.CreateToken(eToken_comment,eHTMLTag_unknown,gEmpty);
         }//if
         break;
       case kExclamation:
-        aToken=new CCommentToken();
+        aToken=gTokenFactory.CreateToken(eToken_comment,eHTMLTag_unknown,gEmpty);
         break;
       default:
         if(nsString::IsAlpha(aChar))
@@ -2685,7 +2899,7 @@ CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToke
   PRInt16 theAttrCount=0;
 
   while((!done) && (result==NS_OK)) {
-    CAttributeToken* theToken= new CAttributeToken();
+    CAttributeToken* theToken= (CAttributeToken*)gTokenFactory.CreateToken(eToken_attribute,eHTMLTag_unknown,gEmpty);
     if(theToken){
       result=theToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
 
@@ -2733,6 +2947,7 @@ CNavDTD::ConsumeAttributes(PRUnichar aChar,CScanner& aScanner,CStartToken* aToke
 nsresult
 CNavDTD::ConsumeContentToEndTag(const nsString& aString,
                                 PRUnichar aChar,
+																eHTMLTags aChildTag,
                                 CScanner& aScanner,
                                 CToken*& aToken){
   
@@ -2742,7 +2957,7 @@ CNavDTD::ConsumeContentToEndTag(const nsString& aString,
   nsAutoString endTag("</");
   endTag.Append(aString);
   endTag.Append(">");
-  aToken=new CSkippedContentToken(endTag);
+  aToken=gTokenFactory.CreateToken(eToken_skippedcontent,aChildTag,endTag);
   return aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
 }
 
@@ -2764,7 +2979,7 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
   PRInt32 theDequeSize=mTokenDeque.GetSize();
   nsresult result=NS_OK;
 
-  aToken=new CStartToken(eHTMLTag_unknown);
+  aToken=gTokenFactory.CreateToken(eToken_start,eHTMLTag_unknown,gEmpty);
   
   if(aToken) {
     result= aToken->Consume(aChar,aScanner);  //tell new token to finish consuming text...    
@@ -2784,7 +2999,7 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
             //Do special case handling for <script>, <style>, <title> or <textarea>...
           CToken*   skippedToken=0;
           nsString& str=aToken->GetStringValueXXX();
-          result=ConsumeContentToEndTag(str,aChar,aScanner,skippedToken);
+          result=ConsumeContentToEndTag(str,aChar,theTag,aScanner,skippedToken);
     
           if((NS_OK==result) && skippedToken){
               //now we strip the ending sequence from our new SkippedContent token...
@@ -2797,7 +3012,7 @@ CNavDTD::ConsumeStartTag(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
             //In the case that we just read a given tag, we should go and
             //consume all the tag content itself (and throw it all away).
 
-            CEndToken* endtoken=new CEndToken(theTag);
+            CToken* endtoken=gTokenFactory.CreateToken(eToken_end,theTag,gEmpty);
             mTokenDeque.Push(endtoken);
           } //if
         } //if
@@ -2838,11 +3053,11 @@ CNavDTD::ConsumeEntity(PRUnichar aChar,CScanner& aScanner,CToken*& aToken) {
 
    if(NS_OK==result) {
      if(nsString::IsAlpha(ch)) { //handle common enity references &xxx; or &#000.
-       aToken = new CEntityToken();
+       aToken = gTokenFactory.CreateToken(eToken_entity,eHTMLTag_unknown,gEmpty);
        result = aToken->Consume(ch,aScanner);  //tell new token to finish consuming text...    
      }
      else if(kHashsign==ch) {
-       aToken = new CEntityToken();
+       aToken = gTokenFactory.CreateToken(eToken_entity,eHTMLTag_unknown,gEmpty);
        result=aToken->Consume(0,aScanner);
      }
      else {
@@ -2869,12 +3084,12 @@ nsresult
 CNavDTD::ConsumeWhitespace(PRUnichar aChar,
                            CScanner& aScanner,
                            CToken*& aToken) {
-  aToken = new CWhitespaceToken();
-  nsresult result=NS_OK;
+  aToken = gTokenFactory.CreateToken(eToken_whitespace,eHTMLTag_unknown,gEmpty);
+  nsresult result=kNoError;
   if(aToken) {
      result=aToken->Consume(aChar,aScanner);
   }
-  return result;
+  return kNoError;
 }
 
 /**
@@ -2888,7 +3103,7 @@ CNavDTD::ConsumeWhitespace(PRUnichar aChar,
  *  @return new token or null 
  */
 nsresult CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  aToken = new CCommentToken();
+  aToken = gTokenFactory.CreateToken(eToken_comment,eHTMLTag_unknown,gEmpty);
   nsresult result=NS_OK;
   if(aToken) {
      result=aToken->Consume(aChar,aScanner);
@@ -2908,7 +3123,7 @@ nsresult CNavDTD::ConsumeComment(PRUnichar aChar,CScanner& aScanner,CToken*& aTo
  */
 nsresult CNavDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*& aToken){
   nsresult result=NS_OK;
-  aToken=new CTextToken(aString);
+  aToken=gTokenFactory.CreateToken(eToken_text,eHTMLTag_text,aString);
   if(aToken) {
     PRUnichar ch=0;
     result=aToken->Consume(ch,aScanner);
@@ -2929,16 +3144,16 @@ nsresult CNavDTD::ConsumeText(const nsString& aString,CScanner& aScanner,CToken*
  *  @update gess 3/25/98
  *  @param  aChar: last char read
  *  @param  aScanner: see nsScanner.h
- *  @param  anErrorCode: arg that will hold error condition
- *  @return new token or null 
+ *  @param  aToken is the newly created newline token that is parsing
+ *  @return error code
  */
 nsresult CNavDTD::ConsumeNewline(PRUnichar aChar,CScanner& aScanner,CToken*& aToken){
-  aToken=new CNewlineToken();
+  aToken=gTokenFactory.CreateToken(eToken_newline,eHTMLTag_newline,gEmpty);
   nsresult result=NS_OK;
   if(aToken) {
     result=aToken->Consume(aChar,aScanner);
   }
-  return result;
+  return kNoError;
 }
 
 /**

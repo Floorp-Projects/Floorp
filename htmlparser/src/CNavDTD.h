@@ -134,6 +134,7 @@ public:
 #else
   eHTMLTags   mTags[200];
   PRBool      mBits[200];
+	CTagStack*	mPrevious;
 #endif
 };
 
@@ -585,12 +586,21 @@ protected:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    virtual nsresult ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    virtual nsresult ConsumeContentToEndTag(const nsString& aString,
+																						PRUnichar aChar,
+																						eHTMLTags aChildTag,
+																						CScanner& aScanner,
+																						CToken*& aToken);
 
 
 protected:
 
-    PRBool  CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const;
+    PRBool			CanContainFormElement(eHTMLTags aParent,eHTMLTags aChild) const;
+		void				PushStack(CTagStack& aStack);
+		CTagStack*	PopStack();
+		PRInt32			CollectAttributes(nsCParserNode& aNode,PRInt32 aCount);
+		PRInt32			CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
+
     
     nsParser*           mParser;
     nsIHTMLContentSink* mSink;
@@ -598,7 +608,7 @@ protected:
     CITokenHandler*     mTokenHandlers[eToken_last];
 
     CTagStack           mContextStack;
-    CTagStack           mStyleStack;
+    CTagStack*          mStyleStack;
 
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;

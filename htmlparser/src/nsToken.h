@@ -78,6 +78,16 @@ class CToken {
      * @update	gess5/11/98
      */
     virtual ~CToken();
+
+    /**
+     * This method gets called when a token is about to be reused
+     * for some other purpose. The token should reinit itself to
+     * some reasonable default values.
+     * @update	gess7/25/98
+     * @param   aTag
+     * @param   aString
+     */
+    virtual void Reinitialize(PRInt32 aTag, const nsString& aString);
     
     /**
      * Retrieve string value of the token
@@ -174,10 +184,9 @@ class CToken {
     virtual void SelfTest(void);
 
 protected:
-    PRInt32       mTypeID;
-    PRInt16       mAttrCount;
-    PRBool        mStringInit;
-    nsAutoString  mTextValue;
+    PRInt32				mTypeID;
+    PRInt16				mAttrCount;
+    nsAutoString	mTextValue;
 };
 
 

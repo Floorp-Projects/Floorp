@@ -598,7 +598,11 @@ private:
      * @param   aToken is the next token (or null)
      * @return  error code
      */
-    virtual nsresult ConsumeContentToEndTag(const nsString& aString,PRUnichar aChar,CScanner& aScanner,CToken*& aToken);
+    virtual nsresult ConsumeContentToEndTag(const nsString& aString,
+																						PRUnichar aChar,
+																						eHTMLTags aChildTag,
+																						CScanner& aScanner,
+																						CToken*& aToken);
 
 
 protected:

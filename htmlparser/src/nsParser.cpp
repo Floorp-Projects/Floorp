@@ -29,8 +29,6 @@
 #include "nsIParserFilter.h"
 #include "nshtmlpars.h"
 
-#include "nsHTMLTokens.h"
-
 #undef rickgdebug
 #ifdef  rickgdebug
 #include "CRtfDTD.h"
@@ -397,7 +395,7 @@ PRInt32 nsParser::DidBuildModel(PRInt32 anErrorCode) {
  * @return  nada
  */
 void nsParser::PushContext(CParserContext& aContext) {
-  aContext.mPrevContext=mParserContext;
+  aContext.mPrevContext=mParserContext;  
   mParserContext=&aContext;
 }
 
@@ -574,11 +572,10 @@ PRInt32 nsParser::BuildModel() {
       */
 
     theMarkPos=*mParserContext->mCurrentPos;
-    
+    ++(*mParserContext->mCurrentPos);    
     result=theRootDTD->HandleToken(theToken);
     if(mDTDVerification)
       theRootDTD->Verify(kEmptyString);
-    ++(*mParserContext->mCurrentPos);
   }
 
   if(kInterrupted==result)
@@ -587,60 +584,41 @@ PRInt32 nsParser::BuildModel() {
   return result;
 }
 
-/**
- * Retrieve the attributes for this node, and add then into
- * the node.
- *
- * @update  gess4/22/98
- * @param   aNode is the node you want to collect attributes for
- * @param   aCount is the # of attributes you're expecting
- * @return error code (should be 0)
- */
-PRInt32 nsParser::CollectAttributes(nsCParserNode& aNode,PRInt32 aCount){
-  nsDequeIterator end=mParserContext->mTokenDeque.End();
 
-  int attr=0;
-  for(attr=0;attr<aCount;attr++) {
-    if(*mParserContext->mCurrentPos<end) {
-      CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
-      if(tkn){
-        if(eToken_attribute==eHTMLTokenTypes(tkn->GetTokenType())){
-          aNode.AddAttribute(tkn);
-        } 
-        else (*mParserContext->mCurrentPos)--;
-      }
-      else return kInterrupted;
-    }
-    else return kInterrupted;
-  }
-  return kNoError;
+/**
+ * This method provides access to the topmost token in the tokenDeque.
+ * The token is not really removed from the list.
+ * @update	gess8/2/98
+ * @return  ptr to token
+ */
+CToken* nsParser::PeekToken() {
+  CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
+  return theToken;
 }
 
 
 /**
- * Causes the next skipped-content token (if any) to
- * be consumed by this node.
- * @update	gess5/11/98
- * @param   node to consume skipped-content
- * @param   holds the number of skipped content elements encountered
- * @return  Error condition.
+ * This method provides access to the topmost token in the tokenDeque.
+ * The token is really removed from the list; if the list is empty we return 0.
+ * @update	gess8/2/98
+ * @return  ptr to token or NULL
  */
-PRInt32 nsParser::CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount) {
-  eHTMLTokenTypes   subtype=eToken_attribute;
-  nsDequeIterator   end=mParserContext->mTokenDeque.End();
-  PRInt32           result=kNoError;
+CToken* nsParser::PopToken() {
+  CToken* theToken=(CToken*)mParserContext->mCurrentPos->GetCurrent();
+  ++(*mParserContext->mCurrentPos);
+  return theToken;
+}
 
-  aCount=0;
-  while((*mParserContext->mCurrentPos!=end) && (eToken_attribute==subtype)) {
-    CToken* tkn=(CToken*)(++(*mParserContext->mCurrentPos));
-    subtype=eHTMLTokenTypes(tkn->GetTokenType());
-    if(eToken_skippedcontent==subtype) {
-      aNode.SetSkippedContent(tkn);
-      aCount++;
-    } 
-    else (*mParserContext->mCurrentPos)--;
-  }
-  return result;
+
+/**
+ * 
+ * @update	gess8/2/98
+ * @param 
+ * @return
+ */
+CToken* nsParser::PushToken(CToken* theToken) {
+  mParserContext->mTokenDeque.Push(theToken);
+	return theToken;
 }
 
 /*******************************************************************
@@ -794,9 +772,9 @@ PRBool nsParser::WillTokenize(){
 
 
 /**
- *  This is the primary control routine. It iteratively
- *  consumes tokens until an error occurs or you run out
- *  of data.
+ *  This is the primary control routine to consume tokens. 
+ *	It iteratively consumes tokens until an error occurs or 
+ *	you run out of data.
  *  
  *  @update  gess 3/25/98
  *  @return  error code -- 0 if ok, non-zero if error.
