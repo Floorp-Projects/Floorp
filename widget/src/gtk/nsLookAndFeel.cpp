@@ -21,10 +21,10 @@
  */
 
 #include "nsLookAndFeel.h"
+#include <gtk/gtkinvisible.h>
 
 #define GDK_COLOR_TO_NS_RGB(c) \
-  ((nscolor) NS_RGB(c.green, c.blue, c.red))
-//    ((nscolor) NS_RGB(c.red, c.green, c.blue))
+    ((nscolor) NS_RGB(c.red, c.green, c.blue))
 
 
 NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
@@ -37,39 +37,20 @@ NS_IMPL_ISUPPORTS1(nsLookAndFeel, nsILookAndFeel)
 nsLookAndFeel::nsLookAndFeel()
 {
   NS_INIT_REFCNT();
-  mStyle = gtk_style_new();
-  gdk_rgb_init();
-  //  mWindow = gdk_pixmap_new(nsnull, 1, 1, 1);
-
-  GdkWindowAttr attributes;
-  gint attributes_mask;
-
-  attributes.window_type = GDK_WINDOW_TEMP;
-  attributes.x = 0;
-  attributes.y = 0;
-  attributes.width = 1;
-  attributes.height = 1;
-  attributes.wclass = GDK_INPUT_OUTPUT;
-  attributes.visual = gdk_rgb_get_visual();
-  attributes.colormap = gdk_rgb_get_cmap();
-  attributes_mask = GDK_WA_X | GDK_WA_Y | GDK_WA_VISUAL | GDK_WA_COLORMAP;
-
-  mWindow = gdk_window_new(nsnull, &attributes, attributes_mask);
-
-  gtk_style_attach(mStyle, mWindow);
+  mWidget = gtk_invisible_new();
+  gtk_widget_ensure_style(mWidget);
+  mStyle = gtk_widget_get_style(mWidget);
 }
 
 nsLookAndFeel::~nsLookAndFeel()
 {
-  gtk_style_unref(mStyle);
-  gdk_window_unref(mWindow);
+  gtk_widget_destroy(mWidget);
 }
 
 NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
 {
   nsresult res = NS_OK;
-  GdkGCValues values;
-  aColor = 0;
+  aColor = 0; // default color black
 
   switch (aID) {
   case eColor_WindowBackground:
@@ -163,36 +144,32 @@ NS_IMETHODIMP nsLookAndFeel::GetColor(const nsColorID aID, nscolor &aColor)
   case eColor_buttonface:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
-  case eColor_buttonhighlight:
-    // ?
+
+  case eColor_buttonhighlight:  // ?
+  case eColor_threedhighlight:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_ACTIVE]);
     break;
-  case eColor_buttonshadow:
-    gdk_gc_get_values(mStyle->dark_gc[GTK_STATE_NORMAL], &values);
-    aColor = GDK_COLOR_TO_NS_RGB(values.foreground);
-    break;
+
   case eColor_buttontext:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
     break;
 
+  case eColor_buttonshadow:
   case eColor_threeddarkshadow:
   case eColor_threedshadow: // i think these should be the same
-    gdk_gc_get_values(mStyle->dark_gc[GTK_STATE_NORMAL], &values);
-    aColor = GDK_COLOR_TO_NS_RGB(values.foreground);
+    aColor = NS_DarkenColor(NS_DarkenColor(NS_DarkenColor(NS_DarkenColor(NS_DarkenColor(GDK_COLOR_TO_NS_RGB(mStyle->light[GTK_STATE_NORMAL]))))));
+    //    aColor = GDK_COLOR_TO_NS_RGB(mStyle->dark[GTK_STATE_NORMAL]);   // dark style gives me bright green?!
     break;
 
-  case eColor_threedhighlight:
-    //    aColor = GDK_COLOR_TO_NS_RGB();
-    break;
   case eColor_threedlightshadow:
-    gdk_gc_get_values(mStyle->light_gc[GTK_STATE_NORMAL], &values);
-    aColor = GDK_COLOR_TO_NS_RGB(values.foreground);
-    //    aColor = GDK_COLOR_TO_NS_RGB(mStyle->light[GTK_STATE_NORMAL]);
+    aColor = GDK_COLOR_TO_NS_RGB(mStyle->light[GTK_STATE_NORMAL]);
     break;
+
   case eColor_window:
   case eColor_windowframe:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->bg[GTK_STATE_NORMAL]);
     break;
+
   case eColor_windowtext:
     aColor = GDK_COLOR_TO_NS_RGB(mStyle->fg[GTK_STATE_NORMAL]);
     break;
