@@ -88,7 +88,7 @@ class nsPop3TestDriver : public nsIUrlListener
 public:
 	nsPop3TestDriver(nsINetService * pService);
 	virtual ~nsPop3TestDriver();
-	NS_DECL_ISUPPORTS;
+	NS_DECL_ISUPPORTS
 
 	// nsIUrlListener support
 	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);

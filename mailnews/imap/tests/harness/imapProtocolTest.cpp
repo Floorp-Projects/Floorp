@@ -103,7 +103,7 @@ class nsIMAP4TestDriver  : public nsIUrlListener,
                            public nsIImapMiscellaneous
 {
 public:
-	NS_DECL_ISUPPORTS;
+	NS_DECL_ISUPPORTS
 
 	// nsIUrlListener support
 	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);

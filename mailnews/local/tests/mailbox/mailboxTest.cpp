@@ -166,7 +166,7 @@ static void strip_nonprintable(char *string) {
 class nsMailboxTestDriver : public nsIUrlListener
 {
 public:
-	NS_DECL_ISUPPORTS;
+	NS_DECL_ISUPPORTS
 
 	// nsIUrlListener support
 	NS_IMETHOD OnStartRunningUrl(nsIURL * aUrl);
