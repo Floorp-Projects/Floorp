@@ -158,8 +158,9 @@ $::query_whotype = $::FORM{'whotype'};
 
 
 my $show_raw = 0;
-$show_raw = $::FORM{'raw'} ne ''
-     if $::FORM{'raw'};
+if ($::FORM{'raw'}) {
+    $show_raw = 1;
+}
 
 #
 # branch
