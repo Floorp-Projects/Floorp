@@ -3841,24 +3841,14 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct,
     table->mBorderCollapse = parentTable->mBorderCollapse;
   }
 
-  nsStyleCoord coord;
-
   // border-spacing-x: length, inherit
-  if (SetCoord(tableData.mBorderSpacing.mXValue, coord, coord, SETCOORD_LENGTH, aContext, mPresContext, inherited)) {
-    table->mBorderSpacingX = coord.GetCoordValue();
-  }
-  else if (eCSSUnit_Inherit == tableData.mBorderSpacing.mXValue.GetUnit()) {
-    inherited = PR_TRUE;
-    table->mBorderSpacingX = parentTable->mBorderSpacingX;
-  }
+  SetCoord(tableData.mBorderSpacing.mXValue, table->mBorderSpacingX,
+           parentTable->mBorderSpacingX, SETCOORD_LH,
+           aContext, mPresContext, inherited);
   // border-spacing-y: length, inherit
-  if (SetCoord(tableData.mBorderSpacing.mYValue, coord, coord, SETCOORD_LENGTH, aContext, mPresContext, inherited)) {
-    table->mBorderSpacingY = coord.GetCoordValue();
-  }
-  else if (eCSSUnit_Inherit == tableData.mBorderSpacing.mYValue.GetUnit()) {
-    inherited = PR_TRUE;
-    table->mBorderSpacingY = parentTable->mBorderSpacingY;
-  }
+  SetCoord(tableData.mBorderSpacing.mYValue, table->mBorderSpacingY,
+           parentTable->mBorderSpacingY, SETCOORD_LH,
+           aContext, mPresContext, inherited);
 
   // caption-side: enum, inherit
   if (eCSSUnit_Enumerated == tableData.mCaptionSide.GetUnit()) {

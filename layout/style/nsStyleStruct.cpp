@@ -1101,8 +1101,8 @@ nsStyleTableBorder::nsStyleTableBorder(nsPresContext* aPresContext)
                   ? NS_STYLE_TABLE_EMPTY_CELLS_SHOW_BACKGROUND     
                   : NS_STYLE_TABLE_EMPTY_CELLS_SHOW;
   mCaptionSide = NS_SIDE_TOP;
-  mBorderSpacingX.Reset();
-  mBorderSpacingY.Reset();
+  mBorderSpacingX.SetCoordValue(0);
+  mBorderSpacingY.SetCoordValue(0);
 }
 
 nsStyleTableBorder::~nsStyleTableBorder(void) 
