@@ -41,6 +41,7 @@
 #include "nsRect.h"
 #include "plhash.h"
 #include "nsINameSpaceManager.h"
+#include "nsXPIDLString.h"
 
 static NS_DEFINE_IID(kIDocumentLoaderObserverIID, NS_IDOCUMENT_LOADER_OBSERVER_IID);
 static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
@@ -593,11 +594,12 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
 
   if (NS_OK == rv) {
 #ifdef NECKO
-    char* host;
+    nsXPIDLCString host;
+    rv = url->GetHost(getter_Copies(host));
 #else
     const char* host;
-#endif
     rv = url->GetHost(&host);
+#endif
     if (rv == NS_OK) {
       PRInt32 hostlen = PL_strlen(host);
 
@@ -627,9 +629,6 @@ nsWebCrawler::OkToLoad(const nsString& aURLSpec)
         }
       }
       ok = PR_FALSE;
-#ifdef NECKO
-      nsCRT::free(host);
-#endif
     }
     NS_RELEASE(url);
   }

@@ -70,19 +70,18 @@ int writeout(const char* i_pURL, PRBool bUseStd =PR_TRUE)
 		}
 	    if (NS_SUCCEEDED(result))
 	    {
-		    char* temp;
+		    nsXPIDLCString temp;
 		    PRInt32 port;
-		    pURL->GetScheme(&temp);
-		    cout << "Got    " << (temp ? temp : "") << ',';
-		    pURL->GetPreHost(&temp);
-		    cout << (temp ? temp : "") << ',';
-		    pURL->GetHost(&temp);
-		    cout << (temp ? temp : "") << ',';
+		    pURL->GetScheme(getter_Copies(temp));
+		    cout << "Got    " << (temp ? (const char*)temp : "") << ',';
+		    pURL->GetPreHost(getter_Copies(temp));
+		    cout << (temp ? (const char*)temp : "") << ',';
+		    pURL->GetHost(getter_Copies(temp));
+		    cout << (temp ? (const char*)temp : "") << ',';
 		    pURL->GetPort(&port);
 		    cout << port << ',';
-		    pURL->GetPath(&temp);
-		    cout << (temp ? temp : "") << endl;
-            nsCRT::free(temp);
+		    pURL->GetPath(getter_Copies(temp));
+		    cout << (temp ? (const char*)temp : "") << endl;
 	    } else {
 		    cout << "Can not create URL" << endl; 
 	    }
