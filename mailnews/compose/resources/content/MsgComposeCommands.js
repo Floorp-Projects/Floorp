@@ -1809,6 +1809,37 @@ function LoadIdentity(startup)
             var start = emailAddr.lastIndexOf("@");
             session.defaultDomain = emailAddr.slice(start + 1, emailAddr.length);
         }
+        try {
+          var autocompleteLdap = prefs.GetBoolPref("ldap_2.autoComplete.useDirectory");
+          var autocompleteDirectory = prefs.CopyCharPref("ldap_2.autoComplete.directoryServer");
+        }
+        catch(ex) {
+          autocompleteLdap = false;
+          autocompleteDirectory = null;
+        }
+        if(currentIdentity.overrideGlobalPref)
+        {
+          autocompleteDirectory = currentIdentity.directoryServer;
+        }
+        if(autocompleteDirectory)
+        {
+          document.getElementById('msgRecipient#1').setAttribute("searchSessions", "addrbook ldap");
+          var session2 = Components.classes["@mozilla.org/autocompleteSession;1?type=ldap"].getService(Components.interfaces.nsILDAPAutoCompleteSession);
+          if (session2) 
+          {
+           var serverURL = Components.classes[
+               "@mozilla.org/network/ldap-url;1"].
+                createInstance().QueryInterface(                                              
+                Components.interfaces.nsILDAPURL);
+
+            serverURL.spec = prefs.CopyCharPref(autocompleteDirectory + ".uri");
+            dump("url is " +  serverURL.spec +"\n");
+            session2.serverURL = serverURL;
+            session2.filterTemplate = "cn=";
+            session2.outputFormat = "cn <mail>";
+            session2.sizeLimit = 10;
+        }
+      }
     }
 }
 
