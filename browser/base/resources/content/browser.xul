@@ -440,7 +440,7 @@ Contributor(s): ______________________________________. -->
   </script>
 
   <toolbox id="navigator-toolbox" class="toolbox-top" deferattached="true">
-      <menubar id="main-menubar" class="chromeclass-menubar">
+      <menubar id="main-menubar" class="chromeclass-menubar" grippytooltiptext="&menuBar.tooltip;">
       <menu label="&fileMenu.label;" accesskey="&fileMenu.accesskey;">
         <menupopup id="menu_FilePopup" onpopupshowing="getContentAreaFrameCount();">
             <menuitem label="&browserCmd.label;" accesskey="&browserCmd.accesskey;" key="key_newNavigator" command="cmd_newNavigator"/>
@@ -733,7 +733,7 @@ Contributor(s): ______________________________________. -->
     </menubar>
 
     <toolbar class="toolbar-primary chromeclass-toolbar" id="nav-bar" persist="collapsed" 
-             grippytooltiptext="&navigationToolbar.tooltip;"
+             grippytooltiptext="&navbarCmd.label;"
              tbalign="stretch" fullscreentoolbar="true">
       <hbox id="nav-bar-buttons">
         <toolbarbutton id="back-button" type="menu-button" class="toolbarbutton-1"
@@ -792,7 +792,7 @@ Contributor(s): ______________________________________. -->
     </toolbar>
   
     <toolbar id="LocationToolbar" class="chromeclass-toolbar" persist="collapsed"
-             tbalign="stretch" fullscreentoolbar="true">
+             tbalign="stretch" fullscreentoolbar="true" grippytooltiptext="&locationbarCmd.label;">
       <hbox id="nav-bar-inner" flex="1">
         <label value="&location.label;" accesskey="&location.accesskey;" control="urlbar"/>
         <textbox id="urlbar" class="chromeclass-location" flex="1"
@@ -841,7 +841,7 @@ Contributor(s): ______________________________________. -->
              ondragdrop="nsDragAndDrop.drop(event, personalToolbarObserver);"
              ondraggesture="nsDragAndDrop.startDrag(event, personalToolbarObserver);"
              ondragexit="nsDragAndDrop.dragExit(event, personalToolbarObserver);"
-             grippytooltiptext="&personalToolbar.tooltip;"
+             grippytooltiptext="&personalbarCmd.label;"
              tbalign="stretch">
 
       <!-- Personal toolbar items -->
