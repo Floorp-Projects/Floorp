@@ -265,3 +265,8 @@ res/fonts/fontEncoding.properties
 ;res/fonts/mathfontPUA.properties
 ;res/fonts/mathfontSymbol.properties
 ;Components/ucvmath.dylib
+
+; p3p
+components/libp3p.dylib
+components/p3p.xpt
+

@@ -241,6 +241,9 @@ bin/res/samples/*
 bin/res/builtin/htmlBindings.xml
 bin/res/builtin/platformHTMLBindings.xml
 
+; p3p
+bin/components/p3p.xpt
+bin/components/libp3p.so
 
 [mail]
 bin/components/libmeta_mail.so

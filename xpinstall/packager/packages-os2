@@ -457,3 +457,7 @@ bin/res/inspector/search-registry.rdf
 ;xpcomsample.xpt - Sample
 ;xpctest.dll  -Test
 ;xpconnect_tests.xpt - Test
+
+; p3p
+bin/components/p3p.xpt
+bin/components/p3p.dll

@@ -227,6 +227,10 @@ viewer:Components:mozldap.xpt
 viewer:Components:ldapAutoComplete.xpt
 viewer:Essential Files:LDAPClient.shlb
 
+; p3p
+viewer:Components:p3p.xpt
+viewer:Components:p3p.shlb
+
 viewer:chrome:help.jar
 viewer:chrome:comm.jar
 viewer:chrome:content-packs.jar
