@@ -1396,12 +1396,12 @@ NS_IMETHODIMP nsRenderingContextPS::RenderEPS(const nsRect& aRect, FILE *aDataFi
   fflush(aDataFile);
   fd = fileno(aDataFile);
   data = (const char *)mmap(0, datalen, PROT_READ, MAP_SHARED, fd, 0); 
-  if (!data)
+  if ((int)data == -1)
     return nsresultForErrno(errno);
 
   nsEPSObjectPS eps(data, datalen);
   if (NS_FAILED(eps.GetStatus())) {
-    munmap((void *)data, datalen);
+    munmap((char *)data, datalen);
     return NS_ERROR_INVALID_ARG;
   }
  
@@ -1410,7 +1410,7 @@ NS_IMETHODIMP nsRenderingContextPS::RenderEPS(const nsRect& aRect, FILE *aDataFi
  
   rv = mPSObj->render_eps(trect, eps);
 
-  munmap((void *)data, datalen);
+  munmap((char *)data, datalen);
   
   return rv;
 }

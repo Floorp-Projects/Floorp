@@ -226,7 +226,7 @@ nsRenderingContextXp::RenderEPS(const nsRect& aRect, FILE *aDataFile)
   fd = fileno(aDataFile);
   PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("fileno=%d\n", fd));  
   data = (const unsigned char *)mmap(0, datalen, PROT_READ, MAP_SHARED, fd, 0); 
-  if (!data) {
+  if ((int)data == -1) {
     int saved_errno = errno;
     PR_LOG(RenderingContextXpLM, PR_LOG_DEBUG, ("mmap() failure, errno=%s/%d\n",
            strerror(saved_errno), saved_errno));  
@@ -242,7 +242,7 @@ nsRenderingContextXp::RenderEPS(const nsRect& aRect, FILE *aDataFile)
 
   PopState();
   
-  munmap((void *)data, datalen);
+  munmap((char *)data, datalen);
 
   return rv;
 }
