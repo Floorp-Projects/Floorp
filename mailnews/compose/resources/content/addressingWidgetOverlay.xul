@@ -35,12 +35,16 @@ Rights Reserved.
 			<tree id="addressingWidgetTree"		
 				  class="addressingWidget"
 				  rows="3"
-				  onclick="awClickEmptySpace(true)"
+				  onclick="awClickEmptySpace(event.target, true)"
 				  ondragover="return DragOverTree(event);"
 				  ondragdrop="return DropOnAddressingWidgetTree(event);"
-				  style="width:0px;height:0px;border:solid black 1px">
+				  style="border:solid black 1px">
 				  
-				<treechildren id="addressWidgetBody">
+        <treecols>
+          <treecol flex="1"/>
+        </treecols>
+
+				<treechildren flex="1" id="addressWidgetBody">
 					<treeitem>
 						<treerow>
 							<treecell allowevents="true">

@@ -201,8 +201,11 @@ function awNotAnEmptyArea(event)
 	event.preventBubble();
 }
 
-function awClickEmptySpace(setFocus)
+function awClickEmptySpace(targ, setFocus)
 {
+  if (targ.localName != 'treechildren')
+    return;
+
 	dump("awClickEmptySpace\n");
 	var lastInput = awGetInputElement(top.MAX_RECIPIENTS);
 
