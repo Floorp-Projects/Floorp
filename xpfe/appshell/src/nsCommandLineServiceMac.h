@@ -22,4 +22,77 @@
 
 // Special stuff for the Macintosh implementation of command-line service.
 
-void InitializeMacCommandLine(int& argc, char**& argv);
+#ifndef nsCommandLineServiceMac_h_
+#define nsCommandLineServiceMac_h_
+
+#include <Files.h>
+
+#include "nscore.h"
+#include "nsError.h"
+
+#include "nsAEDefs.h"
+
+#ifdef __cplusplus
+
+class nsMacCommandLine
+{
+public:
+
+
+  enum
+  {
+    kMaxBufferSize  = 512,
+    kMaxTokens      = 20  
+  };
+
+                  nsMacCommandLine();
+                  ~nsMacCommandLine();
+
+  nsresult        Initialize(int& argc, char**& argv);
+  
+  PRBool          EnsureCommandLine();
+  nsresult        AddToCommandLine(const char* inArgText);
+  nsresult        AddToCommandLine(const char* inOptionString, const FSSpec& inFileSpec);
+  nsresult        AddToEnvironmentVars(const char* inArgText);
+
+  OSErr           HandleOpenOneDoc(const FSSpec& inFileSpec, OSType inFileType);
+  OSErr           HandlePrintOneDoc(const FSSpec& inFileSpec, OSType fileType);
+
+	OSErr						DispatchURLToNewBrowser(const char* url);
+	  
+  OSErr						Quit(TAskSave askSave);
+  
+protected:
+
+  nsresult        OpenWindow(const char *chrome, const PRUnichar *url);
+  
+  char*           mArgBuffer; // the command line itself
+  char**          mArgs;      // array of pointers into argBuffer
+
+  PRBool          mStartedUp;
+
+public:
+
+  static nsMacCommandLine& GetMacCommandLine() { return sMacCommandLine; }
+  
+private:
+
+  static nsMacCommandLine sMacCommandLine;
+  
+};
+
+#endif    //__cplusplus
+
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+nsresult InitializeMacCommandLine(int& argc, char**& argv);
+
+#ifdef __cplusplus
+}
+#endif
+
+
+#endif // nsCommandLineServiceMac_h_

@@ -470,14 +470,12 @@ static nsresult main1(int argc, char* argv[], nsISplashScreen *splashScreen )
  #if XP_MAC 
     stTSMCloser  tsmCloser;
   
-  InitializeMacCommandLine( argc, argv);
-
+  rv = InitializeMacCommandLine( argc, argv);
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Initializing AppleEvents failed");
  #endif
 
   // XXX: This call will be replaced by a registry initialization...
   NS_SetupRegistry_1();
-
-  // Start up the core services:
 
   // Initialize the cmd line service
   NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
