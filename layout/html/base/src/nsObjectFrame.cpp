@@ -1080,7 +1080,7 @@ nsObjectFrame::Reflow(nsIPresContext&          aPresContext,
 
 		    delete [] cString;
 
-		    pluginHost->IsPluginEnabledForExtension(extension, mimeType);
+		    pluginHost->IsPluginEnabledForExtension((const char *)extension, (const char *&)mimeType);
 	    }
 
 	    rv = InstantiatePlugin(aPresContext, aMetrics, aReflowState, pluginHost, mimeType, fullURL);
