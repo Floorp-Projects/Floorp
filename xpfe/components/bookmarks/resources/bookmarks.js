@@ -1512,7 +1512,7 @@ var BookmarksUtils = {
       var name = "";
       var charset;
       try {
-        var doc = webNav.document;
+        var doc = new XPCNativeWrapper(webNav.document, "title", "characterSet");
         name = doc.title || url;
         charset = doc.characterSet;
       } catch (e) {
@@ -1541,8 +1541,9 @@ var BookmarksUtils = {
     var url = aDocShell.currentURI.spec;
     var title, docCharset = null;
     try {
-      title = aDocShell.document.title || url;
-      docCharset = aDocShell.document.characterSet;
+      var doc = new XPCNativeWrapper(aDocShell.document, "title", "characterSet");
+      title = doc.title || url;
+      docCharset = doc.characterSet;
     }
     catch (e) {
       title = url;
