@@ -27,7 +27,7 @@
 interface nsIUserInfo : nsISupports
 {
     /* the system may know our user's fullname*/
-    readonly attribute string fullname;
+    readonly attribute wstring fullname;
 };
 
 %{C++
