@@ -159,6 +159,8 @@ nsPopupSetFrame::SetInitialChildList(nsIPresContext& aPresContext,
         frames.RemoveFrame(frame);
         mPopupFrames.AppendFrame(this, frame);
         nsIFrame* first = frames.FirstChild();
+        rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, first);
+        return rv;
       }
       frame->GetNextSibling(&frame);
     }

@@ -35,27 +35,6 @@
 #include "nsCOMPtr.h"
 #include "nsINameSpaceManager.h"
 
-static void ForceDrawFrame(nsIFrame * aFrame)
-{
-  if (aFrame == nsnull) {
-    return;
-  }
-  nsRect    rect;
-  nsIView * view;
-  nsPoint   pnt;
-  aFrame->GetOffsetFromView(pnt, &view);
-  aFrame->GetRect(rect);
-  rect.x = pnt.x;
-  rect.y = pnt.y;
-  if (view) {
-    nsCOMPtr<nsIViewManager> viewMgr;
-    view->GetViewManager(*getter_AddRefs(viewMgr));
-    if (viewMgr)
-      viewMgr->UpdateView(view, rect, 0);
-  }
-
-}
-
 //
 // NS_NewTreeCellFrame
 //
@@ -125,7 +104,7 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
 
 			// Get the table frame.
       nsTableFrame* tableFrame = nsnull;
-      nsresult rv = nsTableFrame::GetTableFrame(rowGroupFrame, tableFrame);
+      rv = nsTableFrame::GetTableFrame(rowGroupFrame, tableFrame);
       if (NS_FAILED(rv) || (nsnull == tableFrame)) {
         return rv;
       }
@@ -362,7 +341,7 @@ nsTreeCellFrame::ToggleOpenClose()
 	  
 	  // Take the tree item content and toggle the value of its open attribute.
 	  nsAutoString attrValue;
-    nsresult result = treeItem->GetAttribute("open", attrValue);
+    treeItem->GetAttribute("open", attrValue);
     attrValue.ToLowerCase();
     PRBool isExpanded = (attrValue=="true");
     if (isExpanded)
@@ -397,7 +376,7 @@ nsTreeCellFrame::Open()
 	  
 	  // Take the tree item content and toggle the value of its open attribute.
 	  nsAutoString attrValue;
-    nsresult result = treeItem->GetAttribute("open", attrValue);
+    treeItem->GetAttribute("open", attrValue);
     attrValue.ToLowerCase();
     PRBool isExpanded = (attrValue=="true");
     if (!isExpanded) {
@@ -426,7 +405,7 @@ nsTreeCellFrame::Close()
 	  
 	  // Take the tree item content and toggle the value of its open attribute.
 	  nsAutoString attrValue;
-    nsresult result = treeItem->GetAttribute("open", attrValue);
+    treeItem->GetAttribute("open", attrValue);
     attrValue.ToLowerCase();
     PRBool isExpanded = (attrValue=="true");
     if (isExpanded) {
