@@ -5258,7 +5258,16 @@ const char *nsMsgIMAPFolderACL::GetRightsStringForUser(const char *inUserName)
   nsXPIDLCString userName;
   userName.Assign(inUserName);
   if (!userName.Length())
-    m_folder->GetUsername(getter_Copies(userName));
+  {
+    nsCOMPtr <nsIMsgIncomingServer> server;
+
+    nsresult rv = m_folder->GetServer(getter_AddRefs(server));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "error getting server");
+    if (NS_FAILED(rv)) return nsnull;
+    // we need the real user name to match with what the imap server returns
+    // in the acl response.
+    server->GetRealUsername(getter_Copies(userName));
+  }
   nsCStringKey userKey(userName.get());
   
   return (const char *)m_rightsHash->Get(&userKey);
