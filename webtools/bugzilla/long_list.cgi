@@ -104,9 +104,9 @@ foreach my $bug (split(/:/, $::FORM{'buglist'})) {
             }
             print "<TD><B>QA Contact:</B> $name\n";
         }
-        print "<TR><TD><B>Component:</B> $component\n";
+        print "<TR><TD COLSPAN=2><B>Component:</B> $component\n";
         if (Param("usetargetmilestone")) {
-            print "<TD><B>Target milestone:</B>$target_milestone\n";
+            print "<TD COLSPAN=2><B>Target Milestone:</B> $target_milestone\n";
         }
         print "<TR><TD COLSPAN=6><B>URL:</B>&nbsp;";
 	print "<A HREF=\"" . $url . "\">" .  html_quote($url) . "</A>\n"; 
