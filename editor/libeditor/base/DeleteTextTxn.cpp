@@ -69,7 +69,7 @@ NS_IMETHODIMP DeleteTextTxn::Do(void)
       nsCOMPtr<nsIDOMSelection> selection;
       nsresult selectionResult = mEditor->GetSelection(getter_AddRefs(selection));
       if (NS_SUCCEEDED(selectionResult) && selection) {
-        selectionResult = selection->Collapse(mElement, mOffset);
+        selectionResult = selection->Collapse(mElement, mOffset, SELECTION_NORMAL);
         NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after undo of insert.");
       }
     }
@@ -91,7 +91,7 @@ NS_IMETHODIMP DeleteTextTxn::Undo(void)
       nsCOMPtr<nsIDOMSelection> selection;
       nsresult selectionResult = mEditor->GetSelection(getter_AddRefs(selection));
       if (NS_SUCCEEDED(selectionResult) && selection) {
-        selectionResult = selection->Collapse(mElement, mOffset);
+        selectionResult = selection->Collapse(mElement, mOffset, SELECTION_NORMAL);
         NS_ASSERTION((NS_SUCCEEDED(selectionResult)), "selection could not be collapsed after undo of insert.");
       }
     }

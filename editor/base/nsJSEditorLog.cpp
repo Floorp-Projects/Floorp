@@ -957,7 +957,7 @@ nsJSEditorLog::PrintSelection()
   if (NS_FAILED(result))
     return result;
 
-  result = selection->GetRangeCount(&rangeCount);
+  result = selection->GetRangeCount(SELECTION_NORMAL, &rangeCount);
 
   if (NS_FAILED(result))
     return result;
@@ -972,7 +972,7 @@ nsJSEditorLog::PrintSelection()
 
   for (i = 0; i < rangeCount; i++)
   {
-    result = selection->GetRangeAt(i, getter_AddRefs(range));
+    result = selection->GetRangeAt(i, SELECTION_NORMAL, getter_AddRefs(range));
 
     if (NS_FAILED(result))
       return result;

@@ -89,7 +89,7 @@ NS_IMETHODIMP JoinElementTxn::Do(void)
             mEditor->GetSelection(getter_AddRefs(selection));
             if (selection)
             {
-              selection->Collapse(mRightNode, mOffset);
+              selection->Collapse(mRightNode, mOffset, SELECTION_NORMAL);
             }
           }
         }

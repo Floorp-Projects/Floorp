@@ -54,7 +54,7 @@ NS_IMETHODIMP nsInsertHTMLTxn::Do(void)
   if (NS_SUCCEEDED(res) && selection)
   {
     // Get the first range in the selection, and save it in mRange:
-    res = selection->GetRangeAt(0, getter_AddRefs(mRange));
+    res = selection->GetRangeAt(0, SELECTION_NORMAL, getter_AddRefs(mRange));
     if (NS_SUCCEEDED(res))
     {
       nsCOMPtr<nsIDOMNSRange> nsrange (do_QueryInterface(mRange));

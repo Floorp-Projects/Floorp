@@ -75,7 +75,7 @@ NS_IMETHODIMP SplitElementTxn::Do(void)
         mEditor->GetSelection(getter_AddRefs(selection));
         if (selection)
         {
-          selection->Collapse(mNewLeftNode, mOffset);
+          selection->Collapse(mNewLeftNode, mOffset, SELECTION_NORMAL);
         }
       }
       else {
@@ -112,7 +112,7 @@ NS_IMETHODIMP SplitElementTxn::Undo(void)
     mEditor->GetSelection(getter_AddRefs(selection));
     if (selection)
     {
-      selection->Collapse(mExistingRightNode, mOffset);
+      selection->Collapse(mExistingRightNode, mOffset, SELECTION_NORMAL);
     }
   }
   else {

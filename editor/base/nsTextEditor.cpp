@@ -399,7 +399,7 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
     if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
     {
       PRBool isCollapsed;
-      selection->GetIsCollapsed(&isCollapsed);
+      selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
       if (PR_TRUE==isCollapsed)
       {
         // manipulating text attributes on a collapsed selection only sets state for the next text insertion
@@ -410,8 +410,8 @@ NS_IMETHODIMP nsTextEditor::SetTextProperty(nsIAtom        *aProperty,
         // set the text property for all selected ranges
         nsEditor::BeginTransaction();
         nsCOMPtr<nsIEnumerator> enumerator;
-        enumerator = do_QueryInterface(selection);
-        if (enumerator)
+        result = selection->GetEnumerator(SELECTION_NORMAL,getter_AddRefs(enumerator));
+        if (NS_SUCCEEDED(result) && enumerator)
         {
           enumerator->First(); 
           nsISupports *currentItem;
@@ -525,10 +525,10 @@ NS_IMETHODIMP nsTextEditor::GetTextProperty(nsIAtom *aProperty,
   if ((NS_SUCCEEDED(result)) && selection)
   {
     PRBool isCollapsed;
-    selection->GetIsCollapsed(&isCollapsed);
+    selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
     nsCOMPtr<nsIEnumerator> enumerator;
-    enumerator = do_QueryInterface(selection);
-    if (enumerator)
+    result = selection->GetEnumerator(SELECTION_NORMAL, getter_AddRefs(enumerator));
+    if (NS_SUCCEEDED(result) && enumerator)
     {
       enumerator->First(); 
       nsISupports *currentItem;
@@ -735,7 +735,7 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty, const nsStrin
     if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
     {
       PRBool isCollapsed;
-      selection->GetIsCollapsed(&isCollapsed);
+      selection->GetIsCollapsed(SELECTION_NORMAL, &isCollapsed);
       if (PR_TRUE==isCollapsed)
       {
         // manipulating text attributes on a collapsed selection only sets state for the next text insertion
@@ -754,8 +754,8 @@ NS_IMETHODIMP nsTextEditor::RemoveTextProperty(nsIAtom *aProperty, const nsStrin
         nsCOMPtr<nsIDOMNode> startParent, endParent;
         PRInt32 startOffset, endOffset;
         nsCOMPtr<nsIEnumerator> enumerator;
-        enumerator = do_QueryInterface(selection);
-        if (enumerator)
+        result = selection->GetEnumerator(SELECTION_NORMAL,getter_AddRefs(enumerator));
+        if (NS_SUCCEEDED(result) && enumerator)
         {
           enumerator->First(); 
           nsISupports *currentItem;
@@ -847,14 +847,14 @@ void nsTextEditor::GetTextSelectionOffsetsForRange(nsIDOMSelection *aSelection,
 
   nsCOMPtr<nsIDOMNode> startNode, endNode;
   PRInt32 startOffset, endOffset;
-  aSelection->GetAnchorNode(getter_AddRefs(startNode));
-  aSelection->GetAnchorOffset(&startOffset);
-  aSelection->GetFocusNode(getter_AddRefs(endNode));
-  aSelection->GetFocusOffset(&endOffset);
+  aSelection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(startNode));
+  aSelection->GetAnchorOffset(SELECTION_NORMAL, &startOffset);
+  aSelection->GetFocusNode(SELECTION_NORMAL, getter_AddRefs(endNode));
+  aSelection->GetFocusOffset(SELECTION_NORMAL, &endOffset);
 
   nsCOMPtr<nsIEnumerator> enumerator;
-  enumerator = do_QueryInterface(aSelection);
-  if (enumerator)
+  result = aSelection->GetEnumerator(SELECTION_NORMAL,getter_AddRefs(enumerator));
+  if (NS_SUCCEEDED(result) && enumerator)
   {
     enumerator->First(); 
     nsISupports *currentItem;
@@ -951,8 +951,8 @@ void nsTextEditor::ResetTextSelectionForRange(nsIDOMNode *aParent,
       iter->Next();
       iter->CurrentNode(getter_AddRefs(content));
     }
-    aSelection->Collapse(startNode, startOffset);
-    aSelection->Extend(endNode, endOffset);
+    aSelection->Collapse(startNode, startOffset, SELECTION_NORMAL);
+    aSelection->Extend(endNode, endOffset, SELECTION_NORMAL);
   }
 }
 
@@ -1856,9 +1856,9 @@ NS_IMETHODIMP nsTextEditor::MoveContentOfNodeIntoNewParent(nsIDOMNode  *aNode,
                         result = nsEditor::GetSelection(getter_AddRefs(selection));
                         if (NS_SUCCEEDED(result)) 
                         {
-                          selection->Collapse(newChildNode, 0);
+                          selection->Collapse(newChildNode, 0, SELECTION_NORMAL);
                           PRInt32 endOffset = aEndOffset-aStartOffset;
-                          selection->Extend(newChildNode, endOffset);
+                          selection->Extend(newChildNode, endOffset, SELECTION_NORMAL);
                         }
                       }
                     }
@@ -2051,8 +2051,8 @@ NS_IMETHODIMP nsTextEditor::MoveContiguousContentIntoNewParent(nsIDOMNode  *aSta
                       result = nsEditor::GetSelection(getter_AddRefs(selection));
                       if (NS_SUCCEEDED(result)) 
                       {
-                        selection->Collapse(startNode, startOffset);
-                        selection->Extend(newRightNode, endOffset);
+                        selection->Collapse(startNode, startOffset, SELECTION_NORMAL);
+                        selection->Extend(newRightNode, endOffset, SELECTION_NORMAL);
                       }
                     }
                   }
@@ -2106,8 +2106,8 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
   result = nsEditor::GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) { return result; }
   if (!selection) { return NS_ERROR_NULL_POINTER; } 
-  selection->GetAnchorOffset(&aStartOffset);
-  selection->GetFocusOffset(&aEndOffset);
+  selection->GetAnchorOffset(SELECTION_NORMAL, &aStartOffset);
+  selection->GetFocusOffset(SELECTION_NORMAL, &aEndOffset);
 
   // create new parent nodes for all the content between the start and end nodes
   nsCOMPtr<nsIContentIterator>iter;
@@ -2256,8 +2256,8 @@ nsTextEditor::SetTextPropertiesForNodeWithDifferentParents(nsIDOMRange *aRange,
         }
         if (NS_SUCCEEDED(result))
         {
-          selection->Collapse(startNode, startOffset);
-          selection->Extend(endNode, aEndOffset);
+          selection->Collapse(startNode, startOffset, SELECTION_NORMAL);
+          selection->Extend(endNode, aEndOffset, SELECTION_NORMAL);
         }
       }
     }
@@ -2770,8 +2770,8 @@ nsTextEditor::RemoveTextPropertiesForNodeWithDifferentParents(nsIDOMNode  *aStar
     result = nsEditor::GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(result)) 
     {
-      selection->Collapse(aStartNode, rangeStartOffset);
-      selection->Extend(aEndNode, rangeEndOffset);
+      selection->Collapse(aStartNode, rangeStartOffset, SELECTION_NORMAL);
+      selection->Extend(aEndNode, rangeEndOffset, SELECTION_NORMAL);
       if (gNoisy) { printf("RTPFNWDP set selection.\n"); }
     }
   }
@@ -2973,14 +2973,14 @@ nsresult nsTextEditor::GetTextSelectionOffsets(nsIDOMSelection *aSelection,
 
   nsCOMPtr<nsIDOMNode> startNode, endNode, parentNode;
   PRInt32 startOffset, endOffset;
-  aSelection->GetAnchorNode(getter_AddRefs(startNode));
-  aSelection->GetAnchorOffset(&startOffset);
-  aSelection->GetFocusNode(getter_AddRefs(endNode));
-  aSelection->GetFocusOffset(&endOffset);
+  aSelection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(startNode));
+  aSelection->GetAnchorOffset(SELECTION_NORMAL, &startOffset);
+  aSelection->GetFocusNode(SELECTION_NORMAL, getter_AddRefs(endNode));
+  aSelection->GetFocusOffset(SELECTION_NORMAL, &endOffset);
 
   nsCOMPtr<nsIEnumerator> enumerator;
-  enumerator = do_QueryInterface(aSelection);
-  if (enumerator)
+  result = aSelection->GetEnumerator(SELECTION_NORMAL,getter_AddRefs(enumerator));
+  if (NS_SUCCEEDED(result) && enumerator)
   {
     // don't use "result" in this block
     enumerator->First(); 

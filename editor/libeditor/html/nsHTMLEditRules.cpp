@@ -226,7 +226,7 @@ nsHTMLEditRules::WillInsertBreak(nsIDOMSelection *aSelection, PRBool *aCancel)
   
   // if the selection isn't collapsed, delete it.
   PRBool bCollapsed;
-  res = aSelection->GetIsCollapsed(&bCollapsed);
+  res = aSelection->GetIsCollapsed(SELECTION_NORMAL, &bCollapsed);
   if (NS_FAILED(res)) return res;
   if (!bCollapsed)
   {
@@ -295,7 +295,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, nsIEditor::ECo
   nsresult res = NS_OK;
   
   PRBool bCollapsed;
-  res = aSelection->GetIsCollapsed(&bCollapsed);
+  res = aSelection->GetIsCollapsed(SELECTION_NORMAL, &bCollapsed);
   if (NS_FAILED(res)) return res;
   
   nsCOMPtr<nsIDOMNode> node;
@@ -1290,7 +1290,7 @@ nsHTMLEditRules::GetPromotedRanges(nsIDOMSelection *inSelection,
   if (NS_FAILED(res)) return res;
   
   PRInt32 rangeCount;
-  res = inSelection->GetRangeCount(&rangeCount);
+  res = inSelection->GetRangeCount(SELECTION_NORMAL, &rangeCount);
   if (NS_FAILED(res)) return res;
   
   PRInt32 i;
@@ -1301,7 +1301,7 @@ nsHTMLEditRules::GetPromotedRanges(nsIDOMSelection *inSelection,
 
   for (i = 0; i < rangeCount; i++)
   {
-    res = inSelection->GetRangeAt(i, getter_AddRefs(selectionRange));
+    res = inSelection->GetRangeAt(i, SELECTION_NORMAL, getter_AddRefs(selectionRange));
     if (NS_FAILED(res)) return res;
     res = selectionRange->GetStartParent(getter_AddRefs(startNode));
     if (NS_FAILED(res)) return res;
@@ -1711,7 +1711,7 @@ nsHTMLEditRules::ReturnInHeader(nsIDOMSelection *aSelection,
   }
   
   // position selection before inserted node
-  res = aSelection->Collapse(textNode,0);
+  res = aSelection->Collapse(textNode,0, SELECTION_NORMAL);
 
   return res;
 }
@@ -1823,7 +1823,7 @@ nsHTMLEditRules::ReturnInListItem(nsIDOMSelection *aSelection,
 
   nsresult res = mEditor->SplitNodeDeep( aListItem, aNode, aOffset);
   if (NS_FAILED(res)) return res;
-  res = aSelection->Collapse(aNode,0);
+  res = aSelection->Collapse(aNode,0, SELECTION_NORMAL);
   return res;
 }
 
