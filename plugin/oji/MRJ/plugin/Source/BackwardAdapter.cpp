@@ -55,6 +55,7 @@
 #include "nsDebug.h"
 #include "nsIJRILiveConnectPlugin.h"
 #include "nsIJRILiveConnectPlugInstPeer.h"
+#include "nsObsoleteModuleLoading.h"
 
 #ifdef XP_MAC
 #include "EventFilter.h"

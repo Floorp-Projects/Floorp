@@ -60,6 +60,7 @@
 #include "LiveConnectNativeMethods.h"
 #include "CSecureEnv.h"
 #include "EventFilter.h"
+#include "nsObsoleteModuleLoading.h"
 
 #include <Resources.h>
 
