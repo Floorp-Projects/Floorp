@@ -256,6 +256,22 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
 
 }
 
+nsContentAttr
+nsTableCell::AttributeToString(nsIAtom* aAttribute,
+                               nsHTMLValue& aValue,
+                               nsString& aResult) const
+{
+  nsContentAttr ca = eContentAttr_NotThere;
+  if (aAttribute == nsHTMLAtoms::valign) {
+    AlignParamToString(aValue, aResult);
+    ca = eContentAttr_HasValue;
+  }
+  else {
+    ca = nsTableContent::AttributeToString(aAttribute, aValue, aResult);
+  }
+  return ca;
+}
+
 void nsTableCell::SetRowSpan(int aRowSpan)
 {
   NS_ASSERTION(0<aRowSpan, "bad row span");
