@@ -50,9 +50,19 @@ LIBS		+= \
 		$(NULL)
 
 ifdef HAVE_BOUTELL_GD
+ifeq ($(OS_ARCH),WINNT)
+LOCAL_INCLUDES	+= \
+		-I"$(HAVE_BOUTELL_GD)" \
+		$(NULL)
+LIBS		+= \
+		-lmozz_s \
+		"$(HAVE_BOUTELL_GD)/gd.lib" \
+		$(NULL)
+else
 LIBS		+= \
 		-lgd \
 		$(NULL)
+endif
 
 DEFINES		+= \
 		-DHAVE_BOUTELL_GD \
