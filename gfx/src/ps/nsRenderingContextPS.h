@@ -24,6 +24,7 @@
 #define nsRenderingContextPS_h___
 
 #include "nsIRenderingContext.h"
+#include "nsRenderingContextImpl.h"
 #include "nsUnitConversion.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
@@ -42,7 +43,7 @@ class PS_State;
 
 typedef void* nsDrawingSurfacePS;
 
-class nsRenderingContextPS : public nsIRenderingContext
+class nsRenderingContextPS :  public nsRenderingContextImpl
 {
 public:
   nsRenderingContextPS();
