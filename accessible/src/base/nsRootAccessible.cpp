@@ -439,6 +439,12 @@ NS_IMETHODIMP nsRootAccessible::AddAccessibleEventListener(nsIAccessibleEventLis
     rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuItemActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
     
+    rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuBarActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+    
+    rv = target->AddEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "failed to register listener");
+    
     // Extremely short timer, after which we announce that page is finished loading
     // By waiting until after this short time, we know that the 3rd party accessibility software 
     // has received it's accessible, and can handle events on it.
@@ -482,6 +488,8 @@ NS_IMETHODIMP nsRootAccessible::RemoveAccessibleEventListener()
       target->RemoveEventListener(NS_LITERAL_STRING("popupshowing"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("popuphiding"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuItemActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+      target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarActive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
+      target->RemoveEventListener(NS_LITERAL_STRING("DOMMenuBarInactive"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("RadioStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
       target->RemoveEventListener(NS_LITERAL_STRING("ListitemStateChange"), NS_STATIC_CAST(nsIDOMXULListener*, this), PR_TRUE);
     }
@@ -595,7 +603,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       }
       else if (eventType.EqualsIgnoreCase("ListitemStateChange")) {
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
-        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible, nsnull);
+        FireAccessibleFocusEvent(accessible, optionTargetNode);
       }
       else if (eventType.EqualsIgnoreCase("CheckboxStateChange")) { 
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
@@ -605,7 +613,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         if (targetNode &&
             NS_SUCCEEDED(mAccService->GetAccessibleFor(targetNode, getter_AddRefs(accessible)))) {
           mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
-          mListener->HandleEvent(nsIAccessibleEventListener::EVENT_FOCUS, accessible, nsnull);
+          FireAccessibleFocusEvent(accessible, targetNode);
         }
         else { // for the html radio buttons -- apparently the focus code just works. :-)
           mListener->HandleEvent(nsIAccessibleEventListener::EVENT_STATE_CHANGE, accessible, nsnull);
@@ -615,6 +623,16 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUPOPUPSTART, accessible, nsnull);
       else if (eventType.EqualsIgnoreCase("popuphiding")) 
         mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUPOPUPEND, accessible, nsnull);
+      else if (eventType.EqualsIgnoreCase("DOMMenuBarActive")) 
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUSTART, accessible, nsnull);
+      else if (eventType.EqualsIgnoreCase("DOMMenuBarInactive")) {
+        mListener->HandleEvent(nsIAccessibleEventListener::EVENT_MENUEND, accessible, nsnull);
+        GetAccFocused(getter_AddRefs(accessible));
+        if (accessible) {
+          accessible->AccGetDOMNode(getter_AddRefs(targetNode));
+          FireAccessibleFocusEvent(accessible, targetNode);
+        }
+      }
     }
   }
   return NS_OK;

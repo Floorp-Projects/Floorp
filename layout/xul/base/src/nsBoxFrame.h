@@ -253,7 +253,8 @@ protected:
 protected:
     nsresult RegUnregAccessKey(nsIPresContext* aPresContext,
                                PRBool aDoReg);
-  
+    void FireDOMEvent(nsIPresContext *aPresContext, const nsAString& aDOMEventName);
+
 private: 
     friend class nsBoxFrameInner;
     friend class nsBoxDebug;

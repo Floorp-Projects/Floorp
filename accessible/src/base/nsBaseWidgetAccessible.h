@@ -104,6 +104,7 @@ public:
   NS_IMETHOD AccDoAction(PRUint8 index);
   NS_IMETHOD GetAccState(PRUint32 *_retval);
   NS_IMETHOD GetAccValue(nsAString& _retval);
+  NS_IMETHOD AccTakeFocus();
 
 protected:
   PRBool IsALink();

@@ -201,6 +201,20 @@ nsAccessible(aNode, aShell), mIsALinkCached(PR_FALSE), mLinkContent(nsnull), mIs
 { 
 }
 
+NS_IMETHODIMP nsLinkableAccessible::AccTakeFocus()
+{ 
+  if (IsALink()) {
+    nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
+    if (!shell)
+      return NS_ERROR_FAILURE;  
+    nsCOMPtr<nsIPresContext> context;
+    shell->GetPresContext(getter_AddRefs(context));
+    mLinkContent->SetFocus(context);
+  }
+  
+  return NS_OK;
+}
+
 /* long GetAccState (); */
 NS_IMETHODIMP nsLinkableAccessible::GetAccState(PRUint32 *_retval)
 {
@@ -293,12 +307,11 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccActionName(PRUint8 index, nsAString& _
 NS_IMETHODIMP nsLinkableAccessible::AccDoAction(PRUint8 index)
 {
   // Action 0 (default action): Jump to link
-  if (index == 0) {
+  if (index == eAction_Jump) {
     if (IsALink()) {
       nsCOMPtr<nsIPresShell> shell(do_QueryReferent(mPresShell));
-      if (!shell) {
+      if (!shell)
         return NS_ERROR_FAILURE;  
-      }
 
       nsCOMPtr<nsIPresContext> presContext;
       shell->GetPresContext(getter_AddRefs(presContext));

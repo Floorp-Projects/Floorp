@@ -83,8 +83,6 @@
 #include "nsUnicharUtils.h"
 #include "nsIStringBundle.h"
 #include "nsGUIEvent.h"
-#include "nsIEventListenerManager.h"
-#include "nsIEventStateManager.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -555,24 +553,6 @@ nsMenuFrame::ToggleMenuState()
   return NS_OK;
 }
 
-void
-nsMenuFrame::FireMenuDOMEvent(const nsAString& aDOMEventName)
-{
-  // Fire a DOM event for the title change.
-  nsCOMPtr<nsIDOMEvent> event;
-  nsCOMPtr<nsIEventListenerManager> manager;
-  mContent->GetListenerManager(getter_AddRefs(manager));
-  if (manager &&
-      NS_SUCCEEDED(manager->CreateEvent(mPresContext, nsnull, NS_LITERAL_STRING("Events"), getter_AddRefs(event)))) {
-    event->InitEvent(aDOMEventName, PR_TRUE, PR_TRUE);
-    PRBool noDefault;
-    nsCOMPtr<nsIEventStateManager> esm;
-    mPresContext->GetEventStateManager(getter_AddRefs(esm));
-    if (esm)
-      esm->DispatchNewEvent(mContent, event, &noDefault);
-  }
-}
-
 NS_IMETHODIMP
 nsMenuFrame::SelectMenu(PRBool aActivateFlag)
 {
@@ -594,7 +574,7 @@ nsMenuFrame::SelectMenu(PRBool aActivateFlag)
     domEventToFire.Assign(NS_LITERAL_STRING("DOMMenuItemInactive"));
   }
 
-  FireMenuDOMEvent(domEventToFire);
+  FireDOMEvent(mPresContext, domEventToFire);
   return NS_OK;
 }
 

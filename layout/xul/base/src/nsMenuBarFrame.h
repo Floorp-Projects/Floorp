@@ -143,6 +143,9 @@ protected:
   // XXX Hack
   nsIPresContext* mPresContext;  // weak reference
 
+private:
+  PRBool mCaretWasVisible;
+
 }; // class nsMenuBarFrame
 
 #endif
