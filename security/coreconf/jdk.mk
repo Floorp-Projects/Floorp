@@ -399,7 +399,6 @@ endif
 endif
 
 
-ifdef NS_USE_JDK_TOOLSET
 #######################################################################
 # [5] Define JDK "Core Components" toolset;                           #
 #     (always allow a user to override these values)                  #
@@ -607,6 +606,4 @@ ifeq ($(SERIALVER),)
 	SERIALVER_PROG   = $(JAVA_HOME)/bin/serialver$(PROG_SUFFIX)
 	SERIALVER_FLAGS  = $(JDK_THREADING_MODEL_OPT)
 	SERIALVER        = $(SERIALVER_PROG) $(SERIALVER_FLAGS) 
-endif
- 
 endif
