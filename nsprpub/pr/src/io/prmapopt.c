@@ -448,6 +448,10 @@ PRStatus PR_CALLBACK _PR_SocketSetSocketOption(PRFileDesc *fd, const PRSocketOpt
 #define TCP_MAXSEG          _PR_NO_SUCH_SOCKOPT
 #endif
 
+#ifndef SO_BROADCAST                 /* enable broadcast on udp sockets */
+#define SO_BROADCAST        _PR_NO_SUCH_SOCKOPT
+#endif
+
 PRStatus _PR_MapOptionName(
     PRSockOption optname, PRInt32 *level, PRInt32 *name)
 {
