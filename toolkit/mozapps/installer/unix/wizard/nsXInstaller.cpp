@@ -111,7 +111,7 @@ nsXInstaller::ParseConfig()
   XI_ERR_BAIL(ParseGeneral(parser));
   XI_ERR_BAIL(gCtx->ldlg->Parse(parser));
   XI_ERR_BAIL(gCtx->wdlg->Parse(parser));
-  //XI_ERR_BAIL(gCtx->cdlg->Parse(parser)); // components before setup type
+  XI_ERR_BAIL(gCtx->cdlg->Parse(parser));
   XI_ERR_BAIL(gCtx->sdlg->Parse(parser));
   XI_ERR_BAIL(gCtx->idlg->Parse(parser));
 
