@@ -69,7 +69,7 @@ public abstract class IdScriptable extends ScriptableObject
     
     public boolean has(String name, Scriptable start) {
         if (maxId != 0) {
-            int id = getId(name);
+            int id = mapNameToId(name);
             if (id != 0) {
                 return hasValue(id);
             }
@@ -78,14 +78,24 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     public Object get(String name, Scriptable start) {
-        if (maxId != 0) {
-            int id = getId(name);
-            if (id != 0) {
+        if (CACHE_NAMES) {
+            int maxId = this.maxId;
+            L:if (maxId != 0) {
                 Object[] data = idMapData;
-                if (data == null) {
-                    return getIdValue(id);
+                if (data == null) { 
+                    int id = mapNameToId(name);
+                    if (id != 0) {
+                        return getIdValue(id);
+                    }
                 }
                 else {
+                    int id = lastIdCache;
+                    if (data[id - 1 + maxId] != name) {
+                        id = mapNameToId(name);
+                        if (id == 0) { break L; }
+                           data[id - 1 + maxId] = name;
+                           lastIdCache = id;
+                    }
                     Object value = data[id - 1];
                     if (value == null) {
                         value = getIdValue(id);
@@ -97,12 +107,33 @@ public abstract class IdScriptable extends ScriptableObject
                 }
             }
         }
+        else {
+            if (maxId != 0) {
+                int id = mapNameToId(name);
+                if (id != 0) {
+                    Object[] data = idMapData;
+                    if (data == null) { 
+                        return getIdValue(id);
+                    }
+                    else {
+                        Object value = data[id - 1];
+                        if (value == null) {
+                            value = getIdValue(id);
+                        }
+                        else if (value == NULL_TAG) {
+                            value = null;
+                        }
+                        return value;
+                    }
+                }
+            }
+        }
         return super.get(name, start);
     }
 
     public void put(String name, Scriptable start, Object value) {
         if (maxId != 0) {
-            int id = getId(name);
+            int id = mapNameToId(name);
             if (id != 0) {
                 int attr = getAttributes(id);
                 if ((attr & READONLY) == 0) {
@@ -121,7 +152,7 @@ public abstract class IdScriptable extends ScriptableObject
 
     public void delete(String name) {
         if (maxId != 0) {
-            int id = getId(name);
+            int id = mapNameToId(name);
             if (id != 0) {
                 // Let the super class to throw exceptions for sealed objects
                 if (!isSealed()) {
@@ -140,7 +171,7 @@ public abstract class IdScriptable extends ScriptableObject
         throws PropertyException
     {
         if (maxId != 0) {
-            int id = getId(name);
+            int id = mapNameToId(name);
             if (id != 0) {
                 if (hasValue(id)) {
                     return getAttributes(id);
@@ -156,7 +187,7 @@ public abstract class IdScriptable extends ScriptableObject
         throws PropertyException
     {
         if (maxId != 0) {
-            int id = getId(name);
+            int id = mapNameToId(name);
             if (id != 0) {
                 if (hasValue(id)) {
                     synchronized (this) {
@@ -171,8 +202,35 @@ public abstract class IdScriptable extends ScriptableObject
     }
 
     synchronized void addPropertyAttribute(int attribute) {
-        extraIdAttributes |= attribute;
+        extraIdAttributes |= (byte)attribute;
         super.addPropertyAttribute(attribute);
+    }
+
+    /**
+     * Redefine ScriptableObject.defineProperty to allow changing
+     * values/attributes of id-based properties unless 
+     * getIdDefaultAttributes contains the READONLY attribute.
+     * @see #getIdDefaultAttributes
+     * @see org.mozilla.javascript.ScriptableObject#defineProperty
+     */
+    public void defineProperty(String propertyName, Object value,
+                               int attributes)
+    {
+        if (maxId != 0) {
+            int id = mapNameToId(propertyName);
+            if (id != 0) {
+                int default_attributes = getIdDefaultAttributes(id);
+                if ((default_attributes & READONLY) != 0) {
+                    // It is a bug to redefine id with readonly attributes
+                    throw new RuntimeException
+                        ("Attempt to redefine read-only id " + propertyName);
+                }
+                setAttributes(id, attributes);
+                setIdValue(id, value);
+                return;
+            }
+        }
+        super.defineProperty(propertyName, value, attributes);
     }
 
     Object[] getIds(boolean getAll) {
@@ -249,15 +307,23 @@ public abstract class IdScriptable extends ScriptableObject
         return cacheIdValue(id, f);
     }
 
-    /** Set id value. */
+    /**
+     * Set id value. 
+     * IdScriptable never calls this method if result of
+     * <code>getIdDefaultAttributes(id)</code> contains READONLY attribute.
+     * Descendants can overwrite this method to provide custom handler for
+     * property assignments.
+     */
     protected void setIdValue(int id, Object value) {
         synchronized (this) {
             ensureIdData()[id - 1] = (value != null) ? value : NULL_TAG;
         }
     }
     
-    /** Store value in a permamnet cache. 
-     ** After this call hasIdValue and getIdValue will never be called for id.
+    /**
+     * Store value in permanent cache unless value was already assigned to id.
+     * After this call IdScriptable never calls hasIdValue and getIdValue 
+     * for the given id.
      */
     protected Object cacheIdValue(int id, Object value) {
         synchronized (this) {
@@ -273,8 +339,12 @@ public abstract class IdScriptable extends ScriptableObject
         return value;
     }
     
-    /** Delete value represented by id so hasIdValue return false. 
-     ** This will be called only for id without PERMANENT attribute.
+    /**
+     * Delete value represented by id so hasIdValue return false. 
+     * IdScriptable never calls this method if result of
+     * <code>getIdDefaultAttributes(id)</code> contains PERMANENT attribute.
+     * Descendants can overwrite this method to provide custom handler for
+     * property delete.
      */
     protected void deleteIdValue(int id) {
         synchronized (this) {
@@ -306,8 +376,7 @@ public abstract class IdScriptable extends ScriptableObject
     
     /** Sets whether newly constructed function objects should be sealed */
     protected void setSealFunctionsFlag(boolean sealed) {
-        if (sealed) { setupFlags |= SEAL_FUNCTIONS_FLAG; }
-        else { setupFlags &= ~SEAL_FUNCTIONS_FLAG; }
+        setSetupFlag(SEAL_FUNCTIONS_FLAG, sealed);
     }
     
     /** 
@@ -318,9 +387,12 @@ public abstract class IdScriptable extends ScriptableObject
      * @see org.mozilla.javascript.Context#hasCompileFunctionsWithDynamicScope
      */
     protected void setFunctionParametrs(Context cx) {
-        if (cx.hasCompileFunctionsWithDynamicScope()) {
-            setupFlags |= USE_DYNAMIC_SCOPE_FLAG;
-        }
+        setSetupFlag(USE_DYNAMIC_SCOPE_FLAG,
+                     cx.hasCompileFunctionsWithDynamicScope());
+    }
+    
+    private void setSetupFlag(int flag, boolean value) {
+        setupFlags = (byte)(value ? setupFlags | flag : setupFlags & ~flag);
     }
 
     /** 
@@ -437,22 +509,6 @@ public abstract class IdScriptable extends ScriptableObject
         return x ? Boolean.TRUE : Boolean.FALSE;
     }
     
-    private int getId(String name) {
-        Object[] data = idMapData;
-        if (data == null || !CACHE_NAMES) { return mapNameToId(name); }
-        else {
-            int id = lastIdCache;
-            if (data[id - 1 + maxId] != name) {
-                id = mapNameToId(name);
-                if (id != 0) {
-                    data[id - 1 + maxId] = name;
-                    lastIdCache = id;
-                }
-            }
-            return id;
-        }
-    }
-    
     private boolean hasValue(int id) {
         Object value;
         Object[] data = idMapData;
@@ -505,18 +561,17 @@ public abstract class IdScriptable extends ScriptableObject
         }
     }
 
-    private static final boolean CACHE_NAMES = true;
-
     private int maxId;
     private Object[] idMapData;
     private byte[] attributesArray;
-    private int extraIdAttributes;
 
+    private static final boolean CACHE_NAMES = true;
     private int lastIdCache;
 
     private static final int USE_DYNAMIC_SCOPE_FLAG = 1 << 0;
     private static final int SEAL_FUNCTIONS_FLAG    = 1 << 1;
     
-    private int setupFlags;
+    private byte setupFlags;
+    private byte extraIdAttributes;
 }
 
