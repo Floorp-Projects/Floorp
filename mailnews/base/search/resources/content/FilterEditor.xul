@@ -151,7 +151,7 @@ Contributor(s):
 
       <listitem allowevents="true">
         <listcell>
-          <checkbox id="ignore" enablefornews="true" label="&ignoreThread.label;"/>
+          <checkbox id="kill" enablefornews="true" label="&killThread.label;"/>
         </listcell>
       </listitem>
 

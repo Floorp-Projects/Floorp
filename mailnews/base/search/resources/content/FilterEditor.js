@@ -59,7 +59,7 @@ var gLabelCheckbox;
 var gMarkReadCheckbox;
 var gMarkFlaggedCheckbox;
 var gDeleteCheckbox;
-var gIgnoreCheckbox;
+var gKillCheckbox;
 var gWatchCheckbox;
 var gFilterActionList;
 
@@ -274,7 +274,7 @@ function initializeFilterWidgets()
     gMarkReadCheckbox = document.getElementById("markRead");
     gMarkFlaggedCheckbox = document.getElementById("markFlagged");
     gDeleteCheckbox = document.getElementById("delete");
-    gIgnoreCheckbox = document.getElementById("ignore");
+    gKillCheckbox = document.getElementById("kill");
     gWatchCheckbox = document.getElementById("watch");
     gFilterActionList = document.getElementById("filterActionList");
 }
@@ -325,10 +325,10 @@ function initializeDialog(filter)
         gMarkFlaggedCheckbox.checked = true;
       else if (filterAction.type == nsMsgFilterAction.Delete)
         gDeleteCheckbox.checked = true;
-      else if (filterAction.type == nsMsgFilterAction.Watch)
+      else if (filterAction.type == nsMsgFilterAction.WatchThread)
         gWatchCheckbox.checked = true;
-      else if (filterAction.type == nsMsgFilterAction.Ignore)
-        gIgnoreCheckbox.checked = true;
+      else if (filterAction.type == nsMsgFilterAction.KillThread)
+        gKillCheckbox.checked = true;
 
       SetUpFilterActionList(getScope(filter));
     }
@@ -472,14 +472,14 @@ function saveFilter()
   if (gWatchCheckbox.checked) 
   {
     filterAction = gFilter.createAction();
-    filterAction.type = nsMsgFilterAction.Watch;
+    filterAction.type = nsMsgFilterAction.WatchThread;
     gFilter.appendAction(filterAction);
   }
   
-  if (gIgnoreCheckbox.checked) 
+  if (gKillCheckbox.checked) 
   {
     filterAction = gFilter.createAction();
-    filterAction.type = nsMsgFilterAction.Ignore;
+    filterAction.type = nsMsgFilterAction.KillThread;
     gFilter.appendAction(filterAction);
   }
     
@@ -540,16 +540,27 @@ function SetUpFilterActionList(aScope)
       element.setAttribute("disabled", "true");
   }
 
+  // ensure that the first checked action is visible in the listbox of actions.
   elements = gFilterActionList.getElementsByTagName("checkbox");
   for (i=0;i<elements.length;i++)
   {
     element = elements[i];
     if (element.checked) 
     {
-      // ensure row item visible
-      // break;
+      gFilterActionList.ensureElementIsVisible(getListItemForElement(element));
+      break;
     }
   }
+}
+
+function getListItemForElement(element)
+{
+  for (var parent = element.parentNode; parent; parent = parent.parentNode) 
+  {
+    if (parent.localName == "listitem")
+      return parent;
+  }
+  return null;
 }
 
 function onLabelListChanged(event)

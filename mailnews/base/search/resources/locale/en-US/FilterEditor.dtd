@@ -21,7 +21,7 @@
 <!ENTITY markRead.label "Mark the message as read">
 <!ENTITY markFlagged.label "Flag the message">
 <!ENTITY label.label "Label the message:">
-<!ENTITY ignoreThread.label "Ignore thread">
+<!ENTITY killThread.label "Ignore thread">
 <!ENTITY watchThread.label "Watch thread">
 <!ENTITY filterName.label "Filter name:">
 <!ENTITY filterName.accesskey "i">
