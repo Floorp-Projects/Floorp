@@ -56,15 +56,15 @@ local $opt_lxr_url = "http://lxr.mozilla.org/mozilla/source/js/tests/";
 # command line option definition
 local $options = "b=s bugurl>b c=s classpath>c d smdebug>d f=s file>f " .
   "h help>h j=s javapath>j k confail>k l=s list>l o smopt>o p=s testpath>p " .
-  "r rhino>r s=s shellpath>s t trace>t x=s lxrurl>x";
+  "r rhino>r s=s shellpath>s t trace>t u=s lxrurl>u x xpcshell>x";
 
 &parse_args;
 
+local $os_type = &get_os_type;
 local $engine_command = &get_engine_command;
 local $user_exit = 0;
 local $html = "";
 local @failed_tests;
-local $os_type = &get_os_type;
 local $failures_reported = 0;
 local $tests_completed = 0;
 local @test_list = &get_test_list;
@@ -293,7 +293,7 @@ sub parse_args {
             $opt_test_list_file = $value;
             
         } elsif ($option eq "o") {
-            &dd ("opt: using smopt engine");
+            &dd ("opt: using smopt engine.");
             $opt_engine_type = "smopt";
             
         } elsif ($option eq "p") {
@@ -304,7 +304,7 @@ sub parse_args {
             &dd ("opt: setting suite path to '$opt_suite_path'.");
             
         } elsif ($option eq "r") {
-            &dd ("opt: using rhino engine");
+            &dd ("opt: using rhino engine.");
             $opt_engine_type = "rhino";
             
         } elsif ($option eq "s") {
@@ -319,9 +319,13 @@ sub parse_args {
             $opt_console_failures = 1;
             $opt_trace = 1;
             
-        } elsif ($option eq "x") {
+        } elsif ($option eq "u") {
             &dd ("opt: setting lxr url to '$value'.");
             $opt_lxr_url = $value;
+
+        } elsif ($option eq "x") {
+            &dd ("opt: using xpcshell.");
+            $opt_engine_type = "xpcshell";
             
         } else {
             &usage;
@@ -365,8 +369,9 @@ sub usage {
        "(-r|--rhino)            Test Rhino engine.\n" .
        "(-s|--shellpath) <path> Location of JavaScript shell.\n" .
        "(-t|--trace)            Trace script execution.\n" .
-       "(-x|--lxrurl) <url>     Complete URL to tests subdirectory on lxr.\n" .
+       "(-u|--lxrurl) <url>     Complete URL to tests subdirectory on lxr.\n" .
        "                        (default is $opt_lxr_url)\n\n");
+       "(-x|--xpcshell)         Test xpcshell.\n" .
     
     exit (1);
     
@@ -382,6 +387,9 @@ sub get_engine_command {
     if ($opt_engine_type eq "rhino") {
         &dd ("getting rhino engine command.");
         $retval = &get_rhino_engine_command;
+    } elsif ($opt_engine_type eq "xpcshell") {
+        &dd ("getting xpcshell engine command.");
+        $retval = &get_xpc_engine_command;	
     } else {
         &dd ("getting spidermonkey engine command.");
         $retval = &get_sm_engine_command;	
@@ -413,6 +421,29 @@ sub get_rhino_engine_command {
     
     return $retval;
     
+}
+
+#
+# get the shell command used to run xpcshell
+#
+sub get_xpc_engine_command {    
+    local $m5_home = @ENV{"MOZILLA_FIVE_HOME"} ||
+      die ("You must set MOZILLA_FIVE_HOME to use the xpcshell" ,
+           ($os_type eq "WIN") ? "." : ", also " .
+           "setting LD_LIBRARY_PATH to the same directory may get rid of " .
+           "any 'library not found' errors.\n");
+
+    if (($os_type ne "WIN") && (!@ENV{"LD_LIBRARY_PATH"})) {
+        print STDERR "-#- WARNING: LD_LIBRARY_PATH is not set, xpcshell may " .
+          "not be able to find the required components.\n";
+    }
+    
+    if (!($m5_home =~ /[\/\\]$/)) {
+        $m5_home .= "/";
+    }
+
+    return $m5_home . "xpcshell";
+
 }
 
 #
@@ -534,7 +565,7 @@ sub get_user_test_list {
       die("Error opening test list file '$list_file': $!\n");
     
     while (<TESTLIST>) {
-        chop;
+        s/\n$//;
         if (!(/\s*\#/)) {
             $retval[$#retval + 1] = $_;
         }
