@@ -171,7 +171,7 @@ PerlConstruct(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *v)
     JSObject *perlObject;
     JSBool ok;
     char *embedding[] = {"", "-e", "0"};
-    char *t = "use JS qw(perl_eval perl_resolve perl_call $js $ver);";
+    char *t = "use PerlConnect qw(perl_eval perl_resolve perl_call $js $ver);";
 
     /* create a new interpreter */
     perl = perl_alloc();
