@@ -77,6 +77,7 @@ CPPSRCS =				\
 	nsMacGurmukhiToUnicode.cpp	\
 	nsMacHebrewToUnicode.cpp	\
 	nsMacFarsiToUnicode.cpp		\
+	nsGEOSTD8ToUnicode.cpp		\
 	nsARMSCII8ToUnicode.cpp		\
 	nsTCVN5712ToUnicode.cpp		\
 	nsVISCIIToUnicode.cpp		\
@@ -144,6 +145,7 @@ CPPSRCS =				\
 	nsUnicodeToUCS4BE.cpp		\
 	nsUnicodeToUCS4LE.cpp		\
 	nsUnicodeToT61.cpp		\
+	nsUnicodeToGEOSTD8.cpp		\
 	nsUnicodeToARMSCII8.cpp		\
 	nsUnicodeToTCVN5712.cpp		\
 	nsUnicodeToVISCII.cpp		\
@@ -211,6 +213,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsMacGurmukhiToUnicode.obj		\
 	.\$(OBJDIR)\nsMacHebrewToUnicode.obj		\
 	.\$(OBJDIR)\nsMacFarsiToUnicode.obj		\
+	.\$(OBJDIR)\nsGEOSTD8ToUnicode.obj		\
 	.\$(OBJDIR)\nsARMSCII8ToUnicode.obj		\
 	.\$(OBJDIR)\nsTCVN5712ToUnicode.obj		\
 	.\$(OBJDIR)\nsVISCIIToUnicode.obj		\
@@ -271,6 +274,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsUnicodeToMacGurmukhi.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacHebrew.obj		\
 	.\$(OBJDIR)\nsUnicodeToMacFarsi.obj		\
+	.\$(OBJDIR)\nsUnicodeToGEOSTD8.obj		\
 	.\$(OBJDIR)\nsUnicodeToARMSCII8.obj		\
 	.\$(OBJDIR)\nsUnicodeToTCVN5712.obj		\
 	.\$(OBJDIR)\nsUnicodeToVISCII.obj		\

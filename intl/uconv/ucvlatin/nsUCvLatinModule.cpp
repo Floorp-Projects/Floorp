@@ -93,6 +93,7 @@
 #include "nsMacCyrillicToUnicode.h"
 #include "nsMacUkrainianToUnicode.h"
 #include "nsMacIcelandicToUnicode.h"
+#include "nsGEOSTD8ToUnicode.h"
 #include "nsARMSCII8ToUnicode.h"
 #include "nsTCVN5712ToUnicode.h"
 #include "nsVISCIIToUnicode.h"
@@ -144,6 +145,7 @@
 #include "nsUnicodeToMacCyrillic.h"
 #include "nsUnicodeToMacUkrainian.h"
 #include "nsUnicodeToMacIcelandic.h"
+#include "nsUnicodeToGEOSTD8.h"
 #include "nsUnicodeToARMSCII8.h"
 #include "nsUnicodeToTCVN5712.h"
 #include "nsUnicodeToVISCII.h"
@@ -222,6 +224,7 @@ NS_UCONV_REG_UNREG(nsMacRomanianToUnicode, "x-mac-romanian", "Unicode" , NS_MACR
 NS_UCONV_REG_UNREG(nsMacCyrillicToUnicode, "x-mac-cyrillic", "Unicode" , NS_MACCYRILLICTOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsMacUkrainianToUnicode, "x-mac-ukrainian", "Unicode" , NS_MACUKRAINIANTOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsMacIcelandicToUnicode, "x-mac-icelandic", "Unicode" , NS_MACICELANDICTOUNICODE_CID);
+NS_UCONV_REG_UNREG(nsGEOSTD8ToUnicode, "GEOSTD8", "Unicode" , NS_GEOSTD8TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsARMSCII8ToUnicode, "armscii-8", "Unicode" , NS_ARMSCII8TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsTCVN5712ToUnicode, "x-viet-tcvn5712", "Unicode" , NS_TCVN5712TOUNICODE_CID);
 NS_UCONV_REG_UNREG(nsVISCIIToUnicode, "VISCII", "Unicode" , NS_VISCIITOUNICODE_CID);
@@ -274,6 +277,7 @@ NS_UCONV_REG_UNREG(nsUnicodeToMacRomanian, "Unicode", "x-mac-romanian" , NS_UNIC
 NS_UCONV_REG_UNREG(nsUnicodeToMacCyrillic, "Unicode", "x-mac-cyrillic" , NS_UNICODETOMACCYRILLIC_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToMacUkrainian, "Unicode", "x-mac-ukrainian" , NS_UNICODETOMACUKRAINIAN_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToMacIcelandic, "Unicode", "x-mac-icelandic" , NS_UNICODETOMACICELANDIC_CID);
+NS_UCONV_REG_UNREG(nsUnicodeToGEOSTD8, "Unicode", "GEOSTD8" , NS_UNICODETOGEOSTD8_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToARMSCII8, "Unicode", "armscii-8" , NS_UNICODETOARMSCII8_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToTCVN5712, "Unicode", "x-viet-tcvn5712" , NS_UNICODETOTCVN5712_CID);
 NS_UCONV_REG_UNREG(nsUnicodeToVISCII, "Unicode", "VISCII" , NS_UNICODETOVISCII_CID);
@@ -342,6 +346,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacRomanianToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacCyrillicToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacUkrainianToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMacIcelandicToUnicode);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsGEOSTD8ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsARMSCII8ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTCVN5712ToUnicode);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsVISCIIToUnicode);
@@ -394,6 +399,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacRomanian);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacCyrillic);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacUkrainian);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToMacIcelandic);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToGEOSTD8);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToARMSCII8);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTCVN5712);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToVISCII);
@@ -663,6 +669,12 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEDECODER_CONTRACTID_BASE "x-mac-icelandic",
     nsMacIcelandicToUnicodeConstructor ,
     nsMacIcelandicToUnicodeRegSelf , nsMacIcelandicToUnicodeUnRegSelf 
+  },
+  { 
+    DECODER_NAME_BASE "GEOSTD8" , NS_GEOSTD8TOUNICODE_CID, 
+    NS_UNICODEDECODER_CONTRACTID_BASE "GEOSTD8",
+    nsGEOSTD8ToUnicodeConstructor ,
+    nsGEOSTD8ToUnicodeRegSelf , nsGEOSTD8ToUnicodeUnRegSelf 
   },
   { 
     DECODER_NAME_BASE "armscii-8" , NS_ARMSCII8TOUNICODE_CID, 
@@ -1011,6 +1023,12 @@ static nsModuleComponentInfo components[] =
     NS_UNICODEENCODER_CONTRACTID_BASE "x-mac-icelandic",
     nsUnicodeToMacIcelandicConstructor, 
     nsUnicodeToMacIcelandicRegSelf, nsUnicodeToMacIcelandicUnRegSelf
+  },
+  { 
+    ENCODER_NAME_BASE "GEOSTD8" , NS_UNICODETOGEOSTD8_CID, 
+    NS_UNICODEENCODER_CONTRACTID_BASE "GEOSTD8",
+    nsUnicodeToGEOSTD8Constructor, 
+    nsUnicodeToGEOSTD8RegSelf, nsUnicodeToGEOSTD8UnRegSelf
   },
   { 
     ENCODER_NAME_BASE "armscii-8" , NS_UNICODETOARMSCII8_CID, 
