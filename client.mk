@@ -37,7 +37,7 @@
 # Options:
 #   NSPR_INSTALL_DIR     - nspr directory for configure --with-nspr=
 #   USE_PTHREADS         - pthreads for nspr and configure
-#   MOZ_OBJDIR           - destination Object Directory
+#   MOZ_OBJDIR           - destination Object Directory (relative path)
 # also,
 #   MOZ_CVS_FLAGS        - flags to pass to CVS
 #   MOZ_CHECKOUT_FLAGS   - flags to pass after cvs co
@@ -185,7 +185,14 @@ CONFIG_FLAGS := \
 
 all: checkout build
 
-.PHONY: checkout nspr build
+.PHONY: checkout nspr build clean realclean
+
+# Windows equivalents
+pull_all:     checkout
+build_all:    build
+clobber:      clean
+clobber_all:  realclean
+pull_and_build_all: checkout build
 
 #
 # CVS checkout
@@ -260,6 +267,10 @@ $(NSPR_INSTALL_DIR)/lib/libnspr21.so:
 	($(MAKE) -C $(TOPSRCDIR)/nsprpub $(NSPR_GMAKE_OPTIONS)) 
 
 #	cd $(ROOTDIR) && $(CVSCO) $(NSPR_BRANCH) NSPR
+
+# Pass these target onto the real build system
+clean realclean:
+	cd $(OBJDIR); $(MAKE) $@;
 
 # (! IS_FIRST_CHECKOUT)
 endif
