@@ -22,6 +22,7 @@
 
 /* directory server preferences (used to be dirprefs.c in 4.x) */
 
+#include <ctype.h>
 #include "nsIPref.h"
 #include "nsVoidArray.h"
 #include "nsIServiceManager.h"
