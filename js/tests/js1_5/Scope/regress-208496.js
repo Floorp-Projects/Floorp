@@ -52,6 +52,9 @@ var expect= '';
 var expectedvalues = [];
 
 
+/*
+ * GLOBAL SCOPE
+ */
 function f(par)
 {
   var a = par;
@@ -63,7 +66,6 @@ function f(par)
   }
 }
 
-
 status = inSection(1);
 f('abc'); // this sets |actual|
 expect = 'abc';
@@ -73,6 +75,64 @@ status = inSection(2);
 f(111 + 222); // sets |actual|
 expect = 333;
 addThis();
+
+
+/*
+ * EVAL SCOPE
+ */
+var s = '';
+s += 'function F(par)';
+s += '{';
+s += '  var a = par;';
+
+s += '  with(F)';
+s += '  {';
+s += '    var b = par;';
+s += '    actual = b;';
+s += '  }';
+s += '}';
+
+s += 'status = inSection(3);';
+s += 'F("abc");'; // sets |actual|
+s += 'expect = "abc";';
+s += 'addThis();';
+
+s += 'status = inSection(4);';
+s += 'F(111 + 222);'; // sets |actual|
+s += 'expect = 333;';
+s += 'addThis();';
+eval(s);
+
+
+/*
+ * FUNCTION SCOPE
+ */
+function g(par)
+{
+  h(par);
+
+  function h(par)
+  {
+    var a = par;
+
+    with(h)
+    {
+      var b = par;
+      actual = b;
+    }
+  }
+}
+
+status = inSection(5);
+g('abc'); // sets |actual|
+expect = 'abc';
+addThis();
+
+status = inSection(6);
+g(111 + 222); // sets |actual|
+expect = 333;
+addThis();
+
 
 
 
