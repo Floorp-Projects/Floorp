@@ -307,7 +307,10 @@ void nsCSSValue::AppendToString(nsString& aBuffer, PRInt32 aPropID) const
     aBuffer.Append(NS_GET_A(mValue.mColor), 16);
     aBuffer.Append(')');
   }
-  else if (eCSSUnit_Percent <= mUnit) {
+  else if (eCSSUnit_Percent == mUnit) {
+    aBuffer.Append(mValue.mFloat * 100.0f);
+  }
+  else if (eCSSUnit_Percent < mUnit) {
     aBuffer.Append(mValue.mFloat);
   }
 
