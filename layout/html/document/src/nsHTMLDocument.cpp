@@ -82,7 +82,8 @@ nsHTMLDocument::~nsHTMLDocument()
   NS_IF_RELEASE(mAnchors);
   NS_IF_RELEASE(mAttrStyleSheet);
   NS_IF_RELEASE(mParser);
-  nsHTMLAtoms::ReleaseAtoms();
+// XXX don't bother doing this until the dll is unloaded???
+//  nsHTMLAtoms::ReleaseAtoms();
 }
 
 NS_IMETHODIMP nsHTMLDocument::QueryInterface(REFNSIID aIID,
