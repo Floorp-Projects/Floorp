@@ -1109,9 +1109,6 @@ MOZ_ARG_DISABLE_BOOL(async-dns,
 [  --disable-async-dns     Disable separate dns thread],
   NO_UNIX_ASYNC_DNS=1)
 
-dnl build mozilla/nsprpub by default
-MOZ_NATIVE_NSPR=
-
 dnl build mozilla/xpfe by default
 MOZ_BUILD_XPFE=1
 
