@@ -1164,15 +1164,37 @@
         </body>
       </method>
 
+      <method name="appendGroup">
+        <parameter name="aGroup"/>
+        <body>
+        <![CDATA[
+          for (var i in aGroup) {
+            var page = aGroup[i];
+            var referrerURI = "referrerURI" in page ? page.referrerURI : null;
+            this.addTab(page.URI, referrerURI);
+          }
+        ]]>
+        </body>
+      </method>
+
       <method name="loadGroup">
         <parameter name="aGroup"/>
         <body>
         <![CDATA[
           if (aGroup.length == 0)
-            return;
+            return null;
 
-          this.backBrowserGroup = this.replaceGroup(aGroup);
-          this.forwardBrowserGroup = [];
+          var tab;
+          if (this.mPrefs.getIntPref("browser.tabs.loadGroup") == 0) {
+            var oldCount = this.mTabContainer.childNodes.length;
+            this.appendGroup(aGroup);
+            tab = this.mTabContainer.childNodes[oldCount];
+          } else {
+            this.backBrowserGroup = this.replaceGroup(aGroup);
+            this.forwardBrowserGroup = [];
+            tab = tabs.firstChild;
+          }
+          return tab;
         ]]>
         </body>
       </method>
