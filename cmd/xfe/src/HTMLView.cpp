@@ -550,7 +550,7 @@ XFE_HTMLView::doCommand(CommandType cmd, void *callData, XFE_CommandInfo* info)
       getToplevel()->notifyInterested(XFE_View::chromeNeedsUpdating);
       return;
     }
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
   else if (IS_CMD(xfeCmdSendPage))
     {
       fe_mailto_cb (CONTEXT_WIDGET (m_contextData), 
@@ -1200,11 +1200,13 @@ XFE_HTMLView::isCommandEnabled(CommandType cmd, void *calldata, XFE_CommandInfo*
       // Save the frame with focus
       return hasSubViews() == True;
     }
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
   else if (IS_CMD(xfeCmdSendPage)
            || IS_CMD(xfeCmdSendLink))
     {
       return True; // should this always be enabled?
     }
+#endif /* MOZ_MAIL_NEWS) || MOZ_MAIL_COMPOSE */
   else if (IS_CMD(xfeCmdCut))
     {
       return fe_can_cut(m_contextData);

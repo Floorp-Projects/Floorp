@@ -122,26 +122,16 @@ static _name_and_group_t _iconGroups[] =
 #ifdef MOZ_MAIL_NEWS
 	// Mail/News
 	{ "GetMsg",			&MNTB_GetMsg_group },
-	{ "Compose",		&MNTB_Compose_group },
 	{ "Addgroup",		&MNTB_AddGroup_group },
+	{ "Compose",		&MNTB_Compose_group },
 	{ "Reply",			&MNTB_Reply_group },
 	{ "ReplyAll",		&MNTB_ReplyAll_group },
 	{ "Forward",		&MNTB_Forward_group },
 	{ "File",			&MNTB_File_group },
 	{ "Trash",			&MNTB_Trash_group },
-	{ "Next",			&MNTB_Next_group },
 	{ "Prev",			&MNTB_Prev_group },
 	{ "NewFolder",		&MNTB_NewFolder_group },
 	{ "MarkRead",		&MNTB_MarkRead_group },
-
-	// Compose
-	{ "Send",			&MNC_Send_group },
-	{ "Quote",			&MNC_Quote_group },
-	{ "Address",		&MNC_Address_group },
-	{ "Attach",			&MNC_Attach_group },
-	{ "SpellCheck",		&MNC_SpellCheck_group },
-	{ "Save",			&MNC_Save_group },
-	{ "Directory",		&MNC_Directory_group },
 
 	// Address Book
 	{ "NewPerson",		&MNAB_NewPerson_group },
@@ -149,6 +139,19 @@ static _name_and_group_t _iconGroups[] =
 	{ "Properties",		&MNAB_Properties_group },
 	{ "Call",			&MNAB_Call_group },
 #endif
+
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
+	// Compose
+	{ "Send",			&MNC_Send_group },
+	{ "Next",			&MNTB_Next_group },
+	{ "Quote",			&MNC_Quote_group },
+	{ "Address",		&MNC_Address_group },
+	{ "Attach",			&MNC_Attach_group },
+	{ "SpellCheck",		&MNC_SpellCheck_group },
+	{ "Save",			&MNC_Save_group },
+	{ "Directory",		&MNC_Directory_group },
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
+
 #ifdef EDITOR
 	// Editor
 	{ "New",			&ed_new_group },

@@ -148,7 +148,9 @@ extern LO_AnchorData *last_documented_anchor_data;
 
 MenuSpec XFE_Frame::new_menu_spec[] = {
   { xfeCmdOpenBrowser,		PUSHBUTTON },
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
   { xfeCmdComposeMessage,	PUSHBUTTON },
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 #ifdef EDITOR
   MENU_SEPARATOR,
   MENU_PUSHBUTTON(xfeCmdNewBlank),
@@ -257,7 +259,7 @@ MenuSpec XFE_Frame::window_menu_spec[] = {
 // Is there is a reason why this is here? It's the same as new_menu_spec
 MenuSpec XFE_Frame::new_submenu_spec[] = {
   { xfeCmdOpenBrowser,		PUSHBUTTON },
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
   { xfeCmdComposeMessage,	PUSHBUTTON },
 #endif
 #ifdef EDITOR
@@ -391,6 +393,7 @@ MenuSpec XFE_Frame::reply_submenu_spec[] = {
 	{ NULL }
 };
 
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 MenuSpec XFE_Frame::compose_message_submenu_spec[] = {
 	{ xfeCmdComposeMessagePlain,		PUSHBUTTON },
 	{ xfeCmdComposeMessageHTML,		PUSHBUTTON },
@@ -402,6 +405,7 @@ MenuSpec XFE_Frame::compose_article_submenu_spec[] = {
 	{ xfeCmdComposeArticleHTML,		PUSHBUTTON },
 	{ NULL }
 };
+#endif
 
 MenuSpec XFE_Frame::next_submenu_spec[] = {
 	{ xfeCmdNextMessage,			PUSHBUTTON },
@@ -3175,10 +3179,12 @@ XFE_Frame::isCommandEnabled(CommandType cmd,
 		|| cmd == xfeCmdToggleMenubar
 		|| cmd == xfeCmdToggleNavigationToolbar
 		|| cmd == xfeCmdWindowListRaiseItem
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 		|| cmd == xfeCmdComposeMessage
 		|| cmd == xfeCmdComposeMessageHTML
 		|| cmd == xfeCmdComposeMessagePlain
+#endif
+#ifdef MOZ_MAIL_NEWS
 		|| cmd == xfeCmdOpenAddressBook
 		|| cmd == xfeCmdOpenInbox
 		|| cmd == xfeCmdOpenInboxAndGetNewMessages
@@ -3438,7 +3444,7 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 				else
 					hide();
 			}
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 	        else if ( cmd == xfeCmdComposeMessage)
 			{
 			  if (info) {
@@ -3459,6 +3465,8 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 				CONTEXT_DATA(m_context)->stealth_cmd = (fe_globalPrefs.send_html_msg == True) ; 
 				MSG_Mail(m_context);
 			}		
+#endif
+#ifdef MOZ_MAIL_NEWS
 		else if (cmd == xfeCmdOpenInbox)
 			{
 				fe_showInbox(m_toplevelWidget, this, NULL, fe_globalPrefs.reuse_thread_window, False);
@@ -3763,10 +3771,12 @@ XFE_Frame::handlesCommand(CommandType cmd,
 		|| cmd == xfeCmdFloatingTaskBarAlwaysOnTop
 		|| cmd == xfeCmdFloatingTaskBarClose
 #endif
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 		|| cmd == xfeCmdComposeMessage
 		|| cmd == xfeCmdComposeMessageHTML
 		|| cmd == xfeCmdComposeMessagePlain
+#endif
+#ifdef MOZ_MAIL_NEWS
 		|| cmd == xfeCmdEditMailFilterRules
 		|| cmd == xfeCmdOpenAddressBook
 		|| cmd == xfeCmdOpenFolders
@@ -3806,12 +3816,14 @@ XFE_Frame::commandToString(CommandType cmd,
 	if (handler != NULL)
 		return handler->getLabel(this, info);
 
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 	if (cmd == xfeCmdComposeMessage)
 		{
 			char *res;
 			res = "composeMessage";
 			return stringFromResource(res);
 		}
+#endif
 	else if (cmd == xfeCmdToggleMenubar)
 		{
 			char *res = NULL;

@@ -57,13 +57,20 @@ REQUIRES	=\
 			plugimpl \
 			raptor \
 			netcnvts \
-			msg \
 			progress \
 			privacy
 
 ifdef OJI
 REQUIRES +=	  oji \
 		  ojiimpl
+endif
+
+ifdef MOZ_MAIL_NEWS
+REQUIRES +=	  msg
+else
+ifdef MOZ_MAIL_COMPOSE
+REQUIRES +=	  mailto
+endif
 endif
 
 CPPSRCS		= \
@@ -144,6 +151,33 @@ CPPSRCS		+= \
 endif
 
 ifdef MOZ_MAIL_NEWS
+MAIL_OR_COMPOSE	= 1
+endif
+ifdef MOZ_MAIL_COMPOSE
+MAIL_OR_COMPOSE	= 1
+endif
+
+ifdef MAIL_OR_COMPOSE
+CPPSRCS		+= \
+		  AddressFolderView.cpp \
+		  AddressOutliner.cpp \
+		  AttachPanel.cpp \
+		  AttachmentMenu.cpp \
+		  ComposeAttachDialog.cpp \
+		  ComposeAttachFolderView.cpp \
+		  ComposeFolderView.cpp \
+		  ComposeFrame.cpp \
+		  ComposeView.cpp \
+		  MNView.cpp \
+		  MNListView.cpp \
+		  OptionFolderView.cpp \
+		  ProgressFrame.cpp \
+		  TabView.cpp \
+		  TextEditorView.cpp \
+		  $(NULL)
+endif
+
+ifdef MOZ_MAIL_NEWS
 CPPSRCS		+= \
 		  ABComplPickerDlg.cpp \
 		  ABComplPickerView.cpp \
@@ -165,57 +199,16 @@ CPPSRCS		+= \
 		  ABNameGenTab.cpp \
 		  AddrBookFrame.cpp \
 		  AddrBookView.cpp \
-		  AddressFolderView.cpp \
-		  AddressOutliner.cpp \
 		  AdvSearchDialog.cpp \
-		  AttachPanel.cpp \
-		  AttachmentMenu.cpp \
-		  ComposeAttachDialog.cpp \
-		  ComposeAttachFolderView.cpp \
-		  ComposeFolderView.cpp \
-		  ComposeFrame.cpp \
-		  ComposeView.cpp \
 		  EditHdrDialog.cpp \
-		  $(NULL)
-endif
-
-
-ifdef EDITOR
-CPPSRCS		+= \
-		  EditorDrop.cpp \
-		  EditorFrame.cpp \
-		  EditorToolbar.cpp \
-		  EditorView.cpp \
-		  EditRecentMenu.cpp \
-		  EditTableDialog.cpp \
-		  EmbeddedEditorView.cpp \
-		  $(NULL)
-endif
-
-ifdef MOZ_MAIL_NEWS
-CPPSRCS		+= \
 		  FolderDropdown.cpp \
 		  FolderFrame.cpp \
 		  FolderPromptDialog.cpp \
 		  FolderMenu.cpp \
 		  FolderView.cpp \
-		  $(NULL)
-endif
-
-ifdef MOZ_LDAP
-CPPSRCS		+= \
-		  LdapSearchFrame.cpp \
-		  LdapSearchView.cpp \
-		  $(NULL)
-endif
-
-ifdef MOZ_MAIL_NEWS
-CPPSRCS		+= \
 		  MNBanner.cpp \
-		  MNListView.cpp \
 		  MNSearchFrame.cpp \
 		  MNSearchView.cpp \
-		  MNView.cpp \
 		  MailDownloadFrame.cpp \
 		  MailFilterDlg.cpp \
 		  MailFilterRulesDlg.cpp \
@@ -228,37 +221,18 @@ CPPSRCS		+= \
 		  NewsServerDialog.cpp \
 		  NewsServerPropDialog.cpp \
 		  NewsgroupPropDialog.cpp \
-		  OptionFolderView.cpp \
 		  PrefsDialogMServer.cpp \
 		  PrefsDialogNServer.cpp \
 		  PrefsMailFolderDlg.cpp \
 		  PrefsPageAddress.cpp \
 		  PrefsPageMessages.cpp \
 		  PrefsPageNServer.cpp \
-		  ProgressFrame.cpp \
 		  SubUpgradeDialog.cpp \
-		  TabView.cpp \
 		  XmLFolderDialog.cpp \
 		  XmLFolderView.cpp \
 		  ViewDashBDlg.cpp \
-		  $(NULL)
-endif
-
-ifdef EDITOR
-CPPSRCS		+= \
-		  PrefsDialogEditor.cpp \
-		  $(NULL)
-endif
-
-ifdef MOZ_MAIL_NEWS
-CPPSRCS		+= \
 		  PropertySheetDialog.cpp \
 		  PropertySheetView.cpp \
-		  $(NULL)
-endif
-
-ifdef MOZ_MAIL_NEWS
-CPPSRCS		+= \
 		  ReadAttachDrag.cpp \
 		  ReadAttachPanel.cpp \
 		  SearchRuleView.cpp \
@@ -268,6 +242,35 @@ CPPSRCS		+= \
 		  SubTabView.cpp \
 		  SubscribeDialog.cpp \
 		  SubscribeView.cpp \
+		  ThreadFrame.cpp \
+		  ThreadView.cpp \
+		  $(NULL)
+
+ifdef USE_3PANE
+CPPSRCS		+= \
+		ThreePaneView.cpp \
+		$(NULL)
+endif
+endif
+
+ifdef EDITOR
+CPPSRCS		+= \
+		  EditorDrop.cpp \
+		  EditorFrame.cpp \
+		  EditorToolbar.cpp \
+		  EditorView.cpp \
+		  EditRecentMenu.cpp \
+		  EditTableDialog.cpp \
+		  EmbeddedEditorView.cpp \
+		  PrefsDialogEditor.cpp \
+		  SpellHandler.cpp \
+		  $(NULL)
+endif
+
+ifdef MOZ_LDAP
+CPPSRCS		+= \
+		  LdapSearchFrame.cpp \
+		  LdapSearchView.cpp \
 		  $(NULL)
 endif
 
@@ -292,41 +295,16 @@ ifdef XFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
 DEFINES		+= -DXFE_FILE_BOOKMARK_IN_LINK_CONTEXT_MENU
 endif
 
-ifdef MOZ_MAIL_NEWS
-CPPSRCS		+= \
-		  TextEditorView.cpp \
-		  $(NULL)
-endif
-
-ifdef MOZ_MAIL_NEWS
-CPPSRCS		+= \
-		  ThreadFrame.cpp \
-		  ThreadView.cpp \
-		  $(NULL)
-
-ifdef USE_3PANE
-CPPSRCS		+= \
-		ThreePaneView.cpp \
-		$(NULL)
-endif
-endif
-
-ifdef EDITOR
-CPPSRCS		+= \
-		  SpellHandler.cpp \
-		$(NULL)
-endif
-
 CSRCS		= commands.c
 
 include $(DEPTH)/config/rules.mk
 
 INCLUDES	+= -I$(OBJDIR) -I.. -I../DtWidgets -I$(DEPTH)/modules/libreg/include \
-		-I$(DEPTH)/lib/libmsg -I$(DEPTH)/dist/public/security -I$(DEPTH)/dist/public/ldap
+		-I$(DEPTH)/dist/public/security
 
-#ifdef MOZ_MAIL_NEWS
-#CFLAGS		+= -DEDITOR
-#endif
+ifdef MOZ_MAIL_NEWS
+INCLUDES	+= -I$(DEPTH)/lib/libmsg  -I$(DEPTH)/dist/public/ldap
+endif
 
 DEFINES		+= -DNEW_DECODERS -DDELAYED_MENU_CREATION -DNETCASTER_ZAXIS_HACKERY
 DEFINES		+= -DUSE_MAGIC_TOOLBAR

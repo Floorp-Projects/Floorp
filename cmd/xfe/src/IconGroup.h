@@ -128,16 +128,28 @@ ICONGROUP(MNTB_ReplyAll)
 ICONGROUP(MNTB_Forward)
 ICONGROUP(MNTB_File)
 ICONGROUP(MNTB_Trash)
-ICONGROUP(MNTB_Next)
 ICONGROUP(MNTB_Prev)
 ICONGROUP(MNTB_MarkRead)
 
 /* Message Center */
 ICONGROUP(MNTB_NewFolder)
 
+/* Address Book. */
+ICONGROUP(MNAB_NewPerson)  // New Card.
+ICONGROUP(MNAB_NewList)
+ICONGROUP(MNAB_Properties)
+/* MNTB_Compose */
+/* MNC_Directory */
+ICONGROUP(MNAB_Call)
+/* MNTB_Trash */
+
+#endif /* MOZ_MAIL_NEWS || !WANT_GROUPS */
+
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE) || !defined(WANT_GROUPS)
 HG10282
 
 /* Compose Window. */
+ICONGROUP(MNTB_Next)
 ICONGROUP(MNC_Send)
 /* MNTB_File */
 ICONGROUP(MNC_Quote)
@@ -155,16 +167,7 @@ ICONGROUP(MN_CollectSmall)
 ICONGROUP(MN_Collect)
 /* TB_Stop */
 
-
-/* Address Book. */
-ICONGROUP(MNAB_NewPerson)  // New Card.
-ICONGROUP(MNAB_NewList)
-ICONGROUP(MNAB_Properties)
-/* MNTB_Compose */
-/* MNC_Directory */
-ICONGROUP(MNAB_Call)
-/* MNTB_Trash */
-#endif /* !MOZ_MAIL_NEWS || !WANT_GROUPS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE || !WANT_GROUPS */
 
 #if defined(EDITOR) || !defined(WANT_GROUPS)
 /* Editor */

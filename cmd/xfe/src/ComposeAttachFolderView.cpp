@@ -948,6 +948,7 @@ int XFE_ComposeAttachDrop::processTargets(Atom *targets,const char **data,int nu
 
 void XFE_ComposeAttachFolderView::processMessageDrop(fe_dnd_Source *source)
 {
+#ifdef MOZ_MAIL_NEWS
     XFE_ThreadView *threadView=(XFE_ThreadView*)source->closure;
     XFE_Outliner *outliner=threadView->getOutliner();
     const int *selectedList;
@@ -975,6 +976,7 @@ void XFE_ComposeAttachFolderView::processMessageDrop(fe_dnd_Source *source)
             XP_FREE(items[i]);
         delete items;
     }
+#endif /* MOZ_MAIL_NEWS */
 }
 
 

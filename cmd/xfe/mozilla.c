@@ -219,9 +219,11 @@ extern void fe_showHistory(Widget toplevel);
 #ifdef MOZ_MAIL_NEWS
 extern MWContext* fe_showInbox(Widget toplevel, void *parent_frame, Chrome *chromespec, XP_Bool with_reuse, XP_Bool getNewMail);
 extern MWContext* fe_showNewsgroups(Widget toplevel, void *parent_frame, Chrome *chromespec);
-extern Widget fe_MailComposeWin_Create(MWContext* context, Widget parent);
 extern void fe_showConference(Widget w, char *email, short use, char *coolAddr);
 extern void FE_InitAddrBook();
+#endif
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
+extern Widget fe_MailComposeWin_Create(MWContext* context, Widget parent);
 #endif
 
 extern int XFE_COLORMAP_WARNING_TO_IGNORE;
@@ -2480,9 +2482,9 @@ main
 #endif /* MOZ_MAIL_NEWS */
 }
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
   fe_mailNewsPrefs = MSG_CreatePrefs();
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 /* Full Circle initialization */
 #ifdef MOZ_FULLCIRCLE
@@ -3185,7 +3187,7 @@ main
 						 */
 					  URL_Struct *url = NET_CreateURLStruct (argv [i], NET_DONT_RELOAD);
 				  
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 					  if (!XP_STRNCASECMP (argv[i], "mailto:", 7))
 						type = MWContextMessageComposition;
 					  else if (!XP_STRNCASECMP (argv[i], "addrbk:", 7))
@@ -4137,7 +4139,7 @@ fe_clean_old_init_files (Widget toplevel)
 
 #endif /* !OLD_UNIX_FILES */
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 
 /*
  * Message Composition
@@ -4210,7 +4212,7 @@ static struct {
   {"subject", 	Off(mcSubject),		MSG_SUBJECT_HEADER_MASK, 0},
 */
 
-#endif  /* MOZ_MAIL_NEWS */
+#endif  /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 void resize(Widget w, XtPointer clientData, XtPointer callData)
 {
@@ -4230,7 +4232,7 @@ void expose(Widget w, XtPointer clientData, XtPointer callData)
  
 }
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 
 WidgetList
 fe_create_composition_widgets(MWContext* context, Widget pane, int *numkids)
@@ -4411,7 +4413,7 @@ FE_MsgShowHeaders (MSG_Pane* comppane, MSG_HEADER_SET headers)
 #undef ISLABEL
 #undef Off
 
-#endif  /* MOZ_MAIL_NEWS */
+#endif  /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 #ifdef JAVA
 

@@ -305,14 +305,15 @@ typedef struct _XFE_GlobalPrefs
 	XP_Bool msg_in_thread_window;
 
 	/*
-	 *  ----- Mail & News/Identity -----
+         *  ----- Mail & News/Identity -----
 	 */
 
 #endif /* MOZ_MAIL_NEWS */
 	char   *real_name;
 	char   *email_address;
 	char   *organization;
-#ifdef MOZ_MAIL_NEWS
+
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 	char   *signature_file;
 	char   *reply_to_address;
 	XP_Bool attach_address_card;
@@ -337,7 +338,9 @@ typedef struct _XFE_GlobalPrefs
 	char   *news_bcc;
 	char   *mail_fcc;
 	char   *news_fcc;
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
+#ifdef MOZ_MAIL_NEWS
 	/*
 	 *  ----- Mail & News/Mail Server -----
 	 */
@@ -670,11 +673,13 @@ typedef struct _XFE_GlobalPrefs
 	int32		address_book_address_book_toolbar_position;
 	XP_Bool		address_book_address_book_toolbar_showing;
 	XP_Bool		address_book_address_book_toolbar_open;
+#endif /* MOZ_MAIL_NEWS */
 
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 	int32		compose_message_message_toolbar_position;
 	XP_Bool		compose_message_message_toolbar_showing;
 	XP_Bool		compose_message_message_toolbar_open;
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 	int32		composer_composition_toolbar_position;
 	XP_Bool		composer_composition_toolbar_showing;
@@ -687,10 +692,10 @@ typedef struct _XFE_GlobalPrefs
 	int32		browser_win_width;
 	int32		browser_win_height;
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 	int32		mail_compose_win_width;
 	int32		mail_compose_win_height;
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 	int32		editor_win_width;
 	int32		editor_win_height;

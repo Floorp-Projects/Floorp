@@ -89,7 +89,6 @@ REQUIRES	=\
 		  js \
 		  libfont \
 		  mariner \
-		  msg \
 		  plds \
 		  nspr20 \
 		  parse \
@@ -111,6 +110,18 @@ ifdef MOZ_LDAP
 REQUIRES += \
 		  ldap \
 		  $(NULL)
+endif
+
+ifdef MOZ_MAIL_NEWS
+REQUIRES += \
+		  msg \
+		  $(NULL)
+else
+ifdef MOZ_MAIL_COMPOSE
+REQUIRES += \
+		  mailto \
+		  $(NULL)
+endif
 endif
 
 REQUIRES += \
@@ -175,6 +186,13 @@ CSRCS		+= \
 		  mailcompose.c \
 		  movemail.c \
 		  $(NULL)
+else
+ifdef MOZ_MAIL_COMPOSE
+CSRCS		+= \
+		  mailattach.c \
+		  mailcompose.c \
+		  $(NULL)
+endif
 endif
 
 ifndef NO_UNIX_ASYNC_DNS
@@ -246,8 +264,11 @@ ifeq ($(OS_ARCH),AIX)
 NSPR_LIB	= 
 else
 # XXX To a DSO...
-#NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libmsgc21.a $(DIST)/lib/libnspr21.a
+ifdef FULL_STATIC_BUILD
+NSPR_LIB	= $(DIST)/lib/libplds21.a $(DIST)/lib/libplc21.a $(DIST)/lib/libmsgc21.a $(DIST)/lib/libnspr21.a
+else
 BASIC_DSOS     += -lplds21 -lplc21 -lmsgc21 -lnspr21
+endif
 endif
 
 ifdef DBMALLOC
@@ -348,8 +369,16 @@ endif
 BASIC_LIBS_2	+= \
 		  $(DIST)/lib/libldap.a \
 		  $(NULL)
-
 endif
+
+# Do we need libns_mime.a here if MOZ_MAIL_COMPOSE and MOZ_SECURITY?
+#ifdef MOZ_MAIL_COMPOSE
+#ifdef MOZ_SECURITY
+#BASIC_LIBS	+= \
+#		  $(DIST)/lib/libns_mime.a \
+#		  $(NULL)
+#endif
+#endif
 
 BASIC_LIBS	+= \
 		  $(DIST)/lib/libmisc.a \
@@ -375,6 +404,13 @@ BASIC_LIBS	+= $(DIST)/lib/libaddr.a \
 		  $(DIST)/lib/libneo.a \
 		  $(DIST)/lib/libaddr.a \
 		  $(NULL)
+endif
+
+ifdef MOZ_MAIL_COMPOSE
+BASIC_LIBS	+= $(DIST)/lib/libmailto.a \
+		  $(DIST)/lib/libmime.a \
+		  $(DIST)/lib/libsmtpurl.a	\
+		$(NULL)
 endif
 
 ifdef MOZ_MAIL_NEWS
@@ -493,13 +529,19 @@ endif  # !MOZ_OJI
 endif  # !MOZ_JAVA
 
 # XXX To a DSO...
-#BASIC_LIBS	+= $(DIST)/lib/libzlib.a
+ifdef FULL_STATIC_BUILD
+BASIC_LIBS	+= $(DIST)/lib/libzlib.a
+else
 BASIC_DSOS      += -lzlib
+endif
 
 ifndef NO_MOCHA
 # XXX To a DSO...
-#BASIC_LIBS      += $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a 
+ifndef FULL_STATIC_BUILD
+BASIC_LIBS      += $(DIST)/lib/libjs.a $(DIST)/lib/libjsj.a
+else
 BASIC_DSOS      += -ljs -ljsj
+endif
 BASIC_LIBS	+= $(DIST)/lib/libmocha.a
 ifdef DOM
 # the DOM code calls back into layout.
@@ -590,9 +632,13 @@ DEFINES		+= -DUSE_WINNING_FILE_SELECTION
 endif
 
 INCLUDES	+= -Isrc -I. -I$(DEPTH)/dist/public/nls -I$(DEPTH)/dist/public/security \
-		-I$(DEPTH)/lib/libmsg -I$(DEPTH)/dist/public/ldap \
+		-I$(DEPTH)/dist/public/ldap \
 		-I$(DEPTH)/modules/libimg/public \
 		-I$(DEPTH)/l10n/us
+
+ifdef MOZ_MAIL_NEWS
+INCLUDES	+= -Isrc -I. -I$(DEPTH)/lib/libmsg
+endif
 
 
 #######################################################################

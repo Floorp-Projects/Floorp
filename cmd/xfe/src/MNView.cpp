@@ -20,21 +20,21 @@
    Created: Chris Toshok <toshok@netscape.com>, 7-Aug-96.
    */
 
-
 #include "MozillaApp.h"
 #include "ViewGlue.h"
 #include "Frame.h"
 
-#ifdef MOZ_MAIL_NEWS
 #include "MNView.h"
+#include "ComposeFrame.h"
+
+#ifdef MOZ_MAIL_NEWS
 #include "MNListView.h"
 #include "MailDownloadFrame.h"
 #include "NewsPromptDialog.h"
-#include "ComposeFrame.h"
 #include "ABListSearchView.h"
 #include "ThreadView.h"
 #include "dirprefs.h"
-#endif
+#endif /* MOZ_MAIL_NEWS */
 
 #include "Outlinable.h"
 #include "Outliner.h"
@@ -57,7 +57,6 @@
 
 #include "xpgetstr.h"
 
-#ifdef MOZ_MAIL_NEWS
 
 extern int XFE_MAIL_PRIORITY_NONE;
 extern int XFE_MAIL_PRIORITY_LOWEST;
@@ -69,20 +68,25 @@ extern int XFE_MAIL_SPOOL_UNKNOWN;
 extern int XFE_UNABLE_TO_OPEN;
 extern int XFE_NO_KEEP_ON_SERVER_WITH_MOVEMAIL;
 
-extern int XFE_COULDNT_FORK_FOR_MOVEMAIL;
+extern int XFE_COULDNT_FORK_FOR_DELIVERY;
 extern int XFE_PROBLEMS_EXECUTING;
 extern int XFE_TERMINATED_ABNORMALLY;
 extern int XFE_APP_EXITED_WITH_STATUS;
-extern int XFE_COULDNT_FORK_FOR_DELIVERY;
+
+MSG_Master *XFE_MNView::m_master = NULL;
+MSG_Prefs *XFE_MNView::m_prefs = NULL;
+
+const char *
+XFE_MNView::bannerNeedsUpdating = "XFE_MNView::bannerNeedsUpdating";
+
+#ifdef MOZ_MAIL_NEWS
+extern int XFE_COULDNT_FORK_FOR_MOVEMAIL;
 
 extern int XFE_GET_NEXT_N_MSGS;
 
 extern int XFE_MARKBYDATE_CAPTION;
 extern int XFE_MARKBYDATE;
 extern int XFE_DATE_MUST_BE_MM_DD_YY;
-
-MSG_Master *XFE_MNView::m_master = NULL;
-MSG_Prefs *XFE_MNView::m_prefs = NULL;
 
 MSG_BIFF_STATE XFE_MNView::m_biffstate = MSG_BIFF_Unknown;
 
@@ -139,7 +143,6 @@ static void fe_incdone(void* closure, XP_Bool result);
 static XP_Bool fe_run_movemail (MWContext *context, const char *from, const char *to);
 extern "C" char* fe_mn_getmailbox(void);
 
-const char * XFE_MNView::bannerNeedsUpdating = "XFE_MNView::bannerNeedsUpdating";
 const char * XFE_MNView::foldersHaveChanged = "XFE_MNView::foldersHaveChanged";
 const char * XFE_MNView::newsgroupsHaveChanged = "XFE_MNView::newsgroupsHaveChanged";
 const char * XFE_MNView::folderChromeNeedsUpdating = "XFE_MNView::folderChromeNeedsUpdating";
@@ -149,6 +152,7 @@ const char * XFE_MNView::folderDeleted = "XFE_MNView::folderDeleted";
 
 XP_Bool XFE_MNView::m_messageDownloadInProgress = False;
 int  XFE_MNView::m_numFolderBeingLoaded = 0; // Indicate how many folder are loaded
+#endif /* MOZ_MAIL_NEWS */
 
 
 XFE_MNView::XFE_MNView(XFE_Component *toplevel_component,
@@ -165,19 +169,22 @@ XFE_MNView::XFE_MNView(XFE_Component *toplevel_component,
   // initialize the mail master
   getMaster();
 
-
+#ifdef MOZ_MAIL_NEWS
   XFE_MozillaApp::theApp()->registerInterest(
 		XFE_MozillaApp::biffStateChanged,
 		this,
 		(XFE_FunctionNotification) updateBiffState_cb);
+#endif /* MOZ_MAIL_NEWS */
 }
 
 XFE_MNView::~XFE_MNView()
 {
+#ifdef MOZ_MAIL_NEWS
   XFE_MozillaApp::theApp()->unregisterInterest(
 		XFE_MozillaApp::biffStateChanged,
 		this,
 		(XFE_FunctionNotification)updateBiffState_cb);
+#endif /* MOZ_MAIL_NEWS */
 }
 
 void
@@ -393,6 +400,7 @@ char *
 XFE_MNView::commandToString(CommandType cmd, void * calldata, XFE_CommandInfo* info)
 {
 #define IS_CMD(command) cmd == (command)  
+#ifdef MOZ_MAIL_NEWS
 	if (IS_CMD(xfeCmdNewFolder)) 
 		{
 			if (m_displayingNewsgroup)
@@ -436,11 +444,13 @@ XFE_MNView::commandToString(CommandType cmd, void * calldata, XFE_CommandInfo* i
 		  return buf;
 	  }
 	else
+#endif /* MOZ_MAIL_NEWS */
 		return XFE_View::commandToString(cmd, calldata, info);
 		
 #undef IS_CMD
 }
 
+#ifdef MOZ_MAIL_NEWS
 void
 XFE_MNView::markReadByDate()
 {
@@ -638,13 +648,12 @@ XFE_MNView::getNewMail()
     }
 }
 
-void 
-XFE_MNView::paneChanged(XP_Bool /*asynchronous*/,
-                        MSG_PANE_CHANGED_NOTIFY_CODE notify_code,
-                        int32 /*value*/)
+XP_Bool
+XFE_MNView::isDisplayingNews()
 {
-  notifyInterested(XFE_MNView::bannerNeedsUpdating, (void*)notify_code);
+  return m_displayingNewsgroup;
 }
+#endif /* MOZ_MAIL_NEWS */
 
 MSG_Master *
 XFE_MNView::getMaster()
@@ -661,20 +670,26 @@ XFE_MNView::getMaster()
 void
 XFE_MNView::destroyMasterAndShutdown()
 {
+#ifdef MOZ_MAIL_NEWS
 	MWContext *biffcontext = XP_FindContextOfType(NULL, MWContextBiff);
 	XP_ASSERT(biffcontext);
 	MSG_BiffCleanupContext(biffcontext);
+#endif /*  MOZ_MAIL_NEWS */
 
   if (m_master)
     MSG_DestroyMaster(m_master);
 
+#ifdef MOZ_MAIL_NEWS
   MSG_ShutdownMsgLib();
+#endif /*  MOZ_MAIL_NEWS */
 }
 
-XP_Bool
-XFE_MNView::isDisplayingNews()
+void 
+XFE_MNView::paneChanged(XP_Bool /*asynchronous*/,
+                        MSG_PANE_CHANGED_NOTIFY_CODE notify_code,
+                        int32 /*value*/)
 {
-  return m_displayingNewsgroup;
+  notifyInterested(XFE_MNView::bannerNeedsUpdating, (void*)notify_code);
 }
 
 Boolean
@@ -726,6 +741,7 @@ XFE_MNView::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
             CONTEXT_DATA(m_contextData)->stealth_cmd = (fe_globalPrefs.send_html_msg == True) ;
             MSG_Command(m_pane, commandToMsgCmd(cmd), NULL, 0);
    }
+#ifdef MOZ_MAIL_NEWS
    else if (cmd == xfeCmdCleanUpDisk)
    {
        if (MSG_CleanupNeeded(getMaster()))
@@ -741,6 +757,7 @@ XFE_MNView::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
            progressFrame->cleanUpNews();
        }
    }
+#endif /* MOZ_MAIL_NEWS */
    else 
    {
 	XFE_View::doCommand(cmd, calldata, info);
@@ -749,6 +766,7 @@ XFE_MNView::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 
 }
 
+#ifdef MOZ_MAIL_NEWS
 MSG_BIFF_STATE
 XFE_MNView::getBiffState()
 {
@@ -792,6 +810,7 @@ FE_UpdateBiff(MSG_BIFF_STATE state)
   XFE_MozillaApp::theApp()->notifyInterested(XFE_MozillaApp::biffStateChanged,
 					     (void*)state);
 }
+#endif /* MOZ_MAIL_NEWS */
 
 extern "C" void
 FE_UpdateToolbar (MWContext *context)
@@ -850,6 +869,7 @@ FE_DestroyMailCompositionContext(MWContext* context)
   cf->destroyWhenAllConnectionsComplete();
 }
 
+#ifdef MOZ_MAIL_NEWS
 extern "C" MWContext*
 FE_GetAddressBookContext(MSG_Pane* pane, XP_Bool /*viewnow*/)
 {
@@ -945,12 +965,14 @@ FE_ListChangeFinished(MSG_Pane* pane, XP_Bool asynchronous,
 
   outliner->listChangeFinished(asynchronous, notify, where, num, MSG_GetNumLines(pane));
 }
+#endif /* MOZ_MAIL_NEWS */
 
 MSG_Master *
 fe_getMNMaster()
 {
   return XFE_MNView::getMaster();
 }
+#ifdef MOZ_MAIL_NEWS
 
 static void
 fe_incdone(void* closure, XP_Bool result)
@@ -1129,6 +1151,7 @@ fe_run_movemail (MWContext *context, const char *from, const char *to)
       }
     }
 }
+#endif /* MOZ_MAIL_NEWS */
 
 /* If we're set up to deliver mail/news by running a program rather
    than by talking to SMTP/NNTP, this does it.
@@ -1268,6 +1291,13 @@ msg_DeliverMessageExternally(MWContext *context, const char *msg_file)
     }
 }
 
+
+extern "C" MSG_Master*
+FE_GetMaster() {
+	return fe_getMNMaster();
+}
+
+#ifdef MOZ_MAIL_NEWS
 extern "C" XP_Bool 
 FE_NewsDownloadPrompt(MWContext *context,
 					  int32 numMessagesToDownload,
@@ -1288,11 +1318,6 @@ FE_NewsDownloadPrompt(MWContext *context,
 	delete dialog;
 
 	return ret_val;
-}
-
-extern "C" MSG_Master*
-FE_GetMaster() {
-	return fe_getMNMaster();
 }
 
 #endif  // MOZ_MAIL_NEWS

@@ -27,7 +27,9 @@
 #include "ABListSearchView.h"
 #include "ComposeFolderView.h"
 #include "ComposeAttachFolderView.h"
+#ifdef MOZ_MAIL_NEWS
 #include "LdapSearchView.h"
+#endif /* MOZ_MAIL_NEWS */
 #include "xfe.h"
 #include "icondata.h"
 #include "msgcom.h"
@@ -127,6 +129,13 @@ fe_MailComposeAddress_CreateManaged(MWContext* context, Widget parent);
 
 extern XtAppContext fe_XtAppContext;
 
+#ifndef MOZ_MAIL_NEWS
+int DIR_GetComposeNameCompletionAddressBook(XP_List*, DIR_Server**)
+{
+  return 0;
+}
+#endif /* MOZ_MAIL_NEWS */
+
 // Constructor
 XFE_AddressFolderView::XFE_AddressFolderView(
 			XFE_Component *toplevel_component, 
@@ -153,7 +162,6 @@ XFE_AddressFolderView::XFE_AddressFolderView(
 
   setupAddressHeadings();
 }
-
 
 Boolean
 XFE_AddressFolderView::isCommandEnabled(CommandType, void*, XFE_CommandInfo*)
@@ -347,6 +355,7 @@ void XFE_AddressFolderView::addrMsgCB(ABAddrMsgCBProcStruc* clientData)
 				  False);
 }/* XFE_AddressFolderView::addrMsgCB */
 
+#ifdef MOZ_MAIL_NEWS
 XFE_CALLBACK_DEFN(XFE_AddressFolderView, openAddrBk)(XFE_NotificationCenter */*obj*/,
                                           void */*clientData*/,
                                           void */*callData*/)
@@ -357,15 +366,17 @@ XFE_CALLBACK_DEFN(XFE_AddressFolderView, openAddrBk)(XFE_NotificationCenter */*o
 						m_contextData);
       return;
 }
+#endif /* MOZ_MAIL_NEWS */
 
 void
 XFE_AddressFolderView::doCommand(CommandType command, void *, XFE_CommandInfo*)
 {
+#ifdef MOZ_MAIL_NEWS
 	if (command == xfeCmdAddresseePicker)
 		fe_showAddrMSGDlg(getToplevel()->getBaseWidget(), 
 						  XFE_AddressFolderView::addrMsgCallback, this, 
 						  m_contextData);
-
+#endif /* MOZ_MAIL_NEWS */
 }
 
 // Outlinable Interface starts here 
@@ -1221,6 +1232,8 @@ XFE_AddressFolderView::changedItem(char *pString, int*  iconType,
 extern "C" char * xfe_ExpandName(char * pString, int* iconID, short* xxx,
                                  ABook *pAddrBook, DIR_Server *pDirServer)
 {
+#ifdef MOZ_MAIL_NEWS
+
 #if !defined(MOZ_NEWADDR)
         ABID entryID;
         ABID field;
@@ -1260,6 +1273,8 @@ extern "C" char * xfe_ExpandName(char * pString, int* iconID, short* xxx,
           if (fullname) return fullname;  
        }
 #endif
+#endif /* MOZ_MAIL_NEWS */
+
        return NULL; 
 }
 
@@ -1414,6 +1429,7 @@ XFE_AddressFolderView::AddressDropCb(Widget,void* cd,
 void
 XFE_AddressFolderView::addressDropCb(fe_dnd_Source *source)
 {
+#ifdef MOZ_MAIL_NEWS
     XDEBUG(printf("XFE_AddressFolderView::addressDropCb()\n"));
     
     switch (source->type) {
@@ -1449,6 +1465,7 @@ XFE_AddressFolderView::addressDropCb(fe_dnd_Source *source)
         }
         break;
     }
+#endif /* MOZ_MAIL_NEWS */
 }
 
 void
@@ -1457,6 +1474,7 @@ XFE_AddressFolderView::processAddressBookDrop(XFE_Outliner *outliner,
                                               ABook *abBook,
                                               AddressPane *abPane)
 {
+#ifdef MOZ_MAIL_NEWS
     // Make sure insert happens at end of list - drag-over will have moved
     // text field position around under mouse.
     SEND_STATUS fieldStatus=::TO;
@@ -1570,8 +1588,10 @@ XFE_AddressFolderView::processAddressBookDrop(XFE_Outliner *outliner,
             
         }
     }
+#endif /* MOZ_MAIL_NEWS */
 }
 
+#ifdef MOZ_MAIL_NEWS
 void
 XFE_AddressFolderView::processLDAPDrop(fe_dnd_Source* source)
 {
@@ -1603,3 +1623,4 @@ XFE_AddressFolderView::processLDAPDrop(fe_dnd_Source* source)
     m_clearAddressee = True;
 }
 
+#endif /* MOZ_MAIL_NEWS */

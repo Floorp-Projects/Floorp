@@ -257,10 +257,13 @@ static struct pref_map pref_map[] = {
 {"mail.identity.useremail", FIELD_OFFSET(email_address), read_str, write_str},
 {"mail.identity.organization", FIELD_OFFSET(organization), read_str, write_str},
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 {"mail.identity.reply_to", FIELD_OFFSET(reply_to_address), read_str, write_str, },
 {"mail.signature_file", FIELD_OFFSET(signature_file), read_path, write_path, },
 {"mail.attach_vcard", FIELD_OFFSET(attach_address_card), read_bool, write_bool},
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
+
+#ifdef MOZ_MAIL_NEWS
 {"mail.addr_book.lastnamefirst", FIELD_OFFSET(addr_book_lastname_first), read_bool, write_bool},
 /*
  * This is no good on machines where ints are less than four bytes.
@@ -299,7 +302,11 @@ static struct pref_map pref_map[] = {
 {"mailnews.reuse_message_window", FIELD_OFFSET(reuse_msg_window), read_bool, write_bool},
 {"mailnews.reuse_thread_window", FIELD_OFFSET(reuse_thread_window), read_bool, write_bool},
 {"mailnews.message_in_thread_window", FIELD_OFFSET(msg_in_thread_window), read_bool, write_bool},
+#endif /* MOZ_MAIL_NEWS */
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 {"mailnews.wraplength", FIELD_OFFSET(msg_wrap_length), read_int, write_int},
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
+#ifdef MOZ_MAIL_NEWS
 {"mailnews.nicknames_only", FIELD_OFFSET(expand_addr_nicknames_only), read_bool, write_bool},
 {"mailnews.reply_on_top", FIELD_OFFSET(reply_on_top), read_int, write_int},
 {"mailnews.reply_with_extra_lines", FIELD_OFFSET(reply_with_extra_lines), read_int, write_int},
@@ -337,11 +344,14 @@ static struct pref_map pref_map[] = {
 {"network.proxy.type", FIELD_OFFSET(proxy_mode), read_int, write_int},
 {"network.proxy.autoconfig_url", FIELD_OFFSET(proxy_url), read_str, write_str},
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 {"news.default_cc", FIELD_OFFSET(news_bcc), read_str, write_str},
 {"news.default_fcc", FIELD_OFFSET(news_fcc), read_path, write_path, },
 {"news.cc_self", FIELD_OFFSET(newsbccself_p), read_bool, write_bool},
 {"news.use_fcc", FIELD_OFFSET(newsfcc_p), read_bool, write_bool},
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
+
+#ifdef MOZ_MAIL_NEWS
 {"news.directory", FIELD_OFFSET(newsrc_directory), read_path, write_path, },
 {"news.notify.on", FIELD_OFFSET(news_notify_on), read_bool, write_bool},
 {"news.max_articles", FIELD_OFFSET(news_max_articles), read_int, write_int},
@@ -440,11 +450,13 @@ static struct pref_map pref_map[] = {
 {"custtoolbar.Address_Book.Address_Book_Toolbar.position", FIELD_OFFSET(address_book_address_book_toolbar_position), read_int, write_int},
 {"custtoolbar.Address_Book.Address_Book_Toolbar.showing", FIELD_OFFSET(address_book_address_book_toolbar_showing), read_bool, write_bool},
 {"custtoolbar.Address_Book.Address_Book_Toolbar.open", FIELD_OFFSET(address_book_address_book_toolbar_open), read_bool, write_bool},
+#endif /* MOZ_MAIL_NEWS */
 
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 {"custtoolbar.Compose_Message.Message_Toolbar.position", FIELD_OFFSET(compose_message_message_toolbar_position), read_int, write_int},
 {"custtoolbar.Compose_Message.Message_Toolbar.showing", FIELD_OFFSET(compose_message_message_toolbar_showing), read_bool, write_bool},
 {"custtoolbar.Compose_Message.Message_Toolbar.open", FIELD_OFFSET(compose_message_message_toolbar_open), read_bool, write_bool},
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 {"custtoolbar.Composer.Composition_Toolbar.position", FIELD_OFFSET(composer_composition_toolbar_position), read_int, write_int},
 {"custtoolbar.Composer.Composition_Toolbar.showing", FIELD_OFFSET(composer_composition_toolbar_showing), read_bool, write_bool},
@@ -457,10 +469,11 @@ static struct pref_map pref_map[] = {
 {"browser.win_width", FIELD_OFFSET(browser_win_width), read_int, write_int},
 {"browser.win_height",FIELD_OFFSET(browser_win_height), read_int, write_int},
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 {"mail.compose.win_width", FIELD_OFFSET(mail_compose_win_width), read_int, write_int},
 {"mail.compose.win_height",FIELD_OFFSET(mail_compose_win_height), read_int, write_int},
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
+
 
 {"editor.win_width", FIELD_OFFSET(editor_win_width), read_int, write_int},
 {"editor.win_height",FIELD_OFFSET(editor_win_height), read_int, write_int},
@@ -1311,7 +1324,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 		/* COLORS
 		 */
 	
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 		/* COMPOSITION
 		 */
 		else if (!XP_STRCASECMP("8BIT_MAIL_AND_NEWS", name))
@@ -1338,7 +1351,7 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 		}
 		else if (!XP_STRCASECMP("MAIL_AUTOQUOTE_REPLY", name))
 			prefs->autoquote_reply = BOOLP (value);
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 		/* DIRECTORIES
 		 */
@@ -1392,12 +1405,12 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
 			StrAllocCopy (prefs->email_address, value);
 		else if (!XP_STRCASECMP("ORGANIZATION", name))
 			StrAllocCopy (prefs->organization, value);
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 		else if (!XP_STRCASECMP("SIGNATURE_FILE", name))
 			StrAllocCopy (prefs->signature_file, value);
 		else if (!XP_STRCASECMP("SIGNATURE_DATE", name))
 			prefs->signature_date = (time_t) atol (value);
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 		/* IMAGES
        */
@@ -1763,10 +1776,10 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
     }
 
     FROB(cache_dir)
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
     FROB(mail_fcc)
     FROB(news_fcc)
-#endif /* MOZ_MAIL_NEWS */
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
     FROB(tmp_dir)
     FROB(bookmark_file)
     FROB(history_file)
@@ -1778,8 +1791,10 @@ XFE_OldReadPrefs(char * filename, XFE_GlobalPrefs *prefs)
     /* spider end */
     FROB(global_mailcap_file)
     FROB(private_mailcap_file)
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
     FROB(signature_file)
+#endif /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
+#ifdef MOZ_MAIL_NEWS
     FROB(mail_directory)
     FROB(movemail_program)
     FROB(newsrc_directory)

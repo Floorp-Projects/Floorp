@@ -451,6 +451,7 @@ XFE_ComposeFrame::isCommandEnabled(CommandType cmd, void *cd, XFE_CommandInfo* i
 void
 XFE_ComposeFrame::doCommand(CommandType cmd, void *cd, XFE_CommandInfo* info)
 {
+#ifdef MOZ_MAIL_NEWS
     if (cmd == xfeCmdSearchAddress)
     {
         fe_showLdapSearch(XfeAncestorFindApplicationShell(getBaseWidget()), this,
@@ -459,7 +460,9 @@ XFE_ComposeFrame::doCommand(CommandType cmd, void *cd, XFE_CommandInfo* info)
 	// NOTE... [ we need to intercept these commands in order to be
 	//         [ able to do the "right thing" in the ComposeView
 	//
-	else {
+	else
+#endif /* MOZ_MAIL_NEWS */
+        {
 		if ( cmd == xfeCmdPaste ||
 			 cmd == xfeCmdCut   ||
 			 cmd == xfeCmdCopy  ||

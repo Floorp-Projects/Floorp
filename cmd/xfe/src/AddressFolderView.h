@@ -101,8 +101,10 @@ public:
   virtual void Flippyfunc(const OutlineFlippyFuncData *data);
   Boolean removeDataAt(int line);
 
+#ifdef MOZ_MAIL_NEWS
   // For address book button
   XFE_CALLBACK_DECL(openAddrBk)
+#endif /* MOZ_MAIL_NEWS */
 
   void setHeader(int line, MSG_HEADER_SET header);
   int getHeader(int line);

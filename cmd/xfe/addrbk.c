@@ -39,7 +39,6 @@
 #include "xp_file.h"
 #include "addrbk.h"
 
-#ifdef MOZ_MAIL_NEWS
 
 /* list of DIR_Server 
 */
@@ -59,10 +58,12 @@ extern XP_List* FE_GetDirServers()
   	char tmp[256];
 	XP_List* m_directories = XP_ListNew();
 
+#ifdef MOZ_MAIL_NEWS
 	/* database file is not html anymore ... 
 	 */
 	PR_snprintf(tmp, sizeof (tmp), "abook.nab"); 
 	DIR_GetServerPreferences (&m_directories, tmp);
+#endif /* MOZ_MAIL_NEWS */
 	return m_directories;
 }
 
@@ -71,6 +72,7 @@ ABook* FE_GetAddressBook(MSG_Pane *pane)
 	return AddrBook;
 }
 
+#ifdef MOZ_MAIL_NEWS
 void FE_InitAddrBook() 
 {
 
@@ -142,10 +144,14 @@ void FE_CloseAddrBook() {
 }
 
 #else
-extern XP_List* FE_GetDirServers()
+#if 0
+/* compiler complains about definition vs. previous def at
+   line 154 in file '../../include/dirprefs.h.  Dunno why, they're identical.
+ */
+extern XP_List* FE_GetDirServers(void)
 {
   return 0 ;
 }
-
+#endif
 #endif
 

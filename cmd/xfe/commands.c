@@ -767,7 +767,7 @@ fe_MakeViewSourceStream (int format_out, void *data_obj,
   return stream;
 }
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 
 /* Mailing documents
  */
@@ -810,7 +810,7 @@ fe_mailto_cb (Widget widget, XtPointer closure, XtPointer call_data)
 
 }
 
-#endif  /* MOZ_MAIL_NEWS */
+#endif  /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 void
 fe_print_cb (Widget widget, XtPointer closure, XtPointer call_data)

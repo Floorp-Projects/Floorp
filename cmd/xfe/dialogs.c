@@ -3473,7 +3473,7 @@ fe_GetSynchronousURL (MWContext *context,
 }
 
 
-#ifdef MOZ_MAIL_NEWS
+#if defined(MOZ_MAIL_NEWS) || defined(MOZ_MAIL_COMPOSE)
 
 /* Sending mail
  */
@@ -3483,6 +3483,7 @@ void fe_mail_text_modify_cb (Widget, XtPointer, XtPointer);
 Boolean
 fe_CheckDeferredMail (void)
 {
+#ifdef MOZ_MAIL_NEWS
   struct fe_MWContext_cons* rest;
   Boolean haveQueuedMail = False;
   int numMsgs = 0;
@@ -3525,6 +3526,7 @@ fe_CheckDeferredMail (void)
       }
     }
   }
+#endif /* MOZ_MAIL_NEWS */
   /* return True means no mail - weird, but consistent
    * with fe_CheckUnsentMail below. We can change them
    * later.
@@ -4483,7 +4485,7 @@ fe_mail_text_modify_cb (Widget text, XtPointer client_data,
   /*  MSG_MessageBodyEdited(CONTEXT_DATA(context)->comppane); */
 }
 
-#endif  /* MOZ_MAIL_NEWS */
+#endif  /* MOZ_MAIL_NEWS || MOZ_MAIL_COMPOSE */
 
 #define cite_abort 0
 #define cite_protect_me_from_myself 1

@@ -58,23 +58,26 @@ public:
                                                  XFE_CommandInfo* i = NULL);
 
 
+  static const char *bannerNeedsUpdating;  // notify the parent frame that the MNBanner needs updating.
+
+  // these next two are useful in updating more than one window's chrome.
+  static const char *folderChromeNeedsUpdating;
+  static const char *MNChromeNeedsUpdating;
+
+  static MSG_Master *getMaster();
+
+  static void destroyMasterAndShutdown(); // only do this if we're shutting down the application
+
+#ifdef MOZ_MAIL_NEWS
   XP_Bool isDisplayingNews();
 
   static MSG_BIFF_STATE getBiffState();
   static void setBiffState(MSG_BIFF_STATE state);
 
-  static MSG_Master *getMaster();
-  static void destroyMasterAndShutdown(); // only do this if we're shutting down the application
-
-  static const char *bannerNeedsUpdating;  // notify the parent frame that the MNBanner needs updating.
   static const char *foldersHaveChanged;
   static const char *newsgroupsHaveChanged;
   static const char *msgWasDeleted;    // in case we need to close a frame 
   static const char *folderDeleted;    // in case we need to close a frame 
-
-  // these next two are useful in updating more than one window's chrome.
-  static const char *folderChromeNeedsUpdating;
-  static const char *MNChromeNeedsUpdating;
 
   // icons used in the mail/news outliners and proxy icons
 
@@ -126,18 +129,22 @@ public:
 	static fe_icon closedSpoolIcon;
 
   static fe_icon collectionsIcon;
+#endif /* MOZ_MAIL_NEWS */
+
 protected:
   MSG_Pane *m_pane;
 
 	/* useful in both the threadview and msgview. */
 	XP_Bool m_displayingNewsgroup;
 
+#ifdef MOZ_MAIL_NEWS
   static MSG_BIFF_STATE m_biffstate;
 
   static XP_Bool m_messageDownloadInProgress;
   static int 	m_numFolderBeingLoaded; // This is controlled by Thread View only
 					// Indicating how many folder being
 					// loaded in the meantime
+#endif /* MOZ_MAIL_NEWS */
 
   static MSG_Master *m_master;
   static MSG_Prefs *m_prefs;
@@ -148,12 +155,14 @@ protected:
 
   virtual char *priorityToString(MSG_PRIORITY priority);
 
+#ifdef MOZ_MAIL_NEWS
   virtual void getNewNews();
   virtual void getNewMail();
   virtual void markReadByDate();
 
   // update the biff desktop icon
   XFE_CALLBACK_DECL(updateBiffState)
+#endif /* MOZ_MAIL_NEWS */
 };
 
 extern "C" MSG_Master *fe_getMNMaster();
