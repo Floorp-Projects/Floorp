@@ -121,7 +121,6 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
     NS_ADDREF(entry);
     nsresult rv = mHTTPHeaders->AppendElement(entry) ? NS_OK : NS_ERROR_FAILURE;  // XXX this method incorrectly returns a bool
     NS_ASSERTION(NS_SUCCEEDED(rv), "AppendElement failed");
-    NS_RELEASE(entry);
   } 
   // 
   // Append the new value to the existing string
@@ -147,6 +146,8 @@ nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader,
   else {
     entry->mValue.SetString(aValue);
   }
+
+  NS_RELEASE(entry);
 
   return NS_OK;
 }
