@@ -3058,15 +3058,22 @@ dnl ========================================================
 
 dnl ========================================================
 dnl =
-dnl = --enable-modules=mod1,mod2
+dnl = --enable-standalone-modules=mod1,mod2
 dnl =
 dnl = Only selectively build modules
 dnl =
 dnl ========================================================
 BUILD_MODULES=all
-MOZ_ARG_ENABLE_STRING(modules,
-[  --enable-modules        Enable standalone build of specific modules],
+MOZ_ARG_ENABLE_STRING(standalone-modules,
+[  --enable-standalone-modules=mod1[,mod2]
+                          Enable standalone build of specific modules],
   [ BUILD_MODULES=`echo $enableval | sed 's/,/ /g'` ] )
+
+dnl Temp. also check old --enable-modules option
+if test "${BUILD_MODULES}" = "all" && test -n "$enable_modules"; then
+    BUILD_MODULES=`echo $enable_modules | sed 's/,/ /g'`
+fi
+
 dnl ========================================================
 
 
