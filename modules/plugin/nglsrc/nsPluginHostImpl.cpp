@@ -74,6 +74,10 @@
 #include "nsIDocumentLoaderFactory.h"
 #include "nsLayoutCID.h"
 
+#ifdef XP_UNIX
+#include <gdk/gdkx.h> // for GDK_DISPLAY()
+#endif
+
 #if defined(XP_PC)
 #define LAYOUT_DLL "gkhtml.dll"
 #elif defined(XP_UNIX) || defined(XP_BEOS)
@@ -1334,9 +1338,22 @@ nsresult nsPluginHostImpl::QueryInterface(const nsIID& aIID,
   return NS_NOINTERFACE;
 }
 
-NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable variable, void *value)
+NS_IMETHODIMP nsPluginHostImpl::GetValue(nsPluginManagerVariable aVariable, void *aValue)
 {
-  return NS_OK;
+  nsresult rv = NS_OK;
+
+  NS_ENSURE_ARG_POINTER(aValue);
+
+#ifdef XP_UNIX
+  if (nsPluginManagerVariable_XDisplay == aVariable) {
+    Display** value = NS_REINTERPRET_CAST(Display**, aValue);
+      *value = GDK_DISPLAY();
+      if (!(*value)) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+#endif
+  return rv;
 }
 
 nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
