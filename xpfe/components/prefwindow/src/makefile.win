@@ -31,8 +31,8 @@ DEPTH = ..\..\..\..
 #//
 #//------------------------------------------------------------------------
 
-DLLNAME		= mozsampl
-DLL1NAME	= mozsampl
+DLLNAME		= prefwind
+DLL1NAME	= prefwind
 PDBFILE		= $(DLLNAME).pdb
 MAPFILE		= $(DLLNAME).map
 DLL		=.\$(OBJDIR)\$(DLLNAME).dll
