@@ -1734,7 +1734,6 @@ NET_ScanForURLs(MSG_Pane* pane, const char *input, int32 input_size,
   Bool line_is_citation = FALSE;
   const char *cite_open1, *cite_close1;
   const char *cite_open2, *cite_close2;
-  const char* color = NULL;
 
   if (urls_only)
     {

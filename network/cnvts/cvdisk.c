@@ -42,7 +42,8 @@ PRIVATE int net_SaveToDiskWrite (NET_StreamClass *stream, CONST char* s, int32 l
  */
 PRIVATE unsigned int net_SaveToDiskWriteReady (NET_StreamClass * stream)
 {
-   DataObject *obj=stream->data_object;
+   DataObject *obj;
+   obj=stream->data_object;
    return(MAX_WRITE_READY);  /* always ready for writing */ 
 }
 
