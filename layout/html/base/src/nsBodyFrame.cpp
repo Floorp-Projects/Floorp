@@ -331,6 +331,19 @@ NS_METHOD nsBodyFrame::ContentAppended(nsIPresShell*   aShell,
   return mFirstChild->ContentAppended(aShell, aPresContext, aContainer);
 }
 
+NS_METHOD nsBodyFrame::ContentInserted(nsIPresShell*   aShell,
+                                       nsIPresContext* aPresContext,
+                                       nsIContent*     aContainer,
+                                       nsIContent*     aChild,
+                                       PRInt32         aIndexInParent)
+{
+  NS_ASSERTION(mContent == aContainer, "bad content-inserted target");
+
+  // Pass along the notification to our pseudo frame that maps all the content
+  return mFirstChild->ContentInserted(aShell, aPresContext, aContainer,
+                                      aChild, aIndexInParent);
+}
+
 void nsBodyFrame::AddAnchoredItem(nsIFrame*         aAnchoredItem,
                                   AnchoringPosition aPosition,
                                   nsIFrame*         aContainer)

@@ -50,6 +50,12 @@ public:
                              nsIPresContext* aPresContext,
                              nsIContent*     aContainer);
 
+  NS_IMETHOD ContentInserted(nsIPresShell*   aShell,
+                             nsIPresContext* aPresContext,
+                             nsIContent*     aContainer,
+                             nsIContent*     aChild,
+                             PRInt32         aIndexInParent);
+
   NS_IMETHOD CreateContinuingFrame(nsIPresContext* aPresContext,
                                    nsIFrame*       aParent,
                                    nsIFrame*&      aContinuingFrame);

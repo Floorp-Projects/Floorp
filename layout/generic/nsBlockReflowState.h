@@ -1127,7 +1127,8 @@ nsBlockFrame::ContentInserted(nsIPresShell*   aShell,
                               nsIContent*     aChild,
                               PRInt32         aIndexInParent)
 {
-  return nsHTMLContainerFrame::ContentAppended(aShell, aPresContext, aContainer);
+  return nsHTMLContainerFrame::ContentInserted(aShell, aPresContext, aContainer,
+                                               aChild, aIndexInParent);
 }
 
 NS_METHOD
