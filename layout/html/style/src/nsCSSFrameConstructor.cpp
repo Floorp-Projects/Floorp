@@ -49,6 +49,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIDOMHTMLSelectElement.h"
 #include "nsIComboboxControlFrame.h"
+#include "nsIListControlFrame.h"
 #include "nsIRadioControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsIDOMCharacterData.h"
@@ -2982,8 +2983,7 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresContext*          aPresContex
         NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
 
         InitializeScrollFrame(aPresContext, aState, listFrame, scrolledFrame, aContent, aParentFrame,
-                              aStyleContext, aIsAbsolutelyPositioned, PR_TRUE, PR_FALSE,
-                              PR_TRUE);
+                              aStyleContext, PR_TRUE, aIsAbsolutelyPositioned, aIsFixedPositioned, PR_FALSE);
 
         aNewFrame = listFrame;
 
@@ -4629,8 +4629,9 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
     // Check to see if the content is a select and 
     // then if it has a drop down (thus making it a combobox)
     // The drop down is a ListControlFrame derived from a 
-    // nsScrollFrame then get the area frame and 
-    // that will be the parent
+    // nsScrollFrame then get the area frame and that will be the parent
+    // What is unclear here, is if any of this fails, should it return
+    // the nsComboboxControlFrame or null?
     nsCOMPtr<nsIDOMHTMLSelectElement> selectElement;
     nsresult res = aContent->QueryInterface(nsCOMTypeInfo<nsIDOMHTMLSelectElement>::GetIID(),
                                                  (void**)getter_AddRefs(selectElement));
@@ -4638,15 +4639,20 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
       nsIComboboxControlFrame * comboboxFrame;
       res = frame->QueryInterface(nsCOMTypeInfo<nsIComboboxControlFrame>::GetIID(),
                                                (void**)&comboboxFrame);
+      nsIFrame * listFrame;
       if (NS_SUCCEEDED(res) && comboboxFrame) {
-        nsIFrame * listFrame;
         comboboxFrame->GetDropDown(&listFrame);
         if (nsnull != listFrame) {
           listFrame->FirstChild(nsnull, &frame);
         }
+      } else {
+        res = frame->QueryInterface(nsCOMTypeInfo<nsIListControlFrame>::GetIID(),
+                                                 (void**)&listFrame);
+        if (NS_SUCCEEDED(res) && listFrame) {
+          frame->FirstChild(nsnull, &frame);
+        } 
       }
     } else {
-
       // If the primary frame is a scroll frame, then get the scrolled frame.
       // That's the frame that gets the reflow command
       const nsStyleDisplay* display;
@@ -5438,9 +5444,15 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(result) && selectElement) {
       PRUint32 numOptions = 0;
       result = selectElement->GetLength(&numOptions);
+      nsIFrame * selectFrame;                             // XXX temp needed only native controls
+      shell->GetPrimaryFrameFor(aContainer, &selectFrame);// XXX temp needed only native controls
+
       // For "select" add the pseudo frame after the last item is deleted
       nsIFrame* parentFrame = nsnull;
       childFrame->GetParent(&parentFrame);
+      if (parentFrame == selectFrame) { // XXX temp needed only native controls
+        return NS_ERROR_FAILURE;
+      }
       if (NS_SUCCEEDED(result) && shell && parentFrame && 1 == numOptions) { 
   
         nsIStyleContext*          styleContext   = nsnull; 
