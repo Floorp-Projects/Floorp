@@ -73,7 +73,9 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsOperaProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPhoenixProfileMigrator)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSeamonkeyProfileMigrator)
 #ifdef XP_WIN
+#if 0
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsIEProfileMigrator)
+#endif
 #elif defined(XP_MACOSX)
 #if 0
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSafariProfileMigrator)
