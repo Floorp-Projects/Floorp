@@ -458,7 +458,7 @@ EncodeSimpleValue(nsISOAPEncoding * aEncoding,
   nsAutoString name;      //  First choose the appropriate name and namespace for the element.
   nsAutoString ns;
   if (aName.IsEmpty()) {  //  We automatically choose appropriate element names where none exist.
-    // The idea here seems to be to walk up the schema hierarcy to
+    // The idea here seems to be to walk up the schema hierarchy to
     // find the base type and use the name of that as the element name.
     ns = gSOAPStrings->kSOAPEncURI;
     nsAutoString currentURI = ns;
