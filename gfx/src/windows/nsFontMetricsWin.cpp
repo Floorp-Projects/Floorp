@@ -655,9 +655,9 @@ GetGlyphIndex(PRUint16 segCount, PRUint16* endCode, PRUint16* startCode,
 
 enum eGetNameError
 {
-  eGetName_OK = 0,
-  eGetName_GDIError,
-  eGetName_OtherError
+  eGetName_OK = 0,    // exit code for a TrueType font
+  eGetName_GDIError,  // we use this internally to flag a raster (bitmap) font
+  eGetName_OtherError // unknown error, the font can't be used
 };
 
 static eGetNameError
@@ -665,7 +665,11 @@ GetNAME(HDC aDC, nsString* aName)
 {
   DWORD len = GetFontData(aDC, NAME, 0, nsnull, 0);
   if (len == GDI_ERROR) {
-    return eGetName_GDIError;
+    TEXTMETRIC metrics;
+    if (::GetTextMetrics(aDC, &metrics) == 0) // can fail here -- see bug 113779#c81
+      return eGetName_OtherError;
+    return (metrics.tmPitchAndFamily & TMPF_TRUETYPE) ?
+      eGetName_OtherError : eGetName_GDIError;
   }
   if (!len) {
     return eGetName_OtherError;
