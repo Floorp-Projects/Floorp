@@ -49,6 +49,7 @@ static NS_DEFINE_IID(kCCSSParserCID,     NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kHTMLStyleSheetCID, NS_HTMLSTYLESHEET_CID);
 static NS_DEFINE_CID(kHTMLCSSStyleSheetCID, NS_HTML_CSS_STYLESHEET_CID);
 static NS_DEFINE_IID(kCHTMLImageElementCID, NS_HTMLIMAGEELEMENT_CID);
+static NS_DEFINE_IID(kCHTMLOptionElementCID, NS_HTMLOPTIONELEMENT_CID);
 static NS_DEFINE_IID(kCRangeListCID, NS_RANGELIST_CID);
 static NS_DEFINE_IID(kCRangeCID,     NS_RANGE_CID);
 static NS_DEFINE_IID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
@@ -188,6 +189,13 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kCHTMLImageElementCID)) {
     res = NS_NewHTMLImageElement((nsIHTMLContent**)&inst, nsHTMLAtoms::img);
+    if (NS_FAILED(res)) {
+      return res;
+    }
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kCHTMLOptionElementCID)) {
+    res = NS_NewHTMLOptionElement((nsIHTMLContent**)&inst, nsHTMLAtoms::option);
     if (NS_FAILED(res)) {
       return res;
     }
@@ -346,6 +354,19 @@ LayoutScriptNameSet::AddNameSet(nsIScriptContext* aScriptContext)
     result = manager->RegisterGlobalName("HTMLImageElement", 
                                          kCHTMLImageElementCID, 
                                          PR_TRUE);
+    if (NS_FAILED(result)) {
+      NS_RELEASE(manager);
+      return result;
+    }
+      
+    result = manager->RegisterGlobalName("HTMLOptionElement", 
+                                         kCHTMLOptionElementCID, 
+                                         PR_TRUE);
+    if (NS_FAILED(result)) {
+      NS_RELEASE(manager);
+      return result;
+    }
+        
     NS_RELEASE(manager);
   }
   
