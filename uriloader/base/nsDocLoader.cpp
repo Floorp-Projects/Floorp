@@ -51,6 +51,8 @@
 #include "nsICSSParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsLayoutCID.h"
+#include "nsIPresShell.h"
+#include "nsIPresContext.h"
 
 #include "nsRDFCID.h"
 #include "nsIXULParentDocument.h"
@@ -81,17 +83,19 @@ PRLogModuleInfo* gDocLoaderLog = nsnull;
 
 
 /* Define IIDs... */
-NS_DEFINE_IID(kIStreamObserverIID,        NS_ISTREAMOBSERVER_IID);
-NS_DEFINE_IID(kIDocumentLoaderIID,        NS_IDOCUMENTLOADER_IID);
-NS_DEFINE_IID(kIDocumentLoaderFactoryIID, NS_IDOCUMENTLOADERFACTORY_IID);
-NS_DEFINE_IID(kDocumentBindInfoIID,       NS_DOCUMENTBINDINFO_IID);
-NS_DEFINE_IID(kIURLGroupIID,              NS_IURLGROUP_IID);
-NS_DEFINE_IID(kRefreshURLIID,             NS_IREFRESHURL_IID);
-NS_DEFINE_IID(kHTTPURLIID,                NS_IHTTPURL_IID);
-NS_DEFINE_IID(kISupportsIID,              NS_ISUPPORTS_IID);
-NS_DEFINE_IID(kIDocumentIID,              NS_IDOCUMENT_IID);
-NS_DEFINE_IID(kIStreamListenerIID,        NS_ISTREAMLISTENER_IID);
-NS_DEFINE_IID(kINetServiceIID,            NS_INETSERVICE_IID);
+NS_DEFINE_IID(kIStreamObserverIID,          NS_ISTREAMOBSERVER_IID);
+NS_DEFINE_IID(kIDocumentLoaderIID,          NS_IDOCUMENTLOADER_IID);
+NS_DEFINE_IID(kIDocumentLoaderFactoryIID,   NS_IDOCUMENTLOADERFACTORY_IID);
+NS_DEFINE_IID(kDocumentBindInfoIID,         NS_DOCUMENTBINDINFO_IID);
+NS_DEFINE_IID(kIURLGroupIID,                NS_IURLGROUP_IID);
+NS_DEFINE_IID(kRefreshURLIID,               NS_IREFRESHURL_IID);
+NS_DEFINE_IID(kHTTPURLIID,                  NS_IHTTPURL_IID);
+NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
+NS_DEFINE_IID(kIDocumentIID,                NS_IDOCUMENT_IID);
+NS_DEFINE_IID(kIStreamListenerIID,          NS_ISTREAMLISTENER_IID);
+NS_DEFINE_IID(kINetServiceIID,              NS_INETSERVICE_IID);
+NS_DEFINE_IID(kIContentViewerContainerIID,  NS_ICONTENT_VIEWER_CONTAINER_IID);
+
 
 /* Define CIDs... */
 NS_DEFINE_IID(kCHTMLDocumentCID,          NS_HTMLDOCUMENT_CID);
@@ -1254,8 +1258,31 @@ NS_IMETHODIMP
 nsDocLoaderImpl::GetContentViewerContainer(PRUint32 aDocumentID,
                                            nsIContentViewerContainer** aResult)
 {
-  *aResult = nsnull;
-  return NS_OK;
+  nsISupports* base = (nsISupports*) aDocumentID;
+  nsIDocument* doc;
+  nsresult rv;
+
+  rv = base->QueryInterface(kIDocumentIID, (void**)&doc);
+  if (NS_SUCCEEDED(rv)) {
+    nsIPresShell* pres;
+    pres = doc->GetShellAt(0);
+    if (nsnull != pres) {
+      nsIPresContext* presContext;
+      rv = pres->GetPresContext(&presContext);
+      if (NS_SUCCEEDED(rv) && nsnull != presContext) {
+        nsISupports* supp;
+        rv = presContext->GetContainer(&supp);
+        if (NS_SUCCEEDED(rv) && nsnull != supp) {          
+          rv = supp->QueryInterface(kIContentViewerContainerIID, (void**)aResult);          
+          NS_RELEASE(supp);
+        }
+        NS_RELEASE(presContext);
+      }
+      NS_RELEASE(pres);
+    }
+    NS_RELEASE(doc);
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
