@@ -3445,8 +3445,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
         mComboboxFrame->IsDroppedDown(&droppedDown);
         if (droppedDown) {
           ComboboxFinish(mEndSelectionIndex);
+          aKeyEvent->PreventDefault();
         }
-	aKeyEvent->PreventDefault();
         return NS_OK;
       } else {
         newIndex = mEndSelectionIndex;
