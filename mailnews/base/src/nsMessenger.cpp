@@ -494,7 +494,6 @@ nsMessenger::SaveAttachment(nsIFileSpec * fileSpec,
   nsCAutoString fullMessageUri = messageUri;
   nsresult rv = NS_OK;
   
-  fileSpec->MakeUnique();
   NS_WITH_SERVICE(nsIStreamConverterService,
                   streamConverterService,  
                   kIStreamConverterServiceCID, &rv);
