@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?>
-<?xml-stylesheet href="resource:/res/samples/preftree.css" type="text/css"?>
 
 <!DOCTYPE window
 [
@@ -11,7 +10,7 @@
 	<!ENTITY newButton.label "New">
 	<!ENTITY editButton.label "Edit">
 	<!ENTITY deleteButton.label "Delete">
-	<!ENTITY logFilterCheckbox.label "Log Filter Use">
+	<!ENTITY logFilterUseCheckbox.label "Log Filter Use">
 	<!ENTITY viewLogButton.label "View Log">
 	<!ENTITY description.label "Description">
     <!ENTITY filterHeader.label "Filters will be applied in the following order:">
@@ -77,7 +76,7 @@
     <box align="vertical" class="padded">
       <titledbutton class="push" value="&newButton.label;"/>
       <titledbutton class="push" value="&editButton.label;"/>
-      <titledbutton class="push" value="&newButton.label;"/>
+      <titledbutton class="push" value="&deleteButton.label;"/>
     </box>
   </box>
   <box align="horizontal" class="padded">
@@ -85,7 +84,7 @@
     <spring class="spacer"/>
     <html:div>&logFilterUseCheckbox.label;</html:div>
     <spring flex="100%"/>
-    <titledbutton class="push" value="&viewLog.label;"/>
+    <titledbutton class="push" value="&viewLogButton.label;"/>
   </box>
   <box align="vertical" class="cleanborder">
     <html:div>&description.label;</html:div>
