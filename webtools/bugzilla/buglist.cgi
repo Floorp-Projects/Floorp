@@ -354,13 +354,13 @@ sub GenerateSQL {
              my $table = "longdescs_$chartid";
              push(@supptables, "longdescs $table");
              push(@wherepart, "$table.bug_id = bugs.bug_id");
-             $term = "$table.who < " . SqlQuote(SqlifyDate($v));
+             $term = "$table.bug_when < " . SqlQuote(SqlifyDate($v));
          },
          "^long_?desc,changedafter" => sub {
              my $table = "longdescs_$chartid";
              push(@supptables, "longdescs $table");
              push(@wherepart, "$table.bug_id = bugs.bug_id");
-             $term = "$table.who > " . SqlQuote(SqlifyDate($v));
+             $term = "$table.bug_when > " . SqlQuote(SqlifyDate($v));
          },
          "^long_?desc," => sub {
              my $table = "longdescs_$chartid";
