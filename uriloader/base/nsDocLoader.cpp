@@ -50,8 +50,6 @@
 #include "nsICSSStyleSheet.h"
 #include "nsLayoutCID.h"
 
-#include "nsIRDFContentModelBuilder.h"
-#include "nsIRDFDocument.h"
 #include "nsRDFCID.h"
 
 /* Forward declarations.... */
@@ -454,12 +452,9 @@ nsDocFactoryImpl::CreateRDFDocument(const char* aContentType, nsIURL* aURL,
                                     nsIStreamListener** aDocListener,
                                     nsIContentViewer** aDocViewer)
 {
-    static NS_DEFINE_IID(kIRDFDocumentIID, NS_IRDFDOCUMENT_IID);
-
     nsresult rv = NS_ERROR_FAILURE;
     nsIDocument* doc = nsnull;
     nsIDocumentViewer* docv = nsnull;
-    nsIRDFContentModelBuilder* builder = nsnull;
 
     // Load the UA style sheet if we haven't already done that
     if (nsnull == gUAStyleSheet) {
@@ -502,7 +497,6 @@ nsDocFactoryImpl::CreateRDFDocument(const char* aContentType, nsIURL* aURL,
 
 done:
     NS_IF_RELEASE(doc);
-    NS_IF_RELEASE(builder);
     return rv;
 }
 
