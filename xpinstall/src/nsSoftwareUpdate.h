@@ -24,7 +24,7 @@ class nsSoftwareUpdate:  public nsIAppShellComponent, public nsISoftwareUpdate
     public:
         
         NS_DEFINE_STATIC_CID_ACCESSOR( NS_SoftwareUpdate_CID );
-
+        static nsSoftwareUpdate *GetInstance();
         nsSoftwareUpdate();
         virtual ~nsSoftwareUpdate();
 
@@ -45,7 +45,7 @@ class nsSoftwareUpdate:  public nsIAppShellComponent, public nsISoftwareUpdate
 
 
     private:
-        
+        static nsSoftwareUpdate* mInstance;
         nsresult RunNextInstall();
         nsresult DeleteScheduledNodes();
         

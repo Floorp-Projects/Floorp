@@ -162,12 +162,13 @@ nsInstall::~nsInstall()
         delete mVersionInfo;
 }
 
-
+PRInt32
 nsInstall::SetScriptObject(void *aScriptObject)
 {
   mScriptObject = (JSObject*) aScriptObject;
   return NS_OK;
 }
+
 #ifdef _WINDOWS
 nsInstall::SaveWinRegPrototype(void *aScriptObject)
 {
@@ -1616,7 +1617,6 @@ void
 nsInstall::CurrentUserNode(nsString& userRegNode)
 {    
     char *profname;
-    int len = MAXREGNAMELEN;
     nsIPref * prefs;
     
     nsresult rv = nsServiceManager::GetService(kPrefsCID, 

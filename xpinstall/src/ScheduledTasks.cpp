@@ -335,23 +335,23 @@ void ReplaceScheduledFiles(void)
         /* replace files if any listed */
         if (REGERR_OK ==  NR_RegGetKey(reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY, &key))
         {
-            char tmpfile[MAXREGNAMELEN];
+            char dummyFile[MAXREGNAMELEN];
             char target[MAXREGNAMELEN];
 
             state = 0;
-            while (REGERR_OK == NR_RegEnumEntries(reg, key, &state, tmpfile, sizeof(tmpfile), NULL ))
+            while (REGERR_OK == NR_RegEnumEntries(reg, key, &state, dummyFile, sizeof(dummyFile), NULL ))
             {
 
-                nsFileSpec replaceFile(tmpfile);
+                nsFileSpec replaceFile(dummyFile);
 
                 if (! replaceFile.Exists() )
                 {
-                    NR_RegDeleteEntry( reg, key, tmpfile );
+                    NR_RegDeleteEntry( reg, key, dummyFile );
                 }
-                else if ( REGERR_OK != NR_RegGetEntryString( reg, key, tmpfile, target, sizeof(target) ) )
+                else if ( REGERR_OK != NR_RegGetEntryString( reg, key, dummyFile, target, sizeof(target) ) )
                 {
                     /* can't read target filename, corruption? */
-                    NR_RegDeleteEntry( reg, key, tmpfile );
+                    NR_RegDeleteEntry( reg, key, dummyFile );
                 }
                 else 
                 {
@@ -371,13 +371,13 @@ void ReplaceScheduledFiles(void)
                             replaceFile.Rename(leafName);
                             nsCRT::free(leafName);
                             
-                            NR_RegDeleteEntry( reg, key, tmpfile );
+                            NR_RegDeleteEntry( reg, key, dummyFile );
                         }
                     }
                 }
             }
             /* delete list node if empty */
-            if (REGERR_NOMORE == NR_RegEnumEntries(reg, key, &state, tmpfile, sizeof(tmpfile), NULL )) 
+            if (REGERR_NOMORE == NR_RegEnumEntries(reg, key, &state, dummyFile, sizeof(dummyFile), NULL )) 
             {
                 NR_RegDeleteKey(reg, ROOTKEY_PRIVATE, REG_REPLACE_LIST_KEY);
             }

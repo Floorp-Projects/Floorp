@@ -83,6 +83,20 @@ static NS_DEFINE_IID(kIInstallVersion_IID, NS_IDOMINSTALLVERSION_IID);
 static NS_DEFINE_IID(kInstallVersion_CID, NS_SoftwareUpdateInstallVersion_CID);
 
 
+nsSoftwareUpdate* nsSoftwareUpdate::mInstance = nsnull;
+
+
+nsSoftwareUpdate *
+nsSoftwareUpdate::GetInstance()
+{
+    if (mInstance == NULL) 
+    {
+        mInstance = new nsSoftwareUpdate();
+    }
+    return mInstance;
+}
+
+
 
 nsSoftwareUpdate::nsSoftwareUpdate()
 {
@@ -293,7 +307,8 @@ nsSoftwareUpdate::InstallJar(  nsIFileSpec* aLocalFile,
 NS_IMETHODIMP
 nsSoftwareUpdate::InstallJarCallBack()
 {
-    PR_Lock(mLock);
+    //PR_Lock(mLock);  we are already lock by RunNextInstall().
+
     nsInstallInfo *nextInstall = (nsInstallInfo*)mJarInstallQueue->Get(0);
     
     if (nextInstall != nsnull)
@@ -302,7 +317,7 @@ nsSoftwareUpdate::InstallJarCallBack()
     mJarInstallQueue->Remove(0);
     
     mInstalling = PR_FALSE;
-    PR_Unlock(mLock);
+    //PR_Unlock(mLock);
 
     return RunNextInstall();
 
@@ -358,6 +373,8 @@ nsSoftwareUpdateFactory::~nsSoftwareUpdateFactory(void)
 {
 }
 
+
+
 NS_IMPL_ISUPPORTS(nsSoftwareUpdateFactory,kIFactoryIID)
 
 NS_IMETHODIMP
@@ -370,7 +387,7 @@ nsSoftwareUpdateFactory::CreateInstance(nsISupports *aOuter, REFNSIID aIID, void
 
     *aResult = NULL;
 
-    nsSoftwareUpdate *inst = new nsSoftwareUpdate();
+    nsSoftwareUpdate *inst = nsSoftwareUpdate::GetInstance();
 
     if (inst == NULL)
         return NS_ERROR_OUT_OF_MEMORY;

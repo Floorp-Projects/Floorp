@@ -964,13 +964,13 @@ InstallGetLastError(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 PR_STATIC_CALLBACK(JSBool)
 InstallGetWinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-  nsAutoString b0;
-  nsAutoString b1;
-
   *rval = JSVAL_NULL;
 
 #ifdef _WINDOWS
+  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  nsAutoString b0;
+  nsAutoString b1;
+  
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
   {
@@ -1007,11 +1007,13 @@ InstallGetWinProfile(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 PR_STATIC_CALLBACK(JSBool)
 InstallGetWinRegistry(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
-
   *rval = JSVAL_NULL;
 
 #ifdef _WINDOWS
+  
+  nsInstall *nativeThis = (nsInstall*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
   // If there's no private data, this must be the prototype, so ignore
   if(nsnull == nativeThis)
   {
@@ -2390,74 +2392,6 @@ static JSFunctionSpec InstallMethods[] =
 
 
 
-#if 0
-//
-// Install constructor
-//
-PR_STATIC_CALLBACK(JSBool)
-Install(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  return JS_FALSE;
-}
-
-//
-// Install class initialization
-//
-
-PRInt32 InitXPInstallObjects(nsIScriptContext *aContext, const char* jarfile, const char* args)
-{
-  JSContext *jscontext          = (JSContext *)aContext->GetNativeContext();
-  JSObject *global              = JS_GetGlobalObject(jscontext);
-  JSObject *installObject       = nsnull;
-  JSObject *winRegPrototype     = nsnull;
-  JSObject *winProfilePrototype = nsnull;
-  nsInstall *nativeInstallObject;
-
-  installObject  = JS_InitClass( jscontext,         // context
-                                 global,            // global object
-                                 nsnull,            // parent proto 
-                                 &InstallClass,     // JSClass
-                                 nsnull,            // JSNative ctor
-                                 0,                 // ctor args
-                                 nsnull,            // proto props
-                                 nsnull,            // proto funcs
-                                 InstallProperties, // ctor props (static)
-                                 InstallMethods);   // ctor funcs (static)
-
-  if (nsnull == installObject) 
-  {
-      return NS_ERROR_FAILURE;
-  }
-
-  if ( PR_FALSE == JS_DefineConstDoubles(jscontext, installObject, install_constants) )
-            return NS_ERROR_FAILURE;
-  
-  nativeInstallObject = new nsInstall();
-
-  nativeInstallObject->SetJarFileLocation(jarfile);
-  nativeInstallObject->SetInstallArguments(args);
-
-  JS_SetPrivate(jscontext, installObject, nativeInstallObject);
-  nativeInstallObject->SetScriptObject(installObject);
- 
-#ifdef _WINDOWS
-  if(NS_OK != InitWinRegPrototype(jscontext, global, &winRegPrototype))
-  {
-      return NS_ERROR_FAILURE;
-  }
-  nativeInstallObject->SaveWinRegPrototype(winRegPrototype);
-
-  if(NS_OK != InitWinProfilePrototype(jscontext, global, &winRegPrototype))
-  {
-      return NS_ERROR_FAILURE;
-  }
-  nativeInstallObject->SaveWinProfilePrototype(winProfilePrototype);
-#endif
-
-  return NS_OK;
-}
-#endif
-
 
 
 PRInt32 InitXPInstallObjects(JSContext *jscontext, 
@@ -2467,6 +2401,8 @@ PRInt32 InitXPInstallObjects(JSContext *jscontext,
                              const PRUnichar* args)
 {
   JSObject *installObject       = nsnull;
+  JSObject *winRegPrototype     = nsnull;
+  JSObject *winProfilePrototype = nsnull;
   nsInstall *nativeInstallObject;
 
   installObject  = JS_InitClass( jscontext,         // context

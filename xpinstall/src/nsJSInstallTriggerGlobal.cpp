@@ -109,7 +109,6 @@ PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalUpdateEnabled(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRBool nativeRet;
 
   *rval = JSVAL_NULL;
@@ -254,7 +253,6 @@ PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalConditionalSoftwareUpdate(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1;
@@ -409,7 +407,6 @@ PR_STATIC_CALLBACK(JSBool)
 InstallTriggerGlobalCompareVersion(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMInstallTriggerGlobal *nativeThis = (nsIDOMInstallTriggerGlobal*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
   PRInt32 nativeRet;
   nsAutoString b0;
   nsAutoString b1str;
@@ -586,7 +583,6 @@ nsresult NS_InitInstallTriggerGlobalClass(nsIScriptContext *aContext, void **aPr
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
   JSObject *constructor = nsnull;
-  JSObject *parent_proto = nsnull;
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 

@@ -130,7 +130,9 @@ char* nsInstallDelete::toString()
     
     if (mDeleteStatus == DELETE_COMPONENT)
     {
-        sprintf( buffer, nsInstallResources::GetDeleteComponentString(), nsAutoCString(mRegistryName));
+        char* temp = mRegistryName.ToNewCString();
+        sprintf( buffer, nsInstallResources::GetDeleteComponentString(), temp);
+        delete [] temp;
     }
     else
     {
