@@ -153,6 +153,8 @@ endif
 ## Motif
 ##
 
+ifdef FE_X_LIBS
+
 ##
 ## Set the motif include flags
 ##
@@ -203,6 +205,10 @@ ifneq ($(shell $(DETECT_MOTIF) -l),True)
 	@echo >> $@
 	@echo "# Winning File Selection" >> $@
 	@echo "MOZILLA_XFE_USE_WINNING_FILE_SELECTION = 1" >> $@
+endif
+
+# This is the endif for including motif
+
 endif
 
 ##
