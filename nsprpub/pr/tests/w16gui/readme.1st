@@ -1,0 +1,37 @@
+readme.1st.
+
+The files in the pr/tests/w16gui directory are taken
+from "Programming Windows 3.1" by Charles Petzold,
+specifically, the programs in chapter 14 related
+to the "poppad4" sample application.
+
+These programs are compiled with nspr20 to test nspr 2.0
+and to demostrate the use of nspr in a gui application.
+
+Library (DLL) PLDSxx.lib PLDSxx.dll is required to be
+linked with this test case. Functions in this dll are
+in the source ns/nspr20/lib/ds/plevent.* files.
+
+Permission to use.
+
+The source for poppad.c are used under license from
+Petzold. The license to use is stated in the book.
+The following paragraph of the license grants that
+use.
+
+ 5. SAMPLE CODE.  If the SOFTWARE includes Sample Code, then
+    Microsoft grants you a royalty-free right to reproduce and
+    distribute the sample code of the SOFTWARE provided that you:
+    (a) distribute the sample code only in conjunction with and
+    as part of your software product; (b) do not use Microsoft's
+    or its authors' names, logos, or trademarks to market your
+    software product; (c) include the copyright notice that appears
+    on the SOFTWARE on your product label and as a part of the
+    sign-on message for your software product; and (d) agree to
+    idemnify, hold harmless, and defend Microsoft and its authors
+    from and against any claims or lawsuits, including attorneys'
+    fees, that arise or result from the use or distribution of
+    your software product.
+
+lth. 9/24/97.
+

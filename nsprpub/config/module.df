@@ -1,0 +1,6 @@
+# Module description file
+#
+# A module is also called a component or a subsystem.
+
+MOD_NAME = nspr20
+MOD_VERSION = 21
