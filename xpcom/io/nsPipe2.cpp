@@ -621,7 +621,7 @@ nsPipe::nsPipeOutputStream::WriteSegments(nsReadSegmentFun reader,
             if (NS_FAILED(rv))
                 goto done;
             if (writeBufLen == 0) {
-                if (*writeCount > 0)
+                if (*writeCount > 0 && !mBlocking)
                     goto done;
                 if (pipe->mObserver/* && *writeCount == 0*/) {
                     mon.Exit();     // XXXbe avoid deadlock better
