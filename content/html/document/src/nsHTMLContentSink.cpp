@@ -5575,7 +5575,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
     rv = NS_NewTextNode(getter_AddRefs(text));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIDOMText> tc(do_QueryInterface(text), &rv);
+    nsCOMPtr<nsIDOMText> tc(do_QueryInterface(text, &rv));
     if (NS_OK == rv) {
       tc->SetData(script);
     }
