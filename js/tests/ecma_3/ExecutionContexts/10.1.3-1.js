@@ -83,8 +83,8 @@ expect = 'a4b4c4';
 addThis();
 
 /*
- * If the value of the last duplicate parameter is not provided,
- * by the function called, the value of this parameter is undefined
+ * If the value of the last duplicate parameter is not provided by
+ * the function caller, the value of this parameter is undefined
  */
 function f4(x,a,b,x,z)
 {
