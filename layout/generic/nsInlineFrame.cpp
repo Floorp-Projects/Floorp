@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsInlineFrame.h"
+#include "nsBlockFrame.h"
 #include "nsSize.h"
 #include "nsIContent.h"
 #include "nsIContentDelegate.h"
@@ -65,15 +66,24 @@ public:
   nscoord*          ascents;        // ascent information for each child
   PRBool            unconstrainedWidth;
   PRBool            unconstrainedHeight;
+  nsLineLayout*     lineLayout;
+  PRBool            atBreakPoint;
 
   // Constructor
-  nsInlineState(nsStyleFont*     aStyleFont,
+  nsInlineState(nsIPresContext*  aPresContext,
+                nsIFrame*        aInlineFrame,
+                nsStyleFont*     aStyleFont,
                 const nsMargin&  aBorderPadding,
                 const nsSize&    aMaxSize,
                 nsSize*          aMaxElementSize)
     : x(aBorderPadding.left),  // determined by inner edge
       y(aBorderPadding.top)    // determined by inner edge
   {
+    nsBlockReflowState* brs =
+      nsBlockFrame::FindBlockReflowState(aPresContext, aInlineFrame);
+    lineLayout = brs->mCurrentLine;
+    atBreakPoint = PR_TRUE;
+
     font = aStyleFont;
     borderPadding = aBorderPadding;
 
@@ -187,6 +197,49 @@ void nsInlineFrame::PlaceChild(nsIFrame*              aChild,
   }
 }
 
+// XXX an image shouldn't be allowed to continue a word but text
+// should.  hmmm.
+
+PRBool
+nsInlineFrame::CanFitChild(nsIPresContext* aPresContext,
+                           nsInlineState& aState,
+                           nsIFrame* aChildFrame)
+{
+  PRBool result = PR_TRUE;
+  aState.atBreakPoint = nsnull == aState.lineLayout->mBreakFrame;
+  if ((aState.availSize.width <= 0) &&
+      (aChildFrame != mFirstChild) && (nsnull != mFirstChild)) {
+    // If we are at a breakable position then it's ok to be out of
+    // room. Otherwise the child is allowed to fit.
+    if (aState.atBreakPoint) {
+      result = PR_FALSE;
+    }
+  }
+
+  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+               ("nsInlineFrame::CanFitChild: availSize=%d result=%s",
+                aState.availSize.width, result ? "true" : "false"));
+  return result;
+}
+
+// XXX dup first-child check because of calling code not being nice! ick!
+PRBool
+nsInlineFrame::DidFitChild(nsIPresContext* aPresContext,
+                           nsInlineState& aState,
+                           nsIFrame* aChildFrame,
+                           nsReflowMetrics& aChildMetrics)
+{
+  if ((aChildMetrics.width > aState.availSize.width) &&
+      (aChildFrame != mFirstChild) && (nsnull != mFirstChild)) {
+    // If we *were* at a breakable position then it's ok to be out of
+    // room. Otherwise the child is allowed to fit.
+    if (aState.atBreakPoint) {
+      return PR_FALSE;
+    }
+  }
+  return PR_TRUE;
+}
+
 /**
  * Reflow the frames we've already created
  *
@@ -227,11 +280,14 @@ PRBool nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
     nsReflowStatus  status;
 
     // Reflow the child into the available space
-    kidFrame->WillReflow(*aPresContext);
-    status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+    PRBool room = CanFitChild(aPresContext, aState, kidFrame);
+    if (room) {
+      kidFrame->WillReflow(*aPresContext);
+      status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
+    }
 
     // Did the child fit?
-    if ((kidSize.width > aState.availSize.width) && (kidFrame != mFirstChild)) {
+    if (!room || !DidFitChild(aPresContext, aState, kidFrame, kidSize)) {
       // The child is too wide to fit in the available space, and it's
       // not our first child
 
@@ -301,8 +357,6 @@ PRBool nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
 
     // Get the next child frame
     kidFrame->GetNextSibling(kidFrame);
-
-    // XXX talk with troy about checking for available space here
   }
 
   // Update the child count member data
@@ -334,11 +388,18 @@ PRBool nsInlineFrame::ReflowMappedChildrenFrom(nsIPresContext* aPresContext,
 PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
                                      nsInlineState&  aState)
 {
+  NS_FRAME_LOG(NS_FRAME_TRACE_PUSH_PULL,
+               ("nsInlineFrame::PullUpChildren: [%d,%d,%c] childCount=%d",
+                mFirstContentOffset,
+                mLastContentOffset,
+                mLastContentIsComplete ? 'T' : 'F',
+                mChildCount));
 #ifdef NS_DEBUG
   if (GetVerifyTreeEnable()) {
     VerifyLastIsComplete();
   }
 #endif
+
   nsInlineFrame* nextInFlow = (nsInlineFrame*)mNextInFlow;
   nsSize         kidMaxElementSize;
   nsSize*        pKidMaxElementSize = (nsnull != aState.maxElementSize) ? &kidMaxElementSize : nsnull;
@@ -348,13 +409,6 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
   nsIFrame*      prevKidFrame;
    
   LastChild(prevKidFrame);
-
-  // This will hold the prevKidFrame's mLastContentIsComplete
-  // status. If we have to push the frame that follows prevKidFrame
-  // then this will become our mLastContentIsComplete state. Since
-  // prevKidFrame is initially our last frame, it's completion status
-  // is our mLastContentIsComplete value.
-  PRBool        prevLastContentIsComplete = mLastContentIsComplete;
 
   PRBool        result = PR_TRUE;
 
@@ -385,6 +439,14 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
     // frame) then we should stop! If we have an inline BR tag we should
     // stop too!
 
+    // If there is no room, stop pulling up
+    if (!CanFitChild(aPresContext, aState, kidFrame)) {
+      result = PR_FALSE;
+      break;
+    }
+
+// XXX inline reflow avoidance will be done by nsLineLayout
+#if XXX
     // See if the child fits in the available space. If it fits or
     // it's splittable then reflow it. The reason we can't just move
     // it is that we still need ascent/descent information
@@ -396,21 +458,27 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
     if ((kidFrameSize.width > aState.availSize.width) &&
         NS_FRAME_IS_NOT_SPLITTABLE(kidIsSplittable)) {
       result = PR_FALSE;
-      mLastContentIsComplete = prevLastContentIsComplete;
       break;
     }
+#endif
+
     nsReflowState kidReflowState(eReflowReason_Resize, aState.availSize);
     kidFrame->WillReflow(*aPresContext);
     status = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
 
     // Did the child fit?
-    if ((kidSize.width > aState.availSize.width) && (nsnull != mFirstChild)) {
+    if (!DidFitChild(aPresContext, aState, kidFrame, kidSize)) {
       // The child is too wide to fit in the available space, and it's
       // not our first child
       result = PR_FALSE;
-      mLastContentIsComplete = prevLastContentIsComplete;
       break;
     }
+
+    NS_FRAME_LOG(NS_FRAME_TRACE_PUSH_PULL,
+                 ("nsInlineFrame::PullUpChildren: pulled frame=%p [%c][%x]",
+                  kidFrame,
+                  NS_FRAME_IS_COMPLETE(status) ? 'T' : 'F',
+                  status));
 
     // Place and size the child. We'll deal with vertical alignment when
     // we're all done
@@ -440,17 +508,14 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
     }
     kidFrame->SetNextSibling(nsnull);
     mChildCount++;
-
-    // Remember where we just were in case we end up pushing children
     prevKidFrame = kidFrame;
-    prevLastContentIsComplete = mLastContentIsComplete;
 
     // Is the child we just pulled up complete?
     mLastContentIsComplete = NS_FRAME_IS_COMPLETE(status);
     if (NS_FRAME_IS_NOT_COMPLETE(status)) {
       // No the child isn't complete
       nsIFrame* kidNextInFlow;
-       
+
       kidFrame->GetNextInFlow(kidNextInFlow);
       if (nsnull == kidNextInFlow) {
         // The child doesn't have a next-in-flow so create a
@@ -473,6 +538,9 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
         // mLastContentIsComplete state.
         kidFrame->SetNextSibling(continuingFrame);
 
+        NS_FRAME_LOG(NS_FRAME_TRACE_PUSH_PULL,
+                     ("nsInlineFrame::PullUpChildren: pushing frame=%p",
+                      continuingFrame));
         PushChildren(continuingFrame, kidFrame, PR_TRUE);
 
         // After we push the continuation frame we don't need to fuss
@@ -523,6 +591,12 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
     VerifyLastIsComplete();
   }
 #endif
+  NS_FRAME_LOG(NS_FRAME_TRACE_PUSH_PULL,
+               ("nsInlineFrame::PullUpChildren: [%d,%d,%c] childCount=%d",
+                mFirstContentOffset,
+                mLastContentOffset,
+                mLastContentIsComplete ? 'T' : 'F',
+                mChildCount));
   return result;
 }
 
@@ -534,8 +608,9 @@ PRBool nsInlineFrame::PullUpChildren(nsIPresContext* aPresContext,
  * @return  NS_FRAME_COMPLETE if all content has been mapped and 0 if we
  *            should be continued
  */
-nsReflowStatus nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
-                                                     nsInlineState&  aState)
+nsReflowStatus
+nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContext,
+                                      nsInlineState&  aState)
 {
 #ifdef NS_DEBUG
   if (GetVerifyTreeEnable()) {
@@ -550,7 +625,8 @@ nsReflowStatus nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContex
   // our content offset should already be set correctly...
   if ((nsnull == mFirstChild) && (nsnull != mPrevInFlow)) {
     nsInlineFrame* prev = (nsInlineFrame*)mPrevInFlow;
-    NS_ASSERTION(prev->mLastContentOffset >= prev->mFirstContentOffset, "bad prevInFlow");
+    NS_ASSERTION(prev->mLastContentOffset >= prev->mFirstContentOffset,
+                 "bad prevInFlow");
 
     mFirstContentOffset = prev->NextChildOffset();
     if (!prev->mLastContentIsComplete) {
@@ -562,7 +638,8 @@ nsReflowStatus nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContex
 
   // Place our children, one at a time until we are out of children
   nsSize    kidMaxElementSize;
-  nsSize*   pKidMaxElementSize = (nsnull != aState.maxElementSize) ? &kidMaxElementSize : nsnull;
+  nsSize*   pKidMaxElementSize =
+    (nsnull != aState.maxElementSize) ? &kidMaxElementSize : nsnull;
   PRInt32   kidIndex = NextChildOffset();
   nsIFrame* prevKidFrame;
 
@@ -577,13 +654,14 @@ nsReflowStatus nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContex
     }
 
     // Make sure we still have room left
-    if (aState.availSize.width <= 0) {
+    if (!CanFitChild(aPresContext, aState, nsnull)) {
       // Note: return status was set to 0 above...
       break;
     }
 
     // Resolve style for the child
-    nsIStyleContextPtr kidStyleContext = aPresContext->ResolveStyleContextFor(kid, this);
+    nsIStyleContextPtr kidStyleContext =
+      aPresContext->ResolveStyleContextFor(kid, this);
 
     // Figure out how we should treat the child
     nsIFrame*        kidFrame;
@@ -644,7 +722,7 @@ nsReflowStatus nsInlineFrame::ReflowUnmappedChildren(nsIPresContext* aPresContex
                                          kidReflowState);
 
     // Did the child fit?
-    if ((kidSize.width > aState.availSize.width) && (nsnull != mFirstChild)) {
+    if (!DidFitChild(aPresContext, aState, kidFrame, kidSize)) {
       // The child is too wide to fit in the available space, and it's
       // not our first child. Add the frame to our overflow list
       NS_ASSERTION(nsnull == mOverflowList, "bad overflow list");
@@ -744,7 +822,8 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
   // the overflow list, because our first content offset might change
   nsMargin borderPadding;
   styleSpacing->CalcBorderPaddingFor(this, borderPadding);
-  nsInlineState state(styleFont, borderPadding, aReflowState.maxSize, aDesiredSize.maxElementSize);
+  nsInlineState state(aPresContext, this, styleFont, borderPadding,
+                      aReflowState.maxSize, aDesiredSize.maxElementSize);
   InitializeState(aPresContext, state);
   state.SetNumAscents(mContent->ChildCount() - mFirstContentOffset);
 
@@ -776,11 +855,11 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
       aStatus = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState);
   
       // Did the child fit?
-      if ((kidSize.width > state.availSize.width) && (kidFrame != mFirstChild)) {
+      if (!DidFitChild(aPresContext, state, kidFrame, kidSize)) {
         nsIFrame* prevFrame;
   
-        // The child is too wide to fit in the available space, and it's not our
-        // first child
+        // The child is too wide to fit in the available space, and
+        // it's not our first child
         PrevChild(kidFrame, prevFrame);
         PushChildren(kidFrame, prevFrame, mLastContentIsComplete);
         SetLastContentOffset(prevFrame);
@@ -850,6 +929,7 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
   
     // Did we successfully relow our mapped children?
     if (PR_TRUE == reflowMappedOK) {
+#if XXX
       // Any space left?
       if (state.availSize.width <= 0) {
         // No space left. Don't try to pull-up children or reflow unmapped
@@ -857,7 +937,9 @@ NS_METHOD nsInlineFrame::Reflow(nsIPresContext*      aPresContext,
           // No room left to map the remaining content; therefore, we're not complete
           aStatus = NS_FRAME_NOT_COMPLETE;
         }
-      } else if (NextChildOffset() < mContent->ChildCount()) {
+      } else
+#endif
+      if (NextChildOffset() < mContent->ChildCount()) {
         // Try and pull-up some children from a next-in-flow
         if (PullUpChildren(aPresContext, state)) {
           // If we still have unmapped children then create some new frames
@@ -1013,11 +1095,14 @@ nsInlineFrame::IncrementalReflowFrom(nsIPresContext* aPresContext,
   // XXX This isn't the optimal thing to do...
   if (ReflowMappedChildrenFrom(aPresContext, aState, aChildFrame, aChildIndex)) {
     if (NextChildOffset() < mContent->ChildCount()) {
+#if XXX
       // Any space left?
       if (aState.availSize.width <= 0) {
         // No space left. Don't try to pull-up children
         status = NS_FRAME_NOT_COMPLETE;
-      } else {
+      } else
+#endif
+      {
         // Try and pull-up some children from a next-in-flow
         if (!PullUpChildren(aPresContext, aState)) {
           // We were not able to pull-up all the child frames from our
@@ -1050,11 +1135,14 @@ nsInlineFrame::IncrementalReflowAfter(nsIPresContext* aPresContext,
   if ((nsnull == nextFrame) || 
       ReflowMappedChildrenFrom(aPresContext, aState, nextFrame, aChildIndex + 1)) {
     if (NextChildOffset() < mContent->ChildCount()) {
+#if XXX
       // Any space left?
       if (aState.availSize.width <= 0) {
         // No space left. Don't try to pull-up children
         status = NS_FRAME_NOT_COMPLETE;
-      } else {
+      } else
+#endif
+      {
         // Try and pull-up some children from a next-in-flow
         if (!PullUpChildren(aPresContext, aState)) {
           // We were not able to pull-up all the child frames from our
@@ -1076,57 +1164,3 @@ nsInlineFrame::IncrementalReflowAfter(nsIPresContext* aPresContext,
 // that were relatively positioned back to their computed x origin.
 // This should probably be done as a pre-alignment computation (and it
 // can be avoided if there are no relatively positioned children).
-
-/**
- * Adjust the position of all the children in this frame.
- *
- * The children after aKid in the list of children are slid over by
- * dx.
- *
- * Once the x and y coordinates have been set, then the vertical
- * alignment code is executed to place the children vertically and to
- * compute the final height of our frame.
- *
- * If one of our children spills over the end then push it to the
- * next-in-flow or to our overflow list.
- */
-#if 0
-nsReflowStatus
-nsInlineFrame::AdjustChildren(nsIPresContext* aPresContext,
-                              nsReflowMetrics& aDesiredSize,
-                              nsInlineState& aState,
-                              nsIFrame* aKid,
-                              nsReflowMetrics& aKidMetrics,
-                              ReflowStatus aKidReflowStatus)
-{
-  nscoord xr = aState.availSize.width + aState.borderPadding.left;
-  nscoord remainingSpace = xr - aState.x;
-  nscoord x = aState.x;
-
-  // Slide all of the children over following aKid
-  nsIFrame* kid = aKid;
-  nsRect r;
-  while (nsnull != kid) {
-    kid->GetRect(r);
-    if (r.x != x) {
-      kid->MoveTo(x, r.y);
-    }
-    x += r.width;
-    // XXX factor in left and right margins
-    kid->GetNextSibling(kid);
-  }
-
-  // Vertically align the children
-  const nsMargin& insets = aState.borderPadding;
-  nsCSSLayout::VerticallyAlignChildren(aPresContext, this, aState.font,
-                                       insets.top, mFirstChild, mChildCount,
-                                       aState.ascents, aState.maxAscent);
-
-  // XXX relative position children, if any
-
-  // XXX adjust mLastContentOffset if we push
-  // XXX if we push, generate a reflow command
-
-  return NS_FRAME_COMPLETE;
-}
-#endif
