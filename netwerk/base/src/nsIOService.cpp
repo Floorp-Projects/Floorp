@@ -490,7 +490,7 @@ nsIOService::GetParserForScheme(const char *scheme, nsIURLParser **_retval)
                 return rv;
             if (*_retval)
                 CacheURLParser(scheme, *_retval);
-            return *_retval ? NS_OK : NS_ERROR_FAILURE
+            return *_retval ? NS_OK : NS_ERROR_FAILURE;
         }
     }
 
