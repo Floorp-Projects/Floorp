@@ -562,7 +562,7 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
 
   PRBool bidiEnabled = PR_FALSE;
   if (presContext)
-    presContext->BidiEnabled(bidiEnabled);
+    presContext->GetBidiEnabled(&bidiEnabled);
 
   if (bidiEnabled)
   {
@@ -1007,11 +1007,11 @@ void nsCaret::DrawCaret()
       mBidiKeyboard->IsLangRTL(&bidiLevel);
     if (bidiLevel)
     {
-      presContext->EnableBidi();
       bidiEnabled = PR_TRUE;
+      presContext->SetBidiEnabled(bidiEnabled);
     }
     else
-      presContext->BidiEnabled(bidiEnabled);
+      presContext->GetBidiEnabled(&bidiEnabled);
     if (bidiEnabled)
     {
       if (bidiLevel != mKeyboardRTL)

@@ -1586,7 +1586,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
     mHint = (HINT)pos.mPreferLeft;
 #ifdef IBMBIDI
     PRBool bidiEnabled = PR_FALSE;
-    context->BidiEnabled(bidiEnabled);
+    context->GetBidiEnabled(&bidiEnabled);
     if (bidiEnabled)
     {
       nsIFrame *theFrame;
@@ -2612,7 +2612,7 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
   {
 #ifdef IBMBIDI
     PRBool bidiEnabled = PR_FALSE;
-    aPresContext->BidiEnabled(bidiEnabled);
+    aPresContext->GetBidiEnabled(&bidiEnabled);
     if (bidiEnabled) {
       long level;
       nsPeekOffsetStruct pos;

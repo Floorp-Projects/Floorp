@@ -3316,10 +3316,7 @@ nsDocument::GetBidiEnabled(PRBool* aBidiEnabled) const
 NS_IMETHODIMP
 nsDocument::SetBidiEnabled(PRBool aBidiEnabled)
 {
-  NS_ASSERTION(aBidiEnabled, "cannot disable bidi once enabled");
-  if (aBidiEnabled) {
-    mBidiEnabled = PR_TRUE;
-  }
+  mBidiEnabled = aBidiEnabled;
   return NS_OK;
 }
 #endif // IBMBIDI

@@ -924,7 +924,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
 #ifdef IBMBIDI
   PRBool bidiEnabled;
-  mPresContext->BidiEnabled(bidiEnabled);
+  mPresContext->GetBidiEnabled(&bidiEnabled);
   PRBool visual;
   PRBool setMode = PR_FALSE;
   PRInt32 start, end;

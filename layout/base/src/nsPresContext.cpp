@@ -1457,29 +1457,30 @@ nsPresContext::IsVisRTL(PRBool& aResult)
 }
 
 NS_IMETHODIMP
-nsPresContext::BidiEnabled(PRBool& aBidiEnabled) const
+nsPresContext::GetBidiEnabled(PRBool* aBidiEnabled) const
 {
-  aBidiEnabled = PR_FALSE;
-  NS_ASSERTION(mShell, "PresShell must be set on PresContext before calling nsPresContext::BidiEnabled");
+  NS_ENSURE_ARG_POINTER(aBidiEnabled);
+  *aBidiEnabled = PR_FALSE;
+  NS_ASSERTION(mShell, "PresShell must be set on PresContext before calling nsPresContext::GetBidiEnabled");
   if (mShell) {
     nsCOMPtr<nsIDocument> doc;
     mShell->GetDocument(getter_AddRefs(doc) );
-    NS_ASSERTION(doc, "PresShell has no document in nsPresContext::BidiEnabled");
+    NS_ASSERTION(doc, "PresShell has no document in nsPresContext::GetBidiEnabled");
     if (doc) {
-      doc->GetBidiEnabled(&aBidiEnabled);
+      doc->GetBidiEnabled(aBidiEnabled);
     }
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsPresContext::EnableBidi() const
+nsPresContext::SetBidiEnabled(PRBool aBidiEnabled) const
 {
   if (mShell) {
     nsCOMPtr<nsIDocument> doc;
     mShell->GetDocument(getter_AddRefs(doc) );
     if (doc) {
-      doc->SetBidiEnabled(PR_TRUE);
+      doc->SetBidiEnabled(aBidiEnabled);
     }
   }
   return NS_OK;
@@ -1519,7 +1520,7 @@ NS_IMETHODIMP   nsPresContext::SetBidi(PRUint32 aSource, PRBool aForceReflow)
   mBidi = aSource;
   if (IBMBIDI_TEXTDIRECTION_RTL == GET_BIDI_OPTION_DIRECTION(mBidi)
       || IBMBIDI_NUMERAL_HINDI == GET_BIDI_OPTION_NUMERAL(mBidi)) {
-    EnableBidi();
+    SetBidiEnabled(PR_TRUE);
   }
   if (IBMBIDI_TEXTTYPE_VISUAL == GET_BIDI_OPTION_TEXTTYPE(mBidi)) {
     SetVisualMode(PR_TRUE);

@@ -3034,7 +3034,7 @@ nsGenericHTMLElement::MapCommonAttributesInto(const nsIHTMLMappedAttributes* aAt
     display->mExplicitDirection = display->mDirection;
 
     if (NS_STYLE_DIRECTION_RTL == display->mDirection) {
-      aPresContext->EnableBidi();
+      aPresContext->SetBidiEnabled(PR_TRUE);
     }
 #endif // IBMBIDI
   }
