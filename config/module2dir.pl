@@ -184,7 +184,7 @@ my %map = (
   'xlibrgb',            'gfx/src/xlibrgb',
   'xml-rpc',            'extensions/xml-rpc'
   'xmlextras',          'extensions/xmlextras',
-  'xmlterm',            'extensions/xmlterm,
+  'xmlterm',            'extensions/xmlterm',
   'xpcom',              'xpcom',
   'xpconnect',          'js/src/xpconnect',
   'xpcshell',           'js/src/xpconnect/shell',
