@@ -65,7 +65,7 @@ function Startup()
   dialog.isCustomSize = false;
   
   // Another version of button just for this dialog -- on same line as "More Properties"
-  dialog.AdvancedEditButton2 = document.getElementById( "AdvancedEditButton2" );
+  dialog.AdvancedEditButton = document.getElementById( "AdvancedEditButton" );
 
   // Get a single selected image element
   var tagName = "img"
@@ -299,7 +299,7 @@ function onMoreFewerImage()
     //dialog.MoreSection.setAttribute("style","display: none");
     dialog.MoreSection.setAttribute("collapsed","true");
     // Show the "Advanced Edit" button on same line as "More Properties"
-    //dialog.AdvancedEditButton2.setAttribute("style","display: inherit");
+    //dialog.AdvancedEditButton.setAttribute("style","display: inherit");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","0");
     dialog.MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
@@ -310,7 +310,7 @@ function onMoreFewerImage()
     //dialog.MoreSection.setAttribute("style","display: inherit");
     dialog.MoreSection.removeAttribute("collapsed");
     // Hide the "Advanced Edit" next to "More..." Use button at bottom right of dialog
-    dialog.AdvancedEditButton2.setAttribute("style","display: none");
+    dialog.AdvancedEditButton.setAttribute("style","display: none");
     window.sizeToContent();
 
     dialog.MoreFewerButton.setAttribute("more","1");
@@ -394,8 +394,8 @@ function doOverallEnabling()
   SetElementEnabledById( "bordertypeLabel", canEnableAll );
 
   // This shouldn't find button, but it does!
+  SetElementEnabledById( "AdvancedEditButton", canEnableAll );
   SetElementEnabledById( "AdvancedEditButton2", canEnableAll );
-  SetElementEnabledById( "AdvancedEditButton3", canEnableAll );
 
   SetElementEnabledById( "imagemapLabel", canEnableAll );
   SetElementEnabledById( "editImageMap", canEnableAll );

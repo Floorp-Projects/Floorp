@@ -125,21 +125,19 @@
   </box>
   <separator class="groove"/>
   <checkbox id="BackgroundImageCheckbox" value="&backgroundImage.label;" oncommand="onBackgroundImageCheckbox()"/>
-  <box>
-    <textfield id="BackgroundImageInput" flex="1"/>
-    <spring class="spacer"/>
-    <button class="dialog" id="ChooseFile"/>
-  </box>
-  <box>
-    <!-- This message needs to wrap -->
-    <html class="label wrap" flex="1">&saveImageMsg.label;</html>
-    <spring class="bigspacer"/>
-    <spring flex="1"/>
-    <box orient="vertical">
-      <spring class="bigspacer"/>
-      <button class="dialog" id="AdvancedEditButton2"/>
-    </box>
-  </box>
+  <grid>
+    <columns><column/><column/></columns>
+    <rows>
+      <row>
+        <textfield id="BackgroundImageInput"/>
+        <button class="dialog" id="ChooseFile" flex="1"/>
+      </row>
+      <row autostretch="never" vertical-align="middle">
+        <html class="label wrap" flex="1">&saveImageMsg.label;</html>
+        <button class="dialog" id="AdvancedEditButton" flex="1"/>
+      </row>
+    </rows>
+  </grid>
   <separator class="groove"/>
   <box id="okCancelButtons"/> 
 </window>

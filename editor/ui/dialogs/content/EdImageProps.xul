@@ -92,7 +92,7 @@
       persist = "more"/>
     <spring flex="1"/>
     <!-- From EdDialogOverlay.xul -->
-    <button id="AdvancedEditButton2"/>
+    <button id="AdvancedEditButton"/>
   </box>
 
   <!-- Area that shows and hides via MoreFewerButton --> 
@@ -245,7 +245,7 @@
     <box>
       <spring flex="1"/>
       <!-- From EdDialogOverlay -->
-      <button id="AdvancedEditButton3"/>
+      <button id="AdvancedEditButton2"/>
     </box>
   </box> <!-- END OF MORE/FEWER SECTION -->
   <separator class="groove"/>

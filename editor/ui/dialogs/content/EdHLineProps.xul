@@ -68,24 +68,22 @@
       <radio id="rightAlign" value="&rightPopup.value;"/>
     </radiogroup>
   </titledbox>
-  <box align="horizontal">
+  <box>
     <grid>
-      <columns><column/><column/><columns>
+      <columns><column/><column/></columns>
       <rows>
         <row>
           <checkbox id="3dShading" value="&threeDShading.label;"/>
-          <button class="dialog" id="SaveDefault" value="&saveSettings.label;" oncommand="onSaveDefault()"/>
+          <button class="dialog" id="SaveDefault" value="&saveSettings.label;" oncommand="onSaveDefault()" flex="1"/>
         </row>
         <row>
           <spring/>
-          <!-- from EdDialogOverlay -->
-          <box id="AdvancedEdit"/>
+          <button id="AdvancedEditButton" flex="1"/>
         </row>
       </rows>
     </grid>
   </box>
-
+  <separator class="groove"/>
   <!-- from global dialogOverlay -->
-	<box id="okCancelButtons"/>
-
+  <box id="okCancelButtons"/>
 </window>
