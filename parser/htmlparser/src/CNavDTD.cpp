@@ -550,13 +550,24 @@ nsresult CNavDTD::DidBuildModel(nsresult anErrorCode,
       if (mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
         // Looks like the misplaced contents are not processed yet.
         // Here is our last chance to handle the misplaced content.
+
+        // Keep track of the top index.
+        PRInt32 topIndex = mBodyContext->mContextTopIndex;
         
         // Loop until we've really consumed all of our misplaced content.
         do {
           mFlags &= ~NS_DTD_FLAG_MISPLACED_CONTENT; 
+
           // mContextTopIndex refers to the misplaced content's legal parent index.
           result = HandleSavedTokens(mBodyContext->mContextTopIndex);
           NS_ENSURE_SUCCESS(result, result);
+
+          // If we start handling misplaced content while handling misplaced
+          // content, mContextTopIndex gets modified. However, this new index
+          // necessarily points to the middle of a closed tag (since we close
+          // new tags after handling the misplaced content). So we restore the
+          // insertion point after every iteration.
+          mBodyContext->mContextTopIndex = topIndex;
         } while (mFlags & NS_DTD_FLAG_MISPLACED_CONTENT);
 
         mBodyContext->mContextTopIndex = -1; 
