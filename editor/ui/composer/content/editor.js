@@ -1768,7 +1768,7 @@ function BuildRecentMenu(savePrefs)
   }
 
   // Disable menu item if no entries
-  DisableItem("menu_RecentFiles", disableMenu);
+  SetElementEnabledById("menu_RecentFiles", !disableMenu);
 }
 
 function AppendRecentMenuitem(menupopup, title, url, menuIndex)
@@ -2010,8 +2010,8 @@ function EditorInitToolbars()
     //Hide the edit mode toolbar
     gEditModeBar.setAttribute("hidden", "true");
     
-    DisableItem("cmd_viewFormatToolbar", true);
-    DisableItem("cmd_viewEditModeToolbar", true);
+    SetElementEnabledById("cmd_viewFormatToolbar", false);
+    SetElementEnabledById("cmd_viewEditModeToolbar", false);
   }
 
 }
@@ -2429,7 +2429,6 @@ function InitRemoveStylesMenuitems(removeStylesId, removeLinksId, removeNamedAnc
   // Change wording of menuitems depending on selection
   var stylesItem = document.getElementById(removeStylesId);
   var linkItem = document.getElementById(removeLinksId);
-  var namedAnchorsItem = document.getElementById(removeNamedAnchorsId);
 
   var isCollapsed = editorShell.editorSelection.isCollapsed;
   if (stylesItem)
@@ -2445,13 +2444,10 @@ function InitRemoveStylesMenuitems(removeStylesId, removeLinksId, removeNamedAnc
 
     // Disable if not in a link, but always allow "Remove"
     //  if selection isn't collapsed since we only look at anchor node
-    DisableItem(removeLinksId, isCollapsed && !window.editorShell.GetElementOrParentByTagName("href", null));
+    SetElementEnabled(linkItem, !isCollapsed || window.editorShell.GetElementOrParentByTagName("href", null));
   }
-  if (namedAnchorsItem)
-  {
-    // Disable if selection is collapsed
-    DisableItem(removeNamedAnchorsId, isCollapsed);
-  }
+  // Disable if selection is collapsed
+  SetElementEnabledById(removeNamedAnchorsId, !isCollapsed);
 }
 
 function goUpdateTableMenuItems(commandset)

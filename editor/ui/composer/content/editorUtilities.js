@@ -205,28 +205,6 @@ function SetElementEnabled(element, doEnable)
   }
 }
 
-function SetElementHidden(element, hide)
-{
-  if (element)
-  {
-    if (hide)
-      element.setAttribute("hidden", "true");
-    else
-      element.removeAttribute("hidden");
-  }
-}
-
-function DisableItem(id, disable)
-{
-  var item = document.getElementById(id);
-  if (item)
-  {
-    if (disable != (item.getAttribute("disabled") == "true"))
-      item.setAttribute("disabled", disable ? "true" : "");
-  }
-}
-
-
 /************* Services / Prefs ***************/
 
 function GetIOService()
