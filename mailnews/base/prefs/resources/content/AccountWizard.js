@@ -461,9 +461,18 @@ function finishAccount(account, accountData) {
 
         copyObjectToInterface(smtpServer, accountData.smtp);
 
-        // some identities have 'preferred' 
-        if (accountData.smtpUsePreferredServer && destIdentity)
+        // refer bug#141314
+        // since we clone the default smtpserver with the new account's username
+        // force every account to use the smtp server that was created or assigned to it in the
+        // case of isps using rdf files
+
+        try{
             destIdentity.smtpServerKey = smtpServer.key;
+        }
+        catch(ex)
+        {
+          dump("There is no smtp server assigned to this account: Exception= "+ex+"\n");
+        }
      }
 
      if (this.FinishAccountHook != undefined) {
