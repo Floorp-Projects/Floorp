@@ -104,7 +104,6 @@ nsMsgCompose::nsMsgCompose()
   mEntityConversionDone = PR_FALSE;
 	mQuotingToFollow = PR_FALSE;
 	mWhatHolder = 1;
-	mQuoteURI = "";
 	mDocumentListener = nsnull;
 	mMsgSend = nsnull;
 	m_sendListener = nsnull;
@@ -116,7 +115,6 @@ nsMsgCompose::nsMsgCompose()
 	m_compFields = new nsMsgCompFields;
 	NS_IF_ADDREF(m_compFields);
 	mType = nsIMsgCompType::New;
-  mCiteReference = "";
 
 	// Get the default charset from pref, use this as a mail charset.
 	char * default_mail_charset = nsMsgI18NGetDefaultMailCharset();
@@ -253,7 +251,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
       if (!mCiteReference.IsEmpty())
         aEditorShell->InsertAsCitedQuotation(aBuf.GetUnicode(), mCiteReference.GetUnicode(),
                                              PR_TRUE,
-                                             nsString("UTF-8").GetUnicode(), getter_AddRefs(nodeInserted));
+                                             NS_ConvertASCIItoUCS2("UTF-8").GetUnicode(), getter_AddRefs(nodeInserted));
       else
         aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), getter_AddRefs(nodeInserted));
     }
@@ -424,7 +422,9 @@ nsresult nsMsgCompose::Initialize(nsIDOMWindow *aWindow,
 nsresult nsMsgCompose::SetDocumentCharset(const PRUnichar *charset) 
 {
 	// Set charset, this will be used for the MIME charset labeling.
-	m_compFields->SetCharacterSet(nsCAutoString(charset));
+	nsCAutoString charsetStr;
+	charsetStr.AssignWithConversion(charset);
+	m_compFields->SetCharacterSet(charsetStr);
 	
 	return NS_OK;
 }
@@ -539,7 +539,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
         {
           // Apply entity conversion then convert to a mail charset. 
           rv = nsMsgI18NSaveAsCharset(attachment1_type, m_compFields->GetCharacterSet(), 
-                                      nsString(bodyString).GetUnicode(), &outCString);
+                                      NS_ConvertASCIItoUCS2(bodyString).GetUnicode(), &outCString);
           if (NS_SUCCEEDED(rv)) 
           {
             bodyString = outCString;
@@ -644,7 +644,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
     const char contentType[] = "text/plain";
 		nsAutoString msgBody;
 		PRUnichar *bodyText = NULL;
-    nsAutoString format(contentType);
+    nsAutoString format; format.AssignWithConversion(contentType);
     PRUint32 flags = nsIDocumentEncoder::OutputFormatted;
 
     nsresult rv2;
@@ -716,7 +716,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 
 	if (m_compFields && identity) 
 	{ 
-		nsAutoString aCharset(msgCompHeaderInternalCharset());
+		nsAutoString aCharset; aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
 		char *outCString;
 
 		// Convert fields to UTF-8
@@ -726,15 +726,21 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetTo(nsCAutoString(addrTo));
+		{
+		  nsCAutoString addrToCStr; addrToCStr.AssignWithConversion(addrTo);
+			m_compFields->SetTo(addrToCStr);
+	  }
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrCc, &outCString))) 
 		{
 			m_compFields->SetCc(outCString);
 			PR_Free(outCString);
 		}
-		else 
-			m_compFields->SetCc(nsCAutoString(addrCc));
+		else
+		{
+      nsCAutoString addrCcCStr; addrCcCStr.AssignWithConversion(addrCc);
+      m_compFields->SetCc(addrCcCStr);
+    }
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, addrBcc, &outCString))) 
 		{
@@ -742,7 +748,10 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetBcc(nsCAutoString(addrBcc));
+		{
+      nsCAutoString addrBccCStr; addrBccCStr.AssignWithConversion(addrBcc);
+      m_compFields->SetBcc(addrBccCStr);
+    }
 
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, newsgroup, &outCString))) 
 		{
@@ -750,7 +759,10 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetNewsgroups(nsCAutoString(newsgroup));
+		{
+      nsCAutoString newsgroupCStr; newsgroupCStr.AssignWithConversion(newsgroup);
+      m_compFields->SetNewsgroups(newsgroupCStr);
+    }
         
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, subject, &outCString))) 
 		{
@@ -758,17 +770,23 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 			PR_Free(outCString);
 		}
 		else 
-			m_compFields->SetSubject(nsCAutoString(subject));
+		{
+      nsCAutoString subjectCStr; subjectCStr.AssignWithConversion(subject);
+      m_compFields->SetSubject(subjectCStr);
+    }
 
 		// Convert body to mail charset not to utf-8 (because we don't manipulate body text)
-		aCharset.Assign(m_compFields->GetCharacterSet());
+		aCharset.AssignWithConversion(m_compFields->GetCharacterSet());
 		if (NS_SUCCEEDED(ConvertFromUnicode(aCharset, body, &outCString))) 
 		{
 			m_compFields->SetBody(outCString);
 			PR_Free(outCString);
 		}
 		else
-			m_compFields->SetBody(nsCAutoString(body));
+		{
+      nsCAutoString bodyCStr; bodyCStr.AssignWithConversion(body);
+      m_compFields->SetBody(bodyCStr);
+    }
 
 		rv = _SendMsg(deliverMode, identity, callback);
 	}
@@ -835,7 +853,7 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
 
     // Now, lets init the editor here!
     // Just get a blank editor started...
-    m_editor->LoadUrl(nsAutoString("about:blank").GetUnicode());
+    m_editor->LoadUrl(NS_ConvertASCIItoUCS2("about:blank").GetUnicode());
 
     return NS_OK;
 } 
@@ -960,7 +978,7 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
 	    {
 	        nsXPIDLCString email;
 	        m_identity->GetEmail(getter_Copies(email));
-	        bccStr = email;
+	        bccStr.AssignWithConversion(email);
 	    }
 	    
 	    m_identity->GetBccOthers(&aBool);
@@ -969,8 +987,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
 	        nsXPIDLCString bccList;
 	        m_identity->GetBccList(getter_Copies(bccList));
 	        if (bccStr.Length() > 0)
-	            bccStr += ',';
-	        bccStr += bccList;
+	            bccStr.AppendWithConversion(',');
+	        bccStr.AppendWithConversion(bccList);
 	    }
 	    m_compFields->SetBcc(bccStr.GetUnicode());
 	}
@@ -986,8 +1004,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
     if ((NS_SUCCEEDED(rv)) && message)
     {
       nsXPIDLCString subject;
-      nsAutoString subjectStr("");
-      nsAutoString aCharset("");
+      nsAutoString subjectStr;
+      nsAutoString aCharset;
       nsAutoString decodedString;
       nsAutoString encodedCharset;  // we don't use this
       char *aCString = nsnull;
@@ -1011,11 +1029,14 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
 		        prefs->GetBoolPref("mail.auto_quote", &mQuotingToFollow);
           
           // get an original charset, used for a label, UTF-8 is used for the internal processing
-          if (!aCharset.Equals(""))
-            m_compFields->SetCharacterSet(nsCAutoString(aCharset));
+          if (!aCharset.IsEmpty())
+          {
+            nsCAutoString aCharsetCStr; aCharsetCStr.AssignWithConversion(aCharset);
+            m_compFields->SetCharacterSet(aCharsetCStr);
+           }
         
-          subjectStr += "Re: ";
-          subjectStr += subject;
+          subjectStr.AppendWithConversion("Re: ");
+          subjectStr.AppendWithConversion(subject);
           if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(subjectStr, encodedCharset, decodedString)))
             m_compFields->SetSubject(decodedString.GetUnicode());
           else
@@ -1026,9 +1047,9 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
           if (NS_FAILED(rv)) return rv;
           m_compFields->SetTo(author);
 
-          nsString authorStr(author);
+          nsString authorStr; authorStr.AssignWithConversion(author);
           if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(authorStr, encodedCharset, decodedString)))
-            if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
+            if (NS_SUCCEEDED(rv = ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), decodedString, &aCString)))
             {
               m_compFields->SetTo(aCString);
               PR_Free(aCString);
@@ -1039,22 +1060,25 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
               nsXPIDLCString recipients;
               rv = message->GetRecipients(getter_Copies(recipients));
               if (NS_FAILED(rv)) return rv;
-              nsAutoString recipStr(recipients);
+              nsAutoString recipStr; recipStr.AssignWithConversion(recipients);
               CleanUpRecipients(recipStr);
               
               nsXPIDLCString ccList;
               rv = message->GetCcList(getter_Copies(ccList));
               if (NS_FAILED(rv)) return rv;
               
-              nsAutoString ccListStr(ccList);
+              nsAutoString ccListStr; ccListStr.AssignWithConversion(ccList);
               CleanUpRecipients(ccListStr);
               if (recipStr.Length() > 0 && ccListStr.Length() > 0)
-                recipStr += ", ";
+                recipStr.AppendWithConversion(", ");
               recipStr += ccListStr;
-              m_compFields->SetCc(nsCAutoString(recipStr));
+              {
+nsCAutoString recipStrCStr; recipStrCStr.AssignWithConversion(recipStr);
+m_compFields->SetCc(recipStrCStr);
+}
               
               if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(recipStr, encodedCharset, decodedString)))
-                if (NS_SUCCEEDED(rv = ConvertFromUnicode(msgCompHeaderInternalCharset(), decodedString, &aCString)))
+                if (NS_SUCCEEDED(rv = ConvertFromUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), decodedString, &aCString)))
                 {
 					        char * resultStr = nsnull;
 					        nsCString addressToBeRemoved = m_compFields->GetTo();
@@ -1087,12 +1111,15 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       case nsIMsgCompType::ForwardAsAttachment:
         {
         
-          if (!aCharset.Equals(""))
-            m_compFields->SetCharacterSet(nsCAutoString(aCharset));
+          if (!aCharset.IsEmpty())
+          {
+            nsCAutoString aCharsetCStr; aCharsetCStr.AssignWithConversion(aCharset);
+            m_compFields->SetCharacterSet(aCharsetCStr);
+          }
         
-          subjectStr += "[Fwd: ";
-          subjectStr += subject;
-          subjectStr += "]";
+          subjectStr.AppendWithConversion("[Fwd: ");
+          subjectStr.AppendWithConversion(subject);
+          subjectStr.AppendWithConversion("]");
         
           if (NS_SUCCEEDED(rv = nsMsgI18NDecodeMimePartIIStr(subjectStr, encodedCharset, decodedString)))
             m_compFields->SetSubject(decodedString.GetUnicode());
@@ -1130,9 +1157,6 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
   mIdentity = identity;
 
   // For the built message body...
-  mMsgBody = "";
-  mCitePrefix = "";
-  mSignature = "";
 
   nsCOMPtr<nsIMessage> originalMsg = getter_AddRefs(GetIMessageFromURI(originalMsgURI));
   if (originalMsg && !quoteHeaders)
@@ -1144,7 +1168,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
     char    *msgID = nsnull;
     if (NS_SUCCEEDED(originalMsg->GetMessageId(&msgID)) && msgID)
     {
-      mCiteReference = msgID;
+      mCiteReference.AssignWithConversion(msgID);
       PR_FREEIF(msgID);
     }
 
@@ -1156,7 +1180,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
 
       if (parser)
       {
-        nsAutoString aCharset(msgCompHeaderInternalCharset());
+        nsAutoString aCharset; aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
         char * utf8Author = nsnull;
         nsAutoString authorStr(author);
         rv = ConvertFromUnicode(aCharset, authorStr, &utf8Author);
@@ -1169,17 +1193,19 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
         
         if (!utf8Author || NS_FAILED(rv))
         {
-          rv = parser->ExtractHeaderAddressName(nsnull, nsCAutoString(author), &authorName);
+          nsCAutoString authorCStr;
+          authorCStr.AssignWithConversion(author);
+          rv = parser->ExtractHeaderAddressName(nsnull, authorCStr, &authorName);
           if (NS_SUCCEEDED(rv))
-            authorStr = authorName;
+            authorStr.AssignWithConversion(authorName);
         }
         if (NS_SUCCEEDED(rv))
         {
           if (GetReplyOnTop() == 1)
-            mCitePrefix.Append("<br><br>");
+            mCitePrefix.AppendWithConversion("<br><br>");
 
           mCitePrefix.Append(author);
-          mCitePrefix.Append(" wrote:<br><html>");
+          mCitePrefix.AppendWithConversion(" wrote:<br><html>");
         }
         if (authorName)
           PL_strfree(authorName);
@@ -1189,7 +1215,7 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
   }
   
   if (mCitePrefix.IsEmpty())
-    mCitePrefix.Append("<br><br>--- Original Message ---<br><html>");
+    mCitePrefix.AppendWithConversion("<br><br>--- Original Message ---<br><html>");
   
   NS_INIT_REFCNT(); 
 }
@@ -1229,7 +1255,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
       mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
       if (compFields)
       {
-        nsAutoString aCharset(msgCompHeaderInternalCharset());
+        nsAutoString aCharset; aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
         nsAutoString replyTo;
         nsAutoString newgroups;
         nsAutoString followUpTo;
@@ -1301,7 +1327,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
         }
         
         if (! references.IsEmpty())
-          references += ' ';
+          references.AppendWithConversion(' ');
         references += messageId;
         compFields->SetReferences(references.GetUnicode());
         
@@ -1354,9 +1380,9 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
 
               // Re-label "us-ascii" to "ISO-8859-1" since the original body may contain
               // non us-ascii characters with eitity encoded.
-              nsAutoString aCharset(ptr);
+              nsAutoString aCharset; aCharset.AssignWithConversion(ptr);
               if (aCharset.EqualsIgnoreCase("us-ascii"))
-                aCharset.Assign("ISO-8859-1");
+                aCharset.AssignWithConversion("ISO-8859-1");
               compFields->SetCharacterSet(aCharset.GetUnicode());
             }
 
@@ -1370,7 +1396,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
       }
     }
     
-    mMsgBody += "</html>";
+    mMsgBody.AppendWithConversion("</html>");
     
     // Now we have an HTML representation of the quoted message.
     // If we are in plain text mode, we need to convert this to plain
@@ -1421,7 +1447,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChan
 	if (NS_SUCCEEDED(rv) && numWritten > 0)
 	{
     PRUnichar       *u = nsnull; 
-    nsAutoString    fmt("%s");
+    nsAutoString    fmt; fmt.AssignWithConversion("%s");
 
     u = nsTextFormatter::smprintf(fmt.GetUnicode(), newBuf); // this converts UTF-8 to UCS-2 
     if (u)
@@ -1431,7 +1457,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIChannel * /* aChan
       PR_FREEIF(u);
     }
     else
-      mMsgBody.Append(newBuf, numWritten);
+      mMsgBody.AppendWithConversion(newBuf, numWritten);
 	}
 
 	PR_FREEIF(newBuf);
@@ -1832,7 +1858,7 @@ nsMsgCompose::ConvertTextToHTML(nsFileSpec& aSigFile, nsString &aSigData)
     char *escaped = nsEscapeHTML(tString);
     if (escaped) 
     {
-      aSigData.Append(escaped);
+      aSigData.AppendWithConversion(escaped);
       nsCRT::free(escaped);
     }
     else
@@ -1869,7 +1895,7 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   readSize = tempFile.read(readBuf, readSize);
   tempFile.close();
 
-  sigData = readBuf;
+  sigData.AssignWithConversion(readBuf);
   PR_FREEIF(readBuf);
   return NS_OK;
 }
@@ -1919,7 +1945,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   PRBool        useSigFile = PR_FALSE;
   PRBool        htmlSig = PR_FALSE;
   PRBool        imageSig = PR_FALSE;
-  nsAutoString  sigData = "";
+  nsAutoString  sigData;
 
   if (identity)
   {
@@ -1947,7 +1973,7 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   // type for the editor.
   //
   nsFileURL sigFilePath(testSpec);
-  char    *fileExt = nsMsgGetExtensionFromFileURL(nsAutoString(sigFilePath));
+  char    *fileExt = nsMsgGetExtensionFromFileURL(NS_ConvertASCIItoUCS2(NS_STATIC_CAST(const char*, sigFilePath)));
   
   if ( (fileExt) && (*fileExt) )
   {
@@ -1981,14 +2007,14 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   {
     if (m_composeHTML)
     {
-      aMsgBody->Append("<PRE>");
-      aMsgBody->Append(CRLF);
-      aMsgBody->Append("-- ");
-      aMsgBody->Append(CRLF);
-      aMsgBody->Append("</PRE>");
-      aMsgBody->Append("<IMG SRC=\"file:///");
-      aMsgBody->Append(testSpec);
-      aMsgBody->Append("\" BORDER=0>");
+      aMsgBody->AppendWithConversion("<PRE>");
+      aMsgBody->AppendWithConversion(CRLF);
+      aMsgBody->AppendWithConversion("-- ");
+      aMsgBody->AppendWithConversion(CRLF);
+      aMsgBody->AppendWithConversion("</PRE>");
+      aMsgBody->AppendWithConversion("<IMG SRC=\"file:///");
+      aMsgBody->AppendWithConversion(testSpec);
+      aMsgBody->AppendWithConversion("\" BORDER=0>");
     }
     else
     {
@@ -1998,10 +2024,10 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
 
       if (omitString)
       {
-        aMsgBody->Append("-- ");
-        aMsgBody->Append(CRLF);
+        aMsgBody->AppendWithConversion("-- ");
+        aMsgBody->AppendWithConversion(CRLF);
         aMsgBody->Append(omitString);
-        aMsgBody->Append(CRLF);
+        aMsgBody->AppendWithConversion(CRLF);
       }
     }
 
@@ -2028,27 +2054,27 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
   {
     if (m_composeHTML)
     {
-      aMsgBody->Append(htmlBreak);
+      aMsgBody->AppendWithConversion(htmlBreak);
       if (!htmlSig)
       {
-        aMsgBody->Append("<pre>");
-        aMsgBody->Append(CRLF);
+        aMsgBody->AppendWithConversion("<pre>");
+        aMsgBody->AppendWithConversion(CRLF);
       }
     }
     else
-      aMsgBody->Append(CRLF);
+      aMsgBody->AppendWithConversion(CRLF);
     
-    aMsgBody->Append(dashes);
+    aMsgBody->AppendWithConversion(dashes);
 
     if ( (!m_composeHTML) || ((m_composeHTML) && (!htmlSig)) )
-      aMsgBody->Append(CRLF);
+      aMsgBody->AppendWithConversion(CRLF);
     else if (m_composeHTML)
-      aMsgBody->Append(htmlBreak);
+      aMsgBody->AppendWithConversion(htmlBreak);
     
     aMsgBody->Append(sigData);
 
     if ( (m_composeHTML) && (!htmlSig) )
-      aMsgBody->Append("</pre>");
+      aMsgBody->AppendWithConversion("</pre>");
   }
 
   return NS_OK;
@@ -2072,7 +2098,7 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   //
   m_compFields->GetBody(&bod);
 
-  nsAutoString    tSignature = "";
+  nsAutoString    tSignature;
   /* Some time we want to add a signature and sometime we wont. Let's figure that now...*/
   PRBool addSignature;
   switch (mType)
@@ -2105,7 +2131,7 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   	ProcessSignature(m_identity, &tSignature);
   if (m_editor)
   {
-    nsAutoString empty("");
+    nsAutoString empty;
     if (bod) {
       nsAutoString bodStr(bod);
       rv = ConvertAndLoadComposeWindow(m_editor, empty, bodStr, empty,
@@ -2155,7 +2181,8 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
 
 nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _retval)
 {
-	nsCAutoString unescapeULR = url;
+    // Question: is 'ULR' a typo?
+	nsCAutoString unescapeULR; unescapeULR.AssignWithConversion(url);
 	nsUnescape(unescapeULR);
 	if (unescapeULR.IsEmpty())
 	{
@@ -2173,7 +2200,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _r
     		nsAutoString tempStr;
     		nsresult rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), leafName, tempStr);
     		if (NS_FAILED(rv))
-    			tempStr = leafName;
+    			tempStr.AssignWithConversion(leafName);
 			*_retval = tempStr.ToNewUnicode();
 			nsCRT::free(leafName);
 			return NS_OK;
@@ -2182,7 +2209,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _r
 
 	if (PL_strncasestr(unescapeULR, "http:", 5))
 	{
-		nsAutoString tempStr = &unescapeULR.mBuffer[7];
+		nsAutoString tempStr; tempStr.AssignWithConversion(&unescapeULR.mBuffer[7]);
 		*_retval = tempStr.ToNewUnicode();
 		return NS_OK;
 	}
@@ -2242,11 +2269,11 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
         recipientStr = recipients;
     else
     {
-        recipientStr += m_compFields->GetTo();
-        recipientStr += ',';
-        recipientStr += m_compFields->GetCc();
-        recipientStr += ',';
-        recipientStr += m_compFields->GetBcc();
+        recipientStr.AppendWithConversion(m_compFields->GetTo());
+        recipientStr.AppendWithConversion(',');
+        recipientStr.AppendWithConversion(m_compFields->GetCc());
+        recipientStr.AppendWithConversion(',');
+        recipientStr.AppendWithConversion(m_compFields->GetBcc());
     }
     
     /*ducarroz: for now, I've hardcoded the addressbook DBs we are looking in it, will do much better later! */
@@ -2283,7 +2310,7 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
                 rv = array->StringAt(i, getter_Copies(emailAddr));
                 if (NS_FAILED(rv))
                     continue;
-                nsCAutoString emailStr(emailAddr);
+                nsCAutoString emailStr; emailStr.AssignWithConversion(emailAddr);
 
     			rv = abDataBase->GetCardForEmailAddress(abDirectory, emailStr, getter_AddRefs(existingCard));
     			if (NS_SUCCEEDED(rv) && existingCard)
@@ -2313,12 +2340,12 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
     }
 
     //now, build the result
-    recipientStr = "";
+    recipientStr.SetLength(0);
     noHTMLArray->GetCount(&nbrRecipients);
     for (i = 0; i < nbrRecipients; i ++)
     {
         if (! recipientStr.IsEmpty())
-            recipientStr += ',';
+            recipientStr.AppendWithConversion(',');
         noHTMLArray->StringAt(i, getter_Copies(emailAddr));
         recipientStr.Append(emailAddr);
     }
@@ -2327,7 +2354,7 @@ nsresult nsMsgCompose::GetNoHtmlRecipients(const PRUnichar *recipients, PRUnicha
     for (i = 0; i < nbrRecipients; i ++)
     {
         if (! recipientStr.IsEmpty())
-            recipientStr += ',';
+            recipientStr.AppendWithConversion(',');
         array->StringAt(i, getter_Copies(emailAddr));
         recipientStr.Append(emailAddr);
     }

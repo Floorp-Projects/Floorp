@@ -475,7 +475,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
 
   nsMsgCompFields * fields = (nsMsgCompFields *)compFields.get();
 
-  nsString authorStr(author);
+  nsString authorStr; authorStr.AssignWithConversion(author);
   fields->SetFrom(authorStr.ToNewUnicode());
 
   if (m_to)

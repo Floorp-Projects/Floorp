@@ -150,7 +150,7 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
 
   if (!msgURI)
     return NS_ERROR_INVALID_ARG;
-  nsCAutoString aMsgUri (msgURI);
+  nsCAutoString aMsgUri; aMsgUri.AssignWithConversion(msgURI);
 
   mQuoteHeaders = quoteHeaders;
   mStreamListener = aQuoteMsgStreamListener;
@@ -189,8 +189,8 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   NS_WITH_SERVICE(nsIStreamConverterService, streamConverterService, kIStreamConverterServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   nsAutoString from, to;
-  from = MESSAGE_RFC822;
-  to = "text/xul";
+  from.AssignWithConversion(MESSAGE_RFC822);
+  to.AssignWithConversion("text/xul");
   nsCOMPtr<nsIStreamListener> convertedListener;
   rv = streamConverterService->AsyncConvertData(from.GetUnicode(),
                                                 to.GetUnicode(),

@@ -438,7 +438,7 @@ mime_generate_headers (nsMsgCompFields *fields,
     nsXPIDLString userAgentString;
     nsCAutoString   cStr;
     pHTTPHandler->GetUserAgent(getter_Copies(userAgentString));
-    cStr.Assign(userAgentString);
+    cStr.AssignWithConversion(userAgentString);
 
 		if (!cStr.IsEmpty()) 
 		{
@@ -1530,7 +1530,7 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
     nsAutoString uStr;
     rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), attachment->m_real_name, uStr);
     if (NS_FAILED(rv)) 
-      uStr.Assign(attachment->m_real_name);
+      uStr.AssignWithConversion(attachment->m_real_name);
 
     char *utf8Str = uStr.ToNewUTF8String();
 
@@ -1632,8 +1632,8 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const char * aSpec)
   {
   	if (PL_strstr(aSpec, "://") == nsnull)
   	{
-  		nsAutoString newSpec("http://");
-  		newSpec += aSpec;
+  		nsAutoString newSpec; newSpec.AssignWithConversion("http://");
+  		newSpec.AppendWithConversion(aSpec);
 		rv = pNetService->NewURI(nsCAutoString(newSpec), nsnull, aInstancePtrResult);
   	}
   	else
@@ -1983,7 +1983,7 @@ ConvertBufToPlainText(nsString &aConBuf)
         if (NS_SUCCEEDED(rv)) 
         {
           parser->RegisterDTD(dtd);
-          rv = parser->Parse(aConBuf, 0, "text/html", PR_FALSE, PR_TRUE);           
+          rv = parser->Parse(aConBuf, 0, NS_ConvertASCIItoUCS2("text/html"), PR_FALSE, PR_TRUE);           
         }
         NS_IF_RELEASE(dtd);
         NS_IF_RELEASE(sink);
@@ -2047,7 +2047,7 @@ void
 DoLineEndingConJobUnicode(nsString& aInString)
 { 
   //  First pass:  Turn CRLF into LF 
-  aInString.ReplaceSubstring(CRLF, nsAutoString(LF));
+  aInString.ReplaceSubstring(NS_ConvertASCIItoUCS2(CRLF), NS_ConvertASCIItoUCS2(LF));
   //  Second pass: Turn CR into LF
   aInString.ReplaceChar(CR, LF);
 }

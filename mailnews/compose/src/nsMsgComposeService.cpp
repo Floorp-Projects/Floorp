@@ -91,7 +91,7 @@ static nsresult openWindow( const PRUnichar *chrome, const PRUnichar *args ) {
 nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindowURL, const PRUnichar *originalMsgURI,
 	MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * identity)
 {
-	nsAutoString args = "";
+	nsAutoString args;
 	nsresult rv;
 	
 	/* Actually, the only way to implement forward inline is to simulate a template message. 
@@ -123,38 +123,38 @@ nsresult nsMsgComposeService::OpenComposeWindow(const PRUnichar *msgComposeWindo
 		return rv;
 	}
 
-	args.Append("type=");
-	args.Append(type);
+	args.AppendWithConversion("type=");
+	args.AppendInt(type);
 
-	args.Append(",format=");
-	args.Append(format);
+	args.AppendWithConversion(",format=");
+	args.AppendInt(format);
 
 	if (identity) {
 		nsXPIDLCString key;
 		rv = identity->GetKey(getter_Copies(key));
 		if (NS_SUCCEEDED(rv) && key && (PL_strlen(key) > 0)) {
-			args.Append(",preselectid=");
-			args.Append(key);
+			args.AppendWithConversion(",preselectid=");
+			args.AppendWithConversion(key);
 		}
 	}
 
 	if (originalMsgURI && *originalMsgURI)
 	{
 		if (type == nsIMsgCompType::NewsPost) {
-			args.Append(",newsgroups=");
+			args.AppendWithConversion(",newsgroups=");
 			args.Append(originalMsgURI);
 		}
 		else {
-			args.Append(",originalMsg='");
+			args.AppendWithConversion(",originalMsg='");
 			args.Append(originalMsgURI);
-			args.Append("'");
+			args.AppendWithConversion("'");
 		}
 	}
 	
 	if (msgComposeWindowURL && *msgComposeWindowURL)
         rv = openWindow( msgComposeWindowURL, args.GetUnicode() );
 	else
-        rv = openWindow( nsString("chrome://messenger/content/messengercompose/messengercompose.xul").GetUnicode(),
+        rv = openWindow( NS_ConvertASCIItoUCS2("chrome://messenger/content/messengercompose/messengercompose.xul").GetUnicode(),
                          args.GetUnicode() );
 	
 	return rv;
@@ -192,25 +192,17 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const PRUnichar * aM
          format = nsIMsgCompFormat::PlainText;
 
        //ugghh more conversion work!!!!
-       nsAutoString uniToPart((const char*)aToPart);
-       nsAutoString uniCcPart((const char*)aCcPart);
-       nsAutoString unicBccPart((const char*)aBccPart);
-       nsAutoString uniNewsgroup((const char*)aNewsgroup);
-       nsAutoString uniSubjectPart((const char*)aSubjectPart);
-       nsAutoString uniBodyPart((const char*)aBodyPart);
-       nsAutoString uniAttachmentPart((const char*)aAttachmentPart);
-       
        rv = OpenComposeWindowWithValues(aMsgComposeWindowURL,
        									nsIMsgCompType::MailToUrl,
        									format,
-       									uniToPart.GetUnicode(), 
-                                        uniCcPart.GetUnicode(),
-                                        unicBccPart.GetUnicode(), 
-                                        uniNewsgroup.GetUnicode(), 
-                                        uniSubjectPart.GetUnicode(),
-                                        uniBodyPart.GetUnicode(), 
-                                        uniAttachmentPart.GetUnicode(),
-                                        nsnull);
+       									NS_ConvertASCIItoUCS2(aToPart).GetUnicode(), 
+                        NS_ConvertASCIItoUCS2(aCcPart).GetUnicode(),
+                        NS_ConvertASCIItoUCS2(aBccPart).GetUnicode(), 
+                        NS_ConvertASCIItoUCS2(aNewsgroup).GetUnicode(), 
+                        NS_ConvertASCIItoUCS2(aSubjectPart).GetUnicode(),
+                        NS_ConvertASCIItoUCS2(aBodyPart).GetUnicode(), 
+                        NS_ConvertASCIItoUCS2(aAttachmentPart).GetUnicode(),
+                        nsnull);
     }
   }
 
@@ -257,33 +249,33 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const PRUnichar *m
 														  nsIMsgCompFields *compFields,
 														  nsIMsgIdentity *identity)
 {
-	nsAutoString args = "";
+	nsAutoString args;
 	nsresult rv;
 
-	args.Append("type=");
-	args.Append(type);
+	args.AppendWithConversion("type=");
+	args.AppendInt(type);
 
-	args.Append(",format=");
-	args.Append(format);
+	args.AppendWithConversion(",format=");
+	args.AppendInt(format);
 	
 	if (compFields)
 	{
 		NS_ADDREF(compFields);
-		args.Append(",fieldsAddr="); args.Append((PRInt32)compFields, 10);
+		args.AppendWithConversion(",fieldsAddr="); args.AppendInt((PRInt32)compFields, 10);
 	}
 
 	if (identity) {
 		nsXPIDLCString key;
 		rv = identity->GetKey(getter_Copies(key));
 		if (NS_SUCCEEDED(rv) && key && (PL_strlen(key) > 0)) {
-			args.Append(",preselectid=");
-			args.Append(key);
+			args.AppendWithConversion(",preselectid=");
+			args.AppendWithConversion(key);
 		}
 	}
 	if (msgComposeWindowURL && *msgComposeWindowURL)
         rv = openWindow( msgComposeWindowURL, args.GetUnicode() );
 	else
-        rv = openWindow( nsString("chrome://messenger/content/messengercompose/messengercompose.xul").GetUnicode(),
+        rv = openWindow( NS_ConvertASCIItoUCS2("chrome://messenger/content/messengercompose/messengercompose.xul").GetUnicode(),
                          args.GetUnicode() );
 
     if (NS_FAILED(rv))

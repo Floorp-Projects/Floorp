@@ -227,7 +227,7 @@ nsSmtpServer::GetPasswordWithUI(const PRUnichar * aPromptMessage, const
 			}
 
 			// we got a password back...so remember it
-			nsCString aCStr(uniPassword); 
+			nsCString aCStr; aCStr.AssignWithConversion(uniPassword); 
 
 			rv = SetPassword((const char *) aCStr);
             if (NS_FAILED(rv)) return rv;

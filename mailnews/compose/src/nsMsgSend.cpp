@@ -1214,7 +1214,7 @@ nsMsgComposeAndSend::GetBodyFromEditor()
   // 
   // Query the editor, get the body of HTML!
   //
-  nsString  format(TEXT_HTML);
+  nsString  format; format.AssignWithConversion(TEXT_HTML);
   PRUint32  flags = 0;
   PRUnichar *bodyText = NULL;
   nsresult rv;
@@ -1451,7 +1451,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
           
           // Ok, now get the path to the root doc and tack on the name we
           // got from the GetSrc() call....
-          nsString   workURL(spec);
+          nsString   workURL; workURL.AssignWithConversion(spec);
           
           PRInt32 loc = workURL.RFind("/");
           if (loc >= 0)
@@ -1552,7 +1552,7 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
       m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, nsnull);  
     else
     {
-      nsCAutoString tEmail(myEmail);
+      nsCAutoString tEmail; tEmail.AssignWithConversion(myEmail);
       m_attachments[i].m_content_id = mime_gen_content_id(locCount+1, tEmail);  
       
     }
@@ -1591,10 +1591,12 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     nsString      domURL;
     if (m_attachments[i].m_content_id)  
     {
-      nsString   newSpec("cid:");
-      domURL = "";
+      nsString   newSpec; newSpec.AssignWithConversion("cid:");
 
-      newSpec.Append(m_attachments[i].m_content_id);
+        // STRING USE WARNING: this is probably not needed.  Strings are created empty by default.
+      domURL.SetLength(0);
+
+      newSpec.AppendWithConversion(m_attachments[i].m_content_id);
       if (anchor)
       {
         anchor->GetHref(domURL);
@@ -1633,12 +1635,14 @@ nsMsgComposeAndSend::ProcessMultipartRelated(PRInt32 *aMailboxCount, PRInt32 *aN
     nsCOMPtr<nsIDOMHTMLLinkElement>     link = (do_QueryInterface(domSaveArray[i].node));
     nsCOMPtr<nsIDOMHTMLAnchorElement>   anchor = (do_QueryInterface(domSaveArray[i].node));
 
+      // STRING USE WARNING: hoisting the following conversion might save code-space, since it happens along every path
+
     if (anchor)
-      anchor->SetHref(domSaveArray[i].url);
+      anchor->SetHref(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
     else if (link)
-      anchor->SetHref(domSaveArray[i].url);
+      anchor->SetHref(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
     else if (image)
-      image->SetSrc(domSaveArray[i].url);
+      image->SetSrc(NS_ConvertASCIItoUCS2(domSaveArray[i].url));
 
     nsAllocator::Free(domSaveArray[i].url);
   }
@@ -1719,7 +1723,7 @@ nsMsgComposeAndSend::CountCompFieldAttachments()
       // Check to see if this is a file URL, if so, don't retrieve
       // like a remote URL...
       //
-      if (str.Compare("file://", PR_TRUE, 7) == 0)
+      if (str.CompareWithConversion("file://", PR_TRUE, 7) == 0)
       {
         mCompFieldLocalAttachments++;
 #ifdef NS_DEBUG
@@ -1778,7 +1782,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
     if (!str.IsEmpty()) 
     {
       // Just look for local file:// attachments and do the right thing.
-      if (str.Compare("file://", PR_TRUE, 7) == 0)
+      if (str.CompareWithConversion("file://", PR_TRUE, 7) == 0)
       {
 #ifdef NS_DEBUG
         printf("Adding LOCAL attachment %d: %s\n", newLoc, str.GetBuffer());
@@ -1814,7 +1818,7 @@ nsMsgComposeAndSend::AddCompFieldLocalAttachments()
         NS_WITH_SERVICE(nsIMIMEService, mimeFinder, kMimeServiceCID, &rv); 
         if (NS_SUCCEEDED(rv) && mimeFinder) 
         {
-          char *fileExt = nsMsgGetExtensionFromFileURL(str);
+          char *fileExt = nsMsgGetExtensionFromFileURL(NS_ConvertASCIItoUCS2(str));
           if (fileExt)
             mimeFinder->GetTypeFromExtension(fileExt, &(m_attachments[newLoc].m_type));
 
@@ -1892,7 +1896,7 @@ nsMsgComposeAndSend::AddCompFieldRemoteAttachments(PRUint32   aStartLocation,
       // Just look for files that are NOT local file attachments and do 
       // the right thing.
       //
-      if (str.Compare("file://", PR_TRUE, 7) != 0)
+      if (str.CompareWithConversion("file://", PR_TRUE, 7) != 0)
       {
 #ifdef NS_DEBUG
         printf("Adding REMOTE attachment %d: %s\n", newLoc, str.GetBuffer());

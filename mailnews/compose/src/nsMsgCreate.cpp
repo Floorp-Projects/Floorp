@@ -111,7 +111,7 @@ GetIMessageFromURI(const PRUnichar *msgURI)
 {
   nsresult                  rv;
   nsIRDFResource            *myRDFNode = nsnull;
-  nsCAutoString              convertString(msgURI);
+  nsCAutoString              convertString; convertString.AssignWithConversion(msgURI);
 
   nsIMessage                *returnMessage;
 

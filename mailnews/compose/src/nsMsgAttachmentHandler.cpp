@@ -807,7 +807,7 @@ nsMsgAttachmentHandler::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   readSize = tempFile.read(readBuf, readSize);
   tempFile.close();
 
-  sigData = readBuf;
+  sigData.AssignWithConversion(readBuf);
   PR_FREEIF(readBuf);
   return NS_OK;
 }
@@ -907,7 +907,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
       // Now use the converter service here to do the right 
       // thing and convert this data to plain text for us!
       //
-      nsString      conData = "";
+      nsString      conData;
 
       if (NS_SUCCEEDED(LoadDataFromFile(*mFileSpec, conData)))
       {

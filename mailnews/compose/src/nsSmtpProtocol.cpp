@@ -839,7 +839,7 @@ PRInt32 nsSmtpProtocol::AuthLoginUsername()
 
   }
   else
-    password = mLogonCookie;
+    password.Assign(mLogonCookie);
   
   if (TestFlag(SMTP_AUTH_LOGIN_ENABLED))
   {
@@ -902,7 +902,7 @@ PRInt32 nsSmtpProtocol::AuthLoginPassword()
 	    return NS_ERROR_SMTP_USERNAME_UNDEFINED;
   }
   else
-    password = mLogonCookie;
+    password.Assign(mLogonCookie);
 
   if (!password.IsEmpty()) 
   {
@@ -1655,7 +1655,10 @@ NS_IMETHODIMP nsSmtpProtocol::OnLogonRedirectionReply(const PRUnichar * aHost, u
   // now that we have a host and port to connect to, 
   // open up the channel...
   // pass in "ssl" for the last arg if you want this to be over SSL
-  rv = OpenNetworkSocketWithInfo(nsCAutoString(aHost), aPort, nsnull);
+  {
+    nsCAutoString hostCStr; hostCStr.AssignWithConversion(aHost);
+    rv = OpenNetworkSocketWithInfo(hostCStr, aPort, nsnull);
+  }
 
   // we are no longer waiting for a logon redirection reply
   ClearFlag(SMTP_WAIT_FOR_REDIRECTION);
