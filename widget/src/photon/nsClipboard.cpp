@@ -255,7 +255,6 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData(PRInt32 aWhichClipboard)
 					nsPrimitiveHelpers::ConvertUnicodeToPlatformPlainText( (PRUnichar*)data, dataLen/2, &plain, &len );
             		cliphdr[index].length = len+1;
             		cliphdr[index].data = plain;
-					printf("Set TEXT: %s\n", plain);
 				}
     			index++;	
 			}
@@ -351,7 +350,6 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
 					}
 					else if (strcmp(cliptype.type, Ph_CLIPBOARD_TYPE_TEXT) == 0)
 					{
-						printf("Get TEXT: %s\n", (char*) data);
 						nsPrimitiveHelpers::ConvertPlatformPlainTextToUnicode( (char*) data, dataLen, &unicode, &len_unicode );
 						len_unicode--;
 						len_unicode *= 2;
