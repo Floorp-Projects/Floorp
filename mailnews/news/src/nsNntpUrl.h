@@ -20,16 +20,23 @@
 #define nsNntpUrl_h__
 
 #include "nsINntpUrl.h"
+#include "nsIUrlListenerManager.h"
 #include "nsINetlibURL.h" /* this should be temporary until Network N2 project lands */
 #include "nsINNTPNewsgroupPost.h"
 
 class nsNntpUrl : public nsINntpUrl, public nsINetlibURL
 {
 public:
-    // from nsIURL:
+	// nsIMsgMailNewsUrl interface
+	NS_IMETHOD SetUrlState(PRBool aRunningUrl, nsresult aExitCode);
+	NS_IMETHOD GetUrlState(PRBool * aRunningUrl);
 
-	// mscott: some of these we won't need to implement..as part of the netlib re-write we'll be removing them
-	// from nsIURL and then we can remove them from here as well....
+	NS_IMETHOD SetErrorMessage (char * errorMessage);
+	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;  // caller must free using PR_Free
+	NS_IMETHOD RegisterListener (nsIUrlListener * aUrlListener);
+	NS_IMETHOD UnRegisterListener (nsIUrlListener * aUrlListener);
+
+	// nsIURL
     NS_IMETHOD_(PRBool) Equals(const nsIURL *aURL) const;
     NS_IMETHOD GetSpec(const char* *result) const;
     NS_IMETHOD SetSpec(const char* spec);
@@ -78,14 +85,10 @@ public:
 	NS_IMETHOD SetNewsgroupList (nsINNTPNewsgroupList * newsgroupList);
 	NS_IMETHOD GetNewsgroupList (nsINNTPNewsgroupList ** newsgroupList) const;
 
-	NS_IMETHOD SetErrorMessage (char * errorMessage);
-	// caller must free using PR_FREE
-	NS_IMETHOD GetErrorMessage (char ** errorMessage) const;
-
     NS_IMETHOD SetMessageToPost(nsINNTPNewsgroupPost *post);
     NS_IMETHOD GetMessageToPost(nsINNTPNewsgroupPost **post);
-    // nsNntpUrl
 
+    // nsNntpUrl
     nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup);
 
     NS_DECL_ISUPPORTS
@@ -106,8 +109,13 @@ protected:
     char		*m_ref;
     char		*m_search;
 	char		*m_errorMessage;
+
+	PRBool		m_runningUrl;
     
     nsINNTPNewsgroupPost *m_newsgroupPost;
+
+	// manager of all of current url listeners....
+	nsIUrlListenerManager * m_urlListeners;
     
 	PRInt32 m_port;
     nsISupports*    m_container;

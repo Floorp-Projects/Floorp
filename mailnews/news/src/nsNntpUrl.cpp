@@ -37,6 +37,7 @@
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 
 nsNntpUrl::nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
 {
@@ -65,11 +66,16 @@ nsNntpUrl::nsNntpUrl(nsISupports* aContainer, nsIURLGroup* aGroup)
  
     m_container = aContainer;
     NS_IF_ADDREF(m_container);
-    //  ParseURL(aSpec, aURL);      // XXX whh
+
+	m_runningUrl = PR_FALSE;
+	m_urlListeners = nsnull;
+	nsComponentManager::CreateInstance(kUrlListenerManagerCID, nsnull, nsIUrlListenerManager::GetIID(), 
+									   (void **) &m_urlListeners);
 }
  
 nsNntpUrl::~nsNntpUrl()
 {
+	NS_IF_RELEASE(m_urlListeners);
     NS_IF_RELEASE(m_container);
 	NS_IF_RELEASE(m_newsHost);
 	NS_IF_RELEASE(m_articleList);
@@ -256,6 +262,53 @@ nsresult nsNntpUrl::GetNewsgroupList (nsINNTPNewsgroupList ** newsgroupList) con
 	}
     NS_UNLOCK_INSTANCE();
     return NS_OK;
+}
+
+// url listener registration details...
+	
+NS_IMETHODIMP nsNntpUrl::RegisterListener (nsIUrlListener * aUrlListener)
+{
+	NS_LOCK_INSTANCE();
+	nsresult rv = NS_OK;
+	if (m_urlListeners)
+		rv = m_urlListeners->RegisterListener(aUrlListener);
+    NS_UNLOCK_INSTANCE();
+	return rv;
+}
+	
+NS_IMETHODIMP nsNntpUrl::UnRegisterListener (nsIUrlListener * aUrlListener)
+{
+	NS_LOCK_INSTANCE();
+	nsresult rv = NS_OK;
+	if (m_urlListeners)
+		rv = m_urlListeners->UnRegisterListener(aUrlListener);
+	NS_UNLOCK_INSTANCE();
+	return rv;
+}
+
+NS_IMETHODIMP nsNntpUrl::GetUrlState(PRBool * aRunningUrl)
+{
+	NS_LOCK_INSTANCE();
+	if (aRunningUrl)
+		*aRunningUrl = m_runningUrl;
+
+	NS_UNLOCK_INSTANCE();
+	return NS_OK;
+}
+
+NS_IMETHODIMP nsNntpUrl::SetUrlState(PRBool aRunningUrl, nsresult aExitCode)
+{
+	NS_LOCK_INSTANCE();
+	m_runningUrl = aRunningUrl;
+	if (m_urlListeners)
+	{
+		if (m_runningUrl)
+			m_urlListeners->OnStartRunningUrl(this);
+		else
+			m_urlListeners->OnStopRunningUrl(this, aExitCode);
+	}
+	NS_UNLOCK_INSTANCE();
+	return NS_OK;
 }
 
 nsresult nsNntpUrl::SetErrorMessage (char * errorMessage)
