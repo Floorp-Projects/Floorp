@@ -476,6 +476,14 @@ nsHttpConnection::OnReadSegment(const char *buf,
                                 PRUint32 count,
                                 PRUint32 *countRead)
 {
+    if (count == 0) {
+        // some ReadSegments implementations will erroneously call the writer
+        // to consume 0 bytes worth of data.  we must protect against this case
+        // or else we'd end up closing the socket prematurely.
+        NS_ERROR("bad ReadSegments implementation");
+        return NS_ERROR_FAILURE; // stop iterating
+    }
+
     nsresult rv = mSocketOut->Write(buf, count, countRead);
     if (NS_FAILED(rv))
         mSocketOutCondition = rv;
@@ -492,44 +500,52 @@ nsHttpConnection::OnSocketWritable()
 {
     LOG(("nsHttpConnection::OnSocketWritable [this=%x]\n", this));
 
-    PRUint32 count, n;
     nsresult rv;
+    PRUint32 n;
+    PRBool again = PR_TRUE;
 
-    // if we're doing an SSL proxy connect, then we need to bypass calling
-    // into the transaction.
-    //
-    // NOTE: this code path can't be shared since the transaction doesn't
-    // implement nsIInputStream.  doing so is not worth the added cost of
-    // extra indirections during normal reading.
-    //
-    if (mSSLProxyConnectStream) {
-        LOG(("  writing CONNECT request stream\n"));
+    do {
+        // if we're doing an SSL proxy connect, then we need to bypass calling
+        // into the transaction.
+        //
+        // NOTE: this code path can't be shared since the transaction doesn't
+        // implement nsIInputStream.  doing so is not worth the added cost of
+        // extra indirections during normal reading.
+        //
+        if (mSSLProxyConnectStream) {
+            LOG(("  writing CONNECT request stream\n"));
+            rv = mSSLProxyConnectStream->ReadSegments(ReadFromStream, this,
+                                                      NS_HTTP_SEGMENT_SIZE, &n);
+        }
+        else {
+            LOG(("  writing transaction request stream\n"));
+            rv = mTransaction->ReadSegments(this, NS_HTTP_SEGMENT_SIZE, &n);
+        }
 
-        rv = mSSLProxyConnectStream->Available(&count);
-        if (NS_FAILED(rv)) return rv;
+        LOG(("  ReadSegments returned [rv=%x read=%u sock-cond=%x]\n",
+            rv, n, mSocketOutCondition));
 
-        rv = mSSLProxyConnectStream->ReadSegments(ReadFromStream, this, count, &n);
-    }
-    else {
-        LOG(("  writing transaction request stream\n"));
+        // XXX some streams return NS_BASE_STREAM_CLOSED to indicate EOF.
+        if (rv == NS_BASE_STREAM_CLOSED) {
+            rv = NS_OK;
+            n = 0;
+        }
 
-        count = mTransaction->Available();
-        NS_ENSURE_TRUE(count > 0, NS_ERROR_UNEXPECTED);
-
-        rv = mTransaction->ReadSegments(this, count, &n);
-    }
-
-    LOG(("  ReadSegments returned [rv=%x count=%u read=%u sock-cond=%x]\n",
-        rv, count, n, mSocketOutCondition));
-
-    if (NS_SUCCEEDED(rv)) {
-        if (NS_FAILED(mSocketOutCondition)) {
+        if (NS_FAILED(rv)) {
+            // if the transaction didn't want to write any more data, then
+            // wait for the transaction to call ResumeSend.
+            if (rv == NS_BASE_STREAM_WOULD_BLOCK)
+                rv = NS_OK;
+            again = PR_FALSE;
+        }
+        else if (NS_FAILED(mSocketOutCondition)) {
             if (mSocketOutCondition == NS_BASE_STREAM_WOULD_BLOCK)
                 rv = mSocketOut->AsyncWait(this, 0, nsnull); // continue writing
             else
                 rv = mSocketOutCondition;
+            again = PR_FALSE;
         }
-        else if (n == count) {
+        else if (n == 0) {
             // 
             // at this point we've written out the entire transaction, and now we
             // must wait for the server's response.  we manufacture a status message
@@ -539,12 +555,10 @@ nsHttpConnection::OnSocketWritable()
             mTransaction->OnTransportStatus(nsISocketTransport::STATUS_WAITING_FOR, 0);
 
             rv = mSocketIn->AsyncWait(this, 0, nsnull); // start reading
+            again = PR_FALSE;
         }
-        else {
-            NS_WARNING("stopped writing for no reason");
-            rv = NS_ERROR_UNEXPECTED;
-        }
-    }
+        // write more to the socket until error or end-of-request...
+    } while (again);
 
     return rv;
 }
@@ -554,6 +568,14 @@ nsHttpConnection::OnWriteSegment(char *buf,
                                  PRUint32 count,
                                  PRUint32 *countWritten)
 {
+    if (count == 0) {
+        // some WriteSegments implementations will erroneously call the reader
+        // to provide 0 bytes worth of data.  we must protect against this case
+        // or else we'd end up closing the socket prematurely.
+        NS_ERROR("bad WriteSegments implementation");
+        return NS_ERROR_FAILURE; // stop iterating
+    }
+
     nsresult rv = mSocketIn->Read(buf, count, countWritten);
     if (NS_FAILED(rv))
         mSocketInCondition = rv;
@@ -588,8 +610,8 @@ nsHttpConnection::OnSocketReadable()
     do {
         rv = mTransaction->WriteSegments(this, NS_HTTP_SEGMENT_SIZE, &n);
         if (NS_FAILED(rv)) {
-            // if the transaction didn't want to take anymore data, then
-            // wait for the transaction to call ResumeSend.
+            // if the transaction didn't want to take any more data, then
+            // wait for the transaction to call ResumeRecv.
             if (rv == NS_BASE_STREAM_WOULD_BLOCK)
                 rv = NS_OK;
             again = PR_FALSE;
