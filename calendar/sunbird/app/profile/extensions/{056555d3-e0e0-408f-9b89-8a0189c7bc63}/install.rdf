@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>{056555d3-e0e0-408f-9b89-8a0189c7bc63}</em:id>
+    <em:version>1.0</em:version>
+    
+    <!-- Target Application this extension can install into, 
+        with minimum and maximum supported versions. --> 
+    <em:targetApplication>
+      <Description>
+        <em:id>{718e30fb-e89b-41dd-9da7-e25a45638b28}</em:id>
+        <em:minVersion>0.1</em:minVersion>
+        <em:maxVersion>0.2</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    
+    <!-- Front End Integration Hooks (used by Extension Manager)-->
+    
+    <!-- Packages, Skins and Locales that this extension registers -->
+    <!-- XXXben - inspector does not list these here as they are built and
+                  installed by the build process -->
+  </Description>      
+  
+</RDF>

@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+<RDF xmlns="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+     xmlns:em="http://www.mozilla.org/2004/em-rdf#">
+
+  <Description about="urn:mozilla:install-manifest">
+    <em:id>{8af2d0a7-e394-4de2-ae55-2dae532a7a9b}</em:id>
+    <em:version>2.0</em:version>
+    
+    <!-- Target Application this theme can install into, 
+        with minimum and maximum supported versions. --> 
+    <em:targetApplication>
+      <Description>
+        <em:id>{718e30fb-e89b-41dd-9da7-e25a45638b28}</em:id>
+        <em:minVersion>0.1</em:minVersion>
+        <em:maxVersion>0.2</em:maxVersion>
+      </Description>
+    </em:targetApplication>
+    
+    <!-- Front End MetaData -->
+    <em:name>Sunbird (default)</em:name>
+    <em:description>The default theme</em:description>
+
+    <em:locked>true</em:locked>
+
+    <!-- Front End Integration Hooks (used by Theme Manager)-->
+    <!-- XXXben - preprocess this file to use different info for mac version -->
+    <em:creator>?</em:creator>
+    <em:contributor>Mozilla Contributors</em:contributor>
+
+    <em:internalName>classic/1.0</em:internalName>
+  </Description>      
+
+</RDF>

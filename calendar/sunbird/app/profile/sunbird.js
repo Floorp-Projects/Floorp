@@ -39,14 +39,52 @@
 //  The first character after a period must be alphabetic.
 
 // pref("startup.homepage_override_url","chrome://browser-region/locale/region.properties");
+pref("general.startup.calendar", true);
+
 pref("browser.chromeURL","chrome://browser/content/");
 pref("browser.hiddenWindowChromeURL", "chrome://browser/content/hiddenWindow.xul");
 pref("xpinstall.dialog.confirm", "chrome://mozapps/content/xpinstall/xpinstallConfirm.xul");
 pref("xpinstall.dialog.progress", "chrome://mozapps/content/downloads/downloads.xul");
 pref("xpinstall.dialog.progress.type", "Download:Manager");
 
+// This is this application's unique identifier used by the Extension System to identify
+// this application as an extension target, and by the SmartUpdate system to identify
+// this application to the Update server.
+pref("app.id", "{718e30fb-e89b-41dd-9da7-e25a45638b28}");
+pref("app.version", 
+#expand __APP_VERSION__
+);
+pref("app.build_id", 
+#expand __BUILD_ID__
+);
+
+pref("update.app.enabled", false);
+pref("update.app.url", "chrome://mozapps/locale/update/update.properties");
+pref("update.app.updatesAvailable", false);
+pref("update.app.updateVersion", "");
+pref("update.app.updateDescription", "");
+pref("update.app.updateURL", "");
+pref("update.extensions.enabled", true);
+pref("update.extensions.wsdl", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreExtensionsURL", "chrome://mozapps/locale/extensions/extensions.properties");
+pref("extensions.getMoreThemesURL", "chrome://mozapps/locale/extensions/extensions.properties");
+// Automatically download and install updates to themes and extensions.
+pref("update.extensions.autoUpdate", false);
+
+pref("update.interval", 604800000); // every 7 days
+pref("update.lastUpdateDate", 0); // UTC offset when last update was performed. 
+
+// These prefs relate to the number and severity of updates available. This is a 
+// cache that the browser notification mechanism uses to determine if it should show
+// status bar UI if updates are detected and the app is shut down before installing
+// them.
+// 0 = low (extension/theme updates), 1 = medium (app minor version), 2 = high (major version)
+pref("update.severity", 0); 
+// The number of extension/theme/etc updates available
+pref("update.extensions.count", 0);
+
 pref("keyword.enabled", true);
-pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&q=");
+pref("keyword.URL", "http://www.google.com/search?btnI=I%27m+Feeling+Lucky&ie=UTF-8&oe=UTF-8&sourceid=mozilla-search&q=");
 
 pref("general.useragent.locale", "chrome://global/locale/intl.properties");
 pref("general.useragent.contentlocale", "chrome://browser-region/locale/region.properties");
@@ -107,6 +145,7 @@ pref("browser.tabs.loadInBackground", true);
 pref("browser.tabs.loadFolderAndReplace", true);
 pref("browser.tabs.opentabfor.middleclick", true);
 pref("browser.tabs.opentabfor.urlbar", true);
+pref("browser.tabs.loadBookmarksInBackground", false);
 
 // Smart Browsing prefs
 pref("browser.related.enabled", true);
@@ -193,3 +232,11 @@ pref("security.warn_entering_weak.show_once", true);
 pref("security.warn_leaving_secure.show_once", true);
 pref("security.warn_viewing_mixed.show_once", true);
 pref("security.warn_submit_insecure.show_once", true);
+
+pref("browser.urlbar.clickSelectsAll", true);
+#ifdef XP_UNIX
+#ifndef XP_MACOSX
+pref("browser.urlbar.clickSelectsAll", false);
+#endif
+#endif
+
