@@ -716,17 +716,20 @@ void
 js_SetStackSizeLimit(JSContext *cx, jsuword stackSizeLimit)
 {
     int stackDummy;
+    jsuword stackAddr;
 
 #ifdef DEBUG
     CheckStackGrowthDirection(&stackDummy);
 #endif
+
+    stackAddr = (jsuword)&stackDummy;
 #if JS_STACK_GROWTH_DIRECTION > 0
-    cx->stackLimit = stackSizeLimit
-                     ? (jsuword)&stackDummy + stackSizeLimit
+    cx->stackLimit = (stackAddr + stackSizeLimit > stackAddr)
+                     ? stackAddr + stackSizeLimit
                      : (jsuword)-1;
 #else
-    cx->stackLimit = stackSizeLimit
-                     ? (jsuword)&stackDummy - stackSizeLimit
+    cx->stackLimit = (stackAddr > stackSizeLimit)
+                     ? stackAddr - stackSizeLimit
                      : 0;
 #endif
 }
