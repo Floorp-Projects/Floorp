@@ -210,10 +210,14 @@ NSS_CO_MODULE = mozilla/security/nss \
 ifdef MOZ_NSS_AUTOCONF
 NSS_CO_TAG = NSS_CLIENT_BRANCH
 endif
-		
+
 NSS_CO_FLAGS := -P
 ifdef NSS_CO_TAG
    NSS_CO_FLAGS := $(NSS_CO_FLAGS) -r $(NSS_CO_TAG)
+endif
+# Cannot pull static tags by date
+ifeq ($(NSS_CO_TAG),NSS_CLIENT_TAG)
+CVS_CO_DATE_FLAGS :=
 endif
 CVSCO_NSS = $(CVS) $(CVS_FLAGS) co $(NSS_CO_FLAGS) $(CVS_CO_DATE_FLAGS) $(NSS_CO_MODULE)
 
