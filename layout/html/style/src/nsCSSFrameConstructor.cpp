@@ -2131,27 +2131,14 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*  aPresContext,
           childContent->GetTag(*getter_AddRefs(pTag));
           if (pTag.get() == nsXULAtoms::treechildren)
           {
-            // We want to call ConstructFrame to keep building rows, but only if we're
-            // open.
-            nsString attrValue;
-            nsIAtom* kOpenAtom = NS_NewAtom("open");
-            nsresult result = aContent->GetAttribute(nsXULAtoms::nameSpaceID, kOpenAtom, attrValue);
-            attrValue.ToLowerCase();
-            processChildren =  (result == NS_CONTENT_ATTR_NO_VALUE ||
-                                (result == NS_CONTENT_ATTR_HAS_VALUE && attrValue=="true"));
-            NS_RELEASE(kOpenAtom);
-			  
-            // If we do need to process, we have to "skip" this content node, since it
-            // doesn't really have any associated display.
-  
-            if (processChildren)
-            {
-              nsAbsoluteItems floaterList(nsnull);
-              rv = ProcessChildren(aPresContext, childContent, aParentFrame,
-                                   aAbsoluteItems, aFrameItems, aFixedItems,
-                                   floaterList);
-              NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
-            }
+            // Always build rows. Rely on style rules to hide frames.
+            // Rely on RDF trickery to hide synthetic content from the content model.
+            
+            nsAbsoluteItems floaterList(nsnull);
+            rv = ProcessChildren(aPresContext, childContent, aParentFrame,
+                                 aAbsoluteItems, aFrameItems, aFixedItems,
+                                 floaterList);
+            NS_ASSERTION(nsnull == floaterList.childList, "floater in odd spot");
           }
         }
       }
