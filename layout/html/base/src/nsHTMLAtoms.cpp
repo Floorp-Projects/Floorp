@@ -106,6 +106,7 @@ nsIAtom* nsHTMLAtoms::pre;
 nsIAtom* nsHTMLAtoms::prompt;
 nsIAtom* nsHTMLAtoms::readonly;
 nsIAtom* nsHTMLAtoms::rel;
+nsIAtom* nsHTMLAtoms::repeat;
 nsIAtom* nsHTMLAtoms::rightpadding;
 nsIAtom* nsHTMLAtoms::rootContentPseudo;
 nsIAtom* nsHTMLAtoms::rows;
@@ -235,6 +236,7 @@ void nsHTMLAtoms::AddrefAtoms()
     prompt = NS_NewAtom("PROMPT");
     readonly = NS_NewAtom("READONLY");
     rel = NS_NewAtom("REL");
+    repeat = NS_NewAtom("REPEAT");
     rightpadding = NS_NewAtom("RIGHTPADDING");
     rootContentPseudo = NS_NewAtom(":ROOT-CONTENT");
     rows = NS_NewAtom("ROWS");
@@ -365,6 +367,7 @@ void nsHTMLAtoms::ReleaseAtoms()
     NS_RELEASE(prompt);
     NS_RELEASE(readonly);
     NS_RELEASE(rel);
+    NS_RELEASE(repeat);
     NS_RELEASE(rightpadding);
     NS_RELEASE(rootContentPseudo);
     NS_RELEASE(rows);

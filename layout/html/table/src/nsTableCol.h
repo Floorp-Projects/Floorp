@@ -75,6 +75,11 @@ public:
   /** returns nsITableContent::kTableCellType */
   virtual int GetType();
 
+  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+
+  virtual void MapAttributesInto(nsIStyleContext* aContext,
+                                 nsIPresContext* aPresContext);
+
   /** @see nsIHTMLContent::CreateFrame */
   virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
                                nsIFrame*        aParentFrame,
@@ -110,6 +115,46 @@ private:
 
 
 };
+
+/* ---------- inlines ---------- */
+
+
+inline int nsTableCol::GetType()
+{  return nsITableContent::kTableColType;}
+
+inline int nsTableCol::GetRepeat ()
+{
+  if (0 < mRepeat)
+    return mRepeat;
+  return 1;
+}
+
+inline nsTableColGroup * nsTableCol::GetColGroup ()
+{
+  NS_IF_ADDREF(mColGroup);
+  return mColGroup;
+}
+
+inline void nsTableCol::SetColGroup (nsTableColGroup * aColGroup)
+{  mColGroup = aColGroup;}
+
+inline int nsTableCol::GetColumnIndex ()
+{  return mColIndex;}
+  
+inline void nsTableCol::SetColumnIndex (int aColIndex)
+{  mColIndex = aColIndex;}
+
+inline void nsTableCol::SetRepeat (int aRepeat)
+{
+  mRepeat = aRepeat;
+  ResetColumns ();
+}
+
+inline void nsTableCol::ResetColumns ()
+{
+  if (nsnull != mColGroup)
+    mColGroup->ResetColumns ();
+}
 
 #endif
 

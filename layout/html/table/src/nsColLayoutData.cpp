@@ -42,61 +42,6 @@ nsColLayoutData::~nsColLayoutData()
   mCells = 0;
 }
 
-nsTableCol * nsColLayoutData::GetCol()
-{
-  NS_IF_ADDREF(mCol);
-  return mCol; 
-};
-
-void nsColLayoutData::SetCol(nsTableCol * aCol)
-{
-  if (aCol != mCol)
-  {
-    NS_IF_ADDREF(aCol);
-    NS_IF_RELEASE(mCol);
-    mCol = aCol; 
-  }
-}
-
-nsTableColFrame * nsColLayoutData::GetColFrame()
-{
-  return mColFrame;
-}
-
-void nsColLayoutData::SetColFrame(nsTableColFrame *aColFrame)
-{
-  mColFrame = aColFrame;
-}
-
-
-nsCellLayoutData* nsColLayoutData::ElementAt(PRInt32 aIndex) const
-{
-  return (nsCellLayoutData*)mCells->ElementAt(aIndex);
-}
-
-
-PRBool nsColLayoutData::AppendElement(nsCellLayoutData* aCellLayoutData)
-{
-  return mCells->AppendElement((void*)aCellLayoutData);
-}
-
-PRBool nsColLayoutData::ReplaceElementAt(nsCellLayoutData* aCellLayoutData, PRInt32 aIndex)
-{
-  return mCells->ReplaceElementAt((void*)aCellLayoutData,aIndex);
-}
-
-nsVoidArray * nsColLayoutData::GetCells()
-{ return mCells; }
-
-PRInt32 nsColLayoutData::Count() const
-{ return mCells->Count(); }
-
-
-PRInt32 nsColLayoutData::IndexOf(nsCellLayoutData* aCellLayoutData) const
-{
-  return mCells->IndexOf((void*)aCellLayoutData);
-}
-
 PRInt32 nsColLayoutData::IndexOf(nsTableCell* aTableCell) const
 {
   PRInt32 count = this->Count();

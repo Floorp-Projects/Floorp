@@ -241,16 +241,34 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
       if (nsnull!=mRow)
       {
         // TODO: optimize by putting a flag on the row to say whether valign attr is set
-        nsHTMLValue rowAlignValue;
-        mRow->GetAttribute(nsHTMLAtoms::valign, rowAlignValue);
-        if (rowAlignValue.GetUnit() == eHTMLUnit_Enumerated)
+        nsHTMLValue parentAlignValue;
+        mRow->GetAttribute(nsHTMLAtoms::valign, parentAlignValue);
+        if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
         {
-          PRUint8 rowVAlign = rowAlignValue.GetIntValue();
+          PRUint8 rowVAlign = parentAlignValue.GetIntValue();
           if (NS_STYLE_VERTICAL_ALIGN_MIDDLE!=rowVAlign)
           {
             if (nsnull==textStyle)
               textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
             textStyle->mVerticalAlign.SetIntValue(rowVAlign, eStyleUnit_Enumerated);
+          }
+        }
+        else
+        { // we need to check the row group as well
+          nsTableRowGroup *rowGroup = mRow->GetRowGroup();
+          if (nsnull!=rowGroup)
+          {
+            rowGroup->GetAttribute(nsHTMLAtoms::valign, parentAlignValue);
+            if (parentAlignValue.GetUnit() == eHTMLUnit_Enumerated)
+            {
+              PRUint8 rowGroupVAlign = parentAlignValue.GetIntValue();
+              if (NS_STYLE_VERTICAL_ALIGN_MIDDLE!=rowGroupVAlign)
+              {
+                if (nsnull==textStyle)
+                  textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+                textStyle->mVerticalAlign.SetIntValue(rowGroupVAlign, eStyleUnit_Enumerated);
+              }
+            }
           }
         }
       }

@@ -136,6 +136,7 @@ public:
 
   static nsIAtom* readonly;
   static nsIAtom* rel;
+  static nsIAtom* repeat;
   static nsIAtom* rightpadding;
   static nsIAtom* rootContentPseudo;
   static nsIAtom* rows;

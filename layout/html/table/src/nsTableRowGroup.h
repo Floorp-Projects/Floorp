@@ -62,6 +62,12 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
+
+  virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
+
+  virtual void MapAttributesInto(nsIStyleContext* aContext,
+                                 nsIPresContext* aPresContext);
+
   /** @see nsIHTMLContent::CreateFrame */
   virtual nsresult CreateFrame(nsIPresContext*  aPresContext,
                                nsIFrame*        aParentFrame,
@@ -69,16 +75,10 @@ public:
                                nsIFrame*&       aResult);
 
   /** return the number of contained rows */
-  virtual int GetRowCount ()
-  {
-    return ChildCount ();
-  };
+  int GetRowCount ();
 
   /** returns nsITableContent::kTableRowGroupType */
-  virtual int GetType()
-  {
-    return nsITableContent::kTableRowGroupType;
-  };
+  int GetType();
 
   /** notify the containing nsTablePart that cell information has changed */
   virtual void ResetCellMap ();
@@ -114,6 +114,18 @@ protected:
   virtual PRBool IsRow(nsIContent * aContent) const;
 
 };
+
+/** return the number of contained rows */
+inline int nsTableRowGroup::GetRowCount ()
+{
+  return ChildCount ();
+}
+
+/** returns nsITableContent::kTableRowGroupType */
+inline int nsTableRowGroup::GetType()
+{
+  return nsITableContent::kTableRowGroupType;
+}
 
 #endif
 
