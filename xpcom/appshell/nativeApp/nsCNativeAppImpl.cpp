@@ -258,7 +258,7 @@ void nsCLoopInfo::GetEventLoop(nsIEventLoop** eventLoop)
 
 PRBool nsCLoopInfo::CompareName(const PRUnichar* loopName)
 {
-	return (m_LoopName.Compare(loopName) == 0);
+	return (m_LoopName.CompareWithConversion(loopName) == 0);
 } 
 
 //*****************************************************************************
