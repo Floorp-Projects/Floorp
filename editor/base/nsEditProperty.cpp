@@ -213,7 +213,7 @@ nsEditProperty::nsEditProperty()
   
 
   // special
-  if ( nsIEditProperty::allProperties = new nsString )
+  if ( (nsIEditProperty::allProperties = new nsString) != nsnull )
     nsIEditProperty::allProperties->AssignWithConversion("moz_allproperties");
 }
 
