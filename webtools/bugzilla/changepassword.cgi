@@ -141,9 +141,11 @@ Please click <b>Back</b> and try again.\n";
 }
 
 
+my $newemailtech = exists $::FORM{'newemailtech'};
+
 SendSQL("UPDATE profiles " .
         "SET emailnotification='$::FORM{'emailnotification'}', " .
-        "    newemailtech = '$::FORM{'newemailtech'}' " .
+        "    newemailtech = '$newemailtech' " .
         "WHERE login_name = " . SqlQuote($::COOKIE{'Bugzilla_login'}));
 
 my $newrealname = $::FORM{'realname'};
