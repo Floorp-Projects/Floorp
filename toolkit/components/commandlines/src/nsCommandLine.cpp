@@ -389,18 +389,28 @@ nsCommandLine::ResolveURI(const nsAString& aArgument, nsIURI* *aResult)
   nsCOMPtr<nsIIOService> io = do_GetIOService();
   NS_ENSURE_TRUE(io, NS_ERROR_OUT_OF_MEMORY);
 
-  // First, pretend it's a file
-  nsCOMPtr<nsIFile> file;
-  rv = ResolveFile(aArgument, getter_AddRefs(file));
-  if (NS_SUCCEEDED(rv)) {
-    return io->NewFileURI(file, aResult);
+  NS_ConvertUTF16toUTF8 cargument(aArgument);
+
+  // If there appears to be a URI scheme at the beginning of the argument,
+  // it is not a file arg, don't even try.
+
+  nsCAutoString scheme;
+  rv = io->ExtractScheme(cargument, scheme);
+
+  if (NS_FAILED(rv)) {
+    // pretend it's an absolute file path
+    nsCOMPtr<nsIFile> file;
+    rv = ResolveFile(aArgument, getter_AddRefs(file));
+    if (NS_SUCCEEDED(rv)) {
+      return io->NewFileURI(file, aResult);
+    }
   }
 
   nsCOMPtr<nsIURI> workingDirURI;
   rv = io->NewFileURI(mWorkingDir, getter_AddRefs(workingDirURI));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  return io->NewURI(NS_ConvertUTF16toUTF8(aArgument),
+  return io->NewURI(cargument,
                     nsnull,
                     workingDirURI,
                     aResult);
