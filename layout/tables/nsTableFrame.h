@@ -33,9 +33,10 @@ class nsTableColFrame;
 class nsTableRowGroupFrame;
 class nsTableRowFrame;
 class nsTableColGroupFrame;
+class nsTableBorderCollapser;
 class nsITableLayoutStrategy;
 class nsHTMLValue;
-class ColumnInfoCache;
+
 struct InnerTableReflowState;
 struct nsStylePosition;
 struct nsStyleSpacing;
@@ -205,14 +206,6 @@ public:
 
 
 
-  /** allow the cell and row attributes to effect the column frame
-    * currently, the only reason this exists is to support the HTML "rule"
-    * that a width attribute on a cell in the first column sets the column width.
-    */
-  virtual NS_METHOD SetColumnStyleFromCell(nsIPresContext  & aPresContext,
-                                           nsTableCellFrame* aCellFrame,
-                                           nsTableRowFrame * aRowFrame);
-
   /** the COLS attribute can be modified by any cell's width attribute.
     * deal with it here.  Must be called before any call to 
     * ColumnInfoCache::AddColumnInfo
@@ -245,8 +238,14 @@ public:
   /** get the max border thickness for each edge */
   void GetTableBorder(nsMargin &aBorder);
 
+  void SetBorderEdgeLength(PRUint8 aSide, 
+                           PRInt32 aIndex, 
+                           nscoord aLength);
+
   /** get the border values for the row and column */
-  void GetTableBorderAt(nsMargin &aBorder, PRInt32 aRowIndex, PRInt32 aColIndex);
+  void GetTableBorderAt(PRInt32  aRowIndex, 
+                        PRInt32  aColIndex,
+                        nsMargin &aBorder);
 
   /** get the max border thickness for each edge encompassed by the row group */
   void GetTableBorderForRowGroup(nsTableRowGroupFrame * aRowGroupFrame, nsMargin &aBorder);
@@ -269,114 +268,9 @@ public:
   /** helper to get the cell padding style value */
   virtual nscoord GetCellPadding();
           
-// begin methods for collapsing borders
-
-  /** notification that top and bottom borders have been computed */ 
-  void DidComputeHorizontalCollapsingBorders(nsIPresContext& aPresContext,
-                                             PRInt32 aStartRowIndex,
-                                             PRInt32 aEndRowIndex);
-
-  /** compute the left and right collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
-  void    ComputeVerticalCollapsingBorders(nsIPresContext& aPresContext,
-                                           PRInt32 aStartRowIndex, 
-                                           PRInt32 aEndRowIndex);
-
-  /** compute the top and bottom collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
-  void    ComputeHorizontalCollapsingBorders(nsIPresContext& aPresContext,
-                                             PRInt32 aStartRowIndex, 
-                                             PRInt32 aEndRowIndex);
-
-  /** compute the left borders for the table objects intersecting at (aRowIndex, aColIndex) */
-  void    ComputeLeftBorderForEdgeAt(nsIPresContext& aPresContext,
-                                     PRInt32 aRowIndex, 
-                                     PRInt32 aColIndex);
-
-  /** compute the right border for the table cell at (aRowIndex, aColIndex)
-    * and the appropriate border for that cell's right neighbor 
-    * (the left border for a neighboring cell, or the right table edge) 
-    */
-  void    ComputeRightBorderForEdgeAt(nsIPresContext& aPresContext,
-                                      PRInt32 aRowIndex, 
-                                      PRInt32 aColIndex);
-
-  /** compute the top borders for the table objects intersecting at (aRowIndex, aColIndex) */
-  void    ComputeTopBorderForEdgeAt(nsIPresContext& aPresContext,
-                                    PRInt32 aRowIndex, 
-                                    PRInt32 aColIndex);
-
-  /** compute the bottom border for the table cell at (aRowIndex, aColIndex)
-    * and the appropriate border for that cell's bottom neighbor 
-    * (the top border for a neighboring cell, or the bottom table edge) 
-    */
-  void    ComputeBottomBorderForEdgeAt(nsIPresContext& aPresContext,
-                                       PRInt32 aRowIndex, 
-                                       PRInt32 aColIndex);
-  
-  /** at the time we initially compute collapsing borders, we don't yet have the 
-    * column widths.  So we set them as a post-process of the column balancing algorithm.
-    */
-  void    SetCollapsingBorderHorizontalEdgeLengths();
-
-  /** @return the identifier representing the edge opposite from aEdge (left-right, top-bottom) */
-  PRUint8 GetOpposingEdge(PRUint8 aEdge);
-
-  /** @return the computed width for aSide of aBorder */
-  nscoord GetWidthForSide(const nsMargin &aBorder, PRUint8 aSide);
-
-  /** returns BORDER_PRECEDENT_LOWER if aStyle1 is lower precedent that aStyle2
-    *         BORDER_PRECEDENT_HIGHER if aStyle1 is higher precedent that aStyle2
-    *         BORDER_PRECEDENT_EQUAL if aStyle1 and aStyle2 have the same precedence
-    *         (note, this is not necessarily the same as saying aStyle1==aStyle2)
-    * according to the CSS-2 collapsing borders for tables precedent rules.
-    */
-  PRUint8 CompareBorderStyles(PRUint8 aStyle1, PRUint8 aStyle2);
-
-  /** helper to set the length of an edge for aSide border of this table frame */
-  void    SetBorderEdgeLength(PRUint8 aSide, PRInt32 aIndex, nscoord aLength);
-
-  /** Compute the style, width, and color of an edge in a collapsed-border table.
-    * This method is the CSS2 border conflict resolution algorithm
-    * The spec says to resolve conflicts in this order:<br>
-    * 1. any border with the style HIDDEN wins<br>
-    * 2. the widest border with a style that is not NONE wins<br>
-    * 3. the border styles are ranked in this order, highest to lowest precedence:<br>
-    *       double, solid, dashed, dotted, ridge, outset, groove, inset<br>
-    * 4. borders that are of equal width and style (differ only in color) have this precedence:<br>
-    *       cell, row, rowgroup, col, colgroup, table<br>
-    * 5. if all border styles are NONE, then that's the computed border style.<br>
-    * This method assumes that the styles were added to aStyles in the reverse precedence order
-    * of their frame type, so that styles that come later in the list win over style 
-    * earlier in the list if the tie-breaker gets down to #4.
-    * This method sets the out-param aBorder with the resolved border attributes
-    *
-    * @param aSide   the side that is being compared
-    * @param aStyles the resolved styles of the table objects intersecting at aSide
-    *                styles must be added to this list in reverse precedence order
-    * @param aBorder [OUT] the border edge that we're computing.  Results of the computation
-    *                      are stored in aBorder:  style, color, and width.
-    * @param aFlipLastSide an indication of what the bordering object is:  another cell, or the table itself.
-    */
-  void    ComputeCollapsedBorderSegment(PRUint8       aSide, 
-                                        nsVoidArray * aStyles, 
-                                        nsBorderEdge& aBorder,
-                                        PRBool        aFlipLastSide);
-
-// end methods for collapsing borders
 
   // Get cell margin information
   NS_IMETHOD GetCellMarginData(nsTableCellFrame* aKidFrame, nsMargin& aMargin);
-
-  /** get cached column information for a subset of the columns
-    *
-    * @param aType -- information is returned for the subset of columns with aType style
-    * @param aOutNumColumns -- out param, the number of columns matching aType
-    * @param aOutColumnIndexes -- out param, the indexes of the columns matching aType
-    *                             
-    * TODO : make aOutColumnIndexes safe
-    */
-  void GetColumnsByType(const nsStyleUnit aType, 
-                        PRInt32& aOutNumColumns,
-                        PRInt32 *& aOutColumnIndexes);
 
   /** return the row span of a cell, taking into account row span magic at the bottom
     * of a table.
@@ -777,16 +671,6 @@ protected:
   void ListColumnLayoutData(FILE* out, PRInt32 aIndent);
 #endif
 
-  virtual void BuildColumnCache(nsIPresContext&          aPresContext,
-                                nsHTMLReflowMetrics&     aDesiredSize,
-                                const nsHTMLReflowState& aReflowState,
-                                nsReflowStatus&          aStatus);
-
-  /** Helper for BuildColumnCache */
-  virtual void SetColumnStylesFromCells(nsIPresContext& aPresContext, nsIFrame* aRowGroupFrame);
-
-  virtual void CacheColFramesInCellMap();
-
   /** return the number of columns as specified by the input. 
     * has 2 side effects:<br>
     * calls SetStartColumnIndex on each nsTableColumn<br>
@@ -865,6 +749,8 @@ public: /* ----- Cell Map public methods ----- */
   /*------------end of nsITableLayout methods -----------------------*/
 
 
+  virtual void CacheColFrames(nsIPresContext& aPresContext,
+                              PRBool          aReset = PR_FALSE);
 public:
   static nsIAtom* gColGroupAtom;
   void Dump(PRBool aDumpCols, PRBool aDumpCellMap);
@@ -890,11 +776,10 @@ protected:
 
   PRInt32      mColCount;           // the number of columns in this table
   nsCellMap*   mCellMap;            // maintains the relationships between rows, cols, and cells
-  ColumnInfoCache *mColCache;       // cached information about the table columns
   nsITableLayoutStrategy * mTableLayoutStrategy; // the layout strategy for this frame
   nsFrameList  mColGroups;          // the list of colgroup frames
 
-  nsBorderEdges* mBorderEdges;      // one list of border segments for each side of the table frame
+  nsTableBorderCollapser* mBorderCollapser;      // one list of border segments for each side of the table frame
                                     // used only for the collapsing border model
   nscoord      mPercentBasisForRows;
 };
