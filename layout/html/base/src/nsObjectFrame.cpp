@@ -1598,7 +1598,7 @@ nsPluginInstanceOwner::~nsPluginInstanceOwner()
   {
     if (mPluginHost)
       mPluginHost->StopPluginInstance(mInstance);
-    NS_RELEASE(mInstance);
+    NS_IF_RELEASE(mInstance);
   }
 
   NS_IF_RELEASE(mPluginHost);
