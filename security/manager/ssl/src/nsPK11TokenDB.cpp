@@ -199,7 +199,11 @@ done:
 /* void changePassword (in wstring oldPassword, in wstring newPassword); */
 NS_IMETHODIMP nsPK11Token::ChangePassword(const PRUnichar *oldPassword, const PRUnichar *newPassword)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  SECStatus rv;
+  rv = PK11_ChangePW(mSlot, 
+               NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(oldPassword).get()), 
+               NS_CONST_CAST(char *, NS_ConvertUCS2toUTF8(newPassword).get()));
+  return (rv == SECSuccess) ? NS_OK : NS_ERROR_FAILURE;
 }
 
 /* boolean isHardwareToken (); */

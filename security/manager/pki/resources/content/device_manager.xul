@@ -76,7 +76,7 @@
           <treehead>
             <treerow>
               <treecell class="treecell-header"
-                        label="&devmgr.details.title;" flex="5"/>
+                        label="&devmgr.details.title;" flex="2"/>
               <treecell class="treecell-header"
                         label="&devmgr.details.title2;" flex="7"/>
             </treerow>
@@ -85,9 +85,6 @@
         </tree>
       </box> <!-- / Device status -->
       <vbox> <!-- Buttons for manipulating devices -->
-        <button id="change_slotname_button" 
-                label="&devmgr.button.changeslotname.label;"
-                disabled="true"/> 
         <button id="login_button" 
                 label="&devmgr.button.login.label;"
                 onclick="doLogin();" disabled="true"/> 
@@ -96,11 +93,10 @@
                 onclick="doLogout();" disabled="true"/> 
         <button id="change_pw_button" 
                 label="&devmgr.button.changepw.label;"
-                disabled="true"/> 
-        <!-- these are disabled until fully implemented -->
+                onclick="changePassword();" disabled="true"/> 
         <button id="load_button" 
                 label="&devmgr.button.load.label;"
-                onclick="doLoad();" disabled="true"/> 
+                onclick="doLoad();" disabled="false"/> 
         <button id="unload_button" 
                 label="&devmgr.button.unload.label;"
                 onclick="doUnload();" disabled="true"/> 

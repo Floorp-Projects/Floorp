@@ -92,6 +92,8 @@ interface nsIPKCS11ModuleDB : nsISupports
 
   nsIPKCS11Module findModuleByName(in wstring name);
 
+  nsIPKCS11Slot findSlotByName(in wstring name);
+
   nsIEnumerator listModules();
 
   void toggleFIPSMode();

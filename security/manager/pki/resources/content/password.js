@@ -23,6 +23,9 @@
 const nsPK11TokenDB = "@mozilla.org/security/pk11tokendb;1";
 const nsIPK11TokenDB = Components.interfaces.nsIPK11TokenDB;
 const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const nsPKCS11ModuleDB = "@mozilla.org/security/pkcs11moduledb;1";
+const nsIPKCS11ModuleDB = Components.interfaces.nsIPKCS11ModuleDB;
+const nsIPKCS11Slot = Components.interfaces.nsIPKCS11Slot;
 
 var params;
 var tokenName;
@@ -32,15 +35,41 @@ function onLoad()
 {
   pw1 = document.getElementById("pw1");
 
-  params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-  tokenName = params.GetString(1);
+  if (window.arguments) {
+    params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
+    tokenName = params.GetString(1);
+  } else {
+    tokenName = self.name;
+  }
 
   // Set token name in display
   var t = document.getElementById("tokenName");
   t.setAttribute("value", tokenName);
 
-  // Select first password field
-  document.getElementById('pw1').focus();
+  var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+
+  // If the token is unitialized, don't use the old password box.
+  // Otherwise, do.
+  var secmoddb = Components.
+                  classes[nsPKCS11ModuleDB].
+                  getService(nsIPKCS11ModuleDB);
+  var slot = secmoddb.findSlotByName(tokenName);
+  if (slot) {
+    var oldpwbox = document.getElementById("oldpw");
+    if (slot.status == nsIPKCS11Slot.SLOT_UNINITIALIZED ) {
+      oldpwbox.setAttribute("disabled", "true");
+      oldpwbox.setAttribute("type", "text");
+      oldpwbox.setAttribute("value", 
+                            bundle.GetStringFromName("password_not_set")); 
+      oldpwbox.setAttribute("inited", "true");
+      // Select first password field
+      document.getElementById('pw1').focus();
+    } else {
+      // Select old password field
+      oldpwbox.setAttribute("inited", "false");
+      oldpwbox.focus();
+    }
+  }
 }
 
 function onP12Load()
@@ -55,10 +84,24 @@ function setPassword()
 {
   var pk11db = Components.classes[nsPK11TokenDB].getService(nsIPK11TokenDB);
   var token = pk11db.findTokenByName(tokenName);
-  token.initPassword(pw1.value);
 
-  // Return value
-  params.SetInt(1, 1);
+  var oldpwbox = document.getElementById("oldpw");
+  var initpw = oldpwbox.getAttribute("inited");
+  if (initpw == "false") {
+    try {
+      token.changePassword(oldpwbox.value, pw1.value);
+    } catch (e) {
+      var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+      alert(bundle.GetStringFromName("failed_pw_change")); 
+    }
+  } else {
+    token.initPassword(pw1.value);
+  }
+
+  if (params) {
+    // Return value
+    params.SetInt(1, 1);
+  }
 
   // Terminate dialog
   window.close();
