@@ -222,24 +222,38 @@ function getURLSpecFromFile(aFile)
 
 function ensureExtensionsFiles(aIsProfile)
 {
-  var extensionsFile  = getFile(getDirKey(aIsProfile), 
-                                [DIR_EXTENSIONS, FILE_EXTENSIONS]);
+  try {
+    var extensionsFile  = getFile(getDirKey(aIsProfile), 
+                                  [DIR_EXTENSIONS, FILE_EXTENSIONS]);
   
-  // If the file does not exist at the current location, copy the default
-  // version over so we can access the various roots. 
-  // This is a sign also that something may have gone wrong, such as the user
-  // deleting /Extensions so we should remove the relative contents.rdf and
-  // overlayinfo hierarchies too. 
-  if (!extensionsFile.exists()) {
-    var defaultFile = getFile(KEY_DEFAULTS, 
-                              [DIR_DEFAULTS_EXTENSIONS, FILE_EXTENSIONS]);
-    defaultFile.copyTo(extensionsFile.parent, extensionsFile.leafName);
+    // If the file does not exist at the current location, copy the default
+    // version over so we can access the various roots. 
+    // This is a sign also that something may have gone wrong, such as the user
+    // deleting /Extensions so we should remove the relative contents.rdf and
+    // overlayinfo hierarchies too. 
+    if (extensionsFile && !extensionsFile.exists()) {
+      var defaultFile = getFile(KEY_DEFAULTS, 
+                                [DIR_DEFAULTS_EXTENSIONS, FILE_EXTENSIONS]);
+      defaultFile.copyTo(extensionsFile.parent, extensionsFile.leafName);
 
-    try {      
-      (getFile(getDirKey(aIsProfile), [DIR_CR_CHROME, FILE_CR_CHROMEDS])).remove(false);
-      (getDir(getDirKey(aIsProfile), [DIR_CR_CHROME, DIR_CR_OVERLAYINFO])).remove(true);
+      try {      
+        (getFile(getDirKey(aIsProfile), [DIR_CR_CHROME, FILE_CR_CHROMEDS])).remove(false);
+        (getDir(getDirKey(aIsProfile), [DIR_CR_CHROME, DIR_CR_OVERLAYINFO])).remove(true);
+      }
+      catch (e) { 
+        dump("Extension System Warning: failed to remove chrome.rdf/overlay info because: " + e + "\n"); 
+      }
     }
-    catch (e) { dump("*** eeeeeeee = " + e + "\n"); }
+  }
+  catch (e) { 
+    // Too early in the startup process to use the console, we may yet restart
+    // the app.
+    dump("Extension System Warning: Failed to set up default extensions" + 
+         " files probably because you do not have write privileges to this" + 
+         " location. While you can run Firefox like this, it is recommended" + 
+         " that you run it at least once with privileges that allow it to generate" + 
+         " these initial files to improve start performance. Running from a disk" + 
+         " image on MacOS X is not recommended.");
   }
 }
 
