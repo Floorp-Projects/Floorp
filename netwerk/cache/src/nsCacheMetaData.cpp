@@ -22,156 +22,138 @@
  */
 
 #include "nsCacheMetaData.h"
-#include "nsString.h"
 #include "nsICacheEntryDescriptor.h"
-
-
-/*
- *  nsCacheClientHashTable
- */
-
-PLDHashTableOps
-nsCacheMetaData::ops =
-{
-    PL_DHashAllocTable,
-    PL_DHashFreeTable,
-    GetKey,
-    HashKey,
-    MatchEntry,
-    MoveEntry,
-    ClearEntry,
-    Finalize
-};
+#include "nsString.h"
+#include "nsReadableUtils.h"
+#include "plstr.h"
 
 
 nsCacheMetaData::nsCacheMetaData()
-    : initialized(PR_FALSE)
+    : mData(nsnull)
 {
 }
 
-nsCacheMetaData::~nsCacheMetaData()
+void
+nsCacheMetaData::Clear()
 {
-    if (initialized)
-        PL_DHashTableFinish(&table);
+    MetaElement * elem;
+    while (mData) {
+        elem = mData->mNext;
+        delete mData;
+        mData = elem;
+    }
+}
+
+const char *
+nsCacheMetaData::GetElement(const char * key)
+{
+    // We assume the number of meta data elements will be very small, so
+    // we keep it real simple.  Singly-linked list, linearly searched.
+
+    nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(key);
+
+    MetaElement * elem = mData;
+    while (elem) {
+        if (elem->mKey == keyAtom)
+            return elem->mValue;
+        elem = elem->mNext;
+    }
+    return nsnull;
 }
 
 
 nsresult
-nsCacheMetaData::Init()
+nsCacheMetaData::SetElement(const char * key,
+                            const char * value)
 {
-    nsresult rv = NS_OK;
-    initialized = PL_DHashTableInit(&table, &ops, nsnull,
-                                    sizeof(nsCacheMetaDataHashTableEntry), 16);
+    nsCOMPtr<nsIAtom> keyAtom = do_GetAtom(key);
+    if (!keyAtom)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-    if (!initialized) rv = NS_ERROR_OUT_OF_MEMORY;
-    return rv;
-}
-
-
-nsCacheMetaData *
-nsCacheMetaData::Create()
-{
-    nsCacheMetaData * metaData = new nsCacheMetaData();
-    if (!metaData)
-        return nsnull;
-
-    nsresult rv = metaData->Init();
-    if (NS_FAILED(rv)) {
-        delete metaData;
-        return nsnull;
+    // find and remove old meta data element
+    MetaElement * elem = mData, * last = nsnull;
+    while (elem) {
+        if (elem->mKey == keyAtom) {
+            // remove elem
+            if (last)
+                last->mNext = elem->mNext;
+            else
+                mData = elem->mNext;
+            delete elem;
+            break;
+        }
+        last = elem;
+        elem = elem->mNext;
     }
 
-    return metaData;
-}
+    // allocate new meta data element
+    if (value) {
+        elem = new (value) MetaElement;
+        if (!elem)
+            return NS_ERROR_OUT_OF_MEMORY;
+        elem->mKey = keyAtom;
 
-
-const nsACString *
-nsCacheMetaData::GetElement(const nsACString * key)
-{
-    PLDHashEntryHdr * hashEntry;
-    nsCString *       result = nsnull;
-
-    // XXX need to copy string until we have scc's new flat string abstract class
-    // XXX see nsCacheMetaData::HashKey below (bug 70075)
-    nsCString * tempKey = new nsCString(*key);
-    if (!tempKey) return result;
-
-    NS_ASSERTION(initialized, "nsCacheMetaDataHashTable not initialized");
-    hashEntry = PL_DHashTableOperate(&table, tempKey, PL_DHASH_LOOKUP);
-    if (PL_DHASH_ENTRY_IS_BUSY(hashEntry)) {
-        result = ((nsCacheMetaDataHashTableEntry *)hashEntry)->value;
-    }
-
-    delete tempKey;
-    return result;
-}
-
-
-nsresult
-nsCacheMetaData::SetElement(const nsACString& key,
-                            const nsACString& value)
-{
-    nsCacheMetaDataHashTableEntry * metaEntry;
-    nsresult  rv = NS_ERROR_OUT_OF_MEMORY;  // presume the worst
-
-    NS_ASSERTION(initialized, "nsCacheMetaDataHashTable not initialized");
-
-    // XXX need to copy string until we have scc's new flat string abstract class
-    // XXX see nsCacheMetaData::HashKey below (bug 70075)
-    nsCString * tempKey = new nsCString(key);
-    if (!tempKey) return rv;
-
-    // XXX should empty value remove the key?
-
-    metaEntry = (nsCacheMetaDataHashTableEntry *)
-        PL_DHashTableOperate(&table, tempKey, PL_DHASH_ADD);
-    if (!metaEntry) goto error_exit;
-
-
-    if (metaEntry->key == nsnull) {
-        metaEntry->key = new nsCString(key);
-        if (metaEntry->key == nsnull) {
-            goto error_exit;
+        // insert after last or as first element...
+        if (last) {
+            elem->mNext = last->mNext;
+            last->mNext = elem;
+        }
+        else {
+            elem->mNext = mData;
+            mData = elem;
         }
     }
-    if (metaEntry->value != nsnull)
-        delete metaEntry->value;  // clear the old value
 
-    metaEntry->value = new nsCString(value);
-    if (metaEntry->value == nsnull) {
-        // XXX remove key?
-        goto error_exit;
-    }
-
-    rv = NS_OK;
- error_exit:
-    delete tempKey;
-    return rv;
+    return NS_OK;
 }
-
 
 PRUint32
 nsCacheMetaData::Size(void)
 {
     PRUint32 size = 0;
-    (void) PL_DHashTableEnumerate(&table, CalculateSize, &size);
+    nsAutoString ucsKey;
+
+    // XXX this should be computed in SetElement
+
+    MetaElement * elem = mData;
+    while (elem) {
+        elem->mKey->ToString(ucsKey);
+
+        size += (2 + ucsKey.Length() + strlen(elem->mValue));
+
+        elem = elem->mNext;
+    }
     return size;
 }
-
-
-typedef struct {
-    char *    bufPtr;
-    PRUint32  bufSize;
-    PRUint32  metaSize;
-    nsresult  rv;
-} AccumulateStruct;
-
 
 nsresult
 nsCacheMetaData::FlattenMetaData(char * buffer, PRUint32 bufSize)
 {
-    AccumulateStruct  state = {buffer, bufSize, 0, NS_OK};
-    PL_DHashTableEnumerate(&table, AccumulateElement, &state);
+    nsAutoString ucsKey;
+    nsCAutoString key;
+    PRUint32 metaSize = 0;
+
+    MetaElement * elem = mData;
+    while (elem) {
+        elem->mKey->ToString(ucsKey);
+        CopyUCS2toASCII(ucsKey, key); // XXX consider a custom ASCII atom table
+
+        PRUint32 keySize = 1 + key.Length();
+        PRUint32 valSize = 1 + strlen(elem->mValue);
+        if ((metaSize + keySize + valSize) > bufSize) {
+            // not enough space to copy key/value pair
+            NS_ERROR("buffer size too small for meta data.");
+            return NS_ERROR_OUT_OF_MEMORY;
+        }
+        
+        memcpy(buffer, key.get(), keySize);
+        buffer += keySize;
+        memcpy(buffer, elem->mValue, valSize);
+        buffer += valSize;
+        metaSize += keySize + valSize;
+
+        elem = elem->mNext;
+    }
 
     return NS_OK;
 }
@@ -191,151 +173,47 @@ nsCacheMetaData::UnflattenMetaData(char * data, PRUint32 size)
             const char* value = data;
             PRUint32 valueSize = strlen(value);
             data += 1 + valueSize;
-            rv = SetElement(nsDependentCString(name, nameSize),
-                                   nsDependentCString(value, valueSize));
+            rv = SetElement(name, value);
             if (NS_FAILED(rv)) break;
         }
     }
     return rv;
 }
 
-
 nsresult
 nsCacheMetaData::VisitElements(nsICacheMetaDataVisitor * visitor)
 {
-    (void) PL_DHashTableEnumerate(&table, VisitElement, visitor);
+    nsAutoString ucsKey;
+    nsCAutoString key;
+
+    MetaElement * elem = mData;
+    while (elem) {
+        elem->mKey->ToString(ucsKey);
+        CopyUCS2toASCII(ucsKey, key); // XXX consider a custom ASCII atom table
+
+        PRBool keepGoing;
+        nsresult rv = visitor->VisitMetaDataElement(key.get(), elem->mValue, &keepGoing);
+
+        if (NS_FAILED(rv) || !keepGoing)
+            break;
+
+        elem = elem->mNext;
+    }
+
     return NS_OK;
 }
 
-
-/*
- *  hash table operation callback functions
- */
-
-const void * PR_CALLBACK
-nsCacheMetaData::GetKey( PLDHashTable * /* table */, PLDHashEntryHdr *hashEntry)
+void *
+nsCacheMetaData::MetaElement::operator new(size_t size, const char *value) CPP_THROW_NEW
 {
-    return ((nsCacheMetaDataHashTableEntry *)hashEntry)->key;
-}
+    int len = strlen(value);
+    size += len;
 
+    MetaElement *elem = (MetaElement *) ::operator new(size);
+    if (!elem)
+        return nsnull;
 
-PLDHashNumber PR_CALLBACK
-nsCacheMetaData::HashKey( PLDHashTable * table, const void *key)
-{
-    // XXX need scc's new flat string abstract class here (bug 70075)
-    return PL_DHashStringKey(table, ((nsCString *)key)->get());
-}
-
-
-PRBool PR_CALLBACK
-nsCacheMetaData::MatchEntry(PLDHashTable *       /* table */,
-				     const PLDHashEntryHdr * hashEntry,
-				     const void *            key)
-{
-    NS_ASSERTION(key !=  nsnull, "### nsCacheMetaDataHashTable::MatchEntry : null key");
-    nsCString * entryKey = ((nsCacheMetaDataHashTableEntry *)hashEntry)->key;
-    NS_ASSERTION(entryKey, "### hashEntry->key == nsnull");
-
-    return entryKey->Equals(*NS_STATIC_CAST(const nsACString*,key));
-}
-
-
-void PR_CALLBACK
-nsCacheMetaData::MoveEntry(PLDHashTable * /* table */,
-				    const PLDHashEntryHdr *from,
-				    PLDHashEntryHdr       *to)
-{
-    ((nsCacheMetaDataHashTableEntry *)to)->key =
-        ((nsCacheMetaDataHashTableEntry *)from)->key;
-    ((nsCacheMetaDataHashTableEntry *)to)->value =
-        ((nsCacheMetaDataHashTableEntry *)from)->value;
-}
-
-
-void PR_CALLBACK
-nsCacheMetaData::ClearEntry(PLDHashTable * /* table */,
-                            PLDHashEntryHdr * hashEntry)
-{
-    ((nsCacheMetaDataHashTableEntry *)hashEntry)->key      = 0;
-    ((nsCacheMetaDataHashTableEntry *)hashEntry)->value    = 0;
-}
-
-
-void PR_CALLBACK
-nsCacheMetaData::Finalize(PLDHashTable * table)
-{
-    (void) PL_DHashTableEnumerate(table, FreeElement, nsnull);   
-}
-
-
-/**
- * hash table enumeration callback functions
- */
-
-PLDHashOperator PR_CALLBACK
-nsCacheMetaData::CalculateSize(PLDHashTable *table,
-                               PLDHashEntryHdr *hdr,
-                               PRUint32 number,
-                               void *arg)
-{
-    nsCacheMetaDataHashTableEntry* hashEntry = (nsCacheMetaDataHashTableEntry *)hdr;
-    *(PRUint32*)arg += (2 + hashEntry->key->Length() + hashEntry->value->Length());
-    return PL_DHASH_NEXT;
-}
-
-
-PLDHashOperator PR_CALLBACK
-nsCacheMetaData::AccumulateElement(PLDHashTable *table,
-                                 PLDHashEntryHdr *hdr,
-                                 PRUint32 number,
-                                 void *arg)
-{
-    AccumulateStruct * state = (AccumulateStruct *)arg;
-    nsCacheMetaDataHashTableEntry* hashEntry = (nsCacheMetaDataHashTableEntry *)hdr;
-    PRUint32 keySize = 1 + hashEntry->key->Length();
-    PRUint32 valSize = 1 + hashEntry->value->Length();
-    if ((state->metaSize + keySize + valSize) > state->bufSize) {
-        // not enough space to copy key/value pair
-        state->rv = NS_ERROR_OUT_OF_MEMORY;
-        NS_ERROR("buffer size too small for meta data.");
-        return PL_DHASH_STOP;
-    }
-    
-    memcpy(state->bufPtr, hashEntry->key->get(), keySize);
-    state->bufPtr += keySize;
-    memcpy(state->bufPtr, hashEntry->value->get(), valSize);
-    state->bufPtr += valSize;
-    state->metaSize += keySize + valSize;
-    return PL_DHASH_NEXT;
-}
-
-
-PLDHashOperator PR_CALLBACK
-nsCacheMetaData::FreeElement(PLDHashTable *table,
-                              PLDHashEntryHdr *hdr,
-                              PRUint32 number,
-                              void *arg)
-{
-    nsCacheMetaDataHashTableEntry *entry = (nsCacheMetaDataHashTableEntry *)hdr;
-    delete entry->key;
-    delete entry->value;
-    return PL_DHASH_NEXT;
-}
-
-
-PLDHashOperator PR_CALLBACK
-nsCacheMetaData::VisitElement(PLDHashTable *table,
-                              PLDHashEntryHdr *hdr,
-                              PRUint32 number,
-                              void *arg)
-{
-    nsCacheMetaDataHashTableEntry *entry   = (nsCacheMetaDataHashTableEntry *)hdr;
-    nsICacheMetaDataVisitor       *visitor = (nsICacheMetaDataVisitor *)arg;
-    const char * key   = entry->key   ? entry->key->get()   : nsnull;
-    const char * value = entry->value ? entry->value->get() : nsnull;
-    
-    PRBool keepGoing;
-    nsresult rv = visitor->VisitMetaDataElement(key, value, &keepGoing);
-
-    return NS_SUCCEEDED(rv) && keepGoing ? PL_DHASH_NEXT : PL_DHASH_STOP;
+    memcpy(elem->mValue, value, len);
+    elem->mValue[len] = 0;
+    return elem;
 }

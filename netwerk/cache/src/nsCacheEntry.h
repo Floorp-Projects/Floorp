@@ -98,14 +98,13 @@ public:
     /**
      * Meta data accessors
      */
-    nsresult GetMetaDataElement( const nsACString&   key,
-                                 const nsACString ** value);
-    nsresult SetMetaDataElement( const nsACString&  key,
-                                 const nsACString&  value);
+    const char * GetMetaDataElement( const char *  key) { return mMetaData.GetElement(key); }
+    nsresult     SetMetaDataElement( const char *  key,
+                                     const char *  value);
 
-    nsresult VisitMetaDataElements( nsICacheMetaDataVisitor * visitor);
+    nsresult VisitMetaDataElements( nsICacheMetaDataVisitor * visitor) { return mMetaData.VisitElements(visitor); }
 
-    nsresult FlattenMetaData( char * buffer,  PRUint32  bufSize);
+    nsresult FlattenMetaData( char * buffer,  PRUint32  bufSize)       { return mMetaData.FlattenMetaData(buffer, bufSize); }
     nsresult UnflattenMetaData( char * buffer, PRUint32   bufSize);
 
     PRUint32 MetaDataSize()                       { return mMetaSize;}
@@ -230,7 +229,7 @@ private:
     nsCOMPtr<nsISupports>   mSecurityInfo;   // 
     nsCOMPtr<nsISupports>   mData;           // 
     PRThread *              mThread;
-    nsCacheMetaData *       mMetaData;       // 4
+    nsCacheMetaData         mMetaData;       // 4
     PRCList                 mRequestQ;       // 8
     PRCList                 mDescriptorQ;    // 8
 };

@@ -27,39 +27,22 @@
 #include "nspr.h"
 #include "pldhash.h"
 #include "nscore.h"
-// #include "nsCOMPtr.h"
-#include "nsString.h"
-// #include "nsAString.h"
+#include "nsIAtom.h"
 
 class nsICacheMetaDataVisitor;
-
-typedef struct {
-    nsCString *  key;
-    nsCString *  value;
-} nsCacheMetaDataKeyValuePair;
-
-
-typedef struct {
-  PLDHashNumber  keyHash;
-  nsCString *    key;
-  nsCString *    value;
-} nsCacheMetaDataHashTableEntry;
-
 
 class nsCacheMetaData {
 public:
     nsCacheMetaData();
-    ~nsCacheMetaData();
+    ~nsCacheMetaData()  { Clear(); }
 
-    static
-    nsCacheMetaData *     Create(void);
+    void                  Clear();
+    PRBool                IsEmpty() { return (mData == nsnull); }
 
-    nsresult              Init(void);
+    const char *          GetElement(const char * key);
 
-    const nsACString *    GetElement(const nsACString * key);
-
-    nsresult              SetElement(const nsACString& key,
-                                     const nsACString& value);
+    nsresult              SetElement(const char * key,
+                                     const char * value);
 
     PRUint32              Size(void);
 
@@ -70,50 +53,18 @@ public:
     nsresult              VisitElements(nsICacheMetaDataVisitor * visitor);
 
 private:
-    // PLDHashTable operation callbacks
-    static const void *   PR_CALLBACK GetKey( PLDHashTable *table, PLDHashEntryHdr *entry);
 
-    static PLDHashNumber  PR_CALLBACK HashKey( PLDHashTable *table, const void *key);
+    struct MetaElement
+    {
+        struct MetaElement * mNext;
+        nsCOMPtr<nsIAtom>    mKey;
+        char                 mValue[1]; // actually, bigger than 1
 
-    static PRBool         PR_CALLBACK MatchEntry( PLDHashTable *           table,
-                                                  const PLDHashEntryHdr *  entry,
-                                                  const void *             key);
+        // MetaElement and mValue are allocated together via:
+        void *operator new(size_t size, const char *value) CPP_THROW_NEW;
+    };
 
-    static void           PR_CALLBACK MoveEntry( PLDHashTable *table,
-                                                 const PLDHashEntryHdr *from,
-                                                 PLDHashEntryHdr       *to);
-
-    static void           PR_CALLBACK ClearEntry( PLDHashTable *table, PLDHashEntryHdr *entry);
-
-    static void           PR_CALLBACK Finalize( PLDHashTable *table);
-
-    static
-    PLDHashOperator       PR_CALLBACK CalculateSize(PLDHashTable *table,
-                                                    PLDHashEntryHdr *hdr,
-                                                    PRUint32 number,
-                                                    void *arg);
-
-    static
-    PLDHashOperator       PR_CALLBACK AccumulateElement(PLDHashTable *table,
-                                                         PLDHashEntryHdr *hdr,
-                                                         PRUint32 number,
-                                                         void *arg);
-
-    static
-    PLDHashOperator       PR_CALLBACK FreeElement(PLDHashTable *table,
-                                                   PLDHashEntryHdr *hdr,
-                                                   PRUint32 number,
-                                                   void *arg);
-    static
-    PLDHashOperator       PR_CALLBACK VisitElement(PLDHashTable *table,
-                                                    PLDHashEntryHdr *hdr,
-                                                    PRUint32 number,
-                                                    void *arg);
-
-    // member variables
-    static PLDHashTableOps ops;
-    PLDHashTable           table;
-    PRBool                 initialized;
+    MetaElement * mData;
 };
 
 #endif // _nsCacheMetaData_h

@@ -46,8 +46,7 @@ nsCacheEntry::nsCacheEntry(nsCString *          key,
       mDataSize(0),
       mMetaSize(0),
       mCacheDevice(nsnull),
-      mData(nsnull),
-      mMetaData(nsnull)
+      mData(nsnull)
 {
     MOZ_COUNT_CTOR(nsCacheEntry);
     PR_INIT_CLIST(this);
@@ -63,7 +62,6 @@ nsCacheEntry::~nsCacheEntry()
 {
     MOZ_COUNT_DTOR(nsCacheEntry);
     delete mKey;
-    delete mMetaData;
     
     if (IsStreamData())  return;
 
@@ -132,66 +130,26 @@ nsCacheEntry::TouchData()
 }
 
 
-
 nsresult
-nsCacheEntry::GetMetaDataElement( const nsACString&   key,
-                                  const nsACString ** value)
+nsCacheEntry::SetMetaDataElement( const char * key, 
+                                  const char * value)
 {
-    *value = mMetaData ? mMetaData->GetElement(&key) : nsnull;
-    return NS_OK;
-}
-
-
-nsresult
-nsCacheEntry::SetMetaDataElement( const nsACString& key, 
-                                  const nsACString& value)
-{
-    if (!mMetaData) {
-        mMetaData = nsCacheMetaData::Create();
-        if (!mMetaData)
-            return NS_ERROR_OUT_OF_MEMORY;
-    }
-    nsresult rv = mMetaData->SetElement(key, value);
+    nsresult rv = mMetaData.SetElement(key, value);
     if (NS_FAILED(rv))
         return rv;
 
-    mMetaSize = mMetaData->Size();                // calc new meta data size
+    mMetaSize = mMetaData.Size();                // calc new meta data size
     return rv;
-}
-
-
-nsresult
-nsCacheEntry::VisitMetaDataElements( nsICacheMetaDataVisitor * visitor)
-{
-    NS_ENSURE_ARG_POINTER(visitor);
-
-    if (mMetaData)
-        mMetaData->VisitElements(visitor);
-
-    return NS_OK;
-}
-
-
-nsresult
-nsCacheEntry::FlattenMetaData(char * buffer, PRUint32 bufSize)
-{
-    if (mMetaData)  return mMetaData->FlattenMetaData(buffer, bufSize);
-
-    if (bufSize > 0) *buffer = nsnull;
-    return NS_OK;
 }
 
 
 nsresult
 nsCacheEntry::UnflattenMetaData(char * buffer, PRUint32 bufSize)
 {
-    delete mMetaData;
-    mMetaData = nsCacheMetaData::Create();
-    if (!mMetaData)
-        return NS_ERROR_OUT_OF_MEMORY;
-    nsresult rv = mMetaData->UnflattenMetaData(buffer, bufSize);
+    NS_ASSERTION(mMetaData.IsEmpty(), "meta data not empty");
+    nsresult rv = mMetaData.UnflattenMetaData(buffer, bufSize);
     if (NS_SUCCEEDED(rv))
-        mMetaSize = mMetaData->Size();
+        mMetaSize = mMetaData.Size();
     return rv;
 }
 
