@@ -122,8 +122,9 @@ const MSG_VAL_EXPR         = getMsg("msg.val.expression");
 
 const MSG_HELLO            = getMsg("msg.hello");
 
-const MSG_TIP_HELP        = getMsg("msg.tip.help");
+const MSG_TIP_HELP           = getMsg("msg.tip.help");
 const MSG_NO_BREAKPOINTS_SET = getMsg("msg.no.breakpoints.set");
+const MSG_NO_FBREAKS_SET     = getMsg("msg.no.fbreaks.set");
 
 const CMD_BREAK           = getMsg("cmd.break");
 const CMD_BREAK_PARAMS    = getMsg("cmd.break.params");
@@ -143,6 +144,12 @@ const CMD_EVAL_HELP       = getMsg("cmd.eval.help");
 const CMD_EVALD           = getMsg("cmd.evald");
 const CMD_EVALD_PARAMS    = getMsg("cmd.evald.params");
 const CMD_EVALD_HELP      = getMsg("cmd.evald.help");
+const CMD_FBREAK          = getMsg("cmd.fbreak");
+const CMD_FBREAK_PARAMS   = getMsg("cmd.fbreak.params");
+const CMD_FBREAK_HELP     = getMsg("cmd.fbreak.help");
+const CMD_FCLEAR          = getMsg("cmd.fclear");
+const CMD_FCLEAR_PARAMS   = getMsg("cmd.fclear.params");
+const CMD_FCLEAR_HELP     = getMsg("cmd.fclear.help");
 const CMD_FRAME           = getMsg("cmd.frame");
 const CMD_FRAME_PARAMS    = getMsg("cmd.frame.params");
 const CMD_FRAME_HELP      = getMsg("cmd.frame.help");
@@ -191,6 +198,11 @@ const MSN_BP_LINE            = "msg.bp.line";
 const MSN_BP_CREATED         = "msg.bp.created";
 const MSN_BP_DISABLED        = "msg.bp.disabled";
 const MSN_BP_EXISTS          = "msg.bp.exists";
+const MSN_FBP_HEADER         = "msg.fbp.header";
+const MSN_FBP_LINE           = "msg.fbp.line";
+const MSN_FBP_CREATED        = "msg.fbp.created";
+const MSN_FBP_DISABLED       = "msg.fbp.disabled";
+const MSN_FBP_EXISTS         = "msg.fbp.exists";
 const MSN_SOURCE_LINE        = "msg.source.line";
 
 const MSN_CONT             = "msg.cont";
