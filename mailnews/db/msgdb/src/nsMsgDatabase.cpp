@@ -497,10 +497,10 @@ nsMsgDatabase::nsMsgDatabase()
 	  m_messageCharSetColumnToken(0),
 	  m_threadParentColumnToken(0),
 	  m_threadRootKeyColumnToken(0),
-	  m_bCacheHeaders(PR_FALSE),
+	  m_HeaderParser(nsnull),
 	  m_cachedHeaders(nsnull),
 	  m_headersInUse(nsnull),
-	  m_HeaderParser(nsnull)
+	  m_bCacheHeaders(PR_FALSE)
 {
 	NS_INIT_REFCNT();
 	m_bCacheHeaders = PR_TRUE;

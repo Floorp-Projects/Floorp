@@ -1919,8 +1919,6 @@ nsProfile::DoContent(const char * aContentType,
                       nsIStreamListener ** aContentHandler,
                       PRBool * aAbortProcess)
 {
-  nsresult rv = NS_OK;
-
   // if we are currently showing a chromeless window for the registration stuff,
   // then forward the call to the webshell window...then we are done...
   if (mPregWindow)

@@ -116,8 +116,8 @@ nsIMAPGenericParser::nsIMAPGenericParser() :
 	fAtEndOfLine(PR_FALSE),
     fTokenizerAdvanced(PR_FALSE),
     fSyntaxErrorLine(nsnull),
-	fDisconnected(PR_FALSE),
-	fSyntaxError(PR_FALSE)
+	fSyntaxError(PR_FALSE),
+	fDisconnected(PR_FALSE)
 {
 }
 

@@ -80,8 +80,6 @@ nsXULPopupElement::OpenPopup(nsIDOMElement* aElement, PRInt32 aXPos, PRInt32 aYP
                              const nsString& aPopupType, const nsString& aAnchorAlignment, 
                              const nsString& aPopupAlignment)
 {
-  nsresult rv = NS_OK;
-
   nsCOMPtr<nsIContent> content = do_QueryInterface(mOuter);
   nsCOMPtr<nsIDocument> document;
   content->GetDocument(*getter_AddRefs(document));

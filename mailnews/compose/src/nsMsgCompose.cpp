@@ -152,7 +152,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CI
 nsresult
 TranslateLineEndings(nsString &aString)
 {
-
   // First, do sanity checking...if aString doesn't have
   // any CR's, then there is no reason to call this rest
   // of this 
@@ -1487,7 +1486,7 @@ nsMsgCompose::QuoteOriginalMessage(const PRUnichar *originalMsgURI, PRInt32 what
 void nsMsgCompose::CleanUpRecipients(nsString& recipients)
 {
 //	TODO...
-	PRInt16 i;
+	PRUint16 i;
 	PRBool startANewRecipient = PR_TRUE;
 	PRBool removeBracket = PR_FALSE;
 	nsAutoString newRecipient;

@@ -1326,9 +1326,6 @@ PRInt32 InitXPFileOpObjectPrototype(JSContext *jscontext,
                                     JSObject **fileOpObjectPrototype)
 
 {
-    JSObject *fileObject       = nsnull;
-
-
     if (global == nsnull)
     {
         return NS_ERROR_FAILURE;

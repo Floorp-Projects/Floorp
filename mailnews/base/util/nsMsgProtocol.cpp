@@ -75,7 +75,6 @@ nsresult nsMsgProtocol::OpenNetworkSocketWithInfo(const char * aHostName, PRInt3
 nsresult nsMsgProtocol::OpenNetworkSocket(nsIURI * aURL, const char *connectionType) // open a connection on this url
 {
   NS_ENSURE_ARG(aURL);
-	nsresult rv = NS_OK;
 
   nsXPIDLCString hostName;
 	PRInt32 port = 0;

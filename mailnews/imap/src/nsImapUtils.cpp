@@ -481,7 +481,6 @@ CreateUtf7ConvertedStringFromUnicode(const PRUnichar * aSourceString)
   nsresult res;
   char *dstPtr = nsnull;
   PRInt32 dstLength = 0;
-  char *convertedString = NULL;
   
   NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
 

@@ -320,7 +320,6 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
     // avoid an extra string copy by using nsSubsumeStr, this transfers ownership of
     // wresult to strresult so don't try to free wresult later.
     nsString strresult(nsSubsumeStr(wresult, PR_TRUE /* assume ownership */, nsCRT::strlen(wresult)));
-    PRInt32   copyLen = strresult.Length();
 
     // avoid yet another extra string copy of the line by using .ToCString which will
     // convert and copy directly into the buffer we have already allocated.

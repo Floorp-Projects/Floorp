@@ -2235,6 +2235,8 @@ NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
     printf("FOR DEBUG BUILDS ONLY:  we are forcing you to see the checkin guidelines when you open a browser window\n");
     args = "http://www.mozilla.org/quality/checkin-guidelines.html";
 #else
+    static PRBool timebombChecked = PR_FALSE;
+
     nsresult rv;
     nsXPIDLCString url;
     static PRBool timebombChecked = PR_FALSE;
