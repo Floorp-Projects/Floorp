@@ -101,9 +101,10 @@ static JSValue print(const JSValues &argv)
 
 static void genCode(World &world, Context &cx, StmtNode *p)
 {
-    ICodeGenerator icg(&world);
+    JSScope glob;
+    ICodeGenerator icg(&world, &glob);
     icg.isScript();
-    Register ret = NotARegister;
+    TypedRegister ret(NotARegister, &None_Type);
     while (p) {
         ret = icg.genStmt(p);
         p = p->next;
@@ -210,86 +211,6 @@ class Tracer : public Context::Listener {
 };
 
 
-static float64 testFactorial(World &world, float64 n)
-{
-    JSScope glob;
-    Context cx(world, &glob);
-    // generate code for factorial, and interpret it.
-    uint32 pos = 0;
-    ICodeGenerator icg(&world);
-        
-    // fact(n) {
-    // var result = 1;
-
-    StringAtom &n_name = world.identifiers[widenCString("n")];
-    StringAtom &result_name = world.identifiers[widenCString("result")];
-
-    Register r_n = icg.allocateParameter(n_name);
-    Register r_result = icg.allocateVariable(result_name);
-
-    Arena a;
-
-    ExprStmtNode *e = new(a) ExprStmtNode(pos, StmtNode::expression, new(a) BinaryExprNode(pos, ExprNode::assignment, 
-                                                                    new(a) IdentifierExprNode(pos, ExprNode::identifier, result_name),
-                                                                    new(a) NumberExprNode(pos, 1.0) ) );
-    icg.genStmt(e);
-
-    // while (n > 1) {
-    //   result = result * n;
-    //   n = n - 1;
-    // }
-    {
-        BinaryExprNode *c = new(a) BinaryExprNode(pos, ExprNode::greaterThan, 
-                                                new(a) IdentifierExprNode(pos, ExprNode::identifier, n_name),
-                                                new(a) NumberExprNode(pos, 1.0) ) ;
-        ExprStmtNode *e1 = new(a) ExprStmtNode(pos, StmtNode::expression, new(a) BinaryExprNode(pos, ExprNode::assignment, 
-                                                                        new(a) IdentifierExprNode(pos, ExprNode::identifier, result_name),
-                                                                        new(a) BinaryExprNode(pos, ExprNode::multiply, 
-                                                                                new(a) IdentifierExprNode(pos, ExprNode::identifier, result_name),
-                                                                                new(a) IdentifierExprNode(pos, ExprNode::identifier, n_name) ) ) );
-        ExprStmtNode *e2 = new(a) ExprStmtNode(pos, StmtNode::expression, new(a) BinaryExprNode(pos, ExprNode::assignment, 
-                                                                        new(a) IdentifierExprNode(pos, ExprNode::identifier, n_name),
-                                                                        new(a) BinaryExprNode(pos, ExprNode::subtract, 
-                                                                                new(a) IdentifierExprNode(pos, ExprNode::identifier, n_name),
-                                                                                new(a) NumberExprNode(pos, 1.0) ) ) );
-        e1->next = e2;
-        BlockStmtNode *b = new(a) BlockStmtNode(pos, StmtNode::block, NULL, e1);
-
-        UnaryStmtNode *w = new(a) UnaryStmtNode(pos, StmtNode::While, c, b);
-
-        icg.genStmt(w);
-
-    }
-        
-    // return result;
-    icg.returnStmt(r_result);
-    ICodeModule *icm = icg.complete();
-    stdOut << icg;
-        
-    // preset the global property "fact" to contain the above function
-    StringAtom& fact = world.identifiers[widenCString("fact")];
-    glob.defineFunction(fact, icm);
-        
-    // now a script : 
-    // return fact(n);
-    ICodeGenerator script(&world);
-    RegisterList args(1);
-    args[0] = script.loadImmediate(n);
-    script.returnStmt(script.call(script.loadName(fact), args));
-    stdOut << script;
-    
-    // install a listener so we can trace execution of factorial.
-    Tracer t;
-    cx.addListener(&t);
-    
-    // test the iCode interpreter.
-    JSValue result = cx.interpret(script.complete(), JSValues());
-    stdOut << "fact(" << n << ") = " << result.f64 << "\n";
-    
-    delete icm;
-        
-    return result.f64;
-}
 
 char * tests[] = {
     "function fact(n) { if (n > 1) return n * fact(n-1); else return 1; } print(fact(6), \" should be 720\"); return;" ,
@@ -308,8 +229,8 @@ void testCompile()
         Arena a;
         Parser p(world, a, testScript, widenCString("testCompile"));
         StmtNode *parsedStatements = p.parseProgram();
-    
-        ICodeGenerator icg(&world);
+        JSScope glob;
+        ICodeGenerator icg(&world, &glob);
         icg.isScript();
         while (parsedStatements) {
             icg.genStmt(parsedStatements);
@@ -333,7 +254,6 @@ int main(int argc, char **argv)
     using namespace JavaScript;
     using namespace Shell;
   #if 0
-    assert(testFactorial(world, 5) == 120);
     testCompile();
   #endif
     readEvalPrint(stdin, world);

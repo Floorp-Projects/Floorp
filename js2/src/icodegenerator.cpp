@@ -61,14 +61,15 @@ Formatter& operator<<(Formatter &f, ICodeModule &i)
 // ICodeGenerator
 //
 
-ICodeGenerator::ICodeGenerator(World *world)
+ICodeGenerator::ICodeGenerator(World *world, JSScope *global)
     :   topRegister(0), 
         registerBase(0), 
         maxRegister(0), 
         parameterCount(0),
-        exceptionRegister(NotARegister),
+        exceptionRegister(TypedRegister(NotARegister, &None_Type)),
         variableList(new VariableList()),
         mWorld(world),
+        mGlobal(global),
         mInstructionMap(new InstructionMap()),
         mWithinWith(false)
 
@@ -77,12 +78,28 @@ ICodeGenerator::ICodeGenerator(World *world)
     iCodeOwner = true;
 }
 
-Register ICodeGenerator::allocateVariable(const StringAtom& name) 
+const JSType *ICodeGenerator::findType(const StringAtom& typeName) 
+{
+    const JSValue& type = mGlobal->getVariable(typeName);
+    if (type.isType())
+        return type.type;
+    return &Any_Type;
+}
+
+TypedRegister ICodeGenerator::allocateVariable(const StringAtom& name, const StringAtom& typeName) 
 { 
-    if (exceptionRegister == NotARegister) {
-        exceptionRegister = grabRegister(mWorld->identifiers[widenCString("__exceptionObject__")]);
+    if (exceptionRegister.first == NotARegister) {
+        exceptionRegister = grabRegister(mWorld->identifiers[widenCString("__exceptionObject__")], &Any_Type);
     }
-    return grabRegister(name); 
+    return grabRegister(name, findType(typeName)); 
+}
+
+TypedRegister ICodeGenerator::allocateVariable(const StringAtom& name) 
+{ 
+    if (exceptionRegister.first == NotARegister) {
+        exceptionRegister = grabRegister(mWorld->identifiers[widenCString("__exceptionObject__")], &Any_Type);
+    }
+    return grabRegister(name, &Any_Type); 
 }
 
 ICodeModule *ICodeGenerator::complete()
@@ -126,41 +143,41 @@ ICodeModule *ICodeGenerator::complete()
 
 /********************************************************************/
 
-Register ICodeGenerator::loadImmediate(double value)
+TypedRegister ICodeGenerator::loadImmediate(double value)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Number_Type);
     LoadImmediate *instr = new LoadImmediate(dest, value);
     iCode->push_back(instr);
     return dest;
 }
 
-Register ICodeGenerator::loadString(String &value)
+TypedRegister ICodeGenerator::loadString(String &value)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &String_Type);
     LoadString *instr = new LoadString(dest, new JSString(value));
     iCode->push_back(instr);
     return dest;
 }
 
-Register ICodeGenerator::loadValue(JSValue value)
+TypedRegister ICodeGenerator::loadBoolean(bool value)
 {
-    Register dest = getRegister();
-    LoadValue *instr = new LoadValue(dest, value);
+    TypedRegister dest(getRegister(), &Boolean_Type);
+    LoadBoolean *instr = new LoadBoolean(dest, value);
     iCode->push_back(instr);
     return dest;
 }
 
-Register ICodeGenerator::newObject()
+TypedRegister ICodeGenerator::newObject()
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Any_Type);
     NewObject *instr = new NewObject(dest);
     iCode->push_back(instr);
     return dest;
 }
 
-Register ICodeGenerator::newArray()
+TypedRegister ICodeGenerator::newArray()
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Array_Type);
     NewArray *instr = new NewArray(dest);
     iCode->push_back(instr);
     return dest;
@@ -168,47 +185,47 @@ Register ICodeGenerator::newArray()
 
 
 
-Register ICodeGenerator::loadName(const StringAtom &name)
+TypedRegister ICodeGenerator::loadName(const StringAtom &name)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Any_Type);
     LoadName *instr = new LoadName(dest, &name);
     iCode->push_back(instr);
     return dest;
 }
 
-void ICodeGenerator::saveName(const StringAtom &name, Register value)
+void ICodeGenerator::saveName(const StringAtom &name, TypedRegister value)
 {
     SaveName *instr = new SaveName(&name, value);
     iCode->push_back(instr);
 }
 
-Register ICodeGenerator::nameInc(const StringAtom &name)
+TypedRegister ICodeGenerator::nameInc(const StringAtom &name)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Number_Type);
     NameXcr *instr = new NameXcr(dest, &name, 1.0);
     iCode->push_back(instr);
     return dest;
 }
 
-Register ICodeGenerator::nameDec(const StringAtom &name)
+TypedRegister ICodeGenerator::nameDec(const StringAtom &name)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Number_Type);
     NameXcr *instr = new NameXcr(dest, &name, -1.0);
     iCode->push_back(instr);
     return dest;
 }
 
-Register ICodeGenerator::varInc(Register var)
+TypedRegister ICodeGenerator::varInc(TypedRegister var)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Number_Type);
     VarXcr *instr = new VarXcr(dest, var, 1.0);
     iCode->push_back(instr);
     return dest;
 }
 
-Register ICodeGenerator::varDec(Register var)
+TypedRegister ICodeGenerator::varDec(TypedRegister var)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Number_Type);
     VarXcr *instr = new VarXcr(dest, var, -1.0);
     iCode->push_back(instr);
     return dest;
@@ -216,32 +233,32 @@ Register ICodeGenerator::varDec(Register var)
 
 
 
-Register ICodeGenerator::getProperty(Register base, const StringAtom &name)
+TypedRegister ICodeGenerator::getProperty(TypedRegister base, const StringAtom &name)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Any_Type);
     GetProp *instr = new GetProp(dest, base, &name);
     iCode->push_back(instr);
     return dest;
 }
 
-void ICodeGenerator::setProperty(Register base, const StringAtom &name,
-                                 Register value)
+void ICodeGenerator::setProperty(TypedRegister base, const StringAtom &name,
+                                 TypedRegister value)
 {
     SetProp *instr = new SetProp(base, &name, value);
     iCode->push_back(instr);
 }
 
-Register ICodeGenerator::propertyInc(Register base, const StringAtom &name)
+TypedRegister ICodeGenerator::propertyInc(TypedRegister base, const StringAtom &name)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Any_Type);
     PropXcr *instr = new PropXcr(dest, base, &name, 1.0);
     iCode->push_back(instr);
     return dest;
 }
 
-Register ICodeGenerator::propertyDec(Register base, const StringAtom &name)
+TypedRegister ICodeGenerator::propertyDec(TypedRegister base, const StringAtom &name)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Any_Type);
     PropXcr *instr = new PropXcr(dest, base, &name, -1.0);
     iCode->push_back(instr);
     return dest;
@@ -249,94 +266,94 @@ Register ICodeGenerator::propertyDec(Register base, const StringAtom &name)
 
 
 
-Register ICodeGenerator::getElement(Register base, Register index)
+TypedRegister ICodeGenerator::getElement(TypedRegister base, TypedRegister index)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Any_Type);
     GetElement *instr = new GetElement(dest, base, index);
     iCode->push_back(instr);
     return dest;
 }
 
-void ICodeGenerator::setElement(Register base, Register index,
-                                Register value)
+void ICodeGenerator::setElement(TypedRegister base, TypedRegister index,
+                                TypedRegister value)
 {
     SetElement *instr = new SetElement(base, index, value);
     iCode->push_back(instr);
 }
 
-Register ICodeGenerator::elementInc(Register base, Register index)
+TypedRegister ICodeGenerator::elementInc(TypedRegister base, TypedRegister index)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Number_Type);
     ElemXcr *instr = new ElemXcr(dest, base, index, 1.0);
     iCode->push_back(instr);
     return dest;
 }
 
-Register ICodeGenerator::elementDec(Register base, Register index)
+TypedRegister ICodeGenerator::elementDec(TypedRegister base, TypedRegister index)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Number_Type);
     ElemXcr *instr = new ElemXcr(dest, base, index, -1.0);
     iCode->push_back(instr);
     return dest;
 }
 
 
-Register ICodeGenerator::op(ICodeOp op, Register source)
+TypedRegister ICodeGenerator::op(ICodeOp op, TypedRegister source)
 {
-    Register dest = getRegister();
-    ASSERT(source != NotARegister);    
+    TypedRegister dest(getRegister(), &Any_Type);
+    ASSERT(source.first != NotARegister);    
     Unary *instr = new Unary (op, dest, source);
     iCode->push_back(instr);
     return dest;
 }
 
     
-void ICodeGenerator::move(Register destination, Register source)
+void ICodeGenerator::move(TypedRegister destination, TypedRegister source)
 {
-    ASSERT(destination != NotARegister);    
-    ASSERT(source != NotARegister);    
+    ASSERT(destination.first != NotARegister);    
+    ASSERT(source.first != NotARegister);    
     Move *instr = new Move(destination, source);
     iCode->push_back(instr);
 }
 
-Register ICodeGenerator::logicalNot(Register source)
+TypedRegister ICodeGenerator::logicalNot(TypedRegister source)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Any_Type);
     Not *instr = new Not(dest, source);
     iCode->push_back(instr);
     return dest;
 } 
 
-Register ICodeGenerator::test(Register source)
+TypedRegister ICodeGenerator::test(TypedRegister source)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Any_Type);
     Test *instr = new Test(dest, source);
     iCode->push_back(instr);
     return dest;
 }
 
-Register ICodeGenerator::op(ICodeOp op, Register source1, 
-                            Register source2)
+TypedRegister ICodeGenerator::op(ICodeOp op, TypedRegister source1, 
+                            TypedRegister source2)
 {
-    ASSERT(source1 != NotARegister);    
-    ASSERT(source2 != NotARegister);    
-    Register dest = getRegister();
+    ASSERT(source1.first != NotARegister);    
+    ASSERT(source2.first != NotARegister);    
+    TypedRegister dest(getRegister(), &Any_Type);
     Arithmetic *instr = new Arithmetic(op, dest, source1, source2);
     iCode->push_back(instr);
     return dest;
 } 
     
-Register ICodeGenerator::call(Register target, RegisterList args)
+TypedRegister ICodeGenerator::call(TypedRegister target, RegisterList args)
 {
-    Register dest = getRegister();
+    TypedRegister dest(getRegister(), &Any_Type);
     Call *instr = new Call(dest, target, args);
     iCode->push_back(instr);
     return dest;
 }
 
-void ICodeGenerator::callVoid(Register target, RegisterList args)
+void ICodeGenerator::callVoid(TypedRegister target, RegisterList args)
 {
-    Call *instr = new Call(NotARegister, target, args);
+    Call *instr = new Call(TypedRegister(NotARegister, &Void_Type), target, args);
     iCode->push_back(instr);
 }
 
@@ -346,23 +363,23 @@ void ICodeGenerator::branch(Label *label)
     iCode->push_back(instr);
 }
 
-GenericBranch *ICodeGenerator::branchTrue(Label *label, Register condition)
+GenericBranch *ICodeGenerator::branchTrue(Label *label, TypedRegister condition)
 {
     GenericBranch *instr = new GenericBranch(BRANCH_TRUE, label, condition);
     iCode->push_back(instr);
     return instr;
 }
 
-GenericBranch *ICodeGenerator::branchFalse(Label *label, Register condition)
+GenericBranch *ICodeGenerator::branchFalse(Label *label, TypedRegister condition)
 {
     GenericBranch *instr = new GenericBranch(BRANCH_FALSE, label, condition);
     iCode->push_back(instr);
     return instr;
 }
 
-void ICodeGenerator::returnStmt(Register r)
+void ICodeGenerator::returnStmt(TypedRegister r)
 {
-    if (r == NotARegister)
+    if (r.first == NotARegister)
         iCode->push_back(new ReturnVoid());
     else
         iCode->push_back(new Return(r));
@@ -504,37 +521,37 @@ static bool generatedBoolean(ExprNode *p)
     a conditional branch to the appropriate target. If either branch is NULL, it
     indicates that the label is immediately forthcoming.
 */
-Result ICodeGenerator::genExpr(ExprNode *p, 
+TypedRegister ICodeGenerator::genExpr(ExprNode *p, 
                                     bool needBoolValueInBranch, 
                                     Label *trueBranch, 
                                     Label *falseBranch)
 {
-    Register ret = NotARegister;
+    TypedRegister ret(NotARegister, &None_Type);
     switch (p->getKind()) {
     case ExprNode::True:
         if (trueBranch || falseBranch) {
             if (needBoolValueInBranch)
-                ret = loadValue(kTrue);
+                ret = loadBoolean(true);
             if (trueBranch)
                 branch(trueBranch);
         }
         else
-            ret = loadValue(kTrue);
+            ret = loadBoolean(true);
         break;
     case ExprNode::False:
         if (trueBranch || falseBranch) {
             if (needBoolValueInBranch)
-                ret = loadValue(kFalse);
+                ret = loadBoolean(false);
             if (falseBranch)
                 branch(falseBranch);
         }
         else
-            ret = loadValue(kFalse);
+            ret = loadBoolean(false);
         break;
     case ExprNode::parentheses:
         {
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
-            ret = genExpr(u->op, needBoolValueInBranch, trueBranch, falseBranch).reg;
+            ret = genExpr(u->op, needBoolValueInBranch, trueBranch, falseBranch);
         }
         break;
     case ExprNode::New:
@@ -546,11 +563,11 @@ Result ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::call : 
         {
             InvokeExprNode *i = static_cast<InvokeExprNode *>(p);
-            Register fn = genExpr(i->op).reg;
+            TypedRegister fn = genExpr(i->op);
             RegisterList args;
             ExprPairList *p = i->pairs;
             while (p) {
-                args.push_back(genExpr(p->value).reg);
+                args.push_back(genExpr(p->value));
                 p = p->next;
             }
             ret = call(fn, args);
@@ -559,23 +576,23 @@ Result ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::index :
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            Register base = genExpr(b->op1).reg;       
-            Register index = genExpr(b->op2).reg;
+            TypedRegister base = genExpr(b->op1);       
+            TypedRegister index = genExpr(b->op2);
             ret = getElement(base, index);
         }
         break;
     case ExprNode::dot :
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            Register base = genExpr(b->op1).reg;            
+            TypedRegister base = genExpr(b->op1);            
             ret = getProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name);
         }
         break;
     case ExprNode::identifier :
         {
             if (!mWithinWith) {
-                Register v = findVariable((static_cast<IdentifierExprNode *>(p))->name);
-                if (v != NotARegister)
+                TypedRegister v = findVariable((static_cast<IdentifierExprNode *>(p))->name);
+                if (v.first != NotARegister)
                     ret = v;
                 else
                     ret = loadName((static_cast<IdentifierExprNode *>(p))->name);
@@ -595,7 +612,7 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
             if (u->op->getKind() == ExprNode::dot) {
                 BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                Register base = genExpr(b->op1).reg;
+                TypedRegister base = genExpr(b->op1);
                 ret = getProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name);
                 ret = op(ADD, ret, loadImmediate(1.0));
                 setProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name, ret);
@@ -603,8 +620,8 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             else
                 if (u->op->getKind() == ExprNode::identifier) {
                     if (!mWithinWith) {
-                        Register v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
-                        if (v != NotARegister)
+                        TypedRegister v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
+                        if (v.first != NotARegister)
                             ret = op(ADD, ret, loadImmediate(1.0));
                         else {
                             ret = loadName((static_cast<IdentifierExprNode *>(u->op))->name);
@@ -621,8 +638,8 @@ Result ICodeGenerator::genExpr(ExprNode *p,
                 else
                     if (u->op->getKind() == ExprNode::index) {
                         BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                        Register base = genExpr(b->op1).reg;
-                        Register index = genExpr(b->op2).reg;
+                        TypedRegister base = genExpr(b->op1);
+                        TypedRegister index = genExpr(b->op2);
                         ret = getElement(base, index);
                         ret = op(ADD, ret, loadImmediate(1.0));
                         setElement(base, index, ret);
@@ -634,14 +651,14 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
             if (u->op->getKind() == ExprNode::dot) {
                 BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                Register base = genExpr(b->op1).reg;
+                TypedRegister base = genExpr(b->op1);
                 ret = propertyInc(base, static_cast<IdentifierExprNode *>(b->op2)->name);
             }
             else
                 if (u->op->getKind() == ExprNode::identifier) {
                     if (!mWithinWith) {
-                        Register v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
-                        if (v != NotARegister)
+                        TypedRegister v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
+                        if (v.first != NotARegister)
                             ret = varInc(v);
                         else
                             ret = nameInc((static_cast<IdentifierExprNode *>(u->op))->name);
@@ -652,8 +669,8 @@ Result ICodeGenerator::genExpr(ExprNode *p,
                 else
                     if (u->op->getKind() == ExprNode::index) {
                         BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                        Register base = genExpr(b->op1).reg;
-                        Register index = genExpr(b->op2).reg;
+                        TypedRegister base = genExpr(b->op1);
+                        TypedRegister index = genExpr(b->op2);
                         ret = elementInc(base, index);
                     }
         }
@@ -663,7 +680,7 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
             if (u->op->getKind() == ExprNode::dot) {
                 BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                Register base = genExpr(b->op1).reg;
+                TypedRegister base = genExpr(b->op1);
                 ret = getProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name);
                 ret = op(SUBTRACT, ret, loadImmediate(1.0));
                 setProperty(base, static_cast<IdentifierExprNode *>(b->op2)->name, ret);
@@ -671,8 +688,8 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             else
                 if (u->op->getKind() == ExprNode::identifier) {
                     if (!mWithinWith) {
-                        Register v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
-                        if (v != NotARegister)
+                        TypedRegister v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
+                        if (v.first != NotARegister)
                             ret = op(SUBTRACT, ret, loadImmediate(1.0));
                         else {
                             ret = loadName((static_cast<IdentifierExprNode *>(u->op))->name);
@@ -689,8 +706,8 @@ Result ICodeGenerator::genExpr(ExprNode *p,
                 else
                     if (u->op->getKind() == ExprNode::index) {
                         BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                        Register base = genExpr(b->op1).reg;
-                        Register index = genExpr(b->op2).reg;
+                        TypedRegister base = genExpr(b->op1);
+                        TypedRegister index = genExpr(b->op2);
                         ret = getElement(base, index);
                         ret = op(SUBTRACT, ret, loadImmediate(1.0));
                         setElement(base, index, ret);
@@ -702,14 +719,14 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
             if (u->op->getKind() == ExprNode::dot) {
                 BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                Register base = genExpr(b->op1).reg;
+                TypedRegister base = genExpr(b->op1);
                 ret = propertyDec(base, static_cast<IdentifierExprNode *>(b->op2)->name);
             }
             else
                 if (u->op->getKind() == ExprNode::identifier) {
                     if (!mWithinWith) {
-                        Register v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
-                        if (v != NotARegister)
+                        TypedRegister v = findVariable((static_cast<IdentifierExprNode *>(u->op))->name);
+                        if (v.first != NotARegister)
                             ret = varDec(v);
                         else
                             ret = nameDec((static_cast<IdentifierExprNode *>(u->op))->name);
@@ -720,8 +737,8 @@ Result ICodeGenerator::genExpr(ExprNode *p,
                 else
                     if (u->op->getKind() == ExprNode::index) {
                         BinaryExprNode *b = static_cast<BinaryExprNode *>(u->op);
-                        Register base = genExpr(b->op1).reg;
-                        Register index = genExpr(b->op2).reg;
+                        TypedRegister base = genExpr(b->op1);
+                        TypedRegister index = genExpr(b->op2);
                         ret = elementInc(base, index);
                     }
         }
@@ -731,7 +748,7 @@ Result ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::complement:
         {
             UnaryExprNode *u = static_cast<UnaryExprNode *>(p);
-            Register r = genExpr(u->op).reg;
+            TypedRegister r = genExpr(u->op);
             ret = op(mapExprNodeToICodeOp(p->getKind()), r);
         }
         break;
@@ -748,19 +765,19 @@ Result ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::bitwiseOr:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            Register r1 = genExpr(b->op1).reg;
-            Register r2 = genExpr(b->op2).reg;
+            TypedRegister r1 = genExpr(b->op1);
+            TypedRegister r2 = genExpr(b->op2);
             ret = op(mapExprNodeToICodeOp(p->getKind()), r1, r2);
         }
         break;
     case ExprNode::assignment:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            ret = genExpr(b->op2).reg;
+            ret = genExpr(b->op2);
             if (b->op1->getKind() == ExprNode::identifier) {
                 if (!mWithinWith) {
-                    Register v = findVariable((static_cast<IdentifierExprNode *>(b->op1))->name);
-                    if (v != NotARegister)
+                    TypedRegister v = findVariable((static_cast<IdentifierExprNode *>(b->op1))->name);
+                    if (v.first != NotARegister)
                         move(v, ret);
                     else
                         saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
@@ -771,14 +788,14 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             else
                 if (b->op1->getKind() == ExprNode::dot) {
                     BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                    Register base = genExpr(lb->op1).reg;            
+                    TypedRegister base = genExpr(lb->op1);            
                     setProperty(base, static_cast<IdentifierExprNode *>(lb->op2)->name, ret);
                 }
                 else
                     if (b->op1->getKind() == ExprNode::index) {
                         BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                        Register base = genExpr(lb->op1).reg;
-                        Register index = genExpr(lb->op2).reg;
+                        TypedRegister base = genExpr(lb->op1);
+                        TypedRegister index = genExpr(lb->op2);
                         setElement(base, index, ret);
                     }
         }
@@ -796,11 +813,11 @@ Result ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::bitwiseOrEquals:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            ret = genExpr(b->op2).reg;
+            ret = genExpr(b->op2);
             if (b->op1->getKind() == ExprNode::identifier) {
                 if (!mWithinWith) {
-                    Register v = findVariable((static_cast<IdentifierExprNode *>(b->op1))->name);
-                    if (v != NotARegister) {
+                    TypedRegister v = findVariable((static_cast<IdentifierExprNode *>(b->op1))->name);
+                    if (v.first != NotARegister) {
                         ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
                         move(v, ret);
                     }
@@ -811,7 +828,7 @@ Result ICodeGenerator::genExpr(ExprNode *p,
                     }
                 }
                 else {
-                    Register v = loadName((static_cast<IdentifierExprNode *>(b->op1))->name);
+                    TypedRegister v = loadName((static_cast<IdentifierExprNode *>(b->op1))->name);
                     ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
                     saveName((static_cast<IdentifierExprNode *>(b->op1))->name, ret);
                 }
@@ -819,17 +836,17 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             else
                 if (b->op1->getKind() == ExprNode::dot) {
                     BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                    Register base = genExpr(lb->op1).reg;
-                    Register v = getProperty(base, static_cast<IdentifierExprNode *>(lb->op2)->name);
+                    TypedRegister base = genExpr(lb->op1);
+                    TypedRegister v = getProperty(base, static_cast<IdentifierExprNode *>(lb->op2)->name);
                     ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
                     setProperty(base, static_cast<IdentifierExprNode *>(lb->op2)->name, ret);
                 }
                 else
                     if (b->op1->getKind() == ExprNode::index) {
                         BinaryExprNode *lb = static_cast<BinaryExprNode *>(b->op1);
-                        Register base = genExpr(lb->op1).reg;
-                        Register index = genExpr(lb->op2).reg;
-                        Register v = getElement(base, index);
+                        TypedRegister base = genExpr(lb->op1);
+                        TypedRegister index = genExpr(lb->op2);
+                        TypedRegister v = getElement(base, index);
                         ret = op(mapExprNodeToICodeOp(p->getKind()), v, ret);
                         setElement(base, index, ret);
                     }
@@ -843,8 +860,8 @@ Result ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::Instanceof:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            Register r1 = genExpr(b->op1).reg;
-            Register r2 = genExpr(b->op2).reg;
+            TypedRegister r1 = genExpr(b->op1);
+            TypedRegister r2 = genExpr(b->op2);
             ret = op(mapExprNodeToICodeOp(p->getKind()), r1, r2);
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
@@ -861,8 +878,8 @@ Result ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::greaterThanOrEqual:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            Register r1 = genExpr(b->op1).reg;
-            Register r2 = genExpr(b->op2).reg;
+            TypedRegister r1 = genExpr(b->op1);
+            TypedRegister r2 = genExpr(b->op2);
             ret = op(mapExprNodeToICodeOp(p->getKind()), r2, r1);   // will return reverse case
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
@@ -880,8 +897,8 @@ Result ICodeGenerator::genExpr(ExprNode *p,
     case ExprNode::notIdentical:
         {
             BinaryExprNode *b = static_cast<BinaryExprNode *>(p);
-            Register r1 = genExpr(b->op1).reg;
-            Register r2 = genExpr(b->op2).reg;
+            TypedRegister r1 = genExpr(b->op1);
+            TypedRegister r2 = genExpr(b->op2);
             ret = op(mapExprNodeToICodeOp(p->getKind()), r1, r2);
             if (trueBranch || falseBranch) {
                 if (trueBranch == NULL)
@@ -907,12 +924,12 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             }
             else {
                 Label *fBranch = getLabel();
-                Register r1 = genExpr(b->op1, true, NULL, fBranch).reg;
+                TypedRegister r1 = genExpr(b->op1, true, NULL, fBranch);
                 if (!generatedBoolean(b->op1)) {
                     r1 = test(r1);
                     branchFalse(fBranch, r1);
                 }
-                Register r2 = genExpr(b->op2).reg;
+                TypedRegister r2 = genExpr(b->op2);
                 if (!generatedBoolean(b->op2)) {
                     r2 = test(r2);
                 }
@@ -932,12 +949,12 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             }
             else {
                 Label *tBranch = getLabel();
-                Register r1 = genExpr(b->op1, true, tBranch, NULL).reg;
+                TypedRegister r1 = genExpr(b->op1, true, tBranch, NULL);
                 if (!generatedBoolean(b->op1)) {
                     r1 = test(r1);
                     branchTrue(tBranch, r1);
                 }
-                Register r2 = genExpr(b->op2).reg;
+                TypedRegister r2 = genExpr(b->op2);
                 if (!generatedBoolean(b->op2)) {
                     r2 = test(r2);
                 }
@@ -954,13 +971,13 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             TernaryExprNode *t = static_cast<TernaryExprNode *>(p);
             Label *fBranch = getLabel();
             Label *beyondBranch = getLabel();
-            Register c = genExpr(t->op1, false, NULL, fBranch).reg;
+            TypedRegister c = genExpr(t->op1, false, NULL, fBranch);
             if (!generatedBoolean(t->op1))
                 branchFalse(fBranch, test(c));
-            Register r1 = genExpr(t->op2).reg;
+            TypedRegister r1 = genExpr(t->op2);
             branch(beyondBranch);
             setLabel(fBranch);
-            Register r2 = genExpr(t->op3).reg;
+            TypedRegister r2 = genExpr(t->op3);
             if (r1 != r2)       // FIXME, need a way to specify a dest???
                 move(r1, r2);
             setLabel(beyondBranch);
@@ -976,7 +993,7 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             ExprPairList *e = plen->pairs;
             while (e) {
                 if (e->field && e->value && (e->field->getKind() == ExprNode::identifier))
-                    setProperty(ret, (static_cast<IdentifierExprNode *>(e->field))->name, genExpr(e->value).reg);
+                    setProperty(ret, (static_cast<IdentifierExprNode *>(e->field))->name, genExpr(e->value));
                 e = e->next;
             }
         }
@@ -987,7 +1004,7 @@ Result ICodeGenerator::genExpr(ExprNode *p,
             NOT_REACHED("Unsupported ExprNode kind");
         }   
     }
-    return Result(ret, Any_Type);
+    return ret;
 }
 
 /*
@@ -1110,20 +1127,20 @@ void ICodeGenerator::preprocess(StmtNode *p)
    }
 }
 
-Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
+TypedRegister ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
 {
-    Register ret = NotARegister;
+    TypedRegister ret(NotARegister, &None_Type);
 
     startStatement(p->pos);
-    if (exceptionRegister == NotARegister) {
-        exceptionRegister = grabRegister(mWorld->identifiers[widenCString("__exceptionObject__")]);
+    if (exceptionRegister.first == NotARegister) {
+        exceptionRegister = grabRegister(mWorld->identifiers[widenCString("__exceptionObject__")], &Any_Type);
     }
 
     switch (p->getKind()) {
     case StmtNode::Function:
         {
             FunctionStmtNode *f = static_cast<FunctionStmtNode *>(p);
-            ICodeGenerator icg(mWorld);
+            ICodeGenerator icg(mWorld, mGlobal);
             VariableBinding *v = f->function.parameters;
             while (v) {
                 if (v->name && (v->name->getKind() == ExprNode::identifier))
@@ -1146,12 +1163,12 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                 if (v->name && v->initializer) {
                     if (v->name->getKind() == ExprNode::identifier) {
                         if (!mWithinWith) {
-                            Register r = genExpr(v->name).reg;
-                            Register val = genExpr(v->initializer).reg;
+                            TypedRegister r = genExpr(v->name);
+                            TypedRegister val = genExpr(v->initializer);
                             move(r, val);
                         }
                         else {
-                            Register val = genExpr(v->initializer).reg;
+                            TypedRegister val = genExpr(v->initializer);
                             saveName((static_cast<IdentifierExprNode *>(v->name))->name, val);
                         }
                     }
@@ -1164,29 +1181,29 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
     case StmtNode::expression:
         {
             ExprStmtNode *e = static_cast<ExprStmtNode *>(p);
-            ret = genExpr(e->expr).reg;
+            ret = genExpr(e->expr);
         }
         break;
     case StmtNode::Throw:
         {
             ExprStmtNode *e = static_cast<ExprStmtNode *>(p);
-            throwStmt(genExpr(e->expr).reg);
+            throwStmt(genExpr(e->expr));
         }
         break;
     case StmtNode::Return:
         {
             ExprStmtNode *e = static_cast<ExprStmtNode *>(p);
             if (e->expr)
-                returnStmt(ret = genExpr(e->expr).reg);
+                returnStmt(ret = genExpr(e->expr));
             else
-                returnStmt(NotARegister);
+                returnStmt(TypedRegister(NotARegister, &Void_Type));
         }
         break;
     case StmtNode::If:
         {
             Label *falseLabel = getLabel();
             UnaryStmtNode *i = static_cast<UnaryStmtNode *>(p);
-            Register c = genExpr(i->expr, false, NULL, falseLabel).reg;
+            TypedRegister c = genExpr(i->expr, false, NULL, falseLabel);
             if (!generatedBoolean(i->expr))
                 branchFalse(falseLabel, test(c));
             genStmt(i->stmt);
@@ -1198,7 +1215,7 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             Label *falseLabel = getLabel();
             Label *beyondLabel = getLabel();
             BinaryStmtNode *i = static_cast<BinaryStmtNode *>(p);
-            Register c = genExpr(i->expr, false, NULL, falseLabel).reg;
+            TypedRegister c = genExpr(i->expr, false, NULL, falseLabel);
             if (!generatedBoolean(i->expr))
                 branchFalse(falseLabel, test(c));
             genStmt(i->stmt);
@@ -1211,7 +1228,7 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
     case StmtNode::With:
         {
             UnaryStmtNode *w = static_cast<UnaryStmtNode *>(p);
-            Register o = genExpr(w->expr).reg;
+            TypedRegister o = genExpr(w->expr);
             bool withinWith = mWithinWith;
             mWithinWith = true;
             beginWith(o);
@@ -1226,7 +1243,7 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             LabelEntry *e = new LabelEntry(currentLabelSet, getLabel());
             mLabelStack.push_back(e);
             SwitchStmtNode *sw = static_cast<SwitchStmtNode *>(p);
-            Register sc = genExpr(sw->expr).reg;
+            TypedRegister sc = genExpr(sw->expr);
             StmtNode *s = sw->statements;
             // ECMA requires case & default statements to be immediate children of switch
             // unlike C where they can be arbitrarily deeply nested in other statements.    
@@ -1239,8 +1256,8 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
                         if (nextCaseLabel)
                             setLabel(nextCaseLabel);
                         nextCaseLabel = getLabel();
-                        Register r = genExpr(c->expr).reg;
-                        Register eq = op(COMPARE_EQ, r, sc);
+                        TypedRegister r = genExpr(c->expr);
+                        TypedRegister eq = op(COMPARE_EQ, r, sc);
                         lastBranch = branchFalse(nextCaseLabel, eq);
                     }
                     else {
@@ -1270,7 +1287,7 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             setLabel(doBodyTopLabel);
             genStmt(d->stmt);
             setLabel(e->continueLabel);
-            Register c = genExpr(d->expr, false, doBodyTopLabel, NULL).reg;
+            TypedRegister c = genExpr(d->expr, false, doBodyTopLabel, NULL);
             if (!generatedBoolean(d->expr))
                 branchTrue(doBodyTopLabel, test(c));
             setLabel(e->breakLabel);
@@ -1290,7 +1307,7 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             genStmt(w->stmt);
 
             setLabel(e->continueLabel);
-            Register c = genExpr(w->expr, false, whileBodyTopLabel, NULL).reg;
+            TypedRegister c = genExpr(w->expr, false, whileBodyTopLabel, NULL);
             if (!generatedBoolean(w->expr))
                 branchTrue(whileBodyTopLabel, test(c));
 
@@ -1315,11 +1332,11 @@ Register ICodeGenerator::genStmt(StmtNode *p, LabelSet *currentLabelSet)
             
             setLabel(e->continueLabel);
             if (f->expr3)
-                genExpr(f->expr3).reg;
+                genExpr(f->expr3);
             
             setLabel(forTestLabel);
             if (f->expr2) {
-                Register c = genExpr(f->expr2, false, forBlockTop, NULL).reg;
+                TypedRegister c = genExpr(f->expr2, false, forBlockTop, NULL);
                 if (!generatedBoolean(f->expr2))
                     branchTrue(forBlockTop, test(c));
             }

@@ -49,9 +49,7 @@ namespace ICG {
 namespace JavaScript {
 namespace VM {
 
-    using JSTypes::JSValue;
-    using JSTypes::JSValues;
-    using JSTypes::JSString;
+    using namespace JSTypes;
 
     enum ICodeOp {
         ADD, /* dest, source1, source2 */
@@ -75,10 +73,10 @@ namespace VM {
         GET_PROP, /* dest, object, prop name */
         INSTANCEOF, /* dest, source1, source2 */
         JSR, /* target */
+        LOAD_BOOLEAN, /* dest, immediate value (boolean) */
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
         LOAD_NAME, /* dest, name */
         LOAD_STRING, /* dest, immediate value (string) */
-        LOAD_VALUE, /* dest, immediate value (JSValue) */
         MOVE, /* dest, source */
         MULTIPLY, /* dest, source1, source2 */
         NAME_XCR, /* dest, name, value */
@@ -113,8 +111,6 @@ namespace VM {
         XOR, /* dest, source1, source2 */
     };
 
-
-
     /********************************************************************/
 
     static char *opcodeNames[] = {
@@ -139,10 +135,10 @@ namespace VM {
         "GET_PROP      ",
         "INSTANCEOF    ",
         "JSR           ",
+        "LOAD_BOOLEAN  ",
         "LOAD_IMMEDIATE",
         "LOAD_NAME     ",
         "LOAD_STRING   ",
-        "LOAD_VALUE    ",
         "MOVE          ",
         "MULTIPLY      ",
         "NAME_XCR      ",
@@ -233,10 +229,12 @@ namespace VM {
     /********************************************************************/
     
     typedef uint32 Register;
-    typedef std::vector<Register> RegisterList;        
+    typedef std::pair<Register, const JSType*> TypedRegister;
+    typedef std::vector<TypedRegister> RegisterList;        
     typedef std::vector<Instruction *> InstructionStream;
     typedef InstructionStream::iterator InstructionIterator;
-    typedef std::map<String, Register, std::less<String> > VariableMap;
+    typedef std::map<String, TypedRegister, std::less<String> > VariableMap;
+
     
     /**
      * Helper to print Call operands.
@@ -343,60 +341,59 @@ namespace VM {
 
     /* Instruction groups */
     
-    class Arithmetic : public Instruction_3<Register, Register, Register> {
+    class Arithmetic : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
-        Arithmetic (ICodeOp aOpcode, Register aDest, Register aSrc1,
-                    Register aSrc2) :
-            Instruction_3<Register, Register, Register>(aOpcode, aDest, aSrc1,
-                                                        aSrc2) {}
+        Arithmetic (ICodeOp aOpcode, TypedRegister aDest, TypedRegister aSrc1,
+                    TypedRegister aSrc2) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>(aOpcode, aDest, aSrc1, aSrc2) {}
         virtual Formatter& print(Formatter& f)
         {
-            f << opcodeNames[mOpcode] << "\tR" << mOp1 << ", R" << mOp2 << ", R" << mOp3;
+            f << opcodeNames[mOpcode] << "\tR" << mOp1.first << ", R" << mOp2.first << ", R" << mOp3.first;
             return f;
         }
         
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
         {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2] << ", " << "R" << mOp3 << '=' << registers[mOp3];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
             return f;
         }
     };
     
-    class Unary : public Instruction_2<Register, Register> {
+    class Unary : public Instruction_2<TypedRegister, TypedRegister> {
     public:
-        Unary(ICodeOp aOpcode, Register aDest, Register aSrc) :
-            Instruction_2<Register, Register>(aOpcode, aDest, aSrc) {}
+        Unary(ICodeOp aOpcode, TypedRegister aDest, TypedRegister aSrc) :
+            Instruction_2<TypedRegister, TypedRegister>(aOpcode, aDest, aSrc) {}
         virtual Formatter& print (Formatter& f) {
-            f << opcodeNames[mOpcode] << "\tR" << mOp1 << ", R" << mOp2;
+            f << opcodeNames[mOpcode] << "\tR" << mOp1.first << ", R" << mOp2.first;
             return f;
         }
 
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
         {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
     
-    class GenericBranch : public Instruction_2<Label*, Register> {
+    class GenericBranch : public Instruction_2<Label*, TypedRegister> {
     public:
         GenericBranch (ICodeOp aOpcode, Label* aLabel, 
-                       Register aR = NotARegister) :
-            Instruction_2<Label*, Register>(aOpcode, aLabel, aR) {}
+                       TypedRegister aR = TypedRegister(NotARegister, &Any_Type) ) :
+            Instruction_2<Label*, TypedRegister>(aOpcode, aLabel, aR) {}
         virtual Formatter& print (Formatter& f) {
             f << opcodeNames[mOpcode] << "\tOffset " << mOp1->mOffset;
-            if (mOp2 == NotARegister) {
+            if (mOp2.first == NotARegister) {
                 f << ", R~";
             } else {
-                f << ", R" << mOp2;
+                f << ", R" << mOp2.first;
             }
             return f;
         }
 
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers)
         {
-            if (mOp2 != NotARegister)
-                f << "R" << mOp2 << '=' << registers[mOp2];
+            if (mOp2.first != NotARegister)
+                f << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
 
@@ -411,7 +408,7 @@ namespace VM {
     class Add : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Add (Register aOp1, Register aOp2, Register aOp3) :
+        Add (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Arithmetic
             (ADD, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
@@ -420,24 +417,24 @@ namespace VM {
     class And : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        And (Register aOp1, Register aOp2, Register aOp3) :
+        And (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Arithmetic
             (AND, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
 
-    class Bitnot : public Instruction_2<Register, Register> {
+    class Bitnot : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, source */
-        Bitnot (Register aOp1, Register aOp2) :
-            Instruction_2<Register, Register>
+        Bitnot (TypedRegister aOp1, TypedRegister aOp2) :
+            Instruction_2<TypedRegister, TypedRegister>
             (BITNOT, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[BITNOT] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            f << opcodeNames[BITNOT] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
@@ -460,7 +457,7 @@ namespace VM {
     class BranchFalse : public GenericBranch {
     public:
         /* target label, condition */
-        BranchFalse (Label* aOp1, Register aOp2) :
+        BranchFalse (Label* aOp1, TypedRegister aOp2) :
             GenericBranch
             (BRANCH_FALSE, aOp1, aOp2) {};
         /* print() and printOperands() inherited from GenericBranch */
@@ -469,155 +466,155 @@ namespace VM {
     class BranchTrue : public GenericBranch {
     public:
         /* target label, condition */
-        BranchTrue (Label* aOp1, Register aOp2) :
+        BranchTrue (Label* aOp1, TypedRegister aOp2) :
             GenericBranch
             (BRANCH_TRUE, aOp1, aOp2) {};
         /* print() and printOperands() inherited from GenericBranch */
     };
 
-    class Call : public Instruction_3<Register, Register, RegisterList> {
+    class Call : public Instruction_3<TypedRegister, TypedRegister, RegisterList> {
     public:
         /* result, target, args */
-        Call (Register aOp1, Register aOp2, RegisterList aOp3) :
-            Instruction_3<Register, Register, RegisterList>
+        Call (TypedRegister aOp1, TypedRegister aOp2, RegisterList aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, RegisterList>
             (CALL, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[CALL] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << mOp3;
+            f << opcodeNames[CALL] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2] << ", " << ArgList(mOp3, registers);
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << ArgList(mOp3, registers);
             return f;
         }
     };
 
-    class CompareEQ : public Instruction_3<Register, Register, Register> {
+    class CompareEQ : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
-        CompareEQ (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        CompareEQ (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_EQ, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
+        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
     };
 
-    class CompareGE : public Instruction_3<Register, Register, Register> {
+    class CompareGE : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
-        CompareGE (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        CompareGE (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_GE, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
+        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
     };
 
-    class CompareGT : public Instruction_3<Register, Register, Register> {
+    class CompareGT : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
-        CompareGT (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        CompareGT (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_GT, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
+        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
     };
 
-    class CompareIN : public Instruction_3<Register, Register, Register> {
+    class CompareIN : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
-        CompareIN (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        CompareIN (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_IN, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
+        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
     };
 
-    class CompareLE : public Instruction_3<Register, Register, Register> {
+    class CompareLE : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
-        CompareLE (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        CompareLE (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_LE, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
+        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
     };
 
-    class CompareLT : public Instruction_3<Register, Register, Register> {
+    class CompareLT : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
-        CompareLT (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        CompareLT (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_LT, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
+        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
     };
 
-    class CompareNE : public Instruction_3<Register, Register, Register> {
+    class CompareNE : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
-        CompareNE (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        CompareNE (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (COMPARE_NE, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
+        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
     };
 
     class Divide : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Divide (Register aOp1, Register aOp2, Register aOp3) :
+        Divide (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Arithmetic
             (DIVIDE, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
 
-    class ElemXcr : public Instruction_4<Register, Register, Register, double> {
+    class ElemXcr : public Instruction_4<TypedRegister, TypedRegister, TypedRegister, double> {
     public:
         /* dest, base, index, value */
-        ElemXcr (Register aOp1, Register aOp2, Register aOp3, double aOp4) :
-            Instruction_4<Register, Register, Register, double>
+        ElemXcr (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3, double aOp4) :
+            Instruction_4<TypedRegister, TypedRegister, TypedRegister, double>
             (ELEM_XCR, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[ELEM_XCR] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "R" << mOp3 << ", " << mOp4;
+            f << opcodeNames[ELEM_XCR] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "R" << mOp3.first << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2] << ", " << "R" << mOp3 << '=' << registers[mOp3];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
             return f;
         }
     };
 
-    class GetElement : public Instruction_3<Register, Register, Register> {
+    class GetElement : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, base, index */
-        GetElement (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        GetElement (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (GET_ELEMENT, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[GET_ELEMENT] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "R" << mOp3;
+            f << opcodeNames[GET_ELEMENT] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "R" << mOp3.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2] << ", " << "R" << mOp3 << '=' << registers[mOp3];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
             return f;
         }
     };
 
-    class GetProp : public Instruction_3<Register, Register, const StringAtom*> {
+    class GetProp : public Instruction_3<TypedRegister, TypedRegister, const StringAtom*> {
     public:
         /* dest, object, prop name */
-        GetProp (Register aOp1, Register aOp2, const StringAtom* aOp3) :
-            Instruction_3<Register, Register, const StringAtom*>
+        GetProp (TypedRegister aOp1, TypedRegister aOp2, const StringAtom* aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, const StringAtom*>
             (GET_PROP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[GET_PROP] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "'" << *mOp3 << "'";
+            f << opcodeNames[GET_PROP] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "'" << *mOp3 << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
 
-    class Instanceof : public Instruction_3<Register, Register, Register> {
+    class Instanceof : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
-        Instanceof (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        Instanceof (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (INSTANCEOF, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
+        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
     };
 
     class Jsr : public GenericBranch {
@@ -635,82 +632,82 @@ namespace VM {
         }
     };
 
-    class LoadImmediate : public Instruction_2<Register, double> {
+    class LoadBoolean : public Instruction_2<TypedRegister, bool> {
+    public:
+        /* dest, immediate value (boolean) */
+        LoadBoolean (TypedRegister aOp1, bool aOp2) :
+            Instruction_2<TypedRegister, bool>
+            (LOAD_BOOLEAN, aOp1, aOp2) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[LOAD_BOOLEAN] << "\t" << "R" << mOp1.first << ", " << "'" << ((mOp2) ? "true" : "false") << "'";
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
+            return f;
+        }
+    };
+
+    class LoadImmediate : public Instruction_2<TypedRegister, double> {
     public:
         /* dest, immediate value (double) */
-        LoadImmediate (Register aOp1, double aOp2) :
-            Instruction_2<Register, double>
+        LoadImmediate (TypedRegister aOp1, double aOp2) :
+            Instruction_2<TypedRegister, double>
             (LOAD_IMMEDIATE, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[LOAD_IMMEDIATE] << "\t" << "R" << mOp1 << ", " << mOp2;
+            f << opcodeNames[LOAD_IMMEDIATE] << "\t" << "R" << mOp1.first << ", " << mOp2;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
             return f;
         }
     };
 
-    class LoadName : public Instruction_2<Register, const StringAtom*> {
+    class LoadName : public Instruction_2<TypedRegister, const StringAtom*> {
     public:
         /* dest, name */
-        LoadName (Register aOp1, const StringAtom* aOp2) :
-            Instruction_2<Register, const StringAtom*>
+        LoadName (TypedRegister aOp1, const StringAtom* aOp2) :
+            Instruction_2<TypedRegister, const StringAtom*>
             (LOAD_NAME, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[LOAD_NAME] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'";
+            f << opcodeNames[LOAD_NAME] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
             return f;
         }
     };
 
-    class LoadString : public Instruction_2<Register, JSString*> {
+    class LoadString : public Instruction_2<TypedRegister, JSString*> {
     public:
         /* dest, immediate value (string) */
-        LoadString (Register aOp1, JSString* aOp2) :
-            Instruction_2<Register, JSString*>
+        LoadString (TypedRegister aOp1, JSString* aOp2) :
+            Instruction_2<TypedRegister, JSString*>
             (LOAD_STRING, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[LOAD_STRING] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'";
+            f << opcodeNames[LOAD_STRING] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'";
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
             return f;
         }
     };
 
-    class LoadValue : public Instruction_2<Register, JSValue> {
-    public:
-        /* dest, immediate value (JSValue) */
-        LoadValue (Register aOp1, JSValue aOp2) :
-            Instruction_2<Register, JSValue>
-            (LOAD_VALUE, aOp1, aOp2) {};
-        virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[LOAD_VALUE] << "\t" << "R" << mOp1 << ", " << mOp2;
-            return f;
-        }
-        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1];
-            return f;
-        }
-    };
-
-    class Move : public Instruction_2<Register, Register> {
+    class Move : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, source */
-        Move (Register aOp1, Register aOp2) :
-            Instruction_2<Register, Register>
+        Move (TypedRegister aOp1, TypedRegister aOp2) :
+            Instruction_2<TypedRegister, TypedRegister>
             (MOVE, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[MOVE] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            f << opcodeNames[MOVE] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
@@ -718,72 +715,72 @@ namespace VM {
     class Multiply : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Multiply (Register aOp1, Register aOp2, Register aOp3) :
+        Multiply (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Arithmetic
             (MULTIPLY, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
 
-    class NameXcr : public Instruction_3<Register, const StringAtom*, double> {
+    class NameXcr : public Instruction_3<TypedRegister, const StringAtom*, double> {
     public:
         /* dest, name, value */
-        NameXcr (Register aOp1, const StringAtom* aOp2, double aOp3) :
-            Instruction_3<Register, const StringAtom*, double>
+        NameXcr (TypedRegister aOp1, const StringAtom* aOp2, double aOp3) :
+            Instruction_3<TypedRegister, const StringAtom*, double>
             (NAME_XCR, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NAME_XCR] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'" << ", " << mOp3;
+            f << opcodeNames[NAME_XCR] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'" << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
             return f;
         }
     };
 
-    class Negate : public Instruction_2<Register, Register> {
+    class Negate : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, source */
-        Negate (Register aOp1, Register aOp2) :
-            Instruction_2<Register, Register>
+        Negate (TypedRegister aOp1, TypedRegister aOp2) :
+            Instruction_2<TypedRegister, TypedRegister>
             (NEGATE, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEGATE] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            f << opcodeNames[NEGATE] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
 
-    class NewArray : public Instruction_1<Register> {
+    class NewArray : public Instruction_1<TypedRegister> {
     public:
         /* dest */
-        NewArray (Register aOp1) :
-            Instruction_1<Register>
+        NewArray (TypedRegister aOp1) :
+            Instruction_1<TypedRegister>
             (NEW_ARRAY, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEW_ARRAY] << "\t" << "R" << mOp1;
+            f << opcodeNames[NEW_ARRAY] << "\t" << "R" << mOp1.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
             return f;
         }
     };
 
-    class NewObject : public Instruction_1<Register> {
+    class NewObject : public Instruction_1<TypedRegister> {
     public:
         /* dest */
-        NewObject (Register aOp1) :
-            Instruction_1<Register>
+        NewObject (TypedRegister aOp1) :
+            Instruction_1<TypedRegister>
             (NEW_OBJECT, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NEW_OBJECT] << "\t" << "R" << mOp1;
+            f << opcodeNames[NEW_OBJECT] << "\t" << "R" << mOp1.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
             return f;
         }
     };
@@ -803,18 +800,18 @@ namespace VM {
         }
     };
 
-    class Not : public Instruction_2<Register, Register> {
+    class Not : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, source */
-        Not (Register aOp1, Register aOp2) :
-            Instruction_2<Register, Register>
+        Not (TypedRegister aOp1, TypedRegister aOp2) :
+            Instruction_2<TypedRegister, TypedRegister>
             (NOT, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[NOT] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            f << opcodeNames[NOT] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
@@ -822,40 +819,40 @@ namespace VM {
     class Or : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Or (Register aOp1, Register aOp2, Register aOp3) :
+        Or (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Arithmetic
             (OR, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
 
-    class Posate : public Instruction_2<Register, Register> {
+    class Posate : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, source */
-        Posate (Register aOp1, Register aOp2) :
-            Instruction_2<Register, Register>
+        Posate (TypedRegister aOp1, TypedRegister aOp2) :
+            Instruction_2<TypedRegister, TypedRegister>
             (POSATE, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[POSATE] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            f << opcodeNames[POSATE] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
 
-    class PropXcr : public Instruction_4<Register, Register, const StringAtom*, double> {
+    class PropXcr : public Instruction_4<TypedRegister, TypedRegister, const StringAtom*, double> {
     public:
         /* dest, source, name, value */
-        PropXcr (Register aOp1, Register aOp2, const StringAtom* aOp3, double aOp4) :
-            Instruction_4<Register, Register, const StringAtom*, double>
+        PropXcr (TypedRegister aOp1, TypedRegister aOp2, const StringAtom* aOp3, double aOp4) :
+            Instruction_4<TypedRegister, TypedRegister, const StringAtom*, double>
             (PROP_XCR, aOp1, aOp2, aOp3, aOp4) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[PROP_XCR] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
+            f << opcodeNames[PROP_XCR] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "'" << *mOp3 << "'" << ", " << mOp4;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
@@ -863,24 +860,24 @@ namespace VM {
     class Remainder : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Remainder (Register aOp1, Register aOp2, Register aOp3) :
+        Remainder (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Arithmetic
             (REMAINDER, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
 
-    class Return : public Instruction_1<Register> {
+    class Return : public Instruction_1<TypedRegister> {
     public:
         /* return value */
-        Return (Register aOp1) :
-            Instruction_1<Register>
+        Return (TypedRegister aOp1) :
+            Instruction_1<TypedRegister>
             (RETURN, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[RETURN] << "\t" << "R" << mOp1;
+            f << opcodeNames[RETURN] << "\t" << "R" << mOp1.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
             return f;
         }
     };
@@ -915,50 +912,50 @@ namespace VM {
         }
     };
 
-    class SaveName : public Instruction_2<const StringAtom*, Register> {
+    class SaveName : public Instruction_2<const StringAtom*, TypedRegister> {
     public:
         /* name, source */
-        SaveName (const StringAtom* aOp1, Register aOp2) :
-            Instruction_2<const StringAtom*, Register>
+        SaveName (const StringAtom* aOp1, TypedRegister aOp2) :
+            Instruction_2<const StringAtom*, TypedRegister>
             (SAVE_NAME, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[SAVE_NAME] << "\t" << "'" << *mOp1 << "'" << ", " << "R" << mOp2;
+            f << opcodeNames[SAVE_NAME] << "\t" << "'" << *mOp1 << "'" << ", " << "R" << mOp2.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp2 << '=' << registers[mOp2];
+            f << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
 
-    class SetElement : public Instruction_3<Register, Register, Register> {
+    class SetElement : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* base, index, value */
-        SetElement (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        SetElement (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (SET_ELEMENT, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[SET_ELEMENT] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << "R" << mOp3;
+            f << opcodeNames[SET_ELEMENT] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << "R" << mOp3.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2] << ", " << "R" << mOp3 << '=' << registers[mOp3];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
             return f;
         }
     };
 
-    class SetProp : public Instruction_3<Register, const StringAtom*, Register> {
+    class SetProp : public Instruction_3<TypedRegister, const StringAtom*, TypedRegister> {
     public:
         /* object, name, source */
-        SetProp (Register aOp1, const StringAtom* aOp2, Register aOp3) :
-            Instruction_3<Register, const StringAtom*, Register>
+        SetProp (TypedRegister aOp1, const StringAtom* aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, const StringAtom*, TypedRegister>
             (SET_PROP, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[SET_PROP] << "\t" << "R" << mOp1 << ", " << "'" << *mOp2 << "'" << ", " << "R" << mOp3;
+            f << opcodeNames[SET_PROP] << "\t" << "R" << mOp1.first << ", " << "'" << *mOp2 << "'" << ", " << "R" << mOp3.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp3 << '=' << registers[mOp3];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp3.first << '=' << registers[mOp3.first];
             return f;
         }
     };
@@ -966,7 +963,7 @@ namespace VM {
     class Shiftleft : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Shiftleft (Register aOp1, Register aOp2, Register aOp3) :
+        Shiftleft (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Arithmetic
             (SHIFTLEFT, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
@@ -975,67 +972,67 @@ namespace VM {
     class Shiftright : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Shiftright (Register aOp1, Register aOp2, Register aOp3) :
+        Shiftright (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Arithmetic
             (SHIFTRIGHT, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
 
-    class StrictEQ : public Instruction_3<Register, Register, Register> {
+    class StrictEQ : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
-        StrictEQ (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        StrictEQ (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (STRICT_EQ, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
+        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
     };
 
-    class StrictNE : public Instruction_3<Register, Register, Register> {
+    class StrictNE : public Instruction_3<TypedRegister, TypedRegister, TypedRegister> {
     public:
         /* dest, source1, source2 */
-        StrictNE (Register aOp1, Register aOp2, Register aOp3) :
-            Instruction_3<Register, Register, Register>
+        StrictNE (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, TypedRegister>
             (STRICT_NE, aOp1, aOp2, aOp3) {};
-        /* print() and printOperands() inherited from Instruction_3<Register, Register, Register> */
+        /* print() and printOperands() inherited from Instruction_3<TypedRegister, TypedRegister, TypedRegister> */
     };
 
     class Subtract : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Subtract (Register aOp1, Register aOp2, Register aOp3) :
+        Subtract (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Arithmetic
             (SUBTRACT, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
 
-    class Test : public Instruction_2<Register, Register> {
+    class Test : public Instruction_2<TypedRegister, TypedRegister> {
     public:
         /* dest, source */
-        Test (Register aOp1, Register aOp2) :
-            Instruction_2<Register, Register>
+        Test (TypedRegister aOp1, TypedRegister aOp2) :
+            Instruction_2<TypedRegister, TypedRegister>
             (TEST, aOp1, aOp2) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[TEST] << "\t" << "R" << mOp1 << ", " << "R" << mOp2;
+            f << opcodeNames[TEST] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
 
-    class Throw : public Instruction_1<Register> {
+    class Throw : public Instruction_1<TypedRegister> {
     public:
         /* exception value */
-        Throw (Register aOp1) :
-            Instruction_1<Register>
+        Throw (TypedRegister aOp1) :
+            Instruction_1<TypedRegister>
             (THROW, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[THROW] << "\t" << "R" << mOp1;
+            f << opcodeNames[THROW] << "\t" << "R" << mOp1.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
             return f;
         }
     };
@@ -1073,40 +1070,40 @@ namespace VM {
     class Ushiftright : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Ushiftright (Register aOp1, Register aOp2, Register aOp3) :
+        Ushiftright (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Arithmetic
             (USHIFTRIGHT, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
 
-    class VarXcr : public Instruction_3<Register, Register, double> {
+    class VarXcr : public Instruction_3<TypedRegister, TypedRegister, double> {
     public:
         /* dest, source, value */
-        VarXcr (Register aOp1, Register aOp2, double aOp3) :
-            Instruction_3<Register, Register, double>
+        VarXcr (TypedRegister aOp1, TypedRegister aOp2, double aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, double>
             (VAR_XCR, aOp1, aOp2, aOp3) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[VAR_XCR] << "\t" << "R" << mOp1 << ", " << "R" << mOp2 << ", " << mOp3;
+            f << opcodeNames[VAR_XCR] << "\t" << "R" << mOp1.first << ", " << "R" << mOp2.first << ", " << mOp3;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1] << ", " << "R" << mOp2 << '=' << registers[mOp2];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first] << ", " << "R" << mOp2.first << '=' << registers[mOp2.first];
             return f;
         }
     };
 
-    class Within : public Instruction_1<Register> {
+    class Within : public Instruction_1<TypedRegister> {
     public:
         /* within this object */
-        Within (Register aOp1) :
-            Instruction_1<Register>
+        Within (TypedRegister aOp1) :
+            Instruction_1<TypedRegister>
             (WITHIN, aOp1) {};
         virtual Formatter& print(Formatter& f) {
-            f << opcodeNames[WITHIN] << "\t" << "R" << mOp1;
+            f << opcodeNames[WITHIN] << "\t" << "R" << mOp1.first;
             return f;
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
-            f << "R" << mOp1 << '=' << registers[mOp1];
+            f << "R" << mOp1.first << '=' << registers[mOp1.first];
             return f;
         }
     };
@@ -1129,13 +1126,11 @@ namespace VM {
     class Xor : public Arithmetic {
     public:
         /* dest, source1, source2 */
-        Xor (Register aOp1, Register aOp2, Register aOp3) :
+        Xor (TypedRegister aOp1, TypedRegister aOp2, TypedRegister aOp3) :
             Arithmetic
             (XOR, aOp1, aOp2, aOp3) {};
         /* print() and printOperands() inherited from Arithmetic */
     };
-
-
 
 } /* namespace VM */
 

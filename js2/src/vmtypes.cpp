@@ -36,6 +36,8 @@
 
 namespace JavaScript {
 namespace VM {
+
+    using namespace JSTypes;
     
     Formatter& operator<< (Formatter& f, Instruction& i)
     {
@@ -44,11 +46,11 @@ namespace VM {
     
     Formatter& operator<< (Formatter& f, RegisterList& rl)
     {
-        Register* e = rl.end();
+        TypedRegister* e = rl.end();
         
         f << "(";
         for (RegisterList::iterator r = rl.begin(); r != e; r++) {
-            f << "R" << (*r); 
+            f << "R" << r->first; 
             if ((r + 1) != e)
                 f << ", ";
         }
@@ -64,11 +66,11 @@ namespace VM {
         f << "(";
         RegisterList::const_iterator i = rl.begin(), e = rl.end();
         if (i != e) {
-            Register r = *i++;
-            f << "R" << r << '=' << registers[r];
+            TypedRegister r = *i++;
+            f << "R" << r.first << '=' << registers[r.first];
             while (i != e) {
                 r = *i++;
-                f << ", R" << r << '=' << registers[r];
+                f << ", R" << r.first << '=' << registers[r.first];
             }
         }
         f << ")";
