@@ -272,25 +272,42 @@ nsAppShellService::DoProfileStartup(nsICmdLineService *aCmdLineService, PRBool c
 
 #ifdef MOZ_PHOENIX
     // This will eventually change to MOZ_XULAPP
-    PRInt32 numProfiles = 0;
-    profileMgr->GetProfileCount(&numProfiles);
 
-    if (numProfiles == 0) {
-      nsCOMPtr<nsIProfileMigrator> pm(do_CreateInstance("@mozilla.org/profile/migrator;1", &rv));
-      if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIObserver> obs(do_QueryInterface(pm));
+    // Profile Manager has a number of command line arguments... most of which relate to
+    // management UI or options for starting a specific profile. The migration code we're
+    // about to execute occurs ONLY in the situation when there are NO profiles. 
+    // 
+    // In this case there are only TWO profile manager flags that are of concern to us - 
+    // -CreateProfile (used by various automation processes) and -ProfileWizard - these
+    // are the only two commands valid in the no-profile case - users of these commands
+    // do NOT want the automigration UI to appear, so we explicitly check for these flags
+    // before invoking anything.
+    nsXPIDLCString isCreateProfile, isCreateProfileWizard;
+    aCmdLineService->GetCmdLineValue("-CreateProfile", getter_Copies(isCreateProfile));
+    aCmdLineService->GetCmdLineValue("-ProfileWizard", getter_Copies(isCreateProfileWizard));
 
-        nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-        os->AddObserver(obs, "profile-initial-state", PR_FALSE);
-        rv = pm->Migrate();
-      }
-      if (NS_FAILED(rv)) {
-        // Migration failed for some reason, or there was no profile migrator. 
-        // Create a generic default profile. 
-        rv = profileMgr->CreateDefaultProfile();
+    if (isCreateProfile.IsEmpty() && isCreateProfileWizard.IsEmpty()) {
+      PRInt32 numProfiles = 0;
+      profileMgr->GetProfileCount(&numProfiles);
+
+      if (numProfiles == 0) {
+        nsCOMPtr<nsIProfileMigrator> pm(do_CreateInstance("@mozilla.org/profile/migrator;1", &rv));
+        if (NS_SUCCEEDED(rv)) {
+          nsCOMPtr<nsIObserver> obs(do_QueryInterface(pm));
+
+          nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+          os->AddObserver(obs, "profile-initial-state", PR_FALSE);
+          rv = pm->Migrate();
+        }
+        if (NS_FAILED(rv)) {
+          // Migration failed for some reason, or there was no profile migrator. 
+          // Create a generic default profile. 
+          rv = profileMgr->CreateDefaultProfile();
+        }
       }
     }
 #endif
+
     // If we are being launched in turbo mode, profile mgr cannot show UI
     rv = profileMgr->StartupWithArgs(aCmdLineService, canInteract);
     if (!canInteract && rv == NS_ERROR_PROFILE_REQUIRES_INTERACTION) {
