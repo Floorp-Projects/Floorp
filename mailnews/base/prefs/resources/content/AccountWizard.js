@@ -53,7 +53,7 @@
    (server vs. newsserver)
 */
 
-var wizardMap = {
+var gWizardMap = {
     accounttype: { next: "identity" },
     identity: { previous: "accounttype"}, // don't define next: server/newsserver
     server:   { next: "login", previous: "identity"},
@@ -76,7 +76,12 @@ var am;
 var nsIMsgIdentity = Components.interfaces.nsIMsgIdentity;
 var nsIMsgIncomingServer = Components.interfaces.nsIMsgIncomingServer;
 
+// the current nsIMsgAccount
 var currentAccount;
+
+// the current associative array that
+// will eventually be dumped into the account
+var currentAccountData;
 
 // event handlers
 function onLoad() {
@@ -84,14 +89,14 @@ function onLoad() {
     // wizard stuff
     // instantiate the Wizard Manager
     wizardManager = new WizardManager( "wizardContents", null, null,
-                                       wizardMap );
+                                       gWizardMap );
     wizardManager.URL_PagePrefix = "chrome://messenger/content/aw-";
     wizardManager.URL_PagePostfix = ".xul"; 
     wizardManager.SetHandlers(null, null, onFinish, null, null, null);
 
     checkForInvalidAccounts();
-    var pageData = parent.wizardManager.WSM.PageData;
-    updateMap(pageData, wizardMap);
+    var pageData = GetPageData();
+    updateMap(pageData, gWizardMap);
 
     // load up the SMTP service for later
     if (!smtpService) {
@@ -102,7 +107,7 @@ function onLoad() {
     // skip the first page if we have an account
     if (currentAccount) {
         // skip past first pane
-        wizardMap.identity.previous = null;
+        gWizardMap.identity.previous = null;
         wizardManager.LoadPage("identity", false);
     }
     else
@@ -114,13 +119,19 @@ function onLoad() {
 function onFinish() {
     if( !wizardManager.wizardMap[wizardManager.currentPageTag].finish )
         return;
-    var pageData = parent.wizardManager.WSM.PageData;
+    var pageData = GetPageData();
 
     dump(parent.wizardManager.WSM);
 
-    var accountData=[];
+    var accountData= currentAccountData;
+    
+    if (!accountData)
+        accountData = new Object;
+    
     PageDataToAccountData(pageData, accountData);
 
+    FixupAccountDataForIsp(accountData);
+    
     // we might be simply finishing another account
     if (!currentAccount)
         currentAccount = createAccount(accountData);
@@ -182,7 +193,8 @@ function AccountDataToPageData(accountData, pageData)
     }
 
     if (accountData.smtp) {
-        setPageData(pageData, "server", "smtphostname", smtp.hostname);
+        setPageData(pageData, "server", "smtphostname",
+                    accountData.smtp.hostname);
     }
     
 }
@@ -214,12 +226,18 @@ function PageDataToAccountData(pageData, accountData)
         // this stuff probably not relevant
         dump("not setting username/password/rememberpassword/etc\n");
     } else {
-        server.username = pageData.login.username.value;
-        if (pageData.login.password)
-            server.password = pageData.login.password.value;
-        if (pageData.login.rememberPassword)
-            server.rememberPassword = pageData.login.rememberPassword.value;
-        smtp.hostname = pageData.server.smtphostname.value;
+        if (pageData.login) {
+            server.username = pageData.login.username.value;
+            if (pageData.login.password)
+                server.password = pageData.login.password.value;
+            if (pageData.login.rememberPassword)
+                server.rememberPassword = pageData.login.rememberPassword.value;
+        }
+
+        if (pageData.server) {
+            if (pageData.server.smtphostname)
+                smtp.hostname = pageData.server.smtphostname.value;
+        }
     }
     
     server.prettyName = pageData.accname.prettyName.value;
@@ -266,6 +284,15 @@ function finishAccount(account, accountData) {
     }
     
     if (accountData.identity) {
+
+        // fixup the email address if we have a default domain
+        var emailArray = accountData.identity.email.split('@');
+        dump("emailArray = " + emailArray + " (length = " + emailArray.length + "\n");
+        dump("domain = " + accountData.domain + "\n");
+        if (emailArray.length < 2 && accountData.domain) {
+            accountData.identity.email += '@' + accountData.domain;
+        }
+
         var destIdentity =
             account.identities.QueryElementAt(0, nsIMsgIdentity);
         copyObjectToInterface(destIdentity,
@@ -274,9 +301,12 @@ function finishAccount(account, accountData) {
     }
 
     if (accountData.smtp) {
-        if (accountData.smtp.hostname &&
-            accountData.smtp.hostname != "")
-            smtpService.defaultServer.hostname = accountData.smtp.hostname;
+        var server = smtpService.defaultServer;
+        
+        if (accountData.smtpCreateNewServer)
+            server = smtpService.createSmtpServer();
+
+        copyObjectToInterface(server, accountData.smtp);
     }
 }
 
@@ -286,7 +316,7 @@ function finishAccount(account, accountData) {
 function copyObjectToInterface(dest, src) {
     if (!dest) return;
     if (!src) return;
-    
+
     var i;
     for (i in src) {
         try {
@@ -404,7 +434,7 @@ function checkForInvalidAccounts()
     var account = getFirstInvalidAccount(am.accounts);
 
     if (account) {
-        var pageData = parent.wizardManager.WSM.PageData;
+        var pageData = GetPageData();
         dump("We have an invalid account, " + account + ", let's use that!\n");
         currentAccount = account;
 
@@ -428,6 +458,9 @@ function AccountToAccountData(account)
 
 // sets the page data, automatically creating the arrays as necessary
 function setPageData(pageData, tag, slot, value) {
+    if (!value) return;
+    if (value == "") return;
+    
     if (!pageData[tag]) pageData[tag] = [];
     if (!pageData[tag][slot]) pageData[tag][slot] = [];
     
@@ -456,13 +489,27 @@ function getCurrentHostname(pageData) {
     else
         return pageData.server.hostname.value;
 }
-        
+
+function UpdateWizardMap() {
+    updateMap(GetPageData(), gWizardMap);
+}
+
+// updates the map based on various odd states
+// conditions handled right now:
+// - 
 function updateMap(pageData, wizardMap) {
+    dump("Updating wizard map..\n");
     if (pageData.accounttype) {
         if (pageData.accounttype.mailaccount &&
             pageData.accounttype.mailaccount.value) {
-            wizardMap.identity.next = "server";
-            wizardMap.accname.previous = "server";
+
+            if (currentAccountData && currentAccountData.wizardSkipPanels) {
+                wizardMap.identity.next = "done";
+                wizardMap.done.previous = "identity";
+            } else {
+                wizardMap.identity.next = "server";
+                wizardMap.accname.previous = "server";
+            }
         }
 
         else if (pageData.accounttype.newsaccount &&
@@ -475,4 +522,61 @@ function updateMap(pageData, wizardMap) {
         }
     }
 
+}
+
+function GetPageData()
+{
+    return parent.wizardManager.WSM.PageData;
+}
+    
+
+function PrefillAccountForIsp(ispName)
+{
+    dump("AccountWizard.prefillAccountForIsp(" + ispName + ")\n");
+
+    var ispData = getIspDefaultsForUri(ispName);
+
+    // no data for this isp, just return
+    if (!ispData) return;
+    
+    var pageData = GetPageData();
+
+    dump("incoming server: \n");
+    for (var i in ispData.incomingServer)
+        dump("ispData.incomingserver." + i + " = " + ispData.incomingServer[i] + "\n");
+
+    // prefill the rest of the wizard
+    currentAccountData = ispData;
+    AccountDataToPageData(ispData, pageData);
+}
+
+
+// does any cleanup work for the the account data
+// - sets the username from the email address if it's not already set
+// - anything else?
+function FixupAccountDataForIsp(accountData)
+{
+    var email = accountData.identity.email;
+    var username;
+
+    if (email) {
+        var emailData = email.split("@");
+        username = emailData[0];
+    }
+    
+    // fix up the username
+    if (!accountData.incomingServer.username) {
+        accountData.incomingServer.username = username;
+    }
+
+    if (!accountData.smtp.username &&
+        accountData.smtpRequiresUsername) {
+        accountData.smtp.username = username;
+    }
+}
+
+function SetCurrentAccountData(accountData)
+{
+    dump("Setting current account data (" + currentAccountData + ") to " + accountData + "\n");
+    currentAccountData = accountData;
 }

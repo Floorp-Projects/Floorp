@@ -61,5 +61,6 @@ Rights Reserved.
   <html:div>
       <html:label for="email">&emailLabel.label;</html:label>
       <html:input type="text" mailtype="identity" name="email" id="email"/>
+      <html:span id="postEmailText"/>
   </html:div>
 </window>

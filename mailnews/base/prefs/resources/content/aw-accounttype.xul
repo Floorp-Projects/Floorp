@@ -44,23 +44,28 @@ Rights Reserved.
     <html:input type="radio" name="acctyperadio" id="mailaccount" onclick="onMailChanged(event);" value="mail" checked="1"/>
     <html:label for="mailaccount">&accountTypeMail.label;</html:label>
   </html:div>
-  <box align="vertical"
+  <html:div style="visibility: collapse; margin-left: 10px" id="mailSubButtons">
+  <html:div align="vertical" 
             datasources="rdf:ispdefaults" 
             containment="http://home.netscape.com/NC-rdf#providers"
-            style="margin-left: 10px"
             id="ispBox"
             ref="NC:ispinfo">
   <template>
     <rule>
       <html:div uri="...">
-        <html:input type="radio" name="isp" value="rdf:http://home.netscape.com/NC-rdf#wizardShortName" fakeid="rdf:http://home.netscape.com/NC-rdf#wizardShortName"/>
+        <html:input type="radio" name="ispchoice" value="rdf:http://home.netscape.com/NC-rdf#wizardShortName" fakeid="rdf:http://home.netscape.com/NC-rdf#wizardShortName"/>
         <html:label for="rdf:http://home.netscape.com/NC-rdf#wizardShortName">
           <text value="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
         </html:label>
       </html:div>
     </rule>
   </template>
-  </box>
+  </html:div>
+    <html:div id="otherIsp">
+      <html:input type="radio" name="ispchoice" value="otherIsp" id="otherIspRadio"/>
+      <html:label for="otherIspRadio">&accountTypeISP.label;</html:label>
+    </html:div>
+  </html:div>
   <html:div>
     <html:input type="radio" name="acctyperadio" id="newsaccount" value="news"/>
     <html:label for="newsaccount">&accountTypeNews.label;</html:label>

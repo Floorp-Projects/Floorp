@@ -35,6 +35,7 @@ function fixLabels(box) {
     if (!box) return;
     var child = box.firstChild;
 
+    var haveDynamicInputs = false;
     while (child) {
         if (child.tagName.toLowerCase() == "div") {
             var input = child.childNodes[0];
@@ -42,13 +43,22 @@ function fixLabels(box) {
 
             if (input.tagName.toLowerCase() == "input" &&
                 label.tagName.toLowerCase() == "label") {
-                input.setAttribute("id", input.getAttribute("fakeid"));
+                
+                var fakeid = input.getAttribute("fakeid");
+                if (fakeid && fakeid != "") {
+                    input.setAttribute("id", fakeid);
+                    haveDynamicInputs = true;
+                }
             }
         }
 
         child = child.nextSibling;
     }
 
+    if (haveDynamicInputs) {
+        var subButtons = document.getElementById("mailSubButtons");
+        subButtons.style.visibility="visible";
+    }
 }
 
 function onMailChanged(event) {
@@ -74,9 +84,39 @@ function enableControls(node, enabled)
 }
 
 function onUnload() {
-    var pageData = parent.wizardManager.WSM.PageData;
-    var wizardMap = parent.wizardMap;
+    parent.UpdateWizardMap();
 
-    parent.updateMap(pageData, wizardMap);
+    initializeIspData();
+    
     return true;
+}
+
+
+function initializeIspData()
+{
+    if (!document.getElementById("mailaccount").checked) {
+        parent.SetCurrentAccountData(null);
+        return;
+    }
+    
+    var ispName;
+    // now reflect the datasource up into the parent
+    var controls = document.controls;
+    
+    for (var i=0; i<controls.length ;i++) {
+        var formElement = controls[i];
+        if (formElement.name == "ispchoice" &&
+            formElement.checked) {
+            dump("ispName = " + formElement.parentNode.id + "\n");
+            ispName = formElement.parentNode.id;
+            break;
+        }
+    }
+    
+    if (!ispName || ispName == "") return;
+    
+    dump("initializing ISP data for " + ispName + "\n");
+
+    parent.PrefillAccountForIsp(ispName);
+    parent.UpdateWizardMap();
 }

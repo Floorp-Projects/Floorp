@@ -38,7 +38,7 @@ function validate() {
 function onInit() {
     var accountNameInput = document.getElementById("prettyName");
     if (accountNameInput.value=="") {
-        var pageData = parent.wizardManager.WSM.PageData;
+        var pageData = parent.GetPageData();
         var type = parent.getCurrentServerType(pageData);
         var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
         var accountName;

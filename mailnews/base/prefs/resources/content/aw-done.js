@@ -22,8 +22,12 @@ function onInit() {
     var pageData = parent.wizardManager.WSM.PageData;
 
     var email = "";
-    if (pageData.identity && pageData.identity.email)
+    if (pageData.identity && pageData.identity.email) {
+        // fixup the email
         email = pageData.identity.email.value;
+        if (email.split('@').length < 2 && parent.currentAccountData.domain)
+            email += "@" + parent.currentAccountData.domain;
+    }
     setDivTextFromForm("identity.email", email);
 
     var username="";

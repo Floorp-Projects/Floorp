@@ -41,6 +41,7 @@ Rights Reserved.
 
 <html:script language="JavaScript" src="chrome://messenger/content/accountUtils.js"/>
 <html:script language="JavaScript" src="chrome://messenger/content/AccountWizard.js"/>
+<html:script language="JavaScript" src="chrome://messenger/content/ispUtils.js"/>
 <box align="vertical" flex="100%">
   <box id="contentsink" flex="100%">
   <html:iframe flex="100%" style="margin: 5px; border: none"

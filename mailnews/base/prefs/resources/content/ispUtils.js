@@ -39,37 +39,84 @@ var ispDefaults;
 var nsIRDFResource = Components.interfaces.nsIRDFResource;
 var nsIRDFLiteral = Components.interfaces.nsIRDFLiteral;
 
-// Given an email address (like "joe@isp.com") return an associative
-// array with all the defaults for that domain
-function getDomainDefaults(email) {
+// given an ISP's domain URI, look up all relevant information about it
+function getIspDefaultsForUri(domainURI)
+{
+    if (!ispDefaults) 
+        ispDefaults = rdf.GetDataSource("rdf:ispdefaults");
+    
+    domainRes = rdf.GetResource(domainURI);
 
+    var result = dataSourceToObject(ispDefaults, domainRes);
+
+    // add this extra attribute which is the domain itself
+    var domainData = domainURI.split(':');
+    if (domainData.length > 1)
+    result.domain = domainData[1];
+    
+    return result;
+}
+
+// construct an ISP's domain URI based on it's domain
+// (i.e. turns isp.com -> domain:isp.com)
+function getIspDefaultsForDomain(domain) {
+    domainURI = "domain:" + domain;
+    return getIspDefaultsForUri(domainURI);
+}
+
+// Given an email address (like "joe@isp.com") look up 
+function getIspDefaultsForEmail(email) {
+
+    var emailData = getEmailInfo(email);
+    
+    var ispData = getIspDefaultsForDomain(emailData.domain);
+
+    prefillIspData(ispData, email);
+
+    return ispData;
+}
+
+// given an email address, split it into username and domain
+// return in an associative array
+function getEmailInfo(email) {
+    if (!email) return null;
+    
+    var result = new Object;
+    
     var emailData = email.split('@');
-    dump("emailData.length == " + emailData.length + "\n");
+    
     if (emailData.length != 2) {
         dump("bad e-mail address!\n");
         return null;
     }
     
-    if (!ispDefaults) 
-        ispDefaults = rdf.GetDataSource("rdf:ispdefaults");
-    
     // all the variables we'll be returning
-    var username = emailData[0];
-    var domain = emailData[1];
-    
-    domainURI = "domain:" + domain;
-    domainRes = rdf.GetResource(domainURI);
+    result.username = emailData[0];
+    result.domain = emailData[1];
 
-    var result = dataSourceToObject(ispDefaults, domainRes);
-    
-    // no such ISP, just set up the defaults
-    if (!ispInfo)
-        return result;
-
-    // here's where we'd do smart things
-
-    
     return result;
+}
+
+function prefillIspData(ispData, email, fullName) {
+    if (!ispData) return;
+
+    // make sure these objects exist
+    if (!ispData.identity) ispData.identity = new Object;
+    if (!ispData.incomingServer) ispData.incomingServer = new Object;
+
+    // fill in e-mail if it's not already there
+    if (email && !ispData.identity.email)
+        ispData.identity.email = email;
+
+    var emailData = getEmailInfo(email);
+    if (emailData) {
+
+        // fill in the username (assuming the ISP doesn't prevent it)
+        if (!ispData.incomingServer.userName &&
+            !ispData.incomingServer.noDefaultUsername)
+            ispData.incomingServer.username = emailData.username;
+    }
+    
 }
 
 // this function will extract an entire datasource into a giant
@@ -101,8 +148,18 @@ function dataSourceToObject(datasource, root)
 
         if (targetHasChildren)
             value = dataSourceToObject(datasource, target);
-        else
+        else {
             value = target.Value;
+
+            // fixup booleans/numbers/etc
+            if (value == "true") value = true;
+            else if (value == "false") value = false;
+            else {
+                var num = Number(value);
+                if (!isNaN(num)) value = num;
+            }
+        }
+            
         
         // add this value
         result[arcName] = value;

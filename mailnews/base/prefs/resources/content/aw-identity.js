@@ -22,11 +22,11 @@
  * Seth Spitzer <sspitzer@netscape.com>
  */
 
+var currentDomain;
 var Bundle = srGetStrBundle("chrome://messenger/locale/prefs.properties");
 
 function validate(data)
 {
-  var email = document.getElementById("email").value;
   var name = document.getElementById("fullName").value;
 
   if (! name || name=="") {
@@ -34,15 +34,79 @@ function validate(data)
     window.alert(alertText);
     return false;
   }
+  if (!validateEmail()) return false;
 
-  var emailArray = email.split('@');
-  if (emailArray.length != 2 ||
-      emailArray[0] == "" ||
-      emailArray[1] == "") {
-    var alertText = Bundle.GetStringFromName("enterValidEmail");
-    window.alert(alertText);
-    return false;
-  }
+  parent.UpdateWizardMap();
+  
   return true;
 }
 
+// this is kind of wacky.. basically it validates the email entered in
+// the text field to make sure it's in the form "user@host"..
+//
+// However, if there is a current domain (retrieved during onInit)
+// then we have to do some special tricks:
+// - if the user ALSO entered an @domain, then we just chop it off
+// - at some point it would be useful to keep the @domain, in case they
+//   wish to override the domain.
+function validateEmail() {
+  var emailElement = document.getElementById("email");
+  var email = emailElement.value;
+
+  
+  var emailArray = email.split('@');
+
+  if (currentDomain) {
+    // check if user entered and @ sign even though we have a domain
+    if (emailArray.length >= 2) {
+      email = emailArray[0];
+      emailElement.value = email;
+    }
+    
+    if (email.length =="") {
+      var alertText = Bundle.GetStringFromName("enterValidEmailPrefix");
+      window.alert(alertText);
+      return false;
+    }
+  }
+
+  else {
+    if (emailArray.length != 2 ||
+        emailArray[0] == "" ||
+        emailArray[1] == "") {
+      var alertText = Bundle.GetStringFromName("enterValidEmail");
+      window.alert(alertText);
+      return false;
+    }
+  }
+    
+  return true;
+}
+
+function onInit()
+{
+  checkForDomain();
+  
+}
+
+// retrieve the current domain from the parent wizard window,
+// and update the UI to add the @domain static text
+function checkForDomain()
+{
+  var accountData = parent.currentAccountData;
+  if (!accountData) return;
+  if (!accountData.domain) return;
+
+  // save in global variable
+  currentDomain = accountData.domain;
+  
+  var postEmailText = document.getElementById("postEmailText");
+  if (postEmailText) {
+    if (postEmailText.firstChild)
+      postEmailText.removeChild(postEmailText.firstChild);
+
+    var domainText = "@" + currentDomain;
+    postEmailText.appendChild(document.createTextNode(domainText));
+  }
+
+}
