@@ -883,6 +883,7 @@ sub do_action {
   print "@@@ mozconfig:\n$mozconfig\n@@@ network .mozconfig:\n$build_vars->{MOZCONFIG}\n";
   if ($build_vars->{MOZCONFIG}) {
     if ($mozconfig ne $build_vars->{MOZCONFIG}) {
+      $ENV{MOZCONFIG} = undef;
       delete $ENV{MOZCONFIG};
       $client->start_section("CREATING MOZCONFIG");
       open MOZCONFIG, ">.mozconfig";
@@ -1082,9 +1083,13 @@ sub get_config {
 
 sub finish_build {
   my ($client, $config, $persistent_vars, $build_vars) = @_;
+  $ENV{MOZILLA_OFFICIAL} = undef;
   delete $ENV{MOZILLA_OFFICIAL};
+  $ENV{BUILD_OFFICIAL} = undef;
   delete $ENV{BUILD_OFFICIAL};
+  $ENV{MOZ_CO_DATE} = undef;
   delete $ENV{MOZ_CO_DATE};
+  $ENV{MOZ_OBJDIR} = undef;
   delete $ENV{MOZ_OBJDIR};
 }
 
