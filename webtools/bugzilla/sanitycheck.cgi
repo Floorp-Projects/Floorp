@@ -179,6 +179,23 @@ foreach my $field (("bug_severity", "bug_status", "op_sys",
 # Perform referential (cross) checks
 ###########################################################################
 
+# This checks that a simple foreign key has a valid primary key value.  NULL
+# references are acceptable and cause no problem.
+#
+# The first parameter is the primary key table name.
+# The second parameter is the primary key field name.
+# Each successive parameter represents a foreign key, it must be a list
+# reference, where the list has:
+#   the first value is the foreign key table name.
+#   the second value is the foreign key field name.
+#   the third value is optional and represents a field on the foreign key
+#     table to display when the check fails.
+#   the fourth value is optional and is a list reference to values that
+#     are excluded from checking.
+#
+# FIXME: The excluded values parameter should go away - the QA contact
+#        fields should use NULL instead - see bug #109474.
+
 sub CrossCheck {
     my $table = shift @_;
     my $field = shift @_;
@@ -280,6 +297,20 @@ CrossCheck("products", "id",
 # Perform double field referential (cross) checks
 ###########################################################################
  
+# This checks that a compound two-field foreign key has a valid primary key
+# value.  NULL references are acceptable and cause no problem.
+#
+# The first parameter is the primary key table name.
+# The second parameter is the primary key first field name.
+# The third parameter is the primary key second field name.
+# Each successive parameter represents a foreign key, it must be a list
+# reference, where the list has:
+#   the first value is the foreign key table name
+#   the second value is the foreign key first field name.
+#   the third value is the foreign key second field name.
+#   the fourth value is optional and represents a field on the foreign key
+#     table to display when the check fails
+
 sub DoubleCrossCheck {
     my $table = shift @_;
     my $field1 = shift @_;
@@ -443,10 +474,10 @@ SendSQL("SELECT keywords.bug_id, keyworddefs.name " .
         "  AND keywords.bug_id = bugs.bug_id " .
         "ORDER BY keywords.bug_id, keyworddefs.name");
 
-my $lastb;
+my $lastb = 0;
 my @list;
 while (1) {
-    my ($b, $k) = (FetchSQLData());
+    my ($b, $k) = FetchSQLData();
     if (!defined $b || $b ne $lastb) {
         if (@list) {
             $realk{$lastb} = join(', ', @list);
