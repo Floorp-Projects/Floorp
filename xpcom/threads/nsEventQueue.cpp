@@ -303,6 +303,11 @@ NS_IMETHODIMP
 nsEventQueueImpl::RevokeEvents(void* owner)
 {
   PL_RevokeEvents(mEventQueue, owner);
+  if (mElderQueue) {
+    nsCOMPtr<nsIEventQueue> elder(do_QueryInterface(mElderQueue));
+    if (elder)
+      elder->RevokeEvents(owner);
+  }
   return NS_OK;
 }
 
