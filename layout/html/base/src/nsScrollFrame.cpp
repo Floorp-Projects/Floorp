@@ -310,6 +310,7 @@ nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
     // Set the scrolling view's insets to whatever our border is
     nsMargin border;
     if (!spacing->GetBorder(border)) {
+      NS_NOTYETIMPLEMENTED("percentage border");
       border.SizeTo(0, 0, 0, 0);
     }
     scrollingView->SetControlInsets(border);
@@ -503,6 +504,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
   // Calculate the amount of space needed for borders
   nsMargin border;
   if (!aReflowState.mStyleSpacing->GetBorder(border)) {
+    NS_NOTYETIMPLEMENTED("percentage border");
     border.SizeTo(0, 0, 0, 0);
   }
 

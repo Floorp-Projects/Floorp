@@ -327,7 +327,9 @@ RootFrame::Reflow(nsIPresContext&          aPresContext,
       nsMargin      border;
       nsFrameState  kidState;
 
-      kidReflowState.mStyleSpacing->GetBorder(border);
+      if (!kidReflowState.mStyleSpacing->GetBorder(border)) {
+        NS_NOTYETIMPLEMENTED("percentage border");
+      }
       kidFrame->GetFrameState(&kidState);
 
       // First check the combined area
