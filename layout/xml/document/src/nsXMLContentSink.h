@@ -145,8 +145,7 @@ protected:
   nsresult CreateStyleSheetURL(nsIURI** aUrl, const nsAReadableString& aHref);
   nsresult LoadXSLStyleSheet(nsIURI* aUrl, const nsString& aType);
   nsresult SetupTransformMediator();
-
-  nsresult AddText(const nsString& aString);
+  nsresult AddText(const nsAReadableString& aString);
 
   static void
   GetElementFactory(PRInt32 aNameSpaceID, nsIElementFactory** aResult);

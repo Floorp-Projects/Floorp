@@ -353,7 +353,7 @@ nsGenericDOMDataNode::AppendData(nsIContent *aOuterContent,
   if (textLength) {
     mText.CopyTo(to, 0, textLength);
   }
-  CopyUnicodeTo(aData, to + textLength, dataLength);
+  CopyUnicodeTo(aData, 0, to + textLength, dataLength);
 
   // Null terminate the new buffer...
   to[newSize] = (PRUnichar)0;
@@ -441,7 +441,7 @@ nsGenericDOMDataNode::ReplaceData(nsIContent *aOuterContent, PRUint32 aOffset,
     mText.CopyTo(to, 0, aOffset);
   }
   if (0 != dataLength) {
-    CopyUnicodeTo(aData, to+aOffset, dataLength);
+    CopyUnicodeTo(aData, 0, to+aOffset, dataLength);
   }
   if (endOffset != textLength) {
     mText.CopyTo(to + aOffset + dataLength, endOffset, textLength - endOffset);

@@ -341,7 +341,7 @@ NS_IMETHODIMP
 nsPlainTextSerializer::CloseContainer(const nsIParserNode& aNode)
 {
   PRInt32 type = aNode.GetNodeType();
-  const nsString&   namestr = aNode.GetText();
+  const nsAReadableString&   namestr = aNode.GetText();
   nsCOMPtr<nsIAtom> name = dont_AddRef(NS_NewAtom(namestr));
   
   mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
@@ -352,7 +352,7 @@ NS_IMETHODIMP
 nsPlainTextSerializer::AddLeaf(const nsIParserNode& aNode)
 {
   PRInt32 type = aNode.GetNodeType();
-  const nsString& text = aNode.GetText();
+  const nsAReadableString& text = aNode.GetText();
 
   mParserNode = NS_CONST_CAST(nsIParserNode *, &aNode);
   return DoAddLeaf(type, text);
@@ -819,7 +819,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
 
 nsresult
 nsPlainTextSerializer::DoAddLeaf(PRInt32 aTag, 
-                                 const nsString& aText)
+                                 const nsAReadableString& aText)
 {
   // If we don't want any output, just return
   if (!DoOutput()) {
@@ -1259,10 +1259,10 @@ nsPlainTextSerializer::WriteQuotesAndIndent()
 // and so should be used for formatted output even if we're not wrapping.
 //
 void
-nsPlainTextSerializer::Write(const nsString& aString)
+nsPlainTextSerializer::Write(const nsAReadableString& aString)
 {
 #ifdef DEBUG_wrapping
-  char* foo = aString.ToNewCString();
+  char* foo = ToNewCString(aString);
   printf("Write(%s): wrap col = %d, mColPos = %d\n", foo, mWrapColumn, mColPos);
   nsMemory::Free(foo);
 #endif
@@ -1290,7 +1290,7 @@ nsPlainTextSerializer::Write(const nsString& aString)
         WriteQuotesAndIndent();
       }
       
-      newline = aString.FindChar('\n',PR_FALSE,bol);
+      newline = aString.FindChar(PRUnichar('\n'),bol);
       // XXX should probably also look for \r even though they shouldn't happen
       
       if(newline < 0) {
@@ -1333,6 +1333,10 @@ nsPlainTextSerializer::Write(const nsString& aString)
     return;
   }
 
+  // XXX Copy necessary to use nsString methods and gain
+  // access to underlying buffer
+  nsAutoString str(aString);
+
   // Intelligent handling of text
   // If needed, strip out all "end of lines"
   // and multiple whitespace between words
@@ -1342,10 +1346,10 @@ nsPlainTextSerializer::Write(const nsString& aString)
   
   while (bol < totLen) {    // Loop over lines
     // Find a place where we may have to do whitespace compression
-    nextpos = aString.FindCharInSet(" \t\n\r", bol);
+    nextpos = str.FindCharInSet(" \t\n\r", bol);
 #ifdef DEBUG_wrapping
-    nsString remaining;
-    aString.Right(remaining, totLen - bol);
+    nsAutoString remaining;
+    str.Right(remaining, totLen - bol);
     foo = remaining.ToNewCString();
     //    printf("Next line: bol = %d, newlinepos = %d, totLen = %d, string = '%s'\n",
     //           bol, nextpos, totLen, foo);
@@ -1355,11 +1359,11 @@ nsPlainTextSerializer::Write(const nsString& aString)
     if(nextpos < 0) {
       // The rest of the string
       if(!mCacheLine) {
-        aString.Right(tempstr, totLen-bol);
+        str.Right(tempstr, totLen-bol);
         WriteSimple(tempstr);
       } 
       else {
-        offsetIntoBuffer = aString.GetUnicode();
+        offsetIntoBuffer = str.GetUnicode();
         offsetIntoBuffer = &offsetIntoBuffer[bol];
         AddToLine(offsetIntoBuffer, totLen-bol);
       }
@@ -1381,11 +1385,11 @@ nsPlainTextSerializer::Write(const nsString& aString)
         // Note that we are in whitespace.
         mInWhitespace = PR_TRUE;
         if(!mCacheLine) {
-          nsAutoString whitestring(aString[nextpos]);
+          nsAutoString whitestring(str[nextpos]);
           WriteSimple(whitestring);
         } 
         else {
-          offsetIntoBuffer = aString.GetUnicode();
+          offsetIntoBuffer = str.GetUnicode();
           offsetIntoBuffer = &offsetIntoBuffer[nextpos];
           AddToLine(offsetIntoBuffer, 1);
         }
@@ -1394,7 +1398,7 @@ nsPlainTextSerializer::Write(const nsString& aString)
       }
       
       if(!mCacheLine) {
-        aString.Mid(tempstr,bol,nextpos-bol);
+        str.Mid(tempstr,bol,nextpos-bol);
         if(mFlags & nsIDocumentEncoder::OutputPreformatted) {
           bol = nextpos;
         } 
@@ -1408,7 +1412,7 @@ nsPlainTextSerializer::Write(const nsString& aString)
       else {
          mInWhitespace = PR_TRUE;
          
-         offsetIntoBuffer = aString.GetUnicode();
+         offsetIntoBuffer = str.GetUnicode();
          offsetIntoBuffer = &offsetIntoBuffer[bol];
          if(mPreFormatted || (mFlags & nsIDocumentEncoder::OutputPreformatted)) {
            // Preserve the real whitespace character
@@ -1452,7 +1456,7 @@ nsPlainTextSerializer::GetAttributeValue(nsIAtom* aName,
 
     PRInt32 count = mParserNode->GetAttributeCount();
     for (PRInt32 i=0;i<count;i++) {
-      const nsString& key = mParserNode->GetKeyAt(i);
+      const nsAReadableString& key = mParserNode->GetKeyAt(i);
       if (key.Equals(name)) {
         aValueRet = mParserNode->GetValueAt(i);
         aValueRet.StripChars("\"");

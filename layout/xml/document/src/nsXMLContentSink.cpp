@@ -422,7 +422,7 @@ nsXMLContentSink::AddAttributes(const nsIParserNode& aNode,
   PRInt32 ac = aNode.GetAttributeCount();
   for (PRInt32 i = 0; i < ac; i++) {
     // Get upper-cased key
-    const nsString& key = aNode.GetKeyAt(i);
+    const nsAReadableString& key = aNode.GetKeyAt(i);
     name.Assign(key);
 
     nsCOMPtr<nsIAtom> nameSpacePrefix(dont_AddRef(CutNameSpacePrefix(name)));
@@ -498,7 +498,7 @@ nsXMLContentSink::PushNameSpacesFrom(const nsIParserNode& aNode)
 
   if (nsnull != nameSpace) {
     for (PRInt32 i = 0; i < ac; i++) {
-      const nsString& key = aNode.GetKeyAt(i);
+      const nsAReadableString& key = aNode.GetKeyAt(i);
       k.Assign(key);
       // Look for "xmlns" at the start of the attribute name
       offset = k.Find(kNameSpaceDef);
@@ -1225,7 +1225,7 @@ nsXMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode)
   if (!doc)
     return NS_OK;
 
-  const nsString& docTypeStr = aNode.GetText(); 
+  nsAutoString docTypeStr(aNode.GetText()); 
   nsAutoString str, name, publicId, systemId;
 
   if (docTypeStr.EqualsWithConversion("<!DOCTYPE", PR_FALSE, 9)) {
@@ -1320,7 +1320,7 @@ nsXMLContentSink::AddCharacterData(const nsIParserNode& aNode)
 }
 
 nsresult
-nsXMLContentSink::AddText(const nsString& aString)
+nsXMLContentSink::AddText(const nsAReadableString& aString)
 {
   PRInt32 addLen = aString.Length();
   if (0 == addLen) {
@@ -1358,8 +1358,7 @@ nsXMLContentSink::AddText(const nsString& aString)
         }
       }
     }
-    memcpy(&mText[mTextLength], aString.GetUnicode() + offset,
-           sizeof(PRUnichar) * amount);
+    CopyUnicodeTo(aString, offset, &mText[mTextLength], amount);
     mTextLength += amount;
     offset += amount;
     addLen -= amount;
@@ -1691,7 +1690,7 @@ nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
   // Look for SRC attribute and look for a LANGUAGE attribute
   nsAutoString src;
   for (i = 0; i < ac; i++) {
-    const nsString& key = aNode.GetKeyAt(i);
+    nsAutoString key(aNode.GetKeyAt(i));
     if (key.EqualsIgnoreCase("src")) {
       src = aNode.GetValueAt(i);
     }

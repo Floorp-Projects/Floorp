@@ -106,11 +106,11 @@ nsTextTransformer::Shutdown()
   }
 }
 
-// For now, we have only a single character to strip out. If we get
+// For now, we have only a couple of characters to strip out. If we get
 // any more, change this to use a bitset to lookup into.
 //   CH_SHY - soft hyphen (discretionary hyphen)
 #define IS_DISCARDED(_ch) \
-  ((_ch) == CH_SHY)
+  (((_ch) == CH_SHY) || ((_ch) == '\r'))
 
 #define MAX_UNIBYTE 127
 
