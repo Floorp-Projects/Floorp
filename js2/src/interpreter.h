@@ -29,12 +29,16 @@ namespace JavaScript {
     using namespace ICG;
     using namespace JSTypes;
 
+    struct JSLinkage;
+
     class Context : public gc_base {
     public:
-        explicit Context(World& /*world */, JSObject* aGlobal) :
-            mGlobal(aGlobal) {}
+        explicit Context(World& world, JSObject* aGlobal)
+            :   mWorld(world), mGlobal(aGlobal), mLinkage(0)
+        {
+        }
 
-        JSValue interpret(ICodeModule* iCode, const JSValues& args);
+        JSObject* getGlobalObject() { return mGlobal; }
 
         JSObject* setGlobalObject(JSObject* aGlobal)
         {
@@ -43,15 +47,12 @@ namespace JavaScript {
             return t;
         }
 
-        JSObject* getGlobalObject() 
-        {
-            return mGlobal;
-        }
+        JSValue interpret(ICodeModule* iCode, const JSValues& args);
 
     private:
-        /* World mWorld; */
+        World& mWorld;
         JSObject* mGlobal;
-        
+        JSLinkage* mLinkage;
     }; /* class Interpreter */
 } /* namespace JavaScript */
 
