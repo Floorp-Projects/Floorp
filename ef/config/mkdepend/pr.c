@@ -37,7 +37,7 @@ extern boolean	printed;
 extern boolean	verbose;
 extern boolean	show_where_not;
 
-void add_include(filep, file, file_red, include, dot, failOK)
+add_include(filep, file, file_red, include, dot, failOK)
 	struct filepointer	*filep;
 	struct inclist	*file, *file_red;
 	char	*include;
@@ -80,7 +80,7 @@ void add_include(filep, file, file_red, include, dot, failOK)
 	}
 }
 
-void recursive_pr_include(head, file, base)
+recursive_pr_include(head, file, base)
 	register struct inclist	*head;
 	register char	*file, *base;
 {
@@ -95,7 +95,7 @@ void recursive_pr_include(head, file, base)
 		recursive_pr_include(head->i_list[ i ], file, base);
 }
 
-void pr(ip, file, base)
+pr(ip, file, base)
 	register struct inclist  *ip;
 	char	*file, *base;
 {

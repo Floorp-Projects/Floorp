@@ -30,7 +30,7 @@ CSRCS			= 	\
 	pr.c			\
 	$(NULL)
 
-CFLAGS += -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".$(OBJ_SUFFIX)\" -DNeedVarargsPrototypes
+CFLAGS += -DINCLUDEDIR=\"/usr/include\" -DOBJSUFFIX=\".$(OBJ_SUFFIX)\" -DNeedVarargsPrototypes $(X11INCLUDES)
 MKDEPENDENCIES	= 
 
 include $(DEPTH)/config/rules.mk
