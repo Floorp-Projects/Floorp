@@ -538,7 +538,9 @@ var BookmarksCommand = {
     // Bookmark Properties dialog is only ever opened with one selection 
     // (command is disabled otherwise)
     var bookmark = aSelection.item[0].Value;
-    return openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul", "", "centerscreen,chrome,dependent,resizable=no", bookmark);      
+    value = {};
+    openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul", "", "centerscreen,chrome,modal,resizable=no", bookmark, value);
+    return value.ok;
   },
 
   // requires utilityOverlay.js if opening in new window for getTopWin()
@@ -651,6 +653,8 @@ var BookmarksCommand = {
     var name     = BookmarksUtils.getLocaleString("ile_newfolder");
     var resource = BMSVC.createFolder(name);
     this.createNewResource(resource, aTarget, "newfolder");
+    // temporary hack...
+    return resource;
   },
 
   createNewSeparator: function (aTarget)
@@ -664,20 +668,9 @@ var BookmarksCommand = {
     var selection = BookmarksUtils.getSelectionFromResource(aResource, aTarget.parent);
     var ok        = BookmarksUtils.insertAndCheckSelection(aTxnType, selection, aTarget);
     if (ok) {
-      var propWin = this.openBookmarkProperties(selection);
-      
-      function canceledNewResource()
-      {
+      ok = this.openBookmarkProperties(selection);
+      if (!ok)
         BookmarksCommand.deleteBookmark(selection);
-        propWin.document.documentElement.removeEventListener("dialogcancel", canceledNewResource, false);
-        propWin.removeEventListener("load", propertiesWindowLoad, false);
-      }
-      
-      function propertiesWindowLoad()
-      {
-        propWin.document.documentElement.addEventListener("dialogcancel", canceledNewResource, false);
-      }
-      propWin.addEventListener("load", propertiesWindowLoad, false);
     }
   },
 
@@ -795,7 +788,7 @@ var BookmarksController = {
 
   isCommandEnabled: function (aCommand, aSelection, aTarget)
   {
-    var item0, type0;
+    var item0, type0, junk;
     var length = aSelection.length;
     if (length != 0) {
       item0 = aSelection.item[0].Value;
@@ -913,7 +906,7 @@ var BookmarksController = {
       break;
     case "cmd_bm_rename":
     case "cmd_bm_properties":
-      BookmarksCommand.openBookmarkProperties(aSelection);
+      junk = BookmarksCommand.openBookmarkProperties(aSelection);
       break;
     case "cmd_cut":
       BookmarksCommand.cutBookmark(aSelection);
@@ -1070,21 +1063,6 @@ var BookmarksUtils = {
     return type;
   },
 
-  /////////////////////////////////////////////////////////////////////////////
-  // Returns the container of a given container
-  getParentOfResource: function(aChild)
-  {
-    var arcsIn = BMDS.ArcLabelsIn(aChild);
-    var containerArc;
-    while (arcsIn.hasMoreElements()) {
-      containerArc = arcsIn.getNext();
-      if (RDFCU.IsOrdinalProperty(containerArc)) {
-        return BMDS.GetSources(containerArc, aChild, true).getNext()
-                   .QueryInterface(kRDFRSCIID);
-      }
-    }
-    return null;
-  },
   
   /////////////////////////////////////////////////////////////////////////////
   // Caches frequently used informations about the selection
@@ -1150,7 +1128,7 @@ var BookmarksUtils = {
         if (aSelection.isContainer[i] && aSelection.item[i] == folder)
           return true;
       }
-      folder = BookmarksUtils.getParentOfResource(folder);
+      folder = BMSVC.getParent(folder);
       if (!folder)
         return false; // sanity check
     } while (folder.Value != "NC:BookmarksRoot")

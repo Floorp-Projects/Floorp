@@ -21,7 +21,7 @@
 # Contributor(s): 
 #   Ben Goodger <ben@netscape.com> (Original Author)
 #   Blake Ross <blaker@nemtscape.com>
-#   Pierre Chanial <chanial@noos.fr>
+#   Pierre Chanial <chanial@noos.fr> (v 2.0)
 
 <!DOCTYPE window [
   <!ENTITY % bookmarksDTD SYSTEM "chrome://browser/locale/bookmarks/bookmarks.dtd" >
@@ -230,8 +230,14 @@
             elt.setAttribute("hidden", elt.getAttribute("hidden") != "true");
         ]]>
         </body>
-      </method>
-      
+      </method>      
+
+      <property name="tree">
+        <getter><![CDATA[
+          return document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-tree");
+        ]]></getter>
+      </property>
+
       <property name="treeBoxObject">
         <getter><![CDATA[
           return this.tree.boxObject.QueryInterface(Components.interfaces.nsITreeBoxObject);
@@ -241,38 +247,6 @@
       <property name="treeBuilder">
         <getter><![CDATA[
           return this.tree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder);
-        ]]></getter>
-      </property>
-
-      <property name="tree">
-        <getter><![CDATA[
-          return document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-tree");
-        ]]></getter>
-      </property>
-
-      <property name="currentIndex">
-        <getter><![CDATA[
-          return this.treeBoxObject.selection.currentIndex;
-        ]]></getter>
-      </property>
-
-      <property name="currentRes">
-        <getter><![CDATA[
-          return this.treeBuilder.getResourceAtIndex(this.currentIndex);
-        ]]></getter>
-      </property>
-
-      <property name="parentRes">
-        <getter><![CDATA[
-          const currIndex = this.currentIndex;
-
-          if (currIndex == -1)
-            return RDF.GetResource("NC:BookmarksRoot");
-
-          var parentIndex = this.treeBoxObject.view.getParentIndex(currIndex);
-          if (parentIndex != -1)
-            return this.treeBuilder.getResourceAtIndex(parentIndex)
-          return RDF.GetResource("NC:BookmarksRoot"); // assume its parent is the root
         ]]></getter>
       </property>
 
@@ -312,8 +286,42 @@
       <method name="getRootResource">
         <body><![CDATA[
           var tree = document.getAnonymousElementByAttribute(this, "anonid", "bookmarks-tree");
-          var rootURI = tree.ref;
-          return RDF.GetResource(rootURI);
+          return RDF.GetResource(tree.ref);
+        ]]></body>
+      </method>
+
+      <method name="selectResource">
+        <parameter name="aResource"/>
+        <body><![CDATA[
+          var index = this.treeBuilder.getIndexOfResource(aResource);
+          if (index != -1) {
+            if (!this.treeBoxObject.selection.isSelected(index))
+              this.treeBoxObject.selection.toggleSelect(index);
+            return;
+          }
+         
+          var chain = BMSVC.getParentChain(aResource);
+          //dump("Chain:"+chain.length+"\n");
+          for (var i=0; i<chain.length; i++) {
+            var rParent = chain.queryElementAt(i, kRDFRSCIID);
+            index = this.treeBuilder.getIndexOfResource(rParent);
+            //dump(i+":"+BookmarksUtils.getProperty(rParent, NC_NS+"Name")+", index:"+index+"\n");
+            if (index == -1)
+#             rParent is or is a parent of "ref", we go on searching for the
+#             first parent in the tree.
+              continue;
+
+            if (!this.treeBoxObject.view.isContainerOpen(index))
+#             we found one, let's open it.
+              this.treeBoxObject.view.toggleOpenState(index);
+          }
+          if (index == -1)
+#           none of the parents were in the tree, bailing
+            return;
+
+          index = this.treeBuilder.getIndexOfResource(aResource);
+          if (index != -1)
+            this.treeBoxObject.selection.toggleSelect(index);
         ]]></body>
       </method>
 
@@ -342,7 +350,7 @@
             for (var i = rangeMin.value; i <= rangeMax.value; ++i) {
               var selectedItem   = this.getRowResource(i);
               var selectedParent = this.getParentResource(i);
-              var isExpanded     = this.treeBoxObject.view.isContainerOpen(i)
+              var isExpanded     = this.treeBoxObject.view.isContainerOpen(i);
               selection.item  .push(selectedItem);
               selection.parent.push(selectedParent);
               selection.isExpanded.push(isExpanded);
@@ -604,7 +612,7 @@
             this.mOuter.treeBoxObject.selection.selectAll();
             break;
           case "cmd_bm_expandfolder":
-            this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.currentIndex);
+            this.mOuter.treeBoxObject.view.toggleOpenState(this.mOuter.treeBoxObject.selection.currentIndex);
             break;
           default:
             this.mOuter.saveSelection();

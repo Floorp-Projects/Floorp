@@ -61,6 +61,10 @@ function showDescription()
 
 function Init()
 {
+
+  // assume the user will press cancel (only used when creating new resources)
+  window.arguments[1].ok = false;
+
   // This is the set of fields that are visible in the window.
   gFields     = ["name", "url", "shortcut", "description", "webpanel"];
 
@@ -320,6 +324,7 @@ function Commit()
       remote.Flush();
   }
 
+  window.arguments[1].ok = true;
   window.close();
   return true;
 }
