@@ -87,7 +87,7 @@ protected:
 
     // Cached url handlers
     nsCOMPtr<nsIURLParser>              mDefaultURLParser;
-    nsSupportsArray                     mURLParsers;
+    nsAutoVoidArray                     mURLParsers;
     nsVoidArray                         mRestrictedPortList;
 };
 
