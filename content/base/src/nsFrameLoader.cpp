@@ -58,7 +58,7 @@
 #include "nsIWebShell.h"
 #include "nsContentUtils.h"
 #include "nsUnicharUtils.h"
-
+#include "nsIScriptGlobalObject.h"
 #include "nsIScriptSecurityManager.h"
 
 #include "nsIURI.h"
@@ -101,7 +101,6 @@ public:
   NS_IMETHOD Destroy();
 
 protected:
-  nsresult GetPresContext(nsIPresContext **aPresContext);
   nsresult EnsureDocShell();
   void GetURL(nsAString& aURL);
 
@@ -375,46 +374,30 @@ nsFrameLoader::Destroy()
 }
 
 nsresult
-nsFrameLoader::GetPresContext(nsIPresContext **aPresContext)
-{
-  *aPresContext = nsnull;
-
-  nsIDocument* doc = mOwnerContent->GetDocument();
-
-  while (doc) {
-    nsIPresShell *presShell = doc->GetShellAt(0);
-
-    if (presShell) {
-      presShell->GetPresContext(aPresContext);
-
-      return NS_OK;
-    }
-
-    doc = doc->GetParentDocument();
-  }
-
-  return NS_OK;
-}
-
-nsresult
 nsFrameLoader::EnsureDocShell()
 {
   if (mDocShell) {
     return NS_OK;
   }
 
-  nsCOMPtr<nsIPresContext> presContext;
-  GetPresContext(getter_AddRefs(presContext));
-  NS_ENSURE_TRUE(presContext, NS_ERROR_UNEXPECTED);
+  // Get our parent docshell off the document of mOwnerContent
+  // XXXbz this is such a total hack.... We really need to have a
+  // better setup for doing this.
+  nsIDocument* doc = mOwnerContent->GetDocument();
+  if (!doc) {
+    return NS_ERROR_UNEXPECTED;
+  }
+
+  nsCOMPtr<nsIWebNavigation> parentAsWebNav =
+    do_GetInterface(doc->GetScriptGlobalObject());
 
   // Bug 8065: Don't exceed some maximum depth in content frames
   // (MAX_DEPTH_CONTENT_FRAMES)
   PRInt32 depth = 0;
-  nsCOMPtr<nsISupports> parentAsSupports = presContext->GetContainer();
 
-  if (parentAsSupports) {
+  if (parentAsWebNav) {
     nsCOMPtr<nsIDocShellTreeItem> parentAsItem =
-      do_QueryInterface(parentAsSupports);
+      do_QueryInterface(parentAsWebNav);
 
     while (parentAsItem) {
       ++depth;
@@ -457,9 +440,7 @@ nsFrameLoader::EnsureDocShell()
   // child. If it's not a web-shell then some things will not operate
   // properly.
 
-  nsCOMPtr<nsISupports> container = presContext->GetContainer();
-
-  nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(container));
+  nsCOMPtr<nsIDocShellTreeNode> parentAsNode(do_QueryInterface(parentAsWebNav));
   if (parentAsNode) {
     nsCOMPtr<nsIDocShellTreeItem> parentAsItem =
       do_QueryInterface(parentAsNode);
@@ -523,7 +504,7 @@ nsFrameLoader::EnsureDocShell()
     // connect the container...
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
     nsCOMPtr<nsIWebShellContainer> outerContainer =
-      do_QueryInterface(container);
+      do_QueryInterface(parentAsWebNav);
 
     if (outerContainer) {
       webShell->SetContainer(outerContainer);
