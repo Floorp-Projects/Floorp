@@ -1349,7 +1349,7 @@ nsMimeXULEmitter::BuildListOfStatusProviders()
 }
 
 nsIMimeMiscStatus *
-nsMimeXULEmitter::GetStatusObjForProgID(nsString aProgID)
+nsMimeXULEmitter::GetStatusObjForProgID(nsCString aProgID)
 {
   nsresult            rv;
   nsIComponentManager *comMgr;
@@ -1361,7 +1361,7 @@ nsMimeXULEmitter::GetStatusObjForProgID(nsString aProgID)
     return nsnull;
   
   nsCID         cid;
-  rv = comMgr->ProgIDToCLSID(aProgID.GetBuffer(), &cid);
+  rv = comMgr->ProgIDToCLSID(aProgID, &cid);
   if (NS_FAILED(rv))
     return nsnull;
 

@@ -116,7 +116,7 @@ public:
     nsresult      DoGlobalStatusProcessing();
     nsresult      DoWindowStatusProcessing();
     nsresult      BuildListOfStatusProviders();
-    nsIMimeMiscStatus   *GetStatusObjForProgID(nsString aProgID);
+    nsIMimeMiscStatus   *GetStatusObjForProgID(nsCString aProgID);
 
     char          *GetHeaderValue(const char *aHeaderName);
 
