@@ -23,7 +23,7 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRInt16 g_CNS1ShiftTable[] =  {
+static PRInt16 g_ShiftTable[] =  {
   0, u2BytesCharset,
   ShiftCell(0, 0, 0, 0, 0, 0, 0, 0),
 };
@@ -32,7 +32,7 @@ static PRInt16 g_CNS1ShiftTable[] =  {
 // Class nsUnicodeToCNS11643p1 [implementation]
 
 nsUnicodeToCNS11643p1::nsUnicodeToCNS11643p1() 
-: nsTableEncoderSupport((uShiftTable*) &g_CNS1ShiftTable, 
+: nsTableEncoderSupport((uShiftTable*) &g_ShiftTable, 
                         (uMappingTable*) &g_ufCNS1MappingTable)
 {
 }
