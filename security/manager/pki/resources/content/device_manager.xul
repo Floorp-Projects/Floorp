@@ -104,6 +104,7 @@
         <button id="unload_button" 
                 label="&devmgr.button.unload.label;"
                 onclick="doUnload();" disabled="true"/> 
+        <button id="fipsbutton" onclick="toggleFIPS();" />
       </vbox> <!-- / Buttons for manipulating devices -->
     </row>
     <row>
