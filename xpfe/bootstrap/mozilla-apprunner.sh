@@ -28,6 +28,9 @@
 ## the apprunner work.
 ##
 
+#uncomment for debugging
+#set -x
+
 dist_bin=""
 
 # Running from dist/bin
@@ -43,6 +46,8 @@ else
 fi
 
 script_args=""
+moreargs=""
+debugging=0
 
 while [ $# -gt 0 ]
 do
@@ -53,6 +58,7 @@ do
       ;;
     -g | --debug)
       script_args="$script_args -g"
+      debugging=1
       shift
       ;;
     -d | --debugger)
@@ -62,7 +68,13 @@ do
     -*)
 	case $1 in
 		-ProfileManager | -ProfileWizard | -installer | -edit | -mail | -pref | -compose | -editor | -addressbook | -chrome )
-		moreargs=$1
+		if [ "x$moreargs" != "x" ]
+		then
+			echo "You can't have $1 and $moreargs"
+			exit 1
+		else
+			moreargs=$1
+		fi
 		shift
 		;;
 	*)
@@ -77,4 +89,12 @@ do
  esac
 done
 
+# if you are debugging, you can't have moreargs
+# ./mozilla-apprunner.sh -g -mail makes no sense.
+if [ $debugging -eq 1 -a $moreargs != "" ]
+then
+	echo "You can't have -g and $moreargs at the same time"
+	exit 1
+fi
+	
 $dist_bin/run-mozilla.sh $script_args ./apprunner $moreargs ${1+"$@"}
