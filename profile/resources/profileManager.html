@@ -1,0 +1,163 @@
+<html>
+
+<script>
+	var profileList = "";
+	var errorMessage = "";
+
+    var profileCore = parent.GetProfileCore();
+
+	if (profileCore) {
+	    dump("yes profileCore\n");
+		profileList = profileCore.GetProfileList();	
+		dump("***********---------> Profiles I got back : " + profileList + "\n");	
+	}
+
+function generateProfileList()
+{
+	dump("************Inside generateProfileList\n");
+	profileList = profileList.split(",");
+	var numOfElements = profileList.length;
+	dump("************numOfElements: "+numOfElements+"\n");
+
+	for (i = 0; i < numOfElements; i++) {
+		document.writeln("<option>"+profileList[i]);
+	}
+}
+
+function CreateProfile()
+{
+	dump("************Inside del prof\n");
+
+	// Need to call CreateNewProfile xuls
+	this.location.replace("resource:/res/profile/cpwManager.xul");
+}
+
+function RenameProfile()
+{
+	dump("************Inside REANAME prof\n");
+	var index = document.forms[0].profiles.selectedIndex;
+	dump("index: "+index+"\n");
+
+	if (index > 0 || index == 0) 
+	{
+		var curProfileName = profileList[index]; 
+		dump("curProfileName: "+curProfileName+"\n");
+
+
+		dump("********************calling SetProfileName\n");
+		parent.SetProfileName(curProfileName);
+
+		// Open a dialog and get new name
+		this.location.replace("resource:/res/profile/renameProfile.html");
+	}
+	else 
+	{
+		this.location.replace("resource:/res/profile/errorDialog.html");
+		//errorMessage = "Please select a profile first";
+		//var element = document.getElementById("ErrorMessage");
+		//element.value = errorMessage;
+	}
+}
+
+function DeleteProfile()
+{
+	dump("************Inside DELETE prof\n");
+	var index = document.forms[0].profiles.selectedIndex;
+	dump("index: "+index+"\n");
+
+	if (index > 0 || index == 0) 
+	{
+		var curProfileName = profileList[index]; 
+		dump("curProfileName: "+curProfileName+"\n");
+
+		profileCore.DeleteProfile(curProfileName);
+
+		// Load this xul to see the updated profile list
+		this.location.replace("resource:/res/profile/profileManager.html");
+	}
+	else 
+	{
+		this.location.replace("resource:/res/profile/errorDialog.html");
+		//errorMessage = "Please select a profile first";
+		//var element = document.getElementById("ErrorMessage");
+		//element.value = errorMessage;
+	}
+}
+
+function ExitManager()
+{
+	var toolkitCore = XPAppCoresManager.Find("toolkitCore");
+	if (!toolkitCore) {
+		toolkitCore = new ToolkitCore();
+		
+		if (toolkitCore) {
+			toolkitCore.Init("toolkitCore");
+		}
+	}
+	if (toolkitCore) {
+		toolkitCore.CloseWindow(parent);
+	}
+}
+</script>
+
+
+<body>
+
+Communicator stores information about your settings, preferences,
+<br>
+bookmarks, and stored messages in your personal profile. 
+<br><br>
+
+Click New to create a new profile. Select a profile, click delete
+<br>
+to remove that profile. Select a profile, enter a new profile name 
+<br>
+in <i>New Profile Name</i> field, click Rename to rename the profile.
+<br><br>
+
+
+
+<form>
+<table>
+<tr>
+<td>
+<select name="profiles" size=5>
+<script>
+	generateProfileList();
+</script>
+</select>
+</td>
+
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+
+<td>
+	<table>
+	<tr><td>
+		<input name=newButton type="button" value="New         " onclick="CreateProfile();">
+	</td></tr>
+
+	<tr>
+		<td>
+			<input name=renButton type="button" value="Rename   " onclick="RenameProfile();">
+		</td>
+	</tr>
+
+	<tr><td>
+		<input name=delButton type="button" value="Delete      " onclick="DeleteProfile();">
+	</td></tr>
+
+	<tr><td>
+		<input name=exitButton type="button" value="Exit          " onclick="ExitManager();">
+	</td></tr>
+
+	</table>
+</td>
+</tr>
+</table>
+
+</form>
+</body>
+</html>
