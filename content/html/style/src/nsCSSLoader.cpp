@@ -362,23 +362,6 @@ CSSLoaderImpl::RecycleParser(nsICSSParser* aParser)
   return NS_OK;
 }
 
-// XXX We call this function a good bit.  Consider caching the service
-// in a static global or something?
-static nsresult ResolveCharset(const nsACString& aCharsetAlias,
-                               nsACString& aCharset)
-{
-  nsresult rv = NS_ERROR_NOT_AVAILABLE;
-  if (! aCharsetAlias.IsEmpty()) {
-    nsCOMPtr<nsICharsetAlias> calias(do_GetService(kCharsetAliasCID, &rv));
-    NS_ASSERTION(calias, "cannot find charset alias service");
-    if (calias)
-    {
-      rv = calias->GetPreferred(aCharsetAlias, aCharset);
-    }
-  }
-  return rv;
-}
-
 static const char kCharsetSym[] = "@charset";
 
 static nsresult GetCharsetFromData(const unsigned char* aStyleSheetData,
@@ -576,6 +559,8 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
   if (NS_FAILED(result))
     channel = nsnull;
 
+  aCharset.Truncate();
+
   /*
    * First determine the charset (if one is indicated)
    * 1)  Check nsIChannel::contentCharset
@@ -586,66 +571,62 @@ SheetLoadData::OnDetermineCharset(nsIUnicharStreamLoader* aLoader,
    * default (document charset or ISO-8859-1 if we have no document
    * charset)
    */
-  nsCAutoString charset, charsetCandidate;
   if (channel) {
-    channel->GetContentCharset(charsetCandidate);
+    channel->GetContentCharset(aCharset);
   }
 
   result = NS_ERROR_NOT_AVAILABLE;
-  if (! charsetCandidate.IsEmpty()) {
-#ifdef DEBUG_bzbarsky
-    fprintf(stderr, "Setting from HTTP to: %s\n", charsetCandidate.get());
-#endif
-    result = ResolveCharset(charsetCandidate, charset);
-  }
 
-  if (NS_FAILED(result)) {
-    //  We have no charset or the HTTP charset is not recognized.
+#ifdef DEBUG_bzbarsky
+  if (! aCharset.IsEmpty()) {
+    fprintf(stderr, "Setting from HTTP to: %s\n", aCharset.get());
+  }
+#endif
+
+  if (aCharset.IsEmpty()) {
+    //  We have no charset
     //  Try @charset rule
     result = GetCharsetFromData((const unsigned char*)aData,
-                                aDataLength, charsetCandidate);
-    if (NS_SUCCEEDED(result)) {
+                                aDataLength, aCharset);
 #ifdef DEBUG_bzbarsky
+    if (NS_SUCCEEDED(result)) {
       fprintf(stderr, "Setting from @charset rule: %s\n",
-              charsetCandidate.get());
-#endif
-      result = ResolveCharset(charsetCandidate, charset);
+              aCharset.get());
     }
+#endif
   }
 
-  if (NS_FAILED(result)) {
+  if (aCharset.IsEmpty()) {
     // Now try the charset on the <link> or processing instruction
     // that loaded us
     if (mOwningElement) {
       nsAutoString elementCharset;
       mOwningElement->GetCharset(elementCharset);
-      CopyUCS2toASCII(elementCharset, charsetCandidate);
-      if (! charsetCandidate.IsEmpty()) {
+      CopyUCS2toASCII(elementCharset, aCharset);
 #ifdef DEBUG_bzbarsky
+      if (! aCharset.IsEmpty()) {
         fprintf(stderr, "Setting from property on element: %s\n",
-                charsetCandidate.get());
-#endif
-        result = ResolveCharset(charsetCandidate, charset);
+                aCharset.get());
       }
+#endif
     }
   }
 
-  if (NS_FAILED(result) && mLoader->mDocument) {
+  if (aCharset.IsEmpty() && mLoader->mDocument) {
     // no useful data on charset.  Try the document charset.
     // That needs no resolution, since it's already fully resolved
-    mLoader->mDocument->GetDocumentCharacterSet(charset);
+    mLoader->mDocument->GetDocumentCharacterSet(aCharset);
 #ifdef DEBUG_bzbarsky
     fprintf(stderr, "Set from document: %s\n",
-            charset.get());
+            aCharset.get());
 #endif
   }      
 
-  if (charset.IsEmpty()) {
+  if (aCharset.IsEmpty()) {
     NS_WARNING("Unable to determine charset for sheet, using ISO-8859-1!");
-    charset = NS_LITERAL_CSTRING("ISO-8859-1");
+    aCharset = NS_LITERAL_CSTRING("ISO-8859-1");
   }
   
-  aCharset = charset;
   return NS_OK;
 }
 
