@@ -75,11 +75,7 @@ my $dotweak = $::FORM{'tweak'} ? 1 : 0;
 # Log the user in
 if ($dotweak) {
     confirm_login();
-    if (!UserInGroup("editbugs")) {
-        DisplayError("Sorry, you do not have sufficient privileges to edit
-                      multiple bugs.");
-        exit;
-    }
+    UserInGroup("editbugs") || ThrowUserError("insufficient_perms_for_multi");
     GetVersionTable();
 }
 else {
@@ -120,12 +116,8 @@ my $order_from_cookie = 0;  # True if $order set using $::COOKIE{'LASTORDER'}
 # If the user is retrieving the last bug list they looked at, hack the buffer
 # storing the query string so that it looks like a query retrieving those bugs.
 if ($::FORM{'regetlastlist'}) {
-    if (!$::COOKIE{'BUGLIST'}) {
-        DisplayError(qq|Sorry, I seem to have lost the cookie that recorded
-                        the results of your last query.  You will have to start
-                        over at the <a href="query.cgi">query page</a>.|);
-        exit;
-    }
+    $::COOKIE{'BUGLIST'} || ThrowUserError("missing_cookie");
+
     $::FORM{'bug_id'} = join(",", split(/:/, $::COOKIE{'BUGLIST'}));
     $order = "reuse last sort" unless $order;
     $::buffer = "bug_id=$::FORM{'bug_id'}&order=" . url_quote($order);
@@ -186,11 +178,7 @@ sub LookupNamedQuery {
     my $qname = SqlQuote($name);
     SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
     my $result = FetchOneColumn();
-    if (!$result) {
-        my $qname = html_quote($name);
-        DisplayError("The query named <em>$qname</em> seems to no longer exist.");
-        exit;
-    }
+    $result || ThrowUserError("missing_query", {'queryname' => '$name'});
     return $result;
 }
 
@@ -305,13 +293,8 @@ elsif ($::FORM{'cmdtype'} eq "doit" && $::FORM{'remember'}) {
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
 
         my $name = trim($::FORM{'newqueryname'});
-        $name
-          || DisplayError("You must enter a name for your query.")
-            && exit;
-        $name =~ /[<>&]/
-          && DisplayError("The name of your query cannot contain any
-                           of the following characters: &lt;, &gt;, &amp;.")
-            && exit;
+        $name || ThrowUserError("query_name_missing");
+        $name !~ /[<>&]/ || ThrowUserError("illegal_query_name");
         my $qname = SqlQuote($name);
 
         $::buffer =~ s/[\&\?]cmdtype=[a-z]+//;
@@ -507,18 +490,15 @@ if ($order) {
                 # Accept an order fragment matching a column name, with
                 # asc|desc optionally following (to specify the direction)
                 if (!grep($fragment =~ /^\Q$_\E(\s+(asc|desc))?$/, @columnnames)) {
-                    my $qfragment = html_quote($fragment);
-                    my $error = "The custom sort order you specified in your "
-                              . "form submission contains an invalid column "
-                              . "name <em>$qfragment</em>.";
+                    $vars->{'fragment'} = $fragment;
                     if ($order_from_cookie) {
                         my $cookiepath = Param("cookiepath");
                         print "Set-Cookie: LASTORDER= ; path=$cookiepath; expires=Sun, 30-Jun-80 00:00:00 GMT\n";
-                        $error =~ s/form submission/cookie/;
-                        $error .= "  The cookie has been cleared.";
+                        ThrowCodeError("invalid_column_name_cookie");
                     }
-                    DisplayError($error);
-                    exit;
+                    else {
+                        ThrowCodeError("invalid_column_name_form");
+                    }
                 }
             }
             # Now that we have checked that all columns in the order are valid,

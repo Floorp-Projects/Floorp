@@ -81,7 +81,17 @@
 
   [% ELSIF error == "attachment_access_denied" %]
     [% title = "Access Denied" %]
-    You are not permitted access to this attachment.
+    You are not authorized to access this attachment.
+    
+  [% ELSIF error == "bug_access_denied" %]
+    [% title = "Access Denied" %]
+    You are not authorized to access bug #[% bug_id %].
+
+  [% ELSIF error == "bug_access_query" %]
+    [% title = "Access Denied" %]
+    You are not authorized to access bug #[% bug_id %]. To see this bug, you
+    must first <a href="show_bug.cgi?id=[% bug_id %]&amp;GoAheadAndLogIn=1">log
+    in to an account</a> with the appropriate permissions.
     
   [% ELSIF error == "buglist_parameters_required" %]
     [% title = "Parameters Required" %]
@@ -97,6 +107,10 @@
     [% title = "Comment Required" %]
     You have to specify a <b>comment</b> on this change.  
     Please give some words on the reason for your change.
+
+  [% ELSIF error == "comment_too_long" %]
+    [% title = "Comment Too Long" %]
+    Comments cannot be longer than 65,535 characters.
 
   [% ELSIF error == "dependency_loop_multi" %]
     [% title = "Dependency Loop Detected" %]
@@ -192,10 +206,37 @@
     [% title = "Your Query Makes No Sense" %]
      The only legal values for the <em>Attachment is obsolete</em> field are
      0 and 1.
-         
+
+  [% ELSIF error == "illegal_query_name" %]
+    [% title = "Illegal Query Name" %]
+    The name of your query cannot contain any of the following characters: 
+    &lt;, &gt;, &amp;.
+
+  [% ELSIF error == "insufficient_privs_for_multi" %]
+    [% title = "Insufficient Privileges" %]
+    Sorry, you do not have sufficient privileges to edit multiple bugs.
+    
   [% ELSIF error == "invalid_attach_id" %]
     [% title = "Invalid Attachment ID" %]
     The attachment id [% attach_id FILTER html %] is invalid.
+
+  [% ELSIF error == "invalid_bug_id" %]
+    [% title = "Invalid Bug ID" %]
+    The bug id [% bug_id FILTER html %] is invalid.
+
+  [% ELSIF error == "invalid_bug_id_non_existent" %]
+    [% title = "Invalid Bug ID" %]
+    Bug #[% bug_id %] does not exist.
+    
+  [% ELSIF error == "invalid_bug_id_or_alias" %]
+    [% title = "Invalid Bug ID" %]
+    The 'bug number' <em>[% bug_id FILTER html %]</em> is invalid.     
+    [% IF Param("usebugaliases") %]
+      It is neither a bug number nor an alias to a bug number.
+    [% END %]
+    If you are trying to use QuickSearch, you need to enable JavaScript 
+    in your browser. To help us fix this limitation, add your comments to 
+    <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=70907">bug 70907</a>.
 
   [% ELSIF error == "invalid_content_type" %]
     [% title = "Invalid Content-Type" %]
@@ -204,10 +245,6 @@
     is either <em>application, audio, image, message, model, multipart, 
     text,</em> or <em>video</em>.
     
-  [% ELSIF error == "invalid_bug_id" %]
-    [% title = "Invalid Bug ID" %]
-    The bug id [% bug_id FILTER html %] is invalid.
-
   [% ELSIF error == "invalid_product_name" %]
     [% title = "Invalid Product Name" %]
     The product name '[% product FILTER html %]' is invalid or does not exist.
@@ -217,6 +254,10 @@
     The name <tt>[% name FILTER html %]</tt> is not a valid username.  
     Either you misspelled it, or the person has not
     registered for a Bugzilla account.
+
+  [% ELSIF error == "invalid_username_or_password" %]
+    [% title = "Invalid Username Or Password" %]
+    The username or password you entered is not valid.
                     
   [% ELSIF error == "milestone_required" %]
     [% title = "Milestone Required" %]
@@ -240,11 +281,22 @@
     either <em>auto-detect</em>, <em>select from list</em>, or <em>enter 
     manually</em>.
         
+  [% ELSIF error == "missing_cookie" %]
+    [% title = "Missing Cookie" %]
+    Sorry, I seem to have lost the cookie that recorded
+    the results of your last search. I'm afraid you will have to start
+    again on the <a href="query.cgi">search page</a>.
+          
   [% ELSIF error == "missing_email_type" %]
     [% title = "Your Query Makes No Sense" %]
     You must specify one or more fields in which to search for
     <tt>[% email %]</tt>.
     
+  [% ELSIF error == "missing_query" %]
+    [% title = "Missing Query" %]
+    The query named <em>[% queryname FILTER html %]</em> seems to no longer
+    exist.
+        
   [% ELSIF error == "need_component" %]
     [% title = "Component Required" %]
     You must specify a component to help determine the new owner of these bugs.                            
@@ -291,6 +343,10 @@
     The file you are trying to attach is [% filesize %] kilobytes (KB) in size.
     Patches cannot be more than [% Param('maxpatchsize') %] KB in size.
     Try breaking your patch into several pieces.  
+
+  [% ELSIF error == "query_name_missing" %]
+    [% title = "No Query Name Specified" %]
+    You must enter a name for your query.
 
   [% ELSIF error == "reassign_to_empty" %]
     [% title = "Illegal Reassignment" %]

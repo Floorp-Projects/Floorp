@@ -270,19 +270,7 @@ sub ValidateBugID {
     my $alias = $id;
     if (!detaint_natural($id)) {
         $id = BugAliasToID($alias);
-        if (!$id) {
-            my $html_id = html_quote($_[0]);
-            my $alias_specific_message = Param("usebugaliases") ? 
-              " (it is neither a bug number nor an alias to a bug number)" : "";
-            DisplayError(qq|
-              The bug number <em>$html_id</em> is invalid$alias_specific_message.
-              If you are trying to use QuickSearch, you need to enable JavaScript 
-              in your browser. To help us fix this limitation, add your comments 
-              to <a href="http://bugzilla.mozilla.org/show_bug.cgi?id=70907">bug 
-              70907</a>.
-            |);
-            exit;
-        }
+        $id || ThrowUserError("invalid_bug_id_or_alias", {'bug_id' => $id});
     }
     
     # Modify the calling code's original variable to contain the trimmed,
@@ -293,8 +281,7 @@ sub ValidateBugID {
     SendSQL("SELECT bug_id FROM bugs WHERE bug_id = $id");
 
     FetchOneColumn()
-      || DisplayError("Bug #$id does not exist.")
-        && exit;
+      || ThrowUserError("invalid_bug_id_non_existent", {'bug_id' => $id});
 
     return if $skip_authorization;
     
@@ -305,16 +292,10 @@ sub ValidateBugID {
     # The error the user sees depends on whether or not they are logged in
     # (i.e. $::userid contains the user's positive integer ID).
     if ($::userid) {
-        DisplayError("You are not authorized to access bug #$id.");
+        ThrowUserError("bug_access_denied", {'bug_id' => $id});
     } else {
-        DisplayError(
-          qq|You are not authorized to access bug #$id.  To see this bug, you
-          must first <a href="show_bug.cgi?id=$id&amp;GoAheadAndLogIn=1">log in 
-          to an account</a> with the appropriate permissions.|
-        );
+        ThrowUserError("bug_access_query", {'bug_id' => $id});
     }
-    exit;
-
 }
 
 sub ValidateComment {
@@ -323,8 +304,7 @@ sub ValidateComment {
     my ($comment) = @_;
     
     if (defined($comment) && length($comment) > 65535) {
-        DisplayError("Comments cannot be longer than 65,535 characters.");
-        exit;
+        ThrowUserError("comment_too_long");
     }
 }
 
@@ -573,9 +553,7 @@ sub confirm_login {
 
         # Make sure the user exists or throw an error (but do not admit it was a username
         # error to make it harder for a cracker to find account names by brute force).
-        $userid
-          || DisplayError("The username or password you entered is not valid.")
-          && exit;
+        $userid || ThrowUserError("invalid_username_or_password");
 
         # If this is a new user, generate a password, insert a record
         # into the database, and email their password to them.
@@ -605,8 +583,7 @@ sub confirm_login {
 
             # Make sure the passwords match or throw an error.
             ($enteredCryptedPassword eq $realcryptpwd)
-              || DisplayError("The username or password you entered is not valid.")
-              && exit;
+              || ThrowUserError("invalid_username_or_password");
 
             # If the user has successfully logged in, delete any password tokens
             # lying around in the system for them.

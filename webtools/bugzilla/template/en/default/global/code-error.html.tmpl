@@ -73,6 +73,17 @@
      The attachment number of one of the attachments you wanted to obsolete,
      [% attach_id FILTER html %], is invalid.
           
+  [% ELSIF error == "invalid_column_name_cookie" %]
+    [% title = "Invalid Column Name" %]
+     The custom sort order specified in your cookie contains an invalid
+     column name <em>[% fragment FILTER html %]</em>. 
+     The cookie has been cleared.
+         
+  [% ELSIF error == "invalid_column_name_form" %]
+    [% title = "Invalid Column Name" %]
+     The custom sort order specified in your form submission contains an
+     invalid column name <em>[% fragment FILTER html %]</em>.
+         
   [% ELSIF error == "mismatched_bug_ids_on_obsolete" %]
     Attachment [% attach_id FILTER html %] ([% description FILTER html %]) 
     is attached to bug [% attach_bug_id FILTER html %], but you tried to 
