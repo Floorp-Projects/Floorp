@@ -103,22 +103,6 @@ void nsGtkWidget_InitNSKeyEvent(int aEventType, nsKeyEvent& aKeyEvent,
 // Input keysym is in gtk format; output is in NS_VK format
 int nsConvertKey(int keysym)
 {
-  // First, try to handle alphanumeric input, not listed in nsKeycodes:
-  if (keysym >= GDK_a && keysym <= GDK_z)
-    return keysym - GDK_a + NS_VK_A;
-
-  if (keysym >= GDK_A && keysym <= GDK_Z)
-    return keysym - GDK_A + NS_VK_A;
-
-  if (keysym >= GDK_0 && keysym <= GDK_9)
-    return keysym - GDK_0 + NS_VK_0;
-
-  if (keysym >= GDK_KP_0 && keysym <= GDK_KP_9)
-    return keysym - GDK_KP_0 + NS_VK_NUMPAD0;
-
-  if (keysym >= GDK_F1 && keysym <= GDK_F24)
-    return keysym - GDK_F1 + NS_VK_F1;
-
   int i;
   int length = sizeof(nsKeycodes) / sizeof(struct nsKeyConverter);
   for (i = 0; i < length; i++) {
@@ -126,7 +110,7 @@ int nsConvertKey(int keysym)
       return(nsKeycodes[i].vkCode);
   }
 
-  return((int)keysym);
+  return((int)0);
 }
 
 //==============================================================
@@ -305,11 +289,11 @@ void InitKeyEvent(GdkEventKey *aGEK,
 
   if (aGEK != NULL) {
     anEvent.keyCode = nsConvertKey(aGEK->keyval) & 0x00FF;
+    anEvent.charCode = aGEK->keyval;
     anEvent.time = aGEK->time;
     anEvent.isShift = (aGEK->state & GDK_SHIFT_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isControl = (aGEK->state & GDK_CONTROL_MASK) ? PR_TRUE : PR_FALSE;
     anEvent.isAlt = (aGEK->state & GDK_MOD1_MASK) ? PR_TRUE : PR_FALSE;
-    anEvent.time = aGEK->time;
     anEvent.point.x = 0;
     anEvent.point.y = 0;
   }
@@ -734,6 +718,12 @@ void handle_scrollbar_value_changed(GtkAdjustment *adj, gpointer p)
 //==============================================================
 gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 {
+  // Don't pass shift, control and alt as key release events
+  if (event->state & GDK_SHIFT_MASK
+      || event->state & GDK_CONTROL_MASK
+      || event->state & GDK_MOD1_MASK)
+    return PR_FALSE;
+
   nsKeyEvent kevent;
   InitKeyEvent(event, p, kevent, NS_KEY_UP);
 
@@ -746,6 +736,12 @@ gint handle_key_release_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 //==============================================================
 gint handle_key_press_event(GtkWidget *w, GdkEventKey* event, gpointer p)
 {
+  // Don't pass shift, control and alt as key press events
+  if (event->state & GDK_SHIFT_MASK
+      || event->state & GDK_CONTROL_MASK
+      || event->state & GDK_MOD1_MASK)
+    return PR_FALSE;
+
   nsKeyEvent kevent;
   InitKeyEvent(event, p, kevent, NS_KEY_DOWN);
 
