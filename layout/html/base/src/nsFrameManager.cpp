@@ -2217,10 +2217,20 @@ FrameManager::GenerateStateKey(nsIContent* aContent,
       nsCOMPtr<nsIContent> formContent(do_QueryInterface(formElement));
       mHTMLForms->IndexOf(formContent, index, PR_FALSE);
       if (index <= -1) {
-        PRUint32 formsLength;
-        // Assume the form index is going to be added to the form content next
-        mHTMLForms->GetLength(&formsLength, PR_FALSE);
-        index = (PRInt32)formsLength;
+        //
+        // XXX HACK this uses some state that was dumped into the document
+        // specifically to fix bug 138892.  What we are trying to do is *guess*
+        // which form this control's state is found in, with the highly likely
+        // guess that the highest form parsed so far is the one.
+        // This code should not be on trunk, only branch.
+        //
+        nsCOMPtr<nsIDocument> doc;
+        formContent->GetDocument(*getter_AddRefs(doc));
+        nsCOMPtr<nsIHTMLDocument> htmlDoc = do_QueryInterface(doc);
+        if (htmlDoc) {
+          htmlDoc->GetNumFormsSynchronous(&index);
+          index--;
+        }
       }
       if (index > -1) {
         KeyAppendInt(index, aKey);

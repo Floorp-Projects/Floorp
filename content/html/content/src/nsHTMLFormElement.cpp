@@ -161,6 +161,8 @@ public:
   NS_IMETHOD HandleDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent,
                             nsIDOMEvent** aDOMEvent, PRUint32 aFlags,
                             nsEventStatus* aEventStatus);
+  NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                         PRBool aCompileEventHandlers);
 
 protected:
   nsresult DoSubmitOrReset(nsIPresContext* aPresContext,
@@ -593,6 +595,28 @@ nsHTMLFormElement::AttributeToString(nsIAtom* aAttribute,
   return nsGenericHTMLContainerElement::AttributeToString(aAttribute,
                                                           aValue, aResult);
 }
+
+NS_IMETHODIMP
+nsHTMLFormElement::SetDocument(nsIDocument* aDocument, PRBool aDeep,
+                               PRBool aCompileEventHandlers)
+{
+  nsCOMPtr<nsIHTMLDocument> oldDocument = do_QueryInterface(mDocument);
+  nsresult rv = nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                                           aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  nsCOMPtr<nsIHTMLDocument> newDocument = do_QueryInterface(mDocument);
+  if (oldDocument != newDocument) {
+    if (oldDocument) {
+      oldDocument->RemovedForm();
+    }
+    if (newDocument) {
+      newDocument->AddedForm();
+    }
+  }
+  return rv;
+}
+
 
 NS_IMETHODIMP
 nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
