@@ -34,7 +34,7 @@
 /*
  * Test program for SDR (Secret Decoder Ring) functions.
  *
- * $Id: shlibsign.c,v 1.3 2003/02/04 23:39:15 relyea%netscape.com Exp $
+ * $Id: shlibsign.c,v 1.4 2003/02/05 00:29:35 relyea%netscape.com Exp $
  */
 
 #ifdef XP_UNIX
@@ -52,16 +52,14 @@
 #include "pk11sdr.h"
 #include "secrng.h"
 #include "shsign.h"
+#include "pk11pqg.h"
 
 #ifdef USES_LINKS
 #include "libgen.h"
 #include "unistd.h"
+#include "sys/param.h"
 #include "sys/types.h"
 #include "sys/stat.h"
-
-#ifndef MAXPATHLEN
-#define MAXPATHLEN 1024
-#endif
 #endif
 
 static void
@@ -159,7 +157,7 @@ main (int argc, char **argv)
 #ifdef USES_LINKS
     int ret;
     struct stat stat_buf;
-    char link_buf[MAXPATHLEN];
+    char link_buf[MAXPATHLEN+1];
     char *link_file = NULL;
 #endif
 
@@ -262,7 +260,7 @@ main (int argc, char **argv)
     }
     if (S_ISLNK(stat_buf.st_mode)) {
 	char *path,*dirpath;
-	ret = readlink(input_file, link_buf, sizeof(link_buf));
+	ret = readlink(input_file, link_buf, sizeof(link_buf) - 1);
 	if (ret < 0) {
 	   perror(input_file);
 	   goto loser;

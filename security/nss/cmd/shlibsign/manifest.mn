@@ -55,4 +55,6 @@ REQUIRES = dbm seccmd
 
 PROGRAM = shlibsign
 
+DIRS = mangle
+
 #USE_STATIC_LIBS = 1
