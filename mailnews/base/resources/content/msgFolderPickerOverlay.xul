@@ -1,4 +1,23 @@
 <?xml version="1.0"?>
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+-->
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/msgFolderPickerOverlay.dtd">
 
@@ -49,6 +68,7 @@
             </menupopup>
           </rule>
 	</template>
+	<menupopup />
 	</menu>
 
 	<menu class="push" value="&newfolderclickhere.label;" uri="" id="msgNewFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
@@ -98,6 +118,7 @@
             </menupopup>
           </rule>
 	</template>
+	<menupopup />
 	</menu>
 
 	<menu class="push" value="&renamefolderclickhere.label;" uri="" id="msgRenameFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
@@ -161,6 +182,7 @@
             </menupopup>
           </rule>
 	</template>
+	<menupopup />
 	</menu>
 
 	<menu class="push" value="&filemessagesclickhere.label;" uri="" id="msgFccFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
@@ -213,7 +235,9 @@
             </menupopup>
           </rule>
 	</template>
+	<menupopup />
 	</menu>
+
 	<menu class="push" value="&filemessagesclickhere.label;" uri="" id="msgDraftsFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
 		ref="msgaccounts:/">
         <template>
@@ -264,7 +288,9 @@
             </menupopup>
           </rule>
 	</template>
+	<menupopup />
 	</menu>
+
 	<menu class="push" value="&filemessagesclickhere.label;" uri="" id="msgStationeryFolderPicker" datasources="rdf:msgaccountmanager rdf:mailnewsfolders" rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild"
 		ref="msgaccounts:/">
         <template>
@@ -315,5 +341,6 @@
             </menupopup>
           </rule>
 	</template>
+	<menupopup />
 	</menu>
 </overlay>
