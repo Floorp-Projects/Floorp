@@ -23,6 +23,9 @@
 #include "nsIPresContext.h"
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
+#include "nsIPtr.h"
+
+NS_DEF_PTR(nsIStyleContext);
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
@@ -215,21 +218,42 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
   if (nsnull != mAttributes) {
     nsHTMLValue value;
+    nsStyleText* textStyle = nsnull;
 
     // align: enum
     GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) 
     {
-      nsStyleText* text = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      text->mTextAlign = value.GetIntValue();
+      textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mTextAlign = value.GetIntValue();
     }
     
     // valign: enum
     GetAttribute(nsHTMLAtoms::valign, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) 
     {
-      nsStyleText* text = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      text->mTextAlign = value.GetIntValue();
+      if (nsnull==textStyle)
+        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+    }
+    // otherwise check the row for valign and inherit it
+    else {
+      if (nsnull!=mRow)
+      {
+        // TODO: optimize by putting a flag on the row to say whether valign attr is set
+        nsHTMLValue rowAlignValue;
+        mRow->GetAttribute(nsHTMLAtoms::valign, rowAlignValue);
+        if (rowAlignValue.GetUnit() == eHTMLUnit_Enumerated)
+        {
+          PRUint8 rowVAlign = rowAlignValue.GetIntValue();
+          if (NS_STYLE_VERTICAL_ALIGN_MIDDLE!=rowVAlign)
+          {
+            if (nsnull==textStyle)
+              textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+            textStyle->mVerticalAlign.SetIntValue(rowVAlign, eStyleUnit_Enumerated);
+          }
+        }
+      }
     }
 
     MapBackgroundAttributesInto(aContext, aPresContext);
@@ -238,8 +262,9 @@ void nsTableCell::MapAttributesInto(nsIStyleContext* aContext,
     GetAttribute(nsHTMLAtoms::nowrap, value);
     if (value.GetUnit() == eHTMLUnit_Empty)
     {
-      nsStyleText* text = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
-      text->mWhiteSpace = NS_STYLE_WHITESPACE_NOWRAP;
+      if (nsnull==textStyle)
+        textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      textStyle->mWhiteSpace = NS_STYLE_WHITESPACE_NOWRAP;
     }
 
     // width: pixel
