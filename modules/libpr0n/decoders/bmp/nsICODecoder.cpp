@@ -64,43 +64,6 @@ NS_IMPL_ISUPPORTS1(nsICODecoder, imgIDecoder)
 // Actual Data Processing
 // ----------------------------------------
 
-inline nsresult nsICODecoder::SetPixel(PRUint8*& aDecoded, PRUint8 idx) {
-  PRUint8 red, green, blue;
-  red = mColors[idx].red;
-  green = mColors[idx].green;
-  blue = mColors[idx].blue;
-  return SetPixel(aDecoded, red, green, blue);
-}
-
-inline nsresult nsICODecoder::SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue) {
-#if defined(XP_MAC) || defined(XP_MACOSX)
-  *aDecoded++ = 0; // Mac needs this padding byte
-#endif
-#ifdef USE_RGBA1
- *aDecoded++ = aRed;
- *aDecoded++ = aGreen;
- *aDecoded++ = aBlue;
-#else
- *aDecoded++ = aBlue;
- *aDecoded++ = aGreen;
- *aDecoded++ = aRed;
-#endif
-  return NS_OK;
-}
-
-inline nsresult nsICODecoder::Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData, PRUint32& aPos)
-{
-  PRUint8 idx = aData >> 4;
-  nsresult rv = SetPixel(aDecoded, idx);
-  if ((++aPos >= mDirEntry.mWidth) || NS_FAILED(rv))
-      return rv;
-
-  idx = aData & 0xF;
-  rv = SetPixel(aDecoded, idx);
-  ++aPos;
-  return rv;
-}
-
 inline nsresult nsICODecoder::SetImageData()
 {
   PRUint32 bpr;
@@ -383,7 +346,7 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
                       if (lpos >= mDirEntry.mWidth)
                           break;
                       idx = (*p >> bit) & 1;
-                      SetPixel(d, idx);
+                      SetPixel(d, idx, mColors);
                       ++lpos;
                   }
                   ++p;
@@ -391,13 +354,13 @@ nsresult nsICODecoder::ProcessData(const char* aBuffer, PRUint32 aCount) {
                 break;
               case 4:
                 while (lpos < mDirEntry.mWidth) {
-                  Set4BitPixel(d, *p, lpos);
+                  Set4BitPixel(d, *p, lpos, mDirEntry.mWidth, mColors);
                   ++p;
                 }
                 break;
               case 8:
                 while (lpos < mDirEntry.mWidth) {
-                  SetPixel(d, *p);
+                  SetPixel(d, *p, mColors);
                   ++lpos;
                   ++p;
                 }
