@@ -18,6 +18,7 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
+#include <stdio.h>
 #include "nsEditorAppCore.h"
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
@@ -82,9 +83,12 @@
 #include "nsWidgetsCID.h"
 #include "nsIClipboard.h"
 #include "nsITransferable.h"
+#include "nsIDataFlavor.h"
+#include "nsISupportsArray.h"
 
 // Drag & Drop, Clipboard Support
 static NS_DEFINE_IID(kIClipboardIID,    NS_ICLIPBOARD_IID);
+static NS_DEFINE_IID(kIDataFlavorIID,   NS_IDATAFLAVOR_IID);
 static NS_DEFINE_CID(kCClipboardCID,    NS_CLIPBOARD_CID);
 #endif
 
@@ -471,12 +475,217 @@ nsEditorAppCore::Paste()
   return NS_OK;
 }
 
+
+PRInt32
+newWindow(char* urlName) {
+  nsresult rv;
+  nsString controllerCID;
+
+  char *  urlstr=nsnull;
+  char *   progname = nsnull;
+  char *   width=nsnull, *height=nsnull;
+  char *  iconic_state=nsnull;
+
+  nsIAppShellService* appShell = nsnull;
+  urlstr = urlName;
+
+  /*
+   * Create the Application Shell instance...
+   */
+  rv = nsServiceManager::GetService(kAppShellServiceCID,
+                                    kIAppShellServiceIID,
+                                    (nsISupports**)&appShell);
+  if (!NS_SUCCEEDED(rv)) {
+    goto done;
+  }
+
+  /*
+   * Post an event to the shell instance to load the AppShell 
+   * initialization routines...  
+   * 
+   * This allows the application to enter its event loop before having to 
+   * deal with GUI initialization...
+   */
+  ///write me...
+  nsIURL* url;
+  nsIWebShellWindow* newWindow;
+  
+  rv = NS_NewURL(&url, urlstr);
+  if (NS_FAILED(rv)) {
+    goto done;
+  }
+
+  /*
+   * XXX: Currently, the CID for the "controller" is passed in as an argument 
+   *      to CreateTopLevelWindow(...).  Once XUL supports "controller" 
+   *      components this will be specified in the XUL description...
+   */
+  controllerCID = "43147b80-8a39-11d2-9938-0080c7cb1081";
+  appShell->CreateTopLevelWindow(nsnull, url, controllerCID, newWindow,
+              nsnull, nsnull, 615, 650);
+
+  NS_RELEASE(url);
+  
+done:
+  /* Release the shell... */
+  if (nsnull != appShell) {
+    nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
+  }
+
+  return NS_OK;
+}
+
+/**
+  * 
+  * 
+ */
+void GenerateBarItem(FILE * fd, char * aFileName, const nsString & aDesc, void * aData, PRUint32 aLen) 
+{
+	fprintf(fd, "<titledbutton src=\"resource:/res/toolbar/TB_PersonalIcon.gif\" align=\"right\" value=");
+  fprintf(fd, "\"%s\"", aDesc.ToNewCString());
+  fprintf(fd, " onclick=\"LoadURL('%s')\"/>\n", aFileName);
+
+  char name[256];
+  sprintf(name, "res/samples/%s", aFileName);
+  FILE * clipFD = fopen(name, "w");
+  if (clipFD) {
+    char * str = (char *)aData;
+    PRUint32 i;
+    for (i=0;i<aLen;i++) {
+      fprintf(clipFD, "%c", (str[i] == 0?' ':str[i]));
+    }
+    fflush(clipFD);
+    fclose(clipFD);
+  }
+
+}
+
 NS_IMETHODIMP    
 nsEditorAppCore::SelectAll()
 {  
   if (mEditor) {
     mEditor->SelectAll();
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsEditorAppCore::ShowClipboard()
+{  
+
+#ifdef NEW_CLIPBOARD_SUPPORT
+  nsIClipboard* clipboard;
+  nsresult rvv = nsServiceManager::GetService(kCClipboardCID,
+                                             kIClipboardIID,
+                                             (nsISupports **)&clipboard);
+  FILE * fd = fopen("res/samples/ClipboardViewer.xul", "w");
+  fprintf(fd, "<?xml version=\"1.0\"?> \n");
+  fprintf(fd, "<?xml-stylesheet href=\"xul.css\" type=\"text/css\"?> \n"); 
+  fprintf(fd, "<!DOCTYPE window> \n"); 
+  fprintf(fd, "<window xmlns:html=\"http://www.w3.org/TR/REC-html40\"\n");
+  fprintf(fd, "        xmlns=\"http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul\"\n");
+  fprintf(fd, "        onload=\"Startup()\"> \n"); 
+  fprintf(fd, "  <html:script> \n");
+  fprintf(fd, "  function Startup() {\n");
+  fprintf(fd, "    appCore = XPAppCoresManager.Find(\"BrowserAppCore\");  \n");
+  fprintf(fd, "    if (appCore == null) {\n");
+  fprintf(fd, "      appCore = new BrowserAppCore();\n");
+  fprintf(fd, "      if (appCore != null) {\n");
+  fprintf(fd, "        appCore.Init(\"BrowserAppCore\");\n");
+  fprintf(fd, "	      appCore.setContentWindow(window.frames[0]);\n");
+  fprintf(fd, "	      appCore.setWebShellWindow(window);\n");
+  fprintf(fd, "	      appCore.setToolbarWindow(window);\n");
+  fprintf(fd, "        XPAppCoresManager.Add(appCore);  \n");
+  fprintf(fd, "      }\n");
+  fprintf(fd, "    }\n");
+  fprintf(fd, "  }\n");
+  fprintf(fd, "  function LoadURL(url) {\n");
+  fprintf(fd, "    appCore = XPAppCoresManager.Find(\"BrowserAppCore\");  \n");
+  fprintf(fd, "    appCore.loadUrl(\"resource:/res/samples/\"+url);\n");
+  fprintf(fd, "  }\n");
+  fprintf(fd, "  function Exit() {\n");
+  fprintf(fd, "    appCore = XPAppCoresManager.Find(\"BrowserAppCore\");  \n");
+  fprintf(fd, "    if (appCore != null) {\n");
+  fprintf(fd, "      appCore.close();\n");
+  fprintf(fd, "    }\n");
+  fprintf(fd, "  }\n");
+  fprintf(fd, "  </html:script>\n");
+  fprintf(fd, "  <toolbox>\n");
+  fprintf(fd, "	  <toolbar id=\"tests\">\n");
+  fprintf(fd, "	  <titledbutton src=\"resource:/res/toolbar/TB_NewStop.gif\" align=\"right\" value=\"Exit\" onclick=\"Exit()\"/>\n");
+
+  char firstPage[256];
+  strcpy(firstPage, "test0.html");
+
+  if (NS_OK == rvv) {
+    nsITransferable * trans;
+    clipboard->GetData(trans);
+    if (nsnull != trans) {
+
+      // Get the transferable list of data flavors
+      nsISupportsArray * dfList;
+      trans->GetTransferDataFlavors(&dfList);
+
+      // Walk through flavors and see which flavor is on the clipboard them on the native clipboard,
+      PRUint32 i;
+      for (i=0;i<dfList->Count();i++) {
+        nsIDataFlavor * df;
+        nsISupports * supports = dfList->ElementAt(i);
+        if (NS_OK == supports->QueryInterface(kIDataFlavorIID, (void **)&df)) {
+          nsString mime;
+          df->GetMimeType(mime);
+
+          void   * data;
+          PRUint32 dataLen;
+
+          trans->GetTransferData(df, &data, &dataLen);
+          if (nsnull != data) {
+            char clipFileName[256];
+            sprintf(clipFileName, "clip%d.", i);
+            if (mime.Equals(kTextMime)) {
+              strcat(clipFileName, "txt");
+            } else if (mime.Equals(kHTMLMime)) {
+              // Generate html a "text" like in "view source"
+              char htmlsrc[256];
+              strcpy(htmlsrc, clipFileName);
+              strcat(htmlsrc, "txt");
+              GenerateBarItem(fd, htmlsrc, nsAutoString("HTML Src"), data, dataLen);
+              strcat(clipFileName, "html");
+            } else if (mime.Equals(kXIFMime)) {
+              strcat(clipFileName, "txt");
+            } else {
+              strcat(clipFileName, "txt");
+            }
+
+            if (i == 0) {
+              strcpy(firstPage, clipFileName);
+            }
+            nsAutoString desc;
+            df->GetHumanPresentableName(desc);
+            GenerateBarItem(fd, clipFileName, desc, data, dataLen);
+
+          }
+          NS_RELEASE(df);
+        }
+        NS_RELEASE(supports);
+      }
+      NS_RELEASE(trans);
+    }
+    NS_RELEASE(clipboard);
+  }
+  fprintf(fd, "	  </toolbar>\n");
+  fprintf(fd, "  </toolbox>\n");
+  fprintf(fd, "\n");
+
+  char name[256];
+  sprintf(name, "resource:/res/samples/%s", firstPage);
+  fprintf(fd, " <html:iframe html:name=\"content\" html:src=\"%s\" html:width=\"100%c\" html:height=\"500px\"></html:iframe>\n", name, '%');
+  fprintf(fd, "</window>\n");
+  fclose(fd);
+
+  newWindow("resource:/res/samples/ClipboardViewer.xul");
+
+#endif
 
   return NS_OK;
 }
@@ -564,7 +773,7 @@ nsEditorAppCore::Exit()
 
   if (NS_OK == rvv) {
     nsITransferable * trans;
-    clipboard->GetData(&trans);
+    clipboard->GetData(trans);
     if (nsnull != trans) {
       if (NS_OK == trans->IsLargeDataSet()) {
         // XXX A Dialog goes here to see if they want to "force" a copy 

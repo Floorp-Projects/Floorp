@@ -53,6 +53,8 @@ public:
 
   NS_IMETHOD    SelectAll()=0;
 
+  NS_IMETHOD    ShowClipboard()=0;
+
   NS_IMETHOD    InsertText(const nsString& aTextToInsert)=0;
 
   NS_IMETHOD    Exit()=0;
@@ -75,6 +77,7 @@ public:
   NS_IMETHOD    Copy();  \
   NS_IMETHOD    Paste();  \
   NS_IMETHOD    SelectAll();  \
+  NS_IMETHOD    ShowClipboard();  \
   NS_IMETHOD    InsertText(const nsString& aTextToInsert);  \
   NS_IMETHOD    Exit();  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
@@ -93,6 +96,7 @@ public:
   NS_IMETHOD    Copy() { return _to##Copy(); }  \
   NS_IMETHOD    Paste() { return _to##Paste(); }  \
   NS_IMETHOD    SelectAll() { return _to##SelectAll(); }  \
+  NS_IMETHOD    ShowClipboard() { return _to##ShowClipboard(); }  \
   NS_IMETHOD    InsertText(const nsString& aTextToInsert) { return _to##InsertText(aTextToInsert); }  \
   NS_IMETHOD    Exit() { return _to##Exit(); }  \
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to##SetToolbarWindow(aWin); }  \

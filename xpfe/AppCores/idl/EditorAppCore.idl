@@ -17,6 +17,8 @@ interface EditorAppCore : BaseAppCore
 	void paste();
 	
 	void selectAll();
+
+	void showClipboard();
 	
 	void insertText(in wstring textToInsert);
 	
