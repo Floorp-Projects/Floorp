@@ -16,14 +16,21 @@
  */
 
 HTML {
+  background: none;
+  background-image: none;
 }
 
 BODY {
-  background: rgb(255,255,255);	// XXX this needs to go away
+  background: white;
   cursor: arrow;
   display: block;
-  line-height: 1.1;	// XXX should this come from pres context?
-  padding: 8px;
+  line-height: 1.0;
+  margin: 8px;
+  overflow: auto;
+}
+
+FRAMESET {
+  overflow: hidden;
 }
 
 :BULLET {
