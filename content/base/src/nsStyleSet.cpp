@@ -91,7 +91,7 @@ struct nsRuleNodeList
   void Destroy() {
     if (mNext)
       mNext->Destroy();
-    mRuleNode->PresContext()->FreeToShell(sizeof(nsRuleNodeList), this);
+    mRuleNode->GetPresContext()->FreeToShell(sizeof(nsRuleNodeList), this);
   };
 
   nsRuleNode* mRuleNode;
@@ -1041,8 +1041,7 @@ StyleSetImpl::AddImportantRules(nsRuleNode* aCurrLevelNode,
 
   AddImportantRules(aCurrLevelNode->GetParent(), aLastPrevLevelNode);
 
-  nsCOMPtr<nsIStyleRule> rule;;
-  aCurrLevelNode->GetRule(getter_AddRefs(rule));
+  nsIStyleRule *rule = aCurrLevelNode->GetRule();
   nsCOMPtr<nsICSSStyleRule> cssRule(do_QueryInterface(rule));
   if (cssRule) {
     nsCOMPtr<nsIStyleRule> impRule = cssRule->GetImportantRule();
@@ -1518,8 +1517,7 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
     else {  // really a new parent
       nsCOMPtr<nsIAtom>  pseudoTag = aStyleContext->GetPseudoType();
 
-      nsRuleNode* ruleNode;
-      aStyleContext->GetRuleNode(&ruleNode);
+      nsRuleNode* ruleNode = aStyleContext->GetRuleNode();
       EnsureRuleWalker(aPresContext);
       NS_ENSURE_TRUE(mRuleWalker, nsnull);
       mRuleWalker->SetCurrentNode(ruleNode);

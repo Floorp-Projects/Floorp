@@ -102,7 +102,7 @@ public:
  */
 
 struct ChildrenHashEntry : public PLDHashEntryHdr {
-  // key (the rule) is |mRuleNode->Rule()|
+  // key (the rule) is |mRuleNode->GetRule()|
   nsRuleNode *mRuleNode;
 };
 
@@ -110,7 +110,7 @@ PR_STATIC_CALLBACK(const void *)
 ChildrenHashGetKey(PLDHashTable *table, PLDHashEntryHdr *hdr)
 {
   ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*, hdr);
-  return entry->mRuleNode->Rule();
+  return entry->mRuleNode->GetRule();
 }
 
 PR_STATIC_CALLBACK(PRBool)
@@ -119,7 +119,7 @@ ChildrenHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *hdr,
 {
   const ChildrenHashEntry *entry =
     NS_STATIC_CAST(const ChildrenHashEntry*, hdr);
-  return entry->mRuleNode->Rule() == key;
+  return entry->mRuleNode->GetRule() == key;
 }
 
 static PLDHashTableOps ChildrenHashOps = {
@@ -537,22 +537,6 @@ nsRuleNode::ConvertChildrenToHash()
   SetChildrenHash(hash);
 }
 
-nsresult
-nsRuleNode::PathContainsRule(nsIStyleRule* aRule, PRBool* aMatched)
-{
-  *aMatched = PR_FALSE;
-  nsRuleNode* ruleDest = this;
-  while (ruleDest) {
-    if (ruleDest->mRule == aRule) {
-      *aMatched = PR_TRUE;
-      break;
-    }
-    ruleDest = ruleDest->mParent;
-  }
-
-  return NS_OK;
-}
-
 PR_STATIC_CALLBACK(PLDHashOperator)
 ClearStyleDataHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                PRUint32 number, void *arg)
@@ -579,14 +563,6 @@ nsRuleNode::ClearStyleData()
     for (nsRuleList* curr = ChildrenList(); curr; curr = curr->mNext)
       curr->mRuleNode->ClearStyleData();
 
-  return NS_OK;
-}
-
-nsresult
-nsRuleNode::GetPresContext(nsIPresContext** aResult)
-{
-  *aResult = mPresContext;
-  NS_IF_ADDREF(*aResult);
   return NS_OK;
 }
 
@@ -1943,10 +1919,7 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
   PRBool dummy;
   PRUint32 noneBits;
   PRUint32 fontBit = nsCachedStyleData::GetBitForSID(eStyleStruct_Font);
-  nsRuleNode* ruleNode = nsnull;
   
-  nsCOMPtr<nsIStyleRule> rule;
-
   for (; i >= 0; --i) {
     nsStyleContext* context = (nsStyleContext*)contextPath[i];
     nsRuleDataFont fontData; // Declare a struct with null CSS values.
@@ -1954,17 +1927,15 @@ SetGenericFont(nsIPresContext* aPresContext, nsStyleContext* aContext,
     ruleData.mFontData = &fontData;
 
     // Trimmed down version of ::WalkRuleTree() to re-apply the style rules
-    context->GetRuleNode(&ruleNode);
-    while (ruleNode) {
+    for (nsRuleNode* ruleNode = context->GetRuleNode(); ruleNode;
+         ruleNode = ruleNode->GetParent()) {
       ruleNode->GetBits(nsRuleNode::eNoneBits, &noneBits);
       if (noneBits & fontBit) // no more font rules on this branch, get out
         break;
 
-      ruleNode->GetRule(getter_AddRefs(rule));
+      nsIStyleRule *rule = ruleNode->GetRule();
       if (rule)
         rule->MapRuleInfoInto(&ruleData);
-
-      ruleNode = ruleNode->GetParent();
     }
 
     // Compute the delta from the information that the rules specified

@@ -396,6 +396,11 @@ class nsIFrame : public nsISupports
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IFRAME_IID)
+
+  nsIPresContext* GetPresContext() {
+    return GetStyleContext()->GetRuleNode()->GetPresContext();
+  }
+
   /**
    * Called to initialize the frame. This is called immediately after creating
    * the frame.

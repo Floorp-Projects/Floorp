@@ -539,26 +539,15 @@ public:
 
   nsresult GetBits(PRInt32 aType, PRUint32* aResult);
   nsresult Transition(nsIStyleRule* aRule, nsRuleNode** aResult);
-  nsRuleNode* GetParent() { return mParent; }
-  PRBool IsRoot() { return mParent == nsnull; }
-  nsresult GetRule(nsIStyleRule** aResult)
-  {
-    *aResult = mRule;
-    NS_IF_ADDREF(*aResult);
-    return NS_OK;
-  }
-  nsIStyleRule* Rule() {
-    // NOTE:  Does not |AddRef|.
-    return mRule;
-  }
-  nsIPresContext* PresContext() {
-    // NOTE: Does not |AddRef|.
-    return mPresContext;
-  }
+  nsRuleNode* GetParent() const { return mParent; }
+  PRBool IsRoot() const { return mParent == nsnull; }
+
+  // NOTE:  Does not |AddRef|.
+  nsIStyleRule* GetRule() const { return mRule; }
+  // NOTE: Does not |AddRef|.
+  nsIPresContext* GetPresContext() const { return mPresContext; }
 
   nsresult ClearStyleData();
-  nsresult GetPresContext(nsIPresContext** aResult);
-  nsresult PathContainsRule(nsIStyleRule* aRule, PRBool* aMatched);
   const nsStyleStruct* GetStyleData(nsStyleStructID aSID, 
                                     nsStyleContext* aContext,
                                     PRBool aComputeData);

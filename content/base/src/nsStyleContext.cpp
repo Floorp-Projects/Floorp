@@ -92,7 +92,7 @@ nsStyleContext::~nsStyleContext()
 {
   NS_ASSERTION((nsnull == mChild) && (nsnull == mEmptyChild), "destructing context with children");
 
-  nsIPresContext *presContext = mRuleNode->PresContext();
+  nsIPresContext *presContext = mRuleNode->GetPresContext();
 
   nsCOMPtr<nsIPresShell> shell;
   presContext->GetShell(getter_AddRefs(shell));
@@ -347,14 +347,13 @@ nsStyleContext::SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct)
   char* resetOrInherit = NS_REINTERPRET_CAST(char*,
       *NS_REINTERPRET_CAST(void**, resetOrInheritSlot));
   if (!resetOrInherit) {
-    nsCOMPtr<nsIPresContext> presContext;
-    mRuleNode->GetPresContext(getter_AddRefs(presContext));
+    nsIPresContext *presContext = mRuleNode->GetPresContext();
     if (mCachedStyleData.IsReset(aSID)) {
-      mCachedStyleData.mResetData = new (presContext.get()) nsResetStyleData;
+      mCachedStyleData.mResetData = new (presContext) nsResetStyleData;
       resetOrInherit = NS_REINTERPRET_CAST(char*, mCachedStyleData.mResetData);
     } else {
       mCachedStyleData.mInheritedData =
-          new (presContext.get()) nsInheritedStyleData;
+          new (presContext) nsInheritedStyleData;
       resetOrInherit =
           NS_REINTERPRET_CAST(char*, mCachedStyleData.mInheritedData);
     }
@@ -553,8 +552,7 @@ void nsStyleContext::List(FILE* out, PRInt32 aIndent)
     fputs("{\n", out);
     nsRuleNode* ruleNode = mRuleNode;
     while (ruleNode) {
-      nsCOMPtr<nsIStyleRule> styleRule;
-      ruleNode->GetRule(getter_AddRefs(styleRule));
+      nsIStyleRule *styleRule = ruleNode->GetRule();
       if (styleRule) {
         styleRule->List(out, aIndent + 1);
       }
@@ -838,8 +836,7 @@ void
 nsStyleContext::Destroy()
 {
   // Get the pres context from our rule node.
-  nsCOMPtr<nsIPresContext> presContext;
-  mRuleNode->GetPresContext(getter_AddRefs(presContext));
+  nsCOMPtr<nsIPresContext> presContext = mRuleNode->GetPresContext();
 
   // Call our destructor.
   this->~nsStyleContext();

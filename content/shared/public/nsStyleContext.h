@@ -88,7 +88,7 @@ public:
 
   void SetStyle(nsStyleStructID aSID, nsStyleStruct* aStruct);
 
-  void GetRuleNode(nsRuleNode** aResult) { *aResult = mRuleNode; }
+  nsRuleNode* GetRuleNode() { return mRuleNode; }
   void AddStyleBit(const PRUint32& aBit) { mBits |= aBit; }
   void GetStyleBits(PRUint32* aBits) { *aBits = mBits; }
 
