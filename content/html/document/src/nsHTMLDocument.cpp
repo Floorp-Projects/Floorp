@@ -1861,6 +1861,10 @@ nsHTMLDocument::GetBaseURI(nsAString &aURI)
 NS_IMETHODIMP
 nsHTMLDocument::GetXmlEncoding(nsAString& aXmlEncoding)
 {
+  if (IsXHTML()) {
+    return nsDocument::GetXmlEncoding(aXmlEncoding);
+  }
+
   SetDOMStringToNull(aXmlEncoding);
 
   return NS_OK;
@@ -1869,6 +1873,10 @@ nsHTMLDocument::GetXmlEncoding(nsAString& aXmlEncoding)
 NS_IMETHODIMP
 nsHTMLDocument::GetXmlStandalone(PRBool *aXmlStandalone)
 {
+  if (IsXHTML()) {
+    return nsDocument::GetXmlStandalone(aXmlStandalone);
+  }
+
   *aXmlStandalone = PR_FALSE;
 
   return NS_OK;
@@ -1877,6 +1885,10 @@ nsHTMLDocument::GetXmlStandalone(PRBool *aXmlStandalone)
 NS_IMETHODIMP
 nsHTMLDocument::SetXmlStandalone(PRBool aXmlStandalone)
 {
+  if (IsXHTML()) {
+    return nsDocument::SetXmlStandalone(aXmlStandalone);
+  }
+
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
@@ -1884,6 +1896,10 @@ nsHTMLDocument::SetXmlStandalone(PRBool aXmlStandalone)
 NS_IMETHODIMP
 nsHTMLDocument::GetXmlVersion(nsAString& aXmlVersion)
 {
+  if (IsXHTML()) {
+    return nsDocument::GetXmlVersion(aXmlVersion);
+  }
+
   SetDOMStringToNull(aXmlVersion);
 
   return NS_OK;
@@ -1892,6 +1908,10 @@ nsHTMLDocument::GetXmlVersion(nsAString& aXmlVersion)
 NS_IMETHODIMP
 nsHTMLDocument::SetXmlVersion(const nsAString& aXmlVersion)
 {
+  if (IsXHTML()) {
+    return nsDocument::SetXmlVersion(aXmlVersion);
+  }
+
   return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
 }
 
