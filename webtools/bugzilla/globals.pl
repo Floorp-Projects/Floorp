@@ -587,6 +587,7 @@ sub InsertNewUser {
     }
     my $usenewemailtech = Param('newemailtech') & Param('newemailtechdefault');
 
+    PushGlobalSQLState();
     SendSQL("select bit, userregexp from groups where userregexp != ''");
     my $groupset = "0";
     while (MoreSQLData()) {
@@ -605,13 +606,16 @@ sub InsertNewUser {
     $username = SqlQuote($username);
     $realname = SqlQuote($realname);
     SendSQL("insert into profiles (login_name, realname, password, cryptpassword, groupset, newemailtech) values ($username, $realname, '$password', encrypt('$password'), $groupset, $usenewemailtech)");
+    PopGlobalSQLState();
     return $password;
 }
 
 sub DBID_to_real_or_loginname {
     my ($id) = (@_);
+    PushGlobalSQLState();
     SendSQL("SELECT login_name,realname FROM profiles WHERE userid = $id");
     my ($l, $r) = FetchSQLData();
+    PopGlobalSQLState();
     if (!defined $r || $r eq "") {
         return $l;
     } else {
@@ -622,8 +626,10 @@ sub DBID_to_real_or_loginname {
 sub DBID_to_name {
     my ($id) = (@_);
     if (!defined $::cachedNameArray{$id}) {
+        PushGlobalSQLState();
         SendSQL("select login_name from profiles where userid = $id");
         my $r = FetchOneColumn();
+        PopGlobalSQLState();
         if (!defined $r || $r eq "") {
             $r = "__UNKNOWN__";
         }
@@ -634,8 +640,10 @@ sub DBID_to_name {
 
 sub DBname_to_id {
     my ($name) = (@_);
+    PushGlobalSQLState();
     SendSQL("select userid from profiles where login_name = @{[SqlQuote($name)]}");
     my $r = FetchOneColumn();
+    PopGlobalSQLState();
     if (!defined $r || $r eq "") {
         return 0;
     }
