@@ -243,7 +243,7 @@ private:
   GdkFunction            mFunction;
   GdkLineStyle           mLineStyle;
  // gtk+ 1.2.7 introduces an incompatible API change
-#if GTK_CHECK_VERSION(1,2,7)
+#if defined(GTK_CHECK_VERSION) && GTK_CHECK_VERSION(1,2,7)
   gint8                  mDashList[2];
 #else
   gchar                  mDashList[2];
