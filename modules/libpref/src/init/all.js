@@ -213,9 +213,6 @@ pref("view_source.wrap_long_lines", false);
 // gfx widgets
 pref("nglayout.widget.mode", 2);
 
-// css2 hover pref
-pref("nglayout.events.showHierarchicalHover", false);
-
 // dispatch left clicks only to content in browser (still allows clicks to chrome/xul)
 pref("nglayout.events.dispatchLeftClickOnly", true);
 
