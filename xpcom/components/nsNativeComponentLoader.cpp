@@ -751,6 +751,15 @@ nsNativeComponentLoader::AutoRegisterComponent(PRInt32 when,
         // so that 3rd party shared libraries will be noticed!
         validExtension = ((type == 'shlb') || (type == 'NSPL'));
       }
+      
+      if (validExtension)
+      {
+      	// This call to SystemTask is here to give the OS time to grow it's
+      	// FCB (file control block) list, which it seems to be unable to
+      	// do unless we yield some time to the OS. See bug 64978 for the whole
+      	// story.
+      	::SystemTask();
+      }
     }
 
 #else
