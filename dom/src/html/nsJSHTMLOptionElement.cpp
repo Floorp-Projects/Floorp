@@ -240,24 +240,6 @@ SetHTMLOptionElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case HTMLOPTIONELEMENT_INDEX:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_INDEX, PR_TRUE);
-        if (NS_SUCCEEDED(rv)) {
-          PRInt32 prop;
-          int32 temp;
-          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
-            prop = (PRInt32)temp;
-          }
-          else {
-            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
-          }
-      
-          rv = a->SetIndex(prop);
-          
-        }
-        break;
-      }
       case HTMLOPTIONELEMENT_DISABLED:
       {
         rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_HTMLOPTIONELEMENT_DISABLED, PR_TRUE);
@@ -382,7 +364,7 @@ static JSPropertySpec HTMLOptionElementProperties[] =
   {"form",    HTMLOPTIONELEMENT_FORM,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"defaultSelected",    HTMLOPTIONELEMENT_DEFAULTSELECTED,    JSPROP_ENUMERATE},
   {"text",    HTMLOPTIONELEMENT_TEXT,    JSPROP_ENUMERATE},
-  {"index",    HTMLOPTIONELEMENT_INDEX,    JSPROP_ENUMERATE},
+  {"index",    HTMLOPTIONELEMENT_INDEX,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"disabled",    HTMLOPTIONELEMENT_DISABLED,    JSPROP_ENUMERATE},
   {"label",    HTMLOPTIONELEMENT_LABEL,    JSPROP_ENUMERATE},
   {"selected",    HTMLOPTIONELEMENT_SELECTED,    JSPROP_ENUMERATE},
@@ -427,7 +409,7 @@ HTMLOptionElement(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
     return JS_FALSE;
   }
 
-  result = manager->LookupName(NS_ConvertToString("HTMLOptionElement"), PR_TRUE, classID);
+  result = manager->LookupName("HTMLOptionElement", PR_TRUE, classID);
   if (NS_OK != result) {
     return JS_FALSE;
   }

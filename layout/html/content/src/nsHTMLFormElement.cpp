@@ -78,22 +78,7 @@ public:
   NS_IMPL_IDOMHTMLELEMENT_USING_GENERIC(mInner)
 
   // nsIDOMHTMLFormElement
-  NS_IMETHOD GetElements(nsIDOMHTMLCollection** aElements);
-  NS_IMETHOD GetName(nsString& aName);
-  NS_IMETHOD SetName(const nsString& aName);
-  NS_IMETHOD GetAcceptCharset(nsString& aAcceptCharset);
-  NS_IMETHOD SetAcceptCharset(const nsString& aAcceptCharset);
-  NS_IMETHOD GetAction(nsString& aAction);
-  NS_IMETHOD SetAction(const nsString& aAction);
-  NS_IMETHOD GetEnctype(nsString& aEnctype);
-  NS_IMETHOD SetEnctype(const nsString& aEnctype);
-  NS_IMETHOD GetMethod(nsString& aMethod);
-  NS_IMETHOD SetMethod(const nsString& aMethod);
-  NS_IMETHOD GetTarget(nsString& aTarget);
-  NS_IMETHOD SetTarget(const nsString& aTarget);
-  NS_IMETHOD GetLength(PRUint32* aLength);
-  NS_IMETHOD Reset();
-  NS_IMETHOD Submit();
+  NS_DECL_IDOMHTMLFORMELEMENT
 
   // nsIDOMNSHTMLFormElement
   NS_IMETHOD    GetEncoding(nsString& aEncoding);
@@ -509,7 +494,7 @@ nsHTMLFormElement::GetEncoding(nsString& aEncoding)
 }
  
 NS_IMETHODIMP    
-nsHTMLFormElement::GetLength(PRUint32* aLength)
+nsHTMLFormElement::GetLength(PRInt32* aLength)
 {
   *aLength = mControls->mElements.Count();
   

@@ -48,7 +48,6 @@ public:
   NS_IMETHOD    SetText(const nsString& aText)=0;
 
   NS_IMETHOD    GetIndex(PRInt32* aIndex)=0;
-  NS_IMETHOD    SetIndex(PRInt32 aIndex)=0;
 
   NS_IMETHOD    GetDisabled(PRBool* aDisabled)=0;
   NS_IMETHOD    SetDisabled(PRBool aDisabled)=0;
@@ -71,7 +70,6 @@ public:
   NS_IMETHOD    GetText(nsString& aText);  \
   NS_IMETHOD    SetText(const nsString& aText);  \
   NS_IMETHOD    GetIndex(PRInt32* aIndex);  \
-  NS_IMETHOD    SetIndex(PRInt32 aIndex);  \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled);  \
   NS_IMETHOD    SetDisabled(PRBool aDisabled);  \
   NS_IMETHOD    GetLabel(nsString& aLabel);  \
@@ -90,7 +88,6 @@ public:
   NS_IMETHOD    GetText(nsString& aText) { return _to GetText(aText); } \
   NS_IMETHOD    SetText(const nsString& aText) { return _to SetText(aText); } \
   NS_IMETHOD    GetIndex(PRInt32* aIndex) { return _to GetIndex(aIndex); } \
-  NS_IMETHOD    SetIndex(PRInt32 aIndex) { return _to SetIndex(aIndex); } \
   NS_IMETHOD    GetDisabled(PRBool* aDisabled) { return _to GetDisabled(aDisabled); } \
   NS_IMETHOD    SetDisabled(PRBool aDisabled) { return _to SetDisabled(aDisabled); } \
   NS_IMETHOD    GetLabel(nsString& aLabel) { return _to GetLabel(aLabel); } \
