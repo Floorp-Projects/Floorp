@@ -42,6 +42,9 @@ public:
 protected:
   PLArenaPool mPool;
   PRUint32 mBlockSize;
+
+private:
+  PRBool mInitialized;
 };
 
 #endif // nsArena_h__
