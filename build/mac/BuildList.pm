@@ -118,6 +118,8 @@ sub BuildMozilla()
 		BuildProject(":mozilla:modules:libfont:macbuild:FontBroker.mcp",					"FontBroker$D.o");
 		BuildProject(":mozilla:lib:libmocha:macbuild:LibMocha.mcp",							"LibMocha$D.o");	
 		BuildProject(":mozilla:network:macbuild:network.mcp",								"Network$D.o");
+		BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",						"png$D.o");
+		BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o");
 
 		BuildProject(":mozilla:build:mac:CustomLib:CustomLib.mcp",							"CustomStaticLib$D.o");
 		
