@@ -231,11 +231,11 @@ nsGenericDOMDataNode::Normalize()
 }
 
 nsresult
-nsGenericDOMDataNode::Supports(const nsAReadableString& aFeature,
-                               const nsAReadableString& aVersion,
-                               PRBool* aReturn)
+nsGenericDOMDataNode::IsSupported(const nsAReadableString& aFeature,
+                                  const nsAReadableString& aVersion,
+                                  PRBool* aReturn)
 {
-  return nsGenericElement::InternalSupports(aFeature, aVersion, aReturn);
+  return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
 #if 0

@@ -735,8 +735,10 @@
     "node.childnodes", \
     "node.clonenode", \
     "node.firstchild", \
+    "node.hasattributes", \
     "node.haschildnodes", \
     "node.insertbefore", \
+    "node.issupported", \
     "node.lastchild", \
     "node.localname", \
     "node.namespaceuri", \
@@ -751,7 +753,6 @@
     "node.previoussibling", \
     "node.removechild", \
     "node.replacechild", \
-    "node.supports", \
     "nodelist.item", \
     "nodelist.length", \
     "notation.publicid", \
@@ -943,6 +944,8 @@
     "window.scriptglobals", \
     "window.scrollbars", \
     "window.scrollby", \
+    "window.scrollbylines", \
+    "window.scrollbypages", \
     "window.scrollto", \
     "window.scrollx", \
     "window.scrolly", \

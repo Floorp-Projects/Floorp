@@ -1575,6 +1575,12 @@ nsHTMLDocument::HasChildNodes(PRBool* aReturn)
 }
 
 NS_IMETHODIMP    
+nsHTMLDocument::HasAttributes(PRBool* aReturn)
+{
+  return nsDocument::HasAttributes(aReturn);
+}
+
+NS_IMETHODIMP    
 nsHTMLDocument::GetNodeName(nsAWritableString& aNodeName)
 { 
   return nsDocument::GetNodeName(aNodeName); 
@@ -1665,10 +1671,11 @@ nsHTMLDocument::Normalize()
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion,
-                        PRBool* aReturn)
+nsHTMLDocument::IsSupported(const nsAReadableString& aFeature,
+                            const nsAReadableString& aVersion,
+                            PRBool* aReturn)
 {
-  return nsDocument::Supports(aFeature, aVersion, aReturn);
+  return nsDocument::IsSupported(aFeature, aVersion, aReturn);
 }
 
 

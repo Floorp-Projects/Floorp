@@ -89,14 +89,17 @@ public:
     { return mInner.AppendChild(aNewChild, aReturn); }
   NS_IMETHOD    HasChildNodes(PRBool* aReturn)
     { return mInner.HasChildNodes(aReturn); }
+  NS_IMETHOD    HasAttributes(PRBool* aReturn)
+    { return mInner.HasAttributes(aReturn); }
   NS_IMETHOD    CloneNode(PRBool aDeep, nsIDOMNode** aReturn);
   NS_IMETHOD    GetPrefix(nsAWritableString& aPrefix);
   NS_IMETHOD    SetPrefix(const nsAReadableString& aPrefix);
   NS_IMETHOD    GetNamespaceURI(nsAWritableString& aNamespaceURI);
   NS_IMETHOD    GetLocalName(nsAWritableString& aLocalName);
   NS_IMETHOD    Normalize();
-  NS_IMETHOD    Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion,
-                         PRBool* aReturn);
+  NS_IMETHOD    IsSupported(const nsAReadableString& aFeature,
+                            const nsAReadableString& aVersion,
+                            PRBool* aReturn);
 
   // interface nsIScriptObjectOwner
   NS_IMETHOD GetScriptObject(nsIScriptContext* aContext, void** aScriptObject);
@@ -428,10 +431,11 @@ nsDocumentFragment::Normalize()
 
 
 NS_IMETHODIMP
-nsDocumentFragment::Supports(const nsAReadableString& aFeature, const nsAReadableString& aVersion,
-                             PRBool* aReturn)
+nsDocumentFragment::IsSupported(const nsAReadableString& aFeature,
+                                const nsAReadableString& aVersion,
+                                PRBool* aReturn)
 {
-  return nsGenericElement::InternalSupports(aFeature, aVersion, aReturn);
+  return nsGenericElement::InternalIsSupported(aFeature, aVersion, aReturn);
 }
 
 NS_IMETHODIMP 

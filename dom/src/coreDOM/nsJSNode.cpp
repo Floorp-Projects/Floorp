@@ -695,10 +695,10 @@ NodeNormalize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
 
 
 //
-// Native method Supports
+// Native method IsSupported
 //
 PR_STATIC_CALLBACK(JSBool)
-NodeSupports(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+NodeIsSupported(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
   nsresult result = NS_OK;
@@ -715,7 +715,7 @@ NodeSupports(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
     if (!secMan)
         return PR_FALSE;
-    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NODE_SUPPORTS, PR_FALSE);
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NODE_ISSUPPORTED, PR_FALSE);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -726,7 +726,43 @@ NodeSupports(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
     nsJSUtils::nsConvertJSValToString(b1, cx, argv[1]);
 
-    result = nativeThis->Supports(b0, b1, &nativeRet);
+    result = nativeThis->IsSupported(b0, b1, &nativeRet);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method HasAttributes
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeHasAttributes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNode *nativeThis = (nsIDOMNode*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  PRBool nativeRet;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NODE_HASATTRIBUTES, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    result = nativeThis->HasAttributes(&nativeRet);
     if (NS_FAILED(result)) {
       return nsJSUtils::nsReportError(cx, obj, result);
     }
@@ -959,7 +995,8 @@ static JSFunctionSpec NodeMethods[] =
   {"hasChildNodes",          NodeHasChildNodes,     0},
   {"cloneNode",          NodeCloneNode,     1},
   {"normalize",          NodeNormalize,     0},
-  {"supports",          NodeSupports,     2},
+  {"isSupported",          NodeIsSupported,     2},
+  {"hasAttributes",          NodeHasAttributes,     0},
   {"addEventListener",          EventTargetAddEventListener,     3},
   {"removeEventListener",          EventTargetRemoveEventListener,     3},
   {"dispatchEvent",          EventTargetDispatchEvent,     1},
