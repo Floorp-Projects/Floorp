@@ -204,6 +204,7 @@ protected:
     virtual PRBool GetDefaultFlex(PRInt32& aFlex);
 
     virtual nsInfoList* GetInfoList();
+    NS_IMETHOD  Destroy(nsIPresContext* aPresContext);
 
 private: 
   
