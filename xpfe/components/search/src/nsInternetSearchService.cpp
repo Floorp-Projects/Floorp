@@ -130,7 +130,8 @@ public:
 class InternetSearchDataSource : public nsIRDFDataSource
 {
 private:
-	static PRInt32		gRefCnt;
+	static PRInt32			gRefCnt;
+	PRBool				mEngineListBuilt;
 
     // pseudo-constants
 	static nsIRDFResource		*kNC_SearchRoot;
@@ -415,12 +416,8 @@ InternetSearchDataSource::Init()
 	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this, PR_FALSE)))
 		return(rv);
 
-	// get available search engines
-	nsFileSpec			nativeDir;
-	if (NS_SUCCEEDED(rv = GetSearchFolder(nativeDir)))
-	{
-		rv = GetSearchEngineList(nativeDir);
-	}
+	mEngineListBuilt = PR_FALSE;
+
 	return(rv);
 }
 
@@ -535,7 +532,18 @@ InternetSearchDataSource::GetTargets(nsIRDFResource *source,
 		return(rv);
 
 	if (mInner)
-	{
+	{	
+		if ((source == kNC_SearchRoot) && (property == kNC_Child) && (mEngineListBuilt == PR_FALSE))
+		{
+			// get available search engines
+			nsFileSpec			nativeDir;
+			if (NS_SUCCEEDED(rv = GetSearchFolder(nativeDir)))
+			{
+				rv = GetSearchEngineList(nativeDir);
+				mEngineListBuilt = PR_TRUE;
+			}
+		}
+
 		rv = mInner->GetTargets(source, property, tv, targets);
 	}
 	if (isSearchURI(source))
