@@ -31,7 +31,7 @@ Rights Reserved.
   <tree id="addressingWidgetTree"
     class="addressingWidget inset" multiple="true"
     onkeypress="awKeyPress(event, this);"
-    onclick="awClickEmptySpace(event.target, true)"
+    onclick="awClickEmptySpace(event.originalTarget, true)"
     ondragover="return DragOverTree(event);"
     ondragdrop="return DropOnAddressingWidgetTree(event);">
     

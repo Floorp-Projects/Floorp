@@ -1629,7 +1629,7 @@ function editorKeyPress(event)
 
 function AttachmentBucketClicked(event)
 {
-  if (event.target.localName != 'treecell')
+  if (event.originalTarget.localName == 'treechildren')
     goDoCommand('cmd_attachFile');
 }  
 
