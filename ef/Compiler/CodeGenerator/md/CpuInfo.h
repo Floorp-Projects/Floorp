@@ -22,7 +22,7 @@
 #ifdef GENERATE_FOR_PPC
 		#include "PPC601Cpu.h"
 #elif defined(GENERATE_FOR_X86)
-		#include "x86Win32Cpu.h"
+		#include "x86Cpu.h"
 #elif defined(GENERATE_FOR_SPARC)
 		//#include "SparcCpu.h"
 #elif defined(GENERATE_FOR_HPPA)
