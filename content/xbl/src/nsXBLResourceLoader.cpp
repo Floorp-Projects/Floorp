@@ -57,6 +57,7 @@
 #include "nsStyleContext.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsCSSRuleProcessor.h"
+#include "nsContentUtils.h"
 
 NS_IMPL_ISUPPORTS1(nsXBLResourceLoader, nsICSSLoaderObserver)
 
@@ -105,7 +106,8 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
     if (curr->mSrc.IsEmpty())
       continue;
 
-    if (NS_FAILED(NS_NewURI(getter_AddRefs(url), curr->mSrc, nsnull, docURL)))
+    if (NS_FAILED(NS_NewURI(getter_AddRefs(url), curr->mSrc,
+                            doc->GetDocumentCharacterSet().get(), docURL)))
       continue;
 
     if (curr->mType == nsXBLAtoms::image) {
@@ -118,7 +120,8 @@ nsXBLResourceLoader::LoadResources(PRBool* aResult)
       // Passing NULL for pretty much everything -- cause we don't care!
       // XXX: initialDocumentURI is NULL! 
       nsCOMPtr<imgIRequest> req;
-      nsContentUtils::LoadImage(url, doc, nsnull, nsIRequest::LOAD_BACKGROUND,
+      nsContentUtils::LoadImage(url, doc, doc->GetDocumentURI(), nsnull,
+                                nsIRequest::LOAD_BACKGROUND,
                                 getter_AddRefs(req));
     }
     else if (curr->mType == nsXBLAtoms::stylesheet) {
