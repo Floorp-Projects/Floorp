@@ -900,7 +900,7 @@ static NS_DEFINE_IID(kIRDFServiceIID,             NS_IRDFSERVICE_IID);
                                                   (void**) &builder)))
     goto done;
 
-  if (NS_FAILED(rv = doc->Init(builder)))
+  if (NS_FAILED(rv = doc->SetContentModelBuilder(builder)))
     goto done;
 
   if (NS_FAILED(rv = NS_NewURL(&uri, "resource://res/rdf/LocalStore.rdf")))
