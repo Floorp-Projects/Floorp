@@ -1926,7 +1926,7 @@ GlobalWindowImpl::GetScrollXY(PRInt32* aScrollX, PRInt32* aScrollY)
 
   GetScrollInfo(&view, &p2t, &t2p);
   if (!view)
-    return NS_ERROR_FAILURE;
+    return NS_OK;      // bug 202206 changed from NS_ERROR_FAILURE
 
   nscoord xPos, yPos;
   rv = view->GetScrollPosition(xPos, yPos);
