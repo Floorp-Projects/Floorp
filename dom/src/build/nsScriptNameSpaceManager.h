@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 
 #ifndef nsScriptNameSetRegistry_h__
@@ -42,7 +55,7 @@ class nsScriptNameSpaceManager : public nsIScriptNameSpaceManager {
                         nsIID& aCID);
   
  protected:
-  static PRIntn RemoveNames(PLHashEntry *he, PRIntn i, void *arg);
+  static PRIntn PR_CALLBACK RemoveNames(PLHashEntry *he, PRIntn i, void *arg);
 
   PLHashTable* mGlobalNames;
 };

@@ -18,6 +18,19 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *
+ *
+ * This Original Code has been modified by IBM Corporation.
+ * Modifications made by IBM described herein are
+ * Copyright (c) International Business Machines
+ * Corporation, 2000
+ *
+ * Modifications to Mozilla code or documentation
+ * identified per MPL Section 3.3
+ *
+ * Date         Modified by     Description of modification
+ * 03/27/2000   IBM Corp.       Added PR_CALLBACK for Optlink
+ *                               use in OS2
  */
 #include "nscore.h"
 #include "nsIFactory.h"
@@ -134,7 +147,7 @@ public:
   NS_IMETHOD GetFactoryCID(const nsString& aClassName, nsIID& aCID);
 
 private:
-  static PRIntn RemoveStrings(PLHashEntry *he, PRIntn i, void *arg);
+  static PRIntn PR_CALLBACK RemoveStrings(PLHashEntry *he, PRIntn i, void *arg);
 
   PLHashTable *mFactories;
 };
