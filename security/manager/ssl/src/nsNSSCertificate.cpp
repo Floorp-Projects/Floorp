@@ -3101,10 +3101,8 @@ nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
   CERTCertificate *tmpCert;
   CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
 #ifdef NSS_3_4
-  PRBool isperm = PR_TRUE;
   tmpCert = CERT_FindCertByDERCert(certdb, &der);
   if (!tmpCert) {
-    isperm = PR_FALSE;
     tmpCert = CERT_NewTempCertificate(certdb, &der,
                                       nsnull, PR_FALSE, PR_TRUE);
   }
@@ -3121,7 +3119,7 @@ nsNSSCertificateDB::handleCACertDownload(nsISupportsArray *x509Certs,
 
   PRBool canceled;
 #ifdef NSS_3_4
-  if (isperm) {
+  if (tmpCert->isperm) {
 #else
   if (tmpCert->isperm) {
 #endif
