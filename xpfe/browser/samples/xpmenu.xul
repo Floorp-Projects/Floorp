@@ -28,17 +28,17 @@ Contributor(s): ______________________________________. -->
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 		align="vertical"> 
 
-
+playsound
  <toolbox>
    <xpmenubar chromeclass="menubar">
 	  <xpmenu>
 	    <html:div><html:u>F</html:u>ile</html:div>
 		<xpmenuchildren> 
-		<xpmenu> 
+		<xpmenu value="New" shortcut="n" key="newKey"> 
 		  <html:div><html:u>N</html:u>ew </html:div> 
-	   <spring flex="100%"/> 
-	   <html:div>Ctrl+N</html:div> 
-	  </xpmenu> 
+	      <spring flex="100%"/> 
+	      <html:div>Ctrl+N</html:div> 
+	    </xpmenu> 
 	  <xpmenu> 
 		  <html:div><html:u>O</html:u>pen...</html:div> 
 	   <spring flex="100%"/> 
@@ -48,7 +48,8 @@ Contributor(s): ______________________________________. -->
 		  <html:div><html:u>C</html:u>lose</html:div> 
 	   <spring flex="100%"/> 
 	  </xpmenu> 
-	  <html:hr style="border: 1px black solid; margin-left: 10px; margin-right: 10px"/>
+	  <html:div style="border-bottom: 1px white solid; border-top: 1px gray solid; 
+	       margin-top: 2px; margin-bottom: 2px; margin-left: 2px; margin-right: 2px"/>
 	  <xpmenu> 
 		  <html:div><html:u>S</html:u>ave</html:div> 
 	   <spring flex="100%"/> 
