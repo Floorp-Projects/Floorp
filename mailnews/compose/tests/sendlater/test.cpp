@@ -40,6 +40,7 @@
 
 #include "nsIMimeURLUtils.h"
 #include "nsIMsgSendLater.h"
+#include "nsIWebShellWindow.h"
 
 
 #ifdef XP_PC
