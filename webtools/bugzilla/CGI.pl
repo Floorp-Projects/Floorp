@@ -1081,16 +1081,17 @@ Content-type: text/html
         unless( Param("useLDAP") ) {
             print qq|
               <hr>
+              <p>If you don't have a Bugzilla account, you can 
+              <a href="createaccount.cgi">create a new account</a>.</p>
               <form method="get" action="token.cgi">
                 <input type="hidden" name="a" value="reqpw">
-                If you have forgotten your password,
+                If you have an account, but have forgotten your password,
                 enter your login name below and submit a request 
                 to change your password.<br>
                 <input size="35" name="loginname">
                 <input type="submit" value="Submit Request">
               </form>
               <hr>
-              If you don't have a Bugzilla account, you can <a href="createaccount.cgi">create a new account</a>.
             |;
         }
 
