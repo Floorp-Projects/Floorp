@@ -313,7 +313,7 @@ nsXPCWrappedNative::Find(REFNSIID aIID)
     nsXPCWrappedNative* cur = mRoot;
     do
     {
-        if(aIID.Equals(GetIID()))
+        if(aIID.Equals(cur->GetIID()))
             return cur;
 
     } while(NULL != (cur = cur->mNext));
