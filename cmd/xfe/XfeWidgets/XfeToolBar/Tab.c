@@ -787,91 +787,91 @@ DrawTab(Widget w,XEvent *event,Region region,XRectangle * clip_rect)
 static void
 FillTabVertical(Widget w,Pixmap pixmap,Dimension width,Dimension height)
 {
-    XfeTabPart *		tp = _XfeTabPart(w);
-    XfeButtonPart *		bp = _XfeButtonPart(w);
-	Position			y;
-	Boolean				done = False;
-	Dimension			copy_height;
-	Dimension			max_y = _XfeHeight(w) - _XfeOffsetBottom(w);
+    XfeTabPart          *tp;
+    Position            y;
+    Position            max_y;
+    XfeButtonPart       *bp;
+    Display             *dpy;
+    GC                  gc;
+    Dimension           left;
+    Drawable            drawable;
+    Position            x;
 
+    tp = _XfeTabPart(w);
+    y = _XfeOffsetTop(w);
     if (_XfePixmapGood(tp->top_pixmap))
-      y = _XfeOffsetTop(w) + tp->top_height;
-    else
-      y = _XfeOffsetTop(w);
+        y += tp->top_height;
+    max_y = _XfeHeight(w) - _XfeOffsetBottom(w);    
+    if (y >= max_y)
+        return;
 
-	while(!done)
-	{
-		copy_height = height;
+    bp = _XfeButtonPart(w);
+    dpy = XtDisplay(w);
+    gc = bp->pixmap_GC;
+    XSetClipMask(dpy, gc, None);
 
-		if ((y + copy_height) > max_y)
-		{
-			copy_height -= (y + copy_height - max_y);
-		}
+    left = max_y - y;
+    drawable = _XfePrimitiveDrawable(w);
+    x = (_XfeWidth(w) - width) / 2;
 
-		if (copy_height)
-		{
-			XSetClipMask(XtDisplay(w),bp->pixmap_GC,None);
+    for (;;)
+    {
+        Dimension       copy_height;
 
-			XCopyArea(XtDisplay(w),
-					  pixmap,
-					  _XfePrimitiveDrawable(w),
-					  bp->pixmap_GC,
-					  0,0,
-					  width,
-					  height,
-					  (_XfeWidth(w) - width) / 2,
-					  y);
-		}
+        copy_height = left < height ? left : height;
+        XCopyArea(dpy, pixmap, drawable, gc, 0, 0, width, copy_height, x, y);
 
-		done = (copy_height < height);
+        if (left <= height)
+            break;
 
-		y += height;
-	}
+        left -= height;
+        y += height;
+    }
 }
 /*----------------------------------------------------------------------*/
 static void
 FillTabHorizontal(Widget w,Pixmap pixmap,Dimension width,Dimension height)
 {
-    XfeTabPart *		tp = _XfeTabPart(w);
-    XfeButtonPart *		bp = _XfeButtonPart(w);
-	Position			x;
-	Boolean				done = False;
-	Dimension			copy_width;
-	Dimension			max_x = _XfeWidth(w) - _XfeOffsetRight(w);
+    XfeTabPart          *tp;
+    Position            x;
+    Position            max_x;
+    XfeButtonPart       *bp;
+    Display             *dpy;
+    GC                  gc;
+    Dimension           left;
+    Drawable            drawable;
+    Position            y;
 
+    tp = _XfeTabPart(w);
+    x = _XfeOffsetLeft(w);
     if (_XfePixmapGood(tp->left_pixmap))
-      x = _XfeOffsetLeft(w) + tp->left_width;
-    else 
-      x = _XfeOffsetLeft(w);
+        x += tp->left_width;
+    max_x = _XfeWidth(w) - _XfeOffsetRight(w);
+    if (x >= max_x)
+        return;
 
-	while(!done)
-	{
-		copy_width = width;
+    bp = _XfeButtonPart(w);
+    dpy = XtDisplay(w);
+    gc = bp->pixmap_GC;
+    XSetClipMask(dpy, gc, None);
 
-		if ((x + copy_width) > max_x)
-		{
-			copy_width -= (x + copy_width - max_x);
-		}
+    left = max_x - x;
+    drawable = _XfePrimitiveDrawable(w);
+    y = (_XfeHeight(w) - height) / 2;
 
-		if (copy_width)
-		{
-			XSetClipMask(XtDisplay(w),bp->pixmap_GC,None);
+    for (;;)
+    {
+        Dimension       copy_width;
 
-			XCopyArea(XtDisplay(w),
-					  pixmap,
-					  _XfePrimitiveDrawable(w),
-					  bp->pixmap_GC,
-					  0,0,
-					  width,
-					  height,
-					  x,
-					  (_XfeHeight(w) - height) / 2);
-		}
+        copy_width = left < width ? left : width;
+        XCopyArea(dpy, pixmap, drawable, gc, 0, 0, copy_width, height, x, y);
 
-		done = (copy_width < width);
+        if (left <= width)
+            break;
 
-		x += width;
-	}
+        x += width;
+        left -= width;
+    }
 }
 /*----------------------------------------------------------------------*/
 
