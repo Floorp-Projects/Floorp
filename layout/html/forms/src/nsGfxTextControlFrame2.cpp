@@ -220,6 +220,7 @@ nsTextInputListener::nsTextInputListener()
 : mFrame(nsnull)
 , mSelectionWasCollapsed(PR_TRUE)
 , mKnowSelectionCollapsed(PR_FALSE)
+, mFirstDoOfFirstUndo(PR_TRUE)
 {
   NS_INIT_REFCNT();
 }
@@ -2775,7 +2776,6 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
   
   if (mEditor) 
   {
-    nsString format; format.AssignWithConversion("text/plain");
     PRUint32 flags = nsIDocumentEncoder::OutputLFLineBreak;;
 
     if (PR_TRUE==IsPlainTextControl()) {
@@ -2793,7 +2793,7 @@ void nsGfxTextControlFrame2::GetTextControlFrameState(nsAWritableString& aValue)
       }
     }
 
-    mEditor->OutputToString(aValue, format, flags);
+    mEditor->OutputToString(aValue, NS_LITERAL_STRING("text/plain"), flags);
   }
 }     
 
