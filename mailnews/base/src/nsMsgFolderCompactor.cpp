@@ -125,7 +125,6 @@ nsFolderCompactState::InitDB(nsIMsgDatabase *db)
                                getter_AddRefs(m_db));
     }
   }
-  db ->ListAllKeys(m_keyArray);
   return rv;
 }
 
@@ -140,12 +139,13 @@ nsFolderCompactState::Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgD
   if (!m_baseMessageUri)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  pathSpec->GetFileSpec(&m_fileSpec);
+  m_fileSpec.SetLeafName("nstmp");
+
   InitDB(db);
 
   m_size = m_keyArray.GetSize();
   m_curIndex = 0;
-  pathSpec->GetFileSpec(&m_fileSpec);
-  m_fileSpec.SetLeafName("nstmp");
   
   m_fileStream = new nsOutputFileStream(m_fileSpec);
   if (!m_fileStream) 
