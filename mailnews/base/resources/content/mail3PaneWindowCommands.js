@@ -190,6 +190,7 @@ var DefaultController =
 
 		switch ( command )
 		{
+      case "cmd_createFilterFromPopup":
 			case "cmd_close":
 			case "cmd_reply":
 			case "button_reply":
@@ -202,7 +203,7 @@ var DefaultController =
 			case "cmd_forwardInline":
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
-      case "cmd_canHaveFilter":
+      case "cmd_createFilterFromMenu":
 			case "cmd_delete":
 			case "button_delete":
 			case "cmd_shiftDelete":
@@ -325,7 +326,11 @@ var DefaultController =
         if ((GetNumSelectedMessages() == 1) && gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.toggleThreadWatched, enabled, checkStatus);
         return enabled.value;
-      case "cmd_canHaveFilter":
+      case "cmd_createFilterFromPopup":
+        var loadedFolder = GetLoadedMsgFolder();
+        if (!(loadedFolder && loadedFolder.server.canHaveFilters))
+          return false;
+      case "cmd_createFilterFromMenu":
         var loadedFolder = GetLoadedMsgFolder();
         if (!(loadedFolder && loadedFolder.server.canHaveFilters) || !(IsMessageDisplayedInMessagePane()))
           return false;
@@ -493,9 +498,11 @@ var DefaultController =
 			case "cmd_editAsNew":
 				MsgEditMessageAsNew();
 				break;
-      case "cmd_canHaveFilter":
+      case "cmd_createFilterFromMenu":
         MsgCreateFilter();
         break;        
+      case "cmd_createFilterFromPopup":
+        break;// This does nothing because the createfilter is invoked from the popupnode oncommand.
 			case "button_delete":
 			case "cmd_delete":
         SetNextMessageAfterDelete();

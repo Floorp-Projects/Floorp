@@ -673,7 +673,7 @@ function MsgCreateFilter()
   if (gCollapsedHeaderViewMode)
     emailAddressNode = document.getElementById("collapsedfromValue");
   else
-    emailAddressNode = document.getElementById("expandedfromValue");
+    emailAddressNode = document.getElementById("expandedfromBox").emailAddressNode;
   
   if (emailAddressNode)
   {
@@ -988,7 +988,12 @@ function MsgFilters(emailAddress)
         filterEditor.focus();
       }
       else
-      filterList.openPrefillOnExistingFilterList(emailAddress);
+      {
+        if(emailAddress)
+          filterList.openPrefillOnExistingFilterList(emailAddress);
+        else
+          filterList.focus();
+      }
     }
     else
       window.openDialog("chrome://messenger/content/FilterListDialog.xul", "", 

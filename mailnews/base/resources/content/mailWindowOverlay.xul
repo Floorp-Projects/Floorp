@@ -84,6 +84,8 @@ Rights Reserved.
   <command id="cmd_newNavigator"/>
   <command id="cmd_newEditor"/>
   <command id="cmd_quit"/>
+  <!--The cmd_createFilterFromPopup is used to notify the email context popup -->
+  <command id="cmd_createFilterFromPopup"/>
   <!-- <command id="cmd_pageSetup"/>-->
 </commandset>
 <commandset id="mailViewMenuItems"
@@ -182,7 +184,7 @@ Rights Reserved.
   <command id="cmd_forwardInline" oncommand="goDoCommand('cmd_forwardInline')"/>
   <command id="cmd_forwardAttachment" oncommand="goDoCommand('cmd_forwardAttachment')"/>
   <command id="cmd_editAsNew" oncommand="goDoCommand('cmd_editAsNew')"/>
-  <command id="cmd_canHaveFilter" oncommand="goDoCommand('cmd_canHaveFilter')"/>
+  <command id="cmd_createFilterFromMenu" oncommand="goDoCommand('cmd_createFilterFromMenu')"/>
   <command id="cmd_killThread" oncommand="goDoCommand('cmd_killThread')"/>
   <command id="cmd_watchThread" oncommand="goDoCommand('cmd_watchThread')"/>
 
@@ -1074,7 +1076,7 @@ Rights Reserved.
     <menuseparator/>
     <menuitem id="createFilter" label="&createFilter.label;"
       accesskey="&createFilter.accesskey;"
-      observes="cmd_canHaveFilter"/>
+      observes="cmd_createFilterFromMenu"/>
     <menuseparator/>
     <menu label="&moveMsgMenu.label;" accesskey="&moveMsgMenu.accesskey;" id="moveMenu" datasources="rdf:null"
      sortResource="http://home.netscape.com/NC-rdf#FolderTreeName"

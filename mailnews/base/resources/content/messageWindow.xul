@@ -95,7 +95,7 @@ Rights Reserved.
   </keyset>
 
   <popupset>
-    <popup id="emailAddressPopup" popupanchor="bottomleft">
+    <popup id="emailAddressPopup" popupanchor="bottomleft" onpopupshowing="goUpdateCommand('cmd_createFilterFromPopup')">
         <menuitem label="&AddToAddressBook.label;"
                   accesskey="&AddToAddressBook.accesskey;"
                   oncommand="AddNodeToAddressBook(document.popupNode)"/>
@@ -108,7 +108,7 @@ Rights Reserved.
         <menuitem label="&CreateFilter.label;"
                   accesskey="&CreateFilter.accesskey;"
                   oncommand="CreateFilter(document.popupNode)"
-                  observes="cmd_canHaveFilter"/>  
+                  observes="cmd_createFilterFromPopup"/>  
     </popup>
 
     <popup id="allHeadersPopup"  onpopupshowing="return fillAllHeadersPopup(document.popupNode);" popupanchor="bottomleft">

@@ -423,7 +423,8 @@ var MessageWindowController =
 			case "cmd_forwardInline":
 			case "cmd_forwardAttachment":
 			case "cmd_editAsNew":
-      case "cmd_canHaveFilter":
+      case "cmd_createFilterFromPopup":
+      case "cmd_createFilterFromMenu":
 			case "cmd_delete":
       case "cmd_undo":
       case "cmd_redo":
@@ -492,11 +493,11 @@ var MessageWindowController =
 					gDBView.getCommandStatus(nsMsgViewCommandType.deleteMsg, enabled, checkStatus);
 					return enabled.value;
 				}
-      case "cmd_canHaveFilter":
+      case "cmd_createFilterFromPopup":
+      case "cmd_createFilterFromMenu":
         var loadedFolder = GetLoadedMsgFolder();
         if (!(loadedFolder && loadedFolder.server.canHaveFilters))
           return false;
-
 			case "cmd_reply":
 			case "button_reply":
 			case "cmd_replySender":
@@ -609,7 +610,9 @@ var MessageWindowController =
 			case "cmd_editAsNew":
 				MsgEditMessageAsNew();
 				break;
-      case "cmd_canHaveFilter":
+      case "cmd_createFilterFromPopup":
+				break;// This does nothing because the createfilter is invoked from the popupnode oncommand.        
+      case "cmd_createFilterFromMenu":
         MsgCreateFilter();
 				break;        
 			case "cmd_delete":
