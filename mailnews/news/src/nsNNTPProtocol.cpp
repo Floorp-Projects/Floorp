@@ -4235,7 +4235,9 @@ PRInt32 nsNNTPProtocol::ListPrettyNamesResponse(nsIInputStream * inputStream, PR
 PRInt32 nsNNTPProtocol::ListXActive()
 { 
 	nsXPIDLCString group_name;
-    nsresult rv = m_newsgroup->GetName(getter_Copies(group_name));
+    	nsresult rv;
+	rv = m_newsgroup->GetName(getter_Copies(group_name));
+	// XXX: check rv?
 	PRInt32 status = 0;
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
 
