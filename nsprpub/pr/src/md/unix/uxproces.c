@@ -219,12 +219,15 @@ ForkAndExec(
          */
 
         if (attr) {
+            /* the osfd's to redirect stdin, stdout, and stderr to */
+            int in_osfd = -1, out_osfd = -1, err_osfd = -1;
+
             if (attr->stdinFd
                     && attr->stdinFd->secret->md.osfd != 0) {
-                if (dup2(attr->stdinFd->secret->md.osfd, 0) != 0) {
+                in_osfd = attr->stdinFd->secret->md.osfd;
+                if (dup2(in_osfd, 0) != 0) {
                     _exit(1);  /* failed */
                 }
-                close(attr->stdinFd->secret->md.osfd);
                 flags = fcntl(0, F_GETFL, 0);
                 if (flags & O_NONBLOCK) {
                     fcntl(0, F_SETFL, flags & ~O_NONBLOCK);
@@ -232,10 +235,10 @@ ForkAndExec(
             }
             if (attr->stdoutFd
                     && attr->stdoutFd->secret->md.osfd != 1) {
-                if (dup2(attr->stdoutFd->secret->md.osfd, 1) != 1) {
+                out_osfd = attr->stdoutFd->secret->md.osfd;
+                if (dup2(out_osfd, 1) != 1) {
                     _exit(1);  /* failed */
                 }
-                close(attr->stdoutFd->secret->md.osfd);
                 flags = fcntl(1, F_GETFL, 0);
                 if (flags & O_NONBLOCK) {
                     fcntl(1, F_SETFL, flags & ~O_NONBLOCK);
@@ -243,14 +246,24 @@ ForkAndExec(
             }
             if (attr->stderrFd
                     && attr->stderrFd->secret->md.osfd != 2) {
-                if (dup2(attr->stderrFd->secret->md.osfd, 2) != 2) {
+                err_osfd = attr->stderrFd->secret->md.osfd;
+                if (dup2(err_osfd, 2) != 2) {
                     _exit(1);  /* failed */
                 }
-                close(attr->stderrFd->secret->md.osfd);
                 flags = fcntl(2, F_GETFL, 0);
                 if (flags & O_NONBLOCK) {
                     fcntl(2, F_SETFL, flags & ~O_NONBLOCK);
                 }
+            }
+            if (in_osfd != -1) {
+                close(in_osfd);
+            }
+            if (out_osfd != -1 && out_osfd != in_osfd) {
+                close(out_osfd);
+            }
+            if (err_osfd != -1 && err_osfd != in_osfd
+                    && err_osfd != out_osfd) {
+                close(err_osfd);
             }
             if (attr->currentDirectory) {
                 if (chdir(attr->currentDirectory) < 0) {
