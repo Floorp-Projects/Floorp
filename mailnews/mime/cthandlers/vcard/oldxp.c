@@ -223,7 +223,7 @@ XP_Stat(const char * name, XP_StatStruct * info, XP_FileType type)
             char *newName = WH_FileName(name, type);
     	
             if (!newName) return -1;
-            result = _stat( newName, info );
+            result = stat( newName, info );
             PR_Free(newName);
             break;
         }
