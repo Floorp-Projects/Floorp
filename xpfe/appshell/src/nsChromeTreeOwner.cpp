@@ -301,3 +301,4 @@ nsXULWindow* nsChromeTreeOwner::XULWindow()
 {
    return mXULWindow;
 }
+
