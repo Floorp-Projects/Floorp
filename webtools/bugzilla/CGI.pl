@@ -1157,8 +1157,8 @@ sub DumpBugActivity {
         my ($field,$when,$removed,$added,$who) = (@row);
         $removed = html_quote($removed);
         $added = html_quote($added);
-        $removed ||= "&nbsp;";
-        $added ||= "&nbsp;";
+        $removed = "&nbsp;" if $removed eq "";
+        $added = "&nbsp;" if $added eq "";
         print "<tr>\n";
         print "<td>$who</td>\n";
         print "<td>$field</td>\n";
