@@ -1615,9 +1615,12 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
   start = body;
   NS_ADDREF(body);
   // Find Very first Piece of Content
-  PRInt32 snc;
-  start->ChildCount(snc);
-  while (snc > 0) {
+  for (;;) {
+    PRInt32 snc;
+    start->ChildCount(snc);
+    if (snc <= 0) {
+      break;
+    }
     nsIContent * child = start;
     child->ChildAt(0, start);
     NS_RELEASE(child);
@@ -1626,13 +1629,15 @@ NS_IMETHODIMP nsHTMLDocument::FindNext(const nsString &aSearchStr, PRBool aMatch
   end = body;
   NS_ADDREF(body);
   // Last piece of Content
-  PRInt32 count;
-  end->ChildCount(count);
-  while (count > 0) {
+  for (;;) {
+    PRInt32 count;
+    end->ChildCount(count);
+    if (count <= 0) {
+      break;
+    }
     nsIContent * child = end;
     child->ChildAt(count-1, end);
     NS_RELEASE(child);
-    end->ChildCount(count);
   }
 
   nsSelectionRange * range        = mSelection->GetRange();
