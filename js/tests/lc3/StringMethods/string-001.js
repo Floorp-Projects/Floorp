@@ -136,6 +136,8 @@
     // of the instance should be the same as the method of String.prototype
     // fromCharCode charCodeAt constructor split
 
+    /* No longer valid in JDK 1.4: java.lang.String now has a split method. 
+
     a[a.length] = new TestObject(
         "var s" +a.length+" = new java.lang.String(\"0 1 2 3 4 5 6 7 8 9\"); s"+a.length+".split(\" \") +''",
         "s"+a.length,
@@ -143,6 +145,7 @@
         0,
         true,
         "0,1,2,3,4,5,6,7,8,9" );
+    */
 
     a[a.length] = new TestObject(
         "var s" +a.length+" = new java.lang.String(\"0 1 2 3 4 5 6 7 8 9\"); s"+a.length+".constructor",
