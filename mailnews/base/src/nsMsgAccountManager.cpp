@@ -182,10 +182,16 @@ nsresult nsMsgAccountManager::Init()
 
 nsresult nsMsgAccountManager::Shutdown()
 {
-	if(m_msgFolderCache)
-	{
-	  WriteToFolderCache(m_msgFolderCache);
-	}
+  nsresult rv;
+
+  if(m_msgFolderCache)
+  {
+    WriteToFolderCache(m_msgFolderCache);
+  }
+  nsCOMPtr<nsIMsgBiffManager> biffService = do_GetService(NS_MSGBIFFMANAGER_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv) && biffService)
+    biffService->Shutdown();
+
   CloseCachedConnections();
   UnloadAccounts();
 
@@ -193,6 +199,8 @@ nsresult nsMsgAccountManager::Shutdown()
     nsServiceManager::ReleaseService(kPrefServiceCID, m_prefs);
     m_prefs = 0;
   }
+
+  m_msgFolderCache = nsnull;
 
   m_haveShutdown = PR_TRUE;
   return NS_OK;
@@ -1233,7 +1241,7 @@ nsMsgAccountManager::LoadAccounts()
   
   //Ensure biff service has started
   nsCOMPtr<nsIMsgBiffManager> biffService = 
-           do_GetService(kMsgBiffManagerCID, &rv);
+           do_GetService(NS_MSGBIFFMANAGER_CONTRACTID, &rv);
   
   // mail.accountmanager.accounts is the main entry point for all accounts
 

@@ -26,9 +26,10 @@
 [scriptable, uuid(17275D52-1622-11d3-8A84-0060B0FC04D2)]
 interface nsIMsgBiffManager : nsISupports {
 
-	void AddServerBiff(in nsIMsgIncomingServer server);
-	void RemoveServerBiff(in nsIMsgIncomingServer server);
-	void ForceBiff(in nsIMsgIncomingServer server);
-	void ForceBiffAll();
+	void addServerBiff(in nsIMsgIncomingServer server);
+	void removeServerBiff(in nsIMsgIncomingServer server);
+	void forceBiff(in nsIMsgIncomingServer server);
+	void forceBiffAll();
+	void shutdown();
 };
 

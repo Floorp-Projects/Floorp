@@ -56,7 +56,6 @@ public:
 	NS_DECL_NSIOBSERVER
 
 	nsresult Init();
-	nsresult Shutdown();
 	nsresult PerformBiff();
 
 protected:

@@ -28,7 +28,6 @@
 #include "nsIObserverService.h"
 #include "nsStatusBarBiffManager.h"
 
-static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kStatusBarBiffManagerCID, NS_STATUSBARBIFFMANAGER_CID);
 
 NS_IMPL_ISUPPORTS4(nsMsgBiffManager, nsIMsgBiffManager, nsIIncomingServerListener, nsIObserver, nsISupportsWeakReference)
@@ -88,7 +87,7 @@ nsresult nsMsgBiffManager::Init()
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	nsCOMPtr<nsIMsgAccountManager> accountManager = 
-	         do_GetService(kMsgAccountManagerCID, &rv);
+	         do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
 	if (NS_SUCCEEDED(rv))
 	{
 		accountManager->AddIncomingServerListener(this);
@@ -110,19 +109,24 @@ nsresult nsMsgBiffManager::Init()
 	return NS_OK;
 }
 
-nsresult nsMsgBiffManager::Shutdown()
+NS_IMETHODIMP nsMsgBiffManager::Shutdown()
 {
-	nsresult rv;
-	nsCOMPtr<nsIMsgAccountManager> accountManager = 
-	         do_GetService(kMsgAccountManagerCID, &rv);
-	if (NS_SUCCEEDED(rv))
-	{
-		accountManager->RemoveIncomingServerListener(this);
-	}
-
-	mHaveShutdown = PR_TRUE;
-	return NS_OK;
+  if (mBiffTimer) 
+  {
+    mBiffTimer->Cancel();
+    mBiffTimer = nsnull;
+  }
+  nsresult rv;
+  nsCOMPtr<nsIMsgAccountManager> accountManager = do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  if (NS_SUCCEEDED(rv))
+  {
+    accountManager->RemoveIncomingServerListener(this);
+  }
+  
+  mHaveShutdown = PR_TRUE;
+  return NS_OK;
 }
+
 
 NS_IMETHODIMP nsMsgBiffManager::AddServerBiff(nsIMsgIncomingServer *server)
 {
