@@ -38,18 +38,18 @@
 #ifndef _NPPLAT_H_
 #define _NPPLAT_H_
 
+#include "npapi.h"
+#include "npupp.h"
+#define HIBYTE(i) (i >> 8)
+#define LOBYTE(i) (i & 0xff)
+
 /**************************************************/
 /*                                                */
 /*                   Windows                      */
 /*                                                */
 /**************************************************/
 #ifdef XP_WIN
-
 #include "windows.h"
-
-#include "npapi.h"
-#include "npupp.h"
-
 #endif //XP_WIN
 
 /**************************************************/
@@ -58,15 +58,7 @@
 /*                                                */
 /**************************************************/
 #ifdef XP_UNIX
-
 #include <stdio.h>
-
-#include "npapi.h"
-#include "npupp.h"
-
-#define HIBYTE(i) (i >> 8)
-#define LOBYTE(i) (i & 0xff)
-
 #endif //XP_UNIX
 
 /**************************************************/
@@ -91,7 +83,7 @@
 #include <A4Stuff.h>
 
 #include "jri.h"
-#include "npapi.h"
+
 
 // The Mixed Mode procInfos defined in npupp.h assume Think C-
 // style calling conventions.  These conventions are used by
@@ -107,8 +99,6 @@
 #pragma pointers_in_D0
 #endif
 #endif
-
-#include "npupp.h"
 
 #ifdef __MWERKS__
 #ifndef powerc
