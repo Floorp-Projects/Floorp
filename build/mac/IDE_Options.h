@@ -88,7 +88,13 @@
 		#pragma peephole 			off
 		#pragma optimize_for_size 	off
 	#else
-		#pragma traceback 			on					/* leave on until the final release, so MacsBug logs are interpretable */
+		
+		#if TARGET_CARBON
+			#pragma traceback		on					/* should always be ON for Carbon builds */
+		#else
+			#pragma traceback		on					/* leave on until the final release, so MacsBug logs are interpretable */
+		#endif
+		
 		#pragma global_optimizer 	on
 		#pragma optimization_level 	4
 		#pragma scheduling 			603
