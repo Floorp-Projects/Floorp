@@ -63,7 +63,7 @@ interface nsIInputStream;
  * Errors are passed to the caller of WriteSegments, unless aFromOffset is
  * greater than zero.
  *
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 typedef NS_CALLBACK(nsReadSegmentFun)(nsIOutputStream *aOutStream,
                                       void *aClosure,
@@ -78,7 +78,7 @@ native nsReadSegmentFun(nsReadSegmentFun);
 /**
  * nsIOutputStream
  *
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
 [scriptable, uuid(0d0acd2a-61b4-11d4-9877-00c04fa0cf4a)]
 interface nsIOutputStream : nsISupports

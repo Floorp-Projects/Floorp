@@ -33,6 +33,7 @@
 #include "prtime.h"
 #include "nsISupportsUtils.h"
 #include "nsPromiseFlatString.h"
+#include "netCore.h"
 
 #if defined(PR_LOGGING)
 //

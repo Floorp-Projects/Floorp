@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIStreamListener.h"
+#include "nsISimpleStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsCOMPtr.h"
 

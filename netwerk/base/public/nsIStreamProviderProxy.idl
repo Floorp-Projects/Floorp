@@ -35,29 +35,29 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef nsStreamListenerTee_h__
-#define nsStreamListenerTee_h__
+#include "nsIStreamProvider.idl"
 
-#include "nsIStreamListenerTee.h"
-#include "nsIInputStreamTee.h"
-#include "nsIOutputStream.h"
-#include "nsCOMPtr.h"
+interface nsIEventQueue;
 
-class nsStreamListenerTee : public nsIStreamListenerTee
+/**
+ * A stream provider proxy is used to ship data over to another thread specified
+ * by the thread's event queue.  The "true" stream provider's methods are
+ * invoked on the other thread.
+ *
+ * This interface only provides the initialization needed after construction. 
+ * Otherwise, these objects may be used as a nsIStreamProvider.
+ */
+[scriptable, uuid(5c3b0bac-605a-49ac-880e-5c8b993f7d2b)]
+interface nsIStreamProviderProxy : nsIStreamProvider
 {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIREQUESTOBSERVER
-    NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMLISTENERTEE
-
-    nsStreamListenerTee() { NS_INIT_ISUPPORTS(); }
-    virtual ~nsStreamListenerTee() { }
-
-private:
-    nsCOMPtr<nsIInputStreamTee> mInputTee;
-    nsCOMPtr<nsIStreamListener> mListener;
-    nsCOMPtr<nsIOutputStream>   mSink;
+    /**
+     * Initializes an nsIStreamProviderProxy.
+     *
+     * @param aProvider - receives provider notifications on the other thread.
+     * @param aEventQ - may be NULL indicating the calling thread's event queue.
+     */
+    void init(in nsIStreamProvider aProvider,
+              in nsIEventQueue aEventQ,
+              in unsigned long aBufferSegmentSize,
+              in unsigned long aBufferMaxSize);
 };
-
-#endif

@@ -44,9 +44,9 @@ typedef unsigned long nsLoadFlags;
 /**
  * nsIRequest
  *
- * @status UNDER_REVIEW
+ * @status FROZEN
  */
-[scriptable, uuid(F2CAABA0-2F25-11d3-A164-0050041CAF44)]
+[scriptable, uuid(ef6bfbd2-fd46-48d8-96b7-9f8f0fd387fe)]
 interface nsIRequest : nsISupports
 {
     /**

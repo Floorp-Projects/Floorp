@@ -40,7 +40,7 @@
 #define nsStreamListenerProxy_h__
 
 #include "nsRequestObserverProxy.h"
-#include "nsIStreamListener.h"
+#include "nsIStreamListenerProxy.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
 #include "nsIObservableInputStream.h"

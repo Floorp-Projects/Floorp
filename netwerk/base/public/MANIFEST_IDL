@@ -25,6 +25,8 @@ nsISocketTransportService.idl
 nsIStreamIO.idl
 nsIStreamIOChannel.idl
 nsIStreamListener.idl
+nsIStreamListenerProxy.idl
+nsIStreamListenerTee.idl
 nsIFileStreams.idl
 nsITransport.idl
 nsIStreamLoader.idl
@@ -33,7 +35,10 @@ nsIResumableChannel.idl
 nsIResumableEntityID.idl
 nsIRequestObserver.idl
 nsIRequestObserverProxy.idl
+nsISimpleStreamListener.idl
+nsISimpleStreamProvider.idl
 nsIStreamProvider.idl
+nsIStreamProviderProxy.idl
 nsIUploadChannel.idl
 nsIURI.idl
 nsIURIChecker.idl

@@ -35,17 +35,18 @@
 #include "nsIURL.h"
 #include "nsIMIMEService.h"
 #include "nsIScriptSecurityManager.h"
+#include "nsIIDNService.h"
+#include "nsIStreamListenerTee.h"
 #include "nsCExternalHandlerService.h"
+#include "nsCPasswordManager.h"
 #include "nsMimeTypes.h"
 #include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsPrintfCString.h"
 #include "nsReadableUtils.h"
-#include "nsIIDNService.h"
 #include "plstr.h"
 #include "prprf.h"
 #include "nsEscape.h"
-#include "nsCPasswordManager.h"
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 

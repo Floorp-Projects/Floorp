@@ -45,6 +45,7 @@
 #include "nsICacheSession.h"
 #include "nsICacheEntryDescriptor.h"
 #include "nsIStreamListener.h"
+#include "nsIOutputStream.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 

@@ -47,6 +47,8 @@ interface nsIURI;
  * implement only the set of accessors specified by nsIURL. After obtaining the
  * instance from the component manager, the Init routine must be called on the
  * new instance to initialize it from the user's URL spec. 
+ *
+ * @status UNDER_REVIEW
  */
 [scriptable, uuid(8793370a-311f-11d4-9876-00c04fa0cf4a)]
 interface nsIStandardURL : nsISupports

@@ -42,6 +42,7 @@
 #include "nsIDOMInstallTriggerGlobal.h"
 
 #include "nscore.h"
+#include "netCore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
 #include "nsIScriptGlobalObject.h"

@@ -47,6 +47,7 @@
 #include "nsFileSpec.h"
 #include "nsAutoLock.h"
 #include "nsNetCID.h"
+#include "netCore.h"
 #include "nsCExternalHandlerService.h"
 
 ////////////////////////////////////////////////////////////////////////////////

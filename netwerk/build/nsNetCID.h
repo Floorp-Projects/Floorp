@@ -44,8 +44,9 @@
  * netwerk/base/ classes
  */
 
+// service implementing nsIIOService.
 #define NS_IOSERVICE_CLASSNAME \
-    "I/O Service"
+    "nsIOService"
 #define NS_IOSERVICE_CONTRACTID \
     "@mozilla.org/network/io-service;1"
 #define NS_IOSERVICE_CID                             \
@@ -56,8 +57,9 @@
     {0x93, 0x37, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
+// component implementing nsILoadGroup.
 #define NS_LOADGROUP_CLASSNAME \
-    "Load Group"
+    "nsLoadGroup"
 #define NS_LOADGROUP_CONTRACTID \
     "@mozilla.org/network/load-group;1"
 #define NS_LOADGROUP_CID                             \
@@ -68,8 +70,9 @@
     {0x8c, 0xce, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+// component implementing nsIURI and nsISerializable.
 #define NS_SIMPLEURI_CLASSNAME \
-    "Simple URI"
+    "nsSimpleURI"
 #define NS_SIMPLEURI_CONTRACTID \
     "@mozilla.org/network/simple-uri;1"
 #define NS_SIMPLEURI_CID                              \
@@ -80,7 +83,7 @@
      {0x8c, 0xd0, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
-// class implementing nsIFileURL, nsIStandardURL, and nsISerializable.
+// component implementing nsIStandardURL, nsIFileURL, and nsISerializable.
 #define NS_STANDARDURL_CLASSNAME \
     "nsStandardURL"
 #define NS_STANDARDURL_CONTRACTID \
@@ -93,7 +96,7 @@
     {0x93, 0x99, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-// service implementing nsIURLParser2 that assumes the URL will NOT contain an
+// service implementing nsIURLParser that assumes the URL will NOT contain an
 // authority section.
 #define NS_NOAUTHURLPARSER_CLASSNAME \
     "nsNoAuthURLParser"
@@ -107,7 +110,7 @@
     {0xbb, 0x94, 0x78, 0x9f, 0x08, 0x16, 0xa8, 0x10} \
 }
 
-// service implementing nsIURLParser2 that assumes the URL will contain an
+// service implementing nsIURLParser that assumes the URL will contain an
 // authority section.
 #define NS_AUTHURLPARSER_CLASSNAME \
     "nsAuthURLParser"
@@ -121,7 +124,7 @@
     {0xad, 0xb7, 0xd7, 0xf3, 0x90, 0xce, 0x0e, 0x42} \
 }
 
-// service implementing nsIURLParser2 that does not make any assumptions about
+// service implementing nsIURLParser that does not make any assumptions about
 // whether or not the URL contains an authority section.
 #define NS_STDURLPARSER_CLASSNAME \
     "nsStdURLParser"
@@ -135,8 +138,9 @@
     {0x92, 0x01, 0xdc, 0x9b, 0x2c, 0x03, 0x2e, 0xba} \
 }
 
+// component implementing nsIRequestObserverProxy.
 #define NS_REQUESTOBSERVERPROXY_CLASSNAME \
-    "Request Observer Proxy"
+    "nsRequestObserverProxy"
 #define NS_REQUESTOBSERVERPROXY_CONTRACTID \
     "@mozilla.org/network/request-observer-proxy;1"
 #define NS_REQUESTOBSERVERPROXY_CID                  \
@@ -147,8 +151,9 @@
     {0x9c, 0x46, 0xd0, 0x3f, 0xaa, 0x7b, 0x69, 0x6b} \
 }
 
+// component implementing nsIStreamListenerProxy.
 #define NS_STREAMLISTENERPROXY_CLASSNAME \
-    "Stream Listener Proxy"
+    "nsStreamListenerProxy"
 #define NS_STREAMLISTENERPROXY_CONTRACTID \
     "@mozilla.org/network/stream-listener-proxy;1"
 #define NS_STREAMLISTENERPROXY_CID                   \
@@ -159,8 +164,9 @@
     {0xa9, 0xd5, 0xe8, 0x42, 0xbd, 0x76, 0xf0, 0x15} \
 }
 
+// component implementing nsIStreamProviderProxy.
 #define NS_STREAMPROVIDERPROXY_CLASSNAME \
-    "Stream Provider Proxy"
+    "nsStreamProviderProxy"
 #define NS_STREAMPROVIDERPROXY_CONTRACTID \
     "@mozilla.org/network/stream-provider-proxy;1"
 #define NS_STREAMPROVIDERPROXY_CID                   \
@@ -171,8 +177,9 @@
     {0x9b, 0xbd, 0x78, 0x89, 0x4b, 0xfc, 0x1f, 0x31} \
 }
 
+// component implementing nsISimpleStreamListener.
 #define NS_SIMPLESTREAMLISTENER_CLASSNAME \
-    "Simple Stream Listener"
+    "nsSimpleStreamListener"
 #define NS_SIMPLESTREAMLISTENER_CONTRACTID \
     "@mozilla.org/network/simple-stream-listener;1"
 #define NS_SIMPLESTREAMLISTENER_CID                  \
@@ -183,8 +190,9 @@
     {0xb1, 0xd6, 0x53, 0x88, 0xe0, 0x41, 0xfb, 0x67} \
 }
 
+// component implementing nsISimpleStreamProvider.
 #define NS_SIMPLESTREAMPROVIDER_CLASSNAME \
-    "Simple Stream Provider"
+    "nsSimpleStreamProvider"
 #define NS_SIMPLESTREAMPROVIDER_CONTRACTID \
     "@mozilla.org/network/simple-stream-provider;1"
 #define NS_SIMPLESTREAMPROVIDER_CID                  \
@@ -195,8 +203,9 @@
     {0xaf, 0x40, 0x2a, 0x5e, 0xc3, 0x99, 0x27, 0x10} \
 }
 
+// DEPRECATED component implementing nsIAsyncStreamListener.
 #define NS_ASYNCSTREAMLISTENER_CLASSNAME \
-    "Async Stream Listener"
+    "nsAsyncStreamListener"
 #define NS_ASYNCSTREAMLISTENER_CONTRACTID \
     "@mozilla.org/network/async-stream-listener;1"
 #define NS_ASYNCSTREAMLISTENER_CID                   \
@@ -207,8 +216,9 @@
     {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
 }
 
+// component implementing nsIStreamListenerTee.
 #define NS_STREAMLISTENERTEE_CLASSNAME \
-    "Stream Listener Tee"
+    "nsStreamListenerTee"
 #define NS_STREAMLISTENERTEE_CONTRACTID \
     "@mozilla.org/network/stream-listener-tee;1"
 #define NS_STREAMLISTENERTEE_CID                     \
@@ -219,8 +229,15 @@
     {0xb0, 0x2e, 0x77, 0xc8, 0x81, 0xcc, 0x57, 0x73} \
 }
 
+// A simple implementation of nsITransport that stores a segmented memory
+// buffer (4k chunks).  As long as the nsITransport is referenced, the data
+// remains in memory.  It can be read multiple times (only AsyncRead is
+// implemented).  There can be only one writer at a time (only OpenOutputStream
+// is implemented).  AsyncRead can be called while an output stream is still
+// being written to.  The readers will get notified automatically as more
+// data is written via the output stream.
 #define NS_STORAGETRANSPORT_CLASSNAME \
-    "Storage Transport"
+    "nsStorageTransport"
 #define NS_STORAGETRANSPORT_CONTRACTID \
     "@mozilla.org/network/storage-transport;1"
 #define NS_STORAGETRANSPORT_CID                      \
@@ -231,8 +248,9 @@
     {0x86, 0xb5, 0x3b, 0x0f, 0x4d, 0x54, 0xb9, 0xd2} \
 }
 
+// component implementing nsIStreamIOChannel.
 #define NS_STREAMIOCHANNEL_CLASSNAME \
-    "Stream I/O Channel"
+    "nsInputStreamChannel"
 #define NS_STREAMIOCHANNEL_CONTRACTID \
     "@mozilla.org/network/stream-io-channel;1"
 #define NS_STREAMIOCHANNEL_CID                       \
@@ -243,8 +261,22 @@
     {0x98, 0x6e, 0x00, 0xc0, 0x4f, 0xa0, 0xcf, 0x4a} \
 }
 
+// component implementing nsIStreamLoader.
+#define NS_STREAMLOADER_CLASSNAME \
+    "nsStreamLoader"
+#define NS_STREAMLOADER_CONTRACTID \
+    "@mozilla.org/network/stream-loader;1"
+#define NS_STREAMLOADER_CID \
+{ /* 5BA6D920-D4E9-11d3-A1A5-0050041CAF44 */         \
+    0x5ba6d920,                                      \
+    0xd4e9,                                          \
+    0x11d3,                                          \
+    { 0xa1, 0xa5, 0x0, 0x50, 0x4, 0x1c, 0xaf, 0x44 } \
+}
+
+// component implementing nsIDownloader.
 #define NS_DOWNLOADER_CLASSNAME \
-    "File Downloader"
+    "nsDownloader"
 #define NS_DOWNLOADER_CONTRACTID \
     "@mozilla.org/network/downloader;1"
 #define NS_DOWNLOADER_CID \
@@ -255,8 +287,9 @@
     {0xbb, 0x4f, 0x96, 0x5c, 0xff, 0xd2, 0x3e, 0xce} \
 }
 
+// component implementing nsIURIChecker.
 #define NS_URICHECKER_CLASSNAME \
-    "URI Checker"
+    "nsURIChecker"
 #define NS_URICHECKER_CONTRACT_ID \
     "@mozilla.org/network/urichecker;1"
 #define NS_URICHECKER_CID \
@@ -267,8 +300,9 @@
     {0xa9, 0x04, 0xac, 0x1d, 0x6d, 0xa7, 0x7a, 0x02} \
 }
 
+// component implementing nsIResumableEntityID
 #define NS_RESUMABLEENTITYID_CLASSNAME \
-    "ResumableEntityID"
+    "nsResumableEntityID"
 #define NS_RESUMABLEENTITYID_CONTRACTID \
     "@mozilla.org/network/resumable-entity-id;1"
 #define NS_RESUMABLEENTITYID_CID \
@@ -279,12 +313,14 @@
     {0xb9, 0x5c, 0xe5, 0xd6, 0x7a, 0x34, 0xe6, 0xb3} \
 }     
 
+
 /******************************************************************************
  * netwerk/cache/ classes
  */
 
+// service implementing nsICacheService.
 #define NS_CACHESERVICE_CLASSNAME \
-    "Cache Service"
+    "nsCacheService"
 #define NS_CACHESERVICE_CONTRACTID \
     "@mozilla.org/network/cache-service;1"
 #define NS_CACHESERVICE_CID                          \

@@ -51,6 +51,17 @@
 
 // XXX Why can't we put all Netwerk error codes in one file to help avoid collisions?
 
+// Generic status codes for OnStopRequest:
+#define NS_BINDING_SUCCEEDED NS_OK
+#define NS_BINDING_FAILED    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
+#define NS_BINDING_ABORTED   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)
+
+// The binding has been moved to another request in the same load group:
+#define NS_BINDING_REDIRECTED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 3)
+
+// The binding has been moved to another request in a different load group:
+#define NS_BINDING_RETARGETED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 4)
+
 #define NS_ERROR_MALFORMED_URI \
     NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 10)
 
