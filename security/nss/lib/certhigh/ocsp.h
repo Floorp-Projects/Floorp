@@ -34,7 +34,7 @@
 /*
  * Interface to the OCSP implementation.
  *
- * $Id: ocsp.h,v 1.3 2002/07/03 00:02:34 javi%netscape.com Exp $
+ * $Id: ocsp.h,v 1.4 2002/07/03 20:18:07 javi%netscape.com Exp $
  */
 
 #ifndef _OCSP_H_
@@ -476,21 +476,55 @@ CERT_GetOCSPStatusForCertID(CERTCertDBHandle *handle,
                             int64             time);
 
 /*
- * FUNCTION CERT_GetStatusValue
+ * FUNCTION CERT_GetOCSPResponseStatus
  *   Returns the response status for the response passed.
  * INPUTS:
  *   CERTOCSPResponse *response
  *     The response to query for status
  *  RETURN:
- *    OCSPResponseStatus an enumeration corresponding to the possible
- *    return values listed in the OCSP spec.
+ *    Returns SECSuccess if the response has a successful status value.
+ *    Otherwise it returns SECFailure and sets one of the following error
+ *    codes via PORT_SetError
+ *        SEC_ERROR_OCSP_MALFORMED_REQUEST
+ *        SEC_ERROR_OCSP_SERVER_ERROR
+ *        SEC_ERROR_OCSP_TRY_SERVER_LATER
+ *        SEC_ERROR_OCSP_REQUEST_NEEDS_SIG
+ *        SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST
+ *        SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS
  */
-extern OCSPResponseStatus
-CERT_GetStatusValue(CERTOCSPResponse *response);
+extern SECStatus
+CERT_GetOCSPResponseStatus(CERTOCSPResponse *response);
 
+/*
+ * FUNCTION CERT_CreateOCSPCertID
+ *  Returns the OCSP certID for the certificate passed in.
+ * INPUTS:
+ *  CERTCertificate *cert
+ *    The certificate for which to create the certID for.
+ *  int64 time
+ *    The time at which the id is requested for.  This is used
+ *    to determine the appropriate issuer for the cert since
+ *    the issuing CA may be an older expired certificate.
+ *  RETURN:
+ *    A new copy of a CERTOCSPCertID*.  The memory for this certID
+ *    should be freed by calling CERT_DestroyOCSPCertID when the 
+ *    certID is no longer necessary.
+ */
 extern CERTOCSPCertID*
 CERT_CreateOCSPCertID(CERTCertificate *cert, int64 time);
 
+/*
+ * FUNCTION: CERT_DestroyOCSPCertID
+ *  Frees the memory associated with the certID passed in.
+ * INPUTS:
+ *  CERTOCSPCertID* certID
+ *    The certID that the caller no longer needs and wants to 
+ *    free the associated memory.
+ * RETURN:
+ *  SECSuccess if freeing the memory was successful.  Returns
+ *  SECFailure if the memory passed in was not allocated with
+ *  a call to CERT_CreateOCSPCertID.
+ */
 extern SECStatus
 CERT_DestroyOCSPCertID(CERTOCSPCertID* certID);
 /************************************************************************/

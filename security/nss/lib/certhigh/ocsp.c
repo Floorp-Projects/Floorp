@@ -35,7 +35,7 @@
  * Implementation of OCSP services, for both client and server.
  * (XXX, really, mostly just for client right now, but intended to do both.)
  *
- * $Id: ocsp.c,v 1.8 2002/07/03 00:02:34 javi%netscape.com Exp $
+ * $Id: ocsp.c,v 1.9 2002/07/03 20:18:06 javi%netscape.com Exp $
  */
 
 #include "prerror.h"
@@ -599,9 +599,11 @@ loser:
 SECStatus
 CERT_DestroyOCSPCertID(CERTOCSPCertID* certID)
 {
-    if (certID->poolp)
+    if (certID->poolp) {
 	PORT_FreeArena(certID->poolp, PR_FALSE);
-    return SECSuccess;
+	return SECSuccess;
+    }
+    return SECFailure;
 }
 
 
@@ -1414,7 +1416,7 @@ CERT_DecodeOCSPResponse(SECItem *src)
     PRArenaPool *arena = NULL;
     CERTOCSPResponse *response = NULL;
     SECStatus rv = SECFailure;
-    OCSPResponseStatus sv;
+    ocspResponseStatus sv;
 
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if (arena == NULL) {
@@ -1434,9 +1436,9 @@ CERT_DecodeOCSPResponse(SECItem *src)
 	goto loser;
     }
 
-    sv = (OCSPResponseStatus) DER_GetInteger(&response->responseStatus);
+    sv = (ocspResponseStatus) DER_GetInteger(&response->responseStatus);
     response->statusValue = sv;
-    if (sv != OCSPResponse_successful) {
+    if (sv != ocspResponse_successful) {
 	/*
 	 * If the response status is anything but successful, then we
 	 * are all done with decoding; the status is all there is.
@@ -3328,27 +3330,27 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
      * Otherwise, we continue to find the actual per-cert status
      * in the response.
      */
-    switch (CERT_GetStatusValue(response)) {
-      case OCSPResponse_successful:
+    switch (response->statusValue) {
+      case ocspResponse_successful:
 	break;
-      case OCSPResponse_malformedRequest:
+      case ocspResponse_malformedRequest:
 	PORT_SetError(SEC_ERROR_OCSP_MALFORMED_REQUEST);
 	goto loser;
-      case OCSPResponse_internalError:
+      case ocspResponse_internalError:
 	PORT_SetError(SEC_ERROR_OCSP_SERVER_ERROR);
 	goto loser;
-      case OCSPResponse_tryLater:
+      case ocspResponse_tryLater:
 	PORT_SetError(SEC_ERROR_OCSP_TRY_SERVER_LATER);
 	goto loser;
-      case OCSPResponse_sigRequired:
+      case ocspResponse_sigRequired:
 	/* XXX We *should* retry with a signature, if possible. */
 	PORT_SetError(SEC_ERROR_OCSP_REQUEST_NEEDS_SIG);
 	goto loser;
-      case OCSPResponse_unauthorized:
+      case ocspResponse_unauthorized:
 	PORT_SetError(SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST);
 	goto loser;
-      case OCSPResponse_other:
-      case OCSPResponse_unused:
+      case ocspResponse_other:
+      case ocspResponse_unused:
       default:
 	PORT_SetError(SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS);
 	goto loser;
@@ -3385,9 +3387,6 @@ CERT_CheckOCSPStatus(CERTCertDBHandle *handle, CERTCertificate *cert,
     certID = request->tbsRequest->requestList[0]->reqCert;
     rv = CERT_GetOCSPStatusForCertID(handle, response, certID, 
                                      signerCert, time);
-    /*
-     * Add back the loser clause and corresponding free's...
-     */
 loser:
     if (issuerCert != NULL)
 	CERT_DestroyCertificate(issuerCert);
@@ -3969,9 +3968,35 @@ loser:
     return(NULL);
 }
 
-OCSPResponseStatus
-CERT_GetStatusValue(CERTOCSPResponse *response)
+SECStatus
+CERT_GetOCSPResponseStatus(CERTOCSPResponse *response)
 {
     PORT_Assert(response);
-    return response->statusValue;
+    if (response->statusValue == ocspResponse_successful)
+	return SECSuccess;
+
+    switch (response->statusValue) {
+      case ocspResponse_malformedRequest:
+	PORT_SetError(SEC_ERROR_OCSP_MALFORMED_REQUEST);
+	break;
+      case ocspResponse_internalError:
+	PORT_SetError(SEC_ERROR_OCSP_SERVER_ERROR);
+	break;
+      case ocspResponse_tryLater:
+	PORT_SetError(SEC_ERROR_OCSP_TRY_SERVER_LATER);
+	break;
+      case ocspResponse_sigRequired:
+	/* XXX We *should* retry with a signature, if possible. */
+	PORT_SetError(SEC_ERROR_OCSP_REQUEST_NEEDS_SIG);
+	break;
+      case ocspResponse_unauthorized:
+	PORT_SetError(SEC_ERROR_OCSP_UNAUTHORIZED_REQUEST);
+	break;
+      case ocspResponse_other:
+      case ocspResponse_unused:
+      default:
+	PORT_SetError(SEC_ERROR_OCSP_UNKNOWN_RESPONSE_STATUS);
+	break;
+    }
+    return SECFailure;
 }
