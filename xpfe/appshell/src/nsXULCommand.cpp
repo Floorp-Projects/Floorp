@@ -99,7 +99,7 @@ NS_IMETHODIMP nsXULCommand::DoCommand()
   nsresult rv = NS_ERROR_FAILURE;
  
   nsCOMPtr<nsIContentViewer> contentViewer;
-  NS_ENSURE_SUCCESS(mWebShell->GetContentViewer(getter_AddRefs(contentViewer)),
+  NS_ENSURE_SUCCESS(mDocShell->GetContentViewer(getter_AddRefs(contentViewer)),
    NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDocumentViewer> docViewer;
@@ -133,9 +133,9 @@ NS_IMETHODIMP nsXULCommand::DoCommand()
 }
 
 //----------------------------------------------------------------------
-NS_IMETHODIMP nsXULCommand::SetWebShell(nsIWebShell * aWebShell)
+NS_IMETHODIMP nsXULCommand::SetDocShell(nsIDocShell * aDocShell)
 {
-  mWebShell = aWebShell;
+  mDocShell = aDocShell;
   return NS_OK;
 }
 
