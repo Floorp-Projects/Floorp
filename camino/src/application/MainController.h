@@ -199,4 +199,7 @@ typedef enum EBookmarkOpenBehavior
 // security feature to reset browser
 -(IBAction)resetBrowser:(id)sender;
 
+// prompts the user to reset the cache, then does it
+- (IBAction)emptyCache:(id)sender;
+
 @end

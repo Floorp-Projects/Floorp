@@ -22,6 +22,7 @@
                 doSearch = id; 
                 doStop = id; 
                 downloadsWindow = id; 
+                emptyCache = id; 
                 exportBookmarks = id; 
                 feedbackLink = id; 
                 findAgain = id; 

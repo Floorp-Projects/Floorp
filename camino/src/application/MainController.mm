@@ -1306,13 +1306,33 @@ const int kReuseWindowOnAE = 2;
   [self openNewWindowOrTabWithURL:urlString andReferrer:nil];
 }
 
-/*
- *  Here we need to:
- *  - warn user about what is going to happen
- *  - if its OK...
- *  - close all open windows, delete cache, history, cookies, site permissions,
- *    downloads, saved names and passwords
- */
+//
+// -emptyCache:
+//
+// Puts up a modal panel and if the user gives the go-ahead, emtpies the disk and memory 
+// caches. We keep this separate from |-resetBrowser:| so the user can just clear the cache
+// and not have to delete everything (such as their keychain passwords).
+//
+- (IBAction)emptyCache:(id)sender
+{
+  if (NSRunCriticalAlertPanel(NSLocalizedString(@"EmptyCacheTitle", nil), NSLocalizedString(@"EmptyCacheMessage", nil),
+         NSLocalizedString(@"EmptyButton", nil), NSLocalizedString(@"CancelButtonText", nil), nil) == NSAlertDefaultReturn) {
+    // remove cache
+    nsCOMPtr<nsICacheService> cacheServ (do_GetService("@mozilla.org/network/cache-service;1"));
+    if (cacheServ)
+      cacheServ->EvictEntries(nsICache::STORE_ANYWHERE);
+  }
+}
+
+//
+// -resetBrowser:
+//
+// Here we need to:
+// - warn user about what is going to happen
+// - if its OK...
+// - close all open windows, delete cache, history, cookies, site permissions,
+//    downloads, saved names and passwords
+//
 - (IBAction)resetBrowser:(id)sender
 {
   if (NSRunCriticalAlertPanel(NSLocalizedString(@"Reset Camino Title", @"Are you sure you want to reset Camino?"),
