@@ -1282,7 +1282,7 @@ _pl_NativeNotify(PLEventQueue* self)
 struct ThreadInterfaceData
 {
     void  *data;
-    int32 sync;
+    thread_id waitingThread;
 };
 
 static PRStatus
@@ -1290,7 +1290,7 @@ _pl_NativeNotify(PLEventQueue* self)
 {
     struct ThreadInterfaceData id;
     id.data = self;
-    id.sync = false;
+    id.waitingThread = 0;
     write_port(self->eventport, 'natv', &id, sizeof(id));
 
     return PR_SUCCESS;    /* Is this correct? */
