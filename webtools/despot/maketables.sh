@@ -102,8 +102,7 @@ create table users (
     voucher mediumint not null,
     signedform enum("No", "Yes"),
 
-    unique(email),
-    unique(mozlogin)
+    unique(email)
 );
 
 show columns from users;
