@@ -789,7 +789,6 @@ AC_CHECK_LIB(elf, elf_rawdata)
 AC_CHECK_LIB(intl, textdomain)
 AC_CHECK_LIB(posix4, shm_open)
 AC_CHECK_LIB(w, iswupper)
-AC_CHECK_LIB(c, random)
 AC_CHECK_LIB(l, yywrap,,
     AC_CHECK_LIB(fl, yywrap))
 
@@ -1044,10 +1043,10 @@ AC_FUNC_STRFTIME
 AC_FUNC_UTIME_NULL
 AC_FUNC_VFORK
 AC_FUNC_VPRINTF
-AC_CHECK_FUNCS(ftime getcwd gethostname getwd mkdir mktime putenv rmdir select)
-AC_CHECK_FUNCS(socket strcspn strdup strerror strspn strstr strtol strtoul)
-AC_CHECK_FUNCS(uname qsort snprintf waitid fork1 remainder lchown statvfs)
-AC_CHECK_FUNCS(localtime_r setvbuf)
+AC_CHECK_FUNCS(fork1 ftime getcwd getwd gethostname lchown localtime_r)
+AC_CHECK_FUNCS(mkdir mktime putenv qsort random remainder rmdir select)
+AC_CHECK_FUNCS(setvbuf snprintf socket statvfs strcspn strdup strerror)
+AC_CHECK_FUNCS(strspn strstr strtol strtoul uname waitid)
 
 AC_MSG_CHECKING(how to call gettimeofday)
 AC_CACHE_VAL(ac_cv_gettimeofday_args,
