@@ -59,6 +59,14 @@ nsAVLTree::nsAVLTree(nsAVLNodeComparitor& aComparitor,
 }
 
 
+static void 
+avlDeleteTree(nsAVLNode* aNode){
+  if (aNode) {
+    avlDeleteTree(aNode->mLeft);
+    avlDeleteTree(aNode->mRight);
+    delete aNode;
+  }
+}
 
 /**
  * 
@@ -70,6 +78,7 @@ nsAVLTree::~nsAVLTree(){
   if (mDeallocator) {
     ForEachDepthFirst(*mDeallocator);
   }
+  avlDeleteTree(mRoot);
 }
 
 
