@@ -43,8 +43,11 @@
  * If the version number that is in the registry doesn't match
  * the following, we ignore the registry. This lets news versions
  * of the software deal with old formats of registry and not
+ *
+ * alpha0.20 : First time we did versioning
+ * alpha0.30 : Changing autoreg to begin registration from ./components on unix
  */
-#define NS_XPCOM_REPOSITORY_VERSION_STRING "alpha0.20"
+#define NS_XPCOM_REPOSITORY_VERSION_STRING "alpha0.30"
 
 #include "NSReg.h"
 
