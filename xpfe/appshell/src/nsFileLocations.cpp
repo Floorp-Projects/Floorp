@@ -39,7 +39,9 @@
 #include <Memory.h>
 #include <Processes.h>
 #elif defined(XP_PC)
+#if !defined(XP_OS2)
 #include <windows.h>
+#endif // !XP_OS2 
 #include <stdlib.h>
 #include <stdio.h>
 #elif defined(XP_UNIX)
