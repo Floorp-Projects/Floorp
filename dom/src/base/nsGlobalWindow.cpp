@@ -624,24 +624,23 @@ GlobalWindowImpl::SetOpener(nsIDOMWindow* aOpener)
 NS_IMETHODIMP
 GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
 {
-  nsresult ret = NS_OK;
-  
-  *aParent = nsnull;
-  if (nsnull != mWebShell) {
-    nsIWebShell *parentWebShell;
-    mWebShell->GetParent(parentWebShell);
-    
-    if (nsnull != parentWebShell) {
-      ret = WebShellToDOMWindow(parentWebShell, aParent);
-      NS_RELEASE(parentWebShell);
-    } 
-    else {
-      *aParent = this;
-      NS_ADDREF(this);
-    }
-  }
+   NS_ENSURE_ARG_POINTER(aParent);
+   *aParent = nsnull;
+   if(!mWebShell)
+      return NS_OK;
 
-  return ret;
+   nsCOMPtr<nsIWebShell> parentWebShell;
+   mWebShell->GetParent(*getter_AddRefs(parentWebShell));
+   
+   if(parentWebShell)
+      NS_ENSURE_SUCCESS(WebShellToDOMWindow(parentWebShell, aParent), 
+         NS_ERROR_FAILURE);
+   else
+      {
+      *aParent = NS_STATIC_CAST(nsIDOMWindow*, this);
+      NS_ADDREF(*aParent);
+      }
+   return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -3460,24 +3459,36 @@ GlobalWindowImpl::GetControllers(nsIControllers** aResult)
 NS_IMETHODIMP
 GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow** aParent)
 {
-  nsresult ret = NS_OK;
-  
-  *aParent = nsnull;
-  if (nsnull != mWebShell) {
-    nsIWebShell *parentWebShell;
-    mWebShell->GetParentEvenIfChrome(parentWebShell);
-    
-    if (nsnull != parentWebShell) {
-      nsCOMPtr<nsIDOMWindow> domWindow;
-      ret = WebShellToDOMWindow(parentWebShell, getter_AddRefs(domWindow));
-      domWindow->QueryInterface(nsPIDOMWindow::GetIID(),(void**)aParent);
-      NS_RELEASE(parentWebShell);
-    } 
-    else {
-      *aParent = nsnull;
-    }
-  }
+   nsCOMPtr<nsIDOMWindow> parent;
+   GetParent(getter_AddRefs(parent));
 
-  return ret;
+   if(NS_STATIC_CAST(nsIDOMWindow*, this) == parent)
+      {
+      if(mChromeElement)
+         {
+         nsCOMPtr<nsIDocument> doc;
+         NS_ENSURE_SUCCESS(mChromeElement->GetDocument(*getter_AddRefs(doc)),
+            NS_ERROR_FAILURE);
+
+         nsCOMPtr<nsIScriptContextOwner> contextOwner = 
+                              dont_QueryInterface(doc->GetScriptContextOwner());
+         NS_ENSURE_TRUE(contextOwner, NS_ERROR_FAILURE);
+
+         nsCOMPtr<nsIScriptGlobalObject> globalObject;
+         contextOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
+         NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
+
+         parent = do_QueryInterface(globalObject);
+         }
+      else
+         parent = nsnull;
+      }
+
+   if(parent)
+      NS_ENSURE_SUCCESS(CallQueryInterface(parent, aParent), NS_ERROR_FAILURE);
+   else
+      *aParent = nsnull;
+
+   return NS_OK;
 }
 
