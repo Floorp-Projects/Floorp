@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  * Steve Clark (buster@netscape.com)
+ * Håkan Waara (hwaara@chello.se)
  *
  *   IBM Corporation
  *
@@ -6271,7 +6272,7 @@ PresShell::DumpReflows()
     mReflowCountMgr->DisplayTotals(uriStr);
     mReflowCountMgr->DisplayHTMLTotals(uriStr);
     mReflowCountMgr->DisplayDiffsInTotals("Differences");
-    if (uriStr) delete [] uriStr;
+    if (uriStr) nsCRT::free(uriStr);
   }
   return NS_OK;
 }
