@@ -83,7 +83,7 @@ if ($type == 'E' || $type == 'T' || $type == 'P') {
 
 switch ($list) {
    case "Popular":
-     $orderby = "t_version.DownloadCount DESC";
+     $orderby = "t_main.DownloadCount DESC";
      break;
    case "Updated":
      $orderby = "t_main.DateUpdated DESC";
