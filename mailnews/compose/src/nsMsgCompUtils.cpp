@@ -1222,9 +1222,9 @@ mime_7bit_data_p (const char *string, PRUint32 size)
     return PR_TRUE;
 
   char *ptr = (char *)string;
-  for (PRUint32 i; i<size; i++)
+  for (PRUint32 i=0; i<size; i++)
   {
-    if (ptr[i] > 0x7F)
+    if ((unsigned char) ptr[i] > 0x7F)
       return PR_FALSE;
   }
 	return PR_TRUE;
