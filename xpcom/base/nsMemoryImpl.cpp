@@ -227,6 +227,8 @@ nsMemoryImpl::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
         if (NS_FAILED(rv))
             break;
 #endif
+
+        rv = NS_OK;
     } while (0);
 
     if (NS_FAILED(rv))
