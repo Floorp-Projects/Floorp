@@ -72,7 +72,7 @@
 <!ENTITY caCertExists.message "The Certificate already exists.">
 
 <!-- Strings for the MismatchDomain dialog  -->
-<!ENTITY domainMismatch.title "Security Error: Domain Name  Mismatch">
+<!ENTITY domainMismatch.title "Security Error: Domain Name Mismatch">
 <!ENTITY examineCert.label "View Certificate">
 
 <!-- Strings for the Server cert expired dialog  -->
