@@ -15,6 +15,7 @@ REQUIRES = raptor
 
 libs::
 	$(INSTALL) julian.cal $(DIST)/bin/res/ui
+	$(INSTALL) julian_folders.cal $(DIST)/bin/res/ui
 	$(INSTALL) julianht.cal $(DIST)/bin/res/ui
 	$(INSTALL) julian_day.cal $(DIST)/bin/res/ui
 	$(INSTALL) julian_html.cal $(DIST)/bin/res/ui

@@ -63,9 +63,7 @@
 
 <!-- Calendar with Folder Views -->
 <panel id="CalendarAndFolder" label="CalendarAndFolder"> 
-  <!--
   <control rule="FolderViewRule" layout="ybox" weightminor="0" weightmajor="0"/>
-  -->
   <control id="mcuewv" rule="MultiCalendarUserEventWeekView" layout="ybox"/>
 </panel> 
 
