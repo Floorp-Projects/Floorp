@@ -667,6 +667,18 @@ public:
    */
   static void MapAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
                                     nsRuleData* aData);
+
+  /**
+   * Helper to map the align attribute into a style struct for things
+   * like <div>, <h1>, etc.
+   *
+   * @param aAttributes the list of attributes to map
+   * @param aData the returned rule data [INOUT]
+   * @see GetAttributeMappingFunction
+   */
+  static void MapDivAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+                                       nsRuleData* aData);
+
   /**
    * Helper to map the image border attribute into a style struct.
    *

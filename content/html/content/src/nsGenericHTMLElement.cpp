@@ -3574,6 +3574,21 @@ nsGenericHTMLElement::MapAlignAttributeInto(const nsIHTMLMappedAttributes* aAttr
   }
 }
 
+void
+nsGenericHTMLElement::MapDivAlignAttributeInto(const nsIHTMLMappedAttributes* aAttributes,
+                                               nsRuleData* aRuleData)
+{
+  if (aRuleData->mSID == eStyleStruct_Text && aRuleData->mTextData) {
+    if (aRuleData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
+      // align: enum
+      nsHTMLValue value;
+      aAttributes->GetAttribute(nsHTMLAtoms::align, value);
+      if (value.GetUnit() == eHTMLUnit_Enumerated)
+        aRuleData->mTextData->mTextAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
+    }
+  }
+}
+
 PRBool
 nsGenericHTMLElement::GetImageAlignAttributeImpact(const nsIAtom* aAttribute,
                                                    nsChangeHint& aHint)

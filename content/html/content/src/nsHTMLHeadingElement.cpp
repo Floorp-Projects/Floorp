@@ -198,16 +198,7 @@ MapAttributesIntoRule(const nsIHTMLMappedAttributes* aAttributes, nsRuleData* aD
   if (!aData || !aAttributes)
     return;
 
-  if (aData->mTextData && aData->mSID == eStyleStruct_Text) {
-    if (aData->mTextData->mTextAlign.GetUnit() == eCSSUnit_Null) {
-      // align: enum
-      nsHTMLValue value;
-      aAttributes->GetAttribute(nsHTMLAtoms::align, value);
-      if (value.GetUnit() == eHTMLUnit_Enumerated)
-        aData->mTextData->mTextAlign.SetIntValue(value.GetIntValue(), eCSSUnit_Enumerated);
-    }
-  }
-
+  nsGenericHTMLElement::MapDivAlignAttributeInto(aAttributes, aData);
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aData);
 }
 
