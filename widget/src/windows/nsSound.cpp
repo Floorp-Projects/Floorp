@@ -165,6 +165,21 @@ NS_IMETHODIMP nsSound::Play(nsIURL *aURL)
 }
 
 
+NS_IMETHODIMP nsSound::Init()
+{
+  CWinMM& theMM = CWinMM::GetModule();
+
+  // This call halts a sound if it was still playing.
+  // We have to use the sound library for something to make sure
+  // it is initialized.
+  // If we wait until the first sound is played, there will
+  // be a time lag as the library gets loaded.
+  theMM.PlaySound(nsnull, nsnull, SND_PURGE); 
+
+  return NS_OK;
+}
+
+
 NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
 {
   PurgeLastSound();

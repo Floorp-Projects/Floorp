@@ -224,6 +224,12 @@ nsSound::Beep()
 }
 
 NS_IMETHODIMP
+nsSound::Init()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSound::PlaySystemSound(const char *aSoundName)
 {
   nsCOMPtr<nsISupports> requestSupports;

@@ -40,10 +40,6 @@ class nsSound : public nsISound,
   NS_DECL_ISUPPORTS
   NS_DECL_NSISOUND
   NS_DECL_NSISTREAMLOADEROBSERVER
-
-private:
-  nsresult Init();
-
 };
 
 #endif /* __nsSound_h__ */

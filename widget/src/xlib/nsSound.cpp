@@ -50,7 +50,7 @@ nsSound::~nsSound()
 
 }
 
-nsresult nsSound::Init()
+NS_IMETHODIMP nsSound::Init()
 {
   
 #ifdef DEBUG_faulkner

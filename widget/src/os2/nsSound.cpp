@@ -170,6 +170,11 @@ NS_METHOD nsSound::Play(nsIURL *aURL)
   return rv;
 }
 
+NS_IMETHODIMP nsSound::Init()
+{
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsSound::PlaySystemSound(const char *aSoundAlias)
 {
   nsresult rv;
