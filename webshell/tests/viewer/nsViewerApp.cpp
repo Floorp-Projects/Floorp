@@ -230,7 +230,7 @@ nsViewerApp::Initialize(int argc, char** argv)
   if (NS_OK != rv) {
     return rv;
   }
-  mPrefs->Startup("prefs.js");
+  mPrefs->Startup(nsnull);
 
 
   // Load Fullcircle Talkback crash-reporting mechanism.

@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
   if (NS_FAILED(rv)) {
     goto done;
   }
-  prefs->Startup("prefs.js");
+  prefs->Startup(nsnull);
 
   /*
    * Start up the core services:
