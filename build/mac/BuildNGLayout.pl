@@ -65,6 +65,15 @@ $build{mailnews} 		= 0;
 $build{apprunner}		= 0;
 $build{resources} 		= 0;
 
+$options{transformiix}	= 0;
+$options{mathml}		= 0;
+$options{svg}			= 0;
+
+# Don't change these (where should they go?)
+$optiondefines{transformiix}{MOZ_XSL}	= 1;
+$optiondefines{mathml}{MOZ_MATHML}		= 1;
+$optiondefines{svg}{MOZ_SVG}			= 1;
+
 #-----------------------------------------------
 # configuration variables that affect the manner
 # of building, but possibly affecting
