@@ -199,7 +199,7 @@ nsLocaleService::nsLocaleService(void)
 		//
 		// get the application LCID
 		//
-		win_lcid = GetSystemDefaultLCID();
+		win_lcid = GetUserDefaultLCID();
 		if (win_lcid==0) { win32Converter->Release(); return;}
 		result = win32Converter->GetXPLocale(win_lcid,&xpLocale);
 		if (result!=NS_OK) { win32Converter->Release(); return;}
