@@ -17,12 +17,17 @@
 # Corporation. Portions created by Netscape are Copyright (C) 1998
 # Netscape Communications Corporation. All Rights Reserved.
 
-# Figure out which directory tinderbox is in by looking at argv[0]
+# Figure out which directory tinderbox is in by looking at argv[0].  Unless
+# there is a command line argument; if there is, just use that.
 
 $tinderboxdir = $0;
 $tinderboxdir =~ s:/[^/]*$::;      # Remove last word, and slash before it.
 if ($tinderboxdir eq "") {
     $tinderboxdir = ".";
+}
+
+if (@ARGV > 0) {
+    $tinderboxdir = $ARGV[0];
 }
 
 print "tinderbox = $tinderboxdir\n"; 
