@@ -1166,13 +1166,7 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
       }
       mToken.AppendToString(aSource);
       dataMask |= SEL_MASK_CLASS;
-      if (mCaseSensitive) {
-        aSelector.AddClass(mToken.mIdent);
-      }
-      else {
-        mToken.mIdent.ToUpperCase(buffer);
-        aSelector.AddClass(buffer);
-      }
+      aSelector.AddClass(mToken.mIdent);  // class always case sensitive
     }
     else if ((eCSSToken_Symbol == mToken.mType) && (':' == mToken.mSymbol)) { // :pseudo
       mToken.AppendToString(aSource);
@@ -1290,9 +1284,6 @@ PRBool CSSParserImpl::ParseSelector(PRInt32& aErrorCode,
             if ((eCSSToken_Symbol == mToken.mType) && (']' == mToken.mSymbol)) {
               mToken.AppendToString(aSource);
               dataMask |= SEL_MASK_ATTRIB;
-              if (! mCaseSensitive) {
-                value.ToUpperCase();
-              }
               aSelector.AddAttribute(attr, func, value, mCaseSensitive);
             }
             else {
