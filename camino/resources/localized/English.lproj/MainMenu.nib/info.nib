@@ -9,7 +9,7 @@
 		<key>266</key>
 		<string>644 623 277 90 0 0 1600 1002 </string>
 		<key>29</key>
-		<string>103 790 446 44 0 0 1152 848 </string>
+		<string>122 774 446 44 0 0 1280 832 </string>
 		<key>494</key>
 		<string>117 597 185 48 0 0 1280 1002 </string>
 	</dict>
@@ -36,6 +36,6 @@
 		<integer>29</integer>
 	</array>
 	<key>IBSystem Version</key>
-	<string>6G30</string>
+	<string>6I32</string>
 </dict>
 </plist>

@@ -26,7 +26,7 @@
 		<key>NSApplication</key>
 		<dict>
 			<key>Description</key>
-			<string>The Chimera application</string>
+			<string>The Camino application</string>
 			<key>Name</key>
 			<string>application</string>
 			<key>PluralName</key>
@@ -72,8 +72,8 @@
 		</dict>
 	</dict>
 	<key>Description</key>
-	<string>Navigator's scripting suite</string>
+	<string>Camino's scripting suite</string>
 	<key>Name</key>
-	<string>Navigator suite</string>
+	<string>Camino suite</string>
 </dict>
 </plist>

@@ -2,9 +2,9 @@
 <!DOCTYPE bookmarks SYSTEM "http://www.mozilla.org/DTDs/ChimeraBookmarks.dtd">
 <bookmarks xmlns="http://chimera.mozdev.org/bookmarks/">
 	<folder name="Toolbar Bookmarks" type="toolbar" open="true">
-		<folder name="Chimera Info">
-			<bookmark name="Chimera" href="http://www.mozilla.org/projects/chimera/" />
-			<bookmark name="Chimera Feedback" href="http://www.mozilla.org/projects/chimera/feedback.html" />
+		<folder name="Camino Info">
+			<bookmark name="Camino" href="http://www.mozilla.org/projects/camino/" />
+			<bookmark name="Camino Feedback" href="http://www.mozilla.org/projects/camino/feedback.html" />
 			<bookmark name="Mozilla.org" href="http://www.mozilla.org" />
 		</folder>
 		<folder name="News">

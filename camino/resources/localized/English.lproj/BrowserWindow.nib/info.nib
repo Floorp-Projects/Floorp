@@ -7,25 +7,25 @@
 	<key>IBEditorPositions</key>
 	<dict>
 		<key>124</key>
-		<string>107 563 170 144 0 0 1600 1002 </string>
+		<string>83 451 170 144 0 0 1280 832 </string>
 		<key>160</key>
 		<string>496 172 195 666 0 0 1152 848 </string>
 		<key>28</key>
-		<string>478 352 195 457 0 0 1152 848 </string>
+		<string>567 326 195 457 0 0 1280 832 </string>
 		<key>297</key>
-		<string>107 466 213 294 0 0 1600 1002 </string>
+		<string>82 354 213 294 0 0 1280 832 </string>
 		<key>314</key>
-		<string>72 544 213 150 0 0 1600 1002 </string>
+		<string>55 435 213 150 0 0 1280 832 </string>
 		<key>336</key>
-		<string>486 756 213 180 0 0 1600 1002 </string>
+		<string>374 600 213 180 0 0 1280 832 </string>
 		<key>365</key>
-		<string>31 719 93 162 0 0 1600 1002 </string>
+		<string>97 563 93 162 0 0 1280 832 </string>
 		<key>463</key>
-		<string>349 487 213 246 0 0 1600 1002 </string>
+		<string>268 375 213 264 0 0 1280 832 </string>
 		<key>56</key>
-		<string>450 634 343 68 0 0 1280 1002 </string>
+		<string>493 520 343 68 0 0 1280 832 </string>
 		<key>654</key>
-		<string>140 644 198 144 0 0 1152 848 </string>
+		<string>159 629 198 144 0 0 1280 832 </string>
 	</dict>
 	<key>IBFramework Version</key>
 	<string>291.0</string>
@@ -42,6 +42,6 @@
 	<key>IBLockedObjects</key>
 	<array/>
 	<key>IBSystem Version</key>
-	<string>6G30</string>
+	<string>6I32</string>
 </dict>
 </plist>

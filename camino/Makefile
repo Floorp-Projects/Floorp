@@ -53,9 +53,9 @@ endif
 endif
 
 ifdef BUILD_STATIC_LIBS
-TARGET		= NavigatorStatic
+TARGET		= CaminoStatic
 else
-TARGET		= Navigator
+TARGET		= Camino
 endif
 
 all:
@@ -64,5 +64,5 @@ all:
 clean clobber:
 	rm -rf build
 	rm -f resources/localized/English.lproj/Localized.rsrc
-	
+
 

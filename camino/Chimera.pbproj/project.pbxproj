@@ -102,7 +102,7 @@
 //174
 		17587328FF379C6511CA2CBB = {
 			isa = PBXApplicationReference;
-			path = Navigator.app;
+			path = Camino.app;
 			refType = 3;
 		};
 //170
@@ -186,7 +186,7 @@
 				F6BD637A01B30E0F01A962F7,
 			);
 			isa = PBXGroup;
-			name = Chimera;
+			name = Camino;
 			path = "";
 			refType = 4;
 		};
@@ -294,7 +294,7 @@
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				PREBINDING = NO;
 				PREFIX_HEADER = src/includes/ChimeraPrefix.h;
-				PRODUCT_NAME = Navigator;
+				PRODUCT_NAME = Camino;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wno-four-char-constants -Wno-unknown-pragmas -Wall -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth -Wno-long-long";
 				WRAPPER_EXTENSION = app;
@@ -308,9 +308,9 @@
 				F5170513034A396401026D5D,
 			);
 			isa = PBXApplicationTarget;
-			name = Navigator;
+			name = Camino;
 			productInstallPath = "$(HOME)/Applications";
-			productName = Chimera;
+			productName = Camino;
 			productReference = 17587328FF379C6511CA2CBB;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
@@ -399,9 +399,9 @@
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>Navigator</string>
+	<string>Camino</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Navigator 0.6.0, © 2002 The Mozilla Organization</string>
+	<string>Camino 0.6.0, © 2002 The Mozilla Organization</string>
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -409,7 +409,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Navigator</string>
+	<string>Camino</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -482,12 +482,12 @@
 			<key>NSMenuItem</key>
 			<dict>
 				<key>default</key>
-				<string>Open URL in Navigator</string>
+				<string>Open URL in Camino</string>
 			</dict>
 			<key>NSMessage</key>
 			<string>openURL</string>
 			<key>NSPortName</key>
-			<string>Navigator</string>
+			<string>Camino</string>
 			<key>NSSendTypes</key>
 			<array>
 				<string>NSStringPboardType</string>
@@ -1436,7 +1436,7 @@
 				F517395B020CE3740189DA0C,
 			);
 			isa = PBXGroup;
-			name = Chimera;
+			name = Camino;
 			path = "";
 			refType = 4;
 		};
@@ -2442,8 +2442,8 @@
 		};
 		F51B70B4026EC8A601A80166 = {
 			isa = PBXFileReference;
-			name = Navigator.scriptSuite;
-			path = resources/application/Navigator.scriptSuite;
+			name = Camino.scriptSuite;
+			path = resources/application/Camino.scriptSuite;
 			refType = 2;
 		};
 		F51B70B5026EC8A601A80166 = {
@@ -4654,7 +4654,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/Developer/Tools/Rez resources/application/ChimeraVersion.r -o build/Navigator.app/Contents/Resources/English.lproj/Localized.rsrc -useDF";
+			shellScript = "/Developer/Tools/Rez resources/application/ChimeraVersion.r -o build/Camino.app/Contents/Resources/English.lproj/Localized.rsrc -useDF";
 		};
 		F56610A3039474F501A9666E = {
 			buildActionMask = 2147483647;
@@ -4667,7 +4667,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "/Developer/Tools/Rez resources/application/ChimeraVersion.r -o build/Navigator.app/Contents/Resources/English.lproj/Localized.rsrc -useDF";
+			shellScript = "/Developer/Tools/Rez resources/application/ChimeraVersion.r -o build/Camino.app/Contents/Resources/English.lproj/Localized.rsrc -useDF";
 		};
 		F56610A40394767101A9666E = {
 			children = (
@@ -7181,7 +7181,7 @@
 		};
 		F5BAAB1802AC45D301A967F3 = {
 			isa = PBXApplicationReference;
-			path = Navigator.app;
+			path = Camino.app;
 			refType = 3;
 		};
 		F5BAAB1902AC45D301A967F3 = {
@@ -7219,7 +7219,7 @@
 				OTHER_CFLAGS = "-fno-rtti -fno-exceptions -fpascal-strings -fshort-wchar -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -D_BUILD_STATIC_BIN -DIBMBIDI";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lsmime3 -lssl3 -lnss3 -lsoftokn3 -lmozjs -lmozjpeg -ljsj -lmozpng -lmozmng -lpthread -lz -lm";
 				PREFIX_HEADER = src/includes/ChimeraPrefix.h;
-				PRODUCT_NAME = Navigator;
+				PRODUCT_NAME = Camino;
 				SECTORDER_FLAGS = "";
 				WARNING_CFLAGS = "-Wno-four-char-constants -Wno-unknown-pragmas -Wall -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth -Wno-long-long";
 				WRAPPER_EXTENSION = app;
@@ -7233,9 +7233,9 @@
 				F5170514034A396701026D5D,
 			);
 			isa = PBXApplicationTarget;
-			name = NavigatorStatic;
+			name = CaminoStatic;
 			productInstallPath = "$(HOME)/Applications";
-			productName = NavigatorStatic;
+			productName = CaminoStatic;
 			productReference = F5BAAB1802AC45D301A967F3;
 			productSettingsXML = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
 <!DOCTYPE plist PUBLIC \"-//Apple Computer//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
@@ -7324,9 +7324,9 @@
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>Navigator</string>
+	<string>Camino</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Navigator 0.6.0, © 2002 The Mozilla Organization</string>
+	<string>Camino 0.6.0, © 2002 The Mozilla Organization</string>
 	<key>CFBundleIconFile</key>
 	<string>appicon.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -7334,7 +7334,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Navigator</string>
+	<string>Camino</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -7407,12 +7407,12 @@
 			<key>NSMenuItem</key>
 			<dict>
 				<key>default</key>
-				<string>Open URL in Navigator</string>
+				<string>Open URL in Camino</string>
 			</dict>
 			<key>NSMessage</key>
 			<string>openURL</string>
 			<key>NSPortName</key>
-			<string>Navigator</string>
+			<string>Camino</string>
 			<key>NSSendTypes</key>
 			<array>
 				<string>NSStringPboardType</string>
@@ -9358,14 +9358,14 @@
 				F5CA1A1A02D3956F01F34900,
 			);
 			isa = PBXVariantGroup;
-			name = Navigator.scriptTerminology;
+			name = Camino.scriptTerminology;
 			path = "";
 			refType = 4;
 		};
 		F5CA1A1A02D3956F01F34900 = {
 			isa = PBXFileReference;
 			name = English;
-			path = resources/localized/English.lproj/Navigator.scriptTerminology;
+			path = resources/localized/English.lproj/Camino.scriptTerminology;
 			refType = 2;
 		};
 		F5CA1A1B02D3957001F34900 = {

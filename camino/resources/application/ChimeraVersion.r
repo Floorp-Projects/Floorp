@@ -62,7 +62,7 @@
 
 #define     COPYRIGHT_STRING        "© 1998-2002 The Mozilla Organization"
 #define     GETINFO_VERSION         VERSION_STRING ", " COPYRIGHT_STRING
-#define     PACKAGE_NAME            "Chimera " VERSION_STRING
+#define     PACKAGE_NAME            "Camino " VERSION_STRING
 
 
 // Resources definition
