@@ -8,7 +8,7 @@
 ; ; file comment 
 ; 
 
-[xpiengine]
+[install]
 Components:libjar.shlb 
 Components:xpinstall.shlb 
 Essential Files:dom.shlb 
@@ -24,8 +24,9 @@ Essential Files:xpcom.shlb
 Essential Files:xpistub.shlb 
 Essential Files:zlib.shlb 
 
-[core] 
+[browser] 
 apprunner 
+Component Registry
 default_prefs.js 
 Mozilla Addressbook 
 Mozilla Editor 
@@ -37,27 +38,15 @@ Mozilla Profile Manager
 Mozilla Profile Wizard
 Essential Files:AppCores.shlb 
 Essential Files:AppShell.shlb 
-Essential Files:dom.shlb 
 Essential Files:gfx.shlb 
-Essential Files:JavaScript.shlb 
 Essential Files:JPEG.shlb 
 Essential Files:libimg.shlb 
-Essential Files:libreg.shlb 
 Essential Files:libutil.shlb 
-Essential Files:LiveConnect.shlb 
-Essential Files:NetworkModular.shlb 
-Essential Files:NSPR20.shlb 
-Essential Files:NSRuntime.shlb 
-Essential Files:NSStdLib.shlb 
-Essential Files:oji.shlb 
 Essential Files:plugin.shlb 
 Essential Files:RaptorShell.shlb 
 Essential Files:WASTELib 
 Essential Files:webshell.shlb 
 Essential Files:widget.shlb 
-Essential Files:xpcom.shlb 
-Essential Files:xpistub.shlb 
-Essential Files:zlib.shlb 
 Components:about.shlb 
 Components:about.xpt 
 Components:appshell.xpt 
@@ -91,7 +80,6 @@ Components:jpgdecoder.shlb
 Components:JSLoader.shlb 
 Components:jsurl.shlb 
 Components:layout.shlb 
-Components:libjar.shlb 
 Components:libjar.xpt 
 Components:libpref.shlb 
 Components:libpref.xpt 
@@ -148,7 +136,6 @@ Components:xfer.shlb
 Components:xpcom.xpt 
 Components:XPConnect.shlb 
 Components:xpconnect.xpt 
-Components:xpinstall.shlb 
 Components:xpinstall.xpt 
 Components:Directory.shlb 
 Components:Directory.xpt 
