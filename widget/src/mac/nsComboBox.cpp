@@ -36,7 +36,7 @@
 // nsComboBox constructor
 //
 //-------------------------------------------------------------------------
-nsComboBox::nsComboBox(nsISupports *aOuter) : nsWindow(aOuter)
+nsComboBox::nsComboBox() : nsWindow(), nsIComboBox()
 {
   mMultiSelect = PR_FALSE;
   mBackground  = NS_RGB(124, 124, 124);

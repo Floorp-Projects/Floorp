@@ -22,6 +22,8 @@
 #include "nsString.h"
 #include "nsStringUtil.h"
 
+NS_IMPL_ADDREF(nsRadioButton)
+NS_IMPL_RELEASE(nsRadioButton)
 
 #define DBG 0
 //-------------------------------------------------------------------------
@@ -29,7 +31,7 @@
 // nsRadioButton constructor
 //
 //-------------------------------------------------------------------------
-nsRadioButton::nsRadioButton(nsISupports *aOuter) : nsWindow(aOuter)
+nsRadioButton::nsRadioButton() : nsWindow(), nsIRadioButton() 
 {
   strcpy(gInstanceClassName, "nsRadioButton");
   mButtonSet = PR_FALSE;
@@ -164,60 +166,26 @@ nsRadioButton::~nsRadioButton()
 {
 }
 
-//-------------------------------------------------------------------------
-//
-// Query interface implementation
-//
-//-------------------------------------------------------------------------
-nsresult nsRadioButton::QueryObject(REFNSIID aIID, void** aInstancePtr)
+/**
+ * Implement the standard QueryInterface for NS_IWIDGET_IID and NS_ISUPPORTS_IID
+ * @param aIID The name of the class implementing the method
+ * @param _classiiddef The name of the #define symbol that defines the IID
+ * for the class (e.g. NS_ISUPPORTS_IID)
+*/ 
+nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kIRadioButtonIID,    NS_IRADIOBUTTON_IID);
+    if (NULL == aInstancePtr) {
+        return NS_ERROR_NULL_POINTER;
+    }
 
-  if (aIID.Equals(kIRadioButtonIID)) {
-    AddRef();
-    *aInstancePtr = (void**) &mAggWidget;
-    return NS_OK;
-  }
-  return nsWindow::QueryObject(aIID, aInstancePtr);
-}
+    static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
+    if (aIID.Equals(kIRadioButtonIID)) {
+        *aInstancePtr = (void*) ((nsIRadioButton*)this);
+        AddRef();
+        return NS_OK;
+    }
 
-//-------------------------------------------------------------------------
-//
-// Convert a nsString to a PascalStr255
-//
-//-------------------------------------------------------------------------
-void nsRadioButton::StringToStr255(const nsString& aText, Str255& aStr255)
-{
-  char buffer[256];
-	
-	aText.ToCString(buffer,255);
-		
-	PRInt32 len = strlen(buffer);
-	memcpy(&aStr255[1],buffer,len);
-	aStr255[0] = len;
-	
-}
-
-//-------------------------------------------------------------------------
-//
-// Set this button label
-//
-//-------------------------------------------------------------------------
-void nsRadioButton::SetLabel(const nsString& aText)
-{
-	mLabel = aText;
-}
-
-
-
-//-------------------------------------------------------------------------
-//
-// Get this button label
-//
-//-------------------------------------------------------------------------
-void nsRadioButton::GetLabel(nsString& aBuffer)
-{
-	aBuffer = mLabel;
+    return nsWindow::QueryInterface(aIID,aInstancePtr);
 }
 
 //-------------------------------------------------------------------------
@@ -238,17 +206,6 @@ PRBool nsRadioButton::OnResize(nsSizeEvent &aEvent)
 }
 
 
-#define GET_OUTER() ((nsRadioButton*) ((char*)this - nsRadioButton::GetOuterOffset()))
-
-void nsRadioButton::AggRadioButton::GetLabel(nsString& aBuffer)
-{
-  GET_OUTER()->GetLabel(aBuffer);
-}
-
-void nsRadioButton::AggRadioButton::SetLabel(const nsString& aText)
-{
-  GET_OUTER()->SetLabel(aText);
-}
 
 /*
  *  @update  gpk 08/27/98
@@ -365,17 +322,23 @@ Str255		tempstring;
 }
 
 
-//-------------------------------------------------------------------------
-//
-// Set this button label
-//
-//-------------------------------------------------------------------------
-void nsRadioButton::SetState(PRBool aState) 
+
+/** nsIRadioButton Implementation **/
+
+/**
+ * Set the check state.
+ * @param aState PR_TRUE show as checked. PR_FALSE show unchecked.
+ * @result set to NS_OK if method successful
+ */
+
+NS_METHOD nsRadioButton::SetState(PRBool aState) 
 {
   int state = aState;
   
   mButtonSet = aState;
   DrawWidget(PR_FALSE);
+  
+  return NS_OK;
   
   //if (mIsArmed) {
     //mNewValue    = aState;
@@ -383,49 +346,39 @@ void nsRadioButton::SetState(PRBool aState)
   //}
 }
 
-//-------------------------------------------------------------------------
-//
-// Set this button label
-//
-//-------------------------------------------------------------------------
-PRBool nsRadioButton::GetState()
-{
-
-	return(mButtonSet);
-	
-/*
-  if (mIsArmed) {
-    if (mValueWasSet) {
-      return mNewValue;
-    } else {
-      return state;
-    }
-  } else {
-    return state;
-  }
+/**
+ * Get the check state.
+ * @param aState PR_TRUE if checked. PR_FALSE if unchecked.
+ * @result set to NS_OK if method successful
  */
- 	return PR_FALSE;
-}
-
-//----------------------------------------------------------------------
-
-
-//----------------------------------------------------------------------
-//----------------------------------------------------------------------
-
-#define GET_OUTER() \
-  ((nsRadioButton*) ((char*)this - nsRadioButton::GetOuterOffset()))
-
-PRBool nsRadioButton::AggRadioButton::GetState()
+NS_METHOD nsRadioButton::GetState(PRBool& aState)
 {
-  return GET_OUTER()->GetState();
+	aState = mButtonSet;
+  return NS_OK;
 }
 
-void nsRadioButton::AggRadioButton::SetState(PRBool aState)
+
+
+/**
+	* Set the label for this object to be equal to aText
+	*
+	* @param  Set the label to aText
+	* @result NS_Ok if no errors
+	*/
+NS_METHOD nsRadioButton::SetLabel(const nsString& aText)
 {
-  GET_OUTER()->SetState(aState);
+	mLabel = aText;
+	return NS_OK;
 }
 
-
-BASE_IWIDGET_IMPL(nsRadioButton, AggRadioButton);
-
+/**
+	* Set a buffer to be equal to this objects label
+	*
+	* @param  Put the contents of the label into aBuffer
+	* @result NS_Ok if no errors
+	*/
+NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
+{
+	aBuffer = mLabel;
+  return NS_OK;
+}

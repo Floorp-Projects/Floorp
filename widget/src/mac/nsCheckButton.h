@@ -24,17 +24,21 @@
 
 
 /**
- * Native Macintosh button wrapper
+ * Native Macintosh check button wrapper
  */
 
-class nsCheckButton : public nsWindow
+class nsCheckButton : public nsWindow,
+                      public nsICheckButton
 {
 
 public:
-  nsCheckButton(nsISupports *aOuter);
-  virtual ~nsCheckButton();
+                           nsCheckButton();
+	virtual                 ~nsCheckButton();
 
-  NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
+	// nsISupports
+	NS_IMETHOD_(nsrefcnt) AddRef();
+	NS_IMETHOD_(nsrefcnt) Release();
+	NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -53,54 +57,28 @@ public:
 
 
     // nsIRadioButton part
-  virtual void   SetLabel(const nsString& aText);
-  virtual void   GetLabel(nsString& aBuffer);
+  NS_IMETHOD     SetLabel(const nsString& aText);
+  NS_IMETHOD     GetLabel(nsString& aBuffer);
+  NS_IMETHOD 		 SetState(const PRBool aState);
+  NS_IMETHOD     GetState(PRBool& aState);
+
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
   virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
-
-  virtual void            SetState(PRBool aState);
-  virtual PRBool          GetState();
+    
+  // Overriden from nsWindow
+  virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
   
   // Mac specific methods
   void LocalToWindowCoordinate(nsPoint& aPoint);
   void LocalToWindowCoordinate(nsRect& aRect);	
-  
-  // Overriden from nsWindow
-  virtual PRBool PtInWindow(PRInt32 aX,PRInt32 aY);
-  
 
 private:
 
 	void StringToStr255(const nsString& aText, Str255& aStr255);
 	void DrawWidget(PRBool	aMouseInside);
 
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsCheckButton,mAggWidget);
-  }
 
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIRadioButton interface to nsCheckButton w/o using multiple
-  // inheritance.
-  class AggCheckButton : public nsICheckButton {
-  public:
-    AggCheckButton();
-    virtual ~AggCheckButton();
-
-    AGGREGATE_METHOD_DEF
-
-    // nsICheckButton
-    virtual void   SetLabel(const nsString &aText);
-    virtual void   GetLabel(nsString &aBuffer);
-    virtual void   SetState(PRBool aState);
-    virtual PRBool GetState();
-
-  };
-
-  AggCheckButton mAggWidget;
-  friend class AggCheckButton;
   
   nsString			mLabel;
   PRBool				mMouseDownInButton;

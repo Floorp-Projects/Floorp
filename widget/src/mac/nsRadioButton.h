@@ -26,14 +26,14 @@
  * Native Macintosh button wrapper
  */
 
-class nsRadioButton : public nsWindow
+class nsRadioButton :  public nsWindow, public nsIRadioButton
 {
 
 public:
-  nsRadioButton(nsISupports *aOuter);
+  nsRadioButton();
   virtual ~nsRadioButton();
 
-  NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
+	NS_DECL_ISUPPORTS
 
   void Create(nsIWidget *aParent,
               const nsRect &aRect,
@@ -51,15 +51,15 @@ public:
               nsWidgetInitData *aInitData = nsnull);
 
 
-    // nsIButton part
-  virtual void   SetLabel(const nsString& aText);
-  virtual void   GetLabel(nsString& aBuffer);
+    // nsIRadioButton part
+  NS_IMETHOD     SetLabel(const nsString& aText);
+  NS_IMETHOD     GetLabel(nsString& aBuffer);
+  NS_IMETHOD 		 SetState(const PRBool aState);
+  NS_IMETHOD     GetState(PRBool& aState);
+
   virtual PRBool OnPaint(nsPaintEvent & aEvent);
   virtual PRBool OnResize(nsSizeEvent &aEvent);
   virtual PRBool DispatchMouseEvent(nsMouseEvent &aEvent);
-
-  virtual void            SetState(PRBool aState);
-  virtual PRBool          GetState();
   
   // Mac specific methods
   void LocalToWindowCoordinate(nsPoint& aPoint);
@@ -70,36 +70,8 @@ public:
   
 
 private:
-
-	void StringToStr255(const nsString& aText, Str255& aStr255);
 	void DrawWidget(PRBool	aMouseInside);
 
-  // this should not be public
-  static PRInt32 GetOuterOffset() {
-    return offsetof(nsRadioButton,mAggWidget);
-  }
-
-
-  // Aggregator class and instance variable used to aggregate in the
-  // nsIButton interface to nsRadioButton w/o using multiple
-  // inheritance.
-  class AggRadioButton : public nsIRadioButton {
-  public:
-    AggRadioButton();
-    virtual ~AggRadioButton();
-
-    AGGREGATE_METHOD_DEF
-
-    // nsIRadioButton
-    virtual void   SetLabel(const nsString &aText);
-    virtual void   GetLabel(nsString &aBuffer);
-    virtual void   SetState(PRBool aState);
-    virtual PRBool GetState();
-
-  };
-
-  AggRadioButton mAggWidget;
-  friend class AggRadioButton;
   
   nsString			mLabel;
   PRBool				mMouseDownInButton;
