@@ -40,11 +40,12 @@
 
 #include "imgIContainerObserver.h"
 
-// XXX we need to be sure to fire onStopDecode messages to mObserver in error cases.
-
+PR_STATIC_CALLBACK(void) info_callback(png_structp png_ptr, png_infop info_ptr);
+PR_STATIC_CALLBACK(void) row_callback(png_structp png_ptr, png_bytep new_row,
+                                      png_uint_32 row_num, int pass);
+PR_STATIC_CALLBACK(void) end_callback(png_structp png_ptr, png_infop info_ptr);
 
 NS_IMPL_ISUPPORTS2(nsPNGDecoder, imgIDecoder, nsIOutputStream)
-
 
 nsPNGDecoder::nsPNGDecoder()
 {
@@ -76,9 +77,6 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIRequest *aRequest)
   mRequest = aRequest;
   mObserver = do_QueryInterface(aRequest);  // we're holding 2 strong refs to the request.
 
-  mImage = do_CreateInstance("@mozilla.org/image/container;1");
-  aRequest->SetImage(mImage);
-
   /* do png init stuff */
 
   /* Initialize the container's source image header. */
@@ -89,17 +87,18 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgIRequest *aRequest)
                                 NULL, NULL, 
                                 NULL);
   if (!mPNG) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
   mInfo = png_create_info_struct(mPNG);
   if (!mInfo) {
     png_destroy_read_struct(&mPNG, NULL, NULL);
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  /* use ic as libpng "progressive pointer" (retrieve in callbacks) */
-  png_set_progressive_read_fn(mPNG, NS_STATIC_CAST(png_voidp, this), nsPNGDecoder::info_callback, nsPNGDecoder::row_callback, nsPNGDecoder::end_callback);
+  /* use this as libpng "progressive pointer" (retrieve in callbacks) */
+  png_set_progressive_read_fn(mPNG, NS_STATIC_CAST(png_voidp, this),
+                              info_callback, row_callback, end_callback);
 
   return NS_OK;
 }
@@ -161,25 +160,22 @@ static NS_METHOD ReadDataOut(nsIInputStream* in,
     return NS_ERROR_FAILURE;
   }
 
-  *writeCount = decoder->ProcessData((unsigned char*)fromRawSegment, count);
-  return NS_OK;
+  nsresult rv = decoder->ProcessData((unsigned char*)fromRawSegment, count, writeCount);
+  return rv;
 }
 
-PRUint32 nsPNGDecoder::ProcessData(unsigned char *data, PRUint32 count)
+nsresult nsPNGDecoder::ProcessData(unsigned char *data, PRUint32 count, PRUint32 *readCount)
 {
   png_process_data(mPNG, mInfo, data, count);
-
-  return count; // we always consume all the data
+  *readCount = count; // we always consume all the data
+  return NS_OK;
 }
 
 /* unsigned long writeFrom (in nsIInputStream inStr, in unsigned long count); */
 NS_IMETHODIMP nsPNGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
 {
-//  PRUint32 sourceOffset = *_retval;
-
-  inStr->ReadSegments(ReadDataOut, this, count, _retval);
-
-  return NS_OK;
+  NS_ASSERTION(inStr, "Got a null input stream!");
+  return inStr->ReadSegments(ReadDataOut, this, count, _retval);
 }
 
 /* [noscript] unsigned long writeSegments (in nsReadSegmentFun reader, in voidPtr closure, in unsigned long count); */
@@ -219,7 +215,7 @@ NS_IMETHODIMP nsPNGDecoder::SetObserver(nsIOutputStreamObserver * aObserver)
 
 
 void
-nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
+info_callback(png_structp png_ptr, png_infop info_ptr)
 {
 /*  int number_passes;   NOT USED  */
   png_uint_32 width, height;
@@ -324,6 +320,12 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   if (decoder->mObserver)
     decoder->mObserver->OnStartDecode(nsnull, nsnull);
 
+  decoder->mImage = do_CreateInstance("@mozilla.org/image/container;1");
+  // XXX should we add code to longjmp out of here in failure cases?
+  //  if (!decoder->mImage) return NS_ERROR_OUT_OF_MEMORY;
+
+  decoder->mRequest->SetImage(decoder->mImage);
+
   // since the png is only 1 frame, initalize the container to the width and height of the frame
   decoder->mImage->Init(width, height, decoder->mObserver);
 
@@ -333,8 +335,7 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
   decoder->mFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
 #if 0
   // XXX should we longjmp to png_ptr->jumpbuf here if we failed?
-  if (!decoder->mFrame)
-    return NS_ERROR_FAILURE;
+  if (!decoder->mFrame) return NS_ERROR_OUT_OF_MEMORY;
 #endif
 
   gfx_format format;
@@ -385,8 +386,8 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
 
 
 void
-nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
-                           png_uint_32 row_num, int pass)
+row_callback(png_structp png_ptr, png_bytep new_row,
+             png_uint_32 row_num, int pass)
 {
   /* libpng comments:
    *
@@ -528,7 +529,7 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
 
 
 void
-nsPNGDecoder::end_callback(png_structp png_ptr, png_infop info_ptr)
+end_callback(png_structp png_ptr, png_infop info_ptr)
 {
   /* libpng comments:
    *

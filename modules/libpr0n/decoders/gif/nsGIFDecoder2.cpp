@@ -166,7 +166,6 @@ PRUint32 nsGIFDecoder2::ProcessData(unsigned char *data, PRUint32 count)
   if(gif_write_ready(mGIFStruct)) {
     gif_write(mGIFStruct, data, count);
   }
-    
 
   return count; // we always consume all the data
 }

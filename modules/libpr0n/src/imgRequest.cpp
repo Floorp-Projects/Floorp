@@ -478,6 +478,7 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx,
 NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
 {
   NS_ASSERTION(frame, "imgRequest::OnStopFrame called with NULL frame");
+  if (!frame) return NS_ERROR_UNEXPECTED;
 
   LOG_SCOPE(gImgLog, "imgRequest::OnStopFrame");
 
@@ -556,6 +557,17 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   LOG_SCOPE(gImgLog, "imgRequest::OnStartRequest");
 
   NS_ASSERTION(!mDecoder, "imgRequest::OnStartRequest -- we already have a decoder");
+
+  /* if mChannel isn't set here, use aRequest.
+     Having mChannel set is important for Canceling the load, and since we set
+     mChannel to null in OnStopRequest.  Since with multipart/x-mixed-replace, you
+     can get multiple OnStartRequests, we need to reinstance mChannel so that when/if
+     Cancel() gets called, we have a channel to cancel and we don't leave the channel
+     open forever.
+   */
+  if (!mChannel) {
+    mChannel = do_QueryInterface(aRequest);
+  }
 
   /* set our state variables to their initial values. */
   mStatus = imgIRequest::STATUS_NONE;
@@ -743,9 +755,16 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(nsIRequest *aRequest, nsISupports *ctx
 
   PRUint32 wrote;
   nsresult rv = mDecoder->WriteFrom(inStr, count, &wrote);
-#ifdef DEBUG_pavlov
-  NS_ASSERTION(NS_SUCCEEDED(rv), "mDecoder->WriteFrom failed");
-#endif
+
+  if (NS_FAILED(rv)) {
+    PR_LOG(gImgLog, PR_LOG_WARNING,
+           ("[this=%p] imgRequest::OnDataAvailable -- mDecoder->WriteFrom failed\n", this));
+
+    this->Cancel(NS_BINDING_ABORTED);
+
+    return NS_BINDING_ABORTED;
+  }
+
 
   return NS_OK;
 }

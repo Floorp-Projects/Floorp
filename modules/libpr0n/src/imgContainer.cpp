@@ -209,6 +209,9 @@ NS_IMETHODIMP imgContainer::EndFrameDecode(PRUint32 aFrameNum, PRUint32 aTimeout
 
   nsCOMPtr<gfxIImageFrame> currentFrame;
   this->GetFrameAt(aFrameNum-1, getter_AddRefs(currentFrame));
+  NS_ASSERTION(currentFrame, "Received an EndFrameDecode call with an invalid frame number");
+  if (!currentFrame) return NS_ERROR_UNEXPECTED;
+
   currentFrame->SetTimeout(aTimeout);
       
   if (!mTimer && mAnimating){
