@@ -51,12 +51,13 @@ CPPSRCS =				\
 	nsTextFragment.cpp		\
 	nsSelection.cpp			\
 	nsRange.cpp			\
+	nsRuleNode.cpp			\
 	nsTextContentChangeData.cpp	\
 	nsTextNode.cpp			\
 	nsTreeWalker.cpp		\
 	nsXMLContentSerializer.cpp	\
 	nsHTMLContentSerializer.cpp	\
-    nsParserUtils.cpp               \
+	nsParserUtils.cpp		\
 	nsPlainTextSerializer.cpp	\
 	nsContentUtils.cpp 		\
 	nsScriptLoader.cpp		\
@@ -116,6 +117,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsNodeInfoManager.obj	\
 	.\$(OBJDIR)\nsSelection.obj		\
 	.\$(OBJDIR)\nsRange.obj			\
+	.\$(OBJDIR)\nsRuleNode.obj		\
 	.\$(OBJDIR)\nsTextContentChangeData.obj	\
 	.\$(OBJDIR)\nsTextNode.obj		\
 	.\$(OBJDIR)\nsTreeWalker.obj		\

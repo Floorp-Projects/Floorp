@@ -507,7 +507,13 @@ public:
   nsresult Transition(nsIStyleRule* aRule, nsRuleNode** aResult);
   nsRuleNode* GetParent() { return mParent; }
   PRBool IsRoot() { return mParent == nsnull; }
-  nsresult GetRule(nsIStyleRule** aResult);
+  nsresult GetRule(nsIStyleRule** aResult)
+  {
+    *aResult = mRule;
+    NS_IF_ADDREF(*aResult);
+    return NS_OK;
+  }
+
   nsresult ClearCachedData(nsIStyleRule* aRule);
   nsresult ClearCachedDataInSubtree(nsIStyleRule* aRule);
   nsresult GetPresContext(nsIPresContext** aResult);

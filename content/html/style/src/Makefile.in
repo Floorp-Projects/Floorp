@@ -59,13 +59,13 @@ CPPSRCS		= \
 		nsCSSRules.cpp \
 		nsCSSStyleSheet.cpp \
 		nsCSSValue.cpp \
+		nsComputedDOMStyle.cpp \
 		nsDOMCSSDeclaration.cpp \
 		nsHTMLAttributes.cpp \
 		nsHTMLStyleSheet.cpp \
 		nsHTMLCSSStyleSheet.cpp \
-		nsComputedDOMStyle.cpp \
 		nsROCSSPrimitiveValue.cpp \
-    $(NULL)
+		$(NULL)
 
 EXPORTS		= \
 		nsDOMCSSDeclaration.h \
