@@ -173,7 +173,7 @@ DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
 DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 DefCol("target_milestone", "bugs.target_milestone", "TargetM",
        "bugs.target_milestone");
-DefCol("votes", "sum(votes.count)", "Votes", "sum(votes.count)");
+DefCol("votes", "sum(votes.count) as votesum", "Votes", "votesum");
 
 my @collist;
 if (defined $::COOKIE{'COLUMNLIST'}) {
