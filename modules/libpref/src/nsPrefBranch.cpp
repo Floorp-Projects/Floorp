@@ -28,10 +28,10 @@
 #include "nsISupportsPrimitives.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
-#include "prefapi.h"
-#include "prmem.h"
-#include "nsScriptSecurityManager.h"
+#include "nsScriptSecurityManager.h" // Danger -- this includes nsIPref.h
 #include "nsIStringBundle.h"
+#include "prefapi.h"                 // Must be included after nsScriptSecurityManager
+#include "prmem.h"
 
 #include "nsIFileSpec.h"  // this should be removed eventually
 #include "prefapi_private_data.h"
