@@ -1,0 +1,134 @@
+<?xml version="1.0"?> 
+<!--
+The contents of this file are subject to the Netscape Public
+License Version 1.1 (the "License"); you may not use this file
+except in compliance with the License. You may obtain a copy of
+the License at http://www.mozilla.org/NPL/
+
+Software distributed under the License is distributed on an "AS
+IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+implied. See the License for the specific language governing
+rights and limitations under the License.
+
+The Original Code is Mozilla Communicator client code, released
+March 31, 1998.
+
+The Initial Developer of the Original Code is Netscape
+Communications Corporation. Portions created by Netscape are
+ Copyright (C) 1998-1999 Netscape Communications Corporation. All
+Rights Reserved.
+--> 
+
+<?xml-stylesheet href="chrome://messenger/skin/addressbook/addressbook.css" type="text/css"?> 
+
+<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
+
+<!DOCTYPE window SYSTEM "chrome://messenger/locale/addressbook/abMailListDialog.dtd">
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+		title="&mailListWindow.title;"
+		class="dialog"
+		onload="OnLoadMailList()"
+        ondragover="return DragOverTree(event);"
+        ondragdrop="return DropOnAddressListTree(event);"
+		align="vertical">
+
+<script language="JavaScript" src="chrome://messenger/content/addressbook/abMailListDialog.js"/>
+
+	<keyset id="keyset"/>
+
+	<box orient="horizontal" autostretch="never" valign="center">
+		<!--html:label for="abPopup">&addToAddressBook.label;</html:label>
+		<html:div>
+			<html:select id="abPopup" ref="abdirectory://" datasources="rdf:addressdirectory"> 
+				<template> 
+					<html:option uri="..." value="rdf:http://home.netscape.com/NC-rdf#DirUri">
+						<text value="rdf:http://home.netscape.com/NC-rdf#DirName"/>
+					</html:option>
+				</template> 
+			</html:select> 
+		</html:div-->
+
+
+
+		<text for="abPopup" value="&addToAddressBook.label;"/>
+		<menulist id="abPopup">
+			<menupopup id="abPopup-menupopup" ref="abdirectory://" datasources="rdf:addressdirectory">
+				<template> 
+					<menuitem uri="..."
+					          value="rdf:http://home.netscape.com/NC-rdf#DirName"
+					          data="rdf:http://home.netscape.com/NC-rdf#DirUri"/>
+				</template> 
+			</menupopup>
+		</menulist>
+	</box>
+
+	<spring style="height:1em"/>
+		
+	<box align="vertical" style="width:100%">
+		<box orient="horizontal">
+			<spring flex="1"/>
+			<text for="ListName" value="&ListName.label;" class="CardEditLabel"/>
+			<box class="CardEditWidth">
+				<textfield id="ListName" flex="1"/>
+			</box>
+		</box>
+		<box orient="horizontal">
+			<spring flex="1"/>
+			<text for="ListNickName" value="&ListNickName.label;" class="CardEditLabel"/>
+			<box class="CardEditWidth">
+				<textfield id="ListNickName" flex="1"/>
+			</box>
+		</box>
+		<box orient="horizontal">
+			<spring flex="1"/>
+			<text for="ListDescription" value="&ListDescription.label;" class="CardEditLabel"/>
+			<box class="CardEditWidth">
+				<textfield id="ListDescription" flex="1"/>
+			</box>
+		</box>
+	</box>
+
+	<spring style="height:1em"/>
+		
+	<text value="&AddressTitle.label;"/>
+	<spring style="height:0.1em"/>
+	<box orient="horizontal"  flex="100%">
+		<box orient="vertical" flex="80%">
+			<tree id="addressListTree"		
+				  rows="8"
+				  flex="100%"
+				  onclick="awClickEmptySpace(true)"
+				  style="border:solid black 1px">
+				<treechildren id="addressList">
+					<treeitem>
+						<treerow>
+							<treecell allowevents="true">
+								<textfield id="address#1"
+											flex="100%"
+											onkeydown="if (event.which == 9) awReturnHit(this);"
+											onclick="awNotAnEmptyArea(event);"
+											/>
+							</treecell>
+						</treerow>
+					</treeitem>
+				</treechildren>
+			</tree>
+		</box>
+		<spring style="width:1em"/>
+		<box orient="vertical" flex="20%">
+			<spring style="height:30px"/>
+			<titledbutton id="button_remove" value="&RemoveButton.label;" />	
+			<spring style="height:40px"/>
+			<titledbutton id="button_up" value="&UpButton.label;" />	
+			<spring style="height:10px"/>
+			<titledbutton id="button_down" value="&DownButton.label;"/>	
+		</box>
+	</box>
+	<spring style="height:1em"/>
+		
+	<box id="okCancelButtons"/>
+
+</window>
