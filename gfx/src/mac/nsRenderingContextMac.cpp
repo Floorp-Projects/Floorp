@@ -1179,8 +1179,8 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 
   if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
   {
-    NS_ASSERTION(!(nsnull == destport), "no back buffer");
     destport = mRenderingSurface;
+    NS_ASSERTION(!(nsnull == destport), "no back buffer");
   }
   else
     destport = mFrontBuffer;
@@ -1191,10 +1191,10 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   if (aCopyFlags & NS_COPYBITS_XFORM_DEST_VALUES)
     mTMatrix->TransformCoord(&drect.x, &drect.y, &drect.width, &drect.height);
 
-	::SetRect(&srcrect,x,y,drect.width,drect.height);
-	::SetRect(&dstrect,drect.x,drect.y,drect.width,drect.height);
+  ::SetRect(&srcrect,x,y,drect.width,drect.height);
+  ::SetRect(&dstrect,drect.x,drect.y,drect.width,drect.height);
 
-	::SetPort(destport);
+  ::SetPort(destport);
 
   if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
   {
@@ -1208,6 +1208,9 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   if ( offscreenPM ) {
 		LockPixels(offscreenPM);
 		srcpix = (PixMapPtr)*offscreenPM;
+		
+		// We are setting fore/back color of destport without restoring them.
+		// do we care?
 		::RGBForeColor(&rgbblack);
 		::RGBBackColor(&rgbwhite);
 		
