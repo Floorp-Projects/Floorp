@@ -36,13 +36,13 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include <nsCOMPtr.h>
-#include <nsString.h>
-#include <nsIURI.h>
-#include <nsIChannel.h>
-#include <nsIHttpChannel.h>
-#include <nsIInputStream.h>
-#include <nsNetUtil.h>
+#include "nsCOMPtr.h"
+#include "nsString.h"
+#include "nsIURI.h"
+#include "nsIChannel.h"
+#include "nsIHttpChannel.h"
+#include "nsIInputStream.h"
+#include "nsNetUtil.h"
 
 #include <stdio.h>
 
