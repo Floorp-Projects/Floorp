@@ -474,12 +474,6 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 
 		Rect wRect;
 		nsRectToMacRect(aRect, wRect);
-		
-#if TARGET_CARBON
-		// enforce some minimums on carbon. otherwise the system hangs.
-		if (aRect.width < 100) wRect.right = wRect.left + 100;
-		if (aRect.height < 100) wRect.bottom = wRect.top + 100;
-#endif
 
 #ifdef WINDOW_SIZE_TWEAKING
 		// see also the Resize method
@@ -647,14 +641,7 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   // we need to make sure we call ::Show/HideWindow() to generate the 
   // necessary activate/deactivate events. Calling ::ShowHide() is
   // not adequate, unless we don't want activation (popups). (pinkerton).
-  //
-  // [ we're still tinkering with the bit commented out below. it causes
-  //   problems on osX, but breaks the classic build by not allowing the
-  //   hidden window to be seen by FrontWindow(). We'll fix this later, but
-  //   want to get the trunk back to normalcy. See bug 
-  //     http://bugzilla.mozilla.org/show_bug.cgi?id=70388
-  //   for details (pinkerton) ]
-  if ( bState /* && !mBounds.IsEmpty() */ ) {
+  if ( bState && !mBounds.IsEmpty() ) {
     if ( mAcceptsActivation )
       ::ShowWindow(mWindowPtr);
     else {

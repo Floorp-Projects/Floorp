@@ -88,8 +88,7 @@ nsXULWindow::nsXULWindow() : mChromeTreeOwner(nsnull),
    mContinueModalLoop(PR_FALSE), mModalStatus(NS_OK), mChromeLoaded(PR_FALSE), 
    mShowAfterLoad(PR_FALSE), mSizeMode(nsSizeMode_Normal),
    mIntrinsicallySized(PR_FALSE), mCenterAfterLoad(PR_FALSE),
-   mHadChildWindow(PR_FALSE), mZlevel(nsIXULWindow::normalZ)
-   
+   mHadChildWindow(PR_FALSE), mZlevel(nsIXULWindow::normalZ), mIsHiddenWindow(PR_FALSE)
 {
   NS_INIT_REFCNT();
 }
@@ -619,6 +618,7 @@ NS_IMETHODIMP nsXULWindow::SetTitle(const PRUnichar* aTitle)
    return NS_OK;
 }
 
+
 //*****************************************************************************
 // nsXULWindow: Helpers
 //*****************************************************************************   
@@ -736,6 +736,11 @@ NS_IMETHODIMP nsXULWindow::LoadPositionAndSizeFromXUL(PRBool aPosition,
 {
   nsresult rv;
   
+  // if we're the hidden window, don't try to validate our size/position. We're
+  // special.
+  if ( mIsHiddenWindow )
+    return NS_OK;
+
   nsCOMPtr<nsIDOMElement> windowElement;
   GetWindowDOMElement(getter_AddRefs(windowElement));
   NS_ASSERTION(windowElement, "no xul:window");

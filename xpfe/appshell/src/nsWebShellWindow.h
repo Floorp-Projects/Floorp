@@ -92,7 +92,7 @@ public:
                       PRBool aCreatedVisible, PRBool aLoadDefaultPage,
                       PRUint32 aZlevel,
                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                      nsWidgetInitData& widgetInitData);
+                      PRBool aIsHiddenWindow, nsWidgetInitData& widgetInitData);
   nsIWidget* GetWidget(void) { return mWindow; }
 
   void DoContextMenu(

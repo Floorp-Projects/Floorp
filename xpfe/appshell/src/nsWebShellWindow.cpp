@@ -238,11 +238,13 @@ nsresult nsWebShellWindow::Initialize(nsIXULWindow* aParent,
                                       PRBool aLoadDefaultPage,
                                       PRUint32 aZlevel,
                                       PRInt32 aInitialWidth, PRInt32 aInitialHeight,
-                                      nsWidgetInitData& widgetInitData)
+                                      PRBool aIsHiddenWindow, nsWidgetInitData& widgetInitData)
 {
   nsresult rv;
   nsCOMPtr<nsIWidget> parentWidget;
 
+  mIsHiddenWindow = aIsHiddenWindow;
+  
   mShowAfterLoad = aCreatedVisible;
   mLoadDefaultPage = aLoadDefaultPage;
   mZlevel = aZlevel;
