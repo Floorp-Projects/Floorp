@@ -25,24 +25,39 @@ VPATH           = @srcdir@
 
 MODULE          = embed_lite
 LIBRARY_NAME    = embed_lite
+IS_COMPONENT	  = 1
 
 include $(DEPTH)/config/autoconf.mk
 
 REQUIRES	= xpcom \
 		  string \
 		  chrome \
-		  appshell \
 		  necko \
+		  history \
+		  pref \
+		  content \
+		  caps \
+		  xpconnect \
+		  js \
+		  xuldoc \
 		  $(NULL)
 
 CPPSRCS         = \
                 nsEmbedChromeRegistry.cpp \
-				nsEmbedWindowMediator.cpp \
+				nsEmbedGlobalHistory.cpp \
 				nsEmbedLiteModule.cpp \
                 $(NULL)
+
+# bring in the chrome protocol handler
+LOBJS = $(topsrcdir)/rdf/chrome/src/nsChromeProtocolHandler.$(OBJ_SUFFIX)
+
+
+LOCAL_INCLUDES	= -I$(DEPTH)/rdf/chrome/src
 
 EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(NULL)
+
+NO_DIST_INSTALL = 1
 
 include $(topsrcdir)/config/rules.mk
