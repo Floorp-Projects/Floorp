@@ -54,6 +54,11 @@ public:
   NS_IMETHOD SetText(const char* aBuffer,
                      PRInt32 aLength,
                      PRBool aNotify) = 0;
+
+  /**
+   * Query method to see if the frame is nothing but whitespace
+   */
+  NS_IMETHOD IsOnlyWhitespace(PRBool* aResult) = 0;
 };
 
 // XXX These belong elsewhere
