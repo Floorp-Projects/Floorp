@@ -824,6 +824,9 @@ void nsWebShellWindow::LoadSubMenu(
 //----------------------------------------
 void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow) 
 {
+  nsRect oldRect;
+  mWindow->GetClientBounds(oldRect);
+
   // locate the window element which holds toolbars and menus and commands
   nsCOMPtr<nsIDOMElement> element;
   aDOMDoc->GetDocumentElement(getter_AddRefs(element));
@@ -848,12 +851,10 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
         nsMenuEvent fake;
         menuListener->MenuConstruct(fake, aParentWindow, menubarNode, mWebShell);
 
-      // XXX ok this is somewhat of a kludge but it is needed. When the menu bar is added the client area got smaller
-      // unfortunately the document will already have been flowed. So we need to reflow it to a smaller size. -EDV
-      // BEGIN REFLOW CODE
+      // Resize around the menu.
       rv = NS_ERROR_FAILURE;
 
-      // do a reflow
+      // do a resize
       nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
       contentViewerContainer = do_QueryInterface(mWebShell);
       if (!contentViewerContainer) {
@@ -886,7 +887,6 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
           return;
       }
 
-
       nsRect rect;
 
       if (NS_FAILED(rv = mWindow->GetClientBounds(rect))) {
@@ -894,16 +894,11 @@ void nsWebShellWindow::DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aP
           return;
       }
 
-      // convert to twips
-      float p2t;
-      presContext->GetScaledPixelsToTwips(&p2t);
-      rect.width = NSIntPixelsToTwips(rect.width, p2t);
-      rect.height = NSIntPixelsToTwips(rect.height, p2t);
-    
-      if (NS_FAILED(rv = presShell->ResizeReflow(rect.width,rect.height))) {
-          NS_ERROR("Failed to reflow the document after the menu was added");
-          return;
-      }
+      // Resize the browser window by the difference.
+      PRInt32 heightDelta = oldRect.height - rect.height;
+      nsRect currentBounds;
+      GetWindowBounds(currentBounds);
+      SizeWindowTo(currentBounds.width, currentBounds.height + heightDelta);
       // END REFLOW CODE
                   
       } // end if ( nsnull != pnsMenuBar )
@@ -1349,7 +1344,6 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
 
   // (9) Show the window. Don't give the focus yet because we may not want to.
   // For example, popup windows want focus, but tooltips do not.
-  window->SetSizeFromXUL();
   newWindow->Show(PR_TRUE);
 
   // (10) Do some layout.
@@ -1819,7 +1813,6 @@ nsWebShellWindow::OnEndDocumentLoad(nsIDocumentLoader* loader,
     #endif
   }
 
-  SetSizeFromXUL();
   SetTitleFromXUL();
   ShowAppropriateChrome();
   LoadContentAreas();
@@ -2053,7 +2046,6 @@ NS_IMETHODIMP nsWebShellWindow::OnConnectionsComplete()
     #endif
   }
 
-  SetSizeFromXUL();
   SetTitleFromXUL();
 
 #if 0
@@ -2185,51 +2177,6 @@ void nsWebShellWindow::ExecuteStartupCode()
 
 }
 
-
-/* A somewhat early version of window sizing code.  This simply reads attributes
-   from the window tag and blindly sets the size to whatever it finds within.
-*/
-void nsWebShellWindow::SetSizeFromXUL()
-{
-  nsCOMPtr<nsIDOMNode> webshellNode = GetDOMNodeFromWebShell(mWebShell);
-  nsIWidget *windowWidget = GetWidget();
-  nsCOMPtr<nsIDOMElement> webshellElement;
-  nsString sizeString;
-  PRInt32 errorCode,
-          specWidth, specHeight,
-          specSize;
-  nsRect  currentSize;
-
-  if (webshellNode)
-    webshellElement = do_QueryInterface(webshellNode);
-  if (!webshellElement || !windowWidget) // it's hopeless
-    return;
-
-  // first guess: use current size
-  mWindow->GetBounds(currentSize);
-  specWidth = currentSize.width;
-  specHeight = currentSize.height;
-
-  // read "height" attribute
-  if (NS_SUCCEEDED(webshellElement->GetAttribute("height", sizeString))) {
-    specSize = sizeString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode) && specSize > 0)
-      specHeight = specSize;
-  }
-
-  // read "width" attribute
-  if (NS_SUCCEEDED(webshellElement->GetAttribute("width", sizeString))) {
-    specSize = sizeString.ToInteger(&errorCode);
-    if (NS_SUCCEEDED(errorCode) || specSize > 0)
-      specWidth = specSize;
-  }
-
-  if (specWidth != currentSize.width || specHeight != currentSize.height) {
-    windowWidget->Resize(specWidth, specHeight, PR_TRUE);
-    mIntrinsicallySized = PR_FALSE;
-  }
-
-} // SetSizeFromXUL
 
 
 void nsWebShellWindow::SetTitleFromXUL()
