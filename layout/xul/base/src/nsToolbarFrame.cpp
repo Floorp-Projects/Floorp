@@ -24,6 +24,9 @@
 // See documentation in associated header file
 //
 
+#ifndef nsToolbarFrame_h___
+#define nsToolbarFrame_h___
+
 #include "nsToolbarFrame.h"
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
@@ -112,7 +115,7 @@ nsToolbarFrame :: Paint ( nsIPresContext& aPresContext,
 
 #endif
 
-  return nsBlockFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
+  return nsBoxFrame::Paint ( aPresContext, aRenderingContext, aDirtyRect, aWhichLayer );
     
 } // Paint
 
@@ -128,7 +131,8 @@ nsToolbarFrame :: Reflow ( nsIPresContext&          aPresContext,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)
 {
-  return nsBlockFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
+  return nsBoxFrame::Reflow ( aPresContext, aDesiredSize, aReflowState, aStatus );
 
 } // Reflow 
 
+#endif

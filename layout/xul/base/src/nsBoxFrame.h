@@ -24,6 +24,9 @@
  
 **/
 
+#ifndef nsBoxFrame_h___
+#define nsBoxFrame_h___
+
 #include "nsHTMLContainerFrame.h"
 class nsBoxDataSpring;
 
@@ -74,8 +77,11 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus& aEventStatus);
 
- 
+
+   PRBool IsHorizontal() const { return mHorizontal; }
+
 protected:
+   nsBoxFrame();
 
 	  virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsHTMLReflowState& aReflowState,
@@ -83,13 +89,18 @@ protected:
 
     virtual PRIntn GetSkipSides() const { return 0; }
 
-    nsBoxFrame();
 
+    virtual void GetInset(nsMargin& margin);
+  
     virtual void Stretch(nsBoxDataSpring* springs, PRInt32 nSprings, nscoord& size);
+
+    PRBool mHorizontal;
 
 private: 
 
-  PRBool mHorizontal;
+ 
  
 }; // class nsBoxFrame
+
+#endif
 
