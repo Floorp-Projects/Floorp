@@ -65,6 +65,10 @@
 #include <gdfontmb.h>
 #endif /* HAVE_BOUTELL_GD */
 
+/*
+** Ugh, MSVC6's qsort is too slow...
+*/
+#include "nsQuickSort.h"
 
 /*
 ** Turn on to attempt adding support for graphs on your platform.
@@ -145,6 +149,8 @@ int showHelp(void)
 "                                   '0' is by weight (lifespan * byte size).\n"
 "                                                       '1' is by byte size.\n"
 "                                                 '2' is by time (lifetime).\n"
+"                                         '3' is by allocation object count.\n"
+"                                     '4' is by heap operation runtime cost.\n"
 "                                                  By default, <num> is '0'.\n"
                    "\n");
 
@@ -246,17 +252,18 @@ int showHelp(void)
 }
 
 /*
-** ticks2msec
+** ticks2xsec
 **
-** Convert platform specific ticks to msec time
+** Convert platform specific ticks to second units
 ** Returns 0 on success.
 */
-PRUint32 ticks2msec(tmreader* aReader, PRUint32 aTicks)
+PRUint32 ticks2xsec(tmreader* aReader, PRUint32 aTicks, PRUint32 aResolution)
 {
     PRUint32 retval = 0;
-    PRUint64 bigone = LL_INIT(0, 1000);
+    PRUint64 bigone;
     PRUint64 tmp64;
 
+    LL_UI2L(bigone, aResolution);
     LL_UI2L(tmp64, aTicks);
     LL_MUL(bigone, bigone, tmp64);
     LL_UI2L(tmp64, aReader->ticksPerSec);
@@ -264,6 +271,8 @@ PRUint32 ticks2msec(tmreader* aReader, PRUint32 aTicks)
     LL_L2UI(retval, bigone);
     return retval;
 }
+#define ticks2msec(reader, ticks) ticks2xsec((reader), (ticks), 1000)
+#define ticks2usec(reader, ticks) ticks2xsec((reader), (ticks), 1000000)
 
 /*
 ** initOptions
@@ -1086,7 +1095,7 @@ PRUint32 byteSize(STAllocation* aAlloc)
     /*
     ** Need to bump the result by our alignment.
     ** The idea here is that an allocation actually costs you more than you
-    **  thought (1 bytes = 16 bytes).
+    **  thought (1 byte = 16 bytes).
     */
     if(0 != retval && 1 < globals.mOptions.mAlignBy)
     {
@@ -1169,61 +1178,71 @@ int appendAllocation(STRun* aRun, STAllocation* aAllocation)
                 PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
                 PRUint32 size = byteSize(aAllocation);
                 PRUint64 weight64 = LL_INIT(0, 0);
-                PRUint32 eventLoop = 0;
+                PRUint32 heapCost = aAllocation->mHeapRuntimeCost;
 
                 LL_MUL(weight64, (PRUint64)timeval, (PRUint64)size);
 
                 /*
                 ** First, update this run.
                 */
+                aRun->mStats.mCompositeCount++;
+                aRun->mStats.mHeapRuntimeCost += heapCost;
                 aRun->mStats.mSize += size;
                 LL_ADD(aRun->mStats.mTimeval64, aRun->mStats.mTimeval64, (PRUint64)timeval);
                 LL_ADD(aRun->mStats.mWeight64, aRun->mStats.mWeight64, weight64);
 
                 /*
-                ** Next, go through the events of the allocation.
+                ** Use the first event of the allocation to update the parent
+                **  callsites.
+                ** This has positive effect of not updating realloc callsites
+                **  with the same data over and over again.
                 */
-                for(eventLoop = 0; eventLoop < aAllocation->mEventCount; eventLoop++)
+                if(0 < aAllocation->mEventCount)
                 {
+                    tmcallsite* callsite = aAllocation->mEvents[0].mCallsite;
+                    STRun* callsiteRun = NULL;
+
                     /*
-                    ** If not a free...
+                    ** Go up parents till we drop.
                     */
-                    if(TM_EVENT_FREE != aAllocation->mEvents[eventLoop].mEventType)
+                    while(NULL != callsite && NULL != callsite->method)
                     {
-                        tmcallsite* callsite = aAllocation->mEvents[eventLoop].mCallsite;
-                        STRun* callsiteRun = NULL;
-
-                        /*
-                        ** Go up parents till we drop.
-                        */
-                        while(NULL != callsite && NULL != callsite->method)
+                        callsiteRun = CALLSITE_RUN(callsite);
+                        if(NULL != callsiteRun)
                         {
-                            callsiteRun = CALLSITE_RUN(callsite);
-                            if(NULL != callsiteRun)
+                            /*
+                            ** Do we init it?
+                            */
+                            if(callsiteRun->mStats.mStamp != aRun->mStats.mStamp)
                             {
-                                /*
-                                ** Do we init it?
-                                */
-                                if(callsiteRun->mStats.mStamp != aRun->mStats.mStamp)
-                                {
-                                    memset(&callsiteRun->mStats, 0, sizeof(STCallsiteStats));
-                                    callsiteRun->mStats.mStamp = aRun->mStats.mStamp;
-                                }
-
-                                /*
-                                ** Add the values.
-                                ** The realloc size and weights are a bit off,
-                                **  as they represent the final size....
-                                ** Hmm... This means that if the same site
-                                **  reallocs N times, we are N-1 times over.
-                                */
-                                callsiteRun->mStats.mSize += size;
-                                LL_ADD(callsiteRun->mStats.mTimeval64, callsiteRun->mStats.mTimeval64, (PRUint64)timeval);
-                                LL_ADD(callsiteRun->mStats.mWeight64, callsiteRun->mStats.mWeight64, weight64);
+                                memset(&callsiteRun->mStats, 0, sizeof(STCallsiteStats));
+                                callsiteRun->mStats.mStamp = aRun->mStats.mStamp;
                             }
-
-                            callsite = callsite->parent;
+                            
+                            /*
+                            ** Add the values.
+                            ** Note that if the allocation was ever realloced,
+                            **  we are actually recording the final size.
+                            ** Also, the composite count does not include
+                            **  calls to realloc (or free for that matter),
+                            **  but rather is simply a count of actual heap
+                            **  allocation objects, from which someone will
+                            **  draw conclusions regarding number of malloc
+                            **  and free calls.
+                            ** It is possible to generate the exact number
+                            **  of calls to free/malloc/realloc should the
+                            **  absolute need arise to count them individually,
+                            **  but I fear it will take mucho memory and this
+                            **  is perhaps good enough for now.
+                            */
+                            callsiteRun->mStats.mCompositeCount++;
+                            callsiteRun->mStats.mHeapRuntimeCost += heapCost;
+                            callsiteRun->mStats.mSize += size;
+                            LL_ADD(callsiteRun->mStats.mTimeval64, callsiteRun->mStats.mTimeval64, (PRUint64)timeval);
+                            LL_ADD(callsiteRun->mStats.mWeight64, callsiteRun->mStats.mWeight64, weight64);
                         }
+                        
+                        callsite = callsite->parent;
                     }
                 }
             }
@@ -1452,7 +1471,7 @@ int harvestRun(const STRun* aInRun, STRun* aOutRun, STOptions* aOptions)
 ** qsort callback.
 ** Compare the allocations as specified by the options.
 */
-int compareAllocations(const void* aAlloc1, const void* aAlloc2)
+int compareAllocations(const void* aAlloc1, const void* aAlloc2, void* aContext)
 {
     int retval = 0;
 
@@ -1468,6 +1487,11 @@ int compareAllocations(const void* aAlloc1, const void* aAlloc2)
             */
             switch(globals.mOptions.mOrderBy)
             {
+                case ST_COUNT:
+                    /*
+                    ** By count on a single allocation means nothing, so just
+                    **  fall through to weight.
+                    */
                 case ST_WEIGHT:
                 {
                     PRUint64 weight164 = LL_INIT(0, 0);
@@ -1489,24 +1513,8 @@ int compareAllocations(const void* aAlloc1, const void* aAlloc2)
 
                 case ST_SIZE:
                 {
-                    PRUint32 size1 = 0;
-                    PRUint32 size2 = 0;
-
-                    /*
-                    ** MSVC's qsort is so freaking slow on this, use the raw
-                    **  numbers to help out....
-                    ** They seem to have a breakdown regarding the uniqueness
-                    **  of the sorted values.  The byteSize function makes a
-                    **  lot of matches happen, as everything is wrapped to a
-                    **  boundry, and this appears to be the reason.
-                    */
-#if defined(XP_WIN32) && defined(_MSC_VER)
-                    size1 = alloc1->mEvents[alloc1->mEventCount - 1].mHeapSize;
-                    size2 = alloc2->mEvents[alloc2->mEventCount - 1].mHeapSize;
-#else
-                    size1 = byteSize(alloc1);
-                    size2 = byteSize(alloc2);
-#endif
+                    PRUint32 size1 = byteSize(alloc1);
+                    PRUint32 size2 = byteSize(alloc2);
 
                     if(size1 < size2)
                     {
@@ -1529,6 +1537,22 @@ int compareAllocations(const void* aAlloc1, const void* aAlloc2)
                         retval = __LINE__;
                     }
                     else if(timeval1 > timeval2)
+                    {
+                        retval = - __LINE__;
+                    }
+                }
+                break;
+
+                case ST_HEAPCOST:
+                {
+                    PRUint32 cost1 = alloc1->mHeapRuntimeCost;
+                    PRUint32 cost2 = alloc2->mHeapRuntimeCost;
+
+                    if(cost1 < cost2)
+                    {
+                        retval = __LINE__;
+                    }
+                    else if(cost1 > cost2)
                     {
                         retval = - __LINE__;
                     }
@@ -1561,7 +1585,7 @@ int sortRun(STRun* aRun)
     {
         if(NULL != aRun->mAllocations && 0 < aRun->mAllocationCount)
         {
-            qsort(aRun->mAllocations, aRun->mAllocationCount, sizeof(STAllocation*), compareAllocations);
+            NS_QuickSort(aRun->mAllocations, aRun->mAllocationCount, sizeof(STAllocation*), compareAllocations, NULL);
         }
     }
     else
@@ -1883,7 +1907,7 @@ int hasAllocation(STRun* aRun, STAllocation* aTestFor)
 ** Returns a pointer to the allocation on success.
 ** Return NULL on failure.
 */
-STAllocation* allocationTracker(PRUint32 aTimeval, char aType, tmcallsite* aCallsite, PRUint32 aHeapID, PRUint32 aSize, tmcallsite* aOldCallsite, PRUint32 aOldHeapID, PRUint32 aOldSize)
+STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRuntimeCost, tmcallsite* aCallsite, PRUint32 aHeapID, PRUint32 aSize, tmcallsite* aOldCallsite, PRUint32 aOldHeapID, PRUint32 aOldSize)
 {
     STAllocation* retval = NULL;
     static int compactor = 1;
@@ -2026,6 +2050,11 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, tmcallsite* aCall
             STAllocEvent* appendResult = NULL;
 
             /*
+            ** Record the amount of time this allocation event took.
+            */
+            allocation->mHeapRuntimeCost += aHeapRuntimeCost;
+
+            /*
             ** Now that we have an allocation, we need to make sure it has
             **  the proper event.
             */
@@ -2139,7 +2168,7 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, tmcallsite* aCall
 ** An allocation event has dropped in on us.
 ** We need to do the right thing and track it.
 */
-void trackEvent(PRUint32 aTimeval, char aType, tmcallsite* aCallsite, PRUint32 aHeapID, PRUint32 aSize, tmcallsite* aOldCallsite, PRUint32 aOldHeapID, PRUint32 aOldSize)
+void trackEvent(PRUint32 aTimeval, char aType, PRUint32 aHeapRuntimeCost, tmcallsite* aCallsite, PRUint32 aHeapID, PRUint32 aSize, tmcallsite* aOldCallsite, PRUint32 aOldHeapID, PRUint32 aOldSize)
 {
     if(NULL != aCallsite)
     {
@@ -2153,7 +2182,7 @@ void trackEvent(PRUint32 aTimeval, char aType, tmcallsite* aCallsite, PRUint32 a
             /*
             ** Add to the allocation tracking code.
             */
-            allocation = allocationTracker(aTimeval, aType, aCallsite, aHeapID, aSize, aOldCallsite, aOldHeapID, aOldSize);
+            allocation = allocationTracker(aTimeval, aType, aHeapRuntimeCost, aCallsite, aHeapID, aSize, aOldCallsite, aOldHeapID, aOldSize);
         
             if(NULL == allocation)
             {
@@ -2242,7 +2271,7 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
                         {
                             eventType = TM_EVENT_FREE;
                         }
-                        trackEvent(ticks2msec(aReader, aEvent->u.alloc.interval), eventType, callsite, aEvent->u.alloc.ptr, aEvent->u.alloc.size, oldcallsite, oldptr, oldsize);
+                        trackEvent(ticks2msec(aReader, aEvent->u.alloc.interval), eventType, ticks2usec(aReader, aEvent->u.alloc.cost), callsite, aEvent->u.alloc.ptr, aEvent->u.alloc.size, oldcallsite, oldptr, oldsize);
                     }
                 }
                 else
@@ -2934,6 +2963,7 @@ int displayTopAllocations(STRun* aRun, int aWantCallsite)
             PR_fprintf(globals.mRequest.mFD, "<td><b>Byte Size</b></td>\n");
             PR_fprintf(globals.mRequest.mFD, "<td><b>Lifespan Seconds</b></td>\n");
             PR_fprintf(globals.mRequest.mFD, "<td><b>Weight</b></td>\n");
+            PR_fprintf(globals.mRequest.mFD, "<td><b>Heap Operation Seconds</b></td>\n");
             if(0 != aWantCallsite)
             {
                 PR_fprintf(globals.mRequest.mFD, "<td><b>Origin Callsite</b></td>\n");
@@ -2950,6 +2980,7 @@ int displayTopAllocations(STRun* aRun, int aWantCallsite)
                 {
                     PRUint32 lifespan = current->mMaxTimeval - current->mMinTimeval;
                     PRUint32 size = byteSize(current);
+                    PRUint32 heapCost = current->mHeapRuntimeCost;
                     PRUint64 weight64 = LL_INIT(0, 0);
                     char buffer[32];
 
@@ -2984,6 +3015,11 @@ int displayTopAllocations(STRun* aRun, int aWantCallsite)
                     ** Weight.
                     */
                     PR_fprintf(globals.mRequest.mFD, "<td align=right>%llu</td>\n", weight64);
+
+                    /*
+                    ** Heap operation cost.
+                    */
+                    PR_fprintf(globals.mRequest.mFD, "<td align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(heapCost));
 
                     if(0 != aWantCallsite)
                     {
@@ -3036,6 +3072,7 @@ int displayMemoryLeaks(STRun* aRun)
         PR_fprintf(globals.mRequest.mFD, "<td><b>Byte Size</b></td>\n");
         PR_fprintf(globals.mRequest.mFD, "<td><b>Lifespan Seconds</b></td>\n");
         PR_fprintf(globals.mRequest.mFD, "<td><b>Weight</b></td>\n");
+        PR_fprintf(globals.mRequest.mFD, "<td><b>Heap Operation Seconds</b></td>\n");
         PR_fprintf(globals.mRequest.mFD, "<td><b>Origin Callsite</b></td>\n");
         PR_fprintf(globals.mRequest.mFD, "</tr>\n");
 
@@ -3057,6 +3094,7 @@ int displayMemoryLeaks(STRun* aRun)
                 {
                     PRUint32 lifespan = current->mMaxTimeval - current->mMinTimeval;
                     PRUint32 size = byteSize(current);
+                    PRUint32 heapCost = current->mHeapRuntimeCost;
                     PRUint64 weight64 = LL_INIT(0, 0);
                     char buffer[32];
                     
@@ -3097,6 +3135,11 @@ int displayMemoryLeaks(STRun* aRun)
                     */
                     PR_fprintf(globals.mRequest.mFD, "<td align=right>%llu</td>\n", weight64);
                     
+                    /*
+                    ** Heap Operation Seconds.
+                    */
+                    PR_fprintf(globals.mRequest.mFD, "<td align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(heapCost));
+
                     /*
                     ** Callsite.
                     */
@@ -3170,6 +3213,8 @@ int displayCallsites(tmcallsite* aCallsite, int aFollow, PRUint32 aStamp, int aR
                         PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Byte Size</b></td>\n");
                         PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Seconds</b></td>\n");
                         PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Weight</b></td>\n");
+                        PR_fprintf(globals.mRequest.mFD, "<td><b>Heap Object Count</b></td>\n");
+                        PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Heap Operation Seconds</b></td>\n");
                         PR_fprintf(globals.mRequest.mFD, "</tr>\n");
                     }
 
@@ -3200,6 +3245,16 @@ int displayCallsites(tmcallsite* aCallsite, int aFollow, PRUint32 aStamp, int aR
                     */
                     PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%llu</td>\n", run->mStats.mWeight64);
                     
+                    /*
+                    ** Allocation object count.
+                    */
+                    PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>%u</td>\n", run->mStats.mCompositeCount);
+
+                    /*
+                    ** Heap Operation Seconds.
+                    */
+                    PR_fprintf(globals.mRequest.mFD, "<td valign=top align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mStats.mHeapRuntimeCost));
+
                     PR_fprintf(globals.mRequest.mFD, "</tr>\n");
                 }
             }
@@ -3262,6 +3317,7 @@ int displayAllocationDetails(STAllocation* aAllocation)
         PRUint32 traverse = 0;
         PRUint32 bytesize = byteSize(aAllocation);
         PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
+        PRUint32 heapCost = aAllocation->mHeapRuntimeCost;
         PRUint64 weight64 = LL_INIT(0, 0);
         PRUint32 cacheval = 0;
         int displayRes = 0;
@@ -3274,6 +3330,7 @@ int displayAllocationDetails(STAllocation* aAllocation)
         PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Final Size:</td><td align=right>%u</td></tr>\n", bytesize);
         PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Lifespan Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE(timeval));
         PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Weight:</td><td align=right>%llu</td></tr>\n", weight64);
+        PR_fprintf(globals.mRequest.mFD, "<tr><td align=left>Heap Operation Seconds:</td><td align=right>" ST_MICROVAL_FORMAT "</td></tr>\n", ST_MICROVAL_PRINTABLE(heapCost));
         PR_fprintf(globals.mRequest.mFD, "</table><p>\n");
 
         /*
@@ -3369,11 +3426,11 @@ int displayAllocationDetails(STAllocation* aAllocation)
 **
 ** qsort callback.
 ** Compare the callsites as specified by the options.
-** There must be NO equal callsites, unless they erally are duplicates,
+** There must be NO equal callsites, unless they really are duplicates,
 **  this is so that a duplicate detector loop can
 **  simply skip sorted items until the callsite is different.
 */
-int compareCallsites(const void* aSite1, const void* aSite2)
+int compareCallsites(const void* aSite1, const void* aSite2, void* aContext)
 {
     int retval = 0;
 
@@ -3445,6 +3502,38 @@ int compareCallsites(const void* aSite1, const void* aSite2)
                     }
                     break;
 
+                    case ST_COUNT:
+                    {
+                        PRUint32 count1 = stats1->mCompositeCount;
+                        PRUint32 count2 = stats2->mCompositeCount;
+
+                        if(count1 < count2)
+                        {
+                            retval = __LINE__;
+                        }
+                        else if(count1 > count2)
+                        {
+                            retval = - __LINE__;
+                        }
+                    }
+                    break;
+
+                    case ST_HEAPCOST:
+                    {
+                        PRUint32 cost1 = stats1->mHeapRuntimeCost;
+                        PRUint32 cost2 = stats2->mHeapRuntimeCost;
+
+                        if(cost1 < cost2)
+                        {
+                            retval = __LINE__;
+                        }
+                        else if(cost1 > cost2)
+                        {
+                            retval = - __LINE__;
+                        }
+                    }
+                    break;
+
                     default:
                     {
                         REPORT_ERROR(__LINE__, compareAllocations);
@@ -3509,7 +3598,7 @@ int displayTopCallsites(tmcallsite** aCallsites, PRUint32 aCallsiteCount, PRUint
         /*
         ** Sort the things.
         */
-        qsort(aCallsites, aCallsiteCount, sizeof(tmcallsite*), compareCallsites);
+        NS_QuickSort(aCallsites, aCallsiteCount, sizeof(tmcallsite*), compareCallsites, NULL);
 
         /*
         ** Time for output.
@@ -3539,6 +3628,8 @@ int displayTopCallsites(tmcallsite** aCallsites, PRUint32 aCallsiteCount, PRUint
                     PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Size</b></td>\n");
                     PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Seconds</b></td>\n");
                     PR_fprintf(globals.mRequest.mFD, "<td><b>Composite Weight</b></td>\n");
+                    PR_fprintf(globals.mRequest.mFD, "<td><b>Heap Object Count</b></td>\n");
+                    PR_fprintf(globals.mRequest.mFD, "<td><b>Heap Operation Seconds</b></td>\n");
                     PR_fprintf(globals.mRequest.mFD, "</tr>\n");
                 }
 
@@ -3572,6 +3663,16 @@ int displayTopCallsites(tmcallsite** aCallsites, PRUint32 aCallsiteCount, PRUint
                 ** Weight.
                 */
                 PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>%llu</td>\n", run->mStats.mWeight64);
+
+                /*
+                ** Allocation object count.
+                */
+                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>%u</td>\n", run->mStats.mCompositeCount);
+
+                /*
+                ** Heap operation seconds.
+                */
+                PR_fprintf(globals.mRequest.mFD, "<td align=right valign=top>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mStats.mHeapRuntimeCost));
 
                 PR_fprintf(globals.mRequest.mFD, "</tr>\n");
 
@@ -3630,6 +3731,8 @@ int displayCallsiteDetails(tmcallsite* aCallsite)
         PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Byte Size:</td><td align=right>%u</td></tr>\n", thisRun->mStats.mSize);
         PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE64(thisRun->mStats.mTimeval64));
         PR_fprintf(globals.mRequest.mFD, "<tr><td>Composite Weight:</td><td align=right>%llu</td></tr>\n", thisRun->mStats.mWeight64);
+        PR_fprintf(globals.mRequest.mFD, "<tr><td>Heap Object Count:</td><td align=right>%u</td></tr>\n", thisRun->mStats.mCompositeCount);
+        PR_fprintf(globals.mRequest.mFD, "<tr><td>Heap Operation Seconds:</td><td align=right>" ST_MICROVAL_FORMAT "</td></tr>\n", ST_MICROVAL_PRINTABLE(thisRun->mStats.mHeapRuntimeCost));
         PR_fprintf(globals.mRequest.mFD, "</table>\n<p>\n");
 
         /*
@@ -4680,8 +4783,8 @@ int displaySettings(void)
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
 
     PR_fprintf(globals.mRequest.mFD, "This option controls the sort order of the lists presented.<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "There are 3 choices:<br>\n");
-    PR_fprintf(globals.mRequest.mFD, "<ul><li>0 is by weight (byte size * seconds).<li>1 is by byte size.<li>2 is by seconds (lifetime).</ul><p>\n");
+    PR_fprintf(globals.mRequest.mFD, "There are several choices:<br>\n");
+    PR_fprintf(globals.mRequest.mFD, "<ul><li>0 is by weight (byte size * seconds).<li>1 is by byte size.<li>2 is by seconds (lifetime).<li>3 is by allocation object count.<li>4 is by heap operation runtime cost.</ul><p>\n");
     PR_fprintf(globals.mRequest.mFD, "Desired sort order?<br>\n");
     PR_fprintf(globals.mRequest.mFD, "<input type=text name=\"mOrderBy\" value=\"%u\"><br>\n", globals.mOptions.mOrderBy);
     PR_fprintf(globals.mRequest.mFD, "<hr>\n");
