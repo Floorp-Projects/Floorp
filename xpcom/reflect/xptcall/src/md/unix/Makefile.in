@@ -56,7 +56,7 @@ endif
 #
 # Neutrino/Intel (uses the same unixish_x86 code)
 #
-ifeq ($(OS_TARGET)$(OS_TEST),NTOx86pc)
+ifeq ($(OS_TARGET)$(OS_TEST),NTOx86)
 CPPSRCS		:= xptcinvoke_unixish_x86.cpp xptcstubs_unixish_x86.cpp
 endif
 
