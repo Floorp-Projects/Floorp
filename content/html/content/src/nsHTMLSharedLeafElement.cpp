@@ -217,16 +217,8 @@ NS_IMPL_STRING_ATTR(nsHTMLSharedLeafElement, Prompt, prompt)
 NS_IMETHODIMP
 nsHTMLSharedLeafElement::GetForm(nsIDOMHTMLFormElement** aForm)
 {
-#ifdef GATHER_ELEMENT_USEAGE_STATISTICS
-  extern void GEUS_DumpElementCounts();
-
-  GEUS_DumpElementCounts();
-#endif
-
-  *aForm = nsnull;/* XXX */
-  return NS_OK;
+  return FindForm(aForm);
 }
-
 
 NS_IMETHODIMP_(PRBool)
 nsHTMLSharedLeafElement::IsContentOfType(PRUint32 aFlags)
