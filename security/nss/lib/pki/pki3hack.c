@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.19 $ $Date: 2002/01/05 03:00:08 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.20 $ $Date: 2002/01/07 16:45:26 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -655,6 +655,9 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
 	instance->handle = cc->pkcs11ID;
 	instance->isTokenObject = PR_TRUE;
 	nssList_Add(c->object.instanceList, instance);
+	/* XXX Fix this! */
+	nssListIterator_Destroy(c->object.instances);
+	c->object.instances = nssList_CreateIterator(c->object.instanceList);
     }
     c->decoding = create_decoded_pkix_cert_from_nss3cert(arena, cc);
     cc->nssCertificate = c;
@@ -670,16 +673,21 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     NSSTrustDomain *td;
     NSSTrust *nssTrust;
     NSSArena *arena;
+    CERTCertTrust *oldTrust;
     nssListIterator *tokens;
     PRBool moving_object;
-    if (cc->trust) {
-	/* no-op if the trust isn't changing (duh) */
-	if (memcmp(cc->trust, trust, sizeof (CERTCertTrust)) == 0) {
+    oldTrust = nssTrust_GetCERTCertTrustForCert(c, cc);
+    if (oldTrust) {
+	if (memcmp(oldTrust, trust, sizeof (CERTCertTrust)) == 0) {
+	    /* ... and the new trust is no different, done) */
 	    return PR_SUCCESS;
+	} else {
+	    cc->trust = oldTrust;
 	}
-    } 
-    /* Set the CERTCertificate's trust */
-    cc->trust = trust;
+    } else {
+	cc->trust = PORT_ArenaAlloc(cc->arena, sizeof(CERTCertTrust));
+	memcpy(cc->trust, trust, sizeof(CERTCertTrust));
+    }
     /* Set the NSSCerticate's trust */
     arena = nssArena_Create();
     if (!arena) return PR_FAILURE;

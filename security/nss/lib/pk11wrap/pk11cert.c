@@ -1566,6 +1566,9 @@ PK11_ImportCert(PK11SlotInfo *slot, CERTCertificate *cert,
 	    instance->handle = cert->pkcs11ID;
 	    instance->isTokenObject = PR_TRUE;
 	    nssList_Add(c->object.instanceList, instance);
+	    /* XXX Fix this! */
+	    nssListIterator_Destroy(c->object.instances);
+	    c->object.instances = nssList_CreateIterator(c->object.instanceList);
 	} else {
 	    cert->nssCertificate = STAN_GetNSSCertificate(cert);
 	}
