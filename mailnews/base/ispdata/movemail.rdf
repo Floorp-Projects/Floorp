@@ -25,7 +25,7 @@
         <NC:wizardHideIncoming>true</NC:wizardHideIncoming>
         <NC:wizardSkipPanels>loginpage</NC:wizardSkipPanels>
         <NC:wizardShortName>Movemail</NC:wizardShortName>
-        <NC:wizardLongName>Movemail</NC:wizardLongName>
+        <NC:wizardLongName>Unix Mailspool (Movemail)</NC:wizardLongName>
         <NC:wizardShow>true</NC:wizardShow>
         <NC:emailProviderName>Movemail</NC:emailProviderName>
  
