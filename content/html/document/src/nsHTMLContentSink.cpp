@@ -3836,9 +3836,10 @@ HTMLContentSink::AddDocTypeDecl(const nsIParserNode& aNode)
   }
 
   // Cut out "<!DOCTYPE" or "DOCTYPE" from the name.
-  if (Substring(name, 0, 9).Equals(NS_LITERAL_STRING("<!DOCTYPE"))) {
+  nsCaseInsensitiveStringComparator ignoreCase;
+  if (Substring(name, 0, 9).Equals(NS_LITERAL_STRING("<!DOCTYPE"), ignoreCase)) {
     name.Cut(0, 9);
-  } else if (Substring(name, 0, 7).Equals(NS_LITERAL_STRING("DOCTYPE"))) {
+  } else if (Substring(name, 0, 7).Equals(NS_LITERAL_STRING("DOCTYPE"), ignoreCase)) {
     name.Cut(0, 7);
   }
 
