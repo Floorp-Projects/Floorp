@@ -107,9 +107,20 @@ nsresult MRJPlugin::GetService(const char* aContractID, const nsIID& aIID, void*
 
 #pragma export on
 
+static long getSystemVersion()
+{
+    long version = 0;
+    Gestalt(gestaltSystemVersion, &version);
+    return version;
+}
+
 nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const char *aClassName, const char *aContractID, nsIFactory **aFactory)
 {
     nsresult result = NS_OK;
+
+    // First off, fail if not running on AT LEAST Mac OS X, v10.1.
+    if (getSystemVersion() < 0x00001010)
+        return NS_ERROR_FAILURE;
 
     if (theServiceManager == NULL && theServiceManagerObsolete == NULL) {
         if (NS_FAILED(serviceManager->QueryInterface(NS_GET_IID(nsIServiceManager), (void**)&theServiceManager)))
@@ -118,7 +129,7 @@ nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const ch
 
         // Our global operator new wants to use nsIMalloc to do all of its allocation.
         // This should be available from the Service Manager.
-        if (MRJPlugin::GetService(NS_MEMORY_CONTRACTID, NS_GET_IID(nsIMemory), (void **)&theMemoryAllocator) != NS_OK)
+        if (NS_FAILED(MRJPlugin::GetService("@mozilla.org/xpcom/memory-service;1", NS_GET_IID(nsIMemory), (void **)&theMemoryAllocator)))
             return NS_ERROR_FAILURE;
     }
 
