@@ -150,7 +150,7 @@ NS_IMPL_ISUPPORTS1(nsDiskCacheEntryInfo, nsICacheEntryInfo);
 NS_IMETHODIMP nsDiskCacheEntryInfo::GetClientID(char ** clientID)
 {
     NS_ENSURE_ARG_POINTER(clientID);
-    return ClientIDFromCacheKey(nsLiteralCString(mDiskEntry->mKeyStart), clientID);
+    return ClientIDFromCacheKey(nsDependentCString(mDiskEntry->mKeyStart), clientID);
 }
 
 extern const char DISK_CACHE_DEVICE_ID[];
@@ -165,7 +165,7 @@ NS_IMETHODIMP nsDiskCacheEntryInfo::GetDeviceID(char ** deviceID)
 NS_IMETHODIMP nsDiskCacheEntryInfo::GetKey(char ** clientKey)
 {
     NS_ENSURE_ARG_POINTER(clientKey);
-    return ClientKeyFromCacheKey(nsLiteralCString(mDiskEntry->mKeyStart), clientKey);
+    return ClientKeyFromCacheKey(nsDependentCString(mDiskEntry->mKeyStart), clientKey);
 }
 
 NS_IMETHODIMP nsDiskCacheEntryInfo::GetFetchCount(PRInt32 *aFetchCount)

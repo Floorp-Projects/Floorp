@@ -1197,7 +1197,7 @@ nsresult nsProfile::ShouldDeleteProfileParentDir(nsIFile *profileDir, PRBool *is
     if (NS_FAILED(rv)) return rv;
 
     PRBool endsWithSalt = PR_FALSE;    
-    nsLiteralCString leafNameString(leafName.get());
+    nsDependentCString leafNameString(leafName.get());
     if (leafNameString.Length() >= kSaltExtensionCString.Length())
     {
         nsReadingIterator<char> stringEnd;

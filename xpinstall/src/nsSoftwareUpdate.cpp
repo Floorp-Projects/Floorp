@@ -219,7 +219,7 @@ NS_IMETHODIMP nsSoftwareUpdate::Observe(nsISupports *aSubject,
                                         const PRUnichar *aTopic, 
                                         const PRUnichar *aData)
 {
-    nsLiteralString topicString(aTopic);
+    nsDependentString topicString(aTopic);
     if (topicString.Equals(NS_LITERAL_STRING(NS_XPCOM_SHUTDOWN_OBSERVER_ID)))
       Shutdown();
      
