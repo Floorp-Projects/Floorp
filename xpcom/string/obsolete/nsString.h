@@ -51,6 +51,7 @@
 #include "nsIAtom.h"
 
 #include "nsAString.h"
+#include "nsXPIDLString.h"
 
 /* this file will one day be _only_ a compatibility header for clients using the names
      |ns[C]String| et al ... which we probably want to support forever.
@@ -440,6 +441,13 @@ public:
   PRBool  EqualsWithConversion(const nsString &aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRBool  EqualsWithConversion(const char* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
   PRBool  EqualsWithConversion(const PRUnichar* aString,PRBool aIgnoreCase=PR_FALSE,PRInt32 aCount=-1) const;
+  /* a hack to make sure things that used to compile continue to compile
+     even on compilers that don't have proper |explicit| support */
+  inline PRBool
+  EqualsWithConversion(const nsXPIDLString &aString, PRBool aIgnoreCase=PR_FALSE, PRInt32 aCount=-1) const
+    {
+      return EqualsWithConversion(aString.get(), aIgnoreCase, aCount);
+    }
 
   PRBool  EqualsIgnoreCase(const char* aString,PRInt32 aCount=-1) const;
   PRBool  EqualsIgnoreCase(const PRUnichar* aString,PRInt32 aCount=-1) const;
