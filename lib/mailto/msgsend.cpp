@@ -1390,12 +1390,6 @@ MSG_RegisterConverters (void)
   NET_RegisterContentTypeConverter (TEXT_ENRICHED, FO_PRINT,
 									NULL, MIME_EnrichedTextConverter);
 
-  /* Decoders from mimevcrd.c for text/x-vcard and text/enriched */
-  NET_RegisterContentTypeConverter (TEXT_VCARD, FO_PRESENT,
-									NULL, MIME_VCardConverter);
-  NET_RegisterContentTypeConverter (TEXT_VCARD, FO_PRINT,
-									NULL, MIME_VCardConverter);
-
   /* Decoders from mimejul.c for text/calendar */
 #ifdef MOZ_CALENDAR
   NET_RegisterContentTypeConverter (TEXT_CALENDAR, FO_PRESENT,

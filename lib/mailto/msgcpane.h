@@ -192,9 +192,6 @@ protected:
 	PRBool RecipientDialogDone(XPDialogState *state, char **argv, int argc,
 							   unsigned int button);
 
-	int CreateVcardAttachment ();
-
-
 	MSG_REPLY_TYPE m_replyType;		/* The kind of message composition in
 									   progress (reply, forward, etc.) */
 

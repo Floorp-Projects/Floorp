@@ -2347,8 +2347,6 @@ MSG_CompositionPane::SendMessageNow()
 	m_deliver_mode = MSG_DeliverNow;		
 	
 	HG73943
-	if (m_fields->GetAttachVCard())
-		CreateVcardAttachment();
 	// counts we need to update.
 	return DoneComposeMessage(MSG_DeliverNow);
 }
@@ -2358,8 +2356,6 @@ MSG_CompositionPane::QueueMessageForLater()
 {
 		// remember if we're queued so we know which folder
 	m_deliver_mode = MSG_QueueForLater;
-	if (m_fields->GetAttachVCard())
-		CreateVcardAttachment();
 	// counts we need to update.
 	return DoneComposeMessage(MSG_QueueForLater);
 }
