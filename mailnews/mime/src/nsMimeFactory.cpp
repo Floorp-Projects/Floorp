@@ -174,6 +174,14 @@ extern "C" NS_EXPORT PRBool NSCanUnload()
   return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
+// 
+// rhp - when the new interface is in place...this GOES AWAY!
+//       External includes necessary for test application
+//
+#include "net.h"
+extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
+											  URL_Struct *url, MWContext *context);
+
 extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
 {
   printf("*** Mime being registered\n");
@@ -181,6 +189,14 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
                                 PR_TRUE, PR_TRUE);
   nsRepository::RegisterFactory(kCMimeRFC822HTMLConverterCID, path, 
                                 PR_TRUE, PR_TRUE);
+
+  /*
+   * For now, do the old netlib call so we don't have to dork around
+   * with hacking every viewer in the world.
+   */
+	NET_RegisterContentTypeConverter(MESSAGE_RFC822, FO_NGLAYOUT, NULL, MIME_MessageConverter);
+	NET_RegisterContentTypeConverter(MESSAGE_RFC822, FO_CACHE_AND_NGLAYOUT, NULL, MIME_MessageConverter);
+  
   return NS_OK;
 }
 
