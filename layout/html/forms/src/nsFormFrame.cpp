@@ -62,7 +62,7 @@
 #include "prmem.h"
 #include "prenv.h"
 
-#if defined(ClientWallet) || defined(SingleSignon)
+#if defined(ClientWallet) || defined(SingleSignon) || defined(CookieManagement)
 #include "nsIServiceManager.h"
 #endif
 
@@ -80,6 +80,12 @@ static NS_DEFINE_IID(kIDocumentViewerIID, NS_IDOCUMENT_VIEWER_IID);
 #include "nsIWalletService.h"
 static NS_DEFINE_IID(kIWalletServiceIID, NS_IWALLETSERVICE_IID);
 static NS_DEFINE_IID(kWalletServiceCID, NS_WALLETSERVICE_CID);
+#endif
+
+#if defined(CookieManagement)
+#include "nsINetService.h"
+static NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
+static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
 #endif
 
 //----------------------------------------------------------------------
@@ -585,8 +591,8 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
     NS_IF_RELEASE(docURL);
 
-#ifdef ClientWallet
 #ifndef HTMLDialogs 
+#ifdef ClientWallet
     if (href == "internal-walletPrefill-handler") {
       nsresult res;
       nsIWalletService *walletservice;
@@ -608,6 +614,34 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
       if ((NS_OK == res) && (nsnull != walletservice)) {
         res = walletservice->WALLET_PreEdit(nsnull);
         NS_RELEASE(walletservice);
+        return NS_OK;
+      }
+    }
+#endif
+#ifdef SingleSignon
+    if (href == "internal-signonViewer-handler") {
+      nsresult res;
+      nsIWalletService *walletservice;
+      res = nsServiceManager::GetService(kWalletServiceCID,
+                                         kIWalletServiceIID,
+                                         (nsISupports **)&walletservice);
+      if ((NS_OK == res) && (nsnull != walletservice)) {
+        res = walletservice->SI_SignonViewerReturn();
+        NS_RELEASE(walletservice);
+        return NS_OK;
+      }
+    }
+#endif
+#ifdef CookieManagement
+    if (href == "internal-cookieViewer-handler") {
+      nsresult res;
+      nsINetService *netservice;
+      res = nsServiceManager::GetService(kNetServiceCID,
+                                         kINetServiceIID,
+                                         (nsISupports **)&netservice);
+      if ((NS_OK == res) && (nsnull != netservice)) {
+        res = netservice->NET_CookieViewerReturn();
+        NS_RELEASE(netservice);
         return NS_OK;
       }
     }
