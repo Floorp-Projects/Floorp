@@ -64,6 +64,7 @@
 #include "nsXPIDLString.h"
 #include "nsIImapFlagAndUidState.h"
 #include "nsIMessenger.h"
+#include "nsIMsgSearchAdapter.h"
 #include "nsIImapMockChannel.h"
 #include "nsIProgressEventSink.h"
 #include "nsIMsgWindow.h"
@@ -734,15 +735,6 @@ NS_IMETHODIMP nsImapMailFolder::SetBoxFlags(PRInt32 aBoxFlags)
     newFlags |= MSG_FOLDER_FLAG_IMAP_NOINFERIORS;
   else
     newFlags &= ~MSG_FOLDER_FLAG_IMAP_NOINFERIORS;
-    if (m_boxFlags & kImapTrash)
-        newFlags |= MSG_FOLDER_FLAG_TRASH;
-    else
-        newFlags &= ~MSG_FOLDER_FLAG_TRASH;
-    // imap code doesn't seem to be setting this flag, so we shouldn't be either :-(
-//    if (m_boxFlags & kImapSent)
-//        newFlags |= MSG_FOLDER_FLAG_SENTMAIL;
-//    else
-//        newFlags &= ~MSG_FOLDER_FLAG_SENTMAIL;
     if (m_boxFlags & kNoselect)
         newFlags |= MSG_FOLDER_FLAG_IMAP_NOSELECT;
     else
@@ -792,10 +784,31 @@ NS_IMETHODIMP nsImapMailFolder::GetNoSelect(PRBool *aResult)
   NS_ENSURE_ARG_POINTER(aResult);
   return GetFlag(MSG_FOLDER_FLAG_IMAP_NOSELECT, aResult);
 }
-
+#ifdef DEBUG_bienvenu1
+  nsIMsgSearchSession *saveSearchSession;
+#endif
 NS_IMETHODIMP nsImapMailFolder::Compact()
 {
     nsresult rv;
+#ifdef DEBUG_bienvenu1
+  nsCOMPtr<nsIMsgSearchSession> searchSession;
+  rv = nsComponentManager::CreateInstance(NS_MSGSEARCHSESSION_PROGID,
+                                          nsnull,
+                                          NS_GET_IID(nsIMsgSearchSession),
+                                          getter_AddRefs(searchSession));
+  if (searchSession)
+  {
+    nsMsgSearchValue *searchValue = new nsMsgSearchValue;
+    searchValue->u.string = PL_strdup("test");
+    searchValue->attribute = nsMsgSearchAttrib::Subject;
+    searchSession->AddSearchTerm(nsMsgSearchAttrib::Subject, nsMsgSearchOp::Contains, 
+      searchValue, PR_FALSE, nsnull);
+    searchSession->AddScopeTerm(nsMsgSearchScope::MailFolder, this);
+    saveSearchSession = searchSession;
+    NS_ADDREF(saveSearchSession);
+    searchSession->Search(nsnull);
+  }
+#endif
     NS_WITH_SERVICE(nsIImapService, imapService, kCImapService, &rv);
     if (NS_SUCCEEDED(rv) && imapService)
     {
@@ -2163,15 +2176,7 @@ NS_IMETHODIMP nsImapMailFolder::ApplyFilterHit(nsIMsgFilter *filter, PRBool *app
           nsCOMPtr <nsIMsgFolder> mailTrash;
           rv = GetTrashFolder(getter_AddRefs(mailTrash));;
           if (NS_SUCCEEDED(rv) && mailTrash)
-          {
-            // this sucks - but we need value to live past this scope
-            // so we use an nsString from above.
-            PRUnichar *folderName = nsnull;
-            rv = mailTrash->GetName(&folderName);
-            trashNameVal.AssignWithConversion(folderName);
-            nsCRT::free(folderName);
-            *(char **)getter_Copies(actionTargetFolderUri) = trashNameVal.ToNewCString();
-          }
+            rv = mailTrash->GetURI(getter_Copies(actionTargetFolderUri));
 
           msgHdr->OrFlags(MSG_FLAG_READ, &newFlags);  // mark read in trash.
         }
@@ -3279,15 +3284,70 @@ nsImapMailFolder::EndMessage(nsIMsgMailNewsUrl * aUrl, nsMsgKey uidOfMessage)
   return NS_OK;
 }
 
+#define WHITESPACE " \015\012"     // token delimiter
+
 NS_IMETHODIMP
 nsImapMailFolder::NotifySearchHit(nsIMsgMailNewsUrl * aUrl, 
                                   const char* searchHitLine)
 {
 #ifdef DEBUG_bienvenu
-    printf("search hit %s\n", searchHitLine);
+  printf("search hit %s\n", searchHitLine);
 #endif
-    // get the search session from the url.
-    return NS_OK;
+
+  nsresult rv = GetDatabase(nsnull /* don't need msg window, that's more for local mbox parsing */);
+  if (!mDatabase || !NS_SUCCEEDED(rv))
+    return rv;
+  // expect search results in the form of "* SEARCH <hit> <hit> ..."
+                // expect search results in the form of "* SEARCH <hit> <hit> ..."
+  char *tokenString = nsCRT::strdup(searchHitLine);
+  if (tokenString)
+  {
+      char *currentPosition = PL_strcasestr(tokenString, "SEARCH");
+      if (currentPosition)
+      {
+        currentPosition += nsCRT::strlen("SEARCH");
+        char *newStr;
+          
+          PRBool shownUpdateAlert = PR_FALSE;
+          char *hitUidToken = nsCRT::strtok(currentPosition, WHITESPACE, &newStr);
+          while (hitUidToken)
+          {
+            long naturalLong; // %l is 64 bits on OSF1
+            sscanf(hitUidToken, "%ld", &naturalLong);
+            nsMsgKey hitUid = (nsMsgKey) naturalLong;
+        
+            nsCOMPtr <nsIMsgDBHdr> hitHeader;
+            rv = mDatabase->GetMsgHdrForKey(hitUid, getter_AddRefs(hitHeader));
+            if (NS_SUCCEEDED(rv) && hitHeader)
+            {
+              nsCOMPtr <nsIMsgSearchSession> searchSession;
+              nsCOMPtr <nsIMsgSearchAdapter> searchAdapter;
+              aUrl->GetSearchSession(getter_AddRefs(searchSession));
+              if (searchSession)
+              {
+                searchSession->GetRunningAdapter(getter_AddRefs(searchAdapter));
+                if (searchAdapter)
+                  searchAdapter->AddResultElement(hitHeader);
+              }
+            }
+            else if (!shownUpdateAlert)
+            {
+#if 0 // can't do this yet
+            FE_Alert(context, XP_GetString(MK_MSG_SEARCH_HITS_NOT_IN_DB));
+            shownUpdateAlert = PR_TRUE;
+#endif
+            }
+          
+            hitUidToken = nsCRT::strtok(newStr, WHITESPACE, &newStr);
+        }
+    }
+
+    nsCRT::free(tokenString);
+  }
+  else
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  return NS_OK;
 }
 
 
