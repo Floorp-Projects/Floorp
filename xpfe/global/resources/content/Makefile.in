@@ -34,6 +34,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/inputBindings.xul \
 		$(srcdir)/textAreaBindings.xul \
 		$(srcdir)/hiddenWindow.xul \
+		$(srcdir)/globalBindings.xml \
 		$(srcdir)/globalOverlay.xul \
 		$(srcdir)/globalOverlay.js \
 		$(srcdir)/tasksOverlay.xul \
