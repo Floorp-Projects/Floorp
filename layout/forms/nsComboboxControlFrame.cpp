@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   Mats Palmgren <mats.palmgren@bredband.net>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -92,6 +93,53 @@
 #ifdef DO_NEW_REFLOW
 #include "nsIFontMetrics.h"
 #endif
+
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+
+class RedisplayTextEvent : public PLEvent
+{
+public:
+  RedisplayTextEvent(nsComboboxControlFrame* aComboboxControlFrame,
+                     const nsAString&        aTextToDisplay);
+
+  void HandleEvent()
+  {
+    NS_STATIC_CAST(nsComboboxControlFrame*, owner) ->
+      HandleRedisplayTextEvent(mTextToDisplay);
+  }
+
+private:
+  nsString mTextToDisplay;
+};
+
+PR_STATIC_CALLBACK(void*)
+HandleRedisplayTextPLEvent(PLEvent* aEvent)
+{
+  NS_ASSERTION(nsnull != aEvent, "Event is null");
+  RedisplayTextEvent* event = NS_STATIC_CAST(RedisplayTextEvent*, aEvent);
+
+  event->HandleEvent();
+
+  return nsnull;
+}
+
+PR_STATIC_CALLBACK(void)
+DestroyRedisplayTextPLEvent(PLEvent* aEvent)
+{
+  NS_ASSERTION(nsnull != aEvent, "Event is null");
+  RedisplayTextEvent* event = NS_STATIC_CAST(RedisplayTextEvent*, aEvent);
+
+  delete event;
+}
+
+RedisplayTextEvent::RedisplayTextEvent(nsComboboxControlFrame* aComboboxControlFrame,
+                                       const nsAString&        aTextToDisplay)
+  : mTextToDisplay(aTextToDisplay)
+{
+  PL_InitEvent(this, aComboboxControlFrame,
+               ::HandleRedisplayTextPLEvent,
+               ::DestroyRedisplayTextPLEvent);
+}
 
 class nsPresState;
 
@@ -381,6 +429,8 @@ nsComboboxControlFrame::Init(nsPresContext*  aPresContext,
    // which don't have it passed in.
   mPresContext = aPresContext;
   NS_ADDREF(mPresContext);
+
+  mEventQueueService = do_GetService(kEventQueueServiceCID);
 
   //-------------------------------
   // Start - Temporary fix for Bug 36558
@@ -1744,12 +1794,6 @@ nsComboboxControlFrame::RedisplaySelectedText()
 nsresult
 nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
 {
-  // Redirect frame insertions during this method (see GetContentInsertionFrame())
-  // so that any reframing that the frame constructor forces upon us is inserted
-  // into the correct parent (mDisplayFrame). See bug 282607.
-  NS_PRECONDITION(!mInRedisplayText, "Nested RedisplayText");
-  mInRedisplayText = PR_TRUE;
-
   // Get the text to display
   nsAutoString textToDisplay;
   if (aIndex != -1) {
@@ -1778,19 +1822,47 @@ nsComboboxControlFrame::RedisplayText(PRInt32 aIndex)
                          NS_LossyConvertUCS2toASCII(value).get(),
                          NS_LossyConvertUCS2toASCII(textToDisplay).get());
     }
-    if (shouldSetValue) {
-      rv = ActuallyDisplayText(textToDisplay, PR_TRUE);
-      //mTextFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-      mDisplayFrame->AddStateBits(NS_FRAME_IS_DIRTY);
-      ReflowDirtyChild(mPresContext->PresShell(), mDisplayFrame);
+    if (shouldSetValue && mEventQueueService) {
+      // Don't call ActuallyDisplayText(aText,PR_TRUE) directly here since that
+      // could cause recursive frame construction. See bug 283117 and the comment in
+      // HandleRedisplayTextEvent() below.
+      nsCOMPtr<nsIEventQueue> eventQueue;
+      rv = mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                                                    getter_AddRefs(eventQueue));
+      if (eventQueue) {
+        RedisplayTextEvent* event = new RedisplayTextEvent(this, textToDisplay);
+        if (event) {
+          rv = eventQueue->PostEvent(event);
+          if (NS_FAILED(rv)) {
+            PL_DestroyEvent(event);
+          }
+        } else {
+          rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+      }
     }
   }
-  mInRedisplayText = PR_FALSE;
   return rv;
 }
 
+void
+nsComboboxControlFrame::HandleRedisplayTextEvent(const nsAString& aText)
+{
+  // Redirect frame insertions during this method (see GetContentInsertionFrame())
+  // so that any reframing that the frame constructor forces upon us is inserted
+  // into the correct parent (mDisplayFrame). See bug 282607.
+  NS_PRECONDITION(!mInRedisplayText, "Nested RedisplayText");
+  mInRedisplayText = PR_TRUE;
+
+  ActuallyDisplayText(aText, PR_TRUE);
+  mDisplayFrame->AddStateBits(NS_FRAME_IS_DIRTY);
+  ReflowDirtyChild(GetPresContext()->PresShell(), mDisplayFrame);
+
+  mInRedisplayText = PR_FALSE;
+}
+
 nsresult
-nsComboboxControlFrame::ActuallyDisplayText(nsAString& aText, PRBool aNotify)
+nsComboboxControlFrame::ActuallyDisplayText(const nsAString& aText, PRBool aNotify)
 {
   if (aText.IsEmpty()) {
     // Have to use a non-breaking space for line-height calculations
@@ -2152,6 +2224,16 @@ nsComboboxControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHeight)
 NS_IMETHODIMP
 nsComboboxControlFrame::Destroy(nsPresContext* aPresContext)
 {
+  // Revoke queued RedisplayTextEvents
+  if (mEventQueueService) {
+    nsCOMPtr<nsIEventQueue> eventQueue;
+    mEventQueueService->GetSpecialEventQueue(nsIEventQueueService::UI_THREAD_EVENT_QUEUE,
+                                             getter_AddRefs(eventQueue));
+    if (eventQueue) {
+      eventQueue->RevokeEvents(this);
+    }
+  }
+
   nsFormControlFrame::RegUnRegAccessKey(mPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
 
   if (mDroppedDown) {
