@@ -835,8 +835,8 @@ void nsWindow::StoreProperty(char *property, unsigned char *data)
                        XA_STRING, /* type */
                        8, /* *sizeof(GdkAtom) Format. ? */
                        GDK_PROP_MODE_REPLACE, /* mode */
-                       data, /* data */
-                       strlen((const char *)data)); /* size of data */
+                       (guchar *)data, /* data */
+                       (gint)strlen((char *)data)); /* size of data */
 }
 
 
