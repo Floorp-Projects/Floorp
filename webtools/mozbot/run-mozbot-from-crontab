@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # run-mozbot-from-crontab: Script for restarting mozbot from crontab
-# Originally written by <joelpt@eml.cc>
+# Originally written by Joel Thornton <joelpt@eml.cc>
 #
 # This is good to use in your crontab for rebooting the bot
 # automagically upon its untimely demise. Use a line such as this in
