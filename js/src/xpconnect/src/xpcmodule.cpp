@@ -23,176 +23,130 @@
 /***************************************************************************/
 
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+static NS_DEFINE_CID(kGenericFactoryCID, NS_GENERICFACTORY_CID);
 static NS_DEFINE_CID(kJSIID_CID, NS_JS_IID_CID);
 static NS_DEFINE_CID(kJSCID_CID, NS_JS_CID_CID);
 static NS_DEFINE_CID(kXPConnect_CID, NS_XPCONNECT_CID);
 static NS_DEFINE_CID(kXPCThreadJSContextStack_CID, NS_XPC_THREAD_JSCONTEXT_STACK_CID);
 
-class nsXPCFactory : public nsIFactory
+/********************************************/
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSIID)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsJSCID)
+
+static NS_IMETHODIMP
+Construct_nsXPConnect(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-public:
-    NS_DECL_ISUPPORTS
+    nsresult rv;
+    nsISupports *obj;
 
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,
-                              REFNSIID aIID,
-                              void **aResult);
-
-    NS_IMETHOD LockFactory(PRBool aLock);
-
-    nsXPCFactory(const nsCID &aCID);
-    virtual ~nsXPCFactory();
-private:
-    nsCID      mCID;
-};
-
-nsXPCFactory::nsXPCFactory(const nsCID &aCID)
-    : mCID(aCID)
-{
-    NS_INIT_REFCNT();
-    NS_ADDREF_THIS();
-}
-
-nsXPCFactory::~nsXPCFactory()
-{
-//    NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");
-}
-
-NS_IMETHODIMP
-nsXPCFactory::QueryInterface(const nsIID &aIID, void **aResult)
-{
-    if(aResult == NULL)
-        return NS_ERROR_NULL_POINTER;
-
-    if(aIID.Equals(nsCOMTypeInfo<nsISupports>::GetIID()) ||
-       aIID.Equals(nsIFactory::GetIID())  ||
-       aIID.Equals(nsXPCFactory::GetIID()))
+    if(!aResult)
     {
-        *aResult = (void*)this;
+        rv = NS_ERROR_NULL_POINTER;
+        goto done;
     }
-    else
-    {
-        *aResult = NULL;
-        return NS_NOINTERFACE;
-    }
-
-    NS_ADDREF_THIS();
-    return NS_OK;
-}
-
-NS_IMPL_ADDREF(nsXPCFactory)
-NS_IMPL_RELEASE(nsXPCFactory)
-
-NS_IMETHODIMP
-nsXPCFactory::CreateInstance(nsISupports *aOuter,
-                             const nsIID &aIID,
-                             void **aResult)
-{
-    nsresult res = NS_OK;
-
-    if(aResult == NULL)
-        return NS_ERROR_NULL_POINTER;
-
     *aResult = NULL;
-
     if(aOuter)
-        return NS_NOINTERFACE;
-
-    nsISupports *inst = nsnull;
-
-    // ClassID check happens here
-    // Whenever you add a new class that supports an interface, plug it in here
-
-    // ADD NEW CLASSES HERE
-    if (mCID.Equals(kJSIID_CID))
     {
-        inst = new nsJSIID;
+        rv = NS_ERROR_NO_AGGREGATION;
+        goto done;
     }
-    else if (mCID.Equals(kJSCID_CID))
-    {
-        inst = new nsJSCID;
-    }
-    else if (mCID.Equals(kXPConnect_CID))
-    {
-        inst = nsXPConnect::GetXPConnect();    
-    }
-    else if (mCID.Equals(kXPCThreadJSContextStack_CID))
-    {
-        inst = nsXPCThreadJSContextStackImpl::GetSingleton();
-    }
-    else
-        return NS_NOINTERFACE;
 
-    if(inst)
-    {
-        res = inst->QueryInterface(aIID, aResult);
-        NS_RELEASE(inst);
-    }
-    else
-        res = NS_ERROR_OUT_OF_MEMORY;
+    obj = nsXPConnect::GetXPConnect();
 
-    return res;
+    if(!obj)
+    {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    rv = obj->QueryInterface(aIID, aResult);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find correct interface");
+    NS_RELEASE(obj);
+ done:
+    return rv;
 }
 
-NS_IMETHODIMP
-nsXPCFactory::LockFactory(PRBool aLock)
+static NS_IMETHODIMP
+Construct_nsXPCThreadJSContextStack(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 {
-    return NS_OK;
+    nsresult rv;
+    nsISupports *obj;
+
+    if(!aResult)
+    {
+        rv = NS_ERROR_NULL_POINTER;
+        goto done;
+    }
+    *aResult = NULL;
+    if(aOuter)
+    {
+        rv = NS_ERROR_NO_AGGREGATION;
+        goto done;
+    }
+
+    obj = nsXPCThreadJSContextStackImpl::GetSingleton();
+
+    if(!obj)
+    {
+        rv = NS_ERROR_OUT_OF_MEMORY;
+        goto done;
+    }
+
+    rv = obj->QueryInterface(aIID, aResult);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find correct interface");
+    NS_RELEASE(obj);
+ done:
+    return rv;
 }
 
-/***************************************************************************/
+/********************************************/
 
-#if defined(XP_MAC) && defined(MAC_STATIC)
-extern "C" XPC_PUBLIC_API(nsresult)
-NSGetFactory_XPCONNECT_DLL(nsISupports* servMgr,
-                     const nsCID &aClass,
-                     const char *aClassName,
-                     const char *aProgID,
-                     nsIFactory **aFactory)
-#else
-extern "C" XPC_PUBLIC_API(nsresult)
-NSGetFactory(nsISupports* servMgr,
+extern "C" PR_IMPLEMENT(nsresult)
+NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
              const char *aClassName,
              const char *aProgID,
              nsIFactory **aFactory)
-#endif
 {
-    static nsXPCFactory iid_factory(kJSIID_CID);
-    static nsXPCFactory cid_factory(kJSCID_CID);
-    static nsXPCFactory xpc_factory(kXPConnect_CID);
-    static nsXPCFactory threadstack_factory(kXPCThreadJSContextStack_CID);
+    nsresult rv;
+    NS_ASSERTION(aFactory != nsnull, "bad factory pointer");
 
-    if(!aFactory)
-        return NS_ERROR_NULL_POINTER;
+    NS_WITH_SERVICE1(nsIComponentManager, compMgr,
+                     aServMgr, kComponentManagerCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    nsIGenericFactory* factory;
+    rv = compMgr->CreateInstance(kGenericFactoryCID, nsnull,
+                                 nsIGenericFactory::GetIID(),
+                                 (void**)&factory);
+    if (NS_FAILED(rv)) return rv;
+
+    // add more factories as 'if else's below...
 
     if(aClass.Equals(kJSIID_CID))
+        rv = factory->SetConstructor(nsJSIIDConstructor);
+    else if(aClass.Equals(kJSCID_CID))
+        rv = factory->SetConstructor(nsJSCIDConstructor);
+    else if(aClass.Equals(kXPConnect_CID))
+        rv = factory->SetConstructor(Construct_nsXPConnect);
+    else if(aClass.Equals(kXPCThreadJSContextStack_CID))
+        rv = factory->SetConstructor(Construct_nsXPCThreadJSContextStack);
+    else
     {
-        iid_factory.AddRef();
-        *aFactory = &iid_factory;
-        return NS_OK;
-    }
-    if(aClass.Equals(kJSCID_CID))
-    {
-        cid_factory.AddRef();
-        *aFactory = &cid_factory;
-        return NS_OK;
-    }
-    if(aClass.Equals(kXPConnect_CID))
-    {
-        xpc_factory.AddRef();
-        *aFactory = &xpc_factory;
-        return NS_OK;
-    }
-    if(aClass.Equals(kXPCThreadJSContextStack_CID))
-    {
-        threadstack_factory.AddRef();
-        *aFactory = &threadstack_factory;
-        return NS_OK;
+        NS_ASSERTION(0, "incorrectly registered");
+        rv = NS_ERROR_NO_INTERFACE;
     }
 
-    return NS_ERROR_NO_INTERFACE;
+    if (NS_FAILED(rv)) {
+        NS_RELEASE(factory);
+        return rv;
+    }
+    *aFactory = factory;
+    return NS_OK;
 }
 
+/***************************************************************************/
 
 extern "C" XPC_PUBLIC_API(PRBool)
 NSCanUnload(nsISupports* aServMgr)
@@ -247,4 +201,4 @@ NSUnregisterSelf(nsISupports* aServMgr, const char *aPath)
     rv = compMgr->UnregisterComponent(kXPCThreadJSContextStack_CID, aPath);
 
     return rv;
-}        
+}

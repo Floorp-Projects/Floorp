@@ -90,6 +90,9 @@ public:
     NS_IMETHOD DebugDump(int depth) = 0;
     NS_IMETHOD SetFinalizeListener(nsIXPConnectFinalizeListener* aListener) = 0;
 
+    // NOT YET IMPLEMTED!!!
+    NS_IMETHOD GetJSObjectPrototype(JSObject** aJSObj) = 0;
+
     // XXX other methods?
 };
 

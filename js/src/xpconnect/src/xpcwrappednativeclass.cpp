@@ -798,7 +798,7 @@ nsXPCWrappedNativeClass::NewInstanceJSObject(nsXPCWrappedNative* self)
     JSClass* jsclazz = self->GetDynamicScriptable() ? 
                             &WrappedNativeWithCall_class :
                             &WrappedNative_class;
-    JSObject* jsobj = JS_NewObject(cx, jsclazz, NULL, NULL);
+    JSObject* jsobj = JS_NewObject(cx, jsclazz, NULL, JS_GetGlobalObject(cx));
     if(!jsobj || !JS_SetPrivate(cx, jsobj, self))
         return NULL;
     // wrapper is responsible for calling DynamicScriptable->Create

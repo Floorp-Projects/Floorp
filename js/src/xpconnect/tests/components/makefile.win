@@ -30,6 +30,7 @@ OBJS=					\
 	.\$(OBJDIR)\xpctest_echo.obj	\
 	.\$(OBJDIR)\xpctest_child.obj	\
 	.\$(OBJDIR)\xpctest_noisy.obj	\
+	.\$(OBJDIR)\xpctest_overloaded.obj	\
 	.\$(OBJDIR)\xpctest_string.obj	\
 	.\$(OBJDIR)\xpctest_module.obj	\
 	$(NULL)

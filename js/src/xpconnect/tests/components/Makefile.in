@@ -34,6 +34,7 @@ CPPSRCS=		\
 	xpctest_echo.cpp		\
 	xpctest_child.cpp		\
 	xpctest_noisy.cpp		\
+	xpctest_overloaded.cpp	\
 	xpctest_string.cpp		\
 	xpctest_module.cpp	\
 	$(NULL)

@@ -430,6 +430,14 @@ nsXPCWrappedNative::SetFinalizeListener(nsIXPConnectFinalizeListener* aListener)
 }        
 
 NS_IMETHODIMP
+nsXPCWrappedNative::GetJSObjectPrototype(JSObject** aJSObj)
+{
+    NS_PRECONDITION(aJSObj, "bad param");
+    NS_PRECONDITION(mJSObj, "bad wrapper");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}        
+
+NS_IMETHODIMP
 nsXPCWrappedNative::DebugDump(int depth)
 {
 #ifdef DEBUG
