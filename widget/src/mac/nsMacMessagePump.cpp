@@ -100,7 +100,6 @@ unsigned char	evtype;
 						}
 					break;
 				case keyUp:
-					break;
 				case keyDown:
 				case autoKey:
 					DoKey(&theevent);
@@ -757,22 +756,32 @@ nsTextWidget	*widget;
 			thewidget = mToolkit->GetFocus();
 			if(thewidget != nsnull)
 				{
-				keyEvent.message = NS_KEY_DOWN;
 			  keyEvent.keyCode   = 1;
 			  keyEvent.time      = 0; 
 			  keyEvent.isShift   = PR_FALSE; 
 			  keyEvent.isControl = PR_FALSE;
 			  keyEvent.isAlt     = PR_FALSE;
 			  keyEvent.eventStructType = NS_KEY_EVENT;
+			  keyEvent.widget = thewidget;
 			  
 			  thechar = aTheEvent->message&charCodeMask;
+			  keyEvent.keyCode = thechar;
+			  
+			  if(thechar == 13)
+			  	keyEvent.message = NS_KEY_UP;
+			  else
+			  	keyEvent.message = NS_KEY_DOWN;
+			  
 			  
 			  if (!thewidget->DispatchEvent(&keyEvent, eventStatus))
 			  	{
 			  	// if this is a nsTextWidget
 			  	//if (NS_OK == thewidget->QueryInterface(kITEXTWIDGETIID, (void**) &widget) )
-			  	widget = (nsTextWidget*)thewidget;
-			  	widget->PrimitiveKeyDown(thechar,0);
+			  	if (thechar != 13 )  // do not process enter
+			  		{
+			  		widget = (nsTextWidget*)thewidget;
+			  		widget->PrimitiveKeyDown(thechar,0);
+			  		}
 			  	}
 			  
 			  //((nsWindow*)thewidget)->OnKey(NS_KEY_DOWN, 1, &keyEvent);
