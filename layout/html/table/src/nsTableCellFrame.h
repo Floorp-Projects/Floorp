@@ -250,9 +250,9 @@ private:
 
 protected:
 
+  friend class nsTableRowFrame;
   // Subclass hook for style post processing
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
-
   void      MapBorderPadding(nsIPresContext* aPresContext);
 
   void      MapHTMLBorderStyle(nsIPresContext* aPresContext,

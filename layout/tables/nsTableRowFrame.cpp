@@ -1117,6 +1117,10 @@ nsTableRowFrame::InitialReflow(nsIPresContext*      aPresContext,
         kidAvailSize.SizeTo(table->GetColumnWidth(colIndex), NS_UNCONSTRAINEDSIZE); 
       }
 
+      if (NS_UNCONSTRAINEDSIZE == kidAvailSize.width) {
+        ((nsTableCellFrame*)kidFrame)->DidSetStyleContext(aPresContext);
+      }
+
       nsTableCellReflowState kidReflowState(aPresContext, aReflowState.reflowState,
                                             kidFrame, kidAvailSize, eReflowReason_Initial);
 
