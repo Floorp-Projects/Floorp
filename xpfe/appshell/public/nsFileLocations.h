@@ -48,25 +48,30 @@ class NS_APPSHELL nsSpecialFileSpec : public nsFileSpec
 		    // Who has not wished one could have inheritance for enumerated types?
 		    
 		    App_DirectoryBase              = 0x00010000
-		,   App_PrefsDirectory30           = App_DirectoryBase + 1 
-		,   App_PrefsDirectory40           = App_DirectoryBase + 2
-		,   App_PrefsDirectory50           = App_DirectoryBase + 3
+		,   App_PrefsDirectory30           = App_DirectoryBase +    1 
+		,   App_PrefsDirectory40           = App_DirectoryBase +    2
+		,   App_PrefsDirectory50           = App_DirectoryBase +    3
 
-		,   App_UserProfileDirectory30     = App_DirectoryBase + 10
-		,   App_UserProfileDirectory40     = App_DirectoryBase + 11
-		,   App_UserProfileDirectory50     = App_DirectoryBase + 12
+		,   App_UserProfileDirectory30     = App_DirectoryBase +   10
+		,   App_UserProfileDirectory40     = App_DirectoryBase +   11
+		,   App_UserProfileDirectory50     = App_DirectoryBase +   12
+
+		,	App_ComponentsDirectory        = App_DirectoryBase +   30
+		,	App_ChromeDirectory            = App_DirectoryBase +   31
+		,	App_PluginsDirectory           = App_DirectoryBase +   32
 
 		,   App_FileBase                   = App_DirectoryBase + 1000
-		,   App_PreferencesFile30          = App_DirectoryBase + 1001
-		,   App_PreferencesFile40          = App_DirectoryBase + 1002
-		,   App_PreferencesFile50          = App_DirectoryBase + 1003
+		,   App_PreferencesFile30          = App_FileBase      +    1
+		,   App_PreferencesFile40          = App_FileBase      +    2
+		,   App_PreferencesFile50          = App_FileBase      +    3
 
-		,   App_BookmarksFile30            = App_DirectoryBase + 1010
-		,   App_BookmarksFile40            = App_DirectoryBase + 1011
-		,   App_BookmarksFile50            = App_DirectoryBase + 1012
+		,   App_BookmarksFile30            = App_FileBase      +   10
+		,   App_BookmarksFile40            = App_FileBase      +   11
+		,   App_BookmarksFile50            = App_FileBase      +   12
 
-		,	App_Registry40                 = App_DirectoryBase + 1020
-		,   App_Registry50                 = App_DirectoryBase + 1021
+		,	App_Registry40                 = App_FileBase      +   20
+		,   App_Registry50                 = App_FileBase      +   21
+		
 		};
                     //nsSpecialFileSpec();
                     nsSpecialFileSpec(Type aType);        
