@@ -57,6 +57,7 @@ PRIVATE_EXPORTS = \
 	pkcs11i.h \
 	softoken.h \
 	softoknt.h \
+	pk11pars.h \
 	$(NULL)
 
 CSRCS = \
@@ -72,6 +73,8 @@ CSRCS = \
 	fipstest.c \
 	fipstokn.c \
 	rawhash.c \
+	dbinit.c \
+	pk11db.c \
 	$(NULL)
 
 

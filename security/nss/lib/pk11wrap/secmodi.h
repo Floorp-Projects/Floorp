@@ -56,10 +56,6 @@ SEC_BEGIN_PROTOS
 SECMODModule * SECMOD_NewModule(void); /* create a new module */
 SECMODModule * SECMOD_NewInternal(void); /* create an internal module */
 
-/* Data base functions */
-void SECMOD_InitDB(char *);
-SECMODModuleList * SECMOD_ReadPermDB(void);
-
 /*void SECMOD_ReferenceModule(SECMODModule *); */
 
 /* Library functions */

@@ -42,6 +42,7 @@
 /* these are for displaying error messages */
 
 static  SECMODModuleList *modules = NULL;
+static  SECMODModuleList *modulesDB = NULL;
 static  SECMODModule *internalModule = NULL;
 static SECMODListLock *moduleLock = NULL;
 
@@ -135,7 +136,7 @@ secmod_FindExternalRoot(char *dbname)
 	return;
 }
 
-void SECMOD_init(char *dbname) {
+void SECMOD_Init() {
     SECMODModuleList *thisModule;
     int found=0;
     int rootFound=0;
@@ -143,54 +144,10 @@ void SECMOD_init(char *dbname) {
 
 
     /* don't initialize twice */
-    if (modules) return;
-
-    PK11_InitSlotLists();
-
-    SECMOD_InitDB(dbname);
-
-    /*
-     * read in the current modules from the database
-     */
-    modules = SECMOD_ReadPermDB();
-
-    /* make sure that the internal module is loaded */
-    for (thisModule = modules; thisModule ; thisModule = thisModule->next) {
-	if (thisModule->module->internal) {
-	    found++;
-	    internalModule = SECMOD_ReferenceModule(thisModule->module);
-	}
-	if (secmod_ModuleHasRoots(thisModule->module)) {
-	    rootFound++;
-	}
-    }
-
-    if (!found) {
-	thisModule = modules;
-	modules = SECMOD_NewModuleListElement();
-	modules->module = SECMOD_NewInternal();
-	PORT_Assert(modules->module != NULL);
-	modules->next = thisModule;
-	SECMOD_AddPermDB(modules->module);
-	internalModule = SECMOD_ReferenceModule(modules->module);
-    }
-
-    /* load it first... we need it to verify the external modules
-     * which we are loading.... */
-    rv = SECMOD_LoadModule(internalModule);
-    if( rv != SECSuccess )
-        internalModule = NULL;
-
-    if (! rootFound ) {
-	secmod_FindExternalRoot(dbname);
-    }
-    /* Load each new module */
-    for (thisModule = modules; thisModule ; thisModule = thisModule->next) {
-        if( !( thisModule->module->internal ) )
-	    SECMOD_LoadModule(thisModule->module);
-    }
+    if (moduleLock) return;
 
     moduleLock = SECMOD_NewListLock();
+    PK11_InitSlotLists();
 }
 
 
@@ -208,6 +165,11 @@ void SECMOD_Shutdown() {
     /* destroy the list */
     if (modules) {
 	SECMOD_DestroyModuleList(modules);
+	modules = NULL;
+    }
+   
+    if (modulesDB) {
+	SECMOD_DestroyModuleList(modulesDB);
 	modules = NULL;
     }
 
@@ -238,6 +200,49 @@ SECMOD_SetInternalModule( SECMODModule *mod) {
    if (!moduleLock) {
        moduleLock = SECMOD_NewListLock();
    }
+}
+
+SECStatus
+secmod_AddModuleToList(SECMODModuleList **moduleList,SECMODModule *newModule) {
+    SECStatus rv;
+    SECMODModuleList *mlp, *newListElement, *last = NULL;
+
+    newListElement = SECMOD_NewModuleListElement();
+    if (newListElement == NULL) {
+	return SECFailure;
+    }
+
+    newListElement->module = newModule;
+
+    SECMOD_GetWriteLock(moduleLock);
+    /* Added it to the end (This is very inefficient, but Adding a module
+     * on the fly should happen maybe 2-3 times through the life this program
+     * on a given computer, and this list should be *SHORT*. */
+    for(mlp = *moduleList; mlp != NULL; mlp = mlp->next) {
+	last = mlp;
+    }
+
+    if (last == NULL) {
+	*moduleList = newListElement;
+    } else {
+	SECMOD_AddList(last,newListElement,NULL);
+    }
+    SECMOD_ReleaseWriteLock(moduleLock);
+    return SECSuccess;
+    return;
+}
+
+SECStatus
+SECMOD_AddModuleToList(SECMODModule *newModule) {
+    if (newModule->internal && !internalModule) {
+	internalModule = SECMOD_ReferenceModule(newModule);
+    }
+    return secmod_AddModuleToList(&modules,newModule);
+}
+
+SECStatus
+SECMOD_AddModuleToDBOnlyList(SECMODModule *newModule) {
+    return secmod_AddModuleToList(&modulesDB,newModule);
 }
 
 /*
@@ -431,29 +436,9 @@ SECMOD_AddModule(SECMODModule *newModule) {
 	return rv;
     }
 
-    newListElement = SECMOD_NewModuleListElement();
-    if (newListElement == NULL) {
-	return SECFailure;
-    }
-
     SECMOD_AddPermDB(newModule);
+    SECMOD_AddModuleToList(newModule);
 
-    newListElement->module = newModule;
-
-    SECMOD_GetWriteLock(moduleLock);
-    /* Added it to the end (This is very inefficient, but Adding a module
-     * on the fly should happen maybe 2-3 times through the life this program
-     * on a given computer, and this list should be *SHORT*. */
-    for(mlp = modules; mlp != NULL; mlp = mlp->next) {
-	last = mlp;
-    }
-
-    if (last == NULL) {
-	modules = newListElement;
-    } else {
-	SECMOD_AddList(last,newListElement,NULL);
-    }
-    SECMOD_ReleaseWriteLock(moduleLock);
     return SECSuccess;
 }
 

@@ -115,8 +115,6 @@ extern SECStatus SECMOD_AddModule(SECMODModule *newModule);
 extern PK11SlotInfo *SECMOD_FindSlot(SECMODModule *module,char *name);
 extern PK11SlotInfo *SECMOD_LookupSlot(SECMODModuleID module,
 							unsigned long slotID);
-SECStatus  SECMOD_DeletePermDB(SECMODModule *);
-SECStatus  SECMOD_AddPermDB(SECMODModule *);
 
 /* Funtion reports true if at least one of the modules */
 /* of modType has been installed */

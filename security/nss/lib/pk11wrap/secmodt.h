@@ -71,6 +71,15 @@ struct SECMODModuleStr {
     SECMODModuleID moduleID;	/* ID so we can find this module again */
     PRBool	isThreadSafe;
     unsigned long ssl[2];	/* SSL cipher enable flags */
+    char	*libraryParams;  /* Module specific parameters */
+    void *moduleDBFunc; /* function to return module configuration data*/
+    SECMODModule *parent;	/* module that loaded us */
+    PRBool	isCritical;	/* This module must load successfully */
+    PRBool	isModuleDB;	/* this module has lists of PKCS #11 modules */
+    PRBool	moduleDBOnly;	/* this module only has lists of PKCS #11 modules */
+    int		trustOrder;	/* order for this module's certificate trust rollup */
+    int		cipherOrder;	/* order for cipher operations */
+
 };
 
 struct SECMODModuleListStr {
