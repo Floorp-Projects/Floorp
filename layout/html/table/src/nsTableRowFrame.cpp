@@ -992,13 +992,14 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
         nsIFrame* kidNextInFlow;
         kidFrame->GetNextInFlow(&kidNextInFlow);
         nsSize cellDesiredSize = cellFrame->GetDesiredSize();
-        if ((availCellWidth != cellFrame->GetPriorAvailWidth())           ||
+        if ((availCellWidth != cellFrame->GetPriorAvailWidth())       ||
             (cellDesiredSize.width > cellFrame->GetPriorAvailWidth()) ||
             (eReflowReason_StyleChange == aReflowState.reason)        ||
             isPaginated                                               ||
             (aReflowState.mFlags.mSpecialHeightReflow && cellFrame->NeedSpecialReflow()) ||
-            HasPctHeight() ||
-            notifyStyleChange ){
+            (!aReflowState.mFlags.mSpecialHeightReflow && cellFrame->HadSpecialReflow()) ||
+            HasPctHeight()                                            ||
+            notifyStyleChange) {
           // Reflow the cell to fit the available width, height
           nsSize  kidAvailSize(availColWidth, aReflowState.availableHeight);
           nsReflowReason reason = eReflowReason_Resize;
@@ -1443,7 +1444,8 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
   if (!tableFrame) return NS_ERROR_NULL_POINTER;
 
   // see if a special height reflow needs to occur due to having a pct height
-  nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
+  if (!NeedSpecialReflow()) 
+    nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
 
   switch (aReflowState.reason) {
   case eReflowReason_Initial:

@@ -116,8 +116,10 @@ public:
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame);
 
-  NS_IMETHOD NotifyPercentHeight(const nsHTMLReflowState& aReflowState);
+  virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState);
 
+  virtual PRBool NeedsToObserve(const nsHTMLReflowState& aReflowState);
+ 
   void InitCellFrame(PRInt32 aColIndex);
 
 

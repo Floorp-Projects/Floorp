@@ -1186,15 +1186,13 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
   PRBool isPaginated;
   aPresContext->IsPaginated(&isPaginated);
 
-  // If this is a special height reflow, set our desired size to what is was previously and return
-  // if we will be getting another special height reflow. In paginated mode, SetNeedSpecialReflow(PR_TRUE) 
-  // may not have been called if reflow was a result of having a height on the containing table
-  if (nsTableFrame::IsPrematureSpecialHeightReflow(aReflowState, mRect, NeedSpecialReflow() || isPaginated, aDesiredSize)) 
-    return NS_OK;
-
   nsTableFrame* tableFrame = nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
   if (!aPresContext || !tableFrame) return NS_ERROR_NULL_POINTER;
+
+  // see if a special height reflow needs to occur due to having a pct height
+  if (!NeedSpecialReflow()) 
+    nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
 
   nsRowGroupReflowState state(aReflowState, tableFrame);
   PRBool haveDesiredHeight = PR_FALSE;

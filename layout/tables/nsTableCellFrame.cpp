@@ -156,7 +156,7 @@ NoComputedHeightBetween(const nsHTMLReflowState&  aReflowState,
 
 // nsIPercentHeightObserver methods
 
-nsresult
+void
 nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
 {
   if (!NeedSpecialReflow()) {
@@ -166,17 +166,36 @@ nsTableCellFrame::NotifyPercentHeight(const nsHTMLReflowState& aReflowState)
     // initiating frame and the cell.
     for (const nsHTMLReflowState* rs = aReflowState.parentReflowState; rs; rs = rs->parentReflowState) {
       if ((NS_UNCONSTRAINEDSIZE != rs->mComputedHeight) && (0 != rs->mComputedHeight)) {
-        return NS_OK;
+        return;
       }
       // stop when we reach the cell frame
       if (rs->frame == this) {
         nsTableFrame::RequestSpecialHeightReflow(*rs);
-        return NS_OK;
+        return;
       }
     }
     NS_ASSERTION(PR_FALSE, "program error in NotifyPercentHeight");
   }
-  return NS_OK;
+}
+
+// The cell needs to observe its block and things inside its block but nothing below that
+PRBool 
+nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
+{
+  PRBool result = PR_FALSE;
+  const nsHTMLReflowState* parentRS = aReflowState.parentReflowState;
+  if (parentRS && (parentRS->mPercentHeightObserver == this)) { // cell observes the parent
+    result = PR_TRUE;
+    parentRS = parentRS->parentReflowState;
+    if (parentRS && (parentRS->mPercentHeightObserver == this)) { // cell observers the grand parent
+      parentRS = parentRS->parentReflowState;
+      if (parentRS && (parentRS->mPercentHeightObserver == this)) { 
+        // cell observes the great grand parent, so we have gone too deep
+        result = PR_FALSE;
+      }
+    }
+  }
+  return result;
 }
 
 nsresult 
@@ -798,7 +817,8 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   nsresult rv = NS_OK;
 
   // see if a special height reflow needs to occur due to having a pct height
-  nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
+  if (!NeedSpecialReflow()) 
+    nsTableFrame::CheckRequestSpecialHeightReflow(aReflowState);
 
   // this should probably be cached somewhere
   nsCompatibility compatMode;
@@ -883,8 +903,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord computedPaginatedHeight = 0;
 
   if (aReflowState.mFlags.mSpecialHeightReflow || 
-      (HadSpecialReflow() && ((eReflowReason_Incremental == aReflowState.reason) || 
-                              (eReflowReason_Resize == aReflowState.reason)))) {
+      (HadSpecialReflow() && (eReflowReason_Incremental == aReflowState.reason))) {
     ((nsHTMLReflowState&)aReflowState).mComputedHeight = mRect.height - topInset - bottomInset;
     DISPLAY_REFLOW_CHANGE();
   }

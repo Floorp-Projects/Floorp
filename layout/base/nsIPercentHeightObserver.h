@@ -48,14 +48,18 @@ class  nsIPresContext;
 /**
  * This interface is supported by frames that need to provide computed height
  * values to children during reflow which would otherwise not happen. Currently only
- * tables support this.
+ * table cells support this.
  */
 class nsIPercentHeightObserver : public nsISupports
 {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPERCENTHEIGHTOBSERVER_IID)
 
-  NS_IMETHOD NotifyPercentHeight(const nsHTMLReflowState& aReflowState) = 0;
+  // Notify the observer that aReflowState has no computed height, but it has a percent height
+  virtual void NotifyPercentHeight(const nsHTMLReflowState& aReflowState) = 0;
+
+  // Ask the observer if it should observe aReflowState.frame
+  virtual PRBool NeedsToObserve(const nsHTMLReflowState& aReflowState) = 0;
 };
 
 #endif // nsIPercentHeightObserver_h___ 
