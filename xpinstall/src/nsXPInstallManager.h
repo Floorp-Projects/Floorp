@@ -94,6 +94,7 @@ class nsXPInstallManager : public nsIXPINotifier,
         PRInt32             mNumJars;
         PRBool              mFinalizing;
         PRBool              mCancelled;
+        PRInt32             mContentLength;
 
         nsCOMPtr<nsIXPIProgressDlg>  mDlg;
         nsCOMPtr<nsIXPIProgressDlg>  mProxy;

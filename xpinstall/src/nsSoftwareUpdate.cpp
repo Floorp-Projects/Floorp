@@ -157,8 +157,8 @@ nsSoftwareUpdate::~nsSoftwareUpdate()
 //------------------------------------------------------------------------
 //  nsISupports implementation
 //------------------------------------------------------------------------
-NS_IMPL_ADDREF( nsSoftwareUpdate );
-NS_IMPL_RELEASE( nsSoftwareUpdate );
+NS_IMPL_THREADSAFE_ADDREF( nsSoftwareUpdate );
+NS_IMPL_THREADSAFE_RELEASE( nsSoftwareUpdate );
 
 
 NS_IMETHODIMP

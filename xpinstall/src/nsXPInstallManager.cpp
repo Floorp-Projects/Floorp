@@ -66,7 +66,8 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #define XPINSTALL_BUNDLE_URL "chrome://xpinstall/locale/xpinstall.properties"
 
 nsXPInstallManager::nsXPInstallManager()
-  : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), mFinalizing(PR_FALSE), mCancelled(PR_FALSE)
+  : mTriggers(0), mItem(0), mNextItem(0), mNumJars(0), 
+    mFinalizing(PR_FALSE), mCancelled(PR_FALSE), mContentLength(0)
 {
     NS_INIT_ISUPPORTS();
 
@@ -98,8 +99,8 @@ nsXPInstallManager::~nsXPInstallManager()
 }
 
 
-NS_IMPL_ADDREF( nsXPInstallManager );
-NS_IMPL_RELEASE( nsXPInstallManager );
+NS_IMPL_THREADSAFE_ADDREF( nsXPInstallManager );
+NS_IMPL_THREADSAFE_RELEASE( nsXPInstallManager );
 
 NS_IMETHODIMP 
 nsXPInstallManager::QueryInterface(REFNSIID aIID,void** aInstancePtr)
@@ -279,6 +280,7 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
 {
     nsresult rv;
 
+    mContentLength = 0;
     if (mCancelled)
     {
         Shutdown();
@@ -600,7 +602,17 @@ NS_IMETHODIMP
 nsXPInstallManager::OnProgress(nsIChannel *channel, nsISupports *ctxt, PRUint32 aProgress, PRUint32 aProgressMax)
 {
     if (!mCancelled)
-        return mProxy->SetProgress(aProgress, aProgressMax);
+    {
+        nsresult rv = NS_OK;
+        char mode = 'n';     // downloads use a "normal" progress bar
+
+        if (mContentLength < 1) {
+            NS_ASSERTION(channel, "should have a channel");
+            rv = channel->GetContentLength(&mContentLength);
+            if (NS_FAILED(rv)) return rv;
+        }
+        return mProxy->SetProgress(aProgress, mContentLength, mode);
+    }
 
     return NS_OK;
 }
@@ -629,6 +641,10 @@ nsXPInstallManager::BeforeJavascriptEvaluation(const PRUnichar *URL)
     nsresult rv = NS_OK;
 
     mFinalizing = PR_FALSE;
+    mProxy->SetProgress( 0, 0, 'u' ); // turn on the barber pole
+
+    PRUnichar tmp[] = { '\0' };
+    mProxy->SetActionText(tmp);
 
     return rv;
 }
@@ -675,7 +691,7 @@ nsXPInstallManager::FinalizeProgress(const PRUnichar *message, PRInt32 itemNum, 
             }
         }
     }
-    return mProxy->SetProgress( itemNum, totNum );
+    return mProxy->SetProgress( itemNum, totNum, 'n' );
 }
 
 NS_IMETHODIMP 

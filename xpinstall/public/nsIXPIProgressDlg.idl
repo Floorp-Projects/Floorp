@@ -35,7 +35,7 @@ interface nsIXPIProgressDlg : nsISupports
     void SetTitle( in wstring aTitle );
     void SetHeading( in wstring aHeading );
     void SetActionText( in wstring aText );
-    void SetProgress( in long aValue, in long aMax );
+    void SetProgress( in long aValue, in long aMax , in char mode);
     void StartInstallPhase();
 
     boolean GetCancelStatus();
