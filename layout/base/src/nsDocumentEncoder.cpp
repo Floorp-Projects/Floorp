@@ -92,6 +92,7 @@ public:
   NS_IMETHOD SetRange(nsIDOMRange* aRange);
   NS_IMETHOD SetWrapColumn(PRUint32 aWC);
   NS_IMETHOD SetCharset(const nsAReadableString& aCharset);
+  NS_IMETHOD GetMimeType(nsAWritableString& aMimeType);
   NS_IMETHOD EncodeToStream(nsIOutputStream* aStream);
   NS_IMETHOD EncodeToString(nsAWritableString& aOutputString);
   NS_IMETHOD EncodeToStringWithContext(nsAWritableString& aEncodedString, 
@@ -223,6 +224,14 @@ nsDocumentEncoder::SetCharset(const nsAReadableString& aCharset)
   mCharset = aCharset;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsDocumentEncoder::GetMimeType(nsAWritableString& aMimeType)
+{
+  aMimeType = mMimeType;
+  return NS_OK;
+}
+
 
 PRBool
 nsDocumentEncoder::IncludeInContext(nsIDOMNode *aNode)
@@ -803,9 +812,7 @@ nsDocumentEncoder::SerializeRangeToString(nsIDOMRange *aRange,
 
   if (!mCommonParent)
     return NS_OK;
-    
-  AdjustCommonParent(address_of(mCommonParent));
-
+  
   aRange->GetStartContainer(getter_AddRefs(startParent));
   NS_ENSURE_TRUE(startParent, NS_ERROR_FAILURE);
   aRange->GetStartOffset(&startOffset);
@@ -1061,12 +1068,34 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   // check for text widgets: we need to recognize these so that
   // we don't tweak the selection to be outside of the magic
   // div that ender-lite text widgets are embedded in.
-  nsCOMPtr<nsIDOMNode> selNode;
-  nsresult rv = aSelection->GetFocusNode(getter_AddRefs(selNode));
+  
+  if (!aSelection) 
+    return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIDOMRange> range;
+  nsCOMPtr<nsIDOMNode> commonParent;
+  PRInt32 count = 0;
+
+  nsresult rv = aSelection->GetRangeCount(&count);
   NS_ENSURE_SUCCESS(rv, rv);
-  nsCOMPtr<nsIContent> tmp, selContent( do_QueryInterface(selNode) );
+
+  // if selection is uninitialized return
+  if (!count)
+    return NS_ERROR_FAILURE;
+  
+  // we'll just use the common parent of the first range.  Implicit assumption
+  // here that multi-range selections are table cell selections, in which case
+  // the common parent is somewhere in the table and we don't really care where.
+  rv = aSelection->GetRangeAt(0, getter_AddRefs(range));
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (!range)
+    return NS_ERROR_NULL_POINTER;
+  range->GetCommonAncestorContainer(getter_AddRefs(commonParent));
+
+  nsCOMPtr<nsIContent> tmp, selContent( do_QueryInterface(commonParent) );
   while (selContent)
   {
+    // checking for selection inside a plaintext form widget
     nsCOMPtr<nsIAtom> atom;
     selContent->GetTag(*getter_AddRefs(atom));
     if (atom.get() == nsHTMLAtoms::input ||
@@ -1214,15 +1243,28 @@ nsHTMLCopyEncoder::IncludeInContext(nsIDOMNode *aNode)
 
   content->GetTag(*getter_AddRefs(tag));
 
-  if (tag.get() == nsHTMLAtoms::b ||
-      tag.get() == nsHTMLAtoms::i ||
-      tag.get() == nsHTMLAtoms::u ||
-      tag.get() == nsHTMLAtoms::pre ||
-      tag.get() == nsHTMLAtoms::h1 ||
-      tag.get() == nsHTMLAtoms::h2 ||
-      tag.get() == nsHTMLAtoms::h3 ||
-      tag.get() == nsHTMLAtoms::h4 ||
-      tag.get() == nsHTMLAtoms::h5 ||
+  if (tag.get() == nsHTMLAtoms::b        ||
+      tag.get() == nsHTMLAtoms::i        ||
+      tag.get() == nsHTMLAtoms::u        ||
+      tag.get() == nsHTMLAtoms::tt       ||
+      tag.get() == nsHTMLAtoms::s        ||
+      tag.get() == nsHTMLAtoms::strike   ||
+      tag.get() == nsHTMLAtoms::em       ||
+      tag.get() == nsHTMLAtoms::strong   ||
+      tag.get() == nsHTMLAtoms::dfn      ||
+      tag.get() == nsHTMLAtoms::code     ||
+      tag.get() == nsHTMLAtoms::cite     ||
+      tag.get() == nsHTMLAtoms::variable ||
+      tag.get() == nsHTMLAtoms::abbr     ||
+      tag.get() == nsHTMLAtoms::font     ||
+      tag.get() == nsHTMLAtoms::script   ||
+      tag.get() == nsHTMLAtoms::span     ||
+      tag.get() == nsHTMLAtoms::pre      ||
+      tag.get() == nsHTMLAtoms::h1       ||
+      tag.get() == nsHTMLAtoms::h2       ||
+      tag.get() == nsHTMLAtoms::h3       ||
+      tag.get() == nsHTMLAtoms::h4       ||
+      tag.get() == nsHTMLAtoms::h5       ||
       tag.get() == nsHTMLAtoms::h6) {
     return PR_TRUE;
   }
@@ -1515,7 +1557,9 @@ nsHTMLCopyEncoder::IsRoot(nsIDOMNode* aNode)
     if (mIsTextWidget) 
       return (IsTag(aNode, nsHTMLAtoms::div));
     else
-      return (IsTag(aNode, nsHTMLAtoms::body));
+      return (IsTag(aNode, nsHTMLAtoms::body) || 
+              IsTag(aNode, nsHTMLAtoms::td)   ||
+              IsTag(aNode, nsHTMLAtoms::th));
   }
   return PR_FALSE;
 }

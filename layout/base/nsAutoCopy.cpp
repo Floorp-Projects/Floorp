@@ -29,17 +29,12 @@
 #include "nsISelectionPrivate.h"
 #include "nsISelectionListener.h"
 #include "nsWidgetsCID.h"
-#include "nsIClipboard.h"
 #include "nsIDOMDocument.h"
-#include "nsIDocumentEncoder.h"
+#include "nsCopySupport.h"
+#include "nsIClipboard.h"
 
 #include "nsIDocument.h"
 #include "nsSupportsPrimitives.h"
-
-// private clipboard data flavors for html copy, used by editor when pasting
-#define kHTMLContext   "text/_moz_htmlcontext"
-#define kHTMLInfo      "text/_moz_htmlinfo"
-
 
 class nsAutoCopyService : public nsIAutoCopyService , public nsISelectionListener
 {
@@ -56,10 +51,6 @@ public:
   //nsISelectionListener interfaces
   NS_IMETHOD NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
   //end nsISelectionListener 
-protected:
-  nsCOMPtr<nsIClipboard> mClipboard;
-  nsCOMPtr<nsITransferable> mTransferable;
-  nsCOMPtr<nsIFormatConverter> mConverter;
 };
 
 // Implement our nsISupports methods
@@ -125,14 +116,8 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aS
 {
   nsresult rv;
 
-  if (!mClipboard) {
-    static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
-    mClipboard = do_GetService(kCClipboardCID, &rv);
-    if (NS_FAILED(rv))
-      return rv;
-  } 
   if (!(aReason & nsISelectionListener::MOUSEUP_REASON))
-    return NS_OK;//dont care if we are still dragging. or if its not from a mouseup
+    return NS_OK; //dont care if we are still dragging. or if its not from a mouseup
   PRBool collapsed;
   if (!aDoc || !aSel || NS_FAILED(aSel->GetIsCollapsed(&collapsed)) || collapsed) {
 #ifdef DEBUG_CLIPBOARD
@@ -144,82 +129,13 @@ nsAutoCopyService::NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aS
 
   nsCOMPtr<nsIDocument> doc;
   doc = do_QueryInterface(NS_REINTERPRET_CAST(nsISupports *,aDoc),&rv);
-  nsAutoString buffer, parents, info;
+  if (NS_FAILED(rv))
+    return rv;
+  if (!doc)
+    return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsIDocumentEncoder> docEncoder;
-
-  docEncoder = do_CreateInstance(NS_HTMLCOPY_ENCODER_CONTRACTID);
-  NS_ENSURE_TRUE(docEncoder, NS_ERROR_FAILURE);
-
-  docEncoder->Init(doc, NS_LITERAL_STRING("text/html"), 0);
-  docEncoder->SetSelection(aSel);
-
-  rv = docEncoder->EncodeToStringWithContext(buffer, parents, info);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  /* create a transferable */
-  static NS_DEFINE_CID(kCTransferableCID, NS_TRANSFERABLE_CID);
-  nsCOMPtr<nsITransferable> trans;
-  trans = do_CreateInstance(kCTransferableCID);
-  if (!trans)
-    return NS_ERROR_FAILURE;
-
-  if (!mConverter) {
-    static NS_DEFINE_CID(kHTMLConverterCID, NS_HTMLFORMATCONVERTER_CID);
-    mConverter = do_CreateInstance(kHTMLConverterCID);
-    if (!mConverter)
-      return NS_ERROR_FAILURE;
-  }
-
-  trans->AddDataFlavor(kHTMLMime);
-  trans->SetConverter(mConverter);
-  
-  // Add the html DataFlavor to the transferable
-  trans->AddDataFlavor(kHTMLMime);
-  // Add the htmlcontext DataFlavor to the transferable
-  trans->AddDataFlavor(kHTMLContext);
-  // Add the htmlinfo DataFlavor to the transferable
-  trans->AddDataFlavor(kHTMLInfo);
-
-  // get wStrings to hold clip data
-  nsCOMPtr<nsISupportsWString> dataWrapper, contextWrapper, infoWrapper;
-  dataWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
-  NS_ENSURE_TRUE(dataWrapper, NS_ERROR_FAILURE);
-  contextWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
-  NS_ENSURE_TRUE(contextWrapper, NS_ERROR_FAILURE);
-  infoWrapper = do_CreateInstance(NS_SUPPORTS_WSTRING_CONTRACTID);
-  NS_ENSURE_TRUE(infoWrapper, NS_ERROR_FAILURE);
-
-  // populate the strings
-  dataWrapper->SetData ( NS_CONST_CAST(PRUnichar*,buffer.GetUnicode()) );
-  contextWrapper->SetData ( NS_CONST_CAST(PRUnichar*,parents.GetUnicode()) );
-  infoWrapper->SetData ( NS_CONST_CAST(PRUnichar*,info.GetUnicode()) );
-      
-  // QI the data object an |nsISupports| so that when the transferable holds
-  // onto it, it will addref the correct interface.
-  nsCOMPtr<nsISupports> genericDataObj ( do_QueryInterface(dataWrapper) );
-  trans->SetTransferData(kHTMLMime, genericDataObj, buffer.Length()*2);
-  genericDataObj = do_QueryInterface(contextWrapper);
-  trans->SetTransferData(kHTMLContext, genericDataObj, parents.Length()*2);
-  genericDataObj = do_QueryInterface(infoWrapper);
-  trans->SetTransferData(kHTMLInfo, genericDataObj, info.Length()*2);
-
-  // put the transferable on the clipboard
-  mClipboard->SetData(trans, nsnull, nsIClipboard::kSelectionClipboard);
-
-#ifdef DEBUG_CLIPBOARD
-  static char *reasons[] = {
-    "UNKNOWN", "NEW", "REMOVED", "ALTERED",
-    "BOGUS4", "BOGUS5", "BOGUS6", "BOGUS7", "BOGUS8"
-  };
-
-  nsAutoString str;
-  aSel->ToString(str);
-  char *selStr = str.ToNewCString();
-  fprintf(stderr, "SELECTION: %s, %p, %p [%s]\n", reasons[reason], doc, aSel,
-          selStr);
-  nsMemory::Free(selStr);
-#endif
-  return NS_OK;
+  // call the copy code
+  rv = nsCopySupport::HTMLCopy(aSel, doc, nsIClipboard::kSelectionClipboard);
+  return rv;
 }
 
