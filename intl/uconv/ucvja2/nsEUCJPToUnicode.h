@@ -20,18 +20,13 @@
 #ifndef nsEUCJPToUnicode_h___
 #define nsEUCJPToUnicode_h___
 
-#include "nsIFactory.h"
-#include "nsICharsetConverterInfo.h"
+#include "nsIUnicodeDecoder.h"
+#include "nsIUnicodeDecodeUtil.h"
 
 //----------------------------------------------------------------------
-// Class nsEUCJPToUnicodeFactory [declaration]
+// Class nsEUCJPToUnicode [declaration]
 
-/**
- * Factory class for the nsEUCJPToUnicode objects.
- * 
- */
-class nsEUCJPToUnicodeFactory : public nsIFactory, 
-public nsICharsetConverterInfo
+class nsEUCJPToUnicode : public nsIUnicodeDecoder
 {
   NS_DECL_ISUPPORTS
 
@@ -40,28 +35,35 @@ public:
   /**
    * Class constructor.
    */
-  nsEUCJPToUnicodeFactory();
+  nsEUCJPToUnicode();
 
   /**
    * Class destructor.
    */
-  ~nsEUCJPToUnicodeFactory();
+  ~nsEUCJPToUnicode();
+
+  /**
+   * Static class constructor.
+   */
+  static nsresult CreateInstance(nsISupports **aResult);
 
   //--------------------------------------------------------------------
-  // Interface nsIFactory [declaration]
+  // Interface nsIUnicodeDecoder [declaration]
 
-  NS_IMETHOD CreateInstance(nsISupports *aDelegate, const nsIID &aIID,
-                            void **aResult);
+  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
+      PRInt32 * aDestLength,const char * aSrc, PRInt32 aSrcOffset, 
+      PRInt32 * aSrcLength);
+  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
+      PRInt32 * aDestLength);
+  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, PRInt32 aSrcLength, 
+      PRInt32 * aDestLength);
+  NS_IMETHOD Reset();
+  NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
 
-  NS_IMETHOD LockFactory(PRBool aLock);
+private:
+  PRInt32 mBehavior;
+  nsIUnicodeDecodeUtil *mUtil;
 
-  //--------------------------------------------------------------------
-  // Interface nsICharsetConverterInfo [declaration]
-
-  NS_IMETHOD GetCharsetSrc(char ** aCharset);
-  NS_IMETHOD GetCharsetDest(char ** aCharset);
 };
-
-
 
 #endif /* nsEUCJPToUnicode_h___ */

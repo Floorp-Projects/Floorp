@@ -18,58 +18,12 @@
  */
 
 #include "pratom.h"
-
 #include "nsRepository.h"
-#include "nsIUnicodeDecoder.h"
-#include "nsIUnicodeDecodeUtil.h"
 #include "nsEUCJPToUnicode.h"
-#include "nsICharsetConverterManager.h"
 #include "nsUCVJA2Dll.h"
-#include "nsUCVJA2CID.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
-
-#define NS_SRC_CHARSET  "EUC-JP"
-#define NS_DEST_CHARSET "Unicode"
-
-//----------------------------------------------------------------------
-// Class nsEUCJPToUnicode [declaration]
-
-class nsEUCJPToUnicode : public nsIUnicodeDecoder
-{
-  NS_DECL_ISUPPORTS
-
-public:
-
-  /**
-   * Class constructor.
-   */
-  nsEUCJPToUnicode();
-
-  /**
-   * Class destructor.
-   */
-  ~nsEUCJPToUnicode();
-
-  //--------------------------------------------------------------------
-  // Interface nsIUnicodeDecoder [declaration]
-
-  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength,const char * aSrc, PRInt32 aSrcOffset, 
-      PRInt32 * aSrcLength);
-  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength);
-  NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, PRInt32 aSrcLength, 
-      PRInt32 * aDestLength);
-  NS_IMETHOD Reset();
-  NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
-
-private:
-  PRInt32 mBehavior;
-  nsIUnicodeDecodeUtil *mUtil;
-
-};
 
 // Shift Table
 static PRInt16 g0201ShiftTable[] =  {
@@ -107,7 +61,6 @@ static uRange gRanges[] = {
     { 0x8F, 0x8F } 
 };
 
-
 //----------------------------------------------------------------------
 // Class nsEUCJPToUnicode [implementation]
 
@@ -127,9 +80,17 @@ nsEUCJPToUnicode::~nsEUCJPToUnicode()
   PR_AtomicDecrement(&g_InstanceCount);
 }
 
+nsresult nsEUCJPToUnicode::CreateInstance(nsISupports ** aResult) 
+{
+  *aResult = new nsEUCJPToUnicode();
+  return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+}
 
 //----------------------------------------------------------------------
 // Interface nsICharsetConverter [implementation]
+
+// XXX quick hack so I don't have to include nsICharsetConverterManager
+extern "C" const nsID kCharsetConverterManagerCID;
 
 NS_IMETHODIMP nsEUCJPToUnicode::Convert(PRUnichar * aDest, PRInt32 aDestOffset,
                                        PRInt32 * aDestLength, 
@@ -186,99 +147,5 @@ NS_IMETHODIMP nsEUCJPToUnicode::Reset()
 NS_IMETHODIMP nsEUCJPToUnicode::SetInputErrorBehavior(PRInt32 aBehavior)
 {
   mBehavior = aBehavior;
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-// Class nsEUCJPToUnicodeFactory [implementation]
-
-nsEUCJPToUnicodeFactory::nsEUCJPToUnicodeFactory() 
-{
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-
-nsEUCJPToUnicodeFactory::~nsEUCJPToUnicodeFactory() 
-{
-  PR_AtomicDecrement(&g_InstanceCount);
-}
-
-//----------------------------------------------------------------------
-// Interface nsISupports [implementation]
-
-NS_IMPL_ADDREF(nsEUCJPToUnicodeFactory);
-NS_IMPL_RELEASE(nsEUCJPToUnicodeFactory);
-
-nsresult nsEUCJPToUnicodeFactory::QueryInterface(REFNSIID aIID, 
-                                                void** aInstancePtr)
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                         
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  static NS_DEFINE_IID(kClassIID, kICharsetConverterInfoIID);                         
-  static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
-
-  if (aIID.Equals(kClassIID)) {                                          
-    *aInstancePtr = (void*) ((nsICharsetConverterInfo*)this); 
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kIFactoryIID)) {                                          
-    *aInstancePtr = (void*) ((nsIFactory*)this); 
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*) ((nsISupports*)(nsIFactory*)this);
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-
-  return NS_NOINTERFACE;                                                 
-}
-
-//----------------------------------------------------------------------
-// Interface nsIFactory [implementation]
-
-NS_IMETHODIMP nsEUCJPToUnicodeFactory::CreateInstance(nsISupports *aDelegate,
-                                                const nsIID &aIID,
-                                                void **aResult)
-{
-  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
-  if (aDelegate != NULL) return NS_ERROR_NO_AGGREGATION;
-
-  nsIUnicodeDecoder * t = new nsEUCJPToUnicode;
-  if (t == NULL) return NS_ERROR_OUT_OF_MEMORY;
-  
-  nsresult res = t->QueryInterface(aIID, aResult);
-  if (NS_FAILED(res)) delete t;
-
-  return res;
-}
-
-NS_IMETHODIMP nsEUCJPToUnicodeFactory::LockFactory(PRBool aLock)
-{
-  if (aLock) PR_AtomicIncrement(&g_LockCount);
-  else PR_AtomicDecrement(&g_LockCount);
-
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-// Interface nsICharsetConverterInfo [implementation]
-
-NS_IMETHODIMP nsEUCJPToUnicodeFactory::GetCharsetSrc(char ** aCharset)
-{
-  (*aCharset) = NS_SRC_CHARSET;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsEUCJPToUnicodeFactory::GetCharsetDest(char ** aCharset)
-{
-  (*aCharset) = NS_DEST_CHARSET;
   return NS_OK;
 }
