@@ -753,7 +753,7 @@ NS_IMETHODIMP nsWebShellWindow::LoadMenuItem(
           
 
 
-    nsAutoString cmdAtom("onclick");
+    nsAutoString cmdAtom("onaction");
     nsString cmdName;
 
     domElement->GetAttribute(cmdAtom, cmdName);
