@@ -4164,44 +4164,42 @@ NS_IMETHODIMP
 nsGenericHTMLContainerFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
                                            PRBool aRemoveFromForm)
 {
-  PRBool isDemotingForm = PR_FALSE;
-  if (mForm) {
-    mForm->IsDemotingForm(&isDemotingForm);
+  nsAutoString nameVal, idVal;
+
+  if (aForm || (mForm && aRemoveFromForm)) {
+    GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
+    GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
   }
 
-  if (!isDemotingForm) {
-    nsAutoString nameVal, idVal;
+  if (mForm && aRemoveFromForm) {
+    mForm->RemoveElement(this);
 
-    if (aRemoveFromForm) {
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
-
-      if (mForm) {
-        mForm->RemoveElement(this);
-
-        if (!nameVal.IsEmpty())
-          mForm->RemoveElementFromTable(this, nameVal);
-
-        if (!idVal.IsEmpty())
-          mForm->RemoveElementFromTable(this, idVal);
-      }
+    if (!nameVal.IsEmpty()) {
+      mForm->RemoveElementFromTable(this, nameVal);
     }
 
-    if (aForm) {
-      nsCOMPtr<nsIForm> theForm(do_QueryInterface(aForm));
-      mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
+    if (!idVal.IsEmpty()) {
+      mForm->RemoveElementFromTable(this, idVal);
+    }
+  }
 
-      if (theForm) {
-        theForm->AddElement(this);
+  if (aForm) {
+    // keep a *weak* ref to the form here
+    CallQueryInterface(aForm, &mForm);
+    mForm->Release();
+  } else {
+    mForm = nsnull;
+  }
 
-        if (!nameVal.IsEmpty())
-          theForm->AddElementToTable(this, nameVal);
+  if (mForm) {
+    mForm->AddElement(this);
 
-        if (!idVal.IsEmpty())
-          theForm->AddElementToTable(this, idVal);
-      }
-    } else {
-      mForm = nsnull;
+    if (!nameVal.IsEmpty()) {
+      mForm->AddElementToTable(this, nameVal);
+    }
+
+    if (!idVal.IsEmpty()) {
+      mForm->AddElementToTable(this, idVal);
     }
   }
 
@@ -4413,43 +4411,42 @@ NS_IMETHODIMP
 nsGenericHTMLLeafFormElement::SetForm(nsIDOMHTMLFormElement* aForm,
                                       PRBool aRemoveFromForm)
 {
-  PRBool isDemotingForm = PR_FALSE;
-  if (mForm) {
-    mForm->IsDemotingForm(&isDemotingForm);
+  nsAutoString nameVal, idVal;
+
+  if (aForm || (mForm && aRemoveFromForm)) {
+    GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
+    GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
   }
 
-  if (!isDemotingForm) {
-    nsAutoString nameVal, idVal;
+  if (mForm && aRemoveFromForm) {
+    mForm->RemoveElement(this);
 
-    if (aRemoveFromForm) {
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::name, nameVal);
-      GetAttr(kNameSpaceID_None, nsHTMLAtoms::id, idVal);
-
-      if (mForm) {
-        mForm->RemoveElement(this);
-
-        if (!nameVal.IsEmpty())
-          mForm->RemoveElementFromTable(this, nameVal);
-
-        if (!idVal.IsEmpty())
-          mForm->RemoveElementFromTable(this, idVal);
-      }
+    if (!nameVal.IsEmpty()) {
+      mForm->RemoveElementFromTable(this, nameVal);
     }
 
-    if (aForm) {
-      nsCOMPtr<nsIForm> theForm = do_QueryInterface(aForm);
-      mForm = theForm;  // Even if we fail, update mForm (nsnull in failure)
-      if (theForm) {
-        theForm->AddElement(this);
+    if (!idVal.IsEmpty()) {
+      mForm->RemoveElementFromTable(this, idVal);
+    }
+  }
 
-        if (!nameVal.IsEmpty())
-          theForm->AddElementToTable(this, nameVal);
+  if (aForm) {
+    // keep a *weak* ref to the form here
+    CallQueryInterface(aForm, &mForm);
+    mForm->Release();
+  } else {
+    mForm = nsnull;
+  }
 
-        if (!idVal.IsEmpty())
-          theForm->AddElementToTable(this, idVal);
-      }
-    } else {
-      mForm = nsnull;
+  if (mForm) {
+    mForm->AddElement(this);
+
+    if (!nameVal.IsEmpty()) {
+      mForm->AddElementToTable(this, nameVal);
+    }
+
+    if (!idVal.IsEmpty()) {
+      mForm->AddElementToTable(this, idVal);
     }
   }
 

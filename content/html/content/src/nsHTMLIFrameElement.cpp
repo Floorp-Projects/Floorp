@@ -288,14 +288,7 @@ nsHTMLIFrameElement::GetContentWindow(nsIDOMWindow** aContentWindow)
 nsresult
 nsHTMLIFrameElement::EnsureFrameLoader()
 {
-  if (!mParent || !mDocument) {
-    // If our parent or document are gone, time to destroy the frame loader.
-    if (mFrameLoader) {
-      mFrameLoader->Destroy();
-      mFrameLoader = nsnull;
-    }
-    return NS_OK;
-  } else if (mFrameLoader) {
+  if (!mParent || !mDocument || mFrameLoader) {
     // If frame loader is there, we just keep it around, cached
     return NS_OK;
   }
@@ -303,9 +296,8 @@ nsHTMLIFrameElement::EnsureFrameLoader()
   nsresult rv = NS_NewFrameLoader(getter_AddRefs(mFrameLoader));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  mFrameLoader->Init(this);
-
-  return NS_OK;
+  rv = mFrameLoader->Init(this);
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -340,13 +332,9 @@ nsHTMLIFrameElement::SetParent(nsIContent *aParent)
   nsresult rv = nsGenericHTMLContainerElement::SetParent(aParent);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // XXX if we're setting the parent to null, we don't bother with LoadSrc()
-  // just yet, because it will remove the frame loader--and our parent may get
-  // temporarily set to null if DemoteForm() is happening, we don't want to
-  // waste all that time.
-  // Also if mFrameLoader is already there, don't load again, for the same
-  // reason.
-  if (!aParent || mFrameLoader) {
+  // When parent is being set to null on the element's destruction, do not
+  // call LoadSrc().
+  if (!mParent || !mDocument) {
     return NS_OK;
   }
 
@@ -357,18 +345,17 @@ NS_IMETHODIMP
 nsHTMLIFrameElement::SetDocument(nsIDocument *aDocument, PRBool aDeep,
                                  PRBool aCompileEventHandlers)
 {
-  nsresult rv =
-    nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
-                                               aCompileEventHandlers);
+  nsresult rv = nsGenericHTMLContainerElement::SetDocument(aDocument, aDeep,
+                                                           aCompileEventHandlers);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  if (NS_SUCCEEDED(rv) && mParent && mDocument) {
-    // SetParent() was already called on this element, load the
-    // frame...
-
-    rv = LoadSrc();
+  // When document is being set to null on the element's destruction, do not
+  // call LoadSrc().
+  if (!mParent || !mDocument) {
+    return NS_OK;
   }
 
-  return rv;
+  return LoadSrc();
 }
 
 NS_IMETHODIMP

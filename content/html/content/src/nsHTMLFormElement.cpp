@@ -102,7 +102,6 @@ public:
   nsHTMLFormElement() :
     mGeneratingSubmit(PR_FALSE),
     mGeneratingReset(PR_FALSE),
-    mDemotingForm(PR_FALSE),
     mIsSubmitting(PR_FALSE),
     mSubmittingRequest(nsnull) { }
 
@@ -144,8 +143,6 @@ public:
   NS_IMETHOD ResolveName(const nsAString& aName,
                          nsISupports** aReturn);
   NS_IMETHOD IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex);
-  NS_IMETHOD SetDemotingForm(PRBool aDemotingForm);
-  NS_IMETHOD IsDemotingForm(PRBool* aDemotingForm);
   NS_IMETHOD SetCurrentRadioButton(const nsAString& aName,
                                    nsIDOMHTMLInputElement* aRadio);
   NS_IMETHOD GetCurrentRadioButton(const nsAString& aName,
@@ -228,7 +225,6 @@ protected:
   nsDoubleHashtableStringSupports mSelectedRadioButtons;
   PRPackedBool mGeneratingSubmit;
   PRPackedBool mGeneratingReset;
-  PRPackedBool mDemotingForm;
   PRPackedBool mIsSubmitting;
   nsCOMPtr<nsIRequest> mSubmittingRequest;
 
@@ -393,8 +389,6 @@ nsHTMLFormElement::~nsHTMLFormElement()
 
     NS_RELEASE(mControls);
   }
-
-  NS_ASSERTION(!mDemotingForm, "form deleted while demoting form!");
 }
 
 
@@ -1241,25 +1235,6 @@ nsHTMLFormElement::IndexOfControl(nsIFormControl* aControl, PRInt32* aIndex)
   NS_ENSURE_TRUE(mControls, NS_ERROR_FAILURE);
 
   return mControls->IndexOfControl(aControl, aIndex);
-}
-
-NS_IMETHODIMP
-nsHTMLFormElement::SetDemotingForm(PRBool aDemotingForm)
-{
-  NS_ASSERTION(mDemotingForm != aDemotingForm,
-               "Bad call to SetDemotingForm()!");
-
-  mDemotingForm = aDemotingForm;
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsHTMLFormElement::IsDemotingForm(PRBool* aDemotingForm)
-{
-  *aDemotingForm = mDemotingForm;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
