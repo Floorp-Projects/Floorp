@@ -166,11 +166,6 @@ typedef PRUint32 nsFrameState;
 // If this bit is set, then the frame corresponds to generated content
 #define NS_FRAME_GENERATED_CONTENT                    0x00000040
 
-// If this bit is set, then the frame has requested one or more image
-// loads via the nsIPresContext.StartLoadImage API at some time during
-// its lifetime.
-#define NS_FRAME_HAS_LOADED_IMAGES                    0x00000080
-
 // If this bit is set, then the frame has been moved out of the flow,
 // e.g., it is absolutely positioned or floated
 #define NS_FRAME_OUT_OF_FLOW                          0x00000100
