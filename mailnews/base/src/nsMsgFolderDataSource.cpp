@@ -1658,6 +1658,17 @@ nsMsgFolderDataSource::createHasUnreadMessagesNode(nsIMsgFolder *folder, PRBool 
   {
     rv = folder->GetNumUnread(aIncludeSubfolders, &totalUnreadMessages);
     if(NS_FAILED(rv)) return rv;
+    // if we're including sub-folders, we're trying to find out if child folders
+    // have unread. If so, we subtract the unread msgs in the current folder.
+    if (aIncludeSubfolders)
+    {
+      PRInt32 numUnreadInFolder;
+      rv = folder->GetNumUnread(PR_FALSE, &numUnreadInFolder);
+      NS_ENSURE_SUCCESS(rv, rv);
+      // don't subtract if numUnread is negative (which means we don't know the unread count)
+      if (numUnreadInFolder > 0) 
+        totalUnreadMessages -= numUnreadInFolder;
+    }
     if(totalUnreadMessages > 0)
       *target = kTrueLiteral;
     else
