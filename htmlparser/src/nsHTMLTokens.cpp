@@ -996,7 +996,7 @@ nsresult ConsumeQuotedString(PRUnichar aChar,nsString& aString,nsScanner& aScann
   PRUnichar ch=aString.Last();
   if(ch!=aChar)
     aString+=aChar;
-  aString.ReplaceChar(PRUnichar('\n'),PRUnichar(' '));
+  // aString.ReplaceChar(PRUnichar('\n'),PRUnichar(' '));
   aString.StripChars("\r"); //per the HTML spec, ignore linefeeds...
   return result;
 }
