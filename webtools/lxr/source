@@ -1,6 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: source,v 1.11 1998/07/28 19:17:03 jwz%netscape.com Exp $
-
+# $Id: source,v 1.12 1999/01/21 00:42:23 endico%mozilla.org Exp $
 # source --	Present sourcecode as html, complete with references
 #
 #	Arne Georg Gleditsch <argggh@ifi.uio.no>
@@ -57,7 +56,7 @@ sub fileicon {
     if ($filename =~ /^.*\.[ch]$/) {
 #	$img = "/icons/c.gif";
 	$img = "internal-gopher-text";
-    } elsif ($filename =~ /^.*\.(cpp|cc)$/) {
+    } elsif ($filename =~ /^.*\.(cpp|cc|java)$/) {
 	# TODO: Find a nice icon for c++ files (KDE?)
 #	$img = "/icons/c.gif";
 	$img = "internal-gopher-text";

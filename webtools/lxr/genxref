@@ -1,5 +1,5 @@
 #!/usr/bonsaitools/bin/perl
-# $Id: genxref,v 1.2 1998/06/12 18:55:52 jwz Exp $
+# $Id: genxref,v 1.3 1999/01/21 00:42:23 endico%mozilla.org Exp $
 
 # genxref.pl --	Finds identifiers in a set of C files using an
 #		extremely fuzzy algorithm.  It sort of works.
@@ -40,7 +40,8 @@ use DB_File;
 	  ('funcprot',	'f'),
 	  ('class',	'C'),	# (C++)
 	  ('classforw',	'c'),	# (C++)
-	  ('var',	'V'));
+	  ('var',	'V'),
+	  ('interface', 'I'));
 #         ('reference', 'R')
 
 @reserved = ('auto', 'break', 'case', 'char', 'const', 'continue',
@@ -87,6 +88,108 @@ sub classes {
     }
 }
 
+sub c_clean {
+    my $contents = $_[0];
+    # Find macro (un)definitions.
+    $l = 0;
+    foreach ($contents =~ /^(.*)/gm) {
+	$l++;
+	if (/^[ \t]*\#\s*(define|undef)\s+($ident)/o) {
+	    $xref{$2} .= "$itype{'macro'}$fnum:$l\t";
+	    $defs++;
+	}
+    }
+
+    # We want to do some funky heuristics with preprocessor blocks
+    # later, so mark them. (FIXME: #elif)
+    $contents =~ s/^[ \t]*\#\s*if.*/\01/gm;
+    $contents =~ s/^[ \t]*\#\s*else.*/\02/gm;
+    $contents =~ s/^[ \t]*\#\s*endif.*/\03/gm;
+
+    # Strip all preprocessor directives.
+    $contents =~ s/^[ \t]*\#(.*)//gm;
+
+    # Now, remove all odd block markers ({,}) we find inside
+    # #else..#endif blocks.  (And pray they matched one in the
+    # preceding #if..#else block.)
+    while ($contents =~ s/\02([^\01\02\03]*\03)/&stripodd($1)/ges ||
+	   $contents =~ s/\01([^\01\02\03]*)\03/$1/gs) {}
+    
+    while ($contents =~ /([\01\02\03\04\05])/gs) {
+	print(STDERR "\t ** stray ".($1 eq "\01"  
+				     ? "#if"
+				     : ($1 eq "\02"
+					? "#else"
+					: ($1 eq "\03"
+					   ? "#endif"
+					   : "control sequence"
+					   )
+					)
+				     )." found.\n");
+    }
+    $contents =~ s/[\01\02\03\04\05]//gs;
+
+    # Remove all but outermost blocks.  (No local variables.)
+    while ($contents =~ s/\{([^\{\}]*)\}/
+	   "\05".&wash($1)/ges) {}
+    $contents =~ s/\05/\{\}/gs;
+
+    # This operator-stuff messes things up. (C++)
+    $contents =~ s/operator[\<\>\=\!\+\-\*\%\/]{1,2}/operator/g;
+
+    # Ranges are uninteresting (and confusing).
+    $contents =~ s/\[.*?\]//gs;
+
+    # And so are assignments.
+    $contents =~ s/\=(.*?);/";".&wash($1)/ges;
+
+    return $contents;
+}
+
+sub java_clean {
+    my $contents = $_[0];
+    while ($contents =~ s/(\{[^\{]*)\{([^\{\}]*)\}/
+	   $1."\05".&wash($2)/ges) {}
+    $contents =~ s/\05/\{\}/gs;
+
+    # Remove imports
+    $contents =~ s/^\s*import.*;//gm;
+
+    # Remove packages
+    $contents =~ s/^\s*package.*;//gm;
+
+    return $contents;
+}
+
+sub c_classes {
+    my $contents = $_[0];
+
+    # Find struct, enum and union definitions.
+    $contents =~ s/((struct|enum|union)\s+($ident|)\s*({}|(;)))/
+	"$2 ".($3 ? "\01".$itype{$2}.$3."\02 " : "").$5.&wash($1)/goes;
+
+    # Find class definitions. (C++)
+    $contents =~ s/((class)\s+($ident)\s*(:[^;\{]*|)({}|(;)))/
+	"$2 "."\01".$itype{$2.($6 ? 'forw' : '')}.
+	    &classes($4).$3."\02 ".$6.&wash($1)/goes;
+
+    return $contents;
+}
+
+sub java_classes {
+    my $contents = $_[0];
+
+    # Find Java classes
+    $contents =~ s/((class)\s+($ident)\s*(extends\s+([\.\w]+)\s*|)(implements\s+([\.\w]+)|))/
+	"$2 "."\01".$itype{$2}.&classes($5.", ".$7).$3."\02 ".
+	    &wash($1)/goes;
+
+    # Find Java interfaces
+    $contents =~ s/((interface)\s+($ident)\s*(extends\s+([\.\w]+)|))/
+	"$2 "."\01".$itype{$2}.&classes($5).$3."\02 ".&wash($1)/goes;
+    return $contents;
+}
+
 sub findident {
     print(STDERR "Starting pass 1: Collect identifier definitions.\n");
 
@@ -95,6 +198,7 @@ sub findident {
 
     foreach $f (@f) {
 	$f =~ s/^$realpath//o;
+	$java = $ft[$fnum];
 	$fileidx{++$fnum} = $f;
 
 	open(SRCFILE, $realpath.$f);
@@ -114,49 +218,11 @@ sub findident {
 	while ($contents =~ s/\05([^\n\05]+)\05/$1\05\05/gs) {}
 	$contents =~ s/(\05+)([^\n]*)/"$2"."\n" x length($1)/gse;
 
-	# Find macro (un)definitions.
-	$l = 0;
-	foreach ($contents =~ /^(.*)/gm) {
-	    $l++;
-	    if (/^[ \t]*\#\s*(define|undef)\s+($ident)/o) {
-		$xref{$2} .= "$itype{'macro'}$fnum:$l\t";
-		$defs++;
-	    }
+	if ($java) {
+	    $contents = java_clean($contents);
+	} else {
+	    $contents = c_clean($contents);
 	}
-
-	# We want to do some funky heuristics with preprocessor blocks
-	# later, so mark them. (FIXME: #elif)
-	$contents =~ s/^[ \t]*\#\s*if.*/\01/gm;
-	$contents =~ s/^[ \t]*\#\s*else.*/\02/gm;
-	$contents =~ s/^[ \t]*\#\s*endif.*/\03/gm;
-
-	# Strip all preprocessor directives.
-	$contents =~ s/^[ \t]*\#(.*)//gm;
-
-	# Now, remove all odd block markers ({,}) we find inside
-	# #else..#endif blocks.  (And pray they matched one in the
-	# preceding #if..#else block.)
-	while ($contents =~ s/\02([^\01\02\03]*\03)/&stripodd($1)/ges ||
-	       $contents =~ s/\01([^\01\02\03]*)\03/$1/gs) {}
-
-	while ($contents =~ /([\01\02\03\04\05])/gs) {
-	    print(STDERR "\t ** stray ".($1 eq "\01"  
-					 ? "#if"
-					 : ($1 eq "\02"
-					    ? "#else"
-					    : ($1 eq "\03"
-					       ? "#endif"
-					       : "control sequence"
-					       )
-					    )
-					 )." found.\n");
-	}
-	$contents =~ s/[\01\02\03\04\05]//gs;
-
-	# Remove all but outermost blocks.  (No local variables.)
-	while ($contents =~ s/\{([^\{\}]*)\}/
-	       "\05".&wash($1)/ges) {}
-	$contents =~ s/\05/\{\}/gs;
 
 	# Remove nested parentheses.
 	while ($contents =~ s/\(([^\)]*)\(/\($1\05/g ||
@@ -173,55 +239,50 @@ sub findident {
 	$contents =~ s/\(([^\)]*\,[^\)]*)\)/
 	    "()".&wash($1)/ges;
 
-
-	# This operator-stuff messes things up. (C++)
-	$contents =~ s/operator[\<\>\=\!\+\-\*\%\/]{1,2}/operator/g;
-
-	# Ranges are uninteresting (and confusing).
-	$contents =~ s/\[.*?\]//gs;
-
-	# And so are assignments.
-	$contents =~ s/\=(.*?);/";".&wash($1)/ges;
-
 	# From here on, \01 and \02 are used to encapsulate found
 	# identifiers,
 
-	# Find struct, enum and union definitions.
-	$contents =~ s/((struct|enum|union)\s+($ident|)\s*({}|(;)))/
-	    "$2 ".($3 ? "\01".$itype{$2}.$3."\02 " : "").$5.&wash($1)/goes;
-
-	# Find class definitions. (C++)
-	$contents =~ s/((class)\s+($ident)\s*(:[^;\{]*|)({}|(;)))/
-	    "$2 "."\01".$itype{$2.($6 ? 'forw' : '')}.
-		&classes($4).$3."\02 ".$6.&wash($1)/goes;
+	if ($java) {
+	    $contents = java_classes($contents);
+	} else {
+	    $contents = c_classes($contents);
+	}
 
 	@contents = split(/[;\}]/, $contents);
 	$contents = '';
 
 	foreach (@contents) {
-	    s/^(\s*)(struct|enum|union|inline)/$1/;
-
-	    if (/$ident[^a-zA-Z0-9_]+$ident/) { # It takes two, baby.
-
-		$t = /^\s*typedef/s;	# Is this a type definition?
-
-		s/($ident(?:\s*::\s*$ident|))	# ($1) Match the identifier
-		    ([\s\)]*		# ($2) Tokens allowed after identifier
-		     (\([^\)]*\)	# ($3) Function parameters?
-		      (?:\s*:[^\{]*|)	# inheritage specification (C++)
-		      |)		# No function parameters
-		     \s*($|,|\{))/	# ($4) Allowed termination chars.
-		  "\01".		# identifier marker
-		   ($t			# if type definition...
-		    ? $itype{'typedef'} # ..mark as such
-		    : ($3		# $3 is empty unless function definition.
-		       ? ($4 eq '{' 		# Terminating token indicates 
-			  ? $itype{'function'} 	# function or
-			  : $itype{'funcprot'}) # function prototype.
-		       : $itype{'var'}) 	# Variable.
-		    )."$1\02 ".&wash($2)/goesx;
-	       }
-
+	    if (!$java) {
+		s/^(\s*)(struct|enum|union|inline)/$1/;
+		
+		if (/$ident[^a-zA-Z0-9_]+$ident/) { # It takes two, baby.
+		    
+		    $t = /^\s*typedef/s;	# Is this a type definition?
+		    
+		    s/($ident(?:\s*::\s*$ident|))	# ($1) Match the identifier
+			([\s\)]*		# ($2) Tokens allowed after identifier
+			 (\([^\)]*\)	# ($3) Function parameters?
+			  (?:\s*:[^\{]*|)	# inheritage specification (C++)
+			  |)		# No function parameters
+			 \s*($|,|\{))/	# ($4) Allowed termination chars.
+			     "\01".		# identifier marker
+				 ($t			# if type definition...
+				  ? $itype{'typedef'} # ..mark as such
+				  : ($3		# $3 is empty unless function definition.
+				     ? ($4 eq '{' 		# Terminating token indicates 
+					? $itype{'function'} 	# function or
+					: $itype{'funcprot'}) # function prototype.
+				     : $itype{'var'}) 	# Variable.
+				  )."$1\02 ".&wash($2)/goesx;
+		}
+	    } else {
+		s/($ident)\s*\([^\)]*\)[^\{]*($|\{)/
+		    "\01".($2 eq '{' ? $itype{'function'} : $itype{'funcprot'})."$1\02 ".
+			&wash($2)/goesx;
+		s/($ident)\s*(=.*)$/
+		    "\01".$itype{'var'}."$1\02 ".&wash($2)/goesx;
+	    }
+	    
 	    $contents .= $_;
 	}
 
@@ -326,7 +387,15 @@ tie (%fileidx, "DB_File", "fileidx", O_RDWR|O_CREAT, 0660, $DB_HASH)
 open(FILES, "find $realpath -print |");
 while (<FILES>) {
     chop;
-    push(@f, $_) if /\.([ch]|cpp?|cc)$/i; # Duplicated in lib/LXR/Common.pm
+    if (/\.([ch]|cpp?|cc)$/i) {
+	push(@f, $_);
+	push(@t, 0);
+    }
+    if (/\.(java)$/i) {
+	push(@f, $_);
+	push(@ft, 1);
+    }
+#    push(@f, $_) if /\.([ch]|cpp?|cc|java)$/i; # Duplicated in lib/LXR/Common.pm
 }
 close(FILES);
 
