@@ -831,8 +831,7 @@ AppendFontName(XFontStruct* aFontStruct, nsString& aString, Display *aDisplay)
   unsigned long pr = 0;
   // we first append the FFRE name to reconstruct font more faithfully
   unsigned long font_atom = gdk_atom_intern("FONT", FALSE);
-  ::XGetFontProperty(aFontStruct, font_atom, &pr);
-  if(pr) {
+  if (::XGetFontProperty(aFontStruct, font_atom, &pr) && pr) {
     char* xlfdName = ::XGetAtomName(aDisplay, pr);
     AppendFontFFREName(aString, xlfdName);
     ::XFree(xlfdName);
@@ -841,10 +840,9 @@ AppendFontName(XFontStruct* aFontStruct, nsString& aString, Display *aDisplay)
   aString.Append(PRUnichar(','));
 
   // next, we need to append family name to cover more encodings.
-  ::XGetFontProperty(aFontStruct, XA_FAMILY_NAME, &pr);
-  if (!pr)
-    ::XGetFontProperty(aFontStruct, XA_FULL_NAME, &pr);
-  if (pr) {
+  if ((::XGetFontProperty(aFontStruct, XA_FAMILY_NAME, &pr) ||
+       ::XGetFontProperty(aFontStruct, XA_FULL_NAME, &pr)) &&
+      pr) {
     char *fontName = ::XGetAtomName(aDisplay, pr);
     aString.AppendWithConversion(fontName);
     ::XFree(fontName);
@@ -861,8 +859,7 @@ GetFontWeight(XFontStruct* aFontStruct, Display *aDisplay)
   unsigned long pr = 0;
   Atom weightName = ::XInternAtom(aDisplay, "WEIGHT_NAME", True);
   if (weightName != None) {
-    ::XGetFontProperty(aFontStruct, weightName, &pr);
-    if (pr) {
+    if (::XGetFontProperty(aFontStruct, weightName, &pr) && pr) {
       char *weightString = ::XGetAtomName(aDisplay, pr);
       if (nsCRT::strcasecmp(weightString, "bold") == 0)
         weight = NS_FONT_WEIGHT_BOLD;
@@ -871,8 +868,7 @@ GetFontWeight(XFontStruct* aFontStruct, Display *aDisplay)
   }
 
   pr = 0;
-  ::XGetFontProperty(aFontStruct, XA_WEIGHT, &pr);
-  if ( pr > 10 )
+  if (::XGetFontProperty(aFontStruct, XA_WEIGHT, &pr) && pr > 10 )
     weight = NS_FONT_WEIGHT_BOLD;
 
   return weight;
@@ -883,8 +879,7 @@ GetFontSize(XFontStruct *aFontStruct, float aPixelsToTwips)
 {
   unsigned long pr = 0;
   Atom pixelSizeAtom = ::XInternAtom(GDK_DISPLAY(), "PIXEL_SIZE", 0);
-  ::XGetFontProperty(aFontStruct, pixelSizeAtom, &pr);
-  if (!pr)
+  if (!::XGetFontProperty(aFontStruct, pixelSizeAtom, &pr) || !pr)
     return DEFAULT_TWIP_FONT_SIZE;
   return NSIntPixelsToTwips(pr, aPixelsToTwips);
 }
