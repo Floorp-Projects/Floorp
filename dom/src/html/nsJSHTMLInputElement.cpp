@@ -70,7 +70,10 @@ enum HTMLInputElement_slots {
   HTMLINPUTELEMENT_TYPE = -16,
   HTMLINPUTELEMENT_USEMAP = -17,
   HTMLINPUTELEMENT_VALUE = -18,
-  NSHTMLINPUTELEMENT_CONTROLLERS = -19
+  NSHTMLINPUTELEMENT_CONTROLLERS = -19,
+  NSHTMLINPUTELEMENT_TEXTLENGTH = -20,
+  NSHTMLINPUTELEMENT_SELECTIONSTART = -21,
+  NSHTMLINPUTELEMENT_SELECTIONEND = -22
 };
 
 /***********************************************************************/
@@ -321,6 +324,63 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
             if(NS_SUCCEEDED(rv)) {
             // get the js object; n.b., this will do a release on 'prop'
             nsJSUtils::nsConvertXPCObjectToJSVal(prop, NS_GET_IID(nsIControllers), cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLINPUTELEMENT_TEXTLENGTH:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLINPUTELEMENT_TEXTLENGTH, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMNSHTMLInputElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLInputElementIID, (void **)&b)) {
+            rv = b->GetTextLength(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLINPUTELEMENT_SELECTIONSTART:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLINPUTELEMENT_SELECTIONSTART, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMNSHTMLInputElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLInputElementIID, (void **)&b)) {
+            rv = b->GetSelectionStart(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+        }
+        break;
+      }
+      case NSHTMLINPUTELEMENT_SELECTIONEND:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLINPUTELEMENT_SELECTIONEND, PR_FALSE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          nsIDOMNSHTMLInputElement* b;
+          if (NS_OK == a->QueryInterface(kINSHTMLInputElementIID, (void **)&b)) {
+            rv = b->GetSelectionEnd(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            *vp = INT_TO_JSVAL(prop);
             }
             NS_RELEASE(b);
           }
@@ -587,6 +647,58 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
+      case NSHTMLINPUTELEMENT_SELECTIONSTART:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLINPUTELEMENT_SELECTIONSTART, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
+      
+          nsIDOMNSHTMLInputElement *b;
+          if (NS_OK == a->QueryInterface(kINSHTMLInputElementIID, (void **)&b)) {
+            b->SetSelectionStart(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
+      case NSHTMLINPUTELEMENT_SELECTIONEND:
+      {
+        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLINPUTELEMENT_SELECTIONEND, PR_TRUE);
+        if (NS_SUCCEEDED(rv)) {
+          PRInt32 prop;
+          int32 temp;
+          if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
+            prop = (PRInt32)temp;
+          }
+          else {
+            rv = NS_ERROR_DOM_NOT_NUMBER_ERR;
+          }
+      
+          nsIDOMNSHTMLInputElement *b;
+          if (NS_OK == a->QueryInterface(kINSHTMLInputElementIID, (void **)&b)) {
+            b->SetSelectionEnd(prop);
+            NS_RELEASE(b);
+          }
+          else {
+             
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+          
+        }
+        break;
+      }
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, obj, id, vp);
     }
@@ -771,6 +883,58 @@ HTMLInputElementClick(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
 }
 
 
+//
+// Native method SetSelectionRange
+//
+PR_STATIC_CALLBACK(JSBool)
+NSHTMLInputElementSetSelectionRange(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMHTMLInputElement *privateThis = (nsIDOMHTMLInputElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsCOMPtr<nsIDOMNSHTMLInputElement> nativeThis;
+  nsresult result = NS_OK;
+  if (NS_OK != privateThis->QueryInterface(kINSHTMLInputElementIID, getter_AddRefs(nativeThis))) {
+    return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_WRONG_TYPE_ERR);
+  }
+
+  PRInt32 b0;
+  PRInt32 b1;
+  // If there's no private data, this must be the prototype, so ignore
+  if (!nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_NSHTMLINPUTELEMENT_SETSELECTIONRANGE, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 2) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (!JS_ValueToInt32(cx, argv[0], (int32 *)&b0)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+    if (!JS_ValueToInt32(cx, argv[1], (int32 *)&b1)) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_NUMBER_ERR);
+    }
+
+    result = nativeThis->SetSelectionRange(b0, b1);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
 /***********************************************************************/
 //
 // class for HTMLInputElement
@@ -815,6 +979,9 @@ static JSPropertySpec HTMLInputElementProperties[] =
   {"useMap",    HTMLINPUTELEMENT_USEMAP,    JSPROP_ENUMERATE},
   {"value",    HTMLINPUTELEMENT_VALUE,    JSPROP_ENUMERATE},
   {"controllers",    NSHTMLINPUTELEMENT_CONTROLLERS,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"textLength",    NSHTMLINPUTELEMENT_TEXTLENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"selectionStart",    NSHTMLINPUTELEMENT_SELECTIONSTART,    JSPROP_ENUMERATE},
+  {"selectionEnd",    NSHTMLINPUTELEMENT_SELECTIONEND,    JSPROP_ENUMERATE},
   {0}
 };
 
@@ -828,6 +995,7 @@ static JSFunctionSpec HTMLInputElementMethods[] =
   {"focus",          HTMLInputElementFocus,     0},
   {"select",          HTMLInputElementSelect,     0},
   {"click",          HTMLInputElementClick,     0},
+  {"setSelectionRange",          NSHTMLInputElementSetSelectionRange,     2},
   {0}
 };
 

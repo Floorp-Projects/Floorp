@@ -32,4 +32,13 @@
   { 0xbc, 0xcd, 0x00, 0x60, 0xb0, 0xfc, 0x76, 0xbd } } */
 
 	readonly attribute  xpidl nsIControllers  controllers;
+	
+	readonly attribute  long   textLength;
+	
+           attribute  long   selectionStart;
+           attribute  long   selectionEnd;
+
+	/* convenience function */
+  void                       setSelectionRange(in long selectionStart, in long selectionEnd);
+  
  };

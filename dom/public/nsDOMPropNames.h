@@ -742,6 +742,10 @@
     "nshtmlformelement.item", \
     "nshtmlformelement.nameditem", \
     "nshtmlinputelement.controllers", \
+    "nshtmlinputelement.selectionend", \
+    "nshtmlinputelement.selectionstart", \
+    "nshtmlinputelement.setselectionrange", \
+    "nshtmlinputelement.textlength", \
     "nshtmloptioncollection.item", \
     "nshtmloptioncollection.length", \
     "nshtmloptioncollection.nameditem", \
