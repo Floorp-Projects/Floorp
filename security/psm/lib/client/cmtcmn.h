@@ -67,8 +67,13 @@
 
 typedef void (*void_fun) (void);
 
+#ifdef XP_OS2_VACPP	/* OS/2 Visual Age */
+typedef void (*_Optlink CMTP7ContentCallback)(void *arg, const char *buf,
+				      unsigned long len);
+#else
 typedef void (* CMTP7ContentCallback)(void *arg, const char *buf,
 				      unsigned long len);
+#endif
 
 typedef struct _CMTPrivate CMTPrivate;
 typedef void (*CMTReclaimFunc)(CMTPrivate *priv);
