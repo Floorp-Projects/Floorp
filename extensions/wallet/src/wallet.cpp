@@ -3136,11 +3136,6 @@ WLLT_OnSubmit(nsIContent* formNode) {
   nsIURI* docURL = nsnull;
   nsIDocument* doc = nsnull;
   formNode->GetDocument(doc);
-#ifdef NECKO
-  char* spec;
-#else
-  const char* spec;
-#endif
   if (!doc) {
     return;
   }
@@ -3148,13 +3143,8 @@ WLLT_OnSubmit(nsIContent* formNode) {
   if (!docURL) {
     return;
   }
-  (void)docURL->GetSpec(&spec);
-  URLName = (char*)PR_Malloc(PL_strlen(spec)+1);
-  PL_strcpy(URLName, spec);
+  (void)docURL->GetSpec(&URLName);
   NS_IF_RELEASE(docURL);
-#ifdef NECKO
-  nsCRT::free(spec);
-#endif
 
   /* get to the form elements */
   PRInt32 count = 0;
@@ -3287,6 +3277,7 @@ WLLT_OnSubmit(nsIContent* formNode) {
     }
     NS_RELEASE(formElement);
   }
+  nsCRT::free(URLName);
 }
 
 PUBLIC void
