@@ -1,81 +1,236 @@
+/********************************/
+/* nine slice menulist - This is the default style used for all menulists.
+ * This style is fully scalable in 2 dimensions.  It supports menulists in
+ * both active and disabled states, which includes 3 sets of sliced images.
+ ********************************/
 
-/* NEW WIDGET LANDING: <menulist> popup */
+  menulist {
+    -moz-binding		  : url(chrome://global/skin/menulistBindings.xml#nine-slice-menulist);
+    margin			      : 0px 1px 0px 1px;
+    border            : 3px solid transparent;
+    padding           : 0px;
+    min-height        : 19px;
+    font              : message-box;
+  }
 
-/* outer frame */
-  menulist 
-    {
-      padding             : 0px;
-      border              : 1px solid #000000;
-      background-color    : #DDDDDD;
-      -moz-border-radius  : 4px;
-      margin              : 1px 5px 2px 5px;
-      -moz-user-focus		  : ignore;
-    }
+  .menulist-text-mid {
+    color             : #000000;
+    padding-right     : 2px;
+  }
 
-  menulist[open="true"] 
-    {
-      background-color	  : #666666;
-    }
+  .menulist-icon-mid {
+    padding-right     : 2px;
+  }
+
+  .menulist-dropmarker {
+    list-style-image  : url("chrome://global/skin/menulist-arrow.gif");
+    width				  : 5px;
+    height			      : 8px;
+  }
+
+  /* .......... focused state .......... */
+
+/** -- no focused state for mac yet if ever--
+
+  menulist:focus {
+    border-color        : #8C9EB5;
+    -moz-border-radius  : 10px 7px 11px 10px;
+  }
+**/
+
+  /* .......... normal state .......... */
+
+  .menulist-box-left {
+    width           : 8px;
+  }
+    
+  .menulist-left-top {
+    background			: url("chrome://global/skin/menulist-left-top.gif") no-repeat;
+    height          : 3px;
+  }
+
+  .menulist-left-mid {
+    background			: url("chrome://global/skin/menulist-left-mid.gif") repeat-y;
+
+  }
+
+  .menulist-left-btm {
+    background			  : url("chrome://global/skin/menulist-left-btm.gif") no-repeat;
+    height            : 3px;
+
+  }
+
+  .menulist-box-mid {
+    background-color  : #DDDDDD;
+  }
   
-  menulist[disabled="true"]
-    {
-      border              : 1px solid #888888;
-      color               : #777777;
-    }
-    
-/* icon display frame */
-  menulist > .menu-icon 
-    {
-      border			  : none;
-      padding             : 0px;
-    }  
+  .menulist-mid-top {
+  	background			: url("chrome://global/skin/menulist-mid-top.gif") repeat-x;
+  	height          : 3px;
+    vertical-align  : top;
+  }
 
-  menulist[open="true"] > .menu-icon 
-    {
-	  border			  : none;
-      padding             : 0px;
-    }
-    
-/* text display frame */
-  menulist > .menu-text 
-    {
-      color				  : #000000;
-      padding             : 0px 4px;
-      margin	          : 0px;
-      border-top		  : 1px solid #FFFFFF;
-      border-bottom		  : 1px solid #AAAAAA;
-      border-left		  : 1px solid #FFFFFF;
-      border-right		  : 1px solid #AAAAAA;
-      -moz-border-radius  : 3px 2px 2px 2px;  /* Three pixels may be rounding error? */
-    }
-    
-   menulist[open="true"] > .menu-text 
-    {
-      color				  : #FFFFFF;
-      border-top		  : 1px solid #444444;
-      border-bottom		  : 1px solid #888888;
-      border-left		  : 1px solid #444444;
-      border-right		  : 1px solid #888888;
-    }
-    
-/* drop marker display frame */
-  menulist > .menu-dropmarker 
-    {
-      border			  : none;
-      list-style-image    : url("chrome://global/skin/menulist-scroll.gif");
-      padding             : 0px;
-    }
+  .menulist-mid-mid {
+  	background			  : url("chrome://global/skin/menulist-mid-mid.gif") repeat-x;
+  }
+
+  .menulist-mid-btm {
+    background			  : url("chrome://global/skin/menulist-mid-btm.gif") repeat-x;
+    height            : 3px;
+    vertical-align    : bottom;
+  }
+
+  .menulist-text-box {
+    vertical-align    : middle;
+  	text-align        : left;
+    padding           : 1px 0px 2px 0px;
+  }
+
+  .menulist-box-right {
+    width           : 19px;
+  }
   
-  menulist[disabled="true"] > .menu-dropmarker
-    {
-      list-style-image    : url("chrome://global/skin/menulist-scroll-disabled.gif");
-    }
+  .menulist-right-mid {
+  	background			: url("chrome://global/skin/menulist-right-mid.gif") repeat-y;
+  }
 
-  menulist[open="true"] > .menu-dropmarker 
-    {
-      padding             : 0px;
-      list-style-image	  : url("chrome://global/skin/menulist-scroll-active.gif");
-    }
+  .menulist-right-mid2 {
+  	background			: url("chrome://global/skin/menulist-right-top.gif") no-repeat;
+    padding-left    : 3px;
+    padding-right   : 2px;
+    padding-top     : 3px;
+    /**  padding-bottom  : 1px; **/
+    text-align      : center;
+    vertical-align  : middle;
+  }
+
+  .menulist-right-btm {
+    background			  : url("chrome://global/skin/menulist-right-btm.gif") no-repeat;
+    height            : 3px;
+  }
+
+  /* .......... active state .......... */
+  
+  menulist:hover:active .menulist-dropmarker,
+  menulist[open="true"] .menulist-dropmarker{
+    list-style-image  : url("chrome://global/skin/menulist-active-arrow.gif");
+  }
+
+  menulist:hover:active > .menulist-box-left > .menulist-left-top,
+  menulist[open="true"] > .menulist-box-left > .menulist-left-top {
+    background-image   : url("chrome://global/skin/menulist-active-left-top.gif");
+  }
+
+  menulist:hover:active > .menulist-box-left > .menulist-left-mid,
+  menulist[open="true"] > .menulist-box-left > .menulist-left-mid {
+    background-image   : url("chrome://global/skin/menulist-active-left-mid.gif");
+  }
+
+  menulist:hover:active > .menulist-box-left > .menulist-left-btm,
+  menulist[open="true"] > .menulist-box-left > .menulist-left-btm {
+    background-image   : url("chrome://global/skin/menulist-active-left-btm.gif");
+  }
+
+  menulist:hover:active > .menulist-stack > .menulist-box-mid,
+  menulist[open="true"] > .menulist-stack > .menulist-box-mid {
+    background-color  : #666666;
+  }
+  
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-top,
+  menulist[open="true"] > .menulist-stack > .menulist-box-mid > .menulist-mid-top {
+  	background-image  : url("chrome://global/skin/menulist-active-mid-top.gif");
+  }
+
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-mid,
+  menulist[open="true"] > .menulist-stack > .menulist-box-mid > .menulist-mid-mid {
+  	background-image  : url("chrome://global/skin/menulist-active-mid-mid.gif");
+  }
+
+  menulist:hover:active > .menulist-stack > .menulist-text-box > .menulist-text-mid,
+  menulist[open="true"] > .menulist-stack > .menulist-text-box > .menulist-text-mid {
+    color: #ffffff;
+  }
+
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-btm,
+  menulist[open="true"] > .menulist-stack > .menulist-box-mid > .menulist-mid-btm {
+    background-image  : url("chrome://global/skin/menulist-active-mid-btm.gif");
+  }
+
+  menulist:hover:active > .menulist-box-right > .menulist-right-mid,
+  menulist[open="true"] > .menulist-box-right > .menulist-right-mid {
+  	background-image  : url("chrome://global/skin/menulist-active-right-mid.gif");
+  }
+
+  menulist:hover:active > .menulist-box-right > .menulist-right-mid > .menulist-right-mid2,
+  menulist[open="true"] > .menulist-box-right > .menulist-right-mid > .menulist-right-mid2 {
+  	background-image  : url("chrome://global/skin/menulist-active-right-top.gif");
+  }
+
+  menulist:hover:active > .menulist-box-right > .menulist-right-btm,
+  menulist[open="true"] > .menulist-box-right > .menulist-right-btm {
+    background-image  : url("chrome://global/skin/menulist-active-right-btm.gif");
+  }
+
+  /* .......... disabled state .......... */
+
+  menulist:hover:active > .menulist-box-left > .menulist-left-top[disabled="true"],
+  .menulist-left-top[disabled="true"] {
+    background-image   : url("chrome://global/skin/menulist-dis-left-top.gif");
+  }
+
+  menulist:hover:active > .menulist-box-left > .menulist-left-mid[disabled="true"],
+  .menulist-left-mid[disabled="true"] {
+    background-image   : url("chrome://global/skin/menulist-dis-left-mid.gif");
+  }
+
+  menulist:hover:active > .menulist-box-left > .menulist-left-btm[disabled="true"],
+  .menulist-left-btm[disabled="true"] {
+    background-image   : url("chrome://global/skin/menulist-dis-left-btm.gif");
+  }
+
+  menulist:hover:active > .menulist-stack > .menulist-text-box > .menulist-text-mid[disabled="true"],
+  .menulist-text-mid[disabled="true"] {
+    color              : #7F8997;
+  }
+
+  menulist:hover:active > .menulist-stack > .menulist-box-mid[disabled="true"],
+  .menulist-box-mid[disabled="true"] {
+    background-color    : #DDDDDD;
+  }
+
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-top[disabled="true"],
+  .menulist-mid-top[disabled="true"] {
+  	background-image  : url("chrome://global/skin/menulist-dis-mid-top.gif");
+  }
+
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-mid[disabled="true"],
+  .menulist-mid-mid[disabled="true"] {
+  	background-image  : url("chrome://global/skin/menulist-dis-mid-mid.gif");
+  }
+
+  menulist:hover:active > .menulist-stack > .menulist-box-mid > .menulist-mid-btm[disabled="true"],
+  .menulist-mid-btm[disabled="true"] {
+    background-image  : url("chrome://global/skin/menulist-dis-mid-btm.gif");
+  }
+
+  menulist:hover:active > .menulist-box-right > .menulist-right-mid[disabled="true"],
+  .menulist-right-mid[disabled="true"] {
+  	background-image  : url("chrome://global/skin/menulist-dis-right-mid.gif");
+  }
+
+  menulist:hover:active > .menulist-box-right > .menulist-right-mid > .menulist-right-mid2[disabled="true"],
+  .menulist-right-mid2[disabled="true"] {
+  	background-image  : url("chrome://global/skin/menulist-dis-right-top.gif");
+  }
+
+  menulist:hover:active > .menulist-box-right > .menulist-right-btm[disabled="true"],
+  .menulist-right-btm[disabled="true"] {
+    background-image  : url("chrome://global/skin/menulist-dis-right-btm.gif");
+  }
+
+  .menulist-dropmarker[disabled="true"] {
+    list-style-image  : url("chrome://global/skin/menulist-dis-arrow.gif");
+  }
 
 /** rules for EDITABLE menulists (aka 'comboboxes'). 
  **/
@@ -110,14 +265,72 @@
 
 /* drop marker display frame */
   menulist[editable="true"] > .menu-dropmarker 
-    {
+	{
       border              : 1px outset #CCCCCC;
-    }
+	}
 
   menulist[editable="true"][open="true"] > .menu-dropmarker 
     {
       border              : 1px inset #CCCCCC;
     }
+
+/* rules for popups and separators associated with menulists */
+
+/** -- modern's version --
+  menulist > menupopup {
+    border              : 1px solid #313948;
+    padding             : 0px;
+    min-width           : 0px;
+    background-color	  : #C2D0D0;
+  }
+    
+  menulist > menupopup > .popup-internal-box
+    {
+      border: 0px;
+    }
+  
+  menulist > menupopup > menuseparator 
+    {
+      border-top: 1px solid #919FA3;
+      border-bottom: 1px solid #E6EFEE;
+    }
+
+  menulist > menupopup > menuitem,
+  menulist > menupopup > menu 
+    {
+      padding-right       : 12px;
+      padding-top         : 1px;
+      padding-bottom      : 1px;
+      min-width           : 0px;
+      max-width           : none !important;
+      color				        : #000000;
+      font                : message-box;
+    }
+
+
+  menulist > menupopup > menuitem[menuactive="true"]
+    {
+    	background-color  : #465B75;
+    	color			  : #FFFFFF;
+    }
+
+  menulist > menupopup > menuitem[selected="true"] > .menu-iconic-left
+    {
+      list-style-image    : url(chrome://global/skin/menu-check.gif);
+    }
+  
+  menulist > menupopup > menuitem[menuactive="true"][selected="true"] > .menu-iconic-left
+    {
+      list-style-image    : url(chrome://global/skin/menu-check-hover.gif);
+    }
+  
+  menulist > menupopup > arrowscrollbox > vbox > autorepeatbutton:hover 
+    {
+      background-color: #B2BFBF;
+      border: 1px inset #B2BFBF;
+    }
+
+-- end modern's version -- **/
 
 /* rules for popups and separators associated with menulists */
   menulist > menupopup 
@@ -156,3 +369,43 @@
       list-style-image    : url(chrome://global/skin/menulist-select-dot.gif);
       margin-right		  : 3px;
     }
+
+
+
+
+/* :::::::::: compact menulists :::::::::: */
+
+.menulist-compact {
+  -moz-binding: url("chrome://global/skin/menulistBindings.xml#menulist-compact");
+  margin: 0px;
+  border: 1px solid #000000;
+  min-width: 0px;
+  min-height: 0px;
+  background-color: #D6DFDF;
+  -moz-user-focus: ignore;
+}
+
+.menulist-compact-text {
+  margin-right: 3px;
+}  
+
+.menulist-compact-internal-box {
+  border-left: 1px solid #F7F7F7;
+  border-top: 1px solid #F7F7F7;
+  border-right: 1px solid #8CA2A5;
+  border-bottom: 1px solid #8CA2A5;
+  padding: 1px;
+}
+    
+.menulist-compact-dropmarker {
+  list-style-image: url("chrome://global/skin/menulist-compact-arrow.gif");
+  margin-left: 2px;
+}
+      
+.menulist-compact:hover:active > .menulist-compact-internal-box,
+.menulist-compact[open="true"] > .menulist-compact-internal-box {
+  background-color: #949EA5;
+  border: 1px solid #808080;
+}
+
+

@@ -7,8 +7,11 @@
 
 <!-- 
   BINDING : menulist
-  XUL REPRESENTATION : <menulist>
+  XUL
+  REPRESENTATION : <menulist>
   -->
+  
+  <!--
   <binding id="menulist" extends="chrome://global/content/menulistBindings.xml#menulist">
     <content includes="menupopup" flex="1">
       <xul:box class="menulist-internal-box" flex="1">
@@ -32,5 +35,51 @@
       </xul:box>
     </content>
   </binding>
+   -->
+   
+  <!-- new stretchy menulist --> 
+   
+  <binding id="nine-slice-menulist" extends="chrome://global/content/menulistBindings.xml#menulist">
+  	<content includes="menupopup">
+      <xul:box class="menulist-box-left" inherits="disabled" orient="vertical">
+        <xul:spring class="menulist-left-top" inherits="disabled"/>
+        <xul:spring class="menulist-left-mid" inherits="disabled" flex="1"/>
+        <xul:spring class="menulist-left-btm" inherits="disabled"/>
+      </xul:box>
+
+      <xul:stack class="menulist-stack" flex="1">
+        <xul:box class="menulist-box-mid" inherits="disabled" orient="vertical">
+           <xul:spring class="menulist-mid-top" inherits="disabled"/>
+           <xul:box class="menulist-mid-mid" inherits="disabled" flex="1"/>
+           <xul:spring class="menulist-mid-btm" inherits="disabled"/>
+        </xul:box>
+
+        <xul:box class="menulist-text-box" autostretch="never">
+         <xul:image class="menulist-icon-mid" inherits="src"/>
+         <xul:text class="menulist-text-mid" inherits="disabled,value,crop,accesskey" flex="1"/>
+       </xul:box>
+     </xul:stack>
+      
+      <xul:box class="menulist-box-right" inherits="disabled" orient="vertical">
+    		<xul:box class="menulist-right-mid" inherits="disabled" flex="1">
+      		<xul:box class="menulist-right-mid2" inherits="disabled" flex="1" autostretch="never">
+        		<xul:image class="menulist-dropmarker" inherits="disabled"/>
+          </xul:box>
+        </xul:box>
+        <xul:spring class="menulist-right-btm" inherits="disabled"/>
+      </xul:box>
+    </content>
+  </binding>
+
+  <binding id="menulist-compact" extends="chrome://global/content/menulistBindings.xml#menulist">
+    <content includes="menupopup" flex="1">
+      <xul:box class="menulist-compact-internal-box" flex="1" autostretch="never">
+        <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
+        <xul:spring flex="1"/>
+        <xul:text class="menulist-compact-text" inherits="value,accesskey,crop,disabled" crop="right"/>
+      </xul:box>
+    </content>
+  </binding>
+   
    
 </bindings>
