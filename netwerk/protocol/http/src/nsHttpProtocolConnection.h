@@ -25,6 +25,8 @@
 class nsIConnectionGroup;
 class nsIHttpEventSink;
 class nsIString;
+class nsITransport;
+class nsHttpProtocolHandler;
 
 class nsHttpProtocolConnection : public nsIHttpProtocolConnection,
                                  public nsIStreamListener
@@ -38,12 +40,10 @@ public:
     NS_IMETHOD Resume(void);
 
     // nsIProtocolConnection methods:
+    NS_IMETHOD Open(void);
     NS_IMETHOD GetContentType(char* *contentType);
     NS_IMETHOD GetInputStream(nsIInputStream* *result);
     NS_IMETHOD GetOutputStream(nsIOutputStream* *result);
-    NS_IMETHOD AsyncWrite(nsIInputStream* data, PRUint32 count,
-                          nsresult (*callback)(void* closure, PRUint32 count),
-                          void* closure);
 
     // nsIHttpProtocolConnection methods:
     NS_IMETHOD GetHeader(const char* header);
@@ -69,7 +69,10 @@ public:
     nsHttpProtocolConnection();
     virtual ~nsHttpProtocolConnection();
 
-    nsresult Init(nsIUrl* url, nsISupports* eventSink);
+    nsresult Init(nsIUrl* url, nsISupports* eventSink, 
+                  nsHttpProtocolHandler* handler);
+    nsresult GetExistingTransport(const char* host, PRInt32 port,
+                                  nsITransport* *result);
 
     enum State {
         UNCONNECTED,
@@ -78,9 +81,11 @@ public:
     };
 
 protected:
-    nsIUrl*             mUrl;
-    nsIHttpEventSink*   mEventSink;
-    State               mState;
+    nsHttpProtocolHandler*      mHandler;
+    nsIUrl*                     mUrl;
+    nsIHttpEventSink*           mEventSink;
+    State                       mState;
+    nsITransport*               mTransport;
 };
 
 #endif /* nsHttpProtocolConnection_h___ */

@@ -22,17 +22,32 @@
 #include "nsCRT.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsISocketTransportService.h"
+#include "nsITransport.h"
 
-static NS_DEFINE_CID(kTypicalUrlCID,            NS_TYPICALURL_CID);
+static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
+static NS_DEFINE_CID(kTypicalUrlCID,             NS_TYPICALURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsHttpProtocolHandler::nsHttpProtocolHandler()
+    : mConnectionPool(nsnull)
 {
+    NS_INIT_REFCNT();
+}
+
+nsresult
+nsHttpProtocolHandler::Init(void)
+{
+    mConnectionPool = new nsHashtable();
+    if (mConnectionPool == nsnull)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
 }
 
 nsHttpProtocolHandler::~nsHttpProtocolHandler()
 {
+    if (mConnectionPool) delete mConnectionPool;
 }
 
 NS_IMPL_ISUPPORTS(nsHttpProtocolHandler, nsIProtocolHandler::GetIID());
@@ -43,9 +58,7 @@ NS_IMPL_ISUPPORTS(nsHttpProtocolHandler, nsIProtocolHandler::GetIID());
 NS_IMETHODIMP
 nsHttpProtocolHandler::GetScheme(const char* *result)
 {
-    *result = nsCRT::strdup("http");
-    if (*result == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
+    *result = "http";
     return NS_OK;
 }
 
@@ -103,7 +116,7 @@ nsHttpProtocolHandler::NewConnection(nsIUrl* url,
     nsHttpProtocolConnection* connection = new nsHttpProtocolConnection();
     if (connection == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
-    rv = connection->Init(url, eventSink);
+    rv = connection->Init(url, eventSink, this);
     if (NS_FAILED(rv)) {
         delete connection;
         return rv;
@@ -114,3 +127,43 @@ nsHttpProtocolHandler::NewConnection(nsIUrl* url,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+nsresult
+nsHttpProtocolHandler::GetTransport(const char* host, PRInt32 port,
+                                    nsITransport* *result)
+{
+    nsSocketTransportKey key(host, port);
+    nsITransport* trans = (nsITransport*)mConnectionPool->Get(&key);
+    if (trans) {
+        *result = trans;
+        return NS_OK;
+    }
+    
+    nsresult rv;
+    NS_WITH_SERVICE(nsISocketTransportService, sts, kSocketTransportServiceCID, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = sts->CreateTransport(host, port, &trans);
+    if (NS_FAILED(rv)) return rv;
+
+    void* oldValue = mConnectionPool->Put(&key, trans);
+    NS_ASSERTION(oldValue == nsnull, "race?");
+    NS_ADDREF(trans);   // released in ReleaseTransport
+    
+    return rv;
+}
+
+nsresult
+nsHttpProtocolHandler::ReleaseTransport(const char* host, PRInt32 port,
+                                        nsITransport* trans)
+{
+    nsSocketTransportKey key(host, port);
+    nsITransport* value = (nsITransport*)mConnectionPool->Remove(&key);
+    if (value == nsnull)
+        return NS_ERROR_FAILURE;
+    NS_ASSERTION(trans == value, "mConnectionPool out of sync");
+    return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
