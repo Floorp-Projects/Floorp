@@ -517,6 +517,7 @@ read1msg( LDAP *ld, int msgid, int all, Sockbuf *sb, LDAPConn *lc,
 
 	/* message id */
 	if ( ber_get_int( ber, &id ) == LBER_ERROR ) {
+		ber_free( ber, 1 );
 		LDAP_SET_LDERRNO( ld, LDAP_DECODING_ERROR, NULL, NULL );
 		return( -1 );
 	}
@@ -539,6 +540,7 @@ read1msg( LDAP *ld, int msgid, int all, Sockbuf *sb, LDAPConn *lc,
 
 	/* the message type */
 	if ( (tag = ber_peek_tag( ber, &len )) == LBER_ERROR ) {
+		ber_free( ber, 1 );
 		LDAP_SET_LDERRNO( ld, LDAP_DECODING_ERROR, NULL, NULL );
 		return( -1 );
 	}
