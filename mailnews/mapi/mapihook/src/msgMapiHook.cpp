@@ -539,115 +539,55 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
         {
             // check if attachment exists
             if (aIsUnicode)
-                pFile->InitWithPath (nsDependentString(aFiles[i].lpszPathName)) ; 
+                pFile->InitWithPath (nsDependentString(aFiles[i].lpszPathName)); 
             else
-                pFile->InitWithNativePath (nsDependentCString((const char*)aFiles[i].lpszPathName)) ; 
+                pFile->InitWithNativePath (nsDependentCString((const char*)aFiles[i].lpszPathName)); 
+
             PRBool bExist ;
             rv = pFile->Exists(&bExist) ;
             if (NS_FAILED(rv) || (!bExist) ) return NS_ERROR_FILE_TARGET_DOES_NOT_EXIST ;
 
-            // create MsgCompose attachment object
-            nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-                // Win temp Path
             //Temp Directory
             nsCOMPtr <nsIFile> pTempFileDir;
             NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(pTempFileDir));
             nsCOMPtr <nsILocalFile> pTempDir = do_QueryInterface(pTempFileDir);
 
-                // temp dir path
-                nsAutoString tempPath ;
-            rv = pTempDir->GetPath (tempPath) ;
-                if(NS_FAILED(rv) || tempPath.IsEmpty()) return rv ;
+            // create a new sub directory called moz_mapi underneath the temp directory
+            pTempDir->AppendRelativePath(NS_LITERAL_STRING("moz_mapi"));
+            pTempDir->Exists (&bExist) ;
+            if (!bExist)
+            {
+                rv = pTempDir->Create(nsIFile::DIRECTORY_TYPE, 777) ;
+                if (NS_FAILED(rv)) return rv ;
+            }
 
-                // filename of the file attachment
-                nsAutoString leafName ;
-                pFile->GetLeafName (leafName) ;
-                if(NS_FAILED(rv) || leafName.IsEmpty()) return rv ;
-                // full path of the file attachment
-                nsAutoString path ;
-                pFile->GetPath (path) ;
-                if(NS_FAILED(rv) || path.IsEmpty()) return rv ;
-                
-                // dir path of the file attachment
-                nsAutoString dirPath (path.get()) ;
-                PRInt32 offset = dirPath.Find (leafName.get()) ;
-                if (offset != kNotFound && offset > 1)
-                    dirPath.SetLength(offset-1) ;
+            // rename or copy the existing temp file with the real file name
+            
+            nsAutoString leafName ;
+            // convert to Unicode using Platform charset
+            // leafName already contains a unicode leafName from lpszPathName. If we were given
+            // a value for lpszFileName, use it. Otherwise stick with leafName
+            if (aFiles[i].lpszFileName)
+            {
+                if (aIsUnicode)
+                    leafName.Assign(aFiles[i].lpszFileName);
+                else
+                    ConvertToUnicode(nsMsgI18NFileSystemCharset(), (char *) aFiles[i].lpszFileName, leafName);
+            }
+            else 
+              pFile->GetLeafName (leafName);
 
-            if (dirPath.Find(tempPath, PR_TRUE) == 0 || aFiles[i].lpszFileName)
-                {
-                    // if not already existing, create another temp dir for mapi within Win temp dir
-                    nsAutoString strTempDir ;
-                    // this is windows only so we can do "\\"
-                    strTempDir = tempPath + NS_LITERAL_STRING("\\moz_mapi");
-                    pTempDir->InitWithPath (strTempDir) ;
-                    pTempDir->Exists (&bExist) ;
-                    if (!bExist)
-                    {
-                        rv = pTempDir->Create(nsIFile::DIRECTORY_TYPE, 777) ;
-                        if (NS_FAILED(rv)) return rv ;
-                    }
+            // copy the file to its new location and file name
+            pFile->CopyTo(pTempDir, leafName);
+            // point pFile to the new location of the attachment
+            pFile->InitWithFile(pTempDir); 
+            pFile->Append(leafName);
 
-                    // first clone the pFile object for the temp file
-                    nsCOMPtr <nsIFile> pTempFile ;
-                    rv = pFile->Clone(getter_AddRefs(pTempFile)) ;
-                    if (NS_FAILED(rv) || (!pTempFile) ) return rv ;
+            // create MsgCompose attachment object
+            nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
+            NS_ENSURE_SUCCESS(rv, rv);
+            attachment->SetTemporary(PR_TRUE); // this one is a temp file so set the flag for MsgCompose
 
-                    // rename or copy the existing temp file with the real file name
-                    if (aIsUnicode)
-                    {
-                nsAutoString fileName;
-                if (aFiles[i].lpszFileName)
-                  fileName.Assign(aFiles[i].lpszFileName);
-
-                if (fileName.IsEmpty()) 
-                        {
-                  nsDependentString fileNameUCS2(leafName.get());
-                            rv = pFile->CopyTo(pTempDir, fileNameUCS2);
-                            pFile->InitWithPath(strTempDir) ;
-                            pFile->Append(fileNameUCS2);
-                        }
-                        else
-                        {
-                  nsDependentString fileNameUCS2(aFiles[i].lpszFileName);
-                  rv = pFile->CopyTo(pTempDir, fileNameUCS2);
-                  pFile->InitWithPath(strTempDir) ;
-                  pFile->Append(fileNameUCS2);
-                        }
-                    }
-                    else
-                    {
-                        nsAutoString fileName;
-                        // convert to Unicode using Platform charset
-                if (aFiles[i].lpszFileName) 
-                {
-                        rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), (char *) aFiles[i].lpszFileName, fileName);
-                        if (NS_FAILED(rv)) return rv ;
-                } 
-
-                if (fileName.IsEmpty()) 
-                        {
-                  nsDependentString fileNameNative(leafName.get());
-                  rv = pFile->CopyTo(pTempDir, fileNameNative);
-                            pFile->InitWithPath(strTempDir) ;
-                  pFile->Append(fileNameNative);
-                        }
-                        else
-                        {
-                  nsDependentCString fileNameNative((char *) aFiles[i].lpszFileName);
-                  rv = pFile->CopyToNative(pTempDir, fileNameNative);
-                  pFile->InitWithPath(strTempDir) ;
-                  pFile->AppendNative (fileNameNative);
-                        }
-                    }
-                    // this takes care of all cases in if(aIsUnicode) above
-                    if (NS_FAILED(rv)) return rv ;
-
-                    // this one is a temp file so set the flag for MsgCompose
-                    attachment->SetTemporary(PR_TRUE) ;
-                }
             // now set the attachment object
             nsCAutoString pURL ;
             NS_GetURLSpecFromFile(pFile, pURL);
