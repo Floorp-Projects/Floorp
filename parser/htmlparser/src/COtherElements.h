@@ -474,9 +474,9 @@ public:
   /**********************************************************
     by default,members of the block group contain inline children
    **********************************************************/
-  static CGroupMembers& GetContainedGroups(void) {
+  static CGroupMembers& GetContainedGroups(PRBool aCanContainSelf = PR_TRUE) {
     static CGroupMembers theGroups=CInlineElement::GetContainedGroups();
-    theGroups.mBits.mSelf=1;
+    theGroups.mBits.mSelf=aCanContainSelf;
     return theGroups;
   }
 
@@ -2201,12 +2201,13 @@ void CElementTable::InitializeElements() {
   CFrameElement::Initialize(        mDfltElements[eHTMLTag_frameset],   eHTMLTag_frameset);
   mDfltElements[eHTMLTag_frameset].mIncludeKids=kFramesetKids;
 
-  CBlockElement::Initialize(        mDfltElements[eHTMLTag_h1],         eHTMLTag_h1);
-  CBlockElement::Initialize(        mDfltElements[eHTMLTag_h2],         eHTMLTag_h2);
-  CBlockElement::Initialize(        mDfltElements[eHTMLTag_h3],         eHTMLTag_h3);
-  CBlockElement::Initialize(        mDfltElements[eHTMLTag_h4],         eHTMLTag_h4);
-  CBlockElement::Initialize(        mDfltElements[eHTMLTag_h5],         eHTMLTag_h5);
-  CBlockElement::Initialize(        mDfltElements[eHTMLTag_h6],         eHTMLTag_h6);
+  CElement::Initialize(             mDfltElements[eHTMLTag_h1],         eHTMLTag_h1, CBlockElement::GetGroup(), CBlockElement::GetContainedGroups(PR_FALSE));
+  CElement::Initialize(             mDfltElements[eHTMLTag_h2],         eHTMLTag_h2, CBlockElement::GetGroup(), CBlockElement::GetContainedGroups(PR_FALSE));
+  CElement::Initialize(             mDfltElements[eHTMLTag_h3],         eHTMLTag_h3, CBlockElement::GetGroup(), CBlockElement::GetContainedGroups(PR_FALSE));
+  CElement::Initialize(             mDfltElements[eHTMLTag_h4],         eHTMLTag_h4, CBlockElement::GetGroup(), CBlockElement::GetContainedGroups(PR_FALSE));
+  CElement::Initialize(             mDfltElements[eHTMLTag_h5],         eHTMLTag_h5, CBlockElement::GetGroup(), CBlockElement::GetContainedGroups(PR_FALSE));
+  CElement::Initialize(             mDfltElements[eHTMLTag_h6],         eHTMLTag_h6, CBlockElement::GetGroup(), CBlockElement::GetContainedGroups(PR_FALSE));
+
   CElement::InitializeLeaf(         mDfltElements[eHTMLTag_hr],         eHTMLTag_hr,        CBlockElement::GetGroup(), CLeafElement::GetContainedGroups());
 
 
