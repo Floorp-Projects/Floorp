@@ -25,6 +25,7 @@
 #include "nsCodebasePrincipal.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
+#include "nsNetUtil.h"
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
 #include "nsIPref.h"
@@ -43,12 +44,12 @@ NS_IMETHODIMP
 nsCodebasePrincipal::ToString(char **result)
 {
     nsAutoString buf;
-    buf += "[";
+    buf += "[Codebase ";
     nsXPIDLCString spec;
     if (NS_FAILED(mURI->GetSpec(getter_Copies(spec))))
         return NS_ERROR_FAILURE;
     buf += spec;
-    buf += "]";
+    buf += ']';
     *result = buf.ToNewCString();
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
@@ -180,9 +181,7 @@ nsCodebasePrincipal::SameOrigin(nsIPrincipal *other, PRBool *result)
         rv = mURI->GetScheme(&scheme2);
     if (NS_SUCCEEDED(rv) && PL_strcmp(scheme1, scheme2) == 0) {
 
-        if (PL_strcmp(scheme1, "file") == 0 ||
-            PL_strcmp(scheme1, "resource") == 0)
-        {
+        if (PL_strcmp(scheme1, "file") == 0) {
             // All file: urls are considered to have the same origin.
             *result = PR_TRUE;
         } else if (PL_strcmp(scheme1, "imap") == 0 ||
@@ -232,7 +231,7 @@ nsCodebasePrincipal::nsCodebasePrincipal()
     mURI = nsnull;
 }
 
-NS_IMETHODIMP
+nsresult
 nsCodebasePrincipal::Init(nsIURI *uri)
 {
     char *codebase;
@@ -247,6 +246,40 @@ nsCodebasePrincipal::Init(nsIURI *uri)
     NS_ADDREF(mURI);
     return NS_OK;
 }
+
+// This one overrides nsBasePrincipal::Init
+nsresult
+nsCodebasePrincipal::Init(const char* data)
+{
+    // Parses preference strings of the form 
+    // "[Codebase URL] capabilities string"
+    // ie. "[Codebase http://www.mozilla.org] UniversalBrowserRead=1"
+    if (!data)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    data = PL_strchr(data, ' '); // Jump to URL
+    if (!data)
+        return NS_ERROR_FAILURE;
+    data += 1;
+
+    char* urlEnd = PL_strchr(data, ']'); // Find end of URL
+    NS_ASSERTION(urlEnd, "Malformed security.principal preference.");
+    *urlEnd = '\0';
+
+    if (NS_FAILED(NS_NewURI(&mURI, data, nsnull)))
+    {
+        NS_ASSERTION(PR_FALSE, "Malformed URI in security.principal preference.");
+        return NS_ERROR_FAILURE;
+    }
+
+    if (urlEnd[1] != 0)
+    {
+        data = urlEnd+2; // Jump to beginning of caps data
+        return nsBasePrincipal::Init(data);
+    }
+    else
+        return NS_OK;
+ }
 
 nsCodebasePrincipal::~nsCodebasePrincipal(void)
 {

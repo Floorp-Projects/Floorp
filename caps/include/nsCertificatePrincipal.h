@@ -47,23 +47,17 @@ public:
 
     NS_IMETHOD CanEnableCapability(const char *capability, PRInt16 *result);
 
-    NS_IMETHOD SetCanEnableCapability(const char *capability, 
-                                      PRInt16 canEnable);
+    nsresult Init(const char* data);
 
-	nsCertificatePrincipal(PRInt16 type, const char * key);
-	nsCertificatePrincipal(PRInt16 type, const unsigned char ** certChain, PRUint32 * certChainLengths, PRUint32 noOfCerts);
+    nsresult Init(const char* aIssuerName, const char* aSerialNumber);
+
+    nsCertificatePrincipal();
+
 	virtual ~nsCertificatePrincipal(void);
 
 protected:
-	PRInt16 itsType;
-	const char * itsKey;
-	char * itsCompanyName;
-	char * itsCertificateAuthority;
-	char * itsSerialNumber;
-	char * itsExpirationDate;
-	char * itsFingerPrint;	
-	char * itsNickname;
-	char * itsString;
+    const char* mIssuerName;
+    const char* mSerialNumber;
 };
 
 #endif // _NS_CERTIFICATE_PRINCIPAL_H_

@@ -84,6 +84,8 @@ interface nsIScriptSecurityManager : nsISupports
     void RevertCapability(in string capability);
 
     void DisableCapability(in string capability);
+
+    nsIPrincipal GetCertificatePrincipal(in string aIssuer, in string aSerialNumber);
 };
 
 %{C++

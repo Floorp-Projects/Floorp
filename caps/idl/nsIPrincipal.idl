@@ -57,6 +57,8 @@ interface nsIPrincipal : nsISupports {
     void RevertCapability(in string capability, inout voidStar annotation);
 
     void DisableCapability(in string capability, inout voidStar annotation);
+
+    void CapabilitiesToString(out string result);
 };
 
 
