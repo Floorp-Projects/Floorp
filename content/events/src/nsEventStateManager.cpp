@@ -1677,25 +1677,34 @@ nsEventStateManager::DoWheelScroll(nsIPresContext* aPresContext,
   if (sv) {
     GenerateMouseEnterExit(aPresContext, &mouseOutEvent);
 
-    nscoord xPos, yPos;
-    sv->GetScrollPosition(xPos, yPos);
-
     // If we're already at the scroll limit for this view, scroll the
     // parent view instead.
-    if (aNumLines < 0) {
-      passToParent = aScrollHorizontal ? (xPos <= 0) : (yPos <= 0);
-    } else {
-      nsSize scrolledSize;
-      sv->GetContainerSize(&scrolledSize.width, &scrolledSize.height);
-      
-      nsIView* portView = nsnull;
-      CallQueryInterface(sv, &portView);
-      if (!portView)
-        return NS_ERROR_FAILURE;
-      nsRect portRect = portView->GetBounds();
 
-      passToParent = aScrollHorizontal ? (xPos + portRect.width >= scrolledSize.width)
-        : (yPos + portRect.height >= scrolledSize.height);
+    // If the view has a 0 line height, it will not scroll.
+    nscoord lineHeight;
+    sv->GetLineHeight(&lineHeight);
+
+    if (lineHeight == 0) {
+      passToParent = PR_TRUE;
+    } else {
+      nscoord xPos, yPos;
+      sv->GetScrollPosition(xPos, yPos);
+
+      if (aNumLines < 0) {
+        passToParent = aScrollHorizontal ? (xPos <= 0) : (yPos <= 0);
+      } else {
+        nsSize scrolledSize;
+        sv->GetContainerSize(&scrolledSize.width, &scrolledSize.height);
+
+        nsIView* portView = nsnull;
+        CallQueryInterface(sv, &portView);
+        if (!portView)
+          return NS_ERROR_FAILURE;
+        nsRect portRect = portView->GetBounds();
+
+        passToParent = aScrollHorizontal ? (xPos + portRect.width >= scrolledSize.width)
+          : (yPos + portRect.height >= scrolledSize.height);
+      }
     }
 
     if (!passToParent) {
