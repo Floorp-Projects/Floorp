@@ -120,7 +120,7 @@ nsDirectoryIndexStream::GetLength(PRUint32* aLength)
     // Lie, and tell the caller that the stream is endless (until we
     // actually don't have anything left).
     if (mIter->Exists()) {
-        *aLength = -1;
+        *aLength = PRUint32(-1);
         return NS_OK;
     }
     else {
