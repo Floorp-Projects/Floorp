@@ -1823,18 +1823,23 @@ nsHttpChannel::SetReferrer(nsIURI *referrer, PRUint32 referrerType)
     // save a copy of the referrer type for redirects
     mReferrerType = referrerType;
 
-    nsXPIDLCString spec;
-    referrer->GetSpec(getter_Copies(spec));
-    if (spec) {
-        nsCAutoString ref(spec.get());
-        // strip away any prehost; we don't want to be giving out passwords ;-)
-        nsXPIDLCString prehost;
-        referrer->GetPreHost(getter_Copies(prehost));
-        if (prehost && *prehost) {
-            PRUint32 prehostLoc = PRUint32(ref.Find(prehost, PR_TRUE));
-            ref.Cut(prehostLoc, nsCharTraits<char>::length(prehost) + 1); // + 1 for @
+    // clear the old referer first
+    mRequestHead.SetHeader(nsHttp::Referer, nsnull);
+
+    if (referrer) {
+        nsXPIDLCString spec;
+        referrer->GetSpec(getter_Copies(spec));
+        if (spec) {
+            nsCAutoString ref(spec.get());
+            // strip away any prehost; we don't want to be giving out passwords ;-)
+            nsXPIDLCString prehost;
+            referrer->GetPreHost(getter_Copies(prehost));
+            if (prehost && *prehost) {
+                PRUint32 prehostLoc = PRUint32(ref.Find(prehost, PR_TRUE));
+                ref.Cut(prehostLoc, nsCharTraits<char>::length(prehost) + 1); // + 1 for @
+            }
+            mRequestHead.SetHeader(nsHttp::Referer, ref);
         }
-        mRequestHead.SetHeader(nsHttp::Referer, ref);
     }
     return NS_OK;
 }
