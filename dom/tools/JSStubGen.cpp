@@ -986,6 +986,7 @@ static const char kMethodBeginNonPrimaryStr[] = "\n\n"
 "PR_STATIC_CALLBACK(JSBool)\n"
 "%s%s(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)\n"
 "{\n"
+"  nsIDOM%s *privateThis = (nsIDOM%s*)nsJSUtils::nsGetNativeThis(cx, obj);\n"
 #ifdef USE_COMPTR
 "  nsCOMPtr<nsIDOM%s> nativeThis;\n"
 #else
@@ -997,8 +998,6 @@ static const char kMethodBeginNonPrimaryStr[] = "\n\n"
 #else
 "  if (NS_OK != privateThis->QueryInterface(kI%sIID, (void **)&nativeThis)) {\n"
 #endif"  nsIDOM%s *nativeThis = nsnull;\n"
-"  nsresult result = NS_OK;\n"
-"  if (NS_OK != privateThis->QueryInterface(kI%sIID, (void **)&nativeThis)) {\n"
 "    return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);\n"
 "  }\n"
 "\n";

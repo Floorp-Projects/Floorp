@@ -429,9 +429,8 @@ LocationToString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 PR_STATIC_CALLBACK(JSBool)
 NSLocationReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMLocationPtr nativeThis = nsnull;
-  nsresult result = NS_OK;
-  if (NS_OK != privateThis->QueryInterface(kILocationIID, (void **)&nativeThis)) {
+  nsIDOMLocation *privateThis = (nsIDOMLocation*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMNSLocationPtr nativeThis = nsnull;
   nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSLocationIID, (void **)&nativeThis)) {
     return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
@@ -478,9 +477,8 @@ NSLocationReload(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 PR_STATIC_CALLBACK(JSBool)
 NSLocationReplace(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMLocationPtr nativeThis = nsnull;
-  nsresult result = NS_OK;
-  if (NS_OK != privateThis->QueryInterface(kILocationIID, (void **)&nativeThis)) {
+  nsIDOMLocation *privateThis = (nsIDOMLocation*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMNSLocationPtr nativeThis = nsnull;
   nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSLocationIID, (void **)&nativeThis)) {
     return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);

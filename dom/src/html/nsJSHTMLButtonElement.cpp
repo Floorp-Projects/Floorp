@@ -369,9 +369,8 @@ ResolveHTMLButtonElement(JSContext *cx, JSObject *obj, jsval id)
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLButtonElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLButtonElementPtr nativeThis = nsnull;
-  nsresult result = NS_OK;
-  if (NS_OK != privateThis->QueryInterface(kIHTMLButtonElementIID, (void **)&nativeThis)) {
+  nsIDOMHTMLButtonElement *privateThis = (nsIDOMHTMLButtonElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMNSHTMLButtonElementPtr nativeThis = nsnull;
   nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLButtonElementIID, (void **)&nativeThis)) {
     return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
@@ -418,9 +417,8 @@ NSHTMLButtonElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 PR_STATIC_CALLBACK(JSBool)
 NSHTMLButtonElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMHTMLButtonElementPtr nativeThis = nsnull;
-  nsresult result = NS_OK;
-  if (NS_OK != privateThis->QueryInterface(kIHTMLButtonElementIID, (void **)&nativeThis)) {
+  nsIDOMHTMLButtonElement *privateThis = (nsIDOMHTMLButtonElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMNSHTMLButtonElementPtr nativeThis = nsnull;
   nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kINSHTMLButtonElementIID, (void **)&nativeThis)) {
     return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);

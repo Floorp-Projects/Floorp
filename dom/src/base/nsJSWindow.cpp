@@ -2604,9 +2604,8 @@ WindowClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 PR_STATIC_CALLBACK(JSBool)
 EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindowPtr nativeThis = nsnull;
-  nsresult result = NS_OK;
-  if (NS_OK != privateThis->QueryInterface(kIWindowIID, (void **)&nativeThis)) {
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMEventTargetPtr nativeThis = nsnull;
   nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kIEventTargetIID, (void **)&nativeThis)) {
     return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
@@ -2670,9 +2669,8 @@ EventTargetAddEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *arg
 PR_STATIC_CALLBACK(JSBool)
 EventTargetRemoveEventListener(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMWindowPtr nativeThis = nsnull;
-  nsresult result = NS_OK;
-  if (NS_OK != privateThis->QueryInterface(kIWindowIID, (void **)&nativeThis)) {
+  nsIDOMWindow *privateThis = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsIDOMEventTargetPtr nativeThis = nsnull;
   nsresult result = NS_OK;
   if (NS_OK != privateThis->QueryInterface(kIEventTargetIID, (void **)&nativeThis)) {
     return nsJSUtils::nsReportError(cx, NS_ERROR_DOM_WRONG_TYPE_ERR);
