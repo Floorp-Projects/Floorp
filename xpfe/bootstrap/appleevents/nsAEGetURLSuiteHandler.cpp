@@ -111,7 +111,7 @@ void AEGetURLSuiteHandler::HandleGetURLEvent(const AppleEvent *appleEvent, Apple
 	char*	urlString = (char *)nsMemory::Alloc(dataSize + 1);
 	ThrowIfNil(urlString);
 	
-	directParameter.GetCString(urlString, dataSize);
+	directParameter.GetCString(urlString, dataSize + 1);
 	
 	nsMacCommandLine&  cmdLine = nsMacCommandLine::GetMacCommandLine();
 	cmdLine.DispatchURLToNewBrowser(urlString);
