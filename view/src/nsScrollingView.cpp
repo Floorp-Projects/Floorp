@@ -40,7 +40,7 @@ public:
   ~ScrollBarView();
   nsEventStatus HandleEvent(nsGUIEvent *aEvent, PRUint32 aEventFlags);
   void SetPosition(nscoord x, nscoord y);
-  void SetDimensions(nscoord width, nscoord height);
+  void SetDimensions(nscoord width, nscoord height, PRBool aPaint = PR_TRUE);
 
 public:
   nsScrollingView *mScrollingView;
@@ -100,7 +100,7 @@ void ScrollBarView :: SetPosition(nscoord x, nscoord y)
   }
 }
 
-void ScrollBarView :: SetDimensions(nscoord width, nscoord height)
+void ScrollBarView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint)
 {
   mBounds.SizeTo(width, height);
 
@@ -110,7 +110,7 @@ void ScrollBarView :: SetDimensions(nscoord width, nscoord height)
     float           t2p = px->GetTwipsToPixels();
   
     mWindow->Resize(NSTwipsToIntPixels(width, t2p), NSTwipsToIntPixels(height, t2p),
-                    PR_TRUE);
+                    aPaint);
 
     NS_RELEASE(px);
   }
@@ -462,7 +462,7 @@ nsresult nsScrollingView :: Init(nsIViewManager* aManager,
   return rv;
 }
 
-void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
+void nsScrollingView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint)
 {
   nsRect            trect;
   nsIPresContext    *cx = mViewManager->GetPresContext();
@@ -478,7 +478,7 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
     trect.y = height - scrollHeight;
     trect.x = width - scrollWidth;
 
-    mCornerView->SetBounds(trect);
+    mCornerView->SetBounds(trect, aPaint);
   }
 
   if (mHScrollBarView && (mHScrollBarView->GetVisibility() == nsViewVisibility_kShow))
@@ -487,7 +487,7 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
   if (mVScrollBarView && (mVScrollBarView->GetVisibility() == nsViewVisibility_kShow))
     showVert = scrollWidth;
 
-//  nsView :: SetDimensions(width, height);
+//  nsView :: SetDimensions(width, height, aPaint);
 
   mBounds.SizeTo(width, height);
 
@@ -500,7 +500,7 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
   
     mWindow->Resize(NSTwipsToIntPixels((width - showVert), t2p),
                     NSTwipsToIntPixels((height - showHorz), t2p),
-                    PR_TRUE);
+                    aPaint);
   }
   else
   {
@@ -520,7 +520,7 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
     trect.x = width - scrollWidth;
     trect.y = 0;
 
-    mVScrollBarView->SetBounds(trect);
+    mVScrollBarView->SetBounds(trect, aPaint);
   }
 
   if (nsnull != mHScrollBarView)
@@ -535,7 +535,7 @@ void nsScrollingView :: SetDimensions(nscoord width, nscoord height)
     trect.y = height - scrollHeight;
     trect.x = 0;
 
-    mHScrollBarView->SetBounds(trect);
+    mHScrollBarView->SetBounds(trect, aPaint);
   }
 
   //this will fix the size of the thumb when we resize the root window,

@@ -55,18 +55,6 @@ public:
   virtual nsresult Init(nsIPresContext* aPresContext) = 0;
 
   /**
-   * Set the window for which the manager is responsible.
-   * @param aRootWindow window to set as root
-   */
-  virtual void SetRootWindow(nsIWidget *aRootWindow) = 0;
-
-  /**
-   * Get the window for which the manager is responsible.
-   * @result the root window
-   */
-  virtual nsIWidget *GetRootWindow() = 0;
-
-  /**
    * Get the root of the view tree.
    * @result the root view
    */

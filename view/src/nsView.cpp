@@ -583,7 +583,7 @@ void nsView :: GetPosition(nscoord *x, nscoord *y)
   }
 }
 
-void nsView :: SetDimensions(nscoord width, nscoord height)
+void nsView :: SetDimensions(nscoord width, nscoord height, PRBool aPaint)
 {
   mBounds.SizeTo(width, height);
 
@@ -605,7 +605,7 @@ void nsView :: SetDimensions(nscoord width, nscoord height)
     float           t2p = px->GetTwipsToPixels();
   
     mWindow->Resize(NSTwipsToIntPixels(width, t2p), NSTwipsToIntPixels(height, t2p),
-                    PR_TRUE);
+                    aPaint);
 
     NS_RELEASE(px);
   }
@@ -617,16 +617,16 @@ void nsView :: GetDimensions(nscoord *width, nscoord *height)
   *height = mBounds.height;
 }
 
-void nsView :: SetBounds(const nsRect &aBounds)
+void nsView :: SetBounds(const nsRect &aBounds, PRBool aPaint)
 {
   SetPosition(aBounds.x, aBounds.y);
-  SetDimensions(aBounds.width, aBounds.height);
+  SetDimensions(aBounds.width, aBounds.height, aPaint);
 }
 
-void nsView :: SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
+void nsView :: SetBounds(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight, PRBool aPaint)
 {
   SetPosition(aX, aY);
-  SetDimensions(aWidth, aHeight);
+  SetDimensions(aWidth, aHeight, aPaint);
 }
 
 void nsView :: GetBounds(nsRect &aBounds) const
