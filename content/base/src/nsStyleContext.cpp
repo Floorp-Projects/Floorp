@@ -89,6 +89,8 @@ static PRUint32 StyleSideCRC(PRUint32 crc,const nsStyleSides *aStyleSides);
 static PRUint32 StyleCoordCRC(PRUint32 crc, const nsStyleCoord* aCoord);
 static PRUint32 StyleMarginCRC(PRUint32 crc, const nsMargin *aMargin);
 static PRUint32 StyleStringCRC(PRUint32 aCrc, const nsString *aString);
+#define STYLEDATA_NO_CRC (0)
+#define STYLEDATA_DEFAULT_CRC (0xcafebabe)
 #endif // COMPUTE_STYLEDATA_CRC
 
 inline PRBool IsFixedUnit(nsStyleUnit aUnit, PRBool aEnumOK)
@@ -2081,7 +2083,11 @@ private:  // all data and methods private: only friends have access
   ~nsStyleContextData(void);
 
   PRUint32 ComputeCRC32(PRUint32 aCrc) const;
-  void SetCRC32(void) { mCRC = ComputeCRC32(0); }
+  void SetCRC32(void) { 
+    mCRC = ComputeCRC32(0); 
+    if (mCRC==STYLEDATA_NO_CRC) 
+      mCRC = STYLEDATA_DEFAULT_CRC; 
+  }
   PRUint32 GetCRC32(void) const { return mCRC; }
 
   PRUint32 AddRef(void);
@@ -3848,12 +3854,27 @@ nsresult StyleContextImpl::ShareStyleData(void)
   }
 
   if (bEnableSharing && bSharingSupported) {
-    // set the CRC
-    mStyleData->SetCRC32();
-
     NS_ASSERTION(mStyleSet, "Expected to have a style set ref...");
     nsIStyleContext *matchingSC = nsnull;
 
+    // save the old crc before replacing it
+    PRUint32 oldCRC = mStyleData->GetCRC32();
+    
+    // set the CRC based on the new data, and retrieve the new value
+    mStyleData->SetCRC32();
+    PRUint32 newCRC = mStyleData->GetCRC32();
+
+    // if the crc was previously set AND it has changed, notify the styleset
+    if((oldCRC != STYLEDATA_NO_CRC)&&
+       (oldCRC != newCRC)) {
+      result = mStyleSet->UpdateStyleContextKey(oldCRC, newCRC);
+#ifdef NOISY_DEBUG
+      printf("CRC changed on context: updating from %ld to %ld\n", oldCRC, newCRC);
+#endif
+      if(NS_FAILED(result)) {
+        return result;
+      }
+    }
     // check if there is a matching context...
     result = mStyleSet->FindMatchingContext(this, &matchingSC);
     if ((NS_SUCCEEDED(result)) && 
@@ -4345,8 +4366,9 @@ NS_NewStyleContext(nsIStyleContext** aInstancePtrResult,
   context->RemapStyle(aPresContext);  // remap after initial ref-count is set
 
 #ifdef SHARE_STYLECONTEXTS
-  context->UpdateStyleSetCache();     // add it to the style set cache
+  context->UpdateStyleSetCache();     // add it to the style set cache now that the CRC is set
 #endif
+
   return result;
 }
 

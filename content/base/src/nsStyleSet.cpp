@@ -95,7 +95,13 @@ public :
   nsresult RemoveContext(scKey aKey, nsIStyleContext *aContext);
   nsresult RemoveAllContexts(scKey aKey);
   nsresult GetContexts(scKey aKey, nsVoidArray **aResults); // do not munge list
+  nsresult UpdateCRC(scKey aOldKey, scKey aNewKey);
   PRUint32 Count(void);
+
+  void SuspendInvariants(void) { mEnforceInvariants = PR_FALSE; }
+  void ResumeInvariants(void) { mEnforceInvariants = PR_TRUE; }
+  PRBool IsEnforcingInvariants(void) const { return mEnforceInvariants; }
+  
 private:
   StyleContextCache(StyleContextCache &aNoSrcAllowed); // Not Implemented
 
@@ -110,11 +116,26 @@ private:
   // allocate / destroy the list
   static nsVoidArray *AllocateList(void);
   static nsresult DestroyList(nsVoidArray* aList);
-  
+
   nsObjectHashtable mHashTable;
-  PRUint32    mCount;
+  PRUint32          mCount;
+  PRPackedBool      mEnforceInvariants;
+
+  // nested class to block invariants within a function call (or scoping block)
+  // - instantiate a nsAutoInvariantBlocker instance to Suspend/Resume invariants according 
+  //   to scoping of the instance
+  class nsAutoInvariantBlocker {
+  public:
+    nsAutoInvariantBlocker(StyleContextCache& cache)
+      :mCache(cache)
+    { mCache.SuspendInvariants(); }
+    ~nsAutoInvariantBlocker(void)
+    { mCache.ResumeInvariants(); }
+  private:
+    StyleContextCache& mCache;
+  };
 };
-#endif /* USE_FSAT_CACHE */
+#endif /* USE_FAST_CACHE */
 
 
 class StyleSetImpl : public nsIStyleSet 
@@ -261,8 +282,13 @@ public:
   // add and remove from the cache of all contexts
   NS_IMETHOD AddStyleContext(nsIStyleContext *aNewStyleContext);
   NS_IMETHOD RemoveStyleContext(nsIStyleContext *aNewStyleContext);
+  // find a context that matches the source context 
+  // eg. it has the same data and can be shared 
   NS_IMETHOD FindMatchingContext(nsIStyleContext *aStyleContextToMatch, 
                                  nsIStyleContext **aMatchingContext);
+  // update all entries for oldKey and change their key to newKey
+  // - this will remove the entries at oldKey and re-add them at newKey
+  NS_IMETHOD UpdateStyleContextKey(scKey aOldKey,scKey aNewKey);
 #endif
 
 #ifdef MOZ_PERF_METRICS
@@ -1537,7 +1563,7 @@ MOZ_DECL_CTOR_COUNTER(StyleContextCache)
 
 StyleContextCache::StyleContextCache(void)
 :mHashTable(nsnull, nsnull, HashTableEnumDestroy, nsnull),
- mCount(0)
+ mCount(0), mEnforceInvariants(PR_TRUE)
 {
   MOZ_COUNT_CTOR(StyleContextCache);
 }
@@ -1566,6 +1592,12 @@ PRUint32 StyleContextCache::Count(void)
 
 nsresult StyleContextCache::AddContext(scKey aKey, nsIStyleContext *aContext)
 {
+#ifdef ENABLE_FAST_CACHE_TICKLE
+  // Tickle will test the integrity of the elements in the chace...
+  //  - use if it is in question (has already been tested so it is now being commented-out)
+  Tickle("From AddContext - before");
+#endif
+
   // verify we have a list
   nsresult rv = VerifyList(aKey);
   if (NS_SUCCEEDED(rv)){
@@ -1579,6 +1611,13 @@ nsresult StyleContextCache::AddContext(scKey aKey, nsIStyleContext *aContext)
     }
     DumpStats();
   }
+
+#ifdef ENABLE_FAST_CACHE_TICKLE
+  // Tickle will test the integrity of the elements in the chace...
+  //  - use if it is in question (has already been tested so it is now being commented-out)
+  Tickle("From AddContext - after");
+#endif
+
   return rv;
 }
 
@@ -1587,11 +1626,18 @@ nsresult StyleContextCache::RemoveContext(scKey aKey, nsIStyleContext *aContext)
   nsresult rv = NS_ERROR_FAILURE;
   nsVoidArray *pResults = nsnull;
 
+#ifdef ENABLE_FAST_CACHE_TICKLE
+  // Tickle will test the integrity of the elements in the chace...
+  //  - use if it is in question (has already been tested so it is now being commented-out)
+  Tickle("From RemoveContext - before");
+#endif
+
   if (NS_SUCCEEDED(GetContexts(aKey,&pResults)) && pResults) {
     PRUint32 nCountBefore = Count();
     if (nCountBefore > 0){
       if(pResults->RemoveElement(aContext)) {
         mCount--;
+        rv = NS_OK;
       } 
 #ifdef DEBUG
       else {
@@ -1620,11 +1666,24 @@ nsresult StyleContextCache::RemoveContext(scKey aKey, nsIStyleContext *aContext)
     NS_ASSERTION(PR_FALSE, "Failure to find any contexts at provided key!");
   }
 #endif
+
+#ifdef ENABLE_FAST_CACHE_TICKLE
+  // Tickle will test the integrity of the elements in the chace...
+  //  - use if it is in question (has already been tested so it is now being commented-out)
+  Tickle("From RemoveContext - after");
+#endif
+
   return rv;
 }
 
 nsresult StyleContextCache::RemoveAllContexts(scKey aKey)
 {
+#ifdef ENABLE_FAST_CACHE_TICKLE
+  // Tickle will test the integrity of the elements in the chace...
+  //  - use if it is in question (has already been tested so it is now being commented-out)
+  Tickle("From RemoveAllContext");
+#endif
+
   nsresult rv = NS_OK;
   nsVoidKey key((void *)aKey);
   nsVoidArray *pResults = (nsVoidArray *)mHashTable.Remove(&key);
@@ -1636,10 +1695,87 @@ nsresult StyleContextCache::RemoveAllContexts(scKey aKey)
 
 nsresult StyleContextCache::GetContexts(scKey aKey, nsVoidArray **aResults)
 {
+#ifdef ENABLE_FAST_CACHE_TICKLE
+  // Tickle will test the integrity of the elements in the chace...
+  //  - use if it is in question (has already been tested so it is now being commented-out)
+  Tickle("From GetContexts");
+#endif
+
   nsresult rv = NS_OK;
   *aResults = GetList(aKey);
   if (nsnull==aResults) rv = NS_ERROR_FAILURE;
   return rv;
+}
+
+// Update all entries that are mapped to aOldKey by removing them and re-adding them
+// at aNewKey.
+// NOTE: there are (potentially) multiple style contexts mapped to any given CRC,
+//       and furthermore there are (potentially) several contexts sharing the same styleData
+//       instance in which the CRC is located, so we have to go over ALL contexts at the 
+//       old key and look for the ones that now have the new key - these are the shared
+//       contexts, and they all have to be moved.
+nsresult StyleContextCache::UpdateCRC(scKey aOldKey, scKey aNewKey)
+{
+  NS_ASSERTION(aOldKey != aNewKey, 
+               "oldKey and newKey match: call to UpdateCRC is a waste of a function call");
+  if (aOldKey == aNewKey) {
+    // This is not an error, but it is a waste of a fcn call so should be avoided
+    return NS_OK;
+  }
+
+  nsresult rv = NS_OK;
+  PRBool didUpdate = PR_FALSE;
+
+  // block invariants from being run during the process
+  nsAutoInvariantBlocker invariantBlocker(*this);
+
+  // loop over each context mapped to the oldKey looking for contexts that now have the newKey
+  // repeat until there are none found. This construct is to handle the fact that we are removing
+  // elements from the list mapped to the oldKey and as such have to re-fetch the list after
+  // each context is updated
+  do {
+    nsVoidArray *contexts;
+
+    // assume we do nothing, set to true if we actually do update something
+    didUpdate = PR_FALSE;
+  
+    // get the contexts at the old key and update those with the new key
+    // NOTE that we do not directly munge the context list here, we use RemoveContext to do it
+    //      to promote consistency and to avoid duplicating the logic in there. It is less efficient, 
+    //      but much safer
+    rv = GetContexts(aOldKey, &contexts);
+    if(NS_SUCCEEDED(rv)) {
+      PRInt32 count = contexts->Count();
+      for (PRInt32 i=0; i<count; i++) {
+        nsIStyleContext *pContext = NS_STATIC_CAST(nsIStyleContext*, contexts->ElementAt(i));
+        scKey key;
+        pContext->GetStyleContextKey(key);
+        if (pContext && key == aNewKey) {
+          // update the context by removing it adding it again
+          // - NOTE: this is not optimal for performance, but the RemoveContext method
+          //         does a bit of housekeeping that is best left there, so we end up
+          //         looking up the list twice (once here, and once in RemoveContext)
+          rv = RemoveContext(aOldKey, pContext);
+          if(NS_SUCCEEDED(rv)){
+            rv = AddContext(aNewKey, pContext);
+            if(NS_SUCCEEDED(rv)){
+              didUpdate = PR_TRUE;
+              break;
+            } else {
+              NS_WARNING("Error adding updated context to context cache: aborting");
+              return rv;
+            }
+          } else {
+            NS_WARNING("Error removing context from context cache while updating: aborting");
+            return rv;
+          }
+        }
+      }          
+    }
+  }
+  while(didUpdate);
+
+  return NS_OK;
 }
 
 // make sure there is a list for the specified key
@@ -1763,6 +1899,9 @@ void StyleContextCache::DumpStats(void)
 
 void StyleContextCache::Tickle(const char *msg)
 {
+  // only tickle if we can enforce our invariants
+  if(!IsEnforcingInvariants()) return;
+
 #ifdef DEBUG
   // printf("Tickling: %s\n", msg ? msg : "");
   mHashTable.Enumerate(HashTableEnumTickle);
@@ -1848,10 +1987,10 @@ StyleSetImpl::FindMatchingContext(nsIStyleContext *aStyleContextToMatch,
 {
   nsresult rv = NS_ERROR_FAILURE;
   *aMatchingContext = nsnull;
+  scKey key;
 
 #ifdef USE_FAST_CACHE
-  nsVoidArray *pList = nsnull;
-  scKey key;
+  nsVoidArray* pList;
   aStyleContextToMatch->GetStyleContextKey(key);
   if (NS_SUCCEEDED(mStyleContextCache.GetContexts(key, &pList)) && pList) {
     PRInt32 count = pList->Count();
@@ -1896,6 +2035,21 @@ StyleSetImpl::FindMatchingContext(nsIStyleContext *aStyleContextToMatch,
 #endif // #ifdef USE_FAST_CACHE
 
   return rv;
+}
+
+
+NS_IMETHODIMP 
+StyleSetImpl::UpdateStyleContextKey(scKey aOldKey, scKey aNewKey)
+{
+#ifdef USE_FAST_CACHE
+  nsresult rv = mStyleContextCache.UpdateCRC(aOldKey, aNewKey);
+  return rv;
+#else
+  // nothing to do if not using CRC-based cache
+  return NS_OK;
+#endif
+  NS_ASSERTION(PR_FALSE, "Illegal Code Path");
+  return NS_ERROR_FAILURE;
 }
 
 #endif // SHARE_STYLECONTEXTS

@@ -237,6 +237,7 @@ public:
   // - if an exact match is found, the out-param aMatchingContext is set (AddRef'd)
   NS_IMETHOD FindMatchingContext(nsIStyleContext *aStyleContextToMatch, 
                                  nsIStyleContext **aMatchingContext) = 0;
+  NS_IMETHOD UpdateStyleContextKey(scKey aOldKey, scKey aNewKey) = 0;
 #endif
 };
 
