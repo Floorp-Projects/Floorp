@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -51,6 +51,7 @@
 #include "nsMimeStringResources.h"
 #include "nsStreamConverter.h"
 #include "nsIMsgSend.h"
+#include "nsIMsgMailNewsUrl.h"
 
 #include "nsIIOService.h"
 #include "nsIURI.h"
@@ -961,7 +962,13 @@ mime_bridge_create_display_stream(
 
   // Store the URL string for this decode operation
   char *urlString;
-  if (NS_SUCCEEDED(uri->GetSpec(&urlString)))
+  nsresult rv;
+  nsCOMPtr<nsIMsgMessageUrl> messageUrl = do_QueryInterface(uri, &rv);
+  if (NS_SUCCEEDED(rv))
+	rv = messageUrl->GetURI(&urlString);
+  if (NS_FAILED(rv))
+	rv = uri->GetSpec(&urlString);
+  if (NS_SUCCEEDED(rv))
   {
     if ((urlString) && (*urlString))
     {
@@ -989,7 +996,7 @@ mime_bridge_create_display_stream(
   memset(msd->options, 0, sizeof(*msd->options));
   msd->options->format_out = format_out;     // output format
 
-  nsresult rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(msd->options->prefs));
+  rv = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&(msd->options->prefs));
   if (! (msd->options->prefs && NS_SUCCEEDED(rv)))
 	{
     PR_FREEIF(msd);
