@@ -105,7 +105,9 @@ DEFINES		+= -D_IMPL_NS_HTML
 
 INCLUDES	+= -I$(srcdir)/../base/src \
 		   -I$(srcdir)/../html/base/src \
-		   -I$(srcdir)/../xul/content/src
+		   -I$(srcdir)/../xul/content/src \
+		   -I$(srcdir)/../xul/base/src \
+		   $(NULL)
 
 ifdef MOZ_MATHML
 INCLUDES += -I$(srcdir)/../mathml/content/src
