@@ -23,6 +23,7 @@
 #include "nsNetModRegEntry.h"
 #include "nsCRT.h"
 #include "plstr.h"
+#include "nsAutoLock.h"
 #include "nsMemory.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
@@ -36,7 +37,7 @@ static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 //////////////////////////////
 //// nsISupports
 //////////////////////////////
-NS_IMPL_ISUPPORTS(nsNetModRegEntry, NS_GET_IID(nsINetModRegEntry));
+NS_IMPL_THREADSAFE_ISUPPORTS(nsNetModRegEntry, NS_GET_IID(nsINetModRegEntry));
 
 
 //////////////////////////////
@@ -46,6 +47,8 @@ NS_IMPL_ISUPPORTS(nsNetModRegEntry, NS_GET_IID(nsINetModRegEntry));
 NS_IMETHODIMP
 nsNetModRegEntry::GetSyncProxy(nsINetNotify **aNotify) 
 {
+    nsAutoMonitor mon(mMonitor);
+
     if (mSyncProxy)
     {
         *aNotify = mSyncProxy;
@@ -67,6 +70,8 @@ nsNetModRegEntry::GetSyncProxy(nsINetNotify **aNotify)
 NS_IMETHODIMP
 nsNetModRegEntry::GetAsyncProxy(nsINetNotify **aNotify) 
 {
+    nsAutoMonitor mon(mMonitor);
+
     if (mAsyncProxy)
     {
         *aNotify = mAsyncProxy;
@@ -87,6 +92,8 @@ nsNetModRegEntry::GetAsyncProxy(nsINetNotify **aNotify)
 NS_IMETHODIMP
 nsNetModRegEntry::GetTopic(char **topic) 
 {
+    nsAutoMonitor mon(mMonitor);
+
     if (mTopic) 
     {
         *topic = (char *) nsMemory::Clone(mTopic, nsCRT::strlen(mTopic) + 1);
@@ -143,6 +150,8 @@ nsNetModRegEntry::nsNetModRegEntry(const char *aTopic,
     if (NS_FAILED(*result)) return;
     
     *result = eventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(mEventQ)); 
+
+    mMonitor = nsAutoMonitor::NewMonitor("nsNetModRegEntry");
 }
 
 nsresult
@@ -181,4 +190,5 @@ nsNetModRegEntry::BuildProxy(PRBool sync)
 nsNetModRegEntry::~nsNetModRegEntry() 
 {
     delete [] mTopic;
+    nsAutoMonitor::DestroyMonitor(mMonitor);
 }

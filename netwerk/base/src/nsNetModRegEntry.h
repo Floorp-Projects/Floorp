@@ -24,6 +24,7 @@
 #define ___nsNetModRegEntry_h___
 
 #include "nsINetModRegEntry.h"
+#include "prlock.h"
 #include "nsIEventQueue.h"
 #include "nsCOMPtr.h"
 
@@ -50,6 +51,8 @@ protected:
     nsCOMPtr<nsIEventQueue> mEventQ;
 
     nsresult BuildProxy(PRBool sync);
+
+    PRMonitor*          mMonitor;
 };
 
 #endif //___nsNetModRegEntry_h___
