@@ -205,7 +205,7 @@ void LO_RelayoutOnResize(MWContext *context, int32 width, int32 height, int32 le
 	FE_GetDocPosition ( context, FE_VIEW, &docX, &docY );
 
 	/* shrink the layout document in case we get smaller */
-	LO_SetDocumentDimensions(context, 0, 0);
+	/* LO_SetDocumentDimensions(context, 0, 0); */
 
 	if (lo_rl_InitRelayoutState(context, relay_state, width, height, leftMargin, topMargin) != NULL) 
 	{
