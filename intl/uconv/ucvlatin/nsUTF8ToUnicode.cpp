@@ -17,28 +17,29 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "pratom.h"
-#include "nsIComponentManager.h"
 #include "nsUTF8ToUnicode.h"
-#include "nsUCvLatinDll.h"
+
+//----------------------------------------------------------------------
+// Global functions and data [declaration]
+
+static PRUint16 g_UTF8MappingTable[] = {
+  0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0xFFFF, 0x0000
+};
+
+static PRInt16 g_UTF8ShiftTable[] =  {
+  3, uMultibytesCharset, 
+  ShiftCell(u1ByteChar,       1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F), 
+  ShiftCell(u2BytesUTF8,      2, 0xC0, 0xDF, 0x00, 0x00, 0x07, 0xFF), 
+  ShiftCell(u3BytesUTF8,      3, 0xE0, 0xEF, 0x08, 0x00, 0xFF, 0xFF) 
+};
 
 //----------------------------------------------------------------------
 // Class nsUTF8ToUnicode [implementation]
 
-NS_IMPL_ISUPPORTS(nsUTF8ToUnicode, kIUnicodeDecoderIID);
-
 nsUTF8ToUnicode::nsUTF8ToUnicode() 
+: nsTableDecoderSupport((uShiftTable*) &g_UTF8ShiftTable, 
+                        (uMappingTable*) &g_UTF8MappingTable)
 {
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-  mUtil = nsnull;
-  mBehavior = kOnError_Recover;
-}
-
-nsUTF8ToUnicode::~nsUTF8ToUnicode() 
-{
-  NS_IF_RELEASE(mUtil);
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 nsresult nsUTF8ToUnicode::CreateInstance(nsISupports ** aResult) 
@@ -48,74 +49,14 @@ nsresult nsUTF8ToUnicode::CreateInstance(nsISupports ** aResult)
 }
 
 //----------------------------------------------------------------------
-// Interface nsICharsetConverter [implementation]
+// Subclassing of nsTableDecoderSupport class [implementation]
 
-static PRInt16 gShiftTable[] =  {
-     3, uMultibytesCharset, 
-     ShiftCell(u1ByteChar,       1, 0x00, 0x7F, 0x00, 0x00, 0x00, 0x7F), 
-     ShiftCell(u2BytesUTF8,      2, 0xC0, 0xDF, 0x00, 0x00, 0x07, 0xFF), 
-     ShiftCell(u3BytesUTF8,      3, 0xE0, 0xEF, 0x08, 0x00, 0xFF, 0xFF) 
-};
-
-static PRUint16 gMappingTable[] = {
-0x0001, 0x0004, 0x0005, 0x0008, 0x0000, 0x0000, 0xFFFF, 0x0000
-};
-
-// XXX quick hack so I don't have to include nsICharsetConverterManager
-extern "C" const nsID kCharsetConverterManagerCID;
-
-NS_IMETHODIMP nsUTF8ToUnicode::Convert(PRUnichar * aDest, PRInt32 aDestOffset,
-                                       PRInt32 * aDestLength, 
-                                       const char * aSrc, PRInt32 aSrcOffset, 
-                                       PRInt32 * aSrcLength)
-{
-  if (aDest == NULL) return NS_ERROR_NULL_POINTER;
-  if(nsnull == mUtil)
-  {
-     nsresult res = NS_OK;
-     res = nsComponentManager::CreateInstance(
-             kCharsetConverterManagerCID, 
-             NULL,
-             kIUnicodeDecodeUtilIID,
-             (void**) & mUtil);
-    
-     if(NS_FAILED(res))
-     {
-       *aSrcLength = 0;
-       *aDestLength = 0;
-       return res;
-     }
-  }
-  return mUtil->Convert( aDest, aDestOffset, aDestLength, 
-                                 aSrc, aSrcOffset, aSrcLength,
-                                 mBehavior,
-                                 (uShiftTable*) &gShiftTable, 
-                                 (uMappingTable*)&gMappingTable);
-}
-
-NS_IMETHODIMP nsUTF8ToUnicode::Finish(PRUnichar * aDest, PRInt32 aDestOffset,
-                                      PRInt32 * aDestLength)
-{
-  // it is really only a stateless converter...
-  *aDestLength = 0;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsUTF8ToUnicode::Length(const char * aSrc, PRInt32 aSrcOffset, 
+NS_IMETHODIMP nsUTF8ToUnicode::Length(const char * aSrc, 
+                                      PRInt32 aSrcOffset, 
                                       PRInt32 aSrcLength, 
                                       PRInt32 * aDestLength)
 {
+  // we are a single byte to Unicode converter, so...
   *aDestLength = aSrcLength;
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsUTF8ToUnicode::Reset()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsUTF8ToUnicode::SetInputErrorBehavior(PRInt32 aBehavior)
-{
-  mBehavior = aBehavior;
-  return NS_OK;
+  return NS_OK_UDEC_EXACTLENGTH;
 }

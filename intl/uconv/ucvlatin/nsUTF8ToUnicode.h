@@ -20,8 +20,7 @@
 #ifndef nsUTF8ToUnicode_h___
 #define nsUTF8ToUnicode_h___
 
-#include "nsIUnicodeDecoder.h"
-#include "nsIUnicodeDecodeUtil.h"
+#include "nsUCvLatinSupport.h"
 
 //----------------------------------------------------------------------
 // Class nsUTF8ToUnicode [declaration]
@@ -32,10 +31,8 @@
  * @created         18/Mar/1998
  * @author  Catalin Rotaru [CATA]
  */
-class nsUTF8ToUnicode : public nsIUnicodeDecoder
+class nsUTF8ToUnicode : public nsTableDecoderSupport
 {
-  NS_DECL_ISUPPORTS
-
 public:
 
   /**
@@ -44,31 +41,17 @@ public:
   nsUTF8ToUnicode();
 
   /**
-   * Class destructor.
-   */
-  virtual ~nsUTF8ToUnicode();
-
-  /**
    * Static class constructor.
    */
   static nsresult CreateInstance(nsISupports **aResult);
 
-  //--------------------------------------------------------------------
-  // Interface nsIUnicodeDecoder [declaration]
+protected:
 
-  NS_IMETHOD Convert(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength,const char * aSrc, PRInt32 aSrcOffset, 
-      PRInt32 * aSrcLength);
-  NS_IMETHOD Finish(PRUnichar * aDest, PRInt32 aDestOffset, 
-      PRInt32 * aDestLength);
+  //--------------------------------------------------------------------
+  // Subclassing of nsDecoderSupport class [declaration]
+
   NS_IMETHOD Length(const char * aSrc, PRInt32 aSrcOffset, PRInt32 aSrcLength, 
       PRInt32 * aDestLength);
-  NS_IMETHOD Reset();
-  NS_IMETHOD SetInputErrorBehavior(PRInt32 aBehavior);
-
-private:
-  PRInt32 mBehavior;
-  nsIUnicodeDecodeUtil *mUtil;
 
 };
 
