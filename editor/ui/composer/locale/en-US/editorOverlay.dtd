@@ -269,6 +269,8 @@
 <!-- Used just in context popup. -->
 <!ENTITY createLinkCmd.label "Create Link...">
 <!ENTITY createlink.accesskey "k">
+<!ENTITY editLinkCmd.label "Edit Link in New Composer">
+<!ENTITY editlink.accesskey "i">
 <!-- (Toplevel Edit menu uses utilityOverlay) -->
 <!ENTITY undoCmd.label "Undo">
 <!ENTITY undo.accesskey "u">

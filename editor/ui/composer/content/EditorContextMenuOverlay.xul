@@ -58,6 +58,7 @@
     <!-- label and accesskey are set in InitObjectProperties -->
     <menuitem id="objectProperties_cm" observes="cmd_objectProperties"/>
     <menuitem id="menu_saveImage_cm"/>
+    <menuitem id="editLink_cm" label="&editLinkCmd.label;" accesskey="&editlink.accesskey;" observes="cmd_editLink"/>
     <menuseparator id="property-separator"/>
 
     <!-- Can't get submenus to load from a shared overlay -->
