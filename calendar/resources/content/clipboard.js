@@ -120,7 +120,7 @@ function cutToClipboard( /* calendarEventArray */)
   var calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
 
    if( copyToClipboard( calendarEventArray ) )
-      unifinderDeleteCommand(); // deletes all selected events.
+      unifinderDeleteCommand( true ); // deletes all selected events without prompting.
 }
 
 
