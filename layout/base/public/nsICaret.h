@@ -45,7 +45,14 @@ public:
   /** Refresh
    *  Refresh the caret after the frame it is being drawn in has painted
    */
- 	NS_IMETHOD Refresh() = 0;
+ 	NS_IMETHOD Refresh(nsIView *aView, nsIRenderingContext& inRendContext, const nsRect& aDirtyRect) = 0;
+
+  /** ClearFrameRefs
+   *  The caret stores a reference to the frame that the caret was last drawn in.
+   *  This is called to tell the caret that that frame is going away.
+   */
+  NS_IMETHOD ClearFrameRefs(nsIFrame* aFrame) = 0;
+
 };
 
 extern nsresult NS_NewCaret(nsICaret** aInstancePtrResult);
