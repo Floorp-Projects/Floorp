@@ -668,10 +668,10 @@ NS_IMETHODIMP
   case nsIDataType::VTYPE_ASTRING:
     ENCODE_SIMPLE_ARRAY(nsAString, String, "%s",
       NS_ConvertUCS2toUTF8(values[i]).get())
+  case nsIDataType::VTYPE_ARRAY:
 //  Don't support these array types just now (needs more work).
   case nsIDataType::VTYPE_WCHAR:
   case nsIDataType::VTYPE_ID:
-  case nsIDataType::VTYPE_ARRAY:
   case nsIDataType::VTYPE_VOID:
   case nsIDataType::VTYPE_EMPTY:
   case nsIDataType::VTYPE_INTERFACE_IS:
@@ -1518,13 +1518,20 @@ NS_IMETHODIMP
 
     nsCOMPtr < nsISchemaCollection > collection;
     rc = aEncoding->GetSchemaCollection(getter_AddRefs(collection));
-    nsCOMPtr < nsISchemaElement > element;
-    rc = nsSOAPUtils::GetNamespaceURI(aSource, value, ns);
     if (NS_FAILED(rc))
       return rc;
-    rc = nsSOAPUtils::GetLocalName(value, name);
-    if (NS_FAILED(rc))
-      return rc;
+    if (value.Last() ==']') {
+      ns.Assign(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion]);
+      name.Assign(kArraySOAPType);
+    }
+    else {
+      rc = nsSOAPUtils::GetNamespaceURI(aSource, value, ns);
+      if (NS_FAILED(rc))
+        return rc;
+      rc = nsSOAPUtils::GetLocalName(value, name);
+      if (NS_FAILED(rc))
+        return rc;
+    }
     rc = collection->GetType(name, ns, getter_AddRefs(subtype));
 //      if (NS_FAILED(rc)) return rc;
   }
