@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsContainerFrame.h"
 #include "nsIContent.h"
+#include "nsIDocument.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsStyleContext.h"
@@ -558,15 +559,42 @@ SyncFrameViewGeometryDependentProperties(nsIPresContext*  aPresContext,
     (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT) ||
     !aFrame->CanPaintBackground() ||
     HasNonZeroBorderRadius(aStyleContext);
-  if (isCanvas && viewHasTransparentContent) {
+
+  if (isCanvas) {
     nsIView* rootView;
     vm->GetRootView(rootView);
     nsIView* rootParent;
     rootView->GetParent(rootParent);
-    if (nsnull == rootParent) {
+    if (!rootParent) {
+      // We're the root of a view manager hierarchy. We will have to
+      // paint something. NOTE: this can be overridden below.
       viewHasTransparentContent = PR_FALSE;
     }
+
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    nsCOMPtr<nsIDocument> doc;
+    shell->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      nsCOMPtr<nsIDocument> parentDoc;
+      doc->GetParentDocument(getter_AddRefs(parentDoc));
+      nsCOMPtr<nsIContent> rootElem;
+      doc->GetRootContent(getter_AddRefs(rootElem));
+      if (!parentDoc && rootElem && rootElem->IsContentOfType(nsIContent::eXUL)) {
+        // we're XUL at the root of the document hierarchy. Try to make our
+        // window translucent.
+        nsCOMPtr<nsIWidget> widget;
+        aView->GetWidget(*getter_AddRefs(widget));
+        // don't proceed unless this is the root view
+        // (sometimes the non-root-view is a canvas)
+        if (widget && aView == rootView) {
+          viewHasTransparentContent = hasBG && (bg->mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+          widget->SetWindowTranslucency(viewHasTransparentContent);
+        }
+      }
+    }
   }
+  // XXX we should also set widget transparency for XUL popups
 
   const nsStyleDisplay* display;
   ::GetStyleData(aStyleContext, &display);

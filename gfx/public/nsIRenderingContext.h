@@ -198,7 +198,8 @@ public:
   NS_IMETHOD IsVisibleRect(const nsRect& aRect, PRBool &aIsVisible) = 0;
 
   /**
-   * Sets the clipping for the RenderingContext to the passed in rectangle
+   * Sets the clipping for the RenderingContext to the passed in rectangle.
+   * The rectangle is in app units!
    * @param aRect The rectangle to set the clipping rectangle to
    * @param aCombine how to combine this rect with the current clip region.
    *        see the bottom of nsIRenderingContext.h
@@ -207,7 +208,8 @@ public:
   NS_IMETHOD SetClipRect(const nsRect& aRect, nsClipCombine aCombine, PRBool &aClipEmpty) = 0;
 
   /**
-   * Gets the bounds of the clip region of the RenderingContext
+   * Gets the bounds of the clip region of the RenderingContext. The bounds are returned
+   * in device units!
    * @param aRect out parameter to contain the clip region bounds
    *        for the RenderingContext
    * @return PR_TRUE if the rendering context has a local cliprect set
@@ -245,7 +247,8 @@ public:
 
 
   /**
-   * Sets the clipping for the RenderingContext to the passed in region
+   * Sets the clipping for the RenderingContext to the passed in region.
+   * The region is in device coordinates!
    * @param aRegion The region to set the clipping area to, IN DEVICE COORDINATES
    * @param aCombine how to combine this region with the current clip region.
    *        see the bottom of nsIRenderingContext.h
@@ -255,6 +258,7 @@ public:
 
   /**
    * Gets a copy of the current clipping region for the RenderingContext
+   * The region is in device coordinates!
    * @param aRegion inout parameter representing the clip region.
    *        if SetClipRegion() is called, do not assume that GetClipRegion()
    *        will return the same object.
@@ -263,6 +267,7 @@ public:
 
   /**
    * Gets the current clipping region for the RenderingContext
+   * The region is in device coordinates!
    * @param aRegion out parameter representing the clip region.
    *        if SetClipRegion() is called, do not assume that GetClipRegion()
    *        will return the same object.
