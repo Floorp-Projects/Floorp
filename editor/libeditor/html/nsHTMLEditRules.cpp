@@ -932,11 +932,30 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
   nsresult res = GetParagraphFormatNodes(address_of(arrayOfNodes), PR_TRUE);
   if (NS_FAILED(res)) return res;
 
-  // we might have an empty node list.  if so, find selection parent
-  // and put that on the list
+  // post process list.  We need to replace any block nodes that are not format
+  // nodes with their content.  This is so we only have to look "up" the heirarchy
+  // to find format nodes, instead of both up and down.
+  nsCOMPtr<nsISupports> isupports;
   PRUint32 listCount;
   arrayOfNodes->Count(&listCount);
-  nsCOMPtr<nsISupports> isupports;
+  PRInt32 i;
+  for (i=(PRInt32)listCount-1; i>=0; i--)
+  {
+    isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
+    nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
+    nsAutoString format;
+    // if it is a known format node we have it easy
+    if (IsBlockNode(curNode) && !IsFormatNode(curNode))
+    {
+      // arrayOfNodes->RemoveElement(isupports);
+      res = AppendInnerFormatNodes(arrayOfNodes, curNode);
+      if (NS_FAILED(res)) return res;
+    }
+  }
+  
+  // we might have an empty node list.  if so, find selection parent
+  // and put that on the list
+  arrayOfNodes->Count(&listCount);
   if (!listCount)
   {
     nsCOMPtr<nsIDOMNode> selNode;
@@ -952,59 +971,49 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
     listCount = 1;
   }
 
+  // remember root node
+  nsCOMPtr<nsIDOMElement> rootElem;
+  res = mHTMLEditor->GetRootElement(getter_AddRefs(rootElem));
+  if (NS_FAILED(res)) return res;
+  if (!rootElem) return NS_ERROR_NULL_POINTER;
+
   // loop through the nodes in selection and examine their paragraph format
-  PRInt32 i;
   for (i=(PRInt32)listCount-1; i>=0; i--)
   {
     isupports = dont_AddRef(arrayOfNodes->ElementAt(i));
     nsCOMPtr<nsIDOMNode> curNode( do_QueryInterface(isupports) );
-
     nsAutoString format;
-    nsCOMPtr<nsIAtom> atom = mHTMLEditor->GetTag(curNode);
-    
-    if (IsInlineNode(curNode))
+    // if it is a known format node we have it easy
+    if (IsFormatNode(curNode))
+      GetFormatString(curNode, format);
+    else if (IsBlockNode(curNode))
     {
-      nsCOMPtr<nsIDOMNode> block = mHTMLEditor->GetBlockNodeParent(curNode);
-      if (block)
+      // this is a div or some other non-format block.
+      // we should ignore it.  It's children were appended to this list
+      // by AppendInnerFormatNodes() call above.  We will get needed
+      // info when we examine them instead.
+      continue;
+    }
+    else
+    {
+      nsCOMPtr<nsIDOMNode> node, tmp = curNode;
+      tmp->GetParentNode(getter_AddRefs(node));
+      while (node)
       {
-        nsCOMPtr<nsIAtom> blockAtom = mHTMLEditor->GetTag(block);
-        if ( nsIEditProperty::p == blockAtom.get()           ||
-             nsIEditProperty::blockquote == blockAtom.get()  ||
-             nsIEditProperty::address == blockAtom.get()     ||
-             nsIEditProperty::pre == blockAtom.get()           )
-        {
-          blockAtom->ToString(format);
-        }
-        else if (nsHTMLEditUtils::IsHeader(block))
-        {
-          nsAutoString tag;
-          nsEditor::GetTagString(block,tag);
-          ToLowerCase(tag);
-          format = tag;
-        }
-        else
+        if (node == rootElem)
         {
           format.Truncate(0);
+          break;
         }
+        else if (IsFormatNode(node))
+        {
+          GetFormatString(node, format);
+          break;
+        }
+        // else keep looking up
+        tmp = node;
+        tmp->GetParentNode(getter_AddRefs(node));
       }
-      else
-      {
-        format.Truncate(0);
-      }  
-    }    
-    else if (nsHTMLEditUtils::IsHeader(curNode))
-    {
-      nsAutoString tag;
-      nsEditor::GetTagString(curNode,tag);
-      ToLowerCase(tag);
-      format = tag;
-    }
-    else if (nsIEditProperty::p == atom.get()           ||
-             nsIEditProperty::blockquote == atom.get()  ||
-             nsIEditProperty::address == atom.get()     ||
-             nsIEditProperty::pre == atom.get()           )
-    {
-      atom->ToString(format);
     }
     
     // if this is the first node, we've found, remember it as the format
@@ -1023,6 +1032,89 @@ nsHTMLEditRules::GetParagraphState(PRBool *aMixed, nsAString &outFormat)
   return res;
 }
 
+PRBool 
+nsHTMLEditRules::IsFormatNode(nsIDOMNode *aNode)
+{
+  if (!aNode) return NS_ERROR_NULL_POINTER;
+  if (nsHTMLEditUtils::IsParagraph(aNode)  ||
+      nsHTMLEditUtils::IsPre(aNode)  ||
+      nsHTMLEditUtils::IsHeader(aNode)  ||
+      nsHTMLEditUtils::IsAddress(aNode) )
+    return PR_TRUE;
+  return PR_FALSE;
+}
+
+nsresult 
+nsHTMLEditRules::AppendInnerFormatNodes(nsISupportsArray *aArray, nsIDOMNode *aNode)
+{
+  if (!aArray || !aNode) return NS_ERROR_NULL_POINTER;
+
+  nsCOMPtr<nsIDOMNodeList> childList;
+  nsCOMPtr<nsIDOMNode> child;
+  nsCOMPtr<nsISupports> isupports;
+
+  aNode->GetChildNodes(getter_AddRefs(childList));
+  if (!childList)  return NS_OK;
+  PRUint32 len, j=0;
+  childList->GetLength(&len);
+
+  // we only need to place any one inline inside this node onto 
+  // the list.  They are all the same for purposes of determining
+  // paragraph style.  We use foundInline to track this as we are 
+  // going through the children in the loop below.
+  PRBool foundInline = PR_FALSE;
+  while (j < len)
+  {
+    childList->Item(j, getter_AddRefs(child));
+    PRBool isBlock = IsBlockNode(child);
+    PRBool isFormat = IsFormatNode(child);
+    if (isBlock && !isFormat)  // if it's a div, etc, recurse
+      AppendInnerFormatNodes(aArray, child);
+    else if (isFormat)
+    {
+      isupports = do_QueryInterface(child);
+      aArray->AppendElement(isupports);
+    }
+    else if (!foundInline)  // if this is the first inline we've found, use it
+    {
+      foundInline = PR_TRUE;      
+      isupports = do_QueryInterface(child);
+      aArray->AppendElement(isupports);
+    }
+    j++;
+  }
+  return NS_OK;
+}
+
+nsresult 
+nsHTMLEditRules::GetFormatString(nsIDOMNode *aNode, nsAString &outFormat)
+{
+  if (!aNode) return NS_ERROR_NULL_POINTER;
+  nsAutoString format;
+  
+  nsCOMPtr<nsIAtom> atom = mHTMLEditor->GetTag(aNode);
+  
+  if ( nsIEditProperty::p == atom.get()           ||
+       nsIEditProperty::address == atom.get()     ||
+       nsIEditProperty::pre == atom.get()           )
+  {
+    atom->ToString(format);
+  }
+  else if (nsHTMLEditUtils::IsHeader(aNode))
+  {
+    nsAutoString tag;
+    nsEditor::GetTagString(aNode,tag);
+    ToLowerCase(tag);
+    format = tag;
+  }
+  else
+  {
+    format.Truncate(0);
+  }
+  
+  outFormat = format;
+  return NS_OK;
+}    
 
 /********************************************************
  *  Protected rules methods 
