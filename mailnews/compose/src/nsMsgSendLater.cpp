@@ -290,7 +290,7 @@ nsMsgSendLater::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, nsIInput
     mLeftoverBuffer = nsnull; // null out this 
   }
 
-  while (startBuf < endBuf)
+  while (startBuf <= endBuf)
   {
     lineEnd = FindEOL(startBuf, endBuf);
     if (!lineEnd)
