@@ -49,7 +49,7 @@ public:
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     UpdatePresentationDataFromChildAt(0, 2, PR_FALSE);
-    ReResolveStyleContext(&aPresContext, mStyleContext, NS_STYLE_HINT_REFLOW, nsnull, nsnull);
+    InsertScriptLevelStyleContext(aPresContext);
     return rv;
   }
 
