@@ -289,9 +289,17 @@ fi
 cd $STAGE_1 || (Echo "Cant cd to $STAGE_1 , exit"; exit)
 Echo "tar..."
 if [ "$O_SILENT" = "ON" ] ; then
-    tar cf all.tar daily_qa        tinderbox
+    TARPARAM=cf
 else
-    tar cvf all.tar daily_qa        tinderbox
+    TARPARAM=cvf
+fi
+
+if [ "$DO_DQA" = "ON" && "$DO_TBX" = "ON" ] ; then
+        tar $TARPARAM all.tar daily_qa        tinderbox
+elif [ "$DO_DQA" = "ON" ] ; then
+        tar $TARPARAM all.tar daily_qa
+else
+        tar $TARPARAM all.tar tinderbox
 fi
 gzip all.tar
 # ssh-agent > /u/sonmi/.ssh/ssh-agent.info
