@@ -46,8 +46,8 @@ struct nsRect;
 struct nsGUIEvent;
 
 #define NS_IVIEWOBSERVER_IID   \
-{ 0x0f4bc34a, 0xc93b, 0x4699, \
-{ 0xb6, 0xc2, 0xb3, 0xca, 0x9e, 0xe4, 0x6c, 0x95 } }
+{ 0x6a1529e0, 0x3d2c, 0x11d2, \
+{ 0xa8, 0x32, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
 
 class nsIViewObserver : public nsISupports
 {
@@ -85,12 +85,6 @@ public:
    * @return error status
    */
   NS_IMETHOD ResizeReflow(nsIView * aView, nscoord aWidth, nscoord aHeight) = 0;
-
-  /**
-   * Hack to find out if the view observer is itself visible, in lieu
-   * of having the view trees linked.
-   */
-  NS_IMETHOD_(PRBool) IsVisible() = 0;
 };
 
 #endif
