@@ -94,6 +94,13 @@ install:: $(DLL)
 	$(MAKE_INSTALL) navigator-shiny.css $(DISTRES)
 	$(MAKE_INSTALL) raindrops_light.gif $(DISTRES)
 	$(MAKE_INSTALL) skindemo.xul $(DISTRES)
+	$(MAKE_INSTALL) NetSupportAlert.xul $(DISTRES)
+	$(MAKE_INSTALL) NetSupportConfirm.xul $(DISTRES)
+	$(MAKE_INSTALL) NetSupportConfirmCheck.xul $(DISTRES)
+	$(MAKE_INSTALL) alertl.gif $(DISTRES)
+	$(MAKE_INSTALL) errorI.gif $(DISTRES)
+	$(MAKE_INSTALL) messagel.gif $(DISTRES)
+	$(MAKE_INSTALL) questionl.gif $(DISTRES)
 
 clobber::
 	rm -f $(DIST)\bin\$(DLLNAME).dll
@@ -120,4 +127,10 @@ clobber::
 	rm -f $(DISTRES)\navigator-shiny.css
 	rm -f $(DISTRES)\raindrops_light.gif
 	rm -f $(DISTRES)\NetSupportUserPassword.xul
-
+	rm -f $(DISTRES)\NetSupportAlert.xul 
+	rm -f $(DISTRES)\NetSupportConfirm.xul
+	rm -f $(DISTRES)\NetSupportConfirmCheck.xul
+	rm -f $(DISTRES)\alertl.gif
+	rm -f $(DISTRES)\errorI.gif
+	rm -f $(DISTRES)\messagel.gif
+	rm -f $(DISTRES)\questionl.gif
