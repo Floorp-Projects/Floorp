@@ -2304,10 +2304,54 @@ nsresult
 nsHTMLDocument::WriteCommon(const nsAReadableString& aText,
                             PRBool aNewlineTerminate)
 {
-  nsresult rv;
-  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID(), &rv));
+  nsresult rv = NS_OK;
+
+  if (!mParser) {
+    rv = Open();
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  const nsAReadableString *text_to_write = &aText;
+  nsAutoString string_buffer;
+
+  if (aNewlineTerminate) {
+    string_buffer.Assign(aText);
+    string_buffer.Append((PRUnichar)'\n');
+
+    text_to_write = &string_buffer;
+  }
+
+  mWriteLevel++;
+  rv = mParser->Parse(*text_to_write, NS_GENERATE_PARSER_KEY(),
+                      NS_ConvertASCIItoUCS2("text/html"), PR_FALSE,
+                      (!mIsWriting || (mWriteLevel > 1)));
+  mWriteLevel--;
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHTMLDocument::Write(const nsAReadableString& aText)
+{
+  return WriteCommon(aText, PR_FALSE);
+}
+
+NS_IMETHODIMP    
+nsHTMLDocument::Writeln(const nsAReadableString& aText)
+{
+  return WriteCommon(aText, PR_TRUE);
+}
+
+nsresult
+nsHTMLDocument::ScriptWriteCommon(PRBool aNewlineTerminate)
+{
+  nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
 
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
+
+  nsresult rv = NS_OK;
 
   if (xpc) {
     rv = xpc->GetCurrentNativeCallContext(getter_AddRefs(ncc));
@@ -2356,9 +2400,6 @@ nsHTMLDocument::WriteCommon(const nsAReadableString& aText,
     }
   }
 
-  const nsAReadableString *text_to_write = &aText;
-  nsAutoString string_buffer;
-
   if (ncc) {
     // We're called from C++, concatenate the extra arguments into
     // string_buffer
@@ -2366,20 +2407,29 @@ nsHTMLDocument::WriteCommon(const nsAReadableString& aText,
 
     ncc->GetArgc(&argc);
 
+    JSContext *cx = nsnull;
+    rv = ncc->GetJSContext(&cx);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    jsval *argv = nsnull;
+    ncc->GetArgvPtr(&argv);
+    NS_ENSURE_TRUE(argv, NS_ERROR_UNEXPECTED);
+
+    if (argc == 1) {
+      JSString *jsstr = JS_ValueToString(cx, argv[0]);
+      NS_ENSURE_TRUE(jsstr, NS_ERROR_OUT_OF_MEMORY);
+
+      nsLiteralString str(NS_REINTERPRET_CAST(const PRUnichar *,
+                                              ::JS_GetStringChars(jsstr)),
+                          ::JS_GetStringLength(jsstr));
+
+      return WriteCommon(str, aNewlineTerminate);
+    }
+
     if (argc > 1) {
-      string_buffer.Assign(aText);
-      text_to_write = &string_buffer;
+      nsAutoString string_buffer;
 
-      JSContext *cx = nsnull;
-      rv = ncc->GetJSContext(&cx);
-      NS_ENSURE_SUCCESS(rv, rv);
-
-      jsval *argv = nsnull;
-      ncc->GetArgvPtr(&argv);
-      NS_ENSURE_TRUE(argv, NS_ERROR_UNEXPECTED);
-
-      for (i = 1; i < argc; i++) {
-
+      for (i = 0; i < argc; i++) {
         JSString *str = JS_ValueToString(cx, argv[i]);
         NS_ENSURE_TRUE(str, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2387,47 +2437,28 @@ nsHTMLDocument::WriteCommon(const nsAReadableString& aText,
                                                  ::JS_GetStringChars(str)),
                              ::JS_GetStringLength(str));
       }
+
+      return WriteCommon(string_buffer, aNewlineTerminate);
     }
   }
 
-  if (!mParser) {
-    rv = Open();
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
-
-  if (aNewlineTerminate) {
-    if (string_buffer.IsEmpty()) {
-      string_buffer.Assign(aText);
-    }
-
-    text_to_write = &string_buffer;
-
-    string_buffer.Append((PRUnichar)'\n');
-  }
-
-  mWriteLevel++;
-  rv = mParser->Parse(*text_to_write, NS_GENERATE_PARSER_KEY(),
-                      NS_ConvertASCIItoUCS2("text/html"), PR_FALSE,
-                      (!mIsWriting || (mWriteLevel > 1)));
-  mWriteLevel--;
-
-  return rv;
+  // No arguments...
+  return WriteCommon(nsString(), aNewlineTerminate);
 }
 
 NS_IMETHODIMP
-nsHTMLDocument::Write(const nsAReadableString& aText)
+nsHTMLDocument::Write()
 {
-  return WriteCommon(aText, PR_FALSE);
+  return ScriptWriteCommon(PR_FALSE);
 }
 
-NS_IMETHODIMP    
-nsHTMLDocument::Writeln(const nsAReadableString& aText)
+
+NS_IMETHODIMP
+nsHTMLDocument::Writeln()
 {
-  return WriteCommon(aText, PR_TRUE);
+  return ScriptWriteCommon(PR_TRUE);
 }
+
 
 nsIContent *
 nsHTMLDocument::MatchId(nsIContent *aContent, const nsAReadableString& aId)
