@@ -627,6 +627,17 @@ END
     close HTACCESS;
     chmod $fileperm, "data/.htaccess";
   }
+  if (!-e "template/.htaccess") {
+    print "Creating template/.htaccess...\n";
+    open HTACCESS, ">template/.htaccess";
+    print HTACCESS <<'END';
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory
+deny from all
+END
+    close HTACCESS;
+    chmod $fileperm, "template/.htaccess";
+  }
   if (!-e "data/webdot/.htaccess") {
     if (!-d "data/webdot") {
       mkdir "data/webdot", $dirperm;
@@ -751,22 +762,36 @@ sub isExecutableFile {
 
 # fix file (or files - wildcards ok) permissions 
 sub fixPerms {
-    my $file;
-    my @files = glob($_[0]);
-    my $exeperm = 0777 & ~ $_[1];
-    my $normperm = 0666 & ~ $_[1];
-    foreach $file (@files) {
-      # do not change permissions on directories here
-      if (!(-d $file)) {
-        # check if the file is executable.
-        if (isExecutableFile($file)) {
-          #printf ("Changing $file to %o",$exeperm);
-          chmod $exeperm, $file;
-        } else {
-          #print ("Changing $file to %o", $normperm);
-          chmod $normperm, $file;
+    my ($file_pattern, $owner, $group, $umask, $do_dirs) = @_;
+    my @files = glob($file_pattern);
+    my $execperm = 0777 & ~ $umask;
+    my $normperm = 0666 & ~ $umask;
+    foreach my $file (@files) {
+        next if (!-e $file);
+        # do not change permissions on directories here unless $do_dirs is set
+        if (!(-d $file)) {
+            chown $owner, $group, $file;
+            # check if the file is executable.
+            if (isExecutableFile($file)) {
+                #printf ("Changing $file to %o\n", $execperm);
+                chmod $execperm, $file;
+            } else {
+                #printf ("Changing $file to %o\n", $normperm);
+                chmod $normperm, $file;
+            }
         }
-      }
+        elsif ($do_dirs) {
+            chown $owner, $group, $file;
+            if ($file =~ /CVS$/) {
+                chmod 0700, $file;
+            }
+            else {
+                #printf ("Changing $file to %o\n", $execperm);
+                chmod $execperm, $file;
+                fixPerms("$file/.htaccess", $owner, $group, $umask, $do_dirs);
+                fixPerms("$file/*", $owner, $group, $umask, $do_dirs); # do the contents of the directory
+            }
+        }
     }
 }
 
@@ -790,11 +815,11 @@ EOF
     # chown needs to be called with a valid uid, not 0.  $< returns the
     # caller's uid.  Maybe there should be a $bugzillauid, and call with that
     # userid.
-    chown $<, $webservergid, glob('*');
-    if (-e ".htaccess") { chown $<, $webservergid, ".htaccess" } # glob('*') doesn't catch dotfiles
-    if (-e "data/.htaccess") { chown $<, $webservergid, "data/.htaccess" }
-    if (-e "data/webdot/.htaccess") { chown $<, $webservergid, "data/webdot/.htaccess" }
-    fixPerms('*',027);
+    fixPerms('.htaccess', $<, $webservergid, 027); # glob('*') doesn't catch dotfiles
+    fixPerms('data/.htaccess', $<, $webservergid, 027);
+    fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
+    fixPerms('*', $<, $webservergid, 027);
+    fixPerms('template', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
     chmod 0644, 'RelationSet.pm';
     chmod 0771, 'data';
@@ -802,8 +827,11 @@ EOF
 } else {
     # get current gid from $( list
     my $gid = (split " ", $()[0];
-    chown $<, $gid, glob('*');
-    fixPerms('*',022);
+    fixPerms('.htaccess', $<, $gid, 022); # glob('*') doesn't catch dotfiles
+    fixPerms('data/.htaccess', $<, $gid, 022);
+    fixPerms('data/webdot/.htaccess', $<, $gid, 022);
+    fixPerms('*', $<, $gid, 022);
+    fixPerms('template', $<, $gid, 022, 1);
     chmod 01777, 'data', 'graphs';
 }
 
