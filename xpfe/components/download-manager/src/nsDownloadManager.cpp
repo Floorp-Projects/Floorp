@@ -678,8 +678,12 @@ nsDownloadManager::StartBatchUpdate()
 NS_IMETHODIMP
 nsDownloadManager::EndBatchUpdate()
 {
-  --mBatches;
-  return NS_OK;
+  nsresult rv = NS_OK;
+  if (--mBatches == 0) {
+    nsCOMPtr<nsIRDFRemoteDataSource> remote = do_QueryInterface(mDataSource);
+    rv = remote->Flush();
+  }
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -54,23 +54,21 @@ function Startup()
     // always open the bookmark top root folder
     if (!bookmarksView.treeBoxObject.view.isContainerOpen(0))
       bookmarksView.treeBoxObject.view.toggleOpenState(0);
+    // XXXvarga this should go away once bug 200067 is fixed.
     if (!bookmarksView.treeBoxObject.view.isContainerEmpty(0))
       rowIndex = 1;
   }
 
-  bookmarksView.treeBoxObject.scrollToRow(rowIndex);
   bookmarksView.treeBoxObject.selection.select(rowIndex);
 
   windowNode.setAttribute("title", titleString);
 
   document.getElementById("CommandUpdate_Bookmarks").setAttribute("commandupdater","true");
   bookmarksView.tree.focus();
-
 }
 
-function Shutdown ()
+function Shutdown()
 {
-
   // Store current window position and size in window attributes (for persistence).
   var win = document.getElementById("bookmark-window");
   win.setAttribute("x", screenX);
@@ -78,94 +76,6 @@ function Shutdown ()
   win.setAttribute("height", outerHeight);
   win.setAttribute("width", outerWidth);
 }
-
-var gConstructedViewMenuSortItems = false;
-function fillViewMenu(aEvent)
-{
-  var adjacentElement = document.getElementById("fill-before-this-node");
-  var popupElement = aEvent.target;
-  
-  var bookmarksView = document.getElementById("bookmarks-view");
-  var columns = bookmarksView.columns;
-
-  if (!gConstructedViewMenuSortItems) {
-    for (var i = 0; i < columns.length; ++i) {
-      var accesskey = columns[i].accesskey;
-      var menuitem  = document.createElement("menuitem");
-      var name      = BookmarksUtils.getLocaleString("SortMenuItem", columns[i].label);
-      menuitem.setAttribute("label", name);
-      menuitem.setAttribute("accesskey", columns[i].accesskey);
-      menuitem.setAttribute("resource", columns[i].resource);
-      menuitem.setAttribute("id", "sortMenuItem:" + columns[i].resource);
-      menuitem.setAttribute("checked", columns[i].sortActive);
-      menuitem.setAttribute("name", "sortSet");
-      menuitem.setAttribute("type", "radio");
-      
-      popupElement.insertBefore(menuitem, adjacentElement);
-    }
-    
-    gConstructedViewMenuSortItems = true;
-  }  
-
-  const kPrefSvcContractID = "@mozilla.org/preferences;1";
-  const kPrefSvcIID = Components.interfaces.nsIPrefService;
-  var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-  var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
-
-  if (gConstructedViewMenuSortItems) {
-    var resource = bookmarksSortPrefs.getCharPref("resource");
-    var element = document.getElementById("sortMenuItem:" + resource);
-    if (element)
-      element.setAttribute("checked", "true");
-  }  
-
-  var sortAscendingMenu = document.getElementById("ascending");
-  var sortDescendingMenu = document.getElementById("descending");
-  var noSortMenu = document.getElementById("natural");
-  
-  sortAscendingMenu.setAttribute("checked", "false");
-  sortDescendingMenu.setAttribute("checked", "false");
-  noSortMenu.setAttribute("checked", "false");
-  var direction = bookmarksSortPrefs.getCharPref("direction");
-  if (direction == "natural")
-    sortAscendingMenu.setAttribute("checked", "true");
-  else if (direction == "ascending") 
-    sortDescendingMenu.setAttribute("checked", "true");
-  else
-    noSortMenu.setAttribute("checked", "true");
-}
-
-function onViewMenuSortItemSelected(aEvent)
-{
-  var resource = aEvent.target.getAttribute("resource");
-  
-  const kPrefSvcContractID = "@mozilla.org/preferences;1";
-  const kPrefSvcIID = Components.interfaces.nsIPrefService;
-  var prefSvc = Components.classes[kPrefSvcContractID].getService(kPrefSvcIID);
-  var bookmarksSortPrefs = prefSvc.getBranch("browser.bookmarks.sort.");
-
-  switch (resource) {
-  case "":
-    break;
-  case "direction":
-    var dirn = bookmarksSortPrefs.getCharPref("direction");
-    if (aEvent.target.id == "ascending")
-      bookmarksSortPrefs.setCharPref("direction", "natural");
-    else if (aEvent.target.id == "descending")
-      bookmarksSortPrefs.setCharPref("direction", "ascending");
-    else
-      bookmarksSortPrefs.setCharPref("direction", "descending");
-    break;
-  default:
-    bookmarksSortPrefs.setCharPref("resource", resource);
-    var direction = bookmarksSortPrefs.getCharPref("direction");
-    if (direction == "descending")
-      bookmarksSortPrefs.setCharPref("direction", "natural");
-    break;
-  }
-
-  aEvent.preventCapture();
-}  
 
 var gConstructedColumnsMenuItems = false;
 function fillColumnsMenu(aEvent) 

@@ -113,6 +113,15 @@
     <key id="bm_key_find"
          key="&edit.find.keybinding;"
          command="cmd_bm_find" modifiers="accel"/>
+
+    <key id="bm_key_sortFolder"
+         key="&edit.sortFolder.keybinding;"
+         command="cmd_bm_sortfolder" modifiers="accel"/>
+
+    <key id="bm_key_sortFolderByName"
+         key="&edit.sortFolderByName.keybinding;"
+         command="cmd_bm_sortfolderbyname" modifiers="accel"/>
+
     <key id="bm_key_properties"
          key="&edit.properties.keybinding;"
          command="cmd_bm_properties" modifiers="accel"/>
@@ -140,8 +149,8 @@
       </menu>
       <menu id="menu_Edit">
         <menupopup>
-          <menuitem id="menu_undo" disabled="true"/>
-          <menuitem id="menu_redo" disabled="true"/>
+          <menuitem id="menu_undo"/>
+          <menuitem id="menu_redo"/>
           <menuseparator/>
           <menuitem id="menu_bm_cut"
                     label="&cutCmd.label;" accesskey="&cutCmd.accesskey;"
@@ -164,36 +173,35 @@
                     accesskey="&command.moveBookmark.accesskey;"
                     command="cmd_bm_movebookmark"/>
           <menuseparator/>
-            <menuitem observes="cmd_bm_properties" key="bm_key_properties"
-                      label="&command.properties.label;"
-                      accesskey="&command.properties.accesskey;" />
+          <menuitem label="&command.sortFolder.label;"
+                    accesskey="&command.sortFolder.accesskey;"
+                    key="bm_key_sortFolder"
+                    command="cmd_bm_sortfolder"/>
+          <menuitem label="&command.sortFolderByName.label;"
+                    accesskey="&command.sortFolderByName.accesskey;"
+                    key="bm_key_sortFolderByName"
+                    command="cmd_bm_sortfolderbyname"/>
+          <menuseparator/>
+          <menuitem label="&command.properties.label;"
+                    accesskey="&command.properties.accesskey;"
+                    key="bm_key_properties"
+                    command="cmd_bm_properties" />
         </menupopup>
       </menu>
 
       <menu id="menu_View">
-        <menupopup onpopupshowing="fillViewMenu(event)"
-                   oncommand="onViewMenuSortItemSelected(event);">
+        <menupopup>
           <menuitem id="viewCommandToolbar" type="checkbox" class="menuitem-iconic"
                     label="&menuitem.view.command.toolbar.label;"
                     accesskey="&menuitem.view.command.toolbar.accesskey;"
                     oncommand="goToggleToolbar('command-toolbar', 'viewCommandToolbar'); event.preventBubble();"
-                    persist="checked"/>
-          <menuseparator id="fill-after-this-node"/>
-          <menuitem id="natural" label="&menuitem.view.unsorted.label;"
-                    accesskey="&menuitem.view.unsorted.accesskey;"
-                    type="radio"
-                    resource="direction" name="sortSet"/>
-          <menuseparator id="fill-before-this-node"/>
-          <menuitem id="ascending" label="&menuitem.view.ascending.label;"
-                    accesskey="&menuitem.view.ascending.accesskey;"
-                    type="radio"
-                    resource="direction" name="sortDirectionSet"/>
-          <menuitem id="descending" label="&menuitem.view.descending.label;"
-                    accesskey="&menuitem.view.descending.accesskey;"
-                    type="radio"
-                    resource="direction" name="sortDirectionSet"/>
-          <menuseparator/>
-          <menu id="descending" label="&menuitem.view.show_columns.label;"
+                    checked="true"/>
+          <menuitem id="viewCommandSearchbar" type="checkbox" class="menuitem-iconic"
+                    label="&menuitem.view.command.searchbar.label;"
+                    accesskey="&menuitem.view.command.searchbar.accesskey;"
+                    oncommand="goToggleToolbar('bookmarks-search', 'viewCommandSearchbar'); event.preventBubble();"
+                    checked="true"/>
+          <menu label="&menuitem.view.show_columns.label;"
                 accesskey="&menuitem.view.show_columns.accesskey;">
             <menupopup id="columnsPopup" onpopupshowing="fillColumnsMenu(event);"
                        oncommand="onViewMenuColumnItemSelected(event);"/>

@@ -308,6 +308,20 @@ nsMsgRDFDataSource::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
     return NS_RDF_NO_VALUE;
 }
 
+/* void BeginUpdateBatch (); */
+NS_IMETHODIMP
+nsMsgRDFDataSource::BeginUpdateBatch()
+{
+    return NS_OK;
+}
+
+/* void EndUpdateBatch (); */
+NS_IMETHODIMP
+nsMsgRDFDataSource::EndUpdateBatch()
+{
+    return NS_OK;
+}
+
 
 /* XPCOM Shutdown observer */
 NS_IMETHODIMP

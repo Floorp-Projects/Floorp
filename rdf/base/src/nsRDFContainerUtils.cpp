@@ -450,11 +450,7 @@ RDFContainerUtilsImpl::MakeContainer(nsIRDFDataSource* aDataSource, nsIRDFResour
 	rv = aDataSource->Assert(aResource, kRDF_instanceOf, aType, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
 
-	nsCOMPtr<nsIRDFLiteral> nextVal;
-	rv = gRDFService->GetLiteral(NS_LITERAL_STRING("1").get(), getter_AddRefs(nextVal));
-	if (NS_FAILED(rv)) return rv;
-
-	rv = aDataSource->Assert(aResource, kRDF_nextVal, nextVal, PR_TRUE);
+	rv = aDataSource->Assert(aResource, kRDF_nextVal, kOne, PR_TRUE);
 	if (NS_FAILED(rv)) return rv;
     }
 

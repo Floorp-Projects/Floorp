@@ -363,6 +363,14 @@ public:
         return mInner->DoCommand(aSources, aCommand, aArguments);
     }
 
+    NS_IMETHOD BeginUpdateBatch() {
+        return mInner->BeginUpdateBatch();
+    }
+
+    NS_IMETHOD EndUpdateBatch() {
+        return mInner->EndUpdateBatch();
+    }
+
     // nsIRDFRemoteDataSource interface
     NS_DECL_NSIRDFREMOTEDATASOURCE
 

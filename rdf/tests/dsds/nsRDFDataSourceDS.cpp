@@ -120,6 +120,12 @@ public:
   /* void DoCommand (in nsISupportsArray aSources, in nsIRDFResource aCommand, in nsISupportsArray aArguments); */
   NS_IMETHOD DoCommand(nsISupportsArray * aSources, nsIRDFResource *aCommand, nsISupportsArray * aArguments);
 
+  /* void beginUpdateBatch (); */
+  NS_IMETHOD BeginUpdateBatch();
+
+  /* void endUpdateBatch (); */
+  NS_IMETHOD EndUpdateBatch();
+
 private:
   char *mURI;
   nsIRDFDataSource* mDataSource;
@@ -444,6 +450,20 @@ NS_IMETHODIMP
 nsRDFDataSourceDataSource::DoCommand(nsISupportsArray * aSources, nsIRDFResource *aCommand, nsISupportsArray * aArguments)
 {
   return NS_RDF_NO_VALUE;
+}
+
+/* void beginUpdateBatch (); */
+NS_IMETHODIMP
+nsRDFDataSourceDataSource::BeginUpdateBatch()
+{
+  return NS_OK;
+}
+
+/* void endUpdateBatch (); */
+NS_IMETHODIMP
+nsRDFDataSourceDataSource::EndUpdateBatch()
+{
+  return NS_OK;
 }
 
 nsresult

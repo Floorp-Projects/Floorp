@@ -724,6 +724,24 @@ nsSubscribeDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 	return(NS_ERROR_NOT_IMPLEMENTED);
 }
 
+
+
+NS_IMETHODIMP
+nsSubscribeDataSource::BeginUpdateBatch()
+{
+        return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+nsSubscribeDataSource::EndUpdateBatch()
+{
+        return NS_OK;
+}
+
+
+
 NS_IMETHODIMP 
 nsSubscribeDataSource::GetSources(nsIRDFResource *aProperty, nsIRDFNode *aTarget, PRBool aTruthValue, nsISimpleEnumerator **_retval)
 {

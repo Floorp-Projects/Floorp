@@ -1104,7 +1104,7 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
   err = mTable->GetCount(mEnv, &count);
   if (err != 0) return NS_ERROR_FAILURE;
 
-  StartBatchUpdate();
+  BeginUpdateBatch();
 
   // Begin the batch.
   int marker;
@@ -1164,7 +1164,7 @@ nsGlobalHistory::RemoveMatchingRows(rowMatchCallback aMatchFunc,
   err = mTable->EndBatchChangeHint(mEnv, &marker);
   NS_ASSERTION(err == 0, "error ending batch");
 
-  EndBatchUpdate();
+  EndUpdateBatch();
 
   return ( err == 0) ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -2194,6 +2194,66 @@ nsGlobalHistory::GetAllResources(nsISimpleEnumerator** aResult)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsGlobalHistory::BeginUpdateBatch()
+{
+  nsresult rv = NS_OK;
+
+  ++mBatchesInProgress;
+  
+  // we could call mObservers->EnumerateForwards() here
+  // to save the addref/release on each observer, but
+  // it's unlikely that anyone but the tree builder
+  // is observing us
+  if (mObservers) {
+    PRUint32 count;
+    rv = mObservers->Count(&count);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+
+      NS_ASSERTION(observer != nsnull, "null ptr");
+      if (! observer)
+        continue;
+
+      rv = observer->OnBeginUpdateBatch(this);
+      NS_RELEASE(observer);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP
+nsGlobalHistory::EndUpdateBatch()
+{
+  nsresult rv = NS_OK;
+
+  --mBatchesInProgress;
+
+  // we could call mObservers->EnumerateForwards() here
+  // to save the addref/release on each observer, but
+  // it's unlikely that anyone but the tree builder
+  // is observing us
+  if (mObservers) {
+    PRUint32 count;
+    rv = mObservers->Count(&count);
+    if (NS_FAILED(rv)) return rv;
+
+    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
+      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
+
+      NS_ASSERTION(observer != nsnull, "null ptr");
+      if (! observer)
+        continue;
+
+      rv = observer->OnEndUpdateBatch(this);
+      NS_RELEASE(observer);
+    }
+  }
+  return rv;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -2233,66 +2293,6 @@ nsGlobalHistory::FlushTo(const char* aURI)
 {
   // Do not ever implement this (security)
   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsGlobalHistory::StartBatchUpdate()
-{
-  nsresult rv = NS_OK;
-
-  ++mBatchesInProgress;
-  
-  // we could call mObservers->EnumerateForwards() here
-  // to save the addref/release on each observer, but
-  // it's unlikely that anyone but the tree builder
-  // is observing us
-  if (mObservers) {
-    PRUint32 count;
-    rv = mObservers->Count(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-      NS_ASSERTION(observer != nsnull, "null ptr");
-      if (! observer)
-        continue;
-
-      rv = observer->BeginUpdateBatch(this);
-      NS_RELEASE(observer);
-    }
-  }
-  return rv;
-}
-
-NS_IMETHODIMP
-nsGlobalHistory::EndBatchUpdate()
-{
-  nsresult rv = NS_OK;
-
-  --mBatchesInProgress;
-
-  // we could call mObservers->EnumerateForwards() here
-  // to save the addref/release on each observer, but
-  // it's unlikely that anyone but the tree builder
-  // is observing us
-  if (mObservers) {
-    PRUint32 count;
-    rv = mObservers->Count(&count);
-    if (NS_FAILED(rv)) return rv;
-
-    for (PRInt32 i = 0; i < PRInt32(count); ++i) {
-      nsIRDFObserver* observer = NS_STATIC_CAST(nsIRDFObserver*, mObservers->ElementAt(i));
-
-      NS_ASSERTION(observer != nsnull, "null ptr");
-      if (! observer)
-        continue;
-
-      rv = observer->EndUpdateBatch(this);
-      NS_RELEASE(observer);
-    }
-  }
-  return rv;
 }
 
 //----------------------------------------------------------------------

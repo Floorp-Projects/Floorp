@@ -986,3 +986,19 @@ LocalSearchDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 {
 	return(NS_ERROR_NOT_IMPLEMENTED);
 }
+
+
+
+NS_IMETHODIMP
+LocalSearchDataSource::BeginUpdateBatch()
+{
+	return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+LocalSearchDataSource::EndUpdateBatch()
+{
+	return NS_OK;
+}

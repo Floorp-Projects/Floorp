@@ -3395,9 +3395,9 @@ nsBookmarksService::ImportSystemBookmarks(nsIRDFResource* aParentFolder)
 
     BookmarkParser parser;
     parser.Init(ieFavoritesFile, mInner);
-    BeginUpdateBatch(this);
+    BeginUpdateBatch();
     parser.Parse(aParentFolder, kNC_Bookmark);
-    EndUpdateBatch(this);
+    EndUpdateBatch();
 #endif
 
     return NS_OK;
@@ -4526,9 +4526,9 @@ nsBookmarksService::ReadFavorites()
     {
         BookmarkParser parser;
         parser.Init(ieFavoritesFile, mInner);
-        BeginUpdateBatch(this);
+        BeginUpdateBatch();
         parser.Parse(kNC_IEFavoritesRoot, kNC_IEFavorite);
-        EndUpdateBatch(this);
+        EndUpdateBatch();
             
         nsCOMPtr<nsIRDFLiteral> ieTitleLiteral;
         rv = gRDF->GetLiteral(ieTitle.get(), getter_AddRefs(ieTitleLiteral));
@@ -4703,9 +4703,9 @@ nsBookmarksService::LoadBookmarks()
             parser.ParserFoundIEFavoritesRoot(&foundIERoot);
         }
 
-        BeginUpdateBatch(this);
+        BeginUpdateBatch();
         parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
-        EndUpdateBatch(this);
+        EndUpdateBatch();
         mBookmarksAvailable = PR_TRUE;
         
         PRBool foundPTFolder = PR_FALSE;
@@ -5536,13 +5536,13 @@ nsBookmarksService::OnMove(nsIRDFDataSource* aDataSource,
 }
 
 NS_IMETHODIMP
-nsBookmarksService::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
+nsBookmarksService::OnBeginUpdateBatch(nsIRDFDataSource* aDataSource)
 {
     if (mUpdateBatchNest++ == 0)
     {
         PRInt32 count = mObservers.Count();
         for (PRInt32 i = 0; i < count; ++i) {
-            (void) mObservers[i]->BeginUpdateBatch(aDataSource);
+            (void) mObservers[i]->OnBeginUpdateBatch(this);
         }
     }
 
@@ -5550,7 +5550,7 @@ nsBookmarksService::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
 }
 
 NS_IMETHODIMP
-nsBookmarksService::EndUpdateBatch(nsIRDFDataSource* aDataSource)
+nsBookmarksService::OnEndUpdateBatch(nsIRDFDataSource* aDataSource)
 {
     if (mUpdateBatchNest > 0)
     {
@@ -5561,7 +5561,7 @@ nsBookmarksService::EndUpdateBatch(nsIRDFDataSource* aDataSource)
     {
         PRInt32 count = mObservers.Count();
         for (PRInt32 i = 0; i < count; ++i) {
-            (void) mObservers[i]->EndUpdateBatch(aDataSource);
+            (void) mObservers[i]->OnEndUpdateBatch(this);
         }
     }
 

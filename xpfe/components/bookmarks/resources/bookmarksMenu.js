@@ -424,10 +424,8 @@ var BookmarksMenuDNDObserver = {
       menuTarget.removeChild(menuTarget.lastChild.previousSibling);
     }
 
-    // disabling ctrl-DND for now bookmarks are not cloned
     if (aDragSession.dragAction & kCopyAction)
-      SOUND.beep();
-    //BookmarksUtils.insertSelection("drag", selection, selTarget, true);
+      BookmarksUtils.insertSelection("drag", selection, selTarget);
     else
       BookmarksUtils.moveSelection("drag", selection, selTarget);
 
@@ -788,8 +786,13 @@ var BookmarksToolbarRDFObserver =
   },
   onChange: function (aDataSource, aSource, aProperty, aOldTarget, aNewTarget) {},
   onMove: function (aDataSource, aOldSource, aNewSource, aProperty, aTarget) {},
-  beginUpdateBatch: function (aDataSource) {},
-  endUpdateBatch:   function (aDataSource) {},
+  onBeginUpdateBatch: function (aDataSource) {},
+  onEndUpdateBatch:   function (aDataSource) {
+    if (this._overflowTimerInEffect)
+      return;
+    this._overflowTimerInEffect = true;
+    setTimeout(BookmarksToolbar.resizeFunc, 0);
+  },
 
   _overflowTimerInEffect: false,
   setOverflowTimeout: function (aSource, aProperty)

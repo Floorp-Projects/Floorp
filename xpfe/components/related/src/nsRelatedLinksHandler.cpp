@@ -974,3 +974,19 @@ RelatedLinksHandlerImpl::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
 {
 	return mInner->DoCommand(aSources, aCommand, aArguments);
 }
+
+
+
+NS_IMETHODIMP
+RelatedLinksHandlerImpl::BeginUpdateBatch()
+{
+        return mInner->BeginUpdateBatch();
+}
+
+
+
+NS_IMETHODIMP
+RelatedLinksHandlerImpl::EndUpdateBatch()
+{
+        return mInner->EndUpdateBatch();
+}

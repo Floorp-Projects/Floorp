@@ -335,7 +335,8 @@ nsTreeBodyFrame::nsTreeBodyFrame(nsIPresShell* aPresShell)
  mColumns(nsnull), mScrollbar(nsnull), mTopRowIndex(0), mRowHeight(0), mIndentation(0), mStringWidth(-1),
  mFocused(PR_FALSE), mColumnsDirty(PR_TRUE), mDropAllowed(PR_FALSE), mHasFixedRowCount(PR_FALSE),
  mVerticalOverflow(PR_FALSE), mImageGuard(PR_FALSE), mReflowCallbackPosted(PR_FALSE),
- mDropRow(-1), mDropOrient(-1), mScrollLines(0), mTimer(nsnull), mValueArray(~PRInt32(0))
+ mDropRow(-1), mDropOrient(-1), mScrollLines(0), mTimer(nsnull), mValueArray(~PRInt32(0)),
+ mUpdateBatchNest(0), mCountBeforeUpdate(-1)
 {
   NS_NewISupportsArray(getter_AddRefs(mScratchArray));
 }
@@ -886,6 +887,8 @@ NS_IMETHODIMP nsTreeBodyFrame::GetPageCount(PRInt32 *_retval)
 
 NS_IMETHODIMP nsTreeBodyFrame::Invalidate()
 {
+  if (mUpdateBatchNest)
+    return NS_OK;
   if (!mRect.IsEmpty()) {
     nsLeafBoxFrame::Invalidate(mPresContext, mRect, PR_FALSE);
   }
@@ -894,6 +897,8 @@ NS_IMETHODIMP nsTreeBodyFrame::Invalidate()
 
 NS_IMETHODIMP nsTreeBodyFrame::InvalidateColumn(const PRUnichar *aColID)
 {
+  if (mUpdateBatchNest)
+    return NS_OK;
   nscoord currX = mInnerBox.x;
   for (nsTreeColumn* currCol = mColumns; currCol && currX < mInnerBox.x+mInnerBox.width; 
        currCol = currCol->GetNext()) {
@@ -910,6 +915,8 @@ NS_IMETHODIMP nsTreeBodyFrame::InvalidateColumn(const PRUnichar *aColID)
 
 NS_IMETHODIMP nsTreeBodyFrame::InvalidateRow(PRInt32 aIndex)
 {
+  if (mUpdateBatchNest)
+    return NS_OK;
   if (aIndex < mTopRowIndex || aIndex > mTopRowIndex + mPageCount + 1)
     return NS_OK;
 
@@ -921,6 +928,8 @@ NS_IMETHODIMP nsTreeBodyFrame::InvalidateRow(PRInt32 aIndex)
 
 NS_IMETHODIMP nsTreeBodyFrame::InvalidateCell(PRInt32 aIndex, const PRUnichar *aColID)
 {
+  if (mUpdateBatchNest)
+    return NS_OK;
   if (aIndex < mTopRowIndex || aIndex > mTopRowIndex + mPageCount + 1)
     return NS_OK;
 
@@ -944,6 +953,8 @@ NS_IMETHODIMP nsTreeBodyFrame::InvalidateCell(PRInt32 aIndex, const PRUnichar *a
 
 NS_IMETHODIMP nsTreeBodyFrame::InvalidatePrimaryCell(PRInt32 aIndex)
 {
+  if (mUpdateBatchNest)
+    return NS_OK;
   if (aIndex < mTopRowIndex || aIndex > mTopRowIndex + mPageCount + 1)
     return NS_OK;
 
@@ -970,6 +981,8 @@ NS_IMETHODIMP nsTreeBodyFrame::InvalidatePrimaryCell(PRInt32 aIndex)
 
 NS_IMETHODIMP nsTreeBodyFrame::InvalidateRange(PRInt32 aStart, PRInt32 aEnd)
 {
+  if (mUpdateBatchNest)
+    return NS_OK;
   if (aStart == aEnd)
     return InvalidateRow(aStart);
 
@@ -1058,6 +1071,8 @@ nsresult nsTreeBodyFrame::CheckVerticalOverflow()
 
 NS_IMETHODIMP nsTreeBodyFrame::InvalidateScrollbar()
 {
+  if (mUpdateBatchNest)
+    return NS_OK;
   if (!EnsureScrollbar() || !mView)
     return NS_OK;
 
@@ -1695,6 +1710,9 @@ nsTreeBodyFrame::CreateTimer(const nsILookAndFeel::nsMetricID aID,
 
 NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
 {
+  if (mUpdateBatchNest)
+    return NS_OK;
+
   if (aCount == 0 || !mView)
     return NS_OK; // Nothing to do.
 
@@ -1738,9 +1756,10 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
     }
     else if (mTopRowIndex >= aIndex) {
       // This is a full-blown invalidate.
-      if (mTopRowIndex + mPageCount > rowCount - 1)
+      if (mTopRowIndex + mPageCount > rowCount - 1) {
         mTopRowIndex = PR_MAX(0, rowCount - 1 - mPageCount);
-      UpdateScrollbar();
+        UpdateScrollbar();
+      }
       Invalidate();
     }
   }
@@ -1748,6 +1767,40 @@ NS_IMETHODIMP nsTreeBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
   InvalidateScrollbar();
   CheckVerticalOverflow();
   MarkDirtyIfSelect();
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTreeBodyFrame::BeginUpdateBatch()
+{
+  if (mUpdateBatchNest++ == 0) {
+    if (mView) {
+      mView->GetRowCount(&mCountBeforeUpdate);
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTreeBodyFrame::EndUpdateBatch()
+{
+  NS_ASSERTION(mUpdateBatchNest > 0, "badly nested update batch");
+
+  if (--mUpdateBatchNest == 0) {
+    if (mView) {
+      Invalidate();
+      PRInt32 countAfterUpdate;
+      mView->GetRowCount(&countAfterUpdate);
+      if (mCountBeforeUpdate != countAfterUpdate) {
+        if (mTopRowIndex + mPageCount > countAfterUpdate - 1) {
+          mTopRowIndex = PR_MAX(0, countAfterUpdate - 1 - mPageCount);
+          UpdateScrollbar();
+        }
+        InvalidateScrollbar();
+        CheckVerticalOverflow();
+      }
+    }
+  }
 
   return NS_OK;
 }

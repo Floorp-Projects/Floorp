@@ -1343,6 +1343,24 @@ CompositeDataSourceImpl::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSource
     return(NS_OK);
 }
 
+NS_IMETHODIMP
+CompositeDataSourceImpl::BeginUpdateBatch()
+{
+    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+        mDataSources[i]->BeginUpdateBatch();
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+CompositeDataSourceImpl::EndUpdateBatch()
+{
+    for (PRInt32 i = mDataSources.Count() - 1; i >= 0; --i) {
+        mDataSources[i]->EndUpdateBatch();
+    }
+    return NS_OK;
+}
+
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFCompositeDataSource methods
 // XXX rvg We should make this take an additional argument specifying where
@@ -1443,7 +1461,6 @@ CompositeDataSourceImpl::OnAssert(nsIRDFDataSource* aDataSource,
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         mObservers[i]->OnAssert(this, aSource, aProperty, aTarget);
-        // XXX ignore return value?
     }
     return NS_OK;
 }
@@ -1475,7 +1492,6 @@ CompositeDataSourceImpl::OnUnassert(nsIRDFDataSource* aDataSource,
 
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         mObservers[i]->OnUnassert(this, aSource, aProperty, aTarget);
-        // XXX ignore return value?
     }
     return NS_OK;
 }
@@ -1497,7 +1513,6 @@ CompositeDataSourceImpl::OnChange(nsIRDFDataSource* aDataSource,
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         mObservers[i]->OnChange(this, aSource, aProperty,
                                 aOldTarget, aNewTarget);
-        // XXX ignore return value?
     }
     return NS_OK;
 }
@@ -1519,20 +1534,17 @@ CompositeDataSourceImpl::OnMove(nsIRDFDataSource* aDataSource,
     for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
         mObservers[i]->OnMove(this, aOldSource, aNewSource,
                               aProperty, aTarget);
-        // XXX ignore return value?
     }
     return NS_OK;
 }
 
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
+CompositeDataSourceImpl::OnBeginUpdateBatch(nsIRDFDataSource* aDataSource)
 {
-    PRInt32 nest = mUpdateBatchNest++;
-    if (nest == 0) {
+    if (mUpdateBatchNest++ == 0) {
         for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-            mObservers[i]->BeginUpdateBatch(this);
-            // XXX ignore return value?
+            mObservers[i]->OnBeginUpdateBatch(this);
         }
     }
     return NS_OK;
@@ -1540,18 +1552,12 @@ CompositeDataSourceImpl::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
 
 
 NS_IMETHODIMP
-CompositeDataSourceImpl::EndUpdateBatch(nsIRDFDataSource* aDataSource)
+CompositeDataSourceImpl::OnEndUpdateBatch(nsIRDFDataSource* aDataSource)
 {
-    PRInt32 nest = --mUpdateBatchNest;
-    if (nest < 0) {
-        NS_ERROR("badly nested update batch");
-        mUpdateBatchNest = 0;
-        return NS_ERROR_UNEXPECTED;
-    }
-    if (nest == 0) {
+    NS_ASSERTION(mUpdateBatchNest > 0, "badly nested update batch");
+    if (--mUpdateBatchNest == 0) {
         for (PRInt32 i = mObservers.Count() - 1; i >= 0; --i) {
-            mObservers[i]->EndUpdateBatch(this);
-            // XXX ignore return value?
+            mObservers[i]->OnEndUpdateBatch(this);
         }
     }
     return NS_OK;

@@ -57,17 +57,19 @@
 <!ENTITY command.moveBookmark.accesskey "M">
 <!ENTITY command.addBookmark.label     "Add...">
 <!ENTITY command.manageBookmarks.label "Manage">
+<!ENTITY command.sortFolder.label      "Sort Folder...">
+<!ENTITY command.sortFolder.accesskey  "S">
+<!ENTITY edit.sortFolder.keybinding    "S">
+<!ENTITY command.sortFolderByName.label "Sort Folder by Name">
+<!ENTITY command.sortFolderByName.accesskey "N">
+<!ENTITY edit.sortFolderByName.keybinding   "N">
 
 <!ENTITY menuitem.view.command.toolbar.label        "Toolbar">
 <!ENTITY menuitem.view.command.toolbar.accesskey    "t">
-<!ENTITY menuitem.view.unsorted.label               "Unsorted">
-<!ENTITY menuitem.view.unsorted.accesskey           "u">
-<!ENTITY menuitem.view.ascending.label              "A > Z Sort Order">
-<!ENTITY menuitem.view.ascending.accesskey          "a">
-<!ENTITY menuitem.view.descending.label             "Z > A Sort Order">
-<!ENTITY menuitem.view.descending.accesskey         "z">
+<!ENTITY menuitem.view.command.searchbar.label      "Search bar">
+<!ENTITY menuitem.view.command.searchbar.accesskey  "S">
 <!ENTITY menuitem.view.show_columns.label           "Show columns">
-<!ENTITY menuitem.view.show_columns.accesskey       "S">
+<!ENTITY menuitem.view.show_columns.accesskey       "c">
 <!ENTITY menuitem.newbookmarkfolder.label           "Set as New Bookmark Folder">
 <!ENTITY menuitem.newbookmarkfolder.accesskey       "b">
 <!ENTITY menuitem.newinternetsearchfolder.label     "Set as New Internet Search Folder">
@@ -77,18 +79,25 @@
 
 <!ENTITY treecol.name.label             "Name">
 <!ENTITY treecol.name.accesskey         "n">
+<!ENTITY treecol.name.tooltip           "Click to sort by name">
 <!ENTITY treecol.url.label              "Location">
 <!ENTITY treecol.url.accesskey          "l">
+<!ENTITY treecol.url.tooltip            "Click to sort by location">
 <!ENTITY treecol.shortcut.label         "Keyword">
 <!ENTITY treecol.shortcut.accesskey     "k">
-<!ENTITY treecol.addedon.label          "Added">
-<!ENTITY treecol.addedon.accesskey      "a">
-<!ENTITY treecol.lastmod.label          "Last Modified">
-<!ENTITY treecol.lastmod.accesskey      "m">
-<!ENTITY treecol.lastvisit.label        "Last Visited">
-<!ENTITY treecol.lastvisit.accesskey    "b">
+<!ENTITY treecol.shortcut.tooltip       "Click to sort by keyword">
 <!ENTITY treecol.description.label      "Description">
 <!ENTITY treecol.description.accesskey  "d">
+<!ENTITY treecol.description.tooltip    "Click to sort by description">
+<!ENTITY treecol.addedon.label          "Added">
+<!ENTITY treecol.addedon.accesskey      "a">
+<!ENTITY treecol.addedon.tooltip        "Click to sort by added">
+<!ENTITY treecol.lastmod.label          "Last Modified">
+<!ENTITY treecol.lastmod.accesskey      "m">
+<!ENTITY treecol.lastmod.tooltip        "Click to sort by last modified">
+<!ENTITY treecol.lastvisit.label        "Last Visited">
+<!ENTITY treecol.lastvisit.accesskey    "b">
+<!ENTITY treecol.lastvisit.tooltip      "Click to sort by last visit">
 
 <!ENTITY bookmarksWindowTitle.label     "Bookmark Manager">
 

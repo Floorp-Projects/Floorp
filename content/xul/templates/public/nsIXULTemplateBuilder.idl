@@ -22,6 +22,7 @@
  * Contributor(s):
  *  Chris Waterson <waterson@netscape.com>
  *  Ben Goodger <ben@netscape.com>
+ *  Jan Varga <varga@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -42,6 +43,8 @@
 #include "nsISupports.idl"
 #include "nsIRDFCompositeDataSource.idl"
 #include "nsIRDFResource.idl"
+
+interface nsIXULBuilderListener;
 
 [ptr] native nsIContent_ptr(nsIContent);
 
@@ -77,6 +80,17 @@ interface nsIXULTemplateBuilder : nsISupports
      * built.
      */
     [noscript] void createContents(in nsIContent_ptr aElement);
+
+    /**
+     * Add a listener to this template builder. The template builder
+     * holds a strong reference to the listener.
+     */
+    void addListener(in nsIXULBuilderListener aListener);
+
+    /**
+     * Remove a listener from this template builder.
+     */
+    void removeListener(in nsIXULBuilderListener aListener);
 };
 
 /**

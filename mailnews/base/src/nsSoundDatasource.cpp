@@ -582,3 +582,15 @@ nsSoundDatasource::RemoveObserver(nsIRDFObserver *n)
 	mObservers->RemoveElement(n);
 	return NS_OK;
 }
+
+NS_IMETHODIMP
+nsSoundDatasource::BeginUpdateBatch()
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSoundDatasource::EndUpdateBatch()
+{
+  return NS_OK;
+}

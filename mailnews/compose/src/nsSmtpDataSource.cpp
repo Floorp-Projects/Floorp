@@ -422,3 +422,15 @@ NS_IMETHODIMP nsSmtpDataSource::GetAllCmds(nsIRDFResource *aSource, nsISimpleEnu
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+/* void beginUpdateBatch (); */
+NS_IMETHODIMP nsSmtpDataSource::BeginUpdateBatch()
+{
+    return NS_OK;
+}
+
+/* void endUpdateBatch (); */
+NS_IMETHODIMP nsSmtpDataSource::EndUpdateBatch()
+{
+    return NS_OK;
+}

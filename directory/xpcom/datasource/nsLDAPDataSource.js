@@ -859,29 +859,29 @@ nsLDAPDataSource.prototype = {
         }
     },
 
-    beginUpdateBatch: function()
+    onBeginUpdateBatch: function()
     {
         if (DEBUG) {
-            dump("BeginUpdateBatch() called\n\n");
+            dump("onBeginUpdateBatch() called\n\n");
         }
 
         var iter = new ArrayEnumerator(this.mObserverList);
         var nextObserver;
         while ((nextObserver = iter.getNext()) != null) {
-            nextObserver.beginUpdateBatch(this);
+            nextObserver.onBeginUpdateBatch(this);
         }
     },
 
-    endUpdateBatch: function()
+    onEndUpdateBatch: function()
     {
         if (DEBUG) {
-            dump("EndUpdateBatch() called\n\n");
+            dump("onEndUpdateBatch() called\n\n");
         }
 
         var iter = new ArrayEnumerator(this.mObserverList);
         var nextObserver;
         while ((nextObserver = iter.getNext()) != null) {
-            nextObserver.endUpdateBatch(this);
+            nextObserver.onEndUpdateBatch(this);
         }
     },
 

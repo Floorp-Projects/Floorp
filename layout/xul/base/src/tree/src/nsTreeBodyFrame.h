@@ -526,6 +526,8 @@ protected: // Data Members
 
   PRPackedBool mVerticalOverflow;
 
+  PRInt16 mUpdateBatchNest;
+
   // A guard that prevents us from recursive painting.
   PRPackedBool mImageGuard;
 
@@ -547,5 +549,7 @@ protected: // Data Members
 
   // A value array used to keep track of all spring loaded folders.
   nsValueArray mValueArray;
+
+  PRInt32 mCountBeforeUpdate;
 
 }; // class nsTreeBodyFrame

@@ -216,10 +216,6 @@ var PrivacyPanel = {
       }
       dlMgr.endBatchUpdate();  
       
-      var rds = ds.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-      if (rds)
-        rds.Flush();
-      
       return true;
     },
     

@@ -149,16 +149,18 @@ function nsTreeController_delete()
     return false;      
   
   var datasource = this.tree.database;
-  var dsEnum = datasource.GetDataSources(); 
+  var dsEnum = datasource.GetDataSources();
   dsEnum.getNext();
-  var ds = dsEnum.getNext();
+  var ds = dsEnum.getNext()
+                 .QueryInterface(Components.interfaces.nsIRDFDataSource);
 
   var count = this.treeSelection.count;
   
   // XXX 9 is a random number, just looking for a sweetspot
   // don't want to rebuild tree content for just a few items
-  if (count > 9)
-    ds.QueryInterface(Components.interfaces.nsIBrowserHistory).startBatchUpdate();
+  if (count > 9) {
+    ds.beginUpdateBatch();
+  }
 
   var min = new Object(); 
   var max = new Object();
@@ -186,17 +188,16 @@ function nsTreeController_delete()
       
       // otherwise remove the parent/child assertion then
       var containment = gRDF.GetResource("http://home.netscape.com/NC-rdf#child");
-      ds.QueryInterface(Components.interfaces.nsIRDFDataSource).Unassert(parentIDRes, containment, IDRes);
+      ds.Unassert(parentIDRes, containment, IDRes);
       dirty = true;
     }
   }
 
-  if (dirty) {    
-    if (count > 9) {
-      ds.QueryInterface(Components.interfaces.nsIBrowserHistory).endBatchUpdate();
-      this.tree.builder.rebuild();
-    }
+  if (count > 9) {
+    ds.endUpdateBatch();
+  }
 
+  if (dirty) {    
     try {
       var remote = datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
       remote.Flush();

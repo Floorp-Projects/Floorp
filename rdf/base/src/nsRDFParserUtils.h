@@ -45,11 +45,6 @@
 #ifndef nsRDFParserUtils_h__
 #define nsRDFParserUtils_h__
 
-#include "nscore.h"
-#include "jspubtd.h"
-class nsIURI;
-class nsString;
-
 class nsRDFParserUtils {
 public:
     static PRUnichar
@@ -64,6 +59,4 @@ public:
                             nsString& aValue);
 };
 
-
 #endif // nsRDFPasrserUtils_h__
-

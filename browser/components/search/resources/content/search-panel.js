@@ -110,11 +110,11 @@ var RDF_observer =
   {
   },
 
-  beginUpdateBatch : function(ds)
+  onBeginUpdateBatch : function(ds)
   {
   },
 
-  endUpdateBatch   : function(ds)
+  onEndUpdateBatch   : function(ds)
   {
   }
 }

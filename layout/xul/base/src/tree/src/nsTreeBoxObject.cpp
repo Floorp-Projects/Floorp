@@ -424,6 +424,22 @@ NS_IMETHODIMP nsTreeBoxObject::RowCountChanged(PRInt32 aIndex, PRInt32 aDelta)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsTreeBoxObject::BeginUpdateBatch()
+{
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->BeginUpdateBatch();
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsTreeBoxObject::EndUpdateBatch()
+{
+  nsITreeBoxObject* body = GetTreeBody();
+  if (body)
+    return body->EndUpdateBatch();
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsTreeBoxObject::OnDragEnter(nsIDOMEvent* inEvent)
 {
   nsITreeBoxObject* body = GetTreeBody();

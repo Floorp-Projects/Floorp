@@ -1993,3 +1993,12 @@ NS_IMETHODIMP nsCharsetMenu::DoCommand(nsISupportsArray* aSources,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsCharsetMenu::BeginUpdateBatch()
+{
+  return mInner->BeginUpdateBatch();
+}
+
+NS_IMETHODIMP nsCharsetMenu::EndUpdateBatch()
+{
+  return mInner->EndUpdateBatch();
+}

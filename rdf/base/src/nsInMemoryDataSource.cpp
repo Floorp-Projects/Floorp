@@ -62,6 +62,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFInMemoryDataSource.h"
+#include "nsIRDFPropagatableDataSource.h"
 #include "nsIRDFPurgeableDataSource.h"
 #include "nsIRDFService.h"
 #include "nsIServiceManager.h"
@@ -283,6 +284,7 @@ class InMemoryResourceEnumeratorImpl;
 
 class InMemoryDataSource : public nsIRDFDataSource,
                            public nsIRDFInMemoryDataSource,
+                           public nsIRDFPropagatableDataSource,
                            public nsIRDFPurgeableDataSource
 {
 protected:
@@ -338,6 +340,9 @@ public:
 
     // nsIRDFInMemoryDataSource methods
     NS_DECL_NSIRDFINMEMORYDATASOURCE
+
+    // nsIRDFPropagatableDataSource methods
+    NS_DECL_NSIRDFPROPAGATABLEDATASOURCE
 
     // nsIRDFPurgeableDataSource methods
     NS_DECL_NSIRDFPURGEABLEDATASOURCE
@@ -396,6 +401,7 @@ public:
     // This datasource's monitor object.
     PRLock* mLock;
 #endif
+    PRBool  mPropagateChanges;
 };
 
 //----------------------------------------------------------------------
@@ -885,6 +891,7 @@ InMemoryDataSource::InMemoryDataSource(nsISupports* aOuter)
 #ifdef MOZ_THREADSAFE_RDF
     mLock = nsnull;
 #endif
+    mPropagateChanges = PR_TRUE;
 }
 
 
@@ -981,6 +988,9 @@ InMemoryDataSource::AggregatedQueryInterface(REFNSIID aIID, void** aResult)
     }
     else if (aIID.Equals(NS_GET_IID(nsIRDFInMemoryDataSource))) {
         *aResult = NS_STATIC_CAST(nsIRDFInMemoryDataSource*, this);
+    }
+    else if (aIID.Equals(NS_GET_IID(nsIRDFPropagatableDataSource))) {
+        *aResult = NS_STATIC_CAST(nsIRDFPropagatableDataSource*, this);
     }
     else if (aIID.Equals(NS_GET_IID(nsIRDFPurgeableDataSource))) {
         *aResult = NS_STATIC_CAST(nsIRDFPurgeableDataSource*, this);
@@ -1389,7 +1399,7 @@ InMemoryDataSource::Assert(nsIRDFResource* aSource,
     }
 
     // notify observers
-    for (PRInt32 i = (PRInt32)mNumObservers - 1; i >= 0; --i) {
+    for (PRInt32 i = (PRInt32)mNumObservers - 1; mPropagateChanges && i >= 0; --i) {
         nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
@@ -1541,7 +1551,7 @@ InMemoryDataSource::Unassert(nsIRDFResource* aSource,
     }
 
     // Notify the world
-    for (PRInt32 i = PRInt32(mNumObservers) - 1; i >= 0; --i) {
+    for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
         nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
@@ -1595,7 +1605,7 @@ InMemoryDataSource::Change(nsIRDFResource* aSource,
     }
 
     // Notify the world
-    for (PRInt32 i = PRInt32(mNumObservers) - 1; i >= 0; --i) {
+    for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
         nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
@@ -1649,7 +1659,7 @@ InMemoryDataSource::Move(nsIRDFResource* aOldSource,
     }
 
     // Notify the world
-    for (PRInt32 i = PRInt32(mNumObservers) - 1; i >= 0; --i) {
+    for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
         nsIRDFObserver* obs = mObservers[i];
 
         // XXX this should never happen, but it does, and we can't figure out why.
@@ -1843,6 +1853,27 @@ InMemoryDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
     return NS_OK;
 }
 
+NS_IMETHODIMP
+InMemoryDataSource::BeginUpdateBatch()
+{
+    for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
+        nsIRDFObserver* obs = mObservers[i];
+        obs->OnBeginUpdateBatch(this);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InMemoryDataSource::EndUpdateBatch()
+{
+    for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
+        nsIRDFObserver* obs = mObservers[i];
+        obs->OnEndUpdateBatch(this);
+    }
+    return NS_OK;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFInMemoryDataSource methods
@@ -1896,6 +1927,23 @@ InMemoryDataSource::EnsureFastContainment(nsIRDFResource* aSource)
         first = nextRef;
     }
     return(NS_OK);
+}
+
+
+////////////////////////////////////////////////////////////////////////
+// nsIRDFPropagatableDataSource methods
+NS_IMETHODIMP
+InMemoryDataSource::GetPropagateChanges(PRBool* aPropagateChanges)
+{
+    *aPropagateChanges = mPropagateChanges;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InMemoryDataSource::SetPropagateChanges(PRBool aPropagateChanges)
+{
+    mPropagateChanges = aPropagateChanges;
+    return NS_OK;
 }
 
 
@@ -1999,7 +2047,7 @@ InMemoryDataSource::Sweep()
 #endif
         if (!(as->mHashEntry))
         {
-            for (PRInt32 i = PRInt32(mNumObservers) - 1; i >= 0; --i) {
+            for (PRInt32 i = PRInt32(mNumObservers) - 1; mPropagateChanges && i >= 0; --i) {
                 nsIRDFObserver* obs = mObservers[i];
                 // XXXbz other loops over mObservers null-check |obs| here!
                 obs->OnUnassert(this, as->mSource, as->u.as.mProperty, as->u.as.mTarget);

@@ -166,19 +166,13 @@ var downloadViewController = {
       gDownloadManager.startBatchUpdate();
       
       // Notify the datasource that we're about to begin a batch operation
-      var observer = gDownloadHistoryView.builder.QueryInterface(Components.interfaces.nsIRDFObserver);
-      var ds = gDownloadHistoryView.database;
-      observer.beginUpdateBatch(ds);
-      
+      gDownloadManager.datasource.beginUpdateBatch();
       for (i = 0; i <= selectedItems.length - 1; ++i) {
         gDownloadManager.removeDownload(selectedItems[i].id);
       }
+      gDownloadManager.datasource.endUpdateBatch();
 
       gDownloadManager.endBatchUpdate();
-      observer.endUpdateBatch(ds);
-      var remote = gDownloadManager.datasource.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-      remote.Flush();
-      gDownloadHistoryView.builder.rebuild();
       var rowCount = gDownloadHistoryView.getRowCount();
       if (selectedIndex > ( rowCount- 1))
         selectedIndex = rowCount - 1;

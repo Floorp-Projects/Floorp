@@ -287,6 +287,16 @@ nsChromeUIDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
   return mComposite->DoCommand(aSources, aCommand, aArguments);
 }
 
+NS_IMETHODIMP
+nsChromeUIDataSource::BeginUpdateBatch() {
+  return mComposite->BeginUpdateBatch();
+}
+
+NS_IMETHODIMP
+nsChromeUIDataSource::EndUpdateBatch() {
+  return mComposite->EndUpdateBatch();
+}
+                                                                               
 //////////////////////////////////////////////////////////////////////
 
 NS_IMETHODIMP
@@ -299,7 +309,6 @@ nsChromeUIDataSource::OnAssert(nsIRDFDataSource* aDataSource,
 
   for (PRInt32 i = count - 1; i >= 0; --i) {
     mObservers[i]->OnAssert(this, aSource, aProperty, aTarget);
-    // XXX ignore return value?
   }
   return NS_OK;
 }
@@ -313,7 +322,6 @@ nsChromeUIDataSource::OnUnassert(nsIRDFDataSource* aDataSource,
   PRInt32 count = mObservers.Count();
   for (PRInt32 i = count - 1; i >= 0; --i) {
     mObservers[i]->OnUnassert(aDataSource, aSource, aProperty, aTarget);
-    // XXX ignore return value?
   }
   return NS_OK;
 }
@@ -330,7 +338,6 @@ nsChromeUIDataSource::OnChange(nsIRDFDataSource* aDataSource,
 
   for (PRInt32 i = count - 1; i >= 0; --i) {
     mObservers[i]->OnChange(aDataSource, aSource, aProperty, aOldTarget, aNewTarget);
-    // XXX ignore return value?
   }
   return NS_OK;
 }
@@ -347,20 +354,29 @@ nsChromeUIDataSource::OnMove(nsIRDFDataSource* aDataSource,
 
   for (PRInt32 i = count - 1; i >= 0; --i) {
     mObservers[i]->OnMove(aDataSource, aOldSource, aNewSource, aProperty, aTarget);
-    // XXX ignore return value?
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsChromeUIDataSource::BeginUpdateBatch(nsIRDFDataSource* aDataSource)
+nsChromeUIDataSource::OnBeginUpdateBatch(nsIRDFDataSource* aDataSource)
 {
+  PRInt32 count = mObservers.Count();
+
+  for (PRInt32 i = count - 1; i >= 0; --i) {
+    mObservers[i]->OnBeginUpdateBatch(aDataSource);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsChromeUIDataSource::EndUpdateBatch(nsIRDFDataSource* aDataSource)
+nsChromeUIDataSource::OnEndUpdateBatch(nsIRDFDataSource* aDataSource)
 {
+  PRInt32 count = mObservers.Count();
+
+  for (PRInt32 i = count - 1; i >= 0; --i) {
+    mObservers[i]->OnEndUpdateBatch(aDataSource);
+  }
   return NS_OK;
 }
 

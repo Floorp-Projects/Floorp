@@ -286,6 +286,14 @@ public:
                          nsIRDFResource*   aCommand,
                          nsISupportsArray/*<nsIRDFResource>*/* aArguments);
 
+    NS_IMETHOD BeginUpdateBatch() {
+        return mInner->BeginUpdateBatch();
+    }
+
+    NS_IMETHOD EndUpdateBatch() {
+        return mInner->EndUpdateBatch();
+    }
+
     // nsIRDFRemoteDataSource
     NS_DECL_NSIRDFREMOTEDATASOURCE
 

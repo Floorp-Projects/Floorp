@@ -523,3 +523,14 @@ NS_IMETHODIMP nsAbRDFDataSource::DoCommand
     return NS_RDF_NO_VALUE;
 }
 
+NS_IMETHODIMP
+nsAbRDFDataSource::BeginUpdateBatch()
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsAbRDFDataSource::EndUpdateBatch()
+{
+    return NS_OK;
+}

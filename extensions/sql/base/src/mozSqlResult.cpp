@@ -581,6 +581,24 @@ mozSqlResult::DoCommand(nsISupportsArray* aSources,
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+mozSqlResult::BeginUpdateBatch()
+{
+  for (PRInt32 i = 0; i < mObservers.Count(); i++) {
+    mObservers[i]->OnBeginUpdateBatch(this);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+mozSqlResult::EndUpdateBatch()
+{
+  for (PRInt32 i = 0; i < mObservers.Count(); i++) {
+    mObservers[i]->OnEndUpdateBatch(this);
+  }
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP
 mozSqlResult::GetLoaded(PRBool* aResult)

@@ -2344,6 +2344,18 @@ InternetSearchDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSourc
 }
 
 NS_IMETHODIMP
+InternetSearchDataSource::BeginUpdateBatch()
+{
+        return mInner->BeginUpdateBatch();
+}
+
+NS_IMETHODIMP
+InternetSearchDataSource::EndUpdateBatch()
+{
+        return mInner->EndUpdateBatch();
+}
+
+NS_IMETHODIMP
 InternetSearchDataSource::AddSearchEngine(const char *engineURL, const char *iconURL,
 					  const PRUnichar *suggestedTitle, const PRUnichar *suggestedCategory)
 {

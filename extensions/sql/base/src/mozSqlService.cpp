@@ -551,6 +551,18 @@ mozSqlService::DoCommand(nsISupportsArray* aSources,
   return mInner->DoCommand(aSources, aCommand, aArguments);
 }
 
+NS_IMETHODIMP 
+mozSqlService::BeginUpdateBatch()
+{
+  return mInner->BeginUpdateBatch();
+}
+
+NS_IMETHODIMP 
+mozSqlService::EndUpdateBatch()
+{
+  return mInner->EndUpdateBatch();
+}
+
 
 // nsIRDFRemoteDataSource
 NS_IMETHODIMP

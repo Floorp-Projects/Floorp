@@ -1104,6 +1104,22 @@ FileSystemDataSource::DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
 
 
 
+NS_IMETHODIMP
+FileSystemDataSource::BeginUpdateBatch()
+{
+    return NS_OK;
+}
+
+
+
+NS_IMETHODIMP
+FileSystemDataSource::EndUpdateBatch()
+{
+    return NS_OK;
+}
+
+
+
 nsresult
 NS_NewRDFFileSystemDataSource(nsIRDFDataSource **result)
 {

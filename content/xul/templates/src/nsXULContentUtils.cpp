@@ -226,6 +226,7 @@ nsXULContentUtils::GetElementResource(nsIContent* aElement, nsIRDFResource** aRe
 nsresult
 nsXULContentUtils::GetElementRefResource(nsIContent* aElement, nsIRDFResource** aResult)
 {
+    *aResult = nsnull;
     // Perform a reverse mapping from an element in the content model
     // to an RDF resource. Check for a "ref" attribute first, then
     // fallback on an "id" attribute.

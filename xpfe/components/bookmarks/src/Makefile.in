@@ -45,6 +45,7 @@ REQUIRES	= xpcom \
 		  windowwatcher \
 		  unicharutil \
 		  txmgr \
+		  locale \
 		  $(NULL)
 
 CPPSRCS		= nsBookmarksService.cpp

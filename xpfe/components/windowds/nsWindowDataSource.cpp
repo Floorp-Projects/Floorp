@@ -575,3 +575,18 @@ NS_IMETHODIMP nsWindowDataSource::HasArcOut(nsIRDFResource *aSource, nsIRDFResou
     return NS_OK;
 }
 
+/* void beginUpdateBatch (); */
+NS_IMETHODIMP nsWindowDataSource::BeginUpdateBatch()
+{
+    if (mInner)
+        return mInner->BeginUpdateBatch();
+    return NS_OK;
+}
+                                                                                
+/* void endUpdateBatch (); */
+NS_IMETHODIMP nsWindowDataSource::EndUpdateBatch()
+{
+    if (mInner)
+        return mInner->EndUpdateBatch();
+    return NS_OK;
+}
