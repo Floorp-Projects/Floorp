@@ -1214,6 +1214,11 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 #undef TRACE_EVENTS_PAINT
 #undef TRACE_EVENTS_CROSSING
 
+#if defined(DEBUG_mcafee)
+#define TRACE_EVENTS 1
+#define TRACE_EVENTS_MOTION 1
+#endif
+
 #ifdef DEBUG
 void
 nsWidget::DebugPrintEvent(nsGUIEvent &   aEvent,
@@ -1374,7 +1379,6 @@ nsWidget::OnDragBeginSignal(GdkDragContext * aGdkDragContext)
 nsWidget::OnDragDropSignal(GdkDragContext *aDragContext)
 {
   nsMouseEvent    event;
-  nsEventStatus status;
 
   event.message = NS_DRAGDROP_DROP;
   event.eventStructType = NS_DRAGDROP_EVENT;
