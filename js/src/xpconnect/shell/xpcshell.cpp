@@ -18,16 +18,6 @@
 
 /* XPConnect JavaScript interactive shell. */
 
-#if 1   // FIXME - fur, Incompatible with new interactive API
-
-int
-main(int argc, char **argv)
-{
-    return 0;
-}
-
-#else
-
 #include <stdio.h>
 #include "nsIXPConnect.h"
 #include "nsIXPCScriptable.h"
@@ -291,107 +281,186 @@ static JSClass global_class = {
 
 /***************************************************************************/
 
+typedef enum JSShellErrNum {
+#define MSG_DEF(name, number, count, exception, format) \
+    name = number,
+#include "jsshell.msg"
+#undef MSG_DEF
+    JSShellErr_Limit
+#undef MSGDEF
+} JSShellErrNum;
+
+JSErrorFormatString jsShell_ErrorFormatString[JSErr_Limit] = {
+#if JS_HAS_DFLT_MSG_STRINGS
+#define MSG_DEF(name, number, count, exception, format) \
+    { format, count } ,
+#else
+#define MSG_DEF(name, number, count, exception, format) \
+    { NULL, count } ,
+#endif
+#include "jsshell.msg"
+#undef MSG_DEF
+};
+
+static const JSErrorFormatString *
+my_GetErrorMessage(void *userRef, const char *locale, const uintN errorNumber)
+{
+    if ((errorNumber > 0) && (errorNumber < JSShellErr_Limit))
+	    return &jsShell_ErrorFormatString[errorNumber];
+	else
+	    return NULL;
+}
+
+#ifdef EDITLINE
+extern char     *readline(const char *prompt);
+extern void     add_history(char *line);
+#endif
+
+static JSBool
+GetLine(JSContext *cx, char *bufp, FILE *fh, const char *prompt) {
+#ifdef EDITLINE
+    /*
+     * Use readline only if fh is stdin, because there's no way to specify
+     * another handle.  Are other filehandles interactive?
+     */
+    if (fh == stdin) {
+        char *linep;
+        if ((linep = readline(prompt)) == NULL)
+            return JS_FALSE;
+        if (strlen(linep) > 0)
+            add_history(linep);
+        strcpy(bufp, linep);
+        JS_free(cx, linep);
+        bufp += strlen(bufp);
+        *bufp++ = '\n';
+        *bufp = '\0';
+    } else
+#endif
+    {
+        char line[256];
+        fprintf(gOutFile, prompt);
+        if (fgets(line, 256, fh) == NULL)
+            return JS_FALSE;
+        strcpy(bufp, line);
+    }        
+    return JS_TRUE;
+}
+
 static void
 Process(JSContext *cx, JSObject *obj, char *filename)
 {
-    JSTokenStream *ts;
-    JSCodeGenerator cg;
-    JSBool ok;
+    JSBool ok, hitEOF;
     JSScript *script;
     jsval result;
     JSString *str;
+    char buffer[4098];
+    char *bufp;
+    int lineno;
+    int startline;
+    FILE *fh;
 
-    ts = js_NewFileTokenStream(cx, filename, stdin);
-    if (!ts)
-        goto out;
-#ifdef JSDEBUGGER
-    if (!filename)
-        ts->filename = "typein";
-#endif
-    if (isatty(fileno(ts->file))) {
-        ts->flags |= TSF_INTERACTIVE;
+    if (filename != NULL && strcmp(filename, "-") != 0) {
+	fh = fopen(filename, "r");
+	if (!fh) {
+	    JS_ReportErrorNumber(cx, my_GetErrorMessage, NULL,
+			    JSSMSG_CANT_OPEN,
+			    filename, strerror(errno));
+	    return;
+	}
     } else {
-        /* Support the UNIX #! shell hack; gobble the first line if it starts
-         * with '#'.  TODO - this isn't quite compatible with sharp variables,
-         * as a legal js program (using sharp variables) might start with '#'.
-         * But that would require multi-character lookahead.
-         */
-        int ch = fgetc(ts->file);
-        if (ch == '#') {
-            while((ch = fgetc(ts->file)) != EOF) {
-                if(ch == '\n' || ch == '\r')
-                    break;
-            }
-        }
-        ungetc(ch, ts->file);
+        fh = stdin;
+    }
+    
+    if (!isatty(fileno(fh))) {
+	/*
+         * It's not interactive - just execute it.
+         *
+         * Support the UNIX #! shell hack; gobble the first line if it starts
+	 * with '#'.  TODO - this isn't quite compatible with sharp variables,
+	 * as a legal js program (using sharp variables) might start with '#'.
+	 * But that would require multi-character lookahead.
+	 */
+	int ch = fgetc(fh);
+	if (ch == '#') {
+	    while((ch = fgetc(fh)) != EOF) {
+		if(ch == '\n' || ch == '\r')
+		    break;
+	    }
+	}
+	ungetc(ch, fh);
+        script = JS_CompileFileHandle(cx, obj, filename, fh);
+        if (script)
+            (void)JS_ExecuteScript(cx, obj, script, &result);
+        return;
     }
 
+    /* It's an interactive filehandle; drop into read-eval-print loop. */
+    lineno = 1;
+    hitEOF = JS_FALSE;
     do {
-        js_InitCodeGenerator(cx, &cg, ts->filename, ts->lineno, ts->principals);
+        bufp = buffer;
+        *bufp = '\0';
+
+        /*
+         * Accumulate lines until we get a 'compilable unit' - one that either
+         * generates an error (before running out of source) or that compiles
+         * cleanly.  This should be whenever we get a complete statement that
+         * coincides with the end of a line.
+         */
+        startline = lineno;
         do {
-            if (ts->flags & TSF_INTERACTIVE)
-                fprintf(gOutFile, "js> ");
-            ok = js_CompileTokenStream(cx, obj, ts, &cg);
-            if (ts->flags & TSF_ERROR) {
-                ts->flags &= ~TSF_ERROR;
-                CLEAR_PUSHBACK(ts);
-                ok = JS_TRUE;
+            if (!GetLine(cx, bufp, fh, startline == lineno ? "js> " : "")) {
+                hitEOF = JS_TRUE;
+                break;
             }
-        } while (ok && !(ts->flags & TSF_EOF) && CG_OFFSET(&cg) == 0);
-        if (ok) {
-            /* Clear any pending exception from previous failed compiles.  */
-            JS_ClearPendingException(cx);
-
-            script = js_NewScriptFromCG(cx, &cg, NULL);
-            if (script) {
-                JSErrorReporter older;
-                
-                ok = JS_ExecuteScript(cx, obj, script, &result);
-                if (ok &&
-                    (ts->flags & TSF_INTERACTIVE) &&
-                    result != JSVAL_VOID) {
-                    /*
-                     * If JS_ValueToString generates an error, suppress
-                     * the report and print the exception below.
-                     */
-                    older = JS_SetErrorReporter(cx, NULL);
-                    str = JS_ValueToString(cx, result);
-                    JS_SetErrorReporter(cx, older);
-
-                    if (str)
-                        fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
-                    else
-                        ok = JS_FALSE;
-                }
-
-#if JS_HAS_ERROR_EXCEPTIONS
-#if 0
-                /*
-                 * Require that any time we return failure, an exception has
-                 * been set.
-                 */
-                JS_ASSERT(ok || JS_IsExceptionPending(cx));
-
-                /*
-                 * Also that any time an exception has been set, we've
-                 * returned failure.
-                 */
-                JS_ASSERT(!JS_IsExceptionPending(cx) || !ok);
+            bufp += strlen(bufp);
+            lineno++;
+        } while (!JS_BufferIsCompilableUnit(cx, obj,
+                                            buffer, strlen(buffer)));
+        /* Clear any pending exception from previous failed compiles.  */
+        JS_ClearPendingException(cx);
+        script = JS_CompileScript(cx, obj, buffer, strlen(buffer),
+#ifdef JSDEBUGGER
+                                  "typein",
+#else
+                                  NULL,
 #endif
+                                  startline);
+        if (script) {
+            JSErrorReporter older;
+            
+            ok = JS_ExecuteScript(cx, obj, script, &result);
+            if (ok && result != JSVAL_VOID) {
+                /* Suppress error reports from JS_ValueToString(). */
+                older = JS_SetErrorReporter(cx, NULL);
+                str = JS_ValueToString(cx, result);
+                JS_SetErrorReporter(cx, older);
+                
+                if (str)
+                    fprintf(gOutFile, "%s\n", JS_GetStringBytes(str));
+                else
+                    ok = JS_FALSE;
+            }     
+#if 0
+#if JS_HAS_ERROR_EXCEPTIONS
+            /*
+             * Require that any time we return failure, an exception has
+             * been set.
+             */
+            JS_ASSERT(ok || JS_IsExceptionPending(cx));
+            
+            /*
+             * Also that any time an exception has been set, we've
+             * returned failure.
+             */
+            JS_ASSERT(!JS_IsExceptionPending(cx) || !ok);
 #endif /* JS_HAS_ERROR_EXCEPTIONS */
-                JS_DestroyScript(cx, script);
-            }
+#endif
+            JS_DestroyScript(cx, script);
         }
-        cg.firstLine = ts->lineno;
-        js_FinishCodeGenerator(cx, &cg);
-        RESET_TOKENBUF(ts);
-    } while (!(ts->flags & TSF_EOF));
-
-out:
-    if (ts)
-        (void) js_CloseTokenStream(cx, ts);
-    JS_FreeArenaPool(&cx->codePool);
-    JS_FreeArenaPool(&cx->tempPool);
+    } while (!hitEOF);
+    fprintf(gOutFile, "\n");
+    return;
 }
 
 static int
@@ -581,5 +650,3 @@ void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
 //void Dxpc(int depth) {Dobj(GetXPConnect(), depth);}
 JS_END_EXTERN_C
 #endif
-
-#endif    // #if 0
