@@ -30,13 +30,16 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsURLHelper.obj                \
         .\$(OBJDIR)\nsFileStreams.obj              \
         .\$(OBJDIR)\nsBufferedStreams.obj          \
-        .\$(OBJDIR)\nsAsyncStreamListener.obj      \
-        .\$(OBJDIR)\nsSyncStreamListener.obj       \
         .\$(OBJDIR)\nsIOService.obj                \
         .\$(OBJDIR)\nsSocketTransport.obj          \
         .\$(OBJDIR)\nsSocketTransportService.obj   \
         .\$(OBJDIR)\nsFileTransport.obj            \
         .\$(OBJDIR)\nsFileTransportService.obj     \
+        .\$(OBJDIR)\nsSimpleStreamListener.obj     \
+        .\$(OBJDIR)\nsSimpleStreamProvider.obj     \
+        .\$(OBJDIR)\nsStreamObserverProxy.obj      \
+        .\$(OBJDIR)\nsStreamListenerProxy.obj      \
+        .\$(OBJDIR)\nsStreamProviderProxy.obj      \
         .\$(OBJDIR)\nsStdURLParser.obj             \
         .\$(OBJDIR)\nsAuthURLParser.obj            \
         .\$(OBJDIR)\nsNoAuthURLParser.obj          \

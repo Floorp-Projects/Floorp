@@ -35,6 +35,7 @@
 #include "nsIOutputStream.h"
 #include "nsIEventQueueService.h"
 #include "nsIStreamListener.h"
+#include "nsIStreamProvider.h"
 #include "nsIDNSListener.h"
 #include "nsIPipe.h"
 #include "nsIProgressEventSink.h"
@@ -114,6 +115,8 @@ enum nsSocketReadWriteInfo {
 
 // Forward declarations...
 class nsSocketTransportService;
+class nsSocketInputStream;
+class nsSocketOutputStream;
 class nsIInterfaceRequestor;
 
 class nsSocketTransport : public nsISocketTransport,
@@ -166,7 +169,9 @@ protected:
     nsresult doConnection(PRInt16 aSelectFlags);
     nsresult doResolveHost(void);
     nsresult doRead(PRInt16 aSelectFlags);
+    nsresult doReadAsync(PRInt16 aSelectFlags);
     nsresult doWrite(PRInt16 aSelectFlags);
+    nsresult doWriteAsync(PRInt16 aSelectFlags);
     
     nsresult doWriteFromBuffer(PRUint32 *aCount);
     nsresult doWriteFromStream(PRUint32 *aCount);
@@ -222,40 +227,41 @@ protected:
     nsSocketOperation               mOperation;
     nsCOMPtr<nsISupports>           mOwner;
     nsCOMPtr<nsISupports>           mSecurityInfo;
+
     PRInt32                         mProxyPort;
     char*                           mProxyHost;
     PRBool                          mProxyTransparent;
     PRBool                          mSSLProxy;
-    nsCOMPtr<nsISupports>           mReadContext;
-    nsCOMPtr<nsIStreamListener>     mReadListener;
-    nsCOMPtr<nsIInputStream>        mReadPipeIn;
-    nsCOMPtr<nsIOutputStream>       mReadPipeOut;
+
+    nsSocketTransportService*       mService;
+
     PRUint32                        mReadWriteState;
     PRInt16                         mSelectFlags;
-    nsSocketTransportService*       mService;
+    nsresult                        mStatus;
+    PRInt32                         mSuspendCount;
+
     PRFileDesc*                     mSocketFD;
     PRUint32                        mSocketTypeCount;
     char*                          *mSocketTypes;
+
+    nsCOMPtr<nsIStreamListener>     mReadListener;
+    nsCOMPtr<nsISupports>           mReadContext;
     PRUint32                        mReadOffset;
-    PRUint32                        mWriteOffset;
-    nsresult                        mStatus;
-    PRInt32                         mSuspendCount;
-    PRInt32                         mWriteCount;
+
+    nsCOMPtr<nsIStreamProvider>     mWriteProvider;
     nsCOMPtr<nsISupports>           mWriteContext;
-    PRInt32		                    mBytesExpected;
+    PRUint32                        mWriteOffset;
+    PRInt32                         mWriteCount;
+
+    PRInt32		            mBytesExpected;
     PRUint32                        mReuseCount;
     PRUint32                        mLastReuseCount;
+
+    nsSocketInputStream            *mSocketInputStream;
+    nsSocketOutputStream           *mSocketOutputStream;
     
-    // The following four members are used when AsyncWrite(...) is called
-    // with an nsIInputStream which does not also support the
-    // nsIBufferedInputStream interface...
-    //
-    nsCOMPtr<nsIInputStream>        mWriteFromStream;
-    char *                          mWriteBuffer;
-    PRUint32                        mWriteBufferIndex;
-    PRUint32                        mWriteBufferLength;
-    
-    nsCOMPtr<nsIStreamObserver>     mWriteObserver;
+    nsCOMPtr<nsIInputStream>        mReadPipeIn;
+    nsCOMPtr<nsIOutputStream>       mReadPipeOut;
     nsCOMPtr<nsIInputStream>        mWritePipeIn;
     nsCOMPtr<nsIOutputStream>       mWritePipeOut;
     PRUint32                        mBufferSegmentSize;

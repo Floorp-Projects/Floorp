@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -22,27 +22,55 @@
 
 #include "nsISupports.idl"
 
-interface nsIEventQueue;
 interface nsIChannel;
+interface nsIEventQueue;
 
 [scriptable, uuid(fd91e2e0-1481-11d3-9333-00104ba0fd40)]
 interface nsIStreamObserver : nsISupports
 {
     /**
-     * Called to signify the beginning of an asyncronous request.
+     * Called to signify the beginning of an asynchronous request.
+     *
+     * @param channel - channel being observed
+     * @param ctxt - user specified data passed to AsyncRead/Write
      */
     void onStartRequest(in nsIChannel channel,
                         in nsISupports ctxt);
 
     /**
-     * Called to signify the end of an asyncronous request.
-     * @param notif - a notification object containing any error code and error parameters
-     *                (may be null if the notification status is NS_OK)
+     * Called to signify the end of an asynchronous request.  This
+     * call is always preceded by a call to onStartRequest.
+     *
+     * @param channel - channel being observed
+     * @param ctxt - user specified data passed to AsyncRead/Write
+     * @param statusCode - reason for stopping (NS_OK if completed successfully)
+     * @param statusText - human readable reason for stopping (can be NULL)
      */
     void onStopRequest(in nsIChannel channel,
                        in nsISupports ctxt,
-                       in nsresult status,
-                       in wstring statusArg);
+                       in nsresult statusCode,
+                       in wstring statusText);
+};
+
+/**
+ * A stream observer proxy is used to ship data over to another thread specified
+ * by the thread's event queue. The "true" stream observer's methods are 
+ * invoked on the other thread.
+ *
+ * This interface only provides the initialization needed after construction. Otherwise,
+ * these objects are used simply as nsIStreamObserver's.
+ */
+[scriptable, uuid(3c9b532e-db84-4ecf-aa6a-4d38a9c4c5f0)]
+interface nsIStreamObserverProxy : nsIStreamObserver
+{
+    /**
+     * Initializes an nsIStreamObserverProxy.
+     *
+     * @param observer - receives observer notifications on the other thread
+     * @param eventQ - may be NULL indicating the calling thread's event queue
+     */
+    void init(in nsIStreamObserver observer,
+              in nsIEventQueue eventQ);
 };
 
 /**
@@ -65,22 +93,8 @@ interface nsIAsyncStreamObserver : nsIStreamObserver
 };
 
 %{C++
-
-// Use this CID to construct an nsIAsyncStreamObserver
-#define NS_ASYNCSTREAMOBSERVER_CID                   \
-{ /* fcc7c380-91b3-11d3-8cd9-0060b0fc14a3 */         \
-    0xfcc7c380,                                      \
-    0x91b3,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // Generic status codes for OnStopRequest:
-
-#define NS_BINDING_SUCCEEDED    NS_OK
-#define NS_BINDING_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
-#define NS_BINDING_ABORTED      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)
-
+#define NS_BINDING_SUCCEEDED NS_OK
+#define NS_BINDING_FAILED    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
+#define NS_BINDING_ABORTED   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)
 %}
-

@@ -202,7 +202,7 @@ nsStreamXferOp::Start( void ) {
 
                     // hand the output channel our input stream. it will take care
                     // of reading data from the stream and writing it to disk.
-                    rv = mOutputChannel->AsyncWrite(inStream, NS_STATIC_CAST(nsIStreamObserver*,this), nsnull);
+                    rv = NS_AsyncWriteFromStream(mOutputChannel, inStream, NS_STATIC_CAST(nsIStreamObserver*,this), nsnull);
                     if ( NS_FAILED( rv ) ) {
                         this->OnError( kOpAsyncWrite, rv );
                     }

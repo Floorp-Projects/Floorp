@@ -271,7 +271,7 @@ nsCachedChromeChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsCachedChromeChannel::AsyncWrite(nsIInputStream *fromStream, nsIStreamObserver *observer, nsISupports *ctxt)
+nsCachedChromeChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt)
 {
     NS_NOTREACHED("don't do that");
     return NS_ERROR_FAILURE;

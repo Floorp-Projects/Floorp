@@ -29,6 +29,7 @@
 #include "nsCRT.h"
 #include "nsILoadGroup.h"
 #include "nsIStreamListener.h"
+#include "nsIStreamProvider.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamIO.h"
 
@@ -56,7 +57,8 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsStreamIOChannel : public nsIStreamIOChannel, 
-                          public nsIStreamListener
+                          public nsIStreamListener,
+                          public nsIStreamProvider
 {
 public:
     NS_DECL_ISUPPORTS
@@ -65,6 +67,7 @@ public:
     NS_DECL_NSISTREAMIOCHANNEL
     NS_DECL_NSISTREAMOBSERVER
     NS_DECL_NSISTREAMLISTENER
+    NS_DECL_NSISTREAMPROVIDER
 
     nsStreamIOChannel(); 
     virtual ~nsStreamIOChannel();
@@ -75,6 +78,8 @@ public:
 protected:
     nsIStreamListener* GetListener() { return (nsIStreamListener*)mUserObserver.get(); }
     void SetListener(nsIStreamListener* listener) { mUserObserver = listener; }
+    nsIStreamProvider* GetProvider() { return (nsIStreamProvider*)mUserObserver.get(); }
+    void SetProvider(nsIStreamProvider* provider) { mUserObserver = provider; }
 
 protected:
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;

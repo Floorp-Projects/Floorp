@@ -219,7 +219,7 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveURI(nsIURI *aURI, nsIInputStream *aPostDa
     mInputStream = inStream;
 
     // Get the output channel ready for writing
-    rv = outputChannel->AsyncWrite(inStream, NS_STATIC_CAST(nsIStreamObserver *, this), nsnull);
+    rv = NS_AsyncWriteFromStream(outputChannel, inStream, NS_STATIC_CAST(nsIStreamObserver *, this), nsnull);
     if (NS_FAILED(rv))
     {
         OnEndDownload();

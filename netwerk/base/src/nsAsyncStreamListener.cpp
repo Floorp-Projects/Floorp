@@ -36,6 +36,12 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 PRLogModuleInfo* gStreamEventLog = 0;
 #endif
 
+// prevent name conflicts
+#define nsStreamListenerEvent  nsStreamListenerEvent0
+#define nsOnStartRequestEvent  nsOnStartRequestEvent0
+#define nsOnStopRequestEvent   nsOnStopRequestEvent0
+#define nsOnDataAvailableEvent nsOnDataAvailableEvent0
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class nsStreamListenerEvent

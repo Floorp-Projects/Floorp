@@ -341,7 +341,7 @@ NS_IMETHODIMP nsMailtoChannel::AsyncRead(nsIStreamListener *listener, nsISupport
   return listener->OnStartRequest(this, ctxt);
 }
 
-NS_IMETHODIMP nsMailtoChannel::AsyncWrite(nsIInputStream *fromStream, nsIStreamObserver *observer, nsISupports *ctxt)
+NS_IMETHODIMP nsMailtoChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *ctxt)
 {
     NS_NOTREACHED("AsyncWrite");
 	return NS_ERROR_NOT_IMPLEMENTED;

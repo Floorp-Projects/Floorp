@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -22,19 +22,83 @@
 
 #include "nsIStreamObserver.idl"
 
-interface nsIInputStream;
+interface nsIChannel;
 interface nsIInputStream;
 interface nsIOutputStream;
 interface nsIEventQueue;
 
+/**
+ * The nsIChannel::AsyncRead notification handler.  It accepts
+ * data from the channel, when the channel is ready to provide it.
+ */
 [scriptable, uuid(1a637020-1482-11d3-9333-00104ba0fd40)]
 interface nsIStreamListener : nsIStreamObserver
 {
+    /**
+     * Called when there is data to be read from the channel.
+     *
+     * @param channel - the channel being read
+     * @param ctxt - opaque parameter passed to AsyncRead
+     * @param input - temporary input stream for reading data chunk
+     * @param offset - current stream position (informational)
+     * @param count - number of bytes that can be read without blocking
+     *
+     * @return NS_OK - if successfully read something.
+     * @return NS_BASE_STREAM_CLOSED - if done reading data. NOTE: this is
+     *   NOT equivalent to reading zero bytes and returning NS_OK.
+     * @return NS_BASE_STREAM_WOULD_BLOCK - if no data can be read at
+     *   this time.  This implicitly calls Suspend on the channel.  Call
+     *   Resume on the channel to continue the AsyncRead when more data
+     *   becomes available.
+     * @return <other-error> - if failure.
+     */
     void onDataAvailable(in nsIChannel channel,
                          in nsISupports ctxt, 
-                         in nsIInputStream inStr,
-                         in unsigned long sourceOffset,
+                         in nsIInputStream input,
+                         in unsigned long offset,
                          in unsigned long count);
+};
+
+/**
+ * A stream listener proxy is used to ship data over to another thread specified
+ * by the thread's event queue.  The "true" stream listener's methods are
+ * invoked on the other thread.
+ *
+ * This interface only provides the initialization needed after construction. 
+ * Otherwise, these objects may be used as a nsIStreamListener.
+ */
+[scriptable, uuid(e400e688-6b54-4a84-8c4e-56b40281981a)]
+interface nsIStreamListenerProxy : nsIStreamListener
+{
+    /**
+     * Initializes an nsIStreamListenerProxy.
+     *
+     * @param listener - receives listener notifications on the other thread
+     * @param eventQ - may be NULL indicating the calling thread's event queue
+     * @param bufferSegmentSize - passing zero indicates the default
+     * @param bufferMaxSize - passing zero indicates the default
+     */
+    void init(in nsIStreamListener listener,
+              in nsIEventQueue eventQ,
+              in unsigned long bufferSegmentSize,
+              in unsigned long bufferMaxSize);
+};
+
+/**
+ * A simple stream listener can be used with AsyncRead to supply data to
+ * a output stream.
+ */
+[scriptable, uuid(a9b84f6a-0824-4278-bae6-bfca0570a26e)]
+interface nsISimpleStreamListener : nsIStreamListener
+{
+    /**
+     * Initialize the simple stream listener.
+     *
+     * @param sink - data will be read from the channel to this output stream
+     * @param observer - optional stream observer (can be NULL)
+     */
+    void init(in nsIOutputStream sink,
+              in nsIStreamObserver observer);
 };
 
 /**
@@ -55,42 +119,3 @@ interface nsIAsyncStreamListener : nsIStreamListener
     void init(in nsIStreamListener receiver,
               in nsIEventQueue eventQueue);
 };
-
-/**
- * A synchronous stream listener pushes data through a pipe that ends up
- * in an input stream to be read by another thread.
- *
- * This interface only provides the initialization needed after construction. Otherwise,
- * these objects are used simply as nsIStreamListener.
- */
-[scriptable, uuid(1f9fb93e-91bf-11d3-8cd9-0060b0fc14a3)]
-interface nsISyncStreamListener : nsIStreamListener
-{
-    /**
-     * Initializes an nsISyncStreamListener. 
-     */
-    void init(out nsIInputStream inStream,
-              out nsIOutputStream outStream);
-};
-
-%{C++
-
-// Use this CID to construct an nsIAsyncStreamListener
-#define NS_ASYNCSTREAMLISTENER_CID                   \
-{ /* 60047bb2-91c0-11d3-8cd9-0060b0fc14a3 */         \
-    0x60047bb2,                                      \
-    0x91c0,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
-
-// Use this CID to construct an nsISyncStreamListener
-#define NS_SYNCSTREAMLISTENER_CID                    \
-{ /* 65fa5cb2-91c0-11d3-8cd9-0060b0fc14a3 */         \
-    0x65fa5cb2,                                      \
-    0x91c0,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xd9, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
-
-%}

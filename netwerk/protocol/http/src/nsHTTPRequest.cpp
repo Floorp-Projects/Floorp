@@ -43,6 +43,7 @@
 #include "nsISocketTransport.h"
 #include "nsISSLSocketControl.h"
 #include "plstr.h"
+#include "nsNetUtil.h"
 
 #if defined(PR_LOGGING)
 extern PRLogModuleInfo* gHTTPLog;
@@ -732,7 +733,7 @@ nsHTTPPipelinedRequest::WriteRequest(nsIInputStream* iRequestStream)
     }
 
     mOnStopDone = PR_FALSE;
-    rv = mTransport->AsyncWrite(stream, this,(nsISupports*)(nsIRequest*)req->mConnection);
+    rv = NS_AsyncWriteFromStream(mTransport, stream, this, (nsISupports*)(nsIRequest*)req->mConnection);
     NS_RELEASE(req);
 
     return rv;
@@ -782,7 +783,7 @@ nsHTTPPipelinedRequest::OnStopRequest(nsIChannel* channel, nsISupports* i_Contex
                        ("nsHTTPRequest [this=%x]. "
                         "Writing PUT/POST data to the server.\n", this));
 
-                rv = mTransport->AsyncWrite(mInputStream, this, 
+                rv = NS_AsyncWriteFromStream(mTransport, mInputStream, this, 
                                             (nsISupports*)(nsIRequest*)req->mConnection);
 
                 /* the mInputStream is released below... */

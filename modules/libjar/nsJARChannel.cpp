@@ -392,8 +392,7 @@ nsJARChannel::AsyncReadJARElement()
 }
 
 NS_IMETHODIMP
-nsJARChannel::AsyncWrite(nsIInputStream* fromStream,
-						 nsIStreamObserver* observer, 
+nsJARChannel::AsyncWrite(nsIStreamProvider* provider, 
 						 nsISupports* ctxt)
 {
 	NS_NOTREACHED("nsJARChannel::AsyncWrite");

@@ -403,6 +403,10 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
             if (NS_FAILED(rv) && rv != NS_BASE_STREAM_WOULD_BLOCK)
                 goto done;
             NS_ASSERTION(writeCount <= readBufferLen, "writer returned bad writeCount");
+#ifdef DEBUG
+            if (writeCount > 0 && rv == NS_BASE_STREAM_WOULD_BLOCK)
+                NS_WARNING("Invalid writer implementation: cannot write data and return WOULD_BLOCK");
+#endif
             readBuffer += writeCount;
             readBufferLen -= writeCount;
             *readCount += writeCount;
@@ -428,6 +432,15 @@ nsPipe::nsPipeInputStream::ReadSegments(nsWriteSegmentFun writer,
                 rv = mObserver->OnEmpty(this);
                 mon.Enter();
                 mon.Notify();   // wake up writer
+                if (NS_FAILED(rv))
+                    goto done;
+            }
+        }
+        else if (pipe->mReadCursor == pipe->mWriteCursor) {
+            if (mObserver) {
+                mon.Exit();     // XXXbe avoid deadlock better
+                rv = mObserver->OnEmpty(this);
+                mon.Enter();
                 if (NS_FAILED(rv))
                     goto done;
             }

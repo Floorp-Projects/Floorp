@@ -293,13 +293,12 @@ nsFTPChannel::AsyncRead(nsIStreamListener *listener, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
-                         nsIStreamObserver *observer,
+nsFTPChannel::AsyncWrite(nsIStreamProvider *provider,
                          nsISupports *ctxt)
 {
     nsresult rv = NS_OK;
 
-    mObserver = observer;
+    mObserver = provider;
     mUserContext = ctxt;
 
     if (mProxyChannel) {
@@ -307,9 +306,11 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
         if (NS_FAILED(rv)) return rv;
         rv = mProxyChannel->SetTransferCount(mAmount);
         if (NS_FAILED(rv)) return rv;
-        return mProxyChannel->AsyncWrite(fromStream, observer, ctxt);
+        return mProxyChannel->AsyncWrite(provider, ctxt);
     }
 
+    return NS_ERROR_NOT_IMPLEMENTED;
+#if 0
     NS_ASSERTION(mAmount > 0, "FTP requires stream len info");
     if (mAmount < 1) return NS_ERROR_NOT_INITIALIZED;
 
@@ -334,6 +335,7 @@ nsFTPChannel::AsyncWrite(nsIInputStream *fromStream,
         if (NS_FAILED(rv)) return rv;
     }
     return mFTPState->Connect();
+#endif
 }
 
 NS_IMETHODIMP

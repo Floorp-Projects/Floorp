@@ -42,11 +42,13 @@
 #include "nsStreamLoader.h"
 #include "nsDownloader.h"
 #include "nsAsyncStreamListener.h"
-#include "nsSyncStreamListener.h"
+//#include "nsSyncStreamListener.h"
 #include "nsFileStreams.h"
 #include "nsBufferedStreams.h"
 #include "nsProtocolProxyService.h"
 #include "nsSOCKSSocketProvider.h"
+
+#include "nsNetCID.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -74,7 +76,21 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsCacheManager, Init)
 #include "nsXMLMIMEDataSource.h"
 #include "nsMIMEInfoImpl.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl)
+
+///////////////////////////////////////////////////////////////////////////////
+
+#include "nsStreamObserverProxy.h"
+#include "nsStreamListenerProxy.h"
+#include "nsStreamProviderProxy.h"
+#include "nsSimpleStreamListener.h"
+#include "nsSimpleStreamProvider.h"
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamObserverProxy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamListenerProxy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamProviderProxy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamListener)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsSimpleStreamProvider)
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -400,6 +416,26 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_DOWNLOADER_CID,
       "@mozilla.org/network/downloader;1",
       nsDownloader::Create },
+    { NS_STREAMOBSERVERPROXY_CLASSNAME,
+      NS_STREAMOBSERVERPROXY_CID,
+      NS_STREAMOBSERVERPROXY_CONTRACTID,
+      nsStreamObserverProxyConstructor },
+    { NS_STREAMLISTENERPROXY_CLASSNAME,
+      NS_STREAMLISTENERPROXY_CID,
+      NS_STREAMLISTENERPROXY_CONTRACTID,
+      nsStreamListenerProxyConstructor },
+    { NS_STREAMPROVIDERPROXY_CLASSNAME,
+      NS_STREAMPROVIDERPROXY_CID,
+      NS_STREAMPROVIDERPROXY_CONTRACTID,
+      nsStreamProviderProxyConstructor },
+    { NS_SIMPLESTREAMLISTENER_CLASSNAME,
+      NS_SIMPLESTREAMLISTENER_CID,
+      NS_SIMPLESTREAMLISTENER_CONTRACTID,
+      nsSimpleStreamListenerConstructor },
+    { NS_SIMPLESTREAMPROVIDER_CLASSNAME,
+      NS_SIMPLESTREAMPROVIDER_CID,
+      NS_SIMPLESTREAMPROVIDER_CONTRACTID,
+      nsSimpleStreamProviderConstructor },
     { "Async Stream Observer",
       NS_ASYNCSTREAMOBSERVER_CID,
       "@mozilla.org/network/async-stream-observer;1",
@@ -408,10 +444,12 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_ASYNCSTREAMLISTENER_CID,
       "@mozilla.org/network/async-stream-listener;1",
       nsAsyncStreamListener::Create },
+      /*
     { "Sync Stream Listener", 
       NS_SYNCSTREAMLISTENER_CID,
       "@mozilla.org/network/sync-stream-listener;1",
       nsSyncStreamListener::Create },
+      */
     { "Load Group", 
       NS_LOADGROUP_CID,
       "@mozilla.org/network/load-group;1",

@@ -28,6 +28,10 @@ DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
 LCFLAGS = -DWIN32_LEAN_AND_MEAN -D_IMPL_NS_NET
 
+EXPORTS =          \
+        nsNetCID.h \
+        $(NULL)
+
 CPP_OBJS=                            \
         .\$(OBJDIR)\nsNetModule.obj \
 	$(NULL)
