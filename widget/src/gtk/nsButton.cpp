@@ -122,7 +122,7 @@ NS_IMETHODIMP nsButton::GetLabel(nsString& aBuffer)
 
   gtk_label_get(GTK_LABEL(GTK_BIN (mWidget)->child), &text);
   aBuffer.SetLength(0);
-  aBuffer.Append(text);
+  aBuffer.AppendWithConversion(text);
 
   return (NS_OK);
 

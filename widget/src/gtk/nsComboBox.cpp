@@ -179,7 +179,7 @@ PRBool  nsComboBox::RemoveItemAt(PRInt32 aPosition)
 PRBool nsComboBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
 {
   if (aPosition >= 0 && aPosition < mNumItems) {
-    anItem = (gchar *) g_list_nth(mItems, aPosition)->data;
+    anItem.AssignWithConversion((gchar *) g_list_nth(mItems, aPosition)->data);
     return PR_TRUE;
   }
   return PR_FALSE;
@@ -194,7 +194,7 @@ NS_METHOD nsComboBox::GetSelectedItem(nsString& aItem)
 {
   aItem.Truncate();
   if (mCombo) {
-    aItem = gtk_entry_get_text (GTK_ENTRY (GTK_COMBO(mCombo)->entry));
+    aItem.AssignWithConversion(gtk_entry_get_text (GTK_ENTRY (GTK_COMBO(mCombo)->entry)));
   }
   return NS_OK;
 }

@@ -1852,7 +1852,8 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsString& aTitle)
     NS_WITH_SERVICE(nsIPlatformCharset, platform, NS_PLATFORMCHARSET_PROGID,
       &result);
     if (platform && NS_SUCCEEDED(result)) {
-      nsAutoString charset("");
+      nsAutoString charset;
+      charset.AssignWithConversion("");
       result = platform->GetCharset(kPlatformCharsetSel_WindowManager, charset);
       if (NS_SUCCEEDED(result) && (charset.Length() > 0)) {
         NS_WITH_SERVICE(nsICharsetConverterManager, manager,

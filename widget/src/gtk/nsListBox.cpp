@@ -171,7 +171,7 @@ PRBool nsListBox::GetItemAt(nsString& anItem, PRInt32 aPosition)
     char *text = nsnull;
     gtk_clist_get_text(GTK_CLIST(mCList),aPosition,0,&text);
     if (text) {
-      anItem.Append(text);
+      anItem.AppendWithConversion(text);
       result = PR_TRUE;
     }
   }
@@ -196,7 +196,7 @@ NS_IMETHODIMP nsListBox::GetSelectedItem(nsString& aItem)
         char *text = nsnull;
         gtk_clist_get_text(GTK_CLIST(mCList),i,0,&text);
         if (text) {
-          aItem.Append(text);
+          aItem.AppendWithConversion(text);
         }
         return NS_OK;
       }

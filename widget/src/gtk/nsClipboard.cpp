@@ -428,7 +428,7 @@ nsClipboard::GetNativeClipboardData(nsITransferable * aTransferable,
       nsXPIDLCString flavorStr;
       currentFlavor->ToString ( getter_Copies(flavorStr) );
       if (DoConvert(flavorStr, selectionAtom)) {
-        foundFlavor = flavorStr;
+        foundFlavor = nsCAutoString(flavorStr);
         foundData = PR_TRUE;
         break;
       }
@@ -730,7 +730,7 @@ nsClipboard::HasDataMatchingFlavors(nsISupportsArray* aFlavorList,
       nsCAutoString flavorStr;
       nsXPIDLCString myStr;
       flavorWrapper->ToString(getter_Copies(myStr));
-      flavorStr = myStr;
+      flavorStr = nsCAutoString(myStr);
 
       position = 0;
       while (position < dataLength) {

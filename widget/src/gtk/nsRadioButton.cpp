@@ -205,7 +205,7 @@ NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
     if (mLabel) {
       char* text;
       gtk_label_get(GTK_LABEL(mLabel), &text);
-      aBuffer.Append(text);
+      aBuffer.AppendWithConversion(text);
     }
   }
   return NS_OK;
