@@ -191,6 +191,11 @@ Components:rdf.xpt
 Components:shistoryDebug.shlb
 Components:shistory.xpt
 
+; optional typeaheadfind 
+; (docs at http://www.mozilla.org/projects/ui/accessibility/typeaheadfind.html)
+;Components:typeaheadfind.shlb
+;Components:typeaheadfind.xpt
+
 ; required i18n libraries
 
 Components:i18nDebug.shlb
