@@ -71,6 +71,14 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext)
 
 //    buffer.AppendWithConversion("<tr><th>Name</th><th>Size</th><th>Last modified</th><th>Description</th></tr>\n"); //FIX i18n.
 
+    const char * path = mCurrentPath.get();
+    if (path && *path && path[1] != '\0') 
+    {
+        buffer.AppendWithConversion("<tr>\n <td><a HREF=\"");
+        buffer.AppendWithConversion(mCurrentPath);
+        buffer.AppendWithConversion("/../\"> ..</a></td>\n");
+    }
+
     // Push buffer to the listener now, so the initial HTML will not
     // be parsed in OnDataAvailable().
 
