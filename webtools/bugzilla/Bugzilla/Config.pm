@@ -306,7 +306,7 @@ sub check_multi {
 
     if ($param->{'type'} eq "s") {
         unless (scalar(grep {$_ eq $value} (@{$param->{'choices'}}))) {
-            return "Invalid choice '$value' for single-select list param '$param'";
+            return "Invalid choice '$value' for single-select list param '$param->{'name'}'";
         }
 
         return "";
@@ -314,7 +314,7 @@ sub check_multi {
     elsif ($param->{'type'} eq "m") {
         foreach my $chkParam (@$value) {
             unless (scalar(grep {$_ eq $chkParam} (@{$param->{'choices'}}))) {
-                return "Invalid choice '$chkParam' for multi-select list param '$param'";
+                return "Invalid choice '$chkParam' for multi-select list param '$param->{'name'}'";
             }
         }
 
