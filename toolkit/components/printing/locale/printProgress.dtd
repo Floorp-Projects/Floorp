@@ -1,0 +1,18 @@
+<!--LOCALIZATION NOTE printProgress.dtd Main UI for Print Progress Dialog -->
+<!ENTITY printWindow.title "Printing"> 
+<!ENTITY title    "Title:"> 
+<!ENTITY progress "Progress:">
+<!ENTITY preparing "Preparing...">
+<!ENTITY printComplete "Printing is Completed.">
+
+<!ENTITY dialogCancel.label "Cancel"> 
+<!ENTITY dialogClose.label "Close">
+
+<!-- LOCALIZATION NOTE (percentPrint):
+
+    This string is used to format the text to the right of the progress
+    meter.
+
+    #1 will be replaced by the percentage of the file that has been saved -->
+<!ENTITY percentPrint "#1&#037;">
+
