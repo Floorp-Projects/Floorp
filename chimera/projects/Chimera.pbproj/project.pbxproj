@@ -606,6 +606,11 @@
 				F52D5CDF027D412A01A80166,
 				F52D5CE0027D412A01A80166,
 				F5960E9C02BA686001000103,
+				F57BBFE002DA02C401026D5D,
+				F57BBFE102DA02C401026D5D,
+				F57BBFE202DA02C401026D5D,
+				F57BBFE302DA02C401026D5D,
+				F57BBFE402DA02C401026D5D,
 			);
 			isa = PBXFrameworksBuildPhase;
 			name = "Frameworks & Libraries";
@@ -3627,6 +3632,96 @@
 		};
 		F57074C0026D80DF01A80166 = {
 			fileRef = F57074BE026D80DF01A80166;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57BBFDB02DA02C401026D5D = {
+			isa = PBXFileReference;
+			name = libucvcn.dylib;
+			path = ../dist/Embed/components/libucvcn.dylib;
+			refType = 2;
+		};
+		F57BBFDC02DA02C401026D5D = {
+			isa = PBXFileReference;
+			name = libucvja.dylib;
+			path = ../dist/Embed/components/libucvja.dylib;
+			refType = 2;
+		};
+		F57BBFDD02DA02C401026D5D = {
+			isa = PBXFileReference;
+			name = libucvko.dylib;
+			path = ../dist/Embed/components/libucvko.dylib;
+			refType = 2;
+		};
+		F57BBFDE02DA02C401026D5D = {
+			isa = PBXFileReference;
+			name = libucvtw.dylib;
+			path = ../dist/Embed/components/libucvtw.dylib;
+			refType = 2;
+		};
+		F57BBFDF02DA02C401026D5D = {
+			isa = PBXFileReference;
+			name = libucvtw2.dylib;
+			path = ../dist/Embed/components/libucvtw2.dylib;
+			refType = 2;
+		};
+		F57BBFE002DA02C401026D5D = {
+			fileRef = F57BBFDB02DA02C401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57BBFE102DA02C401026D5D = {
+			fileRef = F57BBFDC02DA02C401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57BBFE202DA02C401026D5D = {
+			fileRef = F57BBFDD02DA02C401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57BBFE302DA02C401026D5D = {
+			fileRef = F57BBFDE02DA02C401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57BBFE402DA02C401026D5D = {
+			fileRef = F57BBFDF02DA02C401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57BBFEA02DA034601026D5D = {
+			fileRef = F57BBFDB02DA02C401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57BBFEB02DA034601026D5D = {
+			fileRef = F57BBFDC02DA02C401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57BBFEC02DA034601026D5D = {
+			fileRef = F57BBFDD02DA02C401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57BBFED02DA034601026D5D = {
+			fileRef = F57BBFDE02DA02C401026D5D;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F57BBFEE02DA034601026D5D = {
+			fileRef = F57BBFDF02DA02C401026D5D;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -7025,6 +7120,11 @@
 				F6BD641601B3156701A962F7,
 				F5F59320020F4CD201ACA690,
 				F6BD641701B3156701A962F7,
+				F57BBFDB02DA02C401026D5D,
+				F57BBFDC02DA02C401026D5D,
+				F57BBFDD02DA02C401026D5D,
+				F57BBFDE02DA02C401026D5D,
+				F57BBFDF02DA02C401026D5D,
 				F6BD641801B3156701A962F7,
 				F6BD641901B3156701A962F7,
 				F6BD641A01B3156701A962F7,
@@ -7169,6 +7269,11 @@
 				F6BD649D01B3167601A962F7,
 				F6BD649E01B3167601A962F7,
 				F6BD649F01B3167601A962F7,
+				F57BBFEA02DA034601026D5D,
+				F57BBFEB02DA034601026D5D,
+				F57BBFEC02DA034601026D5D,
+				F57BBFED02DA034601026D5D,
+				F57BBFEE02DA034601026D5D,
 				F6BD64A001B3167601A962F7,
 				F6BD64A101B3167601A962F7,
 				F6BD64A201B3167601A962F7,
