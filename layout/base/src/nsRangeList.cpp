@@ -118,7 +118,7 @@ public:
   nsresult      GetRootScrollableView(nsIScrollableView **aScrollableView);
   nsresult      GetFrameToRootViewOffset(nsIFrame *aFrame, nscoord *aXOffset, nscoord *aYOffset);
   nsresult      GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, nsPoint *aPoint);
-  nsresult      GetFocusNodeRect(nsRect *aRect);
+  nsresult      GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect);
   nsresult      ScrollRectIntoView(nsRect& aRect, PRIntn  aVPercent, PRIntn  aHPercent);
 
   NS_IMETHOD    ScrollIntoView(SelectionRegion aRegion=SELECTION_FOCUS_REGION);
@@ -143,6 +143,8 @@ public:
 
   nsDirection  GetDirection(){return mDirection;}
   void         SetDirection(nsDirection aDir){mDirection = aDir;}
+  NS_IMETHOD   GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffset, PRBool aIsEndNode, nsIFrame **aResultFrame);
+  NS_IMETHOD   GetPrimaryFrameForAnchorNode(nsIFrame **aResultFrame);
   NS_IMETHOD   GetPrimaryFrameForFocusNode(nsIFrame **aResultFrame);
   NS_IMETHOD   SetOriginalAnchorPoint(nsIDOMNode *aNode, PRInt32 aOffset);
   NS_IMETHOD   GetOriginalAnchorPoint(nsIDOMNode **aNode, PRInt32 *aOffset);
@@ -1535,34 +1537,46 @@ nsDOMSelection::Clear()
 }
 
 //utility method to get the primary frame of node or use the offset to get frame of child node
+
 NS_IMETHODIMP
-nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
+nsDOMSelection::GetPrimaryFrameForRangeEndpoint(nsIDOMNode *aNode, PRInt32 aOffset, PRBool aIsEndNode, nsIFrame **aReturnFrame)
 {
-  if (!aReturnFrame)
+  if (!aNode || !aReturnFrame)
     return NS_ERROR_NULL_POINTER;
   
+  if (aOffset < 0)
+    return NS_ERROR_FAILURE;
+
   *aReturnFrame = 0;
   
   nsresult	result = NS_OK;
   
-  nsCOMPtr<nsIDOMNode> node = dont_QueryInterface(FetchFocusNode());
+  nsCOMPtr<nsIDOMNode> node = dont_QueryInterface(aNode);
+
   if (!node)
     return NS_ERROR_NULL_POINTER;
+  
   nsCOMPtr<nsIContent> content = do_QueryInterface(node, &result);
-  if (NS_FAILED(result) || !content)
+
+  if (NS_FAILED(result))
     return result;
+
+  if (!content)
+    return NS_ERROR_NULL_POINTER;
   
   PRBool canContainChildren = PR_FALSE;
+
   result = content->CanContainChildren(canContainChildren);
+
   if (NS_SUCCEEDED(result) && canContainChildren)
   {
-    PRInt32 offset = FetchFocusOffset();
-    if (GetDirection() == eDirNext)
-      offset--;
-    if (offset >= 0)
+    if (aIsEndNode)
+      aOffset--;
+
+    if (aOffset >= 0)
     {
       nsCOMPtr<nsIContent> child;
-      result = content->ChildAt(offset, *getter_AddRefs(child));
+      result = content->ChildAt(aOffset, *getter_AddRefs(child));
       if (NS_FAILED(result))
         return result;
       if (!child) //out of bounds?
@@ -1574,6 +1588,29 @@ nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
   return result;
 }
 
+NS_IMETHODIMP
+nsDOMSelection::GetPrimaryFrameForAnchorNode(nsIFrame **aReturnFrame)
+{
+  if (!aReturnFrame)
+    return NS_ERROR_NULL_POINTER;
+  
+  *aReturnFrame = 0;
+
+  return GetPrimaryFrameForRangeEndpoint(FetchAnchorNode(), FetchAnchorOffset(),
+                                        (GetDirection() == eDirPrevious), aReturnFrame);
+}
+
+NS_IMETHODIMP
+nsDOMSelection::GetPrimaryFrameForFocusNode(nsIFrame **aReturnFrame)
+{
+  if (!aReturnFrame)
+    return NS_ERROR_NULL_POINTER;
+  
+  *aReturnFrame = 0;
+
+  return GetPrimaryFrameForRangeEndpoint(FetchFocusNode(), FetchFocusOffset(),
+                                        (GetDirection() == eDirNext), aReturnFrame);
+}
 
 //the idea of this helper method is to select, deselect "top to bottom" traversing through the frames
 NS_IMETHODIMP
@@ -2880,7 +2917,7 @@ nsDOMSelection::GetPointFromOffset(nsIFrame *aFrame, PRInt32 aContentOffset, nsP
 }
 
 nsresult
-nsDOMSelection::GetFocusNodeRect(nsRect *aRect)
+nsDOMSelection::GetSelectionRegionRect(SelectionRegion aRegion, nsRect *aRect)
 {
   nsresult result = NS_OK;
 
@@ -2894,36 +2931,51 @@ nsDOMSelection::GetFocusNodeRect(nsRect *aRect)
   aRect->width  = 0;
   aRect->height = 0;
 
-  nsIDOMNode *focusNode = FetchFocusNode();
+  nsIDOMNode *node       = 0;
+  PRInt32     nodeOffset = 0;
+  PRBool      isEndNode  = PR_TRUE;
+  nsIFrame   *frame      = 0;
 
-  if (!focusNode)
+  switch (aRegion)
+  {
+  case SELECTION_ANCHOR_REGION:
+    node       = FetchAnchorNode();
+    nodeOffset = FetchAnchorOffset();
+    isEndNode  = GetDirection() == eDirPrevious;
+    break;
+  case SELECTION_FOCUS_REGION:
+    node       = FetchFocusNode();
+    nodeOffset = FetchFocusOffset();
+    isEndNode  = GetDirection() == eDirNext;
+    break;
+  default:
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!node)
     return NS_ERROR_NULL_POINTER;
 
-  PRInt32 focusOffset = FetchFocusOffset();
+  result = GetPrimaryFrameForRangeEndpoint(node, nodeOffset, isEndNode, &frame);
 
-  PRUint16 focusNodeType = nsIDOMNode::ELEMENT_NODE;
-
-  result = focusNode->GetNodeType(&focusNodeType);
-
-  if (NS_FAILED(result))
-    return NS_ERROR_NULL_POINTER;
-
-  nsIFrame *frame = 0;
-
-  result = GetPrimaryFrameForFocusNode(&frame);
-
-  if (NS_FAILED(result))
+  if(NS_FAILED(result))
     return result;
 
   if (!frame)
     return NS_ERROR_NULL_POINTER;
 
-  if (focusNodeType == nsIDOMNode::TEXT_NODE)
+  PRUint16 nodeType = nsIDOMNode::ELEMENT_NODE;
+
+  result = node->GetNodeType(&nodeType);
+
+  if (NS_FAILED(result))
+    return NS_ERROR_NULL_POINTER;
+
+  if (nodeType == nsIDOMNode::TEXT_NODE)
   {
     nsIFrame *childFrame = 0;
     PRInt32 frameOffset  = 0;
 
-    result = frame->GetChildFrameContainingOffset(focusOffset, &frameOffset, &childFrame);
+    result = frame->GetChildFrameContainingOffset(nodeOffset, &frameOffset, &childFrame);
 
     if (NS_FAILED(result))
       return result;
@@ -2941,7 +2993,7 @@ nsDOMSelection::GetFocusNodeRect(nsRect *aRect)
     //
     nsPoint pt;
 
-    result = GetPointFromOffset(frame, focusOffset, &pt);
+    result = GetPointFromOffset(frame, nodeOffset, &pt);
 
     if (NS_FAILED(result))
       return result;
@@ -3146,10 +3198,10 @@ nsDOMSelection::ScrollIntoView(SelectionRegion aRegion)
   }
 
   //
-  // Scroll the anchor focus node into view.
+  // Scroll the selection region into view.
   //
   nsRect rect;
-  result = GetFocusNodeRect(&rect);
+  result = GetSelectionRegionRect(aRegion, &rect);
 
   if (NS_FAILED(result))
     return result;
