@@ -37,12 +37,16 @@
 
 #import <Cocoa/Cocoa.h>
 #import <Cocoa/Cocoa.h>
+
 #import <SystemConfiguration/SystemConfiguration.h>
 #import "CHPreferenceManager.h"
+#import "CHUserDefaults.h"
+
 #include "nsIServiceManager.h"
 #include "nsIProfile.h"
 #include "nsIPref.h"
 #include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsString.h"
 #include "nsEmbedAPI.h"
 #include "AppDirServiceProvider.h"
@@ -74,6 +78,8 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
             // XXXw. throw here too
             NSLog (@"Failed to initialize mozilla prefs.\n");
         }
+        
+        mDefaults = [NSUserDefaults standardUserDefaults];
     }
     return self;
 }
@@ -81,7 +87,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 - (void) dealloc
 {
     nsresult rv;
-    ICStop (internetConfig);
+    ICStop (mInternetConfig);
     nsCOMPtr<nsIPrefService> pref(do_GetService(NS_PREF_CONTRACTID, &rv));
     if (!NS_FAILED(rv))
         pref->SavePrefFile(nsnull);
@@ -91,7 +97,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 - (BOOL) initInternetConfig
 {
     OSStatus error;
-    error = ICStart (&internetConfig, 'CHIM');
+    error = ICStart (&mInternetConfig, 'CHIM');
     if (error != noErr) {
         // XXX throw here?
         NSLog(@"Error initializing IC.\n");
@@ -350,7 +356,7 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
             NSLog (@"malloc failed in [PreferenceManager getICStringPref].");
             return nil;
         }
-        error = ICGetPref (internetConfig, prefKey, &dummy, buf, &size);
+        error = ICGetPref (mInternetConfig, prefKey, &dummy, buf, &size);
         if (error != noErr && error != icTruncatedErr) {
             free (buf);
             NSLog (@"[IC error %d in [PreferenceManager getICStringPref].\n", (int) error);
@@ -392,8 +398,23 @@ app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
     if (NS_SUCCEEDED(prefs->GetBoolPref("chimera.use_system_home_page", &boolPref)) && boolPref)
       return [self getICStringPref:kICWWWHomePage];
 
-    NSString* homepagePref = NSLocalizedStringFromTable( @"HomePageDefault", @"WebsiteDefaults", nil );
-    if ([homepagePref length] > 0 && ![homepagePref isEqualToString:@"HomePageDefault"])
+    nsCOMPtr<nsIPrefBranch> prefBranch = do_QueryInterface(prefs);
+    if (!prefBranch) return @"about:blank";
+    
+    NSString* homepagePref = nil;
+    PRInt32 haveUserPref;
+    if (NS_FAILED(prefBranch->PrefHasUserValue("browser.startup.homepage", &haveUserPref)) || !haveUserPref) {
+      // no home page pref is set in user prefs.
+      homepagePref = NSLocalizedStringFromTable( @"HomePageDefault", @"WebsiteDefaults", nil);
+      // and let's copy this into the homepage pref if it's not bad
+      if (![homepagePref isEqualToString:@"HomePageDefault"])
+        prefs->SetCharPref("browser.startup.homepage", [homepagePref cString]);
+    }
+    else {
+    	homepagePref = [self getMozillaPrefString:"browser.startup.homepage"];
+    }
+
+    if (homepagePref && [homepagePref length] > 0 && ![homepagePref isEqualToString:@"HomePageDefault"])
       return homepagePref;
   }
   
