@@ -25,7 +25,7 @@
 
 <!ENTITY generalInfo.label            "Info">
 <!ENTITY generalInfo.accesskey        "i">
-<!ENTITY generaldesc.label            "&brandShortName; can remember the locations of sites on the Internet for you. Enter the site's name and location in the fields below, then select the site from the Bookmarks menu or your Bookmarks My Sidebar tab to visit the site.">
+<!ENTITY generaldesc.label            "&brandShortName; can remember the locations of sites on the Internet for you. Enter the site's name and location in the fields below, then select the site from the Bookmarks menu or your Bookmarks Sidebar tab to visit the site.">
 
 <!ENTITY schedule.label               "Schedule">
 <!ENTITY schedule.accesskey           "s">
