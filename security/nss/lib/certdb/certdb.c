@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.23 2002/01/23 21:43:30 ian.mcgreer%sun.com Exp $
+ * $Id: certdb.c,v 1.24 2002/02/07 00:50:47 relyea%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -1600,7 +1600,8 @@ CERT_IsCACert(CERTCertificate *cert, unsigned int *rettype)
     ret = PR_FALSE;
     type = 0;
     
-    if ( cert->trust ) {
+    if ( cert->trust && (cert->trust->sslFlags|cert->trust->emailFlags|
+				cert->trust->objectSigningFlags)) {
 	trust = cert->trust;
 	if ( ( ( trust->sslFlags & CERTDB_VALID_CA ) == CERTDB_VALID_CA ) ||
 	   ( ( trust->sslFlags & CERTDB_TRUSTED_CA ) == CERTDB_TRUSTED_CA ) ) {
