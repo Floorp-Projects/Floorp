@@ -27,15 +27,22 @@ import java.util.jar.Attributes;
 import java.io.InputStream;
 import org.mozilla.pluglet.mozilla.*;
 import java.security.*;
+import java.awt.*;
 
 public class PlugletLoader {
+    static {
+	System.loadLibrary("plugletjni");
+	Dimension screenSize = new Button().getToolkit().getScreenSize();
+    }
+    
+    
     //  path to jar file. Name of main class sould to be in MANIFEST.
     public static PlugletFactory getPluglet(String path) {
 	try {
 	    org.mozilla.util.Debug.print("-- PlugletLoader.getPluglet("+path+")\n"); 
-	    URL url = new URL("file:/"+path);
+	    URL url = new URL("file://"+path);
 	    URLClassLoader loader = URLClassLoader.newInstance(new URL[]{url});
-	    URL manifestURL = new URL("jar:file:/"+path+"!/META-INF/MANIFEST.MF");
+	    URL manifestURL = new URL("jar:file://"+path+"!/META-INF/MANIFEST.MF");
 	    InputStream inputStream = manifestURL.openStream();
 	    Manifest manifest = new Manifest(inputStream);
 	    Attributes attr = manifest.getMainAttributes();
@@ -75,7 +82,7 @@ public class PlugletLoader {
     public static String getMIMEDescription(String path) {
 	try {
 	    org.mozilla.util.Debug.print("-- PlugletLoader.getMIMEDescription("+path+")\n");
-	    URL manifestURL = new URL("jar:file:/"+path+"!/META-INF/MANIFEST.MF");
+	    URL manifestURL = new URL("jar:file://"+path+"!/META-INF/MANIFEST.MF");
 	    InputStream inputStream = manifestURL.openStream();
 	    Manifest manifest = new Manifest(inputStream);
 	    Attributes attr = manifest.getMainAttributes();

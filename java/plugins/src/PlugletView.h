@@ -20,24 +20,15 @@
  */
 #ifndef __PlugletView_h__
 #define __PlugletView_h__
-#include <windows.h>
 #include "nsplugindefs.h"
 #include "jni.h"
 
 class PlugletView {
  public:
-    PlugletView(void);
-    jobject GetJObject(void);
-    BOOLEAN SetWindow(nsPluginWindow* window);
- private:
-    static  void Initialize(void);
-    static  jclass clazz;
-    static  jmethodID initMID;
-    HWND    hWND;
-    BOOL    isCreated;
-    jobject frame;
+    virtual jobject GetJObject(void) = 0;
+    virtual PRBool SetWindow(nsPluginWindow* window) = 0;
 };
-#endif /* __PlugletInstanceView_h__ */
+#endif /* __PlugletView_h__ */
 
 
 

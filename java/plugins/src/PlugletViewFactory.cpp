@@ -18,10 +18,16 @@
  *
  * Contributor(s): 
  */
-package org.mozilla.util;
 
-public class Debug {
-    public static native void  print(String str);
+#include "PlugletViewFactory.h"
+#ifdef XP_PC
+#include "PlugletViewWindows.h"
+#define VIEW PlugletViewWindows
+#else /* XP_PC */
+#include "PlugletViewMotif.h"
+#define VIEW PlugletViewMotif
+#endif  /* XP_PC */
 
+PlugletView * PlugletViewFactory::GetPlugletView(void) {
+    return new VIEW();
 }
-    

@@ -18,10 +18,34 @@
  *
  * Contributor(s): 
  */
-package org.mozilla.util;
+#ifndef __PlugletViewWindows_h__
+#define __PlugletViewWindows_h__
+#include <windows.h>
+#include "nsplugindefs.h"
+#include "jni.h"
+#include "PlugletView.h"
 
-public class Debug {
-    public static native void  print(String str);
+class PlugletViewWindows : public PlugletView {
+ public:
+    PlugletViewWindows(void);
+    virtual jobject GetJObject(void);
+    virtual PRBool SetWindow(nsPluginWindow* window);
+ private:
+    static  void Initialize(void);
+    static  jclass clazz;
+    static  jmethodID initMID;
+    HWND    hWND;
+    BOOL    isCreated;
+    jobject frame;
+};
+#endif /* __PlugletViewWindows_h__ */
 
-}
-    
+
+
+
+
+
+
+
+
+

@@ -58,7 +58,7 @@ jobject PlugletStreamInfo::GetJObject(const nsIPluginStreamInfo *streamInfo) {
 	    return NULL;
 	}
     }
-    res = env->NewObject(clazz,initMID,*(jlong*)(void*)&streamInfo);
+    res = env->NewObject(clazz,initMID,(jlong)streamInfo);
     if (env->ExceptionOccurred()) {
 	env->ExceptionDescribe();
 	res = NULL;

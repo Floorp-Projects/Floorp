@@ -19,6 +19,7 @@
  * Contributor(s): 
  */
 
+#include <stdlib.h>
 #include "ByteRanges.h"
 
 jfieldID ByteRanges::offsetFID = NULL;

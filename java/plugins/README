@@ -15,23 +15,24 @@ The sources is divided into four directories
 	       Test code, including simple pluglet.
 
 ========================================================================
-Win32 Build Directions:
+Win32 Directions:
 ========================================================================
 Requirements:
 
-* built M8 mozilla tree for WinNT4.0
+* current mozilla built tree
 
-* JDK1.3
+* JDK1.3 or JDK1.2 if you are not using OJI
 
 * Perl 5 perl.exe must be in your path
 
 How To Build:
 
-* Follow the directions in ..\README
+*  make sure the environment var JDKHOME is set to your jdk installation
+   directory, ie SET JDKHOME=C:\jdk1.2
 
 * if you do not have working OJI set OJI_DISABLE to 1
   (You can do it in your command prompt, or you can set it in 
-   mozilla/java/plugins/src).
+   mozilla/java/plugins/src/makefile.win).
 
 * type "nmake /f makefile.win"
 
@@ -49,13 +50,51 @@ How to build and run test
 
 * Set PLUGLET environment to the  directory you have test.jar
 
-* Run mozilla and load page test.html from test directory and if evething is ok you will see
-  some output from the test pluglet on the stdout.
+* Run mozilla and load page test.html from test directory and if everething is ok you will see
+  some awt demo.
+
+
+=========================================================================
+Unix (Sparc Solaris and i386 Linux) Directions:
+=========================================================================
+
+Requirements:
+
+* current mozilla built tree
+
+* JDK1.2 or JDK1.3 
+
+* Perl 5 must be in your path
+
+How To Build:
+
+*  make sure the environment var JDKHOME is set to your jdk installation
+   directory, ie export  JDKHOME=/usr/local/jdk1.2
+
+* Add following directories to to your LD_LIBRARY_PATH:
+
+$MOZILLA_FIVE_HOME:$JDKHOME/jre/lib/$HOSTTYPE/native_threads:$JDKHOME/jre/lib/$HOSTTYPE/classic:
+$JDKHOME/jre/lib/$HOSTTYPE/:
+
+* type "gmake"
+     
+How to Run:
+	 
+* Add $MOZILLA_FILE_HOME/../classes to your CLASSPATH
+
+How to build and run test
+* go to the test directory and type "gmake"
+
+* Set PLUGLET environment to the  directory you have test.jar
+
+* Run mozilla and load page test.html from test directory and if everething is ok you will see
+  some awt demo.
+
+  
+  
+========================================================================
 
 Problems:
-
-* clobber_all doesn't remove the .class files from dist\classes.  You
-  have to do this manually.
 
 * post to netscape.public.mozilla.java newsgroup
 

@@ -18,6 +18,8 @@
  *
  * Contributor(s): 
  */
+
+#include <stdlib.h>
 #include "nsIOutputStream.h"
 #include "org_mozilla_pluglet_mozilla_PlugletOutputStream.h"
 

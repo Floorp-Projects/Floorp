@@ -19,19 +19,19 @@
  * Contributor(s): 
  */
 #include <windows.h>
-#include "PlugletView.h"
+#include "PlugletViewWindows.h"
 #include "PlugletEngine.h"
 
 
-jclass   PlugletView::clazz = NULL;
-jmethodID  PlugletView::initMID = NULL;
+jclass   PlugletViewWindows::clazz = NULL;
+jmethodID  PlugletViewWindows::initMID = NULL;
 
-PlugletView::PlugletView() {
+PlugletViewWindows::PlugletViewWindows() {
     hWND = NULL;
     frame = NULL;
     isCreated = FALSE;
 }
-void PlugletView::Initialize() {
+void PlugletViewWindows::Initialize() {
     JNIEnv *env = PlugletEngine::GetJNIEnv();
     clazz = env->FindClass("sun/awt/windows/WEmbeddedFrame");
     if (!clazz) {
@@ -46,7 +46,7 @@ void PlugletView::Initialize() {
     }
 }
 
-BOOLEAN  PlugletView::SetWindow(nsPluginWindow* window) {
+PRBool  PlugletViewWindows::SetWindow(nsPluginWindow* window) {
     if (!window || !window->window) {
         if (isCreated) {
             isCreated = FALSE;
@@ -56,7 +56,7 @@ BOOLEAN  PlugletView::SetWindow(nsPluginWindow* window) {
         }
     }
     if (hWND == reinterpret_cast<HWND>(window->window) && isCreated) {
-        return FALSE;
+        return PR_FALSE;
     }
     
     DWORD dwStyle = ::GetWindowLong(reinterpret_cast<HWND>(window->window), GWL_STYLE);
@@ -65,7 +65,7 @@ BOOLEAN  PlugletView::SetWindow(nsPluginWindow* window) {
     if(!clazz) {
         Initialize();
         if (!clazz) {
-            return FALSE;
+            return PR_FALSE;
         }
     }
     JNIEnv *env = PlugletEngine::GetJNIEnv();
@@ -75,10 +75,10 @@ BOOLEAN  PlugletView::SetWindow(nsPluginWindow* window) {
     }
     hWND = (HWND) window->window;
     isCreated = TRUE;
-    return TRUE;
+    return PR_TRUE;
 }
 
-jobject PlugletView::GetJObject() {
+jobject PlugletViewWindows::GetJObject() {
     return frame;
 }
 

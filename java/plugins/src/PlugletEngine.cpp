@@ -175,11 +175,17 @@ void PlugletEngine::StartJVM(void) {
     sprintf(classpath, "%s%c%s",
             vm_args.classpath, PATH_SEPARATOR, PR_GetEnv("CLASSPATH"));
 	printf("-- classpath %s\n",classpath);
+    char **props = new char*[2];
+    props[0]="java.compiler=NONE";
+    props[1]=0;
+    vm_args.properties = props;
     vm_args.classpath = classpath;
     /* Create the Java VM */	
     res = JNI_CreateJavaVM(&jvm, &env, &vm_args);
     if(res < 0 ) {
         printf("--JNI_CreateJavaVM failed \n");
+    } else {
+        printf("--PlugletEngine::StartJVM() jvm was started \n");
     }
 }
 #endif /* OJI_DISABLE */
@@ -208,6 +214,7 @@ JNIEnv * PlugletEngine::GetJNIEnv(void) {
 	   StartJVM();
    }
    jvm->AttachCurrentThread(&res,NULL);
+   printf("--PluglgetEngine::GetJNIEnv after jvm->Attach \n");
 #endif /* OJI_DISABLE */
    return res;
 }
@@ -230,7 +237,7 @@ jobject PlugletEngine::GetPlugletManager(void) {
 }
 
 PlugletEngine * PlugletEngine::GetEngine(void) {
-  return engine;
+    return engine;
 }
 void PlugletEngine::IncObjectCount(void) {
     objectCount++;

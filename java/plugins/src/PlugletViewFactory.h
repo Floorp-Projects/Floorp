@@ -18,10 +18,13 @@
  *
  * Contributor(s): 
  */
-package org.mozilla.util;
+#ifndef __PlugletViewFactory_h__
+#define  __PlugletViewFactory_h__
+#include "PlugletView.h"
 
-public class Debug {
-    public static native void  print(String str);
+class PlugletViewFactory {
+ public:
+    static PlugletView * GetPlugletView(void);
+};
 
-}
-    
+#endif /* __PlugletViewFactory_h__ */

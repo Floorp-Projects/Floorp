@@ -24,7 +24,7 @@
 #include "jni.h"
 #include "nsIPluginManager.h"
 #include "PlugletsDir.h"
-#include "nsComPtr.h"
+#include "nsCOMPtr.h"
 
 #ifndef OJI_DISABLE
 #include "nsJVMManager.h"

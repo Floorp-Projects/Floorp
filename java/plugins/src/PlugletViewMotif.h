@@ -18,10 +18,32 @@
  *
  * Contributor(s): 
  */
-package org.mozilla.util;
+#ifndef __PlugletViewMotif_h__
+#define __PlugletViewMotif_h__
+#include "nsplugindefs.h"
+#include "jni.h"
+#include "PlugletView.h"
 
-public class Debug {
-    public static native void  print(String str);
+class PlugletViewMotif : public PlugletView {
+ public:
+    PlugletViewMotif(void);
+    virtual jobject GetJObject(void);
+    virtual PRBool SetWindow(nsPluginWindow* window);
+ private:
+    static  void Initialize(void);
+    static  jclass clazz;
+    static  jmethodID initMID;
+    int     WindowID;
+    jobject frame;
+};
+#endif /* __PlugletViewMotif_h__ */
 
-}
-    
+
+
+
+
+
+
+
+
+

@@ -50,7 +50,8 @@ OBJS =  \
 	.\$(OBJDIR)\PlugletPeer.obj \
 	.\$(OBJDIR)\PlugletManager.obj \
 	.\$(OBJDIR)\PlugletInputStream.obj \
-	.\$(OBJDIR)\PlugletView.obj \
+	.\$(OBJDIR)\PlugletViewFactory.obj \
+	.\$(OBJDIR)\PlugletViewWindows.obj \
 !ifndef OJI_DISABLE
 	.\$(OBJDIR)\PlugletSecurityContext.obj \
 !endif

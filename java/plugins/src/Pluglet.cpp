@@ -23,6 +23,8 @@
 #include "PlugletStreamListener.h"
 #include "PlugletPeer.h"
 #include "Registry.h"
+#include "PlugletViewFactory.h"
+
 
 jmethodID Pluglet::initializeMID = NULL;
 jmethodID Pluglet::startMID = NULL;
@@ -41,7 +43,7 @@ Pluglet::Pluglet(jobject object) {
     jthis = PlugletEngine::GetJNIEnv()->NewGlobalRef(object);
     //nb check for null
     peer = NULL;
-    view = new PlugletView();
+    view = PlugletViewFactory::GetPlugletView();
     Registry::SetPeer(jthis,(jlong)this);
 }
 
@@ -111,12 +113,14 @@ NS_METHOD Pluglet::Initialize(nsIPluginInstancePeer* _peer) {
 }
 
 NS_METHOD Pluglet::GetPeer(nsIPluginInstancePeer* *result) {
+    printf("--Pluglet::GetPeer\n");
     peer->AddRef();
     *result = peer;
     return NS_OK;
 }
 
 NS_METHOD Pluglet::Start(void) {
+    printf("--Pluglet::Start\n");
     JNIEnv * env = PlugletEngine::GetJNIEnv();
     env->CallVoidMethod(jthis,startMID);
     if (env->ExceptionOccurred()) {
@@ -126,6 +130,7 @@ NS_METHOD Pluglet::Start(void) {
     return NS_OK;
 }
 NS_METHOD Pluglet::Stop(void) {
+    printf("--Pluglet::Stop\n");
     JNIEnv * env = PlugletEngine::GetJNIEnv();
     env->CallVoidMethod(jthis,stopMID);
     if (env->ExceptionOccurred()) {
@@ -145,6 +150,7 @@ NS_METHOD Pluglet::Destroy(void) {
 }
 
 NS_METHOD Pluglet::NewStream(nsIPluginStreamListener** listener) {
+    printf("--Pluglet::NewStream \n");
     if(!listener) {
 	return NS_ERROR_FAILURE;
     }
@@ -162,13 +168,19 @@ NS_METHOD Pluglet::NewStream(nsIPluginStreamListener** listener) {
 }
 
 NS_METHOD Pluglet::GetValue(nsPluginInstanceVariable variable, void *value) {
+    printf("--Pluglet::GetValue\n");
     return NS_ERROR_FAILURE;
 }
 
 NS_METHOD Pluglet::SetWindow(nsPluginWindow* window) {
-    JNIEnv *env = PlugletEngine::GetJNIEnv();
-    if (view->SetWindow(window)) {
-      env->CallVoidMethod(jthis,setWindowMID,view->GetJObject());
+    printf("--Pluglet::SetWindow  \n");
+    if (view->SetWindow(window) == PR_TRUE) {
+	JNIEnv *env = PlugletEngine::GetJNIEnv();
+	env->CallVoidMethod(jthis,setWindowMID,view->GetJObject());
+	if (env->ExceptionOccurred()) {
+            env->ExceptionDescribe();
+            return NS_ERROR_FAILURE;
+	}
     }
     return NS_OK;
 }
