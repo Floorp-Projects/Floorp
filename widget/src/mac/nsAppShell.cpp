@@ -28,7 +28,7 @@
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
 
-#include "nsMacMessageSink.h"	//еее until this is moved into webshell(?)
+#include "nsMacMessageSink.h"
 #include "nsMacMessagePump.h"
 #include "nsToolKit.h"
 #include <Quickdraw.h>
