@@ -93,7 +93,7 @@ function SetUpServerMenu()
 
 var MySubscribeListener = {
 	OnDonePopulating: function() {
-		gStatusFeedback.showProgress(100);
+		gStatusFeedback.showProgress(0);
 		gStatusFeedback.showStatusString(gSubscribeBundle.getString("doneString"));
 		gStatusBar.setAttribute("mode","normal");
 
@@ -102,8 +102,7 @@ var MySubscribeListener = {
         // a part of the tree
   
         var refValue = gSubscribeTree.getAttribute('ref');
-        //dump("ref = " + refValue + refValue.length + "\n");
-        if (refValue == "null") {
+        if (!refValue) {
             //dump("root subscribe tree at: "+ gServerURI +"\n");
             gSubscribeTree.database.AddDataSource(subscribeDS);
             gSubscribeTree.setAttribute('ref',gServerURI);
