@@ -212,7 +212,7 @@ nsScrollFrame::CreateScrollingView(nsIPresContext& aPresContext)
       NS_RELEASE(frameType);
       nsCOMPtr<nsISupports> container;
       rv = aPresContext.GetContainer(getter_AddRefs(container));
-      if (NS_SUCCEEDED(rv)) {
+      if (NS_SUCCEEDED(rv) && container) {
         nsCOMPtr<nsIWebShell> webShell;
         rv = container->QueryInterface(kIWebShellIID, getter_AddRefs(webShell));
         if (NS_SUCCEEDED(rv)) {
