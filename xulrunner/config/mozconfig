@@ -8,7 +8,7 @@ mk_add_options MOZ_XULRUNNER=1
 
 ac_add_options --disable-ldap
 ac_add_options --disable-mailnews
-ac_add_options --enable-extensions=cookie,xml-rpc,xmlextras,pref,transformiix,universalchardet,typeaheadfind,webservices,inspector,gnomevfs,negotiateauth
+ac_add_options --enable-extensions=xml-rpc,xmlextras,pref,transformiix,universalchardet,webservices,gnomevfs,negotiateauth
 ac_add_options --enable-crypto
 ac_add_options --disable-composer
 ac_add_options --enable-single-profile

@@ -60,7 +60,7 @@ REQUIRES = \
         xulapp \
 	$(NULL)
 
-CPPSRCS = nsXulRunnerApp.cpp
+CPPSRCS = nsXULRunnerApp.cpp
 
 ifdef BUILD_STATIC_LIBS
 STATIC_COMPONENTS_LINKER_PATH = -L$(DIST)/lib/components
