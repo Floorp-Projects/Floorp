@@ -375,7 +375,6 @@ void nsWindow::CreateMainWindow(nsNativeWidget aNativeParent,
                 this);
 
 
-  CreateGC();
 }
 
 
