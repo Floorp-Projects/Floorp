@@ -42,7 +42,11 @@
 
 /* version number of certificate database */
 #define CERT_DB_FILE_VERSION		7
+#ifdef USE_NS_ROOTS
+#define CERT_DB_CONTENT_VERSION		23
+#else
 #define CERT_DB_CONTENT_VERSION		2
+#endif
 
 #define SEC_DB_ENTRY_HEADER_LEN		3
 #define SEC_DB_KEY_HEADER_LEN		1

@@ -49,6 +49,7 @@ MODULE = security
 
 ifdef MOZILLA_SECURITY_BUILD
 CERTINIT=nscertinit.c
+DEFINES += -DUSE_NS_ROOTS
 else
 CERTINIT=certinit.c
 endif
