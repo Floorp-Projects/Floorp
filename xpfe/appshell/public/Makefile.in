@@ -29,6 +29,8 @@ XPIDLSRCS =                       \
 	nsIFileLocator.idl        \
 	nsIAppShellService.idl    \
 	nsIWindowMediator.idl     \
+	nsICommonDialogs.idl  \
+	nsIDialogParamBlock.idl \
 	$(NULL)
 
 EXPORTS = \
