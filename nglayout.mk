@@ -99,7 +99,7 @@ real_depend: depend
 # Rules for pulling the source from the cvs repository
 #
 
-pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout pull_plugin pull_autoconf
+pull_all: pull_lizard pull_xpcom pull_imglib pull_netlib pull_nglayout pull_editor pull_plugin pull_autoconf
 
 pull_lizard:
 	cd $(DEPTH)/..; \
@@ -150,6 +150,10 @@ pull_nglayout:
 	$(CVSCO_NGLAYOUT) mozilla/view; \
 	$(CVSCO_NGLAYOUT) mozilla/webshell; \
 	$(CVSCO_NGLAYOUT) mozilla/widget
+
+pull_editor:
+	cd $(DEPTH)/..; \
+	$(CVSCO_NGLAYOUT) mozilla/editor
 
 pull_doc:
 	cd $(DEPTH)/..; \
