@@ -1,6 +1,13 @@
 TransforMiiX (TM) 
-(C) Copyright The MITRE Corporation 1999, Keith Visco.  All rights reserved.
+(C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
+
+Build 20000322
+-- Added Unicode bug fix from Lidong
+
+Build 20000318
+-- Added Olivier's implementation of the XPath Number functions
+-- Added missing prototype to String.h (Peter Van der Beken)
 
 Build 20000222
 -- Added Attribute parent mapping since DOM 1.0 doesn't support it
