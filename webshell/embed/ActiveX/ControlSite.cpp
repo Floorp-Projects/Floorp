@@ -20,9 +20,16 @@
 
 #include "ControlSite.h"
 
+
+std::list<CControlSite *> CControlSite::m_cControlList;
+
+
 CControlSite::CControlSite()
 {
+	NG_TRACE_METHOD(CControlSite::CControlSite);
+
 	m_hWndParent = NULL;
+	m_clsid = CLSID_NULL;
 	m_bSetClientSiteFirst = FALSE;
 	m_bVisibleAtRuntime = TRUE;
 	memset(&m_rcObjectPos, 0, sizeof(m_rcObjectPos));
@@ -40,34 +47,60 @@ CControlSite::CControlSite()
 	m_bAmbientUserMode = true;
 	m_bAmbientShowHatching = true;
 	m_bAmbientShowGrabHandles = true;
+
+	// Add the control to the list
+	m_cControlList.push_back(this);
 }
 
 
 CControlSite::~CControlSite()
 {
+	NG_TRACE_METHOD(CControlSite::~CControlSite);
+	m_cControlList.remove(this);
 }
 
 
-HRESULT CControlSite::Attach(REFCLSID clsid, HWND hwndParent, const RECT &rcPos, IStream *pInitStream)
+HRESULT CControlSite::Create(REFCLSID clsid, PropertyList &pl, const tstring szName)
 {
-	if (hwndParent == NULL)
-	{
-		NG_ASSERT(0);
-		return E_INVALIDARG;
-	}
+	NG_TRACE_METHOD_ARGS(CControlSite::Create, "...,...,\"%s\"", szName);
 
-	m_hWndParent = hwndParent;
-	m_rcObjectPos = rcPos;
+	m_clsid = clsid;
+	m_ParameterList = pl;
+	m_szName = szName;
 
 	// TODO see if object is script safe
-	
+
 	// Create the object
 	HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_ALL, IID_IUnknown, (void **) &m_spObject);
 	if (FAILED(hr))
 	{
 		return E_FAIL;
 	}
-	
+
+	return S_OK;
+}
+
+
+HRESULT CControlSite::Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInitStream)
+{
+	NG_TRACE_METHOD(CControlSite::Attach);
+
+	if (hwndParent == NULL)
+	{
+		NG_ASSERT(0);
+		return E_INVALIDARG;
+	}
+
+	// Object must have been created
+	if (m_spObject == NULL)
+	{
+		NG_ASSERT(0);
+		return E_UNEXPECTED;
+	}
+
+	m_hWndParent = hwndParent;
+	m_rcObjectPos = rcPos;
+
 	m_spIViewObject = m_spObject;
 	m_spIOleObject = m_spObject;
 	
@@ -95,16 +128,45 @@ HRESULT CControlSite::Attach(REFCLSID clsid, HWND hwndParent, const RECT &rcPos,
 		m_spIOleObject->SetClientSite(this);
 	}
 
-	// Initialise the control from store
-	CComQIPtr<IPersistStream, &IID_IPersistStream> spIPersistStream = m_spIOleObject;
-	CComQIPtr<IPersistStreamInit, &IID_IPersistStreamInit> spIPersistStreamInit = m_spIOleObject;
-	if (spIPersistStreamInit && pInitStream == NULL)
+	// If there is a parameter list for the object and no init stream then
+	// create one here.
+	CPropertyBagInstance *pPropertyBag = NULL;
+	if (pInitStream == NULL && m_ParameterList.size() >= 1)
 	{
-		spIPersistStreamInit->InitNew();
+		CPropertyBagInstance::CreateInstance(&pPropertyBag);
+		pPropertyBag->AddRef();
+		for (PropertyList::const_iterator i = m_ParameterList.begin(); i != m_ParameterList.end(); i++)
+		{
+			pPropertyBag->Write((*i).szName, (VARIANT *) &(*i).vValue);
+		}
+		pInitStream = (IPersistPropertyBag *) pPropertyBag;
 	}
-	else if (pInitStream)
+
+	// Initialise the control from store if one is provided
+	if (pInitStream)
 	{
-		spIPersistStream->Load(pInitStream);
+		CComQIPtr<IPropertyBag, &IID_IPropertyBag> spPropertyBag = pInitStream;
+		CComQIPtr<IStream, &IID_IStream> spStream = pInitStream;
+		CComQIPtr<IPersistStream, &IID_IPersistStream> spIPersistStream = m_spIOleObject;
+		CComQIPtr<IPersistPropertyBag, &IID_IPersistPropertyBag> spIPersistPropertyBag = m_spIOleObject;
+
+		if (spIPersistPropertyBag && spPropertyBag)
+		{
+			spIPersistPropertyBag->Load(spPropertyBag, NULL);
+		}
+		else if (spIPersistStream && spStream)
+		{
+			spIPersistStream->Load(spStream);
+		}
+	}
+	else
+	{
+		// Initialise the object if possible
+		CComQIPtr<IPersistStreamInit, &IID_IPersistStreamInit> spIPersistStreamInit = m_spIOleObject;
+		if (spIPersistStreamInit)
+		{
+			spIPersistStreamInit->InitNew();
+		}
 	}
 
 	m_spIOleInPlaceObject = m_spObject;
@@ -131,6 +193,8 @@ HRESULT CControlSite::Attach(REFCLSID clsid, HWND hwndParent, const RECT &rcPos,
 
 HRESULT CControlSite::Detach()
 {
+	NG_TRACE_METHOD(CControlSite::Detach);
+
 	if (m_spIOleInPlaceObjectWindowless)
 	{
 		m_spIOleInPlaceObjectWindowless.Release();
@@ -169,6 +233,8 @@ HRESULT CControlSite::GetControlUnknown(IUnknown **ppObject)
 
 HRESULT CControlSite::Draw(HDC hdc)
 {
+	NG_TRACE_METHOD(CControlSite::Draw);
+
 	// Draw only when control is windowless or deactivated
 	if (m_spIViewObject)
 	{
@@ -183,6 +249,8 @@ HRESULT CControlSite::Draw(HDC hdc)
 
 HRESULT CControlSite::DoVerb(LONG nVerb, LPMSG lpMsg)
 {
+	NG_TRACE_METHOD(CControlSite::DoVerb);
+
 	if (m_spIOleObject == NULL)
 	{
 		return E_FAIL;
@@ -194,6 +262,8 @@ HRESULT CControlSite::DoVerb(LONG nVerb, LPMSG lpMsg)
 
 HRESULT CControlSite::SetPosition(const RECT &rcPos)
 {
+	NG_TRACE_METHOD(CControlSite::SetPosition);
+
 	m_rcObjectPos = rcPos;
 	m_spIOleInPlaceObject->SetObjectRects(&m_rcObjectPos, &m_rcObjectPos);
 	return S_OK;
@@ -394,6 +464,13 @@ HRESULT STDMETHODCALLTYPE CControlSite::GetWindowContext(/* [out] */ IOleInPlace
 	*lprcPosRect = m_rcObjectPos;
 	*lprcClipRect = m_rcObjectPos;
 
+	CControlSiteIPFrameInstance *pIPFrame = NULL;
+	CControlSiteIPFrameInstance::CreateInstance(&pIPFrame);
+	pIPFrame->AddRef();
+
+	*ppFrame = (IOleInPlaceFrame *) pIPFrame;
+	*ppDoc = NULL;
+
 	lpFrameInfo->fMDIApp = FALSE;
 	lpFrameInfo->hwndFrame = NULL;
 	lpFrameInfo->haccel = NULL;
@@ -442,6 +519,69 @@ HRESULT STDMETHODCALLTYPE CControlSite::OnPosRectChange(/* [in] */ LPCRECT lprcP
 
 
 ///////////////////////////////////////////////////////////////////////////////
+// IParseDisplayName implementation
+
+HRESULT STDMETHODCALLTYPE CControlSite::ParseDisplayName(/* [unique][in] */ IBindCtx __RPC_FAR *pbc, /* [in] */ LPOLESTR pszDisplayName, /* [out] */ ULONG __RPC_FAR *pchEaten, /* [out] */ IMoniker __RPC_FAR *__RPC_FAR *ppmkOut)
+{
+	// TODO
+	return E_NOTIMPL;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// IOleContainer implementation
+
+HRESULT STDMETHODCALLTYPE CControlSite::EnumObjects(/* [in] */ DWORD grfFlags, /* [out] */ IEnumUnknown __RPC_FAR *__RPC_FAR *ppenum)
+{
+	// TODO
+	return E_NOTIMPL;
+}
+        
+
+HRESULT STDMETHODCALLTYPE CControlSite::LockContainer(/* [in] */ BOOL fLock)
+{
+	// TODO
+	return E_NOTIMPL;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// IOleItemContainer implementation
+
+HRESULT STDMETHODCALLTYPE CControlSite::GetObject(/* [in] */ LPOLESTR pszItem, /* [in] */ DWORD dwSpeedNeeded, /* [unique][in] */ IBindCtx __RPC_FAR *pbc, /* [in] */ REFIID riid, /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject)
+{
+	if (pszItem == NULL)
+	{
+		return E_INVALIDARG;
+	}
+	if (ppvObject == NULL)
+	{
+		return E_INVALIDARG;
+	}
+
+	*ppvObject = NULL;
+
+
+	
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CControlSite::GetObjectStorage(/* [in] */ LPOLESTR pszItem, /* [unique][in] */ IBindCtx __RPC_FAR *pbc, /* [in] */ REFIID riid, /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvStorage)
+{
+	// TODO
+	return E_NOTIMPL;
+}
+
+
+HRESULT STDMETHODCALLTYPE CControlSite::IsRunning(/* [in] */ LPOLESTR pszItem)
+{
+	// TODO
+	return E_NOTIMPL;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
 // IOleInPlaceSiteEx implementation
 
 HRESULT STDMETHODCALLTYPE CControlSite::OnInPlaceActivateEx(/* [out] */ BOOL __RPC_FAR *pfNoRedraw, /* [in] */ DWORD dwFlags)
@@ -450,10 +590,12 @@ HRESULT STDMETHODCALLTYPE CControlSite::OnInPlaceActivateEx(/* [out] */ BOOL __R
 	return S_OK;
 }
 
+
 HRESULT STDMETHODCALLTYPE CControlSite::OnInPlaceDeactivateEx(/* [in] */ BOOL fNoRedraw)
 {
 	return S_OK;
 }
+
 
 HRESULT STDMETHODCALLTYPE CControlSite::RequestUIActivate(void)
 {
@@ -470,11 +612,13 @@ HRESULT STDMETHODCALLTYPE CControlSite::CanWindowlessActivate(void)
 	return (m_bSupportWindowlessActivation) ? S_OK : S_FALSE;
 }
 
+
 HRESULT STDMETHODCALLTYPE CControlSite::GetCapture(void)
 {
 	// TODO capture the mouse for the object
 	return S_FALSE;
 }
+
 
 HRESULT STDMETHODCALLTYPE CControlSite::SetCapture(/* [in] */ BOOL fCapture)
 {
@@ -482,15 +626,18 @@ HRESULT STDMETHODCALLTYPE CControlSite::SetCapture(/* [in] */ BOOL fCapture)
 	return S_FALSE;
 }
 
+
 HRESULT STDMETHODCALLTYPE CControlSite::GetFocus(void)
 {
 	return S_OK;
 }
 
+
 HRESULT STDMETHODCALLTYPE CControlSite::SetFocus(/* [in] */ BOOL fFocus)
 {
 	return S_OK;
 }
+
 
 HRESULT STDMETHODCALLTYPE CControlSite::GetDC(/* [in] */ LPCRECT pRect, /* [in] */ DWORD grfFlags, /* [out] */ HDC __RPC_FAR *phDC)
 {

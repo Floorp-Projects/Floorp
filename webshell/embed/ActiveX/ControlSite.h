@@ -23,6 +23,7 @@ class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 						public IOleInPlaceSiteWindowless,
 						public IOleControlSite,
 						public IAdviseSinkEx,
+						public IOleItemContainer,
 						public IDispatch
 {
 	// Handle to parent window
@@ -56,6 +57,14 @@ class CControlSite :	public CComObjectRootEx<CComSingleThreadModel>,
 	// Pointer to object's IOleInPlaceObjectWindowless interface
 	CComQIPtr<IOleInPlaceObjectWindowless, &IID_IOleInPlaceObjectWindowless> m_spIOleInPlaceObjectWindowless;
 
+	// Name of this control
+	tstring m_szName;
+	// CLSID of the control
+	CLSID m_clsid;
+	// Parameter list
+	PropertyList m_ParameterList;
+	// List of controls
+	static std::list<CControlSite *> m_cControlList;
 
 	// Double buffer drawing variables used for windowless controls
 	
@@ -92,8 +101,6 @@ public:
 	CControlSite();
 	virtual ~CControlSite();
 
-//DECLARE_REGISTRY_RESOURCEID(IDR_MOZILLABROWSER)
-
 BEGIN_COM_MAP(CControlSite)
 	COM_INTERFACE_ENTRY(IOleWindow)
 	COM_INTERFACE_ENTRY(IOleClientSite)
@@ -106,14 +113,33 @@ BEGIN_COM_MAP(CControlSite)
 	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink, IAdviseSinkEx)
 	COM_INTERFACE_ENTRY_IID(IID_IAdviseSink2, IAdviseSinkEx)
 	COM_INTERFACE_ENTRY_IID(IID_IAdviseSinkEx, IAdviseSinkEx)
+	COM_INTERFACE_ENTRY_IID(IID_IParseDisplayName, IOleItemContainer)
+	COM_INTERFACE_ENTRY_IID(IID_IOleContainer, IOleItemContainer)
+	COM_INTERFACE_ENTRY_IID(IID_IOleItemContainer, IOleItemContainer)
 END_COM_MAP()
 
-	virtual HRESULT Attach(REFCLSID clsid, HWND hwndParent, const RECT &rcPos, IStream *pInitStream);
+	virtual HRESULT Create(REFCLSID clsid, PropertyList &pl, const tstring szName = _T(""));
+	virtual HRESULT Attach(HWND hwndParent, const RECT &rcPos, IUnknown *pInitStream);
 	virtual HRESULT Detach();
 	virtual HRESULT GetControlUnknown(IUnknown **ppObject);
 	virtual HRESULT SetPosition(const RECT &rcPos);
 	virtual HRESULT Draw(HDC hdc);
 	virtual HRESULT DoVerb(LONG nVerb, LPMSG lpMsg = NULL);
+
+	virtual const CLSID &GetObjectCLSID() const
+	{
+		return m_clsid;
+	}
+
+	virtual const tstring &GetObjectName() const
+	{
+		return m_szName;
+	}
+
+	virtual HWND GetParentWindow() const
+	{
+		return m_hWndParent;
+	}
 
 	// IDispatch
 	virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(/* [out] */ UINT __RPC_FAR *pctinfo);
@@ -185,6 +211,18 @@ END_COM_MAP()
 	virtual HRESULT STDMETHODCALLTYPE TranslateAccelerator(/* [in] */ MSG __RPC_FAR *pMsg, /* [in] */ DWORD grfModifiers);
 	virtual HRESULT STDMETHODCALLTYPE OnFocus(/* [in] */ BOOL fGotFocus);
 	virtual HRESULT STDMETHODCALLTYPE ShowPropertyFrame( void);
+
+	// IParseDisplayName implementation
+	virtual HRESULT STDMETHODCALLTYPE ParseDisplayName(/* [unique][in] */ IBindCtx __RPC_FAR *pbc, /* [in] */ LPOLESTR pszDisplayName, /* [out] */ ULONG __RPC_FAR *pchEaten, /* [out] */ IMoniker __RPC_FAR *__RPC_FAR *ppmkOut);
+
+	// IOleContainer implementation
+	virtual HRESULT STDMETHODCALLTYPE EnumObjects(/* [in] */ DWORD grfFlags, /* [out] */ IEnumUnknown __RPC_FAR *__RPC_FAR *ppenum);
+	virtual HRESULT STDMETHODCALLTYPE LockContainer(/* [in] */ BOOL fLock);
+
+	// IOleItemContainer implementation
+	virtual /* [local] */ HRESULT STDMETHODCALLTYPE GetObject(/* [in] */ LPOLESTR pszItem, /* [in] */ DWORD dwSpeedNeeded, /* [unique][in] */ IBindCtx __RPC_FAR *pbc, /* [in] */ REFIID riid, /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvObject);
+	virtual /* [local] */ HRESULT STDMETHODCALLTYPE GetObjectStorage(/* [in] */ LPOLESTR pszItem, /* [unique][in] */ IBindCtx __RPC_FAR *pbc, /* [in] */ REFIID riid, /* [iid_is][out] */ void __RPC_FAR *__RPC_FAR *ppvStorage);
+	virtual HRESULT STDMETHODCALLTYPE IsRunning(/* [in] */ LPOLESTR pszItem);  
 };
 
 typedef CComObject<CControlSite> CControlSiteInstance;
