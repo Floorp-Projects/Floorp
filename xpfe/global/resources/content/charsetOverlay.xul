@@ -113,7 +113,7 @@
     </menu>
 
     <!-- Mail View Charset Menu -->
-    <menu id="mailviewCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:MailviewCharsetMenuRoot" oncommand="MailMultiplexHandler(event)" oncreate="UpdateCharsetDetector()">
+    <menu id="mailviewCharsetMenu" value="&charsetMenu.label;" datasources="rdf:charset-menu" ref="NC:MailviewCharsetMenuRoot" oncommand="MailMultiplexHandler(event)" oncreate="UpdateMailMenus()">
         <template>
             <rule rdf:type="http://home.netscape.com/NC-rdf#CharsetDetector">
                 <menupopup>

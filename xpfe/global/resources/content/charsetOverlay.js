@@ -133,6 +133,18 @@ function UpdateCurrentCharset()
     }
 }
 
+function UpdateCurrentMailCharset()
+{
+    var charset = msgWindow.mailCharacterSet;
+    dump("UPdate current mail charset: " + charset + " \n");
+
+    var menuitem = document.getElementById('charset.' + charset);
+
+    if (menuitem) {
+        menuitem.setAttribute('checked', 'true');
+    }
+}
+
 function UpdateCharsetDetector()
 {
     var pref = Components.classes['component://netscape/preferences'];
@@ -160,6 +172,12 @@ function UpdateMenus(event)
     UpdateCharsetDetector();
 }
 
+function UpdateMailMenus(event)
+{
+    UpdateCurrentMailCharset();
+    UpdateCharsetDetector();
+}
+
 function charsetLoadListener (event)
 {
     var menu = Components.classes['component://netscape/rdf/datasource?name=charset-menu'];
@@ -180,6 +198,36 @@ function charsetLoadListener (event)
     // weird assertion!
 }
 
-contentArea = window.document.getElementById("appcontent");
-if (contentArea)
-  contentArea.addEventListener("load", charsetLoadListener, true);
+function mailCharsetLoadListener (event)
+{
+    var menu = Components.classes['component://netscape/rdf/datasource?name=charset-menu'];
+
+    if (menu) {
+        menu = menu.getService();
+        menu = menu.QueryInterface(Components.interfaces.nsICurrentCharsetListener);
+        
+        var charset = msgWindow.mailCharacterSet;
+        if (charset.length > 0) {
+            menu.SetCurrentMailCharset(charset);
+            dump("mailCharsetLoadListener: " + charset + " \n");
+        }
+    }
+}
+
+var wintype = document.firstChild.getAttribute('windowtype');
+if (window && (wintype == "navigator:browser"))
+{
+  contentArea = window.document.getElementById("appcontent");
+  if (contentArea)
+    contentArea.addEventListener("load", charsetLoadListener, true);
+}
+else
+{
+  var arrayOfStrings = wintype.split(":");
+  if (window && arrayOfStrings[0] == "mail") 
+  {
+    contentArea = window.document.getElementById("messagepane");
+    if (contentArea)
+      contentArea.addEventListener("load", mailCharsetLoadListener, true);
+  }
+}
