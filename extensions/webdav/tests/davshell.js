@@ -110,7 +110,13 @@ OperationListener.prototype =
     {
         dump("DELETE " + resource.urlSpec + " complete: " + status + "\n");
         stopEventPump();
-    }
+    },
+    
+    onMakeCollectionResult: function (status, resource)
+    {
+        dump("MKCOL " + resource.urlSpec + " complete: " + status + "\n");
+        stopEventPump();
+    },
 }
 
 function PropfindListener()
@@ -191,6 +197,12 @@ function PROPFIND_names(url, depth)
 function DELETE(url)
 {
     davSvc.remove(new Resource(url), new OperationListener());
+    runEventPump();
+}
+
+function MKCOL(url)
+{
+    davSvc.makeCollection(new Resource(url), new OperationListener());
     runEventPump();
 }
 

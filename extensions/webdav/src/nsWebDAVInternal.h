@@ -70,6 +70,11 @@ NS_WD_NewDeleteOperationStreamListener(nsIWebDAVResource *resource,
                                        nsIStreamListener **streamListener);
 
 nsresult
+NS_WD_NewMkcolOperationStreamListener(nsIWebDAVResource *resource,
+                                      nsIWebDAVOperationListener *listener,
+                                      nsIStreamListener **streamListener);
+
+nsresult
 NS_WD_NewGetOperationRequestObserver(nsIWebDAVResource *resource,
                                      nsIWebDAVOperationListener *listener,
                                      nsIOutputStream *outstream,

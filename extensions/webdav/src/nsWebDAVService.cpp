@@ -536,6 +536,32 @@ nsWebDAVService::Remove(nsIWebDAVResource *resource,
 }
 
 NS_IMETHODIMP
+nsWebDAVService::MakeCollection(nsIWebDAVResource *resource,
+                                nsIWebDAVOperationListener *listener)
+{
+    nsCOMPtr<nsIHttpChannel> channel;
+    nsresult rv = ChannelFromResource(resource, getter_AddRefs(channel));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStreamListener> streamListener;
+    rv = NS_WD_NewMkcolOperationStreamListener(resource, listener,
+                                               getter_AddRefs(streamListener));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    channel->SetRequestMethod(NS_LITERAL_CSTRING("MKCOL"));
+
+    if (LOG_ENABLED()) {
+        nsCOMPtr<nsIURI> uri;
+        channel->GetURI(getter_AddRefs(uri));
+        nsCAutoString spec;
+        uri->GetSpec(spec);
+        LOG(("MKCOL starting for %s", spec.get()));
+    }
+
+    return channel->AsyncOpen(streamListener, channel);
+}
+
+NS_IMETHODIMP
 nsWebDAVService::MoveTo(nsIWebDAVResourceWithTarget *resource,
                         nsIWebDAVOperationListener *listener)
 {

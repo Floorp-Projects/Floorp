@@ -94,14 +94,15 @@ interface nsIWebDAVService : nsISupports
     void copyTo(in nsIWebDAVResourceWithTarget resource,
                 in nsIWebDAVOperationListener listener,
                 in boolean recursive);
+
+    void makeCollection(in nsIWebDAVResource resource,
+                        in nsIWebDAVOperationListener listener);
 };
 
 [scriptable,uuid(96c8d65a-fa17-408c-8008-1aa2b95952d4)]
 interface nsIWebDAVResourceXXX : nsISupports
 {
   readonly attribute boolean isCollection;
-
-  nsIWebDAVResource makeChildCollection(in string name);
 
   void setProperties([array,size_is(count)] in string propname,
                      [array,size_is(count)] in string propvalues,

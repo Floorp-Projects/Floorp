@@ -51,7 +51,7 @@ public:
     NS_DECL_NSISTREAMLISTENER
     
     enum OperationMode {
-        PUT, GET, DELETE
+        PUT, GET, DELETE, MKCOL
     };
     
     OperationStreamListener(nsIWebDAVResource *resource,
@@ -99,6 +99,9 @@ OperationStreamListener::OnStopRequest(nsIRequest *aRequest,
     case DELETE:
         mListener->OnRemoveResult(aStatusCode, mResource);
         break;
+    case MKCOL:
+        mListener->OnMakeCollectionResult(aStatusCode, mResource);
+        break;
     }
 
     if (mOutputStream)
@@ -106,14 +109,25 @@ OperationStreamListener::OnStopRequest(nsIRequest *aRequest,
     return NS_OK;
 }
 
+nsresult
+NullStreamReaderCallback(nsIInputStream *aInputStream, void *aClosure,
+                         const char *aRawSegment, PRUint32 aToOffset,
+                         PRUint32 aCount, PRUint32 *aWriteCount)
+{
+    *aWriteCount = aCount;
+    return NS_OK;
+}
+
+
 NS_IMETHODIMP
 OperationStreamListener::OnDataAvailable(nsIRequest *aRequest,
                                          nsISupports *aContext,
                                          nsIInputStream *aInputStream,
                                          PRUint32 offset, PRUint32 count)
 {
-    aRequest->Cancel(NS_BINDING_ABORTED);
-    return NS_OK;
+    PRUint32 totalRead;
+    return aInputStream->ReadSegments(NullStreamReaderCallback, nsnull,
+                                      count, &totalRead);
 }
 
 nsresult
@@ -137,6 +151,19 @@ NS_WD_NewDeleteOperationStreamListener(nsIWebDAVResource *resource,
     nsCOMPtr<nsIRequestObserver> osl = 
         new OperationStreamListener(resource, listener, nsnull,
                                     OperationStreamListener::DELETE);
+    if (!osl)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return CallQueryInterface(osl, streamListener);
+}
+
+nsresult
+NS_WD_NewMkcolOperationStreamListener(nsIWebDAVResource *resource,
+                                      nsIWebDAVOperationListener *listener,
+                                      nsIStreamListener **streamListener)
+{
+    nsCOMPtr<nsIRequestObserver> osl = 
+        new OperationStreamListener(resource, listener, nsnull,
+                                    OperationStreamListener::MKCOL);
     if (!osl)
         return NS_ERROR_OUT_OF_MEMORY;
     return CallQueryInterface(osl, streamListener);

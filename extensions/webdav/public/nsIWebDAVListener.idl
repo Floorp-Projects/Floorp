@@ -77,4 +77,6 @@ interface nsIWebDAVOperationListener : nsISupports
                      in nsIWebDAVResource aResource);
     void onRemoveResult(in unsigned long aStatusCode,
                         in nsIWebDAVResource aResource);
+    void onMakeCollectionResult(in unsigned long aStatusCode,
+                                in nsIWebDAVResource aResource);
 };
