@@ -14,54 +14,11 @@ function CreateProfile()
 	this.location.href = "resource:/res/profile/pm.xul";
 }
 
-function MigrateProfile(override)
-{
-	// Hack to avoid writing two copies of this
-	if (override) 
-		selected = override;
-
-	if (!selected)
-	{
-		dump("Select a profile to migrate.\n");
-		return;
-	}
-
-	var name = selected.getAttribute("rowName");
-	var migrate = selected.getAttribute("rowMigrate");
-
-	if (migrate != "true")
-	{
-		dump("This profile doesn't need migration.\n");
-		return;
-	}
-
-	profileCore.MigrateProfile(name);
-	//this.location.replace(this.location);
-	//this.location.href = this.location;
-	this.location.href = "resource:/res/profile/pm.xul";
-}
-
-function MigrateAllProfiles()
-{
-	var body = document.getElementById("theTreeBody");
-
-	var child = body.firstChild;
-
-	while (child)
-	{
-		if (child.getAttribute("rowMigrate") == "true")
-		{
-			MigrateProfile(child);
-		}
-		child = child.nextSibling;
-	}
-}
-
 function RenameProfile(w)
 {
 	if (!selected)
 	{
-		dump("Select a profile to migrate.\n");
+		dump("Select a profile to rename.\n");
 		return;
 	}
 
