@@ -21,14 +21,21 @@
  *  Robert Ginda, rginda@ndcico.com, original author
  *  Peter Van der Beken, peter.vanderbeken@pandora.be, necko-only version
  *
- * depends on utils.js, XPCOM, and the XPCOM component
- *  component://misc/bs/connection
- *
- * sane wrapper around the insane bsIConnection component.  This
- * component needs to be replaced, or at least fixed, so this wrapper
- * will hopefully make it easy to do this in the future.
+ * depends on utils.js, and XPCOM/XPConnect in the JS environment
  *
  */
+
+const NS_ERROR_MODULE_NETWORK = 2152398848;
+
+const NS_ERROR_UNKNOWN_HOST = NS_ERROR_MODULE_NETWORK + 30;
+const NS_ERROR_CONNECTION_REFUSED = NS_ERROR_MODULE_NETWORK + 13;
+const NS_ERROR_NET_TIMEOUT = NS_ERROR_MODULE_NETWORK + 14;
+
+const NS_NET_STATUS_RESOLVING_HOST = NS_ERROR_MODULE_NETWORK + 3;
+const NS_NET_STATUS_CONNECTED_TO = NS_ERROR_MODULE_NETWORK + 4;
+const NS_NET_STATUS_SENDING_TO = NS_ERROR_MODULE_NETWORK + 5;
+const NS_NET_STATUS_RECEIVING_FROM = NS_ERROR_MODULE_NETWORK + 6;
+const NS_NET_STATUS_CONNECTING_TO = NS_ERROR_MODULE_NETWORK + 7;
 
 function toScriptableInputStream (i)
 {
@@ -61,7 +68,8 @@ function CBSConnection ()
 
 }
 
-CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
+CBSConnection.prototype.connect =
+function bc_connect(host, port, bind, tcp_flag, observer)
 {
     if (typeof tcp_flag == "undefined")
 		tcp_flag = false;
@@ -71,14 +79,29 @@ CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
     this.bind = bind;
     this.tcp_flag = tcp_flag;
 
-    this._channel = this._sockService.createTransport (host, port, null, -1,
-                                                       0, 0);
-    if (!this._channel)
-        throw ("Error opening channel.");
+    this._transport = this._sockService.createTransport (host, port, null, -1,
+                                                         0, 0);
+    if (!this._transport)
+        throw ("Error creating transport.");
 
-    this._outputStream = this._channel.openOutputStream(0, -1, 0);
-    if (!this._outputStream)
-        throw ("Error getting output stream.");
+    if (jsenv.HAS_NSPR_EVENTQ) 
+    {   /* we've got an event queue, so start up an async write */
+        this._streamProvider = new StreamProvider (observer);
+        this._write_req =
+            this._transport.asyncWrite (this._streamProvider, this,
+                                        0, -1, 0);
+    }
+    else
+    {   /* no nspr event queues in this environment, we can't use async calls,
+         * so set up the streams. */
+        this._outputStream = this._transport.openOutputStream(0, -1, 0);
+        if (!this._outputStream)
+            throw "Error getting output stream.";
+        this._inputStream =
+            toScriptableInputStream(this._transport.openInputStream (0, -1, 0));
+        if (!this._inputStream)
+            throw "Error getting input stream.";
+    }    
 
     this.connectDate = new Date();
     this.isConnected = true;
@@ -87,24 +110,77 @@ CBSConnection.prototype.connect = function(host, port, bind, tcp_flag)
   
 }
 
-CBSConnection.prototype.disconnect = function()
-{
-    
+CBSConnection.prototype.disconnect =
+function bc_disconnect()
+{    
     if (this.isConnected) {
-        this.isConnected = false;
         this._inputStream.close();
         /* .close() not implemented for output streams
           this._outputStream.close();
         */
     }
-
 }
 
-CBSConnection.prototype.sendData = function(str)
+CBSConnection.prototype.sendData =
+function bc_senddata(str)
 {
     if (!this.isConnected)
         throw "Not Connected.";
 
+    if (jsenv.HAS_NSPR_EVENTQ)
+        this.asyncWrite (str);
+    else
+        this.sendDataNow (str);
+}
+    
+CBSConnection.prototype.readData =
+function bc_readdata(timeout, count)
+{
+    if (!this.isConnected)
+        throw "Not Connected.";
+
+    var rv;
+
+    try
+    {
+        rv = this._inputStream.read (count);
+    }
+    catch (ex)
+    {
+        dd ("*** Caught " + ex + " while reading.")
+        this.isConnected = false;
+        throw (ex);
+    }
+    
+    return rv;
+}
+
+CBSConnection.prototype.startAsyncRead =
+function bc_saread (observer)
+{
+    this._transport.asyncRead (new StreamListener (observer), this, 0, -1, 0);
+}
+
+CBSConnection.prototype.asyncWrite =
+function bc_awrite (str)
+{
+    this._streamProvider.pendingData += str;
+    if (this._streamProvider.isBlocked)
+    {
+        this._write_req.resume();
+        this._streamProvider.isBlocked = false;
+    }
+}
+
+CBSConnection.prototype.hasPendingWrite =
+function bc_haspwrite ()
+{
+    return (this._streamProvider.pendingData != "");
+}
+
+CBSConnection.prototype.sendDataNow =
+function bc_senddatanow(str)
+{
     var rv = false;
     
     try
@@ -114,98 +190,94 @@ CBSConnection.prototype.sendData = function(str)
     }
     catch (ex)
     {
-        if (typeof ex != "undefined")
-        {
-            this.isConnected = false;
-            throw (ex);
-        }
-        else
-            rv = false;
+        dd ("*** Caught " + ex + " while sending.")
+        this.isConnected = false;
+        throw (ex);
     }
     
     return rv;
 }
 
-CBSConnection.prototype.readData = function(timeout)
+function _notimpl ()
 {
-    if (!this.isConnected)
-        throw "Not Connected.";
-
-    if (!this._inputStream)
-    {
-        this._inputStream =
-            toScriptableInputStream(this._channel.openInputStream (0, -1, 0));
-        if (!this._inputStream)
-            throw ("Error getting input stream.");
-    }
-    
-    var rv, av;
-
-    try
-    {
-        av = this._inputStream.available();
-        if (av)
-            rv = this._inputStream.read (av);
-        else
-            rv = "";
-    }
-    catch (ex)
-    {
-        dd ("*** Caught " + ex + " while reading.")
-        if (typeof ex != "undefined") {
-            this.isConnected = false;
-            throw (ex);
-        } else {
-            rv = "";
-        }
-    }
-    
-    return rv;
+    throw "Not Implemented.";
 }
 
-if (jsenv.HAS_DOCUMENT)
+if (!jsenv.HAS_NSPR_EVENTQ)
 {
-    CBSConnection.prototype.startAsyncRead =
-    function (server)
-    {
-        this._channel.asyncRead (new StreamListener (server), this, 0, -1, 0);
-    }
+    CBSConnection.prototype.startAsyncRead = _notimpl;
+    CBSConnection.prototype.asyncWrite = _notimpl;
+}
+else
+{
+    CBSConnection.prototype.sendDataNow = _notimpl;
 }
 
-function StreamListener(server)
+delete _notimpl;
+    
+function StreamProvider(observer)
 {
-    this.server = server;
+    this._observer = observer;
+}
+
+StreamProvider.prototype.pendingData = "";
+StreamProvider.prototype.isBlocked = true;
+
+StreamProvider.prototype.onDataWritable =
+function sp_datawrite (request, ctxt, ostream, offset, count)
+{
+    if (!this.pendingData)
+    {
+        this.isBlocked = true;
+
+        /* this is here to support pre-XPCDOM builds (0.9.0 era), which
+         * don't have this result code mapped. */
+        if (!Components.results.NS_BASE_STREAM_WOULD_BLOCK)
+            throw 2152136711;
+        
+        throw Components.results.NS_BASE_STREAM_WOULD_BLOCK;
+    }
+    
+    var len = ostream.write (this.pendingData, this.pendingData.length);
+    this.pendingData = this.pendingData.substr (len);
+}
+
+StreamProvider.prototype.onStartRequest =
+function sp_startreq (request, ctxt)
+{
+    //dd ("StreamProvider::onStartRequest: " + request + ", " + ctxt);
+}
+
+
+StreamProvider.prototype.onStopRequest =
+function sp_stopreq (request, ctxt, status)
+{
+    //dd ("StreamProvider::onStopRequest: " + request + ", " + ctxt + ", " +
+    //    status);
+}
+
+function StreamListener(observer)
+{
+    this._observer = observer;
 }
 
 StreamListener.prototype.onStartRequest =
-function (request, ctxt)
+function sl_startreq (request, ctxt)
 {
-    dd ("onStartRequest: " + request + ", " + ctxt);
+    //dd ("StreamListener::onStartRequest: " + request + ", " + ctxt);
 }
 
 StreamListener.prototype.onStopRequest =
-function (request, ctxt, status)
+function sl_stopreq (request, ctxt, status)
 {
-    ctxt = ctxt.wrappedJSObject;
-    if (!ctxt)
-    {
-        dd ("*** Can't get wrappedJSObject from ctxt in " +
-            "StreamListener.onDataAvailable ***");
-        return;
-    }
-
-    ctxt.isConnected = false;
-
-    dd ("onStopRequest: " + request + ", " + ctxt + ", " + status);
-
-    var ev = new CEvent ("server", "disconnect", this.server,
-                         "onDisconnect");
-    this.server.parent.eventPump.addEvent (ev);
-
+    //dd ("StreamListener::onStopRequest: " + request + ", " + ctxt + ", " +
+    //status);
+    if (this._observer)
+        this._observer.onStreamClose(status);
 }
 
 StreamListener.prototype.onDataAvailable =
-function (request, ctxt, inStr, sourceOffset, count)
+function sl_dataavail (request, ctxt, inStr, sourceOffset, count)
 {
     ctxt = ctxt.wrappedJSObject;
     if (!ctxt)
@@ -214,12 +286,10 @@ function (request, ctxt, inStr, sourceOffset, count)
             "StreamListener.onDataAvailable ***");
         return;
     }
-    
     if (!ctxt._inputStream)
         ctxt._inputStream = toScriptableInputStream (inStr);
 
-    var ev = new CEvent ("server", "data-available", this.server,
-                         "onDataAvailable");
-    ev.line = ctxt.readData(0);
-    this.server.parent.eventPump.addEvent (ev);
+    if (this._observer)
+        this._observer.onStreamDataAvailable(request, inStr, sourceOffset,
+                                             count);
 }
