@@ -18,7 +18,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::UtilsVersion = '$Revision: 1.10 $ ';
+$::UtilsVersion = '$Revision: 1.11 $ ';
 
 package TinderUtils;
 
@@ -462,7 +462,8 @@ sub mail_build_finished_message {
     print OUTLOG "tinderbox: errorparser: unix\n";
     print OUTLOG "tinderbox: buildfamily: unix\n";
     print OUTLOG "tinderbox: version: $::Version\n";
-    print OUTLOG "tinderbox: END\n";            
+    print OUTLOG "tinderbox: utilsversion: $::UtilsVersion\n";
+    print OUTLOG "tinderbox: END\n";
     
     # Make sendmail happy.
     # Split lines longer than 1000 charaters into 1000 character lines.
@@ -589,8 +590,8 @@ sub BuildIt {
 
 sub run_tests {
     my ($binary, $build_dir) = @_;
-    my $binary_basename = basename($binary);
-    my $binary_dir = dirname($binary);
+    my $binary_basename = File::Basename::basename($binary);
+    my $binary_dir =  File::Basename::dirname($binary);
     my $test_result = 'success';
 
     # The prefs file is used to check for a profile.
@@ -750,8 +751,8 @@ sub kill_process {
         kill $sig => $target_pid;
         my $interval_start = time;
         while (time - $interval_start < 10) {
-            my $pid = waitpid($target_pid, WNOHANG());
-            if (($pid == $target_pid and WIFEXITED($?)) or $pid == -1) {
+            my $pid = waitpid($target_pid, POSIX::WNOHANG());
+            if (($pid == $target_pid and POSIX::WIFEXITED($?)) or $pid == -1) {
                 my $secs = time - $start_time;
                 $secs = $secs == 1 ? '1 second' : "$secs seconds";
                 print_log "Process killed. Took $secs to die.\n";
@@ -814,8 +815,8 @@ sub wait_for_pid {
     eval {
         alarm $timeout_secs;
         while (1) {
-            my $wait_pid = waitpid($pid, WNOHANG());
-            last if ($wait_pid == $pid and WIFEXITED($?)) or $wait_pid == -1;
+            my $wait_pid = waitpid($pid, POSIX::WNOHANG());
+            last if ($wait_pid == $pid and POSIX::WIFEXITED($?)) or $wait_pid == -1;
             sleep 1;
         }
         $exit_value = $? >> 8;
@@ -882,7 +883,7 @@ sub print_logfile {
 
 sub CreateProfile {
     my ($build_dir, $binary, $pref_file, $timeout_secs) = @_;
-    my $binary_dir = dirname($binary);
+    my $binary_dir = File::Basename::dirname($binary);
     my $binary_log = "$build_dir/profile.log";
     local $_;
 
@@ -897,7 +898,7 @@ sub CreateProfile {
           ." $timeout_secs seconds.\n";
         return 'testfailed';
     } elsif ($result->{exit_value} != 0) {
-      my $binary_basename = basename($binary);
+      my $binary_basename = File::Basename::basename($binary);
         print_test_errors($result, $binary_basename);
         return 'testfailed';
     } else {
@@ -915,8 +916,8 @@ sub CreateProfile {
 #
 sub AliveTest {
     my ($build_dir, $binary, $timeout_secs) = @_;
-    my $binary_basename = basename($binary);
-    my $binary_dir = dirname($binary);
+    my $binary_basename = File::Basename::basename($binary);
+    my $binary_dir = File::Basename::dirname($binary);
     my $binary_log = "$build_dir/runlog";
     local $_;
 
@@ -997,8 +998,8 @@ sub FileBasedTest {
 
 sub BloatTest {
     my ($binary, $build_dir) = @_;
-    my $binary_basename = basename($binary);
-    my $binary_dir = dirname($binary);
+    my $binary_basename = File::Basename::basename($binary);
+    my $binary_dir = File::Basename::dirname($binary);
     my $binary_log = "$build_dir/bloat-cur.log";
     my $old_binary_log = "$build_dir/bloat-prev.log";
     my $timeout_secs = 120;
