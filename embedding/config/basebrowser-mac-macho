@@ -34,7 +34,8 @@ components/libjsdom.dylib
 ; XPCOM:
 ; 
 libxpcom.dylib 
-
+libxpcom_compat.dylib
+components/libxpcom_compat_c.dylib
 
 
 ; 
