@@ -44,7 +44,7 @@ public:
 protected:
    nsSupportsHashtable * mProperties;
 
-  friend nsSOAPPropertyBagEnumerator;
+  friend class nsSOAPPropertyBagEnumerator;
 };
 
 

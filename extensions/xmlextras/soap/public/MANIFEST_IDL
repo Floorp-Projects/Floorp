@@ -13,6 +13,7 @@ nsISOAPFault.idl
 nsISOAPHeaderBlock.idl
 nsISOAPMessage.idl
 nsISOAPParameter.idl
+nsISOAPPropertyBagMutator.idl
 nsISOAPResponse.idl
 nsISOAPResponseListener.idl
 nsISOAPService.idl
