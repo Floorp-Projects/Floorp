@@ -36,6 +36,7 @@
     <option value="">&lt;none&gt;</option>
     
     [% FOREACH field = rep_fields %]
+      [% NEXT IF field == "classification" AND !Param('useclassification') %]
       [% NEXT IF field == "target_milestone" AND !Param('usetargetmilestone') %]
       [% NEXT IF field == "qa_contact" AND !Param('useqacontact') %]
       [% NEXT IF field == "votes" AND !Param('usevotes') %]      
