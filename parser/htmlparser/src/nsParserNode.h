@@ -151,8 +151,9 @@ class nsCParserNode :  public nsIParserNode {
     PRInt32   mAttributeCount;    
     CToken*   mToken;
     CToken*   mAttributes[20]; // XXX Ack! This needs to be dynamic! 
-    nsString  mName;
-    nsString  mEmptyString;
+    // nsAutoString  mName;
+
+    static const nsAutoString  mEmptyString;
 
 };
 
