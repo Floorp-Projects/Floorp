@@ -271,7 +271,7 @@ NS_IMETHODIMP  nsFileWidget::GetFile(nsFileSpec& aFile)
 {
   if (mWidget) {
     gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
-    if (fn && !strcmp(fn,"")) {
+    if (fn && strcmp(fn,"")) {
       aFile = fn; // Put the filename into the nsFileSpec instance.
     } else {
       return NS_ERROR_FAILURE;
