@@ -45,7 +45,7 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 				registers[op2(i)] = registers[op1(i)];
 			}
 			break;
-        case LOAD_NAME:
+                case LOAD_NAME:
 			{
 				LoadName* i = static_cast<LoadName*>(instruction);
 				registers[op2(i)] = globals[*op1(i)];
@@ -164,7 +164,12 @@ JSValue interpret(InstructionStream& iCode, const JSValues& args)
 				registers[op3(i)] = JSValue(registers[op1(i)].f64 / registers[op2(i)].f64);
 			}
 			break;
-		case COMPARE:
+		case COMPARE_LT:
+		case COMPARE_LE:
+		case COMPARE_EQ:
+		case COMPARE_NE:
+		case COMPARE_GT:
+		case COMPARE_GE:
 			{
 				Arithmetic* i = static_cast<Arithmetic*>(instruction);
 				float64 diff = (registers[op1(i)].f64 - registers[op2(i)].f64);

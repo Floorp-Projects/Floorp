@@ -58,14 +58,6 @@ namespace JavaScript {
         return iCode;
     }
     
-    InstructionStream *ICodeGenerator::complete(Register result)
-    {
-        Return *instr = new Return(RETURN, result);
-        iCode->push_back(instr);
-        return complete();
-    }
-
-
     /***********************************************************************************************/
 
     Register ICodeGenerator::loadVariable(uint32 frameIndex)
@@ -128,8 +120,13 @@ namespace JavaScript {
         iCode->push_back(instr);
     }
 
-    void ICodeGenerator::branchConditional(int32 label, Register condition, ICodeOp branchOp)
+    void ICodeGenerator::branchConditional(int32 label, Register condition)
     {
+        ICodeOp branchOp = getBranchOp();
+        if (branchOp == NOP) {
+            // XXXX emit convert to boolean / Test / ...
+            branchOp = BRANCH_NE;
+        }
         BranchCond *instr = new BranchCond(branchOp, label, condition);
         iCode->push_back(instr);
     }
@@ -188,8 +185,9 @@ namespace JavaScript {
             }
         }
 
-        for (InstructionIterator ii = sideStream->begin(); ii != sideStream->end(); ii++)
+        for (InstructionIterator ii = sideStream->begin(); ii != sideStream->end(); ii++) {
             iCode->push_back(*ii);
+        }
 
     }
 
@@ -211,12 +209,12 @@ namespace JavaScript {
         iCode = new InstructionStream();
     }
 
-    void ICodeGenerator::endWhileExpression(Register condition, ICodeOp branchOp)
+    void ICodeGenerator::endWhileExpression(Register condition)
     {
         WhileCodeState *ics = static_cast<WhileCodeState *>(stitcher.back());
         ASSERT(ics->stateKind == While_state);
 
-        branchConditional(ics->whileBody, condition, branchOp);
+        branchConditional(ics->whileBody, condition);
         resetTopRegister();
         // stash away the condition expression and switch 
         // back to the main stream
@@ -376,7 +374,7 @@ namespace JavaScript {
         ASSERT(ics->stateKind == Switch_state);
 
         int32 caseLabel = getLabel();
-        Register r = op(COMPARE, expression, ics->controlExpression);
+        Register r = op(COMPARE_EQ, expression, ics->controlExpression);
         branchConditional(caseLabel, r);
 
         setLabel(ics->caseStatementsStream, caseLabel);     // mark the case in the Case Statement stream 
@@ -524,10 +522,17 @@ namespace JavaScript {
         NOT_REACHED("no continue target available");
     }
 
+    void ICodeGenerator::returnStatement(Register result)
+    {
+        Return *instr = new Return(RETURN, result);
+        iCode->push_back(instr);
+    }
+    
     /***********************************************************************************************/
 
 
     char *opcodeName[] = {
+            "nop",
             "move_to",
             "load_var",
             "save_var",
@@ -540,6 +545,11 @@ namespace JavaScript {
             "subtract",
             "multiply",
             "divide",
+            "compare",
+            "compare",
+            "compare",
+            "compare",
+            "compare",
             "compare",
             "not",
             "branch",
@@ -563,13 +573,16 @@ namespace JavaScript {
     {
         s << "ICG! " << iCode->size() << "\n";
         for (InstructionIterator i = iCode->begin(); i != iCode->end(); i++) {
+
             for (LabelList::iterator k = labels.begin(); k != labels.end(); k++)
                 if ((*k)->itsOffset == (i - iCode->begin())) {
-                    s << "label #" << (k - labels.begin()) << ":\n";
+                    //s << "label #" << (k - labels.begin()) << ":\n";
+                    s << "#" << (i - iCode->begin());
+                    break;
                 }
         
             Instruction *instr = *i;
-            s << "\t"<< std::setiosflags( std::ostream::left ) << std::setw(16) << opcodeName[instr->itsOp];
+            s  << "\t" << std::setiosflags( std::ostream::left ) << std::setw(16) << opcodeName[instr->itsOp];
             switch (instr->itsOp) {
                 case LOAD_NAME :
                     {
@@ -593,7 +606,7 @@ namespace JavaScript {
                 case BRANCH :
                     {
                         Branch *t = static_cast<Branch * >(instr);
-                        s << "target #" << t->itsOperand1;
+                        s << "instr #" << t->itsOperand1;
                     }
                     break;
                 case BRANCH_LT :
@@ -604,14 +617,19 @@ namespace JavaScript {
                 case BRANCH_GT :
                     {
                         BranchCond *t = static_cast<BranchCond * >(instr);
-                        s << "target #" << t->itsOperand1 << ", R" << t->itsOperand2;
+                        s << "instr #" << t->itsOperand1 << ", R" << t->itsOperand2;
                     }
                     break;
                 case ADD :
                 case SUBTRACT :
                 case MULTIPLY :
                 case DIVIDE :
-                case COMPARE :
+                case COMPARE_LT :
+                case COMPARE_LE :
+                case COMPARE_EQ :
+                case COMPARE_NE :
+                case COMPARE_GT :
+                case COMPARE_GE :
                     {
                          Arithmetic *t = static_cast<Arithmetic * >(instr);
                          s << "R" << t->itsOperand1 << ", R" << t->itsOperand2 << ", R" << t->itsOperand3;
@@ -635,7 +653,8 @@ namespace JavaScript {
         }
         for (LabelList::iterator k = labels.begin(); k != labels.end(); k++)
             if ((*k)->itsOffset == (iCode->end() - iCode->begin())) {
-                s << "label #" << (k - labels.begin()) << ":\n";
+//                s << "label #" << (k - labels.begin()) << ":\n";
+                s << "#" << (i - iCode->begin());
             }
         return s;
     }

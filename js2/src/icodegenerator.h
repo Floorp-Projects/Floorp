@@ -33,6 +33,7 @@ namespace JavaScript {
 
     enum ICodeOp {
                         //      Operand1                Operand2                Operand3
+        NOP,
 
         MOVE_TO,        // Source Register          Destination Register
 
@@ -52,7 +53,14 @@ namespace JavaScript {
         MULTIPLY,
         DIVIDE,
         
-        COMPARE,        // Source Register 1        Source Register 2           Destination Register
+        // maintain contiguity                     
+        COMPARE_LT,     // Source Register 1        Source Register 2           Destination Register
+        COMPARE_LE,
+        COMPARE_EQ,
+        COMPARE_NE,
+        COMPARE_GE,
+        COMPARE_GT,
+
         NOT,            // Source Register          Destination Register
 
         BRANCH,         // Target label
@@ -72,7 +80,8 @@ namespace JavaScript {
         Instruction(ICodeOp op) : itsOp(op) { }
         ICodeOp itsOp;
         
-        ICodeOp opcode() { return itsOp; }
+        ICodeOp getBranchOp()   { return ((itsOp >= COMPARE_LT) && (itsOp <= COMPARE_GT)) ? (ICodeOp)(BRANCH_LT + (itsOp - COMPARE_LT)) : NOP;  }
+        ICodeOp opcode()        { return itsOp; }
     };
 
     template <typename Operand1>
@@ -119,6 +128,7 @@ namespace JavaScript {
     typedef Instruction_1<int32> Branch;
     typedef Instruction_2<int32, Register> BranchCond;
     typedef Instruction_3<Register, Register, Register> Arithmetic;
+    typedef Instruction_3<Register, Register, Register> Compare;
     typedef Instruction_2<Register, Register> Move;
     typedef Instruction_1<Register> Return;
 
@@ -167,9 +177,8 @@ namespace JavaScript {
 
     class ICodeGenerator {
       private:
-           
         InstructionStream *iCode;
-        
+
         LabelList labels;
 
         std::vector<ICodeState *> stitcher;
@@ -178,6 +187,8 @@ namespace JavaScript {
         Register getRegister()      { return topRegister++; }
         void resetTopRegister()     { topRegister = stitcher.empty() ? 0 : stitcher.back()->registerBase; }
 
+        ICodeOp getBranchOp()       { ASSERT(!iCode->empty()); return iCode->back()->getBranchOp(); }
+
       public:
         int32 getLabel();
       private:
@@ -185,7 +196,7 @@ namespace JavaScript {
         void setLabel(InstructionStream *stream, int32 label);
 
         void branch(int32 label);
-        void branchConditional(int32 label, Register condition, ICodeOp branchOp = BRANCH_NE);
+        void branchConditional(int32 label, Register condition);
     
       public:
         ICodeGenerator() : topRegister(0) { iCode = new InstructionStream(); }
@@ -193,13 +204,14 @@ namespace JavaScript {
         void mergeStream(InstructionStream *sideStream);
         
         InstructionStream *complete();
-        InstructionStream *complete(Register result);
 
         ostream &print(ostream &s);
 
         Register op(ICodeOp op, Register source);
         Register op(ICodeOp op, Register source1, Register source2);
 
+        Register compare(ICodeOp op, Register source1, Register source2);
+ 
         Register loadVariable(uint32 frameIndex);
         Register loadImmediate(double value);
 
@@ -222,9 +234,10 @@ namespace JavaScript {
         // expression statements
         void beginStatement(uint32 /*pos*/)                 { resetTopRegister(); }
     
-        
+        void returnStatement(Register result);
+
         void beginWhileStatement(uint32 pos);
-        void endWhileExpression(Register condition, ICodeOp branchOp = BRANCH_NE);
+        void endWhileExpression(Register condition);
         void endWhileStatement();
 
     
@@ -269,10 +282,6 @@ namespace JavaScript {
 
 
         void throwStatement(Register expression);
-
-
-        void returnStatement(Register expression);     // optional <operand>
-
 
         void beginCatchStatement();
         void endCatchExpression(Register expression);
