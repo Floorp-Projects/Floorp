@@ -39,6 +39,7 @@ public:
   virtual ~nsMacCharset();
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
+private:
   nsString mCharset;
 };
 
