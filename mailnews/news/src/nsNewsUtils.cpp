@@ -77,6 +77,9 @@ nsresult nsGetNewsHostName(const char *rootURI, const char *uriStr, char **hostN
   curPos++;
   while (*curPos == '/') curPos++;
 
+  char *atPos = PL_strchr(curPos, '@');
+  if (atPos) curPos = atPos+1;
+  
   char *slashPos = PL_strchr(curPos, '/');
   int length;
 
@@ -91,6 +94,25 @@ nsresult nsGetNewsHostName(const char *rootURI, const char *uriStr, char **hostN
 	  return NS_ERROR_OUT_OF_MEMORY;
 
   PL_strncpyz(*hostName, curPos, length);
+
+  return NS_OK;
+}
+
+nsresult
+nsGetNewsUsername(const char *rootURI, const char *uriStr, char **userName)
+{
+  const char *curPos = uriStr;
+  while (*curPos != ':') curPos++;
+  curPos++;
+  while (*curPos == '/') curPos++;
+
+  char *atPos = PL_strchr(curPos, '@');
+  
+  if (atPos) {
+    *userName = PL_strndup(curPos, (atPos - curPos));
+  } else {
+    *userName = PL_strdup("");
+  }
 
   return NS_OK;
 }

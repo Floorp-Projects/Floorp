@@ -32,6 +32,9 @@ extern nsresult
 nsGetNewsHostName(const char *rootURI, const char *uriStr, char **hostName);
 
 extern nsresult
+nsGetNewsUsername(const char *rootURI, const char *uriStr, char **userName);
+
+extern nsresult
 nsNewsURI2Path(const char* rootURI, const char* uriStr, nsFileSpec& pathResult);
 
 extern nsresult
