@@ -34,6 +34,7 @@ CPPSRCS =				\
 	nsWinCharset.cpp		\
 	nsCharsetAliasImp.cpp		\
 	nsUConvDll.cpp			\
+	nsURLProperties.cpp		\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -44,6 +45,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsWinCharset.obj 			\
 	.\$(OBJDIR)\nsCharsetAliasImp.obj 		\
 	.\$(OBJDIR)\nsUConvDll.obj 			\
+	.\$(OBJDIR)\nsURLProperties.obj 		\
 	$(NULL)
 
 CSRCS =		\
@@ -65,6 +67,7 @@ LINCS=					\
 	-I$(PUBLIC)\raptor		\
 	-I$(PUBLIC)\xpcom 		\
 	-I$(PUBLIC)\uconv		\
+	-I$(PUBLIC)\netlib		\
 	-I..\ucvja	  		\
 	-I..\ucvlatin			\
 	$(NULL)
@@ -86,6 +89,7 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib $(DIST)\lib
+	$(MAKE_INSTALL) .\charsetalias.properties $(DIST)\bin\res
 
 clobber::
 	rm -f $(DIST)\bin\components\$(DLLNAME).dll
