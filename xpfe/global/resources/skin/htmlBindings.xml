@@ -71,7 +71,7 @@
         command="cmd_wordPrevious"/>
     <handler type="keypress" id="key_rightshiftcontrol" keycode="VK_RIGHT" shift="true" control="true" alt="false"
         command="cmd_wordNext"/>
-    <handler type="keypress" id="key_up" keycode="VK_UP"alt="false"
+    <handler type="keypress" id="key_up" keycode="VK_UP" alt="false"
         command="cmd_linePrevious"/>
     <handler type="keypress" id="key_down" keycode="VK_DOWN" alt="false"
         command="cmd_lineNext"/>
