@@ -232,6 +232,12 @@ SECMOD_GetInternalModule(void) {
 void
 SECMOD_SetInternalModule( SECMODModule *mod) {
    internalModule = SECMOD_ReferenceModule(mod);
+   modules = SECMOD_NewModuleListElement();
+   modules->module = SECMOD_ReferenceModule(mod);
+   modules->next = NULL;
+   if (!moduleLock) {
+       moduleLock = SECMOD_NewListLock();
+   }
 }
 
 /*
