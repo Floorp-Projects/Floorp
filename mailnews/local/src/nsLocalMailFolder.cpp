@@ -1074,16 +1074,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message)
 	nsresult rv = GetDatabase();
 	if(NS_SUCCEEDED(rv))
 	{
-		nsIMsgDBHdr *msgDBHdr = nsnull;
+		nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
 		//We know from our factory that mailbox message resources are going to be
   	//nsLocalMessages.
 	  nsLocalMessage *localMessage = NS_STATIC_CAST(nsLocalMessage*, message);
 
-		rv = localMessage->GetMsgDBHdr(&msgDBHdr);
+		rv = localMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
 		if(NS_SUCCEEDED(rv))
 		{
 			rv =mMailDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
-			NS_IF_RELEASE(msgDBHdr);
 		}
 	}
 	return rv;
@@ -1099,7 +1098,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDB
 	char* msgURI = nsnull;
 	nsFileSpec path;
 	nsMsgKey key;
-    nsIRDFResource* res;
+    nsCOMPtr<nsIRDFResource> resource;
 
 	rv = msgDBHdr->GetMessageKey(&key);
 
@@ -1111,15 +1110,15 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDB
 
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = rdfService->GetResource(msgURI, &res);
+		rv = rdfService->GetResource(msgURI, getter_AddRefs(resource));
     }
 	if(msgURI)
 		PR_smprintf_free(msgURI);
 
 	if(NS_SUCCEEDED(rv))
 	{
-		nsIMessage *messageResource;
-		rv = res->QueryInterface(nsIMessage::GetIID(), (void**)&messageResource);
+		nsIMessage* messageResource;
+		rv = resource->QueryInterface(nsIMessage::GetIID(), (void**)&messageResource);
 		if(NS_SUCCEEDED(rv))
 		{
 			//We know from our factory that mailbox message resources are going to be
@@ -1128,7 +1127,6 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CreateMessageFromMsgDBHdr(nsIMsgDBHdr *msgDB
 			localMessage->SetMsgDBHdr(msgDBHdr);
 			*message = messageResource;
 		}
-		NS_IF_RELEASE(res);
 	}
 	return rv;
 }
@@ -1176,24 +1174,21 @@ NS_IMETHODIMP nsMsgLocalMailFolder::OnKeyAdded(nsMsgKey aKeyChanged, int32 aFlag
                         nsIDBChangeListener * aInstigator)
 {
 	nsresult rv;
-	nsIMsgDBHdr *pMsgDBHdr;
-	rv = mMailDatabase->GetMsgHdrForKey(aKeyChanged, &pMsgDBHdr);
+	nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
+	rv = mMailDatabase->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(msgDBHdr));
 	if(NS_SUCCEEDED(rv))
 	{
-		nsIMessage *message;
-		rv = CreateMessageFromMsgDBHdr(pMsgDBHdr, &message);
+		nsCOMPtr<nsIMessage> message;
+		rv = CreateMessageFromMsgDBHdr(msgDBHdr, getter_AddRefs(message));
 		if(NS_SUCCEEDED(rv))
 		{
-			nsISupports *msgSupports;
-			if(message && NS_SUCCEEDED(message->QueryInterface(kISupportsIID, (void**)&msgSupports)))
+			nsCOMPtr<nsISupports> msgSupports;
+			if(message && NS_SUCCEEDED(message->QueryInterface(kISupportsIID, getter_AddRefs(msgSupports))))
 			{
 				NotifyItemAdded(msgSupports);
-				NS_IF_RELEASE(msgSupports);
 			}
 			UpdateSummaryTotals();
-			NS_IF_RELEASE(message);
 		}
-		NS_IF_RELEASE(pMsgDBHdr);
 	}
 	return NS_OK;
 }
@@ -1264,18 +1259,16 @@ NS_IMETHODIMP nsMsgLocalMailFolder::EndCopy(PRBool copySucceeded)
 	//Copy the header to the new database
 	if(copySucceeded && mCopyState->message)
 	{
-		nsIMsgDBHdr *newHdr;
-		nsIMsgDBHdr *msgDBHdr = nsnull;
+		nsCOMPtr<nsIMsgDBHdr> newHdr;
+		nsCOMPtr<nsIMsgDBHdr> msgDBHdr;
 		//We know from our factory that mailbox message resources are going to be
   	//nsLocalMessages.
 	  nsMessage *message = NS_STATIC_CAST(nsMessage*, mCopyState->message);
 
-		nsresult rv = message->GetMsgDBHdr(&msgDBHdr);
+		nsresult rv = message->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
 
 		if(NS_SUCCEEDED(rv))
-			mMailDatabase->CopyHdrFromExistingHdr(mCopyState->dstKey, msgDBHdr, &newHdr);
-		NS_IF_RELEASE(newHdr);
-		NS_IF_RELEASE(msgDBHdr);
+			mMailDatabase->CopyHdrFromExistingHdr(mCopyState->dstKey, msgDBHdr, getter_AddRefs(newHdr));
 	}
 
 	if(mCopyState->fileStream)
