@@ -47,6 +47,14 @@ if (!defined($CVS_ROOT) || $CVS_ROOT eq "" ){
 $lines_added = 0;
 $lines_removed = 0;
 
+$modules = {};
+
+$CVS_MODULES="${CVS_ROOT}/CVSROOT/modules";
+
+open( MOD, "<$CVS_MODULES") || die "can't open ${CVS_MODULES}";
+&parse_modules;
+close( MOD );
+
 1;
 
 #
@@ -154,7 +162,14 @@ sub query_checkins {
     }
     
     if ($query_debug) {
-        print "<pre wrap> Query: $qstring</PRE>";
+        print "<pre wrap> Query: $qstring\nTreeID is $::TreeID\n";
+        if ($have_mod_map) {
+            print "Dump of module map:\n";
+            foreach my $k (sort(keys %mod_map)) {
+                print value_quote("$k => $mod_map{$k}") . "\n";
+            }
+        }
+        print "</pre>\n";
     }
 
     SendSQL($qstring);
@@ -377,21 +392,75 @@ sub in_module {
 
 
 sub get_module_map {
-     my ($name) = @_;
-     my ($mod, $onlyone, %modules);
-     
-     $onlyone = 0;
-     %modules = ();
-     LoadDirList();
-     for $mod  (sort( grep(!/\*$/, @::LegalDirs))) {
-          $modules{$mod} = $NOT_LOCAL;
-          $onlyone = 1 if ($mod eq $name);
-     }
-     
-     if ($onlyone) {
-          %modules = ();
-          $modules{$name} = $NOT_LOCAL;
-     }
-     
-     return %modules;
+    my($name) = @_;
+    my(%mod_map);
+    &build_map( $name, \%mod_map );
+    return %mod_map;
 }
+
+
+sub parse_modules {
+    while( $l = &get_line ){
+        ($mod_name, $flag, @params) = split(/[ \t]+/,$l);
+
+        if ( $#params eq -1 ) {
+            @params = $flag;
+            $flag = "";
+        }
+	elsif( $flag eq '-d' ){
+	    ($mod_name, $dummy, $dummy, @params) = split(/[ \t]+/,$l);
+	}
+        elsif( $flag ne '-a' ){
+            next;
+        }
+        $modules->{$mod_name} = [@params];
+    }
+}
+
+
+sub build_map {
+    local($name,$mod_map) = @_;
+    local($bFound, $local);
+
+    $local = $NOT_LOCAL;
+    $bFound = 0;
+
+    for $i ( @{$modules->{$name}} ){
+        $bFound = 1;
+        if( $i eq '-l' ){
+            $local = $IS_LOCAL;
+        }
+        elsif( !build_map($i, $mod_map )){
+            $mod_map->{$i} = $local;   
+        }
+    }
+    return $bFound;
+}
+
+
+
+sub get_line {
+    local($l, $save);
+    
+    $bContinue = 1;
+
+    while( $bContinue && ($l = <MOD>) ){
+        chop($l);
+        if( $l =~ /^[ \t]*\#/ 
+                || $l =~ /^[ \t]*$/ ){
+            $l='';
+        }
+        elsif( $l =~ /\\[ \t]*$/ ){
+            chop ($l);
+            $save .= $l . ' ';
+        }
+        elsif( $l eq '' && $save eq ''){
+            # ignore blank lines
+        }
+        else {
+            $bContinue = 0;
+        }
+    }
+    return $save . $l;
+}
+
