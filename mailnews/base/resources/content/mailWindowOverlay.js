@@ -922,10 +922,13 @@ function MsgOpenNewWindowForFolder(uri, key)
   if (uriToOpen) {
     var layoutType = gPrefs.getIntPref("mail.pane_config");
 
+    var paramBlock = Components.classes["@mozilla.org/embedcomp/dialogparam;1"].createInstance(Components.interfaces.nsIDialogParamBlock);
+    paramBlock.SetString(0, uriToOpen);
+    paramBlock.SetInt(0, keyToSelect);
     if(layoutType == 0)
-      window.openDialog("chrome://messenger/content/messenger.xul", "_blank", "all,chrome,dialog=no,status,toolbar", {uri: uriToOpen, key: keyToSelect});
+      window.openDialog("chrome://messenger/content/messenger.xul", "_blank", "all,chrome,dialog=no,status,toolbar", paramBlock);
     else
-      window.openDialog("chrome://messenger/content/mail3PaneWindowVertLayout.xul", "_blank", "all,chrome,dialog=no,status,toolbar", {uri: uriToOpen, key: keyToSelect});
+      window.openDialog("chrome://messenger/content/mail3PaneWindowVertLayout.xul", "_blank", "all,chrome,dialog=no,status,toolbar", paramBlock);
   }
 }
 
