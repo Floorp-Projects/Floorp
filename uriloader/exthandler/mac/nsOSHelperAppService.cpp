@@ -288,9 +288,10 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char * aMIMEType,
   if (!mimeInfo) {
     *aFound = PR_FALSE;
     PR_LOG(mLog, PR_LOG_DEBUG, ("Creating new mimeinfo\n"));
-    CallCreateInstance(NS_MIMEINFO_CONTRACTID, &mimeInfo);
+    mimeInfo = new nsMIMEInfoImpl();
     if (!mimeInfo)
       return nsnull;
+    NS_ADDREF(mimeInfo);
 
     if (aMIMEType && *aMIMEType)
       mimeInfo->SetMIMEType(aMIMEType);

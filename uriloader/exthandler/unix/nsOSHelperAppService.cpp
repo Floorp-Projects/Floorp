@@ -1431,10 +1431,10 @@ nsOSHelperAppService::GetFromExtension(const char *aFileExt) {
     return nsnull;
   }
 
-  nsIMIMEInfo* mimeInfo = nsnull;
-  rv = CallCreateInstance(NS_MIMEINFO_CONTRACTID, &mimeInfo);
-  if (NS_FAILED(rv))
+  nsIMIMEInfo* mimeInfo = new nsMIMEInfoImpl();
+  if (!mimeInfo)
     return nsnull;
+  NS_ADDREF(mimeInfo);
   
   mimeType = majorType + NS_LITERAL_STRING("/") + minorType;
   mimeInfo->SetMIMEType(NS_ConvertUCS2toUTF8(mimeType).get());
@@ -1580,10 +1580,10 @@ nsOSHelperAppService::GetFromType(const char *aMIMEType) {
     return nsnull;
   }
   
-  nsIMIMEInfo* mimeInfo = nsnull;
-  rv = CallCreateInstance(NS_MIMEINFO_CONTRACTID, &mimeInfo);
-  if (NS_FAILED(rv))
+  nsIMIMEInfo* mimeInfo = new nsMIMEInfoImpl();
+  if (!mimeInfo)
     return nsnull;
+  NS_ADDREF(mimeInfo);
 
   mimeInfo->SetFileExtensions(NS_ConvertUCS2toUTF8(extensions).get());
   mimeInfo->SetMIMEType(aMIMEType);
@@ -1637,8 +1637,9 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char *aType,
     // If we got nothing, make a new mimeinfo
     if (!retval) {
       *aFound = PR_FALSE;
-      CallCreateInstance(NS_MIMEINFO_CONTRACTID, &retval);
+      retval = new nsMIMEInfoImpl();
       if (retval) {
+        NS_ADDREF(retval);
         if (aType && *aType)
           retval->SetMIMEType(aType);
         if (aFileExt && *aFileExt)

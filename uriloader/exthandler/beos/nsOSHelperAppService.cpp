@@ -160,7 +160,7 @@ nsresult nsOSHelperAppService::SetMIMEInfoForType(const char *aMIMEType, nsIMIME
 
 	nsresult rv = NS_ERROR_FAILURE;
 
-	nsCOMPtr<nsIMIMEInfo> mimeInfo (do_CreateInstance(NS_MIMEINFO_CONTRACTID));
+	nsCOMPtr<nsIMIMEInfo> mimeInfo = new nsMIMEInfoImpl();
 	if (mimeInfo) {
 		BMimeType mimeType(aMIMEType);
 		BMessage data;
@@ -327,9 +327,10 @@ nsOSHelperAppService::GetMIMEInfoFromOS(const char *aMIMEType, const char *aFile
     return mi;
 
   *aFound = PR_FALSE;
-  CallCreateInstance(NS_MIMEINFO_CONTRACTID, &mi);
+  mi = new nsMIMEInfoImpl();
   if (!mi)
     return nsnull;
+  NS_ADDREF(mi);
   if (aMIMEType && *aMIMEType)
     mi->SetMIMEType(aMIMEType);
   if (aFileExt && *aFileExt)

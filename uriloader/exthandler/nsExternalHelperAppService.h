@@ -36,6 +36,7 @@
 #include "nsIHelperAppLauncherDialog.h"
 
 #include "nsIMIMEInfo.h"
+#include "nsMIMEInfoImpl.h"
 #include "nsIMIMEService.h"
 #include "nsIStreamListener.h"
 #include "nsIFile.h"

@@ -35,7 +35,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-		nsMIMEInfoImpl.cpp \
 		nsMIMEHeaderParamImpl.cpp \
 		$(NULL)
 

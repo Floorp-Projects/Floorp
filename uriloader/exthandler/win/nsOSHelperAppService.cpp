@@ -408,10 +408,10 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetByExtension(const char *a
     nsAutoString description;
     PRBool found = GetValueString(hKey, NULL, description);
 
-    nsIMIMEInfo* mimeInfo = nsnull;
-    CallCreateInstance(NS_MIMEINFO_CONTRACTID, &mimeInfo);
+    nsIMIMEInfo* mimeInfo = new nsMIMEInfoImpl();
     if (mimeInfo)
     {
+      NS_ADDREF(mimeInfo);
       if (!typeToUse.IsEmpty())
         mimeInfo->SetMIMEType(typeToUse.get());
       // don't append the '.'
@@ -504,8 +504,9 @@ already_AddRefed<nsIMIMEInfo> nsOSHelperAppService::GetMIMEInfoFromOS(const char
     }
     if (!miByExt && !mi) {
       *aFound = PR_FALSE;
-      CallCreateInstance(NS_MIMEINFO_CONTRACTID, &mi);
+      mi = new nsMIMEInfoImpl();
       if (mi) {
+        NS_ADDREF(mi);
         if (aMIMEType && *aMIMEType)
           mi->SetMIMEType(aMIMEType);
         if (aFileExt && *aFileExt)

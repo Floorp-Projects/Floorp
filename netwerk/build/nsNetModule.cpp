@@ -116,12 +116,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppleFileDecoder)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "nsMIMEInfoImpl.h"
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEInfoImpl)
-
-///////////////////////////////////////////////////////////////////////////////
-
 #include "nsMIMEHeaderParamImpl.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMIMEHeaderParamImpl)
@@ -878,12 +872,6 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
     },
 
     // from netwerk/mime:
-    { "xml mime INFO", 
-      NS_MIMEINFO_CID,
-      NS_MIMEINFO_CONTRACTID,
-      nsMIMEInfoImplConstructor
-    },
-
     { "mime header param", 
       NS_MIMEHEADERPARAM_CID,
       NS_MIMEHEADERPARAM_CONTRACTID,

@@ -42,6 +42,7 @@
 #include "nsString.h"
 #include "nsIComponentManager.h"
 #include "nsILocalFile.h"
+#include "nsMIMEInfoImpl.h"
 
 #include <glib.h>
 #include <glib-object.h>
@@ -263,7 +264,7 @@ nsGNOMERegistry::GetFromType(const char *aMIMEType)
   if (!handlerApp)
     return nsnull;
 
-  mimeInfo = do_CreateInstance(NS_MIMEINFO_CONTRACTID);
+  mimeInfo = new nsMIMEInfoImpl();
   NS_ENSURE_TRUE(mimeInfo, nsnull);
 
   mimeInfo->SetMIMEType(aMIMEType);
