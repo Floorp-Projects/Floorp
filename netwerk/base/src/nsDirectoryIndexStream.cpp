@@ -181,13 +181,13 @@ nsDirectoryIndexStream::Init(nsIFile* aDir)
     nsCOMPtr<nsISupports> elem;
     while (NS_SUCCEEDED(iter->HasMoreElements(&more)) && more) {
         rv = iter->GetNext(getter_AddRefs(elem));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIFile> file = do_QueryInterface(elem);
-        if (file) {
-            nsIFile* f = file;
-            NS_ADDREF(f);
-            mArray.AppendElement(f);
+        if (NS_SUCCEEDED(rv)) {
+            nsCOMPtr<nsIFile> file = do_QueryInterface(elem);
+            if (file) {
+                nsIFile* f = file;
+                NS_ADDREF(f);
+                mArray.AppendElement(f);
+            }
         }
     }
 
@@ -339,9 +339,8 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
         // bbaetz: why not?
         nsresult rv;
 #ifndef XP_UNIX
-        PRBool hidden;
-        rv = current->IsHidden(&hidden);
-        if (NS_FAILED(rv)) return rv; 
+        PRBool hidden = PR_FALSE;
+        current->IsHidden(&hidden);
         if (hidden) {
             PR_LOG(gLog, PR_LOG_DEBUG,
                    ("nsDirectoryIndexStream[%p]: skipping hidden file/directory",
@@ -350,18 +349,18 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
         }
 #endif        
 
-        PRInt64 fileSize;
-        rv = current->GetFileSize( &fileSize );
-        if (NS_FAILED(rv)) return rv; 
+        PRInt64 fileSize = LL_Zero();
+        current->GetFileSize( &fileSize );
 				 
         PROffset32 fileInfoSize;
         LL_L2I( fileInfoSize,fileSize );
         
-        PRInt64 tmpTime, fileInfoModifyTime;
-        rv = current->GetLastModifiedTime( &tmpTime );
+        PRInt64 tmpTime = LL_Zero();
+        PRInt64 fileInfoModifyTime = LL_Zero();
+        current->GetLastModifiedTime( &tmpTime );
         // Why does nsIFile give this back in milliseconds?
         LL_MUL(fileInfoModifyTime, tmpTime, PR_USEC_PER_MSEC);
-        if (NS_FAILED(rv)) return rv; 
+
         mBuf += "201: ";
 
         // The "filename" field
@@ -410,9 +409,8 @@ nsDirectoryIndexStream::Read(char* aBuf, PRUint32 aCount, PRUint32* aReadCount)
             }
 
             // The "file-type" field
-            PRBool isFile;
-            rv = current->IsFile(&isFile);
-            if (NS_FAILED(rv)) return rv; 
+            PRBool isFile = PR_TRUE;
+            current->IsFile(&isFile);
             if (isFile) {
                 mBuf += "FILE ";
             }
