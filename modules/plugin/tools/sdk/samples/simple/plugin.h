@@ -40,9 +40,6 @@
 
 #include "pluginbase.h"
 #include "nsScriptablePeer.h"
-#include "nsIFile.h"
-#include "nsILocalFile.h"
-#include "nsISimpleEnumerator.h"
 
 class nsPluginInstance : public nsPluginInstanceBase
 {
@@ -61,17 +58,13 @@ public:
 
   // locals
   void getVersion(char* *aVersion);
-  void DumpLayout(nsISupports *aWindow,const PRUnichar *aFilePath, const PRUnichar *aFileName);
-  void StartDirectorySearch(const char *aFilePath);
-  void GetNextFileInDirectory(char **aFilePath);
-  nsIDebugPlugin* getScriptablePeer();
+
+  nsISimplePlugin* getScriptablePeer();
 
 private:
-  NPP                           mInstance;
-  NPBool                        mInitialized;
-  nsIDebugPlugin *             mScriptablePeer;
-  nsCOMPtr<nsISimpleEnumerator> mIter;
-
+  NPP mInstance;
+  NPBool mInitialized;
+  nsISimplePlugin * mScriptablePeer;
 
 public:
   char mString[128];
