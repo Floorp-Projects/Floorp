@@ -329,8 +329,8 @@ FindDataSource::GetTarget(nsIRDFResource *source,
 		}
 		else if (property == kRDF_type)
 		{
-			nsXPIDLCString uri;
-			rv = kNC_FindObject->GetValue( getter_Copies(uri) );
+			const char	*uri = nsnull;
+			rv = kNC_FindObject->GetValueConst(&uri);
 			if (NS_FAILED(rv)) return rv;
 
 			nsAutoString	url(uri);
@@ -359,12 +359,12 @@ FindDataSource::GetTarget(nsIRDFResource *source,
 NS_METHOD
 FindDataSource::parseResourceIntoFindTokens(nsIRDFResource *u, findTokenPtr tokens)
 {
-	nsXPIDLCString		uri;
+	const char		*uri = nsnull;
 	char			*id, *token, *value;
 	int			loop;
 	nsresult		rv;
 
-	if (NS_FAILED(rv = u->GetValue( getter_Copies(uri) )))	return(rv);
+	if (NS_FAILED(rv = u->GetValueConst(&uri)))	return(rv);
 
 #ifdef	DEBUG
 	printf("Find: %s\n", (const char*) uri);
@@ -488,11 +488,11 @@ FindDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
 						nsIRDFResource	*source = nsnull;
 						if (NS_SUCCEEDED(rv = isupports->QueryInterface(nsIRDFResource::GetIID(), (void **)&source)))
 						{
-							nsXPIDLCString	uri;
-							source->GetValue( getter_Copies(uri) );
+							const char	*uri = nsnull;
+							source->GetValueConst(&uri);
 
 							// never match against a "find:" URI
-							if (PL_strncmp(uri, kFindProtocol, sizeof(kFindProtocol) - 1))
+							if ((uri) && (PL_strncmp(uri, kFindProtocol, sizeof(kFindProtocol) - 1)))
 							{
 								nsIRDFResource	*property = nsnull;
 								if (NS_SUCCEEDED(rv = gRDFService->GetResource(tokens[1].value, &property)) &&
