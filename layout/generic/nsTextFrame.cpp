@@ -2034,7 +2034,7 @@ nsTextFrame::GetPosition(nsIPresContext* aCX,
           acx->GetWidth(text[indx], charWidth);
           charWidth /= 2;
 
-          if (PR_ABS(PRInt32(aPoint.x) - origin.x) > textWidth+charWidth) {
+          if ((aPoint.x - origin.x) > textWidth+charWidth) {
             indx++;
           }
         }
