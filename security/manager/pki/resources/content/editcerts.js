@@ -69,6 +69,8 @@ function setWindowName()
   } else {
     objsign.setAttribute("checked", "false");
   }
+  
+  window.sizeToContent();
 }
 
 function doOK()
@@ -134,6 +136,8 @@ function doLoadForSSLCert()
   } else {
     trustssl.radioGroup.selectedItem = notrustssl;
   }
+  
+  window.sizeToContent();
 }
 
 function doSSLOK()

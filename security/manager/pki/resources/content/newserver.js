@@ -60,6 +60,7 @@ function onLoad()
 
   setText("message", message);
   setText("notRecognized", notRecognized);
+  window.sizeToContent();
 }
 
 function doHelpButton()

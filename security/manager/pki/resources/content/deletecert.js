@@ -100,6 +100,7 @@ function setWindowName()
   }
 
   setText("impact",impact);
+  window.sizeToContent();
 }
 
 function doOK()

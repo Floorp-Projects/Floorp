@@ -48,6 +48,7 @@ function onLoad()
                                              [ caName ],
                                               1);
   setText("message2", message2);
+  window.sizeToContent();
 }
 
 function viewCert()
