@@ -17,10 +17,7 @@
  */
 
 #include "nsCheckButton.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 NS_IMPL_ADDREF_INHERITED(nsCheckButton, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsCheckButton, nsWidget)
@@ -122,8 +119,7 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
 
-    static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
-    if (aIID.Equals(kICheckButtonIID)) {
+    if (aIID.Equals(nsICheckButton::GetIID())) {
         *aInstancePtr = (void*) ((nsICheckButton*)this);
         AddRef();
         return NS_OK;

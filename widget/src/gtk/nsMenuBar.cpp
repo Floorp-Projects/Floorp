@@ -19,24 +19,22 @@
 #include <gtk/gtk.h>
 
 #include "nsMenuBar.h"
+#include "nsIComponentManager.h"
+#include "nsIDOMNode.h"
 #include "nsIMenu.h"
+#include "nsIWebShell.h"
 #include "nsIWidget.h"
 
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 #include "nsGtkEventHandler.h"
 
-#include "nsIComponentManager.h"
 #include "nsCOMPtr.h"
-
 #include "nsWidgetsCID.h"
-static NS_DEFINE_IID(kMenuBarCID, NS_MENUBAR_CID);
-static NS_DEFINE_IID(kMenuCID, NS_MENU_CID);
-static NS_DEFINE_IID(kMenuItemCID, NS_MENUITEM_CID);
 
-static NS_DEFINE_IID(kIMenuBarIID, NS_IMENUBAR_IID);
-static NS_DEFINE_IID(kIMenuIID, NS_IMENU_IID);
+static NS_DEFINE_CID(kMenuBarCID, NS_MENUBAR_CID);
+static NS_DEFINE_CID(kMenuCID, NS_MENU_CID);
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)
@@ -47,7 +45,7 @@ nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
   *aInstancePtr = NULL;
 
-  if (aIID.Equals(kIMenuBarIID)) {
+  if (aIID.Equals(nsIMenuBar::GetIID())) {
     *aInstancePtr = (void*) ((nsIMenuBar*) this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -59,7 +57,7 @@ nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
 
-  if (aIID.Equals(kIMenuListenerIID)) {
+  if (aIID.Equals(nsIMenuListener::GetIID())) {
     *aInstancePtr = (void*) ((nsIMenuListener*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -191,7 +189,7 @@ NS_METHOD nsMenuBar::RemoveAll()
   for (int i = mMenusVoidArray.Count(); i > 0; i--) {
     if(nsnull != mMenusVoidArray[i-1]) {
       nsIMenu * menu = nsnull;
-      ((nsISupports*)mMenusVoidArray[i-1])->QueryInterface(kIMenuIID, (void**)&menu);
+      ((nsISupports*)mMenusVoidArray[i-1])->QueryInterface(nsIMenu::GetIID(), (void**)&menu);
       if(menu) {
         //void * gtkmenu= nsnull;
         //menu->GetNativeData(&gtkmenu);
@@ -265,7 +263,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
   nsIMenuBar * pnsMenuBar = nsnull;
   nsresult rv = nsComponentManager::CreateInstance(kMenuBarCID,
                                                    nsnull,
-                                                   kIMenuBarIID,
+                                                   nsIMenuBar::GetIID(),
                                                    (void**)&pnsMenuBar);
   if (NS_OK == rv) {
     if (nsnull != pnsMenuBar) {
@@ -273,7 +271,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
 
       // set pnsMenuBar as a nsMenuListener on aParentWindow
       nsCOMPtr<nsIMenuListener> menuListener;
-      pnsMenuBar->QueryInterface(kIMenuListenerIID, getter_AddRefs(menuListener));
+      pnsMenuBar->QueryInterface(nsIMenuListener::GetIID(), getter_AddRefs(menuListener));
       aParentWindow->AddMenuListener(menuListener);
 
       nsCOMPtr<nsIDOMNode> menuNode;
@@ -290,7 +288,7 @@ nsEventStatus nsMenuBar::MenuConstruct(
 
             // Create nsMenu
             nsIMenu * pnsMenu = nsnull;
-            rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, kIMenuIID, (void**)&pnsMenu);
+            rv = nsComponentManager::CreateInstance(kMenuCID, nsnull, nsIMenu::GetIID(), (void**)&pnsMenu);
             if (NS_OK == rv) {
               // Call Create
               nsISupports * supports = nsnull;

@@ -19,11 +19,7 @@
 #include <gtk/gtk.h>
 
 #include "nsTextAreaWidget.h"
-#include "nsToolkit.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsGtkEventHandler.h"
 
 #define DBG 0
 
@@ -76,16 +72,13 @@ NS_METHOD nsTextAreaWidget::CreateNative(GtkWidget *parentWindow)
 
 nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kITextAreaWidgetIID, NS_ITEXTAREAWIDGET_IID);
-  static NS_DEFINE_IID(kIWidgetIID, NS_IWIDGET_IID);
-
-  if (aIID.Equals(kITextAreaWidgetIID)) {
+  if (aIID.Equals(nsITextAreaWidget::GetIID())) {
       nsITextAreaWidget* textArea = this;
       *aInstancePtr = (void*) (textArea);
       AddRef();
       return NS_OK;
   }
-  else if (aIID.Equals(kIWidgetIID))
+  else if (aIID.Equals(nsIWidget::GetIID()))
   {
       nsIWidget* widget = this;
       *aInstancePtr = (void*) (widget);

@@ -19,16 +19,14 @@
 #ifndef nsMenuItem_h__
 #define nsMenuItem_h__
 
-#include "prtypes.h"
 #include "nsIMenuItem.h"
 #include "nsString.h"
 #include "nsIMenuListener.h"
 
-#include "nsIDOMElement.h"
-#include "nsIWebShell.h"
-
+class nsIDOMElement;
 class nsIMenu;
 class nsIPopUpMenu;
+class nsIWebShell;
 class nsIWidget;
 
 /**

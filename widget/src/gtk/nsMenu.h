@@ -20,15 +20,13 @@
 #define nsMenu_h__
 
 #include "nsIMenu.h"
-#include "nsVoidArray.h"
 #include "nsIMenuListener.h"
+#include "nsVoidArray.h"
 
+class nsIDOMElement;
+class nsIDOMNode;
 class nsIMenuBar;
-class nsIMenuListener;
-
-#include "nsIDOMNode.h"
-#include "nsIDOMElement.h"
-#include "nsIWebShell.h"
+class nsIWebShell;
 
 /**
  * Native GTK+ Menu wrapper

@@ -21,11 +21,7 @@
 #include "nsGtkEventHandler.h"
 
 #include "nsButton.h"
-#include "nsToolkit.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 NS_IMPL_ADDREF_INHERITED(nsButton, nsWidget)
 NS_IMPL_RELEASE_INHERITED(nsButton, nsWidget)
@@ -95,8 +91,7 @@ nsresult nsButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
 
-    static NS_DEFINE_IID(kIButton, NS_IBUTTON_IID);
-    if (aIID.Equals(kIButton)) {
+    if (aIID.Equals(nsIButton::GetIID())) {
         *aInstancePtr = (void*) ((nsIButton*)this);
         AddRef();
         return NS_OK;

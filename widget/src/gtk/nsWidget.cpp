@@ -17,13 +17,16 @@
  */
 
 #include "nsWidget.h"
-#include "nsIDeviceContext.h"
-#include "nsIAppShell.h"
-#include "nsGfxCIID.h"
-#include "nsIComponentManager.h"
+
 #include "nsGtkEventHandler.h"
 #include "nsGtkUtils.h"
+#include "nsIAppShell.h"
+#include "nsIComponentManager.h"
+#include "nsIDeviceContext.h"
 #include "nsIFontMetrics.h"
+#include "nsILookAndFeel.h"
+#include "nsToolkit.h"
+#include "nsWidgetsCID.h"
 #include <gdk/gdkx.h>
 
 #define NSRECT_TO_GDKRECT(ns,gdk) \
@@ -42,8 +45,7 @@
 
 // Taken from nsRenderingContextGTK.cpp
 #define NS_TO_GDK_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
+static NS_DEFINE_CID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 nsILookAndFeel *nsWidget::sLookAndFeel = nsnull;
 PRUint32 nsWidget::sWidgetCount = 0;
 
@@ -65,7 +67,7 @@ nsWidget::nsWidget()
 
   if (!sLookAndFeel) {
     if (NS_OK != nsComponentManager::CreateInstance(kLookAndFeelCID,
-                                                    nsnull, kILookAndFeelIID,
+                                                    nsnull, nsILookAndFeel::GetIID(),
                                                     (void**)&sLookAndFeel))
       sLookAndFeel = nsnull;
   }

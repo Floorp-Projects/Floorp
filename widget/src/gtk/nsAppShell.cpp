@@ -18,7 +18,6 @@
 
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
-#include "plevent.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsICmdLineService.h"
@@ -26,11 +25,13 @@
 
 #include "nsIWidget.h"
 
+//-------------------------------------------------------------------------
+//
+// XPCOM CIDs
+//
+//-------------------------------------------------------------------------
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
-static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
-
 static NS_DEFINE_IID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
-static NS_DEFINE_IID(kICmdLineServiceIID, NS_ICOMMANDLINE_SERVICE_IID);
 
 //-------------------------------------------------------------------------
 //
@@ -58,8 +59,7 @@ nsAppShell::~nsAppShell()
 // nsISupports implementation macro
 //
 //-------------------------------------------------------------------------
-NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
-NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
+NS_IMPL_ISUPPORTS(nsAppShell, nsIAppShell::GetIID());
 
 //-------------------------------------------------------------------------
 NS_METHOD nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)

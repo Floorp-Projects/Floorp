@@ -19,11 +19,8 @@
 #include <gtk/gtk.h>
 
 #include "nsComboBox.h"
-#include "nsColor.h"
 #include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
-#include "nsIDeviceContext.h"
 
 #define DBG 0
 
@@ -279,15 +276,12 @@ NS_METHOD nsComboBox::Deselect()
 //-------------------------------------------------------------------------
 nsresult nsComboBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
-  static NS_DEFINE_IID(kInsComboBoxIID, NS_ICOMBOBOX_IID);
-  static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
-
-  if (aIID.Equals(kInsComboBoxIID)) {
+  if (aIID.Equals(nsIComboBox::GetIID())) {
     *aInstancePtr = (void*) ((nsIComboBox*)this);
     AddRef();
     return NS_OK;
   }
-  else if (aIID.Equals(kInsListWidgetIID)) {
+  else if (aIID.Equals(nsIListWidget::GetIID())) {
     *aInstancePtr = (void*) ((nsIListWidget*)this);
     AddRef();
     return NS_OK;

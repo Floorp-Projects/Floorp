@@ -16,9 +16,8 @@
  * Reserved.
  */
 
+#include "nscore.h"  // needed for 'nsnull'
 #include "nsToolkit.h"
-#include "nsGUIEvent.h"
-#include "plevent.h"
 
 
 //-------------------------------------------------------------------------

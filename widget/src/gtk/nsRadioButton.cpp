@@ -19,10 +19,7 @@
 #include <gtk/gtk.h>
 
 #include "nsRadioButton.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
 #include "nsString.h"
-#include "nsStringUtil.h"
 
 #include "nsGtkEventHandler.h"
 
@@ -64,8 +61,7 @@ nsresult nsRadioButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
-  static NS_DEFINE_IID(kIRadioButtonIID, NS_IRADIOBUTTON_IID);
-  if (result == NS_NOINTERFACE && aIID.Equals(kIRadioButtonIID)) {
+  if (result == NS_NOINTERFACE && aIID.Equals(nsIRadioButton::GetIID())) {
       *aInstancePtr = (void*) ((nsIRadioButton*)this);
       AddRef();
       result = NS_OK;

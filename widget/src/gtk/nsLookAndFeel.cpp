@@ -18,12 +18,10 @@
 
 #include "nsLookAndFeel.h"
 
-static NS_DEFINE_IID(kILookAndFeelIID, NS_ILOOKANDFEEL_IID);
-
 #define GDK_COLOR_TO_NS_RGB(c) \
   ((nscolor) NS_RGB(c.red, c.green, c.blue))
 
-NS_IMPL_ISUPPORTS(nsLookAndFeel, kILookAndFeelIID);
+NS_IMPL_ISUPPORTS(nsLookAndFeel, nsILookAndFeel::GetIID());
 
 //-------------------------------------------------------------------------
 //

@@ -21,18 +21,18 @@
 #include <gtk/gtkprivate.h>
 
 #include "nsWindow.h"
+#include "nsWidgetsCID.h"
 #include "nsIFontMetrics.h"
 #include "nsFont.h"
 #include "nsGUIEvent.h"
 #include "nsIRenderingContext.h"
-#include "nsIDeviceContext.h"
 #include "nsRect.h"
 #include "nsTransform2D.h"
 #include "nsGfxCIID.h"
-#include "nsMenuBar.h"
-
+#include "nsIMenuBar.h"
+#include "nsToolkit.h"
 #include "nsGtkEventHandler.h"
-#include "nsAppShell.h"
+#include "nsIAppShell.h"
 #include "nsClipboard.h"
 
 #include "stdio.h"
@@ -496,11 +496,10 @@ PRBool nsWindow::OnPaint(nsPaintEvent &event)
       g_print("nsWindow::OnPaint(this=%p, NO RECT)\n", this);
     }
 #endif
-    static NS_DEFINE_IID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
-    static NS_DEFINE_IID(kRenderingContextIID, NS_IRENDERING_CONTEXT_IID);
+    static NS_DEFINE_CID(kRenderingContextCID, NS_RENDERING_CONTEXT_CID);
     if (NS_OK == nsComponentManager::CreateInstance(kRenderingContextCID,
 					      nsnull,
-					      kRenderingContextIID,
+					      nsIRenderingContext::GetIID(),
 					      (void **)&event.renderingContext))
       {
         event.renderingContext->Init(mContext, this);

@@ -19,9 +19,7 @@
 #include <gtk/gtk.h>
 
 #include "nsScrollbar.h"
-#include "nsToolkit.h"
 #include "nsGUIEvent.h"
-#include "nsUnitConversion.h"
 
 #include "nsGtkEventHandler.h"
 
@@ -104,8 +102,7 @@ nsresult nsScrollbar::QueryInterface (const nsIID & aIID, void **aInstancePtr)
 {
     nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
-    static NS_DEFINE_IID(kInsScrollbarIID, NS_ISCROLLBAR_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsScrollbarIID)) {
+    if (result == NS_NOINTERFACE && aIID.Equals(nsIScrollbar::GetIID())) {
         *aInstancePtr = (void*) ((nsIScrollbar*)this);
         NS_ADDREF_THIS();
         result = NS_OK;

@@ -21,9 +21,6 @@
 
 #include "nsWidget.h"
 #include "nsWindow.h"
-#include "nsTextWidget.h"
-#include "nsCheckButton.h"
-#include "nsRadioButton.h"
 #include "nsScrollbar.h"
 #include "nsFileWidget.h"
 #include "nsGUIEvent.h"
@@ -38,9 +35,6 @@
 #include <gdk/gdkkeysyms.h>
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
-
-static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
-static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
 
 struct EventInfo {
   nsWidget *widget;  // the widget
@@ -445,7 +439,7 @@ void menu_item_activate_handler(GtkWidget *w, gpointer p)
     //    nsEventStatus status;
     //    mevent.widget->DispatchEvent((nsGUIEvent *)&mevent, status);
 
-    menuItem->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
+    menuItem->QueryInterface(nsIMenuListener::GetIID(), (void**)&menuListener);
     if(menuListener) {
       menuListener->MenuItemSelected(mevent);
       NS_IF_RELEASE(menuListener);
@@ -468,7 +462,7 @@ void menu_map_handler(GtkWidget *w, gpointer p)
 
     mevent.time = PR_IntervalNow();
 
-    menu->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
+    menu->QueryInterface(nsIMenuListener::GetIID(), (void**)&menuListener);
 
     if(menuListener) {
       menuListener->MenuConstruct(
@@ -496,7 +490,7 @@ void menu_unmap_handler(GtkWidget *w, gpointer p)
 
     mevent.time = PR_IntervalNow();
 
-    menu->QueryInterface(kIMenuListenerIID, (void**)&menuListener);
+    menu->QueryInterface(nsIMenuListener::GetIID(), (void**)&menuListener);
     if(menuListener) {
       menuListener->MenuDestruct(mevent);
       NS_IF_RELEASE(menuListener);

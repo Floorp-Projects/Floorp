@@ -19,9 +19,6 @@
 #include <gtk/gtk.h>
 
 #include "nsTextWidget.h"
-#include "nsToolkit.h"
-#include "nsColor.h"
-#include "nsGUIEvent.h"
 #include "nsString.h"
 #include "nsGtkEventHandler.h"
 
@@ -95,8 +92,7 @@ nsresult nsTextWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     nsresult result = nsWidget::QueryInterface(aIID, aInstancePtr);
 
-    static NS_DEFINE_IID(kInsTextWidgetIID, NS_ITEXTWIDGET_IID);
-    if (result == NS_NOINTERFACE && aIID.Equals(kInsTextWidgetIID)) {
+    if (result == NS_NOINTERFACE && aIID.Equals(nsITextWidget::GetIID())) {
         *aInstancePtr = (void*) ((nsITextWidget*)this);
         AddRef();
         result = NS_OK;

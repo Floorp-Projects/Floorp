@@ -23,9 +23,8 @@
 #include "nsIMenuListener.h"
 #include "nsVoidArray.h"
 
-#include "nsIWebShell.h"
-#include "nsIDOMNode.h"
-
+class nsIDOMNode;
+class nsIWebShell;
 class nsIWidget;
 
 /**

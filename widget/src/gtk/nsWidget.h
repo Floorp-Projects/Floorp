@@ -20,16 +20,13 @@
 #define nsWidget_h__
 
 #include "nsBaseWidget.h"
-#include "nsToolkit.h"
-#include "nsIAppShell.h"
-#include "nsWidgetsCID.h"
 
+// XXX: This must go away when nsAutoCString moves out of nsFileSpec.h
 #include "nsFileSpec.h" // for nsAutoCString()
 
-#include "nsIMouseListener.h"
-#include "nsIEventListener.h"
-
-#include "nsLookAndFeel.h"
+class nsILookAndFeel;
+class nsIAppShell;
+class nsIToolkit;
 
 #include <gtk/gtk.h>
 
