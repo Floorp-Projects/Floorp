@@ -420,6 +420,44 @@ interface nsIAccessible : nsISupports
   // Represent top level window
   enum { ROLE_FRAME = 22U };               // ATK_ROLE_FRAME
 
+  // Other roles from atk.h
+  enum { ROLE_ACCEL_LABEL = 1U };          // ATK_ROLE_ACCEL_LABEL
+  enum { ROLE_ARROW  = 4U };               // ATK_ROLE_ARROW
+  enum { ROLE_CANVAS = 6U };               // ATK_ROLE_CANVAS
+  enum { ROLE_CHECK_MENU_ITEM = 8U };      // ATK_ROLE_CHECK_MENU_ITEM
+  enum { ROLE_COLOR_CHOOSER  = 9U };       // ATK_ROLE_COLOR_CHOOSER
+  enum { ROLE_DATE_EDITOR = 12U };         // ATK_ROLE_DATE_EDITOR
+  enum { ROLE_DESKTOP_ICON = 13U };        // ATK_ROLE_DESKTOP_ICON
+  enum { ROLE_DESKTOP_FRAME = 14U };       // ATK_ROLE_DESKTOP_FRAME
+  enum { ROLE_DIRECTORY_PANE = 17U };      // ATK_ROLE_DIRECTORY_PANE
+  enum { ROLE_FILE_CHOOSER = 19U};         // ATK_ROLE_FILE_CHOOSER
+  enum { ROLE_FILLER = 20U };              // ATK_ROLE_FILLER
+  enum { ROLE_FONT_CHOOSER = 21U };        // ATK_ROLE_FONT_CHOOSER
+  enum { ROLE_GLASS_PANE = 23U };          // ATK_ROLE_GLASS_PANE
+  enum { ROLE_HTML_CONTAINER = 24U };      // ATK_ROLE_HTML_CONTAINER
+  enum { ROLE_ICON = 25U };                // ATK_ROLE_ICON
+  enum { ROLE_INTERNAL_FRAME = 27U };      // ATK_ROLE_INTERNAL_FRAME
+  enum { ROLE_LABEL = 28U };               // ATK_ROLE_LABEL
+  enum { ROLE_LAYERED_PANE = 29U };        // ATK_ROLE_LAYERED_PANE
+  enum { ROLE_OPTION_PANE = 35U };         // ATK_ROLE_OPTION_PANE
+  enum { ROLE_PASSWORD_TEXT = 39U };       // ATK_ROLE_PASSWORD_TEXT
+  enum { ROLE_POPUP_MENU = 40U };          // ATK_ROLE_POPUP_MENU
+  enum { ROLE_RADIO_MENU_ITEM = 44U };     // ATK_ROLE_RADIO_MENU_ITEM
+  enum { ROLE_ROOT_PANE = 45U };           // ATK_ROLE_ROOT_PANE
+  enum { ROLE_SCROLL_PANE = 48U };         // ATK_ROLE_SCROLL_PANE
+  enum { ROLE_SPLIT_PANE = 51U };          // ATK_ROLE_SPLIT_PANE
+  enum { ROLE_TABLE_COLUMN_HEADER = 56U }; // ATK_ROLE_TABLE_COLUMN_HEADER
+  enum { ROLE_TABLE_ROW_HEADER = 57U };    // ATK_ROLE_TABLE_ROW_HEADER
+  enum { ROLE_TEAR_OFF_MENU_ITEM = 58U };  // ATK_ROLE_TEAR_OFF_MENU_ITEM
+  enum { ROLE_TERMINAL = 59U };            // ATK_ROLE_TERMINAL
+  enum { ROLE_TOGGLE_BUTTON = 61U };       // ATK_ROLE_TOGGLE_BUTTON
+  enum { ROLE_TREE_TABLE = 65U };          // ATK_ROLE_TREE_TABLE
+  enum { ROLE_VIEWPORT = 67U };            // ATK_ROLE_VIEWPORT
+  enum { ROLE_HEADER = 69U };              // ATK_ROLE_HEADER
+  enum { ROLE_FOOTER = 70U };              // ATK_ROLE_FOOTER
+  enum { ROLE_PARAGRAPH = 71U };           // ATK_ROLE_PARAGRAPH
+  enum { ROLE_RULER = 72U };               // ATK_ROLE_RULER
+  enum { ROLE_AUTOCOMPLETE = 74U };        // ATK_ROLE_AUTOCOMPLETE
 #else
 // MSAA Roles - only one per nsIAccessible or IAccessible
   enum { ROLE_TITLEBAR = 1U };
