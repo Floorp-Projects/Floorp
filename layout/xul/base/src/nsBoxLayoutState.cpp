@@ -193,10 +193,22 @@ nsBoxLayoutState::HandleReflow(nsIBox* aRootBox)
 
 
 void
-nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aBox, PRBool aClearDirtyBits)
+nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aRootBox, PRBool aClearDirtyBits)
 {
   // If incremental, unwind the reflow path, updating dirty bits
-  // appropriately.
+  // appropriately. We recursively descend through the reflow tree,
+  // clearing the NS_FRAME_HAS_DIRTY_CHILDREN bit on each frame until
+  // we reach a target frame. When we reach a target frame, we set the
+  // NS_FRAME_HAS_DIRTY_CHILDREN bit on the root box's frame, and then
+  // call the target box's MarkDirty method. This will reset the
+  // NS_FRAME_HAS_DIRTY_CHILDREN bit on each box on the path back to
+  // root, as well as initialize each box correctly for a dirty
+  // layout.
+  //
+  // Note that we _won't_ clear the NS_FRAME_HAS_DIRTY_CHILDREN bit
+  // once we encounter a target: boxes below a target are assumed to
+  // have had their reflow states initialized properly for a dirty
+  // layout, and we don't want to perturb them.
   nsReflowPath::iterator iter = aReflowPath->FirstChild();
   nsReflowPath::iterator end = aReflowPath->EndChildren();
 
@@ -212,27 +224,27 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aBox, PRBool aClearD
     nsFrameState state;
     (*iter)->GetFrameState(&state);
 
-    // Unconditionally clear the dirty-children bit if no box above us
-    // has been targeted.
+    // Clear the dirty-children bit if no box above us has been
+    // targeted. This will be re-set by MarkDirty once we reach a
+    // target.
     if (aClearDirtyBits) {
       state &= ~NS_FRAME_HAS_DIRTY_CHILDREN;
       (*iter)->SetFrameState(state);
     }
 
     if (isAdaptor) {
-      // The target is inside an html block. Mark the box's frame as
-      // dirty so we don't post a dirty reflow and optimize the reflow
-      // away.
-      // XXXwaterson I don't really understand why aBox->GetFrame
-      // returns a frame that is != *iter, but it does. Furthermore, I
-      // don't really get the bit-twiddling below.
+      // It's nested HTML. Mark the root box's frame with
+      // NS_FRAME_HAS_DIRTY_CHILDREN so MarkDirty won't walk off the
+      // top of the box hierarchy and schedule another reflow command.
       nsIFrame* frame;
-      aBox->GetFrame(&frame);
+      aRootBox->GetFrame(&frame);
 
       frame->GetFrameState(&state);
       state |= NS_FRAME_HAS_DIRTY_CHILDREN;
       frame->SetFrameState(state);
 
+      // Clear the frame's dirty bit so that MarkDirty doesn't
+      // optimize the layout away.
       (*iter)->GetFrameState(&state);
       state &= ~NS_FRAME_IS_DIRTY;
       (*iter)->SetFrameState(state);
@@ -249,9 +261,11 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aBox, PRBool aClearD
     // HandleReflow, it ought to never be. Yet here we are.
     nsHTMLReflowCommand *command = iter.get()->mReflowCommand;
     if (command) {
-      // XXXwaterson isn't (frame == *iter)?
+      // Mark the root box's frame with NS_FRAME_HAS_DIRTY_CHILDREN so
+      // that MarkDirty won't walk off the top of the box hierarchy
+      // and schedule another reflow command.
       nsIFrame* frame;
-      aBox->GetFrame(&frame);
+      aRootBox->GetFrame(&frame);
 
       frame->GetFrameState(&state);
       state |= NS_FRAME_HAS_DIRTY_CHILDREN;
@@ -294,7 +308,7 @@ nsBoxLayoutState::Unwind(nsReflowPath* aReflowPath, nsIBox* aBox, PRBool aClearD
     }
 
     // Recursively unwind the reflow path.
-    Unwind(iter.get(), ibox, aClearDirtyBits);
+    Unwind(iter.get(), aRootBox, aClearDirtyBits);
   }
 }
 

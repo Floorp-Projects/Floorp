@@ -5868,11 +5868,7 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
     }
 #endif
   }
-#if 0
-  // XXXwaterson Temporarily disable dirty reflow coalescing (which is sort of
-  // silly, anyway, given the reflow tree) until we can figure out bug 143959.
   else {
-    nsIBox *
     if (!(mState & NS_FRAME_IS_DIRTY)) {      
       // Mark yourself as dirty
       mState |= NS_FRAME_IS_DIRTY;
@@ -5892,7 +5888,6 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
       mParent->ReflowDirtyChild(aPresShell, this);
     }
   }
-#endif
 
 #ifdef DEBUG
   if (gNoisyReflow) {
