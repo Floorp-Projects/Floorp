@@ -555,17 +555,19 @@ DefParam("emailsuffix",
 
 
 DefParam("voteremovedmail",
-q{This is a mail message to send to anyone who gets a vote removed from a bug for any reason.  %to% gets replaced by a comma-separated list of people who used to be voting for this bug.  %bugid% gets replaced by the bug number.  %reason% gets replaced by a short reason describing why the vote was removed.  %count% is how many votes got removed.%<i>anythingelse</i>% gets replaced by the definition of that parameter (as defined on this page).},
+q{This is a mail message to send to anyone who gets a vote removed from a bug for any reason.  %to% gets replaced by the person who used to be voting for this bug.  %bugid% gets replaced by the bug number.  %reason% gets replaced by a short reason describing why the vote(s) were removed.  %votesremoved%, %votesold% and %votesnew% is the number of votes removed, before and after respectively.  %votesremovedtext%, %votesoldtext% and %votesnewtext% are these as sentences, eg "You had 2 votes on this bug."  %count% is also supported for backwards compatibility.  %<i>anythingelse</i>% gets replaced by the definition of that parameter (as defined on this page).},
          "l",
 "From: bugzilla-daemon
 To: %to%
-Subject: [Bug %bugid%] Your vote has been removed from this bug
+Subject: [Bug %bugid%] Some or all of your votes have been removed.
 
-You used to have a vote on bug %bugid%, but it has been removed.
+Some or all of your votes have been removed from bug %bugid%.
+
+%votesoldtext%
+
+%votesnewtext%
 
 Reason: %reason%
-
-Votes removed: %count%
 
 %urlbase%show_bug.cgi?id=%bugid%
 ");

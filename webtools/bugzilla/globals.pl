@@ -1195,33 +1195,45 @@ sub RemoveVotes {
             $whopart);
     my @list;
     while (MoreSQLData()) {
-        my ($name, $userid, $count, $votesperuser, $maxvotesperbug) = (FetchSQLData());
-        push(@list, [$name, $userid, $count, $votesperuser, $maxvotesperbug]);
+        my ($name, $userid, $oldvotes, $votesperuser, $maxvotesperbug) = (FetchSQLData());
+        push(@list, [$name, $userid, $oldvotes, $votesperuser, $maxvotesperbug]);
     }
     if (0 < @list) {
         foreach my $ref (@list) {
-            my ($name, $userid, $count, $votesperuser, $maxvotesperbug) = (@$ref);
+            my ($name, $userid, $oldvotes, $votesperuser, $maxvotesperbug) = (@$ref);
+            my $s;
+
+            $maxvotesperbug = $votesperuser if ($votesperuser < $maxvotesperbug);
 
             # If this product allows voting and the user's votes are in
             # the acceptable range, then don't do anything.
-            next if $votesperuser && $count <= $maxvotesperbug;
+            next if $votesperuser && $oldvotes <= $maxvotesperbug;
 
             # If the user has more votes on this bug than this product
             # allows, then reduce the number of votes so it fits
             my $newvotes = $votesperuser ? $maxvotesperbug : 0;
+
+            my $removedvotes = $oldvotes - $newvotes;
+
+            $s = $oldvotes == 1 ? "" : "s";
+            my $oldvotestext = "You had $oldvotes vote$s on this bug.";
+
+            $s = $removedvotes == 1 ? "" : "s";
+            my $removedvotestext = "You had $removedvotes vote$s removed from this bug.";
+
+            my $newvotestext;
             if ($newvotes) {
                 SendSQL("UPDATE votes SET count = $newvotes " .
                         "WHERE bug_id = $id AND who = $userid");
-                my $s = $newvotes == 1 ? "" : "s";
-                $count = ($count - $newvotes) . 
-                         "\n    You still have $newvotes vote$s on this bug";
+                $s = $newvotes == 1 ? "" : "s";
+                $newvotestext = "You still have $newvotes vote$s on this bug."
             } else {
                 SendSQL("DELETE FROM votes WHERE bug_id = $id AND who = $userid");
-                $count = "$count\n    You have no more votes remaining on this bug";
+                $newvotestext = "You have no more votes remaining on this bug.";
             }
 
             # Notice that we did not make sure that the user fit within the $votesperuser
-            # range.  This is considered to be an acceptable alternative to loosing votes
+            # range.  This is considered to be an acceptable alternative to losing votes
             # during product moves.  Then next time the user attempts to change their votes,
             # they will be forced to fit within the $votesperuser limit.
 
@@ -1233,10 +1245,21 @@ sub RemoveVotes {
             }
             if (open(SENDMAIL, "|/usr/lib/sendmail $sendmailparm -t")) {
                 my %substs;
+
                 $substs{"to"} = $name;
                 $substs{"bugid"} = $id;
                 $substs{"reason"} = $reason;
-                $substs{"count"} = $count;
+
+                $substs{"votesremoved"} = $removedvotes;
+                $substs{"votesold"} = $oldvotes;
+                $substs{"votesnew"} = $newvotes;
+
+                $substs{"votesremovedtext"} = $removedvotestext;
+                $substs{"votesoldtext"} = $oldvotestext;
+                $substs{"votesnewtext"} = $newvotestext;
+
+                $substs{"count"} = $removedvotes . "\n    " . $newvotestext;
+
                 my $msg = PerformSubsts(Param("voteremovedmail"),
                                         \%substs);
                 print SENDMAIL $msg;
