@@ -138,9 +138,6 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 #define SINK_TRACE_REFLOW             0x2
 #define SINK_ALWAYS_REFLOW            0x4
 
-#define NS_SINK_FLAG_SCRIPT_ENABLED   0x8
-#define NS_SINK_FLAG_FRAMES_ENABLED   0x10
-
 #define SINK_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
 #define SINK_TRACE(_bit,_args)                    \
@@ -160,6 +157,9 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 #undef SINK_NO_INCREMENTAL
 
 //----------------------------------------------------------------------
+
+#define NS_SINK_FLAG_SCRIPT_ENABLED   0x8
+#define NS_SINK_FLAG_FRAMES_ENABLED   0x10
 
 class SinkContext;
 
