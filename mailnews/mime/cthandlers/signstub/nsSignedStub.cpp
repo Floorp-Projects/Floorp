@@ -36,7 +36,7 @@
 
 // String bundles...
 #ifndef XP_MAC
-nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
+static nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
 #endif
 
 /* This is the next generation string retrieval call */

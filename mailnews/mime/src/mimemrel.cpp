@@ -126,6 +126,7 @@
 #include "nsFileStream.h"
 #include "nsFileSpec.h"
 #include "mimebuf.h"
+#include "nsMsgUtils.h"
 
 //
 // External Defines...
@@ -386,7 +387,7 @@ MakeAbsoluteURL(char *base_url, char *relative_url)
     if (!relative_url)
       return nsnull;
 
-    mime_SACopy(&retString, relative_url);
+    NS_MsgSACopy(&retString, relative_url);
     return retString;
   }
 

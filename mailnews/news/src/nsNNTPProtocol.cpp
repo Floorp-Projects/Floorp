@@ -64,6 +64,7 @@
 #include "nsMsgKeySet.h"
 
 #include "nsNewsUtils.h"
+#include "nsMsgUtils.h"
 
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
@@ -147,14 +148,6 @@ protected:
     const char* mBuffer;
     PRUint32    mLength;
 };
-
-// todo:  get rid of this
-extern "C"
-{
-char * NET_SACopy (char **destination, const char *source);
-char * NET_SACat (char **destination, const char *source);
-
-}
 
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
 static NS_DEFINE_CID(kCHeaderParserCID, NS_MSGHEADERPARSER_CID);
@@ -309,60 +302,11 @@ char *stateLabels[] = {
 // TEMPORARY HARD CODED FUNCTIONS 
 ///////////////////////////////////////////////////////////////////////////////////////////
 #ifdef XP_WIN
-char *XP_AppCodeName = "Mozilla";
+static char *XP_AppCodeName = "Mozilla";
 #else
-const char *XP_AppCodeName = "Mozilla";
+static const char *XP_AppCodeName = "Mozilla";
 #endif
 #define NET_IS_SPACE(x) ((x)==' ' || (x)=='\t')
-
-char * NET_SACopy (char **destination, const char *source)
-{
-	if(*destination)
-	  {
-	    PR_Free(*destination);
-		*destination = 0;
-	  }
-    if (! source)
-	  {
-        *destination = NULL;
-	  }
-    else 
-	  {
-        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-        if (*destination == NULL) 
- 	        return(NULL);
-
-        PL_strcpy (*destination, source);
-      }
-    return *destination;
-}
-
-/*  Again like strdup but it concatinates and free's and uses Realloc
-*/
-char * NET_SACat (char **destination, const char *source)
-{
-    if (source && *source)
-      {
-        if (*destination)
-          {
-            int length = PL_strlen (*destination);
-            *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
-            if (*destination == NULL)
-            return(NULL);
-
-            PL_strcpy (*destination + length, source);
-          }
-        else
-          {
-            *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-            if (*destination == NULL)
-                return(NULL);
-
-             PL_strcpy (*destination, source);
-          }
-      }
-    return *destination;
-}
 
 char *MSG_UnEscapeSearchUrl (const char *commandSpecificData)
 {
@@ -999,7 +943,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
      cancel = PR_TRUE;
   }
 
-  NET_SACopy(&m_path, m_messageID);
+  NS_MsgSACopy(&m_path, m_messageID);
 
   /* We are posting a user-written message
      if and only if this message has a message to post
@@ -1009,7 +953,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   if (NS_SUCCEEDED(rv) && message)
 	{
 	  m_typeWanted = NEWS_POST;
-	  NET_SACopy(&m_path, "");
+	  NS_MsgSACopy(&m_path, "");
 	}
   else 
 	if (m_messageID || (m_key != nsMsgKey_None))
@@ -1504,7 +1448,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 #endif
 	}
 
-    NET_SACopy(&m_responseText, line+4);
+    NS_MsgSACopy(&m_responseText, line+4);
 
 	m_previousResponseCode = m_responseCode;
 
@@ -1933,7 +1877,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 
 	if(m_typeWanted == NEWS_POST)
       {  /* posting to the news group */
-        NET_SACopy(&command, "POST");
+        NS_MsgSACopy(&command, "POST");
       }
     else if(m_typeWanted == READ_NEWS_RC)
       {
@@ -1980,7 +1924,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 		PR_FormatTimeUSEnglish(small_buf, sizeof(small_buf), 
                                "NEWGROUPS %y%m%d %H%M%S", &expandedTime);
 		
-        NET_SACopy(&command, small_buf);
+        NS_MsgSACopy(&command, small_buf);
 
 	}
     else if(m_typeWanted == LIST_WANTED)
@@ -2017,12 +1961,12 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 			rv = m_nntpServer->QueryExtension("XACTIVE",&xactive);
 			if (NS_SUCCEEDED(rv) && xactive)
 			{
-				NET_SACopy(&command, "LIST XACTIVE");
+				NS_MsgSACopy(&command, "LIST XACTIVE");
 				SetFlag(NNTP_USE_FANCY_NEWSGROUP);
 			}
 			else
 			{
-				NET_SACopy(&command, "LIST");
+				NS_MsgSACopy(&command, "LIST");
 			}
 		}
 	}
@@ -2041,8 +1985,8 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
         m_firstArticle = 0;
         m_lastArticle = 0;
         
-        NET_SACopy(&command, "GROUP ");
-        NET_SACat(&command, (const char *)group_name);
+        NS_MsgSACopy(&command, "GROUP ");
+        NS_MsgSACat(&command, (const char *)group_name);
       }
 	else if (m_typeWanted == SEARCH_WANTED)
 	{
@@ -2062,7 +2006,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 				char *allocatedCommand = MSG_UnEscapeSearchUrl (slash + 1);
 				if (allocatedCommand)
 				{
-					NET_SACopy (&command, allocatedCommand);
+					NS_MsgSACopy (&command, allocatedCommand);
 					PR_Free(allocatedCommand);
 				}
 			}
@@ -2082,8 +2026,8 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
             rv = m_newsFolder->GetAsciiName(getter_Copies(group_name));
             if (NS_FAILED(rv)) return -1;
 
-			NET_SACopy(&command, "GROUP ");
-            NET_SACat (&command, group_name);
+			NS_MsgSACopy(&command, "GROUP ");
+            NS_MsgSACat (&command, group_name);
 
             // force a GROUP next time
             m_currentGroup = "";
@@ -2115,7 +2059,7 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
 			char *allocatedCommand = MSG_UnEscapeSearchUrl (slash + 1);
 			if (allocatedCommand)
 			{
-				NET_SACopy(&command, allocatedCommand);
+				NS_MsgSACopy(&command, allocatedCommand);
 				PR_Free(allocatedCommand);
 			}
 		}
@@ -2138,23 +2082,23 @@ PRInt32 nsNNTPProtocol::SendFirstNNTPCommand(nsIURI * url)
         if (!m_path) return -1;
 
 		if (m_typeWanted == CANCEL_WANTED) {
-			NET_SACopy(&command, "HEAD ");
+			NS_MsgSACopy(&command, "HEAD ");
         }
 		else {
             NS_ASSERTION(m_typeWanted == ARTICLE_WANTED, "not cancel, and not article");
-			NET_SACopy(&command, "ARTICLE ");
+			NS_MsgSACopy(&command, "ARTICLE ");
         }
 
 		if (*m_path != '<')
-			NET_SACat(&command,"<");
+			NS_MsgSACat(&command,"<");
 
-		NET_SACat(&command, m_path);
+		NS_MsgSACat(&command, m_path);
 
 		if (PL_strchr(command+8, '>')==0) 
-			NET_SACat(&command,">");
+			NS_MsgSACat(&command,">");
 	}
 
-    NET_SACat(&command, CRLF);
+    NS_MsgSACat(&command, CRLF);
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 	if (mailnewsurl)
 		status = SendData(mailnewsurl, command);
@@ -2755,16 +2699,16 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 		  return(MK_NNTP_AUTH_FAILED);
 	}
 
-	NET_SACopy(&command, "AUTHINFO user ");
+	NS_MsgSACopy(&command, "AUTHINFO user ");
 	if (cachedUsername) {
 		PR_LOG(NNTP,PR_LOG_ALWAYS,("use %s as the username",(const char *)cachedUsername));
-		NET_SACat(&command, (const char *)cachedUsername);
+		NS_MsgSACat(&command, (const char *)cachedUsername);
 	}
 	else {
 		PR_LOG(NNTP,PR_LOG_ALWAYS,("use %s as the username",(const char *)username));
-		NET_SACat(&command, (const char *)username);
+		NS_MsgSACat(&command, (const char *)username);
 	}
-	NET_SACat(&command, CRLF);
+	NS_MsgSACat(&command, CRLF);
 
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 	if (mailnewsurl)
@@ -2864,16 +2808,16 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		  return(MK_NNTP_AUTH_FAILED);
 		}
 
-		NET_SACopy(&command, "AUTHINFO pass ");
+		NS_MsgSACopy(&command, "AUTHINFO pass ");
 		if (cachedPassword) {
 			PR_LOG(NNTP,PR_LOG_ALWAYS,("use cached password"));
-			NET_SACat(&command, (const char *)cachedPassword);
+			NS_MsgSACat(&command, (const char *)cachedPassword);
 		}
 		else {
 			// *don't log the password!* PR_LOG(NNTP,PR_LOG_ALWAYS,("use %s as the password",(const char *)password)); 
-			NET_SACat(&command, (const char *)password);
+			NS_MsgSACat(&command, (const char *)password);
 		}
-		NET_SACat(&command, CRLF);
+		NS_MsgSACat(&command, CRLF);
 	
 		nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
 		if (mailnewsurl)
@@ -4424,11 +4368,11 @@ PRInt32 nsNNTPProtocol::XPATSend()
 		char *command = NULL;
 		char *unescapedCommand = NULL;
 		char *endOfTerm = NULL;
-		NET_SACopy (&command, ++thisTerm);
+		NS_MsgSACopy (&command, ++thisTerm);
 		endOfTerm = PL_strchr(command, '/');
 		if (endOfTerm)
 			*endOfTerm = '\0';
-		NET_SACat(&command, CRLF);
+		NS_MsgSACat(&command, CRLF);
 	
 		unescapedCommand = MSG_UnEscapeSearchUrl(command);
 

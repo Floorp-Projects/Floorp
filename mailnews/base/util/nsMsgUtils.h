@@ -54,5 +54,9 @@ NS_MSG_BASE nsresult NS_MsgCreatePathStringFromFolderURI(const char *folderURI, 
 
 NS_MSG_BASE PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP);
 
+NS_MSG_BASE char * NS_MsgSACopy(char **destination, const char *source);
+
+NS_MSG_BASE char * NS_MsgSACat(char **destination, const char *source);
+
 #endif
 

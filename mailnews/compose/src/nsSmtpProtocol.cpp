@@ -47,6 +47,7 @@
 #include "prprf.h"
 #include "plbase64.h"
 #include "nsEscape.h"
+#include "nsMsgUtils.h"
 
 #include "nsISSLSocketControl.h"
 /* sigh, cmtcmn.h, included from nsIPSMSocketInfo.h, includes windows.h, which includes winuser.h,
@@ -71,12 +72,6 @@ static PRLogModuleInfo *SMTPLogModule = nsnull;
 
 static NS_DEFINE_CID(kHeaderParserCID, NS_MSGHEADERPARSER_CID);
 
-extern "C" 
-{
-	char * NET_SACopy (char **destination, const char *source);
-	char * NET_SACat (char **destination, const char *source);
-}
-
 /* the output_buffer_size must be larger than the largest possible line
  * 2000 seems good for news
  *
@@ -91,12 +86,6 @@ extern "C"
 ////////////////////////////////////////////////////////////////////////////////////////////
 // TEMPORARY HARD CODED FUNCTIONS 
 ///////////////////////////////////////////////////////////////////////////////////////////
-#if defined (XP_WIN) || defined(XP_OS2)
-char *XP_AppCodeName = "Mozilla";
-#else
-const char *XP_AppCodeName = "Mozilla";
-#endif
-#define NET_IS_SPACE(x) ((((unsigned int) (x)) > 0x7f) ? 0 : isspace(x))
 
 /* based on in NET_ExplainErrorDetails in mkmessag.c */
 nsresult nsExplainErrorDetails(nsISmtpUrl * aSmtpUrl, int code, ...)
@@ -141,55 +130,6 @@ nsresult nsExplainErrorDetails(nsISmtpUrl * aSmtpUrl, int code, ...)
 	va_end (args);
 
 	return rv;
-}
-
-char * NET_SACopy (char **destination, const char *source)
-{
-	if(*destination)
-	  {
-	    PR_Free(*destination);
-		*destination = 0;
-	  }
-    if (! source)
-	  {
-        *destination = NULL;
-	  }
-    else 
-	  {
-        *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-        if (*destination == NULL) 
- 	        return(NULL);
-
-        PL_strcpy (*destination, source);
-      }
-    return *destination;
-}
-
-/*  Again like strdup but it concatinates and free's and uses Realloc
-*/
-char * NET_SACat (char **destination, const char *source)
-{
-    if (source && *source)
-      {
-        if (*destination)
-          {
-            int length = PL_strlen (*destination);
-            *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
-            if (*destination == NULL)
-            return(NULL);
-
-            PL_strcpy (*destination + length, source);
-          }
-        else
-          {
-            *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
-            if (*destination == NULL)
-                return(NULL);
-
-             PL_strcpy (*destination, source);
-          }
-      }
-    return *destination;
 }
 
 /* RFC 1891 -- extended smtp value encoding scheme
@@ -1185,7 +1125,7 @@ PRInt32 nsSmtpProtocol::SendDataResponse()
 		{
 		  char buffer[512];
 		  PR_snprintf(buffer, sizeof(buffer), "Sender: %.256s" CRLF, real_name);
-		  NET_SACat(command, buffer);
+		  NS_MsgSACat(command, buffer);
 		  if(!command)
 		    {
 		      m_urlErrorState = NS_ERROR_OUT_OF_MEMORY;

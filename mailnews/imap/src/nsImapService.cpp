@@ -61,6 +61,7 @@
 #include "nsMsgUtils.h"
 #include "nsICacheService.h"
 #include "nsNetCID.h"
+#include "nsMsgUtf7Utils.h"
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"
 
@@ -2682,7 +2683,7 @@ char *CreateImapManageMailAccountUrl(const char *imapHost)
 	static const char *formatString = "netscape";
 
 	char *returnString = createStartOfIMAPurl(imapHost, nsCRT::strlen(formatString) + 1);
-	StrAllocCat(returnString, formatString);;
+	NS_MsgSACat(&returnString, formatString);;
 	
 	return returnString;
 }

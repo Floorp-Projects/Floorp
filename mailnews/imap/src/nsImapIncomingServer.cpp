@@ -60,6 +60,7 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIImapService.h"
 #include "nsMsgI18N.h"
+#include "nsMsgUtf7Utils.h"
 #include "nsAutoLock.h"
 #include "nsIImapMockChannel.h"
 #include "nsIPrompt.h"

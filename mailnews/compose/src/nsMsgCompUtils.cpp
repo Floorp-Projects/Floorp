@@ -40,9 +40,7 @@
 #include "nsIURI.h"
 #include "nsNetCID.h"
 #include "nsMsgPrompts.h"
-
-/* for StrAllocCat */
-#include "xp_str.h"
+#include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
@@ -1133,19 +1131,19 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 		foldedParm = PL_strdup(parmName);
 		if (needEscape)
 		{
-			StrAllocCat(foldedParm, "*=");
+			NS_MsgSACat(&foldedParm, "*=");
 			if (charsetLen)
-				StrAllocCat(foldedParm, charset);
-			StrAllocCat(foldedParm, "'");
+				NS_MsgSACat(&foldedParm, charset);
+			NS_MsgSACat(&foldedParm, "'");
 			if (languageLen)
-				StrAllocCat(foldedParm, language);
-			StrAllocCat(foldedParm, "'");
+				NS_MsgSACat(&foldedParm, language);
+			NS_MsgSACat(&foldedParm, "'");
 		}
 		else
-			StrAllocCat(foldedParm, "=\"");
-		StrAllocCat(foldedParm, dupParm);
+			NS_MsgSACat(&foldedParm, "=\"");
+		NS_MsgSACat(&foldedParm, dupParm);
 		if (!needEscape)
-			StrAllocCat(foldedParm, "\"");
+			NS_MsgSACat(&foldedParm, "\"");
 		goto done;
 	}
 	else
@@ -1166,32 +1164,32 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 			}
 			else {
 				if (needEscape)
-					StrAllocCat(foldedParm, "\r\n ");
+					NS_MsgSACat(&foldedParm, "\r\n ");
 				else
-					StrAllocCat(foldedParm, ";\r\n ");
-				StrAllocCat(foldedParm, parmName);
+					NS_MsgSACat(&foldedParm, ";\r\n ");
+				NS_MsgSACat(&foldedParm, parmName);
 			}
 			PR_snprintf(digits, sizeof(digits), "*%d", counter);
-			StrAllocCat(foldedParm, digits);
+			NS_MsgSACat(&foldedParm, digits);
 			curLineLen += PL_strlen(digits);
 			if (needEscape)
 			{
-				StrAllocCat(foldedParm, "*=");
+				NS_MsgSACat(&foldedParm, "*=");
 				if (counter == 0)
 				{
 					if (charsetLen)
-						StrAllocCat(foldedParm, charset);
-					StrAllocCat(foldedParm, "'");
+						NS_MsgSACat(&foldedParm, charset);
+					NS_MsgSACat(&foldedParm, "'");
 					if (languageLen)
-						StrAllocCat(foldedParm, language);
-					StrAllocCat (foldedParm, "'");
+						NS_MsgSACat(&foldedParm, language);
+					NS_MsgSACat(&foldedParm, "'");
 					curLineLen += charsetLen;
 					curLineLen += languageLen;
 				}
 			}
 			else
 			{
-				StrAllocCat(foldedParm, "=\"");
+				NS_MsgSACat(&foldedParm, "=\"");
 			}
 			counter++;
 			curLineLen += parmNameLen;
@@ -1225,9 +1223,9 @@ RFC2231ParmFolding(const char *parmName, const char *charset,
 			{
 				tmp = *end; *end = nsnull;
 			}
-			StrAllocCat(foldedParm, start);
+			NS_MsgSACat(&foldedParm, start);
 			if (!needEscape)
-				StrAllocCat(foldedParm, "\"");
+				NS_MsgSACat(&foldedParm, "\"");
 
 			parmValueLen -= (end-start);
 			if (tmp)

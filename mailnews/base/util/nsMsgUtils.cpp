@@ -36,7 +36,6 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgImapCID.h"
 #include "nsMsgI18N.h"
-#include "xp_str.h"
 
 static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
@@ -349,7 +348,7 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP)
 
  AGAIN:
 
-  while (s < s_end && XP_IS_SPACE(*s))
+  while (s < s_end && IS_SPACE(*s))
 	s++;
 
   if (s < (s_end-2) &&
@@ -367,7 +366,7 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP)
 		  const char *s2 = s+3;		/* Skip over "Re[" */
 
 		  /* Skip forward over digits after the "[". */
-		  while (s2 < (s_end-2) && XP_IS_DIGIT(*s2))
+		  while (s2 < (s_end-2) && IS_DIGIT(*s2))
 			s2++;
 
 		  /* Now ensure that the following thing is "]:"
@@ -390,3 +389,51 @@ PRBool NS_MsgStripRE(const char **stringP, PRUint32 *lengthP)
 
   return result;
 }
+
+/*	Very similar to strdup except it free's too
+ */
+char * NS_MsgSACopy (char **destination, const char *source)
+{
+  if(*destination)
+  {
+    PR_Free(*destination);
+    *destination = 0;
+  }
+  if (! source)
+    *destination = nsnull;
+  else 
+  {
+    *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+    if (*destination == nsnull) 
+      return(nsnull);
+    
+    PL_strcpy (*destination, source);
+  }
+  return *destination;
+}
+
+/*  Again like strdup but it concatinates and free's and uses Realloc
+*/
+char * NS_MsgSACat (char **destination, const char *source)
+{
+  if (source && *source)
+    if (*destination)
+    {
+      int length = PL_strlen (*destination);
+      *destination = (char *) PR_Realloc (*destination, length + PL_strlen(source) + 1);
+      if (*destination == nsnull)
+        return(nsnull);
+
+      PL_strcpy (*destination + length, source);
+    }
+    else
+    {
+      *destination = (char *) PR_Malloc (PL_strlen(source) + 1);
+      if (*destination == nsnull)
+        return(nsnull);
+
+      PL_strcpy (*destination, source);
+    }
+  return *destination;
+}
+

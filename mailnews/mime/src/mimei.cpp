@@ -75,6 +75,7 @@
 #include "nsVoidArray.h"
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
+#include "nsMsgUtils.h"
 
 #define	IMAP_EXTERNAL_CONTENT_HEADER "X-Mozilla-IMAP-Part"
 
@@ -582,7 +583,7 @@ mime_create (const char *content_type, MimeHeaders *hdrs,
        to make it appear inline. One example is a vcard which has a content
        disposition of an "attachment;" */
     if (force_inline_display(content_type))
-  		mime_SACopy(&content_disposition, "inline");
+  		NS_MsgSACopy(&content_disposition, "inline");
     else
   		content_disposition = (hdrs
 							   ? MimeHeaders_get(hdrs, HEADER_CONTENT_DISPOSITION, PR_TRUE, PR_FALSE)

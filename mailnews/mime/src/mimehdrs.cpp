@@ -19,7 +19,6 @@
  *
  * Contributor(s): 
  */
-#include "xp_str.h"
 #include "nsCOMPtr.h"
 #include "msgCore.h"
 #include "mimei.h"
@@ -614,7 +613,7 @@ MimeHeaders_get_parameter (const char *header_value, const char *parm_name,
 				  }
 			  }
 		  }
-		  else if (XP_IS_DIGIT(*cp))
+		  else if (IS_DIGIT(*cp))
 		  {
 			  PRInt32 len = 0;
 			  char *ns = NULL;

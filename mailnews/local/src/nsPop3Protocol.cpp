@@ -2633,9 +2633,9 @@ nsresult nsPop3Protocol::ProcessProtocolState(nsIURI * url, nsIInputStream * aIn
                                   : XP_GetString(XP_NO_ANSWER)),
                                  net_pop3_username, host);
 #if defined(CookiesAndSignons)                                        
-                StrAllocCopy(usernameAndHost, net_pop3_username);
-                StrAllocCat(usernameAndHost, "@");
-                StrAllocCat(usernameAndHost, host);
+                NS_MsgSACopy(&usernameAndHost, net_pop3_username);
+                NS_MsgSACat(&usernameAndHost, "@");
+                NS_MsgSACat(&usernameAndHost, host);
                 PR_FREEIF (host);
                 
                 password = SI_PromptPassword

@@ -21,7 +21,6 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
-#include "xp_str.h"
 #include "msgCore.h"
 #include "nsIURI.h"
 #include "nsParseMailbox.h"
@@ -381,7 +380,7 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 		   looks like a mail file. */
 		const char *s = line;
 		const char *end = s + lineLength;
-		while (s < end && XP_IS_SPACE(*s))
+		while (s < end && IS_SPACE(*s))
 			s++;
 		if ((end - s) < 20 || !IsEnvelopeLine(s, end - s))
 		{
@@ -613,11 +612,11 @@ nsParseMailMessageState::IsEnvelopeLine(const char *buf, PRInt32 buf_size)
 	date++;
 
   /* If at the end, it doesn't match. */
-  if (XP_IS_SPACE(*date) || date == end)
+  if (IS_SPACE(*date) || date == end)
 	return PR_FALSE;
 
   /* Skip over user name. */
-  while (!XP_IS_SPACE(*date) && date < end)
+  while (!IS_SPACE(*date) && date < end)
 	date++;
 
   /* Skip horizontal whitespace between user name and date. */
@@ -914,11 +913,11 @@ int nsParseMailMessageState::ParseHeaders ()
 		{
 		  /* More const short-circuitry... */
 		  /* strip leading whitespace */
-		  while (XP_IS_SPACE (*header->value))
+		  while (IS_SPACE (*header->value))
 			header->value++, header->length--;
 		  /* strip trailing whitespace */
 		  while (header->length > 0 &&
-				 XP_IS_SPACE (header->value [header->length - 1]))
+				 IS_SPACE (header->value [header->length - 1]))
 			((char *) header->value) [--header->length] = 0;
 		}
 	}
@@ -934,18 +933,18 @@ int nsParseMailMessageState::ParseEnvelope (const char *line, PRUint32 line_size
 	end = m_envelope.GetBuffer() + line_size;
 	s = m_envelope.GetBuffer() + 5;
 
-	while (s < end && XP_IS_SPACE (*s))
+	while (s < end && IS_SPACE (*s))
 		s++;
 	m_envelope_from.value = s;
-	while (s < end && !XP_IS_SPACE (*s))
+	while (s < end && !IS_SPACE (*s))
 		s++;
 	m_envelope_from.length = s - m_envelope_from.value;
 
-	while (s < end && XP_IS_SPACE (*s))
+	while (s < end && IS_SPACE (*s))
 		s++;
 	m_envelope_date.value = s;
 	m_envelope_date.length = (PRUint16) (line_size - (s - m_envelope.GetBuffer()));
-	while (XP_IS_SPACE (m_envelope_date.value [m_envelope_date.length - 1]))
+	while (IS_SPACE (m_envelope_date.value [m_envelope_date.length - 1]))
 		m_envelope_date.length--;
 
 	/* #### short-circuit const */
@@ -1297,11 +1296,11 @@ int nsParseMailMessageState::FinalizeHeaders()
             {
               charset++;
               /* strip leading whitespace and double-quote */
-              while (*charset && (XP_IS_SPACE (*charset) || '\"' == *charset))
+              while (*charset && (IS_SPACE (*charset) || '\"' == *charset))
                 charset++;
               /* strip trailing whitespace and double-quote */
               char *end = charset;
-              while (*end && !XP_IS_SPACE (*end) && '\"' != *end && ';' != *end)
+              while (*end && !IS_SPACE (*end) && '\"' != *end && ';' != *end)
                 end++;
               if (*charset)
               {

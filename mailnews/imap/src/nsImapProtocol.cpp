@@ -58,6 +58,7 @@
 #include "nsAutoLock.h"
 #include "nsIDNSService.h"
 #include "nsIMsgHdr.h"
+#include "nsMsgUtf7Utils.h"
 // for the memory cache...
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheSession.h"

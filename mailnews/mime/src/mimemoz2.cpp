@@ -63,6 +63,7 @@
 #include "nsIURI.h"
 #include "nsNetCID.h"
 #include "nsIMsgWindow.h"
+#include "nsMsgUtils.h"
 
 #include "mimeebod.h"
 
@@ -84,7 +85,7 @@ static PRBool MIME_WrapLongLines;
 static PRBool MIME_VariableWidthPlaintext;
 
 // For string bundle access routines...
-nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
+static nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // Attachment handling routines
@@ -227,7 +228,7 @@ ValidateRealName(nsMsgAttachmentData *aAttach, MimeHeaders *aHdrs)
       aAttach->real_name = PR_smprintf("%s.eml", aHdrs->munged_subject);
     }
     else
-      mime_SACopy(&(aAttach->real_name), "ForwardedMessage.eml");
+      NS_MsgSACopy(&(aAttach->real_name), "ForwardedMessage.eml");
     return;
   }
 

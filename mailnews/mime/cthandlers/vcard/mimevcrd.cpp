@@ -39,6 +39,7 @@
 #include "nsEscape.h"
 #include "nsIURI.h"
 #include "nsMsgI18N.h"
+#include "nsMsgUtils.h"
 
 #include "nsIStringBundle.h"
 #include "nsIPref.h"
@@ -50,7 +51,7 @@
 
 // String bundles...
 #ifndef XP_MAC
-nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
+static nsCOMPtr<nsIStringBundle>   stringBundle = nsnull;
 #endif
 
 static int MimeInlineTextVCard_parse_line (char *, PRInt32, MimeObject *);
@@ -154,7 +155,7 @@ MimeInlineTextVCard_parse_begin (MimeObject *obj)
   
   clazz = ((MimeInlineTextVCardClass *) obj->clazz);
   /* initialize vcard string to empty; */
-  vCard_SACopy(&(clazz->vCardString), "");
+  NS_MsgSACopy(&(clazz->vCardString), "");
   
   obj->options->state->separator_suppressed_p = PR_TRUE;
   return 0;
@@ -187,7 +188,7 @@ MimeInlineTextVCard_parse_line (char *line, PRInt32 length, MimeObject *obj)
   if (linestring) 
   {
     strcpySafe((char *)linestring, line, length + 1);
-    vCard_SACat (&clazz->vCardString, linestring);
+    NS_MsgSACat (&clazz->vCardString, linestring);
     PR_Free (linestring);
   }
   
@@ -598,8 +599,8 @@ static int OutputBasicVcard(MimeObject *obj, VObject *v)
 				}
 				else
 				{
-					htmlLine = vCard_SACat (&htmlLine, htmlLine1);
-					htmlLine = vCard_SACat (&htmlLine, htmlLine2);
+					htmlLine = NS_MsgSACat (&htmlLine, htmlLine1);
+					htmlLine = NS_MsgSACat (&htmlLine, htmlLine2);
 				}
 
 				PR_FREEIF (htmlLine1);
@@ -1289,8 +1290,8 @@ static void GetAddressProperties (VObject* o, char ** attribName)
 
   if (tString)
   {
-    vCard_SACat (&(*attribName), " ");
-    vCard_SACat (&(*attribName), tString);
+    NS_MsgSACat (&(*attribName), " ");
+    NS_MsgSACat (&(*attribName), tString);
     PR_FREEIF(tString);
   }
 }
@@ -1339,8 +1340,8 @@ static void GetTelephoneProperties (VObject* o, char ** attribName)
 
   if (tString)
   {
-    vCard_SACat (&(*attribName), " ");
-    vCard_SACat (&(*attribName), tString);
+    NS_MsgSACat (&(*attribName), " ");
+    NS_MsgSACat (&(*attribName), tString);
     PR_FREEIF(tString);
   }
 }
@@ -1413,8 +1414,8 @@ static void GetEmailProperties (VObject* o, char ** attribName)
 
   if (tString)
   {
-    vCard_SACat (&(*attribName), " ");
-    vCard_SACat (&(*attribName), tString);
+    NS_MsgSACat (&(*attribName), " ");
+    NS_MsgSACat (&(*attribName), tString);
     PR_FREEIF(tString);
   }
 }
@@ -1434,7 +1435,7 @@ static int WriteOutEachVCardPhoneProperty (MimeObject *obj, VObject* o)
 				GetTelephoneProperties(o, &attribName);
 				if (!attribName)
 					attribName = VCardGetStringByID(VCARD_LDAP_PHONE_NUMBER);
-				attribName = vCard_SACat(&attribName, ": ");
+				attribName = NS_MsgSACat(&attribName, ": ");
 				value = fakeCString (vObjectUStringZValue(o));
 				if (value)
 				{
@@ -1841,98 +1842,6 @@ static int WriteValue (MimeObject *obj, const char *value)
 	status  = WriteLineToStream (obj, value, PR_TRUE);
 	OutputFont(obj, PR_TRUE, NULL, NULL);
 	return status;
-}
-
-/* Strip CR+LF+<whitespace> runs within (original).
-   Since the string at (original) can only shrink,
-   this conversion is done in place. (original)
-   is returned. */
-extern "C" char *
-MIME_StripContinuations(char *original)
-{
-	char *p1, *p2;
-
-	/* If we were given a null string, return it as is */
-	if (!original) return NULL;
-
-	/* Start source and dest pointers at the beginning */
-	p1 = p2 = original;
-
-	while(*p2)
-	{
-		/* p2 runs ahead at (CR and/or LF) + <space> */
-		if ((p2[0] == nsCRT::CR) || (p2[0] == nsCRT::LF))
-		{
-			/* move past (CR and/or LF) + whitespace following */	
-			do
-			{
-				p2++;
-			}
-			while((*p2 == nsCRT::CR) || (*p2 == nsCRT::LF) || IS_SPACE(*p2));
-
-			if (*p2 == '\0') continue; /* drop out of loop at end of string*/
-		}
-
-		/* Copy the next non-linebreaking char */
-		*p1 = *p2;
-		p1++; p2++;
-	}
-	*p1 = '\0';
-
-	return original;
-}
-
-/*	Very similar to strdup except it free's too
- */
-extern "C" char * 
-vCard_SACopy (char **destination, const char *source)
-{
-  if(*destination)
-  {
-    PR_Free(*destination);
-    *destination = 0;
-  }
-  if (! source)
-  {
-    *destination = NULL;
-  }
-  else 
-  {
-    *destination = (char *) PR_Malloc (nsCRT::strlen(source) + 1);
-    if (*destination == NULL) 
-      return(NULL);
-    
-    PL_strcpy (*destination, source);
-  }
-  return *destination;
-}
-
-/*  Again like strdup but it concatinates and free's and uses Realloc
-*/
-extern "C"  char *
-vCard_SACat (char **destination, const char *source)
-{
-  if (source && *source)
-  {
-    if (*destination)
-    {
-      int length = nsCRT::strlen (*destination);
-      *destination = (char *) PR_Realloc (*destination, length + nsCRT::strlen(source) + 1);
-      if (*destination == NULL)
-        return(NULL);
-      
-      PL_strcpy (*destination + length, source);
-    }
-    else
-    {
-      *destination = (char *) PR_Malloc (nsCRT::strlen(source) + 1);
-      if (*destination == NULL)
-        return(NULL);
-      
-      PL_strcpy (*destination, source);
-    }
-  }
-  return *destination;
 }
 
 //

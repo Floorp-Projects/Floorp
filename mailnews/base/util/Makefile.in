@@ -49,6 +49,7 @@ CPPSRCS		= \
 		nsMsgMailNewsUrl.cpp \
 		nsMsgTxn.cpp \
 		nsMsgI18N.cpp \
+		nsMsgUtf7Utils.cpp \
 		$(NULL)
 
 EXPORTS		= \
@@ -69,6 +70,7 @@ EXPORTS		= \
 		nsMsgMailNewsUrl.h \
 		nsMsgTxn.h \
 		nsMsgI18N.h \
+		nsMsgUtf7Utils.h \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

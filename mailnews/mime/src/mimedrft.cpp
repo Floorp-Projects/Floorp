@@ -464,7 +464,7 @@ mime_draft_process_attachments(mime_draft_data *mdd)
 	  if (tmpFile->type) 
     {
 		  if (nsCRT::strcasecmp ( tmpFile->type, "text/x-vcard") == 0)
-			  mime_SACopy (&(tmp->real_name), tmpFile->description);
+			  NS_MsgSACopy (&(tmp->real_name), tmpFile->description);
 	  }
 
 	  if ( tmpFile->orig_url ) 
@@ -485,33 +485,33 @@ mime_draft_process_attachments(mime_draft_data *mdd)
 
       NS_ADDREF(tmp->url);
 	    if (!tmp->real_name)
-  	    mime_SACopy ( &(tmp->real_name), tmpSpec );
+  	   NS_MsgSACopy ( &(tmp->real_name), tmpSpec );
 	  }
 
 	  if ( tmpFile->type ) 
     {
-	    mime_SACopy ( &(tmp->desired_type), tmpFile->type );
-	    mime_SACopy ( &(tmp->real_type), tmpFile->type );
+	    NS_MsgSACopy ( &(tmp->desired_type), tmpFile->type );
+	    NS_MsgSACopy ( &(tmp->real_type), tmpFile->type );
 	  }
 
 	  if ( tmpFile->encoding ) 
     {
-	    mime_SACopy ( &(tmp->real_encoding), tmpFile->encoding );
+	    NS_MsgSACopy ( &(tmp->real_encoding), tmpFile->encoding );
 	  }
 
 	  if ( tmpFile->description ) 
     {
-	    mime_SACopy ( &(tmp->description), tmpFile->description );
+	    NS_MsgSACopy ( &(tmp->description), tmpFile->description );
 	  }
 
 	  if ( tmpFile->x_mac_type ) 
     {
-	    mime_SACopy ( &(tmp->x_mac_type), tmpFile->x_mac_type );
+	    NS_MsgSACopy ( &(tmp->x_mac_type), tmpFile->x_mac_type );
 	  }
 
 	  if ( tmpFile->x_mac_creator ) 
     {
-	    mime_SACopy ( &(tmp->x_mac_creator), tmpFile->x_mac_creator );
+	    NS_MsgSACopy ( &(tmp->x_mac_creator), tmpFile->x_mac_creator );
 	  }
   }
 
@@ -588,34 +588,34 @@ mime_intl_insert_message_header_1(char        **body,
 
 	if (htmlEdit)
 	{
-		mime_SACat(body, HEADER_START_JUNK);
+		NS_MsgSACat(body, HEADER_START_JUNK);
 	}
 	else
 	{
-		mime_SACat(body, MSG_LINEBREAK);
+		NS_MsgSACat(body, MSG_LINEBREAK);
 	}
 	if (!html_hdr_str)
 		html_hdr_str = hdr_str;
-	mime_SACat(body, html_hdr_str);
+	NS_MsgSACat(body, html_hdr_str);
 	if (htmlEdit)
 	{
-		mime_SACat(body, HEADER_MIDDLE_JUNK);
+		NS_MsgSACat(body, HEADER_MIDDLE_JUNK);
 	}
 	else
-		mime_SACat(body, ": ");
+		NS_MsgSACat(body, ": ");
 
     // MIME decode header
     char* utf8 = MIME_DecodeMimeHeader(*hdr_value, mailcharset, PR_FALSE,
                                        PR_TRUE);
     if (NULL != utf8) {
-        mime_SACat(body, utf8);
+        NS_MsgSACat(body, utf8);
         PR_Free(utf8);
     } else {
-        mime_SACat(body, *hdr_value); // raw MIME encoded string
+        NS_MsgSACat(body, *hdr_value); // raw MIME encoded string
     }
 
 	if (htmlEdit)
-		mime_SACat(body, HEADER_END_JUNK);
+		NS_MsgSACat(body, HEADER_END_JUNK);
 }
 
 char *
@@ -654,20 +654,20 @@ mime_insert_all_headers(char            **body,
 		if (html_tag)
 		{
 			*html_tag = 0;
-			mime_SACopy(&(newBody), *body);
+			NS_MsgSACopy(&(newBody), *body);
 			*html_tag = '<';
-			mime_SACat(&newBody, "<HTML> <BR><BR>");
+			NS_MsgSACat(&newBody, "<HTML> <BR><BR>");
 		}
 		else
-			mime_SACopy(&(newBody), "<HTML> <BR><BR>");
+			NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
 
-    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
-		mime_SACat(&newBody, MIME_HEADER_TABLE);
+    NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
+		NS_MsgSACat(&newBody, MIME_HEADER_TABLE);
 	}
 	else
   {
-		mime_SACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
-    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
+		NS_MsgSACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
+    NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
   }
 
 	for (i = 0; i < headers->heads_size; i++)
@@ -742,17 +742,17 @@ mime_insert_all_headers(char            **body,
 
 	if (htmlEdit)
 	{
-		mime_SACat(&newBody, "</TABLE>");
-		mime_SACat(&newBody, MSG_LINEBREAK "<BR><BR>");
+		NS_MsgSACat(&newBody, "</TABLE>");
+		NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
 		if (html_tag)
-			mime_SACat(&newBody, html_tag+6);
+			NS_MsgSACat(&newBody, html_tag+6);
 		else
-			mime_SACat(&newBody, *body);
+			NS_MsgSACat(&newBody, *body);
 	}
 	else
 	{
-		mime_SACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
-		mime_SACat(&newBody, *body);
+		NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
+		NS_MsgSACat(&newBody, *body);
 	}
 
 	if (newBody)
@@ -801,14 +801,14 @@ mime_insert_normal_headers(char             **body,
 	
 	if (htmlEdit)
 	{
-		mime_SACopy(&(newBody), "<HTML> <BR><BR>");
-    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
-		mime_SACat(&newBody, MIME_HEADER_TABLE);
+		NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
+    NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
+		NS_MsgSACat(&newBody, MIME_HEADER_TABLE);
 	}
 	else
 	{
-		mime_SACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
-    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
+		NS_MsgSACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
+    NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
 	}
 	if (subject)
 		mime_intl_insert_message_header_1(&newBody, &subject, HEADER_SUBJECT,
@@ -911,17 +911,17 @@ mime_insert_normal_headers(char             **body,
 	}
 	if (htmlEdit)
 	{
-		mime_SACat(&newBody, "</TABLE>");
-		mime_SACat(&newBody, MSG_LINEBREAK "<BR><BR>");
+		NS_MsgSACat(&newBody, "</TABLE>");
+		NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
 		if (html_tag)
-			mime_SACat(&newBody, html_tag+6);
+			NS_MsgSACat(&newBody, html_tag+6);
 		else
-			mime_SACat(&newBody, *body);
+			NS_MsgSACat(&newBody, *body);
 	}
 	else
 	{
-		mime_SACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
-		mime_SACat(&newBody, *body);
+		NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
+		NS_MsgSACat(&newBody, *body);
 	}
 	if (newBody)
 	{
@@ -974,14 +974,14 @@ mime_insert_micro_headers(char            **body,
 	
 	if (htmlEdit)
 	{
-		mime_SACopy(&(newBody), "<HTML> <BR><BR>");
-    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
-    mime_SACat(&newBody, MIME_HEADER_TABLE);
+		NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
+    NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
+    NS_MsgSACat(&newBody, MIME_HEADER_TABLE);
 	}
 	else
   {
-		mime_SACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
-    mime_SACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
+		NS_MsgSACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
+    NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
   }
 
   if (from)
@@ -1034,17 +1034,17 @@ mime_insert_micro_headers(char            **body,
 										mailcharset, htmlEdit);
 	if (htmlEdit)
 	{
-		mime_SACat(&newBody, "</TABLE>");
-		mime_SACat(&newBody, MSG_LINEBREAK "<BR><BR>");
+		NS_MsgSACat(&newBody, "</TABLE>");
+		NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
 		if (html_tag)
-			mime_SACat(&newBody, html_tag+6);
+			NS_MsgSACat(&newBody, html_tag+6);
 		else
-			mime_SACat(&newBody, *body);
+			NS_MsgSACat(&newBody, *body);
 	}
 	else
 	{
-		mime_SACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
-		mime_SACat(&newBody, *body);
+		NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
+		NS_MsgSACat(&newBody, *body);
 	}
 	if (newBody)
 	{
@@ -1590,7 +1590,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
       if (mdd->curAttachment) {
         char *ct = MimeHeaders_get(headers, HEADER_CONTENT_TYPE, PR_TRUE, PR_FALSE);
         if (ct)
-          mime_SACopy(&(mdd->curAttachment->type), ct);
+          NS_MsgSACopy(&(mdd->curAttachment->type), ct);
         PR_FREEIF(ct);
       }
       return 0;
@@ -1687,7 +1687,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     if (boundary)
       tmp_value = PR_smprintf("; boundary=\"%s\"", boundary);
     if (tmp_value)
-      mime_SACat(&(newAttachment->type), tmp_value);
+      NS_MsgSACat(&(newAttachment->type), tmp_value);
     newAttachment->x_mac_type = MimeHeaders_get_parameter(parm_value, "x-mac-type", NULL, NULL);
     newAttachment->x_mac_creator = MimeHeaders_get_parameter(parm_value, "x-mac-creator", NULL, NULL);
     PR_FREEIF(parm_value);
