@@ -271,7 +271,7 @@ nsGREDirServiceProvider::GetXPCOMPath()
 {
   char* grePath = GetGREDirectoryPath();
   if (!grePath) {
-    grePath = PR_GetEnv(MOZILLA_FIVE_HOME);
+    grePath = PR_GetEnv("MOZILLA_FIVE_HOME");
     if (!grePath) {
       return nsnull;
     }
