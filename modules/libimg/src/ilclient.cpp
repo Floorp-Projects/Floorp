@@ -35,6 +35,9 @@
 #include "nsCRT.h"
 #include "xpcompat.h" //temporary, for timers
 
+/* Note that default cache size is set in 
+   src/gfx/nsImageManager.cpp, ~line 62.
+*/
 static PRUint32 image_cache_size;
 static PRUint32 max_cache_items = 192;
 
@@ -84,6 +87,7 @@ ImgDCallbk::CreateInstance(const nsCID &aClass,
   if (NS_FAILED(res)) {
     *ppv = NULL;
     delete imgdcb;
+    ic->imgdcb = NULL;
   }
   return res;
 }
@@ -407,7 +411,7 @@ il_addtocache(il_container *ic);
 
 il_container *
 il_get_container(IL_GroupContext *img_cx,    
-                 NET_ReloadMethod cache_reload_policy,
+                 ImgCachePolicy cache_reload_policy,
                  const char *image_url,
                  IL_IRGB *background_color,
                  IL_DitherMode dither_mode,
@@ -416,7 +420,7 @@ il_get_container(IL_GroupContext *img_cx,
                  int req_height) /* Target height requested by client. */
 {
     PRUint32 urlhash, hash;
-    il_container *ic;
+    il_container *ic=NULL;
     
     urlhash = hash = il_hash(image_url);
 
@@ -429,7 +433,8 @@ il_get_container(IL_GroupContext *img_cx,
     /* Check the cache */
     ic = il_find_in_cache(img_cx->display_type, hash, image_url,
                           background_color, req_depth, req_width, req_height);
-    
+
+
     if (ic) { 
        
         /* This ic is being destroyed. Need a new one */
@@ -444,7 +449,7 @@ il_get_container(IL_GroupContext *img_cx,
         /* 2) Their namespace crosses document boundaries, so caching    */
         /*    could result in incorrect behavior.                        */
 
-            else if(cache_reload_policy > IMG_NTWK_SERVER){
+            else if(cache_reload_policy == DONT_USE_IMG_CACHE){
             /* Don't use old copy and purge it from cache.*/
             if (!ic->is_in_use) {
                 il_removefromcache(ic);
@@ -565,8 +570,9 @@ il_get_container(IL_GroupContext *img_cx,
         imgdcb->SetContainer(ic);
         ic->imgdcb = imgdcb;
     }
-    
+  
     il_addtocache(ic);
+
     ic->is_in_use = PR_TRUE;
     
     return ic;
@@ -715,7 +721,9 @@ il_removefromcache(il_container *ic)
         il_cache.items--;
         PR_ASSERT(il_cache.items >= 0);
     }
+
     return ic;
+
 }
 
 void
@@ -982,7 +990,7 @@ il_delete_client(il_container *ic, IL_ImageReq *image_req)
                  ic->img_cx = ic->clients->img_cx;
             /* The container's net context may be about to become invalid, so
                give the container a different one which is known to be valid. */
-             if ((ic->net_cx )&&(ic->net_cx == net_cx)) //ptn test
+             if ((ic->net_cx )&&(ic->net_cx == net_cx)) 
              {
                  NS_RELEASE(ic->net_cx);
                  ic->net_cx = ic->clients->net_cx->Clone();
@@ -1063,7 +1071,7 @@ IL_DestroyImage(IL_ImageReq *image_req)
 {
     IL_GroupContext *img_cx;
     PRBool client_deleted;
-    il_container *ic, *ic2, *ic2_next;
+    il_container *ic, *ic2 = NULL, *ic2_next = NULL;
     il_container_list *ic_list;
 
     /* Check for a NULL request. */

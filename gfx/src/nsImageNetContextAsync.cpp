@@ -59,7 +59,7 @@ class ImageConsumer;
 
 class ImageNetContextImpl : public ilINetContext {
 public:
-  ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
+  ImageNetContextImpl(ImgCachePolicy aReloadPolicy,
                       nsISupports * aLoadContext,
                       nsReconnectCB aReconnectCallback,
                       void* aReconnectArg);
@@ -69,8 +69,8 @@ public:
 
   virtual ilINetContext* Clone();
 
-  virtual NET_ReloadMethod GetReloadPolicy();
-  virtual NET_ReloadMethod SetReloadPolicy(NET_ReloadMethod ReloadPolicy);
+  virtual ImgCachePolicy GetReloadPolicy();
+  virtual ImgCachePolicy SetReloadPolicy(ImgCachePolicy ReloadPolicy);
 
 
   virtual void AddReferer(ilIURL *aUrl);
@@ -78,7 +78,7 @@ public:
   virtual void Interrupt();
 
   virtual ilIURL* CreateURL(const char *aUrl, 
-			    NET_ReloadMethod aReloadMethod);
+			    ImgCachePolicy aReloadMethod);
 
   virtual PRBool IsLocalFileURL(char *aAddress);
 #ifdef NU_CACHE
@@ -89,14 +89,14 @@ public:
   virtual PRBool IsURLInDiskCache(ilIURL *aUrl);
 #endif
 
-  virtual int GetURL (ilIURL * aUrl, NET_ReloadMethod aLoadMethod,
+  virtual int GetURL (ilIURL * aUrl, ImgCachePolicy aLoadMethod,
 		      ilINetReader *aReader);
 
   nsresult RequestDone(ImageConsumer *aConsumer, nsIChannel* channel,
                        nsISupports* ctxt, nsresult status, const PRUnichar* aMsg);
 
   nsVoidArray *mRequests;
-  NET_ReloadMethod mReloadPolicy;
+  ImgCachePolicy mReloadPolicy;
   nsWeakPtr mLoadContext;
   nsReconnectCB mReconnectCallback;
   void* mReconnectArg;
@@ -565,7 +565,7 @@ ImageConsumer::~ImageConsumer()
   NS_IF_RELEASE(mUserContext);
 }
 
-ImageNetContextImpl::ImageNetContextImpl(NET_ReloadMethod aReloadPolicy,
+ImageNetContextImpl::ImageNetContextImpl(ImgCachePolicy aReloadPolicy,
                                          nsISupports * aLoadContext,
                                          nsReconnectCB aReconnectCallback,
                                          void* aReconnectArg)
@@ -613,14 +613,14 @@ ImageNetContextImpl::Clone()
   }
 }
 
-NET_ReloadMethod 
+ImgCachePolicy 
 ImageNetContextImpl::GetReloadPolicy()
 {
   return mReloadPolicy;
 }
 
-NET_ReloadMethod 
-ImageNetContextImpl::SetReloadPolicy(NET_ReloadMethod reloadpolicy)
+ImgCachePolicy 
+ImageNetContextImpl::SetReloadPolicy(ImgCachePolicy reloadpolicy)
 {
   mReloadPolicy=reloadpolicy;
   return mReloadPolicy;
@@ -645,7 +645,7 @@ ImageNetContextImpl::Interrupt()
 
 ilIURL* 
 ImageNetContextImpl::CreateURL(const char *aURL, 
-                               NET_ReloadMethod aReloadMethod)
+                               ImgCachePolicy aReloadMethod)
 {
   ilIURL *url;
  
@@ -693,7 +693,7 @@ ImageNetContextImpl::IsURLInDiskCache(ilIURL *aUrl)
 
 int 
 ImageNetContextImpl::GetURL (ilIURL * aURL, 
-                             NET_ReloadMethod aLoadMethod,
+                             ImgCachePolicy aLoadMethod,
                              ilINetReader *aReader)
 {
   NS_PRECONDITION(nsnull != aURL, "null URL");
@@ -754,34 +754,30 @@ ImageNetContextImpl::GetURL (ilIURL * aURL,
         }
     }
 
-    if (aURL->GetBackgroundLoad()) {
-      (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND);
-    }
-
     nsLoadFlags flags;
     rv = channel->GetLoadAttributes(&flags);
     if (NS_FAILED(rv)) return rv;
 
+    if (aURL->GetBackgroundLoad()) {
+      (void)channel->SetLoadAttributes(nsIChannel::LOAD_BACKGROUND | flags);
+    }
+
     switch(aLoadMethod){
-            case IMG_CACHE_ONLY:
-                 /* shouldn't get here, but don't fail if you do. Just fall to the next case. */
-            case IMG_NTWK_SERVER:
+            case USE_IMG_CACHE:            
                   (void)channel->SetLoadAttributes((nsIChannel::VALIDATE_NEVER) | flags); 
                    break;
 
-            case TV_IMG_NTWK_SERVER:
-            case TV_NTWK_SERVER_ONLY:
+            case DONT_USE_IMG_CACHE:
                   (void)channel->SetLoadAttributes((nsIChannel::FORCE_VALIDATION) | flags);
                   break;
 
-            case SERVER_ONLY:
-                  (void)channel->SetLoadAttributes((nsIChannel::FORCE_RELOAD) | flags);
+            case SYNTH_IMGDOC_NEEDS_IMG_CACHE:
                   break;
-   
+
             default:
                   break;
     }
-  
+
     nsCOMPtr<nsISupports> window (do_QueryInterface(NS_STATIC_CAST(nsIStreamListener *, ic)));
 
     // let's try uri dispatching...
@@ -828,12 +824,38 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
                       nsReconnectCB aReconnectCallback,
                       void* aReconnectArg)
 {
+     
+  PRUint32  necko_attribs;
+  ImgCachePolicy imglib_attribs = USE_IMG_CACHE;
+
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  
-  ilINetContext *cx = new ImageNetContextImpl(IMG_NTWK_SERVER,
+
+  if(aLoadContext){
+     nsCOMPtr<nsISupports> loadContext (do_QueryReferent(NS_GetWeakReference(aLoadContext))); 
+     nsCOMPtr<nsILoadGroup> group (do_GetInterface(loadContext));
+     nsresult rv = group->GetDefaultLoadAttributes(&necko_attribs);
+/*
+Need code to check freshness of necko cache.
+
+     nsCOMPtr<nsIChannel> defLoadChannel; 
+     if (NS_SUCCEEDED(group->GetDefaultLoadChannel(
+                        getter_AddRefs(defLoadChannel))) && defLoadChannel)
+          defLoadChannel->CheckCacheFresh(&isFresh);
+
+Modify code below to work w/r to freshness of necko cache.
+    
+*/
+     if((nsIChannel::FORCE_VALIDATION & necko_attribs)||   
+        (nsIChannel::VALIDATE_ALWAYS & necko_attribs) ||
+        (nsIChannel::INHIBIT_PERSISTENT_CACHING & necko_attribs)||
+        (nsIChannel::FORCE_RELOAD & necko_attribs))           
+                       imglib_attribs = DONT_USE_IMG_CACHE;
+  }
+
+  ilINetContext *cx = new ImageNetContextImpl( imglib_attribs,
                                               aLoadContext,
                                               aReconnectCallback,
                                               aReconnectArg);
@@ -842,4 +864,6 @@ NS_NewImageNetContext(ilINetContext **aInstancePtrResult,
   }
 
   return cx->QueryInterface(kIImageNetContextIID, (void **) aInstancePtrResult);
+
 }
+

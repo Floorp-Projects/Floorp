@@ -1043,11 +1043,6 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
 		}
 	}
 
-    /* Grab the URL's expiration date */
-
-  if (ic->url)
-      ic->expires = ic->url->GetExpires();
-
   /* if our mime sniffer can recognize what's in the
     data stream and it is one of our std vanilla types.
     Check to see if it matches the mimetype sent by creator.
@@ -1494,8 +1489,8 @@ il_image_complete(il_container *ic)
                 
                     ILTRACE(1,("il: loop %s", ic->url_address));
 
-                    if(ic->net_cx){ //ptn test
-                    netRequest = ic->net_cx->CreateURL(ic->fetch_url, IMG_NTWK_SERVER);
+                    if(ic->net_cx){ 
+                    netRequest = ic->net_cx->CreateURL(ic->fetch_url, USE_IMG_CACHE);
                     if (!netRequest) {   /* OOM */
                         il_container_complete(ic);
                         break;
@@ -1558,7 +1553,7 @@ il_image_complete(il_container *ic)
 
 
                         /* using lclient insures we are using an active image request */
-                        (void) ic->lclient->net_cx->GetURL(ic->url, IMG_NTWK_SERVER, reader);
+                        (void) ic->lclient->net_cx->GetURL(ic->url, USE_IMG_CACHE, reader);
  
                         /* Release reader, GetURL will keep a ref to it. */
                         NS_RELEASE(reader);
@@ -1688,10 +1683,11 @@ il_hash(const char *ubuf)
     }
     return h;
 }
-
+#if 0
 #define IL_LAST_ICON 62
 /* Extra factor of 7 is to account for duplications between
    mc-icons and ns-icons */
+
 static PRUint32 il_icon_table[(IL_LAST_ICON + 7) * 2];
 
 static void
@@ -1876,6 +1872,7 @@ il_internal_image(const char *image_url)
     }
     return 0;
 }
+#endif
 
 /* block certain hosts from loading images */
 PRBool il_PermitLoad(const char * image_url, nsIImageRequestObserver * aObserver) {
@@ -1995,16 +1992,20 @@ IL_GetImage(const char* image_url,
     }
 
     ilINetContext *net_cx = (ilINetContext *)opaque_cx;
-    NET_ReloadMethod cache_reload_policy = net_cx->GetReloadPolicy();
+    ImgCachePolicy cache_reload_policy = net_cx->GetReloadPolicy();
+
 
     ilIURL *url = NULL;
 
     IL_ImageReq *image_req;
-      ilINetReader *reader;
-      il_container *ic = NULL;
+    ilINetReader *reader;
+    il_container *ic = NULL;
     int req_depth = img_cx->color_space->pixmap_depth;
-      int err;
-    int is_view_image;
+    int err;
+    int is_view_image = PR_FALSE;
+
+    if(flags == IL_STICKY)
+        is_view_image = PR_TRUE;
 
     /* Create a new instance for this image request. */
     image_req = PR_NEWZAP(IL_ImageReq);
@@ -2020,7 +2021,7 @@ IL_GetImage(const char* image_url,
      * handle on this backup net context.
      */
     image_req->net_cx = net_cx->Clone();
-      if (!image_req->net_cx) {
+    if (!image_req->net_cx) {
           PR_FREEIF(image_req);
           return NULL;
     }
@@ -2037,27 +2038,9 @@ IL_GetImage(const char* image_url,
         return image_req;
     }
 
-    /* Check for any special internal-use URLs */
-      if (*image_url == 'i'                  ||
-        !PL_strncmp(image_url, "/mc-", 4)  ||
-        !PL_strncmp(image_url, "/ns-", 4))
-    {
-            PRUint32 icon;
 
-        /* A built-in icon ? */
-        icon = il_internal_image(image_url);
-            if (icon)
-        {
-                  ILTRACE(4,("il: internal icon %d", icon));
-
-            /* XXXM12N In response to this notification, layout should set
-               lo_image->image_attr->attrmask |= LO_ATTR_INTERNAL_IMAGE; */
-            il_icon_notify(image_req, icon, IL_INTERNAL_IMAGE);
-
-            return image_req;
-        }
-
-    }
+    if(is_view_image)
+        cache_reload_policy = SYNTH_IMGDOC_NEEDS_IMG_CACHE;
 
     ic = il_get_container(img_cx, cache_reload_policy, image_url,
                           background_color, img_cx->dither_mode, req_depth,
@@ -2075,7 +2058,8 @@ IL_GetImage(const char* image_url,
     /* Give the client a handle into the imagelib world. */
     image_req->ic = ic;
 
-    is_view_image = PR_FALSE;
+
+
   
     if (!il_add_client(img_cx, ic, image_req, is_view_image))
     {

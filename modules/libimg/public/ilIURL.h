@@ -25,7 +25,7 @@
 
 #include <stdio.h>
 #include "nsISupports.h"
-#include "ntypes.h"
+
 
 // IID for the ilIURL interface
 #define IL_IURL_IID    \

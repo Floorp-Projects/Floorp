@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if_struct.h,v 1.10 2000/05/18 22:17:48 pnunn%netscape.com Exp $
+ * $Id: if_struct.h,v 1.11 2000/07/20 01:51:00 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -42,9 +42,6 @@
 #include "nsIPresContext.h"
 
 #include "nsIImgDecoder.h"
-
-#include "ntypes.h"             /* typedefs for commonly used Netscape data
-                                   structures */
 
 typedef struct _IL_GroupContext IL_GroupContext;
 typedef struct _IL_ImageReq IL_ImageReq;
@@ -153,7 +150,7 @@ enum icstate {
 
 /* Force memory cache to be flushed ? */
 #define FORCE_RELOAD(reload_method)                                           \
- (((reload_method)==NET_NORMAL_RELOAD) || ((reload_method)==NET_SUPER_RELOAD))
+    (reload_method = DONT_USE_IMG_CACHE)
 
 /* Simple list of image contexts. */
 struct il_context_list {
