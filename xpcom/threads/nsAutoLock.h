@@ -82,9 +82,9 @@ protected:
     nsAutoLockBase(void* addr, nsAutoLockType type);
     ~nsAutoLockBase();
 
-    void*               mAddr;
-    nsAutoLockBase*     mDown;
-    enum nsAutoLockType mType;
+    void*           mAddr;
+    nsAutoLockBase* mDown;
+    nsAutoLockType  mType;
 #else
     nsAutoLockBase(void* addr, nsAutoLockType type) {}
     ~nsAutoLockBase() {}
@@ -164,7 +164,6 @@ public:
     }
 
     ~nsAutoMonitor() {
-        // inline Exit to avoid imposing any penalty on Exit non-users
         PRStatus status = PR_ExitMonitor(mMonitor);
         NS_ASSERTION(status == PR_SUCCESS, "PR_ExitMonitor failed");
     }
@@ -227,7 +226,6 @@ public:
     }
 
     ~nsAutoCMonitor() {
-        // inline Exit to avoid imposing any penalty on Exit non-users
         PRStatus status = PR_CExitMonitor(mLockObject);
         NS_ASSERTION(status == PR_SUCCESS, "PR_CExitMonitor failed");
     }
