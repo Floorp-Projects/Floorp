@@ -1327,7 +1327,7 @@ HRESULT ProcessRunApp(DWORD dwTiming, char *szSectionPrefix)
       else
         bWait = TRUE;
 
-      if (bRunApp == TRUE)
+      if ((bRunApp == TRUE) && FileExists(szTarget))
       {
         if((dwTiming == T_DEPEND_REBOOT) && (NeedReboot() == TRUE))
         {

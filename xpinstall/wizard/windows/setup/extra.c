@@ -6730,6 +6730,8 @@ HRESULT DecryptVariable(LPSTR szVariable, DWORD dwVariableSize)
     GetPrivateProfileString(szLookupSection, "Path Reg Name", "", szName, sizeof(szName), szFileIniConfig);
 
     GetWinReg(hkeyRoot, szKey, szName, szBuf, sizeof(szBuf));
+    if(*szBuf == '\0')
+      return(FALSE);
 
     GetPrivateProfileString(szLookupSection, "Strip Filename", "", szBuf2, sizeof(szBuf2), szFileIniConfig);
     if(lstrcmpi(szBuf2, "TRUE") == 0)
