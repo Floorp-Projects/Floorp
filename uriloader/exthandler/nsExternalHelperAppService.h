@@ -190,7 +190,7 @@ public:
 
 protected:
   nsCOMPtr<nsIFile> mTempFile;
-  nsCOMPtr<nsIURI> mSourceUrl; 
+  nsCOMPtr<nsIURI> mSourceUrl;
   nsString mTempFileExtension;
   nsCOMPtr<nsIMIMEInfo> mMimeInfo;
   nsCOMPtr<nsIOutputStream> mOutStream; // output stream to the temp file...

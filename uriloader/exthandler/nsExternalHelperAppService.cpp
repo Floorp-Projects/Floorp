@@ -187,8 +187,7 @@ nsresult nsExternalHelperAppService::Init()
   // we need a good guess for a size for our hash table...let's try O(n) where n = # of default
   // entries we'll be adding to the hash table. Of course, we'll be adding more entries as we 
   // discover those content types at run time...
-  PRInt32 hashTableSize = sizeof(defaultMimeEntries) / sizeof(defaultMimeEntries[0]);
-  mMimeInfoCache = new nsHashtable(hashTableSize);
+  mMimeInfoCache = new nsHashtable(NS_ARRAY_LENGTH(defaultMimeEntries));
   if (!mMimeInfoCache)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -400,7 +399,9 @@ NS_IMETHODIMP nsExternalHelperAppService::DoContent(const char *aMimeContentType
     
     // this code is incomplete and just here to get things started..
     nsExternalAppHandler * handler = CreateNewExternalHandler(mimeInfo, fileExtension.get(), aWindowContext);
-    handler->QueryInterface(NS_GET_IID(nsIStreamListener), (void **) aStreamListener);
+    if (!handler)
+      return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(*aStreamListener = handler);
   }
   
   return NS_OK;
@@ -1278,21 +1279,21 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     // Turn off content encoding conversions if needed
     PRBool applyConversion = PR_TRUE;
 
-    nsCOMPtr<nsIExternalHelperAppService> extHandler = do_GetService("@mozilla.org/uriloader/external-helper-app-service;1");
-    if (extHandler) {
-      extHandler->ApplyDecodingForType(MIMEType, &applyConversion);
-      
-      if (applyConversion) {
-        // Now we double-check that it's OK to decode this extension
-        nsCOMPtr<nsIURI> channelURI;
-        aChannel->GetURI(getter_AddRefs(channelURI));
-        nsCOMPtr<nsIURL> channelURL(do_QueryInterface(channelURI));
-        nsCAutoString extension;
-        if (channelURL) {
-          channelURL->GetFileExtension(extension);
-          if (!extension.IsEmpty())
-            extHandler->ApplyDecodingForExtension(extension.get(), &applyConversion);
-        }
+    NS_ASSERTION(mHelperAppService, "Not initialized");
+    mHelperAppService->ApplyDecodingForType(MIMEType, &applyConversion);
+    
+    if (applyConversion)
+    {
+      // Now we double-check that it's OK to decode this extension
+      nsCOMPtr<nsIURI> channelURI;
+      aChannel->GetURI(getter_AddRefs(channelURI));
+      nsCOMPtr<nsIURL> channelURL(do_QueryInterface(channelURI));
+      nsCAutoString extension;
+      if (channelURL)
+      {
+        channelURL->GetFileExtension(extension);
+        if (!extension.IsEmpty())
+          mHelperAppService->ApplyDecodingForExtension(extension.get(), &applyConversion);
       }
     }
     
@@ -1870,26 +1871,23 @@ nsresult nsExternalAppHandler::OpenWithApplication(nsIFile * aApplication)
   // if a stop request was already issued then proceed with launching the application.
   if (mStopRequestIssued)
   {
-    nsCOMPtr<nsPIExternalAppLauncher> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID));
-    if (helperAppService)
+    NS_ASSERTION(mHelperAppService, "Not initialized");
+    rv = mHelperAppService->LaunchAppWithTempFile(mMimeInfo, mFinalFileDestination);
+    if (NS_FAILED(rv))
     {
-      rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mFinalFileDestination);
-      if (NS_FAILED(rv))
-      {
-        // Send error notification.
-        nsAutoString path;
-        mFinalFileDestination->GetPath(path);
-        SendStatusChange(kLaunchError, rv, nsnull, path);
-        Cancel(); // Cancel, and clean up temp file.
-      }
-      else
-      {
+      // Send error notification.
+      nsAutoString path;
+      mFinalFileDestination->GetPath(path);
+      SendStatusChange(kLaunchError, rv, nsnull, path);
+      Cancel(); // Cancel, and clean up temp file.
+    }
+    else
+    {
 #if !defined(XP_MAC) && !defined (XP_MACOSX)
       // Mac users have been very verbal about temp files being deleted on app exit - they
       // don't like it - but we'll continue to do this on other platforms for now
-      helperAppService->DeleteTemporaryFileOnExit(mFinalFileDestination);
+      mHelperAppService->DeleteTemporaryFileOnExit(mFinalFileDestination);
 #endif
-      }
     }
   }
 
@@ -1913,6 +1911,30 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   mReceivedDispositionInfo = PR_TRUE; 
   if (mMimeInfo && aApplication)
     mMimeInfo->SetPreferredApplicationHandler(aApplication);
+
+  // Now check if the file is local, in which case we won't bother with saving
+  // it to a temporary directory and just launch it from where it is
+  nsCOMPtr<nsIFileURL> fileUrl(do_QueryInterface(mSourceUrl));
+  if (fileUrl)
+  {
+    Cancel();
+    nsCOMPtr<nsIFile> file;
+    nsresult rv = fileUrl->GetFile(getter_AddRefs(file));
+
+    if (NS_SUCCEEDED(rv))
+    {
+      NS_ASSERTION(mHelperAppService, "Not initialized");
+      rv = mHelperAppService->LaunchAppWithTempFile(mMimeInfo, file);
+      if (NS_SUCCEEDED(rv))
+        return NS_OK;
+    }
+    nsAutoString path;
+    if (file)
+      file->GetPath(path);
+    // If we get here, an error happened
+    SendStatusChange(kLaunchError, rv, nsnull, path);
+    return rv;
+  }
 
   // Now that the user has elected to launch the downloaded file with a helper app, we're justified in
   // removing the 'salted' name.  We'll rename to what was specified in mSuggestedFileName after the
