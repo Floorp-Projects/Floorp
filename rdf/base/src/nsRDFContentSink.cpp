@@ -508,7 +508,7 @@ static const char kCSSType[] = "text/css";
 static const char kDataSourcePI[] = "<?rdf-datasource";
 static const char kContentModelBuilderPI[] = "<?rdf-builder";
 
-    nsresult rv;
+    nsresult rv = NS_OK;
     FlushText();
 
     if (! mDataSource)
