@@ -280,6 +280,9 @@ case "$target" in
 	    DSO_LDOPTS='-r'
 	    _WARNINGS_CFLAGS="-Wall"
 	    _WARNINGS_CXXFLAGS="-Wall"
+	    # The test above doesn't work properly, at least on 3.1.
+	    MKSHLIB_FORCE_ALL=''
+	    MKSHLIB_UNFORCE_ALL=''
 	;;
     esac
     ;;
