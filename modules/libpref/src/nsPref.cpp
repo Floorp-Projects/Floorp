@@ -364,19 +364,22 @@ nsresult nsPref::useLockPrefFile()
     if (NS_SUCCEEDED(rv = GetLocalizedUnicharPref("browser.startup.homepage",
 			getter_Copies(prefVal)) && (prefVal))) 
     {
-        PRINTF("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
+        const char* str = NS_ConvertUCS2toUTF8(prefVal);
+        PRINTF("\nStartup homepage %s \n", str);
     }
 
     if (NS_SUCCEEDED(rv = CopyCharPref("general.config.filename",
 			getter_Copies(lockFileName)) && (lockFileName)))
     {
-        PRINTF("\nlockFile %s \n", (const char *)lockFileName);
+        const char* str = lockFileName;
+        PRINTF("\nlockFile %s \n", str);
     }
 
     if (NS_SUCCEEDED(rv = CopyCharPref("general.config.vendor",
 			getter_Copies(lockVendor)) && (lockVendor))) 
     {
-        PRINTF("\nlockVendor %s \n", (const char *)lockVendor);
+        const char* str = lockVendor;
+        PRINTF("\nlockVendor %s \n", str);
     }
 
     if ((gLockFileName == nsnull) && (gLockVendor == nsnull))
@@ -484,7 +487,8 @@ nsresult nsPref::useLockPrefFile()
             }
         }
         GetLocalizedUnicharPref("browser.startup.homepage",getter_Copies(prefVal));
-        PRINTF("\nStartup homepage %s \n", (const char *)NS_ConvertUCS2toUTF8(prefVal));
+        const char* str = NS_ConvertUCS2toUTF8(prefVal);
+        PRINTF("\nStartup homepage %s \n", str);
     }
     return rv;
 } // nsPref::useLockPrefFile
