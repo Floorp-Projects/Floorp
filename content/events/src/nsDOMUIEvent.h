@@ -42,6 +42,7 @@
 
 #include "nsIDOMUIEvent.h"
 #include "nsIDOMNSUIEvent.h"
+#include "nsIDOMAbstractView.h"
 #include "nsIPrivateCompositionEvent.h"
 #include "nsDOMEvent.h"
 
@@ -71,7 +72,7 @@ public:
 protected:
 
   // Internal helper functions
-  NS_IMETHOD GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
+  nsresult GetScrollInfo(nsIScrollableView** aScrollableView, float* aP2T,
                          float* aT2P);
   nsPoint GetClientPoint();
   nsPoint GetScreenPoint();
