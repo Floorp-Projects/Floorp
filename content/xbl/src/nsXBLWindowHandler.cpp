@@ -291,8 +291,10 @@ nsXBLWindowHandler::WalkHandlersInternal(nsIDOMEvent* aEvent, nsIAtom* aEventTyp
           elt->GetDocument(*getter_AddRefs(doc));
           nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(doc));
           domDoc->GetElementById(command, getter_AddRefs(commandElt));
-          if (!commandElt)
-            continue;
+          if (!commandElt) {
+            NS_ASSERTION(PR_FALSE, "A XUL <key> is observing a command that doesn't exist. Unable to execute key binding!\n");
+            return NS_OK;
+          }
         }
       }
 

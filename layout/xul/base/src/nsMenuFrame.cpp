@@ -1416,6 +1416,8 @@ nsMenuFrame::Execute()
       nsCOMPtr<nsIContent> commandContent(do_QueryInterface(commandElt));
       if (commandContent)
         shell->HandleDOMEventWithTarget(commandContent, &event, &status);
+      else
+        NS_ASSERTION(PR_FALSE, "A XUL <menuitem> is attached to a command that doesn't exist! Unable to execute menu item!\n");
     }
     else
       shell->HandleDOMEventWithTarget(mContent, &event, &status);
