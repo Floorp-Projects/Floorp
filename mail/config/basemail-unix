@@ -64,6 +64,8 @@ defaults/profile/localstore.rdf
 defaults/profile/mimeTypes.rdf
 defaults/profile/US/localstore.rdf
 defaults/profile/US/mimeTypes.rdf
+defaults/isp/US/movemail.rdf
+defaults/isp/movemail.rdf
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
