@@ -25,8 +25,6 @@ classic.jar:
     skin/classic/global/menulistBindings.xml
     skin/classic/global/tasksOverlay.css
     skin/classic/global/dialogOverlay.css
-    skin/classic/global/scroll-thumb-horiz.gif
-    skin/classic/global/scroll-thumb-vert.gif
     skin/classic/global/button-def-disabled-left.gif
     skin/classic/global/button-def-disabled-middle.gif
     skin/classic/global/button-def-disabled-right.gif
