@@ -357,7 +357,7 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aMode) 
 
   if(NS_OK==result){
     nsAutoString  buffer;
-    buffer.Assign(mTextValue, mTextValue.FindCharInSet(" \r\n\t\b",0));
+    mTextValue.Left(buffer, mTextValue.FindCharInSet(" \r\n\t\b",0));
     mTypeID= nsHTMLTags::LookupTag(buffer);
     result=aScanner.GetChar(aChar); //eat the closing '>;
   }

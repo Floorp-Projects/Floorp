@@ -534,7 +534,7 @@ nsresult nsXIFDTD::HandleTextToken(CToken* aToken) {
   {
     nsString& temp = aToken->GetStringValueXXX();
 
-    if (temp != "<xml version=\"1.0\"?>")
+    if (!temp.Equals("<xml version=\"1.0\"?>"))
     {
       result= AddLeaf(node);
     }
@@ -1308,12 +1308,12 @@ nsresult nsXIFDTD::CollectContentComment(CToken* aToken, nsCParserNode& aNode) {
 
         type=(eHTMLTokenTypes)token->GetTokenType();
         fragment=token->GetStringValueXXX();
-        if(fragment=="content") {
+        if(fragment.Equals("content")) {
           if(type==eToken_start) 
             inContent=PR_TRUE;
           else inContent=PR_FALSE;
         }
-        else if(fragment=="comment") {
+        else if(fragment.Equals("comment")) {
           comment.Append("-->");
           result=(mSink)? mSink->AddComment(aNode):NS_OK;
           done=PR_TRUE;
