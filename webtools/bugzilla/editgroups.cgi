@@ -69,7 +69,7 @@ sub ShowError ($)
 
 sub PutTrailer (@)
 {
-    my (@links) = ("<a href=index.html>Back to the Main Bugs Page</a>", @_);
+    my (@links) = ("<a href=\"./\">Back to the Main Bugs Page</a>", @_);
 
     my $count = $#links;
     my $num = 0;
