@@ -363,7 +363,7 @@ nsresult nsMsgFilter::SaveToTextFile(nsIOFileStream *stream)
 nsresult nsMsgFilter::SaveRule()
 {
 	nsresult err = NS_OK;
-	char			*relativePath = nsnull;
+	//char			*relativePath = nsnull;
 	nsMsgFilterList	*filterList = GetFilterList();
 	nsString2	actionFilingStr(eOneByte);
 

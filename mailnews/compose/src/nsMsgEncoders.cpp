@@ -75,7 +75,7 @@ MIME_UUEncoderInit(char *filename, int (*output_fn) (const char *buf, PRInt32 si
 extern "C" nsresult
 MIME_EncoderDestroy(MimeEncoderData *data, PRBool abort_p) 
 {
-  MimeEncoderData *returnEncoderData = nsnull;
+  //MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 
                                            nsIMimeConverter::GetIID(), (void **)&converter);

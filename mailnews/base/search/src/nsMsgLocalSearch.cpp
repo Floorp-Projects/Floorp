@@ -601,9 +601,9 @@ nsresult nsMsgSearchOfflineMail::MatchTerms(nsIMsgDBHdr *msgToMatch,
 nsresult nsMsgSearchOfflineMail::Search ()
 {
     nsresult err = NS_OK;
+#ifdef HAVE_SEARCH_PORT
     nsIMsgDBHdr *pHeaders = nsnull;
 
-#ifdef HAVE_SEARCH_PORT
     nsresult dbErr = NS_OK;
 
     // If we need to parse the mailbox before searching it, give another time

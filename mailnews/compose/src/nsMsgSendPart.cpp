@@ -39,7 +39,7 @@ static NS_DEFINE_CID(kCMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 
 int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size) 
 {
-  MimeEncoderData *returnEncoderData = nsnull;
+  //  MimeEncoderData *returnEncoderData = nsnull;
   nsIMimeConverter *converter;
   PRInt32 written = 0;
   nsresult res = nsComponentManager::CreateInstance(kCMimeConverterCID, nsnull, 

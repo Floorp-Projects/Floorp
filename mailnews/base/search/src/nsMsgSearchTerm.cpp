@@ -656,8 +656,8 @@ nsresult nsMsgSearchTerm::MatchBody (nsMsgSearchScopeTerm *scope, PRUint32 offse
 		return NS_ERROR_OUT_OF_MEMORY;
 
 	const int kBufSize = 512; // max size of a line???
-	char *buf = (char*) PR_Malloc(kBufSize);
 #ifdef HAVE_I18N
+	char *buf = (char*) PR_Malloc(kBufSize);
 	if (buf)
 	{
 		PRBool endOfFile = PR_FALSE;  // if retValue == 0, we've hit the end of the file

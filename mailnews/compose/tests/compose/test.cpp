@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
   nsIMsgCompFields *pMsgCompFields;
   nsIMsgSend *pMsgSend;
   nsresult rv = NS_OK;
-  nsIAppShellService* appShell = nsnull;
+  //nsIAppShellService* appShell = nsnull;
 
 
   nsComponentManager::RegisterComponent(kNetServiceCID, NULL, NULL, NETLIB_DLL, PR_FALSE, PR_FALSE);
