@@ -56,14 +56,14 @@
 static NS_DEFINE_CID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-extern JSObject PR_CALLBACK *InitXPInstallObjects(JSContext *jscontext, JSObject *global, nsIFile* jarfile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIZipReader* hZip);
+extern JSObject PR_CALLBACK *InitXPInstallObjects(JSContext *jscontext, JSObject *global, nsIFile* jarfile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIChromeRegistry* reg, nsIZipReader* hZip);
 extern nsresult PR_CALLBACK InitInstallVersionClass(JSContext *jscontext, JSObject *global, void** prototype);
 extern nsresult PR_CALLBACK InitInstallTriggerGlobalClass(JSContext *jscontext, JSObject *global, void** prototype);
 
 // Defined in this file:
 static void     XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report);
 static PRInt32  GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptBuffer, PRUint32 *scriptLength);
-static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
+static nsresult SetupInstallContext(nsIZipReader* hZip, nsIFile* jarFile, const PRUnichar* url, const PRUnichar* args, PRUint32 flags, nsIChromeRegistry* reg, JSRuntime *jsRT, JSContext **jsCX, JSObject **jsGlob);
 
 extern "C" void RunInstallOnThread(void *data);
 
@@ -106,7 +106,7 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
 
         rv = errorObject->Init(report->ucmessage, newFileUni, report->uclinebuf,
                                report->lineno, column, report->flags,
-                               "XP Install JavaScript");
+                               "XPInstall JavaScript");
         nsAllocator::Free((void *)newFileUni);
         if (NS_SUCCEEDED(rv)) {
             rv = consoleService->LogMessage(errorObject);
@@ -117,6 +117,25 @@ XPInstallErrorReporter(JSContext *cx, const char *message, JSErrorReport *report
             }
         }
     }
+
+    // Build up error string
+    nsCAutoString errmsg("script error: ");
+
+    if (!report)
+        errmsg += message;
+    else
+    {
+        if (report->filename)
+        {
+            errmsg += report->filename;
+            errmsg += ", ";
+        }
+
+
+    }
+
+
+
 
     int i, j, k, n;
 
@@ -250,6 +269,7 @@ GetInstallScriptFromJarfile(nsIZipReader* hZip, nsIFile* jarFile, char** scriptB
 // Argument         : const PRUnichar* url  - URL of where this package came from
 // Argument         : const PRUnichar* args    - any arguments passed into the javascript context
 // Argument         : PRUint32 flags   - bitmask of flags passed in
+// Argument         : nsIChromeRegistry* - the chrome registry to run with.
 // Argument         : JSRuntime *jsRT    - A valid JS Runtime
 // Argument         : JSContext **jsCX   - Created context, destroy via JS_DestroyContext
 // Argument         : JSObject **jsGlob  - created global object
@@ -259,6 +279,7 @@ static nsresult SetupInstallContext(nsIZipReader* hZip,
                                     const PRUnichar* url,
                                     const PRUnichar* args,
                                     PRUint32 flags,
+                                    nsIChromeRegistry* reg,
                                     JSRuntime *rt, 
                                     JSContext **jsCX, 
                                     JSObject **jsGlob)
@@ -281,7 +302,7 @@ static nsresult SetupInstallContext(nsIZipReader* hZip,
     JS_SetErrorReporter(cx, XPInstallErrorReporter);
 
 
-    glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args, flags, hZip);
+    glob = InitXPInstallObjects(cx, nsnull, jarFile, url, args, flags, reg, hZip);
     // Init standard classes
     JS_InitStandardClasses(cx, glob);
 
@@ -358,7 +379,7 @@ extern "C" void RunInstallOnThread(void *data)
     PRInt32     finalStatus;
     PRBool      sendStatus = PR_TRUE;
 
-    nsIXPIListener *listener;
+    nsCOMPtr<nsIXPIListener> listener;
 
     // lets set up an eventQ so that our xpcom/proxies will not have to:
     nsCOMPtr<nsIEventQueue> eventQ;
@@ -378,7 +399,7 @@ extern "C" void RunInstallOnThread(void *data)
     }
 
     softwareUpdate->SetActiveListener( installInfo->GetListener() );
-    softwareUpdate->GetMasterListener(&listener);
+    softwareUpdate->GetMasterListener(getter_AddRefs(listener));
     
     if(listener)
         listener->BeforeJavascriptEvaluation( installInfo->GetURL() );
@@ -408,6 +429,7 @@ extern "C" void RunInstallOnThread(void *data)
                                       installInfo->GetURL(),
                                       installInfo->GetArguments(),
                                       installInfo->GetFlags(),
+                                      installInfo->GetChromeRegistry(),
                                       rt, &cx, &glob);
 
             if (NS_SUCCEEDED(rv))
@@ -456,7 +478,7 @@ extern "C" void RunInstallOnThread(void *data)
                         finalStatus = nsInstall::SCRIPT_ERROR;
                 }
 
-                JS_DestroyContext(cx);
+                JS_DestroyContextMaybeGC(cx);
             }
             else
             {

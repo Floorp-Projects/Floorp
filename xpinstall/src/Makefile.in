@@ -58,6 +58,7 @@ CPPSRCS		= \
 		nsInstallPatch.cpp \
 		nsInstallUninstall.cpp \
 		nsInstallResources.cpp \
+		nsRegisterItem.cpp \
 		nsTopProgressNotifier.cpp \
 		nsLoggingProgressNotifier.cpp \
 		ScheduledTasks.cpp \

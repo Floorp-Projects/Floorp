@@ -98,9 +98,6 @@ class nsSoftwareUpdate: public nsIAppShellComponent,
         nsTopProgressListener   mMasterListener;
 
         HREG              mReg;
-        
-        
-
 };
 
 

@@ -56,6 +56,7 @@
 #include "nsInstallPatch.h"
 #include "nsInstallUninstall.h"
 #include "nsInstallResources.h"
+#include "nsRegisterItem.h"
 #include "nsNetUtil.h"
 
 #include "nsProxiedService.h"
@@ -164,7 +165,7 @@ nsInstall::nsInstall(nsIZipReader * theJARFile)
     
     if (NS_SUCCEEDED(rv))
     {
-        su->GetMasterListener( &mListener );
+        su->GetMasterListener( getter_AddRefs(mListener) );
     }
 
     su->Release();
@@ -1370,6 +1371,24 @@ nsInstall::Patch(const nsString& aRegName, const nsString& aJarSource, nsInstall
 {
     return Patch(aRegName, nsAutoString(), aJarSource, aFolder, aTargetName, aReturn);
 }
+
+PRInt32
+nsInstall::RegisterChrome(nsIFile* chrome, PRUint32 chromeType)
+{
+    PRInt32 result = SanityCheck();
+    if (result != SUCCESS)
+        return SaveError( result );
+
+    if (!chrome || !chromeType)
+        return SaveError( INVALID_ARGUMENTS );
+
+    nsRegisterItem* ri = new nsRegisterItem(this, chrome, chromeType);
+    if (ri == nsnull)
+        return SaveError(OUT_OF_MEMORY);
+    else
+        return SaveError(ScheduleForInstall( ri ));
+}
+
 
 PRInt32    
 nsInstall::ResetError()

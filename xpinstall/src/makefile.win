@@ -71,6 +71,7 @@ OBJS =                                          \
        .\$(OBJDIR)\nsInstallPatch.obj           \
        .\$(OBJDIR)\nsInstallUninstall.obj       \
        .\$(OBJDIR)\nsInstallResources.obj       \
+       .\$(OBJDIR)\nsRegisterItem.obj           \
        .\$(OBJDIR)\nsTopProgressNotifier.obj    \
        .\$(OBJDIR)\nsLoggingProgressNotifier.obj\
        .\$(OBJDIR)\ScheduledTasks.obj           \
