@@ -327,7 +327,6 @@ protected:
   nsIMdbTable* mTable;     // OWNER
 
   nsresult SaveLastPageVisited(const char *);
-  nsresult URLShouldBeInHistory(const char *url, PRBool *result);
 
   nsresult NotifyAssert(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aValue);
   nsresult NotifyChange(nsIRDFResource* aSource, nsIRDFResource* aProperty, nsIRDFNode* aOldValue, nsIRDFNode* aNewValue);
@@ -516,15 +515,6 @@ nsGlobalHistory::AddPage(const char *aURL, const char *aReferrerURL, PRInt64 aDa
   NS_ASSERTION(len != 0, "no URL");
   if (! len)
     return NS_ERROR_INVALID_ARG;
-
-  // this is a hack for now, until mscott fixes it so we don't call AddPage()
-  // with inappropriate urls
-  PRBool urlShouldBeInHistory = PR_FALSE;
-  rv = URLShouldBeInHistory(aURL, &urlShouldBeInHistory);
-  if (NS_FAILED(rv)) return rv;
-  if (!urlShouldBeInHistory) { 
-    return NS_OK;
-  }
 
   rv = SaveLastPageVisited(aURL);
   if (NS_FAILED(rv)) return rv;
@@ -796,27 +786,6 @@ nsGlobalHistory::SaveLastPageVisited(const char *aURL)
 #endif /* DEBUG_LAST_PAGE_VISITED */
 
   return rv;
-}
-
-#define HTTP_COLON "http:"
-#define HTTP_COLON_LEN 5 
-#define HTTPS_COLON "https:"
-#define HTTPS_COLON_LEN 6 
-
-nsresult
-nsGlobalHistory::URLShouldBeInHistory(const char *url, PRBool *result)
-{
-  if (!url) return NS_ERROR_NULL_POINTER;
-
-  if ((nsCRT::strncmp(HTTP_COLON, url, HTTP_COLON_LEN) == 0) ||
-      (nsCRT::strncmp(HTTPS_COLON, url, HTTPS_COLON_LEN) == 0)) {
-    *result = PR_TRUE;
-  }
-  else {
-    *result = PR_FALSE;
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
