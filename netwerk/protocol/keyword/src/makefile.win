@@ -34,7 +34,7 @@ LLIBS= $(LLIBS)                 \
 
 CPP_OBJS=                                      \
 	.\$(OBJDIR)\nsKeywordProtocolHandler.obj \
-	.\$(OBJDIR)\nsKeywordProtocolFactory.obj \
+	.\$(OBJDIR)\nsKeywordModule.obj \
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	
