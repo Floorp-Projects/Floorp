@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   IBM Corp.
+ *   Fredrik Holmqvist <thesuckiestemail@yahoo.se>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -288,35 +289,24 @@ nsDirectoryService::GetCurrentProcessDirectory(nsILocalFile** aFile)
     return NS_OK;
 
 #elif defined(XP_BEOS)
-
-    char *moz5 = getenv("MOZILLA_FIVE_HOME");
-    if (moz5)
+    char buf[MAXPATHLEN];
+    int32 cookie = 0;
+    image_info info;
+    char *p;
+    *buf = 0;
+    if(get_next_image_info(0, &cookie, &info) == B_OK)
     {
-        localFile->InitWithNativePath(nsDependentCString(moz5));
-        localFile->Normalize();
-        *aFile = localFile;
-        return NS_OK;
-    }
-    else
-    {
-      static char buf[MAXPATHLEN];
-      int32 cookie = 0;
-      image_info info;
-      char *p;
-      *buf = 0;
-      if(get_next_image_info(0, &cookie, &info) == B_OK)
-      {
         strcpy(buf, info.name);
         if((p = strrchr(buf, '/')) != 0)
         {
-          *p = 0;
-          localFile->InitWithNativePath(nsDependentCString(buf));
-          *aFile = localFile;
-          return NS_OK;
+            if( (p-2 >= buf) && *(p-2)=='/' && *(p-1)=='.')
+                p -=2; 
+            *p = 0;
+            localFile->InitWithNativePath(nsDependentCString(buf));
+            *aFile = localFile;
+            return NS_OK;
         }
-      }
     }
-
 #endif
     
     NS_RELEASE(localFile);
