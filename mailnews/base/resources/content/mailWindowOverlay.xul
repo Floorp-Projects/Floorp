@@ -336,7 +336,8 @@ Rights Reserved.
 
 </keyset>
 
-  <popup id="threadPaneContext" onpopupshowing="return fillThreadPaneContextMenu();" >
+  <popup id="threadPaneContext" onpopupshowing="return fillThreadPaneContextMenu();"
+    onpopuphiding="if (event.target == this) threadPaneOnPopupHiding();">
     <menuitem id="threadPaneContext-openNewWindow"
         label="&contextOpenNewWindow.label;"
         accesskey="&contextOpenNewWindow.accesskey;"
@@ -551,8 +552,9 @@ Rights Reserved.
         command="cmd_delete"/>
   </popup>
 
-    <popup id="folderPaneContext" onpopupshowing="return fillFolderPaneContextMenu();" >
-        <menuitem id="folderPaneContext-openNewWindow"
+  <popup id="folderPaneContext" onpopupshowing="return fillFolderPaneContextMenu();"
+    onpopuphiding="if (event.target == this) folderPaneOnPopupHiding();">
+    <menuitem id="folderPaneContext-openNewWindow"
         label="&folderContextOpenNewWindow.label;"
         accesskey="&folderContextOpenNewWindow.accesskey;"
         oncommand="MsgOpenNewWindowForFolder(null,-1);"/>

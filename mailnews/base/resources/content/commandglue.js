@@ -654,16 +654,28 @@ function OnClickThreadAndMessagePaneSplitterGrippy()
 
 function FolderPaneSelectionChange()
 {
+    var folderOutliner = GetFolderOutliner();
+    var folderSelection = folderOutliner.outlinerBoxObject.selection;
+
+    // This prevents a folder from being loaded in the case that the user
+    // has right-clicked on a folder different from the one that was
+    // originally highlighted.  On a right-click, the highlight (selection)
+    // of a row will be different from the value of currentIndex, thus if
+    // the currentIndex is not selected, it means the user right-clicked
+    // and we don't want to load the contents of the folder.
+    if (!folderSelection.isSelected(folderSelection.currentIndex))
+      return;
+
     if(gTimelineEnabled) {
       gTimelineService.startTimer("FolderLoading");
       gTimelineService.enter("FolderLoading has Started");
     }
-    var folderOutliner = GetFolderOutliner();
-    if (folderOutliner.outlinerBoxObject.selection.count == 1)
+
+    if (folderSelection.count == 1)
     {
         var startIndex = {};
         var endIndex = {};
-        folderOutliner.outlinerBoxObject.selection.getRangeAt(0, startIndex, endIndex);
+        folderSelection.getRangeAt(0, startIndex, endIndex);
         var folderResource = GetFolderResource(folderOutliner, startIndex.value);
         var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
         if (msgFolder == msgWindow.openFolder)

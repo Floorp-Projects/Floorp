@@ -53,6 +53,16 @@ var gCurrentlyDisplayedMessage=nsMsgViewIndex_None;
 var gStartFolderUri = null;
 var gStartMsgKey = -1;
 
+// Global var to keep track of which row in the thread pane has been selected
+// This is used to make sure that the row with the currentIndex has the selection
+// after a Delete or Move of a message that has a row index less than currentIndex.
+var gThreadPaneCurrentSelectedIndex = -1;
+
+// Global var to keep track of if the 'Delete Message' or 'Move To' thread pane
+// context menu item was triggered.  This helps prevent the outliner view from
+// not updating on one of those menu item commands.
+var gThreadPaneDeleteOrMoveOccurred = false;
+
 //If we've loaded a message, set to true.  Helps us keep the start page around.
 var gHaveLoadedMessage;
 
@@ -298,7 +308,12 @@ function HandleDeleteOrMoveMsgCompleted(folder)
         // update commands when we select the next message after the delete; the commands already
         // have the right update state...
         gDBView.suppressCommandUpdating = true;
-        outlinerSelection.select(gNextMessageViewIndexAfterDelete);
+
+        // This check makes sure that the outliner does not perform a
+        // selection on a non selected row (row < 0), else assertions will
+        // be thrown.
+        if (gNextMessageViewIndexAfterDelete >= 0)
+          outlinerSelection.select(gNextMessageViewIndexAfterDelete);
         
         // if gNextMessageViewIndexAfterDelete has the same value 
         // as the last index we had selected, the outliner won't generate a
@@ -706,6 +721,7 @@ function OnLoadFolderPane()
     var folderOutlinerBuilder = folderOutliner.builder.QueryInterface(Components.interfaces.nsIXULOutlinerBuilder);
     folderOutlinerBuilder.addObserver(folderObserver);
     folderOutliner.addEventListener("click",FolderPaneOnClick,true);
+    folderOutliner.addEventListener("mousedown",OutlinerOnMouseDown,true);
 }
 
 // builds prior to 12-08-2001 did not have the labels column
@@ -872,6 +888,43 @@ function GetSelectedFolderIndex()
     return startIndex.value;
 }
 
+// Function to change the highlighted row to where the mouse was clicked
+// without loading the contents of the selected row.
+// It will also keep the outline/dotted line in the original row.
+function ChangeSelectionWithoutContentLoad(event, outliner)
+{
+    var row = {};
+    var col = {};
+    var elt = {};
+    var outlinerBoxObj = outliner.outlinerBoxObject;
+    var outlinerSelection = outlinerBoxObj.selection;
+
+    outlinerBoxObj.getCellAt(event.clientX, event.clientY, row, col, elt);
+    if((row.value >= 0) && !outlinerSelection.isSelected(row.value))
+    {
+        var saveCurrentIndex = outlinerSelection.currentIndex;
+        outlinerSelection.selectEventsSuppressed = true;
+        outlinerSelection.select(row.value);
+        outlinerSelection.currentIndex = saveCurrentIndex;
+        outlinerBoxObj.ensureRowIsVisible(row.value);
+        outlinerSelection.selectEventsSuppressed = false;
+
+        // Keep track of which row in the thread pane is currently selected.
+        if(outliner.id == "threadOutliner")
+          gThreadPaneCurrentSelectedIndex = row.value;
+    }
+    event.preventBubble();
+}
+
+function OutlinerOnMouseDown(event)
+{
+    // Detect right mouse click and change the highlight to the row
+    // where the click happened without loading the message headers in
+    // the Folder or Thread Pane.
+    if (event.button == 2)
+      ChangeSelectionWithoutContentLoad(event, event.target.parentNode);
+}
+
 function FolderPaneOnClick(event)
 {
     // we only care about button 0 (left click) events
@@ -1011,7 +1064,10 @@ function GetSelectedMsgFolders()
 function GetFirstSelectedMessage()
 {
     try {
-        return gDBView.URIForFirstSelectedMessage;
+        // Use this instead of gDBView.URIForFirstSelectedMessage, else it
+        // will return the currentIndex message instead of the highlighted
+        // message.
+        return GetSelectedMessages()[0];
     }
     catch (ex) {
         return null;
@@ -1078,7 +1134,22 @@ function GetCompositeDataSource(command)
 
 function SetNextMessageAfterDelete()
 {
+  var outlinerSelection = GetThreadOutliner().outlinerBoxObject.selection;
+
+  gThreadPaneDeleteOrMoveOccurred = true;
+  if (outlinerSelection.isSelected(outlinerSelection.currentIndex))
     gNextMessageViewIndexAfterDelete = gDBView.msgToSelectAfterDelete;
+  else if (outlinerSelection.currentIndex > gThreadPaneCurrentSelectedIndex)
+    // Since the currentIndex (the row with the outline/dotted line) is greater
+    // than the currently selected row (the row that is highlighted), we need to
+    // make sure that upon a Delete or Move of the selected row, the highlight
+    // returns to the currentIndex'ed row.  It is necessary to subtract 1
+    // because the row being deleted is above the row with the currentIndex.
+    // If the subtraction is not done, then the highlight will end up on the
+    // row listed after the currentIndex'ed row.
+    gNextMessageViewIndexAfterDelete = outlinerSelection.currentIndex - 1;
+  else
+    gNextMessageViewIndexAfterDelete = outlinerSelection.currentIndex;
 }
 
 function EnsureAllAncestorsAreExpanded(outliner, resource)

@@ -312,7 +312,24 @@ function EnsureRowInThreadOutlinerIsVisible(index)
 function ThreadPaneOnLoad()
 {
   var outliner = GetThreadOutliner();
+
   outliner.addEventListener("click",ThreadPaneOnClick,true);
+
+  // The mousedown event listener below should only be added in the thread
+  // pane of the mailnews 3pane window, not in the advanced search window.
+  if(outliner.parentNode.id == "searchResultListBox")
+    return;
+
+  outliner.addEventListener("mousedown",OutlinerOnMouseDown,true);
+}
+
+function ThreadPaneSelectionChanged()
+{
+  var outlinerBoxObj = GetThreadOutliner().outlinerBoxObject;
+  var outlinerSelection = outlinerBoxObj.selection;
+
+  if (outlinerSelection.isSelected(outlinerSelection.currentIndex))
+    outlinerBoxObj.view.selectionChanged();
 }
 
 addEventListener("load",ThreadPaneOnLoad,true);

@@ -25,12 +25,55 @@
 
 //NOTE: gMessengerBundle must be defined and set or this Overlay won't work
 
+// Function to change the highlighted row back to the row that is currently
+// outline/dotted without loading the contents of either rows.  This is
+// triggered when the context menu for a given row is hidden/closed
+// (onpopuphiding).
+function RestoreSelectionWithoutContentLoad(outliner)
+{
+    var outlinerBoxObj = outliner.outlinerBoxObject;
+    var outlinerSelection = outlinerBoxObj.selection;
+
+    if((!outlinerSelection.isSelected(outlinerSelection.currentIndex)) &&
+       (outlinerSelection.currentIndex >= 0))
+    {
+        outlinerSelection.selectEventsSuppressed = true;
+        outlinerSelection.select(outlinerSelection.currentIndex);
+        outlinerSelection.selectEventsSuppressed = false;
+
+        // Keep track of which row in the thread pane is currently selected.
+        // This is currently only needed when deleting messages.  See
+        // declaration of var in msgMail3PaneWindow.js.
+        if(outliner.id == "threadOutliner")
+          gThreadPaneCurrentSelectedIndex = outlinerSelection.currentIndex;
+    }
+    else if(!gThreadPaneDeleteOrMoveOccurred && (outlinerSelection.currentIndex < 0))
+        // Clear the selection in the case of when a folder has just been
+        // loaded where the message pane does not have a message loaded yet.
+        // When right-clicking a message in this case and dismissing the
+        // popup menu (by either executing a menu command or clicking
+        // somewhere else),  the selection needs to be cleared.
+        // However, if the 'Delete Message' or 'Move To' menu item has been
+        // selected, DO NOT clear the selection, else it will prevent the
+        // outliner view from refreshing.
+        outlinerSelection.clearSelection();
+}
+
+function threadPaneOnPopupHiding()
+{
+  RestoreSelectionWithoutContentLoad(GetThreadOutliner());
+}
+
 function fillThreadPaneContextMenu()
 {
   var numSelected = GetNumSelectedMessages();
 
   var isNewsgroup = false;
   var selectedMessage = null;
+
+  // Clear the global var used to keep track if a 'Delete Message' or 'Move
+  // To' command has been triggered via the thread pane context menu.
+  gThreadPaneDeleteOrMoveOccurred = false;
 
   if(numSelected >= 0) {
     selectedMessage = GetFirstSelectedMessage();
@@ -54,9 +97,10 @@ function fillThreadPaneContextMenu()
   SetupCopyMessageUrlMenuItem("threadPaneContext-copyMessageUrl", numSelected, isNewsgroup, numSelected != 1); 
   SetupCopyMenuItem("threadPaneContext-copyMenu", numSelected, false);
   SetupMoveMenuItem("threadPaneContext-moveMenu", numSelected, isNewsgroup, false);
+  EnableMenuItem("threadPaneContext-labels", (numSelected >= 1));
   SetupSaveAsMenuItem("threadPaneContext-saveAs", numSelected, false);
   SetupPrintMenuItem("threadPaneContext-print", numSelected, false);
-  goUpdateCommand('cmd_delete');
+  SetupDeleteMenuItem("threadPaneContext-delete", numSelected, false);
   SetupAddSenderToABMenuItem("threadPaneContext-addSenderToAddressBook", numSelected, false);
   SetupAddAllToABMenuItem("threadPaneContext-addAllToAddressBook", numSelected, false);
 
@@ -154,6 +198,22 @@ function SetupAddAllToABMenuItem(menuID, numSelected, forceHide)
 {
   ShowMenuItem(menuID, (numSelected <= 1) && !forceHide);
   EnableMenuItem(menuID, false);
+}
+
+function SetupDeleteMenuItem(menuID, numSelected, forceHide)
+{
+  // This function is needed for the case where a folder is just loaded (while
+  // there isn't a message loaded in the message pane), a right-click is done
+  // in the thread pane.  This function will disable enable the 'Delete
+  // Message' menu item.
+  ShowMenuItem(menuID, !forceHide);
+  EnableMenuItem(menuID, (numSelected > 0));
+  goUpdateCommand('cmd_delete');
+}
+
+function folderPaneOnPopupHiding()
+{
+  RestoreSelectionWithoutContentLoad(GetFolderOutliner());
 }
 
 function fillFolderPaneContextMenu()
