@@ -60,6 +60,10 @@
 #include "nsWinProfile.h"
 #endif
 
+#ifdef XP_MAC
+#include "Gestalt.h"
+#endif 
+
 #ifdef XP_PC
 #define FILESEP "\\"
 #elif defined(XP_MAC)
@@ -711,6 +715,25 @@ PRInt32
 nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
 {
     *aReturn = nsnull;
+
+#ifdef XP_MAC
+	
+    long response = 0;
+    
+    if (aSelector == "")
+    {
+        return NS_OK;
+    }
+
+	char selector[4];
+	
+    aSelector.ToCString((char*)&selector,4);
+
+    Gestalt(selector, (int*)&response);
+
+    *aReturn = response;
+	
+#endif    
     return NS_OK;    
 }
 
