@@ -278,6 +278,7 @@ sub BuildDist()
 	[":mozilla:layout:events:src:MANIFEST", "$distdirectory:layout:"],
 #WIDGET
     [":mozilla:widget:public:MANIFEST", "$distdirectory:widget:"],
+    [":mozilla:widget:src:mac:MANIFEST", "$distdirectory:widget:"],
 #GFX
     [":mozilla:gfx:src:MANIFEST", "$distdirectory:gfx:"],
 #VIEW
