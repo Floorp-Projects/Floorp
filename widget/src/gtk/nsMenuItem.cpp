@@ -68,7 +68,6 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
                         const nsString &aLabel, 
                         PRUint32        aCommand)
 {
-#if 0
   mTarget  = aMBParent;
   mCommand = aCommand;
   mLabel   = aLabel;
@@ -79,14 +78,17 @@ void nsMenuItem::Create(nsIWidget      *aMBParent,
 
   mTarget = aMBParent;
   char * nameStr = mLabel.ToNewCString();
-  Widget parentMenuHandle = GetNativeParent();
-  mMenu = XtVaCreateManagedWidget(nameStr, xmCascadeButtonGadgetClass,
+  GtkWidget *parentMenuHandle = GetNativeParent();
+  mMenu = gtk_menu_item_new_with_label(nameStr);
+  gtk_widget_show(mMenu);
+/*
+  XtVaCreateManagedWidget(nameStr, xmCascadeButtonGadgetClass,
                                           parentMenuHandle,
                                           NULL);
   XtAddCallback(mMenu, XmNactivateCallback, nsXtWidget_Menu_Callback, 
                 (nsIMenuItem *)this);
+*/
   delete[] nameStr;
-#endif
 }
 
 //-------------------------------------------------------------------------
@@ -100,7 +102,7 @@ GtkWidget *nsMenuItem::GetNativeParent()
   } else {
     return NULL;
   }
-  return (GtkWidget*)voidData;
+  return GTK_WIDGET(voidData);
 }
 
 
@@ -153,7 +155,6 @@ NS_METHOD nsMenuItem::Create(nsIMenu        *aParent,
                              PRUint32       aCommand)
                             
 {
-#if 0
   if (nsnull == aParent) {
     return NS_ERROR_FAILURE;
   }
@@ -170,7 +171,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu        *aParent,
 
   Create(widget, GetNativeParent(), aLabel, aCommand);
   aParent->AddItem(this);
-#endif
+
   return NS_OK;
 }
 
@@ -179,7 +180,6 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent,
                              const nsString &aLabel,  
                              PRUint32        aCommand)
 {
-#if 0
   mPopUpParent = aParent;
   NS_ADDREF(mPopUpParent);
 
@@ -190,7 +190,7 @@ NS_METHOD nsMenuItem::Create(nsIPopUpMenu   *aParent,
 
   Create(widget, GetNativeParent(), aLabel, aCommand);
   aParent->AddItem(this);
-#endif
+
   return NS_OK;
 }
 

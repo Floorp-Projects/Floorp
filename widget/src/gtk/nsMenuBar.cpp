@@ -62,11 +62,14 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
 {
   mParent = aParent;
   NS_ADDREF(mParent);
-  GtkWidget *parentWidget = (GtkWidget*)mParent->GetNativeData(NS_NATIVE_WIDGET);
+  GtkWidget *parentWidget = GTK_WIDGET(mParent->GetNativeData(NS_NATIVE_WIDGET));
 #if 0
   GtkWidget *mainWindow = XtParent(parentWidget);
 #endif
   mMenu = gtk_menu_bar_new();
+  gtk_widget_show(mMenu);
+// does this need to be added?
+//  gtk_layout_put(GTK_LAYOUT(parentWidget), mMenu, 0, 0);
   return NS_OK;
 
 }
@@ -82,7 +85,26 @@ NS_METHOD nsMenuBar::GetParent(nsIWidget *&aParent)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuBar::AddMenu(nsIMenu * aMenu)
 {
-  // XXX add to internal data structure
+  nsString Label;
+  GtkWidget *widget, *nmenu;
+  char *labelStr;
+  void *voidData;
+
+  aMenu->GetLabel(Label);
+
+  labelStr = Label.ToNewCString();
+
+  widget = gtk_menu_item_new_with_label (labelStr);
+  gtk_menu_bar_append (GTK_MENU_BAR (mMenu), widget);
+
+  delete[] labelStr;
+
+  aMenu->GetNativeData(voidData);
+  nmenu = GTK_WIDGET(voidData);
+
+  gtk_menu_item_set_submenu (GTK_MENU_ITEM (widget), nmenu);
+
+  // XXX add aMenu to internal data structor list
   return NS_OK;
 }
 
