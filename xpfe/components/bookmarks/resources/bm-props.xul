@@ -35,7 +35,7 @@
 <dialog id="bmPropsWindow" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&bookmarks.windowtitle.label;"
         onload="Init()" style="width: 30em;"
-        ondialogaccept="Commit();">
+        ondialogaccept="return Commit();">
  
   <stringbundle id="bundle_bookmark" src="chrome://communicator/locale/bookmarks/bookmark.properties"/>
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>

@@ -122,7 +122,7 @@ Contributor(s):
       <button id="cancel" label="&dialogCancel.label;" oncommand="doCancelButton()"/>
       <deck id="pauseResumeDeck">
         <spacer/>
-        <buttonid="pause"  label="&pauseButtonText;"  oncommand="doPauseButton()"/>
+        <button id="pause"  label="&pauseButtonText;"  oncommand="doPauseButton()"/>
         <button id="resume" label="&resumeButtonText;" oncommand="doPauseButton()"/>
       </deck>
       <spacer flex="1"/>
