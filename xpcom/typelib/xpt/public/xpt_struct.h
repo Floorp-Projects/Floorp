@@ -21,10 +21,12 @@
  * http://www.mozilla.org/scriptable/typelib_file.html
  */
 
+#include "prtypes.h"
+
 #ifndef __xpt_struct_h__
 #define __xpt_struct_h__
 
-#include "prtypes.h"
+PR_BEGIN_EXTERN_C
 
 /*
  * Originally, I was going to have structures that exactly matched the on-disk
@@ -115,7 +117,7 @@ XPT_SizeOfHeaderBlock(XPTHeader *header);
 struct XPTInterfaceDirectoryEntry {
     nsID                   iid;
     char                   *name;
-    char                   *namespace;
+    char                   *name_space;
     XPTInterfaceDescriptor *interface_descriptor;
 #if 0 /* not yet */
     /* not stored on disk */
@@ -125,7 +127,7 @@ struct XPTInterfaceDirectoryEntry {
 
 PRBool
 XPT_FillInterfaceDirectoryEntry(XPTInterfaceDirectoryEntry *ide,
-                                nsID *iid, char *name, char *namespace,
+                                nsID *iid, char *name, char *name_space,
                                 XPTInterfaceDescriptor *descriptor);
 
 /*
@@ -406,5 +408,7 @@ struct XPTAnnotation {
 
 XPTAnnotation *
 XPT_NewAnnotation(uint8 flags, XPTString *creator, XPTString *private_data);
+
+PR_END_EXTERN_C
 
 #endif /* __xpt_struct_h__ */

@@ -20,13 +20,15 @@
  * Basic APIs for streaming typelib structures to/from disk.
  */
 
-#ifndef __xpt_xdr_h__
-#define __xpt_xdr_h__
-
 #include <nspr.h>
 #include <plhash.h>
 #include <prmem.h>
 #include "xpt_struct.h"
+
+#ifndef __xpt_xdr_h__
+#define __xpt_xdr_h__
+
+PR_BEGIN_EXTERN_C
 
 typedef struct XPTState         XPTState;
 typedef struct XPTDatapool      XPTDatapool;
@@ -206,5 +208,7 @@ XPT_GetAddrForOffset(XPTCursor *cursor, uint32 offset);
     PR_FREEIF(free_it);                                                      \
     return PR_FALSE;
 
+
+PR_END_EXTERN_C
 
 #endif /* __xpt_xdr_h__ */
