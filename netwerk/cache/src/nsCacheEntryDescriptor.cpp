@@ -213,7 +213,11 @@ nsCacheEntryDescriptor::DoomAndFailPendingRequests(nsresult status)
 NS_IMETHODIMP
 nsCacheEntryDescriptor::MarkValid()
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (mCacheEntry) {
+        mCacheEntry->MarkValid();
+        return NS_OK;
+    }
+    return NS_ERROR_NOT_AVAILABLE;
 }
 
 NS_IMETHODIMP
