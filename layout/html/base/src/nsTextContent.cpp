@@ -879,8 +879,25 @@ TextFrame::PaintRegularText(nsIPresContext& aPresContext,
 
 		    nscoord textLen = fm->GetWidth(deviceContext, textStr);
 
-		    aRenderingContext.SetColor(NS_RGB(255,0,0));
-		    aRenderingContext.DrawLine(textLen, 0, textLen, mRect.height);
+        // Draw little blue triangle
+		    aRenderingContext.SetColor(NS_RGB(0,0,255));
+        nsPoint pnts[4];
+        nscoord ox = mRect.height / 4;
+        nscoord oy = ox;
+        nscoord yy = mRect.height;
+
+        pnts[0].x = textLen-ox;
+        pnts[0].y = yy;
+        pnts[1].x = textLen;
+        pnts[1].y = yy-oy;
+        pnts[2].x = textLen+ox;
+        pnts[2].y = yy;
+        pnts[3].x = textLen-ox;
+        pnts[3].y = yy;
+
+        //aRenderingContext.DrawPolygon(pnts, 4);
+        aRenderingContext.FillPolygon(pnts, 4);
+		    //aRenderingContext.DrawLine(textLen, mRect.height-(mRect.height/3), textLen, mRect.height);
         NS_RELEASE(fm);
       }
       NS_IF_RELEASE(startContent);
