@@ -178,7 +178,7 @@ public:
 							ScrollCellIntoFrame(inCell);						
 						}
 	
-	void				RefreshRowRange(TableIndexT inStartRow, TableIndexT inEndRow);
+	void				RefreshRowRange(TableIndexT inStartRow, TableIndexT inEndRow) const;
 	void				ReadSavedTableStatus(LStream *inStatusData);
 	void				WriteSavedTableStatus(LStream *outStatusData);
 

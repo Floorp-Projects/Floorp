@@ -1502,7 +1502,7 @@ void CStandardFlexTable::DontBeTarget()
 // ===== BEGINCEXTable Refugees
 
 //----------------------------------------------------------------------------------------
-void CStandardFlexTable::RefreshRowRange(TableIndexT inStartRow, TableIndexT inEndRow)
+void CStandardFlexTable::RefreshRowRange(TableIndexT inStartRow, TableIndexT inEndRow) const
 //----------------------------------------------------------------------------------------
 {
 	TableIndexT topRow, botRow;
@@ -1511,7 +1511,10 @@ void CStandardFlexTable::RefreshRowRange(TableIndexT inStartRow, TableIndexT inE
 	} else {
 		topRow = inEndRow; botRow = inStartRow;
 	}
-	RefreshCellRange(STableCell(topRow, 1), STableCell(botRow, mCols));
+	
+	// RefreshCellRange should be const, but isn't
+	CStandardFlexTable* self = const_cast<CStandardFlexTable*>(this);
+	self->RefreshCellRange(STableCell(topRow, 1), STableCell(botRow, mCols));
 }
 
 //----------------------------------------------------------------------------------------
