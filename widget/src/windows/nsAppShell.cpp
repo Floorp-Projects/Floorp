@@ -39,6 +39,7 @@ static NS_DEFINE_CID(kTimerManagerCID, NS_TIMERMANAGER_CID);
 
 NS_IMPL_ISUPPORTS(nsAppShell, NS_IAPPSHELL_IID) 
 
+static int gKeepGoing = 1;
 //-------------------------------------------------------------------------
 //
 // nsAppShell constructor
@@ -86,6 +87,7 @@ NS_METHOD nsAppShell::Run(void)
   NS_WITH_SERVICE(nsITimerQueue, queue, kTimerManagerCID, &rv);
   if (NS_FAILED(rv)) return rv;
 
+  gKeepGoing = 1;
   // Process messages
   do {
     // Give priority to system messages (in particular keyboard, mouse,
@@ -116,8 +118,16 @@ NS_METHOD nsAppShell::Run(void)
                 !::PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE));
       
     } else {
-       // Block and wait for any posted application message
-      ::WaitMessage();
+      if (!gKeepGoing) {
+        // In this situation, PostQuitMessage() was called, but the WM_QUIT
+        // message was removed from the event queue by someone else -
+        // (see bug #54725).  So, just exit the loop as if WM_QUIT had been
+        // reeceived...
+        keepGoing = 0;
+      } else {
+         // Block and wait for any posted application message
+        ::WaitMessage();
+      }
     }
 
   } while (keepGoing != 0);
@@ -199,6 +209,11 @@ nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 NS_METHOD nsAppShell::Exit(void)
 {
   PostQuitMessage(0);
+  //
+  // Also, set a global flag, just in case someone eats the WM_QUIT message.
+  // see bug #54725.
+  //
+  gKeepGoing = 0;
   return NS_OK;
 }
 
