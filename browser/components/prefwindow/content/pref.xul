@@ -96,7 +96,7 @@
           <treechildren id="advancedChildren">
             <treeitem>
               <treerow>
-                <treecell url="chrome://browser/content/pref/pref-popups.xul" label="&popups.label;"/>
+                <treecell url="chrome://browser/content/pref/pref-images.xul" label="&images.label;"/>
               </treerow>
             </treeitem>
     
