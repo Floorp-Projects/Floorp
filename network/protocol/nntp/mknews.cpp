@@ -67,6 +67,10 @@
 #include "nsIMsgNewsArticleList.h"
 #endif
 
+#ifdef XPCOM_NEWSHOST
+#include "nsIMsgNewsHost.h"
+#endif
+
 /*#define CACHE_NEWSGRP_PASSWORD*/
 
 /* for XP_GetString() */
@@ -375,7 +379,11 @@ typedef struct _NNTPConnection {
  */
 typedef struct _NewsConData {
 	MSG_Pane     *pane;
+#ifdef XPCOM_NEWSHOST
+    nsIMsgNewsHost *news_host;
+#else
 	MSG_NewsHost *host;
+#endif
 
     StatesEnum  next_state;
     StatesEnum  next_state_after_response;
@@ -828,7 +836,11 @@ net_nntp_login_response (ActiveEntry * ce)
       }
 
 	cd->control_con->posting_allowed = postingAllowed; /* ###phil dead code */
+#ifdef XPCOM_NEWSHOST
+    cd->news_host->SetPostingAllowed(postingAllowed);
+#else
 	MSG_SetNewsHostPostingAllowed (cd->host, postingAllowed);
+#endif
     
     cd->next_state = NNTP_SEND_MODE_READER;
     return(0);  /* good */
@@ -860,8 +872,11 @@ net_nntp_send_mode_reader_response (ActiveEntry * ce)
 
 	/* ignore the response code and continue
 	 */
-
+#ifdef XPCOM_NEWSHOST
+    if (cd->news_host->GetPushAuth())
+#else
 	if (MSG_GetNewsHostPushAuth(cd->host))
+#endif
 		/* if the news host is set up to require volunteered (pushed) authentication,
 		 * do that before we do anything else
 		 */
@@ -892,7 +907,11 @@ PRIVATE int net_nntp_send_list_extensions_response (ActiveEntry *ce)
     if (MK_NNTP_RESPONSE_TYPE(cd->response_code) == MK_NNTP_RESPONSE_TYPE_OK)
 	{
 		char *line = NULL;
+#ifdef XPCOM_NEWSHOST
+        nsIMsgNewsHost *news_host = cd->host;
+#else
 		MSG_NewsHost *host = cd->host;
+#endif
 
 		ce->status = NET_BufferedReadLine (ce->socket, &line, &cd->data_buf,
 			&cd->data_buf_size, (Bool*)&cd->pause_for_read);
@@ -914,12 +933,19 @@ PRIVATE int net_nntp_send_list_extensions_response (ActiveEntry *ce)
 		}
 
 		if ('.' != line[0])
+#ifdef XPCOM_NEWSHOST
+            news_host->AddExtension(line);
+#else
 			MSG_AddNewsExtension (host, line);
+#endif
 		else
 		{
 			/* tell libmsg that it's ok to ask this news host for extensions */
+#ifdef XPCOM_NEWSHOST
+          news_host->SetSupportsExtensions(TRUE);
+#else
 			MSG_SupportsNewsExtensions (cd->host, TRUE);
-
+#endif
 			/* all extensions received */
 			cd->next_state = SEND_LIST_SEARCHES;
 			cd->pause_for_read = FALSE;
@@ -931,7 +957,11 @@ PRIVATE int net_nntp_send_list_extensions_response (ActiveEntry *ce)
 		 * tell libmsg not to ask for any more extensions and move on to
 		 * the real NNTP command we were trying to do.
 		 */
+#ifdef XPCOM_NEWSHOST
+      news_host->SetSupportsExtensions(FALSE);
+#else
 		MSG_SupportsNewsExtensions (cd->host, FALSE);
+#endif
 		cd->next_state = SEND_FIRST_NNTP_COMMAND;
 	}
 
@@ -942,7 +972,11 @@ PRIVATE int net_nntp_send_list_searches (ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
 
+#ifdef XPCOM_NEWSHOST
+    if (cd->news_host->QueryExtension("SEARCH"))
+#else
 	if (MSG_QueryNewsExtension (cd->host, "SEARCH"))
+#endif
 	{
 		PL_strcpy(cd->output_buffer, "LIST SEARCHES" CRLF);
 		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
@@ -988,7 +1022,11 @@ PRIVATE int net_nntp_send_list_searches_response (ActiveEntry *ce)
 
 	if ('.' != line[0])
 	{
+#ifdef XPCOM_NEWSHOST
+      cd->news_host->AddSearchableGroup(line);
+#else
 		MSG_AddSearchableGroup (cd->host, line);
+#endif
 	}
 	else
 	{
@@ -1019,7 +1057,11 @@ PRIVATE int net_send_list_search_headers (ActiveEntry *ce)
 PRIVATE int net_send_list_search_headers_response (ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
+#ifdef XPCOM_NEWSHOST
+    nsIMsgNewsHost news_host = cd->host;
+#else
 	MSG_NewsHost *host = cd->host;
+#endif
 
 	char *line = NULL;
 	ce->status = NET_BufferedReadLine (ce->socket, &line, &cd->data_buf,
@@ -1042,7 +1084,11 @@ PRIVATE int net_send_list_search_headers_response (ActiveEntry *ce)
 	}
 
 	if ('.' != line[0])
+#ifdef XPCOM_NEWSHOST
+        host->AddSearchableHeader(line);
+#else
 		MSG_AddSearchableHeader (host, line);
+#endif
 	else
 	{
 		cd->next_state = NNTP_GET_PROPERTIES;
@@ -1056,7 +1102,11 @@ PRIVATE int nntp_get_properties (ActiveEntry *ce)
 {
 	NewsConData *cd = (NewsConData*) ce->con_data;
 
+#ifdef XPCOM_NEWSHOST
+    if (cd->host->QueryExtension("SETGET"))
+#else
 	if (MSG_QueryNewsExtension (cd->host, "SETGET"))
+#endif
 	{
 		PL_strcpy(cd->output_buffer, "GET" CRLF);
 		ce->status = (int) NET_BlockingWrite(ce->socket,cd->output_buffer,PL_strlen(cd->output_buffer));
@@ -1109,8 +1159,12 @@ PRIVATE int nntp_get_properties_response (ActiveEntry *ce)
 			{
 				char *propertyValue = space + 1;
 				*space = '\0';
-				MSG_AddPropertyForGet (cd->host, 
+#ifdef XPCOM_NEWSHOST
+                cd->host->AddPropertyForGet(propertyName, propertyValue);
+#else
+				MSG_AddPropertyForGet (cd->host,
 					propertyName, propertyValue);
+#endif
 			}
 			PR_Free(propertyName);
 		}
@@ -1130,7 +1184,11 @@ PRIVATE int net_send_list_subscriptions (ActiveEntry *ce)
 	NewsConData *cd = (NewsConData*) ce->con_data;
 
 #ifdef LATER
+#ifdef XPCOM_NEWSHOST
+    if (cd->host->QueryExtension("LISTSUBSCR"))
+#else
 	if (MSG_QueryNewsExtension (cd->host, "LISTSUBSCR"))
+#endif
 #else
 	if (0)
 #endif
@@ -1250,7 +1308,11 @@ net_send_first_nntp_command (ActiveEntry *ce)
 	else if(cd->type_wanted == NEW_GROUPS)
 	  {
 		time_t last_update =
+#ifdef XPCOM_NEWSHOST
+          cd->host->GetLastUpdatedTime();
+#else
 			MSG_NewsgroupsLastUpdatedTime(cd->host);
+#endif
 		char small_buf[64];
         PRExplodedTime  expandedTime;
 
@@ -1282,7 +1344,11 @@ net_send_first_nntp_command (ActiveEntry *ce)
     {
 		
 		cd->use_fancy_newsgroup_listing = FALSE;
+#ifdef XPCOM_NEWSHOST
+        if (cd->news_host->GetLastUpdatedTime());
+#else
 		if (MSG_NewsgroupsLastUpdatedTime(cd->host))
+#endif
 		{
 			cd->next_state = DISPLAY_NEWSGROUPS;
         	return(0);
@@ -1297,7 +1363,11 @@ net_send_first_nntp_command (ActiveEntry *ce)
 	  		  }
 #endif /* BUG_21013 */
 
+#ifdef XPCOM_NEWSHOST
+            if (cd->news_host->QueryExtension("XACTIVE"))
+#else
 			if (MSG_QueryNewsExtension(cd->host, "XACTIVE"))
+#endif
 			{
 				StrAllocCopy(command, "LIST XACTIVE");
 				cd->use_fancy_newsgroup_listing = TRUE;
@@ -1332,7 +1402,11 @@ net_send_first_nntp_command (ActiveEntry *ce)
       }
 	else if (cd->type_wanted == SEARCH_WANTED)
 	{
+#ifdef XPCOM_NEWSHOST
+        if (cd->news_host->QueryExtension("SEARCH"))
+#else
 		if (MSG_QueryNewsExtension(cd->host, "SEARCH"))
+#endif
 		{
 			/* use the SEARCH extension */
 			char *slash = PL_strchr (cd->command_specific_data, '/');
@@ -1359,7 +1433,11 @@ net_send_first_nntp_command (ActiveEntry *ce)
 	}
 	else if (cd->type_wanted == PRETTY_NAMES_WANTED)
 	{
+#ifdef XPCOM_NEWSHOST
+        if (cd->news_host->QueryExtension("LISTPRETTY"))
+#else
 		if (MSG_QueryNewsExtension(cd->host, "LISTPRETTY"))
+#endif
 		{
 			cd->next_state = NNTP_LIST_PRETTY_NAMES;
 			return 0;
@@ -1449,8 +1527,13 @@ net_send_first_nntp_command_response (ActiveEntry *ce)
       {
 		if (cd->response_code == MK_NNTP_RESPONSE_GROUP_NO_GROUP &&
             cd->type_wanted == GROUP_WANTED)
-			MSG_GroupNotFound(cd->pane, cd->host, 
+#ifdef XPCOM_NEWSHOST
+            cd->news_host->GroupNotFound(cd->control_con->current_group,
+                                         TRUE /* opening */);
+#else
+			MSG_GroupNotFound(cd->pane, cd->host,
 								cd->control_con->current_group, TRUE /* opening group */);
+#endif
 		return net_display_html_error_state(ce);
       }
 
@@ -1904,7 +1987,11 @@ net_news_authorize_response(ActiveEntry * ce)
 		/* If we're here because the host needs pushed authentication, then we 
 		 * should jump back to SEND_LIST_EXTENSIONS
 		 */
+#ifdef XPCOM_NEWSHOST
+        else if (cd->host->GetPushAuth())
+#else
 		else if (MSG_GetNewsHostPushAuth(cd->host))
+#endif
 			cd->next_state = SEND_LIST_EXTENSIONS;
 		else
 			/* Normal authentication */
@@ -2050,7 +2137,11 @@ net_news_password_response(ActiveEntry * ce)
 		/* If we're here because the host needs pushed authentication, then we 
 		 * should jump back to SEND_LIST_EXTENSIONS
 		 */
+#ifdef XPCOM_NEWSHOST
+        else if (cd->news_host->GetPushAuth())
+#else
 		else if (MSG_GetNewsHostPushAuth(cd->host))
+#endif
 			cd->next_state = SEND_LIST_EXTENSIONS;
 		else
 			/* Normal authentication */
@@ -2152,9 +2243,17 @@ net_process_newgroups (ActiveEntry *ce)
     if (line[0]=='.' && line[1]=='\0')
       {
 		cd->pause_for_read = FALSE;
+#ifdef XPCOM_NEWSHOST
+        if (cd->news_host->QueryExtension("XACTIVE"))
+#else
 		if (MSG_QueryNewsExtension(cd->host, "XACTIVE"))
+#endif
 		{
+#ifdef XPCOM_NEWSHOST
+          cd->news_host->GetFirstGroupNeedingExtraInfo(&cd->group_name);
+#else
 			cd->group_name = MSG_GetFirstGroupNeedingExtraInfo(cd->host);
+#endif
 			if (cd->group_name)
 			{
 				cd->next_state = NNTP_LIST_XACTIVE;
@@ -2215,11 +2314,23 @@ net_process_newgroups (ActiveEntry *ce)
 						   * to trigger this
 						   */
 
+#ifdef XPCOM_NEWSHOST
+    cd->news_host->AddNewNewsGroup(line, oldest, youngest, flag, FALSE);
+#else
 	MSG_AddNewNewsGroup(ce->URL_s->msg_pane, cd->host,
 						line, oldest, youngest, flag, FALSE);
+#endif
+#ifdef XPCOM_NEWSHOST
+    if (cd->news_host->QueryExtension("XACTIVE"))
+#else
 	if (MSG_QueryNewsExtension(cd->host, "XACTIVE"))
+#endif
 	{
+#ifdef XPCOM_NEWSHOST
+      cd->news_host->SetGroupNeedsExtraInfo(line, TRUE);
+#else
 		MSG_SetGroupNeedsExtraInfo(cd->host, line, TRUE);
+#endif
 	}
     return(ce->status);
 }
@@ -2280,7 +2391,11 @@ net_read_news_list (ActiveEntry *ce)
             /* End of list? */
     if (line[0]=='.' && line[1]=='\0')
       {
+#ifdef XPCOM_NEWSHOST
+        if (cd->news_host->QueryExtension("LISTPNAMES"))
+#else
 		if (MSG_QueryNewsExtension(cd->host, "LISTPNAMES"))
+#endif
 		{
 			cd->next_state = NNTP_LIST_PRETTY_NAMES;
 		}
@@ -2317,8 +2432,12 @@ net_read_news_list (ActiveEntry *ce)
 
 	/* store all the group names 
 	 */
+#ifdef XPCOM_NEWSHOST
+    cd->news_host->AddNewNewsGroup(line, 0, 0, "", FALSE);
+#else
 	MSG_AddNewNewsGroup(ce->URL_s->msg_pane, cd->host,
 						line, 0, 0, "", FALSE);
+#endif
 
 
     return(ce->status);
@@ -2352,12 +2471,19 @@ net_read_xover_begin (ActiveEntry *ce)
 
 	/* We now know there is a summary line there; make sure it has the
 	   right numbers in it. */
+#ifdef XPCOM_NEWSHOST
+    cd->news_host->DisplaySubscribedGroup(cd->group_name,
+                                          cd->first_possible_art,
+                                          cd->last_possible_art,
+                                          count, TRUE);
+#else
 	ce->status = MSG_DisplaySubscribedGroup(cd->pane,
 											cd->host,
 											cd->group_name,
 											cd->first_possible_art,
 											cd->last_possible_art,
 											count, TRUE);
+#endif
 	if (ce->status < 0) return ce->status;
 
 	cd->num_loaded = 0;
@@ -2662,7 +2788,11 @@ PRIVATE int net_profile_add_response (ActiveEntry *ce)
 
     if (MK_NNTP_RESPONSE_TYPE(cd->response_code) == MK_NNTP_RESPONSE_TYPE_OK)
 	{
+#ifdef XPCOM_NEWSHOST
+        cd->news_host->AddProfileGroup(cd->response_txt);
+#else
 		MSG_AddProfileGroup (cd->pane, cd->host, cd->response_txt);
+#endif
 		cd->next_state = NEWS_DONE;
 	}
 	else
@@ -2971,7 +3101,11 @@ net_DisplayNewsRC(ActiveEntry * ce)
 
 	
 	FREEIF(cd->control_con->current_group);
+#ifdef XPCOM_NEWSHOST
+    cd->news_host->GetFirstGroupNeedingCount(&cd->control_con->current_group);
+#else
 	cd->control_con->current_group = MSG_GetNewsRCGroup(cd->pane, cd->host);
+#endif
 	
 
 	if(cd->control_con->current_group)
@@ -3084,19 +3218,30 @@ net_DisplayNewsRCResponse(ActiveEntry * ce)
 			strtok(group, " ");
 			last_art = atol(high);
 		  }
-    
+
+#ifdef XPCOM_NEWSHOST
+        cd->news_host->DisplaySubscribedGroup(group,
+                                              low ? atol(low) : 0,
+                                              high ? atol(high) : 0,
+                                              atol(num_arts), FALSE);
+#else
 		ce->status = MSG_DisplaySubscribedGroup(cd->pane,
 												cd->host,
 												group,
 												low  ? atol(low)  : 0,
 												high ? atol(high) : 0,
 												atol(num_arts), FALSE);
+#endif
 		if (ce->status < 0)
 		  return ce->status;
 	  }
 	  else if (cd->response_code == MK_NNTP_RESPONSE_GROUP_NO_GROUP)
 	  {
+#ifdef XPCOM_NEWSHOST
+          cd->news_host->GroupNotFound(cd->control_con->current_group, FALSE);
+#else
 		  MSG_GroupNotFound(cd->pane, cd->host, cd->control_con->current_group, FALSE);
+#endif
 	  }
 	  /* it turns out subscribe ui depends on getting this displaysubscribedgroup call,
 	     even if there was an error.
@@ -3105,10 +3250,15 @@ net_DisplayNewsRCResponse(ActiveEntry * ce)
 	  {
 		/* only on news server error or when zero articles
 		 */
+#ifdef XPCOM_NEWSHOST
+        cd->news_host->DisplaySubscribedGroup(cd->control_con->current_group,
+                                              0, 0, 0, FALSE);
+#else
 		ce->status = MSG_DisplaySubscribedGroup(cd->pane,
 												cd->host,
 												cd->control_con->current_group,
 												0, 0, 0, FALSE);
+#endif
 
 	  }
 
@@ -3218,7 +3368,11 @@ net_do_cancel (ActiveEntry *ce)
 	 which to cancel postings (like telnet.)
 	 Don't do this if server tells us it will validate user. DMB 3/19/97
    */
+#ifdef XPCOM_NEWSHOST
+  if (!cd->news_host->QueryExtension("CANCELCHK"))
+#else
   if (!MSG_QueryNewsExtension(cd->host, "CANCELCHK"))
+#endif
   {
 	char *us = MSG_ExtractRFC822AddressMailboxes (from);
 	char *them = MSG_ExtractRFC822AddressMailboxes (old_from);
@@ -3477,7 +3631,11 @@ static int net_list_pretty_names_response(ActiveEntry *ce)
 
 			line[i] = 0; /* terminate group name */
 			if (i > 0)
+#ifdef XPCOM_NEWSHOST
+              cd->news_host->AddPrettyName(line,prettyName);
+#else
 				MSG_AddPrettyName(cd->host, line, prettyName);
+#endif
 #ifdef DEBUG_bienvenu1
 			PR_LogPrint("adding pretty name %s\n", prettyName);
 #endif
@@ -3564,26 +3722,43 @@ static int net_list_xactive_response(ActiveEntry *ce)
 					   &cd->first_possible_art, 
 					   &cd->last_possible_art,
 					   flags);
+#ifdef XPCOM_NEWSHOST
+                cd->host->AddNewNewsGroup(line,
+                                          cd->first_possible_art,
+                                          cd->last_possible_art, flags, TRUE);
+#else
 				MSG_AddNewNewsGroup(cd->pane, cd->host, line,
 									cd->first_possible_art,
 									cd->last_possible_art, flags, TRUE /* xactive flags */);
-				/* we're either going to list prettynames first, or list all prettynames 
-				   every time, so we won't care so much if it gets interrupted. */
+#endif
+				/* we're either going to list prettynames first, or list
+                   all prettynames every time, so we won't care so much
+                   if it gets interrupted. */
 #ifdef DEBUG_bienvenu1
 				PR_LogPrint("got xactive for %s of %s\n", line, flags);
 #endif
-				/*	This isn't required, because the extra info is initialized to false
-					for new groups. And it's an expensive call.
+				/*	This isn't required, because the extra info is
+                    initialized to false for new groups. And it's
+                    an expensive call.
 				*/
 				/* MSG_SetGroupNeedsExtraInfo(cd->host, line, FALSE); */
 			}
 		}
 		else
 		{
+#ifdef XPCOM_NEWSHOST
+          if (cd->type_wanted == NEW_GROUPS &&
+              cd->news_host->QueryExtension("XACTIVE"))
+#else
 			if (cd->type_wanted == NEW_GROUPS && MSG_QueryNewsExtension(cd->host, "XACTIVE"))
+#endif
 			{
 				char *old_group_name = cd->group_name;
+#ifdef XPCOM_NEWSHOST
+                cd->news_host->GetFirstGroupNeedingExtraInfo(&cd->group_name);
+#else
 				cd->group_name = MSG_GetFirstGroupNeedingExtraInfo(cd->host);
+#endif
 				/* make sure we're not stuck on the same group... */
 				if (old_group_name && cd->group_name && PL_strcmp(old_group_name, cd->group_name))
 				{
@@ -3601,7 +3776,11 @@ static int net_list_xactive_response(ActiveEntry *ce)
 					cd->group_name = NULL;
 				}
 			}
+#ifdef XPCOM_NEWSHOST
+            if (cd->news_host->QueryNewsExtension("LISTPNAME"))
+#else
 			if (MSG_QueryNewsExtension(cd->host, "LISTPNAMES"))
+#endif
 				cd->next_state = NNTP_LIST_PRETTY_NAMES;
 			else
 				cd->next_state = DISPLAY_NEWSGROUPS;	/* this assumes we were doing a list - who knows? */
@@ -4243,12 +4422,22 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
 	*colon = '\0';
 	sscanf (colon+1, " %u ", &port);
   }
+
+#ifdef XPCOM_NEWSHOST
+  NS_NewMsgNewsHost(&cd->host, host_and_port, bVal, port);
+#else
   cd->host = MSG_CreateNewsHost(MSG_GetMaster(cd->pane), host_and_port,
+#endif
 								bVal, port);
   if (colon) *colon = ':';
 
+#ifdef XPCOM_NEWSHOST
+  PR_ASSERT(nsresult worked);
+  if (nsresult failed)
+#else
   PR_ASSERT(cd->host);
   if (!cd->host) {
+#endif
 	status = -1;
 	goto FAIL;
   }
@@ -4261,7 +4450,7 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
 
   /* make sure the user has a news host configured */
   
-  
+#ifndef XPCOM_NEWSHOST
   defhost = MSG_GetDefaultNewsHost(MSG_GetMaster(cd->pane));
 
   if (defhost == NULL)
@@ -4277,7 +4466,8 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
     }
 
   default_host = (cd->host == defhost);
-
+#endif
+  
   if (cancel_p && !ce->URL_s->internal_url)
 	{
 	  /* Don't allow manual "news:ID?cancel" URLs, only internal ones. */
@@ -4518,7 +4708,9 @@ NET_NewsLoad (ActiveEntry *ce, char *proxy_server)
 	  NNTP_LOG_NOTE(("Created control_con %08lX for %s", cd->control_con, ce->URL_s->address));
 	  memset(cd->control_con, 0, sizeof(NNTPConnection));
 
+#ifndef XPCOM_NEWSHOST
 	  cd->control_con->default_host = default_host;
+#endif
 	  StrAllocCopy(cd->control_con->hostname, host_and_port);
 	  NNTP_LOG_NOTE(("Set host string: %s", cd->control_con->hostname));
 
