@@ -373,10 +373,10 @@ inline void TranslationBinding::defineSecondWord()
 // Bind this TranslationBinding to be the result (first word if it's a long or double)
 // of the given DataNode.
 //
-inline void TranslationBinding::define(DataNode &dataNode)
+inline void TranslationBinding::define(DataNode &dn)
 {
 	category = tbDataEdge;
-	TranslationBinding::dataNode = &dataNode;
+	dataNode = &dn;
 }
 
 
