@@ -532,9 +532,19 @@ nsFontMetricsWin::LoadFont(HDC aDC, nsString* aName)
   LOGFONT logFont;
   FillLogFont(&logFont);
 
-  // XXX need to preserve Unicode chars in face name (use LOGFONTW) -- erik
-  aName->ToCString(logFont.lfFaceName, LF_FACESIZE);
+  /*
+   * XXX we are losing info by converting from Unicode to system code page
+   * but we don't really have a choice since CreateFontIndirectW is
+   * not supported on Windows 9X (see below) -- erik
+   */
+  logFont.lfFaceName[0] = 0;
+  WideCharToMultiByte(CP_ACP, 0, aName->GetUnicode(), aName->Length() + 1,
+    logFont.lfFaceName, sizeof(logFont.lfFaceName), nsnull, nsnull);
 
+  /*
+   * According to http://msdn.microsoft.com/library/
+   * CreateFontIndirectW is only supported on NT/2000
+   */
   HFONT hfont = ::CreateFontIndirect(&logFont);
 
   if (hfont) {
@@ -600,8 +610,11 @@ static int CALLBACK enumProc(const LOGFONT* logFont, const TEXTMETRIC* metrics,
   nsGlobalFont* font =
     &nsFontMetricsWin::gGlobalFonts[nsFontMetricsWin::gGlobalFontsCount++];
 
-  // XXX do correct character encoding conversion here
-  font->name = new nsString(logFont->lfFaceName);
+  PRUnichar name[LF_FACESIZE];
+  name[0] = 0;
+  MultiByteToWideChar(CP_ACP, 0, logFont->lfFaceName,
+    strlen(logFont->lfFaceName) + 1, name, sizeof(name)/sizeof(name[0]));
+  font->name = new nsString(name);
   if (!font->name) {
     nsFontMetricsWin::gGlobalFontsCount--;
     return 0;
