@@ -45,6 +45,11 @@
  * If these problems will hurt us, we'll switch to nsICharacterSet. The 
  * implementation of this interface is ment to be quite flexible.
  *
+ * I provide here some nonscriptable "friendly methods". They accept nsString 
+ * as params and assign the result to them, freeing the received memory result.
+ * These methods are prone to optimisation, in order to elliminate any 
+ * allocation when it not strictly necessary.
+ *
  * @created         21/Feb/2000
  * @author  Catalin Rotaru [CATA]
  */
@@ -87,6 +92,12 @@ interface nsICharsetConverterManager2 : nsISupports
    * Get the human-readable name for the given charset.
    */
   wstring GetCharsetTitle([const] in nsIAtom charset);
+
+  /**
+   * Friendlier but non scriptable version.
+   */
+  [noscript] void GetCharsetTitle2([const] in nsIAtom charset, 
+    in nsStringPtr str);
 
   /**
    * Get some data about the given charset.

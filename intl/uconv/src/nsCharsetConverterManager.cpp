@@ -66,6 +66,8 @@ public:
 /**
  * The actual implementation of the nsICharsetConverterManager interface.
  *
+ * XXX optimise the memory allocations in "scriptable" and "friendly" methods
+ *
  * @created         15/Nov/1999
  * @author  Catalin Rotaru [CATA]
  */
@@ -160,6 +162,7 @@ public:
 
   NS_IMETHOD GetCharsetAtom(const PRUnichar * aCharset, nsIAtom ** aResult);
   NS_IMETHOD GetCharsetTitle(const nsIAtom * aCharset, PRUnichar ** aResult);
+  NS_IMETHOD GetCharsetTitle2(const nsIAtom * aCharset, nsString * aResult);
   NS_IMETHOD GetCharsetData(const nsIAtom * aCharset, const PRUnichar * aProp, 
     PRUnichar ** aResult);
   NS_IMETHOD GetCharsetData2(const nsIAtom * aCharset, const PRUnichar * aProp, 
@@ -1051,6 +1054,23 @@ NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle(
   }
 
   res = GetBundleValue(mTitleBundle, aCharset, &prop, aResult);
+  return res;
+}
+
+NS_IMETHODIMP nsCharsetConverterManager::GetCharsetTitle2(
+                                         const nsIAtom * aCharset, 
+                                         nsString * aResult)
+{
+  if (aResult == NULL) return NS_ERROR_NULL_POINTER;
+
+  nsresult res = NS_OK;
+
+  PRUnichar * title;
+  res = GetCharsetTitle(aCharset, &title);
+  if (NS_FAILED(res)) return res;
+
+  aResult->Assign(title);
+  PR_Free(title);
   return res;
 }
 
