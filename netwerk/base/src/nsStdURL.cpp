@@ -35,7 +35,7 @@
 #include "nsILocalFile.h"
 #include "nsEscape.h"
 
-#ifdef XP_PC
+#if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #endif
 
