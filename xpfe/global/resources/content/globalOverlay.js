@@ -48,22 +48,33 @@ function goQuitApplication()
 //
 function goUpdateCommand(command)
 {
-	var controller = top.document.commandDispatcher.getControllerForCommand(command);
-	
-	var enabled = false;
-	
-	if ( controller )
-		enabled = controller.isCommandEnabled(command);
-		
-	goSetCommandEnabled(command, enabled);
+  try {
+	  var controller = top.document.commandDispatcher.getControllerForCommand(command);
+	  
+	  var enabled = false;
+	  
+	  if ( controller )
+		  enabled = controller.isCommandEnabled(command);
+
+  	goSetCommandEnabled(command, enabled);
+  }
+  catch (e) {
+    dump("An error occurred updating the "+command+" command\n");
+  }		
 }
 
 function goDoCommand(command)
 {
-	var controller = top.document.commandDispatcher.getControllerForCommand(command);
 
-	if ( controller && controller.isCommandEnabled(command))
-		controller.doCommand(command);
+  try {
+  	var controller = top.document.commandDispatcher.getControllerForCommand(command);
+
+	  if ( controller && controller.isCommandEnabled(command))
+		  controller.doCommand(command);
+  }
+  catch (e) {
+    dump("An error occurred executing the "+command+" command\n");
+  }		
 }
 
 
