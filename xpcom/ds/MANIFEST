@@ -13,7 +13,6 @@ nsISimpleEnumerator.h
 nsISizeOfHandler.h
 nsIUnicharBuffer.h
 nsInt64.h
-nsIObserverService.h
 nsQuickSort.h
 nsStaticNameTable.h
 nsStatistics.h
