@@ -26,11 +26,15 @@ static NS_DEFINE_IID(kDocumentLoaderCID, NS_DOCUMENTLOADER_CID);
 static NS_DEFINE_IID(kThrobberCID, NS_THROBBER_CID);
 static NS_DEFINE_IID(kWebShellCID, NS_WEB_SHELL_CID);
 
-extern "C" NS_WEB nsresult
-#ifdef XP_MAC
-NSGetFactory_WEB_DLL(const nsCID& aClass, nsIFactory** aFactory)
+
+#ifdef MAC_STATIC
+extern "C" NS_WEB nsresult NSGetFactory_WEB_DLL(const nsCID& aClass, nsIFactory** aFactory)
+#elif defined(MAC_SHARED)
+#pragma export on
+extern "C" NS_WEB nsresult NSGetFactory(const nsCID& aClass, nsIFactory** aFactory)
+#pragma export on
 #else
-NSGetFactory(const nsCID& aClass, nsIFactory** aFactory)
+extern "C" NS_WEB nsresult NSGetFactory(const nsCID& aClass, nsIFactory** aFactory)
 #endif
 {
   nsresult rv = NS_OK;
