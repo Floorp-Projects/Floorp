@@ -12,6 +12,8 @@ interface Window {
        readonly attribute  long scrollY;
        void  scrollTo(in long xScroll, in long yScroll);
        void  scrollBy(in long xScrollDif, in long yScrollDif);
+       void scrollByLines(in long numLines);
+       void scrollByPages(in long numPages);
        Selection getSelection();
 };
 
