@@ -997,7 +997,7 @@ js_GC(JSContext *cx, uintN gcflags)
     JSRuntime *rt;
     JSContext *iter, *acx;
     JSStackFrame *fp, *chain;
-    uintN i, depth, nslots;
+    uintN i, depth, nslots, type;
     JSStackHeader *sh;
     JSArena *a, **ap;
     uint8 flags, *flagp, *split;
@@ -1273,9 +1273,12 @@ restart:
                 *flagp &= ~GCF_MARK;
             } else if (!(flags & (GCF_LOCKMASK | GCF_FINAL))) {
                 /* Call the finalizer with GCF_FINAL ORed into flags. */
-                finalizer = gc_finalizers[flags & GCF_TYPEMASK];
+                type = flags & GCF_TYPEMASK;
+                finalizer = gc_finalizers[type];
                 if (finalizer) {
                     *flagp = (uint8)(flags | GCF_FINAL);
+                    if (type >= GCX_EXTERNAL_STRING)
+                        js_PurgeDeflatedStringCache((JSString *)thing);
                     finalizer(cx, thing);
                 }
 

@@ -2258,7 +2258,9 @@ static JSFunctionSpec string_static_methods[] = {
 };
 
 static JSHashTable *deflated_string_cache;
+#ifdef DEBUG
 static uint32 deflated_string_cache_bytes;
+#endif
 #ifdef JS_THREADSAFE
 static JSLock *deflated_string_cache_lock;
 #endif
@@ -2490,6 +2492,29 @@ js_hash_string_pointer(const void *key)
 }
 
 void
+js_PurgeDeflatedStringCache(JSString *str)
+{
+    JSHashNumber hash;
+    JSHashEntry *he, **hep;
+
+    if (!deflated_string_cache)
+        return;
+
+    hash = js_hash_string_pointer(str);
+    JS_ACQUIRE_LOCK(deflated_string_cache_lock);
+    hep = JS_HashTableRawLookup(deflated_string_cache, hash, str);
+    he = *hep;
+    if (he) {
+#ifdef DEBUG
+        deflated_string_cache_bytes -= JSSTRING_LENGTH(str);
+#endif
+        free(he->value);
+        JS_HashTableRawRemove(deflated_string_cache, hep, he);
+    }
+    JS_RELEASE_LOCK(deflated_string_cache_lock);
+}
+
+void
 js_FinalizeString(JSContext *cx, JSString *str)
 {
     js_FinalizeStringRT(cx->runtime, str);
@@ -2499,9 +2524,6 @@ void
 js_FinalizeStringRT(JSRuntime *rt, JSString *str)
 {
     JSBool valid;
-    size_t length;
-    JSHashNumber hash;
-    JSHashEntry *he, **hep;
 
     JS_RUNTIME_UNMETER(rt, liveStrings);
     if (JSSTRING_IS_DEPENDENT(str)) {
@@ -2509,28 +2531,15 @@ js_FinalizeStringRT(JSRuntime *rt, JSString *str)
         JS_ASSERT(JSSTRDEP_BASE(str));
         JS_RUNTIME_UNMETER(rt, liveDependentStrings);
         valid = JS_TRUE;
-        length = JSSTRDEP_LENGTH(str);
     } else {
         /* A stillborn string has null chars, so is not valid. */
         valid = (str->chars != NULL);
-        length = str->length;
         if (valid)
             free(str->chars);
     }
     if (valid) {
+        js_PurgeDeflatedStringCache(str);
         str->chars = NULL;
-        if (deflated_string_cache) {
-            hash = js_hash_string_pointer(str);
-            JS_ACQUIRE_LOCK(deflated_string_cache_lock);
-            hep = JS_HashTableRawLookup(deflated_string_cache, hash, str);
-            he = *hep;
-            if (he) {
-                free(he->value);
-                JS_HashTableRawRemove(deflated_string_cache, hep, he);
-                deflated_string_cache_bytes -= length;
-            }
-            JS_RELEASE_LOCK(deflated_string_cache_lock);
-        }
     }
     str->length = 0;
 }
@@ -2741,8 +2750,10 @@ js_SetStringBytes(JSString *str, char *bytes, size_t length)
         hep = JS_HashTableRawLookup(cache, hash, str);
         JS_ASSERT(*hep == NULL);
         ok = JS_HashTableRawAdd(cache, hep, hash, str, bytes) != NULL;
+#ifdef DEBUG
         if (ok)
             deflated_string_cache_bytes += length;
+#endif
     }
 
     JS_RELEASE_LOCK(deflated_string_cache_lock);
@@ -2773,7 +2784,9 @@ js_GetStringBytes(JSString *str)
                                      JSSTRING_LENGTH(str));
             if (bytes) {
                 if (JS_HashTableRawAdd(cache, hep, hash, str, bytes)) {
+#ifdef DEBUG
                     deflated_string_cache_bytes += JSSTRING_LENGTH(str);
+#endif
                 } else {
                     free(bytes);
                     bytes = NULL;
