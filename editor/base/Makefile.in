@@ -63,7 +63,7 @@ CPPSRCS =                       \
     TransactionFactory.cpp      \
     nsInternetCiter.cpp         \
     nsAOLCiter.cpp              \
-    nsEditorShell.cpp           \     
+    nsEditorShell.cpp           \
     nsEditorShellFactory.cpp    \
     $(NULL)
 
