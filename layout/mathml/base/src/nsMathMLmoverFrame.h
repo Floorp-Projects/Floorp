@@ -53,6 +53,21 @@ public:
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList);
 
+  NS_IMETHOD
+  UpdatePresentationData(PRInt32  aScriptLevelIncrement,
+                         PRUint32 aFlagsValues,
+                         PRUint32 aFlagsToUpdate)
+  {
+    nsMathMLContainerFrame::UpdatePresentationData(aScriptLevelIncrement,
+                                                   aFlagsValues, aFlagsToUpdate);
+    // disable the stretch-all flag if we are going to act like a superscript
+    if ( NS_MATHML_IS_MOVABLELIMITS(mPresentationData.flags) &&
+        !NS_MATHML_IS_DISPLAYSTYLE(mPresentationData.flags)) {
+      mEmbellishData.flags &= ~NS_MATHML_STRETCH_ALL_CHILDREN_HORIZONTALLY;
+    }
+    return NS_OK;
+  }
+
 protected:
   nsMathMLmoverFrame();
   virtual ~nsMathMLmoverFrame();
