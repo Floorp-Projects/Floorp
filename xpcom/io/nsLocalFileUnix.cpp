@@ -465,7 +465,7 @@ NS_IMETHODIMP
 nsLocalFile::Normalize()
 {
     CHECK_mPath();
-    char  resolved_path[PATH_MAX];
+    char  resolved_path[PATH_MAX] = "";
     char *resolved_path_ptr = nsnull;
 
 #ifdef XP_BEOS
