@@ -173,7 +173,7 @@ interface nsITableEditor : nsISupports
   void normalizeTable(in nsIDOMElement aTable);
 
   /** Get the row an column index from the layout's cellmap
-    * If aTable is null, it will try to find enclosing table of selection ancho
+    * If aCell is null, it will try to find enclosing table of selection anchor
     * 
     */
   void getCellIndexes(in nsIDOMElement aCell,
@@ -194,8 +194,9 @@ interface nsITableEditor : nsISupports
     * @param aTable                   A table in the document
     * @param aRowIndex, aColIndex     The 0-based cellmap indexes
     *
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    * (passes NS_SUCCEEDED macro)
+    * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    *  passes NS_SUCCEEDED macro)
+    *
     *   You can scan for all cells in a row or column
     *   by iterating through the appropriate indexes
     *   until the returned aCell is null
@@ -225,7 +226,8 @@ interface nsITableEditor : nsISupports
     *  @param aIsSelected
     *  @param 
     *
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if a cell is not found (passes NS_SUCCEEDED macro)
+    * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    *  passes NS_SUCCEEDED macro)
     */
   void getCellDataAt(in nsIDOMElement aTable,
                      in long  aRowIndex, in long  aColIndex,
@@ -239,8 +241,8 @@ interface nsITableEditor : nsISupports
     *
     * @return            The row at the requested index
     *                    Returns null if there are no rows in table
-    * Returns (to C++) NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    * (passes NS_SUCCEEDED macro)
+    * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    *  passes NS_SUCCEEDED macro)
     */
   nsIDOMNode getFirstRow(in nsIDOMElement aTableElement);
 
@@ -251,8 +253,8 @@ interface nsITableEditor : nsISupports
     * @return            The row to start search from
     *                    and the row returned from the search
     *                    Returns null if there isn't another row
-    * Returns (to C++) NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    * (passes NS_SUCCEEDED macro)
+    * (in C++ returns: NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    *  passes NS_SUCCEEDED macro)
     */
   nsIDOMNode getNextRow(in nsIDOMNode aTableElement);
   
@@ -288,19 +290,16 @@ interface nsITableEditor : nsISupports
     *   or return the parent TD or TH if selection is inside a table cell
     *   Returns null if no table element is found.
     *
-    * @param aTableElement    The table element (table, row, or cell) returned
     * @param aTagName         The tagname of returned element
     *                         Note that "td" will be returned if name
     *                         is actually "th"
-    * @return                 How many table elements were selected
+    * @param aCount           How many table elements were selected
     *                         This tells us if we have multiple cells selected
     *                           (0 if element is a parent cell of selection)
+    * @return                 The table element (table, row, or first selected cell)
     *
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    * (passes NS_SUCCEEDED macro)
     */
-  long getSelectedOrParentTableElement(out nsIDOMElement aTableElement,
-                                       out AString aTagName);
+  nsIDOMElement getSelectedOrParentTableElement(out AString aTagName, out long aCount);
 
   /** Generally used after GetSelectedOrParentTableElement
     *   to test if selected cells are complete rows or columns
@@ -325,18 +324,22 @@ interface nsITableEditor : nsISupports
   PRUint32 getSelectedCellsType(in nsIDOMElement aElement);
 
   /** Get first selected element from first selection range.
+    *   (If multiple cells were selected this is the first in the order they were selected)
     * Assumes cell-selection model where each cell
     * is in a separate range (selection parent node is table row)
     * @param aCell     [OUT] Selected cell or null if ranges don't contain
     *                  cell selections
     * @param aRange    [OUT] Optional: if not null, return the selection range 
     *                     associated with the cell
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    * (passes NS_SUCCEEDED macro)
+    * Returns the DOM cell element
+    *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    *    passes NS_SUCCEEDED macro)
     */
-  void getFirstSelectedCell(out nsIDOMElement aCell, out nsIDOMRange aRange);
+  nsIDOMElement getFirstSelectedCell(out nsIDOMRange aRange);
   
-  /** Get first selected element from first selection range.
+  /** Get first selected element in the table
+    *   This is the upper-left-most selected cell in table,
+    *   ignoring the order that the user selected them (order in the selection ranges)
     * Assumes cell-selection model where each cell
     * is in a separate range (selection parent node is table row)
     * @param aCell       Selected cell or null if ranges don't contain
@@ -344,11 +347,11 @@ interface nsITableEditor : nsISupports
     * @param aRowIndex   Optional: if not null, return row index of 1st cell
     * @param aColIndex   Optional: if not null, return column index of 1st cell
     *
-    * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
-    * (passes NS_SUCCEEDED macro)
+    * Returns the DOM cell element
+    *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    *    passes NS_SUCCEEDED macro)
     */
-  void getFirstSelectedCellInTable(out nsIDOMElement aCell,
-                                   out long aRowIndex, out long aColIndex);
+  nsIDOMElement getFirstSelectedCellInTable(out long aRowIndex, out long aColIndex);
 
   /** Get next selected cell element from first selection range.
     * Assumes cell-selection model where each cell
@@ -358,7 +361,10 @@ interface nsITableEditor : nsISupports
     *                     or ranges don't contain cell selections
     * @param aRange    Optional: if not null, return the selection range 
     *                     associated with the cell
+    *
+    * Returns the DOM cell element
+    *   (in C++: returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found
+    *    passes NS_SUCCEEDED macro)
     */
-  void getNextSelectedCell(out nsIDOMElement aCell, out nsIDOMRange aRange);
+  nsIDOMElement getNextSelectedCell(out nsIDOMRange aRange);
 };
-

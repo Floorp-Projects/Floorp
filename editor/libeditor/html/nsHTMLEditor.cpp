@@ -2337,9 +2337,9 @@ nsHTMLEditor::GetHTMLBackgroundColorState(PRBool *aMixed, nsAString &aOutColor)
   nsCOMPtr<nsIDOMElement> element;
   PRInt32 selectedCount;
   nsAutoString tagName;
-  nsresult res = GetSelectedOrParentTableElement(getter_AddRefs(element),
-                                                 tagName,
-                                                 &selectedCount);
+  nsresult res = GetSelectedOrParentTableElement(tagName,
+                                                 &selectedCount,
+                                                 getter_AddRefs(element));
   if (NS_FAILED(res)) return res;
 
   NS_NAMED_LITERAL_STRING(styleName, "bgcolor"); 
@@ -3264,8 +3264,8 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
   nsCOMPtr<nsIDOMElement> element;
   PRInt32 selectedCount;
   nsAutoString tagName;
-  nsresult res = GetSelectedOrParentTableElement(getter_AddRefs(element),
-                                                 tagName, &selectedCount);
+  nsresult res = GetSelectedOrParentTableElement(tagName, &selectedCount,
+                                                 getter_AddRefs(element));
   if (NS_FAILED(res)) return res;
 
   PRBool setColor = (aColor.Length() > 0);
@@ -3277,7 +3277,7 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
     {
       // Traverse all selected cells
       nsCOMPtr<nsIDOMElement> cell;
-      res = GetFirstSelectedCell(getter_AddRefs(cell), nsnull);
+      res = GetFirstSelectedCell(nsnull, getter_AddRefs(cell));
       if (NS_SUCCEEDED(res) && cell)
       {
         while(cell)
@@ -3288,7 +3288,7 @@ nsHTMLEditor::SetHTMLBackgroundColor(const nsAString& aColor)
             res = RemoveAttribute(cell, bgcolor);
           if (NS_FAILED(res)) break;
 
-          GetNextSelectedCell(getter_AddRefs(cell), nsnull);
+          GetNextSelectedCell(nsnull, getter_AddRefs(cell));
         };
         return res;
       }
