@@ -155,9 +155,9 @@ nsFileView::SetShowHiddenFiles(PRBool aShowHidden)
     // This could be better optimized, but since the hidden
     // file functionality is not currently used, this will be fine.
     SetDirectory(mDirectoryPath);
-    
-    return NS_OK;
   }
+    
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -342,11 +342,12 @@ nsFileView::GetSelectedFile(nsIFile** aFile)
     PRUint32 dirCount;
     mDirList->Count(&dirCount);
     if (currentIndex < (PRInt32) dirCount)
-      mDirList->QueryElementAt(currentIndex, NS_GET_IID(nsIFile), aFile)
+      mDirList->QueryElementAt(currentIndex, NS_GET_IID(nsIFile),
+                               (void**)aFile);
     else {
       if (currentIndex < mTotalRows)
         mFilteredFiles->QueryElementAt(currentIndex - dirCount,
-                                       NS_GET_IID(nsIFile), aFile);
+                                       NS_GET_IID(nsIFile), (void**)aFile);
     }
   }
 
@@ -723,7 +724,7 @@ nsFileView::SortArray(nsISupportsArray* aArray)
   nsIFile** array = new nsIFile*[count];
   PRUint32 i;
   for (i = 0; i < count; ++i)
-    aArray->QueryElementAt(i, NS_GET_IID(nsIFile), &(array[i]));
+    aArray->QueryElementAt(i, NS_GET_IID(nsIFile), (void**)&(array[i]));
 
   NS_QuickSort(array, count, sizeof(nsIFile*), compareFunc, nsnull);
 
