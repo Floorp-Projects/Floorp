@@ -38,6 +38,7 @@ class nsIRDFContent;
 class nsIRDFContentModelBuilder;
 class nsISupportsArray;
 class nsIRDFResource;
+class nsIDOMHTMLFormElement;
 
 // {954F0811-81DC-11d2-B52A-000000000000}
 #define NS_IRDFDOCUMENT_IID \
@@ -80,6 +81,9 @@ public:
   NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder) = 0;
 
   NS_IMETHOD GetDocumentDataSource(nsIRDFDataSource** aDatasource) = 0;
+
+  NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm) = 0;
+  NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm) = 0;
 };
 
 // factory functions

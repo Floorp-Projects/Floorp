@@ -36,6 +36,7 @@
 #include "nsICSSParser.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIContent.h"
+#include "nsIDOMHTMLFormElement.h"
 #include "nsIDOMElementObserver.h"
 #include "nsIDOMEventCapturer.h"
 #include "nsIDOMEvent.h"
@@ -584,6 +585,9 @@ public:
     NS_IMETHOD AddContentModelBuilder(nsIRDFContentModelBuilder* aBuilder);
     NS_IMETHOD GetDocumentDataSource(nsIRDFDataSource** aDatasource);
 
+    NS_IMETHOD GetForm(nsIDOMHTMLFormElement** aForm);
+    NS_IMETHOD SetForm(nsIDOMHTMLFormElement* aForm);
+
     // nsIDOMEventCapturer interface
     NS_IMETHOD    CaptureEvent(const nsString& aType);
     NS_IMETHOD    ReleaseEvent(const nsString& aType);
@@ -773,7 +777,8 @@ protected:
     nsIRDFResource*            mFragmentRoot;    // [OWNER] 
     nsVoidArray                mSubDocuments;     // [OWNER] of subelements
 	  nsIDOMElement*			       mPopup;			  // [OWNER] of this popup element in the doc
-    PRBool                     mIsPopup;    
+    PRBool                     mIsPopup; 
+    nsIDOMHTMLFormElement*     mHiddenForm;   // [OWNER] of this content element
 };
 
 PRInt32 XULDocumentImpl::gRefCnt = 0;
@@ -812,7 +817,8 @@ XULDocumentImpl::XULDocumentImpl(void)
       mFragmentRoot(nsnull),
       mListenerManager(nsnull),
 	    mPopup(nsnull),
-      mIsPopup(PR_FALSE)
+      mIsPopup(PR_FALSE),
+      mHiddenForm(nsnull)
 {
     NS_INIT_REFCNT();
 
@@ -859,6 +865,7 @@ XULDocumentImpl::~XULDocumentImpl()
     NS_IF_RELEASE(mListenerManager);
 
 	  NS_IF_RELEASE(mPopup);
+    NS_IF_RELEASE(mHiddenForm);
 
     // mParentDocument is never refcounted
     // Delete references to sub-documents
@@ -2651,6 +2658,33 @@ XULDocumentImpl::GetDocumentDataSource(nsIRDFDataSource** aDataSource) {
     }
     return NS_OK;
 }
+
+
+NS_IMETHODIMP
+XULDocumentImpl::GetForm(nsIDOMHTMLFormElement** aForm)
+{
+  NS_IF_ADDREF(mHiddenForm);
+  *aForm = mHiddenForm;
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+XULDocumentImpl::SetForm(nsIDOMHTMLFormElement* aForm)
+{
+  NS_IF_RELEASE(mHiddenForm);
+  if (aForm) {
+    NS_ADDREF(aForm);
+    mHiddenForm = aForm;
+    nsCOMPtr<nsIContent> content = do_QueryInterface(aForm);
+    if (content) {
+      // Add this node as a child
+      mRootContent->AppendChildTo(content, PR_TRUE);
+    }
+  }
+  return NS_OK;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////
 // nsIDOMDocument interface

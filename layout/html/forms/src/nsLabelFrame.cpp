@@ -16,6 +16,8 @@
  * Reserved.
  */
 #include "nsCOMPtr.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMXULDocument.h"
 #include "nsHTMLContainerFrame.h"
 #include "nsIFormControlFrame.h"
 #include "nsHTMLParts.h"
@@ -226,95 +228,65 @@ PRBool IsButton(PRInt32 aType)
 PRBool 
 nsLabelFrame::FindForControl(nsIFormControlFrame*& aResultFrame)
 {
-  static char whitespace[] = " \r\n\t";
-
   nsAutoString forId;
   if (NS_CONTENT_ATTR_HAS_VALUE != GetFor(forId)) {
     return PR_FALSE;
   }
 
-  nsIDocument* iDoc = nsnull;
-  nsresult result = mContent->GetDocument(iDoc);
-  if ((NS_OK != result) || (nsnull == iDoc)) {
+  nsCOMPtr<nsIDocument> iDoc;
+  if (NS_FAILED(mContent->GetDocument(*getter_AddRefs(iDoc))))
     return PR_FALSE;
-  }
+  
+  nsCOMPtr<nsIDOMHTMLDocument> htmlDoc = do_QueryInterface(iDoc);
 
-  nsIHTMLDocument* htmlDoc = nsnull;
-  result = iDoc->QueryInterface(kIHTMLDocumentIID, (void**)&htmlDoc);
-  if ((NS_OK != result) || (nsnull == htmlDoc)) {
-    NS_RELEASE(iDoc);
-    return PR_FALSE;
+  nsCOMPtr<nsIDOMElement> domElement;
+  if (htmlDoc) {
+    if (NS_FAILED(htmlDoc->GetElementById(forId, getter_AddRefs(domElement))))
+      return PR_FALSE;
   }
+#ifdef INCLUDE_XUL
+  else {
+    nsCOMPtr<nsIDOMXULDocument> xulDoc = do_QueryInterface(iDoc);
+    if (xulDoc) {
+      if (NS_FAILED(xulDoc->GetElementById(forId, getter_AddRefs(domElement))))
+        return PR_FALSE;
+    }
+  }
+#endif // INCLUDE_XUL
+
+  if (!domElement)
+    return PR_FALSE;
 
   nsIPresShell *shell = iDoc->GetShellAt(0);
-  if (nsnull == shell) {
-    NS_RELEASE(iDoc);
-    NS_RELEASE(htmlDoc);
+  if (nsnull == shell)
     return PR_FALSE;
-  }
 
-  nsIDOMHTMLCollection* forms = nsnull;
-  htmlDoc->GetForms(&forms);
-  PRUint32 numForms;
-  forms->GetLength(&numForms);
+  nsCOMPtr<nsIFormControl> control = do_QueryInterface(domElement);
+  nsCOMPtr<nsIContent> controlContent = do_QueryInterface(domElement);
 
+  // Labels have to be linked to form controls
+  if (!control)
+    return PR_FALSE;
+
+  // buttons have implicit labels and we don't allow them to have explicit ones
   PRBool returnValue = PR_FALSE;
 
-  for (PRUint32 formX = 0; formX < numForms; formX++) {
-    nsIDOMNode* node = nsnull;
-    forms->Item(formX, &node);
-    if (nsnull == node) {
-      continue;
-    }
-    nsIForm* form = nsnull;
-    result = node->QueryInterface(kIFormIID, (void**)&form);
-    if ((NS_OK != result) || (nsnull == form)) {
-      continue;
-    }
-    PRUint32 numControls;
-    form->GetElementCount(&numControls);
-    for (PRUint32 controlX = 0; controlX < numControls; controlX++) {
-      nsIFormControl* control = nsnull;
-      form->GetElementAt(controlX, &control);
-      if (nsnull == control) {
-        continue;
+  PRInt32 type;
+  control->GetType(&type);
+  if (!IsButton(type)) {  
+    nsIFrame* frame;
+    shell->GetPrimaryFrameFor(controlContent, &frame);
+    if (nsnull != frame) {
+      nsIFormControlFrame* fcFrame = nsnull;
+      nsresult result = frame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
+      if ((NS_OK == result) && (nsnull != fcFrame)) {
+        aResultFrame = fcFrame;
+        NS_RELEASE(fcFrame);
+        returnValue = PR_TRUE;
       }
-      // buttons have implicit labels and we don't allow them to have explicit ones
-      PRInt32 type;
-      control->GetType(&type);
-      if (!IsButton(type)) {
-        nsIHTMLContent* htmlContent = nsnull;
-        result = control->QueryInterface(kIHTMLContentIID, (void**)&htmlContent);
-        if ((NS_OK == result) && (nsnull != htmlContent)) {
-          nsHTMLValue value;
-          nsAutoString id;
-          result = htmlContent->GetHTMLAttribute(nsHTMLAtoms::id, value);
-          if ((NS_CONTENT_ATTR_HAS_VALUE == result) && (eHTMLUnit_String == value.GetUnit())) {
-            value.GetStringValue(id);
-            id.Trim(whitespace, PR_TRUE, PR_TRUE);    
-            if (id.Equals(forId)) {
-              nsIFrame* frame;
-              shell->GetPrimaryFrameFor(htmlContent, &frame);
-              if (nsnull != frame) {
-                nsIFormControlFrame* fcFrame = nsnull;
-                result = frame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
-                if ((NS_OK == result) && (nsnull != fcFrame)) {
-                  aResultFrame = fcFrame;
-                  NS_RELEASE(fcFrame);
-                  returnValue = PR_TRUE;
-                }
-              }
-            }
-          }
-          NS_RELEASE(htmlContent);
-        }
-      }
-      NS_RELEASE(control);
-    } 
+    }
   }
-  NS_RELEASE(iDoc);
-  NS_RELEASE(htmlDoc);
-  NS_RELEASE(forms);
+        
   NS_RELEASE(shell);
 
   return returnValue;
