@@ -358,7 +358,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
 #else
             aEvent->message == NS_CONTEXTMENU &&
 #endif
-            mMenuParent && !IsDisabled()) {
+            mMenuParent && !IsMenu() && !IsDisabled()) {
     // if this menu is a context menu it accepts right-clicks...fire away!
     // Make sure we cancel default processing of the context menu event so
     // that it doesn't bubble and get seen again by the popuplistener and show
