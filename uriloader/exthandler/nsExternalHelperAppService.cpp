@@ -1155,10 +1155,14 @@ nsExternalAppHandler::nsExternalAppHandler()
   mContentLength = -1;
   mProgress      = 0;
   mRequest = nsnull;
+
+  sSrv->AddRef();
 }
 
 nsExternalAppHandler::~nsExternalAppHandler()
 {
+  // Not using NS_RELEASE, since we don't want to set sSrv to NULL
+  sSrv->Release();
 }
 
 NS_IMETHODIMP nsExternalAppHandler::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData )
