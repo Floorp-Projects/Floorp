@@ -107,14 +107,14 @@ NS_IMPL_THREADSAFE_ISUPPORTS2(nsFtpControlConnection,
                               nsIStreamListener, 
                               nsIRequestObserver);
 
-nsFtpControlConnection::nsFtpControlConnection(const char* host, PRUint32 port)
+nsFtpControlConnection::nsFtpControlConnection(const char* host, 
+                                               PRUint32 port) 
+    : mServerType(0), mSuspendedWrite(0), mPort(port)
 {
     NS_INIT_REFCNT();
     PR_LOG(gFTPLog, PR_LOG_ALWAYS, ("(%x) nsFtpControlConnection created", this));
 
     mHost.Adopt(nsCRT::strdup(host));
-    mPort = port;
-    mServerType = 0;
 
     mLock = PR_NewLock();
     NS_ASSERTION(mLock, "null lock");
