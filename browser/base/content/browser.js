@@ -3367,9 +3367,6 @@ nsBrowserStatusHandler.prototype =
 
   init : function()
   {
-    // XXXjag is this still needed? It's currently just ""
-    this.defaultStatus = gNavigatorBundle.getString("defaultStatus");
-
     this.urlBar          = document.getElementById("urlbar");
     this.throbberElement = document.getElementById("navigator-throbber");
     this.statusMeter     = document.getElementById("statusbar-icon");
