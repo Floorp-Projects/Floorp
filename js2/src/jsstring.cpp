@@ -128,7 +128,7 @@ static JSValue String_match(Context *cx, const JSValue& thisValue, JSValue *argv
         parseResult->lastIndex = 0;
         uint32 index = 0;
         while (true) {
-            REState *regexp_result = REExecute(parseResult, S.string->c_str(), S.string->length());
+            REState *regexp_result = REExecute(parseResult, S.string->begin(), S.string->length());
             if (regexp_result == NULL)
                 break;
             if (parseResult->lastIndex == index)
@@ -144,7 +144,7 @@ static JSValue String_match(Context *cx, const JSValue& thisValue, JSValue *argv
 static const String interpretDollar(Context *cx, const String *replaceStr, uint32 dollarPos, const String *searchStr, REState *regexp_result, uint32 &skip)
 {
     skip = 2;
-    const char16 *dollarValue = replaceStr->c_str() + dollarPos + 1;
+    const char16 *dollarValue = replaceStr->begin() + dollarPos + 1;
     switch (*dollarValue) {
     case '$':
 	return cx->Dollar_StringAtom;
@@ -210,7 +210,7 @@ static JSValue String_replace(Context *cx, const JSValue& thisValue, JSValue *ar
 	while (true) {
 	    if (parseResult->flags & GLOBAL)
 		parseResult->lastIndex = (int32)index;
-            regexp_result = REExecute(parseResult, S.string->c_str(), S.string->length());
+            regexp_result = REExecute(parseResult, S.string->begin(), S.string->length());
 	    if (regexp_result) {
 		String insertString;
 		uint32 start = 0;

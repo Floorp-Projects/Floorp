@@ -2213,7 +2213,7 @@ JSValue RegExp_Constructor(Context *cx, const JSValue& thisValue, JSValue *argv,
         if ((argc > 1) && !argv[1].isUndefined())
             flagStr = argv[1].toString(cx).string;
     }
-    REParseState *parseResult = REParse(regexpStr->c_str(), regexpStr->length(), flagStr->c_str(), flagStr->length(), false);
+    REParseState *parseResult = REParse(regexpStr->begin(), regexpStr->length(), flagStr->begin(), flagStr->length(), false);
     if (parseResult) {
         thisObj->mPrivate = parseResult;
 // XXX ECMA spec says these are DONTENUM, but SpiderMonkey and test suite disagree
@@ -2289,7 +2289,7 @@ JSValue RegExp_exec(Context *cx, const JSValue& thisValue, JSValue *argv, uint32
         parseResult->lastIndex = (int)(lastIndex.toInteger(cx).f64);
 
         const String *str = argv[0].toString(cx).string;
-        REState *regexp_result = REExecute(parseResult, str->c_str(), str->length());
+        REState *regexp_result = REExecute(parseResult, str->begin(), str->length());
         if (regexp_result) {
             JSArrayInstance *resultArray = (JSArrayInstance *)Array_Type->newInstance(cx);
             String *matchStr = new String(str->substr(regexp_result->endIndex, regexp_result->length));
@@ -2329,7 +2329,7 @@ static JSValue RegExp_test(Context *cx, const JSValue& thisValue, JSValue *argv,
         cx->reportError(Exception::typeError, "RegExp.test can only be applied to RegExp objects");
     if (argc > 0) {
         const String *str = argv[0].toString(cx).string;
-        REState *regexp_result = REExecute((REParseState *)(thisObj->mPrivate), str->c_str(), str->length());
+        REState *regexp_result = REExecute((REParseState *)(thisObj->mPrivate), str->begin(), str->length());
         if (regexp_result)
             return kTrueValue;
     }
