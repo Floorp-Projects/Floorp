@@ -57,7 +57,13 @@ export LD_LIBRARY_PATH
 ##
 ## Make sure that we set the plugin path for backwards compatibility
 ##
-MOZ_PLUGIN_PATH=LIBDIR/mozilla/plugins
+if [ "$MOZ_PLUGIN_PATH" ]
+then
+  MOZ_PLUGIN_PATH=$MOZ_PLUGIN_PATH:/usr/lib/mozilla/plugins:LIBDIR/mozilla/plugins
+else
+  MOZ_PLUGIN_PATH=/usr/lib/mozilla/plugins:LIBDIR/mozilla/plugins
+fi
+
 export MOZ_PLUGIN_PATH
 
 function check_running() {
