@@ -52,7 +52,7 @@ gboolean emit_typelib_annotations = FALSE;
 
 static char xpidl_usage_str[] =
 "Usage: %s [-m mode] [-w] [-v] [-I path] [-o basename] filename.idl\n"
-"       -a emit annotaions to typelib\n"
+"       -a emit annotations to typelib\n"
 "       -w turn on warnings (recommended)\n"
 "       -v verbose mode (NYI)\n"
 "       -I add entry to start of include path for ``#include \"nsIThing.idl\"''\n"
