@@ -918,6 +918,7 @@
           {
             // up/down keys while menu is closed will open menu
             if (!this.mMenuOpen && (this.view.rowCount > 0 || this.alwaysOpenPopup)) {
+              this.mNeedToFinish = true;
               this.openResultPopup();
               return;
             }
