@@ -149,7 +149,6 @@ nsXMLContentSink::nsXMLContentSink()
   mTextLength = 0;
   mTextSize = 0;
   mConstrainSize = PR_TRUE;
-  mInScript = PR_FALSE;
   mInTitle = PR_FALSE;
   mStyleSheetCount = 0;
   mCSSLoader       = nsnull;
@@ -579,7 +578,6 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
   nsAutoString tag;
   nsCOMPtr<nsIAtom> nameSpacePrefix;
   PRBool isHTML = PR_FALSE;
-  PRBool pushContent = PR_TRUE;
   PRBool appendContent = PR_TRUE;
   nsCOMPtr<nsIContent> content;
 
@@ -687,13 +685,12 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
     if (NS_OK == result) {
       // If this is the document element
-      if (nsnull == mDocElement) {
+      if (!mDocElement) {
         mDocElement = content;
         NS_ADDREF(mDocElement);
 
         // For XSL, we need to wait till after the transform
-        // to set the root content object.  Hence, the following
-        // ifndef.
+        // to set the root content object.
         if (!mXSLTransformMediator)
             mDocument->SetRootContent(mDocElement);
       }
@@ -702,9 +699,8 @@ nsXMLContentSink::OpenContainer(const nsIParserNode& aNode)
 
         parent->AppendChildTo(content, PR_FALSE, PR_FALSE);
       }
-      if (pushContent) {
-        PushContent(content);
-      }
+
+      PushContent(content);
     }
 
     // Set the ID attribute atom on the node info object for this node
@@ -1245,6 +1241,7 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
   result = NS_NewXMLProcessingInstruction(getter_AddRefs(node), target, data);
   if (NS_OK == result) {
     nsCOMPtr<nsIStyleSheetLinkingElement> ssle(do_QueryInterface(node));
+
     if (ssle) {
       ssle->InitStyleLinkElement(mParser, PR_FALSE);
       ssle->SetEnableUpdates(PR_FALSE);
@@ -1256,35 +1253,31 @@ nsXMLContentSink::AddProcessingInstruction(const nsIParserNode& aNode)
       ssle->SetEnableUpdates(PR_TRUE);
       result = ssle->UpdateStyleSheet(PR_TRUE, mDocument, mStyleSheetCount);
       if (NS_SUCCEEDED(result) || (result == NS_ERROR_HTMLPARSER_BLOCK))
-        mStyleSheetCount++;
+        mStyleSheetCount++; // This count may not reflect the real stylesheet count
     }
 
     if (NS_FAILED(result))
       return result;
 
-    nsAutoString type;
-    result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
-
     // If it's a XSL stylesheet PI...
+    nsAutoString type;
+    nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("type"), type);
     if (target.EqualsWithConversion(kStyleSheetPI) && !type.EqualsIgnoreCase("text/css")) {
       nsAutoString href, title, media, alternate;
 
-      result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
-      // If there was an error or there's no href, we can't do
-      // anything with this PI
-      if ((NS_OK != result) || href.IsEmpty()) {
+      nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("href"), href);
+      // If there was no href, we can't do anything with this PI
+      if (href.IsEmpty()) {
         return NS_OK;
       }
 
-      result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("title"), title);
-      if (NS_SUCCEEDED(result)) {
-        title.CompressWhitespace();
-      }
-      result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("media"), media);
-      if (NS_SUCCEEDED(result)) {
-        media.ToLowerCase();
-      }
-      result = nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
+      nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("title"), title);
+      title.CompressWhitespace();
+
+      nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("media"), media);
+      media.ToLowerCase();
+
+      nsParserUtils::GetQuotedAttributeValue(text, NS_ConvertASCIItoUCS2("alternate"), alternate);
 
       result = ProcessStyleLink(node, href, alternate.Equals(NS_LITERAL_STRING("yes")),
                                 title, type, media);
@@ -1682,7 +1675,6 @@ nsXMLContentSink::ProcessEndSCRIPTTag(const nsIParserNode& aNode)
     sele->SetLineNumber(mScriptLineNo);
   }
 
-  mInScript = PR_FALSE;
   mConstrainSize = PR_TRUE; 
   // Assume that we're going to block the parser with a script load.
   // If it's an inline script, we'll be told otherwise in the call
@@ -1757,7 +1749,6 @@ nsresult
 nsXMLContentSink::ProcessStartSCRIPTTag(const nsIParserNode& aNode)
 {
   // Wait until we get the script content
-  mInScript = PR_TRUE;
   mConstrainSize = PR_FALSE;
   mScriptLineNo = (PRUint32)aNode.GetSourceLineNumber();
 
