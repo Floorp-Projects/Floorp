@@ -52,13 +52,11 @@ void nsWindow::BeginResizingChildren(void)
 {
   if (NULL == mDeferredPositioner)
     mDeferredPositioner = ::BeginDeferWindowPos(1);
-//printf("begin defer on %x, parent %x\n", mWnd, ::GetParent(mWnd));
 }
 
 void nsWindow::EndResizingChildren(void)
 {
   if (NULL != mDeferredPositioner) {
-//printf("end defer on %x, parent %x\n", mWnd, ::GetParent(mWnd));
     ::EndDeferWindowPos(mDeferredPositioner);
     mDeferredPositioner = NULL;
   }
@@ -709,7 +707,6 @@ void nsWindow::Move(PRUint32 aX, PRUint32 aY)
         }
 
         if (NULL != deferrer) {
-//printf("move: deferring\n");
             VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, aX, aY, 0, 0,
                                   SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE));
         }
@@ -737,7 +734,6 @@ void nsWindow::Resize(PRUint32 aWidth, PRUint32 aHeight)
         }
 
         if (NULL != deferrer) {
-//printf("resize: deferring\n");
             VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, 0, 0, aWidth, aHeight, 
                                     SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOMOVE));
         }
@@ -766,7 +762,6 @@ void nsWindow::Resize(PRUint32 aX, PRUint32 aY, PRUint32 aWidth, PRUint32 aHeigh
         }
 
         if (NULL != deferrer) {
-//printf("resize: deferring\n");
             VERIFY(::DeferWindowPos(deferrer, mWnd, NULL, aX, aY, aWidth, aHeight, 
                                     SWP_NOZORDER | SWP_NOACTIVATE));
         }
