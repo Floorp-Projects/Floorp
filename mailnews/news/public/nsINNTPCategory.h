@@ -7,19 +7,13 @@
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsINNTPNewsgroup.h" /* interface nsINNTPNewsgroup */
+#include "nsID.h" /* interface nsID */
 #include "nsIMsgGroupRecord.h" /* interface nsIMsgGroupRecord */
 #include "nsINNTPNewsgroupList.h" /* interface nsINNTPNewsgroupList */
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
 #endif
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
-#include "nsISupportsUtils.h"
-
 
 /* starting interface nsINNTPCategory */
 
@@ -37,10 +31,10 @@ class nsINNTPCategory : public nsISupports {
   }
 
   /* nsINNTPNewsgroup BuildCategoryTree (in nsINNTPNewsgroup parent, in string catName, in nsIMsgGroupRecord group, in short depth); */
-  NS_IMETHOD BuildCategoryTree(nsINNTPNewsgroup *parent, char *catName, nsIMsgGroupRecord *group, PRInt16 depth, nsINNTPNewsgroup **_retval) = 0;
+  NS_IMETHOD BuildCategoryTree(nsINNTPNewsgroup *parent, const char *catName, nsIMsgGroupRecord *group, PRInt16 depth, nsINNTPNewsgroup **_retval) = 0;
 
   /* nsINNTPNewsgroup AddToCategoryTree (in nsINNTPNewsgroup parent, in string groupName, in nsIMsgGroupRecord group); */
-  NS_IMETHOD AddToCategoryTree(nsINNTPNewsgroup *parent, char *groupName, nsIMsgGroupRecord *group, nsINNTPNewsgroup **_retval) = 0;
+  NS_IMETHOD AddToCategoryTree(nsINNTPNewsgroup *parent, const char *groupName, nsIMsgGroupRecord *group, nsINNTPNewsgroup **_retval) = 0;
 
   /* nsINNTPNewsgroup CloneIntoNewsFolder (); */
   NS_IMETHOD CloneIntoNewsFolder(nsINNTPNewsgroup **_retval) = 0;
