@@ -17,6 +17,7 @@
  */
 
 #include "msgCore.h"
+#include "prprf.h"
 
 #include <stdio.h>
 #include <assert.h>
@@ -37,6 +38,7 @@
 #include "nsString.h"
 
 #include "nsSmtpUrl.h"
+#include "nsSmtpProtocol.h"
 
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
@@ -72,8 +74,12 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 /////////////////////////////////////////////////////////////////////////////////
 
 #define DEFAULT_HOST	"nsmail-2.mcom.com"
-#define DEFAULT_PORT	NEWS_PORT		/* we get this value from nntpCore.h */
+#define DEFAULT_PORT	25		/* we get this value from SmtpCore.h */
 #define DEFAULT_URL_TYPE  "sockstub://"	/* do NOT change this value until netlib re-write is done...*/
+#define DEFAULT_RECIPIENT "mscott@netscape.com"
+#define DEFAULT_FILE	  "message.eml"
+#define	DEFAULT_SENDER	  "qatest03@netscape.com"
+#define DEFAULT_PASSWORD  "Ne!sc-pe"
 
 //extern NET_StreamClass *MIME_MessageConverter(int format_out, void *closure, 
 //											  URL_Struct *url, MWContext *context);
@@ -86,55 +92,24 @@ extern "C" char *fe_GetConfigDir(void) {
 #endif /* XP_UNIX */
 
 /////////////////////////////////////////////////////////////////////////////////
-// This function is used to load and prepare an nntp url which can be run by
+// This function is used to load and prepare an smtp url which can be run by
 // a transport instance. For different protocols, you'll have different url
 // functions like this one in the test harness...
 /////////////////////////////////////////////////////////////////////////////////
 
 
-#if 0 
-nsresult NS_NewNntpUrl(nsINntpUrl ** aResult, const nsString urlSpec)
+nsresult NS_NewSmtpUrl(nsISmtpUrl ** aResult, const nsString urlSpec)
 {
 	nsresult rv = NS_OK;
 
-	 nsNntpUrl * nntpUrl = new nsNntpUrl(nsnull, nsnull);
-	 if (nntpUrl)
+	 nsSmtpUrl * smtpUrl = new nsSmtpUrl(nsnull, nsnull);
+	 if (smtpUrl)
 	 {
-		nntpUrl->ParseURL(urlSpec);  // load the spec we were given...
-		rv = nntpUrl->QueryInterface(kINntpUrlIID, (void **) aResult);
+		smtpUrl->ParseURL(urlSpec);  // load the spec we were given...
+		rv = smtpUrl->QueryInterface(kISmtpUrlIID, (void **) aResult);
 	 }
 
 	 return rv;
-}
-
-// temporary hack...we don't have escape search url in the new world yet....
-char *MSG_EscapeSearchUrl (const char *nntpCommand)
-{
-	char *result = NULL;
-	// max escaped length is two extra characters for every character in the cmd.
-	char *scratchBuf = (char*) PR_Malloc (3*PL_strlen(nntpCommand) + 1);
-	if (scratchBuf)
-	{
-		char *scratchPtr = scratchBuf;
-		while (1)
-		{
-			char ch = *nntpCommand++;
-			if (!ch)
-				break;
-			if (ch == '#' || ch == '?' || ch == '@' || ch == '\\')
-			{
-				*scratchPtr++ = '\\';
-				sprintf (scratchPtr, "%X", ch);
-				scratchPtr += 2;
-			}
-			else
-				*scratchPtr++ = ch;
-		}
-		*scratchPtr = '\0';
-		result = PL_strdup (scratchBuf); // realloc down to smaller size
-		PR_Free(scratchBuf);
-	}
-	return result;
 }
 
 /* strip out non-printable characters */
@@ -155,17 +130,17 @@ static void strip_nonprintable(char *string) {
 
 
 //////////////////////////////////////////////////////////////////////////////////
-// The nsNntpTestDriver is a class that I envision could be generalized to form the
+// The nsSmtpTestDriver is a class that I envision could be generalized to form the
 // building block of a protocol test harness. To configure it, you would list all of
 // the events you know how to handle and when one of those events is triggered, you
-// would be asked to process it....right now it is just NNTP specific....
+// would be asked to process it....right now it is just Smtp specific....
 ///////////////////////////////////////////////////////////////////////////////////
 
-class nsNntpTestDriver
+class nsSmtpTestDriver
 {
 public:
-	nsNntpTestDriver(nsINetService * pService, PLEventQueue *queue);
-	virtual ~nsNntpTestDriver();
+	nsSmtpTestDriver(nsINetService * pService, PLEventQueue *queue);
+	virtual ~nsSmtpTestDriver();
 
 	// run driver initializes the instance, lists the commands, runs the command and when
 	// the command is finished, it reads in the next command and continues...theoretically,
@@ -181,13 +156,7 @@ public:
 
 	// The following are event generators. They convert all of the available user commands into
 	// URLs and then run the urls. 
-	nsresult OnListAllGroups();   // lists all the groups on the host
-	nsresult OnListIDs();
-	nsresult OnGetGroup();		// lists the status of the user specified group...
-	nsresult OnListArticle();
-	nsresult OnSearch();
-	nsresult OnReadNewsRC();
-    nsresult OnPostMessage();
+	nsresult OnSendMessageInFile();
 	nsresult OnExit(); 
 protected:
     PLEventQueue *m_eventQueue;
@@ -199,8 +168,8 @@ protected:
 	PRUint32	m_port;
 	char		m_host[200];		
 
-	nsINntpUrl * m_url; 
-	nsNNTPProtocol * m_nntpProtocol; // running protocol instance
+	nsISmtpUrl * m_url; 
+	nsSmtpProtocol * m_SmtpProtocol; // running protocol instance
 	nsITransport * m_transport; // a handle on the current transport object being used with the protocol binding...
 
 	PRBool		m_runningURL;	// are we currently running a url? this flag is set to false on exit...
@@ -210,7 +179,7 @@ protected:
 	PRBool m_protocolInitialized; 
 };
 
-nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService,
+nsSmtpTestDriver::nsSmtpTestDriver(nsINetService * pNetService,
                                    PLEventQueue *queue)
 {
 	m_urlSpec[0] = '\0';
@@ -224,26 +193,34 @@ nsNntpTestDriver::nsNntpTestDriver(nsINetService * pNetService,
 	
 	// create a transport socket...
 	pNetService->CreateSocketTransport(&m_transport, m_port, m_host);
-	m_nntpProtocol = nsnull; // we can't create it until we have a url...
+	m_SmtpProtocol = nsnull; // we can't create it until we have a url...
 }
 
-void nsNntpTestDriver::InitializeProtocol(const char * urlString)
+void nsSmtpTestDriver::InitializeProtocol(const char * urlString)
 {
 	// this is called when we don't have a url nor a protocol instance yet...
-	NS_NewNntpUrl(&m_url, urlString);
+	if (m_url)
+		m_url->Release(); // get rid of our old ref count...
+
+	NS_NewSmtpUrl(&m_url, urlString);
+
 	// now create a protocl instance...
-	m_nntpProtocol = new nsNNTPProtocol(m_url, m_transport);
+	if (m_SmtpProtocol)
+		delete m_SmtpProtocol; // delete our old instance
+	
+	// now create a new protocol instance...
+	m_SmtpProtocol = new nsSmtpProtocol(m_url, m_transport);
 	m_protocolInitialized = PR_TRUE;
 }
 
-nsNntpTestDriver::~nsNntpTestDriver()
+nsSmtpTestDriver::~nsSmtpTestDriver()
 {
 	NS_IF_RELEASE(m_url);
 	NS_IF_RELEASE(m_transport);
-	if (m_nntpProtocol) delete m_nntpProtocol;
+	if (m_SmtpProtocol) delete m_SmtpProtocol;
 }
 
-nsresult nsNntpTestDriver::RunDriver()
+nsresult nsSmtpTestDriver::RunDriver()
 {
 	nsresult status = NS_OK;
 
@@ -253,7 +230,7 @@ nsresult nsNntpTestDriver::RunDriver()
 		// if we haven't gotten started (and created a protocol) or
 		// if the protocol instance is currently not busy, then read in a new command
 		// and process it...
-		if ((!m_nntpProtocol) || m_nntpProtocol->IsRunningUrl() == PR_FALSE) // if we aren't running the url anymore, ask ueser for another command....
+		if ((!m_SmtpProtocol) || m_SmtpProtocol->IsRunningUrl() == PR_FALSE) // if we aren't running the url anymore, ask ueser for another command....
 		{
 			status = ReadAndDispatchCommand();	
 		}  // if running url
@@ -276,7 +253,7 @@ nsresult nsNntpTestDriver::RunDriver()
 	return status;
 }
 
-void nsNntpTestDriver::InitializeTestDriver()
+void nsSmtpTestDriver::InitializeTestDriver()
 {
 	// prompt the user for port and host name 
 	char portString[20];  // used to read in the port string
@@ -314,7 +291,7 @@ void nsNntpTestDriver::InitializeTestDriver()
 
 // prints the userPrompt and then reads in the user data. Assumes urlData has already been allocated.
 // it also reconstructs the url string in m_urlString but does NOT reload it....
-nsresult nsNntpTestDriver::PromptForUserDataAndBuildUrl(const char * userPrompt)
+nsresult nsSmtpTestDriver::PromptForUserDataAndBuildUrl(const char * userPrompt)
 {
 	char tempBuffer[500];
 	tempBuffer[0] = '\0'; 
@@ -329,12 +306,13 @@ nsresult nsNntpTestDriver::PromptForUserDataAndBuildUrl(const char * userPrompt)
 	// only replace m_userData if the user actually entered a valid line...
 	// this allows the command function to set a default value on m_userData before
 	// calling this routine....
-    PL_strcpy(m_userData, tempBuffer);
+	if (tempBuffer && *tempBuffer)
+		PL_strcpy(m_userData, tempBuffer);
 
 	return NS_OK;
 }
 
-nsresult nsNntpTestDriver::ReadAndDispatchCommand()
+nsresult nsSmtpTestDriver::ReadAndDispatchCommand()
 {
 	nsresult status = NS_OK;
 	PRInt32 command = 0; 
@@ -356,26 +334,8 @@ nsresult nsNntpTestDriver::ReadAndDispatchCommand()
 		status = ListCommands();
 		break;
 	case 1:
-		status = OnListAllGroups();
+		status = OnSendMessageInFile();
 		break;
-	case 2:
-		status = OnGetGroup();
-		break;
-	case 3:
-		status = OnListIDs();
-		break;
-	case 4:
-		status = OnListArticle();
-		break;
-	case 5:
-		status = OnSearch();
-		break;
-	case 6:
-		status = OnReadNewsRC();
-		break;
-    case 7:
-        status = OnPostMessage();
-        break;
 	default:
 		status = OnExit();
 		break;
@@ -384,17 +344,11 @@ nsresult nsNntpTestDriver::ReadAndDispatchCommand()
 	return status;
 }
 
-nsresult nsNntpTestDriver::ListCommands()
+nsresult nsSmtpTestDriver::ListCommands()
 {
 	printf("Commands currently available: \n");
-	printf("0) List available commands. \n");
-	printf("1) List all news groups. \n");
-	printf("2) Get (and subscribe) to a group. \n");
-	printf("3) List ids. \n");
-	printf("4) Get an article. \n");
-	printf("5) Perform Search. \n");
-	printf("6) Read NewsRC file. \n");
-    printf("7) Post a message. \n");
+	printf("0) List commands. \n");
+	printf("1) Send a message in a file. \n");
 	printf("9) Exit the test application. \n");
 	return NS_OK;
 }
@@ -403,252 +357,66 @@ nsresult nsNntpTestDriver::ListCommands()
 // Begin protocol specific command url generation code...gee that's a mouthful....
 ///////////////////////////////////////////////////////////////////////////////////
 
-nsresult nsNntpTestDriver::OnExit()
+nsresult nsSmtpTestDriver::OnExit()
 {
-	printf("Terminating NNTP test harness....\n");
+	printf("Terminating Smtp test harness....\n");
 	m_runningURL = PR_FALSE; // next time through the test driver loop, we'll kick out....
 	return NS_OK;
 }
 
-
-nsresult nsNntpTestDriver::OnListAllGroups()
+nsresult nsSmtpTestDriver::OnSendMessageInFile()
 {
 	nsresult rv = NS_OK; 
-    printf("Listing all groups..\n");
-	// no prompt for url data....just append a '*' to the url data and run it...
+	char * fileName = nsnull;
+	char * userName = nsnull;
+	char * userPassword = nsnull;
+	char * displayString = nsnull;
+	
+	PL_strcpy(m_userData, DEFAULT_FILE);
+
+	displayString = PR_smprintf("Location of message [%s]: ", m_userData);
+	rv = PromptForUserDataAndBuildUrl(displayString);
+	PR_FREEIF(displayString);
+
+	fileName = PL_strdup(m_userData);
+
+	// now ask the user who to send the message too...
+	PL_strcpy(m_userData, DEFAULT_RECIPIENT);
+	displayString = PR_smprintf("Recipient of message [%s]: ", m_userData);
+	rv = PromptForUserDataAndBuildUrl(displayString);
+	PR_FREEIF(displayString);
+
 	m_urlString[0] = '\0';
 	PL_strcpy(m_urlString, m_urlSpec);
 	PL_strcat(m_urlString, "/");
-	PL_strcat(m_urlString, "*");
+	PL_strcat(m_urlString, m_userData); // tack on recipient...
 	
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
+	// now ask the user what their address is...
+	PL_strcpy(m_userData, DEFAULT_SENDER);
+	displayString = PR_smprintf("Email address of sender [%s]: ", m_userData);
+	rv = PromptForUserDataAndBuildUrl(displayString);
+	PR_FREEIF(displayString);
 
+	userName = PL_strdup(m_userData);
+
+	// SMTP is a connectionless protocol...so we always start with a new
+	// SMTP protocol instance every time we launch a mailto url...
+
+	InitializeProtocol(m_urlString);
 	m_url->SetSpec(m_urlString); // reset spec
-    printf("Running %s\n", m_urlString);
-	rv = m_nntpProtocol->LoadURL(m_url);
-	return rv;
-}
-
-nsresult nsNntpTestDriver::OnListIDs()
-{
-	nsresult rv = NS_OK;
-		// no prompt for url data....just append a '*' to the url data and run it...
-	m_urlString[0] = '\0';
-	PL_strcpy(m_urlString, m_urlSpec);
-	PL_strcat(m_urlString, "/");
-
-
-	rv = PromptForUserDataAndBuildUrl("Group to fetch IDs for: ");
-	PL_strcat(m_urlString, m_userData);
-	PL_strcat(m_urlString, "?list-ids");
+	m_url->SetHost(DEFAULT_HOST);
 	
-	
-	// load the correct newsgroup interface as an event sink...
-    if (NS_SUCCEEDED(rv)) {
-        SetupUrl(m_userData);
-        printf("Running %s\n", m_urlString);
-        rv = m_nntpProtocol->LoadURL(m_url);
-    }
-
+	// store the file name in the url...
+	m_url->SetPostMessageFile(fileName);
+	m_url->SetUserEmailAddress(userName);
+	m_url->SetUserPassword(DEFAULT_PASSWORD);
+	PR_FREEIF(fileName);
+	PR_FREEIF(userName);
+		
+	printf("Running %s\n", m_urlString);
+	rv = m_SmtpProtocol->LoadURL(m_url);
 	return rv;
 }
-
-nsresult nsNntpTestDriver::OnListArticle()
-{
-	nsresult rv = NS_OK;
-
-	// first, prompt the user for the name of the group to fetch
-	// prime article number with a default value...
-	m_userData[0] = '\0';
-	PL_strcpy(m_userData, "35D8A048.3C0F0C7A@zia.mcom.com");
-	rv = PromptForUserDataAndBuildUrl("Article Number to Fetch: ");
-	// no prompt for url data....just append a '*' to the url data and run it...
-	m_urlString[0] = '\0';
-	PL_strcpy(m_urlString, m_urlSpec);
-	PL_strcat(m_urlString, "/");
-	PL_strcat(m_urlString, m_userData);
-
-	if (NS_SUCCEEDED(rv)) {
-        SetupUrl(m_userData);
-        printf("Running %s\n", m_urlString);
-        rv = m_nntpProtocol->LoadURL(m_url);
-    }
-    
-	return rv;
-}
-
-nsresult nsNntpTestDriver::OnSearch()
-{
-	nsresult rv = NS_OK;
-
-	// first, prompt the user for the name of the group to fetch
-	rv = PromptForUserDataAndBuildUrl("Group to search: ");
-	m_urlString[0] = '\0';
-	PL_strcpy(m_urlString, m_urlSpec);
-	PL_strcat(m_urlString, "/");
-	PL_strcat(m_urlString, m_userData);
-
-	// now append "?search" to the end...
-	PL_strcat(m_urlString, "?search/");
-	rv = PromptForUserDataAndBuildUrl("Search criteria: ");
-	if (m_userData[0])  // did the user enter in something???
-	{
-		char * escapedBuffer = MSG_EscapeSearchUrl(m_userData);
-		PL_strcat(m_urlString, escapedBuffer);
-	}
-
-	
-	if (NS_SUCCEEDED(rv)) {
-        SetupUrl(m_userData);
-        printf("Running %s\n", m_urlString);
-        rv = m_nntpProtocol->LoadURL(m_url);
-    }
-    
-	return rv;
-	
-
-}
-
-nsresult
-nsNntpTestDriver::OnPostMessage()
-{
-    nsresult rv = NS_OK;
-    char *subject;
-    char *message;
-    char *newsgroup;
-    
-    rv = PromptForUserDataAndBuildUrl("Newsgroup: ");
-    newsgroup =PL_strdup(m_userData);
-    
-    m_urlString[0] = '\0';
-    PL_strcpy(m_urlString, m_urlSpec);
-    PL_strcat(m_urlString, "/");
-    PL_strcat(m_urlString, m_userData);
-
-    // now we need to attach a message
-
-    
-    rv = PromptForUserDataAndBuildUrl("Subject: ");
-    subject = PL_strdup(m_userData);
-    printf("Enter your message below. End with a blank line.\n");
-    rv = PromptForUserDataAndBuildUrl("");
-    int messagelen = 0;
-    message = NULL;
-    while (m_userData[0]) {
-        int linelen = PL_strlen(m_userData);
-        char *newMessage = (char *)PR_Malloc(linelen+messagelen+2);
-        messagelen = linelen+messagelen+2;
-        
-        newMessage[0]='\0';
-        if (message) PL_strcpy(newMessage, message);
-        PL_strcat(newMessage, m_userData);
-        PL_strcat(newMessage, "\n");
-        PR_FREEIF(message);
-        message = newMessage;
-        rv = PromptForUserDataAndBuildUrl("");
-    }
-
-    printf("Ready to post the message:\n");
-    printf("Subject: %s\n", subject);
-    printf("Message:\n %s\n", message);
-    
-    SetupUrl(m_userData);
-
-    nsINNTPNewsgroupPost *post;
-    rv = NS_NewNewsgroupPost(&post);
-    
-    if (NS_SUCCEEDED(rv)) {
-        post->AddNewsgroup(newsgroup);
-        post->SetBody(message);
-        post->SetSubject(subject);
-    }
-    
-    m_url->SetMessageToPost(post);
-    
-    printf("Running %s\n", m_urlString);
-    rv = m_nntpProtocol->LoadURL(m_url);
-
-	return rv;
-}
-
-nsresult nsNntpTestDriver::OnGetGroup()
-{
-	nsresult rv = NS_OK;
-
-	// first, prompt the user for the name of the group to fetch
-	rv = PromptForUserDataAndBuildUrl("Group to fetch: ");
-	// no prompt for url data....just append a '*' to the url data and run it...
-	m_urlString[0] = '\0';
-	PL_strcpy(m_urlString, m_urlSpec);
-	PL_strcat(m_urlString, "/");
-	PL_strcat(m_urlString, m_userData);
-
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
-	else
-		m_url->SetSpec(m_urlString); // reset spec
-
-    if (NS_SUCCEEDED(rv)) {
-        SetupUrl(m_userData);
-        printf("Running %s\n", m_urlString);
-		rv = m_nntpProtocol->LoadURL(m_url);
-	} // if user provided the data...
-
-	return rv;
-}
-
-
-nsresult nsNntpTestDriver::OnReadNewsRC()
-{
-	nsresult rv = NS_OK;
-	m_urlString[0] = '\0';
-	PL_strcpy(m_urlString, m_urlSpec);
-
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
-	else
-		m_url->SetSpec(m_urlString); // reset spec
-
-
-	// a read newsrc url is of the form: news://
-	// or news://HOST
-    printf("Running %s\n", m_urlString);
-	rv = m_nntpProtocol->LoadURL(m_url);
-	return rv;
-}
-
-nsresult nsNntpTestDriver::SetupUrl(char *groupname)
-{
-    nsresult rv = NS_OK;
-    
-	if (m_protocolInitialized == PR_FALSE)
-		InitializeProtocol(m_urlString);
-	else
-		rv = m_url->SetSpec(m_urlString); // reset spec
-    
-    // before we re-load, assume it is a group command and configure our nntpurl correctly...
-    nsINNTPHost * host = nsnull;
-    nsINNTPNewsgroup * group = nsnull;
-    nsINNTPNewsgroupList * list = nsnull;
-    rv = m_url->GetNntpHost(&host);
-    if (host)
-        {
-			rv = host->FindGroup(groupname, &group);
-			if (group)
-				group->GetNewsgroupList(&list);
-            
-			rv = m_url->SetNewsgroup(group);
-			rv = m_url->SetNewsgroupList(list);
-			NS_IF_RELEASE(group);
-			NS_IF_RELEASE(list);
-			NS_IF_RELEASE(host);
-        }
-
-	return rv;
-    
-} // if user provided the data...
-
 
 /////////////////////////////////////////////////////////////////////////////////
 // End on command handlers for news
@@ -693,7 +461,7 @@ int main()
     //	NET_RegisterContentTypeConverter (MESSAGE_RFC822, FO_CACHE_AND_NGLAYOUT, NULL, MIME_MessageConverter);
 
 	// okay, everything is set up, now we just need to create a test driver and run it...
-	nsNntpTestDriver * driver = new nsNntpTestDriver(pNetService,queue);
+	nsSmtpTestDriver * driver = new nsSmtpTestDriver(pNetService,queue);
 	if (driver)
 	{
 		driver->RunDriver();
@@ -701,52 +469,6 @@ int main()
 		delete driver;
 	}
 
-	// shut down:
-	NS_RELEASE(pNetService);
-    
-    return 0;
-}
-#endif
-
-int main()
-{
-	nsINetService * pNetService;
-    PLEventQueue *queue;
-    nsresult result;
-
-    nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
-	nsRepository::RegisterFactory(kEventQueueServiceCID, XPCOM_DLL, PR_FALSE, PR_FALSE);
-
-	// Create the Event Queue for this thread...
-    nsIEventQueueService *pEventQService = nsnull;
-    result = nsServiceManager::GetService(kEventQueueServiceCID,
-                                          kIEventQueueServiceIID,
-                                          (nsISupports **)&pEventQService);
-	if (NS_SUCCEEDED(result)) {
-      // XXX: What if this fails?
-      result = pEventQService->CreateThreadEventQueue();
-    }
-
-	// ask the net lib service for a nsINetStream:
-	result = NS_NewINetService(&pNetService, NULL);
-	if (NS_FAILED(result) || !pNetService)
-	{
-		printf("unable to initialize net serivce. \n");
-		return 1;
-	}
-
-    result =
-        pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),&queue);
-    if (NS_FAILED(result) || !queue) {
-        printf("unable to get event queue.\n");
-        return 1;
-    }
-
-	const char * urlString = "mailto://mscott@netscape.com?cc=ccfield&subject=subject&&attachement=attachment&&body=body";
-	nsSmtpUrl * smtpurl = new nsSmtpUrl(nsnull, nsnull);
-	smtpurl->ParseURL(urlString, nsnull);
-
-    
 	// shut down:
 	NS_RELEASE(pNetService);
     
