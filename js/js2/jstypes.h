@@ -251,12 +251,11 @@ namespace JSTypes {
         ICodeModule* getICode() { return mICode; }
     };
 
-    typedef JSValue * (*NativeFunction)(const JSValues& argv);
-
     class JSNativeFunction : public JSFunction {
     public:
-        NativeFunction mCode;
-        JSNativeFunction(NativeFunction code) : mCode(code) {}
+        typedef JSValue (*JSCode)(const JSValues& argv);
+        JSCode mCode;
+        JSNativeFunction(JSCode code) : mCode(code) {}
         virtual bool isNative()         { return true; }
     };
         
@@ -266,10 +265,19 @@ namespace JSTypes {
         JSValue value;
     };
     
+#if defined(XP_UNIX)
+    // bastring.cc defines a funky operator new that assumes a byte-allocator.
+    typedef string_char_traits<char16> JSCharTraits;
+    typedef gc_allocator<_Char> JSStringAllocator;
+#else
+    typedef std::char_traits<char16> JSCharTraits;
+    typedef gc_allocator<char16> JSStringAllocator;
+#endif
+
     /**
      * Garbage collectable UNICODE string.
      */
-    class JSString : public std::basic_string<char16, std::char_traits<char16>, gc_allocator<char16> >, public gc_base {
+    class JSString : public std::basic_string<char16, JSCharTraits, JSStringAllocator>, public gc_base {
     public:
         JSString() {}
         explicit JSString(const String* str);
@@ -327,7 +335,7 @@ namespace JSTypes {
             return defineVariable(name, value);
         }
 
-        JSValue& defineNativeFunction(const String& name, NativeFunction code)
+        JSValue& defineNativeFunction(const String& name, JSNativeFunction::JSCode code)
         {
             JSValue value(new JSNativeFunction(code));
             return defineVariable(name, value);
