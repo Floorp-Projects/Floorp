@@ -108,6 +108,7 @@ typedef enum {
 	TEMPDIR_ARG,
 	SECMOD_ARG,
 	NOCERTDB_ARG,
+	STRING_ARG,
 
 	NUM_ARGS	/* must be last */
 } Arg;
@@ -139,7 +140,8 @@ static char *optionStrings[] = {
 	"-installdir",
 	"-tempdir",
 	"-secmod",
-	"-nocertdb"
+	"-nocertdb",
+	"-string",
 };
 
 /* Increment i if doing so would have i still be less than j.  If you
@@ -161,6 +163,7 @@ static char* tokenName = NULL;
 static char* libFile = NULL;
 static char* dbdir = NULL;
 static char* dbprefix = "";
+static char* secmodString = NULL;
 static char* mechanisms = NULL;
 static char* ciphers = NULL;
 static char* fipsArg = NULL;
@@ -470,6 +473,17 @@ parse_args(int argc, char *argv[])
 			}
 			secmodName = argv[i];
 			break;
+                case STRING_ARG:
+			if(secmodString != NULL) {
+				PR_fprintf(PR_STDERR, errStrings[DUPLICATE_OPTION_ERR], arg);
+				return DUPLICATE_OPTION_ERR;
+			}
+			if(TRY_INC(i, argc)) {
+				PR_fprintf(PR_STDERR, errStrings[OPTION_NEEDS_ARG_ERR], arg);
+				return OPTION_NEEDS_ARG_ERR;
+			}
+			secmodString = argv[i];
+			break;
 		}
 	}
 	return SUCCESS;
@@ -709,6 +723,7 @@ usage()
 "   [-ciphers CIPHER_LIST]        Enable the given ciphers on this module\n"
 "   [-mechanisms MECHANISM_LIST]  Make the module a default provider of the\n"
 "                                 given mechanisms\n"
+"   [-string CONFIG_STRING]       Pass a configuration string to this module\n"
 "-changepw TOKEN                  Change the password on the named token\n"
 "   [-pwfile FILE]                The old password is in this file\n"
 "   [-newpwfile FILE]             The new password is in this file\n"
@@ -853,7 +868,7 @@ main(int argc, char *argv[])
 	/* Execute the command */
 	switch(command) {
 	case ADD_COMMAND:
-		errcode = AddModule(moduleName, libFile, ciphers, mechanisms);
+		errcode = AddModule(moduleName, libFile, ciphers, mechanisms, secmodString);
 		break;
 	case CHANGEPW_COMMAND:
 		errcode = ChangePW(tokenName, pwFile, newpwFile);
