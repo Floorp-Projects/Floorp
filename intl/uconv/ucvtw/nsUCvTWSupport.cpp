@@ -336,6 +336,54 @@ NS_IMETHODIMP nsOneByteDecoderSupport::Reset()
 }
 
 //----------------------------------------------------------------------
+// Class nsBasicEncoder [implementation]
+nsBasicEncoder::nsBasicEncoder() 
+{
+  NS_INIT_REFCNT();
+  PR_AtomicIncrement(&g_InstanceCount);
+}
+
+nsBasicEncoder::~nsBasicEncoder() 
+{
+  PR_AtomicDecrement(&g_InstanceCount);
+}
+
+//----------------------------------------------------------------------
+// Interface nsISupports [implementation]
+
+NS_IMPL_ADDREF(nsBasicEncoder);
+NS_IMPL_RELEASE(nsBasicEncoder);
+
+nsresult nsBasicEncoder::QueryInterface(REFNSIID aIID, 
+                                          void** aInstancePtr)
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                         
+  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
+
+  if (aIID.Equals(kIUnicodeEncoderIID)) {                                          
+    *aInstancePtr = (void*) ((nsIUnicodeEncoder*)this); 
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(nsICharRepresentable::GetIID())) {                                          
+    *aInstancePtr = (void*) ((nsICharRepresentable*)this); 
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*) ((nsISupports*)((nsIUnicodeEncoder*)this));
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+
+  return NS_NOINTERFACE;                                                 
+}
+//----------------------------------------------------------------------
 // Class nsEncoderSupport [implementation]
 
 nsEncoderSupport::nsEncoderSupport() 
@@ -348,15 +396,12 @@ nsEncoderSupport::nsEncoderSupport()
   mErrEncoder = NULL;
 
   Reset();
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
 }
 
 nsEncoderSupport::~nsEncoderSupport() 
 {
   delete [] mBuffer;
   NS_IF_RELEASE(mErrEncoder);
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 NS_IMETHODIMP nsEncoderSupport::ConvertNoBuff(const PRUnichar * aSrc, 
@@ -436,41 +481,6 @@ nsresult nsEncoderSupport::FlushBuffer(char ** aDest, const char * aDestEnd)
   return res;
 }
 
-//----------------------------------------------------------------------
-// Interface nsISupports [implementation]
-
-NS_IMPL_ADDREF(nsEncoderSupport);
-NS_IMPL_RELEASE(nsEncoderSupport);
-
-nsresult nsEncoderSupport::QueryInterface(REFNSIID aIID, 
-                                          void** aInstancePtr)
-{                                                                        
-  if (NULL == aInstancePtr) {                                            
-    return NS_ERROR_NULL_POINTER;                                        
-  }                                                                      
-                                                                         
-  *aInstancePtr = NULL;                                                  
-                                                                         
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-
-  if (aIID.Equals(kIUnicodeEncoderIID)) {                                          
-    *aInstancePtr = (void*) ((nsIUnicodeEncoder*)this); 
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(nsICharRepresentable::GetIID())) {                                          
-    *aInstancePtr = (void*) ((nsICharRepresentable*)this); 
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
-    *aInstancePtr = (void*) ((nsISupports*)((nsIUnicodeEncoder*)this));
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-
-  return NS_NOINTERFACE;                                                 
-}
 
 //----------------------------------------------------------------------
 // Interface nsIUnicodeEncoder [implementation]
