@@ -1,0 +1,9 @@
+Mon Nov 23 13:42:39 EST 1998
+
+To build the xpidl compiler, you need a lot of really wacky software that's
+only available from the GNOME CVS, etc.  This will change in the near future,
+when GNOME hits a stabilization point, but for now you really need to be
+a daring hacker to use it.  There are RPMs at
+http://www.hungry.com/~shaver/libIDL/ for ORBit, but you'll need glib 
+of recent vintage (1.1.4 or greater), and that'll require you to update
+gtk+ as well.  If I were you, I'd wait for RPMs of those, too. =)
