@@ -696,8 +696,8 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
   }
 
   // make the url string
-  nsILinkHandler* handler;
-  if (NS_OK == aPresContext->GetLinkHandler(&handler)) {
+  nsCOMPtr<nsILinkHandler> handler;
+  if (NS_OK == aPresContext->GetLinkHandler(getter_AddRefs(handler))) {
     nsAutoString href;
     GetAction(&href);
 
@@ -832,7 +832,6 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 //      }
 //    }
 // XXX DON'T NS_IF_RELEASE(postDataStream), this happens in Necko!
-    NS_IF_RELEASE(handler);
 
 // If you need these for debugging...
 // wrap them in DEBUG_<username>
