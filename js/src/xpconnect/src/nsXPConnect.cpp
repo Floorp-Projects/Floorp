@@ -68,7 +68,9 @@ nsXPConnect::nsXPConnect()
     // then we'll set this up later as needed.
     CreateRuntime();
 
-    mInterfaceInfoManager = XPTI_GetInterfaceInfoManager();
+    nsCOMPtr<nsIInterfaceInfoManager> iim = 
+        dont_AddRef(XPTI_GetInterfaceInfoManager());
+    CallQueryInterface(iim, &mInterfaceInfoManager);
 
     nsServiceManager::GetService(XPC_CONTEXT_STACK_CONTRACTID,
                                  NS_GET_IID(nsIThreadJSContextStack),
@@ -241,16 +243,14 @@ nsXPConnect::ReleaseXPConnectSingleton()
 
 // static
 nsresult
-nsXPConnect::GetInterfaceInfoManager(nsIInterfaceInfoManager** iim,
+nsXPConnect::GetInterfaceInfoManager(nsIInterfaceInfoSuperManager** iim,
                                      nsXPConnect* xpc /*= nsnull*/)
 {
-    nsIInterfaceInfoManager* temp;
-
     if(!xpc && !(xpc = GetXPConnect()))
         return NS_ERROR_FAILURE;
 
-    *iim = temp = xpc->mInterfaceInfoManager;
-    NS_IF_ADDREF(temp);
+    *iim = xpc->mInterfaceInfoManager;
+    NS_IF_ADDREF(*iim);
     return NS_OK;
 }
 
@@ -340,6 +340,67 @@ nsXPConnect::FindMainThread()
     rv = t->GetPRThread(&gMainThread);
     NS_ASSERTION(NS_SUCCEEDED(rv) && gMainThread, "bad");
     return gMainThread;
+}
+
+/***************************************************************************/
+
+typedef PRBool (*InfoTester)(nsIInterfaceInfoManager* manager, const void* data,
+                             nsIInterfaceInfo** info);
+
+static PRBool IIDTester(nsIInterfaceInfoManager* manager, const void* data,
+                        nsIInterfaceInfo** info)
+{
+    return NS_SUCCEEDED(manager->GetInfoForIID((const nsIID *) data, info)) &&
+           *info;
+}
+
+static PRBool NameTester(nsIInterfaceInfoManager* manager, const void* data,
+                      nsIInterfaceInfo** info)
+{
+    return NS_SUCCEEDED(manager->GetInfoForName((const char *) data, info)) &&
+           *info;
+}
+
+static nsresult FindInfo(InfoTester tester, const void* data, 
+                         nsIInterfaceInfoSuperManager* iism,
+                         nsIInterfaceInfo** info)
+{
+    if(tester(iism, data, info))
+        return NS_OK;
+    
+    // If not found, then let's ask additional managers.
+
+    PRBool yes;
+    nsCOMPtr<nsISimpleEnumerator> list;
+
+    if(NS_SUCCEEDED(iism->HasAdditionalManagers(&yes)) && yes &&
+       NS_SUCCEEDED(iism->EnumerateAdditionalManagers(getter_AddRefs(list))) &&
+       list)
+    {
+        PRBool more;
+        nsCOMPtr<nsIInterfaceInfoManager> current;
+
+        while(NS_SUCCEEDED(list->HasMoreElements(&more)) && more &&
+              NS_SUCCEEDED(list->GetNext(getter_AddRefs(current))) && current)
+        {
+            if(tester(current, data, info))
+                return NS_OK;
+        }
+    }
+    
+    return NS_ERROR_NO_INTERFACE;
+}    
+
+nsresult
+nsXPConnect::GetInfoForIID(const nsIID * aIID, nsIInterfaceInfo** info)
+{
+    return FindInfo(IIDTester, aIID, mInterfaceInfoManager, info);
+}
+
+nsresult
+nsXPConnect::GetInfoForName(const char * name, nsIInterfaceInfo** info)
+{
+    return FindInfo(NameTester, name, mInterfaceInfoManager, info);
 }
 
 /***************************************************************************/

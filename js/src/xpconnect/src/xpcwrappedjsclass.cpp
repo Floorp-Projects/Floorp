@@ -133,21 +133,17 @@ nsXPCWrappedJSClass::GetNewOrUsed(XPCCallContext& ccx, REFNSIID aIID,
 
     if(!clazz)
     {
-        nsCOMPtr<nsIInterfaceInfoManager> iimgr;
-        nsXPConnect::GetInterfaceInfoManager(getter_AddRefs(iimgr));
-        if(iimgr)
+        nsCOMPtr<nsIInterfaceInfo> info;
+        ccx.GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
+        if(info)
         {
-            nsCOMPtr<nsIInterfaceInfo> info;
-            if(NS_SUCCEEDED(iimgr->GetInfoForIID(&aIID, getter_AddRefs(info))))
+            PRBool canScript;
+            if(NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
+               nsXPConnect::IsISupportsDescendant(info))
             {
-                PRBool canScript;
-                if(NS_SUCCEEDED(info->IsScriptable(&canScript)) && canScript &&
-                   nsXPConnect::IsISupportsDescendant(info))
-                {
-                    clazz = new nsXPCWrappedJSClass(ccx, aIID, info);
-                    if(!clazz->mDescriptors)
-                        NS_RELEASE(clazz);  // sets clazz to nsnull
-                }
+                clazz = new nsXPCWrappedJSClass(ccx, aIID, info);
+                if(clazz && !clazz->mDescriptors)
+                    NS_RELEASE(clazz);  // sets clazz to nsnull
             }
         }
     }
@@ -242,12 +238,8 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
     // We so often ask for nsISupports that we can short-circuit the test...
     if(!aIID.Equals(NS_GET_IID(nsISupports)))
     {
-        nsCOMPtr<nsIInterfaceInfoManager> iimgr;
-        nsXPConnect::GetInterfaceInfoManager(getter_AddRefs(iimgr));
-        if(!iimgr)
-            return nsnull;
         nsCOMPtr<nsIInterfaceInfo> info;
-        iimgr->GetInfoForIID(&aIID, getter_AddRefs(info));
+        ccx.GetXPConnect()->GetInfoForIID(&aIID, getter_AddRefs(info));
         if(!info)
             return nsnull;
         PRBool canScript;

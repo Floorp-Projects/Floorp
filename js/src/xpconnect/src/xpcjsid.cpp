@@ -392,98 +392,82 @@ NS_IMPL_CI_INTERFACE_GETTER2(nsJSIID, nsIJSID, nsIJSIID)
                                     nsIXPCScriptable::ALLOW_PROP_MODS_DURING_RESOLVE
 #include "xpc_map_end.h" /* This will #undef the above */
 
-nsJSIID::nsJSIID()
+
+nsJSIID::nsJSIID(nsIInterfaceInfo* aInfo)
+    : mInfo(aInfo)
 {
     NS_INIT_ISUPPORTS();
 }
 
 nsJSIID::~nsJSIID() {}
 
+// If mInfo is present we use it and ignore mDetails, else we use mDetails.
+
 NS_IMETHODIMP nsJSIID::GetName(char * *aName)
-    {ResolveName(); return mDetails.GetName(aName);}
-
-NS_IMETHODIMP nsJSIID::GetNumber(char * *aNumber)
-    {return mDetails.GetNumber(aNumber);}
-
-NS_IMETHODIMP nsJSIID::GetId(nsID* *aId)
-    {return mDetails.GetId(aId);}
-
-NS_IMETHODIMP nsJSIID::GetValid(PRBool *aValid)
-    {return mDetails.GetValid(aValid);}
-
-NS_IMETHODIMP nsJSIID::Equals(nsIJSID *other, PRBool *_retval)
-    {return mDetails.Equals(other, _retval);}
-
-NS_IMETHODIMP nsJSIID::Initialize(const char *idString)
-    {return mDetails.Initialize(idString);}
-
-NS_IMETHODIMP nsJSIID::ToString(char **_retval)
-    {ResolveName(); return mDetails.ToString(_retval);}
-
-void
-nsJSIID::ResolveName()
 {
-    if(!mDetails.NameIsSet())
-    {
-        nsCOMPtr<nsIInterfaceInfoManager> iim;
-        nsXPConnect::GetInterfaceInfoManager(getter_AddRefs(iim));
-        if(iim)
-        {
-            char* name;
-            if(NS_SUCCEEDED(iim->GetNameForIID(mDetails.GetID(), &name)) && name)
-            {
-                mDetails.SetName(name);
-                nsMemory::Free(name);
-            }
-        }
-        if(!mDetails.NameIsSet())
-            mDetails.SetNameToNoString();
-    }
+    return mInfo->GetName(aName);    
 }
 
-//static
-nsJSIID*
-nsJSIID::NewID(const char* str)
+NS_IMETHODIMP nsJSIID::GetNumber(char * *aNumber)
 {
+    const nsIID* id;
+    mInfo->GetIIDShared(&id);
+    char* str = id->ToString();
     if(!str)
+        return NS_ERROR_OUT_OF_MEMORY;
+    *aNumber = (char*) nsMemory::Clone(str, strlen(str)+1);
+    PR_Free(str);
+    return *aNumber ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}        
+
+NS_IMETHODIMP nsJSIID::GetId(nsID* *aId)
+{
+    return mInfo->GetIID((nsIID**)aId);
+}
+
+NS_IMETHODIMP nsJSIID::GetValid(PRBool *aValid)
+{
+    *aValid = PR_TRUE;
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsJSIID::Equals(nsIJSID *other, PRBool *_retval)
+{
+    nsID* otherID;
+    if(NS_SUCCEEDED(other->GetId(&otherID)))
     {
-        NS_ASSERTION(0,"no string");
+        mInfo->IsIID((nsIID*)otherID, _retval);
+        nsMemory::Free(otherID);
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsJSIID::Initialize(const char *idString)
+{
+    return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsJSIID::ToString(char **_retval)
+{
+    return mInfo->GetName(_retval);    
+}
+
+// static 
+nsJSIID* 
+nsJSIID::NewID(nsIInterfaceInfo* aInfo)
+{
+    if(!aInfo)
+    {
+        NS_ERROR("no info");
         return nsnull;
     }
 
-    nsJSIID* idObj = new nsJSIID();
-    if(idObj)
-    {
-        PRBool success = PR_FALSE;
-        NS_ADDREF(idObj);
+    PRBool canScript;
+    if(NS_FAILED(aInfo->IsScriptable(&canScript)) || !canScript)
+        return nsnull;
 
-        if(str[0] == '{')
-        {
-            if(NS_SUCCEEDED(idObj->Initialize(str)))
-                success = PR_TRUE;
-        }
-        else
-        {
-            nsCOMPtr<nsIInterfaceInfoManager> iim;
-            nsXPConnect::GetInterfaceInfoManager(getter_AddRefs(iim));
-            if(iim)
-            {
-                nsCOMPtr<nsIInterfaceInfo> iinfo;
-                PRBool canScript;
-                nsID* pid;
-                if(NS_SUCCEEDED(iim->GetInfoForName(str,
-                                                    getter_AddRefs(iinfo))) &&
-                   NS_SUCCEEDED(iinfo->IsScriptable(&canScript)) && canScript &&
-                   NS_SUCCEEDED(iinfo->GetIID(&pid)) && pid)
-                {
-                    success = idObj->mDetails.InitWithName(*pid, str);
-                    nsMemory::Free(pid);
-                }
-            }
-        }
-        if(!success)
-            NS_RELEASE(idObj);
-    }
+    nsJSIID* idObj = new nsJSIID(aInfo);
+    NS_IF_ADDREF(idObj);
     return idObj;
 }
 
@@ -498,7 +482,11 @@ nsJSIID::NewResolve(nsIXPConnectWrappedNative *wrapper,
     XPCCallContext ccx(JS_CALLER, cx);
 
     AutoMarkingNativeInterfacePtr iface(ccx);
-    iface = XPCNativeInterface::GetNewOrUsed(ccx, mDetails.GetID());
+
+    const nsIID* iid;
+    mInfo->GetIIDShared(&iid);
+
+    iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
 
     if(!iface)
         return NS_OK;
@@ -536,7 +524,11 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative *wrapper,
     XPCCallContext ccx(JS_CALLER, cx);
 
     AutoMarkingNativeInterfacePtr iface(ccx);
-    iface = XPCNativeInterface::GetNewOrUsed(ccx, mDetails.GetID());
+
+    const nsIID* iid;
+    mInfo->GetIIDShared(&iid);
+
+    iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
 
     if(!iface)
         return NS_OK;
@@ -577,10 +569,13 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         if(!other_wrapper)
             return NS_OK;
 
+        const nsIID* iid;
+        mInfo->GetIIDShared(&iid);
+
         // We'll trust the interface set of the wrapper if this is known
         // to be an interface that the objects *expects* to be able to
         // handle.
-        if(other_wrapper->HasInterfaceNoQI(*mDetails.GetID()))
+        if(other_wrapper->HasInterfaceNoQI(*iid))
         {
             *bp = JS_TRUE;
             return NS_OK;
@@ -590,7 +585,7 @@ nsJSIID::HasInstance(nsIXPConnectWrappedNative *wrapper,
         XPCCallContext ccx(JS_CALLER, cx);
 
         AutoMarkingNativeInterfacePtr iface(ccx);
-        iface = XPCNativeInterface::GetNewOrUsed(ccx, mDetails.GetID());
+        iface = XPCNativeInterface::GetNewOrUsed(ccx, iid);
 
         if(iface && other_wrapper->FindTearOff(ccx, iface))
             *bp = JS_TRUE;

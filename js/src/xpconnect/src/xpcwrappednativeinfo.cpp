@@ -186,13 +186,9 @@ XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, const nsIID* iid)
     if(iface)
         return iface;
 
-    nsCOMPtr<nsIInterfaceInfoManager> iimgr;
-    nsXPConnect::GetInterfaceInfoManager(getter_AddRefs(iimgr));
-    if(!iimgr)
-        return nsnull;
-
     nsCOMPtr<nsIInterfaceInfo> info;
-    if(NS_FAILED(iimgr->GetInfoForIID(iid, getter_AddRefs(info))) ||!info)
+    ccx.GetXPConnect()->GetInfoForIID(iid, getter_AddRefs(info));
+    if(!info)
         return nsnull;
 
     iface = NewInstance(ccx, info);
@@ -269,16 +265,9 @@ XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, nsIInterfaceInfo* info)
 XPCNativeInterface*
 XPCNativeInterface::GetNewOrUsed(XPCCallContext& ccx, const char* name)
 {
-    nsCOMPtr<nsIInterfaceInfoManager> iimgr;
-    nsXPConnect::GetInterfaceInfoManager(getter_AddRefs(iimgr));
-    if(!iimgr)
-        return nsnull;
-
     nsCOMPtr<nsIInterfaceInfo> info;
-    if(NS_FAILED(iimgr->GetInfoForName(name, getter_AddRefs(info))) || !info)
-        return nsnull;
-
-    return GetNewOrUsed(ccx, info);
+    ccx.GetXPConnect()->GetInfoForName(name, getter_AddRefs(info));
+    return info ? GetNewOrUsed(ccx, info) : nsnull;
 }
 
 // static

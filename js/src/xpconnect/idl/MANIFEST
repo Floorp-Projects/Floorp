@@ -13,3 +13,4 @@ nsIScriptError.idl
 mozIJSSubScriptLoader.idl
 nsIXPCScriptable.idl
 nsIXPCScriptNotify.idl
+nsIScriptableInterfaces.idl
