@@ -34,6 +34,7 @@
 #include "nsIServiceManager.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
+#include "nsXPIDLString.h"
 #include "nsXPComCIID.h"
 #include "plevent.h"
 #include "plstr.h"
@@ -53,9 +54,9 @@ static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
 
 DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Page);
 
-#define OPENDIR_NAMESPACE_URI "http://directory.mozilla.org/rdf"
+#define OPENDIR_NAMESPACE_URI "http://directory.mozilla.org/rdf#"
 DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, Topic);
-DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, link);
+DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, narrow);
 DEFINE_RDF_VOCAB(OPENDIR_NAMESPACE_URI, OPENDIR, catid);
 
 ////////////////////////////////////////////////////////////////////////
@@ -71,13 +72,13 @@ protected:
     // pseudo-constants
     static nsIRDFResource* kNC_Page;
     static nsIRDFResource* kOPENDIR_Topic;
-    static nsIRDFResource* kOPENDIR_link;
+    static nsIRDFResource* kOPENDIR_narrow;
     static nsIRDFResource* kOPENDIR_catid;
 
 public:
     nsBrowsingProfileReader(const char *object_name = (const char *)NULL,
-                         int argc=0,
-                         char **argv=0);
+                            int argc=0,
+                            char **argv=0);
 
     virtual ~nsBrowsingProfileReader();
 
@@ -95,13 +96,17 @@ public:
                 const nsBrowsingProfileVector& aVector);
 
     nsresult
-    GetCategory(PRInt32 aCategoryID, const char* *aCategory);
+    WriteError(WAIServerRequest_ptr aSession,
+               const char* aMessage);
+
+    nsresult
+    GetCategory(PRInt32 aCategoryID, nsXPIDLCString& aCategory);
 };
 
-nsIRDFResource* nsBrowsingProfileReader::kNC_Page       = nsnull;
-nsIRDFResource* nsBrowsingProfileReader::kOPENDIR_Topic = nsnull;
-nsIRDFResource* nsBrowsingProfileReader::kOPENDIR_link  = nsnull;
-nsIRDFResource* nsBrowsingProfileReader::kOPENDIR_catid = nsnull;
+nsIRDFResource* nsBrowsingProfileReader::kNC_Page        = nsnull;
+nsIRDFResource* nsBrowsingProfileReader::kOPENDIR_Topic  = nsnull;
+nsIRDFResource* nsBrowsingProfileReader::kOPENDIR_narrow = nsnull;
+nsIRDFResource* nsBrowsingProfileReader::kOPENDIR_catid  = nsnull;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -125,33 +130,54 @@ nsBrowsingProfileReader::~nsBrowsingProfileReader()
 long
 nsBrowsingProfileReader::Run(WAIServerRequest_ptr aSession)
 {
+    static const char kBrowsingProfileCookiePrefix[] = "BP=";
     // Process an HTTP request
     char *cookie = nsnull;
-    if ((aSession->getCookie(cookie) == WAISPISuccess) && (cookie != nsnull)) {
-        nsresult rv;
-        nsIBrowsingProfile* profile;
-        rv = nsComponentManager::CreateInstance(kBrowsingProfileCID,
-                                                nsnull,
-                                                nsIBrowsingProfile::GetIID(),
-                                                (void**) &profile);
+    if ((WAISPISuccess == aSession->getCookie(cookie)) && (nsnull != cookie)) {
+		char* browsingProfileCookie =
+			PL_strstr(cookie, kBrowsingProfileCookiePrefix);
 
-        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create profile");
-        if (NS_SUCCEEDED(rv)) {
-            rv = profile->SetCookieString(cookie);
-            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set cookie");
+		if (browsingProfileCookie) {
+            // skip over the "BP=" so we can point directly to the hex
+            // digits.
+            browsingProfileCookie += sizeof(kBrowsingProfileCookiePrefix) - 1;
 
+            // create a cookie object into which we'll try to stuff the
+            // hex digits (i.e., let the cookie object do the parsing).
+            nsresult rv;
+            nsIBrowsingProfile* profile;
+            rv = nsComponentManager::CreateInstance(kBrowsingProfileCID,
+                                                    nsnull,
+                                                    nsIBrowsingProfile::GetIID(),
+                                                    (void**) &profile);
+
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create profile");
             if (NS_SUCCEEDED(rv)) {
-                nsBrowsingProfileVector vector;
-                rv = profile->GetVector(vector);
-                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get vector");
+                rv = profile->SetCookieString(browsingProfileCookie);
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to set cookie");
 
                 if (NS_SUCCEEDED(rv)) {
-                    rv = WriteVector(aSession, vector);
+                    // now pull out the browsing profile vector and write
+                    // it back as fancy HTML.
+                    nsBrowsingProfileVector vector;
+                    rv = profile->GetVector(vector);
+                    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get vector");
+
+                    if (NS_SUCCEEDED(rv)) {
+                        rv = WriteVector(aSession, vector);
+                    }
                 }
+                NS_RELEASE(profile);
             }
-            NS_RELEASE(profile);
         }
+        else {
+            WriteError(aSession, "No profile cookie");
+        }
+
         StringDelete(cookie);
+    }
+    else {
+        WriteError(aSession, "No profile cookie.");
     }
 
     return 0;
@@ -191,7 +217,7 @@ nsBrowsingProfileReader::Init()
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
     if (NS_FAILED(rv)) return rv;
 
-    rv = mRDFService->GetResource(kURIOPENDIR_link, &kOPENDIR_link);
+    rv = mRDFService->GetResource(kURIOPENDIR_narrow, &kOPENDIR_narrow);
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get resource");
     if (NS_FAILED(rv)) return rv;
 
@@ -243,6 +269,7 @@ nsBrowsingProfileReader::WriteVector(WAIServerRequest_ptr aSession,
     out << "<td>Flags</td>"     << endl;
     out << "</tr>"              << endl;
 
+    nsXPIDLCString category;
     for (PRInt32 i = 0; i < nsBrowsingProfile_CategoryCount; ++i) {
         // zero means no more categories -- profile is small
         if (aVector.mCategory[i].mID == 0)
@@ -250,10 +277,9 @@ nsBrowsingProfileReader::WriteVector(WAIServerRequest_ptr aSession,
 
         out << "  <tr>" << endl;
 
-        const char* category;
-        nsresult rv = GetCategory(aVector.mCategory[i].mID, &category);
+        nsresult rv = GetCategory(aVector.mCategory[i].mID, category);
         if (NS_SUCCEEDED(rv)) {
-            out << "    <td>" << category                                   << "</td>" << endl;
+            out << "    <td>" << (const char*) category                     << "</td>" << endl;
             out << "    <td>" << (PRInt32) aVector.mCategory[i].mVisitCount << "</td>" << endl;
             out << "    <td>" << (PRInt32) aVector.mCategory[i].mFlags      << "</td>" << endl;
         }
@@ -278,7 +304,24 @@ nsBrowsingProfileReader::WriteVector(WAIServerRequest_ptr aSession,
 
 
 nsresult
-nsBrowsingProfileReader::GetCategory(PRInt32 aCategoryID, const char* *aCategory)
+nsBrowsingProfileReader::WriteError(WAIServerRequest_ptr aSession,
+                                    const char* aMessage)
+{
+    ostrstream out;
+
+    out << "<h1>Browsing Profile</h1>" << endl;
+    out << "<b>" << aMessage << "</b>" << endl;
+
+    aSession->setResponseContentLength(out.pcount());
+    aSession->StartResponse();
+    aSession->WriteClient((const unsigned char *)out.str(), out.pcount()); 
+    out.rdbuf()->freeze(0);
+
+    return NS_OK;
+}
+
+nsresult
+nsBrowsingProfileReader::GetCategory(PRInt32 aCategoryID, nsXPIDLCString& aCategory)
 {
     nsresult rv;
     nsAutoString categoryIDStr;
@@ -294,17 +337,10 @@ nsBrowsingProfileReader::GetCategory(PRInt32 aCategoryID, const char* *aCategory
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to find topic for category");
     if (NS_FAILED(rv)) return rv;
 
-    const char* uri;
-    rv = topic->GetValue(&uri);
+    rv = topic->GetValue(getter_Copies(aCategory));
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get category URI");
     if (NS_FAILED(rv)) return rv;
 
-    const char* category = PL_strchr(uri, '#');
-    NS_ASSERTION(category != nsnull, "unexpected URI");
-    if (! category)
-        return NS_ERROR_FAILURE;
-
-    *aCategory = (category + 1); // skip the '#'
     return NS_OK;
 }
 
