@@ -181,6 +181,10 @@
     <!-- from editorOverlay -->
     <menulist id="ParagraphSelect"/>
     <stack id="ColorButtons"/>
+    <toolbarbutton id="HighlightColorButton"/>
+
+    <toolbarseparator class="toolbarseparator-standard"/>
+
     <toolbarbutton id="DecreaseFontSizeButton"/>
     <toolbarbutton id="IncreaseFontSizeButton"/>
 

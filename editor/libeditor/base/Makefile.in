@@ -44,6 +44,7 @@ REQUIRES        = xpcom \
                   gfx \
                   widget \
                   xuldoc \
+                  unicharutil \
                   webbrwsr \
                   $(NULL)
 
@@ -65,6 +66,7 @@ CPPSRCS		+=                          \
 		EditTxn.cpp                 \
 		PlaceholderTxn.cpp          \
 		ChangeAttributeTxn.cpp      \
+		ChangeCSSInlineStyleTxn.cpp \
 		CreateElementTxn.cpp        \
 		DeleteElementTxn.cpp        \
 		DeleteRangeTxn.cpp          \

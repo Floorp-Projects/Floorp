@@ -71,8 +71,10 @@ function Startup()
 //   by AdvancedEdit(), which is shared by all property dialogs
 function InitDialog()
 {
-  // Just to be confusing, "size" is used instead of height
-  var height = globalElement.getAttribute("size");
+  // Just to be confusing, "size" is used instead of height because it does
+  // not accept % values, only pixels
+  var height = GetHTMLOrCSSStyleValue(globalElement, "size", "height")
+  height = StripPxUnit(height);
   if(!height) {
     height = 2; //Default value
   }
@@ -84,24 +86,21 @@ function InitDialog()
   // This sets contents of menulist (adds pixel and percent menuitems elements)
   gDialog.widthInput.value = InitPixelOrPercentMenulist(globalElement, hLineElement, "width","pixelOrPercentMenulist");
 
-  align = globalElement.getAttribute("align");
-  if (!align)
-    align = "";
-  align = align.toLowerCase();
+  var marginLeft  = GetHTMLOrCSSStyleValue(globalElement, "align", "margin-left").toLowerCase();
+  var marginRight = GetHTMLOrCSSStyleValue(globalElement, "align", "margin-right").toLowerCase();
+  align = marginLeft + " " + marginRight;
+  gDialog.centerAlign.checked = (align == "center center" || align == "auto auto");
+  gDialog.rightAlign.checked  = (align == "right right"   || align == "auto 0px");
+  gDialog.leftAlign.checked   = (align == "left left"     || align == "0px auto" || align == " ");
 
-  var selectedRadio = gDialog.centerAlign;
-  var radioGroup = gDialog.centerAlign.radioGroup
-  switch (align)
-  {
-    case "left":
-      gDialog.alignGroup.selectedItem = gDialog.leftAlign;
-      break;
-    case "right":
-      gDialog.alignGroup.selectedItem = gDialog.rightAlign;
-      break;
-    default:
-      gDialog.alignGroup.selectedItem = gDialog.centerAlign;
-      break;
+  if (gDialog.centerAlign.checked) {
+    gDialog.alignGroup.selectedItem = gDialog.centerAlign;
+  }
+  else if (gDialog.rightAlign.checked) {
+    gDialog.alignGroup.selectedItem = gDialog.rightAlign;
+  }
+  else {
+    gDialog.alignGroup.selectedItem = gDialog.leftAlign;
   }
 
   // This is tricky! Since the "noshade" attribute doesn't always have a value,

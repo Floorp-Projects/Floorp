@@ -93,14 +93,15 @@ function InitDialog()
   BuildBulletStyleList();
   gDialog.StartingNumberInput.value = "";
 
-  var type = globalElement ? globalElement.getAttribute("type") : null;
+  var type = globalElement ? GetHTMLOrCSSStyleValue(globalElement, "type", "list-style-type") : null;
+  if (type)
+    type = type.toLowerCase();
 
   var index = 0;
   if (ListType == "ul")
   {
     if (type)
     {
-      type = type.toLowerCase();
       if (type == "disc")
         index = 1;
       else if (type == "circle")
@@ -114,18 +115,23 @@ function InitDialog()
     switch (type)
     {
       case "1":
+      case "decimal":
         index = 1;
         break;
       case "I":
+      case "upper-roman":
         index = 2;
         break;
       case "i":
+      case "lower-roman":
         index = 3;
         break;
       case "A":
+      case "upper-alpha":
         index = 4;
         break;
       case "a":
+      case "lower-alpha":
         index = 5;
         break;
     }

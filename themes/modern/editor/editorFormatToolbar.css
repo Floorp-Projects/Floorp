@@ -494,3 +494,29 @@
   margin: 9px 2px 2px 9px;
 }
 
+#HighlightColorButton > .toolbarbutton-icon {
+  margin-right: 0px ! important ;
+}
+
+#HighlightColorButton {
+  -moz-image-region: rect(355px 44px 372px 22px);
+  margin: 4px;
+  border: 1px inset #5B7693;
+  padding: 0px;
+  width: 20px; height: 17px;
+}
+
+#HighlightColorButton:hover {
+  -moz-image-region: rect(355px 66px 372px 44px);
+}
+
+#HighlightColorButton:hover:active {
+  -moz-image-region: rect(355px 88px 372px 66px);
+}
+
+
+#HighlightColorButton[disabled="true"],
+#HighlightColorButton[disabled="true"]:hover,
+#HighlightColorButton[disabled="true"]:hover:active {
+  -moz-image-region: rect(372px 22px 389px 0px);
+}

@@ -75,15 +75,6 @@ public:
                   const nsAReadableString & aValue,
                   PRBool aRemoveProperty);
 
-  /** get the specified inline styles (style attribute) for an element
-    *
-    * @param aElement        [IN] the element node
-    * @param aCssDecl        [OUT] the CSS declaration corresponding to the style attr
-    * @param aLength         [OUT] the number of declarations in aCssDecl
-    */
-  static nsresult GetInlineStyles(nsIDOMElement * aElement, nsIDOMCSSStyleDeclaration ** aCssDecl,
-                                  PRUint32 * aLength);
-
   /** returns true if the list of white-space separated values contains aValue
     *
     * @return                true if the value is in the list of values
@@ -111,8 +102,8 @@ private:
   PRBool AcceptsMoreThanOneValue(nsIAtom * aCSSProperty);
 
   /** remove a value from a list of white-space separated values
-    * @param aValueList      [IN] a list of white-space separated values
-    * @param aValue          [IN] the value to remove from the list
+    * @param aValues         [IN] a list of white-space separated values
+    * @param aRemoveValue    [IN] the value to remove from the list
     */
   void   RemoveValueFromListOfValues(nsAWritableString & aValues, const nsAReadableString  & aRemoveValue);
 

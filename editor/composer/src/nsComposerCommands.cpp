@@ -20,7 +20,8 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
- *    Ryan Cassin (rcassin@supernova.org)
+ *   Ryan Cassin <rcassin@supernova.org>
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -791,6 +792,77 @@ nsFontColorStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newSta
   
   return rv;
 }
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+nsHighlightColorStateCommand::nsHighlightColorStateCommand()
+: nsMultiStateCommand()
+{
+}
+
+nsresult
+nsHighlightColorStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString& outStateString, PRBool& outMixed)
+{
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
+  
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+
+  return htmlEditor->GetHighlightColorState(&outMixed, outStateString);
+}
+
+
+nsresult
+nsHighlightColorStateCommand::SetState(nsIEditorShell *aEditorShell, nsString& newState)
+{
+  NS_ASSERTION(aEditorShell, "Need an editor shell here");
+
+  nsCOMPtr<nsIEditor> editor;
+  aEditorShell->GetEditor(getter_AddRefs(editor));
+  nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+  if (!htmlEditor) return NS_ERROR_FAILURE;
+
+  nsresult rv;
+
+  nsCOMPtr<nsIAtom> fontAtom = getter_AddRefs(NS_NewAtom("font"));
+
+  if (!newState.Length() || newState.Equals(NS_LITERAL_STRING("normal"))) {
+    rv = htmlEditor->RemoveInlineProperty(fontAtom, NS_LITERAL_STRING("bgcolor"));
+  } else {
+    rv = htmlEditor->SetCSSInlineProperty(fontAtom, NS_LITERAL_STRING("bgcolor"), newState);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsHighlightColorStateCommand::IsCommandEnabled(const nsAReadableString & aCommandName, nsISupports *refCon, PRBool *outCmdEnabled)
+{
+  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
+  *outCmdEnabled = PR_FALSE;
+  if (editorShell && EditingHTML(editorShell))
+  {
+    nsCOMPtr<nsIEditor> editor;
+    editorShell->GetEditor(getter_AddRefs(editor));
+    PRBool useCSS;
+    editor->IsCSSEnabled(&useCSS);
+      
+    *outCmdEnabled = useCSS;
+  }
+
+  nsresult rv = UpdateCommandState(aCommandName, refCon);
+  if (NS_FAILED(rv)) {
+    *outCmdEnabled = PR_FALSE;
+    return NS_OK;
+  }
+
+  return NS_OK;
+}
+
 
 #ifdef XP_MAC
 #pragma mark -

@@ -515,11 +515,22 @@ function LimitStringLength(elementID, length)
     editField.value = stringIn.slice(0,length);
 }
 
+function StripPxUnit(value)
+{
+  var pxIndex = value.search(/px/);
+  if (pxIndex  > 0) {
+    // Strip out the unit
+    value = value.substr(0, pxIndex);
+  }
+  return value;
+}
+
 function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menulistID, defaultIndex)
 {
   if (!defaultIndex) defaultIndex = gPixel;
 
-  var size  = elementForAtt.getAttribute(attribute);
+  // var size  = elementForAtt.getAttribute(attribute);
+  var size = GetHTMLOrCSSStyleValue(elementForAtt, attribute, attribute)
   var menulist = document.getElementById(menulistID);
   var pixelItem;
   var percentItem;
@@ -538,14 +549,21 @@ function InitPixelOrPercentMenulist(elementForAtt, elementInDoc, attribute, menu
   percentItem = AppendStringToMenulist(menulist, GetAppropriatePercentString(elementForAtt, elementInDoc));
   if (size && size.length > 0)
   {
-    // Search for a "%" character
+    // Search for a "%" or "px"
     var percentIndex = size.search(/%/);
+    var pxIndex = size.search(/px/);
     if (percentIndex > 0)
     {
       // Strip out the %
       size = size.substr(0, percentIndex);
       if (percentItem)
         menulist.selectedItem = percentItem;
+    }
+    else if (pxIndex  > 0)
+    {
+      // Strip out the %
+      size = size.substr(0, pxIndex);
+      menulist.selectedItem = pixelItem;
     }
     else
       menulist.selectedItem = pixelItem;

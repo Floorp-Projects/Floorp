@@ -30,6 +30,7 @@ var maxColumns = 10000;
 var maxPixels = 10000;
 var rows;
 var columns;
+var prefs = GetPrefs();
 
 // dialog initialization code
 function Startup()
@@ -53,7 +54,10 @@ function Startup()
 
   // Make a copy to use for AdvancedEdit
   globalElement = tableElement.cloneNode(false);
-  
+  if (prefs.getBoolPref("editor.use_css") && (editorShell.editorType == "html")) {
+    // only for Composer and not for htmlmail
+    globalElement.setAttribute("style", "text-align: left;");
+  }
   // Initialize all widgets with image attributes
   InitDialog();
 

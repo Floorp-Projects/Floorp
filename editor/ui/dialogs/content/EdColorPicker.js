@@ -18,6 +18,7 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
+ *   Daniel Glazman (glazman@netscape.com)
  */
 
 
@@ -28,6 +29,7 @@ var gColor = "";
 var LastPickedColor = "";
 var ColorType = "Text";
 var TextType = false;
+var HighlightType = false;
 var TableOrCell = false;
 var LastPickedIsDefault = true;
 var NoDefault = false;
@@ -36,6 +38,8 @@ var gColorObj;
 // dialog initialization code
 function Startup()
 {
+  // if (!InitEditorShell()) return;
+ 
   if (!window.arguments[1])
   {
     dump("EdColorPicker: Missing color object param\n");
@@ -64,9 +68,17 @@ function Startup()
     ColorType = gColorObj.Type;
     // Get string for dialog title from passed-in type 
     //   (note constraint on editor.properties string name)
-    window.title = GetString(ColorType+"Color");
+    var prefs = GetPrefs();
+    var IsCSSPrefChecked = prefs.getBoolPref("editor.use_css");
+    if (ColorType == "Page" && IsCSSPrefChecked && editorShell.editorType == "html")
+    {
+      window.title = GetString("BlockColor");
+    }
+    else
+    {
+      window.title = GetString(ColorType+"Color");
+    }
   }
-
   if (!window.title)
     window.title = GetString("Color");
 
@@ -107,6 +119,11 @@ function Startup()
         gDialog.CellRadio.focus();
       }
       break;
+    case "Highlight":
+      HighlightType = true;
+      if (gColorObj.HighlightColor)
+        gColor = gColorObj.HighlightColor;
+      break;
     default:
       // Any other type will change some kind of text,
       TextType = true;
@@ -126,6 +143,12 @@ function Startup()
     if ( !("LastTextColor" in gColorObj) || !gColorObj.LastTextColor)
       gColorObj.LastTextColor = gDialog.LastPickedColor.getAttribute("LastTextColor");
     LastPickedColor = gColorObj.LastTextColor;
+  }
+  else if (HighlightType)
+  {
+    if ( !("LastHighlightColor" in gColorObj) || !gColorObj.LastHighlightColor)
+      gColorObj.LastHighlightColor = gDialog.LastPickedColor.getAttribute("LastHighlightColor");
+    LastPickedColor = gColorObj.LastHighlightColor;
   }
   else
   {
@@ -263,6 +286,15 @@ function onAccept()
     {
       gDialog.LastPickedColor.setAttribute("LastTextColor", gColor);
       gColorObj.LastTextColor = gColor;
+    }
+  }
+  else if (HighlightType)
+  {
+    gColorObj.HighlightColor = gColor;
+    if (gColor.length > 0)
+    {
+      gDialog.LastPickedColor.setAttribute("LastHighlightColor", gColor);
+      gColorObj.LastHighlightColor = gColor;
     }
   }
   else

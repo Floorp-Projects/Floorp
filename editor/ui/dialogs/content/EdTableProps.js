@@ -44,6 +44,8 @@ var bgcolor = "bgcolor";
 var TableColor;
 var CellColor;
 
+const cssBackgroundColorStr = "background-color";
+
 var rowCount = 1;
 var colCount = 1;
 var lastRowIndex;
@@ -81,6 +83,8 @@ var maxColumns = 1000;
 var selection;
 var CellDataChanged = false;
 var canDelete = false;
+var gPrefs = GetPrefs();
+var gUseCSS = true;
 
 // dialog initialization code
 function Startup()
@@ -95,6 +99,15 @@ function Startup()
   gDialog.TableColumnsInput = document.getElementById("TableColumnsInput");
   gDialog.TableWidthInput = document.getElementById("TableWidthInput");
   gDialog.TableWidthUnits = document.getElementById("TableWidthUnits");
+  gDialog.TableHeightInput = document.getElementById("TableHeightInput");
+  gDialog.TableHeightUnits = document.getElementById("TableHeightUnits");
+  if (!gPrefs.getBoolPref("editor.use_css") || (editorShell.editorType != "html")) {
+    gUseCSS = false;
+    tableHeightLabel = document.getElementById("TableHeightLabel");
+    tableHeightLabel.parentNode.removeChild(tableHeightLabel);
+    gDialog.TableHeightInput.parentNode.removeChild(gDialog.TableHeightInput);
+    gDialog.TableHeightUnits.parentNode.removeChild(gDialog.TableHeightUnits);
+  }
   gDialog.BorderWidthInput = document.getElementById("BorderWidthInput");
   gDialog.SpacingInput = document.getElementById("SpacingInput");
   gDialog.PaddingInput = document.getElementById("PaddingInput");
@@ -264,15 +277,20 @@ function InitDialog()
   gDialog.TableRowsInput.value = rowCount;
   gDialog.TableColumnsInput.value = colCount;
   gDialog.TableWidthInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "width", "TableWidthUnits", gPercent);
+  if (gUseCSS) {
+    gDialog.TableHeightInput.value = InitPixelOrPercentMenulist(globalTableElement, TableElement, "height",
+                                                                "TableHeightUnits", gPercent);
+  }
   gDialog.BorderWidthInput.value = globalTableElement.border;
   gDialog.SpacingInput.value = globalTableElement.cellSpacing;
   gDialog.PaddingInput.value = globalTableElement.cellPadding;
 
-  //BUG: The align strings are converted: e.g., "center" becomes "Center";
-  var halign = globalTableElement.align.toLowerCase();
-  if (halign == centerStr)
+  var marginLeft  = GetHTMLOrCSSStyleValue(globalTableElement, "align", "margin-left");
+  var marginRight = GetHTMLOrCSSStyleValue(globalTableElement, "align", "margin-right");
+  var halign = marginLeft.toLowerCase() + " " + marginRight.toLowerCase();
+  if (halign == "center center" || halign == "auto auto")
     gDialog.TableAlignList.selectedIndex = 1;
-  else if (halign == rightStr)
+  else if (halign == "right right" || halign == "auto 0px")
     gDialog.TableAlignList.selectedIndex = 2;
   else // Default = left
     gDialog.TableAlignList.selectedIndex = 0;
@@ -291,7 +309,8 @@ function InitDialog()
   }
   gDialog.TableCaptionList.selectedIndex = index;
 
-  TableColor = globalTableElement.bgColor;
+  TableColor = GetHTMLOrCSSStyleValue(globalTableElement, bgcolor, cssBackgroundColorStr);
+  TableColor = ConvertRGBColorIntoHEXColor(TableColor);
   SetColor("tableBackgroundCW", TableColor);
 
   InitCellPanel();
@@ -329,7 +348,7 @@ function InitCellPanel()
 
     alignWasChar = false;
 
-    var halign = globalCellElement.align.toLowerCase();
+    var halign = GetHTMLOrCSSStyleValue(globalCellElement, "align", "text-align").toLowerCase();
     switch (halign)
     {
       case centerStr:
@@ -362,13 +381,17 @@ function InitCellPanel()
     gDialog.CellStyleCheckbox.checked = AdvancedEditUsed && previousIndex != gDialog.CellStyleList.selectedIndex;
 
     previousIndex = gDialog.TextWrapList.selectedIndex;
-    gDialog.TextWrapList.selectedIndex = globalCellElement.noWrap ? 1 : 0;
+    if (GetHTMLOrCSSStyleValue(globalCellElement, "nowrap", "white-space") == "nowrap")
+      gDialog.TextWrapList.selectedIndex = 1;
+    else
+      gDialog.TextWrapList.selectedIndex = 0;
     gDialog.TextWrapCheckbox.checked = AdvancedEditUsed && previousIndex != gDialog.TextWrapList.selectedIndex;
 
     previousValue = CellColor;
-    SetColor("cellBackgroundCW", globalCellElement.bgColor);
-    gDialog.CellColorCheckbox.checked = AdvancedEditUsed && CellColor != globalCellElement.bgColor;
-    CellColor = globalCellElement.bgColor;
+    CellColor = GetHTMLOrCSSStyleValue(globalCellElement, bgcolor, cssBackgroundColorStr);
+    CellColor = ConvertRGBColorIntoHEXColor(CellColor);
+    SetColor("cellBackgroundCW", CellColor);
+    gDialog.CellColorCheckbox.checked = AdvancedEditUsed && previousValue != CellColor;
 
     // We want to set this true in case changes came
     //   from Advanced Edit dialog session (must assume something changed)
@@ -816,6 +839,12 @@ function ValidateTableData()
                  1, maxPixels, globalTableElement, "width");
   if (gValidationError) return false;
 
+  if (gUseCSS) {
+    ValidateNumber(gDialog.TableHeightInput, gDialog.TableHeightUnits,
+                   1, maxPixels, globalTableElement, "height");
+    if (gValidationError) return false;
+  }
+
   var border = ValidateNumber(gDialog.BorderWidthInput, null, 0, maxPixels, globalTableElement, "border");
   // TODO: Deal with "BORDER" without value issue
   if (gValidationError) return false;
@@ -950,7 +979,6 @@ function ChangeIntTextbox(textboxID, checkboxID)
 function CloneAttribute(destElement, srcElement, attr)
 {
   var value = srcElement.getAttribute(attr);
-
   // Use editorShell methods since we are always
   //  modifying a table in the document and
   //  we need transaction system for undo

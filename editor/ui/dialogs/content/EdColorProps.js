@@ -49,9 +49,12 @@ const vlinkStr =       "vlink";
 const alinkStr =       "alink";
 const bgcolorStr =     "bgcolor";
 const backgroundStr =  "background";
-const colorStyle =     "color: ";
-const backColorStyle = "background-color: ";
-const backImageStyle = "; background-image: url(";
+const cssColorStr = "color";
+const cssBackgroundColorStr = "background-color";
+const cssBackgroundImageStr = "background-image";
+const colorStyle =     cssColorStr + ": ";
+const backColorStyle = cssBackgroundColorStr + ": ";
+const backImageStyle = "; " + cssBackgroundImageStr + ": url(";
 
 var customTextColor;
 var customLinkColor;
@@ -113,7 +116,12 @@ function Startup()
 function InitDialog()
 {
   // Get image from document
-  backgroundImage = globalElement.getAttribute(backgroundStr);
+  backgroundImage = GetHTMLOrCSSStyleValue(globalElement, backgroundStr, cssBackgroundImageStr);
+  innerURL = backgroundImage.match( /url\((.*)\)/ ) ;
+  if (innerURL)
+  {
+    backgroundImage = RegExp.$1;
+  }
   if (backgroundImage)
   {
     gDialog.BackgroundImageInput.value = backgroundImage;
@@ -122,11 +130,13 @@ function InitDialog()
 
   SetRelativeCheckbox();
 
-  customTextColor        = globalElement.getAttribute(textStr);
+  customTextColor        = GetHTMLOrCSSStyleValue(globalElement, textStr, cssColorStr);
+  customTextColor        = ConvertRGBColorIntoHEXColor(customTextColor);
   customLinkColor        = globalElement.getAttribute(linkStr);
   customActiveColor      = globalElement.getAttribute(alinkStr);
   customVisitedColor     = globalElement.getAttribute(vlinkStr);
-  customBackgroundColor  = globalElement.getAttribute(bgcolorStr);
+  customBackgroundColor  = GetHTMLOrCSSStyleValue(globalElement, bgcolorStr, cssBackgroundColorStr);
+  customBackgroundColor  = ConvertRGBColorIntoHEXColor(customBackgroundColor);
 
   var haveCustomColor = 
         customTextColor       ||

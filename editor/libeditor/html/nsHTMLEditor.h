@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -59,7 +60,8 @@
 #include "nsEditRules.h"
 
 #include "nsIEditProperty.h"
- 
+#include "nsHTMLCSSUtils.h"
+
 class nsIDOMKeyEvent;
 class nsITransferable;
 class nsIDOMEventReceiver;
@@ -116,9 +118,14 @@ public:
   NS_IMETHODIMP CollapseSelectionToStart();
 
   /* ------------ nsIHTMLEditor methods -------------- */
+
+  NS_IMETHOD SetCSSInlineProperty(nsIAtom *aProperty, 
+                             const nsAReadableString & aAttribute, 
+                             const nsAReadableString & aValue);
+                            
   NS_IMETHOD SetInlineProperty(nsIAtom *aProperty, 
-                            const nsAReadableString & aAttribute, 
-                            const nsAReadableString & aValue);
+                             const nsAReadableString & aAttribute, 
+                             const nsAReadableString & aValue);
   
   NS_IMETHOD GetInlineProperty(nsIAtom *aProperty, 
                              const nsAReadableString & aAttribute, 
@@ -157,7 +164,11 @@ public:
   NS_IMETHOD GetParagraphState(PRBool *aMixed, nsAWritableString &outFormat);
   NS_IMETHOD GetFontFaceState(PRBool *aMixed, nsAWritableString &outFace);
   NS_IMETHOD GetFontColorState(PRBool *aMixed, nsAWritableString &outColor);
+  NS_IMETHOD GetCSSBackgroundColorState(PRBool *aMixed, nsAWritableString &aOutColor, PRBool aBlockLevel);
+  NS_IMETHOD GetHTMLBackgroundColorState(PRBool *aMixed, nsAWritableString &outColor);
   NS_IMETHOD GetBackgroundColorState(PRBool *aMixed, nsAWritableString &outColor);
+  NS_IMETHOD GetHighlightColorState(PRBool *aMixed, nsAWritableString &outColor);
+  NS_IMETHOD GetHighlightColor(PRBool *mixed, PRUnichar **_retval);
   NS_IMETHOD GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *aDL);
   NS_IMETHOD GetListItemState(PRBool *aMixed, PRBool *aLI, PRBool *aDT, PRBool *aDD);
   NS_IMETHOD GetAlignment(PRBool *aMixed, nsIHTMLEditor::EAlignment *aAlign);
@@ -177,6 +188,8 @@ public:
   NS_IMETHOD InsertLinkAroundSelection(nsIDOMElement* aAnchorElement);
 
   NS_IMETHOD GetLinkedObjects(nsISupportsArray** aNodeList);
+
+  NS_IMETHOD SetCSSEnabled(PRBool aIsCSSPrefChecked);
 
   /* ------------ nsIEditorIMESupport overrides -------------- */
   
@@ -265,6 +278,8 @@ public:
   /* miscellaneous */
   // This sets background on the appropriate container element (table, cell,)
   //   or calls into nsTextEditor to set the page background
+  NS_IMETHOD SetCSSBackgroundColor(const nsAReadableString& aColor);
+  NS_IMETHOD SetHTMLBackgroundColor(const nsAReadableString& aColor);
   NS_IMETHOD SetBackgroundColor(const nsAReadableString& aColor);
   NS_IMETHOD SetBodyAttribute(const nsAReadableString& aAttr, const nsAReadableString& aValue);
   // aTitle may be null or empty string to remove child contents of <title>
@@ -364,8 +379,15 @@ public:
   /** make the given selection span the entire document */
   NS_IMETHOD SelectEntireDocument(nsISelection *aSelection);
 
+  NS_IMETHOD IsCSSEnabled(PRBool * aIsSet);
+  NS_IMETHOD SetCSSEquivalentToHTMLStyle(nsIDOMElement * aElement,
+                                         const nsAReadableString & aAttribute,
+                                         const nsAReadableString & aValue);
+
   /** join together any afjacent editable text nodes in the range */
   NS_IMETHOD CollapseAdjacentTextNodes(nsIDOMRange *aInRange);
+
+  virtual PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
 
   /* ------------ nsICSSLoaderObserver -------------- */
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
@@ -655,7 +677,7 @@ protected:
                              const nsAReadableString *aAttribute, 
                              PRBool aChildrenOnly = PR_FALSE);
   nsresult RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAReadableString *aAttribute);
-  
+
   PRBool NodeIsProperty(nsIDOMNode *aNode);
   PRBool HasAttr(nsIDOMNode *aNode, const nsAReadableString *aAttribute);
   PRBool HasAttrVal(nsIDOMNode *aNode, const nsAReadableString *aAttribute, const nsAReadableString *aValue);
@@ -696,6 +718,8 @@ protected:
                              PRBool *aAll,
                              nsAWritableString *outValue);
 
+  nsresult SelectParentOfSelection();
+
 // Data members
 protected:
 
@@ -721,6 +745,8 @@ protected:
 
   nsCOMPtr<nsIRangeUtils> mRangeHelper;
 
+  PRBool mCSSAware;
+  nsHTMLCSSUtils *mHTMLCSSUtils;
 public:
 
 // friends

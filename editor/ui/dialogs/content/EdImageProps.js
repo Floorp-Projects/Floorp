@@ -185,7 +185,28 @@ function InitDialog()
   // set spacing editfields
   gDialog.imagelrInput.value = globalElement.getAttribute("hspace");
   gDialog.imagetbInput.value = globalElement.getAttribute("vspace");
-  gDialog.border.value       = globalElement.getAttribute("border");
+
+  // dialog.border.value       = globalElement.getAttribute("border");
+  bv = GetHTMLOrCSSStyleValue(globalElement, "border", "border-top-width");
+  var pxIndex = bv.search(/px/);
+  if (pxIndex  > 0)
+  {
+    // Strip out the px
+    bv = bv.substr(0, pxIndex);
+  }
+  else if (bv == "thin")
+  {
+    bv = "1";
+  }
+  else if (bv == "medium")
+  {
+    bv = "3";
+  }
+  else if (bv == "thick")
+  {
+    bv = "5";
+  }
+  gDialog.border.value = bv;
 
   // Get alignment setting
   var align = globalElement.getAttribute("align");

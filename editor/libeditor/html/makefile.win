@@ -36,12 +36,14 @@ REQUIRES        = xpcom \
                   pref \
                   gfx \
                   widget \
+                  unicharutil \
                   webBrowser_core \
                   $(NULL)
 
 CPP_OBJS =                                    \
            .\$(OBJDIR)\TypeInState.obj        \
            .\$(OBJDIR)\nsEditProperty.obj     \
+           .\$(OBJDIR)\nsHTMLCSSUtils.obj     \
            .\$(OBJDIR)\nsHTMLDataTransfer.obj \
            .\$(OBJDIR)\nsHTMLEditRules.obj    \
            .\$(OBJDIR)\nsHTMLEditUtils.obj    \

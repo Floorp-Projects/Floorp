@@ -57,23 +57,20 @@
       <vbox id="TablePanel">
         <groupbox orient="horizontal"><caption label="&size.label;"/>
           <grid>
-            <columns><column/><column/></columns>
-            <rows>
+            <columns><column/><column/><column/><column/><column/></columns>
+              <rows>
+                <row align="center">
+                  <text class="label" value="&tableRows.label;"/>
+                  <textbox class="narrow" id="TableRowsInput" oninput="forceInteger(this.id);"/>
+                  <spring class="bigspacer"/>
+                  <text class="label" value="&tableHeight.label;" id="TableHeightLabel"/>
+                  <textbox class="narrow" id="TableHeightInput" oninput="forceInteger(this.id);"/>
+                  <menulist id="TableHeightUnits"/>
+                </row>
               <row align="center">
-                <label value="&tableRows.label;"/>
-                <textbox class="narrow" id="TableRowsInput" oninput="forceInteger(this.id);"/>
-              </row>
-              <row align="center">
-                <label value="&tableColumns.label;"/>
-                <textbox class="narrow" id="TableColumnsInput" oninput="forceInteger(this.id);"/>
-              </row>
-            </rows>
-          </grid>
-          <spacer class="bigspacer"/>
-          <grid>
-            <columns><column/><column/><column flex="1"/></columns>
-            <rows>
-              <row align="center">
+                  <text class="label" value="&tableColumns.label;"/>
+                  <textbox class="narrow" id="TableColumnsInput" oninput="forceInteger(this.id);"/>
+                  <spring class="bigspacer"/>
                 <label value="&tableWidth.label;"/>
                 <textbox class="narrow" id="TableWidthInput" oninput="forceInteger(this.id);"/>
                 <menulist id="TableWidthUnits"/>

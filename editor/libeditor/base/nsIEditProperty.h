@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -144,9 +145,37 @@ public:
 
   // XXX: end temp code
 
+  /** CSS strings */
+  static nsIAtom *cssBackgroundColor;
+  static nsIAtom *cssBackgroundImage;
+  static nsIAtom *cssBorder;
+  static nsIAtom *cssCaptionSide;
+  static nsIAtom *cssColor;
+  static nsIAtom *cssFloat;
+  static nsIAtom *cssFontFamily;
+  static nsIAtom *cssFontSize;
+  static nsIAtom *cssFontStyle;
+  static nsIAtom *cssFontWeight;
+  static nsIAtom *cssHeight;
+  static nsIAtom *cssListStyleType;
+  static nsIAtom *cssMarginLeft;
+  static nsIAtom *cssMarginRight;
+  static nsIAtom *cssTextAlign;
+  static nsIAtom *cssTextDecoration;
+  static nsIAtom *cssVerticalAlign;
+  static nsIAtom *cssWhitespace;
+  static nsIAtom *cssWidth;
 
 
-
+  static nsIAtom *cssPxUnit;
+  static nsIAtom *cssEmUnit;
+  static nsIAtom *cssCmUnit;
+  static nsIAtom *cssPercentUnit;
+  static nsIAtom *cssInUnit;
+  static nsIAtom *cssMmUnit;
+  static nsIAtom *cssPtUnit;
+  static nsIAtom *cssPcUnit;
+  static nsIAtom *cssExUnit;
 };
 
 extern nsresult NS_NewEditProperty(nsIEditProperty **aResult);

@@ -20,6 +20,7 @@
    - 
    - Contributor(s):
    -   Ryan Cassin (rcassin@supernova.org)
+   -   Daniel Glazman (glazman@netscape.com)
   -->
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/editorOverlay.dtd">
@@ -202,6 +203,7 @@
     <!-- No "oncommand", use EditorSelectColor() to bring up color dialog -->
     <command id="cmd_fontColor"       state=""/>
     <command id="cmd_backgroundColor" state=""/>
+    <command id="cmd_highlight"       state="transparent"  oncommand="EditorSelectColor('Highlight', event);"/>
 
     <command id="cmd_fontSize"        state=""         oncommand="goDoCommand('cmd_fontSize')"/>
     <command id="cmd_align"           state=""/>
@@ -748,6 +750,10 @@
           onclick="EditorSelectColor('Text', event);"
           tooltiptext="&TextColorButton.tooltip;"/>
   </stack>
+  <toolbarbutton id="HighlightColorButton" tooltip="aTooltip"
+          tooltiptext="&HighlightColorButton.tooltip;" command="cmd_highlight">
+    <observes element="cmd_highlight" attribute="state" onbroadcast="onHighlightColorChange()"/>
+  </toolbarbutton>
 
 <!-- A BUG IN CSS/BOXES MAKES THIS ASSERT WHEN CLASS= IS PRESENT AND WE TRY TO COLLAPSE THE TOOLBOX -->
   <toolbarbutton id="DecreaseFontSizeButton" observes="cmd_decreaseFont"

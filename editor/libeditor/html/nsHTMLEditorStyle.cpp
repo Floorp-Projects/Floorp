@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Daniel Glazman <glazman@netscape.com>
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -66,11 +67,9 @@
 #include "nsICSSLoader.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIHTMLContentContainer.h"
-#include "nsIStyleSet.h"
 #include "nsIDocumentObserver.h"
 #include "nsIDocumentStateListener.h"
 
-#include "nsIStyleContext.h"
 #include "TypeInState.h"
 
 #include "nsIEnumerator.h"
@@ -99,6 +98,7 @@
 #include "nsInternetCiter.h"
 #include "nsISupportsPrimitives.h"
 #include "InsertTextTxn.h"
+#include "ChangeCSSInlineStyleTxn.h"
 
 // Transactionas
 #include "PlaceholderTxn.h"
@@ -119,6 +119,21 @@ static PRBool gNoisy = PR_FALSE;
 static const PRBool gNoisy = PR_FALSE;
 #endif
 
+// Add the CSS style corresponding to the HTML inline style defined
+// by aProperty aAttribute and aValue to the selection
+NS_IMETHODIMP nsHTMLEditor::SetCSSInlineProperty(nsIAtom *aProperty, 
+                            const nsAReadableString & aAttribute, 
+                            const nsAReadableString & aValue)
+{
+  nsresult res = NS_OK;
+  PRBool useCSS;
+
+  IsCSSEnabled(&useCSS);
+  if (useCSS) {
+    res = SetInlineProperty(aProperty, aAttribute, aValue);
+  }
+  return res;
+}
 
 NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty, 
                             const nsAReadableString & aAttribute, 
@@ -305,11 +320,17 @@ nsHTMLEditor::SetInlinePropertyOnTextNode( nsIDOMCharacterData *aTextNode,
                                             const nsAReadableString *aValue)
 {
   if (!aTextNode) return NS_ERROR_NULL_POINTER;
+  nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> parent;
+  res = aTextNode->GetParentNode(getter_AddRefs(parent));
+  if (NS_FAILED(res)) return res;
+  nsAutoString tagString;
+  aProperty->ToString(tagString);
+  if (!CanContainTag(parent, tagString)) return NS_OK;
   
   // dont need to do anything if no characters actually selected
   if (aStartOffset == aEndOffset) return NS_OK;
   
-  nsresult res = NS_OK;
   nsCOMPtr<nsIDOMNode> tmp, node = do_QueryInterface(aTextNode);
   
   // dont need to do anything if property already set on node
@@ -377,6 +398,38 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
   nsAutoString tag;
   aProperty->ToString(tag);
   ToLowerCase(tag);
+  
+  PRBool useCSS;
+  IsCSSEnabled(&useCSS);
+
+  if (useCSS) {
+    // we are in CSS mode
+    if (mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) {
+      // the HTML style defined by aProperty/aAttribute has a CSS equivalence
+      // in this implementation for the node aNode
+      nsCOMPtr<nsIDOMNode> tmp = aNode;
+      if (IsTextNode(tmp)) {
+        // we are working on a text node and need to create a span container
+        // that will carry the styles
+        InsertContainerAbove( aNode, 
+                              address_of(tmp), 
+                              NS_LITERAL_STRING("span"),
+                              nsnull,
+                              nsnull);
+      }
+      nsCOMPtr<nsIDOMElement>element;
+      element = do_QueryInterface(tmp);
+      // first we have to remove occurences of the same style hint in the
+      // children of the aNode
+      res = RemoveStyleInside(tmp, aProperty, aAttribute, PR_TRUE);
+      if (NS_FAILED(res)) return res;
+      PRInt32 count;
+      // then we add the css styles corresponding to the HTML style request
+      res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, aProperty, aAttribute, aValue, &count);
+      if (NS_FAILED(res)) return res;
+      return res;
+    }
+  }
   
   // dont need to do anything if property already set on node
   PRBool bHasProp;
@@ -497,7 +550,7 @@ nsresult nsHTMLEditor::SplitStyleAboveRange(nsIDOMRange *inRange,
   // split any matching style nodes above the start of range
   res = SplitStyleAbovePoint(address_of(startNode), &startOffset, aProperty, aAttribute);
   if (NS_FAILED(res)) return res;
-  
+
   if (sameNode && (startNode != origStartNode))
   {
     // our startNode got split.  This changes the offset of the end of our range.
@@ -528,12 +581,27 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
   // split any matching style nodes above the node/offset
   nsCOMPtr<nsIDOMNode> parent, tmp = *aNode;
   PRInt32 offset;
-  
+
+  PRBool useCSS;
+  IsCSSEnabled(&useCSS);
+
+  PRBool isSet;
   while (tmp && !IsBlockNode(tmp))
   {
+    isSet = PR_FALSE;
+    if (useCSS && mHTMLCSSUtils->IsCSSEditableProperty(tmp, aProperty, aAttribute)) {
+      // the HTML style defined by aProperty/aAttribute has a CSS equivalence
+      // in this implementation for the node tmp; let's check if it carries those css styles
+      nsAutoString firstValue;
+      mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(tmp, aProperty, aAttribute,
+                                                         isSet, firstValue,
+                                                         SPECIFIED_STYLE_TYPE);
+    }
     if ( (aProperty && NodeIsType(tmp, aProperty)) ||   // node is the correct inline prop
-         (aProperty == nsIEditProperty::href && nsHTMLEditUtils::IsLink(tmp)) || // node is href - test if really <a href=...
-         (!aProperty && NodeIsProperty(tmp)) )         // or node is any prop, and we asked to split them all
+         (aProperty == nsIEditProperty::href && nsHTMLEditUtils::IsLink(tmp)) ||
+                                                        // node is href - test if really <a href=...
+         (!aProperty && NodeIsProperty(tmp)) ||         // or node is any prop, and we asked to split them all
+         isSet)                                         // or the style is specified in the style attribute
     {
       // found a style node we need to split
       SplitNodeDeep(tmp, *aNode, *aOffset, &offset, PR_FALSE, outLeftNode, outRightNode);
@@ -610,7 +678,44 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
       }
     }
   }
-  
+  else {
+    PRBool useCSS;
+    IsCSSEnabled(&useCSS);
+
+    if (!aChildrenOnly
+        && useCSS && mHTMLCSSUtils->IsCSSEditableProperty(aNode, aProperty, aAttribute)) {
+      // the HTML style defined by aProperty/aAttribute has a CSS equivalence
+      // in this implementation for the node aNode; let's check if it carries those css styles
+      nsAutoString propertyValue;
+      PRBool isSet;
+      mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(aNode, aProperty, aAttribute,
+                                                         isSet, propertyValue,
+                                                         SPECIFIED_STYLE_TYPE);
+      if (isSet) {
+        // yes, tmp has the corresponding css declarations in its style attribute
+        // let's remove them
+        mHTMLCSSUtils->RemoveCSSEquivalentToHTMLStyle(aNode,
+                                                      aProperty,
+                                                      aAttribute,
+                                                      &propertyValue);
+        // remove the node if it is a span, if its style attribute is empty or absent,
+        // and if it does not have a class nor an id
+        nsCOMPtr<nsIDOMElement> elem = do_QueryInterface(aNode);
+        nsAutoString styleVal;
+        PRBool isStyleSet;
+        res = GetAttributeValue(elem,  NS_LITERAL_STRING("style"), styleVal, &isStyleSet);
+        if (NS_FAILED(res)) return res;
+        if (NodeIsType(aNode, nsIEditProperty::span) && (!isStyleSet || (0 == styleVal.Length()))) {
+          PRBool hasClassOrId ;
+          res = mHTMLCSSUtils->HasClassOrID(elem, hasClassOrId);
+          if (!hasClassOrId) {
+            res = RemoveContainer(aNode);
+            if (NS_FAILED(res)) return res;
+          }
+        }
+      }
+    }
+  }  
   if ( aProperty == nsIEditProperty::font &&    // or node is big or small and we are setting font size
        (NodeIsType(aNode, nsIEditProperty::big) || NodeIsType(aNode, nsIEditProperty::small)) &&
        !Compare(*aAttribute,NS_LITERAL_STRING("size"),nsCaseInsensitiveStringComparator()))       
@@ -869,6 +974,10 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
   *aAll=PR_TRUE;
   *aFirst=PR_FALSE;
   PRBool first=PR_TRUE;
+
+  PRBool useCSS;
+  IsCSSEnabled(&useCSS);
+
   nsCOMPtr<nsISelection>selection;
   result = GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(result)) return result;
@@ -916,11 +1025,13 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
         *aFirst = *aAny = *aAll = theSetting;
         return NS_OK;
       }
-      nsCOMPtr<nsIDOMNode> resultNode;
-      IsTextPropertySetByContent(collapsedNode, aProperty, aAttribute, aValue, 
-                                 isSet, getter_AddRefs(resultNode), outValue);
-      *aFirst = *aAny = *aAll = isSet;
-      return NS_OK;
+      if (!useCSS) {
+        nsCOMPtr<nsIDOMNode> resultNode;
+        IsTextPropertySetByContent(collapsedNode, aProperty, 0, 0,
+                                   isSet, getter_AddRefs(resultNode));
+        *aFirst = *aAny = *aAll = isSet;
+        return NS_OK;
+      }
     }
 
     // non-collapsed selection
@@ -983,18 +1094,42 @@ nsHTMLEditor::GetInlinePropertyBase(nsIAtom *aProperty,
       {
         if (node)
         {
-          PRBool isSet;
+          PRBool isSet = PR_FALSE;
           nsCOMPtr<nsIDOMNode>resultNode;
           if (first)
           {
-            IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet, getter_AddRefs(resultNode), &firstValue);
+            if (useCSS &&
+                mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty, aAttribute)) {
+              // the HTML styles defined by aProperty/aAttribute has a CSS equivalence
+              // in this implementation for node; let's check if it carries those css styles
+              if (aValue) firstValue.Assign(*aValue);
+              mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node, aProperty, aAttribute,
+                                                                 isSet, firstValue,
+                                                                 COMPUTED_STYLE_TYPE);
+            }
+            else {
+              IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet,
+                                         getter_AddRefs(resultNode), &firstValue);
+            }
             *aFirst = isSet;
             first = PR_FALSE;
             if (outValue) *outValue = firstValue;
           }
           else
           {
-            IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet, getter_AddRefs(resultNode), &theValue);
+            if (useCSS &&
+                mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty, aAttribute)) {
+              // the HTML styles defined by aProperty/aAttribute has a CSS equivalence
+              // in this implementation for node; let's check if it carries those css styles
+              if (aValue) firstValue.Assign(*aValue);
+              mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node, aProperty, aAttribute,
+                                                                 isSet, theValue,
+                                                                 COMPUTED_STYLE_TYPE);
+            }
+            else {
+              IsTextPropertySetByContent(node, aProperty, aAttribute, aValue, isSet,
+                                         getter_AddRefs(resultNode), &theValue);
+            }
             if (firstValue != theValue)
               *aAll = PR_FALSE;
           }
@@ -1085,6 +1220,10 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsARea
 
   PRBool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
+
+  PRBool useCSS;
+  IsCSSEnabled(&useCSS);
+
   if (isCollapsed)
   {
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
@@ -1142,6 +1281,32 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsARea
       if ((startNode == endNode) && IsTextNode(startNode))
       {
         // we're done with this range!
+        if (useCSS && mHTMLCSSUtils->IsCSSEditableProperty(startNode, aProperty, aAttribute)) {
+          // the HTML style defined by aProperty/aAttribute has a CSS equivalence
+          // in this implementation for startNode
+          nsAutoString cssValue;
+          PRBool isSet = PR_FALSE;
+          mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(startNode,
+                                                    aProperty,
+                                                    aAttribute,
+                                                    isSet ,
+                                                    cssValue,
+                                                    COMPUTED_STYLE_TYPE);
+          if (isSet) {
+            // startNode's computed style indicates the CSS equivalence to the HTML style to
+            // remove is applied; but we found no element in the ancestors of startNode
+            // carrying specified styles; assume it comes from a rule and let's try to
+            // insert a span "inverting" the style
+            nsAutoString value; value.AssignWithConversion("-moz-editor-invert-value");
+            PRInt32 startOffset, endOffset;
+            range->GetStartOffset(&startOffset);
+            range->GetEndOffset(&endOffset);
+            nsCOMPtr<nsIDOMCharacterData> nodeAsText = do_QueryInterface(startNode);
+            if (mHTMLCSSUtils->IsCSSInvertable(aProperty, aAttribute)) {
+              SetInlinePropertyOnTextNode(nodeAsText, startOffset, endOffset, aProperty, aAttribute, &value);
+            }
+          }
+        }
       }
       else
       {
@@ -1189,6 +1354,28 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsARea
           node = do_QueryInterface(isupports);
           res = RemoveStyleInside(node, aProperty, aAttribute);
           if (NS_FAILED(res)) return res;
+          if (useCSS && mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty, aAttribute)) {
+            // the HTML style defined by aProperty/aAttribute has a CSS equivalence
+            // in this implementation for node
+            nsAutoString cssValue;
+            PRBool isSet = PR_FALSE;
+            mHTMLCSSUtils->IsCSSEquivalentToHTMLInlineStyleSet(node,
+                                                               aProperty,
+                                                               aAttribute,
+                                                               isSet ,
+                                                               cssValue,
+                                                               COMPUTED_STYLE_TYPE);
+            if (isSet) {
+              // startNode's computed style indicates the CSS equivalence to the HTML style to
+              // remove is applied; but we found no element in the ancestors of startNode
+              // carrying specified styles; assume it comes from a rule and let's try to
+              // insert a span "inverting" the style
+              if (mHTMLCSSUtils->IsCSSInvertable(aProperty, aAttribute)) {
+                nsAutoString value; value.AssignWithConversion("-moz-editor-invert-value");
+                SetInlinePropertyOnNode(node, aProperty, aAttribute, &value);
+              }
+            }
+          }
           arrayOfNodes->RemoveElementAt(0);
         }
       }
@@ -1239,6 +1426,21 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
     nsCOMPtr<nsIAtom> atom;
     if (aSizeChange==1) atom = nsIEditProperty::big;
     else                atom = nsIEditProperty::small;
+
+    // Let's see in what kind of element the selection is
+    PRInt32 offset;
+    nsCOMPtr<nsIDOMNode> selectedNode;
+    res = GetStartNodeAndOffset(selection, address_of(selectedNode), &offset);
+    if (IsTextNode(selectedNode)) {
+      nsCOMPtr<nsIDOMNode> parent;
+      res = selectedNode->GetParentNode(getter_AddRefs(parent));
+      if (NS_FAILED(res)) return res;
+      selectedNode = parent;
+    }
+    nsAutoString tag;
+    atom->ToString(tag);
+    if (!CanContainTag(selectedNode, tag)) return NS_OK;
+
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
     return mTypeInState->SetProp(atom, nsAutoString(), nsAutoString());
   }
@@ -1388,6 +1590,11 @@ nsHTMLEditor::RelativeFontChangeOnTextNode( PRInt32 aSizeChange,
   if (aStartOffset == aEndOffset) return NS_OK;
   
   nsresult res = NS_OK;
+  nsCOMPtr<nsIDOMNode> parent;
+  res = aTextNode->GetParentNode(getter_AddRefs(parent));
+  if (NS_FAILED(res)) return res;
+  if (!CanContainTag(parent, NS_LITERAL_STRING("big"))) return NS_OK;
+
   nsCOMPtr<nsIDOMNode> tmp, node = do_QueryInterface(aTextNode);
 
   // do we need to split the text node?
@@ -1501,6 +1708,7 @@ nsHTMLEditor::RelativeFontChangeHelper( PRInt32 aSizeChange,
       }
     }
   }
+
   return res;
 }
 
@@ -1654,5 +1862,21 @@ nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAWritableString &aOutColor)
     *aMixed = PR_FALSE;
   }
   return res;
+}
+
+// the return value is true only if the instance of the HTML editor we created
+// can handle CSS styles (for instance, Composer can, Messenger can't) and if
+// the CSS preference is checked
+nsresult
+nsHTMLEditor::IsCSSEnabled(PRBool *aIsSet)
+{
+  *aIsSet = PR_FALSE;
+  if (mCSSAware) {
+    // TBD later : removal of mCSSAware and use only the presence of mHTMLCSSUtils
+    if (mHTMLCSSUtils) {
+      *aIsSet = mHTMLCSSUtils->IsCSSPrefChecked();
+    }
+  }
+  return NS_OK;
 }
 

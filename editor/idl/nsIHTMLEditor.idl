@@ -76,6 +76,9 @@ interface nsIHTMLEditor : nsISupports
    * @param aValue      if aAttribute is not null, the value of the attribute.  May be null.
    *                    Example: aProperty="font", aAttribute="color", aValue="0x00FFFF"
    */
+  void SetCSSInlineProperty(in nsIAtom aProperty, 
+                             in DOMString aAttribute,
+                             in DOMString aValue);
   void SetInlineProperty(in nsIAtom aProperty, 
                              in DOMString aAttribute,
                              in DOMString aValue);
@@ -274,6 +277,14 @@ interface nsIHTMLEditor : nsISupports
   void  GetBackgroundColorState(out boolean aMixed,out DOMString  outColor);
 
   /** 
+   * GetHighlightColorState returns what the highlight color of the selection.
+   * @param aMixed     True if there is more than one font color
+   * @param outColor   Color string. "" is returned for none.
+   */
+  void  GetHighlightColorState(out boolean aMixed,out DOMString  outColor);
+  wstring GetHighlightColor(out boolean mixed);
+
+  /** 
    * GetListState returns what list type is in the selection.
    * @param aMixed    True if there is more than one type of list, or
    *                  if there is some list and non-list
@@ -430,5 +441,8 @@ interface nsIHTMLEditor : nsISupports
    * @return aNodeList    the linked nodes found
    */
   nsISupportsArray GetLinkedObjects();
+
+  void   SetCSSEnabled(in boolean aIsCSSPrefChecked);
+
 };
 

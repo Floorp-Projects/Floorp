@@ -473,3 +473,22 @@
   margin: 9px 2px 2px 9px;
 }
 
+#HighlightColorButton {
+  -moz-image-region: rect(260px 16px 272px 0px);
+  background-color: transparent;
+}
+
+#HighlightColorButton:hover {
+  -moz-image-region: rect(260px 32px 272px 16px);
+}
+
+#HighlightColorButton:hover:active {
+  -moz-image-region: rect(260px 48px 272px 32px);
+}
+
+#HighlightColorButton[disabled="true"],
+#HighlightColorButton[disabled="true"]:hover,
+#HighlightColorButton[disabled="true"]:hover:active {
+  -moz-image-region: rect(260px 64px 272px 48px);
+}
+

@@ -75,3 +75,6 @@ pref("editor.history.url_maximum", 10);
 pref("editor.quotesPreformatted",            true);
 
 pref("editor.publish.",                      "");
+
+pref("editor.use_css",                       false);
+pref("editor.css.default_length_unit",       "px");

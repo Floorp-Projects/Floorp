@@ -46,6 +46,7 @@
 #include "nsIEditProperty.h"
 #include "nsIParser.h"
 #include "nsReadableUtils.h"
+#include "nsUnicharUtils.h"
 
 void
 ChangeCSSInlineStyleTxn::AppendDeclaration(nsAWritableString & aOutputString,
@@ -91,7 +92,9 @@ ChangeCSSInlineStyleTxn::ValueIncludes(const nsAReadableString &aValueList, cons
         }
       }
       else {
-        if (!nsCRT::strcasecmp(value, start)) {
+        if (!Compare(nsDependentString(value),
+                     nsDependentString(start),
+                     nsCaseInsensitiveStringComparator())) {
           result = PR_TRUE;
           break;
         }
@@ -162,6 +165,8 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::Init(nsIEditor      *aEditor,
   mValue.Assign(aValue);
   mRemoveProperty = aRemoveProperty;
   mPropertyWasSet = PR_FALSE;
+  mUndoAttributeWasSet = PR_FALSE;
+  mRedoAttributeWasSet = PR_FALSE;
   mUndoValue.SetLength(0);
   return NS_OK;
 }
@@ -174,8 +179,13 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::DoTransaction(void)
   nsresult result=NS_OK;
 
   nsCOMPtr<nsIDOMCSSStyleDeclaration> cssDecl;
-  PRUint32 length;
-  result = GetInlineStyles(mElement, getter_AddRefs(cssDecl), &length);
+  PRUint32 length = 0;
+  nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(mElement);
+  if (!inlineStyles) return NS_ERROR_NULL_POINTER;
+  result = inlineStyles->GetStyle(getter_AddRefs(cssDecl));
+  if (NS_FAILED(result)) return result;
+  if (!cssDecl) return NS_ERROR_NULL_POINTER;
+  result = cssDecl->GetLength(&length);
   if (NS_FAILED(result)) return result;
 
   nsAutoString newDeclString, propertyNameString, undoString, redoString;
@@ -340,21 +350,6 @@ NS_IMETHODIMP ChangeCSSInlineStyleTxn::GetTxnDescription(nsAWritableString& aStr
   nsAutoString tempString;
   mProperty->ToString(tempString);
   aString += tempString;
-  return NS_OK;
-}
-
-nsresult
-ChangeCSSInlineStyleTxn::GetInlineStyles(nsIDOMElement *aElement,
-                                         nsIDOMCSSStyleDeclaration **aCssDecl,
-                                         PRUint32 *aLength)
-{
-  if (!aElement || !aLength) return NS_ERROR_NULL_POINTER;
-  *aLength = 0;
-  nsCOMPtr<nsIDOMElementCSSInlineStyle> inlineStyles = do_QueryInterface(aElement);
-  if (!inlineStyles) return NS_ERROR_NULL_POINTER;
-  nsresult res = inlineStyles->GetStyle(aCssDecl);
-  if (NS_FAILED(res) || !aCssDecl) return NS_ERROR_NULL_POINTER;
-  (*aCssDecl)->GetLength(aLength);
   return NS_OK;
 }
 
