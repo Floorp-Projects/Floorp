@@ -185,8 +185,8 @@ static BYTE * GetValueBytes( HKEY hKey, const char *pValueName, DWORD *pLen)
   if (err == ERROR_SUCCESS) {
     pBytes = new BYTE[bufSz];
     err = ::RegQueryValueEx( hKey, pValueName, NULL, NULL, pBytes, &bufSz);
-    delete [] pBytes;
     if (err != ERROR_SUCCESS) {
+      delete [] pBytes;
       pBytes = NULL;
     } else {
       // Return length if caller wanted it.
@@ -220,11 +220,12 @@ PRBool nsOSHelperAppService::GetValueString(HKEY hKey, PRUnichar* pValueName, ns
       return PR_FALSE;
 
     err = ::RegQueryValueExW( hKey, pValueName, NULL, NULL, (BYTE*)pBytes, &bufSz);
-    delete [] pBytes;
     if (err != ERROR_SUCCESS) {
+      delete [] pBytes;
       return PR_FALSE;
     } else {
       result.Assign(pBytes);
+      delete [] pBytes;
       return PR_TRUE;
     }
   }
