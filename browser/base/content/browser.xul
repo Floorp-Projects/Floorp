@@ -229,8 +229,14 @@
     <key id="key_fullScreen" keycode="VK_F11" command="View:FullScreen"/>
 #else
     <key id="key_selectAll" key="&selectAllCmd.key;" modifiers="alt"/>
+    
+#ifdef XP_MACOSX
+    <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="accel"/>
+    <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="accel"/>
+#else
     <key id="goBackKb"  keycode="VK_LEFT" command="Browser:Back" modifiers="alt"/>
     <key id="goForwardKb"  keycode="VK_RIGHT" command="Browser:Forward" modifiers="alt"/>
+#endif
 
     <key key="&goBackCmd.commandKey;" command="Browser:Back" modifiers="accel"/>
     <key key="&goForwardCmd.commandKey;" command="Browser:Forward" modifiers="accel"/>
