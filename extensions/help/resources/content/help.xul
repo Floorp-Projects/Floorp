@@ -4,11 +4,13 @@
 <?xml-stylesheet href="chrome://navigator/skin" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin" type="text/css"?>
 
+<!DOCTYPE window SYSTEM "chrome://help/locale/help.dtd">
+
 <window id="ns_help"
         windowtype="mozilla:help"
         xmlns:html="http://www.w3.org/TR/REC-html40"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        title="Mozilla Help"
+        title="&helpWin.ttl;"
         width="640"
         height="650"
         persist="width height screenX screenY"
@@ -25,20 +27,20 @@
 
         <button id="helpBackButton"
                 class="button-toolbar-1 top"
-                value="Back"
-                tooltiptext="Back"
+                value="&backBtn.label;"
+                tooltiptext="&backBtn.tooltip;"
                 tooltip="aTooltip"
                 oncommand="goBack();"/>
         <button id="helpForwardButton"
                 class="button-toolbar-1 top"
-                value="Forward"
-                tooltiptext="Forward"
+                value="&fwdBtn.label;"
+                tooltiptext="&fwdBtn.tooltip;"
                 tooltip="aTooltip"
                 oncommand="goForward();"/>
         <button id="helpHomeButton"
                 class="button-toolbar-1 top"
-                value="Home"
-                tooltiptext="Home"
+                value="&homeBtn.label;"
+                tooltiptext="&homeBtn.tooltip;"
                 tooltip="aTooltip"
                 oncommand="goHome();"/>
 
@@ -57,9 +59,9 @@
       <box id="helpsidebar-box" orient="vertical">
 
         <box orient="vertical" id="help-subset">
-          <text value="What part of Netscape"/>
-          <text value="do you need help with?"/>
-          <text value="  Click one:"/>
+          <text value="&t1.label;"/>
+          <text value="&t2.label;"/>
+          <text value="&t3.label;"/>
         </box>
 
         <tabcontrol orient="vertical" flex="1">

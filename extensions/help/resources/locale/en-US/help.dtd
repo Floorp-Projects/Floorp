@@ -1,0 +1,14 @@
+<!ENTITY helpWin.ttl       "Mozilla Help" >
+
+<!ENTITY backBtn.label       "Back" >
+<!ENTITY fwdBtn.label       "Forward" >
+<!ENTITY homeBtn.label       "Home" >
+
+<!ENTITY backBtn.tooltip    "Back" >
+<!ENTITY fwdBtn.tooltip     "Forward" >
+<!ENTITY homeBtn.tooltio    "Home" >
+
+<!ENTITY t1.label       "What part of Netscape" >
+<!ENTITY t2.label       "do you need help with?" >
+<!ENTITY t3.label       "Click one:" >
+
