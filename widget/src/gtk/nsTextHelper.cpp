@@ -91,14 +91,13 @@ NS_METHOD  nsTextHelper::SetText(const nsString& aText, PRUint32& aActualSize)
 {
   if (!mIsPassword) {
     NS_ALLOC_STR_BUF(buf, aText, 512);
-    if (GTK_IS_ENTRY(mWidget))
-    {
+
+    if (GTK_IS_ENTRY(mWidget)) {
       gtk_entry_set_text(GTK_ENTRY(mWidget), buf);
-    }
-    else if (GTK_IS_TEXT(mWidget))
-    {
+    } else if (GTK_IS_TEXT(mWidget)) {
       gtk_text_insert(GTK_TEXT(mWidget), NULL, NULL, NULL, buf, aActualSize);
     }
+
     NS_FREE_STR_BUF(buf);
   } else {
 /*
@@ -146,7 +145,12 @@ NS_METHOD  nsTextHelper::InsertText(const nsString &aText, PRUint32 aStartPos, P
 //-------------------------------------------------------------------------
 NS_METHOD  nsTextHelper::RemoveText()
 {
-  gtk_entry_set_text(GTK_ENTRY(mWidget), "");
+  if (GTK_IS_ENTRY(mWidget)) {
+    gtk_entry_set_text(GTK_ENTRY(mWidget), "");
+  } else if (GTK_IS_TEXT(mWidget)) {
+    gtk_editable_delete_text(GTK_EDITABLE(mWidget), 0,
+           gtk_text_get_length(GTK_TEXT (mWidget)));
+  }
   return NS_OK;
 }
 
