@@ -38,10 +38,13 @@
 
 @import url('chrome://help/content/platformClasses.css');
 
+body, td, th, input {
+  font-family: verdana, sans-serif;
+  font-size: small;
+}
+
 body {
 	margin: 2ex;
-	font-family: sans-serif;
-	font-size: 0.75em;
 	max-width: 120ex;
 }
 
@@ -50,16 +53,51 @@ body {
   color: -moz-activehyperlinktext;
 }
 
+hr {
+  height: 1px;
+  background-color: #000;
+  color: #000;
+  margin: 2em 0;
+}
+
 a[href^="http://"]:after,
 a[href^="https://"]:after {
   content: url('chrome://help/skin/Weblink.png');
 }
 
-h1 { font-size: 2em; }
-h2 { border-top: 1px solid black; font-size: 1.75em; }
-h3 { color: #009; font-size: 1em; margin-bottom: 0px; margin-top: 35px; }
+:link { color: #039; }
+:visited { color: #636; }
+:link:hover, :visited:hover { color: #333; }
+:link:active, :link:active { color: #000; }
+
+h1 { font-size: 160%; font-weight: normal; }
+h2 { font-size: 150%; font-weight: normal; }
+h3 { font-size: 120%; }
+h4 { font-size: 100%; }
+h5 { font-size: 90%; }
+h6 { font-size: 90%; border: 0; }
+
+h1, h2, h3, h4, h5, h6 {
+  margin: 1em 0 0.2em 0;
+  border-bottom: 1px solid #ccc;
+  font-family: arial, verdana, sans-serif;
+}
+
+li h1, li h2, li h3, li h4, li h5, li h6 {
+  border: none;
+}
+
 
 dt { font-weight: bold; }
+
+sup {
+  font-size: 70%;
+}
+
+:link img,
+:visited img {
+  border: 0;
+}
 
 .contentsBox, 
 .contentsBox > ul,
@@ -89,7 +127,9 @@ li {
 }
 
 table {
-	background-color: #eeeeee;    /* really light grey */
+  background-color: #eeeeee;    /* really light grey */
+  border: 1px solid black;
+  border-collapse: collapse;
 }
 
 td {
