@@ -21,7 +21,6 @@
 #include "nsIFrameImageLoader.h"
 #include "nsSize.h"
 #include "nsString.h"
-#include "nsColor.h"
 
 /**
  * An image loader for frame's.
