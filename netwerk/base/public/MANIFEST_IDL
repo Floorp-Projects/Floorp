@@ -5,6 +5,7 @@
 nsIAuthenticator.idl
 nsIChannel.idl
 nsIFileTransportService.idl
+nsIPasswordManager.idl
 nsIPrompt.idl
 nsIProtocolProxyService.idl
 nsIProxyAutoConfig.idl

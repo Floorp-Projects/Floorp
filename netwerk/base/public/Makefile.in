@@ -30,31 +30,32 @@ MODULE		= necko
 
 XPIDLSRCS	= \
 		nsIAuthenticator.idl \
-		nsIFileStreams.idl \
-		nsIRequest.idl \
 		nsIChannel.idl \
-		nsIURI.idl \
-		nsIURL.idl \
-		nsIStreamObserver.idl \
-		nsIStreamListener.idl \
+		nsIFileStreams.idl \
+		nsIFileTransportService.idl \
 		nsIIOService.idl \
-		nsIPrompt.idl \
-		nsIProtocolHandler.idl \
-		nsIProgressEventSink.idl \
+		nsILoadGroup.idl \
 		nsINetModRegEntry.idl \
 		nsINetModuleMgr.idl \
 		nsINetNotify.idl \
-		nsILoadGroup.idl \
-		nsIFileTransportService.idl \
-		nsISocketTransportService.idl \
-		nsIStreamIO.idl \
-		nsIStreamLoader.idl \
-		nsISocketTransport.idl \
-		nsIURLParser.idl \
+		nsIPasswordManager.idl \
+		nsIProgressEventSink.idl \
+		nsIPrompt.idl \
+		nsIProtocolHandler.idl \
+		nsIProtocolProxyService.idl \
 		nsIProxy.idl \
 		nsIProxyAutoConfig.idl \
 		nsIProxyAutoConfigUtils.idl \
-		nsIProtocolProxyService.idl \
+		nsIRequest.idl \
+		nsISocketTransport.idl \
+		nsISocketTransportService.idl \
+		nsIStreamIO.idl \
+		nsIStreamListener.idl \
+		nsIStreamLoader.idl \
+		nsIStreamObserver.idl \
+		nsIURI.idl \
+		nsIURL.idl \
+		nsIURLParser.idl \
 		nsIWebFilters.idl \
 		$(NULL)
 
@@ -62,6 +63,7 @@ EXPORTS		= \
 		netCore.h \
 		nsNetUtil.h \
 		nsUnixColorPrintf.h \
+		nsIPasswordManagerUtils.h \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
