@@ -542,7 +542,7 @@ nsresult nsXULKeyListenerImpl::DoKey(nsIDOMEvent* aKeyEvent, eEventType aEventTy
 	} // end while(keysetNode)
   } // end if(aKeyEvent && mDOMDocument) 
   executingKeyBind = PR_FALSE;
-  return NS_ERROR_BASE;
+  return NS_OK;
 }
 
 PRBool nsXULKeyListenerImpl::IsMatchingKey(PRUint32 theChar, nsString keyName)
