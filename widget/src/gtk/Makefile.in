@@ -65,6 +65,7 @@ CPPSRCS= \
 	nsPopUpMenu.cpp \
 	nsWidget.cpp \
 	nsWindow.cpp \
+	nsSound.cpp \
 	$(NULL)
 
 TARGETS = $(LIBRARY)
