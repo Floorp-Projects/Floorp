@@ -871,7 +871,7 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
 //
 // For platforms that dont implement InvertRect(), the selection will be 
 // a non-filled rectangle.
-#if defined(XP_PC) || defined(XP_UNIX)
+#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_MAC)
               aRenderingContext.SetColor(NS_RGB(255,255,255));
               aRenderingContext.InvertRect(aX + startOffset, aY, textWidth, rect.height);
 #else
