@@ -50,6 +50,8 @@ endif
 LCFLAGS=-I$(PUBLIC)/xpcom -I$(PUBLIC)/raptor \
       -I$(PUBLIC)/dom -I$(PUBLIC)/js -I$(PUBLIC)/netlib -I$(PUBLIC)/shell
 
+REQUIRES = xpcom raptor dom js netlib shell
+
 EXPORTS =				\
  nsApplicationManager.h			\
  nsShellInstance.h			\
