@@ -4,7 +4,7 @@ package			BuildList;
 require			Exporter;
 
 @ISA				= qw(Exporter);
-@EXPORT			= qw(BuildMozilla);
+@EXPORT			= qw(BuildMozilla DistMozilla);
 
 =head1 NAME
 
@@ -33,12 +33,11 @@ Reserved.
 
 =cut
 
+		use Moz;
 
 sub BuildMozilla()
 	{
-		use Moz;
-
-		chdir(":::"); # assuming this script is in "...:mozilla:build:mac:", change dir to just inside "mozilla"
+		# chdir(":::"); # assuming this script is in "...:mozilla:build:mac:", change dir to just inside "mozilla"
 
 
 		if ( $main::DEBUG )
@@ -58,7 +57,7 @@ sub BuildMozilla()
 			# that it builds.
 			#
 		
-		BuildProjectClean(":build:mac:MakeDist.mcp",													"Stubs");
+		BuildProjectClean(":build:mac:MakeDist.mcp", "Stubs") unless $main::use_DistMozilla;
 		
 			#
 			# Build the appropriate target of each project
@@ -146,6 +145,136 @@ sub BuildMozilla()
 			}
 		
 		BuildProject(":cmd:macfe:projects:client:Client.mcp", 								"Client$D");
+	}
+
+
+
+sub DistMozilla()
+	{
+		#INCLUDE
+		InstallFromManifest(":config:mac:export.mac",			":dist:config:");
+		InstallFromManifest(":include:export.mac",				":dist:include:");
+		InstallFromManifest(":cmd:macfe:pch:export.mac",	":dist:include:");
+
+		#MAC_COMMON
+		InstallFromManifest(":build:mac:export.mac",													":dist:mac:common:");
+		InstallFromManifest(":lib:mac:NSStdLib:include:export.mac",						":dist:mac:common:");
+		InstallFromManifest(":lib:mac:MacMemoryAllocator:include:export.mac",	":dist:mac:common:");
+		InstallFromManifest(":lib:mac:Misc:export.mac",												":dist:mac:common:");
+		InstallFromManifest(":lib:mac:MoreFiles:export.mac",									":dist:mac:common:morefiles:");
+		InstallFromManifest(":cmd:macfe:MANIFEST",														":dist:mac:macfe:");
+
+		#NSPR
+		InstallFromManifest(":nsprpub:pr:include:MANIFEST",					":dist:nspr:");
+		InstallFromManifest(":nsprpub:pr:src:md:mac:export.mac",		":dist:nspr:mac:");
+		InstallFromManifest(":nsprpub:lib:ds:export.mac",						":dist:nspr:");
+		InstallFromManifest(":nsprpub:lib:libc:include:export.mac",	":dist:nspr:");
+		InstallFromManifest(":nsprpub:lib:msgc:include:export.mac",	":dist:nspr:");
+		
+		#DBM
+		InstallFromManifest(":dbm:include:export.mac",	":dist:dbm:");
+		
+		#LIBIMAGE
+		InstallFromManifest(":modules:libimg:png:export.mac",			":dist:libimg:");
+		InstallFromManifest(":modules:libimg:src:export.mac",			":dist:libimg:");
+		InstallFromManifest(":modules:libimg:public:export.mac",	":dist:libimg:");
+		
+		#SECURITY_freenav
+		InstallFromManifest(":modules:security:freenav:export.mac",	":dist:security:");
+		
+		#XPCOM
+		InstallFromManifest(":xpcom:src:export.mac",		":dist:xpcom:");
+		
+		#ZLIB
+		InstallFromManifest(":modules:zlib:src:export.mac",	":dist:zlib:");
+		
+		#JPEG
+		InstallFromManifest(":jpeg:export.mac",	":dist:jpeg:");
+		
+		#JSJ
+		InstallFromManifest(":js:jsj:export.mac",	":dist:jsj:");
+		
+		#JSDEBUG
+		InstallFromManifest(":js:jsd:export.mac",	":dist:jsdebug:");
+		
+		#JS
+		InstallFromManifest(":js:src:export.mac",	":dist:js:");
+		
+		#RDF
+		InstallFromManifest(":modules:rdf:include:export.mac",	":dist:rdf:");
+		
+		#XML
+		InstallFromManifest(":modules:xml:glue:export.mac",						":dist:xml:");
+		InstallFromManifest(":modules:xml:expat:xmlparse:export.mac",	":dist:xml:");
+		
+		#LIBFONT
+		InstallFromManifest(":modules:libfont:MANIFEST",				":dist:libfont:");
+		InstallFromManifest(":modules:libfont:src:export.mac",	":dist:libfont:");
+		
+		#SCHEDULER
+		InstallFromManifest(":modules:schedulr:public:export.mac",	":dist:schedulr:");
+		
+		#NETWORK
+		InstallFromManifest(":network:cache:export.mac",						":dist:network:");
+		InstallFromManifest(":network:client:export.mac",						":dist:network:");
+		InstallFromManifest(":network:cnvts:export.mac",						":dist:network:");
+		InstallFromManifest(":network:cstream:export.mac",					":dist:network:");
+		InstallFromManifest(":network:main:export.mac",							":dist:network:");
+		InstallFromManifest(":network:protocol:about:export.mac",		":dist:network:");
+		InstallFromManifest(":network:protocol:certld:export.mac",	":dist:network:");
+		InstallFromManifest(":network:protocol:dataurl:export.mac",	":dist:network:");
+		InstallFromManifest(":network:protocol:file:export.mac",		":dist:network:");
+		InstallFromManifest(":network:protocol:ftp:export.mac",			":dist:network:");
+		InstallFromManifest(":network:protocol:gopher:export.mac",	":dist:network:");
+		InstallFromManifest(":network:protocol:http:export.mac",		":dist:network:");
+		InstallFromManifest(":network:protocol:js:export.mac",			":dist:network:");
+		InstallFromManifest(":network:protocol:mailbox:export.mac",	":dist:network:");
+		InstallFromManifest(":network:protocol:marimba:export.mac",	":dist:network:");
+		InstallFromManifest(":network:protocol:nntp:export.mac",		":dist:network:");
+		InstallFromManifest(":network:protocol:pop3:export.mac",		":dist:network:");
+		InstallFromManifest(":network:protocol:remote:export.mac",	":dist:network:");
+		InstallFromManifest(":network:protocol:smtp:export.mac",		":dist:network:");
+		
+		#HTML_DIALOGS
+		InstallFromManifest(":lib:htmldlgs:export.mac",	":dist:htmldlgs:");
+		
+		#LAYOUT
+		InstallFromManifest(":lib:layout:export.mac",	":dist:layout:");
+		
+		#LAYERS
+		InstallFromManifest(":lib:liblayer:include:export.mac",	":dist:layers:");
+		
+		#PARSE
+		InstallFromManifest(":lib:libparse:export.mac",	":dist:libparse:");
+		
+		#STYLE
+		InstallFromManifest(":lib:libstyle:export.mac",	":dist:libstyle:");
+		
+		#LIBHOOK
+		InstallFromManifest(":modules:libhook:public:export.mac",	":dist:libhook:");
+		
+		#LIBPREF
+		InstallFromManifest(":modules:libpref:public:export.mac",	":dist:libpref:");
+		
+		#LIBREG
+		InstallFromManifest(":modules:libreg:include:export.mac",	":dist:libreg:");
+		
+		#LIBUTIL
+		InstallFromManifest(":modules:libutil:public:export.mac",	":dist:libutil:");
+		
+		#PROGRESS
+		InstallFromManifest(":modules:progress:public:export.mac",	":dist:progress:");
+		
+		#SOFTUPDATE
+		InstallFromManifest(":modules:softupdt:include:export.mac",	":dist:softupdate:");
+		
+		#NAV_JAVA
+		InstallFromManifest(":nav-java:stubs:macjri:export.mac",	":dist:nav-java:macjri:");
+		InstallFromManifest(":nav-java:stubs:include:export.mac",	":dist:nav-java:");
+		
+		#SUN_JAVA
+		InstallFromManifest(":sun-java:stubs:include:export.mac",	":dist:sun-java:include:");
+		InstallFromManifest(":sun-java:stubs:macjri:export.mac",	":dist:sun-java:macjri:");
 	}
 
 1;
