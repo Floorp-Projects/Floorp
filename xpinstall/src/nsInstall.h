@@ -81,7 +81,7 @@ class nsInstallInfo
                    const PRUnichar* aArgs,
                    PRUint32         aFlags,
                    nsIXPIListener*  aListener,
-                   nsIChromeRegistry*   aChromeReg);
+                   nsIXULChromeRegistry*   aChromeReg);
 
     virtual ~nsInstallInfo();
 
@@ -91,7 +91,7 @@ class nsInstallInfo
     PRUint32            GetFlags()              { return mFlags; }
     PRUint32            GetType()               { return mType; }
     nsIXPIListener*     GetListener()           { return mListener.get(); }
-    nsIChromeRegistry*  GetChromeRegistry()     { return mChromeReg.get(); }
+    nsIXULChromeRegistry*  GetChromeRegistry()  { return mChromeRegistry.get(); }
 
   private:
 
@@ -104,7 +104,7 @@ class nsInstallInfo
 
     nsCOMPtr<nsIFile>           mFile;
     nsCOMPtr<nsIXPIListener>    mListener;
-    nsCOMPtr<nsIChromeRegistry> mChromeReg;
+    nsCOMPtr<nsIXULChromeRegistry> mChromeRegistry;
 };
 
 #ifdef XP_PC
@@ -284,8 +284,8 @@ class nsInstall
 
         PRInt32    GetInstallPlatform(nsCString& aPlatform);
 
-        nsIChromeRegistry*  GetChromeRegistry() { return mChromeRegistry; }
-        void                SetChromeRegistry(nsIChromeRegistry* reg)
+        nsIXULChromeRegistry*  GetChromeRegistry() { return mChromeRegistry; }
+        void                SetChromeRegistry(nsIXULChromeRegistry* reg)
                                 { mChromeRegistry = reg; }
 
         PRUint32   GetFinalStatus() { return mFinalStatus; }
@@ -313,7 +313,7 @@ class nsInstall
         nsString            mInstallURL;
         PRUint32            mInstallFlags;
         nsCString           mInstallPlatform;
-        nsIChromeRegistry*  mChromeRegistry; // we don't own it, it outlives us
+        nsIXULChromeRegistry*  mChromeRegistry; // we don't own it, it outlives us
         nsInstallFolder*    mPackageFolder;
 
         PRBool              mUserCancelled;

@@ -74,7 +74,6 @@
 #include "nsIContentHandler.h"
 #include "nsIBrowserInstance.h"
 #include "nsIEventQueueService.h"
-#include "nsMPFileLocProvider.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsIHttpProtocolHandler.h"
 #include "nsBuildID.h"
@@ -1020,14 +1019,14 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
         if (cmdUI) {
             nsAutoString UILocaleName;
             UILocaleName.AssignWithConversion(cmdUI);
-            nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+            nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
             if (chromeRegistry)
                 rv = chromeRegistry->SelectLocale(UILocaleName.get(), PR_FALSE);
         }
     }
     // match OS when no cmdline override
     if (!cmdUI && matchOS) {
-      nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
       if (chromeRegistry) {
         chromeRegistry->SetRuntimeProvider(PR_TRUE);
         rv = chromeRegistry->SelectLocale(uiLang.get(), PR_FALSE);
@@ -1040,14 +1039,14 @@ static nsresult InstallGlobalLocale(nsICmdLineService *cmdLineArgs)
         if (cmdContent) {
             nsAutoString ContentLocaleName;
             ContentLocaleName.AssignWithConversion(cmdContent);
-            nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+            nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
             if(chromeRegistry)
                 rv = chromeRegistry->SelectLocale(ContentLocaleName.get(), PR_FALSE);
         }
     }
     // match OS when no cmdline override
     if (!cmdContent && matchOS) {
-      nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+      nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
       if (chromeRegistry) {
         chromeRegistry->SetRuntimeProvider(PR_TRUE);        
         rv = chromeRegistry->SelectLocale(country.get(), PR_FALSE);

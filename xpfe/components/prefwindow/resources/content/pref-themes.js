@@ -43,7 +43,7 @@ var gData;
 try {
   var chromeRegistry = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
   if (chromeRegistry)
-    chromeRegistry = chromeRegistry.QueryInterface(Components.interfaces.nsIChromeRegistry);
+    chromeRegistry = chromeRegistry.QueryInterface(Components.interfaces.nsIXULChromeRegistry);
 }
 catch(e) {}
 
@@ -115,7 +115,7 @@ function applySkin()
   try {
     var reg = Components.classes["@mozilla.org/chrome/chrome-registry;1"].getService();
     if (reg)
-      reg = reg.QueryInterface(Components.interfaces.nsIChromeRegistry);
+      reg = reg.QueryInterface(Components.interfaces.nsIXULChromeRegistry);
   }
   catch(e) {}
 

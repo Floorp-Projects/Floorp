@@ -1883,7 +1883,7 @@ JSObject * InitXPInstallObjects(JSContext *jscontext,
                              const PRUnichar* url,
                              const PRUnichar* args,
                              PRUint32 flags,
-                             nsIChromeRegistry* reg,
+                             nsIXULChromeRegistry* reg,
                              nsIZipReader * theJARFile)
 {
   JSObject *installObject  = nsnull;

@@ -3871,10 +3871,11 @@ nsEditorShell::InitSpellChecker()
         dictName = nsnull;
       }
 
-      nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &result);
+      nsCOMPtr<nsIXULChromeRegistry> packageRegistry =
+        do_GetService(kChromeRegistryCID, &result);
 
-      if (NS_SUCCEEDED(result) && chromeRegistry)
-        result = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("navigator").get(), &dictName);
+      if (NS_SUCCEEDED(result) && packageRegistry)
+        result = packageRegistry->GetSelectedLocale(NS_LITERAL_STRING("navigator").get(), &dictName);
     }
 
     if (NS_SUCCEEDED(result) && dictName && *dictName)

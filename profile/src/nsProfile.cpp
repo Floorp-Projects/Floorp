@@ -463,7 +463,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     }
     gLocaleProfiles->Remove(&key);
 
-    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+    nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
     // Install to the profile
@@ -472,7 +472,7 @@ nsProfile::StartupWithArgs(nsICmdLineService *cmdLineArgs, PRBool canInteract)
     const char* fileStr = fileURL.GetURLString();
 
     // NEED TO FIX: when current UILocale and contentLocale are same with specified locales,
-    // we shouldn't install them again here. But chromeRegistry->GetSelectedLocale() doesn't
+    // we shouldn't install them again here. But packageRegistry->GetSelectedLocale() doesn't
     // work here properly. It always returns global and global-region of default not current
     // profile
     const PRUnichar* uilocale = mUILocaleName.get() ;
@@ -1548,7 +1548,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
     rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, getter_AddRefs(profDefaultsDir));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+    nsCOMPtr<nsIXULChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
     if (NS_SUCCEEDED(rv)) {
 
         const PRUnichar* uiLocale = aUILocale;
@@ -1566,8 +1566,9 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
         // We can get preferred UILocale and contentLocale (specified -UILocale and -contentLocale)
         // by GetSelectedLocale() which is done in nsAppRunner.cpp::InstallGlobalLocale()
 
-        if (!aUILocale || !aUILocale[0]) {
-            rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("global").get(),
+        nsCOMPtr<nsIXULChromeRegistry> packageRegistry = do_QueryInterface(chromeRegistry);
+        if ((!aUILocale || !aUILocale[0]) && packageRegistry) {
+            rv = packageRegistry->GetSelectedLocale(NS_LITERAL_STRING("global").get(),
                                            getter_Copies(currentUILocaleName));
             if (NS_SUCCEEDED(rv)) {
                 uiLocale = currentUILocaleName.get();
@@ -1575,7 +1576,7 @@ nsProfile::CreateNewProfileWithLocales(const PRUnichar* profileName,
         }
 
         if (!aContentLocale || !aContentLocale[0]) {
-            rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(),
+            rv = packageRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(),
                                            getter_Copies(currentContentLocaleName));
             if (NS_SUCCEEDED(rv)) {
                 contentLocale = currentContentLocaleName.get();
@@ -2033,12 +2034,12 @@ nsProfile::DefineLocaleDefaultsDir()
     rv = directoryService->Get(NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR, NS_GET_IID(nsIFile), getter_AddRefs(localeDefaults));
     if (NS_SUCCEEDED(rv))
     {
-        nsCOMPtr<nsIChromeRegistry> chromeRegistry = 
+        nsCOMPtr<nsIXULChromeRegistry> packageRegistry = 
                  do_GetService(kChromeRegistryCID, &rv);
         if (NS_SUCCEEDED(rv))
         {
             nsXPIDLString localeName;
-            rv = chromeRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(), getter_Copies(localeName));
+            rv = packageRegistry->GetSelectedLocale(NS_LITERAL_STRING("global-region").get(), getter_Copies(localeName));
             if (NS_SUCCEEDED(rv))
                 rv = localeDefaults->AppendUnicode(localeName);
         }
