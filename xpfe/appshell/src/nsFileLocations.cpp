@@ -219,15 +219,14 @@ static void GetProfileDefaultsFolder(nsFileSpec& outSpec)
     nsFileSpec cwd;
     GetDefaultsFolder(cwd);
 
-    if(cwd) {
 #if defined(XP_MAC)
-        cwd += "Profile";
+    cwd += "Profile";
 #else
-        cwd += "profile";
+    cwd += "profile";
 #endif
 
-        outSpec = cwd;
-    }
+    outSpec = cwd;
+    
 } // GetProfileDefaultsFolder
 
 //----------------------------------------------------------------------------------------
@@ -237,17 +236,14 @@ static void GetPrefDefaultsFolder(nsFileSpec& outSpec)
     nsFileSpec cwd;
     GetDefaultsFolder(cwd);
 
-    if(cwd) {
 #if defined(XP_MAC)
-        cwd += "Pref";
+    cwd += "Pref";
 #else
-        cwd += "pref";
+    cwd += "pref";
 #endif
 
-        outSpec = cwd;
-    }
+    outSpec = cwd;
 } // GetProfileDefaultsFolder
-
 
 
 //========================================================================================
