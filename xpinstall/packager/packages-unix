@@ -38,7 +38,7 @@ bin/libplc4.so
 bin/libplds4.so
 bin/libxpcom.so
 bin/libxpistub.so
-bin/libz.so
+bin/libmozz.so
 bin/components/libxpinstall.so
 bin/components/libjar50.so
 bin/components/libunicharutil.so
@@ -50,7 +50,7 @@ bin/icons/*
 bin/libcmt.so
 bin/libgtksuperwin.so
 bin/libgtkxtbin.so
-bin/libjpeg.so
+bin/libmozjpeg.so
 bin/libjsj.so
 bin/libmsgbaseutil.so
 bin/libprotocol.so

@@ -29,7 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 include $(srcdir)/../src/objs.mk
 
 MODULE		= zlib
-LIBRARY_NAME	= z_s
+LIBRARY_NAME	= mozz_s
 
 CSRCS		= $(MODULES_ZLIB_SRC_LCSRCS)
 EXPORTS		= $(MODULES_ZLIB_SRC_LEXPORTS)

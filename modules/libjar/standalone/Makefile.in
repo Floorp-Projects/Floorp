@@ -43,7 +43,7 @@ override NO_SHARED_LIB=1
 override NO_STATIC_LIB=
 
 #ifndef MOZ_NATIVE_ZLIB
-SHARED_LIBRARY_LIBS = $(DIST)/lib/libz_s.$(LIB_SUFFIX)
+SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozz_s.$(LIB_SUFFIX)
 #endif
 
 MDDEPDIR := $(MDDEPDIR)_S

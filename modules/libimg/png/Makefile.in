@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= png
-LIBRARY_NAME	= png
+LIBRARY_NAME	= mozpng
 
 
 CSRCS		= \

@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= mng
-LIBRARY_NAME	= mng
+LIBRARY_NAME	= mozmng
 
 REQUIRES	= jpeg
 

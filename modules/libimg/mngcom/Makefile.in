@@ -31,9 +31,9 @@ IS_COMPONENT	= 1
 REQUIRES	= xpcom string img layout util locale mng jpeg
 
 ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
-EXTRA_DSO_LIBS  = libmng
+EXTRA_DSO_LIBS  = libmozmng
 else
-EXTRA_DSO_LIBS  = mng
+EXTRA_DSO_LIBS  = mozmng
 endif
 
 CPPSRCS		= \
