@@ -1,3 +1,8 @@
 Makefile
 .deps_S
 nsZipArchive.cpp
+nsJARInputStream.cpp
+nsJAR.cpp
+nsJARFactory.cpp
+nsWildCard.cpp
+nsXPTZipLoader.cpp
