@@ -1108,7 +1108,7 @@ nsRenderingContextPS :: DrawString(const char *aString, PRUint32 aLength,
 
   mPSObj->setlanggroup(nsnull);
 
-  SetupFontAndColor();
+  fontPS->SetupFont(this);
 
   PRInt32 dxMem[500];
   PRInt32* dx0 = 0;
@@ -1158,7 +1158,7 @@ nsRenderingContextPS :: DrawString(const PRUnichar *aString, PRUint32 aLength,
   /* build up conversion table */
   mPSObj->preshow(aString, aLength);
 
-  SetupFontAndColor();
+  fontPS->SetupFont(this);
 
   if (aSpacing) {
     // Slow, but accurate rendering
@@ -1309,38 +1309,6 @@ NS_IMETHODIMP nsRenderingContextPS::RetrieveCurrentNativeGraphicData(PRUint32 * 
 }
 
 /** ---------------------------------------------------
- *  See documentation in nsIRenderingContext.h
- *	@update 12/21/98 dwc
- */
-void 
-nsRenderingContextPS :: SetupFontAndColor(void)
-{
-  if (!mPSObj) return;
-
-  nscoord         fontHeight = 0;
-  PRInt16         fontIndex = -1;
-  const nsFont    *font;
-
-  mFontMetrics->GetHeight(fontHeight);
-  mFontMetrics->GetFont(font);
-
-  mStates->mFontMetrics = mFontMetrics;
-
-  nsFontMetricsPS *metrics = NS_REINTERPRET_CAST(nsFontMetricsPS *, mFontMetrics.get());
-
-  if (!metrics) return;
-
-  nsFontPS* fontPS = metrics->GetFontPS();
-  if (!fontPS) return;
-
-  fontIndex = fontPS->GetFontIndex();
-
-  mPSObj->setscriptfont(fontPS->GetFontIndex(), fontPS->GetFamilyName(),
-                        fontHeight, font->style, font->variant,
-                        font->weight, font->decorations);
-}
-
-/** ---------------------------------------------------
  *  See documentation in nsRenderingContextPS.h
  *	@update 3/24/2000 yueheng.xu@intel.com
  */
@@ -1379,7 +1347,7 @@ const nsFont    *font;
 
   mPSObj->moveto(aX, aY);
   if (PR_TRUE == aIsUnicode) {  
-    mPSObj->show(aString, aLength, "");
+    mPSObj->show(aString, aLength, "", 0);
   }
 }
 

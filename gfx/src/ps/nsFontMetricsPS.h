@@ -50,7 +50,9 @@
 #include "nsCRT.h"
 #include "nsCompressedCharMap.h"
 #include "nsPostScriptObj.h"
+#include "nsIFontCatalogService.h"
 
+class nsPSFontGenerator;
 class nsDeviceContextPS;
 class nsRenderingContextPS;
 class nsFontPS;
@@ -113,7 +115,8 @@ public:
   inline void SetSpaceWidth(nscoord aSpaceWidth) { mSpaceWidth = aSpaceWidth; };
 
   inline nsFontPS* GetFontPS() { return mFontPS; }
-  
+  inline nsDeviceContextPS* GetDeviceContext() { return mDeviceContext; }
+
 #if defined(XP_WIN)
 // this routine is defined here so the PostScript module can be debugged
 // on the windows platform
@@ -161,17 +164,15 @@ class nsFontPS
 {
 public:
   nsFontPS();
-  nsFontPS(const nsFont& aFont, nsIFontMetrics* aFontMetrics);
+  nsFontPS(const nsFont& aFont, nsFontMetricsPS* aFontMetrics);
   virtual ~nsFontPS();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
-  static nsFontPS* FindFont(const nsFont& aFont, nsIFontMetrics* aFontMetrics);
-
+  static nsFontPS* FindFont(const nsFont& aFont, nsFontMetricsPS* aFontMetrics);
+  static nsPSFontGenerator* GetPSFontGenerator(nsFontMetricsPS* aFontMetrics,
+                                               nsCStringKey& aKey);
   inline PRInt32 SupportsChar(PRUnichar aChar)
     { return mCCMap && CCMAP_HAS_CHAR(mCCMap, aChar); };
-
-  inline PRInt16 GetFontIndex() { return mFontIndex; };
-  inline const nsString& GetFamilyName() { return mFamilyName; };
 
   virtual nscoord GetWidth(const char* aString, PRUint32 aLength) = 0;
   virtual nscoord GetWidth(const PRUnichar* aString, PRUint32 aLength) = 0;
@@ -182,6 +183,7 @@ public:
                              nscoord aX, nscoord aY,
                              const PRUnichar* aString, PRUint32 aLength) = 0;
   virtual nsresult RealizeFont(nsFontMetricsPS* aFontMetrics, float dev2app) = 0;
+  virtual nsresult SetupFont(nsRenderingContextPS* aContext) = 0;
 
 #ifdef MOZ_MATHML
   virtual nsresult
@@ -197,15 +199,16 @@ public:
 protected:
   nsFont*                  mFont;
   PRUint16*                mCCMap;
-  nsCOMPtr<nsIFontMetrics> mFontMetrics;
-  PRInt16                  mFontIndex;
-  nsString                 mFamilyName;
+  nsFontMetricsPS*         mFontMetrics;
 };
 
 class nsFontPSAFM : public nsFontPS
 {
 public:
-  nsFontPSAFM(const nsFont& aFont, nsIFontMetrics* aFontMetrics);
+  static nsFontPS* FindFont(const nsFont& aFont, nsFontMetricsPS* aFontMetrics);
+
+  nsFontPSAFM(const nsFont& aFont, nsAFMObject* aAFMInfo,
+              PRInt16 aFontIndex, nsFontMetricsPS* aFontMetrics);
   virtual ~nsFontPSAFM();
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -218,6 +221,7 @@ public:
                      nscoord aX, nscoord aY,
                      const PRUnichar* aString, PRUint32 aLength);
   nsresult RealizeFont(nsFontMetricsPS* aFontMetrics, float dev2app);
+  nsresult SetupFont(nsRenderingContextPS* aContext);
 
 #ifdef MOZ_MATHML
   nsresult
@@ -231,6 +235,104 @@ public:
 #endif
 
   nsAFMObject* mAFMInfo;
+  PRInt16      mFontIndex;
+  nsString     mFamilyName;
+};
+
+#ifdef MOZ_ENABLE_FREETYPE2
+
+#include "nsIFreeType2.h"
+
+class nsFontPSFreeType : public nsFontPS
+{
+public:
+  static nsFontPS* FindFont(const nsFont& aFont, nsFontMetricsPS* aFontMetrics);
+  static nsresult  FindFontEntry(const nsFont& aFont, nsIAtom* aLanguage,
+                                 nsITrueTypeFontCatalogEntry** aEntry);
+  static nsresult  GetFontEntry(nsACString& aFamilyName, nsACString& aLanguage,
+                                PRUint16 aWeight, PRUint16 aWidth,
+                                PRUint16 aSlant, PRUint16 aSpacing,
+                                nsITrueTypeFontCatalogEntry** aEntry);
+  nsresult         Init(nsITrueTypeFontCatalogEntry* aEntry,
+                        nsPSFontGenerator* aPSFontGen);
+
+  nsFontPSFreeType(const nsFont& aFont, nsFontMetricsPS* aFontMetrics);
+  virtual ~nsFontPSFreeType();
+  NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
+
+  nscoord GetWidth(const char* aString, PRUint32 aLength);
+  nscoord GetWidth(const PRUnichar* aString, PRUint32 aLength);
+  nscoord DrawString(nsRenderingContextPS* aContext,
+                     nscoord aX, nscoord aY,
+                     const char* aString, PRUint32 aLength);
+  nscoord DrawString(nsRenderingContextPS* aContext,
+                     nscoord aX, nscoord aY,
+                     const PRUnichar* aString, PRUint32 aLength);
+  nsresult RealizeFont(nsFontMetricsPS* aFontMetrics, float dev2app);
+  nsresult SetupFont(nsRenderingContextPS* aContext);
+
+#ifdef MOZ_MATHML
+  nsresult
+  GetBoundingMetrics(const char*        aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+  nsresult
+  GetBoundingMetrics(const PRUnichar*   aString,
+                     PRUint32           aLength,
+                     nsBoundingMetrics& aBoundingMetrics);
+#endif
+
+  nsCOMPtr<nsITrueTypeFontCatalogEntry> mEntry;
+  FT_Face getFTFace();
+
+protected:
+  nsCOMPtr<nsITrueTypeFontCatalogEntry> mFaceID;
+  nsCOMPtr<nsIFreeType2> mFt2;
+  PRUint16        mPixelSize;
+  FTC_Image_Desc  mImageDesc;
+
+
+  int     ascent();
+  int     descent();
+  PRBool  getXHeight(unsigned long &aVal);
+  int     max_ascent();
+  int     max_descent();
+  int     max_width();
+  PRBool  superscript_y(long &aVal);
+  PRBool  subscript_y(long &aVal);
+  PRBool  underlinePosition(long &aVal);
+  PRBool  underline_thickness(unsigned long &aVal);
+  nsPSFontGenerator*  mPSFontGenerator;
 };
 
 #endif
+
+class nsPSFontGenerator {
+public:
+  nsPSFontGenerator();
+  virtual ~nsPSFontGenerator();
+  virtual void  GeneratePSFont(FILE* aFile);
+  void  AddToSubset(const PRUnichar* aString, PRUint32 aLength);
+  void  AddToSubset(const char* aString, PRUint32 aLength);
+
+protected:
+  nsString mSubset;
+};
+
+#ifdef MOZ_ENABLE_FREETYPE2
+class nsFT2Type8Generator : public nsPSFontGenerator {
+public:
+  nsFT2Type8Generator();
+  ~nsFT2Type8Generator();
+  nsresult Init(nsITrueTypeFontCatalogEntry* aFce);
+  void  GeneratePSFont(FILE* aFile);
+
+protected:
+  nsCOMPtr<nsITrueTypeFontCatalogEntry> mEntry;
+  nsCOMPtr<nsIFreeType2> mFt2;
+  FTC_Image_Desc  mImageDesc;
+};
+#endif
+
+#endif
+

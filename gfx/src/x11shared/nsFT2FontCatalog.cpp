@@ -798,7 +798,7 @@ nsFT2FontCatalog::GetFontNames(const nsACString & aFamilyName,
       continue;
     // width
     if (aWidth && (aWidth != fce->mWidth))
-       continue;
+      continue;
     // slant
     if (aSlant && !((fce->mStyleFlags & FT_STYLE_FLAG_ITALIC) == italicBit))
       continue;
@@ -2356,39 +2356,39 @@ nsFontVendorName sVendorNamesList[] = {
 
 // TODO: what TT_OS2_CPR1_OEM standard for. use "oem" temporarily.
 nsulCodePageRangeLanguage ulCodePageRange1Language[] = {
-{ TT_OS2_CPR1_LATIN1 | TT_OS2_CPR1_MAC_ROMAN,     "latin1"              },
-{ TT_OS2_CPR1_LATIN2,                             "latin2"              },
-{ TT_OS2_CPR1_CYRILLIC,                           "cyrillic"            },
-{ TT_OS2_CPR1_GREEK,                              "greek"               },
-{ TT_OS2_CPR1_TURKISH,                            "turkish"             },
-{ TT_OS2_CPR1_HEBREW,                             "hebrew"              },
-{ TT_OS2_CPR1_ARABIC,                             "arabic"              },
-{ TT_OS2_CPR1_BALTIC,                             "baltic"              },
+{ TT_OS2_CPR1_LATIN1 | TT_OS2_CPR1_MAC_ROMAN,     "x-western"           },
+{ TT_OS2_CPR1_LATIN2,                             "x-central-euro"      },
+{ TT_OS2_CPR1_CYRILLIC,                           "x-cyrillic"          },
+{ TT_OS2_CPR1_GREEK,                              "el"                  },
+{ TT_OS2_CPR1_TURKISH,                            "tr"                  },
+{ TT_OS2_CPR1_HEBREW,                             "he"                  },
+{ TT_OS2_CPR1_ARABIC,                             "ar"                  },
+{ TT_OS2_CPR1_BALTIC,                             "x-baltic"            },
 { TT_OS2_CPR1_VIETNAMESE,                         "vietnamese"          },
-{ TT_OS2_CPR1_THAI,                               "thai"                },
-{ TT_OS2_CPR1_JAPANESE,                           "apanese"             },
-{ TT_OS2_CPR1_CHINESE_SIMP,                       "simplified chinese"  },
-{ TT_OS2_CPR1_KO_WANSUNG | TT_OS2_CPR1_KO_JOHAB,  "korean"              },
-{ TT_OS2_CPR1_CHINESE_TRAD,                       "traditional chinese" },
-{ TT_OS2_CPR1_OEM,                                "oem"                    },
+{ TT_OS2_CPR1_THAI,                               "th"                  },
+{ TT_OS2_CPR1_JAPANESE,                           "ja"                  },
+{ TT_OS2_CPR1_CHINESE_SIMP,                       "zh-cn"               },
+{ TT_OS2_CPR1_KO_WANSUNG | TT_OS2_CPR1_KO_JOHAB,  "ko"                  },
+{ TT_OS2_CPR1_CHINESE_TRAD,                       "zh-tw"               },
+{ TT_OS2_CPR1_OEM,                                "oem"                 },
 { TT_OS2_CPR1_SYMBOL,                             "symbol"              },
 { 0,                                              nsnull                },
 };
 
 nsulCodePageRangeLanguage ulCodePageRange2Language[] = {
-{ TT_OS2_CPR2_GREEK | TT_OS2_CPR2_GREEK_437G,     "greek"               },
-{ TT_OS2_CPR2_RUSSIAN,                            "russian"             },
-{ TT_OS2_CPR2_NORDIC,                             "nordic"              },
-{ TT_OS2_CPR2_ARABIC | TT_OS2_CPR2_ARABIC_708,    "arabic"              },
-{ TT_OS2_CPR2_CA_FRENCH,                          "canadian french"     },
-{ TT_OS2_CPR2_HEBREW,                             "hebrew"              },
+{ TT_OS2_CPR2_GREEK | TT_OS2_CPR2_GREEK_437G,     "el"                  },
+{ TT_OS2_CPR2_RUSSIAN,                            "x-cyrillic"          },
+{ TT_OS2_CPR2_NORDIC,                             "x-western"           },
+{ TT_OS2_CPR2_ARABIC | TT_OS2_CPR2_ARABIC_708,    "ar"                  },
+{ TT_OS2_CPR2_CA_FRENCH,                          "x-western"           },
+{ TT_OS2_CPR2_HEBREW,                             "he"                  },
 { TT_OS2_CPR2_ICELANDIC,                          "icelandic"           },
-{ TT_OS2_CPR2_PORTUGESE,                          "portugese"           },
-{ TT_OS2_CPR2_TURKISH,                            "turkish"             },
-{ TT_OS2_CPR2_CYRILLIC,                           "cyrillic"            },
-{ TT_OS2_CPR2_LATIN2,                             "latin2"              },
-{ TT_OS2_CPR2_BALTIC,                             "baltic"              },
-{ TT_OS2_CPR2_WE_LATIN1 || TT_OS2_CPR2_US,        "latin1"              },
+{ TT_OS2_CPR2_PORTUGESE,                          "x-western"           },
+{ TT_OS2_CPR2_TURKISH,                            "tr"                  },
+{ TT_OS2_CPR2_CYRILLIC,                           "x-cyrillic"          },
+{ TT_OS2_CPR2_LATIN2,                             "x-central-euro"      },
+{ TT_OS2_CPR2_BALTIC,                             "x-baltic"            },
+{ TT_OS2_CPR2_WE_LATIN1 || TT_OS2_CPR2_US,        "x-western"           },
 { 0,                                              nsnull                },
 };
 #endif /* #if (!defined(MOZ_ENABLE_FREETYPE2)) */

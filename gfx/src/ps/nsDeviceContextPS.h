@@ -47,6 +47,7 @@
 #include "nsIRenderingContext.h"
 #include "nsVoidArray.h"
 #include "nsIDeviceContextPS.h"
+#include "nsFontMetricsPS.h"
 
 class nsPostScriptObj;
 class nsDeviceContextWin;       // need to be a friend of the class using us.
@@ -97,6 +98,8 @@ public:
   NS_IMETHOD  SetSpec(nsIDeviceContextSpec *aSpec);
 
   nsPostScriptObj*    GetPrintContext() { return mPSObj; }
+  nsHashtable*        GetPSFontGeneratorList() { return mPSFontGeneratorList; }
+  PRBool               mTTPEnable;
 
 protected:
   virtual     ~nsDeviceContextPS();
@@ -106,6 +109,7 @@ protected:
   nsCOMPtr<nsIDeviceContextSpec>  mSpec;
   nsCOMPtr<nsIDeviceContext>      mParentDeviceContext;
   nsPostScriptObj       *mPSObj;
+  nsHashtable           *mPSFontGeneratorList;
 };
 
 #endif /* nsDeviceContextPS_h___ */

@@ -69,7 +69,7 @@ typedef struct {
 } CodeSpaceRangeElement;
 
 void WriteCidRangeMapUnicode(FILE *aFile);
-void WriteCidCharMap(PRUnichar *aCharIDs, PRUint32 *aCIDs, int aLen, 
+void WriteCidCharMap(const PRUnichar *aCharIDs, PRUint32 *aCIDs, int aLen,
                      FILE *aFile);
 void WriteCmapFooter(FILE *aFile);
 void WriteCmapHeader(const char *aName, const char *aRegistry, 

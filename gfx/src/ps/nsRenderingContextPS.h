@@ -261,7 +261,6 @@ public:
 
 private:
   nsresult CommonInit(void);
-  void SetupFontAndColor(void);
   void PushClipState(void);
 
 protected:

@@ -81,7 +81,6 @@ CPPSRCS		+= \
 		nsType8.cpp \
 		$(NULL)
 DEFINES         += -DMOZ_ENABLE_FREETYPE2
-LOCAL_INCLUDES  += -I$(srcdir)/../freetype
 endif
 
 include $(topsrcdir)/config/rules.mk

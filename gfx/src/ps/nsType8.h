@@ -43,11 +43,11 @@
 
 #include <stdio.h>
 #include "nspr.h"
-#include "nsFreeType.h"
+#include "nsIFreeType2.h"
 
 void AddCIDCheckCode(FILE *aFile);
-PRBool FT2SubsetToType8(FT_Face aFace, PRUnichar *aCharIDs, PRUint32 aNumChars,
-                        int aWmode, FILE *aFile);
+PRBool FT2SubsetToType8(FT_Face aFace, const PRUnichar *aCharIDs,
+                        PRUint32 aNumChars, int aWmode, FILE *aFile);
 char*  FT2ToType8CidFontName(FT_Face aFace, int aWmode);
 
 
