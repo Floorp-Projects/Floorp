@@ -661,6 +661,8 @@ nsresult nsParser::Parse(nsString& aSourceBuffer,void* aKey,PRBool anHTMLString,
         pc->mContextType=CParserContext::eCTString;
         if(PR_TRUE==anHTMLString)
           pc->mSourceType="text/html";
+        else
+          pc->mSourceType="text/xml";           // XXX rick is a fish
       } 
       else {
         NS_RELEASE(me);
