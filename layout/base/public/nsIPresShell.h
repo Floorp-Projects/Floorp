@@ -511,9 +511,14 @@ public:
 
 
 #ifdef MOZ_REFLOW_PERF
-  NS_IMETHOD ClearTotals() = 0;
   NS_IMETHOD DumpReflows() = 0;
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame) = 0;
+  NS_IMETHOD PaintCount(const char * aName, 
+                        nsIRenderingContext* aRenderingContext, 
+                        nsIPresContext * aPresContext, 
+                        nsIFrame * aFrame,
+                        PRUint32 aColor) = 0;
+  NS_IMETHOD SetPaintFrameCount(PRBool aOn) = 0;
 #endif
 
 #ifdef IBMBIDI

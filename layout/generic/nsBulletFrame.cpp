@@ -112,7 +112,7 @@ nsBulletFrame::GetFrameType(nsIAtom** aType) const
 
 #include "nsIDOMNode.h"
 NS_IMETHODIMP
-nsBulletFrame::Paint(nsIPresContext*      aCX,
+nsBulletFrame::Paint(nsIPresContext*      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect,
                      nsFramePaintLayer    aWhichLayer)
@@ -122,7 +122,7 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
   }
 
   PRBool isVisible;
-  if (NS_SUCCEEDED(IsVisibleForPainting(aCX, aRenderingContext, PR_TRUE, &isVisible)) && isVisible) {
+  if (NS_SUCCEEDED(IsVisibleForPainting(aPresContext, aRenderingContext, PR_TRUE, &isVisible)) && isVisible) {
     const nsStyleList* myList =
       (const nsStyleList*)mStyleContext->GetStyleData(eStyleStruct_List);
     PRUint8 listStyleType = myList->mListStyleType;
@@ -256,8 +256,8 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
     case NS_STYLE_LIST_STYLE_LAO:
     case NS_STYLE_LIST_STYLE_MYANMAR:
     case NS_STYLE_LIST_STYLE_KHMER:
-      aCX->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
-      GetListItemText(aCX, *myList, text);
+      aPresContext->GetMetricsFor(myFont->mFont, getter_AddRefs(fm));
+      GetListItemText(aPresContext, *myList, text);
       aRenderingContext.SetFont(fm);
       aRenderingContext.DrawString(text, mPadding.left, mPadding.top);
       break;
@@ -288,6 +288,7 @@ nsBulletFrame::Paint(nsIPresContext*      aCX,
     }   
 #endif // IBMBIDI
   }
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsBulletFrame", &aRenderingContext);
   return NS_OK;
 }
 

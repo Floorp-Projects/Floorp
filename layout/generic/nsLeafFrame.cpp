@@ -66,6 +66,7 @@ nsLeafFrame::Paint(nsIPresContext* aPresContext,
                                   aDirtyRect, rect, *myBorder, *myOutline, mStyleContext, 0);
     }
   }
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsLeafFrame", &aRenderingContext);
   return NS_OK;
 }
 

@@ -107,6 +107,11 @@
 #include "nsIFrameDebug.h"
 #endif
 
+#ifdef MOZ_REFLOW_PERF_DSP
+#include "nsIRenderingContext.h"
+#include "nsIFontMetrics.h"
+#endif
+
 #include "nsIReflowCallback.h"
 
 #include "nsIScriptGlobalObject.h"
@@ -189,6 +194,8 @@ static NS_DEFINE_CID(kHTMLConverterCID,        NS_HTMLFORMATCONVERTER_CID);
 #undef NOISY
 
 //========================================================================
+//========================================================================
+//========================================================================
 #ifdef MOZ_REFLOW_PERF
 class ReflowCountMgr;
 
@@ -223,34 +230,33 @@ protected:
   PRUint32 mTotals[NUM_REFLOW_TYPES];
   PRUint32 mCacheTotals[NUM_REFLOW_TYPES];
 
-  ReflowCountMgr * mMgr;
+  ReflowCountMgr * mMgr; // weak reference (don't delete)
 };
 
 // Counting Class
 class IndiReflowCounter {
 public:
-  IndiReflowCounter(ReflowCountMgr * aMgr = nsnull):mMgr(aMgr),mCounter(aMgr),mFrame(nsnull),mParent(nsnull), mCount(0), mHasBeenOutput(PR_FALSE) {}
+  IndiReflowCounter(ReflowCountMgr * aMgr = nsnull):mMgr(aMgr),mCounter(aMgr),mFrame(nsnull), mCount(0), mHasBeenOutput(PR_FALSE) {}
   virtual ~IndiReflowCounter() {}
 
   nsAutoString mName;
-  nsIFrame *   mFrame;
-  nsIFrame *   mParent;
+  nsIFrame *   mFrame;   // weak reference (don't delete)
   PRInt32      mCount;
 
-  ReflowCountMgr * mMgr;
+  ReflowCountMgr * mMgr; // weak reference (don't delete)
 
   ReflowCounter mCounter;
   PRBool        mHasBeenOutput;
 
 };
 
+//--------------------
 // Manager Class
+//--------------------
 class ReflowCountMgr {
 public:
   ReflowCountMgr();
-  //static ReflowCountMgr * GetInstance() { return &gReflowCountMgr; } 
-
-  ~ReflowCountMgr();
+  virtual ~ReflowCountMgr();
 
   void ClearTotals();
   void ClearGrandTotals();
@@ -261,12 +267,18 @@ public:
   void Add(const char * aName, nsReflowReason aType, nsIFrame * aFrame);
   ReflowCounter * LookUp(const char * aName);
 
+  void PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsIPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
+
   FILE * GetOutFile() { return mFD; }
 
   PLHashTable * GetIndiFrameHT() { return mIndiFrameCounts; }
 
-  void       SetPresContext(nsIPresContext * aPresContext) { mPresContext = aPresContext; } // weak reference
-  void       SetPresShell(nsIPresShell* aPresShell) { mPresShell= aPresShell; } // weak reference
+  void SetPresContext(nsIPresContext * aPresContext) { mPresContext = aPresContext; } // weak reference
+  void SetPresShell(nsIPresShell* aPresShell) { mPresShell= aPresShell; } // weak reference
+
+  void SetDumpFrameCounts(PRBool aVal)         { mDumpFrameCounts = aVal; }
+  void SetDumpFrameByFrameCounts(PRBool aVal)  { mDumpFrameByFrameCounts = aVal; }
+  void SetPaintFrameCounts(PRBool aVal)        { mPaintFrameByFrameCounts = aVal; }
 
 protected:
   void DisplayTotals(PRUint32 * aArray, PRUint32 * aDupArray, char * aTitle);
@@ -297,6 +309,10 @@ protected:
   PLHashTable * mIndiFrameCounts;
   FILE * mFD;
   
+  PRBool mDumpFrameCounts;
+  PRBool mDumpFrameByFrameCounts;
+  PRBool mPaintFrameByFrameCounts;
+
   PRBool mCycledOnce;
 
   // Root Frame for Individual Tracking
@@ -994,9 +1010,12 @@ public:
   NS_IMETHOD DocumentWillBeDestroyed(nsIDocument *aDocument);
 
 #ifdef MOZ_REFLOW_PERF
-  NS_IMETHOD ClearTotals();
   NS_IMETHOD DumpReflows();
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame);
+  NS_IMETHOD PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsIPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor);
+
+  NS_IMETHOD SetPaintFrameCount(PRBool aOn);
+  
 #endif
 
 protected:
@@ -1501,6 +1520,25 @@ PresShell::Init(nsIDocument* aDocument,
 #endif
   // setup the preference style rules up (no forced reflow)
   SetPreferenceStyleRules(PR_FALSE);
+
+#ifdef MOZ_REFLOW_PERF
+    // Get the prefs service
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &result);
+    if (NS_SUCCEEDED(result)) {
+      if (mReflowCountMgr != nsnull) {
+        PRBool paintFrameCounts;
+        PRBool dumpFrameCounts;
+        PRBool dumpFrameByFrameCounts;
+        prefs->GetBoolPref("layout.reflow.showframecounts", &paintFrameCounts);
+        prefs->GetBoolPref("layout.reflow.dumpframecounts", &dumpFrameCounts);
+        prefs->GetBoolPref("layout.reflow.dumpframebyframecounts", &dumpFrameByFrameCounts);
+
+        mReflowCountMgr->SetDumpFrameCounts(dumpFrameCounts);
+        mReflowCountMgr->SetDumpFrameByFrameCounts(dumpFrameByFrameCounts);
+        mReflowCountMgr->SetPaintFrameCounts(paintFrameCounts);
+      }
+    }
+#endif
 
   return NS_OK;
 }
@@ -6076,17 +6114,12 @@ nsresult CtlStyleWatch(PRUint32 aCtlValue, nsIStyleSet *aStyleSet)
 }
 
 
-//-------------------------------------------------------------
-//-- Reflow counts
-//-------------------------------------------------------------
+//=============================================================
+//=============================================================
+//-- Debug Reflow Counts
+//=============================================================
+//=============================================================
 #ifdef MOZ_REFLOW_PERF
-//-------------------------------------------------------------
-NS_IMETHODIMP
-PresShell::ClearTotals()
-{
-  return NS_OK;
-}
-
 //-------------------------------------------------------------
 NS_IMETHODIMP
 PresShell::DumpReflows()
@@ -6118,10 +6151,29 @@ PresShell::CountReflows(const char * aName, PRUint32 aType, nsIFrame * aFrame)
   return NS_OK;
 }
 
+//-------------------------------------------------------------
+NS_IMETHODIMP
+PresShell::PaintCount(const char * aName, nsIRenderingContext* aRenderingContext, nsIPresContext* aPresContext, nsIFrame * aFrame, PRUint32 aColor)
+{
+  if (mReflowCountMgr) {
+    mReflowCountMgr->PaintCount(aName, aRenderingContext, aPresContext, aFrame, aColor);
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------
+NS_IMETHODIMP
+PresShell::SetPaintFrameCount(PRBool aPaintFrameCounts)
+{ 
+  if (mReflowCountMgr) {
+    mReflowCountMgr->SetPaintFrameCounts(aPaintFrameCounts);
+  }
+  return NS_OK; 
+}
+
 //------------------------------------------------------------------
 //-- Reflow Counter Classes Impls
 //------------------------------------------------------------------
-//ReflowCountMgr ReflowCountMgr::gReflowCountMgr;
 
 //------------------------------------------------------------------
 ReflowCounter::ReflowCounter(ReflowCountMgr * aMgr) :
@@ -6134,7 +6186,7 @@ ReflowCounter::ReflowCounter(ReflowCountMgr * aMgr) :
 //------------------------------------------------------------------
 ReflowCounter::~ReflowCounter()
 {
-  //DisplayTotals(mTotals, "Grand Totals");
+  
 }
 
 //------------------------------------------------------------------
@@ -6241,21 +6293,23 @@ void ReflowCounter::DisplayHTMLTotals(PRUint32 * aArray, const char * aTitle)
 }
 
 //------------------------------------------------------------------
+//-- ReflowCountMgr
+//------------------------------------------------------------------
 ReflowCountMgr::ReflowCountMgr()
 {
   mCounts = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
                                 PL_CompareValues, nsnull, nsnull);
   mIndiFrameCounts = PL_NewHashTable(10, PL_HashString, PL_CompareStrings, 
                                      PL_CompareValues, nsnull, nsnull);
-  mCycledOnce = PR_FALSE;
+  mCycledOnce              = PR_FALSE;
+  mDumpFrameCounts         = PR_FALSE;
+  mDumpFrameByFrameCounts  = PR_FALSE;
+  mPaintFrameByFrameCounts = PR_FALSE;
 }
 
 //------------------------------------------------------------------
 ReflowCountMgr::~ReflowCountMgr()
 {
-  //if (GetInstance() == this) {
-  //  DoGrandTotals();
-  //}
   CleanUp();
 }
 
@@ -6275,7 +6329,7 @@ void ReflowCountMgr::Add(const char * aName, nsReflowReason aType, nsIFrame * aF
 {
   NS_ASSERTION(aName != nsnull, "Name shouldn't be null!");
 
-  if (nsnull != mCounts) {
+  if (mDumpFrameCounts && nsnull != mCounts) {
     ReflowCounter * counter = (ReflowCounter *)PL_HashTableLookup(mCounts, aName);
     if (counter == nsnull) {
       counter = new ReflowCounter(this);
@@ -6287,7 +6341,9 @@ void ReflowCountMgr::Add(const char * aName, nsReflowReason aType, nsIFrame * aF
     counter->Add(aType);
   }
 
-  if (nsnull != mIndiFrameCounts && aFrame != nsnull) {
+  if ((mDumpFrameByFrameCounts || mPaintFrameByFrameCounts) && 
+      nsnull != mIndiFrameCounts && 
+      aFrame != nsnull) {
     char * key = new char[16];
     sprintf(key, "%p", aFrame);
     IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
@@ -6295,14 +6351,77 @@ void ReflowCountMgr::Add(const char * aName, nsReflowReason aType, nsIFrame * aF
       counter = new IndiReflowCounter(this);
       NS_ASSERTION(counter != nsnull, "null ptr");
       counter->mFrame = aFrame;
-      aFrame->GetParent(&counter->mParent);
       counter->mName.AssignWithConversion(aName);
       PL_HashTableAdd(mIndiFrameCounts, key, counter);
     }
     // this eliminates extra counts from super classes
-    if (counter->mName.EqualsWithConversion(aName)) {
+    if (counter != nsnull && counter->mName.EqualsWithConversion(aName)) {
       counter->mCount++;
       counter->mCounter.Add(aType, 1);
+    }
+  }
+}
+
+//------------------------------------------------------------------
+void ReflowCountMgr::PaintCount(const char *    aName, 
+                                nsIRenderingContext* aRenderingContext, 
+                                nsIPresContext* aPresContext, 
+                                nsIFrame*       aFrame, 
+                                PRUint32        aColor)
+{
+  if (mPaintFrameByFrameCounts && 
+      nsnull != mIndiFrameCounts && 
+      aFrame != nsnull) {
+    char * key = new char[16];
+    sprintf(key, "%p", aFrame);
+    IndiReflowCounter * counter = (IndiReflowCounter *)PL_HashTableLookup(mIndiFrameCounts, key);
+    if (counter != nsnull && counter->mName.EqualsWithConversion(aName)) {
+      aRenderingContext->PushState();
+      nsFont font("Times", NS_FONT_STYLE_NORMAL,NS_FONT_VARIANT_NORMAL,
+						       NS_FONT_WEIGHT_NORMAL,0,NSIntPointsToTwips(8));
+
+      nsCOMPtr<nsIFontMetrics> fm;
+      aPresContext->GetMetricsFor(font, getter_AddRefs(fm));
+      aRenderingContext->SetFont(fm);
+      char buf[16];
+      sprintf(buf, "%d", counter->mCount);
+      nscoord width, height;
+      aRenderingContext->GetWidth((char*)buf, width);
+      fm->GetHeight(height);
+
+      nsRect r;
+      aFrame->GetRect(r);
+
+      nscoord x = 0;
+      PRUint32 color;
+      PRUint32 color2;
+      if (aColor != 0) {
+        color  = aColor;
+        color2 = NS_RGB(0,0,0);
+      } else {
+        PRUint8 rc,gc,bc = 0;
+        if (counter->mCount < 5) {
+          rc = 255;
+          gc = 255;
+        } else if ( counter->mCount < 11) {
+          gc = 255;
+        } else {
+          rc = 255;
+        }
+        color  = NS_RGB(rc,gc,bc);
+        color2 = NS_RGB(rc/2,gc/2,bc/2);
+      }
+
+      nsRect rect(0,0, width+15, height+15);
+      aRenderingContext->SetColor(NS_RGB(0,0,0));
+      aRenderingContext->FillRect(rect);
+      aRenderingContext->SetColor(color2);
+      aRenderingContext->DrawString(buf, strlen(buf), x+15,15);
+      aRenderingContext->SetColor(color);
+      aRenderingContext->DrawString(buf, strlen(buf), x,0);
+
+      PRBool clipEmpty;
+      aRenderingContext->PopState(clipEmpty);
     }
   }
 }
@@ -6334,11 +6453,14 @@ void ReflowCountMgr::CleanUp()
 {
   if (nsnull != mCounts) {
     PL_HashTableEnumerateEntries(mCounts, RemoveItems, nsnull);
-    PL_HashTableEnumerateEntries(mIndiFrameCounts, RemoveIndiItems, nsnull);
     PL_HashTableDestroy(mCounts);
-    PL_HashTableDestroy(mIndiFrameCounts);
     mCounts = nsnull;
-    mCounts = mIndiFrameCounts;
+  }
+
+  if (nsnull != mIndiFrameCounts) {
+    PL_HashTableEnumerateEntries(mIndiFrameCounts, RemoveIndiItems, nsnull);
+    PL_HashTableDestroy(mIndiFrameCounts);
+    mIndiFrameCounts = nsnull;
   }
 }
 
@@ -6490,8 +6612,12 @@ void ReflowCountMgr::DoGrandHTMLTotals()
 void ReflowCountMgr::DisplayTotals(const char * aStr)
 {
   printf("%s\n", aStr?aStr:"No name");
-  DoGrandTotals();
-  DoIndiTotalsTree();
+  if (mDumpFrameCounts) {
+    DoGrandTotals();
+  }
+  if (mDumpFrameByFrameCounts) {
+    DoIndiTotalsTree();
+  }
 
 }
 //------------------------------------
@@ -6612,3 +6738,5 @@ void ColorToString(nscolor aColor, nsAutoString &aString)
   if (tmp.Length() < 2) tmp.AppendInt(0,16);
   aString.Append(tmp);
 }
+
+

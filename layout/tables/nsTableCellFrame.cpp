@@ -392,6 +392,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext* aPresContext,
     }
   } 
   
+  DO_GLOBAL_REFLOW_COUNT_DSP_J("nsTableCellFrame", &aRenderingContext, 0);
   return NS_OK;
   /*nsFrame::Paint(aPresContext,
                         aRenderingContext,

@@ -1377,6 +1377,7 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext* aPresContext,
 #endif
 
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+  DO_GLOBAL_REFLOW_COUNT_DSP_J("nsTableFrame", &aRenderingContext, NS_RGB(255,128,255));
   return NS_OK;
   /*nsFrame::Paint(aPresContext,
                         aRenderingContext,

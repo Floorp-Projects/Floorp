@@ -90,6 +90,7 @@ nsPlaceholderFrame::Paint(nsIPresContext* aPresContext,
     aRenderingContext.FillRect(0, y, NSIntPixelsToTwips(3, p2t),
                                NSIntPixelsToTwips(10, p2t));
   }
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsPlaceholderFrame", &aRenderingContext);
   return NS_OK;
 }
 

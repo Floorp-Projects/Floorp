@@ -1287,6 +1287,7 @@ nsTextFrame::Paint(nsIPresContext* aPresContext,
 
     }
   }
+  DO_GLOBAL_REFLOW_COUNT_DSP("nsTextFrame", &aRenderingContext);
   return NS_OK;
 }
 
