@@ -47,7 +47,6 @@ class nsIFile;
 
 class nsPrefService : public nsIPrefService,
                       public nsIObserver,
-                      public nsIPrefBranch,
                       public nsIPrefBranchInternal,
                       public nsSupportsWeakReference
 {

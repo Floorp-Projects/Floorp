@@ -187,14 +187,12 @@ NS_IMETHODIMP mozPersonalDictionary::Init()
   }
   if(NS_FAILED(rv)) return rv;
    
-  nsCOMPtr<nsIPrefBranch> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
+  nsCOMPtr<nsIPrefBranchInternal> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   if(NS_SUCCEEDED(rv)) {
     if(NS_FAILED(prefs->GetBoolPref(spellchecker_savePref, &SessionSave))){
       SessionSave = PR_TRUE;
     }
-    nsCOMPtr<nsIPrefBranchInternal> pbi(do_QueryInterface(prefs, &rv));
-    if(NS_SUCCEEDED(rv))
-      pbi->AddObserver(spellchecker_savePref, this, PR_TRUE);
+    prefs->AddObserver(spellchecker_savePref, this, PR_TRUE);
   }
   else {
     SessionSave = PR_FALSE;
