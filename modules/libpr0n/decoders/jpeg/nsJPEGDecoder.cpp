@@ -358,7 +358,7 @@ NS_IMETHODIMP nsJPEGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
      */
     mInfo.dct_method =  JDCT_ISLOW;
     mInfo.dither_mode = JDITHER_FS;
-    mInfo.do_fancy_upsampling = FALSE;
+    mInfo.do_fancy_upsampling = TRUE;
     mInfo.enable_2pass_quant = FALSE;
     mInfo.do_block_smoothing = TRUE;
 
