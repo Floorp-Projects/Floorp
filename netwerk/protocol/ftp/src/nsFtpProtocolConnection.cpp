@@ -202,53 +202,88 @@ nsFtpProtocolConnection::OnStopBinding(nsISupports* context,
     nsIByteBufferInputStream* stream = nsnull;      // stream to be filled, with buffer, then written to the server
     PRUint32 bytesWritten = 0;
 
+	rv = NS_NewByteBufferInputStream(&stream);
+    if (NS_FAILED(rv)) return rv;
+
     // each hunk of data that comes in is evaluated, appropriate action 
     // is taken and the state is incremented.
+
+	// XXX some of the "buffer"s allocated below in the individual states can be removed
+	// XXX and replaced with static char or #defines.
     switch(mState) {
         case FTP_CONNECT:
 
         case FTP_S_USER:
-            rv = NS_NewByteBufferInputStream(&stream);
-            if (NS_FAILED(rv)) return rv;
-
             buffer = "USER anonymous";
             stream->Fill(buffer, strlen(buffer), &bytesWritten);
 
-            // Send off the command
-            mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
+            // send off the command
             mState = FTP_R_USER;
+            mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamObserver*, this));
             break;
 
         case FTP_R_USER:
-            // start the async read.
             mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
             break;
 
-        case FTP_S_PASV:
+        case FTP_S_PASS:
             if (!mPassword) {
                 // XXX we need to prompt the user to enter a password.
 
                 // sendEventToUIThreadToPostADialog(&mPassword);
             }
-            rv = NS_NewByteBufferInputStream(&stream);
-            if (NS_FAILED(rv)) return rv;
-
             buffer = "PASS guest\r\n";
             // PR_smprintf(buffer, "PASS %.256s\r\n", mPassword);
             stream->Fill(buffer, strlen(buffer), &bytesWritten);
             
             // send off the command
-            mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
             mState = FTP_R_PASV;
+            mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
             break;
 
-        case FTP_R_PASV:
-            // start the async read
+        case FTP_R_PASS:
             mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
             break;
 
-        case FTP_S_PORT:
-        case FTP_R_PORT:
+		case FTP_S_SYST:
+			buffer = "SYST\r\n";
+			stream->Fill(buffer, strlen(buffer), &bytesWritten);
+
+			// send off the command
+			mState = FTP_R_SYST;
+			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+			break;
+
+		case FTP_R_SYST:
+			mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+			break;
+
+		case FTP_S_ACCT:
+			buffer = "ACCT noaccount\r\n";
+			stream->Fill(buffer, strlen(buffer), &bytesWritten);
+
+			// send off the command
+			mState = FTP_R_ACCT;			
+			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+			break;
+
+		case FTP_R_ACCT:
+			mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+			break;
+
+		case FTP_S_PWD:
+			buffer = "PWD\r\n";
+			stream->Fill(buffer, strlen(buffer), &bytesWritten);
+
+			// send off the command
+			mState = FTP_R_PWD;
+			mCPipe->AsyncWrite(stream, nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+			break;
+
+		case FTP_R_PWD:
+			mCPipe->AsyncRead(nsnull, mEventQueue, NS_STATIC_CAST(nsIStreamListener*, this));
+			break;
+
         case FTP_COMPLETE:
         default:
             ;
@@ -278,7 +313,11 @@ nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
     rv = aIStream->Read(buffer, aLength, &read);
     if (NS_FAILED(rv)) return rv;
 
+	// get the response code out.
     PR_sscanf(buffer, "%d", &mResponseCode);
+
+	// get the rest of the line
+	mResponseMsg = buffer+4;
 
     // these are states in which data is coming back to us. read states.
     // This switch is a state incrementor using the server response to
@@ -288,21 +327,48 @@ nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
             if (mResponseCode == 3) {
                 // send off the password
                 mState = FTP_S_PASV;
-                OnStopBinding(nsnull, rv, nsnull);
             } else if (mResponseCode == 2) {
                 // no password required, we're already logged in
+				mState = FTP_S_SYST;
             }
             break;
 
-        case FTP_R_PASV:
+        case FTP_R_PASS:
             if (mResponseCode == 3) {
                 // send account info
                 mState = FTP_S_ACCT;
             } else if (mResponseCode == 2) {
                 // logged in
-                // XXX next state?
+                mState = FTP_S_SYST;
             }
-            OnStopBinding(nsnull, rv, nsnull);
+			break;
+
+		case FTP_R_SYST:
+			if (mResponseCode == 2) {
+				SetSystInternals();
+				// XXX various states can be set here.
+			} else {
+				mState = FTP_S_PWD;		
+			}
+			break;
+
+		case FTP_R_ACCT:
+			if (mResponseCode == 2) {
+				mState = FTP_S_SYST;
+			} else {
+				// failure. couldn't login
+				// XXX use a more descriptive error code.
+				return NS_ERROR_NOT_IMPLEMENTED;
+			}
+			break;
+
+		case FTP_R_PWD:
+
+			break;
+
+
+		// call back into the sending state machine.
+        OnStopBinding(nsnull, rv, nsnull);
         case FTP_R_PORT:
         case FTP_COMPLETE:
         default:
@@ -311,5 +377,38 @@ nsFtpProtocolConnection::OnDataAvailable(nsISupports* context,
 
     delete [] buffer;
     return NS_OK;
+}
+
+// Here's where we do all the string whacking/parsing magic to determine
+// what type of server it is we're dealing with.
+void
+nsFtpProtocolConnection::SetSystInternals(void) {
+    if (mResponseMsg.Equals("UNIX Type: L8 MAC-OS MachTen", 28)) {
+		mServerType = FTP_MACHTEN_TYPE;
+	}
+	else if (mResponseMsg.Find("UNIX") > -1) {
+		mServerType = FTP_UNIX_TYPE;
+	}
+	else if (mResponseMsg.Find("Windows_NT") > -1) {
+		mServerType = FTP_NT_TYPE;
+	}
+	else if (mResponseMsg.Equals("VMS", 3)) {
+		mServerType = FTP_VMS_TYPE;
+	}
+	else if (mResponseMsg.Equals("VMS/CMS", 6) || mResponseMsg.Equals("VM ", 3)) {
+		mServerType = FTP_CMS_TYPE;
+	}
+	else if (mResponseMsg.Equals("DCTS", 4)) {
+		mServerType = FTP_DCTS_TYPE;
+	}
+	else if (mResponseMsg.Find("MAC-OS TCP/Connect II") > -1) {
+		mServerType = FTP_TCPC_TYPE;
+	}
+	else if (mResponseMsg.Equals("MACOS Peter's Server", 20)) {
+		mServerType = FTP_PETER_LEWIS_TYPE;
+	}
+	else if (mResponseMsg.Equals("MACOS WebSTAR FTP", 17)) {
+		mServerType = FTP_WEBSTAR_TYPE;
+	}
 }
 ////////////////////////////////////////////////////////////////////////////////
