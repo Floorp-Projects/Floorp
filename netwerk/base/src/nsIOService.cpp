@@ -207,6 +207,10 @@ nsIOService::MakeAbsolute(const char *aSpec,
     nsresult rv;
     NS_ASSERTION(aBaseURI, "It doesn't make sense to not supply a base URI");
 
+    if (aSpec == nsnull) {
+        return aBaseURI->GetSpec(result);
+    }
+
     char* scheme;
     rv = GetScheme(aSpec, &scheme);
     if (NS_SUCCEEDED(rv)) {
