@@ -1665,8 +1665,12 @@ static const jschar *matchRENodes(MatchState *state, RENode *ren, RENode *stop,
               ren = (RENode *)ren->kid;
               continue;
           }
+          num = state->parenCount;
           kidMatch = matchRENodes(state, (RENode *)ren->kid, stop, cp);
           if (kidMatch != NULL) return kidMatch;
+          for (i = num; i < state->parenCount; i++)
+              state->parens[i].length = 0;
+          state->parenCount = num;
           break;
         case REOP_QUANT:
           lastKid = NULL;
