@@ -23,7 +23,7 @@
 
 #include "nsImageLoader.h"
 
-#include "nsIImageRequest2.h"
+#include "lpIImageRequest.h"
 
 #include "nsIServiceManager.h"
 
@@ -72,8 +72,8 @@ nsImageLoader::~nsImageLoader()
 #endif
 }
 
-/* nsIImageRequest loadImage (in nsIURI uri, in nsIImageDecoderObserver aObserver, in nsISupports cx); */
-NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageDecoderObserver *aObserver, nsISupports *cx, nsIImageRequest **_retval)
+/* lpIImageRequest loadImage (in nsIURI uri, in nsIImageDecoderObserver aObserver, in nsISupports cx); */
+NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageDecoderObserver *aObserver, nsISupports *cx, lpIImageRequest **_retval)
 {
   NS_ASSERTION(aURI, "nsImageLoader::LoadImage -- NULL URI pointer");
 
@@ -94,7 +94,7 @@ NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageDecoderObserver *aO
     // XXX do we need to SetOwner here?
     newChannel->SetOwner(this); // the channel is now holding a strong ref to 'this'
 
-    nsCOMPtr<nsIImageRequest> req(do_CreateInstance(kImageRequestCID));
+    nsCOMPtr<lpIImageRequest> req(do_CreateInstance(kImageRequestCID));
     imgRequest = NS_REINTERPRET_CAST(nsImageRequest*, req.get());
     NS_ADDREF(imgRequest);
 
@@ -105,7 +105,7 @@ NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageDecoderObserver *aO
     newChannel->AsyncRead(NS_STATIC_CAST(nsIStreamListener *, imgRequest), cx);  // XXX are we calling this too early?
   }
 
-  nsCOMPtr<nsIImageRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
+  nsCOMPtr<lpIImageRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
   // init adds itself to imgRequest's list of observers
   NS_REINTERPRET_CAST(nsImageRequestProxy*, proxyRequest.get())->Init(imgRequest, aObserver, cx);
 
@@ -117,8 +117,8 @@ NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageDecoderObserver *aO
   return NS_OK;
 }
 
-/* nsIImageRequest loadImageWithChannel(in nsIChannel, in nsIImageDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener); */
-NS_IMETHODIMP nsImageLoader::LoadImageWithChannel(nsIChannel *channel, nsIImageDecoderObserver *aObserver, nsISupports *cx, nsIStreamListener **listener, nsIImageRequest **_retval)
+/* lpIImageRequest loadImageWithChannel(in nsIChannel, in nsIImageDecoderObserver aObserver, in nsISupports cx, out nsIStreamListener); */
+NS_IMETHODIMP nsImageLoader::LoadImageWithChannel(nsIChannel *channel, nsIImageDecoderObserver *aObserver, nsISupports *cx, nsIStreamListener **listener, lpIImageRequest **_retval)
 {
   NS_ASSERTION(channel, "nsImageLoader::LoadImageWithChannel -- NULL channel pointer");
 
@@ -142,7 +142,7 @@ NS_IMETHODIMP nsImageLoader::LoadImageWithChannel(nsIChannel *channel, nsIImageD
     nsAutoLock lock(mLock); // lock when we are adding things to the cache
 #endif
 
-    nsCOMPtr<nsIImageRequest> req(do_CreateInstance(kImageRequestCID));
+    nsCOMPtr<lpIImageRequest> req(do_CreateInstance(kImageRequestCID));
 
     imgRequest = NS_REINTERPRET_CAST(nsImageRequest*, req.get());
     NS_ADDREF(imgRequest);
@@ -155,7 +155,7 @@ NS_IMETHODIMP nsImageLoader::LoadImageWithChannel(nsIChannel *channel, nsIImageD
     NS_IF_ADDREF(*listener);
   }
 
-  nsCOMPtr<nsIImageRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
+  nsCOMPtr<lpIImageRequest> proxyRequest(do_CreateInstance(kImageRequestProxyCID));
 
   // init adds itself to imgRequest's list of observers
   NS_REINTERPRET_CAST(nsImageRequestProxy*, proxyRequest.get())->Init(imgRequest, aObserver, cx);

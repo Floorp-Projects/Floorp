@@ -24,7 +24,7 @@
 #ifndef nsImageRequest_h__
 #define nsImageRequest_h__
 
-#include "nsIImageRequest2.h"
+#include "lpIImageRequest.h"
 
 #include "nsIRunnable.h"
 
@@ -53,7 +53,7 @@ enum {
   onStopDecode = 0x8
 };
 
-class nsImageRequest : public nsIImageRequest,
+class nsImageRequest : public lpIImageRequest,
                        public nsIImageDecoderObserver, 
                        public nsIStreamListener
 {

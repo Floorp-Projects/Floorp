@@ -36,7 +36,7 @@
     {0x8f, 0x65, 0x9c, 0x46, 0x2e, 0xe2, 0xbc, 0x95} \
 }
 
-class nsImageRequestProxy : public nsIImageRequest,
+class nsImageRequestProxy : public lpIImageRequest,
                             public nsIImageDecoderObserver
 {
 public:
@@ -56,5 +56,5 @@ private:
 
   nsCOMPtr<nsISupports> mContext;
 
-  nsCOMPtr<nsIImageRequest> mOwner;
+  nsCOMPtr<lpIImageRequest> mOwner;
 };
