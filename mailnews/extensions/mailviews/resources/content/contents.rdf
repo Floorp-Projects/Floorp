@@ -14,7 +14,7 @@
         chrome:author="mozilla.org"
         chrome:name="messenger-views"
         chrome:localeVersion="1.2"
-        chrome:skinVersion="1.0">
+        chrome:skinVersion="1.2">
   </RDF:Description>
 
   <!-- overlay information -->
