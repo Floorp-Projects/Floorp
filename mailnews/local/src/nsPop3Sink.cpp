@@ -373,14 +373,23 @@ nsPop3Sink::EndMailDelivery(nsIPop3Protocol *protocol)
   m_numNewMessages -= (m_numNewMessagesInFolder  - numNewMessagesInFolder);
   m_folder->SetNumNewMessages(m_numNewMessages); // we'll adjust this for spam later
   if (!filtersRun && m_numNewMessages > 0)
-    m_folder->SetBiffState(m_biffState);
-
+  {
+    nsCOMPtr <nsIMsgIncomingServer> server;
+    m_folder->GetServer(getter_AddRefs(server));
+    if (server)
+    {
+      server->SetPerformingBiff(PR_TRUE);
+      m_folder->SetBiffState(m_biffState);
+      server->SetPerformingBiff(PR_FALSE);
+    }
+  }
   // note that size on disk has possibly changed.
   nsCOMPtr<nsIMsgLocalMailFolder> localFolder = do_QueryInterface(m_folder);
   if (localFolder)
     (void) localFolder->RefreshSizeOnDisk();
   nsCOMPtr<nsIMsgIncomingServer> server = do_QueryInterface(m_popServer);
-  if (server) {
+  if (server) 
+  {
     nsCOMPtr <nsIMsgFilterList> filterList;
     rv = server->GetFilterList(nsnull, getter_AddRefs(filterList)); 
     NS_ENSURE_SUCCESS(rv,rv);
