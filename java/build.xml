@@ -58,9 +58,6 @@
 
     <mkdir dir="${build.home}"/>
 
-    <unjar src="${basedir}/external/dom2.jar" 
-           dest="${build.home}" />
-
   </target>
 
   <target name="util">
@@ -69,7 +66,7 @@
 
   </target>
 
-  <target name="dom">
+  <target name="dom" depends="external">
 
     <ant dir="${basedir}/dom"/>
 

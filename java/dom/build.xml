@@ -61,9 +61,9 @@
   </path>
 
   <target name="main" 
-          depends="compile.classes,compile.src"/> <!--,compile.jni"/>-->
+          depends="compile.classes,compile.src,compile.jni"/>
 
-  <target name="compile.classes">
+  <target name="compile.classes" depends="external">
 
     <javac destdir="${build.home}"
              debug="${compile.debug}"
@@ -73,6 +73,15 @@
       <src path="${source.home}"/>
 
     </javac>
+
+  </target>
+
+  <target name="external">
+
+    <mkdir dir="${build.home}"/>
+
+    <unjar src="${basedir}/../external/dom2.jar" 
+           dest="${build.home}" />
 
   </target>
 
@@ -87,73 +96,38 @@
 
   </target>
 
-  <target name="compile.javah.headers" depends="compile.javah.canvas.headers">
+  <target name="compile.jni" depends="compile.javah.headers">
 
-    <javah outputFile="${basedir}/src_share/BookmarksImpl.h"
-           class="org.mozilla.webclient.wrapper_native.BookmarksImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/PreferencesImpl.h"
-           class="org.mozilla.webclient.wrapper_native.PreferencesImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/CurrentPageImpl.h"
-           class="org.mozilla.webclient.wrapper_native.CurrentPageImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/HistoryImpl.h"
-           class="org.mozilla.webclient.wrapper_native.HistoryImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/WrapperFactoryImpl.h"
-           class="org.mozilla.webclient.wrapper_native.WrapperFactoryImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/NavigationImpl.h"
-           class="org.mozilla.webclient.wrapper_native.NavigationImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/RDFEnumeration.h"
-           class="org.mozilla.webclient.wrapper_native.RDFEnumeration">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/RDFTreeNode.h"
-           class="org.mozilla.webclient.wrapper_native.RDFTreeNode">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/ISupportsPeer.h"
-           class="org.mozilla.webclient.wrapper_native.ISupportsPeer">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/WindowControlImpl.h"
-           class="org.mozilla.webclient.wrapper_native.WindowControlImpl">
-      <classpath refid="compile.classpath"/>
-    </javah>
-    <javah outputFile="${basedir}/src_share/NativeEventThread.h"
-           class="org.mozilla.webclient.wrapper_native.NativeEventThread">
-      <classpath refid="compile.classpath"/>
-    </javah>
-  </target>
-
-  <target name="compile.javah.canvas.headers" 
-          depends="compile.unix.canvas.headers,compile.win32.canvas.headers"/>
-
-  <target name="compile.unix.canvas.headers" if="build.unix.classes">
-
-    <javah outputFile="${basedir}/src_moz/gtk/GtkBrowserControlCanvas.h"
-      class="org.mozilla.webclient.wrapper_native.gtk.GtkBrowserControlCanvas">
-      <classpath refid="compile.classpath"/>
-    </javah>
+    <exec os="SunOS" dir="${basedir}/jni" failonerror="yes" 
+                     executable="gmake"/>
+    <exec os="Linux" dir="${basedir}/jni" failonerror="yes" 
+                     executable="make"/>
+    <exec os="Windows 2000" dir="${basedir}/jni" executable="make" 
+                     failonerror="yes"/>
 
   </target>
 
-  <target name="compile.win32.canvas.headers" if="build.win32.classes">
-
-    <javah outputFile="${basedir}/src_moz/win32/Win32BrowserControlCanvas.h"
-      class="org.mozilla.webclient.wrapper_native.win32.Win32BrowserControlCanvas">
-      <classpath refid="compile.classpath"/>
+  <target name="compile.javah.headers" depends="compile.classes">
+    <javah destdir="jni" classpath="compile.classpath">
+	<class name="org.mozilla.dom.DOMAccessor"/>
+	<class name="org.mozilla.dom.AttrImpl"/>
+	<class name="org.mozilla.dom.CharacterDataImpl"/>
+	<class name="org.mozilla.dom.DocumentImpl"/>
+	<class name="org.mozilla.dom.DocumentTypeImpl"/>
+	<class name="org.mozilla.dom.DOMImplementationImpl"/>
+	<class name="org.mozilla.dom.ElementImpl"/>
+	<class name="org.mozilla.dom.EntityImpl"/>
+	<class name="org.mozilla.dom.NamedNodeMapImpl"/>
+	<class name="org.mozilla.dom.NodeImpl"/>
+	<class name="org.mozilla.dom.NodeListImpl"/>
+	<class name="org.mozilla.dom.NotationImpl"/>
+	<class name="org.mozilla.dom.ProcessingInstructionImpl"/>
+	<class name="org.mozilla.dom.TextImpl"/>
+	<class name="org.mozilla.dom.events.EventImpl"/>
+	<class name="org.mozilla.dom.events.MouseEventImpl"/>
+	<class name="org.mozilla.dom.events.UIEventImpl"/>
+        <classpath refid="compile.classpath"/>
     </javah>
-
   </target>
 
   <target name="clean">
@@ -191,7 +165,6 @@
                      failonerror="yes">
       <arg line="clobber_all"/>
     </exec>
-
 
     <delete dir="${build.home}/org/mozilla/dom"/>
 
