@@ -1041,14 +1041,14 @@ sm_test_done:
 
         printf("ArgumentFormatter test: ");
         
-        argv = JS_PushArguments(jscontext, &mark, "s%ips", 
+        argv = JS_PushArguments(jscontext, &mark, "s %ip s", 
                                 a_in, &nsITestXPCFoo2::GetIID(), foo, b_in);
 
         if(argv)
         {
             nsISupports* fooc;
             nsTestXPCFoo* foog;
-            if(JS_ConvertArguments(jscontext, 3, argv, "s%ips", 
+            if(JS_ConvertArguments(jscontext, 3, argv, "s %ip s", 
                                    &a_out, &fooc, &b_out))
             {
                 if(fooc)
