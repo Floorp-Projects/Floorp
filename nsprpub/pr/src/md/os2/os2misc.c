@@ -323,7 +323,7 @@ PRProcess * _PR_CreateOS2Process(
         strcpy(pszFormatString, "/3 %s %s");
     }
  
-    startData.InheritOpt = SSF_INHERTOPT_PARENT;
+    startData.InheritOpt = SSF_INHERTOPT_SHELL;
  
     if (pszEXEName[0]) {
         pszFormatResult = PR_MALLOC(strlen(pszFormatString)+strlen(path)+strlen(cmdLine));
