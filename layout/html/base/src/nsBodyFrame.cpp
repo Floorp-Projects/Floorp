@@ -165,11 +165,13 @@ NS_METHOD nsBodyFrame::ResizeReflow(nsIPresContext*  aPresContext,
     }
 
     // Get the column's desired rect
-    nsRect  desiredRect;
+    nsRect        desiredRect;
+    nsIRunaround* reflowRunaround;
 
     mSpaceManager->Translate(leftInset, topInset);
-    aStatus = ReflowChild(mFirstChild, aPresContext, mSpaceManager, columnMaxSize,
-                          desiredRect, aMaxElementSize);
+    mFirstChild->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround);
+    reflowRunaround->ResizeReflow(aPresContext, mSpaceManager, columnMaxSize,
+                desiredRect, aMaxElementSize, aStatus);
     mSpaceManager->Translate(-leftInset, -topInset);
 
     // Place and size the column
