@@ -199,9 +199,10 @@ there are "john@doe.com" and "foo", respectively, your
 <filename>.netrc</filename> entry should look something like:</para>
 
 <screen>
-machine "http://landfill.bugzilla.org/bztest/"
-login john@doe.com
-password foo
+    machine "http://landfill.bugzilla.org/bztest/"
+    login john@doe.com
+    password foo
+
 </screen>
 
 <para>Note that the machine entry should match exactly the instance URL
