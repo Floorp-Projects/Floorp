@@ -22,9 +22,6 @@
 # Terry Weissman <terry@mozilla.org>,
 # Dawn Endico <endico@mozilla.org>
 # Bryce Nesbitt <bryce@nextbus.COM>,
-#    Added -All- report, change "nobanner" to "banner" (it is strange to have a
-#    list with 2 positive and 1 negative choice), default links on, add show
-#    sql comment.
 # Joe Robins <jmrobins@tgix.com>,
 #    If using the usebuggroups parameter, users shouldn't be able to see
 #    reports for products they don't have access to.
@@ -42,32 +39,19 @@ use strict;
 
 use lib qw(.);
 
-eval "use GD";
-my $use_gd = $@ ? 0 : 1;
-eval "use Chart::Lines";
-$use_gd = 0 if $@;
-
 require "CGI.pl";
 use vars qw(%FORM); # globals from CGI.pl
 
 require "globals.pl";
 use vars qw(@legal_product); # globals from er, globals.pl
 
+eval "use GD";
+$@ && ThrowCodeError("gd_not_installed");
+eval "use Chart::Lines";
+$@ && ThrowCodeError("chart_lines_not_installed");
+
 my $dir = "data/mining";
 my $graph_dir = "graphs";
-
-my @status = qw (NEW ASSIGNED REOPENED);
-my %bugsperperson;
-
-# while this looks odd/redundant, it allows us to name
-# functions differently than the value passed in
-my %reports = 
-    ( 
-    "most_doomed" => \&most_doomed,
-    "most_doomed_for_milestone" => \&most_doomed_for_milestone,
-    "most_recently_doomed" => \&most_recently_doomed,
-    "show_chart" => \&show_chart,
-    );
 
 # If we're using bug groups for products, we should apply those restrictions
 # to viewing reports, as well.  Time to check the login in that case.
@@ -95,8 +79,8 @@ if(Param("usebuggroups")) {
 if (! defined $FORM{'product'}) {
 
     print "Content-type: text/html\n\n";
-    PutHeader("Bug Reports");
-    &choose_product;
+    PutHeader("Bug Charts");
+    choose_product(@myproducts);
     PutFooter();
 
 } else {
@@ -114,13 +98,6 @@ if (! defined $FORM{'product'}) {
       && !UserInGroup($FORM{'product'})
       && ThrowUserError("report_access_denied");
           
-    # For security and correctness, validate the value of the "output" form variable.
-    # Valid values are the keys from the %reports hash defined above which appear in
-    # the "output" drop-down menu on the report generation form.
-    $FORM{'output'} ||= "most_doomed"; # a reasonable default
-    grep($_ eq $FORM{'output'}, keys %reports)
-      || ThrowCodeError("invalid_output_type", {type => $FORM{'output'}});
-
     # We've checked that the product exists, and that the user can see it
     # This means that is OK to detaint
     trick_taint($FORM{'product'});
@@ -130,22 +107,11 @@ if (! defined $FORM{'product'}) {
     # Changing attachment to inline to resolve 46897 - zach@zachlipton.com
     print "Content-disposition: inline; filename=bugzilla_report.html\n\n";
 
-    if ($FORM{'banner'}) {
-      PutHeader("Bug Reports");
-    } 
-    else {
-      print("<html><head><title>Bug Reports</title></head><body bgcolor=\"#FFFFFF\">");
-    }
+    PutHeader("Bug Charts");
 
-    # Execute the appropriate report generation function 
-    # (the one whose name is the same as the value of the "output" form variable).
-    &{$reports{$FORM{'output'}}};
+    show_chart();
 
-    # ??? why is this necessary? formatting looks fine without it
-    print "<p>";
-
-    PutFooter() if $FORM{banner};
-
+    PutFooter();
 }
 
 
@@ -154,51 +120,40 @@ if (! defined $FORM{'product'}) {
 ##################################
 
 sub choose_product {
-    my $product_popup = make_options (\@myproducts, $myproducts[0]);
-  
+    my @myproducts = (@_);
+    
     my $datafile = daily_stats_filename('-All-');
 
     # Can we do bug charts?  
-         my $do_charts = ($use_gd && -d $dir && -d $graph_dir &&
-                              open(DATA, "$dir/$datafile"));
- 
-     my $charts = $do_charts ? "<option value=\"show_chart\">Bug Charts" : "";
+    (-d $dir && -d $graph_dir) 
+      || ThrowCodeError("chart_dir_nonexistent", 
+                        {dir => $dir, graph_dir => $graph_dir});
+      
+    open(DATA, "$dir/$datafile")
+      || ThrowCodeError("chart_file_open_fail", {filename => "$dir/$datafile"});
  
     print <<FIN;
 <center>
-<h1>Welcome to the Bugzilla Query Kitchen</h1>
+<h1>Welcome to the Bugzilla Charting Kitchen</h1>
 <form method=get action=reports.cgi>
 <table border=1 cellpadding=5>
 <tr>
 <td align=center><b>Product:</b></td>
 <td align=center>
 <select name="product">
-$product_popup
+FIN
+foreach my $product (@myproducts) {
+    $product = html_quote($product);
+    print qq{<option value="$product">$product</option>};
+}
+print <<FIN;
 </select>
 </td>
 </tr>
 <tr>
-<td align=center><b>Output:</b></td>
-<td align=center>
-<select name="output">
-<option value="most_doomed">Bug Counts
-FIN
-    if (Param('usetargetmilestone')) {
-        print "<option value=\"most_doomed_for_milestone\">Most Doomed";
-    }
-    print "<option value=\"most_recently_doomed\">Most Recently Doomed";
-    print <<FIN;
-$charts
-</select>
-</tr>
-FIN
-
-  if ($do_charts) {
-      print <<FIN;
-      <tr>
-      <td align=center><b>Chart datasets:</b></td>
-      <td align=center>
-      <select name="datasets" multiple size=5>
+  <td align=center><b>Chart datasets:</b></td>
+  <td align=center>
+  <select name="datasets" multiple size=5>
 FIN
 
       my @datasets = ();
@@ -223,17 +178,6 @@ FIN
       </select>
       </td>
       </tr>
-FIN
-  }
-
-print <<FIN;
-<tr>
-<td align=center><b>Switches:</b></td>
-<td align=left>
-<input type=checkbox name=links checked value=1>&nbsp;Links to Bugs<br>
-<input type=checkbox name=banner checked value=1>&nbsp;Banner<br>
-</td>
-</tr>
 <tr>
 <td colspan=2 align=center>
 <input type=submit value=Continue>
@@ -242,212 +186,6 @@ print <<FIN;
 </table>
 </center>
 </form>
-<p>
-FIN
-#Add this above to get a control for showing the SQL query:
-#<input type=checkbox name=showsql value=1>&nbsp;Show SQL<br>
-}
-
-sub most_doomed {
-    my $when = localtime (time);
-
-    print <<FIN;
-<center>
-<h1>
-Bug Report for $FORM{'product'}
-</h1>
-$when<p>
-FIN
-
-# Build up $query string
-    my $prod_table = ($FORM{'product'} ne "-All-") ? ", products" : "";
-    my $query;
-    $query = <<FIN;
-select 
-    bugs.bug_id,
-    bugs.bug_status,
-    assign.login_name,
-    unix_timestamp(date_format(bugs.creation_ts, '%Y-%m-%d %H:%i:%s'))
-
-from   bugs,
-       profiles assign $prod_table
-where  bugs.assigned_to = assign.userid
-FIN
-
-    if ($FORM{'product'} ne "-All-" ) {
-        $query .= "and    products.id = bugs.product_id\n";
-        $query .= "and    products.name=".SqlQuote($FORM{'product'});
-    }
-
-    $query .= "AND bugs.bug_status IN ('NEW', 'ASSIGNED', 'REOPENED')";
-# End build up $query string
-
-    print "<font color=purple><tt>$query</tt></font><p>\n" 
-        unless (! exists $FORM{'showsql'});
-
-    SendSQL ($query);
-    
-    my $c = 0;
-
-    my $bugs_count = 0;
-    my $bugs_new_this_week = 0;
-    my $bugs_reopened = 0;
-    my %bugs_owners;
-    my %bugs_summary;
-    my %bugs_status;
-    my %bugs_totals;
-    my %bugs_lookup;
-
-    #############################
-    # suck contents of database # 
-    #############################
-
-    my $week = 60 * 60 * 24 * 7;
-    while (my ($bid, $st, $who, $ts) = FetchSQLData()) {
-        next if (exists $bugs_lookup{$bid});
-        
-        $bugs_lookup{$bid} ++;
-        $bugs_owners{$who} ++;
-        $bugs_new_this_week ++ if (time - $ts <= $week);
-        $bugs_status{$st} ++;
-        $bugs_count ++;
-        
-        push @{$bugs_summary{$who}{$st}}, $bid;
-        
-        $bugs_totals{$who}{$st} ++;
-    }
-
-    #########################
-    # start painting report #
-    #########################
-
-    $bugs_status{'NEW'}      ||= '0';
-    $bugs_status{'ASSIGNED'} ||= '0';
-    $bugs_status{'REOPENED'} ||= '0';
-    print <<FIN;
-<h1>Summary</h1>
-<table border=1 cellpadding=5>
-<tr>
-<td align=right><b>New Bugs This Week</b></td>
-<td align=center>$bugs_new_this_week</td>
-</tr>
-
-<tr>
-<td align=right><b>Bugs Marked New</b></td>
-<td align=center>$bugs_status{'NEW'}</td>
-</tr>
-
-<tr>
-<td align=right><b>Bugs Marked Assigned</b></td>
-<td align=center>$bugs_status{'ASSIGNED'}</td>
-</tr>
-
-<tr>
-<td align=right><b>Bugs Marked Reopened</b></td>
-<td align=center>$bugs_status{'REOPENED'}</td>
-</tr>
-
-<tr>
-<td align=right><b>Total Bugs</b></td>
-<td align=center>$bugs_count</td>
-</tr>
-
-</table>
-<p>
-FIN
-
-    if ($bugs_count == 0) {
-        print "No bugs found!\n";
-                PutFooter() if $FORM{banner};
-        exit;
-    }
-    
-    print <<FIN;
-<h1>Bug Count by Engineer</h1>
-<table border=3 cellpadding=5>
-<tr>
-<td align=center bgcolor="#DDDDDD"><b>Owner</b></td>
-<td align=center bgcolor="#DDDDDD"><b>New</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Assigned</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Reopened</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Total</b></td>
-</tr>
-FIN
-
-    foreach my $who (sort keys %bugs_summary) {
-        my $bugz = 0;
-        print <<FIN;
-<tr>
-<td align=left><tt>$who</tt></td>
-FIN
-        
-        foreach my $st (@status) {
-            $bugs_totals{$who}{$st} += 0;
-            print <<FIN;
-<td align=center>$bugs_totals{$who}{$st}
-FIN
-            $bugz += $#{$bugs_summary{$who}{$st}} + 1;
-        }
-        
-        print <<FIN;
-<td align=center>$bugz</td>
-</tr>
-FIN
-    }
-    
-    print <<FIN;
-</table>
-<p>
-FIN
-
-    ###############################
-    # individual bugs by engineer #
-    ###############################
-
-    print <<FIN;
-<h1>Individual Bugs by Engineer</h1>
-<table border=1 cellpadding=5>
-<tr>
-<td align=center bgcolor="#DDDDDD"><b>Owner</b></td>
-<td align=center bgcolor="#DDDDDD"><b>New</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Assigned</b></td>
-<td align=center bgcolor="#DDDDDD"><b>Reopened</b></td>
-</tr>
-FIN
-
-    foreach my $who (sort keys %bugs_summary) {
-        print <<FIN;
-<tr>
-<td align=left><tt>$who</tt></td>
-FIN
-
-        foreach my $st (@status) {
-            my @l;
-
-            foreach (sort { $a <=> $b } @{$bugs_summary{$who}{$st}}) {
-                if ($FORM{'links'}) {
-                    push @l, "<a href=\"show_bug.cgi?id=$_\">$_</a>\n"; 
-                }
-                else {
-                    push @l, $_;
-                }
-            }
-                
-            my $bugz = join ' ', @l;
-            $bugz = "&nbsp;" unless ($bugz);
-            
-            print <<FIN
-<td align=left>$bugz</td>
-FIN
-        }
-
-        print <<FIN;
-</tr>
-FIN
-    }
-
-    print <<FIN;
-</table>
 <p>
 FIN
 }
@@ -459,12 +197,8 @@ sub daily_stats_filename {
 }
 
 sub show_chart {
-    # if we don't have the graphic mouldes don't even try to go
-    # here. Should probably return some decent error message.
-    return unless $use_gd;
-
     if (! $FORM{datasets}) {
-        die_politely("You didn't select any datasets to plot");
+        ThrowUserError("missing_datasets");
     }
 
   print <<FIN;
@@ -530,7 +264,7 @@ sub generate_chart {
     my ($data_file, $image_file, $type) = @_;
     
     if (! open FILE, $data_file) {
-        &die_politely ("The tool which gathers bug counts has not been run yet.");
+        ThrowCodeError("chart_data_not_generated");
     }
 
     my @fields;
@@ -544,14 +278,14 @@ sub generate_chart {
         if (/^#/) {
             if (/^# fields?: (.*)\s*$/) {
                 @fields = split /\||\r/, $1;
-                &die_politely("`# fields: ' line didn't start with DATE, but with $fields[0]")
+                ThrowCodeError("chart_datafile_corrupt", {file => $data_file})
                   unless $fields[0] =~ /date/i;
                 push @labels, grep($datasets{$_}, @fields);
             }
             next;
         }
 
-        &die_politely("`# fields: ' line was not found before start of data")
+        ThrowCodeError("chart_datafile_corrupt", {file => $data_file})
           unless @fields;
         
         my @line = split /\|/;
@@ -578,7 +312,7 @@ sub generate_chart {
     close FILE;
 
     if (! @{$data{DATE}}) {
-        &die_politely ("We don't have enough data points to make a graph (yet)");
+        ThrowUserError("insufficient_data_points");
     }
     
     my $img = Chart::Lines->new (800, 600);
@@ -607,244 +341,4 @@ sub generate_chart {
     
     $img->set (%settings);
     $img->$type($image_file, [ @data{('DATE', @labels)} ]);
-}
-
-sub die_politely {
-    my $msg = shift;
-
-    print <<FIN;
-<p>
-<table border=1 cellpadding=10>
-<tr>
-<td align=center>
-<font color=blue>Sorry, but ...</font>
-<p>
-There is no graph available for <b>$FORM{'product'}</b><p>
-
-$msg
-<p>
-</td>
-</tr>
-</table>
-<p>
-FIN
-    
-    PutFooter() if $FORM{banner};
-    exit;
-}
-
-sub bybugs {
-   $bugsperperson{$a} <=> $bugsperperson{$b}
-}
-
-sub most_doomed_for_milestone {
-    my $when = localtime (time);
-    my $ms = "M" . Param("curmilestone");
-    my $product_id = get_product_id($FORM{'product'}) unless $FORM{'product'} eq '-All-';
-
-    print "<center>\n<h1>";
-    if( $FORM{'product'} ne "-All-" ) {
-        SendSQL("SELECT defaultmilestone FROM products WHERE id = $product_id");
-        $ms = FetchOneColumn();
-        print "Most Doomed for $ms ($FORM{'product'})";
-    } else {
-        print "Most Doomed for $ms";
-    }
-    print "</h1>\n$when<p>\n";
-
-    #########################
-    # start painting report #
-    #########################
-
-    # Build up $query string
-    my $query;
-    $query = "select distinct assigned_to from bugs where target_milestone=\"$ms\"";
-    if ($FORM{'product'} ne "-All-" ) {
-        $query .= "and    bugs.product_id=$product_id ";
-    }
-    $query .= <<FIN;
-and      
-    ( 
-    bugs.bug_status = 'NEW' or 
-    bugs.bug_status = 'ASSIGNED' or 
-    bugs.bug_status = 'REOPENED'
-    )
-FIN
-# End build up $query string
-
-    SendSQL ($query);
-    my @people = ();
-    while (my ($person) = FetchSQLData()) {
-        push @people, $person;
-    }
-
-    #############################
-    # suck contents of database # 
-    #############################
-    my $person = "";
-    my $bugtotal = 0;
-    foreach $person (@people) {
-        my $query = "select count(bug_id) from bugs,profiles where target_milestone=\"$ms\" and userid=assigned_to and userid=\"$person\"";
-        if( $FORM{'product'} ne "-All-" ) {
-            $query .= "and    bugs.product_id=$product_id ";
-        }
-        $query .= <<FIN;
-and      
-    ( 
-    bugs.bug_status = 'NEW' or 
-    bugs.bug_status = 'ASSIGNED' or 
-    bugs.bug_status = 'REOPENED'
-    )
-FIN
-        SendSQL ($query);
-        my $bugcount = FetchSQLData();
-        $bugsperperson{$person} = $bugcount;
-        $bugtotal += $bugcount;
-    }
-
-#   sort people by the number of bugs they have assigned to this milestone
-    @people = sort bybugs @people;
-    my $totalpeople = @people;
-                
-    print "<TABLE>\n";
-    print "<TR><TD COLSPAN=2>\n";
-    print "$totalpeople engineers have $bugtotal $ms bugs and features.\n";
-    print "</TD></TR>\n";
-
-    while (@people) {
-        $person = pop @people;
-        print "<TR><TD>\n";
-        SendSQL("select login_name from profiles where userid=$person");
-        my $login_name= FetchSQLData();
-        print("<A HREF=\"buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&target_milestone=$ms&assigned_to=$login_name");
-        if ($FORM{'product'} ne "-All-" ) {
-            print "&product=" . url_quote($FORM{'product'});
-        }
-        print("\">\n");
-        print("$bugsperperson{$person}  bugs and features");
-        print("</A>");
-        print(" for \n");
-        print("<A HREF=\"mailto:$login_name\">");
-        print("$login_name");
-        print("</A>\n");
-        print("</TD><TD>\n");
-
-        $person = pop @people;
-        if ($person) {
-            SendSQL("select login_name from profiles where userid=$person");
-            my $login_name= FetchSQLData();
-            print("<A HREF=\"buglist.cgi?bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&target_milestone=$ms&assigned_to=$login_name\">\n");
-            print("$bugsperperson{$person}  bugs and features");
-            print("</A>");
-            print(" for \n");
-            print("<A HREF=\"mailto:$login_name\">");
-            print("$login_name");
-            print("</A>\n");
-            print("</TD></TR>\n\n");
-        }
-    }
-    print "</TABLE>\n";
-}
-
-
-sub most_recently_doomed {
-    my $when = localtime (time);
-    my $ms = "M" . Param("curmilestone");
-
-    print "<center>\n<h1>";
-    if( $FORM{'product'} ne "-All-" ) {
-        SendSQL("SELECT defaultmilestone FROM products WHERE product = " .
-                SqlQuote($FORM{'product'}));
-        $ms = FetchOneColumn();
-        print "Most Recently Doomed ($FORM{'product'})";
-    } else {
-        print "Most Recently Doomed";
-    }
-    print "</h1>\n$when<p>\n";
-
-    #########################
-    # start painting report #
-    #########################
-
-    # Build up $query string
-    my $query = "SELECT DISTINCT assigned_to FROM bugs, products 
-                 WHERE bugs.bug_status = 'NEW' 
-                   AND target_milestone = '' 
-                   AND bug_severity != 'enhancement' 
-                   AND status_whiteboard = ''
-                   AND bugs.product_id = products.id";
-    if ($FORM{'product'} ne "-All-" ) {
-        $query .= "AND products.name =".SqlQuote($FORM{'product'});
-    }
-
-# End build up $query string
-
-    SendSQL ($query);
-    my @people = ();
-    while (my ($person) = FetchSQLData()) {
-        push @people, $person;
-    }
-
-    #############################
-    # suck contents of database # 
-    #############################
-    my $person = "";
-    my $bugtotal = 0;
-    foreach $person (@people) {
-        my $query = "select count(bug_id) from bugs,profiles where bugs.bug_status='NEW' and userid=assigned_to and userid='$person' and target_milestone='' and bug_severity!='enhancement' and status_whiteboard='' and (product='Browser' or product='MailNews')";
-        if( $FORM{'product'} ne "-All-" ) {
-            $query .= "and    bugs.product='$FORM{'product'}'";
-        }
-        SendSQL ($query);
-        my $bugcount = FetchSQLData();
-        $bugsperperson{$person} = $bugcount;
-        $bugtotal += $bugcount;
-    }
-
-#   sort people by the number of bugs they have assigned to this milestone
-    @people = sort bybugs @people;
-    my $totalpeople = @people;
-    
-    if ($totalpeople > 20) {
-        splice @people, 0, $totalpeople-20;
-    }
-                
-    print "<TABLE>\n";
-    print "<TR><TD COLSPAN=2>\n";
-    print "$totalpeople engineers have $bugtotal untouched new bugs.\n";
-    if ($totalpeople > 20) {
-        print "These are the 20 most doomed.";
-    }
-    print "</TD></TR>\n";
-
-    while (@people) {
-        $person = pop @people;
-        print "<TR><TD>\n";
-        SendSQL("select login_name from profiles where userid=$person");
-        my $login_name= FetchSQLData();
-        print("<A HREF=\"buglist.cgi?bug_status=NEW&email1=$login_name&emailtype1=substring&emailassigned_to1=1&product=Browser&product=MailNews&target_milestone=---&status_whiteboard=.&status_whiteboard_type=notregexp&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial\">\n"); 
-        print("$bugsperperson{$person}  bugs");
-        print("</A>");
-        print(" for \n");
-        print("<A HREF=\"mailto:$login_name\">");
-        print("$login_name");
-        print("</A>\n");
-        print("</TD><TD>\n");
-
-        $person = pop @people;
-        if ($person) {
-            SendSQL("select login_name from profiles where userid=$person");
-            my $login_name= FetchSQLData();
-            print("<A HREF=\"buglist.cgi?bug_status=NEW&email1=$login_name&emailtype1=substring&emailassigned_to1=1&product=Browser&product=MailNews&target_milestone=---&status_whiteboard=.&status_whiteboard_type=notregexp&bug_severity=blocker&bug_severity=critical&bug_severity=major&bug_severity=normal&bug_severity=minor&bug_severity=trivial\">\n"); 
-            print("$bugsperperson{$person}  bugs");
-            print("</A>");
-            print(" for \n");
-            print("<A HREF=\"mailto:$login_name\">");
-            print("$login_name");
-            print("</A>\n");
-            print("</TD></TR>\n\n");
-        }
-    }
-    print "</TABLE>\n";
-
 }

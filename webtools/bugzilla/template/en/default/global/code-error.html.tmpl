@@ -48,10 +48,31 @@
     Attachment #[% attachid FILTER html %] ([% description FILTER html %]) 
     is already obsolete.
     
+  [% ELSIF error == "chart_data_not_generated" %]
+    The tool which gathers bug counts has not been run yet.
+        
+  [% ELSIF error == "chart_datafile_corrupt" %]
+    The chart data file [% file FILTER html %] is corrupt.
+        
+  [% ELSIF error == "chart_dir_nonexistent" %]
+    One of the directories <tt>[% dir FILTER html %]</tt> and 
+    <tt>[% graphdir FILTER html %]</tt> does not exist.
+  
+  [% ELSIF error == "chart_file_open_fail" %]
+    Unable to open the chart datafile <tt>[% filename FILTER html %]</tt>.
+  
+  [% ELSIF error == "chart_lines_not_installed" %]
+    Charts will not work without the Chart::Lines Perl module being installed.
+    Run checksetup.pl for installation instructions.
+
   [% ELSIF error == "field_type_mismatch" %]
     Cannot seem to handle <code>[% field %]</code>
     and <code>[% type %]</code> together.
  
+  [% ELSIF error == "gd_not_installed" %]
+    Charts will not work without the GD Perl module being installed.
+    Run checksetup.pl for installation instructions.
+
   [% ELSIF error == "group_bit_invalid" %]
     One of the group bits submitted was invalid.
 

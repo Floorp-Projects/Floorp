@@ -337,56 +337,6 @@ sub ValidateComment {
     }
 }
 
-$::CheckOptionValues = 1;
-
-# This sub is still used in reports.cgi.
-sub make_options {
-    my ($src,$default,$isregexp) = (@_);
-    my $last = "";
-    my $popup = "";
-    my $found = 0;
-    $default = "" if !defined $default;
-
-    if ($src) {
-        foreach my $item (@$src) {
-            if ($item eq "-blank-" || $item ne $last) {
-                if ($item eq "-blank-") {
-                    $item = "";
-                }
-                $last = $item;
-                if ($isregexp ? $item =~ $default : $default eq $item) {
-                    $popup .= "<OPTION SELECTED VALUE=\"$item\">$item\n";
-                    $found = 1;
-                } else {
-                    $popup .= "<OPTION VALUE=\"$item\">$item\n";
-                }
-            }
-        }
-    }
-    if (!$found && $default ne "") {
-      if ( $::CheckOptionValues &&
-           ($default ne $::dontchange) && ($default ne "-All-") &&
-           ($default ne "DUPLICATE") ) {
-        print "Possible bug database corruption has been detected.  " .
-              "Please send mail to " . Param("maintainer") . " with " .
-              "details of what you were doing when this message " . 
-              "appeared.  Thank you.\n";
-        if (!$src) {
-            $src = ["???null???"];
-        }
-        print "<pre>src = " . value_quote(join(' ', @$src)) . "\n";
-        print "default = " . value_quote($default) . "</pre>";
-        PutFooter();
-#        confess "Gulp.";
-        exit 0;
-              
-      } else {
-        $popup .= "<OPTION SELECTED>$default\n";
-      }
-    }
-    return $popup;
-}
-
 sub PasswordForLogin {
     my ($login) = (@_);
     SendSQL("select cryptpassword from profiles where login_name = " .
@@ -812,6 +762,7 @@ sub PutHeader {
      
     $::template->process("global/header.html.tmpl", $::vars)
       || ThrowTemplateError($::template->error());
+    $vars->{'header_done'} = 1;
 }
 
 sub PutFooter {

@@ -234,6 +234,9 @@
     The name of your query cannot contain any of the following characters: 
     &lt;, &gt;, &amp;.
 
+  [% ELSIF error == "insufficient_data_points" %]
+    We don't have enough data points to make a graph (yet).
+        
   [% ELSIF error == "insufficient_privs_for_multi" %]
     [% title = "Insufficient Privileges" %]
     Sorry, you do not have sufficient privileges to edit multiple bugs.
@@ -318,6 +321,10 @@
     the results of your last search. I'm afraid you will have to start
     again on the <a href="query.cgi">search page</a>.
           
+  [% ELSIF error == "missing_datasets" %]
+    [% title = "No Datasets Selected" %]
+    You must specify one or more datasets to plot.
+    
   [% ELSIF error == "missing_email_type" %]
     [% title = "Your Query Makes No Sense" %]
     You must specify one or more fields in which to search for
