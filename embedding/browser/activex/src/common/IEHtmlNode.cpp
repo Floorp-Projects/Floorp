@@ -101,7 +101,7 @@ HRESULT CIEHtmlNode::SetDOMNode(nsIDOMNode *pIDOMNode)
     {
         if (g_NodeLookupTable == NULL)
         {
-            g_NodeLookupTable = PL_NewHashTable(123, HashFunction, HashComparator, NULL, NULL, NULL);
+            g_NodeLookupTable = PL_NewHashTable(123, HashFunction, HashComparator, HashComparator, NULL, NULL);
         }
 
         mDOMNode = pIDOMNode;
