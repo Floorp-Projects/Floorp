@@ -919,20 +919,15 @@ Contributor(s):
 
   </toolbox>
     
-  <hbox flex="1">
-    <!-- we only need to handle |ondragdrop| because everything else is
-          taken care of by the builtin behavior inside the tabbrowser -->
-    <vbox id="appcontent" flex="1"
-         ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
-
-      <hbox id="browser" flex="1">
-        <tabbrowser id="content"
-                    flex="1" contenttooltip="aHTMLTooltip"
-                    contentcontextmenu="contentAreaContextMenu"
-                    onnewtab="BrowserOpenTab();"
-                    onclick="return contentAreaClick(event);"/>
-      </hbox>
-    </vbox>  
+  <!-- we only need to handle |ondragdrop| because everything else is
+        taken care of by the builtin behavior inside the tabbrowser -->
+  <hbox id="browser" flex="1"
+        ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+    <tabbrowser id="content"
+                flex="1" contenttooltip="aHTMLTooltip"
+                contentcontextmenu="contentAreaContextMenu"
+                onnewtab="BrowserOpenTab();"
+                onclick="return contentAreaClick(event);"/>
   </hbox>
 
   <statusbar class="chromeclass-status"
