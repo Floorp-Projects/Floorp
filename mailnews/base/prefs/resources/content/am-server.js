@@ -53,6 +53,7 @@ function initServerType() {
   setDivText("servertype.verbose", verboseName);
   setDivText("servername.verbose", hostname);
   setDivText("username.verbose", username);
+
 }
 
 function setDivText(divname, value) {

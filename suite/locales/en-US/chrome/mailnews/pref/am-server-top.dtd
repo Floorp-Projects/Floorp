@@ -37,3 +37,6 @@
 <!ENTITY maxMessagesEnd.label "messages.">
 <!ENTITY newsrcFilePath.label "newsrc file:">
 <!ENTITY localPath.label "Local directory:">
+<!ENTITY abbreviate.label "Show newsgroup names in the Mail Folder pane as:">
+<!ENTITY abbreviateOn.label "Full names (For example, 'netscape.public.mozilla.mail-news')">
+<!ENTITY abbreviateOff.label "Abbreviate names (For example, 'n.p.m.mail-news')">

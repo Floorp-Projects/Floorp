@@ -78,6 +78,23 @@
   		    &maxMessagesEnd.label;
           </html:div>
         </box>
+	<box align="horizontal">
+	<box align="vertical" flex="100%">
+		<html:fieldset>
+			<html:legend align="left">
+				<html:div>&abbreviate.label;</html:div>
+			</html:legend>
+			<html:div>
+				<html:input reversed="true" name="nntp.abbreviate" type="radio"/>
+				<html:label>&abbreviateOn.label;</html:label>
+			</html:div>
+			<html:div>
+				<html:input name="nntp.abbreviate" type="radio"/>
+				<html:label>&abbreviateOff.label;</html:label>
+			</html:div>
+		</html:fieldset>
+	</box>
+	</box>
 	<html:div>&newsrcFilePath.label;</html:div>
 	<html:input type="text" name="nntp.newsrcFilePath" datatype="nsIFileSpec"/>
       </box>

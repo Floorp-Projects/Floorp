@@ -576,16 +576,21 @@ NS_IMETHODIMP nsMsgNewsFolder::GetAbbreviatedName(PRUnichar * *aAbbreviatedName)
   if (NS_FAILED(rv)) return rv;
   
   if (!isNewsServer) {  
-	NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-    
-    PRInt32 numFullWords;
-    rv = prefs->GetIntPref(PREF_NEWS_ABBREVIATE_PRETTY_NAMES, &numFullWords);
-    if (NS_FAILED(rv))
-	  numFullWords = 1;
-    
-    if (numFullWords != 0) { 
-      rv = AbbreviatePrettyName(aAbbreviatedName, numFullWords);
+	nsCOMPtr<nsIMsgIncomingServer> server;
+	rv = GetServer(getter_AddRefs(server));
+	if (NS_FAILED(rv)) return rv;
+
+	nsCOMPtr<nsINntpIncomingServer> nntpServer;
+	rv = server->QueryInterface(nsINntpIncomingServer::GetIID(),
+				      getter_AddRefs(nntpServer));
+
+	if (NS_FAILED(rv)) return rv; 
+	PRBool abbreviate = PR_TRUE;
+	rv = nntpServer->GetAbbreviate(&abbreviate);
+	if (NS_FAILED(rv)) return rv;
+	
+	if (abbreviate) {
+		rv = AbbreviatePrettyName(aAbbreviatedName, 1 /* hardcoded for now */);
 	}
   }
 
@@ -881,7 +886,6 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages(nsIMsgWindow *aWindow)
   NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
   if (NS_FAILED(rv)) return rv;
   
-  //Are we assured this is the server for this folder?
   nsCOMPtr<nsIMsgIncomingServer> server;
   rv = GetServer(getter_AddRefs(server));
   if (NS_FAILED(rv)) return rv;

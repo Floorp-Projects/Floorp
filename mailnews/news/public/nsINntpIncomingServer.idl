@@ -42,4 +42,7 @@ interface nsINntpIncomingServer : nsISupports {
 
         /* when we don't download all, do we mark the rest read? */
 	attribute boolean markOldRead;
+
+	/* abbreviate the newsgroup names in the folder pane? */
+	attribute boolean abbreviate;
 };

@@ -284,6 +284,8 @@ function savePage(serverId, pageId) {
   var accountValues = getValueArrayFor(serverId);
   var pageElements = getPageFormElements(pageId);
 
+  if (pageElements == null) return;
+
   // store the value in the account
   for (var i=0; i<pageElements.length; i++) {
       if (pageElements[i].name) {
@@ -361,6 +363,8 @@ function restorePage(serverId, pageId) {
   var accountValues = getValueArrayFor(serverId);
   var pageElements = getPageFormElements(pageId);
 
+  if (pageElements == null) return;
+
   // restore the value from the account
   for (var i=0; i<pageElements.length; i++) {
       if (pageElements[i].name) {
@@ -385,13 +389,12 @@ function restorePage(serverId, pageId) {
 function getFormElementValue(formElement) {
 
   var type = formElement.type.toLowerCase();
-  if (type=="checkbox") {
+  if (type=="checkbox" || type=="radio") {
     if (formElement.getAttribute("reversed"))
       return !formElement.checked;
     else
       return formElement.checked;
   }
-
   else if (type == "text" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
     if (formElement.value) {
@@ -416,7 +419,7 @@ function setFormElementValue(formElement, value) {
   //formElement.value = formElement.defaultValue;
   //  formElement.checked = formElement.defaultChecked;
   var type = formElement.type.toLowerCase();
-  if (type == "checkbox") {
+  if (type == "checkbox" || type=="radio") {
     if (value == undefined) {
       formElement.checked = formElement.defaultChecked;
     } else {
@@ -427,7 +430,6 @@ function setFormElementValue(formElement, value) {
     }
     
   }
-
   // handle nsIFileSpec
   else if (type == "text" &&
            formElement.getAttribute("datatype") == "nsIFileSpec") {
@@ -479,11 +481,16 @@ function getAccountFromServerId(serverId) {
 // get the array of form elements for the given page
 //
 function getPageFormElements(pageId) {
-  var pageFrame = top.frames[pageId];
-  var pageDoc = top.frames[pageId].document;
-  var pageElements = pageDoc.getElementsByTagName("FORM")[0].elements;
-
-  return pageElements;
+  try {
+	var pageFrame = top.frames[pageId];
+	var pageDoc = top.frames[pageId].document;
+	var pageElements = pageDoc.getElementsByTagName("FORM")[0].elements;
+	return pageElements;
+ }
+ catch (ex) {
+	dump("getPageFormElements(" + pageId +") failed: " + ex + "\n");
+ }
+ return null;
 }
 
 //

@@ -64,6 +64,7 @@ nsNntpIncomingServer::~nsNntpIncomingServer()
 NS_IMPL_SERVERPREF_INT(nsNntpIncomingServer, NotifySize, "notify.size");
 NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, NotifyOn, "notify.on");
 NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, MarkOldRead, "mark_old_read");
+NS_IMPL_SERVERPREF_BOOL(nsNntpIncomingServer, Abbreviate, "abbreviate");
 NS_IMPL_SERVERPREF_INT(nsNntpIncomingServer, MaxArticles, "max_articles");
 
 NS_IMETHODIMP

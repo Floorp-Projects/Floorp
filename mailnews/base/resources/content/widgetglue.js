@@ -978,14 +978,14 @@ var gMeterObserver;
 
 function GetMsgFolderFromUri(uri)
 {
-	dump("GetMsgFolderFromUri of " + uri + "\n");
+	//dump("GetMsgFolderFromUri of " + uri + "\n");
 	try {
 		var resource = GetResourceFromUri(uri);
 		var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
 		return msgfolder;
 	}
 	catch (ex) {
-		dump("failed to get the folder resource\n");
+		//dump("failed to get the folder resource\n");
 	}
 	return null;
 }

@@ -52,7 +52,7 @@ function onLoad() {
 	dump("initialized with " + wizardContents["smtp.hostname"] + "\n");
     }
     catch (ex) {
-	dump("failed to get the smtp hostname\n");
+	//dump("failed to get the smtp hostname\n");
     }
     init();
 }
