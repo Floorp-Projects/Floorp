@@ -115,6 +115,7 @@ void BasicTableLayoutStrategy::ContinuingFrameCheck()
 #endif
 }
 
+static
 PRBool BCW_Wrapup(BasicTableLayoutStrategy* aStrategy, 
                   nsTableFrame*            aTableFrame, 
                   PRInt32*                 aAllocTypes)
@@ -1050,6 +1051,7 @@ struct nsColInfo {
   float            mWeight;
 };
 
+static
 void
 AC_Wrapup(nsTableFrame* aTableFrame,
           PRInt32       aNumItems, 
@@ -1069,6 +1071,7 @@ AC_Wrapup(nsTableFrame* aTableFrame,
   }
 }
 
+static
 void
 AC_Increase(PRInt32     aNumAutoCols,
              nsColInfo** aColInfo,
@@ -1092,6 +1095,7 @@ AC_Increase(PRInt32     aNumAutoCols,
   }
 }
 
+static
 void
 AC_Decrease(PRInt32     aNumAutoCols,
              nsColInfo** aColInfo,
@@ -1117,6 +1121,7 @@ AC_Decrease(PRInt32     aNumAutoCols,
 }
 
 
+static
 void 
 AC_Sort(nsColInfo** aColInfo, PRInt32 aNumCols)
 {
