@@ -46,7 +46,6 @@ REQUIRES	= xpcom \
 		  $(NULL)
 
 CPPSRCS		= \
-            nsFindComponent.cpp   \
             nsFindService.cpp     \
             nsFindModule.cpp      \
             $(NULL)
