@@ -849,8 +849,10 @@ nsWebBrowserFind::GetFrameSelection(nsIDOMWindow* aWindow,
       if (focusController) {
         nsCOMPtr<nsIDOMElement> focusedElement;
         focusController->GetFocusedElement(getter_AddRefs(focusedElement));
-        nsCOMPtr<nsIContent> content(do_QueryInterface(focusedElement));
-        presShell->GetPrimaryFrameFor(content, &frame);
+        if (focusedElement) {
+            nsCOMPtr<nsIContent> content(do_QueryInterface(focusedElement));
+            presShell->GetPrimaryFrameFor(content, &frame);
+        }
       }
     }
   }
