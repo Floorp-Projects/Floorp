@@ -637,10 +637,10 @@ CreateJSComponentLoader(nsISupports *aOuter, const nsIID &iid, void **result)
         return NS_ERROR_NULL_POINTER;
 
     *result = 0;
-    nsISupports *inst = 0;
+    mozJSComponentLoader *inst;
 
     if (iid.Equals(NS_GET_IID(nsIComponentLoader))) {
-        inst = (nsISupports *)new mozJSComponentLoader();
+        inst = new mozJSComponentLoader();
     } else {
         return NS_ERROR_NO_INTERFACE;
     }
@@ -648,10 +648,12 @@ CreateJSComponentLoader(nsISupports *aOuter, const nsIID &iid, void **result)
     if (!inst)
         return NS_ERROR_OUT_OF_MEMORY;
     
+    NS_ADDREF(inst);  // Stabilize
+    
     nsresult rv = inst->QueryInterface(iid, result);
-    if (NS_FAILED(rv)) {
-        delete inst;
-    }
+    
+    NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>
+    
     return rv;
 }
 
