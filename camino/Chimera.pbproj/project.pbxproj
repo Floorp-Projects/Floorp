@@ -1767,8 +1767,6 @@
 				F564873A023C3857010001CA,
 				F5C3AB810270072A01A80166,
 				F5C3AB820270072A01A80166,
-				F58A94F3023F572B010001CA,
-				F58A94F4023F572B010001CA,
 			);
 			isa = PBXGroup;
 			name = "Categories and Extensions";
@@ -2375,16 +2373,6 @@
 			name = Nibs;
 			refType = 4;
 		};
-		F58A94F3023F572B010001CA = {
-			isa = PBXFileReference;
-			path = TruncatedTabViewItem.h;
-			refType = 4;
-		};
-		F58A94F4023F572B010001CA = {
-			isa = PBXFileReference;
-			path = TruncatedTabViewItem.m;
-			refType = 4;
-		};
 		F59E9F3D0237E28401A967DF = {
 			isa = PBXFileReference;
 			path = ContentClickListener.h;
@@ -2448,12 +2436,12 @@
 		};
 		F5BF71450231B8BC010001CA = {
 			isa = PBXFileReference;
-			path = MJExtendedTabView.h;
+			path = CHExtendedTabView.h;
 			refType = 4;
 		};
 		F5BF71460231B8BC010001CA = {
 			isa = PBXFileReference;
-			path = MJExtendedTabView.m;
+			path = CHExtendedTabView.m;
 			refType = 4;
 		};
 		F5BF71510231DC5D010001CA = {
