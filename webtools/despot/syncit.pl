@@ -24,11 +24,11 @@
 
 $cvs = "/opt/cvs-tools/bin/cvs";
 $whoami = "/usr/ucb/whoami";
-$perlbin = "/tools/ns/bin/perl5.004";
+#$perlbin = "/tools/ns/bin/perl5.004";
 
 #$cvs = "/usr/bin/cvs";
 #$whoami = "/usr/bin/whoami";
-#$perlbin = "/usr/bin/perl";
+$perlbin = "/usr/bin/perl";
 
 #$curdir = `pwd`;
 #chop($curdir);
