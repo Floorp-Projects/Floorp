@@ -3943,6 +3943,10 @@ XULDocumentImpl::Init(void)
 nsresult
 XULDocumentImpl::StartLayout(void)
 {
+    NS_ASSERTION(mRootContent != nsnull, "Error in XUL file. Love to tell ya where if only I knew.");
+    if (!mRootContent)
+      return NS_ERROR_UNEXPECTED;
+    
     if (mFragmentRoot)
       return NS_OK; // Subdocuments rely on the parent document for layout
 
