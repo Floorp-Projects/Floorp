@@ -371,6 +371,9 @@ nsJSContext::~nsJSContext()
   if (!mContext)
     return;
 
+  // Clear our entry in the JSContext, bugzilla bug 66413
+  ::JS_SetContextPrivate(mContext, nsnull);
+
   // Unregister our "javascript.options.*" pref-changed callback.
   nsresult rv;
   NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
