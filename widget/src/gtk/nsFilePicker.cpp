@@ -1,0 +1,294 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation. Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Stuart Parmenter <pavlov@netscape.com>
+ */
+
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
+#include "nsFilePicker.h"
+
+NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
+
+//-------------------------------------------------------------------------
+//
+// nsFilePicker constructor
+//
+//-------------------------------------------------------------------------
+nsFilePicker::nsFilePicker() : nsIFilePicker()
+{
+  NS_INIT_REFCNT();
+  mWidget = nsnull;
+  mDisplayDirectory = nsnull;
+  mFilterMenu = nsnull;
+  mOptionMenu = nsnull;
+  mNumberOfFilters = 0;
+}
+
+//-------------------------------------------------------------------------
+//
+// nsFilePicker destructor
+//
+//-------------------------------------------------------------------------
+nsFilePicker::~nsFilePicker()
+{
+  if (mFilterMenu)
+  {
+    GtkWidget *menu_item;
+    GList *list = g_list_first(GTK_MENU_SHELL(mFilterMenu)->children);
+
+    for (;list; list = list->next)
+    {
+      menu_item = GTK_WIDGET(list->data);
+      gchar *data = (gchar*)gtk_object_get_data(GTK_OBJECT(menu_item), "filters");
+      
+      if (data)
+        nsCRT::free(data);
+    }
+  }
+
+  gtk_widget_destroy(mWidget);
+}
+
+
+static void file_ok_clicked(GtkWidget *w, PRBool *ret)
+{
+  g_print("user hit ok\n");
+  *ret = PR_TRUE;
+  gtk_main_quit();
+}
+
+static void file_cancel_clicked(GtkWidget *w, PRBool *ret)
+{
+  g_print("user hit cancel\n");
+  *ret = PR_FALSE;
+  gtk_main_quit();
+}
+
+static void filter_item_activated(GtkWidget *w, gpointer data)
+{
+  //  nsFilePicker *f = (nsFilePicker*)data;
+  gchar *foo = (gchar*)gtk_object_get_data(GTK_OBJECT(w), "filters");
+  g_print("filter_item_activated(): %s\n", foo);
+}
+
+//-------------------------------------------------------------------------
+//
+// Show - Display the file dialog
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
+{
+  NS_ENSURE_ARG_POINTER(retval);
+
+  PRBool ret;
+  if (mWidget) {
+    // make things shorter
+    GtkFileSelection *fs = GTK_FILE_SELECTION(mWidget);
+
+    if (mNumberOfFilters != 0)
+    {
+      gtk_option_menu_set_menu(GTK_OPTION_MENU(mOptionMenu), mFilterMenu);
+    }
+    else
+      gtk_widget_hide(mOptionMenu);
+
+#if 0
+    if (mDisplayDirectory)
+      gtk_file_selection_complete(fs, "/");
+#endif
+
+    //    gtk_window_set_modal(GTK_WINDOW(mWidget), PR_TRUE);
+    gtk_widget_show(mWidget);
+
+    // handle close, destroy, etc on the dialog
+    gtk_signal_connect(GTK_OBJECT(fs->ok_button), "clicked",
+                       GTK_SIGNAL_FUNC(file_ok_clicked),
+                       &ret);
+    gtk_signal_connect(GTK_OBJECT(fs->cancel_button), "clicked",
+                       GTK_SIGNAL_FUNC(file_cancel_clicked),
+                       &ret);
+    // start new loop.   ret is set in the above callbacks.
+    gtk_main();
+  }
+  else {
+    ret = PR_FALSE;
+  }
+
+  if (ret)
+    *retval = returnOK;
+  else
+    *retval = returnCancel;
+
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Set the list of filters
+//
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP nsFilePicker::SetFilterList(PRInt32 aNumberOfFilters,
+                                          const PRUnichar **aTitles,
+                                          const PRUnichar **filters)
+{
+#if 0
+  GtkWidget *menu_item;
+
+  mNumberOfFilters  = aNumberOfFilters;
+  mTitles           = aTitles;
+  mFilters          = aFilters;
+
+  mFilterMenu = gtk_menu_new();
+
+  for(unsigned int i=0; i < aNumberOfFilters; i++)
+  {
+    // we need *.{htm, html, xul, etc}
+    char *foo = aTitles[i].ToNewCString();
+    char *filters = aFilters[i].ToNewCString();
+    printf("%20s %s\n", foo, filters);
+
+    menu_item = gtk_menu_item_new_with_label(nsAutoCString(aTitles[i]));
+
+    gtk_object_set_data(GTK_OBJECT(menu_item), "filters", filters);
+
+    gtk_signal_connect(GTK_OBJECT(menu_item),
+                       "activate",
+                       GTK_SIGNAL_FUNC(filter_item_activated),
+                       this);
+
+    gtk_menu_append(GTK_MENU(mFilterMenu), menu_item);
+    gtk_widget_show(menu_item);
+
+    nsCRT::free(foo);
+  }
+#endif
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsFilePicker::GetFile(nsIFileSpec **aFile)
+{
+  NS_ENSURE_ARG_POINTER(*aFile);
+  if (mWidget) {
+    gchar *fn = gtk_file_selection_get_filename(GTK_FILE_SELECTION(mWidget));
+
+    nsCOMPtr<nsIFileSpec> fileSpec(do_CreateInstance("component://netscape/filespec"));
+    
+    NS_ENSURE_TRUE(fileSpec, NS_ERROR_FAILURE);
+
+    fileSpec->SetNativePath(fn);
+
+    *aFile = fileSpec;
+    NS_ADDREF(*aFile);
+  }
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::GetSelectedFilter(PRInt32 *aType)
+{
+  NS_ENSURE_ARG_POINTER(aType);
+  *aType = mSelectedType;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Get the file + path
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::SetDefaultString(const PRUnichar *aString)
+{
+  if (mWidget) {
+    gtk_file_selection_set_filename(GTK_FILE_SELECTION(mWidget),
+                                    (const gchar*)nsAutoCString(aString));
+  }
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+//
+// Set the display directory
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::SetDisplayDirectory(nsIFileSpec *aDirectory)
+{
+  mDisplayDirectory = aDirectory;
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Get the display directory
+//
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsIFileSpec **aDirectory)
+{
+  *aDirectory = mDisplayDirectory;
+  NS_IF_ADDREF(*aDirectory);
+  return NS_OK;
+}
+
+
+//-------------------------------------------------------------------------
+NS_IMETHODIMP nsFilePicker::Create(nsIDOMWindow *aParent,
+                                   const PRUnichar *aTitle,
+                                   PRInt16 aMode)
+{
+  mWidget = gtk_file_selection_new((const gchar *)nsAutoCString(aTitle));
+  gtk_signal_connect(GTK_OBJECT(mWidget),
+                     "destroy",
+                     GTK_SIGNAL_FUNC(DestroySignal),
+                     this);
+
+  gtk_button_box_set_layout(GTK_BUTTON_BOX(GTK_FILE_SELECTION(mWidget)->button_area), GTK_BUTTONBOX_SPREAD);
+
+  mOptionMenu = gtk_option_menu_new();
+
+  gtk_box_pack_start(GTK_BOX(GTK_FILE_SELECTION(mWidget)->main_vbox), mOptionMenu, PR_FALSE, PR_FALSE, 0);
+  gtk_widget_show(mOptionMenu);
+
+  // Hide the file column for the folder case.
+  if (aMode == nsIFilePicker::modeGetFolder) {
+    gtk_widget_hide((GTK_FILE_SELECTION(mWidget)->file_list)->parent);
+  }
+
+  return NS_OK;
+}
+
+gint
+nsFilePicker::DestroySignal(GtkWidget *  aGtkWidget,
+                            nsFilePicker* aWidget)
+{
+  aWidget->OnDestroySignal(aGtkWidget);
+  return TRUE;
+}
+
+void
+nsFilePicker::OnDestroySignal(GtkWidget* aGtkWidget)
+{
+  if (aGtkWidget == mWidget) {
+    mWidget = nsnull;
+  }
+}
