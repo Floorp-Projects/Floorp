@@ -35,6 +35,7 @@
 #include "nsIPluginInstancePeer2.h"
 #include "nsIIOService.h"
 #include "nsIURI.h"
+#include "nsNetCID.h"
 
 #include "MRJPlugin.h"
 #include "MRJContext.h"
