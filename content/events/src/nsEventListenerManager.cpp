@@ -191,13 +191,13 @@ nsEventListenerManager::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     AddRef();
     return NS_OK;
   }
+  if (mTarget) {
+    return mTarget->QueryInterface(aIID, aInstancePtr);
+  }
   if (aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = (void*)(nsISupports*)(nsIEventListenerManager*)this;
     AddRef();
     return NS_OK;
-  }
-  if (mTarget) {
-    return mTarget->QueryInterface(aIID, aInstancePtr);
   }
   return NS_NOINTERFACE;
 }
@@ -981,6 +981,8 @@ nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext,
   if (NS_FAILED(rv))
       return rv;
 
+  nsCOMPtr<nsIClassInfo> classInfo = do_QueryInterface(aObject);
+
   if (NS_FAILED(rv = securityManager->CheckPropertyAccess(cx, jsobj,
                 "EventTarget","addEventListener",
                 nsIXPCSecurityManager::ACCESS_SET_PROPERTY))) {
@@ -1762,6 +1764,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
     case NS_PAGE_UNLOAD:
     case NS_IMAGE_LOAD:
     case NS_IMAGE_ERROR:
+    case NS_SCRIPT_LOAD:
     case NS_SCRIPT_ERROR:
       listeners = GetListenersByType(eEventArrayType_Load, nsnull, PR_FALSE);
       if (listeners) {
@@ -1778,6 +1781,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                 switch(aEvent->message) {
                   case NS_PAGE_LOAD:
                   case NS_IMAGE_LOAD:
+                  case NS_SCRIPT_LOAD: 
                     ret = loadListener->Load(*aDOMEvent);
                     break;
                   case NS_PAGE_UNLOAD:
@@ -1796,6 +1800,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                 switch(aEvent->message) {
                   case NS_PAGE_LOAD:
                   case NS_IMAGE_LOAD:
+                  case NS_SCRIPT_LOAD:
                     subType = NS_EVENT_BITS_LOAD_LOAD;
                     if (ls->mSubType & NS_EVENT_BITS_LOAD_LOAD) {
                       correctSubType = PR_TRUE;

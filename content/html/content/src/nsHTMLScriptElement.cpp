@@ -296,6 +296,20 @@ nsHTMLScriptElement::ScriptAvailable(nsresult aResult,
                                      PRInt32 aLineNo,
                                      const nsAString& aScript)
 {
+  nsresult rv = NS_OK;
+  if (!aIsInline && NS_FAILED(aResult)) {
+    nsCOMPtr<nsIPresContext> presContext;
+    GetPresContext(this, getter_AddRefs(presContext)); 
+
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+
+    event.message = NS_SCRIPT_ERROR;
+    rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
+                        &status);
+  }
+
   return NS_OK;
 }
 
@@ -306,7 +320,21 @@ nsHTMLScriptElement::ScriptEvaluated(nsresult aResult,
                                      PRBool aIsInline,
                                      PRBool aWasPending)
 {
-  return NS_OK;
+  nsresult rv = NS_OK;
+  if (!aIsInline) {
+    nsCOMPtr<nsIPresContext> presContext;
+    GetPresContext(this, getter_AddRefs(presContext)); 
+
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+    event.eventStructType = NS_EVENT;
+
+    event.message = NS_SUCCEEDED(aResult) ? NS_SCRIPT_LOAD : NS_SCRIPT_ERROR;
+    rv = HandleDOMEvent(presContext, &event, nsnull, NS_EVENT_FLAG_INIT,
+                        &status);
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP 
