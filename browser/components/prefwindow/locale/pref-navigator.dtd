@@ -18,7 +18,7 @@
 #endif
 
 <!-- XXXben oh please, can we do better than this text-wise? -->
-<!ENTITY showConnections.label      "Connection Settings">
+<!ENTITY showConnections.label      "Connection Settings...">
 <!ENTITY showConnections.accesskey  "o">
 
 <!ENTITY proxiesInfo.label          "Set up Proxies for accessing the internet.">

@@ -26,7 +26,7 @@
 <!ENTITY butAskFirst.label                 "but ask before accepting">
 <!ENTITY butAskFirst.accesskey             "b">
 <!ENTITY clearCookies.label                "Clear">
-<!ENTITY viewCookies.label                 "View Cookies">
+<!ENTITY viewCookies.label                 "View Cookies...">
 
 <!ENTITY formfill.label                    "Saved Form Information">
 <!ENTITY formfillDescription.label         "Information entered in web page forms and the Search Bar is saved to make filling out forms and searching faster.">
@@ -47,7 +47,7 @@
 <!ENTITY passwordsEnable.label             "Remember Passwords">
 <!ENTITY passwordsEnable.accesskey         "p">
 <!ENTITY clearPasswords.label              "Clear">
-<!ENTITY viewPasswords.label               "View Saved Passwords">
+<!ENTITY viewPasswords.label               "View Saved Passwords...">
 
 <!ENTITY clearAll.label                    "Clear All">
 <!ENTITY clearAllDescription.label         "Clear all information stored while browsing:">
