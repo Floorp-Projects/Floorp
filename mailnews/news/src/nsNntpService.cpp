@@ -1198,6 +1198,12 @@ nsresult nsNntpService::DisplayMessageForPrinting(const char* aMessageURI, nsISu
   return rv;
 }
 
+NS_IMETHODIMP nsNntpService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, const char *aMessageUri)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
 NS_IMETHODIMP
 nsNntpService::UpdateCounts(nsINntpIncomingServer *aNntpServer)
 {

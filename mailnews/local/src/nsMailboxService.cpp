@@ -362,3 +362,9 @@ nsresult nsMailboxService::DisplayMessageForPrinting(const char* aMessageURI,
   mPrintingOperation = PR_FALSE;
   return rv;
 }
+
+NS_IMETHODIMP nsMailboxService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, const char *aMessageUri)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+

@@ -630,6 +630,10 @@ nsImapService::CopyMessages(nsMsgKeyArray *keys, nsIMsgFolder *srcFolder, nsIStr
   return rv;
 }
 
+NS_IMETHODIMP nsImapService::Search(nsIMsgSearchSession *aSearchSession, nsIMsgWindow *aMsgWindow, const char *aMessageUri)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 // just a helper method to break down imap message URIs....
 nsresult nsImapService::DecomposeImapURI(const char * aMessageURI, nsIMsgFolder ** aFolder, char ** aMsgKey)

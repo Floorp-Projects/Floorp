@@ -28,6 +28,7 @@ interface nsIStreamListener;
 interface nsIMsgWindow;
 interface nsIFileSpec;
 interface nsIMsgFolder;
+interface nsIMsgSearchSession;
 
 %{C++
 #include "nsMsgKeyArray.h"
@@ -126,4 +127,6 @@ interface nsIMsgMessageService : nsISupports {
 						in nsIMsgWindow aMsgWindow,
 						in nsIUrlListener aUrlListener, 
 						out nsIURI aURL);
+
+	void Search(in nsIMsgSearchSession aSearchSession, in nsIMsgWindow aMsgWindow, in string aSearchUri);
 };
