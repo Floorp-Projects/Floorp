@@ -233,6 +233,8 @@ bin\components\msgnews.dll
 bin\components\msgnews.xpt
 bin\components\msgsearch.xpt
 bin\components\vcard.dll
+bin\components\signed.dll
+bin\components\smime.dll
 bin\chrome\addressbook\*
 bin\chrome\messenger\*
 bin\chrome\messengercompose\*
