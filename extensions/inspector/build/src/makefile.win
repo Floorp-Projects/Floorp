@@ -38,6 +38,7 @@ LLIBS=						      \
     $(DIST)\lib\inspector_s.lib               \
     $(DIST)\lib\gkgfxwin.lib \
     $(DIST)\lib\contenthtmlstyle_s.lib \
+    $(DIST)\lib\contentshared_s.lib \
 		$(LIBNSPR)	 	              \
 		$(NULL)
 
