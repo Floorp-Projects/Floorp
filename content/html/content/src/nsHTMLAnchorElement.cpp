@@ -200,7 +200,9 @@ nsHTMLAnchorElement::Blur()
 NS_IMETHODIMP
 nsHTMLAnchorElement::Focus()
 {
-  SetElementFocus(PR_TRUE);
+  if (ShouldFocus(this)) {
+    SetElementFocus(PR_TRUE);
+  }
 
   return NS_OK;
 }

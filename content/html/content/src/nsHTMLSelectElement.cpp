@@ -1568,7 +1568,9 @@ nsHTMLSelectElement::Blur()
 NS_IMETHODIMP
 nsHTMLSelectElement::Focus()
 {
-  SetElementFocus(PR_TRUE);
+  if (ShouldFocus(this)) {
+    SetElementFocus(PR_TRUE);
+  }
 
   return NS_OK;
 }

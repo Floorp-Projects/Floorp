@@ -3749,6 +3749,10 @@ nsXULElement::IsAncestor(nsIDOMNode* aParentNode, nsIDOMNode* aChildNode)
 NS_IMETHODIMP
 nsXULElement::Focus()
 {
+    if (!nsGenericElement::ShouldFocus(this)) {
+        return NS_OK;
+    }
+
     // What kind of crazy tries to focus an element without a doc?
     if (!mDocument)
         return NS_OK;
