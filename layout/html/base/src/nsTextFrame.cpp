@@ -634,6 +634,8 @@ TextFrame::PrepareUnicodeText(nsTextTransformer& aTX,
         }
       }
       else if (0 == wordLen) {
+        if (nsnull != aIndexes)
+          *aIndexes++ = strInx;
         break;
       }
       else if (nsnull != aIndexes) {
@@ -822,8 +824,10 @@ TextFrame::PaintUnicodeText(nsIPresContext& aPresContext,
                            dx, dy, width);
     }
     else {
-      ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
-
+      ip[mContentLength] = ip[mContentLength-1];
+      if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+        ip[mContentLength]++;
+        
       nscoord textWidth;
       if (mSelectionOffset < 0)
         mSelectionOffset = 0;
@@ -1302,7 +1306,9 @@ TextFrame::PaintTextSlowly(nsIPresContext& aPresContext,
                    text, textLength, dx, dy, width);
     }
     else {
-      ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
+      ip[mContentLength] = ip[mContentLength-1];
+      if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+        ip[mContentLength]++;
       nscoord textWidth;
       if (mSelectionOffset < 0)
         mSelectionOffset = 0;
@@ -1450,7 +1456,9 @@ TextFrame::PaintAsciiText(nsIPresContext& aPresContext,
                            dx, dy, width);
     }
     else {
-      ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
+      ip[mContentLength] = ip[mContentLength-1];
+      if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+        ip[mContentLength]++;
       nscoord textWidth;
       if (mSelectionOffset < 0)
         mSelectionOffset = 0;
@@ -1655,7 +1663,9 @@ TextFrame::GetPosition(nsIPresContext& aCX,
   nsTextTransformer tx(wordBufMem, WORD_BUF_SIZE,lb);
   PrepareUnicodeText(tx,
                      ip, paintBuf, textLength, width);
-  ip[mContentLength] = ip[mContentLength-1]+1;
+  ip[mContentLength] = ip[mContentLength-1];
+  if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+    ip[mContentLength]++;
 
   PRInt32 offset = mContentOffset + mContentLength;
   PRInt32 index;
@@ -1753,7 +1763,7 @@ TextFrame::SetSelectedContentOffsets(nsSelectionStruct *aSS,
     return NS_ERROR_NULL_POINTER;
 
   PRInt32 beginOffset(aSS->mStartContent - mContentOffset);
-  if (beginOffset >= mContentLength){
+  if (beginOffset > mContentLength){
     //this is not the droid we are looking for. keep looking
     nsSelectionStruct ss = {0};//turn it ALL off
     ss.mForceRedraw = aSS->mForceRedraw;
@@ -1872,7 +1882,9 @@ TextFrame::GetPointFromOffset(nsIPresContext* inPresContext, nsIRenderingContext
   PrepareUnicodeText(tx,
                      ip,
                      paintBuf, textLength, width);
-  ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
+  ip[mContentLength] = ip[mContentLength-1];
+  if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+    ip[mContentLength]++;
   if (inOffset > mContentLength){
     NS_ASSERTION(0, "invalid offset passed to GetPointFromOffset");
     inOffset = mContentLength;
@@ -1956,11 +1968,14 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
       if (aStartOffset > mContentLength)
         aStartOffset = mContentLength; //not ok normaly, but eNone means dont leave this frame
       *aFrameOffset = aStartOffset;
+      *aContentOffset = mContentOffset;
     }
     break;
   case eSelectCharacter : {
     PrepareUnicodeText(tx, ip, paintBuf, textLength, width);
-    ip[mContentLength] = ip[mContentLength-1]+1; //must set up last one for selection beyond edge
+    ip[mContentLength] = ip[mContentLength-1];
+    if (ip[mContentLength] < textLength)//must set up last one for selection beyond edge if in boundary
+      ip[mContentLength]++;
     nsIFrame *frameUsed = nsnull;
     PRInt32 start;
     PRBool found = PR_TRUE;
