@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.1 $ $Date: 2001/11/08 00:15:20 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.2 $ $Date: 2001/11/08 04:12:26 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -378,6 +378,24 @@ STAN_GetCERTCertificate(NSSCertificate *c)
     return cc;
 }
 
+static CK_TRUST
+get_stan_trust(unsigned int t) 
+{
+    if (t & CERTDB_TRUSTED_CA || t & CERTDB_NS_TRUSTED_CA) {
+	return CKT_NETSCAPE_TRUSTED_DELEGATOR;
+    }
+    if (t & CERTDB_TRUSTED) {
+	return CKT_NETSCAPE_TRUSTED;
+    }
+    if (t & CERTDB_VALID_CA) {
+	return CKT_NETSCAPE_VALID_DELEGATOR;
+    }
+    if (t & CERTDB_VALID_PEER) {
+	return CKT_NETSCAPE_VALID;
+    }
+    return CKT_NETSCAPE_UNTRUSTED;
+}
+
 NSS_EXTERN NSSCertificate *
 STAN_GetNSSCertificate(CERTCertificate *cc)
 {
@@ -427,28 +445,17 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
 	c->slot = c->token->slot;
     }
     cc->nssCertificate = c;
+    if (cc->trust) {
+	CERTCertTrust *trust = cc->trust;
+	c->trust.serverAuth = get_stan_trust(trust->sslFlags);
+	c->trust.clientAuth = get_stan_trust(trust->sslFlags);
+	c->trust.emailProtection = get_stan_trust(trust->emailFlags);
+	c->trust.codeSigning= get_stan_trust(trust->objectSigningFlags);
+    }
     return c;
 loser:
     nssArena_Destroy(arena);
     return NULL;
-}
-
-static CK_TRUST
-get_stan_trust(unsigned int t) 
-{
-    if (t & CERTDB_TRUSTED_CA || t & CERTDB_NS_TRUSTED_CA) {
-	return CKT_NETSCAPE_TRUSTED_DELEGATOR;
-    }
-    if (t & CERTDB_TRUSTED) {
-	return CKT_NETSCAPE_TRUSTED;
-    }
-    if (t & CERTDB_VALID_CA) {
-	return CKT_NETSCAPE_VALID_DELEGATOR;
-    }
-    if (t & CERTDB_VALID_PEER) {
-	return CKT_NETSCAPE_VALID;
-    }
-    return CKT_NETSCAPE_UNTRUSTED;
 }
 
 NSS_EXTERN PRStatus
