@@ -28,7 +28,38 @@
 #include "prmon.h"
 
 
-#include "../../../js/src/xpconnect/public/xpctest.h"
+//--
+
+/* {159E36D0-991E-11d2-AC3F-00C09300144B} */
+#define NS_ITESTXPCFOO_IID_STR "159E36D0-991E-11d2-AC3F-00C09300144B"
+#define NS_ITESTXPCFOO_IID \
+  {0x159E36D0, 0x991E, 0x11d2, \
+    { 0xAC, 0x3F, 0x00, 0xC0, 0x93, 0x00, 0x14, 0x4B }}
+
+class nsITestXPCFoo : public nsISupports {
+ public: 
+  NS_DEFINE_STATIC_IID_ACCESSOR(NS_ITESTXPCFOO_IID)
+
+  /* long Test (in long p1, in long p2); */
+  NS_IMETHOD Test(PRInt32 p1, PRInt32 p2, PRInt32 *_retval) = 0;
+
+  /* void Test2 (); */
+  NS_IMETHOD Test2() = 0;
+
+  enum { one = 1 };
+
+  enum { five = 5 };
+
+  enum { six = 6 };
+
+#ifdef XPIDL_JS_STUBS
+  static NS_EXPORT_(JSObject *) InitJSClass(JSContext *cx);
+  static NS_EXPORT_(JSObject *) GetJSObject(JSContext *cx, nsITestXPCFoo *priv);
+#endif
+};
+
+
+//
 
 #include "nsProxyObjectManager.h"
 
