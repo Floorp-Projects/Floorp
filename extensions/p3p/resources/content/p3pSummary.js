@@ -189,10 +189,8 @@ function p3pSummarySavePage()
  */
 function captureContentClick(aEvent)
 {
-  if (aEvent.target.hasAttribute("message")) {
+  if (aEvent.target.hasAttribute("message"))
     alertMessage(aEvent.target.getAttribute("message"));
-    return true;
-  }
 
-  return contentAreaClick(aEvent);
+  return true;
 }

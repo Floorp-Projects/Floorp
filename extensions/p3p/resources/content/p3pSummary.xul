@@ -58,13 +58,9 @@
 
   <script type="application/x-javascript" src="chrome://p3p/content/p3pSummary.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/p3p/nsPolicyViewer.js"/>
-  <script type="application/x-javascript" src="chrome://global/content/nsDragAndDrop.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaDD.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/printing.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/browser.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/findUtils.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
-  <script type="application/x-javascript" src="chrome://communicator/content/contentAreaClick.js"/>
 
   <commandset id="commands">
     <commandset id="globalEditMenuItems"/>
@@ -149,7 +145,7 @@
     </menubar>  
   </toolbox>
   
-  <vbox id="appcontent" flex="1" ondragdrop="nsDragAndDrop.drop(event, contentAreaDNDObserver);">
+  <vbox id="appcontent" flex="1">
     <browser type="content-primary" id="content" flex="1"
              onclick="captureContentClick(event);"/>
   </vbox>
