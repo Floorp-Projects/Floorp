@@ -325,7 +325,7 @@ var DefaultController =
       case "cmd_killThread":
         return ((GetNumSelectedMessages() == 1) && MailAreaHasFocus() && IsViewNavigationItemEnabled());
       case "cmd_watchThread":
-        if ((GetNumSelectedMessages() == 1) && gDBView)
+        if (MailAreaHasFocus() && (GetNumSelectedMessages() == 1) && gDBView)
           gDBView.getCommandStatus(nsMsgViewCommandType.toggleThreadWatched, enabled, checkStatus);
         return enabled.value;
       case "cmd_createFilterFromPopup":
@@ -1043,7 +1043,7 @@ function SearchBarToggled()
     else
     {
       /*we have to initialize searchInput because we cannot do it when searchBox is hidden */
-      var searchInput = document.getElementById('searchInput');
+      var searchInput = GetSearchInput();
       searchInput.value="";
     }
   }
