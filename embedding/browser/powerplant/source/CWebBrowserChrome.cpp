@@ -170,6 +170,13 @@ NS_IMETHODIMP CWebBrowserChrome::CreateBrowserWindow(PRUint32 chromeMask, PRInt3
    return aBrowserShell->GetWebBrowser(aWebBrowser);    
 }
 
+/* boolean isWindowModal (); */
+NS_IMETHODIMP CWebBrowserChrome::IsWindowModal(PRBool *_retval)
+{
+    *_retval = PR_FALSE;
+    return NS_OK;
+}
+
 
 NS_IMETHODIMP CWebBrowserChrome::FindNamedBrowserItem(const PRUnichar* aName,
                                                   	  nsIDocShellTreeItem ** aBrowserItem)
