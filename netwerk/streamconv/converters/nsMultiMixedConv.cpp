@@ -440,7 +440,8 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
     PRBool done = PR_FALSE;
     PRUint8 lineFeedIncrement = 1;
 
-    while ( (newLine = PL_strchr(cursor, LF)) ) {
+    while ( (cursorLen > 0) 
+            && (newLine = PL_strchr(cursor, LF)) ) {
         // adjust for linefeeds
         if ( (newLine > cursor) && (newLine[-1] == CR) ) { // CRLF
              lineFeedIncrement = 2;
