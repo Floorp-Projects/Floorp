@@ -394,36 +394,35 @@ if($::usergroupset ne '0') {
   # unchecked, we want to revert to 0.
   DoComma();
   $::query .= "groupset = 0";
-  SendSQL("select bit from groups ".
-          "where bit & $::usergroupset != 0 ".
-          "and isbuggroup != 0 ".
-          "order by bit");
-  while(my $b = FetchSQLData()) {
-    if($::FORM{"bit-$b"}) {
-      $::query .= " + $b";      # Carefully written so that the math is
-                                # done by MySQL, which can handle 64-bit math,
-                                # and not by Perl, which I *think* can not.
-    }
-  }
-  # If we're changing the groupset, then we want to check for any bits
-  # that may have been excluded because the user wasn't in that group, but
-  # that were set previously.
-  my $tmpbugid = 0;
-  if(defined $::FORM{'id'}) {
-    $tmpbugid = $::FORM{'id'};
-  } else {
-    $tmpbugid = (grep(/^id_/, (keys %::FORM)))[0];
-    $tmpbugid =~ s/^id_//;
-  }
-  SendSQL("select sum(bit) from groups ".
-          "LEFT JOIN bugs ON bugs.groupset & bit != 0 ".
-          "where bugs.bug_id = $tmpbugid ".
-          "and bit & $::usergroupset = 0 ".
-          "and isbuggroup != 0");
-  if(MoreSQLData()) {
-    my ($bitsum) = FetchSQLData();
-    if($bitsum =~ /^\d+$/) {
-      $::query .= " + $bitsum";
+  my ($id) = (@idlist);
+  SendSQL(<<_EOQ_);
+    SELECT bit, bit & $::usergroupset != 0, bit & bugs.groupset != 0
+    FROM groups, bugs
+    WHERE isbuggroup != 0 AND bug_id = $id
+    ORDER BY bit
+_EOQ_
+  while (my ($b, $userhasgroup, $bughasgroup) = FetchSQLData()) {
+    if (!$::FORM{"bit-$b"}) {
+      # If we make it here, the item didn't exist on the form or the user
+      # said to clear it.  The only time we add this group back in is if
+      # the bug already has this group on it and the user can't access it.
+      if ($bughasgroup && !$userhasgroup) {
+        $::query .= " + $b";
+      }
+    } elsif ($::FORM{"bit-$b"} == -1) {
+      # If we get here, the user came from the change several bugs form, and
+      # said not to change this group restriction.  So we'll add this group
+      # back in only if the bug already has it.
+      if ($bughasgroup) {
+        $::query .= " + $b";
+      }
+    } else {
+      # If we get here, the user said to set this group.  If they don't have
+      # access to it, we'll use what's already on the bug, otherwise we'll
+      # add this one in.
+      if ($userhasgroup || $bughasgroup) {
+        $::query .= " + $b";
+      }
     }
   }
 }
