@@ -77,7 +77,7 @@
 #ifndef HAVE_SYS_CDEFS_H
 #include "cdefs.h"
 #else
-#include <cdefs.h>
+#include <sys/cdefs.h>
 #endif
 #include "prtypes.h"
 
@@ -229,10 +229,6 @@ XP_END_PROTOS
 #if !defined(_WINDOWS) && !defined(macintosh) && !defined(XP_OS2)
 #include <sys/stat.h>
 #include <errno.h>
-#endif
-
-#ifndef HAVE_SYS_CDEFS_H
-#include "cdefs.h"
 #endif
 
 #ifndef _WINDOWS  /* included above to prevent spurious warnings chouck 12-Sep-95 */

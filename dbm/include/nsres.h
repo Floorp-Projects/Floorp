@@ -1,6 +1,5 @@
 #ifndef NSRES_H
 #define NSRES_H
-#include "cdefs.h"
 #include "mcom_db.h"
 
 __BEGIN_DECLS
