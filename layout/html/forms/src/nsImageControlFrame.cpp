@@ -240,7 +240,7 @@ nsImageControlFrame::Init(nsIPresContext*  aPresContext,
     parWithView->GetView(aPresContext, &parView);
     // the view's size is not know yet, but its size will be kept in synch with our frame.
     nsRect boundBox(0, 0, 0, 0); 
-    result = view->Init(viewMan, boundBox, parView);
+    result = view->Init(viewMan, boundBox, parView, nsnull);
     view->SetContentTransparency(PR_TRUE);
     viewMan->InsertChild(parView, view, 0);
     SetView(aPresContext, view);
