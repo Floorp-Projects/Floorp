@@ -1280,7 +1280,7 @@ public class Codegen extends Interpreter {
                 visitBitOp(node, type, child);
                 break;
 
-              case Token.TONUMBER:
+              case Token.POS:
                 addByteCode(ByteCode.NEW, "java/lang/Double");
                 addByteCode(ByteCode.DUP);
                 generateCodeFromNode(child, node);

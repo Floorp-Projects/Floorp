@@ -600,7 +600,7 @@ public class Interpreter
                 itsStackDepth--;
                 break;
 
-            case Token.TONUMBER:
+            case Token.POS:
                 iCodeTop = generateICode(child, iCodeTop);
                 iCodeTop = addToken(Token.POS, iCodeTop);
                 break;

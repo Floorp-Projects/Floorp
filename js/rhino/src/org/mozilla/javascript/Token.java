@@ -214,13 +214,12 @@ public class Token
         ENUMDONE    = 115,
         EXPRSTMT    = 116,
         PARENT      = 117,
-        TONUMBER    = 118,
-        JSR         = 119,
-        NEWLOCAL    = 120,
-        USELOCAL    = 121,
-        SCRIPT      = 122,   // top-level node for entire script
+        JSR         = 118,
+        NEWLOCAL    = 119,
+        USELOCAL    = 120,
+        SCRIPT      = 121,   // top-level node for entire script
 
-        LAST_TOKEN  = 122;
+        LAST_TOKEN  = 121;
 
     public static String name(int token)
     {
@@ -345,7 +344,6 @@ public class Token
                 case ENUMDONE:        return "enumdone";
                 case EXPRSTMT:        return "exprstmt";
                 case PARENT:          return "parent";
-                case TONUMBER:        return "tonumber";
                 case JSR:             return "jsr";
                 case NEWLOCAL:        return "newlocal";
                 case USELOCAL:        return "uselocal";

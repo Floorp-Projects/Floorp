@@ -839,10 +839,6 @@ public class IRFactory {
         }
     }
 
-    private Node createToNumber(Node expr) {
-        return new Node(Token.TONUMBER, expr);
-    }
-
     private Node createSetName(int assignOp, Node left, Node right,
                                boolean tonumber, boolean postfix)
     {
@@ -861,7 +857,7 @@ public class IRFactory {
 
         Node opLeft = Node.newString(Token.NAME, s);
         if (tonumber)
-            opLeft = createToNumber(opLeft);
+            opLeft = new Node(Token.POS, opLeft);
         if (postfix)
             opLeft = createNewTemp(opLeft);
         Node op = new Node(assignOp, opLeft, right);
@@ -985,7 +981,7 @@ public class IRFactory {
         }
 
         if (tonumber)
-            opLeft = createToNumber(opLeft);
+            opLeft = new Node(Token.POS, opLeft);
         if (postfix)
             opLeft = createNewTemp(opLeft);
         Node op = new Node(assignOp, opLeft, expr);
