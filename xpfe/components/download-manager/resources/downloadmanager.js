@@ -163,8 +163,13 @@ var downloadViewController = {
     var isDownloading = gDownloadManager.getDownload(selectedItem.id);
     switch (aCommand) {
     case "cmd_openfile":
-      if (isDownloading)
+      try {
+        if (isDownloading || getFileForItem(selectedItem).isExecutable())
+          return false;
+      } catch(e) {
+        // Exception means file doesn't exist; launch is not allowed.
         return false;
+      }      
     case "cmd_showinshell":
       // some apps like kazaa/morpheus let you "preview" in-progress downloads because
       // that's possible for movies and music. for now, just disable indiscriminately.
@@ -201,16 +206,6 @@ var downloadViewController = {
     case "cmd_openfile":
       selectedItem = getSelectedItem();
       file = getFileForItem(selectedItem);
-      if (file.isExecutable()) {
-        var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
-                                      .getService(Components.interfaces.nsIPromptService);
-        var strBundle = document.getElementById("dlProgressDlgBundle");
-        var title = strBundle.getFormattedString("openingAlertTitle", [file.leafName]);
-        var msg = strBundle.getFormattedString("securityAlertMsg", [file.leafName]);
-        var okToProceed = promptService.confirm(window, title, msg);
-        if (!okToProceed)
-          return;
-      }
       file.launch();
       break;
     case "cmd_showinshell":
