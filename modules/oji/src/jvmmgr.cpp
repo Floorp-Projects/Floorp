@@ -33,13 +33,8 @@
 #include "plstr.h"
 #include "jni.h"
 #include "jsjava.h"
-#ifdef MOCHA
 #include "libmocha.h"
 #include "libevent.h"
-#endif
-#include "nsICapsManager.h"
-#include "nsCCapsManager.h"
-#include "nsILiveconnect.h"
 
 #include "xpgetstr.h"
 extern "C" int XP_PROGRESS_STARTING_JAVA;
@@ -163,7 +158,6 @@ PR_BEGIN_EXTERN_C
 
 #include "jscntxt.h"
 
-#ifdef MOCHA
 
 static JSContext* PR_CALLBACK
 map_jsj_thread_to_js_context_impl(JSJavaThreadState *jsj_env, JNIEnv *env, char **errp)
@@ -545,8 +539,6 @@ get_java_vm_impl(JNIEnv* env)
     return (SystemJavaVM*)JVM_GetJVMMgr();
 }
 
-#endif /* MOCHA */
-
 PR_END_EXTERN_C
 
 
@@ -589,11 +581,7 @@ ConvertToPlatformPathList(const char* cp)
         result[0] = '\0';
         path = c;
         strtok_path = path;
-#ifndef NSPR20
-        while ((path = XP_STRTOK(strtok_path, PATH_SEPARATOR_STR)))
-#else
         while ((path = XP_STRTOK(strtok_path, PR_PATH_SEPARATOR_STR)))
-#endif
         {
             const char* macPath;
             OSErr err = ConvertUnixPathToMacPath(path, &macPath);
