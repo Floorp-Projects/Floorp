@@ -252,12 +252,6 @@ js_unlog_scope(JSScope *scope)
  * That condition implies deadlock in ClaimScope if cx's thread were to wait
  * to share scope.
  *
- * Also return true right away if cx's thread is running the GC, because in
- * that case, no other requests will run until the GC completes.  Any scope
- * wanted by the GC (from a finalizer) that can't be claimed must be slated
- * for sharing.  Returning true here causes ClaimScope to call ShareScope to
- * promote the scope to multi-threaded access.
- *
  * (i) rt->gcLock held
  */
 static JSBool
@@ -265,8 +259,6 @@ WillDeadlock(JSScope *scope, JSContext *cx)
 {
     JSContext *ownercx;
 
-    if (cx->runtime->gcThread == cx->thread)
-        return JS_TRUE;
     do {
         ownercx = scope->ownercx;
         if (ownercx == cx) {
@@ -398,9 +390,15 @@ ClaimScope(JSScope *scope, JSContext *cx)
          * here and break.  After that we unwind to js_[GS]etSlotThreadSafe or
          * js_LockScope (our caller), where we wait on the newly-fattened lock
          * until ownercx's thread unwinds from js_SetProtoOrParent.
+         *
+         * Avoid deadlock before any of this scope/context cycle detection if
+         * cx is on the active GC's thread, because in that case, no requests
+         * will run until the GC completes.  Any scope wanted by the GC (from
+         * a finalizer) that can't be claimed must be slated for sharing.
          */
-        if (ownercx->scopeToShare &&
-            WillDeadlock(ownercx->scopeToShare, cx)) {
+        if (rt->gcThread == cx->thread ||
+            (ownercx->scopeToShare &&
+             WillDeadlock(ownercx->scopeToShare, cx))) {
             ShareScope(rt, scope);
             break;
         }
