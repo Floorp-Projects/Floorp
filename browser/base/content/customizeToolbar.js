@@ -245,19 +245,24 @@ var paletteDNDObserver = {
   {
     alert("DROP HAPPENED.");
     var itemID = aXferData.data;
+    alert("GOT XFER DATA.");
+
     var item = null;
     var palette = document.getElementById("palette-box");
     var toolbar = document.getElementById("cloneToolbar");
     var toolbarItem = toolbar.firstChild;
     while (toolbarItem) {
+      alert("looping.");
       if (toolbarItem.firstChild.id == itemID) {
         item = toolbarItem;
         break;
       }
       toolbarItem = toolbarItem.nextSibling;
     }
-    if (!item)
+    if (!item) {
+      alert("didn't find it.");
       return;
+    }
 
     // We're going back in the palette now, so we have to readd the flex
     // and width which we removed when moving the item to the toolbar.
