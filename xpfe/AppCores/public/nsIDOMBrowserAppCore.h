@@ -41,6 +41,8 @@ public:
 
   NS_IMETHOD    LoadUrl(const nsString& aUrl)=0;
 
+  NS_IMETHOD	LoadInitialPage()=0;
+
   NS_IMETHOD    WalletEditor()=0;
 
   NS_IMETHOD    WalletSafeFillin()=0;
@@ -83,6 +85,7 @@ public:
   NS_IMETHOD    Back();  \
   NS_IMETHOD    Forward();  \
   NS_IMETHOD    LoadUrl(const nsString& aUrl);  \
+  NS_IMETHOD    LoadInitialPage();   \
   NS_IMETHOD    WalletEditor();  \
   NS_IMETHOD    WalletSafeFillin();  \
   NS_IMETHOD    WalletQuickFillin();  \
