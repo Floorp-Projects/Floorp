@@ -431,6 +431,10 @@ void nsXULTreeGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
       PRInt32 newCount = mOuterFrame->GetRowCount();
       PRInt32 delta = rowCount - newCount;
       mOuterFrame->ScrollToIndex(index-delta);
+      if (index-delta <= 0) {
+        // Repaint the world.
+        mOuterFrame->Redraw(state, nsnull, PR_FALSE);
+      }
       return;
     }
   }
