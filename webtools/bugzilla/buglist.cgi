@@ -1321,6 +1321,12 @@ ReconnectToShadowDatabase();
 # to avoid "table out of space" errors on MySQL versions less than 3.23.2.
 SendSQL("SET OPTION SQL_BIG_TABLES=1") if Param('expectbigqueries');
 
+# Normally, we ignore SIGTERM and SIGPIPE (see globals.pl) but we need to
+# respond to them here to prevent someone DOSing us by reloading a query
+# a large number of times.
+$::SIG{TERM} = 'DEFAULT';
+$::SIG{PIPE} = 'DEFAULT';
+
 # Execute the query.
 SendSQL($query);
 
