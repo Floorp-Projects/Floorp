@@ -41,14 +41,14 @@ Matthew P. Barnson
    Bugzilla is an enterprise-class set of software utilities that, when
    used together, power issue-tracking for hundreds of organizations
    around the world, tracking millions of bugs. While it is easy to use
-   and quite flexible, it is very difficult for a novice to install and
+   and quite flexible, it is difficult for a novice to install and
    maintain. Although we have provided step-by-step directions, Bugzilla
    is not always easy to get working. Please be sure the person
    responsible for installing and maintaining this software is a
-   qualified professional on operating system upon which you install
+   qualified professional for the operating system upon which you install
    Bugzilla.
 
-   THIS DOCUMENTATION IS MAINTAINED IN DOCBOOK 4.1 SGML FORMAT. IF YOU
+   THIS DOCUMENTATION IS MAINTAINED IN DOCBOOK 4.1.2 XML FORMAT. IF YOU
    WISH TO MAKE CORRECTIONS, PLEASE MAKE THEM IN PLAIN TEXT OR SGML DIFFS
    AGAINST THE SOURCE. I CANNOT ACCEPT ADDITIONS TO THE GUIDE WRITTEN IN
    HTML!
@@ -649,8 +649,8 @@ Chapter 2. Using Bugzilla
    tends to run the latest code, so these two utilities should be
    available there for your perusal.
 
-   At this point, please visit the main Bugzilla site,
-   bugzilla.mozilla.org, to see a more fleshed-out query page.
+   At this point, let's visit the query page.
+   landfill.tequilarista.org/bugzilla-tip/query.cgi
 
    The first thing you need to notice about the Bugzilla Query Page is
    that nearly every box you see on your screen has a hyperlink nearby,
@@ -1823,6 +1823,23 @@ sr/local/lib);
    will need to change the ip address in data/webdot/.htaccess to the ip
    address of the webdot server that you are using.
 
+   The default .htaccess file may not provide adequate access
+   restrictions, depending on your web server configuration. Be sure to
+   check the <Directory> entries for your Bugzilla directory so that the
+   .htaccess file is allowed to override web server defaults. For
+   instance, let's assume your installation of Bugzilla is installed to
+   /usr/local/bugzilla. You should have this <Directory> entry in your
+   httpd.conf file:
+
+<Directory /usr/local/bugzilla/>
+  Options +FollowSymLinks +Indexes +Includes +ExecCGI
+  AllowOverride All
+</Directory>
+
+           The important part above is "AllowOverride All". Without that,
+   the .htaccess file created by checksetup.pl will not have sufficient
+   permissions to protect your Bugzilla installation.
+
    If you are using Internet Information Server or other web server which
    does not observe .htaccess conventions, you can disable their creation
    by editing localconfig and setting the $create_htaccess variable to 0.
@@ -2082,6 +2099,7 @@ log";
    Some people have suggested using the Net::SMTP Perl module instead of
    NTsendmail or the other options listed here. You can change
    processmail.pl to make this work.
+
 my $smtp = Net::SMTP->new('<Name of your SMTP server>');   #connect to SMTP ser
 ver
 $smtp->mail('<your name>@<you smpt server>');# use the sender's adress here
@@ -2093,7 +2111,9 @@ $smtp->quit;    # Close the SMTP connection
 $logstr = "$logstr; mail sent to $tolist $cclist";
 }
 
+
    here is a test mail program for Net::SMTP:
+
 use Net::SMTP;
  my $smtp = Net::SMTP->new('<Name of your SMTP server', Timeout => 30, Debug
 => 1, ); # connect to SMTP server
@@ -2107,6 +2127,7 @@ recipient's address
                 $smtp->dataend();   # Finish sending the mail
                 $smtp->quit;    # Close the SMTP connection
 exit;
+
 
    12.
 
@@ -2125,17 +2146,15 @@ exit;
        in order to work. See http://www.cygwin.com/ for details on
        obtaining Cygwin.
    13. Modify the invocation of all system() calls in all perl scripts in
-       your Bugzilla directory. For instance, change this line in
+       your Bugzilla directory. You should specify the full path to perl
+       for each system() call. For instance, change this line in
        processmail:
 
 
-system ("./processmail.pl",@ARGLIST);
-
-
-       to
-
-
-system ("perl processmail.pl",@ARGLIST);
+system ("./processmail",@ARGLIST);
+            </programlisting> to
+            <programlisting>
+system ("C:\\perl\\bin\\perl", "processmail", @ARGLIST);
 
 
    14. Add binmode() calls so attachments will work (bug 62000).
@@ -4520,7 +4539,7 @@ if ($::FORM{sub} eq 'PutFooter') {
 }
 
    and then put this line in index.shtml.
-   <!--#include virtual="api.cgi?sub=PutFooter"-->
+<!--#include virtual="api.cgi?sub=PutFooter"-->
 
    Note
 
@@ -5165,24 +5184,21 @@ Appendix B. Software Download Links
 
    CPAN: http://www.cpan.org/
 
-   DBI Perl module:
-   ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/DBI/
+   DBI Perl module: http://www.cpan.org/modules/by-module/DBI/
 
-   Data::Dumper module:
-   ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Data/
+   Data::Dumper module: http://www.cpan.org/modules/by-module/Data/
 
    MySQL related Perl modules:
-   ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Mysql/
+   http://www.cpan.org/modules/by-module/Mysql/
 
    TimeDate Perl module collection:
-   ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Date/
+   http://www.cpan.org/modules/by-module/Date/
 
-   GD Perl module: ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/GD/
-   Alternately, you should be able to find the latest version of GD at
+   GD Perl module: http://www.cpan.org/modules/by-module/GD/ Alternately,
+   you should be able to find the latest version of GD at
    http://www.boutell.com/gd/
 
-   Chart::Base module:
-   ftp://ftp.cpan.org/pub/perl/CPAN/modules/by-module/Chart/
+   Chart::Base module: http://www.cpan.org/modules/by-module/Chart/
 
    LinuxDoc Software: http://www.linuxdoc.org/ (for documentation
    maintenance)
@@ -5751,10 +5767,10 @@ RewriteEngine On
 RewriteRule ^/([0-9]+)$ http://foo.bar.com/show_bug.cgi?id=$1 [L,R]
 </VirtualHost>
 
-    2. There are many, many more things you can do with mod_rewrite. As
-       time goes on, I will include many more in the Guide. For now,
-       though, please refer to the mod_rewrite documentation at
-       http://www.apache.org
+            2. There are many, many more things you can do with
+       mod_rewrite. As time goes on, I will include many more in the
+       Guide. For now, though, please refer to the mod_rewrite
+       documentation at http://www.apache.org
      _________________________________________________________________
 
 D.2. The setperl.csh Utility
@@ -5899,7 +5915,10 @@ D.5.2. Coding Style for Bugzilla
    favorite shell prompt.
 
    What appears below if a brief summary, please refer to the perl style
-   guide if you don't see your question covered here.
+   guide if you don't see your question covered here. It is much better
+   to submit a patch which fails these criteria than no patch at all, but
+   please try to meet these minimum standards when submitting code to
+   Bugzilla.
 
      * Whitespace
        Bugzilla's prefered indentation is 4 spaces (no tabs, please).
@@ -5928,12 +5947,33 @@ else
 }
 
 
+     * Cookies
+       Bugzilla uses cookies to ease the user experience, but no new
+       patches should require user-side cookies.
      * File Names
        File names for bugzilla code and support documention should be
        legal across multiple platforms. \ / : * ? " < > and | are all
        illegal characters for filenames on various platforms. Also, file
        names should not have spaces in them as they can cause confusion
        in CVS and other mozilla.org utilities.
+     * Javascript dependencies
+       While Bugzilla uses Javascript to make the user experience easier,
+       no patch to Bugzilla should require Javascript.
+     * Patch Format
+       All patches submitted for inclusion into Bugzilla should be in the
+       form of a "unified diff". This comes from using "diff -u" instead
+       of simply "diff" when creating your patch. This will result in
+       quicker acceptance of the patch.
+     * Schema Changes
+       If you make schema changes, you should modify sanitycheck.cgi to
+       support the new schema. All referential columns should be checked.
+     * Taint Mode
+       All new cgis must run in Taint mode (Perl taint and DBI taint),
+       and existing cgi's which run in taint mode must not have taint
+       mode turned off.
+     * Templatization
+       Patches to Bugzilla need to support templates so they do not force
+       user interface choices on Bugzilla administrators.
      * Variable Names
        If a variable is scoped globally ($::variable) its name should be
        descriptive of what it contains. Local variables can be named a

@@ -19,7 +19,7 @@ REL="NEXT"
 TITLE="The setperl.csh Utility"
 HREF="setperl.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -66,19 +66,19 @@ HREF="setperl.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="REWRITE"
+NAME="rewrite"
 >D.1. Apache <TT
-CLASS="FILENAME"
+CLASS="filename"
 >mod_rewrite</TT
 > magic</A
 ></H1
 ><P
 >Apache's <TT
-CLASS="FILENAME"
+CLASS="filename"
 >mod_rewrite</TT
 > module lets you do some truly amazing things with URL rewriting.  Here are a couple of examples of what you can do.</P
 ><P
@@ -87,9 +87,9 @@ CLASS="FILENAME"
 TYPE="1"
 ><LI
 ><P
->	  Make it so if someone types
+>&#13;	  Make it so if someone types
 	  <TT
-CLASS="COMPUTEROUTPUT"
+CLASS="computeroutput"
 >http://www.foo.com/12345</TT
 >,
 	  Bugzilla spits back
@@ -99,17 +99,19 @@ CLASS="COMPUTEROUTPUT"
 ><TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
-WIDTH="90%"
+WIDTH="100%"
 ><TR
 ><TD
 ><FONT
 COLOR="#000000"
 ><PRE
-CLASS="PROGRAMLISTING"
->&#60;VirtualHost 12.34.56.78&#62;
+CLASS="programlisting"
+>&#13;
+&#60;VirtualHost 12.34.56.78&#62;
 RewriteEngine On
 RewriteRule ^/([0-9]+)$ http://foo.bar.com/show_bug.cgi?id=$1 [L,R]
 &#60;/VirtualHost&#62;
+
 	</PRE
 ></FONT
 ></TD

@@ -20,7 +20,7 @@ REL="NEXT"
 TITLE="Integrating Bugzilla with Third-Party Tools"
 HREF="integration.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -67,11 +67,11 @@ HREF="integration.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="SECURITY"
+NAME="security"
 >4.4. Bugzilla Security</A
 ></H1
 ><TABLE
@@ -100,11 +100,11 @@ VALIGN="TOP"
 ></TR
 ></TABLE
 ><DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
+CLASS="note"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -120,7 +120,7 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	Poorly-configured MySQL, Bugzilla, and FTP installations have
+>&#13;	Poorly-configured MySQL, Bugzilla, and FTP installations have
 	given attackers full access to systems in the past.  Please
 	take these guidelines seriously, even for Bugzilla machines
 	hidden away behind your firewall.  80% of all computer
@@ -131,13 +131,13 @@ VALIGN="TOP"
 ></TABLE
 ></DIV
 ><P
->      Secure your installation.
+>&#13;      Secure your installation.
       <DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
+CLASS="note"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -153,7 +153,7 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	  These instructions must, of necessity, be somewhat vague
+>&#13;	  These instructions must, of necessity, be somewhat vague
 	  since Bugzilla runs on so many different platforms.  If you
 	  have refinements of these directions for specific platforms,
 	  please submit them to <A
@@ -173,7 +173,7 @@ TARGET="_top"
 TYPE="1"
 ><LI
 ><P
->	    Ensure you are running at least MysQL version 3.22.32 or
+>&#13;	    Ensure you are running at least MysQL version 3.22.32 or
 	    newer.  Earlier versions had notable security holes and
 	    poorly secured default configuration choices.
 	  </P
@@ -189,7 +189,7 @@ TARGET="_top"
 > The MySQL Privilege System</A
 > until you can recite it from memory!</P
 ><P
->	    At the very least, ensure you password the "mysql -u root"
+>&#13;	    At the very least, ensure you password the "mysql -u root"
 	    account and the "bugs" account, establish grant table
 	    rights (consult the Keystone guide in Appendix C: The
 	    Bugzilla Database for some easy-to-use details) that do
@@ -200,14 +200,14 @@ TARGET="_top"
 ></LI
 ><LI
 ><P
->	    Lock down /etc/inetd.conf.  Heck, disable inet entirely on
+>&#13;	    Lock down /etc/inetd.conf.  Heck, disable inet entirely on
 	    this box.  It should only listen to port 25 for Sendmail
 	    and port 80 for Apache.
 	  </P
 ></LI
 ><LI
 ><P
->	    Do not run Apache as <SPAN
+>&#13;	    Do not run Apache as <SPAN
 CLASS="QUOTE"
 >"nobody"</SPAN
 >.  This will
@@ -215,12 +215,12 @@ CLASS="QUOTE"
 	    Run it, instead, as a user with a name, set via your
 	    httpd.conf file.
 	    <DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
-WIDTH="90%"
+CLASS="note"
+WIDTH="100%"
 BORDER="0"
 ><TR
 ><TD
@@ -235,7 +235,7 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->		<SPAN
+>&#13;		<SPAN
 CLASS="QUOTE"
 >"nobody"</SPAN
 > is a real user on UNIX systems.
@@ -259,7 +259,7 @@ CLASS="QUOTE"
 ></LI
 ><LI
 ><P
->	    Ensure you have adequate access controls for the
+>&#13;	    Ensure you have adequate access controls for the
 	    $BUGZILLA_HOME/data/ and $BUGZILLA_HOME/shadow/
 	    directories, as well as the $BUGZILLA_HOME/localconfig and
 	    $BUGZILLA_HOME/globals.pl files. The localconfig file
@@ -274,12 +274,12 @@ CLASS="QUOTE"
 	    bug information to those who may not be allowed to see it.
 	  </P
 ><DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
-WIDTH="90%"
+CLASS="note"
+WIDTH="100%"
 BORDER="0"
 ><TR
 ><TD
@@ -294,7 +294,7 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	      Bugzilla provides default .htaccess files to protect the
+>&#13;	      Bugzilla provides default .htaccess files to protect the
 	      most common Apache installations.  However, you should
 	      verify these are adequate according to the site-wide
 	      security policy of your web server, and ensure that the
@@ -305,7 +305,7 @@ VALIGN="TOP"
 	      details.
 	    </P
 ><P
->	      If you are using a web server that does not support the
+>&#13;	      If you are using a web server that does not support the
 	      .htaccess control method, <EM
 >you are at
 		risk!</EM
@@ -322,7 +322,7 @@ TARGET="_top"
 ></TABLE
 ></DIV
 ><P
->	    On Apache, you can use .htaccess files to protect access
+>&#13;	    On Apache, you can use .htaccess files to protect access
 	    to these directories, as outlined in <A
 HREF="http://bugzilla.mozilla.org/show_bug.cgi?id=57161"
 TARGET="_top"
@@ -334,34 +334,34 @@ TARGET="_top"
 > for adequate protection in your data/ and shadow/ directories.
 	  </P
 ><P
->	    Note the instructions which follow are Apache-specific.
+>&#13;	    Note the instructions which follow are Apache-specific.
 	    If you use IIS, Netscape, or other non-Apache web servers,
 	    please consult your system documentation for how to secure
 	    these files from being transmitted to curious users.
 	  </P
 ><P
->	    Place the following text into a file named ".htaccess",
+>&#13;	    Place the following text into a file named ".htaccess",
 	    readable by your web server, in your $BUGZILLA_HOME/data
 	    directory. <P
-CLASS="LITERALLAYOUT"
+CLASS="literallayout"
 >&nbsp;&#60;Files&nbsp;comments&#62;&nbsp;allow<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;all&nbsp;&#60;/Files&#62;&nbsp;deny&nbsp;from&nbsp;all&nbsp;</P
 >
 	  </P
 ><P
->	    Place the following text into a file named ".htaccess",
+>&#13;	    Place the following text into a file named ".htaccess",
 	    readable by your web server, in your $BUGZILLA_HOME/
 	    directory. <P
-CLASS="LITERALLAYOUT"
+CLASS="literallayout"
 >&nbsp;&#60;Files&nbsp;localconfig&#62;&nbsp;deny<br>
 	&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;from&nbsp;all&nbsp;&#60;/Files&#62;&nbsp;allow&nbsp;from&nbsp;all&nbsp;</P
 >
 	  </P
 ><P
->	    Place the following text into a file named ".htaccess",
+>&#13;	    Place the following text into a file named ".htaccess",
 	    readable by your web server, in your $BUGZILLA_HOME/shadow
 	    directory. <P
-CLASS="LITERALLAYOUT"
+CLASS="literallayout"
 >&nbsp;deny&nbsp;from&nbsp;all&nbsp;</P
 >
 	  </P

@@ -19,7 +19,7 @@ REL="NEXT"
 TITLE="User Administration"
 HREF="useradmin.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -66,28 +66,28 @@ HREF="useradmin.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="POSTINSTALL-CHECK"
+NAME="postinstall-check"
 >4.1. Post-Installation Checklist</A
 ></H1
 ><P
->      After installation, follow the checklist below to help ensure
+>&#13;      After installation, follow the checklist below to help ensure
       that you have a successful installation. If you do not see a
       recommended setting for a parameter, consider leaving it at the
       default while you perform your initial tests on your Bugzilla
       setup.
     </P
 ><DIV
-CLASS="PROCEDURE"
+CLASS="procedure"
 ><OL
 TYPE="1"
 ><LI
 ><P
->	  Bring up <TT
-CLASS="FILENAME"
+>&#13;	  Bring up <TT
+CLASS="filename"
 >editparams.cgi</TT
 > in your web
 	  browser.  This should be available as the <SPAN
@@ -110,7 +110,7 @@ CLASS="QUOTE"
 	  will be sent with the maintainer as the return email
 	  address.</P
 ><P
->	  Set <SPAN
+>&#13;	  Set <SPAN
 CLASS="QUOTE"
 >"maintainer"</SPAN
 > to <EM
@@ -129,7 +129,7 @@ CLASS="QUOTE"
 	  qualified domain name and web server path to your Bugzilla
 	  installation.</P
 ><P
->	  For example, if your bugzilla query page is
+>&#13;	  For example, if your bugzilla query page is
 	  http://www.foo.com/bugzilla/query.cgi, set your
 	  <SPAN
 CLASS="QUOTE"
@@ -148,7 +148,7 @@ CLASS="QUOTE"
 	  which groups of users are allowed to see and edit the
 	  bug.</P
 ><P
->	  Set "usebuggroups" to "on" <EM
+>&#13;	  Set "usebuggroups" to "on" <EM
 >only</EM
 > if you
 	  may wish to restrict access to products. I suggest leaving
@@ -160,7 +160,7 @@ CLASS="QUOTE"
 ></LI
 ><LI
 ><P
->	  <SPAN
+>&#13;	  <SPAN
 CLASS="QUOTE"
 >"usebuggroupsentry"</SPAN
 >, when set to
@@ -172,7 +172,7 @@ CLASS="QUOTE"
 	  installations where product isolation is a necessity.
 	</P
 ><P
->	  Set "usebuggroupsentry" to "on" if you absolutely need to
+>&#13;	  Set "usebuggroupsentry" to "on" if you absolutely need to
 	  restrict access to bugs from the moment they are submitted
 	  through resolution. Once again, if you are simply testing
 	  your installation, I suggest against turning this parameter
@@ -182,7 +182,7 @@ CLASS="QUOTE"
 ></LI
 ><LI
 ><P
->	  You run into an interesting problem when Bugzilla reaches a
+>&#13;	  You run into an interesting problem when Bugzilla reaches a
 	  high level of continuous activity.  MySQL supports only
 	  table-level write locking.  What this means is that if
 	  someone needs to make a change to a bug, they will lock the
@@ -200,16 +200,16 @@ CLASS="QUOTE"
 	  extremely high-traffic Bugzilla databases.
 	</P
 ><P
->	  Set "shadowdb" to "bug_shadowdb" if you will be running a
+>&#13;	  Set "shadowdb" to "bug_shadowdb" if you will be running a
 	  *very* large installation of Bugzilla. The shadow database
 	  enables many simultaneous users to read and write to the
 	  database without interfering with one another.  
 	  <DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
+CLASS="note"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -225,7 +225,7 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	      Enabling "shadowdb" can adversely affect the stability
+>&#13;	      Enabling "shadowdb" can adversely affect the stability
 	      of your installation of Bugzilla. You should regularly
 	      check that your database is in sync.  It is often
 	      advisable to force a shadow database sync nightly via
@@ -253,7 +253,7 @@ CLASS="QUOTE"
 	  comments per day.
         </P
 ><P
->	  If you use the "shadowdb" option, it is only natural that
+>&#13;	  If you use the "shadowdb" option, it is only natural that
 	  you should turn the "queryagainstshadowdb" option "On" as
 	  well.  Otherwise you are replicating data into a shadow
 	  database for no reason!
@@ -284,27 +284,27 @@ CLASS="QUOTE"
 	  these, but it is really best just to monkey around with them
 	  a bit to see what they do.  I strongly recommend you copy
 	  your <TT
-CLASS="FILENAME"
+CLASS="filename"
 >data/params</TT
 > file somewhere safe
 	  before playing with these values, though.  If they are
 	  changed dramatically, it may make it impossible for you to
 	  display Bugzilla pages to fix the problem until you have
 	  restored your <TT
-CLASS="FILENAME"
+CLASS="filename"
 >data/params</TT
 > file.</P
 ><P
->	  If you have custom logos or HTML you must put in place to
+>&#13;	  If you have custom logos or HTML you must put in place to
 	  fit within your site design guidelines, place the code in
 	  the "headerhtml", "footerhtml", "errorhtml", "bannerhtml",
 	  or "blurbhtml" text boxes.
 	  <DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
+CLASS="note"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -320,7 +320,7 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	      The "headerhtml" text box is the HTML printed out
+>&#13;	      The "headerhtml" text box is the HTML printed out
 	      <EM
 >before</EM
 > any other code on the page,
@@ -346,7 +346,7 @@ CLASS="QUOTE"
 	  is read as the text to send to the new user along with their
 	  password message.</P
 ><P
->	  Add any text you wish to the "passwordmail" parameter box.
+>&#13;	  Add any text you wish to the "passwordmail" parameter box.
 	  For instance, many people choose to use this box to give a
 	  quick training blurb about how to use Bugzilla at your site.
         </P
@@ -389,7 +389,7 @@ CLASS="QUOTE"
 	  their status even more than that which can be indicated by
 	  the Resolution fields.</P
 ><P
->	  Do you want to use the QA Contact ("useqacontact") and
+>&#13;	  Do you want to use the QA Contact ("useqacontact") and
 	  status whiteboard ("usestatuswhiteboard") fields? These
 	  fields are useful because they allow for more flexibility,
 	  particularly when you have an existing Quality Assurance
@@ -399,7 +399,7 @@ CLASS="QUOTE"
 ></LI
 ><LI
 ><P
->	  Set "whinedays" to the amount of days you want to let bugs
+>&#13;	  Set "whinedays" to the amount of days you want to let bugs
 	  go in the "New" or "Reopened" state before notifying people
 	  they have untouched new bugs.  If you do not plan to use
 	  this feature, simply do not set up the whining cron job
@@ -421,15 +421,15 @@ CLASS="QUOTE"
 	  require that most other changes come with an
 	  explanation.</P
 ><P
->	  Set the "commenton" options according to your site policy.
+>&#13;	  Set the "commenton" options according to your site policy.
 	  It is a wise idea to require comments when users resolve,
 	  reassign, or reopen bugs at the very least.
 	  <DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
+CLASS="note"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -445,7 +445,7 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	      It is generally far better to require a developer
+>&#13;	      It is generally far better to require a developer
 	      comment when resolving bugs than not. Few things are
 	      more annoying to bug database users than having a
 	      developer mark a bug "fixed" without any comment as to
@@ -482,7 +482,7 @@ CLASS="QUOTE"
 	  security to prevent snooping, watchers are not a good
 	  idea.</P
 ><P
->	  However, for most sites you should set
+>&#13;	  However, for most sites you should set
 	  <SPAN
 CLASS="QUOTE"
 >"supportwatchers"</SPAN

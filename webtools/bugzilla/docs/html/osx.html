@@ -19,7 +19,7 @@ REL="NEXT"
 TITLE="BSD Installation Notes"
 HREF="bsdinstall.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -66,40 +66,40 @@ HREF="bsdinstall.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="OSX"
+NAME="osx"
 >3.3. Mac OS X Installation Notes</A
 ></H1
 ><P
->      There are a lot of common libraries and utilities out there
+>&#13;      There are a lot of common libraries and utilities out there
       that Apple did not include with Mac OS X, but which run
       perfectly well on it.  The GD library, which Bugzilla needs to
       do bug graphs, is one of these.
     </P
 ><P
->      The easiest way to get a lot of these is with a program called
+>&#13;      The easiest way to get a lot of these is with a program called
       Fink, which is similar in nature to the CPAN installer, but
       installs common GNU utilities.  Fink is available from
       &#60;http://sourceforge.net/projects/fink/&#62;.
     </P
 ><P
->      Follow the instructions for setting up Fink.  Once it's
+>&#13;      Follow the instructions for setting up Fink.  Once it's
       installed, you'll want to run the following as root:
       <B
-CLASS="COMMAND"
+CLASS="command"
 >fink install gd</B
 >
     </P
 ><P
->      It will prompt you for a number of dependencies, type 'y' and
+>&#13;      It will prompt you for a number of dependencies, type 'y' and
       hit enter to install all of the dependencies.  Then watch it
       work.
     </P
 ><P
->      To prevent creating conflicts with the software that Apple
+>&#13;      To prevent creating conflicts with the software that Apple
       installs by default, Fink creates its own directory tree at
       /sw where it installs most of the software that it installs.
       This means your libraries and headers for libgd will be at
@@ -111,15 +111,15 @@ CLASS="COMMAND"
       :-)
     </P
 ><P
->      Instead of typing <SPAN
+>&#13;      Instead of typing <SPAN
 CLASS="QUOTE"
 >"install GD"</SPAN
 > at the
       <TT
-CLASS="PROMPT"
+CLASS="prompt"
 >cpan&#62;</TT
 > prompt, type <B
-CLASS="COMMAND"
+CLASS="command"
 >look
 	GD</B
 >.  This should go through the motions of
@@ -127,13 +127,13 @@ CLASS="COMMAND"
       open a shell and drop you into the build directory. Apply the
       following patch to the Makefile.PL file (save the patch into a
       file  and use the command <B
-CLASS="COMMAND"
+CLASS="command"
 >patch &#60;
 	patchfile</B
 >:
     </P
 ><P
->      <TABLE
+>&#13;      <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
 WIDTH="100%"
@@ -142,8 +142,9 @@ WIDTH="100%"
 ><FONT
 COLOR="#000000"
 ><PRE
-CLASS="PROGRAMLISTING"
->	
+CLASS="programlisting"
+>&#13;
+	
 --- GD-1.33/Makefile.PL Fri Aug  4 16:59:22 2000
 +++ GD-1.33-darwin/Makefile.PL  Tue Jun 26 01:29:32 2001
 @@ -3,8 +3,8 @@
@@ -176,7 +177,7 @@ CLASS="PROGRAMLISTING"
 >
     </P
 ><P
->      Then, run these commands to finish the installation of the perl module:
+>&#13;      Then, run these commands to finish the installation of the perl module:
       <P
 ></P
 ><TABLE
@@ -185,35 +186,35 @@ BORDER="0"
 ><TR
 ><TD
 ><B
-CLASS="COMMAND"
+CLASS="command"
 >perl Makefile.PL</B
 ></TD
 ></TR
 ><TR
 ><TD
 ><B
-CLASS="COMMAND"
+CLASS="command"
 >make</B
 ></TD
 ></TR
 ><TR
 ><TD
 ><B
-CLASS="COMMAND"
+CLASS="command"
 >make test</B
 ></TD
 ></TR
 ><TR
 ><TD
 ><B
-CLASS="COMMAND"
+CLASS="command"
 >make install</B
 ></TD
 ></TR
 ><TR
 ><TD
 >And don't forget to run <B
-CLASS="COMMAND"
+CLASS="command"
 >exit</B
 > to get back to cpan.</TD
 ></TR
@@ -224,7 +225,7 @@ CLASS="COMMAND"
 >
     </P
 ><P
->      Happy Hacking!
+>&#13;      Happy Hacking!
     </P
 ></DIV
 ><DIV

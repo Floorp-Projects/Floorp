@@ -19,7 +19,7 @@ REL="NEXT"
 TITLE="MySQL Permissions & Grant Tables"
 HREF="granttables.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -66,15 +66,15 @@ HREF="granttables.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="DBDOC"
+NAME="dbdoc"
 >C.2. MySQL Bugzilla Database Introduction</A
 ></H1
 ><P
->      This information comes straight from my life.  I was forced to learn how
+>&#13;      This information comes straight from my life.  I was forced to learn how
       Bugzilla organizes database because of nitpicky requests from users for tiny
       changes in wording, rather than having people re-educate themselves or
       figure out how to work our procedures around the tool.  It sucks, but it can
@@ -82,7 +82,7 @@ NAME="DBDOC"
       comes.
     </P
 ><P
->      So, here you are with your brand-new installation of Bugzilla.  You've got
+>&#13;      So, here you are with your brand-new installation of Bugzilla.  You've got
       MySQL set up, Apache working right, Perl DBI and DBD talking to the database
       flawlessly.  Maybe you've even entered a few test bugs to make sure email's
       working; people seem to be notified of new bugs and changes, and you can
@@ -92,12 +92,12 @@ NAME="DBDOC"
       testers.
     </P
 ><P
->      What's the next thing you do?  Outline a training strategy for your
+>&#13;      What's the next thing you do?  Outline a training strategy for your
       development team, of course, and bring them up to speed on the new tool you've
       labored over for hours.
     </P
 ><P
->      Your first training session starts off very well!  You have a captive
+>&#13;      Your first training session starts off very well!  You have a captive
       audience which seems enraptured by the efficiency embodied in this thing called
       "Bugzilla".  You are caught up describing the nifty features, how people can
       save favorite queries in the database, set them up as headers and footers on
@@ -106,12 +106,12 @@ NAME="DBDOC"
       and rescue Jane from the clutches of Certain Death!
     </P
 ><P
->      But Certain Death speaks up -- a tiny voice, from the dark corners of the
+>&#13;      But Certain Death speaks up -- a tiny voice, from the dark corners of the
       conference room.  "I have a concern," the voice hisses from the darkness,
       "about the use of the word 'verified'.
     </P
 ><P
->      The room, previously filled with happy chatter, lapses into reverential
+>&#13;      The room, previously filled with happy chatter, lapses into reverential
       silence as Certain Death (better known as the Vice President of Software
       Engineering) continues.  "You see, for two years we've used the word 'verified'
       to indicate that a developer or quality assurance engineer has confirmed that,
@@ -120,7 +120,7 @@ NAME="DBDOC"
       'approved' as soon as possible. To avoid confusion, of course."
     </P
 ><P
->      Oh no!  Terror strikes your heart, as you find yourself mumbling "yes, yes, I
+>&#13;      Oh no!  Terror strikes your heart, as you find yourself mumbling "yes, yes, I
       don't think that would be a problem," You review the changes with Certain
       Death, and continue to jabber on, "no, it's not too big a change. I mean, we
       have the source code, right? You know, 'Use the Source, Luke' and all that...
@@ -128,20 +128,20 @@ NAME="DBDOC"
       burbling, and boiling on a hot Jamaican sand dune...
     </P
 ><P
->      Thus begins your adventure into the heart of Bugzilla.  You've been forced
+>&#13;      Thus begins your adventure into the heart of Bugzilla.  You've been forced
       to learn about non-portable enum() fields, varchar columns, and tinyint
       definitions. The Adventure Awaits You!
     </P
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="AEN2331"
+NAME="AEN2340"
 >C.2.1. Bugzilla Database Basics</A
 ></H2
 ><P
->	If you were like me, at this point you're totally clueless
+>&#13;	If you were like me, at this point you're totally clueless
 	about the internals of MySQL, and if it weren't for this
 	executive order from the Vice President you couldn't care less
 	about the difference between a <SPAN
@@ -165,24 +165,24 @@ TARGET="_top"
 TYPE="1"
 ><LI
 ><P
->	      To connect to your database:
+>&#13;	      To connect to your database:
 	    </P
 ><P
->	      <TT
-CLASS="PROMPT"
+>&#13;	      <TT
+CLASS="prompt"
 >bash#</TT
 ><B
-CLASS="COMMAND"
+CLASS="command"
 >mysql</B
 ><TT
-CLASS="PARAMETER"
+CLASS="parameter"
 ><I
 >-u root</I
 ></TT
 >
 	    </P
 ><P
->	      If this works without asking you for a password,
+>&#13;	      If this works without asking you for a password,
 	      <EM
 >shame on you</EM
 >!  You should have
@@ -200,7 +200,7 @@ CLASS="PARAMETER"
 	      this:</P
 ><P
 ><TT
-CLASS="PROMPT"
+CLASS="prompt"
 >mysql&#62;</TT
 ></P
 ><P
@@ -209,25 +209,25 @@ CLASS="QUOTE"
 >"bugs"</SPAN
 > is the name
 	      you chose in the<TT
-CLASS="FILENAME"
+CLASS="filename"
 >localconfig</TT
 > file
 	      for your Bugzilla database, type:</P
 ><P
 ><TT
-CLASS="PROMPT"
+CLASS="prompt"
 >mysql</TT
 ><B
-CLASS="COMMAND"
+CLASS="command"
 >use bugs;</B
 ></P
 ><DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
-WIDTH="90%"
+CLASS="note"
+WIDTH="100%"
 BORDER="0"
 ><TR
 ><TD
@@ -256,11 +256,11 @@ CLASS="QUOTE"
 >
       </P
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H3
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="AEN2360"
+NAME="AEN2369"
 >C.2.1.1. Bugzilla Database Tables</A
 ></H3
 ><P
@@ -269,10 +269,10 @@ NAME="AEN2360"
 	  command:</P
 ><P
 ><TT
-CLASS="PROMPT"
+CLASS="prompt"
 >mysql&#62;</TT
 ><B
-CLASS="COMMAND"
+CLASS="command"
 >show tables from bugs;</B
 ></P
 ><P
@@ -295,8 +295,8 @@ WIDTH="100%"
 ><FONT
 COLOR="#000000"
 ><PRE
-CLASS="PROGRAMLISTING"
->+-------------------+
+CLASS="programlisting"
+>&#13;+-------------------+
 | Tables in bugs    |
 +-------------------+
 | attachments       |
@@ -329,8 +329,9 @@ CLASS="PROGRAMLISTING"
 ></TABLE
 ></P
 ><P
-CLASS="LITERALLAYOUT"
+CLASS="literallayout"
 ><br>
+<br>
 &nbsp;&nbsp;Here's&nbsp;an&nbsp;overview&nbsp;of&nbsp;what&nbsp;each&nbsp;table&nbsp;does.&nbsp;&nbsp;Most&nbsp;columns&nbsp;in&nbsp;each&nbsp;table&nbsp;have<br>
 descriptive&nbsp;names&nbsp;that&nbsp;make&nbsp;it&nbsp;fairly&nbsp;trivial&nbsp;to&nbsp;figure&nbsp;out&nbsp;their&nbsp;jobs.<br>
 <br>

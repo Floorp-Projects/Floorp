@@ -20,7 +20,7 @@ TITLE="Product, Component, Milestone, and Version
       Administration"
 HREF="programadmin.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -67,28 +67,28 @@ HREF="programadmin.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="USERADMIN"
+NAME="useradmin"
 >4.2. User Administration</A
 ></H1
 ><P
->      User administration is one of the easiest parts of Bugzilla.
+>&#13;      User administration is one of the easiest parts of Bugzilla.
       Keeping it from getting out of hand, however, can become a
       challenge.
     </P
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="DEFAULTUSER"
+NAME="defaultuser"
 >4.2.1. Creating the Default User</A
 ></H2
 ><P
->	When you first run checksetup.pl after installing Bugzilla, it
+>&#13;	When you first run checksetup.pl after installing Bugzilla, it
 	will prompt you for the administrative username (email
 	address) and password for this "super user". If for some
 	reason you were to delete the "super user" account, re-running
@@ -96,11 +96,11 @@ NAME="DEFAULTUSER"
 	password.
       </P
 ><DIV
-CLASS="TIP"
+CLASS="tip"
 ><P
 ></P
 ><TABLE
-CLASS="TIP"
+CLASS="tip"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -116,21 +116,21 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->       If you wish to add more administrative users, you must use the
+>&#13;       If you wish to add more administrative users, you must use the
 	  MySQL interface. Run "mysql" from the command line, and use
 	  these commands ("mysql&#62;" denotes the  mysql prompt, not
 	  something you should type in):
 	  <B
-CLASS="COMMAND"
+CLASS="command"
 ><TT
-CLASS="PROMPT"
+CLASS="prompt"
 >mysql&#62;</TT
 > use bugs;</B
 >
 	  <B
-CLASS="COMMAND"
+CLASS="command"
 ><TT
-CLASS="PROMPT"
+CLASS="prompt"
 >mysql&#62;</TT
 > update profiles set
 	    groupset=0x7ffffffffffffff where login_name = "(user's
@@ -152,19 +152,19 @@ CLASS="QUOTE"
 ></DIV
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="MANAGEUSERS"
+NAME="manageusers"
 >4.2.2. Managing Other Users</A
 ></H2
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H3
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="LOGIN"
+NAME="login"
 >4.2.2.1. Logging In</A
 ></H3
 ><P
@@ -173,23 +173,23 @@ NAME="LOGIN"
 TYPE="1"
 ><LI
 ><P
->	      Open the index.html page for your Bugzilla installation
+>&#13;	      Open the index.html page for your Bugzilla installation
 	      in your browser window.
 	    </P
 ></LI
 ><LI
 ><P
->	      Click the "Query Existing Bug Reports" link.
+>&#13;	      Click the "Query Existing Bug Reports" link.
 	    </P
 ></LI
 ><LI
 ><P
->	      Click the "Log In" link at the foot of the page.
+>&#13;	      Click the "Log In" link at the foot of the page.
 	    </P
 ></LI
 ><LI
 ><P
->	      Type your email address, and the password which was
+>&#13;	      Type your email address, and the password which was
 	      emailed to you when you created your Bugzilla account,
 	      into the spaces provided.
 	    </P
@@ -199,15 +199,15 @@ TYPE="1"
 >Congratulations, you are logged in!</P
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H3
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="CREATENEWUSERS"
+NAME="createnewusers"
 >4.2.2.2. Creating new users</A
 ></H3
 ><P
->	  Your users can create their own user accounts by clicking
+>&#13;	  Your users can create their own user accounts by clicking
 	  the "New Account" link at the bottom of each page. However,
 	  should you desire to create user accounts ahead of time,
 	  here is how you do it.
@@ -218,24 +218,24 @@ NAME="CREATENEWUSERS"
 TYPE="1"
 ><LI
 ><P
->	      After logging in, click the "Users" link at the footer
+>&#13;	      After logging in, click the "Users" link at the footer
 	      of the query page.
 	    </P
 ></LI
 ><LI
 ><P
->	      To see a specific user, type a portion of their login
+>&#13;	      To see a specific user, type a portion of their login
 	      name in the box provided and click "submit". To see all
 	      users, simply click the "submit" button. You must click
 	      "submit" here to be able to add a new user.
 	    </P
 ><DIV
-CLASS="TIP"
+CLASS="tip"
 ><P
 ></P
 ><TABLE
-CLASS="TIP"
-WIDTH="90%"
+CLASS="tip"
+WIDTH="100%"
 BORDER="0"
 ><TR
 ><TD
@@ -250,12 +250,12 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->		More functionality is available via the list on the
+>&#13;		More functionality is available via the list on the
 		right-hand side of the text entry box. You can match
 		what you type as a case-insensitive substring (the
 		default) of all users on your system, a case-sensitive
 		regular expression (please see the <B
-CLASS="COMMAND"
+CLASS="command"
 >man
 		  regexp</B
 > manual page for details on regular
@@ -272,22 +272,22 @@ CLASS="COMMAND"
 ></LI
 ><LI
 ><P
->	      Click the "Add New User" link at the bottom of the user
+>&#13;	      Click the "Add New User" link at the bottom of the user
 	      list
 	    </P
 ></LI
 ><LI
 ><P
->	      Fill out the form presented.  This page is
+>&#13;	      Fill out the form presented.  This page is
 	      self-explanatory.  When done, click "submit".
 	    </P
 ><DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
-WIDTH="90%"
+CLASS="note"
+WIDTH="100%"
 BORDER="0"
 ><TR
 ><TD
@@ -302,7 +302,7 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->		Adding a user this way will <EM
+>&#13;		Adding a user this way will <EM
 >not</EM
 >
 		send an email informing them of their username and
@@ -326,15 +326,15 @@ CLASS="QUOTE"
 ></OL
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H3
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="DISABLEUSERS"
+NAME="disableusers"
 >4.2.2.3. Disabling Users</A
 ></H3
 ><P
->	  I bet you noticed that big "Disabled Text" entry box
+>&#13;	  I bet you noticed that big "Disabled Text" entry box
 	  available from the "Add New User" screen, when you edit an
 	  account? By entering any text in this box and selecting
 	  "submit", you have prevented the user from using Bugzilla
@@ -342,11 +342,11 @@ NAME="DISABLEUSERS"
 	  text box, will be presented to the user the next time she
 	  attempts to use the system.
 	  <DIV
-CLASS="WARNING"
+CLASS="warning"
 ><P
 ></P
 ><TABLE
-CLASS="WARNING"
+CLASS="warning"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -362,7 +362,7 @@ ALT="Warning"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	      Don't disable your own administrative account, or you
+>&#13;	      Don't disable your own administrative account, or you
 	      will hate life!
 	    </P
 ><P
@@ -382,15 +382,15 @@ CLASS="QUOTE"
 	</P
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H3
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="MODIFYUSERS"
+NAME="modifyusers"
 >4.2.2.4. Modifying Users</A
 ></H3
 ><P
->	  Here I will attempt to describe the function of each option
+>&#13;	  Here I will attempt to describe the function of each option
 	  on the Edit User screen.
 	</P
 ><P
@@ -398,19 +398,19 @@ NAME="MODIFYUSERS"
 ><UL
 ><LI
 ><P
->	      <EM
+>&#13;	      <EM
 >Login Name</EM
 >: This is generally the
 	      user's email address. However, if you have edited your
 	      system parameters, this may just be the user's login
 	      name or some other identifier.
 	      <DIV
-CLASS="TIP"
+CLASS="tip"
 ><P
 ></P
 ><TABLE
-CLASS="TIP"
-WIDTH="90%"
+CLASS="tip"
+WIDTH="100%"
 BORDER="0"
 ><TR
 ><TD
@@ -425,7 +425,7 @@ ALT="Tip"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->		  For compatability reasons, you should probably stick
+>&#13;		  For compatability reasons, you should probably stick
 		  with email addresses as user login names.  It will
 		  make your life easier.
 		</P
@@ -438,14 +438,14 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->	      <EM
+>&#13;	      <EM
 >Real Name</EM
 >: Duh!
 	    </P
 ></LI
 ><LI
 ><P
->	      <EM
+>&#13;	      <EM
 >Password</EM
 >:  You can change the user
 	      password here.  It is normal to only see asterisks.
@@ -453,7 +453,7 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->	      <EM
+>&#13;	      <EM
 >Email Notification</EM
 >: You may choose
 	      from one of three options:
@@ -463,7 +463,7 @@ VALIGN="TOP"
 TYPE="1"
 ><LI
 ><P
->		    All qualifying bugs except those which I change:
+>&#13;		    All qualifying bugs except those which I change:
 		    The user will be notified of any change to any bug
 		    for which she is the reporter, assignee, QA
 		    Contact, CC recipient, or "watcher".
@@ -471,18 +471,18 @@ TYPE="1"
 ></LI
 ><LI
 ><P
->		    Only those bugs which I am listed on the CC line:
+>&#13;		    Only those bugs which I am listed on the CC line:
 		    The user will not be notified of changes to bugs
 		    where she is the assignee, reporter, or QA
 		    Contact, but will receive them if she is on the CC
 		    list.
 		    <DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
-WIDTH="90%"
+CLASS="note"
+WIDTH="100%"
 BORDER="0"
 ><TR
 ><TD
@@ -497,7 +497,7 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->			She will still receive whining cron emails if
+>&#13;			She will still receive whining cron emails if
 			you set up the "whinemail" feature.
 		      </P
 ></TD
@@ -509,7 +509,7 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->		    <EM
+>&#13;		    <EM
 >All Qualifying Bugs</EM
 >: This
 		    user is a glutton for punishment. If her name is
@@ -519,9 +519,10 @@ VALIGN="TOP"
 		  </P
 ></LI
 ></OL
-></P
+>
+</P
 ><P
->	      <EM
+>&#13;	      <EM
 >Disable Text</EM
 >: If you type anything
 	      in this box, including just a space, the user account is
@@ -529,12 +530,12 @@ VALIGN="TOP"
 	      interface, and what you type in this box is presented as
 	      the reason.
 	      <DIV
-CLASS="WARNING"
+CLASS="warning"
 ><P
 ></P
 ><TABLE
-CLASS="WARNING"
-WIDTH="90%"
+CLASS="warning"
+WIDTH="100%"
 BORDER="0"
 ><TR
 ><TD
@@ -556,12 +557,12 @@ VALIGN="TOP"
 ></DIV
 >
 	      <DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
-WIDTH="90%"
+CLASS="note"
+WIDTH="100%"
 BORDER="0"
 ><TR
 ><TD
@@ -576,7 +577,7 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->		  As of this writing, the user can still submit bugs
+>&#13;		  As of this writing, the user can still submit bugs
 		  via the e-mail gateway, if you set it up, despite
 		  the disabled text field.  The e-mail gateway should
 		  <EM
@@ -593,7 +594,7 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->	      <EM
+>&#13;	      <EM
 >CanConfirm</EM
 >: This field is only used
 	      if you have enabled "unconfirmed" status in your
@@ -606,7 +607,7 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->	      <EM
+>&#13;	      <EM
 >Creategroups</EM
 >: This option will
 	      allow a user to create and destroy groups in Bugzilla.
@@ -617,18 +618,18 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->	      <EM
+>&#13;	      <EM
 >Editbugs</EM
 >: Unless a user has this
 	      bit set, they can only edit those bugs for which they
 	      are the assignee or the reporter.  
 	      <DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
-WIDTH="90%"
+CLASS="note"
+WIDTH="100%"
 BORDER="0"
 ><TR
 ><TD
@@ -643,7 +644,7 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->		  Leaving this option unchecked does not prevent users
+>&#13;		  Leaving this option unchecked does not prevent users
 		  from adding comments to a bug!  They simply cannot
 		  change a bug priority, severity, etc. unless they
 		  are the assignee or reporter.
@@ -657,7 +658,7 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->	      <EM
+>&#13;	      <EM
 >Editcomponents</EM
 >: This flag allows a
 	      user to create new  products and components, as well as
@@ -673,7 +674,7 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->	      <EM
+>&#13;	      <EM
 >Editkeywords</EM
 >: If you use Bugzilla's
 	      keyword functionality, enabling this feature allows a
@@ -690,7 +691,7 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->	      <EM
+>&#13;	      <EM
 >Editusers</EM
 >: This flag allows a user
 	      do what you're doing right now: edit other users. This
@@ -701,7 +702,7 @@ VALIGN="TOP"
 ></LI
 ><LI
 ><P
->	      <EM
+>&#13;	      <EM
 >PRODUCT</EM
 >: PRODUCT bugs access.  This
 	      allows an administrator, with product-level granularity,

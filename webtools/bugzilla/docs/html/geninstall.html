@@ -19,7 +19,7 @@ REL="NEXT"
 TITLE="Win32 Installation Notes"
 HREF="win32.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -66,28 +66,28 @@ HREF="win32.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="GENINSTALL"
+NAME="geninstall"
 >3.5. Installation General Notes</A
 ></H1
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
 NAME="AEN941"
 >3.5.1. Modifying Your Running System</A
 ></H2
 ><P
->	Bugzilla optimizes database lookups by storing all relatively static
+>&#13;	Bugzilla optimizes database lookups by storing all relatively static
 	information in the versioncache file, located in the data/ subdirectory
 	under your installation directory.
       </P
 ><P
->	If you make a change to the structural data in your database
+>&#13;	If you make a change to the structural data in your database
 	(the versions table for example), or to the
 	<SPAN
 CLASS="QUOTE"
@@ -101,66 +101,66 @@ CLASS="QUOTE"
 	changes won't show up.
       </P
 ><P
->	That file gets automatically regenerated whenever it's more than an
+>&#13;	That file gets automatically regenerated whenever it's more than an
 	hour old, so Bugzilla will eventually notice your changes by itself, but
 	generally you want it to notice right away, so that you can test things.
       </P
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
 NAME="AEN948"
 >3.5.2. Upgrading From Previous Versions</A
 ></H2
 ><P
->	The developers of Bugzilla are constantly adding new tables, columns and
+>&#13;	The developers of Bugzilla are constantly adding new tables, columns and
 	fields.  You'll get SQL errors if you just update the code.  The strategy
 	to update is to simply always run the checksetup.pl script whenever
 	you upgrade your installation of Bugzilla.  If you want to see what has
 	changed, you can read the comments in that file, starting from the end.
       </P
 ><P
->	If you are running Bugzilla version 2.8 or lower, and wish to upgrade to
+>&#13;	If you are running Bugzilla version 2.8 or lower, and wish to upgrade to
 	the latest version, please consult the file, "UPGRADING-pre-2.8" in the
 	Bugzilla root directory after untarring the archive.
       </P
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="HTACCESS"
+NAME="htaccess"
 >3.5.3. <TT
-CLASS="FILENAME"
+CLASS="filename"
 >.htaccess</TT
 > files and security</A
 ></H2
 ><P
->	To enhance the security of your Bugzilla installation,
+>&#13;	To enhance the security of your Bugzilla installation,
 	Bugzilla  will generate
 	<I
-CLASS="GLOSSTERM"
+CLASS="glossterm"
 ><TT
-CLASS="FILENAME"
+CLASS="filename"
 >.htaccess</TT
 ></I
 > files
 	which the Apache webserver can use to restrict  access to
 	the bugzilla data files. The checksetup script  will
 	generate the <TT
-CLASS="FILENAME"
+CLASS="filename"
 >.htaccess</TT
 > files.
 	
 	<DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
+CLASS="note"
 WIDTH="100%"
 BORDER="0"
 ><TR
@@ -176,19 +176,19 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->	    If you are using an alternate provider of
+>&#13;	    If you are using an alternate provider of
 	    <SPAN
-CLASS="PRODUCTNAME"
+CLASS="productname"
 >webdot</SPAN
 > services for graphing
 	    (as described when viewing
 	    <TT
-CLASS="FILENAME"
+CLASS="filename"
 >editparams.cgi</TT
 > in your web
 	    browser), you will need to change  the ip address in
 	    <TT
-CLASS="FILENAME"
+CLASS="filename"
 >data/webdot/.htaccess</TT
 > to the ip
 	    address of the webdot server that  you are using. 
@@ -201,22 +201,81 @@ CLASS="FILENAME"
 	
       </P
 ><P
->	If you are using Internet Information Server or other web
+>&#13;	The default .htaccess file may not provide adequate access
+	restrictions, depending on your web server configuration.
+	Be sure to check the &#60;Directory&#62; entries for your
+	Bugzilla directory so that the <TT
+CLASS="filename"
+>.htaccess</TT
+>
+	file is allowed to override web server defaults.  For instance,
+	let's assume your installation of Bugzilla is installed to 
+	<TT
+CLASS="filename"
+>/usr/local/bugzilla</TT
+>.  You should have
+	this &#60;Directory&#62; entry in your <TT
+CLASS="filename"
+>httpd.conf</TT
+>
+	file:
+      </P
+><P
+>&#13;	<TABLE
+BORDER="0"
+BGCOLOR="#E0E0E0"
+WIDTH="100%"
+><TR
+><TD
+><FONT
+COLOR="#000000"
+><PRE
+CLASS="programlisting"
+>&#13;
+&#60;Directory /usr/local/bugzilla/&#62;
+  Options +FollowSymLinks +Indexes +Includes +ExecCGI
+  AllowOverride All
+&#60;/Directory&#62;
+
+	</PRE
+></FONT
+></TD
+></TR
+></TABLE
+>
+      </P
+><P
+>&#13;	The important part above is <SPAN
+CLASS="QUOTE"
+>"AllowOverride All"</SPAN
+>.
+	Without that, the <TT
+CLASS="filename"
+>.htaccess</TT
+> file created by 
+	<TT
+CLASS="filename"
+>checksetup.pl</TT
+> will not have sufficient
+	permissions to protect your Bugzilla installation.
+      </P
+><P
+>&#13;	If you are using Internet Information Server or other web
 	server which does not observe <TT
-CLASS="FILENAME"
+CLASS="filename"
 >.htaccess</TT
 >
 	conventions, you can disable their creation by editing
 	<TT
-CLASS="FILENAME"
+CLASS="filename"
 >localconfig</TT
 > and setting the
 	<TT
-CLASS="VARNAME"
+CLASS="varname"
 >$create_htaccess</TT
 > variable to
 	<TT
-CLASS="PARAMETER"
+CLASS="parameter"
 ><I
 >0</I
 ></TT
@@ -224,23 +283,23 @@ CLASS="PARAMETER"
       </P
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="MOD_THROTTLE"
+NAME="mod-throttle"
 >3.5.4. <TT
-CLASS="FILENAME"
+CLASS="filename"
 >mod_throttle</TT
 > and Security</A
 ></H2
 ><P
->	It is possible for a user, by mistake or on purpose, to access
+>&#13;	It is possible for a user, by mistake or on purpose, to access
 	the database many times in a row which can result in very slow
 	access speeds for other users.  If your Bugzilla installation
 	is experiencing this problem , you may install  the Apache
 	module <TT
-CLASS="FILENAME"
+CLASS="filename"
 >mod_throttle</TT
 > which can limit
 	connections by ip-address. You may download this module at
@@ -251,7 +310,7 @@ TARGET="_top"
 >. Follow the instructions to install into your Apache install.  <EM
 >This module only functions with the Apache web server!</EM
 >. You may use the <B
-CLASS="COMMAND"
+CLASS="command"
 >ThrottleClientIP</B
 > command provided by this module  to accomplish this goal. See the <A
 HREF="http://www.snert.com/Software/Throttle/"
@@ -260,11 +319,11 @@ TARGET="_top"
 > for more  information. </P
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="CONTENT_TYPE"
+NAME="content-type"
 >3.5.5. Preventing untrusted Bugzilla content from executing malicious Javascript code</A
 ></H2
 ><P
@@ -286,8 +345,8 @@ WIDTH="100%"
 ><FONT
 COLOR="#000000"
 ><PRE
-CLASS="PROGRAMLISTING"
->bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
+CLASS="programlisting"
+>&#13;bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
 	  do cat $i | sed 's/Content-type\: text\/html/Content-Type: text\/html\; charset=ISO-8859-1/' &#62;$i.tmp; \
 	  mv $i.tmp $i; done
 	</PRE
@@ -297,7 +356,7 @@ CLASS="PROGRAMLISTING"
 ></TABLE
 ></P
 ><P
->	All this one-liner command does is search for all instances of
+>&#13;	All this one-liner command does is search for all instances of
 	<SPAN
 CLASS="QUOTE"
 >"Content-type: text/html"</SPAN
@@ -319,20 +378,20 @@ CLASS="QUOTE"
       </P
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="UNIXHISTORY"
+NAME="unixhistory"
 >3.5.6. UNIX Installation Instructions History</A
 ></H2
 ><P
->	This document was originally adapted from the Bonsai
+>&#13;	This document was originally adapted from the Bonsai
 	installation instructions by Terry Weissman
 	&#60;terry@mozilla.org&#62;.
       </P
 ><P
->	The February 25, 1999 re-write of this page was done by Ry4an
+>&#13;	The February 25, 1999 re-write of this page was done by Ry4an
 	Brase &#60;ry4an@ry4an.org&#62;, with some edits by Terry
 	Weissman, Bryce Nesbitt, Martin Pool, &#38; Dan Mosedale (But
 	don't send bug reports to them; report them using bugzilla, at <A
@@ -342,19 +401,19 @@ TARGET="_top"
 > ).
       </P
 ><P
->	This document was heavily modified again Wednesday, March 07
+>&#13;	This document was heavily modified again Wednesday, March 07
 	2001 to reflect changes for Bugzilla 2.12 release by Matthew
 	P. Barnson.  The securing MySQL section should be changed to
 	become standard procedure for Bugzilla installations.
       </P
 ><P
->	Finally, the README in its entirety was marked up in SGML and
+>&#13;	Finally, the README in its entirety was marked up in SGML and
 	included into the Guide on April 24, 2001 by Matt Barnson.
 	Since that time, it's undergone extensive modification as
 	Bugzilla grew.
       </P
 ><P
->	Comments from people using this Guide for the first time are
+>&#13;	Comments from people using this Guide for the first time are
 	particularly welcome.
       </P
 ></DIV

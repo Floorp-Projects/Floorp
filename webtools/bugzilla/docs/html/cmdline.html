@@ -19,7 +19,7 @@ REL="NEXT"
 TITLE="The Quicksearch Utility"
 HREF="quicksearch.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -66,26 +66,26 @@ HREF="quicksearch.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="CMDLINE"
+NAME="cmdline"
 >D.3. Command-line Bugzilla Queries</A
 ></H1
 ><P
->      Users can query Bugzilla from the command line using this suite
+>&#13;      Users can query Bugzilla from the command line using this suite
       of utilities.
     </P
 ><P
->      The query.conf file contains the mapping from options to field
+>&#13;      The query.conf file contains the mapping from options to field
       names and comparison types.  Quoted option names are "grepped"
       for, so it should be easy to edit this file.  Comments (#) have
       no effect; you must make sure these lines do not contain any
       quoted "option"
     </P
 ><P
->      buglist is a shell script which submits a Bugzilla query and
+>&#13;      buglist is a shell script which submits a Bugzilla query and
       writes the resulting HTML page to stdout.  It supports both
       short options, (such as "-Afoo" or "-Rbar") and long options
       (such as "--assignedto=foo" or "--reporter=bar").  If the first
@@ -93,53 +93,53 @@ NAME="CMDLINE"
       prefixed with "--default=".
     </P
 ><P
->      The columlist is taken from the COLUMNLIST environment variable.
+>&#13;      The columlist is taken from the COLUMNLIST environment variable.
       This is equivalent to the "Change Columns" option when you list
       bugs in buglist.cgi.  If you have already used Bugzilla, use
       <B
-CLASS="COMMAND"
+CLASS="command"
 >grep COLUMLIST ~/.netscape/cookies</B
 > to see
       your current COLUMNLIST setting.
     </P
 ><P
->      bugs is a simple shell script which calls buglist and extracts
+>&#13;      bugs is a simple shell script which calls buglist and extracts
       the bug numbers from the output.  Adding the prefix
       "http://bugzilla.mozilla.org/buglist.cgi?bug_id=" turns the bug
       list into a working link if any bugs are found. Counting bugs is
       easy.  Pipe the results through <B
-CLASS="COMMAND"
+CLASS="command"
 >sed -e 's/,/ /g' | wc |
 	awk '{printf $2 "\n"}'</B
 >
     </P
 ><P
->      Akkana says she has good results piping buglist output through
+>&#13;      Akkana says she has good results piping buglist output through
       <B
-CLASS="COMMAND"
+CLASS="command"
 >w3m -T text/html -dump</B
 >
     </P
 ><DIV
-CLASS="PROCEDURE"
+CLASS="procedure"
 ><OL
 TYPE="1"
 ><LI
 ><P
->	  Download three files:
+>&#13;	  Download three files:
 	</P
 ><OL
 CLASS="SUBSTEPS"
 TYPE="a"
 ><LI
 ><P
->	      <TT
-CLASS="COMPUTEROUTPUT"
+>&#13;	      <TT
+CLASS="computeroutput"
 > <TT
-CLASS="PROMPT"
+CLASS="prompt"
 >bash$</TT
 > <B
-CLASS="COMMAND"
+CLASS="command"
 >wget -O
 		  query.conf
 		  'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26157'</B
@@ -149,13 +149,13 @@ CLASS="COMMAND"
 ></LI
 ><LI
 ><P
->	      <TT
-CLASS="COMPUTEROUTPUT"
+>&#13;	      <TT
+CLASS="computeroutput"
 > <TT
-CLASS="PROMPT"
+CLASS="prompt"
 >bash$</TT
 > <B
-CLASS="COMMAND"
+CLASS="command"
 >wget -O
 		  buglist
 		  'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26944'</B
@@ -165,13 +165,13 @@ CLASS="COMMAND"
 ></LI
 ><LI
 ><P
->	      <TT
-CLASS="COMPUTEROUTPUT"
+>&#13;	      <TT
+CLASS="computeroutput"
 > <TT
-CLASS="PROMPT"
+CLASS="prompt"
 >bash#</TT
 > <B
-CLASS="COMMAND"
+CLASS="command"
 >wget -O
 		  bugs
 		  'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=26215'</B
@@ -183,15 +183,15 @@ CLASS="COMMAND"
 ></LI
 ><LI
 ><P
->	  Make your utilities executable:
+>&#13;	  Make your utilities executable:
 	  <TT
-CLASS="COMPUTEROUTPUT"
->	    <TT
-CLASS="PROMPT"
+CLASS="computeroutput"
+>&#13;	    <TT
+CLASS="prompt"
 >bash$</TT
 >
 	    <B
-CLASS="COMMAND"
+CLASS="command"
 >chmod u+x buglist bugs</B
 >
 	  </TT

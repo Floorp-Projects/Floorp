@@ -19,7 +19,7 @@ REL="NEXT"
 TITLE="GNU Free Documentation License"
 HREF="gfdl.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -66,26 +66,26 @@ HREF="gfdl.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="BZHACKING"
+NAME="bzhacking"
 >D.5. Hacking Bugzilla</A
 ></H1
 ><P
->      The following is a guide for reviewers when checking code into Bugzilla's
+>&#13;      The following is a guide for reviewers when checking code into Bugzilla's
       CVS repostory at mozilla.org.  If you wish to submit patches to Bugzilla,
       you should follow the rules and style conventions below.  Any code that
       does not adhere to these basic rules will not be added to Bugzilla's
       codebase.
     </P
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="AEN2495"
+NAME="AEN2504"
 >D.5.1. Things that have caused problems and should be avoided</A
 ></H2
 ><P
@@ -94,25 +94,25 @@ NAME="AEN2495"
 TYPE="1"
 ><LI
 ><P
->            Usage of variables in Regular Expressions
+>&#13;            Usage of variables in Regular Expressions
           </P
 ><P
->            It is very important that you don't use a variable in a regular
+>&#13;            It is very important that you don't use a variable in a regular
             expression unless that variable is supposed to contain an expression.
             This especially applies when using grep.  You should use:
           </P
 ><P
->            <TABLE
+>&#13;            <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
-WIDTH="90%"
+WIDTH="100%"
 ><TR
 ><TD
 ><FONT
 COLOR="#000000"
 ><PRE
-CLASS="PROGRAMLISTING"
->grep ($_ eq $value, @array);
+CLASS="programlisting"
+>&#13;grep ($_ eq $value, @array);
             </PRE
 ></FONT
 ></TD
@@ -121,20 +121,20 @@ CLASS="PROGRAMLISTING"
 >
           </P
 ><P
->            -- NOT THIS --
+>&#13;            -- NOT THIS --
           </P
 ><P
->            <TABLE
+>&#13;            <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
-WIDTH="90%"
+WIDTH="100%"
 ><TR
 ><TD
 ><FONT
 COLOR="#000000"
 ><PRE
-CLASS="PROGRAMLISTING"
->grep (/$value/, @array);
+CLASS="programlisting"
+>&#13;grep (/$value/, @array);
             </PRE
 ></FONT
 ></TD
@@ -143,12 +143,12 @@ CLASS="PROGRAMLISTING"
 >
           </P
 ><DIV
-CLASS="NOTE"
+CLASS="note"
 ><P
 ></P
 ><TABLE
-CLASS="NOTE"
-WIDTH="90%"
+CLASS="note"
+WIDTH="100%"
 BORDER="0"
 ><TR
 ><TD
@@ -163,9 +163,9 @@ ALT="Note"></TD
 ALIGN="LEFT"
 VALIGN="TOP"
 ><P
->              If you need to use a non-expression variable inside of an expression, be
+>&#13;              If you need to use a non-expression variable inside of an expression, be
               sure to quote it properly (using <TT
-CLASS="FUNCTION"
+CLASS="function"
 >\Q..\E</TT
 >).
             </P
@@ -177,68 +177,70 @@ CLASS="FUNCTION"
 ></OL
 ></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H2
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="AEN2509"
+NAME="AEN2518"
 >D.5.2. Coding Style for Bugzilla</A
 ></H2
 ><P
->        While it's true that not all of the code currently in Bugzilla adheres to
+>&#13;        While it's true that not all of the code currently in Bugzilla adheres to
         this (or any) styleguide, it is something that is being worked toward.  Therefore,
         we ask that all new code (submitted patches and new files) follow this guide
         as closely as possible (if you're only changing 1 or 2 lines, you don't have
         to reformat the entire file :).
       </P
 ><P
->        The Bugzilla development team has decided to adopt the perl style guide as
+>&#13;        The Bugzilla development team has decided to adopt the perl style guide as
         published by Larry Wall.  This giude can be found in <SPAN
 CLASS="QUOTE"
 >"Programming
         Perl"</SPAN
 > (the camel book) or by typing <B
-CLASS="COMMAND"
+CLASS="command"
 >man perlstyle</B
 > at
         your favorite shell prompt.
       </P
 ><P
->        What appears below if a brief summary, please refer to the perl style
-        guide if you don't see your question covered here.
+>&#13;        What appears below if a brief summary, please refer to the perl style
+        guide if you don't see your question covered here.  It is much better to submit
+	a patch which fails these criteria than no patch at all, but please try to meet
+	these minimum standards when submitting code to Bugzilla.
       </P
 ><P
 ></P
 ><UL
 ><LI
 ><P
->            Whitespace
+>&#13;            Whitespace
           </P
 ><P
->            Bugzilla's prefered indentation is 4 spaces (no tabs, please).
+>&#13;            Bugzilla's prefered indentation is 4 spaces (no tabs, please).
           </P
 ></LI
 ><LI
 ><P
->            Curly braces.
+>&#13;            Curly braces.
           </P
 ><P
->            The opening brace of a block should be on the same line as the statement
+>&#13;            The opening brace of a block should be on the same line as the statement
             that is causing the block and the closing brace should be at the same
             indentation level as that statement, for example:
           </P
 ><P
->            <TABLE
+>&#13;            <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
-WIDTH="90%"
+WIDTH="100%"
 ><TR
 ><TD
 ><FONT
 COLOR="#000000"
 ><PRE
-CLASS="PROGRAMLISTING"
->if ($var) {
+CLASS="programlisting"
+>&#13;if ($var) {
     print "The variable is true";
 }
 else {
@@ -252,20 +254,20 @@ else {
 >
           </P
 ><P
->            -- NOT THIS --
+>&#13;            -- NOT THIS --
           </P
 ><P
->            <TABLE
+>&#13;            <TABLE
 BORDER="0"
 BGCOLOR="#E0E0E0"
-WIDTH="90%"
+WIDTH="100%"
 ><TR
 ><TD
 ><FONT
 COLOR="#000000"
 ><PRE
-CLASS="PROGRAMLISTING"
->if ($var)
+CLASS="programlisting"
+>&#13;if ($var)
 {
     print "The variable is true";
 }
@@ -283,16 +285,27 @@ else
 ></LI
 ><LI
 ><P
->            File Names
+>&#13;	    Cookies
+	  </P
+><P
+>&#13;	    Bugzilla uses cookies to ease the user experience, but no new patches
+	    should <EM
+>require</EM
+> user-side cookies.
+	  </P
+></LI
+><LI
+><P
+>&#13;            File Names
           </P
 ><P
->            File names for bugzilla code and support documention should be legal across
+>&#13;            File names for bugzilla code and support documention should be legal across
             multiple platforms. <TT
-CLASS="COMPUTEROUTPUT"
+CLASS="computeroutput"
 >\ / : * ? " &#60; &#62;</TT
 >
             and <TT
-CLASS="COMPUTEROUTPUT"
+CLASS="computeroutput"
 >|</TT
 > are all illegal characters for filenames
             on various platforms.  Also, file names should not have spaces in them as they
@@ -301,50 +314,111 @@ CLASS="COMPUTEROUTPUT"
 ></LI
 ><LI
 ><P
->            Variable Names
+>&#13;	    Javascript dependencies
+	  </P
+><P
+>&#13;	    While Bugzilla uses Javascript to make the user experience easier, no patch
+	    to Bugzilla should <EM
+>require</EM
+> Javascript.
+	  </P
+></LI
+><LI
+><P
+>&#13;	    Patch Format
+	  </P
+><P
+>&#13;	    All patches submitted for inclusion into Bugzilla should be in the form of a
+	    <SPAN
+CLASS="QUOTE"
+>"unified diff"</SPAN
+>.  This comes from using <SPAN
+CLASS="QUOTE"
+>"diff -u"</SPAN
+>
+	    instead of simply <SPAN
+CLASS="QUOTE"
+>"diff"</SPAN
+> when creating your patch.  This will
+	    result in quicker acceptance of the patch.
+	  </P
+></LI
+><LI
+><P
+>&#13;	    Schema Changes
+	  </P
+><P
+>&#13;	    If you make schema changes, you should modify <TT
+CLASS="filename"
+>sanitycheck.cgi</TT
+>
+	    to support the new schema.  All referential columns should be checked.
+	  </P
+></LI
+><LI
+><P
+>&#13;	    Taint Mode
+	  </P
+><P
+>&#13;	    All new cgis must run in Taint mode (Perl taint and DBI taint), and existing cgi's
+	    which run in taint mode must not have taint mode turned off.
+	  </P
+></LI
+><LI
+><P
+>&#13;	    Templatization
+	  </P
+><P
+>&#13;	    Patches to Bugzilla need to support templates so they do not force user interface choices
+	    on Bugzilla administrators.
+	  </P
+></LI
+><LI
+><P
+>&#13;            Variable Names
           </P
 ><P
->            If a variable is scoped globally (<TT
-CLASS="COMPUTEROUTPUT"
+>&#13;            If a variable is scoped globally (<TT
+CLASS="computeroutput"
 >$::variable</TT
 >)
             its name should be descriptive of what it contains.  Local variables can be named
             a bit looser, provided the context makes their content obvious.  For example,
             <TT
-CLASS="COMPUTEROUTPUT"
+CLASS="computeroutput"
 >$ret</TT
 > could be used as a staging variable for a
              routine's return value as the line <TT
-CLASS="COMPUTEROUTPUT"
+CLASS="computeroutput"
 >return $ret;</TT
 >
              will make it blatantly obvious what the variable holds and most likely be shown
              on the same screen as <TT
-CLASS="COMPUTEROUTPUT"
+CLASS="computeroutput"
 >my $ret = "";</TT
 >.
           </P
 ></LI
 ><LI
 ><P
->            Cross Database Compatability
+>&#13;            Cross Database Compatability
           </P
 ><P
->            Bugzilla was originally written to work with MySQL and therefore took advantage
+>&#13;            Bugzilla was originally written to work with MySQL and therefore took advantage
             of some of its features that aren't contained in other RDBMS software.  These
             should be avoided in all new code.  Examples of these features are enums and
             <TT
-CLASS="FUNCTION"
+CLASS="function"
 >encrypt()</TT
 >.
           </P
 ></LI
 ><LI
 ><P
->            Cross Platform Compatability
+>&#13;            Cross Platform Compatability
           </P
 ><P
->            While Bugzilla was written to be used on Unix based systems (and Unix/Linux is
+>&#13;            While Bugzilla was written to be used on Unix based systems (and Unix/Linux is
             still the only officially supported platform) there are many who desire/need to
             run Bugzilla on Microsoft Windows boxes.  Whenever possible, we should strive
             not to make the lives of these people any more complicated and avoid doing things

@@ -19,7 +19,7 @@ REL="NEXT"
 TITLE="Command-line Bugzilla Queries"
 HREF="cmdline.html"></HEAD
 ><BODY
-CLASS="SECTION"
+CLASS="section"
 BGCOLOR="#FFFFFF"
 TEXT="#000000"
 LINK="#0000FF"
@@ -66,11 +66,11 @@ HREF="cmdline.html"
 ALIGN="LEFT"
 WIDTH="100%"></DIV
 ><DIV
-CLASS="SECTION"
+CLASS="section"
 ><H1
-CLASS="SECTION"
+CLASS="section"
 ><A
-NAME="SETPERL"
+NAME="setperl"
 >D.2. The setperl.csh Utility</A
 ></H1
 ><P
@@ -80,12 +80,12 @@ NAME="SETPERL"
       search path on your system, it will not work!
     </P
 ><DIV
-CLASS="PROCEDURE"
+CLASS="procedure"
 ><OL
 TYPE="1"
 ><LI
 ><P
->	  Download the "setperl.csh" utility to your Bugzilla
+>&#13;	  Download the "setperl.csh" utility to your Bugzilla
 	  directory and make it executable.
 	</P
 ><OL
@@ -93,14 +93,14 @@ CLASS="SUBSTEPS"
 TYPE="a"
 ><LI
 ><P
->	      <TT
-CLASS="COMPUTEROUTPUT"
->		<TT
-CLASS="PROMPT"
+>&#13;	      <TT
+CLASS="computeroutput"
+>&#13;		<TT
+CLASS="prompt"
 >bash#</TT
 >
 		<B
-CLASS="COMMAND"
+CLASS="command"
 >cd /your/path/to/bugzilla</B
 >
 	      </TT
@@ -109,13 +109,13 @@ CLASS="COMMAND"
 ></LI
 ><LI
 ><P
->	      <TT
-CLASS="COMPUTEROUTPUT"
+>&#13;	      <TT
+CLASS="computeroutput"
 > <TT
-CLASS="PROMPT"
+CLASS="prompt"
 >bash#</TT
 > <B
-CLASS="COMMAND"
+CLASS="command"
 >wget -O
 		  setperl.csh
 		  'http://bugzilla.mozilla.org/showattachment.cgi?attach_id=10795'</B
@@ -125,13 +125,13 @@ CLASS="COMMAND"
 ></LI
 ><LI
 ><P
->	      <TT
-CLASS="COMPUTEROUTPUT"
+>&#13;	      <TT
+CLASS="computeroutput"
 > <TT
-CLASS="PROMPT"
+CLASS="prompt"
 >bash#</TT
 > <B
-CLASS="COMMAND"
+CLASS="command"
 >chmod
 		  u+x setperl.csh</B
 > </TT
@@ -142,21 +142,21 @@ CLASS="COMMAND"
 ></LI
 ><LI
 ><P
->	  Prepare (and fix) Bugzilla file permissions.
+>&#13;	  Prepare (and fix) Bugzilla file permissions.
 	</P
 ><OL
 CLASS="SUBSTEPS"
 TYPE="a"
 ><LI
 ><P
->	      <TT
-CLASS="COMPUTEROUTPUT"
->		<TT
-CLASS="PROMPT"
+>&#13;	      <TT
+CLASS="computeroutput"
+>&#13;		<TT
+CLASS="prompt"
 >bash#</TT
 >
 		<B
-CLASS="COMMAND"
+CLASS="command"
 >chmod u+w *</B
 >
 	      </TT
@@ -165,13 +165,13 @@ CLASS="COMMAND"
 ></LI
 ><LI
 ><P
->	      <TT
-CLASS="COMPUTEROUTPUT"
+>&#13;	      <TT
+CLASS="computeroutput"
 > <TT
-CLASS="PROMPT"
+CLASS="prompt"
 >bash#</TT
 > <B
-CLASS="COMMAND"
+CLASS="command"
 >chmod
 		  u+x duplicates.cgi</B
 > </TT
@@ -180,14 +180,14 @@ CLASS="COMMAND"
 ></LI
 ><LI
 ><P
->	      <TT
-CLASS="COMPUTEROUTPUT"
->		<TT
-CLASS="PROMPT"
+>&#13;	      <TT
+CLASS="computeroutput"
+>&#13;		<TT
+CLASS="prompt"
 >bash#</TT
 >
 		<B
-CLASS="COMMAND"
+CLASS="command"
 >chmod a-x bug_status.html</B
 >
 	      </TT
@@ -198,39 +198,39 @@ CLASS="COMMAND"
 ></LI
 ><LI
 ><P
->	  Run the script:
+>&#13;	  Run the script:
 	</P
 ><P
->	  <TT
-CLASS="COMPUTEROUTPUT"
+>&#13;	  <TT
+CLASS="computeroutput"
 > <TT
-CLASS="PROMPT"
+CLASS="prompt"
 >bash#</TT
 >
 	    <B
-CLASS="COMMAND"
+CLASS="command"
 >./setperl.csh /your/path/to/perl</B
 >
 	  </TT
 >
 <DIV
-CLASS="EXAMPLE"
+CLASS="example"
 ><A
-NAME="AEN2439"
+NAME="AEN2448"
 ></A
 ><P
 ><B
 >Example D-1. Using Setperl to set your perl path</B
 ></P
 ><P
->	      <TT
-CLASS="COMPUTEROUTPUT"
+>&#13;	      <TT
+CLASS="computeroutput"
 > <TT
-CLASS="PROMPT"
+CLASS="prompt"
 >bash#</TT
 >
 		<B
-CLASS="COMMAND"
+CLASS="command"
 >./setperl.csh /usr/bin/perl</B
 >
 	      </TT
@@ -284,7 +284,7 @@ WIDTH="33%"
 ALIGN="left"
 VALIGN="top"
 >Apache <TT
-CLASS="FILENAME"
+CLASS="filename"
 >mod_rewrite</TT
 > magic</TD
 ><TD
