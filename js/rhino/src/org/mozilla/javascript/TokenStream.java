@@ -600,14 +600,18 @@ public class TokenStream {
         return x & 0xff;
     }
 
-    public TokenStream(Reader in,
+    public TokenStream(Reader in, Scriptable scope,
                        String sourceName, int lineno)
     {
         this.in = new LineBuffer(in, lineno);
-
+        this.scope = scope;
         this.pushbackToken = EOF;
         this.sourceName = sourceName;
         flags = 0;
+    }
+    
+    public Scriptable getScope() { 
+        return scope;
     }
 
     /* return and pop the token from the stream if it matches...
@@ -834,7 +838,7 @@ public class TokenStream {
                     }
                     if (!isDigit(c)) {
                         in.getString(); // throw away string in progress
-                        reportError("msg.missing.exponent", null);
+                        reportSyntaxError("msg.missing.exponent", null);
                         return ERROR;
                     }
                     do {
@@ -852,7 +856,7 @@ public class TokenStream {
                 }
                 catch (NumberFormatException ex) {
                     Object[] errArgs = { ex.getMessage() };
-                    reportError("msg.caught.nfe", errArgs);
+                    reportSyntaxError("msg.caught.nfe", errArgs);
                     return ERROR;
                 }
             } else {
@@ -910,7 +914,7 @@ public class TokenStream {
                 if (c == '\n' || c == EOF_CHAR) {
                     in.unread();
                     in.getString(); // throw away the string in progress
-                    reportError("msg.unterminated.string.lit", null);
+                    reportSyntaxError("msg.unterminated.string.lit", null);
                     return ERROR;
                 }
 
@@ -948,7 +952,7 @@ public class TokenStream {
                             }
                             in.unread();
                             if (val > 0377) {
-                                reportError("msg.oct.esc.too.large", null);
+                                reportSyntaxError("msg.oct.esc.too.large", null);
                                 return ERROR;
                             }
                             c = val;
@@ -1195,12 +1199,12 @@ public class TokenStream {
                     } else if (c == '/' && in.match('*')) {
                         if (in.match('/'))
                             return getToken();
-                        reportError("msg.nested.comment", null);
+                        reportSyntaxError("msg.nested.comment", null);
                         return ERROR;
                     }
                 }
                 if (c == EOF_CHAR) {
-                    reportError("msg.unterminated.comment", null);
+                    reportSyntaxError("msg.unterminated.comment", null);
                     return ERROR;
                 }
                 return getToken();  // `goto retry'
@@ -1215,7 +1219,7 @@ public class TokenStream {
                 while ((c = in.read()) != '/') {
                     if (c == '\n' || c == EOF_CHAR) {
                         in.unread();
-                        reportError("msg.unterminated.re.lit", null);
+                        reportSyntaxError("msg.unterminated.re.lit", null);
                         return ERROR;
                     }
                     if (c == '\\') {
@@ -1239,7 +1243,7 @@ public class TokenStream {
                 }
 
                 if (isAlpha(in.peek())) {
-                    reportError("msg.invalid.re.flag", null);
+                    reportSyntaxError("msg.invalid.re.flag", null);
                     return ERROR;
                 }
 
@@ -1291,16 +1295,23 @@ public class TokenStream {
             }
 
         default:
-            reportError("msg.illegal.character", null);
+            reportSyntaxError("msg.illegal.character", null);
             return ERROR;
         }
     }
 
-    private void reportError(String messageProperty, Object[] args) {
-        flags |= TSF_ERROR;
+    public void reportSyntaxError(String messageProperty, Object[] args) {
         String message = Context.getMessage(messageProperty, args);
-        Context.reportError(message, getSourceName(),
-                            getLineno(), getLine(), getOffset());
+        if (scope != null) {
+            throw NativeGlobal.constructError(
+                            Context.getContext(), "SyntaxError",
+                            message,
+                            scope);
+        } else {
+            flags |= TSF_ERROR;
+            Context.reportError(message, getSourceName(),
+                                getLineno(), getLine(), getOffset());
+        }
     }
 
     public String getSourceName() { return sourceName; }
@@ -1326,6 +1337,7 @@ public class TokenStream {
 
     private String sourceName;
     private String line;
+    private Scriptable scope;
     private int pushbackToken;
     private int tokenno;
 

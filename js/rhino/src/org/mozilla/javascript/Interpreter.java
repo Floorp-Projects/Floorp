@@ -1816,10 +1816,10 @@ public class Interpreter extends LabelTable {
                         pc = finallyStack[tryStackTop];
                         if (pc == 0) 
                             throw ee;
-                        stack[0] = ee.errorObject;
+                        stack[0] = ee.getErrorObject();
                     }
                     else
-                        stack[0] = ee.errorObject;
+                        stack[0] = ee.getErrorObject();
                 }
                 else
                     throw ee;

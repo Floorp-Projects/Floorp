@@ -77,9 +77,7 @@ class Parser {
 
             // Only report the error if the TokenStream hasn't had a chance to.
             if ((ts.flags & ts.TSF_ERROR) == 0) {
-                String message = Context.getMessage(messageId, null);
-                Context.reportError(message, ts.getSourceName(), ts.getLineno(), 
-                                    ts.getLine(), ts.getOffset());
+                ts.reportSyntaxError(messageId, null);
             }
         }
         /* Throw an exception to unwind the recursive descent parse. 

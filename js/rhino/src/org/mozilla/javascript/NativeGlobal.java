@@ -420,7 +420,7 @@ public class NativeGlobal {
             // mode.
             int oldOptLevel = cx.getOptimizationLevel();
             cx.setOptimizationLevel(-1);
-            Script script = cx.compileReader(null, in, filename, linep[0], 
+            Script script = cx.compileReader(scope, in, filename, linep[0], 
                                              securityDomain);
             cx.setOptimizationLevel(oldOptLevel);
             
@@ -442,7 +442,6 @@ public class NativeGlobal {
             // should never happen since we just made the Reader from a String
             throw new RuntimeException("unexpected io exception");
         }
-        
     }
     
     
@@ -451,7 +450,6 @@ public class NativeGlobal {
      *
      * See ECMA 15.11.6
      */
-     
     public static EcmaError constructError(Context cx, 
                                            String error, 
                                            String message,
@@ -481,8 +479,9 @@ public class NativeGlobal {
         }
     }
     
+    // XXX what are these functions used for?
     public static Object ConversionError(Context cx, Object[] args, 
-                            Function ctorObj, boolean inNewExpr)
+                                         Function ctorObj, boolean inNewExpr)
     {
         Scriptable newInstance = new NativeError();
         newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
@@ -493,7 +492,7 @@ public class NativeGlobal {
     }
     
     public static Object EvalError(Context cx, Object[] args, 
-                            Function ctorObj, boolean inNewExpr)
+                                   Function ctorObj, boolean inNewExpr)
     {
         Scriptable newInstance = new NativeError();
         newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
@@ -504,7 +503,7 @@ public class NativeGlobal {
     }
     
     public static Object RangeError(Context cx, Object[] args, 
-                            Function ctorObj, boolean inNewExpr)
+                                    Function ctorObj, boolean inNewExpr)
     {
         Scriptable newInstance = new NativeError();
         newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
@@ -515,7 +514,7 @@ public class NativeGlobal {
     }
     
     public static Object ReferenceError(Context cx, Object[] args, 
-                            Function ctorObj, boolean inNewExpr)
+                                        Function ctorObj, boolean inNewExpr)
     {
         Scriptable newInstance = new NativeError();
         newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
@@ -526,7 +525,7 @@ public class NativeGlobal {
     }
     
     public static Object SyntaxError(Context cx, Object[] args, 
-                            Function ctorObj, boolean inNewExpr)
+                                     Function ctorObj, boolean inNewExpr)
     {
         Scriptable newInstance = new NativeError();
         newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
@@ -537,7 +536,7 @@ public class NativeGlobal {
     }
     
     public static Object TypeError(Context cx, Object[] args, 
-                            Function ctorObj, boolean inNewExpr)
+                                   Function ctorObj, boolean inNewExpr)
     {
         Scriptable newInstance = new NativeError();
         newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));
@@ -548,7 +547,7 @@ public class NativeGlobal {
     }
     
     public static Object URIError(Context cx, Object[] args, 
-                            Function ctorObj, boolean inNewExpr)
+                                  Function ctorObj, boolean inNewExpr)
     {
         Scriptable newInstance = new NativeError();
         newInstance.setPrototype((Scriptable)(ctorObj.get("prototype", ctorObj)));

@@ -110,7 +110,7 @@ class TestScan
             return;
         }
 
-        TokenStream ts = new TokenStream(in, file, 1);
+        TokenStream ts = new TokenStream(in, null, file, 1);
         if (opt == "-scan") {
             int foo;
             while ((foo = ts.getToken()) != ts.EOF) {

@@ -2549,9 +2549,10 @@ if (true) {
             aload(savedVariableObject);
             astore(variableObjectLocal);
             aload(exceptionObject);
-            classFile.add(ByteCode.GETFIELD,
-                         "org/mozilla/javascript/EcmaError",
-                         "errorObject", "Lorg/mozilla/javascript/NativeError;");
+            addVirtualInvoke("org/mozilla/javascript/EcmaError",
+                             "getErrorObject", 
+                             "()", 
+                             "Lorg/mozilla/javascript/Scriptable;");
             releaseWordLocal(exceptionObject);
             addByteCode(ByteCode.GOTO, catchLabel);
             classFile.addExceptionHandler

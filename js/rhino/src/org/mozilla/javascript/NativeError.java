@@ -44,18 +44,28 @@ package org.mozilla.javascript;
  */
 public class NativeError extends ScriptableObject {
 
-    public NativeError()
-    {
+    public NativeError() {
     }
     
-    public String getClassName()    { return "Error"; }
-
-    public String jsFunction_toString()
-    {
-          return ScriptRuntime.toString(ScriptRuntime.getProp(this, "name", this))
-                    + " " 
-                    + ScriptRuntime.toString(ScriptRuntime.getProp(this, "message", this));
+    public String getClassName() { 
+        return "Error"; 
     }
+
+    public String toString() {
+        return getName() + ": " + getMessage();
+    }
+    
+    public String jsFunction_toString() {
+        return toString();
+    }
+    
+    public String getName() {
+        return ScriptRuntime.toString(ScriptRuntime.getProp(this, "name", this));
+    }
+    
+    public String getMessage() {
+        return ScriptRuntime.toString(ScriptRuntime.getProp(this, "message", this));
+    }    
     
     public static void finishInit(Scriptable scope, FunctionObject ctor,
                                   Scriptable proto)

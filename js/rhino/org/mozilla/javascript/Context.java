@@ -751,7 +751,7 @@ public final class Context {
         Reader in = new StringReader(source);
         // no source name or source text manager, because we're just
         // going to throw away the result.
-        TokenStream ts = new TokenStream(in, null, 1);
+        TokenStream ts = new TokenStream(in, null, null, 1);
 
         // Temporarily set error reporter to always be the exception-throwing
         // DefaultErrorReporter.  (This is why the method is synchronized...)
@@ -1687,7 +1687,7 @@ public final class Context {
                            boolean returnFunction)
         throws IOException
     {
-        TokenStream ts = new TokenStream(in, sourceName, lineno);
+        TokenStream ts = new TokenStream(in, scope, sourceName, lineno);
         return compile(scope, ts, securityDomain, returnFunction);
     }
 

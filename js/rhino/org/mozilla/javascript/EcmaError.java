@@ -33,13 +33,15 @@
  * file under either the NPL or the GPL.
  */
 
+// API class
 
 package org.mozilla.javascript;
 
 /**
- * The class of exceptions thrown by the JavaScript engine.
+ * The class of exceptions raised by the engine as described in 
+ * ECMA edition 3. See section 15.11.6 in particular.
  */
-public class EcmaError extends EvaluatorException {
+public class EcmaError extends RuntimeException {
 
     /**
      * Create an exception with the specified detail message.
@@ -47,13 +49,54 @@ public class EcmaError extends EvaluatorException {
      * Errors internal to the JavaScript engine will simply throw a
      * RuntimeException.
      *
-     * @nativeError the NativeError object constructed for this error
+     * @param nativeError the NativeError object constructed for this error
      */
     public EcmaError(NativeError nativeError) {
         super("EcmaError");
         errorObject = nativeError;
     }
     
-    public NativeError errorObject;
-
+    /**
+     * Return a string representation of the error, which currently consists 
+     * of the name of the error together with the message.
+     */
+    public String toString() {
+        return errorObject.toString();
+    }
+    
+    /**
+     * Gets the name of the error.
+     * 
+     * ECMA edition 3 defines the following
+     * errors: ConversionError, EvalError, RangeError, ReferenceError, 
+     * SyntaxError, TypeError, and URIError. Additional error names
+     * may be added in the future.
+     * 
+     * See ECMA edition 3, 15.11.7.9.
+     * 
+     * @return the name of the error. 
+     */
+    public String getName() {
+        return errorObject.getName();
+    }
+    
+    /**
+     * Gets the message corresponding to the error.
+     * 
+     * See ECMA edition 3, 15.11.7.10.
+     * 
+     * @return an implemenation-defined string describing the error.
+     */
+    public String getMessage() {
+        return errorObject.getMessage();
+    }
+    
+    /**
+     * Get the error object corresponding to this exception.
+     */
+    public Scriptable getErrorObject() {
+        return errorObject;
+    }
+    
+    private NativeError errorObject;
 }
