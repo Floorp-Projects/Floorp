@@ -231,7 +231,7 @@ nsresult nsBufferedStream::GetAvailableSpace(PRUint32 *aCount)
 nsresult nsBufferedStream::GetLength(PRUint32 *aLength)
 {
     LockStream();
-    *aLength = m_WriteOffset;
+    *aLength = m_dataLength;
     UnlockStream();
 
     return NS_OK;
@@ -779,4 +779,3 @@ PRInt32 nsBlockingStream::ReadBuffer(char *aBuf, PRUint32 aCount)
 
     return bytesRead;
 }
-
