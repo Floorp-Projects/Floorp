@@ -216,61 +216,6 @@ Rights Reserved.
 <!ENTITY pageSourceCmd.accesskey "o">
 <!ENTITY pageSourceCmd.key "u">
 <!ENTITY translateMenu.label ".Translate">
-<!ENTITY dcharMenu.label "Character Set  ISO">
-<!ENTITY dcharMenu1.label "Character Set  Multibyte">
-<!ENTITY dcharMenu2.label "Character Set  Cyrillic">
-<!ENTITY dcharMenu3.label "Character Set  SE Asian/Armenian">
-<!ENTITY dcharMenu4.label "Character Set  Macintosh">
-<!ENTITY dcharMenu5.label "Character Set  Windows">
-<!ENTITY dcharIso1Cmd.label "Western (ISO-8859-1)">
-<!ENTITY dcharIso2Cmd.label "Central European (ISO-8859-2)">
-<!ENTITY dcharIso3Cmd.label "South European (ISO-8859-3)">
-<!ENTITY dcharIso4Cmd.label "Baltic (ISO-8859-4)">
-<!ENTITY dcharIso9Cmd.label "Turkish (ISO-8859-9)">
-<!ENTITY dcharIso10Cmd.label "Nordic (ISO-8859-10)">
-<!ENTITY dcharIso13Cmd.label "Baltic (ISO-8859-13)">
-<!ENTITY dcharIso14Cmd.label "Celtic (ISO-8859-14)">
-<!ENTITY dcharIso15Cmd.label "Western (ISO-8859-15)">
-<!ENTITY dcharWinLat2Cmd.label "Central European (Windows-1250)">
-<!ENTITY dcharWinLat1Cmd.label "Western (Windows-1252)">
-<!ENTITY dcharWinLat5Cmd.label "Turkish (Windows-1254)">
-<!ENTITY dcharWinBalRimCmd.label "Baltic (Windows-1257)">
-<!ENTITY dcharMacRomCmd.label "Western (MacRoman)">
-<!ENTITY dcharMacCenEuroCmd.label "Central European (MacCE)">
-<!ENTITY dcharMacTurCmd.label "Turkish (MacTurkish)">
-<!ENTITY dcharMacCroaCmd.label "Croatian (MacCroatian)">
-<!ENTITY dcharMacRomanianCmd.label "Romanian (MacRomanian)">
-<!ENTITY dcharMacIceCmd.label "Icelandic (MacIcelandic)">
-<!ENTITY dcharJapanCmd.label "Japanese (ISO-2022-JP)">
-<!ENTITY dcharJapanShiftjsCmd.label "Japanese (Shift_JIS)">
-<!ENTITY dcharJapanEucCmd.label "Japanese (EUC-JP)">
-<!ENTITY dcharTradChiBigCmd.label "Chinese Traditional (Big5)">
-<!ENTITY dcharTriChiEucCmd.label "Chinese Traditional (EUC-TW)">
-<!ENTITY dcharSimpChiGbCmd.label "Chinese Simplified (GB2312)">
-<!ENTITY dcharKoreanCmd.label "Korean (EUC-KR)">
-<!ENTITY dcharUtf7Cmd.label "Unicode (UTF-7)">
-<!ENTITY dcharUtf8Cmd.label "Unicode (UTF-8)">
-<!ENTITY dcharIsoCyrCmd.label "Cyrillic (ISO-8859-5)">
-<!ENTITY dcharEcmaCyrCmd.label "Cyrillic (ISO-IR-111)">
-<!ENTITY dcharDosCyrCmd.label "Cyrillic (CP-866)">
-<!ENTITY dcharWinCyrCmd.label "Cyrillic (Windows-1251)">
-<!ENTITY dcharMacCyrCmd.label "Cyrillic (MacCyrillic)">
-<!ENTITY dcharMacUkrCmd.label "Cyrillic/Ukrainian (MacUkrainian)">
-<!ENTITY dcharRusCmd.label "Cyrillic (KOI8-R)">
-<!ENTITY dcharUkrCmd.label "Cyrillic/Ukrainian (KOI8-U)">
-<!ENTITY dcharIsoGreekCmd.label "Greek (ISO-8859-7)">
-<!ENTITY dcharWinGreekCmd.label "Greek (Windows-1253)">
-<!ENTITY dcharMacGreekCmd.label "Greek (MacGreek)">
-<!ENTITY dcharWinVietCmd.label "Vietnamese (Windows-1258)">
-<!ENTITY dcharVietTcnCmd.label "Vietnamese (TCVN5712)">
-<!ENTITY dcharVietViCmd.label "Vietnamese (VISCII)">
-<!ENTITY dcharVieVpCmd.label "Vietnamese (VPS)">
-<!ENTITY dcharThaiCmd.label "Thai (TIS-620)">
-<!ENTITY dcharArmCmd.label "Armenian (ARMSCII-8)">
-<!ENTITY dcharIso6Cmd.label ".Arabic (ISO-8859-6)">
-<!ENTITY dcharIso8Cmd.label ".Hebrew (ISO-8859-8)">
-<!ENTITY dcharCp1255Cmd.label "Hebrew (Windows-1255)">
-<!ENTITY dcharCp1256Cmd.label "Arabic (Windows-1256)">
 
 <!-- Search Menu -->
 <!-- searchMenu is also used by addressbook -->
