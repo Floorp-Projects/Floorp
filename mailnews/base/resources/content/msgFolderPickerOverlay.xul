@@ -75,7 +75,10 @@
               </menu>
             </menupopup>
           </rule>
-	  <!-- no subfolders for some inboxes -->
+	  <!-- prevent news servers with no newsgroups from showing up -->
+	  <rule nc:CanCreateSubfolders="false" iscontainer="true" isempty="true" nc:ServerType="nntp">
+	  </rule>
+	  <!-- no subfolders for some inboxes -->	
 	  <rule nc:CanCreateSubfolders="false" iscontainer="true" isempty="true">
             <menupopup>
                         <menuitem disabled="true" uri="..." class="folderMenuItem" value="rdf:http://home.netscape.com/NC-rdf#Name"
