@@ -49,6 +49,7 @@
 #include "nsIContent.h"
 #include "nsHashtable.h"
 #include "nsIXBLDocumentInfo.h"
+#include "nsCOMArray.h"
 
 class nsIAtom;
 class nsIDocument;
@@ -148,6 +149,16 @@ public:
 
   void Initialize();
 
+  const nsCOMArray<nsXBLKeyEventHandler>* GetKeyEventHandlers()
+  {
+    if (!mKeyHandlersRegistered) {
+      CreateKeyHandlers();
+      mKeyHandlersRegistered = PR_TRUE;
+    }
+
+    return &mKeyHandlers;
+  }
+
 public:
   nsXBLPrototypeBinding(const nsACString& aRef, nsIXBLDocumentInfo* aInfo, nsIContent* aElement);
   ~nsXBLPrototypeBinding();
@@ -187,6 +198,7 @@ protected:
   void ConstructInsertionTable(nsIContent* aElement);
   void GetNestedChildren(nsIAtom* aTag, nsIContent* aContent,
                          nsISupportsArray** aList);
+  void CreateKeyHandlers();
 
 protected:
   // Internal helper class for managing our IID table.
@@ -217,7 +229,7 @@ protected:
   char* mID;
 
   nsCOMPtr<nsIContent> mBinding; // Strong. We own a ref to our content element in the binding doc.
-  nsXBLPrototypeHandler* mPrototypeHandler; // Strong. DocInfo owns us, and we own the handlers.
+  nsAutoPtr<nsXBLPrototypeHandler> mPrototypeHandler; // Strong. DocInfo owns us, and we own the handlers.
   
   nsXBLProtoImpl* mImplementation; // Our prototype implementation (includes methods, properties, fields,
                                    // the constructor, and the destructor).
@@ -225,6 +237,7 @@ protected:
   nsXBLPrototypeBinding* mBaseBinding; // Weak.  The docinfo will own our base binding.
   PRPackedBool mInheritStyle;
   PRPackedBool mHasBaseProto;
+  PRPackedBool mKeyHandlersRegistered;
  
   nsXBLPrototypeResources* mResources; // If we have any resources, this will be non-null.
                                       
@@ -242,6 +255,8 @@ protected:
   nsCOMPtr<nsIAtom> mBaseTag;  // be stored in here.
 
   nsAutoRefCnt mRefCnt;
+
+  nsCOMArray<nsXBLKeyEventHandler> mKeyHandlers;
 };
 
 #endif

@@ -40,127 +40,159 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsCOMPtr.h"
-#include "nsXBLPrototypeHandler.h"
-#include "nsXBLEventHandler.h"
-#include "nsIContent.h"
 #include "nsIAtom.h"
+#include "nsIContent.h"
+#include "nsIDOMEventGroup.h"
+#include "nsIDOMEventReceiver.h"
 #include "nsIDOMKeyEvent.h"
 #include "nsIDOMMouseEvent.h"
-#include "nsIScriptContext.h"
-#include "nsIScriptGlobalObject.h"
-#include "nsIDocument.h"
-#include "nsIDOMDocument.h"
-#include "nsIJSEventListener.h"
-#include "nsIController.h"
-#include "nsIControllers.h"
-#include "nsIDOMXULElement.h"
-#include "nsIDOMNSHTMLTextAreaElement.h"
-#include "nsIDOMNSHTMLInputElement.h"
 #include "nsIDOMText.h"
-#include "nsIEventListenerManager.h"
-#include "nsIDOMEventReceiver.h"
-#include "nsIDOMEventListener.h"
-#include "nsXBLBinding.h"
-#include "nsIPrivateDOMEvent.h"
-#include "nsIDOMWindowInternal.h"
-#include "nsIServiceManager.h"
-#include "nsIURI.h"
-#include "nsXPIDLString.h"
-
-#include "nsIDOMFocusListener.h"
-#include "nsIDOMKeyListener.h"
-#include "nsIDOMXULListener.h"
-#include "nsIDOMMouseListener.h"
-#include "nsIDOMDragListener.h"
-#include "nsIDOMScrollListener.h"
-#include "nsIDOMFormListener.h"
-#include "nsXBLAtoms.h"
-#include "nsIDOMEventGroup.h"
 #include "nsIDOM3EventTarget.h"
+#include "nsXBLAtoms.h"
+#include "nsXBLPrototypeHandler.h"
 
-nsXBLEventHandler::nsXBLEventHandler(nsIDOMEventReceiver* aEventReceiver,
-                                     nsXBLPrototypeHandler* aHandler)
+nsXBLEventHandler::nsXBLEventHandler(nsXBLPrototypeHandler* aHandler)
+  : mProtoHandler(aHandler)
 {
-  mEventReceiver = aEventReceiver;
-  mProtoHandler = aHandler;
-  mNextHandler = nsnull;
 }
 
 nsXBLEventHandler::~nsXBLEventHandler()
 {
 }
 
-NS_IMPL_ISUPPORTS1(nsXBLEventHandler, nsISupports)
+NS_IMPL_ISUPPORTS1(nsXBLEventHandler, nsIDOMEventListener)
 
-void
-nsXBLEventHandler::RemoveEventHandlers()
+NS_IMETHODIMP
+nsXBLEventHandler::HandleEvent(nsIDOMEvent* aEvent)
 {
-  if (mNextHandler)
-    mNextHandler->RemoveEventHandlers();
-
-  // Figure out if we're using capturing or not.
   if (!mProtoHandler)
-    return;
+    return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIAtom> eventName = mProtoHandler->GetEventName();
-
-  nsAutoString type;
-  eventName->ToString(type);
-  
   PRUint8 phase = mProtoHandler->GetPhase();
-  PRBool useCapture = (phase == NS_PHASE_CAPTURING);
-  
-  PRBool found = PR_FALSE;
-  nsIID iid;
-  nsXBLBinding::GetEventHandlerIID(eventName, &iid, &found);
-
-  nsCOMPtr<nsIDOMEventListener> listener(do_QueryInterface(this));
-
-  // are we in the system event group?
-  nsCOMPtr<nsIDOMEventGroup> eventGroup;
-  if (mProtoHandler->GetType() & NS_HANDLER_TYPE_XBL_COMMAND)
-    mEventReceiver->GetSystemEventGroup(getter_AddRefs(eventGroup));
-
-  if (found && listener) {
-    nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(mEventReceiver);
-    target->RemoveGroupedEventListener(type, listener, useCapture, eventGroup);
+  if (phase == NS_PHASE_TARGET) {
+    PRUint16 eventPhase;
+    aEvent->GetEventPhase(&eventPhase);
+    if (eventPhase != nsIDOMEvent::AT_TARGET)
+      return NS_OK;
   }
+
+  if (!EventMatched(aEvent))
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetCurrentTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(target);
+
+  mProtoHandler->ExecuteHandler(receiver, aEvent);
+
+  return NS_OK;
 }
 
-/// Helpers that are relegated to the end of the file /////////////////////////////
-
-nsresult
-nsXBLEventHandler::GetTextData(nsIContent *aParent, nsAString& aResult)
+nsXBLMouseEventHandler::nsXBLMouseEventHandler(nsXBLPrototypeHandler* aHandler)
+  : nsXBLEventHandler(aHandler)
 {
-  aResult.Truncate(0);
+}
 
-  nsCOMPtr<nsIContent> textChild;
-  PRInt32 textCount;
-  aParent->ChildCount(textCount);
+nsXBLMouseEventHandler::~nsXBLMouseEventHandler()
+{
+}
 
-  for (PRInt32 j = 0; j < textCount; j++) {
-    // Get the child.
-    aParent->ChildAt(j, getter_AddRefs(textChild));
-    nsCOMPtr<nsIDOMText> text(do_QueryInterface(textChild));
-    if (text) {
-      nsAutoString data;
-      text->GetData(data);
-      aResult.Append(data);
-    }
+PRBool
+nsXBLMouseEventHandler::EventMatched(nsIDOMEvent* aEvent)
+{
+  nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aEvent));
+  return mProtoHandler->MouseEventMatched(mouse);
+}
+
+nsXBLKeyEventHandler::nsXBLKeyEventHandler(nsIAtom* aEventType, PRUint8 aPhase,
+                                           PRUint8 aType)
+  : mEventType(aEventType),
+    mPhase(aPhase),
+    mType(aType)
+{
+}
+
+nsXBLKeyEventHandler::~nsXBLKeyEventHandler()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsXBLKeyEventHandler, nsIDOMEventListener)
+
+NS_IMETHODIMP
+nsXBLKeyEventHandler::HandleEvent(nsIDOMEvent* aEvent)
+{
+  PRUint32 count = mProtoHandlers.Count();
+  if (count == 0)
+    return NS_ERROR_FAILURE;
+
+  if (mPhase == NS_PHASE_TARGET) {
+    PRUint16 eventPhase;
+    aEvent->GetEventPhase(&eventPhase);
+    if (eventPhase != nsIDOMEvent::AT_TARGET)
+      return NS_OK;
   }
+
+  nsCOMPtr<nsIDOMEventTarget> target;
+  aEvent->GetCurrentTarget(getter_AddRefs(target));
+  nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(target);
+
+  nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aEvent));
+
+  PRUint32 i;
+  for (i = 0; i < count; ++i) {
+    nsXBLPrototypeHandler* handler = NS_STATIC_CAST(nsXBLPrototypeHandler*,
+                                                    mProtoHandlers[i]);
+    if (handler->KeyEventMatched(key))
+      handler->ExecuteHandler(receiver, aEvent);
+  }
+
   return NS_OK;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewXBLEventHandler(nsIDOMEventReceiver* aRec,
-                      nsXBLPrototypeHandler* aHandler,
+NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
+                      nsIAtom* aEventType,
                       nsXBLEventHandler** aResult)
 {
-  *aResult = new nsXBLEventHandler(aRec, aHandler);
+  if (aEventType == nsXBLAtoms::mousedown ||
+      aEventType == nsXBLAtoms::mouseup ||
+      aEventType == nsXBLAtoms::click ||
+      aEventType == nsXBLAtoms::dblclick ||
+      aEventType == nsXBLAtoms::mouseover ||
+      aEventType == nsXBLAtoms::mouseout ||
+      aEventType == nsXBLAtoms::mousemove ||
+      aEventType == nsXBLAtoms::contextmenu ||
+      aEventType == nsXBLAtoms::dragenter ||
+      aEventType == nsXBLAtoms::dragover ||
+      aEventType == nsXBLAtoms::dragdrop ||
+      aEventType == nsXBLAtoms::dragexit ||
+      aEventType == nsXBLAtoms::draggesture) {
+    *aResult = new nsXBLMouseEventHandler(aHandler);
+  }
+  else {
+    *aResult = new nsXBLEventHandler(aHandler);
+  }
+
   if (!*aResult)
     return NS_ERROR_OUT_OF_MEMORY;
+
   NS_ADDREF(*aResult);
+
+  return NS_OK;
+}
+
+nsresult
+NS_NewXBLKeyEventHandler(nsIAtom* aEventType, PRUint8 aPhase, PRUint8 aType,
+                         nsXBLKeyEventHandler** aResult)
+{
+  *aResult = new nsXBLKeyEventHandler(aEventType, aPhase, aType);
+
+  if (!*aResult)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ADDREF(*aResult);
+
   return NS_OK;
 }

@@ -223,11 +223,11 @@ static const PRInt32 kInsInitialSize = (NS_SIZE_IN_HEAP(sizeof(nsXBLInsertionPoi
 nsXBLPrototypeBinding::nsXBLPrototypeBinding(const nsACString& aID,
                                              nsIXBLDocumentInfo* aInfo,
                                              nsIContent* aElement)
-: mPrototypeHandler(nsnull),
-  mImplementation(nsnull),
+: mImplementation(nsnull),
   mBaseBinding(nsnull),
   mInheritStyle(PR_TRUE), 
   mHasBaseProto(PR_TRUE),
+  mKeyHandlersRegistered(PR_FALSE),
   mResources(nsnull),
   mAttributeTable(nsnull), 
   mInsertionPointTable(nsnull),
@@ -269,7 +269,6 @@ nsXBLPrototypeBinding::~nsXBLPrototypeBinding(void)
   delete mInsertionPointTable;
   delete mInterfaceTable;
   delete mImplementation;
-  delete mPrototypeHandler;
   gRefCnt--;
   if (gRefCnt == 0) {
     delete kAttrPool;
@@ -1266,4 +1265,39 @@ nsXBLPrototypeBinding::AddResourceListener(nsIContent* aBoundElement)
 
   mResources->AddResourceListener(aBoundElement);
   return NS_OK;
+}
+
+void
+nsXBLPrototypeBinding::CreateKeyHandlers()
+{
+  nsXBLPrototypeHandler* curr = mPrototypeHandler;
+  while (curr) {
+    nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
+    if (eventAtom == nsXBLAtoms::keyup ||
+        eventAtom == nsXBLAtoms::keydown ||
+        eventAtom == nsXBLAtoms::keypress) {
+      PRUint8 phase = curr->GetPhase();
+      PRUint8 type = curr->GetType();
+
+      PRInt32 count = mKeyHandlers.Count();
+      PRInt32 i;
+      nsXBLKeyEventHandler* handler;
+      for (i = 0; i < count; ++i) {
+        handler = mKeyHandlers[i];
+        if (handler->Matches(eventAtom, phase, type))
+          break;
+      }
+
+      if (i == count) {
+        NS_NewXBLKeyEventHandler(eventAtom, phase, type, &handler);
+        if (handler)
+          mKeyHandlers.AppendObject(handler);
+      }
+
+      if (handler)
+        handler->AddProtoHandler(curr);
+    }
+
+    curr = curr->GetNextHandler();
+  }
 }

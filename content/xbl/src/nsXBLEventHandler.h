@@ -40,118 +40,98 @@
 #ifndef nsXBLEventHandler_h__
 #define nsXBLEventHandler_h__
 
-#include "nsIDOMEventReceiver.h"
 #include "nsCOMPtr.h"
-#include "nsXBLPrototypeHandler.h"
-#include "nsIDOMKeyEvent.h"
-#include "nsIDOMMouseEvent.h"
-#include "nsIDOMEventReceiver.h"
+#include "nsIDOMEventListener.h"
+#include "nsVoidArray.h"
 
-class nsIXBLBinding;
-class nsIDOMEvent;
-class nsIContent;
-class nsIDOMUIEvent;
-class nsIDOMKeyEvent;
-class nsIDOMMouseEvent;
 class nsIAtom;
-class nsIController;
+class nsIContent;
+class nsIDOM3EventTarget;
+class nsIDOMEventReceiver;
+class nsXBLPrototypeHandler;
 
-// XXX This should be broken up into subclasses for each listener IID type, so we
-// can cut down on the bloat of the handlers.
-class nsXBLEventHandler : public nsISupports
+class nsXBLEventHandler : public nsIDOMEventListener
 {
 public:
-  nsXBLEventHandler(nsIDOMEventReceiver* aReceiver,
-                    nsXBLPrototypeHandler* aHandler);
+  nsXBLEventHandler(nsXBLPrototypeHandler* aHandler);
   virtual ~nsXBLEventHandler();
-  
+
   NS_DECL_ISUPPORTS
 
-public:
-  void SetNextHandler(nsXBLEventHandler* aHandler) {
-    mNextHandler = aHandler;
-  }
-
-  void RemoveEventHandlers();
-
-  void MarkForDeath() {
-    if (mNextHandler) mNextHandler->MarkForDeath(); mProtoHandler = nsnull; mEventReceiver = nsnull;
-  }
-
-  static nsresult GetTextData(nsIContent *aParent, nsAString& aResult);
+  NS_DECL_NSIDOMEVENTLISTENER
 
 protected:
-  nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
   nsXBLPrototypeHandler* mProtoHandler;
 
-  nsXBLEventHandler* mNextHandler; // Handlers are chained for easy unloading later.
-
-  inline nsresult DoGeneric(nsIAtom* aEventType, nsIDOMEvent* aEvent)
+private:
+  nsXBLEventHandler();
+  virtual PRBool EventMatched(nsIDOMEvent* aEvent)
   {
-    if (!mProtoHandler)
-      return NS_ERROR_FAILURE;
-
-    PRUint8 phase = mProtoHandler->GetPhase();
-    if (phase == NS_PHASE_TARGET) {
-      PRUint16 eventPhase;
-      aEvent->GetEventPhase(&eventPhase);
-      if (eventPhase != nsIDOMEvent::AT_TARGET)
-        return NS_OK;
-    }
-
-    if (aEventType) {
-      nsCOMPtr<nsIAtom> eventName = mProtoHandler->GetEventName();
-      if (eventName != aEventType)
-        return NS_OK;
-    }
-
-    mProtoHandler->ExecuteHandler(mEventReceiver, aEvent);
-    return NS_OK;
-  }
-
-  inline nsresult DoKey(nsIAtom* aEventType, nsIDOMEvent* aKeyEvent)
-  {
-    if (!mProtoHandler)
-      return NS_ERROR_FAILURE;
-
-    PRUint8 phase = mProtoHandler->GetPhase();
-    if (phase == NS_PHASE_TARGET) {
-      PRUint16 eventPhase;
-      aKeyEvent->GetEventPhase(&eventPhase);
-      if (eventPhase != nsIDOMEvent::AT_TARGET)
-        return NS_OK;
-    }
-
-    nsCOMPtr<nsIDOMKeyEvent> key(do_QueryInterface(aKeyEvent));
-    if (mProtoHandler->KeyEventMatched(aEventType, key))
-      mProtoHandler->ExecuteHandler(mEventReceiver, aKeyEvent);
-
-    return NS_OK;
-  }
-
-  inline nsresult DoMouse(nsIAtom* aEventType, nsIDOMEvent* aMouseEvent)
-  {
-    if (!mProtoHandler)
-      return NS_ERROR_FAILURE;
-
-    PRUint8 phase = mProtoHandler->GetPhase();
-    if (phase == NS_PHASE_TARGET) {
-      PRUint16 eventPhase;
-      aMouseEvent->GetEventPhase(&eventPhase);
-      if (eventPhase != nsIDOMEvent::AT_TARGET)
-        return NS_OK;
-    }
-
-    nsCOMPtr<nsIDOMMouseEvent> mouse(do_QueryInterface(aMouseEvent));
-    if (mProtoHandler->MouseEventMatched(aEventType, mouse))
-      mProtoHandler->ExecuteHandler(mEventReceiver, aMouseEvent);
-
-    return NS_OK;
+    return PR_TRUE;
   }
 };
 
+class nsXBLMouseEventHandler : public nsXBLEventHandler
+{
+public:
+  nsXBLMouseEventHandler(nsXBLPrototypeHandler* aHandler);
+  virtual ~nsXBLMouseEventHandler();
+
+private:
+  PRBool EventMatched(nsIDOMEvent* aEvent);
+};
+
+class nsXBLKeyEventHandler : public nsIDOMEventListener
+{
+public:
+  nsXBLKeyEventHandler(nsIAtom* aEventType, PRUint8 aPhase, PRUint8 aType);
+  virtual ~nsXBLKeyEventHandler();
+
+  NS_DECL_ISUPPORTS
+
+  NS_DECL_NSIDOMEVENTLISTENER
+
+  void AddProtoHandler(nsXBLPrototypeHandler* aProtoHandler)
+  {
+    mProtoHandlers.AppendElement(aProtoHandler);
+  }
+
+  PRBool Matches(nsIAtom* aEventType, PRUint8 aPhase, PRUint8 aType) const
+  {
+    return (mEventType == aEventType && mPhase == aPhase && mType == aType);
+  }
+
+  void GetEventName(nsAString& aString) const
+  {
+    mEventType->ToString(aString);
+  }
+
+  PRUint8 GetPhase() const
+  {
+    return mPhase;
+  }
+
+  PRUint8 GetType() const
+  {
+    return mType;
+  }
+
+private:
+  nsXBLKeyEventHandler();
+
+  nsVoidArray mProtoHandlers;
+  nsCOMPtr<nsIAtom> mEventType;
+  PRUint8 mPhase;
+  PRUint8 mType;
+};
+
 nsresult
-NS_NewXBLEventHandler(nsIDOMEventReceiver* aEventReceiver,
-                      nsXBLPrototypeHandler* aHandlerElement,
+NS_NewXBLEventHandler(nsXBLPrototypeHandler* aHandler,
+                      nsIAtom* aEventType,
                       nsXBLEventHandler** aResult);
+
+nsresult
+NS_NewXBLKeyEventHandler(nsIAtom* aEventType, PRUint8 aPhase,
+                         PRUint8 aType, nsXBLKeyEventHandler** aResult);
+
 #endif

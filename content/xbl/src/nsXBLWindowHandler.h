@@ -82,11 +82,6 @@ protected:
                                         nsIAtom* aEventType, 
                                         nsXBLPrototypeHandler* aHandler);
 
-  // create the event handler list from the given document/URI
-  void GetHandlers(nsIXBLDocumentInfo* aInfo,
-                   const nsACString& aRef,
-                   nsXBLPrototypeHandler** aResult);
-
     // does the handler care about the particular event?
   virtual PRBool EventMatched(nsXBLPrototypeHandler* inHandler,
                               nsIAtom* inEventType,
