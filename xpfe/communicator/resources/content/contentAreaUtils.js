@@ -644,9 +644,14 @@ function getDefaultFileName(aDefaultFileName, aNameFromHeaders, aDocumentURI, aD
   if (aNameFromHeaders)
     return validateFileName(aNameFromHeaders);  // 1) Use the name suggested by the HTTP headers
 
-  var url = aDocumentURI.QueryInterface(Components.interfaces.nsIURL);
-  if (url.fileName != "")
-    return url.fileName;                        // 2) Use the actual file name, if present
+  try {
+    var url = aDocumentURI.QueryInterface(Components.interfaces.nsIURL);
+    if (url.fileName != "")
+      return url.fileName;                      // 2) Use the actual file name, if present
+  } catch (e) {
+    // This is something like a wyciwyg:, data:, and so forth
+    // URI... no usable filename here.
+  }
   
   if (aDocument && aDocument.title != "") 
     return validateFileName(aDocument.title)    // 3) Use the document title
