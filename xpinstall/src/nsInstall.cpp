@@ -89,17 +89,6 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 	
-// filename length maximums
-#ifdef XP_MAC
-#define MAX_NAME_LENGTH 31
-#elif defined (XP_PC)
-#define MAX_NAME_LENGTH 128
-#elif defined (XP_UNIX)
-#define MAX_NAME_LENGTH 1024 //got this one from nsComponentManager.h
-#elif defined (XP_BEOS)
-#define MAX_NAME_LENGTH MAXNAMLEN
-#endif
-
 MOZ_DECL_CTOR_COUNTER(nsInstallInfo);
 
 nsInstallInfo::nsInstallInfo(PRUint32           aInstallType,
@@ -492,12 +481,6 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
         return NS_OK;
     }
 
-    if(aTargetName.Length() > MAX_NAME_LENGTH)
-    {
-      *aReturn = SaveError( nsInstall::FILENAME_TOO_LONG );
-      return NS_OK;
-    }
-    
     PRInt32 result = SanityCheck();
 
     if (result != nsInstall::SUCCESS)
@@ -507,7 +490,14 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
     }
     
     if( aTargetName.IsEmpty() )
-      tempTargetName = aJarSource;
+    {
+        PRInt32 pos = aJarSource.RFindChar('/');
+
+        if ( pos == kNotFound )
+            tempTargetName = aJarSource;
+        else
+            aJarSource.Mid(tempTargetName, pos+1, -1);
+    }
     
     if (qualifiedVersion.IsEmpty())
         qualifiedVersion.AssignWithConversion("0.0.0.0");   	
