@@ -93,9 +93,29 @@ EXTRA_SHARED_LIBS += \
 endif
 
 ifeq ($(OS_ARCH),SunOS)
-MKSHLIB += -M mapfile
+MAPFILE = $(OBJDIR)/nssmap.sun
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -M $(MAPFILE)
+endif
+
+ifeq ($(OS_ARCH),AIX)
+MAPFILE = $(OBJDIR)/nssmap.aix
+ALL_TRASH += $(MAPFILE)
+EXPORT_RULES = -bexport:$(MAPFILE)
+endif
+
+ifeq ($(OS_ARCH),HP-UX)
+MAPFILE = $(OBJDIR)/nssmap.hp
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -e $(MAPFILE)
 endif
 
 ifeq ($(OS_ARCH),Linux)
-MKSHLIB += -Wl,--version-script,mapfile
+MAPFILE = $(OBJDIR)/nssmap.linux
+ALL_TRASH += $(MAPFILE)
+MKSHLIB += -Wl,--version-script,$(MAPFILE)
 endif
+
+
+	
+
