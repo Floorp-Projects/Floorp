@@ -33,13 +33,12 @@ Rights Reserved.
 	<!-- Addressing Widget -->
 	<box id="addressingWidget"
 		 align="vertical"
-		 onclick="AddressingWidgetClick()"
 		 style="border:solid black 1px">
 
 		<!-- for fixed height:  height:5em;  -->
 		<tree id="addressingWidgetTree"		
-			  class="addressingWidget" 
-			  style="background-color:inherit">
+			  class="addressingWidget"
+			  onclick="awClickRow()">
 			  
 			<treecol style="width:15%"/>
 			<treecol style="width:3%"/>
@@ -47,7 +46,7 @@ Rights Reserved.
 
 			<treechildren id="addressWidgetBody">
 				<treeitem>
-					<treerow>
+					<treerow style="border-bottom:solid black 1px">
 						<treecell treeallowevents="true">
 							<html:select id="msgRecipientType#1">
 								<html:option value="addr_to">&toAddr.label;</html:option>
@@ -58,200 +57,24 @@ Rights Reserved.
 								<html:option value="addr_followup">&followupAddr.label;</html:option>
 							</html:select>
 						</treecell>
-						<treecell><titledbutton/></treecell>
+						
+						<treecell>
+							<titledbutton/>
+						</treecell>
+						
 						<treecell treeallowevents="true">
-							<html:input type="text" id="msgRecipient#1" style="width:90%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#1',
-															  'msgRecipient#1'); }"/>
+							<html:input id="msgRecipient#1"
+										class="addressingWidget"
+										type="text"
+										onkeypress="if (event.which == 13)
+										{ AutoCompleteAddress(this); awReturnHit(this); }"/>
 						</treecell>
 					</treerow>
 				</treeitem>
 				
-				<treeitem>
-					<treerow>
-						<treecell treeallowevents="true">
-							<html:select id="msgRecipientType#2"/>
-						</treecell>
-						<treecell><titledbutton/></treecell>
-						<treecell treeallowevents="true">
-							<html:input type="text" id="msgRecipient#2" style="width:90%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#2',
-															  'msgRecipient#2'); }"/>
-						</treecell>
-					</treerow>
-				</treeitem>
-				
-				<treeitem>
-					<treerow>
-						<treecell treeallowevents="true">
-							<html:select id="msgRecipientType#3"/>
-						</treecell>
-						<treecell><titledbutton/></treecell>
-						<treecell treeallowevents="true">
-							<html:input type="text" id="msgRecipient#3" style="width:90%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#3',
-															  'msgRecipient#3'); }"/>
-						</treecell>
-					</treerow>
-				</treeitem>
-				
-				<treeitem>
-					<treerow>
-						<treecell treeallowevents="true">
-							<html:select id="msgRecipientType#4"/>
-						</treecell>
-						<treecell><titledbutton/></treecell>
-						<treecell treeallowevents="true">
-							<html:input type="text" id="msgRecipient#4" style="width:90%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#4',
-															  'msgRecipient#4'); }"/>
-						</treecell>
-					</treerow>
-				</treeitem>
-				
-				<treeitem>
-					<treerow>
-						<treecell treeallowevents="true">
-							<html:select id="msgRecipientType#5"/>
-						</treecell>
-						<treecell><titledbutton/></treecell>
-						<treecell treeallowevents="true">
-							<html:input type="text" id="msgRecipient#5" style="width:90%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#5',
-															  'msgRecipient#5'); }"/>
-						</treecell>
-					</treerow>
-				</treeitem>
-
-				<!--
-				<treeitem>
-					<treerow>
-						<treecell>
-							<html:select id="msgRecipientType#6"/>
-						</treecell>
-						<treecell>
-							<html:input type="text" id="msgRecipient#6" style="width:90%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#6',
-															  'msgRecipient#6'); }"/>
-						</treecell>
-					</treerow>
-				</treeitem>
-				
-				<treeitem>
-					<treerow>
-						<treecell>
-							<html:select id="msgRecipientType#7"/>
-						</treecell>
-						<treecell>
-							<html:input type="text" id="msgRecipient#7" style="width:90%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#7',
-															  'msgRecipient#7'); }"/>
-						</treecell>
-					</treerow>
-				</treeitem>
-				
-				<treeitem>
-					<treerow>
-						<treecell>
-							<html:select id="msgRecipientType#8"/>
-						</treecell>
-						<treecell>
-							<html:input type="text" id="msgRecipient#8" style="width:90%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#8',
-															  'msgRecipient#8'); }"/>
-						</treecell>
-					</treerow>
-				</treeitem>
-				
-				<treeitem>
-					<treerow>
-						<treecell>
-							<html:select id="msgRecipientType#9"/>
-						</treecell>
-						<treecell>
-							<html:input type="text" id="msgRecipient#9" style="width:90%"
-										onkeyup="if (event.which == 13)
-										{ AutoCompleteAddress('msgRecipientType#9',
-															  'msgRecipient#9'); }"/>
-						</treecell>
-					</treerow>
-				</treeitem>
-				-->
-
 			</treechildren>
 		</tree>
-	</box>
-
-
-	<!--
-	<box align="horizontal" flex="100%">
 		
-		<box align="vertical">
-			<box align="vertical" flex="100%">
-				<html:select id="msgRecipientType#1" flex="100%">
-				<html:option value="addr_to">&toAddr.label;</html:option>
-				<html:option value="addr_cc">&ccAddr.label;</html:option>
-				<html:option value="addr_bcc">&bccAddr.label;</html:option>
-				<html:option value="addr_reply">&replyAddr.label;</html:option>
-				<html:option value="addr_newsgroups">&newsgroupsAddr.label;</html:option>
-				<html:option value="addr_followup">&followupAddr.label;</html:option>
-				</html:select>
-			</box>
-			<box align="vertical" flex="100%">
-				<html:select id="msgRecipientType#2" flex="100%"/>
-			</box>
-			<box align="vertical" flex="100%">
-				<html:select id="msgRecipientType#3" flex="100%"/>
-			</box>
-			<box align="vertical" flex="100%">
-				<html:select id="msgRecipientType#4" flex="100%"/>
-			</box>
-			<box align="vertical" flex="100%">
-				<html:select id="msgRecipientType#5" flex="100%"/>
-			</box>
-		</box>
-		
-		<box align="vertical" flex="100%">
-			<box align="vertical" flex="100%">
-				<html:input type="text" id="msgRecipient#1" flex="100%"
-							onkeyup="if (event.which == 13)
-							{ AutoCompleteAddress('msgRecipientType#1',
-												  'msgRecipient#1'); }"/>
-			</box>					
-			<box align="vertical" flex="100%">
-				<html:input type="text" id="msgRecipient#2" flex="100%"
-							onkeyup="if (event.which == 13)
-							{ AutoCompleteAddress('msgRecipientType#2',
-												  'msgRecipient#2'); }"/>
-			</box>					
-			<box align="vertical" flex="100%">
-				<html:input type="text" id="msgRecipient#3" flex="100%"
-							onkeyup="if (event.which == 13)
-							{ AutoCompleteAddress('msgRecipientType#3',
-												  'msgRecipient#3'); }"/>
-			</box>					
-			<box align="vertical" flex="100%">
-				<html:input type="text" id="msgRecipient#4" flex="100%"
-							onkeyup="if (event.which == 13)
-							{ AutoCompleteAddress('msgRecipientType#4',
-												  'msgRecipient#4'); }"/>
-			</box>					
-			<box align="vertical" flex="100%">
-				<html:input type="text" id="msgRecipient#5" flex="100%"
-							onkeyup="if (event.which == 13)
-							{ AutoCompleteAddress('msgRecipientType#5',
-												  'msgRecipient#5'); }"/>
-			</box>					
-		</box>					
 	</box>
-	-->
 
 </overlay>

@@ -12,12 +12,16 @@ var AddressAutoCompleteListener = {
 	}
 };
 
-function AutoCompleteAddress(select_doc_id, doc_id)
+function AutoCompleteAddress(inputElement)
 {
-	dump("select_doc_id = " + select_doc_id + "\n");
-	dump("doc_id = " + doc_id + "\n");
+	///////////// (select_doc_id, doc_id)
 
-        var select = document.getElementById(select_doc_id);
+	dump("inputElement = " + inputElement + "\n");
+
+	var row = awGetRowByInputElement(inputElement);	
+
+    var select = awGetPopupElement(row);
+	
 	dump("select = " + select + "\n");
 	dump("select.value = " + select.value + "\n");
 
@@ -27,14 +31,12 @@ function AutoCompleteAddress(select_doc_id, doc_id)
 	}
 	
 	var ac = Components.classes['component://netscape/messenger/autocomplete&type=addrbook'];
-        if (ac) {
-                ac = ac.getService();
-        }       
-        if (ac) {
-                ac = ac.QueryInterface(Components.interfaces.nsIAutoCompleteSession);
-        }
+	if (ac) {
+		ac = ac.getService();
+	}       
+	if (ac) {
+		ac = ac.QueryInterface(Components.interfaces.nsIAutoCompleteSession);
+	}
 
-        var field = document.getElementById(doc_id);
-	
-	ac.AutoComplete(doc_id, field.value, AddressAutoCompleteListener);
+	ac.AutoComplete(inputElement.getAttribute('id'), inputElement.value, AddressAutoCompleteListener);
 }

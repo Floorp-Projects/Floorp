@@ -390,16 +390,14 @@ function SelectAddress()
 	var bccAddress = msgCompFields.GetBcc();
 	
 	dump("toAddress: " + toAddress + "\n");
-	var dialog = window.openDialog("chrome://addressbook/content/abSelectAddressesDialog.xul",
-								   "",
-								   "chrome",
-								   {composeWindow:top.window,
-								    msgCompFields:msgCompFields,
-								    toAddress:toAddress,
-								    ccAddress:ccAddress,
-								    bccAddress:bccAddress});
-	
-	return dialog;
+	window.openDialog("chrome://addressbook/content/abSelectAddressesDialog.xul",
+					  "",
+					  "chrome,resizable",
+					  {composeWindow:top.window,
+					   msgCompFields:msgCompFields,
+					   toAddress:toAddress,
+					   ccAddress:ccAddress,
+					   bccAddress:bccAddress});
 }
 
 function queryISupportsArray(supportsArray, iid) {

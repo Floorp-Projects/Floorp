@@ -1,32 +1,39 @@
-
 spring.spacer {
-    width: 5px;
-    height: 5px;
+	width: 5px;
+	height: 5px;
 }
 
 box.cleanborder {
-    margin: 10px;
-    padding: 10px;
-    border: 2px groove white;
-    width: 100%;
+	margin: 10px;
+	padding: 10px;
+	border: 2px groove white;
+	width: 100%;
 }
 
 box.padded {
-    margin: 10px;
-    width: 100%;
+	margin: 10px;
+	width: 100%;
 }
 
 tree[class="attachment"] treeitem > treerow > treecell > titledbutton {
- vertical-align: bottom;
- min-height: 1px;
- min-width: 1px;
- height: 1em;
- width: 1em;
- margin:0px;
- padding:0px;
- border:2px groove black;
- list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
+	vertical-align: bottom;
+	min-height: 1px;
+	min-width: 1px;
+	height: 1em;
+	width: 1em;
+	margin:0px;
+	padding:0px;
+	border:2px groove black;
+	list-style-image: url("chrome://addressbook/skin/myaddrbk.gif");
 }
+
+titledbutton#Throbber
+{
+	list-style-image:url(chrome://navigator/skin/animthrob_single.gif);
+}
+
+
+/* addressing widget */
 
 tree[class="addressingWidget"] treeitem > treerow  > treecell > titledbutton {
 	 vertical-align: middle;
@@ -41,7 +48,11 @@ tree[class="addressingWidget"] treeitem > treerow  > treecell > titledbutton {
 	 color:inherit;
 }
 
-titledbutton#Throbber
-{
-        list-style-image:url(chrome://navigator/skin/animthrob_single.gif);
+input[class="addressingWidget"] {
+	width: 90%;
+	border: none;
+	margin: 0px;
+	padding: 0px;
+	background-color: inherit;
 }
+
