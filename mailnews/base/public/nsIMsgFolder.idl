@@ -25,7 +25,7 @@
 %{ C++
 #include "nsFileSpec.h"
 %}
-
+interface nsIMessage;
 native nsNativeFileSpec(nsNativeFileSpec*);
 interface nsIMessage;
 
@@ -73,8 +73,8 @@ interface nsIMsgFolder : nsIFolder {
 
 	void UpdateSummaryTotals();
 	void SummaryChanged();
-	unsigned long GetNumUnread(in boolean deep);
-	unsigned long GetTotalMessages(in boolean deep);
+	long GetNumUnread(in boolean deep);
+	long GetTotalMessages(in boolean deep);
 
 	readonly attribute unsigned long expungedBytesCount;
 	readonly attribute boolean deletable;
