@@ -1919,6 +1919,11 @@ MOZ_ARG_ENABLE_BOOL(necko,
 [  --enable-necko  Enable NECKO, the new network library.],
   NECKO=1)
 
+dnl Toolbar drag & drop
+MOZ_ARG_ENABLE_BOOL(toolbar_dd,
+[  --enable-toolbar-dd  Enable toolbar drag and drop.],
+  AC_DEFINE(TOOLBAR_DD))
+
 dnl commenting this out
 dnl according to waterson it is obsolete.
 dnl I'll remove it once I hear back from jband.  
@@ -1998,6 +2003,7 @@ AC_SUBST(MOZ_WIDGET_TOOLKIT)
 AC_SUBST(MOZ_GFX_TOOLKIT)
 AC_SUBST(MOZ_UPDATE_XTERM)
 AC_SUBST(NECKO)
+AC_SUBST(TOOLBAR_DD)
 AC_SUBST(MOZ_SECURITY)
 dnl AC_SUBST(MOZ_NETCAST)
 AC_SUBST(MOZ_JAVA)
