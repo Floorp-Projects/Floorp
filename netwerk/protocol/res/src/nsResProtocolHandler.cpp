@@ -31,7 +31,7 @@ static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 ////////////////////////////////////////////////////////////////////////////////
 
 nsResProtocolHandler::nsResProtocolHandler()
-    : mLock(nsnull), mSubstitutions(nsnull)
+    : mLock(nsnull), mSubstitutions(32)
 {
     NS_INIT_REFCNT();
 }
@@ -52,9 +52,6 @@ nsResProtocolHandler::Init()
 
     mLock = PR_NewLock();
     if (mLock == nsnull)
-        return NS_ERROR_OUT_OF_MEMORY;
-    mSubstitutions = new nsHashtable(32);
-    if (mSubstitutions == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
     // set up initial mappings
@@ -91,12 +88,20 @@ nsResProtocolHandler::Init()
     return rv;
 }
 
+static PR_CALLBACK PRBool
+DeleteCStringArray(nsHashKey *aKey, void *aData, void* closure)
+{
+    nsCStringArray* array = NS_STATIC_CAST(nsCStringArray*, aData);
+    if (array)
+        delete array;
+    return PR_TRUE;
+}
+
 nsResProtocolHandler::~nsResProtocolHandler()
 {
     if (mLock)
         PR_DestroyLock(mLock);
-    if (mSubstitutions)
-        delete mSubstitutions;
+    mSubstitutions.Enumerate(DeleteCStringArray, nsnull);
 }
 
 NS_IMPL_ISUPPORTS2(nsResProtocolHandler, nsIResProtocolHandler, nsIProtocolHandler)
@@ -203,12 +208,12 @@ nsresult
 nsResProtocolHandler::RawGetSubstitutions(const char *root, nsCStringArray* *result)
 {
     nsStringKey key(root);
-    nsCStringArray* strings = (nsCStringArray*)mSubstitutions->Get(&key);
+    nsCStringArray* strings = (nsCStringArray*)mSubstitutions.Get(&key);
     if (strings == nsnull) {
         strings = new nsCStringArray();
         if (strings == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
-        (void)mSubstitutions->Put(&key, strings);
+        (void)mSubstitutions.Put(&key, strings);
     }
     *result = strings;
     return NS_OK;
