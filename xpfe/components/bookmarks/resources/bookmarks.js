@@ -951,14 +951,24 @@ function doContextCmd(cmdName)
 	return(true);
 }
 
+
+
 function bookmarkSelect()
 {
-  var tree = document.getElementById( "bookmarksTree" );
-  var status = document.getElementById( "statusbar-text" );
-  if( tree.selectedItems.length != 1 ) {
-    status.setAttribute( "value", "" );
-    return;
-  }
-  var url = tree.selectedItems[0].getAttribute("location");
-  status.setAttribute( "value", url );
+	var tree = document.getElementById( "bookmarksTree" );
+	var status = document.getElementById( "statusbar-text" );
+	var val = "";
+	if( tree.selectedItems.length == 1 )
+	{
+		val = getAbsoluteID("bookmarksTree", tree.selectedItems[0]);
+
+		// Ignore "NC:" urls.
+		if (val.substring(0, 3) == "NC:")
+		{
+			val = "";
+		}
+	}
+	status.setAttribute( "value", val );
+	return(true);
 }
+
