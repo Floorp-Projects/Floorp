@@ -1681,7 +1681,7 @@ PRInt32 nsPop3Protocol::SendPassword()
             // "VXNlc" is the begin of the base64 encoded prompt for LOGIN
             if (m_commandResponse.Compare("VXNlc", PR_FALSE, 5) == 0)
             {
-                // disable and enable LOGIN (in case it's not already enabled)
+                // disable PLAIN and enable LOGIN (in case it's not already enabled)
                 ClearCapFlag(POP3_HAS_AUTH_PLAIN);
                 SetCapFlag(POP3_HAS_AUTH_LOGIN);
                 m_pop3Server->SetPop3CapabilityFlags(m_pop3ConData->capability_flags);
