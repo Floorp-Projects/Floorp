@@ -62,9 +62,9 @@
 <!-- sidebar/toolbar/content/status -->
 <box id="sidebar-parent" align="horizontal" flex="100%">
   <!-- toolbar/content/status -->
- 
-  <box id="sidebar-box" chromeclass="extrachrome"/>
-  <splitter id="sidebar-splitter" chromeclass="extrachrome" />
+
+  <box id="sidebar-box" chromeclass="extrachrome" style="display:none"/>
+  <splitter id="sidebar-splitter" chromeclass="extrachrome" style="display:none"/>
   
   <box id="appcontent" align="vertical" flex="100%">
   <toolbox id="EditorToolbars">
