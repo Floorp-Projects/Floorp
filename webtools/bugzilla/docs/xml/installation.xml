@@ -1398,17 +1398,24 @@ bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
 	  </para>
 	</step>
 	<step>
-	  <para>
-	    Use ppm from your perl\bin directory to install the following packs: DBI,
-	    DBD-Mysql, TimeDate, Chart, Date-Calc, Date-Manip, and GD.  You may need
-	    to extract them from .zip format using Winzip or other unzip program first.
-	    These additional ppm modules can be downloaded from ActiveState.
-	  </para>
+          <para>
+            Use ppm from your perl\bin directory to install the following
+            packs:  DBI, DBD-Mysql, TimeDate, Chart, Date-Calc, Date-Manip,
+            GD, AppConfig, and Template. You may need to extract them from
+            .zip format using Winzip or other unzip program first. Most of
+            these additional ppm modules can be downloaded from ActiveState,
+            but AppConfig and Template should be obtained from OpenInteract
+            using <ulink type="http"
+            url="http://openinteract.sourceforge.net/">the instructions on
+            the Template Toolkit web site</ulink>.
+          </para>
 	  <note>
 	    <para>
 	      You can find a list of modules at
 	      <ulink url="http://www.activestate.com/PPMPackages/zips/5xx-builds-only">
 		http://www.activestate.com/PPMPackages/zips/5xx-builds-only/</ulink>
+		or <ulink
+		url="http://www.activestate.com/PPMPackages/5.6plus">http://www.activestate.com/PPMPackages/5.6plus</ulink>
 	    </para>
 	  </note>
 	  <para>
@@ -1426,10 +1433,35 @@ bash# cd $BUGZILLA_HOME; for i in `ls *.cgi`; \
 	  </example>
 
 	  <para>
-	    You can find ActiveState ppm modules at
-	    <ulink url="http://www.activestate.com/PPMPackages/5.6plus/">
-	      http://www.activestate.com/PPMPackages/5.6plus</ulink>
+            ActiveState's 5.6Plus directory also contains an AppConfig ppm, so
+            you might see the following error when trying to install the
+            version at OpenInteract:
+          </para>
+          <para>
+            <computeroutput>
+              Error installing package 'AppConfig': Read a PPD for
+              'AppConfig', but it is not intended for this build of Perl
+              (MSWin32-x86-multi-thread)
+            </computeroutput>
 	  </para>
+          <para>
+            If so, download both <ulink
+            url="http://openinteract.sourceforge.net/ppmpackages/AppConfig.tar.gz">the
+            tarball</ulink> and <ulink
+            url="http://openinteract.sourceforge.net/ppmpackages/AppConfig.ppd">the
+            ppd</ulink> directly from OpenInteract, then run ppm from within
+            the same directory  to which you downloaded those files and
+            install the package by referencing  the ppd file explicitly via in
+            the install command, f.e.: 
+            <example>
+              <title>Installing OpenInteract ppd Modules manually on Microsoft
+              Windows</title>
+              <para>
+                <computeroutput><command>install
+                <filename>C:\AppConfig.ppd</filename></command></computeroutput>
+              </para>
+            </example>
+          </para>
 	</step>
 
 	<step>
