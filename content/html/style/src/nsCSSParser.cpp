@@ -3612,12 +3612,17 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
     if ((eCSSToken_String == tk->mType) || (eCSSToken_URL == tk->mType)) {
       // Translate url into an absolute url if the url is relative to
       // the style sheet.
-      // XXX editors won't like this - too bad for now
-      nsCOMPtr<nsIURI> url;
-      NS_NewURI(getter_AddRefs(url), tk->mIdent, nsnull, mURL);
+      nsCOMPtr<nsIURI> uri;
+      NS_NewURI(getter_AddRefs(uri), tk->mIdent, nsnull, mURL);
       if (ExpectSymbol(aErrorCode, ')', PR_TRUE)) {
         // Set a null value on failure.  Most failure cases should be
         // NS_ERROR_MALFORMED_URI.
+        nsCSSValue::URL *url = new nsCSSValue::URL(uri, tk->mIdent.get());
+        if (!url || !url->mString) {
+          aErrorCode = NS_ERROR_OUT_OF_MEMORY;
+          delete url;
+          return PR_FALSE;
+        }
         aValue.SetURLValue(url);
         return PR_TRUE;
       }

@@ -90,11 +90,11 @@ nsCSSValue::nsCSSValue(nscolor aValue)
   mValue.mColor = aValue;
 }
 
-nsCSSValue::nsCSSValue(nsIURI* aValue)
+nsCSSValue::nsCSSValue(nsCSSValue::URL* aValue)
   : mUnit(eCSSUnit_URL)
 {
   mValue.mURL = aValue;
-  NS_IF_ADDREF(aValue);
+  mValue.mURL->AddRef();
 }
 
 nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
@@ -116,7 +116,7 @@ nsCSSValue::nsCSSValue(const nsCSSValue& aCopy)
   }
   else if (eCSSUnit_URL == mUnit){
     mValue.mURL = aCopy.mValue.mURL;
-    NS_IF_ADDREF(mValue.mURL);
+    mValue.mURL->AddRef();
   }
   else {
     mValue.mFloat = aCopy.mValue.mFloat;
@@ -140,7 +140,7 @@ nsCSSValue& nsCSSValue::operator=(const nsCSSValue& aCopy)
   }
   else if (eCSSUnit_URL == mUnit){
     mValue.mURL = aCopy.mValue.mURL;
-    NS_IF_ADDREF(mValue.mURL);
+    mValue.mURL->AddRef();
   }
   else {
     mValue.mFloat = aCopy.mValue.mFloat;
@@ -168,11 +168,7 @@ PRBool nsCSSValue::operator==(const nsCSSValue& aOther) const
       return mValue.mColor == aOther.mValue.mColor;
     }
     else if (eCSSUnit_URL == mUnit) {
-      PRBool eq;
-      return (mValue.mURL == aOther.mValue.mURL || // handles null == null
-              (mValue.mURL && aOther.mValue.mURL &&
-               NS_SUCCEEDED(mValue.mURL->Equals(aOther.mValue.mURL, &eq)) &&
-               eq));
+      return *mValue.mURL == *aOther.mValue.mURL;
     }
     else {
       return mValue.mFloat == aOther.mValue.mFloat;
@@ -211,12 +207,12 @@ void nsCSSValue::SetColorValue(nscolor aValue)
   mValue.mColor = aValue;
 }
 
-void nsCSSValue::SetURLValue(nsIURI* aValue)
+void nsCSSValue::SetURLValue(nsCSSValue::URL* aValue)
 {
   Reset();
   mUnit = eCSSUnit_URL;
   mValue.mURL = aValue;
-  NS_IF_ADDREF(mValue.mURL);
+  mValue.mURL->AddRef();
 }
 
 void nsCSSValue::SetAutoValue(void)
@@ -319,13 +315,7 @@ void nsCSSValue::AppendToString(nsAString& aBuffer,
     aBuffer.Append(PRUnichar(')'));
   }
   else if (eCSSUnit_URL == mUnit) {
-    if (mValue.mURL) {
-      nsCAutoString spec;
-      mValue.mURL->GetSpec(spec);
-      AppendUTF8toUTF16(spec, aBuffer);
-    } else {
-      aBuffer.Append(NS_LITERAL_STRING("url(invalid-url:)"));
-    }
+    aBuffer.Append(mValue.mURL->mString);
   }
   else if (eCSSUnit_Percent == mUnit) {
     nsAutoString floatString;
