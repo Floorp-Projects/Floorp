@@ -514,26 +514,23 @@ secu_StdinToItem(SECItem *dst)
 	numBytes = PR_Read(PR_STDIN, buf, sizeof(buf));
 
 	if (numBytes < 0) {
-	    PORT_SetError(PR_IO_ERROR);
 	    return SECFailure;
 	}
 
 	if (numBytes == 0)
 	    break;
 
-	if (buf[numBytes-1] == '\n') {
-	    buf[numBytes-1] = '\0';
-	    notDone = PR_FALSE;
-	}
-
 	if (dst->data) {
+	    /* XXX if PORT_Realloc fails, the old buffer is leaked. */
 	    dst->data = (unsigned char*)PORT_Realloc(dst->data, 
-	                                             dst->len+numBytes);
-	    PORT_Memcpy(dst->data+dst->len, buf, numBytes);
+	                                             dst->len + numBytes);
 	} else {
 	    dst->data = (unsigned char*)PORT_Alloc(numBytes);
-	    PORT_Memcpy(dst->data, buf, numBytes);
 	}
+	if (!dst->data) {
+	    return SECFailure;
+	}
+	PORT_Memcpy(dst->data + dst->len, buf, numBytes);
 	dst->len += numBytes;
     }
 

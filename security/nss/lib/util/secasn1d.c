@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.30 2003/11/07 01:41:22 nelsonb%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.31 2003/11/18 06:16:26 nelsonb%netscape.com Exp $
  */
 
 /* #define DEBUG_ASN1D_STATES 1 */
@@ -403,6 +403,7 @@ sec_asn1d_push_state (SEC_ASN1DecoderContext *cx,
 	new_state->depth = state->depth;
 	if (new_depth) {
 	    if (++new_state->depth > SEC_ASN1D_MAX_DEPTH) {
+		PORT_SetError (SEC_ERROR_BAD_DER);
 		goto loser;
 	    }
 	}
@@ -1046,6 +1047,7 @@ sec_asn1d_prepare_for_contents (sec_asn1d_state *state)
 	sec_asn1d_state *parent = sec_asn1d_get_enclosing_construct(state);
 	if (parent && !parent->indefinite && 
 	    state->consumed + state->contents_length > parent->pending) {
+	    PORT_SetError (SEC_ERROR_BAD_DER);
 	    state->top->status = decodeError;
 	    return;
 	}
@@ -1137,6 +1139,7 @@ sec_asn1d_prepare_for_contents (sec_asn1d_state *state)
 	 * implement this because in practice, it seems to be unused.
 	 */
 	PORT_Assert(0);
+	PORT_SetError (SEC_ERROR_BAD_DER); /* XXX */
 	state->top->status = decodeError;
 	break;
 
@@ -1146,6 +1149,7 @@ sec_asn1d_prepare_for_contents (sec_asn1d_state *state)
 	 * An indefinite-length encoding is not alloweed.
 	 */
 	if (state->contents_length || state->indefinite) {
+	    PORT_SetError (SEC_ERROR_BAD_DER);
 	    state->top->status = decodeError;
 	    break;
 	}
@@ -1160,6 +1164,7 @@ sec_asn1d_prepare_for_contents (sec_asn1d_state *state)
       case SEC_ASN1_BMP_STRING:
 	/* Error if length is not divisable by 2 */
 	if (state->contents_length % 2) {
+	   PORT_SetError (SEC_ERROR_BAD_DER);
 	   state->top->status = decodeError;
 	   break;
 	}   
@@ -1169,6 +1174,7 @@ sec_asn1d_prepare_for_contents (sec_asn1d_state *state)
       case SEC_ASN1_UNIVERSAL_STRING:
 	/* Error if length is not divisable by 4 */
 	if (state->contents_length % 4) {
+	   PORT_SetError (SEC_ERROR_BAD_DER);
 	   state->top->status = decodeError;
 	   break;
 	}   
@@ -2185,13 +2191,9 @@ sec_asn1d_absorb_child (sec_asn1d_state *state)
     /*
      * Inherit the missing status of our child, and do the ugly
      * backing-up if necessary.
-     * (Only IMPLICIT or POINTER should encounter such; all other cases
-     * should have confirmed a tag *before* pushing a child.)
      */
     state->missing = state->child->missing;
     if (state->missing) {
-	PORT_Assert (state->place == afterImplicit
-		     || state->place == afterPointer);
 	state->found_tag_number = state->child->found_tag_number;
 	state->found_tag_modifiers = state->child->found_tag_modifiers;
 	state->endofcontents = state->child->endofcontents;
@@ -2651,6 +2653,7 @@ SEC_ASN1DecoderUpdate (SEC_ASN1DecoderContext *cx,
 	    }
 	    if (cx->status == needBytes) {
 		/* recursive call wanted more data. Fatal. Clean up below. */
+		PORT_SetError (SEC_ERROR_BAD_DER);
 		cx->status = decodeError;
 	    }
 	    break;
@@ -2725,9 +2728,10 @@ SEC_ASN1DecoderUpdate (SEC_ASN1DecoderContext *cx,
 	 * length which is greater than the entire encoding.  So, we cannot
 	 * have this be an error.
 	 */
-	    if (len > 0)
+	    if (len > 0) {
+		PORT_SetError (SEC_ERROR_BAD_DER);
 		cx->status = decodeError;
-	    else
+	    } else
 #endif
 		cx->status = allDone;
 	    break;
