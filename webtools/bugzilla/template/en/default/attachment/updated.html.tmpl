@@ -39,7 +39,7 @@
     <td>
       <h2>Changes to
         <a href="attachment.cgi?id=[% attachid %]&amp;action=edit">attachment [% attachid %]</a>
-        of [% terms.bug %]&nbsp;[% bugid %] submitted
+        of [% terms.bug %] [%+ bugid %] submitted
       </h2>
       [% PROCESS "bug/process/bugmail.html.tmpl" mailing_bugid = bugid %]
     </td>

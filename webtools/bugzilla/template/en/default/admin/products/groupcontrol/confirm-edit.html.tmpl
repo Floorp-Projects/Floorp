@@ -26,7 +26,8 @@
 
 [% FOREACH group = mandatory_groups %]
 <P>
-group '[% group.name FILTER html %]' impacts [% group.count %]&nbsp;[% terms.bugs %] for
+group '[% group.name FILTER html %]' impacts [% group.count %] 
+[%+ terms.bugs %] for
 which the group is newly mandatory and will be added.
 [% END %]
 

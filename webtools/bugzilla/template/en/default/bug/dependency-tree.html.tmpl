@@ -38,7 +38,7 @@
   [% ELSE %]
     [% terms.Bugs %]
   [% END %] 
-  that <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %]&nbsp;[% bugid %]</a> 
+  that <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %] [%+ bugid %]</a> 
   depends on</h3>
 [% IF dependson_ids.size > 0 %]
   (
@@ -60,7 +60,7 @@
   [% ELSE %]
     [% terms.Bugs %]
   [% END %] 
-  that <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %]&nbsp;[% bugid %]</a> 
+  that <a href="show_bug.cgi?id=[% bugid %]">[% terms.bug %] [%+ bugid %]</a> 
   blocks</h3>
 [% IF blocked_ids.size > 0 %]
   (

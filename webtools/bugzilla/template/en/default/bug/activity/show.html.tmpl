@@ -39,7 +39,8 @@
 [% PROCESS bug/activity/table.html.tmpl %]
 
 <p>
-  <a href="show_bug.cgi?id=[% bug_id %]">Back to [% terms.bug %]&nbsp;[% bug_id %]</a>
+  <a href="show_bug.cgi?id=[% bug_id %]">Back to [% terms.bug %] 
+  [%+ bug_id %]</a>
 </p>
 
 [% PROCESS global/footer.html.tmpl %]

@@ -72,7 +72,7 @@
 [%############################################################################%]
 
 [% IF bugs.size > 9 %]
-  [% bugs.size %]&nbsp;[% terms.bugs %] found.
+  [% bugs.size %] [%+ terms.bugs %] found.
 [% END %]
 
 [%############################################################################%]
@@ -99,7 +99,7 @@
 [% ELSIF bugs.size == 1 %]
   One [% terms.bug %] found.
 [% ELSE %]
-  [% bugs.size %]&nbsp;[% terms.bugs %] found.
+  [% bugs.size %] [%+ terms.bugs %] found.
 [% END %]
 
 <br>

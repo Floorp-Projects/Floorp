@@ -210,7 +210,7 @@
 
     You asked [% requestee.identity FILTER html %]
     for <code>[% flag_type.name FILTER html %]</code> on 
-    [%+ terms.bug %]&nbsp;[% bug_id FILTER html %],
+    [%+ terms.bug %] [%+ bug_id FILTER html %],
     attachment [% attach_id FILTER html %], but that attachment is restricted 
     to users
     in the [% Param("insidergroup") FILTER html %] group, and the user
