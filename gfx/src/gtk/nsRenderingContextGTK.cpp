@@ -42,7 +42,7 @@ public:
 
   nsTransform2D  *mMatrix;
   nsRect          mLocalClip;
-  GdkRegion      *mClipRegion;
+  nsRegionGTK    *mClipRegion;
   nscolor         mColor;
   nsLineStyle     mLineStyle;
   nsIFontMetrics *mFontMetrics;
@@ -79,16 +79,15 @@ nsRenderingContextGTK::nsRenderingContextGTK()
   mTMatrix = nsnull;
   mP2T = 1.0f;
   mStateCache = new nsVoidArray();
-  mRegion = nsnull;
+  mRegion = new nsRegionGTK();
+  mRegion->Init();
+
   PushState();
 }
 
 nsRenderingContextGTK::~nsRenderingContextGTK()
 {
-  if (mRegion) {
-    ::gdk_region_destroy(mRegion);
-    mRegion = nsnull;
-  }
+  delete mRegion;
 
   mTMatrix = nsnull;
 
@@ -220,18 +219,13 @@ NS_IMETHODIMP nsRenderingContextGTK::PushState(void)
   state->mClipRegion = mRegion;
 
   if (nsnull != state->mClipRegion) {
-    GdkRegion *tRegion = ::gdk_region_new ();
 
-    GdkRectangle gdk_rect;
-
-    gdk_rect.x = state->mLocalClip.x;
-    gdk_rect.y = state->mLocalClip.y;
-    gdk_rect.width = state->mLocalClip.width;
-    gdk_rect.height = state->mLocalClip.height;
-
-    mRegion = ::gdk_region_union_with_rect (tRegion, &gdk_rect);
-
-    gdk_region_destroy (tRegion);
+    mRegion = new nsRegionGTK();
+    mRegion->Init();
+    mRegion->SetTo(state->mLocalClip.x,
+		   state->mLocalClip.y,
+		   state->mLocalClip.width,
+		   state->mLocalClip.height);
   }
 
   state->mColor = mCurrentColor;
@@ -257,19 +251,24 @@ NS_IMETHODIMP nsRenderingContextGTK::PopState(PRBool &aClipEmpty)
     mTMatrix = state->mMatrix;
 
     if (nsnull != mRegion)
-      ::gdk_region_destroy(mRegion);
+      delete mRegion;
 
     mRegion = state->mClipRegion;
 
-    if (nsnull != mRegion && ::gdk_region_empty(mRegion) == True){
+    if (nsnull != mRegion && mRegion->IsEmpty() == PR_TRUE) {
       bEmpty = PR_TRUE;
     }else{
 
-      // Select in the old region.  We probably want to set a dirty flag and only
-      // do this IFF we need to draw before the next Pop.  We'd need to check the
-      // state flag on every draw operation.
+  // Select in the old region.  We probably want to set a dirty flag and only
+  // do this IFF we need to draw before the next Pop.  We'd need to check the
+ // state flag on every draw operation.
       if (nsnull != mRegion)
-	      ::gdk_gc_set_clip_region (mRenderingSurface->gc, mRegion);
+      {
+         GdkRegion *rgn;
+         mRegion->GetNativeRegion((void*&)rgn);
+	::gdk_gc_set_clip_region (mRenderingSurface->gc, rgn);
+        // can we destroy rgn now?
+      }
     }
 
     if (state->mColor != mCurrentColor)
@@ -295,23 +294,13 @@ NS_IMETHODIMP nsRenderingContextGTK::IsVisibleRect(const nsRect& aRect,
   return NS_OK;
 }
 
-NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
-                                                 nsClipCombine aCombine,
-                                                 PRBool &aClipEmpty)
-{
-  nsRect  trect = aRect;
-
-  mTMatrix->TransformCoord(&trect.x, &trect.y,
-                           &trect.width, &trect.height);
-  return SetClipRectInPixels(trect, aCombine, aClipEmpty);
-}
-
 NS_IMETHODIMP nsRenderingContextGTK::GetClipRect(nsRect &aRect, PRBool &aClipValid)
 {
-  if (mRegion != nsnull) {
-    GdkRectangle gdk_rect;
-    ::gdk_region_get_clipbox(mRegion, &gdk_rect);
-    aRect.SetRect(gdk_rect.x, gdk_rect.y, gdk_rect.width, gdk_rect.height);
+  PRInt32 x, y, w, h;
+  if (!mRegion->IsEmpty())
+  {
+    mRegion->GetBoundingBox(&x,&y,&w,&h);
+    aRect.SetRect(x,y,w,h);
     aClipValid = PR_TRUE;
   } else {
     aRect.SetRect(0,0,0,0);
@@ -319,65 +308,77 @@ NS_IMETHODIMP nsRenderingContextGTK::GetClipRect(nsRect &aRect, PRBool &aClipVal
   }
 
   return NS_OK;
-/*
-  if (::gdk_region_empty (mRegion))
-    aClipValid = PR_TRUE;
-  else
-    aClipValid = PR_FALSE;
+}
+
+NS_IMETHODIMP nsRenderingContextGTK::SetClipRect(const nsRect& aRect,
+                                                 nsClipCombine aCombine,
+                                                 PRBool &aClipEmpty)
+{
+  nsRect trect = aRect;
+  GdkRegion *rgn;
+
+//  mStates->mLocalClip = aRect;
+
+  mTMatrix->TransformCoord(&trect.x, &trect.y,
+                           &trect.width, &trect.height);
+
+  switch(aCombine)
+  {
+    case nsClipCombine_kIntersect:
+      mRegion->Intersect(trect.x,trect.y,trect.width,trect.height);
+      break;
+    case nsClipCombine_kUnion:
+      mRegion->Union(trect.x,trect.y,trect.width,trect.height);
+      break;
+    case nsClipCombine_kSubtract:
+      mRegion->Subtract(trect.x,trect.y,trect.width,trect.height);
+      break;
+    case nsClipCombine_kReplace:
+      mRegion->SetTo(trect.x,trect.y,trect.width,trect.height);
+      break;
+  }
+
+  aClipEmpty = mRegion->IsEmpty();
+
+  mRegion->GetNativeRegion((void*&)rgn);
+  gdk_gc_set_clip_region(mRenderingSurface->gc,rgn);
 
   return NS_OK;
-*/
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::SetClipRegion(const nsIRegion& aRegion,
                                                    nsClipCombine aCombine,
                                                    PRBool &aClipEmpty)
 {
-  nsRect rect;
-  GdkRectangle gdk_rect;
-  GdkRegion *gdk_region;
+  GdkRegion *rgn;
+ 
+  switch(aCombine)
+  {
+    case nsClipCombine_kIntersect:
+      mRegion->Intersect(aRegion);
+      break;
+    case nsClipCombine_kUnion:
+      mRegion->Union(aRegion);
+      break;
+    case nsClipCombine_kSubtract:
+      mRegion->Subtract(aRegion);
+      break;
+    case nsClipCombine_kReplace:
+      mRegion->SetTo(aRegion);
+      break;
+  }
 
-  aRegion.GetNativeRegion((void *&)gdk_region);
-
-  ::gdk_region_get_clipbox (gdk_region, &gdk_rect);
-
-  rect.x = gdk_rect.x;
-  rect.y = gdk_rect.y;
-  rect.width = gdk_rect.width;
-  rect.height = gdk_rect.height;
-
-  SetClipRectInPixels(rect, aCombine, aClipEmpty);
-
-  if (::gdk_region_empty(mRegion))
-    aClipEmpty = PR_TRUE;
-  else
-    aClipEmpty = PR_FALSE;
+  aClipEmpty = mRegion->IsEmpty();
+  mRegion->GetNativeRegion((void*&)rgn);
+  gdk_gc_set_clip_region(mRenderingSurface->gc,rgn);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP nsRenderingContextGTK::GetClipRegion(nsIRegion **aRegion)
 {
-  nsIRegion * pRegion ;
-
-  static NS_DEFINE_IID(kCRegionCID, NS_REGION_CID);
-  static NS_DEFINE_IID(kIRegionIID, NS_IREGION_IID);
-
-  nsresult rv = nsRepository::CreateInstance(kCRegionCID,
-					     nsnull,
-					     kIRegionIID,
-					     (void **)aRegion);
-
-  // XXX this just gets the ClipRect as a region...
-
-  if (NS_OK == rv) {
-    nsRect rect;
-    PRBool clipState;
-    pRegion = (nsIRegion *)&aRegion;
-    pRegion->Init();
-    GetClipRect(rect, clipState);
-    pRegion->Union(rect.x,rect.y,rect.width,rect.height);
-  }
+  NS_IF_ADDREF(mRegion);
+  *aRegion = (nsIRegion*)&mRegion;
 
   return NS_OK;
 }
@@ -1055,59 +1056,6 @@ nsRenderingContextGTK::CopyOffScreenBits(nsDrawingSurface aSrcSurf,
                     x, y,
                     drect.x, drect.y,
                     drect.width, drect.height);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsRenderingContextGTK::SetClipRectInPixels(const nsRect& aRect,
-                                           nsClipCombine aCombine,
-                                           PRBool &aClipEmpty)
-{
-  g_return_val_if_fail(mTMatrix != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mRenderingSurface != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mRenderingSurface->drawable != NULL, NS_ERROR_FAILURE);
-  g_return_val_if_fail(mRenderingSurface->gc != NULL, NS_ERROR_FAILURE);
-
-  if (mRegion == nsnull)
-    mRegion = ::gdk_region_new();
-
-  GdkRectangle gdk_rect;
-
-  gdk_rect.x = aRect.x;
-  gdk_rect.y = aRect.y;
-  gdk_rect.width = aRect.width;
-  gdk_rect.height = aRect.height;
-
-  GdkRegion *a = ::gdk_region_union_with_rect(mRegion, &gdk_rect);
-
-  GdkRegion *nrgn=nsnull;
-  switch(aCombine)
-  {
-    case nsClipCombine_kIntersect:
-      nrgn = ::gdk_regions_intersect (mRegion,a);
-      gdk_region_destroy(mRegion);
-      mRegion = nrgn;
-      break;
-    case nsClipCombine_kUnion:
-      nrgn = ::gdk_regions_union (mRegion,a);
-      gdk_region_destroy(mRegion);
-      mRegion = nrgn;
-      break;
-    case nsClipCombine_kSubtract:
-      nrgn = ::gdk_regions_subtract (mRegion,a);
-      gdk_region_destroy(mRegion);
-      mRegion = nrgn;
-      break;
-    case nsClipCombine_kReplace:
-      gdk_region_destroy(mRegion);
-      mRegion = a;
-      break;
-  }
-  
-  aClipEmpty = ::gdk_region_empty(mRegion);
-
-  ::gdk_gc_set_clip_region(mRenderingSurface->gc, mRegion);
 
   return NS_OK;
 }
