@@ -31,12 +31,13 @@
 // Netscape
 #include "prlog.h"
 #include "xp_trace.h"
-#include "nsViewer.h"
+#include "nsIWidget.h"
+#include "nsViewerApp.h"
 
 const ResIDT	window_Sample		= 1;	// EXAMPLE
 
-class nsMacViewer : public nsViewer {
-    // From nsViewer
+class nsMacViewer : public nsViewerApp {
+    // From nsViewerApp
   public:
     virtual void AddMenu(nsIWidget* aMainWindow);
 };
