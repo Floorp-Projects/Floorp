@@ -1226,23 +1226,27 @@ void nsViewManager::AddCoveringWidgetsToOpaqueRegion(nsRegion &aRgn, nsIDeviceCo
 
     nsCOMPtr<nsIWidget> childWidget = do_QueryInterface(child);
     if (childWidget) {
-      nsView* view = nsView::GetViewFor(childWidget);
-      if (view && view->GetVisibility() == nsViewVisibility_kShow
-          && !view->GetFloating()) {
-        nsRect bounds = view->GetBounds();
-        if (bounds.width > 0 && bounds.height > 0) {
-          nsView* viewParent = view->GetParent();
-
-          while (viewParent && viewParent != aRootView) {
-            viewParent->ConvertToParentCoords(&bounds.x, &bounds.y);
-            viewParent = viewParent->GetParent();
-          }
-
-          // maybe we couldn't get the view into the coordinate
-          // system of aRootView (maybe it's not a descendant
-          // view of aRootView?); if so, don't use it
-          if (viewParent) {
-            aRgn.Or(aRgn, bounds);
+      PRBool widgetVisible;
+      childWidget->IsVisible(widgetVisible);
+      if (widgetVisible) {
+        nsView* view = nsView::GetViewFor(childWidget);
+        if (view && view->GetVisibility() == nsViewVisibility_kShow
+            && !view->GetFloating()) {
+          nsRect bounds = view->GetBounds();
+          if (bounds.width > 0 && bounds.height > 0) {
+            nsView* viewParent = view->GetParent();
+            
+            while (viewParent && viewParent != aRootView) {
+              viewParent->ConvertToParentCoords(&bounds.x, &bounds.y);
+              viewParent = viewParent->GetParent();
+            }
+            
+            // maybe we couldn't get the view into the coordinate
+            // system of aRootView (maybe it's not a descendant
+            // view of aRootView?); if so, don't use it
+            if (viewParent) {
+              aRgn.Or(aRgn, bounds);
+            }
           }
         }
       }
@@ -2367,7 +2371,8 @@ void nsViewManager::ReparentChildWidgets(nsIView* aView, nsIWidget *aNewWidget)
     nsIWidget* widget = aView->GetWidget();
     nsCOMPtr<nsIWidget> parentWidget = getter_AddRefs(widget->GetParent());
     if (parentWidget.get() != aNewWidget) {
-      widget->SetParent(aNewWidget);
+      nsresult rv = widget->SetParent(aNewWidget);
+      NS_ASSERTION(NS_SUCCEEDED(rv), "SetParent failed!");
     }
     return;
   }
