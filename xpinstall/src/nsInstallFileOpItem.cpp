@@ -1314,7 +1314,7 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutComplete()
     if(mIcon)
       mIcon->GetPath(&iconNativePathStr);
 
-    ret = CreateALink(targetNativePathStr,
+    CreateALink(targetNativePathStr,
                       shortcutNativePathStr,
                       cDescription,
                       workingpathNativePathStr,
@@ -1322,8 +1322,7 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutComplete()
                       iconNativePathStr,
                       mIconId);
 
-    if(nsInstall::SUCCESS == ret)
-      mAction = nsInstallFileOpItem::ACTION_SUCCESS;
+    mAction = nsInstallFileOpItem::ACTION_SUCCESS;
   }
 
   if(cDescription)
@@ -1342,12 +1341,16 @@ nsInstallFileOpItem::NativeFileOpWindowsShortcutAbort()
   nsString   shortcutDescription;
   nsCOMPtr<nsIFile> shortcutTarget;
 
-  shortcutDescription = *mDescription;
-  shortcutDescription.AppendWithConversion(".lnk");
-  mShortcutPath->Clone(getter_AddRefs(shortcutTarget));
-  shortcutTarget->Append(NS_LossyConvertUCS2toASCII(shortcutDescription).get());
+  if(mShortcutPath && mDescription)
+  {
+    shortcutDescription = *mDescription;
+    shortcutDescription.AppendWithConversion(".lnk");
+    mShortcutPath->Clone(getter_AddRefs(shortcutTarget));
+    shortcutTarget->Append(NS_LossyConvertUCS2toASCII(shortcutDescription).get());
 
-  NativeFileOpFileDeleteComplete(shortcutTarget);
+    NativeFileOpFileDeleteComplete(shortcutTarget);
+  }
+
 #endif
 
   return nsInstall::SUCCESS;

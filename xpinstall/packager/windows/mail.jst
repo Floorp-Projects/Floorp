@@ -135,13 +135,13 @@ function createShortcuts()
     // locate the Quick Launch folder
     szFolderQuickLaunch     = szFolderAppData + "\\Microsoft\\Internet Explorer\\Quick Launch";
     fFolderQuickLaunch      = getFolder("file:///", szFolderQuickLaunch);
-    folderQuickLaunchExists = File.exists(fFolderQuickLaunch);
+    folderQuickLaunchExists = File.isDirectory(fFolderQuickLaunch);
     if(!folderQuickLaunchExists)
     {
       subkey                  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups";
       valname                 = "Quick Launch";
       szFolderQuickLaunch     = winreg.getValueString(subkey, valname);
-      folderQuickLaunchExists = File.exists(fFolderPath);
+      folderQuickLaunchExists = File.isDirectory(fFolderPath);
       if(folderQuickLaunchExists)
         fFolderQuickLaunch = getFolder("file:///", szFolderQuickLaunch);
     }
