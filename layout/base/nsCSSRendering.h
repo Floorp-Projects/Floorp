@@ -52,7 +52,9 @@ public:
                               nsIFrame* aForFrame,
                               const nsRect& aDirtyRect,
                               const nsRect& aBounds,
-                              const nsStyleColor& aColor);
+                              const nsStyleColor& aColor,
+                              nscoord aDX,
+                              nscoord aDY);
 
 protected:
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,

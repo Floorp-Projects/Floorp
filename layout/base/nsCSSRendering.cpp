@@ -650,13 +650,85 @@ void nsCSSRendering::PaintBorder(nsIPresContext& aPresContext,
 
 //----------------------------------------------------------------------
 
-// XXX improve this to constrain rendering to the damaged area
-void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
-                                     nsIRenderingContext& aRenderingContext,
-                                     nsIFrame* aForFrame,
-                                     const nsRect& aDirtyRect,
-                                     const nsRect& aBounds,
-                                     const nsStyleColor& aColor)
+/**
+ * Translate a background position style unit value to an absolute
+ * pixel value.
+ */
+static nscoord
+BackgroundPositionUnitToCoord(nscoord aUnit)
+{
+  return aUnit;
+}
+
+/**
+ * Map the background position values into xoffset/yoffset values.
+ * Return PR_TRUE if anything but zero was stored into aXOffset and
+ * aYOffset.
+ */
+static PRBool
+ComputeBackgroundOffsets(const nsStyleColor& aColor,
+                         nscoord aTileWidth, nscoord aTileHeight,
+                         nscoord aDX, nscoord aDY,
+                         nscoord& aXOffset, nscoord& aYOffset)
+{
+  nscoord xPos = BackgroundPositionUnitToCoord(aColor.mBackgroundXPosition);
+  if (0 != xPos) {
+    // The position specifies an absolute coordinate where the image
+    // should be tiled from. The rendering code will (conceptually) be
+    // looping from the left edge of the frame's box to the right
+    // edge. Produce a delta to the starting coordinate that allows
+    // the image to be shifted appropriately.
+    if (xPos < 0) {
+      xPos = -xPos;
+      if (xPos < 0) {
+        // Some joker gave us max-negative-integer.
+        xPos = 0;
+      }
+      xPos %= aTileWidth;
+      xPos = -xPos;
+    }
+    else {
+      xPos %= aTileWidth;
+      xPos = xPos - aTileWidth;
+    }
+  }
+
+  nscoord yPos = BackgroundPositionUnitToCoord(aColor.mBackgroundYPosition);
+  if (0 != yPos) {
+    // The position specifies an absolute coordinate where the image
+    // should be tiled from. The rendering code will (conceptually) be
+    // looping from the left edge of the frame's box to the right
+    // edge. Produce a delta to the starting coordinate that allows
+    // the image to be shifted appropriately.
+    if (yPos < 0) {
+      yPos = -yPos;
+      if (yPos < 0) {
+        // Some joker gave us max-negative-integer.
+        yPos = 0;
+      }
+      yPos %= aTileHeight;
+      yPos = -yPos;
+    }
+    else {
+      yPos %= aTileHeight;
+      yPos = yPos - aTileHeight;
+    }
+  }
+
+  aXOffset = xPos;
+  aYOffset = yPos;
+  return (xPos != 0) || (yPos != 0);
+}
+
+void
+nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
+                                nsIRenderingContext& aRenderingContext,
+                                nsIFrame* aForFrame,
+                                const nsRect& aDirtyRect,
+                                const nsRect& aBounds,
+                                const nsStyleColor& aColor,
+                                nscoord aDX,
+                                nscoord aDY)
 {
   if (0 < aColor.mBackgroundImage.Length()) {
     // Lookup the image
@@ -664,9 +736,11 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     nsIImage* image = nsnull;
     nsIFrameImageLoader* loader = nsnull;
     PRBool transparentBG = NS_STYLE_BG_COLOR_TRANSPARENT ==
-                           (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
-    nsresult rv = aPresContext.StartLoadImage(aColor.mBackgroundImage, transparentBG ?
-                                              nsnull : &aColor.mBackgroundColor,
+      (aColor.mBackgroundFlags & NS_STYLE_BG_COLOR_TRANSPARENT);
+    nsresult rv = aPresContext.StartLoadImage(aColor.mBackgroundImage,
+                                              transparentBG
+                                              ? nsnull
+                                              : &aColor.mBackgroundColor,
                                               aForFrame, PR_FALSE, loader);
     if ((NS_OK != rv) || (nsnull == loader) ||
         (loader->GetImage(image), (nsnull == image))) {
@@ -695,54 +769,55 @@ void nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     float p2t = aPresContext.GetPixelsToTwips();
     nscoord tileWidth = NSIntPixelsToTwips(imageSize.width, p2t);
     nscoord tileHeight = NSIntPixelsToTwips(imageSize.height, p2t);
-
-    PRIntn repeat = aColor.mBackgroundRepeat;
-    PRIntn xcount, ycount;
-    switch (aColor.mBackgroundRepeat) {
-    case NS_STYLE_BG_REPEAT_OFF:
-    default:
-      xcount = 0;
-      ycount = 0;
-      break;
-    case NS_STYLE_BG_REPEAT_X:
-      xcount = (tileWidth  == 0) ? 0 : (PRIntn) (aDirtyRect.XMost() / tileWidth);
-      ycount = 0;
-      break;
-    case NS_STYLE_BG_REPEAT_Y:
-      xcount = 0;
-      ycount = (tileHeight == 0) ? 0 : (PRIntn) (aDirtyRect.YMost() / tileHeight);
-      break;
-    case NS_STYLE_BG_REPEAT_XY:
-      xcount = (tileWidth  == 0) ? 0 : (PRIntn) (aDirtyRect.XMost() / tileWidth);
-      ycount = (tileHeight == 0) ? 0 : (PRIntn) (aDirtyRect.YMost() / tileHeight);
-      break;
-    }
-
-    // this shouldn't happen, but it does
     if ((tileWidth == 0) || (tileHeight == 0)) {
       return;
     }
+
+    // Based on the repeat setting, compute how many tiles we should
+    // lay down for each axis.
+    PRIntn repeat = aColor.mBackgroundRepeat;
+    PRIntn xCount, yCount;
+    switch (aColor.mBackgroundRepeat) {
+    case NS_STYLE_BG_REPEAT_OFF:
+    default:
+      xCount = 0;
+      yCount = 0;
+      break;
+    case NS_STYLE_BG_REPEAT_X:
+      xCount = PRIntn(aDirtyRect.XMost() / tileWidth);
+      yCount = 0;
+      break;
+    case NS_STYLE_BG_REPEAT_Y:
+      xCount = 0;
+      yCount = PRIntn(aDirtyRect.YMost() / tileHeight);
+      break;
+    case NS_STYLE_BG_REPEAT_XY:
+      xCount = PRIntn(aDirtyRect.XMost() / tileWidth);
+      yCount = PRIntn(aDirtyRect.YMost() / tileHeight);
+      break;
+    }
+
+    // When we have non-zero background position values, we have to
+    // adjust how many tiles we draw (by at most one) and the starting
+    // position from where the tiles are rendered.
+    nscoord xOffset, yOffset;
+    if (ComputeBackgroundOffsets(aColor, tileWidth, tileHeight, aDX, aDY,
+                                 xOffset, yOffset)) {
+      xCount++;
+      yCount++;
+    }
+
     // Tile the background
-    nscoord xpos, ypos, xpostart;
-    PRIntn x, y, xstart;
-
-    y = aDirtyRect.y / tileHeight;
-    ypos = aBounds.y + y * tileHeight;
-
-    xstart = aDirtyRect.x / tileWidth;
-    xpostart = aBounds.x + xstart * tileWidth;
-
-#if XXX
-    // XXX support offset positioning. why is this disabled? MMP
-    PRIntn xPos = aColor.mBackgroundXPosition;
-    PRIntn yPos = aColor.mBackgroundXPosition;
-#endif
+    PRIntn y = PRIntn(aDirtyRect.y / tileHeight);
+    nscoord ypos = aBounds.y + y * tileHeight + yOffset;
+    PRIntn xstart = PRIntn(aDirtyRect.x / tileWidth);
+    nscoord xpostart = aBounds.x + xstart * tileWidth + xOffset;
     aRenderingContext.PushState();
     aRenderingContext.SetClipRect(aDirtyRect, nsClipCombine_kIntersect);
-    for (; y <= ycount; ++y, ypos += tileHeight) {
-      x = xstart;
-      xpos = xpostart;
-      for (; x <= xcount; ++x, xpos += tileWidth) {
+    for (; y <= yCount; ++y, ypos += tileHeight) {
+      PRIntn x = xstart;
+      nscoord xpos = xpostart;
+      for (; x <= xCount; ++x, xpos += tileWidth) {
         aRenderingContext.DrawImage(image, xpos, ypos);
       }
     }
