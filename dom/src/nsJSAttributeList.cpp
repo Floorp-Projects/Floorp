@@ -36,7 +36,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetAttributeListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMAttributeList *attributeList = (nsIDOMAttributeList*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != attributeList, "null pointer");
+  // NS_ASSERTION(nsnull != attributeList, "null pointer");
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {

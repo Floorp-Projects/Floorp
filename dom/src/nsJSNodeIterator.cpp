@@ -36,7 +36,7 @@ PR_STATIC_CALLBACK(JSBool)
 GetNodeIteratorProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
   nsIDOMNodeIterator *nodeIterator = (nsIDOMNodeIterator*)JS_GetPrivate(cx, obj);
-  NS_ASSERTION(nsnull != nodeIterator, "null pointer");
+  // NS_ASSERTION(nsnull != nodeIterator, "null pointer");
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
