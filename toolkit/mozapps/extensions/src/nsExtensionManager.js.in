@@ -1054,7 +1054,86 @@ nsExtensionManager.prototype = {
           
         win.close();
       }
+      break;
+    case "quit-application-requested":
+      if (this._downloadCount > 0) {
+        var result;
+#ifndef XP_MACOSX
+        result = this._confirmCancelDownloads(this._downloadCount, 
+                                              "quitCancelDownloadsAlertTitle",
+                                              "quitCancelDownloadsAlertMsgMultiple",
+                                              "quitCancelDownloadsAlertMsg",
+                                              "dontQuitButtonWin");
+#else
+        result = this._confirmCancelDownloads(this._downloadCount,
+                                              "quitCancelDownloadsAlertTitle",
+                                              "quitCancelDownloadsAlertMsgMacMultiple",
+                                              "quitCancelDownloadsAlertMsgMac",
+                                              "dontQuitButtonMac");
+#endif
+        if (!result)
+          this._cancelDownloads();
+        var PRBool = aSubject.QueryInterface(Components.interfaces.nsISupportsPRBool);
+        PRBool.data = result;
+      }
+      break;
+    case "offline-requested":
+      if (this._downloadCount > 0) {
+        result = this._confirmCancelDownloads(this._downloadCount,
+                                              "offlineCancelDownloadsAlertTitle",
+                                              "offlineCancelDownloadsAlertMsgMultiple",
+                                              "offlineCancelDownloadsAlertMsg",
+                                              "dontGoOfflineButton");
+        if (!result)
+          this._cancelDownloads();
+        var PRBool = aSubject.QueryInterface(Components.interfaces.nsISupportsPRBool);
+        PRBool.data = result;
+      }
+      break;  
     }
+  },
+
+  _cancelDownloads: function ()
+  {
+    var os = Components.classes["@mozilla.org/observer-service;1"]
+                        .getService(Components.interfaces.nsIObserverService);
+    for (var i = 0; i < this._transactions.length; ++i)
+      os.notifyObservers(this._transactions[i], "xpinstall-progress", "cancel");
+    os.removeObserver(this, "offline-requested");
+    os.removeObserver(this, "quit-application-requested");
+
+    this._removeAllDownloads();
+  },
+
+  _confirmCancelDownloads: function (aCount, aTitle, aCancelMessageMultiple, 
+                                     aCancelMessageSingle, aDontCancelButton)
+  {
+    var sbs = Components.classes["@mozilla.org/intl/stringbundle;1"]
+                        .getService(Components.interfaces.nsIStringBundleService);
+    var bundle = sbs.createBundle("chrome://mozapps/locale/downloads/downloads.properties");
+    var title = bundle.GetStringFromName(aTitle);
+    var message, quitButton;
+    if (aCount > 1) {
+      message = bundle.formatStringFromName(aCancelMessageMultiple, [aCount], 1);
+      quitButton = bundle.formatStringFromName("cancelDownloadsOKTextMultiple", [aCount], 1);
+    }
+    else {
+      message = bundle.GetStringFromName(aCancelMessageSingle);
+      quitButton = bundle.GetStringFromName("cancelDownloadsOKText");
+    }
+    var dontQuitButton = bundle.GetStringFromName(aDontCancelButton);
+    
+    var wm = Components.classes["@mozilla.org/appshell/window-mediator;1"]
+                       .getService(Components.interfaces.nsIWindowMediator);
+    var win = wm.getMostRecentWindow("Extension:Manager");
+    const nsIPromptService = Components.interfaces.nsIPromptService;
+    var ps = Components.classes["@mozilla.org/embedcomp/prompt-service;1"]
+                       .getService(nsIPromptService);
+    var flags = (nsIPromptService.BUTTON_TITLE_IS_STRING * nsIPromptService.BUTTON_POS_0) +
+                (nsIPromptService.BUTTON_TITLE_IS_STRING * nsIPromptService.BUTTON_POS_1);
+    var rv = { };
+    ps.confirmEx(win, title, message, flags, quitButton, dontQuitButton, null, null, { }, rv);
+    return rv.value == 0;
   },
   
   // This function checks for and disables any "old-style" extensions 
@@ -1610,8 +1689,11 @@ nsExtensionManager.prototype = {
   /////////////////////////////////////////////////////////////////////////////    
   // Downloads
   _transactions: [],
+  _downloadCount: 0,
   addDownloads: function (aItems, aItemCount)
   {
+    this._downloadCount += aItemCount;
+    
     var txn = new nsItemDownloadTransaction(this);
     for (var i = 0; i < aItemCount; ++i) {
       var currItem = aItems[i];
@@ -1623,6 +1705,8 @@ nsExtensionManager.prototype = {
     // Kick off the download process for this transaction
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
+    os.addObserver(this, "offline-requested", false);
+    os.addObserver(this, "quit-application-requested", false);
     os.notifyObservers(txn, "xpinstall-progress", "open");  
   },
   
@@ -1634,6 +1718,12 @@ nsExtensionManager.prototype = {
         return;
       }
     } 
+  },
+  
+  _removeAllDownloads: function ()
+  {
+    for (var i = 0; i < this._transactions.length; ++i)
+      this._transactions[i].removeAllDownloads();
   },
   
   // The nsIXPIProgressDialog implementation in the download transaction object
@@ -1649,11 +1739,16 @@ nsExtensionManager.prototype = {
       this._progressData[aURL] = { };
     this._progressData[aURL].state = aState;
     
+    dump("*** sending state changes for " + aURL + "\n");
     for (var i = 0; i < this._downloadObservers.length; ++i)
       this._downloadObservers[i].onStateChange(aURL, aState, aValue);
 
     const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
-    if (aState == nsIXPIProgressDialog.DIALOG_CLOSE) {
+    switch (aState) {
+    case nsIXPIProgressDialog.INSTALL_DONE:
+      --this._downloadCount;
+      break;
+    case nsIXPIProgressDialog.DIALOG_CLOSE:
       for (var i = 0; i < this._transactions.length; ++i) {
         if (this._transactions[i].id == aTransaction.id) {
           this._transactions.splice(i, 1);
@@ -1661,6 +1756,7 @@ nsExtensionManager.prototype = {
           break;
         }
       }
+      break;
     }
   },
   
@@ -1802,6 +1898,12 @@ nsItemDownloadTransaction.prototype = {
   removeDownload: function (aURL, aItemType)
   {
     this._manager._ds.removeDownload(aURL, aItemType);
+  },
+  
+  removeAllDownloads: function ()
+  {
+    for (var i = 0; i < this._downloads.length; ++i)
+      this.removeDownload(this._downloads[i].url, this._downloads[i].type);
   },
   
   containsURL: function (aURL)

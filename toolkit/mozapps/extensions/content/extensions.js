@@ -164,7 +164,8 @@ function Shutdown()
 
   var os = Components.classes["@mozilla.org/observer-service;1"]
                      .getService(Components.interfaces.nsIObserverService);
-  os.removeObserver(gDownloadManager, "xpinstall-download-started");
+  if (gDownloadManager) 
+    os.removeObserver(gDownloadManager, "xpinstall-download-started");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -196,11 +197,13 @@ XPInstallDownloadManager.prototype = {
   
   observe: function (aSubject, aTopic, aData) 
   {
-    if (aTopic  == "xpinstall-download-started") {
+    switch (aTopic) {
+    case "xpinstall-download-started":
       var params = aSubject.QueryInterface(Components.interfaces.nsISupportsArray);
       var paramBlock = params.GetElementAt(0).QueryInterface(Components.interfaces.nsISupportsInterfacePointer);
       paramBlock = paramBlock.data.QueryInterface(Components.interfaces.nsIDialogParamBlock);
       this.addDownloads(paramBlock);
+      break;
     }
   },
   
@@ -244,6 +247,8 @@ XPInstallDownloadManager.prototype = {
   {
     const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
     var element = document.getElementById(aURL);
+    dump("*** aURL = " + aURL + "\n");
+    if (!element) return;
     switch (aState) {
     case nsIXPIProgressDialog.DOWNLOAD_START:
       element.setAttribute("state", "waiting");
@@ -268,12 +273,10 @@ XPInstallDownloadManager.prototype = {
         }
         element.setAttribute("error", msg);
       }
-      else {
-        // Remove the dummy, since we installed successfully
-        var type = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION 
-                                                : nsIUpdateItem.TYPE_THEME;
-        gExtensionManager.removeDownload(aURL, type);
-      }
+      // Remove the dummy, since we installed successfully
+      var type = gWindowState == "extensions" ? nsIUpdateItem.TYPE_EXTENSION 
+                                              : nsIUpdateItem.TYPE_THEME;
+      gExtensionManager.removeDownload(aURL, type);
       break;
     case nsIXPIProgressDialog.DIALOG_CLOSE:
       break;
@@ -284,6 +287,7 @@ XPInstallDownloadManager.prototype = {
   onProgress: function (aURL, aValue, aMaxValue)
   {
     var element = document.getElementById(aURL);
+    if (!element) return;
     var percent = Math.round((aValue / aMaxValue) * 100);
     if (percent > 1 && !(aURL in this._urls)) {
       this._urls[aURL] = true;
