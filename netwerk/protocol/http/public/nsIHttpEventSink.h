@@ -39,11 +39,6 @@ public:
     */
     NS_IMETHOD      OnAwaitingInput(nsISupports* i_Context) = 0;
 
-    NS_IMETHOD      OnDataAvailable(nsISupports* i_Context, 
-                            nsIInputStream *i_IStream,
-                            PRUint32 i_SourceOffset,
-                            PRUint32 i_Length) = 0;
-
     NS_IMETHOD      OnHeadersAvailable(nsISupports* i_Context) = 0;
     
     NS_IMETHOD      OnProgress(nsISupports* i_Context, 
@@ -54,10 +49,6 @@ public:
     NS_IMETHOD      OnRedirect(nsISupports* i_Context, 
                             nsIUrl* i_NewLocation) =0;
 
-    NS_IMETHOD      OnStopBinding(nsISupports* i_Context, 
-                            nsresult i_Status, 
-                            const nsIString* i_pMsg) = 0;
-    
     static const nsIID& GetIID() { 
         // {E4F981C0-098F-11d3-B01A-006097BFC036}
         static const nsIID NS_IHTTPEventSink_IID = 

@@ -19,7 +19,7 @@
 #ifndef _nsIHTTPConnection_h_
 #define _nsIHTTPConnection_h_
 
-#include "nsISupports.h"
+#include "nsIProtocolConnection.h"
 #include "nsHTTPEnums.h"
 class nsIHTTPEventSink;
 /* 
@@ -32,7 +32,7 @@ class nsIHTTPEventSink;
     -Gagan Saksena 03/06/99
 */
 
-class nsIHTTPConnection : public nsISupports
+class nsIHTTPConnection : public nsIProtocolConnection
 {
 
 public:
