@@ -183,7 +183,6 @@ WellTerminated(JSContext *cx, JSTokenStream *ts, JSTokenType lastExprType)
 	     * in the above line breaks old javascript, so we keep it
 	     * this way for now... XXX warning needed?
 	     */
-
 	    return JS_TRUE;
 	}
 #endif
@@ -253,7 +252,7 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
      * case of a branch-callback -- unlikely because it means the switch case
      * must have called a function).
      */
-    cx->gcDisabled++;
+    JS_DISABLE_GC(cx->runtime);
 
     ok = JS_TRUE;
     do {
@@ -302,8 +301,8 @@ js_CompileTokenStream(JSContext *cx, JSObject *chain, JSTokenStream *ts,
     } while (ok);
 
 out:
+    JS_ENABLE_GC(cx->runtime);
     ts->flags &= ~TSF_BADCOMPILE;
-    cx->gcDisabled--;
     cx->fp = fp;
     return ok;
 }
@@ -411,7 +410,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
     }
 
     /* Prevent GC activation on this context during compilation. */
-    cx->gcDisabled++;
+    JS_DISABLE_GC(cx->runtime);
 
     /* Satisfy the assertion at the top of Statements. */
     CURRENT_TOKEN(ts).type = TOK_LC;
@@ -424,7 +423,7 @@ js_CompileFunctionBody(JSContext *cx, JSTokenStream *ts, JSFunction *fun)
 	    ok = js_EmitFunctionBody(cx, &funcg, pn, fun);
     }
 
-    cx->gcDisabled--;
+    JS_ENABLE_GC(cx->runtime);
     js_FinishCodeGenerator(cx, &funcg);
     return ok;
 }
@@ -1091,10 +1090,11 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    stmtInfo.type = STMT_FOR_IN_LOOP;
 
 	    /* Check that the left side of the 'in' is valid. */
-	    if (pn1->pn_type != TOK_VAR &&
-		pn1->pn_type != TOK_NAME &&
-		pn1->pn_type != TOK_DOT &&
-		pn1->pn_type != TOK_LB) {
+	    if ((pn1->pn_type == TOK_VAR)
+                ? pn1->pn_count > 1
+                : (pn1->pn_type != TOK_NAME &&
+		   pn1->pn_type != TOK_DOT &&
+		   pn1->pn_type != TOK_LB)) {
 		js_ReportCompileErrorNumber(cx, ts, JSREPORT_ERROR,
 					    JSMSG_BAD_FOR_LEFTSIDE);
 		return NULL;
@@ -1250,6 +1250,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	tc->tryCount++;
 	return pn;
       }
+
       case TOK_THROW:
 	pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_UNARY);
 	if (!pn)
@@ -1385,7 +1386,7 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	    return NULL;
 	}
 	/* Tell js_EmitTree to generate a final POP. */
-	pn->pn_op = JSOP_POP;
+	pn->pn_extra = JS_TRUE;
 	break;
 
       case TOK_RETURN:
@@ -1534,21 +1535,19 @@ Variables(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
     JSBool ok;
 
     /*
-     * The tricky part of this code is to create special
-     * parsenode opcodes for getting and setting variables
-     * (which will be stored as special slots in the frame).
-     * The complex special case is an eval() inside a
-     * function. If the evaluated string references variables in
-     * the enclosing function, then we need to generate
-     * the special variable opcodes.
-     * We determine this by looking up the variable id in the
-     * current variable scope.
+     * The tricky part of this code is to create special parsenode opcodes for
+     * getting and setting variables (which will be stored as special slots in
+     * the frame).  The complex special case is an eval() inside a function.
+     * If the evaluated string references variables in the enclosing function,
+     * then we need to generate the special variable opcodes.  We determine
+     * this by looking up the variable id in the current variable scope.
      */
     JS_ASSERT(CURRENT_TOKEN(ts).type == TOK_VAR);
     pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_LIST);
     if (!pn)
 	return NULL;
-    pn->pn_op = JSOP_NOP;
+    pn->pn_op = CURRENT_TOKEN(ts).t_op;
+    pn->pn_extra = JS_FALSE;            /* assume no JSOP_POP needed */
     PN_INIT_LIST(pn);
 
     obj = js_FindVariableScope(cx, &fun);
