@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.6 $ $Date: 2001/12/11 23:47:18 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.7 $ $Date: 2001/12/20 23:17:58 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -521,7 +521,9 @@ nssToken_TraverseCertificates
     }
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
     NSS_CK_TEMPLATE_FINISH(cert_template, attr, ctsize);
-    nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+    if (search->cached) {
+	nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+    }
     nssrv = traverse_objects_by_template(token, sessionOpt,
                                          cert_template, ctsize,
                                          retrieve_cert, search);
@@ -551,7 +553,9 @@ nssToken_TraverseCertificatesBySubject
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_SUBJECT, subject);
     NSS_CK_TEMPLATE_FINISH(subj_template, attr, stsize);
-    nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+    if (search->cached) {
+	nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+    }
     /* now traverse the token certs matching this template */
     nssrv = traverse_objects_by_template(token, sessionOpt,
 	                                 subj_template, stsize,
@@ -582,7 +586,9 @@ nssToken_TraverseCertificatesByNickname
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
     NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_LABEL, name);
     NSS_CK_TEMPLATE_FINISH(nick_template, attr, ntsize);
-    nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+    if (search->cached) {
+	nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+    }
     /* now traverse the token certs matching this template */
     nssrv = traverse_objects_by_template(token, sessionOpt,
 	                                 nick_template, ntsize, 
@@ -626,7 +632,9 @@ nssToken_TraverseCertificatesByEmail
     NSS_CK_SET_ATTRIBUTE_ITEM(attr, CKA_CLASS, &g_ck_class_cert);
     NSS_CK_SET_ATTRIBUTE_UTF8(attr, CKA_NETSCAPE_EMAIL, email);
     NSS_CK_TEMPLATE_FINISH(email_template, attr, etsize);
-    nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+    if (search->cached) {
+	nssList_SetCompareFunction(search->cached, compare_cert_by_issuer_sn);
+    }
     /* now traverse the token certs matching this template */
     nssrv = traverse_objects_by_template(token, sessionOpt,
 	                                 email_template, etsize,
