@@ -42,7 +42,17 @@ struct nsOutlinerRange
   void Connect(nsOutlinerRange* aPrev = nsnull, nsOutlinerRange* aNext = nsnull) {
     mPrev = aPrev;
     mNext = aNext;
-  }
+  };
+
+  PRBool Contains(PRInt32 aIndex) {
+    if (aIndex >= mMin && aIndex <= mMax)
+      return PR_TRUE;
+
+    if (mNext)
+      return mNext->Contains(aIndex);
+
+    return PR_FALSE;
+  };
 };
 
 nsOutlinerSelection::nsOutlinerSelection(nsIOutlinerBoxObject* aOutliner)
@@ -50,6 +60,7 @@ nsOutlinerSelection::nsOutlinerSelection(nsIOutlinerBoxObject* aOutliner)
   NS_INIT_ISUPPORTS();
   mOutliner = aOutliner;
   mSuppressed = PR_FALSE;
+  mFirstRange = nsnull;
 }
 
 nsOutlinerSelection::~nsOutlinerSelection()
@@ -71,9 +82,13 @@ NS_IMETHODIMP nsOutlinerSelection::SetOutliner(nsIOutlinerBoxObject * aOutliner)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOutlinerSelection::IsSelected(PRInt32 index, PRBool *_retval)
+NS_IMETHODIMP nsOutlinerSelection::IsSelected(PRInt32 aIndex, PRBool* aResult)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  if (mFirstRange)
+    *aResult = mFirstRange->Contains(aIndex);
+  else
+    *aResult = PR_FALSE;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsOutlinerSelection::Select(PRInt32 index)
