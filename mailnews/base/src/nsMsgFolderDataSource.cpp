@@ -941,11 +941,11 @@ nsresult nsMsgFolderDataSource::DoDeleteFromFolder(
 		nsCOMPtr<nsIMsgFolder> deletedFolder(do_QueryInterface(supports));
 		if (deletedMessage)
 		{
-			messageArray->AppendElement(deletedMessage);
+			messageArray->AppendElement(supports);
 		}
 		else if(deletedFolder)
 		{
-			folderArray->AppendElement(deletedFolder);
+			folderArray->AppendElement(supports);
 		}
 	}
 	PRUint32 cnt;
