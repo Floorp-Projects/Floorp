@@ -43,8 +43,10 @@ nsDeque::nsDeque(nsDequeFunctor* aDeallocator) {
  * @update	gess4/18/98
  */
 nsDeque::~nsDeque() {
-//  char buffer[30];
-//  printf("Capacity: %i\n",mCapacity);
+
+#if 0
+  char buffer[30];
+  printf("Capacity: %i\n",mCapacity);
 
   static int mCaps[15] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
   switch(mCapacity) {
@@ -62,6 +64,7 @@ nsDeque::~nsDeque() {
     default:
       break;
   }
+#endif
 
   Erase();
   if(mData && (mData!=mBuffer))
