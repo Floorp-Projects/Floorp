@@ -48,6 +48,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsInputStreamChannel.obj       \
         .\$(OBJDIR)\nsDirectoryIndexStream.obj     \
         .\$(OBJDIR)\nsStreamLoader.obj             \
+        .\$(OBJDIR)\nsDownloader.obj               \
         .\$(OBJDIR)\nsProtocolProxyService.obj     \
         .\$(OBJDIR)\nsProxyAutoConfigUtils.obj     \
 	$(NULL)

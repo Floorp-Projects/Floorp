@@ -1,0 +1,62 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+#include "nsISupports.idl"
+#include "nsIChannel.idl"
+
+interface nsIURI;
+interface nsILoadGroup;  
+interface nsIStreamLoader;
+interface nsIInterfaceRequestor;
+interface nsIFile;
+interface nsIDownloader;
+
+[scriptable, uuid(6e0fc962-4a6f-4fa6-831f-8c26c554407f)]
+interface nsIDownloadObserver : nsISupports
+{
+    void onDownloadComplete(in nsIDownloader downloader,
+                            in nsISupports ctxt,
+                            in nsresult status,
+                            in nsIFile result);
+};
+
+[scriptable, uuid(9632cc0d-864d-4f92-b7e5-bd8097c4e9a5)]
+interface nsIDownloader : nsISupports
+{
+    void init(in nsIURI uri,
+              in nsIDownloadObserver completionObserver,
+              in nsISupports ctxt,
+              in nsILoadGroup loadGroup,
+              in nsIInterfaceRequestor notificationCallbacks,
+              in nsLoadFlags loadAttributes,
+              in unsigned long bufferSegmentSize,
+              in unsigned long bufferMaxSize);
+};
+
+%{C++
+
+#define NS_DOWNLOADER_CID                   \
+{ /* 510a86bb-6019-4ed1-bb4f-965cffd23ece*/         \
+ 0x510a86bb, 0x6019, 0x4ed1, { 0xbb, 0x4f, 0x96, 0x5c, 0xff, 0xd2, 0x3e, 0xce } \
+}
+
+%}

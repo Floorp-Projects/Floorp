@@ -40,6 +40,7 @@
 #include "nsLoadGroup.h"
 #include "nsInputStreamChannel.h"
 #include "nsStreamLoader.h"
+#include "nsDownloader.h"
 #include "nsAsyncStreamListener.h"
 #include "nsSyncStreamListener.h"
 #include "nsFileStreams.h"
@@ -393,6 +394,10 @@ static nsModuleComponentInfo gNetModuleInfo[] = {
       NS_STREAMLOADER_CID,
       "@mozilla.org/network/stream-loader;1",
       nsStreamLoader::Create },
+    { "Stream-As-File Downloader", 
+      NS_DOWNLOADER_CID,
+      "@mozilla.org/network/downloader;1",
+      nsDownloader::Create },
     { "Async Stream Observer",
       NS_ASYNCSTREAMOBSERVER_CID,
       "@mozilla.org/network/async-stream-observer;1",

@@ -51,6 +51,7 @@ CPPSRCS		= \
 		nsInputStreamChannel.cpp \
 		nsDirectoryIndexStream.cpp \
 		nsStreamLoader.cpp \
+		nsDownloader.cpp \
 		nsProtocolProxyService.cpp \
 		nsProxyAutoConfigUtils.cpp \
 		$(NULL)
