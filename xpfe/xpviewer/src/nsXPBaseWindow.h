@@ -34,26 +34,12 @@
 #include "nsIDocumentLoaderObserver.h"
 #include "nsIDOMMouseListener.h"
 
-
-//class nsILabel;
-//class nsICheckButton;
-//class nsIRadioButton;
-//class nsIDialog;
-//class nsITextWidget;
-//class nsIButton;
-//class nsIThrobber;
 class nsViewerApp;
 class nsIPresShell;
 class nsIPref;
-//class nsIImageButton;
-//class nsIMenuButton;
-//class nsIToolbar;
-//class nsIToolbarManager;
-
-#define SAMPLES_BASE_URL "resource:/res/samples"
 
 /**
- * Abstract base class for our test app's browser windows
+ * 
  */
 class nsXPBaseWindow : public nsIXPBaseWindow,
                        public nsIStreamObserver,
