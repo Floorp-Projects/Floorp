@@ -61,6 +61,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIViewManager.h"
+#include "nsIWidget.h"
 #include "nsIDOMMouseEvent.h"
 #include "nsIDocument.h"
 #include "nsScrollbarButtonFrame.h"
@@ -499,24 +500,36 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
        nsIFrame* parent = this;
        while(parent != nsnull)
        {
-          // if we hit a scrollable view make sure we take into account
-          // how much we are scrolled.
-          nsIScrollableView* scrollingView;
-          nsIView*           view;
-          parent->GetView(aPresContext, &view);
-          if (view) {
-            nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
-            if (NS_SUCCEEDED(result)) {
-                nscoord xoff = 0;
-                nscoord yoff = 0;
-                scrollingView->GetScrollPosition(xoff, yoff);
-                isHorizontal ? start += xoff : start += yoff;
-            }
-          }
+         // if we hit a scrollable view make sure we take into account
+         // how much we are scrolled.
+         nsIScrollableView* scrollingView;
+         nsIView*           view;
+         parent->GetView(aPresContext, &view);
+         if (view) {
+           nsresult result = view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollingView);
+           if (NS_SUCCEEDED(result)) {
+             nscoord xoff = 0;
+             nscoord yoff = 0;
+             scrollingView->GetScrollPosition(xoff, yoff);
+             isHorizontal ? start += xoff : start += yoff;
+           }
+         }
 
          nsRect r;
          parent->GetRect(r);
          isHorizontal ? start -= r.x : start -= r.y;
+
+         if (view) {
+           nsIWidget* widget = nsnull;
+           view->GetWidget(widget);
+           if (widget) {
+             nsWindowType windowType;
+             widget->GetWindowType(windowType);
+             if (windowType == eWindowType_popup)
+               break;
+           }
+         }
+
          parent->GetParent(&parent);
        }
 
