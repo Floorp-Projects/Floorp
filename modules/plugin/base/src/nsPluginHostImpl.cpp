@@ -180,22 +180,6 @@
 #include "nsIClassicPluginFactory.h"
 #endif
 
-// We need this hackery so that we can dynamically register doc
-// loaders for the 4.x plugins that we discover.
-#if defined(XP_PC)
-#define PLUGIN_DLL "gkplugin.dll"
-#elif defined(XP_UNIX) || defined(XP_BEOS)
-#define PLUGIN_DLL "libgkplugin" MOZ_DLL_SUFFIX
-#elif defined(XP_MAC)
-#if defined(NS_DEBUG)
-#define PLUGIN_DLL "pluginDebug.shlb"
-#else
-#define PLUGIN_DLL "plugin.shlb"
-#endif // ifdef NS_DEBUG
-#endif
-
-#define REL_PLUGIN_DLL "rel:" PLUGIN_DLL
-
 // this is the name of the directory which will be created
 // to cache temporary files.
 #define kPluginTmpDirName NS_LITERAL_CSTRING("plugtmp")
@@ -3826,8 +3810,7 @@ void nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
 
 ////////////////////////////////////////////////////////////////////////
 nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * pluginTag, 
-                                                             nsIComponentManager * compManager, 
-                                                             nsIFile * path)
+                                                             nsIComponentManager * compManager)
 {
   NS_ENSURE_ARG_POINTER(pluginTag);
   NS_ENSURE_ARG_POINTER(pluginTag->mMimeTypeArray);
@@ -3838,10 +3821,8 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
   pluginTag->mFileName));
 
   nsresult rv = NS_OK;
-  // what I want to do here is QI for a Component Registration Manager.  Since this 
-  // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
-  nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(compManager, &rv);
-  if (!obsoleteManager)
+  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(compManager, &rv);
+  if (!registrar)
     return rv;
 
   nsCOMPtr<imgILoader> loader;
@@ -3864,13 +3845,21 @@ nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * plugi
     nsCAutoString contractid(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=");
     contractid += pluginTag->mMimeTypeArray[i];
 
+    static nsModuleComponentInfo compInfo[] = {
+      { "Plugin Doc Loader Factory",
+        NS_PLUGINDOCLOADERFACTORY_CID,
+        "@mozilla.org/plugin/doc-loader/factory;1",
+        nsPluginDocLoaderFactory::Create
+      }
+    };
 
-    rv = obsoleteManager->RegisterComponentSpec(kPluginDocLoaderFactoryCID,
-                                                "Plugin Loader Stub",
-                                                contractid.get(),
-                                                path,
-                                                PR_TRUE,
-                                                PR_FALSE);
+    if (!mFactory)
+      NS_NewGenericFactory(getter_AddRefs(mFactory), compInfo);
+
+    rv = registrar->RegisterFactory(kPluginDocLoaderFactoryCID,
+                                    "Plugin Loader Stub",
+                                    contractid.get(),
+                                    mFactory);
 
     PLUGIN_LOG(PLUGIN_LOG_NOISY,
     ("nsPluginHostImpl::RegisterPluginMimeTypesWithLayout mime=%s, plugin=%s\n",
@@ -4843,7 +4832,6 @@ static nsresult FixUpPluginInfo(nsPluginInfo &aInfo, nsPluginFile &aPluginFile)
 ////////////////////////////////////////////////////////////////////////
 nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir, 
                                                 nsIComponentManager * compManager, 
-                                                nsIFile * layoutPath,
                                                 PRBool aCreatePluginList,
                                                 PRBool * aPluginsChanged,
                                                 PRBool checkForUnwantedPlugins)
@@ -5022,9 +5010,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       pluginTag->mNext = mPlugins;
       mPlugins = pluginTag;
 
-      if(layoutPath)
-        RegisterPluginMimeTypesWithLayout(pluginTag, compManager, layoutPath);
-
+      RegisterPluginMimeTypesWithLayout(pluginTag, compManager);
     }
     else if (!(pluginTag->mFlags & NS_PLUGIN_FLAG_UNWANTED)) {
       // we don't need it, delete it;
@@ -5038,7 +5024,6 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
 
 nsresult nsPluginHostImpl::ScanPluginsDirectoryList(nsISimpleEnumerator * dirEnum,
                                                     nsIComponentManager * compManager, 
-                                                    nsIFile * layoutPath,
                                                     PRBool aCreatePluginList,
                                                     PRBool * aPluginsChanged,
                                                     PRBool checkForUnwantedPlugins)
@@ -5055,7 +5040,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectoryList(nsISimpleEnumerator * dirEnu
       
       // don't pass aPluginsChanged directly to prevent it from been reset
       PRBool pluginschanged = PR_FALSE;
-      ScanPluginsDirectory(nextDir, compManager, layoutPath, aCreatePluginList, &pluginschanged, checkForUnwantedPlugins);
+      ScanPluginsDirectory(nextDir, compManager, aCreatePluginList, &pluginschanged, checkForUnwantedPlugins);
 
       if (pluginschanged)
         *aPluginsChanged = PR_TRUE;
@@ -5125,27 +5110,11 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
   // Load cached plugins info
   LoadCachedPluginsInfo(registry);
 
-  // retrieve a path for layout module. Needed for plugin mime types registration
-  nsCOMPtr<nsIFile> layoutPath;
   nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
-
-  // what I want to do here is QI for a Component Registration Manager.  Since this 
-  // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
-  nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(compManager); 
+  if (compManager) 
+    LoadXPCOMPlugins(compManager);
   
-  if (NS_SUCCEEDED(rv) && compManager && obsoleteManager) 
-  {
-    PRBool gotLayoutPath;
-    if (NS_SUCCEEDED(obsoleteManager->SpecForRegistryLocation(REL_PLUGIN_DLL, getter_AddRefs(layoutPath))))
-      gotLayoutPath = PR_TRUE;
-    else
-      gotLayoutPath = PR_FALSE;
-    rv = LoadXPCOMPlugins(compManager, layoutPath);
-    if (!gotLayoutPath)
-        layoutPath = nsnull;
-  }
-  
-  // Failure here is not a show-stopper so just warn.  
+  // Failure here is not a show-stopper so just warn.
   rv = EnsurePrivateDirServiceProvider();
   NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to register dir service provider.");
   
@@ -5163,7 +5132,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
   // 1. Scan the app-defined list of plugin dirs.
   rv = dirService->Get(NS_APP_PLUGINS_DIR_LIST, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dirList));
   if (NS_SUCCEEDED(rv)) {
-    ScanPluginsDirectoryList(dirList, compManager, layoutPath, aCreatePluginList, &pluginschanged);
+    ScanPluginsDirectoryList(dirList, compManager, aCreatePluginList, &pluginschanged);
 
     if (pluginschanged)
       *aPluginsChanged = PR_TRUE;
@@ -5179,7 +5148,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
   // 2. Scan the system-defined list of plugin dirs
   rv = dirService->Get(NS_OS_PLUGINS_DIR_LIST, NS_GET_IID(nsISimpleEnumerator), getter_AddRefs(dirList));
   if (NS_SUCCEEDED(rv)) {
-    ScanPluginsDirectoryList(dirList, compManager, layoutPath, aCreatePluginList, &pluginschanged);
+    ScanPluginsDirectoryList(dirList, compManager, aCreatePluginList, &pluginschanged);
 
     if (pluginschanged)
       *aPluginsChanged = PR_TRUE;
@@ -5230,7 +5199,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
           bFilterUnwanted = PR_FALSE;
 
       }
-      ScanPluginsDirectory(dirToScan, compManager, layoutPath, aCreatePluginList, &pluginschanged, bFilterUnwanted);
+      ScanPluginsDirectory(dirToScan, compManager, aCreatePluginList, &pluginschanged, bFilterUnwanted);
 
       if (pluginschanged)
         *aPluginsChanged = PR_TRUE;
@@ -5284,7 +5253,7 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
    *     When we stop supporting Real 8 or they fix their installer, this can go away.
    */
   if (aCreatePluginList)
-    ScanForRealInComponentsFolder(compManager, layoutPath);
+    ScanForRealInComponentsFolder(compManager);
 
   // reverse our list of plugins 
   nsPluginTag *next,*prev = nsnull;
@@ -5539,7 +5508,7 @@ AddPluginInfoToRegistry(nsIRegistry* registry, nsRegistryKey top,
 
 ////////////////////////////////////////////////////////////////////////
 nsresult
-nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFile* aPath)
+nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager)
 {
   // The "new style" XPCOM plugins have their information stored in
   // the component registry, under the key
@@ -5619,7 +5588,7 @@ nsPluginHostImpl::LoadXPCOMPlugins(nsIComponentManager* aComponentManager, nsIFi
 
     // Create an nsIDocumentLoaderFactory wrapper in case we ever see
     // any naked streams.
-    RegisterPluginMimeTypesWithLayout(tag, aComponentManager, aPath);
+    RegisterPluginMimeTypesWithLayout(tag, aComponentManager);
   }
 
   return NS_OK;
@@ -6638,7 +6607,7 @@ nsPluginHostImpl::CreateTmpFileToPost(const char *postDataURL, char **pTmpFileNa
 }
 
 nsresult
-nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManager, nsIFile * aLayoutPath)
+nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManager)
 {
   nsresult rv = NS_OK;
 
@@ -6680,7 +6649,6 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
   if (NS_FAILED(pluginFile.GetPluginInfo(info)))
     return rv;
   
-  nsCOMPtr<nsIFile> layoutPath;
   nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
   
   // finally, create our "plugin tag" and add it to the list
@@ -6692,8 +6660,7 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
       mPlugins = pluginTag;
       
       // last thing we need is to register this plugin with layout so it can be used in full-page mode
-      if(aLayoutPath)
-        RegisterPluginMimeTypesWithLayout(pluginTag, aCompManager, aLayoutPath);
+      RegisterPluginMimeTypesWithLayout(pluginTag, aCompManager);
     }
   }
           
