@@ -25,14 +25,14 @@
 
 #include "nsWebBrowser.h"
 #include "nsWebBrowserSetup.h"
-
+#include "nsCommandHandler.h"
 
 
 // Factory Constructors
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowser)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWebBrowserSetup)
-
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsCommandHandler)
 
 // Component Table
 
@@ -41,7 +41,9 @@ static nsModuleComponentInfo components[] =
    { "WebBrowser Component", NS_WEBBROWSER_CID, 
       NS_WEBBROWSER_PROGID, nsWebBrowserConstructor },
    { "WebBrowserSetup Component", NS_WEBBROWSER_SETUP_CID, 
-      NS_WEBBROWSER_SETUP_PROGID, nsWebBrowserSetupConstructor }
+      NS_WEBBROWSER_SETUP_PROGID, nsWebBrowserSetupConstructor },
+   { "CommandHandler Component", NS_COMMANDHANDLER_CID,
+      NS_COMMANDHANDLER_PROGID, nsCommandHandlerConstructor }
 };
 
 
