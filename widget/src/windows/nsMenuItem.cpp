@@ -115,7 +115,7 @@ NS_METHOD nsMenuItem::Create(nsIMenu * aParent, const nsString &aLabel, PRUint32
 {
   mCommand = aCommand;
   mLabel   = aLabel;
-  aParent->AddItem(this);
+  aParent->AddMenuItem(this);
 
   nsISupports * sups;
   if (NS_OK == aParent->QueryInterface(kISupportsIID,(void**)&sups)) {
