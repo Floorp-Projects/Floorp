@@ -1963,6 +1963,13 @@ int xre_main(int argc, char* argv[], const nsXREAppData* aAppData)
         em->Start(componentsListChanged, &needsRestart);
 
       if (noRestart || (!upgraded && !needsRestart)) {
+        // Kick off the prebinding update now that we know we won't be
+        // relaunching.
+
+#ifdef XP_MACOSX
+        UpdatePrebinding();
+#endif
+
         nsCOMPtr<nsICmdLineService> cmdLineArgs
           (do_GetService("@mozilla.org/appshell/commandLineService;1"));
         NS_ENSURE_TRUE(cmdLineArgs, 1);
