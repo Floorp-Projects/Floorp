@@ -2634,13 +2634,14 @@ nsresult nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsString& aInputStr
   nsCOMPtr<nsIDOMNode> fragmentAsNode;
   PRInt32 rangeStartHint, rangeEndHint;
   res = CreateDOMFragmentFromPaste(nsrange, inputString, aContextStr, aInfoStr, 
-                                            &fragmentAsNode, &rangeStartHint, &rangeEndHint);
+                                            address_of(fragmentAsNode),
+                                            &rangeStartHint, &rangeEndHint);
   NS_ENSURE_SUCCESS(res, res);
 
 
   // make a list of what nodes in docFrag we need to move
   nsCOMPtr<nsISupportsArray> nodeList;
-  res = CreateListOfNodesToPaste(fragmentAsNode, &nodeList, rangeStartHint, rangeEndHint);
+  res = CreateListOfNodesToPaste(fragmentAsNode, address_of(nodeList), rangeStartHint, rangeEndHint);
   NS_ENSURE_SUCCESS(res, res);
   
   // are there any table elements in the list?  

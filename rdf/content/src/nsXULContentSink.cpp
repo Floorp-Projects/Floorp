@@ -1379,7 +1379,7 @@ XULContentSinkImpl::ParseTag(const nsAReadableString& aText, nsINodeInfo*& aNode
     }
 
     nsCOMPtr<nsINameSpace> ns;
-    rv = GetTopNameSpace(&ns);
+    rv = GetTopNameSpace(address_of(ns));
     if (NS_FAILED(rv)) return rv;
 
     PRInt32 namespaceID;
@@ -1415,7 +1415,7 @@ XULContentSinkImpl::NormalizeAttributeString(const nsAReadableString& aText,
         prefix = dont_AddRef( NS_NewAtom(prefixStr) );
 
         nsCOMPtr<nsINameSpace> ns;
-        rv = GetTopNameSpace(&ns);
+        rv = GetTopNameSpace(address_of(ns));
         if (NS_FAILED(rv)) return rv;
 
         rv = ns->FindNameSpaceID(prefix, nameSpaceID);
@@ -1442,7 +1442,7 @@ XULContentSinkImpl::CreateElement(nsINodeInfo *aNodeInfo,
     element->mDocument    = mPrototype;
 
     nsCOMPtr<nsINameSpace> ns;
-    rv = GetTopNameSpace(&ns);
+    rv = GetTopNameSpace(address_of(ns));
     if (NS_SUCCEEDED(rv)) {
         element->mNameSpace = ns;
     }
