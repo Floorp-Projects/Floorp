@@ -39,12 +39,11 @@ CSRCS		= \
 
 DEFINES		+= -D_IMPL_NS_PLUGIN
 
-#CFLAGS += `gtk-config --cflags`
-#
-#LIBS		= \
-#		`gtk-config --libs`\
-#		$(NULL)
+# plugins should always be shared, even in the "static" build
+FORCE_SHARED_LIB = 1
 
+# Force use of PIC
+FORCE_USE_PIC	= 1
 
 include $(topsrcdir)/config/rules.mk
 
