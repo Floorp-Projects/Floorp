@@ -802,7 +802,7 @@ Rights Reserved.
 							 onclick="OnClickThreadAndMessagePaneSplitter()"/>
 			
       <!-- msg header view -->
-	  <box id="messagepanebox" align="vertical" flex="3">
+	  <box id="messagepanebox" align="vertical" flex="3" persist="collapsed">
       <toolbox id="msgHeaderView"/>
     
     	<!-- message view -->
