@@ -184,6 +184,7 @@ NS_IMETHODIMP nsRenderingContextGTK::Init(nsIDeviceContext* aContext,
 
   mSurface = (nsDrawingSurfaceGTK *) aSurface;
   NS_ADDREF(mSurface);
+  mOffscreenSurface = mSurface;
 
   return (CommonInit());
 }
