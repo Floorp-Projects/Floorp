@@ -21,6 +21,12 @@
    wallet.cpp
 */
 
+/* NEWFETCH is a temporary symbol defined so that we can overcome bug 10456.  It does
+ * not fix the problem for the mac, however.  This symbol (and all the code that is
+ * if-defed on it) must get removed after bug 10456 is fixed.
+ */
+#define NEWFETCH
+
 #include "wallet.h"
 #ifndef NECKO
 #include "nsINetService.h"
@@ -56,6 +62,19 @@
 #include "nsIProfile.h"
 #include "nsIContent.h"
 
+#ifdef NEWFETCH
+#ifdef WIN32 
+#include <windows.h>
+#endif
+#include "nsIStreamObserver.h"
+#include "nsIStreamListener.h"
+#include "nsIInputStream.h"
+#include "nsIBufferInputStream.h"
+#include "nsFileStream.h"
+#include "nsIFileSpec.h"
+#include "nsIEventQueueService.h"
+#endif
+
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID, NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
 static NS_DEFINE_IID(kIDOMElementIID, NS_IDOMELEMENT_IID);
@@ -82,6 +101,90 @@ static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
 
 #include "prlong.h"
 #include "prinrval.h"
+
+#ifdef NEWFETCH
+static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
+static int gKeepRunning = 0;
+static nsIEventQueue* gEventQ = nsnull;
+static nsOutputFileStream      *outFile;
+#endif
+
+#ifdef NEWFETCH
+class InputConsumer : public nsIStreamListener
+{
+public:
+
+  InputConsumer();
+  virtual ~InputConsumer();
+
+  // ISupports interface...
+  NS_DECL_ISUPPORTS
+
+  // IStreamListener interface...
+  NS_IMETHOD OnStartRequest(nsIChannel* channel, nsISupports* context);
+
+  NS_IMETHOD OnDataAvailable(nsIChannel* channel, nsISupports* context,
+                             nsIInputStream *aIStream, 
+                             PRUint32 aSourceOffset,
+                             PRUint32 aLength);
+
+  NS_IMETHOD OnStopRequest(nsIChannel* channel, nsISupports* context,
+                           nsresult aStatus,
+                           const PRUnichar* aMsg);
+
+};
+
+InputConsumer::InputConsumer()
+{
+  NS_INIT_REFCNT();
+}
+
+InputConsumer::~InputConsumer()
+{
+}
+
+NS_IMPL_ISUPPORTS(InputConsumer,nsCOMTypeInfo<nsIStreamListener>::GetIID());
+
+NS_IMETHODIMP
+InputConsumer::OnStartRequest(nsIChannel* channel, nsISupports* context)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+InputConsumer::OnDataAvailable(nsIChannel* channel, 
+                               nsISupports* context,
+                               nsIInputStream *aIStream, 
+                               PRUint32 aSourceOffset,
+                               PRUint32 aLength)
+{
+  char buf[1001];
+  PRUint32 amt;
+  nsresult rv;
+  do {
+    rv = aIStream->Read(buf, 1000, &amt);
+    if (rv == NS_BASE_STREAM_EOF) break;
+    if (NS_FAILED(rv)) return rv;
+    buf[amt] = '\0';
+    outFile->write(buf,amt);
+  } while (amt);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+InputConsumer::OnStopRequest(nsIChannel* channel, 
+                             nsISupports* context,
+                             nsresult aStatus,
+                             const PRUnichar* aMsg)
+{
+  outFile->flush();
+  outFile->close();
+  gKeepRunning -= 1;
+  return NS_OK;
+}
+
+#endif
 
 /***************************************************/
 /* The following declarations define the data base */
@@ -1315,6 +1418,87 @@ wallet_ReadFromURLFieldToSchemaFile
 /* The following routines are for fetching data from NetCenter */
 /***************************************************************/
 
+#ifdef NEWFETCH
+void
+wallet_FetchFromNetCenter(char* from, char* to) {
+
+    nsresult rv;
+
+    // Create the Event Queue for this thread...
+    NS_WITH_SERVICE(nsIEventQueueService, eventQService, 
+                    kEventQueueServiceCID, &rv);
+
+    rv = eventQService->CreateThreadEventQueue();
+
+    eventQService->GetThreadEventQueue(PR_CurrentThread(), &gEventQ);
+
+    nsFileSpec *aFile = new nsFileSpec(to);
+
+    NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &rv);
+    if (pService) {
+        nsCOMPtr<nsIURI> pURL;
+
+        rv = pService->NewURI(from, nsnull, getter_AddRefs(pURL));
+        if (NS_FAILED(rv)) {
+            printf("ERROR: NewURI failed for %s\n", from);
+            return /* rv */;
+        }
+        nsCOMPtr<nsIChannel> pChannel;
+
+        // Async reading thru the calls of the event sink interface
+        rv = pService->NewChannelFromURI("load", pURL, nsnull, 
+                                         getter_AddRefs(pChannel));
+
+        if (NS_FAILED(rv)) {
+            printf("ERROR: NewChannelFromURI failed for %s\n", from);
+        }
+            
+        InputConsumer* listener;
+
+        listener = new InputConsumer;
+        NS_IF_ADDREF(listener);
+        if (!listener) {
+            NS_ERROR("Failed to create a new stream listener!");
+         }
+
+        outFile = new nsOutputFileStream(*aFile);
+              if (! outFile->is_open()) 
+        {
+        }
+        rv = pChannel->AsyncRead(0,         // staring position
+                                 -1,        // number of bytes to read
+                                 nsnull,    // ISupports context
+                                 listener); // IStreamListener consumer
+        if (NS_SUCCEEDED(rv)) {
+            gKeepRunning += 1;
+        }
+        NS_RELEASE(listener);
+
+        // Enter the message pump to allow the URL load to proceed.
+        while ( gKeepRunning ) {
+#ifdef WIN32
+            MSG msg;
+
+            if (GetMessage(&msg, NULL, 0, 0)) {
+                TranslateMessage(&msg);
+                DispatchMessage(&msg);
+            } else {
+                gKeepRunning = 0;
+            }
+#else
+#ifdef XP_MAC
+        /* Mac stuff is missing here! */
+#else
+        PLEvent *gEvent;
+            rv = gEventQ->GetEvent(&gEvent);
+            rv = gEventQ->HandleEvent(gEvent);
+#endif /* XP_UNIX */
+#endif /* !WIN32 */
+       }
+    }
+}
+#else
+
 void
 wallet_FetchFromNetCenter(char* from, char* to) {
 
@@ -1372,6 +1556,7 @@ wallet_FetchFromNetCenter(char* from, char* to) {
     }
 #endif // NECKO
 }
+#endif
 
 /*
  * fetch URL-specific field/schema mapping from netcenter and put into local copy of file
