@@ -26,6 +26,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
+#include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsXIFConverter.h"
@@ -864,22 +865,19 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
       if ((area->mBase).Length() > 0) {
         // use the area->base as the base uri
         char *uriStr = (area->mBase).ToNewCString();
-        if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
+        if (!uriStr) {
+            return PR_FALSE;
+        }
         rv = service->NewURI(uriStr, nsnull, &baseUri);
-        nsCRT::free(uriStr);
+        delete [] uriStr;
       } else {
         rv = aDocURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
       }
       if (NS_FAILED(rv)) return PR_FALSE;
 
-      char *absUrlStr = nsnull;
-      char *urlSpec = (area->mHREF).ToNewCString();
-      if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
-      rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+      NS_MakeAbsoluteURI(area->mHREF, baseUri, aAbsURL);
+
       NS_RELEASE(baseUri);
-      aAbsURL = absUrlStr;
-      nsCRT::free(urlSpec);
-      delete [] absUrlStr;
 #endif // NECKO
       aTarget = area->mTarget;
       aAltText = area->mAltText;

@@ -51,6 +51,7 @@
 #ifdef NECKO
 #include "nsIIOService.h"
 #include "nsIURL.h"
+#include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIDocument.h"
@@ -540,22 +541,14 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 #ifndef NECKO
     NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
 #else
-    nsresult result;
-    NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &result);
-    if (NS_FAILED(result)) return result;
 
     nsIURI *baseUri = nsnull;
     result = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
     if (NS_FAILED(result)) return result;
 
-    char *absUrlStr = nsnull;
-    char *urlSpec = href.ToNewCString();
-    if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
-    result = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+    NS_MakeAbsoluteURI(href, baseUri, absURLSpec);
+
     NS_RELEASE(baseUri);
-    nsCRT::free(urlSpec);
-    absURLSpec = absUrlStr;
-    delete [] absUrlStr;
 #endif // NECKO
     NS_IF_RELEASE(docURL);
 

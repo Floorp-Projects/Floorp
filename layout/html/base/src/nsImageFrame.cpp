@@ -39,6 +39,7 @@
 #include "nsIIOService.h"
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
+#include "nsNeckoUtil.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif // NECKO
 #include "nsIView.h"
@@ -725,23 +726,7 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
           nsString empty;
           NS_MakeAbsoluteURL(baseURL, empty, src, absURL);
 #else
-          // XXX Should be a component local subroutine....
-          nsresult rv;
-          NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-          if (NS_FAILED(rv)) return rv;
-
-          nsIURI *baseUri = nsnull;
-          rv = baseURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-          if (NS_FAILED(rv)) return rv;
-
-          char *absUrlStr = nsnull;
-          char *baseSpec = src.ToNewCString();
-          if (!baseSpec) return NS_ERROR_OUT_OF_MEMORY;
-          rv = service->MakeAbsolute(baseSpec, baseUri, &absUrlStr);
-          NS_RELEASE(baseUri);
-          absURL = absUrlStr;
-          nsCRT::free(baseSpec);
-          delete [] absUrlStr;
+          NS_MakeAbsoluteURI(src, baseURL, absURL);
 #endif // NECKO
           NS_IF_RELEASE(baseURL);
 
