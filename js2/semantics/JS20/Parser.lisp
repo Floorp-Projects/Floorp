@@ -6,7 +6,7 @@
 
 (declaim (optimize (debug 3)))
 
-(defparameter *jw-source* 
+(defparameter *jw-source*
   '((line-grammar code-grammar :lr-1 :program)
     
     (%heading (1 :semantics) "Data Model")
@@ -64,10 +64,10 @@
     
     (deftuple compound-attribute
       (namespaces (list-set namespace))
-      (local boolean)
       (extend class-opt)
       (enumerable boolean)
       (dynamic boolean)
+      (compile boolean)
       (member-mod member-modifier)
       (override-mod override-modifier)
       (prototype boolean)
@@ -518,22 +518,22 @@
         (cond
          ((= a b attribute) (return a))
          ((in b namespace :narrow-both)
-          (return (new compound-attribute (list-set a b) false null false false null null false false)))
+          (return (new compound-attribute (list-set a b) null false false false null null false false)))
          (nil
           (return (new compound-attribute
                        (set+ (& namespaces b) (list-set a))
-                       (& local b) (& extend b) (& enumerable b) (& dynamic b) (& member-mod b) (& override-mod b) (& prototype b) (& unused b))))))
+                       (& extend b) (& enumerable b) (& dynamic b) (& compile b) (& member-mod b) (& override-mod b) (& prototype b) (& unused b))))))
        ((in b namespace :narrow-both)
         (return (new compound-attribute
                      (set+ (& namespaces a) (list-set b))
-                     (& local a) (& extend a) (& enumerable a) (& dynamic a) (& member-mod a) (& override-mod a) (& prototype a) (& unused a))))
+                     (& extend a) (& enumerable a) (& dynamic a) (& compile a) (& member-mod a) (& override-mod a) (& prototype a) (& unused a))))
        (nil
         (// "Both " (:local a) " and " (:local b)
             " are compound attributes. Ensure that they have no duplicate or conflicting contents other than namespaces.")
-        (if (or (and (& local a) (& local b))
-                (and (not-in (& extend a) null) (not-in (& extend b) null))
+        (if (or (and (not-in (& extend a) null) (not-in (& extend b) null))
                 (and (& enumerable a) (& enumerable b))
                 (and (& dynamic a) (& dynamic b))
+                (and (& compile a) (& compile b))
                 (and (not-in (& member-mod a) null) (not-in (& member-mod b) null))
                 (and (not-in (& override-mod a) null) (not-in (& override-mod b) null))
                 (and (& prototype a) (& prototype b))
@@ -541,10 +541,10 @@
           (throw type-error)
           (return (new compound-attribute
                        (set+ (& namespaces a) (& namespaces b))
-                       (or (& local a) (& local b))
                        (if (not-in (& extend a) null) (& extend a) (& extend b))
                        (or (& enumerable a) (& enumerable b))
                        (or (& dynamic a) (& dynamic b))
+                       (or (& compile a) (& compile b))
                        (if (not-in (& member-mod a) null) (& member-mod a) (& member-mod b))
                        (if (not-in (& override-mod a) null) (& override-mod a) (& override-mod b))
                        (or (& prototype a) (& prototype b))
@@ -1936,63 +1936,104 @@
                       full)        ;semicolon required at the end
     (grammar-argument :omega_2 abbrev full)
     
-    (rule (:statement :omega) ((validate (-> (context compile-frame attribute-not-false (list-set label)) void)) (eval (-> (runtime-frame object) object)))
-      (production (:statement :omega) (:empty-statement) statement-empty-statement
-        ((validate (c :unused) (c-env :unused) (a :unused) (sl :unused)))
-        ((eval (r-env :unused) d) (return d)))
+    (rule (:statement :omega) ((validate (-> (context compile-frame (list-set label)) void)) (eval (-> (runtime-frame object) object)))
       (production (:statement :omega) (:expression-statement (:semicolon :omega)) statement-expression-statement
-        ((validate c c-env a (sl :unused)) (if (in a true-type) ((validate :expression-statement) c c-env) (throw syntax-error)))
+        ((validate c c-env (sl :unused)) ((validate :expression-statement) c c-env))
         ((eval r-env (d :unused)) (return ((eval :expression-statement) r-env))))
       (production (:statement :omega) (:super-statement (:semicolon :omega)) statement-super-statement
-        ((validate c c-env a (sl :unused)) (if (in a true-type) ((validate :super-statement) c c-env) (throw syntax-error)))
+        ((validate c c-env (sl :unused)) ((validate :super-statement) c c-env))
         ((eval r-env (d :unused)) (return ((eval :super-statement) r-env))))
-      (production (:statement :omega) (:annotated-block) statement-annotated-block
-        ((validate c c-env a (sl :unused)) ((validate :annotated-block) c c-env a))
-        ((eval r-env d) (return ((eval :annotated-block) r-env d))))
+      (production (:statement :omega) (:block) statement-block
+        ((validate c c-env (sl :unused)) ((validate :block) c c-env))
+        ((eval r-env d) (return ((eval :block) r-env d))))
       (production (:statement :omega) ((:labeled-statement :omega)) statement-labeled-statement
-        ((validate c c-env a sl) (if (in a true-type) ((validate :labeled-statement) c c-env sl) (throw syntax-error)))
+        ((validate c c-env sl) ((validate :labeled-statement) c c-env sl))
         ((eval r-env d) (return ((eval :labeled-statement) r-env d))))
       (production (:statement :omega) ((:if-statement :omega)) statement-if-statement
-        ((validate c c-env a (sl :unused)) (if (in a true-type) ((validate :if-statement) c c-env) (throw syntax-error)))
+        ((validate c c-env (sl :unused)) ((validate :if-statement) c c-env))
         ((eval r-env d) (return ((eval :if-statement) r-env d))))
       (production (:statement :omega) (:switch-statement) statement-switch-statement
-        ((validate (c :unused) (c-env :unused) a (sl :unused)) (if (in a true-type) (todo) (throw syntax-error)))
+        ((validate (c :unused) (c-env :unused) (sl :unused)) (todo))
         ((eval (r-env :unused) (d :unused)) (todo)))
       (production (:statement :omega) (:do-statement (:semicolon :omega)) statement-do-statement
-        ((validate c c-env a sl) (if (in a true-type) ((validate :do-statement) c c-env sl) (throw syntax-error)))
+        ((validate c c-env sl) ((validate :do-statement) c c-env sl))
         ((eval r-env d) (return ((eval :do-statement) r-env d))))
       (production (:statement :omega) ((:while-statement :omega)) statement-while-statement
-        ((validate c c-env a sl) (if (in a true-type) ((validate :while-statement) c c-env sl) (throw syntax-error)))
+        ((validate c c-env sl) ((validate :while-statement) c c-env sl))
         ((eval r-env d) (return ((eval :while-statement) r-env d))))
       (production (:statement :omega) ((:for-statement :omega)) statement-for-statement
-        ((validate (c :unused) (c-env :unused) a (sl :unused)) (if (in a true-type) (todo) (throw syntax-error)))
+        ((validate (c :unused) (c-env :unused) (sl :unused)) (todo))
         ((eval (r-env :unused) (d :unused)) (todo)))
       (production (:statement :omega) ((:with-statement :omega)) statement-with-statement
-        ((validate (c :unused) (c-env :unused) a (sl :unused)) (if (in a true-type) (todo) (throw syntax-error)))
+        ((validate (c :unused) (c-env :unused) (sl :unused)) (todo))
         ((eval (r-env :unused) (d :unused)) (todo)))
       (production (:statement :omega) (:continue-statement (:semicolon :omega)) statement-continue-statement
-        ((validate c (c-env :unused) a (sl :unused)) (if (in a true-type) ((validate :continue-statement) c) (throw syntax-error)))
+        ((validate c (c-env :unused) (sl :unused)) ((validate :continue-statement) c))
         ((eval r-env d) (return ((eval :continue-statement) r-env d))))
       (production (:statement :omega) (:break-statement (:semicolon :omega)) statement-break-statement
-        ((validate c (c-env :unused) a (sl :unused)) (if (in a true-type) ((validate :break-statement) c) (throw syntax-error)))
+        ((validate c (c-env :unused) (sl :unused)) ((validate :break-statement) c))
         ((eval r-env d) (return ((eval :break-statement) r-env d))))
       (production (:statement :omega) (:return-statement (:semicolon :omega)) statement-return-statement
-        ((validate c c-env a (sl :unused)) (if (in a true-type) ((validate :return-statement) c c-env) (throw syntax-error)))
+        ((validate c c-env (sl :unused)) ((validate :return-statement) c c-env))
         ((eval r-env (d :unused)) (return ((eval :return-statement) r-env))))
       (production (:statement :omega) (:throw-statement (:semicolon :omega)) statement-throw-statement
-        ((validate c c-env a (sl :unused)) (if (in a true-type) ((validate :throw-statement) c c-env) (throw syntax-error)))
+        ((validate c c-env (sl :unused)) ((validate :throw-statement) c c-env))
         ((eval r-env (d :unused)) (return ((eval :throw-statement) r-env))))
       (production (:statement :omega) (:try-statement) statement-try-statement
-        ((validate (c :unused) (c-env :unused) a (sl :unused)) (if (in a true-type) (todo) (throw syntax-error)))
+        ((validate (c :unused) (c-env :unused) (sl :unused)) (todo))
         ((eval (r-env :unused) (d :unused)) (todo))))
     
-    (rule (:substatement :omega) ((validate (-> (context compile-frame (list-set label)) void)) (eval (-> (runtime-frame object) object)))
+    
+    (rule (:substatement :omega) ((enabled (writable-cell boolean)) (validate (-> (context compile-frame (list-set label)) void))
+                                  (eval (-> (runtime-frame object) object)))
+      (production (:substatement :omega) (:empty-statement) substatement-empty-statement
+        ((validate (c :unused) (c-env :unused) (sl :unused)))
+        ((eval (r-env :unused) d) (return d)))
       (production (:substatement :omega) ((:statement :omega)) substatement-statement
-        ((validate c c-env sl) ((validate :statement) c c-env true sl))
+        ((validate c c-env sl) ((validate :statement) c c-env sl))
         ((eval r-env d) (return ((eval :statement) r-env d))))
       (production (:substatement :omega) (:simple-variable-definition (:semicolon :omega)) substatement-simple-variable-definition
         ((validate (c :unused) (c-env :unused) (sl :unused)) (todo))
-        ((eval (r-env :unused) (d :unused)) (todo))))
+        ((eval (r-env :unused) (d :unused)) (todo)))
+      (production (:substatement :omega) (:attributes :no-line-break { :substatements }) substatement-annotated-group
+        ((validate c c-env (sl :unused))
+         ((validate :attributes) c c-env)
+         (const a attribute ((eval :attributes) c-env))
+         (rwhen (not-in a boolean :narrow-false)
+           (throw type-error))
+         (action<- (enabled :substatement 0) a)
+         (when a
+           ((validate :substatements) c c-env)))
+        ((eval r-env d)
+         (if (enabled :substatement 0)
+           (return ((eval :substatements) r-env d))
+           (return d)))))
+    
+    
+    (rule :substatements ((validate (-> (context compile-frame) void)) (eval (-> (runtime-frame object) object)))
+      (production :substatements () substatements-none
+        ((validate (c :unused) (c-env :unused)))
+        ((eval (r-env :unused) d) (return d)))
+      (production :substatements (:substatements-prefix (:substatement abbrev)) substatements-more
+        ((validate c c-env)
+         ((validate :substatements-prefix) c c-env)
+         ((validate :substatement) c c-env (list-set-of label)))
+        ((eval r-env d)
+         (const o object ((eval :substatements-prefix) r-env d))
+         (return ((eval :substatement) r-env o)))))
+    
+    (rule :substatements-prefix ((validate (-> (context compile-frame) void)) (eval (-> (runtime-frame object) object)))
+      (production :substatements-prefix () substatements-prefix-none
+        ((validate (c :unused) (c-env :unused)))
+        ((eval (r-env :unused) d) (return d)))
+      (production :substatements-prefix (:substatements-prefix (:substatement full)) substatements-prefix-more
+        ((validate c c-env)
+         ((validate :substatements-prefix) c c-env)
+         ((validate :substatement) c c-env (list-set-of label)))
+        ((eval r-env d)
+         (const o object ((eval :substatements-prefix) r-env d))
+         (return ((eval :substatement) r-env o)))))
+    
     
     (production (:semicolon :omega) (\;) semicolon-semicolon)
     (production (:semicolon :omega) ($virtual-semicolon) semicolon-virtual-semicolon)
@@ -2022,57 +2063,15 @@
     
     
     (%heading 2 "Block Statement")
-    (rule :annotated-block ((enabled (writable-cell boolean)) (frame (writable-cell compile-frame))
-                            (validate (-> (context compile-frame attribute-not-false) void)) (eval (-> (runtime-frame object) object)))
-      (production :annotated-block (:block) annotated-block-block
-        ((validate c c-env a)
-         (const f block-compile-frame (new block-compile-frame c-env (vector-of compile-or-anti-binding)))
-         (action<- (frame :annotated-block 0) f)
-         ((validate :block) c f a))
-        ((eval r-env d)
-         (const inner-env runtime-frame (make-runtime-frame r-env (frame :annotated-block 0)))
-         (return ((eval :block) inner-env d))))
-      (production :annotated-block (:attributes :no-line-break :block) annotated-block-attributes-and-block
-        ((validate c c-env a)
-         ((validate :attributes) c c-env)
-         (const a2 attribute ((eval :attributes) c-env))
-         (const a3 attribute (combine-attributes a a2))
-         (action<- (enabled :annotated-block 0) (not-in a3 false-type))
-         (when (not-in a3 false-type :narrow-true)
-           ((validate :block) c c-env a3)))
-        ((eval r-env d)
-         (if (enabled :annotated-block 0)
-           (return ((eval :block) r-env d))
-           (return d)))))
-    
-    (rule :block ((validate (-> (context compile-frame attribute-not-false) void)) (eval (-> (runtime-frame object) object)))
+    (rule :block ((frame (writable-cell compile-frame)) (validate (-> (context compile-frame) void)) (eval (-> (runtime-frame object) object)))
       (production :block ({ :directives }) block-directives
-        (validate (validate :directives))
-        (eval (eval :directives))))
-    
-    (rule :directives ((validate (-> (context compile-frame attribute-not-false) void)) (eval (-> (runtime-frame object) object)))
-      (production :directives () directives-none
-        ((validate (c :unused) (c-env :unused) (a :unused)))
-        ((eval (r-env :unused) d) (return d)))
-      (production :directives (:directives-prefix (:directive abbrev)) directives-more
-        ((validate c c-env a)
-         (const c2 context ((validate :directives-prefix) c c-env a))
-         (exec ((validate :directive) c2 c-env a)))
+        ((validate c c-env)
+         (const f block-compile-frame (new block-compile-frame c-env (vector-of compile-or-anti-binding)))
+         (action<- (frame :block 0) f)
+         (exec ((validate :directives) c f true)))
         ((eval r-env d)
-         (const o object ((eval :directives-prefix) r-env d))
-         (return ((eval :directive) r-env o)))))
-    
-    (rule :directives-prefix ((validate (-> (context compile-frame attribute-not-false) context)) (eval (-> (runtime-frame object) object)))
-      (production :directives-prefix () directives-prefix-none
-        ((validate c (c-env :unused) (a :unused)) (return c))
-        ((eval (r-env :unused) d) (return d)))
-      (production :directives-prefix (:directives-prefix (:directive full)) directives-prefix-more
-        ((validate c c-env a)
-         (const c2 context ((validate :directives-prefix) c c-env a))
-         (return ((validate :directive) c2 c-env a)))
-        ((eval r-env d)
-         (const o object ((eval :directives-prefix) r-env d))
-         (return ((eval :directive) r-env o)))))
+         (const inner-env runtime-frame (make-runtime-frame r-env (frame :block 0)))
+         (return ((eval :directives) inner-env d)))))
     (%print-actions ("Validation" attribute validate) ("Evaluation" eval))
     
     
@@ -2286,9 +2285,14 @@
     (%heading 1 "Directives")
     (rule (:directive :omega_2) ((enabled (writable-cell boolean)) (validate (-> (context compile-frame attribute-not-false) context))
                                  (eval (-> (runtime-frame object) object)))
+      (production (:directive :omega_2) (:empty-statement) directive-empty-statement
+        ((validate c (c-env :unused) (a :unused)) (return c))
+        ((eval (r-env :unused) d) (return d)))
       (production (:directive :omega_2) ((:statement :omega_2)) directive-statement
         ((validate c c-env a)
-         ((validate :statement) c c-env a (list-set-of label))
+         (rwhen (not-in a true-type)
+           (throw syntax-error))
+         ((validate :statement) c c-env (list-set-of label))
          (return c))
         ((eval r-env d) (return ((eval :statement) r-env d))))
       (production (:directive :omega_2) ((:annotatable-directive :omega_2)) directive-annotatable-directive
@@ -2306,6 +2310,19 @@
         ((eval r-env d)
          (if (enabled :directive 0)
            (return ((eval :annotatable-directive) r-env d))
+           (return d))))
+      (production (:directive :omega_2) (:attributes :no-line-break { :directives }) directive-annotated-group
+        ((validate c c-env a)
+         ((validate :attributes) c c-env)
+         (const a2 attribute ((eval :attributes) c-env))
+         (const a3 attribute (combine-attributes a a2))
+         (action<- (enabled :directive 0) (not-in a3 false-type))
+         (rwhen (in a3 false-type :narrow-false)
+           (return c))
+         (return ((validate :directives) c c-env a3)))
+        ((eval r-env d)
+         (if (enabled :directive 0)
+           (return ((eval :directives) r-env d))
            (return d))))
       (production (:directive :omega_2) (:package-definition) directive-package-definition
         ((validate (c :unused) (c-env :unused) a) (if (in a true-type) (todo) (throw syntax-error)))
@@ -2346,6 +2363,31 @@
       (production (:annotatable-directive :omega_2) (:pragma (:semicolon :omega_2)) annotatable-directive-pragma
         ((validate (c :unused) (c-env :unused) (a :unused) (has-attributes :unused)) (todo))
         ((eval (r-env :unused) (d :unused)) (todo))))
+    
+    
+    (rule :directives ((validate (-> (context compile-frame attribute-not-false) context)) (eval (-> (runtime-frame object) object)))
+      (production :directives () directives-none
+        ((validate c (c-env :unused) (a :unused)) (return c))
+        ((eval (r-env :unused) d) (return d)))
+      (production :directives (:directives-prefix (:directive abbrev)) directives-more
+        ((validate c c-env a)
+         (const c2 context ((validate :directives-prefix) c c-env a))
+         (return ((validate :directive) c2 c-env a)))
+        ((eval r-env d)
+         (const o object ((eval :directives-prefix) r-env d))
+         (return ((eval :directive) r-env o)))))
+    
+    (rule :directives-prefix ((validate (-> (context compile-frame attribute-not-false) context)) (eval (-> (runtime-frame object) object)))
+      (production :directives-prefix () directives-prefix-none
+        ((validate c (c-env :unused) (a :unused)) (return c))
+        ((eval (r-env :unused) d) (return d)))
+      (production :directives-prefix (:directives-prefix (:directive full)) directives-prefix-more
+        ((validate c c-env a)
+         (const c2 context ((validate :directives-prefix) c c-env a))
+         (return ((validate :directive) c2 c-env a)))
+        ((eval r-env d)
+         (const o object ((eval :directives-prefix) r-env d))
+         (return ((eval :directive) r-env o)))))
     (%print-actions ("Validation" validate) ("Evaluation" eval))
     
     
@@ -2376,10 +2418,10 @@
          (return a)))
       (production :attribute (abstract) attribute-abstract
         ((validate (c :unused) (c-env :unused)))
-        ((eval (env :unused)) (return (new compound-attribute (list-set-of namespace) false null false false abstract null false false))))
+        ((eval (env :unused)) (return (new compound-attribute (list-set-of namespace) null false false false abstract null false false))))
       (production :attribute (final) attribute-final
         ((validate (c :unused) (c-env :unused)))
-        ((eval (env :unused)) (return (new compound-attribute (list-set-of namespace) false null false false final null false false))))
+        ((eval (env :unused)) (return (new compound-attribute (list-set-of namespace) null false false false final null false false))))
       (production :attribute (private) attribute-private
         ((validate c (c-env :unused))
          (const p namespace-opt (& private-namespace c))
@@ -2392,7 +2434,7 @@
         ((eval (env :unused)) (return public-namespace)))
       (production :attribute (static) attribute-static
         ((validate (c :unused) (c-env :unused)))
-        ((eval (env :unused)) (return (new compound-attribute (list-set-of namespace) false null false false static null false false))))
+        ((eval (env :unused)) (return (new compound-attribute (list-set-of namespace) null false false false static null false false))))
       (production :attribute (true) attribute-true
         ((validate (c :unused) (c-env :unused)))
         ((eval (env :unused)) (return true)))
@@ -2610,7 +2652,7 @@
       (production :program (:directives) program-directives
         (eval-program
          (begin
-          ((validate :directives) initial-context initial-compile-frame true)
+          (exec ((validate :directives) initial-context initial-compile-frame true))
           (return ((eval :directives) initial-runtime-frame undefined))))))
     
     
