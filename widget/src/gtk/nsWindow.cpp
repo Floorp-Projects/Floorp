@@ -334,7 +334,7 @@ NS_METHOD nsWindow::CreateNative(GtkWidget *parentWidget)
   gtk_drag_dest_set (mWidget,
                      GTK_DEST_DEFAULT_ALL,
                      target_table, n_targets - 1, /* no rootwin */
-                     GDK_ACTION_COPY | GDK_ACTION_MOVE);
+                     GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
 
   return NS_OK;
 }
