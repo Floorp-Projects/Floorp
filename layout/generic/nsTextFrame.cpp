@@ -1137,12 +1137,12 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
 #endif        
               aTextStyle.mNormalFont->GetUnderline(offset, size);
               aRenderingContext.SetColor(NS_RGB(189,33,66));
-              aRenderingContext.FillRect(aX + startOffset+1, aY + baseline - offset+size, textWidth-2, size);
+              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset+size, textWidth-2*size, size);
                                 }break;
           case SELECTION_IME_RAWINPUT:{
               aTextStyle.mNormalFont->GetUnderline(offset, size);
               aRenderingContext.SetColor(NS_RGB(189,33,66));
-              aRenderingContext.FillRect(aX + startOffset+1, aY + baseline - offset+size, textWidth-2, size);
+              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset+size, textWidth-2*size, size);
                                 }break;
           case SELECTION_IME_SELECTEDCONVERTEDTEXT:{
 #ifdef USE_INVERT_FOR_SELECTION
@@ -1154,12 +1154,12 @@ nsTextFrame::PaintTextDecorations(nsIRenderingContext& aRenderingContext,
 #endif        
 			  aTextStyle.mNormalFont->GetUnderline(offset, size);
               aRenderingContext.SetColor(NS_RGB(189,33,66));
-              aRenderingContext.FillRect(aX + startOffset+1, aY + baseline - offset, textWidth-2, size*2);
+              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size*2);
                                 }break;
           case SELECTION_IME_CONVERTEDTEXT:{
               aTextStyle.mNormalFont->GetUnderline(offset, size);
               aRenderingContext.SetColor(NS_RGB(189,33,66));
-              aRenderingContext.FillRect(aX + startOffset+1, aY + baseline - offset, textWidth-2, size*2);
+              aRenderingContext.FillRect(aX + startOffset+size, aY + baseline - offset, textWidth-2*size, size*2);
                                 }break;
           default:
             NS_ASSERTION(0,"what type of selection do i not know about?");
