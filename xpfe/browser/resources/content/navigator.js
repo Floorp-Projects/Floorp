@@ -78,12 +78,19 @@ const gButtonPrefListener =
     var buttonId = buttonName + "-button";
     var button = document.getElementById(buttonId);
 
+    // We need to explicitly set "hidden" to "false"
+    // in order for persistence to work correctly
     var show = pref.getBoolPref(prefName);
-    button.hidden = !show;
+    if (show)
+      button.setAttribute("hidden","false");
+    else
+      button.setAttribute("hidden", "true");
 
     // If all buttons before the separator are hidden, also hide the separator
-    var bookmarkSeparator = document.getElementById("home-bm-separator");
-    bookmarkSeparator.hidden = allLeftButtonsAreHidden();
+    if (allLeftButtonsAreHidden())
+      document.getElementById("home-bm-separator").setAttribute("hidden", "true");
+    else
+      document.getElementById("home-bm-separator").removeAttribute("hidden");
   }
 };
 
