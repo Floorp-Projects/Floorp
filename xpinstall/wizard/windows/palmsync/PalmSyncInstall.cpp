@@ -342,8 +342,14 @@ int InstallConduit()
     // Applications should not place conduits in the Palm Desktop directory.
     // The Palm Desktop installer only manages the Palm Desktop conduits.
     TCHAR   szConduitPath[_MAX_PATH];
-    if(!GetCurrentDirectory(_MAX_PATH, szConduitPath))
+    if(!GetModuleFileName(NULL, szConduitPath, _MAX_PATH))
         return IDS_ERR_CONDUIT_NOT_FOUND;
+    // extract the dir path (without the module name)
+    int index = strlen(szConduitPath)-1;
+    while((szConduitPath[index] != DIRECTORY_SEPARATOR) && index)
+        index--;
+    szConduitPath[index] = 0;
+
     // take care of any possible string overwrites
     if((strlen(szConduitPath) + strlen(DIRECTORY_SEPARATOR_STR) + strlen(CONDUIT_FILENAME)) > _MAX_PATH)
         return IDS_ERR_LOADING_CONDMGR;
