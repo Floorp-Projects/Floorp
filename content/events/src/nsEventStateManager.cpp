@@ -775,10 +775,8 @@ nsEventStateManager :: FireContextClick ( )
       nsCOMPtr<nsIDOMHTMLInputElement> inputElm ( do_QueryInterface(lastContent) );
       nsCOMPtr<nsIFormControl> formControl ( do_QueryInterface(lastContent) );
       if ( inputElm ) {
-        // of all form elements, only <input type='text'> and <textarea> are allowed to have context menus
-        if ( tag == nsHTMLAtoms::textarea )
-          allowedToDispatch = PR_FALSE;
-        else if ( tag == nsHTMLAtoms::input ) {
+        // of all input elements, only ones dealing with text are allowed to have context menus
+        if ( tag == nsHTMLAtoms::input ) {
           nsAutoString type;
           lastContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::type, type);
           if ( type != NS_LITERAL_STRING("") && type != NS_LITERAL_STRING("text") &&
