@@ -624,10 +624,10 @@ File.prototype.copy = function (aDest)
     }
     if (!dest.exists()) {
       copyName          = dest.leafName;
-      dir               = dest.parent;
+      dir               = dest.parent.parent;
 
       if (!dir.exists()) {
-        jslibError(null, "(dest "+dir.path+" doesn't exist)", 
+        jslibError(null, "(dest directory "+dest.parent.parent.path+" doesn't exist and dir is "+dir+")", 
                           "NS_ERROR_FAILURE", 
                           JS_FILE_FILE+":copy");
         return false;

@@ -535,20 +535,33 @@ calendarManager.prototype.getAndConvertAllOldCalendars = function calMan_getAllC
          thisCalendar.active = getBoolPref(prefService.getBranch( "calendar." ), "server"+ArrayOfCalendars[i]+".active", false );
          thisCalendar.remote = getBoolPref(prefService.getBranch( "calendar." ), "server"+ArrayOfCalendars[i]+".remote", false );
          thisCalendar.remotePath = getCharPref(prefService.getBranch( "calendar." ), "server"+ArrayOfCalendars[i]+".remotePath", "" );
-         
-         this.calendars[ this.calendars.length ] = thisCalendar;
       }
       catch ( e )
       {
          dump( "error: could not get calendar information from preferences\n"+e );
       }
 
+      var name = "calendar"+this.rootContainer.getSubNodes().length;
+        
       //now convert it, and put it in the RDF file.
       var node = this.rootContainer.addNode(name);
       node.setAttribute("http://home.netscape.com/NC-rdf#active", thisCalendar.name);
       node.setAttribute("http://home.netscape.com/NC-rdf#serverNumber", this.rootContainer.getSubNodes().length);
       node.setAttribute("http://home.netscape.com/NC-rdf#name", thisCalendar.name);
-      node.setAttribute("http://home.netscape.com/NC-rdf#path", "RemoteCalendar"+this.rootContainer.getSubNodes().length+".ics");
+      
+      if( thisCalendar.remote == true )
+      {
+         var profileFile = this.getProfileDirectory();
+         profileFile.append( "Calendar" );
+         profileFile.append("RemoteCalendar"+this.rootContainer.getSubNodes().length+".ics");
+         var CalendarPath  = profileFile.path;
+      }
+      else
+      {
+         CalendarPath = thisCalendar.remotePath;
+      }
+
+      node.setAttribute("http://home.netscape.com/NC-rdf#path", CalendarPath);
       node.setAttribute("http://home.netscape.com/NC-rdf#remote", thisCalendar.remote);
       node.setAttribute("http://home.netscape.com/NC-rdf#remotePath", thisCalendar.remotePath);
 
@@ -561,7 +574,7 @@ calendarManager.prototype.getAndConvertAllOldCalendars = function calMan_getAllC
       var oldCalendarDataFile = new File( thisCalendar.path );
       var newCalendarDataFile = new File( newCalendarFile.path );
    
-      if( oldCalendarDataFile.exists() )
+      if( oldCalendarDataFile.exists() && thisCalendar.remote == true )
       {
          alert( "moving "+oldCalendarDataFile.path+" to "+newCalendarDataFile.path );
          oldCalendarDataFile.copy( newCalendarDataFile.path );
