@@ -208,9 +208,9 @@ nsPostScriptObj::~nsPostScriptObj()
         remove(mPrintSetup->filename);
 #endif
     }  
-  }
   
-  finalize_translation();
+    finalize_translation();
+  }
 
   // Cleanup things allocated along the way
   if (nsnull != mTitle){
@@ -510,8 +510,10 @@ nsPostScriptObj::Init( nsIDeviceContextSpecPS *aSpec )
 void 
 nsPostScriptObj::finalize_translation()
 {
-  free(mPrintContext->prSetup);
-  mPrintContext->prSetup = nsnull;
+  if (mPrintContext) {
+    free(mPrintContext->prSetup);
+    mPrintContext->prSetup = nsnull;
+  }
 }
 
 /** ---------------------------------------------------
@@ -2055,9 +2057,11 @@ nsPostScriptObj::end_document()
 {
   PR_LOG(nsPostScriptObjLM, PR_LOG_DEBUG, ("nsPostScriptObj::end_document()\n"));
 
-  FILE *f;
+  // insurance against breakage
+  if (!mPrintContext || !mPrintContext->prSetup|| !mPrintContext->prSetup->out || !mPrintSetup) 
+    return NS_ERROR_GFX_PRINTER_CMD_FAILURE;
 
-  f = mPrintContext->prSetup->out;
+  FILE *f = mPrintContext->prSetup->out;
   // n_pages is zero so use mPageNumber
   fprintf(f, "%%%%Trailer\n");
   fprintf(f, "%%%%Pages: %d\n", (int) mPageNumber - 1);
