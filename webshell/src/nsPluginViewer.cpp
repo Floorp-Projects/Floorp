@@ -53,7 +53,7 @@ class PluginViewerImpl;
 class PluginListener : public nsIStreamListener {
 public:
   PluginListener(PluginViewerImpl* aViewer);
-  ~PluginListener();
+  virtual ~PluginListener();
 
   // nsISupports
   NS_DECL_ISUPPORTS
@@ -75,7 +75,7 @@ public:
 class pluginInstanceOwner : public nsIPluginInstanceOwner {
 public:
   pluginInstanceOwner();
-  ~pluginInstanceOwner();
+  virtual ~pluginInstanceOwner();
 
   NS_DECL_ISUPPORTS
 
@@ -135,7 +135,7 @@ public:
   NS_IMETHOD Hide();
   NS_IMETHOD Print(void);
 
-  ~PluginViewerImpl();
+  virtual ~PluginViewerImpl();
 
   nsresult CreatePlugin(nsIPluginHost* aHost, const nsRect& aBounds,
                         nsIStreamListener*& aResult);
