@@ -375,9 +375,24 @@ nsClipboard :: GetNativeClipboardData ( nsITransferable * aTransferable, PRInt32
           // from MacOS line endings to DOM line endings.
           nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &clipboardData, &dataSize );
           
+          unsigned char *clipboardDataPtr = (unsigned char *) clipboardData;
+#if TARGET_CARBON
+          // skip BOM (Byte Order Mark to distinguish little or big endian) in 'utxt'
+          // 10.2 puts BOM for 'utxt', we need to remove it here
+          // for little endian case, we also need to convert the data to big endian
+          // but we do not do that currently (need this in case 'utxt' is really in little endian)
+          if ( (macOSFlavor == 'utxt') &&
+               (dataSize > 2) &&
+               ((clipboardDataPtr[0] == 0xFE && clipboardDataPtr[1] == 0xFF) ||
+               (clipboardDataPtr[0] == 0xFF && clipboardDataPtr[1] == 0xFE)) ) {
+            dataSize -= sizeof(PRUnichar);
+            clipboardDataPtr += sizeof(PRUnichar);
+          }
+#endif
+
           // put it into the transferable
           nsCOMPtr<nsISupports> genericDataWrapper;
-          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, clipboardData, dataSize, getter_AddRefs(genericDataWrapper) );        
+          nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, (void *) clipboardDataPtr, dataSize, getter_AddRefs(genericDataWrapper) );        
           errCode = aTransferable->SetTransferData ( flavorStr, genericDataWrapper, dataSize );
         }
         
