@@ -35,6 +35,7 @@
 #include "nsVoidArray.h"
 
 class nsNativeDragTarget;
+class nsIRollupListener;
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -126,6 +127,7 @@ public:
     virtual void            SetUpForPaint(HDC aHDC);
    	virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
 
+    NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture);
 
     // nsSwitchToUIThread interface
     virtual BOOL            CallMethod(MethodInfo *info);

@@ -90,6 +90,8 @@ public:
     virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
     virtual void            FreeNativeData(void * data, PRUint32 aDataType) {}//~~~
 
+    NS_IMETHOD              CaptureRollupEvents(nsIRollupListener * aListener, PRBool aDoCapture);
+
 protected:
 
     virtual void            DrawScaledRect(nsIRenderingContext& aRenderingContext,
