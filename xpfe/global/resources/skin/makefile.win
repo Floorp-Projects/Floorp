@@ -32,6 +32,8 @@ install::
 	$(MAKE_INSTALL) tasksOverlay.css $(DISTBROWSER)
 	$(MAKE_INSTALL) global.css $(DISTBROWSER)
 	$(MAKE_INSTALL) button.css $(DISTBROWSER)
+	$(MAKE_INSTALL) textfield.css $(DISTBROWSER)
+	$(MAKE_INSTALL) colors.css $(DISTBROWSER)
 	$(MAKE_INSTALL) checkbox.css $(DISTBROWSER)
 	$(MAKE_INSTALL) menubutton.css $(DISTBROWSER)
 	$(MAKE_INSTALL) menulist.css $(DISTBROWSER)
@@ -81,6 +83,7 @@ install::
 	$(MAKE_INSTALL) message-icon.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) question-icon.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) return.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) return-disabled.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) grippy-horizontal-after.gif  $(DISTBROWSER)
 	$(MAKE_INSTALL) grippy-horizontal-before.gif  $(DISTBROWSER)
 	$(MAKE_INSTALL) grippy-vertical-after.gif  $(DISTBROWSER)
@@ -135,7 +138,9 @@ install::
 	$(MAKE_INSTALL) sortAscending.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) sortDescending.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) check-check.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) check-check-disabled.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) check-radio.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) check-radio-disabled.gif $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\global\skin\default\*.*

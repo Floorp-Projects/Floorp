@@ -9,9 +9,14 @@
 @import url(chrome://global/skin/scrollbars.css);
 
 @namespace url(http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul); /* set default namespace to XUL */
+@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for HTML elements */
 
 * {
   display: block;
+}
+
+*[hidden="true"] {
+  display: none;
 }
 
 /** 
@@ -108,10 +113,12 @@ menuitem[hidden="true"] {
 }
 
 menupopup {
+  behavior: url("resource:/chrome/xulBindings.xml#popups");
   display: none;
 }
 
 popup {
+  behavior: url("resource:/chrome/xulBindings.xml#popups");
   display: none;
 }
 
@@ -254,6 +261,10 @@ button.right {
   behavior: url(resource:/chrome/xulBindings.xml#buttonright);
 }
 
+label {
+  behavior: url(resource:/chrome/xulBindings.xml#label);
+}
+
 separator {
   behavior: url(resource:/chrome/xulBindings.xml#separator);
 }
@@ -270,3 +281,16 @@ textfield {
 textfield[multiline="true"] {
   behavior: url(resource:/chrome/xulBindings.xml#textarea);
 }
+
+text {
+  behavior: url(resource:/chrome/xulBindings.xml#text);
+}
+
+text[editable="true"], text[editable="true"][mode="display"] {
+  behavior: url(resource:/chrome/xulBindings.xml#text-editable-display);
+}
+
+text[editable="true"][mode="edit"] {
+  behavior: url(resource:/chrome/xulBindings.xml#text-editable-edit);
+}
+

@@ -69,7 +69,7 @@
 
   <binding name="menubutton">
     <content excludes="template,observes,menupopup">
-      <xul:labelledimage class="menu-button" allowevents="true" inherits="buttonaction:oncommand,src,value,crop,accesskey"/>
+      <xul:button class="menu-button" allowevents="true" inherits="buttonaction:oncommand,src,value,crop,accesskey"/>
       <xul:image class="menu-dropmarker"/>
     </content>
   </binding>
@@ -124,7 +124,7 @@
         <xul:box class="checkmark-box" autostretch="never">
           <xul:image inherits="src"/>
         </xul:box>
-        <xul:html flex="1" inherits="value"/>
+        <xul:html inherits="value" flex="1"/>
       </xul:box>
     </content>
     <handlers>
@@ -140,7 +140,7 @@
           <xul:image/>
         </xul:box>
         <xul:image inherits="src" class="icon" />
-        <xul:html flex="1" inherits="value"/>
+        <xul:html inherits="value" flex="1"/>
       </xul:box>
     </content>
     <handlers>
@@ -155,7 +155,7 @@
         <xul:box class="checkmark-box" autostretch="never">
           <xul:image inherits="src"/>
         </xul:box>
-        <xul:html flex="1" inherits="value"/>
+        <xul:html inherits="value" flex="1"/>
       </xul:box>
     </content>  
   </binding>
@@ -167,7 +167,7 @@
           <xul:image/>
         </xul:box>
         <xul:image inherits="src" class="icon"/>
-        <xul:html flex="1" inherits="value"/>
+        <xul:html inherits="value" flex="1"/>
       </xul:box>
     </content>  
   </binding>  
@@ -179,6 +179,7 @@
 	  </handlers>
   </binding>
 
+  <!-- XUL <button>s -->
   <binding name="buttonleft">
     <content excludes="observes,template">
   	  <xul:box class="internal-box" inherits="orient" autostretch="never" flex="1">
@@ -200,7 +201,7 @@
       </xul:box>
 	  </content>
   </binding>
-
+  
   <binding name="separator" extends="xul:spring"/>
 
   <!-- appending to the end so we don't make hyatt cry -->
@@ -224,26 +225,53 @@
 
   <binding name="textfield" extends="xul:box">
     <content excludes="observes,template">
-      <xul:html flex="1">
-        <html:input inherits="value,type,maxlength,disabled,size,readonly"/>
-      </xul:html>
+      <xul:box flex="1">
+        <html:input flex="1" inherits="value,type,maxlength,disabled,size,readonly"/>
+      </xul:box>
     </content>
     <handlers>
-      <handler type="focus" value="dump('****focus!!!'); var v = this.anonymousContent[0]; v.firstChild.focus();"/>
-      <handler type="blur" value="var v = this.anonymousContent[0]; v.firstChild.blur();"/>
-    </handlers>
-
+      <handler type="focus" value="var v = this.anonymousContent[0]; this.setAttribute('focussed','true'); v.firstChild.focus();"/>
+      <handler type="blur" value="var v = this.anonymousContent[0]; this.removeAttribute('focussed'); v.firstChild.blur();"/>
+    </handlers>    
   </binding>
 
   <binding name="textarea" extends="xul:box">
     <content excludes="observes,template">
-      <xul:html flex="1">
-        <html:textarea inherits="value,disabled,rows,cols,readonly"/>
-      </xul:html>
+      <xul:box flex="1">
+        <html:textarea flex="1" inherits="value,disabled,rows,cols,readonly"/>
+      </xul:box>
     </content>
     <handlers>
-      <handler type="focus" value="dump('****focus!!!'); var v = this.anonymousContent[0]; v.firstChild.focus();"/>
-      <handler type="blur" value="var v = this.anonymousContent[0]; v.firstChild.blur();"/>
+      <handler type="focus" value="var v = this.anonymousContent[0]; this.setAttribute('focussed','true'); v.firstChild.focus();"/>
+      <handler type="blur" value="var v = this.anonymousContent[0]; this.removeAttribute('focussed'); v.firstChild.blur();"/>
+    </handlers>    
+  </binding>
+
+  <binding name="text">
+    <handlers>
+      <handler type="click" value="var forElementID = this.getAttribute('for'); if(forElementID) var forElement = document.getElementById(forElementID); if(forElement) forElement.focus();"/>
     </handlers>
   </binding>
+  
+  <binding name="text-editable-display" extends="resource:/chrome/xulBindings.xml#text"/>
+  
+  <binding name="text-editable-edit" extends="xul:box">
+    <content>
+      <xul:box flex="1">
+        <html:input type="text" inherits="value,type,maxlength,disabled,size,readonly"/>
+      </xul:box>
+    </content>
+    <handlers>
+      <handler type="blur" value="dump('foo 2\n');this.setAttribute('mode','display');"/>
+    </handlers>
+  </binding>
+
+  <binding name="popups">
+    <content>
+      <xul:box class="internal-box" orient="vertical">
+        <children/>
+      </xul:box>
+    </content>
+  </binding>
+  
 </bindings>

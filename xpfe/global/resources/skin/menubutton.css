@@ -1,27 +1,78 @@
 
-/* NEW WIDGET LANDING <menubutton> */
-menubutton:hover, menubutton[open="true"] {
-  border: 1px solid #000000;
-}
 
-menubutton > button, menubutton:hover > button {
-  border: 0px;
-  margin: 0px;
-}
+/* outermost frame */
+  menubutton
+    {
+      border              : 1px solid #000000;
+      margin              : 3px 5px 3px 5px;
+      padding             : 0px;
+      -moz-border-radius  : 3px 2px 2px 3px;
+    }
+    
+  menubutton[disabled="true"] 
+    {
+      border              : 1px solid #999999;
+      color               : #999999;
+    }
+  
+/* inner button */
+  menubutton > .menu-button,
+  menubutton:hover > .menu-button,
+  menubutton:active > .menu-button
+    {
+      border              : none;
+      margin              : 0px;
+      -moz-border-radius  : 0px;
+    }
 
-menubutton > .menu-dropmarker {
-  border: 1px outset #CCCCCC;
-  list-style-image: url("chrome://global/skin/scroll-down.gif");
-  padding: 0px 2px 0px 2px;
-}
+  menubutton[open="true"] > .menu-button > .internal-box
+    {
+      border              : 1px inset #CCCCCC;
+      padding             : 3px 1px 1px 3px;  
+    }
+    
+/* inner dropmarker */
+  menubutton > .menu-dropmarker
+    {
+      border              : 1px outset #CCCCCC;
+      list-style-image    : url("chrome://global/skin/scroll-down.gif");
+      padding             : 0px 2px 0px 2px;
+    }
+    
+  menubutton[disabled="true"] > .menu-dropmarker
+    {
+      list-style-image    : url("chrome://global/skin/scroll-down-disabled.gif");
+    }
 
-menubutton[open="true"] > .menu-dropmarker {
-  border: 1px inset #CCCCCC;
-  padding: 1px 1px -1px 3px;
-}
+  menubutton[open="true"] > .menu-dropmarker
+    {
+      border              : 1px inset #CCCCCC;
+      padding             : 1px 1px -1px 3px;
+    }
 
-menubutton menupopup, menulist menupopup {
-  border-left: 1px solid #000000;
-  border-right: 1px solid #000000;
-  border-bottom: 1px solid #000000;
-}
+  menubutton > menupopup
+    {
+      min-width           : 0px;
+      border-top          : 0px;
+      border-right        : 1px solid #000000;
+      border-left         : 1px solid #000000;
+      border-bottom       : 1px solid #000000;
+    }
+    
+  menubutton > menupopup > .internal-box
+    {
+      border-top          : 0px;
+      border-right        : 1px inset #CCCCCC;
+      border-left         : 1px inset #CCCCCC;
+      border-bottom       : 1px inset #CCCCCC;
+    }
+    
+  menubutton menupopup menuitem
+    {
+      padding             : 0px 0px 0px 3px;
+    }
+
+  menubutton menupopup menuitem > .menu-left
+    {
+      display             : none;
+    }

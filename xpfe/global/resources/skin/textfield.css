@@ -1,0 +1,73 @@
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"); /* set default namespace to HTML */
+@namespace html url("http://www.w3.org/TR/REC-html40"); /* namespace for XUL elements */
+
+/** generic text fields (in dialogs)
+ **/
+ 
+/* outer frame */
+  textfield
+    {
+      border              : 1px inset #CCCCCC;
+      font                : inherit;
+      color               : #000000;
+      padding             : 0px;
+      margin              : 1px 3px 2px 4px;
+      background-color    : #FFFFFF;
+      -moz-border-radius  : 3px 2px 2px 3px;
+      cursor              : text;
+    }
+    
+  textfield[readonly="true"]
+    {
+      background-color    : #CCCCCC;
+    }
+  
+  textfield[focussed="true"]
+    {
+      border              : 2px solid #6699cc;
+      margin              : 0px 2px 1px 3px;
+    }
+    
+  textfield[focussed="true"][readonly="true"]
+    {
+      border              : 1px inset #CCCCCC;
+      margin              : 1px 3px 2px 4px;
+    }
+
+/* internal frame */
+  textfield > box 
+    {
+      margin              : 0px;
+      padding             : 1px 2px 1px 2px;
+      cursor              : text;
+      border              : 1px solid black;
+      background-color    : inherit;
+      color               : inherit;
+    }
+  
+  textfield[disabled="true"] > box
+    {
+      border              : 1px solid #999999;
+    }
+  
+  textfield[multiline="true"] > box
+    {
+      padding             : 0px 0px 0px 2px;
+    }
+  
+/* internal text widget */
+  textfield > box > html|input,
+  textfield > box > html|textarea
+    {
+      border              : none !important;
+      margin              : 0px;
+      font                : inherit;
+      background-color    : inherit;
+    }
+
+  textfield[disabled="true"] > box > html|input,
+  textfield[disabled="true"] > box > html|textarea
+    {
+      color               : #999999;
+      cursor              : default ! important;
+    } 
