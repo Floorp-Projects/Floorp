@@ -220,18 +220,10 @@ public class NativeJavaMethod extends NativeFunction implements Function {
                                    " class = " + actualType);
             }
 
-            // XXX set prototype && parent
             if (wrapped == Undefined.instance)
                 return wrapped;
             if (wrapped == null && staticType == Void.TYPE)
                 return Undefined.instance;
-            if (retval != wrapped && wrapped instanceof Scriptable) {
-                Scriptable s = (Scriptable)wrapped;
-                if (s.getPrototype() == null)
-                    s.setPrototype(parent.getPrototype());
-                if (s.getParentScope() == null)
-                    s.setParentScope(parent.getParentScope());
-            }
             return wrapped;
         } catch (IllegalAccessException accessEx) {
             throw Context.reportRuntimeError(accessEx.getMessage());

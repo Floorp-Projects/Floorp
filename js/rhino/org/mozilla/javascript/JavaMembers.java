@@ -161,7 +161,6 @@ class JavaMembers {
             if (methodOrCtor instanceof Constructor) {
                 NativeJavaConstructor fun = 
                     new NativeJavaConstructor((Constructor)methodOrCtor);
-                fun.setParentScope(scope);
                 fun.setPrototype(prototype);
                 member = fun;
                 ht.put(name, fun);
@@ -173,7 +172,6 @@ class JavaMembers {
                     ((NativeJavaMethod)member).getMethods().length > 1 ) {
                     NativeJavaMethod fun = 
                         new NativeJavaMethod((Method)methodOrCtor, name);
-                    fun.setParentScope(scope);
                     fun.setPrototype(prototype);
                     ht.put(name, fun);
                     member = fun;
@@ -273,7 +271,6 @@ class JavaMembers {
                 FieldAndMethods fam = new FieldAndMethods(method.getMethods(),
                                                           field,
                                                           null);
-                fam.setParentScope(scope);
                 fam.setPrototype(ScriptableObject.getFunctionPrototype(scope));
                 getFieldAndMethodsTable(isStatic).put(name, fam);
                 ht.put(name, fam);
@@ -305,7 +302,6 @@ class JavaMembers {
         NativeJavaMethod fun = (NativeJavaMethod) ht.get(name);
         if (fun == null) {
             fun = new NativeJavaMethod();
-            fun.setParentScope(scope);
             fun.setPrototype(ScriptableObject.getFunctionPrototype(scope));
             ht.put(name, fun);
             fun.add(method);
@@ -480,7 +476,6 @@ class JavaMembers {
             FieldAndMethods fam = (FieldAndMethods) e.nextElement();
             fam = (FieldAndMethods) fam.clone();
             fam.setJavaObject(javaObject);
-            fam.setParentScope(scope);
             result.put(fam.getName(), fam);
         }
         return result;
