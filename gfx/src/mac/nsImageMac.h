@@ -43,7 +43,6 @@
 #include "nsIImageMac.h"
 #include <QDOffscreen.h>
 
-
 class nsImageMac : public nsIImage, public nsIImageMac
 {
 public:
@@ -100,6 +99,7 @@ public:
                         PRInt32 aSXOffset, PRInt32 aSYOffset,
                         const nsRect &aTileRect);
 #ifdef USE_IMG2
+
 	
    /**
     * Get the alpha depth for the image mask
@@ -117,11 +117,29 @@ public:
 
 	NS_IMETHOD					LockImagePixels(PRBool aMaskPixels);
 	NS_IMETHOD					UnlockImagePixels(PRBool aMaskPixels);
+	
+
 
     // Convert to and from the os-native PICT format. Most likely
     // used for clipboard.
-  NS_IMETHOD ConvertToPICT ( PicHandle* outPicture ) ;
-  NS_IMETHOD ConvertFromPICT ( PicHandle inPicture ) ;
+    NS_IMETHOD ConvertToPICT ( PicHandle* outPicture ) ;
+    NS_IMETHOD ConvertFromPICT ( PicHandle inPicture ) ;
+    //Convert to os-native icon format(s)
+    //exact format depends on the bit depth
+    NS_IMETHOD ConvertToIcon(   const nsRect& aSrcRegion, 
+                                const PRInt16 aIconDepth, 
+                                const PRInt16 aIconSize,
+                                Handle* aOutIcon,
+                                OSType* aOutIconType);
+
+    NS_IMETHOD ConvertAlphaToIconMask(  const nsRect& aSrcRegion, 
+                                        const PRInt16 aMaskDepth, 
+                                        const PRInt16 aMaskSize,
+                                        Handle* aOutMask,
+                                        OSType* aOutIconType);
+  
+    static OSType MakeIconType(PRInt32 aHeight, PRInt32 aDepth, PRBool aMask);
+
   
   NS_IMETHOD GetPixMap ( PixMap** outPixMap ) ;
   
@@ -145,6 +163,22 @@ protected:
 
 	static void				ClearGWorld(GWorldPtr);
 	static OSErr			AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rect& bounds, GWorldPtr *outGWorld);
+
+  nsresult          CopyPixMap( Rect& aSrcRegion,
+                                Rect& aDestRegion,
+                                const PRInt32 aDestDepth,
+                                const PRBool aCopyMaskBits,
+                                Handle *aDestData
+                              ); 
+  static nsresult   ConcatBitsHandles(  Handle srcData1, 
+                                        Handle srcData2,
+                                        Handle *dstData);
+                                                
+                                                
+  static nsresult   MakeOpaqueMask( const PRInt32 aWidth,
+                                    const PRInt32 aHeight,
+                                    const PRInt32 aDepth,
+                                    Handle *aMask);                                                
 	
 	static void       CopyBitsWithMask(BitMap* srcBits, BitMap* maskBits, PRInt16 maskDepth, BitMap* destBits,
 	                          const Rect& srcRect, const Rect& maskRect, const Rect& destRect);
