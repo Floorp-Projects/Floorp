@@ -51,18 +51,18 @@ function Startup()
   gImagesRestricted = document.getElementById("enableRestricted");
   var prefValue = gImagesPref.getAttribute("value");
   if (!prefValue)
-    prefValue = "0";
+    prefValue = "1";
   switch (prefValue) {
-  case "1": 
+  case "3": 
     gImagesRestricted.checked = true;
-  case "0": 
+  case "1": 
     gImagesEnabled.checked = true;
     break;
   }
   if (!gImagesEnabled.checked)
     gImagesRestricted.disabled = true;
 
-  if (parent.hPrefWindow.getPrefIsLocked("network.image.imageBehavior")) {  
+  if (parent.hPrefWindow.getPrefIsLocked("permissions.default.image")) {  
     gImagesRestricted.disabled = true;
     gImagesEnabled.disabled = true;
   }
@@ -70,12 +70,12 @@ function Startup()
 
 function updateImagePref()
 {
-  if (!parent.hPrefWindow.getPrefIsLocked("network.image.imageBehavior")) {
+  if (!parent.hPrefWindow.getPrefIsLocked("permissions.default.image")) {
     if (!gImagesEnabled.checked) {
       gImagesPref.setAttribute("value", 2)
       gImagesRestricted.disabled = true;
     } else {
-      gImagesPref.setAttribute("value", gImagesRestricted.checked ? 1 : 0)
+      gImagesPref.setAttribute("value", gImagesRestricted.checked ? 3 : 1)
       gImagesRestricted.disabled = false;
     }
   } else {

@@ -89,7 +89,7 @@
                       accesskey="&forOriginatingSiteOnly.accesskey;"
                       oncommand="updateImagePref()"
                       style="margin-left: 23px;"/>
-            <data id="enableImagePref" preftype="int" prefstring="network.image.imageBehavior"/>
+            <data id="enableImagePref" preftype="int" prefstring="permissions.default.image"/>
           </vbox>
           <vbox>
             <button label="&exceptions.label;"
