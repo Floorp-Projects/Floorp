@@ -39,7 +39,7 @@ static const char *	kUnreadPendingMessagesColumnName = "unreadPendingMsgs";
 static const char * kMailboxNameColumnName = "mailboxName";
 
 nsDBFolderInfo::nsDBFolderInfo(nsMsgDatabase *mdb)
-  : m_folderDate()      // now
+  : m_folderDate(0)      // now
 {
 	m_mdbTable = NULL;
 	m_mdbRow = NULL;

@@ -40,6 +40,12 @@
 static NS_DEFINE_CID(kRDFServiceCID,							NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFInMemoryDataSourceCID,		NS_RDFINMEMORYDATASOURCE_CID);
 
+// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
+// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that multiply inherits from nsISupports
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIRDFCursorIID, NS_IRDFCURSOR_IID);
+
 nsIRDFResource* nsMSGFolderDataSource::kNC_Child;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Folder;
 nsIRDFResource* nsMSGFolderDataSource::kNC_Name;
@@ -768,8 +774,8 @@ ArrayMsgFolderCursor::QueryInterface(REFNSIID iid, void** result)
 
   *result = nsnull;
   if (iid.Equals(nsIRDFAssertionCursor::IID()) ||
-      iid.Equals(::nsIRDFCursor::IID()) ||
-      iid.Equals(::nsISupports::IID())) {
+      iid.Equals(kIRDFCursorIID) ||
+      iid.Equals(kISupportsIID)) {
       *result = NS_STATIC_CAST(nsIRDFAssertionCursor*, this);
       AddRef();
       return NS_OK;

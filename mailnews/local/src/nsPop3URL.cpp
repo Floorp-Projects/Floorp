@@ -33,6 +33,12 @@
 #include "prprf.h"
 #include "nsCRT.h"
 
+// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
+// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that multiply inherits from nsISupports
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+
 nsPop3URL::nsPop3URL(nsISupports* aContainer, nsIURLGroup* aGroup)
 {
     NS_INIT_REFCNT();
@@ -86,7 +92,8 @@ nsresult nsPop3URL::QueryInterface(const nsIID &aIID, void** aInstancePtr)
         return NS_ERROR_NULL_POINTER;
     }
  
-    if (aIID.Equals(nsIPop3URL::IID()) || aIID.Equals(::nsISupports::IID())) {
+    if (aIID.Equals(nsIPop3URL::IID()) ||
+        aIID.Equals(kISupportsIID)) {
         *aInstancePtr = (void*) ((nsIPop3URL*)this);
         AddRef();
         return NS_OK;

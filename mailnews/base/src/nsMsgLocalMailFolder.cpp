@@ -23,6 +23,11 @@
 #include "prprf.h"
 #include "nsIRDFResourceFactory.h"
 
+// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
+// that doesn't allow you to call ::nsISupports::IID() inside of a class
+// that multiply inherits from nsISupports
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
 nsMsgLocalMailFolder::nsMsgLocalMailFolder(const char* uri)
   :nsMsgFolder(uri)
 {
@@ -46,7 +51,7 @@ nsMsgLocalMailFolder::QueryInterface(REFNSIID iid, void** result)
 
 	*result = nsnull;
 	if (iid.Equals(nsIMsgLocalMailFolder::IID()) ||
-      iid.Equals(::nsISupports::IID()))
+      iid.Equals(kISupportsIID))
 	{
 		*result = NS_STATIC_CAST(nsIMsgLocalMailFolder*, this);
 		AddRef();
@@ -364,7 +369,8 @@ nsMsgLocalMailFolder::FindChildNamed(const char *name, nsIMsgFolder ** aChild)
     supports = mSubFolders->ElementAt(i);
 		if(folder)
 			NS_RELEASE(folder);
-		if(NS_SUCCEEDED(supports->QueryInterface(::nsISupports::IID(), (void**)&folder)))
+		if(NS_SUCCEEDED(supports->QueryInterface(kISupportsIID,
+                                             (void**)&folder)))
 		{
 			char *folderName;
 
