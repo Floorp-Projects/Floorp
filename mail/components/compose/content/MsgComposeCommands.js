@@ -1432,7 +1432,7 @@ function ComposeLoad()
   }
 
   try {
-    sAccountManagerDataSource = Components.classes["@mozilla.org/rdf/datasource;1?name=msgaccountmanager"].createInstance(Components.interfaces.nsIRDFDataSource);
+    sAccountManagerDataSource = Components.classes["@mozilla.org/rdf/datasource;1?name=msgaccountmanager"].getService(Components.interfaces.nsIRDFDataSource);
     sRDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService(Components.interfaces.nsIRDFService);
     sNameProperty = sRDF.GetResource("http://home.netscape.com/NC-rdf#Name?sort=true");
   }

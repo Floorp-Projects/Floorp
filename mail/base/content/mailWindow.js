@@ -185,7 +185,7 @@ function CreateMailWindowGlobals()
 
   //Create datasources
   accountManagerDataSource = Components.classes[accountManagerDSContractID].createInstance();
-  folderDataSource         = Components.classes[folderDSContractID].createInstance();
+  folderDataSource         = Components.classes[folderDSContractID].getService();
 
   accountCentralBox = document.getElementById("accountCentralBox");
   gSearchBox = document.getElementById("searchBox");

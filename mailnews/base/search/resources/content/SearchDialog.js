@@ -594,7 +594,7 @@ function setupSearchListener()
 function GetFolderDatasource()
 {
     if (!gFolderDatasource)
-        gFolderDatasource = Components.classes[folderDSContractID].createInstance(Components.interfaces.nsIRDFDataSource);
+        gFolderDatasource = Components.classes[folderDSContractID].getService(Components.interfaces.nsIRDFDataSource);
     return gFolderDatasource;
 }
 

@@ -46,7 +46,7 @@ var accountManager = Components.classes["@mozilla.org/messenger/account-manager;
 
 // we need the account manager datasource for when trying
 // to figure out which account is next in the folder pane.
-var gAccountManagerDataSource = Components.classes["@mozilla.org/rdf/datasource;1?name=msgaccountmanager"].createInstance().QueryInterface(Components.interfaces.nsIRDFDataSource);
+var gAccountManagerDataSource = Components.classes["@mozilla.org/rdf/datasource;1?name=msgaccountmanager"].getService(Components.interfaces.nsIRDFDataSource);
 
 // we can't compare the name to determine the order in the folder pane
 // we need to compare the value of the sort resource, 
