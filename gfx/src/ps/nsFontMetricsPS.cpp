@@ -935,7 +935,11 @@ nsFontPSXft::FindFont(PRUnichar aChar, const nsFont& aFont,
     // set.
     if (fpi.mGenericFont && !aFont.systemFont) {
       NS_AddGenericFontFromPref(fpi.mGenericFont, langGroup, pattern,
+#ifdef PR_LOGGING
                                 gFontMetricsPSM); 
+#else 
+                                nsnull);
+#endif
     }
 
     // Add the generic if there is one.
