@@ -55,8 +55,6 @@ LLIBS=							\
 	$(DIST)\lib\gkgfxwin.lib			\
 	$(DIST)\lib\js32$(VERSION_NUMBER).lib		\
 	$(DIST)\lib\xpcom.lib				\
-	$(DIST)\lib\plds3.lib				\
-	$(DIST)\lib\plc3.lib				\
 	$(DIST)\lib\caps.lib				\
 	$(DIST)\lib\oji.lib				\
 	$(DIST)\lib\timer_s.lib				\
