@@ -252,6 +252,12 @@ js_unlog_scope(JSScope *scope)
  * That condition implies deadlock in ClaimScope if cx's thread were to wait
  * to share scope.
  *
+ * Also return true right away if cx's thread is running the GC, because in
+ * that case, no other requests will run until the GC completes.  Any scope
+ * wanted by the GC (from a finalizer) that can't be claimed must be slated
+ * for sharing.  Returning true here causes ClaimScope to call ShareScope to
+ * promote the scope to multi-threaded access.
+ *
  * (i) rt->gcLock held
  */
 static JSBool
@@ -259,6 +265,8 @@ WillDeadlock(JSScope *scope, JSContext *cx)
 {
     JSContext *ownercx;
 
+    if (cx->runtime->gcThread == cx->thread)
+        return JS_TRUE;
     do {
         ownercx = scope->ownercx;
         if (ownercx == cx) {
@@ -289,6 +297,7 @@ ShareScope(JSRuntime *rt, JSScope *scope)
             JS_ASSERT(*todop != NO_SCOPE_SHARING_TODO);
         }
         *todop = scope->u.link;
+        scope->u.link = NULL;       /* null u.link for sanity ASAP */
         JS_NOTIFY_ALL_CONDVAR(rt->scopeSharingDone);
     }
     js_InitLock(&scope->lock);
@@ -411,14 +420,21 @@ ClaimScope(JSScope *scope, JSContext *cx)
          * Inline JS_SuspendRequest before we wait on rt->scopeSharingDone,
          * saving and clearing cx->requestDepth so we don't deadlock if the
          * GC needs to run on ownercx.
+         *
+         * Unlike JS_SuspendRequest and JS_EndRequest, we must take care not
+         * to decrement rt->requestCount if cx is active on the GC's thread,
+         * because the GC has already reduced rt->requestCount to exclude all
+         * such such contexts.
          */
         saveDepth = cx->requestDepth;
         if (saveDepth) {
             cx->requestDepth = 0;
-            JS_ASSERT(rt->requestCount > 0);
-            rt->requestCount--;
-            if (rt->requestCount == 0)
-                JS_NOTIFY_REQUEST_DONE(rt);
+            if (rt->gcThread != cx->thread) {
+                JS_ASSERT(rt->requestCount > 0);
+                rt->requestCount--;
+                if (rt->requestCount == 0)
+                    JS_NOTIFY_REQUEST_DONE(rt);
+            }
         }
 
         /*
@@ -429,20 +445,34 @@ ClaimScope(JSScope *scope, JSContext *cx)
         cx->scopeToShare = scope;
         stat = PR_WaitCondVar(rt->scopeSharingDone, PR_INTERVAL_NO_TIMEOUT);
         JS_ASSERT(stat != PR_FAILURE);
-        cx->scopeToShare = NULL;
 
         /*
          * Inline JS_ResumeRequest after waiting on rt->scopeSharingDone,
-         * restoring cx->requestDepth.
+         * restoring cx->requestDepth.  Same note as above for the inlined,
+         * specialized JS_SuspendRequest code: beware rt->gcThread.
          */
         if (saveDepth) {
             if (rt->gcThread != cx->thread) {
                 while (rt->gcLevel > 0)
                     JS_AWAIT_GC_DONE(rt);
+                rt->requestCount++;
             }
-            rt->requestCount++;
             cx->requestDepth = saveDepth;
         }
+
+        /*
+         * Don't clear cx->scopeToShare until after we're through waiting on
+         * all condition variables protected by rt->gcLock -- that includes
+         * rt->scopeSharingDone *and* rt->gcDone (hidden in JS_AWAIT_GC_DONE,
+         * in the inlined JS_ResumeRequest code immediately above).
+         *
+         * Otherwise, the GC could easily deadlock with another thread that
+         * owns a scope wanted by a finalizer.  By keeping cx->scopeToShare
+         * set till here, we ensure that such deadlocks are detected, which
+         * results in the finalized object's scope being shared (it must, of
+         * course, have other, live objects sharing it).
+         */
+        cx->scopeToShare = NULL;
     }
 
     JS_UNLOCK_GC(rt);
