@@ -33,7 +33,6 @@ DIRS= \
     sidebar \
     regviewer \
     related \
-    ucth \
     xfer \
     shistory \
     timebomb \
