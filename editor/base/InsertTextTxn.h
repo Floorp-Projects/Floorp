@@ -31,6 +31,8 @@
 /**
  * A transaction that changes an attribute of a content node. 
  * This transaction covers add, remove, and change attribute.
+ * TODO: do we need to add a direction field, and do the insert and
+ *       merging based on the direction?
  */
 class InsertTextTxn : public EditTxn
 {
@@ -66,18 +68,19 @@ public:
   static const nsIID& IID() { static nsIID iid = INSERT_TEXT_TXN_IID; return iid; }
 
 
+  /** return the string data associated with this transaction */
   virtual nsresult GetData(nsString& aResult);
 
 protected:
+
+  /** return PR_TRUE if aOtherTxn immediately follows this txn */
+  virtual PRBool IsSequentialInsert(InsertTextTxn *aOtherTxn);
   
   /** the text element to operate upon */
   nsCOMPtr<nsIDOMCharacterData> mElement;
   
   /** the offset into mElement where the insertion is to take place */
   PRUint32 mOffset;
-
-  /** the value to set the attribute to (ignored if mRemoveAttribute==PR_TRUE) */
-  nsString mValue;
 
   /** the text to insert into mElement at mOffset */
   nsString mStringToInsert;
