@@ -66,17 +66,33 @@ Compare(nsString& str, nsString& aFileName)
   // Inefficiently read from the file:
   nsString inString;
   char c;
+  int index = 0;
+  int different = 0;
   while ((c = getc(file)) != EOF)
+  {
     inString += c;
+    // CVS isn't doing newline comparisons on these files for some reason.
+    // So compensate for possible newline problems in the CVS file:
+    if (c == '\n' && str[index] == '\r')
+      ++index;
+    if (c != str[index++])
+    {
+      //printf("Comparison failed at char %d: generated was %d, file had %d\n",
+      //       index, (int)str[index-1], (int)c);
+      different = index;
+      break;
+    }
+  }
   if (file != stdin)
     fclose(file);
 
-  if (str == inString)
+  if (!different)
     return 0;
   else
   {
-    char* cstr = str.ToNewCString();
-    printf("Comparison failed:\n-----\n%s\n-----\n", cstr);
+    char* cstr = str.ToNewUTF8String();
+    printf("Comparison failed at char %d:\n-----\n%s\n-----\n",
+           different, cstr);
     Recycle(cstr);
     return 1;
   }
