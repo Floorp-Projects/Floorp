@@ -1011,6 +1011,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_blockquote,eHTMLTag_br,        eHTMLTag_button,    eHTMLTag_center,
     eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,       eHTMLTag_dir,
     eHTMLTag_div,       eHTMLTag_dl,        eHTMLTag_em,        eHTMLTag_fieldset,
+    eHTMLTag_embed,
     eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
     eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
     eHTMLTag_hr,        eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,
@@ -1036,6 +1037,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_basefont,  eHTMLTag_bdo,       eHTMLTag_big,       eHTMLTag_br,
     eHTMLTag_button,    eHTMLTag_cite,      eHTMLTag_code,      eHTMLTag_dfn,
     eHTMLTag_div,       eHTMLTag_em,        eHTMLTag_font,      eHTMLTag_hr,        
+    eHTMLTag_embed,
     eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_img,       eHTMLTag_input,     
     eHTMLTag_kbd,       
 
@@ -1056,6 +1058,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     eHTMLTag_body,      eHTMLTag_caption,   eHTMLTag_center,    eHTMLTag_cite,
     eHTMLTag_code,      eHTMLTag_dd,        eHTMLTag_del,       eHTMLTag_dfn,        
     eHTMLTag_div,       eHTMLTag_dt,        eHTMLTag_em,        eHTMLTag_fieldset,    
+    eHTMLTag_embed,
     eHTMLTag_font,      eHTMLTag_form,      eHTMLTag_h1,        eHTMLTag_h2,
     eHTMLTag_h3,        eHTMLTag_h4,        eHTMLTag_h5,        eHTMLTag_h6,
     eHTMLTag_i,         eHTMLTag_iframe,    eHTMLTag_ins,       eHTMLTag_kbd,       
@@ -1099,6 +1102,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) {
     case eHTMLTag_base:
     case eHTMLTag_basefont:
     case eHTMLTag_br:
+    case eHTMLTag_embed:
     case eHTMLTag_hr:      
     case eHTMLTag_img:
     case eHTMLTag_input:
@@ -1515,6 +1519,7 @@ PRBool CNavDTD::IsContainer(eHTMLTags aTag) const {
     case eHTMLTag_area:       case eHTMLTag_base:
     case eHTMLTag_basefont:   case eHTMLTag_br:
     case eHTMLTag_col:        case eHTMLTag_colgroup:
+    case eHTMLTag_embed:
     case eHTMLTag_frame:
     case eHTMLTag_hr:         case eHTMLTag_img:
     case eHTMLTag_input:      case eHTMLTag_isindex:
