@@ -269,7 +269,7 @@ nsIEnumerator* nsRadioGroup::GetChildren()
 
 nsRadioGroup::Enumerator::Enumerator()
 {
-    mRefCnt = 1;
+    mRefCnt = 0;
     mArraySize = INITIAL_SIZE;
     mChildrens = (nsIRadioButton**)new DWORD[mArraySize];
     memset(mChildrens, 0, sizeof(DWORD) * mArraySize);
