@@ -508,14 +508,19 @@ nsGfxTextControlFrame2::nsGfxTextControlFrame2()
 
 nsGfxTextControlFrame2::~nsGfxTextControlFrame2()
 {
-  nsFormControlFrame::RegUnRegAccessKey(nsnull, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
+ 
+}
+
+NS_IMETHODIMP
+nsGfxTextControlFrame2::Destroy(nsIPresContext* aPresContext)
+{
+  nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_FALSE);
   if (mFormFrame) {
     mFormFrame->RemoveFormControlFrame(*this);
     mFormFrame = nsnull;
   }
-
+  return nsHTMLContainerFrame::Destroy(aPresContext);
 }
-
 
 // XXX: wouldn't it be nice to get this from the style context!
 PRBool nsGfxTextControlFrame2::IsSingleLineTextControl() const
@@ -1158,7 +1163,7 @@ NS_IMETHODIMP nsGfxTextControlFrame2::Reflow(nsIPresContext*          aPresConte
   }
   else if (eReflowReason_Initial == aReflowState.reason)
   {
-    nsFormControlFrame::RegUnRegAccessKey(nsnull, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
+    nsFormControlFrame::RegUnRegAccessKey(aPresContext, NS_STATIC_CAST(nsIFrame*, this), PR_TRUE);
     nsFormFrame::AddFormControlFrame(aPresContext, *NS_STATIC_CAST(nsIFrame*, this));
     nsCOMPtr<nsIHTMLContent> htmlContent;
     nsString value;
