@@ -120,21 +120,6 @@ function configureDialer( configFolder, acctSetupIni, regFile )
 	// * configure the dialer
 	plugin.DialerConfig( dialerData, true );
 
-	// * check if we need to reboot
-	if ( plugin.NeedReboot() == true )
-	{
-		// XXX hardcode in name of next screen???
-		globals.forceReboot( "1step.htm" );		
-		return;
-	}
-
-	if ( plugin.DialerConnect() == false )
-	{
-		plugin.DialerHangup();
-		// XXX hardcode in name of next screen???
-		window.location.replace( "error2.htm" );							
-		return;
-	}
 }
 
 function loadData()
@@ -154,26 +139,9 @@ function loadData()
 
 		var regSource = globals.GetNameValuePair( acctSetupIni, "Mode Selection", "RegSource" );
 		
-		var localFlag = globals.GetNameValuePair( regFile, "Dial-In Configuration", "LocalMode" );
-		localFlag = localFlag.toLowerCase();
-		globals.debug( "localFlag:" + localFlag );
-		if ( localFlag != "yes" )
-		{
-			globals.debug( "LocalMode==no" );
-			var connectStatusFlag = plugin.IsDialerConnected();
-			if ( connectStatusFlag == true )
-			{
-				if ( confirm( "Account Setup can't connect until you close your current connection. Close the connection now?" ) == false )
-					return;
-				plugin.DialerHangup();
-			}
-
-			configureDialer( configFolder, acctSetupIni, regFile );
-		}
-		
-		regCGI = globals.GetNameValuePair( regFile, "IP", "RegCGI" );
-		regRoot = globals.GetNameValuePair( regFile, "Configuration", "RegRoot" );
-		metadataMode = globals.GetNameValuePair( regFile, "Configuration", "MetadataMode" );
+		var regCGI = globals.GetNameValuePair( regFile, "IP", "RegCGI" );
+		var regRoot = globals.GetNameValuePair( regFile, "Configuration", "RegRoot" );
+		var metadataMode = globals.GetNameValuePair( regFile, "Configuration", "MetadataMode" );
 		if ( metadataMode == "no" )
 			globals.debug( "MetadataMode==no, you will not be downloading necessary metadata" );
 		
@@ -216,6 +184,43 @@ function loadData()
 		reggieData[ 5 ] = "CST_AREA_CODE_3=" + documentVars.altAreaCode2.value;
 		reggieData[ 6 ] = "CST_AREA_CODE_4=" + documentVars.altAreaCode3.value;
 		reggieData[ 7 ] = "CST_COUNTRY_CODE=" + "1";
+		
+
+		var localFlag = globals.GetNameValuePair( regFile, "Dial-In Configuration", "LocalMode" );
+		localFlag = localFlag.toLowerCase();
+		globals.debug( "localFlag:" + localFlag );
+		if ( localFlag != "yes" )
+		{
+			globals.debug( "LocalMode==no" );
+			var connectStatusFlag = plugin.IsDialerConnected();
+			if ( connectStatusFlag == true )
+			{
+				if ( confirm( "Account Setup can't connect until you close your current connection. Close the connection now?" ) == false )
+					return;
+				plugin.DialerHangup();
+			}
+
+			configureDialer( configFolder, acctSetupIni, regFile );
+
+			// * check if we need to reboot
+			if ( plugin.NeedReboot() == true )
+			{
+				// XXX hardcode in name of next screen???
+				globals.forceReboot( "1step.htm" );		
+				return;
+			}
+
+			//globals.debug( "connecting..." );
+			if ( plugin.DialerConnect() == false )
+			{
+				//globals.debug( "dialer not connected" );
+				plugin.DialerHangup();
+				// XXX hardcode in name of next screen???
+				window.location.replace( "error2.htm" );							
+				return;
+			}
+			//globals.debug( "done..." );
+		}
 		
 		/*documentVars.countryCode.value;*/
 				
