@@ -1871,7 +1871,7 @@ NS_IMETHODIMP
 nsWebShellWindow::GetWidget(nsIWidget *& aWidget)
 {
   aWidget = mWindow;
-  NS_ADDREF(mWindow);
+  NS_IF_ADDREF(mWindow);
   return NS_OK;
 }
 
