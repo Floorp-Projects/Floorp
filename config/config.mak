@@ -196,6 +196,12 @@ CFLAGS=$(CFLAGS) -DSTAND_ALONE_JAVA
 NECKO=1
 CFLAGS=$(CFLAGS) -DNECKO
 
+# XXX We need to remove this before we ship.
+# This causes a static linkage between the webshell
+# and xpfe.f
+DETECT_WEBSHELL_LEAKS=1
+CFLAGS=$(CFLAGS) -DDETECT_WEBSHELL_LEAKS
+
 !ifndef MOZ_JAVA
 MOZ_OJI = 1             # on by default now
 !endif
