@@ -250,6 +250,7 @@ protected:
   void ShowList(nsIPresContext* aPresContext, PRBool aShowList);
   void SetChildFrameSize(nsIFrame* aFrame, nscoord aWidth, nscoord aHeight);
   void InitTextStr();
+  void CheckFireOnChange();
   nsresult RedisplayText(PRInt32 aIndex);
   nsresult ActuallyDisplayText(nsAString& aText, PRBool aNotify);
   nsresult GetPrimaryComboFrame(nsIPresContext* aPresContext, nsIContent* aContent, nsIFrame** aFrame);
