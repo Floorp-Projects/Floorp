@@ -305,6 +305,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
 
       txn->Init(mEditor, textNode, start, numToDelete);
       AppendChild(txn);
+      NS_RELEASE(txn);
     }
   }
 
@@ -346,6 +347,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
 
     txn->Init(node);
     AppendChild(txn);
+    NS_RELEASE(txn);
     iter->Next();
   }
   return result;
