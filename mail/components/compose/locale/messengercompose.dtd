@@ -110,6 +110,7 @@
 <!ENTITY optionsMenu.accesskey "p">
 <!ENTITY checkSpellingCmd.label "Check Spelling...">
 <!ENTITY checkSpellingCmd.key "K">
+<!ENTITY checkSpellingCmd.key2 "VK_F7">
 <!ENTITY checkSpellingCmd.accesskey "S">
 <!ENTITY quoteCmd.label "Quote Message">
 <!ENTITY quoteCmd.accesskey "Q">

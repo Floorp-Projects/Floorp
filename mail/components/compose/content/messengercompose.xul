@@ -173,7 +173,10 @@
   <key keycode="&findPrevCmd.key2;"  command="cmd_findPrev" modifiers="shift"/>
   
   <!-- Options Menu -->
-  <key id="key_checkspelling"  key="&checkSpellingCmd.key;" command="cmd_spelling"  modifiers="accel"/>
+  <key id="key_checkspelling" key="&checkSpellingCmd.key;" command="cmd_spelling"  modifiers="accel"/>
+#ifdef XP_WIN
+  <key keycode="&checkSpellingCmd.key2;" command="cmd_spelling"/>
+#endif
 
    <!-- Tools Menu -->
   <key id="key_mail"  key="&messengerCmd.commandkey;" oncommand="toMessengerWindow();" modifiers="accel"/>
