@@ -182,6 +182,9 @@ function commonDialogOnLoad()
       break;
     }
   }
+
+  focus();
+  GetAttention();
 }
 
 function setCheckbox(aChkMsg, aChkValue)
