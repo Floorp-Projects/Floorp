@@ -28,15 +28,13 @@
  * npapi.h). 
  *
  * dp Suresh <dp@netscape.com>
+ * updated 5/1998 <pollmann@netscape.com>
+ *
  */
 
 #include <stdio.h>
-#include <X11/Xlib.h>
-#include "npapi.h"
-
 #include <Xm/Xm.h>
-#include <Xm/Form.h>
-#include <Xm/PushB.h>
+#include "npapi.h"
 #include "nullplugin.h"
 
 /***********************************************************************
@@ -52,7 +50,7 @@ NPP_GetMIMEDescription(void)
 }
 
 NPError
-NPP_GetValue(void *future, NPPVariable variable, void *value)
+NPP_GetValue(void *instance, NPPVariable variable, void *value)
 {
 	NPError err = NPERR_NO_ERROR;
 
@@ -86,7 +84,6 @@ NPP_Shutdown(void)
 {
 }
 
-
 NPError 
 NPP_New(NPMIMEType pluginType,
 	NPP instance,
@@ -115,24 +112,28 @@ NPP_New(NPMIMEType pluginType,
 		This->instance = instance;
 		This->pluginsPageUrl = NULL;
 
-		/* Parse argument list passed to plugin instance */
-		/* We are interested in these arguments
-		 *	PLUGINSPAGE = <url>
-		 */
+		/* Parse argument list passed to plugin instance. */
 		while (argc > 0)
 		{
-		    if (argv[argc-1] != NULL)
-		    {
-			if (!strcasecmp(argn[argc-1], "PLUGINSPAGE"))
-			    This->pluginsPageUrl = strdup(argv[argc-1]);
-			else if (!strcasecmp(argn[argc-1], "PLUGINURL"))
-			    This->pluginsFileUrl = strdup(argv[argc-1]);
-			else if (!strcasecmp(argn[argc-1], "CODEBASE"))
-			    This->pluginsPageUrl = strdup(argv[argc-1]);
-			else if (!strcasecmp(argn[argc-1], "CLASSID"))
-			    This->pluginsFileUrl = strdup(argv[argc-1]);
-		    }
 		    argc --;
+		    if (argv[argc] != NULL)
+		    {
+			if (!strcasecmp(argn[argc], "PLUGINSPAGE"))
+			    This->pluginsPageUrl = strdup(argv[argc]);
+			else if (!strcasecmp(argn[argc], "PLUGINURL"))
+			    This->pluginsFileUrl = strdup(argv[argc]);
+			else if (!strcasecmp(argn[argc], "CODEBASE"))
+			    This->pluginsPageUrl = strdup(argv[argc]);
+			else if (!strcasecmp(argn[argc], "CLASSID"))
+			    This->pluginsFileUrl = strdup(argv[argc]);
+			else if (!strcasecmp(argn[argc], "HIDDEN"))
+			    This->pluginsHidden = (!strcasecmp(argv[argc], "TRUE"));
+		    }
+		}
+
+		if (This->pluginsHidden)
+		{
+		    showPluginDialog(NULL, (XtPointer)This, NULL);
 		}
 
 		return NPERR_NO_ERROR;
@@ -158,14 +159,28 @@ NPP_Destroy(NPP instance, NPSavedData** save)
 		if (This->pluginsPageUrl)
 			NPN_MemFree(This->pluginsPageUrl);
 		if (This->pluginsFileUrl)
-		        NPN_MemFree(This->pluginsFileUrl);
+		  NPN_MemFree(This->pluginsFileUrl);
+		if (This->refreshing) {
+		    if (This->action == GET) {
+			XtRemoveCallback (This->button, XmNactivateCallback,
+				showPluginDialog, (XtPointer)This);
+		    } else if (This->action == REFRESH) {
+			XtRemoveCallback (This->button, XmNactivateCallback,
+				refreshPluginList, (XtPointer)This);
+		    }
+		    This->exists = FALSE;
+		} else {
+			if (This->dialog) {
+				XtDestroyWidget(This->dialog);
+				This->dialog = NULL;
+			}
+		}
 		NPN_MemFree(instance->pdata);
 		instance->pdata = NULL;
 	}
 
 	return NPERR_NO_ERROR;
 }
-
 
 
 NPError 
@@ -180,67 +195,31 @@ NPP_SetWindow(NPP instance, NPWindow* window)
 	This = (PluginInstance*) instance->pdata;
 	ws_info = (NPSetWindowCallbackStruct *)window->ws_info;
 
-	if (window->window == NULL) {
-		/* The page with the plugin is being resized.
-		   Save any UI information because the next time
-		   around expect a SetWindow with a new window
-		   id.
-		*/
+	if (This->window == (Window) window->window) {
+	   /*
+	    * The page with the plugin is being resized.
+	    * Save any UI information because the next time
+	    * around expect a SetWindow with a new window id.
+	    */
 #ifdef DEBUG
 		fprintf(stderr, "Nullplugin: plugin received window resize.\n");
 #endif
 		return NPERR_NO_ERROR;
-	}
+	} else {
 
-	This->window = (Window) window->window;
-	This->x = window->x;
-	This->y = window->y;
-	This->width = window->width;
-	This->height = window->height;
-	This->display = ws_info->display;
-	This->visual = ws_info->visual;
-	This->depth = ws_info->depth;
-	This->colormap = ws_info->colormap;
+	    This->window = (Window) window->window;
+	    This->x = window->x;
+	    This->y = window->y;
+	    This->width = window->width;
+	    This->height = window->height;
+	    This->display = ws_info->display;
+	    This->visual = ws_info->visual;
+	    This->depth = ws_info->depth;
+	    This->colormap = ws_info->colormap;
 
-	{
-	    Widget netscape_widget;
-	    Widget form;
-	    Arg av[20];
-	    int ac;
-	    XmString xmstr = XmStringCreateLtoR("Download Plugin", XmSTRING_DEFAULT_CHARSET);
-
-	    netscape_widget = XtWindowToWidget(This->display, This->window);
-
-	    ac = 0;
-	    XtSetArg(av[ac], XmNx, 0); ac++;
-	    XtSetArg(av[ac], XmNy, 0); ac++;
-	    XtSetArg(av[ac], XmNwidth, This->width); ac++;
-	    XtSetArg(av[ac], XmNheight, This->height); ac++;
-	    XtSetArg(av[ac], XmNborderWidth, 0); ac++;
-	    XtSetArg(av[ac], XmNnoResize, True); ac++;
-	    form = XmCreateForm(netscape_widget, "pluginForm",
-					av, ac);
-
-	    ac = 0;
-	    XtSetArg(av[ac], XmNleftAttachment, XmATTACH_FORM); ac++;
-	    XtSetArg(av[ac], XmNrightAttachment, XmATTACH_FORM); ac++;
-	    XtSetArg(av[ac], XmNtopAttachment, XmATTACH_FORM); ac++;
-	    XtSetArg(av[ac], XmNbottomAttachment, XmATTACH_FORM); ac++;
-	    XtSetArg (av[ac], XmNeditMode, XmMULTI_LINE_EDIT); ac++;
-	    XtSetArg (av[ac], XmNlabelString, xmstr); ac++;
-	    This->button = XmCreatePushButton (form, "pluginButton", av, ac);
-	    XtAddCallback (This->button, XmNactivateCallback, showPluginDialog,
-				(XtPointer)This);
-
-	    XtManageChild(This->button);
-	    XtManageChild(form);
-
-	    /* Popup the pluginDialog if this is the first time we encounter
-	       this MimeType */
-	    if (addToList(&head, This->type))
-		showPluginDialog(This->button, (XtPointer) This, NULL);
-
-	    XmStringFree(xmstr);
+	    This->exists = FALSE;
+	    This->refreshing = FALSE;
+	    makeWidget(This);
 	}
 
 	return NPERR_NO_ERROR;
@@ -254,28 +233,27 @@ NPP_NewStream(NPP instance,
 	      NPBool seekable,
 	      uint16 *stype)
 {
-	PluginInstance* This;
-
 	if (instance == NULL)
 		return NPERR_INVALID_INSTANCE_ERROR;
-
-	This = (PluginInstance*) instance->pdata;
 
 	return NPERR_NO_ERROR;
 }
 
 
-int32 STREAMBUFSIZE = 0X0FFFFFFF; /* If we are reading from a file in NPAsFile
+int32 STREAMBUFSIZE = 0X0FFFFFFF; /*
+				   * If we are reading from a file in NPAsFile
 				   * mode so we can take any size stream in our
-				   * write call (since we ignore it) */
+				   * write call (since we ignore it)
+				   */
 
 int32 
 NPP_WriteReady(NPP instance, NPStream *stream)
 {
-	PluginInstance* This;
-	if (instance != NULL)
-		This = (PluginInstance*) instance->pdata;
-
+   /*
+    *	PluginInstance* This;
+    *	if (instance != NULL)
+    *		This = (PluginInstance*) instance->pdata;
+    */
 	/* Number of bytes ready to accept in NPP_Write() */
 	return STREAMBUFSIZE;
 }
@@ -284,13 +262,14 @@ NPP_WriteReady(NPP instance, NPStream *stream)
 int32 
 NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
 {
-	PluginInstance* This;
-
-	if (instance != NULL)
-		This = (PluginInstance*) instance->pdata;
-	else
-		return len;
-
+   /*
+    *	PluginInstance* This;
+    *
+    *	if (instance != NULL)
+    *		This = (PluginInstance*) instance->pdata;
+    *	else
+    *		return len;
+    */
 	return len;		/* The number of bytes accepted */
 }
 
@@ -298,12 +277,14 @@ NPP_Write(NPP instance, NPStream *stream, int32 offset, int32 len, void *buffer)
 NPError 
 NPP_DestroyStream(NPP instance, NPStream *stream, NPError reason)
 {
-	PluginInstance* This;
-
+   /*
+    *	PluginInstance* This;
+    */
 	if (instance == NULL)
 		return NPERR_INVALID_INSTANCE_ERROR;
-	This = (PluginInstance*) instance->pdata;
-
+   /*
+    *	This = (PluginInstance*) instance->pdata;
+    */
 	return NPERR_NO_ERROR;
 }
 
@@ -311,9 +292,11 @@ NPP_DestroyStream(NPP instance, NPStream *stream, NPError reason)
 void 
 NPP_StreamAsFile(NPP instance, NPStream *stream, const char* fname)
 {
-	PluginInstance* This;
-	if (instance != NULL)
-		This = (PluginInstance*) instance->pdata;
+   /*
+    *	PluginInstance* This;
+    *	if (instance != NULL)
+    *		This = (PluginInstance*) instance->pdata;
+    */
 }
 
 
@@ -324,7 +307,9 @@ NPP_Print(NPP instance, NPPrint* printInfo)
 		return;
 
 	if (instance != NULL) {
-		PluginInstance* This = (PluginInstance*) instance->pdata;
+   /*
+    *		PluginInstance* This = (PluginInstance*) instance->pdata;
+    */
 	
 		if (printInfo->mode == NP_FULL) {
 		    /*
@@ -342,13 +327,13 @@ NPP_Print(NPP instance, NPPrint* printInfo)
 		     *	Windows, platformPrint is a structure
 		     *	(defined in npapi.h) containing the printer name, port,
 		     *	etc.
-		     */
-
-			void* platformPrint =
-				printInfo->print.fullPrint.platformPrint;
-			NPBool printOne =
-				printInfo->print.fullPrint.printOne;
-			
+		     *
+		     *
+		     *	void* platformPrint =
+		     *		printInfo->print.fullPrint.platformPrint;
+		     *	NPBool printOne =
+		     *		printInfo->print.fullPrint.printOne;
+		     */	
 			/* Do the default*/
 			printInfo->print.fullPrint.pluginPrinted = FALSE;
 		}
@@ -363,12 +348,13 @@ NPP_Print(NPP instance, NPPrint* printInfo)
 		     *	Macintosh, platformPrint is the printer port; on
 		     *	Windows, platformPrint is the handle to the printing
 		     *	device context.
+		     *
+		     *
+		     *	NPWindow* printWindow =
+		     *		&(printInfo->print.embedPrint.window);
+		     *	void* platformPrint =
+		     *		printInfo->print.embedPrint.platformPrint;
 		     */
-
-			NPWindow* printWindow =
-				&(printInfo->print.embedPrint.window);
-			void* platformPrint =
-				printInfo->print.embedPrint.platformPrint;
 		}
 	}
 }
