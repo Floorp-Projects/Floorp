@@ -1926,11 +1926,10 @@ function openHomeDialog(aURL)
   var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService(Components.interfaces.nsIPromptService);
   var promptTitle = gNavigatorBundle.getString("droponhometitle");
   var promptMsg   = gNavigatorBundle.getString("droponhomemsg");
-  var okButton    = gNavigatorBundle.getString("droponhomeokbutton");
   var pressedVal  = promptService.confirmEx(window, promptTitle, promptMsg,
-                          (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_0) +
-                          (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
-                          okButton, null, null, null, {value:0});
+                          (promptService.BUTTON_TITLE_YES * promptService.BUTTON_POS_0) +
+                          (promptService.BUTTON_TITLE_NO * promptService.BUTTON_POS_1),
+                          null, null, null, null, {value:0});
 
   if (pressedVal == 0) {
     try {
