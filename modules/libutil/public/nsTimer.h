@@ -170,3 +170,4 @@ do {                            \
 #endif  // MOZ_PERF_METRICS
 
 #endif  // __NSTIMER_H
+
