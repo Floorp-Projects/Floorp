@@ -148,6 +148,11 @@ void nsFrameWindow::RealDoCreate( HWND hwndP, nsWindow *aParent,
                                    0,
                                    &mWnd);
 
+  
+   /* Because WinCreateStdWindow doesn't take an owner, we have to set it */
+   if (hwndP)
+     WinSetOwner(mFrameWnd, hwndP);
+
 
    /* Set some HWNDs and style into properties for fullscreen mode */
    HWND hwndTitleBar = WinWindowFromID(mFrameWnd, FID_TITLEBAR);
