@@ -1440,6 +1440,7 @@ nsWebShell::GetTarget(const PRUnichar* aName)
   nsIWebShell* target = nsnull;
 
   if (0 == name.Length()) {
+    NS_ADDREF_THIS();
     return this;
   }
   
