@@ -1138,7 +1138,7 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
                     Unescape(name);
 
                     nsCOMPtr<nsIRDFNode>    nameNode;
-                    nsresult rv = ParseLiteral(kNC_Name, name, getter_AddRefs(nameNode));
+                    rv = ParseLiteral(kNC_Name, name, getter_AddRefs(nameNode));
                     if (NS_SUCCEEDED(rv) && nameNode)
                     {
             			updateAtom(mDataSource, bookmark, kNC_Name, nameNode, nsnull);
@@ -1159,10 +1159,16 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
             }
         }
 
-    	// The last thing we do is add the bookmark to the container.
-    	// This ensures the minimal amount of reflow.
-    	nsresult rv = aContainer->AppendElement(bookmark);
-    	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add bookmark to container");
+	// prevent duplicates
+	PRInt32	aIndex;
+	if (NS_SUCCEEDED(aContainer->IndexOf(bookmark, &aIndex)) &&
+		(aIndex < 0))
+	{
+		// The last thing we do is add the bookmark to the container.
+		// This ensures the minimal amount of reflow.
+		rv = aContainer->AppendElement(bookmark);
+		NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add bookmark to container");
+	}
     }
 
     // free up any allocated data in field table
