@@ -879,9 +879,52 @@ function createBrowserInstance()
 
 function OpenSearch(tabName, searchStr)
 {
-	dump("OpenSearch searchStr: '" + searchStr + "'\n\n");
+	var searchMode = 0;
+	var searchEngineURI = null;
+	try
+	{
+		searchMode = pref.GetIntPref("browser.search.powermode");
+		searchEngineURI = pref.CopyCharPref("browser.search.defaultengine");
+	}
+	catch(ex)
+	{
+		searchMode = 0;
+	}
+	if (searchMode == 1)
+	{
+		dump("Power Search: '" + searchStr + "'\n");
+		window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
+	}
+	else
+	{
+		dump("Search: '" + searchStr + "'\n");
+		if ((!searchStr) || (searchStr == ""))	return;
+		dump("Default Engine URL: '" + searchEngineURI + "'\n");
 
-	window.openDialog("chrome://search/content/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
+		var	escapedSearchStr = escape(searchStr);
+		// default to Netscape unless another search engine was selected
+		var	defaultSearchURL = "http://search.netscape.com/cgi-bin/search?search=" + escapedSearchStr;
+
+		if ((searchEngineURI != null) && (searchEngineURI != ""))
+		{
+			try
+			{
+				var	searchURL = null;	
+				var searchDS = Components.classes["component://netscape/rdf/datasource?name=internetsearch"].getService();
+				if (searchDS)	searchDS = searchDS.QueryInterface(Components.interfaces.nsIInternetSearchService);
+				if (searchDS)	searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr);
+				
+				if ((searchURL != null) && (searchURL != ""))
+				{
+					defaultSearchURL = searchURL;
+				}
+			}
+			catch(ex)
+			{
+			}
+		}
+		window.content.location.href = defaultSearchURL;
+	}
 }
 
   function BrowserNewWindow()
