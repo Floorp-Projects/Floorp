@@ -11,7 +11,6 @@
 	<!ENTITY imapHost.img "chrome://messenger/skin/localMailHost.gif">
 	<!ENTITY imapHost.label "Imap Mail">
 	<!ENTITY newsHost.img "chrome://messenger/skin/newsHost.gif">
-	<!ENTITY newsHost.label "news.mozilla.org">
 ]>
 
 <window
@@ -33,24 +32,28 @@
   </treehead>
 
   <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
-    <treeitem id="mailbox:/" open="true">
-      <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&localMailHost.img;"/><b>&localMailHost.label;</b></treecell>
+     <treeitem id="mailbox:/" open="true">
+          <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&localMailHost.img;"/><b>&localMailHost.label;</b></treecell>
 	  <treecell style="background-color: lightgrey"/>
 	  <treecell style="background-color: lightgrey"/>
     </treeitem>
-  </treebody>
-
-  <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
-    <treeitem id="imap:/" open="false">
-      <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&imapHost.img;"/><b>&imapHost.label;</b></treecell>
+     <treeitem id="imap:/" open="false">
+          <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&imapHost.img;"/><b>&imapHost.label;</b></treecell>   
 	  <treecell style="background-color: lightgrey"/>
 	  <treecell style="background-color: lightgrey"/>
     </treeitem>
-  </treebody>
-
-  <treebody rdf:containment="http://home.netscape.com/NC-rdf#child">
     <treeitem id="news://news.mozilla.org" open="false">
-      <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&newsHost.img;"/><b>&newsHost.label;</b></treecell>
+          <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&newsHost.img;"/><b>news.mozilla.org</b></treecell>
+	  <treecell style="background-color: lightgrey"/>
+	  <treecell style="background-color: lightgrey"/>
+    </treeitem>
+    <treeitem id="news://news" open="false">
+          <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&newsHost.img;"/><b>news</b></treecell>
+	  <treecell style="background-color: lightgrey"/>
+	  <treecell style="background-color: lightgrey"/>
+    </treeitem>
+	  <treeitem id="news://news.mcom.com" open="false">
+          <treecell style="background-color: lightgrey"><treeindentation/><html:img hspace="2" style="vertical-align: bottom" src="&newsHost.img;"/><b>news.mcom.com</b></treecell>
 	  <treecell style="background-color: lightgrey"/>
 	  <treecell style="background-color: lightgrey"/>
     </treeitem>
