@@ -78,6 +78,6 @@ The main subdirectories of the "xmlterm" directory are:
   linetest/      stand-alone line terminal testing executables
   scripts/       XMLterm scripts (xls, xcat, ...)
   tests/         XMLterm test programs (HelloWorld pagelet, ...)
-  ui/*           user interface/chrome files
+  ui/            user interface/chrome files
 
 --

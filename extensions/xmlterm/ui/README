@@ -1,1 +1,21 @@
-ui --- User Interface stuff for XMLterm
+ui --- User interface stuff for XMLterm
+
+CONTENT
+
+xmlterm.html        XMLterm startup file containing HTML and Javascript
+                      Uses mozIXMLTermShell to create XMLterm
+                      Uses xmltpage.css for stylesheets
+
+xmlterm.xul         XUL wrapper for xmlterm.html
+
+xmlterm2.xul        XUL wrapper for xmlterm.html, with additional browser frame
+
+XMLTermCommands.js  Javascript commands used by XUL wrappers
+
+SKIN
+
+xmlterm.css         Stylesheet for XUL file xmlterm.xul
+
+xmltpage.css        Stylesheet for XMLterm startup file xmlterm.html
+
+wheel.gif           Wheel icon used for prompt

@@ -3117,7 +3117,7 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
     imgElement->SetAttribute(attName, attValue);
 
     attName = "src";
-    attValue = "chrome://xmlterm/skin/images/wheel.gif";
+    attValue = "chrome://xmlterm/skin/wheel.gif";
     imgElement->SetAttribute(attName, attValue);
 
     attName = "align";
