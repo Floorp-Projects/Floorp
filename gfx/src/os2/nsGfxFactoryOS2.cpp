@@ -434,52 +434,49 @@ int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnich
   return ulSize - cplen;
 }
 
-
 BOOL GetTextExtentPoint32(HPS aPS, const char* aString, int aLength, PSIZEL aSizeL)
 {
     POINTL ptls[5];
-    PRUint32 tLength = aLength;
 
-    const char* tString = aString;
     aSizeL->cx = 0;
 
-    while(tLength)
+    while(aLength)
     {
-      ULONG thislen = min(tLength, 512);
-      GpiQueryTextBox(aPS, thislen, (PCH) tString, 5, ptls);
+      ULONG thislen = min(aLength, 512);
+      GpiQueryTextBox(aPS, thislen, (PCH) aString, 5, ptls);
       aSizeL->cx += ptls[TXTBOX_CONCAT].x;
-      tLength -= thislen;
-      tString += thislen;
+      aLength -= thislen;
+      aString += thislen;
     }
     aSizeL->cy = ptls[TXTBOX_TOPLEFT].y - ptls[TXTBOX_BOTTOMLEFT].y;
     return TRUE;
 }
 
 BOOL ExtTextOut(HPS aPS, int X, int Y, UINT fuOptions, const RECTL* lprc,
-                const char* aString, unsigned int aLength, const int* pDx)
+                const char* aString, unsigned int aLength, const int* pSpacing)
 {
    POINTL ptl = {X, Y};
 
    GpiMove( aPS, &ptl);
 
-   PRUint32 lLength = aLength;
-   const char *aStringTemp = aString;
    // GpiCharString has a max length of 512 chars at a time...
-   while( lLength)
+   while( aLength)
    {
-      ULONG thislen = min( lLength, 512);
-      GpiCharStringPos( aPS, 0,
-                        !pDx ? 0 : CHS_VECTOR,
-                        thislen, (PCH)aStringTemp,
-                        !pDx ? 0 : (PLONG) pDx);
-      lLength -= thislen;
-      aStringTemp += thislen;
-      if (pDx) {
-        pDx += thislen;
-      } /* endif */
+      ULONG thislen = min( aLength, 512);
+      if (pSpacing)
+      {
+         GpiCharStringPos( aPS, 0, CHS_VECTOR, thislen,
+                           (PCH)aString, (PLONG)pSpacing);
+         pSpacing += thislen;
+      }
+      else
+      {
+         GpiCharString( aPS, thislen, (PCH)aString);
+      }
+      aLength -= thislen;
+      aString += thislen;
    }
    return TRUE;
-
 }
 
 
