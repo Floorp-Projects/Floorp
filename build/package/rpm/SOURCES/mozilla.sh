@@ -81,10 +81,53 @@ fi
 
 export LD_LIBRARY_PATH
 
-# tell the glibc for 7.1 that we need to use the old thread stack size
-# model
+# Figure out if we need to ser LD_ASSUME_KERNEL for older versions of the JVM.
 
-export LD_ASSUME_KERNEL=2.2.5
+set_jvm_vars() {
+
+    if [ ! -L /usr/lib/mozilla/plugins/libjavaplugin_oji.so ]; then
+	return;
+    fi
+
+    JVM_LINK=`readlink /usr/lib/mozilla/plugins/libjavaplugin_oji.so`
+    JVM_BASE=`basename $JVM_LINK`
+    JVM_DIR=`echo $JVM_LINK | sed -e s/$JVM_BASE//g`
+    JVM_DIR=${JVM_DIR}../../../bin/
+
+    # make sure it was found
+    if [ -z "$JVM_DIR" ]; then
+        return
+    fi
+
+    # does it exist?
+    if [ ! -d "$JVM_DIR" ]; then
+        return
+    fi
+
+    JVM_COMMAND=$JVM_DIR/java
+    # does the command exist?
+    if [ ! -r "$JVM_COMMAND" ]; then
+	return
+    fi
+
+    # export this temporarily - it seems to work with old and new
+    # versions of the JVM.
+    export LD_ASSUME_KERNEL=2.2.5
+
+    # get the version
+    JVM_VERSION=`$JVM_COMMAND -version 2>&1 | grep version | cut -f 3 -d " " | sed -e 's/\"//g'`
+
+    unset LD_ASSUME_KERNEL
+
+    case "$JVM_VERSION" in
+	(1.3.0*)
+	# bad JVM
+	export LD_ASSUME_KERNEL=2.2.5
+	;;
+    esac
+}
+
+set_jvm_vars
 
 # If there is no command line argument at all then try to open a new
 # window in an already running instance.
