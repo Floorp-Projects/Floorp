@@ -152,7 +152,7 @@ nsRenderingContextPS :: ~nsRenderingContextPS()
     mStateCache = nsnull;
   }
 
-  mTMatrix = nsnull;
+  mTranMatrix = nsnull;
 }
 
 /** ---------------------------------------------------
@@ -206,7 +206,7 @@ float app2dev;
 
   // initialize the matrix
   mContext->GetAppUnitsToDevUnits(app2dev);
-	mTMatrix->AddScale(app2dev, app2dev);
+	mTranMatrix->AddScale(app2dev, app2dev);
   mContext->GetDevUnitsToAppUnits(mP2T);
   return NS_OK;
 }
@@ -317,7 +317,7 @@ nsRenderingContextPS :: PushState(void)
     mStates = state;
   }
 
-  mTMatrix = &mStates->mMatrix;
+  mTranMatrix = &mStates->mMatrix;
 
   // at startup, the graphics state is not saved yet
   if(mPSObj)
@@ -345,11 +345,11 @@ nsRenderingContextPS :: PopState(PRBool &aClipEmpty)
     mStateCache->AppendElement(oldstate);
 
     if (nsnull != mStates){
-      mTMatrix = &mStates->mMatrix;
+      mTranMatrix = &mStates->mMatrix;
       SetLineStyle(mStates->mLineStyle);
     }
     else
-      mTMatrix = nsnull;
+      mTranMatrix = nsnull;
   }
 
   aClipEmpty = retval;
@@ -381,7 +381,7 @@ PRInt32     cliptype;
 
   mStates->mLocalClip = aRect;
 
-	mTMatrix->TransformCoord(&trect.x, &trect.y,&trect.width, &trect.height);
+	mTranMatrix->TransformCoord(&trect.x, &trect.y,&trect.width, &trect.height);
   mStates->mFlags |= FLAG_LOCAL_CLIP_VALID;
 
   if (aCombine == nsClipCombine_kIntersect){
@@ -570,7 +570,7 @@ nsRenderingContextPS :: GetFontMetrics(nsIFontMetrics *&aFontMetrics)
 NS_IMETHODIMP 
 nsRenderingContextPS :: Translate(nscoord aX, nscoord aY)
 {
-	mTMatrix->AddTranslation((float)aX,(float)aY);
+	mTranMatrix->AddTranslation((float)aX,(float)aY);
   return NS_OK;
 }
 
@@ -581,7 +581,7 @@ nsRenderingContextPS :: Translate(nscoord aX, nscoord aY)
 NS_IMETHODIMP 
 nsRenderingContextPS :: Scale(float aSx, float aSy)
 {
-	mTMatrix->AddScale(aSx, aSy);
+	mTranMatrix->AddScale(aSx, aSy);
   return NS_OK;
 }
 
@@ -592,7 +592,7 @@ nsRenderingContextPS :: Scale(float aSx, float aSy)
 NS_IMETHODIMP 
 nsRenderingContextPS :: GetCurrentTransform(nsTransform2D *&aTransform)
 {
-  aTransform = mTMatrix;
+  aTransform = mTranMatrix;
   return NS_OK;
 }
 
@@ -626,8 +626,8 @@ nsRenderingContextPS :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
   if (nsLineStyle_kNone == mCurrLineStyle)
     return NS_OK;
 
-	mTMatrix->TransformCoord(&aX0,&aY0);
-	mTMatrix->TransformCoord(&aX1,&aY1);
+	mTranMatrix->TransformCoord(&aX0,&aY0);
+	mTranMatrix->TransformCoord(&aX1,&aY1);
 
   // this has the moveto,lineto and the stroke
   mPSObj->line(NS_PIXELS_TO_POINTS(aX0),NS_PIXELS_TO_POINTS(aY0),
@@ -653,7 +653,7 @@ nsPoint         pp;
 
   pp.x = np->x;
   pp.y = np->y;
-  mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+  mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
   mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
   np++;
 
@@ -661,7 +661,7 @@ nsPoint         pp;
 	for (PRInt32 i = 1; i < aNumPoints; i++, np++){
 		pp.x = np->x;
 		pp.y = np->y;
-		mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+		mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
     mPSObj->lineto(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
 	}
 
@@ -681,7 +681,7 @@ nsRenderingContextPS :: DrawRect(const nsRect& aRect)
 nsRect	tr;
 
 	tr = aRect;
-	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+	mTranMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
 
   mPSObj->newpath();
   mPSObj->moveto(NS_PIXELS_TO_POINTS(tr.x), NS_PIXELS_TO_POINTS(tr.y));
@@ -700,7 +700,7 @@ NS_IMETHODIMP
 nsRenderingContextPS :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
 
-	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
+	mTranMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
   mPSObj->newpath();
   mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
   mPSObj->box(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
@@ -719,7 +719,7 @@ nsRenderingContextPS :: FillRect(const nsRect& aRect)
 nsRect	tr;
 
 	tr = aRect;
-	mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
+	mTranMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
 
   mPSObj->newpath();
   mPSObj->moveto(NS_PIXELS_TO_POINTS(tr.x), NS_PIXELS_TO_POINTS(tr.y));
@@ -737,7 +737,7 @@ NS_IMETHODIMP
 nsRenderingContextPS :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
 
-	mTMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
+	mTranMatrix->TransformCoord(&aX,&aY,&aWidth,&aHeight);
   mPSObj->newpath();
   mPSObj->moveto(NS_PIXELS_TO_POINTS(aX), NS_PIXELS_TO_POINTS(aY));
   mPSObj->box(NS_PIXELS_TO_POINTS(aWidth), NS_PIXELS_TO_POINTS(aHeight));
@@ -780,7 +780,7 @@ nsPoint         pp;
   // do the initial moveto
 	pp.x = np->x;
 	pp.y = np->y;
-  mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+  mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
   mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
   np++;
 
@@ -788,7 +788,7 @@ nsPoint         pp;
 	for (PRInt32 i = 1; i < aNumPoints; i++, np++){
 		pp.x = np->x;
 		pp.y = np->y;
-		mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+		mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
     mPSObj->lineto(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
 	}
 
@@ -816,7 +816,7 @@ nsPoint         pp;
   // do the initial moveto
 	pp.x = np->x;
 	pp.y = np->y;
-  mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+  mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
   mPSObj->moveto_loc(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
   np++;
 
@@ -824,7 +824,7 @@ nsPoint         pp;
 	for (PRInt32 i = 1; i < aNumPoints; i++, np++){
 		pp.x = np->x;
 		pp.y = np->y;
-		mTMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
+		mTranMatrix->TransformCoord((int*)&pp.x,(int*)&pp.y);
     mPSObj->lineto(NS_PIXELS_TO_POINTS(pp.x),NS_PIXELS_TO_POINTS(pp.y));
 	}
 
@@ -855,7 +855,7 @@ nsRenderingContextPS :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nsco
     return NS_OK;
 
   //SetupPen();
-  mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
+  mTranMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
   mPSObj->comment("arc");
   mPSObj->newpath();
@@ -879,7 +879,7 @@ nsRenderingContextPS :: FillEllipse(const nsRect& aRect)
  */
 NS_IMETHODIMP nsRenderingContextPS :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-  mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
+  mTranMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
   mPSObj->comment("arc");
   mPSObj->newpath();
@@ -914,7 +914,7 @@ nsRenderingContextPS :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
     return NS_OK;
 
   //SetupPen();
-  mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
+  mTranMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
   mPSObj->comment("arc");
   mPSObj->newpath();
@@ -949,7 +949,7 @@ nsRenderingContextPS :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord 
     return NS_OK;
 
   //SetupPen();
-  mTMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
+  mTranMatrix->TransformCoord(&aX, &aY, &aWidth, &aHeight);
 
   mPSObj->comment("arc");
   mPSObj->newpath();
@@ -1061,7 +1061,7 @@ PRInt32       y = aY;
     if (aLength > 500) {
       dx0 = new PRInt32[aLength];
     }
-    mTMatrix->ScaleXCoords(aSpacing, aLength, dx0);
+    mTranMatrix->ScaleXCoords(aSpacing, aLength, dx0);
   }
 
 	// substract ascent since drawing specifies baseline
@@ -1069,7 +1069,7 @@ PRInt32       y = aY;
 	mFontMetrics->GetMaxAscent(ascent);
 	y += ascent;
 
-	mTMatrix->TransformCoord(&x, &y);
+	mTranMatrix->TransformCoord(&x, &y);
   PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aLength, (const nscoord*) (aSpacing ? dx0 : NULL), PR_FALSE);
 
   if ((nsnull != aSpacing) && (dx0 != dxMem)) {
@@ -1129,7 +1129,7 @@ nsIFontMetrics  *fMetrics;
 	    nscoord ascent = 0;
 	    mFontMetrics->GetMaxAscent(ascent);
 	    y += ascent;
-      mTMatrix->TransformCoord(&x, &y);
+      mTranMatrix->TransformCoord(&x, &y);
 	    PostscriptTextOut((PRUnichar *)aString, 1, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
       aX += *aSpacing++;
       aString++;
@@ -1139,7 +1139,7 @@ nsIFontMetrics  *fMetrics;
 	  nscoord ascent = 0;
 	  mFontMetrics->GetMaxAscent(ascent);
 	  y += ascent;
-    mTMatrix->TransformCoord(&x, &y);
+    mTranMatrix->TransformCoord(&x, &y);
 	  PostscriptTextOut(aString, aLength, NS_PIXELS_TO_POINTS(x), NS_PIXELS_TO_POINTS(y), aFontID, aSpacing, PR_TRUE);
   }
 
@@ -1214,13 +1214,13 @@ nsRenderingContextPS :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const 
 nsRect	sr,dr;
 
 	sr = aSRect;
-	mTMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
+	mTranMatrix->TransformCoord(&sr.x, &sr.y, &sr.width, &sr.height);
   sr.x = aSRect.x;
   sr.y = aSRect.y;
   mTranMatrix->TransformNoXLateCoord(&sr.x, &sr.y);
 
   dr = aDRect;
-	mTMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
+	mTranMatrix->TransformCoord(&dr.x, &dr.y, &dr.width, &dr.height);
 
 
   mPSObj->colorimage(aImage,NS_PIXELS_TO_POINTS(sr.x),
@@ -1242,7 +1242,7 @@ nsRenderingContextPS :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 nsRect	tr;
 
 	tr = aRect;
-	mTMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
+	mTranMatrix->TransformCoord(&tr.x, &tr.y, &tr.width, &tr.height);
 
   //return aImage->Draw(*this, mSurface, tr.x, tr.y, tr.width, tr.height);
   mPSObj->colorimage(aImage,

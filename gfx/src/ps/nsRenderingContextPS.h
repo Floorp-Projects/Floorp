@@ -215,7 +215,6 @@ protected:
   nsLineStyle          mCurrLineStyle;
   PS_State            *mStates;
   nsVoidArray         *mStateCache;
-  nsTransform2D		    *mTMatrix;
   float               mP2T;
   nscolor             mCurrentColor;
 
