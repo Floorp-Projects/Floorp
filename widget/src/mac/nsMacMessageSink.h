@@ -20,6 +20,9 @@
 #define nsMacMessageSink_h__
 
 #include "prtypes.h"
+
+#include <map>
+
 class nsMacWindow;
 
 
@@ -28,6 +31,7 @@ class nsMacWindow;
 Hacks to make Raptor coexist with other windows.
 ================================================*/
 
+#if 0
 // This bit is set in the Raptor windows 'windowKind'
 #define kRaptorWindowKindBit		0x4000
 
@@ -47,7 +51,7 @@ public:
 	void					SetUserData(long aUserData)								{mUserData = aUserData;}
 };
 
-
+#endif
 
 /*================================================
 ¥¥¥IMPORTANT
@@ -58,16 +62,37 @@ client code (say, the viewer) and the embedded webshell for event dispatching. F
 here, it goes to the appropriate window, however that may be done (and that still
 needs to be figured out).
 (pinkerton)
+
+This class now has an added responsibility, which
+is to maintain a list of raptor windows. This is
+stored as an STL map, which maps from a WindowPtr
+to a nsMacWindow *.
 ================================================*/
 
 // Macintosh Message Sink Class
 class nsMacMessageSink
 {		    	    
+private:
+	
+	typedef map<WindowPtr, nsMacWindow*>	TWindowMap;
+
 public:
-	void			DispatchOSEvent(EventRecord &anEvent, WindowPtr aWindow);
-	void			DispatchMenuCommand(EventRecord &anEvent, long menuResult);
+									
+	PRBool					DispatchOSEvent(EventRecord &anEvent, WindowPtr aWindow);
+	PRBool					DispatchMenuCommand(EventRecord &anEvent, long menuResult);
+
+	static void			AddRaptorWindowToList(WindowPtr wind, nsMacWindow* theRaptorWindow);
+	static void			RemoveRaptorWindowFromList(WindowPtr wind);
+	static nsMacWindow*		GetNSWindowFromMacWindow(WindowPtr wind);
+
+	PRBool					IsRaptorWindow(WindowPtr inWindow);
+
+protected:
+	
+	static TWindowMap&		GetRaptorWindowList();
 
 };
+
 
 
 #endif // nsMacMessageSink_h__

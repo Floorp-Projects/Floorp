@@ -72,8 +72,8 @@ private:
 	void			DoActivate(EventRecord &anEvent);
 	void			DoIdle(EventRecord &anEvent);
 
-	void			DispatchOSEventToRaptor(EventRecord &anEvent, WindowPtr aWindow);
-	void			DispatchMenuCommandToRaptor(EventRecord &anEvent, long menuResult);
+	PRBool		DispatchOSEventToRaptor(EventRecord &anEvent, WindowPtr aWindow);
+	PRBool		DispatchMenuCommandToRaptor(EventRecord &anEvent, long menuResult);
 
 public:
 	typedef void (*nsWindowlessMenuEventHandler) (PRInt32 menuResult);
