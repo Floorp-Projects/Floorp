@@ -202,9 +202,9 @@ namespace VM {
     
     typedef std::vector<Label *> LabelList;
     typedef LabelList::iterator LabelIterator;
-    
+
     /********************************************************************/
-    
+
     /* 1, 2 and 3 operand opcode templates */
     
     template <typename Operand1>

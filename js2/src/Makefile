@@ -11,7 +11,8 @@ objs = 	hash.o \
 	parser.o \
 	utilities.o \
 	world.o \
-	vmtypes.o
+	vmtypes.o \
+	debugger.o
 
 gc_path = ../../gc/boehm/
 

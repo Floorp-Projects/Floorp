@@ -28,6 +28,7 @@
 #include "interpreter.h"
 #include "icodegenerator.h"
 
+#include "debugger.h"
         
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
 #include <SIOUX.h>
@@ -79,6 +80,8 @@ static bool promptLine(LineReader &inReader, string &s,
 }
 
 
+JavaScript::World world;
+JavaScript::Debugger::Shell jsd(world, JavaScript::stdOut, JavaScript::stdOut);
 const bool showTokens = true;
 
 static void readEvalPrint(FILE *in, World &world)
@@ -123,27 +126,60 @@ static void readEvalPrint(FILE *in, World &world)
     stdOut << '\n';
 }
 
+
+#if 0
+class Tracer : public Context::Listener {
+    void listen(Context* context, InterpretStage stage)
+    {
+        static String lastLine (widenCString("\n"));
+        String line;
+        ICodeModule *iCode = context->getICode();
+        InstructionIterator pc = context->getPC();
+
+        stdOut << "jsd [pc:";
+        printFormat (stdOut, "%04X", (pc - iCode->its_iCode->begin()));
+        stdOut << ", reason:" << (uint)stage << "]> ";
+        
+        std::getline(cin, line);
+        if (line.size() == 0)
+            line = lastLine;
+        else
+        {
+            line.append(widenCString("\n"));
+            lastLine = line;
+        }
+        
+        jsd.doCommand(context, line);
+    }
+};
+
+#else
 /**
  * Poor man's instruction tracing facility.
  */
 class Tracer : public Context::Listener {
     typedef InstructionStream::difference_type InstructionOffset;
-    void listen(Context* /*context*/, InstructionIterator pc,
-                JSValues* registers, ICodeModule* iCode)
+    void listen(Context* context, InterpretStage /*stage*/)
     {
+        ICodeModule *iCode = context->getICode();
+        JSValues &registers = context->getRegisters();
+        InstructionIterator pc = context->getPC();
+        
+        
         InstructionOffset offset = (pc - iCode->its_iCode->begin());
         printFormat(stdOut, "%04X: ", offset);
         Instruction* i = *pc;
         stdOut << *i;
         if (i->op() != BRANCH && i->count() > 0) {
             stdOut << " [";
-            i->printOperands(stdOut, *registers);
+            i->printOperands(stdOut, registers);
             stdOut << "]\n";
         } else {
             stdOut << '\n';
         }
     }
 };
+#endif
 
 static void testICG(World &world)
 {
@@ -553,15 +589,17 @@ int main(int argc, char **argv)
 #if defined(XP_MAC) && !defined(XP_MAC_MPW)
     initConsole("\pJavaScript Shell", "Welcome to the js2 shell.\n", argc, argv);
 #endif
-    JavaScript::World world;
+
 #if 1
-    assert(JavaScript::Shell::testFactorial(world, 5) == 120);
-    assert(JavaScript::Shell::testObjects(world, 5) == 5);
-    assert(JavaScript::Shell::testProto(world, 5) == 5);
+    using namespace JavaScript::Shell;
+    
+    assert(testFactorial(world, 5) == 120);
+    assert(testObjects(world, 5) == 5);
+    assert(testProto(world, 5) == 5);
 //    JavaScript::Shell::testICG(world);
-     assert(JavaScript::Shell::testFunctionCall(world, 5) == 5);
+     assert(testFunctionCall(world, 5) == 5);
 #endif
-    JavaScript::Shell::readEvalPrint(stdin, world);
+    readEvalPrint(stdin, world);
     return 0;
     // return ProcessArgs(argv + 1, argc - 1);
 }

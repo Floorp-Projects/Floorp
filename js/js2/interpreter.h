@@ -22,6 +22,7 @@
 
 #include "utilities.h"
 #include "jstypes.h"
+#include "vmtypes.h"
 #include "icodegenerator.h"
 #include "gc_allocator.h"
 
@@ -31,14 +32,20 @@ namespace Interpreter {
     using namespace ICG;
     using namespace JSTypes;
 
+    struct Activation;
+    
+    enum InterpretStage {
+        STEP,
+        CATCH,
+        TRAP
+    };
+    
     struct Linkage;
     
     class Context : public gc_base {
     public:
         explicit Context(World& world, JSNamespace* aGlobal)
-            :   mWorld(world), mGlobal(aGlobal), mLinkage(0)
-        {
-        }
+            : mWorld(world), mGlobal(aGlobal), mLinkage(0), mActivation(0) {}
 
         JSNamespace* getGlobalObject() { return mGlobal; }
 
@@ -49,9 +56,21 @@ namespace Interpreter {
             return t;
         }
 
+        InstructionIterator getPC() 
+        {
+            return mPc;
+        }
+        
+        JSValues &getRegisters();
+        
+        ICodeModule *getICode()
+        {
+            return mICode;
+        }
+
         class Listener {
         public:
-            virtual void listen(Context* context, InstructionIterator pc, JSValues* registers, ICodeModule* iCode) = 0;
+            virtual void listen(Context *context, InterpretStage Stage) = 0;
         };
     
         void addListener(Listener* listener);
@@ -60,7 +79,8 @@ namespace Interpreter {
         class Frame {
         public:
             virtual Frame* getNext() = 0;
-            virtual void getState(InstructionIterator& pc, JSValues*& registers, ICodeModule*& iCode) = 0;
+            virtual void getState(InstructionIterator& pc, JSValues*& registers,
+                                  ICodeModule*& iCode) = 0;
         };
     
         Frame* getFrames();
@@ -68,13 +88,17 @@ namespace Interpreter {
         JSValue interpret(ICodeModule* iCode, const JSValues& args);
 
     private:
-        void broadcast(InstructionIterator pc, JSValues* registers, ICodeModule* iCode);
+        void broadcast(InterpretStage Stage);
 
     private:
         World& mWorld;
         JSNamespace* mGlobal;
         Linkage* mLinkage;
         std::vector<Listener*> mListeners;
+        Activation* mActivation;
+        ICodeModule *mICode;
+        InstructionIterator mPc;
+        
     }; /* class Context */
 
 } /* namespace Interpreter */

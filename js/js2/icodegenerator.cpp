@@ -66,7 +66,7 @@ namespace ICG {
         iCode = new InstructionStream(); 
         if (hasTryStatement) 
             exceptionRegister = allocateVariable(world->identifiers[widenCString("__exceptionObject__")]);
-        for (int i = 0; i < switchStatementNesting; i++) {
+        for (uint i = 0; i < switchStatementNesting; i++) {
             String s = widenCString("__switchControlVariable__");
             char num[8]; 
             sprintf(num, "%.2d", i);
