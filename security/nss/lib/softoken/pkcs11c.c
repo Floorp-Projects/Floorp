@@ -3005,8 +3005,8 @@ CK_RV NSC_GenerateKey(CK_SESSION_HANDLE hSession,
 CK_RV NSC_GenerateKeyPair (CK_SESSION_HANDLE hSession,
     CK_MECHANISM_PTR pMechanism, CK_ATTRIBUTE_PTR pPublicKeyTemplate,
     CK_ULONG ulPublicKeyAttributeCount, CK_ATTRIBUTE_PTR pPrivateKeyTemplate,
-    CK_ULONG ulPrivateKeyAttributeCount, CK_OBJECT_HANDLE_PTR phPrivateKey,
-    					CK_OBJECT_HANDLE_PTR phPublicKey)
+    CK_ULONG ulPrivateKeyAttributeCount, CK_OBJECT_HANDLE_PTR phPublicKey,
+    					CK_OBJECT_HANDLE_PTR phPrivateKey)
 {
     PK11Object *	publicKey,*privateKey;
     PK11Session *	session;
