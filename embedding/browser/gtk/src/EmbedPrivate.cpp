@@ -59,6 +59,12 @@
 #include "EmbedWindowCreator.h"
 #include "EmbedStream.h"
 
+#ifdef _BUILD_STATIC_BIN
+#include "nsStaticComponent.h"
+nsresult PR_CALLBACK
+gtk_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
+#endif
+
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
 static const char sWatcherContractID[] = "@mozilla.org/embedcomp/window-watcher;1";
@@ -344,6 +350,11 @@ EmbedPrivate::PushStartup(void)
       if (NS_FAILED(rv))
 	return;
     }
+
+#ifdef _BUILD_STATIC_BIN
+    // Initialize XPCOM's module info table
+    NSGetStaticModuleInfo = gtk_getModuleInfo;
+#endif
 
     rv = NS_InitEmbedding(binDir, sAppFileLocProvider);
     if (NS_FAILED(rv))

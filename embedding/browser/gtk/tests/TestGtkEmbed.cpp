@@ -29,6 +29,10 @@
 #include "nsIDOMMouseEvent.h"
 #include "prenv.h"
 
+#ifdef NS_TRACE_MALLOC
+#include "nsTraceMalloc.h"
+#endif
+
 typedef struct _TestGtkBrowser {
   GtkWidget  *topLevelWindow;
   GtkWidget  *topLevelVBox;
@@ -158,6 +162,10 @@ static void update_nav_buttons      (TestGtkBrowser *browser);
 int
 main(int argc, char **argv)
 {
+#ifdef NS_TRACE_MALLOC
+  argc = NS_TraceMallocStartupArgs(argc, argv);
+#endif
+
   gtk_set_locale();
   gtk_init(&argc, &argv);
 

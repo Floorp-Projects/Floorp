@@ -251,6 +251,10 @@ endif
 
 tier_99_dirs	+= xpfe/bootstrap
 
+ifdef ENABLE_TESTS
+tier_99_dirs	+= embedding/browser/gtk/tests
+endif
+
 endif # BUILD_MODULES == all
 
 STATIC_MAKEFILES := $(NSPRPUB_DIR) directory/c-sdk/ldap
