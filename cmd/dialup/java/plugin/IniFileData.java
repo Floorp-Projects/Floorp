@@ -23,49 +23,115 @@ import java.io.*;
 import java.lang.*;
 import java.util.*;
 import netscape.security.*;
-//import Trace;
 
 public class IniFileData
 {
-    Hashtable       sections;
-    final String    sectionPrefix = "[";
-
-
-    public IniFileData( File inputFile ) throws Exception
-    {
+    Hashtable   		  	sections = null;
+   	File					me = null;
+    boolean					dirty = false;
+    boolean					writable = true;
+    
+    public static final String		SECTION_PREFIX = "[";
+	public static final String		SECTION_POSTFIX = "]";
+    public static final String		COMMENT_PREFIX = "#";
+	
+	protected final void init( File inputFile ) throws Exception
+	{
+    	if ( inputFile == null )
+    		throw new NullPointerException( "IniFileData constructor requires non-null file argument" );
+    		
         sections = new Hashtable();
+		me = inputFile;
+	
+		if ( me.exists() )
+			readFileContents();
+	}
+			
+	public IniFileData( File inputFile ) throws Exception
+	{
+		init( inputFile );
+	}
 
-        //Trace.TRACE( "reading file: " + inputFile.getPath() );
-
-        BufferedReader  bufferedInputReader = new BufferedReader( new FileReader( inputFile ) );
-
-        String line = bufferedInputReader.readLine();
-
-        while ( line != null )
+	public IniFileData( File inputFile, boolean isWritable ) throws Exception
+	{
+		init( inputFile );
+		writable = isWritable;
+	}
+	
+	private void readFileContents() throws Exception
+	{
+		//Trace.TRACE( "reading file: " + inputFile.getPath() );
+		
+		BufferedReader  bufferedReader = new BufferedReader( new FileReader( me ) );
+		
+		String line = bufferedReader.readLine();
+		
+		while ( line != null )
+		{
+			//Trace.TRACE( "line: " + line );
+			
+			while ( !line.startsWith( SECTION_PREFIX ) )
+			    line = bufferedReader.readLine();
+			
+			int closingBracketAt = line.indexOf( SECTION_POSTFIX );
+			if ( closingBracketAt != -1 )
+			{
+			    String          sectionName = new String( line.substring( 1, closingBracketAt ).trim() );
+			    NameValueSet    nvSet = new NameValueSet();
+			
+			    //Trace.TRACE( "found section: " + sectionName );
+			
+			    nvSet.read( bufferedReader );
+			    sections.put( sectionName, nvSet );
+			}
+			else
+			    throw new MalformedIniFileException( "malformed file: " + me.getPath() );
+			
+			line = bufferedReader.readLine();
+		}
+	}
+	
+	private void writeFileContents() throws Exception
+	{
+		BufferedWriter 	bufferedWriter = new BufferedWriter( new FileWriter( me ) );
+	
+	    for ( Enumeration sectionList = sections.keys(); sectionList.hasMoreElements(); )
         {
-            //Trace.TRACE( "line: " + line );
+            String          sectionName = (String)sectionList.nextElement();
+            NameValueSet    nvSet = (NameValueSet)sections.get( sectionName );
 
-            while ( !line.startsWith( sectionPrefix ) )
-                line = bufferedInputReader.readLine();
-
-            int closingBracketAt = line.indexOf( "]" );
-            if ( closingBracketAt != -1 )
-            {
-                String          sectionName = new String( line.substring( 1, closingBracketAt ).trim() );
-                NameValueSet    nvSet = new NameValueSet();
-
-                //Trace.TRACE( "found section: " + sectionName );
-
-                nvSet.read( bufferedInputReader );
-                sections.put( sectionName, nvSet );
-            }
-            else
-                throw new MalformedIniFileException( "malformed file: " + inputFile.getPath() );
-
-            line = bufferedInputReader.readLine();
-        }
-    }
-
+			bufferedWriter.write( SECTION_PREFIX + sectionName + SECTION_POSTFIX );
+			bufferedWriter.newLine();
+			nvSet.write( bufferedWriter );
+			bufferedWriter.newLine();
+		}
+	
+		bufferedWriter.close();	
+		dirty = false;
+	}
+	
+	protected void finalize() throws Throwable
+	{
+		try
+		{
+			flush();
+		}
+		catch ( Throwable e )
+		{
+		}
+		super.finalize();
+	}
+	
+	public void flush() throws Exception
+	{
+		Trace.TRACE( "flushing " + me.getName() );
+		if ( writable && isDirty() )
+		{
+			Trace.TRACE( "dirty, writing file contents" );
+			writeFileContents();
+		}
+	}
+		
     public String getValue( String sectionName, String name )
     {
         //Trace.TRACE( "getting section: " + sectionName );
@@ -80,6 +146,38 @@ public class IniFileData
         return value;
     }
 
+	public void setValue( String sectionName, String name, String value )
+	{
+		if ( sectionName == null || name == null || value == null )
+			throw new NullPointerException( "arguments to setValue must be non-null" );
+			
+		NameValueSet		nvSet = (NameValueSet)sections.get( sectionName );
+	
+		if ( nvSet == null )
+		{
+			//Trace.TRACE( "setValue, creating nvSet" );
+			nvSet = new NameValueSet();
+			sections.put( sectionName, nvSet );
+			dirty = true;
+		}
+			
+		String		currentValue;
+		currentValue = nvSet.getValue( name );
+		//Trace.TRACE( "currentValue: " + currentValue );
+		//Trace.TRACE( "value: " + value );
+		if ( value.compareTo( currentValue ) != 0 )
+		{
+			//Trace.TRACE( "		setting value..." );
+			nvSet.setValue( name, value );
+			dirty = true;
+		}
+	}
+	
+	public boolean isDirty()
+	{
+		return dirty;
+	}
+	
     public final void printIniFileData()
     {
         for ( Enumeration sectionList = sections.keys(); sectionList.hasMoreElements(); )

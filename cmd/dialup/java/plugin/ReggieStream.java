@@ -24,34 +24,35 @@ import java.lang.*;
 
 public class ReggieStream extends DataInputStream
 {
-    public ReggieStream( InputStream is )
-    {
-        super( is );
-    }
+	public ReggieStream( InputStream is )
+	{
+		super( is );
+	}
 
-    public String nextToken() throws Exception
-    {
-        byte        buffer[] = null;
-        int         nBuffSize = 0;
-        String      string = null;
+	public String nextToken() throws Exception
+	{
+		byte        buffer[] = null;
+		int         nBuffSize = 0;
+		String      string = null;
 
-        //Trace.TRACE( "nextToken has:" + this.available() );
-        nBuffSize = this.readInt();
-        //Trace.TRACE( "nBuffSize: " + nBuffSize );
-        if ( nBuffSize == 0 )
+		//Trace.TRACE( "nextToken has:" + this.available() );
+		nBuffSize = this.readInt();
+		//Trace.TRACE( "nBuffSize: " + nBuffSize );
+		if ( nBuffSize == 0 )
             string = "";
-        else if ( nBuffSize > 0 && nBuffSize < 4096 )
-        {
-            buffer = new byte[ nBuffSize ];
-            //Trace.TRACE( "trying to read buffer" );
-            this.readFully( buffer );
-            //Trace.TRACE( "creating string" );
-            string = new String( buffer );
-        }
-        else
-            throw new MalformedReggieStreamException( "invalid length for identifier" );
+		else if ( nBuffSize > 0 && nBuffSize < 4096 )
+		{
+			buffer = new byte[ nBuffSize ];
+			//Trace.TRACE( "trying to read buffer" );
+			this.readFully( buffer );
+			//Trace.TRACE( "creating string" );
+			string = new String( buffer );
+			//Trace.TRACE( "read:" + string );
+		}
+		else
+			throw new MalformedReggieStreamException( "invalid length for identifier" );
 
-        //Trace.TRACE( string );
-        return string;
+		//Trace.TRACE( string );
+		return string;
     }
 }

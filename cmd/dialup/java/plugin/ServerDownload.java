@@ -110,7 +110,7 @@ public class ServerDownload
 
         boolean             bResult = false;
 
-        // ¥ downloaded file name: append filename to provided local folder
+        // * downloaded file name: append filename to provided local folder
         StringBuffer        localFile = new StringBuffer( sLocalFolder );
         int                 nIndex = sURL.lastIndexOf( '/' );
         String              sFileName;
@@ -189,9 +189,9 @@ public class ServerDownload
 
             //Trace.TRACE( "localFolder: " + localFolder );
 
-            // ¥ create folder to store the downloaded file
+            // * create folder to store the downloaded file
             if ( !localFolder.mkdirs() && CPGenerator.DEBUG )
-                System.err.println( "FAILED making dirs for " + localFolder.getPath() );
+                Trace.TRACE( "FAILED making dirs for " + localFolder.getPath() );
         }
 
         out = new FileOutputStream( sDestFileName );
@@ -209,7 +209,7 @@ public class ServerDownload
             out.flush();
         }
 
-        // ¥ close streams
+        // * close streams
         is.close();
         out.close();
 
@@ -269,14 +269,14 @@ public class ServerDownload
                 File zEntryFile = new File( localFolderName + File.separator + entryName );
                 //Trace.TRACE( "constructed target file: " + zEntryFile.getPath() );
 
-                // ¥ entry is a directory, create local directories on the filesystem
+                // * entry is a directory, create local directories on the filesystem
                 if ( zEntry.isDirectory() )
                 {
                     if ( !zEntryFile.mkdirs() && CPGenerator.DEBUG )
-                        System.err.println( "FAILED creating folder " + zEntryFile.getPath() );
+                       ; // Trace.TRACE( "FAILED creating folder " + zEntryFile.getPath() );
                 }
 
-                // ¥ entry is a file: extract it
+                // * entry is a file: extract it
                 else
                 {
                     //Trace.TRACE( "--> extracting \"" + zEntry.getName() + "\" to " + zEntryFile.getPath() );
@@ -298,7 +298,7 @@ public class ServerDownload
                 }
             }
 
-            // ¥ delete original JAR file if specified
+            // * delete original JAR file if specified
             if ( bDeleteJarFile )
             {
                 //Trace.TRACE( "deleting " + comprFile.getPath() + " status: "+ comprFile.delete() );

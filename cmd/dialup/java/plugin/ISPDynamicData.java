@@ -24,11 +24,10 @@ import java.lang.*;
 
 public class ISPDynamicData
 {
-    static final String         NAME_STRING = "NAME";
+    static final String         NAME_STRING = "ISPNAME";
     static final String         LANGUAGE_STRING = "LANGUAGE";
-    static final String         REG_SOURCE_STRING = "REG_SOURCE";
     static final String         SERVICE_TYPE_STRING = "SERVICE_TYPE";
-    static final String         DYNAMIC_DATA_STRING = "DYNAMIC_DATA";
+    static final String         DYNAMIC_DATA_STRING = "DYNAMICDATA";
 //  static final String         zipFilesURL = "http://seaspace.netscape.com:8080/programs/ias5/regserv/docs/ISP/";
 
     public NameValueSet         reggieData = null;
@@ -56,47 +55,47 @@ public class ISPDynamicData
 
         try
         {
-            //Trace.TRACE( "creating ISPDynnamicData" );
-            while ( !done )
-            {
-                if ( lastName != null )
-                {
-                    //Trace.TRACE( "have lastName" );
-                    name = lastName;
-                    lastName = null;
-                }
-                else
-                {
-                    name = is.nextToken();
-                }
-
-                //Trace.TRACE( "name is: " + name );
-
-                if ( name.compareTo( NAME_STRING ) == 0 )
-                {
-                    if ( !haveName )
-                    {
-                        //Trace.TRACE( "setting haveName" );
-                        haveName = true;
-                    }
-                    else
-                    {
-                        //Trace.TRACE( "haveName was set, setting lastName, we're done" );
-                        lastName = name;
-                        done = true;
-                    }
-                }
-
-                if ( done == false && name.compareTo( "" ) != 0 )
-                {
-                    value = is.nextToken();
-                    //Trace.TRACE( "value is: " + value );
-                    reggieData.addNameValuePair( name, value );
-                }
-
-                if ( name.compareTo( "" ) == 0 )
-                    throw new EOFException( "done with reggie stream" );
-            }
+			Trace.TRACE( "creating ISPDynnamicData" );
+			while ( !done )
+			{
+				if ( lastName != null )
+				{
+					//Trace.TRACE( "have lastName" );
+					name = lastName;
+					lastName = null;
+				}
+				else
+				{
+					name = is.nextToken();
+				}
+			
+				//Trace.TRACE( "name is: " + name );
+			
+				if ( name.compareTo( NAME_STRING ) == 0 )
+				{
+					if ( !haveName )
+					{
+						//Trace.TRACE( "setting haveName" );
+						haveName = true;
+					}
+					else
+					{
+						//Trace.TRACE( "haveName was set, setting lastName, we're done" );
+						lastName = name;
+						done = true;
+					}
+				}
+			
+				if ( done == false && name.compareTo( "" ) != 0 )
+				{
+					value = is.nextToken();
+					//Trace.TRACE( "value is: " + value );
+					reggieData.setValue( name, value );
+				}
+			
+				if ( name.compareTo( "" ) == 0 )
+					throw new EOFException( "done with reggie stream" );
+			}
         }
         catch ( MalformedReggieStreamException e )
         {

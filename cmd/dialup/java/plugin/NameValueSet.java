@@ -17,7 +17,6 @@
  */
 package netscape.npasw;
 
-import netscape.npasw.*;
 //import Trace;
 import java.io.*;
 import java.lang.*;
@@ -41,14 +40,51 @@ class MalformedNameValueStringException extends Exception
 
 public class NameValueSet
 {
-    Hashtable           nameValuePairs;
-    final String        commentPrefix = "#";
+    Hashtable					nameValuePairs;
+	boolean						ignoreSections = false;
+	final static int			READ_AHEAD = 8192;		
 
 
-    public NameValueSet()
-    {
-        // ¥ XXX
+	protected void init()
+	{
         nameValuePairs = new Hashtable();
+	}
+	
+	protected void initWithFile( File inputFile, boolean ignoreSects ) throws Exception
+	{
+		init();
+		
+    	if ( inputFile == null )
+    		throw new NullPointerException( "constructor for NameValueSet requires non-null parameter" );
+    	
+    	ignoreSections = ignoreSects;
+
+    	if ( inputFile.exists() == false )
+    		return;
+
+		Trace.TRACE("parsing NameValueSet: " + inputFile.getAbsolutePath() );
+        BufferedReader  bufferedReader = new BufferedReader( new FileReader( inputFile ) );
+
+		this.read( bufferedReader );
+	}
+			
+	public NameValueSet()
+	{
+        // * XXX
+        init();
+	}
+
+    /*
+        @param inputFile        file to be parsed into nameValuePairs
+    */
+	public NameValueSet( File inputFile, boolean ignoreSects ) throws Exception
+	{
+    	initWithFile( inputFile, ignoreSects );
+	}
+	
+    public NameValueSet( File inputFile ) throws Exception
+    {
+    	initWithFile( inputFile, false );
     }
 
     /*
@@ -111,61 +147,36 @@ public class NameValueSet
         }
     }
 
-    /*
-        @param inputFile        file to be parsed into nameValuePairs
-    */
-    public NameValueSet( File inputFile ) throws Exception
-    {
-        nameValuePairs = new Hashtable();
-
-        BufferedReader  bufferedInputReader = new BufferedReader( new FileReader( inputFile ) );
-
-        String          line = bufferedInputReader.readLine();
-        while ( line != null )
+	private void readLine( String line )
+	{
+        if ( !line.startsWith( IniFileData.COMMENT_PREFIX ) )
         {
-            if ( !line.startsWith( commentPrefix ) )
+            int equalsSignAt = line.indexOf( "=" );
+            if ( equalsSignAt != -1 )
             {
-                int equalsSignAt = line.indexOf( "=" );
-                if ( equalsSignAt != -1 )
-                {
-                    String          nameString = line.substring( 0, equalsSignAt ).trim();
-                    String          valueString = line.substring( ++equalsSignAt ).trim();
+                String          nameString = new String( line.substring( 0, equalsSignAt ).trim() );
+                String          valueString = new String( line.substring( ++equalsSignAt ).trim() );
 
-                    if ( nameString.length() != 0 && valueString.length() != 0 )
-                        nameValuePairs.put( nameString, valueString );
-                }
+                //Trace.TRACE( "name: " + nameString + " value: " + valueString );
+
+                if ( nameString.length() != 0 && valueString.length() != 0 )
+                    nameValuePairs.put( nameString, valueString );
             }
-            line = bufferedInputReader.readLine();
         }
-    }
+	}
 
     public void read( BufferedReader reader ) throws Exception
     {
-        final String    sectionPrefix = "[";
-
-        reader.mark( 8192 );
+        reader.mark( READ_AHEAD );
         String          line = reader.readLine();
 
         while ( line != null )
         {
             //Trace.TRACE( "line: " + line );
-            if ( !line.startsWith( sectionPrefix ) )
+            if ( ignoreSections || !line.startsWith( IniFileData.SECTION_PREFIX ) )
             {
-                if ( !line.startsWith( commentPrefix ) )
-                {
-                    int equalsSignAt = line.indexOf( "=" );
-                    if ( equalsSignAt != -1 )
-                    {
-                        String          nameString = new String( line.substring( 0, equalsSignAt ).trim() );
-                        String          valueString = new String( line.substring( ++equalsSignAt ).trim() );
-
-                        //Trace.TRACE( "name: " + nameString + " value: " + valueString );
-
-                        if ( nameString.length() != 0 && valueString.length() != 0 )
-                            nameValuePairs.put( nameString, valueString );
-                    }
-                }
-                reader.mark( 8192 );
+                reader.mark( READ_AHEAD );
+				this.readLine( line );
                 line = reader.readLine();
             }
             else
@@ -175,13 +186,19 @@ public class NameValueSet
             }
         }
     }
-
-    public void addNameValuePair( String inputName, String inputValue )
-    {
-        nameValuePairs.put( inputName, inputValue );
-    }
-
-    public boolean removeNameValuePair( String inputName  )
+	
+	public void write( BufferedWriter writer ) throws Exception
+	{
+        for ( Enumeration names = nameValuePairs.keys(); names.hasMoreElements(); )
+        {
+            String      name = (String)names.nextElement();
+            String      value = (String)nameValuePairs.get( name );
+            writer.write( name + "=" + value );
+            writer.newLine();
+        }
+	}
+	
+    public boolean unsetName( String inputName  )
     {
         if ( nameValuePairs.remove( inputName ) != null )
             return true;

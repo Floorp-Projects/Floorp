@@ -21,12 +21,13 @@ package netscape.npasw;
 import netscape.plugin.Plugin;
 import netscape.security.*;
 import java.util.Hashtable;
+import java.util.Enumeration;
 import java.io.*;
 import netscape.npasw.*;
 
 public class SetupPlugin extends Plugin
 {
-    static  Hashtable       iniFileCache = new Hashtable();
+    static private Hashtable       iniFileCache = new Hashtable();
 
     final public void debug( String s )
     {
@@ -44,7 +45,27 @@ public class SetupPlugin extends Plugin
             SECURE_SetKiosk( flag );
     }
 
-
+	final public void FlushCache()
+	{
+		if ( privilegeCheck() == false )
+			return;
+		
+		for ( Enumeration iniFiles = iniFileCache.keys(); iniFiles.hasMoreElements(); )
+		{
+			File			iniFile = (File)iniFiles.nextElement();
+			IniFileData		iniFileData = (IniFileData)iniFileCache.get( iniFile );
+			
+			try
+			{
+				Trace.TRACE( "flushing ini cache object" );
+				iniFileData.flush();
+			}
+			catch ( Throwable e )
+			{
+			}
+		}
+	}
+	
     final public String GetNameValuePair( String filePath, String sectionName, String valueName )
     {
     /*  if ( privilegeCheck() == true )
@@ -58,28 +79,33 @@ public class SetupPlugin extends Plugin
         final String        section1 = sectionName;
         final String        value1 = valueName;
 
-        try
-        {
-            File                file = new File( filePath );
-            IniFileData         iniFile = (IniFileData)iniFileCache.get( new Integer( file.hashCode() ) );
+		try
+		{
+			File                file = new File( filePath );
+			//Trace.TRACE( "GetNameValuePair" );
+			//Trace.TRACE( "	file: " + file.getName() );
+			//Trace.TRACE( "	hash: " + file.hashCode() );
+			IniFileData         iniFile = (IniFileData)iniFileCache.get( file );
 
-            if ( iniFile == null )
-            {
-                iniFile = new IniFileData( file );
-                //iniFile.printIniFileData();
-                iniFileCache.put( new Integer( file.hashCode() ), iniFile );
-            }
-
-            //Trace.TRACE( "getting file: " + filePath + " section: " + section1 + " value: " + value1 );
-            String      value = iniFile.getValue( section1, value1 );
-            if ( value == null )
-                return new String( "" );
-            else
-            {
-                //Trace.TRACE( "returning: " + value );
-                return new String( value );
-            }
-        }
+			if ( iniFile == null )
+			{
+	 			//Trace.TRACE( "file: " + file.getName() );
+	           	//Trace.TRACE( "iniFile is null" );
+	           	
+				iniFile = new IniFileData( file );
+				iniFileCache.put( file, iniFile );
+			}
+	      
+	     	//Trace.TRACE( "getting file: " + filePath + " section: " + section1 + " value: " + value1 );
+			String      value = iniFile.getValue( section1, value1 );
+			if ( value == null )
+				return new String( "" );
+			else
+			{
+				//Trace.TRACE( "returning: " + value );
+				return new String( value );
+			}
+		}
         catch ( Throwable e )
         {
             //Trace.TRACE( "caught an exception: " + e.getMessage() );
@@ -87,12 +113,37 @@ public class SetupPlugin extends Plugin
         }
     }
 
-
-
-    final public void SetNameValuePair( String file, String section, String name, String value )
+    final public void SetNameValuePair( String filePath, String sectionName, String name, String value )
     {
-    //  if ( privilegeCheck() == true )
-    //      SECURE_SetNameValuePair( file, section, name, value );
+    /*  if ( privilegeCheck() == true )
+    		SECURE_SetNameValuePair( file, section, name, value );
+	*/
+    	if ( privilegeCheck() == false )
+    		return;
+    	
+		try
+		{
+			File				file = new File( filePath );
+			//Trace.TRACE( "SetNameValuePair" );
+			//Trace.TRACE( "	file: " + file.getName() );
+			//Trace.TRACE( "	hash: " + file.hashCode() );
+			IniFileData			iniFile = (IniFileData)iniFileCache.get( file );
+			
+    		if ( iniFile == null )
+    		{
+				//Trace.TRACE( "file: " + file.getName() );
+    			//Trace.TRACE( "iniFile is null" );
+    			
+    			iniFile = new IniFileData( file );
+    			iniFileCache.put( file, iniFile );
+			}
+    		
+			//Trace.TRACE( "setValue: " + sectionName + " " + name + " " + value );
+			iniFile.setValue( sectionName, name, value );
+		}
+		catch ( Throwable e )
+		{
+		}    		
     }
 
 
@@ -248,19 +299,27 @@ public class SetupPlugin extends Plugin
             SECURE_DialerConfig( dialerData, regMode );
     }
 
-    final public boolean GenerateComparePage( String sUrl, String reggieData[] )
+    final public boolean GenerateComparePage( String localFolder, String sCGIUrl, String sRegRoot,
+    	String metadataMode, String reggieData[] )
     {
-        return CPGenerator.generateComparePage( sUrl, reggieData );
+		if ( privilegeCheck() == true )
+			return CPGenerator.generateComparePage( localFolder, sCGIUrl, sRegRoot, metadataMode, reggieData );
+		else
+			return false;
     }
 
 
-    final public String GetCurrentProfileDirectory()
-    {
-        if ( privilegeCheck() == true )
-            return SECURE_GetCurrentProfileDirectory();
-        else
-            return null;
-    }
+	final public String GetCurrentProfileDirectory()
+	{
+	    if ( privilegeCheck() == true )
+	    {
+	    	String		temp = SECURE_GetCurrentProfileDirectory();
+	    	Trace.TRACE( "getCurrentProfileDirectory: " + temp );
+			return temp;
+		}
+		else
+			return null;
+	}
 
     final public String GetCurrentProfileName()
     {
@@ -306,8 +365,12 @@ public class SetupPlugin extends Plugin
 
     final public void QuitNavigator()
     {
-    //  if ( privilegeCheck() == true )
-    //      SECURE_QuitNavigator();
+     	if ( privilegeCheck() == true )
+    	{
+    		FlushCache();
+   			iniFileCache = null;
+    		SECURE_QuitNavigator();
+   		}
     }
 
     final public boolean CheckEnvironment()
