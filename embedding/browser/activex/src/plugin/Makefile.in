@@ -44,6 +44,7 @@ REQUIRES = \
     gfx \
     js \
     pref \
+    xpconnect \
     $(NULL)
 XPIFILE         = mozactivex.xpi
 
@@ -90,24 +91,6 @@ MOZ_ACTIVEX_PLUGIN_XPCONNECT = 1
 
 # XPConnect support in (Netscape 6.1+/Mozilla)
 
-############
-# Windows Media Player settings
-
-# IMPORTANT NOTE - WMP is being used as a real world test harness to exercise
-#                  some of the site-side interfaces. Don't enable this option 
-#                  in normal use.
-
-# WMP support needs XPConnect
-ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
-# MOZ_ACTIVEX_PLUGIN_WMPSUPPORT = 1
-
-# Path to the WMP SDK
-ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-WMP_SDK = C:/m/WMSDK/WMPSDK9
-endif
-
-endif
-
 
 ###############################################################################
 
@@ -115,10 +98,6 @@ ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 XPIDLSRCS = \
     ./nsIMozAxPlugin.idl \
     $(NULL)
-endif
-
-ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-XPIDLSRCS += nsWMP.idl
 endif
 
 _CONTROL_CPPSRCS = \
@@ -150,10 +129,6 @@ CPPSRCS += LiveConnect.cpp
 CSRCS += javastubs.c
 endif
 
-ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-CPPSRCS += XPCMediaPlayer.cpp
-endif
-
 LOCAL_INCLUDES = -I$(MOZCTLSRC)
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
@@ -162,11 +137,6 @@ endif
 
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 LOCAL_INCLUDES += -I$(XPIDL_GEN_DIR)
-endif
-
-ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-LOCAL_INCLUDES += -I$(WMP_SDK)/include
-DEFINES += -DMOZ_ACTIVEX_PLUGIN_WMPSUPPORT
 endif
 
 OS_LIBS += \
@@ -224,11 +194,6 @@ install-class: MozAxPlugin.class
 install-typelib: $(XPIDL_GEN_DIR)/nsIMozAxPlugin.xpt
 	$(INSTALL) $< $(DIST)/bin/plugins
 
-ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-install-wmp-typelib: $(XPIDL_GEN_DIR)/nsWMP.xpt
-	$(INSTALL) $< $(DIST)/bin/plugins
-endif
-
 libs:: install-plugin
 
 ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
@@ -237,10 +202,6 @@ endif
 
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 libs:: install-typelib
-endif
-
-ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-libs:: install-wmp-typelib
 endif
 
 ## Note: Ensure you create the redist dir containing the correct runtime dlls
@@ -255,9 +216,6 @@ ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
 endif
 ifdef MOZ_ACTIVEX_PLUGIN_XPCONNECT
 	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) $(XPIDL_GEN_DIR)/nsIMozAxPlugin.xpt
-endif
-ifdef MOZ_ACTIVEX_PLUGIN_WMPSUPPORT
-	$(ZIP_PROG) -9 -j $(DIST)/bin/$(XPIFILE) $(XPIDL_GEN_DIR)/nsWMP.xpt
 endif
 
 $(SHARED_LIBRARY) : $(DEFFILE) copy-sources
