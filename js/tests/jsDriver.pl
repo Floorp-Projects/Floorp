@@ -471,7 +471,7 @@ sub usage {
        "(-k|--confail)            Log failures to console (also.)\n" . 
        "(-l|--list) <file> ...    List of tests to execute.\n" . 
        "(-L|--neglist) <file> ... List of tests to skip.\n" . 
-       "(-o|--opt) <options>      Options to pass to the JavaScript engine\n" .
+       "(-o|--opt) <options>      Options to pass to the JavaScript engine.\n" .
        "                          (Make sure to quote them!)\n" .
        "(-p|--testpath) <path>    Root of the test suite. (default is ./)\n" .
        "(-s|--shellpath) <path>   Location of JavaScript shell.\n" .
