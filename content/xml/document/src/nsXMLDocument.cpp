@@ -96,7 +96,7 @@
 #include "nsIMIMEService.h"
 #include "nsNetUtil.h"
 #include "nsMimeTypes.h"
-
+#include "nsIEventListenerManager.h"
 #include "nsContentUtils.h"
 #include "nsIElementFactory.h"
 
@@ -165,9 +165,6 @@ NS_NewDOMDocument(nsIDOMDocument** aInstancePtrResult,
   }
 
   nsCOMPtr<nsIDOMDocument> kungFuDeathGrip(doc);
-
-  rv = doc->Reset(nsnull, nsnull);
-  NS_ENSURE_SUCCESS(rv, rv);
 
   doc->SetDocumentURL(aBaseURI);
   doc->SetBaseURL(aBaseURI);
@@ -352,10 +349,20 @@ nsXMLDocument::Load(const nsAReadableString& aUrl)
   if (NS_FAILED(secMan->CheckConnect(nsnull, uri, "XMLDocument", "load")))
     return NS_ERROR_FAILURE;
 
-  // Partial Reset
+  // Partial Reset, need to restore principal for security reasons and
+  // event listener manager so that load listeners etc. will remain.
+  nsCOMPtr<nsIPrincipal> principal(dont_QueryInterface(mPrincipal));
+  nsCOMPtr<nsIEventListenerManager> elm(dont_QueryInterface(mListenerManager));
+
+  Reset(nsnull, nsnull);
+  
+  mPrincipal = principal;
+  mListenerManager = elm;
+  NS_IF_ADDREF(mPrincipal);
+  NS_IF_ADDREF(mListenerManager);
+  
   SetDocumentURL(uri);
   SetBaseURL(uri);
-  mBaseTarget.Truncate();
 
   // Create a channel
   rv = NS_OpenURI(getter_AddRefs(channel), uri, nsnull, nsnull, this);

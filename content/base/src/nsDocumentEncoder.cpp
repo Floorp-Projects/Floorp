@@ -888,8 +888,6 @@ nsDocumentEncoder::EncodeToString(nsAWritableString& aOutputString)
 
   aOutputString.Truncate();
 
-  // xxx Also make sure mString is a mime type "text/html" or "text/plain"
-
   nsCAutoString progId(NS_CONTENTSERIALIZER_CONTRACTID_PREFIX);
   progId.AppendWithConversion(mMimeType);
 
@@ -965,8 +963,6 @@ nsDocumentEncoder::EncodeToStream(nsIOutputStream* aStream)
     rv = mUnicodeEncoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
     NS_ENSURE_SUCCESS(rv, rv);
   }
-
-  // xxx Also make sure mString is a mime type "text/html" or "text/plain"
 
   mStream = aStream;
 
