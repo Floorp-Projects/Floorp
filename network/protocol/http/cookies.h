@@ -19,6 +19,8 @@
 #ifndef COOKIES_H
 #define COOKIES_H
 
+#include "mkgeturl.h"
+
 /* removes all cookies structs from the cookie list */
 extern void
 NET_RemoveAllCookies(void);
