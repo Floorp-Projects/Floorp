@@ -26,7 +26,7 @@
 #include "nsIToolkit.h"
 #include "nsRepeater.h"
 
-class nsIEventQueueService;
+class nsIEventQueue;
 
 
 /**
@@ -83,7 +83,7 @@ public:
 	
 protected:
 	nsrefcnt								mRefCnt;
-	nsIEventQueueService* 	mEventQService;
+	nsIEventQueue* 							mEventQ;
 };
 
 

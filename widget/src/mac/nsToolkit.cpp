@@ -26,13 +26,17 @@
 
 #include <Gestalt.h>
 #include <Appearance.h>
+#include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 
 // Class IDs...
+static NS_DEFINE_IID(kEventQueueCID,  NS_EVENTQUEUE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
 
+
 // Interface IDs...
+static NS_DEFINE_IID(kIEventQueueIID, NS_IEVENTQUEUE_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 
@@ -50,7 +54,7 @@ static PRUintn gToolkitTLSIndex = 0;
 nsMacNSPREventQueueHandler::nsMacNSPREventQueueHandler(): Repeater()
 {
 	mRefCnt = 0;
-	mEventQService = nsnull;
+	mEventQ = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -58,12 +62,11 @@ nsMacNSPREventQueueHandler::nsMacNSPREventQueueHandler(): Repeater()
 //-------------------------------------------------------------------------
 nsMacNSPREventQueueHandler::~nsMacNSPREventQueueHandler()
 {
-	if (mEventQService == nsnull)
+	if (mEventQ == nsnull)
 		return;
 
 	StopRepeating();
-	nsServiceManager::ReleaseService(kEventQueueServiceCID, mEventQService);
-	mEventQService = nsnull;
+	NS_RELEASE(mEventQ);
 }
 
 //-------------------------------------------------------------------------
@@ -73,12 +76,18 @@ void nsMacNSPREventQueueHandler::StartPumping()
 {
 	if (mRefCnt == 0)
 	{
-		nsServiceManager::GetService(kEventQueueServiceCID,
-																				kIEventQueueServiceIID,
-	                                      (nsISupports **)&mEventQService);
-		if (mEventQService == nsnull)
+		nsresult rv;
+		
+		NS_WITH_SERVICE(nsIEventQueueService, qServ, kEventQueueServiceCID, &rv);
+		
+		if (NS_SUCCEEDED(rv) && qServ)
 		{
-			NS_WARNING("GetService(kEventQueueServiceCID) failed");
+			qServ->GetThreadEventQueue(NS_CURRENT_THREAD, &mEventQ);
+		}
+		
+		if (mEventQ == nsnull)
+		{
+			NS_WARNING("Could not get current thread's eventQ");
 			return;
 		}
 	}
@@ -93,7 +102,7 @@ void nsMacNSPREventQueueHandler::StartPumping()
 //-------------------------------------------------------------------------
 PRBool nsMacNSPREventQueueHandler::StopPumping()
 {
-	if (mEventQService == nsnull)
+	if (mEventQ == nsnull)
 		return PR_TRUE;
 
 	if (mRefCnt > 0) {
@@ -101,9 +110,8 @@ PRBool nsMacNSPREventQueueHandler::StopPumping()
     NS_LOG_RELEASE(this, mRefCnt, "nsMacNSPREventQueueHandler");
     if (mRefCnt == 0) {
 			StopRepeating();
-		 	nsServiceManager::ReleaseService(kEventQueueServiceCID, mEventQService);
-		 	mEventQService = nsnull;
-			return PR_TRUE;
+		 	NS_RELEASE(mEventQ);
+		 	return PR_TRUE;
 		}
 	}
 
@@ -116,8 +124,8 @@ PRBool nsMacNSPREventQueueHandler::StopPumping()
 void nsMacNSPREventQueueHandler::RepeatAction(const EventRecord& inMacEvent)
 {
 	// Handle pending NSPR events
-	if (mEventQService)
-	  mEventQService->ProcessEvents();
+	if (mEventQ)
+	  mEventQ->ProcessPendingEvents();
 }
 
 
