@@ -569,7 +569,7 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
                     pTempDir->InitWithUnicodePath (strTempDir.get()) ;
                     pTempDir->Exists (&bExist) ;
                     if (!bExist)
-                {
+                    {
                         rv = pTempDir->Create(nsIFile::DIRECTORY_TYPE, 777) ;
                         if (NS_FAILED(rv)) return rv ;
                     }
@@ -591,8 +591,8 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
                             rv = pFile->CopyToUnicode(pTempDir, aFiles[i].lpszFileName) ;
                             pFile->InitWithUnicodePath(strTempDir.get()) ;
                             pFile->AppendUnicode (aFiles[i].lpszFileName) ;
-            }
-                else
+                        }
+                        else
                         {
                             // else if user is sending an already existing file open in the application
                             // just move the file to one with real file name, better performance
@@ -602,16 +602,19 @@ nsresult nsMapiHook::HandleAttachments (nsIMsgCompFields * aCompFields, PRInt32 
                             if (NS_SUCCEEDED(rv))
                                 rv = pTempFile->Create(nsIFile::NORMAL_FILE_TYPE, 777);
                         }
-        }
+                    }
                     else
                     {
                         // check if the user is sending a temporary unsaved file, in this case
                         // the leaf name of the PathName and the FileName (real filename) would be same
                         // if so copy the file (this will create a copy file) and then send else move would do nothing
                         // and the calling app would delete the file and then send will fail.
-                        nsCAutoString leafNameCStr;
-                        leafNameCStr.AssignWithConversion(leafName);
-                        if (!PL_strcasecmp((char *) aFiles[i].lpszFileName, leafNameCStr.get())) 
+                        nsAutoString fileName;
+                        // convert to Unicode using Platform charset
+                        rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), (char *) aFiles[i].lpszFileName, fileName);
+                        if (NS_FAILED(rv)) return rv ;
+                        // now compare the unicode filename string
+                        if (!Compare(fileName, leafName, nsCaseInsensitiveStringComparator()))
                         {
                             rv = pFile->CopyTo(pTempDir, (char *) aFiles[i].lpszFileName) ;
                             pFile->InitWithUnicodePath(strTempDir.get()) ;
