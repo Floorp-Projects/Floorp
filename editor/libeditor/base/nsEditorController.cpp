@@ -21,17 +21,26 @@
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
+#include "nsIComponentManager.h"
 #include "nsEditorController.h"
 #include "nsIGfxTextControlFrame.h"
 #include "nsIEditor.h"
+#include "nsIEditorMailSupport.h"
 #include "nsIFormControlFrame.h"
 #include "nsIDOMSelection.h"
 #include "nsIHTMLEditor.h"
 #include "nsISupportsPrimitives.h"
+#include "nsXPIDLString.h"
 
 #include "nsISelectionController.h"
 #include "nsIDocument.h"
 #include "nsIPresShell.h"
+
+#include "nsEditorCommands.h"
+
+
+#define kMaxStackCommandNameLength 128
+
 
 NS_IMPL_ADDREF(nsEditorController)
 NS_IMPL_RELEASE(nsEditorController)
@@ -43,69 +52,125 @@ NS_INTERFACE_MAP_BEGIN(nsEditorController)
 NS_INTERFACE_MAP_END
 
 nsEditorController::nsEditorController()
+: mContent(NULL)
+, mEditor(NULL)
 {
-  NS_INIT_REFCNT();
-  mContent = nsnull;
-  mEditor = nsnull;
-  
-  mUndoCmd            = getter_AddRefs(NS_NewAtom("cmd_undo"));
-  mRedoCmd            = getter_AddRefs(NS_NewAtom("cmd_redo"));
-  mCutCmd             = getter_AddRefs(NS_NewAtom("cmd_cut"));
-  mCopyCmd            = getter_AddRefs(NS_NewAtom("cmd_copy"));
-  mPasteCmd           = getter_AddRefs(NS_NewAtom("cmd_paste"));
-  mDeleteCmd          = getter_AddRefs(NS_NewAtom("cmd_delete"));
-  mSelectAllCmd       = getter_AddRefs(NS_NewAtom("cmd_selectAll"));
-
-  mBeginLineCmd       = getter_AddRefs(NS_NewAtom("cmd_beginLine"));
-  mEndLineCmd         = getter_AddRefs(NS_NewAtom("cmd_endLine"));
-  mSelectBeginLineCmd = getter_AddRefs(NS_NewAtom("cmd_selectBeginLine"));
-  mSelectEndLineCmd   = getter_AddRefs(NS_NewAtom("cmd_selectEndLine"));
-
-  mScrollTopCmd       = getter_AddRefs(NS_NewAtom("cmd_scrollTop"));
-  mScrollBottomCmd    = getter_AddRefs(NS_NewAtom("cmd_scrollBottom"));
-
-  mMoveTopCmd         = getter_AddRefs(NS_NewAtom("cmd_moveTop"));
-  mMoveBottomCmd      = getter_AddRefs(NS_NewAtom("cmd_moveBottom"));
-  mSelectMoveTopCmd   = getter_AddRefs(NS_NewAtom("cmd_selectTop"));
-  mSelectMoveBottomCmd = getter_AddRefs(NS_NewAtom("cmd_selectBottom"));
-
-  mLineNextCmd        = getter_AddRefs(NS_NewAtom("cmd_lineNext"));
-  mLinePreviousCmd    = getter_AddRefs(NS_NewAtom("cmd_linePrevious"));
-  mSelectLineNextCmd  = getter_AddRefs(NS_NewAtom("cmd_selectLineNext"));
-  mSelectLinePreviousCmd = getter_AddRefs(NS_NewAtom("cmd_selectLinePrevious"));
-
-  mLeftCmd            = getter_AddRefs(NS_NewAtom("cmd_charPrevious"));
-  mRightCmd           = getter_AddRefs(NS_NewAtom("cmd_charNext"));
-  mSelectLeftCmd      = getter_AddRefs(NS_NewAtom("cmd_selectCharPrevious"));
-  mSelectRightCmd     = getter_AddRefs(NS_NewAtom("cmd_selectCharNext"));
-
-  mWordLeftCmd        = getter_AddRefs(NS_NewAtom("cmd_wordPrevious"));
-  mWordRightCmd       = getter_AddRefs(NS_NewAtom("cmd_wordNext"));
-  mSelectWordLeftCmd  = getter_AddRefs(NS_NewAtom("cmd_selectWordPrevious"));
-  mSelectWordRightCmd = getter_AddRefs(NS_NewAtom("cmd_selectWordNext"));
-
-  mScrollPageUpCmd    = getter_AddRefs(NS_NewAtom("cmd_scrollPageUp"));
-  mScrollPageDownCmd  = getter_AddRefs(NS_NewAtom("cmd_scrollPageDown"));
-  mScrollLineUpCmd    = getter_AddRefs(NS_NewAtom("cmd_scrollLineUp"));
-  mScrollLineDownCmd  = getter_AddRefs(NS_NewAtom("cmd_scrollLineDown"));
-
-  mMovePageUpCmd         = getter_AddRefs(NS_NewAtom("cmd_scrollPageUp"));
-  mMovePageDownCmd       = getter_AddRefs(NS_NewAtom("cmd_scrollPageDown"));
-  mSelectMovePageUpCmd   = getter_AddRefs(NS_NewAtom("cmd_selectPageUp"));
-  mSelectMovePageDownCmd = getter_AddRefs(NS_NewAtom("cmd_selectPageDown"));
-
-  mDeleteCharBackwardCmd = getter_AddRefs(NS_NewAtom("cmd_deleteCharBackward"));
-  mDeleteCharForwardCmd  = getter_AddRefs(NS_NewAtom("cmd_deleteCharForward"));
-  mDeleteWordBackwardCmd = getter_AddRefs(NS_NewAtom("cmd_deleteWordBackward"));
-  mDeleteWordForwardCmd  = getter_AddRefs(NS_NewAtom("cmd_deleteWordForward"));
-
-  mDeleteToBeginningOfLineCmd = getter_AddRefs(NS_NewAtom("cmd_deleteToBeginningOfLine"));
-  mDeleteToEndOfLineCmd = getter_AddRefs(NS_NewAtom("cmd_deleteToEndOfLine"));
+  NS_INIT_REFCNT();  
 }
 
 nsEditorController::~nsEditorController()
 {
+  // if the singleton command manger has a refcount of 1 at this point, we need to
+  // set it to null
 }
+
+NS_IMETHODIMP nsEditorController::Init()
+{
+  nsresult  rv;
+ 
+  // get our ref to the singleton command manager
+  rv = GetCommandManager(getter_AddRefs(mCommandManager));
+  if (NS_FAILED(rv)) return rv;  
+  
+  return rv;
+}
+
+
+#define NS_REGISTER_ONE_COMMAND(_cmdClass, _cmdName)                                \
+  {                                                                                 \
+  _cmdClass* theCmd = new _cmdClass;                                                \
+  nsAutoString cmdString(_cmdName);                                                 \
+  rv = RegisterOneCommand(cmdString.GetUnicode(), inCommandManager, theCmd);        \
+  }
+
+#define NS_REGISTER_FIRST_COMMAND(_cmdClass, _cmdName)                              \
+  {                                                                                 \
+  _cmdClass* theCmd = new _cmdClass;                                                \
+  nsAutoString cmdString(_cmdName);                                                 \
+  rv = RegisterOneCommand(cmdString.GetUnicode(), inCommandManager, theCmd);        \
+
+#define NS_REGISTER_NEXT_COMMAND(_cmdClass, _cmdName)                               \
+  cmdString = _cmdName;                                                             \
+  rv = RegisterOneCommand(cmdString.GetUnicode(), inCommandManager, theCmd);
+
+#define NS_REGISTER_LAST_COMMAND(_cmdClass, _cmdName)                               \
+  cmdString = _cmdName;                                                             \
+  rv = RegisterOneCommand(cmdString.GetUnicode(), inCommandManager, theCmd);        \
+  }
+
+
+// static
+nsresult nsEditorController::RegisterEditorCommands(nsIControllerCommandManager *inCommandManager)
+{
+  nsresult rv;
+ 
+  // now register all our commands
+  NS_REGISTER_ONE_COMMAND(nsUndoCommand, "cmd_undo");
+  NS_REGISTER_ONE_COMMAND(nsRedoCommand, "cmd_redo");
+
+  NS_REGISTER_ONE_COMMAND(nsCutCommand, "cmd_cut");
+  NS_REGISTER_ONE_COMMAND(nsCopyCommand, "cmd_copy");
+  NS_REGISTER_ONE_COMMAND(nsSelectAllCommand, "cmd_selectAll");
+  
+  NS_REGISTER_FIRST_COMMAND(nsPasteCommand, "cmd_paste");
+  NS_REGISTER_LAST_COMMAND(nsPasteCommand, "cmd_pasteQuote");  
+  
+  NS_REGISTER_FIRST_COMMAND(nsDeleteCommand, "cmd_delete");
+  NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteCharBackward");
+  NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteCharForward");
+  NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteWordBackward");
+  NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteWordForward");
+  NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteToBeginningOfLine");
+  NS_REGISTER_LAST_COMMAND(nsDeleteCommand, "cmd_deleteToEndOfLine");
+
+  NS_REGISTER_FIRST_COMMAND(nsSelectionMoveCommands, "cmd_scrollTop");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_scrollBottom");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveTop");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveBottom");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectTop");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_lineNext");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_linePrevious");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectLineNext");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectLinePrevious");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_charPrevious");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_charNext");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectCharPrevious");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectCharNext");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_beginLine");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_endLine");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectBeginLine");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectEndLine");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_wordPrevious");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_wordNext");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectWordPrevious");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectWordNext");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_scrollPageUp");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_scrollPageDown");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_scrollLineUp");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_scrollLineDown");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_movePageUp");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_movePageDown");
+  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectPageUp");
+  NS_REGISTER_LAST_COMMAND(nsSelectionMoveCommands, "cmd_selectPageDown");
+    
+  return NS_OK;
+}
+
+// static
+nsresult nsEditorController::RegisterOneCommand(const PRUnichar* aCommandName,
+              nsIControllerCommandManager *inCommandManager,
+              nsBaseCommand* aCommand)
+{
+  nsCOMPtr<nsIControllerCommand> editorCommand;
+
+  NS_ADDREF(aCommand);
+  nsresult rv = aCommand->QueryInterface(NS_GET_IID(nsIControllerCommand), getter_AddRefs(editorCommand));
+  NS_RELEASE(aCommand);
+  if (NS_FAILED(rv)) return rv;
+  
+  return inCommandManager->RegisterCommand(aCommandName, editorCommand);   // this is the owning ref
+}
+
 
 NS_IMETHODIMP nsEditorController::SetContent(nsIHTMLContent *aContent)
 {
@@ -132,63 +197,34 @@ NS_IMETHODIMP nsEditorController::IsCommandEnabled(const PRUnichar *aCommand, PR
   NS_ENSURE_ARG_POINTER(aResult);
 
   *aResult = PR_FALSE;
-
-  nsCOMPtr<nsIAtom> cmdAtom = getter_AddRefs(NS_NewAtom(aCommand));
   
   nsCOMPtr<nsIEditor> editor;
   NS_ENSURE_SUCCESS(GetEditor(getter_AddRefs(editor)), NS_ERROR_FAILURE);
   // a null editor is a legal state
-
-  if (cmdAtom == mUndoCmd)
-  { // we can undo if the editor says we can undo
-    if (editor)
-    {
-      PRBool isEnabled;
-      NS_ENSURE_SUCCESS(editor->CanUndo(isEnabled, *aResult), NS_ERROR_FAILURE);
-    }
-  }
-  else if (cmdAtom == mRedoCmd)
-  { // we can redo if the editor says we can undo
-    if (editor)
-    {
-      PRBool isEnabled;
-      NS_ENSURE_SUCCESS(editor->CanRedo(isEnabled, *aResult), NS_ERROR_FAILURE);
-    }
-  }
-  else if (cmdAtom == mCutCmd)
-  { // we can cut if the editor has a non-collapsed selection and is not readonly
-    if (editor)
-    {
-      NS_ENSURE_SUCCESS(editor->CanCut(*aResult), NS_ERROR_FAILURE);
-    }
-  }
-  else if (cmdAtom == mCopyCmd)
-  { // we can copy if the editor has a non-collapsed selection
-    if (editor)
-    {
-      NS_ENSURE_SUCCESS(editor->CanCopy(*aResult), NS_ERROR_FAILURE);
-    }
-  }
-  else if (cmdAtom == mPasteCmd)
+  if (!editor)
+    return NS_OK;     // just say we don't handle the command
+  
+  if (!mCommandManager)
   {
-    if (editor)
-    {
-      NS_ENSURE_SUCCESS(editor->CanPaste(*aResult), NS_ERROR_FAILURE);
-    }
+    NS_ASSERTION(0, "No command handler!");
+    return NS_ERROR_UNEXPECTED;
   }
-  else if (cmdAtom == mDeleteCmd)
-  { // we can delete if the editor has a non-collapsed selection and is modifiable (same as cut)
-    if (editor)
-    {
-      NS_ENSURE_SUCCESS(editor->CanCut(*aResult), NS_ERROR_FAILURE);
-    }
+    
+  // find the command  
+  nsCOMPtr<nsIControllerCommand> commandHandler;
+  mCommandManager->FindCommandHandler(aCommand, getter_AddRefs(commandHandler));
+    
+  if (!commandHandler)
+  {
+#if DEBUG
+    nsCAutoString msg("EditorController asked about a command that it does not handle -- ");
+    msg += aCommand;
+    NS_WARNING(msg);
+#endif
+    return NS_OK;    // we don't handle this command
   }
-  else if (cmdAtom == mSelectAllCmd)    
-  { // selectAll is enabled if there is any content and if the editor is not disabled (readonly is ok)
-    *aResult = PR_TRUE;
-  }
-
-  return NS_OK;
+  
+  return commandHandler->IsCommandEnabled(aCommand, editor, aResult);
 }
 
 NS_IMETHODIMP nsEditorController::SupportsCommand(const PRUnichar *aCommand, PRBool *aResult)
@@ -199,57 +235,12 @@ NS_IMETHODIMP nsEditorController::SupportsCommand(const PRUnichar *aCommand, PRB
   // XXX: need to check the readonly and disabled states
 
   *aResult = PR_FALSE;
-  nsCOMPtr<nsIAtom> cmdAtom = getter_AddRefs(NS_NewAtom(aCommand));
   
-  if (
-    (cmdAtom == mUndoCmd) ||
-    (cmdAtom == mRedoCmd) ||
-    (cmdAtom == mCutCmd) ||
-    (cmdAtom == mCopyCmd) ||
-    (cmdAtom == mPasteCmd) ||
-    (cmdAtom == mDeleteCmd) ||
-    (cmdAtom == mSelectAllCmd) ||
-    (cmdAtom == mBeginLineCmd) ||
-    (cmdAtom == mEndLineCmd) ||
-    (cmdAtom == mSelectBeginLineCmd) ||
-    (cmdAtom == mSelectEndLineCmd) ||
-    (cmdAtom == mScrollTopCmd) ||
-    (cmdAtom == mScrollBottomCmd) ||
-    (cmdAtom == mMoveTopCmd) ||
-    (cmdAtom == mMoveBottomCmd) ||
-    (cmdAtom == mSelectMoveTopCmd) ||
-    (cmdAtom == mSelectMoveBottomCmd) ||
-    (cmdAtom == mLineNextCmd) ||
-    (cmdAtom == mLinePreviousCmd) ||
-    (cmdAtom == mLeftCmd) ||
-    (cmdAtom == mRightCmd) ||
-    (cmdAtom == mSelectLineNextCmd) ||
-    (cmdAtom == mSelectLinePreviousCmd) ||
-    (cmdAtom == mSelectLeftCmd) ||
-    (cmdAtom == mSelectRightCmd) ||
-    (cmdAtom == mWordLeftCmd) ||
-    (cmdAtom == mWordRightCmd) ||
-    (cmdAtom == mSelectWordLeftCmd) ||
-    (cmdAtom == mSelectWordRightCmd) ||
-    (cmdAtom == mScrollPageUpCmd) ||
-    (cmdAtom == mScrollPageDownCmd) ||
-    (cmdAtom == mScrollLineUpCmd) ||
-    (cmdAtom == mScrollLineDownCmd) ||
-    (cmdAtom == mMovePageUpCmd) ||
-    (cmdAtom == mMovePageDownCmd) ||
-    (cmdAtom == mSelectMovePageUpCmd) ||
-    (cmdAtom == mSelectMovePageDownCmd) ||
-    (cmdAtom == mDeleteCharForwardCmd) ||
-    (cmdAtom == mDeleteCharBackwardCmd) ||
-    (cmdAtom == mDeleteWordForwardCmd) ||
-    (cmdAtom == mDeleteWordBackwardCmd) ||
-    (cmdAtom == mDeleteToBeginningOfLineCmd) ||
-    (cmdAtom == mDeleteToEndOfLineCmd)
-    )
-  {
-    *aResult = PR_TRUE;
-  }
+  // find the command  
+  nsCOMPtr<nsIControllerCommand> commandHandler;
+  mCommandManager->FindCommandHandler(aCommand, getter_AddRefs(commandHandler));
 
+  *aResult = (commandHandler.get() != NULL);
   return NS_OK;
 }
 
@@ -265,249 +256,23 @@ NS_IMETHODIMP nsEditorController::DoCommand(const PRUnichar *aCommand)
     return NS_OK;
   }
 
-  nsCOMPtr<nsIAtom> cmdAtom = getter_AddRefs(NS_NewAtom(aCommand));
-
   nsresult rv = NS_ERROR_NO_INTERFACE;
-  if (cmdAtom == mUndoCmd)
-  {
-    rv = editor->Undo(1);
-  }
-  else if (cmdAtom == mRedoCmd)
-  {
-    rv = editor->Redo(1);
-  }
-  else if (cmdAtom == mCutCmd)
-  { 
-    rv = editor->Cut();
-  }
-  else if (cmdAtom == mCopyCmd)
-  { 
-    rv = editor->Copy();
-  }
-  else if (cmdAtom == mPasteCmd)
-  { 
-    rv = editor->Paste();
-  }
-  else if (cmdAtom == mDeleteCmd)
-  { 
-    rv = editor->DeleteSelection(nsIEditor::eNext);
-  }
-  else if (cmdAtom == mSelectAllCmd)    //SelectALL
-  { 
-    rv = editor->SelectAll();
-  }
 
-  else if (cmdAtom == mDeleteCharForwardCmd)
+  // find the command  
+  nsCOMPtr<nsIControllerCommand> commandHandler;
+  mCommandManager->FindCommandHandler(aCommand, getter_AddRefs(commandHandler));
+  
+  if (!commandHandler)
   {
-    rv = editor->DeleteSelection(nsIEditor::eNext);
+#if DEBUG
+    nsCAutoString msg("EditorController asked to do a command that it does not handle -- ");
+    msg += aCommand;
+    NS_WARNING(msg);
+#endif
+    return NS_OK;    // we don't handle this command
   }
-  else if (cmdAtom == mDeleteCharBackwardCmd)
-  { 
-    rv = editor->DeleteSelection(nsIEditor::ePrevious);
-  }
-  else if (cmdAtom == mDeleteWordForwardCmd)
-  { 
-    rv = editor->DeleteSelection(nsIEditor::eNextWord);
-  }
-  else if (cmdAtom == mDeleteWordBackwardCmd)
-  { 
-    rv = editor->DeleteSelection(nsIEditor::ePreviousWord);
-  }
-
-  else if (cmdAtom == mDeleteToBeginningOfLineCmd)
-  {
-    rv = editor->DeleteSelection(nsIEditor::eToBeginningOfLine);
-  }
-  else if (cmdAtom == mDeleteToEndOfLineCmd)
-  { 
-    rv = editor->DeleteSelection(nsIEditor::eToEndOfLine);
-  }
-
-  else if (cmdAtom == mScrollTopCmd)    //ScrollTOP
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->CompleteScroll(PR_FALSE);
-  }
-  else if (cmdAtom == mScrollBottomCmd)    //ScrollBOTTOM
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->CompleteScroll(PR_TRUE);
-  }
-  else if (cmdAtom == mMoveTopCmd) //MoveTop
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->CompleteMove(PR_FALSE,PR_FALSE);
-  }
-  else if (cmdAtom == mMoveBottomCmd) //MoveBottom
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->CompleteMove(PR_TRUE,PR_FALSE);
-  }
-  else if (cmdAtom == mSelectMoveTopCmd) // SelectMoveTop
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->CompleteMove(PR_FALSE,PR_TRUE);
-  }
-  else if (cmdAtom == mSelectMoveBottomCmd) //SelectMoveBottom
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->CompleteMove(PR_TRUE,PR_TRUE);
-  }
-  else if (cmdAtom == mLineNextCmd)    //DOWN
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->LineMove(PR_TRUE,PR_FALSE);
-  }
-  else if (cmdAtom == mLinePreviousCmd)    //UP
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->LineMove(PR_FALSE,PR_FALSE);
-  }
-  else if (cmdAtom == mSelectLineNextCmd)    //SelectDown
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->LineMove(PR_TRUE,PR_TRUE);
-  }
-  else if (cmdAtom == mSelectLinePreviousCmd)    //SelectUp
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->LineMove(PR_FALSE,PR_TRUE);
-  }
-  else if (cmdAtom == mLeftCmd)    //LeftChar
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->CharacterMove(PR_FALSE,PR_FALSE);
-  }
-  else if (cmdAtom == mRightCmd)    //Right char
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->CharacterMove(PR_TRUE,PR_FALSE);
-  }
-  else if (cmdAtom == mSelectLeftCmd)    //SelectLeftChar
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->CharacterMove(PR_FALSE,PR_TRUE);
-  }
-  else if (cmdAtom == mSelectRightCmd)    //SelectRightChar
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->CharacterMove(PR_TRUE,PR_TRUE);
-  }
-  else if (cmdAtom == mBeginLineCmd)  //BeginLine 
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->IntraLineMove(PR_FALSE,PR_FALSE);
-  }
-  else if (cmdAtom == mEndLineCmd)    //EndLine
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->IntraLineMove(PR_TRUE,PR_FALSE);
-  }
-  else if (cmdAtom == mSelectBeginLineCmd)    //SelectBeginLine
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->IntraLineMove(PR_FALSE,PR_TRUE);
-  }
-  else if (cmdAtom == mSelectEndLineCmd)    //SelectEndLine
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->IntraLineMove(PR_TRUE,PR_TRUE);
-  }
-  else if (cmdAtom == mWordLeftCmd)  //LeftWord 
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->WordMove(PR_FALSE,PR_FALSE);
-  }
-  else if (cmdAtom == mWordRightCmd)  //RightWord 
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->WordMove(PR_TRUE,PR_FALSE);
-  }
-  else if (cmdAtom == mSelectWordLeftCmd)  //SelectLeftWord 
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->WordMove(PR_FALSE,PR_TRUE);
-  }
-  else if (cmdAtom == mSelectWordRightCmd)  //SelectRightWord 
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->WordMove(PR_TRUE,PR_TRUE);
-  }
-  else if (cmdAtom == mScrollPageUpCmd)  //ScrollPageUp
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->ScrollPage(PR_FALSE);
-  }
-  else if (cmdAtom == mScrollPageDownCmd)  //ScrollPageDown
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->ScrollPage(PR_TRUE);
-  }
-  else if (cmdAtom == mScrollLineUpCmd)  //ScrollLineUp
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->ScrollLine(PR_FALSE);
-  }
-  else if (cmdAtom == mScrollLineDownCmd)  //ScrollLineDown
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->ScrollLine(PR_TRUE);
-  }
-  else if (cmdAtom == mMovePageUpCmd)  //MovePageUp
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->PageMove(PR_FALSE,PR_FALSE);
-  }
-  else if (cmdAtom == mMovePageDownCmd)  //MovePageDown
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->PageMove(PR_TRUE,PR_FALSE);
-  }
-  else if (cmdAtom == mSelectMovePageUpCmd)  //SelectMovePageUp
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->PageMove(PR_FALSE,PR_TRUE);
-  }
-  else if (cmdAtom == mSelectMovePageDownCmd)  //SelectMovePageDown
-  { 
-    rv = GetSelectionController(getter_AddRefs(selCont));
-    if (NS_SUCCEEDED(rv))
-      rv = selCont->PageMove(PR_TRUE,PR_TRUE);
-  }
-
-  // For debug builds, we might want to print or return rv here.
-  // For release builds, though, we don't want to be spewing JS errors
-  // for things like "right arrow when already at end of line".
-  return NS_OK;
+  
+  return commandHandler->DoCommand(aCommand, editor);
 }
 
 NS_IMETHODIMP nsEditorController::OnEvent(const PRUnichar *aEventName)
@@ -516,8 +281,6 @@ NS_IMETHODIMP nsEditorController::OnEvent(const PRUnichar *aEventName)
 
   return NS_OK;
 }
-
-
 
 
 NS_IMETHODIMP nsEditorController::GetEditor(nsIEditor ** aEditor)
@@ -529,13 +292,6 @@ NS_IMETHODIMP nsEditorController::GetEditor(nsIEditor ** aEditor)
     NS_ADDREF(*aEditor);
     return NS_OK; 
   }
-
-/*  nsIGfxTextControlFrame *frame;
-  NS_ENSURE_SUCCESS(GetFrame(&frame), NS_ERROR_FAILURE);
-  if (!frame) { return NS_ERROR_FAILURE; }
-
-  NS_ENSURE_SUCCESS(frame->GetEditor(aEditor), NS_ERROR_FAILURE);
- */
   return NS_OK;
 }
 
@@ -616,3 +372,36 @@ PRBool nsEditorController::IsEnabled()
       check eEditorReadonlyBit and eEditorDisabledBit
    */
 }
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+nsWeakPtr nsEditorController::sCommandManager = NULL;
+
+// static
+nsresult nsEditorController::GetCommandManager(nsIControllerCommandManager* *outCommandManager)
+{
+  NS_ENSURE_ARG_POINTER(outCommandManager);
+
+  nsCOMPtr<nsIControllerCommandManager> cmdManager = do_QueryReferent(sCommandManager);
+  if (!cmdManager)
+  {
+    nsresult rv;
+    cmdManager = do_CreateInstance("component://netscape/rdf/controller-command-manager", &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    // register the commands. This just happens once per instance
+    rv = nsEditorController::RegisterEditorCommands(cmdManager);
+    if (NS_FAILED(rv)) return rv;
+
+    // save the singleton in our static weak reference
+    sCommandManager = getter_AddRefs(NS_GetWeakReference(cmdManager, &rv));
+    if (NS_FAILED(rv))  return rv;
+  }
+
+  NS_ADDREF(*outCommandManager = cmdManager);
+  return NS_OK;
+}
+
+
