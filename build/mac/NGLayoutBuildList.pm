@@ -604,6 +604,7 @@ sub MakeResouceAliases()
 	BuildFolderResourceAliases(":mozilla:xpfe:browser:src:", 							"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:",							"$samples_dir");
 	BuildFolderResourceAliases(":mozilla:xpfe:AppCores:xul:resources:",					"$toolbar_dir");
+	MakeAlias(":mozilla:xpfe:AppCores:xul:resources:throbbingN.gif",					"$throbber_dir");
 }
 
 
