@@ -87,6 +87,16 @@ $ define /user GETIPNODEBYNAME TCPIP$GETIPNODEBYNAME
 $ define /user GETIPNODEBYADDR TCPIP$GETIPNODEBYADDR
 $ define /user FREEHOSTENT     TCPIP$FREEHOSTENT
 $!
+$! A networking problem which is still unresolved means that by default
+$! the IPv6 support is disabled. If you want to turn it back on define
+$! the logical MOZILLA_IPV6 (to anything), but beware that you may 
+$! encounter hangs.
+$!
+$ if f$trnlnm("MOZILLA_IPV6") .eqs. ""
+$ then
+$   define /user /nolog GETIPNODEBYNAME NO_SUCH_NAME
+$ endif
+$!
 $! These logicals define how files are created/opened.
 $! The old code used: "shr=get,put", "rfm=stmlf", "deq=500", "fop=dfw,tef"
 $!
