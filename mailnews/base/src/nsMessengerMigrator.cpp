@@ -1126,7 +1126,17 @@ nsMessengerMigrator::MigrateLocalMailAccount()
   // pass the "Local Folders" server so the send later uri pref 
   // will be "mailbox://nobody@Local Folders/Unsent Messages"
   rv = SetSendLaterUriPref(server);
-  return rv;
+  if (NS_FAILED(rv)) return rv;
+
+  // copy the default templates into the Templates folder
+  nsCOMPtr <nsINoIncomingServer> noneServer;
+  noneServer = do_QueryInterface(server, &rv);
+  if (NS_FAILED(rv)) return rv;
+  if (!noneServer) return NS_ERROR_FAILURE;
+  rv = noneServer->CopyDefaultMessages("Templates",mailDir);
+  if (NS_FAILED(rv)) return rv;
+ 
+  return NS_OK;
 }
 
 #ifdef HAVE_MOVEMAIL
