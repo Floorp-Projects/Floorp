@@ -345,14 +345,14 @@ class nsTSubstring_CharT : public nsTAString_CharT
     // array variable. Use AppendASCII for those.
 #ifdef NS_DISABLE_LITERAL_TEMPLATE
       void AppendLiteral( const char* str )
-                  { return AppendASCII(str); }
+                  { AppendASCII(str); }
 #else
       template<int N>
       void AppendLiteral( const char (&str)[N] )
-                  { return AppendASCII(str, N-1); }
+                  { AppendASCII(str, N-1); }
       template<int N>
       void AppendLiteral( char (&str)[N] )
-                  { return AppendASCII(str, N-1); }
+                  { AppendASCII(str, N-1); }
 #endif
 
       self_type& operator+=( char_type c )                                                       { Append(c);        return *this; }
