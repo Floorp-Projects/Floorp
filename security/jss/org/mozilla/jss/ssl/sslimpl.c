@@ -88,12 +88,12 @@
 #define IMPLEMENT_org_mozilla_jss_ssl_SSLInputStream
 #define IMPLEMENT_org_mozilla_jss_ssl_SSLOutputStream
 
-#define jnInAd jobject	/* was struct java_net_InetAddress *       in JRI */
-#define jnSoIm jobject	/* was struct java_net_SocketImpl *        in JRI */
-#define nnSoIm jobject	/* was struct netscape_net_SSLSocketImpl * in JRI */
-#define nnSeSt jobject	/* was struct netscape_net_SSLSecurityStatus * in JRI */
-#define nnInSt jobject	/* was struct netscape_net_SSLInputStream * in JRI */
-#define nnOuSt jobject	/* was struct netscape_net_SSLOutputStream * in JRI */
+#define jnInAd jobject        /* was struct java_net_InetAddress *       in JRI */
+#define jnSoIm jobject        /* was struct java_net_SocketImpl *        in JRI */
+#define nnSoIm jobject        /* was struct netscape_net_SSLSocketImpl * in JRI */
+#define nnSeSt jobject        /* was struct netscape_net_SSLSecurityStatus * in JRI */
+#define nnInSt jobject        /* was struct netscape_net_SSLInputStream * in JRI */
+#define nnOuSt jobject        /* was struct netscape_net_SSLOutputStream * in JRI */
 
 /* the jni-compatible headers derived from the old JRI generated headers */
 #include "nn_SSLInputStream.h"
@@ -127,11 +127,11 @@
 #endif
 
 typedef struct privateDataStr {
-    SSLFD	sslFD;		/* the SSL FileDesc * */
-    nnSoIm	globalSelf;	/* pointer to global reference for self */
-    char *	nickname;	/* nickname of local cert. 
+    SSLFD        sslFD;                /* the SSL FileDesc * */
+    nnSoIm        globalSelf;        /* pointer to global reference for self */
+    char *        nickname;        /* nickname of local cert. 
                                  * PR_Malloc'd if not null.
-				 */
+                                 */
 } privateDataStr;
 
 typedef privateDataStr * pPriv;
@@ -139,26 +139,26 @@ typedef privateDataStr * pPriv;
 #define GET_PRIV_FD(action) \
     priv = get_fd_priv(env, self); \
     if (!priv) { \
-	if (! (*env)->ExceptionOccurred(env)) \
-	    throwError(env, 0, JAVANETPKG "SocketException", \
-	               "NULL private data pointer"); \
-	action; \
+        if (! (*env)->ExceptionOccurred(env)) \
+            throwError(env, 0, JAVANETPKG "SocketException", \
+                       "NULL private data pointer"); \
+        action; \
     } \
     fd = priv->sslFD; \
     if (!fd) { \
-	throwError(env, 0, JAVANETPKG "SocketException", "NULL fd pointer"); \
-	action; \
+        throwError(env, 0, JAVANETPKG "SocketException", "NULL fd pointer"); \
+        action; \
     }
 
 /* Forward declarations of static functions */
 static void throwError( JNIEnv* env, int errornum,
-			const char* classname,
-			const char* message);
+                        const char* classname,
+                        const char* message);
 static void throwError_hostAndPort( JNIEnv* env, int errornum,
-			const char* classname,
-			const char* message,
-			const char* hostname,
-			int port);
+                        const char* classname,
+                        const char* message,
+                        const char* hostname,
+                        int port);
 static void  set_fd_priv(JNIEnv* env, jobject self,  pPriv priv);
 static pPriv get_fd_priv(JNIEnv* env, jobject self);
 static void  initializeSocket(SSLFD fd);
@@ -170,13 +170,13 @@ static void  initializeSocket(SSLFD fd);
 static jint   nsn_get_java_net_InetAddress_family(  JNIEnv* env, jnInAd obj);
 static jint   nsn_get_java_net_InetAddress_address( JNIEnv* env, jnInAd obj);
 static void   nsn_set_java_net_InetAddress_address( JNIEnv* env, jnInAd obj, 
-						    jint value);
+                                                    jint value);
 static char * nsn_get_java_net_InetAddress_hostName(JNIEnv* env, jnInAd self);
 static jnInAd nsn_get_java_net_SocketImpl_address(  JNIEnv* env, jnSoIm obj);
 static void   nsn_set_java_net_SocketImpl_port(     JNIEnv* env, jnSoIm obj, 
-						    jint value);
+                                                    jint value);
 static void   nsn_set_java_net_SocketImpl_localport(JNIEnv* env, jnSoIm obj, 
-						    jint value);
+                                                    jint value);
 
 static const char JNIIntSig[] = { "I" };  /* JNI signature for a jint */
 
@@ -202,7 +202,7 @@ initializeEverything(JNIEnv* env)
     PR_ASSERT(PR_Initialized() != PR_FALSE);
 
     if (initialized) 
-    	return;
+            return;
     initialized = JNI_TRUE;
 
     /* This is to initialize the field lookup indices, and protect
@@ -236,12 +236,12 @@ jni_GetCurrentEnv(void)
     jint    rv;
 
     if (pJavaVM == NULL) 
-    	return NULL;
+            return NULL;
 
     rv = (*pJavaVM)->AttachCurrentThread( pJavaVM, (void **) &env,
                                           (void *) NULL);
     if (rv < 0) 
-    	return NULL;
+            return NULL;
 
     return env;
 }
@@ -266,7 +266,7 @@ nsn_HandshakeCallback(SSLFD fd, void* arg)
     PR_ASSERT(env != NULL);
 
     if (env != NULL) {
-	org_mozilla_jss_ssl_SSLSocketImpl_callHandshakeCompletedListeners(env, self);
+        org_mozilla_jss_ssl_SSLSocketImpl_callHandshakeCompletedListeners(env, self);
     }
     return;
 }
@@ -287,9 +287,9 @@ nsn_HandshakeCallback(SSLFD fd, void* arg)
  */
 JNIEXPORT jint JNICALL 
 Java_org_mozilla_jss_ssl_SSLInputStream_socketRead(JNIEnv *env, jobject self, 
-					      jbyteArray bytes, 
-					      jint       off, 
-					      jint       len)
+                                              jbyteArray bytes, 
+                                              jint       off, 
+                                              jint       len)
 {
     nnSoIm impl;
     jbyte* buf;
@@ -299,7 +299,7 @@ Java_org_mozilla_jss_ssl_SSLInputStream_socketRead(JNIEnv *env, jobject self,
     int   bytesSize;
     int   erv            = 0;
     int   timeout        = 0;
-    jboolean isCopy	 = JNI_FALSE;
+    jboolean isCopy         = JNI_FALSE;
     PRIntervalTime ticks;
     PRIntervalTime ivtimeout;
 
@@ -308,68 +308,68 @@ Java_org_mozilla_jss_ssl_SSLInputStream_socketRead(JNIEnv *env, jobject self,
 
     bytesSize = (*env)->GetArrayLength(env, bytes);
     if ((*env)->ExceptionOccurred(env)) 
-	return -1;
+        return -1;
 
     if (off < 0 || len < 0 || off + len > bytesSize) {
-	throwError(env, erv, JAVAPKG "ArrayIndexOutOfBoundsException", 
-	           "negative off, or len + off > array size");
-	return -1;
+        throwError(env, erv, JAVAPKG "ArrayIndexOutOfBoundsException", 
+                   "negative off, or len + off > array size");
+        return -1;
     }
 
     impl    = get_org_mozilla_jss_ssl_SSLInputStream_impl(  env, self);
     if ((*env)->ExceptionOccurred(env)) 
-	return -1;
+        return -1;
 
     timeout = get_org_mozilla_jss_ssl_SSLSocketImpl_timeout(env, impl);
     if ((*env)->ExceptionOccurred(env)) 
-	return -1;
+        return -1;
 
     buf = (*env)->GetByteArrayElements(env, bytes, &isCopy);
     if ((*env)->ExceptionOccurred(env)) 
-	return -1;
+        return -1;
 
 /* XXX Should a null buf pointer test be done here ?? */
 
     ticks = PR_MillisecondsToInterval(10);
     ivtimeout = (timeout > 0) ? PR_MillisecondsToInterval(timeout) 
-			      : PR_INTERVAL_NO_TIMEOUT;
+                              : PR_INTERVAL_NO_TIMEOUT;
     for( ;; ) {
-	nread = nsn_stuberr_PR_Recv(&erv, fd, buf + off, len, 0, ivtimeout);
-	if ( nread >= 0 ) 
-	    break;
+        nread = nsn_stuberr_PR_Recv(&erv, fd, buf + off, len, 0, ivtimeout);
+        if ( nread >= 0 ) 
+            break;
 
-	if ((erv == PR_WOULD_BLOCK_ERROR)       || 
-	    (erv == PR_PENDING_INTERRUPT_ERROR) || 
-	    (erv == PR_IO_PENDING_ERROR)) {
+        if ((erv == PR_WOULD_BLOCK_ERROR)       || 
+            (erv == PR_PENDING_INTERRUPT_ERROR) || 
+            (erv == PR_IO_PENDING_ERROR)) {
 
 #if defined( MOZILLA_CLIENT)
-	    PRInt32        rv;
-	    PRPollDesc     pd;
+            PRInt32        rv;
+            PRPollDesc     pd;
 
-	    pd.fd        = fd;
-	    pd.in_flags  = PR_POLL_READ;
-	    pd.out_flags = 0;
+            pd.fd        = fd;
+            pd.in_flags  = PR_POLL_READ;
+            pd.out_flags = 0;
 
-	    rv = PR_Poll(&pd, 1, ivtimeout);
+            rv = PR_Poll(&pd, 1, ivtimeout);
 
-	    if (!rv) {
-	    	throwError(env, erv, "java/io/InterruptedIOException",
-		           "Read timed out");
-	    	goto loser;
-	    } else if (rv < 0) {
-		throwError(env, erv, JAVANETPKG "SocketException",
-			   "Select Failed");	
-	    	goto loser;
-	    }
+            if (!rv) {
+                    throwError(env, erv, "java/io/InterruptedIOException",
+                           "Read timed out");
+                    goto loser;
+            } else if (rv < 0) {
+                throwError(env, erv, JAVANETPKG "SocketException",
+                           "Select Failed");        
+                    goto loser;
+            }
 #else
-	    PR_Sleep(ticks);
+            PR_Sleep(ticks);
 #endif /* MOZILLA_CLIENT */
 
-	    continue;
-	}
-	throwError(env, erv, JAVANETPKG "SocketException", 
-		      "reading from SSL socket");
-	goto loser;
+            continue;
+        }
+        throwError(env, erv, JAVANETPKG "SocketException", 
+                      "reading from SSL socket");
+        goto loser;
     }
 
     /*
@@ -379,7 +379,7 @@ Java_org_mozilla_jss_ssl_SSLInputStream_socketRead(JNIEnv *env, jobject self,
      */
     if (nread == 0) {
 loser:
-	nread = -1;
+        nread = -1;
     }
 
     /* 
@@ -407,9 +407,9 @@ loser:
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLOutputStream_socketWrite(JNIEnv *env, jobject self, 
-						jbyteArray bytes, 
-						jint off, 
-						jint len)
+                                                jbyteArray bytes, 
+                                                jint off, 
+                                                jint len)
 {
     nnSoIm   impl;
     jbyte *  buf;
@@ -419,7 +419,7 @@ Java_org_mozilla_jss_ssl_SSLOutputStream_socketWrite(JNIEnv *env, jobject self,
     int      erv            = 0;
     int      timeout        = 0;
     int      bytesSize;
-    jboolean isCopy	 = JNI_FALSE;
+    jboolean isCopy         = JNI_FALSE;
     PRIntervalTime ticks;
     PRIntervalTime ivtimeout;
 
@@ -428,74 +428,74 @@ Java_org_mozilla_jss_ssl_SSLOutputStream_socketWrite(JNIEnv *env, jobject self,
 
     bytesSize = (*env)->GetArrayLength(env, bytes);
     if ((*env)->ExceptionOccurred(env)) 
-	return;
+        return;
 
     if (off < 0 || len < 0 || off + len > bytesSize) {
-	throwError(env, erv, JAVAPKG "ArrayIndexOutOfBoundsException", 
-	           "negative off, or len + off > array size");
-	return;
+        throwError(env, erv, JAVAPKG "ArrayIndexOutOfBoundsException", 
+                   "negative off, or len + off > array size");
+        return;
     }
 
     impl    = get_org_mozilla_jss_ssl_SSLOutputStream_impl( env, self);
     if ((*env)->ExceptionOccurred(env)) 
-	return;
+        return;
 
     timeout = get_org_mozilla_jss_ssl_SSLSocketImpl_timeout(env, impl); 
     if ((*env)->ExceptionOccurred(env)) 
-	return;
+        return;
 
     buf = (*env)->GetByteArrayElements(env, bytes, &isCopy);
     if ((*env)->ExceptionOccurred(env)) 
-	return;
+        return;
 
 /* XXX Should a null buf pointer test be done here ?? */
 
     ticks = PR_MillisecondsToInterval(10);
     ivtimeout = (timeout > 0) ? PR_MillisecondsToInterval(timeout) 
-			      : PR_INTERVAL_NO_TIMEOUT;
+                              : PR_INTERVAL_NO_TIMEOUT;
     while (len > 0) {
 
-	nwritten = nsn_stuberr_PR_Send(&erv, fd, buf + off, len, 0, ivtimeout);
+        nwritten = nsn_stuberr_PR_Send(&erv, fd, buf + off, len, 0, ivtimeout);
 
-	if ( nwritten < 0 ) {
+        if ( nwritten < 0 ) {
 
-	    if ((erv == PR_WOULD_BLOCK_ERROR)       || 
-		(erv == PR_PENDING_INTERRUPT_ERROR) || 
-		(erv == PR_IO_PENDING_ERROR)) {
+            if ((erv == PR_WOULD_BLOCK_ERROR)       || 
+                (erv == PR_PENDING_INTERRUPT_ERROR) || 
+                (erv == PR_IO_PENDING_ERROR)) {
 
 #if defined( MOZILLA_CLIENT)
-		PRInt32        rv;
-		PRPollDesc     pd;
+                PRInt32        rv;
+                PRPollDesc     pd;
 
 
-		pd.fd        = fd;
-		pd.in_flags  = PR_POLL_WRITE;
-		pd.out_flags = 0;
+                pd.fd        = fd;
+                pd.in_flags  = PR_POLL_WRITE;
+                pd.out_flags = 0;
 
-		rv = PR_Poll(&pd, 1, ivtimeout);
+                rv = PR_Poll(&pd, 1, ivtimeout);
 
-		if (!rv) {	/* operation timed out */
-		    throwError(env, erv, "java/io/InterruptedIOException",
-			       "Write timed out");
-		    goto loser;
-		} else if (rv < 0) {
-		    throwError(env, erv, JAVANETPKG "SocketException",
-			       "Select Failed");	
-		    goto loser;
-		}
+                if (!rv) {        /* operation timed out */
+                    throwError(env, erv, "java/io/InterruptedIOException",
+                               "Write timed out");
+                    goto loser;
+                } else if (rv < 0) {
+                    throwError(env, erv, JAVANETPKG "SocketException",
+                               "Select Failed");        
+                    goto loser;
+                }
 #endif /* MOZILLA_CLIENT */
-		PR_Sleep(ticks);
+                PR_Sleep(ticks);
 
-		continue;
-	    }
+                continue;
+            }
 
-	    throwError(env, erv, JAVANETPKG "SocketException", 
-		    "writing to SSL socket");
-	    goto loser;
-	}
-	/* EOF ?? */
-	len -= nwritten;
-	off += nwritten;
+            throwError(env, erv, JAVANETPKG "SocketException", 
+                    "writing to SSL socket");
+            goto loser;
+        }
+        /* EOF ?? */
+        len -= nwritten;
+        off += nwritten;
     }
 
     /* 
@@ -512,7 +512,7 @@ loser:
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_socketCreate(JNIEnv *env, nnSoIm self, 
-						jboolean isStream)
+                                                jboolean isStream)
 {
 #if XP_MAC
 #pragma unused(isStream)
@@ -525,38 +525,38 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketCreate(JNIEnv *env, nnSoIm self,
     initializeEverything(env);
 
     if (NULL == (prfd = PR_NewTCPSocket())) {
-	erv = PR_GetError();
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "creating socket");	
-	return;
+        erv = PR_GetError();
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "creating socket");        
+        return;
     }
 
     fd = nsn_stuberr_SSL_ImportFD(&erv, NULL, prfd);
     if (NULL == fd) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "importing socket into SSL");	
-	PR_Close(prfd);
-	return;
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "importing socket into SSL");        
+        PR_Close(prfd);
+        return;
     }
 
 
     /* enable security */
     if (0 > nsn_stuberr_SSL_Enable(&erv, fd, SSL_SECURITY, PR_TRUE)) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "enabling security on SSL socket");	
-	PR_Close(prfd);
-	return;
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "enabling security on SSL socket");        
+        PR_Close(prfd);
+        return;
     }
 
 #if defined( MOZILLA_CLIENT)
     /* in the client, java SSL sessions should not come from the cache */
     if (!org_mozilla_jss_ssl_SSLSocketImpl_allowClientAuth(env, self)) {
-	if (0 > nsn_stuberr_SSL_Enable(&erv, fd, SSL_NO_CACHE, PR_TRUE)) {
-	    throwError(env, erv, JAVANETPKG "SocketException",
-			   "disabling session caching on SSL socket");	
-	    PR_Close(prfd);
-	    return;
-	}
+        if (0 > nsn_stuberr_SSL_Enable(&erv, fd, SSL_NO_CACHE, PR_TRUE)) {
+            throwError(env, erv, JAVANETPKG "SocketException",
+                           "disabling session caching on SSL socket");        
+            PR_Close(prfd);
+            return;
+        }
     }
 #endif
 
@@ -567,23 +567,23 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketCreate(JNIEnv *env, nnSoIm self,
      * set client or server mode on the socket
      */
     if (0 > nsn_stuberr_SSL_Enable(&erv, fd, SSL_DELAYED_HANDSHAKE, PR_TRUE)) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "setting delayed handshake");	
-	PR_Close(prfd);
-	return;
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "setting delayed handshake");        
+        PR_Close(prfd);
+        return;
     }
 #endif
 
     priv = PR_NEW(privateDataStr);
     if (NULL == priv) {
-	throwError(env, PR_OUT_OF_MEMORY_ERROR, JAVANETPKG "SocketException",
-		       "Allocating SSLSocket private memory");	
-	PR_Close(prfd);
-	return;
+        throwError(env, PR_OUT_OF_MEMORY_ERROR, JAVANETPKG "SocketException",
+                       "Allocating SSLSocket private memory");        
+        PR_Close(prfd);
+        return;
     }
     priv->sslFD      = fd;      /* the SSL FileDesc * */
-    priv->globalSelf = NULL;	/* pointer to global reference for self */
-    priv->nickname   = NULL;	/* nickname of local cert.  */
+    priv->globalSelf = NULL;        /* pointer to global reference for self */
+    priv->nickname   = NULL;        /* nickname of local cert.  */
 
     /*
      * make the socket non-blocking, etc.
@@ -613,8 +613,8 @@ typedef struct implSocketConnectStr {
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_socketConnect(JNIEnv *env, nnSoIm self, 
-					    jnInAd  address, 
-					    jint    port)
+                                            jnInAd  address, 
+                                            jint    port)
 {
     unsigned long addr;
     long          family;
@@ -633,8 +633,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketConnect(JNIEnv *env, nnSoIm self,
 
     initializeEverything(env);
     if (address == NULL) {
-	throwError(env, erv, JAVAPKG "NullPointerException", "null address");
-	goto done;
+        throwError(env, erv, JAVAPKG "NullPointerException", "null address");
+        goto done;
     }
 
     /* Set up the PRNetAddr structure */
@@ -643,12 +643,12 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketConnect(JNIEnv *env, nnSoIm self,
     family = nsn_get_java_net_InetAddress_family(env, address);
     pVars->na.inet.family = (PRUint16)family;
     if ((*env)->ExceptionOccurred(env)) 
-	goto done;
+        goto done;
 
     addr = nsn_get_java_net_InetAddress_address(env, address);
     pVars->na.inet.ip = (PRUint32) PR_htonl(addr);
     if ((*env)->ExceptionOccurred(env)) 
-	goto done;
+        goto done;
 
     hostName = nsn_get_java_net_InetAddress_hostName(env, address);
     if (!hostName)
@@ -656,7 +656,7 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketConnect(JNIEnv *env, nnSoIm self,
 
     timeout = get_org_mozilla_jss_ssl_SSLSocketImpl_timeout(env, self);
     if ((*env)->ExceptionOccurred(env)) 
-	goto done;
+        goto done;
 
     /* get the filedesc number from the java.io.FileDescriptor field */
     GET_PRIV_FD(goto done)
@@ -668,15 +668,15 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketConnect(JNIEnv *env, nnSoIm self,
         0 > nsn_stuberr_SSL_HandshakeCallback(&erv, fd, 
                                               nsn_HandshakeCallback, 
                                               globalSelf)) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "initializing HandshakeCallback on SSL socket");	
-	goto done;
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "initializing HandshakeCallback on SSL socket");        
+        goto done;
     }
 
     /* set up the socket just like the navigator would */
     /*
      * This function sets appropriate defaults values in the following calls:
-     *	SSL_SetURL
+     *        SSL_SetURL
      *  SSL_AuthCertificateHook
      *  SSL_GetClientAuthDataHook
      *  SSL_BadCertHook
@@ -685,10 +685,10 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketConnect(JNIEnv *env, nnSoIm self,
 #if defined( MOZILLA_CLIENT)
 PR_fprintf(PR_STDERR,"MOZILLA_CLIENT - - - !*!*!*!*!*!\n");
     if (nsn_stuberr_SECNAV_SetupSecureSocket(&erv, fd, hostName,
-					     nsn_GetCurrentContext())) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "SSL socket setup");
-	goto done;
+                                             nsn_GetCurrentContext())) {
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "SSL socket setup");
+        goto done;
     }
 #else
     /* outside of Communicator, use our own version. */
@@ -696,9 +696,9 @@ PR_fprintf(PR_STDERR,"MOZILLA_CLIENT - - - !*!*!*!*!*!\n");
     /*   from above? */
     if (nsn_stuberr_JSSL_SetupSecureSocket(&erv, fd, hostName, (void *) env,
                                            self)) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "SSL socket setup");
-	goto done;
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "SSL socket setup");
+        goto done;
     }
 #endif
 
@@ -711,13 +711,13 @@ PR_fprintf(PR_STDERR,"MOZILLA_CLIENT - - - !*!*!*!*!*!\n");
      * not signed and privileged.
      */
     if (!org_mozilla_jss_ssl_SSLSocketImpl_allowClientAuth(env, self)) {
-	if ( nsn_stuberr_SSL_GetClientAuthDataHook(&erv, fd, 
-			   (SSLGetClientAuthData)nsn_DenyClientAuth, 
-			   (void *)self)) {
-	    throwError(env, erv, JAVANETPKG "SocketException",
-			   "disabling SSL client auth");
-	    goto done;
-	}
+        if ( nsn_stuberr_SSL_GetClientAuthDataHook(&erv, fd, 
+                           (SSLGetClientAuthData)nsn_DenyClientAuth, 
+                           (void *)self)) {
+            throwError(env, erv, JAVANETPKG "SocketException",
+                           "disabling SSL client auth");
+            goto done;
+        }
     }
 #endif
 
@@ -726,60 +726,60 @@ PR_fprintf(PR_STDERR,"MOZILLA_CLIENT - - - !*!*!*!*!*!\n");
 
 #if !defined( nsn_DO_SERVER_SOCKET)
     if (!handshakeAsClient) {
-	throwError(env, erv, JAVANETPKG "SocketException", 
-		       "SSL server-mode connections not supported.");
+        throwError(env, erv, JAVANETPKG "SocketException", 
+                       "SSL server-mode connections not supported.");
     }
 #endif
 
     if (!handshakeAsClient &&                /* force server-mode */
         0 > nsn_stuberr_SSL_Enable(&erv, fd, SSL_HANDSHAKE_AS_SERVER, PR_TRUE)) {
 
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "error forcing server mode on SSLSocket");	
-	goto done;
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "error forcing server mode on SSLSocket");        
+        goto done;
     }
 
     ivTimeout = (timeout > 0) ? PR_MillisecondsToInterval(timeout) 
-			      : PR_INTERVAL_NO_TIMEOUT;
+                              : PR_INTERVAL_NO_TIMEOUT;
 
     rv = nsn_stuberr_PR_Connect(&erv, fd, &pVars->na, ivTimeout);
 
 #if defined( MOZILLA_CLIENT)
     if (rv < 0) {
-	while (erv == PR_IN_PROGRESS_ERROR) {
-	    PRPollDesc  pd;
-	    PRStatus    ps;
+        while (erv == PR_IN_PROGRESS_ERROR) {
+            PRPollDesc  pd;
+            PRStatus    ps;
 
-	    pd.fd        = fd;
-	    pd.in_flags  = PR_POLL_WRITE | PR_POLL_EXCEPT;
-	    pd.out_flags = 0;
+            pd.fd        = fd;
+            pd.in_flags  = PR_POLL_WRITE | PR_POLL_EXCEPT;
+            pd.out_flags = 0;
 
-	    rv = PR_Poll(&pd, 1, ivTimeout);
+            rv = PR_Poll(&pd, 1, ivTimeout);
 
-	    if (!rv) {
-		throwError(env, erv, "java/io/InterruptedIOException",
-			   "Connect timed out");
-		goto done;
-	    } else if (rv < 0) {
-		throwError(env, erv, JAVANETPKG "SocketException",
-			   "Select Failed");	
-		goto done;
-	    }
-	    ps = PR_GetConnectStatus(&pd);
-	    if (PR_SUCCESS == ps) 
-		break;
+            if (!rv) {
+                throwError(env, erv, "java/io/InterruptedIOException",
+                           "Connect timed out");
+                goto done;
+            } else if (rv < 0) {
+                throwError(env, erv, JAVANETPKG "SocketException",
+                           "Select Failed");        
+                goto done;
+            }
+            ps = PR_GetConnectStatus(&pd);
+            if (PR_SUCCESS == ps) 
+                break;
 
-	    rv = -1;
-	    erv = PR_GetError();
-	}
+            rv = -1;
+            erv = PR_GetError();
+        }
     }
 #endif /* MOZILLA_CLIENT */
 
 
     if (rv < 0) {
-	throwError_hostAndPort(env, erv, JAVANETPKG "SocketException",
-		       "connecting to SSL peer at",hostName,port);
-	goto done;
+        throwError_hostAndPort(env, erv, JAVANETPKG "SocketException",
+                       "connecting to SSL peer at",hostName,port);
+        goto done;
     }
 
 #if defined(WIN32)
@@ -788,7 +788,7 @@ PR_fprintf(PR_STDERR,"MOZILLA_CLIENT - - - !*!*!*!*!*!\n");
      * blocked for some (any) reason.  Sleeping here fixes it.
      * This will get fixed in NSPR 2.0 in the future, we hope.
      */
-    PR_Sleep(0);	
+    PR_Sleep(0);        
 #endif
 
     /* 
@@ -799,20 +799,20 @@ PR_fprintf(PR_STDERR,"MOZILLA_CLIENT - - - !*!*!*!*!*!\n");
 
     if (localport == 0) {
 
-	if (0 > nsn_stuberr_PR_GetSockName(&erv, fd, &pVars->na)) {
-	    throwError(env, erv, JAVANETPKG "SocketException",
-			   "getting local port");
-	    goto done;
-	}
+        if (0 > nsn_stuberr_PR_GetSockName(&erv, fd, &pVars->na)) {
+            throwError(env, erv, JAVANETPKG "SocketException",
+                           "getting local port");
+            goto done;
+        }
 
-	localport = PR_ntohs(pVars->na.inet.port);
+        localport = PR_ntohs(pVars->na.inet.port);
 
-	nsn_set_java_net_SocketImpl_localport(env, (jnSoIm)self, localport);
+        nsn_set_java_net_SocketImpl_localport(env, (jnSoIm)self, localport);
     }
 
 done:
     if (hostName)
-    	PL_strfree(hostName);
+            PL_strfree(hostName);
     FREE_IF_ALLOC_IS_USED(pVars);
 
 }
@@ -830,8 +830,8 @@ done:
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_socketBind(JNIEnv *env, nnSoIm self, 
-		     jnInAd  address, 
-		     jint    localport)
+                     jnInAd  address, 
+                     jint    localport)
 {
     unsigned long addr;
     long          family;
@@ -844,8 +844,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketBind(JNIEnv *env, nnSoIm self,
 
     initializeEverything(env);
     if (address == NULL) {
-	throwError(env, erv, JAVAPKG "NullPointerException", "null address");
-	goto done;
+        throwError(env, erv, JAVAPKG "NullPointerException", "null address");
+        goto done;
     }
     /* Set up the PRNetAddr structure */
     na->inet.port = PR_htons((PRUint16) localport);
@@ -858,7 +858,7 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketBind(JNIEnv *env, nnSoIm self,
 
     /* check all the foregoing get calls for exceptions */
     if ((*env)->ExceptionOccurred(env)) 
-	goto done;
+        goto done;
 
     GET_PRIV_FD(goto done)
 
@@ -867,8 +867,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketBind(JNIEnv *env, nnSoIm self,
         error = PR_GetError();
         switch (error) {
           case PR_ADDRESS_NOT_AVAILABLE_ERROR :
-	    throwError(env, erv, JAVANETPKG "BindException",
-		       "binding on SSL socket (no permission to use this port)");
+            throwError(env, erv, JAVANETPKG "BindException",
+                       "binding on SSL socket (no permission to use this port)");
             break;
           case PR_ADDRESS_IN_USE_ERROR :
             throwError(env, erv, JAVANETPKG "BindException",
@@ -879,16 +879,16 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketBind(JNIEnv *env, nnSoIm self,
                        "binding on SSL socket");
             }
         
-	goto done;
+        goto done;
     }
     /* Now see what port we actually bound to, 
      * and store it in the socketImpl.
      */
 
     if (0 > nsn_stuberr_PR_GetSockName(&erv, fd, na)) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "getting local port");
-	goto done;
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "getting local port");
+        goto done;
     }
     localport = PR_ntohs(na->inet.port);
     nsn_set_java_net_SocketImpl_localport(env, (jnSoIm)self, localport);
@@ -911,7 +911,7 @@ done:
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_socketListen(JNIEnv *env, nnSoIm self, 
-						jint queueSize)
+                                                jint queueSize)
 {
     pPriv priv = NULL;
     SSLFD fd;
@@ -921,8 +921,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketListen(JNIEnv *env, nnSoIm self,
     GET_PRIV_FD(return)
 
     if (0 > nsn_stuberr_PR_Listen(&erv, fd, queueSize)) {
-	throwError(env, erv, JAVANETPKG "SocketException", 
-		       "SSL listen error");
+        throwError(env, erv, JAVANETPKG "SocketException", 
+                       "SSL listen error");
     }
 }
 
@@ -945,7 +945,7 @@ typedef struct implSocketAcceptStr {
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_socketAccept(JNIEnv *env, nnSoIm self, 
-			   jnSoIm   newSocketImpl)
+                           jnSoIm   newSocketImpl)
 {
     jnInAd  addr;
     SSLFD  fd;
@@ -963,8 +963,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketAccept(JNIEnv *env, nnSoIm self,
     initializeEverything(env);
     timeout = get_org_mozilla_jss_ssl_SSLSocketImpl_timeout(env, self);
     if (newSocketImpl == NULL) {
-	throwError(env, erv, JAVAPKG "NullPointerException", "null address");
-	goto done;
+        throwError(env, erv, JAVAPKG "NullPointerException", "null address");
+        goto done;
     }
     GET_PRIV_FD(goto done)
 
@@ -972,76 +972,76 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketAccept(JNIEnv *env, nnSoIm self,
 
 #if defined(MOZILLA_CLIENT) && !defined( nsn_DO_SERVER_SOCKET)
     if (!handshakeAsClient) {
-	/* browser applet must always handshake as client */
-	throwError(env, erv, JAVANETPKG "SocketException", 
-		       "SSL server-mode connections not supported.");
+        /* browser applet must always handshake as client */
+        throwError(env, erv, JAVANETPKG "SocketException", 
+                       "SSL server-mode connections not supported.");
     } else {
        PR_ASSERT(org_mozilla_jss_ssl_SSLSocketImpl_isClientModeInitialized(env, self));
     }
 #endif
 
     if (handshakeAsClient) {
-	/* force client-mode */
-	if (0 > nsn_stuberr_SSL_Enable(&erv, fd, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) 
-	{
-	    throwError(env, erv, JAVANETPKG "SocketException",
-			   "error forcing client mode on SSLServerSocket");
-	    goto done;
-	}
+        /* force client-mode */
+        if (0 > nsn_stuberr_SSL_Enable(&erv, fd, SSL_HANDSHAKE_AS_CLIENT, PR_TRUE)) 
+        {
+            throwError(env, erv, JAVANETPKG "SocketException",
+                           "error forcing client mode on SSLServerSocket");
+            goto done;
+        }
     }
 
     newPriv = PR_NEW(privateDataStr);
     if (NULL == newPriv) {
-	throwError(env, PR_OUT_OF_MEMORY_ERROR, JAVANETPKG "SocketException",
-		       "Allocating SSLSocket newPrivate memory");	
-	goto done;
+        throwError(env, PR_OUT_OF_MEMORY_ERROR, JAVANETPKG "SocketException",
+                       "Allocating SSLSocket newPrivate memory");        
+        goto done;
     }
 
     ticks = PR_MillisecondsToInterval(10);
 
     for(;;) {
-	pVars->addrlen = sizeof pVars->na;
+        pVars->addrlen = sizeof pVars->na;
 
-	newFd = nsn_stuberr_PR_Accept(&erv, fd, &pVars->na, PR_INTERVAL_NO_TIMEOUT);
-	if (newFd != 0) 
-	    break;
+        newFd = nsn_stuberr_PR_Accept(&erv, fd, &pVars->na, PR_INTERVAL_NO_TIMEOUT);
+        if (newFd != 0) 
+            break;
 
-	if ((erv == PR_WOULD_BLOCK_ERROR)       || 
-	    (erv == PR_PENDING_INTERRUPT_ERROR) || 
-	    (erv == PR_IO_PENDING_ERROR)) {
+        if ((erv == PR_WOULD_BLOCK_ERROR)       || 
+            (erv == PR_PENDING_INTERRUPT_ERROR) || 
+            (erv == PR_IO_PENDING_ERROR)) {
 
 #if defined( MOZILLA_CLIENT)
-	    PRIntervalTime ivtimeout;
-	    PRInt32        rv;
-	    PRPollDesc     pd;
+            PRIntervalTime ivtimeout;
+            PRInt32        rv;
+            PRPollDesc     pd;
 
-	    ivtimeout = (timeout > 0) ? PR_MillisecondsToInterval(timeout) 
-				      : PR_INTERVAL_NO_TIMEOUT;
+            ivtimeout = (timeout > 0) ? PR_MillisecondsToInterval(timeout) 
+                                      : PR_INTERVAL_NO_TIMEOUT;
 
-	    pd.fd        = fd;
-	    pd.in_flags  = PR_POLL_READ;
-	    pd.out_flags = 0;
+            pd.fd        = fd;
+            pd.in_flags  = PR_POLL_READ;
+            pd.out_flags = 0;
 
-	    rv = PR_Poll(&pd, 1, ivtimeout);
+            rv = PR_Poll(&pd, 1, ivtimeout);
 
-	    if (!rv) {
-	    	throwError(env, erv, "java/io/InterruptedIOException",
-		           "Accept timed out");
-	    	goto done;
-	    } else if (rv < 0) {
-		throwError(env, erv, JAVANETPKG "SocketException",
-			   "Select Failed");	
-	    	goto done;
-	    }
+            if (!rv) {
+                    throwError(env, erv, "java/io/InterruptedIOException",
+                           "Accept timed out");
+                    goto done;
+            } else if (rv < 0) {
+                throwError(env, erv, JAVANETPKG "SocketException",
+                           "Select Failed");        
+                    goto done;
+            }
 #else
-	    PR_Sleep(ticks);
+            PR_Sleep(ticks);
 #endif /* MOZILLA_CLIENT */
 
-	    continue;
-	}
-	throwError(env, erv, JAVANETPKG "SocketException", 
-		   "SSL accept error");
-	goto done;
+            continue;
+        }
+        throwError(env, erv, JAVANETPKG "SocketException", 
+                   "SSL accept error");
+        goto done;
     }
 
     /*
@@ -1051,8 +1051,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketAccept(JNIEnv *env, nnSoIm self,
     PR_ASSERT(newSocketImpl != NULL);
 
     newPriv->sslFD      = newFd;   /* the SSL FileDesc *                    */
-    newPriv->globalSelf = NULL;	   /* pointer to global reference for self  */
-    newPriv->nickname   = NULL;	   /* Java code will set this later.        */
+    newPriv->globalSelf = NULL;           /* pointer to global reference for self  */
+    newPriv->nickname   = NULL;           /* Java code will set this later.        */
     set_fd_priv(env, newSocketImpl, newPriv);
 
     /*
@@ -1061,14 +1061,14 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketAccept(JNIEnv *env, nnSoIm self,
      */
     addr = nsn_get_java_net_SocketImpl_address(env, newSocketImpl);
     if ((*env)->ExceptionOccurred(env)) 
-	goto done;
+        goto done;
     /*
      * this shouldn't happen -- these are allocated by java.net.ServerSocket
      * but we're paranoid
      */
     if (addr == NULL) {
-	throwError(env, erv, JAVAPKG "NullPointerException", "null address");
-	goto done;
+        throwError(env, erv, JAVAPKG "NullPointerException", "null address");
+        goto done;
     }
     /*
      * Now, put the remote IP address (which was filled into the na struct 
@@ -1076,13 +1076,13 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketAccept(JNIEnv *env, nnSoIm self,
      */
     nsn_set_java_net_InetAddress_address(env, addr, PR_htonl(pVars->na.inet.ip));
     if ((*env)->ExceptionOccurred(env)) 
-	goto done;
+        goto done;
     /* put the remote port number from the accept call into the new socketimpl.
      */
     nsn_set_java_net_SocketImpl_port(env, newSocketImpl,
-				     PR_ntohs(pVars->na.inet.port));
+                                     PR_ntohs(pVars->na.inet.port));
     if ((*env)->ExceptionOccurred(env)) 
-	goto done;
+        goto done;
 
     /* The new socket must have the same local port number as the listen 
      * socket had. So, get it and copy it.
@@ -1090,27 +1090,27 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketAccept(JNIEnv *env, nnSoIm self,
     localport = org_mozilla_jss_ssl_SSLSocketImpl_getLocalPort(env, self);
     nsn_set_java_net_SocketImpl_localport(env, newSocketImpl, localport);
     if ((*env)->ExceptionOccurred(env)) 
-	goto done;
+        goto done;
 
     newPriv->globalSelf = globalSelf = (*env)->NewGlobalRef(env, newSocketImpl);
     PR_ASSERT(globalSelf != NULL);
     /* setup handshake callback */
     if (0 > nsn_stuberr_SSL_HandshakeCallback(&erv, newFd, 
-    	                nsn_HandshakeCallback, globalSelf)) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "initializing HandshakeCallback on SSL socket");	
-	goto done;
+                            nsn_HandshakeCallback, globalSelf)) {
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "initializing HandshakeCallback on SSL socket");        
+        goto done;
     }
-    newPriv = NULL;	           /* so it won't be freed below.  */
+    newPriv = NULL;                   /* so it won't be freed below.  */
 
 done:
     if (newPriv) {
-	if (globalSelf) {
-	    (*env)->DeleteGlobalRef(env, globalSelf);
-	    newPriv->globalSelf = globalSelf = NULL;
-	}
-    	PR_Free(newPriv);
-	newPriv = NULL;
+        if (globalSelf) {
+            (*env)->DeleteGlobalRef(env, globalSelf);
+            newPriv->globalSelf = globalSelf = NULL;
+        }
+            PR_Free(newPriv);
+        newPriv = NULL;
     }
     FREE_IF_ALLOC_IS_USED(pVars);
 
@@ -1141,8 +1141,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketAvailable(JNIEnv *env, nnSoIm self)
 
     available = nsn_stuberr_SSL_DataPending(&erv, fd);
     if (available < 0)
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "avail on SSL socket");
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "avail on SSL socket");
     return available;
 
 }
@@ -1169,20 +1169,20 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketClose(JNIEnv *env, nnSoIm self)
     initializeEverything(env);
     priv = get_fd_priv(env, self);
     if (!priv)
-	return; /* an exception has already been thrown */
+        return; /* an exception has already been thrown */
     fd = priv->sslFD;
     if (priv->nickname) {
-	PR_Free(priv->nickname);
-    	priv->nickname = NULL;
+        PR_Free(priv->nickname);
+            priv->nickname = NULL;
     }
     if (priv->globalSelf) {
-	(*env)->DeleteGlobalRef(env, priv->globalSelf);
-    	priv->globalSelf = NULL;
+        (*env)->DeleteGlobalRef(env, priv->globalSelf);
+            priv->globalSelf = NULL;
     }
     if (!fd) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "NULL fd pointer closing SSL socket");
-    	return;
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "NULL fd pointer closing SSL socket");
+            return;
     }
 
     nsn_stuberr_PR_Close(&erv, fd);
@@ -1202,8 +1202,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketClose(JNIEnv *env, nnSoIm self)
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_socketSetNeedClientAuth(JNIEnv *env, 
-						nnSoIm self, 
-						jboolean b)
+                                                nnSoIm self, 
+                                                jboolean b)
 {
     pPriv priv           = NULL;
     SSLFD fd;
@@ -1213,8 +1213,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketSetNeedClientAuth(JNIEnv *env,
     GET_PRIV_FD(return)
 
     if (0 > nsn_stuberr_SSL_Enable(&erv, fd, SSL_REQUEST_CERTIFICATE, b)) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "can't set ClientAuth state");	
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "can't set ClientAuth state");        
     }
 }
 
@@ -1232,8 +1232,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketSetNeedClientAuth(JNIEnv *env,
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_socketSetNeedClientAuthNoExpiryCheck(JNIEnv *env, 
-						nnSoIm self, 
-						jboolean b)
+                                                nnSoIm self, 
+                                                jboolean b)
 {
     pPriv priv           = NULL;
     SSLFD fd;
@@ -1244,8 +1244,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketSetNeedClientAuthNoExpiryCheck(JNIE
     GET_PRIV_FD(return)
 
     if (0 > nsn_stuberr_SSL_Enable(&erv, fd, SSL_REQUEST_CERTIFICATE, b)) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "can't set ClientAuth state");	
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "can't set ClientAuth state");        
     }
  /* set certificate validation hook */
     status = SSL_AuthCertificateHook(fd, JSSL_ConfirmExpiredPeerCert, NULL /*cx*/);
@@ -1276,7 +1276,7 @@ typedef union implSocketGetOptStr {
 
 /**************************************************************************
 **
-**  socketSetOption	
+**  socketSetOption        
 **
 **/
 
@@ -1287,10 +1287,10 @@ typedef union implSocketGetOptStr {
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_socketSetOptionIntVal(JNIEnv *env, 
-						nnSoIm  self, 
-						jint     opt, 
-						jboolean enable, 
-						jint     val)
+                                                nnSoIm  self, 
+                                                jint     opt, 
+                                                jboolean enable, 
+                                                jint     val)
 {
     pPriv priv           = NULL;
     SSLFD fd;
@@ -1301,28 +1301,28 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketSetOptionIntVal(JNIEnv *env,
     GET_PRIV_FD(goto thrown_loser)
 
     if (opt == JTCP_NODELAY) {
-	/* enable or disable TCP_NODELAY */
-	pVars->so.option         = PR_SockOpt_NoDelay;
-	pVars->so.value.no_delay = (enable != 0);
+        /* enable or disable TCP_NODELAY */
+        pVars->so.option         = PR_SockOpt_NoDelay;
+        pVars->so.value.no_delay = (enable != 0);
 
-	if (0 > nsn_stuberr_PR_SetSocketOption(&erv, fd, &pVars->so)) {
-	    goto loser;
-    	}
+        if (0 > nsn_stuberr_PR_SetSocketOption(&erv, fd, &pVars->so)) {
+            goto loser;
+            }
     } else if (opt == JSO_LINGER) {
-	pVars->so.option                 = PR_SockOpt_Linger;
-	pVars->so.value.linger.polarity  = (enable != 0);	
-	pVars->so.value.linger.linger    = 
-	                          PR_MillisecondsToInterval(val > 0 ? val : 0); 
+        pVars->so.option                 = PR_SockOpt_Linger;
+        pVars->so.value.linger.polarity  = (enable != 0);        
+        pVars->so.value.linger.linger    = 
+                                  PR_MillisecondsToInterval(val > 0 ? val : 0); 
 
-	if (enable && !PR_IntervalToMilliseconds(pVars->so.value.linger.linger)) {
-	    /* trying to enable w/ no timeout */
-	    goto loser;
-	} 
-	if (0 > nsn_stuberr_PR_SetSocketOption(&erv, fd, &pVars->so)) {
-	    goto loser;
-	}
+        if (enable && !PR_IntervalToMilliseconds(pVars->so.value.linger.linger)) {
+            /* trying to enable w/ no timeout */
+            goto loser;
+        } 
+        if (0 > nsn_stuberr_PR_SetSocketOption(&erv, fd, &pVars->so)) {
+            goto loser;
+        }
     } else {
-    	goto loser; 	/* "Socket option unsupported" */
+            goto loser;         /* "Socket option unsupported" */
     }
 
     FREE_IF_ALLOC_IS_USED(pVars);
@@ -1330,7 +1330,7 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketSetOptionIntVal(JNIEnv *env,
 
 loser:
     throwError(env, erv, JAVANETPKG "SocketException", 
-	       "SSL socket set option error");
+               "SSL socket set option error");
 thrown_loser:
     FREE_IF_ALLOC_IS_USED(pVars);
     return;
@@ -1340,7 +1340,7 @@ thrown_loser:
 
 /**************************************************************************
 **
-**  socketGetOption	
+**  socketGetOption        
 **
 **/
 
@@ -1351,7 +1351,7 @@ thrown_loser:
  */
 JNIEXPORT jint JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_socketGetOption(JNIEnv *env, nnSoIm self, 
-						jint opt)
+                                                jint opt)
 {
     pPriv priv           = NULL;
     SSLFD fd;
@@ -1368,32 +1368,32 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketGetOption(JNIEnv *env, nnSoIm self,
     initializeEverything(env);
     GET_PRIV_FD(goto thrown_loser)
 
-    if (opt == JTCP_NODELAY) { 		/* query for TCP_NODELAY */
-	pVars->so.option = PR_SockOpt_NoDelay;
+    if (opt == JTCP_NODELAY) {                 /* query for TCP_NODELAY */
+        pVars->so.option = PR_SockOpt_NoDelay;
 
-	if (0 > nsn_stuberr_PR_GetSocketOption(&erv, fd, &pVars->so))
-	    goto loser;
+        if (0 > nsn_stuberr_PR_GetSocketOption(&erv, fd, &pVars->so))
+            goto loser;
 
-	rv = (pVars->so.value.no_delay ? 1 : -1); /* -1 means option is off */
+        rv = (pVars->so.value.no_delay ? 1 : -1); /* -1 means option is off */
     } else if (opt == JSO_BINDADDR) {
-	/* find out local IP address, return as 32 bit value */
-	if (0 > nsn_stuberr_PR_GetSockName(&erv, fd, &pVars->na)) 
-	    goto loser;
+        /* find out local IP address, return as 32 bit value */
+        if (0 > nsn_stuberr_PR_GetSockName(&erv, fd, &pVars->na)) 
+            goto loser;
 
-	rv = (pVars->na.inet.ip == PR_INADDR_ANY) ? -1 : pVars->na.inet.ip;
+        rv = (pVars->na.inet.ip == PR_INADDR_ANY) ? -1 : pVars->na.inet.ip;
     } else if (opt == JSO_LINGER) {
-	pVars->so.option = PR_SockOpt_Linger;
+        pVars->so.option = PR_SockOpt_Linger;
 
-	if (0 > nsn_stuberr_PR_GetSocketOption(&erv, fd, &pVars->so))
-	    goto loser;
+        if (0 > nsn_stuberr_PR_GetSocketOption(&erv, fd, &pVars->so))
+            goto loser;
 
-	/* if disabled, return -1, else return the linger time */
-	rv = pVars->so.value.linger.polarity 
-		? PR_IntervalToMilliseconds(pVars->so.value.linger.linger)
-		: -1;
+        /* if disabled, return -1, else return the linger time */
+        rv = pVars->so.value.linger.polarity 
+                ? PR_IntervalToMilliseconds(pVars->so.value.linger.linger)
+                : -1;
     } else {
-	/* we don't understand the specified option */
-	goto loser;
+        /* we don't understand the specified option */
+        goto loser;
     }
 
     FREE_IF_ALLOC_IS_USED(pVars);
@@ -1401,7 +1401,7 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketGetOption(JNIEnv *env, nnSoIm self,
 
 loser:
     throwError(env, erv, JAVANETPKG "SocketException", 
-	       "SSL socket get option error");
+               "SSL socket get option error");
 thrown_loser:
     FREE_IF_ALLOC_IS_USED(pVars);
     return -1;
@@ -1442,26 +1442,26 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_getStatus(JNIEnv *env, nnSoIm self)
     GET_PRIV_FD(return NULL)
 
     irv = nsn_stuberr_SSL_SecurityStatus(&erv, fd, &on, &cipher, 
-			 &sessionKeySize, &secretKeySize, &issuer, &subject);
+                         &sessionKeySize, &secretKeySize, &issuer, &subject);
     if (0 > irv) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		   "Security Status Failed");	
-	return NULL;
+        throwError(env, erv, JAVANETPKG "SocketException",
+                   "Security Status Failed");        
+        return NULL;
     }
 
     if (cipher != NULL) {
-	jCipher = (*env)->NewStringUTF(env, cipher);
-	PR_DELETE(cipher);
+        jCipher = (*env)->NewStringUTF(env, cipher);
+        PR_DELETE(cipher);
     }
 
     if (issuer != NULL) {
-	jIssuer = (*env)->NewStringUTF(env, issuer);
-	PR_DELETE(issuer);
+        jIssuer = (*env)->NewStringUTF(env, issuer);
+        PR_DELETE(issuer);
     }
 
     if (subject != NULL) {
-	jSubject = (*env)->NewStringUTF(env, subject);
-	PR_DELETE(subject);
+        jSubject = (*env)->NewStringUTF(env, subject);
+        PR_DELETE(subject);
     }
 
     /*
@@ -1472,13 +1472,13 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_getStatus(JNIEnv *env, nnSoIm self)
      */
     peerCert = nsn_stuberr_SSL_PeerCertificate(&erv, fd);
     if (peerCert != NULL) {
-	char *tmp;
-	tmp = CERT_Hexify(& peerCert->serialNumber, 0);
+        char *tmp;
+        tmp = CERT_Hexify(& peerCert->serialNumber, 0);
 
-	if (tmp != NULL) {
-	    jCertSerialNum = (*env)->NewStringUTF(env, tmp);
-	    PR_DELETE(tmp);
-	}
+        if (tmp != NULL) {
+            jCertSerialNum = (*env)->NewStringUTF(env, tmp);
+            PR_DELETE(tmp);
+        }
 
     /* if NSSInit.initialize() was called, then we cannot expose the
      * X509Certificate object. This would require us to reveal much more than
@@ -1506,9 +1506,9 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_getStatus(JNIEnv *env, nnSoIm self)
 
 finish:
     rv = org_mozilla_jss_ssl_SSLSecurityStatus_new(env, 
-			class_org_mozilla_jss_ssl_SSLSecurityStatus(env), 
-			on, jCipher, sessionKeySize, secretKeySize, 
-			jIssuer, jSubject, jCertSerialNum, jCertificate);
+                        class_org_mozilla_jss_ssl_SSLSecurityStatus(env), 
+                        on, jCipher, sessionKeySize, secretKeySize, 
+                        jIssuer, jSubject, jCertSerialNum, jCertificate);
 loser:
     return rv;
 }
@@ -1538,9 +1538,9 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_resetHandshake(JNIEnv *env, nnSoIm self)
 
 #if !defined( nsn_DO_SERVER_SOCKET)
     if (!handshakeAsClient) {
-	/* browser applet must always handshake as Client */
-	throwError(env, erv, JAVANETPKG "SocketException", 
-		       "SSL server-mode connections not supported.");
+        /* browser applet must always handshake as Client */
+        throwError(env, erv, JAVANETPKG "SocketException", 
+                       "SSL server-mode connections not supported.");
     }
 #endif
 
@@ -1575,16 +1575,16 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_forceHandshake(JNIEnv *env, nnSoIm self)
 
     ticks = PR_MillisecondsToInterval(10);
     for(;;) {
-	result = nsn_stuberr_SSL_ForceHandshake(&erv, fd);
-	if (result != -2) 
-	    break;
+        result = nsn_stuberr_SSL_ForceHandshake(&erv, fd);
+        if (result != -2) 
+            break;
         /* need to suspend here, to give other threads a chance. */
-	PR_Sleep(ticks);
+        PR_Sleep(ticks);
     }
 
     if (result == -1) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "Error in SSL handshake");	
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "Error in SSL handshake");        
     }
 }
 
@@ -1618,8 +1618,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_redoHandshake(JNIEnv *env, nnSoIm self)
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_setClientNickname(JNIEnv * env, 
-	jobject self, 
-	jstring nameString)
+        jobject self, 
+        jstring nameString)
 {
     pPriv        priv            = NULL;
     SSLFD        fd;
@@ -1638,24 +1638,24 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_setClientNickname(JNIEnv * env,
     if (UTFlen)
         nickName = (*env)->GetStringUTFChars(env, nameString, NULL);
     if (!nickName)
-	return;
+        return;
 
     dupNickName = PL_strdup(nickName);
     (*env)->ReleaseStringUTFChars(env, nameString, nickName);
     if (! dupNickName)
-	return;
+        return;
 
     /* despite the confusing name, 
      * this function SETs the GetClientAuthData hook. 
      */
     rv = nsn_stuberr_SSL_GetClientAuthDataHook(&erv, fd, 
-    					JSSL_GetClientAuthData, dupNickName);
+                                            JSSL_GetClientAuthData, dupNickName);
     if (rv < 0) {
-    	PR_Free(dupNickName);
-	dupNickName = NULL;
+            PR_Free(dupNickName);
+        dupNickName = NULL;
     } else {
-	/* remember this so we'll free it later */
-	priv->nickname = dupNickName;
+        /* remember this so we'll free it later */
+        priv->nickname = dupNickName;
     }
 
 }
@@ -1670,8 +1670,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_setClientNickname(JNIEnv * env,
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_setServerNickname(JNIEnv * env, 
-	jobject self, 
-	jstring nameString)
+        jobject self, 
+        jstring nameString)
 {
     pPriv        priv            = NULL;
     SSLFD        fd;
@@ -1690,12 +1690,12 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_setServerNickname(JNIEnv * env,
     if (UTFlen)
         nickName = (*env)->GetStringUTFChars(env, nameString, NULL);
     if (!nickName)
-	return;
+        return;
 
     rv = nsn_stuberr_JSSL_ConfigSecureServerNickname(&erv, fd, nickName);
     if (rv != SECSuccess) {
-	throwError(env, 0, JAVANETPKG "SocketException",
-		       "Can't find certificate by this nickname.");
+        throwError(env, 0, JAVANETPKG "SocketException",
+                       "Can't find certificate by this nickname.");
     }
 
     (*env)->ReleaseStringUTFChars(env, nameString, nickName);
@@ -1709,7 +1709,7 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_setServerNickname(JNIEnv * env,
  */
 JNIEXPORT jint JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_socketEnable(JNIEnv * env, jobject self, 
-	jint which, jint enable)
+        jint which, jint enable)
 {
     pPriv  priv = NULL;
     SSLFD  fd;
@@ -1729,7 +1729,7 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketEnable(JNIEnv * env, jobject self,
  */
 JNIEXPORT jint JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_socketEnableDefault(JNIEnv * env, 
-	jclass myClass, jint which, jint enable)
+        jclass myClass, jint which, jint enable)
 {
     int   rv;
     int   erv  = 0;
@@ -1745,7 +1745,7 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_socketEnableDefault(JNIEnv * env,
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_setPermittedByPolicy(JNIEnv * env, 
-	jclass myClass, jint cipher, jint permitted)
+        jclass myClass, jint cipher, jint permitted)
 {
     int   erv  = 0;
     initializeEverything(env);
@@ -1759,7 +1759,7 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_setPermittedByPolicy(JNIEnv * env,
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_setCipherPreference(JNIEnv * env, 
-	jclass myClass, jint cipher, jboolean enable)
+        jclass myClass, jint cipher, jboolean enable)
 {
     int   erv  = 0;
     initializeEverything(env);
@@ -1774,8 +1774,8 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_setCipherPreference(JNIEnv * env,
  */
 JNIEXPORT void JNICALL 
 Java_org_mozilla_jss_ssl_SSLSocketImpl_configServerSessionIDCache(JNIEnv * env, 
-	jclass myClass, jint maxEntries, jint ssl2Timeout, jint ssl3Timeout, 
-	jstring nameString)
+        jclass myClass, jint maxEntries, jint ssl2Timeout, jint ssl3Timeout, 
+        jstring nameString)
 {
     const char * dirName        = NULL;
     char *       dupDirName     = NULL;
@@ -1786,22 +1786,22 @@ Java_org_mozilla_jss_ssl_SSLSocketImpl_configServerSessionIDCache(JNIEnv * env,
     initializeEverything(env);
 
     if (nameString) {
-	UTFlen = (*env)->GetStringUTFLength(env, nameString);
-	if (UTFlen)
-	    dirName = (*env)->GetStringUTFChars(env, nameString, NULL);
+        UTFlen = (*env)->GetStringUTFLength(env, nameString);
+        if (UTFlen)
+            dirName = (*env)->GetStringUTFChars(env, nameString, NULL);
     }
     /* No NULL pointer exception here, because NULL is OK . */
 
     rv = nsn_stuberr_SSL_ConfigServerSessionIDCache(&erv, maxEntries,
                                                     ssl2Timeout, ssl3Timeout, 
-						    dirName);
+                                                    dirName);
     if (rv != SECSuccess) {
-	throwError(env, erv, JAVANETPKG "SocketException",
-		       "Cannot config SID cache with this string.");
+        throwError(env, erv, JAVANETPKG "SocketException",
+                       "Cannot config SID cache with this string.");
     }
 
     if (dirName)
-	(*env)->ReleaseStringUTFChars(env, nameString, dirName);
+        (*env)->ReleaseStringUTFChars(env, nameString, dirName);
 }
 
 /* STATIC METHOD
@@ -1857,8 +1857,8 @@ pl_Cat(const char *a0, ...)
     len = 1;
     a   = a0;
     while (a != (char*) NULL) {
-	len += PL_strlen(a);
-	a = va_arg(ap, char*);
+        len += PL_strlen(a);
+        a = va_arg(ap, char*);
     }
     va_end(ap);
 
@@ -1868,9 +1868,9 @@ pl_Cat(const char *a0, ...)
     if (!cp) return 0;
     a = a0;
     while (a != (char*) NULL) {
-	(void)PL_strcpy(cp, a);
-	cp +=  PL_strlen(a);
-	a = va_arg(ap, char*);
+        (void)PL_strcpy(cp, a);
+        cp +=  PL_strlen(a);
+        a = va_arg(ap, char*);
     }
     va_end(ap);
     return result;
@@ -1880,14 +1880,14 @@ pl_Cat(const char *a0, ...)
 static void 
 throwError_hostAndPort(JNIEnv* env, int errornum, 
            const char* classname, const char* message,
-		   const char* hostName, int port)
+                   const char* hostName, int port)
 {
-	char *newmessage;
+        char *newmessage;
 
-	newmessage = PR_smprintf("%s %s:%d ",message,hostName,port);
-	throwError(env,errornum,classname,newmessage);
-	
-	PR_smprintf_free(newmessage);
+        newmessage = PR_smprintf("%s %s:%d ",message,hostName,port);
+        throwError(env,errornum,classname,newmessage);
+        
+        PR_smprintf_free(newmessage);
 }
 
 
@@ -1905,23 +1905,23 @@ throwError(JNIEnv* env, int errornum,
      * append any XP error string to the normal string
      */
     if (errornum) {
-	const char *xpErrorStr;
-	char *      finalMessage;
-	int         freeMessage = 0;
+        const char *xpErrorStr;
+        char *      finalMessage;
+        int         freeMessage = 0;
 
-	xpErrorStr = nsn_GetSSLErrorMessage(errornum);
-	if (xpErrorStr != NULL) {
-	    finalMessage = pl_Cat(message, " (", xpErrorStr, ")", NULL);
-	    freeMessage = 1;
-	} else {
-	    finalMessage = (char *)message;
-	}
+        xpErrorStr = nsn_GetSSLErrorMessage(errornum);
+        if (xpErrorStr != NULL) {
+            finalMessage = pl_Cat(message, " (", xpErrorStr, ")", NULL);
+            freeMessage = 1;
+        } else {
+            finalMessage = (char *)message;
+        }
 
-	(*env)->ThrowNew(env, clazz, finalMessage);
-	if (freeMessage) 
-	    PR_Free(finalMessage);
+        (*env)->ThrowNew(env, clazz, finalMessage);
+        if (freeMessage) 
+            PR_Free(finalMessage);
     } else {
-	(*env)->ThrowNew(env, clazz, message);
+        (*env)->ThrowNew(env, clazz, message);
     }
 
 }
@@ -1943,12 +1943,12 @@ set_fd_priv(JNIEnv* env, jobject self, pPriv priv)
 
     myClass = (*env)->GetObjectClass(env, self);
     fileDesc_ID = (*env)->GetFieldID(env, myClass, "fd", 
-				      JNISigClass("java/io/FileDescriptor"));
+                                      JNISigClass("java/io/FileDescriptor"));
     fileDesc = (*env)->GetObjectField(env, self, fileDesc_ID);
     if ((*env)->ExceptionOccurred(env) || fileDesc == NULL) {
-	throwError(env, erv, JAVANETPKG "SocketException",
+        throwError(env, erv, JAVANETPKG "SocketException",
                        "Socket not valid");     
-	return;
+        return;
     }
 
     fileDescClass = (*env)->GetObjectClass(env, fileDesc);
@@ -1979,10 +1979,10 @@ get_fd_priv(JNIEnv *env, jobject self)
 
     myClass = (*env)->GetObjectClass(env, self);
     fileDesc_ID = (*env)->GetFieldID(env, myClass, "fd", 
-				      JNISigClass("java/io/FileDescriptor"));
+                                      JNISigClass("java/io/FileDescriptor"));
     fileDesc = (*env)->GetObjectField(env, self, fileDesc_ID);
     if ((*env)->ExceptionOccurred(env) || fileDesc == NULL)
-	goto loser;
+        goto loser;
 
     fileDescClass = (*env)->GetObjectClass(env, fileDesc);
 
@@ -1992,7 +1992,7 @@ get_fd_priv(JNIEnv *env, jobject self)
 
     priv = (pPriv)(*env)->GetIntField(env, fileDesc, fd_ID);
     if ((*env)->ExceptionOccurred(env)) 
-	goto loser;
+        goto loser;
 
     return priv;
 
@@ -2056,7 +2056,7 @@ nsn_java_net_InetAddress_getHostName(JNIEnv* env, jnInAd self)
     myClass = (*env)->GetObjectClass(env, self);
     if (myClass == NULL) {
         myClass = (*env)->FindClass(env, "java/lang/ClassNotFoundException");
-	(*env)->ThrowNew(env, myClass, "java/net/InetAddress");
+        (*env)->ThrowNew(env, myClass, "java/net/InetAddress");
         return rv;
     }
     methodID = (*env)->GetMethodID(env, myClass, "getHostName",
@@ -2086,7 +2086,7 @@ nsn_get_java_net_InetAddress_hostName(JNIEnv* env, jnInAd self)
     if (UTFlen)
         hostName = (*env)->GetStringUTFChars(env, nameString, NULL);
     if (!hostName)
-	return dupHostName;
+        return dupHostName;
     dupHostName = PL_strdup(hostName);
     (*env)->ReleaseStringUTFChars(env, nameString, hostName);
     return dupHostName;
@@ -2105,7 +2105,7 @@ nsn_get_java_net_SocketImpl_address(JNIEnv* env, jnSoIm  self)
 
     myClass = (*env)->GetObjectClass(env, self);
     fieldID = (*env)->GetFieldID(env, myClass, "address", 
-			     JNISigClass(JAVANETPKG "InetAddress"));
+                             JNISigClass(JAVANETPKG "InetAddress"));
     val = (*env)->GetObjectField(env, self, fieldID);
 
     return (jnInAd) val;
