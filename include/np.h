@@ -75,7 +75,7 @@ extern NPError			NPL_RefreshPluginList(XP_Bool reloadPages);
 extern NPBool			NPL_IteratePluginFiles(NPReference* ref, char** name, char** filename, char** description);
 extern NPBool			NPL_IteratePluginTypes(NPReference* ref, NPReference plugin, NPMIMEType* type,
 								char*** extents, char** description, void** fileType);
-extern char** 			NPL_FindPluginsForType(const char* typeToFind);
+PR_EXTERN(char**) 			NPL_FindPluginsForType(const char* typeToFind);
 extern char*			NPL_FindPluginEnabledForType(const char* typeToFind);
 
 extern NPError			NPL_EnablePlugin(NPMIMEType type,
