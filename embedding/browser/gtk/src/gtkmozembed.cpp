@@ -753,7 +753,7 @@ enum {
 };
 
 static guint moz_embed_signals[LAST_SIGNAL] = { 0 };
-static GdkWindow *offscreen_window = 0;
+static GtkWidget *offscreen_window = 0;
 
 static char *component_path = 0;
 static char *profile_dir = 0;
@@ -1473,7 +1473,7 @@ gtk_moz_embed_unrealize(GtkWidget *widget)
   GTK_WIDGET_UNSET_FLAGS(widget, GTK_REALIZED);
   
   gdk_window_reparent(embed_private->mMozWindow,
-		      offscreen_window, 0, 0);
+		      offscreen_window->window, 0, 0);
 }
 
 void
@@ -1716,21 +1716,14 @@ gtk_moz_embed_startup_profile(void)
 void
 gtk_moz_embed_create_offscreen_window(void)
 {
-  GdkWindowAttr attributes;
-
-  attributes.window_type = GDK_WINDOW_TOPLEVEL;
-  attributes.width = 1;
-  attributes.height = 1;
-  attributes.wclass = GDK_INPUT_OUTPUT;
-
-  offscreen_window = gdk_window_new(NULL, &attributes, 0);
-				    
+  offscreen_window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_widget_realize(offscreen_window);
 }
 
 void
 gtk_moz_embed_destroy_offscreen_window(void)
 {
-  gdk_window_destroy(offscreen_window);
+  gtk_widget_destroy(offscreen_window);
   offscreen_window = 0;
 }
 
