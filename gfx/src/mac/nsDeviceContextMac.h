@@ -33,39 +33,45 @@ public:
 	NS_DECL_ISUPPORTS
 
   NS_IMETHOD  Init(nsNativeWidget aNativeWidget);
+  
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
   NS_IMETHOD  SupportsNativeWidgets(PRBool &aSupportsWidgets);
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
-	void SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
+	void 				SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
   NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
 
-  NS_IMETHOD CheckFontExistence(const nsString& aFontName);
-  NS_IMETHOD CreateILColorSpace(IL_ColorSpace*& aColorSpace);
+  NS_IMETHOD 	CheckFontExistence(const nsString& aFontName);
+  NS_IMETHOD 	CreateILColorSpace(IL_ColorSpace*& aColorSpace);
   NS_IMETHODIMP GetILColorSpace(IL_ColorSpace*& aColorSpace);
-  NS_IMETHOD GetDepth(PRUint32& aDepth);
-  NS_IMETHOD ConvertPixel(nscolor aColor, PRUint32 & aPixel);
+  NS_IMETHOD 	GetDepth(PRUint32& aDepth);
+  NS_IMETHOD 	ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
-  NS_IMETHOD GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
+  NS_IMETHOD 	GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
 
-  NS_IMETHOD GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
+  NS_IMETHOD 	GetDeviceContextFor(nsIDeviceContextSpec *aDevice,
                                  nsIDeviceContext *&aContext);
 
-  NS_IMETHOD BeginDocument(void);
-  NS_IMETHOD EndDocument(void);
+  NS_IMETHOD 	BeginDocument(void);
+  NS_IMETHOD 	EndDocument(void);
 
-  NS_IMETHOD BeginPage(void);
-  NS_IMETHOD EndPage(void);
+  NS_IMETHOD 	BeginPage(void);
+  NS_IMETHOD 	EndPage(void);
 
 
 protected:
-  virtual ~nsDeviceContextMac();
-
-  nsDrawingSurface 			mSurface ;
+  virtual 	~nsDeviceContextMac();
+  
+/** ---------------------------------------------------
+ *  Common initialization actions for the nsDeviceContextMac
+ *	@update 12/9/98 dwc
+ */
+  nsDrawingSurface 			mSurface;
   PRUint32 							mDepth;
+  Rect									mPageRect;
   nsIDeviceContextSpec  *mSpec;
   GrafPtr								mOldPort;
 
