@@ -104,6 +104,10 @@ print "Bloat/Leak Delta Report\n";
 print "-------------------------------------------\n";
 print "Current file:  $NEWFILE\n";
 print "Previous file: $OLDFILE\n";
+printf "%-20s %10s %10.2f%% %10s %10.2f%%\n",
+       ("TOTAL",
+        $newMap{"TOTAL"}{leaked}, $newMap{"TOTAL"}{leakPercent},
+        $newMap{"TOTAL"}{bloat}, $newMap{"TOTAL"}{bloatPercent});
 
 ################################################################################
 
