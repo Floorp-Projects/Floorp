@@ -1371,7 +1371,6 @@ final class IRFactory
         }
     }
 
-    // Only needed to call reportCurrentLineError.
     private Parser parser;
 
     private static final int LOOP_DO_WHILE = 0;
