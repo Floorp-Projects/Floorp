@@ -111,6 +111,9 @@ nsRenderingContextMac :: nsRenderingContextMac()
 nsRenderingContextMac :: ~nsRenderingContextMac()
 {
 
+  ::SetPort(mRenderingSurface);
+  ::SetOrigin(0,0);
+
   if (mClipRegion) 
   	{
     ::DisposeRgn(mClipRegion);
@@ -150,6 +153,7 @@ NS_IMPL_RELEASE(nsRenderingContextMac)
 
 nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,nsIWidget *aWindow)
 {
+PRInt32					offx,offy;
 
   if (nsnull == aWindow->GetNativeData(NS_NATIVE_WINDOW))
     return NS_ERROR_NOT_INITIALIZED;
@@ -157,11 +161,16 @@ nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,nsIWidget *aWi
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
+	offx = (PRInt32)aWindow->GetNativeData(NS_NATIVE_OFFSETX);
+	offy = (PRInt32)aWindow->GetNativeData(NS_NATIVE_OFFSETY);
 
   mRenderingSurface = (nsDrawingSurfaceMac)aWindow->GetNativeData(NS_NATIVE_DISPLAY);
   mFrontBuffer = mRenderingSurface;
   
   mMainRegion = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
+
+  ::SetPort(mRenderingSurface);
+  ::SetOrigin(-offx,-offy);
   
   return (CommonInit());
 }
@@ -171,11 +180,15 @@ nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,nsIWidget *aWi
 nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,
 					nsDrawingSurface aSurface)
 {
+//PRInt32					offx,offy;
 
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
   mRenderingSurface = (nsDrawingSurfaceMac) aSurface;
+
+	//offx = (PRInt32)aSurface->GetNativeData(NS_NATIVE_OFFSETX);
+	//offy = (PRInt32)aSurface->GetNativeData(NS_NATIVE_OFFSETY);
   
   return (CommonInit());
 }
@@ -185,6 +198,7 @@ nsresult nsRenderingContextMac :: Init(nsIDeviceContext* aContext,
 
 nsresult nsRenderingContextMac :: CommonInit()
 {
+
 	((nsDeviceContextMac *)mContext)->SetDrawingSurface(mRenderingSurface);
   //((nsDeviceContextMac *)mContext)->InstallColormap();
 
@@ -194,6 +208,8 @@ nsresult nsRenderingContextMac :: CommonInit()
   mContext->GetAppUnitsToDevUnits(app2dev);
   mTMatrix->AddScale(app2dev, app2dev);
   this->SetColor(mCurrentColor);
+  
+
   return NS_OK;
 }
 
