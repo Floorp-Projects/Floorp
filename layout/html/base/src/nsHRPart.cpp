@@ -30,6 +30,7 @@
 #include "nsIHTMLAttributes.h"
 #include "nsStyleConsts.h"
 #include "nsCSSRendering.h"
+#include "nsCSSLayout.h"
 
 #undef DEBUG_HR_REFCNT
 
@@ -86,6 +87,8 @@ protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               const nsReflowState& aReflowState,
                               nsReflowMetrics& aDesiredSize);
+
+  nscoord mComputedWidth;
 };
 
 HRuleFrame::HRuleFrame(nsIContent* aContent,
@@ -117,8 +120,6 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
     mStyleContext->GetStyleData(eStyleStruct_Spacing);
   const nsStyleColor* color = (const nsStyleColor*)
     mStyleContext->GetStyleData(eStyleStruct_Color);
-  const nsStylePosition* position = (const nsStylePosition*)
-    mStyleContext->GetStyleData(eStyleStruct_Position);
   nsMargin borderPadding;
   spacing->CalcBorderPaddingFor(this, borderPadding);
   nscoord x0 = borderPadding.left;
@@ -128,15 +129,7 @@ HRuleFrame::Paint(nsIPresContext&      aPresContext,
   nscoord height = mRect.height -
     (borderPadding.top + borderPadding.bottom);
 
-  nscoord newWidth = width;
-  if (position->mWidth.GetUnit() == eStyleUnit_Coord) {
-    newWidth = position->mWidth.GetCoordValue();
-  }
-  else if (position->mWidth.GetUnit() == eStyleUnit_Percent) {
-    // Width is (mostly) interpreted at rendering time
-    float pct = position->mWidth.GetPercentValue();
-    newWidth = nscoord(pct * mRect.width);
-  }
+  nscoord newWidth = mComputedWidth;
   if (newWidth < width) {
     // center or right align rule within the extra space
     const nsStyleText* text =
@@ -259,28 +252,20 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
                            const nsReflowState& aReflowState,
                            nsReflowMetrics& aDesiredSize)
 {
-  const nsStylePosition* position = (const nsStylePosition*)
-    mStyleContext->GetStyleData(eStyleStruct_Position);
-  if (position->mWidth.GetUnit() == eStyleUnit_Coord) {
-    aDesiredSize.width = position->mWidth.GetCoordValue();
-  }
-  else if (position->mWidth.GetUnit() == eStyleUnit_Percent) {
-    float pct = position->mWidth.GetPercentValue();
-    if (aReflowState.maxSize.width == NS_UNCONSTRAINEDSIZE) {
-      aDesiredSize.width = 1;
-    }
-    else {
-      aDesiredSize.width = nscoord(pct * aReflowState.maxSize.width);
-    }
+  nsSize size;
+  PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, aReflowState, size);
+  if (NS_SIZE_HAS_WIDTH & ss) {
+    aDesiredSize.width = size.width;
   }
   else {
-    if (aReflowState.maxSize.width == NS_UNCONSTRAINEDSIZE) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.width) {
       aDesiredSize.width = 1;
     }
     else {
       aDesiredSize.width = aReflowState.maxSize.width;
     }
   }
+  mComputedWidth = aDesiredSize.width;
   if (aReflowState.maxSize.width != NS_UNCONSTRAINEDSIZE) {
     if (aDesiredSize.width  < aReflowState.maxSize.width) {
       aDesiredSize.width = aReflowState.maxSize.width;
@@ -418,7 +403,8 @@ HRulePart::MapAttributesInto(nsIStyleContext* aContext,
     // align: enum
     GetAttribute(nsHTMLAtoms::align, value);
     if (value.GetUnit() == eHTMLUnit_Enumerated) {
-      nsStyleText* text = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
+      nsStyleText* text = (nsStyleText*)
+        aContext->GetMutableStyleData(eStyleStruct_Text);
       text->mTextAlign = value.GetIntValue();
     }
 
