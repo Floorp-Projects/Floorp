@@ -177,7 +177,7 @@ nsEventStateManager::nsEventStateManager()
   mBrowseWithCaret = PR_FALSE;
   mLeftClickOnly = PR_TRUE;
   mNormalLMouseEventInProcess = PR_FALSE;
-
+  mTabbedThroughDocument = PR_FALSE;
 
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   mEventDownWidget = nsnull;
@@ -2983,7 +2983,7 @@ nsresult
 nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
 {
 #ifdef DEBUG_DOCSHELL_FOCUS
-  printf("[%p] ShiftFocus: aForward=%d, aStart=%p, mCurrentFocus=%p\n",
+  printf("[%p] ShiftFocusInternal: aForward=%d, aStart=%p, mCurrentFocus=%p\n",
          this, aForward, aStart, mCurrentFocus);
 #endif
   NS_ASSERTION(mPresContext, "no pres context");
@@ -3110,7 +3110,14 @@ nsEventStateManager::ShiftFocusInternal(PRBool aForward, nsIContent* aStart)
       presShell->ScrollFrameIntoView(nextFocusFrame,
                                      NS_PRESSHELL_SCROLL_ANYWHERE,
                                      NS_PRESSHELL_SCROLL_ANYWHERE);
-      TabIntoDocument(sub_shell, aForward);
+      
+      // if we are in the middle of tabbing into 
+      // sub_shell, bail out, to avoid recursion
+      // see bug #195011 and bug #137191
+      if (mTabbingFromDocShells.IndexOf(sub_shell) != -1)
+        return NS_OK;
+
+      TabIntoDocument(sub_shell, aForward); 
     } else {
       // there is no subshell, so just focus nextFocus
 #ifdef DEBUG_DOCSHELL_FOCUS
@@ -5153,10 +5160,17 @@ nsEventStateManager::TabIntoDocument(nsIDocShell* aDocShell,
       nsCOMPtr<nsIEventStateManager> docESM;
       pc->GetEventStateManager(getter_AddRefs(docESM));
       if (docESM) {
+        // we are about to shift focus to aDocShell
+        // keep track of the document, so we don't try to go back into it.
+        mTabbingFromDocShells.AppendObject(aDocShell);
+        
         // clear out any existing focus state
         docESM->SetContentState(nsnull, NS_EVENT_STATE_FOCUS);
         // now focus the first (or last) focusable content
         docESM->ShiftFocus(aForward, nsnull);
+
+        // remove the document from the list
+        mTabbingFromDocShells.RemoveObject(aDocShell); 
       }
     }
   }

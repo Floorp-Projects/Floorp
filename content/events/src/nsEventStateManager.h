@@ -48,6 +48,7 @@
 #include "nsHashtable.h"
 #include "nsITimer.h"
 #include "nsIDocument.h"
+#include "nsCOMArray.h"
 
 class nsIScrollableView;
 class nsIPresShell;
@@ -317,6 +318,7 @@ protected:
 
   // Recursion guard for tabbing
   PRBool mTabbedThroughDocument;
+  nsCOMArray<nsIDocShell> mTabbingFromDocShells;
 
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   enum { kClickHoldDelay = 500 } ;        // 500ms == 1/2 second
