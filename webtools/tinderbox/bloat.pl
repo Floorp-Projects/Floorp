@@ -78,8 +78,8 @@ sub find_bloat_data {
         # 2,4 is percentage, 1,3 is absolute.
         #my ($leaks, $bloat) = (split)[2,4];
         my ($leaks, $bloat) = (split)[1,3];
-        chop $leaks;
-        chop $bloat;
+        #chop $leaks;
+        #chop $bloat;
         return $leaks, $bloat;
       }
     } else {
