@@ -23,6 +23,15 @@ DEPTH=..\..\..\..\..
 
 LIBRARY_NAME=inscreencap_s 
 MODULE=inspector
+REQUIRES	= xpcom \
+		  string \
+		  gfx \
+		  layout \
+		  widget \
+		  content \
+		  locale \
+		  dom \
+		  $(NULL)
 
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 

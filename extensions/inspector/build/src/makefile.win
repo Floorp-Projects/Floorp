@@ -22,6 +22,21 @@ DEPTH=..\..\..\..
 MODULE=inspector
 LIBRARY_NAME=inspector
 MODULE_NAME=nsInspectorModule
+REQUIRES        = xpcom \
+                  string \
+                  gfx \
+                  layout \
+                  content \
+                  dom \
+                  widget \
+                  rdf \
+                  rdfutil \
+                  locale \
+                  gfx2 \
+                  timer \
+                  necko \
+                  imglib2 \
+                  $(NULL)
 
 ################################################################################
 ## library
