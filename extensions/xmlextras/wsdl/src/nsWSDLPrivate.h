@@ -137,6 +137,19 @@ protected:
   nsCOMPtr<nsIWSDLBinding> mBinding;
 };
 
+class nsSOAPMessageBinding : public nsISOAPMessageBinding {
+public:
+  nsSOAPMessageBinding(const nsAReadableString& aNamespace);
+  virtual ~nsSOAPMessageBinding();
+
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIWSDLBINDING
+  NS_DECL_NSISOAPMESSAGEBINDING
+
+protected:
+  nsString mNamespace;
+};
+
 class nsWSDLMessage : public nsIWSDLMessage {
 public:
   nsWSDLMessage(const nsAReadableString& aName);
@@ -147,11 +160,13 @@ public:
 
   NS_IMETHOD SetDocumentationElement(nsIDOMElement* aElement);
   NS_IMETHOD AddPart(nsIWSDLPart* aPart);
+  NS_IMETHOD SetBinding(nsIWSDLBinding* aBinding);
 
 protected:
   nsString mName;
   nsCOMPtr<nsIDOMElement> mDocumentationElement;
   nsSupportsArray mParts;
+  nsCOMPtr<nsIWSDLBinding> mBinding;
 };
 
 class nsSOAPPartBinding : public nsISOAPPartBinding {
@@ -318,6 +333,14 @@ private:
 
 #define NS_SOAPOPERATIONBINDING_CONTRACTID   \
 "@mozilla/xmlextras/wsdl/soapoperationbinding;1"
+
+#define NS_SOAPMESSAGEBINDING_CID               \
+{ /* 0adc6e39-49cd-42a2-a862-698e7885fcbd */      \
+ 0x0adc6e39, 0x49cd, 0x42a2,                      \
+ {0xa8, 0x62, 0x69, 0x8e, 0x78, 0x85, 0xfc, 0xbd}}
+
+#define NS_SOAPMESSAGEBINDING_CONTRACTID   \
+"@mozilla/xmlextras/wsdl/soapmessagebinding;1"
 
 #define NS_SOAPPARTBINDING_CID                    \
 { /* b7698d5c-06cc-45fe-b6bc-88e32a9f970e */      \

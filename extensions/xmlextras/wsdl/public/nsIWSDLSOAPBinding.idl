@@ -45,6 +45,11 @@ interface nsISOAPOperationBinding : nsIWSDLBinding {
   readonly attribute AString soapAction;
 };
 
+[scriptable, uuid(c3c4614c-301a-44af-ad70-936f9fd1ba5c)]
+interface nsISOAPMessageBinding : nsIWSDLBinding {
+  readonly attribute AString namespace;
+};
+
 [scriptable, uuid(0458dac9-65de-11d5-9b42-00104bdf5339)]
 interface nsISOAPPartBinding : nsIWSDLBinding {
   const unsigned short   LOCATION_BODY = 1;

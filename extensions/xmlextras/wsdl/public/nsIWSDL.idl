@@ -59,14 +59,17 @@ interface nsIWSDLOperation : nsISupports {
   readonly attribute PRUint32 faultCount;
   nsIWSDLMessage getFault(in PRUint32 index);
 
-  readonly attribute PRUint32 parameterCount;
+  readonly attribute PRUint32 parameterOrderCount;
   AString getParameter(in PRUint32 index);
+  PRUint32 getParameterIndex(in AString name);
 };
 
 [scriptable, uuid(0458dac3-65de-11d5-9b42-00104bdf5339)]
 interface nsIWSDLMessage : nsISupports {
   readonly attribute AString name;
   readonly attribute nsIDOMElement documentation;
+
+  readonly attribute nsIWSDLBinding binding;
   
   readonly attribute PRUint32 partCount;
   nsIWSDLPart getPart(in PRUint32 index);

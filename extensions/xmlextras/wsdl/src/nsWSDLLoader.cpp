@@ -176,7 +176,7 @@ nsWSDLLoader::GetResolvedURI(const nsAReadableString& aWSDLURI,
     rv = NS_NewURI(aURI, aWSDLURI, baseURI);
     if (NS_FAILED(rv)) return rv;
     
-    rv = secMan->CheckConnect(cx, *aURI, "nsWSDLLoader", aMethod);
+    rv = secMan->CheckLoadURIFromScript(cx, *aURI);
     if (NS_FAILED(rv))
     {
       // Security check failed. The above call set a JS exception. The
@@ -1170,6 +1170,16 @@ nsWSDLLoadRequest::ProcessMessageBinding(nsIDOMElement* aElement,
         use = nsISOAPPartBinding::USE_ENCODED;
       }
 
+      nsCOMPtr<nsISOAPMessageBinding> messageBinding;
+      nsSOAPMessageBinding* messageBindingInst = new nsSOAPMessageBinding(namespaceStr);
+      if (!messageBindingInst) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      messageBinding = messageBindingInst;
+      nsWSDLMessage* messageInst = NS_REINTERPRET_CAST(nsWSDLMessage*,
+                                                       aMessage);
+      messageInst->SetBinding(messageBinding);
+
       nsCOMPtr<nsISOAPPartBinding> binding;
       nsSOAPPartBinding* bindingInst = new nsSOAPPartBinding(nsISOAPPartBinding::LOCATION_BODY,
                                                              use,
@@ -1182,6 +1192,8 @@ nsWSDLLoadRequest::ProcessMessageBinding(nsIDOMElement* aElement,
 
       nsCOMPtr<nsIWSDLPart> part;
       nsWSDLPart* partInst;
+      // If there is no explicit parts attribute, this binding
+      // applies to all the parts.
       if (partsStr.IsEmpty()) {
         PRUint32 index, count;
         
@@ -1281,6 +1293,17 @@ nsWSDLLoadRequest::ProcessOperationBinding(nsIDOMElement* aElement,
       }
       else if (style.Equals(NS_LITERAL_STRING("document"))) {
         bindingInst->SetStyle(nsISOAPPortBinding::STYLE_DOCUMENT);
+      }
+      // If one isn't explicitly specified, we inherit from the port
+      else {
+        nsCOMPtr<nsIWSDLBinding> portBinding;
+        aPort->GetBinding(getter_AddRefs(portBinding));
+        nsCOMPtr<nsISOAPPortBinding> soapPortBinding = do_QueryInterface(portBinding);
+        if (soapPortBinding) {
+          PRUint16 styleVal;
+          soapPortBinding->GetStyle(&styleVal);
+          bindingInst->SetStyle(styleVal);
+        }
       }
     }
     else if ((tagName == nsWSDLAtoms::sInput_atom) &&
