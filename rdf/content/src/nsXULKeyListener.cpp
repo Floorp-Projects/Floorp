@@ -31,6 +31,9 @@
 #include "nsIDocument.h"
 #include "nsIContent.h"
 #include "nsIDOMUIEvent.h"
+#include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsINSEvent.h"
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -259,7 +262,8 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 			      keyElement->GetAttribute(nsAutoString("modifiercommand"), modCommand);
 			      keyElement->GetAttribute(nsAutoString("modifiershift"),   modShift);
 			      keyElement->GetAttribute(nsAutoString("modifieralt"),     modAlt);
-			      keyElement->GetAttribute(nsAutoString("onkeypress"),         cmdToExecute);
+			      keyElement->GetAttribute(nsAutoString("onkeypress"),      cmdToExecute);
+			      printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
 		          do {
 		            // Test Command attribute
 		            /*
@@ -273,66 +277,58 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 		            */
 		            PRBool isControl = PR_FALSE;
 		            theEvent->GetCtrlKey(&isControl);
-		            //if (isControl && (modCommand != "true"))
-		               // break;
+		            if (isControl && (modCommand != "true"))
+		                break;
 		                
 		            // Test Shift attribute
 		            PRBool isShift = PR_FALSE;
 		            theEvent->GetShiftKey(&isShift);
-		              if (isShift && (modShift != "true"))
+		            if (isShift && (modShift != "true"))
 		                break;
 		            
 		            // Test Alt attribute
 		            PRBool isAlt = PR_FALSE;
 		            theEvent->GetShiftKey(&isAlt);
-		              if (isAlt && (modAlt != "true"))
-		                break;
+		            //  if (isAlt && (modAlt != "true"))
+		            //    break;
 		            
 		            // Modifier tests passed so execute onclick command
 		            
 					  nsresult rv = NS_ERROR_FAILURE;
-					 /*
-					  nsCOMPtr<nsIContentViewerContainer> contentViewerContainer;
-					  contentViewerContainer = do_QueryInterface(theWebShell);
-					  if (!contentViewerContainer) {
-					      NS_ERROR("Webshell doesn't support the content viewer container interface");
-					      return rv;
-					  }
 
-					  nsCOMPtr<nsIContentViewer> contentViewer;
-					  if (NS_FAILED(rv = contentViewerContainer->GetContentViewer(getter_AddRefs(contentViewer)))) {
-					      NS_ERROR("Unable to retrieve content viewer.");
-					      return rv;
-					  }
-
-					  nsCOMPtr<nsIDocumentViewer> docViewer;
-					  docViewer = do_QueryInterface(contentViewer);
-					  if (!docViewer) {
-					      NS_ERROR("Document viewer interface not supported by the content viewer.");
-					      return rv;
-					  }
-					
-					  nsCOMPtr<nsIPresContext> presContext;
-					  if (NS_FAILED(rv = docViewer->GetPresContext(*getter_AddRefs(presContext)))) {
-					      NS_ERROR("Unable to retrieve the doc viewer's presentation context.");
-					      return rv;
-					  }
-					  				  
-					  theStatus = nsEventStatus_eIgnore;
-					  nsMouseEvent event;
-					  event.eventStructType = NS_MOUSE_EVENT;
-					  event.message = NS_MOUSE_LEFT_CLICK;
-
-					  nsCOMPtr<nsIContent> contentNode;
-					  contentNode = do_QueryInterface(keyNode);
-					  if (!contentNode) {
-					      NS_ERROR("DOM Node doesn't support the nsIContent interface required to handle DOM events.");
-					      return rv;
-					  }
-	                  */
-	                  nsCOMPtr<nsIContent> contentNode;
-					  contentNode = do_QueryInterface(element);
-					 // rv = contentNode->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, theStatus);
+				    // This code executes in every presentation context in which this
+				    // document is appearing.
+				    nsCOMPtr<nsIContent> content;
+				    content = do_QueryInterface(keyElement);
+				    if (!content)
+				      return NS_OK;
+				
+				    nsCOMPtr<nsIDocument> document;
+				    content->GetDocument(*getter_AddRefs(document));
+				
+				    if (!document)
+				      return NS_OK;
+				
+				    PRInt32 count = document->GetNumberOfShells();
+				    for (PRInt32 i = 0; i < count; i++) {
+				        nsIPresShell* shell = document->GetShellAt(i);
+				        if (nsnull == shell)
+				            continue;
+				
+				        // Retrieve the context in which our DOM event will fire.
+				        nsCOMPtr<nsIPresContext> aPresContext;
+				        shell->GetPresContext(getter_AddRefs(aPresContext));
+				    
+				        NS_RELEASE(shell);
+				
+				        // Handle the DOM event
+				        nsEventStatus status = nsEventStatus_eIgnore;
+				        nsKeyEvent event;
+				        event.eventStructType = NS_KEY_EVENT;
+				        event.message = NS_KEY_PRESS;
+				        content->HandleDOMEvent(*aPresContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
+				    }
+    
 		          } while (false);
 		        } // end if (theChar == keyName)
 		      } // end if (disabled == "false")
