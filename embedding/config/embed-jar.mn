@@ -45,7 +45,6 @@ skin/classic/communicator/help.css, classic/skin/classic/communicator/help.css,
 
 # PSM stuff
 locale/XXXX/pipnss, XXXX/locale/XXXX/pipnss
-locale/XXXX/pippki, XXXX/locale/XXXX/pippki
 
 # Wallet and Cookie stuff
 locale/XXXX/communicator/wallet, XXXX/locale/XXXX/communicator/wallet

@@ -6,8 +6,6 @@ locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/necko/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/communicator/
 content,install,url,jar:resource:/chrome/pipnss.jar!/content/pipnss/
 locale,install,url,jar:resource:/chrome/pipnss.jar!/locale/en-US/pipnss/
-content,install,url,jar:resource:/chrome/pippki.jar!/content/pippki/
-locale,install,url,jar:resource:/chrome/pippki.jar!/locale/en-US/pippki/
 content,install,url,jar:resource:/chrome/embed.jar!/content/help/ 
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/help/
 skin,install,url,jar:resource:/chrome/embed.jar!/skin/classic/global/
@@ -25,6 +23,5 @@ locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/cookie/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/navigator/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/navigator-platform/
 locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/pipnss/
-locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/pippki/
 content,install,url,jar:resource:/chrome/embed.jar!/content/xbl-marquee/
 locale,install,select,en-US
