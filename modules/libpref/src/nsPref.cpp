@@ -79,12 +79,6 @@
 #define PREFS_HEADER_LINE_2	"// This is a generated file!"
 
 #define INITIAL_MAX_DEFAULT_PREF_FILES 10
-
-// Preferences that start with this string are subject to a security check
-#define PREF_SECURITY_PREFIX "security."
-// Cabability which must be enabled to access preferences starting with PREF_SECURITY_PREFIX
-#define PREF_SECURITY_ACCESS_CAPABILITY "SecurityPreferenceAccess"
-
 #include "prefapi_private_data.h"
 
 #if defined(DEBUG_mcafee)
@@ -275,8 +269,7 @@ nsPref* nsPref::GetInstance()
 nsresult nsPref::SecurePrefCheck(const char* aPrefName)
 //----------------------------------------------------------------------------------------
 {
-    /* This will be uncommented very soon. For now, leave it alone. -mstoltz
-    static const char securityPrefix[] = PREF_SECURITY_PREFIX;
+    static const char securityPrefix[] = "security.";
     if (PL_strnstr(aPrefName, securityPrefix, sizeof(securityPrefix)) == 0)
         return NS_OK;
         
@@ -285,10 +278,9 @@ nsresult nsPref::SecurePrefCheck(const char* aPrefName)
     NS_WITH_SERVICE(nsIScriptSecurityManager, secMan, kSecurityManagerCID, &rv);
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
     PRBool enabled;
-    rv = secMan->IsCapabilityEnabled(PREF_SECURITY_ACCESS_CAPABILITY, &enabled);
+    rv = secMan->IsCapabilityEnabled("SecurityPreferencesAccess", &enabled);
     if (NS_FAILED(rv) || !enabled)
         return NS_ERROR_FAILURE;
-    */
     return NS_OK;
 }
 

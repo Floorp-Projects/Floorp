@@ -25,13 +25,13 @@
  *     Pierre Phaneuf <pp@ludusdesign.com>
  */
 #include <string.h>
-#include "nsIPrincipal.h"
 #include "nsILocalFile.h"
 #include "nsJARInputStream.h"
 #include "nsJAR.h"
 #include "nsXPIDLString.h"
 #include "nsIServiceManager.h"
 #include "plbase64.h"
+#include "nsIConsoleService.h"
 
 #ifndef XP_MAC
 #include "nsIPSMComponent.h"
@@ -105,9 +105,6 @@ class nsJARManifestItem
 public:
   JARManifestItemType mType;
 
-  // the entity which signed this item
-  nsCOMPtr<nsIPrincipal>  mPrincipal;
-
   // True if the second step of verification (VerifyEntry) 
   // has taken place:
   PRBool              step2Complete; 
@@ -152,9 +149,9 @@ DeleteManifestEntry(nsHashKey* aKey, void* aData, void* closure)
   return PR_TRUE;
 }
 
-// The following initialization makes a guess of 25 entries per jarfile.
-nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 25),
-                mParsedManifest(PR_FALSE)
+// The following initialization makes a guess of 10 entries per jarfile.
+nsJAR::nsJAR(): mManifestData(nsnull, nsnull, DeleteManifestEntry, nsnull, 10),
+                mParsedManifest(PR_FALSE), mGlobalStatus(nsIZipReader::NOT_SIGNED)
 {
   NS_INIT_REFCNT();
 }
@@ -298,137 +295,54 @@ nsJAR::GetInputStream(const char *aFilename, nsIInputStream **result)
   return CreateInputStream(aFilename, PR_TRUE, result);
 }
 
-//-- The following #defines are used by ParseManifest()
-//   and ParseOneFile(). The header strings are defined in the JAR specification.
-#define JAR_MF 1
-#define JAR_SF 2
-#define JAR_MF_SEARCH_STRING "(M|/M)ETA-INF/(M|m)(ANIFEST|anifest).(MF|mf)$"
-#define JAR_SF_SEARCH_STRING "(M|/M)ETA-INF/*.(SF|sf)$"
-#define JAR_MF_HEADER (const char*)"Manifest-Version: 1.0"
-#define JAR_SF_HEADER (const char*)"Signature-Version: 1.0"
-
-nsresult
-nsJAR::ParseManifest()
-{
-#ifdef XP_MAC
-return NS_OK;
-#else
-  //-- Verification Step 1
-  if (mParsedManifest)
-    return NS_OK;
-  mParsedManifest = PR_TRUE;   
-
-  //-- (1)Manifest (MF) file
-  nsresult rv;
-  nsCOMPtr<nsISimpleEnumerator> files;
-  rv = FindEntries(JAR_MF_SEARCH_STRING, getter_AddRefs(files));
-  if (!files) rv = NS_ERROR_FAILURE;
-  if (NS_FAILED(rv)) return rv;
-
-  //-- Load the file into memory
-  nsCOMPtr<nsJARItem> file;
-  rv = files->GetNext(getter_AddRefs(file));
-  if (NS_FAILED(rv) || !file)  return rv;
-  PRBool more;
-  rv = files->HasMoreElements(&more);
-  if (NS_FAILED(rv))  return rv;
-  if (more) return NS_ERROR_FILE_CORRUPTED; // More than one MF file
-  nsXPIDLCString manifestFilename;
-  rv = file->GetName(getter_Copies(manifestFilename));
-  if (!manifestFilename || NS_FAILED(rv)) return rv;
-  nsXPIDLCString manifestBuffer;
-  rv = LoadEntry(manifestFilename, getter_Copies(manifestBuffer));
-  if (NS_FAILED(rv)) return rv;
-
-  //-- Parse it
-  rv = ParseOneFile(manifestBuffer, JAR_MF, nsnull, 0);
-  if (NS_FAILED(rv)) return rv;
-  DumpMetadata("PM Pass 1 End");
-
-  //-- (2)Signature (SF) file
-  // If there are multiple signatures, we select one at random.
-  rv = FindEntries(JAR_SF_SEARCH_STRING, getter_AddRefs(files));
-  if (!files) rv = NS_ERROR_FAILURE;
-  if (NS_FAILED(rv)) return rv;
-  //-- Get an SF file
-  rv = files->GetNext(getter_AddRefs(file));
-  if (NS_FAILED(rv) || !file) return rv;
-  rv = file->GetName(getter_Copies(manifestFilename));
-  if (NS_FAILED(rv)) return rv;
-
-  PRUint32 manifestLen;
-  rv = LoadEntry(manifestFilename, getter_Copies(manifestBuffer), &manifestLen);
-  if (NS_FAILED(rv)) return rv;
-  
-  //-- Get its corresponding signature file
-  nsCAutoString sigFilename;
-  sigFilename = manifestFilename;
-  PRInt32 extension = sigFilename.RFindChar('.') + 1;
-  NS_ASSERTION(extension != 0, "Manifest Parser: Missing file extension.");
-  (void)sigFilename.Cut(extension, 2);
-  nsXPIDLCString sigBuffer;
-  PRUint32 sigLen;
-  rv = LoadEntry(sigFilename+"rsa", getter_Copies(sigBuffer), &sigLen);
-  if (NS_FAILED(rv))
-    rv = LoadEntry(sigFilename+"RSA", getter_Copies(sigBuffer), &sigLen);
-  if (NS_FAILED(rv))
-    rv = LoadEntry(sigFilename+"dsa", getter_Copies(sigBuffer), &sigLen);
-  if (NS_FAILED(rv))
-    rv = LoadEntry(sigFilename+"DSA", getter_Copies(sigBuffer), &sigLen);
-  if (NS_FAILED(rv)) return rv;
-  
-  //-- Verify that the signature file is a valid signature of the SF file
-  nsCOMPtr<nsIPrincipal> principal;
-  PRInt16 preStatus;
-  rv = VerifySignature(manifestBuffer, manifestLen, 
-                       sigBuffer, sigLen, getter_AddRefs(principal), &preStatus);
-  if (NS_FAILED(rv)) return rv;
-  
-  //-- Parse the SF file. If the verification above failed, principal
-  // is null, and ParseOneFile will mark the relevant entries as invalid.
-  // if ParseOneFile fails, then it has no effect, and we can safely 
-  // continue to the next SF file, or return. 
-  ParseOneFile(manifestBuffer, JAR_SF, principal, preStatus);
-  DumpMetadata("PM Pass 2 End");
-
-  return NS_OK;
-  #endif
-}
-
 NS_IMETHODIMP  
-nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal, 
-                               PRInt16* result)
+nsJAR::GetCertificatePrincipal(const char* aFilename, nsIPrincipal** aPrincipal)
 {
 #ifdef XP_MAC
 	return NS_ERROR_NOT_IMPLEMENTED;
 #else
   //-- Parameter check
-  if (!aFilename)
-    return NS_ERROR_ILLEGAL_VALUE;
   if (!aPrincipal)
     return NS_ERROR_NULL_POINTER;
   *aPrincipal = nsnull;
 
   DumpMetadata("GetPrincipal");
-  //-- Find the item
-  nsStringKey key(aFilename);
-  nsJARManifestItem* manItem = (nsJARManifestItem*)mManifestData.Get(&key);
-  if (manItem)
-    NS_ASSERTION(manItem->step2Complete,
-                 "Attempt to get principal before verifying signature.");
-  if(!manItem || !manItem->step2Complete)
-  {
-    *result = nsIZipReader::NOT_SIGNED;
-    return NS_OK;
-  }
+  if (!mParsedManifest)
+    ParseManifest();
 
-  *result = manItem->status;
-  if (manItem->status == nsIZipReader::VALID)
+  PRInt16 requestedStatus;
+  if (aFilename)
   {
-    *aPrincipal = manItem->mPrincipal;
+    //-- Find the item
+    nsStringKey key(aFilename);
+    nsJARManifestItem* manItem = (nsJARManifestItem*)mManifestData.Get(&key);
+    if (!manItem)
+    {
+      ReportError(aFilename, nsIZipReader::NOT_SIGNED);
+      return NS_OK;
+    }
+    if (!manItem->step2Complete)
+    {
+      //-- Creating an input stream causes step 2 of verification
+      nsCOMPtr<nsIInputStream> tempStream;
+      if (NS_FAILED(CreateInputStream(aFilename, PR_TRUE, getter_AddRefs(tempStream))))
+        return NS_ERROR_FAILURE;
+      NS_ASSERTION(manItem->step2Complete, "Verification step 2 is not complete");
+      if (!manItem->step2Complete)
+        return NS_ERROR_FAILURE;
+    }
+    requestedStatus = manItem->status;
+  }
+  else // User wants identity of signer w/o verifying any entries
+    requestedStatus = mGlobalStatus;
+
+  if (requestedStatus != nsIZipReader::VALID)
+    ReportError(aFilename, requestedStatus);
+  else // Valid signature
+  {
+    *aPrincipal = mPrincipal;
     NS_IF_ADDREF(*aPrincipal);
   }
-
   return NS_OK;
 #endif
 }
@@ -507,9 +421,99 @@ nsJAR::ReadLine(const char** src)
   return length;
 }
 
+//-- The following #defines are used by ParseManifest()
+//   and ParseOneFile(). The header strings are defined in the JAR specification.
+#define JAR_MF 1
+#define JAR_SF 2
+#define JAR_MF_SEARCH_STRING "(M|/M)ETA-INF/(M|m)(ANIFEST|anifest).(MF|mf)$"
+#define JAR_SF_SEARCH_STRING "(M|/M)ETA-INF/*.(SF|sf)$"
+#define JAR_MF_HEADER (const char*)"Manifest-Version: 1.0"
+#define JAR_SF_HEADER (const char*)"Signature-Version: 1.0"
+
 nsresult
-nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
-                    nsIPrincipal* aPrincipal, PRInt16 aPreStatus)
+nsJAR::ParseManifest()
+{
+#ifdef XP_MAC
+return NS_OK;
+#else
+  //-- Verification Step 1
+  if (mParsedManifest)
+    return NS_OK;
+  mParsedManifest = PR_TRUE;   
+
+  //-- (1)Manifest (MF) file
+  nsresult rv;
+  nsCOMPtr<nsISimpleEnumerator> files;
+  rv = FindEntries(JAR_MF_SEARCH_STRING, getter_AddRefs(files));
+  if (!files) rv = NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) return rv;
+
+  //-- Load the file into memory
+  nsCOMPtr<nsJARItem> file;
+  rv = files->GetNext(getter_AddRefs(file));
+  if (NS_FAILED(rv) || !file)  return rv;
+  PRBool more;
+  rv = files->HasMoreElements(&more);
+  if (NS_FAILED(rv))  return rv;
+  if (more) return NS_ERROR_FILE_CORRUPTED; // More than one MF file
+  nsXPIDLCString manifestFilename;
+  rv = file->GetName(getter_Copies(manifestFilename));
+  if (!manifestFilename || NS_FAILED(rv)) return rv;
+  nsXPIDLCString manifestBuffer;
+  rv = LoadEntry(manifestFilename, getter_Copies(manifestBuffer));
+  if (NS_FAILED(rv)) return rv;
+
+  //-- Parse it
+  rv = ParseOneFile(manifestBuffer, JAR_MF);
+  if (NS_FAILED(rv)) return rv;
+  DumpMetadata("PM Pass 1 End");
+
+  //-- (2)Signature (SF) file
+  // If there are multiple signatures, we select one.
+  rv = FindEntries(JAR_SF_SEARCH_STRING, getter_AddRefs(files));
+  if (!files) rv = NS_ERROR_FAILURE;
+  if (NS_FAILED(rv)) return rv;
+  //-- Get an SF file
+  rv = files->GetNext(getter_AddRefs(file));
+  if (NS_FAILED(rv) || !file) return rv;
+  rv = file->GetName(getter_Copies(manifestFilename));
+  if (NS_FAILED(rv)) return rv;
+
+  PRUint32 manifestLen;
+  rv = LoadEntry(manifestFilename, getter_Copies(manifestBuffer), &manifestLen);
+  if (NS_FAILED(rv)) return rv;
+  
+  //-- Get its corresponding signature file
+  nsCAutoString sigFilename;
+  sigFilename = manifestFilename;
+  PRInt32 extension = sigFilename.RFindChar('.') + 1;
+  NS_ASSERTION(extension != 0, "Manifest Parser: Missing file extension.");
+  (void)sigFilename.Cut(extension, 2);
+  nsXPIDLCString sigBuffer;
+  PRUint32 sigLen;
+  rv = LoadEntry(sigFilename+"rsa", getter_Copies(sigBuffer), &sigLen);
+  if (NS_FAILED(rv))
+    rv = LoadEntry(sigFilename+"RSA", getter_Copies(sigBuffer), &sigLen);
+  if (NS_FAILED(rv)) return rv;
+  
+  //-- Verify that the signature file is a valid signature of the SF file
+  rv = VerifySignature(manifestBuffer, manifestLen, 
+                       sigBuffer, sigLen, getter_AddRefs(mPrincipal), &mGlobalStatus);
+  if (NS_FAILED(rv)) return rv;
+  
+  //-- Parse the SF file. If the verification above failed, principal
+  // is null, and ParseOneFile will mark the relevant entries as invalid.
+  // if ParseOneFile fails, then it has no effect, and we can safely 
+  // continue to the next SF file, or return. 
+  ParseOneFile(manifestBuffer, JAR_SF);
+  DumpMetadata("PM Pass 2 End");
+
+  return NS_OK;
+  #endif
+}
+
+nsresult
+nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType)
 {
   //-- Check file header
   const char* nextLineStart = filebuf;
@@ -600,7 +604,7 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
           {
             NS_ASSERTION(curItemSF->status == nsJAR::NOT_SIGNED,
                          "SECURITY ERROR: nsJARManifestItem not correctly initialized");
-            curItemSF->status = aPreStatus;
+            curItemSF->status = mGlobalStatus;
             if (curItemSF->status == nsIZipReader::VALID)
             { // Compare digests
               if (storedSectionDigest.Length() == 0)
@@ -610,8 +614,6 @@ nsJAR::ParseOneFile(const char* filebuf, PRInt16 aFileType,
                 if (storedSectionDigest !=
                     (const char*)curItemSF->calculatedSectionDigest)
                   curItemSF->status = nsIZipReader::INVALID_MANIFEST;
-                else
-                  curItemSF->mPrincipal = aPrincipal;
                 JAR_NULLFREE(curItemSF->calculatedSectionDigest)
                 storedSectionDigest = "";
               }
@@ -692,9 +694,7 @@ nsresult
 nsJAR::VerifyEntry(const char* aEntryName, char* aEntryData,
                    PRUint32 aLen)
 {
-#ifdef XP_MAC
-	return NS_OK;
-#else
+#ifndef XP_MAC
   //-- Verification Step 2
   // Check that verification is supported and step 1 has been done
 
@@ -724,15 +724,64 @@ nsJAR::VerifyEntry(const char* aEntryName, char* aEntryData,
       JAR_NULLFREE(calculatedEntryDigest)
       JAR_NULLFREE(manItem->storedEntryDigest)
     }
-
-    if(manItem->status != nsIZipReader::VALID)
-      manItem->mPrincipal = null_nsCOMPtr();
   }
 
   manItem->step2Complete = PR_TRUE;
   DumpMetadata("VerifyEntry end");
 #endif
   return NS_OK;
+}
+
+void nsJAR::ReportError(const char* aFilename, PRInt16 errorCode)
+{
+  //-- Generate error message
+  nsAutoString message("Signature Verification Error: the signature on ");
+  if (aFilename)
+    message += aFilename;
+  else
+    message += "this .jar archive";
+  message += " is invalid because ";
+  switch(errorCode)
+  {
+  case nsIZipReader::NOT_SIGNED:
+    message += "the archive did not contain a valid PKCS7 signature.";
+    break;
+  case nsIZipReader::INVALID_SIG:
+    message += "the digital signature (*.RSA) file is not a valid signature of ";
+    message += "the signature instruction file (*.SF).";
+    break;
+  case nsIZipReader::INVALID_UNKNOWN_CA:
+    message += "the certificate used to sign this file has an unrecognized issuer.";
+    break;
+  case nsIZipReader::INVALID_MANIFEST:
+    message += "the signature instruction file (*.SF) does not contain a valid hash ";
+    message += "of the MANIFEST.MF file.";
+    break;
+  case nsIZipReader::INVALID_ENTRY:
+    message += "the MANIFEST.MF file does not contain a valid hash of the file ";
+    message += "being verified.";
+    break;
+  default:
+    message += "of an unknown problem.";
+  }
+  
+  // Report error in JS console
+  nsCOMPtr<nsIConsoleService> console
+    (do_GetService("mozilla.consoleservice.1"));
+  if (console)
+  {
+    PRUnichar* messageUni = message.ToNewUnicode();
+    if (!messageUni) return;
+    console->LogStringMessage(messageUni);
+    nsAllocator::Free(messageUni);
+  }
+  else // If JS console reporting failed, print to stderr.
+  {
+    char* messageCstr = message.ToNewCString();
+    if (!messageCstr) return;
+    fprintf(stderr, "%s\n", messageCstr);
+    nsAllocator::Free(messageCstr);
+  }
 }
 
 nsresult
@@ -789,7 +838,7 @@ nsresult nsJAR::CalculateDigest(const char* aInBuf, PRUint32 aLen,
   if (!(*digest)) { PR_FREEIF(rawDigest); return NS_ERROR_OUT_OF_MEMORY; }
   
   PR_FREEIF(rawDigest);
- #endif
+#endif
   return NS_OK;
 }
 
