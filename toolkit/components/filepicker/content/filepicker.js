@@ -398,6 +398,9 @@ function onCancel()
 }
 
 function onDblClick(e) {
+  // we only care about button 0 (left click) events
+  if (e.button != 0) return;
+
   var t = e.originalTarget;
   if (t.localName != "treechildren")
     return;
