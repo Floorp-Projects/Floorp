@@ -200,7 +200,7 @@ public:
     }
   }
 
-  GdkGC *GetGC() { return mGC; }
+  GdkGC *GetGC() { return gdk_gc_ref(mGC); }
 
 private:
   nsDrawingSurfaceGTK   *mOffscreenSurface;
