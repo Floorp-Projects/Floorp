@@ -1246,6 +1246,7 @@ nsWindow	*child = this;
 nsWindow	*deeperWindow;
 nsRect		rect;
 
+	::GlobalToLocal(&aThePoint);
 	if (this->PtInWindow(aThePoint.h,aThePoint.v))
 		{
 		// traverse through all the nsWindows to find out who got hit, lowest level of course
