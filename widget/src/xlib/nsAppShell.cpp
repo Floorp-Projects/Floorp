@@ -395,13 +395,6 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
   return NS_OK;
 }
 
-NS_METHOD
-nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
-                            nsIWidget *aWidget, PRBool *aForWindow)
-{
-  return NS_OK;
-}
-
 nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
   if (aEvent == 0) {

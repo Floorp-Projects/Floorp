@@ -44,8 +44,6 @@ class nsAppShell : public nsIAppShell
                           { return NS_OK; }
   NS_IMETHOD            GetNativeEvent(PRBool &aRealEvent, void *&aEvent);
   NS_IMETHOD            DispatchNativeEvent(PRBool aRealEvent, void * aEvent);
-  NS_IMETHOD            EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
-					      nsIWidget *aWidget, PRBool *aForWindow);
   
   NS_IMETHOD            SetDispatchListener(nsDispatchListener* aDispatchListener);
   NS_IMETHOD            Exit();

@@ -508,60 +508,6 @@ NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void * aEvent)
   return NS_OK;
 }
 
-NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget, PRBool *aForWindow)
-{
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::EventIsForModalWindow aEvent=<%p> - Not Implemented.\n", aEvent));
-
-#if 1
-    *aForWindow = PR_FALSE;
-    return NS_OK;
-#else
-  PRBool isInWindow, isMouseEvent;
-  PhEvent_t *msg = (PhEvent_t *) aEvent;
-
-  if (aRealEvent == PR_FALSE)
-  {
-    *aForWindow = PR_FALSE;
-    return NS_OK;
-  }
-
-  isInWindow = PR_FALSE;
-  if (aWidget != nsnull)
-  {
-    // Get Native Window for dialog window
-    PtWidget_t *win;
-    win = (PtWidget_t *)aWidget->GetNativeData(NS_NATIVE_WINDOW);
-    PtWidget_t *eWin = (PtWidget_t *) msg->collector.handle;
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::EventIsForModalWindow win=<%p> eWin=<%p>\n",win, eWin));
-
-    if (nsnull != eWin) {
-      if (win == eWin) {
-        isInWindow = PR_TRUE;
-      }
-    }
-  }
-  
-  switch(msg->type)
-  {
-    case Ph_EV_BUT_PRESS:
-    case Ph_EV_BUT_RELEASE:
-    case Ph_EV_BUT_REPEAT:
-    case Ph_EV_PTR_MOTION_BUTTON:
-    case Ph_EV_PTR_MOTION_NOBUTTON:
-       isMouseEvent = PR_TRUE;
-       break;
-    default:
-       isMouseEvent = PR_FALSE;
-       break;
-  }
-
-  *aForWindow = isInWindow == PR_TRUE || isMouseEvent == PR_FALSE ? PR_TRUE : PR_FALSE;
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::EventIsForModalWindow isInWindow=<%d> isMouseEvent=<%d> aForWindow=<%d>\n", isInWindow, isMouseEvent, *aForWindow));
-  return NS_OK;
-#endif
-}
-
 NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
                                              PRBool aListen)
 {

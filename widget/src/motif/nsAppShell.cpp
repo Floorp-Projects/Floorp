@@ -275,13 +275,6 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
 }
 
 
-NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsIWidget *aWidget,
-                                            PRBool *aForWindow)
-{
-  //XXX:Implement this.
-  return NS_OK;
-}
-
 static NS_DEFINE_CID(kCMotifAppContextServiceCID, NS_MOTIF_APP_CONTEXT_SERVICE_CID);
 
 //-------------------------------------------------------------------------

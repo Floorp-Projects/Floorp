@@ -317,18 +317,6 @@ NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
     return NS_ERROR_FAILURE;
 }
 
-NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, 
-                                            void *aEvent,
-                                            nsIWidget *aWidget, 
-                                            PRBool *aForWindow)
-{
-    PR_LOG(QtWidgetsLM, 
-           PR_LOG_DEBUG, 
-           ("nsAppShell::EventIsForModalWindow()\n"));
-    *aForWindow = PR_TRUE;
-    return NS_OK;
-}
-
 nsAppShell::GfxToolkit nsAppShell::GetGfxToolkit()
 {
     nsString aGfxToolkit;

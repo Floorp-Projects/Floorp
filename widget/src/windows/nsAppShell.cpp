@@ -127,69 +127,6 @@ nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
   return NS_ERROR_FAILURE;
 }
 
-NS_METHOD
-nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent,
-                            nsIWidget *aWidget, PRBool *aForWindow)
-{
-  PRBool isInWindow,
-         isMouseEvent;
-  MSG    *msg = (MSG *) aEvent;
-
-  if (aRealEvent == PR_FALSE) {
-     *aForWindow = PR_FALSE;
-     return NS_OK;
-   }
-
-   isInWindow = PR_FALSE;
-   if (aWidget != nsnull) {
-     // Get Native Window for dialog window
-     HWND win;
-     win = (HWND)aWidget->GetNativeData(NS_NATIVE_WINDOW);
-
-     // Find top most window of event window
-     HWND eWin = msg->hwnd;
-     if (NULL != eWin) {
-       /*HWND parent = ::GetParent(eWin);
-       while (parent != NULL) {
-         eWin = parent;
-         parent = ::GetParent(eWin);
-       }
-       */
-       if (win == eWin) {
-#ifdef DEBUG_danm
-         printf(" Short circuit");
-#endif
-         isInWindow = PR_TRUE;
-       } else {
-         RECT r;
-         ::GetWindowRect(win, &r);
-         if (msg->pt.x >= r.left && msg->pt.x <= r.right && msg->pt.y >= r.top && msg->pt.y <= r.bottom)
-           isInWindow = PR_TRUE;
-       }
-     }
-   }
-
-  isMouseEvent = PR_FALSE;
-  switch (msg->message) {
-     case WM_MOUSEMOVE:
-     case WM_LBUTTONDOWN:
-     case WM_LBUTTONUP:
-     case WM_LBUTTONDBLCLK:
-     case WM_MBUTTONDOWN:
-     case WM_MBUTTONUP:
-     case WM_MBUTTONDBLCLK:
-     case WM_RBUTTONDOWN:
-     case WM_RBUTTONUP:
-     case WM_RBUTTONDBLCLK:
-       isMouseEvent = PR_TRUE;
-  }
-
-  *aForWindow = isInWindow == PR_TRUE || isMouseEvent == PR_FALSE ?
-                  PR_TRUE : PR_FALSE;
-
-  return NS_OK;
-}
-
 nsresult nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 {
   DispatchMessage((MSG *)aEvent);

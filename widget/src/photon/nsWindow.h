@@ -103,6 +103,8 @@ protected:
   void                  ResizeHoldOff();
   void                  RemoveResizeWidget();
   static int            ResizeWorkProc( void *data );
+  NS_IMETHOD            ModalEventFilter(PRBool aRealEvent, void *aEvent,
+                                         PRBool *aForWindow);
 
   PtWidget_t            *mClientWidget;
   PtWidget_t            *mShell;         /* used for toplevel windows */
