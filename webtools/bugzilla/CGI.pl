@@ -1357,7 +1357,7 @@ Actions:
         my $mybugstemplate = Param("mybugstemplate");
         my %substs;
         $substs{'userid'} = url_quote($::COOKIE{"Bugzilla_login"});
-        $html .= "</TR><TR>";
+        $html .= "<TR>";
         $html .= "<TD>Preset Queries: </TD>";
         $html .= "<TD colspan=3>\n";
         if ($mybugslink) {
@@ -1374,7 +1374,7 @@ Actions:
             $html .= "<A HREF=\"buglist.cgi?&cmdtype=runnamed&namedcmd=" .
                      url_quote($name) . "\"><NOBR>$name</NOBR></A>";
         }
-        $html .= "</TR>\n<TR>";
+        $html .= "</TD></TR>\n";
     } else {
     $html .= "</TD><TD>&nbsp;</TD><TD valign=middle align=right>\n";
         $html .=
@@ -1383,8 +1383,8 @@ Actions:
             " | <NOBR><a href=query.cgi?GoAheadAndLogIn=1>Log in</a></NOBR>";
         $html .= "</TD></TR>";
     }
-    $html .= "</FORM>\n";
     $html .= "</TABLE>";                
+    $html .= "</FORM>\n";
     return $html;
 }
 
