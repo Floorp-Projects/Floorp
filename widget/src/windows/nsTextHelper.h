@@ -32,7 +32,8 @@ class nsTextHelper : public nsWindow, public nsITextWidget
 public:
     nsTextHelper(nsISupports *aOuter);
     virtual ~nsTextHelper();
-    
+
+    virtual         void            SetMaxTextLength(PRUint32 aChars);
     virtual         PRUint32        GetText(nsString& aTextBuffer, PRUint32 aBufferSize);
     virtual         PRUint32        SetText(const nsString &aText);
     virtual         PRUint32        InsertText(const nsString &aText, PRUint32 aStartPos, PRUint32 aEndPos);
@@ -50,7 +51,7 @@ protected:
 
     PRBool  mIsPassword;
     PRBool  mIsReadOnly;
-
+   
     virtual DWORD           WindowExStyle();
 
 };

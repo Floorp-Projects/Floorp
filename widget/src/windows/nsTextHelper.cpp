@@ -25,6 +25,12 @@
 #include <windows.h>
 
 
+void nsTextHelper::SetMaxTextLength(PRUint32 aChars)
+{
+  ::SendMessage(mWnd, EM_SETLIMITTEXT, (WPARAM) (INT)aChars, 0);
+}
+
+
 PRUint32  nsTextHelper::GetText(nsString& aTextBuffer, PRUint32 aBufferSize) {
 
   int length = GetWindowTextLength(mWnd);

@@ -87,6 +87,15 @@ class nsITextWidget : public nsIWidget
     virtual void SetPassword(PRBool aIsPassword) = 0;
 
     /**
+     * Sets the maximum number of characters the widget can hold 
+     *
+     * @param aChars maximum number of characters for this widget. if 0 then there isn't any limit
+     */
+    
+    virtual void SetMaxTextLength(PRUint32 aChars) = 0;
+
+
+    /**
      * Set the text widget to be read-only
      *
      * @param      aReadOnlyFlag PR_TRUE the widget is read-only,
