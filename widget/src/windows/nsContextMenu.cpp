@@ -118,7 +118,7 @@ nsContextMenu::~nsContextMenu()
 // Create the proper widget
 //
 //-------------------------------------------------------------------------
-NS_METHOD nsContextMenu::Create(nsISupports *aParent)
+NS_METHOD nsContextMenu::Create(nsISupports *aParent, const nsString& anAlignment)
 {
   if(aParent)
   {
