@@ -192,11 +192,22 @@
          (production :identifier-name (:initial-identifier-character) identifier-name-initial
            (name (vector (character-value :initial-identifier-character)))
            (contains-escapes (contains-escapes :initial-identifier-character)))
+         (production :identifier-name (:null-escapes :initial-identifier-character) identifier-name-initial-null-escapes
+           (name (vector (character-value :initial-identifier-character)))
+           (contains-escapes true))
          (production :identifier-name (:identifier-name :continuing-identifier-character) identifier-name-continuing
            (name (append (name :identifier-name) (vector (character-value :continuing-identifier-character))))
            (contains-escapes (or (contains-escapes :identifier-name)
-                                 (contains-escapes :continuing-identifier-character)))))
+                                 (contains-escapes :continuing-identifier-character))))
+         (production :identifier-name (:identifier-name :null-escape) identifier-name-null-escape
+           (name (name :identifier-name))
+           (contains-escapes true)))
+
+       (production :null-escapes (:null-escape) null-escapes-one)
+       (production :null-escapes (:null-escapes :null-escape) null-escapes-more)
        
+       (production :null-escape (#\\ #\Q) null-escape-q)
+
        (rule :initial-identifier-character
              ((character-value character) (contains-escapes boolean))
          (production :initial-identifier-character (:ordinary-initial-identifier-character) initial-identifier-character-ordinary
@@ -225,12 +236,12 @@
        (%print-actions)
        
        (define reserved-words (vector string)
-         (vector "abstract" "break" "case" "catch" "class" "const" "continue" "debugger" "default" "delete" "do" "else" "enum"
-                 "eval" "export" "extends" "false" "final" "finally" "for" "function" "goto" "if" "implements" "import" "in"
-                 "instanceof" "native" "new" "null" "package" "private" "protected" "public" "return" "static" "super" "switch" "synchronized"
-                 "this" "throw" "throws" "transient" "true" "try" "typeof" "var" "volatile" "while" "with"))
+         (vector "abstract" "break" "case" "catch" "class" "const" "constructor" "continue" "debugger" "default" "delete" "do" "else" "enum"
+                 "eval" "export" "extends" "false" "final" "finally" "for" "function" "goto" "if" "implements" "import" "in" "include"
+                 "instanceof" "interface" "namespace" "native" "new" "null" "package" "private" "protected" "public" "return" "static" "super"
+                 "switch" "synchronized" "this" "throw" "throws" "transient" "true" "try" "typeof" "use" "var" "volatile" "while" "with"))
        (define non-reserved-words (vector string)
-         (vector "box" "constructor" "field" "get" "language" "local" "method" "override" "set" "version"))
+         (vector "get" "set"))
        (define keywords (vector string)
          (append reserved-words non-reserved-words))
        
@@ -413,7 +424,9 @@
            (string-value ""))
          (production (:string-chars :theta) ((:string-chars :theta) (:string-char :theta)) string-chars-some
            (string-value (append (string-value :string-chars)
-                                 (vector (character-value :string-char))))))
+                                 (vector (character-value :string-char)))))
+         (production (:string-chars :theta) ((:string-chars :theta) :null-escape) string-chars-null-escape
+           (string-value (string-value :string-chars))))
        
        (rule (:string-char :theta) ((character-value character))
          (production (:string-char :theta) ((:literal-string-char :theta)) string-char-literal
@@ -460,6 +473,7 @@
                                                         (* 256 (hex-value :hex-digit 2)))
                                                      (* 16 (hex-value :hex-digit 3)))
                                                   (hex-value :hex-digit 4))))))
+
        (%print-actions)
        
        (%section "Regular expression literals")
@@ -472,7 +486,9 @@
          (production :reg-exp-flags () reg-exp-flags-none
            (r-e-flags ""))
          (production :reg-exp-flags (:reg-exp-flags :continuing-identifier-character) reg-exp-flags-more
-           (r-e-flags (append (r-e-flags :reg-exp-flags) (vector (character-value :continuing-identifier-character))))))
+           (r-e-flags (append (r-e-flags :reg-exp-flags) (vector (character-value :continuing-identifier-character)))))
+         (production :reg-exp-flags (:reg-exp-flags :null-escape) reg-exp-flags-null-escape
+           (r-e-flags (r-e-flags :reg-exp-flags))))
        
        (rule :reg-exp-body ((r-e-body string))
          (production :reg-exp-body (#\/ (:- #\*) :reg-exp-chars #\/) reg-exp-body
