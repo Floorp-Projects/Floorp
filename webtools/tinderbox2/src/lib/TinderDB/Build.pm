@@ -7,8 +7,8 @@
 # the build was and display a link to the build log.
 
 
-# $Revision: 1.45 $ 
-# $Date: 2002/05/06 17:53:27 $ 
+# $Revision: 1.46 $ 
+# $Date: 2002/05/06 18:37:00 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/Build.pm,v $ 
 # $Name:  $ 
@@ -1169,7 +1169,7 @@ sub status_table_row {
     my ($links) = '';
     my ($title) = "Build Info Buildname: $buildname";
 
-    $links.=  "\t\t".$text_browser_color_string."\n";
+    $links.=  "\t\t\t".$text_browser_color_string."\n";
 
     # Build Log Link
 
@@ -1177,7 +1177,7 @@ sub status_table_row {
     # the full log they can get there from the brief log page.
 
     if ($current_rec->{'brieflog'}) {
-      $links.= "\t\t".
+      $links.= "\t\t\t".
         HTMLPopUp::Link(
                         "linktxt"=>"l", 
                         # the mail processor tells us the URL to
@@ -1189,7 +1189,7 @@ sub status_table_row {
     }
     
     if ($current_rec->{'fulllog'}) {
-      $links.= "\t\t".
+      $links.= "\t\t\t".
         HTMLPopUp::Link(
                         "linktxt"=>"L", 
                         # the mail processor tells us the URL to
@@ -1203,7 +1203,7 @@ sub status_table_row {
     # Binary file Link
     
     if ($current_rec->{'binaryname'}) {
-      $links.= "\t\t".HTML::Link(
+      $links.= "\t\t\t".HTML::Link(
                                  "linktxt"=>"B",
                                  "href"=>$current_rec->{'binaryname'},
                                  "windowtxt"=>$current_rec->{'info'}, 
@@ -1214,7 +1214,7 @@ sub status_table_row {
     # Bloat Data Link
 
     if ($current_rec->{'bloatdata'}) {
-      $links.= "\t\t".
+      $links.= "\t\t\t".
         HTMLPopUp::Link(
                         "windowtxt"=>$current_rec->{'info'}, 
                         "windowtitle" =>$title,
@@ -1237,7 +1237,7 @@ sub status_table_row {
       my ($mindate) = $current_rec->{'previousbuildtime'};
 
       $links .= (
-                 "\t\t". 
+                 "\t\t\t". 
                  VCDisplay::query(
                                    'linktxt'=> "C",
                                    'tree' => $tree,
@@ -1254,7 +1254,7 @@ sub status_table_row {
 
     if ( ($DISPLAY_BUILD_ERRORS) && ($current_rec->{'errors'}) ) {
         $links .= (
-                   "\t\t<br>errs: ". 
+                   "\t\t\t<br>errs: ". 
                    $current_rec->{'errors'}."\n".
                    "");
     }
@@ -1268,11 +1268,12 @@ sub status_table_row {
     }
 
     
-    $links.=  "\t\t".$text_browser_color_string."\n";
+    $links.=  "\t\t\t".$text_browser_color_string."\n";
 
     push @outrow, ( "\t<!-- cell for build: $buildname, tree: $tree -->\n".
-                    "\t<td align=center $cell_options><tt>\n".
-                   $links."\t".
+                    "\t\t<td align=center $cell_options><tt>\n".
+                   $links.
+                    "\t\t".
                    "</tt></td>\n");
     
 
