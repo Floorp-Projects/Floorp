@@ -223,9 +223,6 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 
   sInitialized = PR_TRUE;
 
-  gchar *home=nsnull;
-  gchar *path=nsnull;
-
   int argc = bac ? *bac : 0;
   char **argv = bav;
 
@@ -252,15 +249,6 @@ NS_IMETHODIMP nsAppShell::Create(int *bac, char **bav)
 
   HandleColormapPrefs();
   gdk_rgb_init();
-
-  home = g_get_home_dir();
-  if ((char*)nsnull != home) {
-    path = g_strdup_printf("%s%c%s", home, G_DIR_SEPARATOR, ".gtkrc");
-    if ((char *)nsnull != path) {
-      gtk_rc_parse(path);
-      g_free(path);
-    }
-  }
 
   return NS_OK;
 }
