@@ -22,22 +22,16 @@
 
 <!-- Values for changepassword.xul -->
 <!ENTITY setPassword.title  "Set Master Password">
-<!ENTITY setPassword.tokenName.label "Token Name">
+<!ENTITY setPassword.tokenName.label "Security Device">
 <!ENTITY setPassword.oldPassword.label "Old password">
 <!ENTITY setPassword.newPassword.label "Enter a new password">
 <!ENTITY setPassword.reenterPassword.label "Enter the password again">
 <!ENTITY setPassword.meter.label "Password quality meter:">
-<!ENTITY setPassword.meter.bad "Bad">
-<!ENTITY setPassword.meter.good "Good">
 <!ENTITY setPassword.meter.loading "Loading">
-<!ENTITY setPassword.stats.total "Total characters:">
-<!ENTITY setPassword.stats.numbers "Numbers:">
-<!ENTITY setPassword.stats.symbols "Symbols:">
-<!ENTITY setPassword.stats.upper "Uppercase:">
 
 <!-- Values for getpassword.xul -->
 <!ENTITY getPassword.title  "Enter Master Password">
-<!ENTITY getPassword.tokenName.label "Token Name">
+<!ENTITY getPassword.tokenName.label "Security Device">
 <!ENTITY getPassword.password.label "Password:">
 
 <!-- These should be common -->
