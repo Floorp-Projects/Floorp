@@ -192,7 +192,6 @@ protected:
   PRUint32 mScriptLineNo;
 
   PRBool mNeedToBlockParser;
-  PRBool mParserBlocked;
   nsSupportsArray mScriptElements;
 
   nsString  mPreferredStyle;

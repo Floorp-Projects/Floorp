@@ -155,7 +155,6 @@ nsXMLContentSink::nsXMLContentSink()
   mCSSLoader       = nsnull;
   mXSLTransformMediator = nsnull;
   mNeedToBlockParser = PR_FALSE;
-  mParserBlocked = PR_FALSE;
 }
 
 nsXMLContentSink::~nsXMLContentSink()
@@ -816,12 +815,10 @@ nsXMLContentSink::CloseContainer(const nsIParserNode& aNode)
   NS_IF_RELEASE(nameSpace);
 
   if (mNeedToBlockParser) {
-    mParserBlocked = PR_TRUE;
     return NS_ERROR_HTMLPARSER_BLOCK;
   }
-  else {
-    return result;
-  }
+
+  return result;
 }
 
 NS_IMETHODIMP
@@ -1703,13 +1700,12 @@ nsXMLContentSink::ScriptAvailable(nsresult aResult,
     return NS_OK;
   }
 
-  if (mParserBlocked) {
+  if (mParser && !mParser->IsParserEnabled()) {
     // make sure to unblock the parser before evaluating the script,
     // we must unblock the parser even if loading the script failed or
     // if the script was empty, if we don't, the parser will never be
     // unblocked.
     mParser->UnblockParser();
-    mParserBlocked = PR_FALSE;
   }
 
   // Mark the current script as loaded
