@@ -772,24 +772,6 @@ function BrowserOpenFileWindow()
   }
 }
 
-function BrowserAddBookmark(url, title)
-{
-  if (!title)
-    title = url;
-
-  var focusedWindow = document.commandDispatcher.focusedWindow;
-  if (focusedWindow == window)
-    focusedWindow = _content;
-
-  var docCharset = focusedWindow.document.characterSet;
-
-  var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
-                       .getService(Components.interfaces.nsIBookmarksService);
-
-  bmks.AddBookmark(url, title, bmks.BOOKMARK_DEFAULT_TYPE, docCharset);
-  debug("BrowserAddBookmark: " + docCharset + "\n");
-}
-
 // Set up a lame hack to avoid opening two bookmarks.
 // Could otherwise happen with two Ctrl-B's in a row.
 var gDisableBookmarks = false;
@@ -1294,14 +1276,6 @@ function OpenMessenger()
 function OpenAddressbook()
 {
   open("chrome://messenger/content/addressbook/addressbook.xul", "_blank", "chrome,menubar,toolbar,resizable");
-}
-
-function BrowserSendPage(pageUrl, pageTitle)
-{
-  openDialog("chrome://messenger/content/messengercompose/messengercompose.xul",
-             "_blank",
-             "chrome,all,dialog=no",
-             "attachment='" + pageUrl + "',body='" + pageUrl + "',subject='" + pageTitle + "',bodyislink=true");
 }
 
 function BrowserViewSource()

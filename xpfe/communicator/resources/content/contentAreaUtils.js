@@ -72,6 +72,14 @@
     window.openDialog( "chrome://editor/content", "_blank", "chrome,all,dialog=no", url );
   }
 
+  function sendPage(pageUrl, pageTitle)
+  {
+    window.openDialog("chrome://messenger/content/messengercompose/messengercompose.xul", "_blank", 
+                      "chrome,all,dialog=no", 
+                      "attachment='" + pageUrl + "',body='" + pageUrl +
+                      "',subject='" + pageTitle + "',bodyislink=true");
+  }
+
   function findParentNode(node, parentNode)
   {
     while (node) {
@@ -88,4 +96,21 @@
       node = node.parentNode;
     }
     return null;
+  }
+
+  function addBookmark(url,title)
+  {
+    if (!title)
+      title = url;
+
+    var focusedWindow = document.commandDispatcher.focusedWindow;
+    if (focusedWindow == window)
+      focusedWindow = _content;
+
+    var docCharset = focusedWindow.document.characterSet;
+
+    var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"]
+                         .getService(Components.interfaces.nsIBookmarksService);
+
+    bmks.AddBookmark(url, title, bmks.BOOKMARK_DEFAULT_TYPE, docCharset);
   }
