@@ -1769,7 +1769,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
         {
 		  // we have to load an old 4x style plugin
           nsresult rv = ns4xPlugin::CreatePlugin(plugins->mLibrary, (nsIPlugin **)&plugins->mEntryPoint,
-												(nsISupports*)(nsIPluginManager*) this);
+												mServiceMgr);
         }
         else
         {
