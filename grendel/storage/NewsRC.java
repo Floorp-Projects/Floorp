@@ -173,30 +173,30 @@ public class NewsRC {
     int length = line_buf.length();
     boolean subscribed = false;
     int i = 0;
-    while (i < length && line[i] <= ' ') i++;    // skip whitespace
+    while (i < length && line[i] <= (byte)' ') i++;    // skip whitespace
 
     int start = i;
     while (i < length &&                        // skip non-whitespace, but
-           line[i] > ' ' &&                     // not the two magic chars
-           line[i] != ':' &&
-           line[i] != '!')
+           line[i] > (byte)' ' &&                     // not the two magic chars
+           line[i] != (byte)':' &&
+           line[i] != (byte)'!')
       i++;
 
     if (i == start) return null;
 
     String group_name = new String(line, start, i);
 
-    while (i < length && line[i] <= ' ') i++;    // skip whitespace
+    while (i < length && line[i] <= (byte)' ') i++;    // skip whitespace
 
-    if (i < length && line[i] == ':')
+    if (i < length && line[i] == (byte)':')
       subscribed = true;
-    else if (i < length && line[i] == '!')
+    else if (i < length && line[i] == (byte)'!')
       subscribed = false;
     else
       return null;
 
     i++;
-    while (i < length && line[i] <= ' ') i++;    // skip whitespace
+    while (i < length && line[i] <= (byte)' ') i++;    // skip whitespace
     return new NewsRCLine(this, group_name, subscribed, line, i, length);
   }
 
@@ -231,9 +231,9 @@ public class NewsRC {
       }
       ByteBuf b = new ByteBuf();
 
-      final byte[] CR = { '\r' };
-      final byte[] LF = { '\n' };
-      final byte[] CRLF = { '\r', '\n' };
+      final byte[] CR = { (byte)'\r' };
+      final byte[] LF = { (byte)'\n' };
+      final byte[] CRLF = { (byte)'\r', (byte)'\n' };
       byte linebreak[] = (Constants.ISUNIX ? LF : Constants.ISMAC ? CR : CRLF);
 
       for (Enumeration e = lines.elements(); e.hasMoreElements(); ) {

@@ -35,14 +35,14 @@ public final class MimeBase64Encoder extends MimeEncoder {
   static private final byte crlf[] = "\r\n".getBytes();
 
   static private final byte map[] = {
-    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',     // 0-7
-    'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',     // 8-15
-    'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X',     // 16-23
-    'Y', 'Z', 'a', 'b', 'c', 'd', 'e', 'f',     // 24-31
-    'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',     // 32-39
-    'o', 'p', 'q', 'r', 's', 't', 'u', 'v',     // 40-47
-    'w', 'x', 'y', 'z', '0', '1', '2', '3',     // 48-55
-    '4', '5', '6', '7', '8', '9', '+', '/',     // 56-63
+    (byte)'A', (byte)'B', (byte)'C', (byte)'D', (byte)'E', (byte)'F', (byte)'G', (byte)'H',     // 0-7
+    (byte)'I', (byte)'J', (byte)'K', (byte)'L', (byte)'M', (byte)'N', (byte)'O', (byte)'P',     // 8-15
+    (byte)'Q', (byte)'R', (byte)'S', (byte)'T', (byte)'U', (byte)'V', (byte)'W', (byte)'X',     // 16-23
+    (byte)'Y', (byte)'Z', (byte)'a', (byte)'b', (byte)'c', (byte)'d', (byte)'e', (byte)'f',     // 24-31
+    (byte)'g', (byte)'h', (byte)'i', (byte)'j', (byte)'k', (byte)'l', (byte)'m', (byte)'n',     // 32-39
+    (byte)'o', (byte)'p', (byte)'q', (byte)'r', (byte)'s', (byte)'t', (byte)'u', (byte)'v',     // 40-47
+    (byte)'w', (byte)'x', (byte)'y', (byte)'z', (byte)'0', (byte)'1', (byte)'2', (byte)'3',     // 48-55
+    (byte)'4', (byte)'5', (byte)'6', (byte)'7', (byte)'8', (byte)'9', (byte)'+', (byte)'/',     // 56-63
   };
 
   private final void encode_token() {
@@ -62,12 +62,12 @@ public final class MimeBase64Encoder extends MimeEncoder {
     line[i+1] = map[0x3F & (buf >> 12)];   // sextet 2 (octet 1 and 2)
 
     if (buf_bytes == 1)
-      line[i+2] = '=';
+      line[i+2] = (byte)'=';
     else
       line[i+2] = map[0x3F & (buf >> 6)];  // sextet 3 (octet 2 and 3)
 
     if (buf_bytes <= 2)
-      line[i+3] = '=';
+      line[i+3] = (byte)'=';
     else
       line[i+3] = map[0x3F & buf];         // sextet 4 (octet 3)
     line_length += 4;
@@ -76,8 +76,8 @@ public final class MimeBase64Encoder extends MimeEncoder {
   }
 
   private final void flush_line(ByteBuf out) {
-    line[line_length]   = '\r';
-    line[line_length+1] = '\n';
+    line[line_length]   = (byte)'\r';
+    line[line_length+1] = (byte)'\n';
     out.append(line, 0, line_length + 2);
     line_length = 0;
   }

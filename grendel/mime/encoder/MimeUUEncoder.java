@@ -38,14 +38,14 @@ public final class MimeUUEncoder extends MimeEncoder {
   static private final byte end_crlf[]  = "end\r\n".getBytes();
 
   static private final byte map[] = {
-    '`', '!', '"', '#', '$', '%', '&', '\'',    // 0-7
-    '(', ')', '*', '+', ',', '-', '.', '/',     // 8-15
-    '0', '1', '2', '3', '4', '5', '6', '7',     // 16-23
-    '8', '9', ':', ';', '<', '=', '>', '?',     // 24-31
-    '@', 'A', 'B', 'C', 'D', 'E', 'F', 'G',     // 32-39
-    'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O',     // 40-47
-    'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W',     // 48-55
-    'X', 'Y', 'Z', '[', '\\',']', '^', '_',     // 56-63
+    (byte)'`', (byte)'!', (byte)'"', (byte)'#', (byte)'$', (byte)'%', (byte)'&', (byte)'\'',    // 0-7
+    (byte)'(', (byte)')', (byte)'*', (byte)'+', (byte)',', (byte)'-', (byte)'.', (byte)'/',     // 8-15
+    (byte)'0', (byte)'1', (byte)'2', (byte)'3', (byte)'4', (byte)'5', (byte)'6', (byte)'7',     // 16-23
+    (byte)'8', (byte)'9', (byte)':', (byte)';', (byte)'<', (byte)'=', (byte)'>', (byte)'?',     // 24-31
+    (byte)'@', (byte)'A', (byte)'B', (byte)'C', (byte)'D', (byte)'E', (byte)'F', (byte)'G',     // 32-39
+    (byte)'H', (byte)'I', (byte)'J', (byte)'K', (byte)'L', (byte)'M', (byte)'N', (byte)'O',     // 40-47
+    (byte)'P', (byte)'Q', (byte)'R', (byte)'S', (byte)'T', (byte)'U', (byte)'V', (byte)'W',     // 48-55
+    (byte)'X', (byte)'Y', (byte)'Z', (byte)'[', (byte)'\\',(byte)']', (byte)'^', (byte)'_',     // 56-63
   };
 
 
@@ -67,8 +67,8 @@ public final class MimeUUEncoder extends MimeEncoder {
 
   private final void flush_line(ByteBuf out, int offset) {
     line[0] = map[(line_length * 3 / 4) - offset];
-    line[line_length]   = '\r';
-    line[line_length+1] = '\n';
+    line[line_length]   = (byte)'\r';
+    line[line_length+1] = (byte)'\n';
     out.append(line, 0, line_length + 2);
     line_length = 1;
   }

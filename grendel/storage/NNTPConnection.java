@@ -172,10 +172,10 @@ class NNTPConnection {
     if (DEBUG) {
       String s = "NNTP: ==> ";
       for (int i = start; i < start+length; i++)
-        s += (b[i] == '\r' ? "\\r" :
-              b[i] == '\n' ? "\\n" :
-              b[i] == '\t' ? "\\t" :
-              b[i] == '\\' ? "\\\\" :
+        s += (b[i] == (byte)'\r' ? "\\r" :
+              b[i] == (byte)'\n' ? "\\n" :
+              b[i] == (byte)'\t' ? "\\t" :
+              b[i] == (byte)'\\' ? "\\\\" :
               new String(b, i, 1));
       System.err.print(s + "\n");
     }
@@ -202,9 +202,9 @@ class NNTPConnection {
       String s = "NNTP: <== ";
       byte b[] = into_buf.toBytes();
       for (int i = 0; i < into_buf.length(); i++)
-        s += (b[i] == '\r' ? "\\r" :
-              b[i] == '\n' ? "\\n" :
-              b[i] == '\t' ? "\\t" :
+        s += (b[i] == (byte)'\r' ? "\\r" :
+              b[i] == (byte)'\n' ? "\\n" :
+              b[i] == (byte)(byte)'\t' ? "\\t" :
               b[i] == '\\' ? "\\\\" :
               new String(b, i, 1));
       System.err.print(s + "\n");
@@ -214,8 +214,8 @@ class NNTPConnection {
     int i = into_buf.length();
     int j = i;
     while (j > 0 &&
-           (into_buf.byteAt(j-1) == '\r' ||
-            into_buf.byteAt(j-1) == '\n'))
+           (into_buf.byteAt(j-1) == (byte)'\r' ||
+            into_buf.byteAt(j-1) == (byte)'\n'))
       j--;
     if (i != j)
       into_buf.setLength(j);
@@ -271,10 +271,10 @@ class NNTPConnection {
     byte b0 = b.byteAt(0);
     byte b1 = b.byteAt(1);
     byte b2 = b.byteAt(2);
-    if (b0 != '1' && b0 != '2' && b0 != '3')
+    if (b0 != (byte)'1' && b0 != (byte)'2' && b0 != (byte)'3')
       throw new NNTPException("NNTP error: \"" + b + "\"");
 
-    return (((b0-'0') * 100) + ((b1-'0') * 10) + (b2-'0'));
+    return (((b0-(byte)'0') * 100) + ((b1-(byte)'0') * 10) + (b2-(byte)'0'));
   }
 
 
@@ -307,7 +307,7 @@ class NNTPConnection {
         readLine(b);
         if (b.equals("."))
           break;
-        else if (b.byteAt(0) == '.')
+        else if (b.byteAt(0) == (byte)'.')
           b.remove(0, 1);
         if      (b.equals("SETGET"))     hasSetGetExtension = true;
         else if (b.equals("OVER"))       hasOverExtension = true;
@@ -352,7 +352,7 @@ class NNTPConnection {
         readLine(b);
         if (b.equals("."))
           break;
-        else if (b.byteAt(0) == '.')
+        else if (b.byteAt(0) == (byte)'.')
           b.remove(0, 1);
 
         if (b.regionMatches(true, 0, target, 0, tl)) {
@@ -383,7 +383,7 @@ class NNTPConnection {
         readLine(b);
         if (b.equals("."))
           break;
-        else if (b.byteAt(0) == '.')
+        else if (b.byteAt(0) == (byte)'.')
           b.remove(0, 1);
 
         v.addElement(b.toString());
@@ -443,7 +443,7 @@ class NNTPConnection {
       readLine(b);
       if (b.equals(terminator))
         break;
-      else if (b.byteAt(0) == '.')
+      else if (b.byteAt(0) == (byte)'.')
         b.remove(0, 1);
       h.addHeaderLine(b.toString());
     }
@@ -602,41 +602,41 @@ class NNTPConnection {
     int i = start;
     int j = i;
 
-    if (length > 0 && line[length-1] == '\n')
+    if (length > 0 && line[length-1] == (byte)'\n')
       length--;
-    if (length > 0 && line[length-1] == '\r')
+    if (length > 0 && line[length-1] == (byte)'\r')
       length--;
 
-    while (j < length && line[j] != '\t')
-      article = (article * 10) + line[j++] - '0';
+    while (j < length && line[j] != (byte)'\t')
+      article = (article * 10) + line[j++] - (byte)'0';
 
     i = ++j;
-    while (j < length && line[j] != '\t') j++;
+    while (j < length && line[j] != (byte)'\t') j++;
     subject = new String(line, i, j-i);
 
     i = ++j;
-    while (j < length && line[j] != '\t') j++;
+    while (j < length && line[j] != (byte)'\t') j++;
     from = new String(line, i, j-i);
 
     i = ++j;
-    while (j < length && line[j] != '\t') j++;
+    while (j < length && line[j] != (byte)'\t') j++;
     date = new String(line, i, j-i);
 
     i = ++j;
-    while (j < length && line[j] != '\t') j++;
+    while (j < length && line[j] != (byte)'\t') j++;
     id = new String(line, i, j-i);
 
     i = ++j;
-    while (j < length && line[j] != '\t') j++;
+    while (j < length && line[j] != (byte)'\t') j++;
     references = new String(line, i, j-i);
 
     i = ++j;
-    while (j < length && line[j] != '\t')
-      bytes = (bytes * 10) + line[j++] - '0';
+    while (j < length && line[j] != (byte)'\t')
+      bytes = (bytes * 10) + line[j++] - (byte)'0';
 
     i = ++j;
-    while (j < length && line[j] != '\t')
-      lines = (lines * 10) + line[j++] - '0';
+    while (j < length && line[j] != (byte)'\t')
+      lines = (lines * 10) + line[j++] - (byte)'0';
 
     InternetHeaders h = new InternetHeaders();
     h.addHeaderLine("Subject: " + subject + "\r\n");
@@ -711,10 +711,10 @@ class NNTPDotTerminatedInputStream extends DotTerminatedInputStream {
         String s = "NNTP/DOT #" + (debug_count++) + ": <== ";
         int k = (i > 50 ? 50 : i);
         for (int j = start; j < start+k; j++)
-          s += (buf[j] == '\r' ? "\\r" :
-                buf[j] == '\n' ? "\\n" :
-                buf[j] == '\t' ? "\\t" :
-                buf[j] == '\\' ? "\\\\" :
+          s += (buf[j] == (byte)'\r' ? "\\r" :
+                buf[j] == (byte)'\n' ? "\\n" :
+                buf[j] == (byte)'\t' ? "\\t" :
+                buf[j] == (byte)'\\' ? "\\\\" :
                 new String(buf, j, 1));
         System.err.print(s + "\n");
       }
@@ -799,10 +799,10 @@ class XOVERMessagesEnumeration implements Enumeration {
         String s = "NNTP/XOVER #" + (debug_count++) + ": <== ";
         int k = (i > 50 ? 50 : i);
         for (int j = 0; j < k; j++)
-          s += (buf[j] == '\r' ? "\\r" :
-                buf[j] == '\n' ? "\\n" :
-                buf[j] == '\t' ? "\\t" :
-                buf[j] == '\\' ? "\\\\" :
+          s += (buf[j] == (byte)'\r' ? "\\r" :
+                buf[j] == (byte)'\n' ? "\\n" :
+                buf[j] == (byte)'\t' ? "\\t" :
+                buf[j] == (byte)'\\' ? "\\\\" :
                 new String(buf, j, 1));
         System.err.print(s + "\n");
       }

@@ -78,8 +78,8 @@ public class MimeQuotedPrintableEncoder extends MimeEncoder {
   };
 
   static private final byte hex[] = {
-    '0', '1', '2', '3', '4', '5', '6', '7',
-    '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+    (byte)'0', (byte)'1', (byte)'2', (byte)'3', (byte)'4', (byte)'5', (byte)'6', (byte)'7',
+    (byte)'8', (byte)'9', (byte)'A', (byte)'B', (byte)'C', (byte)'D', (byte)'E', (byte)'F'
   };
 
   static private final byte         crlf[] =      "\r\n".getBytes();
