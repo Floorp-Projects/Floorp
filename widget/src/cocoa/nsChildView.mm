@@ -938,8 +938,8 @@ NS_METHOD nsChildView::SetCursor(nsCursor aCursor)
     case eCursor_count_up:        cursor = kThemeCountingUpHandCursor;          break;
     case eCursor_count_down:      cursor = kThemeCountingDownHandCursor;        break;
     case eCursor_count_up_down:   cursor = kThemeCountingUpAndDownHandCursor;   break;
-    case eCursor_zoom_in:         break;
-    case eCursor_zoom_out:        break;
+    case eCursor_zoom_in:         cursor = 150;                         break;
+    case eCursor_zoom_out:        cursor = 151;                         break;
   }
   if (cursor >= 0)
   {
