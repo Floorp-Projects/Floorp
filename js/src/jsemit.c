@@ -70,14 +70,17 @@
 
 JS_FRIEND_API(JSBool)
 js_InitCodeGenerator(JSContext *cx, JSCodeGenerator *cg,
+                     JSArenaPool *codePool, JSArenaPool *notePool,
                      const char *filename, uintN lineno,
                      JSPrincipals *principals)
 {
     memset(cg, 0, sizeof *cg);
     TREE_CONTEXT_INIT(&cg->treeContext);
     cg->treeContext.flags |= TCF_COMPILING;
-    cg->codeMark = JS_ARENA_MARK(&cx->codePool);
-    cg->noteMark = JS_ARENA_MARK(&cx->notePool);
+    cg->codePool = codePool;
+    cg->notePool = notePool;
+    cg->codeMark = JS_ARENA_MARK(codePool);
+    cg->noteMark = JS_ARENA_MARK(notePool);
     cg->tempMark = JS_ARENA_MARK(&cx->tempPool);
     cg->current = &cg->main;
     cg->filename = filename;
@@ -92,8 +95,8 @@ JS_FRIEND_API(void)
 js_FinishCodeGenerator(JSContext *cx, JSCodeGenerator *cg)
 {
     TREE_CONTEXT_FINISH(&cg->treeContext);
-    JS_ARENA_RELEASE(&cx->codePool, cg->codeMark);
-    JS_ARENA_RELEASE(&cx->notePool, cg->noteMark);
+    JS_ARENA_RELEASE(cg->codePool, cg->codeMark);
+    JS_ARENA_RELEASE(cg->notePool, cg->noteMark);
     JS_ARENA_RELEASE(&cx->tempPool, cg->tempMark);
 }
 
@@ -115,11 +118,11 @@ EmitCheck(JSContext *cx, JSCodeGenerator *cg, JSOp op, ptrdiff_t delta)
                  : JS_BIT(JS_CeilingLog2(length));
         incr = BYTECODE_SIZE(length);
         if (!base) {
-            JS_ARENA_ALLOCATE_CAST(base, jsbytecode *, &cx->codePool, incr);
+            JS_ARENA_ALLOCATE_CAST(base, jsbytecode *, cg->codePool, incr);
         } else {
             size = BYTECODE_SIZE(PTRDIFF(limit, base, jsbytecode));
             incr -= size;
-            JS_ARENA_GROW_CAST(base, jsbytecode *, &cx->codePool, size, incr);
+            JS_ARENA_GROW_CAST(base, jsbytecode *, cg->codePool, size, incr);
         }
         if (!base) {
             JS_ReportOutOfMemory(cx);
@@ -849,7 +852,7 @@ OptimizeSpanDeps(JSContext *cx, JSCodeGenerator *cg)
             JS_ASSERT(length > BYTECODE_CHUNK);
             size = BYTECODE_SIZE(PTRDIFF(limit, base, jsbytecode));
             incr = BYTECODE_SIZE(length) - size;
-            JS_ARENA_GROW_CAST(base, jsbytecode *, &cx->codePool, size, incr);
+            JS_ARENA_GROW_CAST(base, jsbytecode *, cg->codePool, size, incr);
             if (!base) {
                 JS_ReportOutOfMemory(cx);
                 return JS_FALSE;
@@ -1993,8 +1996,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             JS_ReportOutOfMemory(cx);
             return JS_FALSE;
         }
-        if (!js_InitCodeGenerator(cx, cg2, cg->filename,
-                                  pn->pn_pos.begin.lineno,
+        if (!js_InitCodeGenerator(cx, cg2, cg->codePool, cg->notePool,
+                                  cg->filename, pn->pn_pos.begin.lineno,
                                   cg->principals)) {
             return JS_FALSE;
         }
@@ -4037,7 +4040,7 @@ AllocSrcNote(JSContext *cx, JSCodeGenerator *cg)
 
     index = CG_NOTE_COUNT(cg);
     if (((uintN)index & CG_NOTE_MASK(cg)) == 0) {
-        pool = &cx->notePool;
+        pool = cg->notePool;
         size = SRCNOTE_SIZE(CG_NOTE_MASK(cg) + 1);
         if (!CG_NOTES(cg)) {
             /* Allocate the first note array lazily; leave noteMask alone. */
@@ -4143,7 +4146,7 @@ GrowSrcNotes(JSContext *cx, JSCodeGenerator *cg)
     size_t size;
 
     /* Grow by doubling note array size; update noteMask on success. */
-    pool = &cx->notePool;
+    pool = cg->notePool;
     size = SRCNOTE_SIZE(CG_NOTE_MASK(cg) + 1);
     JS_ARENA_GROW_CAST(CG_NOTES(cg), jssrcnote *, pool, size, size);
     if (!CG_NOTES(cg)) {

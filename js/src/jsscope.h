@@ -231,7 +231,13 @@ struct JSScope {
 
 #define SCOPE_IS_SEALED(scope)          ((scope)->flags & SCOPE_SEALED)
 #define SCOPE_SET_SEALED(scope)         ((scope)->flags |= SCOPE_SEALED)
+#if 0
+/*
+ * Don't define this, it can't be done safely because JS_LOCK_OBJ will avoid
+ * taking the lock if the object owns its scope and the scope is sealed.
+ */
 #define SCOPE_CLR_SEALED(scope)         ((scope)->flags &= ~SCOPE_SEALED)
+#endif
 
 /*
  * A little information hiding for scope->lastProp, in case it ever becomes

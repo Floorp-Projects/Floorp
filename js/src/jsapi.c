@@ -1668,8 +1668,6 @@ JS_GC(JSContext *cx)
     /* Don't nuke active arenas if executing or compiling. */
     if (cx->stackPool.current == &cx->stackPool.first)
         JS_FinishArenaPool(&cx->stackPool);
-    if (cx->codePool.current == &cx->codePool.first)
-        JS_FinishArenaPool(&cx->codePool);
     if (cx->tempPool.current == &cx->tempPool.first)
         JS_FinishArenaPool(&cx->tempPool);
     js_ForceGC(cx, 0);
@@ -2082,11 +2080,19 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
         return JS_FALSE;
     }
 
-    /* Nothing to do if obj's scope is already sealed. */
     scope = OBJ_SCOPE(obj);
-#ifdef JS_THREADSAFE
-    JS_ASSERT(scope->ownercx == cx);
+
+#if defined JS_THREADSAFE && defined DEBUG
+    /* Insist on scope being used exclusively by cx's thread. */
+    if (scope->ownercx != cx) {
+        JS_LOCK_OBJ(cx, obj);
+        JS_ASSERT(OBJ_SCOPE(obj) == scope);
+        JS_ASSERT(scope->ownercx == cx);
+        JS_UNLOCK_SCOPE(cx, scope);
+    }
 #endif
+
+    /* Nothing to do if obj's scope is already sealed. */
     if (SCOPE_IS_SEALED(scope))
         return JS_TRUE;
 
@@ -2116,46 +2122,6 @@ JS_SealObject(JSContext *cx, JSObject *obj, JSBool deep)
         if (JSVAL_IS_PRIMITIVE(v))
             continue;
         if (!JS_SealObject(cx, JSVAL_TO_OBJECT(v), deep))
-            return JS_FALSE;
-    }
-    return JS_TRUE;
-}
-
-JS_PUBLIC_API(JSBool)
-JS_UnsealObject(JSContext *cx, JSObject *obj, JSBool deep)
-{
-    JSScope *scope;
-    uint32 nslots;
-    jsval v, *vp, *end;
-
-    if (!OBJ_IS_NATIVE(obj)) {
-        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                             JSMSG_CANT_UNSEAL_OBJECT,
-                             OBJ_GET_CLASS(cx, obj)->name);
-        return JS_FALSE;
-    }
-
-    scope = OBJ_SCOPE(obj);
-#ifdef JS_THREADSAFE
-    JS_ASSERT(scope->ownercx == cx);
-#endif
-    if (!SCOPE_IS_SEALED(scope))
-        return JS_TRUE;
-
-    JS_ASSERT(scope == OBJ_SCOPE(obj));
-    JS_LOCK_SCOPE(cx, scope);
-    SCOPE_CLR_SEALED(scope);
-    JS_UNLOCK_SCOPE(cx, scope);
-
-    if (!deep)
-        return JS_TRUE;
-
-    nslots = JS_MIN(scope->map.freeslot, scope->map.nslots);
-    for (vp = obj->slots, end = vp + nslots; vp < end; vp++) {
-        v = *vp;
-        if (JSVAL_IS_PRIMITIVE(v))
-            continue;
-        if (!JS_UnsealObject(cx, JSVAL_TO_OBJECT(v), deep))
             return JS_FALSE;
     }
     return JS_TRUE;
@@ -3006,12 +2972,16 @@ CompileTokenStream(JSContext *cx, JSObject *obj, JSTokenStream *ts,
                    void *tempMark, JSBool *eofp)
 {
     JSBool eof;
+    JSArenaPool codePool, notePool;
     JSCodeGenerator cg;
     JSScript *script;
 
     CHECK_REQUEST(cx);
     eof = JS_FALSE;
-    if (!js_InitCodeGenerator(cx, &cg, ts->filename, ts->lineno,
+    JS_InitArenaPool(&codePool, "code", 1024, sizeof(jsbytecode));
+    JS_InitArenaPool(&notePool, "note", 1024, sizeof(jssrcnote));
+    if (!js_InitCodeGenerator(cx, &cg, &codePool, &notePool,
+                              ts->filename, ts->lineno,
                               ts->principals)) {
         script = NULL;
     } else if (!js_CompileTokenStream(cx, obj, ts, &cg)) {
@@ -3029,6 +2999,8 @@ CompileTokenStream(JSContext *cx, JSObject *obj, JSTokenStream *ts,
     }
     cg.tempMark = tempMark;
     js_FinishCodeGenerator(cx, &cg);
+    JS_FinishArenaPool(&codePool);
+    JS_FinishArenaPool(&notePool);
     return script;
 }
 

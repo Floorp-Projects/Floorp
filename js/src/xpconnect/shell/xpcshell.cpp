@@ -66,12 +66,6 @@
 #include <unistd.h>
 #include <unix.h>
 #endif
-#include "jsparse.h"
-#include "jsscan.h"
-#include "jsemit.h"
-#include "jsscript.h"
-#include "jsarena.h"
-#include "jscntxt.h"
 
 #include "nsIJSContextStack.h"
 
@@ -283,6 +277,9 @@ DumpXPC(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+/* XXX needed only by GC() */
+#include "jscntxt.h"
+
 #ifdef GC_MARK_DEBUG
 extern "C" JS_FRIEND_DATA(FILE *) js_DumpGCHeap;
 #endif
@@ -353,7 +350,7 @@ static JSFunctionSpec glob_functions[] = {
     {0}
 };
 
-static JSClass global_class = {
+JSClass global_class = {
     "global", 0,
     JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,  JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub,   JS_ConvertStub,   JS_FinalizeStub
@@ -671,9 +668,11 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: xpcshell [-s] [-w] [-W] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: xpcshell [-PswW] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
     return 2;
 }
+
+extern JSClass global_class;
 
 static int
 ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
@@ -754,6 +753,22 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
         case 's':
             JS_ToggleOptions(cx, JSOPTION_STRICT);
+            break;
+        case 'P':
+            if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
+                JSObject *gobj;
+
+                if (!JS_SealObject(cx, obj, JS_TRUE))
+                    return JS_FALSE;
+                gobj = JS_NewObject(cx, &global_class, NULL, NULL);
+                if (!gobj)
+                    return JS_FALSE;
+                if (!JS_SetPrototype(cx, gobj, obj))
+                    return JS_FALSE;
+                JS_SetParent(cx, gobj, NULL);
+                JS_SetGlobalObject(cx, gobj);
+                obj = gobj;
+            }
             break;
         case 'f':
             if (++i == argc) {
@@ -1080,52 +1095,3 @@ main(int argc, char **argv, char **envp)
 
     return result;
 }
-
-/***************************************************************************/
-
-/* XXXbe writeme */
-#if 0
-
-#include "jsatom.h"
-#ifdef DEBUG
-int
-DumpAtom(JSHashEntry *he, int i, void *arg)
-{
-    FILE *fp = (FILE *)arg;
-    JSAtom *atom = (JSAtom *)he;
-
-    fprintf(fp, "%3d %08x %5lu ",
-            i, (uintN)he->keyHash, (unsigned long)atom->number);
-    if (ATOM_IS_STRING(atom))
-        fprintf(fp, "\"%s\"\n", ATOM_BYTES(atom));
-    else if (ATOM_IS_INT(atom))
-        fprintf(fp, "%ld\n", (long)ATOM_TO_INT(atom));
-    else
-        fprintf(fp, "%.16g\n", *ATOM_TO_DOUBLE(atom));
-    return HT_ENUMERATE_NEXT;
-}
-
-int
-DumpSymbol(JSHashEntry *he, int i, void *arg)
-{
-    FILE *fp = (FILE *)arg;
-    JSSymbol *sym = (JSSymbol *)he;
-
-    fprintf(fp, "%3d %08x", i, (uintN)he->keyHash);
-    if (JSVAL_IS_INT(sym_id(sym)))
-        fprintf(fp, " [%ld]\n", (long)JSVAL_TO_INT(sym_id(sym)));
-    else
-        fprintf(fp, " \"%s\"\n", ATOM_BYTES(sym_atom(sym)));
-    return HT_ENUMERATE_NEXT;
-}
-
-/* These are callable from gdb. */
-JS_BEGIN_EXTERN_C
-void Dsym(JSSymbol *sym) { if (sym) DumpSymbol(&sym->entry, 0, gErrFile); }
-void Datom(JSAtom *atom) { if (atom) DumpAtom(&atom->entry, 0, gErrFile); }
-//void Dobj(nsISupports* p, int depth) {if(p)XPC_DUMP(p,depth);}
-//void Dxpc(int depth) {Dobj(GetXPConnect(), depth);}
-JS_END_EXTERN_C
-#endif
-
-#endif

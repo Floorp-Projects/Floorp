@@ -41,9 +41,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include "jstypes.h"
-#include "jsarena.h" /* Added by JSIFY */
-/* Removed by JSIFY: #include "prlog.h" */
-#include "jsutil.h" /* Added by JSIFY */
+#include "jsarena.h"
+#include "jsutil.h"
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jsatom.h"
@@ -386,7 +385,7 @@ static int
 usage(void)
 {
     fprintf(gErrFile, "%s\n", JS_GetImplementationVersion());
-    fprintf(gErrFile, "usage: js [-s] [-w] [-W] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
+    fprintf(gErrFile, "usage: js [-PswW] [-b branchlimit] [-c stackchunksize] [-v version] [-f scriptfile] [scriptfile] [scriptarg...]\n");
     return 2;
 }
 
@@ -406,6 +405,8 @@ my_BranchCallback(JSContext *cx, JSScript *script)
     }
     return JS_TRUE;
 }
+
+extern JSClass global_class;
 
 static int
 ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
@@ -427,8 +428,10 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
             break;
         }
         switch (argv[i][1]) {
-          case 'v':
+          case 'b':
+          case 'c':
           case 'f':
+          case 'v':
             ++i;
             break;
         }
@@ -482,6 +485,23 @@ ProcessArgs(JSContext *cx, JSObject *obj, char **argv, int argc)
 
         case 's':
             JS_ToggleOptions(cx, JSOPTION_STRICT);
+            break;
+
+        case 'P':
+            if (JS_GET_CLASS(cx, JS_GetPrototype(cx, obj)) != &global_class) {
+                JSObject *gobj;
+
+                if (!JS_SealObject(cx, obj, JS_TRUE))
+                    return JS_FALSE;
+                gobj = JS_NewObject(cx, &global_class, NULL, NULL);
+                if (!gobj)
+                    return JS_FALSE;
+                if (!JS_SetPrototype(cx, gobj, obj))
+                    return JS_FALSE;
+                JS_SetParent(cx, gobj, NULL);
+                JS_SetGlobalObject(cx, gobj);
+                obj = gobj;
+            }
             break;
 
         case 'b':
@@ -1452,19 +1472,6 @@ Seal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_SealObject(cx, target, deep);
 }
 
-static JSBool
-Unseal(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-    JSObject *target;
-    JSBool deep = JS_FALSE;
-
-    if (!JS_ConvertArguments(cx, argc, argv, "o/b", &target, &deep))
-        return JS_FALSE;
-    if (!target)
-        return JS_TRUE;
-    return JS_UnsealObject(cx, target, deep);
-}
-
 static JSFunctionSpec shell_functions[] = {
     {"version",         Version,        0},
     {"options",         Options,        0},
@@ -1495,7 +1502,6 @@ static JSFunctionSpec shell_functions[] = {
     {"intern",          Intern,         1},
     {"clone",           Clone,          1},
     {"seal",            Seal,           1, 0, 1},
-    {"unseal",          Unseal,         1, 0, 1},
     {0}
 };
 
@@ -1531,7 +1537,6 @@ static char *shell_help_messages[] = {
     "intern(str)            Internalize str in the atom table",
     "clone(fun[, scope])    Clone function object",
     "seal(obj[, deep])      Seal object, or object graph if deep",
-    "unseal(obj[, deep])    Unseal object, or object graph if deep",
     0
 };
 
@@ -2006,7 +2011,7 @@ global_resolve(JSContext *cx, JSObject *obj, jsval id, uintN flags,
 #endif
 }
 
-static JSClass global_class = {
+JSClass global_class = {
     "global", JSCLASS_NEW_RESOLVE,
     JS_PropertyStub,  JS_PropertyStub,
     JS_PropertyStub,  JS_PropertyStub,

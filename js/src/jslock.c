@@ -1055,6 +1055,10 @@ js_UnlockScope(JSContext *cx, JSScope *scope)
     /* We hope compilers use me instead of reloading cx->thread in the macro. */
     if (CX_THREAD_IS_RUNNING_GC(cx))
         return;
+    if (cx->lockedSealedScope == scope) {
+        cx->lockedSealedScope = NULL;
+        return;
+    }
 
     JS_ASSERT(scope->ownercx == NULL);
     JS_ASSERT(scope->u.count > 0);
@@ -1079,7 +1083,7 @@ js_TransferScopeLock(JSContext *cx, JSScope *oldscope, JSScope *newscope)
     jsword me;
     JSThinLock *tl;
 
-    JS_ASSERT(JS_IS_SCOPE_LOCKED(newscope));
+    JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, newscope));
 
     /*
      * If the last reference to oldscope went away, newscope needs no lock
@@ -1087,15 +1091,37 @@ js_TransferScopeLock(JSContext *cx, JSScope *oldscope, JSScope *newscope)
      */
     if (!oldscope)
 	return;
-    JS_ASSERT(JS_IS_SCOPE_LOCKED(oldscope));
+    JS_ASSERT(JS_IS_SCOPE_LOCKED(cx, oldscope));
+
+    /*
+     * Special case in js_LockScope and js_UnlockScope for the GC calling
+     * code that locks, unlocks, or mutates.  Nothing to do in these cases,
+     * because scope and newscope were "locked" by the GC thread, so neither
+     * was actually locked.
+     */
+    if (CX_THREAD_IS_RUNNING_GC(cx))
+	return;
+
+    /*
+     * Special case in js_LockObj and js_UnlockScope for locking the sealed
+     * scope of an object that owns that scope (the prototype or mutated obj
+     * for which OBJ_SCOPE(obj)->object == obj), and unlocking it.
+     */
+    JS_ASSERT(cx->lockedSealedScope != newscope);
+    if (cx->lockedSealedScope == oldscope) {
+        JS_ASSERT(newscope->ownercx == cx ||
+                  (!newscope->ownercx && newscope->u.count == 1));
+        cx->lockedSealedScope = NULL;
+        return;
+    }
 
     /*
      * If oldscope is single-threaded, there's nothing to do.
-     * XXX if (!newscope->ownercx), assume newscope->u.count is properly set
      */
     if (oldscope->ownercx) {
         JS_ASSERT(oldscope->ownercx == cx);
-        JS_ASSERT(newscope->ownercx == cx || !newscope->ownercx);
+        JS_ASSERT(newscope->ownercx == cx ||
+                  (!newscope->ownercx && newscope->u.count == 1));
         return;
     }
 
@@ -1128,6 +1154,12 @@ js_LockObj(JSContext *cx, JSObject *obj)
     JS_ASSERT(OBJ_IS_NATIVE(obj));
     for (;;) {
         scope = OBJ_SCOPE(obj);
+        if (SCOPE_IS_SEALED(scope) && scope->object == obj &&
+            !cx->lockedSealedScope) {
+            cx->lockedSealedScope = scope;
+            return;
+        }
+
         js_LockScope(cx, scope);
 
         /* If obj still has this scope, we're done. */
@@ -1147,6 +1179,7 @@ js_UnlockObj(JSContext *cx, JSObject *obj)
 }
 
 #ifdef DEBUG
+
 JSBool
 js_IsRuntimeLocked(JSRuntime *rt)
 {
@@ -1154,21 +1187,34 @@ js_IsRuntimeLocked(JSRuntime *rt)
 }
 
 JSBool
-js_IsObjLocked(JSObject *obj)
+js_IsObjLocked(JSContext *cx, JSObject *obj)
 {
     JSScope *scope = OBJ_SCOPE(obj);
 
-    return MAP_IS_NATIVE(&scope->map) &&
-           (scope->ownercx ||
-            CurrentThreadId() == Thin_RemoveWait(ReadWord(scope->lock.owner)));
+    return MAP_IS_NATIVE(&scope->map) && js_IsScopeLocked(cx, scope);
 }
 
 JSBool
-js_IsScopeLocked(JSScope *scope)
+js_IsScopeLocked(JSContext *cx, JSScope *scope)
 {
-    return scope->ownercx ||
-           CurrentThreadId() == Thin_RemoveWait(ReadWord(scope->lock.owner));
-}
-#endif
+    /* Special case: the GC locking any object's scope, see js_LockScope. */
+    if (CX_THREAD_IS_RUNNING_GC(cx))
+        return JS_TRUE;
 
+    /* Special case: locked object owning a sealed scope, see js_LockObj. */
+    if (cx->lockedSealedScope == scope)
+        return JS_TRUE;
+
+    /*
+     * General case: the scope is either exclusively owned (by cx), or it has
+     * a thin or fat lock to cope with shared (concurrent) ownership.
+     */
+    if (scope->ownercx) {
+        JS_ASSERT(scope->ownercx == cx);
+        return JS_TRUE;
+    }
+    return CurrentThreadId() == Thin_RemoveWait(ReadWord(scope->lock.owner));
+}
+
+#endif /* DEBUG */
 #endif /* JS_THREADSAFE */
