@@ -258,7 +258,7 @@ public class IRFactory {
     {
         Node bodyTarget = new Node(Token.TARGET);
         Node condTarget = new Node(Token.TARGET);
-        if (loopType == LOOP_FOR && cond.getType() == Token.VOID) {
+        if (loopType == LOOP_FOR && cond.getType() == Token.EMPTY) {
             cond = new Node(Token.TRUE);
         }
         Node IFEQ = new Node(Token.IFEQ, (Node)cond);
@@ -282,7 +282,7 @@ public class IRFactory {
             result.addChildToFront(GOTO);
 
             if (loopType == LOOP_FOR) {
-                if (init.getType() != Token.VOID) {
+                if (init.getType() != Token.EMPTY) {
                     if (init.getType() != Token.VAR) {
                         init = new Node(Token.POP, init);
                     }
@@ -290,7 +290,7 @@ public class IRFactory {
                 }
                 Node incrTarget = new Node(Token.TARGET);
                 result.addChildAfter(incrTarget, body);
-                if (incr.getType() != Token.VOID) {
+                if (incr.getType() != Token.EMPTY) {
                     incr = (Node)createUnary(Token.POP, incr);
                     result.addChildAfter(incr, incrTarget);
                 }
@@ -471,7 +471,7 @@ public class IRFactory {
             pn.addChildToBack(catchTarget);
 
             // get the exception object and store it in a temp
-            Node exn = createNewLocal(new Node(Token.VOID));
+            Node exn = createNewLocal(new Node(Token.EMPTY));
             pn.addChildToBack(new Node(Token.POP, exn));
 
             Node endCatch = new Node(Token.TARGET);
@@ -536,7 +536,7 @@ public class IRFactory {
 
         if (hasFinally) {
             pn.addChildToBack(finallyTarget);
-            Node returnTemp = createNewLocal(new Node(Token.VOID));
+            Node returnTemp = createNewLocal(new Node(Token.EMPTY));
             Node popAndMake = new Node(Token.POP, returnTemp);
             pn.addChildToBack(popAndMake);
             pn.addChildToBack(finallyNode);
@@ -722,21 +722,21 @@ public class IRFactory {
                 return new Node(Token.TRUE);
             }
             return new Node(nodeType, left, right);
+        
+        } else if (nodeType == Token.TYPEOF) {
+            if (childNode.getType() == Token.NAME) {
+                childNode.setType(Token.TYPEOFNAME);
+                return childNode;
+            }
         }
         return new Node(nodeType, childNode);
     }
 
     public Object createUnary(int nodeType, int nodeOp, Object child) {
         Node childNode = (Node) child;
-        int childType = childNode.getType();
-        if (nodeOp == Token.TYPEOF &&
-            childType == Token.NAME)
-        {
-            childNode.setType(Token.TYPEOFNAME);
-            return childNode;
-        }
 
         if (nodeType == Token.INC || nodeType == Token.DEC) {
+            int childType = childNode.getType();
 
             if (!hasSideEffects(childNode)
                 && (nodeOp == Token.POST)
@@ -768,7 +768,7 @@ public class IRFactory {
         }
 
         Node result = new Node(nodeType, nodeOp);
-        result.addChildToBack((Node)child);
+        result.addChildToBack(childNode);
         return result;
     }
 

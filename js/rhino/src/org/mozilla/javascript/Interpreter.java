@@ -340,7 +340,7 @@ public class Interpreter
             case Token.LOOP :
             case Token.DEFAULT :
             case Token.BLOCK :
-            case Token.VOID :
+            case Token.EMPTY :
             case Token.NOP :
                 iCodeTop = updateLineNumber(node, iCodeTop);
                 while (child != null) {
@@ -604,23 +604,14 @@ public class Interpreter
             case Token.NEG :
             case Token.NOT :
             case Token.BITNOT :
+            case Token.TYPEOF :
+            case Token.VOID :
                 iCodeTop = generateICode(child, iCodeTop);
-                iCodeTop = addToken(type, iCodeTop);
-                break;
-
-            case Token.UNARYOP :
-                iCodeTop = generateICode(child, iCodeTop);
-                switch (node.getOperation()) {
-                    case Token.VOID :
-                        iCodeTop = addToken(Token.POP, iCodeTop);
-                        iCodeTop = addToken(Token.UNDEFINED, iCodeTop);
-                        break;
-                    case Token.TYPEOF :
-                        iCodeTop = addToken(Token.TYPEOF, iCodeTop);
-                        break;
-                    default:
-                        badTree(node);
-                        break;
+                if (type == Token.VOID) {
+                    iCodeTop = addToken(Token.POP, iCodeTop);
+                    iCodeTop = addToken(Token.UNDEFINED, iCodeTop);
+                } else {
+                    iCodeTop = addToken(type, iCodeTop);
                 }
                 break;
 

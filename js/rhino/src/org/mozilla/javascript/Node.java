@@ -443,7 +443,6 @@ public class Node implements Cloneable {
         switch (type) {
             case Token.EQOP:
             case Token.RELOP:
-            case Token.UNARYOP:
                 return intDatum;
         }
         Context.codeBug();
@@ -454,7 +453,6 @@ public class Node implements Cloneable {
         switch (type) {
             case Token.EQOP:
             case Token.RELOP:
-            case Token.UNARYOP:
                 Context.codeBug();
         }
         return intDatum;

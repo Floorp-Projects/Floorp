@@ -561,7 +561,7 @@ class Parser {
             decompiler.addToken(Token.LP);
             tt = ts.peekToken();
             if (tt == Token.SEMI) {
-                init = nf.createLeaf(Token.VOID);
+                init = nf.createLeaf(Token.EMPTY);
             } else {
                 if (tt == Token.VAR) {
                     // set init to a var list or initial
@@ -582,7 +582,7 @@ class Parser {
                 decompiler.addToken(Token.SEMI);
                 if (ts.peekToken() == Token.SEMI) {
                     // no loop condition
-                    cond = nf.createLeaf(Token.VOID);
+                    cond = nf.createLeaf(Token.EMPTY);
                 } else {
                     cond = expr(ts, false);
                 }
@@ -590,7 +590,7 @@ class Parser {
                 mustMatchToken(ts, Token.SEMI, "msg.no.semi.for.cond");
                 decompiler.addToken(Token.SEMI);
                 if (ts.peekToken() == Token.RP) {
-                    incr = nf.createLeaf(Token.VOID);
+                    incr = nf.createLeaf(Token.EMPTY);
                 } else {
                     incr = expr(ts, false);
                 }
@@ -777,7 +777,7 @@ class Parser {
             // Fall thru, to have a node for error recovery to work on
         case Token.EOL:
         case Token.SEMI:
-            pn = nf.createLeaf(Token.VOID);
+            pn = nf.createLeaf(Token.EMPTY);
             skipsemi = true;
             break;
 
@@ -1108,13 +1108,10 @@ class Parser {
         ts.flags &= ~ts.TSF_REGEXP;
 
         switch(tt) {
-        case Token.TYPEOF:
         case Token.VOID:
-            decompiler.addToken(tt);
-            return nf.createUnary(Token.UNARYOP, tt, unaryExpr(ts));
-
         case Token.NOT:
         case Token.BITNOT:
+        case Token.TYPEOF:
             decompiler.addToken(tt);
             return nf.createUnary(tt, unaryExpr(ts));
 

@@ -177,7 +177,8 @@ public class Token
         WITH        = 98, // with keyword
         CATCH       = 99, // catch keyword
         FINALLY     = 100, // finally keyword
-        RESERVED    = 101, // reserved keywords
+        VOID        = 101, // void keyword
+        RESERVED    = 102, // reserved keywords
 
         /** Added by Mike - these are JSOPs in the jsref, but I
          * don't have them yet in the java implementation...
@@ -186,24 +187,23 @@ public class Token
          * Most of these go in the 'op' field when returning
          * more general token types, eg. 'DIV' as the op of 'ASSIGN'.
          */
-        NOP         = 102, // NOP
-        PRE         = 103, // for INC, DEC nodes.
-        POST        = 104,
+        NOP         = 103, // NOP
+        PRE         = 104, // for INC, DEC nodes.
+        POST        = 105,
 
         /**
          * For JSOPs associated with keywords...
          * eg. op = ADD; token = ASSIGN
          */
 
-        VOID        = 105,
+        EMPTY       = 106,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
 
-        EQOP        = 106, // equality ops (== !=)
-        RELOP       = 107, // relational ops (< <= > >= in instanceof)
-        UNARYOP     = 108, // unary prefix operator
+        EQOP        = 107, // equality ops (== !=)
+        RELOP       = 108, // relational ops (< <= > >= in instanceof)
 
         BLOCK       = 109, // statement block
         ARRAYLIT    = 110, // array literal
@@ -310,7 +310,6 @@ public class Token
                 case AND:             return "and";
                 case EQOP:            return "eqop";
                 case RELOP:           return "relop";
-                case UNARYOP:         return "unaryop";
                 case INC:             return "inc";
                 case DEC:             return "dec";
                 case DOT:             return "dot";
@@ -335,7 +334,7 @@ public class Token
                 case NOP:             return "nop";
                 case PRE:             return "pre";
                 case POST:            return "post";
-                case VOID:            return "void";
+                case EMPTY:           return "empty";
                 case BLOCK:           return "block";
                 case ARRAYLIT:        return "arraylit";
                 case OBJLIT:          return "objlit";

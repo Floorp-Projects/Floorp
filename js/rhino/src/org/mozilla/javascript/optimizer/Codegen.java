@@ -1041,7 +1041,7 @@ public class Codegen extends Interpreter {
 
               case Token.SCRIPT:
               case Token.BLOCK:
-              case Token.VOID:
+              case Token.EMPTY:
               case Token.NOP:
                 // no-ops.
                 visitStatement(node);
@@ -1228,8 +1228,17 @@ public class Codegen extends Interpreter {
                 addDoubleConstructor();
                 break;
 
-              case Token.UNARYOP:
-                visitUnary(node, child);
+              case Token.VOID:
+                generateCodeFromNode(child, node);
+                addByteCode(ByteCode.POP);
+                pushUndefined();
+                break;
+
+              case Token.TYPEOF:
+                generateCodeFromNode(child, node);
+                addScriptRuntimeInvoke("typeof",
+                                       "(Ljava/lang/Object;"
+                                       +")Ljava/lang/String;");
                 break;
 
               case Token.TYPEOFNAME:
@@ -2310,29 +2319,6 @@ public class Codegen extends Interpreter {
         Node GOTO = new Node(type);
         GOTO.putProp(Node.TARGET_PROP, target);
         visitGOTO(GOTO, type, null);
-    }
-
-    private void visitUnary(Node node, Node child)
-    {
-        int op = node.getOperation();
-        switch (op) {
-
-          case Token.TYPEOF:
-            generateCodeFromNode(child, node);
-            addScriptRuntimeInvoke("typeof",
-                                   "(Ljava/lang/Object;"
-                                   +")Ljava/lang/String;");
-            break;
-
-          case Token.VOID:
-            generateCodeFromNode(child, node);
-            addByteCode(ByteCode.POP);
-            pushUndefined();
-            break;
-
-          default:
-            badTree();
-        }
     }
 
     private void visitTypeofname(Node node)
