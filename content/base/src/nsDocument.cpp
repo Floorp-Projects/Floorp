@@ -3132,75 +3132,94 @@ nsDocument::GetLocalName(nsAString& aLocalName)
   return NS_OK;
 }
 
+nsresult
+nsDocument::IsAllowedAsChild(PRUint16 aNodeType, nsIContent* aRefContent)
+{
+  if (aNodeType != nsIDOMNode::COMMENT_NODE &&
+      aNodeType != nsIDOMNode::ELEMENT_NODE &&
+      aNodeType != nsIDOMNode::PROCESSING_INSTRUCTION_NODE &&
+      aNodeType != nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  if (aNodeType == nsIDOMNode::ELEMENT_NODE && mRootContent &&
+      mRootContent != aRefContent) {
+    // We already have a child Element, and we're not trying to
+    // replace it, so throw an error.
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  if (aNodeType == nsIDOMNode::DOCUMENT_TYPE_NODE) {
+    nsCOMPtr<nsIDOMDocumentType> docType;
+    GetDoctype(getter_AddRefs(docType));
+
+    nsCOMPtr<nsIContent> docTypeContent = do_QueryInterface(docType);
+    if (docTypeContent && docTypeContent != aRefContent) {
+      // We already have a doctype, and we're not trying to
+      // replace it, so throw an error.
+      return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+    }
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 nsDocument::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild,
                          nsIDOMNode** aReturn)
 {
-  NS_ASSERTION(aNewChild, "null ptr");
-  PRInt32 indx;
-  PRUint16 nodeType;
+  *aReturn = nsnull;
 
-  *aReturn = nsnull; // Do we need to do this?
-
-  if (!aNewChild) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG(aNewChild);
 
   nsresult rv = nsContentUtils::CheckSameOrigin(this, aNewChild);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  // If it's a child type we can't handle (per DOM spec), or if it's an
-  // element and we already have a root (our addition to DOM spec), throw
-  // HIERARCHY_REQUEST_ERR.
+  PRUint16 nodeType;
   aNewChild->GetNodeType(&nodeType);
-  if (((nodeType != COMMENT_NODE) &&
-       (nodeType != TEXT_NODE) &&
-       (nodeType != PROCESSING_INSTRUCTION_NODE) &&
-       (nodeType != DOCUMENT_TYPE_NODE) &&
-       (nodeType != ELEMENT_NODE)) ||
-      ((nodeType == ELEMENT_NODE) && mRootContent)) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+
+  rv = IsAllowedAsChild(nodeType, nsnull);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNewChild));
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNewChild);
   if (!content) {
     return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
   }
 
+  PRInt32 indx;
   if (!aRefChild) {
     indx = mChildren.Count();
     mChildren.AppendObject(content);
   }
   else {
     nsCOMPtr<nsIContent> refContent(do_QueryInterface(aRefChild));
-
     if (!refContent) {
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
 
     indx = mChildren.IndexOf(refContent);
-    if (indx != -1) {
-      mChildren.InsertObjectAt(content, indx);
-    } else {
+    if (indx == -1) {
       // couldn't find refChild
       return NS_ERROR_DOM_NOT_FOUND_ERR;
     }
+
+    mChildren.InsertObjectAt(content, indx);
   }
 
   // If we get here, we've succesfully inserted content into the
   // index-th spot in mChildren.
-  if (nodeType == ELEMENT_NODE) {
+  if (nodeType == nsIDOMNode::ELEMENT_NODE) {
     mRootContent = content;
   }
 
   content->SetDocument(this, PR_TRUE, PR_TRUE);
-
   ContentInserted(nsnull, content, indx);
 
-  *aReturn = aNewChild;
-  NS_ADDREF(aNewChild);
+  NS_ADDREF(*aReturn = aNewChild);
 
   return NS_OK;
 }
@@ -3211,40 +3230,32 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
 {
   *aReturn = nsnull;
 
-  NS_ENSURE_TRUE(aNewChild && aOldChild, NS_ERROR_NULL_POINTER);
+  NS_ENSURE_ARG(aNewChild && aOldChild);
 
-  nsresult rv = NS_OK;
-  PRInt32 indx;
-  PRUint16 nodeType;
+  nsCOMPtr<nsIContent> refContent(do_QueryInterface(aOldChild));
+  if (!refContent) {
+    return NS_ERROR_DOM_NOT_FOUND_ERR;
+  }
 
-  rv = nsContentUtils::CheckSameOrigin(this, aNewChild);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aNewChild);
+  if (!content) {
+    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  }
+
+  nsresult rv = nsContentUtils::CheckSameOrigin(this, aNewChild);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
+  PRUint16 nodeType;
   aNewChild->GetNodeType(&nodeType);
 
-  if ((COMMENT_NODE != nodeType) &&
-      (TEXT_NODE != nodeType) &&
-      (PROCESSING_INSTRUCTION_NODE != nodeType) &&
-      (DOCUMENT_TYPE_NODE != nodeType) &&
-      (ELEMENT_NODE != nodeType)) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
+  rv = IsAllowedAsChild(nodeType, refContent);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
 
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNewChild));
-  nsCOMPtr<nsIContent> refContent(do_QueryInterface(aOldChild));
-  if (!content || !refContent) {
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  if (nodeType == ELEMENT_NODE && mRootContent &&
-      mRootContent != refContent) {
-    // Caller attempted to add a second element as a child.
-    return NS_ERROR_DOM_HIERARCHY_REQUEST_ERR;
-  }
-
-  indx = mChildren.IndexOf(refContent);
+  PRInt32 indx = mChildren.IndexOf(refContent);
   if (indx == -1) {
     // The reference child is not a child of the document.
     return NS_ERROR_DOM_NOT_FOUND_ERR;
@@ -3255,15 +3266,14 @@ nsDocument::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild,
 
   mChildren.ReplaceObjectAt(content, indx);
   // This is OK because we checked above.
-  if (nodeType == ELEMENT_NODE) {
+  if (nodeType == nsIDOMNode::ELEMENT_NODE) {
     mRootContent = content;
   }
 
   content->SetDocument(this, PR_TRUE, PR_TRUE);
   ContentInserted(nsnull, content, indx);
 
-  *aReturn = aOldChild;
-  NS_ADDREF(aOldChild);
+  NS_ADDREF(*aReturn = aNewChild);
 
   return rv;
 }

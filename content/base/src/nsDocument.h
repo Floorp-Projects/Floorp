@@ -676,6 +676,8 @@ protected:
   nsCOMPtr<nsIScriptEventManager> mScriptEventManager;
 
 private:
+  nsresult IsAllowedAsChild(PRUint16 aNodeType, nsIContent* aRefContent);
+
   // These are not implemented and not supported.
   nsDocument(const nsDocument& aOther);
   nsDocument& operator=(const nsDocument& aOther);
