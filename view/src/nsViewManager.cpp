@@ -1633,6 +1633,10 @@ nsresult nsViewManager::CreateBlendingBuffers(nsIRenderingContext &aRC)
 
 void nsViewManager::ProcessPendingUpdates(nsIView* aView)
 {
+  // Protect against a null-view.
+  if (nsnull == aView) {
+    return;
+  }
 	PRBool hasWidget;
 	aView->HasWidget(&hasWidget);
 	if (hasWidget) {
