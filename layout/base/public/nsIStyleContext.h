@@ -168,7 +168,7 @@ struct nsStyleTable: public nsStyleStruct {
   nsStyleCoord  mCellPadding;   // [reset] 
   nsStyleCoord  mCellSpacing;   // [reset] 
   PRInt32       mCols;          // [reset] an integer if set, or see nsStyleConsts.h NS_STYLE_TABLE_COLS_*
-  PRInt32       mSpan;          // [reset] the number of columns spanned by a colgroup
+  PRInt32       mSpan;          // [reset] the number of columns spanned by a colgroup or col
 
 protected:
   nsStyleTable(void);

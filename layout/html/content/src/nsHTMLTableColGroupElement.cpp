@@ -154,7 +154,7 @@ nsHTMLTableColGroupElement::StringToAttribute(nsIAtom* aAttribute,
     nsGenericHTMLElement::ParseValue(aValue, 0, aResult, eHTMLUnit_Integer);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
-  else   if (aAttribute == nsHTMLAtoms::repeat) {
+  else   if (aAttribute == nsHTMLAtoms::span) {
     nsGenericHTMLElement::ParseValue(aValue, 1, aResult, eHTMLUnit_Integer);
     return NS_CONTENT_ATTR_HAS_VALUE;
   }
@@ -248,6 +248,14 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
       if (nsnull==textStyle)
         textStyle = (nsStyleText*)aContext->GetMutableStyleData(eStyleStruct_Text);
       textStyle->mVerticalAlign.SetIntValue(value.GetIntValue(), eStyleUnit_Enumerated);
+    }
+
+    // span: int
+    aAttributes->GetAttribute(nsHTMLAtoms::span, value);
+    if (value.GetUnit() == eHTMLUnit_Integer)
+    {
+      nsStyleTable *tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+      tableStyle->mSpan = value.GetIntValue();
     }
   }
   nsGenericHTMLElement::MapCommonAttributesInto(aAttributes, aContext, aPresContext);

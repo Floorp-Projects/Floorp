@@ -649,6 +649,7 @@ void nsTableFrame::EnsureColumns(nsIPresContext& aPresContext)
     childFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));
     if (NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP == childDisplay->mDisplay)
     {
+      ((nsTableColGroupFrame*)childFrame)->SetStartColumnIndex(actualColumns);
       PRInt32 numCols = ((nsTableColGroupFrame*)childFrame)->GetColumnCount();
       actualColumns += numCols;
       lastColGroupFrame = (nsTableColGroupFrame *)childFrame;
@@ -2965,14 +2966,18 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
       childFrame->FirstChild(nsnull, (nsIFrame *&)colFrame);
       while (nsnull!=colFrame)
       {
-        nsTableColFrame *cachedColFrame = mCellMap->GetColumnFrame(colIndex);
-        if (nsnull==cachedColFrame)
+        PRInt32 repeat = colFrame->GetSpan();
+        for (PRInt32 i=0; i<repeat; i++)
         {
-          if (gsDebug) printf("TIF BCB: adding column frame %p\n", colFrame);
-          mCellMap->AppendColumnFrame(colFrame);
+          nsTableColFrame *cachedColFrame = mCellMap->GetColumnFrame(colIndex+i);
+          if (nsnull==cachedColFrame)
+          {
+            if (gsDebug) printf("TIF BCB: adding column frame %p\n", colFrame);
+            mCellMap->AppendColumnFrame(colFrame);
+          }
+          colIndex++;
         }
         colFrame->GetNextSibling((nsIFrame *&)colFrame);
-        colIndex++;
       }
     }
     else if (PR_TRUE==IsRowGroup(childDisplay->mDisplay))
@@ -3029,7 +3034,12 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
         {
           const nsStylePosition* colPosition;
           colFrame->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)colPosition));
-          mColCache->AddColumnInfo(colPosition->mWidth.GetUnit(), colFrame->GetColumnIndex());
+          PRInt32 repeat = colFrame->GetSpan();
+          colIndex = colFrame->GetColumnIndex();
+          for (PRInt32 i=0; i<repeat; i++)
+          {
+            mColCache->AddColumnInfo(colPosition->mWidth.GetUnit(), colIndex+i);
+          }
         }
         colFrame->GetNextSibling((nsIFrame *&)colFrame);
       }

@@ -962,6 +962,7 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
   PRInt32   count;
   aContent->ChildCount(count);
   for (PRInt32 i = 0; i < count; i++) {
+    nsIFrame* grandChildList=nsnull;  // to be used only when pseudoframes need to be created
     nsIContent* childContent;
     aContent->ChildAt(i, childContent);
 
@@ -1000,8 +1001,28 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
         break;
 
       case NS_STYLE_DISPLAY_TABLE_COLUMN:
-        NS_NewTableColFrame(childContent, innerFrame, frame);
+      {
+        //XXX: Peter -  please code review and remove this comment when all is well.
+        // When we're done here, "frame" will be the pseudo colgroup frame and will be dealt with normally after the swtich.
+        // The the column itself will have already been dealt with
+        nsIStyleContext*  colStyleContext;
+        nsIStyleContext*  colGroupStyleContext;
+        colGroupStyleContext = aPresContext->ResolvePseudoStyleContextFor (childContent, 
+                                                                           nsHTMLAtoms::columnPseudo,
+                                                                           aStyleContext);
+        nsStyleDisplay *colGroupDisplay = (nsStyleDisplay *)colGroupStyleContext->GetMutableStyleData(eStyleStruct_Display);
+        colGroupDisplay->mDisplay = NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP;
+        NS_NewTableColGroupFrame(childContent, innerFrame, frame);
+        childStyleContext = colGroupStyleContext;  // the col group style context will get set to childStyleContext after the switch ends.
+        // need to resolve the style context for the column again to be sure it's a child of the colgroup style context
+        colStyleContext = aPresContext->ResolveStyleContextFor(childContent, colGroupStyleContext);
+        nsIFrame *colFrame;
+        NS_NewTableColFrame(childContent, frame, colFrame);
+        colFrame->SetInitialChildList(*aPresContext, nsnull, nsnull);
+        colFrame->SetStyleContext(aPresContext, colStyleContext); 
+        grandChildList = colFrame;
         break;
+      }
 
       case NS_STYLE_DISPLAY_TABLE_COLUMN_GROUP:
         NS_NewTableColGroupFrame(childContent, innerFrame, frame);
@@ -1019,9 +1040,13 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
         frame->SetStyleContext(aPresContext, childStyleContext);
 
         // Process the children, and set the frame's initial child list
-        nsIFrame* childChildList;
-        ProcessChildren(aPresContext, frame, childContent, childChildList);
-        frame->SetInitialChildList(*aPresContext, nsnull, childChildList);
+        if (nsnull==grandChildList)
+        {
+          nsIFrame* childChildList;
+          ProcessChildren(aPresContext, frame, childContent, childChildList);
+          grandChildList = childChildList;
+        }
+        frame->SetInitialChildList(*aPresContext, nsnull, grandChildList);
   
         // Link the frame into the child list
         if (nsnull == lastChildFrame) {
@@ -1329,6 +1354,8 @@ HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
   case NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP:
     // XXX We should check for being inside of a table. If there's a missing
     // table then create an anonynmous table frame
+    // XXX: see ConstructTableFrame for a prototype of how this should be done,
+    //      and propagate similar logic to other table elements
     {
       nsIFrame *parentFrame;
       rv = GetAdjustedParentFrame(aParentFrame, aDisplay->mDisplay, parentFrame);
