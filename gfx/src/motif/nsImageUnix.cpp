@@ -40,6 +40,7 @@ nsImageUnix :: nsImageUnix()
   mDepth = 0;
   mOriginalDepth = 0;
   mColorMap = nsnull;
+  mAlphaBits = nsnull;
 }
 
 //------------------------------------------------------------
@@ -63,6 +64,11 @@ nsImageUnix :: ~nsImageUnix()
     }
   if(nsnull!= mColorMap)
     delete mColorMap;
+
+  if (nsnull != mAlphaBits) {
+    delete mAlphaBits;
+  }
+  
 }
 
 NS_IMPL_ISUPPORTS(nsImageUnix, kIImageIID);
@@ -94,6 +100,7 @@ nsresult nsImageUnix :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsM
   ComputMetrics();
 
   mImageBits = (PRUint8*) new PRUint8[mSizeImage]; 
+  mAlphaBits = (PRUint8*) new PRUint8[mSizeImage]; 
 
   mColorMap = new nsColorMap;
 

@@ -48,7 +48,7 @@ public:
   virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRBool      IsOptimized()       { return (mImage!=nsnull); }
   virtual nsresult    Optimize(nsDrawingSurface aSurface);
-  virtual PRUint8*    GetAlphaBits()      { return nsnull; }
+  virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
   virtual PRInt32     GetAlphaWidth()   { return 0;}
   virtual PRInt32     GetAlphaHeight()   {return 0;}
   virtual PRInt32     GetAlphaXLoc() {return 0;}
@@ -102,6 +102,7 @@ private:
   PRInt32    mOriginalRowBytes;
   Pixmap     mThePixMap;
   PRUint8    *mImageBits;
+  PRUint8    *mAlphaBits;
   PRUint8    *mConvertedBits;
   PRBool     mConverted;
   PRUint8    *mBitsForCreate;
