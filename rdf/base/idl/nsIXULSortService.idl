@@ -26,16 +26,16 @@
 
 
 [ptr] native nsIRDFDataSourceHandle( nsIRDFDataSource *);
+interface sortState;
 
 interface nsIContent;
 interface nsIDOMNode;
-
 
 [scriptable, uuid(BFD05261-834C-11d2-8EAC-00805F29F371)]
 interface nsIXULSortService : nsISupports
 {
 		void	Sort(in nsIDOMNode node, in string sortResource, in string sortDirection);
-[noscript]	void	InsertContainerNode(in nsIRDFCompositeDataSource db, in nsIRDFDataSourceHandle cacheHandle, in nsIContent root, in nsIContent trueParent,
+[noscript]	void	InsertContainerNode(in nsIRDFCompositeDataSource db, in sortState sortStatePtr, in nsIContent root, in nsIContent trueParent,
 				in nsIContent container, in nsIContent node, in boolean aNotify);
 };
 
