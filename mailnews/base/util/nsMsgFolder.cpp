@@ -913,8 +913,7 @@ NS_IMETHODIMP nsMsgFolder::GetFoldersWithFlag(PRUint32 flags, nsIMsgFolder **res
   rv = mSubFolders->Count(&cnt);
   if (NS_SUCCEEDED(rv)) {
     for (PRUint32 i=0; i < cnt; i++) {
-      nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
-      folder = do_QueryInterface(supports, &rv);
+      folder = getter_AddRefs((nsIMsgFolder*)mSubFolders->ElementAt(i));
       if(NS_SUCCEEDED(rv))
       {
         // CAREFUL! if NULL is passed in for result then the caller
