@@ -55,7 +55,6 @@
 #appcontent
   {
     border-top            : 1px solid #000000;
-    border-right          : 1px solid #FFFFFF;
   }
 
 #ContentWindowDeck
@@ -72,8 +71,7 @@
 
 #EditModeToolbar 
   {
-    border-right          : 1px solid #DDDDDD;
-    border-bottom         : 1px solid #DDDDDD !important;
+    border-bottom         : 1px solid #000000 !important;
   }
   
   
