@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.7 $ $Date: 2001/12/20 23:17:58 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devobject.c,v $ $Revision: 1.8 $ $Date: 2002/01/03 20:09:18 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -316,7 +316,6 @@ get_token_cert
 )
 {
     NSSCertificate *rvCert;
-    struct nssPKIObjectBaseStr *object; /* XXX needs to go */
     NSSArena *arena;
     nssSession *session;
     PRStatus nssrv;
@@ -339,25 +338,18 @@ get_token_cert
     }
     rvCert = nss_ZNEW(arena, NSSCertificate);
     if (!rvCert) {
-	goto loser;
+	NSSArena_Destroy(arena);
+	return NULL;
     }
-    object = &rvCert->object;
-    object->arena = arena;
-    object->refCount = 1;
-    object->instanceList = nssList_Create(arena, PR_TRUE);
-    /* XXX this is only valid if tokens are unique in trust domains... */
-    object->trustDomain = token->trustDomain; 
-    if (!object->instanceList) {
-	goto loser;
-    }
-    object->instances = nssList_CreateIterator(object->instanceList);
-    if (!object->instances) {
+    nssrv = nssPKIObject_Initialize(&rvCert->object, arena, 
+                                    token->trustDomain, NULL);
+    if (nssrv != PR_SUCCESS) {
 	goto loser;
     }
     nssrv = nssCKObject_GetAttributes(handle, 
                                       cert_template, template_size,
                                       arena, session, token->slot);
-    if (nssrv) {
+    if (nssrv != PR_SUCCESS) {
 	goto loser;
     }
     rvCert->type = nss_cert_type_from_ck_attrib(&cert_template[0]);
@@ -383,7 +375,7 @@ get_token_cert
 #endif
     return rvCert;
 loser:
-    nssArena_Destroy(arena);
+    nssPKIObject_Destroy(&rvCert->object);
     return (NSSCertificate *)NULL;
 }
 
@@ -494,7 +486,9 @@ retrieve_cert(NSSToken *t, nssSession *session, CK_OBJECT_HANDLE h, void *arg)
 	}
 	nssList_Add(cert->object.instanceList, ci);
     }
-    return (*search->callback)(cert, search->cbarg);
+    nssrv = (*search->callback)(cert, search->cbarg);
+    NSSCertificate_Destroy(cert);
+    return nssrv;
 }
 
 /* traverse all certificates - this should only happen if the token
@@ -889,7 +883,6 @@ nssToken_FindTrustForCert
     NSSTrust *rvTrust;
     nssSession *session;
     NSSArena *arena;
-    struct nssPKIObjectBaseStr *object;
     nssCryptokiInstance *instance;
     PRBool isTokenObject;
     CK_BBOOL isToken;
@@ -926,31 +919,23 @@ nssToken_FindTrustForCert
 	nssArena_Destroy(arena);
 	return NULL;
     }
-    object = &rvTrust->object;
-    object->arena = arena;
-    object->refCount = 1;
-    /* XXX this is only valid if tokens are unique in trust domains... */
-    object->trustDomain = token->trustDomain;
-    object->instanceList = nssList_Create(arena, PR_TRUE);
-    if (!object->instanceList) {
-	nssArena_Destroy(arena);
-	return NULL;
-    }
-    object->instances = nssList_CreateIterator(object->instanceList);
-    if (!object->instances) {
-	nssArena_Destroy(arena);
-	return NULL;
+    nssrv = nssPKIObject_Initialize(&rvTrust->object, arena, 
+                                    token->trustDomain, NULL);
+    if (nssrv != PR_SUCCESS) {
+	goto loser;
     }
     isTokenObject = (isToken == CK_TRUE) ? PR_TRUE : PR_FALSE;
     instance = create_cryptoki_instance(arena, token, tobjID, isTokenObject);
     if (!instance) {
-	nssArena_Destroy(arena);
-	return NULL;
+	goto loser;
     }
     rvTrust->serverAuth = saTrust;
     rvTrust->clientAuth = caTrust;
     rvTrust->emailProtection = epTrust;
     rvTrust->codeSigning = csTrust;
     return rvTrust;
+loser:
+    nssPKIObject_Destroy(&rvTrust->object);
+    return (NSSTrust *)NULL;
 }
 

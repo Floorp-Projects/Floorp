@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.17 $ $Date: 2001/12/14 17:32:23 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: tdcache.c,v $ $Revision: 1.18 $ $Date: 2002/01/03 20:09:24 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -385,6 +385,7 @@ nssTrustDomain_RemoveCertFromCache
 	nssHash_Remove(td->cache->subject, &cert->subject);
     }
     PZ_Unlock(td->cache->lock);
+    NSSCertificate_Destroy(cert); /* release the reference */
     return;
 loser:
     /* if here, then the cache is inconsistent.  For now, flush it. */
@@ -393,6 +394,7 @@ loser:
     PR_LOG(s_log, PR_LOG_DEBUG, ("remove cert failed, flushing"));
 #endif
     nssTrustDomain_FlushCache(td, -1.0);
+    NSSCertificate_Destroy(cert); /* release the reference */
 }
 
 /* This is used to remove all certs below a certain threshold, where
@@ -665,6 +667,7 @@ add_cert_to_cache
 #endif
     }
     PZ_Unlock(td->cache->lock);
+    nssCertificate_AddRef(cert);
     return nssrv;
 loser:
     /* Remove any handles that have been created */
@@ -730,13 +733,13 @@ collect_subject_certs
 {
     NSSCertificate *c;
     NSSCertificate **rvArray = NULL;
-    PRUint32 count;
+    PRUint32 i, count;
     if (rvCertListOpt) {
 	nssListIterator *iter = nssList_CreateIterator(subjectList);
 	for (c  = (NSSCertificate *)nssListIterator_Start(iter);
 	     c != (NSSCertificate *)NULL;
 	     c  = (NSSCertificate *)nssListIterator_Next(iter)) {
-	    nssList_Add(rvCertListOpt, c);
+	    nssList_Add(rvCertListOpt, nssCertificate_AddRef(c));
 	}
 	nssListIterator_Finish(iter);
 	nssListIterator_Destroy(iter);
@@ -747,6 +750,7 @@ collect_subject_certs
 	    return (NSSCertificate **)NULL;
 	}
 	nssList_GetArray(subjectList, (void **)rvArray, count);
+	for (i=0; i<count; i++) nssCertificate_AddRef(rvArray[i]);
     }
     return rvArray;
 }
@@ -903,7 +907,7 @@ nssTrustDomain_GetCertForIssuerAndSNFromCache
 #endif
     }
     PZ_Unlock(td->cache->lock);
-    return rvCert;
+    return nssCertificate_AddRef(rvCert);
 }
 
 #ifdef NSS_3_4_CODE
@@ -963,14 +967,14 @@ nssTrustDomain_GetCertByDERFromCache
     PORT_Free(issuer.data);
     PORT_Free(serial.data);
 #endif
-    return rvCert;
+    return nssCertificate_AddRef(rvCert);
 }
 
 static void cert_iter(const void *k, void *v, void *a)
 {
     nssList *certList = (nssList *)a;
-    NSSCertificate *c = (NSSCertificate *)v;
-    nssList_Add(certList, c);
+    NSSCertificate *c = (NSSCertificate *)k;
+    nssList_Add(certList, nssCertificate_AddRef(c));
 }
 
 NSS_EXTERN NSSCertificate **
@@ -994,6 +998,7 @@ nssTrustDomain_GetCertsFromCache
 	PRUint32 count = nssList_Count(certList);
 	rvArray = nss_ZNEWARRAY(NULL, NSSCertificate *, count);
 	nssList_GetArray(certList, (void **)rvArray, count);
+	/* array takes the references */
 	nssList_Destroy(certList);
     }
     return rvArray;

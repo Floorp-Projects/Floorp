@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.19 2001/11/21 18:00:08 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.20 2002/01/03 20:09:27 ian.mcgreer%sun.com Exp $
  */
 
 #include "nssilock.h"
@@ -63,7 +63,7 @@
 #ifndef NSS_3_4_CODE
 #define NSS_3_4_CODE
 #endif /* NSS_3_4_CODE */
-#include "pkit.h"
+#include "pki.h"
 
 /*
  * Certificate database handling code
@@ -1159,9 +1159,14 @@ CERTCertificate *
 CERT_DupCertificate(CERTCertificate *c)
 {
     if (c) {
+#ifdef NSS_CLASSIC
 	CERT_LockCertRefCount(c);
 	++c->referenceCount;
 	CERT_UnlockCertRefCount(c);
+#else
+	NSSCertificate *tmp = STAN_GetNSSCertificate(c);
+	nssCertificate_AddRef(tmp);
+#endif
     }
     return c;
 }

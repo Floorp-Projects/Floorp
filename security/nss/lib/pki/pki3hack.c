@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.16 $ $Date: 2001/12/20 16:20:16 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.17 $ $Date: 2002/01/03 20:09:23 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -580,6 +580,7 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
     NSSCertificate *c;
     nssCryptokiInstance *instance;
     NSSArena *arena;
+    PRStatus nssrv;
     c = cc->nssCertificate;
     if (c) {
     	return c;
@@ -593,15 +594,15 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
     }
     c = nss_ZNEW(arena, NSSCertificate);
     if (!c) {
-	goto loser;
+	nssArena_Destroy(arena);
+	return NULL;
     }
     NSSITEM_FROM_SECITEM(&c->encoding, &cc->derCert);
     c->type = NSSCertificateType_PKIX;
-    c->object.arena = arena;
-    c->object.refCount = 1;
-    c->object.trustDomain = (NSSTrustDomain *)cc->dbhandle;
-    c->object.instanceList = nssList_Create(arena, PR_TRUE);
-    c->object.instances = nssList_CreateIterator(c->object.instanceList);
+    nssrv = nssPKIObject_Initialize(&c->object, arena, cc->dbhandle, NULL);
+    if (nssrv != PR_SUCCESS) {
+	nssPKIObject_Destroy(&c->object);
+    }
     nssItem_Create(arena,
                    &c->issuer, cc->derIssuer.len, cc->derIssuer.data);
     nssItem_Create(arena,
@@ -637,9 +638,6 @@ STAN_GetNSSCertificate(CERTCertificate *cc)
     c->decoding = create_decoded_pkix_cert_from_nss3cert(arena, cc);
     cc->nssCertificate = c;
     return c;
-loser:
-    nssArena_Destroy(arena);
-    return NULL;
 }
 
 NSS_EXTERN PRStatus
@@ -665,17 +663,9 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     arena = nssArena_Create();
     if (!arena) return PR_FAILURE;
     nssTrust = nss_ZNEW(arena, NSSTrust);
-    nssTrust->object.arena = arena;
-    nssTrust->object.refCount = 1;
-    nssTrust->object.instanceList = nssList_Create(arena, PR_FALSE);
-    if (!nssTrust->object.instanceList) {
-	nssArena_Destroy(arena);
-	return PR_FAILURE;
-    }
-    nssTrust->object.instances = nssList_CreateIterator(
-                                                nssTrust->object.instanceList);
-    if (!nssTrust->object.instances) {
-	nssArena_Destroy(arena);
+    nssrv = nssPKIObject_Initialize(&nssTrust->object, arena, NULL, NULL);
+    if (nssrv != PR_SUCCESS) {
+	nssPKIObject_Destroy(&nssTrust->object);
 	return PR_FAILURE;
     }
     nssTrust->certificate = c;

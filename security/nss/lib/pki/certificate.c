@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.21 $ $Date: 2001/12/14 17:32:18 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.22 $ $Date: 2002/01/03 20:09:23 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -67,7 +67,9 @@ nssCertificate_AddRef
   NSSCertificate *c
 )
 {
-    nssPKIObject_AddRef(&c->object);
+    if (c) {
+	nssPKIObject_AddRef(&c->object);
+    }
     return c;
 }
 
@@ -77,7 +79,9 @@ NSSCertificate_Destroy
   NSSCertificate *c
 )
 {
-    nssPKIObject_Destroy(&c->object);
+    if (c) {
+	nssPKIObject_Destroy(&c->object);
+    }
     return PR_SUCCESS;
 }
 
@@ -679,6 +683,7 @@ nssSMIMEProfile_Create
   NSSItem *profileData
 )
 {
+    PRStatus nssrv;
     NSSArena *arena;
     nssSMIMEProfile *rvProfile;
     arena = nssArena_Create();
@@ -687,18 +692,11 @@ nssSMIMEProfile_Create
     }
     rvProfile = nss_ZNEW(arena, nssSMIMEProfile);
     if (!rvProfile) {
-	goto loser;
+	nssArena_Destroy(arena);
+	return NULL;
     }
-    rvProfile->object.arena = arena;
-    rvProfile->object.refCount = 1;
-    rvProfile->object.instanceList = nssList_Create(arena, PR_TRUE);
-    if (!rvProfile->object.instanceList) {
-	goto loser;
-    }
-    rvProfile->object.instances = nssList_CreateIterator(
-                                            rvProfile->object.instanceList);
-    if (!rvProfile->object.instances) {
-	nssList_Destroy(rvProfile->object.instanceList);
+    nssrv = nssPKIObject_Initialize(&rvProfile->object, arena, NULL, NULL);
+    if (nssrv != PR_SUCCESS) {
 	goto loser;
     }
     rvProfile->certificate = cert;
@@ -712,7 +710,7 @@ nssSMIMEProfile_Create
     }
     return rvProfile;
 loser:
-    nssArena_Destroy(arena);
+    nssPKIObject_Destroy(&rvProfile->object);
     return NULL;
 }
 
