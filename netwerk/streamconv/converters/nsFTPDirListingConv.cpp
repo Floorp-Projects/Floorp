@@ -932,9 +932,9 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
         case OS_2:
         {
             if(!PL_strncmp(line, "total ", 6)
-               || (PL_strnstr(line, "not authorized") != NULL)
-               || (PL_strnstr(line, "Path not found") != NULL)
-               || (PL_strnstr(line, "No Files") != NULL)) {
+               || (PL_strstr(line, "not authorized") != NULL)
+               || (PL_strstr(line, "Path not found") != NULL)
+               || (PL_strstr(line, "No Files") != NULL)) {
                 NS_DELETEXPCOM(thisEntry);
                 if (cr)
                     line = eol+2;
@@ -946,7 +946,7 @@ nsFTPDirListingConv::DigestBufferLines(char *aBuffer, nsCAutoString &aString) {
             char *name;
             nsCAutoString str;
 
-            if(PL_strnstr(line, "DIR")) {
+            if(PL_strstr(line, "DIR")) {
                 thisEntry->mType = Dir;
                 thisEntry->mSupressSize = PR_TRUE;
             }
