@@ -27,6 +27,7 @@
 #include "nsBaseFilePicker.h"
 #include "nsString.h"
 #include "nsIFileChannel.h"
+#include "nsILocalFile.h"
 #include <Navigation.h>
 
 #define	kMaxTypeListCount	10
