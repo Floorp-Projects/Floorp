@@ -26,6 +26,7 @@
 #include "nsIStyleRule.h"
 
 class nsICSSStyleSheet;
+class nsICSSGroupRule;
 
 // IID for the nsICSSRule interface {b9791e20-1a04-11d3-805a-006008159b5a}
 #define NS_ICSS_RULE_IID     \
@@ -49,6 +50,7 @@ public:
   NS_IMETHOD GetType(PRInt32& aType) const = 0;
 
   NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet) = 0;
+  NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule) = 0;
 
   NS_IMETHOD Clone(nsICSSRule*& aClone) const = 0;
 };

@@ -57,17 +57,20 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 #define DECL_STYLE_RULE_INHERIT  \
 NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const; \
 NS_IMETHOD SetStyleSheet(nsICSSStyleSheet* aSheet); \
+NS_IMETHOD SetParentRule(nsICSSGroupRule* aRule); \
 NS_IMETHOD GetStrength(PRInt32& aStrength) const; \
 NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 
 #define IMPL_STYLE_RULE_INHERIT(_class, super) \
 NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
 NS_IMETHODIMP _class::SetStyleSheet(nsICSSStyleSheet* aSheet) { return super::SetStyleSheet(aSheet); }  \
+NS_IMETHODIMP _class::SetParentRule(nsICSSGroupRule* aRule) { return super::SetParentRule(aRule); }  \
 NS_IMETHODIMP _class::GetStrength(PRInt32& aStrength) const { return super::GetStrength(aStrength); }   \
 NS_IMETHODIMP _class::MapRuleInfoInto(nsRuleData* aRuleData) { return NS_OK; } 
 
 #define IMPL_STYLE_RULE_INHERIT2(_class, super) \
 NS_IMETHODIMP _class::GetStyleSheet(nsIStyleSheet*& aSheet) const { return super::GetStyleSheet(aSheet); }  \
+NS_IMETHODIMP _class::SetParentRule(nsICSSGroupRule* aRule) { return super::SetParentRule(aRule); }  \
 NS_IMETHODIMP _class::GetStrength(PRInt32& aStrength) const { return super::GetStrength(aStrength); }   \
 NS_IMETHODIMP _class::MapRuleInfoInto(nsRuleData* aRuleData) { return NS_OK; } 
 
@@ -354,7 +357,11 @@ CSSCharsetRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 NS_IMETHODIMP
 CSSCharsetRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mParentRule) {
+    return CallQueryInterface(mParentRule, aParentRule);
+  }
+  *aParentRule = nsnull;
+  return NS_OK;
 }
 
 
@@ -642,7 +649,11 @@ CSSImportRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 NS_IMETHODIMP
 CSSImportRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mParentRule) {
+    return CallQueryInterface(mParentRule, aParentRule);
+  }
+  *aParentRule = nsnull;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -747,6 +758,15 @@ CloneRuleInto(nsISupports* aRule, void* aArray)
   return PR_TRUE;
 }
 
+PR_STATIC_CALLBACK(PRBool)
+SetParentRuleReference(nsISupports* aRule, void* aParentRule)
+{
+  nsICSSRule* rule = (nsICSSRule*)aRule;
+  nsICSSGroupRule* parentRule = (nsICSSGroupRule*)aParentRule;
+  rule->SetParentRule(parentRule);
+  return PR_TRUE;
+}
+
 CSSMediaRuleImpl::CSSMediaRuleImpl(const CSSMediaRuleImpl& aCopy)
   : nsCSSRule(aCopy),
     mMedia(nsnull),
@@ -761,6 +781,7 @@ CSSMediaRuleImpl::CSSMediaRuleImpl(const CSSMediaRuleImpl& aCopy)
     NS_NewISupportsArray(getter_AddRefs(mRules));
     if (mRules) {
       aCopy.mRules->EnumerateForwards(CloneRuleInto, mRules);
+      mRules->EnumerateForwards(SetParentRuleReference, this);
     }
   }
 }
@@ -769,6 +790,9 @@ CSSMediaRuleImpl::~CSSMediaRuleImpl(void)
 {
   if (mMedia) {
     mMedia->DropReference();
+  }
+  if (mRules) {
+    mRules->EnumerateForwards(SetParentRuleReference, nsnull);
   }
   if (mRuleCollection) {
     mRuleCollection->DropReference();
@@ -963,6 +987,7 @@ CSSMediaRuleImpl::AppendStyleRule(nsICSSRule* aRule)
   if (NS_SUCCEEDED(result) && mRules) {
     mRules->AppendElement(aRule);
     aRule->SetStyleSheet(mSheet);
+    aRule->SetParentRule(this);
     if (mSheet) {
       mSheet->SetModified(PR_TRUE);
     }
@@ -1024,6 +1049,7 @@ CSSMediaRuleImpl::DeleteStyleRuleAt(PRUint32 aIndex)
   nsCOMPtr<nsICSSRule> rule = dont_AddRef((nsICSSRule*)mRules->ElementAt(aIndex));
   if (rule) {
     rule->SetStyleSheet(nsnull);
+    rule->SetParentRule(nsnull);
   }
   return mRules->DeleteElementAt(aIndex);
 }
@@ -1034,6 +1060,7 @@ CSSMediaRuleImpl::InsertStyleRulesAt(PRUint32 aIndex, nsISupportsArray* aRules)
   NS_ENSURE_TRUE(mRules, NS_ERROR_FAILURE);
 
   aRules->EnumerateForwards(SetStyleSheetReference, mSheet);
+  aRules->EnumerateForwards(SetParentRuleReference, this);
   // There is no xpcom-compatible version of InsertElementsAt.... :(
   if (! mRules->InsertElementsAt(aRules, aIndex)) {
     return NS_ERROR_FAILURE;
@@ -1129,7 +1156,11 @@ CSSMediaRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 NS_IMETHODIMP
 CSSMediaRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mParentRule) {
+    return CallQueryInterface(mParentRule, aParentRule);
+  }
+  *aParentRule = nsnull;
+  return NS_OK;
 }
 
 // nsIDOMCSSMediaRule methods
@@ -1444,6 +1475,10 @@ CSSNameSpaceRuleImpl::GetParentStyleSheet(nsIDOMCSSStyleSheet** aSheet)
 NS_IMETHODIMP
 CSSNameSpaceRuleImpl::GetParentRule(nsIDOMCSSRule** aParentRule)
 {
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (mParentRule) {
+    return CallQueryInterface(mParentRule, aParentRule);
+  }
+  *aParentRule = nsnull;
+  return NS_OK;
 }
 
