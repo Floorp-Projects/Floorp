@@ -198,6 +198,7 @@ protected:
 
   PRBool mUpdatedBand;
   PRBool mPlacedLeftFloater;
+  PRBool mInNBU;
 };
 
 inline nscoord
