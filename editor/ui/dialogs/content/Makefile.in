@@ -30,7 +30,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/EdLinkProps.xul \
 	$(srcdir)/EdImageProps.xul \
 	$(srcdir)/EdCharacterProps.xul \
-	$(srcdir)/EdCharacterProps.js \
+	$(srcdir)/EdLinkProps.js \
 	$(NULL)
 
 install::
