@@ -67,6 +67,7 @@
 #include "nsIScrollableFrame.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsGUIEvent.h"
+#include "nsIRootBox.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   0
 
@@ -158,6 +159,16 @@ nsPopupSetFrame::Init(nsIPresContext*  aPresContext,
 {
   mPresContext = aPresContext; // Don't addref it.  Our lifetime is shorter.
   nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  nsIFrame *grandParent;
+  aParent->GetParent(&grandParent);
+  nsIRootBox *rootBox;
+  nsresult res = CallQueryInterface(grandParent, &rootBox);
+  NS_ASSERTION(NS_SUCCEEDED(res), "grandparent should be root box");
+  if (NS_SUCCEEDED(res)) {
+    rootBox->SetPopupSetFrame(this);
+  }
+
   return rv;
 }
 
@@ -175,6 +186,15 @@ nsPopupSetFrame::Destroy(nsIPresContext* aPresContext)
       temp->mNextPopup = nsnull;
       delete temp; 
     }
+  }
+
+  nsIFrame *grandParent;
+  mParent->GetParent(&grandParent);
+  nsIRootBox *rootBox;
+  nsresult res = CallQueryInterface(grandParent, &rootBox);
+  NS_ASSERTION(NS_SUCCEEDED(res), "grandparent should be root box");
+  if (NS_SUCCEEDED(res)) {
+    rootBox->SetPopupSetFrame(nsnull);
   }
 
   return nsBoxFrame::Destroy(aPresContext);
