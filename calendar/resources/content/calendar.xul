@@ -597,7 +597,8 @@
     </vbox>
 
     <splitter id="calendar-splitter" collapse="before" persist="state"
-              class="chromeclass-extrachrome sidebar-splitter" orient="horizontal" onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarSplitter()', 1 );">
+              class="chromeclass-extrachrome sidebar-splitter" orient="horizontal"
+              onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarSplitter()', 1 );">
       <grippy class="sidebar-splitter-grippy"/>
     </splitter>
          
@@ -709,7 +710,7 @@
         <vbox id="multiweek-view-box"/>
 
       </deck>  <!-- End: Day/Month/Week Deck -->
-            
+
     </vbox>
   </hbox> <!-- End: box with unifinder on left, calendar on right -->
 </vbox>

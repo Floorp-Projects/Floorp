@@ -1,46 +1,46 @@
 <?xml version="1.0"?>
 <!-- ***** BEGIN LICENSE BLOCK *****
-   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
-   -
-   - The contents of this file are subject to the Mozilla Public License Version
-   - 1.1 (the "License"); you may not use this file except in compliance with
-   - the License. You may obtain a copy of the License at
-   - http://www.mozilla.org/MPL/
-   -
-   - Software distributed under the License is distributed on an "AS IS" basis,
-   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
-   - for the specific language governing rights and limitations under the
-   - License.
-   -
-   - The Original Code is OEone Calendar Code, released October 31st, 2001.
-   -
-   - The Initial Developer of the Original Code is
-   - OEone Corporation.
-   - Portions created by the Initial Developer are Copyright (C) 2001
-   - the Initial Developer. All Rights Reserved.
-   -
-   - Contributor(s): Garth Smedley <garths@oeone.com> 
-   -                 Mike Potter <mikep@oeone.com>
-   -                 Colin Phillips <colinp@oeone.com>
-   -                 Chris Charabaruk <coldacid@djfly.org>
-   -                 Karl Guertin <grayrest@grayrest.com> 
-   -                 Dan Parent <danp@oeone.com> 
-   -                 ArentJan Banck <ajbanck@planet.nl> 
-   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
-   -
-   - Alternatively, the contents of this file may be used under the terms of
-   - either the GNU General Public License Version 2 or later (the "GPL"), or
-   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
-   - in which case the provisions of the GPL or the LGPL are applicable instead
-   - of those above. If you wish to allow use of your version of this file only
-   - under the terms of either the GPL or the LGPL, and not to allow others to
-   - use your version of this file under the terms of the MPL, indicate your
-   - decision by deleting the provisions above and replace them with the notice
-   - and other provisions required by the LGPL or the GPL. If you do not delete
-   - the provisions above, a recipient may use your version of this file under
-   - the terms of any one of the MPL, the GPL or the LGPL.
-   -
-   - ***** END LICENSE BLOCK ***** -->
+  - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+  -
+  - The contents of this file are subject to the Mozilla Public License Version
+  - 1.1 (the "License"); you may not use this file except in compliance with
+  - the License. You may obtain a copy of the License at
+  - http://www.mozilla.org/MPL/
+  -
+  - Software distributed under the License is distributed on an "AS IS" basis,
+  - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+  - for the specific language governing rights and limitations under the
+  - License.
+  -
+  - The Original Code is OEone Calendar Code, released October 31st, 2001.
+  -
+  - The Initial Developer of the Original Code is
+  - OEone Corporation.
+  - Portions created by the Initial Developer are Copyright (C) 2001
+  - the Initial Developer. All Rights Reserved.
+  -
+  - Contributor(s): Garth Smedley <garths@oeone.com> 
+  -                 Mike Potter <mikep@oeone.com>
+  -                 Colin Phillips <colinp@oeone.com>
+  -                 Chris Charabaruk <coldacid@djfly.org>
+  -                 Karl Guertin <grayrest@grayrest.com> 
+  -                 Dan Parent <danp@oeone.com> 
+  -                 ArentJan Banck <ajbanck@planet.nl> 
+  -                 Eric Belhaire <belhaire@ief.u-psud.fr>
+  -
+  - Alternatively, the contents of this file may be used under the terms of
+  - either the GNU General Public License Version 2 or later (the "GPL"), or
+  - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+  - in which case the provisions of the GPL or the LGPL are applicable instead
+  - of those above. If you wish to allow use of your version of this file only
+  - under the terms of either the GPL or the LGPL, and not to allow others to
+  - use your version of this file under the terms of the MPL, indicate your
+  - decision by deleting the provisions above and replace them with the notice
+  - and other provisions required by the LGPL or the GPL. If you do not delete
+  - the provisions above, a recipient may use your version of this file under
+  - the terms of any one of the MPL, the GPL or the LGPL.
+  -
+  - ***** END LICENSE BLOCK ***** -->
 
 <!-- Style sheets -->
 
@@ -62,77 +62,76 @@
 <!-- DTD File with all strings specific to the calendar -->
 <!DOCTYPE window 
 [
-    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
-    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
-    <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
-    <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" > %brandDTD;
+  <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
+  <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
+  <!ENTITY % calendarMenuOverlayDTD SYSTEM "chrome://calendar/locale/menuOverlay.dtd" > %calendarMenuOverlayDTD;
+  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" > %brandDTD;
 ]>
 
 
 <!-- The Window  -->
 
-<window
-   id="calendar-window"
-   title="&mainWindow.title;"
-   onload="calendarInit()"
-   onunload="calendarFinish()"
-   windowtype="calendarMainWindow"
-   xmlns:html="http://www.w3.org/1999/xhtml"
-   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   persist="screenX screenY width height sizemode"
-	height="550"
-	width="710"> 
+<window id="calendar-window"
+        title="&mainWindow.title;"
+        onload="calendarInit()"
+        onunload="calendarFinish()"
+        windowtype="calendarMainWindow"
+        xmlns:html="http://www.w3.org/1999/xhtml"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        persist="screenX screenY width height sizemode"
+        height="550"
+        width="710">
 <broadcasterset id="calendar_broadcasters">
-   <broadcaster id="is_editable" hidden="false"/>
+  <broadcaster id="is_editable" hidden="false"/>
 </broadcasterset> 
 <commandset id="calendar_commands">
-   <command id="new_command" oncommand="newEventCommand( event )"/>
-   <command id="delete_command" oncommand="deleteEventCommand( )" disabled="true" disabledwhennoeventsselected="true"/>
-   <command id="delete_command_no_confirm" oncommand="deleteEventCommand( true )" disabled="true" disabledwhennoeventsselected="true"/>
-   <command id="modify_command" oncommand="editEventCommand()" disabled="true" disabledwhennoeventsselected="true"/>
-   <command id="send_event_command" oncommand="sendEvent()" disabled="true" disabledwhennoeventsselected="true"/>
-   <command id="print_command" oncommand="print()"/>
-   <command id="cut_command" oncommand="cutToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
-   <command id="copy_command" oncommand="copyToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
-   <command id="paste_command" oncommand="pasteFromClipboard()"/>
-   <command id="select_all_command" oncommand="selectAllEvents()"/>
-   
-   <command id="new_todo_command" oncommand="newToDoCommand()"/>
-   <command id="modify_todo_command" oncommand="modifyToDoCommand( event )"/>
-   <command id="delete_todo_command" oncommand="deleteToDoCommand()" disabled="true"/>
+  <command id="new_command" oncommand="newEventCommand( event )"/>
+  <command id="delete_command" oncommand="deleteEventCommand( )" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="delete_command_no_confirm" oncommand="deleteEventCommand( true )" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="modify_command" oncommand="editEventCommand()" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="send_event_command" oncommand="sendEvent()" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="print_command" oncommand="print()"/>
+  <command id="cut_command" oncommand="cutToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="copy_command" oncommand="copyToClipboard()" disabled="true" disabledwhennoeventsselected="true"/>
+  <command id="paste_command" oncommand="pasteFromClipboard()"/>
+  <command id="select_all_command" oncommand="selectAllEvents()"/>
 
-   <command id="new_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchAddCalendarDialog()"/>
-   <command id="edit_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
-   <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddRemoteCalendarDialog()"/>
-   <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditRemoteCalendarDialog()"/>
-   <command id="delete_server_command" oncommand="deleteCalendar()"/>
-   <command id="find_new_calendar_command" oncommand="goFindNewCalendars()"/>
+  <command id="new_todo_command" oncommand="newToDoCommand()"/>
+  <command id="modify_todo_command" oncommand="modifyToDoCommand( event )"/>
+  <command id="delete_todo_command" oncommand="deleteToDoCommand()" disabled="true"/>
 
-   <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
-   <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>
-   <command id="go_today_command" oncommand="gCalendarWindow.goToToday()"/>
-   <command id="go_date_command" oncommand="gCalendarWindow.pickAndGoToDate()"/>
-   
-   <command id="day_view_command"   oncommand="gCalendarWindow.switchToDayView()" disabled="true"/>
-   <command id="week_view_command"  oncommand="gCalendarWindow.switchToWeekView()" disabled="true"/>
-   <command id="month_view_command" oncommand="gCalendarWindow.switchToMonthView()" disabled="true"/>
-   <command id="multiweek_view_command" oncommand="gCalendarWindow.switchToMultiweekView()" disabled="false"/>
-   
-   <command id="import_command" oncommand="startImport()"/>
-   <command id="export_command" oncommand="saveEventsToFile()" disabled="true" disabledwhennoeventsselected="true"/>
-   
-   <command id="refresh_remote_calendars" oncommand="gCalendarWindow.calendarManager.refreshAllRemoteCalendars()"/>
-   <command id="publish_calendar" oncommand="publishEntireCalendar()"/>
-	<command id="publish_events_command" oncommand="publishCalendarData()" disabled="true" disabledwhennoeventsselected="true"/>
-   
+  <command id="new_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchAddCalendarDialog()"/>
+  <command id="edit_local_calendar_command" oncommand="gCalendarWindow.calendarManager.launchEditCalendarDialog()"/>
+  <command id="new_server_command" oncommand="gCalendarWindow.calendarManager.launchAddRemoteCalendarDialog()"/>
+  <command id="edit_server_command" oncommand="gCalendarWindow.calendarManager.launchEditRemoteCalendarDialog()"/>
+  <command id="delete_server_command" oncommand="deleteCalendar()"/>
+  <command id="find_new_calendar_command" oncommand="goFindNewCalendars()"/>
+
+  <command id="next_command" oncommand="gCalendarWindow.currentView.goToNext()"/>
+  <command id="previous_command" oncommand="gCalendarWindow.currentView.goToPrevious()"/>
+  <command id="go_today_command" oncommand="gCalendarWindow.goToToday()"/>
+  <command id="go_date_command" oncommand="gCalendarWindow.pickAndGoToDate()"/>
+
+  <command id="day_view_command"  oncommand="gCalendarWindow.switchToDayView()" disabled="true"/>
+  <command id="week_view_command"  oncommand="gCalendarWindow.switchToWeekView()" disabled="true"/>
+  <command id="month_view_command" oncommand="gCalendarWindow.switchToMonthView()" disabled="true"/>
+  <command id="multiweek_view_command" oncommand="gCalendarWindow.switchToMultiweekView()" disabled="false"/>
+
+  <command id="import_command" oncommand="startImport()"/>
+  <command id="export_command" oncommand="saveEventsToFile()" disabled="true" disabledwhennoeventsselected="true"/>
+
+  <command id="refresh_remote_calendars" oncommand="gCalendarWindow.calendarManager.refreshAllRemoteCalendars()"/>
+  <command id="publish_calendar" oncommand="publishEntireCalendar()"/>
+  <command id="publish_events_command" oncommand="publishCalendarData()" disabled="true" disabledwhennoeventsselected="true"/>
+
 <!--
-   <command id="change_display_todo_in_view" oncommand="" checked="true"/>
--->   
-   <command id="close_calendar_command" key="key_close" oncommand="closeCalendar()"/>
-   
-   <command id="wizard_command" oncommand="launchWizard()" collapsed="true"/>
+  <command id="change_display_todo_in_view" oncommand="" checked="true"/>
+-->
+  <command id="close_calendar_command" key="key_close" oncommand="closeCalendar()"/>
 
-   <command id="cmd_CustomizeToolbars" oncommand="CalendarCustomizeToolbar()"/>
+  <command id="wizard_command" oncommand="launchWizard()" collapsed="true"/>
+
+  <command id="cmd_CustomizeToolbars" oncommand="CalendarCustomizeToolbar()"/>
 </commandset>
 
 <keyset>
@@ -150,14 +149,14 @@
   <key id="key_copy" key="C" modifiers="control" observes="copy_command"/>
   <key id="key_paste" key="V" modifiers="control" observes="paste_command"/>
   
-  <key id="view_day_key"   keycode="VK_F1" observes="day_view_command"/>
+  <key id="view_day_key"  keycode="VK_F1" observes="day_view_command"/>
   <key id="view_week_key"  keycode="VK_F2" observes="week_view_command"/>
   <key id="view_multiweek_key" keycode="VK_F3" observes="multiweek_view_command"/>
   <key id="view_month_key" keycode="VK_F4" observes="month_view_command"/>
   
   <key id="go_backward_key" keycode="VK_PAGE_UP" observes="previous_command"/>
   <key id="go_forward_key"  keycode="VK_PAGE_DOWN" observes="next_command"/>
-  <key id="go_to_today_key"   keycode="VK_DOWN" modifiers="control" observes="go_today_command"/>
+  <key id="go_to_today_key"  keycode="VK_DOWN" modifiers="control" observes="go_today_command"/>
   <key id="go_to_date_key" keycode="VK_UP" modifiers="control" observes="go_date_command"/>
   
   <key id="key_close" key="W" modifiers="control" observes="close_calendar_command"/>
@@ -178,8 +177,8 @@
   <stringbundle id="bundle_calendar_email" src="chrome://calendar/locale/email.properties"/>
 </stringbundleset>
 <script type="application/x-javascript">
-   var gCalendarBundle = document.getElementById("bundle_calendar");
-   var gCalendarEmailBundle = document.getElementById("bundle_calendar_email");
+  var gCalendarBundle = document.getElementById("bundle_calendar");
+  var gCalendarEmailBundle = document.getElementById("bundle_calendar_email");
 </script>  
 
 <!-- Javascript includes -->
@@ -228,180 +227,180 @@
 <popup id="context-menu"
        onpopuphidden="gNewDateVariable = null;"
        onpopupshowing="dump(document.popupNode.getAttribute('id'));
-                       document.getElementById('is_editable').hidden = (document.popupNode.getAttribute('id') == 'lefthandcalendar')"
-  >
-   <menuitem label="&calendar.context.newevent.label;"
-             accesskey="&calendar.context.newevent.accesskey;"
-             observes="new_command"/>
-   <menuitem label="&calendar.context.newtodo.label;"
-             accesskey="&calendar.context.newtodo.accesskey;"
-             observes="new_todo_command"/>
-   <menuitem label="&calendar.context.modifyevent.label;"
-             accesskey="&calendar.context.modifyevent.accesskey;"
-             observes="modify_command" />
-   <menuitem label="&calendar.context.deleteevent.label;"
-             accesskey="&calendar.context.deleteevent.accesskey;"
-             observes="delete_command"/>
+                       document.getElementById('is_editable').hidden = (document.popupNode.getAttribute('id') == 'lefthandcalendar')">
 
-   <menuseparator/>
-   <menuitem label="&calendar.context.cutevent.label;"
-             accesskey="&calendar.context.cutevent.accesskey;"
-             observes="cut_command">
-      <observes element="is_editable" attribute="hidden"/>
-   </menuitem>
-   <menuitem label="&calendar.context.copyevent.label;"
-             accesskey="&calendar.context.copyevent.accesskey;"
-             observes="copy_command">
-      <observes element="is_editable" attribute="hidden"/>
-   </menuitem>
-   <menuitem label="&calendar.context.pasteevent.label;"
-             accesskey="&calendar.context.pasteevent.accesskey;"
-             observes="paste_command">
-      <observes element="is_editable" attribute="hidden"/>
-   </menuitem>
-   <menuseparator>
-      <observes element="is_editable" attribute="hidden"/>
-   </menuseparator>
-   <menuitem label="&calendar.context.selectall.label;"
-             accesskey="&calendar.context.selectall.accesskey;"
-             observes="select_all_command">
-      <observes element="is_editable" attribute="hidden"/>
-   </menuitem>
-   <menuseparator>
-      <observes element="is_editable" attribute="hidden"/>
-   </menuseparator>
-   <menuitem label="&calendar.context.gototoday.label;"
-             accesskey="&calendar.context.gototoday.accesskey;"
-             observes="go_today_command"/>
-   <menuseparator/>
-   <menuitem label="&calendar.context.dayview.label;"
-             accesskey="&calendar.context.dayview.accesskey;"
-             observes="day_view_command"/>
-   <menuitem label="&calendar.context.weekview.label;"
-             accesskey="&calendar.context.weekview.accesskey;"
-             observes="week_view_command"/>
-   <menuitem label="&calendar.context.monthview.label;"
-             accesskey="&calendar.context.monthview.accesskey;"
-             observes="month_view_command"/>
-   <menuitem label="&calendar.context.multiweekview.label;"
-             accesskey="&calendar.context.multiweekview.accesskey;"
-             observes="multiweek_view_command"/>
+  <menuitem label="&calendar.context.newevent.label;"
+            accesskey="&calendar.context.newevent.accesskey;"
+            observes="new_command"/>
+  <menuitem label="&calendar.context.newtodo.label;"
+            accesskey="&calendar.context.newtodo.accesskey;"
+            observes="new_todo_command"/>
+  <menuitem label="&calendar.context.modifyevent.label;"
+            accesskey="&calendar.context.modifyevent.accesskey;"
+            observes="modify_command" />
+  <menuitem label="&calendar.context.deleteevent.label;"
+            accesskey="&calendar.context.deleteevent.accesskey;"
+            observes="delete_command"/>
 
-   <menuseparator/>
-   <menuitem id="only-workday-checkbox-2"
-             type="checkbox"
-             label="&calendar.onlyworkday.checkbox.label;"
-             accesskey="&calendar.onlyworkday.checkbox.accesskey;"
-             oncommand="changeOnlyWorkdayCheckbox(2);"
-             persist="checked"
-             disabled="true"/>
-   <menuitem id="display-todo-inview-checkbox-2"
-             type="checkbox"
-             label="&calendar.displaytodos.checkbox.label;"
-             accesskey="&calendar.displaytodos.checkbox.accesskey;"
-             oncommand="changeDisplayToDoInViewCheckbox(2);"
-             persist="checked"
-             disabled="true"/>
+  <menuseparator/>
+  <menuitem label="&calendar.context.cutevent.label;"
+            accesskey="&calendar.context.cutevent.accesskey;"
+            observes="cut_command">
+    <observes element="is_editable" attribute="hidden"/>
+  </menuitem>
+  <menuitem label="&calendar.context.copyevent.label;"
+            accesskey="&calendar.context.copyevent.accesskey;"
+            observes="copy_command">
+    <observes element="is_editable" attribute="hidden"/>
+  </menuitem>
+  <menuitem label="&calendar.context.pasteevent.label;"
+            accesskey="&calendar.context.pasteevent.accesskey;"
+            observes="paste_command">
+    <observes element="is_editable" attribute="hidden"/>
+  </menuitem>
+  <menuseparator>
+    <observes element="is_editable" attribute="hidden"/>
+  </menuseparator>
+  <menuitem label="&calendar.context.selectall.label;"
+            accesskey="&calendar.context.selectall.accesskey;"
+            observes="select_all_command">
+    <observes element="is_editable" attribute="hidden"/>
+  </menuitem>
+  <menuseparator>
+    <observes element="is_editable" attribute="hidden"/>
+  </menuseparator>
+  <menuitem label="&calendar.context.gototoday.label;"
+            accesskey="&calendar.context.gototoday.accesskey;"
+            observes="go_today_command"/>
+  <menuseparator/>
+  <menuitem label="&calendar.context.dayview.label;"
+            accesskey="&calendar.context.dayview.accesskey;"
+            observes="day_view_command"/>
+  <menuitem label="&calendar.context.weekview.label;"
+            accesskey="&calendar.context.weekview.accesskey;"
+            observes="week_view_command"/>
+  <menuitem label="&calendar.context.monthview.label;"
+            accesskey="&calendar.context.monthview.accesskey;"
+            observes="month_view_command"/>
+  <menuitem label="&calendar.context.multiweekview.label;"
+            accesskey="&calendar.context.multiweekview.accesskey;"
+            observes="multiweek_view_command"/>
+
+  <menuseparator/>
+  <menuitem id="only-workday-checkbox-2"
+            type="checkbox"
+            label="&calendar.onlyworkday.checkbox.label;"
+            accesskey="&calendar.onlyworkday.checkbox.accesskey;"
+            oncommand="changeOnlyWorkdayCheckbox(2);"
+            persist="checked"
+            disabled="true"/>
+  <menuitem id="display-todo-inview-checkbox-2"
+            type="checkbox"
+            label="&calendar.displaytodos.checkbox.label;"
+            accesskey="&calendar.displaytodos.checkbox.accesskey;"
+            oncommand="changeDisplayToDoInViewCheckbox(2);"
+            persist="checked"
+            disabled="true"/>
 
 <!--
-   <menuitem label="test" observes="change_display_todo_in_view"  checked="true"/>
+  <menuitem label="test" observes="change_display_todo_in_view"  checked="true"/>
 -->   
 
-   <menuseparator/>
-   <menuitem label="&calendar.context.emailevent.label;"
-             accesskey="&calendar.context.emailevent.accesskey;"
-             observes="send_event_command"/>
-   <!--
-   <menuseparator/>
-   <menuitem label="&calendar.context.reload.label;" accesskey="&calendar.context.reload.accesskey;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
-   -->
+  <menuseparator/>
+  <menuitem label="&calendar.context.emailevent.label;"
+            accesskey="&calendar.context.emailevent.accesskey;"
+            observes="send_event_command"/>
+  <!--
+  <menuseparator/>
+  <menuitem label="&calendar.context.reload.label;" accesskey="&calendar.context.reload.accesskey;" oncommand="window.location = 'chrome://calendar/content/calendar.xul';"/>
+  -->
 </popup>
 
 <!-- TASK ITEM CONTEXT MENU -->
 <popup id="taskitem-context-menu" onpopupshowing="changeContextMenuForToDo( event );">
-   <menuitem label="&calendar.context.newtodo.label;"
-             accesskey="&calendar.context.newtodo.accesskey;"
-             observes="new_todo_command"/>
-   <!--
-   Currently no way to get the item that we clicked on originally 
-   <menuitem label="&calendar.context.modifytask.label;" accesskey="&calendar.context.modifytask.accesskey;" observes="modify_todo_command"/>-->
-   <menuitem label="&calendar.context.deletetask.label;"
-             accesskey="&calendar.context.deletetask.accesskey;"
-             observes="delete_todo_command"/>
-   <menu label="&calendar.context.progress.label;"
-         accesskey="&calendar.context.progress.accesskey;">
-      <menupopup>
-         <menuitem type="checkbox"
-                   id="percent-0-menuitem"
-                   label="&progress.level.0;"
-                   accesskey="&progress.level.0.accesskey;"
-                   oncommand="contextChangeProgress( event, 0 );"/>
-         <menuitem type="checkbox"
-                   id="percent-25-menuitem"
-                   label="&progress.level.25;"
-                   accesskey="&progress.level.25.accesskey;"
-                   oncommand="contextChangeProgress( event, 25 );"/>
-         <menuitem type="checkbox"
-                   id="percent-50-menuitem"
-                   label="&progress.level.50;"
-                   accesskey="&progress.level.50.accesskey;"
-                   oncommand="contextChangeProgress( event, 50 );"/>
-         <menuitem type="checkbox"
-                   id="percent-75-menuitem"
-                   label="&progress.level.75;"
-                   accesskey="&progress.level.75.accesskey;"
-                   oncommand="contextChangeProgress( event, 75 );"/>
-         <menuitem type="checkbox"
-                   id="percent-100-menuitem"
-                   label="&progress.level.100;"
-                   accesskey="&progress.level.100.accesskey;"
-                   oncommand="contextChangeProgress( event, 100 );"/>
-      </menupopup>
-   </menu>
-   <menu label="&calendar.context.priority.label;"
-         accesskey="&calendar.context.priority.accesskey;">
-      <menupopup>
-         <menuitem type="checkbox"
-                   id="priority-0-menuitem"
-                   label="&priority.level.none;"
-                   accesskey="&priority.level.none.accesskey;"
-                   oncommand="contextChangePriority( event, 0 );"/>
-         <menuitem type="checkbox"
-                   id="priority-9-menuitem"
-                   label="&priority.level.low;"
-                   accesskey="&priority.level.low.accesskey;"
-                   oncommand="contextChangePriority( event, 9 );"/>
-         <menuitem type="checkbox"
-                   id="priority-5-menuitem"
-                   label="&priority.level.medium;"
-                   accesskey="&priority.level.medium.accesskey;"
-                   oncommand="contextChangePriority( event, 5 );"/>
-         <menuitem type="checkbox"
-                   id="priority-1-menuitem"
-                   label="&priority.level.high;"
-                   accesskey="&priority.level.high.accesskey;"
-                   oncommand="contextChangePriority( event, 1 );"/>
-      </menupopup>
-   </menu>
+  <menuitem label="&calendar.context.newtodo.label;"
+            accesskey="&calendar.context.newtodo.accesskey;"
+            observes="new_todo_command"/>
+  <!--
+  Currently no way to get the item that we clicked on originally 
+  <menuitem label="&calendar.context.modifytask.label;" accesskey="&calendar.context.modifytask.accesskey;" observes="modify_todo_command"/>-->
+  <menuitem label="&calendar.context.deletetask.label;"
+            accesskey="&calendar.context.deletetask.accesskey;"
+            observes="delete_todo_command"/>
+  <menu label="&calendar.context.progress.label;"
+        accesskey="&calendar.context.progress.accesskey;">
+    <menupopup>
+      <menuitem type="checkbox"
+                id="percent-0-menuitem"
+                label="&progress.level.0;"
+                accesskey="&progress.level.0.accesskey;"
+                oncommand="contextChangeProgress( event, 0 );"/>
+      <menuitem type="checkbox"
+                id="percent-25-menuitem"
+                label="&progress.level.25;"
+                accesskey="&progress.level.25.accesskey;"
+                oncommand="contextChangeProgress( event, 25 );"/>
+      <menuitem type="checkbox"
+                id="percent-50-menuitem"
+                label="&progress.level.50;"
+                accesskey="&progress.level.50.accesskey;"
+                oncommand="contextChangeProgress( event, 50 );"/>
+      <menuitem type="checkbox"
+                id="percent-75-menuitem"
+                label="&progress.level.75;"
+                accesskey="&progress.level.75.accesskey;"
+                oncommand="contextChangeProgress( event, 75 );"/>
+      <menuitem type="checkbox"
+                id="percent-100-menuitem"
+                label="&progress.level.100;"
+                accesskey="&progress.level.100.accesskey;"
+                oncommand="contextChangeProgress( event, 100 );"/>
+    </menupopup>
+  </menu>
+  <menu label="&calendar.context.priority.label;"
+        accesskey="&calendar.context.priority.accesskey;">
+    <menupopup>
+      <menuitem type="checkbox"
+                id="priority-0-menuitem"
+                label="&priority.level.none;"
+                accesskey="&priority.level.none.accesskey;"
+                oncommand="contextChangePriority( event, 0 );"/>
+      <menuitem type="checkbox"
+                id="priority-9-menuitem"
+                label="&priority.level.low;"
+                accesskey="&priority.level.low.accesskey;"
+                oncommand="contextChangePriority( event, 9 );"/>
+      <menuitem type="checkbox"
+                id="priority-5-menuitem"
+                label="&priority.level.medium;"
+                accesskey="&priority.level.medium.accesskey;"
+                oncommand="contextChangePriority( event, 5 );"/>
+      <menuitem type="checkbox"
+                id="priority-1-menuitem"
+                label="&priority.level.high;"
+                accesskey="&priority.level.high.accesskey;"
+                oncommand="contextChangePriority( event, 1 );"/>
+    </menupopup>
+  </menu>
 </popup>
 
 <!-- CALENDAR LIST CONTEXT MENU -->
 <popup id="calendarlist-context-menu">
-   <menuitem label="&calendar.context.newserver.label;"
-             accesskey="&calendar.context.newserver.accesskey;"
-             observes="new_local_calendar_command"/>
-   <menuitem label="&calendar.context.editserver.label;"
-             accesskey="&calendar.context.editserver.accesskey;"
-             observes="edit_local_calendar_command"/>
-   <menuitem label="&calendar.context.deleteserver.label;"
-             accesskey="&calendar.context.deleteserver.accesskey;"
-             observes="delete_server_command"/>
-   <menuitem label="&calendar.context.refreshserver.label;"
-             accesskey="&calendar.context.refreshserver.accesskey;"
-             observes="refresh_remote_calendars"/>
-   <menuitem label="&calendar.context.publish.label;"
-             accesskey="&calendar.context.publish.accesskey;"
-             observes="publish_calendar"/>
+  <menuitem label="&calendar.context.newserver.label;"
+            accesskey="&calendar.context.newserver.accesskey;"
+            observes="new_local_calendar_command"/>
+  <menuitem label="&calendar.context.editserver.label;"
+            accesskey="&calendar.context.editserver.accesskey;"
+            observes="edit_local_calendar_command"/>
+  <menuitem label="&calendar.context.deleteserver.label;"
+            accesskey="&calendar.context.deleteserver.accesskey;"
+            observes="delete_server_command"/>
+  <menuitem label="&calendar.context.refreshserver.label;"
+            accesskey="&calendar.context.refreshserver.accesskey;"
+            observes="refresh_remote_calendars"/>
+  <menuitem label="&calendar.context.publish.label;"
+            accesskey="&calendar.context.publish.accesskey;"
+            observes="publish_calendar"/>
 </popup>
 
 <popup id="toolbar-context-menu">
@@ -413,63 +412,63 @@
 <commandset id="commands"/>
 
 <toolbox id="calendar-toolbox" class="toolbox-top">
-   <!-- Menu -->
-   <toolbar type="menubar" id="main-menubar" class="chromeclass-menubar" customizable="true"
-            defaultset="menubar-items"
-            mode="icons" iconsize="small" context="toolbar-context-menu">
-      <toolbaritem id="menubar-items" align="center"/>
-   </toolbar>
+  <!-- Menu -->
+  <toolbar type="menubar" id="main-menubar" class="chromeclass-menubar" customizable="true"
+           defaultset="menubar-items"
+           mode="icons" iconsize="small" context="toolbar-context-menu">
+    <toolbaritem id="menubar-items" align="center"/>
+  </toolbar>
 
-   <toolbarpalette id="calendarToolbarPalette">
-      <toolbarbutton class="toolbarbutton-1"
-                     id="calendar-new-event-button"
-                     label="&calendar.newevent.button.label;"
-                     tooltiptext="&calendar.newevent.button.tooltip;"
-                     observes="new_command"/>
-      <toolbarbutton class="toolbarbutton-1"
-                     id="calendar-edit-event-button"
-                     label="&calendar.edit.button.label;"
-                     tooltiptext="&calendar.edit.button.tooltip;"
-                     observes="modify_command"/>
-      <toolbarbutton class="toolbarbutton-1"
-                     id="calendar-delete-event-button"
-                     label="&calendar.delete.button.label;"
-                     tooltiptext="&calendar.delete.button.tooltip;"
-                     observes="delete_command"/>
-      <toolbarbutton class="toolbarbutton-1"
-                     id="calendar-day-view-button"
-                     label="&calendar.dayview.button.label;"
-                     tooltiptext="&calendar.dayview.button.tooltip;"
-                     observes="day_view_command"/>
-      <toolbarbutton class="toolbarbutton-1"
-                     id="calendar-week-view-button"
-                     label="&calendar.weekview.button.label;"
-                     tooltiptext="&calendar.weekview.button.tooltip;"
-                     observes="week_view_command"/>
-      <toolbarbutton class="toolbarbutton-1"
-                     id="calendar-multiweek-view-button"
-                     label="&calendar.multiweekview.button.label;"
-                     tooltiptext="&calendar.multiweekview.button.tooltip;"
-                     observes="multiweek_view_command"/>
-      <toolbarbutton class="toolbarbutton-1"
-                     id="calendar-month-view-button"
-                     label="&calendar.monthview.button.label;"
-                     tooltiptext="&calendar.monthview.button.tooltip;"
-                     observes="month_view_command"/>
+  <toolbarpalette id="calendarToolbarPalette">
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-new-event-button"
+                   label="&calendar.newevent.button.label;"
+                   tooltiptext="&calendar.newevent.button.tooltip;"
+                   observes="new_command"/>
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-edit-event-button"
+                   label="&calendar.edit.button.label;"
+                   tooltiptext="&calendar.edit.button.tooltip;"
+                   observes="modify_command"/>
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-delete-event-button"
+                   label="&calendar.delete.button.label;"
+                   tooltiptext="&calendar.delete.button.tooltip;"
+                   observes="delete_command"/>
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-day-view-button"
+                   label="&calendar.dayview.button.label;"
+                   tooltiptext="&calendar.dayview.button.tooltip;"
+                   observes="day_view_command"/>
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-week-view-button"
+                   label="&calendar.weekview.button.label;"
+                   tooltiptext="&calendar.weekview.button.tooltip;"
+                   observes="week_view_command"/>
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-multiweek-view-button"
+                   label="&calendar.multiweekview.button.label;"
+                   tooltiptext="&calendar.multiweekview.button.tooltip;"
+                   observes="multiweek_view_command"/>
+    <toolbarbutton class="toolbarbutton-1"
+                   id="calendar-month-view-button"
+                   label="&calendar.monthview.button.label;"
+                   tooltiptext="&calendar.monthview.button.tooltip;"
+                   observes="month_view_command"/>
 
-      <toolbaritem id="throbber-box" align="center" pack="center">
-         <button id="navigator-throbber" 
-                 oncommand="openAboutDialog();"
-                 tooltiptext="&aboutCmd.label;"/>
+    <toolbaritem id="throbber-box" align="center" pack="center">
+      <button id="navigator-throbber"
+              oncommand="openAboutDialog();"
+              tooltiptext="&aboutCmd.label;"/>
       </toolbaritem>
-   </toolbarpalette>
-   <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar"
-            iconsize="big"
-            defaultset="calendar-new-event-button,calendar-edit-event-button,calendar-delete-event-button,separator,calendar-day-view-button,calendar-week-view-button,calendar-multiweek-view-button,calendar-month-view-button,spring,throbber-box"
-            customizable="true" mode="full"
-            toolbarname="&calendar.maintoolbar.name;" accesskey="&calendar.maintoolbar.accesskey;"
-            context="toolbar-context-menu"/>
-   <toolbarset id="customToolbars" context="toolbar-context-menu"/>
+  </toolbarpalette>
+  <toolbar class="toolbar-primary chromeclass-toolbar" id="calendar-bar"
+           iconsize="big"
+           defaultset="calendar-new-event-button,calendar-edit-event-button,calendar-delete-event-button,separator,calendar-day-view-button,calendar-week-view-button,calendar-multiweek-view-button,calendar-month-view-button,spring,throbber-box"
+           customizable="true" mode="full"
+           toolbarname="&calendar.maintoolbar.name;" accesskey="&calendar.maintoolbar.accesskey;"
+           context="toolbar-context-menu"/>
+  <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 </toolbox>
 
 <tooltip id="eventTreeListTooltip" onpopupshowing="changeToolTipTextForEvent( event );return( checkTooltip( event ) );"/>
@@ -480,267 +479,261 @@
 
 <!-- V I S I B L E  C O N T E N T  -->
 
-<vbox id="calendar-top-box" flex="1" context="context-menu"
-   ondraggesture="nsDragAndDrop.startDrag(event,calendarManagerDNDObserver);"
-   ondragover="nsDragAndDrop.dragOver(event,calendarManagerDNDObserver)"
-   ondragdrop="nsDragAndDrop.drop(event,calendarManagerDNDObserver)"
->
+<vbox id="calendar-top-box"
+      flex="1"
+      context="context-menu"
+      ondraggesture="nsDragAndDrop.startDrag(event,calendarManagerDNDObserver);"
+      ondragover="nsDragAndDrop.dragOver(event,calendarManagerDNDObserver)"
+      ondragdrop="nsDragAndDrop.drop(event,calendarManagerDNDObserver)">
 
   <!-- Calendar Controls-->
  
-   <hbox id="calendar-content-box" flex="1">
+  <hbox id="calendar-content-box" flex="1">
 
-      <vbox id="left-hand-content" persist="width">
+    <vbox id="left-hand-content" persist="width">
       <tabbox id="tablist">
-         <tabs>
-            <tab label="&calendar.calendartab.label;"/>
-            <tab label="&calendar.listofcalendarstab.label;"/>
-         </tabs>
-         <tabpanels>
-         <tabpanel>
+        <tabs>
+          <tab label="&calendar.calendartab.label;"/>
+          <tab label="&calendar.listofcalendarstab.label;"/>
+        </tabs>
+        <tabpanels flex="1">
+          <tabpanel>
             <vbox flex="1">
-               <minimonth flex="1" id="lefthandcalendar" onchange="gCalendarWindow.goToDay( this.value );" />
-               <button observes="go_today_command" label="&calendar.gototoday.button.label;"/>
+              <spacer id="spaceaboveleftminimonth" flex="1" orient="vertical"/>
+              <minimonth id="lefthandcalendar"
+                         flex="8"
+                         maxheight="300"
+                         onchange="gCalendarWindow.goToDay( this.value );"/>
+              <button observes="go_today_command" label="&calendar.gototoday.button.label;"/>
+              <spacer id="spacebelowleftminimonth" flex="1" orient="vertical"/>
             </vbox>
-         </tabpanel>
+          </tabpanel>
       
-         <tabpanel>
-               <!--<vbox id="left-hand-above-splitter" flex="1">-->
-                  <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
+          <tabpanel>
+            <!--<vbox id="left-hand-above-splitter" flex="1">-->
+            <listbox id="list-calendars-listbox" class="unifinder-tree-class" flex="1" 
                      contextmenu="calendarlist-context-menu" datasources="rdf:null" ref="urn:calendarcontainer">
-                     <listhead>
-                        <listheader flex="1" crop="end" label="&calendar.calendarlistbox.label;"/>
-                        <listheader/>
-                     </listhead>
-                     <listcols>
-                        <listcol flex="1"/>
-                        <listcol/>
-                     </listcols>
-                     <template>
-                        <rule>   
-                           <listitem uri="rdf:*" 
-                              calendarPath="rdf:http://home.netscape.com/NC-rdf#path"
-                              onclick="switchCalendar( event );">
-                              <listcell class="calendar-list-item-class"
-                                 label="rdf:http://home.netscape.com/NC-rdf#name"
-                                 flex="1"
-                                 style="background-color: rdf:http://home.netscape.com/NC-rdf#color"
-                                 type="checkbox"
-                                 checked="rdf:http://home.netscape.com/NC-rdf#active"
-                                 />
-                              <!-- If you add something between the above listcell and this listcell,
-                                 or between the next listcell and the image tag, you have to modify calendarManager.js -->
-                              <listcell>
-                                 <image class="calendar-list-item-class"/>
-                              </listcell>
-                           </listitem>
-                        </rule>
-                     </template>
-                  </listbox>
-               <!--</vbox>-->
-            </tabpanel>
-            </tabpanels>
-         </tabbox>
-         <splitter id="calendar-todo-splitter" collapse="before" persist="state" orient="vertical"/>
-         <vbox id="left-hand-below-splitter" flex="1" persist="height">
-            <box align="left">
-               <label flex="1" crop="end" style="font-weight: bold" value="&calendar.unifinder.todoitems.label;"/>
-            </box>
-            <box align="center">
-               <checkbox id="only-completed-checkbox"
-                         label="&calendar.unifinder.hidecompletedtodos.label;"
-                         flex="1"
-                         crop="end"
-                         oncommand="toDoUnifinderRefresh( event )"
-                         persist="checked"/>
-            </box>
-            <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false" ondblclick="modifyToDoCommand( event )">
-               <treecols id="unifinder-todo-tree-cols">
-                  <treecol id="unifinder-todo-tree-col-completed"
+              <listhead>
+                <listheader flex="1" crop="end" label="&calendar.calendarlistbox.label;"/>
+                <listheader/>
+              </listhead>
+              <listcols>
+                <listcol flex="1"/>
+                <listcol/>
+              </listcols>
+              <template>
+                <rule>   
+                  <listitem uri="rdf:*" 
+                            calendarPath="rdf:http://home.netscape.com/NC-rdf#path"
+                            onclick="switchCalendar( event );">
+                    <listcell class="calendar-list-item-class"
+                              label="rdf:http://home.netscape.com/NC-rdf#name"
+                              flex="1"
+                              type="checkbox"
+                              checked="rdf:http://home.netscape.com/NC-rdf#active"/>
+                    <!-- If you add something between the above listcell and this listcell,
+                         or between the next listcell and the image tag, you have to modify calendarManager.js -->
+                    <listcell>
+                      <image class="calendar-list-item-class"/>
+                    </listcell>
+                  </listitem>
+                </rule>
+              </template>
+            </listbox>
+            <!--</vbox>-->
+          </tabpanel>
+        </tabpanels>
+      </tabbox>
+      <splitter id="calendar-todo-splitter" collapse="before" persist="state"
+                orient="vertical"/>
+      <vbox id="left-hand-below-splitter" flex="1" persist="height">
+        <box align="left">
+          <label flex="1" crop="end" style="font-weight: bold" value="&calendar.unifinder.todoitems.label;"/>
+        </box>
+        <box align="center">
+          <checkbox id="only-completed-checkbox"
+                    label="&calendar.unifinder.hidecompletedtodos.label;"
+                    flex="1"
+                    crop="end"
+                    oncommand="toDoUnifinderRefresh( event )"
+                    persist="checked"/>
+        </box>
+        <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false" ondblclick="modifyToDoCommand( event )">
+          <treecols id="unifinder-todo-tree-cols">
+            <treecol id="unifinder-todo-tree-col-completed"
                      persist="hidden ordinal width sortDirection sortActive" width="18" cycler="true"
                      label="&calendar.unifinder.tree.done.label;">
-                     <image id="checkboximg" contextmenu="taskitem-context-menu"/>
-                  </treecol>
-                  <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-todo-tree-col-priority" 
-                      persist="hidden ordinal width sortDirection sortActive" width="18" 
-                      label="&calendar.unifinder.tree.priority.label;">
-                           <image id="priorityimg" contextmenu="taskitem-context-menu"/>
-                      </treecol>
-                   <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-todo-tree-col-title"
-                      persist="hidden ordinal width sortDirection sortActive" flex="1" 
-                      label="&calendar.unifinder.tree.title.label;" />
-                   <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-todo-tree-col-startdate"
-                      persist="hidden ordinal width sortDirection sortActive" 
-                      hidden="true"
-                      flex="1" label="&calendar.unifinder.tree.startdate.label;"/>
-                   <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-todo-tree-col-duedate"
-                      persist="hidden ordinal width sortDirection sortActive" 
-                      hidden="true"
-                      flex="1" label="&calendar.unifinder.tree.duedate.label;"/>
-                   <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-todo-tree-col-completeddate"
-                      persist="hidden ordinal width sortDirection sortActive" 
-                      hidden="true"
-                      flex="1" label="&calendar.unifinder.tree.completeddate.label;"/>
-                   <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-todo-tree-col-percentcomplete"
-                      persist="hidden ordinal width sortDirection sortActive" 
-                      hidden="true"
-                      flex="1" label="&calendar.unifinder.tree.percentcomplete.label;"/>
-                   <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-todo-tree-col-categories"
-                      persist="hidden ordinal width sortDirection sortActive" 
-                      hidden="true"
-                      flex="1" label="&calendar.unifinder.tree.categories.label;"/>
-                  </treecols>
+              <image id="checkboximg" contextmenu="taskitem-context-menu"/>
+            </treecol>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-priority" 
+                     persist="hidden ordinal width sortDirection sortActive" width="18" 
+                     label="&calendar.unifinder.tree.priority.label;">
+              <image id="priorityimg" contextmenu="taskitem-context-menu"/>
+            </treecol>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-title"
+                     persist="hidden ordinal width sortDirection sortActive" flex="1" 
+                     label="&calendar.unifinder.tree.title.label;" />
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-startdate"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     hidden="true"
+                     flex="1" label="&calendar.unifinder.tree.startdate.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-duedate"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     hidden="true"
+                     flex="1" label="&calendar.unifinder.tree.duedate.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-completeddate"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     hidden="true"
+                     flex="1" label="&calendar.unifinder.tree.completeddate.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-percentcomplete"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     hidden="true"
+                     flex="1" label="&calendar.unifinder.tree.percentcomplete.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-todo-tree-col-categories"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     hidden="true"
+                     flex="1" label="&calendar.unifinder.tree.categories.label;"/>
+          </treecols>
        
-                  <treechildren tooltip="taskTooltip"
-                    onmousedown="unifinderMouseDownToDo( event )"
-                    context="taskitem-context-menu"/>
-               </tree>
-            </vbox>
-         </vbox>
-    
-         <splitter id="calendar-splitter" collapse="before" persist="state"
-                   class="chromeclass-extrachrome sidebar-splitter" orient="horizontal"
-                   onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarSplitter()', 1 );"/>
+          <treechildren tooltip="taskTooltip"
+                        onmousedown="unifinderMouseDownToDo( event )"
+                        context="taskitem-context-menu"/>
+        </tree>
+      </vbox>
+    </vbox>
+
+    <splitter id="calendar-splitter" collapse="before" persist="state"
+              class="chromeclass-extrachrome sidebar-splitter" orient="horizontal"
+              onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarSplitter()', 1 );"/>
          
-         <vbox flex="1">
-            <vbox id="bottom-events-box" persist="height">
-               <hbox>
-                  <box align="center">
-                     <menulist id="event-filter-menulist" persist="value">
-                         <menupopup id="event-filter-menupopup" oncommand="changeEventFilter( event );">
-                             <menuitem id="event-filter-all"
-                                       label="&calendar.events.filter.all.label;"
-                                       value="all"/>
-                             <menuitem id="event-filter-today"
-                                       label="&calendar.events.filter.today.label;"
-                                       value="today"/>
-                             <menuitem id="event-filter-week"
-                                       label="&calendar.events.filter.week.label;"
-                                       value="week"/>
-                             <menuitem id="event-filter-2weeks"
-                                       label="&calendar.events.filter.2weeks.label;"
-                                       value="2weeks"/>
-                             <menuitem id="event-filter-month"
-                                       label="&calendar.events.filter.month.label;"
-                                       value="month"/>
-                             <menuitem id="event-filter-future"
-                                       label="&calendar.events.filter.future.label;"
-                                       value="future"/>
-                             <menuitem id="event-filter-current"
-                                       label="&calendar.events.filter.current.label;"
-                                       value="current"/>
-                         </menupopup>
-                     </menulist>
-                  </box>
-                  
-                  <box align="center" flex="1">
-                     <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
-                     <textbox id="unifinder-search-field" onkeypress="searchKeyPress( this, event )" flex="1"/>
-                  </box>
-               </hbox>
-               <tree id="unifinder-search-results-listbox" flex="1" 
-                  onselect="unifinderOnSelect( event )"
-                  enableColumnDrag="true"
-                  >
-               <treecols id="unifinder-search-results-tree-cols">
-                  <treecol id="unifinder-search-results-tree-col-title"
-                      persist="hidden ordinal width sortDirection sortActive"
-                      flex="1"
-                      label="&calendar.unifinder.tree.title.label;" />
-                   <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-search-results-tree-col-startdate"
-                      persist="hidden ordinal width sortDirection sortActive" 
-                      flex="1"
-                      label="&calendar.unifinder.tree.startdate.label;"/>
-                   <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-search-results-tree-col-enddate"
-                      persist="hidden ordinal width sortDirection sortActive" 
-                      flex="1"
-                      label="&calendar.unifinder.tree.enddate.label;"/>
-                   <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-search-results-tree-col-categories"
-                      persist="hidden ordinal width sortDirection sortActive" 
-                      flex="1"
-                      label="&calendar.unifinder.tree.categories.label;"/>
-                   <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-search-results-tree-col-location"
-                      persist="hidden ordinal width sortDirection sortActive" 
-                      flex="1"
-                      hidden="true"
-                      label="&calendar.unifinder.tree.location.label;"/>
-                   <splitter class="tree-splitter"/>
-                   <treecol id="unifinder-search-results-tree-col-status"
-                      persist="hidden ordinal width sortDirection sortActive" 
-                      flex="1"
-                      hidden="true"
-                      label="&calendar.unifinder.tree.status.label;"/>
-                   <treecol id="unifinder-search-results-tree-col-filename"
-                      persist="hidden ordinal width sortDirection sortActive" 
-                      flex="1"
-                      hidden="true"
-                      label="&calendar.unifinder.tree.filename.label;"/>
-                  </treecols>
-       
-                  <!-- on mousedown here happens before onclick above -->
-                  <treechildren tooltip="eventTreeListTooltip" 
-                    onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
-                    ondragover="return( false );"  
-                    ondblclick="unifinderDoubleClickEvent( event )"
-                    onfocus="focusFirstItemIfNoSelection( );"/>
-               </tree>
-            </vbox>
-            
-            <splitter id="calendar-view-splitter" collapse="before" persist="state"
-            class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarViewSplitter()', 1 );">
-               <grippy class="sidebar-splitter-grippy"/>
-            </splitter>
-         
-            <!-- Begin Day/Month/Week Deck -->
-            <deck id="calendar-deck" persist="selectedIndex" flex="1">
-             
-               <!-- Calendar Month View -->
-                
-               <vbox id="month-view-box"/>
-             
-               <!-- End: Calendar Month View -->
-         
-             
-               <!-- Calendar Week View -->
-                
-               <vbox id="week-view-box"/>
-            
-               <!-- End: Calendar Week View -->
-            
-             
-               <!-- Calendar Day View -->
-             
-               <vbox id="day-view-box"/>
-            
-               <!-- End: Calendar Day View -->
+    <vbox flex="1">
+      <vbox id="bottom-events-box" persist="height">
+        <hbox>
+          <box align="center">
+            <menulist id="event-filter-menulist" persist="value">
+              <menupopup id="event-filter-menupopup" oncommand="changeEventFilter( event );">
+                <menuitem id="event-filter-all"
+                          label="&calendar.events.filter.all.label;"
+                          value="all"/>
+                <menuitem id="event-filter-today"
+                          label="&calendar.events.filter.today.label;"
+                          value="today"/>
+                <menuitem id="event-filter-week"
+                          label="&calendar.events.filter.week.label;"
+                          value="week"/>
+                <menuitem id="event-filter-2weeks"
+                          label="&calendar.events.filter.2weeks.label;"
+                          value="2weeks"/>
+                <menuitem id="event-filter-month"
+                          label="&calendar.events.filter.month.label;"
+                          value="month"/>
+                <menuitem id="event-filter-future"
+                          label="&calendar.events.filter.future.label;"
+                          value="future"/>
+                <menuitem id="event-filter-current"
+                          label="&calendar.events.filter.current.label;"
+                          value="current"/>
+              </menupopup>
+            </menulist>
+          </box>
+
+          <box align="center" flex="1">
+            <label control="unifinder-search-field" value="&calendar.search.options.searchfor;"/>
+            <textbox id="unifinder-search-field" onkeypress="searchKeyPress( this, event )" flex="1"/>
+          </box>
+        </hbox>
+        <tree id="unifinder-search-results-listbox" flex="1" 
+              onselect="unifinderOnSelect( event )"
+              enableColumnDrag="true">
+          <treecols id="unifinder-search-results-tree-cols">
+            <treecol id="unifinder-search-results-tree-col-title"
+                     persist="hidden ordinal width sortDirection sortActive"
+                     flex="1"
+                     label="&calendar.unifinder.tree.title.label;" />
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-search-results-tree-col-startdate"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     flex="1"
+                     label="&calendar.unifinder.tree.startdate.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-search-results-tree-col-enddate"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     flex="1"
+                     label="&calendar.unifinder.tree.enddate.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-search-results-tree-col-categories"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     flex="1"
+                     label="&calendar.unifinder.tree.categories.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-search-results-tree-col-location"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     flex="1"
+                     hidden="true"
+                     label="&calendar.unifinder.tree.location.label;"/>
+            <splitter class="tree-splitter"/>
+            <treecol id="unifinder-search-results-tree-col-status"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     flex="1"
+                     hidden="true"
+                     label="&calendar.unifinder.tree.status.label;"/>
+            <treecol id="unifinder-search-results-tree-col-filename"
+                     persist="hidden ordinal width sortDirection sortActive" 
+                     flex="1"
+                     hidden="true"
+                     label="&calendar.unifinder.tree.filename.label;"/>
+          </treecols>
+
+          <!-- on mousedown here happens before onclick above -->
+          <treechildren tooltip="eventTreeListTooltip" 
+                        onkeypress="if (event.keyCode == 13) unifinderEditCommand();"
+                        ondragover="return( false );"  
+                        ondblclick="unifinderDoubleClickEvent( event )"
+                        onfocus="focusFirstItemIfNoSelection( );"/>
+        </tree>
+      </vbox>
+
+      <splitter id="calendar-view-splitter" collapse="before" persist="state"
+                class="chromeclass-extrachrome sidebar-splitter" orient="vertical" onmouseup="setTimeout( 'gCalendarWindow.onMouseUpCalendarViewSplitter()', 1 );">
+        <grippy class="sidebar-splitter-grippy"/>
+      </splitter>
+
+      <!-- Begin Day/Month/Week Deck -->
+      <deck id="calendar-deck" persist="selectedIndex" flex="1">
+
+        <!-- Calendar Month View -->
+        <vbox id="month-view-box"/>
+
+        <!-- Calendar Week View -->
+        <vbox id="week-view-box"/>
+
+        <!-- Calendar Day View -->
+        <vbox id="day-view-box"/>
                       
-               <!-- Calendar Near Future View -->
-                
-               <vbox id="multiweek-view-box"/>
-             
-               <!-- End: Calendar Near Future View -->
-         
-            </deck>  <!-- End: Day/Month/Week Deck -->
-            
-         </vbox>
-         
-      </hbox> <!-- End: box with unifinder on left, calendar on right -->
+        <!-- Calendar Near Future View -->
+        <vbox id="multiweek-view-box"/>
+
+      </deck>  <!-- End: Day/Month/Week Deck -->
+
+    </vbox>
+  </hbox> <!-- End: box with unifinder on left, calendar on right -->
 </vbox>
 
 <statusbar id="status-bar" class="chromeclass-status">
- <statusbarpanel id="statusText" flex="1" value="&statusText.label;"/>  
- <statusbarpanel id="offline-status" class="statusbarpanel-iconic" hidden="true" offline="true"/>
+  <statusbarpanel id="statusText"
+                  flex="1"
+                  value="&statusText.label;"/>
+  <statusbarpanel id="offline-status"
+                  class="statusbarpanel-iconic"
+                  hidden="true"
+                  offline="true"/>
 </statusbar>  
 
 </window>
