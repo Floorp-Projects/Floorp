@@ -108,6 +108,7 @@ GenerateCert(char *nickname, int keysize, char *token)
 
 	if(cert) {
 		output_ca_cert(cert, db);
+		CERT_DestroyCertificate(cert);
 	}
 
 	PORT_Free(subject);
@@ -340,6 +341,8 @@ GenerateSelfSignedObjectSigningCert(char *nickname, CERTCertDBHandle *db,
 
 	/* !!! Free memory ? !!! */
 	PK11_FreeSlot(slot);
+	SECKEY_DestroyPrivateKey(privk);
+	SECKEY_DestroyPublicKey(pubk);
 
 	return cert;
 }
@@ -670,11 +673,13 @@ output_ca_cert (CERTCertificate *cert, CERTCertDBHandle *db)
   certChain = SEC_PKCS7CreateCertsOnly (cert, PR_TRUE, db);
   encodedCertChain 
      = SEC_PKCS7EncodeItem (NULL, NULL, certChain, NULL, NULL, NULL);
+  SEC_PKCS7DestroyContentInfo (certChain);
 
   if (encodedCertChain) 
     {
     fprintf(out, "Content-type: application/x-x509-ca-cert\n\n");
     fwrite (encodedCertChain->data, 1, encodedCertChain->len, out);
+    SECITEM_FreeItem(encodedCertChain, PR_TRUE);
     }
   else {
     PR_fprintf(errorFD, "%s: Can't DER encode this certificate\n", PROGRAM_NAME);
