@@ -35,6 +35,7 @@
 
 #include <MacTypes.h>
 #include <UnicodeConverter.h>
+#include <Menus.h>
 
 extern nsWeakPtr gMacMenubarX;
 
