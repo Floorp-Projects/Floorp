@@ -76,6 +76,7 @@
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMFormListener.h"
 #include "nsIDOMMenuListener.h"
+#include "nsIDOMDragListener.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIStyledContent.h"
 #include "nsIStyleContext.h"
@@ -526,6 +527,12 @@ static EventHandlerMapEntry kEventHandlerMap[] = {
     { "onselect",      nsnull, &kIDOMFormListenerIID        },
 
     { "onpaint",       nsnull, &kIDOMPaintListenerIID       },
+    
+    { "ondragenter",   nsnull, &NS_GET_IID(nsIDOMDragListener)    },
+    { "ondragover",    nsnull, &NS_GET_IID(nsIDOMDragListener)    },
+    { "ondragexit",    nsnull, &NS_GET_IID(nsIDOMDragListener)    },
+    { "ondragdrop",    nsnull, &NS_GET_IID(nsIDOMDragListener)    },
+    { "ondraggesture", nsnull, &NS_GET_IID(nsIDOMDragListener)    },
 
     { nsnull,          nsnull, nsnull                       }
 };
