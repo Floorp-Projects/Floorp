@@ -525,7 +525,7 @@ nsFontMetricsWin::FillLogFont(LOGFONT* logFont, PRInt32 aWeight,
   // Quick return if we came here just to compute the font size
   if (aSizeOnly) return;
 
-  // Fill in logFont structure; stolen from awt
+  // Fill in logFont structure
   logFont->lfWidth          = 0; 
   logFont->lfEscapement     = 0;
   logFont->lfOrientation    = 0;
