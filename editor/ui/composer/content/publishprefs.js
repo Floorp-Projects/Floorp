@@ -515,7 +515,7 @@ function FindSiteIndexAndDocDir(publishSiteData, docUrl, dirObj)
   if (docUrl.charAt(docUrl.length-1) != "/")
   {
     var lastSlash = docUrl.lastIndexOf("/");
-    docUrl = docUrl.slice(0, lastSlash);
+    docUrl = docUrl.slice(0, lastSlash+1);
   }
 
   var siteIndex = -1;
