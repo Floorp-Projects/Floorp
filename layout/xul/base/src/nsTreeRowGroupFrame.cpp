@@ -65,6 +65,74 @@ nsTreeRowGroupFrame::~nsTreeRowGroupFrame()
 {
 }
 
+PRBool nsTreeRowGroupFrame::RowGroupDesiresExcessSpace() 
+{
+  nsIFrame* parentFrame;
+  GetParent(&parentFrame);
+  const nsStyleDisplay *display;
+  parentFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+  if (display->mDisplay == NS_STYLE_DISPLAY_TABLE_ROW_GROUP)
+    return PR_FALSE; // Nested groups don't grow.
+  else return PR_TRUE; // The outermost group can grow.
+}
+
+PRBool nsTreeRowGroupFrame::RowGroupReceivesExcessSpace()
+{
+  const nsStyleDisplay *display;
+  GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)display));
+  if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == display->mDisplay)
+    return PR_TRUE;
+  else return PR_FALSE; // Headers and footers don't get excess space.
+}
+
+NS_IMETHODIMP
+nsTreeRowGroupFrame::GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame)
+{
+  nsPoint tmp;
+  nsRect kidRect;
+  if (mScrollbar) {
+    mScrollbar->GetRect(kidRect);
+    if (kidRect.Contains(aPoint)) {
+      tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+      return mScrollbar->GetFrameForPoint(tmp, aFrame);
+    }
+  }
+
+  return nsTableRowGroupFrame::GetFrameForPoint(aPoint, aFrame);
+}
+
+void nsTreeRowGroupFrame::PaintChildren(nsIPresContext&      aPresContext,
+                                         nsIRenderingContext& aRenderingContext,
+                                         const nsRect&        aDirtyRect,
+                                         nsFramePaintLayer    aWhichLayer)
+{
+  nsTableRowGroupFrame::PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+  if (mScrollbar) {
+    nsIView *pView;
+     
+    mScrollbar->GetView(&pView);
+    if (nsnull == pView) {
+      PRBool clipState;
+      nsRect kidRect;
+      mScrollbar->GetRect(kidRect);
+      nsRect damageArea(aDirtyRect);
+      // Translate damage area into kid's coordinate system
+      nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+                           damageArea.width, damageArea.height);
+      aRenderingContext.PushState();
+      aRenderingContext.Translate(kidRect.x, kidRect.y);
+      mScrollbar->Paint(aPresContext, aRenderingContext, kidDamageArea, aWhichLayer);
+      if ((NS_FRAME_PAINT_LAYER_DEBUG == aWhichLayer) &&
+          GetShowFrameBorders()) {
+        aRenderingContext.SetColor(NS_RGB(255,0,0));
+        aRenderingContext.DrawRect(0, 0, kidRect.width, kidRect.height);
+      }
+      aRenderingContext.PopState(clipState);
+    }
+  }
+}
+
 NS_IMETHODIMP 
 nsTreeRowGroupFrame::ReflowBeforeRowLayout(nsIPresContext&      aPresContext,
                                            nsHTMLReflowMetrics& aDesiredSize,

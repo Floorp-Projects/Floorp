@@ -3027,7 +3027,7 @@ nsCSSFrameConstructor::CreateAnonymousXULContent(nsIPresContext* aPresContext,
 
       nsCOMPtr<nsIContent> content = do_QueryInterface(node);
       content->SetParent(aContent);
-
+      
       nsCOMPtr<nsIAtom> vertical = dont_AddRef(NS_NewAtom("align"));
       nsCOMPtr<nsIAtom> style = dont_AddRef(NS_NewAtom("style"));
 
