@@ -43,7 +43,7 @@ interface imgIRequest : nsIRequest
    * @return the image object associated with the request.
    * @attention NEED DOCS
    */
-  attribute imgIContainer image;
+  readonly attribute imgIContainer image;
 
   /**
    * Bits set in the return value from imageStatus

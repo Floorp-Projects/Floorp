@@ -40,7 +40,7 @@ PR_STATIC_CALLBACK(void) row_callback(png_structp png_ptr, png_bytep new_row,
                                       png_uint_32 row_num, int pass);
 PR_STATIC_CALLBACK(void) end_callback(png_structp png_ptr, png_infop info_ptr);
 
-NS_IMPL_ISUPPORTS2(nsPNGDecoder, imgIDecoder, nsIOutputStream)
+NS_IMPL_ISUPPORTS1(nsPNGDecoder, imgIDecoder)
 
 nsPNGDecoder::nsPNGDecoder()
 {
@@ -97,11 +97,6 @@ NS_IMETHODIMP nsPNGDecoder::Init(imgILoad *aLoad)
   return NS_OK;
 }
 
-
-
-
-/** nsIOutputStream methods **/
-
 /* void close (); */
 NS_IMETHODIMP nsPNGDecoder::Close()
 {
@@ -113,12 +108,6 @@ NS_IMETHODIMP nsPNGDecoder::Close()
 
 /* void flush (); */
 NS_IMETHODIMP nsPNGDecoder::Flush()
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* unsigned long write (in string buf, in unsigned long count); */
-NS_IMETHODIMP nsPNGDecoder::Write(const char *buf, PRUint32 count, PRUint32 *_retval)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -156,41 +145,6 @@ NS_IMETHODIMP nsPNGDecoder::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRU
   NS_ASSERTION(inStr, "Got a null input stream!");
   return inStr->ReadSegments(ReadDataOut, this, count, _retval);
 }
-
-/* [noscript] unsigned long writeSegments (in nsReadSegmentFun reader, in voidPtr closure, in unsigned long count); */
-NS_IMETHODIMP nsPNGDecoder::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute boolean nonBlocking; */
-NS_IMETHODIMP nsPNGDecoder::GetNonBlocking(PRBool *aNonBlocking)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsPNGDecoder::SetNonBlocking(PRBool aNonBlocking)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* attribute nsIOutputStreamObserver observer; */
-NS_IMETHODIMP nsPNGDecoder::GetObserver(nsIOutputStreamObserver * *aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-NS_IMETHODIMP nsPNGDecoder::SetObserver(nsIOutputStreamObserver * aObserver)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-
-
-
-
-
-
-
-
 
 
 void
