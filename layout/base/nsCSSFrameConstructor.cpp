@@ -17,8 +17,8 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ * Contributor(s):
+ *   Dan Rosen <dr@netscape.com>
  */
 
 #include "nsCSSFrameConstructor.h"
@@ -3779,11 +3779,14 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   // Only need to create a scroll frame/view for cases 2 and 3.
   // Currently OVERFLOW_SCROLL isn't honored, as
   // scrollportview::SetScrollPref is not implemented.
+  PRBool isXUL = PR_FALSE;
+
 #ifdef INCLUDE_XUL
   PRInt32 nameSpaceID; // Never create scrollbars for XUL documents
   if (NS_SUCCEEDED(aDocElement->GetNameSpaceID(nameSpaceID)) &&
       nameSpaceID == nsXULAtoms::nameSpaceID) {
     isScrollable = PR_FALSE;
+    isXUL = PR_TRUE;
   } else 
 #endif
   {
@@ -3818,10 +3821,14 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
 
   nsIFrame* parentFrame = viewportFrame;
 
-  // It should be scrollable.. and it also can not be paginated
-  if (isScrollable && !isPaginated) {
+  // If paginated, make sure we don't put scrollbars in
+  if (isPaginated)
+    aPresContext->ResolvePseudoStyleContextFor(nsnull, rootPseudo,
+                                               viewportPseudoStyle, PR_FALSE,
+                                               getter_AddRefs(rootPseudoStyle));
+  else if (isScrollable) {
 
-      // built the frame. We give it the content we are wrapping which is the document,
+      // Build the frame. We give it the content we are wrapping which is the document,
       // the root frame, the parent view port frame, and we should get back the new
       // frame and the scrollable view if one was created.
 
@@ -3851,42 +3858,88 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
                                 newScrollableFrame);
 
       // Inform the view manager about the root scrollable view
-      // get the scrolling view
       nsIView* view = nsnull;
       newScrollableFrame->GetView(aPresContext, &view);
-      nsIScrollableView* scrollableView;
-      view->QueryInterface(NS_GET_IID(nsIScrollableView), (void**)&scrollableView);
+      NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIScrollableView>
+        scrollableView(do_QueryInterface(view));
+      NS_ENSURE_TRUE(scrollableView, NS_ERROR_FAILURE);
+
       viewManager->SetRootScrollableView(scrollableView);
       parentFrame = newScrollableFrame;
 
       // if gfx scrollbars store them
-      if (HasGfxScrollbars()) {
-          mGfxScrollFrame = newFrame;
-      } else {
-          mGfxScrollFrame = nsnull;
-      }
+      if (HasGfxScrollbars())
+        mGfxScrollFrame = newFrame;
+      else
+        mGfxScrollFrame = nsnull;
+
   } else {
-    aPresContext->ResolvePseudoStyleContextFor(nsnull, rootPseudo,
-                                               viewportPseudoStyle,
-                                               PR_FALSE,
-                                               getter_AddRefs(rootPseudoStyle));
+    // If no scrollbars and xul, don't build a scrollframe at all. 
+    if (isXUL) {
+      aPresContext->ResolvePseudoStyleContextFor(nsnull, rootPseudo,
+                                                 viewportPseudoStyle, PR_FALSE,
+                                                 getter_AddRefs(rootPseudoStyle));
+    } else {
+      // if HTML the always create a scrollframe so anchors work. That way you can scroll to 
+      // anchors even if we don't have scrollbars.
+
+      // create a style context for the scrollport of the viewport
+      nsCOMPtr<nsIStyleContext> scrollPseudoStyle;
+      aPresContext->ResolvePseudoStyleContextFor(nsnull,
+                                                nsLayoutAtoms::scrolledContentPseudo,
+                                                viewportPseudoStyle, PR_FALSE,
+                                                getter_AddRefs(scrollPseudoStyle));
+
+      // create scrollframe
+      nsIFrame* scrollFrame = nsnull;
+      NS_NewScrollPortFrame(aPresShell, &scrollFrame);
+      NS_ENSURE_TRUE(scrollFrame, NS_ERROR_FAILURE);
+
+      scrollFrame->Init(aPresContext, nsnull, parentFrame, scrollPseudoStyle, nsnull);
+
+      // resolve a new style for the root frame
+      aPresContext->ResolvePseudoStyleContextFor(nsnull, rootPseudo,
+                                                 scrollPseudoStyle, PR_FALSE,
+                                                 getter_AddRefs(rootPseudoStyle));
+
+      // Inform the view manager about the root scrollable view
+      nsIView* view = nsnull;
+      scrollFrame->GetView(aPresContext, &view);
+      NS_ENSURE_TRUE(view, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIScrollableView>
+        scrollableView(do_QueryInterface(view));
+      NS_ENSURE_TRUE(scrollableView, NS_ERROR_FAILURE);
+
+      viewManager->SetRootScrollableView(scrollableView);
+
+      parentFrame = scrollFrame;
+      newFrame = scrollFrame;
+    }
   }
+  
 
   rootFrame->Init(aPresContext, nsnull, parentFrame, rootPseudoStyle, nsnull);
   
-  if (isScrollable) {
-    FinishBuildingScrollFrame(aPresContext, 
-                              state,
-                              aDocElement,
-                              parentFrame,
-                              rootFrame,
-                              rootPseudoStyle);
+  if (!isPaginated) {
+    if (isScrollable) {
+      FinishBuildingScrollFrame(aPresContext, 
+                                state,
+                                aDocElement,
+                                parentFrame,
+                                rootFrame,
+                                rootPseudoStyle);
 
-    // set the primary frame to the root frame
-    state.mFrameManager->SetPrimaryFrameFor(aDocElement, rootFrame);
-  }
-
-  if (isPaginated) {
+      // set the primary frame to the root frame
+      state.mFrameManager->SetPrimaryFrameFor(aDocElement, rootFrame);
+    } else { // if not scrollable
+      if (!isXUL) { // if not XUL
+        parentFrame->SetInitialChildList(aPresContext, nsnull, rootFrame);
+      }
+    }
+  } else { // paginated
     // Create the first page
     nsIFrame* pageFrame;
     NS_NewPageFrame(aPresShell, &pageFrame);
@@ -5957,7 +6010,7 @@ nsCSSFrameConstructor::BeginBuildingScrollFrame(nsIPresShell* aPresShell,
     BuildGfxScrollFrame(aPresShell, aPresContext, aState, aContent, aDocument, aParentFrame,
                         contentStyle, aIsRoot, gfxScrollFrame, anonymousItems, aScrollPortFrame);
 
-    scrollFrame = anonymousItems.childList;
+    scrollFrame = anonymousItems.childList; // get the scrollport from the anonymous list
     parentFrame = gfxScrollFrame;
     aNewFrame = gfxScrollFrame;
 
