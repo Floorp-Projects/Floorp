@@ -35,30 +35,42 @@ use IPC::Open2;
 # Collect program options
 $::opt_help = 0;
 $::opt_detail = 0;
-$::opt_format = "boehm";
-$::opt_fragment = 10;
+$::opt_fragment = 1.0; # Default to no fragment analysis
 $::opt_nostacks = 0;
 $::opt_nochildstacks = 0;
 $::opt_depth = 9999;
 $::opt_noentrained = 0;
 $::opt_noslop = 0;
-$::opt_showtype = 100000000;
+$::opt_showtype = -1; # default to listing all types
+$::opt_stackrefine = "C";
+@::opt_stackretype = ();
+@::opt_stackskipclass = ();
+@::opt_stackskipfunc = ();
+@::opt_typedivide = ();
 
-GetOptions("help", "detail", "format=s", "fragment=i", "nostacks", "nochildstacks", "depth=i", "noentrained", "noslop", "showtype=i");
+GetOptions("help", "detail", "format=s", "fragment=f", "nostacks", 
+	   "nochildstacks", "depth=i", "noentrained", "noslop", "showtype=i", 
+	   "stackrefine=s", "stackretype=s@", "stackskipclass=s@", "stackskipfunc=s@",
+	   "typedivide=s@"
+	   );
 
 if ($::opt_help) {
     die "usage: leak-soup.pl [options] <leakfile>
-  --help          Display this message
-  --detail        Provide details of memory sweeping from child to parents
-  --format=[boehm*|trace-malloc]
-                  Parse input as if from boehm (default) or trace-malloc
-  --fragment=n    Histogram bucket ration for fragmentation analysis
-  --nostacks      Do not compute stack traces
-  --nochildstacks Do not compute stack traces for entrained objects
-  --depth=<max>   Only compute stack traces to depth of <max>
-  --noentrained   Do not compute amount of memory entrained by root objects
-  --noslop        Don't ignore low bits when searching for pointers
-  --showtype=<i>  Show memory usage most-significant <i>  types";
+  --help                 Display this message
+  --detail               Provide details of memory sweeping from child to parents
+  --fragment=ratio       Histogram bucket ratio for fragmentation analysis
+#  --nostacks            Do not compute stack traces
+#  --nochildstacks       Do not compute stack traces for entrained objects
+#  --depth=<max>         Only compute stack traces to depth of <max>
+#  --noentrained         Do not compute amount of memory entrained by root objects
+  --noslop               Don't ignore low bits when searching for pointers
+  --showtype=<i>         Show memory usage histogram for most-significant <i> types
+  --stackrefine={F|C}    During stack based refinement, use 'F'ull name name or just 'C'lass
+  --stackretype=type     Use allocation stack to refine vague types like void*
+  --stackskipclass=class When refining types, ignore stack frames from 'class'
+  --stackskipfunc=func   When refining types, ignore stack frames for 'func'
+  --typedivide=type      Subdivide 'type' based on objects pointing to each instance
+";
 }
 
 # This is the table that keeps a graph of objects. It's indexed by the
@@ -67,9 +79,9 @@ if ($::opt_help) {
 # stack.
 %::Objects = %{0};
 
-# This will be a list of addresses in Objects, that is sorted
-# It gets used to evaluate overlaps, and chase parent->child
-# (interior) pointers.
+# This will be a list of keys to (addresses in) Objects, that is sorted
+# It gets used to evaluate overlaps, calculate fragmentation, and chase 
+# parent->child (interior) pointers.
 @::SortedAddresses = [];
 
 # This is the table that keeps track of memory usage on a per-type basis.
@@ -89,7 +101,133 @@ $::TotalSize = 0; # sum of sizes of all objects included $::Types{}
 
 #----------------------------------------------------------------------
 #
-# Read in the output from the Boehm GC. 
+# Decode arguments to override default values for doing call-stack-based 
+# refinement of typename based on contents of the stack at allocation time.
+#
+
+# List the types that we need to refine (if any) based on allocation stack
+$::VagueType = {
+    'void*' => 1,
+};
+
+# With regard to the stack, ignore stack frames in the following
+# overly vague classes.
+$::VagueClasses = {
+#    'nsStr' => 1,
+    'nsVoidArray' => 1,
+};
+
+# With regard to stack, ignore stack frames with the following vague
+# function names
+$::VagueFunctions = {
+    'PL_ArenaAllocate' => 1,
+    'PL_HashTableFinalize(PLHashTable *)' => 1,
+    'PL_HashTableInit__FP11PLHashTableUiPFPCv_UiPFPCvPCv_iT3PC14PLHashAllocOpsPv' => 1,
+    'PL_HashTableRawAdd' => 1,
+    '__builtin_vec_new' => 1,
+    '_init' => 1,
+    'il_get_container(_IL_GroupContext *, ImgCachePolicy, char const *, _NI_IRGB *, IL_DitherMode, int, int, int)' => 1,
+    'nsCStringKey::Clone(void) const' => 1,
+    'nsCppSharedAllocator<unsigned short>::allocate(unsigned int, void const *)' => 1,
+    'nsHashtable::Put(nsHashKey *, void *)' => 1,
+    'nsHashtable::nsHashtable(unsigned int, int)' => 1,
+    'nsMemory::Alloc(unsigned int)' => 1,
+    'nsMemoryImpl::Alloc(unsigned int)' => 1,
+};
+
+sub init_stack_based_type_refinement() {
+    # Move across stackretype options, or use default values
+    if ($#::opt_stackretype < 0) {
+	print "Default --stackretype options will be used (since none were specified)\n";
+	print "  use --stackretype='nothing' to disable re-typing activity\n";
+    } else {
+	foreach my $type (keys %{$::VagueType}) {
+	    delete ($::VagueType->{$type});
+	}
+	if ($#::opt_stackretype == 0 && $::opt_stackretype[0] eq 'nothing') {
+	    print "Types will not be refined based on call stack\n";
+	} else {
+	    foreach my $type (@::opt_stackretype) {
+		$::VagueType->{$type} = 1;
+	    }
+	}
+    }
+
+
+    if (keys %{$::VagueType}) {
+	print "The following type(s) will be refined based on call stacks:\n";
+	foreach my $type (sort keys %{$::VagueType}) {
+	    print "     $type\n";
+	}
+	print "Equivalent command line argument(s):\n";
+	foreach my $type (sort keys %{$::VagueType}) {
+	    print " --stackretype='$type'";
+	}
+	print "\n\n";
+
+	if ($#::opt_stackskipclass < 0) {
+	    print "Default --stackskipclass options will be used (since none were specified)\n";
+	    print "  use --stackskipclass='nothing' to disable skipping stack frames based on class names\n";
+	} else {
+	    foreach my $type (keys %{$::VagueClasses}) {
+		delete ($::VagueClasses->{$type});
+	    }
+	    if ($#::opt_stackskipclass == 0 && $::opt_stackskipclass[0] eq 'nothing') {
+		print "Types will not be refined based on call stack\n";
+	    } else {
+		foreach my $type (@::opt_stackskipclass) {
+		    $::VagueClasses->{$type} = 1;
+		}
+	    }
+	}
+
+	if (keys %{$::VagueClasses}) {
+	    print "Stack frames from the following class(es) will not be used to refine types:\n";
+	    foreach my $class (sort keys %{$::VagueClasses}) {
+		print "     $class\n";
+	    }
+	    print "Equivalent command line argument(s):\n";
+	    foreach my $class (sort keys %{$::VagueClasses}) {
+		print " --stackskipclass='$class'";
+	    }
+	    print "\n\n";
+	}
+
+
+	if ($#::opt_stackskipfunc < 0) {
+	    print "Default --stackskipfunc options will be used (since none were specified)\n";
+	    print "  use --stackskipfunc='nothing' to disable skipping stack frames based on function names\n";
+	} else {
+	    foreach my $type (keys %{$::VagueFunctions}) {
+		delete ($::VagueFunctions->{$type});
+	    }
+	    if ($#::opt_stackskipfunc == 0 && $::opt_stackskipfunc[0] eq 'nothing') {
+		print "Types will not be refined based on call stack\n";
+	    } else {
+		foreach my $type (@::opt_stackskipfunc) {
+		    $::VagueFunctions->{$type} = 1;
+		}
+	    }
+	}
+
+	if (keys %{$::VagueFunctions}) {
+	    print "Stack frames from the following function(s) will not be used to refine types:\n";
+	    foreach my $func (sort keys %{$::VagueFunctions}) {
+		print "     $func\n";
+	    }
+	    print "Equivalent command line argument(s):\n";
+	    foreach my $func (sort keys %{$::VagueFunctions}) {
+		print " --stackskipfunc='$func'";
+	    }
+	    print "\n\n";
+	}
+    }
+}
+
+
+#----------------------------------------------------------------------
+#
+# Read in the output from the Boehm GC or Trace-malloc. 
 #
 sub read_boehm() {
   OBJECT: while (<>) {
@@ -124,20 +262,43 @@ sub read_boehm() {
 
       $object->{'slots'} = \@slots;
 
-      if (! $::opt_nostacks) {
-          # Record the stack by which the object was allocated
-          my @stack;
-
-        FRAME: while (<>) {
+      if (@::opt_stackretype && (defined $::VagueType->{$type})) {
+	  # Change the value of type of the object based on stack
+	  # if we can find an interesting calling function
+        VAGUEFRAME: while (<>) {
             # e.g., _dl_debug_message[/lib/ld-linux.so.2 +0x0000B858]
-            last FRAME unless /^(.*)\[(.*) \+0x(\S+)\]$/;
+            last VAGUEFRAMEFRAME unless /^(.*)\[(.*) \+0x(\S+)\]$/;
             my ($func, $lib, $off) = ($1, $2, hex $3);
-
             chomp;
-            $stack[$#stack + 1] = $_;
-        }
 
-          $object->{'stack'} = \@stack;
+	    my ($class,,$fname) = split(/:/, $func);
+	    next VAGUEFRAME if (defined $::VagueFunctions->{$func} || 
+				defined $::VagueClasses->{$class});
+
+	    # Refine typename and exit stack scan
+	    $object->{'type'} = $type . ":" . 
+		(('C' eq $::opt_stackrefine) ?
+		 $class :
+		 $func);
+	    last VAGUEFRAME;
+	} 
+      } else {
+	  # Save all stack info if requested
+	  if (! $::opt_nostacks) {
+	      # Record the stack by which the object was allocated
+	      my @stack;
+
+	    FRAME: while (<>) {
+		# e.g., _dl_debug_message[/lib/ld-linux.so.2 +0x0000B858]
+		last FRAME unless /^(.*)\[(.*) \+0x(\S+)\]$/;
+		my ($func, $lib, $off) = ($1, $2, hex $3);
+		chomp;
+
+		$stack[$#stack + 1] = $_;
+	    }
+		
+	      $object->{'stack'} = \@stack;
+	  }
       }
 
       # Gotta check EOF explicitly...
@@ -148,76 +309,10 @@ sub read_boehm() {
 
 #----------------------------------------------------------------------
 #
-# Read output from trace-malloc
-#
-sub read_trace_malloc() {
-  OBJECT: while (<>) {
-      # One record per line, data separated by `;'
-      my @data = split ';';
-
-      my $addr = hex shift @data;
-      my $type = shift @data;
-      my $size = shift @data;
-
-      my $object = $::Objects{$addr};
-      if (! $object) {
-          # Found a new object entry. Record its type and size
-          $::Objects{$addr} =
-              $object =
-              { 'type' => $type, 'size' => $size };
-      } else {
-	  print "Duplicate address $addr contains $object->{'type'} and $type\n";
-	  $object->{'dup_addr_count'}++;
-      }
-
-      # Record the object's slots
-      my @slots;
-
-    SLOT: while (1) {
-        my $value = shift @data;
-
-        # The slots are terminated by a field with character `@'
-        last SLOT if $value eq '@';
-
-        $value = hex $value;
-
-        # Ignore low bits, unless they've specified --noslop
-        $value &= ~0x7 unless $::opt_noslop;
-
-        $slots[$#slots + 1] = $value;
-    }
-
-      $object->{'slots'} = \@slots;
-
-      # Record the stack by which the object was allocated
-      if (! $::opt_nostacks) {
-          my @stack;
-
-        FRAME: while (1) {
-            my $frame = shift @data;
-            last FRAME unless $frame;
-            $stack[$#stack + 1] = $frame;
-        }
-
-          $object->{'stack'} = \@stack;
-      }
-  }
-}
-
-
-#----------------------------------------------------------------------
-#
 # Read input
 #
-if ($::opt_format eq "boehm") {
-    read_boehm;
-}
-elsif ($::opt_format eq "trace-malloc") {
-    read_trace_malloc;
-}
-else {
-    die "unknown format ``$::opt_format''.";
-}
+init_stack_based_type_refinement();
+read_boehm;
 
 
 
@@ -225,7 +320,7 @@ else {
 #
 # Do basic initialization of the type hash table.  Accumulate
 # total counts, and basic memory usage (not including children)
-sub init_type_table() {
+sub load_type_table() {
     # Reset global counter and hash table
     $::TotalSize = 0;
     %::Types = %{0};
@@ -311,13 +406,13 @@ sub print_type_table(){
 			  <=> $::Types{$a}->{'size'} } @sorted_types;
 
     foreach my $type (@sorted_types) {
-	last if (++$line_count > $::opt_showtype);
+	last if ($line_count++ == $::opt_showtype);
 
 	my $type_data = $::Types{$type};
 	$bytes_printed_tally += $type_data->{'size'};
 
 	if ($type_data->{'count'}) {
-	    printf "%2.2f%% ", $type_data->{'size'} * 100.0/$::TotalSize;
+	    printf "%.2f%% ", $type_data->{'size'} * 100.0/$::TotalSize;
 	    print $type_data->{'size'}, 
 	    "\t(", 
 	    $type_data->{'min'}, "/", 
@@ -348,13 +443,17 @@ sub print_type_table(){
 	    my @swept_types = sort {$sizes->{$b} <=> $sizes->{$a}} keys (%{$sizes});
 	    
 	    for my $type (@swept_types) {
-		print "   $sizes->{$type}     (", int($sizes->{$type}/$counts->{$type}) , ")   $counts->{$type} x $type\n";
+		printf "    %.2f%% ", $sizes->{$type} * 100.0/$::TotalSize;
+		print "$sizes->{$type}     (", int($sizes->{$type}/$counts->{$type}) , ")   $counts->{$type} x $type\n";
 	    }
+	    print "    ---------------\n";
 	}
     }
     if ($bytes_printed_tally != $::TotalSize) {
-	printf "%2.2f%% ", ($::TotalSize- $bytes_printed_tally) * 100.0/$::TotalSize;
-	print $::TotalSize - $bytes_printed_tally, "\t not shown due to truncation of type list\n\n";
+	printf "%.2f%% ", ($::TotalSize- $bytes_printed_tally) * 100.0/$::TotalSize;
+	print $::TotalSize - $bytes_printed_tally, "\t not shown due to truncation of type list\n";
+	print "Currently only data on $::opt_showtype types are displayed, due to command \n",
+	    "line argument '--showtype=$::opt_showtype'\n\n";
     }
 
 }
@@ -364,7 +463,7 @@ sub print_type_table(){
 # Check for duplicate address ranges is Objects table, and 
 # create list of sorted addresses for doing pointer-chasing
 
-sub validate_addresses() {
+sub validate_address_ranges() {
     # Build sorted list of address for validating interior pointers
     @::SortedAddresses = sort {$a <=> $b} keys %::Objects;
 
@@ -377,7 +476,7 @@ sub validate_addresses() {
     while ($index <= $#::SortedAddresses) {
 	my $address = $::SortedAddresses[$index];
 	if ($prev_addr_end > $address) {
-	    print "Overlap from $::Objects{$prev_addr}->{'type'}:$prev_addr-$prev_addr_end into";
+	    print "Object overlap from $::Objects{$prev_addr}->{'type'}:$prev_addr-$prev_addr_end into";
 	    my $test_index = $index;
 	    my $prev_addr_overlap_tally = 0;
 
@@ -417,7 +516,14 @@ sub validate_addresses() {
 # Gather the sizes into histograms for analysis
 # This function assumes a sorted list of addresses is present globally
 
-sub histogram_fragments() {
+sub generate_and_print_unused_memory_histogram() {
+    print "\nInterobject spacing (fragmentation waste) Statistics\n";
+    if ($::opt_fragment <= 1) {
+	print "Statistics are not being gathered.  Use '--fragment=10' to get stats\n";
+	return;
+    }
+    print "Ratio of histogram buckets will be a factor of $::opt_fragment\n";
+
     my $prev_addr_end = -1;
     my $prev_addr = -1;
     my $index = 0;
@@ -458,7 +564,6 @@ sub histogram_fragments() {
 	$index++;
     }
 
-    print "\nInterobject spacing (fragmentation waste) Statistics\n";
 
     $power = 0;
     $bucket_size = 1;
@@ -467,7 +572,8 @@ sub histogram_fragments() {
 	if (! defined $fragment_count[$power]) {
 	    $fragment_count[$power] = $fragment_tally[$power] = 0;
 	}
-	print " $bucket_size:", $fragment_count[$power];
+	printf " %.1f:", $bucket_size;
+	print $fragment_count[$power];
 	$power++;
 	$bucket_size *= $::opt_fragment;
     }
@@ -482,18 +588,18 @@ sub histogram_fragments() {
     while ($power <= $max_power) {
 	$count += $fragment_count[$power];
 	$tally += $fragment_tally[$power];
-	print "$count gaps, totaling $tally bytes, were under $bucket_size bytes each";
+	print "$count gaps, totaling $tally bytes, were under ";
+	printf "%.1f bytes each", $bucket_size;
 	if ($count) {
-	    print ", for an average of ", $tally/$count, " bytes per gap";
+	    printf ", for an average of %.1f bytes per gap", $tally/$count, ;
 	}
 	print "\n";
 	$power++;
 	$bucket_size *= $::opt_fragment;
     }
 
-    print "Total allocation was $tally_sizes bytes";
-    print ", or ", $tally_sizes/($count+1), " bytes per allocation block\n";
-    print "\n";
+    print "Total allocation was $tally_sizes bytes, or ";
+    printf "%.0f bytes per allocation block\n\n", $tally_sizes/($count+1);
     
 }
 
@@ -507,7 +613,7 @@ sub create_parent_links(){
     my $max_addr = $::SortedAddresses[ $#::SortedAddresses]; #allow one beyond each object
     $max_addr += $::Objects{$max_addr}->{'size'};
 
-    print "Viable addresses runs from $min_addr to $max_addr for a total of ", 
+    print "Viable addresses range from $min_addr to $max_addr for a total of ", 
     $max_addr-$min_addr, " bytes\n\n";
 
     # Gather stats as we try to convert slots to children
@@ -590,11 +696,11 @@ sub create_parent_links(){
 	    $::Leafs[$#::Leafs + 1] = $parent;
 	} 
     }
-    print "Scanning $#::SortedAddresses objects linked $parent_child_count pointers by chasing $slot_count addresses.\n",
+    print "Scanning $#::SortedAddresses objects, we found $parent_child_count parents-to-child connections by chasing $slot_count pointers.\n",
     "This required $fixed_addr_count interior pointer fixups, skipping $child_dup_count duplicate pointers, ",
     "and $self_pointer_count self pointers\nAlso discarded ", 
     $slot_count - $parent_child_count -$self_pointer_count - $child_dup_count, 
-    " out-of-range pointers\n";
+    " out-of-range pointers\n\n";
 }
 
 
@@ -612,10 +718,11 @@ sub sweep_leaf_memory () {
 	next LEAF if (! defined($parents) || 1 != scalar(@$parents));
 
 	# We have only one parent, so we'll try to sweep upwards
-	my $parent_obj = $::Objects{@$parents[0]};
+	my $parent_addr = @$parents[0];
+	my $parent_obj = $::Objects{$parent_addr};
 
 	# watch out for self-pointers
-	next LEAF if ($parent_obj == $leaf_obj); 
+	next LEAF if ($parent_addr == $leaf_addr); 
 
 	if ($::opt_detail) {
 	    foreach my $obj ($parent_obj, $leaf_obj) {
@@ -642,14 +749,17 @@ sub sweep_leaf_memory () {
 	}
 
 	$parent_obj->{'size'} += $leaf_obj->{'size'};
-	$parent_obj->{'swept_in'} += 
-	    defined ($leaf_obj->{'swept_in'}) 
-	    ? $leaf_obj->{'swept_in'} + 1 
-		: 1;		
 	$leaf_obj->{'size'} = 0;
+
+	if (defined ($leaf_obj->{'swept_in'})) {
+	    $parent_obj->{'swept_in'} += $leaf_obj->{'swept_in'};
+	    $leaf_obj->{'swept_in'} = 0;  # sweep has been handed off to parent
+	} 
+	$parent_obj->{'swept_in'} ++;  # tally swept in leaf_obj
+
 	$sweep_count++;
 
-	# Tally another swept child, and see if we created another leaf
+	# See if we created another leaf
 	my $consumed_children = $parent_obj->{'consumed'}++;
 	my @children = $parent_obj->{'children'};
 	if ($consumed_children == $#children) {
@@ -715,35 +825,39 @@ sub expand_type_names($) {
 }
 
 #----------------------------------------------------------------------
+#
+# Print out a type histogram
+
+sub print_type_histogram() {
+    load_type_table();
+    print_type_table();
+    print "\n\n";
+}
+
+
+#----------------------------------------------------------------------
 # Provide a nice summary of the types during the process
-validate_addresses();
-histogram_fragments();
-
-print "\nBefore doing any work on types:\n";
-init_type_table();
-print_type_table();
-print "\n\n";
-
+validate_address_ranges();
 create_parent_links();
+
+print "\nBasic memory use histogram is:\n";
+print_type_histogram();
+
+generate_and_print_unused_memory_histogram();
+
 sweep_leaf_memory ();
 print "After doing basic leaf-sweep processing of instances:\n";
-init_type_table();
-print_type_table();
-print "\n\n";
+print_type_histogram();
 
-expand_type_names({'void*'=>'void*'});
-print "After subdividing <void*> types:\n";
-init_type_table();
-print_type_table();
-print "\n\n";
-
-
-expand_type_names({'(void*)->void*->(void*)'=>'void*'});
-print "After subdividing <(void*)->void*->(void*)> types:\n";
-init_type_table();
-print_type_table();
-print "\n\n";
-
+{
+    foreach my $typename (@::opt_typedivide) {
+	my %expansion_table;
+	$expansion_table{$typename} = $typename;
+	expand_type_names(\%expansion_table);
+	print "After subdividing <$typename> based on inbound (and somtimes outbound) pointers:\n";
+	print_type_histogram();
+    }
+}
 
 exit();  # Don't bother with SCCs yet.
 
