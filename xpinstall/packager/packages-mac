@@ -125,7 +125,6 @@ viewer:Components:Related.shlb
 viewer:Components:related.xpt 
 viewer:Components:res.shlb 
 viewer:Components:res.xpt
-viewer:Components:resource.shlb
 viewer:Components:Search.shlb 
 viewer:Components:search.xpt 
 viewer:Components:shistory.shlb 
