@@ -2085,7 +2085,6 @@ void nsAddrDatabase::GetStringYarn(nsString* str, struct mdbYarn* strYarn)
 
 void nsAddrDatabase::GetIntYarn(PRUint32 nValue, struct mdbYarn* intYarn)
 {
-    intYarn->mYarn_Size = sizeof(intYarn->mYarn_Buf);
     intYarn->mYarn_Fill = intYarn->mYarn_Size;
     intYarn->mYarn_Form = 0;
     intYarn->mYarn_Grow = nsnull;
@@ -2120,6 +2119,7 @@ nsresult nsAddrDatabase::AddIntColumn(nsIMdbRow* cardRow, mdb_column inColumn, P
     char    yarnBuf[100];
 
     yarn.mYarn_Buf = (void *) yarnBuf;
+    yarn.mYarn_Size = sizeof(yarnBuf);
     GetIntYarn(nValue, &yarn);
     mdb_err err = cardRow->AddColumn(GetEnv(),  inColumn, &yarn);
 
@@ -2132,6 +2132,7 @@ nsresult nsAddrDatabase::AddBoolColumn(nsIMdbRow* cardRow, mdb_column inColumn, 
     char    yarnBuf[100];
 
     yarn.mYarn_Buf = (void *) yarnBuf;
+    yarn.mYarn_Size = sizeof(yarnBuf);
     if (bValue)
         GetIntYarn(1, &yarn);
     else
