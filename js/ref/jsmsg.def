@@ -76,7 +76,7 @@ MSG_DEF(JSMSG_STACK_UNDERFLOW,         16, 2, JSEXN_INTERNALERR, "internal error
 MSG_DEF(JSMSG_NEED_DIET,               17, 1, JSEXN_SYNTAXERR, "{0} too large")
 MSG_DEF(JSMSG_BAD_CASE,                18, 2, JSEXN_SYNTAXERR, "{0}, line {1}: invalid case expression")
 MSG_DEF(JSMSG_READ_ONLY,               19, 1, JSEXN_ERR, "{0} is read-only")
-MSG_DEF(JSMSG_NO_FORMAL,               20, 0, JSEXN_SYNTAXERR, "missing formal parameter")
+MSG_DEF(JSMSG_BAD_FORMAL,              20, 0, JSEXN_SYNTAXERR, "malformed formal parameter")
 MSG_DEF(JSMSG_SAME_FORMAL,             21, 1, JSEXN_NONE, "duplicate formal argument {0}")
 MSG_DEF(JSMSG_NOT_FUNCTION,            22, 1, JSEXN_CALLERR, "{0} is not a function")
 MSG_DEF(JSMSG_NOT_CONSTRUCTOR,         23, 1, JSEXN_CONSTRUCTORERR, "{0} is not a constructor")
