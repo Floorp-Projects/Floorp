@@ -166,7 +166,10 @@ protected:
         SET_CURSOR,
         CREATE_HACK
     };
-    
+
+#ifdef DEBUG
+  static nsAutoString GuiEventToString(nsGUIEvent & aEvent);
+#endif
 };
 
 #endif // nsBaseWidget_h__
