@@ -172,7 +172,7 @@
 
 #oe-time-picker-minutes-bottom-image
 {
-   list-style-image     : url("chrome://penglobal/skin/timepicker/time_picker_minutes_bottom.png");
+   list-style-image     : url("chrome://calendar/skin/timepicker/time_picker_minutes_bottom.png");
    padding-right        : 2px;
 }
 

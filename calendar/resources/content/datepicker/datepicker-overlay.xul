@@ -38,14 +38,14 @@
 <!-- CSS Files -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://penglobal/skin/datepicker/datepicker.css" ?>
+<?xml-stylesheet href="chrome://calendar/skin/datepicker/datepicker.css" ?>
 
 
 <!-- DTD Files -->
 
 <!DOCTYPE window 
 [
-    <!ENTITY % dtd1 SYSTEM "chrome://penglobal/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
 ]>
 

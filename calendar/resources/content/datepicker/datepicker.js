@@ -46,7 +46,7 @@
 *
 * To use the datepicker include the overlay in your XUL, this .js file is included from there
 
-      <?xul-overlay href="chrome://penglobal/content/datepicker-overlay.xul"?>
+      <?xul-overlay href="chrome://calendar/content/datepicker/datepicker-overlay.xul"?>
 *
 *
     <popup  id="oe-date-picker-popup"  oncommand="yourCommandFunction( this )" >

@@ -56,14 +56,14 @@
 
 #oe-date-picker-year-previous-button
 {
-   list-style-image        : url("chrome://penglobal/skin/datepicker/left_arrow.png");
+   list-style-image        : url("chrome://calendar/skin/datepicker/left_arrow.png");
    
 }
 
 
 #oe-date-picker-year-next-button
 {
-   list-style-image        : url("chrome://penglobal/skin/datepicker/right_arrow.png");
+   list-style-image        : url("chrome://calendar/skin/datepicker/right_arrow.png");
 }
 
 #oe-date-picker-year-next-button-box
@@ -107,7 +107,7 @@
 
 #oe-date-picker-month-grid-box
 {
-   background-image        : url("chrome://penglobal/skin/datepicker/day_grid.png");
+   background-image        : url("chrome://calendar/skin/datepicker/day_grid.png");
    background-repeat       : no-repeat;
 }
 

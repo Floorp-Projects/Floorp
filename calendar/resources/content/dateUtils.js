@@ -81,7 +81,7 @@ function DateFormater()
    // we be notified of a locale change instead, then we could
    // get the bundle once.
    
-   this.dateStringBundle = srGetStrBundle("chrome://penglobal/locale/dateFormat.properties");
+   this.dateStringBundle = srGetStrBundle("chrome://calendar/locale/dateFormat.properties");
 
 }
 

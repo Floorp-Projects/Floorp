@@ -39,13 +39,13 @@
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 
 <!-- CSS File with all styles specific to the unifinder -->
-<?xml-stylesheet href="chrome://penglobal/skin/unifinder/unifinder.css" ?>
+<?xml-stylesheet href="chrome://calendar/skin/unifinder/unifinder.css" ?>
 
 <!-- DTD File with all strings specific to the unifinder -->
 <!DOCTYPE window 
 [
-    <!ENTITY % dtd1 SYSTEM "chrome://penglobal/locale/global.dtd" > %dtd1;
-    <!ENTITY % dtd2 SYSTEM "chrome://penglobal/locale/unifinder.dtd" > %dtd2;
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/unifinder.dtd" > %dtd2;
 	<!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd3;
 ]>
 

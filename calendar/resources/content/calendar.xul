@@ -59,9 +59,9 @@
 <!-- DTD File with all strings specific to the calendar -->
 <!DOCTYPE window 
 [
-    <!ENTITY % dtd1 SYSTEM "chrome://penglobal/locale/global.dtd" > %dtd1;
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/global.dtd" > %dtd1;
     <!ENTITY % dtd2 SYSTEM "chrome://calendar/locale/calendar.dtd" > %dtd2;
-    <!ENTITY % dtd3 SYSTEM "chrome://penglobal/locale/unifinder.dtd" > %dtd3;
+    <!ENTITY % dtd3 SYSTEM "chrome://calendar/locale/unifinder.dtd" > %dtd3;
     <!ENTITY % dtd4 SYSTEM "chrome://calendar/locale/calendarMenu.dtd" > %dtd4;
 ]>
 

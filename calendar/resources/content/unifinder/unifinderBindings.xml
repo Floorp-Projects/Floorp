@@ -37,7 +37,7 @@
    - ***** END LICENSE BLOCK ***** -->
 
 <!DOCTYPE window [
-    <!ENTITY % dtd1 SYSTEM "chrome://penglobal/locale/unifinder.dtd" > %dtd1;
+    <!ENTITY % dtd1 SYSTEM "chrome://calendar/locale/unifinder.dtd" > %dtd1;
 ]>
 
 <bindings id="unifinderBindings"
@@ -46,7 +46,7 @@
 
   <binding id="unifinder-base">
     <resources>
-      <stylesheet src="chrome://penglobal/skin/unifinder/unifinder.css"/>
+      <stylesheet src="chrome://calendar/skin/unifinder/unifinder.css"/>
     </resources>
   </binding>
 
@@ -152,7 +152,7 @@
 
   <binding id="unifinder-button-base" extends="xul:button">
     <resources>
-      <stylesheet src="chrome://penglobal/skin/unifinder/unifinder.css"/>
+      <stylesheet src="chrome://calendar/skin/unifinder/unifinder.css"/>
     </resources>
     <content orient="vertical">
         <xul:unifinder-image-button class="unifinder-button-image"  unifinder-button-part="button"   /> 
