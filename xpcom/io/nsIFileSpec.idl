@@ -139,10 +139,6 @@ NS_COM nsresult NS_NewFileSpecWithSpec(nsFileSpec aSrcFileSpec, nsIFileSpec **re
 NS_COM nsresult NS_NewFileSpec(nsIFileSpec** result);
 NS_COM nsresult NS_NewDirectoryIterator(nsIDirectoryIterator** result);
 
-// Convinience functions for creation of xpcom objects
-NS_COM nsIFileSpec* NS_CreateFileSpec();
-NS_COM nsIDirectoryIterator* NS_CreateDirectoryIterator();
-
 #define NS_BOOL_ACCESSOR(_method) { PRBool yes; return NS_SUCCEEDED(f->_method(&yes)) && yes; }
 inline PRBool Exists(nsIFileSpec* f) NS_BOOL_ACCESSOR(exists)
 inline PRBool Exists(nsIDirectoryIterator* f) NS_BOOL_ACCESSOR(exists)
