@@ -461,8 +461,13 @@ GtkMozEmbedPrivate::OnChromeStateChange(nsIWebProgress *aWebProgress,
   {
     nsXPIDLCString uriString;
     nsCString      chromeString;
+    nsresult         rv;
     // get the original URI for this
-    nsCOMPtr <nsIChannel> channel = do_QueryInterface(aRequest);
+    nsCOMPtr <nsIChannel> channel = do_QueryInterface(aRequest, &rv);
+    if (NS_FAILED(rv)) {
+      NS_ERROR("Error querying request to nsIChannel");
+      return rv;
+    }
     nsCOMPtr <nsIURI>     origURI;
     channel->GetOriginalURI(getter_AddRefs(origURI));
     origURI->GetSpec(getter_Copies(uriString));
