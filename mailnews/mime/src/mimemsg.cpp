@@ -53,6 +53,7 @@
 #include "nsString.h"
 #include "mimetext.h"
 #include "mimecryp.h"
+#include "mimetpfl.h"
 
 #define MIME_SUPERCLASS mimeContainerClass
 MimeDefClass(MimeMessage, MimeMessageClass, mimeMessageClass,
@@ -144,8 +145,11 @@ MimeMessage_parse_begin (MimeObject *obj)
 
 
 static int
-MimeMessage_parse_line (char *line, PRInt32 length, MimeObject *obj)
+MimeMessage_parse_line (char *aLine, PRInt32 aLength, MimeObject *obj)
 {
+  char * line = aLine;
+  PRInt32 length = aLength;
+
   MimeMessage *msg = (MimeMessage *) obj;
   int status = 0;
 
@@ -207,6 +211,12 @@ MimeMessage_parse_line (char *line, PRInt32 length, MimeObject *obj)
 		   obj->options->decompose_file_output_fn )
 		{
 		  if (!obj->options->decrypt_p) {
+        //if we are processing a flowed plain text line, we need to remove any stuffed space
+        if (length > 0 && ' ' == *line && mime_typep(kid, (MimeObjectClass *)&mimeInlineTextPlainFlowedClass))
+        {
+          line ++;
+          length --;
+        }
 			  status = obj->options->decompose_file_output_fn (line,
 															   length,
 													 obj->options->stream_closure);
