@@ -2,8 +2,8 @@
 # -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 
-# $Revision: 1.3 $ 
-# $Date: 2000/08/24 14:57:19 $ 
+# $Revision: 1.4 $ 
+# $Date: 2000/08/30 02:28:24 $ 
 # $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/tinder.cgi,v $ 
 # $Name:  $ 
@@ -312,6 +312,7 @@ sub HTML_status_page {
   my ($tree_state) = TinderHeader::gettree_header('TreeState', $tree);
   my ($break_times) = TinderHeader::gettree_header('Build', $tree);
   my ($ignore_builds) = TinderHeader::gettree_header('IgnoreBuilds', $tree);
+
   my ($html_tree_state, $html_ignore_builds);
 
   ($tree_state) &&
@@ -398,25 +399,21 @@ sub HTML_status_page {
                    ).
    "<br>\n";
   
-  
   $out .= HTMLPopUp::page_header('title'=>"Tinderbox Status Page tree: $tree", 
                                  'refresh'=>$REFRESH_TIME);
   $out .= "\n\n";
   $out .= "<!-- /Build Page Headers -->\n\n\n";
   $out .= "$links\n";
 
-  # this is a one row table consisting of the image and the table legend
-  
-  $out .= "<!-- Table Legend -->\n";
-  $out .= "<table width=\"100%\" cellpadding=0 cellspacing=0><tr>\n";
-  $out .= "	<td valign=bottom><p><center>\n";
+  # this used to be a one row table consisting of the image and the
+  # table legend, I may need to use a trick to move the image and put
+  # a border around it.
+
   $out .= $image;
-  $out .= "	<br></center>\n";
-  $out .= "	<p></td>\n";
-  $out .= "	<td align=right valign=bottom>\n";
+  $out .= "<!-- Table Legend -->\n";
+  $out .= "<table width=\"100%\" cellpadding=0 cellspacing=0>\n";
   $out .= "	@legend\n\n";
-  $out .= "	</td>\n";
-  $out .= "</tr></table>\n\n";
+  $out .= "</table>\n\n";
   $out .= "<!-- Message of the Day -->\n";
   $out .=  $motd;
   $out .= "<p>\n<!-- /Message of the Day -->\n";
@@ -438,10 +435,10 @@ sub HTML_status_page {
   $out .= "</table>\n\n";
   $out .= "<!-- Page Footer --><p>\n";
   $out .= $links;
-  $out .= "<!-- /Page Footer --><p>\n\n";
-  $out .= "</html>\n\n";
   my (@structures) = HTMLPopUp::define_structures();
   $out .= "@structures";
+  $out .= "<!-- /Page Footer --><p>\n\n";
+  $out .= "</HTML>\n\n";
 
   return $out;
 }
