@@ -1,7 +1,22 @@
-/* Insert copyright and license here 1997 */
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */    
 
-/* dirprefs.c -- directory server preferences */
-
+/* directory server preferences (used to be dirprefs.c in 4.x) */
 
 #include "nsIPref.h"
 #include "nsVoidArray.h"
@@ -912,7 +927,7 @@ PRBool DIR_SetServerPosition(nsVoidArray *wholeList, DIR_Server *server, int pos
 			{
 				DIR_Server *sLast = nsnull;
 
-				for (int i= 0; i < count; i++)
+				for (i= 0; i < count; i++)
 				{
 					if  ((s = (DIR_Server *)wholeList->ElementAt(i)) != nsnull)
 						if (!DIR_TestFlag(s, DIR_POSITION_LOCKED))
@@ -2237,7 +2252,7 @@ int DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** ids /* 
 	DIR_AttributeId * idArray = nsnull;
 	int status = 0; 
 	int numAdded = 0;  /* number of ids we actually added to the array...*/
-	int index = 0;
+	int indx = 0;
 	int numItems = 0; 
 	char * idName = nsnull;
 	char * marker = nsnull;
@@ -2257,7 +2272,7 @@ int DIR_GetAttributeIDsForColumns(DIR_Server *server, DIR_AttributeId ** ids /* 
 			idArray = (DIR_AttributeId *) PR_Malloc(sizeof(DIR_AttributeId) * numItems);
 			if (idArray)
 			{
-				for (index = 0; index < numItems; index++)
+				for (indx = 0; indx < numItems; indx++)
 				{
 					idName = AB_pstrtok_r(nil,", ",&marker);
 					if (idName)
@@ -2410,8 +2425,8 @@ static nsresult DIR_GetCustomAttributePrefs(const char *prefstring, DIR_Server *
 		if (childList && childList[0])
 		{
 			char *child = nsnull;
-			PRInt16 index = 0;
-			while ((pPref->NextChild (childList, &index, &child)) == NS_OK)
+			PRInt16 indx = 0;
+			while ((pPref->NextChild (childList, &indx, &child)) == NS_OK)
 			{
 				char *jsValue = nsnull;
 				if (PREF_NOERROR == pPref->CopyCharPref (child, &jsValue))
@@ -4089,6 +4104,7 @@ PRBool DIR_IsUriAttribute (DIR_Server *s, const char *attrib)
 	return PR_FALSE;
 }
 
+#if 0
 static void dir_PushStringToPrefs (DIR_Server *server, char **curVal, const char *newVal, const char *name)
 {
 	char buf[256];
@@ -4106,7 +4122,7 @@ static void dir_PushStringToPrefs (DIR_Server *server, char **curVal, const char
 	*curVal = PL_strdup(newVal);
 	DIR_SetStringPref (server->prefName, name, buf, *curVal, "");
 }
-
+#endif 
 
 void DIR_SetAuthDN (DIR_Server *s, const char *dn)
 {

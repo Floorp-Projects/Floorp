@@ -37,9 +37,9 @@ static NS_DEFINE_CID(kAbCardCID, NS_ABCARDRESOURCE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsABDirectory::nsABDirectory(void)
-  : nsRDFResource(), mListeners(nsnull),
-    mCsid(0), mDepth(0), mPrefFlags(0),
-	mInitialized(PR_FALSE), mCardInitialized(PR_FALSE)
+  :  nsRDFResource(), mListeners(nsnull),
+     mInitialized(PR_FALSE), mCardInitialized(PR_FALSE),
+     mCsid(0), mDepth(0), mPrefFlags(0)
 {
 //  NS_INIT_REFCNT(); done by superclass
 
@@ -106,6 +106,7 @@ NS_IMPL_ISUPPORTS_INHERITED(nsABDirectory, nsRDFResource, nsIAbDirectory)
 typedef PRBool
 (*nsArrayFilter)(nsISupports* element, void* data);
 
+#if 0
 static nsresult
 nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
            nsISupportsArray* *result)
@@ -129,6 +130,8 @@ nsFilterBy(nsISupportsArray* array, nsArrayFilter filter, void* data,
   *result = f;
   return NS_OK;
 }
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
