@@ -57,7 +57,7 @@ nsTableColFrame::nsTableColFrame()
   : nsFrame()
 {
   SetIsAnonymous(PR_FALSE);
-  SetType(eColContent);
+  SetColType(eColContent);
   ResetSizingInfo();
 }
 
@@ -66,13 +66,13 @@ nsTableColFrame::~nsTableColFrame()
 }
 
 nsTableColType 
-nsTableColFrame::GetType() const 
+nsTableColFrame::GetColType() const 
 {
   return (nsTableColType)((mState & COL_TYPE_BITS) >> COL_TYPE_OFFSET);
 }
 
 void 
-nsTableColFrame::SetType(nsTableColType aType) 
+nsTableColFrame::SetColType(nsTableColType aType) 
 {
   PRUint32 type = aType - eColContent;
   mState |= (type << COL_TYPE_OFFSET);
@@ -281,9 +281,7 @@ nsTableColFrame::GetNextCol() const
 {
   nsIFrame* childFrame = GetNextSibling();
   while (childFrame) {
-    nsCOMPtr<nsIAtom> frameType;
-    childFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::tableColFrame == frameType.get()) {
+    if (nsLayoutAtoms::tableColFrame == childFrame->GetType()) {
       return (nsTableColFrame*)childFrame;
     }
     childFrame = childFrame->GetNextSibling();
@@ -291,13 +289,10 @@ nsTableColFrame::GetNextCol() const
   return nsnull;
 }
 
-NS_IMETHODIMP
-nsTableColFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsTableColFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::tableColFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::tableColFrame;
 }
 
 #ifdef DEBUG

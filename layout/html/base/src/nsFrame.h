@@ -240,7 +240,7 @@ public:
   NS_IMETHOD  SetNextInFlow(nsIFrame*);
   NS_IMETHOD  GetOffsetFromView(nsIPresContext* aPresContext, nsPoint& aOffset, nsIView** aView) const;
   NS_IMETHOD  GetOriginToViewOffset(nsIPresContext *aPresContext, nsPoint& aOffset, nsIView **aView) const;
-  NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
   NS_IMETHOD  IsPercentageBase(PRBool& aBase) const;
 #ifdef NS_DEBUG
   NS_IMETHOD  List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;

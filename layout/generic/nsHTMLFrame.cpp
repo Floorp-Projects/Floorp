@@ -147,7 +147,7 @@ public:
    *
    * @see nsLayoutAtoms::canvasFrame
    */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -679,13 +679,10 @@ CanvasFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return GetFrameForPointUsing(aPresContext, aPoint, nsnull, aWhichLayer, (aWhichLayer == NS_FRAME_PAINT_LAYER_BACKGROUND), aFrame);
 }
 
-NS_IMETHODIMP
-CanvasFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+CanvasFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::canvasFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::canvasFrame;
 }
 
 NS_IMETHODIMP 

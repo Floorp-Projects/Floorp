@@ -425,7 +425,7 @@ public:
    *
    * @see nsLayoutAtoms::textFrame
    */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
   
 #ifdef DEBUG
   NS_IMETHOD List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) const;
@@ -5884,13 +5884,10 @@ nsTextFrame::ToCString(nsString& aBuf, PRInt32* aTotalContentLength) const
   }
 }
 
-NS_IMETHODIMP
-nsTextFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsTextFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::textFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::textFrame;
 }
 
 NS_IMETHODIMP

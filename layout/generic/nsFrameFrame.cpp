@@ -145,7 +145,7 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return 2; }
   NS_IMETHOD_(nsrefcnt) Release(void) { return 1; }
 
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
@@ -213,7 +213,7 @@ public:
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
 #endif
 
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
 
@@ -498,13 +498,10 @@ NS_IMETHODIMP nsHTMLFrameOuterFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-NS_IMETHODIMP
-nsHTMLFrameOuterFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsHTMLFrameOuterFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::htmlFrameOuterFrame;
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::htmlFrameOuterFrame;
 }
 
 NS_IMETHODIMP
@@ -859,13 +856,10 @@ NS_IMETHODIMP nsHTMLFrameInnerFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-NS_IMETHODIMP
-nsHTMLFrameInnerFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsHTMLFrameInnerFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::htmlFrameInnerFrame;
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::htmlFrameInnerFrame;
 }
 
 NS_IMETHODIMP

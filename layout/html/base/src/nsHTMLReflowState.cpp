@@ -56,9 +56,6 @@
 #include "nsBidiUtils.h"
 #endif
 
-#define IS_TABLE_CELL(frameType)\
-((nsLayoutAtoms::tableCellFrame == frameType) || (nsLayoutAtoms::bcTableCellFrame == frameType))
-
 #ifdef NS_DEBUG
 #undef NOISY_VERTICAL_ALIGN
 #else
@@ -348,9 +345,7 @@ void nsHTMLReflowState::InitCBReflowState()
   if (NS_SUCCEEDED(rv) && isContainingBlock) {
     // a block inside a table cell needs to use the table cell
     if (parentReflowState) {
-      nsCOMPtr<nsIAtom> fType;
-      parentReflowState->frame->GetFrameType(getter_AddRefs(fType));
-      if (IS_TABLE_CELL(fType.get())) {
+      if (IS_TABLE_CELL(parentReflowState->frame->GetType())) {
         mCBReflowState = parentReflowState;
         // Set mFlags.mTableDerivedComputedWidth to true for a cell block. Its default 
         // value was set to what the parent reflow state has. 
@@ -591,13 +586,10 @@ GetNearestContainingBlock(nsIFrame* aFrame, nsMargin& aContentArea)
 {
   aFrame = aFrame->GetParent();
   while (aFrame) {
-    nsIAtom*  frameType;
-    PRBool    isBlock;
-
-    aFrame->GetFrameType(&frameType);
-    isBlock = (frameType == nsLayoutAtoms::blockFrame) ||
-              (frameType == nsLayoutAtoms::areaFrame);
-    NS_IF_RELEASE(frameType);
+    nsIAtom*  frameType = aFrame->GetType();
+    PRBool    isBlock =
+      (frameType == nsLayoutAtoms::blockFrame) ||
+      (frameType == nsLayoutAtoms::areaFrame);
 
     if (isBlock) {
       break;
@@ -650,22 +642,18 @@ static PRBool
 GetIntrinsicSizeFor(nsIFrame* aFrame, nsSize& aIntrinsicSize)
 {
   // See if it is an image frame
-  nsIAtom*  frameType;
   PRBool    result = PR_FALSE;
 
   // Currently the only type of replaced frame that we can get the intrinsic
   // size for is an image frame
   // XXX We should add back the GetReflowMetrics() function and one of the
   // things should be the intrinsic size...
-  aFrame->GetFrameType(&frameType);
-  if (frameType == nsLayoutAtoms::imageFrame) {
+  if (aFrame->GetType() == nsLayoutAtoms::imageFrame) {
     nsImageFrame* imageFrame = (nsImageFrame*)aFrame;
 
     imageFrame->GetIntrinsicImageSize(aIntrinsicSize);
     result = (aIntrinsicSize != nsSize(0, 0));
   }
-  
-  NS_IF_RELEASE(frameType);
   return result;
 }
 
@@ -1405,8 +1393,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
                              
   const nsHTMLReflowState* rs = &aReflowState;
   for (; rs && rs->frame; rs = (nsHTMLReflowState *)(rs->parentReflowState)) { 
-    nsCOMPtr<nsIAtom> frameType;
-    rs->frame->GetFrameType(getter_AddRefs(frameType));
+    nsIAtom* frameType = rs->frame->GetType();
     // if the ancestor is auto height then skip it and continue up if it 
     // is the first block/area frame and possibly the body/html
     if (nsLayoutAtoms::blockFrame == frameType ||
@@ -1440,9 +1427,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
       // Use scroll frames' computed height if we have one, this will
       // allow us to get viewport height for native scrollbars.
       nsHTMLReflowState* scrollState = (nsHTMLReflowState *)rs->parentReflowState;
-      nsCOMPtr<nsIAtom> scrollFrameType;
-      scrollState->frame->GetFrameType(getter_AddRefs(scrollFrameType));
-      if (nsLayoutAtoms::scrollFrame == scrollFrameType.get()) {
+      if (nsLayoutAtoms::scrollFrame == scrollState->frame->GetType()) {
         rs = scrollState;
       }
     }
@@ -1497,9 +1482,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
     // margin/border/padding for the BODY element
     else if (nsLayoutAtoms::areaFrame == frameType) {
       // make sure it is the body
-      nsCOMPtr<nsIAtom> fType;
-      rs->parentReflowState->frame->GetFrameType(getter_AddRefs(fType));
-      if (nsLayoutAtoms::canvasFrame == fType) {
+      if (nsLayoutAtoms::canvasFrame == rs->parentReflowState->frame->GetType()) {
         result -= GetVerticalMarginBorderPadding(secondAncestorRS);
       }
     }
@@ -1659,9 +1642,7 @@ CheckResetTableDerivedComputedWidth(nsHTMLReflowState& aState,
   if (eStyleUnit_Percent == aWidthUnit) {
     // If the parent isn't a table cell and has a style width reset the flag
     if (aState.parentReflowState) {
-      nsCOMPtr<nsIAtom> parentType;
-      aState.parentReflowState->frame->GetFrameType(getter_AddRefs(parentType));
-      if (!IS_TABLE_CELL(parentType)) {
+      if (!IS_TABLE_CELL(aState.parentReflowState->frame->GetType())) {
         nsStyleUnit parentUnit = aState.parentReflowState->mStylePosition->mWidth.GetUnit();
         if ((eStyleUnit_Inherit != parentUnit) &&
             (eStyleUnit_Auto    != parentUnit)) {
@@ -1725,7 +1706,7 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
 
     // See if the containing block height is based on the size of its
     // content
-    nsCOMPtr<nsIAtom>  fType;
+    nsIAtom* fType;
     if (NS_AUTOHEIGHT == aContainingBlockHeight) {
       // See if the containing block is (1) a scrolled frame, i.e. its
       // parent is a scroll frame. The presence of the intervening
@@ -1734,15 +1715,15 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
       // to use the mComputedHeight of the cell instead of what the cell block passed in.
       if (cbrs->parentReflowState) {
         nsIFrame* f = cbrs->parentReflowState->frame;
-        f->GetFrameType(getter_AddRefs(fType));
-        if (nsLayoutAtoms::scrollFrame == fType.get()) {
+        fType = f->GetType();
+        if (nsLayoutAtoms::scrollFrame == fType) {
           // Use the scroll frame's computed height instead
           aContainingBlockHeight =
             ((nsHTMLReflowState*)cbrs->parentReflowState)->mComputedHeight;
         }
         else {
-          cbrs->frame->GetFrameType(getter_AddRefs(fType));
-          if (IS_TABLE_CELL(fType.get())) {
+          fType = cbrs->frame->GetType();
+          if (IS_TABLE_CELL(fType)) {
             // use the cell's computed height 
             aContainingBlockHeight =
               ((nsHTMLReflowState*)cbrs)->mComputedHeight;
@@ -1781,9 +1762,6 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
 
     nsStyleUnit widthUnit = mStylePosition->mWidth.GetUnit();
     nsStyleUnit heightUnit = mStylePosition->mHeight.GetUnit();
-
-    nsCOMPtr<nsIAtom>  frameType;
-    frame->GetFrameType(getter_AddRefs(frameType));
 
     // Check for a percentage based width and an unconstrained containing
     // block width
@@ -1982,13 +1960,10 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
     } else if (NS_FRAME_GET_TYPE(mFrameType) == NS_CSS_FRAME_TYPE_ABSOLUTE) {
       // XXX not sure if this belongs here or somewhere else - cwk
       // an nsHTMLFrameInnerFrame doesn't get a placeholder frame, the nsHTMLFrameOuterFrame does
-      nsIAtom* targetFrameType;
-      frame->GetFrameType(&targetFrameType);
-      if (nsLayoutAtoms::htmlFrameInnerFrame != targetFrameType) {
+      if (nsLayoutAtoms::htmlFrameInnerFrame != frame->GetType()) {
         InitAbsoluteConstraints(aPresContext, cbrs, aContainingBlockWidth,
                                 aContainingBlockHeight);
       }
-      NS_IF_RELEASE(targetFrameType);
     } else if (NS_CSS_FRAME_TYPE_INLINE == mFrameType) {
       // Inline non-replaced elements do not have computed widths or heights
       // XXX add this check to HaveFixedContentHeight/Width too
@@ -2056,12 +2031,11 @@ nsHTMLReflowState::ComputeBlockBoxData(nsIPresContext* aPresContext,
 
       } else {
         // tables act like replaced elements regarding mComputedWidth 
-        nsCOMPtr<nsIAtom> fType;
-        frame->GetFrameType(getter_AddRefs(fType));
-        if (nsLayoutAtoms::tableOuterFrame == fType.get()) {
+        nsIAtom* fType = frame->GetType();
+        if (nsLayoutAtoms::tableOuterFrame == fType) {
           mComputedWidth = 0; // XXX temp fix for trees
-        } else if ((nsLayoutAtoms::tableFrame == fType.get()) ||
-                   (nsLayoutAtoms::tableCaptionFrame == fType.get())) {
+        } else if ((nsLayoutAtoms::tableFrame == fType) ||
+                   (nsLayoutAtoms::tableCaptionFrame == fType)) {
           mComputedWidth = NS_SHRINKWRAPWIDTH;
           if (eStyleUnit_Auto == mStyleMargin->mMargin.GetLeftUnit()) {
             mComputedMargin.left = NS_AUTOMARGIN;
@@ -2599,12 +2573,11 @@ nsHTMLReflowState::ComputePadding(nscoord aContainingBlockWidth,
   }
   // a table row/col group, row/col doesn't have padding
   if (frame) {
-    nsCOMPtr<nsIAtom> frameType;
-    frame->GetFrameType(getter_AddRefs(frameType));
-    if ((nsLayoutAtoms::tableRowGroupFrame == frameType.get()) ||
-        (nsLayoutAtoms::tableColGroupFrame == frameType.get()) ||
-        (nsLayoutAtoms::tableRowFrame      == frameType.get()) ||
-        (nsLayoutAtoms::tableColFrame      == frameType.get())) {
+    nsIAtom* frameType = frame->GetType();
+    if ((nsLayoutAtoms::tableRowGroupFrame == frameType) ||
+        (nsLayoutAtoms::tableColGroupFrame == frameType) ||
+        (nsLayoutAtoms::tableRowFrame      == frameType) ||
+        (nsLayoutAtoms::tableColFrame      == frameType)) {
       mComputedPadding.top    = 0;
       mComputedPadding.right  = 0;
       mComputedPadding.bottom = 0;

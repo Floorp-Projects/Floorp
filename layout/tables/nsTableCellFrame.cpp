@@ -101,9 +101,7 @@ nsTableCellFrame::GetNextCell() const
 {
   nsIFrame* childFrame = GetNextSibling();
   while (childFrame) {
-    nsCOMPtr<nsIAtom> frameType;
-    childFrame->GetFrameType(getter_AddRefs(frameType));
-    if (IS_TABLE_CELL(frameType.get())) {
+    if (IS_TABLE_CELL(childFrame->GetType())) {
       return (nsTableCellFrame*)childFrame;
     }
     childFrame = childFrame->GetNextSibling();
@@ -1230,13 +1228,10 @@ nsTableCellFrame::GetBorderWidth(float      aPixelsToTwips,
   return &aBorder;
 }
 
-NS_IMETHODIMP
-nsTableCellFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsTableCellFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::tableCellFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::tableCellFrame;
 }
 
 #ifdef DEBUG
@@ -1294,13 +1289,10 @@ nsBCTableCellFrame::~nsBCTableCellFrame()
 {
 }
 
-NS_IMETHODIMP
-nsBCTableCellFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsBCTableCellFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::bcTableCellFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::bcTableCellFrame;
 }
 
 #ifdef DEBUG

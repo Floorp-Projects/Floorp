@@ -128,9 +128,7 @@ nsInspectorCSSUtils::GetStyleContextForFrame(nsIFrame* aFrame)
      * frame" actually inherits style from the "inner frame" so we can
      * just move one level up in the style context hierarchy....
      */
-    nsCOMPtr<nsIAtom> frameType;
-    aFrame->GetFrameType(getter_AddRefs(frameType));
-    if (frameType == nsLayoutAtoms::tableOuterFrame)
+    if (aFrame->GetType() == nsLayoutAtoms::tableOuterFrame)
         return styleContext->GetParent();
 
     return styleContext;

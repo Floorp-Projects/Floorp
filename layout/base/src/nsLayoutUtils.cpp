@@ -169,9 +169,7 @@ nsIFrame*
 nsLayoutUtils::GetPageFrame(nsIFrame* aFrame)
 {
   for (nsIFrame* frame = aFrame; frame; frame = frame->GetParent()) {
-    nsCOMPtr<nsIAtom> type;
-    frame->GetFrameType(getter_AddRefs(type));
-    if (type.get() == nsLayoutAtoms::pageFrame) {
+    if (frame->GetType() == nsLayoutAtoms::pageFrame) {
       return frame;
     }
   }
@@ -190,7 +188,7 @@ nsLayoutUtils::IsGeneratedContentFor(nsIContent* aContent,
   if (!aFrame->IsGeneratedContentFrame()) {
     return PR_FALSE;
   }
-
+  
   if (aContent && aFrame->GetContent() != aContent) {
     return PR_FALSE;
   }

@@ -430,7 +430,7 @@ nsComboboxControlFrame::InitializeControl(nsIPresContext* aPresContext)
 
 //--------------------------------------------------------------
 NS_IMETHODIMP_(PRInt32)
-nsComboboxControlFrame::GetType() const
+nsComboboxControlFrame::GetFormControlType() const
 {
   return NS_FORM_SELECT;
 }
@@ -2301,7 +2301,7 @@ nsComboboxControlFrame::SetInitialChildList(nsIPresContext* aPresContext,
       nsIFormControlFrame* fcFrame = nsnull;
       CallQueryInterface(child, &fcFrame);
       if (fcFrame) {
-        if (fcFrame->GetType() == NS_FORM_INPUT_BUTTON) {
+        if (fcFrame->GetFormControlType() == NS_FORM_INPUT_BUTTON) {
           mButtonFrame = child;
         }
       } else {

@@ -103,7 +103,7 @@ public:
                          nsGUIEvent* aEvent,
                          nsEventStatus* aEventStatus);
 
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 
 #ifdef ACCESSIBILITY
   NS_IMETHOD GetAccessible(nsIAccessible** aAccessible);
@@ -121,7 +121,7 @@ public:
 
   virtual void MouseClicked(nsIPresContext* aPresContext);
 
-  NS_IMETHOD_(PRInt32) GetType() const;
+  NS_IMETHOD_(PRInt32) GetFormControlType() const;
 
   NS_IMETHOD GetName(nsAString* aName);
 
@@ -247,13 +247,10 @@ nsrefcnt nsImageControlFrame::Release(void)
   return 1;
 }
 
-NS_IMETHODIMP
-nsImageControlFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsImageControlFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::imageControlFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::imageControlFrame; 
 }
 
 NS_IMETHODIMP
@@ -384,7 +381,7 @@ nsImageControlFrame::GetTranslatedRect(nsIPresContext* aPresContext, nsRect& aRe
 }
 
 NS_IMETHODIMP_(PRInt32)
-nsImageControlFrame::GetType() const
+nsImageControlFrame::GetFormControlType() const
 {
   return NS_FORM_INPUT_IMAGE;
 }

@@ -84,8 +84,7 @@ public:
                           nsGUIEvent*     aEvent,
                           nsEventStatus*  aEventStatus);
 
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
-  
+  virtual nsIAtom* GetType() const;
   virtual PRBool SupportsVisibilityHidden() { return PR_FALSE; }
 
 #ifdef DEBUG

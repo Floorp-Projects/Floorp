@@ -445,13 +445,10 @@ nsBlockFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-NS_IMETHODIMP
-nsBlockFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsBlockFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::blockFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::blockFrame;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -834,8 +831,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
            ancestorRS; 
            ancestorRS = ancestorRS->parentReflowState) {
         nsIFrame* ancestor = ancestorRS->frame;
-        nsCOMPtr<nsIAtom> fType;
-        ancestor->GetFrameType(getter_AddRefs(fType));
+        nsIAtom* fType = ancestor->GetType();
         if ((nsLayoutAtoms::blockFrame == fType) || (nsLayoutAtoms::areaFrame == fType)) {
           if (aReflowState.mSpaceManager == ancestorRS->mSpaceManager) {
             // Put the continued floats in ancestor since it uses the same space manager
@@ -3793,8 +3789,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   else if (NS_FRAME_IS_NOT_COMPLETE(frameReflowStatus)) {
     // Frame is not-complete, no special breaking status
 
-    nsCOMPtr<nsIAtom> frameType;
-    aFrame->GetFrameType(getter_AddRefs(frameType));
+    nsIAtom* frameType = aFrame->GetType();
 
     // Create a continuation for the incomplete frame. Note that the
     // frame may already have a continuation.
@@ -3813,8 +3808,8 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
     PRBool splitLine = !reflowingFirstLetter && 
                        (nsLayoutAtoms::placeholderFrame != frameType);
     if (reflowingFirstLetter) {
-      if ((nsLayoutAtoms::inlineFrame == frameType.get()) ||
-          (nsLayoutAtoms::lineFrame == frameType.get())) {
+      if ((nsLayoutAtoms::inlineFrame == frameType) ||
+          (nsLayoutAtoms::lineFrame == frameType)) {
         splitLine = PR_TRUE;
       }
     }
@@ -3838,9 +3833,7 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
   else if (NS_FRAME_IS_TRUNCATED(frameReflowStatus)) {
     // if the frame is a placeholder and was complete but truncated (and not at the top
     // of page), the entire line will be pushed to give it another chance to not truncate.
-    nsCOMPtr<nsIAtom> frameType;
-    aFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::placeholderFrame == frameType) {
+    if (nsLayoutAtoms::placeholderFrame == aFrame->GetType()) {
       *aLineReflowStatus = LINE_REFLOW_TRUNCATED;
     }
   }  
@@ -4382,10 +4375,7 @@ nsBlockFrame::DrainOverflowLines(nsIPresContext* aPresContext)
         // Note: A floating table (example: style="position: relative; float: right")
         //       is an example of an out-of-flow frame with a view
 
-        nsCOMPtr<nsIAtom> frameType;
-        frame->GetFrameType(getter_AddRefs(frameType));
-
-        if (nsLayoutAtoms::placeholderFrame == frameType.get()) {
+        if (nsLayoutAtoms::placeholderFrame == frame->GetType()) {
           nsIFrame *outOfFlowFrame = NS_STATIC_CAST(nsPlaceholderFrame*, frame)->GetOutOfFlowFrame();
           if (outOfFlowFrame) {
             const nsStyleDisplay* display = outOfFlowFrame->GetStyleDisplay();
@@ -4795,16 +4785,11 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsIPresContext* aPresContext,
   // find the containing block, this is either the parent or the grandparent
   // if the parent is an inline frame
   nsIFrame* parent = aFrame->GetParent();
-  nsCOMPtr<nsIAtom> parentType;
-  parent->GetFrameType(getter_AddRefs(parentType));
-  while (parent && (nsLayoutAtoms::blockFrame != parentType) &&
-                   (nsLayoutAtoms::areaFrame  != parentType)) {
+  nsIAtom* parentType = parent->GetType();
+  while ((nsLayoutAtoms::blockFrame != parentType) &&
+         (nsLayoutAtoms::areaFrame  != parentType)) {
     parent = parent->GetParent();
-    parent->GetFrameType(getter_AddRefs(parentType));
-  }
-  if (!parent) {
-    NS_ASSERTION(PR_FALSE, "null parent");
-    return;
+    parentType = parent->GetType();
   }
   
   nsBlockFrame* block = (nsBlockFrame*)parent;
@@ -5197,9 +5182,7 @@ nsBlockFrame::ReflowFloat(nsBlockReflowState& aState,
     PRBool lastPlaceholder = PR_TRUE;
     nsIFrame* next = aPlaceholder->GetNextSibling();
     if (next) {
-      nsCOMPtr<nsIAtom> nextType;
-      next->GetFrameType(getter_AddRefs(nextType));
-      if (nsLayoutAtoms::placeholderFrame == nextType) {
+      if (nsLayoutAtoms::placeholderFrame == next->GetType()) {
         lastPlaceholder = PR_FALSE;
       }
     }
@@ -5969,10 +5952,8 @@ nsBlockFrame::IsChild(nsIPresContext* aPresContext, nsIFrame* aFrame)
   aFrame->GetPrevInFlow(&prevInFlow);
   if (prevInFlow) {
     nsFrameState state = aFrame->GetStateBits();
-    nsCOMPtr<nsIAtom> frameType;
-    aFrame->GetFrameType(getter_AddRefs(frameType));
     skipLineList    = (state & NS_FRAME_OUT_OF_FLOW); 
-    skipSiblingList = (nsLayoutAtoms::placeholderFrame == frameType) ||
+    skipSiblingList = (nsLayoutAtoms::placeholderFrame == aFrame->GetType()) ||
                       (state & NS_FRAME_OUT_OF_FLOW);
   }
 
@@ -6191,9 +6172,7 @@ nsBlockFrame::RenumberListsFor(nsIPresContext* aPresContext,
   nsIFrame* kid = aKid;
 
   // if the frame is a placeholder, then get the out of flow frame
-  nsCOMPtr<nsIAtom> frameType;
-  aKid->GetFrameType(getter_AddRefs(frameType));
-  if (nsLayoutAtoms::placeholderFrame == frameType.get()) {
+  if (nsLayoutAtoms::placeholderFrame == aKid->GetType()) {
     kid = NS_STATIC_CAST(nsPlaceholderFrame*, aKid)->GetOutOfFlowFrame();
     NS_ASSERTION(kid, "no out-of-flow frame");
   }

@@ -112,7 +112,7 @@ public:
    *
    * @see nsLayoutAtoms::rootFrame
    */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
@@ -268,13 +268,10 @@ nsRootBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,
   return nsBoxFrame::GetFrameForPoint(aPresContext, aPoint, aWhichLayer, aFrame);
 }
 
-NS_IMETHODIMP
-nsRootBoxFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsRootBoxFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::rootFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::rootFrame;
 }
 
 NS_IMETHODIMP

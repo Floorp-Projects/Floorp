@@ -1345,17 +1345,13 @@ PRBool nsCellMap::CellsSpanOut(nsIPresContext* aPresContext,
     nsIFrame* cellFrame = nsnull;
     rowFrame->FirstChild(aPresContext, nsnull, &cellFrame);
     while (cellFrame) {
-      nsIAtom* frameType;
-      cellFrame->GetFrameType(&frameType);
-      if (IS_TABLE_CELL(frameType)) {
+      if (IS_TABLE_CELL(cellFrame->GetType())) {
         PRBool zeroSpan;
         PRInt32 rowSpan = GetRowSpanForNewCell((nsTableCellFrame &)*cellFrame, rowX, zeroSpan);
         if (rowX + rowSpan > numNewRows) {
-          NS_RELEASE(frameType);
           return PR_TRUE;
         }
       }
-      NS_IF_RELEASE(frameType);
       cellFrame = cellFrame->GetNextSibling();
     }
   }
@@ -1490,12 +1486,9 @@ nsCellMap::ExpandWithRows(nsIPresContext* aPresContext,
     rFrame->FirstChild(aPresContext, nsnull, &cFrame);
     PRInt32 colIndex = 0;
     while (cFrame) {
-      nsIAtom* cFrameType;
-      cFrame->GetFrameType(&cFrameType);
-      if (IS_TABLE_CELL(cFrameType)) {
+      if (IS_TABLE_CELL(cFrame->GetType())) {
         AppendCell(aMap, (nsTableCellFrame *)cFrame, rowX, PR_FALSE, aDamageArea, &colIndex);
       }
-      NS_IF_RELEASE(cFrameType);
       cFrame = cFrame->GetNextSibling();
     }
     newRowIndex++;
@@ -1901,12 +1894,9 @@ nsCellMap::RebuildConsideringRows(nsIPresContext* aPresContext,
       nsIFrame* cFrame = nsnull;
       rFrame->FirstChild(aPresContext, nsnull, &cFrame);
       while (cFrame) {
-        nsIAtom* cFrameType;
-        cFrame->GetFrameType(&cFrameType);
-        if (IS_TABLE_CELL(cFrameType)) {
+        if (IS_TABLE_CELL(cFrame->GetType())) {
           AppendCell(aMap, (nsTableCellFrame *)cFrame, rowX, PR_FALSE, aDamageArea);
         }
-        NS_IF_RELEASE(cFrameType);
         cFrame = cFrame->GetNextSibling();
       }
       rowX++;

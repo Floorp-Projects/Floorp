@@ -232,15 +232,10 @@ nsBlockReflowState::ComputeBlockAvailSpace(nsIFrame* aFrame,
 
   /* bug 18445: treat elements mapped to display: block such as text controls
    * just like normal blocks   */
-  PRBool treatAsNotSplittable=PR_FALSE;
-  nsCOMPtr<nsIAtom>frameType;
-  aFrame->GetFrameType(getter_AddRefs(frameType));
-  if (frameType) {
-    // text controls are not splittable, so make a special case here
-    // XXXldb Why not just set the frame state bit?
-    if (nsLayoutAtoms::textInputFrame == frameType.get())
-      treatAsNotSplittable = PR_TRUE;
-  }
+  // text controls are not splittable, so make a special case here
+  // XXXldb Why not just set the frame state bit?
+  PRBool treatAsNotSplittable =
+    nsLayoutAtoms::textInputFrame == aFrame->GetType();
 
   if (NS_FRAME_SPLITTABLE_NON_RECTANGULAR == aSplitType ||    // normal blocks 
       NS_FRAME_NOT_SPLITTABLE == aSplitType ||                // things like images mapped to display: block
@@ -927,9 +922,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache* aFloatCache,
       
       if(prevFrame) {
         //get the frame type
-        nsIAtom* atom;
-        prevFrame->GetFrameType(&atom);
-        if(nsLayoutAtoms::tableOuterFrame == atom) {
+        if (nsLayoutAtoms::tableOuterFrame == prevFrame->GetType()) {
           //see if it has "align="
           // IE makes a difference between align and he float property
           nsIContent* content = prevFrame->GetContent();

@@ -107,7 +107,7 @@ public:
                                const nsPoint&    aPoint, 
                                nsFramePaintLayer aWhichLayer,
                                nsIFrame**        aFrame);
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 
 #ifdef ACCESSIBILITY  
   NS_IMETHOD  GetAccessible(nsIAccessible** aAccessible);
@@ -157,13 +157,10 @@ nsFieldSetFrame::nsFieldSetFrame()
 }
 
 
-NS_IMETHODIMP
-nsFieldSetFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsFieldSetFrame::GetType() const
 {
-  NS_PRECONDITION(aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::fieldSetFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::fieldSetFrame;
 }
 
 NS_IMETHODIMP

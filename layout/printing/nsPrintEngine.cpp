@@ -3067,9 +3067,7 @@ static void GetIFramePosition(nsPrintObject * aPO, nscoord& aX, nscoord& aY)
           nsPoint pt = frame->GetPosition();
           aX += pt.x;
           aY += pt.y;
-          nsCOMPtr<nsIAtom> frameType;
-          frame->GetFrameType(getter_AddRefs(frameType));
-          if (nsLayoutAtoms::pageContentFrame == frameType.get()) {
+          if (nsLayoutAtoms::pageContentFrame == frame->GetType()) {
             break;
           }
           frame = frame->GetParent();

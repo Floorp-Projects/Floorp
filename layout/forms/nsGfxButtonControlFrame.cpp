@@ -83,13 +83,10 @@ NS_NewGfxButtonControlFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
   return NS_OK;
 }
       
-NS_IMETHODIMP
-nsGfxButtonControlFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsGfxButtonControlFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::gfxButtonControlFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::gfxButtonControlFrame;
 }
 
 // Special check for the browse button of a file input.
@@ -314,7 +311,7 @@ nsGfxButtonControlFrame::GetDefaultLabel(nsString& aString)
 {
   const char * propname = nsFormControlHelper::GetHTMLPropertiesFileName();
   nsresult rv = NS_OK;
-  PRInt32 type = GetType();
+  PRInt32 type = GetFormControlType();
   if (type == NS_FORM_INPUT_RESET) {
     rv = nsFormControlHelper::GetLocalizedString(propname, NS_LITERAL_STRING("Reset").get(), aString);
   } 

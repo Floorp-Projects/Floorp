@@ -80,9 +80,9 @@ public:
                                  nsIAtom*        aListName,
                                  nsIFrame*       aChildList);
 
-  nsTableColGroupType GetType() const;
+  nsTableColGroupType GetColType() const;
 
-  void SetType(nsTableColGroupType aType);
+  void SetColType(nsTableColGroupType aType);
 
   static PRBool GetLastRealColGroup(nsTableFrame* aTableFrame, 
                                     nsIFrame**    aLastColGroup);
@@ -138,7 +138,7 @@ public:
    *
    * @see nsLayoutAtoms::tableColGroupFrame
    */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
   
   NS_IMETHOD AddColsToTable(nsIPresContext&  aPresContext,
                             PRInt32          aFirstColIndex,
@@ -232,7 +232,7 @@ protected:
 inline nsTableColGroupFrame::nsTableColGroupFrame()
 : mColCount(0), mStartColIndex(0)
 { 
-  SetType(eColGroupContent);
+  SetColType(eColGroupContent);
 }
   
 inline PRInt32 nsTableColGroupFrame::GetStartColumnIndex()

@@ -358,10 +358,8 @@ nsresult nsContextMenuInfo::GetFrameForBackgroundUpdate(nsIPresContext *aPresCon
         // the frame is the body frame, so we provide the canvas frame
         nsIFrame *pCanvasFrame = aFrame->GetParent();
         while (pCanvasFrame) {
-          nsCOMPtr<nsIAtom>  parentType;
-          pCanvasFrame->GetFrameType(getter_AddRefs(parentType));
-          nsCOMPtr<nsIAtom> mTag_canvasFrame = do_GetAtom("CanvasFrame");   
-          if (parentType.get() == mTag_canvasFrame) {
+          nsCOMPtr<nsIAtom> mTag_canvasFrame = do_GetAtom("CanvasFrame");
+          if (pCanvasFrame->GetType() == mTag_canvasFrame) {
             *aBGFrame = pCanvasFrame;
             break;
           }

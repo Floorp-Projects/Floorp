@@ -53,7 +53,7 @@ class nsTableCaptionFrame : public nsBlockFrame
 {
 public:
   // nsISupports
-  NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
   friend nsresult NS_NewTableCaptionFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
 protected:
@@ -157,7 +157,7 @@ public:
    *
    * @see nsLayoutAtoms::tableOuterFrame
    */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;

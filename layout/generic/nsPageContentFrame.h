@@ -71,7 +71,7 @@ public:
    *
    * @see nsLayoutAtoms::pageFrame
    */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
   
 #ifdef NS_DEBUG
   // Debugging

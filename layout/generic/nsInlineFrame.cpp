@@ -107,13 +107,10 @@ nsInlineFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-NS_IMETHODIMP
-nsInlineFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsInlineFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::inlineFrame;
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::inlineFrame;
 }
 
 inline PRBool
@@ -244,15 +241,11 @@ nsInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
 
   if (aOldFrame) {
     // Loop and destroy the frame and all of its continuations.
-    PRBool generateReflowCommand = PR_FALSE;
-
     // If the frame we are removing is a brFrame, we need a reflow so
     // the line the brFrame was on can attempt to pull up any frames
     // that can fit from lines below it.
-    nsCOMPtr<nsIAtom> frameType;
-    aOldFrame->GetFrameType(getter_AddRefs(frameType));
-    if (frameType == nsLayoutAtoms::brFrame)
-      generateReflowCommand = PR_TRUE;
+    PRBool generateReflowCommand =
+      aOldFrame->GetType() == nsLayoutAtoms::brFrame;
 
     nsInlineFrame* parent = NS_STATIC_CAST(nsInlineFrame*, aOldFrame->GetParent());
     while (aOldFrame) {
@@ -786,9 +779,7 @@ nsInlineFrame::ReflowInlineFrame(nsIPresContext* aPresContext,
     }
   }
   else if (NS_FRAME_IS_NOT_COMPLETE(aStatus)) {
-    nsCOMPtr<nsIAtom> frameType;
-    aFrame->GetFrameType(getter_AddRefs(frameType));
-    if (nsLayoutAtoms::placeholderFrame == frameType) {
+    if (nsLayoutAtoms::placeholderFrame == aFrame->GetType()) {
       nsBlockReflowState* blockRS = lineLayout->mBlockRS;
       blockRS->mBlock->SplitPlaceholder(*aPresContext, *aFrame);
     }
@@ -958,13 +949,10 @@ nsFirstLineFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-NS_IMETHODIMP
-nsFirstLineFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsFirstLineFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::lineFrame;
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::lineFrame;
 }
 
 void
@@ -1232,13 +1220,10 @@ nsPositionedInlineFrame::FirstChild(nsIPresContext* aPresContext,
   return nsInlineFrame::FirstChild(aPresContext, aListName, aFirstChild);
 }
 
-NS_IMETHODIMP
-nsPositionedInlineFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsPositionedInlineFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::positionedInlineFrame;
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::positionedInlineFrame;
 }
 
 NS_IMETHODIMP

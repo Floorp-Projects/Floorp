@@ -86,13 +86,10 @@ nsPlaceholderFrame::Reflow(nsIPresContext*          aPresContext,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsPlaceholderFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsPlaceholderFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::placeholderFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::placeholderFrame; 
 }
 
 NS_IMETHODIMP

@@ -80,13 +80,10 @@ nsLegendFrame::~nsLegendFrame()
 {
 }
 
-NS_IMETHODIMP
-nsLegendFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+nsLegendFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::legendFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::legendFrame; 
 }
 
 NS_IMETHODIMP

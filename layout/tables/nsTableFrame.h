@@ -76,7 +76,8 @@ public:
   nsReflowTimer(nsIFrame* aFrame) {
     mFrame = aFrame;
     mNextSibling = nsnull;
-    aFrame->GetFrameType(&mFrameType);
+    mFrameType = aFrame->GetType();
+    NS_IF_ADDREF(mFrameType);
     mReflowType = -1;
 		Reset();
 	}
@@ -407,7 +408,7 @@ public:
    *
    * @see nsLayoutAtoms::tableFrame
    */
-  NS_IMETHOD  GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 
 #ifdef DEBUG
   /** @see nsIFrame::GetFrameName */

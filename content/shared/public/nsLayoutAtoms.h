@@ -64,4 +64,9 @@ public:
 #undef LAYOUT_ATOM
 };
 
+static inline PRBool IS_TABLE_CELL(nsIAtom* frameType) {
+  return nsLayoutAtoms::tableCellFrame == frameType ||
+    nsLayoutAtoms::bcTableCellFrame == frameType;
+}
+
 #endif /* nsLayoutAtoms_h___ */

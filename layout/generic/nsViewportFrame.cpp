@@ -336,13 +336,10 @@ ViewportFrame::Reflow(nsIPresContext*          aPresContext,
   return rv; 
 }
 
-NS_IMETHODIMP
-ViewportFrame::GetFrameType(nsIAtom** aType) const
+nsIAtom*
+ViewportFrame::GetType() const
 {
-  NS_PRECONDITION(nsnull != aType, "null OUT parameter pointer");
-  *aType = nsLayoutAtoms::viewportFrame; 
-  NS_ADDREF(*aType);
-  return NS_OK;
+  return nsLayoutAtoms::viewportFrame;
 }
 
 NS_IMETHODIMP

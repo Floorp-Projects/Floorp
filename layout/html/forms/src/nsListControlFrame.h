@@ -222,7 +222,7 @@ public:
    *
    * @see nsLayoutAtoms::scrollFrame
    */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 
 #ifdef DEBUG
     // nsIFrameDebug
@@ -230,7 +230,7 @@ public:
 #endif
 
     // nsIFormControlFrame
-  NS_IMETHOD_(PRInt32) GetType() const;
+  NS_IMETHOD_(PRInt32) GetFormControlType() const;
   NS_IMETHOD GetName(nsAString* aName);
   NS_IMETHOD SetProperty(nsIPresContext* aPresContext, nsIAtom* aName, const nsAString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsAString& aValue); 

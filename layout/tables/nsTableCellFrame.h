@@ -157,7 +157,7 @@ public:
    *
    * @see nsLayoutAtoms::tableCellFrame
    */
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsAString& aResult) const;
@@ -453,7 +453,7 @@ public:
 
   ~nsBCTableCellFrame();
 
-  NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+  virtual nsIAtom* GetType() const;
 
   virtual nsMargin* GetBorderWidth(float     aPixelsToTwips,
                                    nsMargin& aBorder) const;
@@ -485,9 +485,6 @@ private:
   PRUint32 mBottomBorder: 8;
   PRUint32 mLeftBorder:   8;
 };
-
-#define IS_TABLE_CELL(frameType)\
-((nsLayoutAtoms::tableCellFrame == frameType) || (nsLayoutAtoms::bcTableCellFrame == frameType))
 
 #endif
 

@@ -899,9 +899,7 @@ nsContainerFrame::FrameNeedsView(nsIFrame* aFrame)
     // XXX Check for the frame being a block frame and only force a view
     // in that case, because adding a view for box frames seems to cause
     // problems for XUL...
-    nsCOMPtr<nsIAtom> frameType;
-    
-    aFrame->GetFrameType(getter_AddRefs(frameType));
+    nsIAtom* frameType = aFrame->GetType();
     if ((frameType == nsLayoutAtoms::blockFrame) ||
         (frameType == nsLayoutAtoms::areaFrame)) {
       return PR_TRUE;

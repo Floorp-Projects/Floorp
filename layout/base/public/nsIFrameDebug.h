@@ -63,7 +63,7 @@ public:
   static void RootFrameList(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent);
   /**
    * Get a printable from of the name of the frame type.
-   * XXX This should be eliminated and we use GetFrameType() instead...
+   * XXX This should be eliminated and we use GetType() instead...
    */
   NS_IMETHOD  GetFrameName(nsAString& aResult) const = 0;
   /**

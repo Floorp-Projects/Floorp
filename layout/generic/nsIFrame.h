@@ -1013,7 +1013,7 @@ public:
    *
    * @see nsLayoutAtoms
    */
-  NS_IMETHOD  GetFrameType(nsIAtom** aType) const = 0;
+  virtual nsIAtom* GetType() const = 0;
   
   /**
    * Is this frame a "containing block"?
