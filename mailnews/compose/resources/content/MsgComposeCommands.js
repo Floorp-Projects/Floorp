@@ -1320,8 +1320,8 @@ function AddAttachment(attachment)
 			prettyName = msgCompose.AttachmentPrettyName(attachment);
 		cell.setAttribute("value", prettyName);				//use for display only
 		cell.setAttribute("attachment", attachment);		//full url stored here
-//		cell.setAttribute("tooltip", "aTooltip");
-//		cell.setAttribute("tooltiptext", unescape(attachment));
+		cell.setAttribute("tooltip", "aTooltip");
+		cell.setAttribute("tooltiptext", unescape(attachment));
 		row.appendChild(cell);
 		item.appendChild(row);
 		bucketBody.appendChild(item);
