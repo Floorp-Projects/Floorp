@@ -1241,9 +1241,41 @@ public:
         return NS_OK;
     }
 
+    typedef struct {
+        InterceptStreamListener* me;
+        nsWriteSegmentFun mWriter;
+        void* mClosure;
+    } IntercepterWriterStruct;
+
+    static NS_METHOD IntercepterWriter(nsIInputStream* in,
+                                       void* closure,
+                                       const char* fromRawSegment,
+                                       PRUint32 toOffset,
+                                       PRUint32 count,
+                                       PRUint32 *writeCount) {
+        IntercepterWriterStruct* iws = (IntercepterWriterStruct*)closure;
+        nsresult rv;
+        
+        rv = iws->mWriter (in, iws->mClosure, fromRawSegment, 
+                           toOffset, count, writeCount);
+        if (NS_FAILED(rv)) return rv;
+
+        rv = iws->me->write(fromRawSegment, count);
+        
+        // If the cache fills up, mark entry as partial content
+        if (NS_FAILED(rv)) 
+            iws->me->mCacheEntry->SetFlag(nsCachedNetData::TRUNCATED_CONTENT);
+        return NS_OK;
+    }
+
     NS_IMETHOD ReadSegments(nsWriteSegmentFun writer, void * closure, PRUint32 count, PRUint32 *_retval) {
-        NS_NOTREACHED("ReadSegments");
-        return NS_ERROR_NOT_IMPLEMENTED;
+        IntercepterWriterStruct iws;
+        iws.me = this;
+        iws.mWriter = writer;
+        iws.mClosure = closure;
+
+        return mOriginalStream->ReadSegments(IntercepterWriter, (void*)&iws, 
+                                             count, _retval);
     }
 
     NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking) {
@@ -1263,7 +1295,7 @@ public:
 
 private:
     nsresult
-    write(char* aBuf, PRUint32 aNumBytes) {
+    write(const char* aBuf, PRUint32 aNumBytes) {
         PRUint32 actualBytes;
         return mCacheStream->Write(aBuf, aNumBytes, &actualBytes);
     }
