@@ -35,7 +35,7 @@
     color                 : graytext;
   }  
 
-.menubutton-dual-toolbar[disabled="true"] > .menubutton-dual-dropmarker-box > .menubutton-dropmarker
+.menubutton-dual.toolbar[disabled="true"] > .menubutton-dual-dropmarker-box > .menubutton-dropmarker
   {
     list-style-image      : url("chrome://global/skin/scroll-down-disabled.gif");
   }  
