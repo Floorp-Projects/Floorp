@@ -97,7 +97,7 @@ if (lsearch($::components{$prod}, $comp) < 0) {
     Punt("component", $comp);
 }
 if (lsearch($::versions{$prod}, $version) < 0) {
-    Punt("version", $comp);
+    Punt("version", $version);
 }
 
 
