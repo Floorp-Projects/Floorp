@@ -47,7 +47,7 @@ BUILD_MODULE_DIRS_necko		= $(BUILD_MODULE_DIRS_xpcom) netwerk
 BUILD_MODULE_DIRS_transformiix	= extensions/transformiix
 BUILD_MODULE_DIRS_xpcom		= $(NSPRPUB_DIR) modules/libreg xpcom
 BUILD_MODULE_DIRS_xpconnect	= $(BUILD_MODULE_DIRS_xpcom) $(BUILD_MODULE_DIRS_js) js/src/xpconnect
-
+BUILD_MODULE_DIRS_security	= $(BUILD_MODULE_DIRS_xpcom) $(BUILD_MODULE_DIRS_dbm) security
 
 BUILD_MODULE_DIRS += $(foreach mod,$(BUILD_MODULES), $(BUILD_MODULE_DIRS_$(mod)))
 
