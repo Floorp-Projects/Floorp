@@ -23,6 +23,7 @@
  */
 
 var gSearchBox;
+
 ////////////////////////////////////////////////////////////////////////////////
 // Initialize the command controllers, set focus, tree root, 
 // window title state, etc. 
@@ -217,14 +218,3 @@ function onViewMenuColumnItemSelected(aEvent)
 
   aEvent.preventBubble();
 }
-
-function searchBookmarks(aInput)
-{
-  var bookmarksView = document.getElementById("bookmarks-view");
-  if (!aInput) 
-    bookmarksView.tree.setAttribute("ref", "NC:BookmarksRoot");
-  else
-    bookmarksView.tree.setAttribute("ref",
-                               "find:datasource=rdf:bookmarks&match=http://home.netscape.com/NC-rdf#Name&method=contains&text=" + escape(aInput));
- }
-

@@ -84,7 +84,7 @@
 <!ENTITY bookmarksWindowTitle.label     "Bookmark Manager">
 
 <!ENTITY find.label                     "Find">
-<!ENTITY find.accesskey                 "F">
+<!ENTITY find.accesskey                 "n">
 <!ENTITY fileMenu.label                 "File">
 <!ENTITY fileMenu.accesskey             "F">
 
