@@ -25,6 +25,8 @@
 #include "nsIURL.h"
 #include "nsIPref.h"
 
+#include "nsVoidArray.h"
+
 #include "nsGUIEvent.h"
 #include "nsWidgetsCID.h"
 #include "nsIWidget.h"
@@ -130,6 +132,28 @@ struct ThreadedWindowEvent {
   nsWebShellWindow  *window;
 };
 
+// The web shell info object is used to hold information about content areas that will
+// subsequently be filled in when we receive a webshell added notification.
+struct nsWebShellInfo {
+  nsString id; // The identifier of the iframe or frame node in the XUL tree.
+  nsString name; // The name to apply to the webshell once we create it.
+  nsString url; // The URL to load in the webshell once we create it.
+  nsIWebShell* opener; // The web shell that will be the opener of this new shell.
+
+  nsWebShellInfo(const nsString& anID, const nsString aName, const nsString& anURL,
+                 nsIWebShell* anOpenerShell)
+  {
+    id = anID; name = aName; url = anURL;
+    opener = anOpenerShell;
+    NS_IF_ADDREF(anOpenerShell);
+  }
+
+  ~nsWebShellInfo()
+  {
+    NS_IF_RELEASE(opener);
+  }
+};
+
 nsWebShellWindow::nsWebShellWindow()
 {
   NS_INIT_REFCNT();
@@ -140,6 +164,7 @@ nsWebShellWindow::nsWebShellWindow()
   mCallbacks = nsnull;
   mContinueModalLoop = PR_FALSE;
   mChromeInitialized = PR_FALSE;
+  mContentShells = nsnull;
 }
 
 
@@ -153,6 +178,19 @@ nsWebShellWindow::~nsWebShellWindow()
   NS_IF_RELEASE(mWindow);
   NS_IF_RELEASE(mController);
   NS_IF_RELEASE(mCallbacks);
+
+  // Delete any remaining content shells.
+  PRInt32 count;
+  if (mContentShells && ((count = mContentShells->Count()) > 0)) {
+    for (PRInt32 i = 0; i < count; i++)
+    {
+      nsWebShellInfo* webInfo = (nsWebShellInfo*)(mContentShells->ElementAt(i));
+      delete webInfo;
+    }
+
+    delete mContentShells;
+  }
+
 }
 
 
@@ -779,6 +817,16 @@ nsWebShellWindow::SetNewWebShellInfo(const nsString& aName, const nsString& anUR
   // Now return our web shell.
   NS_IF_ADDREF(mWebShell);
   *aNewWebShellResult = mWebShell;
+
+  // Cache our webshell info.
+  nsWebShellInfo* webShellInfo = new nsWebShellInfo("contentframe", 
+                                                    aName, anURL, aOpenerShell);
+
+  if (mContentShells == nsnull)
+    mContentShells = new nsVoidArray();
+
+  mContentShells->AppendElement((void*)webShellInfo);
+
   return NS_OK;
 }
 
