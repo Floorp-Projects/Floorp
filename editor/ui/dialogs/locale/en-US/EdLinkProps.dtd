@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+
+<!-- These strings are generic to all or most of the editor's dialogs. -->
+<!-- They should be moved into a "common" file -->
+
+<!ENTITY OKButton.label "OK">
+<!ENTITY CancelButton.label "Cancel">
+
+<!-- This button is for the progressive disclosure of additional editing functionality -->
+<!ENTITY AdditionalEditingButton.label "Advanced">
+
+
+<!-- These strings are for use specifically in the editor's link dialog. -->
+<!ENTITY LinkWindow.title "Link Properties">
+
+<!-- These are in the link source fieldset. -->
+<!ENTITY LinkSourceFieldset.label "Link Source">
+<!ENTITY LinkSourceText.label "Enter text to display for a new link:">
+
+<!-- These controls are in the Dimensions Fieldset of the advanced area -->
+<!ENTITY LinkURLFieldset.label "Link To">
+<!ENTITY LinkURLEditField.label "Enter a web page location or local file:">
+<!ENTITY LinkChooseFileButton.label "Choose File...">
+

@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<!-- Window title -->
+<!ENTITY windowTitle.label "Insert Table">
+
+<!ENTITY numRowsEditField.label "Number of rows">
+<!ENTITY numColumnsEditField.label "Number of columns">
+<!ENTITY widthEditField.label "Table Width">
+<!ENTITY borderEditField.label "Border">
+
+<!ENTITY alignmentFieldset.label "Alignment">
+<!ENTITY leftPopup.value "Left">
+<!ENTITY centerPopup.value "Center">
+<!ENTITY rightPopup.value "Right">
+
+<!ENTITY pixelsPopup.value "pixels">
+<!ENTITY percentPopup.value "percent">
+
+<!ENTITY OKButton.label "OK">
+<!ENTITY CancelButton.label "Cancel">
+<!ENTITY AdvancedEditButton.label "Advanced Edit...">
