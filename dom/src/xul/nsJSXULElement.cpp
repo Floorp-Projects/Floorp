@@ -26,20 +26,20 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
+#include "nsIDOMElement.h"
 #include "nsIDOMXULElement.h"
-#include "nsIDOMNode.h"
 #include "nsIDOMNodeList.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
+static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXULElementIID, NS_IDOMXULELEMENT_IID);
-static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
+NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMXULElement);
-NS_DEF_PTR(nsIDOMNode);
 NS_DEF_PTR(nsIDOMNodeList);
 
 
@@ -139,7 +139,7 @@ XULElementAddBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
   nsIDOMXULElement *nativeThis = (nsIDOMXULElement*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
-  nsIDOMNodePtr b1;
+  nsIDOMElementPtr b1;
 
   *rval = JSVAL_NULL;
 
@@ -153,8 +153,8 @@ XULElementAddBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsval *
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
-                                           kINodeIID,
-                                           "Node",
+                                           kIElementIID,
+                                           "Element",
                                            cx,
                                            argv[1])) {
       return JS_FALSE;
@@ -184,7 +184,7 @@ XULElementRemoveBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsva
   nsIDOMXULElement *nativeThis = (nsIDOMXULElement*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
   nsAutoString b0;
-  nsIDOMNodePtr b1;
+  nsIDOMElementPtr b1;
 
   *rval = JSVAL_NULL;
 
@@ -198,8 +198,8 @@ XULElementRemoveBroadcastListener(JSContext *cx, JSObject *obj, uintN argc, jsva
     nsJSUtils::nsConvertJSValToString(b0, cx, argv[0]);
 
     if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&b1,
-                                           kINodeIID,
-                                           "Node",
+                                           kIElementIID,
+                                           "Element",
                                            cx,
                                            argv[1])) {
       return JS_FALSE;

@@ -131,9 +131,9 @@ static NS_DEFINE_IID(kIDOMPaintListenerIID, NS_IDOMPAINTLISTENER_IID);
 struct XULBroadcastListener
 {
 	nsString mAttribute;
-	nsCOMPtr<nsIDOMNode> mListener;
+	nsCOMPtr<nsIDOMElement> mListener;
 
-	XULBroadcastListener(const nsString& attr, nsIDOMNode* listen)
+	XULBroadcastListener(const nsString& attr, nsIDOMElement* listen)
 		: mAttribute(attr), mListener( dont_QueryInterface(listen) )
 	{ // Nothing else to do 
 	}
@@ -2140,14 +2140,14 @@ RDFElementImpl::DoCommand()
 }
 
 NS_IMETHODIMP
-RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMNode* aNode) 
+RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMElement* anElement) 
 { 
 	// Add ourselves to the array.
-	NS_ADDREF(aNode);
-	mBroadcastListeners.AppendElement(new XULBroadcastListener(attr, aNode));
+	NS_ADDREF(anElement);
+	mBroadcastListeners.AppendElement(new XULBroadcastListener(attr, anElement));
 
 	// We need to sync up the initial attribute value.
-  nsCOMPtr<nsIContent> pListener( do_QueryInterface(aNode) );
+  nsCOMPtr<nsIContent> listener( do_QueryInterface(anElement) );
 
   // Retrieve our namespace
   PRInt32 namespaceID;
@@ -2163,12 +2163,12 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMNode* aNode)
 	if (attrPresent)
   {
     // Set the attribute 
-    pListener->SetAttribute(namespaceID, kAtom, attrValue, PR_TRUE);
+    listener->SetAttribute(namespaceID, kAtom, attrValue, PR_TRUE);
   }
   else
   {
     // Unset the attribute
-    pListener->UnsetAttribute(namespaceID, kAtom, PR_FALSE);
+    listener->UnsetAttribute(namespaceID, kAtom, PR_FALSE);
   }
 
   NS_RELEASE(kAtom);
@@ -2178,7 +2178,7 @@ RDFElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMNode* aNode)
 	
 
 NS_IMETHODIMP
-RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMNode* aNode) 
+RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMElement* anElement) 
 { 
 	// Find the node.
 	PRInt32 count = mBroadcastListeners.Count();
@@ -2187,7 +2187,7 @@ RDFElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMNode* aNode)
 		XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
 		
 		if (xulListener->mAttribute == attr &&
-			xulListener->mListener == nsCOMPtr<nsIDOMNode>( dont_QueryInterface(aNode) ))
+			  xulListener->mListener == nsCOMPtr<nsIDOMElement>( dont_QueryInterface(anElement) ))
 		{
 			// Do the removal.
 			mBroadcastListeners.RemoveElementAt(i);
