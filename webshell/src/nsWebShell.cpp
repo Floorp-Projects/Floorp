@@ -2000,7 +2000,9 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   nsresult rv = NS_OK;
   rv = aUri->GetSpec(getter_Copies(urlSpec));
   if (NS_FAILED(rv)) return rv;
+  mURL = urlSpec;
 
+  mReferrer = aReferrer;
 
   // If it's a normal reload that uses the cache, look at the destination anchor
   // and see if it's an element within the current document
@@ -2123,8 +2125,6 @@ nsWebShell::LoadURI(nsIURI * aUri,
   CancelRefreshURITimers();
   nsXPIDLCString scheme, CUriSpec;
 
-  mReferrer = aReferrer;
-
   rv = aUri->GetScheme(getter_Copies(scheme));
   if (NS_FAILED(rv)) return rv;
   rv = aUri->GetSpec(getter_Copies(CUriSpec));
@@ -2135,7 +2135,6 @@ nsWebShell::LoadURI(nsIURI * aUri,
   nsXPIDLCString spec;
   rv = aUri->GetSpec(getter_Copies(spec));
   if (NS_FAILED(rv)) return rv;
-  mURL = spec;
 
   /*
    * Before the new page is added to the session history,
@@ -2215,7 +2214,8 @@ nsWebShell::LoadURI(nsIURI * aUri,
    */
   // Give web-shell-container right of refusal
   if (nsnull != mContainer) {
-    rv = mContainer->WillLoadURL(this, mURL.GetUnicode(), nsLoadURL);
+    nsAutoString str(spec);
+    rv = mContainer->WillLoadURL(this, str.GetUnicode(), nsLoadURL);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -2402,8 +2402,14 @@ NS_IMETHODIMP nsWebShell::Reload(nsLoadFlags aType)
   nsString* s = (nsString*) mHistory.ElementAt(mHistoryIndex);
   if (nsnull != s) {
     // XXX What about the post data?
-    return LoadURL(s->GetUnicode(), nsnull, PR_FALSE, aType);
+
+    // Allocate since mReferrer will change beneath us
+    PRUnichar* str = mReferrer.ToNewUnicode();
+    return LoadURL(s->GetUnicode(), nsnull, PR_FALSE, 
+                   aType, 0, nsnull, str);
+    Recycle(str);
   }
+
   return NS_ERROR_FAILURE;
 #else
   if (mSHist)
@@ -3018,9 +3024,12 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
       {
         nsIWebShell* shell = GetTarget(target.GetUnicode());
         if (nsnull != shell) {
+          // Allocate since mURL may change beneath us
+          PRUnichar* str = mURL.ToNewUnicode();
           (void)shell->LoadURL(aURLSpec, aPostDataStream,
                                PR_TRUE, nsIChannel::LOAD_NORMAL,
-                               0, nsnull, mURL.GetUnicode());
+                               0, nsnull, str);
+          Recycle(str);
           NS_RELEASE(shell);
         }
       }
