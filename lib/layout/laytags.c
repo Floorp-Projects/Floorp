@@ -5622,7 +5622,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		case P_LINEBREAK:
 		  
 		  {
-			uint8 clear_type;
+			uint8 clear_type = LO_CLEAR_NONE;
 
 			if(state->hide_content)
 				break;  /* skip the whole tag */
