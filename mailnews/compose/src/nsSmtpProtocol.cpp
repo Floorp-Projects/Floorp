@@ -1323,6 +1323,7 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 			PRBool transportOpen = PR_FALSE;
 			m_transport->IsTransportOpen(&transportOpen);
 			m_urlInProgress = PR_TRUE;
+			m_runningURL->SetRunningUrlFlag(PR_TRUE); // set the url as a url currently being run...
 			if (transportOpen == PR_FALSE)
 			{
 				m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
@@ -1451,6 +1452,7 @@ PRInt32 nsSmtpProtocol::LoadURL(nsIURL * aURL)
 				break;
 			case SMTP_DONE:
 				m_urlInProgress = PR_FALSE;
+				m_runningURL->SetRunningUrlFlag(PR_FALSE);
 	            m_nextState = SMTP_FREE;
 				break;
         
