@@ -45,7 +45,6 @@
 #include "nsIAppShell.h"
 #include "nsWindow.h"
 #include "nsSwitchToUIThread.h"
-#include "nsTimerBeOS.h"
 #include "plevent.h"
 #include "prprf.h"
 #include "nsGUIEvent.h"
@@ -182,14 +181,6 @@ NS_IMETHODIMP nsAppShell::Run()
       
       switch(code)
       {
-      case 'WMti' :
-        {
-          // Hack
-          nsCOMPtr<nsTimerBeOS> timer = (nsTimerBeOS *)id.data;
-          timer->FireTimeout();
-        }
-        break;
-
       case WM_CALLMETHOD :
         {
           MethodInfo *mInfo = (MethodInfo *)id.data;
@@ -375,14 +366,6 @@ NS_IMETHODIMP nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void *aEvent)
 
       switch(code) 
       {
-        case 'WMti' :
-          {
-            // Hack
-            nsCOMPtr<nsTimerBeOS> timer = (nsTimerBeOS *)id.data;
-            timer->FireTimeout();
-          }
-          break;
-        
         case WM_CALLMETHOD :
           {
             MethodInfo *mInfo = (MethodInfo *)id.data;
@@ -495,10 +478,6 @@ void nsAppShell::RetrieveAllEvents(bool blockable)
 	else {
       switch(newitem->code)
       {
-      case 'WMti' :
-        events[PRIORITY_LOW].AddItem(newitem);
-        break;
-  
       case WM_CALLMETHOD :
         {
           MethodInfo *mInfo = (MethodInfo *)newitem->ifdata.data;

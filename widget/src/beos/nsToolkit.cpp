@@ -39,7 +39,6 @@
 #include "nsWindow.h"
 #include "prmon.h"
 #include "prtime.h"
-#include "nsTimerBeOS.h"
 #include "nsGUIEvent.h"
 #include "nsSwitchToUIThread.h"
 #include "plevent.h"
@@ -120,14 +119,6 @@ void nsToolkit::RunPump(void* arg)
   {
     switch(code)
     {
-      case 'WMti' :
-        {
-          // Hack
-          nsCOMPtr<nsTimerBeOS> timer = (nsTimerBeOS *)id.data;
-          timer->FireTimeout();
-        }
-        break;
-
       case WM_CALLMETHOD :
         {
           MethodInfo *mInfo = (MethodInfo *)id.data;
