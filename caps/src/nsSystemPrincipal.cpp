@@ -52,8 +52,8 @@
 NS_IMPL_QUERY_INTERFACE2_CI(nsSystemPrincipal, nsIPrincipal, nsISerializable)
 NS_IMPL_CI_INTERFACE_GETTER2(nsSystemPrincipal, nsIPrincipal, nsISerializable)
 
-NSBASEPRINCIPALS_ADDREF(nsSystemPrincipal);
-NSBASEPRINCIPALS_RELEASE(nsSystemPrincipal);
+NSBASEPRINCIPALS_ADDREF(nsSystemPrincipal)
+NSBASEPRINCIPALS_RELEASE(nsSystemPrincipal)
 
 
 ///////////////////////////////////////

@@ -78,6 +78,6 @@ static const nsModuleComponentInfo components[] =
     },
 };
 
-NS_IMPL_NSGETMODULE(nsAccessibilityModule, components);
+NS_IMPL_NSGETMODULE(nsAccessibilityModule, components)
 
 

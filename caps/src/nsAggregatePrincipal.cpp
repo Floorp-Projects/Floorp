@@ -50,8 +50,8 @@ NS_IMPL_CI_INTERFACE_GETTER5(nsAggregatePrincipal, nsIAggregatePrincipal,
                              nsICertificatePrincipal, nsICodebasePrincipal,
                              nsIPrincipal, nsISerializable)
 
-NSBASEPRINCIPALS_ADDREF(nsAggregatePrincipal);
-NSBASEPRINCIPALS_RELEASE(nsAggregatePrincipal);
+NSBASEPRINCIPALS_ADDREF(nsAggregatePrincipal)
+NSBASEPRINCIPALS_RELEASE(nsAggregatePrincipal)
 
 //////////////////////////////////////////////////
 // Methods implementing nsICertificatePrincipal //

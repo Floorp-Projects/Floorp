@@ -55,8 +55,8 @@ NS_IMPL_CI_INTERFACE_GETTER3(nsCertificatePrincipal,
                              nsIPrincipal,
                              nsISerializable)
 
-NSBASEPRINCIPALS_ADDREF(nsCertificatePrincipal);
-NSBASEPRINCIPALS_RELEASE(nsCertificatePrincipal);
+NSBASEPRINCIPALS_ADDREF(nsCertificatePrincipal)
+NSBASEPRINCIPALS_RELEASE(nsCertificatePrincipal)
 
 //////////////////////////////////////////////////
 // Methods implementing nsICertificatePrincipal //

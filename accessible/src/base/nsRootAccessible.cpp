@@ -87,8 +87,8 @@ NS_INTERFACE_MAP_BEGIN(nsRootAccessible)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsIDOMEventListener, nsIDOMFormListener)
 NS_INTERFACE_MAP_END_INHERITING(nsDocAccessible)
 
-NS_IMPL_ADDREF_INHERITED(nsRootAccessible, nsDocAccessible);
-NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsDocAccessible);
+NS_IMPL_ADDREF_INHERITED(nsRootAccessible, nsDocAccessible)
+NS_IMPL_RELEASE_INHERITED(nsRootAccessible, nsDocAccessible)
 
 
 //-----------------------------------------------------
