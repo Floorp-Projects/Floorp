@@ -1777,6 +1777,16 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
       if (collapsedNode != mCachedNode) CacheInlineStyles(collapsedNode);
       // cache now current, use it!  But override it with typeInState results if any...
       PRBool isSet, theSetting;
+      if (aAttribute)
+        mTypeInState->GetTypingState(isSet, theSetting, aProperty, *aAttribute, outValue);
+      else
+        mTypeInState->GetTypingState(isSet, theSetting, aProperty);
+      if (isSet) 
+      {
+        aFirst = aAny = aAll = theSetting;
+        return NS_OK;
+      }
+      /*
       if (aProperty == mBoldAtom.get())
       {
         mTypeInState->GetTypingState(isSet, theSetting, aProperty);
@@ -1815,7 +1825,7 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
           aFirst = aAny = aAll = mCachedUnderlineStyle;
         }
         return NS_OK;
-      }
+      } */
     }
 
     // either non-collapsed selection or no cached value: do it the hard way
@@ -7102,7 +7112,7 @@ nsHTMLEditor::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPtr<
 
 
 ///////////////////////////////////////////////////////////////////////////
-// GetNextHTMLNode: returns the previous editable leaf node, if there is
+// GetNextHTMLNode: returns the next editable leaf node, if there is
 //                   one within the <body>
 //                       
 nsresult
@@ -7236,6 +7246,75 @@ nsHTMLEditor::GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
   }
   
   *aOutLastChild = child;
+  return res;
+}
+
+nsresult 
+nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstLeaf)
+{
+  // check parms
+  if (!aOutFirstLeaf || !aNode) return NS_ERROR_NULL_POINTER;
+  
+  // init out parms
+  *aOutFirstLeaf = nsnull;
+  
+  // find leftmost leaf
+  nsCOMPtr<nsIDOMNode> child;
+  nsresult res = GetLeftmostChild(aNode, getter_AddRefs(child));
+  if (NS_FAILED(res)) return res;
+  
+  while (child && (!IsEditable(child) || !nsHTMLEditUtils::IsLeafNode(child)))
+  {
+    nsCOMPtr<nsIDOMNode> tmp;
+    res = GetNextHTMLNode(child, &tmp);
+    if (NS_FAILED(res)) return res;
+    if (!tmp) return NS_ERROR_FAILURE;
+    
+    // only accept nodes that are descendants of aNode
+    if (nsHTMLEditUtils::IsDescendantOf(tmp, aNode))
+      child = tmp;
+    else
+    {
+      child = nsnull;  // this will abort the loop
+    }
+  }
+  
+  *aOutFirstLeaf = child;
+  return res;
+}
+
+
+nsresult 
+nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf)
+{
+  // check parms
+  if (!aOutLastLeaf || !aNode) return NS_ERROR_NULL_POINTER;
+  
+  // init out parms
+  *aOutLastLeaf = nsnull;
+  
+  // find leftmost leaf
+  nsCOMPtr<nsIDOMNode> child;
+  nsresult res = GetRightmostChild(aNode, getter_AddRefs(child));
+  if (NS_FAILED(res)) return res;
+  
+  while (child && (!IsEditable(child) || !nsHTMLEditUtils::IsLeafNode(child)))
+  {
+    nsCOMPtr<nsIDOMNode> tmp;
+    res = GetPriorHTMLNode(child, &tmp);
+    if (NS_FAILED(res)) return res;
+    if (!tmp) return NS_ERROR_FAILURE;
+    
+    // only accept nodes that are descendants of aNode
+    if (nsHTMLEditUtils::IsDescendantOf(tmp, aNode))
+      child = tmp;
+    else
+    {
+      child = nsnull;
+    }
+  }
+  
+  *aOutLastLeaf = child;
   return res;
 }
 

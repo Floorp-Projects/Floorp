@@ -32,6 +32,7 @@
 #include "nsIAtom.h"
 #include "nsVoidArray.h"
 #include "nsEditor.h"
+#include "nsIContentIterator.h"
 
 /***************************************************************************
  * stack based helper class for batching a collection of txns inside a 
@@ -77,6 +78,9 @@ class nsAutoSelectionReset
     
     /** destructor restores mSel to its former state */
     ~nsAutoSelectionReset();
+
+    /** Abort: cancel selection saver */
+    void Abort();
 };
 
 /***************************************************************************
@@ -139,5 +143,47 @@ class nsAutoTxnsConserveSelection
   PRBool mOldState;
 };
 
+/******************************************************************************
+ * some helper classes for iterating the dom tree
+ *****************************************************************************/
+
+class nsDomIterFunctor 
+{
+  public:
+    virtual void* operator()(nsIDOMNode* aNode)=0;
+};
+
+class nsBoolDomIterFunctor 
+{
+  public:
+    virtual PRBool operator()(nsIDOMNode* aNode)=0;
+};
+
+class nsDOMIterator
+{
+  public:
+    nsDOMIterator();
+    virtual ~nsDOMIterator();
+    
+    nsresult Init(nsIDOMRange* aRange);
+    nsresult Init(nsIDOMNode* aNode);
+    void ForEach(nsDomIterFunctor& functor) const;
+    nsresult MakeList(nsBoolDomIterFunctor& functor,
+                      nsCOMPtr<nsISupportsArray> *outArrayOfNodes) const;
+    nsresult AppendList(nsBoolDomIterFunctor& functor,
+                      nsCOMPtr<nsISupportsArray> arrayOfNodes) const;
+  protected:
+    nsCOMPtr<nsIContentIterator> mIter;
+};
+
+class nsDOMSubtreeIterator : public nsDOMIterator
+{
+  public:
+    nsDOMSubtreeIterator();
+    virtual ~nsDOMSubtreeIterator();
+
+    nsresult Init(nsIDOMRange* aRange);
+    nsresult Init(nsIDOMNode* aNode);
+};
 
 #endif // nsEditorUtils_h__

@@ -42,6 +42,7 @@ nsHTMLEditUtils::IsBody(nsIDOMNode *node)
   {
     nsAutoString tag;
     nsEditor::GetTagString(node,tag);
+    tag.ToLowerCase();
     if (tag.EqualsWithConversion("body"))
     {
       return PR_TRUE;
@@ -573,4 +574,11 @@ nsHTMLEditUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent)
 }
 
 
-
+PRBool 
+nsHTMLEditUtils::IsLeafNode(nsIDOMNode *aNode)
+{
+  if (!aNode) return PR_FALSE;
+  PRBool hasChildren = PR_FALSE;
+  aNode->HasChildNodes(&hasChildren);
+  return !hasChildren;
+}

@@ -57,7 +57,6 @@ public:
   nsresult ClearAllProps();
   nsresult ClearProp(nsIAtom *aProp);
   nsresult ClearProp(nsIAtom *aProp, const nsString &aAttr);
-  nsresult ClearProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
   
   //**************************************************************************
   //    TakeClearProperty: hands back next poroperty item on the clear list.
@@ -78,17 +77,17 @@ public:
   nsresult GetTypingState(PRBool &isSet, PRBool &theSetting, nsIAtom *aProp, 
                           const nsString &aAttr);
   nsresult GetTypingState(PRBool &isSet, PRBool &theSetting, nsIAtom *aProp, 
-                          const nsString &aAttr, const nsString &aValue);
+                          const nsString &aAttr, nsString* outValue);
 
 protected:
 
-  nsresult RemovePropFromSetList(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
-  nsresult RemovePropFromClearedList(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
-  PRBool IsPropSet(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
-  PRBool IsPropSet(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue, PRInt32 &outIndex);
-  PRBool IsPropCleared(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue);
-  PRBool IsPropCleared(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue, PRInt32 &outIndex);
-  PRBool FindPropInList(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue, nsVoidArray &aList, PRInt32 &outIndex);
+  nsresult RemovePropFromSetList(nsIAtom *aProp, const nsString &aAttr);
+  nsresult RemovePropFromClearedList(nsIAtom *aProp, const nsString &aAttr);
+  PRBool IsPropSet(nsIAtom *aProp, const nsString &aAttr, nsString* outValue);
+  PRBool IsPropSet(nsIAtom *aProp, const nsString &aAttr, nsString* outValue, PRInt32 &outIndex);
+  PRBool IsPropCleared(nsIAtom *aProp, const nsString &aAttr);
+  PRBool IsPropCleared(nsIAtom *aProp, const nsString &aAttr, PRInt32 &outIndex);
+  PRBool FindPropInList(nsIAtom *aProp, const nsString &aAttr, nsString *outValue, nsVoidArray &aList, PRInt32 &outIndex);
 
   nsVoidArray mSetArray;
   nsVoidArray mClearedArray;

@@ -332,6 +332,11 @@ public:
   // aSelection is optional -- if null, we get current seletion
   nsresult CollapseSelectionToDeepestNonTableFirstChild(nsIDOMSelection *aSelection, nsIDOMNode *aNode);
 
+  nsresult IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyBlock, 
+                       PRBool aMozBRDoesntCount = PR_FALSE,
+                       PRBool aListOrCellNotEmpty = PR_FALSE,
+                       PRBool aSafeToAskFrames = PR_FALSE);
+
 protected:
 
   NS_IMETHOD  InitRules();
@@ -563,10 +568,8 @@ protected:
   nsresult IsLastEditableChild( nsIDOMNode *aNode, PRBool *aOutIsLast);
   nsresult GetFirstEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstChild);
   nsresult GetLastEditableChild( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastChild);
-  nsresult IsEmptyNode(nsIDOMNode *aNode, PRBool *outIsEmptyBlock, 
-                       PRBool aMozBRDoesntCount = PR_FALSE,
-                       PRBool aListOrCellNotEmpty = PR_FALSE,
-                       PRBool aSafeToAskFrames = PR_FALSE);
+  nsresult GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutFirstLeaf);
+  nsresult GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOutLastLeaf);
 
   nsresult GetDOMEventReceiver(nsIDOMEventReceiver **aEventReceiver);
 
