@@ -2336,16 +2336,27 @@ $dbh->bz_add_field('products', 'votestoconfirm', 'smallint not null');
 
 # 2000-03-21 Adding a table for target milestones to 
 # database - matthew@zeroknowledge.com
-
-$sth = $dbh->prepare("SELECT count(*) from milestones");
-$sth->execute();
-if (!($sth->fetchrow_arrayref()->[0])) {
+# If the milestones table is empty, and we're still back in a Bugzilla
+# that has a bugs.product field, that means that we just created
+# the milestones table and it needs to be populated.
+my $milestones_exist = $dbh->selectrow_array("SELECT 1 FROM milestones");
+if (!$milestones_exist && $dbh->bz_get_field_def('bugs', 'product')) {
     print "Replacing blank milestones...\n";
+
     $dbh->do("UPDATE bugs " .
              "SET target_milestone = '---', delta_ts=delta_ts " .
              "WHERE target_milestone = ' '");
-    
-# Populate the milestone table with all existing values in the database
+
+    # If we are upgrading from 2.8 or earlier, we will have *created*
+    # the milestones table with a product_id field, but Bugzilla expects
+    # it to have a "product" field. So we change the field backward so
+    # other code can run. The change will be reversed later in checksetup.
+    if ($dbh->bz_get_field_def('milestones', 'product_id')) {
+        $dbh->bz_drop_field('milestones', 'product_id');
+        $dbh->bz_add_field('milestones', 'product', 'varchar(64) not null');
+    }
+
+    # Populate the milestone table with all existing values in the database
     $sth = $dbh->prepare("SELECT DISTINCT target_milestone, product FROM bugs");
     $sth->execute();
     
@@ -2985,15 +2996,18 @@ if ($dbh->bz_get_field_def("profiles", "groupset")) {
                        VALUES($uid, $gid, 0, " . GRANT_DIRECT . ")");
             }
         }
-        # Create user can bless group grants for old groupsets.
-        # Get each user with the old blessgroupset bit set
-        $sth2 = $dbh->prepare("SELECT userid FROM profiles
-                   WHERE (blessgroupset & $bit) != 0");
-        $sth2->execute();
-        while (my ($uid) = $sth2->fetchrow_array) {
-            $dbh->do("INSERT INTO user_group_map
-                   (user_id, group_id, isbless, grant_type)
-                   VALUES($uid, $gid, 1, " . GRANT_DIRECT . ")");
+        # Create user can bless group grants for old groupsets, but only
+        # if we're upgrading from a Bugzilla that had blessing.
+        if($dbh->bz_get_field_def('profiles', 'blessgroupset')) {
+            # Get each user with the old blessgroupset bit set
+            $sth2 = $dbh->prepare("SELECT userid FROM profiles
+                       WHERE (blessgroupset & $bit) != 0");
+            $sth2->execute();
+            while (my ($uid) = $sth2->fetchrow_array) {
+                $dbh->do("INSERT INTO user_group_map
+                       (user_id, group_id, isbless, grant_type)
+                       VALUES($uid, $gid, 1, " . GRANT_DIRECT . ")");
+            }
         }
         # Create bug_group_map records for old groupsets.
         # Get each bug with the old group bit set.
