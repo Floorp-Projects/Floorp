@@ -171,10 +171,6 @@ static int APP_DEBUG = 0; // Set to 1 in debugger to turn on debugging.
 #define PREF_BROWSER_STARTUP_PAGE "browser.startup.page"
 #define PREF_BROWSER_STARTUP_HOMEPAGE "browser.startup.homepage"
 
-static nsresult
-FindNamedXULElement(nsIDocShell * aShell, const char *aId, nsCOMPtr<nsIDOMElement> * aResult );
-
-
 //*****************************************************************************
 //***    PageCycler: Object Management
 //*****************************************************************************
@@ -236,8 +232,7 @@ public:
 
     NS_WITH_SERVICE(nsIObserverService, obsServ, NS_OBSERVERSERVICE_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
-    nsString topic; topic.AssignWithConversion("EndDocumentLoad");
-    rv = obsServ->AddObserver(this, topic.GetUnicode());
+    rv = obsServ->AddObserver(this, NS_LITERAL_STRING("EndDocumentLoad").get());
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add self to observer service");
     return rv; 
   }
@@ -325,8 +320,7 @@ public:
         }
 
         if (NS_FAILED(rv)) {
-          printf("######### PageCycler couldn't asynchronously load: %s\n",
-                 NS_STATIC_CAST(const char*, NS_ConvertUCS2toUTF8(mLastRequest)));
+          printf("######### PageCycler couldn't asynchronously load: %s\n", NS_ConvertUCS2toUTF8(mLastRequest).get());
         }
       }
     }
@@ -346,8 +340,7 @@ public:
 
     // load the URL
     const PRUnichar* url = self->mLastRequest.GetUnicode();
-    printf("########## PageCycler starting: %s\n",
-           NS_STATIC_CAST(const char*, NS_ConvertUCS2toUTF8(url)));
+    printf("########## PageCycler starting: %s\n", NS_ConvertUCS2toUTF8(url).get());
 
     self->mAppCore->LoadUrl(url);
 
@@ -431,6 +424,7 @@ void TimesUp(nsITimer *aTimer, void *aClosure)
 #endif //ENABLE_PAGE_CYCLER
 
 PRUint32 nsBrowserInstance::gRefCnt = 0;
+PRBool nsBrowserInstance::sCmdLineURLUsed = PR_FALSE;
 int PR_CALLBACK ButtonShowHideCallback(const char* aPref, void* aClosure);
 static const char kShowToolbarElts[] = "browser.toolbars.showbutton";
 
@@ -440,13 +434,10 @@ static const char kShowToolbarElts[] = "browser.toolbars.showbutton";
 
 nsBrowserInstance::nsBrowserInstance() : mIsClosed(PR_FALSE)
 {
-  mContentWindowWeak    = nsnull;
-  mContentScriptContext = nsnull;
   mWebShellWin          = nsnull;
   mDocShell             = nsnull;
   mDOMWindow            = nsnull;
   mContentAreaDocShellWeak  = nsnull;
-  mContentAreaDocLoaderWeak = nsnull;
   NS_INIT_REFCNT();
   gRefCnt++;
   if (gRefCnt == 1) {
@@ -476,23 +467,78 @@ nsBrowserInstance::~nsBrowserInstance()
 void
 nsBrowserInstance::ReinitializeContentVariables()
 {
-  nsCOMPtr<nsIDOMWindowInternal> content;
-  mDOMWindow->Get_content(getter_AddRefs(content));
-  SetContentWindow(content);
+  nsresult rv;
+
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  mDOMWindow->Get_content(getter_AddRefs(contentWindow));
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
+
+  if (globalObj) {
+    nsCOMPtr<nsIDocShell> docShell;
+    globalObj->GetDocShell(getter_AddRefs(docShell));
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+
+    if (webShell) {
+      mContentAreaDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell)); // Weak reference
+
+      // Add a WebProgressListener to receive start/stop document notifications
+      nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
+      webProgress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
+
+      nsCOMPtr<nsISHistory> sessionHistory;
+      if (mSessionHistory) {
+        /* There is already a Session History for this browser 
+         * component. Maybe the theme changed and we got called
+         * to reinitialize the window, docloader, docshell etc...
+         * Use the existing session History
+         */
+        sessionHistory = mSessionHistory;
+      }
+      else {
+        sessionHistory = do_CreateInstance(NS_SHISTORY_CONTRACTID, &rv);
+        mSessionHistory = sessionHistory;
+        if (!mSessionHistory) {
+          if (APP_DEBUG) printf("#### Error initialising Session History ####\n");
+        }
+      }
+
+      if (sessionHistory) {
+        nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
+        if (webNav)
+           webNav->SetSessionHistory(sessionHistory);
+      }
+
+      nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(docShell));
+      nsCOMPtr<nsIGlobalHistory> history(do_GetService(kCGlobalHistoryCID));
+      if (dsHistory)
+        dsHistory->SetGlobalHistory(history);
+
+      if (APP_DEBUG) {
+        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+        nsXPIDLString name;
+        docShellAsItem->GetName(getter_Copies(name));
+        nsCAutoString str;
+        str.AssignWithConversion(name);
+        printf("Attaching to Content WebShell [%s]\n", str.get());
+      }
+
+      nsCOMPtr<nsIUrlbarHistory> ubHistory = do_GetService(NS_URLBARHISTORY_CONTRACTID, &rv);
+
+      if (ubHistory)
+        mUrlbarHistory = ubHistory;
+    }
+  }
 
   /* reinitialize the security module */
-  nsresult rv;
-  nsCOMPtr<nsSecureBrowserUI> security =
-     do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
+  nsCOMPtr<nsSecureBrowserUI> security = do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
   if (NS_SUCCEEDED(rv) && security) {
     nsCOMPtr<nsIDOMDocument> doc;
     rv = mDOMWindow->GetDocument(getter_AddRefs(doc));
     if (NS_SUCCEEDED(rv) && doc) {
       nsCOMPtr<nsIDOMElement> button;
-      rv = doc->GetElementById(NS_LITERAL_STRING("security-button"),
-                               getter_AddRefs(button));
+      rv = doc->GetElementById(NS_LITERAL_STRING("security-button"), getter_AddRefs(button));
       if (NS_SUCCEEDED(rv)) {
-        security->Init(content,button);
+        security->Init(contentWindow, button);
       }
     }
   }
@@ -523,11 +569,9 @@ nsresult nsBrowserInstance::GetContentAreaDocShell(nsIDocShell** outDocShell)
 
 nsresult nsBrowserInstance::GetContentWindow(nsIDOMWindowInternal** outDOMWindow)
 {
-  nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryReferent(mContentWindowWeak));
-  if (!domWindow)
-    ReinitializeContentVariables();
-  domWindow = do_QueryReferent(mContentWindowWeak);
-  NS_IF_ADDREF(*outDOMWindow = domWindow);
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  mDOMWindow->Get_content(getter_AddRefs(contentWindow));
+  NS_IF_ADDREF(*outDOMWindow = contentWindow);
   return NS_OK;
 }
 
@@ -566,16 +610,6 @@ nsresult nsBrowserInstance::GetFocussedContentWindow(nsIDOMWindowInternal** outF
 }
 
 
-nsresult nsBrowserInstance::GetContentAreaDocLoader(nsIDocumentLoader** outDocLoader)
-{
-  nsCOMPtr<nsIDocumentLoader> docLoader(do_QueryReferent(mContentAreaDocLoaderWeak));
-  if (!docLoader)
-    ReinitializeContentVariables();
-  docLoader = do_QueryReferent(mContentAreaDocLoaderWeak);
-  NS_IF_ADDREF(*outDocLoader = docLoader);
-  return NS_OK;
-}
-
 //*****************************************************************************
 //    nsBrowserInstance: nsISupports
 //*****************************************************************************
@@ -613,13 +647,30 @@ nsBrowserInstance::LoadUrl(const PRUnichar * urlToLoad)
 }
 
 NS_IMETHODIMP    
-nsBrowserInstance::LoadInitialPage(void)
+nsBrowserInstance::SetCmdLineURLUsed(PRBool aCmdLineURLUsed)
 {
-  static PRBool cmdLineURLUsed = PR_FALSE;
-  char * urlstr = nsnull;
+  sCmdLineURLUsed = aCmdLineURLUsed;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserInstance::GetCmdLineURLUsed(PRBool* aCmdLineURLUsed)
+{
+  NS_ASSERTION(aCmdLineURLUsed, "aCmdLineURLUsed can't be null");
+  if (!aCmdLineURLUsed)
+    return NS_ERROR_NULL_POINTER;
+
+  *aCmdLineURLUsed = sCmdLineURLUsed;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsBrowserInstance::StartPageCycler(PRBool* aIsPageCycling)
+{
   nsresult rv;
 
-  if (!cmdLineURLUsed) {
+  *aIsPageCycling = PR_FALSE;
+  if (!sCmdLineURLUsed) {
     NS_WITH_SERVICE(nsICmdLineService, cmdLineArgs, kCmdLineServiceCID, &rv);
     if (NS_FAILED(rv)) {
       if (APP_DEBUG) fprintf(stderr, "Could not obtain CmdLine processing service\n");
@@ -629,9 +680,11 @@ nsBrowserInstance::LoadInitialPage(void)
 #ifdef ENABLE_PAGE_CYCLER
     // First, check if there's a URL file to load (for testing), and if there 
     // is, process it instead of anything else.
+    nsAutoString urlstr;
     nsXPIDLCString file;
     rv = cmdLineArgs->GetCmdLineValue("-f", getter_Copies(file));
     if (NS_SUCCEEDED(rv) && (const char*)file) {
+
       // see if we have a timeout value corresponding to the url-file
       nsXPIDLCString timeoutVal;
       rv = cmdLineArgs->GetCmdLineValue("-ftimeout", getter_Copies(timeoutVal));
@@ -647,84 +700,21 @@ nsBrowserInstance::LoadInitialPage(void)
       rv = bb->Init(file);
       if (NS_FAILED(rv)) return rv;
 
-      nsAutoString str;
-      rv = bb->GetNextURL(str);
-      if (NS_SUCCEEDED(rv)) {
-        urlstr = str.ToNewCString();
-      }
+      rv = bb->GetNextURL(urlstr);
       NS_RELEASE(bb);
-    }
-    else 
-#endif //ENABLE_PAGE_CYCLER
-    {
-      nsCOMPtr<nsIDocShell> docShell;
-      GetContentAreaDocShell(getter_AddRefs(docShell));
 
-      // Examine content URL.
-      if (docShell) {
-        nsCOMPtr<nsIURI> uri;
-        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(docShell);
-        rv = webNav->GetCurrentURI(getter_AddRefs(uri));
-        nsXPIDLCString spec;
-        if (uri)
-          rv = uri->GetSpec(getter_Copies(spec));
-        /* Check whether url is valid. Otherwise we compare with 
-           * "about:blank" and there by return from here with out 
-           * loading the command line url or default home page.
-           */
-        if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp(spec, "about:blank") != 0) {
-            // Something has already been loaded (probably via window.open),
-            // leave it be.
-            return NS_OK;
-        }
-      }
-
-      // Get the URL to load
-      rv = cmdLineArgs->GetURLToLoad(&urlstr);
+      *aIsPageCycling = PR_TRUE;
     }
 
-    if (urlstr != nsnull) {
+    if (!urlstr.IsEmpty()) {
       // A url was provided. Load it
-      if (APP_DEBUG) printf("Got Command line URL to load %s\n", urlstr);
-      nsString url; url.AssignWithConversion( urlstr );
-      nsMemory::Free(urlstr); urlstr = nsnull;
-      rv = LoadUrl( url.GetUnicode() );
-      cmdLineURLUsed = PR_TRUE;
+      if (APP_DEBUG) printf("Got Command line URL to load %s\n", NS_ConvertUCS2toUTF8(urlstr).get());
+      rv = LoadUrl( urlstr.GetUnicode() );
+      sCmdLineURLUsed = PR_TRUE;
       return rv;
     }
+#endif //ENABLE_PAGE_CYCLER
   }
-
-  // No URL was provided in the command line. Load the default provided
-  // in the navigator.xul;
-
-  // but first, abort if the window doesn't want a default page loaded
-  if (mWebShellWin) {
-    PRBool loadDefault;
-    mWebShellWin->ShouldLoadDefaultPage(&loadDefault);
-    if (!loadDefault)
-      return NS_OK;
-  }
-
-  nsCOMPtr<nsIDOMElement>    argsElement;
-
-  rv = FindNamedXULElement(mDocShell, "args", address_of(argsElement));
-  if (!argsElement) {
-    // Couldn't get the "args" element from the xul file. Load a blank page
-    if (APP_DEBUG) printf("Couldn't find args element\n");
-    nsAutoString url; url.AssignWithConversion("about:blank");
-    rv = LoadUrl( url.GetUnicode() );
-    return rv;
-  }
-
-  // Load the default page mentioned in the xul file.
-  nsString value;
-  argsElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), value);
-  if (value.Length()) {
-    rv = LoadUrl(value.GetUnicode());
-    return rv;
-  }
-
-  if (APP_DEBUG) printf("Quitting LoadInitialPage\n");
   return NS_OK;
 }
 
@@ -741,92 +731,6 @@ nsBrowserInstance::Init()
 
 
   return rv;
-}
-
-NS_IMETHODIMP    
-nsBrowserInstance::SetContentWindow(nsIDOMWindowInternal* aWin)
-{
-  NS_PRECONDITION(aWin != nsnull, "null ptr");
-  if (! aWin)
-    return NS_ERROR_NULL_POINTER;
-
-  mContentWindowWeak = getter_AddRefs(NS_GetWeakReference(aWin));
-
-  // NS_ADDREF(aWin); WE DO NOT OWN THIS
-  nsresult rv;
-
-  // we do not own the script context, so don't addref it
-  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(aWin));
-  if(!globalObj)
-   return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIScriptContext>  scriptContext;
-  globalObj->GetContext(getter_AddRefs(scriptContext));
-  mContentScriptContext = scriptContext;
-
-  nsCOMPtr<nsIDocShell> docShell;
-  globalObj->GetDocShell(getter_AddRefs(docShell));
-  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
-  if (webShell) {
-    mContentAreaDocShellWeak = getter_AddRefs(NS_GetWeakReference(docShell)); // Weak reference
-
-    // Add a WebProgressListener to receive start/stop document notifications
-    nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
-    webProgress->AddProgressListener(NS_STATIC_CAST(nsIWebProgressListener*, this));
-
-    nsCOMPtr<nsISHistory> sessionHistory;
-    if (mSessionHistory) {
-  	  /* There is already a Session History for this browser 
-  	   * component. Maybe the theme changed and we got called
-  	   * to reinitialize the window, docloader, docshell etc...
-  	   * Use the existing session History
-  	   */
-  	  sessionHistory = mSessionHistory;
-    }
-    else {
-      sessionHistory = (do_CreateInstance(NS_SHISTORY_CONTRACTID, &rv));
-      mSessionHistory = sessionHistory;
-      if (!mSessionHistory) {
-  	    if (APP_DEBUG) printf("#### Error initialising Session History ####\n");
-        return NS_FAILED(rv) ? rv : NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
-    if (webNav)
-       webNav->SetSessionHistory(sessionHistory);
-
-    nsCOMPtr<nsIDocShell> docShell;
-    GetContentAreaDocShell(getter_AddRefs(docShell));
-
-    nsCOMPtr<nsIDocShellHistory> dsHistory(do_QueryInterface(docShell));
-    nsCOMPtr<nsIGlobalHistory> history(do_GetService(kCGlobalHistoryCID));
-    if (dsHistory)
-   	  dsHistory->SetGlobalHistory(history);
-
-    // Cache the Document Loader for the content area webshell.  This is a 
-    // weak reference that is *not* reference counted...
-    nsCOMPtr<nsIDocumentLoader> docLoader;
-
-    webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
-    mContentAreaDocLoaderWeak = getter_AddRefs(NS_GetWeakReference(docLoader.get()));
-
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
-    nsXPIDLString name;
-    docShellAsItem->GetName(getter_Copies(name));
-    nsCAutoString str;
-    str.AssignWithConversion(name);
-
-    if (APP_DEBUG) {
-      printf("Attaching to Content WebShell [%s]\n", (const char *)str);
-    }
-    nsCOMPtr<nsIUrlbarHistory>  ubHistory = do_GetService(NS_URLBARHISTORY_CONTRACTID, &rv);
-	
-	  NS_ENSURE_TRUE(ubHistory, NS_ERROR_FAILURE);
-	  mUrlbarHistory = ubHistory;
-  }
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -859,8 +763,8 @@ nsBrowserInstance::GetUrlbarHistory(nsIUrlbarHistory** aUrlbarHistory)
 NS_IMETHODIMP    
 nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
 {
-   NS_ENSURE_ARG(aWin);
-   mDOMWindow = aWin;
+  NS_ENSURE_ARG(aWin);
+  mDOMWindow = aWin;
 
   nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
   if (!globalObj) {
@@ -875,28 +779,27 @@ nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
     // inform our top level webshell that we are its parent URI content listener...
     docShell->SetParentURIContentListener(this);
 
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
-    nsXPIDLString name;
-    docShellAsItem->GetName(getter_Copies(name));
-    nsCAutoString str;
-    str.AssignWithConversion(name);
-
     if (APP_DEBUG) {
-      printf("Attaching to WebShellWindow[%s]\n", (const char *)str);
+      nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+      nsXPIDLString name;
+      docShellAsItem->GetName(getter_Copies(name));
+      nsCAutoString str;
+      str.AssignWithConversion(name);
+      printf("Attaching to WebShellWindow[%s]\n", str.get());
     }
 
     nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
     nsCOMPtr<nsIWebShellContainer> webShellContainer;
     webShell->GetContainer(*getter_AddRefs(webShellContainer));
-    if (nsnull != webShellContainer)
-    {
+    if (webShellContainer) {
       nsCOMPtr<nsIWebShellWindow> webShellWin;
       if (NS_OK == webShellContainer->QueryInterface(NS_GET_IID(nsIWebShellWindow), getter_AddRefs(webShellWin)))
-      {
         mWebShellWin = webShellWin;   // WE DO NOT OWN THIS
-      }
     }
   }
+
+  ReinitializeContentVariables();
+
   return NS_OK;
 }
 
@@ -1195,15 +1098,10 @@ nsresult nsBrowserInstance::StartDocumentLoad(nsIDOMWindow *aDOMWindow,
   NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  nsAutoString kStartDocumentLoad;
-  kStartDocumentLoad.AssignWithConversion("StartDocumentLoad");
+  rv = observer->Notify(contentWindow, NS_LITERAL_STRING("StartDocumentLoad").get(), urlStr.GetUnicode());
 
-  rv = observer->Notify(contentWindow,
-                        kStartDocumentLoad.GetUnicode(),
-                        urlStr.GetUnicode());
-
-    // XXX Ignore rv for now. They are using nsIEnumerator instead of
-    // nsISimpleEnumerator.
+  // XXX Ignore rv for now. They are using nsIEnumerator instead of
+  // nsISimpleEnumerator.
 
   return NS_OK;
 }
@@ -1234,7 +1132,6 @@ nsresult nsBrowserInstance::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
          (const char *)urlCString, PR_IntervalToMilliseconds(diff) / 1000.0);
 #endif
 
-
   //
   // If this document notification is for a frame then ignore it...
   //
@@ -1249,20 +1146,34 @@ nsresult nsBrowserInstance::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
     }
   }
 
+  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+  rv = GetContentWindow(getter_AddRefs(contentWindow));
+  if (NS_FAILED(rv)) return rv;
+
   //
   // XXX: The DocLoader should never be busy at this point!!  
   //
-#if 1
-  nsCOMPtr<nsIDocumentLoader> docLoader;
-  GetContentAreaDocLoader(getter_AddRefs(docLoader));
- 
-  if (docLoader) {
-    PRBool isBusy = PR_FALSE;
+#ifdef DEBUG
+  nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
 
-    docLoader->IsBusy(&isBusy);
-    if (isBusy) {
-      NS_ASSERTION(0, "The DocLoader is still busy... There is a bug in End Document notifications\n");
-      return NS_OK;
+  if (globalObj) {
+    nsCOMPtr<nsIDocShell> docShell;
+    globalObj->GetDocShell(getter_AddRefs(docShell));
+    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(docShell));
+
+    if (webShell) {
+      nsCOMPtr<nsIDocumentLoader> docLoader;
+      webShell->GetDocumentLoader(*getter_AddRefs(docLoader));
+
+      if (docLoader) {
+        PRBool isBusy = PR_FALSE;
+        docLoader->IsBusy(&isBusy);
+
+        if (isBusy) {
+          NS_ASSERTION(0, "The DocLoader is still busy... There is a bug in End Document notifications\n");
+          return NS_OK;
+        }
+      }
     }
   }
 #endif 
@@ -1270,24 +1181,15 @@ nsresult nsBrowserInstance::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
   /* If this is a frame, don't do any of the Global History
    * & observer thingy 
    */
-  nsAutoString urlStr;
-  nsAutoString notifyString;
-  nsCOMPtr<nsIDOMWindowInternal> contentWindow;
-
-  urlStr.AssignWithConversion(urlCString);
-  notifyString.AssignWithConversion( NS_SUCCEEDED(aStatus) ? "EndDocumentLoad"
-                                                           : "FailDocumentLoad" );
-  // Notify observers that a document load has started in the
-  // content window.
-  rv = GetContentWindow(getter_AddRefs(contentWindow));
-  if (NS_FAILED(rv)) return rv;
-
   NS_WITH_SERVICE(nsIObserverService, observer, NS_OBSERVERSERVICE_CONTRACTID, &rv);
   if (NS_FAILED(rv)) return rv;
 
+  // Notify observers that a document load has started in the
+  // content window.
   rv = observer->Notify(contentWindow,
-                        notifyString.GetUnicode(),
-                        urlStr.GetUnicode());
+                        NS_SUCCEEDED(aStatus) ? NS_LITERAL_STRING("EndDocumentLoad").get()
+                                              : NS_LITERAL_STRING("FailDocumentLoad").get(),
+                        NS_ConvertASCIItoUCS2(urlCString).get());
 
   // XXX Ignore rv for now. They are using nsIEnumerator instead of
   // nsISimpleEnumerator.
@@ -1297,17 +1199,20 @@ nsresult nsBrowserInstance::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
   if (NS_SUCCEEDED(aStatus)) {
     // Remember post data for http channels.
     nsCOMPtr<nsIHTTPChannel> httpChannel(do_QueryInterface(aChannel));
-    if (httpChannel) {
+    if (httpChannel)
       httpChannel->GetUploadStream(getter_AddRefs(postData));
-    }
-    fprintf(stdout, "Document %s loaded successfully\n",
-            (const char*)urlCString);
+  }
+
+#ifdef DEBUG
+  if (NS_SUCCEEDED(aStatus)) {
+    fprintf(stdout, "Document %s loaded successfully\n", urlCString.get());
     fflush(stdout);
   } else {
-    fprintf(stdout, "Error loading URL %s: %0x \n", 
-            (const char*)urlCString, aStatus);
+    fprintf(stdout, "Error loading URL %s: %0x \n", urlCString.get(), aStatus);
     fflush(stdout);
   }
+#endif
+
   SetPostData(postData);
 
   return NS_OK;
@@ -1577,8 +1482,7 @@ nsBrowserInstance::EnsureXULBrowserWindow()
    NS_ENSURE_TRUE(piDOMWindow, NS_ERROR_FAILURE);
 
    nsCOMPtr<nsISupports> xpConnectObj;
-   nsAutoString xulBrowserWinId; xulBrowserWinId.AssignWithConversion("XULBrowserWindow");
-   piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+   piDOMWindow->GetObjectProperty(NS_LITERAL_STRING("XULBrowserWindow").get(), getter_AddRefs(xpConnectObj));
    mXULBrowserWindow = do_QueryInterface(xpConnectObj);
 
    if(mXULBrowserWindow)
@@ -1586,53 +1490,6 @@ nsBrowserInstance::EnsureXULBrowserWindow()
 
    return NS_ERROR_FAILURE;
 }
-
-static nsresult
-FindNamedXULElement(nsIDocShell * aShell,
-                              const char *aId,
-                              nsCOMPtr<nsIDOMElement> * aResult ) {
-    nsresult rv = NS_OK;
-
-    nsCOMPtr<nsIContentViewer> cv;
-    rv = aShell ? aShell->GetContentViewer(getter_AddRefs(cv))
-               : NS_ERROR_NULL_POINTER;
-    if ( cv ) {
-        // Up-cast.
-        nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(cv));
-        if ( docv ) {
-            // Get the document from the doc viewer.
-            nsCOMPtr<nsIDocument> doc;
-            rv = docv->GetDocument(*getter_AddRefs(doc));
-            if ( doc ) {
-                // Up-cast.
-
-                nsCOMPtr<nsIDOMXULDocument> xulDoc( do_QueryInterface(doc) );
-                  if ( xulDoc ) {
-                    // Find specified element.
-                    nsCOMPtr<nsIDOMElement> elem;
-
-                    rv = xulDoc->GetElementById( NS_ConvertASCIItoUCS2(aId), getter_AddRefs(elem) );
-                    if ( elem ) {
-      *aResult =  elem;
-                    } else {
-                       if (APP_DEBUG) printf("GetElementByID failed, rv=0x%X\n",(int)rv);
-                    }
-                } else {
-                  if (APP_DEBUG)   printf("Upcast to nsIDOMXULDocument failed\n");
-                }
-
-            } else {
-               if (APP_DEBUG)  printf("GetDocument failed, rv=0x%X\n",(int)rv);
-            }
-        } else {
-             if (APP_DEBUG)  printf("Upcast to nsIDocumentViewer failed\n");
-        }
-    } else {
-       if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
-    }
-    return rv;
-}
-
 
 ////////////////////////////////////////////////////////////////////////
 // browserCntHandler is a content handler component that registers
@@ -1703,91 +1560,88 @@ NS_IMETHODIMP nsBrowserContentHandler::GetChromeUrlForTask(char **aChromeUrlForT
   return NS_OK;
 }
 
-NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs) 
-{ 
-    if (!aDefaultArgs) return NS_ERROR_FAILURE; 
+NS_IMETHODIMP nsBrowserContentHandler::GetDefaultArgs(PRUnichar **aDefaultArgs)
+{
+  if (!aDefaultArgs)
+    return NS_ERROR_NULL_POINTER;
 
-    nsString args;
+  nsresult rv;
+  static PRBool timebombChecked = PR_FALSE;
+  nsAutoString args;
 
-    nsresult rv;
-    nsXPIDLString url;
-    static PRBool timebombChecked = PR_FALSE;
+  if (!timebombChecked) {
+    // timebomb check
+    timebombChecked = PR_TRUE;
 
-    if (timebombChecked == PR_FALSE)
-    {
-        // timebomb check
-        timebombChecked = PR_TRUE;
-        
-        PRBool expired;
-        NS_WITH_SERVICE(nsITimeBomb, timeBomb, kTimeBombCID, &rv);
-        if ( NS_FAILED(rv) ) return rv; 
+    PRBool expired;
+    nsCOMPtr<nsITimeBomb> timeBomb(do_GetService(kTimeBombCID, &rv));
+    if (NS_FAILED(rv)) return rv;
 
-        rv = timeBomb->Init();
-        if ( NS_FAILED(rv) ) return rv; 
+    rv = timeBomb->Init();
+    if (NS_FAILED(rv)) return rv;
 
-        rv = timeBomb->CheckWithUI(&expired);
-        if ( NS_FAILED(rv) ) return rv; 
+    rv = timeBomb->CheckWithUI(&expired);
+    if (NS_FAILED(rv)) return rv;
 
-        if ( expired ) 
-        {
-            char* urlString;
-            rv = timeBomb->GetTimebombURL(&urlString);
-            if ( NS_FAILED(rv) ) return rv;
+    if (expired) {
+      nsXPIDLCString urlString;
+      rv = timeBomb->GetTimebombURL(getter_Copies(urlString));
+      if (NS_FAILED(rv)) return rv;
 
-            *aDefaultArgs =  nsXPIDLString::Copy(url);
-            nsMemory::Free(urlString);
-            return rv;
-        }
+      args.AssignWithConversion(urlString);
     }
+  }
 
-    /* the default, in case we fail somewhere */
-    args.AssignWithConversion("about:blank");
-
+  if (args.IsEmpty()) {
     nsCOMPtr<nsIPref> prefs(do_GetService(kCPrefServiceCID));
     if (!prefs) return NS_ERROR_FAILURE;
-
-    nsCOMPtr<nsIGlobalHistory> history(do_GetService(kCGlobalHistoryCID));
 
     PRBool override = PR_FALSE;
     rv = prefs->GetBoolPref(PREF_HOMEPAGE_OVERRIDE, &override);
     if (NS_SUCCEEDED(rv) && override) {
-        rv = prefs->GetLocalizedUnicharPref(PREF_HOMEPAGE_OVERRIDE_URL, getter_Copies(url));
-        if (NS_SUCCEEDED(rv) && (const PRUnichar *)url) {
-            rv = prefs->SetBoolPref(PREF_HOMEPAGE_OVERRIDE, PR_FALSE);
-        }
+      nsXPIDLString url;
+      rv = prefs->GetLocalizedUnicharPref(PREF_HOMEPAGE_OVERRIDE_URL, getter_Copies(url));
+      if (NS_SUCCEEDED(rv) && (const PRUnichar *)url) {
+        rv = prefs->SetBoolPref(PREF_HOMEPAGE_OVERRIDE, PR_FALSE);
+        args = url;
+      }
     }
-    
-    nsAutoString tmp(url);
-    if (!url || !tmp.Length()) {
-        PRInt32 choice = 0;
-        rv = prefs->GetIntPref(PREF_BROWSER_STARTUP_PAGE, &choice);
-        if (NS_SUCCEEDED(rv)) {
-            switch (choice) {
-                case 1:
-                    rv = prefs->GetLocalizedUnicharPref(PREF_BROWSER_STARTUP_HOMEPAGE, getter_Copies(url));
-                    tmp = url;
-                    break;
-                case 2:
-                    if (history) {
-                        nsXPIDLCString curl;
-                        rv = history->GetLastPageVisited(getter_Copies(curl));
-                        tmp = NS_ConvertUTF8toUCS2((const char *)curl);
-                    }
-                    break;
-                case 0:
-                default:
-                    args.AssignWithConversion("about:blank");
-                    break;
+
+    if (args.IsEmpty()) {
+      PRInt32 choice = 0;
+      rv = prefs->GetIntPref(PREF_BROWSER_STARTUP_PAGE, &choice);
+      if (NS_SUCCEEDED(rv)) {
+        switch (choice) {
+          case 1: {
+            nsXPIDLString url;
+            rv = prefs->GetLocalizedUnicharPref(PREF_BROWSER_STARTUP_HOMEPAGE, getter_Copies(url));
+            args = url;
+            break;
+          }
+          case 2: {
+            nsCOMPtr<nsIGlobalHistory> history(do_GetService(kCGlobalHistoryCID));
+            if (history) {
+              nsXPIDLCString curl;
+              rv = history->GetLastPageVisited(getter_Copies(curl));
+              args.AssignWithConversion(curl);
             }
+            break;
+          }
+          case 0:
+          default:
+            // fall through to about:blank below
+            break;
         }
-    }
+      }
 
-    if (NS_SUCCEEDED(rv) && tmp.Length()) {              
-        args = tmp;
+      // the default, in case we fail somewhere
+      if (args.IsEmpty())
+        args.Assign(NS_LITERAL_STRING("about:blank"));
     }
+  }
 
-    *aDefaultArgs = args.ToNewUnicode(); 
-    return NS_OK;
+  *aDefaultArgs = args.ToNewUnicode();
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsBrowserContentHandler::HandleContent(const char * aContentType,

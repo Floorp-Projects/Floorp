@@ -33,11 +33,11 @@ interface nsIInputStream;
 interface nsIBrowserInstance : nsISupports {
 
     void loadUrl(in wstring url);
-    void loadInitialPage();
+    boolean startPageCycler();
+    attribute boolean cmdLineURLUsed;
     
     // Infrastructure.
     void init();
-    void setContentWindow( in nsIDOMWindowInternal aWindow );
 	 void getContentDocShell(out nsIDocShell aDocShell);
     void setWebShellWindow( in nsIDOMWindowInternal aWindow );
     void SetDocumentCharset(in wstring charset);
