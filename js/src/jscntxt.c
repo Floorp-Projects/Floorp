@@ -139,6 +139,8 @@ js_NewContext(JSRuntime *rt, size_t stackChunkSize)
         if (ok)
             ok = js_InitRuntimeNumberState(cx);
         if (ok)
+            ok = js_InitRuntimeScriptState(cx);
+        if (ok)
             ok = js_InitRuntimeStringState(cx);
         if (!ok) {
             js_DestroyContext(cx, JS_NO_GC);
@@ -193,6 +195,7 @@ js_DestroyContext(JSContext *cx, JSGCMode gcmode)
 
         /* Unlock and clear GC things held by runtime pointers. */
         js_FinishRuntimeNumberState(cx);
+        js_FinishRuntimeScriptState(cx);
         js_FinishRuntimeStringState(cx);
 
         /* Clear debugging state to remove GC roots. */
