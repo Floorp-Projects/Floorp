@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: nss.h,v 1.27 2003/04/08 00:29:54 wtc%netscape.com Exp $
+ * $Id: nss.h,v 1.28 2003/05/30 17:25:12 kirk.erickson%sun.com Exp $
  */
 
 #ifndef __nss_h_
@@ -121,6 +121,12 @@ extern SECStatus NSS_InitReadWrite(const char *configdir);
 #define NSS_INIT_FORCEOPEN	0x8
 #define NSS_INIT_NOROOTINIT     0x10
 #define NSS_INIT_OPTIMIZESPACE  0x20
+
+#ifdef macintosh
+#define SECMOD_DB "Security Modules"
+#else
+#define SECMOD_DB "secmod.db"
+#endif
 
 extern SECStatus NSS_Initialize(const char *configdir, 
 	const char *certPrefix, const char *keyPrefix, 

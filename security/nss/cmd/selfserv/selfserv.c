@@ -1638,7 +1638,7 @@ main(int argc, char **argv)
     PK11_SetPasswordFunc( passwd ? ownPasswd : SECU_GetModulePassword);
 
     /* Call the libsec initialization routines */
-    rv = NSS_Init(dir);
+    rv = NSS_Initialize(dir, "", "", SECMOD_DB, NSS_INIT_READONLY);
     if (rv != SECSuccess) {
     	fputs("NSS_Init failed.\n", stderr);
 		exit(8);
