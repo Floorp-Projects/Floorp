@@ -146,6 +146,9 @@ map_os32()
         OSF1)
             MAPPED_OS=OSF1V4.0
             ;;
+        Darwin)
+            MAPPED_OS=Darwin6.5
+            ;;	
         AIX)
             MAPPED_OS=AIX4.3
             ;;
