@@ -47,13 +47,13 @@ Collector::~Collector()
 }
 
 void
-Collector::addRoot(void* root, size_type n)
+Collector::addRoot(pointer* root, size_type n)
 {
-    mRoots.push_back(RootSegment(pointer(root), n));
+    mRoots.push_back(RootSegment(root, n));
 }
 
 void
-Collector::removeRoot(void* root)
+Collector::removeRoot(pointer* root)
 {
     for (RootSegments::iterator i = mRoots.begin(), e = mRoots.end(); i != e; ++i) {
         if (i->first == root) {
@@ -118,8 +118,8 @@ Collector::collect()
     for (RootSegments::iterator i = mRoots.begin(), e = mRoots.end(); i != e; ++i) {
         RootSegment& r = *i;
         
-        pointer* refs = (pointer*) r.first;
-        pointer* limit = (pointer*) (r.first + r.second);
+        pointer* refs = r.first;
+        pointer* limit = r.first + r.second;
         while (refs < limit) {
             pointer& ref = *refs++;
             if (ref) {
@@ -200,7 +200,7 @@ void testCollector()
     Collector gc;
     
     ConsCell* head = 0;
-    gc.addRoot(&head, sizeof(ConsCell*));
+    gc.addRoot(reinterpret_cast<Collector::pointer*>(&head));
     
     const uint32 kCellCount = 100;
     

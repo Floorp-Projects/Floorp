@@ -58,7 +58,7 @@ namespace JavaScript
         kObjectSpaceSize = 1024 * 1024,
         kFloatSpaceSize = kObjectSpaceSize / sizeof(float64)
     };
-
+    
     // collector entry points.
     class Collector {
     public:
@@ -67,6 +67,20 @@ namespace JavaScript
         typedef char *pointer;
         typedef const char *const_pointer;
 
+        /**
+         * Abstract class used by clients of the collector to scan objects.
+         */
+        class ObjectScanner {
+        public:
+            /**
+             * For each object associated with this scanner, the collector
+             * will call the scan method until it returns NULL. The return
+             * value should be a pointer to a slot in the object that
+             * contains a valid pointer or NULL.
+             */
+            virtual pointer* scan(size_type& offset) = 0;
+        };
+        
         struct ObjectHeader {
             size_type mSize;
             pointer mType;
@@ -75,8 +89,12 @@ namespace JavaScript
         Collector();
         ~Collector();
 
-        void addRoot(void* root, size_type n);
-        void removeRoot(void* root);
+        /**
+         * Adds a root, which is required to be a densely packed array of pointers.
+         * Each element of a root array must contain either a valid pointer or NULL.
+         */
+        void addRoot(pointer* root, size_type count = 1);
+        void removeRoot(pointer* root);
 
         pointer allocateObject(size_type n, pointer type = 0);
         float64* allocateFloat64(float64 value = 0.0);
@@ -139,7 +157,7 @@ namespace JavaScript
         Space<char> mObjectSpace;
         Space<float64> mFloatSpace;
 
-        typedef pair<pointer, size_type> RootSegment;
+        typedef pair<pointer*, size_type> RootSegment;
         typedef deque<RootSegment> RootSegments;
         RootSegments mRoots;
 
