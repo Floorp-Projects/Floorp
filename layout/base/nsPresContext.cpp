@@ -141,15 +141,8 @@ nsPresContext::~nsPresContext()
 
   // Unregister preference callbacks
   if (mPrefs) {
-    mPrefs->UnregisterCallback("browser.display.screen_resolution", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.display.use_document_fonts", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.display.use_document_colors", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.display.background_color", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.display.foreground_color", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.display.base_font_scaler", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.display.wfe.use_windows_colors", PrefChangedCallback, (void*)this);
     mPrefs->UnregisterCallback("font.", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("browser.display.direction", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("browser.display.", PrefChangedCallback, (void*)this);
   }
 }
 
@@ -331,15 +324,8 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext)
   mPrefs = do_GetService(NS_PREF_PROGID);
   if (mPrefs) {
     // Register callbacks so we're notified when the preferences change
-    mPrefs->RegisterCallback("browser.display.screen_resolution", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.display.use_document_fonts", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.display.use_document_colors", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.display.background_color", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.display.foreground_color", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.display.base_font_scaler", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.display.wfe.use_windows_colors", PrefChangedCallback, (void*)this);
     mPrefs->RegisterCallback("font.", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("browser.display.direction", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("browser.display.", PrefChangedCallback, (void*)this);
 
     // Initialize our state from the user preferences
     GetUserPreferences();
