@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -12,250 +12,168 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
- * Rights Reserved.
+ * The Initial Developer of the Original Code is Christopher
+ * Blizzard.  Portions created by Christopher Blizzard are
+ * Copyright (C) 2000 Christopher Blizzard. All Rights Reserved.
+ *
+ * This was taken from the qt port.
  *
  * Contributor(s):
+ *   John C. Griggs <johng@corel.com>
  *   Dan Rosen <dr@netscape.com>
+ *   Paul Ashford <arougthopher@lizardland.net>
  */
 
-#include "nsIFactory.h"
-#include "nsISupports.h"
-#include "nsIButton.h"
-#include "nsITextWidget.h"
+#include "nsIGenericFactory.h"
+#include "nsIModule.h"
+#include "nsCOMPtr.h"
 #include "nsWidgetsCID.h"
 
-#include "nsToolkit.h"
 #include "nsWindow.h"
 #include "nsAppShell.h"
-#include "nsButton.h"
-#include "nsScrollbar.h"
-#include "nsCheckButton.h"
-#include "nsTextWidget.h"
-#include "nsFilePicker.h"
+#include "nsToolkit.h"
 #include "nsLookAndFeel.h"
-#include "nsLabel.h"
+#include "nsFilePicker.h"
+#include "nsScrollbar.h"
 #ifdef IBMBIDI
 #include "nsBidiKeyboard.h"
 #endif
 
 // Drag & Drop, Clipboard
+#include "nsTransferable.h"
 #include "nsClipboard.h"
 #include "nsClipboardHelper.h"
-#include "nsTransferable.h"
 #include "nsHTMLFormatConverter.h"
 #include "nsDragService.h"
 
-#include "nsSound.h"
 
-static NS_DEFINE_IID(kCWindow,        NS_WINDOW_CID);
-static NS_DEFINE_IID(kCChild,         NS_CHILD_CID);
-static NS_DEFINE_IID(kCButton,        NS_BUTTON_CID);
-static NS_DEFINE_IID(kCCheckButton,   NS_CHECKBUTTON_CID);
-static NS_DEFINE_IID(kCFilePicker,    NS_FILEPICKER_CID);
-static NS_DEFINE_IID(kCHorzScrollbar, NS_HORZSCROLLBAR_CID);
-static NS_DEFINE_IID(kCVertScrollbar, NS_VERTSCROLLBAR_CID);
-static NS_DEFINE_IID(kCTextField,     NS_TEXTFIELD_CID);
-static NS_DEFINE_IID(kCAppShell,      NS_APPSHELL_CID);
-static NS_DEFINE_IID(kCToolkit,       NS_TOOLKIT_CID);
-static NS_DEFINE_IID(kCLookAndFeel,   NS_LOOKANDFEEL_CID);
-static NS_DEFINE_IID(kCLabel,         NS_LABEL_CID);
-
-// Drag & Drop, Clipboard
-static NS_DEFINE_IID(kCClipboard,     NS_CLIPBOARD_CID);
-static NS_DEFINE_IID(kCClipboardHelper,  NS_CLIPBOARDHELPER_CID);
-static NS_DEFINE_IID(kCTransferable,  NS_TRANSFERABLE_CID);
-static NS_DEFINE_IID(kCDataFlavor,    NS_DATAFLAVOR_CID);
-static NS_DEFINE_IID(kCHTMLFormatConverter,  NS_HTMLFORMATCONVERTER_CID);
-static NS_DEFINE_IID(kCDragService,   NS_DRAGSERVICE_CID);
-
-static NS_DEFINE_IID(kISupportsIID,   NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIFactoryIID,    NS_IFACTORY_IID);
-
-// Sound services (just Beep for now)
-static NS_DEFINE_CID(kCSound,   NS_SOUND_CID);
-
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(ChildWindow)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAppShell)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsToolkit)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsLookAndFeel)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsTransferable)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboard)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsClipboardHelper)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsHTMLFormatConverter)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsDragService)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsFilePicker)
 #ifdef IBMBIDI
-static NS_DEFINE_IID(kCBidiKeyboard,   NS_BIDIKEYBOARD_CID);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsBidiKeyboard)
 #endif
 
-class nsWidgetFactory : public nsIFactory
-{   
-public:   
-
-    NS_DECL_ISUPPORTS
-
-    // nsIFactory methods   
-    NS_IMETHOD CreateInstance(nsISupports *aOuter,   
-                              const nsIID &aIID,   
-                              void **aResult);   
-
-    NS_IMETHOD LockFactory(PRBool aLock);   
-
-    nsWidgetFactory(const nsCID &aClass);   
-    virtual ~nsWidgetFactory();   
-private:
-  nsCID mClassID;
-
-};   
-
-
-
-nsWidgetFactory::nsWidgetFactory(const nsCID &aClass)   
-{   
- NS_INIT_REFCNT();
- mClassID = aClass;
-}   
-
-nsWidgetFactory::~nsWidgetFactory()   
-{   
-}   
-
-nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,   
-                                         void **aResult)   
-{   
-  if (NULL == aResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  *aResult = NULL;
-
-  if (aIID.Equals(kISupportsIID)) {
-    *aResult = (void *)(nsISupports *)this;
-  } else if (aIID.Equals(kIFactoryIID)) {
-    *aResult = (void *)(nsIFactory *)this;
-  }
-
-  if (*aResult == NULL) {
-    return NS_NOINTERFACE;
-  }
-
-  NS_ADDREF_THIS();
-  return NS_OK;
-}   
-
-NS_IMPL_ADDREF(nsWidgetFactory)
-NS_IMPL_RELEASE(nsWidgetFactory)
-
-nsresult nsWidgetFactory::CreateInstance(nsISupports *aOuter,  
-                                          const nsIID &aIID,  
-                                          void **aResult)  
-{  
-    if (aResult == NULL) {  
-        return NS_ERROR_NULL_POINTER;  
-    }  
-
-    *aResult = NULL;  
-
-    if (nsnull != aOuter)
-      return NS_ERROR_NO_AGGREGATION;
-  
-    nsISupports *inst = nsnull;
-    if (mClassID.Equals(kCWindow)) {
-      inst = (nsISupports *)new nsWindow();
-    }
-    else if (mClassID.Equals(kCChild)) {
-      inst = (nsISupports *)new ChildWindow();
-    }
-    else if (mClassID.Equals(kCButton)) {
-      inst = (nsISupports*)(nsWindow *)new nsButton();
-    }
-    else if (mClassID.Equals(kCCheckButton)) {
-        inst = (nsISupports*)(nsWindow *)new nsCheckButton();
-    }
-    else if (mClassID.Equals(kCFilePicker)) {
-        inst = (nsISupports*)(nsBaseFilePicker*)new nsFilePicker();
-    }
-    else if (mClassID.Equals(kCHorzScrollbar)) {
-        inst = (nsISupports*)(nsWindow *)new nsScrollbar(PR_FALSE);
-    }
-    else if (mClassID.Equals(kCVertScrollbar)) {
-        inst = (nsISupports*)(nsWindow *)new nsScrollbar(PR_TRUE);
-    }
-    else if (mClassID.Equals(kCTextField)) {
-        inst = (nsISupports*)(nsWindow *)new nsTextWidget();
-    }
-    else if (mClassID.Equals(kCAppShell)) {
-        inst = (nsISupports*)new nsAppShell();
-    }
-    else if (mClassID.Equals(kCToolkit)) {
-        inst = (nsISupports*)new nsToolkit();
-    }
-    else if (mClassID.Equals(kCLookAndFeel)) {
-        inst = (nsISupports*)new nsLookAndFeel();
-    }
-    else if (mClassID.Equals(kCLabel)) {
-        inst = (nsISupports*)(nsWindow *)new nsLabel();
-    }
-    else if (mClassID.Equals(kCSound)) {
-        inst = (nsISupports*)new nsSound();
-    }
-    else if (mClassID.Equals(kCTransferable)) {
-        inst = (nsISupports*)new nsTransferable();
-    }
-    else if (mClassID.Equals(kCClipboard)) {
-        inst = (nsISupports*)new nsClipboard();
-    }
-    else if (mClassID.Equals(kCClipboardHelper)) {
-        inst = (nsISupports*)new nsClipboardHelper();
-    }
-    else if (mClassID.Equals(kCHTMLFormatConverter)) {
-        inst = (nsISupports*)new nsHTMLFormatConverter();
-    }
-    else if (mClassID.Equals(kCDragService)) {
-        inst = (nsISupports*) (nsIDragService *) new nsDragService();
-    }
-#ifdef IBMBIDI
-    else if (mClassID.Equals(kCBidiKeyboard)) {
-        inst = (nsISupports*)(nsIBidiKeyboard*) new nsBidiKeyboard();
-    }
-#endif // IBMBIDI
-    else {
-        printf("nsWidgetFactory::CreateInstance(), unhandled class.\n");
-    }
-  
-    if (inst == NULL) {  
-        return NS_ERROR_OUT_OF_MEMORY;  
-    }  
-
-    nsresult res = inst->QueryInterface(aIID, aResult);
-
-    if (res != NS_OK) {  
-        // We didn't get the right interface, so clean up  
-        delete inst;  
-    }
-
-    return res;
-
-}  
-
-nsresult nsWidgetFactory::LockFactory(PRBool aLock)  
-{  
-    // Not implemented in simplest case.  
-    return NS_OK;
-}  
-
-// return the proper factory to the caller
-extern "C" NS_WIDGET nsresult 
-NSGetFactory(nsISupports* serviceMgr,
-             const nsCID &aClass,
-             const char *aClassName,
-             const char *aContractID,
-             nsIFactory **aFactory)
+static nsresult nsHorizScrollbarConstructor(nsISupports *aOuter,REFNSIID aIID,
+                                            void **aResult)
 {
-    if (nsnull == aFactory) {
-        return NS_ERROR_NULL_POINTER;
-    }
+  nsresult rv;
+  nsISupports *inst = nsnull;
 
-    *aFactory = new nsWidgetFactory(aClass);
+  if (NULL == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter) {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_FALSE);
+  if (inst == NULL) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID,aResult);
+  NS_RELEASE(inst);
 
-    if (nsnull == aFactory) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    return (*aFactory)->QueryInterface(kIFactoryIID, (void**)aFactory);
+  return rv;
 }
 
+static nsresult nsVertScrollbarConstructor(nsISupports *aOuter,REFNSIID aIID,
+                                           void **aResult)
+{
+  nsresult rv;
+  nsISupports *inst = nsnull;
 
+  if (NULL == aResult) {
+    rv = NS_ERROR_NULL_POINTER;
+    return rv;
+  }
+  *aResult = NULL;
+  if (NULL != aOuter) {
+    rv = NS_ERROR_NO_AGGREGATION;
+    return rv;
+  }
+  inst = (nsISupports*)(nsBaseWidget*)(nsWindow*)new nsScrollbar(PR_TRUE);
+  if (inst == NULL) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  NS_ADDREF(inst);
+  rv = inst->QueryInterface(aIID, aResult);
+  NS_RELEASE(inst);
+
+  return rv;
+}  
+
+static nsModuleComponentInfo components[] =
+{
+  { "BeOS nsWindow",
+    NS_WINDOW_CID,
+    "@mozilla.org/widgets/window/beos;1",
+    nsWindowConstructor },
+  { "BeOS Child nsWindow",
+    NS_CHILD_CID,
+    "@mozilla.org/widgets/child_window/beos;1",
+    ChildWindowConstructor },
+  { "BeOS Horiz Scrollbar",
+    NS_HORZSCROLLBAR_CID,
+    "@mozilla.org/widgets/horizscroll/beos;1",
+    nsHorizScrollbarConstructor },
+  { "BeOS Vert Scrollbar",
+    NS_VERTSCROLLBAR_CID,
+    "@mozilla.org/widgets/vertscroll/beos;1",
+    nsVertScrollbarConstructor },
+  { "BeOS AppShell",
+    NS_APPSHELL_CID,
+    "@mozilla.org/widget/appshell/beos;1",
+    nsAppShellConstructor },
+  { "BeOS Toolkit",
+    NS_TOOLKIT_CID,
+    "@mozilla.org/widget/toolkit/beos;1",
+    nsToolkitConstructor },
+  { "BeOS Look And Feel",
+    NS_LOOKANDFEEL_CID,
+    "@mozilla.org/widget/lookandfeel/beos;1",
+    nsLookAndFeelConstructor },
+  { "Transferrable",
+    NS_TRANSFERABLE_CID,
+    "@mozilla.org/widget/transferable;1",
+    nsTransferableConstructor },
+  { "BeOS Clipboard",
+    NS_CLIPBOARD_CID,
+    "@mozilla.org/widget/clipboard;1",
+    nsClipboardConstructor },
+  { "Clipboard Helper",
+    NS_CLIPBOARDHELPER_CID,
+    "@mozilla.org/widget/clipboardhelper;1",
+    nsClipboardHelperConstructor },
+  { "HTML Format Converter",
+    NS_HTMLFORMATCONVERTER_CID,
+    "@mozilla.org/widget/htmlformatconverter/beos;1",
+    nsHTMLFormatConverterConstructor },
+  { "BeOS Drag Service",
+    NS_DRAGSERVICE_CID,
+    "@mozilla.org/widget/dragservice;1",
+    nsDragServiceConstructor },
+#ifdef IBMBIDI
+    { "BeOS Bidi Keyboard",
+    NS_BIDIKEYBOARD_CID,
+    "@mozilla.org/widget/bidikeyboard;1",
+    nsBidiKeyboardConstructor },
+#endif // IBMBIDI
+  { "BeOS File Picker",
+    NS_FILEPICKER_CID,
+    "@mozilla.org/filepicker;1",
+    nsFilePickerConstructor },
+};
+
+NS_IMPL_NSGETMODULE(nsWidgetBeOSModule,components)
