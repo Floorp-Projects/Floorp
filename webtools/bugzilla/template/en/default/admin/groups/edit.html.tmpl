@@ -154,9 +154,10 @@
           </td>
         [% ELSE %]
           <td>
+            <input type="hidden" name="oldbless-[% group.grpid FILTER html %]" value="0">
           </td>
           <td>
-            <input type="hidden" name="oldgrp-[% group.grpid FILTER html %]" value="">
+            <input type="hidden" name="oldgrp-[% group.grpid FILTER html %]" value="0">
           </td>
         [% END %]
         <td align="left" class="groupname">

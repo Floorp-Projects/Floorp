@@ -599,7 +599,7 @@ sub doGroupChanges {
             $b =~ /^oldgrp-(\d+)$/;
             my $v = $1;
             my $grp = $cgi->param("grp-$v") || 0;
-            if (($cgi->param("oldgrp-$v") != $grp) && ($v != $gid)) {
+            if (($v != $gid) && ($cgi->param("oldgrp-$v") != $grp)) {
                 $chgs = 1;
                 if ($grp != 0) {
                     SendSQL("INSERT INTO group_group_map 
@@ -613,7 +613,8 @@ sub doGroupChanges {
             }
 
             my $bless = $cgi->param("bless-$v") || 0;
-            if ($cgi->param("oldbless-$v") != $bless) {
+            my $oldbless = $cgi->param("oldbless-$v");
+            if ((defined $oldbless) and ($oldbless != $bless)) {
                 $chgs = 1;
                 if ($bless != 0) {
                     SendSQL("INSERT INTO group_group_map 
