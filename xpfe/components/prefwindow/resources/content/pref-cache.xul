@@ -27,73 +27,89 @@
 <window xmlns:html="http://www.w3.org/TR/REC-html40"
 		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         class="dialog"
-        onload="return StartUp('Cache');"  align="vertical" title="&title.label;">
+        onload="return StartUp('Cache');"
+		align="vertical" title="&title.label;"
+		debug="false">
 
 <html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
-<html:div flex="100%">
 
-	<box id="header" style="width:100%" align="horizontal">  
-		  <spring style="width:20px"/>
-		  <html:div style="vertical-align: middle;">
-		  <html:B>&lHeader;</html:B>
-		  </html:div>
-   		  <spring flex="100%"/>
-		  <html:div align="right">&rHeader;</html:div><spring style="width:5px"/>
-	</box>
- 	<box align="vertical" style="width: 100%;">
-	<!--	<html:fieldset style="width: 100%;">  
-			<html:legend align="left">>
-				<html:div></html:div>
-			</html:legend> -->
-	
-		<html:div>&cachePara;</html:div><spring flex="100%"/>
-		<html:div></html:div>
-		<box align="horizontal" style="width: 100%;"> 
-			<html:div>&memCache;</html:div>
-			<spring style="width:5px"/>
-			<html:input name="disk" type="text" size="3" id="pref:string:browser.cache.memory_cache_size" />
-			<html:div>&kbyes;</html:div>
-			<titledbutton class="dialog push" name="clearm" value="&clearMemcacheButton.label;" />
-		</box> 
-		<box align="horizontal" style="width: 100%;"> 
-			<html:div>&diskCache;</html:div>
-			<spring style="width:5px"/>
-			<html:input name="disk" type="text" size="3" id="pref:string:browser.cache.disk_cache_size" />
-			<html:div>&kbyes;</html:div>
-			<titledbutton class="dialog push" name="clearm" value="&clearDiskcacheButton.label;" />
-		</box>
-		<box align="horizontal" style="width: 100%;"> 
-			<html:div>&diskCacheFolder;</html:div>
-			<html:input name="disk" type="text" size="20" id="pref:string:browser.cache.directory" />
-			<html:div>
-				<titledbutton class="dialog push" value="&chooseFolder;" align="left" onclick="PrefCacheSelectFolder()"/>
-			</html:div>
-		</box>
+<box class="header" style="width:100%" align="horizontal">  
+      <titledbutton class="left-header-text" value="&lHeader;"/>
+	  <spring class="header-spring" flex="1"/>
+	  <titledbutton class="right-header-text" value="&rHeader;"/>
+</box>
 
+<box align="vertical" style="width: 100%;">
+	<html:div>&cachePara;</html:div><spring flex="100%"/>
+	<html:div></html:div>
+
+	<html:table>
+
+	<html:tr>
+	<html:td>
+		<html:div>&memCache;</html:div>
+	</html:td>
+	<html:td>
+<box align="horizontal" style="width: 100%;"> 
+		<html:input name="disk" type="text" size="3" id="pref:string:browser.cache.memory_cache_size" />
+		<html:div>&kbyes;</html:div>
+</box>
+
+	</html:td>
+	<html:td>
+<titledbutton class="dialog push" name="clearm" value="&clearMemcacheButton.label;" />
+	</html:td>
+	</html:tr>
+	<html:tr>
+	<html:td>
+<html:div>&diskCache;</html:div>
+
+	</html:td>
+	<html:td>
+<box align="horizontal" style="width: 100%;"> 
+		<html:input name="disk" type="text" size="3" id="pref:string:browser.cache.disk_cache_size" />
+		<html:div>&kbyes;</html:div>
 	</box>
 
-	<box align="vertical" style="width: 100%;">
-				<html:div>&docCache;</html:div>
+	</html:td>
+	<html:td>
+		<titledbutton class="dialog push" name="clearm" value="&clearDiskcacheButton.label;" />
+
+	</html:td>
+	</html:tr>
+
+	</html:table>
+
+	<box align="horizontal" style="width: 100%;"> 
+		<html:div>&diskCacheFolder;</html:div>
+		<html:input name="disk" type="text" size="20" id="pref:string:browser.cache.directory" />
 		<html:div>
-    		<html:input name="cacheDocFreq" type="radio" id="pref:0:int:browser.cache.check_doc_frequency" />
-			<html:label for="pref:0:int:browser.cache.check_doc_frequency" accesskey="o" tabindex="0">
-			&oncePsessionRadio.label;
-			</html:label>
+			<titledbutton class="dialog push" value="&chooseFolder;" align="left" onclick="PrefCacheSelectFolder()"/>
 		</html:div>
-		<html:div>
-    		<html:input name="cacheDocFreq" type="radio" id="pref:1:int:browser.cache.check_doc_frequency" />
-			<html:label for="pref:1:int:browser.cache.check_doc_frequency" accesskey="e" tabindex="0">
-			&everyTimeRadio.label;	
-			</html:label>
-		</html:div>
-    	<html:div>
-    		<html:input name="cacheDocFreq" type="radio" id="pref:2:int:browser.cache.check_doc_frequency" />
-			<html:label for="pref:2:int:browser.cache.check_doc_frequency" accesskey="n" tabindex="0">
-			&neverRadio.label;	
-			</html:label>
-		</html:div>	
 	</box>
-	<!--	</html:fieldset> -->
-</html:div>
+</box>
+
+<box align="vertical" style="width: 100%;">
+			<html:div>&docCache;</html:div>
+	<html:div>
+		<html:input name="cacheDocFreq" type="radio" id="pref:0:int:browser.cache.check_doc_frequency" />
+		<html:label for="pref:0:int:browser.cache.check_doc_frequency" accesskey="o" tabindex="0">
+		&oncePsessionRadio.label;
+		</html:label>
+	</html:div>
+	<html:div>
+		<html:input name="cacheDocFreq" type="radio" id="pref:1:int:browser.cache.check_doc_frequency" />
+		<html:label for="pref:1:int:browser.cache.check_doc_frequency" accesskey="e" tabindex="0">
+		&everyTimeRadio.label;	
+		</html:label>
+	</html:div>
+	<html:div>
+		<html:input name="cacheDocFreq" type="radio" id="pref:2:int:browser.cache.check_doc_frequency" />
+		<html:label for="pref:2:int:browser.cache.check_doc_frequency" accesskey="n" tabindex="0">
+		&neverRadio.label;	
+		</html:label>
+	</html:div>	
+</box>
+
 </window>
 
