@@ -54,18 +54,6 @@ interface calITodo : calIItemBase
   readonly attribute calIDateTime entryTime;
   readonly attribute calIDateTime dueDate;
   readonly attribute calIDateTime completedDate;
-  readonly attribute short percentComplete;
-};
-
-//
-// calIMutableTodo
-//
-
-[scriptable, uuid(d4e00ebe-e9cd-41ee-bd4f-8015071adb97)]
-interface calIMutableTodo : calIItemBase
-{
-  readonly attribute calIMutableDateTime entryTime;
-  readonly attribute calIMutableDateTime dueDate;
-  readonly attribute calIMutableDateTime completedDate;
   attribute short percentComplete;
 };
+

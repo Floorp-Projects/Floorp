@@ -37,17 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 var calItemModule = {
+    /* Update these in calBaseCID.h */
     mEventCID: Components.ID("{974339d5-ab86-4491-aaaf-2b2ca177c12b}"),
     mEventContractId: "@mozilla.org/calendar/event;1",
 
-    mMutableEventCID: Components.ID("{943c81f5-da08-441e-918e-266f17866180}"),
-    mMutableEventContractId: "@mozilla.org/calendar/mutableevent;1",
-
     mTodoCID: Components.ID("{7af51168-6abe-4a31-984d-6f8a3989212d}"),
     mTodoContractId: "@mozilla.org/calendar/todo;1",
-
-    mMutableTodoCID: Components.ID("{46f8bfd1-84e9-4c57-9c5c-e8c2a8386e73}"),
-    mMutableTodoContractId: "@mozilla.org/calendar/mutabletodo;1",
 
     mScriptsLoaded: false,
     loadScripts: function () {
@@ -85,8 +80,8 @@ var calItemModule = {
     registerSelf: function (compMgr, fileSpec, location, type) {
         compMgr = compMgr.QueryInterface(Components.interfaces.nsIComponentRegistrar);
 
-        var cids = [ this.mEventCID, this.mMutableEventCID, this.mTodoCID, this.mMutableTodoCID ];
-        var contractids = [ this.mEventContractId, this.mMutableEventContractId, this.mTodoContractId, this.mMutableTodoContractId ];
+        var cids = [ this.mEventCID, this.mTodoCID ];
+        var contractids = [ this.mEventContractId, this.mTodoContractId ];
 
         for (var i = 0; i < cids.length; i++) {
             dump ("calItemModule: registering " + contractids[i] + "\n");
@@ -109,14 +104,8 @@ var calItemModule = {
         if (cid.equals(this.mEventCID))
             return this.mEventFactory;
 
-        if (cid.equals(this.mMutableEventCID))
-            return this.mMutableEventFactory;
-
         if (cid.equals(this.mTodoCID))
             return this.mTodoFactory;
-
-        if (cid.equals(this.mMutableTodoCID))
-            return this.mMutableTodoFactory;
 
         throw Components.results.NS_ERROR_NO_INTERFACE;
     },
@@ -136,21 +125,6 @@ var calItemModule = {
         }
     },
 
-    mMutableEventFactory: {
-        QueryInterface: function (aIID) {
-            if (!aIID.equals(Components.interfaces.nsISupports) &&
-                !aIID.equals(Components.interfaces.nsIFactory))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-        },
-
-        createInstance: function (outer, iid) {
-            if (outer != null)
-                throw Components.results.NS_ERROR_NO_AGGREGATION;
-            return (new calMutableEvent()).QueryInterface(iid);
-        }
-    },
-
     mTodoFactory: {
         QueryInterface: function (aIID) {
             if (!aIID.equals(Components.interfaces.nsISupports) &&
@@ -163,21 +137,6 @@ var calItemModule = {
             if (outer != null)
                 throw Components.results.NS_ERROR_NO_AGGREGATION;
             return (new calTodo()).QueryInterface(iid);
-        }
-    },
-
-    mMutableTodoFactory: {
-        QueryInterface: function (aIID) {
-            if (!aIID.equals(Components.interfaces.nsISupports) &&
-                !aIID.equals(Components.interfaces.nsIFactory))
-                throw Components.results.NS_ERROR_NO_INTERFACE;
-            return this;
-        },
-
-        createInstance: function (outer, iid) {
-            if (outer != null)
-                throw Components.results.NS_ERROR_NO_AGGREGATION;
-            return (new calMutableTodo()).QueryInterface(iid);
         }
     },
 

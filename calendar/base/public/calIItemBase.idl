@@ -63,10 +63,16 @@ interface calIMutableRecurrenceInfo;
 [scriptable, uuid(096b8cc5-113c-40fb-bc52-d64e3992980c)]
 interface calIItemBase : nsISupports
 {
-  //
-  // Return a mutable version of this item
-  //
-  calIMutableItemBase getMutable();
+  // returns true if this thing is able to be modified;
+  // if the item is not mutable, attempts to modify
+  // any data will throw CAL_ERROR_ITEM_IS_IMMUTABLE
+  readonly attribute boolean isMutable;
+
+  // makes this item immutable
+  void makeImmutable();
+
+  // clone always returns a mutable event
+  calIItemBase clone();
 
   //
   // the generation number of this item; 0 means
@@ -87,85 +93,7 @@ interface calIItemBase : nsISupports
   readonly attribute calIDateTime creationDate;
 
   // last time any attribute was modified on this item, in UTC
-  readonly attribute PRTime lastModifiedTime;
-
-  // the calICalendar to which this event belongs
-  readonly attribute calICalendar parent;
-
-  // the ID of this event
-  readonly attribute AUTF8String id;
-
-  // event title
-  readonly attribute AUTF8String title;
-
-  // event priority
-  readonly attribute short priority;
-  readonly attribute boolean isPrivate;
-
-  // event/status of the event (see consts above)
-  readonly attribute long method;
-  readonly attribute long status;
-
-  // ical interop; writing this means parsing
-  // the ical string into this event
-  readonly attribute AUTF8String icalString;
-
-  //
-  // alarms
-  //
-  readonly attribute boolean hasAlarm;
-  readonly attribute calIDateTime alarmTime;
-
-  //
-  // recurrence
-  //
-  readonly attribute calIRecurrenceInfo recurrenceInfo;
-
-  // attachments
-  // array of nsIMsgAttachment
-  readonly attribute nsIArray attachments;
-
-  // contacts
-  // array of nsIAbCard
-  readonly attribute nsIArray contacts;
-
-  //
-  // other properties come in through a property bag
-  //
-
-  // 'description' - description (string)
-  // 'location' - location (string)
-  // 'categories' - categories (string)
-  // 'syncId' - sync id (string)
-  // 'inviteEmailAddress' - string
-  // alarmLength/alarmUnits/alarmEmailAddress/lastAlarmAck
-  // recurInterval/recurCount/recurWeekdays/recurWeeknumber
-
-  // Ideally, /all/ of the properties on the event should
-  // be available via the property bag.  (And maybe the
-  // nsIItemBase impl should be QI'able to
-  // nsIWritablePropertyBag also)
-
-  readonly attribute nsIPropertyBag properties;
-};
-
-//
-// calIMutableItemBase
-//
-// Mutable version of the above
-//
-[scriptable, uuid(56ca7d46-2412-466f-9dea-fb141ae95de0)]
-interface calIMutableItemBase : nsISupports
-{
-  // the base item that this is a mutable item of
-  readonly attribute calIItemBase baseItem;
-  readonly attribute long generation;
-
-  // the time when this item was created
-  attribute calIMutableDateTime creationDate;
-
-  // last time any attribute was modified on this item, in UTC
-  readonly attribute PRTime lastModifiedTime;
+  attribute PRTime lastModifiedTime;
 
   // the calICalendar to which this event belongs
   attribute calICalendar parent;
@@ -192,20 +120,22 @@ interface calIMutableItemBase : nsISupports
   // alarms
   //
   attribute boolean hasAlarm;
-  attribute calIMutableDateTime alarmTime;
+  attribute calIDateTime alarmTime;
 
   //
   // recurrence
   //
-  readonly attribute calIMutableRecurrenceInfo recurrenceInfo;
+  readonly attribute calIRecurrenceInfo recurrenceInfo;
 
   // attachments
   // array of nsIMsgAttachment
-  readonly attribute nsIMutableArray attachments;
+  // if this item is mutable, the returned array will be a nsIMutableArray
+  readonly attribute nsIArray attachments;
 
   // contacts
   // array of nsIAbCard
-  readonly attribute nsIMutableArray contacts;
+  // if this item is mutable, the returned array will be a nsIMutableArray
+  readonly attribute nsIArray contacts;
 
   //
   // other properties come in through a property bag
@@ -224,7 +154,8 @@ interface calIMutableItemBase : nsISupports
   // nsIItemBase impl should be QI'able to
   // nsIWritablePropertyBag also)
 
-  readonly attribute nsIWritablePropertyBag properties;
+  // if this item is mutable, the returned bag will be a nsIWritablePropertyBag
+  readonly attribute nsIPropertyBag properties;
 };
 
 //

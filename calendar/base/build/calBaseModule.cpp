@@ -36,21 +36,20 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "calTodo.h"
+#include "nsIGenericFactory.h"
 
-#include "calAttributeHelpers.h"
+#include "calDateTime.h"
 
-NS_IMPL_ISUPPORTS_INHERITED1(calTodo, calItemBase, calITodo)
+#include "calBaseCID.h"
 
-calTodo::calTodo()
+NS_GENERIC_FACTORY_CONSTRUCTOR(calDateTime)
+
+static const nsModuleComponentInfo components[] =
 {
-}
+    { "Calendar DateTime Object",
+      CAL_DATETIME_CID,
+      CAL_DATETIME_CONTRACTID,
+      calDateTimeConstructor }
+};
 
-/***
- *** calITodo impl
- ***/
-
-CAL_ISUPPORTS_ATTR_GETTER(calTodo, calIDateTime, DueDate)
-CAL_ISUPPORTS_ATTR_GETTER(calTodo, calIDateTime, CompletedDate)
-CAL_VALUETYPE_ATTR(calTodo, PRInt16, PercentComplete)
-
+NS_IMPL_NSGETMODULE(calBaseModule, components)

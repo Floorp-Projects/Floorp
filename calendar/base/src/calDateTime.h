@@ -36,91 +36,51 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef CALITEMBASE_H_
-#define CALITEMBASE_H_
+#ifndef CALDATETIME_H_
+#define CALDATETIME_H_
 
 #include "nsString.h"
 
-#include "nsCOMPtr.h"
-#include "nsIPropertyBag.h"
-
-#include "nsIArray.h"
-
 #include "calIDateTime.h"
-#include "calICalendar.h"
-#include "calIItemBase.h"
 
-class calItemBase : public calIItemBase, public nsIWritablePropertyBag
+struct icaltimetype;
+
+class calDateTime : public calIDateTime
 {
 public:
-    calItemBase();
-
-    // nsISupports
-    NS_DECL_ISUPPORTS
-
-    // calIItemBase
-    NS_DECL_CALIITEMBASE
-
-    // nsIWritablePropertyBag interface
-    NS_DECL_NSIPROPERTYBAG
-    NS_DECL_NSIWRITABLEPROPERTYBAG
-
-protected:
-    nsCOMPtr<calICalendar> mParent;
-
-    nsCOMPtr<calIDateTime> mCreationDate;
-    PRTime mLastModifiedTime;
-
-    nsCString mId;
-    nsCString mTitle;
-
-    PRInt16 mPriority;
-    PRBool mIsPrivate;
-
-    PRInt32 mMethod;
-    PRInt32 mStatus;
-
-    // alarm
-    PRBool mHasAlarm;
-    nsCOMPtr<calIDateTime> mAlarmTime;
-
-    // recurrence
-    PRInt32 mRecurType;
-    nsCOMPtr<calIDateTime> mRecurEnd;
-    //nsCOMArray<calIDateTime> mRecurrenceExceptions;
-    nsCOMPtr<nsIMutableArray> mRecurrenceExceptions;
-
-    // attachments
-    //nsCOMArray<nsIMsgAttachment> mAttachments;
-    nsCOMPtr<nsIMutableArray> mAttachments;
-
-    // contacts
-    //nsCOMArray<nsIAbCard> mContacts;
-    nsCOMPtr<nsIMutableArray> mContacts;
-
-    // properties
-    nsCOMPtr<nsIWritablePropertyBag> mProperties;
-};
-
-
-class calItemOccurrence : public calIItemOccurrence
-{
-public:
-    calItemOccurrence();
-    calItemOccurrence(calIItemBase *aBaseItem,
-                      calIDateTime *aStart,
-                      calIDateTime *aEnd);
+    calDateTime ();
+    calDateTime (struct icaltimetype *timeptr);
 
     // nsISupports interface
     NS_DECL_ISUPPORTS
 
-    // calIItemOccurrence interface
-    NS_DECL_CALIITEMOCCURRENCE
+    // calIDateTime interface
+    NS_DECL_CALIDATETIME
 
 protected:
-    nsCOMPtr<calIItemBase> mItem;
-    nsCOMPtr<calIDateTime> mOccurrenceStartDate;
-    nsCOMPtr<calIDateTime> mOccurrenceEndDate;
+    PRBool mImmutable;
+
+    PRBool mValid;
+
+    PRTime mNativeTime;
+
+    PRInt16 mYear;
+    PRInt16 mMonth;
+    PRInt16 mDay;
+    PRInt16 mHour;
+    PRInt16 mMinute;
+    PRInt16 mSecond;
+
+    PRBool mIsUtc;
+
+    PRInt16 mWeekday;
+    PRInt16 mYearday;
+
+    void toIcalTime(icaltimetype *icalt);
+    void fromIcalTime(icaltimetype *icalt);
+
+    PRTime mLastModified;
 };
 
-#endif /* CALITEMBASE_H_ */
+#endif /* CALDATETIME_H_ */
+

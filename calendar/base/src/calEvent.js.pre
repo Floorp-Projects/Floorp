@@ -61,9 +61,20 @@ calEvent.prototype = {
         return this;
     },
 
+    clone: function () {
+        var m = new calEvent();
+        this.cloneItemBaseInto(m);
+        m.mStartDate = this.mStartDate.clone();
+        m.mEndDate = this.mEndDate.clone();
+        m.mStampDate = this.mStampDate.clone();
+
+        return m;
+    },
+
 #define MEMBER_ATTR(varname, initvalue, attrname) \
-    varname: initvalue,                                                 \
-    get attrname() { return this.varname; }
+    varname: initvalue,                           \
+    get attrname() { return this.varname; }       \
+    set attrname(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.varname = v; }
 
     MEMBER_ATTR(mStartDate, null, startDate),
     MEMBER_ATTR(mEndDate, null, endDate),

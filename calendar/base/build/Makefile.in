@@ -43,38 +43,25 @@ VPATH   = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE           = calbase
-LIBRARY_NAME     = calbase_s
-MODULE_NAME      = calBaseModule
-FORCE_STATIC_LIB = 1
-GRE_MODULE       = 1
+MODULE = calbasecomps
+LIBRARY_NAME = calbasecomps
+SHORT_LIBNAME = calbscmp
+EXPORT_LIBRARY = 1
+IS_COMPONENT = 1
+MODULE_NAME = calBaseModule
 
-REQUIRES = xpcom \
-           string \
-	   ical \
-	   $(NULL)
+REQUIRES = \
+	xpcom \
+	string \
+	ical \
+	calbase
 
-#	   storage \
-#	   sqlite3 \
-#           $(NULL)
+EXPORTS = calBaseCID.h
 
-CPPSRCS = \
-	calDateTime.cpp
-
-#CPPSRCS = \
-#	calItemBase.cpp \
-#	calEvent.cpp \
-#	calTodo.cpp \
-#	$(NULL)
-
-
-EXTRA_COMPONENTS = \
-	calItemBase.js \
-	calEvent.js \
-	calItemModule.js \
+CPPSRCS = calBaseModule.cpp \
 	$(NULL)
 
-include $(topsrcdir)/config/rules.mk
+LOCAL_INCLUDES = \
+	-I$(srcdir)/../src
 
-%.js: %.js.pre
-	cpp -P -undef $(DEFINES) $(ACDEFINES) $^ > $@
+include $(topsrcdir)/config/rules.mk

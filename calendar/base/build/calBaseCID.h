@@ -36,28 +36,24 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef CALEVENT_H_
-#define CALEVENT_H_
+#ifndef CALBASECID_H_
+#define CALBASECID_H_
 
-#include "calItemBase.h"
-#include "calIEvent.h"
+/* C++ */
+#define CAL_DATETIME_CID \
+    { 0x85475b45, 0x110a, 0x443c, { 0xaf, 0x3f, 0xb6, 0x63, 0x98, 0xa5, 0xa7, 0xcd } }
+#define CAL_DATETIME_CONTRACTID \
+    "@mozilla.org/calendar/datetime;1"
 
-class calEvent : public calItemBase,
-                 public calIEvent
-{
-public:
-    calEvent();
+/* JS -- Update these from calItemModule.js */
+#define CAL_EVENT_CID \
+    { 0x974339d5, 0xab86, 0x4491, { 0xaa, 0xaf, 0x2b, 0x2c, 0xa1, 0x77, 0xc1, 0x2b } }
+#define CAL_EVENT_CONTRACTID \
+    "@mozilla.org/calendar/event;1"
 
-    // nsISupports interface
-    NS_DECL_ISUPPORTS_INHERITED
+#define CAL_TODO_CID \
+    { 0x7af51168, 0x6abe, 0x4a31, { 0x98, 0x4d, 0x6f, 0x8a, 0x39, 0x89, 0x21, 0x2d } }
+#define CAL_TODO_CONTRACTID \
+    "@mozilla.org/calendar/todo;1"
 
-    // calIEvent interface
-    NS_DECL_CALIEVENT
-
-protected:
-    nsCOMPtr<calIDateTime> mStartDate;
-    nsCOMPtr<calIDateTime> mEndDate;
-    PRBool mIsAllDay;
-};
-
-#endif /* CALEVENT_H_ */
+#endif /* CALBASECID_H_ */

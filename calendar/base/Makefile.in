@@ -45,6 +45,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = calbase
 MODULE_NAME = calBaseModule
 
-SUBDIRS = public src
+SUBDIRS = public src build
 
 include $(topsrcdir)/config/rules.mk

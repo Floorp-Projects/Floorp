@@ -44,7 +44,7 @@ calItemBase.prototype = {
     mLastModifiedTime: 0, get lastModifiedTime() { return this.mLastModifiedTime; },
     mParent: null, get parent() { return this.mParent; },
     mId: null, get id() { return this.mId; },
-    mTitle: null, get title() { return this.mTitle; },
+    mTitle: "", get title() { return this.mTitle; },
     mPriority: 0, get priority() { return this.mPriority; },
     mIsPrivate: 0, get isPrivate() { return this.mIsPrivate; },
     mMethod: 0, get method() { return this.mMethod; },

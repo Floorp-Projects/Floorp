@@ -53,10 +53,25 @@ calItemBase.prototype = {
         return this;
     },
 
-    getMutable: function () {
-        var m = new calMutableItemBase();
+    mImmutable: false,
+    get isMutable() { return this. mImmutable; },
+    makeImmutable: function() {
+        if (this.mImmutable)
+            throw Components.results.NS_ERROR_FAILURE;
+
+        // make all our components immutable
+        this.mCreationDate.makeImmutable();
+        this.mRecurrenceInfo.makeImmutable();
+        this.mAlarmTime.makeImmutable();
+
+        this.mImmutable = true;
+    }
+
+    // for subclasses to use; copies the ItemBase's values
+    // into m
+    cloneItemBaseInto: function (m) {
+        m.mImmutable = false;
         m.mGeneration = this.mGeneration;
-        m.mCreationDate = this.mCreationDate.getMutable();
         m.mLastModifiedTime = this.mLastModifiedTime;
         m.mParent = this.mParent;
         m.mId = this.mId;
@@ -66,8 +81,10 @@ calItemBase.prototype = {
         m.mMethod = this.mMethod;
         m.mStatus = this.mStatus;
         m.mHasAlarm = this.mHasAlarm;
-        m.mAlarmTime = this.mAlarmTime.getMutable();
-        m.mRecurrenceInfo = this.mRecurrenceInfo.getMutable();
+        m.mRecurrenceInfo = this.mRecurrenceInfo.clone();
+
+        m.mCreationDate = this.mCreationDate.clone();
+        m.mAlarmTime = this.mAlarmTime.clone();
 
         // these need fixing
         m.mAttachments = this.mAttachments;
@@ -79,7 +96,8 @@ calItemBase.prototype = {
 
 #define MEMBER_ATTR(varname, initvalue, attrname) \
     varname: initvalue,                           \
-    get attrname() { return this.varname; }
+    get attrname() { return this.varname; }       \
+    set attrname(v) { if (this.mImmutable) throw Components.results.NS_ERROR_FAILURE; else this.varname = v; }
 
     MEMBER_ATTR(mGeneration, 0, generation),
     MEMBER_ATTR(mCreationDate, null, creationDate),
@@ -102,12 +120,14 @@ calItemBase.prototype = {
 #undef MEMBER_ATTR
 };
 
-function calMutableItemBase() { }
+function calItemOccurrence () {
+    this.wrappedJSObject = this;
+}
 
-calMutableItemBase.prototype = {
+calItemOccurrence.prototype = {
     QueryInterface: function (aIID) {
         if (!aIID.equals(Components.interfaces.nsISupports) &&
-            !aIID.equals(Components.interfaces.calIMutableItemBase))
+            !aIID.equals(Components.interfaces.calIItemOccurrence))
         {
             throw Components.results.NS_ERROR_NO_INTERFACE;
         }
@@ -115,28 +135,10 @@ calMutableItemBase.prototype = {
         return this;
     },
 
-#define MEMBER_ATTR(varname, initvalue, attrname) \
-    varname: initvalue,                                                 \
-    get attrname() { return this.varname; },                            \
-    set attrname(v) { this.varname = v; }
+    item: null,
+    occurrenceStartDate: null,
+    occurrenceEndDate: null,
 
-    MEMBER_ATTR(mGeneration, 0, generation),
-    MEMBER_ATTR(mCreationDate, null, creationDate),
-    MEMBER_ATTR(mLastModifiedTime, 0, lastModifiedTime),
-    MEMBER_ATTR(mParent, null, parent),
-    MEMBER_ATTR(mId, null, id),
-    MEMBER_ATTR(mTitle, null, title),
-    MEMBER_ATTR(mPriority, 0, priority),
-    MEMBER_ATTR(mIsPrivate, 0, isPrivate),
-    MEMBER_ATTR(mMethod, 0, method),
-    MEMBER_ATTR(mStatus, 0, status),
-    MEMBER_ATTR(mIcalString, "", icalString),
-    MEMBER_ATTR(mHasAlarm, false, hasAlarm),
-    MEMBER_ATTR(mAlarmTime, null, alarmTime),
-    MEMBER_ATTR(mRecurrenceInfo, null, recurrenceInfo),
-    MEMBER_ATTR(mAttachments, null, attachments),
-    MEMBER_ATTR(mContacts, null, contacts),
-    MEMBER_ATTR(mProperties, null, properties)
-
-#undef MEMBER_ATTR
+    next: null,
+    previous: null
 };

@@ -47,6 +47,18 @@ interface calIItemOccurrence;
 [scriptable, uuid(a6a458cf-052c-45d1-bee7-b700ad21109a)]
 interface calIRecurrenceInfo : nsISupports
 {
+  // returns true if this thing is able to be modified;
+  // if the item is not mutable, attempts to modify
+  // any data will throw CAL_ERROR_ITEM_IS_IMMUTABLE
+  readonly attribute boolean isMutable;
+
+  // makes this item immutable
+  void makeImmutable();
+
+  // clone always returns a mutable event
+  calIItemBase clone();
+
+  //
   //
   // recurrence
   //
@@ -57,10 +69,10 @@ interface calIRecurrenceInfo : nsISupports
   const long CAL_ITEM_RECUR_TYPE_MONTHLY = 4;
   const long CAL_ITEM_RECUR_TYPE_YEARLY = 5;
 
-  readonly attribute long recurType;
-  readonly attribute calIDateTime recurEnd; // if null, then forever
+  attribute long recurType;
+  attribute calIDateTime recurEnd; // if null, then forever
   // array of calIDateTime
-  readonly attribute nsIArray recurrenceExceptions;
+  attribute nsIArray recurrenceExceptions;
   // rest of recurrence in properties (?)
 
   // return the next display item for this event,
@@ -77,26 +89,3 @@ interface calIRecurrenceInfo : nsISupports
                               in calIDateTime aEndTime);
 };
 
-
-[scriptable, uuid(ee300ea5-9bfa-4566-9ae1-23adf79088a8)]
-interface calIMutableRecurrenceInfo : nsISupports
-{
-  attribute long recurType;
-  attribute calIDateTime recurEnd; // if null, then forever
-  // array of calIDateTime
-  readonly attribute nsIMutableArray recurrenceExceptions;
-  // rest of recurrence in properties (?)
-
-  // return the next display item for this event,
-  // where the start time is >= aStartTime
-  calIItemOccurrence getNextOccurrence (in calIDateTime aStartTime);
-
-  // return the previous display item for this event,
-  // where the start time is < aStartTime
-  calIItemOccurrence getPreviousOccurrence (in calIDateTime aStartTime);
-
-  // return array of calIDisplayItems, representing all
-  // occurances of this event between start and end.
-  nsIArray getAllOccurrences (in calIDateTime aStartTime,
-                              in calIDateTime aEndTime);
-};

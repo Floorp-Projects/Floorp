@@ -53,24 +53,10 @@ interface calIEvent : calIItemBase
   // these attributes are marked readonly, as the calIDates are owned
   // by the event; however, the actual caIDate objects are not read
   // only and are intended to be manipulated to adjust dates.
-  readonly attribute calIDateTime startDate;
-  readonly attribute calIDateTime endDate;
-  readonly attribute calIDateTime stampDate; // ??
+  attribute calIDateTime startDate;
+  attribute calIDateTime endDate;
+  attribute calIDateTime stampDate; // ??
 
   // all day event?
-  readonly attribute boolean isAllDay;
-};
-
-//
-// calIMutableEvent
-//
-
-[scriptable, uuid(383973d2-88c5-4bf1-a5ff-2d879a1b8675)]
-interface calIMutableEvent : calIItemBase
-{
-  readonly attribute calIMutableDateTime startDate;
-  readonly attribute calIMutableDateTime endDate;
-  readonly attribute calIMutableDateTime stampDate;
-
   attribute boolean isAllDay;
 };
