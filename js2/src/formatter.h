@@ -117,8 +117,8 @@ namespace JavaScript
     // BitSet passed to the constructor.
     class AsciiFileFormatter: public Formatter {
         FILE *file;
-        BitSet<256> filter; // Set of first 256 characters that are to be converted to escape sequences
-        bool filterEmpty;   // True if filter passes all 256 characters
+        const BitSet<256> filter;   // Set of first 256 characters that are to be converted to escape sequences
+        bool filterEmpty;           // True if filter passes all 256 characters
       public:
         static BitSet<256> defaultFilter;  // Default value of filter when not given in the constructor
 

@@ -313,17 +313,9 @@ JS::BitSet<256> JS::AsciiFileFormatter::defaultFilter(defaultFilterRanges);
 
 // Construct an AsciiFileFormatter using the given file and filter f.
 // If f is nil, use the default filter.
-JS::AsciiFileFormatter::AsciiFileFormatter(FILE *file, BitSet<256> *f): file(file)
-#ifndef _WIN32  // Microsoft Visual C++ 6.0 bug
-    , filter(f ? *f : defaultFilter)
-#endif
+JS::AsciiFileFormatter::AsciiFileFormatter(FILE *file, BitSet<256> *f):
+    file(file), filter(f ? *f : defaultFilter)
 {
-#ifdef _WIN32       // Microsoft Visual C++ 6.0 bug
-    if (f)
-        filter = *f;
-    else
-        filter = defaultFilter;
-#endif
     filterEmpty = filter.none();
 }
 
