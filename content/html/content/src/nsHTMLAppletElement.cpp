@@ -31,14 +31,6 @@
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
 #include "nsIDocument.h"
-#include "nsIPresShell.h"
-#include "nsIFrame.h"
-#include "nsIObjectFrame.h"
-#include "nsIServiceManager.h"
-#include "nsIJVMManager.h"
-#include "nsILiveConnectManager.h"
-#include "nsIPluginInstance.h"
-#include "nsIJVMPluginInstance.h"
 #include "nsLayoutAtoms.h"
 
 // XXX this is to get around conflicts with windows.h defines
@@ -257,123 +249,6 @@ nsHTMLAppletElement::GetAttributeMappingFunctions(nsMapAttributesFunc& aFontMapF
   aMapFunc = &MapAttributesInto;
   return NS_OK;
 }
-
-
-
-/**
- * For backwards compatibility an applet element's JavaScript object
- * should expose both the public fields of the applet, and the
- * attributes of the applet tag. The call to
- * nsGenericElement::GetScriptObject takes case of the tag
- * attributes. Here we generate a JavaScript reference to the applet
- * object itself, and set its __proto__ property to the tag
- * object. That way, if the Java applet has public fields that shadow
- * the tag attributes, the applet's fields take precedence.
- */
-#if 0
-NS_IMETHODIMP
-nsHTMLAppletElement::GetScriptObject(nsIScriptContext* aContext,
-                                     void** aScriptObject)
-{
-  nsresult rv = NS_OK;
-
-  nsCOMPtr<nsIJVMManager> jvm(do_GetService(nsIJVMManager::GetCID(), &rv));
-
-  if (NS_SUCCEEDED(rv)) {
-    if (!mReflectedApplet) {
-      // 0. Make sure the presentation is up-to-date
-      if (mDocument) {
-        mDocument->FlushPendingNotifications();
-      }
-
-      // 1. get the script object corresponding to the <APPLET> element itself.
-      JSObject* elementObject = nsnull;
-      rv = nsGenericHTMLContainerElement::GetScriptObject(aContext,
-                                                          (void**)&elementObject);
-      if (NS_FAILED(rv))
-        return rv;
-
-      // 2. get the plugin instance corresponding to this element.
-      nsCOMPtr<nsIPresShell> shell;
-      if (mDocument)
-        shell = dont_AddRef(mDocument->GetShellAt(0));
-
-      nsIFrame* frame = nsnull;
-
-      if (shell) {
-        shell->GetPrimaryFrameFor(this, &frame);
-      }
-
-      if (frame) {
-        nsCOMPtr<nsIAtom> frameType;
-        frame->GetFrameType(getter_AddRefs(frameType));
-        if(nsLayoutAtoms::objectFrame != frameType.get()) {
-          *aScriptObject = elementObject;
-          return rv;
-        }
-      }
-
-      // 3. get the Java object corresponding to this applet, and
-      // reflect it into JavaScript using the LiveConnect manager.
-      JSContext* context = (JSContext*)aContext->GetNativeContext();
-      JSObject* wrappedAppletObject = nsnull;
-      nsCOMPtr<nsIPluginInstance> pluginInstance;
-
-      GetPluginInstance(getter_AddRefs(pluginInstance));
-
-      if (pluginInstance) {
-        nsCOMPtr<nsIJVMPluginInstance> javaPluginInstance;
-
-        javaPluginInstance = do_QueryInterface(pluginInstance);
-
-        if (javaPluginInstance) {
-          jobject appletObject = nsnull;
-          rv = javaPluginInstance->GetJavaObject(&appletObject);
-
-          if (NS_SUCCEEDED(rv)) {
-            nsCOMPtr<nsILiveConnectManager> manager;
-
-            manager = do_GetService(nsIJVMManager::GetCID());
-
-            if (manager) {
-              rv = manager->WrapJavaObject(context, appletObject,
-                                           &wrappedAppletObject);
-            }
-          }
-        }
-      }
-
-      // 4. set the __proto__ field of the applet object to be the
-      // element script object.
-      if (wrappedAppletObject) {
-        JS_SetPrototype(context, wrappedAppletObject, elementObject);
-
-        // Cache the wrapped applet object as our script object.
-        SetScriptObject(wrappedAppletObject);
-
-        mReflectedApplet = PR_TRUE;
-
-        *aScriptObject = wrappedAppletObject;
-      } else {
-        // We didn't wrap the applet object so we'll fall back and use
-        // the plain DOM script object.
-
-        *aScriptObject = elementObject;
-      }
-    }
-    else {
-      rv = nsGenericHTMLContainerElement::GetScriptObject(aContext,
-                                                          aScriptObject);
-    }
-  }
-  else {
-    rv = nsGenericHTMLContainerElement::GetScriptObject(aContext,
-                                                        aScriptObject);
-  }
-
-  return rv;
-}
-#endif
 
 NS_IMETHODIMP
 nsHTMLAppletElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const

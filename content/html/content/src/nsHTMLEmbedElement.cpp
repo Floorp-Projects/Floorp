@@ -229,25 +229,6 @@ nsHTMLEmbedElement::SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const
   return NS_OK;
 }
 
-
-/***************************************************************************/
-
-#if 0
-NS_IMETHODIMP
-nsHTMLEmbedElement::GetScriptObject(nsIScriptContext* aContext,
-                                    void** aScriptObject)
-{
-  return GetPluginScriptObject(aContext, aScriptObject);
-}
-
-PRBool
-nsHTMLEmbedElement::GetProperty(JSContext *aContext, JSObject *aObj,
-                                jsval aID, jsval *aVp)
-{
-  return GetPluginProperty(aContext, aObj, aID, aVp);
-}
-#endif
-
 /////////////////////////////////////////////
 // Implement nsIDOMHTMLEmbedElement interface
 NS_IMPL_STRING_ATTR(nsHTMLEmbedElement, Align, align)
