@@ -365,6 +365,14 @@ class basic_nsAReadableString
 //    PRBool    Equals( incompatible_char_type ) const;
   };
 
+  /*
+    The following macro defines a cast that helps us solve type-unification error problems on compilers
+    with poor template support.  String clients probably _never_ need to use it.  String implementors
+    sometimes will.
+  */
+
+#define NS_READABLE_CAST(CharT, expr)  (*NS_STATIC_CAST(const basic_nsAReadableString<CharT>*, &(expr)))
+
 template <class CharT>
 inline
 void
@@ -705,7 +713,7 @@ inline
 int
 basic_nsAReadableString<CharT>::Compare( const CharT* rhs ) const
   {
-    return ::Compare(*this, NS_STATIC_CAST(const basic_nsAReadableString<CharT>&, basic_nsLiteralString<CharT>(rhs)));
+    return ::Compare(*this, NS_READABLE_CAST(CharT, basic_nsLiteralString<CharT>(rhs)));
   }
 
 template <class CharT>
@@ -713,7 +721,7 @@ inline
 int
 basic_nsAReadableString<CharT>::Compare( const CharT* rhs, PRUint32 rhs_length ) const
   {
-    return ::Compare(*this, NS_STATIC_CAST(const basic_nsAReadableString<CharT>&, basic_nsLiteralString<CharT>(rhs, rhs_length)));
+    return ::Compare(*this, NS_READABLE_CAST(CharT, basic_nsLiteralString<CharT>(rhs, rhs_length)));
   }
 
 
@@ -1135,7 +1143,7 @@ inline
 int
 Compare( const basic_nsAReadableString<CharT>& lhs, const CharT* rhs )
   {
-    return Compare(lhs, NS_STATIC_CAST(const basic_nsAReadableString<CharT>&, basic_nsLiteralString<CharT>(rhs)));
+    return Compare(lhs, NS_READABLE_CAST(CharT, basic_nsLiteralString<CharT>(rhs)));
   }
 
 template <class CharT>
@@ -1143,7 +1151,7 @@ inline
 int
 Compare( const CharT* lhs, const basic_nsAReadableString<CharT>& rhs )
   {
-    return Compare(NS_STATIC_CAST(const basic_nsAReadableString<CharT>&, basic_nsLiteralString<CharT>(lhs)), rhs);
+    return Compare(NS_READABLE_CAST(CharT, basic_nsLiteralString<CharT>(lhs)), rhs);
   }
 
 
