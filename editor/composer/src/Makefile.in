@@ -59,6 +59,7 @@ REQUIRES        = xpcom \
                   webbrwsr \
                   unicharutil \
                   commandhandler \
+                  composer \
                   $(NULL)
 
 CPPSRCS  = \
@@ -69,8 +70,8 @@ CPPSRCS  = \
            nsComposerController.cpp       \
            nsComposerCommands.cpp         \
            nsComposerRegistration.cpp     \
-	     nsEditingSession.cpp		\
-	     nsComposerCommandsUpdater.cpp	\
+           nsEditingSession.cpp		\
+           nsComposerCommandsUpdater.cpp	\
            $(NULL)
 
 include $(topsrcdir)/config/rules.mk
