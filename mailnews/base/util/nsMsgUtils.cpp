@@ -72,6 +72,8 @@ static NS_DEFINE_CID(kImapUrlCID, NS_IMAPURL_CID);
 static NS_DEFINE_CID(kCMailboxUrl, NS_MAILBOXURL_CID);
 static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
 
+#define ILLEGAL_FOLDER_CHARS ";#"
+
 #define NS_PASSWORDMANAGER_CATEGORY "passwordmanager"
 static PRBool gInitPasswordManager = PR_FALSE;
 
@@ -263,7 +265,7 @@ inline PRUint32 StringHash(const nsAutoString& str)
 nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
 {
   NS_NAMED_LITERAL_CSTRING (illegalChars, 
-                            FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS);
+                            FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS ILLEGAL_FOLDER_CHARS);
   nsCAutoString str(name);
 
   // Given a filename, make it safe for filesystem
@@ -307,7 +309,7 @@ nsresult NS_MsgHashIfNecessary(nsCAutoString &name)
 nsresult NS_MsgHashIfNecessary(nsAutoString &name)
 {
   PRInt32 illegalCharacterIndex = name.FindCharInSet(
-                                  FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS);
+                                  FILE_PATH_SEPARATOR FILE_ILLEGAL_CHARACTERS ILLEGAL_FOLDER_CHARS);
 
   char hashedname[9];
   if (illegalCharacterIndex == kNotFound) 
