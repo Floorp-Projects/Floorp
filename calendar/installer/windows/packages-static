@@ -212,7 +212,6 @@ bin\res\ua.css
 bin\res\html.css
 bin\res\quirk.css
 bin\res\forms.css
-bin\res\platform-forms.css
 ;!4sunbird bin\res\EditorOverride.css
 ;!4sunbird bin\res\table-add-column-after-active.gif
 ;!4sunbird bin\res\table-add-column-after-hover.gif

@@ -391,7 +391,6 @@ res/ua.css
 res/html.css
 res/quirk.css
 res/forms.css
-res/platform-forms.css
 res/charsetData.properties
 res/charsetalias.properties
 res/langGroups.properties
@@ -448,7 +447,6 @@ components/filepicker.xpt
 ;;res/viewsource.css
 ;;res/ua.css
 ;;res/forms.css
-;;res/platform-forms.css
 ;;res/arrow.gif
 ;;res/arrowd.gif
 ;;res/loading-image.gif

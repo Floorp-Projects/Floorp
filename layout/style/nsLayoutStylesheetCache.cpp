@@ -101,12 +101,12 @@ nsLayoutStylesheetCache::FormsSheet()
   if (!gStyleCache->mFormsSheet) {
     nsCOMPtr<nsIURI> sheetURI;
       NS_NewURI(getter_AddRefs(sheetURI),
-                NS_LITERAL_CSTRING("resource://gre/res/platform-forms.css"));
+                NS_LITERAL_CSTRING("resource://gre/res/forms.css"));
 
     if (sheetURI)
       LoadSheet(sheetURI, gStyleCache->mFormsSheet);
 
-    NS_ASSERTION(gStyleCache->mFormsSheet, "Could not load platform-forms.css.");
+    NS_ASSERTION(gStyleCache->mFormsSheet, "Could not load forms.css.");
   }
 
   return gStyleCache->mFormsSheet;

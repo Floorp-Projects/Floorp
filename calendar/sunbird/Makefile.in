@@ -145,7 +145,6 @@ endif
 	cp $(topsrcdir)/dist/bin/res/arrow.gif ./$(MOZ_APP_NAME)/res
 	cp $(topsrcdir)/dist/bin/res/arrowd.gif ./$(MOZ_APP_NAME)/res
 	cp $(topsrcdir)/dist/bin/res/forms.css ./$(MOZ_APP_NAME)/res
-	cp $(topsrcdir)/dist/bin/res/platform-forms.css ./$(MOZ_APP_NAME)/res
 	cp $(topsrcdir)/dist/bin/res/ua.css ./$(MOZ_APP_NAME)/res
 	cp $(topsrcdir)/dist/bin/res/mathml.css ./$(MOZ_APP_NAME)/res
 	cp $(topsrcdir)/dist/bin/res/viewer.properties ./$(MOZ_APP_NAME)/res
