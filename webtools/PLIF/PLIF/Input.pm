@@ -36,12 +36,13 @@ use PLIF::Service;
 sub provides {
     my $class = shift;
     my($service) = @_;
-    return (($service eq 'input' and $class->applies) or $class->SUPER::provides($service));
+    return (($service eq 'input' and $class->applies) or
+            $class->SUPER::provides($service));
 }
 
 sub applies {
-    my $self = shift;
-    $self->notImplemented(); # this must be overriden by descendants
+    my $class = shift;
+    $class->notImplemented(); # this must be overriden by descendants
 }
 
 sub defaultOutputProtocol {
@@ -125,14 +126,16 @@ sub getArgumentsAsString {
     my $string = '';
     foreach my $key (keys(%$hash)) {
         $string .= $self->escapeString($key);
+        $string .= ';';
         if (ref($hash->{$key}) eq 'ARRAY') {
-            $string .= ';';
-            foreach my $substring (@{$hash->{$key}}) {
-                $string .= $self->escapeString($substring);
-                $string .= '|';
-            }
-            chop $string;
-        } else {
+            if (@{$hash->{$key}}) {
+                foreach my $substring (@{$hash->{$key}}) {
+                    $string .= $self->escapeString($substring);
+                    $string .= '|';
+                }
+                chop $string;
+            } # else, array is empty, so ignore it
+        } elsif (defined($hash->{$key})) {
             $string .= $self->escapeString($hash->{$key});
         }
         $string .= ';';
