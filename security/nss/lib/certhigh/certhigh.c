@@ -1071,6 +1071,7 @@ loser:
     stanCert = STAN_GetNSSCertificate(cert);
     nssUsage.anyUsage = PR_FALSE;
     nssUsage.nss3usage = usage;
+    nssUsage.nss3lookingForCA = PR_FALSE;
     stanChain = NSSCertificate_BuildChain(stanCert, NULL, &nssUsage, NULL,
                                                     NULL, 0, NULL, NULL);
     if (!stanChain) {
