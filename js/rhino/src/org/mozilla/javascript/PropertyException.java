@@ -38,28 +38,12 @@
 package org.mozilla.javascript;
 
 /**
- * Thrown if errors are detected while attempting to define a property of
- * a host object from a Java class or method, or if a property is not found.
+ * @deprecated This exception is no longer thrown by Rhino runtime.
  */
-public class PropertyException extends Exception {
+public class PropertyException extends RuntimeException {
 
     public PropertyException(String detail) {
         super(detail);
-    }
-
-    static PropertyException withMessage0(String messageId) {
-        return new PropertyException(Context.getMessage0(messageId));
-    }
-
-    static PropertyException withMessage1(String messageId, Object arg1) {
-        return new PropertyException(Context.getMessage1(messageId, arg1));
-    }
-
-    static PropertyException withMessage2
-        (String messageId, Object arg1, Object arg2)
-    {
-        return new PropertyException
-            (Context.getMessage2(messageId, arg1, arg2));
     }
 
 }

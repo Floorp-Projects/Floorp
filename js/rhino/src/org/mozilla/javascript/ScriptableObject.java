@@ -309,7 +309,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * ignored the start argument.
      */
     public final int getAttributes(String name, Scriptable start)
-        throws PropertyException
     {
         return getAttributes(name);
     }
@@ -319,7 +318,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * ignored the start argument.
      */
     public final int getAttributes(int index, Scriptable start)
-        throws PropertyException
     {
         return getAttributes(index);
     }
@@ -330,7 +328,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      */
     public final void setAttributes(String name, Scriptable start,
                                     int attributes)
-        throws PropertyException
     {
         setAttributes(name, attributes);
     }
@@ -341,7 +338,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      */
     public void setAttributes(int index, Scriptable start,
                               int attributes)
-        throws PropertyException
     {
         setAttributes(index, attributes);
     }
@@ -726,9 +722,6 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *            during execution of methods of the named class
      * @exception ClassDefinitionException if an appropriate
      *            constructor cannot be found to create the prototype
-     * @exception PropertyException if getter and setter
-     *            methods do not conform to the requirements of the
-     *            defineProperty method
      * @see org.mozilla.javascript.Function
      * @see org.mozilla.javascript.FunctionObject
      * @see org.mozilla.javascript.ScriptableObject#READONLY
@@ -736,8 +729,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      */
     public static void defineClass(Scriptable scope, Class clazz)
         throws IllegalAccessException, InstantiationException,
-               InvocationTargetException, ClassDefinitionException,
-               PropertyException
+               InvocationTargetException, ClassDefinitionException
     {
         defineClass(scope, clazz, false);
     }
@@ -765,16 +757,12 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *            during execution of methods of the named class
      * @exception ClassDefinitionException if an appropriate
      *            constructor cannot be found to create the prototype
-     * @exception PropertyException if getter and setter
-     *            methods do not conform to the requirements of the
-     *            defineProperty method
      * @since 1.4R3
      */
     public static void defineClass(Scriptable scope, Class clazz,
                                    boolean sealed)
         throws IllegalAccessException, InstantiationException,
-               InvocationTargetException, ClassDefinitionException,
-               PropertyException
+               InvocationTargetException, ClassDefinitionException
     {
         Method[] methods = FunctionObject.getMethodList(clazz);
         for (int i=0; i < methods.length; i++) {
@@ -904,8 +892,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 continue;   // deal with set when we see get
             if (prefix == getterPrefix) {
                 if (!(proto instanceof ScriptableObject)) {
-                    throw PropertyException.withMessage2
-                        ("msg.extend.scriptable",                                                         proto.getClass().toString(), name);
+                    throw Context.reportRuntimeError2(
+                        "msg.extend.scriptable",
+                        proto.getClass().toString(), name);
                 }
                 Method setter = FunctionObject.findSingleMethod(
                                     methods,
@@ -999,16 +988,10 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      *                    and "setFoo" methods.
      * @param clazz the Java class to search for the getter and setter
      * @param attributes the attributes of the JavaScript property
-     * @exception PropertyException if multiple methods
-     *            are found for the getter or setter, or if the getter
-     *            or setter do not conform to the forms described in
-     *            <code>defineProperty(String, Object, Method, Method,
-     *            int)</code>
      * @see org.mozilla.javascript.Scriptable#put
      */
     public void defineProperty(String propertyName, Class clazz,
                                int attributes)
-        throws PropertyException
     {
         int length = propertyName.length();
         if (length == 0) throw new IllegalArgumentException();
@@ -1071,12 +1054,9 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param getter the method to invoke to get the value of the property
      * @param setter the method to invoke to set the value of the property
      * @param attributes the attributes of the JavaScript property
-     * @exception PropertyException if the getter or setter
-     *            do not conform to the forms specified above
      */
     public void defineProperty(String propertyName, Object delegateTo,
                                Method getter, Method setter, int attributes)
-        throws PropertyException
     {
         if (delegateTo == null && (Modifier.isStatic(getter.getModifiers())))
             delegateTo = HAS_STATIC_ACCESSORS;
@@ -1085,40 +1065,40 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             if (parmTypes.length != 1 ||
                 parmTypes[0] != ScriptRuntime.ScriptableObjectClass)
             {
-                throw PropertyException.withMessage1
-                    ("msg.bad.getter.parms", getter.toString());
+                throw Context.reportRuntimeError1(
+                    "msg.bad.getter.parms", getter.toString());
             }
         } else if (delegateTo != null) {
-            throw PropertyException.withMessage1
-                ("msg.obj.getter.parms", getter.toString());
+            throw Context.reportRuntimeError1(
+                "msg.obj.getter.parms", getter.toString());
         }
         if (setter != null) {
             if ((delegateTo == HAS_STATIC_ACCESSORS) !=
                 (Modifier.isStatic(setter.getModifiers())))
             {
-                throw PropertyException.withMessage0("msg.getter.static");
+                throw Context.reportRuntimeError0("msg.getter.static");
             }
             parmTypes = setter.getParameterTypes();
             if (parmTypes.length == 2) {
                 if (parmTypes[0] != ScriptRuntime.ScriptableObjectClass) {
-                    throw PropertyException.withMessage0("msg.setter2.parms");
+                    throw Context.reportRuntimeError0("msg.setter2.parms");
                 }
                 if (delegateTo == null) {
-                    throw PropertyException.withMessage1
-                        ("msg.setter1.parms", setter.toString());
+                    throw Context.reportRuntimeError1(
+                        "msg.setter1.parms", setter.toString());
                 }
             } else if (parmTypes.length == 1) {
                 if (delegateTo != null) {
-                    throw PropertyException.withMessage1
-                        ("msg.setter2.expected", setter.toString());
+                    throw Context.reportRuntimeError1(
+                        "msg.setter2.expected", setter.toString());
                 }
             } else {
-                throw PropertyException.withMessage0("msg.setter.parms");
+                throw Context.reportRuntimeError0("msg.setter.parms");
             }
             Class setterType = parmTypes[parmTypes.length - 1];
             int setterTypeTag = FunctionObject.getTypeTag(setterType);
             if (setterTypeTag  == FunctionObject.JAVA_UNSUPPORTED_TYPE) {
-                throw PropertyException.withMessage2(
+                throw Context.reportRuntimeError2(
                     "msg.setter2.expected", setterType.getName(),
                     setter.toString());
             }
@@ -1153,22 +1133,18 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param names the names of the Methods to add as function properties
      * @param clazz the class to search for the Methods
      * @param attributes the attributes of the new properties
-     * @exception PropertyException if any of the names
-     *            has no corresponding method or more than one corresponding
-     *            method in the class
      * @see org.mozilla.javascript.FunctionObject
      */
     public void defineFunctionProperties(String[] names, Class clazz,
                                          int attributes)
-        throws PropertyException
     {
         Method[] methods = FunctionObject.getMethodList(clazz);
         for (int i=0; i < names.length; i++) {
             String name = names[i];
             Method m = FunctionObject.findSingleMethod(methods, name);
             if (m == null) {
-                throw PropertyException.withMessage2
-                    ("msg.method.not.found", name, clazz.getName());
+                throw Context.reportRuntimeError2(
+                    "msg.method.not.found", name, clazz.getName());
             }
             FunctionObject f = new FunctionObject(name, m, this);
             defineProperty(name, f, attributes);

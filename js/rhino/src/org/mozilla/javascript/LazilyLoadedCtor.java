@@ -58,13 +58,8 @@ public final class LazilyLoadedCtor {
             setter = FunctionObject.findSingleMethod(methods, "setProperty");
         }
 
-        try {
-            scope.defineProperty(ctorName, this, getter, setter,
-                                 ScriptableObject.DONTENUM);
-        }
-        catch (PropertyException e) {
-            throw Context.throwAsScriptRuntimeEx(e);
-        }
+        scope.defineProperty(ctorName, this, getter, setter,
+                             ScriptableObject.DONTENUM);
     }
 
     public Object getProperty(ScriptableObject obj) {
@@ -86,7 +81,7 @@ public final class LazilyLoadedCtor {
                             throw (RuntimeException)target;
                         }
                         removeOnError = true;
-                    } catch (PropertyException ex) {
+                    } catch (RhinoException ex) {
                         removeOnError = true;
                     } catch (InstantiationException ex) {
                         removeOnError = true;

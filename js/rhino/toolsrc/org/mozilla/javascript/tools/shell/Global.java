@@ -64,12 +64,8 @@ public class Global extends ImporterTopLevel {
                            "loadClass", "defineClass", "spawn", "sync",
                            "serialize", "deserialize", "runCommand",
                            "seal", "readFile", "readUrl" };
-        try {
-            defineFunctionProperties(names, Global.class,
-                                     ScriptableObject.DONTENUM);
-        } catch (PropertyException e) {
-            throw new Error();  // shouldn't occur.
-        }
+        defineFunctionProperties(names, Global.class,
+                                 ScriptableObject.DONTENUM);
 
         // Set up "environment" in the global scope to provide access to the
         // System environment variables.
@@ -178,15 +174,12 @@ public class Global extends ImporterTopLevel {
      *            during execution of methods of the named class
      * @exception ClassDefinitionException if the format of the
      *            class causes this exception in ScriptableObject.defineClass
-     * @exception PropertyException if the format of the
-     *            class causes this exception in ScriptableObject.defineClass
      * @see org.mozilla.javascript.ScriptableObject#defineClass
      */
     public static void defineClass(Context cx, Scriptable thisObj,
                                    Object[] args, Function funObj)
         throws IllegalAccessException, InstantiationException,
-               InvocationTargetException, ClassDefinitionException,
-               PropertyException
+               InvocationTargetException, ClassDefinitionException
     {
         Class clazz = getClass(args);
         ScriptableObject.defineClass(thisObj, clazz);
