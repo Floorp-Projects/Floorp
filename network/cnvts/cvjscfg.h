@@ -25,4 +25,6 @@
 MODULE_PRIVATE NET_StreamClass*
 NET_JavascriptConfig(int fmt, void* data_obj, URL_Struct* URL_s, MWContext* w);
 
+MODULE_PRIVATE XP_Bool NET_FindProxyInJSC(void);
+
 #endif
