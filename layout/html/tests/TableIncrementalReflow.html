@@ -182,14 +182,14 @@ function insertRowWithContent() {
 function setRowIndex() {
   dump("\nSCRIPT: starting setRowIndex\n");
   var row = document.getElementsByTagName("TR")[0];
-  row.setRowIndex(99);
+  row.rowIndex = 99;
   dump("SCRIPT: ending setRowindex - placed 1st row at end\n");
 }
 
 function setSectionRowIndex() {
   dump("\nSCRIPT: starting setSectionRowIndex\n");
   var row = document.getElementsByTagName("TR")[0];
-  row.setSectionRowIndex(99);
+  row.sectionRowIndex = 99;
   dump("SCRIPT: ending setSectionRowindex - placed 1st row at end\n");
 }
 
