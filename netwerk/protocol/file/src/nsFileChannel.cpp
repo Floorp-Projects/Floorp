@@ -516,7 +516,7 @@ nsFileChannel::Process(void)
           if (mStatus == NS_BASE_STREAM_EOF) goto error; 
           if (NS_FAILED(mStatus)) goto error;
 
-          nsAutoMonitor mon(mBuffer);
+          nsAutoCMonitor mon(mBuffer);
           mon.Notify();
 
           mSourceOffset += amt;
