@@ -12120,7 +12120,7 @@ nsCSSFrameConstructor::GetFirstLineStyle(nsIPresContext* aPresContext,
   nsIStyleContext* fls = nsnull;
   if (aContent) {
     aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                               nsCSSPseudoElements::firstLetter,
+                                               nsCSSPseudoElements::firstLine,
                                                aStyleContext, &fls);
   }
   return fls;
@@ -12143,7 +12143,7 @@ nsCSSFrameConstructor::HaveFirstLineStyle(nsIPresContext* aPresContext,
                                           nsIStyleContext* aStyleContext)
 {
   return HasPseudoStyle(aPresContext, aContent, aStyleContext,
-                        nsCSSPseudoElements::firstLetter);
+                        nsCSSPseudoElements::firstLine);
 }
 
 void
