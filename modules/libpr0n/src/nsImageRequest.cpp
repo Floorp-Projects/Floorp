@@ -31,23 +31,30 @@
 #include "nsIComponentManager.h"
 
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 
 #include "nsString.h"
 
+#include "nsIEventQueueService.h"
+#include "nsIEventQueue.h"
+
 #include "nspr.h"
 
-NS_IMPL_ISUPPORTS4(nsImageRequest, nsIImageRequest, nsIRequest, nsIStreamListener, nsIStreamObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsImageRequest, nsIImageRequest, nsIRequest, nsIStreamListener, nsIStreamObserver, nsIRunnable)
 
 nsImageRequest::nsImageRequest()
 {
   NS_INIT_ISUPPORTS();
   /* member initializers and constructor code */
+  mProcessing = PR_TRUE;
 }
 
 nsImageRequest::~nsImageRequest()
 {
   /* destructor code */
 }
+
+
 
 /* void init (in nsIChannel aChannel, in gfx_dimension width, in gfx_dimension height); */
 NS_IMETHODIMP nsImageRequest::Init(nsIChannel *aChannel)
@@ -60,7 +67,7 @@ NS_IMETHODIMP nsImageRequest::Init(nsIChannel *aChannel)
   // XXX do not init the image here.  this has to be done from the image decoder.
   mImage = do_CreateInstance("@mozilla.org/gfx/image;2");
 
-  return aChannel->AsyncRead(NS_STATIC_CAST(nsIStreamListener*, this), nsnull);
+  return NS_OK;
 }
 
 /* readonly attribute nsIImage image; */
@@ -149,6 +156,8 @@ NS_IMETHODIMP nsImageRequest::OnStartRequest(nsIChannel *channel, nsISupports *c
 /* void onStopRequest (in nsIChannel channel, in nsISupports ctxt, in nsresult status, in wstring statusArg); */
 NS_IMETHODIMP nsImageRequest::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, nsresult status, const PRUnichar *statusArg)
 {
+  mProcessing = PR_FALSE;
+
   if (!mDecoder) return NS_ERROR_FAILURE;
 
   return mDecoder->Close();
@@ -169,6 +178,50 @@ NS_IMETHODIMP nsImageRequest::OnDataAvailable(nsIChannel *channel, nsISupports *
 }
 
 
+
+
+
+/** nsIRunnable methods **/
+
+NS_IMETHODIMP nsImageRequest::Run()
+{
+  nsresult rv = NS_OK;
+  if (!mChannel) return NS_ERROR_NOT_INITIALIZED;
+
+  // create an event queue for this thread.
+#if 0
+  nsCOMPtr<nsIEventQueueService> service = do_GetService(NS_EVENTQUEUESERVICE_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  rv = service->CreateThreadEventQueue();
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIEventQueue> currentThreadQ;
+  rv = service->GetThreadEventQueue(NS_CURRENT_THREAD, 
+                                getter_AddRefs(currentThreadQ));
+  if (NS_FAILED(rv)) return rv;
+#endif
+  // initiate the AsyncRead from this thread so events are
+  // sent here for processing.
+  rv = mChannel->AsyncRead(NS_STATIC_CAST(nsIStreamListener*, this), nsnull);
+  if (NS_FAILED(rv)) return rv;
+#if 0
+  // process events until we're finished.
+  PLEvent *event;
+  while (mProcessing) {
+    rv = currentThreadQ->WaitForEvent(&event);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = currentThreadQ->HandleEvent(event);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  rv = service->DestroyThreadEventQueue();
+  if (NS_FAILED(rv)) return rv;
+#endif
+  // XXX make sure cleanup happens on the calling thread.
+  return NS_OK;
+}
 
 
 
