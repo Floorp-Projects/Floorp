@@ -20,7 +20,6 @@
 #include "nsHTMLIIDs.h"
 
 #include "nsIContent.h"
-#include "nsIFloaterContainer.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
 #include "nsIStyleContext.h"
