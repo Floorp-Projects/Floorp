@@ -23,6 +23,7 @@
 #include "nsTableOuterFrame.h"
 #include "nsIBox.h"
 #include "nsISelfScrollingFrame.h"
+#include "nsITreeFrame.h"
 
 class nsTreeOuterFrame : public nsTableOuterFrame, nsIBox, nsISelfScrollingFrame
 {
@@ -54,10 +55,13 @@ public:
 
   NS_IMETHOD ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines);
   NS_IMETHOD CollapseScrollbar(nsIPresContext* aPresContext, PRBool aHide);
+  NS_IMETHOD ScrollByPages(nsIPresContext* aPresContext, PRInt32 pages);
 
 protected:
   nsTreeOuterFrame();
   virtual ~nsTreeOuterFrame();
+
+  nsITreeFrame* FindTreeFrame();
 
 protected: // Data Members
   

@@ -618,6 +618,33 @@ nsTreeFrame::ScrollByLines(nsIPresContext* aPresContext, PRInt32 lines)
 }
 
 NS_IMETHODIMP
+nsTreeFrame::ScrollByPages(nsIPresContext* aPresContext, PRInt32 pages)
+{
+  printf("nsTreeFrame::ScrollByPages\n");
+  PRInt32 lines;
+
+  // Get our treechildren child frame.
+  nsTreeRowGroupFrame* treeRowGroup = nsnull;
+  GetTreeBody(&treeRowGroup);
+  
+  if (!treeRowGroup)
+    return NS_OK; // No tree body. Just bail.
+
+  PRInt32 absPages = (pages > 0) ? pages : -pages;
+  PRInt32 treeRows;
+  treeRowGroup->GetRowCount(treeRows);
+
+  lines = (absPages * treeRows) - 1;
+  if (pages < 0)
+    lines = -lines;
+
+  printf("nsTreeFrame::ScrollByPages : scrolling treeRowGroup by %d lines\n", lines);
+  treeRowGroup->ScrollByLines(aPresContext, lines);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsTreeFrame::CollapseScrollbar(nsIPresContext* aPresContext, PRBool aHide)
 {
   // Get our treechildren child frame.
