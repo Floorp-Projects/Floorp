@@ -54,6 +54,7 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
     NS_ENSURE_ARG_POINTER(aStringURI);
     NS_ENSURE_ARG_POINTER(aURI);
 
+    nsresult rv;
     *aURI = nsnull;
 
     // Try and get the prefs service
@@ -79,9 +80,7 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
 
         nsAutoString tempString;
         tempString = Substring(uriString, 12, uriString.Length() - 12);
-        nsresult rv =  CreateFixupURI(tempString.get(),
-                                      newFixupFlags,
-                                      getter_AddRefs(uri));
+        rv =  CreateFixupURI(tempString.get(), newFixupFlags, getter_AddRefs(uri));
         if (NS_FAILED(rv) || !uri)
             return NS_ERROR_FAILURE;
         nsCAutoString spec;
@@ -118,8 +117,12 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
                         uriString.EqualsIgnoreCase("file:", 5));
 
     // Just try to create an URL out of it
-    NS_NewURI(aURI, uriString, bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
-    if(*aURI) {
+    rv = NS_NewURI(aURI, uriString, bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
+    if (rv == NS_ERROR_UNKNOWN_PROTOCOL)
+    {
+        return rv;
+    }
+    if (*aURI) {
         if (aFixupFlags & FIXUP_FLAGS_MAKE_ALTERNATE_URI)
             MakeAlternateURI(*aURI);
         return NS_OK;
@@ -192,7 +195,7 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
           bUseNonDefaultCharsetForURI = PR_TRUE;
     } // end if checkprotocol
 
-    nsresult rv = NS_NewURI(aURI, uriString, bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
+    rv = NS_NewURI(aURI, uriString, bUseNonDefaultCharsetForURI ? GetCharsetForUrlBar() : nsnull);
 
     // Did the caller want us to try an alternative URI?
     // If so, attempt to fixup http://foo into http://www.foo.com
