@@ -119,6 +119,8 @@ public: // dynamic type identification
 
 public: // utility env methods
 
+  mork_u1 HexToByte(mork_ch inFirstHex, mork_ch inSecondHex);
+
   mork_size TokenAsHex(void* outBuf, mork_token inToken);
   // TokenAsHex() is the same as sprintf(outBuf, "%lX", (long) inToken);
  
