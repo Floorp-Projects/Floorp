@@ -30,6 +30,7 @@
 
 #include "nsImapCore.h"
 #include "nsImapProtocol.h"
+#include "nsIMsgMailNewsUrl.h"
 #include "nscore.h"
 #include "nsImapProxyEvent.h"
 #include "nsIMAPHostSessionList.h"
@@ -43,7 +44,7 @@
 #include "nsXPIDLString.h"
 
 #include "nsImapStringBundle.h"
-
+#include "nsCOMPtr.h"
 PRLogModuleInfo *IMAP;
 
 // netlib required files
@@ -447,7 +448,10 @@ nsresult nsImapProtocol::SetupWithUrl(nsIURI * aURL, nsISupports* aConsumer)
         if (NS_FAILED(rv)) return rv;
 
         if (!m_server)
-            rv = m_runningUrl->GetServer(getter_AddRefs(m_server));
+		{
+			nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(m_runningUrl);
+            rv = mailnewsUrl->GetServer(getter_AddRefs(m_server));
+		}
 
 		if ( m_runningUrl && !m_channel /* and we don't have a transport yet */)
 		{
@@ -493,6 +497,7 @@ void nsImapProtocol::ReleaseUrlState()
 void nsImapProtocol::ImapThreadMain(void *aParm)
 {
     nsImapProtocol *me = (nsImapProtocol *) aParm;
+	nsresult result = NS_OK;
     NS_ASSERTION(me, "Yuk, me is null.\n");
     
     PR_CEnterMonitor(aParm);
@@ -504,22 +509,16 @@ void nsImapProtocol::ImapThreadMain(void *aParm)
         return;
     }
 
-	// Wrap the PLQueue we're going to make in an nsIEventQueue
-	nsresult result = NS_OK;
-	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result);
-	if (NS_FAILED(result))
-		return;
-		
-		PLEventQueue* aPLQueue = PL_CreateEventQueue("ImapProtocolThread",
-                                       PR_GetCurrentThread());
 
+	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &result); 
 
-	if (NS_FAILED(result = pEventQService->CreateFromPLEventQueue(aPLQueue, getter_AddRefs(me->m_eventQueue))))
-		return;
+    result = pEventQService->CreateThreadEventQueue();
+	
+	pEventQService->GetThreadEventQueue(PR_GetCurrentThread(),getter_AddRefs(me->m_eventQueue));
 
     NS_ASSERTION(me->m_eventQueue, 
                  "Unable to create imap thread event queue.\n");
-    if (!me->m_eventQueue)
+    if (NS_FAILED(result) || !me->m_eventQueue)
     {
         PR_CExitMonitor(me);
         return;
@@ -805,6 +804,13 @@ void nsImapProtocol::EstablishServerConnection()
 void nsImapProtocol::ProcessCurrentURL()
 {
 	PRBool	logonFailed = FALSE;
+
+	if (!TestFlag(IMAP_CONNECTION_IS_OPEN))
+	{
+		nsCOMPtr<nsISupports> sprts = do_QueryInterface (m_runningUrl);
+		m_channel->AsyncRead(0, -1, sprts,this /* stream observer */);
+		SetFlag(IMAP_CONNECTION_IS_OPEN);
+	}
     
 	// we used to check if the current running url was 
 	// Reinitialize the parser
@@ -1092,12 +1098,6 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 			// can get away with this.
 			m_needNoop = (imapAction == nsIImapUrl::nsImapSelectFolder || imapAction == nsIImapUrl::nsImapDeleteAllMsgs);
 
-			if (!TestFlag(IMAP_CONNECTION_IS_OPEN))
-			{
-				m_channel->AsyncRead(0, -1, aURL,this /* stream observer */);
-				SetFlag(IMAP_CONNECTION_IS_OPEN);
-			}
-
 			// We now have a url to run so signal the monitor for url ready to be processed...
 			PR_EnterMonitor(m_urlReadyToRunMonitor);
 			m_nextUrlReadyToRun = PR_TRUE;
@@ -1189,8 +1189,9 @@ NS_IMETHODIMP nsImapProtocol::CanHandleUrl(nsIImapUrl * aImapUrl,
         PRBool isSelectedStateUrl = imapState ==
             nsIImapUrl::nsImapSelectedState;
         
+		nsCOMPtr<nsIMsgMailNewsUrl> msgUrl = do_QueryInterface(aImapUrl);
         nsCOMPtr<nsIMsgIncomingServer> server;
-        rv = aImapUrl->GetServer(getter_AddRefs(server));
+        rv = msgUrl->GetServer(getter_AddRefs(server));
         if (NS_SUCCEEDED(rv))
         {
             // compare host/user between url and connection.
@@ -5460,14 +5461,13 @@ PRBool nsImapProtocol::TryToLogon()
 	PRBool loginSucceeded = PR_FALSE;
 	char * password = nsnull;
 	char * userName = nsnull;
+	nsresult rv = NS_OK;
 
 	// get the password and user name for the current incoming server...
-	nsCOMPtr<nsIMsgIncomingServer>  server;
-	nsresult rv = m_runningUrl->GetServer(getter_AddRefs(server));
-	if (NS_SUCCEEDED(rv) && server)
+	if (m_server)
 	{
-		rv = server->GetPassword(&password);
-		rv = server->GetUsername(&userName);
+		rv = m_server->GetPassword(&password);
+		rv = m_server->GetUsername(&userName);
 
 	}
 
