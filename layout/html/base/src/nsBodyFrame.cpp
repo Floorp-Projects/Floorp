@@ -77,7 +77,8 @@ nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kIAbsoluteItemsIID)) {
-    *aInstancePtr = (void*) ((nsIAbsoluteItems*) this);
+    nsIAbsoluteItems* tmp = this;
+    *aInstancePtr = (void*) tmp;
     return NS_OK;
   }
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);
@@ -259,91 +260,89 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
     // Get the target and the type of reflow command
     aReflowState.reflowCommand->GetTarget(reflowCmdTarget);
     aReflowState.reflowCommand->GetType(reflowCmdType);
-    if (nsIReflowCommand::StyleChanged != reflowCmdType) {
-      // XXX CONSTRUCTION
-      if (this == reflowCmdTarget) {
-        NS_ASSERTION(nsIReflowCommand::FrameAppended == reflowCmdType,
-                     "unexpected reflow command");
 
-        // Append reflow commands will be targeted at us. Reset the target and
-        // send the reflow command.
-        // XXX Would it be better to have the frame generate the reflow command
-        // that way it could correctly set the target?
-        reflowCmdTarget = mFirstChild;
-        aReflowState.reflowCommand->SetTarget(mFirstChild);
+    if (this == reflowCmdTarget) {
+      NS_ASSERTION(nsIReflowCommand::FrameAppended == reflowCmdType,
+                   "unexpected reflow command");
 
-        // Reset the geometric and content parent for each of the child frames
-        nsIFrame* childList;
-        aReflowState.reflowCommand->GetChildFrame(childList);
-        for (nsIFrame* frame = childList; nsnull != frame; frame->GetNextSibling(frame)) {
-          frame->SetGeometricParent(mFirstChild);
-          frame->SetContentParent(mFirstChild);
-        }
+      // Append reflow commands will be targeted at us. Reset the target and
+      // send the reflow command.
+      // XXX Would it be better to have the frame generate the reflow command
+      // that way it could correctly set the target?
+      reflowCmdTarget = mFirstChild;
+      aReflowState.reflowCommand->SetTarget(mFirstChild);
+
+      // Reset the geometric and content parent for each of the child frames
+      nsIFrame* childList;
+      aReflowState.reflowCommand->GetChildFrame(childList);
+      for (nsIFrame* frame = childList; nsnull != frame; frame->GetNextSibling(frame)) {
+        frame->SetGeometricParent(mFirstChild);
+        frame->SetContentParent(mFirstChild);
       }
+    }
 
-      // The reflow command should never be target for us
+    // The reflow command should never be target for us
 #ifdef NS_DEBUG
-      NS_ASSERTION(this != reflowCmdTarget, "bad reflow command target");
+    NS_ASSERTION(this != reflowCmdTarget, "bad reflow command target");
 #endif
 
-      // Is the next frame in the reflow chain the pseudo block-frame or an
-      // absolutely positioned frame?
-      //
-      // If the next frame is the pseudo block-frame then fall thru to the main
-      // code below. The only thing that should be handled below is absolutely
-      // positioned elements...
-      nsIFrame* nextFrame;
-      aReflowState.reflowCommand->GetNext(nextFrame);
-      if ((nsnull != nextFrame) && (mFirstChild != nextFrame)) {
-        NS_ASSERTION(this != nextFrame, "huh?");
-        NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                       ("nsBodyFrame::Reflow: reflowing frame=%p",
-                        nextFrame));
-        // It's an absolutely positioned frame that's the target.
-        // XXX FIX ME. For an absolutely positioned item we need to properly
-        // compute the available space and compute the origin...
-        nsIHTMLReflow*  reflow;
-        if (NS_OK == nextFrame->QueryInterface(kIHTMLReflowIID, (void**)&reflow)) {
-          nsHTMLReflowState reflowState(aPresContext, nextFrame, aReflowState,
-                                        aReflowState.maxSize);
-          reflowState.spaceManager = mSpaceManager;
-          reflow->WillReflow(aPresContext);
-          nsresult rv = reflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-          if (NS_OK != rv) {
-            return rv;
-          }
-          nextFrame->SizeTo(aDesiredSize.width, aDesiredSize.height);
+    // Is the next frame in the reflow chain the pseudo block-frame or an
+    // absolutely positioned frame?
+    //
+    // If the next frame is the pseudo block-frame then fall thru to the main
+    // code below. The only thing that should be handled below is absolutely
+    // positioned elements...
+    nsIFrame* nextFrame;
+    aReflowState.reflowCommand->GetNext(nextFrame);
+    if ((nsnull != nextFrame) && (mFirstChild != nextFrame)) {
+      NS_ASSERTION(this != nextFrame, "huh?");
+      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                     ("nsBodyFrame::Reflow: reflowing frame=%p",
+                      nextFrame));
+      // It's an absolutely positioned frame that's the target.
+      // XXX FIX ME. For an absolutely positioned item we need to properly
+      // compute the available space and compute the origin...
+      nsIHTMLReflow*  reflow;
+      if (NS_OK == nextFrame->QueryInterface(kIHTMLReflowIID, (void**)&reflow)) {
+        nsHTMLReflowState reflowState(aPresContext, nextFrame, aReflowState,
+                                      aReflowState.maxSize);
+        reflowState.spaceManager = mSpaceManager;
+        reflow->WillReflow(aPresContext);
+        nsresult rv = reflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+        if (NS_OK != rv) {
+          return rv;
         }
-
-        // XXX Commented this out because the absolute positioning code
-        // above doesn't check if it needs to position the absolute frame.
-#if 0
-        // XXX Temporary code: if the frame we just reflowed is a
-        // floating frame then fall through into the main reflow pathway
-        // after clearing out our incremental reflow status. This forces
-        // our child to adjust to the new size of the floater.
-        //
-        // XXXX We shouldn't be here at all for floating frames, just for absolutely
-        // positioned frames. What's happening is that if a child of the body is
-        // floated then the reflow state path isn't getting set up correctly. The
-        // body's block pseudo-frame isn't getting included in the reflow path like
-        // it shoudld and that's why we end up here
-        const nsStyleDisplay* display;
-        nextFrame->GetStyleData(eStyleStruct_Display,
-                                (const nsStyleStruct*&) display);
-        if (NS_STYLE_FLOAT_NONE == display->mFloats) {
-          return NS_OK;
-        }
-#endif
-
-        // Switch over to a reflow-state that is called resize instead
-        // of an incremental reflow state like we were passed in.
-        resizeReflowState.reason = eReflowReason_Resize;
-        resizeReflowState.reflowCommand = nsnull;
-        rsp = &resizeReflowState;
-
-        // XXX End temporary code
+        nextFrame->SizeTo(aDesiredSize.width, aDesiredSize.height);
       }
+
+      // XXX Commented this out because the absolute positioning code
+      // above doesn't check if it needs to position the absolute frame.
+#if 0
+      // XXX Temporary code: if the frame we just reflowed is a
+      // floating frame then fall through into the main reflow pathway
+      // after clearing out our incremental reflow status. This forces
+      // our child to adjust to the new size of the floater.
+      //
+      // XXXX We shouldn't be here at all for floating frames, just for absolutely
+      // positioned frames. What's happening is that if a child of the body is
+      // floated then the reflow state path isn't getting set up correctly. The
+      // body's block pseudo-frame isn't getting included in the reflow path like
+      // it shoudld and that's why we end up here
+      const nsStyleDisplay* display;
+      nextFrame->GetStyleData(eStyleStruct_Display,
+                              (const nsStyleStruct*&) display);
+      if (NS_STYLE_FLOAT_NONE == display->mFloats) {
+        return NS_OK;
+      }
+#endif
+
+      // Switch over to a reflow-state that is called resize instead
+      // of an incremental reflow state like we were passed in.
+      resizeReflowState.reason = eReflowReason_Resize;
+      resizeReflowState.reflowCommand = nsnull;
+      rsp = &resizeReflowState;
+
+      // XXX End temporary code
     }
   }
 
