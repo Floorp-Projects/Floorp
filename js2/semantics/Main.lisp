@@ -31,7 +31,7 @@
   '("Utilities" "Markup" "RTF" "HTML" "GrammarSymbol" "Grammar" "Parser" "Metaparser" "Lexer" "Calculus" "CalculusMarkup"))
 
 (defparameter *semantics-filenames*
-  '("JS20/Parser" "JS20/Lexer" "JS20/RegExp" #|"JSECMA/Lexer" "JSECMA/Parser"|# ))
+  '("JS20/Parser" "JS20/Lexer" "JS20/Kernel" "JS20/RegExp"))
 
 (defparameter *semantic-engine-directory*
   (make-pathname 
@@ -71,7 +71,7 @@
   (operate-on-files #-allegro #'load #+allegro #'load-compiled *semantic-engine-filenames*))
 
 (defun load-semantics ()
-  (operate-on-files #'load *semantics-filenames*))
+  (operate-on-files #-allegro #'load #+allegro #'load-compiled *semantics-filenames*))
 
 
 (defmacro with-local-output ((stream filename) &body body)
