@@ -1,0 +1,6 @@
+This dir, x11shared, is for code common to multiple X11
+implementations (eg: gtk, xlib, xprint).
+
+Code that is being (or would be) *replicated* in several
+of these should be factored out and put here.
+
