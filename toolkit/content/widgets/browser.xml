@@ -601,22 +601,26 @@
               this._f = false;
               return;
             }
-            this.showAutoscrollMarker(event);
+            
+            if (event.button == 1)
+              this.showAutoscrollMarker(event);
           }
         ]]>        
       </handler>
-      <handler event="mousedown" button="1">
+      <handler event="mousedown">
         <![CDATA[
           if (!this._isScrolling) {
-            this._startX = event.clientX;
-            this._startY = event.clientY;
-            this._clientFrameDoc = event.originalTarget.ownerDocument;
-            this._clientFrameBody = (this._clientFrameDoc.getElementsByTagName('body')[0]) ? this._clientFrameDoc.getElementsByTagName('body')[0] : this._clientFrameDoc.getElementsByTagName('*')[0];
-            this._isScrolling = true;
-            if (!this.isLink(event.originalTarget))
-              this._snapOn = true;
+            if (event.button == 1) {
+              this._startX = event.clientX;
+              this._startY = event.clientY;
+              this._clientFrameDoc = event.originalTarget.ownerDocument;
+              this._clientFrameBody = (this._clientFrameDoc.getElementsByTagName('body')[0]) ? this._clientFrameDoc.getElementsByTagName('body')[0] : this._clientFrameDoc.getElementsByTagName('*')[0];
+              this._isScrolling = true;
+              if (!this.isLink(event.originalTarget))
+                this._snapOn = true;
 
-            window.setTimeout(function foo(a) { a.autoScrollLoop() }, 5, this);
+              window.setTimeout(function foo(a) { a.autoScrollLoop() }, 5, this);
+            }
           }
           else {
             if (event.originalTarget == this._autoScrollMarkerImage)
