@@ -788,6 +788,14 @@ nsresult nsAbView::CreateCollationKey(const PRUnichar *aSource, PRUint8 **aKey, 
   NS_ENSURE_ARG_POINTER(aKey);
   NS_ENSURE_ARG_POINTER(aKeyLen);
 
+  if (!*aSource)
+  {
+    // no string, so no key.
+    *aKey = nsnull;
+    *aKeyLen = 0;
+    return NS_OK;
+  }
+
   nsresult rv;
   if (!mCollationKeyGenerator)
   {
