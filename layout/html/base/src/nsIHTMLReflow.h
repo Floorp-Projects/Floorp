@@ -143,8 +143,7 @@ struct nsHTMLReflowState : nsReflowState {
   // use your intrinsic width as the computed width
   //
   // For block-level frames, the computed width is based on the width of the
-  // containing block and the margin/border/padding areas and the min/max
-  // width
+  // containing block, the margin/border/padding areas, and the min/max width
   nscoord          mComputedWidth; 
 
   // The computed height specifies the frame's content height, and it does
