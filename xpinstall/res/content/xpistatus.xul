@@ -57,7 +57,7 @@
         <spring id="verticalSmallSpacer"/>            
 
         <box align="vertical" id="treebox">  
-                <tree id="modulesTree">
+                <tree id="modulesTree" class="inset">
                     <treecolgroup>
                       <treecol flex="1"/>
                       <splitter class="tree-splitter"/>
@@ -65,8 +65,8 @@
                     </treecolgroup>
                     <treehead>
                         <treerow>
-                            <treecell id="moduleName" value="&moduleName.label;" />
-                            <treecell id="moduleSource" value="&moduleSource.label;"/>
+                            <treecell id="moduleName" class="treecell-header" value="&moduleName.label;" />
+                            <treecell id="moduleSource" class="treecell-header" value="&moduleSource.label;"/>
                         </treerow>
                     </treehead>
 
