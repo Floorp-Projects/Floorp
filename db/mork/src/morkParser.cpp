@@ -600,6 +600,19 @@ morkParser::ReadCell(morkEnv* ev)
     this->UnexpectedEofError(ev);
 }
 
+void morkParser::ReadRowPos(morkEnv* ev)
+{
+  morkStream* s = mParser_Stream;
+
+  int c; // next character
+  mork_pos rowPos = this->ReadHex(ev, &c);
+  
+  if ( ev->Good() && c != EOF ) // should put back byte after hex?
+    mParser_Stream->Ungetc(c);
+
+  this->OnRowPos(ev, rowPos);
+}
+
 void morkParser::ReadRow(morkEnv* ev, int c)
 // zm:Row       ::= zm:S? '[' zm:S? zm:Id zm:RowItem* zm:S? ']'
 // zm:RowItem   ::= zm:MetaRow | zm:Cell
@@ -612,15 +625,15 @@ void morkParser::ReadRow(morkEnv* ev, int c)
     if ( mParser_Change )
       mParser_RowChange = mParser_Change;
 
+    mork_bool cutAllRowCols = morkBool_kFalse;
+
     if ( c == '[' )
     {
-      mork_bool cutAllRowCols = morkBool_kFalse;
-      
       if ( ( c = this->NextChar(ev) ) == '-' )
         cutAllRowCols = morkBool_kTrue;
       else if ( ev->Good() && c != EOF )
         mParser_Stream->Ungetc(c);
-      
+
       if ( this->ReadMid(ev, &mParser_RowMid) )
       {
         mParser_InRow = morkBool_kTrue;
@@ -660,6 +673,14 @@ void morkParser::ReadRow(morkEnv* ev, int c)
           } // switch
         } // while
         
+        if ( ev->Good() )
+        {
+          if ( (c = this->NextChar(ev)) == '!' )
+            this->ReadRowPos(ev);
+          else if ( c != EOF && ev->Good() )
+            mParser_Stream->Ungetc(c);
+        }
+        
         this->EndSpanOnThisByte(ev, &mParser_RowSpan);
         mParser_InRow = morkBool_kFalse;
         this->OnRowEnd(ev, mParser_RowSpan);
@@ -675,9 +696,17 @@ void morkParser::ReadRow(morkEnv* ev, int c)
       {
         mParser_InRow = morkBool_kTrue;
         this->OnNewRow(ev, *mParser_RowSpan.AsPlace(),
-          mParser_RowMid, mParser_RowChange);
+          mParser_RowMid, cutAllRowCols);
 
         mParser_Change = mParser_RowChange = morkChange_kNil;
+        
+        if ( ev->Good() )
+        {
+          if ( (c = this->NextChar(ev)) == '!' )
+            this->ReadRowPos(ev);
+          else if ( c != EOF && ev->Good() )
+            s->Ungetc(c);
+        }
 
         this->EndSpanOnThisByte(ev, &mParser_RowSpan);
         mParser_InRow = morkBool_kFalse;
@@ -1109,6 +1138,7 @@ mork_bool morkParser::ReadAt(morkEnv* ev, mork_bool inInsideGroup)
   {
     morkStream* s = mParser_Stream;
      register int c;
+    int next = 0;
     if ( ((c = s->Getc(ev)) == '{' || c == '}') && ev->Good() )
      {
        if ( c == '{' ) // start of new group?
