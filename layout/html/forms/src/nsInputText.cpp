@@ -173,6 +173,7 @@ nsInputTextFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aView)
     nsAutoString valAttr;
     nsContentAttr valStatus = ((nsInput *)content)->GetAttribute(nsHTMLAtoms::value, valAttr);
     text->SetText(valAttr);
+    NS_RELEASE(text);
     NS_RELEASE(content);
   }
 }
