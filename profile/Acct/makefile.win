@@ -77,7 +77,7 @@ LLIBS	= \
 	$(DIST)\lib\xpcom.lib
 
 WIN_LIBS =  \
-	rasapi32.lib \
+#	rasapi32.lib \
 	ole32.lib \
 	tapi32.lib \
 	shell32.lib
