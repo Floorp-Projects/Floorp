@@ -1126,6 +1126,7 @@ case "$target" in
 #include <stdio.h>
 #include <link.h>
 #include <dlfcn.h>
+#ifdef _dl_loaded
 void __dump_link_map(void) {
   struct link_map *map = _dl_loaded;
   while (NULL != map) {printf("0x%08x %s\n", map->l_addr, map->l_name); map = map->l_next;}
@@ -1137,6 +1138,10 @@ int main() {
   dlopen("/tmp/../tmp/conftest1.so",RTLD_LAZY);
   __dump_link_map();
 }
+#else
+/* _dl_loaded isn't defined, so this should be either a libc5 (glibc1) system, or a glibc2 system that doesn't have the multiple load bug (i.e., RH6.0).*/
+int main() { printf("./conftest1.so\n"); }
+#endif
 EOF
 
 	    cat >> conftest1.C <<\EOF
