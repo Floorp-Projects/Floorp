@@ -40,6 +40,7 @@
 #include "nsTextFragment.h"
 #include "nsISupports.h"
 #include "nsIPresContext.h"
+#include "nsIObserver.h"
 #ifdef IBMBIDI
 #include "nsBidi.h"
 #include "nsBidiUtils.h"
@@ -348,8 +349,13 @@ protected:
   PRUint8 mFlags;
 
   // prefs used to configure the double-click word selection behavior
-  static PRPackedBool sWordSelectPrefInited;            // have we read the prefs yet?
-  static PRPackedBool sWordSelectStopAtPunctuation;     // should we stop at punctuation?
+  class WordSelectListener: public nsIObserver {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+  };
+  static WordSelectListener *sWordSelectListener; // have we read the prefs yet?
+  static PRBool sWordSelectStopAtPunctuation;     // should we stop at punctuation?
 
 #ifdef DEBUG
   static void SelfTest(nsILineBreaker* aLineBreaker,
