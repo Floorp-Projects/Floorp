@@ -43,11 +43,11 @@ typedef uint32 uint32_t;
 
 typedef prword_t uintVP_t; /* unsigned that is same size as a void pointer */
 
-#if !defined(BSDI) && !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(LINUX) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11)
+#if !defined(BSDI) && !defined(IRIX6_2) && !defined(IRIX6_3) && !defined(LINUX) && !defined(SOLARIS2_6) && !defined(HPUX10_20) && !defined(HPUX10_30) && !defined(HPUX11) && !defined(RHAPSODY)
 typedef int64 int64_t;
 #else
 /*
-** On BSDI, for some damn reason, they define long long's for these types
+** On BSDI, for some reason, they define long long's for these types
 ** even though they aren't actually 64 bits wide!
 */
 #define int64_t int64
