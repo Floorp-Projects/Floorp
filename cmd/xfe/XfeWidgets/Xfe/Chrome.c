@@ -311,7 +311,7 @@ _XFE_WIDGET_CLASS_RECORD(chrome,Chrome) =
     
     /* Composite Part */
     {
-		XtInheritGeometryManager,				/* geometry_manager		*/
+		_XfeLiberalGeometryManager,				/* geometry_manager		*/
 		XtInheritChangeManaged,					/* change_managed		*/
 		XtInheritInsertChild,					/* insert_child			*/
 		XtInheritDeleteChild,					/* delete_child			*/
@@ -557,10 +557,77 @@ static void
 PreferredGeometry(Widget w,Dimension * width,Dimension * height)
 {
     XfeChromePart *		cp = _XfeChromePart(w);
+	Dimension			max_width = 0;
+	Dimension			max_height = 0;
 
 	*width  = _XfemOffsetLeft(w) + _XfemOffsetRight(w);
 	*height = _XfemOffsetTop(w)  + _XfemOffsetBottom(w);
 
+	/* center_view */
+	if (SHOW_CENTER_VIEW(cp))
+	{
+		max_width = _XfeWidth(cp->center_view);
+		max_height = _XfeHeight(cp->center_view);
+	}
+
+	/* bottom_view */
+	if (SHOW_BOTTOM_VIEW(cp))
+	{
+		max_width = XfeMax(max_width,_XfeWidth(cp->bottom_view));
+		
+		*height += _XfeHeight(cp->bottom_view);
+	}
+
+	/* top_view */
+	if (SHOW_TOP_VIEW(cp))
+	{
+		max_width = XfeMax(max_width,_XfeWidth(cp->top_view));
+		
+		*height += _XfeHeight(cp->top_view);
+	}
+
+	/* menu_bar */
+	if (SHOW_MENU_BAR(cp))
+	{
+		max_width = XfeMax(max_width,_XfeWidth(cp->menu_bar));
+		
+		*height += _XfeHeight(cp->menu_bar);
+	}
+
+	/* tool_box */
+	if (SHOW_TOOL_BOX(cp))
+	{
+		max_width = XfeMax(max_width,_XfeWidth(cp->tool_box));
+		
+		*height += _XfeHeight(cp->tool_box);
+	}
+
+	/* dash_board */
+	if (SHOW_DASH_BOARD(cp))
+	{
+		max_width = XfeMax(max_width,_XfeWidth(cp->dash_board));
+		
+		*height += _XfeHeight(cp->dash_board);
+	}
+
+	/* left_view */
+	if (SHOW_LEFT_VIEW(cp))
+	{
+		*width += _XfeWidth(cp->left_view);
+		
+		max_height = XfeMax(max_height,_XfeHeight(cp->left_view));
+	}
+
+	/* right_view */
+	if (SHOW_RIGHT_VIEW(cp))
+	{
+		*width += _XfeWidth(cp->right_view);
+		
+		max_height = XfeMax(max_height,_XfeHeight(cp->right_view));
+	}
+
+	*width += max_width;
+	*height += max_height;
 }
 /*----------------------------------------------------------------------*/
 static Boolean
