@@ -33,6 +33,9 @@
 #if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>
 #define NS_MEMORY_FLUSHER_THREAD
+#elif defined(XP_MAC)
+#include <MacMemory.h>
+#define NS_MEMORY_FLUSHER_THREAD
 #else
 // Need to implement the nsIMemory::IsLowMemory() predicate
 #undef NS_MEMORY_FLUSHER_THREAD
@@ -337,6 +340,37 @@ nsMemoryImpl::IsLowMemory(PRBool *result)
     MEMORYSTATUS stat;
     GlobalMemoryStatus(&stat);
     *result = ((float)stat.dwAvailPageFile / stat.dwTotalPageFile) < 0.1;
+#elif defined(XP_MAC)
+
+  const long kReserveHeapFreeSpace = (256 * 1024);
+  const long kReserveHeapContigSpace = (128 * 1024);
+
+  long totalSpace, contiguousSpace;
+  // this call measures how much memory would be available if the OS
+  // purged. Despite the name, it does not purge (that happens
+  // automatically when heap space is low).
+  ::PurgeSpace(&totalSpace, &contiguousSpace);
+  if (totalSpace < kReserveHeapFreeSpace || contiguousSpace < kReserveHeapContigSpace)
+  {
+    NS_WARNING("Found that heap mem is low");
+    *result = PR_TRUE;
+    return NS_OK;
+  }
+
+  // see how much temp mem is available (since our allocators allocate 1Mb chunks
+  // in temp mem. We don't use TempMaxMem() (to get contig space) here, because it
+  // compacts the application heap, so can be slow.
+  const long kReserveTempFreeSpace = (2 * 1024 * 1024);     // 2Mb  
+  long  totalTempSpace = ::TempFreeMem();  
+  if (totalTempSpace < kReserveTempFreeSpace)
+  {
+    NS_WARNING("Found that temp mem is low");
+    *result = PR_TRUE;
+    return NS_OK;
+  }  
+
+  *result = PR_FALSE;
+  
 #else
     *result = PR_FALSE;
 #endif
