@@ -20,7 +20,7 @@
  *   ilclient.c --- Management of imagelib client data structures,
  *                  including image cache.
  *
- *   $Id: ilclient.cpp,v 3.1 1998/07/27 16:09:37 hardts%netscape.com Exp $
+ *   $Id: ilclient.cpp,v 3.2 1998/08/18 22:24:59 pnunn%netscape.com Exp $
  */
 
 
@@ -327,13 +327,7 @@ il_image_match(il_container *ic,          /* Candidate for match. */
             }
         }
     }
-
-
-        return FALSE;
-
-    if((ic->display_type==IL_Printer) &&
-	(ic->dest_width != ic->image->header.width) &&
-	(ic->dest_height != ic->image->header.height ))
+    
     /* Check the url (we have already checked the hash value which is based
        on the url.) */
     if (strcmp(image_url, ic->url_address))
