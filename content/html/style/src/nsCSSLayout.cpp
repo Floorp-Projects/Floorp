@@ -15,6 +15,7 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#if 0
 #include "nsCSSLayout.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -121,3 +122,4 @@ nsCSSLayout::RelativePositionChildren(nsIPresContext* aCX,
     kid->GetNextSibling(kid);
   }
 }
+#endif
