@@ -28,8 +28,8 @@ PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex,
 {
 #define PARAM_BUFFER_COUNT     32
 
-    nsXPCMiniVarient paramBuffer[PARAM_BUFFER_COUNT];
-    nsXPCMiniVarient* dispatchParams = NULL;
+    nsXPCMiniVariant paramBuffer[PARAM_BUFFER_COUNT];
+    nsXPCMiniVariant* dispatchParams = NULL;
     nsXPCWrappedJSClass* clazz;
     nsIInterfaceInfo* iface_info;
     const nsXPCMethodInfo* info;
@@ -53,9 +53,9 @@ PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex,
 
     paramCount = info->GetParamCount();
 
-    // setup varient array pointer
+    // setup variant array pointer
     if(paramCount > PARAM_BUFFER_COUNT)
-        dispatchParams = new nsXPCMiniVarient[paramCount];
+        dispatchParams = new nsXPCMiniVariant[paramCount];
     else
         dispatchParams = paramBuffer;
     NS_ASSERTION(dispatchParams,"no place for params");
@@ -65,7 +65,7 @@ PrepareAndDispatch(nsXPCWrappedJS* self, uint32 methodIndex,
     {
         const nsXPCParamInfo& param = info->GetParam(i);
         const nsXPCType& type = param.GetType();
-        nsXPCMiniVarient* dp = &dispatchParams[i];
+        nsXPCMiniVariant* dp = &dispatchParams[i];
 
         if(param.IsOut() || (type & nsXPCType::IS_POINTER))
         {
@@ -130,11 +130,11 @@ static __declspec(naked) void SharedStub(void)
 }
 
 #define STUB_ENTRY(n) \
-__declspec(naked) nsresult nsXPCWrappedJS::Stub##n() \
+__declspec(naked) nsresult __stdcall nsXPCWrappedJS::Stub##n() \
 { __asm push n __asm jmp SharedStub }
 
 #define SENTINEL_ENTRY(n) \
-nsresult nsXPCWrappedJS::Sentinel##n() \
+nsresult __stdcall nsXPCWrappedJS::Sentinel##n() \
 { \
     NS_ASSERTION(0,"nsXPCWrappedJS::Sentinel called"); \
     return NS_ERROR_NOT_IMPLEMENTED; \

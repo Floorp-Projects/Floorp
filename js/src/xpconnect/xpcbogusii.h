@@ -80,7 +80,7 @@ public:
 };
 
 // this is used only for WrappedJS stub param repackaging
-struct nsXPCMiniVarient
+struct nsXPCMiniVariant
 {
 // No ctors or dtors so that we can use arrays of these on the stack
 // with no penalty.
@@ -103,7 +103,7 @@ struct nsXPCMiniVarient
     }         val;
 };
 
-struct nsXPCVarient
+struct nsXPCVariant
 {
 // No ctors or dtors so that we can use arrays of these on the stack
 // with no penalty.
@@ -232,14 +232,14 @@ class nsXPCConstant
 public:
     // XXX simple ctors, we can do better
     nsXPCConstant() {}
-    nsXPCConstant(char* aName, const nsXPCVarient& aVal)
+    nsXPCConstant(char* aName, const nsXPCVariant& aVal)
         : mName(aName), mVal(aVal) {};
 
     const char*         GetName()  const {return mName;}
-    const nsXPCVarient& GetValue() const {return mVal;}
+    const nsXPCVariant& GetValue() const {return mVal;}
 private:
     char* mName;
-    nsXPCVarient mVal;
+    nsXPCVariant mVal;
 };
 
 class nsInterfaceInfo : public nsIInterfaceInfo

@@ -34,7 +34,6 @@ OBJS=					\
 	.\$(OBJDIR)\nsXPConnect.obj	\
 	.\$(OBJDIR)\xpcarbitrary.obj	\
 	.\$(OBJDIR)\xpcbogusii.obj	\
-	.\$(OBJDIR)\xpcbogusjs.obj	\
 	.\$(OBJDIR)\xpccontext.obj	\
 	.\$(OBJDIR)\xpcconvert.obj	\
 	.\$(OBJDIR)\xpcinvoke.obj	\

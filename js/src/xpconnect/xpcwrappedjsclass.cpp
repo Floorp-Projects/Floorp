@@ -167,17 +167,11 @@ nsXPCWrappedJSClass::IsWrappedJS(nsISupports* aPtr)
            result == WrappedJSIdentity::GetSingleton();
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
                                              REFNSIID aIID,
                                              void** aInstancePtr)
 {
-    if(NULL == aInstancePtr)
-    {
-        NS_PRECONDITION(0, "null pointer");
-        return NS_ERROR_NULL_POINTER;
-    }
-
     if(aIID.Equals(kISupportsIID))
     {
         nsXPCWrappedJS* root = self->GetRootWrapper();
@@ -224,10 +218,10 @@ nsXPCWrappedJSClass::GetRootJSObject(JSObject* aJSObj)
     return result ? result : aJSObj;
 }
 
-nsresult
+NS_IMETHODIMP
 nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
                                 const nsXPCMethodInfo* info,
-                                nsXPCMiniVarient* params)
+                                nsXPCMiniVariant* params)
 {
 #define ARGS_BUFFER_COUNT     32
 
@@ -270,15 +264,15 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
 
         if(param.IsIn())
         {
-            nsXPCMiniVarient* pv;
+            nsXPCMiniVariant* pv;
 
             if(param.IsOut())
-                pv = (nsXPCMiniVarient*) params[i].val.p;
+                pv = (nsXPCMiniVariant*) params[i].val.p;
             else
                 pv = &params[i];
 
             if(type & nsXPCType::IS_POINTER)
-                pv = (nsXPCMiniVarient*) pv->val.p;
+                pv = (nsXPCMiniVariant*) pv->val.p;
 
             if(!xpc_ConvertNativeData2JS(&val, &pv->val, type))
             {
@@ -324,16 +318,16 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper,
         {
             jsval val;
             const nsXPCType& type = param.GetType();
-            nsXPCMiniVarient* pv;
+            nsXPCMiniVariant* pv;
 
             if(param.IsRetval())
                 val = result;
             else if(!JS_GetProperty(cx, JSVAL_TO_OBJECT(argv[i]), XPC_VAL_STR, &val))
                 goto done;
 
-            pv = (nsXPCMiniVarient*) params[i].val.p;
+            pv = (nsXPCMiniVariant*) params[i].val.p;
             if(type & nsXPCType::IS_POINTER)
-                pv = (nsXPCMiniVarient*) pv->val.p;
+                pv = (nsXPCMiniVariant*) pv->val.p;
 
             if(!xpc_ConvertJSData2Native(cx, &pv->val, &val, type))
             {

@@ -23,10 +23,27 @@
 // NOTE: much of the fancy footwork is done in xpcstubs.cpp
 
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kWrappedJSMethodsIID, NS_IXPCONNECT_WRAPPED_JS_METHODS_IID);
 
-nsresult
+NS_IMETHODIMP
 nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
+    if(NULL == aInstancePtr)
+    {
+        NS_PRECONDITION(0, "null pointer");
+        return NS_ERROR_NULL_POINTER;
+    }
+
+    if(aIID.Equals(kWrappedJSMethodsIID))
+    {
+        if(!mMethods && !(mMethods = new nsXPCWrappedJSMethods(this)))
+            return NS_ERROR_OUT_OF_MEMORY;
+        // intentional second addref
+        NS_ADDREF(mMethods);
+        *aInstancePtr = (void*) mMethods;
+        return NS_OK;
+    }
+
     return mClass->DelegatedQueryInterface(this, aIID, aInstancePtr);
 }
 
@@ -36,9 +53,8 @@ nsrefcnt
 nsXPCWrappedJS::AddRef(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
-    ++mRefCnt;
 
-    if(1 == mRefCnt && mRoot && mRoot != this)
+    if(1 == ++mRefCnt && mRoot && mRoot != this)
         NS_ADDREF(mRoot);
 
     return mRefCnt;
@@ -49,8 +65,8 @@ nsXPCWrappedJS::Release(void)
 {
     NS_PRECONDITION(mRoot, "bad root");
     NS_PRECONDITION(0 != mRefCnt, "dup release");
-    --mRefCnt;
-    if(0 == mRefCnt)
+
+    if(0 == --mRefCnt)
     {
         if(mRoot == this)
         {
@@ -165,9 +181,9 @@ nsXPCWrappedJS::nsXPCWrappedJS(JSObject* aJSObj,
                                nsXPCWrappedJS* root)
     : mJSObj(aJSObj),
       mClass(aClass),
+      mMethods(NULL),
       mRoot(root ? root : this),
       mNext(NULL)
-
 {
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
@@ -180,6 +196,8 @@ nsXPCWrappedJS::~nsXPCWrappedJS()
     NS_PRECONDITION(0 == mRefCnt, "refcounting error");
     JS_RemoveRoot(mClass->GetXPCContext()->GetJSContext(), &mJSObj);
     NS_RELEASE(mClass);
+    if(mMethods)
+        NS_RELEASE(mMethods);
     if(mNext)
         NS_DELETEXPCOM(mNext);  // cascaded delete
 }
@@ -201,4 +219,96 @@ nsXPCWrappedJS::Find(REFNSIID aIID)
     return NULL;
 }
 
+/***************************************************************************/
 
+NS_IMETHODIMP
+nsXPCWrappedJSMethods::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    NS_PRECONDITION(mWrapper, "bad state");
+    return mWrapper->QueryInterface(aIID, aInstancePtr);
+}
+
+// maintain a weak link to the wrapper
+
+nsrefcnt
+nsXPCWrappedJSMethods::AddRef(void)
+{
+    NS_PRECONDITION(mWrapper, "bad state");
+    if(2 == ++mRefCnt)
+        NS_ADDREF(mWrapper);
+    return mRefCnt;
+}
+
+nsrefcnt
+nsXPCWrappedJSMethods::Release(void)
+{
+    NS_PRECONDITION(mWrapper, "bad state");
+    if(0 == --mRefCnt)
+    {
+        NS_DELETEXPCOM(this);
+        return 0;
+    }
+    else if(1 == mRefCnt)
+        mWrapper->Release();    // do NOT zero out the ptr (weak ref)
+    return mRefCnt;
+}
+
+nsXPCWrappedJSMethods::nsXPCWrappedJSMethods(nsXPCWrappedJS* aWrapper)
+    : mWrapper(aWrapper)
+{
+    NS_PRECONDITION(mWrapper, "bad param");
+    NS_INIT_REFCNT();
+    NS_ADDREF_THIS();
+}
+
+nsXPCWrappedJSMethods::~nsXPCWrappedJSMethods()
+{
+    NS_ASSERTION(0 == mRefCnt, "recounting error");
+}
+
+/***************************************/
+
+NS_IMETHODIMP
+nsXPCWrappedJSMethods::GetJSObject(JSObject** aJSObj)
+{
+    NS_PRECONDITION(mWrapper, "bad state");
+    NS_PRECONDITION(aJSObj,"bad param");
+    if(!(*aJSObj = mWrapper->GetJSObject()))
+        return NS_ERROR_UNEXPECTED;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCWrappedJSMethods::GetInterfaceInfo(nsIInterfaceInfo** info)
+{
+    NS_PRECONDITION(mWrapper, "bad state");
+    NS_PRECONDITION(info, "bad param");
+    NS_PRECONDITION(mWrapper->GetClass(), "bad wrapper");
+    NS_PRECONDITION(mWrapper->GetClass()->GetInterfaceInfo(), "bad wrapper");
+
+    if(!(*info = mWrapper->GetClass()->GetInterfaceInfo()))
+        return NS_ERROR_UNEXPECTED;
+    NS_ADDREF(*info);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXPCWrappedJSMethods::GetIID(nsIID** iid)
+{
+    NS_PRECONDITION(mWrapper, "bad state");
+    NS_PRECONDITION(iid, "bad param");
+
+    nsIAllocator* al;
+    void* p;
+
+    al = mWrapper->GetClass()->GetXPCContext()->GetXPConnect()->GetAllocator();
+    if(!al || NULL == (p = al->Alloc(sizeof(nsIID))))
+    {
+        *iid = NULL;
+        return NS_ERROR_UNEXPECTED;
+    }
+    NS_RELEASE(al);
+    memcpy(p, &mWrapper->GetIID(), sizeof(nsIID));
+    *iid = (nsIID*)p;
+    return NS_OK;
+}

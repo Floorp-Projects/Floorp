@@ -33,7 +33,6 @@
 #include "jshash.h"
 #include "xpcforwards.h"
 
-#include "xpcbogusjs.h"
 #include "xpcbogusii.h"
 
 extern const char* XPC_VAL_STR; // 'val' property name for out params
@@ -45,33 +44,24 @@ class nsXPConnect : public nsIXPConnect
     // all the interface method declarations...
     NS_DECL_ISUPPORTS;
 
-    NS_IMETHOD InitJSContext(nsIJSContext* aJSContext,
-                             nsIJSObject* aGlobalJSObj);
+    NS_IMETHOD InitJSContext(JSContext* aJSContext,
+                             JSObject* aGlobalJSObj);
 
     NS_IMETHOD GetInterfaceInfo(REFNSIID aIID,
                                 nsIInterfaceInfo** info);
 
-    NS_IMETHOD WrapNative(nsIJSContext* aJSContext,
+    NS_IMETHOD WrapNative(JSContext* aJSContext,
                           nsISupports* aCOMObj,
                           REFNSIID aIID,
                           nsIXPConnectWrappedNative** aWrapper);
 
-    NS_IMETHOD WrapJS(nsIJSContext* aJSContext,
-                      nsIJSObject* aJSObj,
+    NS_IMETHOD WrapJS(JSContext* aJSContext,
+                      JSObject* aJSObj,
                       REFNSIID aIID,
                       nsIXPConnectWrappedJS** aWrapper);
 
-    NS_IMETHOD GetJSObjectOfWrappedJS(nsIXPConnectWrappedJS* aWrapper,
-                                      nsIJSObject** aJSObj);
-
-    NS_IMETHOD GetJSObjectOfWrappedNative(nsIXPConnectWrappedNative* aWrapper,
-                                          nsIJSObject** aJSObj);
-
-    NS_IMETHOD GetNativeOfWrappedNative(nsIXPConnectWrappedNative* aWrapper,
-                                        nsISupports** aObj);
-
-    NS_IMETHOD GetWrappedNativeOfJSObject(nsIJSContext* aJSContext,
-                                    nsIJSObject* aJSObj,
+    NS_IMETHOD GetWrappedNativeOfJSObject(JSContext* aJSContext,
+                                    JSObject* aJSObj,
                                     nsIXPConnectWrappedNative** aWrapper);
 
     // non-interface implementation
@@ -84,7 +74,7 @@ public:
     nsIAllocator*            GetAllocator()
     {
         if(mAllocator)
-            NS_ADDREF(mAllocator); 
+            NS_ADDREF(mAllocator);
         return mAllocator;
     }
 
@@ -173,14 +163,14 @@ public:
     static JSBool InitForContext(XPCContext* xpcc);
     JSBool IsWrappedJS(nsISupports* aPtr);
 
-    nsresult DelegatedQueryInterface(nsXPCWrappedJS* self, REFNSIID aIID,
-                                     void** aInstancePtr);
+    NS_IMETHOD DelegatedQueryInterface(nsXPCWrappedJS* self, REFNSIID aIID,
+                                       void** aInstancePtr);
 
     JSObject* GetRootJSObject(JSObject* aJSObj);
 
-    nsresult CallMethod(nsXPCWrappedJS* wrapper,
+    NS_IMETHOD CallMethod(nsXPCWrappedJS* wrapper,
                         const nsXPCMethodInfo* info,
-                        nsXPCMiniVarient* params);
+                        nsXPCMiniVariant* params);
 
     ~nsXPCWrappedJSClass();
 private:
@@ -230,8 +220,27 @@ private:
 private:
     JSObject* mJSObj;
     nsXPCWrappedJSClass* mClass;
+    nsXPCWrappedJSMethods* mMethods;
     nsXPCWrappedJS* mRoot;
     nsXPCWrappedJS* mNext;
+};
+
+class nsXPCWrappedJSMethods : public nsIXPConnectWrappedJSMethods
+{
+public:
+    NS_DECL_ISUPPORTS;
+    NS_IMETHOD GetJSObject(JSObject** aJSObj);
+    NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
+    NS_IMETHOD GetIID(nsIID** iid); // returns IAllocatator alloc'd copy
+
+    nsXPCWrappedJSMethods(nsXPCWrappedJS* aWrapper);
+    virtual ~nsXPCWrappedJSMethods();
+
+private:
+    nsXPCWrappedJSMethods();  // not implemented
+
+private:
+    nsXPCWrappedJS* mWrapper;
 };
 
 /***************************************************************************/
@@ -375,6 +384,10 @@ class nsXPCWrappedNative : public nsIXPConnectWrappedNative
 
     NS_IMETHOD GetDynamicScriptable(nsIXPCScriptable** p);
     NS_IMETHOD GetArbitraryScriptable(nsIXPCScriptable** p);
+    NS_IMETHOD GetJSObject(JSObject** aJSObj);
+    NS_IMETHOD GetNative(nsISupports** aObj);
+    NS_IMETHOD GetInterfaceInfo(nsIInterfaceInfo** info);
+    NS_IMETHOD GetIID(nsIID** iid); // returns IAllocatator alloc'd copy
 
 public:
     static nsXPCWrappedNative* GetNewOrUsedWrapper(XPCContext* xpcc,
@@ -424,7 +437,7 @@ xpc_NewIDObject(JSContext *cx, const nsID& aID);
 // data convertion
 
 JSBool
-xpc_ConvertNativeData2JS(jsval* d, const void* s, 
+xpc_ConvertNativeData2JS(jsval* d, const void* s,
                          const nsXPCType& type);
 
 JSBool
@@ -436,7 +449,7 @@ xpc_ConvertJSData2Native(JSContext* cx, void* d, const jsval* s,
 // platform specific method invoker
 nsresult
 xpc_InvokeNativeMethod(void* that, PRUint32 index,
-                       uint32 paramCount, nsXPCVarient* params);
+                       uint32 paramCount, nsXPCVariant* params);
 
 /***************************************************************************/
 

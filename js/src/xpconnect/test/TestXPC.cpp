@@ -31,7 +31,7 @@ NS_IMPL_ISUPPORTS(MyScriptable,NS_IXPCSCRIPTABLE_IID);
     XPC_IMPLEMENT_FORWARD_CONSTRUCT(MyScriptable);
     XPC_IMPLEMENT_FORWARD_FINALIZE(MyScriptable);
 
-nsresult
+NS_IMETHODIMP
 MyScriptable::DefaultValue(JSContext *cx, JSObject *obj,             
                             JSType type, jsval *vp,                         
                             nsIXPConnectWrappedNative* wrapper,             
@@ -80,7 +80,7 @@ class nsTestXPCFoo : public nsITestXPCFoo2
     nsTestXPCFoo();
 };
 
-nsresult nsTestXPCFoo::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+NS_IMETHODIMP nsTestXPCFoo::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
@@ -108,13 +108,13 @@ nsresult nsTestXPCFoo::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE;
 }
 
-nsresult nsTestXPCFoo::Test(int p1, int p2, int* retval)
+NS_IMETHODIMP nsTestXPCFoo::Test(int p1, int p2, int* retval)
 {
     printf("nsTestXPCFoo::Test called with p1 = %d and p2 = %d\n", p1, p2);
     *retval = p1+p2;
     return NS_OK;
 }
-nsresult nsTestXPCFoo::Test2()
+NS_IMETHODIMP nsTestXPCFoo::Test2()
 {
     printf("nsTestXPCFoo::Test2 called\n");
     return NS_OK;
@@ -130,9 +130,10 @@ nsTestXPCFoo::nsTestXPCFoo()
     NS_ADDREF_THIS();
 }
 
-NS_DEFINE_IID(kIFooIID, NS_ITESTXPC_FOO_IID);
-NS_DEFINE_IID(kIFoo2IID, NS_ITESTXPC_FOO2_IID);
+static NS_DEFINE_IID(kIFooIID, NS_ITESTXPC_FOO_IID);
+static NS_DEFINE_IID(kIFoo2IID, NS_ITESTXPC_FOO2_IID);
 
+static NS_DEFINE_IID(kWrappedJSMethodsIID, NS_IXPCONNECT_WRAPPED_JS_METHODS_IID);
 
 /***************************************************************************/
 FILE *gOutFile = NULL;
@@ -199,10 +200,7 @@ int main()
         return 1;
 
     nsIXPConnect* xpc = XPC_GetXPConnect();
-    nsIJSContext* xpccx = XPC_NewJSContext(cx);
-    nsIJSObject* xpcglob = XPC_NewJSObject(xpccx, glob);
-
-    xpc->InitJSContext(xpccx, xpcglob);
+    xpc->InitJSContext(cx, glob);
 
     nsTestXPCFoo* foo = new nsTestXPCFoo();
 
@@ -215,44 +213,43 @@ int main()
 
     nsIXPConnectWrappedNative* wrapper;
     nsIXPConnectWrappedNative* wrapper2;
-    if(NS_SUCCEEDED(xpc->WrapNative(xpccx, foo, kIFooIID, &wrapper)))
+    if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, kIFooIID, &wrapper)))
     {
-        if(NS_SUCCEEDED(xpc->WrapNative(xpccx, foo, kIFoo2IID, &wrapper2)))
+        if(NS_SUCCEEDED(xpc->WrapNative(cx, foo, kIFoo2IID, &wrapper2)))
         {
-            JSObject* jsobj;
-            nsIJSObject* obj;
+            JSObject* js_obj;
             nsISupports* com_obj;
             jsval rval;
 
-            xpc->GetJSObjectOfWrappedNative(wrapper2, &obj);
-            xpc->GetNativeOfWrappedNative(wrapper2, &com_obj);
-
-            obj->GetNative(&jsobj);
+            wrapper2->GetJSObject(&js_obj);
+            wrapper2->GetNative(&com_obj);
 
             jsval v;
-            v = OBJECT_TO_JSVAL(jsobj);
+            v = OBJECT_TO_JSVAL(js_obj);
             JS_SetProperty(cx, glob, "foo", &v);
 
             char* txt[] = {
-                "print('foo = '+foo);",
-                "foo.toString = new Function('return \"foo_baby\";')",
-                "print('foo = '+foo);",
-                "print('foo.toString() = '+foo.toString());",
-                "print('foo.five = '+ foo.five);",
-                "print('foo.six = '+ foo.six);",
-                "print('foo.bogus = '+ foo.bogus);",
-                "foo.bogus = 5;",
-                "print('foo.bogus = '+ foo.bogus);",
-                "print('foo.Test(10,20) returned: '+foo.Test(10,20));",
-                "function Test(p1, p2){print('test called in JS with p1 = '+p1+' and p2 = '+p2);return p1+p2;}",
-                "bar = new Object();",
-                "bar.Test = Test;",
-//                "bar.Test(5,7);",
-                "function QI(iid){print('QueryInterface called in JS with iid = '+iid); return  this;}",
-                "bar.QueryInterface = QI;",
-                "print('foo properties:');",
-                "for(i in foo)print('  foo.'+i+' = '+foo[i]);",
-                0,
+  "print('foo = '+foo);",
+  "foo.toString = new Function('return \"foo toString called\";')",
+  "foo.toStr = new Function('return \"foo toStr called\";')",
+  "print('foo = '+foo);",
+  "print('foo.toString() = '+foo.toString());",
+  "print('foo.toStr() = '+foo.toStr());",
+  "print('foo.five = '+ foo.five);",
+  "print('foo.six = '+ foo.six);",
+  "print('foo.bogus = '+ foo.bogus);",
+  "foo.bogus = 5;",
+  "print('foo.bogus = '+ foo.bogus);",
+  "print('foo.Test(10,20) returned: '+foo.Test(10,20));",
+  "function Test(p1, p2){print('test called in JS with p1 = '+p1+' and p2 = '+p2);return p1+p2;}",
+  "bar = new Object();",
+  "bar.Test = Test;",
+//  "bar.Test(5,7);",
+  "function QI(iid){print('QueryInterface called in JS with iid = '+iid); return  this;}",
+  "bar.QueryInterface = QI;",
+  "print('foo properties:');",
+  "for(i in foo)print('  foo.'+i+' = '+foo[i]);",
+  0,
             };
 
             for(char** p = txt; *p; p++)
@@ -262,22 +259,32 @@ int main()
             {
                 JSObject* bar = JSVAL_TO_OBJECT(v);
                 nsIXPConnectWrappedJS* wrapper;
-                if(NS_SUCCEEDED(xpc->WrapJS(xpccx,
-                                       XPC_NewJSObject(xpccx, JSVAL_TO_OBJECT(v)),
+                if(NS_SUCCEEDED(xpc->WrapJS(cx,
+                                       JSVAL_TO_OBJECT(v),
                                        kIFooIID, &wrapper)))
                 {
                     nsITestXPCFoo* ptr = (nsITestXPCFoo*)wrapper;
                     int result;
+                    JSObject* test_js_obj;
                     ptr->Test(11, 13, &result);
                     printf("call to ptr->Test returned %d\n", result);
+    
+                    nsIXPConnectWrappedJSMethods* methods;
+
+                    wrapper->QueryInterface(kWrappedJSMethodsIID, 
+                                            (void**) &methods);
+                    methods->GetJSObject(&test_js_obj);
+
+                    printf("call to methods->GetJSObject() returned: %s\n", 
+                            test_js_obj == JSVAL_TO_OBJECT(v) ?
+                            "expected result" : "WRONG RESULT" );
+
+                    NS_RELEASE(methods);
                     NS_RELEASE(wrapper);
 
                 }
             }
-
-            NS_RELEASE(obj);
             NS_RELEASE(com_obj);
-
             NS_RELEASE(wrapper2);
         }
         NS_RELEASE(wrapper);
