@@ -349,8 +349,13 @@ nsresult
 MemoryElementSet::Add(MemoryElement* aElement)
 {
     for (ConstIterator element = First(); element != Last(); ++element) {
-        if (*element == *aElement)
+        if (*element == *aElement) {
+            // We've already got this element covered. Since Add()
+            // assumes ownership, and we aren't going to need this,
+            // just nuke it.
+            delete aElement;
             return NS_OK;
+        }
     }
 
     List* list = new List;
