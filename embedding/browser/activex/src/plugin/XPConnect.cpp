@@ -337,6 +337,7 @@ nsScriptablePeer::ConvertVariants(nsIVariant *aIn, VARIANT *aOut)
     return S_OK;
 }
 
+
 HRESULT
 nsScriptablePeer::ConvertVariants(VARIANT *aIn, nsIVariant **aOut)
 {
@@ -349,6 +350,35 @@ nsScriptablePeer::ConvertVariants(VARIANT *aIn, nsIVariant **aOut)
 
     nsresult rv;
     nsCOMPtr<nsIWritableVariant> v = do_CreateInstance("@mozilla.org/variant;1", &rv);
+
+    // NOTE: THIS IS AN UGLY BACKWARDS COMPATIBILITY HACK TO WORKAROUND
+    // XPCOM GLUE'S INABILITY TO FIND A CERTAIN ENTRY POINT IN MOZ1.0.x/NS7.0!
+    // DO NOT TAUNT THE HACK
+    if (NS_FAILED(rv))
+    {
+        // do_CreateInstance macro is broken so load the component manager by
+        // hand and get it to create the component.
+        HMODULE hlib = ::LoadLibrary("xpcom.dll");
+        if (hlib)
+        {
+            nsIComponentManager *pManager = nsnull; // A frozen interface, even in 1.0.x
+            typedef nsresult (PR_CALLBACK *Moz1XGetComponentManagerFunc)(nsIComponentManager* *result);
+            Moz1XGetComponentManagerFunc compMgr = (Moz1XGetComponentManagerFunc)
+                ::GetProcAddress(hlib, "NS_GetComponentManager");
+            if (compMgr)
+            {
+                compMgr(&pManager);
+                if (pManager)
+                {
+                    rv = pManager->CreateInstanceByContractID("@mozilla.org/variant;1",
+                        nsnull, NS_GET_IID(nsIWritableVariant), (void **) &v);
+                    pManager->Release();
+                }
+            }
+            ::FreeLibrary(hlib);
+        }
+    }
+    // END HACK
     NS_ENSURE_SUCCESS(rv, rv);
 
     switch (aIn->vt)
@@ -524,7 +554,6 @@ nsScriptablePeer::GetProperty(const char *propertyName, nsIVariant **_retval)
         return NPERR_GENERIC_ERROR;
     }
 
-    DISPID dispIdPut = DISPID_PROPERTYPUT;
     _variant_t vResult;
     
     DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
@@ -720,7 +749,6 @@ nsEventSink::InternalInvoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wF
     nsAutoString eventName(bstrName.m_str);
 
     // TODO Turn VARIANT args into js objects
-
     // Fire event to DOM 2 event listeners
 
     nsCOMPtr<nsIDOMEventReceiver> eventReceiver = do_QueryInterface(element);
