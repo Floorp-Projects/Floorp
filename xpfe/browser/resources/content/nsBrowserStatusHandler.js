@@ -331,8 +331,6 @@ nsBrowserStatusHandler.prototype =
     if (blank ||
         !("popupDomain" in browser)) {
       browser.popupDomain = null;
-      browser.popupUrls = null;
-      browser.popupFeatures = null;
     }
     else {
       var hostPort = "";
@@ -340,11 +338,8 @@ nsBrowserStatusHandler.prototype =
         hostPort = locationURI.hostPort;
       }
       catch(ex) { }
-      if (hostPort != browser.popupDomain) {
+      if (hostPort != browser.popupDomain)
         browser.popupDomain = null;
-        browser.popupUrls = null;
-        browser.popupFeatures = null;
-      }
     }
 
     var popupIcon = document.getElementById("popupIcon");
