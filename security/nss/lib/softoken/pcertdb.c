@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.43 2003/01/17 02:49:10 wtc%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.44 2003/02/07 05:08:01 nelsonb%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -3982,7 +3982,6 @@ openNewCertDB(const char *appName, const char *prefix, const char *certdbname,
     SECStatus rv;
     certDBEntryVersion *versionEntry = NULL;
     DB *updatedb = NULL;
-    char *tmpname;
     int status = RDB_FAIL;
 
     if (appName) {
@@ -4515,8 +4514,7 @@ nsslowcert_UpdatePermCert(NSSLOWCERTCertDBHandle *dbhandle,
     certDBEntryCert *entry;
     PRBool conflict;
     SECStatus ret;
-    SECStatus rv;
-    
+
     PORT_Assert(!cert->dbEntry);
 
     /* don't add a conflicting nickname */
@@ -4553,9 +4551,6 @@ SECStatus
 nsslowcert_AddPermCert(NSSLOWCERTCertDBHandle *dbhandle,
     NSSLOWCERTCertificate *cert, char *nickname, NSSLOWCERTCertTrust *trust)
 {
-    char *oldnn;
-    certDBEntryCert *entry;
-    PRBool conflict;
     SECStatus ret;
     SECStatus rv;
 
@@ -5263,3 +5258,4 @@ nsslowcert_DestroyGlobalLocks()
 	certTrustLock = NULL;
     }
 }
+
