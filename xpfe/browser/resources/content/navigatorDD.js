@@ -612,7 +612,7 @@ function determineDropPosition(aEvent, aAllowDropOn)
 
   // you can drop ONTO containers, so there is a "middle" region
   if (aAllowDropOn && aEvent.target.getAttribute("container") == "true" &&
-      aEvent.target.getAttribute("type") == "http://home.netscape.com/NC-rdf#Folder")
+      aEvent.target.getAttribute("type") == "menu")
     return DROP_ON;
       
   var measure;
