@@ -2658,11 +2658,11 @@ cross_compiling=$ac_cv_prog_cc_cross
 
 
         # Determine compiler version
-        CC_VERSION=`"${CC}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's| *$||'`
-        _CC_MAJOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $ 1 }'`
+        CC_VERSION=`"${CC}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
+        _CC_MAJOR_VERSION=`echo ${CC_VERSION} | $AWK -F\. '{ print $1 }'`
 
-        CXX_VERSION=`"${CXX}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's| *$||'`
-        _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | $AWK -F\. '{ print $ 1 }'`
+        CXX_VERSION=`"${CXX}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
+        _CXX_MAJOR_VERSION=`echo ${CXX_VERSION} | $AWK -F\. '{ print $1 }'`
 
         if test "$_CC_MAJOR_VERSION" != "$_CXX_MAJOR_VERSION"; then
             { echo "configure: error: The major versions of \$CC and \$CXX do not match." 1>&2; exit 1; }
@@ -2676,18 +2676,18 @@ cross_compiling=$ac_cv_prog_cc_cross
         fi
 
         # Check linker version
-        _LD_FULL_VERSION=`"${LD}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's| *$||'`
-        _LD_MAJOR_VERSION=`echo ${_LD_FULL_VERSION} | $AWK -F\. '{ print $ 1 }'`
+        _LD_FULL_VERSION=`"${LD}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
+        _LD_MAJOR_VERSION=`echo ${_LD_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
         if test "$_LD_MAJOR_VERSION" != "$_CC_SUITE"; then
             { echo "configure: error: The linker major version, $_LD_FULL_VERSION,  does not match the compiler suite version, $_CC_SUITE." 1>&2; exit 1; }
         fi
         INCREMENTAL_LINKER=1
 
         # Check midl version
-        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' | sed -e 's| *$||'`
-        _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $ 1 }'`
-        _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $ 2 }'`
-        _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $ 3 }'`
+        _MIDL_FULL_VERSION=`"${MIDL}" -v 2>&1 | grep Version | sed -e 's|.* Version ||' -e 's| .*||'`
+        _MIDL_MAJOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $1 }'`
+        _MIDL_MINOR_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $2 }'`
+        _MIDL_REV_VERSION=`echo ${_MIDL_FULL_VERSION} | $AWK -F\. '{ print $3 }'`
          if test "$_MIDL_MAJOR_VERSION" != "5" -a "$_MIDL_FULL_VERSION" != "6.00.0347" -a "$_MIDL_FULL_VERSION" != "6.00.0361"; then
              { echo "configure: error: Midl version $_MIDL_FULL_VERSION was found.  Midl version must be 5.x.x (VC6*) or 6.00.0347 (VC7) or 6.00.0361 (VC.net 2003)." 1>&2; exit 1; }
          fi
