@@ -1582,33 +1582,48 @@ nsDNSService::AbortLookups()
 NS_IMETHODIMP
 nsDNSService::Resolve(const char *i_hostname, char **o_ip)
 {
-    // Note that this does not check for an IP address already in hostname
-    // So beware!
+    // Beware! This does not check for an IP address already in hostname.
     NS_ENSURE_ARG_POINTER(o_ip);
     *o_ip = 0;
     NS_ENSURE_ARG_POINTER(i_hostname);
 
-    PRHostEnt he;
-    char netdbbuf[PR_NETDB_BUF_SIZE];
+    PRNetAddr   netAddr;
+    PRIntn      index = 0;
+    char        ipBuffer[64];
 
-    if (PR_SUCCESS == PR_GetHostByName(i_hostname, 
-                netdbbuf, 
-                sizeof(netdbbuf), 
-                &he))
-    {
-        struct in_addr in;
-        memcpy(&in.s_addr, he.h_addr, he.h_length);
-        char* ip = 0;
-
-        ip = inet_ntoa(in);
-        
-        if (ip)
-        {
-            return (*o_ip = nsCRT::strdup(ip)) ? 
-                NS_OK: NS_ERROR_OUT_OF_MEMORY;
+    // aquire lock to check hash table for existing lookup
+    // release lock before calling synchronous PR_GetHostByName()
+    {    
+        nsAutoLock    dnsLock(mDNSServiceLock);
+        PLDHashEntryHdr * hashEntry = PL_DHashTableOperate(&mHashTable, i_hostname, PL_DHASH_LOOKUP);
+        if (PL_DHASH_ENTRY_IS_BUSY(hashEntry)) {
+            nsDNSLookup * lookup = ((DNSHashTableEntry *)hashEntry)->mLookup;
+            if (lookup->IsComplete() && !lookup->IsExpired()) {
+                nsHostEnt * hep = lookup->HostEntry();
+                NS_ASSERTION(hep != nsnull, "null DNS Lookup HostEntry.\n");
+                if (hep) {
+                    index = PR_EnumerateHostEnt(0, &hep->hostEnt, 0, &netAddr);
+                }
+            }
         }
     }
-    return NS_ERROR_FAILURE;
+
+    if (index == 0) {
+        PRHostEnt   he;
+        char        netdbbuf[PR_NETDB_BUF_SIZE];
+
+        if (PR_SUCCESS == PR_GetHostByName(i_hostname, netdbbuf, sizeof(netdbbuf), &he)) {
+            index = PR_EnumerateHostEnt(0, &he, 0, &netAddr);
+        }
+    }
+            
+    if (index == 0)  return NS_ERROR_FAILURE;
+    else {
+        PRStatus  status = PR_NetAddrToString(&netAddr, ipBuffer, sizeof(ipBuffer));
+        if (status != PR_SUCCESS)   return NS_ERROR_FAILURE;
+    }
+    
+    return (*o_ip = nsCRT::strdup(ipBuffer)) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
 
