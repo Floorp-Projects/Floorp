@@ -65,6 +65,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    Init(const nsString& aId);
     NS_IMETHOD    GetId(nsString& aId) { return nsBaseAppCore::GetId(aId); } 
 
+    NS_IMETHOD    Back();
+    NS_IMETHOD    Forward();
     NS_IMETHOD    Stop();
 
     NS_IMETHOD    WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm);
@@ -95,6 +97,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand);
     NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus,
 								 nsIDocumentLoaderObserver * aObserver);
+
     NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer);
     NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, nsIURL* aURL, PRUint32 aProgress, 
@@ -129,9 +132,9 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
 
 	// nsISessionHistory methods 
-    NS_IMETHOD Forward();
+    NS_IMETHOD Forward(nsIWebShell * prev);
 
-    NS_IMETHOD Back();
+    NS_IMETHOD Back(nsIWebShell * prev);
 
     NS_IMETHOD canForward(PRBool &aResult);
 
@@ -139,7 +142,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
 
     NS_IMETHOD add(nsIWebShell * aWebShell);
 
-    NS_IMETHOD Goto(PRInt32 aHistoryIndex);
+    NS_IMETHOD Goto(PRInt32 aHistoryIndex, nsIWebShell * prev);
 
     NS_IMETHOD getHistoryLength(PRInt32 & aResult);
 
@@ -148,6 +151,8 @@ class nsBrowserAppCore : public nsBaseAppCore,
   //  NS_IMETHOD cloneHistory(nsISessionHistory * aSessionHistory);
 
     NS_IMETHOD SetLoadingFlag(PRBool aFlag);
+
+    NS_IMETHOD GetLoadingFlag(PRBool &aFlag);
 
     NS_IMETHOD SetLoadingHistoryEntry(nsHistoryEntry * aHistoryEntry);
 
@@ -171,7 +176,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
     nsIWebShell *       mContentAreaWebShell;
 
     nsIGlobalHistory*   mGHistory;
-	nsISessionHistory * mSHistory;
+	  nsISessionHistory * mSHistory;
 
     nsISupports *       mSearchContext;
 };
