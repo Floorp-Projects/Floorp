@@ -17,6 +17,8 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsCSSContainerFrame.h"
+#include "nsPlaceholderFrame.h"
+#include "nsIStyleContext.h"
 
 nsCSSContainerFrame::nsCSSContainerFrame(nsIContent* aContent,
                                          nsIFrame* aParent)
@@ -28,23 +30,23 @@ nsCSSContainerFrame::~nsCSSContainerFrame()
 {
 }
 
-#if 0
-NS_IMETHODIMP
-nsCSSContainerFrame::ContentAppended(nsIPresShell*   aShell,
-                                     nsIPresContext* aPresContext,
-                                     nsIContent*     aContainer)
+nsPlaceholderFrame*
+nsCSSContainerFrame::CreatePlaceholderFrame(nsIPresContext* aPresContext,
+                                            nsIFrame*       aFloatedFrame)
 {
-  // Get to the last-in-flow of our frame (that is where appends occur)
-  nsCSSContainerFrame* lastInFlow = (nsCSSContainerFrame*) GetLastInFlow();
+  nsIContent* content;
+  aFloatedFrame->GetContent(content);
 
-  // Now generate a reflow command targetted at our last-in-flow frame
-  nsIReflowCommand* cmd;
-  nsresult rv = NS_NewHTMLReflowCommand(&cmd, lastInFlow,
-                                        nsIReflowCommand::FrameAppended);
-  if (NS_OK == rv) {
-    aShell->AppendReflowCommand(cmd);
-    NS_RELEASE(cmd);
-  }
-  return rv;
+  // XXX We should wrap the floated element in a BODY frame...
+  nsPlaceholderFrame* placeholder;
+  nsPlaceholderFrame::NewFrame((nsIFrame**)&placeholder, content, this, aFloatedFrame);
+  NS_IF_RELEASE(content);
+
+  // Let the placeholder share the same style context as the floated element
+  nsIStyleContext*  kidSC;
+  aFloatedFrame->GetStyleContext(aPresContext, kidSC);
+  placeholder->SetStyleContext(aPresContext, kidSC);
+  NS_RELEASE(kidSC);
+  
+  return placeholder;
 }
-#endif

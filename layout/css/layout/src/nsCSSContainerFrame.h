@@ -21,6 +21,8 @@
 
 #include "nsHTMLContainerFrame.h"
 
+class nsPlaceholderFrame;
+
 class nsCSSContainerFrame : public nsHTMLContainerFrame {
 public:
 
@@ -29,6 +31,10 @@ public:
 protected:
   nsCSSContainerFrame(nsIContent* aContent, nsIFrame* aParent);
   ~nsCSSContainerFrame();
+
+  nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext* aPresContext,
+                                             nsIFrame*       aFloatedFrame);
+
 };
 
 #endif /* nsCSSContainerFrame_h___ */

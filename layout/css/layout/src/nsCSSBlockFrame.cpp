@@ -274,8 +274,6 @@ protected:
                      nsIRenderingContext& aRenderingContext,
                      const nsRect&        aDirtyRect);
 
-  nsPlaceholderFrame* CreatePlaceholderFrame(nsIPresContext* aPresContext,
-                                             nsIFrame*       aFloatedFrame);
   nsresult AppendNewFrames(nsIPresContext* aPresContext, nsIFrame*);
 
 #ifdef NS_DEBUG
@@ -1656,27 +1654,6 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
     aMetrics.maxElementSize->width += maxLeft + maxRight;
   }
   NS_ASSERTION(aDesiredRect.width < 1000000, "whoops");
-}
-
-nsPlaceholderFrame*
-nsCSSBlockFrame::CreatePlaceholderFrame(nsIPresContext* aPresContext,
-                                        nsIFrame*       aFloatedFrame)
-{
-  nsIContent* content;
-  aFloatedFrame->GetContent(content);
-
-  // XXX We should wrap the floated element in a BODY frame...
-  nsPlaceholderFrame* placeholder;
-  nsPlaceholderFrame::NewFrame((nsIFrame**)&placeholder, content, this, aFloatedFrame);
-  NS_IF_RELEASE(content);
-
-  // Let the placeholder share the same style context as the floated element
-  nsIStyleContext*  kidSC;
-  aFloatedFrame->GetStyleContext(aPresContext, kidSC);
-  placeholder->SetStyleContext(aPresContext, kidSC);
-  NS_RELEASE(kidSC);
-  
-  return placeholder;
 }
 
 nsresult
