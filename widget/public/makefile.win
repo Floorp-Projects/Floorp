@@ -24,7 +24,7 @@ MODULE=raptor
 EXPORTS=nsui.h nsIWidget.h nsIButton.h nsICheckButton.h nsIListWidget.h \
     nsIComboBox.h nsITextWidget.h nsITextAreaWidget.h nsIComboBox.h \
     nsIListBox.h nsIFileWidget.h nsIScrollbar.h nsGUIEvent.h \
-    nsIRadioButton.h nsIRadioGroup.h nsIMouseListener.h \
+    nsIRadioButton.h nsIMouseListener.h \
     nsIEventListener.h nsIMenuListener.h nsIToolkit.h nsWidgetsCID.h nsITabWidget.h \
     nsITooltipWidget.h nsIAppShell.h nsStringUtil.h nsILookAndFeel.h \
     nsIDialog.h nsILabel.h nsWidgetSupport.h \
