@@ -117,6 +117,20 @@ struct JSRuntime {
 #endif
 };
 
+#ifdef va_start
+/*
+ * Linked list mapping format strings for JS_{Convert,Push}Arguments{,VA} to
+ * formatter functions.  Elements are sorted in non-increasing format string
+ * length order.
+ */
+struct JSArgumentFormatMap {
+    const char          *format;
+    size_t              length;
+    JSArgumentFormatter formatter;
+    JSArgumentFormatMap *next;
+};
+#endif
+
 struct JSContext {
     JSCList             links;
 
@@ -150,6 +164,9 @@ struct JSContext {
 
     /* State for object and array toSource conversion. */
     JSSharpObjectMap    sharpObjectMap;
+
+    /* Argument formatter support for JS_{Convert,Push}Arguments{,VA}. */
+    JSArgumentFormatMap *argumentFormatMap;
 
     /* Last message string and trace file for debugging. */
     char                *lastMessage;

@@ -41,33 +41,34 @@ typedef uint8  jssrcnote;
 typedef uint32 jsatomid;
 
 /* Struct typedefs. */
-typedef struct JSCodeGenerator  JSCodeGenerator;
-typedef struct JSGCThing        JSGCThing;
-typedef struct JSParseNode      JSParseNode;
-typedef struct JSSharpObjectMap JSSharpObjectMap;
-typedef struct JSToken          JSToken;
-typedef struct JSTokenPos       JSTokenPos;
-typedef struct JSTokenPtr       JSTokenPtr;
-typedef struct JSTokenStream    JSTokenStream;
-typedef struct JSTreeContext    JSTreeContext;
-typedef struct JSTryNote       JSTryNote;
+typedef struct JSArgumentFormatMap  JSArgumentFormatMap;
+typedef struct JSCodeGenerator      JSCodeGenerator;
+typedef struct JSGCThing            JSGCThing;
+typedef struct JSParseNode          JSParseNode;
+typedef struct JSSharpObjectMap     JSSharpObjectMap;
+typedef struct JSToken              JSToken;
+typedef struct JSTokenPos           JSTokenPos;
+typedef struct JSTokenPtr           JSTokenPtr;
+typedef struct JSTokenStream        JSTokenStream;
+typedef struct JSTreeContext        JSTreeContext;
+typedef struct JSTryNote            JSTryNote;
 
 /* Friend "Advanced API" typedefs. */
-typedef struct JSAtom           JSAtom;
-typedef struct JSAtomList       JSAtomList;
-typedef struct JSAtomListElement JSAtomListElement;
-typedef struct JSAtomMap        JSAtomMap;
-typedef struct JSAtomState      JSAtomState;
-typedef struct JSCodeSpec       JSCodeSpec;
-typedef struct JSPrinter        JSPrinter;
-typedef struct JSRegExp         JSRegExp;
-typedef struct JSRegExpStatics  JSRegExpStatics;
-typedef struct JSScope          JSScope;
-typedef struct JSScopeOps       JSScopeOps;
-typedef struct JSScopeProperty  JSScopeProperty;
-typedef struct JSStackFrame     JSStackFrame;
-typedef struct JSSubString      JSSubString;
-typedef struct JSSymbol         JSSymbol;
+typedef struct JSAtom               JSAtom;
+typedef struct JSAtomList           JSAtomList;
+typedef struct JSAtomListElement    JSAtomListElement;
+typedef struct JSAtomMap            JSAtomMap;
+typedef struct JSAtomState          JSAtomState;
+typedef struct JSCodeSpec           JSCodeSpec;
+typedef struct JSPrinter            JSPrinter;
+typedef struct JSRegExp             JSRegExp;
+typedef struct JSRegExpStatics      JSRegExpStatics;
+typedef struct JSScope              JSScope;
+typedef struct JSScopeOps           JSScopeOps;
+typedef struct JSScopeProperty      JSScopeProperty;
+typedef struct JSStackFrame         JSStackFrame;
+typedef struct JSSubString          JSSubString;
+typedef struct JSSymbol             JSSymbol;
 
 /* "Friend" types used by jscntxt.h and jsdbgapi.h. */
 typedef enum JSTrapStatus {
