@@ -1043,19 +1043,31 @@
 
 /* TO DO ITEMS */
 
-treechildren:-moz-tree-cell-text(started)
+treechildren:-moz-tree-cell-text(inprogress)
 {
    color                 : green;
+}
+treechildren:-moz-tree-row(inprogress,selected)
+{
+   background-color                 : green;
 }
 
 treechildren:-moz-tree-cell-text(overdue)
 {
    color                  : red;
 }
+treechildren:-moz-tree-row(overdue,selected)
+{
+   background-color                  : red;
+}
 
 treechildren:-moz-tree-cell-text(duetoday)
 {
    color                  : blue;
+}
+treechildren:-moz-tree-row(duetoday,selected)
+{
+   background-color                  : blue;
 }
 
 treechildren:-moz-tree-cell-text(completed)

@@ -24,6 +24,7 @@
  *						 Colin Phillips <colinp@oeone.com>
  *                 ArentJan Banck <ajbanck@planet.nl>
  *                 Curtis Jewell <csjewell@mail.freeshell.org>
+ *                 Eric Belhaire <eric.belhaire@ief.u-psud.fr>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -156,38 +157,6 @@ function getSelectedToDo()
    
 }
 
-
-/**
-*  This is attached to the onclik attribute of the events shown in the unifinder
-*/
-
-function unifinderClickToDo( event )
-{
-   // only change checkbox on left mouse-button click
-   if( event.button != 0)
-      return;
-      
-   var tree = document.getElementById( ToDoUnifinderTreeName );
-   var ThisToDo = getToDoFromEvent( event );
-   
-   var row = new Object();
-   var childElt = { };
-   var colID = { };
-   tree.treeBoxObject.getCellAt( event.clientX, event.clientY, row, colID, childElt );
-
-   if( colID.value == "unifinder-todo-tree-col-completed" && childElt.value == "image" )
-   {      
-      var treeitem = tree.treeBoxObject.view.getItemAtIndex( row.value );
-      var isChecked = treeitem.getAttribute( "checked" );
-      if( isChecked )
-         treeitem.removeAttribute( "checked" )
-      else
-         treeitem.setAttribute( "checked", true );
-      
-      checkboxClick( ThisToDo, !isChecked )
-   }
-}
-
 /**
 *  This is attached to the onclik attribute of the to do list shown in the unifinder
 */
@@ -282,6 +251,43 @@ function checkboxClick( ThisToDo, completed )
 }
 
 
+/*
+This function return the progress state of a ToDo task :
+completed, overdue, duetoday, inprogress
+ */
+function ToDoProgressAtom( calendarToDo )
+{
+      var now = new Date();
+   
+      var thisMorning = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0 );
+      
+      var completed = calendarToDo.completed.getTime();
+      
+      if( completed > 0 )
+      {
+         return("completed");
+      }
+      
+      var startDate     = new Date( calendarToDo.start.getTime() );
+      var dueDate       = new Date( calendarToDo.due.getTime() );
+      var tonightMidnight = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 00 );
+      
+      if( tonightMidnight.getTime() > dueDate.getTime() )
+      {
+         return("overdue");
+      } else 
+	if ( dueDate.getFullYear() == now.getFullYear() &&
+                  dueDate.getMonth() == now.getMonth() &&
+                  dueDate.getDate() == now.getDate() )
+      {
+	    return("duetoday");
+      }
+      else
+      {
+	    return("inprogress");
+      }
+}
+
 var toDoTreeView =
 {
    rowCount : gEventArray.length,
@@ -289,71 +295,58 @@ var toDoTreeView =
    sortDirection : null,
 
    isContainer : function(){return false;},
+   // By getCellProperties, the properties defined with 
+   // treechildren:-moz-tree-cell-text in CSS are used.
+   // It is use here to color a particular row with a color
+   // given by the progress state of the ToDo task.
    getCellProperties : function( row,column, props )
    { 
+      calendarToDo = gTaskArray[row];
       var aserv=Components.classes["@mozilla.org/atom-service;1"].createInstance(Components.interfaces.nsIAtomService);
-      if( column == "unifinder-todo-tree-col-completed" )
-      {
-         props.AppendElement(aserv.getAtom("completed"));
-      }
 
       if( column == "unifinder-todo-tree-col-priority" )
       {
-         props.AppendElement(aserv.getAtom("highpriority"));
-      }
-   },
-   getColumnProperties : function(){return false;},
-   getRowProperties : function( row,props ){
-      calendarToDo = gTaskArray[row];
-      
-      var aserv=Components.classes["@mozilla.org/atom-service;1"].createInstance(Components.interfaces.nsIAtomService);
-    
-      var now = new Date();
-   
-      var thisMorning = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0 );
-      
-      if( calendarToDo.start.getTime() <= thisMorning.getTime() )
-      {
-         //this task should be started
-         props.AppendElement(aserv.getAtom("started"));
-      }
-      
-      var completed = calendarToDo.completed.getTime();
-      
-      if( completed > 0 )
-      {
-         props.AppendElement(aserv.getAtom("completed"));
-      }
-      
-      var startDate     = new Date( calendarToDo.start.getTime() );
-      var dueDate       = new Date( calendarToDo.due.getTime() );
-      
-      var tonightMidnight = new Date( now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 00 );
-      
-      var yesterdayMidnight = new Date( now.getFullYear(), now.getMonth(), ( now.getDate() - 1 ), 23, 59, 00 );
-      
-      if( tonightMidnight.getTime() > dueDate.getTime() )
-      {
-         props.AppendElement(aserv.getAtom("overdue"));
-      } else if ( dueDate.getFullYear() == now.getFullYear() &&
-                  dueDate.getMonth() == now.getMonth() &&
-                  dueDate.getDate() == now.getDate() )
-      {
-         props.AppendElement(aserv.getAtom("duetoday"));
-      }
-      else
-      {
-         props.AppendElement(aserv.getAtom("inprogress"));
-      }
       if(calendarToDo.priority > 0 && calendarToDo.priority < 5)
          props.AppendElement(aserv.getAtom("highpriority"));
       if(calendarToDo.priority > 5 && calendarToDo.priority < 10)
          props.AppendElement(aserv.getAtom("lowpriority"));                                                  
+      }
+      props.AppendElement(aserv.getAtom(ToDoProgressAtom(calendarToDo)));
+   },
+   getColumnProperties : function(){return false;},
+   // By getCellProperties, the properties defined with 
+   // treechildren:-moz-tree-row in CSS are used.
+   // It is used here to color the background of a selected
+   // ToDo task with a color
+   // given by  the progress state of the ToDo task.
+   getRowProperties : function( row,props ){
+      calendarToDo = gTaskArray[row];
+      
+      var aserv=Components.classes["@mozilla.org/atom-service;1"].createInstance(Components.interfaces.nsIAtomService);
+      props.AppendElement(aserv.getAtom(ToDoProgressAtom( calendarToDo )));
    },
    isSorted : function(){return false;},
    isEditable : function(){return true;},
    isSeparator : function(){return false;},
-   getImageSrc : function(){return false;},
+   // Return the empty string in order 
+   // to use moz-tree-image pseudoelement : 
+   // it is mandatory to return "" and not false :-(
+   getImageSrc : function(){return("");},
+   cycleCell : function(row,colId)
+   {
+    calendarToDo = gTaskArray[row];
+    if( !calendarToDo ) return false;
+
+    if( colId == "unifinder-todo-tree-col-completed")
+	{
+	  var completed = calendarToDo.completed.getTime();
+	  
+	  if( completed > 0 )
+	  checkboxClick( calendarToDo, false ) ;
+	  else 
+	  checkboxClick( calendarToDo, true ) ;
+	}
+   },
    cycleHeader : function( ColId, element )
    {
       var sortActive;
@@ -401,10 +394,10 @@ var toDoTreeView =
       switch( column )
       {
          case "unifinder-todo-tree-col-completed":
-            return( " " );
+            return( "" );
          
          case "unifinder-todo-tree-col-priority":
-            return( " " );
+            return( "" );
 
          case "unifinder-todo-tree-col-title":
             var titleText;

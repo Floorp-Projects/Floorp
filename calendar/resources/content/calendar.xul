@@ -372,7 +372,7 @@
             <tree id="unifinder-todo-tree" flex="1" enableColumnDrag="false">
                <treecols id="unifinder-todo-tree-cols">
                   <treecol id="unifinder-todo-tree-col-completed"
-                     persist="hidden ordinal width" width="18" 
+                     persist="hidden ordinal width" width="18" cycler="true"
                      label="&calendar.unifinder.tree.done.label;">
                      <image id="checkboximg" contextmenu="taskitem-context-menu"/>
                   </treecol>
@@ -414,7 +414,6 @@
                   </treecols>
        
                   <treechildren tooltip="taskTooltip"
-                    onclick="unifinderClickToDo( event )" 
                     ondblclick="modifyToDoCommand( event )"
                     onmousedown="unifinderMouseDownToDo( event )"
                     context="taskitem-context-menu"/>
