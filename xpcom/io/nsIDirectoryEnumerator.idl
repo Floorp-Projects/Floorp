@@ -25,3 +25,8 @@ interface nsIDirectoryEnumerator : nsISimpleEnumerator
 {
     void Init(in nsIFile parent, in boolean resolveSymlinks);
 };
+
+%{C++
+#define NS_DIRECTORY_ENUMERATOR_PROGID "component://netscape/file/enumerator"
+#define NS_DIRECTORY_ENUMERATOR_CLASS  "Directory Enumerator"
+%}
