@@ -47,6 +47,7 @@
 #include "nsIWindowWatcher.h"
 #include "nsIWebProgress.h"
 #include "nsXPIDLString.h"
+#include "nsICategoryManager.h"
 
 // for making the leap from nsIDOMWindowInternal -> nsIPresShell
 #include "nsIScriptGlobalObject.h"
@@ -210,6 +211,47 @@ NS_IMETHODIMP nsWalletlibService::Notify(nsIContent* formNode, nsIDOMWindowInter
     return NS_ERROR_FAILURE;
   }
   ::WLLT_OnSubmit(formNode, window);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWalletlibService::RegisterProc(nsIComponentManager *aCompMgr,
+                                 nsIFile *aPath,
+                                 const char *registryLocation,
+                                 const char *componentType,
+                                 const nsModuleComponentInfo *info)
+{
+  // Register ourselves into the NS_CATEGORY_HTTP_STARTUP
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsXPIDLCString prevEntry;
+  catman->AddCategoryEntry(NS_FIRST_FORMSUBMIT_CATEGORY, "Form Manager", NS_WALLETSERVICE_CONTRACTID,
+                           PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
+  
+  catman->AddCategoryEntry(NS_PASSWORDMANAGER_CATEGORY, "Password Manager", NS_WALLETSERVICE_CONTRACTID,
+                           PR_TRUE, PR_TRUE, getter_Copies(prevEntry));
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWalletlibService::UnregisterProc(nsIComponentManager *aCompMgr,
+                                   nsIFile *aPath,
+                                   const char *registryLocation,
+                                   const nsModuleComponentInfo *info)
+{
+  nsresult rv;
+  nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  
+  catman->DeleteCategoryEntry(NS_FIRST_FORMSUBMIT_CATEGORY,
+                              NS_WALLETSERVICE_CONTRACTID, PR_TRUE);
+  
+  catman->DeleteCategoryEntry(NS_PASSWORDMANAGER_CATEGORY,
+                              NS_WALLETSERVICE_CONTRACTID, PR_TRUE);
+
+  // Return value is not used from this function.
   return NS_OK;
 }
 

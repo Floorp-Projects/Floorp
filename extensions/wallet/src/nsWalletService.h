@@ -32,6 +32,8 @@
 #include "nsIDOMWindowInternal.h"
 #include "nsIURI.h"
 #include "nsIWebProgressListener.h"
+#include "nsIComponentManager.h"
+#include "nsIGenericFactory.h"
 
 class nsWalletlibService : public nsIWalletService,
                            public nsIObserver,
@@ -53,6 +55,18 @@ public:
 
   // NS_DECL_NSIFORMSUBMITOBSERVER
   NS_IMETHOD Notify(nsIContent* formNode, nsIDOMWindowInternal* window, nsIURI* actionURL, PRBool* cancelSubmit);
+
+  // {Un}Register proc that do category {Un}Registration
+  static NS_METHOD RegisterProc(nsIComponentManager *aCompMgr,
+                                nsIFile *aPath,
+                                const char *registryLocation,
+                                const char *componentType,
+                                const nsModuleComponentInfo *info);
+  static NS_METHOD UnregisterProc(nsIComponentManager *aCompMgr,
+                                  nsIFile *aPath,
+                                  const char *registryLocation,
+                                  const nsModuleComponentInfo *info);
+
   
 protected:
   virtual ~nsWalletlibService();
@@ -71,7 +85,7 @@ public:
   virtual ~nsSingleSignOnPrompt() {}
   
   nsresult Init();
-  
+
 protected:
   nsCOMPtr<nsIPrompt>   mPrompt;
   static PRBool         mgRegisteredObserver;

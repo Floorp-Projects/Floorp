@@ -44,7 +44,6 @@
 #include "nsIDirectoryService.h"
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsSpecialSystemDirectory.h"
-#include "nsIWalletService.h"
 #include "nsIWindowMediator.h"
 #include "nsIDOMWindowInternal.h"
 #include "nsIClipboard.h"
@@ -1374,11 +1373,6 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   NS_TIMELINE_LEAVE("Ensure1Window");
   NS_ASSERTION(NS_SUCCEEDED(rv), "failed to Ensure1Window");
   if (NS_FAILED(rv)) return rv;
-
-  // Startup wallet service so it registers for notifications
-  NS_TIMELINE_ENTER("walletService");
-  nsCOMPtr<nsIWalletService> walletService(do_GetService(NS_WALLETSERVICE_CONTRACTID, &rv));
-  NS_TIMELINE_LEAVE("walletService");
 
   // From this point on, should be true
   appShell->SetQuitOnLastWindowClosing(PR_TRUE);	
