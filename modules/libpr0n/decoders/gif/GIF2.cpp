@@ -1051,7 +1051,7 @@ PRStatus gif_write(gif_struct *gs, const PRUint8 *buf, PRUint32 len)
     // Handle general errors
     case gif_error:
       nsGIFDecoder2::EndGIF(gs->clientptr, gs->loop_count);
-      return PR_FAILURE;
+      return PR_SUCCESS;
 
     case gif_stop_animating:
       return PR_SUCCESS;

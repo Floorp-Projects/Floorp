@@ -233,9 +233,15 @@ NS_IMETHODIMP nsGIFDecoder2::WriteFrom(nsIInputStream *inStr, PRUint32 count, PR
   nsresult rv = inStr->ReadSegments(ReadDataOut, this,  count, _retval);
 
   /* necko doesn't propagate the errors from ReadDataOut - take matters
-     into our own hands */
-  if (NS_SUCCEEDED(rv) && mGIFStruct && mGIFStruct->state == gif_error)
-    return NS_ERROR_FAILURE;
+     into our own hands.  if we have at least one frame of an animated
+     gif, then return success so we keep displaying as much as possible. */
+  if (NS_SUCCEEDED(rv) && mGIFStruct && mGIFStruct->state == gif_error) {
+    PRUint32 numFrames = 0;
+    if (mImageContainer)
+      mImageContainer->GetNumFrames(&numFrames);
+    if (numFrames <= 1)
+      return NS_ERROR_FAILURE;
+  }
 
   return rv;
 }
@@ -280,6 +286,10 @@ int nsGIFDecoder2::EndGIF(
     int      aAnimationLoopCount)
 {
   nsGIFDecoder2 *decoder = NS_STATIC_CAST(nsGIFDecoder2*, aClientData);
+
+  if (!decoder->mGIFOpen)
+    return 0;
+
   if (decoder->mObserver) {
     decoder->mObserver->OnStopContainer(nsnull, decoder->mImageContainer);
     decoder->mObserver->OnStopDecode(nsnull, NS_OK, nsnull);
