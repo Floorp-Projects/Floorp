@@ -8,54 +8,50 @@
 # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
-# 
+#  
 # The Original Code is The Waterfall Java Plugin Module
-# 
+#  
 # The Initial Developer of the Original Code is Sun Microsystems Inc
 # Portions created by Sun Microsystems Inc are Copyright (C) 2001
 # All Rights Reserved.
-#
-# $Id: makefile.win,v 1.1 2001/05/10 18:12:22 edburns%acm.org Exp $
-#
 # 
-# Contributor(s): 
-#
-#   Nikolay N. Igotti <inn@sparc.spb.su>
+# $Id: makefile.win,v 1.1 2001/07/12 20:25:25 edburns%acm.org Exp $
+# 
+# Contributor(s):
+# 
+#     Nikolay N. Igotti <nikolay.igotti@Sun.Com>
+# 
 
 BUILDDIR = ..\..
 JAVASRCDIR = ..\..\..\..\java
-CLASSDESTDIR = ..\..\..\win32\ext\jpav
-ADDCLASSPATH=..\..\..\win32\classes;..\..\..\win32\ext\jpav
-EDBURNS=edburns
-PATH_SEP=;
+CLASSDESTDIR = ..\..\..\win32\ext\av
+ADDCLASSPATH=..\..\..\win32\classes;..\..\..\win32\ext\av
 
-PKG3=sun.jvmp.jpav
-PKG4=sun.jvmp.jpav.protocol.jdk12.http
-PKG15=sun.jvmp.jpav.protocol.jdk12.https
-PKG16=sun.jvmp.jpav.protocol.jdk12.ftp
-PKG17=sun.jvmp.jpav.protocol.jdk12.gopher
-PKG18=sun.jvmp.jpav.protocol.jdk12.jar
+PKG3=sun.jvmp.av
+PKG4=sun.jvmp.av.protocol.http
+PKG15=sun.jvmp.av.protocol.https
+PKG16=sun.jvmp.av.protocol.ftp
+PKG17=sun.jvmp.av.protocol.gopher
 
 !include FileListExt.mk
 
 # ugly, but nmake is pretty stupid in substitutions 
-CLASSDESTDIR=..\..\..\win32\ext\jpav
-FILES_class = $(FILES_java:sun/jvmp=../../../win32/ext/jpav/sun/jvmp)
+CLASSDESTDIR=..\..\..\win32\ext\av
+FILES_class = $(FILES_java:sun/jvmp=../../../win32/ext/av/sun/jvmp)
 
 !include  $(BUILDDIR)\defs.mk
 !include  $(BUILDDIR)\rules.mk
 
-all: jpav.jar
+all: av.jar
 
-jpav.jar: classes
+av.jar: classes
 	@IF EXIST manifest.tmp $(DEL) manifest.tmp 
-        @ echo Creating jpav.jar...
+        @ echo Creating av.jar...
         @ cd $(CLASSDESTDIR) 
-	@$(JAR_CMD) cfm jpav.jar <<manifest.tmp sun 
-Factory-Class: sun.jvmp.jpav.JavaPluginAVFactory
-Protocol-Handlers: sun.jvmp.jpav.protocol.jdk12
+	@$(JAR_CMD) cfm av.jar <<manifest.tmp sun 
+Factory-Class: sun.jvmp.av.AVFactory
 <<
-	-@$(DEL) ..\jpav.jar manifest.tmp
-	@$(MV) jpav.jar ..
+	-@$(DEL) ..\av.jar manifest.tmp
+	@$(MV) av.jar ..
 	@ echo Done
 	
