@@ -116,7 +116,6 @@ CPPSRCS = \
         nsDeviceContext.cpp \
         nsFont.cpp \
         nsFontList.cpp \
-        nsNameValuePairDB.cpp \
         nsRect.cpp \
         nsRegion.cpp \
         nsTransform2D.cpp \
