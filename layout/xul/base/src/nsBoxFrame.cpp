@@ -1881,10 +1881,11 @@ nsBoxFrame::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame*
         nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
         if (scroll)
           scroll->GetScrolledFrame(nsnull, frame);
-
-        nsIFrame* nestedPoint = nsnull;
-        GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
-        *aResult = nestedPoint ? nestedPoint : frame;
+        if (frame != aParent) {
+          nsIFrame* nestedPoint = nsnull;
+          GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
+          *aResult = nestedPoint ? nestedPoint : frame;
+        }
       }
       return;
     }
@@ -1898,9 +1899,11 @@ nsBoxFrame::GetInsertionPoint(nsIPresShell* aShell, nsIFrame* aParent, nsIFrame*
         nsCOMPtr<nsIScrollableFrame> scroll(do_QueryInterface(frame));
         if (scroll)
           scroll->GetScrolledFrame(nsnull, frame);
-        nsIFrame* nestedPoint = nsnull;
-        GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
-        *aResult = nestedPoint ? nestedPoint : frame;
+        if (frame != aParent) {
+          nsIFrame* nestedPoint = nsnull;
+          GetInsertionPoint(aShell, frame, aChild, &nestedPoint);
+          *aResult = nestedPoint ? nestedPoint : frame;
+        }
       }
       return;
     }
