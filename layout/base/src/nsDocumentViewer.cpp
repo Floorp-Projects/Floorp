@@ -633,10 +633,44 @@ DocumentViewerImpl::Init(nsIWidget* aParentWidget,
   return rv;
 }
 
+//
+// LoadComplete(aStatus)
+//
+//   aStatus - The status returned from loading the document.
+//
+// This method is called by the container when the document has been
+// completely loaded.
+//
 NS_IMETHODIMP
 DocumentViewerImpl::LoadComplete(nsresult aStatus)
 {
-  return NS_ERROR_FAILURE;
+  nsresult rv;
+
+  nsCOMPtr<nsIScriptGlobalObject> global;
+
+  // First, get the script global object from the document...
+  if (mDocument) {
+    rv = mDocument->GetScriptGlobalObject(getter_AddRefs(global));
+  }
+
+  // Fail if no ScriptGlobalObject is available...
+  NS_ASSERTION(global, "nsIScriptGlobalObject not set for document!");
+  if (!global) return NS_ERROR_NULL_POINTER;
+
+  // Now, fire either an OnLoad or OnError event to the document...
+  if(NS_SUCCEEDED(aStatus)) {
+    nsEventStatus status = nsEventStatus_eIgnore;
+    nsEvent event;
+
+    event.eventStructType = NS_EVENT;
+    event.message = NS_PAGE_LOAD;
+    rv = global->HandleDOMEvent(mPresContext, &event, nsnull,
+                                NS_EVENT_FLAG_INIT, &status);
+  } else {
+    // XXX: Should fire error event to the document...
+  }
+
+  return rv;
 }
 
 NS_IMETHODIMP
