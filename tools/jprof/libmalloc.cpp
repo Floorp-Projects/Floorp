@@ -67,11 +67,11 @@ static void writeStrStdout(const char* str)
 
 //----------------------------------------------------------------------
 
-#if defined(i386)
+#if defined(i386) || defined(_i386)
 static void CrawlStack(malloc_log_entry* me, jmp_buf jb, char* first)
 {
 #ifdef NTO
-  u_long* bp = (u_long*) (jb[0].__savearea[JB_BP]);
+  u_long* bp = (u_long*) (jb[0].__jmpbuf_un.__savearea[JB_BP]);
 #else
   u_long* bp = (u_long*) (jb[0].__jmpbuf[JB_BP]);
 #endif
@@ -155,7 +155,11 @@ Log(u_long aTime, char *first)
   setjmp(jb);
   CrawlStack(&me, jb, first);
 
+#ifndef NTO
   write(gLogFD, &me, offsetof(malloc_log_entry, pcs) + me.numpcs*sizeof(char*));
+#else
+  printf("Neutrino is missing the pcs member of malloc_log_entry!! \n");
+#endif
 }
 
 static int  realTime = 0;
