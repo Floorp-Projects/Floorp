@@ -3828,6 +3828,15 @@ nsGenericHTMLLeafFormElement::GetForm(nsIDOMHTMLFormElement** aForm)
   NS_ENSURE_ARG_POINTER(aForm);
   *aForm = nsnull;
 
+  // This is here because radios can be created via script
+  // and depending on how the content in the script is constructed
+  // none of the code paths that set up the mForm may get called
+  // So this is a last stab effort to get the form before somebody 
+  // uses the radiobutton. Bug 62799
+  if (mForm == nsnull) {
+    FindFormParent(mParent, this); // ignore returned result
+  }
+
   if (mForm) {
     mForm->QueryInterface(NS_GET_IID(nsIDOMHTMLFormElement), (void**)aForm);
   }
