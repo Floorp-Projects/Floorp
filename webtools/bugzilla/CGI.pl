@@ -304,7 +304,7 @@ sub GetBugActivity {
     if (Param("insidergroup") && !UserInGroup(Param('insidergroup'))) {
         $suppjoins = "LEFT JOIN attachments 
                    ON attachments.attach_id = bugs_activity.attach_id";
-        $suppwhere = "AND NOT(COALESCE(attachments.isprivate,0))"; 
+        $suppwhere = "AND COALESCE(attachments.isprivate, 0) = 0";
     }
     my $query = "
         SELECT COALESCE(fielddefs.description, bugs_activity.fieldid),

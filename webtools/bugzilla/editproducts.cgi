@@ -339,7 +339,7 @@ unless ($action) {
 
     my $query = "SELECT products.name,
                         COALESCE(products.description,'') AS description, 
-                        NOT(disallownew) AS status,
+                        disallownew = 0 AS status,
                         votesperuser,  maxvotesperbug, votestoconfirm,
                         COUNT(bug_id) AS bug_count
                  FROM products";
