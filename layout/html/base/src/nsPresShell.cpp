@@ -1891,18 +1891,22 @@ nsresult PresShell::SetPrefColorRules(void)
               //   all (even author important) when put into an override stylesheet
 
               ///////////////////////////////////////////////////////////////
-              // - default color: '* {color:#RRGGBB !important;}'
+              // - default color: ':root {color:#RRGGBB !important;}'
               ColorToString(textColor,strColor);
-              strRule.Append(NS_LITERAL_STRING("* {color:"));
+              strRule.Append(NS_LITERAL_STRING(":root {color:"));
               strRule.Append(strColor);
               strRule.Append(NS_LITERAL_STRING(" !important;} "));
 
               ///////////////////////////////////////////////////////////////
-              // - default background color: '* {background-color:#RRGGBB !important;}'
+              // - default background color: ':root {background:#RRGGBB !important;}'
               ColorToString(bgColor,strColor);
-              strRule.Append(NS_LITERAL_STRING("* {background-color:"));
+              strRule.Append(NS_LITERAL_STRING(":root {background:"));
               strRule.Append(strColor);
               strRule.Append(NS_LITERAL_STRING(" !important;} "));
+              
+              ///////////////////////////////////////////////////////////////
+              // - everything else inherits the color, and has transparent background
+              strRule.Append(NS_LITERAL_STRING("* {color: inherit !important; background: transparent !important;} "));
               
               // now insert the rule
               result = sheet->InsertRule(strRule,0,&index);
