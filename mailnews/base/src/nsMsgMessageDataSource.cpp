@@ -721,7 +721,7 @@ nsMsgMessageDataSource::createMessagePriorityNode(nsIMessage *message,
 		return rv;
 	nsString uniStr = priorityStr;
 
-	rv = createNode(priorityStr, target);
+	rv = createNode(uniStr, target);
 	return rv;
 }
 
