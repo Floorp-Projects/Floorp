@@ -71,8 +71,8 @@ JSValue interpret(ICodeModule *iCode, const JSValues& args)
 	static JSObject globals;
 	
 	InstructionIterator begin_pc = iCode->its_iCode->begin();
-        InstructionIterator end_pc = iCode->its_iCode->end();
-        InstructionIterator pc = begin_pc;
+    InstructionIterator end_pc = iCode->its_iCode->end();
+    InstructionIterator pc = begin_pc;
     while (pc != end_pc) {
         Instruction* instruction = *pc;
 	    switch (instruction->opcode()) {
