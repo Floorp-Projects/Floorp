@@ -36,5 +36,5 @@ function deselectSkin()
 function installSkin()
   {
     var themeURL = prompt( "Enter URL for a skin to install:","");
-    chromeRegistry.installSkin( themeURL, DEBUG_USE_PROFILE );
+    chromeRegistry.installSkin( themeURL, DEBUG_USE_PROFILE, false );
   }
