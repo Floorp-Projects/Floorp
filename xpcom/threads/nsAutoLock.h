@@ -69,7 +69,9 @@
 #ifndef nsAutoLock_h__
 #define nsAutoLock_h__
 
+#include "nscore.h"
 #include "prlock.h"
+#include "prlog.h"
 
 // If you ever decide that you need to add a non-inline method to this
 // class, be sure to change the class declaration to "class NS_BASE
