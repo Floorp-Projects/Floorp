@@ -135,6 +135,19 @@ alpha-*-linux*)
 	DLL_SUFFIX="so.1.0"
     fi ;;
 
+*-netbsd*)
+    DLL_SUFFIX=".so.1.0"
+    DSO_CFLAGS='-fPIC'
+    DSO_LDOPTS='-shared -h $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+    MKSHLIB='$(LD) $(DSO_LDOPTS)'
+    if test -z "`$CC -E - -dM </dev/null | grep __ELF__`"; then
+	DSO_LDOPTS="-Bshareable"
+    fi
+    if test -n "$LIBRUNPATH"; then
+	DSO_LDOPTS="-R$LIBRUNPATH $DSO_LDOPTS"
+    fi
+    ;;
+
 *-openbsd*)
     DSO_LDOPTS="-Bshareable -x -assert pure-text"
     DSO_CFLAGS='-fPIC'
