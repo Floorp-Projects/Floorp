@@ -326,8 +326,8 @@ sub sqlify_criteria {
         
         # Add inclusions to the query, which simply involves joining the table
         # by flag type ID and target product/component.
-        push(@$tables, ", flaginclusions");
-        push(@criteria, "flagtypes.id = flaginclusions.type_id");
+        push(@$tables, "INNER JOIN flaginclusions ON " .
+                       "flagtypes.id = flaginclusions.type_id");
         push(@criteria, "(flaginclusions.product_id = $product_id " . 
                         " OR flaginclusions.product_id IS NULL)");
         push(@criteria, "(flaginclusions.component_id = $component_id " . 
