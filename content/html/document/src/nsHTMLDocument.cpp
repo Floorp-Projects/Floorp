@@ -147,6 +147,7 @@ const PRInt32 kBackward = 1;
 
 
 #define ID_NOT_IN_DOCUMENT ((nsIContent *)1)
+#define NAME_NOT_VALID ((nsBaseContentList*)1)
 
 static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -220,7 +221,9 @@ public:
 
   ~IdAndNameMapEntry()
   {
-    NS_IF_RELEASE(mContentList);
+    if (mContentList && mContentList != NAME_NOT_VALID) {
+      NS_RELEASE(mContentList);
+    }
   }
 
   nsString mKey;
@@ -2937,24 +2940,15 @@ nsHTMLDocument::InvalidateHashTables()
 }
 
 static nsresult
-AddEmptyListToHash(const nsAString& aName, PLDHashTable *aHash)
+ReserveNameInHash(const nsAString& aName, PLDHashTable *aHash)
 {
-  nsBaseContentList *list = new nsBaseContentList();
-  NS_ENSURE_TRUE(list, NS_ERROR_OUT_OF_MEMORY);
-
-  NS_ADDREF(list);
-
   IdAndNameMapEntry *entry =
     NS_STATIC_CAST(IdAndNameMapEntry *,
                    PL_DHashTableOperate(aHash, &aName, PL_DHASH_ADD));
 
-  if (!entry) {
-    NS_RELEASE(list);
+  NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
 
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  entry->mContentList = list;
+  entry->mContentList = NAME_NOT_VALID;
 
   return NS_OK;
 }
@@ -2968,36 +2962,36 @@ nsHTMLDocument::PrePopulateHashTables()
 {
   nsresult rv = NS_OK;
 
-  rv = AddEmptyListToHash(NS_LITERAL_STRING("write"), &mIdAndNameHashTable);
+  rv = ReserveNameInHash(NS_LITERAL_STRING("write"), &mIdAndNameHashTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddEmptyListToHash(NS_LITERAL_STRING("writeln"), &mIdAndNameHashTable);
+  rv = ReserveNameInHash(NS_LITERAL_STRING("writeln"), &mIdAndNameHashTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddEmptyListToHash(NS_LITERAL_STRING("open"), &mIdAndNameHashTable);
+  rv = ReserveNameInHash(NS_LITERAL_STRING("open"), &mIdAndNameHashTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddEmptyListToHash(NS_LITERAL_STRING("close"), &mIdAndNameHashTable);
+  rv = ReserveNameInHash(NS_LITERAL_STRING("close"), &mIdAndNameHashTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddEmptyListToHash(NS_LITERAL_STRING("forms"), &mIdAndNameHashTable);
+  rv = ReserveNameInHash(NS_LITERAL_STRING("forms"), &mIdAndNameHashTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddEmptyListToHash(NS_LITERAL_STRING("elements"), &mIdAndNameHashTable);
+  rv = ReserveNameInHash(NS_LITERAL_STRING("elements"), &mIdAndNameHashTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddEmptyListToHash(NS_LITERAL_STRING("characterSet"),
+  rv = ReserveNameInHash(NS_LITERAL_STRING("characterSet"),
                           &mIdAndNameHashTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddEmptyListToHash(NS_LITERAL_STRING("nodeType"), &mIdAndNameHashTable);
+  rv = ReserveNameInHash(NS_LITERAL_STRING("nodeType"), &mIdAndNameHashTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddEmptyListToHash(NS_LITERAL_STRING("parentNode"),
+  rv = ReserveNameInHash(NS_LITERAL_STRING("parentNode"),
                           &mIdAndNameHashTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = AddEmptyListToHash(NS_LITERAL_STRING("cookie"), &mIdAndNameHashTable);
+  rv = ReserveNameInHash(NS_LITERAL_STRING("cookie"), &mIdAndNameHashTable);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return rv;
@@ -3042,7 +3036,7 @@ nsHTMLDocument::UpdateNameTableEntry(const nsAString& aName,
 
   nsBaseContentList *list = entry->mContentList;
 
-  if (!list) {
+  if (!list || list == NAME_NOT_VALID) {
     return NS_OK;
   }
 
@@ -3097,7 +3091,8 @@ nsHTMLDocument::RemoveFromNameTable(const nsAString& aName,
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aName,
                                         PL_DHASH_LOOKUP));
 
-  if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mContentList) {
+  if (PL_DHASH_ENTRY_IS_BUSY(entry) && entry->mContentList &&
+      entry->mContentList != NAME_NOT_VALID) {
     entry->mContentList->RemoveElement(aContent);
   }
 
@@ -3217,6 +3212,8 @@ FindNamedItems(const nsAString& aName, nsIContent *aContent,
 {
   NS_ASSERTION(aEntry.mContentList,
                "Entry w/o content list passed to FindNamedItems()!");
+  NS_ASSERTION(aEntry.mContentList != NAME_NOT_VALID,
+               "Entry that should never have a list passed to FindNamedItems()!");
 
   nsIAtom *tag = aContent->Tag();
 
@@ -3263,12 +3260,6 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
     return NS_OK;
   }
 
-  // Bug 69826 - Make sure to flush the content model if the document
-  // is still loading.
-
-  // This is a perf killer while the document is loading!
-  FlushPendingNotifications(PR_FALSE);
-
   // We have built a table and cache the named items. The table will
   // be updated as content is added and removed.
 
@@ -3277,6 +3268,18 @@ nsHTMLDocument::ResolveName(const nsAString& aName,
                    PL_DHashTableOperate(&mIdAndNameHashTable, &aName,
                                         PL_DHASH_ADD));
   NS_ENSURE_TRUE(entry, NS_ERROR_OUT_OF_MEMORY);
+
+  if (entry->mContentList == NAME_NOT_VALID) {
+    // There won't be any named items by this name -- it's reserved
+    return NS_OK;
+  }
+
+  // Now we know we _might_ have items.  Before looking at
+  // entry->mContentList, make sure to flush out content (see
+  // bug 69826).
+
+  // This is a perf killer while the document is loading!
+  FlushPendingNotifications(PR_FALSE);
 
   nsBaseContentList *list = entry->mContentList;
 
