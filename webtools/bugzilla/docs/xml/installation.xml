@@ -1094,44 +1094,6 @@ my $webservergid = '8'
           </programlisting>
         </section>
 
-        <section>
-          <title>System Calls</title>
-
-          <para>In order to get system calls to work on win32's perl, you need
-          to tell the windows shell what interpreter to use. This is done by
-          changing the <function>system</function> calls. You will need to
-          search all of Bugzilla's code  for <function>system</function> calls.
-          To tell perl your interpreter, it needs to be the first argument to
-          the <function>system</function> call.  For example, you'll need to
-          change:
-          </para>
-          <programlisting>
-system("$webdotbase","-Tpng","-o","$pngfilename","$filename");
-          </programlisting>
-          <para>with</para>
-          <programlisting>
-system("C:\\perl\\bin\\perl", "$webdotbase","-Tpng","-o","$pngfilename","$filename");
-          </programlisting>
-
-          <tip>
-            <para>The <command>grep</command> command is very helpful in finding
-            these <function>system</function> calls, assuming you have the
-            <productname class="trade">cygwin</productname> utilities.
-            </para>
-          </tip>
-
-          <note>
-            <para>It appears that the only <function>system</function> call
-            remaining in the Bugzilla codebase is in
-            <filename>showdependencygraph.cgi</filename>. Not changing this
-            file will only cause dependency graphs to not function if the
-            <option>webdotbase</option> paramater points to a local
-            installation of <ulink url="http://www.graphviz.org">GraphViz</ulink>.
-            </para>
-          </note>
-
-        </section>
-
       </section>
 
       <section id="win32-http">
