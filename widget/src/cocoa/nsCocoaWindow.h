@@ -116,7 +116,7 @@ public:
     
     NS_IMETHOD              Enable(PRBool aState) { return NS_OK; }
     NS_IMETHOD              SetModal(PRBool aState) { return NS_OK; }
-    NS_IMETHOD              IsVisible(PRBool & aState) { return NS_OK; }
+    NS_IMETHOD              IsVisible(PRBool & aState);
     NS_IMETHOD              SetFocus(PRBool aState=PR_FALSE) { return NS_OK; }
     NS_IMETHOD SetMenuBar(nsIMenuBar * aMenuBar) { return NS_OK; }
     NS_IMETHOD ShowMenuBar(PRBool aShow) { return NS_OK; }
@@ -203,6 +203,7 @@ protected:
   NSWindow*         mWindow;         // our cocoa window [STRONG]
   WindowDelegate*   mDelegate;       // our delegate for processing window msgs [STRONG]
 
+  PRBool            mVisible;        // Whether or not we're visible.
 };
 
 #endif // MacWindow_h__

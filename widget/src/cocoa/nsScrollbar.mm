@@ -496,8 +496,9 @@ nsScrollbar::Show(PRBool bState)
     if ( mParentView )
       [mParentView addSubview:mView];
   }
-    
-  return Inherited::Show(bState);
+
+  mVisible = bState;
+  return NS_OK;
 }
 
 
