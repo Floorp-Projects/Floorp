@@ -316,7 +316,8 @@ sub BuildDist()
     [":mozilla:widget:src:mac:MANIFEST",						"$distdirectory:widget:"],
 
 	#GFX
-    [":mozilla:gfx:src:MANIFEST",								"$distdirectory:gfx:"],
+    [":mozilla:gfx:src:MANIFEST",										"$distdirectory:gfx:"],
+    [":mozilla:gfx:public:MANIFEST",								"$distdirectory:gfx:"],
 
 	#VIEW
     [":mozilla:view:public:MANIFEST",							"$distdirectory:view:"],
