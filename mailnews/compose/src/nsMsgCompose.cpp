@@ -19,6 +19,7 @@
  *
  * Contributor(s): 
  */
+#include "nsCOMPtr.h"
 #include "nsMsgCompose.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIDOMNode.h"
@@ -46,6 +47,9 @@
 #include "nsICharsetConverterManager.h"
 #include "nsTextFormater.h"
 #include "nsIEditor.h"
+#include "nsIHTMLEditor.h"
+#include "nsIDOMSelection.h"
+#include "nsIDOMNode.h"
 
 // XXX temporary so we can use the current identity hack -alecf
 #include "nsIMsgMailSession.h"
@@ -158,11 +162,64 @@ TranslateLineEndings(nsString &aString)
   return NS_OK;
 }
 
+nsresult 
+GetChildOffset(nsIDOMNode *aChild, nsIDOMNode *aParent, PRInt32 &aOffset)
+{
+  NS_ASSERTION((aChild && aParent), "bad args");
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (aChild && aParent)
+  {
+    nsCOMPtr<nsIDOMNodeList> childNodes;
+    result = aParent->GetChildNodes(getter_AddRefs(childNodes));
+    if ((NS_SUCCEEDED(result)) && (childNodes))
+    {
+      PRInt32 i=0;
+      for ( ; NS_SUCCEEDED(result); i++)
+      {
+        nsCOMPtr<nsIDOMNode> childNode;
+        result = childNodes->Item(i, getter_AddRefs(childNode));
+        if ((NS_SUCCEEDED(result)) && (childNode))
+        {
+          if (childNode.get()==aChild)
+          {
+            aOffset = i;
+            break;
+          }
+        }
+        else if (!childNode)
+          result = NS_ERROR_NULL_POINTER;
+      }
+    }
+    else if (!childNodes)
+      result = NS_ERROR_NULL_POINTER;
+  }
+  return result;
+}
+
+nsresult 
+GetNodeLocation(nsIDOMNode *inChild, nsCOMPtr<nsIDOMNode> *outParent, PRInt32 *outOffset)
+{
+  NS_ASSERTION((inChild && outParent && outOffset), "bad args");
+  nsresult result = NS_ERROR_NULL_POINTER;
+  if (inChild && outParent && outOffset)
+  {
+    result = inChild->GetParentNode(getter_AddRefs(*outParent));
+    if ( (NS_SUCCEEDED(result)) && (*outParent) )
+    {
+      result = GetChildOffset(inChild, *outParent, *outOffset);
+    }
+  }
+
+  return result;
+}
+
 nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell, nsString aPrefix, nsString aBuf, 
                                                    nsString aSignature, PRBool aQuoted, PRBool aHTMLEditor)
 {
   // First, get the nsIEditor interface for future use
   nsCOMPtr<nsIEditor> editor;
+  nsIDOMNode          *nodeInserted = nsnull;
+
   aEditorShell->GetEditor(getter_AddRefs(editor));
 
   TranslateLineEndings(aPrefix);
@@ -175,7 +232,7 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
   // Now, insert it into the editor...
   if ( (aQuoted) )
   {
-    if (aPrefix != "")
+    if (!aPrefix.IsEmpty())
     {
       if (aHTMLEditor)
         aEditorShell->InsertSource(aPrefix.GetUnicode());
@@ -183,28 +240,31 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
         aEditorShell->InsertText(aPrefix.GetUnicode());
     }
 
-    if (aBuf != "")
-      aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), 0);
+    if (!aBuf.IsEmpty())
+      aEditorShell->InsertAsQuotation(aBuf.GetUnicode(), &nodeInserted);
 
-    if (aSignature != "")
+    if (!aSignature.IsEmpty())
     {
-      aEditorShell->InsertSource(aSignature.GetUnicode());
+      if (aHTMLEditor)
+        aEditorShell->InsertSource(aSignature.GetUnicode());
+      else
+        aEditorShell->InsertText(aSignature.GetUnicode());
     }
   }
   else
   {
     if (aHTMLEditor)
     {
-      if (aBuf != "")
+      if (!aBuf.IsEmpty())
         aEditorShell->InsertSource(aBuf.GetUnicode());
-      if (aSignature != "")
+      if (!aSignature.IsEmpty())
         aEditorShell->InsertSource(aSignature.GetUnicode());
     }
     else
     {
-      if (aBuf != "")
+      if (!aBuf.IsEmpty())
         aEditorShell->InsertText(aBuf.GetUnicode());
-      if (aSignature != "")
+      if (!aSignature.IsEmpty())
         aEditorShell->InsertText(aSignature.GetUnicode());
     }
   }
@@ -213,12 +273,56 @@ nsresult nsMsgCompose::ConvertAndLoadComposeWindow(nsIEditorShell *aEditorShell,
   {
 	  switch (GetReplyOnTop())
 	  {
-      // RICHIE SHERRY - have to save where the cursor was!
       // This should set the cursor after the body but before the sig
-		  case 0	: editor->EndOfDocument();					break;
+		  case 0	:
+		  {
+		    nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
+        if (!htmlEditor)
+        {
+          editor->BeginningOfDocument();
+          break;
+        }
 
-		  case 2	: editor->SelectAll();						  break;
+        nsCOMPtr<nsIDOMSelection> selection = nsnull; 
+        nsCOMPtr<nsIDOMNode>      parent = nsnull; 
+        PRInt32                   offset;
+        nsresult                  rv;
 
+        // get parent and offset of mailcite 
+        rv = GetNodeLocation(nodeInserted, &parent, &offset); 
+        if ( NS_FAILED(rv) || (!parent) )
+        {
+          editor->BeginningOfDocument();
+          break;
+        }
+
+        // get selection
+        editor->GetSelection(getter_AddRefs(selection));
+        if (!selection)
+        {
+          editor->BeginningOfDocument();
+          break;
+        }
+
+        // place selection after mailcite
+        selection->Collapse(parent, offset+1);
+
+        // insert a break at current selection
+        htmlEditor->InsertBreak();
+
+        // i'm not sure if you need to move the selection back to before the
+        // break. expirement.
+        selection->Collapse(parent, offset+1);
+ 
+		    break;
+		  }
+		  
+		  case 2	: 
+		  {
+		    editor->SelectAll();
+		    break;
+		  }
+		  
       // This should set the cursor to the top!
       default	: editor->BeginningOfDocument();		break;
 	  }
