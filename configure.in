@@ -3252,7 +3252,8 @@ dnl
 MOZ_ARG_ENABLE_BOOL(ldap,
 [  --enable-ldap           Enable LDAP (default=no); will fail w/o prereqs at
                             http://www.mozilla.org/directory/xpcom.html ],
-  MOZ_LDAP_XPCOM=1)
+  MOZ_LDAP_XPCOM=1
+    )
 
 dnl --enable mathml
 dnl TODO: handle include files here ?
@@ -3413,6 +3414,7 @@ AC_SUBST(MOZ_INSURE_EXCLUDE_DIRS)
 AC_SUBST(MOZ_INSURIFYING)
 AC_SUBST(MOZ_BUILD_XPFE)
 dnl AC_SUBST(MOZ_LDAP)
+AC_SUBST(MOZ_LDAP_XPCOM)
 
 AC_SUBST(UNIX_CRASH_ON_ASSERT)
 AC_SUBST(NO_UNIX_ASYNC_DNS)
@@ -4026,4 +4028,12 @@ unset CONFIG_FILES
 if test -z "$MOZ_NATIVE_NSPR" && test -n "$USE_NSPR_AUTOCONF"; then
   ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist"
   AC_OUTPUT_SUBDIRS(nsprpub)
+fi
+
+# if we're building the LDAP XPCOM component, we need to build 
+# the c-sdk first.  
+#
+if test "$MOZ_LDAP_XPCOM"; then
+  ac_configure_args="$_SUBDIR_CONFIG_ARGS --prefix=$MOZ_BUILD_ROOT/dist"
+  AC_OUTPUT_SUBDIRS(directory/c-sdk/ldap)
 fi
