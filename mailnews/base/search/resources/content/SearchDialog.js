@@ -138,32 +138,14 @@ function onSearch(event)
     dump("setting up search..\n");
     gSearchSession.clearScopes();
     // tell the search session what the new scope is
-    gSearchSession.addScopeTerm(GetScopeForFolder(gCurrentFolder),
+	if (!gCurrentFolder.isServer)
+		gSearchSession.addScopeTerm(GetScopeForFolder(gCurrentFolder),
                                 gCurrentFolder);
 
     var searchSubfolders = document.getElementById("checkSearchSubFolders").checked;
-	if (gCurrentFolder && (searchSubfolders || gCurrentFolder.isServer) && gCurrentFolder.hasSubFolders)
+	if (gCurrentFolder && (searchSubfolders || gCurrentFolder.isServer))
 	{
-		var subFolderEnumerator = gCurrentFolder.GetSubFolders();
-		var done = false;
-		while (!done)
-		{
-			var next = subFolderEnumerator.currentItem();
-			if (next)
-			{
-				var nextFolder = next.QueryInterface(Components.interfaces.nsIMsgFolder);
-				if (nextFolder)
-					gSearchSession.addScopeTerm(GetScopeForFolder(nextFolder), nextFolder);
-			}
-			try 
-			{
-				subFolderEnumerator.next();
-			 } 
-			 catch (ex) 
-			 {
-				  done = true;
-			 }
-		}
+		AddSubFolders(gCurrentFolder);
 	}
     // reflect the search widgets back into the search session
     saveSearchTerms(gSearchSession.searchTerms, gSearchSession);
@@ -175,6 +157,34 @@ function onSearch(event)
     dump("Kicking it off with " + gThreadTree.getAttribute("ref") + "\n");
 }
 
+function AddSubFolders(folder) {
+	if (folder.hasSubFolders)
+	{
+		var subFolderEnumerator = folder.GetSubFolders();
+		var done = false;
+		while (!done)
+		{
+			var next = subFolderEnumerator.currentItem();
+			if (next)
+			{
+				var nextFolder = next.QueryInterface(Components.interfaces.nsIMsgFolder);
+				if (nextFolder)
+				{
+					gSearchSession.addScopeTerm(GetScopeForFolder(nextFolder), nextFolder);
+					AddSubFolders(nextFolder);
+				}
+			}
+			try 
+			{
+				subFolderEnumerator.next();
+			 } 
+			 catch (ex) 
+			 {
+				  done = true;
+			 }
+		}
+	}
+}
 
 function GetScopeForFolder(folder) {
     if (folder.server.type == "nntp")
