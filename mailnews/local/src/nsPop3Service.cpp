@@ -27,7 +27,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
 
-#include "nsPop3Url.h"
+#include "nsPop3URL.h"
 #include "nsPop3Sink.h"
 #include "nsPop3Protocol.h"
 
