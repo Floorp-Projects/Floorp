@@ -17,8 +17,10 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Original Author:
+ *   Scott Collins <scc@mozilla.org>
+ *
  * Contributor(s):
- *   Scott Collins <scc@netscape.com>
  */
 
 #ifndef _nsFragmentedString_h__
