@@ -2555,10 +2555,37 @@ void
 nsWindow::HandleXlibExposeEvent(XEvent *event)
 {
   // expose.. we didn't get an Invalidate, so we should up the count here
-  do {
-    mUpdateArea->Union(event->xexpose.x, event->xexpose.y,
-                       event->xexpose.width, event->xexpose.height);
-  } while (XCheckWindowEvent(event->xany.display, event->xany.window, ExposureMask, event));
+  mUpdateArea->Union(event->xexpose.x, event->xexpose.y,
+                     event->xexpose.width, event->xexpose.height);
+  // try to see if there are any more events waiting for this window
+  gint x;
+  gint y;
+  gint width;
+  gint height;
+  gboolean was_expose;
+  GdkWindow *gdk_window = NULL;
+  GdkSuperWin *superwin = NULL;
+  gpointer data = NULL;
+
+  // try to get the superwin for this event
+  gdk_window = gdk_window_lookup(event->xexpose.window);
+  if (gdk_window) {
+    gdk_window_get_user_data(gdk_window, &data);
+    if (data)  {
+      if (GDK_IS_SUPERWIN(data)) {
+        superwin = (GdkSuperWin *)data;
+      }
+    }
+  }
+  if (superwin) {
+    // this function will look for expose and configurenotify events.
+    // if it was an expose event, was_expose will be true
+    while (gdk_superwin_check_expose_events(superwin,
+                                            &x, &y, &width, &height, &was_expose)) {
+      if (was_expose)
+        mUpdateArea->Union(x, y, width, height);
+    }
+  }
   
   SendExposeEvent();
 }

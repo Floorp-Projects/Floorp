@@ -28,6 +28,9 @@ static void gdk_superwin_destroy(GtkObject *object);
 
 static int  gdk_superwin_clear_rect_queue(GdkSuperWin *superwin, XEvent *xevent);
 static void gdk_superwin_clear_translate_queue(GdkSuperWin *superwin, unsigned long serial);
+static Bool gdk_superwin_expose_predicate(Display  *display,
+                                          XEvent   *xevent,
+                                          XPointer  arg);
 
 typedef struct _GdkSuperWinTranslate GdkSuperWinTranslate;
 typedef struct _GdkSuperWinRect      GdkSuperWinRect;
@@ -323,7 +326,7 @@ gdk_superwin_bin_filter (GdkXEvent *gdk_xevent,
   case Expose:
     /* if we pulled something out of the rect queue for this
        window it means that it was handled earlier as part of a scroll
-       so just ignore it. */
+       so just ignore igt. */
     if (!gdk_superwin_clear_rect_queue(superwin, xevent))
     {
       /* otherwise, translate the coords for this expose normally. */
@@ -387,6 +390,90 @@ gdk_superwin_shell_filter (GdkXEvent *gdk_xevent,
   }
 
   return GDK_FILTER_CONTINUE;
+}
+
+/* this function is used to check whether or not a particular event is
+   for a specific superwin and is a ConfigureNotify or Expose
+   event. */
+
+Bool gdk_superwin_expose_predicate(Display  *display,
+                                   XEvent   *xevent,
+                                   XPointer  arg) {
+  GdkSuperWin *superwin = (GdkSuperWin *)arg;
+  if (xevent->xany.window != GDK_WINDOW_XWINDOW(superwin->bin_window))
+    return False;
+  switch (xevent->xany.type) {
+  case Expose:
+    return True;
+    break;
+  case ConfigureNotify:
+    return True;
+    break;
+  default:
+    return False;
+    break;
+  }
+}
+
+/* this function allows you to do simple expose compression.
+   it will return the properly xlated x/y width/height of
+   the expose event.  also, it can return after processing 
+   a ConfigureNotify event without setting any of the members.
+   always check the value of was_expose, too */
+
+gint gdk_superwin_check_expose_events (GdkSuperWin *superwin,
+                                       gint *x, gint *y,
+                                       gint *width, gint *height,
+                                       gboolean *was_expose)
+{
+  XEvent  event_return;
+  XEvent *xevent = &event_return;
+  GList *tmp_list;
+  GdkSuperWinTranslate *translate;
+  *was_expose = FALSE;
+  *x = 0;
+  *y = 0;
+  *width = 0;
+  *height = 0;
+  // check to see if we have any events
+  if (XCheckIfEvent(GDK_DISPLAY(), xevent,
+                    gdk_superwin_expose_predicate, (XPointer)superwin)) {
+    switch (xevent->xany.type) {
+    case Expose:
+      /* if we pulled something out of the rect queue for this
+         window it means that it was handled earlier as part of a scroll
+         so just ignore igt. */
+      if (!gdk_superwin_clear_rect_queue(superwin, xevent))
+        {
+          /* otherwise, translate the coords for this expose normally. */
+          tmp_list = superwin->translate_queue;
+          while (tmp_list)
+            {
+              translate = tmp_list->data;
+              xevent->xexpose.x += translate->dx;
+              xevent->xexpose.y += translate->dy;
+              tmp_list = tmp_list->next;
+            }
+        }
+      // set our return values
+      *x = xevent->xexpose.x;
+      *y = xevent->xexpose.y;
+      *width = xevent->xexpose.width;
+      *height = xevent->xexpose.height;
+      *was_expose = TRUE;
+      return 1;
+      break;
+      
+    case ConfigureNotify:
+      /* we got a configure notify. clear the xlate queue */
+      gdk_superwin_clear_translate_queue(superwin, event_return.xany.serial);
+      // note that we are returning 1 here but was_expose is still FALSE
+      return 1;
+      break;
+    }
+    
+  }
+  return 0;
 }
 
 void
