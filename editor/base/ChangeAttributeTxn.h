@@ -20,8 +20,14 @@
 #define ChangeAttributeTxn_h__
 
 #include "EditTxn.h"
+#include "nsCOMPtr.h"
+#include "nsIDOMElement.h"
+#include "nsIEditor.h"
 
-class nsIDOMElement;
+#define CHANGE_ATTRIBUTE_TXN_IID \
+{/* 97818860-ac48-11d2-86d8-000064657374 */ \
+0x97818860, 0xac48, 0x11d2, \
+{0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
 /**
  * A transaction that changes an attribute of a content node. 
@@ -31,11 +37,16 @@ class ChangeAttributeTxn : public EditTxn
 {
 public:
 
-  ChangeAttributeTxn(nsEditor *aEditor,
-                     nsIDOMElement *aElement,
-                     const nsString& aAttribute,
-                     const nsString& aValue,
-                     PRBool aRemoveAttribute);
+  virtual nsresult Init(nsIEditor      *aEditor,
+                        nsIDOMElement  *aElement,
+                        const nsString& aAttribute,
+                        const nsString& aValue,
+                        PRBool aRemoveAttribute);
+
+private:
+  ChangeAttributeTxn();
+
+public:
 
   virtual nsresult Do(void);
 
@@ -54,9 +65,12 @@ public:
   virtual nsresult GetRedoString(nsString **aString);
 
 protected:
+
+  /** the editor that created this transaction */
+  nsCOMPtr<nsIEditor> mEditor;
   
   /** the element to operate upon */
-  nsIDOMElement *mElement;
+  nsCOMPtr<nsIDOMElement> mElement;
   
   /** the attribute to change */
   nsString mAttribute;
@@ -72,6 +86,8 @@ protected:
 
   /** PR_TRUE if the operation is to remove mAttribute from mElement */
   PRBool   mRemoveAttribute;
+
+  friend class TransactionFactory;
 };
 
 #endif

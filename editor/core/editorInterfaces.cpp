@@ -19,7 +19,6 @@
 #include "editor.h"
 
 #include "CreateElementTxn.h"
-#include "SplitElementTxn.h"
 
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
@@ -178,7 +177,7 @@ nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
           }
           else
           { // XXX: delete the first P we find
-            nsString pTag("P");
+            nsAutoString pTag("P");
             nsCOMPtr<nsIDOMNode> currentNode;
             nsCOMPtr<nsIDOMNode> parentNode;
             nsCOMPtr<nsIDOMElement> element;
@@ -199,25 +198,12 @@ nsEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
         {
           // XXX Replace with x-platform NS-virtkeycode transform.
           if (NS_OK == GetCharFromKeyCode(keyCode, isShift, & character)) {
-            nsString key;
+            nsAutoString key;
             key += character;
             if (!isShift) {
               key.ToLowerCase();
             }
-
-            // XXX: for now, just grab the first text node
-            nsCOMPtr<nsIDOMNode> currentNode;
-            nsCOMPtr<nsIDOMNode> textNode;
-            nsCOMPtr<nsIDOMCharacterData> text;
-            if (NS_SUCCEEDED(mEditor->GetCurrentNode(getter_AddRefs(currentNode))) && 
-                NS_SUCCEEDED(mEditor->GetFirstTextNode(currentNode,getter_AddRefs(textNode))) && 
-                NS_SUCCEEDED(textNode->QueryInterface(kIDOMCharacterDataIID, getter_AddRefs(text)))) 
-            {
-              // XXX: for now, just append the text
-              PRUint32 offset;
-              text->GetLength(&offset);
-              mEditor->InsertText(text, offset, key);
-            }
+            mEditor->InsertText(key);
           }
         }
         break;
@@ -244,6 +230,10 @@ nsEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   return NS_OK;
 }
 
+/* these includes are for debug only.  this module should never instantiate it's own transactions */
+#include "SplitElementTxn.h"
+#include "TransactionFactory.h"
+static NS_DEFINE_IID(kSplitElementTxnIID,   SPLIT_ELEMENT_TXN_IID);
 nsresult
 nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProcessed)
 {
@@ -265,7 +255,7 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
         if (PR_TRUE==ctrlKey)
         {
           if (nsnull!=mEditor)
-            mEditor->Undo();
+            mEditor->Undo(1);
         }
         aProcessed=PR_TRUE;
         break;
@@ -275,7 +265,7 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
         if (PR_TRUE==ctrlKey)
         {
           if (nsnull!=mEditor)
-            mEditor->Redo();
+            mEditor->Redo(1);
         }
         aProcessed=PR_TRUE;
         break;
@@ -283,17 +273,27 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
       // hard-coded split node test:  works on first <P> in the document
       case nsIDOMEvent::VK_S:
         {
-          nsString pTag("P");
+          nsAutoString pTag("P");
           nsCOMPtr<nsIDOMNode> currentNode;
           nsCOMPtr<nsIDOMElement> element;
           if (NS_SUCCEEDED(mEditor->GetFirstNodeOfType(nsnull, pTag, getter_AddRefs(currentNode))))
           {
+            nsresult result;
             SplitElementTxn *txn;
             if (PR_FALSE==isShift)   // split the element so there are 0 children in the first half
-              txn = new SplitElementTxn(mEditor, currentNode, -1);
+            {
+              result = TransactionFactory::GetNewTransaction(kSplitElementTxnIID, (EditTxn **)&txn);
+              if (txn)
+                txn->Init(currentNode, -1);
+            }
             else                    // split the element so there are 2 children in the first half
-             txn = new SplitElementTxn(mEditor, currentNode, 1);
-            mEditor->ExecuteTransaction(txn);        
+            {
+              result = TransactionFactory::GetNewTransaction(kSplitElementTxnIID, (EditTxn **)&txn);
+              if (txn)
+               txn->Init(currentNode, 1);
+            }
+            if (txn)
+              mEditor->Do(txn);        
           }
         }
         aProcessed=PR_TRUE;
@@ -305,10 +305,10 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
         {
           //XXX: should be from a factory
           //XXX: should manage the refcount of txn
-          nsString attribute("width");
-          nsString value("400");
+          nsAutoString attribute("width");
+          nsAutoString value("400");
 
-          nsString tableTag("TABLE");
+          nsAutoString tableTag("TABLE");
           nsCOMPtr<nsIDOMNode> currentNode;
           nsCOMPtr<nsIDOMElement> element;
           if (NS_SUCCEEDED(mEditor->GetFirstNodeOfType(nsnull, tableTag, getter_AddRefs(currentNode))))
@@ -331,11 +331,11 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
           nsresult result;
           //XXX: should be from a factory
           //XXX: should manage the refcount of txn
-          nsString attribute("src");
-          nsString value("resource:/res/samples/raptor.jpg");
+          nsAutoString attribute("src");
+          nsAutoString value("resource:/res/samples/raptor.jpg");
 
-          nsString imgTag("HR");
-          nsString bodyTag("BODY");
+          nsAutoString imgTag("HR");
+          nsAutoString bodyTag("BODY");
           nsCOMPtr<nsIDOMNode> currentNode;
           result = mEditor->GetFirstNodeOfType(nsnull, bodyTag, getter_AddRefs(currentNode));
           if (NS_SUCCEEDED(result))
@@ -356,7 +356,7 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
             {
               ChangeAttributeTxn *txn;
               txn = new ChangeAttributeTxn(mEditor, element, attribute, value, PR_FALSE);
-              mEditor->ExecuteTransaction(txn);        
+              mEditor->Do(txn);        
             }
           }
 */
@@ -522,4 +522,5 @@ NS_NewEditorMouseListener(nsIDOMEventListener ** aInstancePtrResult, nsEditor *a
 
   return it->QueryInterface(kIDOMEventListenerIID, (void **) aInstancePtrResult);   
 }
+
 

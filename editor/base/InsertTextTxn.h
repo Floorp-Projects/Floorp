@@ -20,13 +20,13 @@
 #define InsertTextTxn_h__
 
 #include "EditTxn.h"
+#include "nsIDOMCharacterData.h"
+#include "nsCOMPtr.h"
 
-#define INSERTTEXTTXN_IID \
+#define INSERT_TEXT_TXN_IID \
 {/* 93276f00-ab2c-11d2-8f4b-006008159b0c*/ \
 0x93276f00, 0xab2c, 0x11d2, \
 {0x8f, 0xb4, 0x0, 0x60, 0x8, 0x15, 0x9b, 0xc} }
-
-class nsIDOMCharacterData;
 
 /**
  * A transaction that changes an attribute of a content node. 
@@ -36,15 +36,13 @@ class InsertTextTxn : public EditTxn
 {
 public:
 	
-  InsertTextTxn(nsEditor *aEditor,
-                nsIDOMCharacterData *aElement,
-                PRUint32 aOffset,
-                const nsString& aStringToInsert);
+  virtual nsresult Init(nsIDOMCharacterData *aElement,
+                        PRUint32 aOffset,
+                        const nsString& aStringToInsert);
 
 private:
 	
-	// default ctor so that nsCOMPtr is happy
-	InsertTextTxn() : EditTxn(nsnull) {}
+	InsertTextTxn();
 
 public:
 	
@@ -67,7 +65,7 @@ public:
   // override QueryInterface to handle InsertTextTxn request
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
 
-  static const nsIID& IID() { static nsIID iid = INSERTTEXTTXN_IID; return iid; }
+  static const nsIID& IID() { static nsIID iid = INSERT_TEXT_TXN_IID; return iid; }
 
 
   virtual nsresult GetData(nsString& aResult);
@@ -75,7 +73,7 @@ public:
 protected:
   
   /** the text element to operate upon */
-  nsIDOMCharacterData *mElement;
+  nsCOMPtr<nsIDOMCharacterData> mElement;
   
   /** the offset into mElement where the insertion is to take place */
   PRUint32 mOffset;
@@ -85,6 +83,8 @@ protected:
 
   /** the text to insert into mElement at mOffset */
   nsString mStringToInsert;
+
+  friend class TransactionFactory;
 
 };
 

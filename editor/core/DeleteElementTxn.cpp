@@ -17,30 +17,32 @@
  */
 
 #include "DeleteElementTxn.h"
-#include "editor.h"
-#include "nsIDOMDocument.h"
+#ifdef NS_DEBUG
 #include "nsIDOMElement.h"
+#endif
 
-// note that aEditor is not refcounted
-DeleteElementTxn::DeleteElementTxn(nsEditor *      aEditor,
-                                   nsIDOMDocument *aDoc,
-                                   nsIDOMNode *    aElement,
-                                   nsIDOMNode *    aParent)
-  : EditTxn(aEditor)
+
+DeleteElementTxn::DeleteElementTxn()
+  : EditTxn()
 {
-  mDoc = aDoc;
-  NS_ADDREF(mDoc);
-  mElement = aElement;
-  NS_ADDREF(mElement);
-  mParent = aParent;
-  NS_ADDREF(mParent);
 }
+
+nsresult DeleteElementTxn::Init(nsIDOMNode *aElement,
+                                nsIDOMNode *aParent)
+{
+  if ((nsnull!=aElement) && (nsnull!=aParent))
+  {
+    mElement = aElement;
+    mParent = aParent;
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_NULL_POINTER;
+}
+
 
 DeleteElementTxn::~DeleteElementTxn()
 {
-  NS_IF_RELEASE(mDoc);
-  NS_IF_RELEASE(mParent);
-  NS_IF_RELEASE(mElement);
 }
 
 nsresult DeleteElementTxn::Do(void)
@@ -48,11 +50,32 @@ nsresult DeleteElementTxn::Do(void)
   if (!mParent  ||  !mElement)
     return NS_ERROR_NULL_POINTER;
 #ifdef NS_DEBUG
+  // begin debug output
+  nsCOMPtr<nsIDOMElement> element=mElement;
+  nsAutoString elementTag="text node";
+  if (element)
+    element->GetTagName(elementTag);
+  nsCOMPtr<nsIDOMElement> parentElement=mParent;
+  nsAutoString parentElementTag="text node";
+  if (parentElement)
+    parentElement->GetTagName(parentElementTag);
+  char *c, *p;
+  c = elementTag.ToNewCString();
+  p = parentElementTag.ToNewCString();
+  if (c&&p)
+  {
+    printf("DeleteElementTxn:  deleting child %s from parent %s\n", c, p); 
+    delete [] c;
+    delete [] p;
+  }
+  // end debug output
+  // begin sanity check 1: parent-child relationship
   nsresult testResult;
   nsCOMPtr<nsIDOMNode> parentNode;
   testResult = mElement->GetParentNode(getter_AddRefs(parentNode));
   NS_ASSERTION((NS_SUCCEEDED(testResult)), "bad mElement, couldn't get parent");
   NS_ASSERTION((parentNode==mParent), "bad mParent, mParent!=mElement->GetParent() ");
+  // end sanity check 1.
 #endif
 
   // remember which child mElement was (by remembering which child was next)

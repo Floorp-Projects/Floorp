@@ -23,8 +23,10 @@
 #include "nsIDOMNode.h"
 #include "nsCOMPtr.h"
 
-class nsIDOMDocument;
-class nsIDOMElement;
+#define DELETE_ELEMENT_TXN_IID \
+{/* 6fd77770-ac49-11d2-86d8-000064657374 */ \
+0x6fd77770, 0xac49, 0x11d2, \
+{0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
 
 /**
  * A transaction that deletes a single element
@@ -33,10 +35,13 @@ class DeleteElementTxn : public EditTxn
 {
 public:
 
-  DeleteElementTxn(nsEditor *aEditor,
-                   nsIDOMDocument *aDoc,
-                   nsIDOMNode *aElement,
-                   nsIDOMNode *aParent);
+  virtual nsresult Init(nsIDOMNode *aElement,
+                        nsIDOMNode *aParent);
+
+private:
+  DeleteElementTxn();
+
+public:
 
   virtual ~DeleteElementTxn();
 
@@ -58,20 +63,19 @@ public:
 
 protected:
   
-  /** the document into which the new node will be inserted */
-  nsIDOMDocument *mDoc;
-  
   /** the element to delete */
-  nsIDOMNode *mElement;
+  nsCOMPtr<nsIDOMNode> mElement;
 
   /** the node into which the new node will be inserted */
-  nsIDOMNode *mParent;
+  nsCOMPtr<nsIDOMNode> mParent;
 
   /** the index in mParent for the new node */
   PRUint32 mOffsetInParent;
 
   /** the node we will insert mNewNode before.  We compute this ourselves. */
   nsCOMPtr<nsIDOMNode> mRefNode;
+
+  friend class TransactionFactory;
 
 };
 

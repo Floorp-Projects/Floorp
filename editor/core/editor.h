@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#ifndef __editor_h__
+#define __editor_h__
+
 #include "prmon.h"
 #include "nsIEditor.h"
 #include "nsIContextLoader.h"
@@ -24,11 +27,13 @@
 #include "nsCOMPtr.h"
 #include "editorInterfaces.h"
 #include "nsITransactionManager.h"
+#include "TransactionFactory.h"
 #include "nsRepository.h"
 //#include "nsISelection.h"
 
 class nsIDOMCharacterData;
 class nsIPresShell;
+class nsIViewManager;
 
 //This is the monitor for the editor.
 PRMonitor *getEditorMonitor();
@@ -42,15 +47,19 @@ PRMonitor *getEditorMonitor();
 class nsEditor : public nsIEditor
 {
 private:
-  nsIPresShell *mPresShell;
+  nsIPresShell   *mPresShell;
+  nsIViewManager *mViewManager;
+  PRUint32        mUpdateCount;
   nsCOMPtr<nsIDOMDocument>      mDomInterfaceP;
   nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
   nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
 //  nsCOMPtr<nsISelection>        mSelectionP;
   //nsCOMPtr<nsITransactionManager> mTxnMgrP;
+
   nsITransactionManager * mTxnMgr;
   friend PRBool NSCanUnload(void);
   static PRInt32 gInstanceCount;
+
 public:
   /** The default constructor. This should suffice. the setting of the interfaces is done
    *  after the construction of the editor class.
@@ -70,9 +79,9 @@ public:
 
   virtual nsresult GetDomInterface(nsIDOMDocument **aDomInterface);
 
-  virtual nsresult SetProperties(PROPERTIES aProperty);
+  virtual nsresult SetProperties(Properties aProperties);
 
-  virtual nsresult GetProperties(PROPERTIES **);
+  virtual nsresult GetProperties(Properties **aProperties);
 
   virtual nsresult SetAttribute(nsIDOMElement * aElement, 
                                 const nsString& aAttribute, 
@@ -85,11 +94,15 @@ public:
 
   virtual nsresult RemoveAttribute(nsIDOMElement *aElement, const nsString& aAttribute);
 
-  virtual nsresult InsertString(nsString *aString);
-  
-  virtual nsresult Commit(PRBool aCtrlKey);
+  virtual nsresult Do(nsITransaction *aTxn);
 
+  virtual nsresult Undo(PRUint32 aCount);
 
+  virtual nsresult Redo(PRUint32 aCount);
+
+  virtual nsresult BeginUpdate();
+
+  virtual nsresult EndUpdate();
 
 /*END nsIEditor interfaces*/
 
@@ -112,12 +125,6 @@ public:
   PRBool MouseClick(int aX,int aY); //it should also tell us the dom element that was selected.
 
 /*BEGIN private methods used by the implementations of the above functions*/
-
-  /** AppendText is a private method that accepts a pointer to a string
-   *  and will append it to the current node.  this will be depricated
-   *  @param nsString *aStr is the pointer to the valid string
-   */
-  nsresult AppendText(nsString *aStr);
 
   /** GetCurrentNode ADDREFFS and will get the current node from selection.
    *  now it simply returns the first node in the dom
@@ -142,33 +149,6 @@ public:
    */
   nsresult GetFirstNodeOfType(nsIDOMNode *aStartNode, const nsString &aTag, nsIDOMNode **aResult);
 
-  /** ExecuteTransaction fires a transaction.  It is provided here so 
-    * clients need no knowledge of whether the editor has a transaction manager or not.
-    * If a transaction manager is present, it is used.  
-    * Otherwise, the transaction is just executed directly.
-    *
-    * @param aTxn the transaction to execute
-    */
-  nsresult ExecuteTransaction(nsITransaction *aTxn);
-
-  /** Undo reverses the effects of the last ExecuteTransaction operation
-    * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
-    * If a transaction manager is present, it is told to undo and the result of
-    * that undo is returned.  
-    * Otherwise, the Undo request is ignored.
-    *
-    */
-  nsresult Undo();
-
-  /** Redo reverses the effects of the last Undo operation
-    * It is provided here so clients need no knowledge of whether the editor has a transaction manager or not.
-    * If a transaction manager is present, it is told to redo and the result of
-    * that redo is returned.  
-    * Otherwise, the Redo request is ignored.
-    *
-    */
-  nsresult Redo();
-
   nsresult CreateElement(const nsString& aTag,
                          nsIDOMNode *    aParent,
                          PRInt32         aPosition);
@@ -178,17 +158,15 @@ public:
 
   nsresult DeleteSelection();
 
-  nsresult InsertText(nsIDOMCharacterData *aElement,
-                      PRUint32             aOffset,
-                      const nsString&      aStringToInsert);
+  nsresult InsertText(const nsString& aStringToInsert);
 
   nsresult DeleteText(nsIDOMCharacterData *aElement,
                       PRUint32             aOffset,
                       PRUint32             aLength);
 
-  static  nsresult SplitNode(nsIDOMNode * aNode,
+  static  nsresult SplitNode(nsIDOMNode * aExistingRightNode,
                              PRInt32      aOffset,
-                             nsIDOMNode * aNewNode,
+                             nsIDOMNode * aNewLeftNode,
                              nsIDOMNode * aParent);
 
   static nsresult JoinNodes(nsIDOMNode * aNodeToKeep,
@@ -197,6 +175,10 @@ public:
                             PRBool       aNodeToKeepIsFirst);
 
   nsresult Delete(PRBool aForward, PRUint32 aCount);
+
+  virtual nsresult InsertString(nsString *aString);
+  
+  virtual nsresult Commit(PRBool aCtrlKey);
 
 /*END private methods of nsEditor*/
 };
@@ -207,3 +189,6 @@ factory method(s)
 */
 
 nsresult NS_MakeEditorLoader(nsIContextLoader **aResult);
+
+
+#endif

@@ -17,23 +17,33 @@
  */
 
 #include "ChangeAttributeTxn.h"
-#include "editor.h"
 #include "nsIDOMElement.h"
+#include "editor.h"
 
-// note that aEditor is not refcounted
-ChangeAttributeTxn::ChangeAttributeTxn(nsEditor *aEditor,
-                                       nsIDOMElement *aElement,
-                                       const nsString& aAttribute,
-                                       const nsString& aValue,
-                                       PRBool aRemoveAttribute)
-  : EditTxn(aEditor)
+ChangeAttributeTxn::ChangeAttributeTxn()
+  : EditTxn()
 {
-  mElement = aElement;
-  mAttribute = aAttribute;
-  mValue = aValue;
-  mRemoveAttribute = aRemoveAttribute;
-  mAttributeWasSet=PR_FALSE;
-  mUndoValue="";
+}
+
+nsresult ChangeAttributeTxn::Init(nsIEditor      *aEditor,
+                                  nsIDOMElement  *aElement,
+                                  const nsString& aAttribute,
+                                  const nsString& aValue,
+                                  PRBool aRemoveAttribute)
+{
+  if (nsnull!=aEditor && nsnull!=aElement)
+  {
+    mEditor = aEditor;
+    mElement = aElement;
+    mAttribute = aAttribute;
+    mValue = aValue;
+    mRemoveAttribute = aRemoveAttribute;
+    mAttributeWasSet=PR_FALSE;
+    mUndoValue="";
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_NULL_POINTER;
 }
 
 nsresult ChangeAttributeTxn::Do(void)

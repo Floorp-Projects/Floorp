@@ -20,18 +20,22 @@
 #include "editor.h"
 #include "nsIDOMCharacterData.h"
 
-static NS_DEFINE_IID(kInsertTextTxnIID, INSERTTEXTTXN_IID);
+static NS_DEFINE_IID(kInsertTextTxnIID, INSERT_TEXT_TXN_IID);
 
-// note that aEditor is not refcounted
-InsertTextTxn::InsertTextTxn(nsEditor *aEditor,
-                             nsIDOMCharacterData *aElement,
+
+InsertTextTxn::InsertTextTxn()
+  : EditTxn()
+{
+}
+
+nsresult InsertTextTxn::Init(nsIDOMCharacterData *aElement,
                              PRUint32 aOffset,
                              const nsString& aStringToInsert)
-  : EditTxn(aEditor)
 {
   mElement = aElement;
   mOffset = aOffset;
   mStringToInsert = aStringToInsert;
+  return NS_OK;
 }
 
 nsresult InsertTextTxn::Do(void)
@@ -60,11 +64,11 @@ nsresult InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
   if ((nsnull!=aDidMerge) && (nsnull!=aTransaction))
   {
     // if aTransaction isa InsertTextTxn, absorb it
-    nsCOMPtr<InsertTextTxn> otherTxn;
-    nsresult result = aTransaction->QueryInterface(kInsertTextTxnIID, getter_AddRefs(otherTxn));
+    nsCOMPtr<InsertTextTxn> otherTxn = aTransaction;
+    nsresult result=NS_OK;// = aTransaction->QueryInterface(kInsertTextTxnIID, getter_AddRefs(otherTxn));
     if (NS_SUCCEEDED(result) && (otherTxn))
     {
-      nsString otherData;
+      nsAutoString otherData;
       otherTxn->GetData(otherData);
       mStringToInsert += otherData;
     }
