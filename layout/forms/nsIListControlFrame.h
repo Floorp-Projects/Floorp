@@ -53,6 +53,12 @@ public:
   NS_IMETHOD GetSelectedItem(nsString & aStr) = 0;
 
   /**
+   * Get the Selected Item's index
+   *
+   */
+  NS_IMETHOD GetSelectedIndex(PRInt32* aIndex) = 0;
+
+  /**
    * Initiates mouse capture for the listbox
    *
    */
