@@ -200,7 +200,6 @@ protected:
                             nscoord                  aAvailableWidth,
                             nscoord                  aAvailableHeight);
 
-  nsresult GetScreenHeight(nsIPresContext* aPresContext, nscoord& aHeight);
 public:
   nsresult PositionDropdown(nsIPresContext* aPresContext,
                             nscoord aHeight, 

@@ -625,30 +625,6 @@ nsComboboxControlFrame::GetDropdownFrame()
 
 
 nsresult 
-nsComboboxControlFrame::GetScreenHeight(nsIPresContext* aPresContext,
-                                        nscoord& aHeight)
-{
-  aHeight = 0;
-  nsIDeviceContext* context;
-  aPresContext->GetDeviceContext( &context );
-	if ( nsnull != context )
-	{
-		PRInt32 height;
-    PRInt32 width;
-		context->GetDeviceSurfaceDimensions(width, height);
-		float devUnits;
- 		context->GetDevUnitsToAppUnits(devUnits);
-		aHeight = NSToIntRound(float( height) / devUnits );
-		NS_RELEASE( context );
-		return NS_OK;
-	}
-
-  return NS_ERROR_FAILURE;
-}
-
-int counter = 0;
-
-nsresult 
 nsComboboxControlFrame::PositionDropdown(nsIPresContext* aPresContext, 
                                          nscoord aHeight, 
                                          nsRect aAbsoluteTwipsRect, 
@@ -676,7 +652,7 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext* aPresContext,
   dropdownFrame->GetRect(dropdownRect);
 
   nscoord screenHeightInPixels = 0;
-  if (NS_SUCCEEDED(GetScreenHeight(aPresContext, screenHeightInPixels))) {
+  if (NS_SUCCEEDED(nsFormControlFrame::GetScreenHeight(aPresContext, screenHeightInPixels))) {
      // Get the height of the dropdown list in pixels.
      float t2p;
      aPresContext->GetTwipsToPixels(&t2p);
