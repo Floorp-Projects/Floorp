@@ -20,6 +20,16 @@
 #define nsTraceRefcnt_h___
 
 #include "nsCom.h"
+#include <stdio.h>
+
+class nsVoidArray;
+
+#ifdef DEBUG
+struct mozCtorDtorCounter {
+  PRInt32 ctors;
+  PRInt32 dtors;
+};
+#endif
 
 /**
  * This class is used to support tracing (and logging using nspr) of
@@ -71,6 +81,63 @@ public:
                                 const char* aFile,
                                 int aLine);
 
+#ifdef DEBUG
+  /**
+   * Register a constructor with the xpcom library. This records the
+   * type name and the address of the counter so that later on when
+   * DumpLeaks is called, we can print out those objects ctors whose
+   * counter is not zero (the ones that have live object references
+   * still out there)
+   */
+  static NS_COM void RegisterCtor(const char* aType,
+                                  mozCtorDtorCounter* aCounterAddr);
+
+  static NS_COM void UnregisterCtor(const char* aType);
+
+  /**
+   * Dump the leaking constructors out.
+   */
+  static NS_COM void DumpLeaks(FILE* out);
+
+  /**
+   * Erase the ctor registration data.
+   */
+  static NS_COM void FlushCtorRegistry(void);
+#endif
+
+protected:
+#ifdef DEBUG
+  static nsVoidArray* mCtors;
+#endif
 };
+
+//----------------------------------------------------------------------
+
+#ifdef DEBUG
+
+#define MOZ_DECL_CTOR(_type)                  \
+  static mozCtorDtorCounter gCounter_##_type
+
+#define MOZ_CTOR(_type)                                     \
+PR_BEGIN_MACRO                                              \
+  if (0 == gCounter_##_type . ctors) {                      \
+    nsTraceRefcnt::RegisterCtor(#_type, &gCounter_##_type); \
+  }                                                         \
+  gCounter_##_type . ctors++;                               \
+PR_END_MACRO
+
+#define MOZ_DTOR(_type)        \
+PR_BEGIN_MACRO                 \
+  gCounter_##_type . dtors ++; \
+PR_END_MACRO
+
+#else
+
+#define MOZ_REG_CTOR(_type,_counter)
+#define MOZ_DECL_CTOR_(type)
+#define MOZ_CTOR(_type)
+#define MOZ_DTOR(_type)
+
+#endif /* DEBUG */
 
 #endif /* nsTraceRefcnt_h___ */

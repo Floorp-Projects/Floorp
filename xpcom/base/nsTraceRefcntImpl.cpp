@@ -17,8 +17,10 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 #include "nsISupports.h"
+#include "nsVoidArray.h"
 #include "prprf.h"
 #include "prlog.h"
+#include "plstr.h"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -542,3 +544,99 @@ nsTraceRefcnt::DemangleSymbol(const char * aSymbol,
 }
 #endif // __linux__
 
+//----------------------------------------------------------------------
+
+#ifdef DEBUG
+
+struct CtorEntry {
+  const char* type;
+  mozCtorDtorCounter* counter;
+};
+
+nsVoidArray* nsTraceRefcnt::mCtors;
+
+void
+nsTraceRefcnt::RegisterCtor(const char* aType,
+                            mozCtorDtorCounter* aCounterAddr)
+{
+  if (!mCtors) {
+    mCtors = new nsVoidArray();
+    if (!mCtors) {
+      return;
+    }
+  }
+  CtorEntry* e = new CtorEntry();
+  if (!e) {
+    return;
+  }
+  e->type = aType;
+  e->counter = aCounterAddr;
+  mCtors->AppendElement(e);
+}
+
+void
+nsTraceRefcnt::UnregisterCtor(const char* aType)
+{
+  if (mCtors) {
+    PRInt32 i, n = mCtors->Count();
+    for (i = 0; i < n; i++) {
+      CtorEntry* e = (CtorEntry*) mCtors->ElementAt(i);
+      if (0 == PL_strcmp(e->type, aType)) {
+        delete e;
+        mCtors->RemoveElementAt(i);
+        break;
+      }
+    }
+  }
+}
+
+void
+nsTraceRefcnt::DumpLeaks(FILE* out)
+{
+  if (mCtors) {
+    PRBool haveLeaks = PR_FALSE;
+    PRInt32 i, n = mCtors->Count();
+    for (i = 0; i < n; i++) {
+      CtorEntry* e = (CtorEntry*) mCtors->ElementAt(i);
+      if (e) {
+        mozCtorDtorCounter* cdc = e->counter;
+        if (cdc) {
+          if (cdc->ctors != cdc->dtors) {
+            haveLeaks = PR_TRUE;
+            break;
+          }
+        }
+      }
+    }
+    if (haveLeaks) {
+      fprintf(out, "*** There are memory leaks:\n");
+      fprintf(out, "%-40s %-15s %s\n", "Type", "# created", "# leaked");
+      fprintf(out, "%-40s %-15s %s\n", "----", "---------", "--------");
+
+      for (i = 0; i < n; i++) {
+        CtorEntry* e = (CtorEntry*) mCtors->ElementAt(i);
+        if (e && e->counter) {
+          mozCtorDtorCounter* cdc = e->counter;
+          if (cdc->ctors != cdc->dtors) {
+            fprintf(out, "%-40s %-15d %d\n", e->type, cdc->ctors,
+                    cdc->ctors - cdc->dtors);
+          }
+        }
+      }
+    }
+  }
+}
+
+void
+nsTraceRefcnt::FlushCtorRegistry(void)
+{
+  if (mCtors) {
+    PRInt32 i, n = mCtors->Count();
+    for (i = 0; i < n; i++) {
+      CtorEntry* e = (CtorEntry*) mCtors->ElementAt(i);
+      delete e;
+    }
+    delete mCtors;
+  }
+}
+#endif /* DEBUG */
