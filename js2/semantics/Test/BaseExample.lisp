@@ -17,14 +17,14 @@
            (decimal-value (value :digit))
            ((base-value (base integer))
             (let ((d integer (value :digit)))
-              (if (< d base) d (bottom integer)))))
+              (if (< d base) d (bottom)))))
          (production :digits (:digits :digit) digits-rest
            (decimal-value (+ (* 10 (decimal-value :digits)) (value :digit)))
            ((base-value (base integer))
             (let ((d integer (value :digit)))
               (if (< d base)
                 (+ (* base ((base-value :digits) base)) d)
-                (bottom integer))))))
+                (bottom))))))
        
        (rule :numeral ((value integer))
          (production :numeral (:digits) numeral-digits
@@ -34,7 +34,7 @@
             (let ((base integer (decimal-value :digits 2)))
               (if (and (>= base 2) (<= base 10))
                 ((base-value :digits 1) base)
-                (bottom integer))))))
+                (bottom))))))
        (%print-actions)
        )))
   
