@@ -1079,7 +1079,8 @@
                               ref="msgaccounts:/"
                               observes="cmd_getNewMessages">
                             <menupopup>
-                                <menuitem label="&getAllNewMsgCmd.label;" 
+                                <menuitem label="&getAllNewMsgCmdPopupMenu.label;"
+                                          accesskey="&getAllNewMsgCmdPopupMenu.accesskey;"
                                           key="key_getAllNewMessages"
                                           observes="cmd_getMsgsForAuthAccounts"/>
                                 <menuseparator/>
