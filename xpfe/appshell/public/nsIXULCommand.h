@@ -38,7 +38,7 @@ class nsIFactory;
 //----------------------------------------------------------------------
 
 
-class nsIXULCommand : public nsISupports {
+class nsIXULCommand : public nsIMenuListener {
 public:
 
   static const nsIID& IID() { static nsIID iid = NS_IXULCOMMAND_IID; return iid; }
