@@ -43,6 +43,8 @@ public class bloatsoup {
 			System.out.println("usage:  bloatsoup trace");
 			System.exit(1);
 		}
+
+		FileLocator.USE_BLAME = true;
 		
 		for (int i = 0; i < args.length; i++) {
 		    cook(args[i]);
@@ -51,25 +53,87 @@ public class bloatsoup {
 		// quit the application.
 		System.exit(0);
 	}
+	
+	/**
+	 * An Entry is created for every object in the bloat report.
+	 */
+	static class Entry {
+    	String mAddress;
+    	Type mType;
+    	Object[] mReferences;
+    	CallTree.Node mCrawl;
+    	int mCrawlID;
+    	int mRefCount;
+    	Entry[] mParents;
+    	int mTotalSize;
+
+    	Entry(String addr, Type type, Object[] refs, CallTree.Node crawl) {
+    		mAddress = addr;
+    		mReferences = refs;
+    		mCrawl = crawl;
+    		mCrawlID = crawl.id;
+    		mRefCount = 0;
+    		mType = type;
+    		mTotalSize = 0;
+    	}
+
+    	public String toString() {
+    		return ("<A HREF=\"#" + mAddress + "\" onMouseOver='return showCrawl(event,\"" + mCrawlID + "\");'>" + mAddress + "</A> [" + mRefCount + "] " + mType + " {" + mTotalSize + "}");
+    	}
+    }
+    
+    static String kStackCrawlScript =
+        "function finishedLoad() {\n" +
+        "   document.loaded = true;\n" +
+        "   document.layers['popup'].visibility='show';\n" +
+        "   return true;\n" +
+        "}\n" +
+        "var currentURL = null;\n" +
+        "function showCrawl(event, addr) {\n" +
+        "   if (!document.loaded) return true;\n" +
+        "   var l = document.layers['popup'];\n" +
+        "   var docURL = document.URL;\n" +
+        "   var crawlURL = docURL.substring(0, docURL.lastIndexOf('/') + 1) + crawlDir + addr + '.html';\n" +
+        "   // alert(crawlURL);\n" +
+        "   if (currentURL != crawlURL) {\n" +
+        "      l.load(crawlURL, 800);\n" +
+        "      currentURL = crawlURL\n" +
+        "      l.top = event.target.y + 15;\n" +
+        "      l.left = event.target.x + 30;\n" +
+        "   }\n" +
+        "   l.visibility='show';\n" +
+        "   return true;\n" +
+        "}\n" +
+        "";
+
+    static String kStackCrawlPrefix =
+        "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=3><TR><TD BGCOLOR=#00A000>\n" +
+        "<TABLE BORDER=0 CELLSPACING=0 CELLPADDING=6><TR><TD BGCOLOR=#FFFFFF>\n" +
+        "<PRE>\n" +
+        "";
+    static String kStackCrawlSuffix =
+        "</PRE>\n" +
+        "</TD></TR></TABLE>\n" +
+        "</TD></TR></TABLE>\n" +
+        "";
 
     /**
      * Initially, just create a histogram of the bloat.
      */
 	static void cook(String inputName) {
 		String outputName = inputName + ".html";
+		String crawlDir = inputName + ".crawls/";
 
 		try {
-			PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputName))));
-			writer.println("<HTML>");
-			Date now = new Date();
-			writer.println("<TITLE>Bloat as of " + now + "</TITLE>");
-
 			int objectCount = 0;
 			long totalSize = 0;
 			
+			StringTable strings = new StringTable();
 			Hashtable types = new Hashtable();
 			Histogram hist = new Histogram();
-			StringTable strings = new StringTable();
+			CallTree calls = new CallTree(strings);
+			Vector entries = new Vector();
+			Vector vec = new Vector();
 			BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(inputName)));
 			String line = reader.readLine();
 			while (line != null) {
@@ -93,11 +157,52 @@ public class bloatsoup {
 					
 					++objectCount;
 					totalSize += size;
-				}
-				line = reader.readLine();
+
+                    line = reader.readLine();
+
+                    // process references (optional).
+                    Object[] refs = null;
+                    if (line != null && line.charAt(0) == '\t') {
+                        vec.setSize(0);
+                        do {
+                            vec.addElement(strings.intern(line.substring(1, 11)));
+                            line = reader.readLine();
+                        } while (line != null && line.charAt(0) == '\t');
+                        refs = new Object[vec.size()];
+                        vec.copyInto(refs);
+                    }
+                    
+                    // process stack crawl (optional).
+                    CallTree.Node crawl = null;
+                    if (line != null && line.charAt(0) == '<') {
+                        do {
+                            crawl = calls.parseNode(line);
+                            line = reader.readLine();
+                        } while (line != null && line.charAt(0) == '<');
+                    }
+                    
+                    entries.addElement(new Entry(addr, type, refs, crawl));
+				} else {
+    				line = reader.readLine();
+    			}
 			}
 			reader.close();
+			
+			// build the Entries graph.
 
+            // Create the output .html report.
+			PrintWriter writer = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputName))));
+			writer.println("<HTML><HEAD>");
+			Date now = new Date();
+			writer.println("<TITLE>Bloat as of " + now + "</TITLE>");
+			
+			// set up the stack crawl "layer". I know, this is deprecated, but still useful.
+            writer.println("<SCRIPT>\n" + kStackCrawlScript +
+                           "var crawlDir = '" + crawlDir + "';\n" + 
+                           "</SCRIPT>");
+            writer.println("</HEAD>\n<BODY onLoad='finishedLoad();'>");
+            writer.println("<LAYER NAME='popup' onMouseOut='this.visibility=\"hide\";' LEFT=0 TOP=0 BGCOLOR='#FFFFFF' VISIBILITY='hide'></LAYER>");
+            
 			// print bloat summary.
 			writer.println("<H2>Bloat Summary</H2>");
 			writer.println("total object count = " + objectCount + "<BR>");
@@ -106,33 +211,50 @@ public class bloatsoup {
             // print histogram sorted by count * size.
 			writer.println("<H2>Bloat Histogram</H2>");
             leaksoup.printHistogram(writer, hist);
+            
+            File crawlFile = new File(inputName + ".crawls");
+            if (!crawlFile.exists())
+                crawlFile.mkdir();
+            // String crawlPath = System.getProperty("user.dir") + "/" + crawlDir;
+            
+            // print the Entries graph.
+			writer.println("<H2>Bloat Graph</H2>");
+			writer.println("<PRE>");
+			int count = entries.size();
+			for (int i = 0; i < count; ++i) {
+			    Entry entry = (Entry) entries.elementAt(i);
+                writer.println("<A NAME=\"" + entry.mAddress + "\"></A>");
+                writer.println(entry);
+    			// print object's fields:
+    			Object[] refs = entry.mReferences;
+    			if (refs != null) {
+        			int length = refs.length;
+        			for (int j = 0; j < length; ++j)
+        				leaksoup.printField(writer, refs[j]);
+        		}
+    			// print object's stack crawl, if it hasn't been printed already.
+    			CallTree.Node crawl = entry.mCrawl;
+    			int crawlID = crawl.id;
+    			if (crawlID > 0) {
+    			    // encode already printed by negating the crawl id.
+    			    crawl.id = -crawlID;
+        			PrintWriter crawlWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(crawlDir + crawlID + ".html"))));
+        			crawlWriter.print(kStackCrawlPrefix);
+        			while (crawl != null) {
+        				String location = FileLocator.getFileLocation(crawl.data);
+        				crawlWriter.println(location);
+        				crawl = crawl.parent;
+        			}
+        			crawlWriter.print(kStackCrawlSuffix);
+        			crawlWriter.close();
+        		}
+			}
+			writer.println("</PRE>");
+			writer.println("</BODY></HTML>");
 
 			writer.close();
 		} catch (Exception e) {
 			e.printStackTrace(System.err);
 		}
-	}
-	
-	/**
-	 * Simply replaces instances of '<' with "&LT;" and '>' with "&GT;".
-	 */
-	static String quoteTags(String str) {
-		int length = str.length();
-		StringBuffer buf = new StringBuffer(length);
-		for (int i = 0; i < length; ++i) {
-			char ch = str.charAt(i);
-			switch (ch) {
-			case '<':
-				buf.append("&LT;");
-				break;
-			case '>':
-				buf.append("&GT;");
-				break;
-			default:
-				buf.append(ch);
-				break;
-			}
-		}
-		return buf.toString();
 	}
 }
