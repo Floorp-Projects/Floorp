@@ -98,6 +98,7 @@ XPIDLSRCS	+= \
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
 ifdef ACCESSIBILITY
+REQUIRES	+= accessibility
 SHARED_LIBRARY_LIBS += \
     $(DIST)/lib/$(LIB_PREFIX)accessibility_base_s.$(LIB_SUFFIX) \
     $(DIST)/lib/$(LIB_PREFIX)accessibility_html_s.$(LIB_SUFFIX) \
