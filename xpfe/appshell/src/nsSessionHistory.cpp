@@ -17,7 +17,6 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-
 #include "nsISessionHistory.h"
 #include "nsVoidArray.h"
 //#include "nsIDocumentLoaderObserver.h"
@@ -175,12 +174,17 @@ public:
   PRInt32             mChildCount; // # of children
   nsHistoryEntry *    mParent;
   nsISupports *       mHistoryState;  // History state as saved by the layout
+
+  // WARNING: Weak reference
   nsISessionHistory * mHistoryList;  // The handle to the session History to 
-                                    // which this entry belongs
+                                     // which this entry belongs
 };
+
+MOZ_DECL_CTOR_COUNTER(nsHistoryEntry);
 
 nsHistoryEntry::nsHistoryEntry()
 {
+  MOZ_COUNT_CTOR(nsHistoryEntry);
    mChildCount = 0;
    mWS  = nsnull;
    mHistoryList = nsnull;
@@ -193,12 +197,14 @@ nsHistoryEntry::nsHistoryEntry()
 
 nsHistoryEntry::~nsHistoryEntry()
 {
+  MOZ_COUNT_DTOR(nsHistoryEntry);
    if (mTitle)
      delete mTitle;
    if (mURL)
 	 delete mURL;
    NS_IF_RELEASE(mWS);
-   NS_IF_RELEASE(mHistoryList);
+   // mHistoryList is a weak reference. Hence no release.
+   mHistoryList = nsnull;
    NS_IF_RELEASE(mHistoryState);
 
   DestroyChildren();
@@ -318,9 +324,8 @@ nsHistoryEntry::GetChildAt(PRInt32 aIndex, nsHistoryEntry *& aResult)
 nsresult
 nsHistoryEntry::SetSessionHistoryID(nsISessionHistory * aHistoryListID)
 {
-	NS_IF_RELEASE(mHistoryList);
+  // WARNING: Weak Reference
    mHistoryList = aHistoryListID;
-   NS_ADDREF(aHistoryListID);
    return NS_OK;
 }
 
@@ -848,9 +853,12 @@ private:
 
 };
 
+MOZ_DECL_CTOR_COUNTER(nsSessionHistory);
 
 nsSessionHistory::nsSessionHistory()
 {
+  MOZ_COUNT_CTOR(nsSessionHistory);
+
   mHistoryLength = 0;
   mHistoryCurrentIndex = -1;
   mIsLoadingDoc = 0;
@@ -861,6 +869,7 @@ nsSessionHistory::nsSessionHistory()
 
 nsSessionHistory::~nsSessionHistory()
 {
+  MOZ_COUNT_DTOR(nsSessionHistory);
 
   // Delete all HistoryEntries
 
