@@ -25,7 +25,10 @@
 #include "nsIURL.h"
 #include "nsIPref.h"
 
+#include "nsINameSpaceManager.h"
 #include "nsVoidArray.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIDOMWindow.h"
 
 #include "nsGUIEvent.h"
 #include "nsWidgetsCID.h"
@@ -139,18 +142,22 @@ struct nsWebShellInfo {
   nsString name; // The name to apply to the webshell once we create it.
   nsString url; // The URL to load in the webshell once we create it.
   nsIWebShell* opener; // The web shell that will be the opener of this new shell.
+  nsIWebShell* child; // The child web shell that will end up being used for the content area.
 
   nsWebShellInfo(const nsString& anID, const nsString aName, const nsString& anURL,
-                 nsIWebShell* anOpenerShell)
+                 nsIWebShell* anOpenerShell, nsIWebShell* aChildShell)
   {
     id = anID; name = aName; url = anURL;
     opener = anOpenerShell;
     NS_IF_ADDREF(anOpenerShell);
+    child = aChildShell;
+    NS_IF_ADDREF(aChildShell);
   }
 
   ~nsWebShellInfo()
   {
     NS_IF_RELEASE(opener);
+    NS_IF_RELEASE(child);
   }
 };
 
@@ -767,9 +774,91 @@ void nsWebShellWindow::LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWi
 
 } // nsWebShellWindow::LoadMenus
 
+
 NS_IMETHODIMP
-nsWebShellWindow::ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult)
+nsWebShellWindow::AddWebShellInfo(const nsString& aID, const nsString& aName,
+                                  const nsString& anURL, nsIWebShell* aOpenerShell,
+                                  nsIWebShell* aChildShell)
 {
+
+  nsWebShellInfo* webShellInfo = new nsWebShellInfo(aID, 
+                                                    aName, anURL, aOpenerShell, aChildShell);
+  
+  if (mContentShells == nsnull)
+    mContentShells = new nsVoidArray();
+
+  mContentShells->AppendElement((void*)webShellInfo);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow)
+{
+  nsresult rv;
+  nsCOMPtr<nsIScriptContextOwner> newContextOwner;
+  nsCOMPtr<nsIScriptGlobalObject> newGlobalObject;
+  nsCOMPtr<nsIDOMWindow> newDOMWindow;
+
+  newContextOwner = do_QueryInterface(aShell);
+  if (newContextOwner)
+  {
+    if (NS_FAILED(rv = newContextOwner->GetScriptGlobalObject(getter_AddRefs(newGlobalObject)))) {
+      NS_ERROR("Unable to retrieve global object.");
+      return rv;
+    }
+    
+    if (newGlobalObject) {
+      newDOMWindow = do_QueryInterface(newGlobalObject);
+      *aDOMWindow = newDOMWindow.get();
+      NS_ADDREF(*aDOMWindow);
+    }
+    else return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWebShellWindow::ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode)
+{
+  // Set to null just to be certain
+  *aChildShell = nsnull;
+
+  // If we don't have a content array, we just don't care.
+  if (mContentShells == nsnull)
+    return NS_OK;
+
+  // Find out if the frameNode in question is one that we have web shell info for.
+  nsIAtom* idAtom = NS_NewAtom("id");
+  nsIAtom* srcAtom = NS_NewAtom("src");
+	nsAutoString value;
+	frameNode->GetAttribute(kNameSpaceID_None, idAtom, value);
+
+  PRInt32 count = mContentShells->Count();
+  for (PRInt32 i = 0; i < count; i++)
+  {
+    nsWebShellInfo* webInfo = (nsWebShellInfo*)(mContentShells->ElementAt(i));
+    if (webInfo->id == value)
+    {
+      // We have a match!
+      
+      // Alter the frame node's source using the nsIContent method (to ensure that
+      // the value isn't persistently stored).
+      frameNode->SetAttribute(kNameSpaceID_None, srcAtom, webInfo->url, PR_FALSE);
+
+      *aChildShell = webInfo->child;
+      NS_ADDREF(*aChildShell);
+
+      // Remove this object from our array.
+      mContentShells->RemoveElementAt(i);
+      delete webInfo;
+
+      return NS_OK;
+    }
+  }
+  NS_RELEASE(idAtom);
+  NS_RELEASE(srcAtom);
   return NS_OK;
 }
 
@@ -794,7 +883,8 @@ nsWebShellWindow::CanCreateNewWebShell(PRBool& aResult)
 NS_IMETHODIMP
 nsWebShellWindow::SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
                                      nsIWebShell* aOpenerShell, PRUint32 chrome,
-                                     nsIWebShell** aNewWebShellResult)
+                                     nsIWebShell** anOuterResult,
+                                     nsIWebShell** anInnerResult)
 {
   // Create a new browser window. That's what this method is here for.
 	nsresult           rv;
@@ -819,19 +909,26 @@ nsWebShellWindow::SetNewWebShellInfo(const nsString& aName, const nsString& anUR
                                  nsnull, nsnull, 615, 480);
   nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
 
-  // Now return our web shell.
-  NS_IF_ADDREF(mWebShell);
-  *aNewWebShellResult = mWebShell;
+  // Now return the new window's web shell.
+  newWindow->GetWebShell(*anOuterResult);
+
+  // Create a new dummy shell that we will eventually want to reuse (when we find the
+  // right place for it).
+  // Create web shell
+  nsIWebShell* dummyShell;
+  rv = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
+                                    kIWebShellIID,
+                                    (void**)&dummyShell);
+  if (rv != NS_OK) {
+    return rv;
+  }
+
+  // Return this inner dummy shell. Set this shell's container to point to the outer shell.
+  *anInnerResult = dummyShell;
+  dummyShell->SetContainer(this);
 
   // Cache our webshell info.
-  nsWebShellInfo* webShellInfo = new nsWebShellInfo("content_frame", 
-                                                    aName, anURL, aOpenerShell);
-
-  if (mContentShells == nsnull)
-    mContentShells = new nsVoidArray();
-
-  mContentShells->AppendElement((void*)webShellInfo);
-
+  newWindow->AddWebShellInfo("content-frame", aName, anURL, aOpenerShell, dummyShell);
   return NS_OK;
 }
 

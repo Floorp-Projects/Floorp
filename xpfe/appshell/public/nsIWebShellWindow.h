@@ -26,6 +26,7 @@
 /* Forward declarations.... */
 class nsIWebShell;
 class nsIWidget;
+class nsString;
 
 // Interface ID for nsIWebShellWindow
 #define NS_IWEBSHELL_WINDOW_IID \
@@ -41,6 +42,10 @@ public:
   NS_IMETHOD Close() = 0;
   NS_IMETHOD GetWebShell(nsIWebShell *& aWebShell) = 0;
   NS_IMETHOD GetWidget(nsIWidget *& aWidget) = 0;
+
+  NS_IMETHOD AddWebShellInfo(const nsString& aID, const nsString& aName,
+                             const nsString& aURL, nsIWebShell* aOpenerShell,
+                             nsIWebShell* aChildShell) = 0;
 };
 
 

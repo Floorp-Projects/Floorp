@@ -1750,9 +1750,8 @@ nsBrowserWindow::CanCreateNewWebShell(PRBool& aResult)
 }
 
 NS_IMETHODIMP
-nsBrowserWindow::ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult)
+nsBrowserWindow::ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode)
 {
-  aResult = PR_FALSE; // We don't ever care about handling this.
   return NS_OK;
 }
 
@@ -1760,7 +1759,7 @@ nsBrowserWindow::ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode
 NS_IMETHODIMP
 nsBrowserWindow::SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
                                 nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
-                                nsIWebShell** aNewShell)
+                                nsIWebShell** aNewShell, nsIWebShell** anInnerShell)
 {
   return NS_OK; // We don't care about this method, since we can make new web shells immediately.
 }

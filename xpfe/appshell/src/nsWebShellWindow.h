@@ -45,6 +45,7 @@ class nsIContent;
 class nsIDocument;
 class nsIDOMCharacterData;
 class nsIDOMElement;
+class nsIDOMWindow;
 class nsIDOMHTMLImageElement;
 class nsIDOMHTMLInputElement;
 class nsIStreamObserver;
@@ -84,16 +85,20 @@ public:
                         PRInt32 aStatus);
 
 
-  NS_IMETHOD ChildShellAdded(nsIWebShell* aChildShell, nsIContent* frameNode, PRBool& aResult);
+  NS_IMETHOD ChildShellAdded(nsIWebShell** aChildShell, nsIContent* frameNode);
 
   NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
                          PRBool aVisible,
                          nsIWebShell *&aNewWebShell);
 
+  NS_IMETHOD AddWebShellInfo(const nsString& aID, const nsString& aName,
+                             const nsString& aURL, nsIWebShell* aOpenerShell,
+                             nsIWebShell* aChildShell);
+
   NS_IMETHOD CanCreateNewWebShell(PRBool& aResult);
   NS_IMETHOD SetNewWebShellInfo(const nsString& aName, const nsString& anURL, 
                                 nsIWebShell* aOpenerShell, PRUint32 aChromeMask,
-                                nsIWebShell** aNewShell);
+                                nsIWebShell** aNewShell, nsIWebShell** anInnerShell);
 
   NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
                                   nsIWebShell*& aResult);
@@ -203,6 +208,8 @@ public:
 
 protected:
   void ExecuteJavaScriptString(nsString& aJavaScript);
+
+  NS_IMETHOD ConvertWebShellToDOMWindow(nsIWebShell* aShell, nsIDOMWindow** aDOMWindow);
 
   PRInt32 GetDocHeight(nsIDocument * aDoc);
  
