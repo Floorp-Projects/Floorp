@@ -55,6 +55,10 @@
 #include "nsIAppStartup.h"
 #include "nsXPFEComponentsCID.h"
 
+#ifdef MOZ_XUL_APP
+#include "nsAppRunner.h"
+#endif
+
 /*----------------------------------------------------------------------------
 	AEApplicationClass 
 	
@@ -323,26 +327,28 @@ void AEApplicationClass::HandleRun(AEDesc *token, const AppleEvent *appleEvent, 
 ----------------------------------------------------------------------------*/
 void AEApplicationClass::HandleReOpen(AEDesc *token, const AppleEvent *appleEvent, AppleEvent *reply)
 {
-  // XXXbsmedberg this is just a hack to turn the tbox green, I will fix this tomorrow.
-#ifndef MOZ_XUL_APP
   OSErr	err = noErr;
   nsresult rv = NS_OK;
   nsCOMPtr<nsINativeAppSupport> nas;
-  
+
+#ifdef MOZ_XUL_APP
+  nas = do_CreateInstance(NS_NATIVEAPPSUPPORT_CONTRACTID);
+  if (!nas) ThrowIfOSErr(errAEEventNotHandled);
+#else
   nsCOMPtr<nsIAppStartup> appStartup(do_GetService(NS_APPSTARTUP_CONTRACTID));
   NS_WARN_IF_FALSE(appStartup, "Failed to get appstartup service");
   if(!appStartup) ThrowIfOSErr(errAEEventNotHandled);
   
   rv = appStartup->GetNativeAppSupport(getter_AddRefs(nas));
-  NS_WARN_IF_FALSE(rv==NS_OK, "Failed to get NativeAppSupport");  
+  NS_WARN_IF_FALSE(NS_SUCCEEDED(rv), "Failed to get NativeAppSupport");  
   if(NS_FAILED(rv)) ThrowIfOSErr(errAEEventNotHandled);
-    
+#endif
+
   rv = nas->ReOpen();
   if(NS_FAILED(rv)) ThrowIfOSErr(errAEEventNotHandled);    
-    
+
 	err = CheckForUnusedParameters(appleEvent);
 	ThrowIfOSErr(err);
-#endif
 }
 
 /*----------------------------------------------------------------------------

@@ -96,8 +96,16 @@ FORCE_STATIC_LIB = 1
 LOCAL_INCLUDES	= \
 	-I$(srcdir) \
 	-I$(srcdir)/.. \
-	-I$(srcdir)/../../components/startup/src \
 	$(NULL)
+
+ifdef MOZ_XUL_APP
+LOCAL_INCLUDES += \
+	-I$(topsrcdir)/toolkit/xre \
+	-I$(topsrcdir)/toolkit/components/startup/src \
+	$(NULL)
+else
+LOCAL_INCLUDEs += -I$(topsrcdir)/xpfe/components/startup/src
+endif
 
 include $(topsrcdir)/config/rules.mk
 
