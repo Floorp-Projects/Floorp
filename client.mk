@@ -541,7 +541,7 @@ endif
 # Depend
 
 depend:: $(OBJDIR)/Makefile $(OBJDIR)/config.status
-	$(MOZ_MAKE) $@;
+	$(MOZ_MAKE) export && $(MOZ_MAKE) depend
 
 ####################################
 # Build it

@@ -339,6 +339,7 @@ depend:
 	set DIST_DIRS=1
 	set LAYOUT_DIRS=1
 	set CLIENT_DIRS=1
+	nmake -f makefile.win export
 	nmake -f makefile.win depend 
 
 depend_xpconnect:
