@@ -54,7 +54,7 @@
 
 #include <stdio.h>
 #include "nspr.h"
-#include "nsFreeType.h"
+#include "nsIFreeType2.h"
 
 /* to/from Character Space */
 inline int

@@ -217,6 +217,8 @@ struct PrintSetup_ {
   struct URL_Struct_ *url;      /* url of doc being translated */
   FILE *out;                    /* Where to send the output */
   const char *filename;         /* output file name, if any */
+  FILE *tmpBody;                   /* temp file for True-Type printing */
+  const char *tmpBody_filename;    /* temp file name*/
   XL_CompletionRoutine completion; /* Called when translation finished */
   void* carg;                   /* Data saved for completion routine */
   int status;                   /* Status of URL on completion */
@@ -395,7 +397,7 @@ public:
    *  This version takes an Unicode string. 
    *	@update 3/22/2000 yueheng.xu@intel.com
    */
-  void show(const PRUnichar* aText, int aLen, const char *aAlign);
+  void show(const PRUnichar* aText, int aLen, const char *aAlign, int aType);
   /** ---------------------------------------------------
    *  set the clipping path to the current path using the winding rule
    *	@update 2/1/99 dwc
@@ -431,6 +433,11 @@ public:
    *	@update 2/1/99 dwc
    */
   void setscriptfont(PRInt16 aFontIndex,const nsString &aFamily,nscoord aHeight, PRUint8 aStyle, PRUint8 aVariant, PRUint16 aWeight, PRUint8 decorations);
+  /** ---------------------------------------------------
+   *  Set up the font
+   *    @update 12/17/2002 louie
+   */
+  void setfont(const nsCString aFontName, PRUint32 aHeight);
   /** ---------------------------------------------------
    *  output a postscript comment
    *	@update 2/1/99 dwc

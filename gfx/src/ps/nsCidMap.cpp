@@ -69,7 +69,7 @@ int len_UCS2_CodeSpaceRange =
              sizeof(UCS2_CodeSpaceRange)/sizeof(UCS2_CodeSpaceRange[0]);
 
 void
-WriteCidCharMap(PRUnichar *aCharIDs, PRUint32 *aCIDs, 
+WriteCidCharMap(const PRUnichar *aCharIDs, PRUint32 *aCIDs,
                 int aLen, FILE *aFile)
 {
   int i, blk_len;

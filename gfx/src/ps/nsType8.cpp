@@ -53,7 +53,7 @@
 #include "nsCidMap.h"
 #include "nsType1.h"
 #include "nsType8.h"
-#include "nsFreeType.h"
+#include "nsIFreeType2.h"
 #include "nsIServiceManager.h"
 #include "nsISignatureVerifier.h"
 #include "plbase64.h"
@@ -68,7 +68,7 @@ static void hex_out(unsigned char *buf, PRUint32 n, FILE *f, PRUint32 *pos);
 
 static void spaces_to_underlines(char *aToName);
 static int FT2SubsetToCidKeyedType1(nsIFreeType2 *aFt2, FT_Face aFace,
-                                    PRUnichar *aCharIDs, int aLen,
+                                    const PRUnichar *aCharIDs, int aLen,
                                     const char *aFontName,
                                     const char *aRegistry,
                                     const char *aEncoding, int aSupplement,
@@ -249,7 +249,7 @@ done:
 }
 
 char *
-FT2SubsetToEncoding(PRUnichar *aCharIDs, PRUint32 aNumChars)
+FT2SubsetToEncoding(const PRUnichar *aCharIDs, PRUint32 aNumChars)
 {
   unsigned char* rawDigest;
   char *encoding = NULL;
@@ -286,7 +286,7 @@ FT2SubsetToEncoding(PRUnichar *aCharIDs, PRUint32 aNumChars)
 
   // if psm is not available then just make a string based
   // on the time and a simple hash of the chars
-  PRUint32 hash = nsCRT::HashCode((const PRUnichar *)aCharIDs, &aNumChars);
+  PRUint32 hash = nsCRT::HashCode(aCharIDs, &aNumChars);
   encoding = (char*)PR_Malloc(10+1+10+1+10+1);
   if (!encoding)
     return nsnull;
@@ -304,7 +304,7 @@ FT2SubsetToEncoding(PRUnichar *aCharIDs, PRUint32 aNumChars)
 }
 
 PRBool
-FT2SubsetToType8(FT_Face aFace, PRUnichar *aCharIDs, PRUint32 aNumChars,
+FT2SubsetToType8(FT_Face aFace, const PRUnichar *aCharIDs, PRUint32 aNumChars,
                  int aWmode, FILE *aFile)
 {
   PRUint32 i;
@@ -392,7 +392,8 @@ done:
 }
 
 static PRBool
-FT2SubsetToCidKeyedType1(nsIFreeType2 *aFt2, FT_Face aFace, PRUnichar *aCharIDs,
+FT2SubsetToCidKeyedType1(nsIFreeType2 *aFt2, FT_Face aFace,
+                         const PRUnichar *aCharIDs,
                          int aLen, const char *aFontName,
                          const char *aRegistry, const char *aEncoding,
                          int aSupplement, int aWmode, int aLenIV, FILE *aFile)

@@ -106,11 +106,11 @@ interface nsIFontCatalogService : nsISupports
   const unsigned short kFCWidthDoubleWide    = 9;
 
   // Definition for slant
-  const unsigned short kFCSlantRoman          = 1;
-  const unsigned short kFCSlantItalic         = 2;
-  const unsigned short kFCSlantOblique        = 3;
-  const unsigned short kFCSlantReverseItalic  = 4;
-  const unsigned short kFCSlantReverseOblique = 5;
+  const unsigned short kFCSlantRoman          = 0;
+  const unsigned short kFCSlantItalic         = 1;
+  const unsigned short kFCSlantOblique        = 2;
+  const unsigned short kFCSlantReverseItalic  = 3;
+  const unsigned short kFCSlantReverseOblique = 4;
 
   // Definition for spacing
   const unsigned short kFCSpacingMonospace    = 1;

@@ -60,11 +60,6 @@ nsFreeTypeFont::NewFont(nsITrueTypeFontCatalogEntry *, PRUint16, const char *)
 #include "nsFontDebug.h"
 #include "nsIServiceManager.h"
 
-// macros to handle FreeType2 26.6 numbers (26 bit number with 6 bit fraction)
-#define FT_CEIL(x) (((x) + 63) & -64)
-#define FT_FLOOR(x) ((x) & -64)
-#define FT_TRUNC(x) ((x) >> 6)
-
 // macros to handle FreeType2 16.16 numbers
 #define FT_16_16_TO_REG(x) ((x)>>16)
 
