@@ -241,7 +241,7 @@ nsresult nsTestUConv::TestCharsetManager()
     mLog.PrintError("GetUnicode()", res);
     return res;
   }
-  if (!csName.Equals(name)) {
+  if (!csName.EqualsWithConversion(name)) {
     mLog.PrintError("Equals()", "unexpected charset name");
     return NS_ERROR_UNEXPECTED;
   }
@@ -258,7 +258,7 @@ nsresult nsTestUConv::TestCharsetManager()
     mLog.PrintError("GetUnicode()", res);
     return res;
   }
-  if (!csAlias2.Equals(name)) {
+  if (!csAlias2.EqualsWithConversion(name)) {
     mLog.PrintError("Equals()", "unexpected charset name");
     return NS_ERROR_UNEXPECTED;
   }
