@@ -23,6 +23,7 @@ browserutils    0
 intl            0
 nglayout        0
 editor          0
+embedding       0
 viewer          0
 xpapp           0
 extensions      0
@@ -44,6 +45,7 @@ xmlextras       0
 mailextras      1
 xptlink         0
 psm             0
+embedding_test  1
 
 filepath_flags
 idepath             ":CodeWarrior IDE Path.txt"
