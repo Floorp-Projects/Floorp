@@ -22,7 +22,11 @@ CPPSRCS =				\
   nsJSCSSStyleSheet.cpp \
   nsJSCSSUnknownRule.cpp \
   nsJSCSSValue.cpp \
-	$(NULL)
+  nsJSCSSPrimitiveValue.cpp \
+  nsJSCounter.cpp \
+  nsJSRect.cpp \
+  nsJSRGBColor.cpp \
+  $(NULL)
 
 CPP_OBJS=						\
   .\$(OBJDIR)\nsJSCSS2Properties.obj \
@@ -37,7 +41,11 @@ CPP_OBJS=						\
   .\$(OBJDIR)\nsJSCSSStyleSheet.obj \
   .\$(OBJDIR)\nsJSCSSUnknownRule.obj \
   .\$(OBJDIR)\nsJSCSSValue.obj \
-	$(NULL)
+  .\$(OBJDIR)\nsJSCSSPrimitiveValue.obj \
+  .\$(OBJDIR)\nsJSCounter.obj \
+  .\$(OBJDIR)\nsJSRect.obj \
+  .\$(OBJDIR)\nsJSRGBColor.obj \
+  $(NULL)
 
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor \

@@ -51,6 +51,9 @@
     "characterdata.length", \
     "characterdata.replacedata", \
     "characterdata.substringdata", \
+    "counter.identifier", \
+    "counter.liststyle", \
+    "counter.separator", \
     "crmfobject.request", \
     "crypto.alert", \
     "crypto.disablerightclick", \
@@ -195,6 +198,14 @@
     "cssmediarule.media", \
     "csspagerule.selectortext", \
     "csspagerule.style", \
+    "cssprimitivevalue.getcountervalue", \
+    "cssprimitivevalue.getfloatvalue", \
+    "cssprimitivevalue.getrectvalue", \
+    "cssprimitivevalue.getrgbcolorvalue", \
+    "cssprimitivevalue.getstringvalue", \
+    "cssprimitivevalue.primitivetype", \
+    "cssprimitivevalue.setfloatvalue", \
+    "cssprimitivevalue.setstringvalue", \
     "cssrule.csstext", \
     "cssrule.parentrule", \
     "cssrule.parentstylesheet", \
@@ -831,6 +842,13 @@
     "range.startparent", \
     "range.surroundcontents", \
     "range.tostring", \
+    "rect.bottom", \
+    "rect.left", \
+    "rect.right", \
+    "rect.top", \
+    "rgbcolor.blue", \
+    "rgbcolor.green", \
+    "rgbcolor.red", \
     "screen.availheight", \
     "screen.availleft", \
     "screen.availtop", \
