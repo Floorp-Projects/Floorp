@@ -1203,7 +1203,7 @@ nsresult nsBrowserInstance::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
       httpChannel->GetUploadStream(getter_AddRefs(postData));
   }
 
-#ifdef DEBUG
+//#ifdef DEBUG
   if (NS_SUCCEEDED(aStatus)) {
     fprintf(stdout, "Document %s loaded successfully\n", urlCString.get());
     fflush(stdout);
@@ -1211,7 +1211,7 @@ nsresult nsBrowserInstance::EndDocumentLoad(nsIDOMWindow *aDOMWindow,
     fprintf(stdout, "Error loading URL %s: %0x \n", urlCString.get(), aStatus);
     fflush(stdout);
   }
-#endif
+//#endif
 
   SetPostData(postData);
 
