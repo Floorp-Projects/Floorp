@@ -36,24 +36,32 @@ typedef struct fixElement fixElement;
 static int compare_IDEs_by_IID(const void *ap, const void *bp);
 static int compare_IDEs_by_name(const void *ap, const void *bp);
 static int compare_IDEs_by_name_space(const void *ap, const void *bp);
+static int compare_strings(const void *ap, const void *bp);
+static int compare_fixElements_by_IID(const void *ap, const void *bp);
 static int compare_fixElements_by_name(const void *ap, const void *bp);
 static int compare_IIDs(const void *ap, const void *bp);
 PRBool shrink_IDE_array(XPTInterfaceDirectoryEntry *ide, 
                         int element_to_delete, int num_interfaces);
-PRBool update_fix_array(fixElement *deleted, int new_index);
+PRBool update_fix_array(fixElement *fix, int element_to_delete, 
+                        int num_interfaces, int replacement); 
 static int get_new_index(const fixElement *fix, int num_elements,
                          int target_file, int target_interface);
 PRBool copy_IDE(XPTInterfaceDirectoryEntry *from, 
                 XPTInterfaceDirectoryEntry *to);
+PRBool copy_fixElement(fixElement *from, fixElement *to);
 static void xpt_dump_usage(char *argv[]); 
 
 struct fixElement {
-    nsID *iid;
+    nsID iid;
     char* name;
     int file_num;
     int interface_num;
     PRBool is_deleted;
-    int index;
+    /* These next two variables will point you to the substitute interface
+     * if this one has been deleted.
+     */
+    int maps_to_file_num;
+    int maps_to_interface_num;
 };
 
 /* Global variables. */
@@ -76,7 +84,7 @@ main(int argc, char **argv)
     char *head, *data, *whole;
     FILE *in, *out;
     fixElement *newFix, *fix_array;
-    int i,j,l;
+    int i,j;
     int k = 0;
 
     if (argc < 3) {
@@ -154,11 +162,13 @@ main(int argc, char **argv)
                     perror("FAILED: 1st copying of IDE");
                     return 1;
                 }
-                fix_array[k].iid = &IDE_array[k].iid;
+                fix_array[k].iid = IDE_array[k].iid;
                 fix_array[k].name = IDE_array[k].name;
                 fix_array[k].file_num = i-2;
                 fix_array[k].interface_num = j+1;
                 fix_array[k].is_deleted = PR_FALSE;
+                fix_array[k].maps_to_file_num = i-2;
+                fix_array[k].maps_to_interface_num = j+1;
 
                 k++;
             }
@@ -189,14 +199,6 @@ main(int argc, char **argv)
           sizeof(fixElement), 
           compare_fixElements_by_name);
 
-    /* Iterate through fix_array now that it is in its final form (sorted)
-     * and set the index. Index is i+1 because index 0 is reserved for
-     * the special case (no parent interface).
-     */
-    for (i=0; i<totalNumberOfInterfaces; i++) {
-        fix_array[k].index = i+1;
-    }
-
     /* trueNumberOfInterfaces == number of interfaces left after deletions
      * are made. Initialize it here to be the same as the total number of
      * interfaces we'ce encountered thus far.
@@ -217,7 +219,7 @@ main(int argc, char **argv)
             /* If one of the interfaces is unresolved, delete that one 
              * preferentailly.
              */
-            if (!&IDE_array[i-1].iid) {
+            if (!IDE_array[i-1].interface_descriptor) {
                 /* Shrink the IDE_array to delete the duplicate interface.
                  */
                 if (!shrink_IDE_array(IDE_array, 
@@ -226,19 +228,19 @@ main(int argc, char **argv)
                     perror("FAILED: shrink_IDE_array");
                     return 1;
                 }
-                /* Update the fix_array so that the index that corresponds
-                 * to the just-deleted IDE now points to the surviving IDE
-                 * of the same name. Indices are one-based, so the second 
-                 * argument is passed as i+1 (instead of i).
+                /* Update the fix array. This involves moving the deleted 
+                 * entry to the end of the array (rather than deleting it)
+                 * and mapping it to the "replacement" element so we can
+                 * update interface indices appropriately later.
                  */
-                update_fix_array(&fix_array[i-1], i+1);
+                update_fix_array(fix_array, i-1, totalNumberOfInterfaces, i);
                 /* Decrement the true number of interfaces since we just
                  * deleted one. There's more than one way to get out of
                  * this loop.
                  */
                 trueNumberOfInterfaces--;
             } else {
-                if (!&IDE_array[i].iid || 
+                if (!IDE_array[i].interface_descriptor ||
                     (compare_IIDs(&IDE_array[i-1].iid, &IDE_array[i].iid) == 0)) {
                     /* Shrink the IDE_array to delete the duplicate interface.
                      */
@@ -248,12 +250,13 @@ main(int argc, char **argv)
                         perror("FAILED: shrink_IDE_array");
                         return 1;
                     }
-                    /* Update the fix_array so that the index that corresponds
-                     * to the just-deleted IDE now points to the surviving IDE
-                     * of the same name. Indices are one-based, so the second 
-                     * argument is passed as i (instead of i-1).
+                    /* Update the fix array. This involves moving the deleted 
+                     * entry to the end of the array (rather than deleting it)
+                     * and mapping it to the "replacement" element so we can
+                     * update interface indices appropriately later.
                      */
-                    update_fix_array(&fix_array[i], i);
+                    update_fix_array(fix_array, i, 
+                                     totalNumberOfInterfaces, i-1);
                     /* Decrement the true number of interfaces since we just
                      * deleted one. There's more than one way to get out of
                      * this loop.
@@ -269,68 +272,75 @@ main(int argc, char **argv)
         }
     }
 
-    /* Iterate through the remaining interfaces. There's some magic here - 
-     * we walk fix_array at the same time skipping over ones that have 
-     * been deleted. This should work correctly since we only ever delete
-     * things in a linear manner.
-     */
-    for (i=0,j=0; 
-         i<trueNumberOfInterfaces && j<totalNumberOfInterfaces; 
-         i++,j++) {
-        
-        /* Define id to save some keystrokes.
-         */
-        id = IDE_array[i].interface_descriptor;
-        /* Skip ahead in fix_array until past the deleted elements.
-         */
-        while (fix_array[j].is_deleted) {
-            j++;
-        }
-        /* Fix parent_interface first.
-         */
-        if (id->parent_interface != 0) {
-            id->parent_interface = 
-                get_new_index(fix_array, totalNumberOfInterfaces,
-                              fix_array[j].file_num, id->parent_interface);
-        }
-        /* Iterate through the method descriptors looking for params of
-         * type TD_INTERFACE_TYPE.
-         */
-        for (k=0; k<id->num_methods; k++) {
-            /* Cycle through the params first.
-             */
-            for (l=0; l<id->method_descriptors[k].num_args; l++) {
-                /* Define td to save some keystrokes.
-                 */
-                td = &id->method_descriptors[k].params[l].type;
-                if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
-                    td->type.interface = 
-                        get_new_index(fix_array, 
-                                      totalNumberOfInterfaces,
-                                      fix_array[j].file_num, 
-                                      td->type.interface);
-                }                                                
-            }
-
-            /* Check the result param too. Define td again to save 
-             * some keystrokes.
-             */
-            td = &id->method_descriptors[k].result->type;
-            if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
-                td->type.interface = 
-                    get_new_index(fix_array, totalNumberOfInterfaces,
-                                  fix_array[j].file_num, td->type.interface);
-            }                
-        }
-    } 
-
-    /* Sort the IDE_array by IID for output to xpt file.
+    /* Sort the IDE_array (put them in their final order) so that updating
+     * of indices will be meaningful.
      */
     qsort(IDE_array, 
           trueNumberOfInterfaces, 
           sizeof(XPTInterfaceDirectoryEntry), 
           compare_IDEs_by_IID);
 
+    /* Sort the fix_array to match the IDE_array. 
+     */
+    qsort(fix_array, 
+          trueNumberOfInterfaces, 
+          sizeof(fixElement), 
+          compare_fixElements_by_IID);
+
+    /* Iterate through the remaining interfaces (those not deleted) 
+     * looking for references to interfaces (such as id->parent_interface)
+     * which need an updated index number.
+     */
+    for (i=0; i<trueNumberOfInterfaces; i++) {
+        
+        /* Define id to save some keystrokes.
+         */
+        id = IDE_array[i].interface_descriptor;
+
+        /* Check for unresolved interface.
+         */
+        if (id) {
+            
+            /* Fix parent_interface first.
+             */
+            if (id->parent_interface && id->parent_interface != 0) {
+                id->parent_interface = 
+                    get_new_index(fix_array, totalNumberOfInterfaces,
+                                  fix_array[i].file_num, id->parent_interface);
+            }
+            /* Iterate through the method descriptors looking for params of
+             * type TD_INTERFACE_TYPE.
+             */
+            for (j=0; j<id->num_methods; j++) {
+                /* Cycle through the params first.
+                 */
+                for (k=0; k<id->method_descriptors[j].num_args; k++) {
+                    /* Define td to save some keystrokes.
+                     */
+                    td = &id->method_descriptors[j].params[k].type;
+                    if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
+                        td->type.interface = 
+                            get_new_index(fix_array, 
+                                          totalNumberOfInterfaces,
+                                          fix_array[j].file_num, 
+                                          td->type.interface);
+                    }                                                
+                }
+
+                /* Check the result param too. Define td again to save 
+                 * some keystrokes.
+                 */
+                td = &id->method_descriptors[j].result->type;
+                if (XPT_TDP_TAG(td->prefix) == TD_INTERFACE_TYPE) {
+                    td->type.interface = 
+                        get_new_index(fix_array, totalNumberOfInterfaces,
+                                      fix_array[i].file_num, 
+                                      td->type.interface);
+                }                
+            }
+        } 
+    }
+    
     /* Iterate through the array quickly looking for duplicate IIDS.
      * This shouldn't happen, i.e. is a failure condition, so bail
      * if we find a duplicate. If we have more than one entry, start 
@@ -407,12 +417,21 @@ compare_IDEs_by_IID(const void *ap,
 }  
 
 static int 
+compare_fixElements_by_IID(const void *ap,
+                           const void *bp)
+{
+    const fixElement *fix1 = ap, *fix2 = bp;
+    
+    return compare_IIDs(&fix1->iid, &fix2->iid);
+}  
+
+static int 
 compare_IDEs_by_name(const void *ap,
                     const void *bp)
 {
     const XPTInterfaceDirectoryEntry *ide1 = ap, *ide2 = bp;
     
-    return strcmp(ide1->name, ide2->name);
+    return compare_strings(ide1->name, ide2->name);
 }
 
 static int 
@@ -421,8 +440,23 @@ compare_IDEs_by_name_space(const void *ap,
 {
     const XPTInterfaceDirectoryEntry *ide1 = ap, *ide2 = bp;
     
-    return strcmp(ide1->name_space, ide2->name_space);
+    return compare_strings(ide1->name_space, ide2->name_space);
 }
+
+static int 
+compare_strings(const void *ap, const void *bp)
+{
+    const char *string1 = ap, *string2 = bp;
+
+    if (!string1 && !string2)
+        return 0;
+    if (!string1)
+        return -1;
+    if (!string2)
+        return 1;
+
+    return strcmp(string1, string2);    
+}     
 
 static int 
 compare_fixElements_by_name(const void *ap,
@@ -430,7 +464,7 @@ compare_fixElements_by_name(const void *ap,
 {
     const fixElement *fix1 = ap, *fix2 = bp;
     
-    return strcmp(fix1->name, fix2->name);
+    return compare_strings(fix1->name, fix2->name);
 }
     
 static int
@@ -469,24 +503,48 @@ shrink_IDE_array(XPTInterfaceDirectoryEntry *ide, int element_to_delete,
     return PR_TRUE;
 }
 
-/* update_fix_array marks a fixElement as deleted and updates the index 
- *  marker. Deleted elements are not used for comparison purposes with 
- * IDE_array. There only purpose is to set the interface index (if 
- * necessary) for id->parent_interfaces and TypeDescriptors once the IDEs 
- * are sorted and pruned. 
+/* update_fix_array marks a fixElement as deleted, updates its mapping 
+ * to point to the "replacement" element, and moves it to the end of 
+ * the array.
  */
 PRBool 
-update_fix_array(fixElement *deleted, int new_index) 
+update_fix_array(fixElement *fix, int element_to_delete, 
+                 int num_interfaces, int replacement) 
 {
+    fixElement *deleted;
+    int i;  
+
+    if (element_to_delete >= num_interfaces) {
+        return PR_FALSE;
+    }
+
+    deleted = PR_CALLOC(sizeof(fixElement));
+    if (!copy_fixElement(&fix[element_to_delete], deleted)) {
+        return PR_FALSE;
+    }
     deleted->is_deleted = PR_TRUE;
-    deleted->index = new_index;
+    deleted->maps_to_file_num = fix[replacement].file_num;
+    deleted->maps_to_interface_num = fix[replacement].interface_num;
+    
+    for (i=element_to_delete+1; i<num_interfaces; i++) {
+        if (!copy_fixElement(&fix[i], &fix[i-1])) {
+            return PR_FALSE;
+        }
+    }
+
+    if (!copy_fixElement(deleted, &fix[num_interfaces-1])) {
+        return PR_FALSE;
+    }
     
     return PR_TRUE;
 }
 
 /* get_new_index returns the new interface index by walking the fix_array
- * until the file_num and interface_num match the target values. Indices 
- * are one-based; zero represents the special case (no parent interface). 
+ * until the file_num and interface_num match the target values. If a match
+ * is found, it checks to see if that element has been deleted. If it has 
+ * been deleted, it follows that elements mapping until it gets to the 
+ * proper interface (recursion). FYI, Indices are one-based; zero 
+ * represents the special case (no parent interface). 
  */
 static int 
 get_new_index(const fixElement *fix, int num_elements, 
@@ -496,8 +554,14 @@ get_new_index(const fixElement *fix, int num_elements,
     
     for (i=0; i<num_elements; i++) { 
         if (fix[i].file_num == target_file &&
-            fix[i].interface_num == target_interface)
-            return fix[i].index;
+            fix[i].interface_num == target_interface) {
+            if (fix[i].is_deleted) {
+                return get_new_index(fix, num_elements, 
+                                     fix[i].maps_to_file_num,
+                                     fix[i].maps_to_interface_num);
+            }
+            return i+1;
+        }
     }
     
     return 0;
@@ -506,7 +570,7 @@ get_new_index(const fixElement *fix, int num_elements,
 PRBool
 copy_IDE(XPTInterfaceDirectoryEntry *from, XPTInterfaceDirectoryEntry *to) 
 {
-    if (from == NULL || to == NULL) {
+    if (!from || !to) {
         return PR_FALSE;
     }
     
@@ -515,6 +579,24 @@ copy_IDE(XPTInterfaceDirectoryEntry *from, XPTInterfaceDirectoryEntry *to)
     to->name_space = from->name_space;
     to->interface_descriptor = from->interface_descriptor;
     return PR_TRUE;
+}
+
+PRBool
+copy_fixElement(fixElement *from, fixElement *to)
+{
+    if (!from || !to) {
+        return PR_FALSE;
+    }
+
+    to->iid = from->iid;
+    to->name = from->name;
+    to->file_num = from->file_num;
+    to->interface_num = from->interface_num;
+    to->is_deleted = from->is_deleted;
+    to->maps_to_file_num = from->maps_to_file_num;
+    to->maps_to_interface_num = from->maps_to_interface_num;
+
+    return PR_TRUE;    
 }
 
 static void
