@@ -113,7 +113,9 @@ public:
 
   static void ForceDrawFrame(nsIFrame * aFrame);
 
- 
+  static nsresult GetValue(nsIContent* aContent, nsString* aResult);
+  static nsresult GetName(nsIContent* aContent, nsString* aResult);
+
  /** 
   * Utility to convert a string to a PRBool
   * @param aValue string to convert to a PRBool

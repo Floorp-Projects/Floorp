@@ -195,14 +195,15 @@ public:
                             const nsHTMLReflowState& aReflowState,
                             nsSize& aSize);
 
+    // nsIFormControlFrame
+  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
+  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
+
 protected:
 
   virtual ~nsFormControlFrame();
 
-   // nsIFormControlFrame
-  NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
-  NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
-
+ 
   /**
    * Determine if the control uses a native widget for rendering
    * @param aRequiresWidget is set to PR_TRUE if it has a native widget, PR_FALSE otherwise.

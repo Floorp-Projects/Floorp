@@ -321,9 +321,11 @@ nsHTMLInputElement::GetValue(nsString& aValue)
   GetType(&type);
   if (NS_FORM_INPUT_TEXT == type || NS_FORM_INPUT_PASSWORD == type) {
     nsIFormControlFrame* formControlFrame = nsnull;
-    if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
-      formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
-      NS_RELEASE(formControlFrame);
+    if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
+      if (nsnull != formControlFrame) {
+        formControlFrame->GetProperty(nsHTMLAtoms::value, aValue);
+        NS_RELEASE(formControlFrame);
+      }
       return NS_OK;
     }
   }
@@ -338,9 +340,11 @@ nsHTMLInputElement::SetValue(const nsString& aValue)
   GetType(&type);
   if (NS_FORM_INPUT_TEXT == type) {
     nsIFormControlFrame* formControlFrame = nsnull;
-    if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))     {
-      formControlFrame->SetProperty(nsHTMLAtoms::value, aValue);
-      NS_RELEASE(formControlFrame);
+    if (NS_SUCCEEDED(nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame))) {
+      if (nsnull != formControlFrame ) { 
+        formControlFrame->SetProperty(nsHTMLAtoms::value, aValue);
+        NS_RELEASE(formControlFrame);
+      }
     }
   }        
   return NS_OK;

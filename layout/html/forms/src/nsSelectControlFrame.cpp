@@ -736,10 +736,6 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
 {
   aRenderingContext.PushState();
 
-
-  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
-                            eFramePaintLayer_Content);
-
   /**
    * Resolve style for a pseudo frame within the given aParentContent & aParentContext.
    * The tag should be uppercase and inclue the colon.
@@ -913,6 +909,8 @@ nsSelectControlFrame::Paint(nsIPresContext& aPresContext,
                             const nsRect& aDirtyRect,
                             nsFramePaintLayer aWhichLayer)
 {
+  nsFormControlFrame::Paint(aPresContext, aRenderingContext, aDirtyRect,
+                            aWhichLayer);
   if (eFramePaintLayer_Content == aWhichLayer) {
     PaintSelectControl(aPresContext, aRenderingContext, aDirtyRect);
   }

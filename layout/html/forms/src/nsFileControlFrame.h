@@ -31,6 +31,11 @@ class nsFileControlFrame : public nsHTMLContainerFrame,
 public:
   nsFileControlFrame();
 
+  NS_IMETHOD Paint(nsIPresContext& aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect& aDirtyRect,
+                   nsFramePaintLayer aWhichLayer);
+
       // nsIFormControlFrame
   NS_IMETHOD SetProperty(nsIAtom* aName, const nsString& aValue);
   NS_IMETHOD GetProperty(nsIAtom* aName, nsString& aValue); 
