@@ -305,6 +305,7 @@ PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
 
     switch (lpk->keyType) {
     case rsaKey:
+	    keyType = CKK_RSA;
 	    PK11_SETATTRS(attrs, CKA_UNWRAP, (keyUsage & KU_KEY_ENCIPHERMENT) ?
 				&cktrue : &ckfalse, sizeof(CK_BBOOL) ); attrs++;
 	    PK11_SETATTRS(attrs, CKA_DECRYPT, (keyUsage & KU_DATA_ENCIPHERMENT) ?
@@ -348,6 +349,7 @@ PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
 				lpk->u.rsa.coefficient.len); attrs++;
 	    break;
     case dsaKey:
+	    keyType = CKK_DSA;
 	    /* To make our intenal PKCS #11 module work correctly with 
 	     * our database, we need to pass in the public key value for 
 	     * this dsa key. We have a netscape only CKA_ value to do this.
@@ -381,6 +383,7 @@ PK11_ImportAndReturnPrivateKey(PK11SlotInfo *slot, SECKEYRawPrivateKey *lpk,
 					lpk->u.dsa.privateValue.len); attrs++;
 	    break;
      case dhKey:
+	    keyType = CKK_DH;
 	    /* To make our intenal PKCS #11 module work correctly with 
 	     * our database, we need to pass in the public key value for 
 	     * this dh key. We have a netscape only CKA_ value to do this.
