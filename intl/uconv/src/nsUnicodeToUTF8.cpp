@@ -92,6 +92,7 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
       *dest++ = (char)0xe0 | (mHighSurrogate >> 12);
       *dest++ = (char)0x80 | ((mHighSurrogate >> 6) & 0x003f);
       *dest++ = (char)0x80 | (mHighSurrogate & 0x003f);
+      destLen -= 3;
     } else { 
       n = ((mHighSurrogate - (PRUnichar)0xd800) << 10) + 
               (*src - (PRUnichar)0xdc00) + 0x10000;
@@ -100,6 +101,7 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
       *dest++ = (char)0x80 | ((n >> 6) & 0x3f);
       *dest++ = (char)0x80 | (n & 0x3f);
       ++src;
+      destLen -= 4;
     }
     mHighSurrogate = 0;
   }
@@ -115,6 +117,7 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
         goto error_more_output;
       *dest++ = (char)0xc0 | (*src >> 6);
       *dest++ = (char)0x80 | (*src & 0x003f);
+      destLen -= 2;
     } else if (*src >= (PRUnichar)0xD800 && *src < (PRUnichar)0xDA00) {
       if ((src+1) >= srcEnd) {
         //we need another surrogate to complete this unicode char
@@ -129,12 +132,14 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
         *dest++ = (char)0xe0 | (*src >> 12);
         *dest++ = (char)0x80 | ((*src >> 6) & 0x003f);
         *dest++ = (char)0x80 | (*src & 0x003f);
+        destLen -= 3;
       } else {
         n = ((*src - (PRUnichar)0xd800) << 10) + (*(src+1) - (PRUnichar)0xdc00) + (PRUnichar)0x10000;
         *dest++ = (char)0xf0 | (n >> 18);
         *dest++ = (char)0x80 | ((n >> 12) & 0x3f);
         *dest++ = (char)0x80 | ((n >> 6) & 0x3f);
         *dest++ = (char)0x80 | (n & 0x3f);
+        destLen -= 4;
         ++src;
       }
     } else { 
@@ -144,6 +149,7 @@ NS_IMETHODIMP nsUnicodeToUTF8::Convert(const PRUnichar * aSrc,
       *dest++ = (char)0xe0 | (*src >> 12);
       *dest++ = (char)0x80 | ((*src >> 6) & 0x003f);
       *dest++ = (char)0x80 | (*src & 0x003f);
+      destLen -= 3;
     }
     ++src;
   }
