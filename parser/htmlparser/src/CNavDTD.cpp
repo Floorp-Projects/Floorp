@@ -1984,6 +1984,7 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
       return PR_TRUE;
     }
   }
+
   return PR_FALSE;
 }
      
@@ -2005,7 +2006,7 @@ PRBool CNavDTD::IsContainer(PRInt32 aTag) const {
  * This method tries to design a context vector (without actually
  * changing our parser state) from the parent down to the
  * child. 
- *
+ * 
  * @update  gess4/6/98
  * @param   aVector is the string where we store our output vector
  *          in bottom-up order.

@@ -177,6 +177,7 @@ static const int kTable         = 0x10000;//  TR,TD,THEAD,TBODY,TFOOT,CAPTION,TH
 static const int kInlineEntity  = (kPCDATA|kFontStyle|kPhrase|kSpecial|kFormControl|kExtensions);  //  #PCDATA, %fontstyle, %phrase, %special, %formctrl
 static const int kBlockEntity   = (kHeading|kList|kPreformatted|kBlock); //  %heading, %list, %preformatted, %blockmisc
 static const int kFlowEntity    = (kBlockEntity|kInlineEntity); //  %block, %inline
+static const int kAllTags       = 0xffffff;
 
 
 #endif
