@@ -1452,15 +1452,15 @@ RDFGenericBuilderImpl::UpdateWidgetItemAttribute(nsIContent *aTemplateNode,
 						delete [] prop;
 						if (NS_FAILED(rv))	continue;
 
-						if (propRes == aProperty)
+						if (propRes.get() == aProperty)
 						{
-							nsAutoString		attribValue("");
-							if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetTextForNode(aValue, attribValue)))
+							nsAutoString		text("");
+							if (NS_SUCCEEDED(rv = nsRDFContentUtils::GetTextForNode(aValue, text)))
 							{
-								if ((attribValue.Length() > 0) && (truth))
+								if ((text.Length() > 0) && (truth))
 								{
 									aTreeItemElement->SetAttribute(attribNameSpaceID,
-										attribName, attribValue, PR_TRUE);
+										attribName, text, PR_TRUE);
 								}
 								else
 								{
@@ -2368,7 +2368,7 @@ RDFGenericBuilderImpl::IsElementInWidget(nsIContent* aElement)
           return PR_TRUE;
 
         // up to the parent...
-        nsCOMPtr<nsIContent> parent;
+//        nsCOMPtr<nsIContent> parent;
         element->GetParent(*getter_AddRefs(parent));
         element = parent;
     }
