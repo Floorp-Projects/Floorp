@@ -1973,80 +1973,80 @@ tagify_value(JSContext *cx, JSObject *obj, jsval *argv,
 static JSBool
 str_bold(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify(cx, obj, argv, "B", NULL, NULL, rval);
+    return tagify(cx, obj, argv, "b", NULL, NULL, rval);
 }
 
 static JSBool
 str_italics(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify(cx, obj, argv, "I", NULL, NULL, rval);
+    return tagify(cx, obj, argv, "i", NULL, NULL, rval);
 }
 
 static JSBool
 str_fixed(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify(cx, obj, argv, "TT", NULL, NULL, rval);
+    return tagify(cx, obj, argv, "tt", NULL, NULL, rval);
 }
 
 static JSBool
 str_fontsize(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify_value(cx, obj, argv, "FONT SIZE", "FONT", rval);
+    return tagify_value(cx, obj, argv, "font size", "font", rval);
 }
 
 static JSBool
 str_fontcolor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
               jsval *rval)
 {
-    return tagify_value(cx, obj, argv, "FONT COLOR", "FONT", rval);
+    return tagify_value(cx, obj, argv, "font color", "font", rval);
 }
 
 static JSBool
 str_link(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify_value(cx, obj, argv, "A HREF", "A", rval);
+    return tagify_value(cx, obj, argv, "a href", "a", rval);
 }
 
 static JSBool
 str_anchor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify_value(cx, obj, argv, "A NAME", "A", rval);
+    return tagify_value(cx, obj, argv, "a name", "a", rval);
 }
 
 static JSBool
 str_strike(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify(cx, obj, argv, "STRIKE", NULL, NULL, rval);
+    return tagify(cx, obj, argv, "strike", NULL, NULL, rval);
 }
 
 static JSBool
 str_small(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify(cx, obj, argv, "SMALL", NULL, NULL, rval);
+    return tagify(cx, obj, argv, "small", NULL, NULL, rval);
 }
 
 static JSBool
 str_big(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify(cx, obj, argv, "BIG", NULL, NULL, rval);
+    return tagify(cx, obj, argv, "big", NULL, NULL, rval);
 }
 
 static JSBool
 str_blink(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify(cx, obj, argv, "BLINK", NULL, NULL, rval);
+    return tagify(cx, obj, argv, "blink", NULL, NULL, rval);
 }
 
 static JSBool
 str_sup(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify(cx, obj, argv, "SUP", NULL, NULL, rval);
+    return tagify(cx, obj, argv, "sup", NULL, NULL, rval);
 }
 
 static JSBool
 str_sub(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-    return tagify(cx, obj, argv, "SUB", NULL, NULL, rval);
+    return tagify(cx, obj, argv, "sub", NULL, NULL, rval);
 }
 
 static JSFunctionSpec string_methods[] = {
