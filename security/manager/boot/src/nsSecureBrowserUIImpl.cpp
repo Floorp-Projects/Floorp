@@ -1119,16 +1119,11 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
                                         nsIRequest* aRequest,
                                         nsIURI* aLocation)
 {
-  PRBool isWyciwyg = PR_FALSE;
-
   if (aLocation)
   {
-    nsresult rv = aLocation->SchemeIs("wyciwyg", &isWyciwyg);
-    NS_ENSURE_SUCCESS(rv, rv);
-
     PRBool vs;
 
-    rv = aLocation->SchemeIs("view-source", &vs);
+    nsresult rv = aLocation->SchemeIs("view-source", &vs);
     NS_ENSURE_SUCCESS(rv, rv);
 
     if (vs) {
@@ -1141,35 +1136,38 @@ nsSecureBrowserUIImpl::OnLocationChange(nsIWebProgress* aWebProgress,
 
   mCurrentURI = aLocation;
 
-  if (isWyciwyg) {
-    nsCOMPtr<nsIDOMWindow> windowForProgress;
-    aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
+  // The location bar has changed, so we must update the security state.  The
+  // only concern with doing this here is that a page may transition from being
+  // reported as completely secure to being reported as partially secure
+  // (mixed).  This may be confusing for users, and it may bother users who
+  // like seeing security dialogs.  However, it seems prudent given that page
+  // loading may never end in some edge cases (perhaps by a site with malicious
+  // intent).
 
-    if (windowForProgress.get() == mWindow.get()) {
-      // For toplevel wyciwyg channels, upate the security state right
-      // away.
-      return EvaluateAndUpdateSecurityState(aRequest);
-    }
+  nsCOMPtr<nsIDOMWindow> windowForProgress;
+  aWebProgress->GetDOMWindow(getter_AddRefs(windowForProgress));
 
-    // For wyciwyg channels in subdocuments we only update our
-    // subrequest state members.
-    UpdateSubrequestMembers(aRequest);
-
-    // Care for the following scenario:
-
-    // A new top level document load might have already started, but
-    // the security state of the new top level document might not yet
-    // been known.
-    // 
-    // At this point, we are learning about the security state of a
-    // sub-document.  We must not update the security state based on
-    // the sub content, if the new top level state is not yet known.
-    //
-    // We skip updating the security state in this case.
-
-    if (mNewToplevelSecurityStateKnown)
-      return UpdateSecurityState(aRequest);
+  if (windowForProgress.get() == mWindow.get()) {
+    // For toplevel channels, update the security state right away.
+    return EvaluateAndUpdateSecurityState(aRequest);
   }
+
+  // For channels in subdocuments we only update our subrequest state members.
+  UpdateSubrequestMembers(aRequest);
+
+  // Care for the following scenario:
+
+  // A new toplevel document load might have already started, but the security
+  // state of the new toplevel document might not yet be known.
+  // 
+  // At this point, we are learning about the security state of a sub-document.
+  // We must not update the security state based on the sub content, if the new
+  // top level state is not yet known.
+  //
+  // We skip updating the security state in this case.
+
+  if (mNewToplevelSecurityStateKnown)
+    return UpdateSecurityState(aRequest);
 
   return NS_OK;
 }
