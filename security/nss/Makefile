@@ -78,11 +78,11 @@ include $(CORE_DEPTH)/coreconf/rules.mk
 
 moz_import::
 ifeq ($(OS_ARCH),WINNT)
-	cp -r $(DIST)/../include $(DIST)
+	cp $(DIST)/../include/* $(DIST)/include
 ifdef BUILD_OPT
-	cp -r $(DIST)/../WIN32_O.OBJ/lib $(DIST)
+	cp $(DIST)/../WIN32_O.OBJ/lib/* $(DIST)/lib
 else
-	cp -r $(DIST)/../WIN32_D.OBJ/lib $(DIST)
+	cp $(DIST)/../WIN32_D.OBJ/lib/* $(DIST)/lib
 endif
 	mv $(DIST)/lib/dbm32.lib $(DIST)/lib/dbm.lib
 else
