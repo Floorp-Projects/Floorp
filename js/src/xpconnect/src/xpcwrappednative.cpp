@@ -1353,7 +1353,7 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
                 // without actually extending the set.
                 //
                 // XXX It is a little cheesy to have FindTearOff return an
-                // 'empty' tearoff. But this is the cetralized place to do the
+                // 'empty' tearoff. But this is the centralized place to do the
                 // QI activities on the underlying object. *And* most caller to
                 // FindTearOff only look for a non-null result and ignore the
                 // actual tearoff returned. The only callers that do use the
