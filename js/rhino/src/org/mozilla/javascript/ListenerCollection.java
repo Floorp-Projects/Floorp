@@ -1,5 +1,5 @@
 /**
- * $Id: ListenerCollection.java,v 1.1 1999/05/18 22:32:25 norris%netscape.com Exp $
+ * $Id: ListenerCollection.java,v 1.2 1999/05/19 23:58:37 norris%netscape.com Exp $
  *
  * This class provides a series of methods for accessing event listeners.
  *
@@ -23,6 +23,9 @@
  *
  * Revision history:
  * $Log: ListenerCollection.java,v $
+ * Revision 1.2  1999/05/19 23:58:37  norris%netscape.com
+ * Remove Java 2 dependency.
+ *
  * Revision 1.1  1999/05/18 22:32:25  norris%netscape.com
  * Add submission:
  * Subject:
@@ -132,7 +135,9 @@ public class ListenerCollection extends Vector {
                 array.addElement(listener);
             }
         }
-        return array.toArray();
+        Object[] result = new Object[array.size()];
+        array.copyInto(result);
+        return result;
     }
 } // ListenerCollection
 
