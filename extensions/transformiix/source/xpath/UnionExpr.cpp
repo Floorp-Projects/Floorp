@@ -76,17 +76,18 @@ ExprResult* UnionExpr::evaluate(Node* context, ContextState* cs) {
 
     NodeSet* nodes = new NodeSet();
 
-    ListIterator* iter = expressions.iterator();
+    txListIterator iter(&expressions);
 
-    while (iter->hasNext()) {
-        Expr* expr = (Expr*)iter->next();
+    while (iter.hasNext()) {
+        Expr* expr = (Expr*)iter.next();
         ExprResult* exprResult = expr->evaluate(context, cs);
-        if (exprResult->getResultType() == ExprResult::NODESET) {
+        if (exprResult && 
+	    exprResult->getResultType() == ExprResult::NODESET) {
             ((NodeSet*)exprResult)->copyInto(*nodes);
         }
+	delete exprResult;
     }
 
-    delete iter;
     return nodes;
 } //-- evaluate
 
