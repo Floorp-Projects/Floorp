@@ -145,8 +145,8 @@ function formatTypeName(info, methodIndex, param, dimension)
             if(type.isPointer)
                 return "nsIDPtr";
             return "nsID";
-        case nsIDataType.VTYPE_ASTRING:
-            return "aString";
+        case nsIDataType.VTYPE_DOMSTRING:
+            return "DOMString";
         case nsIDataType.VTYPE_CHAR_STR:
             return "string";
         case nsIDataType.VTYPE_WCHAR_STR:
@@ -165,6 +165,12 @@ function formatTypeName(info, methodIndex, param, dimension)
             return "string";
         case nsIDataType.VTYPE_WSTRING_SIZE_IS:
             return "wstring";
+        case nsIDataType.VTYPE_UTF8STRING:
+            return "AUTF8String";
+        case nsIDataType.VTYPE_CSTRING:
+            return "ACString";
+        case nsIDataType.VTYPE_ASTRING:
+            return "AString";
         default:
             return "!!!! bad data type !!!";
     }
