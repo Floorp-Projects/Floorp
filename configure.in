@@ -16,7 +16,9 @@ dnl are Copyright (C) 1998 Christopher Seawood.  All Rights Reserved.
 dnl
 dnl Contributors:
 dnl Jamie Zawinski <jwz@jwz.org>	gettimeofday args check
-
+dnl Christopher Blizzard <blizzard@appliedtheory.com>
+dnl					gnomefe update & enable-pthreads
+dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl ========================================================
 
@@ -56,7 +58,7 @@ AC_PROG_AWK
 AC_PROG_RANLIB
 
 AC_PATH_PROGS(EMACS, xemacs lemacs emacs, /bin/true)
-AC_PATH_PROG(PERL, perl, /bin/true)
+AC_PATH_PROGS(PERL, perl5 perl, /bin/true)
 AC_PATH_PROG(WHOAMI, whoami, /bin/true)
 AC_PATH_PROG(UNZIP, unzip, /bin/true)
 AC_PATH_PROG(ZIP, zip, /bin/true)
@@ -357,11 +359,17 @@ AC_ARG_ENABLE(smart-mail,
 	fi])
 
 AC_ARG_ENABLE(dom,
-[  --enable-dom            enable Level-1 Document Object Model support (broken)],
+[  --enable-dom            enable Level-1 Document Object Model support ],
 	[if test "$enableval" = "yes"; then
     	    AC_DEFINE(DOM)
 	    MOZ_DOM=1
 	fi] )
+
+AC_ARG_ENABLE(pthreads,
+[  --enable-pthreads       enable native pthreads support],
+        [if test "$enableval" = "yes"; then
+	    AC_CHECK_LIB(pthread, pthread_create, USE_PTHREADS=1)
+        fi] )
 
 AC_SUBST(MOZ_FE)
 AC_SUBST(MOZ_SECURITY)
@@ -381,6 +389,7 @@ AC_SUBST(ENABLE_TESTS)
 AC_SUBST(MOZ_USER_DIR)
 AC_SUBST(MOZ_SMART_MAIL)
 AC_SUBST(MOZ_DOM)
+AC_SUBST(USE_PTHREADS)
 
 dnl Checks for X libraries.
 dnl ========================================================
@@ -436,10 +445,10 @@ fi
 
 res=`echo :$MOZ_FE | grep -c " gnome"`
 if [ test $res != 0 ]; then
-    AC_CHECK_LIB(gnome, gnome_config_set_bool,
-	[FE_GNOME_LIBS="`gnome-config --libs`" FE_GNOME_CFLAGS="`gnome-config --cflags`"],
+    AC_CHECK_LIB(gnome, gnome_init,
+	[FE_GNOME_LIBS="`gnome-config --libs gnomeui`" FE_GNOME_CFLAGS="`gnome-config --cflags gnomeui`"],
 	[MISSING_GNOME=1],
-	`gnome-config --libs`)
+	`gnome-config --libs gnomeui`)
 fi
 
 dnl XCFLAGS="$X_CFLAGS"
