@@ -209,7 +209,7 @@
               </menupopup>
             </menu>
   
-            <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;" oncommand="var url = event.target.getAttribute('url'); if (url) openTopWin(url);">
+            <menu label="&goMenu.label;" accesskey="&goMenu.accesskey;" oncommand="var url = event.target.getAttribute('statustext'); if (url) openTopWin(url);">
               <menupopup id="goPopup" onpopupshowing="updateGoMenu(this);" onpopuphiding="onGoMenuHidden();">
                 <menuitem label="&backCmd.label;"    accesskey="&backCmd.accesskey;"    key="goBackKb"    command="Browser:Back"/>
                 <menuitem label="&forwardCmd.label;" accesskey="&forwardCmd.accesskey;" key="goForwardKb" command="Browser:Forward"/>
