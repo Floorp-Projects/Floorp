@@ -41,7 +41,7 @@ case_sensitive=YES
 ! These replace stubs 49-52
 ! --------------------------------------------------------------------------
 ! Ident 2,8 introduced for NSPR 4.6.
-! Stub49 (resurrected) replaces PR_FindLibrary.  
+! Stub49 (resurrected) replaces PR_FindLibrary.
 ! --------------------------------------------------------------------------
 !
 SYMBOL_VECTOR=(PR_Accept=PROCEDURE)
