@@ -1,6 +1,6 @@
-content,install,url,resource:/chrome/toolkit/content/global/
-locale,install,url,resource:/chrome/en-US/locale/en-US/global/
-locale,install,url,resource:/chrome/en-US/locale/en-US/necko/
-skin,install,url,resource:/chrome/classic/skin/classic/global/
+content,install,url,jar:resource:/chrome/embed.jar!/content/global/
+locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/global/
+locale,install,url,jar:resource:/chrome/embed.jar!/locale/en-US/necko/
+skin,install,url,jar:resource:/chrome/embed.jar!/skin/classic/global/
 skin,install,select,classic/1.0 
 locale,install,select,en-US 
