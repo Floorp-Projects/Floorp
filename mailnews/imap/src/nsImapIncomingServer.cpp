@@ -2870,6 +2870,13 @@ nsImapIncomingServer::OnStopRunningUrl(nsIURI *url, nsresult exitCode)
         case nsIImapUrl::nsImapDiscoverAllBoxesUrl:
             DiscoveryDone();
             break;
+        case nsIImapUrl::nsImapFolderStatus:
+          {
+            PRInt32 folderCount = m_foldersToStat.Count();
+            m_foldersToStat.RemoveObjectAt(folderCount - 1);
+            if (folderCount > 1)
+              m_foldersToStat[folderCount - 2]->UpdateStatus(this, nsnull);
+          }
         default:
             break;
         }
@@ -3592,6 +3599,8 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aFolder,
   if (!aFolder)
     return retval;
 
+  PRBool isServer;
+  (void) aFolder->GetIsServer(&isServer);
   // Check this folder for new messages if it is marked to be checked
   // or if we are forced to check all folders
   PRUint32 flags = 0;
@@ -3624,11 +3633,10 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aFolder,
     }
     if (gUseStatus && !isOpen)
     {
-      PRBool isServer;
-      (void) aFolder->GetIsServer(&isServer);
       nsCOMPtr <nsIMsgImapMailFolder> imapFolder = do_QueryInterface(aFolder);
       if (imapFolder && !isServer)
-        imapFolder->UpdateStatus(nsnull, nsnull /* aWindow - null window will prevent alerts */);
+        m_foldersToStat.AppendObject(imapFolder);
+        //imapFolder->UpdateStatus(this, nsnull /* aWindow - null window will prevent alerts */);
     }
     else
     {
@@ -3659,6 +3667,12 @@ nsImapIncomingServer::GetNewMessagesForNonInboxFolders(nsIMsgFolder *aFolder,
     more = aEnumerator->Next();
   }
 
+  if (isServer)
+  {
+    PRInt32 folderCount = m_foldersToStat.Count();
+    if (folderCount > 0)
+      m_foldersToStat[folderCount - 1]->UpdateStatus(this, nsnull);
+  }
   return retval;
 }
 
