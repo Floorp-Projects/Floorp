@@ -188,6 +188,8 @@ void CNavMenuBar::OnPaint( )
 //	else m_pMenuButton->SetCustomColors(::GetSysColor(COLOR_INACTIVECAPTIONTEXT), ::GetSysColor(COLOR_INACTIVECAPTION));
 
 	// Read in all the properties
+	if (!m_View) return;
+	
 	HT_Resource top = HT_TopNode(m_View);
 	void* data;
 	PRBool foundData = FALSE;
