@@ -127,7 +127,7 @@ enum nsCSSFrameType {
 //----------------------------------------------------------------------
 
 // XXX I think these should be NS_UNCONSTRAINEDSIZE instead, but that causes
-// problems for tables
+// problems for test5
 #if 0
 #define NS_INTRINSICSIZE  NS_UNCONSTRAINEDSIZE
 #define NS_AUTOHEIGHT     NS_UNCONSTRAINEDSIZE
