@@ -1180,8 +1180,40 @@ InternetSearchDataSource::GetInternetSearchURL(const char *searchEngineURI,
 	nsAutoString	data;
 	if (NS_FAILED(rv = FindData(engine, data)))	return(rv);
 	if (data.Length() < 1)				return(NS_ERROR_UNEXPECTED);
+
+	nsAutoString	 text(searchStr), encodingStr, queryEncodingStr;
+
+	GetData(data, "search", "queryEncoding", encodingStr);		// decimal string values
+	MapEncoding(encodingStr, queryEncodingStr);
+	if (queryEncodingStr.Length() > 0)
+	{
+		// convert from escaped-UTF_8, to unicode, and then to
+		// the charset indicated by the dataset in question
+
+		char	*utf8data = text.ToNewUTF8String();
+		if (utf8data)
+		{
+			NS_WITH_SERVICE(nsITextToSubURI, textToSubURI,
+				kTextToSubURICID, &rv);
+			if (NS_SUCCEEDED(rv) && (textToSubURI))
+			{
+				PRUnichar	*uni = nsnull;
+				if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("UTF-8", utf8data, &uni)) && (uni))
+				{
+					char	*charsetData = nsnull;
+					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(nsCAutoString(queryEncodingStr), uni, &charsetData)) && (charsetData))
+					{
+						text = charsetData;
+						Recycle(charsetData);
+					}
+					Recycle(uni);
+				}
+			}
+			Recycle(utf8data);
+		}
+	}
 	
-	nsAutoString	action, input, method, text(searchStr), userVar;
+	nsAutoString	action, input, method, userVar;
 	if (NS_FAILED(rv = GetData(data, "search", "action", action)))	return(rv);
 	if (NS_FAILED(rv = GetData(data, "search", "method", method)))	return(rv);
 	if (NS_FAILED(rv = GetInputs(data, userVar, text, input)))	return(rv);
@@ -1795,7 +1827,10 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	if (!mInner)	return(NS_RDF_NO_VALUE);
 
 	nsCOMPtr<nsIUnicodeDecoder>	unicodeDecoder;
-	nsAutoString			action, method, input;
+	nsAutoString			action, data, method, input, userVar;
+
+	if (NS_FAILED(rv = FindData(engine, data)))	return(rv);
+	if (data.Length() < 1)				return(NS_RDF_NO_VALUE);
 
 	if (fullURL.Length() > 0)
 	{
@@ -1804,72 +1839,68 @@ InternetSearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engin
 	}
 	else
 	{
-		nsAutoString		data;
-		if (NS_FAILED(rv = FindData(engine, data)))	return(rv);
-		if (data.Length() < 1)				return(NS_RDF_NO_VALUE);
-		
-		nsAutoString	userVar;
-
 		if (NS_FAILED(rv = GetData(data, "search", "action", action)))	return(rv);
 		if (NS_FAILED(rv = GetData(data, "search", "method", method)))	return(rv);
+	}
 
-		nsAutoString	encodingStr, queryEncodingStr, resultEncodingStr;
+	nsAutoString	encodingStr, queryEncodingStr, resultEncodingStr;
 
-		GetData(data, "interpret", "resultEncoding", encodingStr);	// decimal string values
-		MapEncoding(encodingStr, resultEncodingStr);
-		// rjc note: ignore "interpret/resultTranslationEncoding" as well as
-		// "interpret/resultTranslationFont" since we always convert results to Unicode
-		if (resultEncodingStr.Length() > 0)
+	GetData(data, "interpret", "resultEncoding", encodingStr);	// decimal string values
+	MapEncoding(encodingStr, resultEncodingStr);
+	// rjc note: ignore "interpret/resultTranslationEncoding" as well as
+	// "interpret/resultTranslationFont" since we always convert results to Unicode
+	if (resultEncodingStr.Length() > 0)
+	{
+		NS_WITH_SERVICE(nsICharsetConverterManager, charsetConv,
+			kCharsetConverterManagerCID, &rv);
+		if (NS_SUCCEEDED(rv) && (charsetConv))
 		{
-			NS_WITH_SERVICE(nsICharsetConverterManager, charsetConv,
-				kCharsetConverterManagerCID, &rv);
-			if (NS_SUCCEEDED(rv) && (charsetConv))
-			{
-				rv = charsetConv->GetUnicodeDecoder(&resultEncodingStr,
-					getter_AddRefs(unicodeDecoder));
-			}
+			rv = charsetConv->GetUnicodeDecoder(&resultEncodingStr,
+				getter_AddRefs(unicodeDecoder));
 		}
+	}
 
+	GetData(data, "search", "queryEncoding", encodingStr);		// decimal string values
+	MapEncoding(encodingStr, queryEncodingStr);
+	if (queryEncodingStr.Length() > 0)
+	{
+		// convert from escaped-UTF_8, to unicode, and then to
+		// the charset indicated by the dataset in question
 
-		GetData(data, "search", "queryEncoding", encodingStr);		// decimal string values
-		MapEncoding(encodingStr, queryEncodingStr);
-		if (queryEncodingStr.Length() > 0)
+		char	*utf8data = textTemp.ToNewUTF8String();
+		if (utf8data)
 		{
-			// convert from escaped-UTF_8, to unicode, and then to
-			// the charset indicated by the dataset in question
-
-			char	*utf8data = textTemp.ToNewUTF8String();
-			if (utf8data)
+			NS_WITH_SERVICE(nsITextToSubURI, textToSubURI,
+				kTextToSubURICID, &rv);
+			if (NS_SUCCEEDED(rv) && (textToSubURI))
 			{
-				NS_WITH_SERVICE(nsITextToSubURI, textToSubURI,
-					kTextToSubURICID, &rv);
-				if (NS_SUCCEEDED(rv) && (textToSubURI))
+				PRUnichar	*uni = nsnull;
+				if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("UTF-8", utf8data, &uni)) && (uni))
 				{
-					PRUnichar	*uni = nsnull;
-					if (NS_SUCCEEDED(rv = textToSubURI->UnEscapeAndConvert("UTF-8", utf8data, &uni)) && (uni))
+					char	*charsetData = nsnull;
+					if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(nsCAutoString(queryEncodingStr), uni, &charsetData)) && (charsetData))
 					{
-						char	*charsetData = nsnull;
-						if (NS_SUCCEEDED(rv = textToSubURI->ConvertAndEscape(nsCAutoString(queryEncodingStr), uni, &charsetData)) && (charsetData))
-						{
-							textTemp = charsetData;
-							Recycle(charsetData);
-						}
-						Recycle(uni);
+						textTemp = charsetData;
+						Recycle(charsetData);
 					}
+					Recycle(uni);
 				}
-				Recycle(utf8data);
 			}
+			Recycle(utf8data);
 		}
+	}
 
+	if (fullURL.Length() > 0)
+	{
+	}
+	else if (method.EqualsIgnoreCase("get"))
+	{
 		if (NS_FAILED(rv = GetInputs(data, userVar, textTemp, input)))	return(rv);
 		if (input.Length() < 1)				return(NS_ERROR_UNEXPECTED);
 
-		if (method.EqualsIgnoreCase("get"))
-		{
-			// HTTP Get method support
-			action += "?";
-			action += input;
-		}
+		// HTTP Get method support
+		action += "?";
+		action += input;
 	}
 
 	nsCOMPtr<nsIInternetSearchContext>	context;
