@@ -167,7 +167,12 @@ static nsModuleComponentInfo components[] =
     NS_SCREENMANAGER_CID, 
     //    "@mozilla.org/gfx/screenmanager/beos;1", 
     "@mozilla.org/gfx/screenmanager;1", 
-    nsScreenManagerBeOSConstructor } 
+    nsScreenManagerBeOSConstructor },
+  { "BeOS Printer Enumerator",
+    NS_PRINTER_ENUMERATOR_CID,
+    //    "@mozilla.org/gfx/printer_enumerator/beos;1",
+    "@mozilla.org/gfx/printerenumerator;1",
+    nsPrinterEnumeratorBeOSConstructor }    
 };   
 
 NS_IMPL_NSGETMODULE(nsGfxBeOSModule, components) 

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de> 
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -50,9 +51,17 @@
 #include "nsISupportsPrimitives.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindowInternal.h"
- 
+
+#include "nsIPrintOptions.h"
+#include "nsReadableUtils.h"
+
 //#include "prmem.h"
 //#include "plstr.h"
+
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+
+nsStringArray* nsDeviceContextSpecBeOS::globalPrinterList = nsnull;
+int nsDeviceContextSpecBeOS::globalNumPrinters = 0;
 
 /** -------------------------------------------------------
  *  Construct the nsDeviceContextSpecBeOS
@@ -61,7 +70,6 @@
 nsDeviceContextSpecBeOS :: nsDeviceContextSpecBeOS()
 {
   NS_INIT_REFCNT();
-	
 }
 
 /** -------------------------------------------------------
@@ -117,115 +125,261 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: QueryInterface(REFNSIID aIID, void** aI
 NS_IMPL_ADDREF(nsDeviceContextSpecBeOS)
 NS_IMPL_RELEASE(nsDeviceContextSpecBeOS)
 
+
+int nsDeviceContextSpecBeOS::InitializeGlobalPrinters ()
+{
+  globalNumPrinters = 0;
+  globalPrinterList = new nsStringArray();
+  if (!globalPrinterList) 
+    return NS_ERROR_OUT_OF_MEMORY;
+      
+  /* add an entry for the default printer (see nsPostScriptObj.cpp) */
+  globalPrinterList->AppendString(
+    nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME "default")));
+  globalNumPrinters++;
+
+  /* get the list of printers */
+  char *printerList = nsnull;
+  
+  /* the env var MOZILLA_PRINTER_LIST can "override" the prefs */
+  printerList = PR_GetEnv("MOZILLA_PRINTER_LIST");
+  
+  if (!printerList) {
+    nsresult rv;
+    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      (void) pPrefs->CopyCharPref("print.printer_list", &printerList);
+    }
+  }  
+
+  if (printerList) {
+    char *tok_lasts;
+    char *name;
+    
+    /* PL_strtok_r() will modify the string - copy it! */
+    printerList = strdup(printerList);
+    if (!printerList)
+      return NS_ERROR_OUT_OF_MEMORY;    
+    
+    for( name = PL_strtok_r(printerList, " ", &tok_lasts) ; 
+         name != nsnull ; 
+         name = PL_strtok_r(nsnull, " ", &tok_lasts) )
+    {
+      globalPrinterList->AppendString(
+        nsString(NS_ConvertASCIItoUCS2(NS_POSTSCRIPT_DRIVER_NAME)) + 
+        nsString(NS_ConvertASCIItoUCS2(name)));
+      globalNumPrinters++;      
+    }
+    
+    free(printerList);
+  }
+      
+  if (globalNumPrinters == 0)
+    return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAIULABLE; 
+
+  return NS_OK;
+}
+
+void nsDeviceContextSpecBeOS::FreeGlobalPrinters()
+{
+  delete globalPrinterList;
+  globalPrinterList = nsnull;
+  globalNumPrinters = 0;
+}
+
 /** -------------------------------------------------------
  *  Initialize the nsDeviceContextSpecBeOS
  *  @update   dc 2/15/98
  *  @update   syd 3/2/99
  */
-NS_IMETHODIMP nsDeviceContextSpecBeOS :: Init(PRBool	aQuiet)
+NS_IMETHODIMP nsDeviceContextSpecBeOS::Init(PRBool aQuiet)
 {
-  char *path;
-
-  PRBool reversed = PR_FALSE, color = PR_FALSE, landscape = PR_FALSE; 
-  PRBool tofile = PR_FALSE; 
-  PRInt32 paper_size = NS_LETTER_SIZE; 
-  PRInt32 orientation = NS_PORTRAIT;
-  int ileft = 500, iright = 0, itop = 500, ibottom = 0; 
-  char *command; 
-  char *printfile = nsnull; 
- 
   nsresult rv = NS_ERROR_FAILURE;
-  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
 
-  nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
-  if (ioParamBlock)
-    paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
-
-  if (paramBlockWrapper) {
-    paramBlockWrapper->SetData(ioParamBlock);
-    paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
-
-    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
-    if (wwatch) {
-
-      nsCOMPtr<nsIDOMWindowInternal> parent;
-      nsCOMPtr<nsIDOMWindow> active;
-      wwatch->GetActiveWindow(getter_AddRefs(active));
-      if (active) {
-        active->QueryInterface(NS_GET_IID(nsIDOMWindowInternal), getter_AddRefs(parent));
-      }
-
-      nsCOMPtr<nsIDOMWindow> newWindow;
-      rv = wwatch->OpenWindow(parent, "chrome://global/content/printdialog.xul",
-		    "_blank", "chrome,modal", paramBlockWrapper,
-		    getter_AddRefs(newWindow));
+  nsCOMPtr<nsIPrintOptions> printService(do_GetService(kPrintOptionsCID, &rv));
+  NS_ASSERTION(nsnull != printService, "No print service.");
+  
+  // if there is a current selection then enable the "Selection" radio button
+  if (NS_SUCCEEDED(rv) && printService) {
+    PRBool isOn;
+    printService->GetPrintOptions(nsIPrintOptions::kPrintOptionsEnableSelectionRB, &isOn);
+    nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      (void) pPrefs->SetBoolPref("print.selection_radio_enabled", isOn);
     }
   }
 
-  if (NS_SUCCEEDED(rv)) { 
-    PRInt32 buttonPressed = 0; 
-    ioParamBlock->GetInt(0, &buttonPressed); 
-    if (buttonPressed == 0) { 
-      nsCOMPtr<nsIPref> pPrefs = do_GetService(NS_PREF_CONTRACTID, &rv); 
-      if (NS_SUCCEEDED(rv) && pPrefs) { 
-	(void) pPrefs->GetBoolPref("print.print_reversed", &reversed); 
-	(void) pPrefs->GetBoolPref("print.print_color", &color); 
-	(void) pPrefs->GetBoolPref("print.print_landscape", &landscape); 
-	(void) pPrefs->GetIntPref("print.print_paper_size", &paper_size); 
-	(void) pPrefs->GetIntPref("print.print_orientation", &orientation); 
-	(void) pPrefs->CopyCharPref("print.print_command", (char **) &command); 
-	(void) pPrefs->GetIntPref("print.print_margin_top", &itop); 
-	(void) pPrefs->GetIntPref("print.print_margin_left", &ileft); 
-	(void) pPrefs->GetIntPref("print.print_margin_bottom", &ibottom); 
-	(void) pPrefs->GetIntPref("print.print_margin_right", &iright); 
-	(void) pPrefs->CopyCharPref("print.print_file", (char **) &printfile); 
-	(void) pPrefs->GetBoolPref("print.print_tofile", &tofile); 
-	sprintf( mPrData.command, command ); 
-	sprintf( mPrData.path, printfile ); 
-      } else { 
-#ifndef VMS 
-sprintf( mPrData.command, "lpr" );
-#else 
-	// Note to whoever puts the "lpr" into the prefs file. Please contact me 
-	// as I need to make the default be "print" instead of "lpr" for OpenVMS. 
-	sprintf( mPrData.command, "print" ); 
-#endif 
-      } 
+  char      *path;
+  PRBool     canPrint       = PR_FALSE;
+  PRBool     reversed       = PR_FALSE;
+  PRBool     color          = PR_FALSE;
+  PRBool     tofile         = PR_FALSE;
+  PRInt16    printRange     = nsIPrintOptions::kRangeAllPages;
+  PRInt32    paper_size     = NS_LETTER_SIZE;
+  PRInt32    orientation    = NS_PORTRAIT;
+  PRInt32    fromPage       = 1;
+  PRInt32    toPage         = 1;
+  PRUnichar *command        = nsnull;
+  PRInt32    copies         = 1;
+  PRUnichar *printer        = nsnull;
+  PRUnichar *printfile      = nsnull;
+  double     dleft          = 0.5;
+  double     dright         = 0.5;
+  double     dtop           = 0.5;
+  double     dbottom        = 0.5; 
 
-      mPrData.top = itop / 1000.0; 
-      mPrData.bottom = ibottom / 1000.0; 
-      mPrData.left = ileft / 1000.0; 
-      mPrData.right = iright / 1000.0; 
-      mPrData.fpf = !reversed; 
-      mPrData.grayscale = !color; 
-      mPrData.size = paper_size; 
-      mPrData.orientation = orientation;
-      mPrData.toPrinter = !tofile; 
+  if( !globalPrinterList )
+    if (InitializeGlobalPrinters())
+       return NS_ERROR_GFX_PRINTER_NO_PRINTER_AVAIULABLE;
+  if( globalNumPrinters && !globalPrinterList->Count() ) 
+     return NS_ERROR_OUT_OF_MEMORY;
 
-// PWD, HOME, or fail 
+  if (!aQuiet ) {
+    rv = NS_ERROR_FAILURE;
+    nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
 
-      if (!printfile) { 
-        if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) NULL ) 
-          if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) NULL )
-	strcpy( mPrData.path, "mozilla.ps" );
-	if ( path != (char *) NULL )
-          sprintf( mPrData.path, "%s/mozilla.ps", path );
-	else
-          return NS_ERROR_FAILURE;
+    nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
+    if (ioParamBlock)
+      paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
+
+    if (paramBlockWrapper) {
+      paramBlockWrapper->SetData(ioParamBlock);
+      paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+
+      nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+      if (wwatch) {
+        nsCOMPtr<nsIDOMWindow> active;
+        wwatch->GetActiveWindow(getter_AddRefs(active));      
+        nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
+
+        nsCOMPtr<nsIDOMWindow> newWindow;
+        rv = wwatch->OpenWindow(parent, "chrome://global/content/printdialog.xul",
+                      "_blank", "chrome,modal", paramBlockWrapper,
+                      getter_AddRefs(newWindow));
       }
+    }
+    if (NS_SUCCEEDED(rv)) {
+      PRInt32 buttonPressed = 0;
+      ioParamBlock->GetInt(0, &buttonPressed);
+      if (buttonPressed == 0) {
+        canPrint = PR_TRUE;
+      }
+      else {
+        rv = NS_ERROR_ABORT;
+      }
+    }
+  }
+  else {
+    canPrint = PR_TRUE;
+  }
+  
+  FreeGlobalPrinters();
 
-      return NS_OK; 
-    } 
-  } 
+  if (canPrint) {
+    if (printService) {
+      printService->GetPrinter(&printer);
+      printService->GetPrintReversed(&reversed);
+      printService->GetPrintInColor(&color);
+      printService->GetPaperSize(&paper_size);
+      printService->GetOrientation(&orientation);
+      printService->GetPrintCommand(&command);
+      printService->GetPrintRange(&printRange);
+      printService->GetToFileName(&printfile);
+      printService->GetPrintToFile(&tofile);
+      printService->GetStartPageRange(&fromPage);
+      printService->GetEndPageRange(&toPage);
+      printService->GetNumCopies(&copies);
+      printService->GetMarginTop(&dtop);
+      printService->GetMarginLeft(&dleft);
+      printService->GetMarginBottom(&dbottom);
+      printService->GetMarginRight(&dright);
 
-  return NS_ERROR_FAILURE;
-} 
+      if (command != nsnull && printfile != nsnull) {
+        // ToDo: Use LocalEncoding instead of UTF-8 (see bug 73446)
+        strcpy(mPrData.command, NS_ConvertUCS2toUTF8(command).get());  
+        strcpy(mPrData.path,    NS_ConvertUCS2toUTF8(printfile).get());
+      }
+      if (printer != nsnull) 
+        strcpy(mPrData.printer, NS_ConvertUCS2toUTF8(printer).get());        
+#ifdef DEBUG_rods
+      printf("margins:       %5.2f,%5.2f,%5.2f,%5.2f\n", dtop, dleft, dbottom, dright);
+      printf("printRange     %d\n", printRange);
+      printf("fromPage       %d\n", fromPage);
+      printf("toPage         %d\n", toPage);
+#endif /* DEBUG_rods */
+    } else {
+#ifdef VMS
+      // Note to whoever puts the "lpr" into the prefs file. Please contact me
+      // as I need to make the default be "print" instead of "lpr" for OpenVMS.
+      strcpy(mPrData.command, "print");
+#else
+      strcpy(mPrData.command, "lpr ${MOZ_PRINTER_NAME:+'-P'}${MOZ_PRINTER_NAME}");
+#endif /* VMS */
+    }
+
+    mPrData.top       = dtop;
+    mPrData.bottom    = dbottom;
+    mPrData.left      = dleft;
+    mPrData.right     = dright;
+    mPrData.fpf       = !reversed;
+    mPrData.grayscale = !color;
+    mPrData.size      = paper_size;
+    mPrData.orientation = orientation;
+    mPrData.toPrinter = !tofile;
+    mPrData.copies = copies;
+
+    // PWD, HOME, or fail 
+    
+    if (!printfile) {
+      if ( ( path = PR_GetEnv( "PWD" ) ) == (char *) nsnull ) 
+        if ( ( path = PR_GetEnv( "HOME" ) ) == (char *) nsnull )
+          strcpy(mPrData.path, "mozilla.ps");
+          
+      if ( path != (char *) nsnull )
+        sprintf(mPrData.path, "%s/mozilla.ps", path);
+      else
+        return NS_ERROR_FAILURE;
+    }
+    
+#ifdef NOT_IMPLEMENTED_YET
+    if (globalNumPrinters) {
+       for(int i = 0; (i < globalNumPrinters) && !mQueue; i++) {
+          if (!(globalPrinterList->StringAt(i)->CompareWithConversion(mPrData.printer, TRUE, -1)))
+             mQueue = PrnDlg.SetPrinterQueue(i);
+       }
+    }
+#endif /* NOT_IMPLEMENTED_YET */
+    
+    if (command != nsnull) {
+      nsMemory::Free(command);
+    }
+    if (printfile != nsnull) {
+      nsMemory::Free(printfile);
+    }
+
+    return NS_OK;
+  }
+
+  return rv;
+}
  
 NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetToPrinter( PRBool &aToPrinter )     
 { 
   aToPrinter = mPrData.toPrinter;
         return NS_OK;
 } 
+
+NS_IMETHODIMP nsDeviceContextSpecBeOS::GetPrinter ( char **aPrinter )
+{
+   *aPrinter = &mPrData.printer[0];
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDeviceContextSpecBeOS::GetCopies ( int &aCopies )
+{
+   aCopies = mPrData.copies;
+   return NS_OK;
+}
  
 NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetFirstPageFirst ( PRBool &aFpf )      
 { 
@@ -330,5 +484,96 @@ NS_IMETHODIMP nsDeviceContextSpecBeOS :: GetUserCancelled( PRBool &aCancel )
  */
 NS_IMETHODIMP nsDeviceContextSpecBeOS :: ClosePrintManager()
 {
-	return NS_OK;
+  return NS_OK;
 }  
+
+
+
+
+//  Printer Enumerator
+nsPrinterEnumeratorBeOS::nsPrinterEnumeratorBeOS()
+{
+  NS_INIT_REFCNT();
+}
+
+NS_IMPL_ISUPPORTS1(nsPrinterEnumeratorBeOS, nsIPrinterEnumerator)
+
+NS_IMETHODIMP nsPrinterEnumeratorBeOS::EnumeratePrinters(PRUint32* aCount, PRUnichar*** aResult)
+{
+  if (aCount) 
+    *aCount = 0;
+  else 
+    return NS_ERROR_NULL_POINTER;
+  
+  if (aResult) 
+    *aResult = nsnull;
+  else 
+    return NS_ERROR_NULL_POINTER;
+  
+
+  PRUnichar** array = (PRUnichar**) nsMemory::Alloc(nsDeviceContextSpecBeOS::globalNumPrinters * sizeof(PRUnichar*));
+  if (!array && nsDeviceContextSpecBeOS::globalNumPrinters) 
+    return NS_ERROR_OUT_OF_MEMORY;
+  
+  int count = 0;
+  while( count < nsDeviceContextSpecBeOS::globalNumPrinters )
+  {
+    PRUnichar *str = ToNewUnicode(*nsDeviceContextSpecBeOS::globalPrinterList->StringAt(count));
+
+    if (!str) {
+      for (int i = count - 1; i >= 0; i--) 
+        nsMemory::Free(array[i]);
+      
+      nsMemory::Free(array);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    array[count++] = str;
+    
+  }
+  *aCount = count;
+  *aResult = array;
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPrinterEnumeratorBeOS::DisplayPropertiesDlg(const PRUnichar *aPrinter)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+  
+  /* fixme: We simply ignore the |aPrinter| argument here
+   * We should get the supported printer attributes from the printer and 
+   * populate the print job options dialog with these data instead of using 
+   * the "default set" here.
+   * However, this requires changes on all platforms and is another big chunk
+   * of patches ... ;-(
+   */
+
+  nsCOMPtr<nsIPrintOptions> printService(do_GetService(kPrintOptionsCID, &rv));
+
+  rv = NS_ERROR_FAILURE;
+  nsCOMPtr<nsIDialogParamBlock> ioParamBlock(do_CreateInstance("@mozilla.org/embedcomp/dialogparam;1"));
+
+  nsCOMPtr<nsISupportsInterfacePointer> paramBlockWrapper;
+  if (ioParamBlock)
+    paramBlockWrapper = do_CreateInstance(NS_SUPPORTS_INTERFACE_POINTER_CONTRACTID);
+
+  if (paramBlockWrapper) {
+    paramBlockWrapper->SetData(ioParamBlock);
+    paramBlockWrapper->SetDataIID(&NS_GET_IID(nsIDialogParamBlock));
+
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+    if (wwatch) {
+      nsCOMPtr<nsIDOMWindow> active;
+      wwatch->GetActiveWindow(getter_AddRefs(active));
+      nsCOMPtr<nsIDOMWindowInternal> parent = do_QueryInterface(active);
+
+      nsCOMPtr<nsIDOMWindow> newWindow;
+      rv = wwatch->OpenWindow(parent, "chrome://global/content/printjoboptions.xul",
+                    "_blank", "chrome,modal", paramBlockWrapper,
+                    getter_AddRefs(newWindow));
+    }
+  }
+
+  return rv;
+}
+

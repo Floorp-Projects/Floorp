@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de> 
  *
  *
  * Alternatively, the contents of this file may be used under the terms of
@@ -41,12 +42,14 @@
 
 #include "nsIDeviceContextSpec.h"
 #include "nsDeviceContextSpecB.h" 
+#include "nsIPrintOptions.h"
+#include "nsVoidArray.h"
 #include "nsIDeviceContextSpecPS.h" 
  
 #include "nsPrintdBeOS.h" 
  
 class nsDeviceContextSpecBeOS : public nsIDeviceContextSpec , 
-                                      public nsIDeviceContextSpecPS 
+                                public nsIDeviceContextSpecPS 
 {
 public:
 /**
@@ -78,7 +81,11 @@ public:
   NS_IMETHOD ClosePrintManager();
 
   NS_IMETHOD GetToPrinter( PRBool &aToPrinter ); 
- 
+
+  NS_IMETHOD GetPrinter ( char **aPrinter );
+
+  NS_IMETHOD GetCopies ( int &aCopies ); 
+
   NS_IMETHOD GetFirstPageFirst ( PRBool &aFpf );     
  
   NS_IMETHOD GetGrayscale( PRBool &aGrayscale );   
@@ -109,8 +116,11 @@ protected:
  * @update  dc 2/16/98
  */
   virtual ~nsDeviceContextSpecBeOS();
-
-protected:
+ 
+  static nsStringArray *globalPrinterList;
+  static int globalNumPrinters;
+  int InitializeGlobalPrinters();
+  void FreeGlobalPrinters();
 
   BeOSPrData mPrData;
 	
