@@ -339,6 +339,11 @@
            ((gen-matcher (paren-index integer :unused))
             (character-set-matcher line-terminators true))
            (count-parens 0))
+         (production :atom (:null-escape) atom-null-escape
+           ((gen-matcher (paren-index integer :unused))
+            (function ((t r-e-input :unused) (x r-e-match) (c continuation))
+              (c x)))
+           (count-parens 0))
          (production :atom (#\\ :atom-escape) atom-atom-escape
            (gen-matcher (gen-matcher :atom-escape))
            (count-parens 0))
@@ -389,6 +394,8 @@
        
        
        (%section "Escapes")
+       
+       (production :null-escape (#\\ #\Q) null-escape-q)
        
        (rule :atom-escape ((gen-matcher matcher-generator))
          (production :atom-escape (:decimal-escape) atom-escape-decimal
@@ -531,7 +538,9 @@
            (acceptance-set
             (let ((range (set character) (character-range (acceptance-set :class-atom 1)
                                                           (acceptance-set :class-atom 2))))
-              (character-set-union range (acceptance-set :class-ranges))))))
+              (character-set-union range (acceptance-set :class-ranges)))))
+         (production (:nonempty-class-ranges :delta) (:null-escape :class-ranges) nonempty-class-ranges-null-escape
+           (acceptance-set (acceptance-set :class-ranges))))
        (%print-actions)
        
        (define (character-range (low (set character)) (high (set character))) (set character)
@@ -632,6 +641,7 @@
 (run-regexp "(?=(a+))" "baaabac")
 (run-regexp "(.*?)a(?!(a+)b\\2c)\\2(.*)" "baaabaac")
 (run-regexp "(aa|aabaac|ba|b|c)*" "aabaac")
+(run-regexp "[\\Q^01234]+\\Qaa+" "93-43aabbc")
 |#
 
 #+allegro (clean-grammar *rg*) ;Remove this line if you wish to print the grammar's state tables.
