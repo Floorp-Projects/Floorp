@@ -22,7 +22,7 @@
 
 /*   if.h --- Top-level image library internal routines
  *
- * $Id: if_struct.h,v 1.8 1999/12/03 00:52:29 pnunn%netscape.com Exp $
+ * $Id: if_struct.h,v 1.9 1999/12/23 20:10:14 pnunn%netscape.com Exp $
  */
 
 #ifndef _if_h
@@ -202,7 +202,7 @@ struct il_container_struct {
     IL_Pixmap *image;           /* Destination image pixmap structure. */
     IL_Pixmap *mask;            /* Destination mask pixmap structure. */
 
-    intn type;
+    char* type;
     void *ds;                   /* decoder's private data */
 
     il_converter converter;
