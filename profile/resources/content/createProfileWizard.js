@@ -47,7 +47,7 @@ function Startup( startPage, frame_id )
   
   // instantiate the Wizard Manager
   wizardManager                   = new WizardManager( frame_id, null, null, wizardMap );
-  wizardManager.URL_PagePrefix    = "chrome://communicator/content/profile/profile.xul";
+  wizardManager.URL_PagePrefix    = "chrome://communicator/content/profile/";
   wizardManager.URL_PagePostfix   = ".xul";
 
   // set the button handler functions
