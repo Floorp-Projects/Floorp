@@ -65,38 +65,6 @@ nsComboBox::~nsComboBox()
 
 //-------------------------------------------------------------------------
 //
-// Set the foreground color
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsComboBox::SetForegroundColor(const nscolor &aColor)
-{
-#if 0
-  nsWindow::SetForegroundColor(aColor);
-  PRUint32 pixel;
-  mContext->ConvertPixel(aColor, pixel);
-  XtVaSetValues(mOptionMenu, XtNforeground, pixel, nsnull);
-#endif
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Set the background color
-//
-//-------------------------------------------------------------------------
-NS_METHOD nsComboBox::SetBackgroundColor(const nscolor &aColor)
-{
-#if 0
-  nsWindow::SetForegroundColor(aColor);
-  PRUint32 pixel;
-  mContext->ConvertPixel(aColor, pixel);
-  XtVaSetValues(mOptionMenu, XtNbackground, pixel, nsnull);
-#endif
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
 //  initializer
 //
 //-------------------------------------------------------------------------
@@ -377,14 +345,26 @@ NS_METHOD nsComboBox::Create(nsIWidget *aParent,
   GtkWidget *parentWidget = nsnull;
 
   if (aParent) {
-    parentWidget = (Widget) aParent->GetNativeData(NS_NATIVE_WIDGET);
+    parentWidget = GTK_WIDGET(aParent->GetNativeData(NS_NATIVE_WIDGET));
   } else if (aAppShell) {
-    parentWidget = (Widget) aAppShell->GetNativeData(NS_NATIVE_SHELL);
+    parentWidget = GTK_WIDGET(aAppShell->GetNativeData(NS_NATIVE_SHELL));
   }
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, parentWidget);
 
+  mWidget = gtk_combo_new();
+
+  gtk_layout_put(GTK_LAYOUT(parentWidget), mWidget, aRect.x, aRect.y);
+  gtk_widget_set_usize(mWidget, aRect.width, aRect.height);
+
+  gtk_widget_show(mWidget);
+
+  mEventCallback = aHandleEventFunction;
+  //InitCallbacks();
+#endif
+  return NS_OK;
+/*
   Arg	args[30];
   int	argc;
 
@@ -418,9 +398,9 @@ NS_METHOD nsComboBox::Create(nsIWidget *aParent,
 
   // save the event callback function
   mEventCallback = aHandleEventFunction;
-#endif
   //InitCallbacks();
   return NS_OK;
+*/
 }
 
 //-------------------------------------------------------------------------

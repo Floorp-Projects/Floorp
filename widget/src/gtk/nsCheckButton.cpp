@@ -33,6 +33,7 @@ NS_IMPL_RELEASE(nsCheckButton)
 nsCheckButton::nsCheckButton() : nsWidget() , nsICheckButton()
 {
   NS_INIT_REFCNT();
+  mLabel = nsnull;
 }
 
 //-------------------------------------------------------------------------
