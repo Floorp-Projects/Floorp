@@ -1655,16 +1655,12 @@ si_ReadLine
   lineBuffer = nsAutoString("");
 
   /* read the line */
-  PRUnichar c, c2;
+  PRUnichar c;
   for (;;) {
     if (inHeader) {
       c = Wallet_UTF8Get(strmu);
       if (obscure) {
-        c2 = Wallet_UTF8Get(strmp);
-        if (c != c2) {
-          NS_ASSERTION(0, ".p and .u files differ in header");
-          return -1;
-        }
+        c = Wallet_UTF8Get(strmp);
       }
     } else if (obscure) {
       c = Wallet_UTF8Get(strmu); /* get past the asterisk */
