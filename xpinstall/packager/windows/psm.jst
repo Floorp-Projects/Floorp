@@ -2,6 +2,7 @@
 var srDest;
 var err;
 var fProgram;
+var target;
 
 $Ren8dot3List$
 
@@ -25,6 +26,13 @@ if(verifyDiskSpace(fProgram, srDest))
                      "",                 // subdir name to create relative to fProgram
                      true);              // Force Flag 
   logComment("addDirectory() returned: " + err);
+
+  target = getFolder("Components", "psmglue.dll");
+  if (File.exists(target) > 0)
+  {
+      var rmErr = File.remove(target);
+      logComment("File.remove of " + target + " returned: " + rmErr);
+  }
 
   // check return value
   if(err == SUCCESS)
