@@ -805,7 +805,7 @@ public:
   NS_DECL_ISUPPORTS
 
   // basic style sheet data
-  NS_IMETHOD Init(nsIURI* aURL);
+  NS_IMETHOD SetURL(nsIURI* aURL);
   NS_IMETHOD GetURL(nsIURI*& aURL) const;
   NS_IMETHOD GetTitle(nsString& aTitle) const;
   NS_IMETHOD SetTitle(const nsAString& aTitle);
@@ -1780,7 +1780,7 @@ CSSStyleSheetImpl::DropRuleProcessorReference(nsICSSStyleRuleProcessor* aProcess
 
 
 NS_IMETHODIMP
-CSSStyleSheetImpl::Init(nsIURI* aURL)
+CSSStyleSheetImpl::SetURL(nsIURI* aURL)
 {
   NS_PRECONDITION(aURL, "null ptr");
   if (! aURL)
@@ -1790,9 +1790,8 @@ CSSStyleSheetImpl::Init(nsIURI* aURL)
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  NS_ASSERTION(! mInner->mURL, "already initialized");
-  if (mInner->mURL)
-    return NS_ERROR_ALREADY_INITIALIZED;
+  NS_ASSERTION(!mInner->mOrderedRules && !mInner->mComplete,
+               "Can't call SetURL on sheets that are complete or have rules");
 
   mInner->mURL = aURL;
   return NS_OK;
@@ -3059,7 +3058,7 @@ NS_NewCSSStyleSheet(nsICSSStyleSheet** aInstancePtrResult, nsIURI* aURL)
   if (NS_FAILED(rv = NS_NewCSSStyleSheet(&sheet)))
     return rv;
 
-  if (NS_FAILED(rv = sheet->Init(aURL))) {
+  if (NS_FAILED(rv = sheet->SetURL(aURL))) {
     NS_RELEASE(sheet);
     return rv;
   }

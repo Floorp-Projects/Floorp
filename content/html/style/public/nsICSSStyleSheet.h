@@ -76,7 +76,12 @@ public:
   NS_IMETHOD  StyleSheetCount(PRInt32& aCount) const = 0;
   NS_IMETHOD  GetStyleSheetAt(PRInt32 aIndex, nsICSSStyleSheet*& aSheet) const = 0;
 
-  NS_IMETHOD  Init(nsIURI* aURL) = 0;
+  /**
+   * SetURL must be called on all sheets before parsing into them.
+   * SetURL may only be called while the sheet is 1) incomplete and 2)
+   * has no rules in it
+   */
+  NS_IMETHOD  SetURL(nsIURI* aURL) = 0;
   NS_IMETHOD  SetTitle(const nsAString& aTitle) = 0;
   NS_IMETHOD  AppendMedium(nsIAtom* aMedium) = 0;
   NS_IMETHOD  ClearMedia(void) = 0;
