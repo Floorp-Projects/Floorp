@@ -275,8 +275,11 @@ nsSupportsArray::AppendElements(nsISupportsArray* aElements)
 NS_IMETHODIMP
 nsSupportsArray::Clear(void)
 {
-  while (mCount != 0) {
-    NS_RELEASE(mArray[--mCount]);
+  if (0 < mCount) {
+    do {
+      --mCount;
+      NS_RELEASE(mArray[mCount]);
+    } while (0 != mCount);
   }
   return NS_OK;
 }
