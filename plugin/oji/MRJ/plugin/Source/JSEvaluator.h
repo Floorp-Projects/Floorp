@@ -75,7 +75,7 @@ public:
      * @return The return value is currently ignored.
      */
     NS_IMETHOD
-    OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 offset, PRUint32 length);
+    OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length);
 
     NS_IMETHOD
     OnFileAvailable(nsIPluginStreamInfo* pluginInfo, const char* fileName)

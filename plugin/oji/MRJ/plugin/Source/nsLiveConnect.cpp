@@ -113,7 +113,7 @@ nsLiveconnect::Eval(JNIEnv *env, jsobject obj, const jchar *script, jsize length
     return NS_OK;
 }
 
-NS_METHOD nsLiveconnect::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 offset, PRUint32 length)
+NS_METHOD nsLiveconnect::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length)
 {
     // hopefully all our data is available.
     mResult = new char[length + 1];
