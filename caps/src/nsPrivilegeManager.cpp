@@ -740,35 +740,29 @@ nsPrivilegeManager::CheckPrivilegeEnabled(nsTargetArray * targetArray, PRInt32 c
 }
 
 char *
-nsPrivilegeManager::CheckPrivilegeEnabled(nsIScriptContext * context, nsTargetArray * targetArray, PRInt32 callerDepth, void *data)
+nsPrivilegeManager::CheckPrivilegeEnabled(nsIScriptContext * context, nsTargetArray * targetArray, PRInt32 callerDepth, void * data)
 {
 	/*
-	struct NSJSJavaFrameWrapper *wrapper = NULL;
-	nsTarget *target;
-	nsPrivilegeTable *annotation;
-	nsPrivilege *privilege;
+	struct NSJSJavaFrameWrapper * wrapper = NULL;
+	nsTarget * target;
+	nsPrivilegeTable * annotation;
+	nsPrivilege * privilege;
 	nsIPrincipalArray * prinArray = theUnknownPrincipalArray;
 	int depth = 0;
 	nsPermissionState perm;
 	nsPermissionState scopePerm;
 	nsPermissionState prinPerm;
-	PRBool saw_non_system_code = PR_FALSE;
-	PRBool saw_unsigned_principal = PR_FALSE;
-	PRInt32 noOfTargets;
-	PRInt32 idx;
+	PRBool saw_non_system_code = PR_FALSE, saw_unsigned_principal = PR_FALSE, saw_dangerous_code = PR_FALSE;
+	PRInt32 noOfTargets, noOfPrincipals, idx;
 	char *errMsg = NULL; 
 	nsIPrincipal * principal;
-	PRInt32 noOfPrincipals;
-	PRBool saw_dangerous_code = PR_FALSE;
 	if (targetArray == NULL) return "internal error - null target array";
 	if (nsCapsNewNSJSJavaFrameWrapperCallback == NULL) return NULL;
 	wrapper = (* nsCapsNewNSJSJavaFrameWrapperCallback)(context);
 	if (wrapper == NULL) return NULL;
 	noOfTargets = targetArray->GetSize();
-	for ((*nsCapsGetStartFrameCallback)(wrapper); 
-		(!(*nsCapsIsEndOfFrameCallback)(wrapper));
-		)
-		if ((*nsCapsIsValidFrameCallback)(wrapper)) {
+	for ((* nsCapsGetStartFrameCallback)(wrapper);(!(* nsCapsIsEndOfFrameCallback)(wrapper));)
+		if ((* nsCapsIsValidFrameCallback)(wrapper)) {
 			if (depth >= callerDepth) {
 				scopePerm = prinPerm = nsIPrivilege::PrivilegeState_Blank;
 				for (idx = 0; idx < noOfTargets; idx++) {
@@ -777,54 +771,56 @@ nsPrivilegeManager::CheckPrivilegeEnabled(nsIScriptContext * context, nsTargetAr
 						errMsg = "internal error - a null target in the Array";
 						goto done;
 					}
-					annotation =(nsPrivilegeTable *) (*nsCapsGetAnnotationCallback)(wrapper);
-					prinArray = (nsIPrincipalArray *) (*nsCapsGetPrincipalArrayCallback)(wrapper);
+					annotation =(nsPrivilegeTable *) (* nsCapsGetAnnotationCallback)(wrapper);
+					prinArray = (nsIPrincipalArray *) (* nsCapsGetPrincipalArrayCallback)(wrapper);
 				
-			 * When the Registration Mode flag is enabled, we allow secure
-			 * operations if and only iff the principal codebase is 'file:'.
-			 * That means we load files only after recognizing that they
-			 * reside on local harddrive. Any other code is considered as
-			 * dangerous and an exception will be thrown in such cases.
+// When the Registration Mode flag is enabled, we allow secure
+// operations if and only iff the principal codebase is 'file:'.
+// That means we load files only after recognizing that they
+// reside on local harddrive. Any other code is considered as
+// dangerous and an exception will be thrown in such cases.
 					if ((nsCapsGetRegistrationModeFlag()) && (prinArray != NULL)){
 						noOfPrincipals = prinArray->GetSize();
-						for (idx=0; idx < noOfPrincipals; idx++){
+						for (idx = 0; idx < noOfPrincipals; idx++){
 							principal = (nsIPrincipal *) prinArray->Get(idx);
-//XXX ARIEL: figure this out
-//							if (!(principal->isFileCodeBase())){
-//								saw_dangerous_code = PR_TRUE;
-//								errMsg = "access to target Forbidden - Illegal url code base is detected";
-//								goto done;
+							PRInt16 prinType = 0;
+							principal->GetType(& prinType);
+							if ((prinType != nsIPrincipal::PrincipalType_CodebaseExact) && 
+								(prinType != nsIPrincipal::PrincipalType_CodebaseExact)){
+								saw_dangerous_code = PR_TRUE;
+								errMsg = "access to target Forbidden - Illegal url code base is detected";
+								goto done;
 							}
 						}
 					}
- * frame->annotation holds a PrivilegeTable, describing
- * the scope privileges of this frame.  We'll check
- * if it permits the target, and if so, we just return.
- * If it forbids the target, we'll throw an exception,
- * and return.  If it's blank, things get funny.
- *
- * In the blank case, we need to continue walking up
- * the stack, looking for a non-blank privilege.  To
- * prevent "luring" attacks, these blank frames must
- * have the ability that they *could have requested*
- * privilege, but actually didn't.  This property
- * insures that we don't have a non-permitted (attacker)
- * class somewhere in the call chain between the request
- * for scope privilege and the chedk for privilege.
-
- * If there isn't a annotation, then we assume the default
- * value of blank and avoid allocating a new annotation.
+// frame->annotation holds a PrivilegeTable, describing
+// the scope privileges of this frame.  We'll check
+// if it permits the target, and if so, we just return.
+// If it forbids the target, we'll throw an exception,
+// and return.  If it's blank, things get funny.
+// In the blank case, we need to continue walking up
+// the stack, looking for a non-blank privilege.  To
+// prevent "luring" attacks, these blank frames must
+// have the ability that they *could have requested*
+// privilege, but actually didn't.  This property
+// insures that we don't have a non-permitted (attacker)
+// class somewhere in the call chain between the request
+// for scope privilege and the chedk for privilege.
+// If there isn't a annotation, then we assume the default
+// value of blank and avoid allocating a new annotation.
 				if (annotation) {
 					privilege = annotation->Get(target);
 					PR_ASSERT(privilege != NULL);
-					perm = privilege->etPermission();
-					scopePerm = nsPrivilege::add(perm, scopePerm);
+					PRInt16 privState;
+					privilege->GetState(& privState);
+// need this fixed
+//					scopePerm = nsPrivilege::Add(privState, scopePerm);
 				}
 				if (prinArray != NULL) {
-XXX: We need to allow sub-classing of Target, so that
- * we would call the method on Developer Sub-class'ed Target.
- * That would allow us to implement Parameterized targets
- * May be checkPrivilegeEnabled should go back into Java.
+// XXX: We need to allow sub-classing of Target, so that
+// we would call the method on Developer Sub-class'ed Target.
+// That would allow us to implement Parameterized targets
+// May be checkPrivilegeEnabled should go back into Java.
 					privilege = target->CheckPrivilegeEnabled(prinArray,data);
 					PR_ASSERT(privilege != NULL);
 					perm = privilege->getPermission();
@@ -862,37 +858,6 @@ done:
 	*/
 	return NULL;
 }
-/*
-nsIPrincipalArray *
-nsPrivilegeManager::GetClassPrincipalsFromStack(PRInt32 callerDepth)
-{
-  return this->GetClassPrincipalsFromStack(NULL, callerDepth);
-}
-
-nsIPrincipalArray *
-nsPrivilegeManager::GetClassPrincipalsFromStack(void* context, PRInt32 callerDepth)
-{
-  nsIPrincipalArray * principalArray = theUnknownPrincipalArray;
-  int depth = 0;
-  struct NSJSJavaFrameWrapper *wrapper = NULL;
-  if (nsCapsNewNSJSJavaFrameWrapperCallback == NULL) return NULL;
-  wrapper = (*nsCapsNewNSJSJavaFrameWrapperCallback)(context);
-  if (wrapper == NULL) return NULL;
-  for ((*nsCapsGetStartFrameCallback)(wrapper) ; 
-       (!(*nsCapsIsEndOfFrameCallback)(wrapper)) ;
-       ) {
-    if ((*nsCapsIsValidFrameCallback)(wrapper)) {
-      if (depth >= callerDepth) {
-        principalArray = (nsIPrincipalArray *) (*nsCapsGetPrincipalArrayCallback)(wrapper);
-	break;
-      }
-    }
-    if (!(*nsCapsGetNextFrameCallback)(wrapper, &depth)) break;
-  }
-  (*nsCapsFreeNSJSJavaFrameWrapperCallback)(wrapper);
-  return principalArray;
-}
-*/
 
 nsPrivilegeTable * 
 nsPrivilegeManager::GetPrivilegeTableFromStack(PRInt32 callerDepth, PRBool createIfNull)
