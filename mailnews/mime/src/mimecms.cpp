@@ -468,15 +468,36 @@ MimeCMS_init(MimeObject *obj,
       nsCOMPtr<nsISupports> securityInfo;
       channel->GetURI(getter_AddRefs(uri));
       if (uri)
-        msgurl = do_QueryInterface(uri);
-      if (msgurl)
-        msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
-      if (msgWindow)
-        msgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
-      if (headerSink)
-        headerSink->GetSecurityInfo(getter_AddRefs(securityInfo));
-      if (securityInfo)
-        data->smimeHeaderSink = do_QueryInterface(securityInfo);
+      {
+        nsCAutoString urlSpec;
+        rv = uri->GetSpec(urlSpec);
+
+        // We only want to update the UI if the current mime transaction
+        // is intended for display.
+        // If the current transaction is intended for background processing,
+        // we can learn that by looking at the additional header=filter
+        // string contained in the URI.
+        //
+        // If we find something, we do not set smimeHeaderSink,
+        // which will prevent us from giving UI feedback.
+        //
+        // If we do not find header=filter, we assume the result of the
+        // processing will be shown in the UI.
+
+        if (!strstr(urlSpec.get(), "?header=filter") &&
+            !strstr(urlSpec.get(), "&header=filter"))
+        {
+          msgurl = do_QueryInterface(uri);
+          if (msgurl)
+            msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
+          if (msgWindow)
+            msgWindow->GetMsgHeaderSink(getter_AddRefs(headerSink));
+          if (headerSink)
+            headerSink->GetSecurityInfo(getter_AddRefs(securityInfo));
+          if (securityInfo)
+            data->smimeHeaderSink = do_QueryInterface(securityInfo);
+        }
+      }
     } // if channel
   } // if msd
 
