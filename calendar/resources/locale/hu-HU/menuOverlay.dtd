@@ -37,48 +37,48 @@
    - Hungarian translation by Gábor Ziegler <gziegler@freemail.hu>
    - ***** END LICENSE BLOCK ***** -->
 
-<!-- Event Menu -->                                      
+<!-- Event Menu -->
 <!ENTITY event.menu.title   "Esemény">
 <!ENTITY eventMenuCmd.accesskey     "s">
 
-<!ENTITY event.new.event		"Új esemény">
+<!ENTITY event.new.event           "Új esemény">
 <!ENTITY event.new.event.accesskey "e">
 
-<!ENTITY event.new.todo		"Új tennivaló">
+<!ENTITY event.new.todo     "Új tennivaló">
 <!ENTITY event.new.todo.accesskey "t">
 
 <!ENTITY calendar.new.server.label "Új naptár">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event	"Szerkesztés">
-<!ENTITY event.edit.event.accesskey	"z">
+<!ENTITY event.edit.event   "Szerkesztés">
+<!ENTITY event.edit.event.accesskey "z">
 
-<!ENTITY event.delete.event	"Kiválaszott esemény(ek) törlése">
-<!ENTITY event.delete.event.accesskey	"r">
+<!ENTITY event.delete.event "Kiválaszott esemény(ek) törlése">
+<!ENTITY event.delete.event.accesskey   "r">
 
-<!ENTITY event.delete.tasks	"Kiválaszott tennivaló(k) törlése">
-<!ENTITY event.delete.tasks.accesskey	"l">
+<!ENTITY event.delete.tasks "Kiválaszott tennivaló(k) törlése">
+<!ENTITY event.delete.tasks.accesskey   "l">
 
-<!ENTITY event.mail.event	"Kiválaszott esemény(ek) elküldése">
-<!ENTITY event.mail.event.accesskey	"ü">
+<!ENTITY event.mail.event   "Kiválaszott esemény(ek) elküldése">
+<!ENTITY event.mail.event.accesskey "ü">
 
-<!ENTITY calendar.print.label	"Az aktív naptár nyomtatása...">
-<!ENTITY calendar.print.accesskey	"n">
+<!ENTITY calendar.print.label   "Az aktív naptár nyomtatása...">
+<!ENTITY calendar.print.accesskey   "n">
 
-<!ENTITY calendar.printpreview.label	"Nyomtatási előkép">
-<!ENTITY calendar.printpreview.accesskey	"e">
+<!ENTITY calendar.printpreview.label    "Nyomtatási előkép">
+<!ENTITY calendar.printpreview.accesskey    "e">
 
-<!ENTITY calendar.pagesetup.label	"Oldalbeállítás...">
-<!ENTITY calendar.pagesetup.accesskey	"u">
+<!ENTITY calendar.pagesetup.label   "Oldalbeállítás...">
+<!ENTITY calendar.pagesetup.accesskey   "u">
 
-<!ENTITY calendar.import.label	"Importálás fájlból...">
-<!ENTITY calendar.import.accesskey	"i">
+<!ENTITY calendar.import.label  "Importálás fájlból...">
+<!ENTITY calendar.import.accesskey  "i">
 
-<!ENTITY calendar.wizard.label	"Varázzló indítása">
-<!ENTITY calendar.wizard.accesskey	"v">
+<!ENTITY calendar.wizard.label  "Varázzló indítása">
+<!ENTITY calendar.wizard.accesskey  "v">
 
-<!ENTITY calendar.export.label	"Kiválaszott események exportálása...">
-<!ENTITY calendar.export.accesskey	"x">
+<!ENTITY calendar.export.label  "Kiválaszott események exportálása...">
+<!ENTITY calendar.export.accesskey  "x">
 
 <!ENTITY calendar.subscribe.label "Feliratkozás távoli naptárra...">
 <!ENTITY calendar.subscribe.accesskey "s">
@@ -86,23 +86,23 @@
 <!ENTITY calendar.publish.label "Kiválasztott események közzététele...">
 <!ENTITY calendar.publish.accesskey "k">
 
-<!ENTITY calendar.about.label	"A Naptár névjegye">
-<!ENTITY calendar.about.accesskey	"a">
+<!ENTITY calendar.about.label   "A Naptár névjegye">
+<!ENTITY calendar.about.accesskey   "a">
 
-<!ENTITY calendar.cut.label	"Kivág">
-<!ENTITY calendar.cut.accesskey	"k">
+<!ENTITY calendar.cut.label "Kivág">
+<!ENTITY calendar.cut.accesskey "k">
 
-<!ENTITY calendar.copy.label	"Másol">
-<!ENTITY calendar.copy.accesskey	"l">
+<!ENTITY calendar.copy.label    "Másol">
+<!ENTITY calendar.copy.accesskey    "l">
 
-<!ENTITY calendar.paste.label	"Beszúr">
-<!ENTITY calendar.paste.accesskey	"b">
+<!ENTITY calendar.paste.label   "Beszúr">
+<!ENTITY calendar.paste.accesskey   "b">
 
-<!ENTITY calendar.selectall.label	"Mindent kiválaszt">
-<!ENTITY calendar.selectall.accesskey	"a">
+<!ENTITY calendar.selectall.label   "Mindent kiválaszt">
+<!ENTITY calendar.selectall.accesskey   "a">
 
-<!ENTITY calendar.preferences.label	"Beállítások...">
-<!ENTITY calendar.preferences.accesskey	"á">
+<!ENTITY calendar.preferences.label "Beállítások...">
+<!ENTITY calendar.preferences.accesskey "á">
 
 <!ENTITY goMenu.label                   "Ugrás">
 <!ENTITY goMenu.accesskey               "g">
@@ -115,3 +115,8 @@
 
 <!ENTITY goNextCmd.label                "Következő">
 <!ENTITY goNextCmd.accesskey            "k">
+
+<!ENTITY taskMenu.label                "Tools">
+<!ENTITY taskMenu.accesskey            "T">
+
+<!ENTITY helpMenu.accesskey            "H">

@@ -117,21 +117,21 @@
 <!ENTITY newevent.status.tentative.label   "Provisoire" >
 <!ENTITY newevent.status.confirmed.label   "Confirmé" >
 
-<!ENTITY newevent.advanced.repeat.dayofmonth.label "L'énième jour du mois">          
-<!ENTITY newevent.advanced.repeat.dayofweek.label "Le quatrième mardi du mois">          
-<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Le dernier mardi du mois">          
-<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">          
+<!ENTITY newevent.advanced.repeat.dayofmonth.label "L'énième jour du mois">
+<!ENTITY newevent.advanced.repeat.dayofweek.label "Le quatrième mardi du mois">
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Le dernier mardi du mois">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">
 
-<!ENTITY newevent.advanced.repeat.onthe.label "On the ">                   
-<!ENTITY newevent.advanced.repeat.last.label "Last ">          
-<!ENTITY newevent.advanced.repeat.first.label "First"> 
-<!ENTITY newevent.advanced.repeat.second.label "Second"> 
-<!ENTITY newevent.advanced.repeat.third.label "Third"> 
-<!ENTITY newevent.advanced.repeat.fourth.label "Fourth"> 
-<!ENTITY newevent.advanced.repeat.first.extension "st"> 
-<!ENTITY newevent.advanced.repeat.second.extension "nd"> 
-<!ENTITY newevent.advanced.repeat.third.extension "rd"> 
-<!ENTITY newevent.advanced.repeat.nth.extension "th"> 
+<!ENTITY newevent.advanced.repeat.onthe.label "On the ">
+<!ENTITY newevent.advanced.repeat.last.label "Last ">
+<!ENTITY newevent.advanced.repeat.first.label "First">
+<!ENTITY newevent.advanced.repeat.second.label "Second">
+<!ENTITY newevent.advanced.repeat.third.label "Third">
+<!ENTITY newevent.advanced.repeat.fourth.label "Fourth">
+<!ENTITY newevent.advanced.repeat.first.extension "st">
+<!ENTITY newevent.advanced.repeat.second.extension "nd">
+<!ENTITY newevent.advanced.repeat.third.extension "rd">
+<!ENTITY newevent.advanced.repeat.nth.extension "th">
 
 <!ENTITY newevent.choosefile.label "Choisir un fichier">
 <!ENTITY newevent.removeselectedfile.label "Enlever le fichier sélectionné">
@@ -152,7 +152,7 @@
 <!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
 <!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
 
-<!ENTITY calendar.confirm.deleteevent "Êtes-vous sûr de vouloir effacer l'événement intitulé : " >        
+<!ENTITY calendar.confirm.deleteevent "Êtes-vous sûr de vouloir effacer l'événement intitulé : " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Êtes vous sûr de vouloir effacer cet événement sans titre ?" >
 
 <!ENTITY event.alarm.checkbox.label "Me rappeler dans " >
@@ -238,17 +238,16 @@
 
 <!ENTITY calendar.nextday.button.tooltip        "Jour suivant" >
 <!ENTITY calendar.prevday.button.tooltip        "Jour précédent" >
-<!ENTITY calendar.nextweek.button.tooltip        "Semaine suivante" >
-<!ENTITY calendar.prevweek.button.tooltip        "Semaine précédente" >
-<!ENTITY calendar.nextmonth.button.tooltip        "Mois suivant" >
-<!ENTITY calendar.prevmonth.button.tooltip        "Mois précédent" >
+<!ENTITY calendar.nextweek.button.tooltip       "Semaine suivante" >
+<!ENTITY calendar.prevweek.button.tooltip       "Semaine précédente" >
+<!ENTITY calendar.nextmonth.button.tooltip      "Mois suivant" >
+<!ENTITY calendar.prevmonth.button.tooltip      "Mois précédent" >
 
 <!ENTITY calendar.newtask.button.label          "Nouvelle tâche" >
 <!ENTITY calendar.newevent.button.label         "Nouvel événement" >
 <!ENTITY calendar.delete.button.label           "Supprimer" >
 <!ENTITY calendar.edit.button.label             "Modifier" >
 
-<!ENTITY calendar.gototoday.button.label        "Aujourd'hui" >
 <!ENTITY calendar.choosedate.button.label       "Choisir une date" >
 
 <!ENTITY calendar.dayview.button.label          "1 jour par vue" >
@@ -266,9 +265,9 @@
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Événements" >
-<!ENTITY calendar.search.tab.label			        "Chercher">
+<!ENTITY calendar.search.tab.label      "Chercher">
 
-<!ENTITY calendar.search.options.searchfor			" contient">
+<!ENTITY calendar.search.options.searchfor " contient">
 
 <!ENTITY calendar.menu.numberofweeks.label     "Nombre de semaines" >
 <!ENTITY calendar.menu.numberofweeks.1      "1 semaine" >
@@ -373,13 +372,12 @@
 
 
 <!-- Calendar Alarm Dialog -->
-
 <!ENTITY calendar.alarm.acknowledge.label           "Accepter" >
 <!ENTITY calendar.alarm.editevent.label             "Modifier l'événement" >
 <!ENTITY calendar.alarm.acknowledgeall.label        "Accepter toutes les alarmes" >
 <!ENTITY calendar.alarm.snooze.label                "Snooze" >
 
-  
+
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Ajouter un nouveau calendrier">
 <!ENTITY calendar.server.dialog.title.edit          "Modifier le calendrier">
@@ -424,7 +422,6 @@
 <!ENTITY calendar.importdupes.autodiscard.label "Écarter automatiquement les doublons">
 <!ENTITY calendar.importdupes.adddupes.label "Ajouter les doublons">
 <!ENTITY calendar.importdupes.prompt.label "Donner le choix à chaque fois">
-
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Print A Calendar">

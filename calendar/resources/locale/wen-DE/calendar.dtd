@@ -18,10 +18,11 @@
    - Portions created by the Initial Developer are Copyright (C) 2001
    - the Initial Developer. All Rights Reserved.
    -
-   - Contributor(s): Garth Smedley <garths@oeone.com> 
+   - Contributor(s): Garth Smedley <garths@oeone.com>
    -                 Mike Potter <mikep@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -116,21 +117,21 @@
 <!ENTITY newevent.status.tentative.label   "Spytowacy" >
 <!ENTITY newevent.status.confirmed.label   "Wobkrućeny" >
 
-<!ENTITY newevent.advanced.repeat.dayofmonth.label "x. dźeń měsaca">          
-<!ENTITY newevent.advanced.repeat.dayofweek.label "4. wutoru měsaca">          
+<!ENTITY newevent.advanced.repeat.dayofmonth.label "x. dźeń měsaca">
+<!ENTITY newevent.advanced.repeat.dayofweek.label "4. wutoru měsaca">
 <!ENTITY newevent.advanced.repeat.lastdayofweek.label "Poslednju wutoru měsaca">
 <!ENTITY newevent.advanced.repeat.ofthemonth.label " měsaca">
 
-<!ENTITY newevent.advanced.repeat.onthe.label "dnja">                   
-<!ENTITY newevent.advanced.repeat.last.label "posledni ">          
-<!ENTITY newevent.advanced.repeat.first.label "prěni"> 
-<!ENTITY newevent.advanced.repeat.second.label "druhi"> 
-<!ENTITY newevent.advanced.repeat.third.label "třeći"> 
-<!ENTITY newevent.advanced.repeat.fourth.label "štwórty"> 
-<!ENTITY newevent.advanced.repeat.first.extension "."> 
-<!ENTITY newevent.advanced.repeat.second.extension "."> 
-<!ENTITY newevent.advanced.repeat.third.extension "."> 
-<!ENTITY newevent.advanced.repeat.nth.extension "."> 
+<!ENTITY newevent.advanced.repeat.onthe.label "dnja">
+<!ENTITY newevent.advanced.repeat.last.label "posledni ">
+<!ENTITY newevent.advanced.repeat.first.label "prěni">
+<!ENTITY newevent.advanced.repeat.second.label "druhi">
+<!ENTITY newevent.advanced.repeat.third.label "třeći">
+<!ENTITY newevent.advanced.repeat.fourth.label "štwórty">
+<!ENTITY newevent.advanced.repeat.first.extension ".">
+<!ENTITY newevent.advanced.repeat.second.extension ".">
+<!ENTITY newevent.advanced.repeat.third.extension ".">
+<!ENTITY newevent.advanced.repeat.nth.extension ".">
 
 <!ENTITY newevent.choosefile.label "Dataju wubrać">
 <!ENTITY newevent.removeselectedfile.label "Wubranu dataju wotstronić">
@@ -237,17 +238,16 @@
 
 <!ENTITY calendar.nextday.button.tooltip        "Přichodny dźeń" >
 <!ENTITY calendar.prevday.button.tooltip        "Předchadny dźeń" >
-<!ENTITY calendar.nextweek.button.tooltip        "Přichodny tydźeń" >
-<!ENTITY calendar.prevweek.button.tooltip        "Předchadny tydźeń" >
-<!ENTITY calendar.nextmonth.button.tooltip        "Přichodny měsac" >
-<!ENTITY calendar.prevmonth.button.tooltip        "Předchadny měsac" >
+<!ENTITY calendar.nextweek.button.tooltip       "Přichodny tydźeń" >
+<!ENTITY calendar.prevweek.button.tooltip       "Předchadny tydźeń" >
+<!ENTITY calendar.nextmonth.button.tooltip      "Přichodny měsac" >
+<!ENTITY calendar.prevmonth.button.tooltip      "Předchadny měsac" >
 
 <!ENTITY calendar.newtask.button.label          "Nowy nadawk" >
 <!ENTITY calendar.newevent.button.label         "Nowy podawk" >
 <!ENTITY calendar.delete.button.label           "Wotstronić" >
 <!ENTITY calendar.edit.button.label             "Wobdźěłać" >
 
-<!ENTITY calendar.gototoday.button.label        "Dźensa" >
 <!ENTITY calendar.choosedate.button.label       "Datum wubrać" >
 
 <!ENTITY calendar.dayview.button.label          "Dnjowy wid" >
@@ -265,9 +265,9 @@
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Podawki" >
-<!ENTITY calendar.search.tab.label			        "Pytanje">
+<!ENTITY calendar.search.tab.label      "Pytanje">
 
-<!ENTITY calendar.search.options.searchfor			" wobsahuja">
+<!ENTITY calendar.search.options.searchfor " wobsahuja">
 
 <!ENTITY calendar.menu.numberofweeks.label     "Ličba njedźelow" >
 <!ENTITY calendar.menu.numberofweeks.1      "1 tydźeń" >
@@ -372,13 +372,12 @@
 
 
 <!-- Calendar Alarm Dialog -->
-
 <!ENTITY calendar.alarm.acknowledge.label           "Wobkrućenje" >
 <!ENTITY calendar.alarm.editevent.label             "Podawk wobdźěłać" >
 <!ENTITY calendar.alarm.acknowledgeall.label        "Wšě alarmy wobkrućic" >
 <!ENTITY calendar.alarm.snooze.label                "Drěmk" >
 
-  
+
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Nowu protyku přidać">
 <!ENTITY calendar.server.dialog.title.edit          "Protyku wobdźěłać">
@@ -423,7 +422,6 @@
 <!ENTITY calendar.importdupes.autodiscard.label "Duplikaty awtomatisce wotpokazać">
 <!ENTITY calendar.importdupes.adddupes.label "Duplikaty přidać">
 <!ENTITY calendar.importdupes.prompt.label "Za kóždy so prašeć">
-
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Protyku ćišćeć">

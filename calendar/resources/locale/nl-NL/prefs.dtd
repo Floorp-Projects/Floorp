@@ -20,6 +20,7 @@
    -
    - Contributor(s): Mike Potter <mikep@oeone.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -84,7 +85,6 @@
 <!ENTITY pref.numberofweeks.6      "6 Weeks" >
 <!ENTITY pref.numberofpreviousweeks.label     "Number of Previous Weeks:" >
 
-
 <!ENTITY pref.hour.help.description    "Overschrijven als gebeurtenissen buiten deze tijden vallen" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
@@ -112,15 +112,15 @@
 <!ENTITY pref.hour.23    "23:00" >
 
 <!ENTITY pref.calendar.view.allview.caption "General">
-<!ENTITY pref.calendar.view.dayview.caption "Dagoverzicht"> 
-<!ENTITY pref.calendar.view.weekview.caption "Weekoverzicht"> 
+<!ENTITY pref.calendar.view.dayview.caption "Dagoverzicht">
+<!ENTITY pref.calendar.view.weekview.caption "Weekoverzicht">
 <!ENTITY pref.calendar.view.weekanddayview.caption "Week and Day Views">
 <!ENTITY pref.calendar.view.monthview.caption "Month View">
-<!ENTITY pref.calendar.view.multiweekview.caption "Multiweek View"> 
+<!ENTITY pref.calendar.view.multiweekview.caption "Multiweek View">
 
-<!ENTITY pref.calendar.view.restrict.label "Beperk overzichten tot "> 
-<!ENTITY pref.calendar.view.starttime.label "Starttijd:"> 
-<!ENTITY pref.calendar.view.endtime.label   "Eindtijd:"> 
+<!ENTITY pref.calendar.view.restrict.label "Beperk overzichten tot ">
+<!ENTITY pref.calendar.view.starttime.label "Starttijd:">
+<!ENTITY pref.calendar.view.endtime.label   "Eindtijd:">
 
 <!ENTITY pref.categories.label   "Categori&#xEB;n" >
 
@@ -136,7 +136,6 @@
 <!ENTITY pref.minutes.label "Minuten">
 
 <!-- Calendar Timezone preferences information -->
-
 <!ENTITY pref.calendar.timezone.label "My Timezone">
 <!ENTITY pref.calendar.timezone.caption "Timezone">
 <!ENTITY pref.defaultzone.label     "Default Timezone:" >

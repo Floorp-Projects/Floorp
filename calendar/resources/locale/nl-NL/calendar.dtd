@@ -22,6 +22,7 @@
    -                 Mike Potter <mikep@oeone.com>
    -                 Chris Charabaruk <coldacid@meldstar.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -116,21 +117,21 @@
 <!ENTITY newevent.status.tentative.label   "Tentatief" >
 <!ENTITY newevent.status.confirmed.label   "Bevestigd" >
 
-<!ENTITY newevent.advanced.repeat.dayofmonth.label "Op de zoveelste dag van de maand">          
-<!ENTITY newevent.advanced.repeat.dayofweek.label "Vierde dinsdag van de maand">          
-<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Laatstedinsdag van de maand">          
-<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">          
+<!ENTITY newevent.advanced.repeat.dayofmonth.label "Op de zoveelste dag van de maand">
+<!ENTITY newevent.advanced.repeat.dayofweek.label "Vierde dinsdag van de maand">
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Laatstedinsdag van de maand">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " of the month">
 
-<!ENTITY newevent.advanced.repeat.onthe.label "On the ">                   
-<!ENTITY newevent.advanced.repeat.last.label "Last ">          
-<!ENTITY newevent.advanced.repeat.first.label "First"> 
-<!ENTITY newevent.advanced.repeat.second.label "Second"> 
-<!ENTITY newevent.advanced.repeat.third.label "Third"> 
-<!ENTITY newevent.advanced.repeat.fourth.label "Fourth"> 
-<!ENTITY newevent.advanced.repeat.first.extension "st"> 
-<!ENTITY newevent.advanced.repeat.second.extension "nd"> 
-<!ENTITY newevent.advanced.repeat.third.extension "rd"> 
-<!ENTITY newevent.advanced.repeat.nth.extension "th"> 
+<!ENTITY newevent.advanced.repeat.onthe.label "On the ">
+<!ENTITY newevent.advanced.repeat.last.label "Last ">
+<!ENTITY newevent.advanced.repeat.first.label "First">
+<!ENTITY newevent.advanced.repeat.second.label "Second">
+<!ENTITY newevent.advanced.repeat.third.label "Third">
+<!ENTITY newevent.advanced.repeat.fourth.label "Fourth">
+<!ENTITY newevent.advanced.repeat.first.extension "st">
+<!ENTITY newevent.advanced.repeat.second.extension "nd">
+<!ENTITY newevent.advanced.repeat.third.extension "rd">
+<!ENTITY newevent.advanced.repeat.nth.extension "th">
 
 <!ENTITY newevent.choosefile.label "Kies bestand">
 <!ENTITY newevent.removeselectedfile.label "Verwijder geselecteerd bestand">
@@ -151,7 +152,7 @@
 <!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
 <!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
 
-<!ENTITY calendar.confirm.deleteevent "Weet u zeker dat u de volgende gebeurtenis wilt verwijderen: " >        
+<!ENTITY calendar.confirm.deleteevent "Weet u zeker dat u de volgende gebeurtenis wilt verwijderen: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Weet u zeker dat u de volgende naamloze gebeurtenis wilt verwijderen?" >
 
 <!ENTITY event.alarm.checkbox.label "Herinner mij opnieuw over " >
@@ -237,17 +238,16 @@
 
 <!ENTITY calendar.nextday.button.tooltip        "Volgende dag" >
 <!ENTITY calendar.prevday.button.tooltip        "Vorige dag" >
-<!ENTITY calendar.nextweek.button.tooltip        "Volgende week" >
-<!ENTITY calendar.prevweek.button.tooltip        "Vorige week" >
-<!ENTITY calendar.nextmonth.button.tooltip        "Volgende maand" >
-<!ENTITY calendar.prevmonth.button.tooltip        "Vorige maand" >
+<!ENTITY calendar.nextweek.button.tooltip       "Volgende week" >
+<!ENTITY calendar.prevweek.button.tooltip       "Vorige week" >
+<!ENTITY calendar.nextmonth.button.tooltip      "Volgende maand" >
+<!ENTITY calendar.prevmonth.button.tooltip      "Vorige maand" >
 
 <!ENTITY calendar.newtask.button.label          "Nieuwe taak" >
 <!ENTITY calendar.newevent.button.label         "Nieuwe gebeurtenis" >
 <!ENTITY calendar.delete.button.label           "Verwijderen" >
 <!ENTITY calendar.edit.button.label             "Bewerken" >
 
-<!ENTITY calendar.gototoday.button.label        "Vandaag" >
 <!ENTITY calendar.choosedate.button.label       "Kies datum" >
 
 <!ENTITY calendar.dayview.button.label          "Dagoverzicht" >
@@ -265,9 +265,9 @@
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Gebeurtenissen" >
-<!ENTITY calendar.search.tab.label			        "Zoeken">
+<!ENTITY calendar.search.tab.label      "Zoeken">
 
-<!ENTITY calendar.search.options.searchfor			" bevat">
+<!ENTITY calendar.search.options.searchfor " bevat">
 
 <!ENTITY calendar.menu.numberofweeks.label     "Number of Weeks" >
 <!ENTITY calendar.menu.numberofweeks.1      "1 Week" >
@@ -372,13 +372,12 @@
 
 
 <!-- Calendar Alarm Dialog -->
-
 <!ENTITY calendar.alarm.acknowledge.label           "Bevestig" >
 <!ENTITY calendar.alarm.editevent.label             "Bewerk gebeurtenis" >
 <!ENTITY calendar.alarm.acknowledgeall.label        "Bevestig alle waarschuwingen" >
 <!ENTITY calendar.alarm.snooze.label                "Snooze" >
 
-  
+
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Nieuwe kalender toevoegen">
 <!ENTITY calendar.server.dialog.title.edit          "Bewerk kalender">
@@ -423,7 +422,6 @@
 <!ENTITY calendar.importdupes.autodiscard.label "Duplikaten automatisch afdanken">
 <!ENTITY calendar.importdupes.adddupes.label "Duplikaten toevoegen">
 <!ENTITY calendar.importdupes.prompt.label "Voor elke vragen">
-
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Print A Calendar">

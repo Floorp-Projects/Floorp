@@ -102,7 +102,7 @@
 <!ENTITY newevent.repeatdate.tooltip    "Zvolte datum ukončení" >
 <!ENTITY newevent.recurend.warning    "Čas opakování končí před konečným časem.">
 <!ENTITY newevent.endtime.tooltip    "Zvolte pro tuto událost čas ukočení." >
-<!ENTITY newevent.starttimeerror.alertmessage "Událost nemůže skončit dříve než začne. Opravte čas začátku a konce." >        
+<!ENTITY newevent.starttimeerror.alertmessage "Událost nemůže skončit dříve než začne. Opravte čas začátku a konce." >
 <!ENTITY newevent.recurendtimeerror.alertmessage "Opakování události nemůže být před jejím skončením. Opravte to nebo zrušte opakování." >
 <!ENTITY newevent.newevent.tab.label "Událost" >
 <!ENTITY newevent.recurrence.tab.label "Opakování" >
@@ -117,21 +117,21 @@
 <!ENTITY newevent.status.tentative.label   "Předběžná" >
 <!ENTITY newevent.status.confirmed.label   "Schválena" >
 
-<!ENTITY newevent.advanced.repeat.dayofmonth.label "Zvolený den v měsíci">          
-<!ENTITY newevent.advanced.repeat.dayofweek.label "4. úterý v měsíci">          
-<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Poslední úterý v měsíci">  
-<!ENTITY newevent.advanced.repeat.ofthemonth.label " v měsíci">          
+<!ENTITY newevent.advanced.repeat.dayofmonth.label "Zvolený den v měsíci">
+<!ENTITY newevent.advanced.repeat.dayofweek.label "4. úterý v měsíci">
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "Poslední úterý v měsíci">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label " v měsíci">
 
-<!ENTITY newevent.advanced.repeat.onthe.label "On the ">                   
-<!ENTITY newevent.advanced.repeat.last.label "Poslední ">          
-<!ENTITY newevent.advanced.repeat.first.label "První"> 
-<!ENTITY newevent.advanced.repeat.second.label "Druhý"> 
-<!ENTITY newevent.advanced.repeat.third.label "Třetí"> 
-<!ENTITY newevent.advanced.repeat.fourth.label "Čtvrtý"> 
-<!ENTITY newevent.advanced.repeat.first.extension "."> 
-<!ENTITY newevent.advanced.repeat.second.extension "."> 
-<!ENTITY newevent.advanced.repeat.third.extension "."> 
-<!ENTITY newevent.advanced.repeat.nth.extension "."> 
+<!ENTITY newevent.advanced.repeat.onthe.label "On the ">
+<!ENTITY newevent.advanced.repeat.last.label "Poslední ">
+<!ENTITY newevent.advanced.repeat.first.label "První">
+<!ENTITY newevent.advanced.repeat.second.label "Druhý">
+<!ENTITY newevent.advanced.repeat.third.label "Třetí">
+<!ENTITY newevent.advanced.repeat.fourth.label "Čtvrtý">
+<!ENTITY newevent.advanced.repeat.first.extension ".">
+<!ENTITY newevent.advanced.repeat.second.extension ".">
+<!ENTITY newevent.advanced.repeat.third.extension ".">
+<!ENTITY newevent.advanced.repeat.nth.extension ".">
 
 <!ENTITY newevent.choosefile.label "Zvolit soubor">
 <!ENTITY newevent.removeselectedfile.label "Odstranit vybraný soubor">
@@ -152,7 +152,7 @@
 <!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
 <!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
 
-<!ENTITY calendar.confirm.deleteevent "Skutečně chcete vymazat událost pojmenovanou: " >        
+<!ENTITY calendar.confirm.deleteevent "Skutečně chcete vymazat událost pojmenovanou: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "Skutečně chcete vymazat tuto nepojmenovanou událost?" >
 
 <!ENTITY event.alarm.checkbox.label "Připomenout znovu v " >
@@ -238,17 +238,16 @@
 
 <!ENTITY calendar.nextday.button.tooltip        "Další den" >
 <!ENTITY calendar.prevday.button.tooltip        "Předchozí den" >
-<!ENTITY calendar.nextweek.button.tooltip        "Další týden" >
-<!ENTITY calendar.prevweek.button.tooltip        "Předchozí týden" >
-<!ENTITY calendar.nextmonth.button.tooltip        "Další měsíc" >
-<!ENTITY calendar.prevmonth.button.tooltip        "Předchozí měsíc" >
+<!ENTITY calendar.nextweek.button.tooltip       "Další týden" >
+<!ENTITY calendar.prevweek.button.tooltip       "Předchozí týden" >
+<!ENTITY calendar.nextmonth.button.tooltip      "Další měsíc" >
+<!ENTITY calendar.prevmonth.button.tooltip      "Předchozí měsíc" >
 
 <!ENTITY calendar.newtask.button.label          "Nový úkol" >
 <!ENTITY calendar.newevent.button.label         "Nová událost" >
 <!ENTITY calendar.delete.button.label           "Vymazat" >
 <!ENTITY calendar.edit.button.label             "Upravit" >
 
-<!ENTITY calendar.gototoday.button.label        "Dnes" >
 <!ENTITY calendar.choosedate.button.label       "Zvolit datum" >
 
 <!ENTITY calendar.dayview.button.label          "Denní" >
@@ -266,9 +265,9 @@
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Události" >
-<!ENTITY calendar.search.tab.label			        "Hledej">
+<!ENTITY calendar.search.tab.label      "Hledej">
 
-<!ENTITY calendar.search.options.searchfor			" obsahující">
+<!ENTITY calendar.search.options.searchfor " obsahující">
 
 <!ENTITY calendar.menu.numberofweeks.label     "Počet týdnů" >
 <!ENTITY calendar.menu.numberofweeks.1      "1 týden" >
@@ -373,13 +372,12 @@
 
 
 <!-- Calendar Alarm Dialog -->
-
 <!ENTITY calendar.alarm.acknowledge.label           "Potvrdit" >
 <!ENTITY calendar.alarm.editevent.label             "Upravit událost" >
 <!ENTITY calendar.alarm.acknowledgeall.label        "Potvrdit všechna upozornění" >
 <!ENTITY calendar.alarm.snooze.label                "Dřímat" >
 
-  
+
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Přidat nový kalendář">
 <!ENTITY calendar.server.dialog.title.edit          "Upravit kalendář">
@@ -424,7 +422,6 @@
 <!ENTITY calendar.importdupes.autodiscard.label "Automaticky zahodit duplicity">
 <!ENTITY calendar.importdupes.adddupes.label "Přidat duplicity">
 <!ENTITY calendar.importdupes.prompt.label "Každou potvrdit">
-
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Tisk kalendáře">

@@ -86,7 +86,6 @@
 <!ENTITY pref.numberofweeks.6      "6 hét" >
 <!ENTITY pref.numberofpreviousweeks.label     "A megelőző hetek száma:" >
 
-
 <!ENTITY pref.hour.help.description    "Ha esemény van ezeken kívül, akkor felülbírálásra kerül" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
@@ -113,16 +112,16 @@
 <!ENTITY pref.hour.22    "22:00" >
 <!ENTITY pref.hour.23    "23:00" >
 
-<!ENTITY pref.calendar.view.allview.caption "Általános"> 
-<!ENTITY pref.calendar.view.dayview.caption "Napi nézet View"> 
-<!ENTITY pref.calendar.view.weekview.caption "Heti nézet View"> 
-<!ENTITY pref.calendar.view.weekanddayview.caption "Többheti nézet"> 
-<!ENTITY pref.calendar.view.monthview.caption "Havi nézet"> 
-<!ENTITY pref.calendar.view.multiweekview.caption "Többheti nézet"> 
+<!ENTITY pref.calendar.view.allview.caption "Általános">
+<!ENTITY pref.calendar.view.dayview.caption "Napi nézet View">
+<!ENTITY pref.calendar.view.weekview.caption "Heti nézet View">
+<!ENTITY pref.calendar.view.weekanddayview.caption "Többheti nézet">
+<!ENTITY pref.calendar.view.monthview.caption "Havi nézet">
+<!ENTITY pref.calendar.view.multiweekview.caption "Többheti nézet">
 
-<!ENTITY pref.calendar.view.restrict.label "A nézet korlátozása "> 
-<!ENTITY pref.calendar.view.starttime.label "Kezdési időpont:"> 
-<!ENTITY pref.calendar.view.endtime.label   "Bejezési időpont:"> 
+<!ENTITY pref.calendar.view.restrict.label "A nézet korlátozása ">
+<!ENTITY pref.calendar.view.starttime.label "Kezdési időpont:">
+<!ENTITY pref.calendar.view.endtime.label   "Bejezési időpont:">
 
 <!ENTITY pref.categories.label   "Kategórák" >
 
@@ -137,8 +136,7 @@
 
 <!ENTITY pref.minutes.label "perc">
 
-<!-- Calendar Timezone preferences information -->        
-        
+<!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Saját időzóna">
 <!ENTITY pref.calendar.timezone.caption "Időzóna">
 <!ENTITY pref.defaultzone.label     "Alapértelmezett időzóna:" >

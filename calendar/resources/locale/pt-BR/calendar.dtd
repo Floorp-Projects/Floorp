@@ -239,17 +239,16 @@
 
 <!ENTITY calendar.nextday.button.tooltip        "Pr&#xF3;ximo Dia" >
 <!ENTITY calendar.prevday.button.tooltip        "Dia Anterior" >
-<!ENTITY calendar.nextweek.button.tooltip        "Pr&#xF3;xima Semana" >
-<!ENTITY calendar.prevweek.button.tooltip        "Semana Anterior" >
-<!ENTITY calendar.nextmonth.button.tooltip        "Pr&#xF3;ximo M&#xEA;s" >
-<!ENTITY calendar.prevmonth.button.tooltip        "M&#xEA;s Anterior" >
+<!ENTITY calendar.nextweek.button.tooltip       "Pr&#xF3;xima Semana" >
+<!ENTITY calendar.prevweek.button.tooltip       "Semana Anterior" >
+<!ENTITY calendar.nextmonth.button.tooltip      "Pr&#xF3;ximo M&#xEA;s" >
+<!ENTITY calendar.prevmonth.button.tooltip      "M&#xEA;s Anterior" >
 
 <!ENTITY calendar.newtask.button.label          "Nova Tarefa" >
 <!ENTITY calendar.newevent.button.label         "Novo Evento" >
 <!ENTITY calendar.delete.button.label           "Apagar" >
 <!ENTITY calendar.edit.button.label             "Editar" >
 
-<!ENTITY calendar.gototoday.button.label        "Hoje" >
 <!ENTITY calendar.choosedate.button.label       "Escolher Data" >
 
 <!ENTITY calendar.dayview.button.label          "Dia" >
@@ -267,9 +266,9 @@
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Eventos" >
-<!ENTITY calendar.search.tab.label			        "Procurar">
+<!ENTITY calendar.search.tab.label      "Procurar">
 
-<!ENTITY calendar.search.options.searchfor			" contendo">
+<!ENTITY calendar.search.options.searchfor " contendo">
 
 <!ENTITY calendar.menu.numberofweeks.label     "N&#xFA;mero de Semanas" >
 <!ENTITY calendar.menu.numberofweeks.1      "1 Semana" >
@@ -308,7 +307,6 @@
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
 <!ENTITY calendar.context.deletetask.label            "Apagar Tarefa">
 <!ENTITY calendar.context.deletetask.accesskey        "l">
-
 <!ENTITY calendar.context.cutevent.label              "Cortar">
 <!ENTITY calendar.context.cutevent.accesskey          "t">
 <!ENTITY calendar.context.copyevent.label             "Copiar">
@@ -375,7 +373,6 @@
 
 
 <!-- Calendar Alarm Dialog -->
-
 <!ENTITY calendar.alarm.acknowledge.label           "Aceitar" >
 <!ENTITY calendar.alarm.editevent.label             "Editar Evento" >
 <!ENTITY calendar.alarm.acknowledgeall.label        "Aceitar Todos os Alarmes" >
@@ -426,7 +423,6 @@
 <!ENTITY calendar.importdupes.autodiscard.label "Automaticamente descartar duplicados">
 <!ENTITY calendar.importdupes.adddupes.label "Acrescentar duplicados">
 <!ENTITY calendar.importdupes.prompt.label "Perguntar para cada um">
-
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Imprimir um Calend&#xE1;rio">

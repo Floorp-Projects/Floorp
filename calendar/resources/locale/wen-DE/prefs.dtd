@@ -20,6 +20,7 @@
    -
    - Contributor(s): Mike Potter <mikep@oeone.com>
    -                 ArentJan Banck <ajbanck@planet.nl>
+   -                 Eric Belhaire <belhaire@ief.u-psud.fr>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -84,7 +85,6 @@
 <!ENTITY pref.numberofweeks.6      "6 njedźelow" >
 <!ENTITY pref.numberofpreviousweeks.label     "Ličba předchadnych njedźelow:" >
 
-
 <!ENTITY pref.hour.help.description    "Nadpisane jelizo podawki su zwonka tutych časow" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
@@ -112,15 +112,15 @@
 <!ENTITY pref.hour.23    "23:00" >
 
 <!ENTITY pref.calendar.view.allview.caption "Powšitkowny">
-<!ENTITY pref.calendar.view.dayview.caption "Dnjowy wid"> 
+<!ENTITY pref.calendar.view.dayview.caption "Dnjowy wid">
 <!ENTITY pref.calendar.view.weekview.caption "Tydźenski wid">
 <!ENTITY pref.calendar.view.weekanddayview.caption "Dnjowy a tydźenski widaj">
 <!ENTITY pref.calendar.view.monthview.caption "Měsačny wid">
 <!ENTITY pref.calendar.view.multiweekview.caption "Multitydźenski wid">
 
-<!ENTITY pref.calendar.view.restrict.label "Widy wobmjezować na "> 
-<!ENTITY pref.calendar.view.starttime.label "Startowy čas:"> 
-<!ENTITY pref.calendar.view.endtime.label   "Kónčny čas:"> 
+<!ENTITY pref.calendar.view.restrict.label "Widy wobmjezować na ">
+<!ENTITY pref.calendar.view.starttime.label "Startowy čas:">
+<!ENTITY pref.calendar.view.endtime.label   "Kónčny čas:">
 
 <!ENTITY pref.categories.label   "Kategorije" >
 
@@ -136,7 +136,6 @@
 <!ENTITY pref.minutes.label "mjeńšin">
 
 <!-- Calendar Timezone preferences information -->
-
 <!ENTITY pref.calendar.timezone.label "Moje časowe pasmo">
 <!ENTITY pref.calendar.timezone.caption "Časowe pasmo">
 <!ENTITY pref.defaultzone.label     "Standardne časowe pasmo:" >

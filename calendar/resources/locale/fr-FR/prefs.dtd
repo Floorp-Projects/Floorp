@@ -85,7 +85,6 @@
 <!ENTITY pref.numberofweeks.6      "6 semaines" >
 <!ENTITY pref.numberofpreviousweeks.label     "Nombre de semaines passées :" >
 
-
 <!ENTITY pref.hour.help.description    "Non pris en compte si des événements sont hors de ces limites" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
@@ -112,16 +111,16 @@
 <!ENTITY pref.hour.22    "22:00" >
 <!ENTITY pref.hour.23    "23:00" >
 
-<!ENTITY pref.calendar.view.allview.caption "General"> 
-<!ENTITY pref.calendar.view.dayview.caption "1 jour par vue"> 
-<!ENTITY pref.calendar.view.weekview.caption "1 semaine par vue"> 
-<!ENTITY pref.calendar.view.weekanddayview.caption "Week and Day Views"> 
-<!ENTITY pref.calendar.view.monthview.caption "Month View"> 
-<!ENTITY pref.calendar.view.multiweekview.caption "Vue multisemaine"> 
+<!ENTITY pref.calendar.view.allview.caption "General">
+<!ENTITY pref.calendar.view.dayview.caption "1 jour par vue">
+<!ENTITY pref.calendar.view.weekview.caption "1 semaine par vue">
+<!ENTITY pref.calendar.view.weekanddayview.caption "Week and Day Views">
+<!ENTITY pref.calendar.view.monthview.caption "Month View">
+<!ENTITY pref.calendar.view.multiweekview.caption "Vue multisemaine">
 
-<!ENTITY pref.calendar.view.restrict.label "Restreindre les vues à"> 
-<!ENTITY pref.calendar.view.starttime.label "Heure de début :"> 
-<!ENTITY pref.calendar.view.endtime.label   "Here de fin :"> 
+<!ENTITY pref.calendar.view.restrict.label "Restreindre les vues à">
+<!ENTITY pref.calendar.view.starttime.label "Heure de début :">
+<!ENTITY pref.calendar.view.endtime.label   "Here de fin :">
 
 <!ENTITY pref.categories.label   "Catégories" >
 
@@ -136,8 +135,7 @@
 
 <!ENTITY pref.minutes.label "Minutes">
 
-<!-- Calendar Timezone preferences information -->        
-        
+<!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Mon fuseau horaire">
 <!ENTITY pref.calendar.timezone.caption "Fuseau horaire">
 <!ENTITY pref.defaultzone.label     "Fuseau horaire par défaut :" >

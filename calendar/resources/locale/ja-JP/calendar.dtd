@@ -251,7 +251,6 @@
 <!ENTITY calendar.delete.button.label           "削除" >
 <!ENTITY calendar.edit.button.label             "編集" >
 
-<!ENTITY calendar.gototoday.button.label        "今日" >
 <!ENTITY calendar.choosedate.button.label       "日付を選択" >
 
 <!ENTITY calendar.dayview.button.label          "デー" >

@@ -86,7 +86,6 @@
 <!ENTITY pref.numberofweeks.6      "6 Semanas" >
 <!ENTITY pref.numberofpreviousweeks.label     "N&#xFA;mero de Semanas Anteriores:" >
 
-
 <!ENTITY pref.hour.help.description    "Omitir caso os eventos estejam fora destes hor&#xE1;rios" >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
@@ -138,7 +137,6 @@
 <!ENTITY pref.minutes.label "Minutos">
 
 <!-- Calendar Timezone preferences information -->
-
 <!ENTITY pref.calendar.timezone.label "Fuso Hor&#xE1;rio">
 <!ENTITY pref.calendar.timezone.caption "Fuso Hor&#xE1;rio">
 <!ENTITY pref.defaultzone.label     "Fuso Hor&#xE1;rio Padr&#xE3;o:" >

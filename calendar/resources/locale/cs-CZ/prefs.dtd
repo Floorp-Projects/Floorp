@@ -85,7 +85,6 @@
 <!ENTITY pref.numberofweeks.6      "6 týdnů" >
 <!ENTITY pref.numberofpreviousweeks.label     "Počet předchozích týdnů:" >
 
-
 <!ENTITY pref.hour.help.description    "Přepsat, jestliže jsou události mimo zvolený čas." >
 <!ENTITY pref.hour.00    "00:00" >
 <!ENTITY pref.hour.01    "01:00" >
@@ -112,15 +111,15 @@
 <!ENTITY pref.hour.22    "22:00" >
 <!ENTITY pref.hour.23    "23:00" >
 
-<!ENTITY pref.calendar.view.allview.caption "Hlavní"> 
-<!ENTITY pref.calendar.view.dayview.caption "Denní pohled"> 
-<!ENTITY pref.calendar.view.weekview.caption "Týdenní pohled"> 
-<!ENTITY pref.calendar.view.weekanddayview.caption "Týdenní a denní pohledy"> 
-<!ENTITY pref.calendar.view.monthview.caption "Měsíční pohled"> 
-<!ENTITY pref.calendar.view.multiweekview.caption "Více-týdenní pohled"> 
+<!ENTITY pref.calendar.view.allview.caption "Hlavní">
+<!ENTITY pref.calendar.view.dayview.caption "Denní pohled">
+<!ENTITY pref.calendar.view.weekview.caption "Týdenní pohled">
+<!ENTITY pref.calendar.view.weekanddayview.caption "Týdenní a denní pohledy">
+<!ENTITY pref.calendar.view.monthview.caption "Měsíční pohled">
+<!ENTITY pref.calendar.view.multiweekview.caption "Více-týdenní pohled">
 
-<!ENTITY pref.calendar.view.restrict.label "Omezit pohled na "> 
-<!ENTITY pref.calendar.view.starttime.label "Začátek:"> 
+<!ENTITY pref.calendar.view.restrict.label "Omezit pohled na ">
+<!ENTITY pref.calendar.view.starttime.label "Začátek:">
 <!ENTITY pref.calendar.view.endtime.label   "Konec:">
 
 <!ENTITY pref.categories.label   "Kategorie" >
@@ -136,8 +135,7 @@
 
 <!ENTITY pref.minutes.label "minut">
 
-<!-- Calendar Timezone preferences information -->        
-        
+<!-- Calendar Timezone preferences information -->
 <!ENTITY pref.calendar.timezone.label "Časová zóna">
 <!ENTITY pref.calendar.timezone.caption "Časová zóna">
 <!ENTITY pref.defaultzone.label     "Výchozí časová zóna:" >

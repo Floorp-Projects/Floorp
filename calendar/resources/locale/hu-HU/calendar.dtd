@@ -103,7 +103,7 @@
 <!ENTITY newevent.repeatdate.tooltip    "Válassz befejző dátumot" >
 <!ENTITY newevent.recurend.warning    "Az ismétlődési idő korábban ér véget mint a befejezési időpont!">
 <!ENTITY newevent.endtime.tooltip    "Válassz befejezési időpontot ehhez az eseményhez!" >
-<!ENTITY newevent.starttimeerror.alertmessage "Az esemény nem érhet véget, mielőtt elkezdődik. Javítsd ki a kezdési, vagy a befejezési időpontot!" >        
+<!ENTITY newevent.starttimeerror.alertmessage "Az esemény nem érhet véget, mielőtt elkezdődik. Javítsd ki a kezdési, vagy a befejezési időpontot!" >
 <!ENTITY newevent.recurendtimeerror.alertmessage "Az esemény ismétlődési széma nem érhet véget, mielőtt az esemény befejeződik. Javítsd ki, vagy töröld az ismétlődési beállítást!" >
 <!ENTITY newevent.newevent.tab.label "Esemény" >
 <!ENTITY newevent.recurrence.tab.label "Ismétlődés" >
@@ -118,21 +118,21 @@
 <!ENTITY newevent.status.tentative.label   "Nem megerősített" >
 <!ENTITY newevent.status.confirmed.label   "Megerősített" >
 
-<!ENTITY newevent.advanced.repeat.dayofmonth.label "A hónap adott napján">          
-<!ENTITY newevent.advanced.repeat.dayofweek.label "A hónap keddjei közül a 4.">          
-<!ENTITY newevent.advanced.repeat.lastdayofweek.label "A hónap utolsó keddjén">          
-<!ENTITY newevent.advanced.repeat.ofthemonth.label "a hónapban">          
+<!ENTITY newevent.advanced.repeat.dayofmonth.label "A hónap adott napján">
+<!ENTITY newevent.advanced.repeat.dayofweek.label "A hónap keddjei közül a 4.">
+<!ENTITY newevent.advanced.repeat.lastdayofweek.label "A hónap utolsó keddjén">
+<!ENTITY newevent.advanced.repeat.ofthemonth.label "a hónapban">
 
-<!ENTITY newevent.advanced.repeat.onthe.label "A(z)">                   
-<!ENTITY newevent.advanced.repeat.last.label "utolsó">          
-<!ENTITY newevent.advanced.repeat.first.label "első"> 
-<!ENTITY newevent.advanced.repeat.second.label "második"> 
-<!ENTITY newevent.advanced.repeat.third.label "hatmadik"> 
-<!ENTITY newevent.advanced.repeat.fourth.label "negyedik"> 
-<!ENTITY newevent.advanced.repeat.first.extension "."> 
-<!ENTITY newevent.advanced.repeat.second.extension "."> 
-<!ENTITY newevent.advanced.repeat.third.extension "."> 
-<!ENTITY newevent.advanced.repeat.nth.extension "."> 
+<!ENTITY newevent.advanced.repeat.onthe.label "A(z)">
+<!ENTITY newevent.advanced.repeat.last.label "utolsó">
+<!ENTITY newevent.advanced.repeat.first.label "első">
+<!ENTITY newevent.advanced.repeat.second.label "második">
+<!ENTITY newevent.advanced.repeat.third.label "hatmadik">
+<!ENTITY newevent.advanced.repeat.fourth.label "negyedik">
+<!ENTITY newevent.advanced.repeat.first.extension ".">
+<!ENTITY newevent.advanced.repeat.second.extension ".">
+<!ENTITY newevent.advanced.repeat.third.extension ".">
+<!ENTITY newevent.advanced.repeat.nth.extension ".">
 
 <!ENTITY newevent.choosefile.label "Fájl kiválasztása">
 <!ENTITY newevent.removeselectedfile.label "Kiválasztott fájl eltávolítása">
@@ -153,7 +153,7 @@
 <!ENTITY newtodo.duetime.warning    "Your start time is after your due time.">
 <!ENTITY newtodo.duedate.warning    "Your start date is after your due date.">
 
-<!ENTITY calendar.confirm.deleteevent "Biztos, hogy törölni akarod ezt az eseményt?:" >        
+<!ENTITY calendar.confirm.deleteevent "Biztos, hogy törölni akarod ezt az eseményt?:" >
 <!ENTITY calendar.confirm.deleteuntitledevent "Biztos, hogy törölni akarod ezt az eseményt?" >
 
 <!ENTITY event.alarm.checkbox.label "Emlékeztessen ismét ennyi idő múlva" >
@@ -239,17 +239,16 @@
 
 <!ENTITY calendar.nextday.button.tooltip        "Következő nap" >
 <!ENTITY calendar.prevday.button.tooltip        "PreviousElőző nap" >
-<!ENTITY calendar.nextweek.button.tooltip        "Következő hét" >
-<!ENTITY calendar.prevweek.button.tooltip        "Előző hét" >
-<!ENTITY calendar.nextmonth.button.tooltip        "Előző hónap" >
-<!ENTITY calendar.prevmonth.button.tooltip        "Következő hónap" >
+<!ENTITY calendar.nextweek.button.tooltip       "Következő hét" >
+<!ENTITY calendar.prevweek.button.tooltip       "Előző hét" >
+<!ENTITY calendar.nextmonth.button.tooltip      "Előző hónap" >
+<!ENTITY calendar.prevmonth.button.tooltip      "Következő hónap" >
 
 <!ENTITY calendar.newtask.button.label          "Új tennivaló" >
 <!ENTITY calendar.newevent.button.label         "Új esemény" >
 <!ENTITY calendar.delete.button.label           "Törlés" >
 <!ENTITY calendar.edit.button.label             "Szerkesztés" >
 
-<!ENTITY calendar.gototoday.button.label        "Mai nap" >
 <!ENTITY calendar.choosedate.button.label       "Válassz dátumot" >
 
 <!ENTITY calendar.dayview.button.label          "Napi nézet" >
@@ -267,9 +266,9 @@
 <!ENTITY calendar.menu.options.close.accesskey  "C" >
 
 <!ENTITY calendar.main.tab.label        "Események" >
-<!ENTITY calendar.search.tab.label			        "Keresés">
+<!ENTITY calendar.search.tab.label      "Keresés">
 
-<!ENTITY calendar.search.options.searchfor			"ha tartalmazza">
+<!ENTITY calendar.search.options.searchfor "ha tartalmazza">
 
 <!ENTITY calendar.menu.numberofweeks.label     "Hetek száma" >
 <!ENTITY calendar.menu.numberofweeks.1      "1 hét" >
@@ -374,13 +373,12 @@
 
 
 <!-- Calendar Alarm Dialog -->
-
 <!ENTITY calendar.alarm.acknowledge.label           "Tudomásul vettem" >
 <!ENTITY calendar.alarm.editevent.label             "Esemény szerkesztése" >
 <!ENTITY calendar.alarm.acknowledgeall.label        "Az összes értesítés tudomásul vétele" >
 <!ENTITY calendar.alarm.snooze.label                "Szundi" >
 
-  
+
 <!-- Calendar Server Dialog -->
 <!ENTITY calendar.server.dialog.title.new           "Új naptár hozzáadása">
 <!ENTITY calendar.server.dialog.title.edit          "Naptár szerkesztése">
@@ -425,7 +423,6 @@
 <!ENTITY calendar.importdupes.autodiscard.label "Duplikátumok automatikus eldobása">
 <!ENTITY calendar.importdupes.adddupes.label "Duplikátumok hozzáadása">
 <!ENTITY calendar.importdupes.prompt.label "Egyenként rákérdez">
-
 
 <!-- Calendar Printing -->
 <!ENTITY calendar.print.window.title "Naptár nyomtatása">

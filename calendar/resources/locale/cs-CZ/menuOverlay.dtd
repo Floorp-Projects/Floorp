@@ -36,48 +36,48 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!-- Event Menu -->                                      
+<!-- Event Menu -->
 <!ENTITY event.menu.title   "Událost">
 <!ENTITY eventMenuCmd.accesskey     "v">
 
-<!ENTITY event.new.event		"Nová událost">
+<!ENTITY event.new.event           "Nová událost">
 <!ENTITY event.new.event.accesskey "u">
 
-<!ENTITY event.new.todo		"Nový úkol">
+<!ENTITY event.new.todo     "Nový úkol">
 <!ENTITY event.new.todo.accesskey "k">
 
 <!ENTITY calendar.new.server.label "Nový kalendář">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event	"Upravit">
-<!ENTITY event.edit.event.accesskey	"r">
+<!ENTITY event.edit.event   "Upravit">
+<!ENTITY event.edit.event.accesskey "r">
 
-<!ENTITY event.delete.event	"Vymazat vybranou událost">
-<!ENTITY event.delete.event.accesskey	"V">
+<!ENTITY event.delete.event "Vymazat vybranou událost">
+<!ENTITY event.delete.event.accesskey   "V">
 
-<!ENTITY event.delete.tasks	"Vymazat vybraný úkol">
-<!ENTITY event.delete.tasks.accesskey	"b">
+<!ENTITY event.delete.tasks "Vymazat vybraný úkol">
+<!ENTITY event.delete.tasks.accesskey   "b">
 
-<!ENTITY event.mail.event	"Odeslat vybrané události">
-<!ENTITY event.mail.event.accesskey	"O">
+<!ENTITY event.mail.event   "Odeslat vybrané události">
+<!ENTITY event.mail.event.accesskey "O">
 
-<!ENTITY calendar.print.label	"Tisknout aktivní kalendář...">
-<!ENTITY calendar.print.accesskey	"T">
+<!ENTITY calendar.print.label   "Tisknout aktivní kalendář...">
+<!ENTITY calendar.print.accesskey   "T">
 
-<!ENTITY calendar.printpreview.label	"Náhled tisku">
-<!ENTITY calendar.printpreview.accesskey	"N">
+<!ENTITY calendar.printpreview.label    "Náhled tisku">
+<!ENTITY calendar.printpreview.accesskey    "N">
 
-<!ENTITY calendar.pagesetup.label	"Nastavení tisku...">
-<!ENTITY calendar.pagesetup.accesskey	"s">
+<!ENTITY calendar.pagesetup.label   "Nastavení tisku...">
+<!ENTITY calendar.pagesetup.accesskey   "s">
 
-<!ENTITY calendar.import.label	"Import ze souboru...">
-<!ENTITY calendar.import.accesskey	"I">
+<!ENTITY calendar.import.label  "Import ze souboru...">
+<!ENTITY calendar.import.accesskey  "I">
 
-<!ENTITY calendar.wizard.label	"Spustit průvodce">
-<!ENTITY calendar.wizard.accesskey	"i">
+<!ENTITY calendar.wizard.label  "Spustit průvodce">
+<!ENTITY calendar.wizard.accesskey  "i">
 
-<!ENTITY calendar.export.label	"Exportovat vybrané události...">
-<!ENTITY calendar.export.accesskey	"E">
+<!ENTITY calendar.export.label  "Exportovat vybrané události...">
+<!ENTITY calendar.export.accesskey  "E">
 
 <!ENTITY calendar.subscribe.label "Přijmout vzdálený kalendář...">
 <!ENTITY calendar.subscribe.accesskey "j">
@@ -85,23 +85,23 @@
 <!ENTITY calendar.publish.label "Publikovat vybrané události...">
 <!ENTITY calendar.publish.accesskey "b">
 
-<!ENTITY calendar.about.label	"O Kalendáři">
-<!ENTITY calendar.about.accesskey	"k">
+<!ENTITY calendar.about.label   "O Kalendáři">
+<!ENTITY calendar.about.accesskey   "k">
 
-<!ENTITY calendar.cut.label	"Vyjmout">
-<!ENTITY calendar.cut.accesskey	"V">
+<!ENTITY calendar.cut.label "Vyjmout">
+<!ENTITY calendar.cut.accesskey "V">
 
-<!ENTITY calendar.copy.label	"Kopírovat">
-<!ENTITY calendar.copy.accesskey	"K">
+<!ENTITY calendar.copy.label    "Kopírovat">
+<!ENTITY calendar.copy.accesskey    "K">
 
-<!ENTITY calendar.paste.label	"Vložit">
-<!ENTITY calendar.paste.accesskey	"l">
+<!ENTITY calendar.paste.label   "Vložit">
+<!ENTITY calendar.paste.accesskey   "l">
 
-<!ENTITY calendar.selectall.label	"Vybrat vše">
-<!ENTITY calendar.selectall.accesskey	"a">
+<!ENTITY calendar.selectall.label   "Vybrat vše">
+<!ENTITY calendar.selectall.accesskey   "a">
 
-<!ENTITY calendar.preferences.label	"Nastavení...">
-<!ENTITY calendar.preferences.accesskey	"n">
+<!ENTITY calendar.preferences.label "Nastavení...">
+<!ENTITY calendar.preferences.accesskey "n">
 
 <!ENTITY goMenu.label                   "Přejít">
 <!ENTITY goMenu.accesskey               "j">
@@ -114,3 +114,8 @@
 
 <!ENTITY goNextCmd.label                "Následující">
 <!ENTITY goNextCmd.accesskey            "n">
+
+<!ENTITY taskMenu.label                "Tools">
+<!ENTITY taskMenu.accesskey            "T">
+
+<!ENTITY helpMenu.accesskey            "H">

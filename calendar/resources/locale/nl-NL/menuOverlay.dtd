@@ -36,48 +36,48 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!-- Event Menu -->                                      
+<!-- Event Menu -->
 <!ENTITY event.menu.title   "Gebeurtenis">
 <!ENTITY eventMenuCmd.accesskey     "v">
 
-<!ENTITY event.new.event		"Nieuwe gebeurtenis">
+<!ENTITY event.new.event           "Nieuwe gebeurtenis">
 <!ENTITY event.new.event.accesskey "n">
 
-<!ENTITY event.new.todo		"Nieuwe taak">
+<!ENTITY event.new.todo     "Nieuwe taak">
 <!ENTITY event.new.todo.accesskey "t">
 
 <!ENTITY calendar.new.server.label "Nieuwe kalender">
 <!ENTITY calendar.new.server.accesskey "l">
 
-<!ENTITY event.edit.event	"Bewerken">
-<!ENTITY event.edit.event.accesskey	"e">
+<!ENTITY event.edit.event   "Bewerken">
+<!ENTITY event.edit.event.accesskey "e">
 
-<!ENTITY event.delete.event	"Verwijder geselecteerd(e) gebeurtenis(sen)">
-<!ENTITY event.delete.event.accesskey	"d">
+<!ENTITY event.delete.event "Verwijder geselecteerd(e) gebeurtenis(sen)">
+<!ENTITY event.delete.event.accesskey   "d">
 
-<!ENTITY event.delete.tasks	"Verwijder geselecteerd(e) ta(a)k(en)">
-<!ENTITY event.delete.tasks.accesskey	"t">
+<!ENTITY event.delete.tasks "Verwijder geselecteerd(e) ta(a)k(en)">
+<!ENTITY event.delete.tasks.accesskey   "t">
 
-<!ENTITY event.mail.event	"Mail geselecteerd(e) gebeurtenis(sen)">
-<!ENTITY event.mail.event.accesskey	"m">
+<!ENTITY event.mail.event   "Mail geselecteerd(e) gebeurtenis(sen)">
+<!ENTITY event.mail.event.accesskey "m">
 
-<!ENTITY calendar.print.label	"Gebeurtenissen afdrukken...">
-<!ENTITY calendar.print.accesskey	"r">
+<!ENTITY calendar.print.label   "Gebeurtenissen afdrukken...">
+<!ENTITY calendar.print.accesskey   "r">
 
-<!ENTITY calendar.printpreview.label	"Afdrukvoorbeeld">
-<!ENTITY calendar.printpreview.accesskey	"v">
+<!ENTITY calendar.printpreview.label    "Afdrukvoorbeeld">
+<!ENTITY calendar.printpreview.accesskey    "v">
 
-<!ENTITY calendar.pagesetup.label	"Paginainstellingen...">
-<!ENTITY calendar.pagesetup.accesskey	"u">
+<!ENTITY calendar.pagesetup.label   "Paginainstellingen...">
+<!ENTITY calendar.pagesetup.accesskey   "u">
 
-<!ENTITY calendar.import.label	"Importeren vanuit bestand...">
-<!ENTITY calendar.import.accesskey	"i">
+<!ENTITY calendar.import.label  "Importeren vanuit bestand...">
+<!ENTITY calendar.import.accesskey  "i">
 
-<!ENTITY calendar.wizard.label	"Start assistent">
-<!ENTITY calendar.wizard.accesskey	"w">
+<!ENTITY calendar.wizard.label  "Start assistent">
+<!ENTITY calendar.wizard.accesskey  "w">
 
-<!ENTITY calendar.export.label	"Exporteer geselecteerde gebeurtenissen...">
-<!ENTITY calendar.export.accesskey	"e">
+<!ENTITY calendar.export.label  "Exporteer geselecteerde gebeurtenissen...">
+<!ENTITY calendar.export.accesskey  "e">
 
 <!ENTITY calendar.subscribe.label "Aanmelden bij kalender op andere computer...">
 <!ENTITY calendar.subscribe.accesskey "s">
@@ -85,23 +85,23 @@
 <!ENTITY calendar.publish.label "Publiceer geselecteerde gebeurtenissen...">
 <!ENTITY calendar.publish.accesskey "p">
 
-<!ENTITY calendar.about.label	"Over kalender">
-<!ENTITY calendar.about.accesskey	"a">
+<!ENTITY calendar.about.label   "Over kalender">
+<!ENTITY calendar.about.accesskey   "a">
 
-<!ENTITY calendar.cut.label	"Knippen">
-<!ENTITY calendar.cut.accesskey	"t">
+<!ENTITY calendar.cut.label "Knippen">
+<!ENTITY calendar.cut.accesskey "t">
 
-<!ENTITY calendar.copy.label	"Kopi&#xEB;ren">
-<!ENTITY calendar.copy.accesskey	"c">
+<!ENTITY calendar.copy.label    "Kopi&#xEB;ren">
+<!ENTITY calendar.copy.accesskey    "c">
 
-<!ENTITY calendar.paste.label	"Plakken">
-<!ENTITY calendar.paste.accesskey	"p">
+<!ENTITY calendar.paste.label   "Plakken">
+<!ENTITY calendar.paste.accesskey   "p">
 
-<!ENTITY calendar.selectall.label	"Alles selecteren">
-<!ENTITY calendar.selectall.accesskey	"a">
+<!ENTITY calendar.selectall.label   "Alles selecteren">
+<!ENTITY calendar.selectall.accesskey   "a">
 
-<!ENTITY calendar.preferences.label	"Voorkeuren...">
-<!ENTITY calendar.preferences.accesskey	"p">
+<!ENTITY calendar.preferences.label "Voorkeuren...">
+<!ENTITY calendar.preferences.accesskey "p">
 
 <!ENTITY goMenu.label                   "Ga naar">
 <!ENTITY goMenu.accesskey               "g">
@@ -114,3 +114,8 @@
 
 <!ENTITY goNextCmd.label                "Volgende">
 <!ENTITY goNextCmd.accesskey            "n">
+
+<!ENTITY taskMenu.label                "Tools">
+<!ENTITY taskMenu.accesskey            "T">
+
+<!ENTITY helpMenu.accesskey            "H">

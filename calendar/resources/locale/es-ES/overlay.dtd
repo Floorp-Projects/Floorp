@@ -33,7 +33,7 @@
    - the terms of any one of the MPL, the GPL or the LGPL.
    -
    - ***** END LICENSE BLOCK ***** -->
-   
+
 <!ENTITY calendarCmd.label  "Calendario">
 <!ENTITY calendarCmd.accesskey  "r">
 <!ENTITY calendarCmd.commandkey "7">
