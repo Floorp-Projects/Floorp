@@ -35,6 +35,7 @@
 #include "nsILocalFile.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "nsCRT.h"
 
 
 #include <windows.h>
@@ -91,23 +92,23 @@ winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
 	*_retval = nsnull;
 	*persistant = PR_TRUE;
 	
-    if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
+    if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_DIR) == 0)
     {
         rv = GetProductDirectory(getter_AddRefs(localFile));
     }
-    else if (strcmp(prop, NS_APP_APPLICATION_REGISTRY_FILE) == 0)
+    else if (nsCRT::strcmp(prop, NS_APP_APPLICATION_REGISTRY_FILE) == 0)
     {
         rv = GetProductDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendNative(APP_REGISTRY_NAME);
     }
-    else if (strcmp(prop, NS_APP_DEFAULTS_50_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_APP_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(DEFAULTS_DIR_NAME);
     }
-    else if (strcmp(prop, NS_APP_PREF_DEFAULTS_50_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_APP_PREF_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
@@ -116,8 +117,8 @@ winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
                 rv = localFile->AppendRelativeNativePath(DEFAULTS_PREF_DIR_NAME);
         }
     }
-    else if (strcmp(prop, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR) == 0 ||
-             strcmp(prop, NS_APP_PROFILE_DEFAULTS_50_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_NLOC_50_DIR) == 0 ||
+             nsCRT::strcmp(prop, NS_APP_PROFILE_DEFAULTS_50_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv)) {
@@ -126,29 +127,29 @@ winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
                 rv = localFile->AppendRelativeNativePath(DEFAULTS_PROFILE_DIR_NAME);
         }
     }
-    else if (strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_APP_USER_PROFILES_ROOT_DIR) == 0)
     {
         rv = GetDefaultUserProfileRoot(getter_AddRefs(localFile));   
     }
-    else if (strcmp(prop, NS_APP_RES_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_APP_RES_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(RES_DIR_NAME);
     }
-    else if (strcmp(prop, NS_APP_CHROME_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_APP_CHROME_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(CHROME_DIR_NAME);
     }
-    else if (strcmp(prop, NS_APP_PLUGINS_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_APP_PLUGINS_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
             rv = localFile->AppendRelativeNativePath(PLUGINS_DIR_NAME);
     }
-    else if (strcmp(prop, NS_APP_SEARCH_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_APP_SEARCH_DIR) == 0)
     {
         rv = CloneMozBinDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))
@@ -163,11 +164,11 @@ winEmbedFileLocProvider::GetFile(const char *prop, PRBool *persistant, nsIFile *
     // Please see http://www.mozilla.org/projects/embedding/MRE.html
     // for more info. on MRE
     //---------------------------------------------------------------
-    else if (strcmp(prop, NS_MRE_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_MRE_DIR) == 0)
     {
         rv = GetMreDirectory(getter_AddRefs(localFile));
     }    
-    else if (strcmp(prop, NS_MRE_COMPONENT_DIR) == 0)
+    else if (nsCRT::strcmp(prop, NS_MRE_COMPONENT_DIR) == 0)
     {
         rv = GetMreDirectory(getter_AddRefs(localFile));
         if (NS_SUCCEEDED(rv))

@@ -81,6 +81,7 @@ static NS_DEFINE_IID(kPrinterEnumeratorCID, NS_PRINTER_ENUMERATOR_CID);
 #include "nsRect.h"
 
 #include "nsIPref.h"
+#include "nsCRT.h"
 #include "prenv.h" /* for PR_GetEnv */
 
 #include <windows.h>
@@ -836,17 +837,6 @@ static PRUnichar * GetDefaultPrinterNameFromGlobalPrinters()
   return printerName;
 }
 
-static PRUint32 strlen(const PRUnichar* s)
-{
-  PRUint32 len = 0;
-  if(s) {
-    while (*s++ != 0) {
-      len++;
-    }
-  }
-  return len;
-}
-
 
 //------------------------------------------------------------------
 // Displays the native Print Dialog
@@ -876,7 +866,7 @@ ShowNativePrintDialog(HWND              aHWnd,
   if (!printerName) return NS_ERROR_FAILURE;
 
   // Now create a DEVNAMES struct so the the dialog is initialized correctly.
-  PRUint32 len = strlen(printerName);
+  PRUint32 len = nsCRT::strlen(printerName);
   hDevNames = (HGLOBAL)::GlobalAlloc(GHND, len+sizeof(DEVNAMES)+1);
   DEVNAMES* pDevNames = (DEVNAMES*)::GlobalLock(hDevNames);
   pDevNames->wDriverOffset = sizeof(DEVNAMES);
