@@ -25,16 +25,16 @@ Contributor(s):
 -->
 
 <?xml-stylesheet href="chrome://communicator/skin/xpinstall/xpinstall.css" type="text/css"?>
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/xpinstall/institems.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://communicator/locale/xpinstall/institems.dtd">
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="onLoad()"
         title="&dialog.title;"
         id="confirmDlg"
-        class="dialog"
-        style="width: 50em"
-        >
+        style="width: 60em"
+        buttons="accept,cancel"
+        ondialogaccept="return onOk();"
+        ondialogcancel="return onCancel();">
 
     <script src="chrome://communicator/content/xpinstall/institems.js"/>
     <stringbundle id="xpinstallBundle" src="chrome://communicator/locale/xpinstall/xpinstall.properties"/>
@@ -53,8 +53,8 @@ Contributor(s):
 
             <grid id="confirmGrid" flex="1">
                 <columns>
-                    <column id="xpiColumn"/>
-                    <column id="certColumn"/>
+                    <column id="xpiColumn"  flex="1"/>
+                    <column id="certColumn" flex="1"/>
                     <column id="urlColumn" flex="1"/>
                 </columns>
                 <rows id="xpirows">
@@ -68,5 +68,4 @@ Contributor(s):
             </description>
         </vbox>
     </hbox>
-    <hbox id="okCancelButtonsRight"/>
-</window>
+</dialog>
