@@ -4189,13 +4189,18 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                 PRBool done = PR_FALSE;
                 while (!done && !token.IsEmpty()) {
                     token.CompressWhitespace();
-                    if (millis == -1 && nsCRT::IsAsciiDigit(token.First())) {
+                    // Ref. bug 22886
+                    // Apparently CONTENT can also start with a period (.).
+                    // Ex: <meta http-equiv = "refresh" content=".1; url=./recommendations1.html">
+                    // So let's relax a little bit otherwise http://www.mozillazine.org/resources/
+                    // wouldn't get redirected to the correct URL.
+                    if (millis == -1 && (nsCRT::IsAsciiDigit(token.First()) || token.First()==PRUnichar('.'))) {
                         PRBool tokenIsANumber = PR_TRUE;
                         nsReadingIterator<PRUnichar> doneIterating(token.EndReading());
                         nsReadingIterator<PRUnichar> iter(token.BeginReading());
                         while ( iter != doneIterating )
                           {
-                            if ( !(tokenIsANumber = nsCRT::IsAsciiDigit(*iter)) )
+                            if (!(tokenIsANumber = nsCRT::IsAsciiDigit(*iter)) && *iter!=PRUnichar('.'))
                               break;
                             ++iter;
                            }
