@@ -426,7 +426,7 @@ elsif (defined $::COOKIE{'COLUMNLIST'}) {
     $columnlist =~ s/owner_realname/assigned_to_realname/;
     $columnlist =~ s/[^_]platform/rep_platform/;
     $columnlist =~ s/[^_]severity/bug_severity/;
-    $columnlist =~ s/[^_]status/bug_status/;
+    $columnlist =~ s/[^_]status\b/bug_status/;
     $columnlist =~ s/summaryfull/short_desc/;
     $columnlist =~ s/summary/short_short_desc/;
 
