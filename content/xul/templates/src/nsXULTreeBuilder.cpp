@@ -1917,11 +1917,10 @@ nsXULTreeBuilder::CompareMatches(nsTemplateMatch* aLeft, nsTemplateMatch* aRight
                 r->GetValueConst(&rstr);
 
                 if (mCollation) {
-                    mCollation->CompareRawSortKey(NS_REINTERPRET_CAST(const PRUint8*, lstr),
-                                                  nsCRT::strlen(lstr) * sizeof(PRUnichar),
-                                                  NS_REINTERPRET_CAST(const PRUint8*, rstr),
-                                                  nsCRT::strlen(rstr) * sizeof(PRUnichar),
-                                                  &result);
+                    mCollation->CompareString(kCollationCaseInSensitive,
+                                              nsDependentString(lstr),
+                                              nsDependentString(rstr),
+                                              &result);
                 }
                 else
                     result = ::Compare(nsDependentString(lstr),
