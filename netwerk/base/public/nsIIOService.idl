@@ -26,6 +26,10 @@ interface nsIProtocolHandler;
 interface nsIURI;
 interface nsIEventSinkGetter;
 interface nsIChannel;
+interface nsIStreamObserver;
+interface nsIStreamListener;
+interface nsIEventQueue;
+interface nsIBufferInputStream;
 
 [scriptable, uuid(01f0a170-1881-11d3-9337-00104ba0fd40)]
 interface nsIIOService : nsISupports
@@ -100,6 +104,27 @@ interface nsIIOService : nsISupports
      * Get the HTTP advertised user agent string.
      */
     readonly attribute wstring UserAgent;
+
+    /**
+     * Returns a new stream observer that marshals data from another
+     * stream observer over to the thread specified by an event queue.
+     */
+    nsIStreamObserver NewAsyncStreamObserver(in nsIStreamObserver receiver,
+                                             in nsIEventQueue eventQueue);
+
+    /**
+     * An asynchronous stream listener is used to ship data over to another thread specified
+     * by the thread's event queue. The receiver stream listener is then used to receive
+     * the data on the other thread.
+     */
+    nsIStreamListener NewAsyncStreamListener(in nsIStreamListener receiver,
+                                             in nsIEventQueue eventQueue);
+
+    /**
+     * A synchronous stream listener pushes data through a pipe that ends up
+     * in an input stream to be read by another thread.
+     */
+    nsIStreamListener NewSyncStreamListener(out nsIBufferInputStream inStream);
 
 };
 
