@@ -882,11 +882,11 @@ nsNntpIncomingServer::SetDelimiter(char aDelimiter)
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::SetAsSubscribedInSubscribeDS(const char *aName)
+nsNntpIncomingServer::SetAsSubscribedInSubscribeDS(const char *aURI)
 {
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->SetAsSubscribedInSubscribeDS(aName);
+	return mInner->SetAsSubscribedInSubscribeDS(aURI);
 }
 
 NS_IMETHODIMP
@@ -906,7 +906,7 @@ nsNntpIncomingServer::AddToSubscribeDS(const char *aName)
 }
 
 NS_IMETHODIMP
-nsNntpIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const char *aName, nsIRDFResource *aResource)
+nsNntpIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource)
 {
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;

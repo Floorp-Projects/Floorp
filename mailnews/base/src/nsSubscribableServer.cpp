@@ -32,6 +32,7 @@
 #include "nsIFolder.h"
 
 #include "rdf.h"
+#include "nsMsgUtils.h"
 
 #if defined(DEBUG_sspitzer_) || defined(DEBUG_seth_)
 #define DEBUG_SUBSCRIBE 1
@@ -68,25 +69,15 @@ nsSubscribableServer::SetDelimiter(char aDelimiter)
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::SetAsSubscribedInSubscribeDS(const char *aName)
+nsSubscribableServer::SetAsSubscribedInSubscribeDS(const char *aURI)
 {
     nsresult rv;
 
-    NS_ASSERTION(aName,"no name");
-    if (!aName) return NS_ERROR_FAILURE;
-
-    nsXPIDLCString serverUri;
-
-    rv = mIncomingServer->GetServerURI(getter_Copies(serverUri));
-    if (NS_FAILED(rv)) return rv;
-
-    nsCAutoString uri;
-    uri = (const char *)serverUri;
-    uri += "/";
-    uri += aName;
+    NS_ASSERTION(aURI,"no URI");
+    if (!aURI) return NS_ERROR_FAILURE;
 
     nsCOMPtr<nsIRDFResource> resource;
-    rv = mRDFService->GetResource((const char *) uri, getter_AddRefs(resource));
+    rv = mRDFService->GetResource(aURI, getter_AddRefs(resource));
 
     nsCOMPtr<nsIRDFDataSource> ds;
     rv = mRDFService->GetDataSource("rdf:subscribe",getter_AddRefs(mSubscribeDatasource));
@@ -132,11 +123,10 @@ nsSubscribableServer::UpdateSubscribedInSubscribeDS()
         if (NS_SUCCEEDED(rv) && child) {
             currFolder = do_QueryInterface(child, &rv);
             if (NS_SUCCEEDED(rv) && currFolder) {
-				nsXPIDLString name;
-				rv = currFolder->GetName(getter_Copies(name));
-				if (NS_SUCCEEDED(rv) && name) {
-					nsCAutoString asciiName; asciiName.AssignWithConversion(name);
-					rv = SetAsSubscribedInSubscribeDS((const char *)asciiName);
+				nsXPIDLCString uri;
+				rv = currFolder->GetURI(getter_Copies(uri));
+				if (NS_SUCCEEDED(rv)) {
+					rv = SetAsSubscribedInSubscribeDS((const char *)uri);
 				}
             }
         }
@@ -170,8 +160,12 @@ nsSubscribableServer::AddToSubscribeDS(const char *aName)
 	nsCOMPtr<nsIRDFResource> resource;
 	rv = mRDFService->GetResource((const char *) uri, getter_AddRefs(resource));
 	if(NS_FAILED(rv)) return rv;
+	
+	nsXPIDLString unicodeName;
+	rv = ConvertNameToUnichar(aName, getter_Copies(unicodeName));
+	if (NS_FAILED(rv)) return rv;
 
-	rv = SetPropertiesInSubscribeDS((const char *) uri, aName, resource);
+	rv = SetPropertiesInSubscribeDS((const char *) uri, (const PRUnichar *)unicodeName, resource);
 	if (NS_FAILED(rv)) return rv;
 
 	rv = FindAndAddParentToSubscribeDS((const char *) uri, (const char *)serverUri, aName, resource);
@@ -181,18 +175,16 @@ nsSubscribableServer::AddToSubscribeDS(const char *aName)
 }
 
 NS_IMETHODIMP
-nsSubscribableServer::SetPropertiesInSubscribeDS(const char *uri, const char *aName, nsIRDFResource *aResource)
+nsSubscribableServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource)
 {
 	nsresult rv;
 
 #ifdef DEBUG_SUBSCRIBE
-	printf("SetPropertiesInSubscribeDS(%s,%s,??)\n",uri,aName);
+	printf("SetPropertiesInSubscribeDS(%s,??,??)\n",uri);
 #endif
 		
 	nsCOMPtr<nsIRDFLiteral> nameLiteral;
-	nsAutoString nameString; 
-	nameString.AssignWithConversion(aName);
-	rv = mRDFService->GetLiteral(nameString.GetUnicode(), getter_AddRefs(nameLiteral));
+	rv = mRDFService->GetLiteral(aName, getter_AddRefs(nameLiteral));
 	if(NS_FAILED(rv)) return rv;
 
 	rv = mSubscribeDatasource->Assert(aResource, kNC_Name, nameLiteral, PR_TRUE);
@@ -251,7 +243,11 @@ nsSubscribableServer::FindAndAddParentToSubscribeDS(const char *uri, const char 
 		}
 
 		if (!parentExists) {
-			rv = SetPropertiesInSubscribeDS((const char *)uriCStr, (const char *)nameCStr, parentResource);
+			nsXPIDLString unicodeName;
+			rv = ConvertNameToUnichar((const char *)nameCStr, getter_Copies(unicodeName));
+			if (NS_FAILED(rv)) return rv;
+
+			rv = SetPropertiesInSubscribeDS((const char *)uriCStr, (const PRUnichar *)unicodeName, parentResource);
 			if(NS_FAILED(rv)) return rv;
 		}
 

@@ -41,9 +41,9 @@ interface nsISubscribableServer : nsISupports {
 	void startPopulatingSubscribeDS();
   	void stopPopulatingSubscribeDS();
   	void findAndAddParentToSubscribeDS(in string uri, in string serverUri, in string aName, in nsIRDFResource aChildResource);
-  	void setPropertiesInSubscribeDS(in string uri, in string aName, in nsIRDFResource aResource);
+  	void setPropertiesInSubscribeDS(in string uri, in wstring aName, in nsIRDFResource aResource);
 	void addToSubscribeDS(in string aName);
-	void setAsSubscribedInSubscribeDS(in string aName);
+	void setAsSubscribedInSubscribeDS(in string aURI);
 	void updateSubscribedInSubscribeDS();
 	void subscribe(in string name);
 	void unsubscribe(in string name);

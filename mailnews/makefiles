@@ -76,9 +76,6 @@ mailnews/news/resources/Makefile
 mailnews/news/resources/content/Makefile
 mailnews/news/resources/locale/Makefile
 mailnews/news/resources/locale/en-US/Makefile
-mailnews/news/tests/Makefile
-mailnews/news/tests/nntp/Makefile
-mailnews/news/tests/newsParser/Makefile
 mailnews/mime/Makefile
 mailnews/mime/cthandlers/Makefile
 mailnews/mime/cthandlers/resources/Makefile

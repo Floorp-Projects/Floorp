@@ -58,6 +58,7 @@
 #include "nsIEventQueueService.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIImapService.h"
+#include "nsMsgUtils.h"
 
 #include "nsITimer.h"
 static NS_DEFINE_CID(kCImapHostSessionList, NS_IIMAPHOSTSESSIONLIST_CID);
@@ -185,6 +186,7 @@ nsImapIncomingServer::SetServerDirectory(const char *serverDirectory)
     }
     return SetCharValue("server_sub_directory", dirString.GetBuffer());
 }
+
 
 NS_IMETHODIMP
 nsImapIncomingServer::GetOverrideNamespaces(PRBool *bVal)
@@ -1887,11 +1889,11 @@ nsImapIncomingServer::SetDelimiter(char aDelimiter)
 }
 
 NS_IMETHODIMP
-nsImapIncomingServer::SetAsSubscribedInSubscribeDS(const char *aName)
+nsImapIncomingServer::SetAsSubscribedInSubscribeDS(const char *aURI)
 {
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;
-	return mInner->SetAsSubscribedInSubscribeDS(aName);
+	return mInner->SetAsSubscribedInSubscribeDS(aURI);
 }
 
 NS_IMETHODIMP
@@ -1910,8 +1912,9 @@ nsImapIncomingServer::AddToSubscribeDS(const char *aName)
 	return mInner->AddToSubscribeDS(aName);
 }
 
+
 NS_IMETHODIMP
-nsImapIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const char *aName, nsIRDFResource *aResource)
+nsImapIncomingServer::SetPropertiesInSubscribeDS(const char *uri, const PRUnichar *aName, nsIRDFResource *aResource)
 {
 	NS_ASSERTION(mInner,"not initialized");
 	if (!mInner) return NS_ERROR_FAILURE;

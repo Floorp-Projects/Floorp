@@ -53,8 +53,6 @@ char*
 CreateUtf7ConvertedString(const char * aSourceString, 
                       PRBool aConvertToUtf7Imap);
 
-nsresult CreateUnicodeStringFromUtf7(const char *aSourceString, PRUnichar **result);
-
 char *
 CreateUtf7ConvertedStringFromUnicode(const PRUnichar *aSourceString);
 

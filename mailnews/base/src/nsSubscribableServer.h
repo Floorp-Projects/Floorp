@@ -40,6 +40,7 @@ class nsSubscribableServer : public nsISubscribableServer
   NS_DECL_NSISUBSCRIBABLESERVER
   
 private:
+  nsresult ConvertNameToUnichar(const char *inStr, PRUnichar **outStr);
   nsCOMPtr <nsISubscribeListener> mSubscribeListener;
   nsCOMPtr <nsIRDFDataSource> mSubscribeDatasource;
   nsCOMPtr <nsIRDFService> mRDFService;
