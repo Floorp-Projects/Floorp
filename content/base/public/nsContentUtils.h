@@ -250,12 +250,17 @@ public:
   static nsINameSpaceManager* GetNSManagerWeakRef()
   {
     return sNameSpaceManager;
-  };
+  }
 
   static nsIIOService* GetIOServiceWeakRef()
   {
     return sIOService;
-  };
+  }
+
+  static imgILoader* GetImgLoader()
+  {
+    return sImgLoader;
+  }
 
 #ifdef MOZ_XTF
   static nsIXTFService* GetXTFServiceWeakRef();
@@ -365,7 +370,7 @@ public:
    * @param aContent The image loading content.  Must not be null.
    * @return the nsIImage corresponding to the first frame of the image
    */
-  static already_AddRefed<nsIImage> GetImageFromContent(nsIImageLoadingContent* aContent);
+  static already_AddRefed<nsIImage> GetImageFromContent(nsIImageLoadingContent* aContent, PRBool aDoMimeCheck);
 
   /**
    * Method that decides whether a content node is draggable

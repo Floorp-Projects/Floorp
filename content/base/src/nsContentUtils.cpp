@@ -108,6 +108,7 @@
 #include "nsIXTFService.h"
 static NS_DEFINE_CID(kXTFServiceCID, NS_XTFSERVICE_CID);
 #endif
+#include "nsIMIMEService.h"
 
 // for ReportToConsole
 #include "nsIStringBundle.h"
@@ -1882,7 +1883,8 @@ nsContentUtils::LoadImage(nsIURI* aURI, nsIDocument* aLoadingDocument,
 
 // static
 already_AddRefed<nsIImage>
-nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent)
+nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent,
+                                    PRBool aDoMimeCheck)
 {
   NS_ENSURE_TRUE(aContent, nsnull);
   
@@ -1893,6 +1895,33 @@ nsContentUtils::GetImageFromContent(nsIImageLoadingContent* aContent)
     return nsnull;
   }
   
+  if (aDoMimeCheck) {
+    nsCOMPtr<nsIMIMEService> mimeService =
+      do_GetService("@mozilla.org/mime;1");
+
+    imgILoader *imgLoader = nsContentUtils::GetImgLoader();
+
+    if (mimeService) {
+      nsCAutoString mimeType;
+      nsCOMPtr<nsIURI> uri;
+
+      imgRequest->GetURI(getter_AddRefs(uri));
+      mimeService->GetTypeFromURI(uri, mimeType);
+
+      PRBool supportedType;
+      if (NS_FAILED(imgLoader->SupportImageWithMimeType(mimeType.get(),
+                                                        &supportedType)) ||
+          !supportedType) {
+        // The extension of the image we're about to drag doesn't
+        // match an extension that we recognize as an image. Disallow
+        // dragging this image as an image to prevent dropping images
+        // with extensions that the OS won't recognize as images.
+
+        return nsnull;
+      }
+    }
+  }
+
   nsCOMPtr<imgIContainer> imgContainer;
   imgRequest->GetImage(getter_AddRefs(imgContainer));
 

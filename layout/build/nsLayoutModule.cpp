@@ -123,7 +123,6 @@
 #include "nsCSSLoader.h"
 #include "nsXULAtoms.h"
 #include "nsLayoutCID.h"
-#include "nsImageLoadingContent.h"
 #include "nsStyleSet.h"
 #include "nsImageFrame.h"
 #include "nsILanguageAtomService.h"
@@ -336,8 +335,6 @@ Initialize(nsIModule* aSelf)
     return rv;
   }
 
-  nsImageLoadingContent::Initialize();
-
   // Add our shutdown observer.
   nsCOMPtr<nsIObserverService> observerService =
     do_GetService("@mozilla.org/observer-service;1");
@@ -429,7 +426,6 @@ Shutdown()
   nsContentUtils::Shutdown();
   nsLayoutStylesheetCache::Shutdown();
   NS_NameSpaceManagerShutdown();
-  nsImageLoadingContent::Shutdown();
   nsStyleSet::FreeGlobals();
 
   nsGlobalWindow::ShutDown();

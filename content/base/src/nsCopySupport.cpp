@@ -462,7 +462,7 @@ nsCopySupport::ImageCopy(nsIImageLoadingContent* aImageElement,
   if (aCopyImageData) {
     // get the image data from the element
     nsCOMPtr<nsIImage> image =
-      nsContentUtils::GetImageFromContent(aImageElement);
+      nsContentUtils::GetImageFromContent(aImageElement, PR_FALSE);
     NS_ENSURE_TRUE(image, NS_ERROR_FAILURE);
 
     nsCOMPtr<nsISupportsInterfacePointer>
