@@ -303,7 +303,7 @@ function restoreCerts()
   fp.init(window,
           bundle.GetStringFromName("chooseP12RestoreFileDialog"),
           nsIFilePicker.modeOpen);
-  fp.appendFilter("PKCS12 Files", "*.p12;*.pfx");
+  fp.appendFilter("PKCS12 Files", "*.p12; *.pfx");
   fp.appendFilters(nsIFilePicker.filterAll);
   if (fp.show() == nsIFilePicker.returnOK) {
     var certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
