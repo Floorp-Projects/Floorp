@@ -47,9 +47,8 @@ extern int MK_SIGNON_NOTIFICATION;
 extern int MK_SIGNON_NOTIFICATION_1;
 extern int MK_SIGNON_NAG;
 extern int MK_SIGNON_REMEMBER;
-/* remove temporarily until I can figure out why it is breaking the Linux build
- * extern int MK_SIGNON_SELECTUSER;
- */
+extern int MK_SIGNON_SELECTUSER;
+
 /* locks for signon cache */
 
 static PRMonitor * signon_lock_monitor = NULL;
@@ -500,10 +499,7 @@ si_GetUser(MWContext *context, char* URLName, Bool pickFirstUser) {
 
 	    /* have user select a username from the list */
 	    if (FE_SelectDialog(
-/* remove temporarily until I can figure out why it is breaking the linux build
- *		    context, XP_GetString(MK_SIGNON_SELECTUSER),
- */
-context,"Select a username to be entered on this form",
+		    context, XP_GetString(MK_SIGNON_SELECTUSER),
 		    list, &user_count)) {
 		/* user pressed OK */
 		if (user_count == -1) {
