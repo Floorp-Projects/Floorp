@@ -128,7 +128,7 @@ sub print_script_preview {
 
 <table cellspacing=0 cellpadding=0>
 <tr><td colspan=3>
-After the script is saved,build the tree with,
+After the script is saved, build the tree with,
 </td></tr><tr><td>&nbsp;</td><td>
   1.</td><td> <code>cd mozilla</code>
 </td></tr><tr><td></td><td>
@@ -271,7 +271,7 @@ sub print_configure_form {
     <font face="Helvetica,Arial"><b>NSPR to use:</b></font><br>
     </td></tr><tr><td>
     <input type="radio" name="nspr_option" value="tip" checked>
-    Build nspr from the tip<br>
+    Build nspr from the tip (installs in <code>\@OBJDIR\@/nspr</code>)<br>
     <input type="radio" name="nspr_option" value="userdefined">
     NSPR is installed in
     <input type="text" name="nspr_dir"> (omit trailing '<code>/lib</code>')<br>
