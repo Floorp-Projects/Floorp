@@ -71,6 +71,16 @@ function setWindowName()
   } else {
     objsign.setAttribute("checked", "false");
   }
+
+  var xulWindow = document.getElementById("editCert");
+  var wdth = window.innerWidth; // THIS IS NEEDED,
+  window.sizeToContent();
+  xulWindow.setAttribute("width",window.innerWidth + 30);
+  var hght = window.innerHeight; // THIS IS NEEDED,
+  window.sizeToContent();
+  xulWindow.setAttribute("height",window.innerHeight + 70);
+  
+
 }
 
 function doOK()
@@ -109,6 +119,27 @@ function doLoadForSSLCert()
 
   setText("issuer", cert.issuerName);
 
+  var cacert = getCaCertForServerCert(cert);
+  if(cacert == null)
+  {
+     setText("explainations",bundle.GetStringFromName("issuerNotKnown"));
+  }
+  else if(certdb.getCertTrust(cacert, nsIX509Cert.CA_CERT,
+                                                nsIX509CertDB.TRUSTED_SSL))
+  {
+     setText("explainations",bundle.GetStringFromName("issuerTrusted"));
+  }
+  else
+  {
+     setText("explainations",bundle.GetStringFromName("issuerNotTrusted"));
+  }
+/*
+  if(cacert == null)
+  {
+     var editButton = document.getElementById('editca-button');
+	 editButton.setAttribute("disabled","true");
+  }
+*/  
   var trustssl = document.getElementById("trustSSLCert");
   var notrustssl = document.getElementById("dontTrustSSLCert");
   if (certdb.getCertTrust(cert, nsIX509Cert.SERVER_CERT, 
@@ -117,6 +148,15 @@ function doLoadForSSLCert()
   } else {
     notrustssl.setAttribute("checked", "true");
   }
+
+  var xulWindow = document.getElementById("editSSLCert");
+  var wdth = window.innerWidth; // THIS IS NEEDED,
+  window.sizeToContent();
+  xulWindow.setAttribute("width",window.innerWidth + 30);
+  var hght = window.innerHeight; // THIS IS NEEDED,
+  window.sizeToContent();
+  xulWindow.setAttribute("height",window.innerHeight + 70);
+
 }
 
 function doSSLOK()
@@ -131,3 +171,44 @@ function doSSLOK()
   certdb.setCertTrust(cert, nsIX509Cert.SERVER_CERT, trustssl);
   window.close();
 }
+
+function editCaTrust()
+{
+   var cacert = getCaCertForServerCert(cert);
+   if(cacert != null)
+   {
+      window.openDialog('chrome://pippki/content/editcacert.xul', cacert.dbKey,
+                               'chrome,resizable=1,modal');
+   }
+   else
+   {
+      var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
+      alert(bundle.GetStringFromName("issuerCertNotFound"));
+   }
+}
+
+function getCaCertForServerCert(cert)
+{
+   var i=1;
+   var nextCertInChain;
+   nextCertInChain = cert;
+   var lastSubjectName="";
+   while(true)
+   {
+     if(nextCertInChain == null)
+     {
+        return null;
+     }
+     if((nextCertInChain.type == nsIX509Cert.CA_CERT) || 
+                                 (nextCertInChain.subjectName = lastSubjectName))
+     {
+        break;
+     }
+
+     lastSubjectName = nextCertInChain.subjectName;
+     nextCertInChain = nextCertInChain.issuer;
+   }
+
+   return nextCertInChain;
+}
+
