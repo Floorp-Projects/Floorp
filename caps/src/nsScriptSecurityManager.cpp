@@ -778,12 +778,12 @@ nsScriptSecurityManager::CheckPropertyAccessImpl(PRUint32 aAction,
         };
 
         nsXPIDLString errorMsg;
-        rv = sStrBundle->FormatStringFromName(stringName.get(),
-                                              formatStrings,
-                                              NS_ARRAY_LENGTH(formatStrings),
-                                              getter_Copies(errorMsg));
-        NS_ENSURE_SUCCESS(rv, rv);
- 
+        nsresult rv2 = sStrBundle->FormatStringFromName(stringName.get(),
+                                                        formatStrings,
+                                                        NS_ARRAY_LENGTH(formatStrings),
+                                                        getter_Copies(errorMsg));
+        NS_ENSURE_SUCCESS(rv2, rv2);
+
         JS_SetPendingException(cx,
             STRING_TO_JSVAL(JS_NewUCStringCopyZ(cx,
                 NS_REINTERPRET_CAST(const jschar*, errorMsg.get()))));
