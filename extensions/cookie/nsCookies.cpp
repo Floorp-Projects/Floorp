@@ -55,6 +55,7 @@
 #include "nsICookieConsent.h"
 #include "nsIURL.h"
 #include "nsIHttpChannel.h"
+#include "prnetdb.h"
 
 #define MAX_NUMBER_OF_COOKIES 300
 #define MAX_COOKIES_PER_SERVER 20
@@ -328,7 +329,17 @@ cookie_CheckForPrevCookie(char * path, char * hostname, char * name) {
 
 /* cookie utility functions */
 PRIVATE void
-cookie_SetBehaviorPref(PERMISSION_BehaviorEnum x) {
+cookie_SetBehaviorPref(PERMISSION_BehaviorEnum x, nsIPref* prefs) {
+  // can't have pref specifying accept-cookie-based-on-p3p if p3p module is not installed
+  if (x == PERMISSION_P3P) {
+    // pref specifies that cookie acceptance is based on site's p3p policy
+    nsCOMPtr<nsICookieConsent> p3p(do_GetService(NS_COOKIECONSENT_CONTRACTID));
+    if (!p3p) {
+      // p3p module is not installed, so change pref to accept-all
+      x = PERMISSION_Accept;
+      prefs->SetIntPref(cookie_behaviorPref, x);
+    }
+  }
   cookie_behavior = x;
 }
 
@@ -407,7 +418,7 @@ cookie_BehaviorPrefChanged(const char * newpref, void * data) {
     n = PERMISSION_Accept;
   }
     
-  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n);
+  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
   return 0;
 }
 
@@ -512,8 +523,7 @@ COOKIE_RegisterPrefCallbacks(void) {
   if (NS_FAILED(prefs->GetIntPref(cookie_behaviorPref, &n))) {
     n = PERMISSION_Accept;
   }
-
-  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n);
+  cookie_SetBehaviorPref((PERMISSION_BehaviorEnum)n, prefs);
   prefs->RegisterCallback(cookie_behaviorPref, cookie_BehaviorPrefChanged, nsnull);
 
   // Initialize for cookie_warningPref
@@ -561,6 +571,13 @@ COOKIE_RegisterPrefCallbacks(void) {
 }
 
 PRBool
+cookie_IsIPAddress(const char* name) {
+  // determine if name is an IP address
+  PRNetAddr addr;
+  return (PR_StringToNetAddr(name, &addr) == PR_SUCCESS);
+}
+
+PRBool
 cookie_IsInDomain(char* domain, char* host, int hostLength) {
   int domainLength = PL_strlen(domain);
 
@@ -579,16 +596,9 @@ cookie_IsInDomain(char* domain, char* host, int hostLength) {
   }
 
   /*
-   * test for domain name being an IP address (e.g., 105.217) and reject if so
+   * test for domain name being an IP address (e.g., 105.217.180.21) and reject if so
    */
-  PRBool hasNonDigitChar = PR_FALSE;
-  for (int i = 0; i<domainLength; i++) {
-    if (!nsCRT::IsAsciiDigit(domain[i]) && domain[i] != '.') {
-      hasNonDigitChar = PR_TRUE;
-      break;
-    }
-  }
-  if (!hasNonDigitChar) {
+  if (cookie_IsIPAddress(domain)) {
     return PR_FALSE;
   }
 
@@ -881,7 +891,8 @@ P3P_SitePolicy(char * curURL, nsIHttpChannel* aHttpChannel) {
  */
 int
 cookie_P3PUserPref(PRInt32 policy, PRBool foreign) {
-  NS_ASSERTION(policy == P3P_NoPolicy ||
+  NS_ASSERTION(policy == P3P_UnknownPolicy ||
+               policy == P3P_NoPolicy ||
                policy == P3P_NoConsent ||
                policy == P3P_ImplicitConsent ||
                policy == P3P_ExplicitConsent ||
@@ -892,7 +903,8 @@ cookie_P3PUserPref(PRInt32 policy, PRBool foreign) {
      * asked for explicit consent */
     policy = P3P_ExplicitConsent;
   }
-  if (cookie_P3P && PL_strlen(cookie_P3P) == 8) {
+  // note: P3P_UnknownPolicy means that the p3p module was not installed
+  if (cookie_P3P && PL_strlen(cookie_P3P) == 8 && policy != P3P_UnknownPolicy) {
     return (foreign ? cookie_P3P[policy+1] : cookie_P3P[policy]);
   } else {
     return P3P_Accept;
@@ -1097,7 +1109,8 @@ cookie_SetCookieString(char * curURL, nsIPrompt *aPrompter, const char * setCook
 
       /* allocate more than we need */
       nsCAutoString domain;
-      if (*(ptr+7) != '.') { // force domain name to start with a dot
+      if (*(ptr+7) != '.' && !cookie_IsIPAddress(cur_host.get())) {
+        // if host is not an IP address, force domain name to start with a dot
         domain = '.';
       }
       domain.Append(ptr+7);
