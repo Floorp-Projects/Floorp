@@ -650,26 +650,36 @@
     return (BookmarksService::IsBookmarkDropValid(parent, index, draggedIDs)) ? NSDragOperationGeneric : NSDragOperationNone;
   } else if ([types containsObject: @"MozURLType"]) {
     return NSDragOperationGeneric;
+  } else if ([types containsObject: NSStringPboardType]) {
+    return NSDragOperationGeneric;
   }
 
   return NSDragOperationNone;
 }
 
-- (BOOL)outlineView:(NSOutlineView*)ov acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index {
+- (BOOL)outlineView:(NSOutlineView*)ov acceptDrop:(id <NSDraggingInfo>)info item:(id)item childIndex:(int)index
+{
   NSArray *types = [[info draggingPasteboard] types];
   BookmarkItem* parent = (item) ? item : BookmarksService::GetRootItem();
 
-  if ([types containsObject: @"MozBookmarkType"]) {
+  if ([types containsObject: @"MozBookmarkType"])
+  {
     NSArray *draggedItems = [[info draggingPasteboard] propertyListForType: @"MozBookmarkType"];
-    BookmarksService::PerformBookmarkDrop(parent, index, draggedItems);
-    return YES;
+    return BookmarksService::PerformBookmarkDrop(parent, index, draggedItems);
   }
-  else if ([types containsObject: @"MozURLType"]) {
+  else if ([types containsObject: @"MozURLType"])
+  {
     NSDictionary* proxy = [[info draggingPasteboard] propertyListForType: @"MozURLType"];    
     BookmarkItem* beforeItem = [self outlineView:ov child:index ofItem:item];
     return BookmarksService::PerformProxyDrop(parent, beforeItem, proxy);
   }
-
+  else if ([types containsObject: NSStringPboardType])
+  {
+    NSString* draggedText = [[info draggingPasteboard] stringForType:NSStringPboardType];
+    BookmarkItem* beforeItem = [self outlineView:ov child:index ofItem:item];
+    return BookmarksService::PerformURLDrop(parent, beforeItem, draggedText, draggedText);
+  }
+  
   return NO;
 }
 

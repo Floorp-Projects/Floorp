@@ -10,10 +10,12 @@
 
 #import "CHRDFOutlineViewDataSource.h"
 
+@class BrowserWindowController;
+
 @interface CHHistoryDataSource : CHRDFOutlineViewDataSource
 {
 
-  IBOutlet id mBrowserWindowController;
+  IBOutlet BrowserWindowController* mBrowserWindowController;
 
 }
 

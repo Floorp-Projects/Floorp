@@ -103,7 +103,7 @@ public:
   static bool PerformBookmarkDrop(BookmarkItem* parent, int index, NSArray* draggedIDs);
   static bool PerformProxyDrop(BookmarkItem* parentItem, BookmarkItem* beforeItem, NSDictionary* data);
   
-  static void DropURL(NSString* title, NSURL* url, BookmarkItem* parent, int index);
+  static bool PerformURLDrop(BookmarkItem* parentItem, BookmarkItem* beforeItem, NSString* title, NSString* url);
   
 public:
   // Global counter and pointers to our singletons.

@@ -22,6 +22,8 @@
 *   David Haas  <haasd@cae.wisc.edu>
 */
 
+#import "NSString+Utils.h"
+
 #import "BookmarkInfoController.h"
 #import "BookmarksDataSource.h"
 

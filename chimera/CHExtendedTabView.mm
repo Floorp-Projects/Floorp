@@ -164,12 +164,11 @@
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender
 {
   // determine if we are over a tab or the content area
-  NSPoint 				localPoint 			= [self convertPoint: [sender draggingLocation] fromView: nil];
-  NSTabViewItem*	overTabViewItem = [self tabViewItemAtPoint: localPoint];
-  BOOL						overContentArea = NSPointInRect(localPoint, [self contentRect]);
-  
-  NSArray*				pasteBoardTypes = [[sender draggingPasteboard] types];
-  
+  NSPoint         localPoint      = [self convertPoint: [sender draggingLocation] fromView: nil];
+  NSTabViewItem*  overTabViewItem = [self tabViewItemAtPoint: localPoint];
+  BOOL            overContentArea = NSPointInRect(localPoint, [self contentRect]);
+  NSArray*        pasteBoardTypes = [[sender draggingPasteboard] types];
+
   if ([pasteBoardTypes containsObject: @"MozBookmarkType"])
   {
     NSArray* contentIds = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
@@ -207,7 +206,7 @@
   }
   else if ([pasteBoardTypes containsObject: NSStringPboardType])
   {
-    NSString*	urlString = [[sender draggingPasteboard] propertyListForType: NSStringPboardType];
+    NSString*	urlString = [[sender draggingPasteboard] stringForType: NSStringPboardType];
     [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
   }
   else if ([pasteBoardTypes containsObject: NSURLPboardType])
@@ -217,7 +216,7 @@
   }
   else if ([pasteBoardTypes containsObject: NSFilenamesPboardType])
   {
-    NSString*	urlString = [[sender draggingPasteboard] propertyListForType: NSFilenamesPboardType];
+    NSString*	urlString = [[sender draggingPasteboard] stringForType: NSFilenamesPboardType];
     [self handleDropOnTab:overTabViewItem overContent:overContentArea withURL:urlString];
   }
   

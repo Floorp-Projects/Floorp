@@ -39,7 +39,7 @@
     mButtons = [[NSMutableArray alloc] init];
     mDragInsertionButton = nil;
     mDragInsertionPosition = BookmarksService::CHInsertNone;
-    [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", nil]];
+    [self registerForDraggedTypes:[NSArray arrayWithObjects:@"MozURLType", @"MozBookmarkType", NSStringPboardType, nil]];
     mIsShowing = YES;
   }
   return self;
@@ -370,22 +370,36 @@
       return NO;
     }
 
-  NSArray *draggedItems = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
-  if ( draggedItems )
-    BookmarksService::PerformBookmarkDrop(parent, index, draggedItems);
-  else {
+  BOOL dropHandled = NO;
+  NSArray	*draggedTypes = [[sender draggingPasteboard] types];
+  if ( [draggedTypes containsObject:@"MozBookmarkType"] )
+  {
+    NSArray *draggedItems = [[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"];
+    dropHandled = BookmarksService::PerformBookmarkDrop(parent, index, draggedItems);
+  }
+  else if ( [draggedTypes containsObject:@"MozURLType"] )
+  {
     NSDictionary* proxy = [[sender draggingPasteboard] propertyListForType: @"MozURLType"];
     nsCOMPtr<nsIContent> beforeContent;
     [parent contentNode]->ChildAt(index, *getter_AddRefs(beforeContent));
     BookmarkItem* beforeItem = mBookmarks->GetWrapperFor(beforeContent);		// can handle nil content
-    BookmarksService::PerformProxyDrop(parent, beforeItem, proxy);
+    dropHandled = BookmarksService::PerformProxyDrop(parent, beforeItem, proxy);
 	}
-
+  else if ( [draggedTypes containsObject:NSStringPboardType] )
+  {
+    NSString* draggedText = [[sender draggingPasteboard] stringForType:NSStringPboardType];
+    nsCOMPtr<nsIContent> beforeContent;
+    [parent contentNode]->ChildAt(index, *getter_AddRefs(beforeContent));
+    BookmarkItem* beforeItem = mBookmarks->GetWrapperFor(beforeContent);		// can handle nil content
+    // maybe fix URL drags to include the selected text as the title
+    dropHandled = BookmarksService::PerformURLDrop(parent, beforeItem, draggedText, draggedText);
+  }
+  
   mDragInsertionButton = nil;
   mDragInsertionPosition = BookmarksService::CHInsertNone;
   [self setNeedsDisplay: [self isShown]];
 
-  return YES;    
+  return dropHandled;
 }
 
 - (NSRect)insertionRectForButton:(NSView*)aButton position:(int) aPosition

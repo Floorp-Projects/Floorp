@@ -8,6 +8,7 @@
 
 #import "NSString+Utils.h"
 
+#import "BrowserWindowController.h"
 #import "CHHistoryDataSource.h"
 #import "CHBrowserView.h"
 
