@@ -1,0 +1,90 @@
+<style>
+
+body  {
+  background-color:#CCCCCC
+
+}
+   
+#righttext {
+  text-align: left;
+  font-style: bold;
+  
+}
+
+
+#righttext {
+  text-align: right;
+}
+
+#top  {
+background-color: grey
+}
+
+#tableb {
+    display:block;
+    border: groove white 2px;
+    font-size: 7pt;
+    min-height: 16px;
+    color: white;
+}
+
+
+</style>
+
+<head>
+<script language="JavaScript" src="PrefsWindow.js">
+</script>
+</head>
+
+<body ID=here onload="return StartUp('Navigator')">
+<DIV ID=top>
+<SPAN ID=lefttext>Navigator</SPAN>
+</DIV>
+<br>
+
+
+
+Navigator starts with
+<table ID="tableb">
+<tr>
+<FORM>
+<tr><td><input name=starts type="radio">Blank Page</td></tr>
+<tr><td><input name=starts type="radio">Home Page</td></tr>
+<tr><td><input name=starts type="radio">Last Page vistited</td></tr>
+</FORM>
+</table>
+
+Home page
+<table ID="tableb">
+<tr>
+<tr><td>Clicking the Home button will take you to this page.<td><tr>
+<FORM>
+<tr><td>Location:   <input name="homepage" type="text" value="http://my.netscape.com" size="20"><td>
+<tr><td><input name=starts type="button" value="Use Current Page">
+<input name="browse" type="button" value="browsefile"><td></tr>
+</FORM>
+</table>
+
+History
+<table ID="tableb">
+<tr>
+<FORM>
+History is a list of the pages you have previously vistited.
+<td>Pages in history expire after:<input type="text" value="9" size=3>days</td>
+<td><input name="Clearit" type="button" value="Clear History"></td>
+</FORM>
+</table>
+
+
+Home page
+<table ID="tableb">
+<tr>
+<FORM>
+<tr><td>Clear the list of sites on the location bar:   <input name=starts type="button" value="Clear Location Bar"><td>
+</FORM>
+</table>
+
+<br>
+<br>
+
+</body>
