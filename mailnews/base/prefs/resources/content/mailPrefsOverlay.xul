@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 
 <!DOCTYPE window [
-<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
-%brandDTD;
 <!ENTITY % mailPrefsOverlayDTD SYSTEM "chrome://messenger/locale/mailPrefsOverlay.dtd" >
 %mailPrefsOverlayDTD;
 ]>
@@ -37,7 +35,7 @@
   <!-- mail startup toggle -->
   <groupbox id="generalStartupPreferences">           
     <checkbox id="generalStartupMail" wsm_persist="true" position="3"
-              label="&mesCheck.label;" accesskey="&mesCheck.accesskey;"
+              label="&mail.label;" accesskey="&mail.accesskey;"
               pref="true" preftype="bool" prefstring="general.startup.mail"
               prefattribute="checked"/>         
   </groupbox>
