@@ -347,6 +347,7 @@ InputConsumer::OnStopRequest(nsIChannel* channel,
 
   /* rename the downloaded file to the file that was requested */
   if (NS_SUCCEEDED(rv)) {
+    mFileSpec.Delete(PR_FALSE);
     mDownloadFileSpec.Rename(mFileName);
   }
 
