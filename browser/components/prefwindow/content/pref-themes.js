@@ -36,7 +36,6 @@
 # 
 # ***** END LICENSE BLOCK *****
 
-var gShowDescription = true;
 var gData;
 const kPrefSvcContractID = "@mozilla.org/preferences;1";
 const kPrefSvcIID = Components.interfaces.nsIPref;
@@ -80,18 +79,7 @@ function Startup()
       break;
     }      
   }
-
   removeInvalidThemes();
-  
-  var navbundle = document.getElementById("bundle_navigator");
-  var showSkinsDescription = navbundle.getString("showskinsdescription");
-  if (showSkinsDescription == "false")
-  {
-    gShowDescription = false;
-    var description = document.getElementById("description");
-    while (description.hasChildNodes())
-      description.removeChild(description.firstChild);
-  }
 }
 
 function removeInvalidThemes() {
@@ -213,8 +201,7 @@ function themeSelect()
     }
     catch (e) {
     }
-    if( gShowDescription ) 
-      description.appendChild(descText);
+    description.appendChild(descText);
     
     var locType = selectedItem.getAttribute("loctype");
     uninstallButton.disabled = (selectedSkin == skinName) || (locType == "install");
