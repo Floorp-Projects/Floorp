@@ -525,6 +525,8 @@ sub print_top {
 <HTML>
 <HEAD>
   <TITLE>CVS Log $title_text</TITLE>
+  <link rel="alternate" type="application/rss+xml" title="CVS Log $title_text"
+        href="cvslog.cgi?file=$url_filename&root=$root$revstr$sortstr&author=$url_author_arg&ctype=rss">
 </HEAD>
 <BODY BGCOLOR=WHITE TEXT=BLACK>
 
