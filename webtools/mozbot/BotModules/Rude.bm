@@ -42,7 +42,7 @@ sub RegisterConfig {
 sub Told {
     my $self = shift;
     my ($event, $message) = @_;
-    if ($message =~ /^\s*insult\s+(\S+?)\s*$/osi) {
+    if ($message =~ /^\s*(?:will\s+you\s+)?(?:insult|harass)\s+(\S+?)(?:[\s,.]+please)?[\s.?!]*$/osi) {
         my $line;
         if (defined($self->{'insultOverrides'}->{lc $1})) {
             $line = "$1: ".$self->{'insultOverrides'}->{lc $1};
