@@ -45,7 +45,7 @@
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 
-const  int               gTabSize=2;
+const  PRInt32 gTabSize=2;
 
 static PRBool IsInline(eHTMLTags aTag);
 static PRBool IsBlockLevel(eHTMLTags aTag);
@@ -164,13 +164,20 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
   NS_INIT_REFCNT();
   mColPos = 0;
   mIndent = 0;
-  mCiteQuote = PR_FALSE;
+  mCiteQuoteLevel = 0;
   mDoFragment = PR_FALSE;
   mBufferSize = 0;
   mBufferLength = 0;
   mBuffer = nsnull;
   mUnicodeEncoder = nsnull;
   mWrapColumn = 72;     // XXX magic number, we expect someone to reset this
+
+  // Flow
+  mEmptyLines=1; // The start of the document is an "empty line" in itself,
+  mCurrentLine = "";
+  mInWhitespace = PR_TRUE;
+  mPreFormatted = PR_FALSE;
+  mCacheLine = PR_FALSE;
 
   // initialize the tag stack to zero:
   mTagStack = new nsHTMLTag[TagStackSize];
@@ -190,7 +197,10 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
  */
 nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream()
 {
-  delete [] mBuffer;
+  NS_ASSERTION(mCurrentLine.Length() == 0, "Buffer don't flushed! Probably illegal input to class.");
+
+  if(mBuffer) 
+    delete[] mBuffer;
   delete[] mTagStack;
   delete[] mOLStack;
   NS_IF_RELEASE(mUnicodeEncoder);
@@ -403,7 +413,11 @@ PRBool nsHTMLToTXTSinkStream::DoOutput()
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
 {
+
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
+#ifdef DEBUG_bratell
+  printf("OpenContainer: %d    ", type);
+#endif  
   const nsString&   name = aNode.GetText();
   if (name.Equals("XIF_DOC_INFO"))
   {
@@ -423,8 +437,31 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
 
   if (type == eHTMLTag_body)
   {
+
+    //    body ->  can turn on cacheing unless it's already preformatted
+    if(!(mFlags & nsIDocumentEncoder::OutputPreformatted) && 
+       ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
+        (mFlags & nsIDocumentEncoder::OutputWrap))) {
+      mCacheLine = PR_TRUE;
+    }
+
+    
     // Would be cool to figure out here whether we have a
     // preformatted style attribute.  It's hard, though.
+
+    // Trigger on the presence of a "-moz-pre-wrap" in the
+    // style attribute. That's a very simplistic way to do
+    // it, but better than nothing.
+    nsString value;
+    if(NS_SUCCEEDED(GetValueOfAttribute(aNode, "style", value)) &&
+       (-1 != value.Find("-moz-pre-wrap"))) {
+      mPreFormatted = PR_TRUE;
+      mCacheLine = PR_TRUE;
+    } else {
+      mPreFormatted = PR_FALSE;
+      mCacheLine = PR_TRUE; // Cache lines unless something else tells us not to
+    }
+
     return NS_OK;
   }
 
@@ -453,25 +490,27 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
         temp = "#";
     }
     Write(temp);
-    mColPos++;
+    //    mColPos++;    This is done in Write(temp) above
   }
   else if (type == eHTMLTag_blockquote)
   {
     // Find out whether it's a type=cite, and insert "> " instead.
     // Eventually we should get the value of the pref controlling citations,
     // and handle AOL-style citations as well.
+    // If we want to support RFC 2646 (and we do!) we have to have:
+    // >>>> text
+    // >>> fdfd
+    // when a mail is sent.
     nsString value;
     if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "type", value))
         && value.StripChars("\"").Equals("cite", PR_TRUE))
-      mCiteQuote = PR_TRUE;
+      mCiteQuoteLevel++;
     else
-      mIndent += gTabSize;
+      mIndent += gTabSize; // Check for some maximum value?
   }
   else if (type == eHTMLTag_pre)
   {
-    nsAutoString temp(NS_LINEBREAK);
-    Write(temp);
-    mColPos = 0;
+    EnsureVerticalSpace(0);
   }
 
   // Finally, the list of tags before which we want some vertical space:
@@ -482,9 +521,7 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     case eHTMLTag_ol:
     case eHTMLTag_p:
     {
-      nsAutoString temp(NS_LINEBREAK);
-      Write(temp);
-      mColPos = 0;
+      EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted) ? 1 : 0);
       break;
     }
     default:
@@ -506,32 +543,64 @@ NS_IMETHODIMP
 nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
 {
   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
-
+#ifdef DEBUG_bratell
+  printf("CloseContainer: %d    ", type);
+#endif
   if (mTagStackIndex > 0)
     --mTagStackIndex;
 
   if (type == eHTMLTag_ol)
     --mOLStackIndex;
-
   else if (type == eHTMLTag_blockquote)
   {
-    if (mCiteQuote)
-      mCiteQuote = PR_FALSE;
-    else
+    if (mCiteQuoteLevel>0)
+      mCiteQuoteLevel--;
+    else if(mIndent >= gTabSize)
       mIndent -= gTabSize;
+  }
+  else if (type == eHTMLTag_td)
+  {
+    // We are after a table cell an thus maybe between two cells.
+    // Something should be done to avoid the two cells to be written
+    // together. This really need some intelligence about how the
+    // contents in the cell looks.
+    // Fow now, I will only add a SPACE. Could be a TAB or something
+    // else but I'm not sure everything can handle the TAB so SPACE
+    // seems like a better solution.
+    if(!mInWhitespace) {
+      // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
+      if(mCacheLine) {
+        AddToLine(" ");
+      } else {
+        WriteSimple(" ");
+      }
+      mInWhitespace = PR_TRUE;
+    }
   }
 
   // End current line if we're ending a block level tag
-  if (IsBlockLevel(type) && type != eHTMLTag_body && type != eHTMLTag_html
-      && type != eHTMLTag_comment)
-  {
-    if (mColPos != 0)
-    {
-      nsAutoString temp(NS_LINEBREAK);
-      Write(temp);
-      mColPos = 0;
+  if(IsBlockLevel(type)) {
+    if((type == eHTMLTag_body) || (type == eHTMLTag_html)) {
+      // We want the output to end with a new line,
+      // but in preformatted areas like text fields,
+      // we can't emit newlines that weren't there.
+      if (mPreFormatted || (mFlags & nsIDocumentEncoder::OutputPreformatted))
+        FlushLine();
+      else
+        EnsureVerticalSpace(0);
+      
+    } else if((type == eHTMLTag_tr) ||
+              (type == eHTMLTag_blockquote)) {
+      EnsureVerticalSpace(0);
+    } else {
+      // All other blocks get 1 vertical space after them
+      // in formatted mode, otherwise 0.
+      // This is hard. Sometimes 0 is a better number, but
+      // how to know?
+      EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted) ? 1 : 0);
     }
   }
+
   return NS_OK;
 }
 
@@ -546,71 +615,77 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
 NS_IMETHODIMP
 nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
 {
-   eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
+#ifdef DEBUG_bratell
+  printf("Addleaf: %d (%d)   ", (eHTMLTags)aNode.GetNodeType(),mFlags);
+#endif
+  
+  // If we don't want any output, just return
+  if (!DoOutput())
+    return NS_OK;
+  
+  eHTMLTags type = (eHTMLTags)aNode.GetNodeType();
   
   nsString text = aNode.GetText();
 
-  if (!DoOutput())
-    return NS_OK;
+#ifdef DEBUG_bratell
+  printf("        '%s'    ", text.ToNewCString());
+#endif
 
   if (type == eHTMLTag_text)
   {
-#if 0
-    // This is too generous about putting spaces around text nodes
-    // even when there's no indication for a space.
-    if (mColPos > mIndent)
-    {
-      nsAutoString temp(" ");
-      Write(temp);
-      mColPos++;
-    }
-#endif
-
     Write(text);
   } 
   else if (type == eHTMLTag_entity)
   {
     PRUnichar entity = nsHTMLEntities::EntityToUnicode(aNode.GetText());
-
     nsAutoString temp;
-    
     temp.Append(entity);
     Write(temp);
-
-    mColPos++;
   }
   else if (type == eHTMLTag_br)
   {
     // Do this even if we're not doing formatted output:
-    nsAutoString temp(NS_LINEBREAK);
-    Write(temp);
-    mColPos = 0;
+    EnsureVerticalSpace(mEmptyLines+1);
   }
-  // The only times we want to pass along whitespace from the original
-  // html source are if we're forced into preformatted mode via flags,
-  // or if we're prettyprinting and we're inside a <pre>.
-  // Otherwise, either we're collapsing to minimal text, or we're
-  // prettyprinting to mimic the html format, and in neither case
-  // does the formatting of the html source help us.
-  else if (mFlags & nsIDocumentEncoder::OutputPreformatted ||
-           ((mFlags & nsIDocumentEncoder::OutputFormatted)
-            && (mTagStackIndex > 0)
-            && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)))
+  else if (type == eHTMLTag_whitespace)
   {
-    if (type == eHTMLTag_whitespace)
+    // The only times we want to pass along whitespace from the original
+    // html source are if we're forced into preformatted mode via flags,
+    // or if we're prettyprinting and we're inside a <pre>.
+    // Otherwise, either we're collapsing to minimal text, or we're
+    // prettyprinting to mimic the html format, and in neither case
+    // does the formatting of the html source help us.
+    if (mFlags & nsIDocumentEncoder::OutputPreformatted ||
+        ((mFlags & nsIDocumentEncoder::OutputFormatted)
+         && (mTagStackIndex > 0)
+         && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)) ||
+        (mPreFormatted && !mWrapColumn))
+      {
+        text = aNode.GetText();
+        WriteSimple(text);
+        mColPos += text.Length();
+        mEmptyLines = -1;
+      } else if(!mInWhitespace) {
+        if(mCacheLine) {
+          AddToLine(" ");
+        } else {
+          WriteSimple(" ");
+        }
+        mInWhitespace = PR_TRUE;
+      }
+  }
+  else if (type == eHTMLTag_newline)
+  {
+    if (mFlags & nsIDocumentEncoder::OutputPreformatted ||
+        ((mFlags & nsIDocumentEncoder::OutputFormatted)
+         && (mTagStackIndex > 0)
+         && (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)) ||
+        (mPreFormatted && !mWrapColumn))
     {
-      text = aNode.GetText();
-      Write(text);
-      mColPos += text.Length();
-    }
-    else if (type == eHTMLTag_newline)
-    {
-      nsAutoString temp(NS_LINEBREAK);
-      Write(temp);
-      mColPos = 0;
+      EnsureVerticalSpace(mEmptyLines+1);
     }
   }
-
+  
   return NS_OK;
 }
 
@@ -668,6 +743,25 @@ void nsHTMLToTXTSinkStream::EncodeToBuffer(const nsString& aSrc)
 }
 
 
+void
+nsHTMLToTXTSinkStream::EnsureVerticalSpace(PRInt32 noOfRows)
+{
+  while(mEmptyLines < noOfRows)
+    EndLine(PR_FALSE);
+}
+
+
+// This empties the current line cache without adding a NEWLINE.
+// Should not be used if line wrapping is of importance since
+// this function destroys the cache information.
+void
+nsHTMLToTXTSinkStream::FlushLine()
+{
+  WriteSimple(mCurrentLine);
+  mCurrentLine.SetString("");
+}
+
+
 
 /**
  *  WriteSimple places the contents of aString into either the output stream
@@ -711,6 +805,151 @@ void nsHTMLToTXTSinkStream::WriteSimple(const nsString& aString)
   }
 }
 
+void
+nsHTMLToTXTSinkStream::AddToLine(const nsString &linefragment)
+{
+  PRUint32 prefixwidth = (mCiteQuoteLevel>0?mCiteQuoteLevel+1:0)+mIndent;
+  
+  PRInt32 linelength = mCurrentLine.Length();
+  if(0 == linelength) {
+    if(0 == linefragment.Length()) {
+      // Nothing at all. Are you kidding me?
+      return;
+    }
+
+    if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
+      if((linefragment[0] == '>') ||
+         (linefragment[0] == ' ') ||
+         (!linefragment.Compare("From ",PR_FALSE,5))) {
+        // Space stuffing a la RFC 2646 if this will be used in a mail,
+        // but how can I know that??? Now space stuffing is done always
+        // when formatting text as HTML and that is wrong! XXX: Fix this!
+        mCurrentLine.Append(' ');
+      }
+    }
+    mEmptyLines=-1;
+  }
+    
+  mCurrentLine.Append(linefragment);
+  
+  linelength = mCurrentLine.Length();
+
+  //  Wrap?
+  if(mWrapColumn &&
+     ((mFlags & nsIDocumentEncoder::OutputFormatted) ||
+                     (mFlags & nsIDocumentEncoder::OutputWrap))) {
+
+    // Yes, wrap!
+    // The "+4" is to avoid wrap lines that only should be a couple
+    // of letters too long.
+    while(linelength+prefixwidth > mWrapColumn+4) {
+      // Must wrap. Let's find a good place to do that.
+      PRInt32 goodSpace = mWrapColumn-prefixwidth;
+      while (goodSpace >= 0 &&
+             !nsString::IsSpace(mCurrentLine.CharAt(goodSpace))) {
+        goodSpace--;
+      }
+    
+      nsAutoString restOfLine = "";
+      if(goodSpace<0) {
+        // If we don't found a good place to break, accept long line and
+        // try to find another place to break
+        goodSpace=mWrapColumn-prefixwidth;
+        while (goodSpace < linelength &&
+               !nsString::IsSpace(mCurrentLine.CharAt(goodSpace))) {
+          goodSpace++;
+        }
+      }
+
+      if(goodSpace < linelength && goodSpace > 0) {
+        // Found a place to break
+        mCurrentLine.Right(restOfLine, linelength-goodSpace-1);
+        mCurrentLine.Cut(goodSpace, linelength-goodSpace);
+        EndLine(PR_TRUE);
+        mCurrentLine.SetString(restOfLine);
+        linelength = mCurrentLine.Length();
+        mEmptyLines = -1;
+      } else {
+        // Nothing to do. Hopefully we get more data later
+        // to use for a place to break line
+        break;
+      }
+    }
+  } else {
+    // No wrapping.
+  }
+}
+
+void
+nsHTMLToTXTSinkStream::EndLine(PRBool softlinebreak)
+{
+  if(softlinebreak) {
+    if(0 == mCurrentLine.Length()) {
+      // No meaning
+      return;
+    }
+    WriteQuotesAndIndent();
+    // Remove whitespace from the end of the line.
+    mCurrentLine.CompressWhitespace(PR_FALSE,PR_TRUE);
+    if(mFlags & nsIDocumentEncoder::OutputFormatFlowed) {
+      // Add the soft part of the soft linebreak (RFC 2646 4.1)
+      mCurrentLine.Append(' ');
+    }
+    mCurrentLine.Append(NS_LINEBREAK);
+    WriteSimple(mCurrentLine);
+    mCurrentLine.SetString("");
+    mColPos=0;
+    mEmptyLines=0;
+    mInWhitespace=PR_TRUE;
+  } else {
+    // Hard break
+    if(0 == mColPos) {
+      WriteQuotesAndIndent();
+    }
+    if(mCurrentLine.Length()>0)
+      mEmptyLines=-1;
+    // Output current line
+    mCurrentLine.CompressWhitespace(PR_FALSE,PR_TRUE);
+    mCurrentLine.Append(NS_LINEBREAK);
+    WriteSimple(mCurrentLine);
+    mCurrentLine.SetString("");
+    mColPos=0;
+    mEmptyLines++;
+    mInWhitespace=PR_TRUE;
+  }
+}
+
+void
+nsHTMLToTXTSinkStream::WriteQuotesAndIndent()
+{
+  // Put the mail quote "> " chars in, if appropriate:
+  if (mCiteQuoteLevel>0) {
+    // Check for out of memory?
+    char* gts = NS_STATIC_CAST(char*, nsAllocator::Alloc(mCiteQuoteLevel+2));
+    for(int i=0; i<mCiteQuoteLevel; i++) {
+      gts[i]='>';
+    }
+    gts[mCiteQuoteLevel] = ' ';
+    gts[mCiteQuoteLevel+1] = '\0';
+    nsAutoString temp(gts);
+    WriteSimple(temp);
+    mColPos += (mCiteQuoteLevel+1);
+    nsAllocator::Free(gts);
+  }
+  // Indent if necessary
+  if (mIndent > 0) {
+    char* spaces = NS_STATIC_CAST(char*, nsAllocator::Alloc(mIndent+1));
+    for (int i=0; i<mIndent; ++i)
+      spaces[i] = ' ';
+    spaces[mIndent] = '\0';
+    nsAutoString temp(spaces);
+    WriteSimple(temp);
+    mColPos += mIndent;
+    nsAllocator::Free(spaces);
+  }
+}
+
+
 #ifdef DEBUG_akkana_not
 #define DEBUG_wrapping 1
 #endif
@@ -729,49 +968,85 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
   nsAllocator::Free(foo);
 #endif
 
+
+
   PRInt32 bol = 0;
-  int totLen = aString.Length();
-
-  // Put the mail quote "> " chars in, if appropriate:
-  if (mColPos == 0)
-  {
-    if (mCiteQuote)
-    {
-      nsAutoString temp("> ");
-      WriteSimple(temp);
-      mColPos += 2;
-    }
-    // Indent if necessary
-    if (mIndent > 0)
-    {
-      char* spaces = NS_STATIC_CAST(char*, nsAllocator::Alloc(mIndent+1));
-      for (int i=0; i<mIndent; ++i)
-        spaces[i] = ' ';
-      spaces[mIndent] = '\0';
-      nsAutoString temp(spaces);
-      WriteSimple(temp);
-      mColPos += mIndent;
-      nsAllocator::Free(spaces);
-    }
-  }
-
+  PRInt32 newline;
+  
+  PRInt32 totLen = aString.Length();
+  
   // Don't wrap mail-quoted text
-  PRUint32 wrapcol = (mCiteQuote ? 0 : mWrapColumn);
+  // Yes do! /Daniel Bratell
+  //  PRUint32 wrapcol = (mCiteQuote ? 0 : mWrapColumn);
 
-  // See if there's a newline in the string:
-  PRInt32 newline = aString.FindCharInSet("\n\r", bol);
-
-  if ((!(mFlags & nsIDocumentEncoder::OutputFormatted)
-       && !(mFlags & nsIDocumentEncoder::OutputWrap))
-      || wrapcol == 0)
+  //  PRInt32 prefixwidth = (mCiteQuoteLevel>0?mCiteQuoteLevel+1:0)+mIndent;
+    //  PRInt32 linewidth = mWrapColumn-prefixwidth;
+  
+  //  if ((!(mFlags & nsIDocumentEncoder::OutputFormatted)
+  //       && !(mFlags & nsIDocumentEncoder::OutputWrap)) ||
+  //      ((mTagStackIndex > 0) &&
+  //       (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)))
+  if (((mTagStackIndex > 0) &&
+       (mTagStack[mTagStackIndex-1] == eHTMLTag_pre)) ||
+      (mPreFormatted && !mWrapColumn))
   {
-    WriteSimple(aString);
+    // No intelligent wrapping. This mustn't be mixed with
+    // intelligent wrapping without clearing the mCurrentLine
+    // buffer before!!!
 
-    // Simple attempt to be smart about col pos:
-    if (newline >= 0)
-      mColPos = totLen - newline - 1;
-    else
-      mColPos += totLen;
+    NS_ASSERTION(mCurrentLine.Length() == 0, "Mixed wrapping data and nonwrapping data on the same line");
+    
+    // Put the mail quote "> " chars in, if appropriate.
+    // Have to put it in before every line.
+    PRInt32 newCR, newLF;
+    while(bol<totLen) {
+      if(0 == mColPos)
+        WriteQuotesAndIndent();
+      
+      newCR = aString.FindCharInSet("\r",bol);
+      newLF = aString.FindCharInSet("\n",bol);
+      if(newCR>=0) {
+        if(newLF==newCR+1) {
+          // Found CRLF
+          newline=newLF;
+        } else if(newLF>=0 && newLF<newCR) {
+          // Found single LF
+          newline=newLF;
+        } else {
+          // Single CR
+          newline=newCR;
+        }
+      } else {
+        newline=newLF;
+      }
+      if(newline < 0) {
+        // No new lines.
+        nsAutoString stringpart;
+        aString.Right(stringpart, totLen-bol);
+        if(stringpart.Length()>0) {
+          PRUnichar lastchar = stringpart[stringpart.Length()-1];
+          if((lastchar == '\t') || (lastchar == ' ') ||
+             (lastchar == '\r') ||(lastchar == '\n')) {
+            mInWhitespace = PR_TRUE;
+          } else {
+            mInWhitespace = PR_FALSE;
+          }
+        }
+        WriteSimple(stringpart);
+        mEmptyLines=-1;
+        mColPos += totLen-bol;
+        bol = totLen;
+      } else {
+        nsAutoString stringpart;
+        aString.Mid(stringpart, bol, newline-bol+1);
+        mInWhitespace = PR_TRUE;
+        WriteSimple(stringpart);
+        mEmptyLines=0;
+        mColPos=0;
+        bol = newline+1;
+      }
+    }
+
 #ifdef DEBUG_wrapping
     printf("No wrapping: newline is %d, totLen is %d; leaving mColPos = %d\n",
            newline, totLen, mColPos);
@@ -779,109 +1054,63 @@ nsHTMLToTXTSinkStream::Write(const nsString& aString)
     return;
   }
 
-  while (bol < totLen)     // Loop over lines
-  {
+
+  // Intelligent handling of text
+  // Strip out all "end of lines" and multiple whitespace between words
+
+  PRInt32 nextpos;
+  nsAutoString tempstr;
+  
+  while (bol < totLen) {    // Loop over lines
+    nextpos = aString.FindCharInSet(" \t\n\r", bol);
 #ifdef DEBUG_wrapping
     nsString remaining;
     aString.Right(remaining, totLen - bol);
     foo = remaining.ToNewCString();
-    printf("Next line: bol = %d, newline = %d, totLen = %d, string = '%s'\n",
-           bol, newline, totLen, foo);
+    //    printf("Next line: bol = %d, newlinepos = %d, totLen = %d, string = '%s'\n",
+    //           bol, nextpos, totLen, foo);
     nsAllocator::Free(foo);
 #endif
 
-    // Set eol to the end of the string or the first newline,
-    // whichever comes first:
-    int eol = bol + wrapcol - mColPos;
-
-    if (eol > totLen || wrapcol == 0)
-      eol = bol + totLen;
-
-    else if (newline > 0 && eol > newline)
-      eol = newline;
-    // else we have to wrap
-    else
-    {
-      // search backward to find last IsSpace char:
-      int lastSpace = eol;
-      while (lastSpace > bol && !nsString::IsSpace(aString[lastSpace]))
-      {
-#ifdef DEBUG_wrapping
-        aString.Right(remaining, totLen - bol);
-        foo = remaining.ToNewCString();
-        printf("Searching backward: bol = %d, string = '%s'\n", bol, foo);
-        nsAllocator::Free(foo);
-#endif
-        --lastSpace;
+    if(nextpos < 0) {
+      // The rest of the string
+      aString.Right(tempstr, totLen-bol);
+      if(!mCacheLine) {
+        WriteSimple(tempstr);
+      } else {
+        AddToLine(tempstr);
       }
-      if (lastSpace > bol)
-      {
-        // We found a space, so set eol to just before that
-        eol = lastSpace - 1;
+      bol=totLen;
+      mInWhitespace=PR_FALSE;
+    } else {
+      if(mInWhitespace && (nextpos == bol)) {
+        // Skip whitespace
+        bol++;
+        continue;
       }
-      else
-      {
-#ifdef NOTSURE
-        // If we reached the bol, it might just be because we were close
-        // to the end already and should have wrapped last time.
-        // In that case, write a linebreak and come around again.
-        // I don't remember what this comment means, so skip it for now.
-        if (mColPos > mIndent)
-        {
-          nsAutoString linebreak(NS_LINEBREAK);
-          WriteSimple(linebreak);
-          mColPos = 0;
-          continue;
+
+      if(nextpos == bol) {
+        // Note that we are in whitespace.
+        mInWhitespace = PR_TRUE;
+        if(!mCacheLine) {
+          WriteSimple(" ");
+        } else {
+          AddToLine(" ");
         }
-#endif /* NOTSURE */
-
-        // Else apparently we really can't break this line at whitespace --
-        // so scan forward to the next space or newline, and dump a long line.
-        lastSpace = eol;
-        while (eol < totLen && !nsString::IsSpace(aString[eol])
-               && (newline < 0 || eol < newline))
-        {
-#ifdef DEBUG_wrapping
-          aString.Mid(remaining, bol, lastSpace - bol);
-          foo = remaining.ToNewCString();
-          printf("Searching foreward: '%c' is not a space\n  line = '%s'\n",
-                 (char)aString[lastSpace], foo);
-          nsAllocator::Free(foo);
-#endif
-          ++eol;
-        }
+        bol++;
+        continue;
       }
+
+      aString.Mid(tempstr,bol,nextpos-bol);
+      tempstr.Append(" ");
+      if(!mCacheLine) {
+        WriteSimple(tempstr);
+      } else {
+        AddToLine(tempstr);
+      }
+      mInWhitespace = PR_TRUE;
+      bol = nextpos + 1;
     }
-    // At this point, bol and eol should represent the line
-    // we really want to dump; lastSpace isn't necessarily set.
-
-    nsAutoString lineStr;
-    aString.Mid(lineStr, bol, eol-bol+1);
-
-    if (eol == newline)
-      mColPos = 0;
-    else if (eol != totLen)      // we're wrapping
-    {
-      lineStr.Append(NS_LINEBREAK);
-      mColPos = 0;
-      // If we broke at a space, skip that space:
-      // (but not necessarily any spaces that might follow it,
-      // see bug 12984)
-      if (eol < totLen && nsString::IsSpace(aString[eol+1]))
-        ++eol;
-    }
-    else                        // Not wrapping and not writing a newline
-      mColPos += lineStr.Length();
-    WriteSimple(lineStr);
-#ifdef DEBUG_wrapping
-    foo = lineStr.ToNewCString();
-    printf("Calling WriteSimple(%s), leaving mColPos = %d\n", foo, mColPos);
-    nsAllocator::Free(foo);
-#endif
-
-    // Reset bol and newline:
-    bol = eol+1;
-    newline = aString.FindCharInSet("\n\r", bol);
   } // Continue looping over the string
 }
 

@@ -45,6 +45,8 @@ TEST_FILES      = \
 		entityxif.out \
 		mailquote.html \
 		mailquote.out \
+		htmltable.html \
+		htmltable.out \
 		xifstuff.xif \
 		xifstuff.out \
 		$(NULL)

@@ -137,6 +137,11 @@ protected:
 
   nsresult InitEncoder(const nsString& aCharset);
 
+  void AddToLine(const nsString& linefragment);
+  void EndLine(PRBool softlinebreak);
+  void EnsureVerticalSpace(PRInt32 noOfRows);
+  void FlushLine();
+  void WriteQuotesAndIndent();
   void WriteSimple(const nsString& aString);
   void Write(const nsString& aString);
   void EncodeToBuffer(const nsString& aString);
@@ -148,13 +153,22 @@ protected:
 protected:
   nsIOutputStream* mStream;
   nsString*        mString;
+  nsString         mCurrentLine;
 
   PRInt32          mIndent;
-  PRBool           mCiteQuote;
+  PRInt32          mCiteQuoteLevel;
   PRInt32          mColPos;
   PRInt32          mFlags;
   PRUint32         mWrapColumn;
   PRBool           mDoFragment;
+
+  // For format=flowed
+  PRInt32          mEmptyLines; // Will be the number of empty lines before
+                                // the current. 0 if we are starting a new
+                                // line and -1 if we are in a line.
+  PRBool           mInWhitespace;
+  PRBool           mPreFormatted;
+  PRBool           mCacheLine;   // If the line should be cached before output. This makes it possible to do smarter wrapping.
 
   // The tag stack: the stack of tags we're operating on, so we can nest:
   nsHTMLTag       *mTagStack;

@@ -19,7 +19,8 @@ DEPTH=..\..\..
 
 
 MAKE_OBJ_TYPE   = EXE
-PROGRAM = .\$(OBJDIR)\Convert.exe
+PROGRAM = .\$(OBJDIR)\TestOutput.exe
+BATCHSCRIPT = TestOutSinks.bat
 
 OBJS =					\
 	.\$(OBJDIR)\Convert.obj	        \
@@ -38,6 +39,8 @@ TEST_FILES      = \
 		mailquote.out \
 		xifstuff.xif \
 		xifstuff.out \
+		htmltable.html \
+		htmltable.out \
 		$(NULL)
 
 LINCS=					\
@@ -60,6 +63,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(PROGRAM)
 	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+	$(MAKE_INSTALL) $(BATCHSCRIPT) $(DIST)\bin
 	$(MAKE_INSTALL) $(TEST_FILES) $(DIST)/bin/OutTestData
 
 clobber::
