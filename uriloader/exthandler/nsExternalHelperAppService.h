@@ -150,7 +150,7 @@ struct nsDefaultMimeTypeEntry {
 #define DATA_BUFFER_SIZE (4096*2) 
 
 class nsExternalAppHandler : public nsIStreamListener, public nsIHelperAppLauncher, public nsIURIContentListener,
-                             public nsIInterfaceRequestor
+                             public nsIInterfaceRequestor, public nsIObserver
 {
 public:
   NS_DECL_ISUPPORTS
@@ -159,6 +159,7 @@ public:
   NS_DECL_NSIHELPERAPPLAUNCHER
   NS_DECL_NSIURICONTENTLISTENER
   NS_DECL_NSIINTERFACEREQUESTOR
+  NS_DECL_NSIOBSERVER
 
   nsExternalAppHandler();
   virtual ~nsExternalAppHandler();
@@ -185,6 +186,8 @@ protected:
   PRBool mStopRequestIssued; 
   PRBool mProgressWindowCreated; 
   PRInt64 mTimeDownloadStarted;
+  PRInt32 mContentLength;
+  PRInt32 mProgress; // Number of bytes received (for sending progress notifications).
 
   // when we are told to save the temp file to disk (in a more permament location) before we are done
   // writing the content to a temp file, then we need to remember the final destination until we are ready to

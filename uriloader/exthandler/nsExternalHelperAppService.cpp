@@ -53,6 +53,7 @@
 #include "nsIRefreshURI.h"
 #include "nsIDocumentLoader.h"
 #include "nsIHelperAppLauncherDialog.h"
+#include "nsIProgressDialog.h"
 #include "nsITransport.h"
 #include "nsIFileTransportService.h"
 #include "nsCExternalHandlerService.h" // contains contractids for the helper app service
@@ -74,6 +75,8 @@
 
 #include "nsIPluginHost.h"
 #include "nsEscape.h"
+
+#include "nsIStringBundle.h"
 
 const char *FORCE_ALWAYS_ASK_PREF = "browser.helperApps.alwaysAsk.force";
 
@@ -673,6 +676,7 @@ NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY(nsIHelperAppLauncher)   
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+   NS_INTERFACE_MAP_ENTRY(nsIObserver)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 nsExternalAppHandler::nsExternalAppHandler()
@@ -683,6 +687,8 @@ nsExternalAppHandler::nsExternalAppHandler()
   mStopRequestIssued = PR_FALSE;
   mDataBuffer = (char *) nsMemory::Alloc((sizeof(char) * DATA_BUFFER_SIZE));
   mProgressWindowCreated = PR_FALSE;
+  mContentLength = -1;
+  mProgress      = 0;
 }
 
 nsExternalAppHandler::~nsExternalAppHandler()
@@ -695,6 +701,16 @@ NS_IMETHODIMP nsExternalAppHandler::GetInterface(const nsIID & aIID, void * *aIn
 {
   NS_ENSURE_ARG_POINTER(aInstancePtr);
   return QueryInterface(aIID, aInstancePtr);
+}
+
+NS_IMETHODIMP nsExternalAppHandler::Observe(nsISupports *aSubject, const char *aTopic, const PRUnichar *aData )
+{
+  if (PL_strcmp(aTopic, "oncancel") == 0)
+  {
+    // User pressed cancel button on dialog.
+    return this->Cancel();
+  }
+  return NS_OK;
 }
 
 
@@ -725,7 +741,6 @@ NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListene
     if (webProgress) 
     {
       mWebProgressListener = aWebProgressListener;
-      webProgress->AddProgressListener(mWebProgressListener);
     }
   }
   return NS_OK;
@@ -1011,6 +1026,11 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
 
   nsresult rv = SetUpTempFile(aChannel);
   
+  // Get content length.
+  if ( aChannel )
+  {
+    aChannel->GetContentLength( &mContentLength );
+  }
   
   // retarget all load notifcations to our docloader instead of the original window's docloader...
   RetargetLoadNotifications(request);
@@ -1022,6 +1042,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     // Turn off content encoding conversions.
     httpChannel->SetApplyConversion( PR_FALSE );
   }
+
+  mTimeDownloadStarted = PR_Now();
 
   // now that the temp file is set up, find out if we need to invoke a dialog asking the user what
   // they want us to do with this content...
@@ -1059,14 +1081,71 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIRequest *request, nsISuppo
     }
   }
 
-  mTimeDownloadStarted = PR_Now();
-
   return NS_OK;
+}
+
+// Convert error info into proper message text and send OnStatusChange notification
+// to the web progress listener.
+typedef enum { kReadError, kWriteError, kLaunchError } ErrorType;
+static void SendStatusChange( 
+    ErrorType type, nsresult rv, nsIRequest *aRequest, nsIWebProgressListener *aListener, const PRUnichar *path)
+{
+    nsAutoString msgId;
+    switch(rv)
+    {
+    case NS_ERROR_FILE_DISK_FULL:
+    case NS_ERROR_FILE_NO_DEVICE_SPACE:
+        // Out of space on target volume.
+        msgId = NS_LITERAL_STRING("diskFull");
+        break;
+
+    case NS_ERROR_FILE_READ_ONLY:
+        // Attempt to write to read/only file.
+        msgId = NS_LITERAL_STRING("readOnly");
+        break;
+
+    case NS_ERROR_FILE_ACCESS_DENIED:
+        // Attempt to write without sufficient permissions.
+        msgId = NS_LITERAL_STRING("accessError");
+        break;
+
+    default:
+        // Generic read/write/launch error message.
+        switch(type)
+        {
+        case kReadError:
+          msgId = NS_LITERAL_STRING("readError");
+          break;
+        case kWriteError:
+          msgId = NS_LITERAL_STRING("writeError");
+          break;
+        case kLaunchError:
+          msgId = NS_LITERAL_STRING("launchError");
+          break;
+        }
+        break;
+    }
+    // Get properties file bundle and extract status string.
+    nsCOMPtr<nsIStringBundleService> s = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
+    if (s)
+    {
+        nsCOMPtr<nsIStringBundle> bundle;
+        if (NS_SUCCEEDED(s->CreateBundle("chrome://global/locale/nsWebBrowserPersist.properties", getter_AddRefs(bundle))))
+        {
+            nsXPIDLString msgText;
+            const PRUnichar *strings[] = { path };
+            if(NS_SUCCEEDED(bundle->FormatStringFromName(msgId.get(), strings, 1, getter_Copies(msgText))))
+            {
+                aListener->OnStatusChange(nsnull, (type == kReadError) ? aRequest : nsnull, rv, msgText);
+            }
+        }
+    }
 }
 
 NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupports * aCtxt,
                                                   nsIInputStream * inStr, PRUint32 sourceOffset, PRUint32 count)
 {
+  nsresult rv = NS_OK;
   // first, check to see if we've been canceled....
   if (mCanceled) // then go cancel our underlying channel too
     return request->Cancel(NS_BINDING_ABORTED);
@@ -1076,17 +1155,73 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
   {
     PRUint32 numBytesRead = 0; 
     PRUint32 numBytesWritten = 0;
-    while (count > 0) // while we still have bytes to copy...
+    mProgress += count;
+    PRBool readError;
+    while (NS_SUCCEEDED(rv) && count > 0) // while we still have bytes to copy...
     {
-      inStr->Read(mDataBuffer, PR_MIN(count, DATA_BUFFER_SIZE - 1), &numBytesRead);
-      if (count >= numBytesRead)
-        count -= numBytesRead; // subtract off the number of bytes we just read
-      else
-        count = 0;
-      mOutStream->Write(mDataBuffer, numBytesRead, &numBytesWritten);
+      readError = PR_TRUE;
+      rv = inStr->Read(mDataBuffer, PR_MIN(count, DATA_BUFFER_SIZE - 1), &numBytesRead);
+      if (NS_SUCCEEDED(rv))
+      {
+        if (count >= numBytesRead)
+          count -= numBytesRead; // subtract off the number of bytes we just read
+        else
+          count = 0;
+        readError = PR_FALSE;
+        // Write out the data until something goes wrong, or, it is
+        // all written.  We loop because for some errors (e.g., disk
+        // full), we get NS_OK with some bytes written, then an error.
+        // So, we want to write again in that case to get the actual
+        // error code.
+        const char *bufPtr = mDataBuffer; // Where to write from.
+        while (NS_SUCCEEDED(rv) && numBytesRead)
+        {
+          numBytesWritten = 0;
+          rv = mOutStream->Write(bufPtr, numBytesRead, &numBytesWritten);
+          if (NS_SUCCEEDED(rv))
+          {
+            numBytesRead -= numBytesWritten;
+            bufPtr += numBytesWritten;
+            // Force an error if (for some reason) we get NS_OK but
+            // no bytes written.
+            if (!numBytesWritten)
+            {
+              rv = NS_ERROR_FAILURE;
+            }
+          }
+        }
+      }
+    }
+    if (NS_SUCCEEDED(rv))
+    {
+      // Set content length if we haven't already got it.
+      if (mContentLength == -1)
+      {
+        nsCOMPtr<nsIChannel> aChannel(do_QueryInterface(request));
+        if (aChannel)
+        {
+          aChannel->GetContentLength(&mContentLength);
+        }
+      }
+      // Send progress notification.
+      if (mWebProgressListener)
+      {
+        mWebProgressListener->OnProgressChange(nsnull, request, mProgress, mContentLength, mProgress, mContentLength);
+      }
+    }
+    else
+    {
+      // An error occurred, notify listener.
+      if (mWebProgressListener)
+      {
+        nsXPIDLString tempFilePath;
+        if (mTempFile)
+          mTempFile->GetUnicodePath(getter_Copies(tempFilePath));
+        SendStatusChange(readError ? kReadError : kWriteError, rv, request, mWebProgressListener, tempFilePath.get());
+      }
     }
   }
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISupports *aCtxt, 
@@ -1108,6 +1243,13 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISuppor
   {
     mOutStream->Close();
     mOutStream = nsnull;
+  }
+
+  // Notify dialog that download is complete.
+  if(mWebProgressListener)
+  {
+    // XXX Do we need to check for errors here (server goes down, network cable cut, etc.)?
+    mWebProgressListener->OnStateChange(nsnull, request, nsIWebProgressListener::STATE_STOP, NS_OK);
   }
 
   return ExecuteDesiredAction();
@@ -1181,13 +1323,49 @@ nsresult nsExternalAppHandler::ShowProgressDialog()
   // done processing the load. in this case, throw up a progress dialog so the user can see what's going on...
   nsresult rv = NS_OK;
 
-  if ( !mDialog ) {
-    // Get helper app launcher dialog.
-    mDialog = do_CreateInstance( NS_IHELPERAPPLAUNCHERDLG_CONTRACTID, &rv );
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  nsCOMPtr<nsIProgressDialog> progressDlg = do_CreateInstance( "@mozilla.org/progressdialog;1", &rv );
+  if (progressDlg)
+  {
+    // Wire up this progress dialog.
+    progressDlg->SetSource( mSourceUrl );
+    progressDlg->SetStartTime( mTimeDownloadStarted );
+    progressDlg->SetObserver(this);
+    nsCOMPtr<nsILocalFile> local = do_QueryInterface(mFinalFileDestination);
+    progressDlg->SetTarget(local);
 
-  rv = mDialog->ShowProgressDialog(this, mWindowContext);
+    nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
+    mMimeInfo->GetPreferredAction(&action);
+    if (action != nsIMIMEInfo::saveToDisk)
+    {
+      // Opening with an application; use either description or application file name.
+      nsXPIDLString openWith;
+      mMimeInfo->GetApplicationDescription(getter_Copies(openWith));
+      if (openWith.IsEmpty())
+      {
+        nsCOMPtr<nsIFile> appl;
+        mMimeInfo->GetPreferredApplicationHandler(getter_AddRefs(appl));
+        if (appl)
+        {
+          nsCOMPtr<nsILocalFile> file = do_QueryInterface(appl);
+          if (file)
+          {
+            file->GetUnicodeLeafName(getter_Copies(openWith));
+          }
+        }
+      }
+      // Tell progress dialog what we're opening with.
+      progressDlg->SetOpeningWith(openWith);
+    }
+
+    // Open the dialog.
+    rv = progressDlg->Open(nsnull, nsnull);
+
+    if(NS_SUCCEEDED(rv))
+    {
+      // Send notifications to the dialog.
+      this->SetWebProgressListener(progressDlg);
+    }
+  }
 
   return rv;
 }
@@ -1242,6 +1420,13 @@ nsresult nsExternalAppHandler::MoveFile(nsIFile * aNewFileLocation)
      {
        rv = mTempFile->MoveTo(directoryLocation, fileName);
      }
+     if (NS_FAILED(rv) && mWebProgressListener)
+     {
+       // Send error notification.        
+       nsXPIDLString path;
+       fileToUse->GetUnicodePath(getter_Copies(path));
+       SendStatusChange(kWriteError, rv, nsnull, mWebProgressListener, path.get());
+     }
   }
 
   return rv;
@@ -1282,7 +1467,7 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
       rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mSuggestedFileName.get(), fileExt.get());
     }
 
-    if (NS_FAILED(rv)) 
+    if (NS_FAILED(rv) || !fileToUse) 
       return Cancel();
     
     mFinalFileDestination = do_QueryInterface(fileToUse);
@@ -1318,6 +1503,13 @@ nsresult nsExternalAppHandler::OpenWithApplication(nsIFile * aApplication)
     if (helperAppService)
     {
       rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mFinalFileDestination);
+      if (NS_FAILED(rv) && mWebProgressListener)
+      {
+        // Send error notification.
+        nsXPIDLString path;
+        mFinalFileDestination->GetUnicodePath(getter_Copies(path));
+        SendStatusChange(kLaunchError, rv, nsnull, mWebProgressListener,path.get());
+      }
 
 #ifndef XP_MAC
       // Mac users have been very verbal about temp files being deleted on app exit - they
@@ -1342,10 +1534,6 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
     return NS_OK;
 
   mMimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
-
-  // launch the progress window now that the user has picked the desired action.
-  if (!mProgressWindowCreated) 
-   ShowProgressDialog();
 
   // user has chosen to launch using an application, fire any refresh tags now...
   ProcessAnyRefreshTags(); 
@@ -1383,6 +1571,10 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
   // We'll make sure this results in a unique name later
 
   mFinalFileDestination = do_QueryInterface(fileToUse);
+
+  // launch the progress window now that the user has picked the desired action.
+  if (!mProgressWindowCreated) 
+   ShowProgressDialog();
 
   return NS_OK;
 }
