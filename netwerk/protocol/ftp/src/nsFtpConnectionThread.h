@@ -183,7 +183,6 @@ private:
     nsAutoString        mUsername;      // username
     nsAutoString        mPassword;      // password
     FTP_ACTION          mAction;        // the higher level action (GET/PUT)
-    PRBool              mUsePasv;       // use a passive data connection.
     PRBool              mBin;           // transfer mode (ascii or binary)
     PRBool              mAnonymous;     // try connecting anonymous (default)
     PRBool              mRetryPass;     // retrying the password

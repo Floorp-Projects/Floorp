@@ -57,7 +57,7 @@ nsFtpConnectionThread::nsFtpConnectionThread() {
     NS_INIT_REFCNT();
     // bool init
     mConnected = mList = mRetryPass = mCachedConn = mSentStart = PR_FALSE;
-    mFireCallbacks = mUsePasv = mBin = mKeepRunning = mAnonymous = PR_TRUE;
+    mFireCallbacks = mBin = mKeepRunning = mAnonymous = PR_TRUE;
 
     mAction = GET;
     mState = FTP_COMMAND_CONNECT;
@@ -1288,13 +1288,8 @@ nsFtpConnectionThread::R_pasv() {
     PRInt32 port;
 
     if (mResponseCode/100 != 2)  {
-        // failed. increment to port.
-        // mState = FTP_S_PORT;
-        mUsePasv = PR_FALSE;
         return FTP_ERROR;
     }
-
-    mUsePasv = PR_TRUE;
 
     char *ptr = nsnull;
     char *response = mResponseMsg.ToNewCString();
@@ -1329,9 +1324,6 @@ nsFtpConnectionThread::R_pasv() {
         &h0, &h1, &h2, &h3, &p0, &p1);
 
     if (fields < 6) {
-        // bad format. we'll try PORT, but it's probably over.
-        
-        mUsePasv = PR_FALSE;
         return FTP_ERROR;
     }
 
@@ -1714,12 +1706,7 @@ nsFtpConnectionThread::FindActionState(void) {
         // we're doing an operation that requies the data channel.
         // figure out what kind of data channel we want to setup,
         // and do it.
-        if (mUsePasv)
-            return FTP_S_PASV;
-        else
-            // until we have PORT support, we'll just fail.
-            // return FTP_S_PORT;
-            return FTP_ERROR;
+        return FTP_S_PASV;
     }
 
     // These operations use the command channel response as the
