@@ -42,7 +42,6 @@ NS_DEF_PTR(nsIStyleContext);
 
 //----------------------------------------------------------------------
 
-
 void nsBlockBandData::ComputeAvailSpaceRect()
 {
   nsBandTrapezoid*  trapezoid = data;
@@ -536,9 +535,9 @@ nsBlockFrame::DrainOverflowList()
 }
 
 nsresult
-nsBlockFrame::PlaceLine(nsBlockReflowState&     aState,
-                        nsLineLayout&           aLineLayout,
-                        nsLineData*             aLine)
+nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
+                        nsLineLayout&       aLineLayout,
+                        nsLineData*         aLine)
 {
   // Before we place the line, make sure that it will fit in it's new
   // location. It always fits if the height isn't constrained or it's
@@ -548,6 +547,26 @@ nsBlockFrame::PlaceLine(nsBlockReflowState&     aState,
       // The line will not fit
       return PushLines(aState, aLine);
     }
+  }
+
+  // When the line is finally placed then we know that the child
+  // frames have a stable location. This means that we can DidReflow
+  // them marking them done. Note that when we are paginated this
+  // optimization cannot be done because this may be a nested block
+  // that will be pushed to a new page by the containing block and the
+  // nested block can't know that during its reflow.
+  if (!aState.mPresContext->IsPaginated()) {
+    nsIFrame* child = aLine->mFirstChild;
+    for (PRInt32 i = aLine->mChildCount; --i >= 0; ) {
+      nsFrameState state;
+      child->GetFrameState(state);
+      if (NS_FRAME_IN_REFLOW & state) {
+        child->DidReflow(*aState.mPresContext, NS_FRAME_REFLOW_FINISHED);
+      }
+      child->GetNextSibling(child);
+    }
+
+    // XXX Paint this portion of ourselves
   }
 
   // Consume space and advance running values
@@ -596,7 +615,6 @@ nsBlockFrame::PlaceLine(nsBlockReflowState&     aState,
 }
 
 // aY has borderpadding.top already factored in
-// aResult is relative to left,aY
 nsresult
 nsBlockFrame::GetAvailableSpace(nsBlockReflowState& aState, nscoord aY)
 {
@@ -613,18 +631,8 @@ nsBlockFrame::GetAvailableSpace(nsBlockReflowState& aState, nscoord aY)
   // between any left and right floaters
   aState.mCurrentBand.ComputeAvailSpaceRect();
 
-#if 0
-  // XXX For now we assume that there are no height restrictions
-  // (e.g. no "float to bottom of column/page")
-  nsRect& availSpace = aState.mCurrentBand.availSpace;
-  aResult.x = availSpace.x;
-  aResult.y = availSpace.y;
-  aResult.width = availSpace.width;
-  aResult.height = aState.mAvailSize.height;
-#else
   aState.mCurrentBand.availSpace.MoveBy(aState.mBorderPadding.left,
                                         aState.mY);
-#endif
 
   return rv;
 }
