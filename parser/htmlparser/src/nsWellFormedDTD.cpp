@@ -181,7 +181,7 @@ eAutoDetectResult CWellFormedDTD::CanParse(nsString& aContentType, nsString& aCo
     if(aContentType.Equals(kXMLTextContentType) ||
        aContentType.Equals(kRDFTextContentType) ||
        aContentType.Equals(kXULTextContentType)) {
-      result=eValidDetect;
+      result=ePrimaryDetect;
     }
     else {
       if(-1<aBuffer.Find("<?xml ")) {
