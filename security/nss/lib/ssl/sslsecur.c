@@ -37,7 +37,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsecur.c,v 1.26 2005/02/24 00:38:23 julien.pierre.bugs%sun.com Exp $ */
+/* $Id: sslsecur.c,v 1.27 2005/04/05 03:48:20 nelsonb%netscape.com Exp $ */
 #include "cert.h"
 #include "secitem.h"
 #include "keyhi.h"
@@ -678,10 +678,14 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 	SECKEY_CacheStaticFlags(sc->serverKey);
     }
 
-    if (kea == kt_rsa) {
-        rv = ssl3_CreateRSAStepDownKeys(ss);
-	if (rv != SECSuccess) {
-	    return SECFailure;	/* err set by ssl3_CreateRSAStepDownKeys */
+    if (kea == kt_rsa && cert && sc->serverKeyBits > 512) {
+	if (ss->noStepDown) {
+	    /* disable all export ciphersuites */
+	} else {
+	    rv = ssl3_CreateRSAStepDownKeys(ss);
+	    if (rv != SECSuccess) {
+		return SECFailure; /* err set by ssl3_CreateRSAStepDownKeys */
+	    }
 	}
     }
 

@@ -40,7 +40,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsock.c,v 1.34 2004/05/11 03:48:25 jpierre%netscape.com Exp $ */
+/* $Id: sslsock.c,v 1.35 2005/04/05 03:48:20 nelsonb%netscape.com Exp $ */
 #include "seccomon.h"
 #include "cert.h"
 #include "keyhi.h"
@@ -163,6 +163,7 @@ static sslOptions ssl_defaults = {
     PR_FALSE,	/* fdx                */
     PR_TRUE,	/* v2CompatibleHello  */
     PR_TRUE,	/* detectRollBack     */
+    PR_FALSE,   /* noStepDown         */
 };
 
 sslSessionIDLookupFunc  ssl_sid_lookup;
@@ -244,6 +245,7 @@ ssl_DupSocket(sslSocket *os)
 	ss->fdx                = os->fdx;
 	ss->v2CompatibleHello  = os->v2CompatibleHello;
 	ss->detectRollBack     = os->detectRollBack;
+	ss->noStepDown         = os->noStepDown;
 
 	ss->peerID             = !os->peerID ? NULL : PORT_Strdup(os->peerID);
 	ss->url                = !os->url    ? NULL : PORT_Strdup(os->url);
@@ -603,6 +605,12 @@ SSL_OptionSet(PRFileDesc *fd, PRInt32 which, PRBool on)
 	ss->detectRollBack = on;
         break;
 
+      case SSL_NO_STEP_DOWN:        
+	ss->noStepDown     = on;         
+	if (on) 
+	    SSL_DisableExportCipherSuites(fd);
+	break;
+
       default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	rv = SECFailure;
@@ -648,6 +656,7 @@ SSL_OptionGet(PRFileDesc *fd, PRInt32 which, PRBool *pOn)
     case SSL_ENABLE_FDX:          on = ss->fdx;                break;
     case SSL_V2_COMPATIBLE_HELLO: on = ss->v2CompatibleHello;  break;
     case SSL_ROLLBACK_DETECTION:  on = ss->detectRollBack;     break;
+    case SSL_NO_STEP_DOWN:        on = ss->noStepDown;         break;
 
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -686,6 +695,7 @@ SSL_OptionGetDefault(PRInt32 which, PRBool *pOn)
     case SSL_ENABLE_FDX:          on = ssl_defaults.fdx;                break;
     case SSL_V2_COMPATIBLE_HELLO: on = ssl_defaults.v2CompatibleHello;  break;
     case SSL_ROLLBACK_DETECTION:  on = ssl_defaults.detectRollBack;     break;
+    case SSL_NO_STEP_DOWN:        on = ssl_defaults.noStepDown;         break;
 
     default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
@@ -777,6 +787,12 @@ SSL_OptionSetDefault(PRInt32 which, PRBool on)
 	ssl_defaults.detectRollBack = on;
 	break;
 
+      case SSL_NO_STEP_DOWN:        
+	ssl_defaults.noStepDown     = on;         
+	if (on)
+	    SSL_DisableDefaultExportCipherSuites();
+	break;
+
       default:
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
@@ -854,6 +870,10 @@ SSL_CipherPrefSetDefault(PRInt32 which, PRBool enabled)
 {
     SECStatus rv;
     
+    if (enabled && ssl_defaults.noStepDown && SSL_IsExportCipherSuite(which)) {
+    	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
+	return SECFailure;
+    }
     if (SSL_IS_SSL2_CIPHER(which)) {
 	rv = ssl2_CipherPrefSetDefault(which, enabled);
     } else {
@@ -887,6 +907,10 @@ SSL_CipherPrefSet(PRFileDesc *fd, PRInt32 which, PRBool enabled)
     
     if (!ss) {
 	SSL_DBG(("%d: SSL[%d]: bad socket in CipherPrefSet", SSL_GETPID(), fd));
+	return SECFailure;
+    }
+    if (enabled && ss->noStepDown && SSL_IsExportCipherSuite(which)) {
+    	PORT_SetError(SEC_ERROR_INVALID_ALGORITHM);
 	return SECFailure;
     }
     if (SSL_IS_SSL2_CIPHER(which)) {
@@ -1873,6 +1897,7 @@ ssl_NewSocket(void)
 	ss->fdx                = ssl_defaults.fdx;
 	ss->v2CompatibleHello  = ssl_defaults.v2CompatibleHello;
 	ss->detectRollBack     = ssl_defaults.detectRollBack;
+	ss->noStepDown         = ssl_defaults.noStepDown;
 	ss->noCache            = ssl_defaults.noCache;
 	ss->peerID             = NULL;
 	ss->rTimeout	       = PR_INTERVAL_NO_TIMEOUT;
