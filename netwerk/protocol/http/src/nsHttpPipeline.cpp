@@ -381,6 +381,12 @@ nsHttpPipeline::ReadSegments(nsAHttpSegmentReader *reader,
 
         rv = mSendBufIn->Available(&avail);
         if (NS_FAILED(rv)) return rv;
+
+        // return EOF if send buffer is empty
+        if (avail == 0) {
+            *countRead = 0;
+            return NS_OK;
+        }
     }
 
     // read no more than what was requested
