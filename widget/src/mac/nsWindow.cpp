@@ -2166,12 +2166,19 @@ void nsWindow::CalcWindowRegions()
 	{
 		while (parent && (!parent->mIsTopWidgetWindow))
 	{
-		if (parent->mWindowRegion)
-		{
-			::OffsetRgn(parent->mWindowRegion, origin.x, origin.y);
-			::SectRgn(mWindowRegion, parent->mWindowRegion, mWindowRegion);
-			::OffsetRgn(parent->mWindowRegion, -origin.x, -origin.y);
-		}
+    if (parent->mWindowRegion)
+    {
+      // Under 10.2, if we offset a region beyond the coordinate space,
+      // OffsetRgn() will silently fail and restoring it will then cause the
+      // widget to be out of place (visible as 'shearing' when scrolling).
+      // To prevent that, we copy the original region and work on that. (bug 162885)
+      StRegionFromPool shiftedParentWindowRgn;
+      if ( !shiftedParentWindowRgn )
+        return;
+      ::CopyRgn(parent->mWindowRegion, shiftedParentWindowRgn); 
+      ::OffsetRgn(shiftedParentWindowRgn, origin.x, origin.y);
+      ::SectRgn(mWindowRegion, shiftedParentWindowRgn, mWindowRegion);
+    }
 		origin.x -= parent->mBounds.x;
 		origin.y -= parent->mBounds.y;
 		parent = (nsWindow*)parent->mParent;
