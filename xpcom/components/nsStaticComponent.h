@@ -36,7 +36,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIModule.h"
-#include "nsNativeComponentLoader.h"
+#include "nsModule.h"
  
 struct nsStaticModuleInfo {
   const char      *name;
