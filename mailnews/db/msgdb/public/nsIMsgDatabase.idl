@@ -1,0 +1,167 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1999 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
+#include "nsISupports.idl"
+#include "MailNewsTypes2.idl"
+#include "nsIFileSpec.idl"
+#include "nsIDBChangeAnnouncer.idl"
+
+%{C++
+#include "nsMsgKeyArray.h"
+%}
+
+interface nsIDBChangeListener;
+interface nsIMsgDBHdr;
+interface nsIEnumerator;
+interface nsIMsgThread;
+interface nsIDBFolderInfo;
+
+typedef long nsMsgDBCommit;
+
+interface nsMsgDBCommitType 
+{
+  const long kSmallCommit = 0;
+  const long kLargeCommit = 1;
+  const long kSessionCommit = 2;
+  const long kCompressCommit = 3;
+};
+
+
+[ref] native nsMsgKeyArray(nsMsgKeyArray);
+
+[scriptable, uuid(9188bc83-f92e-11d2-81ef-0060083a0bcf)]
+
+interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
+  nsIMsgDatabase Open(in nsIFileSpec folderName, in boolean create, in boolean upgrading);
+  void Close(in boolean forceCommit);
+
+  void Commit(in nsMsgDBCommit commitType);
+  // Force closed is evil, and we should see if we can do without it.
+  // In 4.x, it was mainly used to remove corrupted databases.
+  void ForceClosed();
+
+  readonly attribute nsIDBFolderInfo  DBFolderInfo;
+
+  // get a message header for the given key. Caller must release()!
+
+  nsIMsgDBHdr GetMsgHdrForKey(in nsMsgKey key);
+  //Returns whether or not this database contains the given key
+  boolean ContainsKey(in nsMsgKey key);
+
+   // Must call AddNewHdrToDB after creating. The idea is that you create
+  // a new header, fill in its properties, and then call AddNewHdrToDB.
+  // AddNewHdrToDB will send notifications to any listeners.
+  nsIMsgDBHdr CreateNewHdr(in nsMsgKey key);
+
+  void AddNewHdrToDB(in nsIMsgDBHdr newHdr, in boolean notify);
+
+  nsIMsgDBHdr CopyHdrFromExistingHdr(in nsMsgKey key, in nsIMsgDBHdr existingHdr);
+
+  void ListAllKeys(in nsMsgKeyArray outputKeys);
+
+  nsIEnumerator EnumerateMessages();
+  nsIEnumerator EnumerateThreads();
+
+  nsIMsgThread GetThreadContainingMsgHdr(in nsIMsgDBHdr msgHdr) ;
+
+  // helpers for user command functions like delete, mark read, etc.
+
+  void MarkHdrRead(in nsIMsgDBHdr msgHdr, in boolean bRead,
+                         in nsIDBChangeListener instigator);
+
+  // MDN support
+  void MarkMDNNeeded(in nsMsgKey key, in boolean bNeeded,
+                           in nsIDBChangeListener instigator);
+
+  // MarkMDNneeded only used when mail server is a POP3 server
+  // or when the IMAP server does not support user defined
+  // PERMANENTFLAGS
+  boolean IsMDNNeeded(in nsMsgKey key);
+
+  void MarkMDNSent(in nsMsgKey key, in boolean bNeeded,
+                         in nsIDBChangeListener instigator);
+  boolean IsMDNSent(in nsMsgKey key);
+
+// methods to get and set docsets for ids.
+  void MarkRead(in nsMsgKey key, in boolean bRead, 
+                      in nsIDBChangeListener instigator);
+
+  void MarkReplied(in nsMsgKey key, in boolean bReplied, 
+                         in nsIDBChangeListener instigator);
+
+  void MarkForwarded(in nsMsgKey key, in boolean bForwarded, 
+                           in nsIDBChangeListener instigator);
+
+  void MarkHasAttachments(in nsMsgKey key, in boolean bHasAttachments, 
+                                in nsIDBChangeListener instigator);
+
+  void MarkThreadIgnored(in nsIMsgThread thread, in nsMsgKey threadKey, in boolean bIgnored,
+                               in nsIDBChangeListener instigator);
+  void MarkThreadWatched(in nsIMsgThread thread, in nsMsgKey threadKey, in boolean bWatched,
+                               in nsIDBChangeListener instigator);
+
+  boolean IsRead(in nsMsgKey key);
+  boolean IsIgnored(in nsMsgKey key);
+  boolean IsMarked(in nsMsgKey key);
+  boolean HasAttachments(in nsMsgKey key);
+
+[ptr] native nsMsgKeyArray(nsMsgKeyArray);
+
+  void MarkAllRead(in nsMsgKeyArray thoseMarked);
+
+  void MarkReadByDate (in PRTime startDate, in PRTime endDate, in nsMsgKeyArray markedIds);
+
+  void DeleteMessages(in nsMsgKeyArray nsMsgKeys, in nsIDBChangeListener instigator);
+  void DeleteMessage(in nsMsgKey key, 
+                           in nsIDBChangeListener instigator,
+                           in boolean commit);
+  void DeleteHeader(in nsIMsgDBHdr msgHdr, in nsIDBChangeListener instigator,
+                          in boolean commit, in boolean notify);
+
+  void UndoDelete(in nsIMsgDBHdr msgHdr);
+
+  void MarkLater(in nsMsgKey key, in PRTime until);
+  void MarkMarked(in nsMsgKey key, in boolean mark,
+                        in nsIDBChangeListener instigator);
+  void MarkOffline(in nsMsgKey key, in boolean offline,
+                         in nsIDBChangeListener instigator);
+
+  // returns NS_OK on success, NS_COMFALSE on failure
+  void AllMsgKeysImapDeleted(in nsMsgKeyArray keys);
+
+  void MarkImapDeleted(in nsMsgKey key, in boolean deleted,
+                             in nsIDBChangeListener instigator);
+
+  readonly attribute nsMsgKey FirstNew;
+  void HasNew();  // returns NS_OK if true, NS_COMFALSE if false
+  void ClearNewList(in boolean notify);
+  void AddToNewList(in nsMsgKey key);
+
+  // used mainly to force the timestamp of a local mail folder db to
+  // match the time stamp of the corresponding berkeley mail folder,
+  // but also useful to tell the summary to mark itself invalid
+  void SetSummaryValid(in boolean valid);
+
+  // offline operations
+  void ListAllOfflineOpIds(in nsMsgKeyArray offlineOpIds);
+  void ListAllOfflineDeletes(in nsMsgKeyArray offlineDeletes);
+
+  readonly attribute nsMsgKey LowWaterArticleNum;
+  readonly attribute nsMsgKey HighWaterArticleNum;
+};
+
