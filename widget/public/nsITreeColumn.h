@@ -38,10 +38,10 @@ class nsITreeColumn : public nsISupports
 {
 public:
 	// Inspectors
-	NS_IMETHOD GetPixelWidth(PRUint32& width) = 0;
-	NS_IMETHOD GetDesiredPercentage(double& percentage) = 0;
-	NS_IMETHOD GetSortState(nsColumnSortState& answer) = 0;
-	NS_IMETHOD GetColumnName(nsString& name) = 0;
+	NS_IMETHOD GetPixelWidth(PRUint32& width) const = 0;
+	NS_IMETHOD GetDesiredPercentage(double& percentage) const = 0;
+	NS_IMETHOD GetSortState(nsColumnSortState& answer) const = 0;
+	NS_IMETHOD GetColumnName(nsString& name) const = 0;
 
 	// Setters
 	NS_IMETHOD SetPixelWidth(PRUint32 newWidth) = 0;

@@ -34,8 +34,8 @@ class nsITreeItem : public nsISupports
 {
 public:
 	// Inspectors
-	NS_IMETHOD GetTriggerImage(nsIImage*& pImage, nsIImageGroup* pGroup) = 0;
-	NS_IMETHOD GetIndentationLevel(PRUint32& indentation) = 0;
+	NS_IMETHOD GetTriggerImage(nsIImage*& pImage, nsIImageGroup* pGroup) const = 0;
+	NS_IMETHOD GetIndentationLevel(PRUint32& indentation) const = 0;
 	
 	// Setters
 
