@@ -82,8 +82,8 @@ public:
                                      nscoord                  aMaxWidth);
 
   // these accessors are mostly for debugging purposes
-  nscoord GetTableMinContentWidth() const;
-  nscoord GetTableMaxContentWidth() const;
+  nscoord GetTableMinWidth() const;
+  nscoord GetTableMaxWidth() const;
   nscoord GetCOLSAttribute() const;
   void Dump(PRInt32 aIndent);
 
@@ -210,19 +210,10 @@ protected:
   nsTableFrame * mTableFrame;
   PRInt32        mCols;
   // cached data
-  nscoord        mMinTableContentWidth;   // the smallest size for the table (excluding border and padding)
-  nscoord        mMaxTableContentWidth;   // the "natural" size for the table, if unconstrained (excluding border and padding) 
   nscoord        mCellSpacingTotal;       // all of the cellspacing for all of the cols
   float          mMinToDesProportionRatio;
   PRPackedBool   mIsNavQuirksMode;
 };
-
-// these accessors are mostly for debugging purposes
-inline nscoord BasicTableLayoutStrategy::GetTableMinContentWidth() const
-{ return mMinTableContentWidth; };
-
-inline nscoord BasicTableLayoutStrategy::GetTableMaxContentWidth() const
-{ return mMaxTableContentWidth; };
 
 inline nscoord BasicTableLayoutStrategy::GetCOLSAttribute() const
 { return mCols; };

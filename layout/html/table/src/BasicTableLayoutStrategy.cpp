@@ -69,8 +69,6 @@ BasicTableLayoutStrategy::BasicTableLayoutStrategy(nsTableFrame *aFrame, PRBool 
   NS_ASSERTION(nsnull != aFrame, "bad frame arg");
 
   mTableFrame            = aFrame;
-  mMinTableContentWidth  = 0;
-  mMaxTableContentWidth  = 0;
   mCellSpacingTotal      = 0;
   mIsNavQuirksMode       = aIsNavQuirks;
 }
@@ -90,8 +88,6 @@ PRBool BasicTableLayoutStrategy::Initialize(nsIPresContext*          aPresContex
   PRBool result = PR_TRUE;
 
   // re-init instance variables
-  mMinTableContentWidth = 0;
-  mMaxTableContentWidth = 0;
   mCellSpacingTotal     = 0;
   mCols                 = mTableFrame->GetEffectiveCOLSAttribute();
   // assign the width of all fixed-width columns
@@ -117,14 +113,15 @@ BasicTableLayoutStrategy::SetMaxElementSize(nsSize*         aMaxElementSize,
     mTableFrame->GetTableBorder(borderPadding);
     borderPadding += aPadding;
     nscoord horBorderPadding = borderPadding.left + borderPadding.right;
+    nscoord minTableWidth = GetTableMinWidth();
     if (tablePosition->mWidth.GetUnit() == eStyleUnit_Coord) {
       aMaxElementSize->width = tablePosition->mWidth.GetCoordValue();
-      if (mMinTableContentWidth + horBorderPadding > aMaxElementSize->width) {
-        aMaxElementSize->width = mMinTableContentWidth + horBorderPadding;
+      if (minTableWidth + horBorderPadding > aMaxElementSize->width) {
+        aMaxElementSize->width = minTableWidth + horBorderPadding;
       }
     }   
     else {
-      aMaxElementSize->width = mMinTableContentWidth + horBorderPadding;
+      aMaxElementSize->width = minTableWidth + horBorderPadding;
     }
   }
 }
@@ -216,13 +213,14 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   }
 
   // if the max width available is less than the min content width for fixed table, we're done
-  if (!tableIsAutoWidth && (maxWidth < mMinTableContentWidth)) {
+  nscoord minTableWidth = GetTableMinWidth();
+  if (!tableIsAutoWidth && (maxWidth < minTableWidth)) {
     return BCW_Wrapup(aPresContext, this, mTableFrame, nsnull);
   }
 
   // if the max width available is less than the min content width for auto table
   // that had no % cells/cols, we're done
-  if (tableIsAutoWidth && (maxWidth < mMinTableContentWidth) && (0 == perAdjTableWidth)) {
+  if (tableIsAutoWidth && (maxWidth < minTableWidth) && (0 == perAdjTableWidth)) {
     return BCW_Wrapup(aPresContext, this, mTableFrame, nsnull);
   }
 
@@ -885,7 +883,6 @@ BasicTableLayoutStrategy::AssignPreliminaryColumnWidths(nsIPresContext*         
     nscoord minWidth = colFrame->GetMinWidth();
     mTableFrame->SetColumnWidth(colX, minWidth);
   }
-  SetMinAndMaxTableContentWidths();
 
   if (gsDebugAssign) {printf("AssignPrelimColWidths ex\n"); mTableFrame->Dump(aPresContext, PR_FALSE, PR_TRUE, PR_FALSE);}
   return rv;
@@ -1181,27 +1178,42 @@ BasicTableLayoutStrategy::AssignPercentageColumnWidths(nscoord aBasisIn,
   return basis;
 }
 
-void BasicTableLayoutStrategy::SetMinAndMaxTableContentWidths()
+nscoord BasicTableLayoutStrategy::GetTableMinWidth() const
 {
-  mMinTableContentWidth = 0;
-  mMaxTableContentWidth = 0;
-
+  nscoord minWidth = 0;
   nscoord spacingX = mTableFrame->GetCellSpacingX();
   PRInt32 numCols = mTableFrame->GetColCount();
   for (PRInt32 colX = 0; colX < numCols; colX++) { 
     nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
-    mMinTableContentWidth += colFrame->GetMinWidth();
-    mMaxTableContentWidth += PR_MAX(colFrame->GetDesWidth(), colFrame->GetFixWidth());
+    minWidth += PR_MAX(colFrame->GetMinWidth(), colFrame->GetWidth(MIN_ADJ));
+  }
+  // if it is not a degenerate table, add the last spacing on the right
+  if (minWidth > 0) {
+    minWidth += spacingX;
+  }
+  return minWidth;
+}
+
+nscoord BasicTableLayoutStrategy::GetTableMaxWidth() const
+{
+  nscoord spacingX = mTableFrame->GetCellSpacingX();
+  PRInt32 numCols = mTableFrame->GetColCount();
+  nscoord maxWidth = 0;
+  for (PRInt32 colX = 0; colX < numCols; colX++) { 
+    nsTableColFrame* colFrame = mTableFrame->GetColFrame(colX);
+    nscoord max = PR_MAX(colFrame->GetDesWidth(), colFrame->GetFixWidth());
+    max = PR_MAX(max, colFrame->GetPctWidth());
+    max = PR_MAX(max, colFrame->GetWidth(MIN_PRO));
+    maxWidth += max;
     if (mTableFrame->GetNumCellsOriginatingInCol(colX) > 0) {
-      mMaxTableContentWidth += spacingX;
-      mMinTableContentWidth += spacingX;
+      maxWidth += spacingX;
     }
   }
   // if it is not a degenerate table, add the last spacing on the right
-  if (mMinTableContentWidth > 0) {
-    mMinTableContentWidth += spacingX;
-    mMaxTableContentWidth += spacingX;
+  if (maxWidth > 0) {
+    maxWidth += spacingX;
   }
+  return maxWidth;
 }
 
 // calculate totals by width type. 
@@ -1783,8 +1795,8 @@ void BasicTableLayoutStrategy::Dump(PRInt32 aIndent)
 
   printf("%s**START BASIC STRATEGY DUMP** table=%p cols=%X",
          indent, mTableFrame, mCols);
-  printf("\n%s minConWidth=%d maxConWidth=%d cellSpacing=%d propRatio=%.2f navQuirks=%d",
-    indent, mMinTableContentWidth, mMaxTableContentWidth, mCellSpacingTotal, mMinToDesProportionRatio, mIsNavQuirksMode);
+  printf("\n%s cellSpacing=%d propRatio=%.2f navQuirks=%d",
+    indent, mCellSpacingTotal, mMinToDesProportionRatio, mIsNavQuirksMode);
   printf(" **END BASIC STRATEGY DUMP** \n");
   delete [] indent;
 }

@@ -793,13 +793,13 @@ public: /* ----- Cell Map public methods ----- */
   /** return the minimum width of the table caption.  Return 0 if there is no caption. */
   nscoord GetMinCaptionWidth();
 
-  /** return the minimum contend width of the table (excludes borders and padding).  
+  /** return the minimum content width of the table (excludes borders and padding).  
       Return 0 if the min width is unknown. */
-  nscoord GetMinTableContentWidth();
+  nscoord GetMinTableWidth();
 
   /** return the maximum content width of the table (excludes borders and padding). 
       Return 0 if the max width is unknown. */
-  nscoord GetMaxTableContentWidth();
+  nscoord GetMaxTableWidth();
 
   /** compute the max-element-size for the table
     * @param aMaxElementSize  [OUT] width field set to the min legal width of the table

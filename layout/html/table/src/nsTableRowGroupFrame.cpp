@@ -1404,6 +1404,10 @@ nsTableRowGroupFrame::RecoverState(RowGroupReflowState& aReflowState,
                                    nsIFrame*            aKidFrame,
                                    nsSize*              aMaxElementSize)
 {
+  nsTableFrame* tableFrame = nsnull;
+  nsTableFrame::GetTableFrame(this, tableFrame);
+  nscoord cellSpacingY = tableFrame->GetCellSpacingY();
+
   // Walk the list of children looking for aKidFrame
   for (nsIFrame* frame = mFrames.FirstChild(); frame; frame->GetNextSibling(&frame)) {
     if (frame == aKidFrame) {
@@ -1413,7 +1417,7 @@ nsTableRowGroupFrame::RecoverState(RowGroupReflowState& aReflowState,
     // Update the running y-offset
     nsSize  kidSize;
     frame->GetSize(kidSize);
-    aReflowState.y += kidSize.height;
+    aReflowState.y += cellSpacingY + kidSize.height;
 
     // If our height is constrained then update the available height
     if (PR_FALSE == aReflowState.unconstrainedHeight) {
