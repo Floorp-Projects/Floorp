@@ -609,13 +609,11 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileStream(nsMsgKey msgKey, PRUint32 *off
 
   *offset = *size = 0;
   
-  nsresult rv;
-
   nsXPIDLCString nativePath;
   mPath->GetNativePath(getter_Copies(nativePath));
 
   nsCOMPtr <nsILocalFile> localStore;
-  rv = NS_NewNativeLocalFile(nativePath, PR_TRUE, getter_AddRefs(localStore));
+  nsresult rv = NS_NewNativeLocalFile(nativePath, PR_TRUE, getter_AddRefs(localStore));
   if (NS_SUCCEEDED(rv) && localStore)
   {
     rv = NS_NewLocalFileInputStream(aFileStream, localStore);
@@ -623,14 +621,34 @@ NS_IMETHODIMP nsMsgDBFolder::GetOfflineFileStream(nsMsgKey msgKey, PRUint32 *off
     if (NS_SUCCEEDED(rv))
     {
 
-      nsresult rv = GetDatabase(nsnull);
+      rv = GetDatabase(nsnull);
       NS_ENSURE_SUCCESS(rv, NS_OK);
-        nsCOMPtr<nsIMsgDBHdr> hdr;
-        rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
+      nsCOMPtr<nsIMsgDBHdr> hdr;
+      rv = mDatabase->GetMsgHdrForKey(msgKey, getter_AddRefs(hdr));
       if (hdr && NS_SUCCEEDED(rv))
       {
         hdr->GetMessageOffset(offset);
         hdr->GetOfflineMessageSize(size);
+      }
+      // check if offline store really has the correct offset into the offline 
+      // store by reading the first few bytes. If it doesn't, clear the offline
+      // flag on the msg and return false, which will fall back to reading the message
+      // from the server.
+      nsCOMPtr <nsISeekableStream> seekableStream = do_QueryInterface(*aFileStream);
+      if (seekableStream)
+      {
+        rv = seekableStream->Seek(nsISeekableStream::NS_SEEK_CUR, *offset);
+        char startOfMsg[10];
+        PRUint32 bytesRead;
+        if (NS_SUCCEEDED(rv))
+          rv = (*aFileStream)->Read(startOfMsg, sizeof(startOfMsg), &bytesRead);
+
+        if (NS_FAILED(rv) || bytesRead != sizeof(startOfMsg) || strncmp(startOfMsg, "From ", 5))
+        {
+          if (mDatabase)
+            mDatabase->MarkOffline(msgKey, PR_FALSE, nsnull);
+          rv = NS_ERROR_FAILURE;
+        }
       }
     }
   }
