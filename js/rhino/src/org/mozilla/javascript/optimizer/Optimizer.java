@@ -448,7 +448,10 @@ class Optimizer
                         }
                     }
                 }
-            case Token.RELOP : {
+            case Token.LE :
+            case Token.LT :
+            case Token.GE :
+            case Token.GT : {
                     Node lChild = n.getFirstChild();
                     Node rChild = lChild.getNext();
                     int lType = rewriteForNumberVariables(lChild);
@@ -456,61 +459,34 @@ class Optimizer
                     markDCPNumberContext(lChild);
                     markDCPNumberContext(rChild);
 
-                    int op = n.getOperation();
-                    if (op == Token.INSTANCEOF || op == Token.IN) {
-                        if (lType == NumberType) {
-                            if (!convertParameter(lChild)) {
-                                n.removeChild(lChild);
-                                n.addChildToFront(new Node(TO_OBJECT, lChild));
-                            }
+                    if (convertParameter(lChild)) {
+                        if (convertParameter(rChild)) {
+                            return NoType;
+                        } else if (rType == NumberType) {
+                            n.putIntProp(Node.ISNUMBER_PROP, Node.RIGHT);
                         }
-                        if (rType == NumberType) {
-                            if (!convertParameter(rChild)) {
-                                n.removeChild(rChild);
-                                n.addChildToBack(new Node(TO_OBJECT, rChild));
-                            }
+                    }
+                    else if (convertParameter(rChild)) {
+                        if (lType == NumberType) {
+                            n.putIntProp(Node.ISNUMBER_PROP, Node.LEFT);
                         }
                     }
                     else {
-                        if (convertParameter(lChild)) {
-                            if (convertParameter(rChild)) {
-                                return NoType;
+                        if (lType == NumberType) {
+                            if (rType == NumberType) {
+                                n.putIntProp(Node.ISNUMBER_PROP, Node.BOTH);
                             }
                             else {
-                                if (rType == NumberType) {
-                                    n.putIntProp(Node.ISNUMBER_PROP,
-                                                 Node.RIGHT);
-                                }
+                                n.putIntProp(Node.ISNUMBER_PROP, Node.LEFT);
                             }
                         }
                         else {
-                            if (convertParameter(rChild)) {
-                                if (lType == NumberType) {
-                                    n.putIntProp(Node.ISNUMBER_PROP,
-                                                 Node.LEFT);
-                                }
-                            }
-                            else {
-                                if (lType == NumberType) {
-                                    if (rType == NumberType) {
-                                        n.putIntProp(Node.ISNUMBER_PROP,
-                                                     Node.BOTH);
-                                    }
-                                    else {
-                                        n.putIntProp(Node.ISNUMBER_PROP,
-                                                     Node.LEFT);
-                                    }
-                                }
-                                else {
-                                    if (rType == NumberType) {
-                                        n.putIntProp(Node.ISNUMBER_PROP,
-                                                     Node.RIGHT);
-                                    }
-                                }
+                            if (rType == NumberType) {
+                                n.putIntProp(Node.ISNUMBER_PROP, Node.RIGHT);
                             }
                         }
-                     }
-                     // we actually build a boolean value
+                    }
+                    // we actually build a boolean value
                     return NoType;
                 }
 

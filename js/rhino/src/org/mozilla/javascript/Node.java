@@ -440,21 +440,12 @@ public class Node implements Cloneable {
     }
 
     public int getOperation() {
-        switch (type) {
-            case Token.EQOP:
-            case Token.RELOP:
-                return intDatum;
-        }
-        Context.codeBug();
-        return 0;
+        if (type != Token.EQOP) Context.codeBug();
+        return intDatum;
     }
 
     public int getLineno() {
-        switch (type) {
-            case Token.EQOP:
-            case Token.RELOP:
-                Context.codeBug();
-        }
+        if (type == Token.EQOP) Context.codeBug();
         return intDatum;
     }
 

@@ -201,24 +201,23 @@ public class Token
          */
 
         EQOP        = 105, // equality ops (== !=)
-        RELOP       = 106, // relational ops (< <= > >= in instanceof)
 
-        BLOCK       = 107, // statement block
-        ARRAYLIT    = 108, // array literal
-        OBJLIT      = 109, // object literal
-        LABEL       = 110, // label
-        TARGET      = 111,
-        LOOP        = 112,
-        ENUMDONE    = 113,
-        EXPRSTMT    = 114,
-        PARENT      = 115,
-        JSR         = 116,
-        NEWLOCAL    = 117,
-        USELOCAL    = 118,
-        SCRIPT      = 119,   // top-level node for entire script
-        TYPEOFNAME  = 120,  // for typeof(simple-name)
+        BLOCK       = 106, // statement block
+        ARRAYLIT    = 107, // array literal
+        OBJLIT      = 108, // object literal
+        LABEL       = 109, // label
+        TARGET      = 110,
+        LOOP        = 111,
+        ENUMDONE    = 112,
+        EXPRSTMT    = 113,
+        PARENT      = 114,
+        JSR         = 115,
+        NEWLOCAL    = 116,
+        USELOCAL    = 117,
+        SCRIPT      = 118,   // top-level node for entire script
+        TYPEOFNAME  = 119,  // for typeof(simple-name)
 
-        LAST_TOKEN  = 120;
+        LAST_TOKEN  = 119;
 
     public static String name(int token)
     {
@@ -307,7 +306,6 @@ public class Token
                 case OR:              return "or";
                 case AND:             return "and";
                 case EQOP:            return "eqop";
-                case RELOP:           return "relop";
                 case INC:             return "inc";
                 case DEC:             return "dec";
                 case DOT:             return "dot";

@@ -791,14 +791,6 @@ public class IRFactory {
             nodeType = Token.GETELEM;
             break;
             
-          case Token.IN:
-          case Token.INSTANCEOF:
-          case Token.LE:
-          case Token.LT:
-          case Token.GE:
-          case Token.GT:
-            return new Node(Token.RELOP, left, right, nodeType);
-            
           case Token.EQ:
           case Token.NE:
           case Token.SHEQ:

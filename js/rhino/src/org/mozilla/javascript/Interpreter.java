@@ -418,7 +418,6 @@ public class Interpreter
                 break;
 
             case Token.EQOP :
-            case Token.RELOP :
                 iCodeTop = generateICode(child, iCodeTop);
                 child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);
@@ -584,6 +583,12 @@ public class Interpreter
             case Token.DIV :
             case Token.MUL :
             case Token.GETELEM :
+            case Token.IN :
+            case Token.INSTANCEOF :
+            case Token.LE :
+            case Token.LT :
+            case Token.GE :
+            case Token.GT :
                 iCodeTop = generateICode(child, iCodeTop);
                 child = child.getNext();
                 iCodeTop = generateICode(child, iCodeTop);

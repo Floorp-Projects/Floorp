@@ -1355,7 +1355,12 @@ public class Codegen extends Interpreter {
                 break;
               }
 
-              case Token.RELOP:
+              case Token.IN:
+              case Token.INSTANCEOF:
+              case Token.LE:
+              case Token.LT:
+              case Token.GE:
+              case Token.GT:
                 // need a result Object
                 visitRelOp(node, child);
                 break;
@@ -1502,12 +1507,9 @@ public class Codegen extends Interpreter {
         int type = node.getType();
         Node child = node.getFirstChild();
 
-        boolean jumpIsDone = false;
-
         switch (type) {
           case Token.NOT:
             generateIfJump(child, node, falseLabel, trueLabel);
-            jumpIsDone = true;
             break;
 
           case Token.OR:
@@ -1522,22 +1524,23 @@ public class Codegen extends Interpreter {
             markLabel(interLabel);
             child = child.getNext();
             generateIfJump(child, node, trueLabel, falseLabel);
-            jumpIsDone = true;
             break;
           }
 
-          case Token.RELOP:
+          case Token.IN:
+          case Token.INSTANCEOF:
+          case Token.LE:
+          case Token.LT:
+          case Token.GE:
+          case Token.GT:
             visitIfJumpRelOp(node, child, trueLabel, falseLabel);
-            jumpIsDone = true;
             break;
 
           case Token.EQOP:
             visitIfJumpEqOp(node, child, trueLabel, falseLabel);
-            jumpIsDone = true;
             break;
-        }
-
-        if (!jumpIsDone) {
+          
+          default:
             // Generate generic code for non-optimized jump
             generateCodeFromNode(node, parent);
             addScriptRuntimeInvoke("toBoolean", "(Ljava/lang/Object;)Z");
@@ -2518,9 +2521,9 @@ public class Codegen extends Interpreter {
         return false;
     }
 
-    private void genSimpleCompare(int op, int trueGOTO, int falseGOTO)
+    private void genSimpleCompare(int type, int trueGOTO, int falseGOTO)
     {
-        switch (op) {
+        switch (type) {
             case Token.LE :
                 addByteCode(ByteCode.DCMPG);
                 addByteCode(ByteCode.IFLE, trueGOTO);
@@ -2537,6 +2540,9 @@ public class Codegen extends Interpreter {
                 addByteCode(ByteCode.DCMPL);
                 addByteCode(ByteCode.IFGT, trueGOTO);
                 break;
+            default :
+                badTree();
+            
         }
         if (falseGOTO != -1)
             addByteCode(ByteCode.GOTO, falseGOTO);
@@ -2545,33 +2551,61 @@ public class Codegen extends Interpreter {
     private void visitIfJumpRelOp(Node node, Node child,
                                   int trueGOTO, int falseGOTO)
     {
-        int op = node.getOperation();
+        int type = node.getType();
+        if (type == Token.INSTANCEOF || type == Token.IN) {
+            generateCodeFromNode(child, node);
+            generateCodeFromNode(child.getNext(), node);
+            aload(variableObjectLocal);
+            addScriptRuntimeInvoke(
+                (type == Token.INSTANCEOF) ? "instanceOf" : "in",
+                "(Ljava/lang/Object;"
+                +"Ljava/lang/Object;"
+                +"Lorg/mozilla/javascript/Scriptable;"
+                +")Z");
+            addByteCode(ByteCode.IFNE, trueGOTO);
+            addByteCode(ByteCode.GOTO, falseGOTO);
+            return;
+        }
         int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
         if (childNumberFlag == Node.BOTH) {
             generateCodeFromNode(child, node);
             generateCodeFromNode(child.getNext(), node);
-            genSimpleCompare(op, trueGOTO, falseGOTO);
+            genSimpleCompare(type, trueGOTO, falseGOTO);
         } else {
-            if (op == Token.INSTANCEOF || op == Token.IN) {
-                generateCodeFromNode(child, node);
-                generateCodeFromNode(child.getNext(), node);
-                aload(variableObjectLocal);
-                addScriptRuntimeInvoke(
-                    (op == Token.INSTANCEOF) ? "instanceOf" : "in",
-                    "(Ljava/lang/Object;"
-                    +"Ljava/lang/Object;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
-                    +")Z");
-                addByteCode(ByteCode.IFNE, trueGOTO);
-                addByteCode(ByteCode.GOTO, falseGOTO);
-            } else {
-                Node rChild = child.getNext();
-                boolean leftIsDCP = nodeIsDirectCallParameter(child);
-                boolean rightIsDCP = nodeIsDirectCallParameter(rChild);
-                if (leftIsDCP || rightIsDCP) {
-                    if (leftIsDCP) {
-                        if (rightIsDCP) {
-                            OptLocalVariable lVar1, lVar2;
+            Node rChild = child.getNext();
+            boolean leftIsDCP = nodeIsDirectCallParameter(child);
+            boolean rightIsDCP = nodeIsDirectCallParameter(rChild);
+            if (leftIsDCP || rightIsDCP) {
+                if (leftIsDCP) {
+                    if (rightIsDCP) {
+                        OptLocalVariable lVar1, lVar2;
+                        lVar1 = (OptLocalVariable)child.getProp(
+                                    Node.VARIABLE_PROP);
+                        aload(lVar1.getJRegister());
+                        classFile.add(ByteCode.GETSTATIC,
+                                "java/lang/Void",
+                                "TYPE",
+                                "Ljava/lang/Class;");
+                        int notNumbersLabel = acquireLabel();
+                        addByteCode(ByteCode.IF_ACMPNE, notNumbersLabel);
+                        lVar2 = (OptLocalVariable)rChild.getProp(
+                                    Node.VARIABLE_PROP);
+                        aload(lVar2.getJRegister());
+                        classFile.add(ByteCode.GETSTATIC,
+                                "java/lang/Void",
+                                "TYPE",
+                                "Ljava/lang/Class;");
+                        addByteCode(ByteCode.IF_ACMPNE, notNumbersLabel);
+                        dload((short)(lVar1.getJRegister() + 1));
+                        dload((short)(lVar2.getJRegister() + 1));
+                        genSimpleCompare(type, trueGOTO, falseGOTO);
+                        markLabel(notNumbersLabel);
+                        // fall thru to generic handling
+                    } else {
+                        // just the left child is a DCP, if the right child
+                        // is a number it's worth testing the left
+                        if (childNumberFlag == Node.RIGHT) {
+                            OptLocalVariable lVar1;
                             lVar1 = (OptLocalVariable)child.getProp(
                                         Node.VARIABLE_PROP);
                             aload(lVar1.getJRegister());
@@ -2580,99 +2614,71 @@ public class Codegen extends Interpreter {
                                     "TYPE",
                                     "Ljava/lang/Class;");
                             int notNumbersLabel = acquireLabel();
-                            addByteCode(ByteCode.IF_ACMPNE, notNumbersLabel);
-                            lVar2 = (OptLocalVariable)rChild.getProp(
-                                        Node.VARIABLE_PROP);
-                            aload(lVar2.getJRegister());
-                            classFile.add(ByteCode.GETSTATIC,
-                                    "java/lang/Void",
-                                    "TYPE",
-                                    "Ljava/lang/Class;");
-                            addByteCode(ByteCode.IF_ACMPNE, notNumbersLabel);
+                            addByteCode(ByteCode.IF_ACMPNE,
+                                        notNumbersLabel);
                             dload((short)(lVar1.getJRegister() + 1));
-                            dload((short)(lVar2.getJRegister() + 1));
-                            genSimpleCompare(op, trueGOTO, falseGOTO);
-                            markLabel(notNumbersLabel);
-                            // fall thru to generic handling
-                        } else {
-                            // just the left child is a DCP, if the right child
-                            // is a number it's worth testing the left
-                            if (childNumberFlag == Node.RIGHT) {
-                                OptLocalVariable lVar1;
-                                lVar1 = (OptLocalVariable)child.getProp(
-                                            Node.VARIABLE_PROP);
-                                aload(lVar1.getJRegister());
-                                classFile.add(ByteCode.GETSTATIC,
-                                        "java/lang/Void",
-                                        "TYPE",
-                                        "Ljava/lang/Class;");
-                                int notNumbersLabel = acquireLabel();
-                                addByteCode(ByteCode.IF_ACMPNE,
-                                            notNumbersLabel);
-                                dload((short)(lVar1.getJRegister() + 1));
-                                generateCodeFromNode(rChild, node);
-                                genSimpleCompare(op, trueGOTO, falseGOTO);
-                                markLabel(notNumbersLabel);
-                                // fall thru to generic handling
-                            }
-                        }
-                    } else {
-                        //  just the right child is a DCP, if the left child
-                        //  is a number it's worth testing the right
-                        if (childNumberFlag == Node.LEFT) {
-                            OptLocalVariable lVar2;
-                            lVar2 = (OptLocalVariable)rChild.getProp(
-                                        Node.VARIABLE_PROP);
-                            aload(lVar2.getJRegister());
-                            classFile.add(ByteCode.GETSTATIC,
-                                    "java/lang/Void",
-                                    "TYPE",
-                                    "Ljava/lang/Class;");
-                            int notNumbersLabel = acquireLabel();
-                            addByteCode(ByteCode.IF_ACMPNE, notNumbersLabel);
-                            generateCodeFromNode(child, node);
-                            dload((short)(lVar2.getJRegister() + 1));
-                            genSimpleCompare(op, trueGOTO, falseGOTO);
+                            generateCodeFromNode(rChild, node);
+                            genSimpleCompare(type, trueGOTO, falseGOTO);
                             markLabel(notNumbersLabel);
                             // fall thru to generic handling
                         }
                     }
-                }
-                generateCodeFromNode(child, node);
-                generateCodeFromNode(rChild, node);
-                if (childNumberFlag == -1) {
-                    if (op == Token.GE || op == Token.GT) {
-                        addByteCode(ByteCode.SWAP);
-                    }
-                    String routine = ((op == Token.LT)
-                              || (op == Token.GT)) ? "cmp_LT" : "cmp_LE";
-                    addScriptRuntimeInvoke(routine,
-                                           "(Ljava/lang/Object;"
-                                           +"Ljava/lang/Object;"
-                                           +")I");
                 } else {
-                    boolean doubleThenObject = (childNumberFlag == Node.LEFT);
-                    if (op == Token.GE || op == Token.GT) {
-                        if (doubleThenObject) {
-                            addByteCode(ByteCode.DUP_X2);
-                            addByteCode(ByteCode.POP);
-                            doubleThenObject = false;
-                        } else {
-                            addByteCode(ByteCode.DUP2_X1);
-                            addByteCode(ByteCode.POP2);
-                            doubleThenObject = true;
-                        }
+                    //  just the right child is a DCP, if the left child
+                    //  is a number it's worth testing the right
+                    if (childNumberFlag == Node.LEFT) {
+                        OptLocalVariable lVar2;
+                        lVar2 = (OptLocalVariable)rChild.getProp(
+                                    Node.VARIABLE_PROP);
+                        aload(lVar2.getJRegister());
+                        classFile.add(ByteCode.GETSTATIC,
+                                "java/lang/Void",
+                                "TYPE",
+                                "Ljava/lang/Class;");
+                        int notNumbersLabel = acquireLabel();
+                        addByteCode(ByteCode.IF_ACMPNE, notNumbersLabel);
+                        generateCodeFromNode(child, node);
+                        dload((short)(lVar2.getJRegister() + 1));
+                        genSimpleCompare(type, trueGOTO, falseGOTO);
+                        markLabel(notNumbersLabel);
+                        // fall thru to generic handling
                     }
-                    String routine = ((op == Token.LT)
-                             || (op == Token.GT)) ? "cmp_LT" : "cmp_LE";
-                    if (doubleThenObject)
-                        addOptRuntimeInvoke(routine, "(DLjava/lang/Object;)I");
-                    else
-                        addOptRuntimeInvoke(routine, "(Ljava/lang/Object;D)I");
                 }
-                addByteCode(ByteCode.IFNE, trueGOTO);
-                addByteCode(ByteCode.GOTO, falseGOTO);
             }
+            generateCodeFromNode(child, node);
+            generateCodeFromNode(rChild, node);
+            if (childNumberFlag == -1) {
+                if (type == Token.GE || type == Token.GT) {
+                    addByteCode(ByteCode.SWAP);
+                }
+                String routine = ((type == Token.LT)
+                          || (type == Token.GT)) ? "cmp_LT" : "cmp_LE";
+                addScriptRuntimeInvoke(routine,
+                                       "(Ljava/lang/Object;"
+                                       +"Ljava/lang/Object;"
+                                       +")I");
+            } else {
+                boolean doubleThenObject = (childNumberFlag == Node.LEFT);
+                if (type == Token.GE || type == Token.GT) {
+                    if (doubleThenObject) {
+                        addByteCode(ByteCode.DUP_X2);
+                        addByteCode(ByteCode.POP);
+                        doubleThenObject = false;
+                    } else {
+                        addByteCode(ByteCode.DUP2_X1);
+                        addByteCode(ByteCode.POP2);
+                        doubleThenObject = true;
+                    }
+                }
+                String routine = ((type == Token.LT)
+                         || (type == Token.GT)) ? "cmp_LT" : "cmp_LE";
+                if (doubleThenObject)
+                    addOptRuntimeInvoke(routine, "(DLjava/lang/Object;)I");
+                else
+                    addOptRuntimeInvoke(routine, "(Ljava/lang/Object;D)I");
+            }
+            addByteCode(ByteCode.IFNE, trueGOTO);
+            addByteCode(ByteCode.GOTO, falseGOTO);
         }
     }
 
@@ -2681,28 +2687,38 @@ public class Codegen extends Interpreter {
         /*
             this is the version that returns an Object result
         */
-        int op = node.getOperation();
+        int type = node.getType();
+        if (type == Token.INSTANCEOF || type == Token.IN) {
+            generateCodeFromNode(child, node);
+            generateCodeFromNode(child.getNext(), node);
+            aload(variableObjectLocal);
+            addScriptRuntimeInvoke(
+                (type == Token.INSTANCEOF) ? "instanceOf" : "in",
+                "(Ljava/lang/Object;"
+                +"Ljava/lang/Object;"
+                +"Lorg/mozilla/javascript/Scriptable;"
+                +")Z");
+            int trueGOTO = acquireLabel();
+            int skip = acquireLabel();
+            addByteCode(ByteCode.IFNE, trueGOTO);
+            classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
+                                    "FALSE", "Ljava/lang/Boolean;");
+            addByteCode(ByteCode.GOTO, skip);
+            markLabel(trueGOTO);
+            classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
+                                    "TRUE", "Ljava/lang/Boolean;");
+            markLabel(skip);
+            classFile.adjustStackTop(-1);   // only have 1 of true/false
+            return;
+        }
+
         int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
-        if (childNumberFlag == Node.BOTH
-                || op == Token.INSTANCEOF
-                || op == Token.IN)
-        {
+        if (childNumberFlag == Node.BOTH) {
             generateCodeFromNode(child, node);
             generateCodeFromNode(child.getNext(), node);
             int trueGOTO = acquireLabel();
             int skip = acquireLabel();
-            if (op == Token.INSTANCEOF || op == Token.IN) {
-                aload(variableObjectLocal);
-                addScriptRuntimeInvoke(
-                    (op == Token.INSTANCEOF) ? "instanceOf" : "in",
-                    "(Ljava/lang/Object;"
-                    +"Ljava/lang/Object;"
-                    +"Lorg/mozilla/javascript/Scriptable;"
-                    +")Z");
-                addByteCode(ByteCode.IFNE, trueGOTO);
-            } else {
-                genSimpleCompare(op, trueGOTO, -1);
-            }
+            genSimpleCompare(type, trueGOTO, -1);
             classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
                                     "FALSE", "Ljava/lang/Boolean;");
             addByteCode(ByteCode.GOTO, skip);
@@ -2713,12 +2729,12 @@ public class Codegen extends Interpreter {
             classFile.adjustStackTop(-1);   // only have 1 of true/false
         }
         else {
-            String routine = ((op == Token.LT)
-                     || (op == Token.GT)) ? "cmp_LTB" : "cmp_LEB";
+            String routine = (type == Token.LT || type == Token.GT) 
+                             ? "cmp_LTB" : "cmp_LEB";
             generateCodeFromNode(child, node);
             generateCodeFromNode(child.getNext(), node);
             if (childNumberFlag == -1) {
-                if (op == Token.GE || op == Token.GT) {
+                if (type == Token.GE || type == Token.GT) {
                     addByteCode(ByteCode.SWAP);
                 }
                 addScriptRuntimeInvoke(routine,
@@ -2728,7 +2744,7 @@ public class Codegen extends Interpreter {
             }
             else {
                 boolean doubleThenObject = (childNumberFlag == Node.LEFT);
-                if (op == Token.GE || op == Token.GT) {
+                if (type == Token.GE || type == Token.GT) {
                     if (doubleThenObject) {
                         addByteCode(ByteCode.DUP_X2);
                         addByteCode(ByteCode.POP);
@@ -2983,42 +2999,6 @@ public class Codegen extends Interpreter {
                         constantName, constantType);
                 }
             }
-        }
-    }
-
-   private void visitPrimary(Node node)
-   {
-        int op = node.getOperation();
-        switch (op) {
-
-          case Token.THIS:
-            aload(thisObjLocal);
-            break;
-
-          case Token.THISFN:
-            classFile.add(ByteCode.ALOAD_0);
-            break;
-
-          case Token.NULL:
-            addByteCode(ByteCode.ACONST_NULL);
-            break;
-
-          case Token.TRUE:
-            classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                    "TRUE", "Ljava/lang/Boolean;");
-            break;
-
-          case Token.FALSE:
-            classFile.add(ByteCode.GETSTATIC, "java/lang/Boolean",
-                                    "FALSE", "Ljava/lang/Boolean;");
-            break;
-
-          case Token.UNDEFINED:
-            pushUndefined();
-            break;
-
-          default:
-            badTree();
         }
     }
 
