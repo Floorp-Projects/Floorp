@@ -783,6 +783,8 @@ FrameManager::RegisterPlaceholderFrame(nsPlaceholderFrame* aPlaceholderFrame)
                               PL_DHASH_ADD));
   if (!entry)
     return NS_ERROR_OUT_OF_MEMORY;
+
+  NS_ASSERTION(!entry->placeholderFrame, "Registering a placeholder for a frame that already has a placeholder!");
   entry->placeholderFrame = aPlaceholderFrame;
   return NS_OK;
 }

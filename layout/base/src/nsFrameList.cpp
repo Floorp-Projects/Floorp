@@ -281,44 +281,51 @@ nsFrameList::InsertFrames(nsIFrame* aParent,
 }
 
 PRBool
-nsFrameList::ReplaceFrame(nsIFrame* aParent,
-                          nsIFrame* aOldFrame,
-                          nsIFrame* aNewFrame)
+nsFrameList::DoReplaceFrame(nsIFrame* aParent,
+                            nsIFrame* aOldFrame,
+                            nsIFrame* aNewFrame)
 {
-  NS_PRECONDITION(nsnull != aOldFrame, "null ptr");
-  NS_PRECONDITION(nsnull != aNewFrame, "null ptr");
-  if ((nsnull != aOldFrame) && (nsnull != aNewFrame)) {
-    nsIFrame* nextFrame;
-    aOldFrame->GetNextSibling(&nextFrame);
-    if (aOldFrame == mFirstChild) {
-      mFirstChild = aNewFrame;
-      aNewFrame->SetNextSibling(nextFrame);
-    }
-    else {
-      nsIFrame* prevSibling = GetPrevSiblingFor(aOldFrame);
-      if (nsnull != prevSibling) {
-        prevSibling->SetNextSibling(aNewFrame);
-        aNewFrame->SetNextSibling(nextFrame);
-      }
-    }
-    if (nsnull != aParent) {
-      aNewFrame->SetParent(aParent);
-    }
-    return PR_TRUE;
+  NS_PRECONDITION(aOldFrame, "null ptr");
+  NS_PRECONDITION(aNewFrame, "null ptr");
+  if (!aOldFrame || !aNewFrame) {
+    return PR_FALSE;
   }
-  return PR_FALSE;
+  
+  nsIFrame* nextFrame;
+  aOldFrame->GetNextSibling(&nextFrame);
+  if (aOldFrame == mFirstChild) {
+    mFirstChild = aNewFrame;
+  }
+  else {
+    nsIFrame* prevSibling = GetPrevSiblingFor(aOldFrame);
+    if (!prevSibling) {
+      NS_WARNING("nsFrameList::ReplaceFrame: aOldFrame not found in list");
+      return PR_FALSE;
+    }
+    prevSibling->SetNextSibling(aNewFrame);
+  }
+
+  aNewFrame->SetNextSibling(nextFrame);
+  
+  if (aParent) {
+    aNewFrame->SetParent(aParent);
+  }
+  return PR_TRUE;
 }
 
 PRBool
-nsFrameList::ReplaceAndDestroyFrame(nsIPresContext* aPresContext,
-                                    nsIFrame* aParent,
-                                    nsIFrame* aOldFrame,
-                                    nsIFrame* aNewFrame)
+nsFrameList::ReplaceFrame(nsIPresContext* aPresContext,
+                          nsIFrame* aParent,
+                          nsIFrame* aOldFrame,
+                          nsIFrame* aNewFrame,
+                          PRBool aDestroy)
 {
-  NS_PRECONDITION(nsnull != aOldFrame, "null ptr");
-  NS_PRECONDITION(nsnull != aNewFrame, "null ptr");
-  if (ReplaceFrame(aParent, aOldFrame, aNewFrame)) {
-    aNewFrame->Destroy(aPresContext);
+  NS_PRECONDITION(aOldFrame, "null ptr");
+  NS_PRECONDITION(aNewFrame, "null ptr");
+  if (DoReplaceFrame(aParent, aOldFrame, aNewFrame)) {
+    if (aDestroy) {
+      aOldFrame->Destroy(aPresContext);
+    }
     return PR_TRUE;
   }
   return PR_FALSE;

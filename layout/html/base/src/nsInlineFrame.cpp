@@ -311,21 +311,22 @@ nsInlineFrame::ReplaceFrame(nsIPresContext* aPresContext,
                             nsIFrame* aOldFrame,
                             nsIFrame* aNewFrame)
 {
-  if (nsnull != aListName) {
+  if (aListName) {
+    NS_ERROR("Don't have any special lists on inline frames!");
     return NS_ERROR_INVALID_ARG;
   }
   if (!aOldFrame || !aNewFrame) {
+    NS_ERROR("Missing aOldFrame or aNewFrame");
     return NS_ERROR_INVALID_ARG;
   }
 
-  // Replace the old frame with the new frame in the list, then remove the old frame
-  mFrames.ReplaceFrame(this, aOldFrame, aNewFrame);
-  aOldFrame->Destroy(aPresContext);
-
+  PRBool retval =
+    mFrames.ReplaceFrame(aPresContext, this, aOldFrame, aNewFrame, PR_TRUE);
+  
   // Ask the parent frame to reflow me.
   ReflowDirtyChild(&aPresShell, nsnull);
 
-  return NS_OK;
+  return retval ? NS_OK : NS_ERROR_FAILURE;
 }
 
 
@@ -1193,6 +1194,22 @@ nsPositionedInlineFrame::RemoveFrame(nsIPresContext* aPresContext,
   }
 
   return rv;
+}
+
+NS_IMETHODIMP
+nsPositionedInlineFrame::ReplaceFrame(nsIPresContext* aPresContext,
+                                      nsIPresShell&   aPresShell,
+                                      nsIAtom*        aListName,
+                                      nsIFrame*       aOldFrame,
+                                      nsIFrame*       aNewFrame)
+{
+  if (nsLayoutAtoms::absoluteList == aListName) {
+    return mAbsoluteContainer.ReplaceFrame(this, aPresContext, aPresShell,
+                                           aListName, aOldFrame, aNewFrame);
+  } else {
+    return nsInlineFrame::ReplaceFrame(aPresContext, aPresShell, aListName,
+                                       aOldFrame, aNewFrame);
+  }
 }
 
 NS_IMETHODIMP

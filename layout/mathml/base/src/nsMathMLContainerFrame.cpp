@@ -734,7 +734,7 @@ nsMathMLContainerFrame::WrapForeignFrames(nsIPresContext* aPresContext)
         wrapper->Destroy(aPresContext);
         return rv;
       }
-      mFrames.ReplaceFrame(this, child, wrapper);
+      mFrames.ReplaceFrame(aPresContext, this, child, wrapper, PR_FALSE);
       child->SetParent(wrapper);
       child->SetNextSibling(nsnull);
       aPresContext->ReParentStyleContext(child, newStyleContext);
@@ -1013,13 +1013,7 @@ nsMathMLContainerFrame::ReplaceFrame(nsIPresContext* aPresContext,
     return NS_ERROR_INVALID_ARG;
   }
   // Replace the old frame with the new frame in the list
-  mFrames.ReplaceFrame(this, aOldFrame, aNewFrame);
-
-  // XXX now destroy the old frame, really? the usage of ReplaceFrame() vs.
-  // XXX ReplaceFrameAndDestroy() is ambiguous - see bug 122748
-  // XXX The style system doesn't call ReplaceFrame() and that's why
-  // XXX nobody seems to have been biten by the ambiguity yet
-  aOldFrame->Destroy(aPresContext);
+  mFrames.ReplaceFrame(aPresContext, this, aOldFrame, aNewFrame, PR_TRUE);
 
   return ChildListChanged(aPresContext, nsIDOMMutationEvent::MODIFICATION);
 }

@@ -138,6 +138,21 @@ nsAbsoluteContainingBlock::RemoveFrame(nsIFrame*       aDelegatingFrame,
   return result ? NS_OK : NS_ERROR_FAILURE;
 }
 
+nsresult
+nsAbsoluteContainingBlock::ReplaceFrame(nsIFrame*       aDelegatingFrame,
+                                        nsIPresContext* aPresContext,
+                                        nsIPresShell&   aPresShell,
+                                        nsIAtom*        aListName,
+                                        nsIFrame*       aOldFrame,
+                                        nsIFrame*       aNewFrame)
+{
+  PRBool result = mAbsoluteFrames.ReplaceFrame(aPresContext, aDelegatingFrame,
+                                               aOldFrame, aNewFrame, PR_TRUE);
+  NS_ASSERTION(result, "Problems replacing a frame");
+  return result ? NS_OK : NS_ERROR_FAILURE;
+}
+
+
 // Destructor function for the collapse offset frame property
 static void
 DestroyRectFunc(nsIPresContext* aPresContext,
