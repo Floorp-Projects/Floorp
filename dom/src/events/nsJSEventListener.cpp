@@ -100,7 +100,8 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       return NS_OK;
     }
     //if (mReturnResult == nsReturnResult_eNotSet) {
-      if (eventString.Equals(NS_LITERAL_STRING("error")) || eventString.Equals(NS_LITERAL_STRING("mouseover"))) {
+      if (eventString.Equals(NS_LITERAL_STRING("error")) ||
+          eventString.Equals(NS_LITERAL_STRING("mouseover"))) {
         mReturnResult = nsReturnResult_eReverseReturnResult;
       }
       else {
@@ -197,18 +198,19 @@ nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
           beforeUnload->text = nsDependentJSString(JSVAL_TO_STRING(rval));
         }
       }
-    } else {
+    } else if (JSVAL_IS_BOOLEAN(rval)) {
       // if the handler returned false and its sense is not reversed,
       // or the handler returned true and its sense is reversed from
       // the usual (false means cancel), then prevent default.
 
-      PRBool jsBoolResult = !JSVAL_IS_BOOLEAN(rval) || JSVAL_TO_BOOLEAN(rval);
-
-      if (jsBoolResult ==
+      if (JSVAL_TO_BOOLEAN(rval) ==
           (mReturnResult == nsReturnResult_eReverseReturnResult)) {
         aEvent->PreventDefault();
       }
     }
+  } else if (eventString.Equals(NS_LITERAL_STRING("onsubmit"))) {
+    // Don't submit any data if the event handler failed
+    aEvent->PreventDefault();
   }
 
   return rv;

@@ -1515,25 +1515,22 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
           // Try the type-specific listener interface
           PRBool hasInterface = PR_FALSE;
           if (typeData)
-            ret = DispatchToInterface(*aDOMEvent, ls->mListener,
-                                      dispData->method, *typeData->iid,
-                                      &hasInterface);
+            DispatchToInterface(*aDOMEvent, ls->mListener,
+                                dispData->method, *typeData->iid,
+                                &hasInterface);
 
           // If it doesn't implement that, call the generic HandleEvent()
           if (!hasInterface && (ls->mSubType == NS_EVENT_BITS_NONE ||
                                 ls->mSubType & dispData->bits))
-            ret = HandleEventSubType(ls, *aDOMEvent, aCurrentTarget,
-                                     dispData ? dispData->bits : NS_EVENT_BITS_NONE,
-                                     aFlags);
+            HandleEventSubType(ls, *aDOMEvent, aCurrentTarget,
+                               dispData ? dispData->bits : NS_EVENT_BITS_NONE,
+                               aFlags);
         }
       }
     }
   }
 
-  // XXX (NS_OK != ret) is going away,
-  // (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT) is correct
-  if ((NS_OK != ret) ||
-    (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT)) {
+  if (aEvent->flags & NS_EVENT_FLAG_NO_DEFAULT) {
     *aEventStatus = nsEventStatus_eConsumeNoDefault;
   }
 
