@@ -405,7 +405,7 @@ BEGIN
     CONTROL         "Match &case",IDC_MATCH_CASE,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP,4,42,64,12
     CONTROL         "Search &backwards",IDC_SEARCH_BACKWARDS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,101,42,67,12
+                    BS_AUTOCHECKBOX | WS_TABSTOP,101,42,75,12
     DEFPUSHBUTTON   "&Find Next",IDOK,182,5,50,14,WS_GROUP
     PUSHBUTTON      "Cancel",IDCANCEL,182,23,50,14
 END
