@@ -877,7 +877,7 @@ nsresult nsDiskCacheDevice::visitEntries(nsICacheVisitor * visitor)
             rv = getTransportForFile(file, nsICache::ACCESS_READ, getter_AddRefs(transport));
             if (NS_FAILED(rv)) continue;
             nsCOMPtr<nsIInputStream> input;
-            rv = transport->OpenInputStream(0, -1, 0, getter_AddRefs(input));
+            rv = transport->OpenInputStream(0, ULONG_MAX, 0, getter_AddRefs(input));
             if (NS_FAILED(rv)) continue;
             
             // read the metadata file.
@@ -921,7 +921,7 @@ nsresult nsDiskCacheDevice::updateDiskCacheEntry(nsCacheEntry* entry)
         }
 
         nsCOMPtr<nsIOutputStream> output;
-        rv = transport->OpenOutputStream(0, -1, 0, getter_AddRefs(output));
+        rv = transport->OpenOutputStream(0, ULONG_MAX, 0, getter_AddRefs(output));
         if (NS_FAILED(rv)) return rv;
         
         // write the metadata to the file.
@@ -967,7 +967,7 @@ static nsresult readMetaDataFile(nsIFile* file, DiskCacheEntry* diskEntry, MetaD
     }
 
     nsCOMPtr<nsIInputStream> input;
-    rv = transport->OpenInputStream(0, -1, 0, getter_AddRefs(input));
+    rv = transport->OpenInputStream(0, ULONG_MAX, 0, getter_AddRefs(input));
     if (NS_FAILED(rv)) break;
     
     // read the metadata file.
@@ -1006,7 +1006,7 @@ nsresult nsDiskCacheDevice::readDiskCacheEntry(nsCString* key, nsCacheEntry ** r
         }
 
         nsCOMPtr<nsIInputStream> input;
-        rv = transport->OpenInputStream(0, -1, 0, getter_AddRefs(input));
+        rv = transport->OpenInputStream(0, ULONG_MAX, 0, getter_AddRefs(input));
         if (NS_FAILED(rv)) break;
         
         // read the metadata file.
