@@ -2214,32 +2214,7 @@ void invisible()
 	tempWidget = findWidget("SelectedComponents");
 	CString component;
 
-	// Place calendar component after MailNews
-	int mailindex, calendarindex;
-	BOOL foundcalendar = FALSE;
 	for (int i=0; i<numComponents; i++)
-	{
-		if ((Components[i].name) == "Mail & Instant Messaging")
-			mailindex = i;
-		if ((Components[i].name) == "Calendar")
-		{
-			calendarindex = i;
-			foundcalendar = TRUE;
-			break;
-		}
-	}
-	if (foundcalendar == TRUE)
-	{
-		COMPONENT tempComponents[100];
-		for(int i=mailindex+1, int j=0; i==calendarindex; i++, j++)
-			tempComponents[j] = Components[i];
-		int jcnt = j;
-		Components[mailindex+1] = Components[calendarindex];
-		for (j=0,i=mailindex+2; j<jcnt; j++,i++)
-			Components[i] = tempComponents[j];
-	}
-
-	for (i=0; i<numComponents; i++)
 	{
 		if (Components[i].selected)
 		{
