@@ -43,6 +43,7 @@
 #include "nsGfxCIID.h"
 #include "nsLayoutAtoms.h"
 #include "nsIPrintSettings.h"
+#include "imgIContainer.h"
 
 
 class PrintContext : public nsPresContext , nsIPrintContext{
@@ -65,6 +66,8 @@ public:
   NS_IMETHOD GetPaginatedScrolling(PRBool* aResult);
   NS_IMETHOD GetPageDim(nsRect* aActualRect, nsRect* aAdjRect);
   NS_IMETHOD SetPageDim(nsRect* aRect);
+  NS_IMETHOD SetImageAnimationMode(PRUint16 aMode);
+  NS_IMETHOD GetImageAnimationMode(PRUint16* aModeResult);
   NS_IMETHOD SetPrintSettings(nsIPrintSettings* aPS);
   NS_IMETHOD GetPrintSettings(nsIPrintSettings** aPS);
 
@@ -154,6 +157,20 @@ PrintContext::SetPageDim(nsRect* aPageDim)
 {
   NS_ENSURE_ARG_POINTER(aPageDim);
   mPageDim = *aPageDim;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PrintContext::SetImageAnimationMode(PRUint16 aMode)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PrintContext::GetImageAnimationMode(PRUint16* aModeResult)
+{
+  NS_PRECONDITION(aModeResult, "null out param");
+  *aModeResult = imgIContainer::kDontAnimMode;
   return NS_OK;
 }
 
