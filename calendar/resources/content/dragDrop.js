@@ -70,7 +70,7 @@ var calendarViewDNDObserver = {
       flavourSet.appendFlavour("text/unicode");
       flavourSet.appendFlavour("text/calendar");
       flavourSet.appendFlavour("text/calendar-interval");
-      flavourSet.appendFlavour("text/x-moz-message-or-folder");
+      // flavourSet.appendFlavour("text/x-moz-message-or-folder"); // not implemented
       flavourSet.appendFlavour("application/x-moz-file", "nsIFile");
       return flavourSet;
    },
@@ -191,8 +191,8 @@ var calendarViewDNDObserver = {
       var trans = Components.classes["@mozilla.org/widget/transferable;1"].createInstance(Components.interfaces.nsITransferable);
       trans.addDataFlavor("text/calendar");
       trans.addDataFlavor("text/calendar-interval");
-      trans.addDataFlavor("text/x-moz-message-or-folder");
-      trans.addDataFlavor("text/x-moz-url");
+      //trans.addDataFlavor("text/x-moz-message-or-folder"); // not implemented
+      //trans.addDataFlavor("text/x-moz-url");               // not implemented
       trans.addDataFlavor("application/x-moz-file");
       trans.addDataFlavor("text/unicode");
 
