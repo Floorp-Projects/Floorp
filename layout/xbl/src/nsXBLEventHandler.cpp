@@ -39,6 +39,7 @@
 #include "nsIDOMXULElement.h"
 #include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIDOMNSHTMLInputElement.h"
+#include "nsIDOMText.h"
 
 PRUint32 nsXBLEventHandler::gRefCnt = 0;
 nsIAtom* nsXBLEventHandler::kKeyCodeAtom = nsnull;
@@ -437,9 +438,12 @@ nsXBLEventHandler::ExecuteHandler(const nsString& aEventName, nsIDOMEvent* aEven
   // Compile the event handler.
   nsAutoString handlerText;
   mHandlerElement->GetAttribute(kNameSpaceID_None, kValueAtom, handlerText);
-  if (handlerText.IsEmpty())
-    return NS_OK; // For whatever reason, they didn't give us anything to do.
-
+  if (handlerText.IsEmpty()) {
+    // look to see if action content is contained by the handler element
+    GetTextData(mHandlerElement, handlerText);
+    if (handlerText.IsEmpty())
+      return NS_OK; // For whatever reason, they didn't give us anything to do.
+  }
   
   // Compile the handler and bind it to the element.
   nsCOMPtr<nsIDocument> boundDocument;
@@ -1078,6 +1082,28 @@ PRBool nsXBLEventHandler::IsMatchingKeyCode(const PRUint32 aChar, const nsString
   }
 
   return ret;
+}
+
+nsresult
+nsXBLEventHandler::GetTextData(nsIContent *aParent, nsString& aResult)
+{
+  aResult.Truncate(0);
+
+  nsCOMPtr<nsIContent> textChild;
+  PRInt32 textCount;
+  aParent->ChildCount(textCount);
+  nsAutoString answer;
+  for (PRInt32 j = 0; j < textCount; j++) {
+    // Get the child.
+    aParent->ChildAt(j, *getter_AddRefs(textChild));
+    nsCOMPtr<nsIDOMText> text(do_QueryInterface(textChild));
+    if (text) {
+      nsAutoString data;
+      text->GetData(data);
+      aResult += data;
+    }
+  }
+  return NS_OK;
 }
 
 PRBool 
