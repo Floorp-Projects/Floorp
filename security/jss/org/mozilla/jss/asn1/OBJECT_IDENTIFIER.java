@@ -108,6 +108,13 @@ public class OBJECT_IDENTIFIER implements ASN1Value {
         new OBJECT_IDENTIFIER( new long[] { 1, 3, 14, 3, 2 } );
 
     /**
+     * The OID space for FIPS-180-2 SHA256/SHA384/SHA512 standardized algorithms.
+     */
+    public static final OBJECT_IDENTIFIER HASH_ALGORITHM =
+        new OBJECT_IDENTIFIER( new long[] {2, 16, 840, 1, 101, 3, 4 } );
+
+
+    /**
      * The OID space for PKIX.
      */
     public static final OBJECT_IDENTIFIER PKIX =
@@ -116,9 +123,9 @@ public class OBJECT_IDENTIFIER implements ASN1Value {
     public static final OBJECT_IDENTIFIER
     id_cmc = PKIX.subBranch( 7 );
 
-	/**
-	 * CMC control attributes
-	 */
+    /**
+     * CMC control attributes
+     */
     public static final OBJECT_IDENTIFIER
     id_cmc_cMCStatusInfo = id_cmc.subBranch(1);
     public static final OBJECT_IDENTIFIER

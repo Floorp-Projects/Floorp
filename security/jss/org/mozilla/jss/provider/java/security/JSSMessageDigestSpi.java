@@ -125,6 +125,21 @@ public abstract class JSSMessageDigestSpi extends MessageDigestSpi {
             super( DigestAlgorithm.SHA1 );
         }
     }
+    public static class SHA256 extends JSSMessageDigestSpi {
+        public SHA256() {
+            super( DigestAlgorithm.SHA256 );
+        }
+    }
+    public static class SHA384 extends JSSMessageDigestSpi {
+        public SHA384() {
+            super( DigestAlgorithm.SHA384 );
+        }
+    }
+    public static class SHA512 extends JSSMessageDigestSpi {
+        public SHA512() {
+            super( DigestAlgorithm.SHA512 );
+        }
+    }
     public static class MD5 extends JSSMessageDigestSpi {
         public MD5() {
             super( DigestAlgorithm.MD5 );

@@ -54,15 +54,15 @@ getAlgInfo(JNIEnv *env, jobject alg, JSS_AlgInfo *info);
 /***********************************************************************
 **
 **  Algorithm indices.  This must be kept in sync with the algorithm
-**	tags in the Algorithm class.
+**  tags in the Algorithm class.
 **  We only store CKMs as a last resort if there is no corresponding
 **  SEC_OID.
 **/
 JSS_AlgInfo JSS_AlgTable[NUM_ALGS] = {
-/* 0 */		{SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION, SEC_OID_TAG},
-/* 1 */		{SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION, SEC_OID_TAG},
-/* 2 */		{SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION, SEC_OID_TAG},
-/* 3 */		{SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST, SEC_OID_TAG},
+/* 0 */     {SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION, SEC_OID_TAG},
+/* 1 */     {SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION, SEC_OID_TAG},
+/* 2 */     {SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION, SEC_OID_TAG},
+/* 3 */     {SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST, SEC_OID_TAG},
 /* 4 */     {SEC_OID_PKCS1_RSA_ENCRYPTION, SEC_OID_TAG},
 /* 5 */     {CKM_RSA_PKCS_KEY_PAIR_GEN, PK11_MECH},
 /* 6 */     {CKM_DSA_KEY_PAIR_GEN, PK11_MECH},
@@ -97,8 +97,13 @@ JSS_AlgInfo JSS_AlgTable[NUM_ALGS] = {
 /* 34 */    {CKM_AES_CBC, PK11_MECH},
 /* 35 */    {CKM_AES_CBC_PAD, PK11_MECH},
 /* 36 */    {CKM_RC2_CBC_PAD, PK11_MECH},
-/* 37 */    {CKM_RC2_KEY_GEN, PK11_MECH}
-
+/* 37 */    {CKM_RC2_KEY_GEN, PK11_MECH},
+/* 38 */    {SEC_OID_SHA256, SEC_OID_TAG},
+/* 39 */    {SEC_OID_SHA384, SEC_OID_TAG},
+/* 40 */    {SEC_OID_SHA512, SEC_OID_TAG},
+/* 41 */    {SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION, SEC_OID_TAG},
+/* 42 */    {SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION, SEC_OID_TAG},
+/* 43 */    {SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION, SEC_OID_TAG}
 /* REMEMBER TO UPDATE NUM_ALGS!!! */
 };
 
@@ -173,7 +178,7 @@ static jint
 getAlgIndex(JNIEnv *env, jobject alg)
 {
     jclass algClass;
-	jint index=-1;
+    jint index=-1;
     jfieldID indexField;
 
     PR_ASSERT(env!=NULL && alg!=NULL);
@@ -199,7 +204,7 @@ getAlgIndex(JNIEnv *env, jobject alg)
     }
 
     index = (*env)->GetIntField(env, alg, indexField);
-	PR_ASSERT( (index >= 0) && (index < NUM_ALGS) );
+    PR_ASSERT( (index >= 0) && (index < NUM_ALGS) );
 
 finish:
     return index;
@@ -231,7 +236,7 @@ getAlgInfo(JNIEnv *env, jobject alg, JSS_AlgInfo *info)
     if( index == -1 ) {
         goto finish;
     }
-	*info = JSS_AlgTable[index];
+    *info = JSS_AlgTable[index];
     status = PR_SUCCESS;
 
 finish:

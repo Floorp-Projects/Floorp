@@ -67,6 +67,21 @@ public final class JSSProvider extends java.security.Provider {
         put("Alg.Alias.Signature.SHA1/RSA", "SHA-1/RSA");
         put("Alg.Alias.Signature.SHA1withRSA", "SHA-1/RSA");
 
+        put("Signature.SHA-256/RSA",
+            "org.mozilla.jss.provider.java.security.JSSSignatureSpi$SHA256RSA");
+        put("Alg.Alias.Signature.SHA256/RSA", "SHA-256/RSA");
+        put("Alg.Alias.Signature.SHA256withRSA", "SHA-256/RSA");
+
+        put("Signature.SHA-384/RSA",
+            "org.mozilla.jss.provider.java.security.JSSSignatureSpi$SHA384RSA");
+        put("Alg.Alias.Signature.SHA384/RSA", "SHA-384/RSA");
+        put("Alg.Alias.Signature.SHA384withRSA", "SHA-384/RSA");
+
+        put("Signature.SHA-512/RSA",
+            "org.mozilla.jss.provider.java.security.JSSSignatureSpi$SHA512RSA");
+        put("Alg.Alias.Signature.SHA512/RSA", "SHA-512/RSA");
+        put("Alg.Alias.Signature.SHA512withRSA", "SHA-512/RSA");
+
         /////////////////////////////////////////////////////////////
         // Message Digesting
         /////////////////////////////////////////////////////////////
@@ -77,9 +92,18 @@ public final class JSSProvider extends java.security.Provider {
                 "org.mozilla.jss.provider.java.security.JSSMessageDigestSpi$MD2");
         put("MessageDigest.MD5",
                 "org.mozilla.jss.provider.java.security.JSSMessageDigestSpi$MD5");
+        put("MessageDigest.SHA-256",
+                "org.mozilla.jss.provider.java.security.JSSMessageDigestSpi$SHA256");
+        put("MessageDigest.SHA-384",
+                "org.mozilla.jss.provider.java.security.JSSMessageDigestSpi$SHA384");
+        put("MessageDigest.SHA-512",
+                "org.mozilla.jss.provider.java.security.JSSMessageDigestSpi$SHA512");
 
         put("Alg.Alias.MessageDigest.SHA1", "SHA-1");
         put("Alg.Alias.MessageDigest.SHA", "SHA-1");
+        put("Alg.Alias.MessageDigest.SHA256", "SHA-256");
+        put("Alg.Alias.MessageDigest.SHA384", "SHA-384");
+        put("Alg.Alias.MessageDigest.SHA512", "SHA-512");
 
         /////////////////////////////////////////////////////////////
         // SecureRandom

@@ -219,5 +219,21 @@ class JSSSignatureSpi extends java.security.SignatureSpi {
             super(SignatureAlgorithm.RSASignatureWithSHA1Digest);
         }
     }
+    public static class SHA256RSA extends JSSSignatureSpi {
+        public SHA256RSA() {
+            super(SignatureAlgorithm.RSASignatureWithSHA256Digest);
+        }
+    }
+    public static class SHA384RSA extends JSSSignatureSpi {
+        public SHA384RSA() {
+            super(SignatureAlgorithm.RSASignatureWithSHA384Digest);
+        }
+    }
+    public static class SHA512RSA extends JSSSignatureSpi {
+        public SHA512RSA() {
+            super(SignatureAlgorithm.RSASignatureWithSHA512Digest);
+        }
+    }
+
 
 }

@@ -72,7 +72,7 @@ public final class KeyType {
             Assert._assert(! algHash.containsKey(algorithms[i]) );
             algHash.put(algorithms[i], this);
         }
-		this.name = name;
+        this.name = name;
     }
 
     /**
@@ -114,7 +114,7 @@ public final class KeyType {
     // An array of algorithms supported by this key type
     protected Algorithm[] algorithms;
 
-	protected String name;
+    protected String name;
 
 
     //////////////////////////////////////////////////////////////
@@ -146,9 +146,12 @@ public final class KeyType {
                     SignatureAlgorithm.RSASignatureWithMD2Digest,
                     SignatureAlgorithm.RSASignatureWithMD5Digest,
                     SignatureAlgorithm.RSASignatureWithSHA1Digest,
+                    SignatureAlgorithm.RSASignatureWithSHA256Digest,
+                    SignatureAlgorithm.RSASignatureWithSHA384Digest,
+                    SignatureAlgorithm.RSASignatureWithSHA512Digest,
                     KeyWrapAlgorithm.RSA
                     },
-					"RSA"
+                    "RSA"
                 );
 
     //////////////////////////////////////////////////////////////
@@ -158,7 +161,7 @@ public final class KeyType {
                     SignatureAlgorithm.DSASignature,
                     SignatureAlgorithm.DSASignatureWithSHA1Digest
                     },
-					"DSA"
+                    "DSA"
                 );
 
     //////////////////////////////////////////////////////////////

@@ -122,28 +122,50 @@ public class SignatureAlgorithm extends Algorithm {
     //////////////////////////////////////////////////////////////////////
     public static final SignatureAlgorithm
     RSASignatureWithMD2Digest =
-		new SignatureAlgorithm(SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION,
+        new SignatureAlgorithm(SEC_OID_PKCS1_MD2_WITH_RSA_ENCRYPTION,
                 "RSASignatureWithMD2Digest", RSASignature, DigestAlgorithm.MD2,
                 OBJECT_IDENTIFIER.PKCS1.subBranch(2) );
 
     //////////////////////////////////////////////////////////////////////
     public static final SignatureAlgorithm
     RSASignatureWithMD5Digest =
-		new SignatureAlgorithm(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
+        new SignatureAlgorithm(SEC_OID_PKCS1_MD5_WITH_RSA_ENCRYPTION,
                 "RSASignatureWithMD5Digest", RSASignature, DigestAlgorithm.MD5,
                 OBJECT_IDENTIFIER.PKCS1.subBranch(4) );
 
     //////////////////////////////////////////////////////////////////////
     public static final SignatureAlgorithm
     RSASignatureWithSHA1Digest =
-		new SignatureAlgorithm(SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION,
+        new SignatureAlgorithm(SEC_OID_PKCS1_SHA1_WITH_RSA_ENCRYPTION,
             "RSASignatureWithSHA1Digest", RSASignature, DigestAlgorithm.SHA1,
             OBJECT_IDENTIFIER.PKCS1.subBranch(5) );
 
     //////////////////////////////////////////////////////////////////////
     public static final SignatureAlgorithm
     DSASignatureWithSHA1Digest =
-		new SignatureAlgorithm(SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST,
+        new SignatureAlgorithm(SEC_OID_ANSIX9_DSA_SIGNATURE_WITH_SHA1_DIGEST,
             "DSASignatureWithSHA1Digest", DSASignature, DigestAlgorithm.SHA1,
             ANSI_X9_ALGORITHM.subBranch(3) );
+
+    //////////////////////////////////////////////////////////////////////
+    public static final SignatureAlgorithm
+    RSASignatureWithSHA256Digest =
+        new SignatureAlgorithm(SEC_OID_PKCS1_SHA256_WITH_RSA_ENCRYPTION,
+            "RSASignatureWithSHA256Digest", RSASignature, DigestAlgorithm.SHA256,
+            OBJECT_IDENTIFIER.PKCS1.subBranch(11));
+
+    //////////////////////////////////////////////////////////////////////
+    public static final SignatureAlgorithm
+    RSASignatureWithSHA384Digest =
+        new SignatureAlgorithm(SEC_OID_PKCS1_SHA384_WITH_RSA_ENCRYPTION,
+            "RSASignatureWithSHA384Digest", RSASignature, DigestAlgorithm.SHA384,
+            OBJECT_IDENTIFIER.PKCS1.subBranch(12));
+    
+    //////////////////////////////////////////////////////////////////////
+    public static final SignatureAlgorithm
+    RSASignatureWithSHA512Digest =
+        new SignatureAlgorithm(SEC_OID_PKCS1_SHA512_WITH_RSA_ENCRYPTION,
+            "RSASignatureWithSHA512Digest", RSASignature, DigestAlgorithm.SHA512,
+            OBJECT_IDENTIFIER.PKCS1.subBranch(13));
+
 }

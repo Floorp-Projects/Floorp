@@ -47,57 +47,24 @@ public class JCASigTest {
 
     public static void usage() {
         System.out.println(
-            "Usage: java org.mozilla.jss.tests.JCASigTest <dbdir> <passwordFile>");
+        "Usage: java org.mozilla.jss.tests.JCASigTest <dbdir> <passwordFile>");
     }
 
-    public static void main(String args[]) {
-        CryptoManager manager;
+    public static void sigTest(String alg, KeyPair keyPair) {
         byte[] data = new byte[] {1,2,3,4,5,6,7,8,9};
         byte[] signature;
         Signature signer;
-        PublicKey pubk;
-        KeyPairGenerator kpgen;
-        KeyPair keyPair;
 
-        if (args.length != 2) {
-            usage();
-            return;
-        }
-        String dbdir = args[0];
-        String file = args[1];
         try {
-            CryptoManager.InitializationValues vals = new
-                      CryptoManager.InitializationValues (dbdir );
-            vals.removeSunProvider = true;
-            CryptoManager.initialize(vals);
-            manager = CryptoManager.getInstance();
-            manager.setPasswordCallback( new FilePasswordCallback(file) );
-
-            Debug.setLevel(Debug.OBNOXIOUS);
-
-            Provider[] providers = Security.getProviders();
-            for (int i=0; i < providers.length; i++) {
-                System.out.println("Provider "+i+": "+providers[i].getName());
-            }
-
-            // Generate an RSA keypair
-            kpgen = KeyPairGenerator.getInstance("RSA");
-            kpgen.initialize(1024);
-            keyPair = kpgen.generateKeyPair();
-            Provider  provider = kpgen.getProvider();
-
-            System.out.println("The provider used to Generate the Keys was " + provider.getName() );
-            System.out.println("provider info " + provider.getInfo() );
-
-            // RSA MD5
-            signer = Signature.getInstance("MD5/RSA");
+            signer = Signature.getInstance(alg);
 
             System.out.println("Created a signing context");
-            provider = signer.getProvider();
-            System.out.println("The provider used to for the signer MD5/RSA was " + provider.getName() );
+            Provider provider = signer.getProvider();
+            System.out.println("The provider used for the signer " 
+                 + provider.getName() + " and the algorithm was " + alg);
 
             signer.initSign(
-                           (org.mozilla.jss.crypto.PrivateKey)keyPair.getPrivate());
+                   (org.mozilla.jss.crypto.PrivateKey)keyPair.getPrivate());
             System.out.println("initialized the signing operation");
 
             signer.update(data);
@@ -114,8 +81,56 @@ public class JCASigTest {
             } else {
                 System.out.println("ERROR: Signature failed to verify.");
             }
+        } catch ( Exception e ) {
+            e.printStackTrace();
+        }
+    }
 
-        } catch (Exception e) {
+    public static void main(String args[]) {
+        CryptoManager manager;
+        KeyPairGenerator kpgen;
+        KeyPair keyPair;
+
+        if ( args.length != 2 ) {
+            usage();
+            return;
+        }
+        String dbdir = args[0];
+        String file = args[1];
+        try {
+            CryptoManager.InitializationValues vals = new
+                                CryptoManager.InitializationValues (dbdir );
+            vals.removeSunProvider = true;
+            CryptoManager.initialize(vals);
+            manager = CryptoManager.getInstance();
+            manager.setPasswordCallback( new FilePasswordCallback(file) );
+
+            Debug.setLevel(Debug.OBNOXIOUS);
+
+            Provider[] providers = Security.getProviders();
+            for ( int i=0; i < providers.length; i++ ) {
+                System.out.println("Provider "+i+": "+providers[i].getName());
+            }
+
+            // Generate an RSA keypair
+            kpgen = KeyPairGenerator.getInstance("RSA");
+            kpgen.initialize(1024);
+            keyPair = kpgen.generateKeyPair();
+            Provider  provider = kpgen.getProvider();
+
+            System.out.println("The provider used to Generate the Keys was " 
+                                + provider.getName() );
+            System.out.println("provider info " + provider.getInfo() );
+
+            sigTest("MD5/RSA", keyPair);
+            sigTest("MD2/RSA", keyPair);
+            sigTest("SHA-1/RSA", keyPair);
+            sigTest("SHA-256/RSA", keyPair);
+            sigTest("SHA-384/RSA", keyPair);
+            sigTest("SHA-512/RSA", keyPair);
+
+
+        } catch ( Exception e ) {
             e.printStackTrace();
         }
     }
