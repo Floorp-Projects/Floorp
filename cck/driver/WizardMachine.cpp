@@ -981,7 +981,7 @@ BOOL CWizardMachineApp::interpret(CString cmds, WIDGET *curWidget)
 					if (!value || value.IsEmpty())
 					{
 						CWnd myWnd;
-						myWnd.MessageBox(p2, "Error", MB_OK);
+						myWnd.MessageBox(p2, "Error", MB_OK|MB_SYSTEMMODAL);
 						return FALSE;
 					}
 				}
