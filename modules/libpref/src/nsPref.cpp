@@ -108,8 +108,6 @@ public:
 
   NS_IMETHOD RegisterCallback(const char *domain, PrefChangedFunc callback, void * closure);
   NS_IMETHOD UnregisterCallback(const char *domain, PrefChangedFunc callback, void * closure);
-  NS_IMETHOD CreateChildList(const char *parent_node, char **childList);
-  NS_IMETHOD NextChild(const char *child_list, PRInt16 *index, char **_retval);
   NS_IMETHOD EnumerateChildren(const char *parent, PrefEnumerationFunc callback, void * data); 
 
 protected:
@@ -545,96 +543,6 @@ NS_IMETHODIMP nsPref::UnregisterCallback( const char* domain,
 /*
  * Preference enumeration
  */
-
-NS_IMETHODIMP nsPref::CreateChildList(const char* parent_node, char **child_list)
-{
-  PRUint32 bufferSize;
-  PRUint32 theCount;
-  PRUint32 i;
-  nsresult rv;
-  char     **childArray;
-  char     *childList;
-  char     *prefName;
-
-  NS_ENSURE_ARG_POINTER(parent_node);
-  NS_ENSURE_ARG_POINTER(child_list);
-
-  if (*parent_node > 0)
-    prefName = PR_smprintf("%s.", parent_node);
-  else
-    prefName = PL_strdup("");
-
-  if (prefName == nsnull) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  rv = GetChildList(prefName, &theCount, &childArray);
-  if (NS_SUCCEEDED(rv)) {
-    // now that we've built up the list, build a buffer from the results
-    bufferSize = 2048;
-    childList = (char *)nsMemory::Alloc(sizeof(char) * bufferSize);
-    if (childList != nsnull) {
-      char buf[512];
-      char* nextdelim;
-      PRUint32 parentlen = PL_strlen(prefName);
-      char* substring;
-      childList[0] = '\0';
-
-      for (i = 0; i < theCount; ++i) {
-        PL_strncpy(buf, (char *)childArray[i], PR_MIN(512, PL_strlen((char *)childArray[i]) + 1));
-        nextdelim = buf + parentlen;
-        if (parentlen < PL_strlen(buf)) {
-          // Find the next delimiter if any and truncate the string there
-          nextdelim = PL_strstr(nextdelim, ".");
-          if (nextdelim) {
-            *nextdelim = ';';
-            *(nextdelim + 1) = '\0';
-          }
-        }
-
-        // if this substring isn't already in the buffer, add it
-        substring = PL_strstr(childList, buf);
-        if (!substring) {
-          unsigned int newsize = PL_strlen(childList) + PL_strlen(buf) + 2;
-          if (newsize > bufferSize) {
-            bufferSize *= 2;
-            childList = (char *)nsMemory::Realloc(childList, sizeof(char) * bufferSize);
-            if (childList == nsnull) {
-              // problem... break out of for loop
-              break;
-            }
-          }
-          PL_strcat(childList, buf);
-        }
-      }
-      *child_list = childList;
-    }
-
-    // if we had an Alloc or Realloc problem
-    if (childList == nsnull) {
-      rv = NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // release the memory allocated by GetChildList
-    NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(theCount, childArray);
-  }
-  PR_Free(prefName);
-
-  return rv;
-}
-
-NS_IMETHODIMP nsPref::NextChild(const char *child_list, PRInt16 *indx, char **listchild)
-{
-  char* temp = (char*)&child_list[*indx];
-  char* newstr;
-  char* child = nsCRT::strtok(temp, ";", &newstr);
-  if (child) {
-    *indx += PL_strlen(child) + 1;
-    *listchild = child;
-    return NS_OK;
-  } else
-    return NS_ERROR_NULL_POINTER;
-}
 
 NS_IMETHODIMP nsPref::EnumerateChildren(const char *parent, PrefEnumerationFunc callback, void *arg) 
 {
