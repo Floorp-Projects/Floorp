@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -65,9 +66,20 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLAREAELEMENT_ACCESSKEY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.accesskey", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAccessKey(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -79,6 +91,11 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_ALT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.alt", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAlt(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -90,6 +107,11 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_COORDS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.coords", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetCoords(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -101,6 +123,11 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_HREF:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.href", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetHref(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -112,6 +139,11 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_NOHREF:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.nohref", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetNoHref(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -123,6 +155,11 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_SHAPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.shape", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetShape(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -134,6 +171,11 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_TABINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.tabindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetTabIndex(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -145,6 +187,11 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_TARGET:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.target", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetTarget(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -157,6 +204,7 @@ GetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -180,9 +228,20 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLAREAELEMENT_ACCESSKEY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.accesskey", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -192,6 +251,11 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_ALT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.alt", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -201,6 +265,11 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_COORDS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.coords", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -210,6 +279,11 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_HREF:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.href", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -219,6 +293,11 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_NOHREF:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.nohref", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
@@ -230,6 +309,11 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_SHAPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.shape", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -239,6 +323,11 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_TABINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.tabindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -255,6 +344,11 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLAREAELEMENT_TARGET:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlareaelement.target", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -265,6 +359,7 @@ SetHTMLAreaElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

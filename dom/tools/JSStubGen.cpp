@@ -91,6 +91,7 @@ static const char *kIncludeDefaultsStr = "\n"
 "#include \"nsJSUtils.h\"\n"
 "#include \"nscore.h\"\n"
 "#include \"nsIScriptContext.h\"\n"
+"#include \"nsIScriptSecurityManager.h\"\n"
 "#include \"nsIJSScriptObject.h\"\n"
 "#include \"nsIScriptObjectOwner.h\"\n"
 "#include \"nsIScriptGlobalObject.h\"\n"
@@ -299,12 +300,19 @@ static const char *kPropFuncBeginStr = "\n"
 "  }\n"
 "\n"
 "  if (JSVAL_IS_INT(id)) {\n"
+"    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
+"    nsIScriptSecurityManager *secMan;\n"
+"    PRBool ok;\n"
+"    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {\n"
+"      return JS_FALSE;\n"
+"    }\n"
 "    switch(JSVAL_TO_INT(id)) {\n";
 
 static const char *kPropFuncDefaultStr = 
 "      default:\n"
 "        return nsJSUtils::nsCallJSScriptObject%sProperty(a, cx, id, vp);\n"
 "    }\n"
+"    NS_RELEASE(secMan);\n"
 "  }\n";
 
 static const char *kPropFuncDefaultItemStr = 
@@ -424,7 +432,12 @@ static const char *kPropFuncNamedItemNonPrimaryStr =
 
 static const char *kPropCaseBeginStr = 
 "      case %s_%s:\n"
-"      {\n";
+"      {\n"
+"        secMan->CheckScriptAccess(scriptCX, obj, \"%s.%s\", &ok);\n"
+"        if (!ok) {\n"
+"          //Need to throw error here\n"
+"          return JS_FALSE;\n"
+"        }\n";
 
 static const char *kPropCaseEndStr = 
 "        break;\n"
@@ -466,7 +479,15 @@ JSStubGen::GeneratePropertyFunc(IdlSpecification &aSpec, PRBool aIsGetter)
 
       any = PR_TRUE;
       
-      sprintf(buf, kPropCaseBeginStr, iface_name, attr_name);
+      char lwr_attr_name[128];
+      strcpy(lwr_attr_name, attr_name);
+      StrLwr(lwr_attr_name);
+
+      char lwr_iface_name[128];
+      strcpy(lwr_iface_name, iface_name);
+      StrLwr(lwr_iface_name);
+
+      sprintf(buf, kPropCaseBeginStr, iface_name, attr_name, lwr_iface_name, lwr_attr_name);
       *file << buf;
 
       if (aIsGetter) {
@@ -925,6 +946,21 @@ static const char *kMethodParamStr =  "  %s b%d;\n";
 static const char *kMethodBodyBeginStr = "\n"
 "  *rval = JSVAL_NULL;\n"
 "\n"
+"  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);\n"
+"  nsIScriptSecurityManager *secMan;\n"
+"  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {\n"
+"    PRBool ok;\n"
+"    secMan->CheckScriptAccess(scriptCX, obj, \"%s.%s\", &ok);\n"
+"    if (!ok) {\n"
+"      //Need to throw error here\n"
+"      return JS_FALSE;\n"
+"    }\n"
+"    NS_RELEASE(secMan);\n"
+"  }\n"
+"  else {\n"
+"    return JS_FALSE;\n"
+"  }\n"
+"\n"
 "  // If there's no private data, this must be the prototype, so ignore\n"
 "  if (nsnull == nativeThis) {\n"
 "    return JS_TRUE;\n"
@@ -1091,7 +1127,16 @@ JSStubGen::GenerateMethods(IdlSpecification &aSpec)
         *file << buf;
       }
 
-      sprintf(buf, kMethodBodyBeginStr, func->ParameterCount());
+      char lwr_method_name[128];
+      strcpy(lwr_method_name, method_name);
+      StrLwr(lwr_method_name);
+
+      char lwr_iface_name[128];
+      strcpy(lwr_iface_name, iface->GetName());
+      StrLwr(lwr_iface_name);
+
+      sprintf(buf, kMethodBodyBeginStr, lwr_iface_name,
+              lwr_method_name, func->ParameterCount());
       *file << buf;
 
       for (p = 0; p < pcount; p++) {

@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -66,9 +67,20 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLELEMENT_ID:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.id", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetId(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -80,6 +92,11 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLELEMENT_TITLE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.title", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetTitle(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -91,6 +108,11 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLELEMENT_LANG:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.lang", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetLang(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -102,6 +124,11 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLELEMENT_DIR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.dir", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetDir(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -113,6 +140,11 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLELEMENT_CLASSNAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.classname", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetClassName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -124,6 +156,11 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLELEMENT_STYLE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.style", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMCSSStyleDeclaration* prop;
         if (NS_OK == a->GetStyle(&prop)) {
           // get the js object
@@ -137,6 +174,7 @@ GetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -160,9 +198,20 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLELEMENT_ID:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.id", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -172,6 +221,11 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLELEMENT_TITLE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.title", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -181,6 +235,11 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLELEMENT_LANG:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.lang", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -190,6 +249,11 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLELEMENT_DIR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.dir", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -199,6 +263,11 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLELEMENT_CLASSNAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlelement.classname", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -209,6 +278,7 @@ SetHTMLElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

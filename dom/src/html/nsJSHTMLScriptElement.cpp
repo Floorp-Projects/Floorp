@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -64,9 +65,20 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLSCRIPTELEMENT_TEXT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.text", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetText(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -78,6 +90,11 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_HTMLFOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.htmlfor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetHtmlFor(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -89,6 +106,11 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_EVENT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.event", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetEvent(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -100,6 +122,11 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_CHARSET:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.charset", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetCharset(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -111,6 +138,11 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_DEFER:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.defer", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetDefer(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -122,6 +154,11 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_SRC:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.src", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetSrc(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -133,6 +170,11 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_TYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.type", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetType(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -145,6 +187,7 @@ GetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -168,9 +211,20 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLSCRIPTELEMENT_TEXT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.text", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -180,6 +234,11 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_HTMLFOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.htmlfor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -189,6 +248,11 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_EVENT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.event", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -198,6 +262,11 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_CHARSET:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.charset", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -207,6 +276,11 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_DEFER:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.defer", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
@@ -218,6 +292,11 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_SRC:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.src", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -227,6 +306,11 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLSCRIPTELEMENT_TYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlscriptelement.type", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -237,6 +321,7 @@ SetHTMLScriptElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

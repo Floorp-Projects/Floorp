@@ -70,6 +70,7 @@ protected:
     ofstream*       GetFile() { return mOutputFile; }
     
     void            StrUpr(char *aBuffer);
+    void            StrLwr(char *aBuffer);
 
 private:
     void            CollectAllInInterface(IdlInterface &aInterface,

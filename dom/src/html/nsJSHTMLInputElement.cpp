@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -78,9 +79,20 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLINPUTELEMENT_DEFAULTVALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultvalue", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetDefaultValue(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -92,6 +104,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_DEFAULTCHECKED:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultchecked", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetDefaultChecked(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -103,6 +120,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_FORM:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.form", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLFormElement* prop;
         if (NS_OK == a->GetForm(&prop)) {
           // get the js object
@@ -115,6 +137,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_ACCEPT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accept", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAccept(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -126,6 +153,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_ACCESSKEY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accesskey", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAccessKey(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -137,6 +169,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_ALIGN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.align", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAlign(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -148,6 +185,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_ALT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.alt", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetAlt(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -159,6 +201,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_CHECKED:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.checked", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetChecked(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -170,6 +217,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_DISABLED:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.disabled", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetDisabled(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -181,6 +233,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_MAXLENGTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.maxlength", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetMaxLength(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -192,6 +249,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -203,6 +265,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_READONLY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.readonly", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetReadOnly(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -214,6 +281,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_SIZE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.size", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetSize(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -225,6 +297,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_SRC:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.src", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetSrc(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -236,6 +313,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_TABINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.tabindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         if (NS_OK == a->GetTabIndex(&prop)) {
           *vp = INT_TO_JSVAL(prop);
@@ -247,6 +329,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_TYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.type", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetType(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -258,6 +345,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_USEMAP:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.usemap", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetUseMap(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -269,6 +361,11 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_VALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.value", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetValue(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -281,6 +378,7 @@ GetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -304,9 +402,20 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLINPUTELEMENT_DEFAULTVALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultvalue", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -316,6 +425,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_DEFAULTCHECKED:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.defaultchecked", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
@@ -327,6 +441,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_ACCEPT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accept", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -336,6 +455,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_ACCESSKEY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.accesskey", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -345,6 +469,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_ALIGN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.align", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -354,6 +483,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_ALT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.alt", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -363,6 +497,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_CHECKED:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.checked", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
@@ -374,6 +513,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_DISABLED:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.disabled", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
@@ -385,6 +529,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_MAXLENGTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.maxlength", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -401,6 +550,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -410,6 +564,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_READONLY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.readonly", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
@@ -421,6 +580,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_SIZE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.size", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -430,6 +594,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_SRC:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.src", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -439,6 +608,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_TABINDEX:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.tabindex", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRInt32 prop;
         int32 temp;
         if (JSVAL_IS_NUMBER(*vp) && JS_ValueToInt32(cx, *vp, &temp)) {
@@ -455,6 +629,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_USEMAP:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.usemap", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -464,6 +643,11 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLINPUTELEMENT_VALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.value", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -474,6 +658,7 @@ SetHTMLInputElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -524,6 +709,21 @@ HTMLInputElementBlur(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsva
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.blur", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -556,6 +756,21 @@ HTMLInputElementFocus(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.focus", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -590,6 +805,21 @@ HTMLInputElementSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, js
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.select", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -622,6 +852,21 @@ HTMLInputElementClick(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsv
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmlinputelement.click", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {

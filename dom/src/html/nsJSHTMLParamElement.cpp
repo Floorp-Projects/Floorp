@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -61,9 +62,20 @@ GetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLPARAMELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlparamelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -75,6 +87,11 @@ GetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLPARAMELEMENT_TYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlparamelement.type", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetType(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -86,6 +103,11 @@ GetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLPARAMELEMENT_VALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlparamelement.value", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetValue(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -97,6 +119,11 @@ GetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLPARAMELEMENT_VALUETYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlparamelement.valuetype", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetValueType(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -109,6 +136,7 @@ GetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -132,9 +160,20 @@ SetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLPARAMELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlparamelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -144,6 +183,11 @@ SetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLPARAMELEMENT_TYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlparamelement.type", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -153,6 +197,11 @@ SetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLPARAMELEMENT_VALUE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlparamelement.value", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -162,6 +211,11 @@ SetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLPARAMELEMENT_VALUETYPE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlparamelement.valuetype", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -172,6 +226,7 @@ SetHTMLParamElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

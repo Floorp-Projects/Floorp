@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -65,9 +66,20 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLFRAMEELEMENT_FRAMEBORDER:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.frameborder", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetFrameBorder(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -79,6 +91,11 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_LONGDESC:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.longdesc", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetLongDesc(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -90,6 +107,11 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_MARGINHEIGHT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginheight", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetMarginHeight(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -101,6 +123,11 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_MARGINWIDTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginwidth", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetMarginWidth(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -112,6 +139,11 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -123,6 +155,11 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_NORESIZE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.noresize", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (NS_OK == a->GetNoResize(&prop)) {
           *vp = BOOLEAN_TO_JSVAL(prop);
@@ -134,6 +171,11 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_SCROLLING:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.scrolling", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetScrolling(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -145,6 +187,11 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_SRC:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.src", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetSrc(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -157,6 +204,7 @@ GetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
@@ -180,9 +228,20 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLFRAMEELEMENT_FRAMEBORDER:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.frameborder", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -192,6 +251,11 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_LONGDESC:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.longdesc", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -201,6 +265,11 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_MARGINHEIGHT:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginheight", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -210,6 +279,11 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_MARGINWIDTH:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.marginwidth", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -219,6 +293,11 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_NAME:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.name", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -228,6 +307,11 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_NORESIZE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.noresize", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         PRBool prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToBool(&prop, cx, *vp)) {
           return JS_FALSE;
@@ -239,6 +323,11 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_SCROLLING:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.scrolling", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -248,6 +337,11 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLFRAMEELEMENT_SRC:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmlframeelement.src", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -258,6 +352,7 @@ SetHTMLFrameElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);

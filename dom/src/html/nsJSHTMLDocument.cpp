@@ -21,6 +21,7 @@
 #include "nsJSUtils.h"
 #include "nscore.h"
 #include "nsIScriptContext.h"
+#include "nsIScriptSecurityManager.h"
 #include "nsIJSScriptObject.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -92,9 +93,20 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLDOCUMENT_TITLE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.title", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetTitle(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -106,6 +118,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_REFERRER:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.referrer", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetReferrer(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -117,6 +134,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_DOMAIN:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.domain", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetDomain(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -128,6 +150,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_URL:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.url", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetURL(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -139,6 +166,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_BODY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.body", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLElement* prop;
         if (NS_OK == a->GetBody(&prop)) {
           // get the js object
@@ -151,6 +183,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_IMAGES:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.images", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetImages(&prop)) {
           // get the js object
@@ -163,6 +200,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_APPLETS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.applets", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetApplets(&prop)) {
           // get the js object
@@ -175,6 +217,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_LINKS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.links", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetLinks(&prop)) {
           // get the js object
@@ -187,6 +234,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_FORMS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.forms", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetForms(&prop)) {
           // get the js object
@@ -199,6 +251,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_ANCHORS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.anchors", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLCollection* prop;
         if (NS_OK == a->GetAnchors(&prop)) {
           // get the js object
@@ -211,6 +268,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_COOKIE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.cookie", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         if (NS_OK == a->GetCookie(prop)) {
           nsJSUtils::nsConvertStringToJSVal(prop, cx, vp);
@@ -222,6 +284,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_ALINKCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.alinkcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -242,6 +309,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_LINKCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.linkcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -262,6 +334,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_VLINKCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.vlinkcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -282,6 +359,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_BGCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.bgcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -302,6 +384,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_FGCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.fgcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -322,6 +409,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_LASTMODIFIED:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.lastmodified", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -342,6 +434,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_EMBEDS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.embeds", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLCollection* prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -363,6 +460,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_LAYERS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.layers", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLCollection* prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -384,6 +486,11 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_PLUGINS:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.plugins", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLCollection* prop;
         nsIDOMNSHTMLDocument* b;
         if (NS_OK == a->QueryInterface(kINSHTMLDocumentIID, (void **)&b)) {
@@ -406,6 +513,7 @@ GetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else if (JSVAL_IS_STRING(id)) {
     nsIDOMElement* prop;
@@ -463,9 +571,20 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
   }
 
   if (JSVAL_IS_INT(id)) {
+    nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+    nsIScriptSecurityManager *secMan;
+    PRBool ok;
+    if (NS_OK != scriptCX->GetSecurityManager(&secMan)) {
+      return JS_FALSE;
+    }
     switch(JSVAL_TO_INT(id)) {
       case HTMLDOCUMENT_TITLE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.title", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -475,6 +594,11 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_BODY:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.body", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsIDOMHTMLElement* prop;
         if (PR_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)&prop,
                                                 kIHTMLElementIID, "HTMLElement",
@@ -488,6 +612,11 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case HTMLDOCUMENT_COOKIE:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.cookie", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -497,6 +626,11 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_ALINKCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.alinkcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -515,6 +649,11 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_LINKCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.linkcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -533,6 +672,11 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_VLINKCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.vlinkcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -551,6 +695,11 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_BGCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.bgcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -569,6 +718,11 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       }
       case NSHTMLDOCUMENT_FGCOLOR:
       {
+        secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.fgcolor", &ok);
+        if (!ok) {
+          //Need to throw error here
+          return JS_FALSE;
+        }
         nsAutoString prop;
         nsJSUtils::nsConvertJSValToString(prop, cx, *vp);
       
@@ -588,6 +742,7 @@ SetHTMLDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       default:
         return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
     }
+    NS_RELEASE(secMan);
   }
   else {
     return nsJSUtils::nsCallJSScriptObjectSetProperty(a, cx, id, vp);
@@ -638,6 +793,21 @@ HTMLDocumentOpen(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.open", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -670,6 +840,21 @@ HTMLDocumentClose(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.close", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -704,6 +889,21 @@ HTMLDocumentWrite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.write", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -736,6 +936,21 @@ HTMLDocumentWriteln(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
   JSBool rBool = JS_FALSE;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.writeln", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -771,6 +986,21 @@ HTMLDocumentGetElementById(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementbyid", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -808,6 +1038,21 @@ HTMLDocumentGetElementsByName(JSContext *cx, JSObject *obj, uintN argc, jsval *a
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "htmldocument.getelementsbyname", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
@@ -851,6 +1096,21 @@ NSHTMLDocumentGetSelection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
 
   *rval = JSVAL_NULL;
 
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.getselection", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
+
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {
     return JS_TRUE;
@@ -891,6 +1151,21 @@ NSHTMLDocumentNamedItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
   nsAutoString b0;
 
   *rval = JSVAL_NULL;
+
+  nsIScriptContext *scriptCX = (nsIScriptContext *)JS_GetContextPrivate(cx);
+  nsIScriptSecurityManager *secMan;
+  if (NS_OK == scriptCX->GetSecurityManager(&secMan)) {
+    PRBool ok;
+    secMan->CheckScriptAccess(scriptCX, obj, "nshtmldocument.nameditem", &ok);
+    if (!ok) {
+      //Need to throw error here
+      return JS_FALSE;
+    }
+    NS_RELEASE(secMan);
+  }
+  else {
+    return JS_FALSE;
+  }
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == nativeThis) {

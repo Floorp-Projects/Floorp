@@ -320,6 +320,19 @@ FileGen::StrUpr(char *aBuffer)
   }
 }
 
+void 
+FileGen::StrLwr(char *aBuffer)
+{
+  char *cur_ptr = aBuffer;
+
+  while (*cur_ptr != 0) {
+    if ((*cur_ptr >= 'A') && (*cur_ptr <= 'Z')) {
+      *cur_ptr += ('a' - 'A');
+    }
+    cur_ptr++;
+  }
+}
+
 void
 FileGen::CollectAllInInterface(IdlInterface &aInterface,
                                PLHashTable *aTable)
