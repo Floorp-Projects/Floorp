@@ -17,7 +17,6 @@
 #
 
 nsMessenger.h
-nsMsgRFC822Parser.h
 nsMsgKeyArray.h
 nsUrlListenerManager.h
 nsMsgMailSession.h
