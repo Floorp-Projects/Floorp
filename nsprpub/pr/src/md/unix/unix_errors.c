@@ -128,7 +128,10 @@ static void _MD_unix_map_default_error(int err)
         case ENFILE:
             prError = PR_SYS_DESC_TABLE_FULL_ERROR;
             break;
-#ifdef ENOBUFS
+        /*
+         * On SCO OpenServer 5, ENOBUFS is defined as ENOSR.
+         */
+#if defined(ENOBUFS) && (ENOBUFS != ENOSR)
         case ENOBUFS:
             prError = PR_INSUFFICIENT_RESOURCES_ERROR;
             break;
