@@ -14,7 +14,7 @@
     startTest();
 
     re_1 = /\cA?/g;
-    re_1.lastIndex = Math.pow(2,32);
+    re_1.lastIndex = Math.pow(2,31);
 
     re_2 = /\w*/i;
     re_2.lastIndex = Math.pow(2,32) -1;
@@ -28,7 +28,7 @@
     re_5 = /\B/;
     re_5.lastIndex = Math.pow(2,30);
 
-    AddRegExpCases( re_1, "\\cA?", true, false, false, Math.pow(2,32) );
+    AddRegExpCases( re_1, "\\cA?", true, false, false, Math.pow(2,31) );
     AddRegExpCases( re_2, "\\w*", false, true, false, Math.pow(2,32)-1 );
     AddRegExpCases( re_3, "\\*{0,80}", false, false, true, Math.pow(2,31) -1 );
     AddRegExpCases( re_4, "^.", true, true, true, Math.pow(2,30) -1 );
