@@ -54,8 +54,6 @@ libs::
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 DIRS  += skin/mac
-else
-DIRS  += skin
 endif
 
 EXTRA_COMPONENTS = js/newsblog.js

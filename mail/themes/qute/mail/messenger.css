@@ -1,0 +1,10 @@
+/* ===== messenger.css ==================================================
+  == Styles shared throughout the Messenger application.
+  ======================================================================= */
+
+@import url("chrome://communicator/skin/");
+@import url("chrome://messenger/content/messenger.css");
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+  

@@ -42,12 +42,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-ifndef MOZ_PHOENIX
-DIRS		= classic
-endif
-
 ifndef MOZ_XUL_APP
-DIRS		+= modern 
+DIRS		= classic modern 
 endif
 
 include $(topsrcdir)/config/rules.mk

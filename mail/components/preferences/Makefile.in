@@ -46,8 +46,6 @@ DIRS = content
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 	DIRS  += skin/mac
-else
-	DIRS  += skin
 endif
 
 include $(topsrcdir)/config/rules.mk
