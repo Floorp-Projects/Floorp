@@ -281,7 +281,10 @@ NS_IMETHODIMP gfxImageFrame::SetImageData(const PRUint8 *aData, PRUint32 aLength
     return NS_ERROR_FAILURE;
   }
 
-  memcpy(imgData + newOffset, aData, aLength);
+  if (aData)
+    memcpy(imgData + newOffset, aData, aLength);
+  else
+    memset(imgData + newOffset, 0, aLength);
   mImage->UnlockImagePixels(PR_FALSE);
 
   PRInt32 row = (aOffset / row_stride);
@@ -377,7 +380,10 @@ NS_IMETHODIMP gfxImageFrame::SetAlphaData(const PRUint8 *aData, PRUint32 aLength
     return NS_ERROR_FAILURE;
   }
 
-  memcpy(alphaData + offset, aData, aLength);
+  if (aData)
+    memcpy(alphaData + offset, aData, aLength);
+  else
+    memset(alphaData + offset, 0, aLength);
   mImage->UnlockImagePixels(PR_TRUE);
   return NS_OK;
 }
