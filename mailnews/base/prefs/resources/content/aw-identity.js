@@ -55,9 +55,9 @@ function identityPageValidate()
   var pageData = parent.GetPageData();
   setPageData(pageData, "identity", "fullName", name);
 
+  setNextPage("accounttype","identitypage");
   var isMailAccount = pageData.accounttype.mailaccount;
   if (isMailAccount && isMailAccount.value) {
-    setNextPage("accounttype","identitypage");
     if (gCurrentAccountData && gCurrentAccountData.wizardSkipPanels) {
       setNextPage("identitypage","done");
     }
@@ -165,6 +165,7 @@ function containsIllegalChar(aString)
 
 function identityPageInit()
 {
+  gCurrentDomain = null;
   gPrefsBundle = document.getElementById("bundle_prefs");
   clearEmailTextItems();
   setEmailDescriptionText();
@@ -277,8 +278,13 @@ function checkForFullName() {
     }
 }
 
-function checkForEmail() {
+function checkForEmail() 
+{
     var email = document.getElementById("email");
+    var pageData = parent.GetPageData();
+    if (pageData && pageData.identity && pageData.identity.email) {
+        email.value = pageData.identity.email.value;
+    }
     if (email.value=="") {
         try {
             var userInfo = Components.classes["@mozilla.org/userinfo;1"].getService(Components.interfaces.nsIUserInfo);

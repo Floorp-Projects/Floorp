@@ -764,8 +764,10 @@ function PrefillAccountForIsp(ispName)
     
     var pageData = GetPageData();
 
-    if (!ispData) 
+    if (!ispData) {
+      SetCurrentAccountData(null);
       return;
+    }
 
     // prefill the rest of the wizard
     dump("PrefillAccountForISP: filling with " + ispData + "\n");

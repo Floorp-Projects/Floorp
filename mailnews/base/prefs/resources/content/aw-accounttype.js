@@ -41,14 +41,12 @@ function acctTypePageInit() {
   // select the first radio button, assuming the wizard hasn't
   // already selected one for us. The wizard can get in this wierd state
   var rg = document.getElementById("acctyperadio");
-  var elements = rg.getElementsByTagName("radio");
-  var topItem = elements[0];
-  for (var i=0; i < elements.length; i++)
-    if (elements[i].selected) topItem = elements[i];
+  if (!rg.selectedItem) {
+    var elements = rg.getElementsByTagName("radio");
+    rg.selectedItem = elements[0];
+  }
 
-  rg.selectedItem = topItem;
-
-  var selectedItemId = topItem.getAttribute('id');
+  var selectedItemId = rg.selectedItem.getAttribute('id');
   if (selectedItemId == "mailaccount")
     setMailAccountTypeData();
   else if (selectedItemId == "newsaccount")
@@ -67,9 +65,9 @@ function acctTypePageUnload() {
 function initializeIspData()
 {
     if (!document.getElementById("mailaccount").selected) {
-        parent.SetCurrentAccountData(null);
-    }
-    
+      parent.SetCurrentAccountData(null);
+    }    
+
     // now reflect the datasource up into the parent
     var accountSelection = document.getElementById("acctyperadio");
 
