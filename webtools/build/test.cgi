@@ -40,19 +40,9 @@ print "Content-type: text/html\n\n\n";
 while (($key,$value) = each %ENV) {
   print "<code>$key=$value</code><br>\n";
 }
-  print qq(
-	   <FORM action='test.cgi' method='post' enctype='multipart/form-data' onsubmit="this.doit='you';this.foo.filename = '/u/slamm/.cshrc';">
-	   <input type='file' name='foo'>
-	   <input type='submit' name='doit' >
-	   </form>
-	  );
 
-    if ($ENV{"REQUEST_METHOD"} eq 'POST') {
-      print "body:<br>\n";
-      print "$_<br>\n" while (<>);
-    }
-    else {
-        $s = $ENV{"QUERY_STRING"};
-    }
+  mkdir 'configure-mirror', 0777 if not -d 'configure-mirror';
+
+  print "Unable to create directory<br>\n" if not -d 'configure-mirror';
 
   print "\n</body>\n</html>\n";
