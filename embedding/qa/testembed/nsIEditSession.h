@@ -83,12 +83,12 @@ public:
 
 	// local methods for nsIEditingSession tests
 	nsIEditingSession * GetEditSessionObject();
-	void InitTest(void);
-	void MakeWinEditTest(PRBool);
-	void WinIsEditTest(PRBool);
-	void SetEditorWinTest(void);
-	void GetEditorWinTest(void);
-	void TearEditorWinTest(void);
+	void InitTest(PRInt16);
+	void MakeWinEditTest(PRBool, PRInt16);
+	void WinIsEditTest(PRBool, PRInt16);
+	void SetEditorWinTest(PRInt16);
+	void GetEditorWinTest(PRInt16);
+	void TearEditorWinTest(PRInt16);
 	void OnStartTests(UINT nMenuID);
 	void RunAllTests(void);
 

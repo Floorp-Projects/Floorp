@@ -177,6 +177,12 @@ void CnsIObserServ::NotifyObserversTest(int displayType)
 
 	QAOutput("\n nsIObserverService::NotifyObserversTest().");
 
+	if (!observerService) 
+	{
+		QAOutput("Can't get nsIObserverService object. Tests fail.");
+		return;
+	}
+
 	for (i=0; i<10; i++)
 	{
 		FormatAndPrintOutput("The notified observer = ", ObserverTable[i].theTopic, 1);
@@ -223,6 +229,11 @@ void CnsIObserServ::EnumerateObserversTest(int displayType)
 		{
 			simpleEnum->GetNext(getter_AddRefs(observer));
 
+			if (!observer)
+			{
+				QAOutput("Didn't get the observer object. Tests fail.");
+				return;
+			}
 			rv = observer->Observe(observer, ObserverTable[i].theTopic, 0);
 			RvTestResult(rv, "nsIObserver() test", 1);	
 			RvTestResultDlg(rv, "nsIObserver() test");
