@@ -2295,7 +2295,6 @@ GetNamespace(JSContext *cx, JSXMLQName *qn, const JSXMLArray *inScopeNSes)
     if (inScopeNSes) {
         for (i = 0, n = inScopeNSes->length; i < n; i++) {
             ns = XMLARRAY_MEMBER(inScopeNSes, i, JSXMLNamespace);
-            JS_ASSERT(ns->prefix);
 
             /*
              * Erratum, very tricky, and not specified in ECMA-357 13.3.5.4:
@@ -2326,9 +2325,9 @@ GetNamespace(JSContext *cx, JSXMLQName *qn, const JSXMLArray *inScopeNSes)
              */
             if (!js_CompareStrings(ns->uri, qn->uri) &&
                 (ns->prefix == qn->prefix ||
-                 (qn->prefix
+                 ((ns->prefix && qn->prefix)
                   ? !js_CompareStrings(ns->prefix, qn->prefix)
-                  : IS_EMPTY(ns->prefix)))) {
+                  : IS_EMPTY(ns->prefix ? ns->prefix : qn->prefix)))) {
                 match = ns;
                 break;
             }
