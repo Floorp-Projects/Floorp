@@ -341,8 +341,6 @@ DayView.prototype.createEventBox = function dayview_createEventBox( calendarEven
    // create title label, location label and description description :)
    var eventTitleLabel = document.createElement( "label" );
    eventTitleLabel.setAttribute( "class", "day-view-event-title-label-class" );
-   eventTitleLabel.setAttribute( "crop", "end" );
-   eventTitleLabel.setAttribute( "flex", "1" );
    if( eventLocation ) 
       eventTitleLabel.setAttribute( "value", calendarEventDisplay.event.title + " (" + eventLocation + ")" );
    else
