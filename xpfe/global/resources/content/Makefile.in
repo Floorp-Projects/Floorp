@@ -41,6 +41,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/taskbarOverlay.xul \
 		$(srcdir)/dialogOverlay.xul \
 		$(srcdir)/dialogOverlay.js \
+		$(srcdir)/dialogBindings.xml \
 		$(srcdir)/commonDialog.xul \
 		$(srcdir)/commonDialog.js \
 		$(srcdir)/charsetOverlay.xul \

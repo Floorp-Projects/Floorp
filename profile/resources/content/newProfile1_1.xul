@@ -26,18 +26,16 @@
 <!DOCTYPE window SYSTEM "chrome://profile/locale/newProfile1_1.dtd" >
 <window 
     xmlns:html="http://www.w3.org/TR/REC-html40"
-    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog wizardPanel"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" 
+    class="dialog wizardPanel"
+    orient="vertical"
 		onload="parent.wizardManager.onPageLoad('newProfile1_1');"> 
 
-  <box flex="100%" align="vertical">
-    <html:div>&pnl1.p1.text;</html:div>
-    <spring style="height: 10px;"/>
-    <html:div>&pnl1.p2.text;</html:div>
-    <spring style="height: 10px;"/>
-    <html:div>&pnl1.p3.text;</html:div>
-    <spring style="height: 10px;"/>
-    <html:div>&pnl1.p4.text;</html:div>
-  </box>
+    <html>&pnl1.p1.text;</html>
+    <html>&pnl1.p2.text;</html>
+    <html>&pnl1.p3.text;</html>
+    <spring flex="1"/>
+    <html>&pnl1.p4.text;</html>
 
 </window>
 

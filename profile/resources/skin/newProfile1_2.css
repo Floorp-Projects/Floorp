@@ -1,45 +1,16 @@
-box.picker {
-  margin-left                 : 10px;
-  margin-top                  : 10px;
-  margin-bottom               : 5px;
-  margin-right                : 20px;
-}
 
-div.dirLabel {
-  margin-left                 : 15px;
-  margin-top                  : -10px;
-  font-weight                 : bold;
-}
-
-div#finishtext {
+#finishtext {
   margin-top                  : -20px;
 }
 
-div#folderintro {
-  height                      : 30px;
-}
-
-titledbutton#ProfileDir {
-  border                      : none;
-  color                       : black;
+text#ProfileDir {
   font-weight                 : bold;
-  padding                     : none;
-  margin                      : none;
-  text-decoration             : none;
+  padding-left                : 1em;
+  margin-top                  : 0.4em;
 }
 
-box#folderbuttons {
-  margin-top                  : 0px;
-  margin-bottom               : -10px;
-  margin-right                : 7px;
-}
-
-box#folderbuttons titledbutton {
-  width                       : 90px;
-}
-
-box#dirbox {
-  height                      : 50px;
+box#dirbox > box > titledbutton {
+  min-width                   : 8em;
 }
 
 span#deffoldername {

@@ -19,32 +19,15 @@
  * Rights Reserved.
  *
  * Contributors:
+ *   Ben Goodger <ben@netscape.com>
  *   Chris Nelson <chrisn@statecollege.com>
  *
  */
 
 @import url(chrome://global/skin/);
 
-toolbar.header {
-  padding-left: 5px;
-  padding-bottom: 4px;
-  min-height: 34px;
-}
-
-toolbar.title {
-  padding: 1px 5px 1px 5px;
-  min-height: 0px ! important;
-}
-
-treeitem[rowMigrate="true"] > treerow > treecell > .tree-icon {
-  list-style-image: url("chrome://profile/skin/migrate.gif");
-}
-
-titledbutton.unMigratedProfile {
-  padding: 0px;
-  margin-bottom: -4px;
-  margin-right: 4px;
-  list-style-image: url("chrome://profile/skin/migrate.gif");
+window.dialog {
+  padding: none;
 }
 
 .dimmed-highcontrast {
@@ -55,7 +38,7 @@ treeitem[rowMigrate="no"] > treerow > treecell {
 }
 
 /** icon courtesy of chris nelson, chrisn@statecollege.com **/
-treeitem[rowMigrate="no"] > treerow > treecell > .tree-icon {
+treeitem[rowMigrate="no"] > treerow > treecell > .tree-button {
   list-style-image: url("chrome://profile/skin/migrate.gif");
 }
 
@@ -63,11 +46,7 @@ treeitem[rowMigrate="no"][selected="true"] > treerow > treecell {
   color: #FFFFFF;
 }
 
-div.headertext {
-  color: white;
-}
-
-titledbutton#profileIcon {
+box[type="largeheader"] > toolbar > .circle {
   list-style-image: url("chrome://profile/skin/profileicon-large.gif");
   margin-top: 1px;
   margin-bottom: 1px;  
@@ -75,22 +54,13 @@ titledbutton#profileIcon {
   width: 28px;
 }
 
-titledbutton#profileIcon:hover {
-  background-image: url("chrome://global/skin/button28-bg.gif");
+/* profile selection dialog */
+deck#prattle {
+  max-width: 17em;
 }
 
-titledbutton#profileIcon:active {
-  background-image: url("chrome://global/skin/button28-bg.gif");
-}
-
-div.headertext {
-  font-size: large;
-  font-weight: bold;
-  text-decoration: underline;
-}
-
-div.separator {
-  margin: 0px;
+box#managebuttons > titledbutton {
+  min-width: 8em;
 }
 
 /* display area */
@@ -105,11 +75,6 @@ box#wizardButtons {
   border-bottom: 1px solid threedshadow;
   padding-top: 1px;
   padding-bottom: 1px;
-}
-
-/* profile selection dialog */
-div.label {
-  padding-top: 10px;
 }
 
 /* manager buttons */

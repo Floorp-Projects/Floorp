@@ -29,38 +29,24 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" class="dialog wizardPanel"
 	width="500" height="500"
   align="vertical"
-	onload="parent.wizardManager.onPageLoad('newProfile1_2');"> 
+	onload="initFields();parent.wizardManager.onPageLoad('newProfile1_2');"> 
 
 	<html:script language="javascript" src="chrome://global/content/strres.js" />
-  <html:script language="JavaScript" src="newProfile1_2.js"/>
+  <html:script language="JavaScript" src="chrome://profile/content/newProfile1_2.js"/>
 
-    <html:div>&pnl2.intro.text;</html:div> 
-    <spring style="height: 7px;"/>
-    <html:div>&pnl2.pname.label;</html:div> 
-    <spring flex="15%"/>
-    <box align="horizontal">
-      <html:input type="text" id="ProfileName" value="mozProfile" flex="100%" onblur="updateProfileName( this );"/>
+  <html>&pnl2.intro.text;</html> 
+  <html>&pnl2.pname.label;</html> 
+  <html:input type="text" id="ProfileName" value="&pnl2.defaultPName.label;" onblur="updateProfileName();"/>
+  <html>&pnl2.pdir.label;</html> 
+  <box id="dirbox" autostretch="never">
+    <text id="ProfileDir" flex="1" crop="right"/>
+    <box orient="vertical">
+      <titledbutton class="push" value="&button.choosefolder.label;" onclick="chooseProfileFolder(null,true);"/>
+      <titledbutton class="push" id="useDefault" value="&button.usedefault.label;" onclick="setDisplayToDefaultFolder();" style="display: none;"/>
     </box>
-    <spring flex="15%"/>
-    <html:div id="folderintro" style="padding-bottom: 0px;">
-      &pnl2.pdir.label;
-      <html:span id="deffoldername">&pnl2.deffldr.label;</html:span>
-    </html:div> 
-    <box align="horizontal" id="dirbox">
-      <html:div class="dirLabel" flex="100%">
-        <!-- replace this button with an input field when they start responding
-             to css styles properly as the cropping is a problem. -->
-        <titledbutton id="ProfileDir" flex="100%" value="" crop="right"/>
-      </html:div>
-      <spring flex="100%"/>
-      <box align="vertical" id="folderbuttons">
-        <titledbutton class="dialog push" value="&button.choosefolder.label;" onclick="getProfileDir(null,true);"/>
-      </box>
-      <spring flex="5%"/>
-    </box>
-    <spring flex="85%"/>
-    <html:div id="finishtext">&pnl2.finish.text;</html:div> 
-    <spring flex="15%"/>
+  </box>
+  <spring flex="1"/>
+  <html id="finishtext">&pnl2.finish.text;</html> 
 
 </window>
 

@@ -5,32 +5,12 @@
    xmlns:html="http://www.w3.org/TR/REC-html40"
    xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
   
-  <binding name="thumb" extends="xul:box">
-    <content>
-      <xul:spring flex="1"/>
-		  <xul:image inherits="src"/>
-		  <xul:spring flex="1"/>
-    </content>
-  </binding>
-
   <binding name="scrollbar">
     <content>
-      <xul:scrollbarbutton type="decrement">
-	      <xul:image inherits="src"/>
-	    </xul:scrollbarbutton>
-      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment">
-	      <xul:thumb inherits="align,src" flex="1"/>
-      </xul:slider>
-      <xul:scrollbarbutton type="increment">
-	    <xul:image inherits="src"/>
-	  </xul:scrollbarbutton>
+      <xul:scrollbarbutton type="decrement"/>
+      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment"/>
+      <xul:scrollbarbutton type="increment"/>
     </content>
-  </binding>
-
-  <binding name="slider">
-    <content>
-	  <xul:button align="horizontal"/>
-	</content>
   </binding>
 
   <binding name="menusOnMenuBar">
@@ -79,7 +59,7 @@
   </binding>
 
   <binding name="treecell-indented-folder">
-	<content>
+    <content>
       <xul:treeindentation/>
       <xul:titledbutton class="twisty" allowevents="true"/>
       <xul:titledbutton class="tree-icon tree-button" inherits="crop,value,align,src" 
@@ -103,15 +83,9 @@
     </content>
   </binding>
 
-  <binding name="checkbox" extends="xul:checkbox">
-    <content>
-	  <xul:box class="internal-box" autostretch="never">
-        <xul:image inherits="src"/>
-        <xul:text inherits="value,accesskey,crop"/>
-      </xul:box>
-    </content>
+  <binding name="checkbox">
 	<handlers>
-      <handler type="mouseup" value="dump('\n*** foopy\n');this.checked = !this.checked;"/>
+      <handler type="mouseup" value="this.checked = !this.checked;"/>
 	  <handler type="keypress" key=" " value="this.checked = !this.checked;"/>
 	</handlers>
   </binding>
@@ -123,40 +97,7 @@
 	</handlers>
   </binding>
 
-  <binding name="buttonleft" excludes="observes,template">
-    <content>
-	  <xul:box class="internal-box" autostretch="never">
-        <xul:image inherits="src"/>
-        <xul:text inherits="value,accesskey,crop"/>
-      </xul:box>
-    </content>
-  </binding>
-  
-  <binding name="buttontop" excludes="observes,template">
-    <content>
-	  <xul:box orient="vertical" autostretch="never" class="internal-box">
-        <xul:image inherits="src"/>
-        <xul:text inherits="value,accesskey,crop"/>
-	  </xul:box>
-	</content>
-  </binding>
 
-  <binding name="buttonright" excludes="observes,template">
-    <content>
-	  <xul:box autostretch="never" class="internal-box">
-	    <xul:text inherits="value,accesskey,crop"/>
-        <xul:image inherits="src"/>
-      </xul:box>
-	</content>
-  </binding>
-
-  <binding name="buttonbottom" excludes="observes,template">
-    <content>
-	  <xul:box orient="vertical" autostretch="never" class="internal-box">
-	    <xul:text inherits="value,accesskey,crop"/>
-        <xul:image inherits="src"/>
-	  </xul:box>
-	</content>
-  </binding>
+  <binding name="separator" extends="xul:spring"/>
 
 </bindings>

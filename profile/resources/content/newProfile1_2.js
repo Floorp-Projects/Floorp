@@ -22,7 +22,6 @@
  */
 
 var bundle = srGetStrBundle("chrome://profile/locale/newProfile1_2.properties");
-var detect = false;
 
 // the getting procedure is unique to each page, since each page can different
 // types of elements (not necessarily form elements). So each page must provide
@@ -34,8 +33,8 @@ function GetFields()
   var profDirContent = profDir.getAttribute("value");
   var profDirRootFolder = profDir.getAttribute("rootFolder");
   var rv = { 
-    ProfileName: { id: "ProfileName",      value: profName       },
-    ProfileDir:  { id: "ProfileDir",       value: profDirContent, rootFolder: profDirRootFolder }
+    ProfileName: { id: "ProfileName", value: profName },
+    ProfileDir:  { id: "ProfileDir",  value: profDirContent, rootFolder: profDirRootFolder }
   }
   return rv; 
 }
@@ -44,58 +43,43 @@ function GetFields()
 // must provide its own SetFields function
 function SetFields( aElement, aValue, aDataObject )
 {
-  dump("*** element = " + aElement + "; set = " + aValue + "\n");
   element = document.getElementById( aElement );
-  //dump("In SetFields(" + element + "," + set + ");\n");
   if(element.id == "ProfileDir" && aValue != "") {
     element.setAttribute( "rootFolder", aDataObject.rootFolder );
-    getProfileDir( aValue, false );
+    chooseProfileFolder( aValue, false );
   }
   else if(element.id == "ProfileName")
     element.value = aValue;
 }  
 
-// function createProfileWizard.js::chooseFolder();
-// utility function responsible for displaying a folder selection dialog.
-function chooseFolder(string)
+// check to see if some user specified profile folder exists, otherwise use
+// default. 
+function initFields()
 {
-	try {
-    var fileSpec = Components.classes["component://netscape/filespecwithui"].createInstance();
-    if(fileSpec) {
-      fileSpec = fileSpec.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
-      return fileSpec.chooseDirectory(string);
-    } else 
-      return false;
-  } catch(e) {
-    return false;
-  }
+  var displayField = document.getElementById( "ProfileDir" );
+  if ( !displayField.value || !displayField.rootFolder )
+    setDisplayToDefaultFolder();
 }
 
-function removeChildren(which)
+// function createProfileWizard.js::chooseProfileFolder();
+// invoke a folder selection dialog for choosing the directory of profile storage.
+function chooseProfileFolder(folder, showPopup)
 {
-  if(which.hasChildNodes()) {
-    for(var i = 0; i < which.childNodes.length; i++)
-    {
-      which.removeChild(which.lastChild);
+  if(showPopup) {
+	  try {
+      var fileSpec = Components.classes["component://netscape/filespecwithui"].createInstance();
+      if(fileSpec) {
+        fileSpec = fileSpec.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
+        folder = fileSpec.chooseDirectory( bundle.GetStringFromName("chooseFolder"));    
+      } 
+      else folder = null;
+    }
+    catch(e) {
+      folder = null;
     }
   }
-}
-
-// function createProfileWizard.js::getProfileDir();
-// invoke a folder selection dialog for choosing the directory of profile storage.
-function getProfileDir(folder, showPopup)
-{
-  if(showPopup)
-    folder = chooseFolder("Choose Profile Directory");
   if( folder != undefined && folder ) {
     var folderText = document.getElementById("ProfileDir");
-    oldText = document.getElementById("deffoldername");
-    removeChildren(oldText);
-    // covert the file URL to a native file path.
-    // only need to do this if we called chooseFolder()
-    // otherwise, it's already a native file path.   
-    // this can happen when the user goes back and next after
-    // selecting a folder
     if (showPopup) {
 	    try {
     		var spec = Components.classes["component://netscape/filespec"].createInstance();
@@ -110,76 +94,48 @@ function getProfileDir(folder, showPopup)
     folderText.setAttribute( "value",folder );
     if( showPopup )
       folderText.setAttribute( "rootFolder", folder );
-    if(!detect) {
-      var useDefault = document.createElement("titledbutton");
-      try {
-        useDefault.setAttribute("value",bundle.GetStringFromName("useDefaultFolder"));
-      }
-      catch(e) {
-        // mac string bundle hack
-        useDefault.setAttribute("value", "Use default folder, yah");
-      }
-      useDefault.setAttribute("class","dialog push");
-      useDefault.setAttribute("id","useDefaultButton");
-      useDefault.setAttribute("onclick","UseDefaultFolder();");
-      document.getElementById("folderbuttons").appendChild(useDefault);
-      detect = true;
-      updateProfileName( document.getElementById("ProfileName") );
-     }
+    // show the 'use default' button
+    document.getElementById( "useDefault" ).setAttribute( "style", "display: inherit" );
+    updateProfileName();
   }
-
-  //resize the parent window, because the native file path
-  //may require a window resize.
-  //comment this out for now, see bug #15825
-  //parent.sizeToContent();
 }
 
-function UseDefaultFolder()
+function updateProfileName()
 {
-  var ProfileDir = document.getElementById("ProfileDir");
-  ProfileDir.setAttribute("value","");
-  var FolderButtons = document.getElementById("folderbuttons");
-  if(FolderButtons.childNodes.length > 1)
-    FolderButtons.removeChild(FolderButtons.lastChild);
-  var span = document.getElementById("deffoldername")
+  var profileName = document.getElementById( "ProfileName" );
+  var folderDisplayElement = document.getElementById( "ProfileDir" );
+  var rootFolder = folderDisplayElement.getAttribute( "rootFolder" );
   try {
-    var text = document.createTextNode(bundle.GetStringFromName("defaultString"));
+    var fileSpec = Components.classes["component://netscape/filespec"].createInstance();
+    if ( fileSpec )
+      fileSpec = fileSpec.QueryInterface( Components.interfaces.nsIFileSpec );
+    if ( fileSpec )
+      fileSpec.nativePath = rootFolder;
+    fileSpec.appendRelativeUnixPath( profileName.value );
+    folderDisplayElement.setAttribute( "value", fileSpec.nativePath );
   }
   catch(e) {
-    // mac string bundle hack
-    var text = document.createTextNode("the default folder, yah.");
   }
-  span.appendChild(text);
-  detect = false;
-
-  //resize the parent window, because switching to use the default
-  //may require a window resize.
-  //comment this out for now, see bug #15825
-  //parent.sizeToContent(); 
 }
 
-// check to see if profilename exists to allow the user to finish or not.
-function ProfileNameExists()
+function setDisplayToDefaultFolder()
 {
-/*
-  var profName = this.value;
-  var isBackAvailable   = ( parent.wizardManager.wizardMap[parent.wizardManager.currentPageTag].previous ) ? true : false;
-  var isNextAvailable   = ( parent.wizardManager.wizardMap[parent.wizardManager.currentPageTag].next ) ? true : false;
-  var isFinishAvailable = ( parent.wizardManager.wizardMap[parent.wizardManager.currentPageTag].finish ) ? true : false;
-  if( parent.profile.profileExists( profName ) )
-  	parent.wizardManager.DoButtonEnabling( false, isBackAvailable, false );
-  else
-    parent.wizardManager.DoButtonEnabling( false, isNextAvailable, isFinishAvailable );
- */
-}
-
-function updateProfileName( aTextFieldElement )
-{
-  if( detect ) {
-    var folderDisplayElement = document.getElementById( "ProfileDir" );
-    var rootFolder = folderDisplayElement.getAttribute( "rootFolder" );
-    dump("*** rootFolder = " + rootFolder + "\n");
-    var stringValue = rootFolder + aTextFieldElement.value;
-    folderDisplayElement.setAttribute( "value", stringValue );
+  var profileName = document.getElementById( "ProfileName" );
+  var profileDisplay = document.getElementById( "ProfileDir" );
+  
+  var fileSpec;
+  try {
+    fileSpec = top.profile.defaultProfileParentDir; 
+    if ( fileSpec )
+      fileSpec = fileSpec.QueryInterface( Components.interfaces.nsIFileSpec );
+    if ( fileSpec )
+      profileDisplay.setAttribute("rootFolder", fileSpec.nativePath );
   }
+  catch(e) {
+  }
+  
+  document.getElementById("useDefault").setAttribute("style","display:none");
+  
+  // reset the display field
+  updateProfileName();
 }

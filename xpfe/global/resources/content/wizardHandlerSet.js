@@ -149,7 +149,7 @@ function DEF_onPageLoad( tag )
   if( this.DoButtonEnabling )              // if provided, call user-defined button
     this.DoButtonEnabling();               // enabling function
   if( this.content_frame ) {
-    oParent.SM.SetPageData( tag, false );  // set page data in content frame
+    oParent.SM.SetPageData( tag, true );  // set page data in content frame
 
     // set the focus to the first focusable element
     var doc = window.frames[this.content_frame.name].document;

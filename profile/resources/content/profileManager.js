@@ -18,6 +18,8 @@
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Contributor(s):
+ *   Ben Goodger <ben@netscape.com>
  */
 
 var bundle = srGetStrBundle("chrome://profile/locale/profileManager.properties");
@@ -66,7 +68,7 @@ function RenameProfile()
     }
     else {
       var oldName = selected.getAttribute("rowName");
-      var newName = prompt( bundle.GetStringFromName("renameprofilepromptA") + oldName + bundle.GetStringFromName("renameprofilepromptB"), "" );
+      var newName = prompt( bundle.GetStringFromName("renameprofilepromptA") + oldName + bundle.GetStringFromName("renameprofilepromptB"), oldName );
       dump("*** newName = |" + newName + "|\n");
       if( newName == "" || !newName )
         return false;
@@ -179,7 +181,6 @@ function SwitchProfileManagerMode()
       captionLine = "Manage Profiles Yah";
     }
     
-    buttonDisplay = "display: inherit;";                    // display the manager's buttons
     var manage = document.getElementById( "manage" );       // hide the manage profiles button...
     var manageParent = manage.parentNode;
     manageParent.removeChild( manage );
@@ -192,7 +193,6 @@ function SwitchProfileManagerMode()
     } catch(e) {
       captionLine = "Select Profile Yah";
     }
-    buttonDisplay = "display: none;";
     profileManagerMode = "selection";
   }
 
@@ -203,27 +203,14 @@ function SwitchProfileManagerMode()
   // swap caption
   ChangeCaption( captionLine );
   
-  // display the management buttons
-  var buttons = document.getElementById( "managementbox" );
-  buttons.setAttribute( "style", buttonDisplay );
-
-  // switch set
-  if( set )
-    set = false;
-  else
-    set = true;
+  set = !set;
 }
 
 // change the title of the profile manager/selection window.
 function ChangeCaption( aCaption )
 {
-  var caption = document.getElementById( "caption" );
-  while( caption.hasChildNodes() )
-  {
-    caption.removeChild( caption.firstChild );
-  }
-  newCaption = document.createTextNode( aCaption );
-  caption.appendChild( newCaption );
+  var caption = document.getElementById( "header" );
+  caption.setAttribute( "value", aCaption );
 }
 
 // do button enabling based on tree selection
@@ -274,8 +261,9 @@ function HandleKeyEvent( aEvent )
 
 function HandleClickEvent( aEvent )
 {
-  if( aEvent.clickCount == 2 ) {
-    if( aEvent.target.nodeName.toLowerCase() == "treecell" )
+  if( aEvent.clickCount == 2 && aEvent.which == 1 ) {
+    if( aEvent.target.nodeName.toLowerCase() == "treecell" && 
+        aEvent.target.parentNode.parentNode.nodeName.toLowerCase() != "treehead" )
       return onStart(); 
   }
   else 

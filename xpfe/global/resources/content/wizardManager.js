@@ -155,13 +155,8 @@ function WM_GetMapLength()
  **/               
 function WM_ProgressUpdate( currentPageNumber )
 {
-  var div = document.getElementById ( "progress" );
-  if ( div ) {
-    if ( div.hasChildNodes() ) {
-      for ( var i = 0; i < div.childNodes.length; i++ ) {
-        div.removeChild ( div.childNodes[i] );  // kill old childnodes
-      }
-    }
+  var statusbar = document.getElementById ( "status" );
+  if ( statusbar ) {
     var string = "";
     string += (currentPageNumber + 1);
     try {
@@ -171,8 +166,7 @@ function WM_ProgressUpdate( currentPageNumber )
       string += " of ";
     }
     string += this.GetMapLength();
-    var textNode = document.createTextNode ( string );
-    div.appendChild ( textNode );
+    statusbar.setAttribute( "progress", string );
   }
 }
 

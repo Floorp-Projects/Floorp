@@ -19,7 +19,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *   Ben Goodger (03/01/00)
+ *   Ben Goodger <ben@netscape.com>
  *   Seth Spitzer (28/10/99)
  */
 
@@ -53,6 +53,7 @@ function StartUp()
   loadElements();
   highlightCurrentProfile();
   DoEnabling();
+  document.getElementById("profiles").focus();
 }
 
 // select the last opened profile in the profile list

@@ -10,6 +10,7 @@ tasksOverlay.js
 taskbarOverlay.xul
 dialogOverlay.xul
 dialogOverlay.js
+dialogBindings.xml
 commonDialog.xul
 commonDialog.js
 strres.js
