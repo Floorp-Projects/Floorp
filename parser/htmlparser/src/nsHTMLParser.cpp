@@ -705,7 +705,7 @@ PRBool VerifyContextVector(CTokenizer * tokenizer, PRInt32 aTags[],PRInt32 count
         strcat(path,"/");
         const char* name=GetTagName(aTags[i]);
         strcat(path,name);
-        mkdir(path);
+        PR_MkDir(path,0);
       }
 	  if(PR_FALSE==result){
       static PRBool rnd_initialized = PR_FALSE;
