@@ -43,7 +43,8 @@ IDLSRCS =  \
 	ProcessingInstruction.idl \
 	Text.idl \
 	StyleSheet.idl \
-	StyleSheetCollection.idl
+	StyleSheetList.idl \
+	MediaList.idl \
 
 
 XPCOM_DESTDIR=$(DEPTH)\dom\public\coreDom

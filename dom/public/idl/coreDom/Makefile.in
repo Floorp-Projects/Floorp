@@ -47,7 +47,8 @@ IDLSRCS		= \
 		ProcessingInstruction.idl \
 		Text.idl \
 		StyleSheet.idl \
-		StyleSheetCollection.idl \
+		StyleSheetList.idl \
+		MediaList.idl \
 		$(NULL)
 
 include $(DEPTH)/config/rules.mk
