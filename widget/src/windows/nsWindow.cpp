@@ -2432,6 +2432,25 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
          }
          if (iDeltaPerLine == 0)
            return 0;
+
+         // The mousewheel event will be dispatched to the toplevel
+         // window.  We need to give it to the child window
+
+         POINT point;
+         point.x = (short) LOWORD(lParam);
+         point.y = (short) HIWORD(lParam);
+         HWND destWnd = ::WindowFromPoint(point);
+
+         if (destWnd != mWnd) {
+           nsWindow* destWindow = (nsWindow*) ::GetWindowLong(destWnd, GWL_USERDATA);
+           if (destWindow)
+             return destWindow->ProcessMessage(msg, wParam, lParam, aRetValue);
+#ifdef DEBUG
+           else
+             printf("WARNING: couldn't get child window for MW event\n");
+#endif
+         }
+
          nsMouseScrollEvent scrollEvent;
          scrollEvent.deltaLines = -((short) HIWORD (wParam) / iDeltaPerLine);
          scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;
