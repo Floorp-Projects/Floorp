@@ -267,8 +267,12 @@ class nsScanner {
       static void SelfTest();
 
       /**
-       *  Change the charset and the Unicode Decoder
-       */      
+       *  Use this setter to change the scanner's unicode decoder
+       *
+       *  @update  ftang 2/12/99
+       *  @param   aCharset a normalized (alias resolved) charset name
+       *  @return  
+       */
       nsresult SetDocumentCharset(const nsString& aCharset);
 
   protected:
@@ -282,11 +286,6 @@ class nsScanner {
        * @update  gess4/3/98
        */
       nsresult FillBuffer(void);
-
-      /**
-       *  Initialize the charset and the Unicode Decoder
-       */
-      void InitUnicodeDecoder();
 
       fstream*        mFileStream;
       nsString        mBuffer;
