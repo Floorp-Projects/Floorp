@@ -153,11 +153,11 @@ nsDragService::InvokeDragSession (nsIDOMNode *aDOMNode,
     GdkDragAction action = GDK_ACTION_DEFAULT;
 
     if (aActionType & DRAGDROP_ACTION_COPY)
-      (int)action |= GDK_ACTION_COPY;
+      action = (GdkDragAction)(action | GDK_ACTION_COPY);
     if (aActionType & DRAGDROP_ACTION_MOVE)
-      (int)action |= GDK_ACTION_MOVE;
+      action = (GdkDragAction)(action | GDK_ACTION_MOVE);
     if (aActionType & DRAGDROP_ACTION_LINK)
-      (int)action |= GDK_ACTION_LINK;
+      action = (GdkDragAction)(action | GDK_ACTION_LINK);
 
     // start our drag.
     GdkDragContext *context = gtk_drag_begin(mHiddenWidget,
