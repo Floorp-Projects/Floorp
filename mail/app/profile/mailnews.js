@@ -101,7 +101,7 @@ pref("mail.imap.mime_parts_on_demand",      true);
 pref("mail.imap.mime_parts_on_demand_max_depth", 15);
 pref("mail.imap.mime_parts_on_demand_threshold", 30000);
 pref("mail.thread_without_re",	            true);
-pref("mail.leave_on_server",                false);
+pref("mail.leave_on_server",                true);
 pref("mail.default_cc",                     "");
 pref("mail.default_fcc",                    ""); // maibox:URL or Imap://Host/OnLineFolderName
 pref("mail.check_new_mail",                 false);
@@ -325,7 +325,7 @@ pref("mail.default_sendlater_uri","mailbox://nobody@Local%20Folders/Unsent%20Mes
 
 pref("mail.server.default.port", -1);
 pref("mail.server.default.offline_support_level", -1);
-pref("mail.server.default.leave_on_server", false);
+pref("mail.server.default.leave_on_server", true);
 pref("mail.server.default.download_on_biff", false);
 pref("mail.server.default.check_time", 10);
 // "mail.server.default.check_new_mail" now lives in the protocol info
@@ -511,7 +511,7 @@ pref("mailnews.fakeaccount.server", "");
 
 // message display properties
 pref("mailnews.message_display.disable_remote_image", false);
-pref("mailnews.message_display.allow.plugins", true);
+pref("mailnews.message_display.allow.plugins", false);
 
 // When there is no disclosed recipients (only bcc), we should address the message to empty group
 // to prevent some mail server to disclose the bcc recipients
