@@ -31,6 +31,7 @@
 #include "nsMimeTypes.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsXPIDLString.h"
+#include "nsSpecialSystemDirectory.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
@@ -43,40 +44,6 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 //
 #define     TPATH_LEN   1024
 
-static char *
-GetTheTempDirectoryOnTheSystem(void)
-{
-  char *retPath = (char *)PR_Malloc(TPATH_LEN);
-  if (!retPath)
-    return nsnull;
-
-  retPath[0] = '\0';
-#ifdef WIN32
-  if (getenv("TEMP"))
-    PL_strncpy(retPath, getenv("TEMP"), TPATH_LEN);  // environment variable
-  else if (getenv("TMP"))
-    PL_strncpy(retPath, getenv("TMP"), TPATH_LEN);   // How about this environment variable?
-  else
-    GetWindowsDirectory(retPath, TPATH_LEN);
-#endif 
-
-  // RICHIE - should do something better here!
-
-#if defined(XP_UNIX) || defined(XP_BEOS)
-  char *tPath = getenv("TMPDIR");
-  if (!tPath)
-    PL_strncpy(retPath, "/tmp/", TPATH_LEN);
-  else
-    PL_strncpy(retPath, tPath, TPATH_LEN);
-#endif
-
-#ifdef XP_MAC
-  PL_strncpy(retPath, "", TPATH_LEN);
-#endif
-
-  return retPath;
-}
-
 //
 // Create a file spec for the a unique temp file
 // on the local machine. Caller must free memory
@@ -87,22 +54,11 @@ nsMsgCreateTempFileSpec(char *tFileName)
   if ((!tFileName) || (!*tFileName))
     tFileName = "nsmail.tmp";
 
-  // Age old question, where to store temp files....ugh!
-  char  *tDir = GetTheTempDirectoryOnTheSystem();
-  if (!tDir)
-    return (new nsFileSpec("mozmail.tmp"));  // No need to I18N
-
-  nsFileSpec *tmpSpec = new nsFileSpec(tDir);
-  if (!tmpSpec)
-  {
-    PR_FREEIF(tDir);
-    return (new nsFileSpec("mozmail.tmp"));  // No need to I18N
-  }
-
+  nsFileSpec *tmpSpec = new nsFileSpec(nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory));
+  
   *tmpSpec += tFileName;
   tmpSpec->MakeUnique();
 
-  PR_FREEIF(tDir);
   return tmpSpec;
 }
 
@@ -117,16 +73,10 @@ nsMsgCreateTempFileName(char *tFileName)
   if ((!tFileName) || (!*tFileName))
     tFileName = "nsmail.tmp";
 
-  // Age old question, where to store temp files....ugh!
-  char  *tDir = GetTheTempDirectoryOnTheSystem();
-  if (!tDir)
-    return "mozmail.tmp";  // No need to I18N
-
-  nsFileSpec tmpSpec(tDir);
+  nsFileSpec tmpSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory); 
   tmpSpec += tFileName;
   tmpSpec.MakeUnique();
 
-  PR_FREEIF(tDir);
   char *tString = (char *)PL_strdup(tmpSpec.GetNativePathCString());
   if (!tString)
     return PL_strdup("mozmail.tmp");  // No need to I18N
