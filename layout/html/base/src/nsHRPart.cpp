@@ -30,19 +30,20 @@
 #include "nsIHTMLAttributes.h"
 #include "nsStyleConsts.h"
 #include "nsCSSRendering.h"
+#include "nsCSSLayout.h"
 
 #undef DEBUG_HR_REFCNT
 
-// Default alignment value (so we can tell an unset value from a set value)
-#define ALIGN_UNSET PRUint8(-1)
+// default hr thickness in pixels
+#define DEFAULT_THICKNESS 3
 
 class HRulePart : public nsHTMLTagContent {
 public:
   HRulePart(nsIAtom* aTag);
 
 #ifdef DEBUG_HR_REFCNT
-  virtual nsrefcnt AddRef(void);
-  virtual nsrefcnt Release(void);
+  NS_IMETHOD_(nsrefcnt) AddRef(void);
+  NS_IMETHOD_(nsrefcnt) Release(void);
 #endif
 
   virtual nsresult CreateFrame(nsIPresContext* aPresContext,
@@ -51,16 +52,17 @@ public:
                                nsIFrame*& aResult);
 
   virtual void SetAttribute(nsIAtom* aAttribute, const nsString& aValue);
-  virtual nsContentAttr GetAttribute(nsIAtom* aAttribute,
-                                     nsHTMLValue& aResult) const;
-  virtual void UnsetAttribute(nsIAtom* aAttribute);
 
-  PRInt32 mThickness;           // in pixels
-  PRPackedBool mNoShade;
-  PRUint8 mAlign;
+  virtual void MapAttributesInto(nsIStyleContext* aContext,
+                                 nsIPresContext* aPresContext);
+
+  PRInt32 GetThickness();
+
+  PRBool GetNoShade();
 
 protected:
   virtual ~HRulePart();
+
   virtual nsContentAttr AttributeToString(nsIAtom* aAttribute,
                                           nsHTMLValue& aValue,
                                           nsString& aResult) const;
@@ -81,7 +83,6 @@ protected:
   virtual void GetDesiredSize(nsIPresContext* aPresContext,
                               nsReflowMetrics& aDesiredSize,
                               const nsSize& aMaxSize);
-
 };
 
 HRuleFrame::HRuleFrame(nsIContent* aContent,
@@ -94,19 +95,19 @@ HRuleFrame::~HRuleFrame()
 {
 }
 
-NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
-                            nsIRenderingContext& aRenderingContext,
-                            const nsRect& aDirtyRect)
+NS_METHOD
+HRuleFrame::Paint(nsIPresContext&      aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  const nsRect&        aDirtyRect)
 {
   nsStyleDisplay* disp =
     (nsStyleDisplay*)mStyleContext->GetData(eStyleStruct_Display);
-
   if (PR_FALSE == disp->mVisible) {
     return NS_OK;
   }
 
   float p2t = aPresContext.GetPixelsToTwips();
-  nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->mThickness);
+  nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->GetThickness());
 
   // Get style data
   nsStyleSpacing* spacing =
@@ -121,6 +122,36 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
     (borderPadding.left + borderPadding.right);
   nscoord height = mRect.height -
     (borderPadding.top + borderPadding.bottom);
+  nsSize size;
+  PRIntn sf = nsCSSLayout::GetStyleSize(&aPresContext, this, size);
+  if (NS_SIZE_HAS_WIDTH & sf) {
+    // Use width from style. Get alignment
+    if (size.width < width) {
+      // center or right align rule within the extra space
+      nsStyleText* text =
+        (nsStyleText*) mStyleContext->GetData(eStyleStruct_Text);
+      switch (text->mTextAlign) {
+      default:
+        if (NS_STYLE_DIRECTION_LTR == disp->mDirection) {
+          // left align when direction is left-to-right
+          break;
+        }
+        // right align when direction is right-to-left
+
+      case NS_STYLE_TEXT_ALIGN_RIGHT:
+        x0 += width - size.width;
+        break;
+
+      case NS_STYLE_TEXT_ALIGN_LEFT:
+        break;
+
+      case NS_STYLE_TEXT_ALIGN_CENTER:
+        x0 += (width - size.width) / 2;
+        break;
+      }
+    }
+    width = size.width;
+  }
 
   // Center hrule vertically within the available space
   y0 += (height - thickness) / 2;
@@ -134,7 +165,7 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
 
   PRBool bevel = nsGlobalVariables::Instance()->GetBeveledLines();
 
-	PRBool noShadeAttribute = PRBool(((HRulePart*)mContent)->mNoShade);
+	PRBool noShadeAttribute = PRBool(((HRulePart*)mContent)->GetNoShade());
 
   // Now that we have the data to make the shading criteria, we next
   // collect the decision criteria for rending in solid black:
@@ -163,15 +194,15 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
     nscoord x1 = nscoord(x0 + width - p2t);
     nscoord y1 = nscoord(y0 + height - p2t);
 
-    // Draw top and left lines
-    aRenderingContext.SetColor (colors[0]);
-    aRenderingContext.DrawLine (x0, y1, x0, y0);
-    aRenderingContext.DrawLine (x0, y0, x1, y0);
-
     // Draw bottom and right lines
     aRenderingContext.SetColor (colors[1]);
     aRenderingContext.DrawLine (x1, y0, x1, y1);
     aRenderingContext.DrawLine (x1, y1, x0, y1);
+
+    // Draw top and left lines
+    aRenderingContext.SetColor (colors[0]);
+    aRenderingContext.DrawLine (x0, y1, x0, y0);
+    aRenderingContext.DrawLine (x0, y0, x1, y0);
   } else {
     // When a rule is not shaded, then we use a uniform color and
     // draw half-circles on the end points.
@@ -182,7 +213,7 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
       // look right so don't bother drawing them.
       aRenderingContext.FillRect(x0, y0, width, height);
     } else {
-      aRenderingContext.FillArc(x0, y0, diameter, diameter, 90.0f, 180.0f);
+      aRenderingContext.FillArc(x0, y0, diameter, diameter, 90.0f, 270.0f);
       aRenderingContext.FillArc(x0 + width - diameter, y0,
                                 diameter, diameter, 270.0f, 180.0f);
       aRenderingContext.FillRect(x0 + diameter/2, y0,
@@ -192,38 +223,56 @@ NS_METHOD HRuleFrame::Paint(nsIPresContext& aPresContext,
   return NS_OK;
 }
 
-
 void HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                 nsReflowMetrics& aDesiredSize,
                                 const nsSize& aMaxSize)
 {
-  // Get style data
-  nsStyleFont* font =
-    (nsStyleFont*)mStyleContext->GetData(eStyleStruct_Font);
-
-  if (aMaxSize.width == NS_UNCONSTRAINEDSIZE) {
-    aDesiredSize.width = 1;
-  } else {
-    // XXX look at width property; use percentage, etc.
-    // XXX apply centering using our align property
-    aDesiredSize.width = aMaxSize.width;
+  nsSize size;
+  PRIntn sf = nsCSSLayout::GetStyleSize(aPresContext, this, size);
+  if (NS_SIZE_HAS_WIDTH & sf) {
+    aDesiredSize.width = size.width;
+    if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
+      // Use larger of specified width and max-size (HR's can be sized
+      // larger than the parent which causes the parent to be grown).
+      // When HR's are smaller than the parent then they can be
+      // aligned with the parent via the text-align css property OR
+      // the align tag attribute.
+      if (size.width < aMaxSize.width) {
+        aDesiredSize.width = aMaxSize.width;
+      }
+    }
+  }
+  else {
+    if (aMaxSize.width == NS_UNCONSTRAINEDSIZE) {
+      aDesiredSize.width = 1;
+    } else {
+      aDesiredSize.width = aMaxSize.width;
+    }
   }
 
-  // Get the thickness of the rule (this is not css's height property)
-  float p2t = aPresContext->GetPixelsToTwips();
-  nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->mThickness);
+  nscoord lineHeight;
+  if (NS_SIZE_HAS_HEIGHT & sf) {
+    lineHeight = size.height;
+  }
+  else {
+    // Get the thickness of the rule (this is not css's height property)
+    float p2t = aPresContext->GetPixelsToTwips();
+    nscoord thickness = nscoord(p2t * ((HRulePart*)mContent)->GetThickness());
 
-  // Compute height of "line" that hrule will layout within
-  nscoord lineHeight = thickness + nscoord(p2t * 2);
-  nsIFontMetrics* fm = aPresContext->GetMetricsFor(font->mFont);
-  nscoord defaultLineHeight = fm->GetHeight();
-  NS_RELEASE(fm);
-  if (lineHeight < defaultLineHeight) {
-    lineHeight = defaultLineHeight;
+    // Compute height of "line" that hrule will layout within. Use the
+    // default font to do this.
+    lineHeight = thickness + nscoord(p2t * 2);
+    const nsFont& defaultFont = aPresContext->GetDefaultFont();
+    nsIFontMetrics* fm = aPresContext->GetMetricsFor(defaultFont);
+    nscoord defaultLineHeight = fm->GetHeight();
+    NS_RELEASE(fm);
+    if (lineHeight < defaultLineHeight) {
+      lineHeight = defaultLineHeight;
+    }
   }
 
   aDesiredSize.height = lineHeight;
-  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.ascent = lineHeight;
   aDesiredSize.descent = 0;
 }
 
@@ -232,7 +281,6 @@ void HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
 HRulePart::HRulePart(nsIAtom* aTag)
   : nsHTMLTagContent(aTag)
 {
-  mAlign = ALIGN_UNSET;
 }
 
 HRulePart::~HRulePart()
@@ -257,8 +305,40 @@ nsrefcnt HRulePart::Release(void)
 }
 #endif
 
-//----------------------------------------------------------------------
-// Attributes
+PRInt32
+HRulePart::GetThickness()
+{
+  PRInt32 result = DEFAULT_THICKNESS;
+  nsHTMLValue value;
+  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::size, value)) {
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      PRInt32 pixels = value.GetPixelValue();
+      switch (pixels) {
+      case 0:
+      case 1:
+        result = 1;
+        break;
+      default:
+        result = pixels + 1;
+        break;
+      }
+    }
+  }
+  return result;
+}
+
+PRBool
+HRulePart::GetNoShade()
+{
+  PRBool result = PR_FALSE;
+  nsHTMLValue value;
+  if (eContentAttr_HasValue == GetAttribute(nsHTMLAtoms::noshade, value)) {
+    if (value.GetUnit() == eHTMLUnit_Empty) {
+      result = PR_TRUE;
+    }
+  }
+  return result;
+}
 
 static nsHTMLTagContent::EnumTable kAlignTable[] = {
   { "left", NS_STYLE_TEXT_ALIGN_LEFT },
@@ -267,94 +347,69 @@ static nsHTMLTagContent::EnumTable kAlignTable[] = {
   { 0 }
 };
 
-void HRulePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
+void
+HRulePart::SetAttribute(nsIAtom* aAttribute, const nsString& aValue)
 {
+  nsHTMLValue val;
   if (aAttribute == nsHTMLAtoms::width) {
-    nsHTMLValue val;
     ParseValueOrPercent(aValue, val, eHTMLUnit_Pixel);
     nsHTMLTagContent::SetAttribute(aAttribute, val);
-    return;
-  }
-  if (aAttribute == nsHTMLAtoms::size) {
-    nsHTMLValue val;
-    ParseValue(aValue, 1, 100, val, eHTMLUnit_Pixel);
-    mThickness = val.GetPixelValue();
-    return;
-  }
-  if (aAttribute == nsHTMLAtoms::noshade) {
-    mNoShade = PR_TRUE;
-    return;
-  }
-  if (aAttribute == nsHTMLAtoms::align) {
-    nsHTMLValue val;
-    if (ParseEnumValue(aValue, kAlignTable, val)) {
-      mAlign = val.GetIntValue();
-    } else {
-      mAlign = ALIGN_UNSET;
-    }
-    return;
-  }
-
-  // Use default attribute catching code
-  nsHTMLTagContent::SetAttribute(aAttribute, aValue);
-}
-
-nsContentAttr HRulePart::GetAttribute(nsIAtom* aAttribute,
-                                      nsHTMLValue& aResult) const
-{
-  nsContentAttr ca = eContentAttr_NotThere;
-  if (aAttribute == nsHTMLAtoms::size) {
-    aResult.Reset();
-    if (0 != mThickness) {
-      aResult.SetPixelValue(mThickness);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::noshade) {
-    aResult.Reset();
-    if (mNoShade) {
-      aResult.SetEmptyValue();
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else if (aAttribute == nsHTMLAtoms::align) {
-    aResult.Reset();
-    if (ALIGN_UNSET != mAlign) {
-      aResult.SetIntValue(mAlign, eHTMLUnit_Enumerated);
-      ca = eContentAttr_HasValue;
-    }
-  }
-  else {
-    ca = nsHTMLTagContent::GetAttribute(aAttribute, aResult);
-  }
-  return ca;
-}
-
-void HRulePart::UnsetAttribute(nsIAtom* aAttribute)
-{
-  if (aAttribute == nsHTMLAtoms::noshade) {
-    mNoShade = PR_FALSE;
   }
   else if (aAttribute == nsHTMLAtoms::size) {
-    mThickness = 0;
+    ParseValue(aValue, 1, 100, val, eHTMLUnit_Pixel);
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
+  }
+  else if (aAttribute == nsHTMLAtoms::noshade) {
+    val.SetEmptyValue();
+    nsHTMLTagContent::SetAttribute(aAttribute, val);
   }
   else if (aAttribute == nsHTMLAtoms::align) {
-    mAlign = ALIGN_UNSET;
+    if (ParseEnumValue(aValue, kAlignTable, val)) {
+      nsHTMLTagContent::SetAttribute(aAttribute, val);
+    }
   }
   else {
     // Use default attribute catching code
-    nsHTMLTagContent::UnsetAttribute(aAttribute);
+    nsHTMLTagContent::SetAttribute(aAttribute, aValue);
   }
 }
 
-nsContentAttr HRulePart::AttributeToString(nsIAtom* aAttribute,
-                                           nsHTMLValue& aValue,
-                                           nsString& aResult) const
+void
+HRulePart::MapAttributesInto(nsIStyleContext* aContext,
+                             nsIPresContext* aPresContext)
+{
+  if (nsnull != mAttributes) {
+    nsHTMLValue value;
+    // align: enum
+    GetAttribute(nsHTMLAtoms::align, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      nsStyleText* text = (nsStyleText*)aContext->GetData(eStyleStruct_Text);
+      text->mTextAlign = value.GetIntValue();
+    }
+
+    // width: pixel, percent
+    float p2t = aPresContext->GetPixelsToTwips();
+    nsStylePosition* pos = (nsStylePosition*)
+      aContext->GetData(eStyleStruct_Position);
+    GetAttribute(nsHTMLAtoms::width, value);
+    if (value.GetUnit() == eHTMLUnit_Pixel) {
+      nscoord twips = nscoord(p2t * value.GetPixelValue());
+      pos->mWidth.SetCoordValue(twips);
+    }
+    else if (value.GetUnit() == eHTMLUnit_Percent) {
+      pos->mWidth.SetPercentValue(value.GetPercentValue());
+    }
+  }
+}
+
+nsContentAttr
+HRulePart::AttributeToString(nsIAtom*     aAttribute,
+                             nsHTMLValue& aValue,
+                             nsString&    aResult) const
 {
   nsContentAttr ca = eContentAttr_NotThere;
   if (aAttribute == nsHTMLAtoms::align) {
-    if ((eHTMLUnit_Enumerated == aValue.GetUnit()) &&
-        (ALIGN_UNSET != aValue.GetIntValue())) {
+    if (eHTMLUnit_Enumerated == aValue.GetUnit()) {
       EnumValueToString(aValue, kAlignTable, aResult);
       ca = eContentAttr_HasValue;
     }
