@@ -44,6 +44,20 @@ public:
                   nsIStyleContext* aContext,
                   nsIFrame*        aPrevInFlow);
 
+  NS_IMETHOD AppendFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD InsertFrames(nsIPresContext& aPresContext,
+                          nsIPresShell&   aPresShell,
+                          nsIAtom*        aListName,
+                          nsIFrame*       aPrevFrame,
+                          nsIFrame*       aFrameList);
+  NS_IMETHOD RemoveFrame(nsIPresContext& aPresContext,
+                         nsIPresShell&   aPresShell,
+                         nsIAtom*        aListName,
+                         nsIFrame*       aOldFrame);
+
   /** Initialization of data */
   NS_IMETHOD InitChildren();
 
@@ -166,31 +180,14 @@ protected:
                            RowReflowState&      aReflowState,
                            nsReflowStatus&      aStatus);
 
-  NS_IMETHOD IR_CellInserted(nsIPresContext&     aPresContext,
-                            nsHTMLReflowMetrics& aDesiredSize,
-                            RowReflowState&      aReflowState,
-                            nsReflowStatus&      aStatus,
-                            nsTableCellFrame *   aInsertedFrame,
-                            PRBool               aReplace);
-
-  NS_IMETHOD IR_CellAppended(nsIPresContext&     aPresContext,
-                            nsHTMLReflowMetrics& aDesiredSize,
-                            RowReflowState&      aReflowState,
-                            nsReflowStatus&      aStatus,
-                            nsTableCellFrame *   aAppendedFrame);
-
-  NS_IMETHOD IR_DidAppendCell(nsTableCellFrame *aRowFrame);
-
-  NS_IMETHOD IR_CellRemoved(nsIPresContext&     aPresContext,
-                           nsHTMLReflowMetrics& aDesiredSize,
-                           RowReflowState&      aReflowState,
-                           nsReflowStatus&      aStatus,
-                           nsTableCellFrame *   aDeletedFrame);
-
   NS_IMETHOD IR_StyleChanged(nsIPresContext&      aPresContext,
                              nsHTMLReflowMetrics& aDesiredSize,
                              RowReflowState&      aReflowState,
                              nsReflowStatus&      aStatus);
+
+  nsresult AddTableDirtyReflowCommand(nsIPresContext& aPresContext,
+                                      nsIPresShell&   aPresShell,
+                                      nsIFrame*       aTableFrame);
 
   // row-specific methods
 
@@ -224,7 +221,8 @@ protected:
   NS_IMETHOD ResizeReflow(nsIPresContext&      aPresContext,
                           nsHTMLReflowMetrics& aDesiredSize,
                           RowReflowState&      aReflowState,
-                          nsReflowStatus&      aStatus);
+                          nsReflowStatus&      aStatus,
+                          PRBool               aDirtyOnly = PR_FALSE);
 
   /**
    * Called for the initial reflow. Creates each table cell frame, and
