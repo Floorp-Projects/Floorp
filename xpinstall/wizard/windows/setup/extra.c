@@ -1769,8 +1769,9 @@ HRESULT InitSetupGeneral()
 {
   char szBuf[MAX_BUF];
 
-  sgProduct.dwMode        = NORMAL;
-  sgProduct.dwCustomType  = ST_RADIO0;
+  sgProduct.dwMode               = NORMAL;
+  sgProduct.dwCustomType         = ST_RADIO0;
+  sgProduct.dwNumberOfComponents = 0;
 
   if((sgProduct.szPath                        = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
@@ -2140,61 +2141,35 @@ void SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIn
   }
 }
 
+BOOL IsInList(DWORD dwCurrentItem, DWORD dwItems, DWORD *dwItemsSelected)
+{
+  DWORD i;
+
+  for(i = 0; i < dwItems; i++)
+  {
+    if(dwItemsSelected[i] == dwCurrentItem)
+      return(TRUE);
+  }
+
+  return(FALSE);
+}
+
 void SiCNodeSetItemsSelected(DWORD dwItems, DWORD *dwItemsSelected)
 {
   DWORD i;
-  DWORD dwCount;
   siC   *siCTemp;
 
-  dwCount = 0;
-  siCTemp = siComponents;
-  if(siCTemp != NULL)
+  for(i = 0; i < sgProduct.dwNumberOfComponents; i++)
   {
-    for(i = 0; i < dwItems; i++)
+    siCTemp = SiCNodeGetObject(i, TRUE, AC_ALL);
+    if(IsInList(i, dwItems, dwItemsSelected))
     {
-      if(dwItemsSelected[i] == dwCount)
-      {
-        /* Found the item that was selected, set the */
-        /* SIC_SELECTED attribute and break*/
-        if((siCTemp->lRandomInstallPercentage == 0) ||
-           (siCTemp->lRandomInstallPercentage > siCTemp->lRandomInstallValue))
-          siCTemp->dwAttributes |= SIC_SELECTED;
-        else
-          siCTemp->dwAttributes &= ~SIC_SELECTED;
-        break;
-      }
-      else
-        /* unset the SIC_SELECTED attribute and */
-        /* keep looking for the selected item (if any) */
+      if((siCTemp->lRandomInstallPercentage != 0) &&
+         (siCTemp->lRandomInstallPercentage <= siCTemp->lRandomInstallValue))
         siCTemp->dwAttributes &= ~SIC_SELECTED;
     }
-  
-    ++dwCount;
-    siCTemp = siCTemp->Next;
-    while((siCTemp != NULL) && (siCTemp != siComponents))
-    {
-      for(i = 0; i < dwItems; i++)
-      {
-        if(dwItemsSelected[i] == dwCount)
-        {
-          /* Found the item that was selected, set the */
-          /* SIC_SELECTED attribute and break*/
-          if((siCTemp->lRandomInstallPercentage == 0) ||
-             (siCTemp->lRandomInstallPercentage > siCTemp->lRandomInstallValue))
-            siCTemp->dwAttributes |= SIC_SELECTED;
-          else
-            siCTemp->dwAttributes &= ~SIC_SELECTED;
-          break;
-        }
-        else
-          /* unset the SIC_SELECTED attribute and */
-          /* keep looking for the selected item (if any) */
-          siCTemp->dwAttributes &= ~SIC_SELECTED;
-      }
-      
-      ++dwCount;
-      siCTemp = siCTemp->Next;
-    }
+    else
+      siCTemp->dwAttributes &= ~SIC_SELECTED;
   }
 }
 
@@ -3151,6 +3126,28 @@ void InitSiComponents(char *szFileIni)
     lstrcpy(szComponentItem, "Component");
     lstrcat(szComponentItem, szIndex0);
     GetPrivateProfileString(szComponentItem, "Archive", "", szBuf, MAX_BUF, szFileIni);
+  }
+
+  sgProduct.dwNumberOfComponents = dwIndex0;
+}
+
+void ResetComponentAttributes(char *szFileIni)
+{
+  char  szIndex[MAX_BUF];
+  char  szBuf[MAX_BUF];
+  char  szComponentItem[MAX_BUF];
+  siC   *siCTemp;
+  DWORD dwCounter;
+
+  for(dwCounter = 0; dwCounter < sgProduct.dwNumberOfComponents; dwCounter++)
+  {
+    itoa(dwCounter, szIndex, 10);
+    lstrcpy(szComponentItem, "Component");
+    lstrcat(szComponentItem, szIndex);
+
+    siCTemp = SiCNodeGetObject(dwCounter, TRUE, AC_ALL);
+    GetPrivateProfileString(szComponentItem, "Attributes", "", szBuf, MAX_BUF, szFileIni);
+    siCTemp->dwAttributes = ParseComponentAttributes(szBuf);
   }
 }
 
