@@ -14,11 +14,17 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-MODULE = calendar
+MODULE = julian
 
-LIBRARY_NAME = cal
+LIBRARY_NAME = julian
 
-DEPTH = ../../../..
+ifdef MOZ_TREX
+NS_DEPTH=../../../..
+else
+NS_DEPTH=../../..
+endif
+
+DEPTH = $(NS_DEPTH)
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -26,94 +32,184 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 EXPORTS = \
-	htmlform/include/julianform.h \
-	util/jdefines.h
+    htmlform/include/julianform.h \
+    ical/nscal.h \
+    ical/prprty.h \
+    ical/icalprm.h \
+    ical/icalredr.h \
+    ical/icalcomp.h \
+    ical/duration.h \
+    ical/datetime.h \
+    ical/jutility.h \
+    ical/vevent.h \
+    ical/tmbevent.h \
+    ical/attendee.h \
+    ical/valarm.h \
+    ical/keyword.h \
+    ical/vtodo.h \
+    ical/vfrbsy.h \
+    ical/vjournal.h \
+	ical/icalsrdr.h \
+    ical/period.h \
+    ical/freebusy.h \
+    ical/icalfrdr.h \
+    util/ptrarray.h \
+    util/jatom.h \
+    util/jlog.h \
+    util/julnstr.h \
+    util/jlogerr.h \
+    util/jlogvctr.h \
+    util/jdefines.h
+
+ifndef MOZ_TREX
+EXPORTS += htmlform/include/form.h \
+           htmlform/include/formFactory.h
+
+CSRCS = \
+    htmlform/src/julianform.c \
+    $(NULL)
+endif
+
+ifndef MOZ_TREX
+CPPSRCS = \
+    htmlform/src/form.cpp        \
+    htmlform/src/formFactory.cpp \
+    ical/attendee.cpp        \
+    ical/bydmgntr.cpp        \
+    ical/bydwgntr.cpp        \
+    ical/bydygntr.cpp        \
+    ical/byhgntr.cpp         \
+    ical/bymdgntr.cpp        \
+    ical/bymgntr.cpp         \
+    ical/bymogntr.cpp        \
+    ical/bywngntr.cpp        \
+    ical/byydgntr.cpp        \
+    ical/capiredr.cpp        \
+    ical/dategntr.cpp        \
+    ical/datetime.cpp        \
+    ical/deftgntr.cpp        \
+    ical/dprprty.cpp         \
+    ical/duprprty.cpp        \
+    ical/duration.cpp        \
+    ical/functbl.cpp         \
+    ical/freebusy.cpp        \
+    ical/icalcomp.cpp        \
+    ical/icalfrdr.cpp        \
+    ical/icalprm.cpp         \
+    ical/icalredr.cpp        \
+    ical/icalsrdr.cpp        \
+    ical/icompfy.cpp         \
+    ical/iprprty.cpp         \
+    ical/jparser.cpp         \
+    ical/jutility.cpp        \
+    ical/keyword.cpp         \
+    ical/nscal.cpp           \
+    ical/orgnzr.cpp          \
+    ical/period.cpp          \
+    ical/prprty.cpp          \
+    ical/prprtyfy.cpp        \
+    ical/rcrrence.cpp        \
+    ical/recid.cpp           \
+    ical/rrday.cpp           \
+    ical/sdprprty.cpp        \
+    ical/sprpty.cpp          \
+    ical/tmbevent.cpp        \
+    ical/tzpart.cpp          \
+    ical/unistrto.cpp        \
+    ical/uri.cpp             \
+    ical/valarm.cpp          \
+    ical/vevent.cpp          \
+    ical/vfrbsy.cpp          \
+    ical/vjournal.cpp        \
+    ical/vtimezne.cpp        \
+    ical/vtodo.cpp           \
+    util/jatom.cpp           \
+    util/jlog.cpp            \
+    util/jlogerr.cpp         \
+    util/jlogvctr.cpp        \
+    util/julnstr.cpp         \
+    util/ptrarray.cpp        \
+    util/uidrgntr.cpp        \
+    itip/detxnobj.cpp        \
+    itip/getxnobj.cpp        \
+    itip/sttxnobj.cpp        \
+    itip/txnobj.cpp          \
+    itip/txnobjfy.cpp        \
+    itip/user.cpp            \
+    $(NULL)
+else
+CPPSRCS = \
+    ical/attendee.cpp        \
+    ical/bydmgntr.cpp        \
+    ical/bydwgntr.cpp        \
+    ical/bydygntr.cpp        \
+    ical/byhgntr.cpp         \
+    ical/bymdgntr.cpp        \
+    ical/bymgntr.cpp         \
+    ical/bymogntr.cpp        \
+    ical/bywngntr.cpp        \
+    ical/byydgntr.cpp        \
+    ical/capiredr.cpp        \
+    ical/dategntr.cpp        \
+    ical/datetime.cpp        \
+    ical/deftgntr.cpp        \
+    ical/dprprty.cpp         \
+    ical/duprprty.cpp        \
+    ical/duration.cpp        \
+    ical/functbl.cpp         \
+    ical/freebusy.cpp        \
+    ical/icalcomp.cpp        \
+    ical/icalfrdr.cpp        \
+    ical/icalprm.cpp         \
+    ical/icalredr.cpp        \
+    ical/icalsrdr.cpp        \
+    ical/icompfy.cpp         \
+    ical/iprprty.cpp         \
+    ical/jparser.cpp         \
+    ical/jutility.cpp        \
+    ical/keyword.cpp         \
+    ical/nscal.cpp           \
+    ical/orgnzr.cpp          \
+    ical/period.cpp          \
+    ical/prprty.cpp          \
+    ical/prprtyfy.cpp        \
+    ical/rcrrence.cpp        \
+    ical/recid.cpp           \
+    ical/rrday.cpp           \
+    ical/sdprprty.cpp        \
+    ical/sprpty.cpp          \
+    ical/tmbevent.cpp        \
+    ical/tzpart.cpp          \
+    ical/unistrto.cpp        \
+    ical/uri.cpp             \
+    ical/valarm.cpp          \
+    ical/vevent.cpp          \
+    ical/vfrbsy.cpp          \
+    ical/vjournal.cpp        \
+    ical/vtimezne.cpp        \
+    ical/vtodo.cpp           \
+    util/jatom.cpp           \
+    util/jlog.cpp            \
+    util/jlogerr.cpp         \
+    util/jlogvctr.cpp        \
+    util/julnstr.cpp         \
+    util/ptrarray.cpp        \
+    util/uidrgntr.cpp
+endif
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 
-CSRCS = \
-	htmlform/src/julianform.c \
-	$(NULL)
-
-CPPSRCS = \
-	htmlform/src/form.cpp	     \
-	htmlform/src/formFactory.cpp \
-	ical/attendee.cpp	     \
-	ical/bprprty.cpp	     \
-	ical/bydmgntr.cpp	     \
-	ical/bydwgntr.cpp	     \
-	ical/bydygntr.cpp	     \
-	ical/byhgntr.cpp	     \
-	ical/bymdgntr.cpp	     \
-	ical/bymgntr.cpp	     \
-	ical/bymogntr.cpp	     \
-	ical/bywngntr.cpp	     \
-	ical/byydgntr.cpp	     \
-	ical/capiredr.cpp	     \
-	ical/dategntr.cpp	     \
-	ical/datetime.cpp	     \
-	ical/deftgntr.cpp	     \
-	ical/dprprty.cpp	     \
-	ical/duprprty.cpp	     \
-	ical/duration.cpp	     \
-	ical/freebusy.cpp	     \
-	ical/icalcomp.cpp	     \
-	ical/icalfrdr.cpp	     \
-	ical/icalprm.cpp	     \
-	ical/icalredr.cpp	     \
-	ical/icalsrdr.cpp	     \
-	ical/icompfy.cpp	     \
-	ical/iprprty.cpp	     \
-	ical/jparser.cpp	     \
-	ical/jutility.cpp	     \
-	ical/keyword.cpp	     \
-	ical/nscal.cpp		     \
-	ical/orgnzr.cpp		     \
-	ical/period.cpp		     \
-	ical/pprprty.cpp	     \
-	ical/prprty.cpp		     \
-	ical/prprtyfy.cpp	     \
-	ical/rcrrence.cpp	     \
-	ical/recid.cpp		     \
-	ical/rrday.cpp		     \
-	ical/sdprprty.cpp	     \
-	ical/sprpty.cpp		     \
-	ical/tmbevent.cpp	     \
-	ical/tzpart.cpp		     \
-	ical/unistrto.cpp	     \
-	ical/uri.cpp		     \
-	ical/vevent.cpp		     \
-	ical/vfrbsy.cpp		     \
-	ical/vjournal.cpp            \
-	ical/vtimezne.cpp	     \
-	ical/vtodo.cpp               \
-	util/jatom.cpp		     \
-	util/jlog.cpp		     \
-	util/julnstr.cpp	     \
-	util/ptrarray.cpp	     \
-	util/uidrgntr.cpp	     \
-	itip/detxnobj.cpp            \
-	itip/getxnobj.cpp            \
-	itip/sttxnobj.cpp            \
-	itip/txnobj.cpp		     \
-	itip/txnobjfy.cpp	     \
-	itip/user.cpp		     \
-	$(NULL)
-
-REQUIRES = calendar nspr nls libmime
+REQUIRES = julian nspr nls java libmime security
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -DNLS_DEFINE_STANDARD_TYPES=1 -DNLSAPI_PUBLIC_CLASS
-#
-NSTOM_DEPTH = $(NS_DEPTH)/../mozilla
-INCLUDES    += -I$(srcdir)/ical -I$(srcdir)/itip -I$(srcdir)/ui -I$(srcdir)/util -I$(srcdir)/htmlform/include \
-			-I$(NSTOM_DEPTH)/dist/public/util \
-			-I$(NSTOM_DEPTH)/dist/public/img \
-			-I$(NSTOM_DEPTH)/dist/public/layer \
-			-I$(NSTOM_DEPTH)/libnls/headers/
+DEFINES     += -DNLS_DEFINE_STANDARD_TYPES=1 -DNLSAPI_PUBLIC_CLASS
 
+ifdef MOZ_TREX
+DEFINES += -DMOZ_TREX
+endif
 
+INCLUDES    += -I$(srcdir)/ical -I$(srcdir)/itip -I$(srcdir)/ui -I$(srcdir)/util -I$(srcdir)/htmlform/include -I$(NS_DEPTH)/dist/public/util -I$(NS_DEPTH)/dist/public/img -I$(NS_DEPTH)/dist/public/layer -I$(NS_DEPTH)/dist/public/security -I$(NS_DEPTH)/dist/public/java -I$(srcdir)/../../capi
 
 
 
