@@ -301,6 +301,7 @@ protected:
   PRPackedBool                  mIsDocumentLoaded; // true between onload and onunload events
   PRPackedBool                  mFullScreen;
   PRPackedBool                  mIsClosed;
+  PRPackedBool                  mOpenerWasCleared;
   PRTime                        mLastMouseButtonAction;
   nsString                      mStatus;
   nsString                      mDefaultStatus;
