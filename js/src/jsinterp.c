@@ -4008,12 +4008,12 @@ js_Interpret(JSContext *cx, jsval *result)
                 CACHED_SET(OBJ_SET_PROPERTY(cx, obj, id, &rval));
                 if (!ok)
                     goto out;
+                STORE_OPND(-1, rval);
             } else {
                 slot = JSVAL_TO_INT(lval);
                 GC_POKE(cx, obj->slots[slot]);
                 OBJ_SET_SLOT(cx, obj, slot, rval);
             }
-            STORE_OPND(-1, rval);
             break;
 
           case JSOP_DEFCONST:
