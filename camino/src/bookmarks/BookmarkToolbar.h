@@ -47,11 +47,11 @@
 
 @interface BookmarkToolbar : NSView<BookmarksClient>
 {
-  NSMutableArray*    mButtons;
-  BookmarkButton*   mDragInsertionButton;
-  int                mDragInsertionPosition;
-  BOOL               mIsShowing;
-  BOOL               mDrawBorder;
+  NSMutableArray* mButtons;
+  BookmarkButton* mDragInsertionButton;
+  int             mDragInsertionPosition;
+  BOOL            mIsShowing;
+  BOOL            mDrawBorder;
 }
 
   // Called to construct & edit the initial set of personal toolbar buttons.

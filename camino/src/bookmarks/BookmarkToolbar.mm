@@ -423,38 +423,29 @@
 - (BOOL)dropDestinationValid:(id <NSDraggingInfo>)sender
 {
   NSPasteboard* draggingPasteboard = [sender draggingPasteboard];
-  NSArray*      types  = [draggingPasteboard types];
+  NSArray* types = [draggingPasteboard types];
   BookmarkManager *bmManager = [BookmarkManager sharedBookmarkManager];
   BookmarkFolder* toolbar = [bmManager toolbarFolder];
 
   if (!toolbar)
     return NO;
 
-  if ([types containsObject: @"MozBookmarkType"])
-  {
+  if ([types containsObject: @"MozBookmarkType"]) {
     NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[draggingPasteboard propertyListForType: @"MozBookmarkType"]];
     BookmarkItem* destItem = nil;
-    int index = 0;
 
-    if (mDragInsertionPosition == CHInsertInto)
-    // drop onto folder
-    {
+    if (mDragInsertionPosition == CHInsertInto) {
+      // drop onto folder
       destItem = [mDragInsertionButton BookmarkItem];
-      index = 0;
     }
     else if (mDragInsertionPosition == CHInsertBefore ||
-             mDragInsertionPosition == CHInsertAfter)		// drop onto toolbar
-    {
+             mDragInsertionPosition == CHInsertAfter) { // drop onto toolbar
       destItem = toolbar;
-      index = [mButtons indexOfObjectIdenticalTo:mDragInsertionButton];
-      if (mDragInsertionPosition == CHInsertAfter)
-        ++index;
     }
     if (![bmManager isDropValid:draggedItems toFolder:destItem])
       return NO;
   }
-  else if ([types containsObject:NSStringPboardType])
-  {
+  else if ([types containsObject:NSStringPboardType]) {
     // validate the string is a real url before allowing
     NSURL* testURL = [NSURL URLWithString:[draggingPasteboard stringForType:NSStringPboardType]];
     return (testURL != nil);
@@ -520,22 +511,19 @@
   if (!toolbar)
     return NO;
 
-  if (mDragInsertionPosition == CHInsertInto)							// drop onto folder
-  {
+  if (mDragInsertionPosition == CHInsertInto) { // drop onto folder
     toolbar = (BookmarkFolder *)[mDragInsertionButton BookmarkItem];
-    index = 0;
+    index = [toolbar count];
   }
   else if (mDragInsertionPosition == CHInsertBefore ||
-           mDragInsertionPosition == CHInsertAfter)				// drop onto toolbar
-  {
-    index = [mButtons indexOfObjectIdenticalTo: mDragInsertionButton];
+           mDragInsertionPosition == CHInsertAfter) { // drop onto toolbar
+    index = [mButtons indexOfObjectIdenticalTo:mDragInsertionButton];
     if (index == NSNotFound)
       index = [toolbar count];
     else if (mDragInsertionPosition == CHInsertAfter)
       index++;
   }
-  else
-  {
+  else {
     mDragInsertionButton = nil;
     mDragInsertionPosition = CHInsertNone;
     [self setNeedsDisplay:YES];
@@ -547,35 +535,30 @@
 
   NSArray	*draggedTypes = [[sender draggingPasteboard] types];
 
-  if ( [draggedTypes containsObject:@"MozBookmarkType"] )
-  {
+  if ([draggedTypes containsObject:@"MozBookmarkType"]) {
     NSArray *draggedItems = [NSArray pointerArrayFromDataArrayForMozBookmarkDrop:[[sender draggingPasteboard] propertyListForType: @"MozBookmarkType"]];
     // added sequentially, so use reverse object enumerator to preserve order.
     NSEnumerator *enumerator = [draggedItems reverseObjectEnumerator];
     id aKid;
     while ((aKid = [enumerator nextObject])) {
-      if (isCopy) {
+      if (isCopy)
         [[aKid parent] copyChild:aKid toBookmarkFolder:toolbar atIndex:index];
-      } else {
+      else
         [[aKid parent] moveChild:aKid toBookmarkFolder:toolbar atIndex:index];
-      }
     }
     dropHandled = YES;
   }
-  else if ( [draggedTypes containsObject:@"MozURLType"] )
-  {
+  else if ([draggedTypes containsObject:@"MozURLType"]) {
     NSDictionary* proxy = [[sender draggingPasteboard] propertyListForType: @"MozURLType"];
     [toolbar addBookmark:[proxy objectForKey:@"title"] url:[proxy objectForKey:@"url"] inPosition:index isSeparator:NO];
     dropHandled = YES;
   }
-  else if ( [draggedTypes containsObject:NSStringPboardType] )
-  {
+  else if ([draggedTypes containsObject:NSStringPboardType]) {
     NSString* draggedText = [[sender draggingPasteboard] stringForType:NSStringPboardType];
     [toolbar addBookmark:draggedText url:draggedText inPosition:index isSeparator:NO];
     dropHandled = YES;
   }
-  else if ([draggedTypes containsObject: NSURLPboardType])
-  {
+  else if ([draggedTypes containsObject: NSURLPboardType]) {
     NSURL*	urlData = [NSURL URLFromPasteboard:[sender draggingPasteboard]];
     [toolbar addBookmark:[urlData absoluteString] url:[urlData absoluteString] inPosition:index isSeparator:NO];
     dropHandled = YES;
