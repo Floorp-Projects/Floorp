@@ -239,6 +239,46 @@ nsPlainTextSerializer::Init(PRUint32 aFlags, PRUint32 aWrapColumn,
   return NS_OK;
 }
 
+PRBool
+nsPlainTextSerializer::GetLastBool(const nsVoidArray& aStack)
+{
+  PRUint32 size = aStack.Count();
+  if (size == 0) {
+    return PR_FALSE;
+  }
+  return NS_REINTERPRET_CAST(PRBool, aStack.ElementAt(size-1));
+}
+
+void
+nsPlainTextSerializer::SetLastBool(nsVoidArray& aStack, PRBool aValue)
+{
+  PRUint32 size = aStack.Count();
+  if (size > 0) {
+    aStack.ReplaceElementAt(NS_REINTERPRET_CAST(void*, aValue), size-1);
+  }
+  else {
+    NS_ERROR("There is no \"Last\" value");
+  }
+}
+
+void
+nsPlainTextSerializer::PushBool(nsVoidArray& aStack, PRBool aValue)
+{
+    aStack.AppendElement(NS_REINTERPRET_CAST(void*, aValue));
+}
+
+PRBool
+nsPlainTextSerializer::PopBool(nsVoidArray& aStack)
+{
+  PRBool returnValue = PR_FALSE;
+  PRUint32 size = aStack.Count();
+  if (size > 0) {
+    returnValue = NS_REINTERPRET_CAST(PRBool, aStack.ElementAt(size-1));
+    aStack.RemoveElementAt(size-1);
+  }
+  return returnValue;
+}
+
 NS_IMETHODIMP
 nsPlainTextSerializer::Initialize(nsAString* aOutString,
                                   PRUint32 aFlags, PRUint32 aWrapCol)
@@ -654,17 +694,27 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
   if (type == eHTMLTag_p || type == eHTMLTag_pre) {
     EnsureVerticalSpace(1); // Should this be 0 in unformatted case?
   }
+  else if (type == eHTMLTag_tr) {
+    PushBool(mHasWrittenCellsForRow, PR_FALSE);
+  }
   else if (type == eHTMLTag_td || type == eHTMLTag_th) {
     // We must make sure that the content of two table cells get a
     // space between them.
-    
-    // Fow now, I will only add a SPACE. Could be a TAB or something
-    // else but I'm not sure everything can handle the TAB so SPACE
-    // seems like a better solution.
-    if(!mInWhitespace) {
-      // Maybe add something else? Several spaces? A TAB? SPACE+TAB?
-      AddToLine(kSpace.get(), 1);
+
+    // To make the seperation between cells most obvious and
+    // importable, we use a TAB.
+    if (GetLastBool(mHasWrittenCellsForRow)) {
+      // Bypass |Write| so that the TAB isn't compressed away.
+      AddToLine(NS_LITERAL_STRING("\t").get(), 1);
       mInWhitespace = PR_TRUE;
+    }
+    else if (mHasWrittenCellsForRow.Count() == 0) {
+      // We don't always see a <tr> (nor a <table>) before the <td> if we're
+      // copying part of a table
+      PushBool(mHasWrittenCellsForRow, PR_TRUE); // will never be popped
+    }
+    else {
+      SetLastBool(mHasWrittenCellsForRow, PR_TRUE);
     }
   }
   else if (type == eHTMLTag_ul) {
@@ -741,7 +791,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
     PRBool isInCiteBlockquote =
       NS_SUCCEEDED(rv) && value.EqualsIgnoreCase("cite");
     // Push
-    mIsInCiteBlockquote.AppendElement((void*)isInCiteBlockquote);
+    PushBool(mIsInCiteBlockquote, isInCiteBlockquote);
     if (isInCiteBlockquote) {
       mCiteQuoteLevel++;
     }
@@ -767,7 +817,7 @@ nsPlainTextSerializer::DoOpenContainer(const nsIParserNode* aNode, PRInt32 aTag)
 
   // Push on stack
   PRBool currentNodeIsConverted = IsCurrentNodeConverted(aNode);
-  mCurrentNodeIsConverted.AppendElement((void*)currentNodeIsConverted);
+  PushBool(mCurrentNodeIsConverted, currentNodeIsConverted);
 
   if (type == eHTMLTag_h1 || type == eHTMLTag_h2 ||
       type == eHTMLTag_h3 || type == eHTMLTag_h4 ||
@@ -893,8 +943,14 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     // so just return now:
     return NS_OK;
   } 
-  else if ((type == eHTMLTag_tr) ||
-           (type == eHTMLTag_li) ||
+  else if (type == eHTMLTag_tr) {
+    PopBool(mHasWrittenCellsForRow);
+    // Should always end a line, but get no more whitespace
+    if (mFloatingLines < 0)
+      mFloatingLines = 0;
+    mLineBreakDue = PR_TRUE;
+  } 
+  else if ((type == eHTMLTag_li) ||
            (type == eHTMLTag_dt)) {
     // Items that should always end a line, but get no more whitespace
     if (mFloatingLines < 0)
@@ -942,12 +998,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
     FlushLine();    // Is this needed?
 
     // Pop
-    PRBool isInCiteBlockquote = PR_FALSE;
-    if (mIsInCiteBlockquote.Count() > 0) {
-      isInCiteBlockquote =
-        (PRBool)mIsInCiteBlockquote[mIsInCiteBlockquote.Count()-1];
-      mIsInCiteBlockquote.RemoveElementAt(mIsInCiteBlockquote.Count()-1);
-    }
+    PRBool isInCiteBlockquote = PopBool(mIsInCiteBlockquote);
 
     if (isInCiteBlockquote) {
       mCiteQuoteLevel--;
@@ -986,12 +1037,7 @@ nsPlainTextSerializer::DoCloseContainer(PRInt32 aTag)
   //////////////////////////////////////////////////////////////
 
   // Pop the currentConverted stack
-  PRBool currentNodeIsConverted = PR_FALSE;
-  if (mCurrentNodeIsConverted.Count() > 0) {
-    currentNodeIsConverted =
-      (PRBool)mCurrentNodeIsConverted[mCurrentNodeIsConverted.Count()-1];
-    mCurrentNodeIsConverted.RemoveElementAt(mCurrentNodeIsConverted.Count()-1);
-  }
+  PRBool currentNodeIsConverted = PopBool(mCurrentNodeIsConverted);
   
   if (type == eHTMLTag_h1 || type == eHTMLTag_h2 ||
       type == eHTMLTag_h3 || type == eHTMLTag_h4 ||
@@ -1057,8 +1103,6 @@ nsPlainTextSerializer::DoAddLeaf(const nsIParserNode *aNode, PRInt32 aTag,
   if (mLineBreakDue)
     EnsureVerticalSpace(mFloatingLines);
 
-  PRBool currentNodeIsConverted = IsCurrentNodeConverted(aNode);
-
   eHTMLTags type = (eHTMLTags)aTag;
   
   if ((mTagStackIndex > 1 &&
@@ -1096,7 +1140,8 @@ nsPlainTextSerializer::DoAddLeaf(const nsIParserNode *aNode, PRInt32 aTag,
         PRInt32 err = 0;
         entity = str.ToInteger(&err, kAutoDetect);  // NCR
       }
-      nsAutoString temp(entity);
+      nsAutoString temp;
+      temp.Append(PRUnichar(entity));
       Write(temp);
     }
   }

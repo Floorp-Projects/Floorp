@@ -167,6 +167,12 @@ protected:
   {
     return !mInHead;
   }
+
+  // Stack handling functions
+  PRBool GetLastBool(const nsVoidArray& aStack);
+  void SetLastBool(nsVoidArray& aStack, PRBool aValue);
+  void PushBool(nsVoidArray& aStack, PRBool aValue);
+  PRBool PopBool(nsVoidArray& aStack);
   
 protected:
   nsString         mCurrentLine;
@@ -235,6 +241,9 @@ protected:
 
   nsCOMPtr<nsIContent> mContent;
 
+  // For handling table rows
+  nsAutoVoidArray mHasWrittenCellsForRow; // really an array of bools
+  
   // Values gotten in OpenContainer that is (also) needed in CloseContainer
   nsAutoVoidArray     mCurrentNodeIsConverted; // really an array of bools
   nsAutoVoidArray     mIsInCiteBlockquote; // really an array of bools
