@@ -16,8 +16,6 @@
  * Communications Corporation.  Portions created by Netscape are
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
- *
- * Contributor(s): 
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
@@ -193,6 +191,10 @@ public:
   NS_IMETHOD    Close()=0;
 
   NS_IMETHOD    Close(JSContext* cx, jsval* argv, PRUint32 argc)=0;
+
+  NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn)=0;
+
+  NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn)=0;
 };
 
 
@@ -276,6 +278,8 @@ public:
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
   NS_IMETHOD    Close();  \
   NS_IMETHOD    Close(JSContext* cx, jsval* argv, PRUint32 argc);  \
+  NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn);  \
+  NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn);  \
 
 
 
@@ -359,6 +363,8 @@ public:
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to OpenDialog(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Close() { return _to Close(); }  \
   NS_IMETHOD    Close(JSContext* cx, jsval* argv, PRUint32 argc) { return _to Close(cx, argv, argc); }  \
+  NS_IMETHOD    Escape(const nsString& aStr, nsString& aReturn) { return _to Escape(aStr, aReturn); }  \
+  NS_IMETHOD    Unescape(const nsString& aStr, nsString& aReturn) { return _to Unescape(aStr, aReturn); }  \
 
 
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);
