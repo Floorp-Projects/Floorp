@@ -1478,7 +1478,6 @@ function checkForDirectoryListing()
  **/
 function FillInHTMLTooltip(tipElement)
 {
-  const HTMLNS = "http://www.w3.org/1999/xhtml";
   const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
   const XLinkNS = "http://www.w3.org/1999/xlink";
   const Node = { ELEMENT_NODE : 1 }; // XXX Components.interfaces.Node;
@@ -1494,7 +1493,7 @@ function FillInHTMLTooltip(tipElement)
 
     while (!titleText && !XLinkTitleText && tipElement) {
       if (tipElement.nodeType == Node.ELEMENT_NODE) {
-        titleText = tipElement.getAttributeNS(HTMLNS, "title");
+        titleText = tipElement.getAttribute("title");
         XLinkTitleText = tipElement.getAttributeNS(XLinkNS, "title");
       }
       tipElement = tipElement.parentNode;
