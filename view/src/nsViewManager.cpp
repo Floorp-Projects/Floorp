@@ -1897,39 +1897,41 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
     default:
       {
-        nsView* baseView;
-        nsView* view;
-        nsPoint offset;
-        PRBool capturedEvent = PR_FALSE;
-
         if (NS_IS_MOUSE_EVENT(aEvent) || NS_IS_KEY_EVENT(aEvent) ||
             NS_IS_IME_EVENT(aEvent)) {
           gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
         }
 
-        //Find the view whose coordinates system we're in.
-        baseView = nsView::GetViewFor(aEvent->widget);
+        if (aEvent->message == NS_DEACTIVATE) {
+          PRBool result;
+          GrabMouseEvents(nsnull, result);
+          mKeyGrabber = nsnull;
+        }
 
-        if (aEvent->message == NS_DEACTIVATE)
-          mMouseGrabber = mKeyGrabber = nsnull;
+        //Find the view whose coordinates system we're in.
+        nsView* baseView = nsView::GetViewFor(aEvent->widget);
+        nsView* view = baseView;
+        PRBool capturedEvent = PR_FALSE;
 
         //Find the view to which we're initially going to send the event 
         //for hittesting.
-        if (nsnull != mMouseGrabber && (NS_IS_MOUSE_EVENT(aEvent) || (NS_IS_DRAG_EVENT(aEvent)))) {
-          view = mMouseGrabber;
-          capturedEvent = PR_TRUE;
+        if (NS_IS_MOUSE_EVENT(aEvent) || NS_IS_DRAG_EVENT(aEvent)) {
+          nsView* mouseGrabber = GetMouseEventGrabber();
+          if (mouseGrabber) {
+            view = mouseGrabber;
+            capturedEvent = PR_TRUE;
+          }
         }
-        else if (nsnull != mKeyGrabber && (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent))) {
-          view = mKeyGrabber;
-          capturedEvent = PR_TRUE;
-        }
-        else {
-          view = baseView;
+        else if (NS_IS_KEY_EVENT(aEvent) || NS_IS_IME_EVENT(aEvent)) {
+          if (mKeyGrabber) {
+            view = mKeyGrabber;
+            capturedEvent = PR_TRUE;
+          }
         }
 
         if (nsnull != view) {
           //Calculate the proper offset for the view we're going to
-          offset.x = offset.y = 0;
+          nsPoint offset(0, 0);
           if (baseView != view) {
             //Get offset from root of baseView
             nsView *parent;
@@ -2297,14 +2299,17 @@ NS_IMETHODIMP nsViewManager::GrabKeyEvents(nsIView *aView, PRBool &aResult)
   return NS_OK;
 }
 
+nsView* nsViewManager::GetMouseEventGrabber() const {
+  nsView* root = mRootView;
+  while (root && root->GetParent()) {
+    root = root->GetParent()->GetViewManager()->mRootView;
+  }
+  return root ? root->GetViewManager()->mMouseGrabber : nsnull;
+}
+
 NS_IMETHODIMP nsViewManager::GetMouseEventGrabber(nsIView *&aView)
 {
-  nsView* rootParent = mRootView ? mRootView->GetParent() : nsnull;
-  if (rootParent) {
-    return rootParent->GetViewManager()->GetMouseEventGrabber(aView);
-  }
-
-  aView = mMouseGrabber;
+  aView = GetMouseEventGrabber();
   return NS_OK;
 }
 
