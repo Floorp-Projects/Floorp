@@ -18,7 +18,7 @@
 
 
 #include "nsMenuFrame.h"
-
+#include "nsAreaFrame.h"
 #include "nsIContent.h"
 #include "prtypes.h"
 #include "nsIAtom.h"
@@ -27,6 +27,8 @@
 #include "nsCSSRendering.h"
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"
+
+#define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
 //
 // NS_NewMenuFrame
@@ -82,4 +84,23 @@ nsMenuFrame::SetInitialChildList(nsIPresContext& aPresContext,
     rv = nsBoxFrame::SetInitialChildList(aPresContext, aListName, aChildList);
   }
   return rv;
+}
+
+NS_IMETHODIMP
+nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
+                                        nsIAtom** aListName) const
+{
+   // Maintain a separate child list for the menu contents.
+   // This is necessary because we don't want the menu contents to be included in the layout
+   // of the menu's single item because it would take up space, when it is supposed to
+   // be floating above the display.
+  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
+  
+  *aListName = nsnull;
+  if (NS_MENU_POPUP_LIST_INDEX == aIndex) {
+    *aListName = nsLayoutAtoms::popupList;
+    NS_ADDREF(*aListName);
+    return NS_OK;
+  }
+  return nsBoxFrame::GetAdditionalChildListName(aIndex, aListName);
 }
