@@ -809,6 +809,18 @@ void CWizardUI::SortWidgetsForTabOrder()
 	CurrentNode->isWidgetsSorted = TRUE;
 }
 
+void CWizardUI::EnableWidget(WIDGET *curWidget) 
+{
+	// all controls are enabled by default, only do something if not enabled...
+	int enabled = TRUE;
+	if (curWidget->action.function == "Enable")
+	{
+		CString enableStr = theInterpreter->replaceVars(curWidget->action.parameters,NULL);				
+		if (enableStr != "1")
+			enabled = FALSE;
+		curWidget->control->EnableWindow(enabled);
+	}
+}
 
 void CWizardUI::CreateControls() 
 {
@@ -854,10 +866,12 @@ void CWizardUI::CreateControls()
 		if (widgetType == "Text" || widgetType == "BoldText") {
 			curWidget->control = new CStatic;
 			((CStatic*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
+			EnableWidget(curWidget);
 		}
 		else if (widgetType == "Navigation Text") {
 			curWidget->control = new CNavText;
 			((CNavText*)curWidget->control)->Create(curWidget->value, SS_LEFT, tmpRect, this, ID);
+			EnableWidget(curWidget);
 		}
 		else if (widgetType == "EditBox") {
 			curWidget->control = new CEdit;//Added new style parameter ES_AUTOHSCROLL- to allow *GASP* SCROLLING!!
@@ -874,11 +888,13 @@ void CWizardUI::CreateControls()
 				//Set maximum number of characters allowed per line - limit set to 200
 				((CEdit*)curWidget->control)->SetLimitText(int(curWidget->fieldlen.length));
 				((CEdit*)curWidget->control)->SetWindowText(curWidget->value);
+				EnableWidget(curWidget);
 			}
 		}
 		else if (widgetType == "Button") {
 			curWidget->control = new CButton;
 			((CButton*)curWidget->control)->Create(curWidget->value, BS_PUSHBUTTON | WS_TABSTOP, tmpRect, this, ID);
+			EnableWidget(curWidget);
 		}
 		else if (widgetType == "RadioButton") {
 			curWidget->control = new CButton;
@@ -950,11 +966,13 @@ void CWizardUI::CreateControls()
 			else {
 				((CButton*)curWidget->control)->SetCheck(0);
 			}
+			EnableWidget(curWidget);
 		}
 		else if (widgetType == "CheckBox") {
 			curWidget->control = new CButton;
 			((CButton*)curWidget->control)->Create(curWidget->title, BS_AUTOCHECKBOX | WS_TABSTOP, tmpRect, this, ID);
 			((CButton*)curWidget->control)->SetCheck(atoi(curWidget->value));
+			EnableWidget(curWidget);
 		}
 		else if (widgetType == "ListBox") 
 		{
@@ -989,6 +1007,7 @@ void CWizardUI::CreateControls()
 				((CListBox*)curWidget->control)->SelectString(0, s);
 				s = strtok( NULL, "," );
 			}
+			EnableWidget(curWidget);
 		}
 		else if (widgetType == "CheckListBox") 
 		{
@@ -1029,6 +1048,7 @@ void CWizardUI::CreateControls()
 					((CCheckListBox*)curWidget->control)->SetCheck(i, 1);
 				s = strtok( NULL, "," );
 			}
+			EnableWidget(curWidget);
 		}
 		else if (widgetType == "ComboBox") {
 			curWidget->control = new CComboBox;
@@ -1050,16 +1070,19 @@ void CWizardUI::CreateControls()
 					}
 				}
 			}
+			EnableWidget(curWidget);
 
 			//((CComboBox*)curWidget->control)->SelectString(0, selectedCustomization);
 		}
 		else if (widgetType == "GroupBox") {
 			curWidget->control = new CButton;
 			((CButton*)curWidget->control)->Create(curWidget->value, BS_GROUPBOX, tmpRect, this, ID);
+			EnableWidget(curWidget);
 		}
 		else if (widgetType == "ProgressBar") {
 			curWidget->control = new CProgressCtrl;
 			((CProgressCtrl*)curWidget->control)->Create(WS_TABSTOP, tmpRect, this, ID);
+			EnableWidget(curWidget);
 		}
 
 
@@ -1132,7 +1155,11 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 	CString rv("");
 
 	if (widgetType == "CheckBox") {
-		int state = ((CButton*)curWidget->control)->GetState();
+		// Mask off everything but the checked/not checked state 
+		// Ignore indeterminate state
+		int state = ((CButton*)curWidget->control)->GetState() & 0x0003;
+		if (state == 2) 
+			state = 0;
 
 		char temp[MIN_SIZE];
 
@@ -1142,7 +1169,11 @@ CString CWizardUI::GetScreenValue(WIDGET *curWidget)
 	}
 	else if (widgetType == "RadioButton")
 	{
+		// Mask off everything but the checked/not checked state 
+		// Ignore indeterminate state
 		int state = ((CButton*)curWidget->control)->GetState();
+		if (state == 2) 
+			state = 0;
 			
 		CString allOptions;
 		CString setBack;

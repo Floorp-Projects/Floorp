@@ -80,6 +80,7 @@ public:
 	BOOL containsImage;
 
 	void SortWidgetsForTabOrder();
+	void EnableWidget(WIDGET *curWidget);
 	void CreateControls();
 	void DisplayControls();
 	void UpdateGlobals();
