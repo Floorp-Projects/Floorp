@@ -462,10 +462,10 @@ public: // NOT in nsIViewManager, so private to the view module
    * Called to inform the view manager that a view has scrolled.
    * The view manager will invalidate any widgets which may need
    * to be rerendered.
-   * @param aView view to paint. should be root view
-   * @param aUpdateFlags see bottom of nsIViewManager.h for description
+   * @param aView view to paint. should be the nsScrollPortView that
+   * got scrolled.
    */
-  void UpdateViewAfterScroll(nsIView *aView, PRInt32 aDX, PRInt32 aDY);
+  void UpdateViewAfterScroll(nsView *aView);
 
   PRBool CanScrollWithBitBlt(nsView* aView);
 
@@ -525,6 +525,7 @@ private:
   PRPackedBool      mPainting;
   PRPackedBool      mRecursiveRefreshPending;
   PRPackedBool      mHasPendingUpdates;
+  PRPackedBool      mInScroll;
 
   //from here to public should be static and locked... MMP
   static PRInt32           mVMCount;        //number of viewmanagers

@@ -500,6 +500,7 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoin
     
     if (!scrollWidget)
     {
+      NS_ASSERTION(!canBitBlit, "Someone screwed up");
       nsPoint offsetToWidget;
       GetNearestWidget(&offsetToWidget);
       // We're moving the child widgets because we are scrolling. But
@@ -527,7 +528,7 @@ void nsScrollPortView::Scroll(nsView *aScrolledView, nsPoint aTwipsDelta, nsPoin
       // Scroll the contents of the widget by the specfied amount, and scroll
       // the child widgets
       scrollWidget->Scroll(aPixDelta.x, aPixDelta.y, nsnull);
-      mViewManager->UpdateViewAfterScroll(this, aTwipsDelta.x, aTwipsDelta.y);
+      mViewManager->UpdateViewAfterScroll(this);
     }
   }
 }
