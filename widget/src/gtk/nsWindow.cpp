@@ -2257,7 +2257,7 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
   PRInt32 platformLen;
 
   // Set UTF8_STRING title for NET_WM-supporting window managers
-  NS_ConvertUCS2toUTF8 utf8_title(aTitle);
+  NS_ConvertUTF16toUTF8 utf8_title(aTitle);
   XChangeProperty(GDK_DISPLAY(), GDK_WINDOW_XWINDOW(mShell->window),
                 XInternAtom(GDK_DISPLAY(), "_NET_WM_NAME", False),
                 XInternAtom(GDK_DISPLAY(), "UTF8_STRING", False),
@@ -2320,11 +2320,11 @@ NS_IMETHODIMP nsWindow::SetTitle(const nsAString& aTitle)
 }
 
 NS_IMETHODIMP
-nsWindow::SetIcon(const nsAString& aIcon)
+nsWindow::SetIcon(const nsAString& aIconSpec)
 {
   // See if we have a cached icon set for this window type.
   // Note that icon specs must be UTF8.
-  NS_ConvertUCS2toUTF8 iconKey(aIcon);
+  NS_ConvertUTF16toUTF8 iconKey(aIconSpec);
   IconEntry* entry = NS_STATIC_CAST(IconEntry*,
                                     PL_DHashTableOperate(sIconCache,
                                                          iconKey.get(),
@@ -2338,70 +2338,40 @@ nsWindow::SetIcon(const nsAString& aIcon)
     PRUint32 generation = sIconCache->generation;
 #endif
 
-    // Have necko resolve this to a file for us.
-    nsCOMPtr<nsIIOService> ioService = do_GetIOService();
-    nsCOMPtr<nsIURI> iconURI;
-    NS_NewURI(getter_AddRefs(iconURI), aIcon);
-    nsCAutoString scheme;
-    iconURI->GetScheme(scheme);
-    nsCOMPtr<nsIProtocolHandler> handler;
-    ioService->GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
-    nsCOMPtr<nsIResProtocolHandler> resHandler = do_QueryInterface(handler);
-    nsCAutoString fileURLSpec;
-    resHandler->ResolveURI(iconURI, fileURLSpec);
-
-    // We now have the file path as a file URL.  Resolve to a filesystem path.
-    NS_NewURI(getter_AddRefs(iconURI), fileURLSpec);
-    nsCOMPtr<nsIFileURL> iconFileURL = do_QueryInterface(iconURI);
-    NS_ENSURE_TRUE(iconFileURL, NS_ERROR_UNEXPECTED);
-
-    nsCOMPtr<nsIFile> fileTarget;
-    iconFileURL->GetFile(getter_AddRefs(fileTarget));
-    nsCAutoString fileTargetPath;
-    fileTarget->GetNativePath(fileTargetPath);
-
     GtkStyle* w_style;
     GdkPixmap* w_pixmap = NULL, *w_minipixmap = NULL;
     GdkBitmap* w_mask = NULL, *w_minimask = NULL;
 
     w_style = gtk_widget_get_style(mShell);
 
-    nsCAutoString largeIconPath(fileTargetPath);
-    largeIconPath.Append(".xpm");
-    nsCOMPtr<nsILocalFile> largeIconFile;
-    NS_NewNativeLocalFile(largeIconPath, PR_TRUE, getter_AddRefs(largeIconFile));
-#ifdef DEBUG_ICONS
-    printf("Looking for large icon file: %s\n", largeIconPath.get());
-#endif
-    PRBool exists;
-    if (NS_SUCCEEDED(largeIconFile->Exists(&exists)) && exists) {
-      nsCAutoString nativePath;
-      largeIconFile->GetNativePath(nativePath);
+    nsCOMPtr<nsILocalFile> iconFile;
+    ResolveIconName(aIconSpec, NS_LITERAL_STRING(".xpm"),
+                    getter_AddRefs(iconFile));
+    if (iconFile) {
+      nsCAutoString path;
+      iconFile->GetNativePath(path);
+
       w_pixmap = gdk_pixmap_create_from_xpm(mShell->window,
                                             &w_mask,
                                             &w_style->bg[GTK_STATE_NORMAL],
-                                            nativePath.get());
+                                            path.get());
 #ifdef DEBUG_ICONS
-      printf("Loaded large icon file: %s\n", largeIconPath.get());
+      printf("Loaded large icon file: %s\n", path.get());
 #endif
     }
 
-    nsCAutoString smallIconPath(fileTargetPath);
-    smallIconPath.Append("16.xpm");
-    nsCOMPtr<nsILocalFile> smallIconFile;
-    NS_NewNativeLocalFile(smallIconPath, PR_TRUE, getter_AddRefs(smallIconFile));
-#ifdef DEBUG_ICONS
-    printf("Looking for small icon file: %s\n", smallIconPath.get());
-#endif
-    if (NS_SUCCEEDED(smallIconFile->Exists(&exists)) && exists) {
-      nsCAutoString nativePath;
-      smallIconFile->GetNativePath(nativePath);
+    ResolveIconName(aIconSpec, NS_LITERAL_STRING("16.xpm"),
+                    getter_AddRefs(iconFile));
+    if (iconFile) {
+      nsCAutoString path;
+      iconFile->GetNativePath(path);
+
       w_minipixmap = gdk_pixmap_create_from_xpm(mShell->window,
                                                 &w_minimask,
                                                 &w_style->bg[GTK_STATE_NORMAL],
-                                                nativePath.get());
+                                                path.get());
 #ifdef DEBUG_ICONS
-      printf("Loaded small icon file: %s\n", smallIconPath.get());
+      printf("Loaded small icon file: %s\n", path.get());
 #endif
     }
 

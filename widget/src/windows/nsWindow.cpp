@@ -5629,32 +5629,20 @@ NS_METHOD nsWindow::SetTitle(const nsAString& aTitle)
   return NS_OK;
 }
 
-NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec)
+NS_METHOD nsWindow::SetIcon(const nsAString& aIconSpec) 
 {
-  // Start at app chrome directory.
-  nsCOMPtr<nsIFile> chromeDir;
-  if (NS_FAILED(NS_GetSpecialDirectory(NS_APP_CHROME_DIR, getter_AddRefs(chromeDir)))) {
-    return NS_ERROR_FAILURE;
-  }
-  // Get native file name of that directory.
+  // Assume the given string is a local identifier for an icon file.
+
+  nsCOMPtr<nsILocalFile> iconFile;
+  ResolveIconName(aIconSpec, NS_LITERAL_STRING(".ico"),
+                  getter_AddRefs(iconFile));
+  if (!iconFile)
+    return NS_OK; // not an error if icon is not found
+
   nsAutoString iconPath;
-  chromeDir->GetPath(iconPath);
+  iconFile->GetPath(iconPath);
 
-  // Now take input path...
-  nsAutoString iconSpec(anIconSpec);
-  // ...append ".ico" to that.
-  iconSpec.Append(NS_LITERAL_STRING(".ico"));
-  // ...and figure out where /chrome/... is within that
-  // (and skip the "resource:///chrome" part).
-  nsAutoString key(NS_LITERAL_STRING("/chrome/"));
-  PRInt32 n = iconSpec.Find(key) + key.Length();
-  // Convert / to \.
-  nsAutoString slash(NS_LITERAL_STRING("/"));
-  nsAutoString bslash(NS_LITERAL_STRING("\\"));
-  iconSpec.ReplaceChar(*(slash.get()), *(bslash.get()));
-
-  // Append that to icon resource path.
-  iconPath.Append(iconSpec.get() + n - 1);
+  // XXX this should use MZLU (see bug 239279)
 
   ::SetLastError(0);
   HICON bigIcon = (HICON)::LoadImageW(NULL,
@@ -5698,10 +5686,10 @@ NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec)
     if (icon)
       ::DestroyIcon(icon);
   }
-#ifdef DEBUG_law
+#ifdef DEBUG_SetIcon
   else {
-    nsCAutoString cPath; cPath.AssignWithConversion(iconPath);
-    printf("\nIcon load error; icon=%s, rc=0x%08X\n\n", (const char*)cPath, ::GetLastError());
+    NS_LossyConvertUTF16toASCII cPath(iconPath);
+    printf( "\nIcon load error; icon=%s, rc=0x%08X\n\n", cPath.get(), ::GetLastError() );
   }
 #endif
   if (smallIcon) {
@@ -5709,12 +5697,13 @@ NS_METHOD nsWindow::SetIcon(const nsAString& anIconSpec)
     if (icon)
       ::DestroyIcon(icon);
   }
-#ifdef DEBUG_law
+#ifdef DEBUG_SetIcon
   else {
-    nsCAutoString cPath; cPath.AssignWithConversion(iconPath);
-    printf("\nSmall icon load error; icon=%s, rc=0x%08X\n\n", (const char*)cPath, ::GetLastError());
+    NS_LossyConvertUTF16toASCII cPath(iconPath);
+    printf( "\nSmall icon load error; icon=%s, rc=0x%08X\n\n", cPath.get(), ::GetLastError() );
   }
 #endif
+
   return NS_OK;
 }
 
