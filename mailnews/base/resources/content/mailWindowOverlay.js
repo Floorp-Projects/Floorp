@@ -1604,23 +1604,10 @@ function IsEmptyTrashEnabled()
 
 function IsCompactFolderEnabled()
 {
-  var folderURI = GetSelectedFolderURI();
-  var server = GetServer(folderURI);
-  if (!(server && server.canCompactFoldersOnServer))
-    return false;
-
-  var folderTree = GetFolderTree();
-  var startIndex = {};
-  var endIndex = {};
-  folderTree.treeBoxObject.selection.getRangeAt(0, startIndex, endIndex);
-  if (startIndex.value < 0)
-        return false;
-
-  var folderResource = GetFolderResource(folderTree, startIndex.value);
-  if (! folderResource)
-        return false;
-
-  return GetFolderAttribute(folderTree, folderResource, "CanCompact") == "true" && isCommandEnabled("cmd_compactFolder");
+  var server = GetServer(GetSelectedFolderURI());
+  return (server && 
+      ((server.type != 'imap') || server.canCompactFoldersOnServer) &&
+      isCommandEnabled("cmd_compactFolder"));   // checks e.g. if IMAP is offline
 }
 
 var gDeleteButton = null;
