@@ -123,7 +123,7 @@ nsIFrame*
 inLayoutUtils::GetFrameFor(nsIDOMElement* aElement, nsIPresShell* aShell)
 {
   nsCOMPtr<nsIContent> content = do_QueryInterface(aElement);
-  nsIFrame* frame;
+  nsIFrame* frame = nsnull;
   aShell->GetPrimaryFrameFor(content, &frame);
 
   return frame;
@@ -250,7 +250,7 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
       presShell->GetPresContext(getter_AddRefs(presContext));
       
       if (presContext) {
-        nsIFrame* frame;
+        nsIFrame* frame = nsnull;
         nsresult rv = presShell->GetPrimaryFrameFor(content, &frame);
         
         PRInt32 offsetX = 0;
@@ -259,9 +259,9 @@ inLayoutUtils::GetScreenOrigin(nsIDOMElement* aElement)
         
         while (frame) {
           // Look for a widget so we can get screen coordinates
-          nsIView* view;
+          nsIView* view = nsnull;
           rv = frame->GetView(presContext, &view);
-          if (view) {
+          if (NS_SUCCEEDED(rv) && view) {
             rv = view->GetWidget(*getter_AddRefs(widget));
             if (widget)
               break;
