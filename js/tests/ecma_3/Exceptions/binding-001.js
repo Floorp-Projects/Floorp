@@ -27,7 +27,7 @@
 * for the following test? If it does, it's buggy.
 *
 *   var f = function sum(){};
-*   print(sum);  // should fail with 'sum is not defined"' "
+*   print(sum);  // should fail with 'sum is not defined' "
 *
 */
 //-----------------------------------------------------------------------------
