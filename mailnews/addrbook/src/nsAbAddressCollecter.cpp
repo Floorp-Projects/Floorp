@@ -134,7 +134,9 @@ NS_IMETHODIMP nsAbAddressCollecter::CollectAddress(const char *address)
 				nsCOMPtr <nsIAbCard> existingCard;
 				nsCOMPtr <nsIAbCard> cardInstance;
 
-				rv = m_historyAB->GetCardFromAttribute(m_historyDirectory, kPriEmailColumn, curAddress, PR_TRUE /* caseInsensitive */, getter_AddRefs(existingCard));
+        // Please DO NOT change the 3rd param of GetCardFromAttribute() call to 
+        // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
+				rv = m_historyAB->GetCardFromAttribute(m_historyDirectory, kPriEmailColumn, curAddress, PR_FALSE /* retain case */, getter_AddRefs(existingCard));
 
 				if (!existingCard)
 				{

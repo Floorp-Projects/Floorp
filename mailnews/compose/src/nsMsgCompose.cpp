@@ -3667,7 +3667,9 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
 
             /* Then if we have a card for this email address */
             nsCAutoString emailStr; emailStr.AssignWithConversion(recipient->mEmail);
-            rv = abDataBase->GetCardFromAttribute(abDirectory, kPriEmailColumn, emailStr.get(), PR_TRUE /* caseInsensitive */, getter_AddRefs(existingCard));
+            // Please DO NOT change the 3rd param of GetCardFromAttribute() call to 
+            // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
+            rv = abDataBase->GetCardFromAttribute(abDirectory, kPriEmailColumn, emailStr.get(), PR_FALSE /* retain case */, getter_AddRefs(existingCard));
             if (NS_SUCCEEDED(rv) && existingCard)
             {
               recipient->mPreferFormat = nsIAbPreferMailFormat::unknown;

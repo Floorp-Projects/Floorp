@@ -1390,7 +1390,9 @@ nsresult nsAddrDatabase::AddListCardColumnsToRow
   if (email)
   {
     nsIMdbRow    *pCardRow = nsnull;
-    err = GetRowFromAttribute(kPriEmailColumn, NS_ConvertUCS2toUTF8(email).get(), PR_TRUE /* caseInsensitive */, &pCardRow);
+    // Please DO NOT change the 3rd param of GetRowFromAttribute() call to 
+    // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
+    err = GetRowFromAttribute(kPriEmailColumn, NS_ConvertUCS2toUTF8(email).get(), PR_FALSE /* retain case */, &pCardRow);
     PRBool cardWasAdded = PR_FALSE;
     if (NS_FAILED(err) || !pCardRow)
     {
@@ -2036,8 +2038,10 @@ NS_IMETHODIMP nsAddrDatabase::AddLdifListMember(nsIMdbRow* listRow, const char* 
     emailPos += strlen("mail=");
     valueString.Right(email, valueString.Length() - emailPos);
     char* emailAddress = ToNewCString(email);
-    nsIMdbRow    *cardRow = nsnull;    
-  nsresult result = GetRowFromAttribute(kPriEmailColumn, emailAddress, PR_TRUE /* lower case */, &cardRow);
+    nsIMdbRow    *cardRow = nsnull; 
+    // Please DO NOT change the 3rd param of GetRowFromAttribute() call to 
+    // PR_TRUE (ie, case insensitive) without reading bugs #128535 and #121478.
+  nsresult result = GetRowFromAttribute(kPriEmailColumn, emailAddress, PR_FALSE /* retain case */, &cardRow);
     if (cardRow)
     {
         mdbOid outOid;
