@@ -40,6 +40,7 @@
 #include "nsILiveConnectManager.h"
 #include "nsIPluginInstance.h"
 #include "nsIJVMPluginInstance.h"
+#include "nsLayoutAtoms.h"
 
 // XXX this is to get around conflicts with windows.h defines
 // introduced through jni.h
@@ -301,7 +302,18 @@ if (NS_SUCCEEDED(rv)) {
 		shell->GetPrimaryFrameFor(mInner.mContent, &frame);
 		NS_RELEASE(shell);
 
-		// 3. get the Java object corresponding to this applet, and reflect it into
+    if(frame != nsnull)
+    {
+      nsIAtom* frameType = nsnull;
+      frame->GetFrameType(&frameType);
+      if(nsLayoutAtoms::objectFrame != frameType)
+      {
+        *aScriptObject = elementObject;
+        return rv;
+      }
+    }
+
+    // 3. get the Java object corresponding to this applet, and reflect it into
 		// JavaScript using the LiveConnect manager.
 		JSContext* context = (JSContext*)aContext->GetNativeContext();
 		JSObject* wrappedAppletObject = nsnull;
