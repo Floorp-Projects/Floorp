@@ -184,6 +184,25 @@ function verifyAccounts(wizardcallback) {
             MsgAccountWizard();
 		        ret = false;
         }
+        else
+        {
+          var localFoldersExists;
+          try
+          {
+            localFoldersExists = am.localFoldersServer;
+          }
+          catch (ex)
+          {
+            localFoldersExists = false;
+          }
+
+          // we didn't create the MsgAccountWizard - we need to verify that local folders exists.
+          if (!localFoldersExists)
+          {
+            messengerMigrator = Components.classes["@mozilla.org/messenger/migrator;1"].getService(Components.interfaces.nsIMessengerMigrator);
+            messengerMigrator.createLocalMailAccount(false /* false, since we are not migrating */);
+          }
+        }
         // hack, set a time out to do this, so that the window can load first
         setTimeout("showMailIntegrationDialog();",0);
 
