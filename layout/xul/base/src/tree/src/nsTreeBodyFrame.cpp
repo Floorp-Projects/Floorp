@@ -2563,8 +2563,7 @@ nsTreeBodyFrame::PaintCell(PRInt32              aRowIndex,
         }
 
         PRInt32 parent;
-        mView->GetParentIndex(currentParent, &parent);
-        if (parent == -1)
+        if (NS_FAILED(mView->GetParentIndex(currentParent, &parent)) || parent < 0)
           break;
         currentParent = parent;
       }
@@ -3569,8 +3568,8 @@ nsTreeBodyFrame::OnDragDrop (nsIDOMEvent* aEvent)
 {
   // Remove the drop folder and all its parents from the array.
   PRInt32 parentIndex;
-  mView->GetParentIndex(mDropRow, &parentIndex);
-  while (parentIndex >= 0) {
+  while (NS_SUCCEEDED(mView->GetParentIndex(mDropRow, &parentIndex)) &&
+         parentIndex >= 0) {
     mValueArray.RemoveValue(parentIndex);
     mView->GetParentIndex(parentIndex, &parentIndex);
   }
