@@ -183,6 +183,14 @@ Components:appcomps.shlb
 Components:mozcomps.xpt
 Components:mork.shlb
 
+; download progress
+; Optional - you can implement your own download progress dialog
+;   then this is no longer required
+Components:nsProgressDialog.js
+Components:nsHelperAppDlg.js
+Components:nsDownloadProgressListener.js
+Components:downloadmanager.xpt
+
 ; rdf
 Components:RDFLibrary.shlb
 Components:rdf.xpt

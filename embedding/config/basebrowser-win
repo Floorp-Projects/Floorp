@@ -186,6 +186,14 @@ components\profile.xpt
 components\wallet.dll
 components\wallet.xpt                  
 
+; download progress
+; Optional - you can implement your own download progress dialog
+;   then this is no longer required
+;components\nsProgressDialog.js
+;components\nsHelperAppDlg.js
+;components\nsDownloadProgressListener.js
+;components\downloadmanager.xpt
+
 ; psm2
 ; Optional - only if you need PSM2 support
 components\pipboot.dll

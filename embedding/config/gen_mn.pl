@@ -13,6 +13,7 @@ use Getopt::Long;
 
 # Configuration
 $win32 = ($^O eq "MSWin32") ? 1 : 0; # ActiveState Perl
+$darwin = ($^O eq "darwin") ? 1 : 0; # MacOSX
 if ($win32) {
   $moz = "$ENV{'MOZ_SRC'}/mozilla";
   if ($ENV{'MOZ_DEBUG'}) {
@@ -30,6 +31,7 @@ else {
 
 $verbose = 0;
 $locale = "en-US";
+$platform = "en-unix";
 
 GetOptions('verbose!' => \$verbose,
            'mozpath=s' => \$moz,
@@ -42,6 +44,10 @@ if ($win32) {
   # Fix those pesky backslashes
   $moz =~ s/\\/\//g;
   $chrome =~ s/\\/\//g;
+  $platform = "en-win";
+}
+elsif ($darwin)
+  $platform = "en-mac"
 }
 
 if ($showhelp) {
@@ -66,6 +72,6 @@ if ($verbose) {
                "Manifest file = \"$manifest\"\n";
 }
 
-GenerateManifest($moz, $manifest, $chrome, $locale, *STDOUT, "/", $verbose);
+GenerateManifest($moz, $manifest, $chrome, $locale, $platform, *STDOUT, "/", $verbose);
 
 exit 0;

@@ -76,6 +76,7 @@
 #include "nsNetUtil.h"
 #include "nsIWindowWatcher.h"
 #include "nsIDOMWindow.h"
+#include "nsIDownload.h"
 
 #include <TextServices.h>
 
@@ -311,6 +312,21 @@ CBrowserApp::OverrideComponents()
                                               PR_TRUE); // replace existing
 #endif
 
+    static NS_DEFINE_CID(kDownloadCID, NS_DOWNLOAD_CID);
+    nsCOMPtr<nsIFactory> dlFactory;
+    nsComponentManager::FindFactory(kDownloadCID, getter_AddRefs(dlFactory));
+    rv = nsComponentManager::RegisterFactory(kDownloadCID, 
+                                              "Download", 
+                                              NS_DOWNLOAD_CONTRACTID,
+                                              dlFactory,
+                                              PR_TRUE); // replace existing
+
+    static NS_DEFINE_CID(kDownloadCID, NS_DOWNLOAD_CONTRACTID);
+    rv = nsComponentManager::RegisterFactory(kDownloadCID, 
+                                              "Download", 
+                                              NS_DOWNLOAD_CONTRACTID,
+                                              downloadFactory,
+                                              PR_TRUE); // replace existing
     return rv;
 }
 
