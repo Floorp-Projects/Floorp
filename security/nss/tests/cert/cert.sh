@@ -224,26 +224,27 @@ cert_CA()
 
   ################# Generating Certscript #################################
   #
-  echo "$SCRIPTNAME: Certificate initialized, generating script ----------"
-
-  echo 5 > ${CERTSCRIPT}
-  echo 9 >> ${CERTSCRIPT}
-  echo n >> ${CERTSCRIPT}
-  echo y >> ${CERTSCRIPT}
-  echo 3 >> ${CERTSCRIPT}
-  echo n >> ${CERTSCRIPT}
-  echo 5 >> ${CERTSCRIPT}
-  echo 6 >> ${CERTSCRIPT}
-  echo 7 >> ${CERTSCRIPT}
-  echo 9 >> ${CERTSCRIPT}
-  echo n >> ${CERTSCRIPT}
+  echo "$SCRIPTNAME: Certificate initialized ----------"
 
   ################# Creating CA Cert ######################################
   #
   CU_ACTION="Creating CA Cert"
   CU_SUBJECT="CN=NSS Test CA, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -S -n "TestCA" -t "CTu,CTu,CTu" -v 60 -x -d . -1 -2 -5 \
-        -f ${R_PWFILE} -z ${R_NOISE_FILE} < ${CERTSCRIPT} 2>&1
+        -f ${R_PWFILE} -z ${R_NOISE_FILE} 2>&1 <<CERTSCRIPT
+5
+9
+n
+y
+3
+n
+5
+6
+7
+9
+n
+CERTSCRIPT
+
   if [ "$RET" -ne 0 ]; then
       Exit 6 "Fatal - failed to create CA cert"
   fi

@@ -266,7 +266,6 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     DAVEDIR=${HOSTDIR}/dave
 
     PWFILE=${TMP}/tests.pw.$$
-    CERTSCRIPT=${TMP}/tests_certs.$$
     NOISE_FILE=${TMP}/tests_noise.$$
 
     # we need relative pathnames of these files abd directories, since our 
@@ -280,14 +279,13 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     R_DAVEDIR=../dave
 
     R_PWFILE=../tests.pw.$$
-    R_CERTSCRIPT=../tests_certs.$$
     R_NOISE_FILE=../tests_noise.$$
 
     # a new log file, short - fast to search, mostly for tools to
     # see if their portion of the cert has succeeded, also for me -
     CERT_LOG_FILE=${HOSTDIR}/cert.log      #the output.log is so crowded...
 
-    TEMPFILES="${PWFILE} ${CERTSCRIPT} ${NOISE_FILE}"
+    TEMPFILES="${PWFILE} ${NOISE_FILE}"
     trap "Exit $0 Signal_caught" 2 3
 
     export PATH LD_LIBRARY_PATH SHLIB_PATH LIBPATH
