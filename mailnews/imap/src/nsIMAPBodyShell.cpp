@@ -1444,32 +1444,7 @@ PRBool	nsIMAPBodypartMultipart::ShouldFetchInline()
 				: PR_TRUE))
 			return PR_FALSE;
 
-#ifdef XP_MAC
-		// If this is a multipart of type multipart/appledouble,
-		// then it is only inline if its data fork is inline.
-		// There should only be one data fork, but to be safe use the
-		// boolean AND of any children which aren't resource forks.
-		if (!PL_strcasecmp(GetBodySubType(), "appledouble"))
-		{
-			PRBool partInline = TRUE;
-			NS_ASSERTION(m_partList->Count() == 2, "invalid apple double part");	// 2 == resource fork + data fork
-			for (int i = 0; partInline && (i < m_partList->Count()); i++)
-			{
-				nsIMAPBodypart *child = (nsIMAPBodypart *)(m_partList->ElementAt(i));
-
-				// If this isn't the resource fork
-				if (!(!PL_strcasecmp(child->GetBodyType(), "application") &&
-					!PL_strcasecmp(child->GetBodySubType(), "applefile")))
-				{
-					partInline = partInline && child->ShouldFetchInline();
-				}
-			}
-			if (!partInline)	// the data fork isn't inline
-				return PR_FALSE;	// leave the whole multipart/appledouble out
-		}
-#endif	// XP_MAC
-
-		// multiparts are always inline
+		// multiparts are always inline (even multipart/appledouble)
 		// (their children might not be, though)
 		return PR_TRUE;
 	}
