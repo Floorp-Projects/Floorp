@@ -28,8 +28,10 @@ function applySkin()
   var tree = document.getElementById( "skinsTree" );
   var selectedSkinItem = tree.selectedItems[0];
   var skinName = selectedSkinItem.getAttribute( "name" );
-  chromeRegistry.selectSkin( skinName, DEBUG_USE_PROFILE );
-  chromeRegistry.refreshSkins();
+  if (!chromeRegistry.isSkinSelected(skinName, DEBUG_USE_PROFILE)) {
+    chromeRegistry.selectSkin( skinName, DEBUG_USE_PROFILE );
+    chromeRegistry.refreshSkins();
+  }
 }
 
 function deselectSkin()
@@ -88,6 +90,8 @@ function themeSelect()
     uninstallButton.label = uninstallLabel;
     var locType = selectedItem.getAttribute("loctype");
     uninstallButton.disabled = (locType == "install");
+    var skinName = selectedItem.getAttribute( "name" );
+    applyButton.disabled = chromeRegistry.isSkinSelected(skinName, DEBUG_USE_PROFILE);
   }
   else {
     applyButton.setAttribute("disabled", true);
