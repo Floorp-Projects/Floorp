@@ -1841,7 +1841,7 @@ public class ScriptRuntime {
         }
         throw new RuntimeException("Error creating script object");
     }
-
+    
     public static Scriptable initScript(Context cx, Scriptable scope,
                                         NativeFunction funObj, 
                                         Scriptable thisObj) 
@@ -1865,7 +1865,7 @@ public class ScriptRuntime {
                 String name = funObj.names[i];
                 // Don't overwrite existing def if already defined in object
                 // or prototypes of object.
-                if (getProp(scope, name, scope) == Scriptable.NOT_FOUND) {
+                if (!hasProp(scope, name)) {
                     if (so != null)
                         so.defineProperty(name, Undefined.instance, 
                                           ScriptableObject.PERMANENT);
@@ -2000,6 +2000,16 @@ public class ScriptRuntime {
         cx.currentActivation = activation;
     }
             
+    private static boolean hasProp(Scriptable start, String name) {
+        Scriptable m = start;
+        do {
+            if (m.has(name, start))
+                return true;            
+            m = m.getPrototype();
+        } while (m != null);
+        return false;
+    }
+
     private static RuntimeException errorWithClassName(String msg, Object val)
     {
         Object[] args = { val.getClass().getName() };
