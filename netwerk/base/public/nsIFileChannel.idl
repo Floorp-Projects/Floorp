@@ -1,0 +1,82 @@
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ */
+
+interface nsIFile;
+#include "nsIChannel.idl"
+#include "nsIURL.idl"
+
+/**
+ * nsIFileURL is used for the file: protocol, and gives access to the
+ * underlying nsIFile object.
+ */
+[scriptable, uuid(d26b2e2e-1dd1-11b2-88f3-8545a7ba7949)]
+interface nsIFileURL : nsIURL
+{
+    attribute nsIFile file;
+};
+
+/**
+ * nsIFileChannel is an interface that allows for the initialization
+ * of a simple nsIChannel that is constructed from a single nsIFile and
+ * associated content type. 
+ */
+[scriptable, uuid(68a26506-f947-11d3-8cda-0060b0fc14a3)]
+interface nsIFileChannel : nsIChannel
+{
+    /** 
+     * Values for ioFlags parameters to be or'd together. 
+     * (From prio.h)
+     */
+    const long NS_RDONLY        = 0x01;
+    const long NS_WRONLY        = 0x02;
+    const long NS_RDWR          = 0x04;
+    const long NS_CREATE_FILE   = 0x08;
+    const long NS_APPEND        = 0x10;
+    const long NS_TRUNCATE      = 0x20;
+    const long NS_SYNC          = 0x40;
+    const long NS_EXCL          = 0x80;
+
+    void init(in nsIFile file,
+              in long ioFlags,
+              in long perm);
+    
+    readonly attribute nsIFile file;
+    attribute long ioFlags;
+    attribute long permissions;
+};
+
+%{C++
+
+#define NS_LOCALFILECHANNEL_CLASSNAME "Local File Channel"
+#define NS_LOCALFILECHANNEL_CONTRACTID "@mozilla.org/network/local-file-channel;1"
+
+#define NS_LOCALFILECHANNEL_CID                      \
+{ /* 6d5b2d44-f947-11d3-8cda-0060b0fc14a3 */         \
+    0x6d5b2d44,                                      \
+    0xf947,                                          \
+    0x11d3,                                          \
+    {0x8c, 0xda, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
+}
+
+%}
+
+////////////////////////////////////////////////////////////////////////////////
