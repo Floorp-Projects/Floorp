@@ -23,6 +23,8 @@
 
 #include "nsIImageRequest.h"
 
+#include "nsIRunnable.h"
+
 #include "nsIChannel.h"
 #include "nsIImageContainer.h"
 #include "nsIImageDecoder.h"
@@ -37,7 +39,7 @@
     {0x8c, 0xdf, 0xef, 0xfb, 0x70, 0xd1, 0xea, 0x71} \
 }
 
-class nsImageRequest : public nsIImageRequest, public nsIStreamListener
+class nsImageRequest : public nsIImageRequest, public nsIStreamListener, public nsIRunnable
 {
 public:
   NS_DECL_ISUPPORTS
@@ -45,6 +47,7 @@ public:
   NS_DECL_NSIREQUEST
   NS_DECL_NSISTREAMLISTENER
   NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIRUNNABLE
 
   nsImageRequest();
   virtual ~nsImageRequest();
@@ -54,4 +57,6 @@ private:
   nsCOMPtr<nsIChannel> mChannel;
   nsCOMPtr<nsIImageContainer> mImage;
   nsCOMPtr<nsIImageDecoder> mDecoder;
+
+  PRBool mProcessing;
 };

@@ -29,6 +29,7 @@
 
 #include "nsIChannel.h"
 #include "nsIIOService.h"
+#include "nsIRunnable.h"
 #include "nsIStreamListener.h"
 #include "nsIURI.h"
 
@@ -49,6 +50,16 @@ nsImageLoader::~nsImageLoader()
 NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageRequest **_retval)
 {
 
+#ifdef IMAGE_THREADPOOL
+  if (!mThreadPool) {
+    NS_NewThreadPool(getter_AddRefs(mThreadPool),
+                     1, 4,
+                     512,
+                     PR_PRIORITY_NORMAL,
+                     PR_GLOBAL_THREAD);
+  }
+#endif
+
 /* do we need a loadgroup of channels here?  what does that buy us?
   if (!mLoadGroup)
     NS_NewLoadGroup
@@ -66,6 +77,14 @@ NS_IMETHODIMP nsImageLoader::LoadImage(nsIURI *aURI, nsIImageRequest **_retval)
   // XXX look at the progid
   nsCOMPtr<nsIImageRequest> imgRequest(do_CreateInstance("@mozilla.org/image/request;1"));
   imgRequest->Init(newChannel);
+
+#ifdef IMAGE_THREADPOOL
+  nsCOMPtr<nsIRunnable> run(do_QueryInterface(imgRequest));
+  mThreadPool->DispatchRequest(run);
+#else
+  nsCOMPtr<nsIStreamListener> streamList(do_QueryInterface(imgRequest));
+  newChannel->AsyncRead(streamList, nsnull);
+#endif
 
   *_retval = imgRequest;
   NS_ADDREF(*_retval);

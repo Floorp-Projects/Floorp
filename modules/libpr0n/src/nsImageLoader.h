@@ -22,8 +22,7 @@
  */
 
 #include "nsIImageLoader.h"
-//#include "nsIDeviceContext.h"
-#include "nsILoadGroup.h"
+#include "nsIThreadPool.h"
 #include "nsCOMPtr.h"
 
 #define NS_IMAGELOADER_CID \
@@ -44,6 +43,5 @@ public:
   virtual ~nsImageLoader();
 
 private:
-//  nsCOMPtr<nsIDeviceContext> mDeviceContext;
-  nsCOMPtr<nsILoadGroup> mLoadGroup;
+  nsCOMPtr<nsIThreadPool> mThreadPool;
 };

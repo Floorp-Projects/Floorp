@@ -32,6 +32,12 @@ interface nsIImageLoader;
 [scriptable, uuid(ccf705f6-1dd1-11b2-82ef-e18eccf7f7ec)]
 interface nsIImageRequest : nsIRequest
 {
+  // const values for GetStatus() to be used someday...
+  //  const long STATUS_NONE             = 0x0;
+  //  const long STATUS_SIZE_AVAILABLE   = 0x1;
+  //  const long STATUS_IMAGE_READY      = 0x2;
+  //  const long STATUS_ERROR            = 0x4;
+
   void init(in nsIChannel aChannel);
 
   /// @return the image object associated with the request.
