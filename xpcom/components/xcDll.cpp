@@ -52,10 +52,14 @@
 #include "nsCRT.h"
 #include "nsString.h"
 #include "nsITimelineService.h"
-#if defined(VMS) && defined(DEBUG)
+#ifdef DEBUG
+#if defined(VMS)
 #include <lib$routines.h>
 #include <ssdef.h>
+#elif defined(XP_MACOSX)
+#include <signal.h>
 #endif
+#endif /* defined(DEBUG) */
 
 nsDll::nsDll(const char *codeDllName, int type)
   : m_dllName(NULL),
@@ -529,6 +533,8 @@ void nsDll::BreakAfterLoad(const char *nsprPath)
             asm("int $3");
 #elif defined(VMS)
             lib$signal(SS$_DEBUG);
+#elif defined(XP_MACOSX)
+            raise(SIGTRAP);
 #endif
         }
 #endif /* SHOULD_IMPLEMENT_BREAKAFTERLOAD */
