@@ -642,7 +642,7 @@ nsXULTreeOuterGroupFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 
      nsCOMPtr<nsIPresShell> shell;
      mPresContext->GetShell(getter_AddRefs(shell));
-     shell->FlushPendingNotifications(PR_FALSE);
+     shell->FlushPendingNotifications();
 
      smoother->mDelta = newTwipIndex > oldTwipIndex ? rowDelta : -rowDelta;
 
@@ -707,7 +707,7 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PR
 
   nsCOMPtr<nsIPresShell> shell;
   mPresContext->GetShell(getter_AddRefs(shell));
-  shell->FlushPendingNotifications(PR_FALSE);
+  shell->FlushPendingNotifications();
 
   PRInt32 visibleRows = 0;
   if (mRowHeight)
@@ -775,7 +775,7 @@ nsXULTreeOuterGroupFrame::InternalPositionChanged(PRBool aUp, PRInt32 aDelta, PR
   nsBoxLayoutState state(mPresContext);
   mScrolling = PR_TRUE;
   MarkDirtyChildren(state);
-  shell->FlushPendingNotifications(PR_FALSE);
+  shell->FlushPendingNotifications();
   mScrolling = PR_FALSE;
   
   VerticalScroll(mYPosition);

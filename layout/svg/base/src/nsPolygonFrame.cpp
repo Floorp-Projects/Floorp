@@ -305,7 +305,7 @@ nsPolygonFrame::AttributeChanged(nsIPresContext* aPresContext,
     if (NS_SUCCEEDED(rv)) {
       shell->AppendReflowCommand(reflowCmd);
       NS_RELEASE(reflowCmd);
-      rv = shell->FlushPendingNotifications(PR_FALSE);
+      rv = shell->FlushPendingNotifications();
     }
   } else if (aAttribute == nsSVGAtoms::x) {
   } else if (aAttribute == nsSVGAtoms::y) {

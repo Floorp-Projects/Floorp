@@ -156,7 +156,7 @@ nsBoxObject::GetOffsetRect(nsRect& aRect)
 
     if(presShell) {
       // Flush all pending notifications so that our frames are uptodate
-      presShell->FlushPendingNotifications(PR_FALSE);
+      presShell->FlushPendingNotifications();
 
       // Get the Frame for our content
       nsIFrame* frame = nsnull;
@@ -267,7 +267,7 @@ nsBoxObject::GetScreenRect(nsRect& aRect)
     
     if (presShell) {
       // Flush all pending notifications so that our frames are uptodate
-      presShell->FlushPendingNotifications(PR_FALSE);
+      presShell->FlushPendingNotifications();
 
       nsCOMPtr<nsIPresContext> presContext;
       presShell->GetPresContext(getter_AddRefs(presContext));

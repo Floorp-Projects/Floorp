@@ -295,9 +295,8 @@ public:
   /**
    * Flush all pending notifications such that the presentation is
    * in sync with the content.
-   * @param aUpdateViews PR_TRUE causes the affected views to be refreshed immediately.
    */
-  NS_IMETHOD FlushPendingNotifications(PRBool aUpdateViews) = 0;
+  NS_IMETHOD FlushPendingNotifications() = 0;
 
   /**
    * Post a request to handle a DOM event after Reflow has finished.

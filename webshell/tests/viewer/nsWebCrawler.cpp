@@ -414,7 +414,7 @@ nsWebCrawler::OnStateChange(nsIWebProgress* aWebProgress,
     nsCOMPtr<nsIPresShell> shell = dont_AddRef(GetPresShell());
     if (shell) {
       // Force the presentation shell to flush any pending reflows
-      shell->FlushPendingNotifications(PR_FALSE);
+      shell->FlushPendingNotifications();
 
       // Force the view manager to update itself
       nsCOMPtr<nsIViewManager> vm;

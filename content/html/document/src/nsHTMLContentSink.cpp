@@ -3984,7 +3984,7 @@ HTMLContentSink::ScrollToRef()
       mDocument->GetShellAt(i, getter_AddRefs(shell));
       if (shell) {
         // Scroll to the anchor
-        shell->FlushPendingNotifications(PR_FALSE);
+        shell->FlushPendingNotifications();
 
         // Check an empty string which might be caused by the UTF-8 conversion
         if (!ref.IsEmpty())
