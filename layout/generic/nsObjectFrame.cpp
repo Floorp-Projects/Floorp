@@ -678,6 +678,11 @@ nsObjectFrame::Reflow(nsIPresContext*          aPresContext,
 
   // Get our desired size
   GetDesiredSize(aPresContext, aReflowState, aMetrics);
+  // initialize max element size if present
+  if (aMetrics.maxElementSize) {
+    aMetrics.maxElementSize->width  = 0;
+    aMetrics.maxElementSize->height = 0;
+  }
 
   // could be an image
   nsIFrame * child = mFrames.FirstChild();
