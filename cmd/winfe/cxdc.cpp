@@ -2108,13 +2108,16 @@ AlterBackgroundColor(HDC pSrcDC, int width, int height, HBITMAP hMask, HBRUSH hB
 // correct color mapping of BMP into pDC's palette.
 BOOL CDCCX::cxLoadBitmap(LPCSTR pszBmName, char** bits,  BITMAPINFOHEADER** myBitmapInfo) 
 {
+    HINSTANCE hResHandle = AfxGetResourceHandle();
 
     // get the resource from the file
-    HBITMAP hBmp = (HBITMAP)FindResource(AfxGetInstanceHandle( ), pszBmName, RT_BITMAP);
-    ASSERT(hBmp != NULL);
-    if(!hBmp)
+    HBITMAP hBmp = (HBITMAP)FindResource(hResHandle, pszBmName, RT_BITMAP);
+    if(NULL == hBmp)    {
+        ASSERT(0);
         return FALSE;
-    HGLOBAL hRes = LoadResource(AfxGetInstanceHandle( ), (HRSRC)hBmp);
+    }
+
+    HGLOBAL hRes = LoadResource(hResHandle, (HRSRC)hBmp);
     ASSERT(hRes != NULL);
     if(!hRes)
         return FALSE;
@@ -2261,11 +2264,11 @@ void CDCCX::DisplayIcon(int32 x0, int32 y0, int icon_number)
 				VERIFY(::DeleteObject(hBitmap));
 			}
 			else {	// printing icon
-				char** image_bits;
-				BITMAPINFOHEADER* imageInfo;
-				char** mask_bits;
-				BITMAPINFOHEADER* maskInfo;
-				if (cxLoadBitmap(MAKEINTRESOURCE(bitmapID), image_bits, &imageInfo)) {
+				char* image_bits = NULL;
+				BITMAPINFOHEADER* imageInfo = NULL;
+				char* mask_bits = NULL;
+				BITMAPINFOHEADER* maskInfo = NULL;
+				if (cxLoadBitmap(MAKEINTRESOURCE(bitmapID), &image_bits, &imageInfo)) {
 					if(maskID) {
 						BOOL fillBack = TRUE;
 #ifdef MOZ_NGLAYOUT
@@ -2276,7 +2279,7 @@ void CDCCX::DisplayIcon(int32 x0, int32 y0, int icon_number)
 						fillBack = pPrintCx->IsPrintingBackground() ? FALSE : TRUE;
 #endif
 #endif
-						cxLoadBitmap(MAKEINTRESOURCE(maskID), mask_bits, &maskInfo);
+						cxLoadBitmap(MAKEINTRESOURCE(maskID), &mask_bits, &maskInfo);
 						WFE_StretchDIBitsWithMask(hdc,TRUE, m_pImageDC,
 											CASTINT(Rect.left), 
     										CASTINT(Rect.top),
@@ -2310,12 +2313,12 @@ void CDCCX::DisplayIcon(int32 x0, int32 y0, int icon_number)
 				}
 
 				if (image_bits)
-					delete *image_bits;
+					delete image_bits;
 				if (imageInfo)
 					delete imageInfo;
 				if(maskID) {
 					if (mask_bits)
-						delete *mask_bits;
+						delete mask_bits;
 					if (maskInfo)
 						delete maskInfo;
 				}
