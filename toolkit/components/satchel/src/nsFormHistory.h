@@ -96,11 +96,11 @@ protected:
   static PRBool FormHistoryEnabled();
 
   static nsFormHistory *gFormHistory;
-  static nsIMdbFactory *gMdbFactory;
 
   static PRBool gFormHistoryEnabled;
   static PRBool gPrefsInitialized;
 
+  nsCOMPtr<nsIMdbFactory> mMdbFactory;
   nsIMdbEnv* mEnv;
   nsIMdbStore* mStore;
   nsIMdbTable* mTable;

@@ -107,7 +107,6 @@ nsFormHistory::Init()
   return NS_OK;
 }
 
-nsIMdbFactory *nsFormHistory::gMdbFactory = nsnull;
 nsFormHistory *nsFormHistory::gFormHistory = nsnull;
 
 nsFormHistory *
@@ -416,11 +415,11 @@ nsFormHistory::OpenDatabase()
   nsCOMPtr<nsIMdbFactoryFactory> mdbFactory;
   rv = nsComponentManager::CreateInstance(kMorkCID, nsnull, NS_GET_IID(nsIMdbFactoryFactory), getter_AddRefs(mdbFactory));
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = mdbFactory->GetMdbFactory(&gMdbFactory);
+  rv = mdbFactory->GetMdbFactory(getter_AddRefs(mMdbFactory));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // Create the Mdb environment
-  mdb_err err = gMdbFactory->MakeEnv(nsnull, &mEnv);
+  mdb_err err = mMdbFactory->MakeEnv(nsnull, &mEnv);
   NS_ASSERTION(err == 0, "ERROR: Unable to create Form History mdb");
   mEnv->SetAutoClear(PR_TRUE);
   NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
@@ -473,24 +472,24 @@ nsFormHistory::OpenExistingFile(const char *aPath)
 {
   nsCOMPtr<nsIMdbFile> oldFile;
   nsIMdbHeap* dbHeap = 0;
-  mdb_err err = gMdbFactory->OpenOldFile(mEnv, dbHeap, aPath, mdbBool_kFalse, getter_AddRefs(oldFile));
+  mdb_err err = mMdbFactory->OpenOldFile(mEnv, dbHeap, aPath, mdbBool_kFalse, getter_AddRefs(oldFile));
   NS_ENSURE_TRUE(!err && oldFile, NS_ERROR_FAILURE);
 
   mdb_bool canOpen = 0;
   mdbYarn outFormat = {nsnull, 0, 0, 0, 0, nsnull};
-  err = gMdbFactory->CanOpenFilePort(mEnv, oldFile, &canOpen, &outFormat);
+  err = mMdbFactory->CanOpenFilePort(mEnv, oldFile, &canOpen, &outFormat);
   NS_ENSURE_TRUE(!err && canOpen, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIMdbThumb> thumb;
   mdbOpenPolicy policy = {{0, 0}, 0, 0};
-  err = gMdbFactory->OpenFileStore(mEnv, dbHeap, oldFile, &policy, getter_AddRefs(thumb));
+  err = mMdbFactory->OpenFileStore(mEnv, dbHeap, oldFile, &policy, getter_AddRefs(thumb));
   NS_ENSURE_TRUE(!err && thumb, NS_ERROR_FAILURE);
 
   PRBool done;
   mdb_err thumbErr = UseThumb(thumb, &done);
 
   if (err == 0 && done)
-    err = gMdbFactory->ThumbToOpenStore(mEnv, thumb, &mStore);
+    err = mMdbFactory->ThumbToOpenStore(mEnv, thumb, &mStore);
   NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
 
   nsresult rv = CreateTokens();
@@ -515,13 +514,13 @@ nsFormHistory::CreateNewFile(const char *aPath)
 {
   nsIMdbHeap* dbHeap = 0;
   nsCOMPtr<nsIMdbFile> newFile;
-  mdb_err err = gMdbFactory->CreateNewFile(mEnv, dbHeap, aPath, getter_AddRefs(newFile));
+  mdb_err err = mMdbFactory->CreateNewFile(mEnv, dbHeap, aPath, getter_AddRefs(newFile));
   NS_ENSURE_TRUE(!err && newFile, NS_ERROR_FAILURE);
 
   nsCOMPtr <nsIMdbTable> oldTable = mTable;;
   nsCOMPtr <nsIMdbStore> oldStore = mStore;
   mdbOpenPolicy policy = {{0, 0}, 0, 0};
-  err = gMdbFactory->CreateNewFileStore(mEnv, dbHeap, newFile, &policy, &mStore);
+  err = mMdbFactory->CreateNewFileStore(mEnv, dbHeap, newFile, &policy, &mStore);
   NS_ENSURE_TRUE(!err, NS_ERROR_FAILURE);
   
   nsresult rv = CreateTokens();
