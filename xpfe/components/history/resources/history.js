@@ -53,6 +53,11 @@ function HistoryInit() {
 
     gGlobalHistory = Components.classes["@mozilla.org/browser/global-history;1"].getService(Components.interfaces.nsIBrowserHistory);
 
+    if ("arguments" in window && window.arguments && window.arguments.length >= 1) {
+      // We have been supplied a resource URI to root the tree on
+      setRoot(window.arguments[0]);
+    }
+
     var children = document.getElementById('treechildren-bookmarks');
     if (children.firstChild)
         gHistoryTree.selectItem(children.firstChild);
@@ -206,3 +211,14 @@ function OpenURL(event, node, root)
         openTopWin(url);
     return true;
 }
+
+/**
+ * Root the tree on a given URI (used for displaying search results)
+ */
+function setRoot(root)
+{
+  var windowNode = document.getElementById("history-window");
+  windowNode.setAttribute("title", gHistoryBundle.getString("search_results_title"));
+  gHistoryTree.setAttribute("ref", root);
+}
+
