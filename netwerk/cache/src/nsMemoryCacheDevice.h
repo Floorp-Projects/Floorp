@@ -74,22 +74,28 @@ public:
  
 private:
     friend class nsMemoryCacheDeviceInfo;
+    enum      { DELETE_ENTRY        = PR_TRUE,
+                DO_NOT_DELETE_ENTRY = PR_FALSE };
+
     void      AdjustMemoryLimits( PRInt32  softLimit, PRInt32  hardLimit);
-    void      EvictEntry( nsCacheEntry * entry );
+    void      EvictEntry( nsCacheEntry * entry , PRBool deleteEntry);
     void      EvictEntriesIfNecessary();
     int       EvictionList(nsCacheEntry * entry, PRInt32  deltaSize);
 
-    void      EnsureEvictionLists();
-    void      CreateEvictionLists();
-
+#ifdef DEBUG
+    void      CheckEntryCount();
+#endif
     /*
      *  Data members
      */
-    
-    nsCacheEntryHashTable   mMemCacheEntries;
-    PRBool                  mInitialized;
+    enum {
+        kQueueCount = 24   // entries > 2^23 (8Mb) start in last queue
+    };
 
-    PRCList*               mEvictionList;
+    nsCacheEntryHashTable  mMemCacheEntries;
+    PRBool                 mInitialized;
+
+    PRCList                mEvictionList[kQueueCount];
     PRInt32                mEvictionThreshold;
 
     PRInt32                mHardLimit;
@@ -99,10 +105,7 @@ private:
     PRInt32                mInactiveSize;
 
     PRInt32                mEntryCount;
-
     PRInt32                mMaxEntryCount;
-
-    PRInt32                mQueueCount;
 
     // XXX what other stats do we want to keep?
 };
