@@ -108,6 +108,10 @@
                   filename="mimeTypes.rdf"
                   label="" />
         <listitem type="checkbox"
+                  id="training"
+                  filename="training.dat"
+                  label="" />
+        <listitem type="checkbox"
                   id="sidebar"
                   filename="panels.rdf"
                   label="" />
