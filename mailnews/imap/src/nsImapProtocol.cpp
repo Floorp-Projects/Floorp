@@ -304,6 +304,8 @@ NS_IMETHODIMP nsImapProtocol::OnDataAvailable(nsIURL* aURL, nsIInputStream *aISt
                 nsImapLogProxy aProxy(aImapLog, m_sinkEventQueue, m_thread);
                 aProxy.HandleImapLogData(m_dataBuf);
                 NS_RELEASE(aImapLog);
+				// we are done running the imap log url so mark the url as done...
+				m_runningUrl->SetUrlState(PR_FALSE, NS_OK); // set change in url state...
             }
         }
         NS_RELEASE(aImapUrl);
