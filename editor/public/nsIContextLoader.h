@@ -20,6 +20,7 @@
 #ifndef nsIContextLoader_h__
 #define nsIContextLoader_h__
 
+#include "nsISupports.h"
 
 #define NS_IEDITOR_IID \
 {/* A3C5EE71-742E-11d2-8F2C-006008310194*/ \
