@@ -368,6 +368,19 @@ extern char *strdup();
 #endif
 #endif
 
+
+/*
+ * Define portable 32-bit integral types.
+ */
+#include <limits.h>
+#if UINT_MAX >= 0xffffffffU	/* an int holds at least 32 bits */
+    typedef signed int nsldapi_int_32;
+    typedef unsigned int nsldapi_uint_32;
+#else				/* ints are < 32 bits; use long instead */
+    typedef signed long nsldapi_int_32;
+    typedef unsigned long nsldapi_uint_32;
+#endif
+
 /*
  * Define a portable type for IPv4 style Internet addresses (32 bits):
  */
@@ -375,7 +388,7 @@ extern char *strdup();
     defined(aix) || defined(HPUX11) || defined(OSF1)
 typedef in_addr_t	nsldapi_in_addr_t;
 #else
-typedef unsigned long	nsldapi_in_addr_t;
+typedef nsldapi_uint_32	nsldapi_in_addr_t;
 #endif
 
 #ifdef SUNOS4

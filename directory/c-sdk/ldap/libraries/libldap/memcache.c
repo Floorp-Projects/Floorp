@@ -2129,7 +2129,7 @@ attrkey_clearnode(void **ppTableData, void *pData)
  */
 #define NSLDAPI_CRC32_POLY 0x04c11db7     /* AUTODIN II, Ethernet, & FDDI */
 
-static unsigned long crc32_table[256] = { 
+static nsldapi_uint_32 crc32_table[256] = { 
     0x00000000, 0x04c11db7, 0x09823b6e, 0x0d4326d9, 0x130476dc, 0x17c56b6b, 
     0x1a864db2, 0x1e475005, 0x2608edb8, 0x22c9f00f, 0x2f8ad6d6, 0x2b4bcb61, 
     0x350c9b64, 0x31cd86d3, 0x3c8ea00a, 0x384fbdbd, 0x4c11db70, 0x48d0c6c7, 
@@ -2181,15 +2181,11 @@ static unsigned long crc32_table[256] = {
 static unsigned long
 crc32_convert(char *buf, int len)
 {
-    char *p;
-#ifdef OSF1V4D
-    unsigned int crc;
-#else
-    unsigned long crc;	    /* FIXME: this is not 32-bits on all platforms! */
-#endif /* OSF1V4D */
+    unsigned char *p;
+	nsldapi_uint_32	crc;
 
     crc = 0xffffffff;       /* preload shift register, per CRC-32 spec */
-    for (p = buf; len > 0; ++p, --len)
+    for (p = (unsigned char *)buf; len > 0; ++p, --len)
 	crc = ((crc << 8) ^ crc32_table[(crc >> 24) ^ *p]) & 0xffffffff;
 
     return (unsigned long) ~crc;    /* transmit complement, per CRC-32 spec */
