@@ -125,7 +125,9 @@ nsrefcnt ImageRequestImpl::Release(void)
       // Make sure dangling reference to this object goes away
       XP_RemoveObserver(mXPObserver, ns_observer_proc, (void*)this);
     }
-    IL_DestroyImage(mImageReq);
+    if (mImageReq) {
+      IL_DestroyImage(mImageReq);
+    }
     NS_DELETEXPCOM(this);
     return 0;
   }
@@ -346,7 +348,19 @@ static void ns_observer_proc (XP_Observable aSource,
    */
   if ((IL_IMAGE_DESTROYED == aMsg) && (nsnull != image_request)) {
     image_request->SetImageRequest(nsnull);
+    image_request->ImageDestroyed();
   }
 }
 
-
+void
+ImageRequestImpl::ImageDestroyed()
+{
+  if (mXPObserver) {
+    // Make sure dangling reference to this object goes
+    // away; this is just in case the image library changes
+    // and holds onto the observer list after destroying the
+    // image.
+    XP_RemoveObserver(mXPObserver, ns_observer_proc, (void*)this);
+    mXPObserver = nsnull;
+  }
+}
