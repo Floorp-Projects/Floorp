@@ -2,7 +2,7 @@ TransforMiiX (TM)
 (C) Copyright 1999 The MITRE Corporation, Keith Visco. All rights reserved.
 
 
-Last updated: 2000/03/22
+Last updated: 2000/04/12
 
 The current "target" XSLT version is the 19991116 XSLT Recommendation, which
 can be found at http://www.w3.org/TR/1999/REC-xslt-19991116. 
@@ -17,7 +17,8 @@ What's Remaining?
 
 -- I18N support for sorting and numbering
 
--- Sorting for xsl:for-each and xsl:apply-templates
+-- Finishing sorting for xsl:for-each and xsl:apply-templates
+   -- simple sorting is working, see examples/sort.xml[xsl]
 
 -- Stylesheet inclusion using xsl:import
    -- xsl:include works

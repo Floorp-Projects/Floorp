@@ -1,6 +1,24 @@
 TransforMiiX (TM) 
 (C) Copyright 1999, 2000, The MITRE Corporation, Keith Visco, et al. All rights reserved.
 
+Build 20000412
+
+-- Fixed the following Axes names in Names.cpp so that
+   the are compatible with the XSLT 1.0 recommendation (Marina)
+   -- FOLLOWING_SIBLING_AXIS - removed the trailing s
+   -- PRECEDING_SIBLING_AXIS - removed the trailing s
+
+-- Added support for xsl:sort (kvisco)
+   -- simple sorting is working...documentation to follow
+-- Added StringComparator and DefaultStringComparator
+   -- we need some more comparators for I18N support
+-- Did some directory structure changes
+   - source/xsl is now source/xslt
+   - source/xsl/expr is now source/xpath
+-- Changed xslt/XSLProcessor.* to XSLTProcessor.*
+
+-- Incorporated some changes from Olivier Gerardin for the Expat parser
+
 Build 20000331
 
 -- Fixed a memory leak with translate() function (kvisco)
