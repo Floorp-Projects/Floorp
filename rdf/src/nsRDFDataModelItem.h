@@ -43,7 +43,6 @@ private:
      */
     mutable PRUint32 mCachedSubtreeSize;
 
-    PRUint32 GetSubtreeSize(void) const;
     void InvalidateCachedSubtreeSize(void);
 
 public:
@@ -65,6 +64,7 @@ public:
     // Methods for iterating over children.
     NS_IMETHOD GetChildCount(PRUint32& count) const;
     NS_IMETHOD GetNthChild(nsIDMItem*& pItem, PRUint32 item) const;
+    NS_IMETHOD GetSubtreeSize(PRUint32& result) const;
 
     // Parent access
     NS_IMETHOD GetParent(nsIDMItem*& pItem) const;
@@ -83,7 +83,8 @@ public:
 
     ////////////////////////////////////////////////////////////////////////
     // Implementation methods
-    
+
+   
     nsRDFDataModel& GetDataModel(void) const {
         return mDataModel;
     }
@@ -108,8 +109,6 @@ public:
     nsRDFDataModelItem* GetParent(void) const {
         return mParent;
     }
-
-    nsRDFDataModelItem* GetNth(PRUint32 n) const;
 };
 
 ////////////////////////////////////////////////////////////////////////

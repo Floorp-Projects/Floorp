@@ -70,6 +70,7 @@ public:
 	
     // TreeItem APIs
     NS_IMETHOD GetFirstVisibleItemIndex(PRUint32& index) const;
+    NS_IMETHOD GetTreeItemCount(PRUint32& result) const;
     NS_IMETHOD GetNthTreeItem(nsITreeDMItem*& pItem, PRUint32 n) const;
     NS_IMETHOD GetItemTextForColumn(nsString& nodeText, nsITreeDMItem* pItem, nsITreeColumn* pColumn) const;
 

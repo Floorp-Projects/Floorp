@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -25,6 +25,66 @@ static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIDataModelIID,     NS_IDATAMODEL_IID);
 static NS_DEFINE_IID(kITreeDataModelIID, NS_ITREEDATAMODEL_IID);
 static NS_DEFINE_IID(kIRDFResourceIID,   NS_IRDFRESOURCE_IID);
+
+
+////////////////////////////////////////////////////////////////////////
+
+#ifdef ALLOW_DYNAMIC_CAST
+#define DYNAMIC_CAST(__type, __pointer) dynamic_cast<__type>(__pointer)
+#else
+#define DYNAMIC_CAST(__type, __pointer) ((__type)(__pointer))
+#endif
+
+static nsITreeDMItem*
+rdf_GetNth(nsIDMItem* node, PRUint32 n)
+{
+    // XXX this algorithm sucks: it's O(m*log(n)), where m is the
+    // branching factor and n is the depth of the tree. We need to
+    // eventually do something like the old HT did: keep a
+    // vector. Alternatively, hyatt suggested that is we can keep a
+    // pointer to the topmost node, m will be kept small.
+
+    if (n == 0) {
+        node->AddRef();
+        return DYNAMIC_CAST(nsITreeDMItem*, node);
+    }
+
+    // iterate through all of the children. since we know the subtree
+    // height of each child, we can determine a range of indices
+    // contained within the subtree.
+    PRUint32 childCount;
+    if (NS_SUCCEEDED(node->GetChildCount(childCount))) {
+        PRUint32 firstIndexInSubtree = 1;
+        for (PRUint32 i = 0; i < childCount; ++i) {
+            nsIDMItem* child;
+            if (NS_FAILED(node->GetNthChild(child, i))) {
+                PR_ASSERT(0);
+                continue;
+            }
+
+            PRUint32 subtreeSize;
+            child->GetSubtreeSize(subtreeSize);
+
+            PRUint32 lastIndexInSubtree = firstIndexInSubtree + subtreeSize;
+
+            nsITreeDMItem* result = NULL;
+            if (n >= firstIndexInSubtree && n < lastIndexInSubtree)
+                result = rdf_GetNth(child, n - firstIndexInSubtree); 
+
+            child->Release();
+            if (result)
+                return result;
+
+            firstIndexInSubtree = lastIndexInSubtree;
+        }
+    }
+
+    // n was larger than the total number of elements in the tree! You
+    // should've called GetTreeItemCount() first...
+    PR_ASSERT(0);
+    return NULL;
+}
+
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -169,10 +229,24 @@ nsRDFTreeDataModel::GetFirstVisibleItemIndex(PRUint32& index) const
 }
 
 NS_IMETHODIMP
+nsRDFTreeDataModel::GetTreeItemCount(PRUint32& result) const
+{
+    nsRDFDataModelItem* root = GetRoot();
+    if (! root)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    return root->GetSubtreeSize(result);
+}
+
+NS_IMETHODIMP
 nsRDFTreeDataModel::GetNthTreeItem(nsITreeDMItem*& pItem, PRUint32 n) const
 {
-    
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsRDFDataModelItem* root = GetRoot();
+    if (! root)
+        return NS_ERROR_NOT_INITIALIZED;
+
+    pItem = rdf_GetNth(root, n);
+    return pItem ? NS_OK : NS_ERROR_INVALID_ARG;
 }
 
 NS_IMETHODIMP
@@ -246,7 +320,7 @@ nsRDFTreeDataModel::CreateColumns(void)
         return NS_ERROR_UNEXPECTED;
 
     RDF_Cursor cursor;
-    cursor = RDF_GetTargets(GetDB(), rootResource,
+    cursor = RDF_GetSources(GetDB(), rootResource,
                             gNavCenter->RDF_Column,
                             RDF_RESOURCE_TYPE, PR_TRUE);
 

@@ -51,6 +51,7 @@ public:
     // Methods for iterating over children.
     NS_IMETHOD GetChildCount(PRUint32& count) const;
     NS_IMETHOD GetNthChild(nsIDMItem*& pItem, PRUint32 item) const;
+    NS_IMETHOD GetSubtreeSize(PRUint32& result) const;
 
     // Parent access
     NS_IMETHOD GetParent(nsIDMItem*& pItem) const;

@@ -116,6 +116,28 @@ nsRDFDataModelItem::GetNthChild(nsIDMItem*& pItem, PRUint32 n) const
         return NS_ERROR_UNEXPECTED; // XXX
 
     pItem = static_cast<nsIDMItem*>(mChildren[n]);
+    pItem->AddRef();
+
+    return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRDFDataModelItem::GetSubtreeSize(PRUint32& result) const
+{
+    if (! mCachedSubtreeSize) {
+        mCachedSubtreeSize = 1; // me
+
+        for (PRUint32 i = 0; i < mChildren.GetSize(); ++i) {
+            nsRDFDataModelItem* child =
+                static_cast<nsRDFDataModelItem*>(mChildren[i]);
+
+            PRUint32 childSubtreeSize;
+            child->GetSubtreeSize(childSubtreeSize);
+            mCachedSubtreeSize += childSubtreeSize;
+        }
+    }
+    result = mCachedSubtreeSize;
     return NS_OK;
 }
 
@@ -176,59 +198,11 @@ nsRDFDataModelItem::AddChild(nsRDFDataModelItem* child)
     mChildren.Add(child);
     nsRDFDataModelItem* item = this;
     while (item) {
-        item->mCachedSubtreeSize += child->GetSubtreeSize();
+        PRUint32 subtreeSize;
+        child->GetSubtreeSize(subtreeSize);
+        item->mCachedSubtreeSize += subtreeSize;
         item = item->mParent;
     }
-}
-
-
-PRUint32
-nsRDFDataModelItem::GetSubtreeSize(void) const
-{
-    if (! mCachedSubtreeSize) {
-        mCachedSubtreeSize = 1; // me
-
-        for (PRUint32 i = mChildren.GetUpperBound(); i >= 0; --i) {
-            nsRDFDataModelItem* child =
-                static_cast<nsRDFDataModelItem*>(mChildren[i]);
-
-            mCachedSubtreeSize += child->GetSubtreeSize();
-        }
-    }
-    return mCachedSubtreeSize;
-}
-
-
-nsRDFDataModelItem*
-nsRDFDataModelItem::GetNth(PRUint32 n) const
-{
-    // XXX this algorithm sucks: it's O(m*log(n)), where m is the
-    // branching factor and n is the depth of the tree. We need to
-    // eventually do something like the old HT did: keep a
-    // vector. Alternatively, hyatt suggested that is we can keep a
-    // pointer to the topmost node, m will be kept small.
-
-    if (n == 0)
-        return const_cast<nsRDFDataModelItem*>(this);
-
-    // iterate through all of the children. since we know the subtree
-    // height of each child, we can determine a range of indices
-    // contained within the subtree.
-    PRUint32 firstIndexInSubtree = 1;
-    for (PRUint32 i = 0; i < mChildren.GetSize(); ++i) {
-        nsRDFDataModelItem* child =
-            static_cast<nsRDFDataModelItem*>(mChildren[i]);
-
-        PRUint32 subtreeSize = child->GetSubtreeSize();
-        PRUint32 lastIndexInSubtree = firstIndexInSubtree + subtreeSize;
-
-        if (n >= firstIndexInSubtree && n < lastIndexInSubtree)
-            return GetNth(n - firstIndexInSubtree);
-    }
-
-    // n was larger than the total number of elements in the tree!
-    PR_ASSERT(0);
-    return NULL;
 }
 
 
