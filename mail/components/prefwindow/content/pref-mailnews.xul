@@ -66,9 +66,10 @@
     <caption label="&windowSettings.label;"/>
     <label value="&selectWindowLayout.label;" accesskey="&selectWindowLayout.accesskey;" control="mailPaneConfig"/>
     <hbox align="center" class="indent">
-      <radiogroup id="mailPaneConfig" prefstring="mail.pane_config" orient="horizontal">
+      <radiogroup id="mailPaneConfig" prefstring="mail.pane_config.dynamic" orient="horizontal">
         <radio class="iconic" value="0" id="classic"/>
         <radio class="iconic" value="1" id="wide"/>
+        <radio class="iconic" value="2" id="vertical"/>
       </radiogroup>
     </hbox> 
   </groupbox>

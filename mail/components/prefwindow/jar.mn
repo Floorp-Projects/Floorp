@@ -36,3 +36,5 @@ en-US.jar:
 classic.jar:
 +  skin/classic/communicator/pref/pref.css                             (skin/pref.css)
 +  skin/classic/messenger/prefPanels.css                               (skin/prefPanels.css)
+   skin/classic/messenger/icons/winvertical.gif                        (skin/winvertical.gif)
+
