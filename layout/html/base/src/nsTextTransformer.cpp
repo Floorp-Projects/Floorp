@@ -46,8 +46,8 @@ nsTextTransformer::nsTextTransformer(PRUnichar* aBuffer, PRInt32 aBufLen,
   : mAutoBuffer(aBuffer),
     mBuffer(aBuffer),
     mBufferLength(aBufLen < 0 ? 0 : aBufLen),
-    mLineBreaker(aLineBreaker),
-    mHasMultibyte(PR_FALSE)
+    mHasMultibyte(PR_FALSE),
+    mLineBreaker(aLineBreaker)
 {
   NS_IF_ADDREF(mLineBreaker);
 }
@@ -459,8 +459,6 @@ nsTextTransformer::GetPrevWord(PRBool aInWord,
 
   PRInt32 numChars;
   do {
-    PRInt32 fragLen = frag->GetLength();
-
     // Scan characters in this fragment that are the same kind as the
     // isWhitespace flag indicates.
     if (frag->Is2b()) {
