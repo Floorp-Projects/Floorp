@@ -1721,6 +1721,11 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
   nsresult rv = GetWrapWidth(&wrapCol);
   if (NS_FAILED(rv))
     return NS_OK;
+
+  // Rewrap makes no sense if there's no wrap column; default to 72.
+  if (wrapCol <= 0)
+    wrapCol = 72;
+
 #ifdef DEBUG_akkana
   printf("nsPlaintextEditor::Rewrap to %ld columns\n", (long)wrapCol);
 #endif
@@ -1743,7 +1748,8 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
   if (isCollapsed)    // rewrap the whole document
   {
     rv = OutputToString(current, format,
-                               nsIDocumentEncoder::OutputFormatted);
+                        nsIDocumentEncoder::OutputFormatted
+                        | nsIDocumentEncoder::OutputLFLineBreak);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsICiter> citer = dont_AddRef(MakeACiter());
@@ -1762,6 +1768,7 @@ nsPlaintextEditor::Rewrap(PRBool aRespectNewlines)
   {
     rv = OutputToString(current, format,
                         nsIDocumentEncoder::OutputFormatted
+                        | nsIDocumentEncoder::OutputLFLineBreak
                         | nsIDocumentEncoder::OutputSelectionOnly);
     if (NS_FAILED(rv)) return rv;
 
