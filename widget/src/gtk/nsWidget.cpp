@@ -145,7 +145,7 @@ static GtkWidget *debugTopLevel = NULL;
 static GtkWidget *debugBox = NULL;
 static GtkWidget *debugEntryBox = NULL;
 static GtkWidget *debugButton = NULL;
-static nsWidget  *debugWidget = NULL;
+nsWidget  *nsWidget::debugWidget = NULL;
 static PRBool     debugCheckedDebugWindow = PR_FALSE;
 static PRBool     debugCallbackRegistered = PR_FALSE;
 
@@ -1598,6 +1598,7 @@ nsWidget::InstallRealizeSignal(GtkWidget * aWidget)
 /* virtual */ void 
 nsWidget::OnMotionNotifySignal(GdkEventMotion * aGdkMotionEvent)
 {
+  
   nsMouseEvent event;
 
   event.message = NS_MOUSE_MOVE;
@@ -1898,7 +1899,8 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   PRUint32 eventType = 0;
 
 #if defined(DEBUG_pavlov) || defined(DEBUG_blizzard)
-  printf("button press for %p\n", this);
+  printf("button press for %p bounds are %d %d %d %d\n", this,
+         mBounds.x, mBounds.y, mBounds.height, mBounds.width);
 #endif
 
   if (gRollupWidget && gRollupListener)
@@ -3064,7 +3066,7 @@ static void setDebugWindow(void)
 
   if (strlen(text) == 0) {
     g_print("setting value to null\n");
-    debugWidget = NULL;
+    nsWidget::debugWidget = NULL;
     g_free(text);
     return;
   }
@@ -3082,7 +3084,7 @@ static void setDebugWindow(void)
   sscanf(&text[2], "%x", &val);
 
   printf("setting value to 0x%x\n", val);
-  debugWidget = (nsWidget *)val;
+  nsWidget::debugWidget = (nsWidget *)val;
 
   g_free(text);
 }
@@ -3107,7 +3109,7 @@ static void      debugDestroyWindow (void)
   debugBox = NULL;
   debugEntryBox = NULL;
   debugButton = NULL;
-  debugWidget = NULL;  
+  nsWidget::debugWidget = NULL;  
 }
 
 static void      debugSetupWindow   (void)

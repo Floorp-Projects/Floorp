@@ -97,6 +97,40 @@ public:
   virtual void         InstallFocusOutSignal(GtkWidget * aWidget);
   void                 HandleGDKEvent(GdkEvent *event);
 
+  void                 InstallToplevelDragBeginSignal (void);
+  void                 InstallToplevelDragLeaveSignal (void);
+  void                 InstallToplevelDragMotionSignal(void);
+  void                 InstallToplevelDragDropSignal  (void);
+
+  static gint          ToplevelDragBeginSignal  (GtkWidget *      aWidget,
+                                                 GdkDragContext   *aDragContext,
+                                                 gint             x,
+                                                 gint             y,
+                                                 guint            aTime,
+                                                 void             *aData);
+  static gint          ToplevelDragDropSignal   (GtkWidget *      aWidget,
+                                                 GdkDragContext   *aDragContext,
+                                                 gint             x,
+                                                 gint             y,
+                                                 guint            aTime,
+                                                 void             *aData);
+  static gint          ToplevelDragLeaveSignal  (GtkWidget *      aWidget,
+                                                 GdkDragContext   *aDragContext,
+                                                 guint            aTime,
+                                                 void             *aData);
+  static gint          ToplevelDragMotionSignal (GtkWidget *      aWidget,
+                                                 GdkDragContext   *aDragContext,
+                                                 gint             x,
+                                                 gint             y,
+                                                 guint            aTime,
+                                                 void             *aData);
+
+  void                 OnToplevelDragMotion     (GtkWidget      *aWidget,
+                                                 GdkDragContext *aGdkDragContext,
+                                                 gint            x,
+                                                 gint            y,
+                                                 guint           aTime);
+
   gint                 ConvertBorderStyles(nsBorderStyle bs);
 
   // Add an XATOM property to this window.
@@ -186,6 +220,27 @@ protected:
   // are we doing a grab?
   static PRBool      mIsGrabbing;
   static nsWindow   *mGrabWindow;
+
+  // our wonderful hash table with our window -> nsWindow * lookup
+  static GHashTable *mWindowLookupTable;
+
+  // this will query all of it's children trying to find a child
+  // that has a containing rectangle and return it.
+  static Window     GetInnerMostWindow(Window aOriginWindow,
+                                       Window aWindow,
+                                       nscoord x, nscoord y,
+                                       int depth);
+  // given an X window this will find the nsWindow * for it.
+  static nsWindow  *GetnsWindowFromXWindow(Window aWindow);
+  // this is the last window that had a drag event happen on it.
+  static nsWindow  *mLastDragMotionWindow;
+  static nsWindow  *mLastLeaveWindow;
+
+#ifdef NS_DEBUG
+  void        DumpWindowTree(void);
+  static void dumpWindowChildren(Window aWindow, unsigned int depth);
+#endif
+
 private:
   nsresult     SetIcon(GdkPixmap *window_pixmap, 
                        GdkBitmap *window_mask);

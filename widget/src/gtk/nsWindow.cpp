@@ -49,6 +49,8 @@
 
 #include "nsGtkUtils.h" // for nsGtkUtils::gdk_window_flash()
 
+#undef DEBUG_DND_XLATE
+
 gint handle_toplevel_focus_in(
     GtkWidget *      aWidget, 
     GdkEventFocus *  aGdkFocusEvent, 
@@ -62,6 +64,37 @@ gint handle_toplevel_focus_out(
 // are we grabbing?
 PRBool      nsWindow::mIsGrabbing = PR_FALSE;
 nsWindow   *nsWindow::mGrabWindow = NULL;
+
+// this is a hash table that contains a list of the
+// shell_window -> nsWindow * lookups
+GHashTable *nsWindow::mWindowLookupTable = NULL;
+
+// this is the last window that had a drag event happen on it.
+nsWindow *nsWindow::mLastDragMotionWindow = NULL;
+// we get our drop after the leave.
+nsWindow *nsWindow::mLastLeaveWindow = NULL;
+
+static void printDepth(int depth) {
+  int i;
+  for (i=0; i < depth; i++)
+  {
+    g_print(" ");
+  }
+}
+
+// Drag & Drop stuff.
+enum {
+  TARGET_STRING,
+  TARGET_ROOTWIN
+};
+
+static GtkTargetEntry target_table[] = {
+  { "STRING",     0, TARGET_STRING },
+  { "text/plain", 0, TARGET_STRING },
+  { "application/x-rootwin-drop", 0, TARGET_ROOTWIN }
+};
+
+static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
 
 //-------------------------------------------------------------------------
 //
@@ -87,6 +120,14 @@ nsWindow::nsWindow()
   mIsTooSmall = PR_FALSE;
   mIsUpdating = PR_FALSE;
   mBlockFocusEvents = PR_FALSE;
+  // init the hash table if it hasn't happened already
+  if (mWindowLookupTable == NULL) {
+    mWindowLookupTable = g_hash_table_new(g_int_hash, g_int_equal);
+  }
+  if (mLastLeaveWindow == this)
+    mLastLeaveWindow = NULL;
+  if (mLastDragMotionWindow == this)
+    mLastDragMotionWindow = NULL;
 }
 
 //-------------------------------------------------------------------------
@@ -101,6 +142,11 @@ nsWindow::~nsWindow()
   if (mGrabWindow == this) {
     mIsGrabbing = PR_FALSE;
     mGrabWindow = NULL;
+  }
+  // make sure that we unset the lastDragMotionWindow if
+  // we are it.
+  if (mLastDragMotionWindow == this) {
+    mLastDragMotionWindow = NULL;
   }
   // make sure to release our focus window
   if (mHasFocus == PR_TRUE) {
@@ -163,6 +209,11 @@ nsWindow::DestroyNative(void)
   // preempting the gdk destroy system.
   DestroyNativeChildren();
 
+  if (mSuperWin) {
+    // remove the key from the hash table for the shell_window
+    g_hash_table_remove(mWindowLookupTable, mSuperWin->shell_window);
+  }
+
   if (mShell) {
     gtk_widget_destroy(mShell);
     mShell = nsnull;
@@ -198,6 +249,174 @@ nsWindow::DestroyNativeChildren(void)
       }
     } while(NS_SUCCEEDED(children->Next()));
   }
+}
+
+// This function will try to take a given native X window and try 
+// to find the nsWindow * class that has it corresponds to.
+
+/* static */
+nsWindow *
+nsWindow::GetnsWindowFromXWindow(Window aWindow)
+{
+  GdkWindow *thisWindow = NULL;
+
+  thisWindow = gdk_window_lookup(aWindow);
+
+  if (!thisWindow)
+  {
+    return NULL;
+  }
+  gpointer data;
+  // see if this is a real widget
+  gdk_window_get_user_data(thisWindow, &data);
+  if (data)
+  {
+    if (GTK_IS_OBJECT(data))
+      return (nsWindow *)gtk_object_get_data(GTK_OBJECT(data), "nsWindow");
+    else
+      return NULL;
+  }
+  else
+  {
+    // ok, see if it's a shell window
+    nsWindow *childWindow = (nsWindow *)g_hash_table_lookup(nsWindow::mWindowLookupTable,
+                                                            thisWindow);
+    if (childWindow)
+    {
+      return childWindow;
+    }
+  }
+  // shouldn't ever get here but just to make the compiler happy...
+  return NULL;
+}
+
+// given an origin window and inner window ( can be the same ) 
+// this function will find the innermost window in the 
+// window tree that fits inside of the coordinates
+// the depth is how deep we are in the tree and really
+// is for debugging...
+
+/* static */
+Window
+nsWindow::GetInnerMostWindow(Window aOriginWindow,
+                             Window aWindow,
+                             nscoord x, nscoord y,
+                             int depth)
+{
+
+  Display     *display;
+  Window       window;
+  Window       root_return;
+  Window       parent_return;
+  Window      *children_return;
+  unsigned int nchildren_return;
+  unsigned int i;
+  Window       returnWindow = None;
+  
+  display = GDK_DISPLAY();
+  window = aWindow;
+
+#ifdef DEBUG_DND_XLATE
+  printDepth(depth);
+  g_print("Finding children for 0x%lx\n", aWindow);
+#endif
+
+  // get a list of children for this window
+  XQueryTree(display, window, &root_return, &parent_return,
+             &children_return, &nchildren_return);
+  
+#ifdef DEBUG_DND_XLATE
+  printDepth(depth);
+  g_print("Found %d children\n", nchildren_return);
+#endif
+
+  // walk the list looking for someone who matches the coords
+
+  for (i=0; i < nchildren_return; i++)
+  {
+    Window src_w = aOriginWindow;
+    Window dest_w = children_return[i];
+    int  src_x = x;
+    int  src_y = y;
+    int  dest_x_return, dest_y_return;
+    Window child_return;
+    
+#ifdef DEBUG_DND_XLATE
+    printDepth(depth);
+    g_print("Checking window 0x%lx with coords %d %d\n", dest_w,
+            src_x, src_y);
+#endif
+    if (XTranslateCoordinates(display, src_w, dest_w,
+                              src_x, src_y,
+                              &dest_x_return, &dest_y_return,
+                              &child_return))
+    {
+      int x_return, y_return;
+      unsigned int width_return, height_return;
+      unsigned int border_width_return;
+      unsigned int depth_return;
+
+      // get the parent window's geometry
+      XGetGeometry(display, src_w, &root_return, &x_return, &y_return,
+                   &width_return, &height_return, &border_width_return,
+                   &depth_return);
+
+#ifdef DEBUG_DND_XLATE
+      printDepth(depth);
+      g_print("parent has geo %d %d %d %d\n",
+              x_return, y_return, width_return, height_return);
+#endif
+
+      // get the child window's geometry
+      XGetGeometry(display, dest_w, &root_return, &x_return, &y_return,
+                   &width_return, &height_return, &border_width_return,
+                   &depth_return);
+
+#ifdef DEBUG_DND_XLATE
+      printDepth(depth);
+      g_print("child has geo %d %d %d %d\n",
+              x_return, y_return, width_return, height_return);
+      printDepth(depth);
+      g_print("coords are %d %d in child window's geo\n",
+              dest_x_return, dest_y_return);
+#endif
+
+      int x_offset = width_return;
+      int y_offset = height_return;
+      x_offset -= dest_x_return;
+      y_offset -= dest_y_return;
+#ifdef DEBUG_DND_XLATE
+      printDepth(depth);
+      g_print("offsets are %d %d\n", x_offset, y_offset);
+#endif
+      // does this child exist within the x,y coords?
+      if ((dest_x_return > 0) && (dest_y_return > 0) &&
+          (y_offset > 0) && (x_offset > 0))
+      {
+        returnWindow = dest_w;
+        // check to see if there's a more inner window that is
+        // also within these coords
+        Window tempWindow = None;
+        tempWindow = GetInnerMostWindow(aOriginWindow, dest_w, x, y, (depth + 1));
+        if (tempWindow != None)
+          returnWindow = tempWindow;
+        goto finishedWalk;
+      }
+      
+    }
+    else
+    {
+      g_assert("XTranslateCoordinates failed!\n");
+    }
+  }
+  
+ finishedWalk:
+
+  // free up the list of children
+  if (children_return)
+    XFree(children_return);
+
+  return returnWindow;
 }
 
 // Routines implementing an update queue.
@@ -278,6 +497,11 @@ void
 nsWindow::DoPaint (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
                    nsIRegion *aClipRegion)
 {
+
+  if (this == debugWidget) {
+    g_print("nsWindow::DoPaint %d %d %d %d\n",
+            aX, aY, aWidth, aHeight);
+  }
   if (mEventCallback) 
   {
     nsPaintEvent event;
@@ -838,6 +1062,282 @@ nsWindow::HandleGDKEvent(GdkEvent *event)
     }
 }
 
+
+void
+nsWindow::InstallToplevelDragBeginSignal(void)
+{
+  NS_ASSERTION( nsnull != mShell, "mShell is null");
+  
+  InstallSignal(mShell,
+                (gchar *)"drag_begin",
+                GTK_SIGNAL_FUNC(nsWindow::ToplevelDragBeginSignal));
+}
+
+/* static */
+gint
+nsWindow::ToplevelDragBeginSignal(GtkWidget *aWidget,
+                                  GdkDragContext   *aDragContext,
+                                  gint x,
+                                  gint y,
+                                  guint time,
+                                  void *aData)
+{
+  g_print("nsWindow::ToplevelDragBeginSignal\n");
+  return PR_FALSE;
+}
+
+void
+nsWindow::InstallToplevelDragLeaveSignal(void)
+{
+  NS_ASSERTION( nsnull != mShell, "mShell is null");
+  
+  InstallSignal(mShell,
+                (gchar *)"drag_leave",
+                GTK_SIGNAL_FUNC(nsWindow::ToplevelDragLeaveSignal));
+}
+
+/* static */
+gint
+nsWindow::ToplevelDragLeaveSignal(GtkWidget *      aWidget,
+                                  GdkDragContext   *aDragContext,
+                                  guint            aTime,
+                                  void             *aData)
+{
+  g_print("nsWindow::ToplevelDragLeaveSignal\n");
+  if (mLastDragMotionWindow) {
+    mLastDragMotionWindow->OnDragLeaveSignal(aDragContext, aTime);
+    mLastLeaveWindow = mLastDragMotionWindow;
+    mLastDragMotionWindow = NULL;
+  }
+  else {
+    g_print("Warning: no motion window set\n");
+  }
+  
+  return PR_TRUE;
+}
+
+void
+nsWindow::InstallToplevelDragMotionSignal(void)
+{
+  NS_ASSERTION( nsnull != mShell, "mShell is null");
+  
+  InstallSignal(mShell,
+                (gchar *)"drag_motion",
+                GTK_SIGNAL_FUNC(nsWindow::ToplevelDragMotionSignal));
+  
+}
+
+/* static */
+gint
+nsWindow::ToplevelDragMotionSignal(GtkWidget *      aWidget,
+                                   GdkDragContext   *aDragContext,
+                                   gint             x,
+                                   gint             y,
+                                   guint            time,
+                                   void             *aData)
+{
+  nsWindow *widget = (nsWindow *)aData;
+
+  NS_ASSERTION(nsnull != widget, "instance pointer is null");
+
+  widget->OnToplevelDragMotion(aWidget, aDragContext, x, y, time);
+
+  return PR_TRUE;
+}
+
+#ifdef NS_DEBUG
+
+/* static */
+void
+nsWindow::dumpWindowChildren(Window aWindow, unsigned int depth)
+{
+  Display     *display;
+  Window       window;
+  Window       root_return;
+  Window       parent_return;
+  Window      *children_return;
+  unsigned int nchildren_return;
+  unsigned int i;
+  
+  display = GDK_DISPLAY();
+  window = aWindow;
+  XQueryTree(display, window, &root_return, &parent_return,
+             &children_return, &nchildren_return);
+
+  printDepth(depth);
+
+  g_print("Window 0x%lx ", window);
+
+  GdkWindow *thisWindow = NULL;
+
+  thisWindow = gdk_window_lookup(window);
+
+  if (!thisWindow)
+  {
+    g_print("(none)\n");
+  }
+  else
+  {
+    gpointer data;
+    // see if this is a real widget
+    gdk_window_get_user_data(thisWindow, &data);
+    if (data)
+    {
+      if (GTK_IS_WIDGET(data))
+      {
+        g_print("(%s)\n", gtk_widget_get_name(GTK_WIDGET(data)));
+      }
+      else if (GDK_IS_SUPERWIN(data))
+      {
+        g_print("(bin_window for nsWindow %p)\n", gtk_object_get_data(GTK_OBJECT(data), "nsWindow"));
+      }
+      else
+      {
+        g_print("(invalid GtkWidget)\n");
+      }
+    }
+    else
+    {
+      // ok, see if it's a shell window
+      nsWindow *childWindow = (nsWindow *)g_hash_table_lookup(nsWindow::mWindowLookupTable,
+                                                              thisWindow);
+      if (childWindow)
+      {
+        g_print("(shell_window for nsWindow %p)\n", childWindow);
+      }
+    }
+  }
+
+  for (i=0; i < nchildren_return; i++)
+  {
+    dumpWindowChildren(children_return[i], depth + 1);
+  }
+  
+  // free the list of children
+  if (children_return)
+    XFree(children_return);
+
+}
+
+void
+nsWindow::DumpWindowTree(void)
+{
+  if (mShell || mSuperWin)
+  {
+    GdkWindow *startWindow = NULL;
+    // see where we are starting
+    if (mShell)
+    {
+      g_print("dumping from shell for %p.\n", this);
+      startWindow = mShell->window;
+    }
+    else 
+    {
+      g_print("dumping from superwin for %p.\n", this);
+      startWindow = mSuperWin->shell_window;
+    }
+    Window window;
+    window = GDK_WINDOW_XWINDOW(startWindow);
+    dumpWindowChildren(window, 0);
+  }
+  else
+  {
+    g_print("no windows for %p.\n", this);
+  }
+    
+}
+
+#endif /* NS_DEBUG */
+
+void
+nsWindow::OnToplevelDragMotion     (GtkWidget      *aWidget,
+                                    GdkDragContext *aDragContext,
+                                    gint            x,
+                                    gint            y,
+                                    guint           aTime)
+{
+
+#ifdef DEBUG_DND_XLATE
+  DumpWindowTree();
+#endif
+
+  Window thisWindow = GDK_WINDOW_XWINDOW(aWidget->window);
+  Window returnWindow = None;
+  returnWindow = GetInnerMostWindow(thisWindow, thisWindow, x, y, 0);
+
+  nsWindow *innerMostWidget = NULL;
+  innerMostWidget = GetnsWindowFromXWindow(returnWindow);
+
+  if (!innerMostWidget)
+    innerMostWidget = this;
+
+#ifdef DEBUG_DND_XLATE
+  g_print("innerMostWidget is %p\n", innerMostWidget);
+#endif
+
+  // check to see if there was a drag motion window already in place
+  if (mLastDragMotionWindow) {
+    // if it wasn't this
+    if (mLastDragMotionWindow != innerMostWidget) {
+      // send a drag event to the last window that got a motion event
+      mLastDragMotionWindow->OnDragLeaveSignal(aDragContext, aTime);
+    }
+  }
+
+  // set the last window to this 
+  mLastDragMotionWindow = innerMostWidget;
+
+  if (!innerMostWidget->mIsDragDest)
+  {
+    // this will happen on the first motion event, so we will generate an ENTER event
+    innerMostWidget->OnDragEnterSignal(aDragContext, x, y, aTime);
+  }
+
+  nsMouseEvent event;
+
+  event.message = NS_DRAGDROP_OVER;
+  event.eventStructType = NS_DRAGDROP_EVENT;
+
+  event.widget = innerMostWidget;
+
+  event.point.x = x;
+  event.point.y = y;
+
+  innerMostWidget->AddRef();
+
+  innerMostWidget->DispatchMouseEvent(event);
+
+  innerMostWidget->Release();
+
+}
+
+void
+nsWindow::InstallToplevelDragDropSignal(void)
+{
+  NS_ASSERTION( nsnull != mShell, "mShell is null");
+
+  InstallSignal(mShell,
+                (gchar *)"drag_drop",
+                GTK_SIGNAL_FUNC(nsWindow::ToplevelDragDropSignal));
+}
+
+/* static */
+gint
+nsWindow::ToplevelDragDropSignal(GtkWidget *      aWidget,
+                                 GdkDragContext   *aDragContext,
+                                 gint             x,
+                                 gint             y,
+                                 guint            aTime,
+                                 void             *aData)
+{
+  g_print("nsWindow::ToplevelDragDropSignal\n");
+  if (mLastLeaveWindow) {
+    mLastLeaveWindow->OnDragDropSignal(aDragContext, x, y, aTime);
+    mLastLeaveWindow = NULL;
+  }
+  return PR_FALSE;
+}
+
 void
 nsWindow::OnDestroySignal(GtkWidget* aGtkWidget)
 {
@@ -1015,12 +1515,14 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
 
   // set our object data so that we can find the class for this window
   gtk_object_set_data (GTK_OBJECT (mSuperWin), "nsWindow", this);
+  // we want to set this on our moz area and shell too so we can
+  // always find the nsWindow given a specific GtkWidget *
+  if (mShell)
+    gtk_object_set_data(GTK_OBJECT(mShell), "nsWindow", this);
+  if (mMozArea)
+    gtk_object_set_data(GTK_OBJECT(mMozArea), "nsWindow", this);
   // set user data on the bin_window so we can find the superwin for it.
   gdk_window_set_user_data (mSuperWin->bin_window, (gpointer)mSuperWin);
-
-  // set our background color to make people happy.
-
-  // SetBackgroundColor(NS_RGB(192,192,192));
 
   gdk_window_set_back_pixmap(mSuperWin->bin_window, NULL, 0);
 
@@ -1048,6 +1550,26 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
         gtk_window_set_transient_for(GTK_WINDOW(mShell), GTK_WINDOW(tlw));
       }
     }
+  }
+
+  if (mShell) {
+    // install the drag and drop signals for the toplevel window.
+    InstallToplevelDragBeginSignal();
+    InstallToplevelDragLeaveSignal();
+    InstallToplevelDragMotionSignal();
+    InstallToplevelDragDropSignal();
+    // set the shell window as a drop target
+    gtk_drag_dest_set (mShell,
+                       GTK_DEST_DEFAULT_ALL,
+                       target_table, n_targets - 1, /* no rootwin */
+                       GdkDragAction(GDK_ACTION_COPY | GDK_ACTION_MOVE));
+  }
+
+  if (mSuperWin) {
+    // add the shell_window for this window to the table lookup
+    // this is so that as part of destruction we can find the superwin
+    // associated with the window.
+    g_hash_table_insert(mWindowLookupTable, mSuperWin->shell_window, this);
   }
 
   return NS_OK;
@@ -1608,6 +2130,9 @@ NS_IMETHODIMP nsWindow::CaptureMouse(PRBool aCapture)
 
 NS_IMETHODIMP nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
+  //mBounds.x = aX;
+  //mBounds.y = aY;
+
   if (mIsToplevel && mShell)
   {
     // do it the way it should be done period.
@@ -1895,6 +2420,7 @@ nsWindow::HandleXlibExposeEvent(XEvent *event)
   OnExpose(pevent);
   Release();
   delete pevent.rect;
+
 }
  
 void
