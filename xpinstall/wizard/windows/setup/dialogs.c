@@ -29,6 +29,7 @@
 #include "xpistub.h"
 #include "xpi.h"
 #include <shlobj.h>
+#include <logkeys.h>
 
 static WNDPROC OldListBoxWndProc;
 static BOOL    gbProcessingXpnstallFiles;
@@ -406,6 +407,8 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 
             if(MessageBox(hDlg, szBufTemp2, szStrCreateDirectory, MB_YESNO | MB_ICONQUESTION) == IDYES)
             {
+              char szBuf2[MAX_PATH];
+
               if(CreateDirectoriesAll(szBuf, TRUE) == FALSE)
               {
                 char szECreateDirectory[MAX_BUF];
@@ -421,6 +424,18 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
                 MessageBox(hDlg, szBuf, "", MB_OK | MB_ICONERROR);
                 break;
               }
+
+              if(*sgProduct.szSubPath != '\0')
+              {
+                 /* log the subpath for uninstallation.  This subpath does not normally get logged
+                  * for uninstallation due to a chicken and egg problem with creating the log file
+                  * and the directory its in */
+                lstrcpy(szBuf2, szBuf);
+                AppendBackSlash(szBuf2, sizeof(szBuf2));
+                lstrcat(szBuf2, sgProduct.szSubPath);
+                UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2);
+              }
+
               bCreateDestinationDir = TRUE;
             }
             else
@@ -429,8 +444,8 @@ LRESULT CALLBACK BrowseHookProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
             }
           }
 
-          RemoveBackSlash(szBuf);
           lstrcpy(szTempSetupPath, szBuf);
+          RemoveBackSlash(szTempSetupPath);
           EndDialog(hDlg, 0);
           break;
       }
@@ -761,6 +776,8 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
 
             if(MessageBox(hDlg, szBufTemp2, szStrCreateDirectory, MB_YESNO | MB_ICONQUESTION) == IDYES)
             {
+              char szBuf2[MAX_PATH];
+
               if(CreateDirectoriesAll(szBuf, TRUE) == FALSE)
               {
                 char szECreateDirectory[MAX_BUF];
@@ -776,6 +793,18 @@ LRESULT CALLBACK DlgProcSetupType(HWND hDlg, UINT msg, WPARAM wParam, LONG lPara
                 MessageBox(hDlg, szBuf, "", MB_OK | MB_ICONERROR);
                 break;
               }
+
+              if(*sgProduct.szSubPath != '\0')
+              {
+                 /* log the subpath for uninstallation.  This subpath does not normally get logged
+                  * for uninstallation due to a chicken and egg problem with creating the log file
+                  * and the directory its in */
+                lstrcpy(szBuf2, szBuf);
+                AppendBackSlash(szBuf2, sizeof(szBuf2));
+                lstrcat(szBuf2, sgProduct.szSubPath);
+                UpdateInstallLog(KEY_CREATE_FOLDER, szBuf2);
+              }
+
               bCreateDestinationDir = TRUE;
             }
             else

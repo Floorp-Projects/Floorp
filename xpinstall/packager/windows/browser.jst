@@ -240,13 +240,30 @@ if(verifyDiskSpace(fProgram, srDest))
     registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"skins/modern"));
     registerChrome(SKIN | DELAYED_CHROME, getFolder(cf,"skins/classic"));
 
-    /* Log the .dat files that are created post install so it can be uninstalled.
-     * Since the components folder gets created (and therefore logged) during finalize
-     * we need to log its creation here before the xpti files so it will get removed
-     * if the xpti files were the last files in the folder */
+    /* Log files that are created after the installer is done, so they can be uninstalled */
+    logComment("Installing: "    + fProgram + "Xpcs Registry.dat");
     logComment("Create Folder: " + fProgram + "components");
     logComment("Installing: "    + fProgram + "components\\xpti.dat");
     logComment("Installing: "    + fProgram + "components\\xptitemp.dat");
+    logComment("Create Folder: " + fProgram + "chrome");
+    logComment("Installing: "    + fProgram + "chrome\\all-locales.rdf");
+    logComment("Installing: "    + fProgram + "chrome\\all-packages.rdf");
+    logComment("Installing: "    + fProgram + "chrome\\all-skins.rdf");
+    logComment("Installing: "    + fProgram + "chrome\\user-locales.rdf");
+    logComment("Installing: "    + fProgram + "chrome\\user-skins.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\editor");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\messenger");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\communicator\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\communicator\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\editor\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\editor\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\messenger\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\messenger\\content\\overlays.rdf");
+    logComment("Create Folder: " + fProgram + "chrome\\overlayinfo\\navigator\\content");
+    logComment("Installing: "    + fProgram + "chrome\\overlayinfo\\navigator\\content\\overlays.rdf");
 
     err = getLastError();
     if (err == SUCCESS)
