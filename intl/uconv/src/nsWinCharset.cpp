@@ -61,7 +61,7 @@ class nsWinCharset : public nsIPlatformCharset
 public:
 
   nsWinCharset();
-  ~nsWinCharset();
+  virtual ~nsWinCharset();
 
   NS_IMETHOD GetCharset(nsPlatformCharsetSel selector, nsString& oResult);
 
@@ -94,7 +94,7 @@ public:
      NS_INIT_REFCNT();
      PR_AtomicIncrement(&g_InstanceCount);
    }
-   ~nsWinCharsetFactory() {
+   virtual ~nsWinCharsetFactory() {
      PR_AtomicDecrement(&g_InstanceCount);
    }
 

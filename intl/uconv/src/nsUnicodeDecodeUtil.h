@@ -38,7 +38,7 @@ public:
      */
     nsUnicodeDecodeUtil();
 
-    ~nsUnicodeDecodeUtil();
+    virtual ~nsUnicodeDecodeUtil();
 
 public:
     NS_IMETHOD Convert(
