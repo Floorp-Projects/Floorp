@@ -69,6 +69,7 @@ CPPSRCS		= \
 		nsImageURL.cpp \
 		nsRect.cpp \
 		nsTransform2D.cpp \
+		nsScriptableRegion.cpp \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
