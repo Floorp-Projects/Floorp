@@ -71,7 +71,7 @@ expect = EXPECTED_FORMAT;
 addThis();
 
 status = inSection(2);
-var err2 = new MyError(err1);
+var err2 = new MyError(String(err1));
 actual = examineThis(err2, err1);
 expect = EXPECTED_FORMAT;
 addThis();
