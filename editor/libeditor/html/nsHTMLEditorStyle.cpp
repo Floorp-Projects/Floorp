@@ -571,7 +571,7 @@ nsresult nsHTMLEditor::SplitStyleAbovePoint(nsCOMPtr<nsIDOMNode> *aNode,
                                                          SPECIFIED_STYLE_TYPE);
     }
     if ( (aProperty && NodeIsType(tmp, aProperty)) ||   // node is the correct inline prop
-         (aProperty == nsIEditProperty::href && nsHTMLEditUtils::IsLink(tmp)) ||
+         (aProperty == nsEditProperty::href && nsHTMLEditUtils::IsLink(tmp)) ||
                                                         // node is href - test if really <a href=...
          (!aProperty && NodeIsProperty(tmp)) ||         // or node is any prop, and we asked to split them all
          isSet)                                         // or the style is specified in the style attribute
@@ -594,7 +594,7 @@ PRBool nsHTMLEditor::NodeIsProperty(nsIDOMNode *aNode)
   if (!IsContainer(aNode))  return PR_FALSE;
   if (!IsEditable(aNode))   return PR_FALSE;
   if (IsBlockNode(aNode))   return PR_FALSE;
-  if (NodeIsType(aNode, nsIEditProperty::a)) return PR_FALSE;
+  if (NodeIsType(aNode, nsEditProperty::a)) return PR_FALSE;
   return PR_TRUE;
 }
 
@@ -622,8 +622,8 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
   // then process the node itself
   if ( !aChildrenOnly && 
         (aProperty && NodeIsType(aNode, aProperty) || // node is prop we asked for
-        (aProperty == nsIEditProperty::href && nsHTMLEditUtils::IsLink(aNode)) || // but check for link (<a href=...)
-        (aProperty == nsIEditProperty::name && nsHTMLEditUtils::IsNamedAnchor(aNode))) || // and for named anchors
+        (aProperty == nsEditProperty::href && nsHTMLEditUtils::IsLink(aNode)) || // but check for link (<a href=...)
+        (aProperty == nsEditProperty::name && nsHTMLEditUtils::IsNamedAnchor(aNode))) || // and for named anchors
         (!aProperty && NodeIsProperty(aNode)))  // or node is any prop and we asked for that
   {
     // if we weren't passed an attribute, then we want to 
@@ -676,12 +676,12 @@ nsresult nsHTMLEditor::RemoveStyleInside(nsIDOMNode *aNode,
         // remove the node if it is a span, if its style attribute is empty or absent,
         // and if it does not have a class nor an id
         nsCOMPtr<nsIDOMElement> element = do_QueryInterface(aNode);
-        res = RemoveElementIfNoStyleOrIdOrClass(element, nsIEditProperty::span);
+        res = RemoveElementIfNoStyleOrIdOrClass(element, nsEditProperty::span);
       }
     }
   }  
-  if ( aProperty == nsIEditProperty::font &&    // or node is big or small and we are setting font size
-       (NodeIsType(aNode, nsIEditProperty::big) || NodeIsType(aNode, nsIEditProperty::small)) &&
+  if ( aProperty == nsEditProperty::font &&    // or node is big or small and we are setting font size
+       (NodeIsType(aNode, nsEditProperty::big) || NodeIsType(aNode, nsEditProperty::small)) &&
        aAttribute->Equals(NS_LITERAL_STRING("size"),nsCaseInsensitiveStringComparator()))       
   {
     res = RemoveContainer(aNode);  // if we are setting font size, remove any nested bigs and smalls
@@ -1206,9 +1206,9 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
     // manipulating text attributes on a collapsed selection only sets state for the next text insertion
 
     // For links, aProperty uses "href", use "a" instead
-    if (aProperty == nsIEditProperty::href ||
-        aProperty == nsIEditProperty::name)
-      aProperty = nsIEditProperty::a;
+    if (aProperty == nsEditProperty::href ||
+        aProperty == nsEditProperty::name)
+      aProperty = nsEditProperty::a;
 
     if (aProperty) return mTypeInState->ClearProp(aProperty, nsAutoString(*aAttribute));
     else return mTypeInState->ClearAllProps();
@@ -1241,7 +1241,7 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
       
       nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
 
-      if (aProperty == nsIEditProperty::name)
+      if (aProperty == nsEditProperty::name)
       {
         // promote range if it starts or end in a named anchor and we
         // want to remove named anchors
@@ -1402,8 +1402,8 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
   if (bCollapsed)
   {
     nsCOMPtr<nsIAtom> atom;
-    if (aSizeChange==1) atom = nsIEditProperty::big;
-    else                atom = nsIEditProperty::small;
+    if (aSizeChange==1) atom = nsEditProperty::big;
+    else                atom = nsEditProperty::small;
 
     // Let's see in what kind of element the selection is
     PRInt32 offset;
@@ -1641,7 +1641,7 @@ nsHTMLEditor::RelativeFontChangeHelper( PRInt32 aSizeChange,
   
   // if this is a font node with size, put big/small inside it
   NS_NAMED_LITERAL_STRING(attr, "size");
-  if (NodeIsType(aNode, nsIEditProperty::font) && HasAttr(aNode, &attr))
+  if (NodeIsType(aNode, nsEditProperty::font) && HasAttr(aNode, &attr))
   {
     // cycle through children and adjust relative font size
     res = aNode->GetChildNodes(getter_AddRefs(childNodes));
@@ -1776,7 +1776,7 @@ nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAString &outFace)
   PRBool first, any, all;
   
   NS_NAMED_LITERAL_STRING(attr, "face");
-  res = GetInlinePropertyBase(nsIEditProperty::font, &attr, nsnull, &first, &any, &all, &outFace);
+  res = GetInlinePropertyBase(nsEditProperty::font, &attr, nsnull, &first, &any, &all, &outFace);
   if (NS_FAILED(res)) return res;
   if (any && !all) return res; // mixed
   if (all)
@@ -1785,13 +1785,13 @@ nsHTMLEditor::GetFontFaceState(PRBool *aMixed, nsAString &outFace)
     return res;
   }
   
-  res = GetInlinePropertyBase(nsIEditProperty::tt, nsnull, nsnull, &first, &any, &all,nsnull);
+  res = GetInlinePropertyBase(nsEditProperty::tt, nsnull, nsnull, &first, &any, &all,nsnull);
   if (NS_FAILED(res)) return res;
   if (any && !all) return res; // mixed
   if (all)
   {
     *aMixed = PR_FALSE;
-    nsIEditProperty::tt->ToString(outFace);
+    nsEditProperty::tt->ToString(outFace);
   }
   
   if (!any)
@@ -1815,7 +1815,7 @@ nsHTMLEditor::GetFontColorState(PRBool *aMixed, nsAString &aOutColor)
   NS_NAMED_LITERAL_STRING(colorStr, "color");
   PRBool first, any, all;
   
-  res = GetInlinePropertyBase(nsIEditProperty::font, &colorStr, nsnull, &first, &any, &all, &aOutColor);
+  res = GetInlinePropertyBase(nsEditProperty::font, &colorStr, nsnull, &first, &any, &all, &aOutColor);
   if (NS_FAILED(res)) return res;
   if (any && !all) return res; // mixed
   if (all)

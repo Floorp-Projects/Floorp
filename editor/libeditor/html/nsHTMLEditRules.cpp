@@ -606,11 +606,11 @@ nsHTMLEditRules::GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *
   {
     nsIDOMNode* curNode = arrayOfNodes[i];
     
-    if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::ul))
+    if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::ul))
       *aUL = PR_TRUE;
-    else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::ol))
+    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::ol))
       *aOL = PR_TRUE;
-    else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::li))
+    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::li))
     {
       nsCOMPtr<nsIDOMNode> parent;
       PRInt32 offset;
@@ -621,9 +621,9 @@ nsHTMLEditRules::GetListState(PRBool *aMixed, PRBool *aOL, PRBool *aUL, PRBool *
       else if (nsHTMLEditUtils::IsOrderedList(parent))
         *aOL = PR_TRUE;
     }
-    else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dl) ||
-             mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dt) ||
-             mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dd) )
+    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::dl) ||
+             mHTMLEditor->NodeIsType(curNode,nsEditProperty::dt) ||
+             mHTMLEditor->NodeIsType(curNode,nsEditProperty::dd) )
     {
       *aDL = PR_TRUE;
     }
@@ -658,21 +658,21 @@ nsHTMLEditRules::GetListItemState(PRBool *aMixed, PRBool *aLI, PRBool *aDT, PRBo
   {
     nsIDOMNode* curNode = arrayOfNodes[i];
     
-    if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::ul) ||
-        mHTMLEditor->NodeIsType(curNode,nsIEditProperty::ol) ||
-        mHTMLEditor->NodeIsType(curNode,nsIEditProperty::li) )
+    if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::ul) ||
+        mHTMLEditor->NodeIsType(curNode,nsEditProperty::ol) ||
+        mHTMLEditor->NodeIsType(curNode,nsEditProperty::li) )
     {
       *aLI = PR_TRUE;
     }
-    else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dt))
+    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::dt))
     {
       *aDT = PR_TRUE;
     }
-    else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dd))
+    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::dd))
     {
       *aDD = PR_TRUE;
     }
-    else if (mHTMLEditor->NodeIsType(curNode,nsIEditProperty::dl))
+    else if (mHTMLEditor->NodeIsType(curNode,nsEditProperty::dl))
     {
       // need to look inside dl and see which types of items it has
       PRBool bDT, bDD;
@@ -894,7 +894,7 @@ nsHTMLEditRules::GetIndentState(PRBool *aCanIndent, PRBool *aCanOutdent)
       // we are in CSS mode, indentation is done using the margin-left property
       nsAutoString value;
       // retrieve its specified value
-      mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(curNode, nsIEditProperty::cssMarginLeft, value);
+      mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(curNode, nsEditProperty::cssMarginLeft, value);
       float f;
       nsCOMPtr<nsIAtom> unit;
       // get its number part and its unit
@@ -1136,9 +1136,9 @@ nsHTMLEditRules::GetFormatString(nsIDOMNode *aNode, nsAString &outFormat)
   
   nsCOMPtr<nsIAtom> atom = mHTMLEditor->GetTag(aNode);
   
-  if ( nsIEditProperty::p == atom           ||
-       nsIEditProperty::address == atom     ||
-       nsIEditProperty::pre == atom           )
+  if ( nsEditProperty::p == atom           ||
+       nsEditProperty::address == atom     ||
+       nsEditProperty::pre == atom           )
   {
     atom->ToString(format);
   }
@@ -5601,8 +5601,8 @@ nsHTMLEditRules::GetDefinitionListItemTypes(nsIDOMNode *aNode, PRBool &aDT, PRBo
   res = aNode->GetFirstChild(getter_AddRefs(child));
   while (child && NS_SUCCEEDED(res))
   {
-    if (mHTMLEditor->NodeIsType(child,nsIEditProperty::dt)) aDT = PR_TRUE;
-    else if (mHTMLEditor->NodeIsType(child,nsIEditProperty::dd)) aDD = PR_TRUE;
+    if (mHTMLEditor->NodeIsType(child,nsEditProperty::dt)) aDT = PR_TRUE;
+    else if (mHTMLEditor->NodeIsType(child,nsEditProperty::dd)) aDD = PR_TRUE;
     res = child->GetNextSibling(getter_AddRefs(temp));
     child = temp;
   }
@@ -8018,7 +8018,7 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignTyp
         else
         {
           nsAutoString dummyCssValue;
-          res = mHTMLEditor->mHTMLCSSUtils->RemoveCSSInlineStyle(child, nsIEditProperty::cssTextAlign, dummyCssValue);
+          res = mHTMLEditor->mHTMLCSSUtils->RemoveCSSInlineStyle(child, nsEditProperty::cssTextAlign, dummyCssValue);
         }
         if (NS_FAILED(res)) return res;
       }
@@ -8042,7 +8042,7 @@ nsHTMLEditRules::RemoveAlignment(nsIDOMNode * aNode, const nsAString & aAlignTyp
         // if we are in CSS mode and if the element is a DIV, let's remove it
         // if it does not carry any style hint (style attr, class or ID)
         nsAutoString dummyCssValue;
-        res = mHTMLEditor->mHTMLCSSUtils->RemoveCSSInlineStyle(child, nsIEditProperty::cssTextAlign, dummyCssValue);
+        res = mHTMLEditor->mHTMLCSSUtils->RemoveCSSInlineStyle(child, nsEditProperty::cssTextAlign, dummyCssValue);
         if (NS_FAILED(res)) return res;
         nsCOMPtr<nsIDOMElement> childElt = do_QueryInterface(child);
         PRBool hasStyleOrIdOrClass;
@@ -8202,7 +8202,7 @@ nsHTMLEditRules::RelativeChangeIndentation(nsIDOMNode *aNode, PRInt8 aRelativeCh
 
   nsAutoString value;
   nsresult res;
-  mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(aNode, nsIEditProperty::cssMarginLeft, value);
+  mHTMLEditor->mHTMLCSSUtils->GetSpecifiedProperty(aNode, nsEditProperty::cssMarginLeft, value);
   float f;
   nsIAtom * unit;
   mHTMLEditor->mHTMLCSSUtils->ParseLength(value, &f, &unit);
@@ -8214,23 +8214,23 @@ nsHTMLEditRules::RelativeChangeIndentation(nsIDOMNode *aNode, PRInt8 aRelativeCh
   }
   nsAutoString unitString;
   unit->ToString(unitString);
-  if      (nsIEditProperty::cssInUnit == unit)
+  if      (nsEditProperty::cssInUnit == unit)
             f += NS_EDITOR_INDENT_INCREMENT_IN * aRelativeChange;
-  else if (nsIEditProperty::cssCmUnit == unit)
+  else if (nsEditProperty::cssCmUnit == unit)
             f += NS_EDITOR_INDENT_INCREMENT_CM * aRelativeChange;
-  else if (nsIEditProperty::cssMmUnit == unit)
+  else if (nsEditProperty::cssMmUnit == unit)
             f += NS_EDITOR_INDENT_INCREMENT_MM * aRelativeChange;
-  else if (nsIEditProperty::cssPtUnit == unit)
+  else if (nsEditProperty::cssPtUnit == unit)
             f += NS_EDITOR_INDENT_INCREMENT_PT * aRelativeChange;
-  else if (nsIEditProperty::cssPcUnit == unit)
+  else if (nsEditProperty::cssPcUnit == unit)
             f += NS_EDITOR_INDENT_INCREMENT_PC * aRelativeChange;
-  else if (nsIEditProperty::cssEmUnit == unit)
+  else if (nsEditProperty::cssEmUnit == unit)
             f += NS_EDITOR_INDENT_INCREMENT_EM * aRelativeChange;
-  else if (nsIEditProperty::cssExUnit == unit)
+  else if (nsEditProperty::cssExUnit == unit)
             f += NS_EDITOR_INDENT_INCREMENT_EX * aRelativeChange;
-  else if (nsIEditProperty::cssPxUnit == unit)
+  else if (nsEditProperty::cssPxUnit == unit)
             f += NS_EDITOR_INDENT_INCREMENT_PX * aRelativeChange;
-  else if (nsIEditProperty::cssPercentUnit == unit)
+  else if (nsEditProperty::cssPercentUnit == unit)
             f += NS_EDITOR_INDENT_INCREMENT_PERCENT * aRelativeChange;    
 
   NS_IF_RELEASE(unit);
@@ -8241,10 +8241,10 @@ nsHTMLEditRules::RelativeChangeIndentation(nsIDOMNode *aNode, PRInt8 aRelativeCh
       nsAutoString newValue;
       newValue.AppendFloat(f);
       newValue.Append(unitString);
-      mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(element, nsIEditProperty::cssMarginLeft, newValue, PR_FALSE);
+      mHTMLEditor->mHTMLCSSUtils->SetCSSProperty(element, nsEditProperty::cssMarginLeft, newValue, PR_FALSE);
     }
     else {
-      mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(element, nsIEditProperty::cssMarginLeft, value, PR_FALSE);
+      mHTMLEditor->mHTMLCSSUtils->RemoveCSSProperty(element, nsEditProperty::cssMarginLeft, value, PR_FALSE);
       if (nsHTMLEditUtils::IsDiv(aNode)) {
         // we deal with a DIV ; let's see if it is useless and if we can remove it
         nsCOMPtr<nsIDOMNamedNodeMap> attributeList;

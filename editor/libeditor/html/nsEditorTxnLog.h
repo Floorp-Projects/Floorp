@@ -70,19 +70,7 @@ public:
   NS_DECL_ISUPPORTS
 
   /* nsITransactionListener method implementations. */
-  NS_IMETHOD WillDo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, PRBool *aInterrupt);
-  NS_IMETHOD DidDo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, nsresult aDoResult);
-  NS_IMETHOD WillUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, PRBool *aInterrupt);
-  NS_IMETHOD DidUndo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, nsresult aUndoResult);
-  NS_IMETHOD WillRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, PRBool *aInterrupt);
-  NS_IMETHOD DidRedo(nsITransactionManager *aTxMgr, nsITransaction *aTransaction, nsresult aRedoResult);
-  NS_IMETHOD WillBeginBatch(nsITransactionManager *aTxMgr, PRBool *aInterrupt);
-  NS_IMETHOD DidBeginBatch(nsITransactionManager *aTxMgr, nsresult aResult);
-  NS_IMETHOD WillEndBatch(nsITransactionManager *aTxMgr, PRBool *aInterrupt);
-  NS_IMETHOD DidEndBatch(nsITransactionManager *aTxMgr, nsresult aResult);
-  NS_IMETHOD WillMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransaction, nsITransaction *aTransaction, PRBool *aInterrupt);
-  NS_IMETHOD DidMerge(nsITransactionManager *aTxMgr, nsITransaction *aTopTransaction, nsITransaction *aTransaction, PRBool aDidMerge, nsresult aMergeResult);
-
+  NS_DECL_NSITRANSACTIONLISTENER
 
 private:
 

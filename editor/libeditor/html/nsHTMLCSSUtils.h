@@ -47,7 +47,7 @@
 #include "nsIDOMElement.h"
 #include "nsIHTMLEditor.h"
 #include "ChangeCSSInlineStyleTxn.h"
-#include "nsIEditProperty.h"
+#include "nsEditProperty.h"
 #include "nsIDOMCSSStyleDeclaration.h"
 
 #define SPECIFIED_STYLE_TYPE    1

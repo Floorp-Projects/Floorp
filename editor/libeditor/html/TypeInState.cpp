@@ -173,12 +173,12 @@ nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr)
 nsresult TypeInState::SetProp(nsIAtom *aProp, const nsString &aAttr, const nsString &aValue)
 {
   // special case for big/small, these nest
-  if (nsIEditProperty::big == aProp)
+  if (nsEditProperty::big == aProp)
   {
     mRelativeFontSize++;
     return NS_OK;
   }
-  if (nsIEditProperty::small == aProp)
+  if (nsEditProperty::small == aProp)
   {
     mRelativeFontSize--;
     return NS_OK;

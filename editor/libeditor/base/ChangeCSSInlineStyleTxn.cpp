@@ -43,7 +43,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsIDOMElementCSSInlineStyle.h"
 #include "nsIContent.h"
-#include "nsIEditProperty.h"
+#include "nsEditProperty.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"

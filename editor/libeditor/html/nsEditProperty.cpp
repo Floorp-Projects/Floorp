@@ -38,24 +38,14 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsEditProperty.h"
-#include "nsString.h"
+#include "nsMemory.h"
 #include "nsStaticAtom.h"
-
-// singleton instance
-static nsEditProperty *gInstance;
-
-NS_IMPL_ADDREF(nsEditProperty)
-
-NS_IMPL_RELEASE(nsEditProperty)
+#include "nsEditProperty.h"
 
 
-#define EDITOR_ATOM(name_, value_) nsIAtom* nsIEditProperty::name_ = 0;
+#define EDITOR_ATOM(name_, value_) nsIAtom* nsEditProperty::name_ = 0;
 #include "nsEditPropertyAtomList.h"
 #undef EDITOR_ATOM
-
-// special
-nsString * nsIEditProperty::allProperties;
 
 /* From the HTML 4.0 DTD, 
 
@@ -78,7 +68,8 @@ But what about BODY, TR, TD, TH, CAPTION, COL, COLGROUP, THEAD, TFOOT, LI, DT, D
  
 
 */
-nsEditProperty::nsEditProperty()
+void
+nsEditProperty::RegisterAtoms()
 {
   // inline tags
   static const nsStaticAtom property_atoms[] = {
@@ -88,56 +79,4 @@ nsEditProperty::nsEditProperty()
   };
   
   NS_RegisterStaticAtoms(property_atoms, NS_ARRAY_LENGTH(property_atoms));
-  
-  // special
-  if ( (nsIEditProperty::allProperties = new nsString) != nsnull )
-    nsIEditProperty::allProperties->Assign(NS_LITERAL_STRING("moz_allproperties"));
-}
-
-nsEditProperty::~nsEditProperty()
-{
-  // special
-  if (nsIEditProperty::allProperties) {
-    delete (nsIEditProperty::allProperties);
-    nsIEditProperty::allProperties = nsnull;
-  }
-  gInstance = nsnull;
-}
-
-NS_IMETHODIMP
-nsEditProperty::QueryInterface(REFNSIID aIID, void** aInstancePtr)
-{
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(NS_GET_IID(nsISupports))) {
-    *aInstancePtr = (void*)(nsISupports*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIEditProperty))) {
-    *aInstancePtr = (void*)(nsIEditProperty*)this;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
-
-/* Factory for edit property object */
-nsresult NS_NewEditProperty(nsIEditProperty **aResult)
-{
-  if (aResult)
-  {
-    if (!gInstance)
-    {
-      gInstance = new nsEditProperty();
-      if (!gInstance) {
-        return NS_ERROR_OUT_OF_MEMORY;
-      }
-    }
-    *aResult = gInstance;
-    NS_ADDREF(*aResult);
-    return NS_OK;
-  }
-  return NS_ERROR_NULL_POINTER;
 }

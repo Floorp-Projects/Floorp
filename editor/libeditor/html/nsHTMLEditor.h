@@ -61,7 +61,7 @@
 
 #include "nsEditRules.h"
 
-#include "nsIEditProperty.h"
+#include "nsEditProperty.h"
 #include "nsHTMLCSSUtils.h"
 #include "nsIParserService.h"
 
@@ -838,8 +838,6 @@ protected:
   nsCOMPtr<nsIAtom>    mUnderlineAtom;
   nsCOMPtr<nsIAtom>    mFontAtom;
   nsCOMPtr<nsIAtom>    mLinkAtom;
-
-  nsCOMPtr<nsIEditProperty> mEditProperty;
 
   nsCOMPtr<nsIDOMNode> mCachedNode;
   

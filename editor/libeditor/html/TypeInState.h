@@ -43,7 +43,7 @@
 #include "nsIDOMNode.h"
 #include "nsISelection.h"
 #include "nsISelectionListener.h"
-#include "nsIEditProperty.h"
+#include "nsEditProperty.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
 

@@ -59,6 +59,13 @@
 
 static NS_DEFINE_CID(kEditorCommandTableCID, NS_EDITORCOMMANDTABLE_CID);
 
+PR_STATIC_CALLBACK(nsresult)
+Initialize(nsIModule* self)
+{
+    nsEditProperty::RegisterAtoms();
+    return NS_OK;
+}
+
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 
@@ -157,4 +164,4 @@ static const nsModuleComponentInfo components[] = {
 // Implement the NSGetModule() exported function for your module
 // and the entire implementation of the module object.
 //
-NS_IMPL_NSGETMODULE(nsEditorModule, components)
+NS_IMPL_NSGETMODULE_WITH_CTOR(nsEditorModule, components, Initialize)
