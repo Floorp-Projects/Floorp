@@ -2507,7 +2507,7 @@ nsGlobalHistory::CloseDB()
   if (mEnv)
     mEnv->CloseMdbObject(mEnv /* XXX */);
 
-  mTable = mEnv = mStore = nsnull;
+  mTable = nsnull; mEnv = nsnull; mStore = nsnull;
 
   return NS_OK;
 }
