@@ -213,6 +213,7 @@ NS_IMETHODIMP nsDeviceContextGTK::GetSystemAttribute(nsSystemAttrID anID, System
     case eSystemAttr_Font_SmallCaption : 
     case eSystemAttr_Font_StatusBar : 
     case eSystemAttr_Font_Tooltips : 
+    case eSystemAttr_Font_Widget :
       status = NS_ERROR_FAILURE;
       break;
   } // switch 
