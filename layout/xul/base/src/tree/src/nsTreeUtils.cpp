@@ -40,6 +40,7 @@
 #include "nsTreeUtils.h"
 #include "nsChildIterator.h"
 #include "nsCRT.h"
+#include "nsIAtom.h"
 
 nsresult
 nsTreeUtils::TokenizeProperties(const nsAString& aProperties, nsISupportsArray* aPropertiesArray)

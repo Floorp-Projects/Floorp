@@ -45,6 +45,7 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDocumentObserver.h"
 #include "nsIContentList.h"
+#include "nsIAtom.h"
 
 typedef PRBool (*nsContentListMatchFunc)(nsIContent* aContent,
                                          nsString* aData);

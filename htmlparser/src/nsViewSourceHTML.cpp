@@ -68,6 +68,7 @@
 #  define START_TIMER()
 #endif
 
+#include "nsIAtom.h"
 #include "nsViewSourceHTML.h"
 #include "nsCRT.h"
 #include "nsParser.h"

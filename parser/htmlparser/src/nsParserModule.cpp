@@ -37,6 +37,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
+#include "nsIAtom.h"
 #include "nsString.h"
 #include "nspr.h"
 #include "nsCOMPtr.h"

@@ -43,6 +43,7 @@
 class nsIPresContext;
 class nsAString;
 class nsIContent;
+class nsIAtom;
 
 
 // IID for the nsIFormControlFrame class

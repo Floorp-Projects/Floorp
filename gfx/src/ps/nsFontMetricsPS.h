@@ -43,6 +43,7 @@
 #include "nsAFMObject.h"
 #include "nsFont.h"
 #include "nsString.h"
+#include "nsIAtom.h"
 #include "nsUnitConversion.h"
 #include "nsIDeviceContext.h"
 #include "nsCOMPtr.h"

@@ -64,7 +64,7 @@
 //#define HEAP_ALLOCATED_NODES 
 //#define DEBUG_TRACK_NODES
 
-
+class nsIAtom;
 class CToken;
 
 // 6e59f160-2717-11d2-9246-00805f8a7ab6

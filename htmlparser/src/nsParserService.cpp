@@ -19,6 +19,7 @@
  *
  */
 
+#include "nsIAtom.h"
 #include "nsParserService.h"
 #include "nsHTMLEntities.h"
 #include "nsElementTable.h"

@@ -53,6 +53,7 @@ class nsISupportsArray;
 class nsCString; 
 class nsIScriptContext;
 class nsXBLProtoImpl;
+class nsIAtom;
 
 // {34D700F5-C1A2-4408-A0B1-DD8F891DD1FE}
 #define NS_IXBLPROTOTYPEBINDING_IID \

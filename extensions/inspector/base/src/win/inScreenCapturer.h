@@ -41,6 +41,7 @@
 
 #include "inIScreenCapturer.h"
 #include "nsIInspectorCSSUtils.h"
+#include "nsCOMPtr.h"
 #include <windows.h>
 
 class inScreenCapturer : public inIScreenCapturer                            

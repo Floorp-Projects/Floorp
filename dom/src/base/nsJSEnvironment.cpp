@@ -75,6 +75,7 @@
 #include "nsIThread.h"
 #include "nsITimer.h"
 #include "nsDOMClassInfo.h"
+#include "nsIAtom.h"
 
 #ifdef MOZ_LOGGING
 // Force PR_LOGGING so we can get JS strict warnings even in release builds
@@ -87,8 +88,6 @@
 #include "nsILiveConnectManager.h"
 
 const size_t gStackSize = 8192;
-
-static NS_DEFINE_IID(kPrefServiceCID, NS_PREF_CID);
 
 #ifdef PR_LOGGING
 static PRLogModuleInfo* gJSDiagnostics = nsnull;
@@ -350,7 +349,7 @@ int PR_CALLBACK
 nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 {
   nsresult rv;
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv)) {
     nsJSContext *context = NS_REINTERPRET_CAST(nsJSContext *, data);
     PRUint32 oldDefaultJSOptions = context->mDefaultJSOptions;
@@ -413,7 +412,7 @@ nsJSContext::nsJSContext(JSRuntime *aRuntime) : mGCOnDestruction(PR_TRUE)
     ::JS_SetOptions(mContext, mDefaultJSOptions);
 
     // Check for the JS strict option, which enables extra error checks
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID, &rv));
+    nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv)) {
       (void) prefs->RegisterCallback(js_options_dot_str,
                                      JSOptionChangedCallback,
@@ -446,7 +445,7 @@ nsJSContext::~nsJSContext()
   ::JS_SetContextPrivate(mContext, nsnull);
 
   // Unregister our "javascript.options.*" pref-changed callback.
-  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (prefs) {
     prefs->UnregisterCallback(js_options_dot_str, JSOptionChangedCallback,
                               this);

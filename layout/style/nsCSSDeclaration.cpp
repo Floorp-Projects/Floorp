@@ -39,6 +39,7 @@
 #include "nscore.h"
 #include "nsCSSDeclaration.h"
 #include "nsString.h"
+#include "nsIAtom.h"
 #include "nsUnicharUtils.h"
 #include "nsCRT.h"
 #include "nsCSSProps.h"

@@ -40,7 +40,8 @@
 #include <time.h>
 #include <stdio.h>  
 #include "nsScanner.h"
-#include "nsToken.h" 
+#include "nsToken.h"
+#include "nsIAtom.h"
 #include "nsHTMLTokens.h"
 #include "prtypes.h"
 #include "nsDebug.h"

@@ -38,9 +38,10 @@
  * ***** END LICENSE BLOCK ***** */
        
   
+#include "nsIAtom.h"
 #include "nsDTDUtils.h" 
 #include "CNavDTD.h" 
-#include "nsIParserNode.h" 
+#include "nsIParserNode.h"
 #include "nsParserNode.h" 
 #include "nsIChannel.h"
 #include "nsIServiceManager.h"

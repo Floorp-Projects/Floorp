@@ -56,6 +56,7 @@ class nsIDOMNodeList;
 class nsIXBLBinding;
 class nsIXBLDocumentInfo;
 class nsIURI;
+class nsIAtom;
 
 // {0E7903E1-C7BB-11d3-97FB-00400553EEF0}
 #define NS_IXBLSERVICE_IID \
