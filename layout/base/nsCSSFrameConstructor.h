@@ -849,7 +849,7 @@ private:
                           nsIFrame*                aParentFrame,
                           nsIFrame*                aContentParentFrame,
                           nsStyleContext*          aStyleContext,
-                          nsIFrame*                aNewFrame,
+                          nsIFrame**               aNewFrame,
                           PRBool                   aRelPos);
 
   nsresult ConstructInline(nsIPresShell*            aPresShell, 

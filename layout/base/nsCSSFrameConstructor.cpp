@@ -6289,7 +6289,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
 
     ConstructBlock(aPresShell, aPresContext, aState, aDisplay, aContent, 
                    aState.mFloatedItems.containingBlock, adjParentFrame,
-                   aStyleContext, newFrame,
+                   aStyleContext, &newFrame,
                    aDisplay->mPosition == NS_STYLE_POSITION_RELATIVE);
   }
   // See if it's relatively positioned
@@ -6307,7 +6307,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
       NS_NewRelativeItemWrapperFrame(aPresShell, &newFrame);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       ConstructBlock(aPresShell, aPresContext, aState, aDisplay, aContent,
-                     adjParentFrame, nsnull, aStyleContext, newFrame, PR_TRUE);
+                     adjParentFrame, nsnull, aStyleContext, &newFrame, PR_TRUE);
     } else {
       // Create a positioned inline frame
       NS_NewPositionedInlineFrame(aPresShell, &newFrame);
@@ -6332,7 +6332,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
       aState.mPseudoFrames.Reset(&savePseudo);
       // XXXbz should we be passing in a non-null aContentParentFrame?
       rv = ConstructBlock(aPresShell, aPresContext, aState, aDisplay, aContent,
-                          adjParentFrame, nsnull, aStyleContext, newFrame,
+                          adjParentFrame, nsnull, aStyleContext, &newFrame,
                           PR_FALSE);
       if (!aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
         ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
@@ -7196,7 +7196,7 @@ nsCSSFrameConstructor::ConstructSVGFrame(nsIPresShell*            aPresShell,
       const nsStyleDisplay* disp = aStyleContext->GetStyleDisplay();
       rv = ConstructBlock(aPresShell, aPresContext, aState, disp, aContent,
                           geometricParent, aParentFrame, aStyleContext,
-                          newFrame, PR_TRUE);
+                          &newFrame, PR_TRUE);
     } else {
       InitAndRestoreFrame(aPresContext, aState, aContent, 
                           geometricParent, aStyleContext, nsnull, newFrame);
@@ -10916,6 +10916,15 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsPresContext* aPresContext,
       nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
     }
   
+  } else if (nsLayoutAtoms::columnSetFrame == frameType) {
+    rv = NS_NewColumnSetFrame(shell, &newFrame, 0);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(aPresContext, content, aParentFrame, styleContext,
+                     aFrame);
+      // XXXbz should we be passing in a non-null aContentParentFrame?
+      nsHTMLContainerFrame::CreateViewForFrame(newFrame, nsnull, PR_FALSE);
+    }
+  
   } else if (nsLayoutAtoms::positionedInlineFrame == frameType) {
     rv = NS_NewPositionedInlineFrame(shell, &newFrame);
     if (NS_SUCCEEDED(rv)) {
@@ -12697,28 +12706,62 @@ nsCSSFrameConstructor::ConstructBlock(nsIPresShell*            aPresShell,
                                       nsIFrame*                aParentFrame,
                                       nsIFrame*                aContentParentFrame,
                                       nsStyleContext*          aStyleContext,
-                                      nsIFrame*                aNewFrame,
+                                      nsIFrame**               aNewFrame,
                                       PRBool                   aRelPos)
 {
-  InitAndRestoreFrame(aPresContext, aState, aContent, 
-                      aParentFrame, aStyleContext, nsnull, aNewFrame);
+  // Create column wrapper if necessary
+  nsIFrame* blockFrame = *aNewFrame;
+  nsIFrame* parent = aParentFrame;
+  nsIFrame* contentParent = aContentParentFrame;
+  nsRefPtr<nsStyleContext> blockStyle = aStyleContext;
+  const nsStyleColumn* columns = aStyleContext->GetStyleColumn();
+
+  if (columns->mColumnCount != NS_STYLE_COLUMN_COUNT_AUTO
+      || columns->mColumnWidth.GetUnit() != eStyleUnit_Auto) {
+    nsIFrame* columnSetFrame = nsnull;
+    NS_NewColumnSetFrame(aPresShell, &columnSetFrame, 0);
+    if (!columnSetFrame) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    InitAndRestoreFrame(aPresContext, aState, aContent, 
+                        aParentFrame, aStyleContext, nsnull, columnSetFrame);
+    // See if we need to create a view, e.g. the frame is absolutely positioned
+    nsHTMLContainerFrame::CreateViewForFrame(columnSetFrame, aContentParentFrame,
+                                             PR_FALSE);
+    blockStyle = aPresContext->StyleSet()->
+      ResolvePseudoStyleFor(aContent, nsCSSAnonBoxes::columnContent,
+                            aStyleContext);
+    contentParent = columnSetFrame;
+    parent = columnSetFrame;
+    *aNewFrame = columnSetFrame;
+
+    columnSetFrame->SetInitialChildList(aPresContext, nsnull, blockFrame);
+
+    blockFrame->AddStateBits(NS_BLOCK_SPACE_MGR);
+  }
+
+  InitAndRestoreFrame(aPresContext, aState, aContent,
+                      parent, blockStyle, nsnull, blockFrame);
 
   // See if we need to create a view, e.g. the frame is absolutely positioned
-  nsHTMLContainerFrame::CreateViewForFrame(aNewFrame, aContentParentFrame,
-                                           PR_FALSE);
+  nsHTMLContainerFrame::CreateViewForFrame(blockFrame, contentParent, PR_FALSE);
 
   // If we're the first block to be created (e.g., because we're
   // contained inside a XUL document), then make sure that we've got a
   // space manager so we can handle floats...
   if (! aState.mFloatedItems.containingBlock) {
-    aNewFrame->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
+    blockFrame->AddStateBits(NS_BLOCK_SPACE_MGR | NS_BLOCK_MARGIN_ROOT);
   }
 
   // ...and that we're the absolute containing block.
+  // This makes absolute children of a block in columns be positioned
+  // relative to the container, not flowed into columns. I don't know if this
+  // is right...
   nsFrameConstructorSaveState absoluteSaveState;
   if (aRelPos || !aState.mAbsoluteItems.containingBlock) {
     //    NS_ASSERTION(aRelPos, "should have made area frame for this");
-    aState.PushAbsoluteContainingBlock(aPresContext, aNewFrame, absoluteSaveState);
+    aState.PushAbsoluteContainingBlock(aPresContext, *aNewFrame, absoluteSaveState);
   }
 
   // See if the block has first-letter style applied to it...
@@ -12729,28 +12772,28 @@ nsCSSFrameConstructor::ConstructBlock(nsIPresShell*            aPresShell,
   // Process the child content
   nsFrameItems childItems;
   nsFrameConstructorSaveState floatSaveState;
-  aState.PushFloatContainingBlock(aNewFrame, floatSaveState,
+  aState.PushFloatContainingBlock(blockFrame, floatSaveState,
                                     haveFirstLetterStyle,
                                     haveFirstLineStyle);
   nsresult rv = ProcessChildren(aPresShell, aPresContext, aState, aContent,
-                                aNewFrame, PR_TRUE, childItems, PR_TRUE);
+                                blockFrame, PR_TRUE, childItems, PR_TRUE);
 
   CreateAnonymousFrames(aPresShell, aPresContext, aContent->Tag(), aState,
-                        aContent, aNewFrame, PR_FALSE, childItems);
+                        aContent, blockFrame, PR_FALSE, childItems);
 
   // Set the frame's initial child list
-  aNewFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
+  blockFrame->SetInitialChildList(aPresContext, nsnull, childItems.childList);
 
   // Set the frame's float list if there were any floated children
   if (aState.mFloatedItems.childList) {
-    aNewFrame->SetInitialChildList(aPresContext,
-                                   nsLayoutAtoms::floatList,
-                                   aState.mFloatedItems.childList);
+    blockFrame->SetInitialChildList(aPresContext,
+                                    nsLayoutAtoms::floatList,
+                                    aState.mFloatedItems.childList);
   }
   // and the same for absolutely positioned children.
   if (aRelPos && aState.mAbsoluteItems.childList) {
-    aNewFrame->SetInitialChildList(aPresContext, nsLayoutAtoms::absoluteList,
-                                   aState.mAbsoluteItems.childList);
+    blockFrame->SetInitialChildList(aPresContext, nsLayoutAtoms::absoluteList,
+                                    aState.mAbsoluteItems.childList);
   }
 
   return rv;

@@ -90,6 +90,7 @@ CPPSRCS		= \
 		nsBlockReflowContext.cpp \
 		nsBlockReflowState.cpp \
 		nsBulletFrame.cpp \
+		nsColumnSetFrame.cpp \
 		nsContainerFrame.cpp \
 		nsFirstLetterFrame.cpp \
 		nsFrame.cpp \

@@ -147,6 +147,10 @@
   -moz-counter-reset: inherit;
 }
 
+*|*::-moz-column-content { 
+  /* the column boxes inside a column-flowed block */
+}
+
 *|*::-moz-page, *|*::-moz-page-sequence {
   display: block !important;
   background: transparent;

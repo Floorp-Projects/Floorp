@@ -806,12 +806,13 @@ nsChangeHint nsStyleColumn::CalcDifference(const nsStyleColumn& aOther) const
 {
   if ((mColumnWidth.GetUnit() == eStyleUnit_Auto)
       != (aOther.mColumnWidth.GetUnit() == eStyleUnit_Auto) ||
-      (mColumnCount == NS_STYLE_COLUMN_COUNT_AUTO)
-      != (aOther.mColumnCount == NS_STYLE_COLUMN_COUNT_AUTO))
+      mColumnCount != aOther.mColumnCount)
+    // We force column count changes to do a reframe, because it's tricky to handle
+    // some edge cases where the column count gets smaller and content overflows.
+    // XXX not ideal
     return nsChangeHint_ReconstructFrame;
 
-  if (mColumnCount != aOther.mColumnCount ||
-      mColumnWidth != aOther.mColumnWidth ||
+  if (mColumnWidth != aOther.mColumnWidth ||
       mColumnGap != aOther.mColumnGap)
     return nsChangeHint_ReflowFrame;
 

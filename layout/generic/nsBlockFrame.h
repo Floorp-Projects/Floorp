@@ -286,9 +286,9 @@ protected:
                              const nsPoint &aPoint, 
                              PRInt32 &aClosestLine);
 
-  void NextOverAllLines(nsLineList::iterator* aIterator,
-                        nsLineList::iterator* aEndIterator,
-                        PRBool* aInOverflowLines);
+  void TryAllLines(nsLineList::iterator* aIterator,
+                   nsLineList::iterator* aEndIterator,
+                   PRBool* aInOverflowLines);
 
   void SetFlags(PRUint32 aFlags) {
     mState &= ~NS_BLOCK_FLAGS_MASK;
@@ -309,12 +309,6 @@ protected:
     */
   void SlideLine(nsBlockReflowState& aState,
                  nsLineBox* aLine, nscoord aDY);
-
-  /** grab overflow lines from this block's prevInFlow, and make them
-    * part of this block's mLines list.
-    * @return PR_TRUE if any lines were drained.
-    */
-  PRBool DrainOverflowLines(nsPresContext* aPresContext);
 
   virtual PRIntn GetSkipSides() const;
 
@@ -342,6 +336,18 @@ protected:
     */
   nsresult DoRemoveFrame(nsPresContext* aPresContext,
                          nsIFrame* aDeletedFrame);
+
+  /** grab overflow lines from this block's prevInFlow, and make them
+    * part of this block's mLines list.
+    * @return PR_TRUE if any lines were drained.
+    */
+  PRBool DrainOverflowLines();
+
+  /**
+    * Remove a float from our float list and also the float cache
+    * for the line its placeholder is on.
+    */
+  line_iterator RemoveFloat(nsIFrame* aFloat);
 
   // Remove a float, abs, rel positioned frame from the appropriate block's list
   static void DoRemoveOutOfFlowFrame(nsPresContext* aPresContext,
@@ -493,15 +499,19 @@ protected:
                      nsIFrame*& aFrameResult);
 
   nsresult PullFrameFrom(nsBlockReflowState& aState,
-                         nsLineBox* aToLine,
-                         nsLineList& aFromContainer,
+                         nsLineBox* aLine,
+                         nsBlockFrame* aFromContainer,
+                         PRBool aFromOverflowLine,
                          nsLineList::iterator aFromLine,
-                         PRBool aUpdateGeometricParent,
                          PRBool aDamageDeletedLines,
                          nsIFrame*& aFrameResult);
 
   void PushLines(nsBlockReflowState& aState,
                  nsLineList::iterator aLineBefore);
+
+
+  void ReparentFloats(nsIFrame* aFirstFrame,
+                      nsBlockFrame* aOldParent, PRBool aFromOverflow);
 
   //----------------------------------------
   //XXX
