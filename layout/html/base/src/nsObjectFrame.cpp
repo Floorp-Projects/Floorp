@@ -370,7 +370,9 @@ private:
   nsresult EnsureCachedAttrParamArrays();
 };
 
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
 static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect);
+#endif
 
   // Mac specific code to fix up port position and clip during paint
 #if defined(XP_MAC) || defined(XP_MACOSX)
@@ -4073,6 +4075,7 @@ void nsPluginInstanceOwner::SetPluginHost(nsIPluginHost* aHost)
   mPluginHost = aHost;
 }
 
+#if defined(XP_WIN) || defined(XP_MAC) || defined(XP_MACOSX)
 // convert frame coordinates from twips to pixels
 static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRect, nsRect& aPixelRect)
 {
@@ -4083,6 +4086,7 @@ static void ConvertTwipsToPixels(nsIPresContext& aPresContext, nsRect& aTwipsRec
   aPixelRect.width = NSTwipsToIntPixels(aTwipsRect.width, t2p);
   aPixelRect.height = NSTwipsToIntPixels(aTwipsRect.height, t2p);
 }
+#endif
 
   // Mac specific code to fix up the port location and clipping region
 #if defined(XP_MAC) || defined(XP_MACOSX)
