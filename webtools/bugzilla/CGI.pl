@@ -396,7 +396,7 @@ sub confirm_login {
 	my $enteredcryptpwd = crypt($enteredpwd, substr($realcryptpwd, 0, 2));
         if ($realcryptpwd eq "" || $enteredcryptpwd ne $realcryptpwd) {
             print "Content-type: text/html\n\n";
-            print "<H1>Login failed.</H1>\n";
+	    PutHeader("Login failed");
             print "The username or password you entered is not valid.\n";
             print "Please click <b>Back</b> and try again.\n";
             exit;
