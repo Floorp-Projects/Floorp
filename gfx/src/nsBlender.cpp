@@ -572,6 +572,11 @@ PRUint32  *distbuffer;
 PRUint32  quantlevel,tnum,num,shiftnum;
 NI_RGB    *map;
 
+  if (nsnull == aColorMap->cmap.map) {
+    NS_ASSERTION(PR_FALSE, "NULL Colormap during 8-bit blend");
+    return;
+  } 
+
   aBlendVal = (aBlendVal*255)/100;
   val2 = aBlendVal;
   val1 = 255-val2;
