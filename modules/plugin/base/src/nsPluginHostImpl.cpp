@@ -176,7 +176,12 @@
 
 #if defined(XP_MAC) && TARGET_CARBON
 #include "nsIClassicPluginFactory.h"
+#endif
+
+#if defined(XP_MAC) || defined (XP_MACOSX)
+#if TARGET_CARBON
 #include <TextServices.h>  // for ::UseInputWindow()
+#endif
 #endif
 
 // this is the name of the directory which will be created
@@ -4608,7 +4613,8 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
       }
     }
 
-#if defined(XP_MAC) && TARGET_CARBON
+#if defined(XP_MAC) || defined (XP_MACOSX)
+#if TARGET_CARBON
    /* Flash 6.0 r50 and older on Mac has a bug which calls ::UseInputWindow(NULL, true) 
       which turn off all our inline IME. Turn it back after the plugin 
       initializtion and hope that future versions will be fixed. See bug 159016
@@ -4620,6 +4626,7 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
          ::UseInputWindow(NULL, false);
        }
     }
+#endif
 #endif
 
     if (plugin != nsnull)
