@@ -32,6 +32,6 @@ CPPSRCS = XMLParser.cpp
 include $(topsrcdir)/config/rules.mk
 
 COMPILE_CFLAGS += -DXML_UNICODE -I$(srcdir)/xmltok
-INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../dom -I$(srcdir)/xmlparse
+INCLUDES += -I$(srcdir)/../../base -I$(srcdir)/../../net -I$(srcdir)/../dom -I$(srcdir)/xmlparse
 
 install:: $(OBJS)
