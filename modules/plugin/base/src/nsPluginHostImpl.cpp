@@ -3960,22 +3960,13 @@ nsresult nsPluginHostImpl::SetUpDefaultPluginInstance(const char *aMimeType, nsI
   if(mimetype == nsnull)
   {
     nsresult res = NS_OK;
-    nsCOMPtr<nsIURL> url = do_QueryInterface(aURL);
-    if(url)
+    nsCOMPtr<nsIMIMEService> ms (do_GetService(NS_MIMESERVICE_CONTRACTID, &res));
+    if(NS_SUCCEEDED(res))
     {
-      nsCAutoString extension;
-      url->GetFileExtension(extension);
-    
-      if(!extension.IsEmpty())
-      {
-        nsCOMPtr<nsIMIMEService> ms (do_GetService(NS_MIMESERVICE_CONTRACTID, &res));
-        if(NS_SUCCEEDED(res) && ms)
-        {
-          res = ms->GetTypeFromExtension(extension.get(), getter_Copies(mt));
-          if(NS_SUCCEEDED(res))
-            mimetype = mt;
-        }
-      }
+      nsXPIDLCString mt;
+      res = ms->GetTypeFromURI(aURL, getter_Copies(mt));
+      if(NS_SUCCEEDED(res))
+        mimetype = mt;
     }
   }
 
