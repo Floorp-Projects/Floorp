@@ -160,14 +160,8 @@ extern int32 LO_GetNumberOfLayers(MWContext *context);
 #endif
 extern NET_ReloadMethod LO_GetReloadMethod(MWContext *context);
 
-#if 0
-extern LO_Element *LO_XYToElement(MWContext *, int32, int32, CL_Layer *);
-extern LO_Element *LO_XYToNearestElement(MWContext *, int32, int32, 
-                                         CL_Layer *);
-#else
 extern LO_Element *LO_XYToElement(MWContext *, int32, int32);
 extern LO_Element *LO_XYToNearestElement(MWContext *, int32, int32);
-#endif /* LAYERS */
 
 extern void LO_MoveGridEdge(MWContext *context, LO_EdgeStruct *edge,
 	int32 x, int32 y);
@@ -202,12 +196,7 @@ extern void LO_SetDocumentPosition(MWContext *context, int32 x, int32 y);
 #endif /* OLD_POS_HIST */
 extern void LO_SetDocumentDimensions(MWContext *context,
                                      int32 width, int32 height);
-#if 0
-extern void LO_StartSelection(MWContext *context, int32 x, int32 y, 
-                              CL_Layer *layer);
-#else
 extern void LO_StartSelection(MWContext *context, int32 x, int32 y);
-#endif /* LAYERS */
 
 typedef enum {
 	SMALL_BM_ICON,
@@ -294,16 +283,9 @@ extern void SI_UnanonymizeSignons();
 extern void SI_StartOfForm();
 #endif
 
-#if 0
-extern Bool LO_Click( MWContext *context, int32 x, int32 y, 
-                      Bool requireCaret, CL_Layer *layer );
-extern void LO_Hit(MWContext *context, int32 x, int32 y,
-	Bool requireCaret, LO_HitResult *result, CL_Layer *layer);
-#else
 extern Bool LO_Click( MWContext *context, int32 x, int32 y, Bool requireCaret );
 extern void LO_Hit(MWContext *context, int32 x, int32 y,
 	Bool requireCaret, LO_HitResult *result);
-#endif /* LAYERS */
 /* Similar to lo_Click, but doesn't process click
    Returns TRUE if line would be selected if user clicked here
    We only use this in Editor, so we can assume "layer" is NULL
@@ -332,15 +314,8 @@ extern void LO_UpdateTextData(lo_FormElementTextData * textData, const char * te
  */
 
 
-#if 0
-extern void LO_PositionCaret( MWContext *context, int32 x, int32 y,
-                              CL_Layer *layer);
-extern void LO_DoubleClick( MWContext *context, int32 x, int32 y, 
-                            CL_Layer *layer );
-#else
 extern void LO_PositionCaret( MWContext *context, int32 x, int32 y );
 extern void LO_DoubleClick( MWContext *context, int32 x, int32 y );
-#endif /* LAYERS */
 
 void LO_PositionCaretBounded(MWContext *context, int32 x, int32 y,
 			int32 minY, int32 maxY );
@@ -362,13 +337,8 @@ extern LO_Element* LO_BeginOfLine( MWContext *pContext, LO_Element *pElement );
 extern LO_Element* LO_EndOfLine( MWContext *pContext, LO_Element *pElement);
 extern LO_Element* LO_FirstElementOnLine( MWContext *pContext,
 	int32 x, int32 y, int32 *pLineNum);
-#if 0
-extern void LO_StartSelectionFromElement( MWContext *context, LO_Element *eptr, 
-            int32 new_pos, CL_Layer *layer );
-#else
 extern void LO_StartSelectionFromElement( MWContext *context, LO_Element *eptr, 
             int32 new_pos );
-#endif /* LAYERS */
 extern void LO_ExtendSelectionFromElement( MWContext *context, LO_Element *eptr, 
             int32 position, Bool bFromStart );
 extern Bool LO_SelectElement( MWContext *context, LO_Element *eptr, 
@@ -401,21 +371,7 @@ extern Bool LO_Click( MWContext *context, int32 x, int32 y, Bool requireCaret );
 extern void LO_Hit(MWContext *context, int32 x, int32 y, Bool requireCaret, LO_HitResult *result);
 #endif
 
-#if 0
-extern void LO_SelectObject( MWContext *context, int32 x, int32 y,
-                             CL_Layer *layer );
-#else
 extern void LO_SelectObject( MWContext *context, int32 x, int32 y );
-#endif /* LAYERS */
-
-#if 0
-extern LO_LayerType LO_GetLayerType(CL_Layer *layer);
-extern Bool LO_PrepareLayerForWriting(MWContext *context, int32 layer_id, 
-                                      const char *referer, int32 width);
-extern Bool LO_SetLayerSrc(MWContext *context, int32 layer_id, char *str, 
-                           const char *referer, int32 width);
-extern int32 LO_CreateNewLayer(MWContext *context, int32 wrap_width, int32 parent_layer_id);
-#endif /* LAYERS */
 
 #ifdef XP_UNIX
 extern void LO_DisplayFormElement(LO_FormElementStruct *form);

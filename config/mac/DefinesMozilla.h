@@ -82,7 +82,6 @@
 	#define UNICODE_FONTLIST 1
 #endif
 
-#define LAYERS	1
 // #define NU_CACHE 1 // uncomment to turn on new memory cache features
 
 //#define CASTED_READ_OBJECT(stream, type, reference) (reference = NULL)

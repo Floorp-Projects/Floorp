@@ -634,12 +634,6 @@ BOOL   FE_FileType(char * path,
             (*context->funcs->DisplayBorder)(context, iLocation, x, y, width, height, bw, color, style)
 #define FE_DisplayFeedback(context, iLocation, element) \
 			(*context->funcs->DisplayFeedback)(context, iLocation, element)
-#if 0
-#define FE_EraseBackground(context, iLocation, x, y, width, height, bg) \
-            (*context->funcs->EraseBackground)(context, iLocation, x, y, width, height, bg)
-#define FE_SetDrawable(context, drawable) \
-            (*context->funcs->SetDrawable)(context, drawable)
-#endif /* LAYERS */
 
 #define FE_ClearView(context, which) \
 			(*context->funcs->ClearView)(context, which)
