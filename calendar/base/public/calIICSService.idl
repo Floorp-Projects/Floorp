@@ -41,6 +41,8 @@
 interface calIItemBase;
 interface calIDateTime;
 
+interface calIIcalProperty;
+
 [scriptable,uuid(4d7e456b-cfd0-4ebf-8794-c57789dafdc3)]
 interface calIIcalComponent : nsISupports
 {
@@ -124,6 +126,60 @@ interface calIIcalComponent : nsISupports
     AUTF8String serializeToICS();
 
     void addSubcomponent(in calIIcalComponent comp);
+    void removeSubcomponent(in calIIcalComponent comp);
+
+    const PRUint32 ANY_PROPERTY = 0;
+    const PRUint32 ACTION_PROPERTY = 1;
+    const PRUint32 ATTACH_PROPERTY = 2;
+    const PRUint32 ATTENDEE_PROPERTY = 3;
+    calIIcalProperty getFirstProperty(in PRUint32 kind);
+    calIIcalProperty getNextProperty(in PRUint32 kind);
+    calIIcalProperty addProperty(in PRUint32 kind);
+    void removeProperty(in calIIcalProperty prop);
+
+    calIIcalProperty getFirstXProperty(in AUTF8String xpropname);
+    calIIcalProperty getNextXProperty(in AUTF8String xpropname);
+    calIIcalProperty addXProperty(in AUTF8String xpropname,
+                                  in AUTF8String xpropval);
+};
+
+[scriptable,uuid(17349a10-5d80-47fa-9bea-f22957357675)]
+interface calIIcalProperty : nsISupports
+{
+    attribute AUTF8String stringValue;
+    readonly attribute PRUint32 isA;
+
+    AUTF8String getXParameter(in AUTF8String xparamname);
+    void setXParameter(in AUTF8String xparamname, in AUTF8String xparamval);
+    void removeXParameter(in AUTF8String xparamname);
+
+    const PRUint32 ALTREP_PARAMETER = 1;
+    const PRUint32 CN_PARAMETER = 2;
+    const PRUint32 CUTYPE_PARAMETER = 3;
+    const PRUint32 DELEGATEDFROM_PARAMETER = 4;
+    const PRUint32 DELEGATEDTO_PARAMETER = 5;
+    const PRUint32 DIR_PARAMETER = 6;
+    const PRUint32 ENCODING_PARAMETER = 7;
+    const PRUint32 FBTYPE_PARAMETER = 8;
+    const PRUint32 FMTTYPE_PARAMETER = 9;
+    const PRUint32 LANGUAGE_PARAMETER = 10;
+    const PRUint32 MEMBER_PARAMETER = 11;
+    const PRUint32 PARTSTAT_PARAMETER = 12;
+    const PRUint32 RANGE_PARAMETER = 13;
+    const PRUint32 RELATED_PARAMETER = 14;
+    const PRUint32 RELTYPE_PARAMETER = 15;
+    const PRUint32 ROLE_PARAMETER = 16;
+    const PRUint32 RSVP_PARAMETER = 17;
+    const PRUint32 SENTBY_PARAMETER = 18;
+    const PRUint32 TZID_PARAMETER = 19;
+    const PRUint32 VALUE_PARAMETER = 20;
+    /* const PRUint32 X_PARAMETER = 21; */
+    const PRUint32 XLICCOMPARETYPE_PARAMETER = 22;
+    const PRUint32 XLICERRORTYPE_PARAMETER = 23;
+
+    AUTF8String getParameter(in PRUint32 kind);
+    void setParameter(in PRUint32 kind, in AUTF8String value);
+    void removeParameter(in PRUint32 kind);
 };
 
 [scriptable,uuid(c788a1dc-0929-4029-9a14-e1bc654eafad)]
