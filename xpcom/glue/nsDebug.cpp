@@ -18,6 +18,7 @@
 
 #include "nsDebug.h"
 #include "prlog.h"
+#include "prinit.h"
 
 #if defined(HPUX)
 /* for abort() */
@@ -87,7 +88,7 @@ NS_COM void nsDebug::Abort(const char* aFile, PRIntn aLine)
 #elif defined(XP_MAC)
   ExitToShell();
 #elif defined(XP_UNIX)
-  ::abort();
+  PR_Abort();
 #endif
 }
 
