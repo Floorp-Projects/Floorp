@@ -28,7 +28,7 @@ REQUIRES	= string \
 		  $(NULL)
 
 
-LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN -DEXPORT_XPTC_API
+LCFLAGS = -D_IMPL_NS_COM -DWIN32_LEAN_AND_MEAN -DEXPORT_XPTC_API
 
 OBJS =                           \
     .\$(OBJDIR)\nsProxyEvent.obj \

@@ -56,7 +56,7 @@ XPIDLSRCS =                        \
 
 LIBRARY_NAME=xpcomthreads_s
 
-LCFLAGS = -D_IMPL_NS_COM -D_IMPL_NS_BASE -DWIN32_LEAN_AND_MEAN -DDEBUG_danm
+LCFLAGS = -D_IMPL_NS_COM -DWIN32_LEAN_AND_MEAN -DDEBUG_danm
 
 C_OBJS =                                    \
         .\$(OBJDIR)\plevent.obj             \
