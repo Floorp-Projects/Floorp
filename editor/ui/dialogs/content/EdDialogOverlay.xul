@@ -1,7 +1,5 @@
 <?xml version="1.0"?> 
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EdDialogOverlay.dtd">
-
 <!--
    - The contents of this file are subject to the Netscape Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -23,6 +21,8 @@
    - 
    - Contributor(s): 
   -->
+
+<!DOCTYPE overlay SYSTEM "chrome://editor/locale/EdDialogOverlay.dtd">
 
 <overlay id="EdDialogOverlay"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

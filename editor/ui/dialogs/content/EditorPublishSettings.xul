@@ -28,7 +28,7 @@
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EditorPublishOverlay.xul"?> 
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPublish.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorPublish.dtd">
 
 <dialog title="&windowTitleSettings.label;"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"

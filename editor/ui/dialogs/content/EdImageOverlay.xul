@@ -23,7 +23,7 @@
    -   Neil Rashbrook <neil@parkwaycc.co.uk> (Separated from EdImageProps.xul)
   -->
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorImageProperties.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://editor/locale/EditorImageProperties.dtd">
 
 <overlay id="EdImageOverlay"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

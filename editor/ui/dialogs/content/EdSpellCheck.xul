@@ -24,7 +24,7 @@
 
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?> 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorSpellCheck.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorSpellCheck.dtd">
 
 <!-- dialog containing a control requiring initial setup -->
 <dialog buttons="cancel" title="&windowTitle.label;"

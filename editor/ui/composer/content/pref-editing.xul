@@ -24,7 +24,7 @@
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/pref-editing.dtd">
+<!DOCTYPE page SYSTEM "chrome://editor/locale/pref-editing.dtd">
 
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
       onload="parent.initPanel('chrome://editor/content/pref-editing.xul');"

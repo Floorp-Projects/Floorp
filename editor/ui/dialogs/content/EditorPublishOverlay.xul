@@ -25,7 +25,7 @@
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPublish.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://editor/locale/EditorPublish.dtd">
 
 <overlay id="EditorPublishOverlay"
      xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

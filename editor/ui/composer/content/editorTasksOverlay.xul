@@ -35,7 +35,7 @@
    -
    - ***** END LICENSE BLOCK ***** -->
 
-<!DOCTYPE window SYSTEM "chrome://communicator/locale/tasksOverlay.dtd">
+<!DOCTYPE overlay SYSTEM "chrome://communicator/locale/tasksOverlay.dtd">
 
 <overlay id="editorTasksOverlay"
          xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">

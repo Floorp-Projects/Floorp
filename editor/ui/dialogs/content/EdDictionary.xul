@@ -23,7 +23,7 @@
 
 <?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?>
 <?xml-stylesheet href="chrome://editor/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPersonalDictionary.dtd">
+<!DOCTYPE dialog SYSTEM "chrome://editor/locale/EditorPersonalDictionary.dtd">
 <dialog buttons="cancel" title="&windowTitle.label;"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     persist="screenX screenY"
