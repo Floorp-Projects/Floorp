@@ -67,7 +67,6 @@ public:
     void*               mKey;
     PRUint32            mTransferBufferSize;
     PRBool              mParserEnabled;
-    PRBool              mParserTerminated;
     eStreamState        mStreamListenerState; //this is really only here for debug purposes.
     PRBool              mMultipart;
     eContextType        mContextType;

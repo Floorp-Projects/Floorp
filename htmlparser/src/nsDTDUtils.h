@@ -247,12 +247,44 @@ public:
   CObserverDictionary();
   ~CObserverDictionary();
 
-  void      RegisterObservers();
+  void      RegisterObservers(nsString& aTopicList);
   void      UnregisterObservers();
   nsDeque*  GetObserversForTag(eHTMLTags aTag);
 
 protected:
   nsDeque*  mObservers[NS_HTML_TAG_MAX];
+};
+
+/************************************************************** 
+  Define the a functor used to notify observers... 
+ **************************************************************/ 
+class nsObserverNotifier: public nsDequeFunctor{ 
+public: 
+  nsObserverNotifier(const PRUnichar* aTagName,PRUint32 aUniqueKey,PRUint32 aCount=0,
+                     const PRUnichar** aKeys=nsnull,const PRUnichar** aValues=nsnull){ 
+    mCount=aCount; 
+    mKeys=aKeys; 
+    mValues=aValues; 
+    mUniqueKey=aUniqueKey; 
+    mTagName=aTagName; 
+  } 
+
+  virtual void* operator()(void* anObject) { 
+    nsIElementObserver* theObserver= (nsIElementObserver*)anObject; 
+    if(theObserver) { 
+      mResult = theObserver->Notify(mUniqueKey,mTagName,mCount,mKeys,mValues); 
+    } 
+    if(NS_OK==mResult) 
+      return 0; 
+    return anObject; 
+  } 
+
+  const PRUnichar** mKeys; 
+  const PRUnichar** mValues; 
+  PRUint32          mCount; 
+  PRUint32          mUniqueKey; 
+  nsresult          mResult; 
+  const PRUnichar*  mTagName; 
 };
 
 #endif

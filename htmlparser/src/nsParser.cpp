@@ -191,6 +191,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mTokenObserver=anObserver;
   mStreamStatus=0;
   mDTDVerification=PR_FALSE;
+  mParserTerminated=PR_FALSE;
   mCharsetSource=kCharsetUninitialized;
   mInternalState=NS_OK;
 }
@@ -584,9 +585,8 @@ void nsParser::SetUnusedInput(nsString& aBuffer) {
  *  @return  should return NS_OK once implemented
  */
 nsresult nsParser::Terminate(void){
-  NS_NOTYETIMPLEMENTED("Call again later");
-  nsresult result=NS_ERROR_NOT_IMPLEMENTED;
-  return result;
+  mParserTerminated=PR_TRUE;
+  return NS_OK;
 }
 
 /**
@@ -870,7 +870,7 @@ nsresult nsParser::ParseFragment(const nsString& aSourceBuffer,void* aKey,nsITag
 nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
   
   nsresult result=NS_OK;
-  if(mParserContext->mParserEnabled && !mParserContext->mParserTerminated) {
+  if(mParserContext->mParserEnabled && !mParserTerminated) {
     result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
     if(mParserContext->mDTD) {
       mParserContext->mDTD->WillResumeParse();
@@ -878,7 +878,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
         result=Tokenize(aIsFinalChunk);
         result=BuildModel();
 
-        if((!mParserContext->mMultipart) || (mParserContext->mParserTerminated) || 
+        if((!mParserContext->mMultipart) || (mParserTerminated) || 
           ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
           DidBuildModel(mStreamStatus);
         }
@@ -931,7 +931,7 @@ nsresult nsParser::BuildModel() {
     if(theRootDTD) {
       result=theRootDTD->BuildModel(this,theTokenizer,mTokenObserver,mSink);
       if(NS_ERROR_HTMLPARSER_STOPPARSING==result)
-        mParserContext->mParserTerminated=PR_TRUE;
+        Terminate();
     }
   }
   else{
@@ -1253,7 +1253,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
           break;
         }
         else if(NS_ERROR_HTMLPARSER_STOPPARSING==result)
-          mParserContext->mParserTerminated=PR_TRUE;
+          Terminate();
       }
     } 
     DidTokenize(aIsFinalChunk);
