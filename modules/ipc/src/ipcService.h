@@ -49,6 +49,25 @@
 #include "nsHashtable.h"
 
 //----------------------------------------------------------------------------
+// ipcClientQuery
+//----------------------------------------------------------------------------
+
+/*
+class ipcClientQuery
+{
+public:
+    ipcClientQuery()
+        : mNext(nsnull)
+        , mReqToken(0)
+        { }
+
+    ipcClientQuery              *mNext;
+    PRUint32                     mReqToken;
+    nsCOMPtr<ipcIClientObserver> mObserver;
+};
+*/
+
+//----------------------------------------------------------------------------
 // ipcService
 //----------------------------------------------------------------------------
 
@@ -66,10 +85,15 @@ public:
 
 private:
     // ipcTransportObserver:
-    void OnMsgAvailable(const ipcMessage *);
+    void OnConnectionEstablished(PRUint32 clientID);
+    void OnConnectionLost();
+    void OnMessageAvailable(const ipcMessage *);
 
-    nsHashtable   mObserverDB;
-    ipcTransport *mTransport;
+    nsHashtable     mObserverDB;
+    ipcTransport   *mTransport;
+    PRUint32        mClientID;
+
+    //ipcClientQuery *mQueryQ;
 };
 
 #endif // !ipcService_h__

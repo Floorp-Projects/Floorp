@@ -63,7 +63,7 @@ SHARED_LIBRARY_LIBS = \
 
 LOCAL_INCLUDES	= \
 		-I$(srcdir)/../src \
-		-I$(srcdir)/../util \
+		-I$(srcdir)/../common \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

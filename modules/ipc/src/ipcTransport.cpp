@@ -51,10 +51,10 @@
 #include "plstr.h"
 
 #include "ipcConfig.h"
+#include "ipcLog.h"
+#include "ipcMessageUtils.h"
 #include "ipcTransport.h"
 #include "ipcm.h"
-
-#define LOG(args) printf args
 
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
@@ -69,13 +69,17 @@ ipcTransport::~ipcTransport()
 }
 
 nsresult
-ipcTransport::Init(const nsACString &socketPath, ipcTransportObserver *obs)
+ipcTransport::Init(const nsACString &appName,
+                   const nsACString &socketPath,
+                   ipcTransportObserver *obs)
 {
-    LOG((">>> ipcTransport::Init\n"));
+    LOG(("ipcTransport::Init\n"));
 
+    mAppName = appName;
     mSocketPath = socketPath;
     mObserver = obs;
 
+    // XXX service should be the observer
     nsCOMPtr<nsIObserverService> observ(do_GetService("@mozilla.org/observer-service;1"));
     if (observ) {
         observ->AddObserver(this, "xpcom-shutdown", PR_FALSE);
@@ -88,7 +92,7 @@ ipcTransport::Init(const nsACString &socketPath, ipcTransportObserver *obs)
 nsresult
 ipcTransport::Shutdown()
 {
-    LOG((">>> ipcTransport::Shutdown\n"));
+    LOG(("ipcTransport::Shutdown\n"));
 
     mHaveConnection = PR_FALSE;
 
@@ -110,10 +114,10 @@ ipcTransport::SendMsg(ipcMessage *msg)
 {
     NS_ENSURE_ARG_POINTER(msg);
 
-    LOG((">>> ipcTransport::SendMsg [dataLen=%u]\n", msg->DataLen()));
+    LOG(("ipcTransport::SendMsg [dataLen=%u]\n", msg->DataLen()));
 
     if (!mHaveConnection) {
-        LOG((">>>    delaying message until connected\n"));
+        LOG(("  delaying message until connected\n"));
         mDelayedQ.Append(msg);
         return NS_OK;
     }
@@ -124,7 +128,7 @@ ipcTransport::SendMsg(ipcMessage *msg)
 nsresult
 ipcTransport::SendMsg_Internal(ipcMessage *msg)
 {
-    LOG((">>> ipcTransport::SendMsg_Internal [dataLen=%u]\n", msg->DataLen()));
+    LOG(("ipcTransport::SendMsg_Internal [dataLen=%u]\n", msg->DataLen()));
 
     mSendQ.EnqueueMsg(msg);
 
@@ -148,10 +152,10 @@ ipcTransport::Connect()
 {
     nsresult rv;
 
-    LOG((">>> ipcTransport::Connect\n"));
+    LOG(("ipcTransport::Connect\n"));
 
     if (++mConnectionAttemptCount > 20) {
-        LOG((">>>   giving up after 20 unsuccessful connection attempts\n"));
+        LOG(("  giving up after 20 unsuccessful connection attempts\n"));
         return NS_ERROR_ABORT;
     }
 
@@ -164,40 +168,34 @@ ipcTransport::Connect()
 }
 
 void
-ipcTransport::OnMsgAvailable(const ipcMessage *rawMsg)
+ipcTransport::OnMessageAvailable(const ipcMessage *rawMsg)
 {
-    LOG((">>> ipcTransport::OnMsgAvailable [dataLen=%u]\n", rawMsg->DataLen()));
+    LOG(("ipcTransport::OnMsgAvailable [dataLen=%u]\n", rawMsg->DataLen()));
 
-    //
-    // all IPCM messages stop here.
-    //
-    if (rawMsg->Target().Equals(IPCM_TARGET)) {
-        //
-        // check for startup PING
-        //
-        if (!mHaveConnection) {
+    if (!mHaveConnection) {
+        if (rawMsg->Target().Equals(IPCM_TARGET)) {
             if (IPCM_GetMsgType(rawMsg) == IPCM_MSG_TYPE_CLIENT_ID) {
-                LOG((">>>    connection established!\n"));
+                LOG(("  connection established!\n"));
                 mHaveConnection = PR_TRUE;
-                /* XXX inform the service that we now know our ID
+
+                // remember our client ID
                 ipcMessageCast<ipcmMessageClientID> msg(rawMsg);
-                msg->ClientID();
-                */
-                //
-                // move messages off the delayed queue
-                //
+                if (mObserver)
+                    mObserver->OnConnectionEstablished(msg->ClientID());
+
+                // move messages off the delayed message queue
                 while (!mDelayedQ.IsEmpty()) {
                     ipcMessage *msg = mDelayedQ.First();
                     mDelayedQ.RemoveFirst();
                     SendMsg_Internal(msg);
                 }
+                return;
             }
-            else
-                LOG((">>>    received bogus response to our ping!\n"));
         }
+        LOG(("  received unexpected first message!\n"));
     }
     else if (mObserver)
-        mObserver->OnMsgAvailable(rawMsg);
+        mObserver->OnMessageAvailable(rawMsg);
 }
 
 void
@@ -210,7 +208,7 @@ ipcTransport::OnStartRequest(nsIRequest *req)
         //
         // send CLIENT_HELLO; expect CLIENT_ID in response.
         //
-        SendMsg_Internal(new ipcmMessageClientHello("test-app")); // XXX need real client name
+        SendMsg_Internal(new ipcmMessageClientHello(mAppName.get()));
         mSentHello = PR_TRUE;
     }
 }
@@ -218,7 +216,13 @@ ipcTransport::OnStartRequest(nsIRequest *req)
 void
 ipcTransport::OnStopRequest(nsIRequest *req, nsresult status)
 {
-    LOG((">>> ipcTransport::OnStopRequest [status=%x]\n", status));
+    LOG(("ipcTransport::OnStopRequest [status=%x]\n", status));
+
+    if (mHaveConnection) {
+        mHaveConnection = PR_FALSE;
+        if (mObserver)
+            mObserver->OnConnectionLost();
+    }
 
     if (status == NS_BINDING_ABORTED)
         return;
@@ -230,7 +234,7 @@ ipcTransport::OnStopRequest(nsIRequest *req, nsresult status)
         //
         rv = SpawnDaemon();
         if (NS_FAILED(rv)) {
-            LOG((">>>    failed to spawn daemon [rv=%x]\n", rv));
+            LOG(("  failed to spawn daemon [rv=%x]\n", rv));
             return;
         }
 
@@ -239,18 +243,18 @@ ipcTransport::OnStopRequest(nsIRequest *req, nsresult status)
         //
         mTimer = do_CreateInstance(NS_TIMER_CONTRACTID, &rv);
         if (NS_FAILED(rv)) {
-            LOG((">>>    failed to create timer [rv=%x]\n", rv));
+            LOG(("  failed to create timer [rv=%x]\n", rv));
             return;
         }
 
         // use a simple exponential growth algorithm n*2^(n-1)
         PRUint32 ms = 1000 * (1 << (mConnectionAttemptCount - 1));
 
-        LOG((">>>    waiting %u milliseconds\n", ms));
+        LOG(("  waiting %u milliseconds\n", ms));
 
         rv = mTimer->Init(this, ms, nsITimer::TYPE_ONE_SHOT);
         if (NS_FAILED(rv)) {
-            LOG((">>>    failed to initialize timer [rv=%x]\n", rv));
+            LOG(("  failed to initialize timer [rv=%x]\n", rv));
             return;
         }
     }
@@ -297,7 +301,7 @@ ipcTransport::CreateTransport()
 nsresult
 ipcTransport::SpawnDaemon()
 {
-    LOG((">>> ipcTransport::SpawnDaemon\n"));
+    LOG(("ipcTransport::SpawnDaemon\n"));
 
     nsresult rv;
     nsCOMPtr<nsIFile> file;
@@ -323,7 +327,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS0(ipcTransport)
 NS_IMETHODIMP
 ipcTransport::Observe(nsISupports *subject, const char *topic, const PRUnichar *data)
 {
-    LOG((">>> ipcTransport::Observe [topic=%s]\n", topic));
+    LOG(("ipcTransport::Observe [topic=%s]\n", topic));
 
     if (strcmp(topic, "timer-callback") == 0) {
         // 
@@ -363,7 +367,7 @@ NS_IMETHODIMP
 ipcSendQueue::OnStartRequest(nsIRequest *request,
                              nsISupports *context)
 {
-    LOG((">>> ipcSendQueue::OnStartRequest\n"));
+    LOG(("ipcSendQueue::OnStartRequest\n"));
 
     if (mTransport)
         mTransport->OnStartRequest(request);
@@ -376,7 +380,7 @@ ipcSendQueue::OnStopRequest(nsIRequest *request,
                             nsISupports *context,
                             nsresult status)
 {
-    LOG((">>> ipcSendQueue::OnStopRequest [status=%x]\n", status));
+    LOG(("ipcSendQueue::OnStopRequest [status=%x]\n", status));
 
     if (mTransport)
         mTransport->OnStopRequest(request, status);
@@ -418,7 +422,7 @@ ipcSendQueue::OnDataWritable(nsIRequest *request,
     ipcWriteState state;
     PRBool wroteSomething = PR_FALSE;
 
-    LOG((">>> ipcSendQueue::OnDataWritable\n"));
+    LOG(("ipcSendQueue::OnDataWritable\n"));
 
     while (!mQueue.IsEmpty()) {
         state.msg = mQueue.First();
@@ -429,7 +433,7 @@ ipcSendQueue::OnDataWritable(nsIRequest *request,
             break;
 
         if (state.complete) {
-            LOG((">>>    wrote message %u bytes\n", mQueue.First()->MsgLen()));
+            LOG(("  wrote message %u bytes\n", mQueue.First()->MsgLen()));
             mQueue.DeleteFirst();
         }
 
@@ -439,7 +443,7 @@ ipcSendQueue::OnDataWritable(nsIRequest *request,
     if (wroteSomething)
         return NS_OK;
 
-    LOG((">>>    suspending write request\n"));
+    LOG(("  suspending write request\n"));
 
     mTransport->SetWriteSuspended(PR_TRUE);
     return NS_BASE_STREAM_WOULD_BLOCK;
@@ -467,7 +471,7 @@ NS_IMETHODIMP
 ipcReceiver::OnStartRequest(nsIRequest *request,
                             nsISupports *context)
 {
-    LOG((">>> ipcReceiver::OnStartRequest\n"));
+    LOG(("ipcReceiver::OnStartRequest\n"));
 
     if (mTransport)
         mTransport->OnStartRequest(request);
@@ -480,7 +484,7 @@ ipcReceiver::OnStopRequest(nsIRequest *request,
                            nsISupports *context,
                            nsresult status)
 {
-    LOG((">>> ipcReceiver::OnStopRequest [status=%x]\n", status));
+    LOG(("ipcReceiver::OnStopRequest [status=%x]\n", status));
 
     if (mTransport)
         mTransport->OnStopRequest(request, status);
@@ -506,7 +510,7 @@ ipcReceiver::OnDataAvailable(nsIRequest *request,
                              PRUint32 offset,
                              PRUint32 count)
 {
-    LOG((">>> ipcReceiver::OnDataAvailable [count=%u]\n", count));
+    LOG(("ipcReceiver::OnDataAvailable [count=%u]\n", count));
 
     PRUint32 countRead;
     return stream->ReadSegments(ipcReadMessage, this, count, &countRead);
@@ -523,7 +527,7 @@ ipcReceiver::ReadSegment(const char *ptr, PRUint32 count, PRUint32 *countRead)
         mMsg.ReadFrom(ptr, count, &nread, &complete);
 
         if (complete) {
-            mTransport->OnMsgAvailable(&mMsg);
+            mTransport->OnMessageAvailable(&mMsg);
             mMsg.Reset();
         }
 

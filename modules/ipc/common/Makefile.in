@@ -53,8 +53,8 @@ REQUIRES	= \
 		  $(NULL)
 
 CPPSRCS		= \
+			ipcLog.cpp \
 			ipcMessage.cpp \
-			ipcMessageQ.cpp \
 			ipcMessagePrimitives.cpp \
 			ipcm.cpp
 

@@ -38,51 +38,9 @@
 #ifndef ipcMessageQ_h__
 #define ipcMessageQ_h__
 
-#include "prtypes.h"
+#include "ipcMessage.h"
+#include "ipcQueue.h"
 
-class ipcMessage;
-
-//-----------------------------------------------------------------------------
-// simple queue of ipcMessage objects
-//-----------------------------------------------------------------------------
-
-class ipcMessageQ
-{
-public:
-    ipcMessageQ()
-        : mHead(NULL)
-        , mTail(NULL)
-        { }
-   ~ipcMessageQ() { DeleteAll(); }
-
-    //
-    // appends msg to the end of the queue.  caller loses ownership of |msg|.
-    //
-    void Append(ipcMessage *msg);
-
-    // 
-    // removes first element w/o deleting it
-    //
-    void RemoveFirst() { if (mHead) AdvanceHead(); }
-
-    //
-    // deletes first element
-    //
-    void DeleteFirst();
-
-    //
-    // deletes all elements
-    //
-    void DeleteAll();
-
-    ipcMessage *First()   { return mHead; }
-    PRBool      IsEmpty() { return mHead == NULL; }
-
-private:
-    void AdvanceHead();
-
-    ipcMessage *mHead;
-    ipcMessage *mTail;
-};
+typedef ipcQueue<ipcMessage> ipcMessageQ;
 
 #endif // !ipcMessageQ_h__

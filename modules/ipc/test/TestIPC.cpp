@@ -36,6 +36,8 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "ipcIService.h"
+#include "nsIPrefService.h"
+#include "nsIPrefBranch.h"
 #include "nsIEventQueueService.h"
 #include "nsIServiceManager.h"
 #include "nsIComponentRegistrar.h"
@@ -60,7 +62,7 @@ static const nsID TestTargetID =
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static nsIEventQueue* gEventQ = nsnull;
 static PRBool gKeepRunning = PR_TRUE;
-static PRInt32 gMsgCount = 0;
+//static PRInt32 gMsgCount = 0;
 
 class myIpcMessageObserver : public ipcIMessageObserver
 {
@@ -81,8 +83,8 @@ myIpcMessageObserver::OnMessageAvailable(const nsID &target, const char *data, P
 {
     printf("*** got message: [%s]\n", data);
 
-    if (--gMsgCount == 0)
-        gKeepRunning = PR_FALSE;
+//    if (--gMsgCount == 0)
+//        gKeepRunning = PR_FALSE;
 
     return NS_OK;
 }
@@ -92,7 +94,7 @@ void SendMsg(ipcIService *ipc, const nsID &target, const char *data, PRUint32 da
     printf("*** sending message: [dataLen=%u]\n", dataLen);
 
     ipc->SendMessage(0, target, data, dataLen);
-    gMsgCount++;
+//    gMsgCount++;
 }
 
 int main(int argc, char **argv)
@@ -117,6 +119,17 @@ int main(int argc, char **argv)
 
         rv = eqs->GetThreadEventQueue(NS_CURRENT_THREAD, &gEventQ);
         RETURN_IF_FAILED(rv, "GetThreadEventQueue");
+
+        if (argc > 1) {
+            printf("*** using client name [%s]\n", argv[1]);
+            nsCOMPtr<nsIPrefService> prefserv(do_GetService(NS_PREFSERVICE_CONTRACTID));
+            if (prefserv) {
+                nsCOMPtr<nsIPrefBranch> prefbranch;
+                prefserv->GetBranch(nsnull, getter_AddRefs(prefbranch));
+                if (prefbranch)
+                    prefbranch->SetCharPref("ipc.client-name", argv[1]);
+            }
+        }
 
         nsCOMPtr<ipcIService> ipcServ(do_GetService("@mozilla.org/ipc/service;1", &rv));
         RETURN_IF_FAILED(rv, "do_GetService(ipcServ)");

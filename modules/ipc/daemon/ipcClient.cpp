@@ -36,11 +36,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include <stdio.h>
+#include "prio.h"
+#include "plstr.h"
+#include "ipcLog.h"
 #include "ipcClient.h"
 #include "ipcMessage.h"
 #include "ipcd.h"
-#include "prio.h"
-#include "plstr.h"
 
 int ipcClient::gLastID = 0;
 
@@ -100,7 +101,7 @@ ipcClient::Process(PRFileDesc *fd, int poll_flags)
         //
         // expect Finalize method to be called next.
         //
-        printf("### client socket appears to have closed\n");
+        LOG(("client socket appears to have closed\n"));
         return 0;
     }
 
@@ -108,7 +109,7 @@ ipcClient::Process(PRFileDesc *fd, int poll_flags)
     int ret_flags = PR_POLL_READ;
 
     if (poll_flags & PR_POLL_READ) {
-        printf("### client socket is now readable\n");
+        LOG(("client socket is now readable\n"));
 
         char buf[1024];
         PRInt32 n;
@@ -138,7 +139,7 @@ ipcClient::Process(PRFileDesc *fd, int poll_flags)
     }
   
     if (poll_flags & PR_POLL_WRITE) {
-        printf("### client socket is now writable\n");
+        LOG(("client socket is now writable\n"));
 
         if (mOutMsgQ.First())
             WriteMsgs(fd);
@@ -153,7 +154,7 @@ ipcClient::Process(PRFileDesc *fd, int poll_flags)
 void
 ipcClient::SetName(const char *name)
 {
-    printf("### setting client name to \"%s\"\n", name);
+    LOG(("setting client name to \"%s\"\n", name));
 
     if (mName)
         PL_strfree(mName);
@@ -179,7 +180,7 @@ ipcClient::WriteMsgs(PRFileDesc *fd)
         if (nw <= 0)
             break;
 
-        printf("### wrote %d bytes\n", nw);
+        LOG(("wrote %d bytes\n", nw));
 
         if (nw == bufLen)
             mOutMsgQ.DeleteFirst();

@@ -51,6 +51,7 @@ MODULE_NAME	= ipc
 REQUIRES	= xpcom \
 		  string \
 		  necko \
+		  pref \
 		  $(NULL)
 
 CPPSRCS		= \
