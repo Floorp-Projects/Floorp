@@ -544,11 +544,25 @@ array_nyi(JSContext *cx, const char *what)
 #endif
 
 static JSBool
+InitArrayElements(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
+{
+    jsuint index;
+    jsid id;
+
+    for (index = 0; index < length; index++) {
+	if (!IndexToId(cx, index, &id))
+	    return JS_FALSE;
+	if (!OBJ_SET_PROPERTY(cx, obj, id, &vector[index]))
+	    return JS_FALSE;
+    }
+    return JS_TRUE;
+}
+
+static JSBool
 InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
 {
     jsval v;
     jsid id;
-    jsuint index;
 
     if (!IndexToValue(cx, length, &v))
 	return JS_FALSE;
@@ -561,13 +575,7 @@ InitArrayObject(JSContext *cx, JSObject *obj, jsuint length, jsval *vector)
     }
     if (!vector)
 	return JS_TRUE;
-    for (index = 0; index < length; index++) {
-	if (!IndexToId(cx, index, &id))
-	    return JS_FALSE;
-	if (!OBJ_SET_PROPERTY(cx, obj, id, &vector[index]))
-	    return JS_FALSE;
-    }
-    return JS_TRUE;
+    return InitArrayElements(cx, obj, length, vector);
 }
 
 static JSBool
@@ -837,7 +845,7 @@ array_sort(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     }
 
     if (ca.status) {
-	ca.status = InitArrayObject(cx, obj, newlen, vec);
+	ca.status = InitArrayElements(cx, obj, newlen, vec);
 	if (ca.status)
 	    *rval = OBJECT_TO_JSVAL(obj);
 #if JS_HAS_SPARSE_ARRAYS
