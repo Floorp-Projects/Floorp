@@ -252,10 +252,10 @@ PRBool nsString2::IsOrdered(void) const {
   if(mLength>1) {
     PRUint32 theIndex;
     PRUnichar c1=0;
-    PRUnichar c2=nsStr::GetCharAt(*this,0);
+    PRUnichar c2=GetCharAt(*this,0);
     for(theIndex=1;theIndex<mLength;theIndex++) {
       c1=c2;
-      c2=nsStr::GetCharAt(*this,theIndex);
+      c2=GetCharAt(*this,theIndex);
       if(c1>c2) {
         result=PR_FALSE;
         break;
@@ -315,19 +315,19 @@ PRUnichar* nsString2::GetUnicode(void) const {
  * Get nth character.
  */
 PRUnichar nsString2::operator[](int anIndex) const {
-  return nsStr::GetCharAt(*this,anIndex);
+  return GetCharAt(*this,anIndex);
 }
 
 PRUnichar nsString2::CharAt(int anIndex) const {
-  return nsStr::GetCharAt(*this,anIndex);
+  return GetCharAt(*this,anIndex);
 }
 
 PRUnichar nsString2::First(void) const{
-  return nsStr::GetCharAt(*this,0);
+  return GetCharAt(*this,0);
 }
 
 PRUnichar nsString2::Last(void) const{
-  return nsStr::GetCharAt(*this,mLength-1);
+  return GetCharAt(*this,mLength-1);
 }
 
 PRBool nsString2::SetCharAt(PRUnichar aChar,PRUint32 anIndex){
@@ -1130,7 +1130,7 @@ PRInt32 nsString2::BinarySearch(PRUnichar aChar) const{
 
   while (low <= high) {
     int middle = (low + high) >> 1;
-    PRUnichar theChar=nsStr::GetCharAt(*this,middle);
+    PRUnichar theChar=GetCharAt(*this,middle);
     if (theChar==aChar)
       return middle;
     if (theChar>aChar)
