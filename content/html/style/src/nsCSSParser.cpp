@@ -3581,8 +3581,8 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
     return ParseClip(aErrorCode, aDeclaration, aChangeHint);
   case eCSSProperty_content:
     return ParseContent(aErrorCode, aDeclaration, aChangeHint);
-  case eCSSProperty_counter_increment:
-  case eCSSProperty_counter_reset:
+  case eCSSProperty__moz_counter_increment:
+  case eCSSProperty__moz_counter_reset:
     return ParseCounterData(aErrorCode, aDeclaration, aPropID, aChangeHint);
   case eCSSProperty_cue:
     return ParseCue(aErrorCode, aDeclaration, aChangeHint);
@@ -3597,7 +3597,7 @@ PRBool CSSParserImpl::ParseProperty(PRInt32& aErrorCode,
   case eCSSProperty_margin:
     return ParseMargin(aErrorCode, aDeclaration, aChangeHint);
 #ifdef ENABLE_OUTLINE
-  case eCSSProperty_outline:
+  case eCSSProperty__moz_outline:
     return ParseOutline(aErrorCode, aDeclaration, aChangeHint);
 #endif
   case eCSSProperty_padding:
@@ -3700,8 +3700,8 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_border_width:
   case eCSSProperty_clip:
   case eCSSProperty_content:
-  case eCSSProperty_counter_increment:
-  case eCSSProperty_counter_reset:
+  case eCSSProperty__moz_counter_increment:
+  case eCSSProperty__moz_counter_reset:
   case eCSSProperty_cue:
   case eCSSProperty_cursor:
   case eCSSProperty_font:
@@ -3709,7 +3709,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_list_style:
   case eCSSProperty_margin:
 #ifdef ENABLE_OUTLINE
-  case eCSSProperty_outline:
+  case eCSSProperty__moz_outline:
 #endif
   case eCSSProperty_padding:
   case eCSSProperty_pause:
@@ -3958,13 +3958,13 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
   case eCSSProperty_widows:
     return ParseVariant(aErrorCode, aValue, VARIANT_HI, nsnull);
 #ifdef ENABLE_OUTLINE
-  case eCSSProperty_outline_color:
+  case eCSSProperty__moz_outline_color:
     return ParseVariant(aErrorCode, aValue, VARIANT_HCK, 
                         nsCSSProps::kOutlineColorKTable);
-  case eCSSProperty_outline_style:
+  case eCSSProperty__moz_outline_style:
     return ParseVariant(aErrorCode, aValue, VARIANT_HOK, 
                         nsCSSProps::kBorderStyleKTable);
-  case eCSSProperty_outline_width:
+  case eCSSProperty__moz_outline_width:
     return ParseVariant(aErrorCode, aValue, VARIANT_HKL,
                         nsCSSProps::kBorderWidthKTable);
 #endif
@@ -5130,9 +5130,9 @@ PRBool CSSParserImpl::ParseOutline(PRInt32& aErrorCode, nsCSSDeclaration* aDecla
 {
   const PRInt32 numProps = 3;
   static const nsCSSProperty kOutlineIDs[] = {
-    eCSSProperty_outline_color,
-    eCSSProperty_outline_style,
-    eCSSProperty_outline_width
+    eCSSProperty__moz_outline_color,
+    eCSSProperty__moz_outline_style,
+    eCSSProperty__moz_outline_width
   };
 
   nsCSSValue  values[numProps];

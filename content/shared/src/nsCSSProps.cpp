@@ -48,7 +48,7 @@
 #include "nsStaticNameTable.h"
 
 // define an array of all CSS properties
-#define CSS_PROP(_name, _id, _hint) #_name,
+#define CSS_PROP(_name, _id, _method, _hint) #_name,
 const char* kCSSRawProperties[] = {
 #include "nsCSSPropList.h"
 };
@@ -1018,8 +1018,8 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
   case eCSSProperty_content:
     return SearchKeywordTable(aValue, kContentKTable);  
 
-  case eCSSProperty_counter_increment:
-  case eCSSProperty_counter_reset:
+  case eCSSProperty__moz_counter_increment:
+  case eCSSProperty__moz_counter_reset:
   case eCSSProperty_cue:
   case eCSSProperty_cue_after:
   case eCSSProperty_cue_before:
@@ -1113,16 +1113,16 @@ static const PRInt32 kBackgroundYPositionKTable[] = {
 
   case eCSSProperty_opacity:
   case eCSSProperty_orphans:
-  case eCSSProperty_outline:
+  case eCSSProperty__moz_outline:
     break;
 
-  case eCSSProperty_outline_color:
+  case eCSSProperty__moz_outline_color:
     return SearchKeywordTable(aValue, kOutlineColorKTable);
 
-  case eCSSProperty_outline_style:
+  case eCSSProperty__moz_outline_style:
     return SearchKeywordTable(aValue, kBorderStyleKTable);
 
-  case eCSSProperty_outline_width:
+  case eCSSProperty__moz_outline_width:
     return SearchKeywordTable(aValue, kBorderWidthKTable);
 
   case eCSSProperty_overflow:
@@ -1286,7 +1286,7 @@ PRBool nsCSSProps::GetColorName(PRInt32 aPropValue, nsCString &aStr)
 }
 
 // define array of all CSS property hints
-#define CSS_PROP(_name, _id, _hint) NS_STYLE_HINT_##_hint,
+#define CSS_PROP(_name, _id, _method, _hint) NS_STYLE_HINT_##_hint,
 const nsChangeHint nsCSSProps::kHintTable[eCSSProperty_COUNT] = {
 #include "nsCSSPropList.h"
 };
