@@ -122,11 +122,5 @@ public class NativeFunction extends BaseFunction {
      * Used only for decompiling of nested functions.
      */
     public NativeFunction[] nestedFunctions;
-
-    // For all generated subclass objects debug_level is set to 0 or higher.
-    // So, if debug_level remains -1 in some object, then that object is
-    // known to have not been generated.
-    public int debug_level = -1;
-    public String debug_srcName;
 }
 
