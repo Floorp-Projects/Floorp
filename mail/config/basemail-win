@@ -147,6 +147,9 @@ components\xuldoc.xpt
 ; Imaging:
 mozz.dll
 components\imglib2.dll
+components\imgicon.dll
+components\imgicon.xpt
+compontents\imglib2.xpt
 
 ; accessibility (out of process API support)
 components\accessibility.dll              

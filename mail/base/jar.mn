@@ -35,6 +35,11 @@ toolkit.jar:
 
 
 en-US.jar:
++   locale/en-US/messenger/start.html               (locale/start.html)
+    locale/en-US/messenger/bird.png                 (locale/bird.png)
+    locale/en-US/messenger/h1.png                   (locale/h1.png)
+    locale/en-US/messenger/h2.png                   (locale/h2.png)
+    locale/en-US/messenger/back.png                 (locale/back.png)
 +   locale/en-US/messenger/messenger.dtd            (locale/messenger.dtd)
 +   locale/en-US/messenger/mailTasksOverlay.dtd     (locale/mailTasksOverlay.dtd)
 +   locale/en-US/messenger/msgAccountCentral.dtd    (locale/msgAccountCentral.dtd)

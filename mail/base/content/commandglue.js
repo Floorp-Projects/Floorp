@@ -226,6 +226,7 @@ function ChangeFolderByURI(uri, viewType, viewFlags, sortType, sortOrder)
     gRerootOnFolderLoad = true;
     try
     {
+      ClearThreadPane();
       SetBusyCursor(window, true);
       msgfolder.startFolderLoading();
       msgfolder.updateFolder(msgWindow);
