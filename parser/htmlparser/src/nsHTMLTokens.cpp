@@ -507,10 +507,11 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
  *  @return  error result
  */
 nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,nsString& aTerminalString){
-  PRBool      done=PR_FALSE; 
-  nsresult    result=NS_OK; 
-  nsString    temp; 
-  PRUnichar   theChar;
+  PRBool       done=PR_FALSE; 
+  nsresult     result=NS_OK; 
+  nsString     temp; 
+  PRUnichar    theChar;
+  nsAutoString theRight;
 
   //We're going to try a new algorithm here. Rather than scan for the matching 
  //end tag like we used to do, we're now going to scan for whitespace and comments. 
@@ -552,13 +553,18 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
       temp+=aChar; 
       result=aScanner.ReadUntil(temp,kLessThan,PR_FALSE); 
     } 
-    nsAutoString theRight;
     temp.Right(theRight,aTerminalString.Length());
     done=PRBool(0==theRight.Compare(aTerminalString,PR_TRUE)); 
   }  //while
   int len=temp.Length(); 
   temp.Truncate(len-aTerminalString.Length()); 
   mTextValue=temp; 
+
+  // Make aTerminalString contain the name of the end tag ** as seen in **
+  // the document and not the made up one.
+  theRight.Cut(0,2);
+  theRight.Cut((theRight.Length()-1),1);
+  aTerminalString = theRight;
   return result; 
 }
 
