@@ -1509,7 +1509,10 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
     ostream* copyStream;
     rv = aSelectionMgr->GetCopyOStream(&copyStream);
     if (!NS_SUCCEEDED(rv))
+    {
+      NS_IF_RELEASE(sink);
       return rv;
+    }
 
     ((nsHTMLContentSinkStream*)sink)->SetOutputStream(*copyStream);
 
@@ -1526,10 +1529,10 @@ PresShell::DoCopy(nsISelectionMgr* aSelectionMgr)
         parser->Parse(buffer, 0, "text/xif",PR_FALSE,PR_TRUE);           
       }
       NS_IF_RELEASE(dtd);
-      NS_IF_RELEASE(sink);
 
       aSelectionMgr->CopyToClipboard();
     }
+    NS_IF_RELEASE(sink);
     NS_RELEASE(parser);
   }
   return NS_OK;
