@@ -149,6 +149,7 @@ nsCacheObject::nsCacheObject():
     m_Etag(new char[1]),
     m_Filename(new char[1]),
     m_Flags(INIT), 
+    m_bIsCompleted(PR_FALSE),
     m_Module(-1),
     m_pInfo(0),
     m_PageServicesURL(new char[1]),
@@ -197,6 +198,7 @@ nsCacheObject::nsCacheObject(const nsCacheObject& another):
     m_Etag(new char[PL_strlen(another.m_Etag)+1]),
     m_Filename(new char[PL_strlen(another.m_Filename)+1]),
     m_Flags(another.m_Flags),
+    m_bIsCompleted(another.m_bIsCompleted),
     m_PageServicesURL(new char[PL_strlen(another.m_PageServicesURL)+1]),
     m_PostDataLen(another.m_PostDataLen),
     m_PostData(new char[another.m_PostDataLen+1]),
@@ -204,14 +206,14 @@ nsCacheObject::nsCacheObject(const nsCacheObject& another):
     m_pStream(0),
     m_pInfo(0) /* Should this be copied as well? */
 {
-    PL_strncpy(m_Charset, another.m_Charset, PL_strlen(another.m_Charset));
-    PL_strncpy(m_ContentEncoding, another.m_ContentEncoding, PL_strlen(another.m_ContentEncoding));
-    PL_strncpy(m_ContentType, another.m_ContentType, PL_strlen(another.m_ContentType));
-    PL_strncpy(m_Etag, another.m_Etag, PL_strlen(another.m_Etag));
-    PL_strncpy(m_Filename, another.m_Filename, PL_strlen(another.m_Filename));
-    PL_strncpy(m_PageServicesURL, another.m_PageServicesURL, PL_strlen(another.m_PageServicesURL));
-    PL_strncpy(m_PostData, another.m_PostData, another.m_PostDataLen);
-    PL_strncpy(m_URL, another.m_URL, PL_strlen(another.m_URL));
+    PL_strncpyz(m_Charset, another.m_Charset, PL_strlen(another.m_Charset)+1);
+    PL_strncpyz(m_ContentEncoding, another.m_ContentEncoding, PL_strlen(another.m_ContentEncoding)+1);
+    PL_strncpyz(m_ContentType, another.m_ContentType, PL_strlen(another.m_ContentType)+1);
+    PL_strncpyz(m_Etag, another.m_Etag, PL_strlen(another.m_Etag)+1);
+    PL_strncpyz(m_Filename, another.m_Filename, PL_strlen(another.m_Filename)+1);
+    PL_strncpyz(m_PageServicesURL, another.m_PageServicesURL, PL_strlen(another.m_PageServicesURL)+1);
+    PL_strncpyz(m_PostData, another.m_PostData, another.m_PostDataLen+1);
+    PL_strncpyz(m_URL, another.m_URL, PL_strlen(another.m_URL)+1);
 
     m_Hits = another.m_Hits;
     m_LastAccessed = another.m_LastAccessed;
@@ -227,6 +229,7 @@ nsCacheObject::nsCacheObject(const char* i_url):
     m_Etag(new char[1]),
     m_Filename(new char[1]),
     m_Flags(INIT), 
+    m_bIsCompleted(PR_FALSE),
     m_PageServicesURL(new char[1]),
     m_PostData(new char[1]),
     m_PostDataLen(0),
@@ -237,7 +240,7 @@ nsCacheObject::nsCacheObject(const char* i_url):
 {
     Init();
     PR_ASSERT(i_url);
-    PL_strncpy(m_URL, i_url, PL_strlen(i_url));
+    PL_strncpyz(m_URL, i_url, PL_strlen(i_url)+1);
 
     *m_Charset = '\0';
     *m_ContentEncoding = '\0';
@@ -255,19 +258,21 @@ void nsCacheObject::Address(const char* i_url)
         return;
     if (m_URL)
         delete[] m_URL;
-    m_URL = new char[PL_strlen(i_url) + 1];
-    PL_strncpy(m_URL, i_url, PL_strlen(i_url));
+    int len = PL_strlen(i_url);
+    m_URL = new char[len + 1];
+    PL_strncpyz(m_URL, i_url, len+1);
 }
 
 void nsCacheObject::Charset(const char* i_Charset) 
 {
 //    PR_ASSERT(i_Charset && *i_Charset);
-    if (!i_Charset)
+    if (!i_Charset) //TODO reset m_charset here 
         return;
     if (m_Charset)
         delete[] m_Charset;
-    m_URL = new char[PL_strlen(i_Charset) + 1];
-    PL_strncpy(m_Charset, i_Charset, PL_strlen(i_Charset));
+    int len = PL_strlen(i_Charset);
+    m_URL = new char[len + 1];
+    PL_strncpyz(m_Charset, i_Charset, len+1);
 }
 
 void nsCacheObject::ContentEncoding(const char* i_Encoding) 
@@ -277,8 +282,9 @@ void nsCacheObject::ContentEncoding(const char* i_Encoding)
         return;
     if (m_ContentEncoding)
         delete[] m_ContentEncoding;
-    m_ContentEncoding = new char[PL_strlen(i_Encoding) + 1];
-    PL_strncpy(m_ContentEncoding, i_Encoding, PL_strlen(i_Encoding));
+    int len = PL_strlen(i_Encoding);
+    m_ContentEncoding = new char[len + 1];
+    PL_strncpyz(m_ContentEncoding, i_Encoding, len+1);
 }
 
 void nsCacheObject::ContentType(const char* i_Type) 
@@ -291,8 +297,9 @@ void nsCacheObject::ContentType(const char* i_Type)
     }
     if (m_ContentType)
         delete[] m_ContentType;
-    m_ContentType = new char[PL_strlen(i_Type) + 1];
-    PL_strncpy(m_ContentType, i_Type, PL_strlen(i_Type));
+    int len = PL_strlen(i_Type);
+    m_ContentType = new char[len + 1];
+    PL_strncpyz(m_ContentType, i_Type, len+1);
 }
 
 void nsCacheObject::Etag(const char* i_etag) 
@@ -303,7 +310,7 @@ void nsCacheObject::Etag(const char* i_etag)
     if (m_Etag)
         delete[] m_Etag;
     m_Etag = new char[PL_strlen(i_etag) + 1];
-    PL_strncpy(m_Etag, i_etag, PL_strlen(i_etag));
+    PL_strncpyz(m_Etag, i_etag, PL_strlen(i_etag)+1);
 }
 
 void nsCacheObject::Filename(const char* i_Filename)
@@ -313,8 +320,9 @@ void nsCacheObject::Filename(const char* i_Filename)
         return;
     if (m_Filename)
         delete[] m_Filename;
-    m_Filename = new char[PL_strlen(i_Filename) +1];
-    PL_strncpy(m_Filename, i_Filename, PL_strlen(i_Filename));
+    int len = PL_strlen(i_Filename);
+    m_Filename = new char[len +1];
+    PL_strncpyz(m_Filename, i_Filename, len+1);
 }
 
 void* nsCacheObject::Info(void) const
@@ -328,7 +336,10 @@ void* nsCacheObject::Info(void) const
         pThis->m_info_size = sizeof(nsCacheObject);
         
         pThis->m_info_size -= sizeof(void*); // m_info itself is not being serialized
-        pThis->m_info_size -= sizeof(char*); // And neither is PostData
+        pThis->m_info_size -= sizeof(char*); // neither is m_PostData
+        pThis->m_info_size -= sizeof(nsStream*); // nor the stream
+        pThis->m_info_size -= sizeof(PRBool); // bIsComplete. 
+        //todo -optimize till here
 
         //Add the strings sizes
         pThis->m_info_size += PL_strlen(m_Charset)+1;
@@ -501,7 +512,7 @@ void nsCacheObject::PageServicesURL(const char* i_Url)
     if (m_PageServicesURL)
         delete[] m_PageServicesURL;
     m_PageServicesURL = new char[PL_strlen(i_Url) + 1];
-    PL_strncpy(m_PageServicesURL, i_Url, PL_strlen(i_Url));
+    PL_strncpyz(m_PageServicesURL, i_Url, PL_strlen(i_Url)+1);
 }
 
 void nsCacheObject::PostData(const char* i_data, const PRUint32 i_Len)
@@ -511,7 +522,7 @@ void nsCacheObject::PostData(const char* i_data, const PRUint32 i_Len)
     if (m_PostData)
         delete[] m_PostData;
     m_PostData = new char[i_Len+1];
-    PL_strncpy(m_PostData, i_data, i_Len);
+    PL_strncpyz(m_PostData, i_data, i_Len+1);
     m_PostDataLen = i_Len;
 }
 

@@ -225,11 +225,12 @@ nsCacheManager::Remove(const char* i_url)
     if (m_pFirstModule)
     {
         nsCacheModule* pModule = m_pFirstModule;
-        bStatus |= pModule->Remove(i_url);
+        bStatus = pModule->Remove(i_url);
         if (bStatus)
             return bStatus;
         while(pModule->NextModule()) {
             pModule = pModule->NextModule();
+            bStatus = pModule->Remove(i_url);
             if (bStatus)
                 return bStatus;
         }
