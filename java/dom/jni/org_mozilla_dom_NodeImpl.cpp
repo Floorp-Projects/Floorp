@@ -162,9 +162,9 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_appendChild
   if (NS_FAILED(rv) || !ret) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR)) {
+        (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         rv == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
+         rv == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR)) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -520,8 +520,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_NodeImpl_getNodeValue
   nsresult rv = node->GetNodeValue(ret);
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
-    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_DOMSTRING_SIZE_ERR) {
+    if (rv == NS_ERROR_DOM_DOMSTRING_SIZE_ERR) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -701,10 +700,10 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_insertBefore
   if (NS_FAILED(rv) || !ret) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_FOUND_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR)) {
+        (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         rv == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
+         rv == NS_ERROR_DOM_NOT_FOUND_ERR ||
+         rv == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR)) {
         exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -747,8 +746,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_removeChild
   if (NS_FAILED(rv) || !ret) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_FOUND_ERR)) {
+        (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         rv == NS_ERROR_DOM_NOT_FOUND_ERR)) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -802,10 +801,10 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NodeImpl_replaceChild
   if (NS_FAILED(rv) || !ret) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_FOUND_ERR)) {
+        (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         rv == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
+         rv == NS_ERROR_DOM_HIERARCHY_REQUEST_ERR ||
+         rv == NS_ERROR_DOM_NOT_FOUND_ERR)) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -848,8 +847,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_NodeImpl_setNodeValue
     env->ReleaseStringUTFChars(jvalue, value);
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
-    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
+    if (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,

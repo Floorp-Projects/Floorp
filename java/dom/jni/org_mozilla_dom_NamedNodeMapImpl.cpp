@@ -154,8 +154,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_removeNamedItem
     env->ReleaseStringUTFChars(jname, name);
   if (NS_FAILED(rv) || !node) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
-    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_FOUND_ERR) {
+    if (rv == NS_ERROR_DOM_NOT_FOUND_ERR) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -195,9 +194,9 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_NamedNodeMapImpl_setNamedItem
   if (NS_FAILED(rv) || !node) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR)) {
+        (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         rv == NS_ERROR_DOM_WRONG_DOCUMENT_ERR ||
+         rv == NS_ERROR_DOM_INUSE_ATTRIBUTE_ERR)) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,

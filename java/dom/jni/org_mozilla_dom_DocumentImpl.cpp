@@ -81,10 +81,9 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createAttribute
   nsresult rv = doc->CreateAttribute(name, &ret);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, name);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
-    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INVALID_CHARACTER_ERR) {
+    if (rv == NS_ERROR_DOM_INVALID_CHARACTER_ERR) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -142,10 +141,9 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createCDATASection
   nsresult rv = doc->CreateCDATASection(data, &ret);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jdata, data);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
-    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_SUPPORTED_ERR) {
+    if (rv == NS_ERROR_DOM_NOT_SUPPORTED_ERR) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -202,7 +200,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createComment
   nsresult rv = doc->CreateComment(data, &ret);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jdata, data);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "Document.createComment: failed", rv);
     return NULL;
@@ -244,7 +242,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createDocumentFragme
 
   nsIDOMDocumentFragment* ret = nsnull;
   nsresult rv = doc->CreateDocumentFragment(&ret);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "Document.createDocumentFragment: failed", rv);
     return NULL;
@@ -299,10 +297,9 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createElement
   nsresult rv = doc->CreateElement(tagName, &ret);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jtagName, tagName);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
-    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INVALID_CHARACTER_ERR) {
+    if (rv == NS_ERROR_DOM_INVALID_CHARACTER_ERR) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -360,11 +357,11 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createEntityReferenc
   nsresult rv = doc->CreateEntityReference(name, &ret);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jname, name);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INVALID_CHARACTER_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_SUPPORTED_ERR)) {
+        (rv == NS_ERROR_DOM_INVALID_CHARACTER_ERR ||
+         rv == NS_ERROR_DOM_NOT_SUPPORTED_ERR)) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -434,11 +431,11 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createProcessingInst
     env->ReleaseStringUTFChars(jdata, data);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jtarget, target);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NOT_SUPPORTED_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INVALID_CHARACTER_ERR)) {
+        (rv == NS_ERROR_DOM_NOT_SUPPORTED_ERR ||
+         rv == NS_ERROR_DOM_INVALID_CHARACTER_ERR)) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -495,7 +492,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_DocumentImpl_createTextNode
   nsresult rv = doc->CreateTextNode(data, &ret);
   if (iscopy == JNI_TRUE)
     env->ReleaseStringUTFChars(jdata, data);
-  if (NS_FAILED(rv) || !ret) {
+  if (NS_FAILED(rv)) {
     JavaDOMGlobals::ThrowException(env,
       "Document.createTextNode failed", rv);
     return NULL;

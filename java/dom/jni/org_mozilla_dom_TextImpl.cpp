@@ -35,7 +35,7 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_TextImpl_splitText
   (JNIEnv *env, jobject jthis, jint joffset)
 {
   if (joffset < 0 || joffset > JavaDOMGlobals::javaMaxInt) {
-    JavaDOMGlobals::ThrowException(env, "",
+    JavaDOMGlobals::ThrowException(env, "Text.splitText: failed",
                  NS_ERROR_DOM_INDEX_SIZE_ERR,
                  JavaDOMGlobals::EXCEPTION_DOM);
     return NULL;
@@ -54,8 +54,8 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_dom_TextImpl_splitText
   if (NS_FAILED(rv) || !ret) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INDEX_SIZE_ERR)) {
+        (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR ||
+         rv == NS_ERROR_DOM_INDEX_SIZE_ERR)) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,

@@ -126,8 +126,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_ProcessingInstructionImpl_setData
     env->ReleaseStringUTFChars(jdata, data);
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
-    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
+    if (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,

@@ -57,8 +57,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_appendData
     env->ReleaseStringUTFChars(jvalue, value);
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
-    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
+    if (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,  
@@ -77,7 +76,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_deleteData
 {
   if (offset < 0 || offset > JavaDOMGlobals::javaMaxInt || 
       count < 0 || count > JavaDOMGlobals::javaMaxInt) {
-    JavaDOMGlobals::ThrowException(env, "",
+    JavaDOMGlobals::ThrowException(env, "CharacterData.deleteData: failed",
                  NS_ERROR_DOM_INDEX_SIZE_ERR,
                  JavaDOMGlobals::EXCEPTION_DOM);
     return;
@@ -95,8 +94,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_deleteData
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INDEX_SIZE_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
+        (rv == NS_ERROR_DOM_INDEX_SIZE_ERR ||
+         rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -125,8 +124,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_getData
   nsresult rv = data->GetData(ret);
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
-    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_DOMSTRING_SIZE_ERR) {
+    if (rv == NS_ERROR_DOM_DOMSTRING_SIZE_ERR) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -203,8 +201,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_insertData
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INDEX_SIZE_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
+        (rv == NS_ERROR_DOM_INDEX_SIZE_ERR ||
+         rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -223,7 +221,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_replaceData
 {
   if (offset < 0 || offset > JavaDOMGlobals::javaMaxInt || 
       count < 0 || count > JavaDOMGlobals::javaMaxInt) {
-    JavaDOMGlobals::ThrowException(env, "",
+    JavaDOMGlobals::ThrowException(env, "CharacterData.replaceData: failed",
                  NS_ERROR_DOM_INDEX_SIZE_ERR,
                  JavaDOMGlobals::EXCEPTION_DOM);
     return;
@@ -254,8 +252,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_replaceData
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INDEX_SIZE_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
+        (rv == NS_ERROR_DOM_INDEX_SIZE_ERR ||
+         rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR)) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -296,8 +294,7 @@ JNIEXPORT void JNICALL Java_org_mozilla_dom_CharacterDataImpl_setData
     env->ReleaseStringUTFChars(jvalue, value);
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
-    if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
+    if (rv == NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
@@ -316,7 +313,7 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_substringData
 {
   if (offset < 0 || offset > JavaDOMGlobals::javaMaxInt || 
       count < 0 || count > JavaDOMGlobals::javaMaxInt) {
-    JavaDOMGlobals::ThrowException(env, "",
+    JavaDOMGlobals::ThrowException(env, "CharacterData.substringData: failed",
                  NS_ERROR_DOM_INDEX_SIZE_ERR,
                  JavaDOMGlobals::EXCEPTION_DOM);
     return NULL;
@@ -335,8 +332,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_dom_CharacterDataImpl_substringData
   if (NS_FAILED(rv)) {
     JavaDOMGlobals::ExceptionType exceptionType = JavaDOMGlobals::EXCEPTION_RUNTIME;
     if (NS_ERROR_GET_MODULE(rv) == NS_ERROR_MODULE_DOM &&
-        (NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_INDEX_SIZE_ERR ||
-         NS_ERROR_GET_CODE(rv) == NS_ERROR_DOM_DOMSTRING_SIZE_ERR)) {
+        (rv == NS_ERROR_DOM_INDEX_SIZE_ERR ||
+         rv == NS_ERROR_DOM_DOMSTRING_SIZE_ERR)) {
       exceptionType = JavaDOMGlobals::EXCEPTION_DOM;
     }
     JavaDOMGlobals::ThrowException(env,
