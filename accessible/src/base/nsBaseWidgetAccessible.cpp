@@ -264,7 +264,7 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccValue(nsAWritableString& _retval)
     if (elt) 
       return elt->GetAttribute(NS_LITERAL_STRING("href"), _retval);
   }
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_ERROR_FAILURE;
 }
 
 
@@ -284,9 +284,8 @@ NS_IMETHODIMP nsLinkableAccessible::GetAccActionName(PRUint8 index, nsAWritableS
       nsAccessible::GetTranslatedString(NS_LITERAL_STRING("jump"), _retval); 
       return NS_OK;
     }
-    return NS_ERROR_NOT_IMPLEMENTED;
   }
-  return NS_ERROR_INVALID_ARG;
+  return NS_ERROR_FAILURE;
 }
 
 /* void accDoAction (in PRUint8 index); */
@@ -323,7 +322,7 @@ NS_IMETHODIMP nsLinkableAccessible::AccDoAction(PRUint8 index)
       }
     }
   }
-  return NS_ERROR_INVALID_ARG;
+  return NS_ERROR_FAILURE;
 }
 
 
