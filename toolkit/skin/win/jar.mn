@@ -28,6 +28,7 @@ classic.jar:
 +  skin/classic/global/wizardOverlay.css
 +  skin/classic/global/button.css
 +  skin/classic/global/menu.css
+   skin/classic/global/expander.css
 +  skin/classic/global/toolbar.css
 +  skin/classic/global/globalBindings.xml
 +  skin/classic/global/Preview.png

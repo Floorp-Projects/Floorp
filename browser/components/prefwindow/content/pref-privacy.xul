@@ -38,7 +38,6 @@
 
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/skin/pref/pref.css" type="text/css"?>
-<?xml-stylesheet href="chrome://browser/content/pref/privacyExpanderBindings.css" type="text/css"?>
 
 <!DOCTYPE window SYSTEM "chrome://browser/locale/pref/pref-privacy.dtd" >
 <page xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -53,7 +52,7 @@
 
   <description>&privacyDescription.label;</description>
 
-  <vbox id="privacyCategories" class="listBox" flex="1" style="overflow: auto;">
+  <vbox id="privacyCategories" class="listBox settingsBox" flex="1" style="overflow: auto;">
     <!-- History -->
     <expander id="history" label="&history.label;" clearlabel="&clearHistory.label;" onclear="clearHistory();" persist="open">
       <hbox align="center">
