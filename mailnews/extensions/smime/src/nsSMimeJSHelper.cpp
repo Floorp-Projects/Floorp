@@ -393,15 +393,15 @@ nsresult nsSMimeJSHelper::getMailboxList(nsIMsgCompFields *compFields, PRUint32 
   nsXPIDLString to, cc, bcc;
   nsXPIDLCString ng;
 
-  res = compFields->GetTo(getter_Copies(to));
+  res = compFields->GetTo(to);
   if (NS_FAILED(res))
     return res;
 
-  res = compFields->GetCc(getter_Copies(cc));
+  res = compFields->GetCc(cc);
   if (NS_FAILED(res))
     return res;
 
-  res = compFields->GetBcc(getter_Copies(bcc));
+  res = compFields->GetBcc(bcc);
   if (NS_FAILED(res))
     return res;
 

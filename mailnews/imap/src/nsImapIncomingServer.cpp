@@ -79,7 +79,6 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsIImapService.h"
 #include "nsMsgI18N.h"
-#include "nsMsgUtf7Utils.h"
 #include "nsAutoLock.h"
 #include "nsIImapMockChannel.h"
 #include "nsIPrompt.h"
@@ -1143,7 +1142,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
       PRBool isNamespace = PR_FALSE;
       PRBool noSelect = PR_FALSE;
 
-      rv = a_nsIFolder->FindSubFolder(dupFolderPath.get(), getter_AddRefs(msgFolder));
+      rv = a_nsIFolder->FindSubFolder(dupFolderPath, getter_AddRefs(msgFolder));
       NS_ENSURE_SUCCESS(rv,rv);
       m_subscribeFolders.AppendObject(msgFolder);
       noSelect = (boxFlags & kNoselect) != 0;
@@ -1296,7 +1295,7 @@ NS_IMETHODIMP nsImapIncomingServer::PossibleImapMailbox(const char *folderPath, 
         imapFolder->SetOnlineName(dupFolderPath.get());
       if (hierarchyDelimiter != '/')
         nsImapUrl::UnescapeSlashes(folderName.BeginWriting());
-      if (NS_SUCCEEDED(CreatePRUnicharStringFromUTF7(folderName.get(), getter_Copies(unicodeName))))
+      if (NS_SUCCEEDED(CopyMUTF7toUTF16(folderName, unicodeName)))
         child->SetPrettyName(unicodeName);
       // Call ConvertFolderName() and HideFolderName() to do special folder name
       // mapping and hiding, if configured to do so. For example, need to hide AOL's
@@ -1709,7 +1708,7 @@ NS_IMETHODIMP  nsImapIncomingServer::FolderVerifiedOnline(const char *folderName
   if (NS_SUCCEEDED(rv) && rootFolder)
   {
     nsCOMPtr<nsIMsgFolder> aFolder;
-    rv = rootFolder->FindSubFolder(folderName, getter_AddRefs(aFolder));
+    rv = rootFolder->FindSubFolder(nsDependentCString(folderName), getter_AddRefs(aFolder));
     if (NS_SUCCEEDED(rv) && aFolder)
     {
       nsCOMPtr<nsIImapMailFolderSink> imapFolder = do_QueryInterface(aFolder);
@@ -2522,11 +2521,6 @@ NS_IMETHODIMP nsImapIncomingServer::RemoveChannelFromUrl(nsIMsgMailNewsUrl *aUrl
   return rv;
 }
 
-NS_IMETHODIMP nsImapIncomingServer::CreatePRUnicharStringFromUTF7(const char * aSourceString, PRUnichar **aUnicodeStr)
-{
-  return CreateUnicodeStringFromUtf7(aSourceString, aUnicodeStr);
-}
-
 nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
 {
   
@@ -3040,12 +3034,13 @@ nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe
   
   // Locate the folder so that the correct hierarchical delimiter is used in the
   // folder pathnames, otherwise root's (ie, '^') is used and this is wrong.
-  nsCAutoString folderCName;
-  folderCName.AppendWithConversion(aName);
+  
+  // aName is not a genuine UTF-16 but just a zero-padded modified UTF-7 
+  NS_LossyConvertUTF16toASCII folderCName(aName);
   nsCOMPtr<nsIMsgFolder> msgFolder;
   if (rootMsgFolder && aName && (*aName))
   {
-    rv = rootMsgFolder->FindSubFolder(folderCName.get(), getter_AddRefs(msgFolder));
+    rv = rootMsgFolder->FindSubFolder(folderCName, getter_AddRefs(msgFolder));
   }
   
   nsCOMPtr<nsIEventQueue> queue;
@@ -3057,12 +3052,10 @@ nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe
   rv = pEventQService->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
   if (NS_FAILED(rv)) return rv;
 
-  // ok, aName is really a fake unicode name,
-  // just a utf-7 encoded ascii string 0 byte extended to unicode. So convert it 
-  // to real unicode, and pass that into the subscribe routines.
-  nsXPIDLString unicodeName;
-  CreateUnicodeStringFromUtf7(folderCName.get(), getter_Copies(unicodeName));
-  // we need to convert aName, which is utf-7 encoded, to unicode
+  nsAutoString unicodeName;
+  rv = CopyMUTF7toUTF16(folderCName, unicodeName);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   if (subscribe)
     rv = imapService->SubscribeFolder(queue, msgFolder, unicodeName.get(), nsnull, aUri);
   else 
@@ -3794,16 +3787,16 @@ NS_IMETHODIMP nsImapIncomingServer::SetTrashFolderName(const PRUnichar *chvalue)
   nsresult rv = GetTrashFolderName(getter_Copies(oldTrashName));
   if (NS_SUCCEEDED(rv))
   {
-    char *oldTrashNameUtf7 = CreateUtf7ConvertedStringFromUnicode(oldTrashName);
-    if (oldTrashNameUtf7)
+    nsCAutoString oldTrashNameUtf7;
+    rv = CopyUTF16toMUTF7(oldTrashName, oldTrashNameUtf7);
+    if (NS_SUCCEEDED(rv))
     {
       nsCOMPtr<nsIMsgFolder> oldFolder;
-      rv = GetFolder(oldTrashNameUtf7, getter_AddRefs(oldFolder));
+      rv = GetFolder(oldTrashNameUtf7.get(), getter_AddRefs(oldFolder));
       if (NS_SUCCEEDED(rv) && oldFolder)
       {
         oldFolder->ClearFlag(MSG_FOLDER_FLAG_TRASH);
       }
-      PR_Free(oldTrashNameUtf7);
     }
   }
   

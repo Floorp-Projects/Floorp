@@ -297,8 +297,6 @@ public:
   
   // utility function calls made by the server
   
-  static PRUnichar * CreatePRUnicharStringFromUTF7(const char * aSourceString);
-  
   void Copy(const char * messageList, const char *destinationMailbox, 
     PRBool idsAreUid);
   void Search(const char * searchCriteria,  PRBool useUID, 

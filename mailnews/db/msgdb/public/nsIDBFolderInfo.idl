@@ -38,11 +38,6 @@
 #include "nsISupports.idl"
 #include "MailNewsTypes2.idl"
 
-[ptr] native nsString(nsString); 
-%{ C++
-#include "nsString.h"
-%}
-
 [scriptable, uuid(5cb11c00-cb8b-11d2-8d67-00805f8a6617)]
 interface  nsIDBFolderInfo : nsISupports {
   attribute long Flags;
@@ -74,30 +69,28 @@ interface  nsIDBFolderInfo : nsISupports {
 
   void ChangeExpungedBytes(in long delta);
 
-  void GetCharPtrProperty(in string propertyName, out string resultProperty);
-  void SetCharPtrProperty(in string aPropertyName, in string aPropertyValue);
-  void SetUint32Property(in string propertyName, in unsigned long propertyValue);
-  void GetUint32Property(in string propertyName, out unsigned long result, in unsigned long defaultValue);
-  void getBooleanProperty(in string propertyName, out boolean result, in boolean defaultValue);
+  string getCharPtrProperty(in string propertyName);
+  void setCharPtrProperty(in string aPropertyName, in string aPropertyValue);
+  void setUint32Property(in string propertyName, in unsigned long propertyValue);
+  unsigned long getUint32Property(in string propertyName, in unsigned long defaultValue);
+  boolean getBooleanProperty(in string propertyName, in boolean defaultValue);
   void setBooleanProperty(in string propertyName, in boolean aPropertyValue);
-  void	GetTransferInfo(out nsIDBFolderInfo transferInfo);
-  void	InitFromTransferInfo(in nsIDBFolderInfo transferInfo);
+  nsIDBFolderInfo	GetTransferInfo();
+  void	initFromTransferInfo(in nsIDBFolderInfo transferInfo);
 
-  [noscript] void getCharacterSet(in nsString charSet, out boolean usedDefault);
-  [noscript] void setCharacterSet(in wstring charSet);
-  void getCharacterSetOverride(out boolean characterSetOverride);
-  void setCharacterSetOverride(in boolean characterSetOverride);
+  void getCharacterSet(out AString charSet, out boolean overriden);
+  void setCharacterSet(in wstring charSet);
 
-  void getCharPtrCharacterSet(out string result);
+  attribute boolean characterSetOverride;
 
-  [noscript] void getLocale(in nsString result);
-  [noscript] void setLocale(in nsString locale);
+  string getCharPtrCharacterSet();
 
-  [noscript] void setMailboxName(in nsString newBoxName);
-  [noscript] void getMailboxName(in nsString boxName);
+  attribute AString locale;
+  attribute AString mailboxName;
 
-  [noscript] void getProperty(in string propertyName, in nsString resultProperty);
-  [noscript] void setProperty(in string propertyName, in nsString propertyStr);
+
+  AString getProperty(in string propertyName);
+  void setProperty(in string propertyName, in AString propertyStr);
 
   attribute string knownArtsSet;
   attribute string folderName;

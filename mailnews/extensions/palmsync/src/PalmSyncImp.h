@@ -102,8 +102,8 @@ public :
 private :
     PRInt32 m_cRef;
     void * m_PalmHotSync;
-    void CopyUnicodeString(LPTSTR *destStr, nsString srcStr);
-    void CopyCString(LPTSTR *destStr, nsCString srcStr);
+    void CopyUnicodeString(LPTSTR *destStr, const nsAFlatString& srcStr);
+    void CopyCString(LPTSTR *destStr, const nsAFlatCString& srcStr);
 };
 
 #endif // MSG_MAPI_IMP_H

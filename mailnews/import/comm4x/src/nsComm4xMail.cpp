@@ -48,6 +48,7 @@
 #include "nsUnicharUtils.h"
 #include "Comm4xMailDebugLog.h"
 #include "prmem.h"
+#include "nsNativeCharsetUtils.h"
 
 #define	kCopyBufferSize		8192
 #define	kMailReadBufferSize	16384
@@ -168,7 +169,7 @@ nsresult nsComm4xMail::IterateMailDir(nsIFileSpec *pFolder, nsISupportsArray *pA
         rv = dir->GetCurrentSpec(getter_AddRefs(entry));
         if (NS_SUCCEEDED(rv)) {
             rv = entry->GetLeafName(getter_Copies(pName));
-            nsMsgGetNativePathString(pName.get(), currentFolderNameStr);
+            NS_CopyNativeToUnicode(pName, currentFolderNameStr);
             isFile = PR_FALSE;
             entry->IsFile(&isFile);
             if (isFile) {
@@ -211,7 +212,7 @@ nsresult nsComm4xMail::FoundMailbox(nsIFileSpec *mailFile, nsAutoString *pName, 
     if (!pPath.IsEmpty())
       IMPORT_LOG2("Found comm4x mailbox: %s, m_depth = %d\n", pPath.get(), m_depth);
     else
-      IMPORT_LOG2("Can't get native path but found comm4x mailbox: %s, m_depth = %d\n", NS_ConvertUCS2toUTF8(*pName).get(), m_depth);
+      IMPORT_LOG2("Can't get native path but found comm4x mailbox: %s, m_depth = %d\n", NS_ConvertUTF16toUTF8(*pName).get(), m_depth);
 
     nsresult rv = pImport->CreateNewMailboxDescriptor(getter_AddRefs(desc));
     if (NS_SUCCEEDED(rv)) {

@@ -49,6 +49,7 @@
 #include "nsIIOService.h"
 #include "nsNetCID.h"
 #include "prprf.h"
+#include "nsAutoPtr.h"
 
 // This stuff lives in the base class because the IMAP search syntax 
 // is used by the Dredd SEARCH command as well as IMAP itself
@@ -601,35 +602,35 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsIMsgSearchTerm *term, PRBool real
 #endif
 
             // do all sorts of crazy escaping
-			convertedValue = reallyDredd ? EscapeSearchUrl (searchTermValue) :
+      convertedValue = reallyDredd ? EscapeSearchUrl (searchTermValue) :
                 EscapeImapSearchProtocol(searchTermValue);
-			useQuotes = !reallyDredd ||
-                (nsAutoString(convertedValue).FindChar((PRUnichar)' ') != -1);
-			// now convert to char* and escape quoted_specials
-			nsresult rv = ConvertFromUnicode(NS_ConvertUCS2toUTF8(destCharset).get(), nsAutoString(convertedValue), &value);
-			if (NS_SUCCEEDED(rv) && value)
-			{
-				char *oldValue = value;
-				// max escaped length is one extra character for every character in the cmd.
-				char *newValue = (char*)PR_Malloc(sizeof(char) * (2*strlen(value) + 1));
-				if (newValue)
-				{
-					char *p = newValue;
-					while (1)
-					{
-						char ch = *value++;
-						if (!ch)
-							break;
-						if ((useQuotes ? ch == '"' : 0) || ch == '\\')
-							*p++ = '\\';
-						*p++ = ch;
-					}
-					*p = '\0';
-					value = nsCRT::strdup(newValue); // realloc down to smaller size
-					nsCRT::free(newValue);
-					nsCRT::free(oldValue);
-				}
-			}
+      useQuotes = !reallyDredd || 
+        (nsDependentString(convertedValue).FindChar(PRUnichar(' ')) != -1);
+      // now convert to char* and escape quoted_specials
+      nsCAutoString valueStr;
+      nsresult rv = ConvertFromUnicode(NS_LossyConvertUTF16toASCII(destCharset).get(),
+                                       nsDependentString(convertedValue), valueStr);
+      if (NS_SUCCEEDED(rv))
+      {
+        const char *vptr = valueStr.get();
+        // max escaped length is one extra character for every character in the cmd.
+        nsAutoArrayPtr<char> newValue(new char[2*strlen(vptr) + 1]);
+        if (newValue)
+        {
+          char *p = newValue;
+          while (1)
+          {
+            char ch = *vptr++;
+            if (!ch)
+              break;
+            if ((useQuotes ? ch == '"' : 0) || ch == '\\')
+              *p++ = '\\';
+            *p++ = ch;
+          }
+          *p = '\0';
+          value = nsCRT::strdup(newValue); // realloc down to smaller size
+        }
+      }
 			else
 				value = nsCRT::strdup("");
 			nsCRT::free(convertedValue);

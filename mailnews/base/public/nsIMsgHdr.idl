@@ -43,10 +43,6 @@
 
 #include "MailNewsTypes2.idl"
 
-[ptr] native nsString(nsString);
-[ptr] native nsCString(nsCString);
-[ref] native nsStringRef(nsString);
-[ref] native nsCStringRef(nsCString);
 [ptr] native octetPtr(PRUint8);
 
 interface nsIMsgFolder;
@@ -56,8 +52,8 @@ interface nsIMsgHdr : nsISupports
 {
     /* general property routines - I think this can retrieve any
        header in the db */
-    [noscript] void getProperty(in string propertyName, in nsStringRef propertyValue);
-    [noscript] void setProperty(in string propertyName, in nsStringRef propertyStr);
+    AString getProperty(in string propertyName);
+    void setProperty(in string propertyName, in AString propertyStr);
     void setStringProperty(in string propertyName, in string propertyValue);
     string getStringProperty(in string propertyName);
     unsigned long getUint32Property(in string propertyName);
@@ -68,7 +64,7 @@ interface nsIMsgHdr : nsISupports
     readonly attribute boolean isRead;
     readonly attribute boolean isFlagged;
 
-	// Mark message routines
+    // Mark message routines
     void markRead(in boolean read);
     void markFlagged(in boolean flagged);
     void markHasAttachments(in boolean hasAttachments);
@@ -104,9 +100,9 @@ interface nsIMsgHdr : nsISupports
     /* anything below here still has to be fixed */
     void setReferences(in string references);
     readonly attribute unsigned short numReferences;
-    [noscript] void getStringReference(in long refNum, in nsCStringRef ref);
+    ACString getStringReference(in long refNum);
 
-	void setRecipientsArray(in string names, in string addresses,
+    void setRecipientsArray(in string names, in string addresses,
                             in unsigned long numAddresses);
     void setCCListArray(in string names, in string addresses,
                         in unsigned long numAddresses);
@@ -119,9 +115,9 @@ interface nsIMsgHdr : nsISupports
     [noscript] void getSubjectCollationKey(out octetPtr key, out unsigned long len);
     [noscript] void getRecipientsCollationKey(out octetPtr key, out unsigned long len);
     
-	attribute string Charset;
-	attribute nsMsgLabelValue label;
-  readonly attribute nsIMsgFolder folder;
+    attribute string Charset;
+    attribute nsMsgLabelValue label;
+    readonly attribute nsIMsgFolder folder;
 };
 
 [scriptable, uuid(B5212A60-F93F-11d2-951C-006097222B83)]

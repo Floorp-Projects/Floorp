@@ -339,7 +339,7 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharset(const char * aCharset)
 	rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
 	if(NS_SUCCEEDED(rv))
 	{
-		rv = folderInfo->SetCharacterSet(NS_ConvertASCIItoUCS2(aCharset).get());
+		rv = folderInfo->SetCharacterSet(NS_ConvertASCIItoUTF16(aCharset).get());
 		db->Commit(nsMsgDBCommitType::kLargeCommit);
 		mCharset.AssignWithConversion(aCharset);  // synchronize member variable
 	}
@@ -533,7 +533,7 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
         //folderInfo->GetImapUnreadPendingMessages(&mNumPendingUnreadMessages);
         
         PRBool defaultUsed;
-        folderInfo->GetCharacterSet(&mCharset, &defaultUsed);
+        folderInfo->GetCharacterSet(mCharset, &defaultUsed);
         if (defaultUsed)
           mCharset.Truncate();
         folderInfo->GetCharacterSetOverride(&mCharsetOverride);
@@ -2188,7 +2188,7 @@ nsMsgDBFolder::GetSubFolders(nsIEnumerator* *result)
 }
 
 NS_IMETHODIMP
-nsMsgDBFolder::FindSubFolder(const char *aEscapedSubFolderName, nsIMsgFolder **aFolder)
+nsMsgDBFolder::FindSubFolder(const nsACString& aEscapedSubFolderName, nsIMsgFolder **aFolder)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIRDFService> rdf(do_GetService(kRDFServiceCID, &rv));
@@ -2958,7 +2958,7 @@ NS_IMETHODIMP nsMsgDBFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsg
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsMsgDBFolder::AddSubfolder(nsAutoString *folderName,
+nsresult nsMsgDBFolder::AddSubfolder(const nsAString& folderName,
                                    nsIMsgFolder** newFolder)
 {
   return NS_ERROR_NOT_IMPLEMENTED;

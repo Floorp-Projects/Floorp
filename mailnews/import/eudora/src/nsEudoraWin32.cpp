@@ -420,7 +420,7 @@ nsresult nsEudoraWin32::FoundMailbox( nsIFileSpec *mailFile, const char *pName, 
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
 
-	ConvertToUnicode(pName, displayName);
+	NS_CopyNativeToUnicode(nsDependentCString(pName), displayName);
 
 #ifdef IMPORT_DEBUG
 	char *pPath = nsnull;
@@ -463,7 +463,7 @@ nsresult nsEudoraWin32::FoundMailFolder( nsIFileSpec *mailFolder, const char *pN
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
 
-	ConvertToUnicode(pName, displayName);
+	NS_CopyNativeToUnicode(nsDependentCString(pName), displayName);
 
 #ifdef IMPORT_DEBUG
 	char *pPath = nsnull;
@@ -1371,7 +1371,7 @@ nsresult nsEudoraWin32::FoundAddressBook( nsIFileSpec *spec, const PRUnichar *pN
 			return( rv);
 		if (!pLeaf)
 			return( NS_ERROR_FAILURE);
-		ConvertToUnicode(pLeaf, name);
+		NS_CopyNativeToUnicode(nsDependentCString(pLeaf), name);
 		nsCRT::free( pLeaf);
 		nsString	tStr;
 		name.Right( tStr, 4);

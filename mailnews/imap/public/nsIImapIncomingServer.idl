@@ -96,7 +96,6 @@ interface nsIImapIncomingServer : nsISupports {
   void pseudoInterruptMsgLoad(in nsIMsgFolder aImapFolder, in nsIMsgWindow aMsgWindow, out boolean interrupted);
   void ResetConnection(in string folderName);
   void CloseConnectionForFolder(in nsIMsgFolder aMsgFolder);
-  void CreatePRUnicharStringFromUTF7(in string aSourceString, out wstring aUnicodeStr);
   void reDiscoverAllFolders();
   nsIURI subscribeToFolder(in wstring name, in boolean subscribe);
   nsIMsgFolder GetReadMailPFC(in boolean createIfMissing);

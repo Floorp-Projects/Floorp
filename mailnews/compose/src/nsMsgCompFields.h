@@ -85,8 +85,8 @@ public:
   nsresult SetAsciiHeader(MsgHeaderID header, const char *value);
   const char* GetAsciiHeader(MsgHeaderID header); //just return the address of the internal header variable, don't dispose it
 
-  nsresult SetUnicodeHeader(MsgHeaderID header, const PRUnichar *value);
-  nsresult GetUnicodeHeader(MsgHeaderID header, PRUnichar **_retval); //Will return a copy of the header, must be free using PR_Free() 
+  nsresult SetUnicodeHeader(MsgHeaderID header, const nsAString &value);
+  nsresult GetUnicodeHeader(MsgHeaderID header, nsAString &_retval); 
 
   /* Convenience routines to get and set header's value...
   
@@ -169,7 +169,7 @@ public:
 
 protected:
   char*       m_headers[MSG_MAX_HEADERS];
-  char*       m_body;
+  nsCString   m_body;
   nsCOMPtr<nsISupportsArray>  m_attachments;
   PRBool      m_attachVCard;
   PRBool      m_forcePlainText;
@@ -178,7 +178,6 @@ protected:
   PRBool      m_returnReceipt;
   PRBool      m_bodyIsAsciiOnly;
   PRInt32     m_receiptHeaderType;        /* receipt header type */
-  nsCString   m_internalCharSet;
   nsCString   m_DefaultCharacterSet;
 
   nsCOMPtr<nsISupports> mSecureCompFields;

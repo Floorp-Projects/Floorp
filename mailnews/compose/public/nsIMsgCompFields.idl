@@ -44,21 +44,21 @@
 [scriptable, uuid(3E89CAE3-BD2D-11d2-8293-000000000000)]
 interface nsIMsgCompFields : nsISupports {
 
-  attribute wstring from;
-  attribute wstring replyTo;
-  attribute wstring to;
-  attribute wstring cc;
-  attribute wstring bcc;
+  attribute AString from;
+  attribute AString replyTo;
+  attribute AString to;
+  attribute AString cc;
+  attribute AString bcc;
   
-  attribute wstring fcc;
-  attribute wstring fcc2;
+  attribute AString fcc;
+  attribute AString fcc2;
   
   attribute string  newsgroups;
   attribute string  newshost;
   attribute string  newspostUrl;
   attribute string  followupTo;
 
-  attribute wstring subject;
+  attribute AString subject;
   
   /**
    * attachments
@@ -67,14 +67,14 @@ interface nsIMsgCompFields : nsISupports {
    */
   attribute string  attachments;
 
-  attribute wstring organization;
+  attribute AString organization;
   attribute string  references;
   attribute string  priority;
   attribute string  messageId;
   attribute string  characterSet;
   readonly attribute string defaultCharacterSet;
 
-  attribute wstring templateName;
+  attribute AString templateName;
   attribute string  draftId;
 
   attribute boolean returnReceipt;
@@ -85,9 +85,9 @@ interface nsIMsgCompFields : nsISupports {
   attribute boolean uuEncodeAttachments;
   attribute boolean bodyIsAsciiOnly;
 
-  attribute wstring otherRandomHeaders;
+  attribute AString otherRandomHeaders;
 
-  attribute wstring body;
+  attribute AString body;
 
   /**
    * temporaryFiles

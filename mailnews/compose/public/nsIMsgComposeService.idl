@@ -60,25 +60,6 @@ interface nsIMsgComposeService : nsISupports {
      the compose window  */
   void OpenComposeWindowWithURI(in string msgComposeWindowURL, in nsIURI aURI);
 
-  /**
-  * OpenComposeWindowWithValues
-  *
-  * @NOT SUPPORTED ANYMORE, USE OpenComposeWindowWithParams INSTEAD.
-  * @THIS API WILL BE REMOVED
-  */
-  void OpenComposeWindowWithValues(in string msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
-              in wstring to, in wstring cc, in wstring bcc, in string newsgroups,
-              in wstring subject, in wstring body, in string attachment, in nsIMsgIdentity identity);
-
-  /**
-  * OpenComposeWindowWithCompFields
-  *
-  * @NOT SUPPORTED ANYMORE, USE OpenComposeWindowWithParams INSTEAD.
-  * @THIS API WILL BE REMOVED
-  */
-  void OpenComposeWindowWithCompFields(in string msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
-                    in nsIMsgCompFields compFields, in nsIMsgIdentity identity);
-
   /* ... */
   void OpenComposeWindowWithParams(in string msgComposeWindowURL, in nsIMsgComposeParams params);
 

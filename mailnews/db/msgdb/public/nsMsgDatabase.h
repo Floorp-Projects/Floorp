@@ -101,7 +101,7 @@ public:
   static nsMsgDatabase* FindInCache(nsFileSpec &dbName);
 
   //helper function to fill in nsStrings from hdr row cell contents.
-  nsresult RowCellColumnTonsString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
+  nsresult RowCellColumnTonsString(nsIMdbRow *row, mdb_token columnToken, nsAString &resultStr);
   nsresult RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 *uint32Result, PRUint32 defaultValue = 0);
   nsresult RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 &uint32Result, PRUint32 defaultValue = 0);
   nsresult RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, PRUnichar **);
@@ -113,12 +113,12 @@ public:
   // they should be used when the properties aren't accessed a lot
   nsresult        GetProperty(nsIMdbRow *row, const char *propertyName, char **result);
   nsresult        SetProperty(nsIMdbRow *row, const char *propertyName, const char *propertyVal);
-  nsresult        GetPropertyAsNSString(nsIMdbRow *row, const char *propertyName, nsString *result);
-  nsresult        SetPropertyFromNSString(nsIMdbRow *row, const char *propertyName, nsString *propertyVal);
+  nsresult        GetPropertyAsNSString(nsIMdbRow *row, const char *propertyName, nsAString &result);
+  nsresult        SetPropertyFromNSString(nsIMdbRow *row, const char *propertyName, const nsAString &propertyVal);
   nsresult        GetUint32Property(nsIMdbRow *row, const char *propertyName, PRUint32 *result, PRUint32 defaultValue = 0);
   nsresult        SetUint32Property(nsIMdbRow *row, const char *propertyName, PRUint32 propertyVal);
   // helper function for once we have the token.
-  nsresult        SetNSStringPropertyWithToken(nsIMdbRow *row, mdb_token aProperty, nsString *propertyStr);
+  nsresult        SetNSStringPropertyWithToken(nsIMdbRow *row, mdb_token aProperty, const nsAString &propertyStr);
   
   // helper functions to put values in cells for the passed-in row
   nsresult        UInt32ToRowCellColumn(nsIMdbRow *row, mdb_token columnToken, PRUint32 value);
@@ -127,10 +127,10 @@ public:
   
   
   // helper functions to copy an nsString to a yarn, int32 to yarn, and vice versa.
-  static struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
+  static struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, const nsAString &str);
   static struct mdbYarn *UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i);
-  static void YarnTonsString(struct mdbYarn *yarn, nsString *str);
-  static void YarnTonsCString(struct mdbYarn *yarn, nsCString *str);
+  static void YarnTonsString(struct mdbYarn *yarn, nsAString &str);
+  static void YarnTonsCString(struct mdbYarn *yarn, nsACString &str);
   static void YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i);
   
   

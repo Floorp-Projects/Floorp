@@ -55,7 +55,7 @@
 #include "nsMsgSearchValue.h"
 #include "nsReadableUtils.h"
 #include "nsEscape.h"
-#include "nsMsgUtf7Utils.h"
+#include "nsMsgI18N.h"
 #include "nsIImportService.h"
 #include "nsISupportsObsolete.h"
 #include "nsIOutputStream.h"
@@ -510,15 +510,14 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, n
       {
         nsAutoString unicodeStr;
         impSvc->SystemStringToUnicode(originalServerPath.get(), unicodeStr);
-        char *utfNewName = CreateUtf7ConvertedStringFromUnicode(unicodeStr.get());
-        originalServerPath.Assign(utfNewName);
-        nsCRT::free(utfNewName);
+        nsresult rv = CopyUTF16toMUTF7(unicodeStr, originalServerPath);
+        NS_ENSURE_SUCCESS(rv, rv); 
       }
 
       nsCOMPtr <nsIMsgFolder> destIFolder;
       if (rootFolder)
       {
-        rootFolder->FindSubFolder(originalServerPath.get(), getter_AddRefs(destIFolder));
+        rootFolder->FindSubFolder(originalServerPath, getter_AddRefs(destIFolder));
         if (destIFolder)
         {
           destIFolder->GetURI(getter_Copies(folderUri));
@@ -576,10 +575,7 @@ nsresult nsMsgFilter::ConvertMoveToFolderValue(nsIMsgRuleAction *filterAction, n
         {
           nsAutoString unicodeStr;
           impSvc->SystemStringToUnicode(moveValue.get(), unicodeStr);
-          nsXPIDLCString escapedName;
-          rv = NS_MsgEscapeEncodeURLPath(unicodeStr.get(), getter_Copies(escapedName));
-          if (NS_SUCCEEDED(rv) && escapedName)
-            moveValue.Assign(escapedName.get());
+          rv = NS_MsgEscapeEncodeURLPath(unicodeStr, moveValue);
         }
         destFolderUri.Append(moveValue);
         localMailRootMsgFolder->GetChildWithURI (destFolderUri.get(), PR_TRUE, PR_FALSE /*caseInsensitive*/, getter_AddRefs(destIMsgFolder));

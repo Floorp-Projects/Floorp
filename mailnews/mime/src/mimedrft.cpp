@@ -229,9 +229,9 @@ CreateTheComposeWindow(nsIMsgCompFields *   compFields,
         if (NS_SUCCEEDED(rv) && attachment)
         {
           nsAutoString nameStr;
-          rv = ConvertToUnicode(msgCompHeaderInternalCharset(), curAttachment->real_name, nameStr);
+          rv = ConvertToUnicode("UTF-8", curAttachment->real_name, nameStr);
           if (NS_FAILED(rv))
-            nameStr.AssignWithConversion(curAttachment->real_name);
+            CopyASCIItoUTF16(curAttachment->real_name, nameStr);
           attachment->SetName(nameStr);
           attachment->SetUrl(spec.get());
           attachment->SetTemporary(PR_TRUE);
@@ -318,43 +318,43 @@ CreateCompositionFields(const char        *from,
   
   if (from) {
     val = MIME_DecodeMimeHeader(from, charset, PR_FALSE, PR_TRUE);
-    cFields->SetFrom(NS_ConvertUTF8toUCS2(val ? val : from).get());
+    cFields->SetFrom(NS_ConvertUTF8toUTF16(val ? val : from));
     PR_FREEIF(val);
   }
   
   if (subject) {
     val = MIME_DecodeMimeHeader(subject, charset, PR_FALSE, PR_TRUE);
-    cFields->SetSubject(NS_ConvertUTF8toUCS2(val ? val : subject).get());
+    cFields->SetSubject(NS_ConvertUTF8toUTF16(val ? val : subject));
     PR_FREEIF(val);
   }
   
   if (reply_to) {
     val = MIME_DecodeMimeHeader(reply_to, charset, PR_FALSE, PR_TRUE);
-    cFields->SetReplyTo(NS_ConvertUTF8toUCS2(val ? val : reply_to).get());
+    cFields->SetReplyTo(NS_ConvertUTF8toUTF16(val ? val : reply_to));
     PR_FREEIF(val);
   }
   
   if (to) {
     val = MIME_DecodeMimeHeader(to, charset, PR_FALSE, PR_TRUE);
-    cFields->SetTo(NS_ConvertUTF8toUCS2(val ? val : to).get());
+    cFields->SetTo(NS_ConvertUTF8toUTF16(val ? val : to));
     PR_FREEIF(val);
   }
   
   if (cc) {
     val = MIME_DecodeMimeHeader(cc, charset, PR_FALSE, PR_TRUE);
-    cFields->SetCc(NS_ConvertUTF8toUCS2(val ? val : cc).get());
+    cFields->SetCc(NS_ConvertUTF8toUTF16(val ? val : cc));
     PR_FREEIF(val);
   }
   
   if (bcc) {
     val = MIME_DecodeMimeHeader(bcc, charset, PR_FALSE, PR_TRUE);
-    cFields->SetBcc(NS_ConvertUTF8toUCS2(val ? val : bcc).get());
+    cFields->SetBcc(NS_ConvertUTF8toUTF16(val ? val : bcc));
     PR_FREEIF(val);
   }
   
   if (fcc) {
     val = MIME_DecodeMimeHeader(fcc, charset, PR_FALSE, PR_TRUE);
-    cFields->SetFcc(NS_ConvertUTF8toUCS2(val ? val : fcc).get());
+    cFields->SetFcc(NS_ConvertUTF8toUTF16(val ? val : fcc));
     PR_FREEIF(val);
   }
   
@@ -372,7 +372,7 @@ CreateCompositionFields(const char        *from,
   
   if (organization) {
     val = MIME_DecodeMimeHeader(organization, charset, PR_FALSE, PR_TRUE);
-    cFields->SetOrganization(NS_ConvertUTF8toUCS2(val ? val : organization).get());
+    cFields->SetOrganization(NS_ConvertUTF8toUTF16(val ? val : organization));
     PR_FREEIF(val);
   }
   
@@ -384,7 +384,7 @@ CreateCompositionFields(const char        *from,
   
   if (other_random_headers) {
     val = MIME_DecodeMimeHeader(other_random_headers, charset, PR_FALSE, PR_TRUE);
-    cFields->SetOtherRandomHeaders(NS_ConvertUTF8toUCS2(val ? val : other_random_headers).get());
+    cFields->SetOtherRandomHeaders(NS_ConvertUTF8toUTF16(val ? val : other_random_headers));
     PR_FREEIF(val);
   }
   
@@ -1526,10 +1526,10 @@ mime_parse_stream_complete (nsMIMESession *stream)
       // setting the charset while we are creating the composition fields
       //fields->SetCharacterSet(NS_ConvertASCIItoUCS2(mdd->mailcharset));
 
-      // convert from UTF-8 to UCS2
+      // convert from UTF-8 to UTF-16
       if (body)
       {
-        fields->SetBody(NS_ConvertUTF8toUCS2(body).get());
+        fields->SetBody(NS_ConvertUTF8toUTF16(body));
         PR_Free(body);
       }
 
@@ -1981,10 +1981,10 @@ mime_decompose_file_output_fn (const char     *buf,
   
   NS_ASSERTION (mdd && buf, "missing mime draft data and/or buf");
   if (!mdd || !buf) return -1;
-  if (!size) return 0;
+  if (!size) return NS_OK;
   
   if ( !mdd->tmpFileStream ) 
-    return 0;
+    return NS_OK;
   
   if (mdd->decoder_data) {
     ret = MimeDecoderWrite(mdd->decoder_data, buf, size);
@@ -1997,7 +1997,7 @@ mime_decompose_file_output_fn (const char     *buf,
       return MIME_ERROR_WRITING_FILE;
   }
   
-  return 0;
+  return NS_OK;
 }
 
 nsresult

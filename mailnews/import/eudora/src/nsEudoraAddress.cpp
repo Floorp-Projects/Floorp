@@ -25,6 +25,8 @@
 #include "nsIServiceManager.h"
 #include "nsEudoraImport.h"
 #include "nsReadableUtils.h"
+#include "nsMsgI18N.h"
+#include "nsNativeCharsetUtils.h"
 
 #include "EudoraDebugLog.h"
 
@@ -33,8 +35,8 @@
 #define ADD_FIELD_TO_DB_ROW(pdb, func, dbRow, val, uniStr)    \
   if (!val.IsEmpty())                                         \
   {                                                           \
-        ConvertToUnicode(val.get(), uniStr);                  \
-        pdb->func(dbRow, NS_ConvertUCS2toUTF8(uniStr).get()); \
+        NS_CopyNativeToUnicode(val, uniStr);                  \
+        pdb->func(dbRow, NS_ConvertUTF16toUTF8(uniStr).get());\
   }
 
 

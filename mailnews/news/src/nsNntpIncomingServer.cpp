@@ -767,8 +767,8 @@ nsNntpIncomingServer::SubscribeToNewsgroup(const char *name)
 	if (NS_FAILED(rv)) return rv;
 	if (!msgfolder) return NS_ERROR_FAILURE;
 
-	nsXPIDLString newsgroupName;
-	rv = NS_MsgDecodeUnescapeURLPath(name, getter_Copies(newsgroupName));
+	nsAutoString newsgroupName;
+	rv = NS_MsgDecodeUnescapeURLPath(nsDependentCString(name), newsgroupName);
 	NS_ENSURE_SUCCESS(rv,rv);
 
 	rv = msgfolder->CreateSubfolder(newsgroupName.get(), nsnull);
@@ -788,8 +788,8 @@ writeGroupToHostInfoFile(nsCString &aElement, void *aData)
         return PR_FALSE;
     }
 
-    nsXPIDLString name;
-    nsresult rv = NS_MsgDecodeUnescapeURLPath(aElement.get(), getter_Copies(name)); 
+    nsAutoString name;
+    nsresult rv = NS_MsgDecodeUnescapeURLPath(aElement, name); 
     if (NS_FAILED(rv)) {
         // stop, something is bad.
         return PR_FALSE;
@@ -1197,12 +1197,11 @@ nsNntpIncomingServer::Unsubscribe(const PRUnichar *aUnicharName)
   
   // to handle non-ASCII newsgroup names, we store them internally as escaped.
   // so we need to escape and encode the name, in order to find it.
-  nsXPIDLCString escapedName;
-  rv = NS_MsgEscapeEncodeURLPath(aUnicharName, getter_Copies(escapedName));
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsCAutoString escapedName;
+  rv = NS_MsgEscapeEncodeURLPath(nsDependentString(aUnicharName), escapedName);
 
   nsCOMPtr <nsIMsgFolder> newsgroupFolder;
-  rv = serverFolder->FindSubFolder(escapedName.get(), getter_AddRefs(newsgroupFolder));
+  rv = serverFolder->FindSubFolder(escapedName, getter_AddRefs(newsgroupFolder));
   if (NS_FAILED(rv)) 
     return rv;
 
@@ -1534,7 +1533,7 @@ nsNntpIncomingServer::FindGroup(const char *name, nsIMsgNewsFolder **result)
   if (!serverFolder) return NS_ERROR_FAILURE;
 
   nsCOMPtr <nsIMsgFolder> subFolder;
-  rv = serverFolder->FindSubFolder(name, getter_AddRefs(subFolder));
+  rv = serverFolder->FindSubFolder(nsDependentCString(name), getter_AddRefs(subFolder));
   NS_ENSURE_SUCCESS(rv,rv);
   if (!subFolder) return NS_ERROR_FAILURE;
 
@@ -1888,18 +1887,15 @@ nsNntpIncomingServer::GetCellText(PRInt32 row, const PRUnichar *colID, nsAString
     if (!IsValidRow(row))
       return NS_ERROR_UNEXPECTED;
 
+    nsresult rv = NS_OK;
     if (colID[0] == 'n') {
-      nsCString str;
+      nsCAutoString str;
       mSubscribeSearchResult.CStringAt(row, str);
-      // some servers have newsgroup names that are non ASCII.  we store those as escaped
-      // unescape here so the UI is consistent
-      // XXX fix me by converting NS_MsgDecodeUnescapeURLPath to take an nsAString&
-      nsXPIDLString cellText;
-      nsresult rv = NS_MsgDecodeUnescapeURLPath(str.get(), getter_Copies(cellText));
-      _retval.Assign(cellText);
-      NS_ENSURE_SUCCESS(rv,rv);
+      // some servers have newsgroup names that are non ASCII.  we store 
+      // those as escaped. unescape here so the UI is consistent
+      rv = NS_MsgDecodeUnescapeURLPath(str, _retval);
     }
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP 

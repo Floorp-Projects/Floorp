@@ -424,15 +424,14 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
     if (aMessage->lpOriginator)
     {
         PRUnichar * From = aMessage->lpOriginator->lpszAddress ;
-        aCompFields->SetFrom (From) ;
+        aCompFields->SetFrom (nsDependentString(From)) ;
     }
 
     nsAutoString To ;
     nsAutoString Cc ; 
     nsAutoString Bcc ;
 
-    nsAutoString Comma ;
-    Comma.AssignWithConversion(",");
+    NS_NAMED_LITERAL_STRING(Comma, ",") ;
 
     if (aMessage->lpRecips)
     {
@@ -465,15 +464,15 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
     }
 
     // set To, Cc, Bcc
-    aCompFields->SetTo (To.get()) ;
-    aCompFields->SetCc (Cc.get()) ;
-    aCompFields->SetBcc (Bcc.get()) ;
+    aCompFields->SetTo (To) ;
+    aCompFields->SetCc (Cc) ;
+    aCompFields->SetBcc (Bcc) ;
 
     // set subject
     if (aMessage->lpszSubject)
     {
         PRUnichar * Subject = aMessage->lpszSubject ;
-        aCompFields->SetSubject(Subject) ;
+        aCompFields->SetSubject(nsDependentString(Subject)) ;
     }
 
     // handle attachments as File URL
@@ -484,7 +483,7 @@ nsresult nsMapiHook::PopulateCompFields(lpnsMapiMessage aMessage,
     if (aMessage->lpszNoteText)
     {
         PRUnichar * Body = aMessage->lpszNoteText ;
-        rv = aCompFields->SetBody(Body) ;
+        rv = aCompFields->SetBody(nsDependentString(Body)) ;
     }
 
 #ifdef RAJIV_DEBUG
@@ -662,15 +661,14 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
     {
         nsAutoString From ;
         From.AssignWithConversion((char *) aMessage->lpOriginator->lpszAddress);
-        aCompFields->SetFrom (From.get()) ;
+        aCompFields->SetFrom (From) ;
     }
 
     nsAutoString To ;
     nsAutoString Cc ; 
     nsAutoString Bcc ;
 
-    nsAutoString Comma ;
-    Comma.AssignWithConversion(",");
+    NS_NAMED_LITERAL_STRING(Comma, ",") ;
 
     if (aMessage->lpRecips)
     {
@@ -703,9 +701,9 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
     }
     
     // set To, Cc, Bcc
-    aCompFields->SetTo (To.get()) ;
-    aCompFields->SetCc (Cc.get()) ;
-    aCompFields->SetBcc (Bcc.get()) ;
+    aCompFields->SetTo (To) ;
+    aCompFields->SetCc (Cc) ;
+    aCompFields->SetBcc (Bcc) ;
 
     nsCAutoString platformCharSet;
     // set subject
@@ -716,7 +714,7 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
             platformCharSet.Assign(nsMsgI18NFileSystemCharset());
         rv = ConvertToUnicode(platformCharSet.get(), (char *) aMessage->lpszSubject, Subject);
         if (NS_FAILED(rv)) return rv ;         
-        aCompFields->SetSubject(Subject.get()) ;
+        aCompFields->SetSubject(Subject) ;
     }
 
     // handle attachments as File URL
@@ -731,7 +729,7 @@ nsresult nsMapiHook::PopulateCompFieldsWithConversion(lpnsMapiMessage aMessage,
             platformCharSet.Assign(nsMsgI18NFileSystemCharset());
         rv = ConvertToUnicode(platformCharSet.get(), (char *) aMessage->lpszNoteText, Body);
         if (NS_FAILED(rv)) return rv ;
-        rv = aCompFields->SetBody(Body.get()) ;
+        rv = aCompFields->SetBody(Body) ;
     }
 
 #ifdef RAJIV_DEBUG

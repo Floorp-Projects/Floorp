@@ -511,14 +511,14 @@ NS_IMETHODIMP nsMsgComposeService::GetParamsForMailto(nsIURI * aURI, nsIMsgCompo
                                     nsnull /* priority */, getter_Copies(aNewsgroup), nsnull /* host */,
                                     &requestedComposeFormat);
 
-      nsString sanitizedBody;
+      nsAutoString sanitizedBody;
 
       // Since there is a buffer for each of the body types ('body', 'html-body') and
       // only one can be used, we give precedence to 'html-body' in the case where
       // both 'body' and 'html-body' are found in the url.
-      nsString rawBody = NS_ConvertUTF8toUCS2(aHTMLBodyPart);
+      NS_ConvertUTF8toUTF16 rawBody(aHTMLBodyPart);
       if(rawBody.IsEmpty())
-        rawBody = NS_ConvertUTF8toUCS2(aBodyPart);
+        CopyUTF8toUTF16(aBodyPart, rawBody);
 
       PRBool composeHTMLFormat;
       DetermineComposeHTML(NULL, requestedComposeFormat, &composeHTMLFormat);
@@ -542,7 +542,7 @@ NS_IMETHODIMP nsMsgComposeService::GetParamsForMailto(nsIURI * aURI, nsIMsgCompo
           nsCOMPtr<mozISanitizingHTMLSerializer> sanSink(do_QueryInterface(sink));
           if (sanSink)
           {
-            sanSink->Initialize(&sanitizedBody, 0, NS_ConvertASCIItoUCS2(allowedTags.get()));
+            sanSink->Initialize(&sanitizedBody, 0, NS_ConvertASCIItoUTF16(allowedTags));
 
             parser->SetContentSink(sink);
             nsCOMPtr<nsIDTD> dtd = do_CreateInstance(kNavDTDCID);
@@ -572,12 +572,12 @@ NS_IMETHODIMP nsMsgComposeService::GetParamsForMailto(nsIURI * aURI, nsIMsgCompo
         if (pMsgCompFields)
         {
           //ugghh more conversion work!!!!
-          pMsgCompFields->SetTo(NS_ConvertUTF8toUCS2(aToPart).get());
-          pMsgCompFields->SetCc(NS_ConvertUTF8toUCS2(aCcPart).get());
-          pMsgCompFields->SetBcc(NS_ConvertUTF8toUCS2(aBccPart).get());
+          pMsgCompFields->SetTo(NS_ConvertUTF8toUTF16(aToPart));
+          pMsgCompFields->SetCc(NS_ConvertUTF8toUTF16(aCcPart));
+          pMsgCompFields->SetBcc(NS_ConvertUTF8toUTF16(aBccPart));
           pMsgCompFields->SetNewsgroups(aNewsgroup);
-          pMsgCompFields->SetSubject(NS_ConvertUTF8toUCS2(aSubjectPart).get());
-          pMsgCompFields->SetBody(composeHTMLFormat ? sanitizedBody.get() : rawBody.get());
+          pMsgCompFields->SetSubject(NS_ConvertUTF8toUTF16(aSubjectPart));
+          pMsgCompFields->SetBody(composeHTMLFormat ? sanitizedBody : rawBody);
           pMsgComposeParams->SetComposeFields(pMsgCompFields);
 
           NS_ADDREF(*aParams = pMsgComposeParams);
@@ -598,68 +598,6 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
   nsresult rv = GetParamsForMailto(aURI, getter_AddRefs(pMsgComposeParams));
   if (NS_SUCCEEDED(rv))
     rv = OpenComposeWindowWithParams(aMsgComposeWindowURL, pMsgComposeParams);
-  return rv;
-}
-
-nsresult nsMsgComposeService::OpenComposeWindowWithValues(const char *msgComposeWindowURL,
-                              MSG_ComposeType type,
-                              MSG_ComposeFormat format,
-                              const PRUnichar *to,
-                              const PRUnichar *cc,
-                              const PRUnichar *bcc,
-                              const char *newsgroups,
-                              const PRUnichar *subject,
-                              const PRUnichar *body,
-                              const char *attachment,
-                              nsIMsgIdentity *identity)
-{
-  NS_ASSERTION(0, "nsMsgComposeService::OpenComposeWindowWithValues is not supported anymore, use OpenComposeWindowWithParams instead\n");
-
-  nsresult rv;
-  nsCOMPtr<nsIMsgCompFields> pCompFields (do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv) && pCompFields)
-  {
-    if (to)         {pCompFields->SetTo(to);}
-    if (cc)         {pCompFields->SetCc(cc);}
-    if (bcc)        {pCompFields->SetBcc(bcc);}
-    if (newsgroups) {pCompFields->SetNewsgroups(newsgroups);}
-    if (subject)    {pCompFields->SetSubject(subject);}
-//    if (attachment) {pCompFields->SetAttachments(attachment);}
-    if (body)       {pCompFields->SetBody(body);}
-  
-    rv = OpenComposeWindowWithCompFields(msgComposeWindowURL, type, format, pCompFields, identity);
-  }
-    
-  return rv;
-}
-
-nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const char *msgComposeWindowURL,
-                              MSG_ComposeType type,
-                              MSG_ComposeFormat format,
-                              nsIMsgCompFields *compFields,
-                              nsIMsgIdentity *identity)
-{
-  NS_ASSERTION(0, "nsMsgComposeService::OpenComposeWindowWithCompFields is not supported anymore, use OpenComposeWindowWithParams instead\n");
-
-  nsresult rv;
-
-  nsCOMPtr<nsIMsgComposeParams> pMsgComposeParams (do_CreateInstance(NS_MSGCOMPOSEPARAMS_CONTRACTID, &rv));
-  if (NS_SUCCEEDED(rv) && pMsgComposeParams)
-  {
-      pMsgComposeParams->SetType(type);
-      pMsgComposeParams->SetFormat(format);
-      pMsgComposeParams->SetIdentity(identity);
-      pMsgComposeParams->SetComposeFields(compFields);    
-
-      if(mLogComposePerformance)
-      {
-#ifdef MSGCOMP_TRACE_PERFORMANCE
-        TimeStamp("Start opening the window", PR_TRUE);
-#endif
-      }//end -if (mLogComposePerformance)
-      rv = OpenWindow(msgComposeWindowURL, pMsgComposeParams);
-  }
-
   return rv;
 }
 

@@ -94,8 +94,6 @@ private:
 	void 			BuildMailboxList( MailboxEntry *pBox, nsIFileSpec * root, PRInt32 depth, nsISupportsArray *pArray);
 	PRBool 			GetMailboxList( nsIFileSpec * root, nsISupportsArray **pArray);
 	
-	void			ConvertToUnicode(const char *pStr, nsString &dist);
-	
 private:
 	MailboxEntry *				m_pFirst;
 	nsVoidArray					m_entryArray;

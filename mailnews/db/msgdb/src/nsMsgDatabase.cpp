@@ -52,7 +52,7 @@
 #include "nsIEnumerator.h"
 #include "nsMsgThread.h"
 #include "nsFileStream.h"
-#include "nsString.h"
+#include "nsDependentSubstring.h"
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsIMsgHeaderParser.h"
@@ -2738,17 +2738,6 @@ nsMsgDatabase::EnumerateMessagesWithFlag(nsISimpleEnumerator* *result, PRUint32 
     return NS_OK;
 }
 
-static nsresult
-nsMsgReadFilter(nsIMsgDBHdr* msg, void* closure)
-{
-    nsMsgDatabase* db = (nsMsgDatabase*)closure;
-    PRBool wasRead = PR_TRUE;
-    nsresult rv = db->IsHeaderRead(msg, &wasRead);
-    if (NS_FAILED(rv))
-        return rv;
-    return wasRead ? NS_OK : NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsIMsgDBHdr **pnewHdr)
 {
   nsresult	err = NS_OK;
@@ -2850,7 +2839,7 @@ NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *e
   return err;
 }
 
-nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token columnToken, nsString &resultStr)
+nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token columnToken, nsAString &resultStr)
 {
   nsresult	err = NS_OK;
   
@@ -2859,7 +2848,7 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token col
     struct mdbYarn yarn;
     err = hdrRow->AliasCellYarn(GetEnv(), columnToken, &yarn);
     if (err == NS_OK)
-      YarnTonsString(&yarn, &resultStr);
+      YarnTonsString(&yarn, resultStr);
   }
   return err;
 }
@@ -2963,7 +2952,7 @@ nsresult nsMsgDatabase::GetCollationKeyGenerator()
   if (!m_collationKeyGenerator)
   {
     nsCOMPtr <nsILocale> locale; 
-    nsString localeName; 
+    nsAutoString localeName; 
     
     // get a locale service 
     nsCOMPtr <nsILocaleService> localeService = do_GetService(NS_LOCALESERVICE_CONTRACTID, &err);
@@ -3135,10 +3124,10 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 
 
 
-/* static */struct mdbYarn *nsMsgDatabase::nsStringToYarn(struct mdbYarn *yarn, nsString *str)
+/* static */struct mdbYarn *nsMsgDatabase::nsStringToYarn(struct mdbYarn *yarn, const nsAString &str)
 {
-  yarn->mYarn_Buf = ToNewCString(*str);
-  yarn->mYarn_Size = PL_strlen((const char *) yarn->mYarn_Buf) + 1;
+  yarn->mYarn_Buf = ToNewCString(str);
+  yarn->mYarn_Size = str.Length() + 1;
   yarn->mYarn_Fill = yarn->mYarn_Size - 1;
   yarn->mYarn_Form = 0;	// what to do with this? we're storing csid in the msg hdr...
   return yarn;
@@ -3152,22 +3141,22 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
   return yarn;
 }
 
-/* static */void nsMsgDatabase::YarnTonsString(struct mdbYarn *yarn, nsString *str)
+/* static */void nsMsgDatabase::YarnTonsString(struct mdbYarn *yarn, nsAString &str)
 {
   const char* buf = (const char*)yarn->mYarn_Buf;
   if (buf)
-    str->AssignWithConversion(buf, yarn->mYarn_Fill);
+    CopyASCIItoUTF16(Substring(buf, buf + yarn->mYarn_Fill), str);
   else
-    str->Truncate();
+    str.Truncate();
 }
 
-/* static */void nsMsgDatabase::YarnTonsCString(struct mdbYarn *yarn, nsCString *str)
+/* static */void nsMsgDatabase::YarnTonsCString(struct mdbYarn *yarn, nsACString &str)
 {
     const char* buf = (const char*)yarn->mYarn_Buf;
     if (buf)
-        str->Assign(buf, yarn->mYarn_Fill);
+        str.Assign(buf, yarn->mYarn_Fill);
     else
-        str->Truncate();
+        str.Truncate();
 }
 
 // WARNING - if yarn is empty, *pResult will not be changed!!!!
@@ -3242,20 +3231,19 @@ nsresult nsMsgDatabase::SetProperty(nsIMdbRow *row, const char *propertyName, co
   return err;
 }
 
-nsresult nsMsgDatabase::GetPropertyAsNSString(nsIMdbRow *row, const char *propertyName, nsString *result)
+nsresult nsMsgDatabase::GetPropertyAsNSString(nsIMdbRow *row, const char *propertyName, nsAString &result)
 {
   nsresult err = NS_OK;
   mdb_token	property_token;
   
-  NS_ENSURE_ARG(result);
   err = m_mdbStore->StringToToken(GetEnv(),  propertyName, &property_token);
   if (err == NS_OK)
-    err = RowCellColumnTonsString(row, property_token, *result);
+    err = RowCellColumnTonsString(row, property_token, result);
   
   return err;
 }
 
-nsresult nsMsgDatabase::SetPropertyFromNSString(nsIMdbRow *row, const char *propertyName, nsString *propertyVal)
+nsresult nsMsgDatabase::SetPropertyFromNSString(nsIMdbRow *row, const char *propertyName, const nsAString &propertyVal)
 {
   nsresult err = NS_OK;
   mdb_token	property_token;
@@ -3302,7 +3290,7 @@ nsresult nsMsgDatabase::SetUint32Property(nsIMdbRow *row, const char *propertyNa
   return err;
 }
 
-nsresult nsMsgDatabase::SetNSStringPropertyWithToken(nsIMdbRow *row, mdb_token aProperty, nsString *propertyStr)
+nsresult nsMsgDatabase::SetNSStringPropertyWithToken(nsIMdbRow *row, mdb_token aProperty, const nsAString &propertyStr)
 {
   NS_ENSURE_ARG(row);
   struct mdbYarn yarn;
@@ -4056,13 +4044,13 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgRetentionSettings(nsIMsgRetentionSettings **r
       PRUint32 daysToKeepBodies = 0;
       PRBool cleanupBodiesByDays = PR_FALSE;
 
-      rv = m_dbFolderInfo->GetUint32Property("retainBy", &retainByPreference, nsIMsgRetentionSettings::nsMsgRetainAll);
-      m_dbFolderInfo->GetUint32Property("daysToKeepHdrs", &daysToKeepHdrs, 0);
-      m_dbFolderInfo->GetUint32Property("numHdrsToKeep", &numHeadersToKeep, 0);
-      m_dbFolderInfo->GetUint32Property("daysToKeepBodies", &daysToKeepBodies, 0);
-      m_dbFolderInfo->GetUint32Property("keepUnreadOnly", &keepUnreadMessagesProp, 0);
-      m_dbFolderInfo->GetBooleanProperty("useServerDefaults", &useServerDefaults, PR_TRUE);
-      m_dbFolderInfo->GetBooleanProperty("cleanupBodies", &cleanupBodiesByDays, PR_FALSE);
+      rv = m_dbFolderInfo->GetUint32Property("retainBy", nsIMsgRetentionSettings::nsMsgRetainAll, &retainByPreference);
+      m_dbFolderInfo->GetUint32Property("daysToKeepHdrs", 0, &daysToKeepHdrs);
+      m_dbFolderInfo->GetUint32Property("numHdrsToKeep", 0, &numHeadersToKeep);
+      m_dbFolderInfo->GetUint32Property("daysToKeepBodies", 0, &daysToKeepBodies);
+      m_dbFolderInfo->GetUint32Property("keepUnreadOnly", 0, &keepUnreadMessagesProp);
+      m_dbFolderInfo->GetBooleanProperty("useServerDefaults", PR_TRUE, &useServerDefaults);
+      m_dbFolderInfo->GetBooleanProperty("cleanupBodies", PR_FALSE, &cleanupBodiesByDays);
       keepUnreadMessagesOnly = (keepUnreadMessagesProp == 1);
       m_retentionSettings->SetRetainByPreference(retainByPreference);
       m_retentionSettings->SetDaysToKeepHdrs(daysToKeepHdrs);
@@ -4121,10 +4109,10 @@ NS_IMETHODIMP nsMsgDatabase::GetMsgDownloadSettings(nsIMsgDownloadSettings **dow
       PRUint32 ageLimitOfMsgsToDownload;
       PRBool downloadUnreadOnly;
 
-      m_dbFolderInfo->GetBooleanProperty("useServerDefaults", &useServerDefaults, PR_TRUE);
-      m_dbFolderInfo->GetBooleanProperty("downloadByDate", &downloadByDate, PR_FALSE);
-      m_dbFolderInfo->GetBooleanProperty("downloadUnreadOnly", &downloadUnreadOnly, PR_FALSE);
-      m_dbFolderInfo->GetUint32Property("ageLimit", &ageLimitOfMsgsToDownload, 0);
+      m_dbFolderInfo->GetBooleanProperty("useServerDefaults", PR_TRUE, &useServerDefaults);
+      m_dbFolderInfo->GetBooleanProperty("downloadByDate", PR_FALSE, &downloadByDate);
+      m_dbFolderInfo->GetBooleanProperty("downloadUnreadOnly", PR_FALSE, &downloadUnreadOnly);
+      m_dbFolderInfo->GetUint32Property("ageLimit", 0, &ageLimitOfMsgsToDownload);
 
       m_downloadSettings->SetUseServerDefaults(useServerDefaults);
       m_downloadSettings->SetDownloadByDate(downloadByDate);

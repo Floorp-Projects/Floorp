@@ -178,26 +178,6 @@ private:
 };
 
 ////////////////////////////////////////////////////////////////////////
-// Converter functions
-////////////////////////////////////////////////////////////////////////
-
-static nsCOMPtr<nsIImportService>	gService;
-
-void ConvertToUnicode(const char *pStr, nsString &dist)
-{
-	nsresult rv = NS_OK;
-
-	if (!gService)
-		gService = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-
-	if (gService)
-		rv = gService->SystemStringToUnicode(pStr, dist);
-
-	if (!gService || NS_FAILED(rv)) // XXX bad cast
-		dist.AssignWithConversion(pStr);
-}
-
-////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 
 

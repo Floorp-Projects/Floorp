@@ -80,10 +80,10 @@ public:
   
   nsresult      InitFromExistingDB();
   // get and set arbitrary property, aka row cell value.
-  nsresult	SetPropertyWithToken(mdb_token aProperty, nsString *propertyStr);
+  nsresult	SetPropertyWithToken(mdb_token aProperty, const nsAString &propertyStr);
   nsresult	SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue);
   nsresult	SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue);
-  nsresult	GetPropertyWithToken(mdb_token aProperty, nsString *resultProperty);
+  nsresult	GetPropertyWithToken(mdb_token aProperty, nsAString &resultProperty);
   nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue, PRUint32 defaultValue = 0);
   nsresult	GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue, PRInt32 defaultValue = 0);
   nsresult      GetConstCharPtrCharacterSet(const char**result);

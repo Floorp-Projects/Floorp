@@ -1170,8 +1170,8 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
             
             // to handle non-ASCII newsgroup names, we store them internally as escaped.
             // decode and unescape the newsgroup name so we'll display a proper name.
-            nsXPIDLString unescapedName;
-            rv = NS_MsgDecodeUnescapeURLPath(group.get(), getter_Copies(unescapedName));
+            nsAutoString unescapedName;
+            rv = NS_MsgDecodeUnescapeURLPath(group, unescapedName);
             NS_ENSURE_SUCCESS(rv,rv);
             
             bundleService->CreateBundle(NEWS_MSGS_URL, getter_AddRefs(bundle));

@@ -409,7 +409,7 @@ nsresult nsDBFolderInfo::LoadMemberVariables()
   m_version = (PRUint16) version;
   m_charSetOverride = gDefaultCharacterOverride;
   PRUint32 propertyValue;
-  nsresult rv = GetUint32Property(kCharacterSetOverrideColumnName, &propertyValue, gDefaultCharacterOverride);
+  nsresult rv = GetUint32Property(kCharacterSetOverrideColumnName, gDefaultCharacterOverride, &propertyValue);
   if (NS_SUCCEEDED(rv))
     m_charSetOverride = propertyValue;
 
@@ -502,12 +502,12 @@ nsDBFolderInfo::ChangeExpungedBytes(PRInt32 delta)
     return SetExpungedBytes(m_expungedBytes + delta);
 }
 
-NS_IMETHODIMP nsDBFolderInfo::SetMailboxName(nsString *newBoxName)
+NS_IMETHODIMP nsDBFolderInfo::SetMailboxName(const nsAString &newBoxName)
 {
   return SetPropertyWithToken(m_mailboxNameColumnToken, newBoxName);
 }
 
-NS_IMETHODIMP nsDBFolderInfo::GetMailboxName(nsString *boxName)
+NS_IMETHODIMP nsDBFolderInfo::GetMailboxName(nsAString &boxName)
 {
   return GetPropertyWithToken(m_mailboxNameColumnToken, boxName);
 }
@@ -629,15 +629,15 @@ PRBool nsDBFolderInfo::TestFlag(PRInt32 flags)
 }
 
 NS_IMETHODIMP
-nsDBFolderInfo::GetCharacterSet(nsString *result, PRBool *usedDefault) 
+nsDBFolderInfo::GetCharacterSet(nsAString &result, PRBool *usedDefault) 
 {
+  *usedDefault = PR_FALSE;
+
   nsresult rv = GetProperty(kCharacterSetColumnName, result);
   
-  *usedDefault = PR_FALSE;
-  
-  if (NS_SUCCEEDED(rv) && result->IsEmpty())
+  if (NS_SUCCEEDED(rv) && result.IsEmpty())
   {
-    result->AssignWithConversion(gDefaultCharacterSet.get());
+    CopyASCIItoUTF16(gDefaultCharacterSet, result);
     *usedDefault = PR_TRUE;
   }
   
@@ -686,13 +686,13 @@ NS_IMETHODIMP nsDBFolderInfo::SetCharacterSetOverride(PRBool characterSetOverrid
 }
 
 NS_IMETHODIMP
-nsDBFolderInfo::GetLocale(nsString *result) 
+nsDBFolderInfo::GetLocale(nsAString &result) 
 {
   GetProperty(kLocaleColumnName, result);
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDBFolderInfo::SetLocale(nsString *locale) 
+NS_IMETHODIMP nsDBFolderInfo::SetLocale(const nsAString &locale) 
 {
   return SetProperty(kLocaleColumnName, locale);
 }
@@ -760,7 +760,7 @@ void nsDBFolderInfo::ChangeImapUnreadPendingMessages(PRInt32 delta)
 NS_IMETHODIMP nsDBFolderInfo::GetViewType(nsMsgViewTypeValue *aViewType)
 {
   PRUint32 viewTypeValue;
-  nsresult rv = GetUint32Property("viewType", &viewTypeValue, nsMsgViewType::eShowAllThreads);
+  nsresult rv = GetUint32Property("viewType", nsMsgViewType::eShowAllThreads, &viewTypeValue);
   *aViewType = viewTypeValue;
   return rv;
 }
@@ -777,7 +777,7 @@ NS_IMETHODIMP nsDBFolderInfo::GetViewFlags(nsMsgViewFlagsTypeValue *aViewFlags)
   NS_ENSURE_SUCCESS(rv,rv);
 
   PRUint32 viewFlagsValue;
-  rv = GetUint32Property("viewFlags", &viewFlagsValue, defaultViewFlags);
+  rv = GetUint32Property("viewFlags", defaultViewFlags, &viewFlagsValue);
   *aViewFlags = viewFlagsValue;
   return rv;
 }
@@ -794,7 +794,7 @@ NS_IMETHODIMP nsDBFolderInfo::GetSortType(nsMsgViewSortTypeValue *aSortType)
   NS_ENSURE_SUCCESS(rv,rv);
 
   PRUint32 sortTypeValue;
-  rv = GetUint32Property("sortType", &sortTypeValue, defaultSortType);
+  rv = GetUint32Property("sortType", defaultSortType, &sortTypeValue);
   *aSortType = sortTypeValue;
   return rv;
 }
@@ -807,7 +807,7 @@ NS_IMETHODIMP nsDBFolderInfo::SetSortType(nsMsgViewSortTypeValue aSortType)
 NS_IMETHODIMP nsDBFolderInfo::GetSortOrder(nsMsgViewSortOrderValue *aSortOrder)
 {
   PRUint32 sortOrderValue;
-  nsresult rv = GetUint32Property("sortOrder",  &sortOrderValue, nsMsgViewSortOrder::ascending);
+  nsresult rv = GetUint32Property("sortOrder", nsMsgViewSortOrder::ascending, &sortOrderValue);
   *aSortOrder = sortOrderValue;
   return rv;
 }
@@ -829,7 +829,7 @@ NS_IMETHODIMP nsDBFolderInfo::GetKnownArtsSet(char **newsArtSet)
 }
 
 // get arbitrary property, aka row cell value.
-NS_IMETHODIMP nsDBFolderInfo::GetProperty(const char *propertyName, nsString *resultProperty)
+NS_IMETHODIMP nsDBFolderInfo::GetProperty(const char *propertyName, nsAString &resultProperty)
 {
   return m_mdb->GetPropertyAsNSString(m_mdbRow, propertyName, resultProperty);
 }
@@ -851,12 +851,12 @@ NS_IMETHODIMP nsDBFolderInfo::SetUint32Property(const char *propertyName, PRUint
   return m_mdb->SetUint32Property(m_mdbRow, propertyName, propertyValue);
 }
 
-NS_IMETHODIMP	nsDBFolderInfo::SetProperty(const char *propertyName, nsString *propertyStr)
+NS_IMETHODIMP	nsDBFolderInfo::SetProperty(const char *propertyName, const nsAString &propertyStr)
 {
   return m_mdb->SetPropertyFromNSString(m_mdbRow, propertyName, propertyStr);
 }
 
-nsresult nsDBFolderInfo::SetPropertyWithToken(mdb_token aProperty, nsString *propertyStr)
+nsresult nsDBFolderInfo::SetPropertyWithToken(mdb_token aProperty, const nsAString &propertyStr)
 {
   return m_mdb->SetNSStringPropertyWithToken(m_mdbRow, aProperty, propertyStr);
 }
@@ -868,16 +868,14 @@ nsresult  nsDBFolderInfo::SetUint32PropertyWithToken(mdb_token aProperty, PRUint
 
 nsresult  nsDBFolderInfo::SetInt32PropertyWithToken(mdb_token aProperty, PRInt32 propertyValue)
 {
-  nsString propertyStr;
+  nsAutoString propertyStr;
   propertyStr.AppendInt(propertyValue, 16);
-  return SetPropertyWithToken(aProperty, &propertyStr);
+  return SetPropertyWithToken(aProperty, propertyStr);
 }
 
-nsresult nsDBFolderInfo::GetPropertyWithToken(mdb_token aProperty, nsString *resultProperty)
+nsresult nsDBFolderInfo::GetPropertyWithToken(mdb_token aProperty, nsAString &resultProperty)
 {
-  if (!resultProperty)
-    return NS_ERROR_NULL_POINTER;
-  return m_mdb->RowCellColumnTonsString(m_mdbRow, aProperty, *resultProperty);
+  return m_mdb->RowCellColumnTonsString(m_mdbRow, aProperty, resultProperty);
 }
 
 nsresult nsDBFolderInfo::GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue, PRUint32 defaultValue)
@@ -890,12 +888,12 @@ nsresult nsDBFolderInfo::GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 
   return m_mdb->RowCellColumnToUInt32(m_mdbRow, aProperty, (PRUint32 &) propertyValue, defaultValue);
 }
 
-NS_IMETHODIMP nsDBFolderInfo::GetUint32Property(const char *propertyName, PRUint32 *propertyValue, PRUint32 defaultValue)
+NS_IMETHODIMP nsDBFolderInfo::GetUint32Property(const char *propertyName, PRUint32 defaultValue, PRUint32 *propertyValue)
 {
   return m_mdb->GetUint32Property(m_mdbRow, propertyName, propertyValue, defaultValue);
 }
 
-NS_IMETHODIMP nsDBFolderInfo::GetBooleanProperty(const char *propertyName, PRBool *propertyValue, PRBool defaultValue)
+NS_IMETHODIMP nsDBFolderInfo::GetBooleanProperty(const char *propertyName, PRBool defaultValue, PRBool *propertyValue)
 {
   PRUint32 defaultUint32Value = (defaultValue) ? 1 : 0;
   PRUint32 returnValue;
@@ -923,8 +921,8 @@ class nsTransferDBFolderInfo : public nsDBFolderInfo
 public:
   nsTransferDBFolderInfo();
   virtual ~nsTransferDBFolderInfo();
-  NS_IMETHOD GetMailboxName(nsString *boxName);
-  NS_IMETHOD SetMailboxName(nsString *boxName);
+  NS_IMETHOD GetMailboxName(nsAString &boxName);
+  NS_IMETHOD SetMailboxName(const nsAString &boxName);
   NS_IMETHOD GetViewType(nsMsgViewTypeValue *aViewType); 
   NS_IMETHOD SetViewType(nsMsgViewTypeValue aViewType); 
   NS_IMETHOD GetViewFlags(nsMsgViewFlagsTypeValue *aViewFlags); 
@@ -956,14 +954,15 @@ nsTransferDBFolderInfo::~nsTransferDBFolderInfo()
 NS_IMETHODIMP nsDBFolderInfo::GetTransferInfo(nsIDBFolderInfo **transferInfo)
 {
   NS_ENSURE_ARG_POINTER(transferInfo);
-  nsAutoString folderNameStr;
 
   nsTransferDBFolderInfo *newInfo = new nsTransferDBFolderInfo;
   *transferInfo = newInfo;
   NS_ADDREF(newInfo);
   newInfo->m_flags = m_flags;
-  GetMailboxName(&folderNameStr);
-  newInfo->SetMailboxName(&folderNameStr);
+
+  nsAutoString folderNameStr;
+  GetMailboxName(folderNameStr);
+  newInfo->SetMailboxName(folderNameStr);
   // ### add whatever other fields we want to copy here.
   nsMsgViewTypeValue viewType;
   nsMsgViewFlagsTypeValue viewFlags;
@@ -1000,15 +999,15 @@ NS_IMETHODIMP nsTransferDBFolderInfo::GetFolderName(char **folderName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTransferDBFolderInfo::GetMailboxName(nsString *boxName)
+NS_IMETHODIMP nsTransferDBFolderInfo::GetMailboxName(nsAString &boxName)
 {
-  *boxName = m_boxName;
+  boxName = m_boxName;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsTransferDBFolderInfo::SetMailboxName(nsString *boxName)
+NS_IMETHODIMP nsTransferDBFolderInfo::SetMailboxName(const nsAString &boxName)
 {
-  m_boxName = *boxName;
+  m_boxName = boxName;
   return NS_OK;
 }
 
@@ -1026,8 +1025,8 @@ NS_IMETHODIMP nsDBFolderInfo::InitFromTransferInfo(nsIDBFolderInfo *transferInfo
 
   transferInfo->GetFlags(&flags);
   SetFlags(flags);
-  transferInfo->GetMailboxName(&folderNameStr);
-  SetMailboxName(&folderNameStr);
+  transferInfo->GetMailboxName(folderNameStr);
+  SetMailboxName(folderNameStr);
 
   nsXPIDLCString utf8Name;
   transferInfo->GetFolderName(getter_Copies(utf8Name));

@@ -1673,9 +1673,9 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const PRUnichar *propose
   {
     /* Convert to unicode */
     nsAutoString uStr;
-    rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), attachment->m_real_name, uStr);
+    rv = nsMsgI18NCopyNativeToUTF16(attachment->m_real_name, uStr);
     if (NS_FAILED(rv)) 
-      uStr.AssignWithConversion(attachment->m_real_name);
+      CopyASCIItoUTF16(attachment->m_real_name, uStr);
 
   }
   

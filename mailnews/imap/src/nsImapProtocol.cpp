@@ -81,7 +81,7 @@
 #include "nsAutoLock.h"
 #include "nsIDNSService.h"
 #include "nsIMsgHdr.h"
-#include "nsMsgUtf7Utils.h"
+#include "nsMsgI18N.h"
 #include "nsEscape.h"
 // for the memory cache...
 #include "nsICacheEntryDescriptor.h"
@@ -4496,7 +4496,8 @@ nsImapProtocol::ShowProgress()
     
     nsXPIDLString unicodeMailboxName;
     
-    nsresult rv = CreateUnicodeStringFromUtf7(mailboxName, getter_Copies(unicodeMailboxName));
+    nsresult rv = CopyMUTF7toUTF16(nsDependentCString(mailboxName),
+                                   unicodeMailboxName);
     if (NS_SUCCEEDED(rv))
     {
       // ### should convert mailboxName to PRUnichar and change %s to %S in msg text
@@ -4527,10 +4528,8 @@ nsImapProtocol::ProgressEventFunctionUsingIdWithString(PRUint32 aMsgId, const
 {
   if (m_imapMiscellaneousSink)
   {
-
     nsXPIDLString unicodeStr;
-
-    nsresult rv = CreateUnicodeStringFromUtf7(aExtraInfo, getter_Copies(unicodeStr));
+    nsresult rv = CopyMUTF7toUTF16(nsDependentCString(aExtraInfo), unicodeStr);
     if (NS_SUCCEEDED(rv))
       m_imapMiscellaneousSink->ProgressStatus(this, aMsgId, unicodeStr);
   }
@@ -4573,49 +4572,6 @@ nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 currentPr
   if (m_imapMiscellaneousSink)
       m_imapMiscellaneousSink->PercentProgress(this, &aProgressInfo);
 }
-
-
-/* static */PRUnichar * nsImapProtocol::CreatePRUnicharStringFromUTF7(const char * aSourceString)
-{
-  PRUnichar *convertedString = NULL;
-  nsresult res;
-  
-  nsCOMPtr<nsICharsetConverterManager> ccm = 
-           do_GetService(kCharsetConverterManagerCID, &res); 
-
-  if(NS_SUCCEEDED(res) && (nsnull != ccm))
-  {
-    PRUnichar *unichars = nsnull;
-    PRInt32 unicharLength;
-
-    // convert utf7 to unicode
-    nsIUnicodeDecoder* decoder = nsnull;
-
-    res = ccm->GetUnicodeDecoderRaw("x-imap4-modified-utf7", &decoder);
-    if(NS_SUCCEEDED(res) && (nsnull != decoder)) 
-    {
-      PRInt32 srcLen = PL_strlen(aSourceString);
-      res = decoder->GetMaxLength(aSourceString, srcLen, &unicharLength);
-      // temporary buffer to hold unicode string
-      unichars = new PRUnichar[unicharLength + 1];
-      if (unichars == nsnull) 
-      {
-        res = NS_ERROR_OUT_OF_MEMORY;
-      }
-      else 
-      {
-        res = decoder->Convert(aSourceString, &srcLen, unichars, &unicharLength);
-        unichars[unicharLength] = 0;
-      }
-      NS_IF_RELEASE(decoder);
-      // convert the unicode to 8 bit ascii.
-      nsString unicodeStr(unichars);
-      convertedString = ToNewUnicode(unicodeStr);
-    }
-    }
-    return convertedString;
-}
-
 
   // imap commands issued by the parser
 void
@@ -6620,12 +6576,7 @@ const char * nsImapProtocol::GetTrashFolderName()
       nsXPIDLString trashFolderName;
       if (NS_SUCCEEDED(server->GetTrashFolderName(getter_Copies(trashFolderName))))
       {
-        char *trashFolderNameUtf7 = CreateUtf7ConvertedStringFromUnicode(trashFolderName);
-        if (trashFolderNameUtf7)
-        {
-          m_trashFolderName.Assign(trashFolderNameUtf7);  
-          PR_Free(trashFolderNameUtf7);
-        }
+        CopyUTF16toMUTF7(trashFolderName, m_trashFolderName);
       }
     }
   }

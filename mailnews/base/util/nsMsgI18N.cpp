@@ -62,7 +62,7 @@
 #include "nsReadableUtils.h"
 #include "prmem.h"
 #include "nsFileSpec.h"
-#include "nsUnicharUtils.h"
+#include "plstr.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
@@ -71,262 +71,128 @@ static NS_DEFINE_CID(kEntityConverterCID, NS_ENTITYCONVERTER_CID);
 // International functions necessary for composition
 //
 
-nsresult nsMsgI18NConvertFromUnicode(const nsAFlatCString& aCharset, 
+nsresult nsMsgI18NConvertFromUnicode(const char* aCharset,
                                      const nsAFlatString& inString,
-                                     nsACString& outString)
+                                     nsACString& outString,
+                                     PRBool aIsCharsetCanonical)
 {
   if (inString.IsEmpty()) {
-    outString.Truncate(0);
+    outString.Truncate();
     return NS_OK;
   }
   // Note: this will hide a possible error when the unicode text may contain more than one charset.
   // (e.g. Latin1 + Japanese). Use nsMsgI18NSaveAsCharset instead to avoid that problem.
-  else if (aCharset.IsEmpty() ||
-      aCharset.Equals("us-ascii", nsCaseInsensitiveCStringComparator()) ||
-      aCharset.Equals("ISO-8859-1", nsCaseInsensitiveCStringComparator())) {
+  else if (!*aCharset || !PL_strcasecmp(aCharset, "us-ascii") ||
+           !PL_strcasecmp(aCharset, "ISO-8859-1")) {
     LossyCopyUTF16toASCII(inString, outString);
     return NS_OK;
   }
-  else if (aCharset.Equals("UTF-8", nsCaseInsensitiveCStringComparator())) {
+  else if (!PL_strcasecmp(aCharset, "UTF-8")) {
     CopyUTF16toUTF8(inString, outString);
     return NS_OK;
   }
 
-  nsresult res;
-  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-  if(NS_SUCCEEDED(res)) {
-    nsCOMPtr <nsIUnicodeEncoder> encoder;
+  nsresult rv;
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr <nsIUnicodeEncoder> encoder;
 
-    // get an unicode converter
-    res = ccm->GetUnicodeEncoder(aCharset.get(), getter_AddRefs(encoder));
-    if(NS_SUCCEEDED(res)) {
-      res = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
-      if (NS_SUCCEEDED(res)) {
+  // get an unicode converter
+  if (aIsCharsetCanonical)  // optimize for modified UTF-7 used by IMAP
+    rv = ccm->GetUnicodeEncoderRaw(aCharset, getter_AddRefs(encoder));
+  else
+    rv = ccm->GetUnicodeEncoder(aCharset, getter_AddRefs(encoder));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
+  NS_ENSURE_SUCCESS(rv, rv);
 
-        const PRUnichar *originalSrcPtr = inString.get();
-        const PRUnichar *currentSrcPtr = originalSrcPtr;
-        PRInt32 originalUnicharLength = inString.Length();
-        PRInt32 srcLength;
-        PRInt32 dstLength;
-        char localbuf[512];
-        PRInt32 consumedLen = 0;
+  const PRUnichar *originalSrcPtr = inString.get();
+  const PRUnichar *currentSrcPtr = originalSrcPtr;
+  PRInt32 originalUnicharLength = inString.Length();
+  PRInt32 srcLength;
+  PRInt32 dstLength;
+  char localbuf[512];
+  PRInt32 consumedLen = 0;
 
-        outString.Truncate();
+  outString.Truncate();
+  // convert
+  while (consumedLen < originalUnicharLength) {
+    srcLength = originalUnicharLength - consumedLen;  
+    dstLength = 512;
+    rv = encoder->Convert(currentSrcPtr, &srcLength, localbuf, &dstLength);
+    if (NS_FAILED(rv) || dstLength == 0)
+      break;
+    outString.Append(localbuf, dstLength);
 
-        // convert
-        while (consumedLen < originalUnicharLength) {
-          srcLength = originalUnicharLength - consumedLen;  
-          dstLength = 512;
-          res = encoder->Convert(currentSrcPtr, &srcLength, localbuf, &dstLength);
-          if (NS_FAILED(res) || dstLength == 0)
-            break;
-          outString.Append(localbuf, dstLength);
-
-          currentSrcPtr += srcLength;
-          consumedLen = currentSrcPtr - originalSrcPtr; // src length used so far
-        }
-        res = encoder->Finish(localbuf, &dstLength);
-        if (NS_SUCCEEDED(res))
-          outString.Append(localbuf, dstLength);
-      }
-    }    
+    currentSrcPtr += srcLength;
+    consumedLen = currentSrcPtr - originalSrcPtr; // src length used so far
   }
-  return res;
+  rv = encoder->Finish(localbuf, &dstLength);
+  if (NS_SUCCEEDED(rv))
+    outString.Append(localbuf, dstLength);
+  return rv;
 }
 
-nsresult nsMsgI18NConvertToUnicode(const nsAFlatCString& aCharset, 
+nsresult nsMsgI18NConvertToUnicode(const char* aCharset,
                                    const nsAFlatCString& inString, 
-                                   nsAString& outString)
+                                   nsAString& outString,
+                                   PRBool aIsCharsetCanonical)
 {
   if (inString.IsEmpty()) {
     outString.Truncate();
     return NS_OK;
   }
-  else if (aCharset.IsEmpty() ||
-      aCharset.Equals("us-ascii", nsCaseInsensitiveCStringComparator()) ||
-      aCharset.Equals("ISO-8859-1", nsCaseInsensitiveCStringComparator())) {
+  else if (!*aCharset || !PL_strcasecmp(aCharset, "us-ascii") ||
+           !PL_strcasecmp(aCharset, "ISO-8859-1")) {
     // Despite its name, it also works for Latin-1.
     CopyASCIItoUTF16(inString, outString);
     return NS_OK;
   }
-  else if (aCharset.Equals("UTF-8", nsCaseInsensitiveCStringComparator())) {
-    CopyUTF8toUTF16(inString, outString);
-    return NS_OK;
-  }
-
-  nsresult res;
-  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-
-  if(NS_SUCCEEDED(res)) {
-    nsCOMPtr <nsIUnicodeDecoder> decoder;
-
-    // get an unicode converter
-    res = ccm->GetUnicodeDecoder(aCharset.get(), getter_AddRefs(decoder));
-    if(NS_SUCCEEDED(res)) {
-
-      const char *originalSrcPtr = inString.get();
-      const char *currentSrcPtr = originalSrcPtr;
-      PRInt32 originalLength = inString.Length();
-      PRInt32 srcLength;
-      PRInt32 dstLength;
-      PRUnichar localbuf[512];
-      PRInt32 consumedLen = 0;
-
-      outString.Truncate();
-
-      // convert
-      while (consumedLen < originalLength) {
-        srcLength = originalLength - consumedLen;  
-        dstLength = 512;
-        res = decoder->Convert(currentSrcPtr, &srcLength, localbuf, &dstLength);
-        if (NS_FAILED(res) || dstLength == 0)
-          break;
-        outString.Append(localbuf, dstLength);
-
-        currentSrcPtr += srcLength;
-        consumedLen = currentSrcPtr - originalSrcPtr; // src length used so far
-      }
-    }    
-  }  
-  return res;
-}
-
-// Convert an unicode string to a C string with a given charset.
-nsresult ConvertFromUnicode(const char* aCharset,
-                            const nsString& inString,
-                            char** outCString)
-{
-  NS_ENSURE_ARG_POINTER(aCharset);
-  NS_ENSURE_ARG_POINTER(outCString);
-
-  *outCString = NULL;
-
-  if (inString.IsEmpty()) {
-    *outCString = nsCRT::strdup("");
-    return (NULL == *outCString) ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-  }
-  // Note: this will hide a possible error when the unicode text may contain more than one charset.
-  // (e.g. Latin1 + Japanese). Use nsMsgI18NSaveAsCharset instead to avoid that problem.
-  else if (!*aCharset ||
-           !nsCRT::strcasecmp("us-ascii", aCharset) ||
-           !nsCRT::strcasecmp("ISO-8859-1", aCharset)) {
-    *outCString = ToNewCString(inString);
-    return *outCString ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-  }
-  else if (!nsCRT::strcasecmp("UTF-8", aCharset)) {
-    *outCString = ToNewUTF8String(inString);
-    return *outCString ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  nsresult res;
-
-  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-  NS_ENSURE_SUCCESS(res, res);
-
-  // get an unicode converter
-  nsCOMPtr<nsIUnicodeEncoder> encoder;
-  res = ccm->GetUnicodeEncoder(aCharset, getter_AddRefs(encoder));
-  NS_ENSURE_SUCCESS(res, res);
-
-
-  PRUnichar *unichars = (PRUnichar *) inString.get();
-  PRInt32 unicharLength = inString.Length();
-  PRInt32 dstLength;
-
-  res = encoder->GetMaxLength(unichars, unicharLength, &dstLength);
-  NS_ENSURE_SUCCESS(res, res);
-
-  res = encoder->SetOutputErrorBehavior(nsIUnicodeEncoder::kOnError_Replace, nsnull, '?');
-  NS_ENSURE_SUCCESS(res, res);
-
-  // allocale an output buffer
-  *outCString = (char *) PR_Malloc(dstLength + 1);
-  NS_ENSURE_TRUE(*outCString, NS_ERROR_OUT_OF_MEMORY);
-
-  PRInt32 buffLength = dstLength;
-  **outCString = '\0';
-  res = encoder->Convert(unichars, &unicharLength, *outCString, &dstLength);
-  if (NS_SUCCEEDED(res)) {
-    PRInt32 finLen = buffLength - dstLength;
-    res = encoder->Finish((char *)(*outCString+dstLength), &finLen);
-    if (NS_SUCCEEDED(res)) {
-      dstLength += finLen;
+  else if (!PL_strcasecmp(aCharset, "UTF-8")) {
+    if (IsUTF8(inString)) {
+      CopyUTF8toUTF16(inString, outString);
+      return NS_OK;
     }
-    (*outCString)[dstLength] = '\0';
+    NS_WARNING("Invalid UTF-8 string");
+    return NS_ERROR_UNEXPECTED;
   }
 
-  return res;
-}
+  nsresult rv;
+  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
-// Convert a C string to an unicode string.
-nsresult ConvertToUnicode(const char* aCharset, 
-                          const char* inCString, 
-                          nsString& outString)
-{
-  NS_ENSURE_ARG_POINTER(aCharset);
-  NS_ENSURE_ARG_POINTER(inCString);
-
-  if ('\0' == *inCString) {
-    outString.Truncate();
-    return NS_OK;
-  }
-  else if ((!*aCharset ||
-            !nsCRT::strcasecmp("us-ascii", aCharset) ||
-            !nsCRT::strcasecmp("ISO-8859-1", aCharset)) &&
-           nsCRT::IsAscii(inCString)) {
-    outString.AssignWithConversion(inCString);
-    return NS_OK;
-  }
-
-  nsresult res;
-
-  nsCOMPtr <nsICharsetConverterManager> ccm = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID, &res);
-  NS_ENSURE_SUCCESS(res, res);
+  nsCOMPtr <nsIUnicodeDecoder> decoder;
 
   // get an unicode converter
-  nsCOMPtr<nsIUnicodeDecoder> decoder;
-  res = ccm->GetUnicodeDecoder(aCharset, getter_AddRefs(decoder));
-  NS_ENSURE_SUCCESS(res, res);
+  if (aIsCharsetCanonical)  // optimize for modified UTF-7 used by IMAP
+    rv = ccm->GetUnicodeDecoderRaw(aCharset, getter_AddRefs(decoder));
+  else
+    rv = ccm->GetUnicodeDecoder(aCharset, getter_AddRefs(decoder));
+  NS_ENSURE_SUCCESS(rv, rv);
 
-  PRUnichar *unichars;
-  PRInt32 unicharLength;
-  PRInt32 srcLen = PL_strlen(inCString);
+  const char *originalSrcPtr = inString.get();
+  const char *currentSrcPtr = originalSrcPtr;
+  PRInt32 originalLength = inString.Length();
+  PRInt32 srcLength;
+  PRInt32 dstLength;
+  PRUnichar localbuf[512];
+  PRInt32 consumedLen = 0;
 
-  // buffer size 144 =
-  // 72 (default line len for compose) 
-  // times 2 (converted byte len might be larger)
-  const int klocalbufsize = 144; 
-  PRUnichar localbuf[klocalbufsize+1];
-  PRBool usedlocalbuf;
+  outString.Truncate();
 
-  if (srcLen > klocalbufsize) {
-    res = decoder->GetMaxLength(inCString, srcLen, &unicharLength);
-    NS_ENSURE_SUCCESS(res, res);
-    unichars = (PRUnichar *) nsMemory::Alloc(unicharLength * sizeof(PRUnichar));
-    NS_ENSURE_TRUE(unichars, NS_ERROR_OUT_OF_MEMORY);
-    usedlocalbuf = PR_FALSE;
+  // convert
+  while (consumedLen < originalLength) {
+    srcLength = originalLength - consumedLen;  
+    dstLength = 512;
+    rv = decoder->Convert(currentSrcPtr, &srcLength, localbuf, &dstLength);
+    if (NS_FAILED(rv) || dstLength == 0)
+      break;
+    outString.Append(localbuf, dstLength);
+
+    currentSrcPtr += srcLength;
+    consumedLen = currentSrcPtr - originalSrcPtr; // src length used so far
   }
-  else {
-    unichars = localbuf;
-    unicharLength = klocalbufsize+1;
-    usedlocalbuf = PR_TRUE;
-  }
-
-  // convert to unicode
-  res = decoder->Convert(inCString, &srcLen, unichars, &unicharLength);
-  outString.Assign(unichars, unicharLength);
-  if (!usedlocalbuf)
-    nsMemory::Free(unichars);
-
-  return res;
-}
-
-// Charset to be used for the internatl processing.
-const char *msgCompHeaderInternalCharset()
-{
-  // UTF-8 is a super set of us-ascii. 
-  // We can use the same string manipulation methods as us-ascii without breaking non us-ascii characters. 
-  return "UTF-8";
+  return rv;
 }
 
 // Charset used by the file system.
@@ -351,13 +217,15 @@ const char * nsMsgI18NFileSystemCharset()
 }
 
 // MIME encoder, output string should be freed by PR_FREE
+// XXX : fix callers later to avoid allocation and copy
 char * nsMsgI18NEncodeMimePartIIStr(const char *header, PRBool structured, const char *charset, PRInt32 fieldnamelen, PRBool usemime) 
 {
   // No MIME, convert to the outgoing mail charset.
   if (PR_FALSE == usemime) {
-    char *convertedStr;
-    if (NS_SUCCEEDED(ConvertFromUnicode(charset, NS_ConvertUTF8toUCS2(header), &convertedStr)))
-      return (convertedStr);
+    nsCAutoString convertedStr;
+    if (NS_SUCCEEDED(ConvertFromUnicode(charset, NS_ConvertUTF8toUTF16(header),
+                                        convertedStr)))
+      return PL_strdup(convertedStr.get());
     else
       return PL_strdup(header);
   }
@@ -547,7 +415,7 @@ nsresult nsMsgI18NSaveAsCharset(const char* contentType, const char *charset,
   if (nsCRT::IsAscii(inString)) {
     if (isAsciiOnly)
       *isAsciiOnly = PR_TRUE;
-    *outString = nsCRT::strdup(NS_LossyConvertUCS2toASCII(inString).get());
+    *outString = nsCRT::strdup(NS_LossyConvertUTF16toASCII(inString).get());
     return (nsnull != *outString) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
   }
   if (isAsciiOnly)
@@ -690,7 +558,7 @@ nsMsgI18NGetAcceptLanguage(void)
       if (!ucsval.IsEmpty())
       {
         static nsCAutoString acceptLang;
-        acceptLang.Assign(NS_LossyConvertUCS2toASCII(ucsval));
+        LossyCopyUTF16toASCII(ucsval, acceptLang);
         return acceptLang.get();
       }
     }
@@ -698,20 +566,5 @@ nsMsgI18NGetAcceptLanguage(void)
 
   // Default Accept-Language
   return "en";
-}
-
-
-// taken from nsFileSpec::GetNativePathString()
-void
-nsMsgGetNativePathString(const char *aPath, nsString& aResult)
-{
-  if (!aPath) {
-    aResult.Truncate();
-    return;
-  }
-  if (nsCRT::IsAscii(aPath))
-    aResult.AssignWithConversion(aPath);
-  else
-    ConvertToUnicode(nsMsgI18NFileSystemCharset(), aPath, aResult);
 }
 

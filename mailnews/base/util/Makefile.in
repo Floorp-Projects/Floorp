@@ -89,7 +89,6 @@ CPPSRCS		= \
 		nsMsgMailNewsUrl.cpp \
 		nsMsgTxn.cpp \
 		nsMsgI18N.cpp \
-		nsMsgUtf7Utils.cpp \
 		nsAdapterEnumerator.cpp \
 		$(NULL)
 
@@ -110,7 +109,6 @@ EXPORTS		= \
 		nsMsgMailNewsUrl.h \
 		nsMsgTxn.h \
 		nsMsgI18N.h \
-		nsMsgUtf7Utils.h \
 		nsAdapterEnumerator.h \
 		$(NULL)
 

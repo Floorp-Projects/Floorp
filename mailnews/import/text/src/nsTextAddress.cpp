@@ -27,6 +27,7 @@
 #include "nsReadableUtils.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
+#include "nsNativeCharsetUtils.h"
 
 #include "TextDebugLog.h"
 
@@ -54,19 +55,6 @@ nsTextAddress::~nsTextAddress()
 {
     NS_IF_RELEASE( m_database);
     NS_IF_RELEASE( m_fieldMap);
-}
-
-
-void nsTextAddress::ConvertToUnicode( const char *pStr, nsString& str)
-{
-    if (!m_pService) {
-        m_pService = do_GetService( NS_IMPORTSERVICE_CONTRACTID);
-    }
-    if (m_pService) {
-        m_pService->SystemStringToUnicode( pStr, str);
-    }
-    else
-        str.AssignWithConversion( pStr);
 }
 
 nsresult nsTextAddress::ImportLDIF( PRBool *pAbort, const PRUnichar *pName, nsIFileSpec *pSrc, nsIAddrDatabase *pDb, nsString& errors, PRUint32 *pProgress)
@@ -502,7 +490,7 @@ nsresult nsTextAddress::ProcessLine( const char *pLine, PRInt32 len, nsString& e
                         }
                     }
                     if (newRow) {
-                        ConvertToUnicode( fieldVal.get(), uVal);
+                        NS_CopyNativeToUnicode( fieldVal, uVal);
                         rv = m_fieldMap->SetFieldValue( m_database, newRow, fieldNum, uVal.get());
                     }
                 }

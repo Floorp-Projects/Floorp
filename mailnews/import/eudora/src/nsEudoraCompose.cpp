@@ -570,19 +570,6 @@ nsMsgAttachedFile * nsEudoraCompose::GetLocalAttachments( void)
 	return( a);
 }
 
-void nsEudoraCompose::ConvertSysToUnicode( const char *pStr, nsString& uniStr)
-{
-	if (!m_pImportService) {
-		m_pImportService = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-	}
-	if (m_pImportService) {
-		m_pImportService->SystemStringToUnicode( pStr, uniStr);
-	}
-	else
-		uniStr.AssignWithConversion( pStr);
-}
-
-
 // Test a message send????
 nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 {
@@ -599,13 +586,13 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 	nsString	headerVal;
 	GetHeaderValue( m_pHeaders, m_headerLen, "From:", headerVal);
 	if (!headerVal.IsEmpty())
-		m_pMsgFields->SetFrom( headerVal.get());
+		m_pMsgFields->SetFrom( headerVal);
 	GetHeaderValue( m_pHeaders, m_headerLen, "To:", headerVal);
 	if (!headerVal.IsEmpty())
-		m_pMsgFields->SetTo( headerVal.get());
+		m_pMsgFields->SetTo( headerVal);
 	GetHeaderValue( m_pHeaders, m_headerLen, "Subject:", headerVal);
 	if (!headerVal.IsEmpty())
-		m_pMsgFields->SetSubject( headerVal.get());
+		m_pMsgFields->SetSubject( headerVal);
 	GetHeaderValue( m_pHeaders, m_headerLen, "Content-type:", headerVal);
 	bodyType = headerVal;
 	ExtractType( bodyType);
@@ -633,13 +620,13 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
   charSet = headerVal;
 	GetHeaderValue( m_pHeaders, m_headerLen, "CC:", headerVal);
 	if (!headerVal.IsEmpty())
-		m_pMsgFields->SetCc( headerVal.get());
+		m_pMsgFields->SetCc( headerVal);
 	GetHeaderValue( m_pHeaders, m_headerLen, "Message-ID:", headerVal);
 	if (!headerVal.IsEmpty())
 		m_pMsgFields->SetMessageId( NS_LossyConvertUCS2toASCII(headerVal).get() );
 	GetHeaderValue( m_pHeaders, m_headerLen, "Reply-To:", headerVal);
 	if (!headerVal.IsEmpty())
-		m_pMsgFields->SetReplyTo( headerVal.get());
+		m_pMsgFields->SetReplyTo( headerVal);
 
 	// what about all of the other headers?!?!?!?!?!?!
 	char *pMimeType = nsnull;
@@ -660,20 +647,19 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
 	*/
 	
 	nsString	uniBody;
-	ConvertSysToUnicode( m_pBody, uniBody);
+	NS_CopyNativeToUnicode( nsDependentCString(m_pBody), uniBody);
 
 	nsCString	body;
-	nsCString	theCharset;
-	theCharset.AssignWithConversion( charSet);
 
-	rv = nsMsgI18NConvertFromUnicode( theCharset, uniBody, body);
+	rv = nsMsgI18NConvertFromUnicode( NS_LossyConvertUTF16toASCII(charSet).get(),
+                                    uniBody, body);
 	if (NS_FAILED( rv)) {
 		// in this case, if we did not use the default compose
 		// charset, then try that.
 		if (!charSet.Equals( m_defCharset)) {
-			theCharset.AssignWithConversion( m_defCharset);
 			body.Truncate();
-			rv = nsMsgI18NConvertFromUnicode( theCharset, uniBody, body);
+			rv = nsMsgI18NConvertFromUnicode( NS_LossyConvertUTF16toASCII(charSet).get(),
+                                        uniBody, body);
 		}
 	}
 	uniBody.Truncate();
@@ -683,12 +669,12 @@ nsresult nsEudoraCompose::SendTheMessage( nsIFileSpec *pMsg)
   // Eudora saves sent and draft msgs in Out folder (ie, mixed) and it does
   // store Bcc: header in the msg itself.
   nsMsgDeliverMode mode = nsIMsgSend::nsMsgDeliverNow;
-  PRUnichar *from, *to, *cc, *bcc;
-  rv = m_pMsgFields->GetFrom(&from);
-  rv = m_pMsgFields->GetTo(&to);
-  rv = m_pMsgFields->GetCc(&cc);
-  rv = m_pMsgFields->GetBcc(&bcc);
-  if ( (!from || !*from) || ((!to || !*to) && (!cc || !*cc) && (!bcc || !*bcc)) )
+  nsAutoString from, to, cc, bcc;
+  rv = m_pMsgFields->GetFrom(from);
+  rv = m_pMsgFields->GetTo(to);
+  rv = m_pMsgFields->GetCc(cc);
+  rv = m_pMsgFields->GetBcc(bcc);
+  if ( from.IsEmpty() || to.IsEmpty() && cc.IsEmpty() && bcc.IsEmpty() )
     mode = nsIMsgSend::nsMsgSaveAsDraft;
 
 	if (NS_FAILED( rv)) {

@@ -54,7 +54,6 @@ public:
 
 private:
 	nsresult		ProcessLine( const char *pLine, PRInt32 len, nsString& errors);
-	void			ConvertToUnicode( const char *pStr, nsString& str);
 	
 	static PRBool		IsLineComplete( const char *pLine, PRInt32 len, char delim);
 	static PRInt32		CountFields( const char *pLine, PRInt32 maxLen, char delim);

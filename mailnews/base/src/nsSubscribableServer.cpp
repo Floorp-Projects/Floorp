@@ -53,7 +53,7 @@
 #include "nsIRDFLiteral.h"
 #include "nsIServiceManager.h"
 
-#include "nsMsgUtf7Utils.h"
+#include "nsMsgI18N.h"
 #include "nsMsgUtils.h"
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
@@ -739,13 +739,17 @@ nsSubscribableServer::GetLeafName(const char *path, PRUnichar **aLeafName)
     // for news, the path is escaped UTF8
     //
     // when we switch to using the tree, this hack will go away.
+    nsAutoString leafName;
     if (mShowFullName) {
-	rv = NS_MsgDecodeUnescapeURLPath(path, aLeafName);
+       rv = NS_MsgDecodeUnescapeURLPath(nsDependentCString(path), leafName);
     }
     else {
-        rv = CreateUnicodeStringFromUtf7(node->name, aLeafName);
+        rv = CopyMUTF7toUTF16(nsDependentCString(node->name), leafName);
     }
-    NS_ENSURE_SUCCESS(rv,rv);
+    if (NS_SUCCEEDED(rv)) {
+        *aLeafName = ToNewUnicode(leafName);
+        NS_ENSURE_TRUE(*aLeafName, NS_ERROR_OUT_OF_MEMORY);
+    }
     return rv;
 }
 

@@ -81,7 +81,7 @@
 #include "nsICacheService.h"
 #include "nsIStreamListenerTee.h"
 #include "nsNetCID.h"
-#include "nsMsgUtf7Utils.h"
+#include "nsMsgI18N.h"
 #include "nsIOutputStream.h"
 #include "nsIInputStream.h"
 #include "nsICopyMsgStreamListener.h"
@@ -100,7 +100,6 @@
 #include "nsImapProtocol.h"
 #include "nsIMsgMailSession.h"
 #include "nsIStreamConverterService.h"
-
 
 #define PREF_MAIL_ROOT_IMAP "mail.root.imap"            // old - for backward compatibility only
 #define PREF_MAIL_ROOT_IMAP_REL "mail.root.imap-rel"
@@ -2369,26 +2368,27 @@ nsImapService::RenameLeaf(nsIEventQueue* eventQueue, nsIMsgFolder* srcFolder,
             urlSpec.Append('>');
             urlSpec.Append(char(hierarchySeparator));
 
-			char *utfNewName = CreateUtf7ConvertedStringFromUnicode( newLeafName);
 
-			nsCAutoString cStrFolderName(NS_STATIC_CAST(const char *, folderName));
-      // Unescape the name before looking for parent path
-      nsUnescape(cStrFolderName.BeginWriting());
-      PRInt32 leafNameStart = 
+            nsCAutoString cStrFolderName(NS_STATIC_CAST(const char *, folderName));
+            // Unescape the name before looking for parent path
+            nsUnescape(cStrFolderName.BeginWriting());
+            PRInt32 leafNameStart = 
             cStrFolderName.RFindChar(hierarchySeparator);
             if (leafNameStart != -1)
             {
                 cStrFolderName.SetLength(leafNameStart+1);
                 urlSpec.Append(cStrFolderName);
             }
-            char *escapedNewName = nsEscape(utfNewName, url_Path);
+
+            nsCAutoString utfNewName;
+            CopyUTF16toMUTF7(nsDependentString(newLeafName), utfNewName);
+            char* escapedNewName = nsEscape(utfNewName.get(), url_Path);
             if (!escapedNewName) return NS_ERROR_OUT_OF_MEMORY;
             nsXPIDLCString escapedSlashName;
-            rv = nsImapUrl::EscapeSlashes((const char *) escapedNewName, getter_Copies(escapedSlashName));
-            if (!escapedSlashName) return NS_ERROR_OUT_OF_MEMORY;
-            urlSpec.Append(escapedSlashName.get());
+            rv = nsImapUrl::EscapeSlashes(escapedNewName, getter_Copies(escapedSlashName));
+            NS_ENSURE_SUCCESS(rv, rv);
             nsCRT::free(escapedNewName);
-			nsCRT::free(utfNewName);
+            urlSpec.Append(escapedSlashName.get());
 
             rv = uri->SetSpec(urlSpec);
             if (NS_SUCCEEDED(rv))
@@ -2436,11 +2436,13 @@ nsImapService::CreateFolder(nsIEventQueue* eventQueue, nsIMsgFolder* parent,
               urlSpec.Append((const char *) canonicalName);
               urlSpec.Append(char(hierarchySeparator));
             }
-	    char *utfNewName = CreateUtf7ConvertedStringFromUnicode( newFolderName);
-	    char *escapedFolderName = nsEscape(utfNewName, url_Path);
+
+            nsCAutoString utfNewName;
+            rv = CopyUTF16toMUTF7(nsDependentString(newFolderName), utfNewName);
+            NS_ENSURE_SUCCESS(rv, rv);
+            char* escapedFolderName = nsEscape(utfNewName.get(), url_Path);
             urlSpec.Append(escapedFolderName);
             nsCRT::free(escapedFolderName);
-            nsCRT::free(utfNewName);
     
             rv = uri->SetSpec(urlSpec);
             if (NS_SUCCEEDED(rv))
@@ -2484,11 +2486,11 @@ nsImapService::EnsureFolderExists(nsIEventQueue* eventQueue, nsIMsgFolder* paren
                 urlSpec.Append((const char *) folderName);
                 urlSpec.Append(char(hierarchySeparator));
             }
-			char *utfNewName = CreateUtf7ConvertedStringFromUnicode( newFolderName);
-			char *escapedFolderName = nsEscape(utfNewName, url_Path);
+            nsCAutoString utfNewName; 
+            CopyUTF16toMUTF7(nsDependentString(newFolderName), utfNewName);
+            char* escapedFolderName = nsEscape(utfNewName.get(), url_Path);
             urlSpec.Append(escapedFolderName);
-			nsCRT::free(escapedFolderName);
-			nsCRT::free(utfNewName);
+            nsCRT::free(escapedFolderName);
     
             rv = uri->SetSpec(urlSpec);
             if (NS_SUCCEEDED(rv))
@@ -2631,7 +2633,6 @@ nsresult nsImapService::GetServerFromUrl(nsIImapUrl *aImapUrl, nsIMsgIncomingSer
 {
     nsCAutoString userPass;
     nsCAutoString hostName;
-    nsXPIDLCString folderName;
     nsCOMPtr<nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(aImapUrl);
     
     // extract the user name and host name information...
@@ -2643,6 +2644,8 @@ nsresult nsImapService::GetServerFromUrl(nsIImapUrl *aImapUrl, nsIMsgIncomingSer
     if (!userPass.IsEmpty())
       NS_UnescapeURL(userPass); // hopefully we're not unescaping ':' or nasty control chars
     
+    nsXPIDLCString folderName;
+
     // if we can't get a folder name out of the url then I think this is an error
     aImapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(folderName));
     if (folderName.IsEmpty())
@@ -2701,7 +2704,6 @@ NS_IMETHODIMP nsImapService::NewURI(const nsACString &aSpec,
     }
 
     nsXPIDLCString folderName;
-    nsXPIDLCString urlPath;
 
     // if we can't get a folder name out of the url then I think this is an error
     aImapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(folderName));
@@ -2855,8 +2857,9 @@ NS_IMETHODIMP nsImapService::NewChannel(nsIURI *aURI, nsIChannel **_retval)
         rv = IMAPGetStringBundle(getter_AddRefs(bundle));
         NS_ENSURE_SUCCESS(rv, rv);
         // need to convert folder name from mod-utf7 to unicode
-        nsXPIDLString unescapedName;
-        CreateUnicodeStringFromUtf7(fullFolderName, getter_Copies(unescapedName));
+        nsAutoString unescapedName;
+        if (NS_FAILED(CopyMUTF7toUTF16(nsDependentCString(fullFolderName), unescapedName)))
+            CopyASCIItoUTF16(nsDependentCString(fullFolderName), unescapedName);
         const PRUnichar *formatStrings[1] = { unescapedName.get() };
 
         rv = bundle->FormatStringFromID(IMAP_SUBSCRIBE_PROMPT,
@@ -3149,7 +3152,7 @@ nsImapService::GetListOfFoldersWithPath(nsIImapIncomingServer *aServer, nsIMsgWi
       changedStr.Append(remStr);
     
     
-    rv = rootMsgFolder->FindSubFolder(changedStr.get(), getter_AddRefs(msgFolder));
+    rv = rootMsgFolder->FindSubFolder(changedStr, getter_AddRefs(msgFolder));
   }
   
   rv = DiscoverChildren(queue, msgFolder, listener, folderPath, nsnull);
@@ -3215,12 +3218,12 @@ nsImapService::SubscribeFolder(nsIEventQueue* eventQueue,
             nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
             urlSpec.Append("/subscribe>");
             urlSpec.Append(char(hierarchySeparator));
-            char *utfFolderName =
-                CreateUtf7ConvertedStringFromUnicode(aFolderName);
-            char *escapedFolderName = nsEscape(utfFolderName, url_Path);
+            nsCAutoString utfFolderName;
+            rv = CopyUTF16toMUTF7(nsDependentString(aFolderName), utfFolderName);
+            NS_ENSURE_SUCCESS(rv, rv);
+            char* escapedFolderName = nsEscape(utfFolderName.get(), url_Path);
             urlSpec.Append(escapedFolderName);
             nsCRT::free(escapedFolderName);
-            nsCRT::free(utfFolderName);
             rv = uri->SetSpec(urlSpec);
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,
@@ -3254,12 +3257,12 @@ nsImapService::UnsubscribeFolder(nsIEventQueue* eventQueue,
             nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
             urlSpec.Append("/unsubscribe>");
             urlSpec.Append(char(hierarchySeparator));
-            char *utfFolderName =
-                CreateUtf7ConvertedStringFromUnicode(folderName);
-            char *escapedFolderName = nsEscape(utfFolderName, url_Path);
+            nsCAutoString utfFolderName;
+            rv = CopyUTF16toMUTF7(nsDependentString(folderName), utfFolderName);
+            NS_ENSURE_SUCCESS(rv, rv);
+            char* escapedFolderName = nsEscape(utfFolderName.get(), url_Path);
             urlSpec.Append(escapedFolderName);
             nsCRT::free(escapedFolderName);
-            nsCRT::free(utfFolderName);
             rv = uri->SetSpec(urlSpec);
             if (NS_SUCCEEDED(rv))
                 rv = GetImapConnectionAndLoadUrl(eventQueue, imapUrl,

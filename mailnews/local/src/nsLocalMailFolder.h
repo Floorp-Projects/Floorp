@@ -126,7 +126,7 @@ public:
 	NS_IMETHOD UpdateFolder(nsIMsgWindow *aWindow);
 
 	NS_IMETHOD CreateSubfolder(const PRUnichar *folderName ,nsIMsgWindow *msgWindow);
-  NS_IMETHOD AddSubfolder(nsAutoString *folderName, nsIMsgFolder** newFolder);
+  NS_IMETHOD AddSubfolder(const nsAString& folderName, nsIMsgFolder** newFolder);
 
   NS_IMETHOD Compact(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow);
   NS_IMETHOD CompactAll(nsIUrlListener *aListener, nsIMsgWindow *aMsgWindow, nsISupportsArray *aFolderArray, PRBool aCompactOfflineAlso, nsISupportsArray *aOfflineFolderArray);

@@ -45,6 +45,8 @@
 
 #include "OEDebugLog.h"
 
+#include "nsNativeCharsetUtils.h"
+
 /*
 	.nch file format???
 
@@ -75,23 +77,6 @@ nsOEScanBoxes::~nsOEScanBoxes()
       delete pEntry;
   }
 }
-
-
-// convert methods
-void nsOEScanBoxes::ConvertToUnicode(const char *pStr, nsString &dist)
-{
-	nsresult rv = NS_OK;
-
-	if (!mService)
-		mService = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-
-	if (mService)
-		rv = mService->SystemStringToUnicode(pStr, dist);
-
-	if (!mService || NS_FAILED(rv)) // XXX bad cast
-		dist.AssignWithConversion(pStr);
-}
-
 
 /*
  3.x & 4.x registry
@@ -490,7 +475,7 @@ nsOEScanBoxes::MailboxEntry *nsOEScanBoxes::NewMailboxEntry(PRUint32 id, PRUint3
   pEntry->type = 0;
   pEntry->sibling = -1;
   pEntry->processed =  PR_FALSE;
-  ConvertToUnicode(prettyName, pEntry->mailName);
+  NS_CopyNativeToUnicode(nsDependentCString(prettyName), pEntry->mailName);
   if (pFileName)
 	  pEntry->fileName = pFileName;
   return pEntry;
@@ -624,7 +609,7 @@ PRBool nsOEScanBoxes::Scan50MailboxDir( nsIFileSpec * srcDir)
 						pEntry->type = -1;
 						pEntry->fileName = pLeaf;
 						pLeaf[sLen - 4] = 0;
-						ConvertToUnicode(pLeaf, pEntry->mailName);
+						NS_CopyNativeToUnicode(nsDependentCString(pLeaf), pEntry->mailName);
 						m_entryArray.AppendElement( pEntry);				
 					}
 				}
@@ -695,7 +680,7 @@ void nsOEScanBoxes::ScanMailboxDir( nsIFileSpec * srcDir)
 					pEntry->type = -1;
 					pEntry->fileName = pLeaf;
 					pLeaf[sLen - 4] = 0;
-					ConvertToUnicode(pLeaf, pEntry->mailName);
+					NS_CopyNativeToUnicode(nsDependentCString(pLeaf), pEntry->mailName);
 					m_entryArray.AppendElement( pEntry);				
 				}
 				if (pLeaf)

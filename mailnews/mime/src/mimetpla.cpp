@@ -347,8 +347,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
          ((MimeInlineTextClass*)&mimeInlineTextClass)->initialize_charset(obj);
       mailCharset = inlinetext->charset;
       if (mailCharset && *mailCharset) {
-        rv = nsMsgI18NConvertToUnicode(nsDependentCString(mailCharset), 
-                                       inputStr, lineSourceStr);
+        rv = nsMsgI18NConvertToUnicode(mailCharset, inputStr, lineSourceStr);
         NS_ENSURE_SUCCESS(rv, -1);
       }
       else // this probably never happens ...
@@ -463,7 +462,7 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
         CopyUTF16toUTF8(lineResultUnichar, outString);
       else
       { // convert back to mailCharset before writing.       
-        rv = nsMsgI18NConvertFromUnicode(nsDependentCString(mailCharset), 
+        rv = nsMsgI18NConvertFromUnicode(mailCharset, 
                                          lineResultUnichar, outString);
         NS_ENSURE_SUCCESS(rv, -1);
       }

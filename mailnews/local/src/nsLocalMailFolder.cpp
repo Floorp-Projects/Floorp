@@ -100,6 +100,7 @@
 #include "nsIMsgMailNewsUrl.h"
 #include "nsISpamSettings.h"
 #include "nsINoIncomingServer.h"
+#include "nsNativeCharsetUtils.h"
 
 static NS_DEFINE_CID(kMailboxServiceCID,					NS_MAILBOXSERVICE_CID);
 static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
@@ -222,7 +223,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
     nsFileSpec currentFolderPath = dir.Spec();
 
     char *leafName = currentFolderPath.GetLeafName();
-    nsMsgGetNativePathString(leafName, currentFolderNameStr);
+    NS_CopyNativeToUnicode(nsDependentCString(leafName), currentFolderNameStr);
     PR_Free(leafName);
 
     // here we should handle the case where the current file is a .sbd directory w/o
@@ -230,7 +231,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
     if (nsShouldIgnoreFile(currentFolderNameStr))
       continue;
 
-    rv = AddSubfolder(&currentFolderNameStr, getter_AddRefs(child));  
+    rv = AddSubfolder(currentFolderNameStr, getter_AddRefs(child));  
     if (child)
     { 
       nsXPIDLString folderName;
@@ -242,7 +243,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
   return rv;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
+NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(const nsAString &name,
                                                  nsIMsgFolder **child)
 {
   NS_ENSURE_ARG_POINTER(child);
@@ -257,9 +258,9 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
   
   // URI should use UTF-8
   // (see RFC2396 Uniform Resource Identifiers (URI): Generic Syntax)
-  nsXPIDLCString escapedName;
-  rv = NS_MsgEscapeEncodeURLPath((*name).get(), getter_Copies(escapedName));
-  NS_ENSURE_SUCCESS(rv,rv);
+  nsCAutoString escapedName;
+  rv = NS_MsgEscapeEncodeURLPath(name, escapedName);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   // fix for #192780
   // if this is the root folder
@@ -315,24 +316,24 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
   //Only set these is these are top level children.
   if(NS_SUCCEEDED(rv) && isServer)
   {
-    if(name->Equals(NS_LITERAL_STRING("Inbox"), nsCaseInsensitiveStringComparator()))
+    if(name.Equals(NS_LITERAL_STRING("Inbox"), nsCaseInsensitiveStringComparator()))
     {
       flags |= MSG_FOLDER_FLAG_INBOX;
       SetBiffState(nsIMsgFolder::nsMsgBiffState_Unknown);
     }
-    else if (name->Equals(NS_LITERAL_STRING("Trash"), nsCaseInsensitiveStringComparator()))
+    else if (name.Equals(NS_LITERAL_STRING("Trash"), nsCaseInsensitiveStringComparator()))
       flags |= MSG_FOLDER_FLAG_TRASH;
-    else if (name->Equals(NS_LITERAL_STRING("Unsent Messages"), nsCaseInsensitiveStringComparator()) ||
-      name->Equals(NS_LITERAL_STRING("Outbox"), nsCaseInsensitiveStringComparator()))
+    else if (name.Equals(NS_LITERAL_STRING("Unsent Messages"), nsCaseInsensitiveStringComparator()) ||
+      name.Equals(NS_LITERAL_STRING("Outbox"), nsCaseInsensitiveStringComparator()))
       flags |= MSG_FOLDER_FLAG_QUEUE;
 #if 0
     // the logic for this has been moved into 
     // SetFlagsOnDefaultMailboxes()
-    else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
+    else if(name.EqualsIgnoreCase(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
       folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-    else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
+    else if(name.EqualsIgnoreCase(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
       folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-    else if(name->EqualsIgnoreCase(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
+    else if(name.EqualsIgnoreCase(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
       folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 #endif 
   }
@@ -909,9 +910,8 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
   
   //Now we have a valid directory or we have returned.
   //Make sure the new folder name is valid
-  nsXPIDLCString nativeFolderName;
-  rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(folderName),
-    getter_Copies(nativeFolderName));
+  nsCAutoString nativeFolderName;
+  rv = nsMsgI18NCopyUTF16ToNative(folderName, nativeFolderName);
   if (NS_FAILED(rv) || nativeFolderName.IsEmpty()) {
     ThrowAlertMsg("folderCreationFailed", msgWindow);
     // I'm returning this value so the dialog stays up
@@ -936,10 +936,8 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
     outputStream.close();
   }
   
-  //Now let's create the actual new folder
-  nsAutoString folderNameStr(folderName);
   //GetFlags and SetFlags in AddSubfolder will fail because we have no db at this point but mFlags is set.
-  rv = AddSubfolder(&folderNameStr, getter_AddRefs(child));
+  rv = AddSubfolder(nsDependentString(folderName), getter_AddRefs(child));
   if (!child || NS_FAILED(rv))
   {
     path.Delete(PR_FALSE);
@@ -962,7 +960,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
       rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
       if(NS_SUCCEEDED(rv))
       {
-        folderInfo->SetMailboxName(&folderNameStr);
+        folderInfo->SetMailboxName(nsDependentString(folderName));
       }
       unusedDB->SetSummaryValid(PR_TRUE);
       unusedDB->Close(PR_TRUE);
@@ -977,7 +975,7 @@ nsMsgLocalMailFolder::CreateSubfolder(const PRUnichar *folderName, nsIMsgWindow 
   {
     //we need to notify explicitly the flag change because it failed when we did AddSubfolder
     child->OnFlagChange(mFlags);
-    child->SetPrettyName(folderNameStr.get());  //because empty trash will create a new trash folder
+    child->SetPrettyName(folderName);  //because empty trash will create a new trash folder
     NotifyItemAdded(child, "folderView");
   }
   return rv;
@@ -1266,8 +1264,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
   // convert from PRUnichar* to char* due to not having Rename(PRUnichar*)
   // function in nsIFileSpec
   
-  nsXPIDLCString convertedNewName;
-  if (NS_FAILED(ConvertFromUnicode(nsMsgI18NFileSystemCharset(), nsAutoString(aNewName), getter_Copies(convertedNewName))))
+  nsCAutoString convertedNewName;
+  if (NS_FAILED(nsMsgI18NCopyUTF16ToNative(aNewName, convertedNewName)))
     return NS_ERROR_FAILURE;
   
   nsCAutoString newDiskName;
@@ -1327,11 +1325,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Rename(const PRUnichar *aNewName, nsIMsgWind
   nsCOMPtr<nsIMsgFolder> newFolder;
   if (parentSupport)
   {
-    nsAutoString newFolderName(aNewName);
-    rv = parentFolder->AddSubfolder(&newFolderName, getter_AddRefs(newFolder));
+    rv = parentFolder->AddSubfolder(nsDependentString(aNewName), getter_AddRefs(newFolder));
     if (newFolder) 
     {
-      newFolder->SetPrettyName(newFolderName.get());
+      newFolder->SetPrettyName(aNewName);
       PRBool changed = PR_FALSE;
       MatchOrChangeFilterDestination(newFolder, PR_TRUE /*caseInsenstive*/, &changed);
       if (changed)
@@ -1372,9 +1369,8 @@ NS_IMETHODIMP nsMsgLocalMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, ns
      nsCOMPtr<nsIMsgFolder>msgFolder = do_QueryInterface(aSupport);
      nsXPIDLString folderName;
      rv = msgFolder->GetName(getter_Copies(folderName));
-     nsAutoString folderNameStr(folderName.get());
      nsCOMPtr <nsIMsgFolder> newFolder;
-     AddSubfolder(&folderNameStr, getter_AddRefs(newFolder));
+     AddSubfolder(folderName, getter_AddRefs(newFolder));
      if (newFolder)
      {
        newFolder->SetPrettyName(folderName.get());
@@ -1909,14 +1905,14 @@ nsMsgLocalMailFolder::CopyFolderAcrossServer(nsIMsgFolder* srcFolder, nsIMsgWind
   nsresult rv = CreateSubfolder(folderName, msgWindow);
   if (NS_FAILED(rv)) return rv;
 
-  nsXPIDLCString escapedFolderName;
-  rv = NS_MsgEscapeEncodeURLPath(folderName.get(), getter_Copies(escapedFolderName));
+  nsCAutoString escapedFolderName;
+  rv = NS_MsgEscapeEncodeURLPath(folderName, escapedFolderName);
   NS_ENSURE_SUCCESS(rv,rv);
 
   nsCOMPtr<nsIMsgFolder> newFolder;
   nsCOMPtr<nsIMsgFolder> newMsgFolder;
 
-  rv = FindSubFolder(escapedFolderName.get(), getter_AddRefs(newMsgFolder));
+  rv = FindSubFolder(escapedFolderName, getter_AddRefs(newMsgFolder));
   NS_ENSURE_SUCCESS(rv,rv);
   
   nsCOMPtr<nsISimpleEnumerator> messages;
@@ -2029,10 +2025,8 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
     }
   }
   
-  nsXPIDLString idlName;
-  srcFolder->GetName(getter_Copies(idlName));
-  nsAutoString folderName;
-  folderName.Assign(idlName);
+  nsXPIDLString folderName;
+  srcFolder->GetName(getter_Copies(folderName));
   
   srcFolder->ForceDBClosed();	  
   
@@ -2072,7 +2066,7 @@ nsMsgLocalMailFolder::CopyFolderLocal(nsIMsgFolder *srcFolder, PRBool isMoveFold
   rv = summarySpec.CopyToDir(newPath);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  rv = AddSubfolder(&folderName, getter_AddRefs(newMsgFolder));  
+  rv = AddSubfolder(folderName, getter_AddRefs(newMsgFolder));  
   NS_ENSURE_SUCCESS(rv, rv);
 
   newMsgFolder->SetPrettyName(folderName.get());
@@ -3340,8 +3334,8 @@ nsMsgLocalMailFolder::setSubfolderFlag(const PRUnichar *aFolderName,
 {
   // FindSubFolder() expects the folder name to be escaped
   // see bug #192043
-  nsXPIDLCString escapedFolderName;
-  nsresult rv = NS_MsgEscapeEncodeURLPath(aFolderName, getter_Copies(escapedFolderName));
+  nsCAutoString escapedFolderName;
+  nsresult rv = NS_MsgEscapeEncodeURLPath(nsDependentString(aFolderName), escapedFolderName);
   NS_ENSURE_SUCCESS(rv,rv);
   nsCOMPtr<nsIMsgFolder> msgFolder;
   rv = FindSubFolder(escapedFolderName, getter_AddRefs(msgFolder));

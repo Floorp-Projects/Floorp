@@ -242,7 +242,7 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
           {
             // convert uri to Unicode
             nsAutoString abUrl;
-            rv = ConvertToUnicode("UTF-8", uri.get(), abUrl);
+            rv = ConvertToUnicode("UTF-8", uri, abUrl);
             if (NS_FAILED(rv))
               break;
             // add to the list
@@ -252,15 +252,15 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
           else {
             // we need to convert uri to Unicode and then to ASCII
             nsAutoString abUUrl;
-            nsCAutoString abName(NS_ConvertUCS2toUTF8(description).get());
 
-            rv = ConvertToUnicode("UTF-8", uri.get(), abUUrl);
+            rv = ConvertToUnicode("UTF-8", uri, abUUrl);
             if (NS_FAILED(rv))
               break;
-            nsCAutoString abUrl(NS_ConvertUCS2toUTF8(abUUrl).get());
 
-            CopyCString(&(serverDescList->lpszABName), abName);
-            CopyCString(&(serverDescList->lpszABUrl), abUrl);
+            CopyCString(&(serverDescList->lpszABName),
+                        NS_ConvertUTF16toUTF8(description));
+            CopyCString(&(serverDescList->lpszABUrl),
+                        NS_ConvertUTF16toUTF8(abUUrl));
           }
           serverDescList++;
 
@@ -429,7 +429,7 @@ STDMETHODIMP CPalmSyncImp::nsRenameAB(BOOL aIsUnicode, long aCategoryIndex, LPTS
   return S_OK;
 }
 
-void CPalmSyncImp::CopyUnicodeString(LPTSTR *destStr, nsString srcStr)
+void CPalmSyncImp::CopyUnicodeString(LPTSTR *destStr, const nsAFlatString& srcStr)
 {
   if (!destStr)
     return;
@@ -440,7 +440,7 @@ void CPalmSyncImp::CopyUnicodeString(LPTSTR *destStr, nsString srcStr)
   (*destStr)[length-1] = '\0';
 }
 
-void CPalmSyncImp::CopyCString(LPTSTR *destStr, nsCString srcStr)
+void CPalmSyncImp::CopyCString(LPTSTR *destStr, const nsAFlatCString& srcStr)
 {
   if (!destStr)
     return;

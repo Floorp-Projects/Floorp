@@ -26,6 +26,7 @@
 #include "nsVoidArray.h"
 #include "nsISupportsArray.h"
 #include "nsIImportService.h"
+#include "nsNativeCharsetUtils.h"
 
 
 class nsIMsgSend;
@@ -130,7 +131,7 @@ private:
 		val.Truncate();
 		nsCString	hVal;
 		GetHeaderValue( pData, dataLen, pHeader, hVal, PR_TRUE);
-		ConvertSysToUnicode( hVal.get(), val);
+		NS_CopyNativeToUnicode( hVal, val);
 	}
 	void		ExtractCharset( nsString& str);
 	void		ExtractType( nsString& str);
@@ -144,7 +145,6 @@ private:
 	PRInt32		IsSpecialHeader( const char *pHeader);
 	nsresult	WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCopiedOnce& newHeaders);
 	PRBool		IsReplaceHeader( const char *pHeader);
-	void		ConvertSysToUnicode( const char *pSysStr, nsString& uniStr);
 
 private:
 	nsVoidArray *			m_pAttachments;

@@ -65,6 +65,7 @@
 #include "nsIMimeStreamConverter.h"
 #include "nsMsgMimeCID.h"
 #include "nsNetUtil.h"
+#include "nsNativeCharsetUtils.h"
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -519,7 +520,8 @@ nsMsgAttachmentHandler::SnarfMsgAttachment(nsMsgCompFields *compFields)
         {
           nsAutoString error_msg;
           nsAutoString path;
-          nsMsgGetNativePathString(mFileSpec->GetNativePathCString(),path);
+          NS_CopyNativeToUnicode(
+            nsDependentCString(mFileSpec->GetNativePathCString()), path);
           nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
           sendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
         }
@@ -655,7 +657,8 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
       {
         nsAutoString error_msg;
         nsAutoString path;
-        nsMsgGetNativePathString(mFileSpec->GetNativePathCString(),path);
+        NS_CopyNativeToUnicode(
+          nsDependentCString(mFileSpec->GetNativePathCString()), path);
         nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
         sendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
       }
@@ -969,11 +972,11 @@ nsMsgAttachmentHandler::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData, P
 
   if (charsetConversion)
   {
-    if (NS_FAILED(ConvertToUnicode(m_charset, readBuf, sigData)))
-      sigData.AssignWithConversion(readBuf);
+    if (NS_FAILED(ConvertToUnicode(m_charset, nsDependentCString(readBuf), sigData)))
+      CopyASCIItoUTF16(readBuf, sigData);
   }
   else
-      sigData.AssignWithConversion(readBuf);
+    CopyASCIItoUTF16(readBuf, sigData);
 
   PR_FREEIF(readBuf);
   return NS_OK;
@@ -1126,7 +1129,7 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
       // Now use the converter service here to do the right 
       // thing and convert this data to plain text for us!
       //
-      nsString      conData;
+      nsAutoString      conData;
 
       if (NS_SUCCEEDED(LoadDataFromFile(*mFileSpec, conData, PR_TRUE)))
       {
@@ -1138,13 +1141,12 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
           nsOutputFileStream tempfile(*mFileSpec, PR_WRONLY | PR_CREATE_FILE, 00600);
           if (tempfile.is_open()) 
           {
-            char    *tData = nsnull;
-            if (NS_FAILED(ConvertFromUnicode(m_charset, conData, &tData)))
-              tData = ToNewCString(conData);
-            if (tData)
+            nsCAutoString tData;
+            if (NS_FAILED(ConvertFromUnicode(m_charset, conData, tData)))
+              LossyCopyUTF16toASCII(conData, tData);
+            if (!tData.IsEmpty())
             {
-              (void) tempfile.write(tData, strlen(tData));
-              PR_FREEIF(tData);
+              (void) tempfile.write(tData.get(), tData.Length());
             }
             tempfile.close();
           }

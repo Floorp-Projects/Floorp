@@ -31,6 +31,7 @@
 #include "nsIProxyObjectManager.h"
 #include "nsProxiedService.h"
 #include "nsMsgI18N.h"
+#include "nsNativeCharsetUtils.h"
 
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"
@@ -564,18 +565,6 @@ nsMsgAttachedFile * nsOutlookCompose::GetLocalAttachments( void)
 	return( a);
 }
 
-void nsOutlookCompose::ConvertSystemStringToUnicode( const char *pStr, nsString& uniStr)
-{
-  if (!m_pImportService)
-    m_pImportService = do_GetService(NS_IMPORTSERVICE_CONTRACTID);
-  NS_ASSERTION(m_pImportService, "no import service, can't convert");
-
-  if (m_pImportService)
-    m_pImportService->SystemStringToUnicode( pStr, uniStr);
-  else
-    uniStr.AssignWithConversion( pStr);
-}
-
 // Test a message send????
 nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode mode, nsCString &useThisCType)
 {
@@ -587,20 +576,20 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 	
 	// IMPORT_LOG0( "Outlook Compose created necessary components\n");
 
-	nsString	bodyType;
-	nsString	charSet;
-	nsString	headerVal;
+	nsAutoString	bodyType;
+	nsAutoString	charSet;
+	nsAutoString	headerVal;
     nsCAutoString asciiHeaderVal;
 
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "From:", headerVal);
 	if (!headerVal.IsEmpty())
-		m_pMsgFields->SetFrom( headerVal.get());
+		m_pMsgFields->SetFrom( headerVal);
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "To:", headerVal);
 	if (!headerVal.IsEmpty())
-		m_pMsgFields->SetTo( headerVal.get());
+		m_pMsgFields->SetTo( headerVal);
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Subject:", headerVal);
 	if (!headerVal.IsEmpty())
-		m_pMsgFields->SetSubject( headerVal.get());
+		m_pMsgFields->SetSubject( headerVal);
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Content-type:", headerVal);
 
   // If callers pass in a content type then use it, else get it from the header.
@@ -627,19 +616,19 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
       headerVal.Assign(defaultCharset.IsEmpty() ? NS_LITERAL_STRING("ISO-8859-1").get() : defaultCharset.get());
     }
   }
-  m_pMsgFields->SetCharacterSet( NS_LossyConvertUCS2toASCII(headerVal).get() );
+  m_pMsgFields->SetCharacterSet( NS_LossyConvertUTF16toASCII(headerVal).get() );
   charSet = headerVal;
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "CC:", headerVal);
 	if (!headerVal.IsEmpty())
-		m_pMsgFields->SetCc( headerVal.get());
+		m_pMsgFields->SetCc( headerVal);
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Message-ID:", headerVal);
 	if (!headerVal.IsEmpty()) {
-        asciiHeaderVal.AssignWithConversion(headerVal);
+        LossyCopyUTF16toASCII(headerVal, asciiHeaderVal);
 		m_pMsgFields->SetMessageId(asciiHeaderVal.get());
     }
 	GetHeaderValue( m_Headers.get(), m_Headers.Length(), "Reply-To:", headerVal);
 	if (!headerVal.IsEmpty())
-		m_pMsgFields->SetReplyTo( headerVal.get());
+		m_pMsgFields->SetReplyTo( headerVal);
 
 	// what about all of the other headers?!?!?!?!?!?!
 	char *pMimeType = nsnull;
@@ -651,12 +640,11 @@ nsresult nsOutlookCompose::SendTheMessage( nsIFileSpec *pMsg, nsMsgDeliverMode m
 
   // Do body conversion here
   nsString	uniBody;
-  ConvertSystemStringToUnicode( m_Body.get(), uniBody);
+  NS_CopyNativeToUnicode( m_Body, uniBody);
 
-  nsCString	body, theCharset;
-  theCharset.AssignWithConversion(charSet);
-
-  rv = nsMsgI18NConvertFromUnicode( theCharset, uniBody, body);
+  nsCString body;
+  rv = nsMsgI18NConvertFromUnicode( NS_LossyConvertUTF16toASCII(charSet).get(),
+                                    uniBody, body);
   uniBody.Truncate();
 
 	rv = m_pSendProxy->CreateAndSendMessage(

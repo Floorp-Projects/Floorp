@@ -216,8 +216,8 @@ nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder
   nsAutoString newsgroupName;
   newsgroupName.AssignWithConversion(name);
   
-  nsXPIDLCString escapedName;
-  rv = NS_MsgEscapeEncodeURLPath(newsgroupName.get(), getter_Copies(escapedName));
+  nsCAutoString escapedName;
+  rv = NS_MsgEscapeEncodeURLPath(newsgroupName, escapedName);
   if (NS_FAILED(rv)) return rv;
   
   rv = nntpServer->AddNewsgroup(escapedName.get());
@@ -615,8 +615,8 @@ NS_IMETHODIMP nsMsgNewsFolder::Delete()
   rv = GetName(getter_Copies(name));
   NS_ENSURE_SUCCESS(rv,rv);
   
-  nsXPIDLCString escapedName;
-  rv = NS_MsgEscapeEncodeURLPath(name.get(), getter_Copies(escapedName));
+  nsCAutoString escapedName;
+  rv = NS_MsgEscapeEncodeURLPath(name, escapedName);
   NS_ENSURE_SUCCESS(rv,rv);
   
   rv = nntpServer->RemoveNewsgroup(escapedName.get());

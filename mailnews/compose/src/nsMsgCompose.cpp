@@ -1037,8 +1037,8 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
   if (progress)
   {
     mProgress = progress;
-    nsXPIDLString msgSubject;
-    m_compFields->GetSubject(getter_Copies(msgSubject));
+    nsAutoString msgSubject;
+    m_compFields->GetSubject(msgSubject);
 
     PRBool showProgress = PR_FALSE;
     nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
@@ -1051,7 +1051,7 @@ NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity 
         if (NS_FAILED(rv) || !params)
           return NS_ERROR_FAILURE;
 
-        params->SetSubject((const PRUnichar*) msgSubject);
+        params->SetSubject(msgSubject.get());
         params->SetDeliveryMode(deliverMode);
         
         mProgress->OpenProgressDialog(m_window, aMsgWindow, "chrome://messenger/content/messengercompose/sendProgress.xul", params);
@@ -1525,10 +1525,6 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
     charsetOverride = PR_TRUE;
   }
 
-#ifdef DEBUG_jungshik
-  printf ("charset=%s\n", charset.get());
-#endif
-
   PRBool isFirstPass = PR_TRUE;
   char *uri = uriList;
   char *nextUri;
@@ -1585,7 +1581,6 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
       if (charset.Equals("x-windows-949",
             nsCaseInsensitiveCStringComparator()))
         charset = "EUC-KR";
-
 
       // get an original charset, used for a label, UTF-8 is used for the internal processing
       if (isFirstPass && !charset.IsEmpty())
@@ -1666,7 +1661,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
             mQuotingToFollow = PR_TRUE;
 
             subject.Insert(NS_LITERAL_STRING("Re: "), 0);
-            m_compFields->SetSubject(subject.get());
+            m_compFields->SetSubject(subject);
 
             nsXPIDLCString author;
             rv = msgHdr->GetAuthor(getter_Copies(author));
@@ -1709,7 +1704,7 @@ nsresult nsMsgCompose::CreateMessage(const char * originalMsgURI,
             {
               subject.Insert(NS_LITERAL_STRING("[Fwd: ").get(), 0);
               subject.Append(NS_LITERAL_STRING("]").get());
-              m_compFields->SetSubject(subject.get()); 
+              m_compFields->SetSubject(subject); 
             }
             break;
           }
@@ -2032,7 +2027,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
       compose->GetCompFields(getter_AddRefs(compFields));
       if (compFields)
       {
-        aCharset.AssignWithConversion(msgCompHeaderInternalCharset());
+        aCharset = NS_LITERAL_STRING("UTF-8");
         nsAutoString recipient;
         nsAutoString cc;
         nsAutoString replyTo;
@@ -2041,7 +2036,6 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         nsAutoString messageId;
         nsAutoString references;
         nsXPIDLCString outCString;
-        PRUnichar emptyUnichar = 0;
         PRBool needToRemoveDup = PR_FALSE;
         if (!mMimeConverter)
         {
@@ -2068,7 +2062,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
           if (recipient.Length() > 0 && cc.Length() > 0)
             recipient.Append(NS_LITERAL_STRING(", "));
           recipient += cc;
-          compFields->SetCc(recipient.get());
+          compFields->SetCc(recipient);
 
           needToRemoveDup = PR_TRUE;
         }
@@ -2105,7 +2099,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         
         if (! replyTo.IsEmpty())
         {
-          compFields->SetTo(replyTo.get());
+          compFields->SetTo(replyTo);
           needToRemoveDup = PR_TRUE;
         }
         
@@ -2114,7 +2108,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
           if ((type != nsIMsgCompType::Reply) && (type != nsIMsgCompType::ReplyToSender))
             compFields->SetNewsgroups(NS_LossyConvertUCS2toASCII(newgroups).get());
           if (type == nsIMsgCompType::ReplyToGroup)
-            compFields->SetTo(&emptyUnichar);
+            compFields->SetTo(EmptyString());
         }
         
         if (! followUpTo.IsEmpty())
@@ -2132,7 +2126,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
             // If reply-to is empty, use the from header to fetch
             // the original sender's email
             if (!replyTo.IsEmpty())
-              compFields->SetTo(replyTo.get());
+              compFields->SetTo(replyTo);
             else
             {
               mHeaders->ExtractHeader(HEADER_FROM, PR_FALSE, getter_Copies(outCString));
@@ -2140,7 +2134,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
               {
                 nsAutoString from;
                 mMimeConverter->DecodeMimeHeader(outCString, from, charset);
-                compFields->SetTo(from.get());
+                compFields->SetTo(from);
               }
             }
 
@@ -2154,7 +2148,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
             if (type != nsIMsgCompType::ReplyToSender)
               compFields->SetNewsgroups(NS_LossyConvertUCS2toASCII(followUpTo).get());
             if (type == nsIMsgCompType::Reply)
-              compFields->SetTo(&emptyUnichar);
+              compFields->SetTo(EmptyString());
           }
         }
         
@@ -2279,7 +2273,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnDataAvailable(nsIRequest *request,
       if (NS_SUCCEEDED(rv))
       {
         // Use this local buffer if possible.
-        const PRUint32 kLocalBufSize = 4096;
+        const PRInt32 kLocalBufSize = 4096;
         PRUnichar localBuf[kLocalBufSize];
         PRUnichar *unichars = localBuf;
         
@@ -2826,8 +2820,8 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       compose->ProcessReplyFlags();
 
       // Close the window ONLY if we are not going to do a save operation
-      nsXPIDLString fieldsFCC;
-      if (NS_SUCCEEDED(compFields->GetFcc(getter_Copies(fieldsFCC))))
+      nsAutoString fieldsFCC;
+      if (NS_SUCCEEDED(compFields->GetFcc(fieldsFCC)))
       {
         if (!fieldsFCC.IsEmpty())
         {
@@ -3085,7 +3079,7 @@ nsMsgComposeSendListener::RemoveCurrentDraftMessage(nsIMsgCompose *compObj, PRBo
             nsCAutoString srcStr(str+1);
             PRInt32 num=0, err;
             num = srcStr.ToInteger(&err);
-            if (num != nsMsgKey_None)
+            if (num != PRInt32(nsMsgKey_None))
             {
               messageID.Add(num);
               rv = imapFolder->StoreImapFlags(kImapMsgDeletedFlag, PR_TRUE, messageID.GetArray(), messageID.GetSize());
@@ -3282,8 +3276,7 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
   }
   tempFile.close();
 
-  nsCAutoString sigEncoding;
-  sigEncoding.Assign(nsMsgI18NParseMetaCharset(&fSpec));
+  nsCAutoString sigEncoding(nsMsgI18NParseMetaCharset(&fSpec));
   PRBool removeSigCharset = !sigEncoding.IsEmpty() && m_composeHTML;
 
   //default to platform encoding for signature files w/o meta charset
@@ -3291,14 +3284,13 @@ nsMsgCompose::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
     sigEncoding.Assign(nsMsgI18NFileSystemCharset());
 
   if (NS_FAILED(ConvertToUnicode(sigEncoding.get(), readBuf, sigData)))
-    sigData.AssignWithConversion(readBuf);
+    CopyASCIItoUTF16(readBuf, sigData);
 
   //remove sig meta charset to allow user charset override during composition
   if (removeSigCharset)
   {
-    nsAutoString metaCharset;
-    metaCharset.Assign(NS_LITERAL_STRING("charset="));
-    metaCharset.AppendWithConversion(sigEncoding.get());
+    nsAutoString metaCharset(NS_LITERAL_STRING("charset="));
+    AppendASCIItoUTF16(sigEncoding, metaCharset);
     nsAString::const_iterator realstart, start, end;
     sigData.BeginReading(start);
     sigData.EndReading(end);
@@ -3509,7 +3501,6 @@ nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, PRBool aQuoted, nsStrin
 nsresult
 nsMsgCompose::BuildBodyMessageAndSignature()
 {
-  PRUnichar   *bod = nsnull;
   nsresult    rv = NS_OK;
 
   // 
@@ -3522,7 +3513,8 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   // Now, we have the body so we can just blast it into the
   // composition editor window.
   //
-  m_compFields->GetBody(&bod);
+  nsAutoString   body;
+  m_compFields->GetBody(body);
 
   /* Some time we want to add a signature and sometime we wont. Let's figure that now...*/
   PRBool addSignature;
@@ -3546,7 +3538,7 @@ nsMsgCompose::BuildBodyMessageAndSignature()
       break;
     
     case nsIMsgCompType::MailToUrl :
-      addSignature = !(bod && *bod != 0);
+      addSignature = body.IsEmpty();
       break;
 
     default :
@@ -3554,17 +3546,15 @@ nsMsgCompose::BuildBodyMessageAndSignature()
       break;
   }
 
-  nsAutoString empty;
-  nsAutoString bodStr(bod);
   nsAutoString tSignature;
 
   if (addSignature)
     ProcessSignature(m_identity, PR_FALSE, &tSignature);
 
-  rv = ConvertAndLoadComposeWindow(empty, bodStr, tSignature,
+  nsString empty;
+  rv = ConvertAndLoadComposeWindow(empty, body, tSignature,
                                    PR_FALSE, m_composeHTML);
 
-  PR_FREEIF(bod);
   return rv;
 }
 
@@ -3849,10 +3839,10 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
   /* First, build an array with original recipients */
   nsCOMArray<nsMsgRecipient> recipientsList[MAX_OF_RECIPIENT_ARRAY];
 
-  nsXPIDLString originalRecipients[MAX_OF_RECIPIENT_ARRAY];
-  m_compFields->GetTo(getter_Copies(originalRecipients[0]));
-  m_compFields->GetCc(getter_Copies(originalRecipients[1]));
-  m_compFields->GetBcc(getter_Copies(originalRecipients[2]));
+  nsAutoString originalRecipients[MAX_OF_RECIPIENT_ARRAY];
+  m_compFields->GetTo(originalRecipients[0]);
+  m_compFields->GetCc(originalRecipients[1]);
+  m_compFields->GetBcc(originalRecipients[2]);
 
   nsCOMPtr<nsIMsgRecipientArray> addressArray;
   nsCOMPtr<nsIMsgRecipientArray> emailArray;
@@ -3860,7 +3850,8 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
   {
     if (originalRecipients[i].IsEmpty())
       continue;
-    rv = m_compFields->SplitRecipientsEx((const PRUnichar *)(originalRecipients[i]), getter_AddRefs(addressArray), getter_AddRefs(emailArray));
+    rv = m_compFields->SplitRecipientsEx(originalRecipients[i].get(),
+                                         getter_AddRefs(addressArray),                                                        getter_AddRefs(emailArray));
     if (NS_SUCCEEDED(rv))
     {
       PRInt32 nbrRecipients;
@@ -3995,7 +3986,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
                       if (!fullAddress.IsEmpty())
                       {
                         /* We need to convert back the result from UTF-8 to Unicode */
-                        (void)ConvertToUnicode(msgCompHeaderInternalCharset(), fullAddress.get(), fullNameStr);
+                        CopyUTF8toUTF16(fullAddress, fullNameStr);
                       }
                     }
                     if (fullNameStr.IsEmpty())
@@ -4159,9 +4150,9 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
       {
         switch (i)
         {
-          case 0 : m_compFields->SetTo(recipientsStr.get());  break;
-          case 1 : m_compFields->SetCc(recipientsStr.get());  break;
-          case 2 : m_compFields->SetBcc(recipientsStr.get()); break;
+          case 0 : m_compFields->SetTo(recipientsStr);  break;
+          case 1 : m_compFields->SetCc(recipientsStr);  break;
+          case 2 : m_compFields->SetBcc(recipientsStr); break;
         }
       }
   }
@@ -4853,18 +4844,19 @@ nsMsgMailList::nsMsgMailList(nsString listName, nsString listDescription, nsIAbD
 
   if (parser)
   {
-    nsXPIDLCString fullAddress;
     nsXPIDLCString utf8Email;
     if (listDescription.IsEmpty())
-      utf8Email.Adopt(ToNewUTF8String(listName));
+      CopyUTF16toUTF8(listName, utf8Email);
     else
-      utf8Email.Adopt(ToNewUTF8String(listDescription));
+      CopyUTF16toUTF8(listDescription, utf8Email);
 
-    parser->MakeFullAddress(nsnull, NS_ConvertUCS2toUTF8(listName).get(), utf8Email, getter_Copies(fullAddress));
+    nsXPIDLCString fullAddress;
+    parser->MakeFullAddress(nsnull, NS_ConvertUTF16toUTF8(listName).get(),
+                            utf8Email, getter_Copies(fullAddress));
     if (!fullAddress.IsEmpty())
     {
       /* We need to convert back the result from UTF-8 to Unicode */
-      (void)ConvertToUnicode(msgCompHeaderInternalCharset(), fullAddress, mFullName);
+      CopyUTF8toUTF16(fullAddress, mFullName);
     }
   }
 

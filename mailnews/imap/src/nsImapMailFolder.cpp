@@ -70,7 +70,7 @@
 #include "nsTextFormatter.h"
 #include "nsIPrefBranch.h"
 #include "nsIPrefService.h"
-#include "nsMsgUtf7Utils.h"
+#include "nsMsgI18N.h"
 #include "nsICacheSession.h"
 #include "nsEscape.h"
 #include "nsIDOMWindowInternal.h"
@@ -319,7 +319,7 @@ nsShouldIgnoreFile(nsString& name)
     return PR_TRUE;
 }
 
-NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFileSpec *dbPath, 
+NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAString& name, nsIFileSpec *dbPath, 
                                              nsIMsgFolder **child)
 {
   if(!child)
@@ -334,7 +334,7 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
   PRInt32 flags = 0;
 
   nsCAutoString uri = mURI + NS_LITERAL_CSTRING("/");
-  AppendUTF16toUTF8(*name, uri);
+  AppendUTF16toUTF8(name, uri);
 
   //will make sure mSubFolders does not have duplicates because of bogus msf files.
 
@@ -375,22 +375,22 @@ NS_IMETHODIMP nsImapMailFolder::AddSubfolderWithPath(nsAutoString *name, nsIFile
   if(NS_SUCCEEDED(rv))
   {
     if(isServer &&
-       name->Equals(NS_LITERAL_STRING("Inbox"),
+       name.Equals(NS_LITERAL_STRING("Inbox"),
                     nsCaseInsensitiveStringComparator()))
       flags |= MSG_FOLDER_FLAG_INBOX;
     else if(isServer || isParentInbox) 
     {
       nsAutoString trashName;
       GetTrashFolderName(trashName);
-      if (name->Equals(trashName))
+      if (name.Equals(trashName))
         flags |= MSG_FOLDER_FLAG_TRASH;
     }
 #if 0
-    else if(name->Equals(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
+    else if(name.Equals(NS_LITERAL_STRING("Sent"), nsCaseInsensitiveStringComparator()))
       folder->SetFlag(MSG_FOLDER_FLAG_SENTMAIL);
-    else if(name->Equals(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
+    else if(name.Equals(NS_LITERAL_STRING("Drafts"), nsCaseInsensitiveStringComparator()))
       folder->SetFlag(MSG_FOLDER_FLAG_DRAFTS);
-    else if (name->Equals(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
+    else if (name.Equals(NS_LITERAL_STRING("Templates"), nsCaseInsensitiveStringComparator()))
       folder->SetFlag(MSG_FOLDER_FLAG_TEMPLATES);
 #endif
   }
@@ -487,8 +487,11 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
             else
             {
               rv = imapServer->ConvertFolderName(onlineFullUtf7Name.get(), getter_Copies(unicodeName));
-              if (NS_FAILED(rv))
-                imapServer->CreatePRUnicharStringFromUTF7(onlineFullUtf7Name, getter_Copies(unicodeName));
+              if (NS_FAILED(rv)) {
+                rv = CopyMUTF7toUTF16(onlineFullUtf7Name, unicodeName);
+                if (NS_FAILED(rv))  // XXX Does this make sense? 
+                  CopyASCIItoUTF16(onlineFullUtf7Name, unicodeName);
+              }
             }
           }
 
@@ -501,7 +504,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
             currentFolderNameStr.Cut(0, leafPos + 1);
 
           // take the utf7 full online name, and determine the utf7 leaf name
-          utf7LeafName.AssignWithConversion(onlineFullUtf7Name);
+          CopyASCIItoUTF16(onlineFullUtf7Name, utf7LeafName);
           leafPos = utf7LeafName.RFindChar(delimiter);
           if (leafPos > 0)
             utf7LeafName.Cut(0, leafPos + 1);
@@ -519,7 +522,7 @@ nsresult nsImapMailFolder::CreateSubFolders(nsFileSpec &path)
       msfFileSpec->SetLeafName(leafName.get());
     }
     // use the utf7 name as the uri for the folder.
-    AddSubfolderWithPath(&utf7LeafName, msfFileSpec, getter_AddRefs(child));
+    AddSubfolderWithPath(utf7LeafName, msfFileSpec, getter_AddRefs(child));
     if (child)
     {
       // use the unicode name as the "pretty" name. Set it so it won't be
@@ -817,7 +820,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
   if(NS_FAILED(rv))
     return rv;
 
-    nsAutoString leafName; leafName.AssignWithConversion(folderName);
+    NS_ConvertASCIItoUTF16 leafName(folderName);
     nsAutoString folderNameStr;
     nsAutoString parentName = leafName;
     PRInt32 folderStart = leafName.FindChar('/');
@@ -886,7 +889,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
 //      }
 
       //Now let's create the actual new folder
-      rv = AddSubfolderWithPath(&folderNameStr, dbFileSpec, getter_AddRefs(child));
+      rv = AddSubfolderWithPath(folderNameStr, dbFileSpec, getter_AddRefs(child));
 //      if (NS_SUCCEEDED(rv) && child)
 //        child->SetPath(dbFileSpec);
 
@@ -904,7 +907,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
    
         child->SetFlag(MSG_FOLDER_FLAG_ELIDED);
         nsXPIDLString unicodeName;
-        rv = CreateUnicodeStringFromUtf7(folderName, getter_Copies(unicodeName));
+        rv = CopyMUTF7toUTF16(nsDependentCString(folderName), unicodeName);
         if (NS_SUCCEEDED(rv))
           child->SetPrettyName(unicodeName);
  
@@ -914,7 +917,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
         if (folderInfo)
         {
           nsAutoString unicodeOnlineName; unicodeOnlineName.AssignWithConversion(onlineName.get());
-          folderInfo->SetMailboxName(&unicodeOnlineName);
+          folderInfo->SetMailboxName(unicodeOnlineName);
         }
       }
 
@@ -1856,8 +1859,8 @@ NS_IMETHODIMP nsImapMailFolder::SetOnlineName(const char * aOnlineFolderName)
   if(NS_SUCCEEDED(rv) && folderInfo)
   {
     nsAutoString onlineName; onlineName.AssignWithConversion(aOnlineFolderName);
-    rv = folderInfo->SetProperty("onlineName", &onlineName);
-    rv = folderInfo->SetMailboxName(&onlineName);
+    rv = folderInfo->SetProperty("onlineName", onlineName);
+    rv = folderInfo->SetMailboxName(onlineName);
     // so, when are we going to commit this? Definitely not every time!
     // We could check if the online name has changed.
     db->Commit(nsMsgDBCommitType::kLargeCommit);
@@ -1905,7 +1908,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
         {
           nsAutoString autoOnlineName; 
           // autoOnlineName.AssignWithConversion(name);
-          (*folderInfo)->GetMailboxName(&autoOnlineName);
+          (*folderInfo)->GetMailboxName(autoOnlineName);
           if (autoOnlineName.IsEmpty())
           {
             nsXPIDLCString uri;
@@ -1922,7 +1925,7 @@ nsImapMailFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatab
             m_onlineFolderName.Assign(onlineCName); 
             autoOnlineName.AssignWithConversion(onlineCName.get());
           }
-          rv = (*folderInfo)->SetProperty("onlineName", &autoOnlineName);
+          rv = (*folderInfo)->SetProperty("onlineName", autoOnlineName);
         }
       }
     }
@@ -5222,7 +5225,7 @@ NS_IMETHODIMP nsImapMailFolder::GetAclFlags(PRUint32 *aclFlags)
       rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
       if (NS_SUCCEEDED(rv) && dbFolderInfo)
       {
-        rv = dbFolderInfo->GetUint32Property("aclFlags", aclFlags, 0);
+        rv = dbFolderInfo->GetUint32Property("aclFlags", 0, aclFlags);
         m_aclFlags = *aclFlags;
       }
     }
@@ -5267,7 +5270,7 @@ nsresult nsImapMailFolder::GetSupportedUserFlags(PRUint32 *userFlags)
       rv = mDatabase->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
       if (NS_SUCCEEDED(rv) && dbFolderInfo)
       {
-        rv = dbFolderInfo->GetUint32Property("imapFlags", userFlags, 0);
+        rv = dbFolderInfo->GetUint32Property("imapFlags", 0, userFlags);
         m_supportedUserFlags = *userFlags;
       }
     }
@@ -7190,11 +7193,11 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         rv = unusedDB->GetDBFolderInfo(getter_AddRefs(folderInfo));
 
         //Now let's create the actual new folder
-        rv = AddSubfolderWithPath(&folderNameStr, dbFileSpec, getter_AddRefs(child));
+        rv = AddSubfolderWithPath(folderNameStr, dbFileSpec, getter_AddRefs(child));
         if (!child || NS_FAILED(rv)) return rv;
         nsXPIDLString unicodeName;
-        rv = CreateUnicodeStringFromUtf7(proposedDBName.get(), getter_Copies(unicodeName));
-        if (NS_SUCCEEDED(rv) && unicodeName)
+        rv = CopyMUTF7toUTF16(proposedDBName, unicodeName);
+        if (NS_SUCCEEDED(rv))
           child->SetName(unicodeName);
         imapFolder = do_QueryInterface(child);
 
@@ -7215,7 +7218,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
            if (folderInfo)
            {
              nsAutoString unicodeOnlineName; unicodeOnlineName.AssignWithConversion(onlineName.get());
-             folderInfo->SetMailboxName(&unicodeOnlineName);
+             folderInfo->SetMailboxName(unicodeOnlineName);
            }
            PRBool changed = PR_FALSE;
            msgFolder->MatchOrChangeFilterDestination(child, PR_FALSE /*caseInsensitive*/, &changed);
@@ -7307,11 +7310,14 @@ NS_IMETHODIMP nsImapMailFolder::RenameSubFolders(nsIMsgWindow *msgWindow, nsIMsg
      if (folderName.IsEmpty() || NS_FAILED(rv)) return rv;
 
      nsXPIDLCString utf7LeafName;
-     utf7LeafName.Adopt(CreateUtf7ConvertedStringFromUnicode(folderName.get()));
-     nsAutoString unicodeLeafName;
-     unicodeLeafName.AssignWithConversion(utf7LeafName.get());
+     rv = CopyUTF16toMUTF7(folderName, utf7LeafName);
+     NS_ENSURE_SUCCESS(rv, rv);
 
-     rv = AddSubfolderWithPath(&unicodeLeafName, dbFileSpec, getter_AddRefs(child));
+     // XXX : Fix this non-sense by fixing AddSubfolderWithPath
+     nsAutoString unicodeLeafName;
+     CopyASCIItoUTF16(utf7LeafName, unicodeLeafName);
+
+     rv = AddSubfolderWithPath(unicodeLeafName, dbFileSpec, getter_AddRefs(child));
      
      if (!child || NS_FAILED(rv)) return rv;
 

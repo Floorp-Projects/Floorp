@@ -283,14 +283,14 @@ NS_IMETHODIMP nsMsgHdr::MarkFlagged(PRBool bFlagged)
   return rv;
 }
 
-NS_IMETHODIMP nsMsgHdr::GetProperty(const char *propertyName, nsString &resultProperty)
+NS_IMETHODIMP nsMsgHdr::GetProperty(const char *propertyName, nsAString &resultProperty)
 {
-  return m_mdb->GetPropertyAsNSString(GetMDBRow(), propertyName, &resultProperty);
+  return m_mdb->GetPropertyAsNSString(GetMDBRow(), propertyName, resultProperty);
 }
 
-NS_IMETHODIMP nsMsgHdr::SetProperty(const char *propertyName, nsString &propertyStr)
+NS_IMETHODIMP nsMsgHdr::SetProperty(const char *propertyName, const nsAString &propertyStr)
 {
-  return m_mdb->SetPropertyFromNSString(m_mdbRow, propertyName, &propertyStr);
+  return m_mdb->SetPropertyFromNSString(m_mdbRow, propertyName, propertyStr);
 }
 
 NS_IMETHODIMP nsMsgHdr::SetStringProperty(const char *propertyName, const char *propertyValue)
@@ -337,7 +337,7 @@ nsresult nsMsgHdr::ParseReferences(const char *references)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsCString &resultReference)
+NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsACString& resultReference)
 {
   nsresult err = NS_OK;
   

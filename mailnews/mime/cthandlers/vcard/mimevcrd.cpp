@@ -226,9 +226,11 @@ static PRInt32 INTL_ConvertCharset(const char* from_charset, const char* to_char
   }
 
   if (NS_SUCCEEDED(res)) {
-    res = ConvertFromUnicode(to_charset, outString, outBuffer);
+    nsCAutoString result;
+    res = ConvertFromUnicode(to_charset, outString, result);
     if (NS_SUCCEEDED(res)) {
-      *outLength = strlen(*outBuffer);
+      *outLength = result.Length();
+      *outBuffer = PL_strdup(result.get());
     }
   }
 

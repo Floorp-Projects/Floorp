@@ -938,7 +938,7 @@ nsresult nsMsgSearchTerm::MatchString (const char *stringToMatch,
     n_str = m_value.string;
     if (charset != nsnull)
     {
-      nsString out;
+      nsAutoString out;
       ConvertToUnicode(charset, stringToMatch ? stringToMatch : "", out);
       utf8 = ToNewUTF8String(out);
     }

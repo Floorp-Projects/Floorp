@@ -343,11 +343,11 @@ nsresult nsEudoraMac::IterateMailDir( nsIFileSpec *pFolder, nsISupportsArray *pA
 
 nsresult nsEudoraMac::FoundMailbox( nsIFileSpec *mailFile, const char *pName, nsISupportsArray *pArray, nsIImportService *pImport)
 {
-	nsString								displayName;
+	nsAutoString							displayName;
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
 
-	ConvertToUnicode(pName, displayName);
+	NS_CopyNativeToUnicode(nsDependentCString(pName), displayName);
 
 #ifdef IMPORT_DEBUG
 	char *pPath = nsnull;
@@ -386,11 +386,11 @@ nsresult nsEudoraMac::FoundMailbox( nsIFileSpec *mailFile, const char *pName, ns
 
 nsresult nsEudoraMac::FoundMailFolder( nsIFileSpec *mailFolder, const char *pName, nsISupportsArray *pArray, nsIImportService *pImport)
 {
-	nsString								displayName;
+	nsAutoString  				displayName;
 	nsCOMPtr<nsIImportMailboxDescriptor>	desc;
 	nsISupports *							pInterface;
 
-	ConvertToUnicode(pName, displayName);
+	NS_CopyNativeToUnicode(nsDependentCString(pName), displayName);
 
 #ifdef IMPORT_DEBUG
 	char *pPath = nsnull;
@@ -1297,7 +1297,7 @@ nsresult nsEudoraMac::FindAddressBooks( nsIFileSpec *pRoot, nsISupportsArray **p
 			rv = spec->IsFile( &isFile);
 			rv = spec->GetLeafName( &pName);
 			if (pName)	{
-				ConvertToUnicode(pName, displayName);
+				NS_CopyNativeToUnicode(nsDependentCString(pName), displayName);
 				nsCRT::free( pName);
 			}
 			if (NS_SUCCEEDED( rv) && pName && isFile) {
