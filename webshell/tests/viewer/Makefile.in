@@ -122,8 +122,6 @@ GECKO_LIBS =		      \
 
 IMGLIB_LIBS =	     \
 	-limg	     \
-	$(JPEG_LIBS) \
-	$(PNG_LIBS)  \
 	$(NULL)
 
 NETLIB_LIBS =	      \
