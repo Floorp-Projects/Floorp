@@ -527,7 +527,7 @@
                 if (securityUI)
                   p.onSecurityChange(webProgress, null, securityUI.state);
                 var listener = this.mTabListeners[this.mPanelContainer.selectedIndex];
-                if (listener.mIcon)
+                if (listener.mIcon && 'onLinkIconAvailable' in p)
                   p.onLinkIconAvailable(listener.mIcon);
               }
             }
@@ -696,7 +696,7 @@
             if (notifyListeners && this.mProgressListeners) {
               for (i = 0; i < this.mProgressListeners.length; i++) {
                 var p = this.mProgressListeners[i];
-                if (p)
+                if (p && 'onLinkIconAvailable' in p)
                   p.onLinkIconAvailable(href);
               }
             }

@@ -572,7 +572,7 @@
                 if (listener.mIcon) {
                   if (this.isFavIconKnownMissing(listener.mIcon))
                     listener.mIcon = null;
-                  else
+                  else if ('onLinkIconAvailable' in p)
                     p.onLinkIconAvailable(newBrowser, listener.mIcon);
                 }
               }
@@ -743,7 +743,7 @@
               var targetBrowser = tabBrowser.getBrowserAtIndex(browserIndex);
               for (i = 0; i < tabBrowser.mProgressListeners.length; i++) {
                 var p = tabBrowser.mProgressListeners[i];
-                if (p)
+                if (p && 'onLinkIconAvailable' in p)
                   p.onLinkIconAvailable(targetBrowser, href);
               }
             }
