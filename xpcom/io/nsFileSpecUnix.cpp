@@ -456,7 +456,7 @@ PRUint32 nsFileSpec::GetDiskSpaceAvailable() const
         sprintf(curdir, "%.200s", (const char*)mPath);
  
     struct STATFS fs_buf;
-#if defined(__QNX__)  /* Maybe this should be handled differently? */
+#if defined(__QNX__) && !defined(HAVE_STATVFS) /* Maybe this should be handled differently? */
     if (STATFS(curdir, &fs_buf, 0, 0) < 0)
 #else
     if (STATFS(curdir, &fs_buf) < 0)
