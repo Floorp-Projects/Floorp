@@ -626,6 +626,8 @@ static PRInt32 gInstanceCount;
 static PRInt32 gInstrument = 6;
 #endif
 
+// XXX the storage of mContent can cause deleted content to dangle if the context
+//     is shared, need to adda cleanup pass to content delete style notification
 StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
                                    nsISupportsArray* aRules, 
                                    nsIContent* aContent,
@@ -847,7 +849,8 @@ PRUint32 StyleContextImpl::HashValue(void) const
       PRInt32 index = mRules->Count();
       while (0 <= --index) {
         nsIStyleRule* rule = (nsIStyleRule*)mRules->ElementAt(index);
-        PRUint32 hash = rule->HashValue();
+        PRUint32 hash;
+        rule->HashValue(hash);
         ((StyleContextImpl*)this)->mHashValue ^= (hash & 0x7FFFFFFF);
         NS_RELEASE(rule);
       }
@@ -952,20 +955,22 @@ nsStyleStruct* StyleContextImpl::GetMutableStyleData(nsStyleStructID aSID)
 }
 
 struct MapStyleData {
-  MapStyleData(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext)
+  MapStyleData(nsIStyleContext* aStyleContext, nsIPresContext* aPresContext, nsIContent* aContent)
   {
     mStyleContext = aStyleContext;
     mPresContext = aPresContext;
+    mContent = aContent;
   }
   nsIStyleContext*  mStyleContext;
   nsIPresContext*   mPresContext;
+  nsIContent*       mContent;
 };
 
 PRBool MapStyleRule(nsISupports* aRule, void* aData)
 {
   nsIStyleRule* rule = (nsIStyleRule*)aRule;
   MapStyleData* data = (MapStyleData*)aData;
-  rule->MapStyleInto(data->mStyleContext, data->mPresContext);
+  rule->MapStyleInto(data->mStyleContext, data->mPresContext, data->mContent);
   return PR_TRUE;
 }
 
@@ -992,7 +997,7 @@ void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
   }
 
   if ((nsnull != mRules) && (0 < mRules->Count())) {
-    MapStyleData  data(this, aPresContext);
+    MapStyleData  data(this, aPresContext, mContent);
     mRules->EnumerateForwards(MapStyleRule, &data);
   }
   if (-1 == mDataCode) {
@@ -1012,7 +1017,7 @@ void StyleContextImpl::RemapStyle(nsIPresContext* aPresContext)
     mDisplay.ResetFrom(nsnull, aPresContext);
 
     if ((nsnull != mRules) && (0 < mRules->Count())) {
-      MapStyleData  data(this, aPresContext);
+      MapStyleData  data(this, aPresContext, mContent);
       mRules->EnumerateForwards(MapStyleRule, &data);
     }
   }

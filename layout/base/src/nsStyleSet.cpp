@@ -40,7 +40,7 @@ public:
 private:
   ContextKey(void);
   ContextKey(const ContextKey& aCopy);
-  ContextKey& operator=(const ContextKey& aCopy) const;
+  ContextKey& operator=(const ContextKey& aCopy);
 
 protected:
   nsIStyleContext* mContext;
@@ -144,7 +144,8 @@ PRUint32 ContextKey::HashValue(void) const
     PRInt32 index = mRules->Count();
     while (0 <= --index) {
       nsIStyleRule* rule = (nsIStyleRule*)mRules->ElementAt(index);
-      PRUint32 hash = rule->HashValue();
+      PRUint32 hash;
+      rule->HashValue(hash);
       hashValue ^= (hash & 0x7FFFFFFF);
       NS_RELEASE(rule);
     }
