@@ -81,7 +81,6 @@ ICONS += $(wildcard images/hidecolumn*.gif images/showcolumn*.gif) \
 ICONS += $(wildcard images/M_*.gif)
 
 MAIL_OR_COMPOSE_ICONS = $(wildcard images/MNC*.gif \
-			   images/HFolder*.gif \
 			   images/MNTB_Next*.gif \
 			   images/MNTB_Forward*.gif \
 			   images/MNAB_NewPerson*.gif \
