@@ -13,7 +13,7 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is 
+ * The Initial Developer of the Original Code is
  * Netscape Communications Corporation.
  * Portions created by the Initial Developer are Copyright (C) 1998-1999
  * the Initial Developer. All Rights Reserved.
@@ -23,7 +23,7 @@
  *   Jason Kersey (kerz@netscape.com)
  *
  * Alternatively, the contents of this file may be used under the terms of
- * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * either the GNU General Public License Version 2 or later (the "GPL"), or
  * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
  * in which case the provisions of the GPL or the LGPL are applicable instead
  * of those above. If you wish to allow use of your version of this file only
@@ -42,153 +42,468 @@
 
 @namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
+
+/* ::::: bookmark toolbar buttons ::::: */
+
+/* ..... bookmark items ..... */
+
+toolbarbutton.bookmark-item {
+  cursor: pointer;
+  min-width: 0;
+  max-width: 10em;
+  color: black !important;
+}
+
+toolbarbutton.bookmark-item:hover,
+toolbarbutton.bookmark-item:hover:active {
+  text-decoration: underline;
+  color: black !important;
+}
+
+toolbarbutton.bookmark-item[container="true"],
+toolbarbutton.bookmark-item[container="true"]:hover {
+  cursor: default;
+  text-decoration: none;
+}
+
+/* removes border from non-container bookmark items */
+toolbarbutton.bookmark-item:not([container="true"]):hover,
+toolbarbutton.bookmark-item:not([container="true"]):hover:active {
+  border: 1px solid transparent;
+}
+
+.bookmark-item > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
+.bookmark-item > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+/* ..... drag and drop styles ..... */
+
+toolbarbutton.bookmark-item[dragover-left="true"] {
+  border-left-color: #000000;
+}
+
+toolbarbutton.bookmark-item[dragover-right="true"] {
+  border-right-color: #000000;
+}
+
+toolbarbutton.bookmark-item[dragover-top="true"] {
+  border: 1px solid #000000;
+}
+
+/* ::::: bookmark menus ::::: */
+
+menu.bookmark-item,
+menuitem.bookmark-item {
+  border-top: 1px solid transparent !important;
+  border-bottom: 1px solid transparent !important;
+  padding: 1px 2px;
+}
+
+/* ..... drag and drop styles ..... */
+
+menu.bookmark-item[dragover-top="true"],
+menuitem.bookmark-item[dragover-top="true"] {
+  border-top: 1px solid #000000 !important;
+}
+
+menu.bookmark-item[dragover-bottom="true"],
+menuitem.bookmark-item[dragover-bottom="true"] {
+  border-bottom: 1px solid #000000 !important;
+}
+
+menu.bookmark-item[dragover="true"] {
+  background: #424F63 !important;
+  color: #FFFFFF !important;
+}
+
+/* ::::: bookmark items ::::: */
+
+treechildren:-moz-tree-image(Name) {
+  padding-right: 2px;
+}
+
+
+.bookmark-item,
+treechildren:-moz-tree-image(Name) {
+  margin: 0px 2px;
+  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-n.png");
+}
+
+.bookmark-item:hover,
+treechildren:-moz-tree-image(Name) {
+  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-h.png");
+}
+
+.bookmark-item:active,
+treechildren:-moz-tree-image(Name) {
+  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-a.png");
+}
+
+.bookmark-item[container="true"],
+treechildren:-moz-tree-image(Name, container) {
+  list-style-image: url("chrome://browser/skin/o3-bookmark-folder-n.png");
+}
+
+.bookmark-item[container="true"]:hover,
+treechildren:-moz-tree-image(Name, container) {
+  list-style-image: url("chrome://browser/skin/o3-bookmark-folder-h.png");
+}
+
+.bookmark-item[open="true"],
+treechildren:-moz-tree-image(Name, open) {
+  list-style-image: url("chrome://browser/skin/o3-bookmark-folder-a.png");
+}
+
+.bookmark-item[container="true"][open="true"],
+treechildren:-moz-tree-image(Name, open) {
+  list-style-image: url("chrome://browser/skin/o3-bookmark-folder-a.png");
+}
+
+
+treechildren:-moz-tree-twisty(group, hidetwisty) {
+  list-style-image: none;
+}
+
+treechildren:-moz-tree-image(Name, container, group) {
+  list-style-image: url("chrome://browser/skin/bookmarks/bookmark-group.gif");
+}
+
+
 /* ::::: primary toolbar buttons ::::: */
 
+.toolbarbutton-menubutton-dropmarker {
+  list-style-image: url("chrome://browser/skin/o3-imap-dropmarker.png");
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  -moz-image-region: rect(0 14px 15px 0px) !important;
+  margin-left: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  border: 0px !important;
+}
+
+toolbarbutton:hover > stack > .toolbarbutton-menubutton-dropmarker {
+  -moz-image-region: rect(0 29px 15px 15px) !important;
+}
+
+toolbarbutton[disabled="true"] > stack > .toolbarbutton-menubutton-dropmarker,
+toolbarbutton[disabled="true"]:hover > stack > .toolbarbutton-menubutton-dropmarker {
+  -moz-image-region: rect(0 44px 15px 30px) !important;
+}
+
+toolbarbutton[open="true"] > stack > .toolbarbutton-menubutton-dropmarker {
+  -moz-image-region: rect(0 59px 15px 45px) !important;
+}
+
+#back-button > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker,
+#forward-button > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker
+{
+  margin-left: 34px;
+  margin-top: 26px;
+}
+
+#print-button > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker
+{
+  margin-left: 34px;
+  margin-top: 26px;
+}
+
+
+
 .toolbarbutton-1 {
-  list-style-image: url("chrome://browser/skin/buttons.gif");
+  min-width: 0px;
+  padding: 0px !important;
+  margin: 0px 2px !important;
+  border: 0px !important;
+  -moz-appearance: none !important;
+}
+
+toolbarbutton, menubutton {
+  -moz-appearance: none !important;
+  border-color: transparent !important;
+}
+
+toolbarbutton:not([disabled="true"]):hover,
+menubutton:not([disabled="true"]):hover,
+toolbarbutton:not([disabled="true"]):hover:active,
+menubutton:not([disabled="true"]):hover:active {
+  color: black !important;
 }
 
 #back-button {
-  -moz-image-region: rect(0px 23px 21px 0px) !important;
+  list-style-image: url("chrome://browser/skin/back-large.png");
+  -moz-image-region: rect(0px 46px 42px 0px);
+  width: 47 !important;
+  min-width: 47;
+  border: 0px !important;
+}
+
+#back-button[buttonover="true"] {
+  -moz-image-region: rect(0px 100px 42px 54px);
+    border: 0px !important;
 }
 
 #back-button[disabled="true"] {
-  -moz-image-region: rect(21px 23px 42px 0px) !important;
-}
-
-#back-button[buttonover="true"]:not([disabled]) {
-  -moz-image-region: rect(42px 23px 63px 0px) !important;
+  -moz-image-region: rect(0px 154px 42px 108px) !important;
+    border: 0px !important;
 }
 
 #back-button[buttondown="true"] {
-  -moz-image-region: rect(63px 23px 84px 0px) !important;
+  -moz-image-region: rect(0px 208px 42px 162px);
+    border: 0px !important;
 }
 
+
 #forward-button {
-  -moz-image-region: rect(0px 46px 21px 23px) !important;
+  list-style-image: url("chrome://browser/skin/forward-large.png");
+  -moz-image-region: rect(0px 46px 42px 0px);
+  min-width: 47;
+  width: 47;
+  border: 0px !important;
+}
+
+#forward-button[buttonover="true"] {
+  -moz-image-region: rect(0px 100px 42px 54px);
 }
 
 #forward-button[disabled="true"] {
-  -moz-image-region: rect(21px 46px 42px 23px) !important;
-}
-
-#forward-button[buttonover="true"]:not([disabled]) {
-  -moz-image-region: rect(42px 46px 63px 23px) !important;
+  -moz-image-region: rect(0px 154px 42px 108px) !important;
 }
 
 #forward-button[buttondown="true"] {
-  -moz-image-region: rect(63px 46px 84px 23px) !important;
+  -moz-image-region: rect(0px 208px 42px 162px);
 }
+
 
 
 #reload-button {
-  -moz-image-region: rect(0px 92px 21px 69px) !important;
+  list-style-image: url("chrome://browser/skin/reload-large.png");
+  -moz-image-region: rect(0px 40px 42px 0px);
+  width: 47 !important;
+  min-width: 47;
 }
 
 #reload-button:hover {
-  -moz-image-region: rect(42px 92px 63px 69px) !important;
+  -moz-image-region: rect(0px 81px 42px 41px);
+}
+
+#reload-button[disabled="true"] {
+  -moz-image-region: rect(0px 122px 42px 82px) !important;
 }
 
 #reload-button:hover:active {
-  -moz-image-region: rect(63px 92px 84px 69px) !important;
+  -moz-image-region: rect(0px 163px 42px 123px);
 }
+
 
 #stop-button {
-  -moz-image-region: rect(0px 69px 21px 46px) !important;
+  list-style-image: url("chrome://browser/skin/stop-large.png");
+  -moz-image-region: rect(0px 40px 42px 0px);
+  width: 47 !important;
+  min-width: 47;
 }
-  
+
+#stop-button:hover {
+  -moz-image-region: rect(0px 81px 42px 41px);
+}
+
 #stop-button[disabled="true"] {
-  -moz-image-region: rect(21px 69px 42px 46px) !important;
+  -moz-image-region: rect(0px 122px 42px 82px) !important;
 }
-
-#stop-button:hover:not([disabled]) {
-  -moz-image-region: rect(42px 69px 63px 46px) !important;
-}
-
-#stop-button:hover:active:not([disabled]) {
-  -moz-image-region: rect(63px 69px 84px 46px) !important;
-}
-
-
-#print-button {
-  -moz-image-region: rect(0px 115px 21px 92px) !important;
-}
-
-#print-button:hover {
-  -moz-image-region: rect(42px 115px 63px 92px) !important;
-}
-
-#print-button:hover:active {
-  -moz-image-region: rect(63px 115px 84px 92px) !important;
+#stop-button:hover:active {
+  -moz-image-region: rect(0px 163px 42px 123px);
 }
 
 #home-button {
-  -moz-image-region: rect(0px 138px 21px 115px) !important;
+  list-style-image: url("chrome://browser/skin/home-large.png") !important;
+  -moz-image-region: rect(0px 40px 42px 0px);
+  -moz-box-align: center;
+  -moz-box-pack: center;
 }
-  
-#home-button:hover,
-#home-button[dragover] {
-  -moz-image-region: rect(42px 138px 63px 115px) !important;
+
+#home-button:hover {
+  -moz-image-region: rect(0px 94px 42px 54px);
 }
-  
+
+#home-button[disabled="true"] {
+  -moz-image-region: rect(0px 148px 42px 108px) !important;
+}
+
 #home-button:hover:active {
-  -moz-image-region: rect(63px 138px 84px 115px) !important;
+  -moz-image-region: rect(0px 202px 42px 162px);
+}
+
+#print-button {
+  list-style-image: url("chrome://browser/skin/print-large.png");
+  -moz-image-region: rect(0px 46px 42px 0px);
+  width: 47 !important;
+  min-width: 47;
+}
+
+#print-button:hover {
+  -moz-image-region: rect(0px 100px 42px 54px);
+}
+
+#print-button:hover:active {
+  -moz-image-region: rect(0px 208px 42px 162px);
+}
+
+#print-button[disabled="true"] {
+  -moz-image-region: rect(0px 154px 42px 108px) !important;
 }
 
 #search-button {
-  -moz-image-region: rect(0px 161px 21px 138px) !important;
+  list-style-image: url("chrome://browser/skin/search-large.png");
+  -moz-image-region: rect(0px 32px 32px 0px) !important;
+  width: 47 !important;
+  min-width: 47;
 }
-  
 #search-button:hover {
-  -moz-image-region: rect(42px 161px 63px 138px) !important;
+  -moz-image-region: rect(0px 65px 32px 33px) !important;
 }
-  
+#search-button[disabled="true"] {
+  -moz-image-region: rect(0px 98px 32px 66px) !important;
+}
 #search-button:hover:active {
-  -moz-image-region: rect(63px 161px 84px 138px) !important;
-}
-
-#bookmarks-button {
-  -moz-image-region: rect(0px 184px 21px 161px) !important;
-}
-  
-#bookmarks-button:hover {
-  -moz-image-region: rect(42px 184px 63px 161px) !important;
-}
-  
-#bookmarks-button:hover:active {
-  -moz-image-region: rect(63px 184px 84px 161px) !important;
-}
-
-#history-button {
-  -moz-image-region: rect(0px 207px 21px 184px) !important;
-}
-  
-#history-button:hover {
-  -moz-image-region: rect(42px 207px 63px 184px) !important;
-}
-  
-#history-button:hover:active {
-  -moz-image-region: rect(63px 207px 84px 184px) !important;
+  -moz-image-region: rect(0px 131px 32px 99px) !important;
 }
 
 /* ::::: small primary toolbar buttons ::::: */
 
-.toolbarbutton-1[toolbarmode="small"] {
-  min-width: 0;
+/*.toolbarbutton-1[toolbarmode="small"] {
+  margin-top: 4px !important;
+  list-style-image: url("chrome://navigator/skin/icons/btn1-small.gif") !important;
+}*/
+
+toolbar[iconsize="small"] > #back-button {
+  list-style-image: url("chrome://browser/skin/back-forward-small.png") !important;
+  -moz-image-region: rect(0px 28px 25px 0px);
 }
 
-.toolbarbutton-1[toolbarmode="small"] > .toolbarbutton-menubutton-button
-    > .toolbarbutton-text,
-.toolbarbutton-1[toolbarmode="small"] > .toolbarbutton-text {
-  display: none;
+toolbar[iconsize="small"] > #back-button[buttonover="true"] {
+  -moz-image-region: rect(0px 56px 25px 28px);
 }
 
-#nav-bar[toolbarmode="small"] > #nav-bar-inner {
-  margin: 0;
-  border: none;
+toolbar[iconsize="small"] > #back-button[disabled="true"] {
+  -moz-image-region: rect(0px 84px 25px 56px);
 }
 
-#nav-bar[toolbarmode="small"] > .toolbar-primary-grippy {
+toolbar[iconsize="small"] > #back-button[buttondown="true"] {
+  -moz-image-region: rect(0px 112px 25px 84px) !important;
+}
+
+toolbar[iconsize="small"] > #forward-button {
+  list-style-image: url("chrome://browser/skin/back-forward-small.png") !important;
+  -moz-image-region: rect(25px 28px 50px 0px);
+  margin-left: 0px !important;
+}
+
+toolbar[iconsize="small"] > #forward-button[buttonover="true"] {
+  -moz-image-region: rect(25px 56px 50px 28px);
+}
+
+toolbar[iconsize="small"] > #forward-button[buttondown="true"] {
+  -moz-image-region: rect(25px 84px 50px 56px);
+}
+
+toolbar[iconsize="small"] > #forward-button[disabled="true"] {
+  -moz-image-region: rect(25px 112px 50px 84px) !important;
+}
+
+toolbar[iconsize="small"] > #reload-button {
+  list-style-image: url("chrome://browser/skin/reload-small.png") !important;
+  -moz-image-region: rect(0px 24px 25px 0px);
+  margin-right: 3px !important;
+}
+
+toolbar[iconsize="small"] > #reload-button:hover {
+  -moz-image-region: rect(0px 48px 25px 24px);
+}
+
+toolbar[iconsize="small"] > #reload-button:hover:active {
+  -moz-image-region: rect(0px 72px 25px 48px);
+}
+
+toolbar[iconsize="small"] > #reload-button[disabled="true"] {
+  -moz-image-region: rect(0px 96px 25px 72px) !important;
+}
+
+toolbar[iconsize="small"] > #stop-button {
+  list-style-image: url("chrome://browser/skin/stop-small.png") !important;
+  -moz-image-region: rect(0px 24px 25px 0px);
+}
+
+toolbar[iconsize="small"] > #stop-button:hover {
+  -moz-image-region: rect(0px 48px 25px 24px);
+}
+
+toolbar[iconsize="small"] > #stop-button:hover:active {
+  -moz-image-region: rect(0px 72px 25px 48px);
+}
+
+toolbar[iconsize="small"] > #stop-button[disabled="true"] {
+  -moz-image-region: rect(0px 96px 25px 72px) !important;
+}
+
+
+toolbar[iconsize="small"] > #home {
+  margin-left: 3px !important;
+  list-style-image: url("chrome://browser/skin/home-small.png") !important;
+  -moz-image-region: rect(0 28px 25px 0);
+}
+
+toolbar[iconsize="small"] > #home:hover {
+  -moz-image-region: rect(0 56px 25px 28px);
+}
+
+toolbar[iconsize="small"] > #home:hover:active {
+  -moz-image-region: rect(0 112px 25px 84px);
+}
+
+/*#back-button[toolbarmode="small"] > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker,
+#print-button[toolbarmode="small"] > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker,
+#forward-button[toolbarmode="small"] > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker
+{
+  margin: 6px 0px 0px 14px; /* top x x x */
+}*/
+
+/*#back-button[disabled="true"][toolbarmode="small"] > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker,
+#forward-button[disabled="true"][toolbarmode="small"] > .toolbarbutton-menubutton-stack
+    > .toolbarbutton-menubutton-dropmarker
+{
+  list-style-image: none !important;
+}*/
+
+toolbar[iconsize="small"] > #print-button {
+  list-style-image: url("chrome://browser/skin/print-small.png") !important;
+  -moz-image-region: rect(0 28px 25px 0);
+}
+
+toolbar[iconsize="small"] > #print-button[buttonover="true"] {
+  -moz-image-region: rect(0 56px 25px 28px);
+}
+
+toolbar[iconsize="small"] > #print-button[buttondown="true"] {
+  -moz-image-region: rect(0 84px 25px 56px);
+}
+
+toolbar[iconsize="small"] > #print-button[disabled="true"] {
+  -moz-image-region: rect(0 112px 25px 84px);
+}
+
+toolbar[iconsize="small"] > #search-button > .button-box > .button-text {
   display: none;
 }
 
@@ -203,29 +518,25 @@
 
 #minimize-button {
   list-style-image: url("chrome://navigator/skin/icons/minimize.gif");
-} 
+}
 
 #restore-button {
   list-style-image: url("chrome://navigator/skin/icons/restore.gif");
-} 
+}
 
 #close-button {
   list-style-image: url("chrome://navigator/skin/icons/close.gif");
-} 
-  
+}
+
 /* ::::: nav-bar-inner ::::: */
-  
+
 #nav-bar-inner {
   -moz-box-align: center;
   min-width: 0px;
 }
 
 #urlbar {
-  border: 3px solid;
-  -moz-border-top-colors: transparent ThreeDShadow ThreeDDarkShadow;
-  -moz-border-right-colors: transparent ThreeDHighlight ThreeDDarkShadow;
-  -moz-border-bottom-colors: transparent ThreeDHighlight ThreeDDarkShadow;
-  -moz-border-left-colors: transparent ThreeDShadow ThreeDDarkShadow;
+  margin: 2px 6px 2px 3px;
 }
 
 /* ::::: page proxy icon ::::: */
@@ -243,51 +554,41 @@
 }
 
 #page-proxy-button {
-  list-style-image: url("chrome://communicator/skin/bookmarks/location.gif"); 
-} 
+  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-n.png");
+}
 
 #page-proxy-favicon {
   list-style-image: none;
-} 
+}
 
 #page-proxy-button[pageproxystate="valid"]:hover  {
-  list-style-image: url("chrome://communicator/skin/bookmarks/location-hov.gif");
+  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-h.png");
 }
-  
+
 #page-proxy-button[pageproxystate="valid"]:hover:active {
-  list-style-image: url("chrome://communicator/skin/bookmarks/location-act.gif");
+  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-a.png");
 }
 
 #page-proxy-button[pageproxystate="invalid"] {
   cursor: default;
-  list-style-image: url("chrome://communicator/skin/bookmarks/location-dis.gif");
+  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-d.png");
 }
 
 /* ::::: autocomplete ::::: */
-
-.autocomplete-history-dropmarker {
-  border-right-width: 1px;
-  border-bottom-width: 1px;
-  -moz-border-right-colors: ThreeDShadow;
-  -moz-border-bottom-colors: ThreeDShadow;
-}
-
-.autocomplete-treebody:-moz-tree-cell-text(value) {
+.autocomplete-outlinerbody:-moz-outliner-cell-text(value) {
   padding-left: 15px;
 }
 
-.autocomplete-treebody:-moz-tree-cell-text(comment) {
-  color: ThreeDShadow;
+.autocomplete-outlinerbody:-moz-outliner-cell-text(comment) {
+  color: #555566;
 }
 
 .autocomplete-search-box {
-  border-top: 2px groove -moz-Dialog;
-  background-color: -moz-Dialog;
-  color: ButtonText;
+  border-top: 2px groove;
 }
 
-.autocomplete-result-popup[nomatch] > .autocomplete-search-box {
-  border-top: 1px solid ThreeDHighlight;
+.autocomplete-result-popup[nomatch="true"] > .autocomplete-search-box {
+  border-top: 1px solid;
 }
 
 .autocomplete-search-engine {
@@ -295,39 +596,61 @@
 }
 
 .autocomplete-search-engine[menuactive="true"] {
-  background-color: Highlight;
-  color: HighlightText;
+  color: #FFFFFF;
 }
 
 .autocomplete-search-engine-img {
   margin-right: 4px;
 }
 
-/* ::::: go and searchbuttons ::::: */
+.autocomplete-history-dropmarker {
+  margin: -1px 3px 0px 1px !important;
+  background: transparent;
+  border: 0px;
+  padding-top: 2px;
 
-#go-button {
-  margin: 0px 4px 0px 0px;
-  min-height: 25px;
-  -moz-border-top-colors: transparent transparent !important;
-  -moz-border-right-colors: transparent transparent !important;
-  -moz-border-bottom-colors: transparent transparent !important;
-  -moz-border-left-colors: transparent transparent !important;
-
+  list-style-image: url("chrome://browser/skin/o3-imap-dropmarker.png");
+  -moz-image-region: rect(0 14px 15px 0px) !important;
+  -moz-appearance: none !important;
 }
 
+.autocomplete-history-dropmarker:hover {
+  -moz-image-region: rect(0 29px 15px 15px) !important;
+}
+
+.autocomplete-history-dropmarker[open="true"] {
+  -moz-image-region: rect(0 60px 15px 46px) !important;
+}
+
+/* ::::: go button ::::: */
+
+#go-button > .button-box > .button-text {
+  display: none !important;
+  max-width: 0px !important;
+  min-width: 0px;
+  padding: 0px !important;
+  margin: 0px !important;
+  border: 0px !important;
+}
+
+#go-button,
+#go-container {
+  -moz-appearance: none !importan;
+  min-width: 0px;
+  padding: 0px !important;
+  margin: 0px !important;
+  border: 0px !important;
+  list-style-image: url("chrome://browser/skin/go-large.png");
+  -moz-image-region: rect(0px 26px 27px 0px) !important;
+}
 #go-button:hover {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight !important;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow !important;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow !important;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight !important;
-  font-color: blue;
+  -moz-image-region: rect(0px 53px 27px 27px) !important;
 }
-
+#go-button[disabled="true"] {
+  -moz-image-region: rect(0px 80px 27px 54px) !important;
+}
 #go-button:hover:active {
-  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow !important;
-  -moz-border-right-colors: ThreeDDarkShadow ThreeDHighlight !important;
-  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDHighlight !important;
-  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow !important;
+  -moz-image-region: rect(0px 107px 27px 81px) !important;
 }
 
 /* ::::: content area ::::: */
@@ -357,4 +680,67 @@
 
 #security-button[level="broken"] {
   list-style-image: url("chrome://communicator/skin/icons/lock-broken.gif");
+}
+
+/* ::::: tabs ::::: */
+
+.tabbrowser-strip {
+  padding-bottom: 3px;
+  border-bottom: 2px solid;
+}
+
+.tabbrowser-tabs {
+  padding-top: 1px;
+}
+
+.tabs-left {
+  width: 3px;
+}
+
+tab {
+  padding: 1px 3px 0px 3px;
+}
+
+tab[busy] {
+  list-style-image: url("chrome://communicator/skin/icons/loading.gif");
+}
+
+.tab-icon {
+  margin-right: 3px;
+  width: 16px;
+  height: 16px;
+  list-style-image: url("chrome://browser/skin/o3-bookmark-icon-n.png") !important;
+}
+
+/* ::::: close button ::::: */
+
+.tabs-closebutton {
+  margin: 0px 4px;
+  padding: 1px 2px 2px 2px;
+  border: none;
+  list-style-image: url("chrome://browser/skin/o3-imap-close-v2.png");
+  -moz-image-region: rect(0px 20px 20px 0px);
+}
+
+.tabs-closebutton:hover {
+  -moz-image-region: rect(0px 50px 20px 30px);
+}
+
+.tabs-closebutton:hover:active {
+  -moz-image-region: rect(0px 110px 20px 90px);
+}
+
+.tabs-newbutton {
+  border: none;
+  padding: 1px 2px 2px 2px;
+  list-style-image: url("chrome://browser/skin/o3-imap-newtab.png");
+  -moz-image-region: rect(0px 20px 20px 0px);
+}
+
+.tabs-newbutton:hover {
+  -moz-image-region: rect(0px 50px 20px 30px);
+}
+
+.tabs-newbutton:hover:active {
+  -moz-image-region: rect(0px 110px 20px 90px);
 }
