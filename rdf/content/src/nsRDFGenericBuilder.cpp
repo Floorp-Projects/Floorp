@@ -737,6 +737,14 @@ RDFGenericBuilderImpl::OnUnassert(nsIRDFResource* aSource,
             rv = RemoveWidgetItem(element, aProperty, resource);
             NS_ASSERTION(NS_SUCCEEDED(rv), "unable to remove widget item");
             if (NS_FAILED(rv)) return rv;
+
+		PRInt32	numKids;
+		if (NS_SUCCEEDED(element->ChildCount(numKids)) && (numKids == 0))
+		{
+			nsAutoString		emptyVal("true");
+			element->SetAttribute(kNameSpaceID_None, kEmptyAtom, emptyVal, PR_TRUE);
+		}
+            
         }
         else {
             // Either the target of the assertion is not a resource,
@@ -1941,6 +1949,13 @@ RDFGenericBuilderImpl::CreateWidgetItem(nsIContent *aElement,
                                   PR_TRUE,
                                   aValue,
                                   aNaturalOrderPos);
+
+	if (NS_SUCCEEDED(rv))
+	{
+		nsAutoString		emptyVal("false");
+		aElement->SetAttribute(kNameSpaceID_None, kEmptyAtom, emptyVal, PR_TRUE);
+	}
+
 	return rv;
 }
 
