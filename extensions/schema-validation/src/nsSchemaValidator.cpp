@@ -2568,9 +2568,12 @@ PRBool nsSchemaValidator::IsValidSchemaDecimal(const nsAString & aNodeValue,
 
   long temp;
   isValid = nsSchemaValidatorUtils::IsValidSchemaInteger(aWholePart, &temp);
-  
-  if (isValid) {
-    if ((aFractionPart.First() == '-') || (aFractionPart.First() == '+'))
+
+  if (isValid && (findString != kNotFound)) {
+    // XX: assuming "2." is not valid
+    if (aFractionPart.IsEmpty())
+      isValid = PR_FALSE;
+    else if ((aFractionPart.First() == '-') || (aFractionPart.First() == '+'))
       isValid = PR_FALSE;
     else
       isValid = nsSchemaValidatorUtils::IsValidSchemaInteger(aFractionPart, &temp);
