@@ -3436,7 +3436,10 @@ NS_IMETHODIMP
 nsEventStateManager::SetContentState(nsIContent *aContent, PRInt32 aState)
 {
   const PRInt32 maxNotify = 5;
-  nsIContent  *notifyContent[maxNotify] = {nsnull, nsnull, nsnull, nsnull, nsnull};
+  // We must initialize this array with memset for the sake of the boneheaded
+  // OS X compiler.  See bug 134934.
+  nsIContent  *notifyContent[maxNotify];
+  memset(notifyContent, 0, sizeof(notifyContent));
 
   // check to see that this state is allowed by style. Check dragover too?
   // XXX This doesn't consider that |aState| is a bitfield.
