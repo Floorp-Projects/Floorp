@@ -29,6 +29,7 @@ include $(DEPTH)/config/autoconf.mk
 MODULE		= autocomplete
 LIBRARY_NAME	= autocomplete
 IS_COMPONENT	= 1
+SHORT_LIBNAME	= autocomp
 
 CPPSRCS		= nsAutoComplete.cpp
 
