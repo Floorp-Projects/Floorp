@@ -369,7 +369,9 @@ nsFactoryEntry::nsFactoryEntry(const nsCID &aClass,
                                PRUint32 locationlen,
                                int aType,
                                class nsFactoryEntry* parent)
-: mCid(aClass), mTypeIndex(aType), mParent(parent)
+: mCid(aClass),
+  mTypeIndex(aType),
+  mParent(parent)
 {
     // Arena allocate the location string
     mLocation = ArenaStrndup(aLocation, locationlen, &nsComponentManagerImpl::gComponentManager->mArena);
@@ -378,10 +380,12 @@ nsFactoryEntry::nsFactoryEntry(const nsCID &aClass,
 nsFactoryEntry::nsFactoryEntry(const nsCID &aClass,
                                nsIFactory *aFactory,
                                class nsFactoryEntry* parent)
-: mCid(aClass), mTypeIndex(NS_COMPONENT_TYPE_FACTORY_ONLY), mParent(parent)
+: mCid(aClass),
+  mFactory(aFactory),
+  mTypeIndex(NS_COMPONENT_TYPE_FACTORY_ONLY),
+  mLocation(nsnull),
+  mParent(parent)
 {
-    mFactory = aFactory;
-    mLocation = nsnull;
 }
 
 // nsFactoryEntry is usually arena allocated including the strings it
@@ -411,6 +415,8 @@ nsFactoryEntry::ReInit(const nsCID &aClass, const char *aLocation, int aType)
 
     // Arena allocate the location string
     mLocation = ArenaStrdup(aLocation, &nsComponentManagerImpl::gComponentManager->mArena);
+    if (!mLocation)
+        return NS_ERROR_OUT_OF_MEMORY;
 
     mTypeIndex = aType;
     return NS_OK;
@@ -1142,8 +1148,10 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         AutoRegEntry *entry =
             new AutoRegEntry(nsDependentCString(values[0], lengths[0]), &a);
 
-        if (!entry)
-            return NS_ERROR_OUT_OF_MEMORY;
+        if (!entry) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto out;
+        }
 
         if (parts == 3)
             entry->SetOptionalData(values[2]);
@@ -1177,10 +1185,16 @@ nsComponentManagerImpl::ReadPersistentRegistry()
 
         void *mem;
         PL_ARENA_ALLOCATE(mem, &mArena, sizeof(nsFactoryEntry));
-        if (!mem)
-            return NS_ERROR_OUT_OF_MEMORY;
+        if (!mem) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto out;
+        }
 
         nsFactoryEntry *entry = new (mem) nsFactoryEntry(aClass, values[4], lengths[4], loadertype);
+        if (!entry->mLocation) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto out;
+        }
 
         nsFactoryTableEntry* factoryTableEntry =
             NS_STATIC_CAST(nsFactoryTableEntry*,
@@ -1188,8 +1202,10 @@ nsComponentManagerImpl::ReadPersistentRegistry()
                                                 &aClass,
                                                 PL_DHASH_ADD));
 
-        if (!factoryTableEntry)
-            return NS_ERROR_OUT_OF_MEMORY;
+        if (!factoryTableEntry) {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+            goto out;
+        }
 
         factoryTableEntry->mFactoryEntry = entry;
 
@@ -1227,7 +1243,12 @@ nsComponentManagerImpl::ReadPersistentRegistry()
         }
 
         if (!contractIDTableEntry->mContractID) {
-            contractIDTableEntry->mContractID = ArenaStrndup(values[0], lengths[0], &mArena);
+            char *contractID = ArenaStrndup(values[0], lengths[0], &mArena);
+            if (!contractID) {
+                rv = NS_ERROR_OUT_OF_MEMORY;
+                goto out; 
+            }
+            contractIDTableEntry->mContractID = contractID;
             contractIDTableEntry->mContractIDLen = lengths[0];
         }
 
@@ -1533,7 +1554,11 @@ nsComponentManagerImpl::HashContractID(const char *aContractID,
     NS_ASSERTION(!contractIDTableEntry->mContractID || !strcmp(contractIDTableEntry->mContractID, aContractID), "contractid conflict");
 
     if (!contractIDTableEntry->mContractID) {
-        contractIDTableEntry->mContractID = ArenaStrndup(aContractID, aContractIDLen, &mArena);
+        char *contractID = ArenaStrndup(aContractID, aContractIDLen, &mArena);
+        if (!contractID)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        contractIDTableEntry->mContractID = contractID;
         contractIDTableEntry->mContractIDLen = aContractIDLen;
     }
 
@@ -2201,9 +2226,11 @@ nsComponentManagerImpl::RegisterService(const char* aContractID, nsISupports* aS
         }
 
         if (!contractIDTableEntry->mContractID) {
-            contractIDTableEntry->mContractID =
-                ArenaStrndup(aContractID, contractIDLen, &mArena);
+            char *contractID = ArenaStrndup(aContractID, contractIDLen, &mArena);
+            if (!contractID)
+                return NS_ERROR_OUT_OF_MEMORY;
 
+            contractIDTableEntry->mContractID = contractID;
             contractIDTableEntry->mContractIDLen = contractIDLen;
         }
 
@@ -2659,9 +2686,6 @@ nsComponentManagerImpl::RegisterFactory(const nsCID &aClass,
 
     entry = new (mem) nsFactoryEntry(aClass, aFactory, entry);
 
-    if (!entry)
-        return NS_ERROR_OUT_OF_MEMORY;
-
     factoryTableEntry->mFactoryEntry = entry;
 
     // Update the ContractID->CLSID Map
@@ -2826,7 +2850,7 @@ nsComponentManagerImpl::RegisterComponentCommon(const nsCID &aClass,
         entry = new (mem) nsFactoryEntry(aClass,
                                          aRegistryName, aRegistryNameLen,
                                          typeIndex);
-        if (!entry)
+        if (!entry->mLocation)
             return NS_ERROR_OUT_OF_MEMORY;
 
         nsFactoryTableEntry* factoryTableEntry =
