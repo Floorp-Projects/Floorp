@@ -28,6 +28,7 @@ CSRCS		=  \
 		  $(NULL)
 
 CPPSRCS		= \
+		  nsISO2022JPToUnicode.cpp \
                   nsEUCJPToUnicode.cpp \
                   nsUCVJA2Dll.cpp \
 		  $(NULL)

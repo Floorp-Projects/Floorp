@@ -17,10 +17,9 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "pratom.h"
-
 #define NS_IMPL_IDS
 
+#include "pratom.h"
 #include "nsString.h"
 #include "nsRepository.h"
 #include "nsICharsetConverterManager.h"

@@ -19,8 +19,8 @@
 #ifndef __REGISTRYHACK1_H__
 #define __REGISTRYHACK1_H__
  
-#include "nsConverterCID.h"
-#include "nsUCVJACID.h"
 #include "nsUCvLatinCID.h"
+#include "nsUCVJACID.h"
+#include "nsUCVJA2CID.h"
 
 #endif /* __REGISTRYHACK1_H__ */
