@@ -127,6 +127,7 @@ export:: \
        $(MAKE_INSTALL) trace.dll $(DIST)/install
        $(MAKE_INSTALL) $(DIST)/bin/nspr4.dll $(DIST)/install
 !endif
+      $(RM) $(DIST)\bin\chrome\chromelist.txt 
 
 #install::
 #	$(RM) $(DIST)\bin\chrome\installed-chrome.txt
