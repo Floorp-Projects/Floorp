@@ -586,7 +586,9 @@ nsNativeAppSupportWin::CheckConsole() {
                     FILE *hf = ::_fdopen( hCrt, "w" );
                     if ( hf ) {
                         *stdout = *hf;
+#ifdef DEBUG
                         ::fprintf( stdout, "stdout directed to dynamic console\n" );
+#endif
                     }
                 }
 
@@ -597,7 +599,9 @@ nsNativeAppSupportWin::CheckConsole() {
                     FILE *hf = ::_fdopen( hCrt, "w" );
                     if ( hf ) {
                         *stderr = *hf;
+#ifdef DEBUG
                         ::fprintf( stderr, "stderr directed to dynamic console\n" );
+#endif
                     }
                 }
 

@@ -170,10 +170,12 @@ nsSplashScreenPh::Show()
       PtFlush();
       }
    }
+#ifdef DEBUG
    else
    {
      fprintf( stderr, "Error loading splash screen image: %s\n", splash );
    }
+#endif
 
    return NS_OK;
 }
