@@ -1275,60 +1275,7 @@ nsWebShell::Paste(void)
 NS_IMETHODIMP
 nsWebShell::SelectAll(void)
 {
-  nsresult rv;
-
-  nsCOMPtr<nsIDocumentViewer> docViewer ( do_QueryInterface(mContentViewer, &rv) );
-  if (NS_FAILED(rv) || !docViewer) return rv;
-
-  nsCOMPtr<nsIPresShell> presShell;
-  rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
-  if (NS_FAILED(rv) || !presShell) return rv;
-  
-  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell, &rv);
-  if (NS_FAILED(rv) || !selCon) return rv;
-
-  nsCOMPtr<nsISelection> selection;
-  rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-  if (NS_FAILED(rv) || !selection) return rv;
-
-  // Get the document object
-  nsCOMPtr<nsIDocument> doc;
-  rv = docViewer->GetDocument(*getter_AddRefs(doc));
-  if (NS_FAILED(rv) || !doc) return rv;
-
-
-  nsCOMPtr<nsIDOMHTMLDocument> htmldoc( do_QueryInterface(doc) );
-  if (NS_FAILED(rv) || !htmldoc) return rv;
-
-  nsCOMPtr<nsIDOMHTMLElement>bodyElement;
-  rv = htmldoc->GetBody(getter_AddRefs(bodyElement));
-  if (NS_FAILED(rv) || !bodyElement) return rv;
-
-  nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
-  if (!bodyNode) return NS_ERROR_NO_INTERFACE;
-
-#if 0
-  rv = selection->Collapse(bodyNode, 0);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIDOMRange>range;
-  rv = selection->GetRangeAt(0, getter_AddRefs(range));
-  if (NS_FAILED(rv) || !range) return rv;
-#endif
-
-  rv = selection->RemoveAllRanges();
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIDOMRange> range;
-  rv = nsComponentManager::CreateInstance(kCDOMRangeCID, nsnull,
-                                          NS_GET_IID(nsIDOMRange),
-                                          getter_AddRefs(range));
-
-  rv = range->SelectNodeContents(bodyNode);
-  if (NS_FAILED(rv)) return rv;
-
-  rv = selection->AddRange(range);
-  return rv;
+  return DoCommand ( NS_LITERAL_STRING("cmd_selectAll") );
 }
 
 
@@ -1341,22 +1288,40 @@ nsWebShell::SelectAll(void)
 NS_IMETHODIMP
 nsWebShell::SelectNone(void)
 {
-  nsresult rv = NS_OK;
-  
-  nsCOMPtr<nsIDocumentViewer> docViewer ( do_QueryInterface(mContentViewer, &rv) );
-  if (NS_FAILED(rv) || !docViewer) return rv;
-
   nsCOMPtr<nsIPresShell> presShell;
-  rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
-  if (NS_FAILED(rv) || !presShell) return rv;
-  
-  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell, &rv);
-  if (NS_FAILED(rv) || !selCon) return rv;
+  nsCOMPtr<nsPIDOMWindow> window ( do_QueryInterface(mScriptGlobal) );
+  if (!window) return NS_OK;
 
+  //
+  // Locate the nsISelectionController of the currently focused window...
+  //
+  nsCOMPtr<nsIFocusController> focusController;
+  (void) window->GetRootFocusController ( getter_AddRefs(focusController) );
+  if (!focusController) return NS_OK;
+
+  nsCOMPtr<nsIDOMWindowInternal> focusWindow;
+  (void) focusController->GetFocusedWindow(getter_AddRefs(focusWindow));
+  if (!focusWindow) return NS_OK;
+
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(focusWindow);
+  if (!sgo) return NS_OK;
+
+  nsCOMPtr<nsIDocShell> docshell;
+  (void) sgo->GetDocShell(getter_AddRefs(docshell));
+  if (!docshell) return NS_OK;
+
+  (void) docshell->GetPresShell(getter_AddRefs(presShell));
+  if (!presShell) return NS_OK;
+
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
+  if (!selCon) return NS_OK;
+
+  // Now, get the selection...
   nsCOMPtr<nsISelection> selection;
-  rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
-  if (NS_FAILED(rv) || !selection) return rv;
+  (void) selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+  if (!selection) return NS_OK;
   
+  // Clear the selection...
   return selection->CollapseToStart();
 }
 
