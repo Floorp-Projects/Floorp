@@ -25,7 +25,7 @@
 #include HG40855
 
 #include "nsIOutputStream.h"
-#include "nsINntpUrl.h"
+#include "nsINntpURL.h"
 
 #include "nsINNTPNewsgroupList.h"
 #include "nsINNTPArticleList.h"
