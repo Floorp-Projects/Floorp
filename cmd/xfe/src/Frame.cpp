@@ -47,7 +47,6 @@
 #include "MenuBar.h"
 #include "BookmarkMenu.h"
 #include "BrowserFrame.h"
-#include "HistoryFrame.h"
 #include "NavCenterFrame.h"
 #include "FrameListMenu.h"
 #include "Minibuffer.h"
@@ -938,40 +937,8 @@ XFE_Frame::XFE_Frame(char *name,
 			m_menubar = NULL;
 		}
 
-	XP_Bool needNavigationToolbar = False;
-	XP_Bool needToolbox = False;
-
-	// Determine if we need navigation toolbars
-	if (chromespec && chromespec->show_button_bar)
-	{
-		needNavigationToolbar = True;
-	}
-	else
-	{
-		needNavigationToolbar = haveToolbars;
-	}
-
-	//
-	// show_url_bar and show_directory_buttons determine whether the url bar
-	// and personal toolbar are shown.  These components will be created in
-	// the XFE_BrowserFrame class.  Since the toolbox is created here
-	// we need to take these into account even though (in theory) this class
-	// should know nothing about its subclasses...
-	//
-
-	// Determine if we need a toolbox
-	if (chromespec && (chromespec->show_url_bar || 
-					   chromespec->show_directory_buttons))
-	{
-		needToolbox = True;
-	}
-	else
-	{
-		needToolbox = needNavigationToolbar;
-	}
-
 	// Create the toolbox if needed
-	if (needToolbox)
+	if (haveToolbars)
 	{
 		// Create the toolbox as a child of the main form
 		m_toolbox = new XFE_Toolbox(this,m_chrome);
@@ -1008,70 +975,14 @@ XFE_Frame::XFE_Frame(char *name,
 		m_toolbox = NULL;
 	}
 
-	// Create the navigation toolbox if needed
-	if (needNavigationToolbar)
-	{
-		// Create the toolbar 
-		m_toolbar = new XFE_Toolbar(this,m_toolbox,NULL);
-
-		// chromespec takes precedence over prefs
-		if (chromespec && chromespec->show_button_bar)
-		{
-			m_toolbar->show();
-		}
-	}
-	else
-	{
-		m_toolbar = NULL;
-	}
-
-	// If a chromespec is given and all 3 toolbars are off, then we need
-	// to unmanage the toolbox.  Otherwise the Frame's expect geometry 
-	// will be wrong.
-	if (chromespec)
-	{
-		if (!chromespec->show_button_bar && 
-			!chromespec->show_url_bar && 
-			!chromespec->show_directory_buttons)
-		{
-			if (m_toolbox)
-				m_toolbox->hide();
-		}
-	}
-
 	m_aboveview = NULL;
 	m_view = NULL;
 	m_belowview = NULL;
 
-	if (needNavigationToolbar) 
-	{
-		m_toolbar->registerInterest(Command::doCommandCallback,
-									this,
-									doCommandCallback_cb);
-		
-		// Register the logo animation notifications with ourselves
-#if defined(GLUE_COMPO_CONTEXT)
-		registerInterest(XFE_Component::logoStartAnimation,
-						 this,
-						 logoAnimationStartNotice_cb);
-		
-		registerInterest(XFE_Component::logoStopAnimation,
-						 this,
-						 logoAnimationStopNotice_cb);
-#else
-		registerInterest(XFE_Frame::logoStartAnimation,
-						 this,
-						 logoAnimationStartNotice_cb);
-		
-		registerInterest(XFE_Frame::logoStopAnimation,
-						 this,
-						 logoAnimationStopNotice_cb);
-#endif /* GLUE_COMPO_CONTEXT */
-	}
-	
-	XFE_MozillaApp::theApp()->registerInterest(XFE_MozillaApp::changeInToplevelFrames,
-											   this,
-											   (XFE_FunctionNotification)toplevelWindowChangeOccured_cb);
+	XFE_MozillaApp::theApp()->registerInterest(
+            XFE_MozillaApp::changeInToplevelFrames,
+            this,
+            (XFE_FunctionNotification)toplevelWindowChangeOccured_cb);
 
 	XFE_MozillaApp::theApp()->registerFrame(this);
 	
@@ -1862,8 +1773,10 @@ XFE_Frame::initializeMWContext(EFrameType frame_type,
 
 	fe_InitIconColors(m_context);
 
+#ifdef OLD_BOOKMARKS
 	if (m_frametype != FRAME_BOOKMARK)
       fe_createBookmarks(XtParent(m_widget), NULL, NULL);
+#endif /*OLD_BOOKMARKS*/
 
 //	fe_LicenseDialog (m_context);
 
@@ -2191,10 +2104,41 @@ XFE_Frame::setMenubar(MenuSpec *menu_bar_spec)
 void
 XFE_Frame::setToolbar(ToolbarSpec *toolbar_spec)
 {
-	XP_ASSERT(m_toolbar);
+    if (m_toolbar)
+    {
+        delete m_toolbar;
+    }
+    else 
+    {
+        // This is the first time the toolbar is set.
+		// Register the logo animation notifications with ourselves.
+#if defined(GLUE_COMPO_CONTEXT)
+		registerInterest(XFE_Component::logoStartAnimation,
+						 this,
+						 logoAnimationStartNotice_cb);
+		
+		registerInterest(XFE_Component::logoStopAnimation,
+						 this,
+						 logoAnimationStopNotice_cb);
+#else
+		registerInterest(XFE_Frame::logoStartAnimation,
+						 this,
+						 logoAnimationStartNotice_cb);
+		
+		registerInterest(XFE_Frame::logoStopAnimation,
+						 this,
+						 logoAnimationStopNotice_cb);
+#endif /* GLUE_COMPO_CONTEXT */
+    }
 
+    // Create the toolbar 
+    m_toolbar = new XFE_Toolbar(this,m_toolbox,NULL);
 	m_toolbar->setToolbarSpec(toolbar_spec);
 
+    m_toolbar->registerInterest(Command::doCommandCallback,
+                                this,
+                                doCommandCallback_cb);
+		
 	return;
 }
 
@@ -3552,11 +3496,11 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 			}
 		else if (cmd == xfeCmdOpenBookmarks)
 			{
-				fe_showBookmarks(m_toplevelWidget, this, NULL);
+				fe_showBookmarks(m_toplevelWidget);
 			}
         else if (cmd == xfeCmdOpenHistory)
             {
-                XFE_HistoryFrame::showHistory(m_toplevelWidget, this, NULL);
+                fe_showHistory(m_toplevelWidget);
             }
 #ifdef MOZ_MAIL_NEWS
 		else if (cmd == xfeCmdOpenAddressBook)
