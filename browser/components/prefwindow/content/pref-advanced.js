@@ -33,6 +33,8 @@
 # 
 # ***** END LICENSE BLOCK *****
 
+#define PROVISIONAL_SECURITY_UI
+
 var _elementIDs = ["moveSystemCaret", "hideTabBar",
                     "loadInBackground", "useAutoScrolling",
                     "useSmoothScrolling", "enableAutoImageResizing",
