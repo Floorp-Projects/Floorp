@@ -132,3 +132,12 @@ INCLUDES += -I$(srcdir)/../source/xslt -I$(srcdir)/../source/base \
   -I$(srcdir)/../source/xml/parser -I$(srcdir)/../source/xml/parser/xmlparse \
   -I$(srcdir)/../source/xml/printer -I$(srcdir)/../source/xpath \
   -I$(srcdir)/../source/xslt/util -I$(srcdir)/../source/xslt/functions
+
+_T_VERSION = $(shell date +%Y%m%d%H)
+
+GARBAGE += install.js $(wildcard transformiix*.xpi)
+
+xpi:
+	$(PERL) $(topsrcdir)/xpinstall/packager/unix/makejs.pl $(srcdir)/transformiix.jst $(_T_VERSION) . install.js
+	zip transformiix$(_T_VERSION).xpi install.js
+	cd $(DIST); zip -u ../extensions/transformiix/build/transformiix$(_T_VERSION).xpi bin/components/libtransformiix.so
