@@ -1187,17 +1187,35 @@ nsFrame::FindTextRuns(nsLineLayout& aLineLayout)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::ContentChanged(nsIPresContext* aPresContext,
-                                  nsIContent*     aChild,
-                                  nsISupports*    aSubContent)
+NS_IMETHODIMP
+nsFrame::AdjustFrameSize(nscoord aExtraSpace, nscoord& aUsedSpace)
+{
+  aUsedSpace = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrame::TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
+                                nsIRenderingContext& aRC,
+                                nscoord& aDeltaWidth)
+{
+  aDeltaWidth = 0;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFrame::ContentChanged(nsIPresContext* aPresContext,
+                        nsIContent*     aChild,
+                        nsISupports*    aSubContent)
 {
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFrame::AttributeChanged(nsIPresContext* aPresContext,
-                                        nsIContent*     aChild,
-                                        nsIAtom*        aAttribute,
-                                        PRInt32         aHint)
+NS_IMETHODIMP
+nsFrame::AttributeChanged(nsIPresContext* aPresContext,
+                          nsIContent*     aChild,
+                          nsIAtom*        aAttribute,
+                          PRInt32         aHint)
 {
   return NS_OK;
 }
