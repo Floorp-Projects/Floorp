@@ -4033,6 +4033,11 @@ function clearObsoletePrefs()
     }
   }
 
+  // removed 10/22/2003
+  try {
+    PREF.clearUserPref("browser.search.defaultengine");
+  } catch (e) {}
+
   // removed 11/01/2003
   try {
     PREF.clearUserPref("print.use_global_printsettings");
