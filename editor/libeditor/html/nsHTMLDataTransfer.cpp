@@ -946,6 +946,32 @@ nsHTMLEditor::ParseCFHTML(nsCString & aCfhtml, PRUnichar **aStuffToPaste, PRUnic
   nsCAutoString contextUTF8(Substring(aCfhtml, startHTML, startFragment - startHTML) +
                             Substring(aCfhtml, endFragment, endHTML - endFragment));
   
+  // validate startFragment
+  // make sure it's not in the middle of a HTML tag
+  // see bug #228879 for more details
+  PRInt32 curPos = startFragment;
+  while (curPos > startHTML)
+  {
+      if (aCfhtml[curPos] == '>')
+      {
+          // working backwards, the first thing we see is the end of a tag
+          // so StartFragment is good, so do nothing.
+          break;
+      }
+      else if (aCfhtml[curPos] == '<') 
+      {
+          // working backwards, the first thing we see is the start of a tag
+          // so StartFragment is bad, so we need to update it.
+          NS_ASSERTION(0, "StartFragment byte count in the clipboard looks bad, see bug #228879");
+          startFragment = curPos - 1;
+          break;
+      }
+      else 
+      {
+          curPos--;
+      }
+  }
+
   // create fragment string
   nsCAutoString fragmentUTF8(Substring(aCfhtml, startFragment, endFragment-startFragment));
   
