@@ -13,7 +13,8 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
-# This is a list of local files which get copied to the res\mailnews\messenger directory
+# This is a list of local files which get copied to the bin\chrome\messenger\locale
+#   directory
 #
 
-vcard_en.properties
+vcard.properties

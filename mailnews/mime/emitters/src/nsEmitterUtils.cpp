@@ -98,7 +98,7 @@ static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
-#define MIME_URL "resource:/res/mailnews/messenger/mimeheader_en.properties"
+#define MIME_URL "chrome://messenger/locale/mimeheader.properties"
 
 extern "C" 
 char *

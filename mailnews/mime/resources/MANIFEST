@@ -13,7 +13,9 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 #
-# This is a list of local files which get copied to the res\mailnews\messenger directory
+# This is a list of local files which get copied to the 
+#     chrome\messenger\locale directory
 #
 
-mime_en.properties
+mime.properties
+mimeheader.properties

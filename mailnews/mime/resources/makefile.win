@@ -21,7 +21,9 @@ DIRS= skin content
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) mime_en.properties $(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) mime.properties $(DIST)\bin\chrome\messenger\locale\en-US
+	$(MAKE_INSTALL) mimeheader.properties $(DIST)\bin\chrome\messenger\locale\en-US
 
 clobber::
-	rm -f $(DIST)\bin\res\mailnews\messenger\mime_en.properties
+	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\mime.properties
+	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\mimeheader.properties

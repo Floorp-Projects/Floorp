@@ -1934,7 +1934,7 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
-char *VCARD_URL = {"resource:/chrome/messenger/content/default/vcard_en.properties"};
+char *VCARD_URL = {"chrome://messenger/locale/vcard.properties"};
 
 extern "C" 
 char *

@@ -20,7 +20,7 @@ DEPTH=..\..\..\..
 include <$(DEPTH)\config\rules.mak>
 
 install:: 
-	$(MAKE_INSTALL) vcard_en.properties $(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) vcard.properties $(DIST)\bin\chrome\messenger\locale\en-US
 
 clobber::
-	rm -f $(DIST)\bin\chrome\messenger\content\default\vcard_en.properties
+	rm -f $(DIST)\bin\chrome\messenger\locale\en-US\vcard.properties
