@@ -113,7 +113,8 @@ class nsDocument : public nsIDocument,
                    public nsIScriptObjectOwner, 
                    public nsIJSScriptObject,
                    public nsSupportsWeakReference,
-                   public nsIDOMEventReceiver
+                   public nsIDOMEventReceiver,
+                   public nsIScriptObjectPrincipal
 {
 public:
   NS_DECL_ISUPPORTS
@@ -139,7 +140,7 @@ public:
   /**
    * Return the principal responsible for this document.
    */
-  virtual nsIPrincipal* GetDocumentPrincipal();
+  NS_IMETHOD GetPrincipal(nsIPrincipal **aPrincipal);
 
   /**
    * Return the content (mime) type of this document.

@@ -1434,8 +1434,8 @@ nsHTMLDocument::GetReferrer(nsString& aReferrer)
 NS_IMETHODIMP
 nsHTMLDocument::GetDomainURI(nsIURI **uri) 
 {
-  nsCOMPtr<nsIPrincipal> principal = GetDocumentPrincipal();
-  if (!principal)
+  nsCOMPtr<nsIPrincipal> principal;
+  if (NS_FAILED(GetPrincipal(getter_AddRefs(principal))))
     return NS_ERROR_FAILURE;
   nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
   if (!codebase)

@@ -116,4 +116,20 @@ public:
   NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler) = 0;
 };
 
+
+#define NS_ISCRIPTOBJECTPRINCIPAL_IID \
+{ 0x98485f80, 0x9615, 0x11d2,  \
+{ 0xbd, 0x92, 0x00, 0x80, 0x5f, 0x8a, 0xe3, 0xf4} }
+
+/**
+ * JS Object Principal information.
+ */
+class nsIScriptObjectPrincipal : public nsISupports {
+public:
+
+NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCRIPTOBJECTPRINCIPAL_IID)
+
+  NS_IMETHOD       GetPrincipal(nsIPrincipal **aPrincipal) = 0;
+};
+
 #endif // nsIScriptObjectOwner_h__

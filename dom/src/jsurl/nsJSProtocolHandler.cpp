@@ -34,7 +34,6 @@
 #include "nsIScriptContext.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
-#include "nsIScriptGlobalObjectData.h"
 #include "nsJSProtocolHandler.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptSecurityManager.h"

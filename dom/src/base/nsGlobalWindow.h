@@ -40,7 +40,6 @@
 #include "nsIJSScriptObject.h"
 #include "nsGUIEvent.h"
 #include "nsFrameList.h"
-#include "nsIScriptGlobalObjectData.h"
 #include "nsDOMWindowList.h"
 #include "nsIDOMEventTarget.h"
 #include "nsIControllers.h"
@@ -73,7 +72,7 @@ class HistoryImpl;
 
 // Global object for scripting
 class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow, 
-                         public nsIJSScriptObject, public nsIScriptGlobalObjectData, public nsIDOMEventReceiver,
+                         public nsIJSScriptObject, public nsIScriptObjectPrincipal, public nsIDOMEventReceiver,
                          public nsPIDOMWindow, public nsIDOMAbstractView
 {
 public:
@@ -235,7 +234,7 @@ public:
   virtual PRBool    Convert(JSContext *aContext, JSObject *aObj, jsval aID);
   virtual void      Finalize(JSContext *aContext, JSObject *aObj);
   
-  // nsIScriptGlobalObjectData interface
+  // nsIScriptObjectPrincipal interface
   NS_IMETHOD        GetPrincipal(nsIPrincipal **prin);
 
   // nsPIDOMWindowInterface

@@ -21,7 +21,7 @@
  */
 #include "nsScriptSecurityManager.h"
 #include "nsIServiceManager.h"
-#include "nsIScriptGlobalObjectData.h"
+#include "nsIScriptObjectOwner.h"
 #include "nsIPref.h"
 #include "nsIURL.h"
 #include "nspr.h"
@@ -949,22 +949,25 @@ NS_IMETHODIMP
 nsScriptSecurityManager::GetObjectPrincipal(JSContext *aCx, JSObject *aObj, 
                                             nsIPrincipal **result)
 {
-    JSObject *parent;
-    while ((parent = JS_GetParent(aCx, aObj)) != nsnull) 
-        aObj = parent;
-    
-    nsISupports *supports = (nsISupports *) JS_GetPrivate(aCx, aObj);
-    nsCOMPtr<nsIScriptGlobalObjectData> globalData;
-    if (!supports || NS_FAILED(supports->QueryInterface(
-                                     NS_GET_IID(nsIScriptGlobalObjectData), 
-                                     (void **) getter_AddRefs(globalData))))
-    {
-        return NS_ERROR_FAILURE;
-    }
-    if (NS_FAILED(globalData->GetPrincipal(result))) {
-        return NS_ERROR_FAILURE;
-    }
-    return NS_OK;
+    JSObject *parent = aObj;
+    do {
+        JSClass *jsClass = JS_GetClass(aCx, parent);
+        const int privateNsISupports = JSCLASS_HAS_PRIVATE | 
+                                       JSCLASS_PRIVATE_IS_NSISUPPORTS;
+        if (jsClass && (jsClass->flags & (privateNsISupports)) == 
+                            privateNsISupports)
+        {
+            nsISupports *supports = (nsISupports *) JS_GetPrivate(aCx, parent);
+            nsCOMPtr<nsIScriptObjectPrincipal> objPrin = 
+                do_QueryInterface(supports);
+            if (objPrin && NS_SUCCEEDED(objPrin->GetPrincipal(result)))
+                return NS_OK;
+        }
+        parent = JS_GetParent(aCx, parent);
+    } while (parent);
+
+    // Couldn't find a principal for this object.
+    return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -1084,6 +1087,21 @@ nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext)
     if (NS_FAILED(IsCapabilityEnabled("UniversalXPConnect", &ok)))
         ok = PR_FALSE;
     if (!ok) {
+        // T E M P O R A R Y
+        // Check the pref "security.checkxpconnect". If it exists and is
+        // set to false, don't report an error.
+	    nsresult rv;
+	    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+	    if (NS_SUCCEEDED(rv)) {
+		    PRBool enabled;
+		    if (NS_SUCCEEDED(prefs->GetBoolPref("security.checkxpconnect",
+                                                &enabled)) &&
+			    !enabled) 
+		    {
+			    return NS_OK;
+		    }
+	    }
+        // T E M P O R A R Y
 		static const char msg[] = "Access denied to XPConnect service.";
 		JS_SetPendingException(aJSContext, 
 			                   STRING_TO_JSVAL(JS_NewStringCopyZ(aJSContext, msg)));

@@ -30,7 +30,6 @@
 #include "nsCOMPtr.h"
 #include "nsIPrincipal.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectData.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
@@ -45,7 +44,7 @@
 class nsXULPrototypeDocument : public nsIXULPrototypeDocument,
                                public nsIScriptObjectOwner,
                                public nsIScriptGlobalObject,
-                               public nsIScriptGlobalObjectData
+                               public nsIScriptObjectPrincipal
 {
 public:
     static nsresult
@@ -92,7 +91,7 @@ public:
                               PRUint32 aFlags,
                               nsEventStatus* aEventStatus);
 
-    // nsIScriptGlobalObjectData methods
+    // nsIScriptObjectPrincipal methods
     NS_IMETHOD GetPrincipal(nsIPrincipal** aPrincipal);
     
 
@@ -163,7 +162,7 @@ NS_IMPL_ISUPPORTS4(nsXULPrototypeDocument,
                    nsIXULPrototypeDocument,
                    nsIScriptObjectOwner,
                    nsIScriptGlobalObject,
-                   nsIScriptGlobalObjectData);
+                   nsIScriptObjectPrincipal);
 
 NS_IMETHODIMP
 NS_NewXULPrototypeDocument(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -462,7 +461,7 @@ nsXULPrototypeDocument::HandleDOMEvent(nsIPresContext* aPresContext,
 
 //----------------------------------------------------------------------
 //
-// nsIScriptGlobalObjectData methods
+// nsIScriptObjectPrincipal methods
 //
 
 NS_IMETHODIMP

@@ -45,7 +45,6 @@
 #include "nsDOMEventsIIDs.h"
 #include "prmem.h"
 #include "nsIScriptGlobalObject.h"
-#include "nsIScriptGlobalObjectData.h"
 #include "nsLayoutAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsIContent.h"
@@ -60,7 +59,6 @@ static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
 static NS_DEFINE_IID(kIDOMEventListenerIID, NS_IDOMEVENTLISTENER_IID);
 static NS_DEFINE_IID(kIDOMEventIID, NS_IDOMEVENT_IID);
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
-static NS_DEFINE_IID(kIScriptGlobalObjectDataIID, NS_ISCRIPTGLOBALOBJECTDATA_IID);
 
 nsEventListenerManager::nsEventListenerManager() 
 {

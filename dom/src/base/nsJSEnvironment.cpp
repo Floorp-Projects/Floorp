@@ -25,7 +25,6 @@
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectOwner.h"
-#include "nsIScriptGlobalObjectData.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
@@ -232,10 +231,10 @@ nsJSContext::EvaluateString(const nsString& aScript,
     nsCOMPtr<nsIScriptGlobalObject> global = dont_AddRef(GetGlobalObject());
     if (!global)
       return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIScriptGlobalObjectData> globalData = do_QueryInterface(global, &rv);
+    nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal = do_QueryInterface(global, &rv);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
-    rv = globalData->GetPrincipal(getter_AddRefs(principal));
+    rv = objPrincipal->GetPrincipal(getter_AddRefs(principal));
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
     principal->GetJSPrincipals(&jsprin);
@@ -487,7 +486,7 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName, const nsString& 
   nsCOMPtr<nsIScriptGlobalObject> global = getter_AddRefs(GetGlobalObject());
   if (global) {
     // XXXbe why the two-step QI? speed up via a new GetGlobalObjectData func?
-    nsCOMPtr<nsIScriptGlobalObjectData> globalData = do_QueryInterface(global);
+    nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
     if (globalData) {
       nsCOMPtr<nsIPrincipal> prin;
       if (NS_FAILED(globalData->GetPrincipal(getter_AddRefs(prin))))
