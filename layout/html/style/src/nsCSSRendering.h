@@ -38,7 +38,7 @@ public:
                           const nsRect& aDirtyRect,
                           const nsRect& aBorderArea,
                           const nsStyleSpacing& aBorderStyle,
-						  nsIStyleContext* aStyleContext,
+                          nsIStyleContext* aStyleContext,
                           PRIntn aSkipSides,
                           nsRect* aGap = 0);
 
@@ -59,7 +59,7 @@ public:
                                const nsRect& aDirtyRect,
                                const nsRect& aBorderArea,
                                nsBorderEdges * aBorderEdges,
-							   nsIStyleContext* aStyleContext,
+                               nsIStyleContext* aStyleContext,
                                PRIntn aSkipSides,
                                nsRect* aGap = 0);
 
@@ -110,8 +110,8 @@ public:
 protected:
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                                 nscolor aBackgroundColor,
-								nscolor aBorderColor,
-								PRBool printing,PRBool aSpecialCase);
+                                nscolor aBorderColor,
+                                PRBool aSpecialCase);
 
   static PRIntn MakeSide(nsPoint aPoints[],
                          nsIRenderingContext& aContext,
@@ -120,24 +120,13 @@ protected:
                          PRIntn borderPart, float borderFrac,
                          nscoord twipsPerPixel);
 
-  //static void DrawSide(nsIRenderingContext& aContext,
-  //                     PRIntn whichSide,
-  //                     const PRUint8 borderStyles[],
-  //                    const nscolor borderColors[],
-  //                     const nsRect& borderOutside,     
-  //                     const nsRect& borderInside,
-  //                     PRBool printing,
-  //                     nscoord twipsPerPixel,
-  //                     nsRect* aGap = 0);
-  
   static void DrawSide(nsIRenderingContext& aContext,
                        PRIntn whichSide,
                        const PRUint8 borderStyle,
                        const nscolor borderColor,
-					   const nscolor aBackgroundColor, 
-					   const nsRect& borderOutside,
+                       const nscolor aBackgroundColor, 
+                       const nsRect& borderOutside,
                        const nsRect& borderInside,
-                       PRBool printing,
                        nscoord twipsPerPixel,
                        nsRect* aGap = 0);
 
