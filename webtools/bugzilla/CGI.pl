@@ -451,7 +451,12 @@ sub make_options {
               "Please send mail to " . Param("maintainer") . " with " .
               "details of what you were doing when this message " . 
               "appeared.  Thank you.\n";
-        PutFooter();
+        if (!$src) {
+            $src = ["???null???"];
+        }
+        print "<pre>src = " . value_quote(join(' ', @$src)) . "\n";
+        print "default = " . value_quote($default) . "</pre>";
+        Putfooter();
 #        confess "Gulp.";
         exit 0;
               
