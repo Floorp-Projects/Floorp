@@ -642,13 +642,15 @@ public:
     Table needs to be notified so it can manage table states.
    **********************************************************/
   virtual nsresult  NotifyClose(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
+
+    nsresult result=NS_OK;
     if(aContext->mTableStates) {
 
       if(!aContext->mTableStates->mHasTBody) {
         //so let's open a tbody, a TR and a TD for good measure...
 
         eHTMLTags theTags[]={eHTMLTag_tbody,eHTMLTag_tr,eHTMLTag_td,eHTMLTag_unknown};
-        nsresult result=AutoGenerateStructure(theTags,aContext,aSink);
+        AutoGenerateStructure(theTags,aContext,aSink);
       }
       
       //pop the current state and restore it's predecessor, if any...
@@ -656,7 +658,7 @@ public:
       aContext->mTableStates=theState->mPrevious; 
       delete theState;
     }
-    return NS_OK;
+    return result;
   }
  
   /**********************************************************
@@ -729,7 +731,6 @@ public:
    **********************************************************/
   virtual nsresult HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDContext* aContext,nsIHTMLContentSink* aSink) {
     nsresult result=NS_OK;
-    nsEntryStack* theStack=0;
 
     if(aContext->HasOpenContainer(aTag)) {
       switch(aTag) {
@@ -2503,7 +2504,6 @@ nsresult CElement::HandleEndToken(nsIParserNode* aNode,eHTMLTags aTag,nsDTDConte
   PRInt32 theCloseTarget=FindAutoCloseTargetForEndTag(aNode,aTag,aContext,aSink,theIndex);
 
   if(-1!=theCloseTarget) {
-    PRInt32 theCount=aContext->GetCount();
     while(theCloseTarget<theCount) {
       eHTMLTags theTag=aContext->Last();
       eHTMLTags theGrandParentTag=aContext->TagAt(theCount-2);
