@@ -223,7 +223,6 @@
 <!ENTITY ver23Cmd.label "Animation">
 <!ENTITY ver24Cmd.label "Larger page">
 <!ENTITY ver25Cmd.label "Smaller page">
-<!ENTITY ver26Cmd.label "DOM Viewer">
 <!-- LOCALIZATION NOTE END : DO not localize the entities above; debug --> 
 
 <!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; debug --> 
@@ -260,6 +259,10 @@
 <!ENTITY xptk9Cmd.label "Sound">
 <!ENTITY xptk10Cmd.label "XP Menus">
 <!ENTITY xptk11Cmd.label "Color Picker">
+<!-- LOCALIZATION NOTE END : DO not localize the entities above; debug --> 
+
+<!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; debug --> 
+<!ENTITY domviewer.label "DOM Viewer">
 <!-- LOCALIZATION NOTE END : DO not localize the entities above; debug --> 
 
 <!-- LOCALIZATION NOTE BEGIN : DO not localize the entities below; test case --> 

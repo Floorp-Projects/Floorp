@@ -557,7 +557,6 @@ var contextTarget = null; // Content element to which context menu applies.
           <menuitem value="&ver23Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/test2.html'"/>
           <menuitem value="&ver24Cmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_html_mix3.html'"/>
           <menuitem value="&ver25Cmd.label;" oncommand="window.content.location.href='http://www.mozilla.org/quality/browser/debugtc/bft_browser_link.html'"/>
-	  <menuitem value="&ver26Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/rdf/DOMDataSourceViewer.xul'"/>
         </menupopup>
       </menu>
 
@@ -598,6 +597,9 @@ var contextTarget = null; // Content element to which context menu applies.
         <menuitem value="&xptk11Cmd.label;" oncommand="window.content.location.href='resource:/res/samples/colorpicker.xul'"/>
        </menupopup>
       </menu>
+
+     <menuitem value="&domviewer.label;" oncommand="window.content.location.href='resource:/res/samples/rdf/DOMDataSourceViewer.xul'"/>
+
      </menupopup>
   </menu>
 
