@@ -343,8 +343,10 @@ SelectionImageService::CreateImage(nscolor aImageColor, imgIContainer *aContaine
           return NS_ERROR_OUT_OF_MEMORY;
         unsigned char *alpha = (unsigned char *)malloc(abpr);
         if (!alpha)
+        {
+          free (row_data);
           return NS_ERROR_OUT_OF_MEMORY;
-
+        }
         unsigned char *data = row_data;
 
         PRInt16 i;
