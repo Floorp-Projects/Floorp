@@ -29,9 +29,9 @@
 # issue to work out.
 
 
-# $Revision: 1.4 $ 
-# $Date: 2000/08/28 18:39:40 $ 
-# $Author: mcafee%netscape.com $ 
+# $Revision: 1.5 $ 
+# $Date: 2000/09/18 19:23:53 $ 
+# $Author: kestes%staff.mail.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/Attic/TreeData.pm,v $ 
 # $Name:  $ 
 
@@ -243,6 +243,6 @@ sub get_all_trees {
   @out = sort (keys %VC_TREE);
 
   return @out;
-
 }
 
+1;
