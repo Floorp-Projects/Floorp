@@ -70,6 +70,11 @@
 #include "nsIBoxObject.h"
 #include "nsIBrowserBoxObject.h"
 #include "nsISHistory.h"
+#include "nsIWebProgress.h"
+#include "nsIWebProgressListener.h"
+#include "nsISecureBrowserUI.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIDOMDocument.h"
 #endif
 
 class nsHTMLFrame;
@@ -485,6 +490,10 @@ nsHTMLFrameInnerFrame::~nsHTMLFrameInnerFrame()
         webShell->GetSessionHistory(getter_AddRefs(hist));
         if (hist)
           boxObject->SetPropertyAsSupports(NS_LITERAL_STRING("history").get(), hist);
+        nsCOMPtr<nsISupports> supports;
+        boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("listenerkungfu").get(), getter_AddRefs(supports));
+        if (supports)
+          boxObject->SetPropertyAsSupports(NS_LITERAL_STRING("listener").get(), supports);
       }
     }
   }
@@ -899,16 +908,50 @@ nsHTMLFrameInnerFrame::CreateDocShell(nsIPresContext* aPresContext,
 
 static PRBool CheckForBrowser(nsIContent* aContent, nsIBaseWindow* aShell)
 {
+  PRBool didReload = PR_FALSE;
 #ifdef INCLUDE_XUL
+  // XXXjag see bug 68662
   nsCOMPtr<nsIDOMXULElement> xulElt(do_QueryInterface(aContent));
   if (xulElt) {
-    // We might be a XUL browser and may have stored the URL in our box object.
+    // We might be a XUL browser and may have stored state in our box object.
     nsCOMPtr<nsIBoxObject> boxObject;
     xulElt->GetBoxObject(getter_AddRefs(boxObject));
     if (boxObject) {
       nsCOMPtr<nsIBrowserBoxObject> browser(do_QueryInterface(boxObject));
       if (browser) {
         nsCOMPtr<nsISupports> supp;
+        /* reregister the progress listener */
+        boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("listener").get(), getter_AddRefs(supp));
+        if (supp) {
+          nsCOMPtr<nsIWebProgressListener> listener(do_QueryInterface(supp));
+          if (listener) {
+            nsCOMPtr<nsIDocShell> docShell;
+            browser->GetDocShell(getter_AddRefs(docShell));
+            nsCOMPtr<nsIWebProgress> webProgress(do_GetInterface(docShell));
+            webProgress->AddProgressListener(listener);
+            boxObject->RemoveProperty(NS_LITERAL_STRING("listener").get());
+          }
+        }
+
+        /* reinitialize the security module */
+        boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("xulwindow").get(), getter_AddRefs(supp));
+        nsCOMPtr<nsIDOMWindowInternal> domWindow(do_QueryInterface(supp));
+        boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("secureBrowserUI").get(), getter_AddRefs(supp));
+        nsCOMPtr<nsSecureBrowserUI> secureBrowserUI(do_QueryInterface(supp));
+        if (domWindow && secureBrowserUI) {
+          nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+          domWindow->Get_content(getter_AddRefs(contentWindow));
+          nsCOMPtr<nsIDOMDocument> doc;
+          domWindow->GetDocument(getter_AddRefs(doc));
+          if (contentWindow && doc) {
+            nsCOMPtr<nsIDOMElement> button;
+            doc->GetElementById(NS_LITERAL_STRING("security-button"), getter_AddRefs(button));
+            if (button)
+              secureBrowserUI->Init(contentWindow, button);
+          }
+        }
+
+        /* set session history on the new docshell */
         boxObject->GetPropertyAsSupports(NS_LITERAL_STRING("history").get(), getter_AddRefs(supp));
         if (supp) {
           nsCOMPtr<nsISHistory> hist(do_QueryInterface(supp));
@@ -917,15 +960,15 @@ static PRBool CheckForBrowser(nsIContent* aContent, nsIBaseWindow* aShell)
             webNav->SetSessionHistory(hist);
             nsCOMPtr<nsIWebNavigation> histNav(do_QueryInterface(hist));
             histNav->Reload(0);
+            didReload = PR_TRUE;
             boxObject->RemoveProperty(NS_LITERAL_STRING("history").get());
-            return PR_FALSE;
           }
         }
       }
     }
   }
 #endif
-  return PR_TRUE;
+  return didReload;
 }
 
 nsresult
@@ -943,7 +986,7 @@ nsHTMLFrameInnerFrame::DoLoadURL(nsIPresContext* aPresContext)
   nsresult rv = GetParentContent(*getter_AddRefs(parentContent));
   NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && parentContent, rv);
 
-  PRBool load = CheckForBrowser(parentContent, mSubShell);
+  PRBool load = !CheckForBrowser(parentContent, mSubShell);
 
   if (load) {
     nsAutoString url;

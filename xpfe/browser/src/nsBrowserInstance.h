@@ -37,13 +37,13 @@
 #include "nsISupports.h"
 
 #include "nsIStreamObserver.h"
+#include "nsIInputStream.h"
 #include "nsIObserver.h"
 #include "nsICmdLineHandler.h"
 #include "nsIXULBrowserWindow.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebShell.h"
 #include "nsIUrlbarHistory.h"
-#include "nsISHistory.h"
 
 class nsIDocShell;
 class nsIScriptContext;
@@ -87,7 +87,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
     
     nsresult GetFocussedContentWindow(nsIDOMWindowInternal** outFocussedWindow);
     
-    void ReinitializeContentWindow();
     void ReinitializeContentVariables();
 
     nsresult InitializeSearch(nsIDOMWindowInternal* windowToSearch, nsIFindComponent *finder );
@@ -106,8 +105,6 @@ class nsBrowserInstance : public nsIBrowserInstance,
     static PRBool       sCmdLineURLUsed;
 
     nsCOMPtr<nsIXULBrowserWindow> mXULBrowserWindow;
-
-	  nsCOMPtr<nsISHistory>   mSessionHistory;
 
     nsWeakPtr          mContentAreaDocShellWeak;
 
