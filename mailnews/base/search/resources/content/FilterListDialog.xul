@@ -31,6 +31,7 @@ Rights Reserved.
   title="&window.title;">
 
 <script language="JavaScript" src="chrome://messenger/content/FilterListDialog.js"/>
+<!-- <script src="resource:/res/samples/DumpDOM.js"/> -->
 
   <box orient="horizontal">
     <text value="Filters for:"/>
@@ -39,7 +40,7 @@ Rights Reserved.
                  rdf:containment="http://home.netscape.com/NC-rdf#child"
                  ref="msgaccounts:/">
         <template>
-          <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+          <menuitem uri="..." data="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
         </template>
       </menupopup>
     </menulist>
@@ -47,8 +48,9 @@ Rights Reserved.
   <box orient="horizontal" >
     <box orient="vertical" style="width:100%;" >
     <text value="&filterHeader.label;"/>
-    <box orient="horizontal">
-    <tree id="filterTree" class="inset" style="width: 35em"
+    <box orient="horizontal" style="min-height: 200px; min-width: 200px">
+    <tree id="filterTree" class="inset" flex="1"
+       onselect="onFilterSelect(event);"
        rdf:datasources="rdf:msgaccountmanager rdf:msgfilters"
        rdf:containment="http://home.netscape.com/NC-rdf#child">
           <template>
@@ -70,8 +72,8 @@ Rights Reserved.
 
       <treehead>
         <treerow>
-           <treecell persist="hidden width" value="&nameColumn.label;"/>
-           <treecell persist="hidden width" value="&activeColumn.label;"/>
+           <treecell persist="hidden width" class="treecell-header treecell-inset-header" value="&nameColumn.label;"/>
+           <treecell persist="hidden width" class="treecell-header treecell-inset-header" value="&activeColumn.label;"/>
         </treerow>
       </treehead>
       </tree>
@@ -88,15 +90,16 @@ Rights Reserved.
     </box>
     </box>
     <box orient="vertical">
-      <button value="&newButton.label;" onclick="NewFilter();"/>
-      <button value="&editButton.label;" onclick="EditFilter();"/>
-      <button value="&deleteButton.label;" onclick="DeleteFilter();"/>
+      <button id="newButton" value="&newButton.label;" onclick="NewFilter();"/>
+      <button id="editButton" value="&editButton.label;" onclick="EditFilter();"/>
+      <button id="deleteButton" value="&deleteButton.label;" onclick="DeleteFilter();"/>
     </box>
   </box>
   <box orient="horizontal">
     <button value="&runFiltersNow.label;" width="0em"/>
     <html style="font: bold">Do NOT file bugs against this dialog. It is not complete.</html>
   </box>
+<!--  <button onclick="DumpDOM(document.getElementById('filterTree'));" value="dump"/> -->
   <separator class="groove"/>
   <box id="okCancelButtons"/>
 

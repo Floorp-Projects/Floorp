@@ -21,15 +21,33 @@
  * Alec Flett <alecf@netscape.com>
  */
 
-
-var validityManager;
+// the actual filter that we're editing
+var gFilter;
+var nsIMsgSearchValidityManager = Components.interfaces.nsIMsgSearchValidityManager;
 
 function filterEditorOnLoad()
 {
-    validityManager = Components.classes["mozilla.mail.search.validityManager.1"].getService(Components.interfaces.nsIMsgSearchValidityManager);
+    if (window.arguments && window.arguments[0]) {
+        var args = window.arguments[0];
+        if (args.filter) {
+            gFilter = window.arguments[0].filter;
+        
+            dump("Filter editor loading with filter " + gFilter.filterName + "\n");
+            initializeDialog(gFilter);
+        } else {
+            if (args.filterList)
+                setScope(getScopeFromFilterList(args.filterList));
+            dump("New filter\n");
+        }
+    }
+}
 
-    var searchAttr = document.getElementById("searchAttr");
-    searchAttr.scope = 0;
+// set scope on all visible searhattribute tags
+function setScope(scope) {
+    var searchAttributes = document.getElementsByTagName("searchattribute");
+    for (var i = 0; i<searchAttributes.length; i++) {
+        searchAttributes[i].searchScope = scope;
+    }
 }
 
 
@@ -38,11 +56,28 @@ function scopeChanged(event)
     var menuitem = event.target;
 
     var searchattr = document.getElementById("searchAttr");
-    dump("setting scope to " + menuitem.data + "\n");
     try {
-      searchattr.scope = menuitem.data;
+      searchattr.searchScope = menuitem.data;
     } catch (ex) {
         
     }
-    //    DumpDOM(searchattr.anonymousContent[0]);
+}
+
+function getScopeFromFilterList(filterList)
+{
+    var type = filterList.folder.server.type;
+    if (type == "nntp") return nsIMsgSearchValidityManager.news;
+    return nsIMsgSearchValidityManager.onlineMail;
+}
+
+function getScope(filter) {
+    return getScopeFromFilterList(filter.filterList);
+}
+
+function initializeDialog(filter)
+{
+    var filterName = document.getElementById("filterName");
+    filterName.value = filter.filterName;
+
+    setScope(getScope(filter));
 }

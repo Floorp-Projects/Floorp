@@ -18,9 +18,19 @@
  * Rights Reserved.
  */
 
+var rdf;
+
+var editButton;
+var deleteButton;
+
 function onLoad()
 {
-    dump("Loading..\n");
+    rdf = Components.classes["component://netscape/rdf/rdf-service"].getService(Components.interfaces.nsIRDFService);
+
+    editButton = document.getElementById("editButton");
+    deleteButton = document.getElementById("deleteButton");
+
+    updateButtons();
     
     var firstitem;
     var args = window.arguments;
@@ -41,6 +51,7 @@ function onServerClick(event)
 {
     var item = event.target;
     setServer(item.id);
+    updateButtons();
 }
 
 // roots the tree at the specified server
@@ -62,18 +73,67 @@ function selectServer(uri)
     setServer(uri);
 }
 
+function currentFilter()
+{
+    var selection = document.getElementById("filterTree").selectedItems;
+    if (!selection || selection.length <=0)
+        return null;
+
+    var filter;
+    try {
+        var filterResource = rdf.GetResource(selection[0].id);
+        filter = filterResource.GetDelegate("filter",
+                                            Components.interfaces.nsIMsgFilter);
+    } catch (ex) {
+        dump(ex);
+        dump("no filter selected!\n");
+    }
+    return filter;
+}
+
+function currentFilterList()
+{
+    var serverMenu = document.getElementById("serverMenu");
+    var serverUri = serverMenu.data;
+
+    var filterList = rdf.GetResource(serverUri).GetDelegate("filter", Components.interfaces.nsIMsgFilterList);
+
+    return filterList;
+}
+
+function onFilterSelect(event)
+{
+    updateButtons();
+}
+
 function EditFilter() {
 
-    var tree = document.getElementById("filterTree");
-    var selectedFilter = tree.selectedItems[0];
+    var selectedFilter = currentFilter();
 
-    var args = {selectedFilter: selectedFilter};
+    var args = {filter: selectedFilter};
     
     window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal", args);
 }
 
-function NewFilter() {
-  // pass the URI too, so that we know what filter to put this before
-  window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal");
+function NewFilter()
+{
+    var curFilterList = currentFilterList();
+    var args = {filterList: curFilterList };
+    
+  window.openDialog("chrome://messenger/content/FilterEditor.xul", "FilterEditor", "chrome,modal", args);
 
+}
+
+
+
+function updateButtons()
+{
+    var filter = currentFilter();
+    if (filter) {
+        editButton.removeAttribute("disabled");
+        deleteButton.removeAttribute("disabled");
+    } else {
+        editButton.setAttribute("disabled", "true");
+        deleteButton.setAttribute("disabled", "true");
+    }                      
 }

@@ -33,24 +33,10 @@ Rights Reserved.
 
 <script language="JavaScript" src="chrome://messenger/content/FilterEditor.js"/>
 <script language="JavaScript" src="chrome://global/content/strres.js"/>
-<script src="chrome://global/content/default/DumpDOM.js"/>
 
   <box orient="horizontal" class="padded">
     <text value="&filterName.label;"/>
-    <textfield flex="1"/>
-  </box>
-  <box>
-    <text value="(For debugging only) Scope:"/>
-    <menulist oncommand="scopeChanged(event);">
-      <menupopup>
-        <menuitem value="onlineMail" data="0"/>
-        <menuitem value="offlineMailFilter" data="1"/>
-        <menuitem value="offlineMail" data="2"/>
-        <menuitem value="localNews" data="3"/>
-        <menuitem value="news" data="4"/>
-        <menuitem value="newsEx" data="5"/>
-      </menupopup>
-    </menulist>
+    <textfield flex="1" id="filterName"/>
   </box>
   <titledbox orient="vertical">
     <title>
@@ -63,8 +49,9 @@ Rights Reserved.
     </radiogroup>
 
     <spring class="spacer"/>
-
-    <box>
+    <box orient="horizontal">
+    </box>
+    <box style="min-height:200px">
     <tree class="inset" flex="1">
       <treecol id="a" />
       <treecol id="b"/>
@@ -74,12 +61,14 @@ Rights Reserved.
         <treeitem>
           <treerow>
             <treecell allowevents="true">
-              <searchattribute id="searchAttr" flex="1"/>
+              <searchattribute id="searchAttr" for="searchOp" flex="1"/>
             </treecell>
             <treecell allowevents="true">
-              <searchoperator id="searchOp" flex="1"/>
+              <searchoperator id="searchOp" for="searchValue" flex="1"/>
             </treecell>
-            <treecell value="text here"/>
+            <treecell allowevents="true">
+              <textfield id="searchValue" flex="1"/>
+            </treecell>
           </treerow>
         </treeitem>
         <treeitem>
@@ -109,12 +98,6 @@ Rights Reserved.
         <menuitem value="&watchThread.label;"/>
       </menupopup>
     </menulist>
-    <spring class="spacer"/>
-    <box orient="horizontal">
-<!-- we can use fcc folder picker, because that follows the "can file into here" rules -->
-	<menu id="msgFccFolderPicker"/>
-	<spring flex="100%"/>
-    </box>
   </titledbox>
   <separator class="groove"/>
   <box id="okCancelButtons"/>
