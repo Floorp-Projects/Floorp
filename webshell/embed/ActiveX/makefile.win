@@ -75,6 +75,7 @@ LINCS=  \
   -I$(PUBLIC)\lwbrk \
   -I$(PUBLIC)\unicharutil \
   -I$(PUBLIC)\pref \
+  -I$(PUBLIC)\walletlib \
   -I$(PUBLIC)\rdf
 
 MYLIBS=                         \
