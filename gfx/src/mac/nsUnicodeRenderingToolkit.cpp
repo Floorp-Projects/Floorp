@@ -531,6 +531,9 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: GetWidth(const PRUnichar *aString, PR
 	return res;  
 }
 
+#define IS_FORMAT_CONTROL_CHARS(c) 	((0x2000==((c)&0xFFF0))||(0x2028==((c)&0xFFF8)))
+#define IS_CONTEXTUAL_CHARS(c) 		((0x0600<=(c))&&((c)<0x1000))
+#define IS_COMBINING_CHARS(c) 		((0x0300<=(c))&&((c)<0x0370))
 //------------------------------------------------------------------------
 NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, PRUint32 aLength,
                                          nscoord aX, nscoord aY, PRInt32 aFontID,
@@ -560,14 +563,26 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, 
 		if (spacing)
 		{
 			mGS->mTMatrix.ScaleXCoords(aSpacing, aLength, spacing);
-		    for(i =0; i < aLength; i++)
+		    for(i =0; i < aLength; )
 		    {
+		       PRUint32 j,drawLen;
 		       short curFontNum = fontmap->GetFontID(aString[i]);
-		       res = DrawTextSegment(aString+i, 1, curFontNum, scriptFallbackFonts, currentX, y, thisWidth);
-			   if(NS_FAILED(res))
+		       for(drawLen = 1; ((i+drawLen) < aLength);drawLen++) {
+		       	    PRUnichar uc = aString[i+drawLen];
+		       		if(! ( IS_CONTEXTUAL_CHARS(uc) || 
+		       			   IS_FORMAT_CONTROL_CHARS(uc) ||
+		       		       IS_COMBINING_CHARS(uc)) ) {
+		       		       break;
+		       		}
+		       }
+		       res = DrawTextSegment(aString+i, drawLen, curFontNum, scriptFallbackFonts, currentX, y, thisWidth);
+			   if(NS_FAILED(res)) {
+			    	if (spacing != buffer)
+						delete[] spacing;
 			 		goto end_of_func;
-		       
-			   currentX += spacing[i];
+		       }
+		       for(j=0;j<drawLen;j++)
+			   		currentX += spacing[i++];
 		    }
 	    	if (spacing != buffer)
 				delete[] spacing;
@@ -577,22 +592,31 @@ NS_IMETHODIMP nsUnicodeRenderingToolkit :: DrawString(const PRUnichar *aString, 
  			goto end_of_func;
 		}
     } else {
-  		short fontNum[2];
-    	fontNum[0] = fontNum[1] = BAD_FONT_NUM;
-	    PRUint32 start;
-		for(i =0, start = 0; i < aLength; i++)
-	    {
-	       fontNum[ i % 2] = fontmap->GetFontID(aString[i]);
-	       if((fontNum[0] != fontNum[1]) && (0 != i))
-	       {  // start new font run...
-	          res = DrawTextSegment(aString+start, i-start, fontNum[ (i+1) % 2], scriptFallbackFonts, currentX, y, thisWidth);
-			  if(NS_FAILED(res))
-			 		goto end_of_func;
-			  currentX += thisWidth;
-	          start = i;
-	       }
+    	short thisFont, nextFont;
+    	thisFont=fontmap->GetFontID(aString[0]);;	
+    	PRUint32 start;
+    	for(i =1, start=0; i < aLength; i++)
+    	{
+    		PRUnichar uch = aString[i];
+    		if(! IS_FORMAT_CONTROL_CHARS(uch))
+    		{
+    			nextFont = fontmap->GetFontID(uch);
+    			if(thisFont != nextFont) 
+		        {  // start new font run...
+		       
+		       		res = DrawTextSegment(aString+start, i-start, thisFont, scriptFallbackFonts, 
+		          						currentX, y, thisWidth);
+				  	if(NS_FAILED(res))
+				 		goto end_of_func;
+					currentX += thisWidth;
+					start = i;
+					thisFont = nextFont;
+    			}
+    		}
 	    }
-    	res = DrawTextSegment(aString+start, aLength-start, fontNum[ (i+1) % 2], scriptFallbackFonts, currentX, y, thisWidth);
+
+    	res = DrawTextSegment(aString+start, aLength-start, thisFont, 
+    							scriptFallbackFonts, currentX, y, thisWidth);
 		if(NS_FAILED(res))
 			goto end_of_func;
     }
