@@ -31,7 +31,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: prng_fips1861.c,v 1.1 2000/07/19 17:01:30 mcgreer%netscape.com Exp $
+ * $Id: prng_fips1861.c,v 1.2 2000/07/19 23:54:43 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -43,6 +43,20 @@
 #include "prlock.h"
 #include "secitem.h"
 #include "sha_fast.h"
+
+/*
+ * The minimum amount of seed data required before the generator will
+ * provide data.
+ * Note that this is a measure of the number of bytes sent to
+ * RNG_RandomUpdate, not the actual amount of entropy present in the
+ * generator.  Naturally, it is impossible to know (at this level) just
+ * how much entropy is present in the provided seed data.  A bare minimum
+ * of entropy would be 20 bytes, so by requiring 1K this code is making
+ * the tacit assumption that at least 1 byte of pure entropy is provided
+ * with every 8 bytes supplied to RNG_RandomUpdate.  The reality of this
+ * assumption is left up to the caller.
+ */
+#define MIN_SEED_COUNT 1024
 
 /*
  * Steps taken from FIPS 186-1 Appendix 3.1
@@ -108,7 +122,7 @@ struct RNGContextStr {
     PRUint8   Xj[BSIZE];   /* Output from previous operation */
     PRLock   *lock;        /* Lock to serialize access to global rng */
     PRUint8   avail;       /* # bytes of output available, [0...20] */
-    PRBool    XKEYinit;    /* toggle XKEY's initialization state */
+    PRUint32  seedCount;   /* number of seed bytes given to generator */
     PRBool    isValid;     /* false if RNG reaches an invalid state */
 };
 typedef struct RNGContextStr RNGContext;
@@ -291,14 +305,13 @@ prng_RandomUpdate(RNGContext *rng, void *data, size_t bytes, unsigned char *q)
      * size of XKEY is b-bytes, so fill it with the first b-bytes
      * sent to RNG_RandomUpdate().
      */
-    if (!rng->XKEYinit) {
+    if (rng->seedCount == 0) {
 	/* This is the first call to RandomUpdate().  Use a SHA1 hash
 	 * of the input to set the seed, XKEY.
 	 *
 	 * <Step 1> copy seed bytes into context's XKEY
 	 */
 	memcpy(rng->XKEY, inputhash, BSIZE);
-	rng->XKEYinit = PR_TRUE;
 	/* 
 	 * Now continue with algorithm.  Since the input was used to
 	 * initialize XKEY, the "optional user input" at this stage
@@ -315,6 +328,8 @@ prng_RandomUpdate(RNGContext *rng, void *data, size_t bytes, unsigned char *q)
 	/* Execute the algorithm from FIPS 186-1 appendix 3.1 */
 	rv = alg_fips186_1_x3_1(rng, inputhash, q);
     }
+    /* If got this far, have added bytes of seed data. */
+    rng->seedCount += bytes;
     PR_Unlock(rng->lock);
     /* --- UNLOCKED --- */
     /* housekeeping */
@@ -351,6 +366,15 @@ prng_GenerateGlobalRandomBytes(RNGContext *rng,
     }
     /* --- LOCKED --- */
     PR_Lock(rng->lock);
+    /* Check the amount of seed data in the generator.  If not enough,
+     * don't produce any data.
+     */
+    if (rng->seedCount < MIN_SEED_COUNT) {
+	PR_Unlock(rng->lock);
+	/* XXX this should be a new error code */
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
     /*
      * If there are enough bytes of random data, send back Xj, 
      * else call alg3_1() with 0's to generate more random data.
@@ -393,7 +417,8 @@ RNG_RNGShutdown(void)
     }
     /* clear */
     freeRNGContext();
-    /* XXX zero the callonce struct to allow a new call to RNG_RNGInit() ? */
+    /* zero the callonce struct to allow a new call to RNG_RNGInit() */
+    memset(&coRNGInit, 0, sizeof coRNGInit);
 }
 
 /*
