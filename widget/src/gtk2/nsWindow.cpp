@@ -113,6 +113,8 @@ nsWeakPtr                     gRollupWindow;
 MaiHook *gMaiHook = NULL;
 #endif
 
+#define kWindowPositionSlop 20
+
 // cursor cache
 GdkCursor *gCursorCache[eCursor_count_up_down + 1];
 
@@ -307,7 +309,30 @@ nsWindow::IsVisible(PRBool & aState)
 NS_IMETHODIMP
 nsWindow::ConstrainPosition(PRBool aAllowSlop, PRInt32 *aX, PRInt32 *aY)
 {
-    return NS_ERROR_NOT_IMPLEMENTED; 
+    if (mIsTopLevel && mShell) {
+        PRInt32 screenWidth = gdk_screen_width();
+        PRInt32 screenHeight = gdk_screen_height();
+        if (aAllowSlop) {
+            if (*aX < (kWindowPositionSlop - mBounds.width))
+                *aX = kWindowPositionSlop - mBounds.width;
+            if (*aX > (screenWidth - kWindowPositionSlop))
+                *aX = screenWidth - kWindowPositionSlop;
+            if (*aY < (kWindowPositionSlop - mBounds.height))
+                *aY = kWindowPositionSlop - mBounds.height;
+            if (*aY > (screenHeight - kWindowPositionSlop))
+                *aY = screenHeight - kWindowPositionSlop;
+        } else {
+            if (*aX < 0)
+                *aX = 0;
+            if (*aX > (screenWidth - mBounds.width))
+                *aX = screenWidth - mBounds.width;
+            if (*aY < 0)
+                *aY = 0;
+            if (*aY > (screenHeight - mBounds.height))
+                *aY = screenHeight - mBounds.height;
+        }
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
