@@ -38,7 +38,6 @@
 
 #include "nsTextFragment.h"
 #include "nsWSRunObject.h"
-#include "nsISupportsArray.h"
 #include "nsIDOMNode.h"
 //#include "nsIModule.h"
 #include "nsHTMLEditor.h"
@@ -88,7 +87,6 @@ mNode(aNode)
 ,mEndRun(nsnull)
 ,mHTMLEditor(aEd)
 {
-  mNodeArray = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID);
   GetWSNodes();
   GetRuns();
 }
@@ -131,7 +129,6 @@ nsWSRunObject::PrepareToJoinBlocks(nsHTMLEditor *aHTMLEd,
 {
   if (!aLeftParent || !aRightParent || !aHTMLEd)
     return NS_ERROR_NULL_POINTER;
-  nsresult res = NS_OK;
   PRUint32 count;
   aHTMLEd->GetLengthOfDOMNode(aLeftParent, count);
   nsWSRunObject leftWSObj(aHTMLEd, aLeftParent, count);
@@ -149,7 +146,6 @@ nsWSRunObject::PrepareToDeleteRange(nsHTMLEditor *aHTMLEd,
 {
   if (!aStartNode || !aEndNode || !*aStartNode || !*aEndNode || !aStartOffset || !aEndOffset || !aHTMLEd)
     return NS_ERROR_NULL_POINTER;
-  nsresult res = NS_OK;
 
   nsAutoTrackDOMPoint trackerStart(aHTMLEd->mRangeUpdater, aStartNode, aStartOffset);
   nsAutoTrackDOMPoint trackerEnd(aHTMLEd->mRangeUpdater, aEndNode, aEndOffset);
@@ -186,7 +182,6 @@ nsWSRunObject::PrepareToSplitAcrossBlocks(nsHTMLEditor *aHTMLEd,
 {
   if (!aSplitNode || !aSplitOffset || !*aSplitNode || !aHTMLEd)
     return NS_ERROR_NULL_POINTER;
-  nsresult res = NS_OK;
 
   nsAutoTrackDOMPoint tracker(aHTMLEd->mRangeUpdater, aSplitNode, aSplitOffset);
   
@@ -430,7 +425,7 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
   // MOOSE: don't need to convert tabs here since that is done by WillInsertText() 
   // before we are called.  Eventually, all that logic will be pushed down into
   // here and made more efficient.
-  PRInt32 j;
+  PRUint32 j;
   PRBool prevWS = PR_FALSE;
   for (j=0; j<=lastCharIndex; j++)
   {
@@ -580,7 +575,7 @@ nsWSRunObject::PriorVisibleNode(nsIDOMNode *aNode,
     
   *outType = eNone;
   WSFragment *run;
-  nsresult res = FindRun(aNode, aOffset, &run, PR_FALSE);
+  FindRun(aNode, aOffset, &run, PR_FALSE);
   
   // is there a visible run there or earlier?
   while (run)
@@ -635,7 +630,7 @@ nsWSRunObject::NextVisibleNode (nsIDOMNode *aNode,
     return NS_ERROR_NULL_POINTER;
     
   WSFragment *run;
-  nsresult res = FindRun(aNode, aOffset, &run, PR_TRUE);
+  FindRun(aNode, aOffset, &run, PR_TRUE);
   
   // is there a visible run there or later?
   while (run)
@@ -1164,19 +1159,19 @@ nsWSRunObject::MakeSingleWSRun(PRInt16 aType)
 nsresult 
 nsWSRunObject::PrependNodeToList(nsIDOMNode *aNode)
 {
-  if (!aNode || !mNodeArray) return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsISupports> isupports (do_QueryInterface(aNode));
-  nsresult res = mNodeArray->InsertElementAt(isupports,0);
-  return res;
+  if (!aNode) return NS_ERROR_NULL_POINTER;
+  if (!mNodeArray.InsertObjectAt(aNode, 0))
+    return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 nsresult 
 nsWSRunObject::AppendNodeToList(nsIDOMNode *aNode)
 {
   if (!aNode) return NS_ERROR_NULL_POINTER;
-  nsCOMPtr<nsISupports> isupports (do_QueryInterface(aNode));
-  nsresult res = mNodeArray->AppendElement(isupports);
-  return res;
+  if (!mNodeArray.AppendObject(aNode))
+    return NS_ERROR_FAILURE;
+  return NS_OK;
 }
 
 nsresult 
@@ -1531,8 +1526,7 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
     return NS_OK;  // nothing to delete
   
   nsresult res = NS_OK;
-  nsCOMPtr<nsISupports> isupps(do_QueryInterface(aStartNode));
-  PRInt32 idx = mNodeArray->IndexOf(isupps);
+  PRInt32 idx = mNodeArray.IndexOf(aStartNode);
   if (idx==-1) idx = 0; // if our strarting point wasn't one of our ws text nodes,
                         // then just go through them from the beginning.
   nsCOMPtr<nsIDOMNode> node;
@@ -1549,17 +1543,15 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
     }
   }
 
-  PRUint32 count;
-  mNodeArray->Count(&count);
+  PRInt32 count = mNodeArray.Count();
   while (idx < count)
   {
-    isupps = dont_AddRef(mNodeArray->ElementAt(idx));
-    node = do_QueryInterface(isupps);
+    node = mNodeArray[idx];
     if (!node)
       break;  // we ran out of ws nodes; must have been deleting to end
     if (node == aStartNode)
     {
-      textnode = do_QueryInterface(isupps);
+      textnode = do_QueryInterface(node);
       PRUint32 len;
       textnode->GetLength(&len);
       if (aStartOffset<len)
@@ -1572,7 +1564,7 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
     {
       if (aEndOffset)
       {
-        textnode = do_QueryInterface(isupps);
+        textnode = do_QueryInterface(node);
         res = mHTMLEditor->DeleteText(textnode, 0, (PRUint32)aEndOffset);
         NS_ENSURE_SUCCESS(res, res);
       }
@@ -1600,7 +1592,7 @@ nsWSRunObject::DeleteChars(nsIDOMNode *aStartNode, PRInt32 aStartOffset,
       {
         res = mHTMLEditor->DeleteNode(node);
         NS_ENSURE_SUCCESS(res, res);
-        mNodeArray->RemoveElement(isupps);
+        mNodeArray.RemoveObject(node);
       }
     }
     idx++;
@@ -1614,8 +1606,7 @@ nsWSRunObject::GetCharAfter(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoin
   if (!aNode || !outPoint)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsISupports> isupps(do_QueryInterface(aNode));
-  PRInt32 idx = mNodeArray->IndexOf(isupps);
+  PRInt32 idx = mNodeArray.IndexOf(aNode);
   if (idx == -1) 
   {
     // use range comparisons to get right ws node
@@ -1637,8 +1628,7 @@ nsWSRunObject::GetCharBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outPoi
   if (!aNode || !outPoint)
     return NS_ERROR_NULL_POINTER;
 
-  nsCOMPtr<nsISupports> isupps(do_QueryInterface(aNode));
-  PRInt32 idx = mNodeArray->IndexOf(isupps);
+  PRInt32 idx = mNodeArray.IndexOf(aNode);
   if (idx == -1) 
   {
     // use range comparisons to get right ws node
@@ -1663,12 +1653,11 @@ nsWSRunObject::GetCharAfter(WSPoint &aPoint, WSPoint *outPoint)
   outPoint->mTextNode = nsnull;
   outPoint->mOffset = 0;
   outPoint->mChar = 0;
-  
-  nsCOMPtr<nsISupports> isupps(do_QueryInterface(aPoint.mTextNode));
-  PRInt32 idx = mNodeArray->IndexOf(isupps);
+
+  nsCOMPtr<nsIDOMNode> pointTextNode(do_QueryInterface(aPoint.mTextNode));
+  PRInt32 idx = mNodeArray.IndexOf(pointTextNode);
   if (idx == -1) return NS_OK;  // can't find point, but it's not an error
-  PRUint32 numNodes;
-  mNodeArray->Count(&numNodes);
+  PRInt32 numNodes = mNodeArray.Count();
   
   PRInt32 len;
   nsresult res = aPoint.mTextNode->GetTextLength(&len);
@@ -1681,9 +1670,9 @@ nsWSRunObject::GetCharAfter(WSPoint &aPoint, WSPoint *outPoint)
   }
   else if (idx < (PRInt32)(numNodes-1))
   {
-    nsCOMPtr<nsISupports> isupps = dont_AddRef(mNodeArray->ElementAt(idx+1));
-    if (!isupps) return NS_ERROR_FAILURE;
-    outPoint->mTextNode = do_QueryInterface(isupps);
+    nsIDOMNode* node = mNodeArray[idx+1];
+    if (!node) return NS_ERROR_FAILURE;
+    outPoint->mTextNode = do_QueryInterface(node);
     outPoint->mOffset = 0;
     outPoint->mChar = GetCharAt(outPoint->mTextNode, 0);
   }
@@ -1701,8 +1690,8 @@ nsWSRunObject::GetCharBefore(WSPoint &aPoint, WSPoint *outPoint)
   outPoint->mChar = 0;
   
   nsresult res = NS_OK;
-  nsCOMPtr<nsISupports> isupps(do_QueryInterface(aPoint.mTextNode));
-  PRInt32 idx = mNodeArray->IndexOf(isupps);
+  nsCOMPtr<nsIDOMNode> pointTextNode(do_QueryInterface(aPoint.mTextNode));
+  PRInt32 idx = mNodeArray.IndexOf(pointTextNode);
   if (idx == -1) return NS_OK;  // can't find point, but it's not an error
   
   if (aPoint.mOffset != 0)
@@ -1713,9 +1702,9 @@ nsWSRunObject::GetCharBefore(WSPoint &aPoint, WSPoint *outPoint)
   }
   else if (idx)
   {
-    nsCOMPtr<nsISupports> isupps = dont_AddRef(mNodeArray->ElementAt(idx-1));
-    if (!isupps) return NS_ERROR_FAILURE;
-    outPoint->mTextNode = do_QueryInterface(isupps);
+    nsIDOMNode* node = mNodeArray[idx-1];
+    if (!node) return NS_ERROR_FAILURE;
+    outPoint->mTextNode = do_QueryInterface(node);
     PRInt32 len;
     res = outPoint->mTextNode->GetTextLength(&len);
     NS_ENSURE_SUCCESS(res, res);
@@ -1923,8 +1912,8 @@ nsWSRunObject::GetWSPointAfter(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outP
   // Note: only to be called if aNode is not a ws node.  
   
   // binary search on wsnodes
-  PRUint32 numNodes, curNum, lastNum;
-  mNodeArray->Count(&numNodes);
+  PRInt32 numNodes, curNum, lastNum;
+  numNodes = mNodeArray.Count();
   
   if (!numNodes) 
     return NS_OK; // do nothing if there are no nodes to search
@@ -1932,7 +1921,6 @@ nsWSRunObject::GetWSPointAfter(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outP
   curNum = numNodes/2;
   lastNum = numNodes;
   PRInt16 cmp=0;
-  nsCOMPtr<nsISupports> isupps;
   nsCOMPtr<nsIDOMNode>  curNode;
   
   // begin binary search
@@ -1941,8 +1929,7 @@ nsWSRunObject::GetWSPointAfter(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *outP
   while (curNum != lastNum)
   {
     PRUint32 savedCur = curNum;
-    isupps = dont_AddRef(mNodeArray->ElementAt(curNum));
-    curNode = do_QueryInterface(isupps);
+    curNode = mNodeArray[curNum];
     cmp = mHTMLEditor->mRangeHelper->ComparePoints(aNode, aOffset, curNode, 0);
     if (cmp < 0)
     {
@@ -1985,8 +1972,8 @@ nsWSRunObject::GetWSPointBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *out
   // Note: only to be called if aNode is not a ws node.  
   
   // binary search on wsnodes
-  PRUint32 numNodes, curNum, lastNum;
-  mNodeArray->Count(&numNodes);
+  PRInt32 numNodes, curNum, lastNum;
+  numNodes = mNodeArray.Count();
   
   if (!numNodes) 
     return NS_OK; // do nothing if there are no nodes to search
@@ -1994,7 +1981,6 @@ nsWSRunObject::GetWSPointBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *out
   curNum = numNodes/2;
   lastNum = numNodes;
   PRInt16 cmp=0;
-  nsCOMPtr<nsISupports> isupps;
   nsCOMPtr<nsIDOMNode>  curNode;
   
   // begin binary search
@@ -2003,8 +1989,7 @@ nsWSRunObject::GetWSPointBefore(nsIDOMNode *aNode, PRInt32 aOffset, WSPoint *out
   while (curNum != lastNum)
   {
     PRUint32 savedCur = curNum;
-    isupps = dont_AddRef(mNodeArray->ElementAt(curNum));
-    curNode = do_QueryInterface(isupps);
+    curNode = mNodeArray[curNum];
     cmp = mHTMLEditor->mRangeHelper->ComparePoints(aNode, aOffset, curNode, 0);
     if (cmp < 0)
     {

@@ -865,9 +865,9 @@ nsHTMLEditor::GetBlockSection(nsIDOMNode *aChild,
 //                           this range
 nsresult
 nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
-                                       nsISupportsArray *aSections) 
+                                       nsCOMArray<nsIDOMRange>& aSections) 
 {
-  if (!aRange || !aSections) {return NS_ERROR_NULL_POINTER;}
+  if (!aRange) {return NS_ERROR_NULL_POINTER;}
 
   nsresult result;
   nsCOMPtr<nsIContentIterator>iter;
@@ -887,9 +887,9 @@ nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
         nsCOMPtr<nsIAtom> currentContentTag;
         currentContent->GetTag(*getter_AddRefs(currentContentTag));
         // <BR> divides block content ranges.  We can achieve this by nulling out lastRange
-        if (nsIEditProperty::br==currentContentTag.get())
+        if (nsIEditProperty::br==currentContentTag)
         {
-          lastRange = do_QueryInterface(nsnull);
+          lastRange = nsnull;
         }
         else
         {
@@ -945,7 +945,7 @@ nsHTMLEditor::GetBlockSectionsForRange(nsIDOMRange *aRange,
                 { // initialize the range
                   range->SetStart(leftNode, 0);
                   range->SetEnd(rightNode, 0);
-                  aSections->AppendElement(range);
+                  aSections.AppendObject(range);
                   lastRange = do_QueryInterface(range);
                 }
               }        
@@ -989,7 +989,7 @@ nsHTMLEditor::NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir)
   PRBool isBlock;
   if (NS_SUCCEEDED(NodeIsBlockStatic(aNode, &isBlock)) && isBlock)
   {
-    blockParent = do_QueryInterface(aNode);
+    blockParent = aNode;
   }
   else
   {
@@ -2188,15 +2188,11 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
     nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
     // scan the range for all the independent block content blockSections
     // and get the block parent of each
-    nsISupportsArray *blockSections;
-    res = NS_NewISupportsArray(&blockSections);
-    if (NS_FAILED(res)) return res;
-    if (!blockSections) return NS_ERROR_NULL_POINTER;
+    nsCOMArray<nsIDOMRange> blockSections;
     res = GetBlockSectionsForRange(range, blockSections);
     if (NS_SUCCEEDED(res))
     {
-      nsIDOMRange *subRange;
-      subRange = (nsIDOMRange *)(blockSections->ElementAt(0));
+      nsCOMPtr<nsIDOMRange> subRange = blockSections[0];
       while (subRange)
       {
         nsCOMPtr<nsIDOMNode>startParent;
@@ -2224,14 +2220,14 @@ nsHTMLEditor::GetParentBlockTags(nsStringArray *aTagList, PRBool aGetLists)
             }
           }
         }
-        NS_RELEASE(subRange);
         if (NS_FAILED(res))
-          break;  // don't return here, need to release blockSections
-        blockSections->RemoveElementAt(0);
-        subRange = (nsIDOMRange *)(blockSections->ElementAt(0));
+          return res;
+        blockSections.RemoveObject(0);
+        if (blockSections.Count() == 0)
+          break;
+        subRange = blockSections[0];
       }
     }
-    NS_RELEASE(blockSections);
   }
   return res;
 }
@@ -3720,40 +3716,24 @@ nsHTMLEditor::EnableExistingStyleSheet(const nsAString &aURL)
 }
 
 nsresult
-nsHTMLEditor::EnsureStyleSheetArrays()
-{
-  nsresult rv = NS_OK;
-  if (!mStyleSheets)
-    rv = NS_NewISupportsArray(getter_AddRefs(mStyleSheets));
-
-  return rv;
-}
-
-nsresult
 nsHTMLEditor::AddNewStyleSheetToList(const nsAString &aURL,
                                      nsICSSStyleSheet *aStyleSheet)
 {
-  PRUint32 countSS;
-  nsresult rv = mStyleSheets->Count(&countSS);
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  PRInt32 countSS = mStyleSheets.Count();
   PRInt32 countU = mStyleSheetURLs.Count();
 
-  if (countU < 0 || countSS != (PRUint32)countU)
+  if (countU < 0 || countSS != countU)
     return NS_ERROR_UNEXPECTED;
 
   if (!mStyleSheetURLs.AppendString(aURL))
     return NS_ERROR_UNEXPECTED;
 
-  return mStyleSheets->AppendElement(aStyleSheet);
+  return mStyleSheets.AppendObject(aStyleSheet) ? NS_OK : NS_ERROR_UNEXPECTED;
 }
 
 nsresult
 nsHTMLEditor::RemoveStyleSheetFromList(const nsAString &aURL)
 {
-  nsresult rv = EnsureStyleSheetArrays();
-  NS_ENSURE_SUCCESS(rv, rv);
-
   // is it already in the list?
   PRInt32 foundIndex;
   foundIndex = mStyleSheetURLs.IndexOf(aURL);
@@ -3761,7 +3741,8 @@ nsHTMLEditor::RemoveStyleSheetFromList(const nsAString &aURL)
     return NS_ERROR_FAILURE;
 
   // Attempt both removals; if one fails there's not much we can do.
-  if (!mStyleSheets->RemoveElementAt(foundIndex))
+  nsresult rv = NS_OK;
+  if (!mStyleSheets.RemoveObjectAt(foundIndex))
     rv = NS_ERROR_FAILURE;
   if (!mStyleSheetURLs.RemoveStringAt(foundIndex))
     rv = NS_ERROR_FAILURE;
@@ -3775,8 +3756,6 @@ nsHTMLEditor::GetStyleSheetForURL(const nsAString &aURL,
 {
   NS_ENSURE_ARG_POINTER(aStyleSheet);
   *aStyleSheet = 0;
-  nsresult rv = EnsureStyleSheetArrays();
-  NS_ENSURE_SUCCESS(rv, rv);
 
   // is it already in the list?
   PRInt32 foundIndex;
@@ -3784,11 +3763,12 @@ nsHTMLEditor::GetStyleSheetForURL(const nsAString &aURL,
   if (foundIndex < 0)
     return NS_OK; //No sheet -- don't fail!
 
-  *aStyleSheet = (nsICSSStyleSheet*)mStyleSheets->ElementAt(foundIndex);
+  *aStyleSheet = mStyleSheets[foundIndex];
   if (!*aStyleSheet)
     return NS_ERROR_FAILURE;
 
   NS_ADDREF(*aStyleSheet);
+
   return NS_OK;
 }
 
@@ -3796,16 +3776,8 @@ NS_IMETHODIMP
 nsHTMLEditor::GetURLForStyleSheet(nsICSSStyleSheet *aStyleSheet,
                                   nsAString &aURL)
 {
-  nsresult rv = EnsureStyleSheetArrays();
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(aStyleSheet, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
-    
   // is it already in the list?
-  PRInt32 foundIndex;
-  rv = mStyleSheets->GetIndexOf(iSupports, &foundIndex);
-  NS_ENSURE_SUCCESS(rv, rv);
+  PRInt32 foundIndex = mStyleSheets.IndexOf(aStyleSheet);
 
   // Don't fail if we don't find it in our list
   if (foundIndex == -1)
@@ -5659,15 +5631,10 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
         if (NS_FAILED(res)) return res;
         if (!iter)          return NS_ERROR_FAILURE;
 
-        nsCOMPtr<nsISupportsArray> arrayOfNodes;
+        nsCOMArray<nsIDOMNode> arrayOfNodes;
         nsCOMPtr<nsIContent> content;
         nsCOMPtr<nsIDOMNode> node;
-        nsCOMPtr<nsISupports> isupports;
-        
-        // make a array
-        res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
-        if (NS_FAILED(res)) return res;
-        
+                
         // iterate range and build up array
         res = iter->Init(range);
         // init returns an error if no nodes in range.
@@ -5683,9 +5650,8 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
             node = do_QueryInterface(content);
             if (!node) return NS_ERROR_FAILURE;
             if (IsEditable(node))
-            { 
-              isupports = do_QueryInterface(node);
-              arrayOfNodes->AppendElement(isupports);
+            {
+              arrayOfNodes.AppendObject(node);
             }
             res = iter->Next();
             if (NS_FAILED(res)) return res;
@@ -5709,13 +5675,11 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
         }
         
         // then loop through the list, set the property on each node
-        PRUint32 listCount;
-        PRUint32 j;
-        arrayOfNodes->Count(&listCount);
+        PRInt32 listCount = arrayOfNodes.Count();
+        PRInt32 j;
         for (j = 0; j < listCount; j++)
         {
-          isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
-          node = do_QueryInterface(isupports);
+          node = arrayOfNodes[j];
           // do we have a block here ?
           PRBool isBlock =PR_FALSE;
           res = NodeIsBlockStatic(node, &isBlock);
@@ -5734,8 +5698,8 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
             res = mHTMLCSSUtils->SetCSSEquivalentToHTMLStyle(element, nsnull, &bgcolor, &aColor, &count, PR_FALSE);
             if (NS_FAILED(res)) return res;
           }
-          arrayOfNodes->RemoveElementAt(0);
         }
+        arrayOfNodes.Clear();
         
         // last check the end parent of the range to see if it needs to 
         // be seperately handled (it does if it's a text node, due to how the

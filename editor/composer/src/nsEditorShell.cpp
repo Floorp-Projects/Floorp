@@ -1106,8 +1106,8 @@ nsEditorShell::TransferDocumentStateListeners()
 
   for (PRUint32 i = 0; i <  numListeners; i ++)
   {
-    nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(i));
-    nsCOMPtr<nsIDocumentStateListener> docStateListener = do_QueryInterface(iSupports);
+    nsCOMPtr<nsIDocumentStateListener> docStateListener =
+      do_QueryElementAt(mDocStateListeners, i);
     if (docStateListener)
     {
       // this checks for duplicates

@@ -225,14 +225,9 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         if (NS_FAILED(res)) return res;
         if (!iter)          return NS_ERROR_FAILURE;
 
-        nsCOMPtr<nsISupportsArray> arrayOfNodes;
+        nsCOMArray<nsIDOMNode> arrayOfNodes;
         nsCOMPtr<nsIContent> content;
         nsCOMPtr<nsIDOMNode> node;
-        nsCOMPtr<nsISupports> isupports;
-        
-        // make a array
-        res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
-        if (NS_FAILED(res)) return res;
         
         // iterate range and build up array
         res = iter->Init(range);
@@ -250,8 +245,7 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
             if (!node) return NS_ERROR_FAILURE;
             if (IsEditable(node))
             { 
-              isupports = do_QueryInterface(node);
-              arrayOfNodes->AppendElement(isupports);
+              arrayOfNodes.AppendObject(node);
             }
             res = iter->Next();
             if (NS_FAILED(res)) return res;
@@ -272,17 +266,15 @@ NS_IMETHODIMP nsHTMLEditor::SetInlineProperty(nsIAtom *aProperty,
         }
         
         // then loop through the list, set the property on each node
-        PRUint32 listCount;
-        PRUint32 j;
-        arrayOfNodes->Count(&listCount);
+        PRInt32 listCount = arrayOfNodes.Count();
+        PRInt32 j;
         for (j = 0; j < listCount; j++)
         {
-          isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
-          node = do_QueryInterface(isupports);
+          node = arrayOfNodes[j];
           res = SetInlinePropertyOnNode(node, aProperty, &aAttribute, &aValue);
           if (NS_FAILED(res)) return res;
-          arrayOfNodes->RemoveElementAt(0);
         }
+        arrayOfNodes.Clear();
         
         // last check the end parent of the range to see if it needs to 
         // be seperately handled (it does if it's a text node, due to how the
@@ -500,13 +492,8 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
     childNodes->GetLength(&childCount);
     if (childCount)
     {
-      nsCOMPtr<nsISupportsArray> arrayOfNodes;
+      nsCOMArray<nsIDOMNode> arrayOfNodes;
       nsCOMPtr<nsIDOMNode> node;
-      nsCOMPtr<nsISupports> isupports;
-      
-      // make a array
-      res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
-      if (NS_FAILED(res)) return res;
       
       // populate the list
       for (j=0 ; j < (PRInt32)childCount; j++)
@@ -515,22 +502,19 @@ nsHTMLEditor::SetInlinePropertyOnNode( nsIDOMNode *aNode,
         res = childNodes->Item(j, getter_AddRefs(childNode));
         if ((NS_SUCCEEDED(res)) && (childNode) && IsEditable(childNode))
         {
-          isupports = do_QueryInterface(childNode);
-          arrayOfNodes->AppendElement(isupports);
+          arrayOfNodes.AppendObject(childNode);
         }
       }
       
       // then loop through the list, set the property on each node
-      PRUint32 listCount;
-      arrayOfNodes->Count(&listCount);
-      for (j = 0; j < (PRInt32)listCount; j++)
+      PRInt32 listCount = arrayOfNodes.Count();
+      for (j = 0; j < listCount; j++)
       {
-        isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
-        node = do_QueryInterface(isupports);
+        node = arrayOfNodes[j];
         res = SetInlinePropertyOnNode(node, aProperty, aAttribute, aValue);
         if (NS_FAILED(res)) return res;
-        arrayOfNodes->RemoveElementAt(0);
       }
+      arrayOfNodes.Clear();
     }
   }
   return res;
@@ -1340,14 +1324,9 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
         if (NS_FAILED(res)) return res;
         if (!iter)          return NS_ERROR_FAILURE;
 
-        nsCOMPtr<nsISupportsArray> arrayOfNodes;
+        nsCOMArray<nsIDOMNode> arrayOfNodes;
         nsCOMPtr<nsIContent> content;
         nsCOMPtr<nsIDOMNode> node;
-        nsCOMPtr<nsISupports> isupports;
-        
-        // make a array
-        res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
-        if (NS_FAILED(res)) return res;
         
         // iterate range and build up array
         iter->Init(range);
@@ -1359,21 +1338,18 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
           if (!node) return NS_ERROR_FAILURE;
           if (IsEditable(node))
           { 
-            isupports = do_QueryInterface(node);
-            arrayOfNodes->AppendElement(isupports);
+            arrayOfNodes.AppendObject(node);
           }
           res = iter->Next();
           if (NS_FAILED(res)) return res;
         }
         
         // loop through the list, remove the property on each node
-        PRUint32 listCount;
-        PRUint32 j;
-        arrayOfNodes->Count(&listCount);
+        PRInt32 listCount = arrayOfNodes.Count();
+        PRInt32 j;
         for (j = 0; j < listCount; j++)
         {
-          isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
-          node = do_QueryInterface(isupports);
+          node = arrayOfNodes[j];
           res = RemoveStyleInside(node, aProperty, aAttribute);
           if (NS_FAILED(res)) return res;
           if (useCSS && mHTMLCSSUtils->IsCSSEditableProperty(node, aProperty, aAttribute)) {
@@ -1398,8 +1374,8 @@ nsresult nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom *aProperty, const nsAStr
               }
             }
           }
-          arrayOfNodes->RemoveElementAt(0);
         }
+        arrayOfNodes.Clear();
       }
       enumerator->Next();
     }
@@ -1529,14 +1505,9 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
       if (NS_FAILED(res)) return res;
       if (!iter)          return NS_ERROR_FAILURE;
 
-      nsCOMPtr<nsISupportsArray> arrayOfNodes;
+      nsCOMArray<nsIDOMNode> arrayOfNodes;
       nsCOMPtr<nsIContent> content;
       nsCOMPtr<nsIDOMNode> node;
-      nsCOMPtr<nsISupports> isupports;
-      
-      // make a array
-      res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
-      if (NS_FAILED(res)) return res;
       
       // iterate range and build up array
       res = iter->Init(range);
@@ -1550,24 +1521,21 @@ nsHTMLEditor::RelativeFontChange( PRInt32 aSizeChange)
           if (!node) return NS_ERROR_FAILURE;
           if (IsEditable(node))
           { 
-            isupports = do_QueryInterface(node);
-            arrayOfNodes->AppendElement(isupports);
+            arrayOfNodes.AppendObject(node);
           }
           iter->Next();
         }
         
         // now that we have the list, do the font size change on each node
-        PRUint32 listCount;
-        PRUint32 j;
-        arrayOfNodes->Count(&listCount);
+        PRInt32 listCount = arrayOfNodes.Count();
+        PRInt32 j;
         for (j = 0; j < listCount; j++)
         {
-          isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
-          node = do_QueryInterface(isupports);
+          node = arrayOfNodes[j];
           res = RelativeFontChangeOnNode(aSizeChange, node);
           if (NS_FAILED(res)) return res;
-          arrayOfNodes->RemoveElementAt(0);
         }
+        arrayOfNodes.Clear();
       }
       // now check the start and end parents of the range to see if they need to 
       // be seperately handled (they do if they are text nodes, due to how the

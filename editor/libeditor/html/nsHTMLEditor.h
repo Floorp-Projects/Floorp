@@ -41,7 +41,7 @@
 #define nsHTMLEditor_h__
 
 #include "nsCOMPtr.h"
-
+#include "nsCOMArray.h"
 #include "nsPlaintextEditor.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
@@ -341,7 +341,7 @@ public:
     * @param aSections  Allocated storage for the resulting set, stored as nsIDOMRanges.
     */
   static nsresult GetBlockSectionsForRange(nsIDOMRange      *aRange, 
-                                           nsISupportsArray *aSections);
+                                           nsCOMArray<nsIDOMRange>& aSections);
 
   static nsCOMPtr<nsIDOMNode> NextNodeInBlock(nsIDOMNode *aNode, IterDirection aDir);
   nsresult IsNextCharWhitespace(nsIDOMNode *aParentNode, 
@@ -469,7 +469,6 @@ public:
   PRBool   EnableExistingStyleSheet(const nsAString& aURL);
 
   // Dealing with the internal style sheet lists:
-  nsresult EnsureStyleSheetArrays();
   NS_IMETHOD GetStyleSheetForURL(const nsAString &aURL,
                                nsICSSStyleSheet **_retval);
   NS_IMETHOD GetURLForStyleSheet(nsICSSStyleSheet *aStyleSheet, nsAString &aURL);
@@ -664,24 +663,24 @@ protected:
                                         PRInt32 *outRangeStartHint,
                                         PRInt32 *outRangeEndHint);
   nsresult   CreateListOfNodesToPaste(nsIDOMNode  *aFragmentAsNode,
-                                      nsCOMPtr<nsISupportsArray> *outNodeList,
+                                      nsCOMArray<nsIDOMNode>& outNodeList,
                                       PRInt32 aRangeStartHint,
                                       PRInt32 aRangeEndHint);
   nsresult GetListAndTableParents( PRBool aEnd, 
-                                   nsISupportsArray *aListOfNodes,
-                                   nsCOMPtr<nsISupportsArray> *outArray);
-  nsresult DiscoverPartialListsAndTables( nsISupportsArray *aPasteNodes,
-                                          nsISupportsArray *aListsAndTables,
-                                          PRInt32 *outHighWaterMark);
+                                   nsCOMArray<nsIDOMNode>& aListOfNodes,
+                                   nsCOMArray<nsIDOMNode>& outArray);
+  nsresult DiscoverPartialListsAndTables(nsCOMArray<nsIDOMNode>& aPasteNodes,
+                                         nsCOMArray<nsIDOMNode>& aListsAndTables,
+                                         PRInt32 *outHighWaterMark);
   nsresult ScanForListAndTableStructure(PRBool aEnd,
-                                        nsISupportsArray *aNodes,
+                                        nsCOMArray<nsIDOMNode>& aNodes,
                                         nsIDOMNode *aListOrTable,
                                         nsCOMPtr<nsIDOMNode> *outReplaceNode);
   nsresult ReplaceOrphanedStructure( PRBool aEnd,
-                                     nsISupportsArray *aNodeArray,
-                                     nsISupportsArray *aListAndTableArray,
+                                     nsCOMArray<nsIDOMNode>& aNodeArray,
+                                     nsCOMArray<nsIDOMNode>& aListAndTableArray,
                                      PRInt32 aHighWaterMark);
-  nsISupports* GetArrayEndpoint(PRBool aEnd, nsISupportsArray *aNodeArray);
+  nsIDOMNode* GetArrayEndpoint(PRBool aEnd, nsCOMArray<nsIDOMNode>& aNodeArray);
 
   /** simple utility to handle any error with event listener allocation or registration */
   void HandleEventListenerError();
@@ -815,7 +814,7 @@ protected:
 
   // Maintain a list of associated style sheets and their urls.
   nsStringArray mStyleSheetURLs;
-  nsCOMPtr<nsISupportsArray> mStyleSheets;
+  nsCOMArray<nsICSSStyleSheet> mStyleSheets;
   PRInt32 mNumStyleSheets;
 
   // Maintain a static parser service ...

@@ -1129,18 +1129,14 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
 
   nsCOMPtr<nsIContentIterator> iter;
   nsCOMPtr<nsISupports> isupports;
-  PRUint32 nodeCount,j;
-  nsCOMPtr<nsISupportsArray> arrayOfNodes;
+  PRInt32 nodeCount,j;
+  nsCOMArray<nsIDOMCharacterData> arrayOfNodes;
   
-  // make an isupportsArray to hold a list of nodes
-  nsresult res = NS_NewISupportsArray(getter_AddRefs(arrayOfNodes));
-  if (NS_FAILED(res)) return res;
-
   // need an iterator
-  res = nsComponentManager::CreateInstance(kContentIteratorCID,
-                                        nsnull,
-                                        NS_GET_IID(nsIContentIterator), 
-                                        getter_AddRefs(iter));
+  nsresult res = nsComponentManager::CreateInstance(kContentIteratorCID,
+                                                    nsnull,
+                                                    NS_GET_IID(nsIContentIterator), 
+                                                    getter_AddRefs(iter));
   if (NS_FAILED(res)) return res;
   res = iter->Init(aRange);
   if (NS_FAILED(res)) return res;
@@ -1162,8 +1158,8 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
       if (NS_FAILED(res)) return res;
       if (isPRE)
       {
-        isupports = do_QueryInterface(node);
-        arrayOfNodes->AppendElement(isupports);
+        nsCOMPtr<nsIDOMCharacterData> data = do_QueryInterface(node);
+        arrayOfNodes.AppendObject(data);
       }
     }
     res = iter->Next();
@@ -1173,14 +1169,12 @@ nsTextEditRules::ReplaceNewlines(nsIDOMRange *aRange)
   // replace newlines with breaks.  have to do this left to right,
   // since inserting the break can split the text node, and the
   // original node becomes the righthand node.
-  res = arrayOfNodes->Count(&nodeCount);
-  if (NS_FAILED(res)) return res;
+  nodeCount = arrayOfNodes.Count();
   for (j = 0; j < nodeCount; j++)
   {
-    isupports = dont_AddRef(arrayOfNodes->ElementAt(0));
-    nsCOMPtr<nsIDOMNode> brNode, theNode( do_QueryInterface(isupports) );
-    nsCOMPtr<nsIDOMCharacterData> textNode( do_QueryInterface(theNode) );
-    arrayOfNodes->RemoveElementAt(0);
+    nsCOMPtr<nsIDOMNode> brNode;
+    nsCOMPtr<nsIDOMCharacterData> textNode = arrayOfNodes[0];
+    arrayOfNodes.RemoveObjectAt(0);
     // find the newline
     PRInt32 offset;
     nsAutoString tempString;
