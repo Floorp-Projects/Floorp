@@ -38,6 +38,7 @@ endif
 CPPSRCS		= \
 		nsAppShell.cpp \
 		nsCanvas.cpp \
+		nsClipboard.cpp \
 		nsDirPicker.cpp \
 		nsFSTree.cpp \
 		nsFileDialog.cpp \
@@ -55,7 +56,6 @@ CPPSRCS		= \
 		$(NULL)
 
 # XXX FILES temporarily removed
-#        	nsClipboard.cpp \
 #              	nsDragService.cpp \
 
 # XXX OS2TODO
