@@ -35,5 +35,5 @@ JS::StringAtom &JS::StringAtomTable::operator[](const String &s)
 
 JS::World::World()
 {
-	initKeywords(*this);
+	Token::initKeywords(*this);
 }
