@@ -4432,8 +4432,10 @@ nsCSSFrameConstructor::ConstructHTMLFrame(nsIPresShell*            aPresShell,
                                           nsStyleContext*          aStyleContext,
                                           nsFrameItems&            aFrameItems)
 {
-  // Ignore the tag if it's not HTML content
-  if (!aContent->IsContentOfType(nsIContent::eHTML)) {
+  // Ignore the tag if it's not HTML content and if it doesn't extend (via XBL)
+  // a valid HTML namespace.
+  if (!aContent->IsContentOfType(nsIContent::eHTML) &&
+      aNameSpaceID != kNameSpaceID_XHTML) {
     return NS_OK;
   }
 
