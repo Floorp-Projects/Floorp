@@ -99,7 +99,9 @@ struct ip_mreq {
 #define _PR_NO_LARGE_FILES
 
 /* IPv6 support */
+#ifdef _SOCKADDR_LEN
 #define _PR_HAVE_SOCKADDR_LEN
+#endif
 #define _PR_HAVE_GETIPNODEBYNAME
 #define _PR_HAVE_GETIPNODEBYADDR
 #define _PR_INET6_PROBE
