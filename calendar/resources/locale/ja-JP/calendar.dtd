@@ -298,9 +298,9 @@
 <!ENTITY window.title            "Mozilla Calendar">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Customize">
+<!ENTITY calendar.context.customize.label             "カスタマイズ">
 <!ENTITY calendar.context.customize.accesskey         "C">
-<!ENTITY calendar.maintoolbar.name                    "Main Toolbar">
+<!ENTITY calendar.maintoolbar.name                    "メインツールバー">
 <!ENTITY calendar.maintoolbar.accesskey               "M">
 
 <!-- Context Menu -->
