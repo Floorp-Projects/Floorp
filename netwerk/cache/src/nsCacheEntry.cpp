@@ -82,6 +82,7 @@ nsCacheEntry::SetDataSize( PRUint32   size)
 {
     mDataSize = size;
     mLastModified = ConvertPRTimeToSeconds(PR_Now());
+    MarkEntryDirty();
 }
 
 void
@@ -89,6 +90,7 @@ nsCacheEntry::SetMetaDataSize( PRUint32   size)
 {
     mMetaSize = size;
     mLastModified = ConvertPRTimeToSeconds(PR_Now());
+    MarkEntryDirty();
 }
 
 nsresult
