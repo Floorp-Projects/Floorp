@@ -35,6 +35,7 @@
 #include "nsIStreamListener.h"
 #include "nsIExternalHelperAppService.h"
 #include "nsISHistory.h"
+#include "nsIHistoryEntry.h"
 
 /*
  * PtMozilla public
@@ -57,6 +58,7 @@ extern PtWidgetClassRef_t *PtMozilla;
 #define Pt_ARG_MOZ_GET_CONTEXT			Pt_RESOURCE( 104,  10 )
 #define Pt_ARG_MOZ_UNKNOWN_RESP			Pt_RESOURCE( 104,  11 )
 #define Pt_ARG_MOZ_DOWNLOAD					Pt_RESOURCE( 104,  12 )
+#define Pt_ARG_MOZ_GET_HISTORY			Pt_RESOURCE( 104,  13 )
 
 #define Pt_CB_MOZ_PROGRESS					Pt_RESOURCE( 104,  20 )
 #define Pt_CB_MOZ_START							Pt_RESOURCE( 104,  21 )

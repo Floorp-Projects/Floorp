@@ -59,7 +59,6 @@ class CWebBrowserContainer :
 		public nsIURIContentListener,
 		public nsIDocShellTreeOwner,
 		public nsIInterfaceRequestor,
-		public nsIPrompt,
         public nsIContextMenuListener,
         public nsICommandHandler,
         public nsIPrintListener,
@@ -104,9 +103,6 @@ public:
   NS_DECL_NSICOMMANDHANDLER
 	NS_DECL_NSIPRINTLISTENER
 
-	// "Services" accessed through nsIInterfaceRequestor
-	NS_DECL_NSIPROMPT
-
 private:
 	nsCOMPtr<nsIInputStream>   	mStream;
 	nsCOMPtr<nsIStreamListener>	mStreamListener;
@@ -114,5 +110,7 @@ private:
 	PRUint32                   	mOffset;
 	PRBool                     	mDoingStream;
 };
+
+nsresult InitializeWindowCreator();
 
 #endif

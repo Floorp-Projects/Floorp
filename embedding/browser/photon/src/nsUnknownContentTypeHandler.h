@@ -7,6 +7,8 @@
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserPersist.h"
 #include "nsWeakReference.h"
+#include "nsIWindowWatcher.h"
+#include "WebBrowserContainer.h"
 
 
 static NS_DEFINE_CID( kCID, NS_IHELPERAPPLAUNCHERDIALOG_IID );
@@ -19,6 +21,8 @@ public:
     nsUnknownContentTypeHandler();
     virtual ~nsUnknownContentTypeHandler();
 
+
+
     // This class implements the nsISupports interface functions.
     NS_DECL_ISUPPORTS
 
@@ -27,6 +31,9 @@ public:
 
     // This class implements the nsIHelperAppLauncherDialog interface functions.
     NS_DECL_NSIHELPERAPPLAUNCHERDIALOG
+
+private:
+		CWebBrowserContainer* GetWebBrowser(nsIDOMWindow *aWindow);
 }; // nsUnknownContentTypeHandler
 
 

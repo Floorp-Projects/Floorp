@@ -31,6 +31,8 @@
 #include "nsIDOMHTMLHtmlElement.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMNamedNodeMap.h"
+#include "nsIWindowCreator.h"
+#include "nsIWindowWatcher.h"
 
 CWebBrowserContainer::CWebBrowserContainer(PtWidget_t *pOwner)
 {
@@ -114,7 +116,6 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
 	NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-	NS_INTERFACE_MAP_ENTRY(nsIPrompt)
     NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
     NS_INTERFACE_MAP_ENTRY(nsICommandHandler)
 		NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
@@ -126,13 +127,6 @@ NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP CWebBrowserContainer::GetInterface(const nsIID & uuid, void * *result)
 {
-	const nsIID &iid = NS_GET_IID(nsIPrompt);
-	if (memcmp(&uuid, &iid, sizeof(nsIID)) == 0)
-	{
-		*result = (nsIPrompt *) this;
-		AddRef();
-		return NS_OK;
-	}
     return QueryInterface(uuid, result);
 }
 
@@ -198,165 +192,6 @@ NS_IMETHODIMP CWebBrowserContainer::OnShowContextMenu(PRUint32 aContextFlags, ns
 
 	return NS_OK;
 	}
-
-///////////////////////////////////////////////////////////////////////////////
-// nsIPrompt
-
-/* void alert (in wstring text); */
-NS_IMETHODIMP CWebBrowserContainer::Alert(const PRUnichar* dialogTitle, const PRUnichar *text)
-{
-	nsString 			mTitle(dialogTitle);
-	nsString 			mText(text);
-
-	InvokeDialogCallback(Pt_MOZ_DIALOG_ALERT, mTitle.ToNewCString(), mText.ToNewCString(), nsnull, nsnull);
-
-    return NS_OK;
-}
-
-/* boolean confirmCheck (in wstring text, in wstring checkMsg, out boolean checkValue); */
-NS_IMETHODIMP CWebBrowserContainer::AlertCheck(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue)
-{
-	nsString 	mTitle(dialogTitle);
-	nsString 	mText(text);
-	nsString 	mMsg(checkMsg);
-	int 		ret;
-
-	InvokeDialogCallback(Pt_MOZ_DIALOG_ALERT, mTitle.ToNewCString(), mText.ToNewCString(), \
-			mMsg.ToNewCString(), &ret);
-	*checkValue = ret;
-
-    return NS_OK;
-}
-
-
-/* boolean confirm (in wstring text); */
-NS_IMETHODIMP CWebBrowserContainer::Confirm(const PRUnichar* dialogTitle, const PRUnichar *text, PRBool *_retval)
-{
-	nsString 			mTitle(dialogTitle);
-	nsString 			mText(text);
-
-	if (InvokeDialogCallback(Pt_MOZ_DIALOG_CONFIRM, mTitle.ToNewCString(), mText.ToNewCString(), nsnull, nsnull) == Pt_CONTINUE)
-		*_retval = PR_TRUE;
-	else
-		*_retval = PR_FALSE;
-
-    return NS_OK;
-}
-
-/* boolean confirmCheck (in wstring text, in wstring checkMsg, out boolean checkValue); */
-NS_IMETHODIMP CWebBrowserContainer::ConfirmCheck(const PRUnichar* dialogTitle, const PRUnichar *text, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
-{
-	nsString 	mTitle(dialogTitle);
-	nsString 	mText(text);
-	nsString 	mMsg(checkMsg);
-	int 		ret;
-
-
-	if (InvokeDialogCallback(Pt_MOZ_DIALOG_CONFIRM, mTitle.ToNewCString(), mText.ToNewCString(), \
-			mMsg.ToNewCString(), &ret) == Pt_CONTINUE)
-		*_retval = PR_TRUE;
-	else
-		*_retval = PR_FALSE;
-	*checkValue = ret;
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserContainer::ConfirmEx(const PRUnichar *dialogTitle, const PRUnichar *text, PRUint32 buttonFlags, const PRUnichar *button0Title, const PRUnichar *button1Title,
-								const PRUnichar *button2Title, const PRUnichar *checkMsg, PRBool *checkValue, PRInt32 *buttonPressed) {
-	return NS_ERROR_NOT_IMPLEMENTED;;
-	}
-
-NS_IMETHODIMP CWebBrowserContainer::Prompt(const PRUnichar *dialogTitle, const PRUnichar *text, PRUnichar **value, const PRUnichar *checkMsg,
-		PRBool *checkValue, PRBool *_retval )
-{
-	PtMozillaWidget_t 	*moz = (PtMozillaWidget_t *) m_pOwner;
-	PtCallbackList_t 	*cb;
-	PtCallbackInfo_t 	cbinfo;
-	PtMozillaPromptCb_t	pr;
-	nsString 	mTitle(dialogTitle);
-	nsString 	mText(text);
-	nsString 	mDflt(checkMsg);
-
-	if (!moz->prompt_cb)
-	    return NS_OK;
-
-	cb = moz->prompt_cb;
-	memset(&cbinfo, 0, sizeof(cbinfo));
-	cbinfo.reason = Pt_CB_MOZ_PROMPT;
-	cbinfo.cbdata = &pr;
-
-	memset(&pr, 0, sizeof(PtMozillaPromptCb_t));
-	pr.title = mTitle.ToNewCString();
-	pr.text = mText.ToNewCString();
-	pr.dflt_resp = mDflt.ToNewCString();
-
-	if (PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo) == Pt_END)
-		*_retval = PR_FALSE;
-	else
-	{
-		nsCString	mResp(pr.response);
-		*value = mResp.ToNewUnicode();
-		*_retval = PR_TRUE;
-	}
-    
-    return NS_OK;
-}
-
-/* boolean promptUsernameAndPassword (in wstring text, out wstring user, out wstring pwd); */
-NS_IMETHODIMP CWebBrowserContainer::PromptUsernameAndPassword(
-		const PRUnichar *dialogTitle,
-		const PRUnichar *text,
-		PRUnichar **username,
-		PRUnichar **password, const PRUnichar *checkMsg, PRBool *checkValue, PRBool *_retval)
-{
-	PtMozillaWidget_t 			*moz = (PtMozillaWidget_t *) m_pOwner;
-	PtCallbackList_t 			*cb;
-	PtCallbackInfo_t 			cbinfo;
-	PtMozillaAuthenticateCb_t   auth;
-	nsString 					mTitle(dialogTitle);
-	nsString 					mRealm(checkMsg);
-
-	if (!moz->auth_cb)
-	    return NS_OK;
-
-	cb = moz->auth_cb;
-	memset(&cbinfo, 0, sizeof(cbinfo));
-	cbinfo.reason = Pt_CB_MOZ_AUTHENTICATE;
-	cbinfo.cbdata = &auth;
-
-	memset(&auth, 0, sizeof(PtMozillaAuthenticateCb_t));
-	auth.title = mTitle.ToNewCString();
-	auth.realm = mRealm.ToNewCString();
-
-    if (PtInvokeCallbackList(cb, (PtWidget_t *)moz, &cbinfo) == Pt_CONTINUE)
-    {
-		nsCString	mUser(auth.user);
-		nsCString	mPass(auth.pass);
-		*username = mUser.ToNewUnicode();
-		*password = mPass.ToNewUnicode();
-    	*_retval = PR_TRUE;
-    }
-    else
-    	*_retval = PR_FALSE;
-
-    return NS_OK;
-}
-
-/* boolean promptPassword (in wstring text, in wstring title, out wstring pwd); */
-NS_IMETHODIMP CWebBrowserContainer::PromptPassword(
-	const PRUnichar *dialogTitle, const PRUnichar *text,
-	PRUnichar **password, const PRUnichar *checkMsg,
-	PRBool *checkValue, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-/* boolean select (in wstring inDialogTitle, in wstring inMsg, in PRUint32 inCount, [array, size_is (inCount)] in wstring inList, out long outSelection); */
-NS_IMETHODIMP CWebBrowserContainer::Select(const PRUnichar *inDialogTitle, const PRUnichar *inMsg, PRUint32 inCount, const PRUnichar **inList, PRInt32 *outSelection, PRBool *_retval)
-{
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // nsIWebProgressListener
@@ -1018,7 +853,9 @@ NS_IMETHODIMP CWebBrowserContainer::SetTitle(const PRUnichar * aTitle) {
 /* [noscript] readonly attribute voidPtr siteWindow; */
 NS_IMETHODIMP CWebBrowserContainer::GetSiteWindow(void * *aSiteWindow)
 {
-	return NS_ERROR_NOT_IMPLEMENTED;
+
+	*aSiteWindow = this;
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1266,3 +1103,59 @@ NS_IMETHODIMP CWebBrowserContainer::FocusNextElement() {
 NS_IMETHODIMP CWebBrowserContainer::FocusPrevElement() {
   return NS_ERROR_NOT_IMPLEMENTED;
   }
+
+
+
+// ---------------------------------------------------------------------------
+//	Window Creator
+// ---------------------------------------------------------------------------
+
+class CWindowCreator : public nsIWindowCreator
+{
+  public:
+                         CWindowCreator();
+    virtual             ~CWindowCreator();
+    
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIWINDOWCREATOR 
+};
+
+NS_IMPL_ISUPPORTS1(CWindowCreator, nsIWindowCreator);
+
+CWindowCreator::CWindowCreator()
+{
+    NS_INIT_ISUPPORTS();
+}
+
+CWindowCreator::~CWindowCreator()
+{
+}
+
+NS_IMETHODIMP CWindowCreator::CreateChromeWindow(nsIWebBrowserChrome *aParent,
+                                              PRUint32 aChromeFlags,
+                                              nsIWebBrowserChrome **_retval)
+{
+	return NS_OK;
+}
+
+
+/*
+   InitializeWindowCreator creates and hands off an object with a callback
+   to a window creation function. This will be used by Gecko C++ code
+   (never JS) to create new windows when no previous window is handy
+   to begin with. This is done in a few exceptional cases, like PSM code.
+   Failure to set this callback will only disable the ability to create
+   new windows under these circumstances.
+*/
+
+nsresult InitializeWindowCreator()
+{
+	// Create a CWindowCreator and give it to the WindowWatcher service
+	// The WindowWatcher service will own it so we don't keep a ref.
+	CWindowCreator *windowCreator = new CWindowCreator;
+	if (!windowCreator) return NS_ERROR_FAILURE;
+	
+	nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+	if (!wwatch) return NS_ERROR_FAILURE;
+	return wwatch->SetWindowCreator(windowCreator);
+}
