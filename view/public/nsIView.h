@@ -126,9 +126,10 @@ public:
    * @param aBackstop if we will need to do back to front
    *        painting, this is the view that, once rendered
    *        ends the back to front pass.
+   * @return PR_TRUE if the entire clip region has been eliminated, else PR_FALSE
    */
-  virtual void Paint(nsIRenderingContext& rc, const nsRect& rect,
-                     PRUint32 aPaintFlags, nsIView *aBackstop = nsnull) = 0;
+  virtual PRBool Paint(nsIRenderingContext& rc, const nsRect& rect,
+                       PRUint32 aPaintFlags, nsIView *aBackstop = nsnull) = 0;
 
   /**
    * Called to indicate that the specified region of the view
@@ -137,8 +138,9 @@ public:
    * @param rc rendering context to paint into
    * @param region damage area
    * @param aPaintFlags see nsIView.h for flag definitions
+   * @return PR_TRUE if the entire clip region has been eliminated, else PR_FALSE
    */
-  virtual void Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 aPaintFlags) = 0;
+  virtual PRBool Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 aPaintFlags) = 0;
   
   /**
    * Called to indicate that the specified event should be handled

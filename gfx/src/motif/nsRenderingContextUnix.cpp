@@ -111,8 +111,9 @@ PRBool nsRenderingContextUnix :: IsVisibleRect(const nsRect& aRect)
   return PR_TRUE;
 }
 
-void nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
+PRBool nsRenderingContextUnix :: SetClipRect(const nsRect& aRect, nsClipCombine aCombine)
 {
+  return PR_FALSE;
 }
 
 PRBool nsRenderingContextUnix :: GetClipRect(nsRect &aRect)
@@ -120,9 +121,10 @@ PRBool nsRenderingContextUnix :: GetClipRect(nsRect &aRect)
   return PR_FALSE;
 }
 
-void nsRenderingContextUnix :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
+PRBool nsRenderingContextUnix :: SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine)
 {
   //XXX wow, needs to do something.
+  return PR_FALSE;
 }
 
 void nsRenderingContextUnix :: GetClipRegion(nsIRegion **aRegion)

@@ -373,10 +373,11 @@ nsIWidget * nsView :: GetWidget()
   return mWindow;
 }
 
-void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
-                     PRUint32 aPaintFlags, nsIView *aBackstop)
+PRBool nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
+                       PRUint32 aPaintFlags, nsIView *aBackstop)
 {
   nsIView *pRoot = mViewManager->GetRootView();
+  PRBool  clipres = PR_FALSE;
 
   rc.PushState();
 
@@ -389,52 +390,62 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
     crect.width = mClip.mRight - mClip.mLeft;
     crect.height = mClip.mBottom - mClip.mTop;
 
-    rc.SetClipRect(crect, nsClipCombine_kIntersect);
+    clipres = rc.SetClipRect(crect, nsClipCombine_kIntersect);
   }
   else if (this != pRoot)
-    rc.SetClipRect(mBounds, nsClipCombine_kIntersect);
+    clipres = rc.SetClipRect(mBounds, nsClipCombine_kIntersect);
 
-  rc.Translate(mBounds.x, mBounds.y);
-
-  //XXX maybe we should set this before we set the clip? MMP
-
-  if (nsnull != mXForm)
+  if (clipres == PR_FALSE)
   {
-    nsTransform2D *pXForm = rc.GetCurrentTransform();
-    pXForm->Concatenate(mXForm);
-  }
+    rc.Translate(mBounds.x, mBounds.y);
 
-  PRInt32 numkids = GetChildCount();
+    //XXX maybe we should set this before we set the clip? MMP
 
-  for (PRInt32 cnt = 0; cnt < numkids; cnt++)
-  {
-    nsIView *kid = GetChild(cnt);
-
-    if (nsnull != kid)
+    if (nsnull != mXForm)
     {
-      nsRect kidRect;
-      kid->GetBounds(kidRect);
-      nsRect damageArea;
-      PRBool overlap = damageArea.IntersectRect(rect, kidRect);
+      nsTransform2D *pXForm = rc.GetCurrentTransform();
+      pXForm->Concatenate(mXForm);
+    }
 
-      if (overlap == PR_TRUE)
+    PRInt32 numkids = GetChildCount();
+
+    for (PRInt32 cnt = 0; cnt < numkids; cnt++)
+    {
+      nsIView *kid = GetChild(cnt);
+
+      if (nsnull != kid)
       {
-        // Translate damage area into kid's coordinate system
-        nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
-                             damageArea.width, damageArea.height);
-        kid->Paint(rc, kidDamageArea, aPaintFlags);
+        nsRect kidRect;
+        kid->GetBounds(kidRect);
+        nsRect damageArea;
+        PRBool overlap = damageArea.IntersectRect(rect, kidRect);
+
+        if (overlap == PR_TRUE)
+        {
+          // Translate damage area into kid's coordinate system
+          nsRect kidDamageArea(damageArea.x - kidRect.x, damageArea.y - kidRect.y,
+                               damageArea.width, damageArea.height);
+          clipres = kid->Paint(rc, kidDamageArea, aPaintFlags);
+
+          if (clipres == PR_TRUE)
+            break;
+        }
       }
+    }
+
+    if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow) && (nsnull != mFrame))
+    {
+      nsIPresContext  *cx = mViewManager->GetPresContext();
+      rc.PushState();
+      mFrame->Paint(*cx, rc, rect);
+      rc.PopState();
+      NS_RELEASE(cx);
     }
   }
 
-  if ((mVis == nsViewVisibility_kShow) && (nsnull != mFrame))
-  {
-    nsIPresContext  *cx = mViewManager->GetPresContext();
-    rc.PushState();
-    mFrame->Paint(*cx, rc, rect);
-    rc.PopState();
-    NS_RELEASE(cx);
-  }
+  //XXX would be nice if we could have a version of pop that just removes the
+  //state from the stack but doesn't change the state of the underlying graphics
+  //context. MMP
 
   rc.PopState();
 
@@ -442,7 +453,7 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
   //paint process. only do this if this view is actually
   //visible and if there is no widget (like a scrollbar) here.
 
-  if ((mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
+  if ((clipres == PR_FALSE) && (mVis == nsViewVisibility_kShow) && (nsnull == mWindow))
   {
     if ((mClip.mLeft != mClip.mRight) && (mClip.mTop != mClip.mBottom))
     {
@@ -453,21 +464,24 @@ void nsView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
       crect.width = mClip.mRight - mClip.mLeft;
       crect.height = mClip.mBottom - mClip.mTop;
 
-      rc.SetClipRect(crect, nsClipCombine_kSubtract);
+      clipres = rc.SetClipRect(crect, nsClipCombine_kSubtract);
     }
     else if (this != pRoot)
-      rc.SetClipRect(mBounds, nsClipCombine_kSubtract);
+      clipres = rc.SetClipRect(mBounds, nsClipCombine_kSubtract);
   }
 
   NS_RELEASE(pRoot);
+
+  return clipres;
 }
 
-void nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 aPaintFlags)
+PRBool nsView :: Paint(nsIRenderingContext& rc, const nsIRegion& region, PRUint32 aPaintFlags)
 {
   // XXX apply region to rc
   // XXX get bounding rect from region
   //if (nsnull != mFrame)
   //  mFrame->Paint(rc, rect, aPaintFlags);
+  return PR_FALSE;
 }
 
 nsEventStatus nsView :: HandleEvent(nsGUIEvent *event, PRUint32 aEventFlags)
