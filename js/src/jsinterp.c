@@ -530,9 +530,9 @@ SetFunctionSlot(JSContext *cx, JSObject *obj, JSPropertyOp setter, jsid id,
     for (sprop = SCOPE_LAST_PROP(scope); sprop; sprop = sprop->parent) {
         if (sprop->setter == setter && (uintN) sprop->shortid == slot) {
             if (sprop->attrs & JSPROP_SHARED) {
-                sprop = js_ChangeScopePropertyAttrs(cx, scope, sprop,
-                                                    0, ~JSPROP_SHARED,
-                                                    sprop->getter, setter);
+                sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop,
+                                                     0, ~JSPROP_SHARED,
+                                                     sprop->getter, setter);
                 if (!sprop) {
                     ok = JS_FALSE;
                 } else {
@@ -544,7 +544,7 @@ SetFunctionSlot(JSContext *cx, JSObject *obj, JSPropertyOp setter, jsid id,
             break;
         }
     }
-    JS_UNLOCK_SCOPE(cx, scope);
+    JS_UNLOCK_OBJ(cx, obj);
     return ok;
 }
 
