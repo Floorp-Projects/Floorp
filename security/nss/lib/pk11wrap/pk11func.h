@@ -617,7 +617,6 @@ PK11_SaveContextAlloc(PK11Context *cx,
 SECStatus PK11_RestoreContext(PK11Context *cx,unsigned char *save,int len);
 SECStatus PK11_GenerateFortezzaIV(PK11SymKey *symKey,unsigned char *iv,int len);
 SECStatus PK11_ReadSlotCerts(PK11SlotInfo *slot);
-void PK11_FreeSlotCerts(PK11SlotInfo *slot);
 void PK11_SetFortezzaHack(PK11SymKey *symKey) ;
 
 

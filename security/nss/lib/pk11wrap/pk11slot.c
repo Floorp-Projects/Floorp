@@ -2119,7 +2119,6 @@ pk11_IsPresentCertLoad(PK11SlotInfo *slot, PRBool loadCerts)
 	if (slot->session != CK_INVALID_SESSION) {
 	    PK11_GETTAB(slot)->C_CloseSession(slot->session);
 	    slot->session = CK_INVALID_SESSION;
-	    /* force certs to be freed */
 	}
         if (!slot->isThreadSafe) PK11_ExitSlotMonitor(slot);
 	return PR_FALSE;
