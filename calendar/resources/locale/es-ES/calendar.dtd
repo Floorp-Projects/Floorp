@@ -149,7 +149,7 @@
 <!ENTITY newtodo.duedate.warning    "La fecha de inicio es posterior a la de vencimiento.">
 <!ENTITY newtodo.repeatstart.warning "Fecha de inicio necesaria para recurrencia.">
 
-<!ENTITY calendar.confirm.deleteallevents  "Are you sure you want to delete all the selected events?" >
+<!ENTITY calendar.confirm.deleteallevents  "¿Está seguro de que quiere borrar todos los eventos seleccionados?" >
 <!ENTITY calendar.confirm.deleteevent "¿Está seguro de que quiere borrar este evento titulado: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "¿Está seguro de que quiere borrar este evento sin título?" >
 
@@ -184,7 +184,7 @@
 <!ENTITY calendar.weekview.accesskey           "s" >
 <!ENTITY calendar.flat.topbar.monthview        "Ver mes" >
 <!ENTITY calendar.monthview.accesskey          "M" >
-<!ENTITY calendar.flat.topbar.multiweekview    "Multisemana" >
+<!ENTITY calendar.flat.topbar.multiweekview    "Vista multisemana" >
 <!ENTITY calendar.multiweekview.accesskey      "u" >
 <!ENTITY calendar.dayView.key                  "1" >
 <!ENTITY calendar.weekView.key                 "2" >
@@ -277,10 +277,10 @@
 <!ENTITY calendar.subscribe.button.label           "Suscribir" >
 <!ENTITY calendar.publish.button.label             "Publicar" >
 
-<!ENTITY calendar.localreload.button.label   "Local Reload" >
-<!ENTITY calendar.localreload.button.tooltip  "Reload all local calendars" >
-<!ENTITY calendar.remotereload.button.label   "Reload" >
-<!ENTITY calendar.remotereload.button.tooltip   "Reload all remote calendars" >
+<!ENTITY calendar.localreload.button.label   "Recarga local" >
+<!ENTITY calendar.localreload.button.tooltip  "Recargar todos los calendarios locales" >
+<!ENTITY calendar.remotereload.button.label   "Recargar" >
+<!ENTITY calendar.remotereload.button.tooltip   "Recargar todos los calendarios remotos" >
 
 <!ENTITY calendar.dayview.button.label          "Ver día" >
 <!ENTITY calendar.weekview.button.label         "Ver semana" >
@@ -327,21 +327,21 @@
 <!ENTITY window.title            "Calendario de Mozilla">
 
 <!-- customizable toolbars -->
-<!ENTITY calendar.context.customize.label             "Personalizar">
+<!ENTITY calendar.context.customize.label             "Personalizar...">
 <!ENTITY calendar.context.customize.accesskey         "P">
-<!ENTITY calendar.menu.customize.label                "Personalizar barras de herramientas">
+<!ENTITY calendar.menu.customize.label                "Personalizar barra de herramientas...">
 <!ENTITY calendar.menu.customize.accesskey            "P">
 <!ENTITY calendar.maintoolbar.name                    "Barra de herramientas principal">
 <!ENTITY calendar.maintoolbar.accesskey               "M">
 
 <!-- Context Menu -->
-<!ENTITY calendar.context.newevent.label              "Nuevo evento">
+<!ENTITY calendar.context.newevent.label              "Nuevo evento...">
 <!ENTITY calendar.context.newevent.accesskey          "N">
-<!ENTITY calendar.context.newtodo.label               "Nueva tarea">
+<!ENTITY calendar.context.newtodo.label               "Nueva tarea...">
 <!ENTITY calendar.context.newtodo.accesskey           "r">
-<!ENTITY calendar.context.modifyevent.label           "Editar evento seleccionado">
+<!ENTITY calendar.context.modifyevent.label           "Editar evento seleccionado...">
 <!ENTITY calendar.context.modifyevent.accesskey       "E">
-<!ENTITY calendar.context.modifytask.label            "Editar tarea">
+<!ENTITY calendar.context.modifytask.label            "Editar tarea...">
 <!ENTITY calendar.context.modifytask.accesskey        "E">
 <!ENTITY calendar.context.deleteevent.label           "Borrar evento seleccioando">
 <!ENTITY calendar.context.deleteevent.accesskey       "l">
@@ -363,13 +363,13 @@
 <!ENTITY calendar.context.weekview.accesskey          "s">
 <!ENTITY calendar.context.monthview.label             "Cambiar a ver mes">
 <!ENTITY calendar.context.monthview.accesskey         "M">
-<!ENTITY calendar.context.multiweekview.label        "Cambiar a ver multisemana">
-<!ENTITY calendar.context.multiweekview.accesskey    "u">
+<!ENTITY calendar.context.multiweekview.label         "Cambiar a ver multisemana">
+<!ENTITY calendar.context.multiweekview.accesskey     "u">
 <!ENTITY calendar.context.reload.label                "Recargar">
 <!ENTITY calendar.context.reload.accesskey            "R">
-<!ENTITY calendar.context.emailevent.label            "Enviar eventos seleccionados">
+<!ENTITY calendar.context.emailevent.label            "Enviar eventos seleccionados...">
 <!ENTITY calendar.context.emailevent.accesskey        "i">
-<!ENTITY calendar.context.emailtask.label             "Enviar tarea">
+<!ENTITY calendar.context.emailtask.label             "Enviar tarea...">
 <!ENTITY calendar.context.emailtask.accesskey         "i">
 
 <!-- Task Context Menu -->
@@ -398,8 +398,8 @@
 <!ENTITY calendar.context.editserver.accesskey         "E">
 <!ENTITY calendar.context.deleteserver.label           "Borrar calendario">
 <!ENTITY calendar.context.deleteserver.accesskey       "D">
-<!ENTITY calendar.context.refreshserver.label          "Refrescar calendarios remotos">
-<!ENTITY calendar.context.refreshserver.accesskey      "R">
+<!ENTITY calendar.context.reloadserver.label           "Recargar calendarios remotos">
+<!ENTITY calendar.context.reloadserver.accesskey       "R">
 <!ENTITY calendar.context.publish.label                "Publicar todo el calendario">
 <!ENTITY calendar.context.publish.accesskey            "P">
 
@@ -450,7 +450,7 @@
 <!-- Calendar Wizard Dialog -->
 <!ENTITY calendar.wizard.import.label              "Importar: Importar eventos de un archivo local en un calendario existente.">
 <!ENTITY calendar.wizard.export.label              "Exportar: Exportar eventos de un calendario existente a un archivo local.">
-<!ENTITY calendar.wizard.subscribe.label           "Subscribir: Suscribirse a un archivo de calendario en una máquina remota (p. ej. Internet)">
+<!ENTITY calendar.wizard.subscribe.label           "Subscribir: suscribirse a un archivo de calendario en una máquina remota (p. ej. Internet)">
 <!ENTITY calendar.wizard.publish.label             "Publicar: Publicar eventos en una máquina remota (p. ej. Internet) para que otros se suscriban.">
 
 <!-- Calendar Import Outlook CSV Dialog -->

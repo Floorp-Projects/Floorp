@@ -78,20 +78,20 @@
 <!ENTITY calendar.pagesetup.label               "Configurar página...">
 <!ENTITY calendar.pagesetup.accesskey           "u">
 
-<!ENTITY calendar.import.label                  "Importar de archivo...">
+<!ENTITY calendar.import.label                  "Importar...">
 <!ENTITY calendar.import.key                    "I">
 <!ENTITY calendar.import.accesskey              "I">
 
-<!ENTITY calendar.wizard.label                  "Cargar asistente">
+<!ENTITY calendar.wizard.label                  "Cargar asistente…">
 <!ENTITY calendar.wizard.accesskey              "W">
 
 <!ENTITY calendar.export.label                  "Exportar eventos seleccionados...">
 <!ENTITY calendar.export.accesskey              "E">
 
-<!ENTITY calendar.subscribe.label               "Suscribir a calendario remoto...">
+<!ENTITY calendar.subscribe.label               "Suscribirse a calendario remoto...">
 <!ENTITY calendar.subscribe.accesskey           "R">
 
-<!ENTITY calendar.reloadserver.label            "Reload Remote Calendars">
+<!ENTITY calendar.reloadserver.label            "Recargar calendarios remotos">
 <!ENTITY calendar.reloadserver.key              "R">
 <!ENTITY calendar.reloadserver.accesskey        "R">
 
