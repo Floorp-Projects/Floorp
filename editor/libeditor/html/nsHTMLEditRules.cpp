@@ -4336,7 +4336,7 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
   res = mHTMLEditor->GetRootElement(getter_AddRefs(rootElement));
   
   // find previous visible thingy before start of selection
-  if (!(selStartNode!=selCommon || selStartNode!=rootElement))
+  if ((selStartNode!=selCommon) && (selStartNode!=rootElement))
   {
     while (stillLooking)
     {
@@ -4367,7 +4367,7 @@ nsHTMLEditRules::ExpandSelectionForDeletion(nsISelection *aSelection)
   
   stillLooking = PR_TRUE;
   // find next visible thingy after end of selection
-  if (!(selStartNode!=selCommon || selStartNode!=rootElement))
+  if ((selEndNode!=selCommon) && (selEndNode!=rootElement))
   {
     while (stillLooking)
     {
