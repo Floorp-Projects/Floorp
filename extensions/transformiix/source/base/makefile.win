@@ -48,6 +48,7 @@ CPP_OBJS=                                       \
 	.\$(OBJDIR)\Tokenizer.obj		\
 	.\$(OBJDIR)\txAtoms.obj			\
 	.\$(OBJDIR)\txExpandedNameMap.obj	\
+	.\$(OBJDIR)\txURIUtils.obj	\
 	$(NULL)
 
 !ifdef TX_EXE
