@@ -44,13 +44,13 @@
 //
 
 nsresult
-NS_NewMathMLmpaddedFrame(nsIFrame** aNewFrame)
+NS_NewMathMLmpaddedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMathMLmpaddedFrame* it = new nsMathMLmpaddedFrame;
+  nsMathMLmpaddedFrame* it = new (aPresShell) nsMathMLmpaddedFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

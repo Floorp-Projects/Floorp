@@ -45,13 +45,13 @@
 //
 
 nsresult
-NS_NewMathMLmsqrtFrame(nsIFrame** aNewFrame)
+NS_NewMathMLmsqrtFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMathMLmsqrtFrame* it = new nsMathMLmsqrtFrame;
+  nsMathMLmsqrtFrame* it = new (aPresShell) nsMathMLmsqrtFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -63,10 +63,8 @@ nsMathMLmsqrtFrame::nsMathMLmsqrtFrame() :
   mSqrChar(),
   mBarChar()
 {
-   nsAutoString sqr(PRUnichar(0x221A)),
-                bar(PRUnichar(0xF8E5));
-   mSqrChar.SetData(sqr);
-   mBarChar.SetData(bar);
+  mSqrChar.SetEnum(eMathMLChar_Radical);
+  mBarChar.SetEnum(eMathMLChar_RadicalBar);
 }
 
 nsMathMLmsqrtFrame::~nsMathMLmsqrtFrame()
@@ -83,9 +81,8 @@ nsMathMLmsqrtFrame::Init(nsIPresContext*  aPresContext,
   nsresult rv = NS_OK;
   rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent,
                                     aContext, aPrevInFlow);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
+
+  mEmbellish.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
 
   // TODO: other attributes...
   return rv;
@@ -146,6 +143,10 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   fm->GetMaxAscent(fontAscent);
   fm->GetMaxDescent(fontDescent);
 
+  float p2t;
+  aPresContext->GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
+
   nsBoundingMetrics bmSqr, bmBar;
   nscoord dx, dy;
 
@@ -158,10 +159,10 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord thickspace = bmBar.ascent - bmBar.descent; // height of the overline bar
 
   // Stretch the sqrt symbol to the appropriate height if it is not big enough.
-  nsCharMetrics contSize(aDesiredSize);
-  nsCharMetrics desSize(fontDescent, fontAscent, charWidth, fontAscent + fontDescent);
+  nsStretchMetrics contSize(aDesiredSize);
+  nsStretchMetrics desSize(fontDescent, fontAscent, charWidth, fontAscent + fontDescent);
   mSqrChar.Stretch(aPresContext, renderingContext, mStyleContext,
-                    NS_STRETCH_DIRECTION_VERTICAL, contSize, desSize);
+                   NS_STRETCH_DIRECTION_VERTICAL, contSize, desSize);
   charWidth = desSize.width;
   if (aDesiredSize.ascent < desSize.ascent) {
     aDesiredSize.ascent = desSize.ascent;
@@ -172,31 +173,32 @@ nsMathMLmsqrtFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
 
   dx = 0;
-  dy = bmSqr.ascent - fontAscent;
+  dy =  2*onePixel + (bmSqr.ascent - fontAscent);
   mSqrChar.SetRect(nsRect(dx, dy, desSize.width, aDesiredSize.height));
   dx = bmSqr.rightBearing;
 
   // Stretch the overline bar to the appropriate width if it is not big enough.
-  contSize = nsCharMetrics(aDesiredSize);
-  desSize = nsCharMetrics(fontDescent, fontAscent, bmBar.rightBearing-bmBar.leftBearing, fontAscent + fontDescent);
-  nsCharMetrics oldSize = desSize;
+
+  contSize = nsStretchMetrics(aDesiredSize);
+  desSize = nsStretchMetrics(fontDescent, fontAscent, bmBar.rightBearing-bmBar.leftBearing, fontAscent + fontDescent);
+  nsStretchMetrics oldSize = desSize;
   mBarChar.Stretch(aPresContext, renderingContext, mStyleContext,
                    NS_STRETCH_DIRECTION_HORIZONTAL, contSize, desSize);
 
-  dy = bmBar.ascent - fontAscent;
+  dy = 2*onePixel + (bmBar.ascent - fontAscent);
   if (oldSize == desSize) { // hasn't changed size! Char will be painted as a normal char
     dx -= bmBar.leftBearing; // adjust so that it coincides with the sqrt char
-  } 
-  dy = bmBar.ascent - fontAscent;
-  mBarChar.SetRect(nsRect(dx, dy, desSize.width, thickspace));
+    // XXX need also to check when a single glyph wil be used
+  }
+  mBarChar.SetRect(nsRect(dx, dy, desSize.width, 2*onePixel + thickspace));
 
   // Update the size of the container
   aDesiredSize.width += charWidth;
-  aDesiredSize.ascent += thickspace;
+  aDesiredSize.ascent += 2*onePixel + thickspace;
   aDesiredSize.height = aDesiredSize.ascent + aDesiredSize.descent;
 
   //////////////////
-  // Place Children now by setting the origin of each child.
+  // Adjust the origins to leave room for the sqrt char and the overline bar
 
   nsRect rect;
   dx = charWidth;

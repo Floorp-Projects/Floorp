@@ -96,7 +96,7 @@ pc  picas (1 pica = 12 points)
 
 class nsMathMLmfracFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmfracFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,

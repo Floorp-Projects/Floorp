@@ -44,13 +44,13 @@
 //
 
 nsresult
-NS_NewMathMLmfracFrame(nsIFrame** aNewFrame)
+NS_NewMathMLmfracFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMathMLmfracFrame* it = new nsMathMLmfracFrame;
+  nsMathMLmfracFrame* it = new (aPresShell) nsMathMLmfracFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -85,7 +85,7 @@ nsMathMLmfracFrame::Init(nsIPresContext*  aPresContext,
   
   // see if the linethickness attribute is there  
   if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttribute(kNameSpaceID_None, 
-                   nsMathMLAtoms::linethickness, value))
+                   nsMathMLAtoms::linethickness_, value))
   {
     if (value == "thin")
       aLineThickness = THIN_FRACTION_LINE_THICKNESS;
@@ -237,9 +237,15 @@ nsMathMLmfracFrame::Reflow(nsIPresContext*          aPresContext,
   rect[1].x = (aDesiredSize.width - rect[1].width) / 2;
   rect[0].y = 0;
   rect[1].y = aDesiredSize.height - rect[1].height;
-  
-  child[0]->SetRect(aPresContext, rect[0]);
-  child[1]->SetRect(aPresContext, rect[1]); 
+
+  // child[0]->SetRect(aPresContext, rect[0]);
+  // child[1]->SetRect(aPresContext, rect[1]);
+  nsHTMLReflowMetrics childSize(nsnull);
+  for (PRInt32 i=0; i<count; i++) {
+    childSize.width = rect[i].width;
+    childSize.height = rect[i].height;
+    FinishReflowChild(child[i], aPresContext, childSize, rect[i].x, rect[i].y, 0);
+  }
   SetLineOrigin(nsPoint(0,rect[0].height)); // position the fraction bar  
 
   if (nsnull != aDesiredSize.maxElementSize) {

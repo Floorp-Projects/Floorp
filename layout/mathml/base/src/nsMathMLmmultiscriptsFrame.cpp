@@ -44,13 +44,13 @@
 //
 
 nsresult
-NS_NewMathMLmmultiscriptsFrame(nsIFrame** aNewFrame)
+NS_NewMathMLmmultiscriptsFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMathMLmmultiscriptsFrame* it = new nsMathMLmmultiscriptsFrame;
+  nsMathMLmmultiscriptsFrame* it = new (aPresShell) nsMathMLmmultiscriptsFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -67,19 +67,12 @@ nsMathMLmmultiscriptsFrame::~nsMathMLmmultiscriptsFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext*          aPresContext,
-                                   nsHTMLReflowMetrics&     aDesiredSize,
-                                   const nsHTMLReflowState& aReflowState,
-                                   nsReflowStatus&          aStatus)
+nsMathMLmmultiscriptsFrame::Place(nsIPresContext*      aPresContext,
+                                  nsIRenderingContext& aRenderingContext,
+                                  PRBool               aPlaceOrigin,
+                                  nsHTMLReflowMetrics& aDesiredSize)
 {
-  nsresult rv = NS_OK;
-  nsReflowStatus childStatus;
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize);
-  nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
-
-  //////////////////
-  // Reflow Children
-  
+  nsresult rv;
   nsIFrame* mprescriptsFrame = nsnull; // frame of <mprescripts/>, if there.  
   PRBool isSubscript = PR_FALSE;
   nscoord ascent, descent, width, height;
@@ -88,71 +81,44 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext*          aPresContext,
 
   nsIFrame* baseFrame = nsnull;
   nsIFrame* childFrame = mFrames.FirstChild();
-  while (nsnull != childFrame) 
-  {
-    //////////////
-    // WHITESPACE: don't forget that whitespace doesn't count in MathML!
-    if (IsOnlyWhitespace(childFrame)) {
-      ReflowEmptyChild(aPresContext, childFrame);
-    }
-    else {
+  nsRect childRect;
+  while (childFrame)  {
+    if (!IsOnlyWhitespace(childFrame)) {
+
       nsCOMPtr<nsIContent> childContent;
       nsCOMPtr<nsIAtom> childTag;
       childFrame->GetContent(getter_AddRefs(childContent));
       childContent->GetTag(*getter_AddRefs(childTag));
 
-      if (childTag.get() == nsMathMLAtoms::mprescripts) {
-//        NS_ASSERTION(mprescriptsFrame == nsnull,"duplicate <mprescripts/>");
-//printf("mprescripts Found ...\n");  // should ignore?
+      if (childTag.get() == nsMathMLAtoms::mprescripts_) {
         mprescriptsFrame = childFrame;
       }
-      else if (childTag.get() == nsMathMLAtoms::none) {
-        childDesiredSize.height = 0;
-        childDesiredSize.width = 0;
-        childDesiredSize.ascent = 0;
-        childDesiredSize.descent = 0;
-      }
-      else {
-//printf("child count: %d...\n", count);
-        nsHTMLReflowState childReflowState(aPresContext, aReflowState, 
-                                           childFrame, availSize);
-        rv = ReflowChild(childFrame, aPresContext, childDesiredSize, 
-                         childReflowState, childStatus);
-        NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
-        if (NS_FAILED(rv)) {
-          return rv;
-        }
-
+      else if (childTag.get() != nsMathMLAtoms::none_) {
+        childFrame->GetRect(childRect);
         if (0 == count) {
           baseFrame = childFrame;
-          ascent = childDesiredSize.ascent;
-          descent = childDesiredSize.descent;
-          height = childDesiredSize.height;
-          subsupWidth = childDesiredSize.width;
+          descent = childRect.x;
+          ascent = childRect.y;
+          height = childRect.height;
+          subsupWidth = childRect.width;
           subHeight = supHeight = height;
           supAscent = ascent; 
           subDescent = descent;
         }
         else {
       	  if (isSubscript) {
-      	    subDescent = PR_MAX(subDescent, childDesiredSize.descent);
-      	    subHeight = PR_MAX(subHeight, childDesiredSize.height);
-      	    width = childDesiredSize.width;
+      	    subDescent = PR_MAX(subDescent, childRect.x);
+      	    subHeight = PR_MAX(subHeight, childRect.height);
+      	    width = childRect.width;
           }
       	  else {
-      	    supAscent = PR_MAX(supAscent, childDesiredSize.ascent);
-            supHeight = PR_MAX(supHeight, childDesiredSize.height);
-            width = PR_MAX(width, childDesiredSize.width);
+      	    supAscent = PR_MAX(supAscent, childRect.y);
+            supHeight = PR_MAX(supHeight, childRect.height);
+            width = PR_MAX(width, childRect.width);
             subsupWidth += width;
           }
         }
       
-        // At this stage, the origin points of the children have no use, so we will use the
-        // origins to store the child's ascent and descent. At the next pass, we should 
-        // set the origins so as to overwrite what we are storing there now
-        childFrame->SetRect(aPresContext,
-                            nsRect(childDesiredSize.descent, childDesiredSize.ascent,
-                            childDesiredSize.width, childDesiredSize.height));                        
         isSubscript = !isSubscript;
         count++;
       }
@@ -160,9 +126,6 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext*          aPresContext,
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
   }
-
-  //////////////////
-  // Place Children 
 
   // Get the subscript and superscript offsets
   nscoord subscriptOffset, superscriptOffset, leading;
@@ -182,15 +145,12 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.height = aDesiredSize.descent + aDesiredSize.ascent;
   aDesiredSize.width = subsupWidth;
  
-  // Place prescripts, followed by base, and then postscripts.
-  // The list of frames is in the order: {base} {postscripts} {prescripts}
-  // We go over the list in a circular manner, starting at <prescripts/>
-
   nscoord offset = 0;
   nsIFrame* child[2];
   nsRect rect[2];
 
   count = 0;
+  nsHTMLReflowMetrics childSize(nsnull);
   childFrame = mprescriptsFrame; 
   do {
     if (nsnull == childFrame) { // end of prescripts,
@@ -199,7 +159,12 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext*          aPresContext,
       childFrame->GetRect(rect[0]);
       rect[0].x = offset;
       rect[0].y = aDesiredSize.height - subHeight;
-      childFrame->SetRect(aPresContext, rect[0]);
+      if (aPlaceOrigin) {
+        // childFrame->SetRect(aPresContext, rect[0]);
+        childSize.width = rect[0].width;
+        childSize.height = rect[0].height;
+        FinishReflowChild(child[0], aPresContext, childSize, rect[0].x, rect[0].y, 0);
+      }
       offset += rect[0].width;
     }
     else if (mprescriptsFrame != childFrame) { 
@@ -208,7 +173,6 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext*          aPresContext,
       if (!IsOnlyWhitespace(childFrame)) {
         child[count++] = childFrame;
         if (2 == count) { // place a sub-sup pair
-          count = 0;
 //printf("Placing the sub-sup pair...\n");
 
           child[0]->GetRect(rect[0]);
@@ -220,9 +184,18 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext*          aPresContext,
           rect[0].x = offset + (width - rect[0].width) / 2; // centering
           rect[1].x = offset + (width - rect[1].width) / 2; 
 
-          child[0]->SetRect(aPresContext, rect[0]);
-          child[1]->SetRect(aPresContext, rect[1]);          
+          if (aPlaceOrigin) {
+            // child[0]->SetRect(aPresContext, rect[0]);
+            // child[1]->SetRect(aPresContext, rect[1]);
+            nsHTMLReflowMetrics childSize(nsnull);
+            for (PRInt32 i=0; i<count; i++) {
+              childSize.width = rect[i].width;
+              childSize.height = rect[i].height;
+              FinishReflowChild(child[i], aPresContext, childSize, rect[i].x, rect[i].y, 0);
+            }
+          }    
           offset += width;
+          count = 0;
         }        
       }
     }
@@ -234,6 +207,6 @@ nsMathMLmmultiscriptsFrame::Reflow(nsIPresContext*          aPresContext,
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   }  
-  aStatus = NS_FRAME_COMPLETE;
   return rv;
 }
+

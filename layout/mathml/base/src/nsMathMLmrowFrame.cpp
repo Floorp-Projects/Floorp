@@ -44,13 +44,13 @@
 //
 
 nsresult
-NS_NewMathMLmrowFrame(nsIFrame** aNewFrame)
+NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMathMLmrowFrame* it = new nsMathMLmrowFrame;
+  nsMathMLmrowFrame* it = new (aPresShell) nsMathMLmrowFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -74,6 +74,8 @@ nsMathMLmrowFrame::Init(nsIPresContext*  aPresContext,
                         nsIFrame*        aPrevInFlow)
 {
   nsresult rv = nsMathMLContainerFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  mEmbellish.flags = NS_MATHML_STRETCH_ALL_CHILDREN;
 
   // XXX Attributes?
   return rv;

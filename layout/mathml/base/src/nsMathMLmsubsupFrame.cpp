@@ -44,13 +44,13 @@
 //
 
 nsresult
-NS_NewMathMLmsubsupFrame(nsIFrame** aNewFrame)
+NS_NewMathMLmsubsupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMathMLmsubsupFrame* it = new nsMathMLmsubsupFrame;
+  nsMathMLmsubsupFrame* it = new (aPresShell) nsMathMLmsubsupFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -67,59 +67,30 @@ nsMathMLmsubsupFrame::~nsMathMLmsubsupFrame()
 }
 
 NS_IMETHODIMP
-nsMathMLmsubsupFrame::Reflow(nsIPresContext*          aPresContext,
-                             nsHTMLReflowMetrics&     aDesiredSize,
-                             const nsHTMLReflowState& aReflowState,
-                             nsReflowStatus&          aStatus)
+nsMathMLmsubsupFrame::Place(nsIPresContext*      aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            PRBool               aPlaceOrigin,
+                            nsHTMLReflowMetrics& aDesiredSize)
 {
-  nsresult rv = NS_OK;
-  nsReflowStatus childStatus;
-  nsHTMLReflowMetrics childDesiredSize(aDesiredSize.maxElementSize);
-  nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
- 
-  //////////////////
-  // Reflow Children
-
+  nsresult rv;
+  aDesiredSize.width = aDesiredSize.height = aDesiredSize.ascent = aDesiredSize.descent = 0;
   nscoord ascent, descent;   
   nscoord count = 0;
   nsRect rect[3];
   nsIFrame* child[3];
   nsIFrame* childFrame = mFrames.FirstChild(); 
-  while (nsnull != childFrame) 
-  {
-    //////////////
-    // WHITESPACE: don't forget that whitespace doesn't count in MathML!
-    if (IsOnlyWhitespace(childFrame)) {
-      ReflowEmptyChild(aPresContext, childFrame);      
-    }
-    else if (3 > count) {
-      nsHTMLReflowState childReflowState(aPresContext, aReflowState, 
-                                         childFrame, availSize);  	
-      rv = ReflowChild(childFrame, aPresContext, childDesiredSize, 
-                       childReflowState, childStatus);
-      NS_ASSERTION(NS_FRAME_IS_COMPLETE(childStatus), "bad status");
-      if (NS_FAILED(rv)) {
-        return rv;
-      }                  
-
+  while (childFrame) {
+    if (!IsOnlyWhitespace(childFrame) && 3 > count) {
       child[count] = childFrame;
-      rect[count].width = childDesiredSize.width;
-      rect[count].height = childDesiredSize.height;
-      if (0 == count) {
-        ascent = childDesiredSize.ascent;
-        descent = childDesiredSize.descent;
-      }
+      childFrame->GetRect(rect[count]);
       count++;
     }
-//  else { invalid markup... }
-
     rv = childFrame->GetNextSibling(&childFrame);
     NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get next child");
   }
+  descent = rect[0].x;
+  ascent = rect[0].y;
 
-  //////////////////
-  // Place Children 
-  
   // Get the subscript and superscript offsets
   nscoord subscriptOffset, superscriptOffset, leading;
   nsCOMPtr<nsIFontMetrics> fm;
@@ -158,15 +129,21 @@ subscriptOffset = PR_MAX(subscriptOffset,fmAscent-(xHeight*4)/5);
   rect[2].y = 0;
   rect[1].y = aDesiredSize.height - rect[1].height;  
   rect[0].y = aDesiredSize.height - subHeight;  
- 
-  child[0]->SetRect(aPresContext, rect[0]);
-  child[1]->SetRect(aPresContext, rect[1]);
-  child[2]->SetRect(aPresContext, rect[2]);
 
+  if (aPlaceOrigin) { 
+    // child[0]->SetRect(aPresContext, rect[0]);
+    // child[1]->SetRect(aPresContext, rect[1]);
+    // child[2]->SetRect(aPresContext, rect[2]);
+    nsHTMLReflowMetrics childSize(nsnull);
+    for (PRInt32 i=0; i<count; i++) {
+      childSize.width = rect[i].width;
+      childSize.height = rect[i].height;
+      FinishReflowChild(child[i], aPresContext, childSize, rect[i].x, rect[i].y, 0);
+    }
+  }
   if (nsnull != aDesiredSize.maxElementSize) {
     aDesiredSize.maxElementSize->width = aDesiredSize.width;
     aDesiredSize.maxElementSize->height = aDesiredSize.height;
   } 
-  aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
 }

@@ -32,7 +32,7 @@
 
 class nsMathMLmfencedFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmfencedFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLmfencedFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
   
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
@@ -80,7 +80,7 @@ protected:
              nscoord              fontAscent,
              nscoord              fontDescent,
              nscoord              em,
-             nsCharMetrics&       aContainerSize,
+             nsStretchMetrics&    aContainerSize,
              nsHTMLReflowMetrics& aDesiredSize,
              nscoord&             aX);
 

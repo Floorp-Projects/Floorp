@@ -48,13 +48,13 @@
 //
 
 nsresult
-NS_NewMathMLmiFrame(nsIFrame** aNewFrame)
+NS_NewMathMLmiFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame)
 {
   NS_PRECONDITION(aNewFrame, "null OUT ptr");
   if (nsnull == aNewFrame) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsMathMLmiFrame* it = new nsMathMLmiFrame;
+  nsMathMLmiFrame* it = new (aPresShell) nsMathMLmiFrame;
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -137,8 +137,11 @@ nsMathMLmiFrame::SetInitialChildList(nsIPresContext* aPresContext,
     
     if (newStyleContext && newStyleContext.get() != mStyleContext) {
     
+      nsCOMPtr<nsIPresShell> shell;
+      aPresContext->GetShell(getter_AddRefs(shell));
+
       nsIFrame* newFrame = nsnull;
-      NS_NewMathMLWrapperFrame(&newFrame);
+      NS_NewMathMLWrapperFrame(shell, &newFrame);
       NS_ASSERTION(newFrame, "Failed to create new frame");
     
       newFrame->Init(aPresContext, mContent, this, newStyleContext, nsnull);

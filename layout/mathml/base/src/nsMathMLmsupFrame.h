@@ -32,13 +32,13 @@
 
 class nsMathMLmsupFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmsupFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLmsupFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
   NS_IMETHOD
-  Reflow(nsIPresContext*          aPresContext,
-         nsHTMLReflowMetrics&     aDesiredSize,
-         const nsHTMLReflowState& aReflowState,
-         nsReflowStatus&          aStatus); 
+  Place(nsIPresContext*      aPresContext,
+        nsIRenderingContext& aRenderingContext,
+        PRBool               aPlaceOrigin,
+        nsHTMLReflowMetrics& aDesiredSize);
 
   NS_IMETHOD
   SetInitialChildList(nsIPresContext* aPresContext,
@@ -48,7 +48,10 @@ public:
     nsresult rv;
     rv = nsMathMLContainerFrame::SetInitialChildList(aPresContext, aListName, aChildList);
     UpdatePresentationDataFromChildAt(1, 1, PR_FALSE);
+    // switch the style of the superscript
     InsertScriptLevelStyleContext(aPresContext);
+    // check whether or not this is an embellished operator
+    EmbellishOperator();
     return rv;
   }
 

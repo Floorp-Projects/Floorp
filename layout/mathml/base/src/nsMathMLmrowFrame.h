@@ -32,7 +32,7 @@
 
 class nsMathMLmrowFrame : public nsMathMLContainerFrame {
 public:
-  friend nsresult NS_NewMathMLmrowFrame(nsIFrame** aNewFrame);
+  friend nsresult NS_NewMathMLmrowFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
   
   NS_IMETHOD
   Init(nsIPresContext*  aPresContext,
