@@ -184,7 +184,7 @@ public:
    */
   virtual nsIAtom* GetType() const;
 
-  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
+  virtual PRBool IsContainingBlock() const;
 
   nsTableRowFrame* GetFirstRow();
 

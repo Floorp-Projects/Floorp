@@ -2609,16 +2609,15 @@ nsFrame::IsFrameTreeTooDeep(const nsHTMLReflowState& aReflowState,
 }
 
 // Style sizing methods
-NS_IMETHODIMP nsFrame::IsPercentageBase(PRBool& aBase) const
+/* virtual */ PRBool nsFrame::IsContainingBlock() const
 {
   const nsStyleDisplay* display = GetStyleDisplay();
 
   // Absolute positioning causes |display->mDisplay| to be set to block,
   // if needed.
-  aBase = display->mDisplay == NS_STYLE_DISPLAY_BLOCK || 
-          display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM ||
-          display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL;
-  return NS_OK;
+  return display->mDisplay == NS_STYLE_DISPLAY_BLOCK || 
+         display->mDisplay == NS_STYLE_DISPLAY_LIST_ITEM ||
+         display->mDisplay == NS_STYLE_DISPLAY_TABLE_CELL;
 }
 
 #ifdef NS_DEBUG

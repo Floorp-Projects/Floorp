@@ -275,11 +275,10 @@ nsPageFrame::GetFrameName(nsAString& aResult) const
 }
 #endif
 
-NS_IMETHODIMP
-nsPageFrame::IsPercentageBase(PRBool& aBase) const
+/* virtual */ PRBool
+nsPageFrame::IsContainingBlock() const
 {
-  aBase = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 // Remove fix below when string gets fixed

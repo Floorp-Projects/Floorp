@@ -2887,16 +2887,11 @@ nsComputedDOMStyle::GetContainingBlock(nsIFrame *aFrame)
   }
 
   nsIFrame* container = aFrame;
-  PRBool done = PR_FALSE;
   do {
     container = container->GetParent();
-    if (container) {
-      (container)->IsPercentageBase(done);
-    }
-  } while (!done && container);
+  } while (container && !container->IsContainingBlock())
 
   NS_POSTCONDITION(container, "Frame has no containing block");
-  
   return container;
 }
 

@@ -497,11 +497,10 @@ nsBlockFrame::GetAdditionalChildListName(PRInt32 aIndex) const
   }
 }
 
-NS_IMETHODIMP
-nsBlockFrame::IsPercentageBase(PRBool& aBase) const
+/* virtual */ PRBool
+nsBlockFrame::IsContainingBlock() const
 {
-  aBase = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 //////////////////////////////////////////////////////////////////////

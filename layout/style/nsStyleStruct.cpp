@@ -81,11 +81,9 @@ inline nscoord CalcSideFor(const nsIFrame* aFrame, const nsStyleCoord& aCoord,
     case eStyleUnit_Percent:
       {
         nscoord baseWidth = 0;
-        PRBool  isBase = PR_FALSE;
         nsIFrame* frame = aFrame->GetParent();
         while (frame) {
-          frame->IsPercentageBase(isBase);
-          if (isBase) {
+          if (frame->IsContainingBlock()) {
             baseWidth = frame->GetSize().width;
             // subtract border of containing block
             nsMargin border;

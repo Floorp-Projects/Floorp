@@ -1006,9 +1006,9 @@ public:
   virtual nsIAtom* GetType() const = 0;
   
   /**
-   * Is this frame a "containing block"?
+   * Is this frame a containing block for non-positioned elements?
    */
-  NS_IMETHOD  IsPercentageBase(PRBool& aBase) const = 0;
+  virtual PRBool IsContainingBlock() const = 0;
 
   /**
    * Invalidate part of the frame by asking the view manager to repaint.

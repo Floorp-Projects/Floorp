@@ -334,11 +334,10 @@ ViewportFrame::GetType() const
   return nsLayoutAtoms::viewportFrame;
 }
 
-NS_IMETHODIMP
-ViewportFrame::IsPercentageBase(PRBool& aBase) const
+/* virtual */ PRBool
+ViewportFrame::IsContainingBlock() const
 {
-  aBase = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 #ifdef DEBUG

@@ -557,13 +557,11 @@ nsHTMLButtonControlFrame::ReflowButtonContents(nsIPresContext* aPresContext,
                     yoff + aFocusPadding.top + aReflowState.mComputedBorderPadding.top, 0);
 }
 
-NS_IMETHODIMP
-nsHTMLButtonControlFrame::IsPercentageBase(PRBool& aBase) const
+/* virtual */ PRBool
+nsHTMLButtonControlFrame::IsContainingBlock() const
 {
-  aBase = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
-
 
 PRIntn
 nsHTMLButtonControlFrame::GetSkipSides() const

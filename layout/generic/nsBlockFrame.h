@@ -124,7 +124,7 @@ public:
   virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
   NS_IMETHOD Destroy(nsIPresContext* aPresContext);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
-  NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
+  virtual PRBool IsContainingBlock() const;
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect&        aDirtyRect,

@@ -454,11 +454,10 @@ nsTableFrame::SetInitialChildList(nsIPresContext* aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-nsTableFrame::IsPercentageBase(PRBool& aBase) const
+/* virtual */ PRBool
+nsTableFrame::IsContainingBlock() const
 {
-  aBase = PR_TRUE;
-  return NS_OK;
+  return PR_TRUE;
 }
 
 void nsTableFrame::AttributeChangedFor(nsIPresContext* aPresContext, 

@@ -124,10 +124,7 @@ public:
                               const nsPoint& aPoint, 
                               nsFramePaintLayer aWhichLayer,
                               nsIFrame**     aFrame);
-  NS_IMETHOD IsPercentageBase(PRBool& aBase) const {
-    aBase = PR_TRUE;
-    return NS_OK;
-  }
+  virtual PRBool IsContainingBlock() const { return PR_TRUE; }
 
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,
                    nsIRenderingContext& aRenderingContext,
