@@ -44,18 +44,14 @@
 #define INCL_DOSERRORS
 #include <os2.h>
 
-#ifdef XPCOM_GLUE
-#include "nsStringSupport.h"
-#else
-#include "nsString.h"
-#endif
-
 #include "nsNativeAppSupportBase.h"
 #include "nsNativeAppSupportOS2.h"
 #include "nsICmdLineService.h"
 #include "nsCOMPtr.h"
 #include "nsIComponentManager.h"
+#include "nsComponentManagerUtils.h"
 #include "nsIServiceManager.h"
+#include "nsIServiceManagerUtils.h"
 #include "nsICmdLineHandler.h"
 #include "nsIDOMWindow.h"
 #include "nsXPCOM.h"
@@ -76,20 +72,25 @@
 #include "nsIPromptService.h"
 #include "nsNetCID.h"
 #include "nsIObserverService.h"
-#include "nsXPCOM.h"
-#include "nsPaletteOS2.h"
+
+#ifdef XPCOM_GLUE
+#include "nsStringSupport.h"
+#else
+#include "nsString.h"
+#endif
 
 // These are needed to load a URL in a browser window.
 #include "nsIDOMLocation.h"
 #include "nsIJSContextStack.h"
 #include "nsIWindowMediator.h"
 
+#include "nsPaletteOS2.h"
 
 #include <sys/stat.h>
 #include <stdlib.h>
+#include <ctype.h>
 
 #include "prprf.h"
-
 
 // getting from nsAppRunner.  Use to help track down arguments.
 extern char ** __argv;
@@ -392,7 +393,8 @@ private:
                                                     ULONG    dwData1,
                                                     ULONG    dwData2 );
     static void HandleRequest( LPBYTE request, PRBool newWindow = PR_TRUE );
-    static nsCString ParseDDEArg( HSZ args, int index );
+    static void ParseDDEArg( HSZ args, int index, nsCString& string);
+    static void ParseDDEArg( const char* args, int index, nsCString& aString);
     static void ActivateLastWindow();
     static HDDEDATA CreateDDEData( DWORD value );
     static HDDEDATA CreateDDEData( LPBYTE value, DWORD len );
@@ -1229,7 +1231,7 @@ nsNativeAppSupportOS2::Start( PRBool *aResult ) {
      * then make sure to clean up the message queue.
      */
     MQINFO mqinfo;
-    HAB hab;
+    HAB hab = NULLHANDLE;
     HMQ hmqCurrent = WinQueryQueueInfo( HMQ_CURRENT, &mqinfo, 
                                         sizeof( MQINFO ) );
     if( !hmqCurrent )
@@ -1467,7 +1469,7 @@ static nsCString hszValue( DWORD instance, HSZ hsz ) {
 
 
 // Utility function to escape double-quotes within a string.
-static void escapeQuotes( nsAString &aString ) {
+static void escapeQuotes( nsString &aString ) {
     PRInt32 offset = -1;
     while( 1 ) {
        // Find next '"'.
@@ -1532,12 +1534,12 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
                     PRBool new_window = PR_FALSE;
 
                     // Get the URL from the first argument in the command.
-                    nsCAutoString url( ParseDDEArg( hsz2, 0 ) );
-
+                    nsCAutoString url;
+                    ParseDDEArg(hsz2, 0, url);
                     // Read the 3rd argument in the command to determine if a
                     // new window is to be used.
-                    nsCAutoString windowID( ParseDDEArg( hsz2, 2 ) );
-
+                    nsCAutoString windowID;
+                    ParseDDEArg(hsz2, 2, windowID);
                     // "0" means to open the URL in a new window.
                     if ( windowID.Equals( "0" ) ) {
                         new_window = PR_TRUE;
@@ -1628,7 +1630,7 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
                         // title
                         outpt.Append( NS_LITERAL_CSTRING("\",\"") );
                         // Now copy the current page title to the return string
-                        outpt.Append( NS_LossyConvertUCS2toASCII( title.get() ));
+                        outpt.Append( NS_LossyConvertUCS2toASCII( title ));
                         // Fill out the return string with the remainin ",""
                         outpt.Append( NS_LITERAL_CSTRING( "\",\"\"" ));
 
@@ -1646,8 +1648,8 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
                 }
                 case topicActivate: {
                     // Activate a Nav window...
-                    nsCString windowID = ParseDDEArg( hsz2, 0 );
-
+                    nsCAutoString windowID;
+                    ParseDDEArg(hsz2, 0, windowID);
                     // 4294967295 is decimal for 0xFFFFFFFF which is also a
                     //   correct value to do that Activate last window stuff
                     if ( windowID.Equals( "-1" ) ||
@@ -1700,13 +1702,13 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
             // Default is to open in current window.
             PRBool new_window = PR_FALSE;
 
-            // Get the URL from the first argument in the command.
-            HSZ args = WinDdeCreateStringHandle( (PSZ)request, CP_WINANSI );
-            nsCAutoString url( ParseDDEArg( args, 0 ) );
+            nsCAutoString url;
+            ParseDDEArg((const char*) request, 0, url);
 
             // Read the 3rd argument in the command to determine if a
             // new window is to be used.
-            nsCAutoString windowID( ParseDDEArg( args, 2 ) );
+            nsCAutoString windowID;
+            ParseDDEArg((const char*) request, 2, windowID);
 
             // "0" means to open the URL in a new window.
             if ( windowID.Equals( "0" ) ) {
@@ -1720,8 +1722,7 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
 #endif
             // Now handle it.
             HandleRequest( LPBYTE( url.get() ), new_window );
-            // Release the args string.
-            WinDdeFreeStringHandle( args );
+
             // Release the data.
 //            DdeUnaccessData( hdata );
             result = (HDDEDATA)DDE_FACK;
@@ -1757,32 +1758,25 @@ static PRInt32 advanceToEndOfQuotedArg( const char *p, PRInt32 offset, PRInt32 l
     return offset;
 }
 
-// Utility to parse out argument from a DDE item string.
-nsCString nsNativeAppSupportOS2::ParseDDEArg( HSZ args, int index ) {
-    nsCString result;
-    DWORD argLen = WinDdeQueryString( args, NULL, NULL, CP_WINANSI );
-    if ( argLen ) {
-        nsCString temp;
-        // Ensure result's buffer is sufficiently big.
-        temp.SetLength( argLen + 1 );
-        // Now get the string contents.
-        WinDdeQueryString( args, temp.BeginWriting(), temp.Length(), CP_WINANSI );
-        // Parse out the given arg.
-        const char *p = temp.get();
+void nsNativeAppSupportOS2::ParseDDEArg( const char* args, int index, nsCString& aString) {
+    if ( args ) {
+        int argLen = strlen(args);
+        nsDependentCString temp(args, argLen);
+
         // offset points to the comma preceding the desired arg.
         PRInt32 offset = -1;
         // Skip commas till we get to the arg we want.
         while( index-- ) {
             // If this arg is quoted, then go to closing quote.
-            offset = advanceToEndOfQuotedArg( p, offset, argLen );
+            offset = advanceToEndOfQuotedArg( args, offset, argLen);
             // Find next comma.
             offset = temp.FindChar( ',', offset );
             if ( offset == kNotFound ) {
                 // No more commas, give up.
-                return result;
+                aString = args;
+                return;
             }
         }
-
         // The desired argument starts just past the preceding comma,
         // which offset points to, and extends until the following
         // comma (or the end of the string).
@@ -1791,7 +1785,7 @@ nsCString nsNativeAppSupportOS2::ParseDDEArg( HSZ args, int index ) {
         // deal with that before searching for the terminating comma.
         // We advance offset so it ends up pointing to the start of
         // the argument we want.
-        PRInt32 end = advanceToEndOfQuotedArg( p, offset++, argLen );
+        PRInt32 end = advanceToEndOfQuotedArg( args, offset++, argLen );
         // Find next comma (or end of string).
         end = temp.FindChar( ',', end );
         if ( end == kNotFound ) {
@@ -1799,9 +1793,24 @@ nsCString nsNativeAppSupportOS2::ParseDDEArg( HSZ args, int index ) {
             end = argLen;
         }
         // Extract result.
-        result.Assign( p + offset, end - offset );
+        aString.Assign( args + offset, end - offset );
     }
-    return result;
+    return;
+}
+
+// Utility to parse out argument from a DDE item string.
+void nsNativeAppSupportOS2::ParseDDEArg( HSZ args, int index, nsCString& aString) {
+    DWORD argLen = WinDdeQueryString( args, NULL, NULL, CP_WINANSI );
+    // there wasn't any string, so return empty string
+    if ( !argLen ) return;
+    // Ensure result's buffer is sufficiently big.
+    char *temp = (char *) malloc(argLen + 1);
+    if ( !temp ) return;
+    // Now get the string contents.
+    WinDdeQueryString( args, temp, argLen + 1, CP_WINANSI );
+    // Parse out the given arg.
+    ParseDDEArg(temp, index, aString);
+    free(temp);
 }
 
 void nsNativeAppSupportOS2::ActivateLastWindow() {
@@ -1975,8 +1984,7 @@ nsNativeAppSupportOS2::HandleRequest( LPBYTE request, PRBool newWindow ) {
     if (NS_FAILED(rv) || !defaultArgs) return;
 
     if (defaultArgs) {
-      nsCAutoString url;
-      url.AssignWithConversion( defaultArgs );
+      NS_LossyConvertUCS2toASCII url( defaultArgs );
       OpenBrowserWindow(url.get());
     } else {
       OpenBrowserWindow("about:blank");
@@ -1993,21 +2001,12 @@ nsNativeAppSupportOS2::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
     int justCounting = 1;
     char **argv = 0;
     // Flags, etc.
-    int init = 1;
-    int between, quoted, bSlashCount;
-    int argc;
-    char *p;
+    int between = 1, quoted = 0, bSlashCount = 0;
+    int argc = 0;
+    char *p = (char*)request;
     nsCAutoString arg;
     // We loop if we've not finished the second pass through.
     while ( 1 ) {
-        // Initialize if required.
-        if ( init ) {
-            p = (char*)request;
-            between = 1;
-            argc = quoted = bSlashCount = 0;
-
-            init = 0;
-        }
         if ( between ) {
             // We are traversing whitespace between args.
             // Check for start of next arg.
@@ -2108,9 +2107,11 @@ nsNativeAppSupportOS2::GetCmdLineArgs( LPBYTE request, nsICmdLineService **aResu
                 // Allocate argv array.
                 argv = new char*[ argc ];
     
-                // Start second pass
+                // Start second pass, initialize again
                 justCounting = 0;
-                init = 1;
+                p = (char*)request;
+                between = 1;
+                argc = quoted = bSlashCount = 0;
             } else {
                 // Quit.
                 break;

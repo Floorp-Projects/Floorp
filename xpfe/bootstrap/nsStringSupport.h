@@ -65,6 +65,7 @@
 #define nsXPIDLString                 nsXPIDLString_local
 #define nsGetterCopies                nsGetterCopies_local
 #define NS_ConvertUCS2toUTF8          NS_ConvertUCS2toUTF8_local
+#define NS_ConvertASCIItoUTF16        NS_ConvertASCIItoUTF16_local
 #define NS_LossyConvertUCS2toASCII    NS_LossyConvertUCS2toASCII_local
 #define getter_Copies                 getter_Copies_local
 
@@ -331,11 +332,23 @@ class NS_LossyConvertUCS2toASCII : public nsCString
         }
   };
 
+class NS_ConvertASCIItoUTF16 : public nsString
+  {
+    public:
+      NS_ConvertASCIItoUTF16(const char *str, PRUint32 len)
+        {
+          nsEmbedCString temp;
+          temp.Assign(str, len);
+          NS_CStringToUTF16(temp, NS_CSTRING_ENCODING_ASCII, *this);
+        }
+  };
+
 #define NS_LITERAL_CSTRING(s) nsDependentCString(s)
 
-// only used by nsNativeAppSupport{Win,OS2}.cpp
-#if defined(XP_WIN) || defined(XP_OS2)
-#define NS_LITERAL_STRING(s) nsDependentString(L##s)
+#ifdef HAVE_CPP_2BYTE_WCHAR_T
+#define NS_LITERAL_STRING(s) nsDependentString((const PRUnichar*)L##s)
+#else
+#define NS_LITERAL_STRING(s) NS_ConvertASCIItoUTF16(s, sizeof(s)-1)
 #endif
 
 #define EmptyCString() nsCString()
