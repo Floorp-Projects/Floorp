@@ -265,7 +265,6 @@ nsUnknownContentTypeDialog.prototype = {
     // initDialog:  Fill various dialog fields with initial content.
     initDialog : function() {
          // Put file name in window title.
-         var win   = this.dialogElement( "unknownContentType" );
          var suggestedFileName = this.mLauncher.suggestedFileName;
 
          // Some URIs do not implement nsIURL, so we can't just QI.
@@ -288,7 +287,7 @@ nsUnknownContentTypeDialog.prototype = {
            
 
          this.mTitle = this.dialogElement("strings").getFormattedString("title", [fname]);
-         win.document.title = this.mTitle;
+         this.mDialog.document.title = this.mTitle;
 
          // Put content type, filename and location into intro.
          this.initIntro(url, fname);
