@@ -71,6 +71,9 @@
 // XXX The current values in the table correspond to the Symbol font.
 //     Other fonts will need their own customized tables.
 
+// XXX The Stretching doesn't align the glyphs in italic style. Need to
+//     force the style to normal before starting to stretch.
+
 static PRUnichar gMathMLCharGlyph[] = {
 
   //------------
@@ -276,7 +279,7 @@ static const PRInt32 kMathMLChar[] = {
 // for you whenever mData changes.
 void
 nsMathMLChar::SetEnum() {
-  mEnum = eMathMLChar_UNKNOWN;
+  mEnum = eMathMLChar_DONT_STRETCH;
   if (1 == mData.Length()) {
     PRUnichar ch = mData[0];
     PRInt32 count = sizeof(kMathMLChar) / sizeof(kMathMLChar[0]);
@@ -330,8 +333,8 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
 {
   nsresult rv = NS_OK;
 
-  // quick return if we know nothing about this char
-  if (eMathMLChar_UNKNOWN == mEnum) {
+  // quick return if there is nothing special about this char
+  if (eMathMLChar_DONT_STRETCH == mEnum) {
     return NS_OK;
   }
 
@@ -339,17 +342,16 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
   // XXX need better criteria
   if (aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) {
     if (aContainerSize.height <= aDesiredStretchSize.height) {
+      mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char behaves like a normal char
       return NS_OK;
     }
   }
   else if (aStretchDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
     if (aContainerSize.width <= aDesiredStretchSize.width) {
+      mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char behaves like a normal char
       return NS_OK;
     }
   }
-
-  // cache the stretch direction for use later at the painting stage
-  mDirection = aStretchDirection;
 
 //  printf("Container height:%d  ascent:%d  descent:%d\n contains height:%d  ascent:%d  descent:%d\n",
 //         aContainerSize.height, aContainerSize.ascent, aContainerSize.descent,
@@ -368,7 +370,6 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
   aRenderingContext.SetColor(color.mColor);
   aRenderingContext.SetFont(font.mFont);
 
-  nsBoundingMetrics bm;
   nscoord height = aDesiredStretchSize.height;
   nscoord width = aDesiredStretchSize.width;
   nscoord ascent = aDesiredStretchSize.ascent; 
@@ -381,9 +382,10 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
   // try first to see if there is a glyph of appropriate size ...
   PRBool sizeOK = PR_FALSE; 
   PRUnichar ch = gMathMLCharGlyph[index++];
+  nsBoundingMetrics bm;
   while (ch && index <= limit) {
     // printf("Checking size of:%c  index:%d\n", ch & 0x00FF, index);
-    rv = aRenderingContext.GetBoundingMetrics(&ch, 1, bm);
+    rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
     if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
     h = bm.ascent - bm.descent;
     w = bm.width;
@@ -395,7 +397,7 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
     if ((aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL && h > height) || 
         (aStretchDirection == NS_STRETCH_DIRECTION_HORIZONTAL && w > width)) {
       sizeOK = PR_TRUE;
-      descent = -bm.descent; // as expected by Gecko
+      descent = -bm.descent; // flip the sign, as expected by Gecko
       ascent = bm.ascent;
       height = bm.ascent - bm.descent;
       width = bm.width;
@@ -411,7 +413,7 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
     nscoord a, d;
     h = w = a = d = 0;
     float flex[3] = {0.7f, 0.3f, 0.7f}; // XXX hack!
-    if (mDirection == NS_STRETCH_DIRECTION_VERTICAL) {
+    if (aStretchDirection == NS_STRETCH_DIRECTION_VERTICAL) {
       // default is to fill-up the area given to us
       width = aDesiredStretchSize.width;
       height = aContainerSize.height;
@@ -420,7 +422,7 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
 
       for (i = 0; i < 4; i++) {
         ch = gMathMLCharGlyph[index+i];
-        rv = aRenderingContext.GetBoundingMetrics(&ch, 1, bm);
+        rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
         if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
         if (w < bm.width) w = bm.width;
         if (i < 3) h += nscoord(flex[i]*(bm.ascent-bm.descent)); // sum heights of the parts...
@@ -428,10 +430,11 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
       if (h <= aContainerSize.height) { // can nicely fit in the available space...
         width = w;
       } else { // sum of parts doesn't fit in the space... will use a single glyph
+        mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char behaves like a normal char
         return NS_OK;
       }
     }
-    else if (mDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
+    else if (aStretchDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
       // default is to fill-up the area given to us
       width = aContainerSize.width;
       height = aDesiredStretchSize.height;
@@ -440,7 +443,7 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
 
       for (i = 0; i < 4; i++) {
         ch = gMathMLCharGlyph[index+i];
-        rv = aRenderingContext.GetBoundingMetrics(&ch, 1, bm);
+        rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
         if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
         if (a < bm.ascent) a = bm.ascent;
         if (d > bm.descent) d = bm.descent;
@@ -450,10 +453,14 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
 //        ascent = a;
 //        height = a - d;
       } else { // sum of parts doesn't fit in the space... will use a single glyph
+        mEnum = eMathMLChar_DONT_STRETCH; // ensure that the char behaves like a normal char
         return NS_OK;
       }
     }
   }
+
+  // cache the stretch direction to be used later at the painting stage
+  mDirection = aStretchDirection;
 
   aDesiredStretchSize.width = width;
   aDesiredStretchSize.height = height;
@@ -461,20 +468,6 @@ nsMathMLChar::Stretch(nsIPresContext&      aPresContext,
   aDesiredStretchSize.descent = descent;
 
   return NS_OK;
-}
-
-void
-nsMathMLChar::DrawChar(nsIRenderingContext& aRenderingContext, 
-                       PRUnichar            aChar, 
-                       nscoord              aX,
-                       nscoord              aY,
-                       nsRect&              aClipRect) 
-{
-  PRBool clipState;
-  aRenderingContext.PushState();
-  aRenderingContext.SetClipRect(aClipRect, nsClipCombine_kIntersect, clipState);
-  aRenderingContext.DrawString(&aChar, PRUint32(1), aX, aY);
-  aRenderingContext.PopState(clipState);
 }
 
 NS_IMETHODIMP
@@ -489,231 +482,321 @@ nsMathMLChar::Paint(nsIPresContext&      aPresContext,
   aStyleContext->GetStyle(eStyleStruct_Font, font);
   aStyleContext->GetStyle(eStyleStruct_Color, color);
 
-  // Set color and font
+  // Set color and font ...
   aRenderingContext.SetColor(color.mColor);
   aRenderingContext.SetFont(font.mFont);
 
-  nscoord dx = mRect.x;
-  nscoord dy = mRect.y;
-
-  // quick return if we know nothing about this char
-  if (eMathMLChar_UNKNOWN == mEnum) {
-    aRenderingContext.DrawString(mData.GetUnicode(), PRUint32(mData.Length()), dx, dy);
+  // quick return if there is nothing special about this char ...
+  if (eMathMLChar_DONT_STRETCH == mEnum) {
+    aRenderingContext.DrawString(mData.GetUnicode(), PRUint32(mData.Length()), mRect.x, mRect.y);
     return NS_OK;
   }
 
   if (0 < mGlyph) { // wow, there is a glyph of appropriate size!
-    aRenderingContext.DrawString(&mGlyph, PRUint32(1), dx, dy);
+    aRenderingContext.DrawString(&mGlyph, PRUint32(1), mRect.x, mRect.y);
   }
   else { // paint by parts
-    PRInt32 index = gMathMLCharIndex[mEnum];
-    PRInt32 limit = gMathMLCharIndex[mEnum+1]; // next char starts here...
-
-    // jump past the glyphs of various size...
-    PRUnichar ch = gMathMLCharGlyph[index++];
-    while (ch && index <= limit) {
-      ch = gMathMLCharGlyph[index++];
-    }
-    // return if there are no partial glyphs (an erroneous table!)
-    if (!gMathMLCharGlyph[index]) 
-      return NS_OK;
-
-    nsRect clipRect;
-    nsBoundingMetrics bm;
-    bm.Clear();
-
-    // grab some metrics to help adjusting the placements
+    // grab some metrics that will help to adjust the placements ...
+    nscoord fontAscent, fontDescent;
     nsCOMPtr<nsIFontMetrics> fm;
     aRenderingContext.GetFontMetrics(*getter_AddRefs(fm));
-    nscoord fontAscent, fontDescent;
     fm->GetMaxAscent(fontAscent);
     fm->GetMaxDescent(fontDescent);
-    
-    nsBoundingMetrics bmdata[4];
-    nscoord stride, offset[3], start[3], end[3];
+    // do the painting ...
+    if (mDirection == NS_STRETCH_DIRECTION_VERTICAL)
+      return PaintVertically(aPresContext, aRenderingContext, aStyleContext,
+                             fontAscent, fontDescent, mEnum, mRect);
+    else if (mDirection == NS_STRETCH_DIRECTION_HORIZONTAL)
+      return PaintHorizontally(aPresContext, aRenderingContext, aStyleContext,
+                               fontAscent, fontDescent, mEnum, mRect);
+  }
+  return NS_OK;
+}
 
-    float p2t;
-    aPresContext.GetScaledPixelsToTwips(&p2t);
-    nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
+/* ================================================================================= 
+  And now the helper routines that actually do the job of painting the char by parts
+ */
 
-    // get metrics data to be re-used later
-    PRInt32 i;
-    for (i = 0; i < 4; i++) {
-      ch = gMathMLCharGlyph[index+i];
-      rv = aRenderingContext.GetBoundingMetrics(&ch, 1, bm);
-      if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
-      bmdata[i] = bm;
-//      printf("bm for i:%d ch:%04X ascent:%d descent:%d lbearing:%d rbearing:%d width:%d fontAscent:%d fontDescent:%d\n",
-//             i, ch, bm.ascent, bm.descent, bm.leftBearing, bm.rightBearing, bm.width, fontAscent, fontDescent);
-    }
+// draw a glyph in a clipped area so that we don't have hairy chars pending outside
+void
+nsMathMLChar::DrawChar(nsIRenderingContext& aRenderingContext, 
+                       PRUnichar            aChar, 
+                       nscoord              aX,
+                       nscoord              aY,
+                       nsRect&              aClipRect) 
+{
+  PRBool clipState;
+  aRenderingContext.PushState();
+  aRenderingContext.SetClipRect(aClipRect, nsClipCombine_kIntersect, clipState);
+  aRenderingContext.DrawString(&aChar, PRUint32(1), aX, aY);
+  aRenderingContext.PopState(clipState);
+}
 
-    // draw top (or left), middle, bottom (or right)
-    for (i = 0; i < 3; i++) {
-      ch = gMathMLCharGlyph[index+i];
-      bm = bmdata[i];
+// paint a stretchy char by assembling glyphs vertically
+nsresult
+nsMathMLChar::PaintVertically(nsIPresContext&      aPresContext,
+                              nsIRenderingContext& aRenderingContext,
+                              nsIStyleContext*     aStyleContext,
+                              nscoord              fontAscent,
+                              nscoord              fontDescent,
+                              nsMathMLCharEnum     aCharEnum,
+                              nsRect               aRect)
+{
+  nsresult rv = NS_OK;
+  PRInt32 index = gMathMLCharIndex[aCharEnum];
+  PRInt32 limit = gMathMLCharIndex[aCharEnum+1]; // next char starts here...
+  // jump past the glyphs of various size...
+  PRUnichar ch = gMathMLCharGlyph[index++];
+  while (ch && index <= limit) {
+   ch = gMathMLCharGlyph[index++];
+  }
+  // return if there are no partial glyphs (an erroneous table!)
+  if (!gMathMLCharGlyph[index]) return NS_OK;
+
+  nscoord dx = aRect.x;
+  nscoord dy = aRect.y;
+  nsRect clipRect;
+
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
+
+  // get metrics data to be re-used later
+  PRInt32 i;
+  nsBoundingMetrics bm, bmdata[4];
+  nscoord stride, offset[3], start[3], end[3];
+  for (i = 0; i < 4; i++) {
+    ch = gMathMLCharGlyph[index+i];
+    rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
+    if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
+    bmdata[i] = bm;
+//    printf("bm for i:%d ch:%04X ascent:%d descent:%d lbearing:%d rbearing:%d width:%d fontAscent:%d fontDescent:%d\n",
+//           i, ch, bm.ascent, bm.descent, bm.leftBearing, bm.rightBearing, bm.width, fontAscent, fontDescent);
+  }
+  for (i = 0; i < 3; i++) {
+    ch = gMathMLCharGlyph[index+i];
+    bm = bmdata[i];
 //printf("Drawing i=%d ch=%04X", i, ch); getchar();
-      if (mDirection == NS_STRETCH_DIRECTION_VERTICAL) {
-        if (0 == i) { // top
-          //coord with line-spacing (i.e., leading)
-          //  dy = mRect.y;
+    if (0 == i) { // top
+      //coord with line-spacing (i.e., leading)
+      //  dy = aRect.y;
 
-          //coord for exact fit (i.e., no leading)
-          dy = mRect.y + bm.ascent - fontAscent;
-        }
-        else if (1 == i) { // middle
-          // coord with line-spacing (i.e., leading)
-          //  dy = mRect.y + (mRect.height - fontAscent - fontDescent
-          //  - bmdata[0].ascent - bmdata[2].descent + bm.ascent + bm.descent)/2;
-
-          // coord for exact fit (i.e., no leading)
-          dy = mRect.y + (mRect.height - (bm.ascent - bm.descent))/2
-                       - (fontAscent - bm.ascent);
-        }
-        else if (2 == i) { // bottom
-          // coord with line-spacing (i.e., leading)
-          // dy = mRect.y + mRect.height - (fontAscent + fontDescent);
-
-          // coord for exact fit (i.e., no leading)
-          dy = mRect.y + mRect.height - (fontAscent - bm.descent);
-        }
-        clipRect = nsRect(dx, dy, mRect.width, mRect.height);
-        // abcissa that DrawString used
-        offset[i] = dy;
-        // *exact* abcissa where the *top-most* pixel of the glyph is painted
-        start[i] = dy + fontAscent - bm.ascent; 
-        // *exact* abcissa where the *bottom-most* pixel of the glyph is painted
-        end[i] = dy + fontAscent - bm.descent; // note: end = start + height
-      }
-      else if (mDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
-        if (0 == i) { // left 
-          // coord with intercharacter-spacing
-          // dx = mRect.x;
-
-          // coord for exact fit (no intercharacter-spacing)
-          dx = mRect.x - bm.leftBearing;
-        }
-        else if (1 == i) { // middle
-          // coord with intercharacter-spacing
-          dx = mRect.x + (mRect.width - bm.width)/2;
-        }
-        else if (2 == i) { // right
-          // coord with intercharacter-spacing
-          // dx = mRect.x + mRect.width - bm.width;
-
-          // coord for exact fit (no intercharacter-spacing)
-          dx = mRect.x + mRect.width - bm.rightBearing;
-        }
-        // abcissa that DrawString used
-        offset[i] = dx;
-        // *exact* abcissa where the *left-most* pixel of the glyph is painted
-        start[i] = dx + bm.leftBearing; 
-        // *exact* abcissa where the *right-most* pixel of the glyph is painted
-        end[i] = dx + bm.rightBearing; // note: end = start + width
-      }
+      //coord for exact fit (i.e., no leading)
+      dy = aRect.y + bm.ascent - fontAscent;
     }
+    else if (1 == i) { // middle
+      // coord with line-spacing (i.e., leading)
+      //  dy = aRect.y + (aRect.height - fontAscent - fontDescent
+      //  - bmdata[0].ascent - bmdata[2].descent + bm.ascent + bm.descent)/2;
 
-    for (i = 0; i < 3; i++) {
-      ch = gMathMLCharGlyph[index+i];
-      if (mDirection == NS_STRETCH_DIRECTION_VERTICAL) {
-#ifdef SHOW_BORDERS
-        aRenderingContext.SetColor(NS_RGB(0,0,0));
-        aRenderingContext.DrawRect(nsRect(dx,start[i],mRect.width+30*(i+1),end[i]-start[i]));
-#endif
-        dy = offset[i];
-             if (i==0) clipRect = nsRect(dx, dy, mRect.width, mRect.height);
-        else if (i==1) clipRect = nsRect(dx, end[0], mRect.width, start[2]-end[0]);
-        else if (i==2) clipRect = nsRect(dx, start[2], mRect.width, end[2]-start[2]);
-      }
-      else if (mDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
-#ifdef SHOW_BORDERS
-        aRenderingContext.SetColor(NS_RGB(0,0,0));
-        aRenderingContext.DrawRect(nsRect(start[i],dy,end[i]-start[i],mRect.height+30*(i+1)));
-#endif
-        dx = offset[i];
-        nscoord top = PR_MIN(dy, dy + fontAscent - bm.ascent);
-             if (i==0) clipRect = nsRect(dx, top, mRect.width, mRect.height);
-        else if (i==1) clipRect = nsRect(end[0], top, start[2]-end[0], mRect.height);
-        else if (i==2) clipRect = nsRect(start[2], top, end[2]-start[2], mRect.height);
-      }
-
-
-//      printf("Drawing i:%d ch:%04X ascent:%d descent:%d lbearing:%d rbearing:%d width:%d at position dx:%d dy:%d\n",
-//             i, ch, bm.ascent, bm.descent, bm.leftBearing, bm.rightBearing, bm.width, dx, dy);
-//      getchar();
-
-      if (!clipRect.IsEmpty()) {
-        clipRect.Inflate(onePixel, onePixel);
-        DrawChar(aRenderingContext, ch, dx, dy, clipRect);
-      }
+      // coord for exact fit (i.e., no leading)
+      dy = aRect.y + (aRect.height - (bm.ascent - bm.descent))/2
+                   - (fontAscent - bm.ascent);
     }
+    else if (2 == i) { // bottom
+      // coord with line-spacing (i.e., leading)
+      // dy = aRect.y + aRect.height - (fontAscent + fontDescent);
 
-    // fill the gap between top and middle, and between middle and bottom.
-    ch = gMathMLCharGlyph[index+3]; // glue
-    for (i = 0; i < 2; i++) {
-      PRInt32 count = 0;
-      if (mDirection == NS_STRETCH_DIRECTION_VERTICAL) {
-        dy = offset[i]; 
-        clipRect = nsRect(dx, end[i], mRect.width, start[i+1]-end[i]);
-        clipRect.Inflate(onePixel, onePixel);
+      // coord for exact fit (i.e., no leading)
+      dy = aRect.y + aRect.height - (fontAscent - bm.descent);
+    }
+    clipRect = nsRect(dx, dy, aRect.width, aRect.height);
+    // abcissa that DrawString used
+    offset[i] = dy;
+    // *exact* abcissa where the *top-most* pixel of the glyph is painted
+    start[i] = dy + fontAscent - bm.ascent; 
+    // *exact* abcissa where the *bottom-most* pixel of the glyph is painted
+    end[i] = dy + fontAscent - bm.descent; // note: end = start + height
+  }
+
+  /////////////////////////////////////
+  // draw top, middle, bottom
+  for (i = 0; i < 3; i++) {
+    ch = gMathMLCharGlyph[index+i];
 #ifdef SHOW_BORDERS
-        aRenderingContext.SetColor(NS_RGB(255,0,0));
-        aRenderingContext.DrawRect(clipRect);
+    aRenderingContext.SetColor(NS_RGB(0,0,0));
+    aRenderingContext.DrawRect(nsRect(dx,start[i],aRect.width+30*(i+1),end[i]-start[i]));
 #endif
-        bm = bmdata[i];
-        while (dy + fontAscent - bm.descent < start[i+1]) {
-          if (2 > count) {
-            stride = -bm.descent;
-            bm = bmdata[3]; // glue
-            stride += bm.ascent;
-          }
-          count++;
-          dy += stride;
-          DrawChar(aRenderingContext, ch, dx, dy, clipRect);
-//        NS_ASSERTION(5000 == count, "Error - gMathMLCharGlyph is incorrectly set");
-          if (1000 == count) return NS_ERROR_UNEXPECTED;
-        }
-#ifdef SHOW_BORDERS
-        // last glyph that may cross past its boundary and collide with the next
-        nscoord height = bm.ascent - bm.descent;
-        aRenderingContext.SetColor(NS_RGB(0,255,0));
-        aRenderingContext.DrawRect(nsRect(dx,dy+fontAscent-bm.ascent,mRect.width,height));
-#endif
-      }
-      else if (mDirection == NS_STRETCH_DIRECTION_HORIZONTAL) {
-        dx = offset[i]; 
-        nscoord top = PR_MIN(dy, dy + fontAscent - bm.ascent);
-        clipRect = nsRect(end[i], top, start[i+1]-end[i], mRect.height);
-        clipRect.Inflate(onePixel, onePixel);
-#ifdef SHOW_BORDERS
-        // rectangles in-between that are to be filled
-        aRenderingContext.SetColor(NS_RGB(255,0,0));
-        aRenderingContext.DrawRect(clipRect);
-#endif
-        bm = bmdata[i];
-        while (dx + bm.rightBearing < start[i+1]) {
-          if (2 > count) {
-            stride = bm.rightBearing;
-            bm = bmdata[3]; // glue
-            stride -= bm.leftBearing;
-          }
-          count++;
-          dx += stride;
-          DrawChar(aRenderingContext, ch, dx, dy, clipRect);
-//        NS_ASSERTION(5000 == count, "Error - gMathMLCharGlyph is incorrectly set");
-          if (1000 == count) return NS_ERROR_UNEXPECTED;
-//        printf("Drawing %04X ascent:%d descent:%d  at position dx:%d dy:%d\n",
-//               ch, bm.ascent, bm.descent, dx, dy);
-        }
-#ifdef SHOW_BORDERS
-        // last glyph that may cross past its boundary and collide with the next
-        nscoord width = bm.rightBearing - bm.leftBearing;
-        aRenderingContext.SetColor(NS_RGB(0,255,0));
-        aRenderingContext.DrawRect(nsRect(dx+bm.leftBearing,dy,width,mRect.height));
-#endif
-      } 
+    dy = offset[i];
+         if (i==0) clipRect = nsRect(dx, dy, aRect.width, aRect.height);
+    else if (i==1) clipRect = nsRect(dx, end[0], aRect.width, start[2]-end[0]);
+    else if (i==2) clipRect = nsRect(dx, start[2], aRect.width, end[2]-start[2]);
+
+//    printf("Drawing i:%d ch:%04X ascent:%d descent:%d lbearing:%d rbearing:%d width:%d at position dx:%d dy:%d\n",
+//           i, ch, bm.ascent, bm.descent, bm.leftBearing, bm.rightBearing, bm.width, dx, dy);
+//    getchar();
+
+    if (!clipRect.IsEmpty()) {
+      clipRect.Inflate(onePixel, onePixel);
+      DrawChar(aRenderingContext, ch, dx, dy, clipRect);
     }
   }
 
+  ///////////////
+  // fill the gap between top and middle, and between middle and bottom.
+  ch = gMathMLCharGlyph[index+3]; // glue
+  for (i = 0; i < 2; i++) {
+    PRInt32 count = 0;
+    dy = offset[i]; 
+    clipRect = nsRect(dx, end[i], aRect.width, start[i+1]-end[i]);
+    clipRect.Inflate(onePixel, onePixel);
+#ifdef SHOW_BORDERS
+    aRenderingContext.SetColor(NS_RGB(255,0,0));
+    aRenderingContext.DrawRect(clipRect);
+#endif
+    bm = bmdata[i];
+    while (dy + fontAscent - bm.descent < start[i+1]) {
+      if (2 > count) {
+        stride = -bm.descent;
+        bm = bmdata[3]; // glue
+        stride += bm.ascent;
+      }
+      count++;
+      dy += stride;
+      DrawChar(aRenderingContext, ch, dx, dy, clipRect);
+//    NS_ASSERTION(5000 == count, "Error - gMathMLCharGlyph is incorrectly set");
+      if (1000 == count) return NS_ERROR_UNEXPECTED;
+    }
+#ifdef SHOW_BORDERS
+    // last glyph that may cross past its boundary and collide with the next
+    nscoord height = bm.ascent - bm.descent;
+    aRenderingContext.SetColor(NS_RGB(0,255,0));
+    aRenderingContext.DrawRect(nsRect(dx, dy+fontAscent-bm.ascent, aRect.width, height));
+#endif
+  }
+  return NS_OK;	
+}
+
+// paint a stretchy char by assembling glyphs horizontally
+nsresult
+nsMathMLChar::PaintHorizontally(nsIPresContext&      aPresContext,
+                                nsIRenderingContext& aRenderingContext,
+                                nsIStyleContext*     aStyleContext,
+                                nscoord              fontAscent,
+                                nscoord              fontDescent,
+                                nsMathMLCharEnum     aCharEnum,
+                                nsRect               aRect)
+{
+  nsresult rv = NS_OK;
+  PRInt32 index = gMathMLCharIndex[aCharEnum];
+  PRInt32 limit = gMathMLCharIndex[aCharEnum+1]; // next char starts here...
+  // jump past the glyphs of various size...
+  PRUnichar ch = gMathMLCharGlyph[index++];
+  while (ch && index <= limit) {
+   ch = gMathMLCharGlyph[index++];
+  }
+  // return if there are no partial glyphs (an erroneous table!)
+  if (!gMathMLCharGlyph[index]) return NS_OK;
+
+  nscoord dx = aRect.x;
+  nscoord dy = aRect.y;
+  nsRect clipRect;
+
+  float p2t;
+  aPresContext.GetScaledPixelsToTwips(&p2t);
+  nscoord onePixel = NSIntPixelsToTwips(1, p2t); 
+
+  // get metrics data to be re-used later
+  PRInt32 i;
+  nsBoundingMetrics bm, bmdata[4];
+  nscoord stride, offset[3], start[3], end[3];
+  for (i = 0; i < 4; i++) {
+    ch = gMathMLCharGlyph[index+i];
+    rv = aRenderingContext.GetBoundingMetrics(&ch, PRUint32(1), bm);
+    if (NS_FAILED(rv)) { printf("GetBoundingMetrics failed for %04X:%c\n", ch, ch&0x00FF); /*getchar();*/ return rv; }
+    bmdata[i] = bm;
+//    printf("bm for i:%d ch:%04X ascent:%d descent:%d lbearing:%d rbearing:%d width:%d fontAscent:%d fontDescent:%d\n",
+//           i, ch, bm.ascent, bm.descent, bm.leftBearing, bm.rightBearing, bm.width, fontAscent, fontDescent);
+  }
+  for (i = 0; i < 3; i++) {
+    ch = gMathMLCharGlyph[index+i];
+    bm = bmdata[i];
+//printf("Drawing i=%d ch=%04X", i, ch); getchar();
+    if (0 == i) { // left 
+      // coord with intercharacter-spacing
+      // dx = aRect.x;
+
+      // coord for exact fit (no intercharacter-spacing)
+      dx = aRect.x - bm.leftBearing;
+    }
+    else if (1 == i) { // middle
+      // coord with intercharacter-spacing
+      dx = aRect.x + (aRect.width - bm.width)/2;
+    }
+    else if (2 == i) { // right
+      // coord with intercharacter-spacing
+      // dx = aRect.x + aRect.width - bm.width;
+
+      // coord for exact fit (no intercharacter-spacing)
+      dx = aRect.x + aRect.width - bm.rightBearing;
+    }
+    // abcissa that DrawString used
+    offset[i] = dx;
+    // *exact* abcissa where the *left-most* pixel of the glyph is painted
+    start[i] = dx + bm.leftBearing; 
+    // *exact* abcissa where the *right-most* pixel of the glyph is painted
+    end[i] = dx + bm.rightBearing; // note: end = start + width
+  }
+
+  ///////////////////////////
+  // draw left, middle, right
+  for (i = 0; i < 3; i++) {
+    ch = gMathMLCharGlyph[index+i];
+#ifdef SHOW_BORDERS
+    aRenderingContext.SetColor(NS_RGB(0,0,0));
+    aRenderingContext.DrawRect(nsRect(start[i], dy, end[i]-start[i], aRect.height+30*(i+1)));
+#endif
+    dx = offset[i];
+    nscoord top = PR_MIN(dy, dy + fontAscent - bm.ascent);
+         if (i==0) clipRect = nsRect(dx, top, aRect.width, aRect.height);
+    else if (i==1) clipRect = nsRect(end[0], top, start[2]-end[0], aRect.height);
+    else if (i==2) clipRect = nsRect(start[2], top, end[2]-start[2], aRect.height);
+
+//  printf("Drawing i:%d ch:%04X ascent:%d descent:%d lbearing:%d rbearing:%d width:%d at position dx:%d dy:%d\n",
+//         i, ch, bm.ascent, bm.descent, bm.leftBearing, bm.rightBearing, bm.width, dx, dy);
+//  getchar();
+    if (!clipRect.IsEmpty()) {
+      clipRect.Inflate(onePixel, onePixel);
+      DrawChar(aRenderingContext, ch, dx, dy, clipRect);
+    }
+  }
+
+  ////////////////
+  // fill the gap between left and middle, and between middle and right.
+  ch = gMathMLCharGlyph[index+3]; // glue
+  for (i = 0; i < 2; i++) {
+    PRInt32 count = 0;
+    dx = offset[i]; 
+    nscoord top = PR_MIN(dy, dy + fontAscent - bm.ascent);
+    clipRect = nsRect(end[i], top, start[i+1]-end[i], aRect.height);
+    clipRect.Inflate(onePixel, onePixel);
+#ifdef SHOW_BORDERS
+    // rectangles in-between that are to be filled
+    aRenderingContext.SetColor(NS_RGB(255,0,0));
+    aRenderingContext.DrawRect(clipRect);
+#endif
+    bm = bmdata[i];
+    while (dx + bm.rightBearing < start[i+1]) {
+      if (2 > count) {
+        stride = bm.rightBearing;
+        bm = bmdata[3]; // glue
+        stride -= bm.leftBearing;
+      }
+      count++;
+      dx += stride;
+      DrawChar(aRenderingContext, ch, dx, dy, clipRect);
+//    NS_ASSERTION(5000 == count, "Error - gMathMLCharGlyph is incorrectly set");
+      if (1000 == count) return NS_ERROR_UNEXPECTED;
+//    printf("Drawing %04X ascent:%d descent:%d  at position dx:%d dy:%d\n",
+//           ch, bm.ascent, bm.descent, dx, dy);
+    }
+#ifdef SHOW_BORDERS
+    // last glyph that may cross past its boundary and collide with the next
+    nscoord width = bm.rightBearing - bm.leftBearing;
+    aRenderingContext.SetColor(NS_RGB(0,255,0));
+    aRenderingContext.DrawRect(nsRect(dx + bm.leftBearing, dy, width, aRect.height));
+#endif
+  }
   return NS_OK;	
 }
 

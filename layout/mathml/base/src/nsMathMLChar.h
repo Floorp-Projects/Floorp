@@ -31,7 +31,7 @@ typedef PRUint32 nsStretchDirection;
 
 // chars that we know how to stretch
 enum nsMathMLCharEnum {
-  eMathMLChar_UNKNOWN = -1,
+  eMathMLChar_DONT_STRETCH = -1,
   eMathMLChar_LeftParenthesis,
   eMathMLChar_RightParenthesis,
   eMathMLChar_Integral ,
@@ -75,6 +75,7 @@ struct nsCharMetrics {
     descent = aReflowMetrics.descent;
   }
 
+#if 0
   void 
   operator=(const nsCharMetrics& aCharMetrics) {
     width = aCharMetrics.width; 
@@ -82,6 +83,7 @@ struct nsCharMetrics {
     ascent = aCharMetrics.ascent; 
     descent = aCharMetrics.descent;
   }
+#endif
 
   PRBool
   operator==(const nsCharMetrics& aCharMetrics) {
@@ -120,7 +122,7 @@ public:
   // This is the method called to ask the char to stretch itself.
   // aDesiredStretchSize is an IN/OUT parameter.
   // On input  - it contains our current size.
-  // On output - the same size or the new size that we want.
+  // On output - the same size or the new size that the char wants.
   NS_IMETHOD Stretch(nsIPresContext&      aPresContext,
                      nsIRenderingContext& aRenderingContext,
                      nsIStyleContext*     aStyleContext,
@@ -128,14 +130,27 @@ public:
                      nsCharMetrics&       aContainerSize,
                      nsCharMetrics&       aDesiredStretchSize);
 
-  void SetData(nsString& aData)
-  {
+  void
+  SetData(nsString& aData) {
     mData = aData;
     SetEnum();
   }
 
-  void GetData(nsString& aData) {
+  void 
+  GetData(nsString& aData) {
     aData = mData;
+  }
+
+  PRInt32
+  Length() {
+    return mData.Length();
+  }
+
+  // Sometimes we only want to pass the data to another routine,
+  // this function helps to avoid copying
+  const PRUnichar*
+  GetUnicode() {
+    return mData.GetUnicode();
   }
 
   void
@@ -165,6 +180,24 @@ private:
            nscoord              aX,
            nscoord              aY,
            nsRect&              aClipRect);
+
+  static nsresult
+  PaintVertically(nsIPresContext&      aPresContext,
+                  nsIRenderingContext& aRenderingContext,
+                  nsIStyleContext*     aStyleContext,
+                  nscoord              fontAscent,
+                  nscoord              fontDescent,
+                  nsMathMLCharEnum     aCharEnum,
+                  nsRect               aRect);
+
+  static nsresult
+  PaintHorizontally(nsIPresContext&      aPresContext,
+                    nsIRenderingContext& aRenderingContext,
+                    nsIStyleContext*     aStyleContext,
+                    nscoord              fontAscent,
+                    nscoord              fontDescent,
+                    nsMathMLCharEnum     aCharEnum,
+                    nsRect               aRect);
 };
 
 #endif /* nsMathMLChar_h___ */
