@@ -2442,7 +2442,7 @@ MatchRegExp(MatchState *state, jsbytecode *pc, const jschar *cp)
                         cp = MatchRegExp(state, pc2, cp);
                         state->pcend = pcend;
                         /* couldn't grab one more, so bail */
-                        if (!cp)
+                        if (!cp || (cp == cpend))
 			    return cp2;
                         num++;
                     }
