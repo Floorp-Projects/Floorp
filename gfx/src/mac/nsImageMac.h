@@ -2,7 +2,7 @@
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * compliance with the NPL.	 You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
  *
  * Software distributed under the NPL is distributed on an "AS IS" basis,
@@ -11,8 +11,8 @@
  * NPL.
  *
  * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Communications Corporation.	Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.	All Rights
  * Reserved.
  */
 
@@ -25,81 +25,81 @@
 class nsImageMac : public nsIImage
 {
 public:
-  nsImageMac();
-  ~nsImageMac();
+											nsImageMac();
+	virtual							~nsImageMac();
 
-  NS_DECL_ISUPPORTS
+	NS_DECL_ISUPPORTS
 
-  /**
-  @see nsIImage.h
-  */
-  virtual PRInt32     GetBytesPix()       { return mThePixelmap.cmpCount; }
-  virtual PRInt32     GetHeight()         { return mHeight;}
-  virtual PRInt32     GetWidth()          { return mWidth; }
-  virtual PRUint8*    GetBits() ;          //{ return mImageBits; }
-  virtual void*       GetBitInfo()        { return nsnull; }
-  virtual PRBool      GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
-  virtual PRInt32     GetLineStride()     {return mRowBytes; }
-  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
-  NS_IMETHOD Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                  PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
-  virtual nsColorMap* GetColorMap() {return nsnull;}
-  virtual void ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
-  virtual nsresult    Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
-  virtual PRBool      IsOptimized()       { return false; }
-  virtual nsresult    Optimize(nsIDeviceContext* aContext);
-  virtual PRUint8*    GetAlphaBits()      { return mAlphaBits; }
-  virtual PRInt32     GetAlphaWidth()   { return mAlphaWidth;}
-  virtual PRInt32     GetAlphaHeight()   {return mAlphaHeight;}
-  virtual PRInt32     GetAlphaLineStride(){ return mARowBytes; }
-  virtual nsIImage*   DuplicateImage() {return(nsnull);}
+	/**
+	@see nsIImage.h
+	*/
+	virtual nsresult		Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
+	virtual PRInt32			GetBytesPix()					{ return mBytesPerPixel; }
+	virtual PRBool			GetIsRowOrderTopToBottom() { return mIsTopToBottom; }
 
-  void AllocConvertedBits(PRUint32 aSize);
+	virtual PRInt32			GetWidth()						{ return mWidth; }
+	virtual PRInt32			GetHeight()						{ return mHeight;}
 
-  /** 
-    * Return the image size of the Device Independent Bitmap(DIB).
-    * @return size of image in bytes
-    */
-  PRIntn      GetSizeImage(){ return mSizeImage; }
+	virtual PRUint8*		GetBits();
+	virtual PRInt32			GetLineStride()				{ return mRowBytes; }
+	virtual PRBool			GetHasAlphaMask()     { return mAlphaGWorld != nsnull; }
 
-  /** 
-   * Make a palette for the DIB.
-   * @return true or false if the palette was created
-   */
-  PRBool      MakePalette();
+	virtual PRUint8*		GetAlphaBits();
+	virtual PRInt32			GetAlphaWidth() 			{ return mAlphaWidth; }
+	virtual PRInt32			GetAlphaHeight()	 		{ return mAlphaHeight; }
+	virtual PRInt32			GetAlphaLineStride()	{ return mARowBytes; }
 
-  /** 
-   * Calculate the number of bytes spaned for this image for a given width
-   * @param aWidth is the width to calculate the number of bytes for
-   * @return the number of bytes in this span
-   */
-  PRInt32  					CalcBytesSpan(PRUint32  aWidth,PRUint32	aDepth);
-  virtual void  		SetAlphaLevel(PRInt32 aAlphaLevel) {}
-  virtual PRInt32 	GetAlphaLevel() {return(0);}
-  virtual void  		MoveAlphaMask(PRInt32 aX, PRInt32 aY) {}
+	virtual void				ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect);
+	virtual PRBool			IsOptimized()					{ return PR_FALSE; }
+	virtual nsresult		Optimize(nsIDeviceContext* aContext);
+	virtual nsColorMap*	GetColorMap() 				{ return nsnull;}
 
-private:
-  PixMap			mThePixelmap;
-  PRInt32			mWidth;
-  PRInt32			mHeight;
-  PRInt32			mSizeImage;
-  PRInt32           mRowBytes;          // number of bytes per row
-  PRUint8*          mImageBits;         // starting address of the bits
+	NS_IMETHOD 					Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+															PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 
+	NS_IMETHOD 					Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+															PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+															PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+
+	virtual void				SetAlphaLevel(PRInt32 aAlphaLevel);
+	virtual PRInt32			GetAlphaLevel();
+	virtual void*				GetBitInfo()					{ return nsnull; }
+
+	NS_IMETHOD					LockImagePixels(PRBool aMaskPixels);
+	NS_IMETHOD					UnlockImagePixels(PRBool aMaskPixels);
+
+protected:
 	
-  nsColorMap*       mColorMap;          // Redundant with mColorTable, but necessary
-    
-  // alpha layer members
-  BitMap			*mAlphaPix;			// the alpha level pixel map
-  PRBool 			mIsTopToBottom;
-  PRUint8			*mAlphaBits;        // the bits to set for the mask
-  PRInt32			mARowBytes;			// rowbytes for the alpha layer
-  PRInt8            mAlphaDepth;        // alpha layer depth
-  PRInt16			mAlphaWidth;        // alpha layer width
-  PRInt16			mAlphaHeight;       // alpha layer height
-  nsPoint			mLocation;          // alpha mask location
-  PRInt8			mImageCache;        // place to save off the old image for fast animation
-  PRInt16			mAlphaLevel;        // an alpha level every pixel uses
+	void							ClearGWorld(GWorldPtr);
+	OSErr							MakeGrayscaleColorTable(PRInt16 numColors, CTabHandle *outColorTable);
+	OSErr							AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rect& bounds, GWorldPtr *outGWorld);
+	
+private:
+
+	GWorldPtr				mImageGWorld;
+	
+	PRInt32					mWidth;
+	PRInt32					mHeight;
+
+	PRInt32					mRowBytes;
+	PRInt32					mBytesPerPixel;
+		
+	// alpha layer members
+	GWorldPtr				mAlphaGWorld;
+
+	PRInt16					mAlphaDepth;		// alpha layer depth
+	PRInt16					mAlphaWidth;		// alpha layer width
+	PRInt16					mAlphaHeight;		// alpha layer height
+	PRInt32					mARowBytes;			// alpha row bytes
+	
+	//nsPoint					mLocation;			// alpha mask location
+
+	//PRInt8					mImageCache;		// place to save off the old image for fast animation
+	//PRInt16					mAlphaLevel;		// an alpha level every pixel uses
+
+	PRIntn					mPixelDataSize;
+	PRBool					mIsTopToBottom;
+
 };
 
 #endif

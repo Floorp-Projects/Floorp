@@ -399,3 +399,19 @@ printf("Format XYPixmap\n");
   }	
   return ;
 }
+
+//------------------------------------------------------------
+// lock the image pixels. nothing to do on gtk
+NS_IMETHODIMP
+nsImageMotif::LockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+// unlock the image pixels. nothing to do on gtk
+NS_IMETHODIMP
+nsImageMotif::UnlockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+} 

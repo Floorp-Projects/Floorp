@@ -354,3 +354,19 @@ void nsImageOS2::DrawBitmap( HPS hps, LONG lCount, PPOINTL pPoints,
       delete pMaskInfo;
    }
 }
+
+//------------------------------------------------------------
+// lock the image pixels. implement this if you need it
+NS_IMETHODIMP
+nsImageOS2::LockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+// unlock the image pixels. implement this if you need it
+NS_IMETHODIMP
+nsImageOS2::UnlockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+} 

@@ -53,6 +53,7 @@ public:
                            PRInt32 aDepth, nsMaskRequirements aMaskRequirements);
   virtual PRBool      IsOptimized();
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
+  virtual PRBool      GetHasAlphaMask()     { return mAlphaBits != nsnull; }        
   virtual PRUint8*    GetAlphaBits();
   virtual PRInt32     GetAlphaWidth();
   virtual PRInt32     GetAlphaHeight();
@@ -68,6 +69,10 @@ public:
 
   void*               GetBitInfo();
   virtual PRBool      GetIsRowOrderTopToBottom() { return PR_TRUE; }
+
+  NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
+  NS_IMETHOD   UnlockImagePixels(PRBool aMaskPixels);    
+
 private:
   PRInt32   mWidth;
   PRInt32   mHeight;

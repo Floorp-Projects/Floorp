@@ -599,3 +599,19 @@ nsresult nsImageGTK::Optimize(nsIDeviceContext* aContext)
 {
   return NS_OK;
 }
+
+//------------------------------------------------------------
+// lock the image pixels. nothing to do on gtk
+NS_IMETHODIMP
+nsImageGTK::LockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+}
+
+//------------------------------------------------------------
+// unlock the image pixels. nothing to do on gtk
+NS_IMETHODIMP
+nsImageGTK::UnlockImagePixels(PRBool aMaskPixels)
+{
+  return NS_OK;
+} 

@@ -46,6 +46,7 @@ public:
   virtual PRBool      IsOptimized();
   virtual nsresult    Optimize(nsIDeviceContext* aContext);
   virtual PRUint8*    GetAlphaBits();
+  virtual PRBool      GetHasAlphaMask()     { return mAlphaBits != nsnull; }        
   virtual PRInt32     GetAlphaWidth();
   virtual PRInt32     GetAlphaHeight();
   virtual PRInt32     GetAlphaLineStride();
@@ -85,7 +86,14 @@ public:
    * @return VOID
    */
   void* GetBitInfo();
+  
 
+  /** 
+   * Lock and unlock the image pixels (for platforms on which this is necessary)
+   * @param aMaskPixels true to lock the mask, false to lock the image
+   */
+  NS_IMETHOD   LockImagePixels(PRBool aMaskPixels);
+  NS_IMETHOD   UnlockImagePixels(PRBool aMaskPixels);    
 
 private:
   /** 

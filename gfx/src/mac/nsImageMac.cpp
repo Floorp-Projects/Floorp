@@ -2,7 +2,7 @@
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * compliance with the NPL.	 You may obtain a copy of the NPL at
  * http://www.mozilla.org/NPL/
  *
  * Software distributed under the NPL is distributed on an "AS IS" basis,
@@ -11,8 +11,8 @@
  * NPL.
  *
  * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Communications Corporation.	Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.	All Rights
  * Reserved.
  */
 #include "nsImageMac.h"
@@ -25,244 +25,477 @@
 
 static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
+
+/** ------------------------------------------------------------
+ *	Utility class for saving, locking, and restoring pixel state
+ */
+
+class StPixelLocker
+{
+public:
+				
+										StPixelLocker(PixMapHandle thePixMap)
+										:	mPixMap(thePixMap)
+										{
+											mPixelState = ::GetPixelsState(mPixMap);
+											::LockPixels(mPixMap);
+										}
+										
+										~StPixelLocker()
+										{
+											::SetPixelsState(mPixMap, mPixelState);
+										}
+
+protected:
+
+
+		PixMapHandle		mPixMap;
+		GWorldFlags			mPixelState;
+
+};
+
+
 /** ---------------------------------------------------
- *  See documentation in nsImageMac.h
+ *	See documentation in nsImageMac.h
  *	@update 
  */
-nsImageMac :: nsImageMac()
+nsImageMac::nsImageMac()
+:	mImageGWorld(nsnull)
+,	mWidth(0)
+,	mHeight(0)
+,	mRowBytes(0)
+,	mBytesPerPixel(0)
+,	mAlphaGWorld(nsnull)
+,	mAlphaDepth(0)
+,	mAlphaWidth(0)
+,	mAlphaHeight(0)
+,	mARowBytes(0)
+,	mIsTopToBottom(PR_TRUE)
+,	mPixelDataSize(0)
 {
-
 	NS_INIT_REFCNT();
-	mThePixelmap.baseAddr = nsnull;
-	mImageBits = nsnull;
-  mWidth = 0;
-  mHeight = 0;	
 }
 
 /** ---------------------------------------------------
- *  See documentation in nsImageMac.h
+ *	See documentation in nsImageMac.h
  *	@update 
  */
-nsImageMac :: ~nsImageMac()
+nsImageMac::~nsImageMac()
 {
-	if(mImageBits)
-		delete[] mImageBits;
+	if (mImageGWorld)
+		::DisposeGWorld(mImageGWorld);
 		
-	if(mAlphaBits){
-    delete mAlphaPix;
-    delete [] mAlphaBits;
-	}
+	if (mAlphaGWorld)
+		::DisposeGWorld(mAlphaGWorld);
+		
 }
 
 NS_IMPL_ISUPPORTS(nsImageMac, kIImageIID);
 
 /** ---------------------------------------------------
- *  See documentation in nsImageMac.h
+ *	See documentation in nsImageMac.h
  *	@update 
  */
 PRUint8* 
 nsImageMac::GetBits()
-{ 
-	return mImageBits; 
+{
+	if (!mImageGWorld)
+	{
+		NS_ASSERTION(0, "Getting bits for non-existent image");
+		return nsnull;
+	}
+
+	PixMapHandle		thePixMap = ::GetGWorldPixMap(mImageGWorld);
+	
+	// pixels should be locked here!
+#if DEBUG
+	GWorldFlags		pixelFlags = GetPixelsState(thePixMap);
+	NS_ASSERTION(pixelFlags & pixelsLocked, "Pixels must be locked here");
+#endif
+	
+	Ptr			pixels = ::GetPixBaseAddr(thePixMap);
+	NS_ASSERTION(pixels, "Getting bits for image failed");
+	return (PRUint8 *)pixels;
 }
 
+
 /** ---------------------------------------------------
- *  See documentation in nsImageMac.h
+ *	See documentation in nsImageMac.h
+ *	@update 
+ */
+PRUint8* 
+nsImageMac::GetAlphaBits()
+{
+	if (!mAlphaGWorld)
+	{
+		NS_ASSERTION(0, "Getting alpha bits for non-existent mask");
+		return nsnull;
+	}
+
+	PixMapHandle		thePixMap = GetGWorldPixMap(mAlphaGWorld);
+	
+	// pixels should be locked here!
+#if DEBUG
+	GWorldFlags		pixelFlags = GetPixelsState(thePixMap);
+	NS_ASSERTION(pixelFlags & pixelsLocked, "Pixels must be locked here");
+#endif
+
+	Ptr	pixels = GetPixBaseAddr(thePixMap);
+	NS_ASSERTION(pixels, "Getting alpha bits failed");
+	return (PRUint8 *)pixels;
+}
+
+
+/** ---------------------------------------------------
+ *	See documentation in nsImageMac.h
  *	@update 08/03/99 -- cleared out the image pointer - dwc
  */
 nsresult 
-nsImageMac :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
-{
-PRInt32	bufferdepth;
-
-	if(nsnull==mImageBits){
-		delete [] mImageBits;
-		}
-
-		switch(aDepth){
-			case 8:
-				mThePixelmap.pixelType = 0;
-				mThePixelmap.cmpCount = 1;
-				mThePixelmap.cmpSize = 8;
-				mThePixelmap.pmTable = GetCTable(8);
-				bufferdepth = 8;
-				break;
-			case 16:
-				mThePixelmap.pixelType = 16;
-				mThePixelmap.cmpCount = 3;
-				mThePixelmap.cmpSize = 5;
-				mThePixelmap.pmTable = 0;
-				bufferdepth = 16;
-				break;
-			case 24:			// 24 and 32 bit are basically the same
-			case 32:
-				mThePixelmap.pixelType = 16;
-				mThePixelmap.cmpCount = 3;
-				mThePixelmap.cmpSize = 8;
-				mThePixelmap.pmTable = 0;
-				bufferdepth = 32;
-				break;
-			default:
-				mThePixelmap.cmpCount = 0;
-				break;
-			}
-	
-	if(mThePixelmap.cmpCount){
-		mRowBytes = CalcBytesSpan(aWidth,bufferdepth);
-		mSizeImage = mRowBytes*aHeight;
-		mImageBits = new unsigned char[mSizeImage];
-		}
-		
-	if(mImageBits){
-		memset(mImageBits,0,mSizeImage);						// clear out any garbage
-		
-		mThePixelmap.baseAddr = (char*) mImageBits;
-		mThePixelmap.rowBytes = mRowBytes | 0x8000;
-		mThePixelmap.bounds.top = 0;
-		mThePixelmap.bounds.left = 0;
-		mThePixelmap.bounds.bottom = aHeight;
-		mThePixelmap.bounds.right = aWidth;
-		mThePixelmap.pixelSize = bufferdepth;
-		mThePixelmap.packType = 0;
-		mThePixelmap.packSize = 0;
-		mThePixelmap.hRes = nsDeviceContextMac::GetScreenResolution()<<16;
-		mThePixelmap.vRes = nsDeviceContextMac::GetScreenResolution()<<16;
-#if TARGET_CARBON
-		mThePixelmap.pixelFormat = 0;				/*fourCharCode representation*/
-		mThePixelmap.pmTable	= 0;					/*color map for this pixMap*/
-		mThePixelmap.pmExt = 0;	
-#else
-  		mThePixelmap.planeBytes = 0;
-  		mThePixelmap.pmReserved = 0;
-#endif
-		mThePixelmap.pmVersion = 0;
-		mWidth = aWidth;
-		mHeight = aHeight;
-		}
-
-
-  // Allocate mask image bits if requested
-  if (aMaskRequirements != nsMaskRequirements_kNoMask){
-  	mAlphaPix = new BitMap();
-    if (nsMaskRequirements_kNeeds1Bit == aMaskRequirements){
-    	mARowBytes = (aWidth + 7) / 8;					// 1 bit rowbytes
-    	mARowBytes = (mARowBytes + 3) & ~0x3;		// 32 bit align
-    	mAlphaBits = new unsigned char[mARowBytes * aHeight];
-      mAlphaDepth = 1;
-      bufferdepth = 1;
-      mAlphaPix->baseAddr = (char*) mAlphaBits;
-      mAlphaPix->rowBytes = mARowBytes;
-      mAlphaPix->bounds.top = 0;
-      mAlphaPix->bounds.left = 0;
-      mAlphaPix->bounds.bottom = aHeight;
-      mAlphaPix->bounds.right = aWidth;      
-      mAlphaWidth = aWidth;
-      mAlphaHeight = aHeight;
-    }else{
-      NS_ASSERTION(nsMaskRequirements_kNeeds8Bit == aMaskRequirements, "unexpected mask depth");
-      mAlphaBits = nsnull;
-      mAlphaWidth = 0;
-      mAlphaHeight = 0;
-    }
-
-  } else{
-    mAlphaBits = nsnull;
-    mAlphaWidth = 0;
-    mAlphaHeight = 0;
-  }
-  mIsTopToBottom = PR_TRUE;
-  return NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsImageMac.h
- *	@update 
- */
-PRInt32  nsImageMac :: CalcBytesSpan(PRUint32  aWidth,PRUint32	aDepth)
-{
-PRInt32 spanbytes;
-
-  spanbytes = (aWidth * aDepth) >> 5;
-
-  if (((PRUint32)aWidth * aDepth) & 0x1F) 
-    spanbytes++;
-  spanbytes <<= 2;
-  return(spanbytes);
-  return 0;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsImageMac.h
- *	@update 
- */
-void nsImageMac :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
+nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirements aMaskRequirements)
 {
 
-  /*if (nsnull == mImage)
-    return;
-
-  if (IsFlagSet(nsImageUpdateFlags_kBitsChanged, aFlags)){
-  }
-*/
-}
-
-
-/** ---------------------------------------------------
- *  See documentation in nsImageMac.h
- *	@update 
- */
-NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
-                                 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
-{
-  PixMapPtr	destpix;
-  RGBColor	rgbblack = {0x0000,0x0000,0x0000};
-  RGBColor	rgbwhite = {0xFFFF,0xFFFF,0xFFFF};
-  Rect			srcrect,dstrect,maskrect;;
-
-  if (nsnull == mThePixelmap.baseAddr)
-    return NS_ERROR_FAILURE;
-
-	::SetRect(&srcrect,aSX,aSY,aSX+aSWidth,aSY+aSHeight);
-	::SetRect(&maskrect,aSX,aSY,aSX+aSWidth,aSY+aSHeight);
-	::SetRect(&dstrect,aDX,aDY,aDX+aDWidth,aDY+aDHeight);
-
-#if TARGET_CARBON
-	destpix = *::GetPortPixMap((CGrafPtr)aSurface);
-#else
-	destpix = *((CGrafPtr)aSurface)->portPixMap;
-#endif
-
-	::RGBForeColor(&rgbblack);
-	::RGBBackColor(&rgbwhite);
-	if(mAlphaBits){
-	  ::CopyDeepMask((BitMap*)&mThePixelmap,(BitMap*)mAlphaPix,(BitMap*)destpix,&srcrect,&maskrect,&dstrect,srcCopy,0L);
-	} else {
-	  ::CopyBits((BitMap*)&mThePixelmap, (BitMap*)destpix, &srcrect, &dstrect, ditherCopy, 0L);
+	// have we already been initted?
+	if (mImageGWorld)
+	{
+		NS_ASSERTION(0, "Initting image twice");
+		::DisposeGWorld(mImageGWorld);
+		mImageGWorld = nsnull;
 	}
 
-  return NS_OK;
+  mWidth = aWidth;
+  mHeight = aHeight;
+  
+	PRInt16 bufferdepth;
+
+	switch(aDepth)
+	{
+		case 8:
+			//mThePixelmap.pmTable = ::GetCTable(8);
+			bufferdepth = 8;
+			break;
+
+		case 16:
+			bufferdepth = 16;
+			break;
+
+		case 24:			// 24 and 32 bit are basically the same
+		case 32:
+			bufferdepth = 32;
+			break;
+
+		default:
+			NS_NOTREACHED("Unexpected buffer depth");
+			bufferdepth = 32;
+			break;
+	}
+
+
+	// allocate the GWorld
+	Rect		bounds = {0, 0, 0, 0};
+	bounds.right = aWidth;
+	bounds.bottom = aHeight;
+		
+	OSErr		err = AllocateGWorld(bufferdepth, nsnull, bounds, &mImageGWorld);
+	if (err != noErr)
+	{
+		NS_WARNING("GWorld allocation failed");
+		return NS_ERROR_OUT_OF_MEMORY;
+	}
+	
+	ClearGWorld(mImageGWorld);
+	
+	// calculate the pixel data size
+	PixMapHandle	thePixMap = ::GetGWorldPixMap(mImageGWorld);
+
+	mRowBytes = (**thePixMap).rowBytes & 0x3FFF;
+	mPixelDataSize = mRowBytes * aHeight;
+	mBytesPerPixel = (**thePixMap).cmpCount;
+		
+	if (aMaskRequirements != nsMaskRequirements_kNoMask)
+	{
+		PRInt16 mAlphaDepth = 0;
+
+		switch (aMaskRequirements)
+		{
+			case nsMaskRequirements_kNeeds1Bit:
+				mAlphaDepth = 1;
+				err = AllocateGWorld(mAlphaDepth, nsnull, bounds, &mAlphaGWorld);
+				if (err != noErr)
+					return NS_ERROR_OUT_OF_MEMORY;
+				break;
+				
+			case nsMaskRequirements_kNeeds8Bit:
+				mAlphaDepth = 8;
+				
+				// make 8-bit grayscale color table
+				CTabHandle		grayRamp = nsnull;
+				err = MakeGrayscaleColorTable(256, &grayRamp);
+				if (err != noErr)
+					return NS_ERROR_OUT_OF_MEMORY;				
+				
+				err = AllocateGWorld(mAlphaDepth, grayRamp, bounds, &mAlphaGWorld);
+				if (err != noErr)
+					return NS_ERROR_OUT_OF_MEMORY;
+					
+				::DisposeHandle((Handle)grayRamp);
+				break;
+				
+			default:
+				NS_NOTREACHED("Uknown mask depth");
+				break;
+		}
+		
+		if (mAlphaGWorld)
+		{
+			ClearGWorld(mAlphaGWorld);
+
+			// calculate the pixel data size
+			PixMapHandle	maskPixMap = GetGWorldPixMap(mAlphaGWorld);
+
+			mARowBytes = (**maskPixMap).rowBytes & 0x3FFF;
+		  mAlphaWidth = aWidth;
+		  mAlphaHeight = aHeight;
+		}		
+	}
+	
+	return NS_OK;
 }
 
 /** ---------------------------------------------------
- *  See documentation in nsImageMac.h
+ *	See documentation in nsImageMac.h
+ *	@update 
+ */
+void nsImageMac::ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
+{
+	// NS_NOTYETIMPLEMENTED("nsImageMac::ImageUpdated not implemented");
+}
+
+
+/** ---------------------------------------------------
+ *	See documentation in nsImageMac.h
+ *	@update 
+ */
+NS_IMETHODIMP nsImageMac::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface, PRInt32 aSX, PRInt32 aSY,
+								 PRInt32 aSWidth, PRInt32 aSHeight, PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+{
+	PixMapHandle	imagePixMap;
+	Rect					srcRect, dstRect, maskRect;
+
+	if (!mImageGWorld)
+		return NS_ERROR_FAILURE;
+
+	::SetRect(&srcRect, aSX, aSY, aSX + aSWidth, aSY + aSHeight);
+	maskRect = srcRect;
+	::SetRect(&dstRect, aDX, aDY, aDX + aDWidth, aDY + aDHeight);
+
+	::ForeColor(blackColor);
+	::BackColor(whiteColor);
+	
+	imagePixMap = GetGWorldPixMap(mImageGWorld);
+	
+	StPixelLocker		pixelLocker(imagePixMap);			// locks the pixels
+	
+	// get the destination pix map
+	nsDrawingSurfaceMac* surface = static_cast<nsDrawingSurfaceMac*>(aSurface);
+	CGrafPtr		destPort;
+	nsresult		rv = surface->GetGrafPtr((GrafPtr *)&destPort);
+	if (NS_FAILED(rv)) return rv;
+	
+	PixMapHandle		destPixels = GetGWorldPixMap(destPort);
+	NS_ASSERTION(destPixels, "No dest pixels!");
+	
+	// XXX printing???
+	
+	if(mAlphaGWorld)
+	{
+		PixMapHandle		maskPixMap = GetGWorldPixMap(mAlphaGWorld);
+		StPixelLocker		pixelLocker(maskPixMap);
+		
+		// 1-bit masks?
+		
+		::CopyDeepMask((BitMap*)*imagePixMap, (BitMap*)*maskPixMap, (BitMap*)*destPixels, &srcRect, &maskRect, &dstRect, srcCopy, nsnull);
+	}
+	else
+	{
+		::CopyBits((BitMap*)*imagePixMap, (BitMap*)*destPixels, &srcRect, &dstRect, ditherCopy, 0L);
+	}
+
+	return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *	See documentation in nsImageMac.h
  *	@update 
  */
 NS_IMETHODIMP nsImageMac :: Draw(nsIRenderingContext &aContext, 
-                                 nsDrawingSurface aSurface,
-                                 PRInt32 aX, PRInt32 aY, 
-                                 PRInt32 aWidth, PRInt32 aHeight)
+								 nsDrawingSurface aSurface,
+								 PRInt32 aX, PRInt32 aY, 
+								 PRInt32 aWidth, PRInt32 aHeight)
 {
 
-  return Draw(aContext,aSurface,0,0,mWidth,mHeight,aX,aY,aWidth,aHeight);
+	return Draw(aContext,aSurface,0,0,mWidth,mHeight,aX,aY,aWidth,aHeight);
 }
-
+ 
 /** ---------------------------------------------------
- *  See documentation in nsImageMac.h
+ *	See documentation in nsImageMac.h
  *	@update 
  */
 nsresult nsImageMac::Optimize(nsIDeviceContext* aContext)
 {
-  return NS_OK;
+	return NS_OK;
 }
 
-//------------------------------------------------------------
+
+#pragma mark -
+
+/** ---------------------------------------------------
+ *	See documentation in nsImageMac.h
+ *	@update 
+ */
+void nsImageMac::SetAlphaLevel(PRInt32 aAlphaLevel)
+{
+	NS_NOTYETIMPLEMENTED("nsImageMac::SetAlphaLevel not implemented");
+}
+
+
+/** ---------------------------------------------------
+ *	See documentation in nsImageMac.h
+ *	@update 
+ */
+PRInt32 nsImageMac::GetAlphaLevel()
+{
+	NS_NOTYETIMPLEMENTED("nsImageMac::GetAlphaLevel not implemented");
+	return 0;
+}
+
+#pragma mark -
+
+/** ---------------------------------------------------
+ *	Lock down the image pixels
+ */
+NS_IMETHODIMP
+nsImageMac::LockImagePixels(PRBool aMaskPixels)
+{
+  if (!mImageGWorld)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  if (aMaskPixels && !mAlphaGWorld)
+  	return NS_ERROR_NOT_INITIALIZED;
+  	
+	PixMapHandle		thePixMap = ::GetGWorldPixMap(aMaskPixels ? mAlphaGWorld : mImageGWorld);
+	::LockPixels(thePixMap);
+	return NS_OK;
+}
+
+/** ---------------------------------------------------
+ *	Unlock the pixels
+ */
+NS_IMETHODIMP
+nsImageMac::UnlockImagePixels(PRBool aMaskPixels)
+{
+  if (!mImageGWorld)
+    return NS_ERROR_NOT_INITIALIZED;
+  
+  if (aMaskPixels && !mAlphaGWorld)
+  	return NS_ERROR_NOT_INITIALIZED;
+
+	PixMapHandle		thePixMap = ::GetGWorldPixMap(aMaskPixels ? mAlphaGWorld : mImageGWorld);
+	::UnlockPixels(thePixMap);
+	return NS_OK;
+}
+
+#pragma mark -
+
+/** ---------------------------------------------------
+ *	Erase the GWorld contents
+ */
+void nsImageMac::ClearGWorld(GWorldPtr theGWorld)
+{
+	PixMapHandle	thePixels;
+	GWorldPtr			curPort;
+	GDHandle			curDev;
+	OSErr					err = noErr;
+
+	thePixels = ::GetGWorldPixMap(theGWorld);
+	::GetGWorld(&curPort, &curDev);
+
+	// Black the offscreen
+	if (LockPixels(thePixels))
+	{
+		::SetGWorld(theGWorld, nil);
+
+		::BackColor(whiteColor);
+		::EraseRect(&theGWorld->portRect);
+
+		::UnlockPixels(thePixels);
+	}
+
+	::SetGWorld(curPort, curDev);
+}
+
+/** -----------------------------------------------------------------
+ *	Allocate a GWorld, trying first in the heap, and then in temp mem.
+ */
+#define kReserveHeapFreeSpace			(256 * 1024)
+#define kReserverHeapContigSpace	(64 * 1024)
+
+OSErr nsImageMac::AllocateGWorld(PRInt16 depth, CTabHandle colorTable, const Rect& bounds, GWorldPtr *outGWorld)
+{
+	*outGWorld = nsnull;
+	
+	// Quick and dirty check to make sure there is some memory available.
+	// GWorld allocations in temp mem can still fail if the heap is totally
+	// full, because some stuff is allocated in the heap
+	long	totalSpace, contiguousSpace;
+	::PurgeSpace(&totalSpace, &contiguousSpace);		// this does not purge memory!
+	
+	QDErr		err = noErr;
+	
+	if (totalSpace > kReserveHeapFreeSpace && contiguousSpace > kReserverHeapContigSpace)
+	{
+		err = ::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, 0);
+		if (err == noErr || err != memFullErr) return err;
+	}
+	
+	err = ::NewGWorld(outGWorld, depth, &bounds, colorTable, nsnull, useTempMem);
+	return err;
+}
+
+
+/** ----------------------------------------------------------
+ *	Make a 256-level grayscale color table, for alpha blending.
+ *  Caller must free the color table with ::DisposeHandle((Handle)colorTable)
+ *  when done.
+ */
+
+OSErr nsImageMac::MakeGrayscaleColorTable(PRInt16 numColors, CTabHandle *outColorTable)
+{
+	CTabHandle	colorTable = nil;
+
+	colorTable = (CTabHandle)::NewHandleClear (8 * numColors + 8);	/* Allocate memory for the table */
+	if (!colorTable) return memFullErr;
+						
+	(**colorTable).ctSeed = ::GetCTSeed();				// not sure about this one
+	(**colorTable).ctFlags = 0;										// not sure about this one
+	(**colorTable).ctSize = numColors - 1;					
+
+	RGBColor		tempColor = { 0xFFFF, 0xFFFF, 0xFFFF};			// starts at white
+	PRUint16		colorInc = 0xFFFF / numColors;
+	
+	for (PRInt16 i = 0; i < numColors; i++)
+	{
+		(**colorTable).ctTable[i].value = i;
+				
+		(**colorTable).ctTable[i].rgb = tempColor;
+		
+		tempColor.red -= colorInc;
+		tempColor.green -= colorInc;
+		tempColor.blue -= colorInc;
+	}
+
+	*outColorTable = colorTable;
+	return noErr;
+}
+
+
+
