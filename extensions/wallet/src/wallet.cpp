@@ -1019,11 +1019,12 @@ PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
   /* otherwise do our own obscuring *
    *   obscuring algorithm is as follows:
    *   1. start with a prefix that is not in base64 so we can identify it as obscuring
-   *   2. xor each text character with 0x7f ('~')
+   *   2. xor each text character with the corresponding character of a key string
    *   3. break up each xor-ed character into a pair of nibbles
    *   4. add each nibble to a base character and append to result
    */
 #define PREFIX "~"
+#define KEY "mozilla"
 #define BASE 'a'
   crypt = (char *)PR_Malloc(PL_strlen(PREFIX) + 2*PL_strlen(text) + 1);
   PRUint32 i;
@@ -1031,7 +1032,7 @@ PRIVATE nsresult EncryptString (const char * text, char *& crypt) {
     crypt[i] = PREFIX[i];
   }
   for (i=0; i<PL_strlen(text); i++) {
-    char ret = text[i]^'~';
+    char ret = text[i]^KEY[i%PL_strlen(KEY)];
     crypt[PL_strlen(PREFIX)+2*i] = BASE + (ret >> 4);
     crypt[PL_strlen(PREFIX)+2*i+1] = BASE + (ret & 0x0F);
   }
@@ -1058,7 +1059,7 @@ PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
   for (PRUint32 i=0; i<(PL_strlen(crypt)-PL_strlen(PREFIX))/2; i++) {
     text[i] =
       (((crypt[PL_strlen(PREFIX)+2*i] - BASE)<<4) +
-        (crypt[PL_strlen(PREFIX)+2*i+1] - BASE))^'~';
+        (crypt[PL_strlen(PREFIX)+2*i+1] - BASE))^KEY[i%PL_strlen(KEY)];
   }
   text[(PL_strlen(crypt)-PL_strlen(PREFIX))/2] = '\0';
   return NS_OK;
@@ -1502,7 +1503,7 @@ Wallet_RandomName(char* suffix)
   return PL_strdup(name);
 }
 
-#define HEADER_VERSION_2b "#2b"
+#define HEADER_VERSION "#2c"
 
 /*
  * get a line from a file
@@ -1543,7 +1544,7 @@ wallet_GetHeader(nsInputFileStream strm) {
   if (NS_FAILED(wallet_GetLine(strm, format))) {
     return PR_FALSE;
   }
-  if (!format.EqualsWithConversion(HEADER_VERSION_2b)) {
+  if (!format.EqualsWithConversion(HEADER_VERSION)) {
     /* something's wrong */
     return PR_FALSE;
   }
@@ -1567,7 +1568,7 @@ wallet_PutHeader(nsOutputFileStream strm) {
   /* format revision number */
   {
     nsAutoString temp1;
-    temp1.AssignWithConversion(HEADER_VERSION_2b);
+    temp1.AssignWithConversion(HEADER_VERSION);
     wallet_PutLine(strm, temp1);
   }
 }

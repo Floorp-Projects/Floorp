@@ -1616,7 +1616,7 @@ si_PutData(const char * URLName, nsVoidArray * signonData, PRBool save) {
  * Managing the Signon Files *
  *****************************/
 
-#define HEADER_VERSION_2b "#2b"
+#define HEADER_VERSION "#2c"
 
 extern void
 Wallet_UTF8Put(nsOutputFileStream strm, PRUnichar c);
@@ -1698,7 +1698,7 @@ SI_LoadSignonData() {
   if (NS_FAILED(si_ReadLine(strm, format))) {
     return -1;
   }
-  if (!format.EqualsWithConversion(HEADER_VERSION_2b)) {
+  if (!format.EqualsWithConversion(HEADER_VERSION)) {
     /* something's wrong */
     return -1;
   }
@@ -1849,7 +1849,7 @@ si_SaveSignonDataLocked() {
 
   /* write out the format revision number */
 
-  si_WriteLine(strm, NS_ConvertToString(HEADER_VERSION_2b));
+  si_WriteLine(strm, NS_ConvertToString(HEADER_VERSION));
 
   /* format for next part of file shall be:
    * URLName -- first url/username on reject list
