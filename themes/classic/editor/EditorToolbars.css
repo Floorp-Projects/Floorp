@@ -106,16 +106,95 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
   padding : 0px;
 }
 
+/*** States for all Editor Formatting Toolbar Buttons (Like Underline, Bold, etc.) ****/
+
+.button-toolbar
+    {
+      min-width           : 24px;
+      margin              : 1px 0px;
+      border              : 1px solid transparent;
+      background-color	  : transparent;
+    }
+
+.button-toolbar:hover
+	{
+	  border              : 1px solid #000000;
+	}
+	
+.button-toolbar > .button-internal-box
+  {
+  	  padding             : 0px 1px 3px 2px;
+      vertical-align      : middle;
+      text-align          : center;
+      border              : 1px solid transparent;
+  }
+
+.button-toolbar > .button-internal-box > .button-text-container
+  {
+  	padding: 0px;
+  }
+
+  .button-toolbar[disabled="true"],
+  .button-toolbar[disabled="true"]:hover,
+  .button-toolbar[disabled="true"]:hover:active
+    {
+   	  border              : 1px solid transparent;
+      color               : #777777;
+      background-color	  : transparent;
+    }
+
+  .button-toolbar:hover > .button-internal-box
+    {
+      border-left         : 1px solid #FFFFFF;
+      border-top          : 1px solid #FFFFFF;
+      border-right        : 1px solid #9D9D9D;
+      border-bottom       : 1px solid #9D9D9D;
+      background-color	  : #D8D8D8;
+    }
+
+  .button-toolbar:hover:active > .button-internal-box
+    {
+      padding             : 1px 0px 2px 3px;
+      border-left         : 1px solid #444444;
+      border-top          : 1px solid #444444;
+      border-right        : 1px solid #AAAAAA;
+      border-bottom       : 1px solid #AAAAAA;
+      background-color	  : #666666;
+    }
+
+  .button-toolbar[disabled="true"] > .button-internal-box,
+  .button-toolbar[disabled="true"]:hover > .button-internal-box,
+  .button-toolbar[disabled="true"]:hover:active > .button-internal-box
+    {
+      padding             : 0px 1px 3px 2px;
+      border              : 1px solid transparent;
+      color				  : #777777;
+      background-color	  : transparent;
+    }
+
+/**** Toggled ON styles ******/
+
+.button-toolbar[toggled="true"]
+  {
+  	border              : 1px solid #000000;
+  }
+
+
+.button-toolbar[toggled="true"] > .button-internal-box
+  {
+  	  padding             : 1px 0px 2px 3px;
+      border-left         : 1px solid #444444;
+      border-top          : 1px solid #444444;
+      border-right        : 1px solid #AAAAAA;
+      border-bottom       : 1px solid #AAAAAA;
+      background-color	  : #666666;
+  }
+
 /* Image URLs for all Editor toolbar buttons */
 
-#boldButton {
+#boldButton, #boldButton[toggled="true"]:hover, #boldButton[toggled="true"]:hover:active {
   list-style-image:url(chrome://editor/skin/images/bold.gif); 
 }
-
-#boldButton 
-  {
-	  list-style-image      : url("chrome://editor/skin/images/bold.gif");
-  } 
 
 #boldButton[disabled="true"],
 #boldButton[disabled="true"]:hover,
@@ -134,7 +213,7 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
     list-style-image      : url("chrome://editor/skin/images/bold-hover-active.gif");
   } 
 
-#italicButton 
+#italicButton, #italicButton[toggled="true"]:hover, #italicButton[toggled="true"]:hover:active
   {
 	  list-style-image      : url("chrome://editor/skin/images/italic.gif");
   } 
@@ -156,7 +235,7 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
     list-style-image      : url("chrome://editor/skin/images/italic-hover-active.gif");
   } 
 
-#underlineButton 
+#underlineButton, #underlineButton[toggled="true"]:hover, #underlineButton[toggled="true"]:hover:active
   {
 	  list-style-image      : url("chrome://editor/skin/images/underline.gif");
   } 
@@ -351,7 +430,7 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 
 #findButton:hover:active
   {
-    list-style-image      : url("chrome://editor/skin/images/find-hover-active.gif"); 
+    list-style-image	  : url("chrome://editor/skin/images/find-hover-active.gif"); 
   }
 
 #linkButton 
@@ -534,9 +613,43 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 	list-style-image:url("chrome://editor/skin/images/bullets.gif");
 }
 
+#ulButton[disabled="true"],
+#ulButton[disabled="true"]:hover,
+#ulButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/bullets-disabled.gif");
+  } 
+
+#ulButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/bullets-hover.gif");
+  } 
+
+#ulButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/bullets-hover-active.gif"); 
+  }
+
 #olButton {
 	list-style-image:url("chrome://editor/skin/images/numbers.gif");
 }
+
+#olButton[disabled="true"],
+#olButton[disabled="true"]:hover,
+#olButton[disabled="true"]:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/numbers-disabled.gif");
+  } 
+
+#olButton:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/numbers-hover.gif");
+  } 
+
+#olButton:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/numbers-hover-active.gif"); 
+  }
 
 #outdentButton 
   {
@@ -590,51 +703,64 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 	list-style-image:url("chrome://editor/skin/images/object-popup.gif");
 }
 
-#text-align-left 
+#text-align-left,
+#align-left-button
   {
 	  list-style-image      : url("chrome://editor/skin/images/left.gif");
   } 
 
 #text-align-left[disabled="true"],
 #text-align-left[disabled="true"]:hover,
-#text-align-left[disabled="true"]:hover:active
+#text-align-left[disabled="true"]:hover:active,
+#align-left-button[disabled="true"],
+#align-left-button[disabled="true"]:hover,
+#align-left-button[disabled="true"]:hover:active,
   {
     list-style-image      : url("chrome://editor/skin/images/left-disabled.gif");
   } 
 
-#text-align-left:hover
+#text-align-left:hover,
+#align-left-button:hover
   {
     list-style-image      : url("chrome://editor/skin/images/left-hover.gif");
   } 
 
-#text-align-left:hover:active
+#text-align-left:hover:active,
+#align-left-button:hover:active
   {
     list-style-image      : url("chrome://editor/skin/images/left-hover-active.gif"); 
   }
 
-#text-align-center 
+#text-align-center,
+#align-center-button
   {
 	  list-style-image      : url("chrome://editor/skin/images/center.gif");
   } 
 
 #text-align-center[disabled="true"],
 #text-align-center[disabled="true"]:hover,
-#text-align-center[disabled="true"]:hover:active
+#text-align-center[disabled="true"]:hover:active,
+#align-center-button[disabled="true"],
+#align-center-button[disabled="true"]:hover,
+#align-center-button[disabled="true"]:hover:active
   {
     list-style-image      : url("chrome://editor/skin/images/center-disabled.gif");
   } 
 
-#text-align-center:hover
+#text-align-center:hover,
+#align-center-button:hover
   {
     list-style-image      : url("chrome://editor/skin/images/center-hover.gif");
   } 
 
-#text-align-center:hover:active
+#text-align-center:hover:active,
+#align-center-button:hover:active
   {
     list-style-image      : url("chrome://editor/skin/images/center-hover-active.gif"); 
   }
 
-#text-align-right 
+#text-align-right,
+#align-right-button
   {
 	  list-style-image      : url("chrome://editor/skin/images/right.gif");
   } 
@@ -642,23 +768,68 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 #text-align-right[disabled="true"],
 #text-align-right[disabled="true"]:hover,
 #text-align-right[disabled="true"]:hover:active
-  {
+#align-right-button[disabled="true"],
+#align-right-button[disabled="true"]:hover,
+#align-right-button[disabled="true"]:hover:active 
+ {
     list-style-image      : url("chrome://editor/skin/images/right-disabled.gif");
   } 
 
-#text-align-right:hover
+#text-align-right:hover,
+#align-right-button:hover
   {
     list-style-image      : url("chrome://editor/skin/images/right-hover.gif");
   } 
 
-#text-align-right:hover:active
+#text-align-right:hover:active,
+#align-right-button:hover:active
   {
     list-style-image      : url("chrome://editor/skin/images/right-hover-active.gif"); 
   }
 
-#text-align-justify {
+#text-align-justify,
+#align-justify-button
+{
 	list-style-image:url("chrome://editor/skin/images/justify.gif");
 }
+
+#text-align-justify[disabled="true"],
+#text-align-justify[disabled="true"]:hover,
+#text-align-justify[disabled="true"]:hover:active
+#align-justify-button[disabled="true"],
+#align-justify-button[disabled="true"]:hover,
+#align-justify-button[disabled="true"]:hover:active 
+ {
+    list-style-image      : url("chrome://editor/skin/images/justify-disabled.gif");
+  } 
+
+#text-align-justify:hover,
+#align-justify-button:hover
+  {
+    list-style-image      : url("chrome://editor/skin/images/justify-hover.gif");
+  } 
+
+#text-align-justify:hover:active,
+#align-justify-button:hover:active
+  {
+    list-style-image      : url("chrome://editor/skin/images/justify-hover-active.gif"); 
+  }
+
+#text-align-left > .button-internal-box, #align-left-button > .button-internal-box,
+#text-align-center > .button-internal-box, #align-center-button > .button-internal-box,
+#text-align-right > .button-internal-box, #align-right-button > .button-internal-box,
+#text-align-justify > .button-internal-box, #align-justify-button > .button-internal-box
+  {
+  	  padding             : 2px 1px 3px 2px;
+  }
+
+#text-align-left:hover:active > .button-internal-box, #align-left-button:hover:active > .button-internal-box,
+#text-align-center:hover:active > .button-internal-box, #align-center-button:hover:active > .button-internal-box,
+#text-align-right:hover:active > .button-internal-box, #align-right-button:hover:active > .button-internal-box,
+#text-align-justify:hover:active > .button-internal-box, #align-justify-button:hover:active > .button-internal-box
+  {
+  	  padding             : 3px 0px 2px 3px;
+  }
 
 .ColorPickerLabel {
   border:     1px inset white;
@@ -677,7 +848,7 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
 }
 
 .color-button:hover {
-  border:  1px solid white;
+  border:  1px solid #000000;
 }
 
 #TextColorPopupButton {

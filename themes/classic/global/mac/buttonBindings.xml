@@ -62,8 +62,11 @@
         <xul:spring class="button-image-left" inherits="default,disabled"/>
     	<xul:box flex="1" class="button-image-middle" inherits="default,disabled" orient="vertical" align="center">
     	  <xul:spring flex="1" class="button-top-spring"/>
-    	  <xul:box class="button-text-box" flex="1">
-		    <xul:text inherits="disabled,value,crop,accesskey"/>
+    	  <xul:box flex="1">
+    	  	<xul:image class="button-icon" inherits="src"/>
+    	    <xul:box class="button-text-box" flex="1">
+		      <xul:text inherits="disabled,value,crop,accesskey"/>
+    	    </xul:box>
     	  </xul:box>
     	  <xul:spring flex="1" class="button-bottom-spring"/>
     	</xul:box>

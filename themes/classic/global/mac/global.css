@@ -123,7 +123,7 @@
       min-width           : 1px;
       border-right        : 1px solid #FFFFFF;
       border-bottom       : 1px solid #FFFFFF;
-      border-top		  : 2px groove #000000;
+      border-top		  : 1px solid #000000;
     }
   
   statusbarpanel

@@ -104,6 +104,9 @@ install::
 	$(MAKE_INSTALL) italic-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) italic.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) justify.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) justify-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) justify-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
+	$(MAKE_INSTALL) justify-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) left-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) left-hover-active.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images
 	$(MAKE_INSTALL) left-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\editor\skin\images

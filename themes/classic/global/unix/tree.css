@@ -140,12 +140,17 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
 
 
 /* tree header with sort direction indicators */
-.sortDirectionIndicator[sortDirection="ascending"]  > .tree-header-sortdirection {
+.sortDirectionIndicator[sortDirection="ascending"]  > treecell-header-box > .tree-header-sortdirection {
   list-style-image: url("chrome://global/skin/sortAscending.gif");
   margin-right: 3px;
 }
 
-.sortDirectionIndicator[sortDirection="descending"] > .tree-header-sortdirection {
+.sortDirectionIndicator[sortDirection="descending"] > treecell-header-box > .tree-header-sortdirection {
   list-style-image: url("chrome://global/skin/sortDescending.gif");
   margin-right: 3px;
 }
+
+.treecell-popup-icon
+  {
+    list-style-image       : url("chrome://global/skin/columnselect.gif");
+  }

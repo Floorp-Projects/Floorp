@@ -107,7 +107,10 @@ EXPORT_RESOURCE_SAMPLES_1 = \
 	italic-hover-active.gif \
 	italic-hover.gif \
 	italic.gif \
-	justify.gif
+	justify.gif \
+	justify-hover.gif \
+	justify-hover-active.gif \
+	justify-disabled.gif
 
 EXPORT_RESOURCE_SAMPLES_2 = \
 	left-disabled.gif \

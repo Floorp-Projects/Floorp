@@ -14,5 +14,13 @@
       </xul:box>
     </content>
   </binding>
-   
+  
+    <binding id="treecell-header-image">
+    <content excludes="observes">
+      <xul:box class="treecell-header-image-box" flex="1" autostretch="never" valign="middle">
+        <xul:image class="tree-header-image" inherits="src"/>
+      </xul:box>
+    </content>
+  </binding>
+  
 </bindings>

@@ -50,7 +50,7 @@ treecell {
 } 
 
 .treecell-header, .treecell-inset-header { 
-  behavior: url("chrome://global/skin/classicBindings.xml#treeheader");
+  behavior: url("chrome://global/skin/treeBindings.xml#treecell-header");
   background-color: #CCCCCC; 
   border-left: 1px solid #666666 !important;
   border-top: 1px solid #666666 !important;
@@ -61,8 +61,8 @@ treecell {
   vertical-align: middle;
 } 
 
-.treecell-header > .treeheader-box,
-.treecell-inset-header > .treeheader-box {
+.treecell-header > .treecell-header-box,
+.treecell-inset-header > .treecell-header-box {
   padding: 2px 2px 2px 6px;
   border-left: 1px solid #FFFFFF;
   border-top: 1px solid #FFFFFF;
@@ -89,19 +89,30 @@ treecell {
   border-bottom: 1px solid #444444 !important;
 }
 
-.treecell-header:hover:active > .treeheader-box,
-.treecell-inset-header:hover:active > .treeheader-box,
-.treecell-header[sortActive="true"] > .treeheader-box,
-.treecell-inset-header[sortActive="true"] > .treeheader-box {
+.treecell-header:hover:active > .treecell-header-box,
+.treecell-inset-header:hover:active > .treecell-header-box,
+.treecell-header[sortActive="true"] > .treecell-header-box,
+.treecell-inset-header[sortActive="true"] > .treecell-header-box {
   border-left: 1px solid #555555;
   border-top: 1px solid #555555;
   border-right: 1px solid #AAAAAA;
   border-bottom: 1px solid #AAAAAA;
 }
 
-.treecell-header-image {
-  padding: 0px;
-}
+.treecell-header-image 
+  {
+    behavior              : url("chrome://global/skin/treeBindings.xml#treecell-header-image");
+    padding               : 0px;
+  }
+
+.treecell-header-image-box
+  {
+  	border-left				: 1px solid #FFFFFF;
+  	border-top				: 1px solid #FFFFFF;
+  	border-bottom			: 1px solid #888888;
+  	border-right			: 1px solid #888888;
+    padding                 : 0px;
+  }
 
 .treecell-image {
   padding: 0px;
@@ -175,12 +186,12 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
 }
 
 /* tree header with sort direction indicators */
-.sortDirectionIndicator[sortDirection="ascending"]  > .tree-header-sortdirection {
+.sortDirectionIndicator[sortDirection="ascending"]  > .treecell-header-box > .tree-header-sortdirection {
   list-style-image: url("chrome://global/skin/sortAscending.gif");
   margin-right: 3px;
 }
 
-.sortDirectionIndicator[sortDirection="descending"] > .tree-header-sortdirection {
+.sortDirectionIndicator[sortDirection="descending"] > .treecell-header-box > .tree-header-sortdirection {
   list-style-image: url("chrome://global/skin/sortDescending.gif");
   margin-right: 3px;
 }
@@ -188,12 +199,7 @@ treeitem[selected="true"][container="true"][open="true"] > treerow > treecell > 
 treecol[sortDirection="true"],
 treecol[sortActive="true"]
   {
-    background-color       : #DFDFDF;
-  }
-
-#popupCell
-  {
-    behavior: url("chrome://global/skin/classicBindings.xml#treeheader-children");
+    background-color       : #DDDDDD;
   }
 
 .treecell-popup-icon

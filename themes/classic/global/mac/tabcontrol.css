@@ -1,4 +1,10 @@
 /********** Tab widget *********/
+/*******************************/
+/* This Mac-specific CSS styles tabs that are located on the top of their content,
+ * as Macintosh tabs generally are.  An example of using bottom tab images can be 
+ * found in EditorToolbar.css in classic/editor/.
+ *******************************/
+ 
 tab { 
   behavior			: url(chrome://global/skin/classicBindings.xml#tab);
   color				: #000000; 

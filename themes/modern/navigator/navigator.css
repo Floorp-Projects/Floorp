@@ -143,3 +143,10 @@ window[chromehidden~="extrachrome"] .chromeclass-extrachrome {
   {
     padding               : 2px;
   }
+
+#print-button 
+  {
+    behavior              : url("chrome://communicator/skin/menubuttonBindings.xml#menubutton-dual-standard");
+	list-style-image      : url("chrome://global/skin/print.gif");
+    margin                : 0px;
+  }

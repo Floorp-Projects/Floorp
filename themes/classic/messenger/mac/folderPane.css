@@ -36,30 +36,43 @@ treeitem.folderTreeItem[open="true"] > treerow > .tree-cell-folderpane-icon
   }
 
 .tree-cell-folderpane-icon[SpecialFolder="Trash"]
-  {
-    list-style-image      : url("chrome://messenger/skin/folder-trash.gif");
-  }
-
-.tree-cell-folderpane-icon[BiffState="NewMail"]
-  {
-    list-style-image      : url("chrome://messenger/skin/folder-new-closed.gif");
-  }
-
-treeitem[open="true"] > treerow > .tree-cell-folderpane-icon[BiffState="NewMail"]
-  {
-    list-style-image      : url("chrome://messenger/skin/folder-new-open.gif");
-  }
-
-.tree-cell-folderpane-icon[SpecialFolder="Inbox"][BiffState="NewMail"]
-  {
-    list-style-image      : url("chrome://messenger/skin/folder-inbox-new.gif");
-  }
+{
+ list-style-image: url("chrome://messenger/skin/folder-trash.gif");
+}
 
 .tree-cell-folderpane-icon[IsServer="true"]
-  {
-    list-style-image      : url("chrome://messenger/skin/server-mail.gif");
-  }
+{
+ list-style-image: url("chrome://messenger/skin/server-mail.gif");
+}
 
+.tree-cell-folderpane-icon[BiffState="NewMail"][IsServer="true"]
+{
+ list-style-image: url("chrome://messenger/skin/server-mail-new.gif");
+}
+
+treeitem[open="true"] > treerow > .tree-cell-folderpane-icon[BiffState="NewMail"][IsServer="true"]
+{
+ list-style-image: url("chrome://messenger/skin/folder-new-open.gif");
+}
+
+/* differentiate new messages on inbox/folders from biff on the server */
+.tree-cell-folderpane-icon[NewMessages="true"]
+{
+    list-style-image: url("chrome://messenger/skin/folder-new-closed.gif");
+	font-weight: bold;
+}
+
+.tree-cell-folderpane-icon[SpecialFolder="Inbox"][NewMessages="true"]
+{
+ list-style-image: url("chrome://messenger/skin/folder-inbox-new.gif");
+ font-weight: bold;
+}
+
+treeitem[open="true"] > treerow > .tree-cell-folderpane-icon[NewMessages="true"]
+{
+ list-style-image: url("chrome://messenger/skin/folder-new-open.gif");
+ font-weight: bold;
+}
 
 /* IMAP folders */
 
@@ -119,3 +132,10 @@ treeitem[open="true"] > treerow > .tree-cell-folderpane-icon[BiffState="NewMail"
     border                : none !important;
   }
 
+/* using tree-cell-folderpane-icon to isolate this rule to the folderpane
+   and prevent such crawls on the threadpane */   
+treeitem[empty="true"] > treerow > .tree-cell-folderpane-icon > .tree-cell-twisty 
+  {               
+    visibility            : hidden;
+  }      
+  

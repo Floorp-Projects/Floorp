@@ -30,7 +30,7 @@
     list-style-image      : url("chrome://communicator/skin/bookmarks/home-hover.gif");
   }
   
-#homebutton:active
+#homebutton:hover:active
   {
     list-style-image      : url("chrome://communicator/skin/bookmarks/home-active.gif");
   }
