@@ -30,7 +30,7 @@
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.29 $ $Date: 2001/06/10 16:41:35 $
+ * @version $Revision: 1.30 $ $Date: 2001/06/20 06:00:35 $
 **/
 
 #include "ProcessorState.h"
@@ -126,7 +126,10 @@ void ProcessorState::addAttributeSet(Element* attributeSet) {
     if ( !attributeSet ) return;
     String name = attributeSet->getAttribute(NAME_ATTR);
     if ( name.length() == 0 ) {
+#if 0
+        // XXX DEBUG OUTPUT
         cout << "missing required name attribute for xsl:" << ATTRIBUTE_SET <<endl;
+#endif
         return;
     }
     //-- get attribute set, if already exists, then merge
