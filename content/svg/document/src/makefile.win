@@ -54,7 +54,6 @@ CPP_OBJS=                      \
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
   -I..\..\..\html\document\src -I..\..\..\html\base\src \
   -I..\..\..\xml\document\src \
-  -I..\..\..\xsl\document\src \
   -I..\..\..\base\src \
   $(NULL)
 

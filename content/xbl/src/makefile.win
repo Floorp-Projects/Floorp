@@ -90,7 +90,6 @@ EXPORTS =					\
 LINCS=-I..\..\html\style\src -I..\..\html\base\src \
   -I..\..\html\document\src \
   -I..\..\xml\document\src \
-  -I..\..\xsl\document\src \
   -I..\..\xul\content\src \
   -I..\..\base\src \
   $(NULL)
