@@ -103,6 +103,8 @@
 #ifndef _FILESPEC_H_
 #define _FILESPEC_H_
 
+#include "nscore.h"
+
 //========================================================================================
 //                          Compiler-specific macros, as needed
 //========================================================================================
@@ -117,7 +119,6 @@
 #define NS_NAMESPACE_END
 #include <ostream>
 	using std::ostream;
-
 #else
 
 #define NS_NAMESPACE_PROTOTYPE static
@@ -144,7 +145,7 @@ class nsNativeFileSpec;
 #define kFileURLPrefixLength (7)
 
 //========================================================================================
-class nsNativeFileSpec
+class NS_BASE nsNativeFileSpec
 //    This is whatever each platform really prefers to describe files as.  Declared first
 //  because the other two types have an embeded nsNativeFileSpec object.
 //========================================================================================
@@ -195,7 +196,7 @@ class nsNativeFileSpec
         bool                    Valid() const { return true; } // Fixme.
 #endif // XP_MAC
 
-        friend                  ostream& operator << (ostream& s, const nsNativeFileSpec& spec);
+        friend                  NS_BASE ostream& operator << (ostream& s, const nsNativeFileSpec& spec);
 
         char*                   GetLeafName() const; // Allocated.  Use delete [].
         void                    SetLeafName(const char* inLeafName);
@@ -214,7 +215,7 @@ class nsNativeFileSpec
 }; // class nsNativeFileSpec
 
 //========================================================================================
-class nsFileURL
+class NS_BASE nsFileURL
 //    This is an escaped string that looks like "file:///foo/bar/mumble%20fish".  Since URLs
 //    are the standard way of doing things in mozilla, this allows a string constructor,
 //    which just stashes the string with no conversion.
@@ -236,7 +237,7 @@ class nsFileURL
         void                    operator = (const nsFilePath& inOther);
         void                    operator = (const nsNativeFileSpec& inOther);
 
-        friend                  ostream& operator << (ostream& s, const nsFileURL& spec);
+        friend                  NS_BASE ostream& operator << (ostream& s, const nsFileURL& spec);
 
 #ifdef XP_MAC
                                 // Accessor to allow quick assignment to a mNativeFileSpec
@@ -257,7 +258,7 @@ class nsFileURL
 }; // class nsFileURL
 
 //========================================================================================
-class nsFilePath
+class NS_BASE nsFilePath
 //    This is a string that looks like "/foo/bar/mumble%20fish".  Same as nsFileURL, but
 //    without the "file:// prefix".
 //========================================================================================
