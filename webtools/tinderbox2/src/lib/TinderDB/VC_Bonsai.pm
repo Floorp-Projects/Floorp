@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.62 $ 
-# $Date: 2002/05/10 23:00:41 $ 
+# $Revision: 1.63 $ 
+# $Date: 2002/05/10 23:07:53 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -102,7 +102,7 @@ use VCDisplay;
 use TinderDB::Notice;
 
 
-$VERSION = ( qw $Revision: 1.62 $ )[1];
+$VERSION = ( qw $Revision: 1.63 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -502,8 +502,8 @@ sub render_authors {
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
-                               'mindate' => $mindate,
-                               'maxdate' => $maxdate - $main::SECONDS_PER_DAY,
+                               'mindate' => $mindate - $main::SECONDS_PER_DAY,
+                               'maxdate' => $maxdate,
                                'who' => $author,
                                
                                "linktxt" => "Check-ins within 24 hours",
@@ -512,8 +512,8 @@ sub render_authors {
             $link_choices .= 
               VCDisplay::query(
                                'tree' => $tree,
-                               'mindate' => $mindate,
-                               'maxdate' => $maxdate - $main::SECONDS_PER_WEEK,
+                               'mindate' => $mindate - $main::SECONDS_PER_WEEK,
+                               'maxdate' => $maxdate,
                                'who' => $author,
                                
                                "linktxt" => "Check-ins within 7 days",

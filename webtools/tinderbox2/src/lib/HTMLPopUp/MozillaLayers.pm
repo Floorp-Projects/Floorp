@@ -15,8 +15,8 @@
 
 
 
-# $Revision: 1.15 $ 
-# $Date: 2002/05/10 22:56:57 $ 
+# $Revision: 1.16 $ 
+# $Date: 2002/05/10 23:07:57 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp/MozillaLayers.pm,v $ 
 # $Name:  $ 
@@ -353,8 +353,10 @@ sub Link {
     $out .= "onClick=\" ";
     ($args{'windowtxt'}) &&
       ($out .= "tip(".(
-                       "$args{'windowwidth'},".
-                       "$args{'windowheight'},".
+#                        "$args{'windowheight'},".
+#                        "$args{'windowwidth'},".
+                       "$HTMLPopUp::DEFAULT_POPUP_HEIGHT,".
+                       "$HTMLPopUp::DEFAULT_POPUP_WIDTH,".
                        "\'$args{'windowtxt'}\'".
                       "").
        "); ");
