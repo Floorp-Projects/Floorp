@@ -48,23 +48,6 @@ nsBaseAppCore::nsBaseAppCore()
 {
     IncInstanceCount();
     NS_INIT_REFCNT();
-
-#ifdef NS_DEBUG
-    printf("Adding app core to AppCoreManager in the base constructor.\n");
-#endif
-    nsIDOMAppCoresManager * appCoreManager;
-    nsresult rv = nsServiceManager::GetService(
-        kAppCoresManagerCID,
-        kIDOMAppCoresManagerIID,
-        (nsISupports**)&appCoreManager);
-    if (NS_FAILED(rv))
-        return;
-    rv = appCoreManager->Add((nsIDOMBaseAppCore *)this);
-#ifdef NS_DEBUG
-    if (NS_FAILED(rv))
-	    printf("...failed!\n");
-#endif
-    nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
 }
 
 nsBaseAppCore::~nsBaseAppCore()
@@ -127,6 +110,27 @@ NS_IMETHODIMP
 nsBaseAppCore::Init(const nsString& aId)
 {   
 	mId = aId;
+
+	// this used to be in the constructor of the base class, but
+	// nsIAppCoreManager::Add requires that the app core being added
+	// has a id. So we can't do it until the app core has been initialized
+
+#ifdef NS_DEBUG
+    printf("Adding app core to AppCoreManager in the base initialization.\n");
+#endif
+    nsIDOMAppCoresManager * appCoreManager;
+    nsresult rv = nsServiceManager::GetService(
+        kAppCoresManagerCID,
+        kIDOMAppCoresManagerIID,
+        (nsISupports**)&appCoreManager);
+    if (NS_FAILED(rv))
+        return rv;
+    rv = appCoreManager->Add((nsIDOMBaseAppCore *)this);
+#ifdef NS_DEBUG
+    if (NS_FAILED(rv))
+	    printf("...failed!\n");
+#endif
+    nsServiceManager::ReleaseService(kAppCoresManagerCID, appCoreManager);
 	return NS_OK;
 }
 
