@@ -34,7 +34,7 @@
 */
 
 #include "xp_mcom.h"
-#include "net.h";
+#include "net.h"
 #include "xp_linebuf.h"
 #include "mkbuf.h"
 
