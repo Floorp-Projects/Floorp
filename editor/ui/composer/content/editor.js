@@ -327,8 +327,7 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
     var window = windowManagerInterface.convertISupportsToDOMWindow( enumerator.getNext() );
     if ( window )
     {
-      var didFindWindow = editorShell.checkOpenWindowForURLMatch(urlToMatch, window)
-	    if (didFindWindow)
+	    if (editorShell.checkOpenWindowForURLMatch(urlToMatch, window))
 	    {
 	      window.focus();
 	      return true;
@@ -342,7 +341,7 @@ function FindAndSelectEditorWindowWithURL(urlToMatch)
 
 function editorSendPage()
 {
-  var docModified = editorShell.documentModified;
+  var docModified = window.editorShell.documentModified;
   var pageUrl = window.editorShell.editorDocument.location;
   if (pageUrl != "about:blank" && !docModified)
   {
@@ -430,10 +429,23 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
 // used by openLocation. see openLocation.js for additional notes.
 function delayedOpenWindow(chrome, flags, url)
 {
-  if (PageIsEmptyAndUntouched())
-    editorShell.LoadUrl(url);
-  else
-    setTimeout("window.openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
+  if (chrome == "chrome://editor/content")
+  {
+    // We are opening an editor window
+    // First, switch to another editor window if already editing this page
+    // *** 1/12/01: The only caller to delayedOpenWindow 
+    //     (editPage in utilityOverlay.js) already does this
+//    if (FindAndSelectEditorWindowWithURL(url)) return;
+
+    // Load into current editor if empty
+    if (PageIsEmptyAndUntouched())
+    {
+      editorShell.LoadUrl(url);
+      return;
+    }
+  }
+  // We are NOT using an existing editor, so delay starting a new one
+  setTimeout("window.openDialog('"+chrome+"','_blank','"+flags+"','"+url+"')", 10);
 }
 
 function EditorNewPlaintext()
@@ -1013,6 +1025,11 @@ function SetEditMode(mode)
 
     if (mode == DisplayModeSource)
     {
+      // We can't monitor changes while in HTML Source, 
+      //   so the nsSaveCommand::isCommandEnabled() will always return true 
+      //   when in HTML Source mode
+      goUpdateCommand("cmd_save");
+
       // Get the entire document's source string
 
       var flags = gOutputEncodeEntities;
