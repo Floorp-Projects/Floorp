@@ -131,7 +131,6 @@ static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
 // Printing Events
 #include "nsIEventQueue.h"
 #include "nsIEventQueueService.h"
-static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // Printing
 #include "nsIDOMHTMLFrameElement.h"
@@ -174,7 +173,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #include "nsIUBidiUtils.h"
 #endif
 
-static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
 static NS_DEFINE_CID(kPrintContextCID,  NS_PRINTCONTEXT_CID);
@@ -886,7 +884,6 @@ PrintObject::~PrintObject()
 //------------------------------------------------------------------
 // Class IDs
 static NS_DEFINE_CID(kViewManagerCID,       NS_VIEW_MANAGER_CID);
-static NS_DEFINE_CID(kScrollingViewCID,     NS_SCROLLING_VIEW_CID);
 static NS_DEFINE_CID(kWidgetCID,            NS_CHILD_CID);
 static NS_DEFINE_CID(kViewCID,              NS_VIEW_CID);
 
