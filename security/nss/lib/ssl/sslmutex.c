@@ -30,9 +30,10 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslmutex.c,v 1.10 2002/04/04 00:14:10 nelsonb%netscape.com Exp $
+ * $Id: sslmutex.c,v 1.11 2002/04/04 01:41:19 nelsonb%netscape.com Exp $
  */
 
+#include "seccomon.h"
 /* This ifdef should match the one in sslsnce.c */
 #if (defined(XP_UNIX) || defined(XP_WIN32) || defined (XP_OS2)) && !defined(_WIN32_WCE)
 
