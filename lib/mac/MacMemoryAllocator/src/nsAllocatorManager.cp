@@ -16,6 +16,7 @@
  * Reserved. */
 
 #include <stdlib.h>
+#include <string.h>
 
 #include <new.h>			// for placement new
 
@@ -24,6 +25,10 @@
 #include <Errors.h>
 #include <Processes.h>
 #include <CodeFragments.h>
+
+#if __profile__
+#include <Profiler.h>
+#endif
 
 #include "nsMemAllocator.h"
 
@@ -52,48 +57,106 @@ pascal void __MemTerminate(void);
 
 
 //--------------------------------------------------------------------
-class nsAllocatorManager
+nsHeapZoneHeader::nsHeapZoneHeader(Ptr zonePtr, Size ptrSize)
+:	mNextHeapZone(nil)
+,	mZoneHandle(nil)
+,	mChunkCount(0)
+,	mHeapZone(nil)
+#if DEBUG_HEAP_INTEGRITY
+,	mSignature(kHeapZoneSignature)
+#endif
+// This ctor is used for zones in our heap, which are allocated with
+// NewPtr
+//--------------------------------------------------------------------
 {
-	public:
+	SetupHeapZone(zonePtr, ptrSize);
+}
 
-		static const SInt32			kNumMasterPointerBlocks;
-		static const SInt32			kApplicationStackSizeIncrease;
-		static const SInt32			kHeapZoneHeapPercentage;
-
-									nsAllocatorManager();
-									~nsAllocatorManager();
-									
-		static OSErr				InitializeMacMemory(SInt32 inNumMasterPointerBlocks,
-															SInt32 inAppStackSizeInc);
-
-		
-		nsMemAllocator*				GetAllocatorForBlockSize(size_t blockSize);
-
-		static nsAllocatorManager*	GetAllocatorManager();
-		
-	protected:
-	
-		static nsAllocatorManager	*sAllocatorManager;		
-		
-	private:
-	
-		SInt32						mNumFixedSizeAllocators;
-		SInt32						mNumSmallBlockAllocators;
-		
-		UInt32						mMinSmallBlockSize;			// blocks >= this size come out of the small block allocator
-		UInt32						mMinLargeBlockSize;			// blocks >= this size come out of the large allocator
-		
-		nsMemAllocator**			mFixedSizeAllocators;		// array of pointers to allocator objects
-		nsMemAllocator**			mSmallBlockAllocators;		// array of pointers to allocator objects
-	
-		nsMemAllocator*				mLargeAllocator;
-
-		THz							mHeapZone;					// the heap zone for our memory heaps
-
-};
 
 //--------------------------------------------------------------------
+nsHeapZoneHeader::nsHeapZoneHeader(Handle zoneHandle, Size handleSize)
+:	mNextHeapZone(nil)
+,	mZoneHandle(zoneHandle)
+,	mChunkCount(0)
+,	mHeapZone(nil)
+#if DEBUG_HEAP_INTEGRITY
+,	mSignature(kHeapZoneSignature)
+#endif
+// This ctor is used for zones in temporary memory, which are allocated
+// with TempNewHandle
+//--------------------------------------------------------------------
+{
+	// handle should be locked here
+	SetupHeapZone(*zoneHandle, handleSize);
+}
 
+//--------------------------------------------------------------------
+nsHeapZoneHeader::~nsHeapZoneHeader()
+//--------------------------------------------------------------------
+{
+	if (mZoneHandle)
+		::DisposeHandle(mZoneHandle);
+	else
+		::DisposePtr((Ptr)this);
+		
+	MEM_ASSERT(::MemError() == noErr, "Error on Mac memory dispose");
+}
+
+
+//--------------------------------------------------------------------
+void nsHeapZoneHeader::SetupHeapZone(Ptr zonePtr, Size ptrSize)
+//--------------------------------------------------------------------
+{
+	Ptr		zoneStart = zonePtr + sizeof(nsHeapZoneHeader);
+	Ptr		endZone = zonePtr + ptrSize;
+	
+	::InitZone(nil, kHeapZoneMasterPointers, endZone, zoneStart);
+	
+	mHeapZone = (THz)zoneStart;
+	
+	// set the current zone back to the application zone, because InitZone changes it
+	::SetZone(::ApplicationZone());
+}
+
+
+//--------------------------------------------------------------------
+Ptr nsHeapZoneHeader::AllocateZonePtr(Size ptrSize)
+//--------------------------------------------------------------------
+{
+	::SetZone(mHeapZone);
+	Ptr		thePtr = ::NewPtr(ptrSize);
+	::SetZone(::ApplicationZone());
+
+	mChunkCount += (thePtr != nil);
+	
+	return thePtr;
+}
+
+
+//--------------------------------------------------------------------
+void nsHeapZoneHeader::DisposeZonePtr(Ptr thePtr, Boolean &outWasLastChunk)
+//--------------------------------------------------------------------
+{
+	MEM_ASSERT(::PtrZone(thePtr) == mHeapZone, "Ptr disposed from wrong zone!");
+	::DisposePtr(thePtr);
+	mChunkCount --;
+	outWasLastChunk = (mChunkCount == 0);
+}
+
+
+//--------------------------------------------------------------------
+/* static */ nsHeapZoneHeader* nsHeapZoneHeader::GetZoneFromPtr(Ptr subheapPtr)
+//--------------------------------------------------------------------
+{
+	THz		ptrZone = ::PtrZone(subheapPtr);
+	MEM_ASSERT(ptrZone && (::MemError() == noErr), "Problem getting zone from ptr");
+	
+	return (nsHeapZoneHeader *)((char *)ptrZone - sizeof(nsHeapZoneHeader));
+}
+
+
+
+#pragma mark -
 
 
 const SInt32	nsAllocatorManager::kNumMasterPointerBlocks = 30;
@@ -103,10 +166,12 @@ const SInt32	nsAllocatorManager::kHeapZoneHeapPercentage = 60;
 nsAllocatorManager* 	nsAllocatorManager::sAllocatorManager = nil;
 
 //--------------------------------------------------------------------
-nsAllocatorManager::nsAllocatorManager() :
-	mFixedSizeAllocators(nil),
-	mSmallBlockAllocators(nil),
-	mLargeAllocator(nil)
+nsAllocatorManager::nsAllocatorManager()
+:	mFixedSizeAllocators(nil)
+,	mSmallBlockAllocators(nil)
+,	mLargeAllocator(nil)
+,	mFirstHeapZone(nil)
+,	mLastHeapZone(nil)
 //--------------------------------------------------------------------
 {
 	mMinSmallBlockSize = 44;			// some magic numbers for now
@@ -129,6 +194,7 @@ nsAllocatorManager::nsAllocatorManager() :
 		mFixedSizeAllocators[i] = (nsMemAllocator *)NewPtr(sizeof(nsFixedSizeAllocator));
 		if (mFixedSizeAllocators[i] == nil)
 			throw((OSErr)memFullErr);
+		new (mFixedSizeAllocators[i]) nsFixedSizeAllocator((i + 1) * 4);
 	}
 
 	for (SInt32 i = 0; i < mNumSmallBlockAllocators; i ++)
@@ -136,11 +202,13 @@ nsAllocatorManager::nsAllocatorManager() :
 		mSmallBlockAllocators[i] = (nsMemAllocator *)NewPtr(sizeof(nsSmallHeapAllocator));
 		if (mSmallBlockAllocators[i] == nil)
 			throw((OSErr)memFullErr);
+		new (mSmallBlockAllocators[i]) nsSmallHeapAllocator();
 	}
 	
 	mLargeAllocator = (nsMemAllocator *)NewPtr(sizeof(nsLargeHeapAllocator));
 	if (mLargeAllocator == nil)
 		throw((OSErr)memFullErr);
+	new (mLargeAllocator) nsLargeHeapAllocator();
 	
 	// make the heap zone for our subheaps
 	UInt32		heapZoneSize;
@@ -148,30 +216,10 @@ nsAllocatorManager::nsAllocatorManager() :
 	heapZoneSize = ( kHeapZoneHeapPercentage * ::FreeMem() ) / 100;
 	heapZoneSize = ( ( heapZoneSize + 3 ) & ~3 );		// round up to a multiple of 4 bytes
 
-	Ptr			heapZone = ::NewPtr(heapZoneSize);
-	if (heapZone == nil)
+	nsHeapZoneHeader	*firstZone = MakeNewHeapZone(heapZoneSize, heapZoneSize);
+	if (!firstZone)
 		throw((OSErr)memFullErr);
-
-#define kNumMasterPointers		24		// does not matter, since we won't be allocating handles
-										// in this heap zone
-										
-	Ptr			endZone = heapZone + heapZoneSize;
-	::InitZone(nil, kNumMasterPointers, endZone, heapZone);
 	
-	// set the current zone back to the application zone
-	::SetZone(::ApplicationZone());
-	
-	mHeapZone = (THz)heapZone;
-	
-	// now we have the heap zone, call (placement) new on our allocators
-	for (SInt32 i = 0; i < mNumFixedSizeAllocators; i ++)
-		new (mFixedSizeAllocators[i]) nsFixedSizeAllocator(mHeapZone, (i + 1) * 4);
-
-	for (SInt32 i = 0; i < mNumSmallBlockAllocators; i ++)
-		new (mSmallBlockAllocators[i]) nsSmallHeapAllocator(mHeapZone);
-	
-	new (mLargeAllocator) nsLargeHeapAllocator(mHeapZone);
-
 }
 
 //--------------------------------------------------------------------
@@ -213,6 +261,131 @@ nsMemAllocator* nsAllocatorManager::GetAllocatorForBlockSize(size_t blockSize)
 		return mSmallBlockAllocators[ ((blockSize + 3) >> 2) - mNumFixedSizeAllocators ];
 	
 	return mLargeAllocator;
+}
+
+//--------------------------------------------------------------------
+nsHeapZoneHeader* nsAllocatorManager::MakeNewHeapZone(Size zoneSize, Size minZoneSize)
+//--------------------------------------------------------------------
+{
+	if (mFirstHeapZone == nil)
+	{
+		Ptr	firstZonePtr = ::NewPtr(zoneSize);
+		
+		if (!firstZonePtr) return nil;
+
+		mFirstHeapZone = new (firstZonePtr) nsHeapZoneHeader(firstZonePtr, zoneSize);
+		mLastHeapZone = mFirstHeapZone;
+	}
+	else
+	{
+		OSErr		err;
+		Handle		tempMemHandle = ::TempNewHandle(zoneSize, &err);
+		
+		while (!tempMemHandle && zoneSize > minZoneSize)
+		{
+			zoneSize -= (128 * 1024);
+			tempMemHandle = ::TempNewHandle(zoneSize, &err);
+		}
+	
+		if (!tempMemHandle) return nil;
+	
+		// first, lock the handle hi
+		HLockHi(tempMemHandle);
+	
+		nsHeapZoneHeader	*newZone = new (*tempMemHandle) nsHeapZoneHeader(tempMemHandle, zoneSize);
+		mLastHeapZone->SetNextZone(newZone);
+		mLastHeapZone = newZone;
+	}
+
+	return mLastHeapZone;
+}
+
+
+// block size multiple. All blocks should be multiples of this size,
+// to reduce heap fragmentation
+const Size nsAllocatorManager::kChunkSizeMultiple 	= 2 * 1024;
+const Size nsAllocatorManager::kMacMemoryPtrOvehead	= 16;							// this overhead is documented in IM:Memory 2-22
+const Size nsAllocatorManager::kTempMemHeapZoneSize	= 1024 * 1024;		// 1MB temp handles
+const Size nsAllocatorManager::kTempMemHeapMinZoneSize	= 256 * 1024;	// min 256K handle
+
+
+//--------------------------------------------------------------------
+Ptr nsAllocatorManager::AllocateSubheap(Size preferredSize, Size &outActualSize)
+//--------------------------------------------------------------------
+{
+	nsHeapZoneHeader		*thisHeapZone = mFirstHeapZone;
+	
+	// calculate an ideal chunk size by rounding up
+	preferredSize = kChunkSizeMultiple * ((preferredSize + (kChunkSizeMultiple - 1)) / kChunkSizeMultiple);
+	
+	// take into accound the memory manager's pointer overhead (16 btyes), to avoid fragmentation
+	preferredSize += ((preferredSize / kChunkSizeMultiple) - 1) * kMacMemoryPtrOvehead;
+	outActualSize = preferredSize;
+
+	while (thisHeapZone)
+	{
+		Ptr		subheapPtr = thisHeapZone->AllocateZonePtr(preferredSize);
+		if (subheapPtr)
+			return subheapPtr;
+	
+		thisHeapZone = thisHeapZone->GetNextZone();
+	}
+
+	// we failed to allocate. Let's make a new heap zone
+	thisHeapZone = MakeNewHeapZone(kTempMemHeapZoneSize, kTempMemHeapMinZoneSize);
+	if (thisHeapZone)
+		return thisHeapZone->AllocateZonePtr(preferredSize);
+		
+	return nil;
+}
+
+
+//--------------------------------------------------------------------
+void nsAllocatorManager::FreeSubheap(Ptr subheapPtr)
+//--------------------------------------------------------------------
+{
+	nsHeapZoneHeader		*ptrHeapZone = nsHeapZoneHeader::GetZoneFromPtr(subheapPtr);
+	
+#if DEBUG_HEAP_INTEGRITY
+	MEM_ASSERT(ptrHeapZone->IsGoodZone(), "Got bad heap zone header");
+#endif
+	
+	Boolean					lastChunk;
+	ptrHeapZone->DisposeZonePtr(subheapPtr, lastChunk);
+	
+	if (lastChunk)
+	{
+		// remove from the list
+		nsHeapZoneHeader		*prevZone = nil;
+		nsHeapZoneHeader		*nextZone = nil;
+		nsHeapZoneHeader		*thisZone = mFirstHeapZone;
+			
+		while (thisZone)
+		{
+			nextZone = thisZone->GetNextZone();
+			
+			if (thisZone == ptrHeapZone)
+				break;
+			
+			prevZone = thisZone;
+			thisZone = nextZone;
+		}
+		
+		if (thisZone)
+		{
+			if (prevZone)
+				prevZone->SetNextZone(nextZone);
+			
+			if (mFirstHeapZone == thisZone)
+				mFirstHeapZone = nextZone;
+			
+			if (mLastHeapZone == thisZone)
+				mLastHeapZone = prevZone;
+		}
+		
+		// dispose it
+		ptrHeapZone->~nsHeapZoneHeader();		// this disposes the ptr/handle
+	}
 }
 
 
@@ -258,7 +431,7 @@ nsMemAllocator* nsAllocatorManager::GetAllocatorForBlockSize(size_t blockSize)
 
 
 //--------------------------------------------------------------------
-/* static */ nsAllocatorManager * nsAllocatorManager::GetAllocatorManager()
+/* static */ nsAllocatorManager * nsAllocatorManager::CreateAllocatorManager()
 //--------------------------------------------------------------------
 {
 	if (sAllocatorManager) return sAllocatorManager;
@@ -268,6 +441,57 @@ nsMemAllocator* nsAllocatorManager::GetAllocatorForBlockSize(size_t blockSize)
 	
 	return sAllocatorManager;
 }
+
+
+
+#if STATS_MAC_MEMORY
+//--------------------------------------------------------------------
+void nsAllocatorManager::DumpMemoryStats()
+//--------------------------------------------------------------------
+{
+	UInt32			i;
+	char			outString[ 1024 ];
+	PRFileDesc		*outFile;
+	
+	// Enter a valid, UNIX-style full path on your system to get this
+	// to work.
+	outFile = PR_Open("/System/MemoryStats.txt", PR_RDWR | PR_CREATE_FILE | PR_TRUNCATE, 0644);
+	if ( outFile == NULL )
+	{
+		return;
+	}
+
+	for (i = 0; i < mNumFixedSizeAllocators; i ++)
+	{
+		mFixedSizeAllocators[i]->DumpMemoryStats(outFile);
+	}
+
+	for (i = 0; i < mNumSmallBlockAllocators; i ++)
+	{
+		mSmallBlockAllocators[i]->DumpMemoryStats(outFile);
+	}
+	
+	mLargeAllocator->DumpMemoryStats(outFile);
+	
+	PR_Close(outFile);
+}
+
+
+//--------------------------------------------------------------------
+void WriteString(PRFileDesc *file, const char * string)
+//--------------------------------------------------------------------
+{
+	long	len;
+	long	bytesWritten;
+	
+	len = strlen ( string );
+	if ( len >= 1024 ) Debugger();
+	bytesWritten = PR_Write(file, string, len);
+}
+
+
+#endif
+
 
 #pragma mark -
 
@@ -348,13 +572,11 @@ void *calloc(size_t nele, size_t elesize)
 
 #pragma mark -
 
-#if 0
-
 /*----------------------------------------------------------------------------
 	__MemInitialize 
 	
 	Note the people can call malloc() or new() before we come here,
-	so we only initialize the memory if we've not alredy done it.s
+	so we can't rely on this being called before we do allocation.
 	
 ----------------------------------------------------------------------------*/
 pascal OSErr __MemInitialize(const CFragInitBlock *theInitBlock)
@@ -389,9 +611,11 @@ pascal void __MemTerminate(void)
 	ProfilerTerm();
 #endif
 
+#if STATS_MAC_MEMORY
+	nsAllocatorManager::GetAllocatorManager()->DumpMemoryStats();
+#endif
+	
 	__terminate();
 }
-
-#endif
 
 

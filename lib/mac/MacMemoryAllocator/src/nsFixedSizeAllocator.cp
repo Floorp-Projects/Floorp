@@ -20,17 +20,19 @@
 #include <MacMemory.h>
 
 #include "nsMemAllocator.h"
+#include "nsAllocatorManager.h"
 #include "nsFixedSizeAllocator.h"
 
 const UInt32 FixedMemoryBlock::kFixedSizeBlockOverhead = sizeof(FixedMemoryBlockHeader) + MEMORY_BLOCK_TAILER_SIZE;
 
 //--------------------------------------------------------------------
-nsFixedSizeAllocator::nsFixedSizeAllocator(THz heapZone, size_t blockSize)
-:	nsMemAllocator(heapZone)
+nsFixedSizeAllocator::nsFixedSizeAllocator(size_t blockSize)
+:	nsMemAllocator()
 ,	mBlockSize(blockSize)
+,	mChunkWithSpace(nil)
 //--------------------------------------------------------------------
 {
-	mBaseChunkSize = mTempChunkSize = (nsMemAllocator::kChunkSizeMultiple);
+	mBaseChunkSize = mTempChunkSize = (nsAllocatorManager::kChunkSizeMultiple);
 }
 
 //--------------------------------------------------------------------
@@ -46,6 +48,9 @@ nsHeapChunk* nsFixedSizeAllocator::FindChunkWithSpace(size_t blockSize) const
 {
 	nsFixedSizeHeapChunk*	chunk = (nsFixedSizeHeapChunk *)mFirstChunk;
 
+	if (mChunkWithSpace && mChunkWithSpace->GetFreeList())
+		return mChunkWithSpace;
+	
 	//	Try to find an existing chunk with a free block.
 	while (chunk != nil)
 	{
@@ -69,10 +74,12 @@ void *nsFixedSizeAllocator::AllocatorMakeBlock(size_t blockSize)
 	{
 		chunk = (nsFixedSizeHeapChunk *)AllocateChunk(blockSize);
 		if (!chunk) return nil;
+		
+		mChunkWithSpace = chunk;
 	}
 
 	FixedMemoryBlock*	blockHeader = chunk->FetchFirstFree();
-
+	
 #if DEBUG_HEAP_INTEGRITY
 	blockHeader->SetHeaderTag(kUsedBlockHeaderTag);
 	blockHeader->SetTrailerTag(GetAllocatorBlockSize(), kUsedBlockTrailerTag);
@@ -119,7 +126,13 @@ void nsFixedSizeAllocator::AllocatorFreeBlock(void *freeBlock)
 	// if this chunk is completely empty and it's not the first chunk then free it
 	if ( chunk->IsEmpty() && chunk != mFirstChunk )
 	{
+		if (chunk == mChunkWithSpace)
+			mChunkWithSpace = nil;
 		FreeChunk(chunk);
+	}
+	else
+	{
+		mChunkWithSpace = chunk;			// we know is has some space now
 	}
 }
 
@@ -170,13 +183,13 @@ nsHeapChunk *nsFixedSizeAllocator::AllocateChunk(size_t requestedBlockSize)
 //--------------------------------------------------------------------
 {
 	Size	actualChunkSize;
-	Handle	tempMemHandle;
-	Ptr		chunkMemory = DoMacMemoryAllocation(mBaseChunkSize, actualChunkSize, &tempMemHandle);
+	Ptr		chunkMemory = nsAllocatorManager::GetAllocatorManager()->AllocateSubheap(mBaseChunkSize, actualChunkSize);
 	
 	// use placement new to initialize the chunk in the memory block
-	nsHeapChunk		*newHeapChunk = new (chunkMemory) nsFixedSizeHeapChunk(this, actualChunkSize, tempMemHandle);
+	nsHeapChunk		*newHeapChunk = new (chunkMemory) nsFixedSizeHeapChunk(this, actualChunkSize);
 	if (newHeapChunk)
 		AddToChunkList(newHeapChunk);
+		
 	return newHeapChunk;
 }
 
@@ -190,11 +203,7 @@ void nsFixedSizeAllocator::FreeChunk(nsHeapChunk *chunkToFree)
 	nsFixedSizeHeapChunk	*thisChunk = (nsFixedSizeHeapChunk *)chunkToFree;
 	thisChunk->~nsFixedSizeHeapChunk();
 	
-	Handle	tempMemHandle = thisChunk->GetMemHandle();
-	if (tempMemHandle)
-		DisposeHandle(tempMemHandle);
-	else
-		DisposePtr((Ptr)thisChunk);
+	nsAllocatorManager::GetAllocatorManager()->FreeSubheap((Ptr)thisChunk);
 }
 
 
@@ -203,9 +212,8 @@ void nsFixedSizeAllocator::FreeChunk(nsHeapChunk *chunkToFree)
 //--------------------------------------------------------------------
 nsFixedSizeHeapChunk::nsFixedSizeHeapChunk(
 			nsMemAllocator 	*inOwningAllocator,
-			Size 			heapSize,
-			Handle 			tempMemHandle) :
-	nsHeapChunk(inOwningAllocator, heapSize, tempMemHandle)
+			Size 			heapSize) :
+	nsHeapChunk(inOwningAllocator, heapSize)
 //--------------------------------------------------------------------
 {
 	nsFixedSizeAllocator	*allocator = (nsFixedSizeAllocator *)mOwningAllocator;

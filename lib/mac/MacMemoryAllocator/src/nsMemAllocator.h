@@ -18,6 +18,10 @@
 
 #include <stddef.h>
 
+#if STATS_MAC_MEMORY
+#include "prio.h"
+#endif
+
 class nsMemAllocator;
 class nsHeapChunk;
 
@@ -86,7 +90,7 @@ class nsHeapChunk
 {
 	public:
 		
-								nsHeapChunk(nsMemAllocator *inOwningAllocator, Size heapSize, Handle tempMemHandle);
+								nsHeapChunk(nsMemAllocator *inOwningAllocator, Size heapSize);
 								~nsHeapChunk();
 		
 		nsHeapChunk*			GetNextChunk() const	{ return mNextChunk; }
@@ -99,8 +103,8 @@ class nsHeapChunk
 		
 		Boolean					IsEmpty() const			{ return mUsedBlocks == 0;	}
 		
-		Handle					GetMemHandle()			{ return mTempMemHandle;	}
-
+		UInt32					GetChunkSize()			{ return mHeapSize;	}
+		
 #if DEBUG_HEAP_INTEGRITY	
 		Boolean					IsGoodChunk()			{ return mSignature == kChunkSignature; }
 #endif
@@ -117,9 +121,6 @@ class nsHeapChunk
 		nsHeapChunk				*mNextChunk;
 		UInt32					mUsedBlocks;
 		UInt32					mHeapSize;		
-	
-	private:
-		Handle					mTempMemHandle;			// if nil, this chunk is a pointer in the heap
 };
 
 
@@ -130,7 +131,7 @@ class nsMemAllocator
 {
 	public:
 
-								nsMemAllocator(THz inHeapZone);
+								nsMemAllocator();
 		virtual 				~nsMemAllocator() = 0;
 		
 		static size_t			GetBlockSize(void *thisBlock);
@@ -155,13 +156,7 @@ class nsMemAllocator
 #endif
 
 	protected:
-		
-		static const Size		kFreeHeapSpace;
-		static const Size		kChunkSizeMultiple;
-		static const Size		kMacMemoryPtrOvehead;
-		
-		Ptr						DoMacMemoryAllocation(Size preferredSize, Size &outActualSize, Handle *outTempMemHandle);
-	
+				
 		void					AddToChunkList(nsHeapChunk *inNewChunk);
 		void					RemoveFromChunkList(nsHeapChunk *inChunk);
 		
@@ -178,8 +173,6 @@ class nsMemAllocator
 
 		UInt32					mBaseChunkSize;			// size of subheap allocated at startup
 		UInt32					mTempChunkSize;			// size of additional subheaps
-		
-		THz						mHeapZone;				// heap zone in which to allocate pointers
 
 #if STATS_MAC_MEMORY
 		
@@ -188,6 +181,8 @@ class nsMemAllocator
 		void					AccountForNewBlock(size_t logicalSize);
 		void					AccountForFreedBlock(size_t logicalSize);
 		void					AccountForResizedBlock(size_t oldLogicalSize, size_t newLogicalSize);
+		
+		void					DumpMemoryStats(PRFileDesc *statsFile);
 		
 	private:
 	

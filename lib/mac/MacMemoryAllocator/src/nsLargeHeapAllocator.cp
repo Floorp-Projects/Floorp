@@ -19,14 +19,15 @@
 #include <MacMemory.h>
 
 #include "nsMemAllocator.h"
+#include "nsAllocatorManager.h"
 #include "nsLargeHeapAllocator.h"
 
 
  const UInt32 LargeBlockHeader::kLargeBlockOverhead = sizeof(LargeBlockHeader) + MEMORY_BLOCK_TAILER_SIZE;
  
 //--------------------------------------------------------------------
-nsLargeHeapAllocator::nsLargeHeapAllocator(THz heapZone)
-:	nsMemAllocator(heapZone)
+nsLargeHeapAllocator::nsLargeHeapAllocator()
+:	nsMemAllocator()
 //--------------------------------------------------------------------
 {
 	mBaseChunkSize = mTempChunkSize = (64 * 1024);
@@ -160,17 +161,16 @@ nsHeapChunk *nsLargeHeapAllocator::AllocateChunk(size_t requestedBlockSize)
 //--------------------------------------------------------------------
 {
 	Size	chunkSize = mBaseChunkSize, actualChunkSize;
-	Handle	tempMemHandle;
 	
 	size_t	paddedBlockSize = (( requestedBlockSize + 3 ) & ~3) + 3 * LargeBlockHeader::kLargeBlockOverhead + sizeof(nsLargeHeapChunk);
 	
 	if (paddedBlockSize > chunkSize)
 		chunkSize = paddedBlockSize;
 
-	Ptr		chunkMemory = DoMacMemoryAllocation(chunkSize, actualChunkSize, &tempMemHandle);
+	Ptr		chunkMemory = nsAllocatorManager::GetAllocatorManager()->AllocateSubheap(chunkSize, actualChunkSize);
 	
 	// use placement new to initialize the chunk in the memory block
-	nsHeapChunk		*newHeapChunk = new (chunkMemory) nsLargeHeapChunk(this, actualChunkSize, tempMemHandle);
+	nsHeapChunk		*newHeapChunk = new (chunkMemory) nsLargeHeapChunk(this, actualChunkSize);
 	
 	if (newHeapChunk)
 		AddToChunkList(newHeapChunk);
@@ -188,11 +188,7 @@ void nsLargeHeapAllocator::FreeChunk(nsHeapChunk *chunkToFree)
 	nsLargeHeapChunk	*thisChunk = (nsLargeHeapChunk *)chunkToFree;
 	thisChunk->~nsLargeHeapChunk();
 	
-	Handle	tempMemHandle = thisChunk->GetMemHandle();
-	if (tempMemHandle)
-		DisposeHandle(tempMemHandle);
-	else
-		DisposePtr((Ptr)thisChunk);
+	nsAllocatorManager::GetAllocatorManager()->FreeSubheap((Ptr)thisChunk);
 }
 
 
@@ -201,9 +197,8 @@ void nsLargeHeapAllocator::FreeChunk(nsHeapChunk *chunkToFree)
 //--------------------------------------------------------------------
 nsLargeHeapChunk::nsLargeHeapChunk(
 			nsMemAllocator 	*inOwningAllocator,
-			Size 			heapSize,
-			Handle 			tempMemHandle) :
-	nsHeapChunk(inOwningAllocator, heapSize, tempMemHandle)
+			Size 			heapSize) :
+	nsHeapChunk(inOwningAllocator, heapSize)
 //--------------------------------------------------------------------
 {
 	heapSize -= sizeof(nsLargeHeapChunk);		// subtract heap overhead

@@ -15,18 +15,19 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All Rights    
  * Reserved. */
 
+#include <stdio.h>
 #include <MacMemory.h>
 
-
 #include "nsMemAllocator.h"
+#include "nsAllocatorManager.h"
+
 
 //--------------------------------------------------------------------
-nsHeapChunk::nsHeapChunk(nsMemAllocator *inOwningAllocator, Size heapSize, Handle tempMemHandle)
+nsHeapChunk::nsHeapChunk(nsMemAllocator *inOwningAllocator, Size heapSize)
 :	mOwningAllocator(inOwningAllocator)
 ,	mNextChunk(nil)
 ,	mHeapSize(heapSize)
 ,	mUsedBlocks(0)
-,	mTempMemHandle(tempMemHandle)
 #if DEBUG_HEAP_INTEGRITY	
 ,	mSignature(kChunkSignature)
 #endif
@@ -46,12 +47,21 @@ nsHeapChunk::~nsHeapChunk()
 #pragma mark -
 
 //--------------------------------------------------------------------
-nsMemAllocator::nsMemAllocator(THz inHeapZone)
-:	mHeapZone(inHeapZone)
-,	mFirstChunk(nil)
+nsMemAllocator::nsMemAllocator()
+:	mFirstChunk(nil)
 ,	mLastChunk(nil)
 #if DEBUG_HEAP_INTEGRITY	
 ,	mSignature(kMemAllocatorSignature)
+#endif
+#if STATS_MAC_MEMORY
+,	mCurBlockCount(0)
+,	mMaxBlockCount(0)
+,	mCurBlockSpaceUsed(0)
+,	mMaxBlockSpaceUsed(0)
+,	mCurHeapSpaceUsed(0)
+,	mMaxHeapSpaceUsed(0)
+,	mCurSubheapCount(0)
+,	mMaxSubheapCount(0)
 #endif
 //--------------------------------------------------------------------
 {
@@ -109,6 +119,10 @@ void nsMemAllocator::AddToChunkList(nsHeapChunk *inNewChunk)
 	mCurSubheapCount ++;
 	if (mCurSubheapCount > mMaxSubheapCount)
 		mMaxSubheapCount = mCurSubheapCount;
+		
+	mCurHeapSpaceUsed += inNewChunk->GetChunkSize();
+	if (mCurHeapSpaceUsed > mMaxHeapSpaceUsed)
+		mMaxHeapSpaceUsed = mCurHeapSpaceUsed;
 #endif
 }
 
@@ -146,67 +160,13 @@ void nsMemAllocator::RemoveFromChunkList(nsHeapChunk *inChunk)
 	
 #if STATS_MAC_MEMORY
 	mCurSubheapCount --;
+	
+	mCurHeapSpaceUsed -= inChunk->GetChunkSize();
 #endif
 }
 
 
-// amount of free space to maintain in the heap. This is used by 
-// plugins, GWorlds and other things.
-const Size nsMemAllocator::kFreeHeapSpace 		= 512 * 1024;
-
-// block size multiple. All blocks should be multiples of this size,
-// to reduce heap fragmentation
-const Size nsMemAllocator::kChunkSizeMultiple 	= 2 * 1024;
-const Size nsMemAllocator::kMacMemoryPtrOvehead	= 16;
-
-//--------------------------------------------------------------------
-Ptr nsMemAllocator::DoMacMemoryAllocation(Size preferredSize, Size &outActualSize,
-			Handle *outTempMemHandle)
-// This is the routine that does the actual memory allocation.
-// Possible results:
-//		1.	Allocate pointer in heap. Return ptr, *outTempMemHandle==nil.
-//		2.	Allocate handle in temp mem. Return *handle, and put handle in *outTempMemHandle
-//		3.	Fail to allocate. Return nil,  *outTempMemHandle==nil.
-//
-//		outActualSize may be larger than preferredSize because we
-//		want to avoid heap fragmentation by keeping all blocks multiples
-//		of one smallest block size. outActualSize will not be smaller
-//		than preferredSize
-//--------------------------------------------------------------------
-{
-	*outTempMemHandle = nil;
-	
-	// calculate an ideal chunk size by rounding up
-	preferredSize = kChunkSizeMultiple * ((preferredSize + (kChunkSizeMultiple - 1)) / kChunkSizeMultiple);
-	
-	// take into accound the memory manager's pointer overhead (16 btyes), to avoid fragmentation
-	preferredSize += ((preferredSize / kChunkSizeMultiple) - 1) * kMacMemoryPtrOvehead;
-	outActualSize = preferredSize;
-	
-	// try to allocate in our heap zone
-	::SetZone(mHeapZone);
-
-	Ptr	resultPtr = ::NewPtr(preferredSize);
-
-	// set the current zone back to the application zone
-	::SetZone(::ApplicationZone());
-
-	if (resultPtr != nil)
-		return resultPtr;
-	
-	// that failed, so try temp mem now
-	OSErr		err;
-	Handle		tempMemHandle = ::TempNewHandle(preferredSize, &err);
-	if (tempMemHandle != nil)
-	{
-		HLock(tempMemHandle);		// may thee remain locked for all time
-		*outTempMemHandle = tempMemHandle;
-		return *tempMemHandle;
-	}
-
-	return nil;			// failure
-}
-
+#pragma mark -
 
 #if STATS_MAC_MEMORY
 
@@ -244,6 +204,33 @@ void nsMemAllocator::AccountForFreedBlock(size_t logicalSize)
 {
 	mCurBlockCount --;
 	mCurBlockSpaceUsed -= logicalSize;
+}
+
+
+//--------------------------------------------------------------------
+void nsMemAllocator::DumpMemoryStats(PRFileDesc *outFile)
+//--------------------------------------------------------------------
+{
+	char			outString[ 1024 ];
+	
+	WriteString ( outFile, "\n\n--------------------------------------------------------------------------------\n" );
+	WriteString(outFile, "Stats for heap\n");
+	WriteString ( outFile, "--------------------------------------------------------------------------------\n" );
+	WriteString ( outFile, "                     Current         Max\n" );
+	WriteString ( outFile, "                  ----------     -------\n" );
+	sprintf( outString,    "Num chunks:       %10d  %10d\n", mCurSubheapCount, mMaxSubheapCount);
+	WriteString ( outFile, outString );
+	sprintf( outString,    "Chunk total:      %10d  %10d\n", mCurHeapSpaceUsed, mMaxHeapSpaceUsed);
+	WriteString ( outFile, outString );
+	sprintf( outString,    "Block space:      %10d  %10d\n", mCurBlockSpaceUsed, mMaxBlockSpaceUsed );
+	WriteString ( outFile, outString );
+	sprintf( outString,    "Blocks used:      %10d  %10d\n", mCurBlockCount, mMaxBlockCount );
+	WriteString ( outFile, outString );
+	WriteString ( outFile, "                                 -------\n" );
+	sprintf( outString,    "%s of allocated space used:    %10.2f\n", "%", 100.0 * mMaxBlockSpaceUsed / mMaxHeapSpaceUsed );
+	WriteString ( outFile, outString );
+
+	WriteString ( outFile, "\n\n");
 }
 
 #endif

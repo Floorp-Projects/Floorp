@@ -106,7 +106,7 @@ class nsFixedSizeAllocator : public nsMemAllocator
 	
 	public:
 
-								nsFixedSizeAllocator(THz heapZone, size_t blockSize);
+								nsFixedSizeAllocator(size_t blockSize);
 								~nsFixedSizeAllocator();
 
 		virtual void *			AllocatorMakeBlock(size_t blockSize);
@@ -130,7 +130,9 @@ class nsFixedSizeAllocator : public nsMemAllocator
 		UInt32			mBlockSize;		// upper bound for blocks allocated in this heap
 										// does not include block overhead
 
-
+		nsFixedSizeHeapChunk	*mChunkWithSpace;	// cheap optimization
+		
+		
 #if STATS_MAC_MEMORY
 		UInt32			mChunksAllocated;
 		UInt32			mMaxChunksAllocated;
@@ -156,20 +158,20 @@ class nsFixedSizeHeapChunk : public nsHeapChunk
 {
 	public:
 	
-										nsFixedSizeHeapChunk(nsMemAllocator *inOwningAllocator, Size heapSize, Handle tempMemHandle);
-										~nsFixedSizeHeapChunk();
+									nsFixedSizeHeapChunk(nsMemAllocator *inOwningAllocator, Size heapSize);
+									~nsFixedSizeHeapChunk();
 
 		FixedMemoryBlock*			GetFreeList() const { return mFreeList; }
-		void							SetFreeList(FixedMemoryBlock *nextFree) { mFreeList = nextFree; }
+		void						SetFreeList(FixedMemoryBlock *nextFree) { mFreeList = nextFree; }
 				
 		FixedMemoryBlock*			FetchFirstFree();
-		void							ReturnToFreeList(FixedMemoryBlock *freeBlock);
+		void						ReturnToFreeList(FixedMemoryBlock *freeBlock);
 
 	protected:
 		
 	#if STATS_MAC_MEMORY
-		UInt32							chunkSize;
-		UInt32							numBlocks;
+		UInt32						chunkSize;
+		UInt32						numBlocks;
 	#endif
 		
 		FixedMemoryBlock			*mFreeList;

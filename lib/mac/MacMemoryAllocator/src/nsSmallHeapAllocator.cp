@@ -20,17 +20,18 @@
 #include <MacMemory.h>
 
 #include "nsMemAllocator.h"
+#include "nsAllocatorManager.h"
 #include "nsSmallHeapAllocator.h"
 
 const UInt32 SmallHeapBlock::kBlockOverhead = sizeof(SmallHeapBlock) + MEMORY_BLOCK_TAILER_SIZE;
 
 
 //--------------------------------------------------------------------
-nsSmallHeapAllocator::nsSmallHeapAllocator(THz heapZone)
-:	nsMemAllocator(heapZone)
+nsSmallHeapAllocator::nsSmallHeapAllocator()
+:	nsMemAllocator()
 //--------------------------------------------------------------------
 {
-	mBaseChunkSize = mTempChunkSize = (nsMemAllocator::kChunkSizeMultiple);
+	mBaseChunkSize = mTempChunkSize = (nsAllocatorManager::kChunkSizeMultiple);
 }
 
 //--------------------------------------------------------------------
@@ -146,12 +147,10 @@ nsHeapChunk *nsSmallHeapAllocator::AllocateChunk(size_t blockSize)
 		minChunkSize = mBaseChunkSize;
 		
 	Size	actualChunkSize;
-	Handle	tempMemHandle;
-	Ptr		chunkMemory = DoMacMemoryAllocation(minChunkSize, actualChunkSize, &tempMemHandle);
+	Ptr		chunkMemory = nsAllocatorManager::GetAllocatorManager()->AllocateSubheap(mBaseChunkSize, actualChunkSize);
 	
 	// use placement new to initialize the chunk in the memory block
-	nsHeapChunk		*newHeapChunk = new (chunkMemory) nsSmallHeapChunk(this, actualChunkSize, tempMemHandle);
-	
+	nsHeapChunk		*newHeapChunk = new (chunkMemory) nsSmallHeapChunk(this, actualChunkSize);
 	if (newHeapChunk)
 		AddToChunkList(newHeapChunk);
 	
@@ -168,11 +167,7 @@ void nsSmallHeapAllocator::FreeChunk(nsHeapChunk *chunkToFree)
 	nsSmallHeapChunk	*thisChunk = (nsSmallHeapChunk *)chunkToFree;
 	thisChunk->~nsSmallHeapChunk();
 	
-	Handle	tempMemHandle = thisChunk->GetMemHandle();
-	if (tempMemHandle)
-		DisposeHandle(tempMemHandle);
-	else
-		DisposePtr((Ptr)thisChunk);
+	nsAllocatorManager::GetAllocatorManager()->FreeSubheap((Ptr)thisChunk);
 }
 
 
@@ -181,9 +176,8 @@ void nsSmallHeapAllocator::FreeChunk(nsHeapChunk *chunkToFree)
 //--------------------------------------------------------------------
 nsSmallHeapChunk::nsSmallHeapChunk(
 			nsMemAllocator 	*inOwningAllocator,
-			Size 			heapSize,
-			Handle 			tempMemHandle) :
-	nsHeapChunk(inOwningAllocator, heapSize, tempMemHandle),
+			Size 			heapSize) :
+	nsHeapChunk(inOwningAllocator, heapSize),
 	mOverflow(nil)
 //--------------------------------------------------------------------
 {
@@ -298,8 +292,6 @@ void *nsSmallHeapChunk::GetSpaceForBlock(size_t blockSize)
 			//	room for another allocation out of the 
 			//	block, then split the block up.
 			
-			//blockToCarve->SetUnusedBlockSize(roundedBlockSize);
-			//leftovers = blockToCarveSize - blockToCarve->GetBlockHeapUsage();
 			SInt32	leftovers = blockToCarveSize - roundedBlockSize - SmallHeapBlock::kBlockOverhead;
 
 			if (leftovers >= kDefaultSmallHeadMinSize)

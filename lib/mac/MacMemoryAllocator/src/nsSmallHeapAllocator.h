@@ -130,7 +130,7 @@ class nsSmallHeapAllocator : public nsMemAllocator
 
 	public:
 			
-								nsSmallHeapAllocator(THz heapZone);
+								nsSmallHeapAllocator();
 								~nsSmallHeapAllocator();
 
 		virtual void *			AllocatorMakeBlock(size_t blockSize);
@@ -153,9 +153,7 @@ class nsSmallHeapChunk : public nsHeapChunk
 {
 	public:
 		
-								nsSmallHeapChunk(	nsMemAllocator *inOwningAllocator,
-													Size 			heapSize,
-													Handle 			tempMemHandle);
+								nsSmallHeapChunk(nsMemAllocator *inOwningAllocator, Size heapSize);
 								~nsSmallHeapChunk();
 		
 		void *					GetSpaceForBlock(UInt32 roundedBlockSize);

@@ -108,7 +108,7 @@ class nsLargeHeapAllocator : public nsMemAllocator
 	
 	
 	public:
-								nsLargeHeapAllocator(THz heapZone);
+								nsLargeHeapAllocator();
 								~nsLargeHeapAllocator();
 
 
@@ -136,8 +136,7 @@ class nsLargeHeapChunk : public nsHeapChunk
 	public:
 	
 							nsLargeHeapChunk(	nsMemAllocator *inOwningAllocator,
-												Size 			heapSize,
-												Handle 			tempMemHandle);
+												Size 			heapSize);
 							~nsLargeHeapChunk();
 
 		LargeBlockHeader*	GetHeadBlock()		{ return mHead;	}
