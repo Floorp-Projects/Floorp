@@ -532,7 +532,7 @@ nsBrowserAppCore::LoadInitialPage(void)
   // Examine content URL.
   if ( mContentAreaWebShell ) {
       const PRUnichar *url = 0;
-      nsresult rv = mContentAreaWebShell->GetURL( 0, &url );
+      rv = mContentAreaWebShell->GetURL( 0, &url );
       if ( NS_SUCCEEDED( rv ) ) {
           if ( nsString(url) != "about:blank" ) {
               // Something has already been loaded (probably via window.open),
@@ -766,9 +766,9 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURL* aURL, 
 
   nsAutoString urlStr(url);
 
-  static PRUnichar kStartDocumentLoad[] = L"StartDocumentLoad";
+  nsAutoString kStartDocumentLoad("StartDocumentLoad");
   rv = observer->Notify(mContentWindow,
-                        kStartDocumentLoad,
+                        kStartDocumentLoad.GetUnicode(),
                         urlStr.GetUnicode());
 
   // XXX Ignore rv for now. They are using nsIEnumerator instead of
@@ -808,11 +808,11 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIURL *aUrl, PR
 
   nsAutoString urlStr(url);
 
-  static PRUnichar kEndDocumentLoad[] = L"EndDocumentLoad";
-  static PRUnichar kFailDocumentLoad[] = L"FailDocumentLoad";
+  nsAutoString kEndDocumentLoad("EndDocumentLoad");
+  nsAutoString kFailDocumentLoad("FailDocumentLoad");
 
   rv = observer->Notify(mContentWindow,
-                        NS_SUCCEEDED(aStatus) ? kEndDocumentLoad : kFailDocumentLoad,
+                        NS_SUCCEEDED(aStatus) ? kEndDocumentLoad.GetUnicode() : kFailDocumentLoad.GetUnicode(),
                         urlStr.GetUnicode());
 
   // XXX Ignore rv for now. They are using nsIEnumerator instead of
