@@ -88,9 +88,6 @@ public class JavaAdapter extends ScriptableObject
 
     public static Object jsConstructor(Context cx, Object[] args,
                                        Function ctorObj, boolean inNewExpr)
-        throws InstantiationException, NoSuchMethodException,
-               IllegalAccessException, InvocationTargetException,
-               ClassNotFoundException, NoSuchFieldException
     {
         Class superClass = null;
         Class[] intfs = new Class[args.length-1];
@@ -122,7 +119,8 @@ public class JavaAdapter extends ScriptableObject
         System.arraycopy(intfs, 0, interfaces, 0, interfaceCount);
         Scriptable obj = (Scriptable) args[args.length - 1];
 
-        ClassSignature sig = new ClassSignature(superClass, interfaces, obj);
+        JavaClassSignature sig = new JavaClassSignature(superClass, interfaces,
+                                                        obj);
         Class adapterClass = (Class) generatedClasses.get(sig);
         if (adapterClass == null) {
             String adapterName;
@@ -138,18 +136,23 @@ public class JavaAdapter extends ScriptableObject
 
         Class[] ctorParms = { ScriptRuntime.ScriptableClass };
         Object[] ctorArgs = { obj };
-        Object adapter = adapterClass.getConstructor(ctorParms).newInstance(ctorArgs);
-        return getAdapterSelf(adapterClass, adapter);
+        try {
+            Object adapter = adapterClass.getConstructor(ctorParms).
+                                 newInstance(ctorArgs);
+            return getAdapterSelf(adapterClass, adapter);
+        } catch (Exception ex) {
+            throw WrappedException.wrapException(ex);
+        }
     }
 
     // Needed by NativeJavaObject de-serializer
 
-    public static Object createAdapterClass(Class superClass,
-                                            Class[] interfaces,
-                                            Scriptable obj, Scriptable self)
-          throws ClassNotFoundException
+    static Object createAdapterClass(Class superClass, Class[] interfaces,
+                                     Scriptable obj, Scriptable self)
+        throws ClassNotFoundException
     {
-        ClassSignature sig = new ClassSignature(superClass, interfaces, obj);
+        JavaClassSignature sig = new JavaClassSignature(superClass, interfaces,
+                                                        obj);
         Class adapterClass = (Class) generatedClasses.get(sig);
         if (adapterClass == null) {
             String adapterName;
@@ -322,8 +325,8 @@ public class JavaAdapter extends ScriptableObject
         return cfw.toByteArray();
     }
 
-    private static Class
-    loadAdapterClass(Context cx, String className, byte[] classBytes)
+    private static Class loadAdapterClass(Context cx, String className,
+                                          byte[] classBytes)
     {
         ClassLoader parentLoader = cx.getApplicationClassLoader();
         GeneratedClassLoader loader;
@@ -413,11 +416,14 @@ public class JavaAdapter extends ScriptableObject
         cfw.stopMethod((short)20, null); // TODO: magic number "20"
     }
 
-    private static void generateSerialCtor(ClassFileWriter cfw, String adapterName,
-                                     String superName)
+    private static void generateSerialCtor(ClassFileWriter cfw,
+                                           String adapterName,
+                                           String superName)
     {
         cfw.startMethod("<init>",
-                        "(Lorg/mozilla/javascript/Scriptable;Lorg/mozilla/javascript/Scriptable;)V",
+                        "(Lorg/mozilla/javascript/Scriptable;"
+                        +"Lorg/mozilla/javascript/Scriptable;"
+                        +")V",
                         ClassFileWriter.ACC_PUBLIC);
 
         // Invoke base class constructor
@@ -654,7 +660,8 @@ public class JavaAdapter extends ScriptableObject
         cfw.add(ByteCode.ANEWARRAY, "java/lang/Object");
         cfw.add(ByteCode.ASTORE, arrayLocal);
 
-        // allocate a local variable to store the scope used to wrap native objects.
+        // allocate a local variable to store the scope used to wrap native
+        // objects.
         short scopeLocal = (short) (arrayLocal + 1);
         boolean loadedScope = false;
 
@@ -868,56 +875,56 @@ public class JavaAdapter extends ScriptableObject
         return sb;
     }
 
-    /**
-     * Provides a key with which to distinguish previously generated
-     * adapter classes stored in a hash table.
-     */
-    static class ClassSignature
-    {
-        Class mSuperClass;
-        Class[] mInterfaces;
-        Object[] mProperties;    // JDK1.2: Use HashSet
-
-        ClassSignature(Class superClass, Class[] interfaces, Scriptable jsObj)
-        {
-            mSuperClass = superClass;
-            mInterfaces = interfaces;
-            mProperties = ScriptableObject.getPropertyIds(jsObj);
-        }
-
-        public boolean equals(Object obj)
-        {
-            if (obj instanceof ClassSignature) {
-                ClassSignature sig = (ClassSignature) obj;
-                if (mSuperClass == sig.mSuperClass) {
-                    Class[] interfaces = sig.mInterfaces;
-                    if (mInterfaces != interfaces) {
-                        if (mInterfaces == null || interfaces == null)
-                            return false;
-                        if (mInterfaces.length != interfaces.length)
-                            return false;
-                        for (int i=0; i < interfaces.length; i++)
-                            if (mInterfaces[i] != interfaces[i])
-                                return false;
-                    }
-                    if (mProperties.length != sig.mProperties.length)
-                        return false;
-                    for (int i=0; i < mProperties.length; i++) {
-                        if (!mProperties[i].equals(sig.mProperties[i]))
-                            return false;
-                    }
-                    return true;
-                }
-            }
-            return false;
-        }
-
-        public int hashCode()
-        {
-            return mSuperClass.hashCode();
-        }
-    }
-
     private static int serial;
     private static Hashtable generatedClasses = new Hashtable(7);
+}
+
+/**
+ * Provides a key with which to distinguish previously generated
+ * adapter classes stored in a hash table.
+ */
+class JavaClassSignature
+{
+    Class mSuperClass;
+    Class[] mInterfaces;
+    Object[] mProperties;
+
+    JavaClassSignature(Class superClass, Class[] interfaces, Scriptable jsObj)
+    {
+        mSuperClass = superClass;
+        mInterfaces = interfaces;
+        mProperties = ScriptableObject.getPropertyIds(jsObj);
+    }
+
+    public boolean equals(Object obj)
+    {
+        if (obj instanceof JavaClassSignature) {
+            JavaClassSignature sig = (JavaClassSignature) obj;
+            if (mSuperClass == sig.mSuperClass) {
+                Class[] interfaces = sig.mInterfaces;
+                if (mInterfaces != interfaces) {
+                    if (mInterfaces == null || interfaces == null)
+                        return false;
+                    if (mInterfaces.length != interfaces.length)
+                        return false;
+                    for (int i=0; i < interfaces.length; i++)
+                        if (mInterfaces[i] != interfaces[i])
+                            return false;
+                }
+                if (mProperties.length != sig.mProperties.length)
+                    return false;
+                for (int i=0; i < mProperties.length; i++) {
+                    if (!mProperties[i].equals(sig.mProperties[i]))
+                        return false;
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public int hashCode()
+    {
+        return mSuperClass.hashCode();
+    }
 }
