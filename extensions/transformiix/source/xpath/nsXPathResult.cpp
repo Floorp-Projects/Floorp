@@ -40,23 +40,13 @@
 #include "nsXPathResult.h"
 #include "dom.h"
 #include "ExprResult.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 #include "nsDOMError.h"
 #include "nsIContent.h"
 #include "nsIDOMClassInfo.h"
 #include "nsIDOMNode.h"
 #include "nsXPathException.h"
 #include "nsIDOMDocument.h"
-
-NS_IMPL_ADDREF(nsXPathResult)
-NS_IMPL_RELEASE(nsXPathResult)
-NS_INTERFACE_MAP_BEGIN(nsXPathResult)
-  NS_INTERFACE_MAP_ENTRY(nsIDOMXPathResult)
-  NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
-  NS_INTERFACE_MAP_ENTRY(nsIXPathResult)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathResult)
-  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathResult)
-NS_INTERFACE_MAP_END
 
 nsXPathResult::nsXPathResult() : mNumberValue(0),
                                  mDocument(0),
@@ -70,6 +60,16 @@ nsXPathResult::~nsXPathResult()
 {
     Reset();
 }
+
+NS_IMPL_ADDREF(nsXPathResult)
+NS_IMPL_RELEASE(nsXPathResult)
+NS_INTERFACE_MAP_BEGIN(nsXPathResult)
+  NS_INTERFACE_MAP_ENTRY(nsIDOMXPathResult)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIXPathResult)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMXPathResult)
+  NS_INTERFACE_MAP_ENTRY_EXTERNAL_DOM_CLASSINFO(XPathResult)
+NS_INTERFACE_MAP_END
 
 NS_IMETHODIMP
 nsXPathResult::GetResultType(PRUint16 *aResultType)
@@ -170,7 +170,7 @@ nsXPathResult::IterateNext(nsIDOMNode **aResult)
         return NS_ERROR_DOM_INVALID_STATE_ERR;
 
     NS_ENSURE_ARG(aResult);
-    if (mElements && mCurrentPos < mElements->Count()) {
+    if (mElements && mCurrentPos < (PRUint32)mElements->Count()) {
         *aResult = mElements->ObjectAt(mCurrentPos++);
         NS_ADDREF(*aResult);
         return NS_OK;
@@ -187,7 +187,7 @@ nsXPathResult::SnapshotItem(PRUint32 aIndex, nsIDOMNode **aResult)
         return NS_ERROR_DOM_TYPE_ERR;
 
     NS_ENSURE_ARG(aResult);
-    if (mElements && aIndex < mElements->Count()) {
+    if (mElements && aIndex < (PRUint32)mElements->Count()) {
         *aResult = mElements->ObjectAt(aIndex);
         NS_ADDREF(*aResult);
         return NS_OK;
@@ -288,7 +288,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
 
     if (aExprResult->getResultType() == txAExprResult::NODESET) {
         nsresult rv = NS_OK;
-        NodeSet* nodeSet = (NodeSet*)aExprResult;
+        txNodeSet* nodeSet = NS_STATIC_CAST(txNodeSet*, aExprResult);
 
         if (mResultType == FIRST_ORDERED_NODE_TYPE ||
             mResultType == ANY_UNORDERED_NODE_TYPE) {
@@ -302,7 +302,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
                 mInvalidIteratorState = PR_FALSE;
             }
 
-            int count = nodeSet->size();
+            PRInt32 count = nodeSet->size();
             if (count == 0)
                 return NS_OK;
 
@@ -310,7 +310,7 @@ nsXPathResult::SetExprResult(txAExprResult* aExprResult, PRUint16 aResultType)
             NS_ENSURE_TRUE(mElements, NS_ERROR_OUT_OF_MEMORY);
 
             nsCOMPtr<nsIDOMNode> node;
-            int i;
+            PRInt32 i;
             for (i = 0; i < count; ++i) {
                 node = do_QueryInterface(nodeSet->get(i)->getNSObj());
                 NS_ASSERTION(node, "node isn't an nsIDOMNode");

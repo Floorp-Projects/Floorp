@@ -24,7 +24,7 @@
  */
 
 #include "Expr.h"
-#include "NodeSet.h"
+#include "txNodeSet.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
 

@@ -60,7 +60,6 @@ OBJS = ../base/Double.$(OBJ_SUFFIX) \
   ../xpath/FunctionCall.$(OBJ_SUFFIX) \
   ../xpath/LocationStep.$(OBJ_SUFFIX) \
   ../xpath/MultiplicativeExpr.$(OBJ_SUFFIX) \
-  ../xpath/NodeSet.$(OBJ_SUFFIX) \
   ../xpath/NodeSetFunctionCall.$(OBJ_SUFFIX) \
   ../xpath/NumberFunctionCall.$(OBJ_SUFFIX) \
   ../xpath/NumberResult.$(OBJ_SUFFIX) \
@@ -72,6 +71,7 @@ OBJS = ../base/Double.$(OBJ_SUFFIX) \
   ../xpath/StringResult.$(OBJ_SUFFIX) \
   ../xpath/txLiteralExpr.$(OBJ_SUFFIX) \
   ../xpath/txNameTest.$(OBJ_SUFFIX) \
+  ../xpath/txNodeSet.$(OBJ_SUFFIX) \
   ../xpath/txNodeTypeTest.$(OBJ_SUFFIX) \
   ../xpath/txForwardContext.$(OBJ_SUFFIX) \
   ../xpath/txNodeSetContext.$(OBJ_SUFFIX) \

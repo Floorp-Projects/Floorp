@@ -81,7 +81,6 @@ LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/xpath/FunctionCall.$(OBJ_SUFFIX) \
   ../source/xpath/LocationStep.$(OBJ_SUFFIX) \
   ../source/xpath/MultiplicativeExpr.$(OBJ_SUFFIX) \
-  ../source/xpath/NodeSet.$(OBJ_SUFFIX) \
   ../source/xpath/NodeSetFunctionCall.$(OBJ_SUFFIX) \
   ../source/xpath/nsXPathEvaluator.$(OBJ_SUFFIX) \
   ../source/xpath/nsXPathException.$(OBJ_SUFFIX) \
@@ -99,6 +98,7 @@ LOBJS = ../source/base/Double.$(OBJ_SUFFIX) \
   ../source/xpath/StringResult.$(OBJ_SUFFIX) \
   ../source/xpath/txLiteralExpr.$(OBJ_SUFFIX) \
   ../source/xpath/txNameTest.$(OBJ_SUFFIX) \
+  ../source/xpath/txNodeSet.$(OBJ_SUFFIX) \
   ../source/xpath/txNodeTypeTest.$(OBJ_SUFFIX) \
   ../source/xpath/txForwardContext.$(OBJ_SUFFIX) \
   ../source/xpath/txNodeSetContext.$(OBJ_SUFFIX) \
