@@ -287,6 +287,12 @@ nsGenericHTMLElement::CopyInnerTo(nsIContent* aSrcContent,
 }
 
 nsresult
+nsGenericHTMLElement::GetNodeName(nsString& aNodeName)
+{
+  return GetTagName(aNodeName);
+}
+
+nsresult
 nsGenericHTMLElement::GetTagName(nsString& aTagName)
 {
   nsGenericElement::GetTagName(aTagName);
