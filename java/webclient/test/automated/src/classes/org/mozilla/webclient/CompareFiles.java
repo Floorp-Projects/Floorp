@@ -1,5 +1,5 @@
 /*
- * $Id: CompareFiles.java,v 1.1 2002/10/01 00:39:28 edburns%acm.org Exp $
+ * $Id: CompareFiles.java,v 1.2 2004/02/25 05:44:08 edburns%acm.org Exp $
  */
 
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
@@ -43,7 +43,9 @@ public class CompareFiles {
     public static boolean filesIdentical (String newFileName, 
 					  String oldFileName, 
 					  List oldLinesToIgnore, 
-					  int ignorePrefix) 
+					  boolean ignorePrefix,
+					  boolean ignoreWarnings, 
+					  List ignoreKeywords) 
             throws IOException {
 
         boolean same = true;
@@ -68,13 +70,23 @@ public class CompareFiles {
 	}
 
 	while (null != newLine && null != oldLine) {
-	    if (0 < ignorePrefix) {
-		newLine = newLine.substring(ignorePrefix);
-		oldLine = oldLine.substring(ignorePrefix);
+	    if (ignorePrefix) {
+		int bracketColon = 0;
+		if (-1 != (bracketColon = newLine.indexOf("]: "))) {
+		    newLine = newLine.substring(bracketColon + 3);
+		}
+		if (-1 != (bracketColon = oldLine.indexOf("]: "))) {
+		    oldLine = oldLine.substring(bracketColon + 3);
+		}
 	    }
 	    
-	    if (!newLine.equals(oldLine)) {
-
+	    if (ignoreWarnings && newLine.startsWith("WARNING:")) {
+		// we're ignoring warnings, no-op
+		newLine = newReader.readLine(); // swallow the WARNING line
+		continue;
+		
+	    }
+	    else if (!newLine.equals(oldLine)) {
 		if (null != oldLinesToIgnore) {
 		    // go thru the list of oldLinesToIgnore and see if
 		    // the current oldLine matches any of them.
@@ -91,12 +103,29 @@ public class CompareFiles {
 		    // important
 		    if (!foundMatch) {
 			same = false;
+			System.out.println("newLine: " + newLine);
+			System.out.println("oldLine: " + oldLine);
 			break;
 		    }
 		}
 		else {
 		    same = false;
-		    break;
+		    if (null != ignoreKeywords && 0 < ignoreKeywords.size()) {
+			Iterator iter = ignoreKeywords.iterator();
+			while (iter.hasNext()) {
+			    if (-1 != newLine.indexOf((String) iter.next())) {
+				// we're ignoring lines that contain this
+				// keyword, no-op
+				same = true;
+				break;
+			    }
+			}
+		    }
+		    if (!same) {
+			System.out.println("newLine: " + newLine);
+			System.out.println("oldLine: " + oldLine);
+			break;
+		    }
 		}
 	    }
 	    

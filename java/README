@@ -37,6 +37,7 @@ How To Build:
 
 ######
 build.unix.classes=true
+build.win32.classes=false
 build.home=/home/edburns/Projects/mozilla/MOZILLA_1_4/mozilla/dist/classes
 compile.debug=true
 ######
@@ -55,10 +56,13 @@ How to run the Junit tests:
 
 * Set the following variables in your environment
 
-NSPR_LOG_MODULES="webclient:4,webclientstub:4"
-NSPR_LOG_FILE="logfile.txt"
+NSPR_LOG_MODULES=webclient:4,webclientstub:4
+NSPR_LOG_FILE=logfile.txt
 
 * cd to mozilla/java/webclient
+
+* Kill any running mozilla instances.  These will mess up the
+  profilemanager code.
 
 * run ant test
 

@@ -45,6 +45,9 @@
 #ifdef XP_UNIX
 #include <unistd.h> // for getpid
 #endif
+#ifdef XP_PC
+#include <windows.h> // for GetCurrentProcessId()
+#endif
 
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 
@@ -133,17 +136,20 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeAppInit
     PR_LOG(prLogModuleInfo, PR_LOG_DEBUG, 
            ("WrapperFactoryImpl_nativeAppInitialize: exiting\n"));
 
-#ifdef XP_UNIX
     char propValue[50];
     ::util_getSystemProperty(env, "native.waitForDebugger", propValue, 50);
     if (nsnull != propValue[0] &&
         0 < nsCRT::strlen(propValue)) {
+#ifdef XP_UNIX
         pid_t pid = getpid();
         printf("++++++++++++++++debug: pid is: %d\n", pid);
-        fflush(stdout);
-        sleep(7);
-    }
 #endif
+#ifdef XP_PC
+        printf("++++++++++++++++debug: pid is: %d\n", GetCurrentProcessId());
+#endif
+        fflush(stdout);
+        PR_Sleep(700000);
+    }
     
     // Store our pointer to the global vm
     if (nsnull == gVm) { // declared in ../src_share/jni_util.h
