@@ -445,6 +445,13 @@ ProxyListener::~ProxyListener()
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP ProxyListener::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
 {
+  // if the request has been redirected, then we'll get another pair
+  // of OnStartRequest/OnStopRequest from the new request.
+  nsresult status = 0;
+  aRequest->GetStatus(&status);
+  if (status == NS_BINDING_REDIRECTED)
+    return NS_OK;
+
   if (!mDestListener)
     return NS_ERROR_FAILURE;
 
@@ -483,6 +490,11 @@ NS_IMETHODIMP ProxyListener::OnStartRequest(nsIRequest *aRequest, nsISupports *c
 /* void onStopRequest (in nsIRequest request, in nsISupports ctxt, in nsresult status); */
 NS_IMETHODIMP ProxyListener::OnStopRequest(nsIRequest *aRequest, nsISupports *ctxt, nsresult status)
 {
+  // if the request has been redirected, then we'll get another pair
+  // of OnStartRequest/OnStopRequest from the new request.
+  if (status == NS_BINDING_REDIRECTED)
+    return NS_OK;
+
   if (!mDestListener)
     return NS_ERROR_FAILURE;
 

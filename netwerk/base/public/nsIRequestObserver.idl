@@ -80,7 +80,8 @@ interface nsIRequestObserver : nsISupports
 #define NS_BINDING_FAILED    NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
 #define NS_BINDING_ABORTED   NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)
 
-// The binding has been moved to another request in the same load group:
+// The binding has been moved to another request in the same load group;
+// the request observer should expect another On{Start/Stop}Request pair:
 #define NS_BINDING_REDIRECTED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 3)
 
 // The binding has been moved to another request in a different load group:
