@@ -150,6 +150,18 @@
   -moz-image-region: rect(63px 161px 84px 138px) !important;
 }
 
+#bookmarks-button {
+  -moz-image-region: rect(0px 184px 21px 161px) !important;
+}
+  
+#bookmarks-button:hover {
+  -moz-image-region: rect(42px 184px 63px 161px) !important;
+}
+  
+#bookmarks-button:hover:active {
+  -moz-image-region: rect(63px 161px 84px 161px) !important;
+}
+
 /* ::::: small primary toolbar buttons ::::: */
 
 .toolbarbutton-1[toolbarmode="small"] {

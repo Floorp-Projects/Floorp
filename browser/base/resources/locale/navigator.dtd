@@ -194,3 +194,4 @@
 <!ENTITY openCmd2.commandkey "d">
 
 <!ENTITY searchButton.label "Search">
+<!ENTITY bookmarksButton.label "Bookmarks">
