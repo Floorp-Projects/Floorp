@@ -435,6 +435,7 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
 nsIFrame::ReflowStatus
 nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
                               nsIPresContext*  aPresContext,
+                              nsStyleMolecule* aKidMol,
                               nsISpaceManager* aSpaceManager,
                               const nsSize&    aMaxSize,
                               nsRect&          aDesiredRect,
@@ -479,31 +480,31 @@ nsContainerFrame::ReflowChild(nsIFrame*        aKidFrame,
     availSize.height = availRect->height;
   }
 
-  if ((availRect->x > 0) || (availRect->XMost() < aMaxSize.width)) {
-    // There are left/right floaters.
-    availSize.width = availRect->width;
-
-    // XXX We also need to reduce the width by the kid's left/right margin
-    // and border...
+  if (aMaxSize.width != NS_UNCONSTRAINEDSIZE) {
+    if ((availRect->x > 0) || (availRect->XMost() < aMaxSize.width)) {
+      // There are left/right floaters.
+      availSize.width = availRect->width;
+    }
+  
+    // Reduce the available width by the kid's left/right margin
+    availSize.width -= aKidMol->margin.left + aKidMol->margin.right;
   }
 
-  //
   // Does the child frame support interface nsIRunaround?
   if (NS_OK == aKidFrame->QueryInterface(kIRunaroundIID, (void**)&reflowRunaround)) {
-    // Yes, the child frame wants to interact directly with the space manager
-    if (availRect->x > 0) {
-      // Translate the local coordinate space to the current left edge
-      aSpaceManager->Translate(availRect->x, 0);
-    }
+    // Yes, the child frame wants to interact directly with the space manager.
+    nscoord tx = availRect->x + aKidMol->margin.left;
+
+    // Translate the local coordinate space to the current left edge plus any
+    // left margin the child wants
+    aSpaceManager->Translate(tx, 0);
 
     reflowRunaround->ResizeReflow(aPresContext, aSpaceManager, availSize,
                                   aDesiredRect, aMaxElementSize, status);
     aDesiredRect.x += availRect->x;
 
-    if (availRect->x > 0) {
-      // Translate back
-      aSpaceManager->Translate(-availRect->x, 0);
-    }
+    // Translate back
+    aSpaceManager->Translate(-tx, 0);
 
   } else {
     // No, use interface nsIFrame instead.
@@ -1068,8 +1069,8 @@ NS_METHOD nsContainerFrame::VerifyTree() const
   VERIFY_ASSERT(len == mChildCount, "bad child count");
 
   nsIFrame* lastChild;
-  LastChild(lastChild);
 
+  LastChild(lastChild);
   if (len != 0) {
     VERIFY_ASSERT(nsnull != lastChild, "bad last child");
   }

@@ -246,22 +246,21 @@ PRBool ColumnFrame::ReflowMappedChildren(nsIPresContext*    aPresContext,
 
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
+    //
+    // Note: don't subtract off for the child's left/right margins. ReflowChild()
+    // will do that when it determines the current left/right edge
     if (PR_FALSE == aState.unconstrainedHeight) {
       kidAvailSize.height -= topMargin;
-    }
-    // Subtract off for left and right margin
-    if (PR_FALSE == aState.unconstrainedWidth) {
-      kidAvailSize.width -= kidMol->margin.left + kidMol->margin.right;
     }
 
     // Only skip the reflow if this is not our first child and we are
     // out of space.
     if ((kidFrame == mFirstChild) || (kidAvailSize.height > 0)) {
       // Reflow the child into the available space
-      aState.spaceManager->Translate(kidMol->margin.left, topMargin);
-      status = ReflowChild(kidFrame, aPresContext, aState.spaceManager,
+      aState.spaceManager->Translate(0, topMargin);
+      status = ReflowChild(kidFrame, aPresContext, kidMol, aState.spaceManager,
                            kidAvailSize, kidRect, pKidMaxElementSize);
-      aState.spaceManager->Translate(-kidMol->margin.left, -topMargin);
+      aState.spaceManager->Translate(0, -topMargin);
     }
 
     // Did the child fit?
@@ -447,12 +446,11 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
 
     // Figure out the amount of available size for the child (subtract
     // off the top margin we are going to apply to it)
+    //
+    // Note: don't subtract off for the child's left/right margins. ReflowChild()
+    // will do that when it determines the current left/right edge
     if (PR_FALSE == aState.unconstrainedHeight) {
       kidAvailSize.height -= topMargin;
-    }
-    // Subtract off for left and right margin
-    if (PR_FALSE == aState.unconstrainedWidth) {
-      kidAvailSize.width -= kidMol->margin.left + kidMol->margin.right;
     }
 
     ReflowStatus status;
@@ -460,10 +458,10 @@ PRBool ColumnFrame::PullUpChildren(nsIPresContext*    aPresContext,
       // Only skip the reflow if this is not our first child and we are
       // out of space.
       if ((kidFrame == mFirstChild) || (kidAvailSize.height > 0)) {
-        aState.spaceManager->Translate(kidMol->margin.left, topMargin);
-        status = ReflowChild(kidFrame, aPresContext, aState.spaceManager, kidAvailSize,
-                             kidRect, pKidMaxElementSize);
-        aState.spaceManager->Translate(-kidMol->margin.left, -topMargin);
+        aState.spaceManager->Translate(0, topMargin);
+        status = ReflowChild(kidFrame, aPresContext, kidMol, aState.spaceManager,
+                             kidAvailSize, kidRect, pKidMaxElementSize);
+        aState.spaceManager->Translate(0, -topMargin);
       }
 
       // Did the child fit?
@@ -737,21 +735,20 @@ ColumnFrame::ReflowUnmappedChildren(nsIPresContext*    aPresContext,
 
       // Figure out the amount of available size for the child (subtract
       // off the margin we are going to apply to it)
+      //
+      // Note: don't subtract off for the child's left/right margins. ReflowChild()
+      // will do that when it determines the current left/right edge
       if (PR_FALSE == aState.unconstrainedHeight) {
         kidAvailSize.height -= topMargin;
-      }
-      // Subtract off for left and right margin
-      if (PR_FALSE == aState.unconstrainedWidth) {
-        kidAvailSize.width -= kidMol->margin.left + kidMol->margin.right;
       }
 
       // Try to reflow the child into the available space. It might not
       // fit or might need continuing
       if (kidAvailSize.height > 0) {
-        aState.spaceManager->Translate(kidMol->margin.left, topMargin);
-        status = ReflowChild(kidFrame, aPresContext, aState.spaceManager,
+        aState.spaceManager->Translate(0, topMargin);
+        status = ReflowChild(kidFrame, aPresContext, kidMol, aState.spaceManager,
                              kidAvailSize, kidRect, pKidMaxElementSize);
-        aState.spaceManager->Translate(-kidMol->margin.left, -topMargin);
+        aState.spaceManager->Translate(0, -topMargin);
       }
 
       // Did the child fit?
@@ -1082,15 +1079,10 @@ NS_METHOD ColumnFrame::IncrementalReflow(nsIPresContext*  aPresContext,
 
       nsRect kidRect;
       nsSize kidAvailSize(state.availSize);
-      if (PR_FALSE == state.unconstrainedWidth) {
-        kidAvailSize.width -= kidMol->margin.left + kidMol->margin.right;
-      }
 
       // Reflow the child
-      state.spaceManager->Translate(kidMol->margin.left, 0);
-      aStatus = ReflowChild(kidFrame, aPresContext, state.spaceManager,
+      aStatus = ReflowChild(kidFrame, aPresContext, kidMol, state.spaceManager,
                             kidAvailSize, kidRect, nsnull);
-      state.spaceManager->Translate(-kidMol->margin.left, 0);
 
       // Did it fit?
       if ((kidFrame != mFirstChild) &&
