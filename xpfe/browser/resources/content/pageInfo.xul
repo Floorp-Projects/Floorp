@@ -66,6 +66,7 @@
   <script type="application/x-javascript" src="chrome://communicator/content/contentAreaUtils.js"/>
   <script type="application/x-javascript" src="chrome://communicator/content/utilityOverlay.js"/>
   <script type="application/x-javascript" src="chrome://navigator/content/pageInfo.js"/>
+  <script type="application/x-javascript" src="chrome://global/content/XPCNativeWrapper.js"/>
   <script type="application/x-javascript" src="chrome://help/content/contextHelp.js"/>
 
   <keyset>
