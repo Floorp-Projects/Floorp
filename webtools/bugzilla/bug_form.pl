@@ -191,7 +191,7 @@ print "
 <INPUT TYPE=HIDDEN NAME=\"id\" VALUE=$::FORM{'id'}>
 <INPUT TYPE=HIDDEN NAME=\"was_assigned_to\" VALUE=\"$bug{'assigned_to'}\">
   <TABLE CELLSPACING=0 CELLPADDING=0 BORDER=0><TR>
-    <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD>$bug{'bug_id'}</TD>
+    <TD ALIGN=RIGHT><B>Bug#:</B></TD><TD><A HREF=\"show_bug.cgi?id=$bug{'bug_id'}\">$bug{'bug_id'}</A></TD>
     <TD ALIGN=RIGHT><B><A HREF=\"bug_status.html#rep_platform\">Platform:</A></B></TD>
     <TD><SELECT NAME=rep_platform>$platform_popup</SELECT></TD>
     <TD ALIGN=RIGHT><B>Version:</B></TD>
