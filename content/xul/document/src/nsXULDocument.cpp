@@ -4811,6 +4811,9 @@ nsXULDocument::ResumeWalk()
                 if (! child)
                     return NS_ERROR_UNEXPECTED;
 
+				NS_ASSERTION(element,"element is null");
+				if (!element) return NS_ERROR_FAILURE;
+
                 rv = element->AppendChildTo(child, PR_FALSE);
                 if (NS_FAILED(rv)) return rv;
             }
