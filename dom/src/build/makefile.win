@@ -26,56 +26,42 @@ CPPSRCS=dlldeps.cpp
 
 CPP_OBJS=.\$(OBJDIR)\dlldeps.obj 
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor 
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor \
+	-I$(PUBLIC)\dom -I$(PUBLIC)\js -I..\base
 
 MAKE_OBJ_TYPE = DLL
-DLLNAME = raptorhtml
+DLLNAME = jsdom
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-MISCDEP =				\
- $(DIST)\lib\raptorlayout_s.lib		\
- $(DIST)\lib\raptorhtmlbase_s.lib	\
- $(DIST)\lib\nglhtmlcon_s.lib		\
- $(DIST)\lib\nglcsslay_s.lib		\
- $(DIST)\lib\raptorhtmldoc_s.lib	\
- $(DIST)\lib\raptorhtmlforms_s.lib	\
- $(DIST)\lib\raptorhtmlstyle_s.lib	\
- $(DIST)\lib\raptorhtmltable_s.lib	\
- $(DIST)\lib\raptorevents_s.lib		\
- $(DIST)\lib\xpcom32.lib		\
- $(DIST)\lib\raptorbase.lib		\
- $(DIST)\lib\raptorgfx.lib		\
- $(DIST)\lib\raptorhtmlpars.lib		\
- $(DIST)\lib\jsdom.lib		        \
- $(DIST)\lib\libplc21.lib		\
- $(LIBNSPR)
+MISCDEP =						\
+	$(DIST)\lib\jsdombase_s.lib			\
+	$(DIST)\lib\jsdomcore_s.lib			\
+	$(DIST)\lib\jsdomhtml_s.lib			\
+	$(DIST)\lib\raptorbase.lib			\
+	$(DIST)\lib\netlib.lib				\
+	$(DIST)\lib\js3240.lib				\
+	$(DIST)\lib\xpcom32.lib				\
+	$(DIST)\lib\libplds21.lib			\
+	$(DIST)\lib\libplc21.lib			\
+	$(LIBNSPR)
 
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I..\..\style\src
-
 # These are the libraries we need to link with to create the dll
-LLIBS=					\
- $(DIST)\lib\raptorlayout_s.lib		\
- $(DIST)\lib\raptorhtmlbase_s.lib	\
- $(DIST)\lib\nglhtmlcon_s.lib		\
- $(DIST)\lib\nglcsslay_s.lib		\
- $(DIST)\lib\raptorhtmldoc_s.lib	\
- $(DIST)\lib\raptorhtmlforms_s.lib	\
- $(DIST)\lib\raptorhtmlstyle_s.lib	\
- $(DIST)\lib\raptorhtmltable_s.lib	\
- $(DIST)\lib\raptorevents_s.lib		\
- $(DIST)\lib\xpcom32.lib		\
- $(DIST)\lib\raptorbase.lib		\
- $(DIST)\lib\raptorgfx.lib		\
- $(DIST)\lib\raptorhtmlpars.lib		\
- $(DIST)\lib\jsdom.lib		        \
- $(DIST)\lib\netlib.lib		        \
- $(DIST)\lib\libplc21.lib		\
- $(LIBNSPR)
+LLIBS=							\
+	$(DIST)\lib\jsdombase_s.lib			\
+	$(DIST)\lib\jsdomcore_s.lib			\
+	$(DIST)\lib\jsdomhtml_s.lib			\
+	$(DIST)\lib\raptorbase.lib			\
+	$(DIST)\lib\netlib.lib				\
+	$(DIST)\lib\js3240.lib				\
+	$(DIST)\lib\xpcom32.lib				\
+	$(DIST)\lib\libplds21.lib			\
+	$(DIST)\lib\libplc21.lib			\
+	$(LIBNSPR)
 
 include <$(DEPTH)\layout\config\rules.mak>
 

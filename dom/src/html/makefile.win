@@ -18,7 +18,7 @@
 DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
-LIBRARY_NAME=domhtml_s 
+LIBRARY_NAME=jsdomhtml_s 
 MODULE=raptor 
 REQUIRES=xpcom raptor js netlib
 DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN

@@ -15,10 +15,12 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nsJSEnvironment.h"
 
 // Force references to all of the symbols that we want exported from
 // the dll that are located in the .lib files we link with
 
 void XXXDomNeverCalled()
 {
+  nsJSContext* jcx = new nsJSContext(0);
 }
