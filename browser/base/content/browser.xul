@@ -751,9 +751,9 @@ Contributor(s):
                  oninput="window.XULBrowserWindow.userTyped.value=true;"
                  ontextentered="return handleURLBarCommand(param);"
                  ontextreverted="return handleURLBarRevert();"
-                 onfocus="URLBarFocusHandler(event);"
-                 onmousedown="URLBarMouseDownHandler(event);"
-                 onclick="URLBarClickHandler(event);">
+                 onfocus="URLBarFocusHandler(event, this);"
+                 onmousedown="URLBarMouseDownHandler(event, this);"
+                 onclick="URLBarClickHandler(event, this);">
           <deck id="page-proxy-deck">
             <image id="page-proxy-button"
                     ondraggesture="PageProxyDragGesture(event);"
@@ -776,6 +776,9 @@ Contributor(s):
                  autocompletepopup="PopupAutoComplete"
                  autocompletesearch="form-history"
                  tabscrolling="true"
+                 onfocus="URLBarFocusHandler(event, this);"
+                 onmousedown="URLBarMouseDownHandler(event, this);"
+                 onclick="URLBarClickHandler(event, this);"
                  ontextentered="return handleSearchBarCommand(param);"
                  persist="searchmode,autocompletesearchparam">
           <image id="search-proxy-button" popup="SearchBarPopup"/>
