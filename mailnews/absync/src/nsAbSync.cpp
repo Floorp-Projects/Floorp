@@ -726,7 +726,7 @@ nsAbSync::OpenAB(char *aAbName, nsIAddrDatabase **aDatabase)
 		NS_WITH_SERVICE(nsIAddrDatabase, addrDBFactory, kAddressBookDBCID, &rv);
 
 		if (NS_SUCCEEDED(rv) && addrDBFactory)
-			rv = addrDBFactory->Open(dbPath, PR_TRUE, getter_AddRefs(aDatabase), PR_TRUE);
+			rv = addrDBFactory->Open(dbPath, PR_TRUE, aDatabase, PR_TRUE);
 	}
   else
     rv = NS_ERROR_FAILURE;

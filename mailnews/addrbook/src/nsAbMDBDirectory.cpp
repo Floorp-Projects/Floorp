@@ -629,8 +629,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddMailList(nsIAbDirectory *list)
 	{
 		nsAbMDBDirProperty* dblistproperty = new nsAbMDBDirProperty ();
 		NS_ADDREF(dblistproperty);
-		nsCOMPtr<nsIAbDirectory> newlist;
-		newlist = getter_AddRefs(dblistproperty);
+		nsCOMPtr<nsIAbDirectory> newlist = getter_AddRefs(NS_STATIC_CAST(nsIAbDirectory*, dblistproperty));
 		newlist->CopyMailList(list);
 		list = newlist;
 		dblist = do_QueryInterface(list);
@@ -675,8 +674,7 @@ NS_IMETHODIMP nsAbMDBDirectory::AddCard(nsIAbCard* card, nsIAbCard **_retval)
 	{
 		nsAbMDBCardProperty* dbcardproperty = new nsAbMDBCardProperty ();
 		NS_ADDREF(dbcardproperty);
-		nsCOMPtr<nsIAbCard> newcard;
-		newcard = getter_AddRefs(dbcardproperty);
+		nsCOMPtr<nsIAbCard> newcard = getter_AddRefs(NS_STATIC_CAST(nsIAbCard*, dbcardproperty));
 		newcard->Copy (card);
 		card = newcard;
 		dbcard = do_QueryInterface(card);
@@ -735,8 +733,7 @@ NS_IMETHODIMP nsAbMDBDirectory::DropCard(nsIAbCard* card, nsIAbCard **_retval)
 	{
 		nsAbMDBCardProperty* dbcardproperty = new nsAbMDBCardProperty ();
 		NS_ADDREF(dbcardproperty);
-		nsCOMPtr<nsIAbCard> newcard;
-		newcard = getter_AddRefs (dbcardproperty);
+		nsCOMPtr<nsIAbCard> newcard = getter_AddRefs (NS_STATIC_CAST(nsIAbCard*, dbcardproperty));
 		newcard->Copy (card);
 		card = newcard;
 		dbcard = do_QueryInterface (card);

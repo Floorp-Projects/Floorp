@@ -64,7 +64,7 @@ class nsDOMAccessible : public nsGenericAccessible
     NS_IMETHOD AccRemoveSelection(void);
 
   protected:
-    nsIWeakReference* mPresShell;
+    nsCOMPtr<nsIWeakReference> mPresShell;
     nsCOMPtr<nsIDOMNode> mNode;
 };
 

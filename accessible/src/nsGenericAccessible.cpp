@@ -221,7 +221,7 @@ NS_IMETHODIMP nsGenericAccessible::GetAccExtState(PRUint32 *_retval)
 
 nsDOMAccessible::nsDOMAccessible(nsIPresShell* aShell, nsIDOMNode* aNode)
 {
-  mPresShell = getter_AddRefs(NS_GetWeakReference(aShell));
+  mPresShell = do_GetWeakReference(aShell);
   mNode = aNode;
 }
 
