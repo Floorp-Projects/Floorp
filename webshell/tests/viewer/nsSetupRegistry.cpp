@@ -35,9 +35,7 @@
 #include "nsLayoutCID.h"
 #include "nsINetService.h"
 
-#ifdef NGEDITOR
 #include "nsIEditor.h"
-#endif
 
 #ifdef XP_PC
 #define WIDGET_DLL "raptorwidget.dll"
@@ -118,9 +116,7 @@ static NS_DEFINE_IID(kCXMLDocument, NS_XMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCImageDocument, NS_IMAGEDOCUMENT_CID);
 static NS_DEFINE_IID(kCHTMLImageElementFactory, NS_HTMLIMAGEELEMENTFACTORY_CID);
 static NS_DEFINE_IID(kNetServiceCID, NS_NETSERVICE_CID);
-#ifdef NGEDITOR
 static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
-#endif
 
 static NS_DEFINE_CID(kRDFMemoryDataSourceCID,   NS_RDFMEMORYDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFResourceManagerCID,    NS_RDFRESOURCEMANAGER_CID);
@@ -176,9 +172,7 @@ NS_SetupRegistry()
   nsRepository::RegisterFactory(kCHTMLImageElementFactory, LAYOUT_DLL, PR_FALSE, PR_FALSE);
   nsRepository::RegisterFactory(kNetServiceCID, NETLIB_DLL, PR_FALSE, PR_FALSE);
 #ifndef XP_MAC		// temporary
-#ifdef NGEDITOR
   nsRepository::RegisterFactory(kIEditFactoryIID, EDITOR_DLL, PR_FALSE, PR_FALSE);
-#endif
 #endif	//XP_MAC
 
 #ifndef XP_MAC    // temporary

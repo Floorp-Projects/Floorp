@@ -96,9 +96,7 @@
 #include <windows.h>
 #endif
 
-#ifdef NGEDITOR
 #include "nsIEditor.h"
-#endif
 
 // XXX For font setting below
 #include "nsFont.h"
@@ -179,10 +177,8 @@ static NS_DEFINE_IID(kIPopUpMenuIID, NS_IPOPUPMENU_IID);
 static NS_DEFINE_IID(kIMenuButtonIID, NS_IMENUBUTTON_IID);
 static NS_DEFINE_IID(kIXPBaseWindowIID, NS_IXPBASE_WINDOW_IID);
 static NS_DEFINE_IID(kINetSupportIID, NS_INETSUPPORT_IID);
-#ifdef NGEDITOR
 static NS_DEFINE_IID(kIEditFactoryIID, NS_IEDITORFACTORY_IID);
 static NS_DEFINE_IID(kIEditorIID, NS_IEDITOR_IID);
-#endif
 
 static const char* gsAOLFormat = "AOLMAIL";
 static const char* gsHTMLFormat = "text/html";
@@ -770,11 +766,9 @@ nsBrowserWindow::DispatchMenuItem(PRInt32 aID)
       DoJSConsole();
     break;
 
-#ifdef NGEDITOR
     case EDITOR_MODE:
       DoEditorMode(mWebShell);
       break;
-#endif
   } //switch
 
   return nsEventStatus_eIgnore;
@@ -2829,7 +2823,6 @@ nsBrowserWindow::DoJSConsole()
   mApp->CreateJSConsole(this);
 }
 
-#ifdef NGEDITOR
 //----------------------------------------
 void
 nsBrowserWindow::DoEditorMode(nsIWebShell *aWebShell)
@@ -2884,7 +2877,6 @@ nsBrowserWindow::AddEditor(nsIEditor *aEditor)
   if (!mEditor)//THIS FUNCTION REALLY NEEDS HELP
     mEditor = aEditor;
 }
-#endif
 
 
 #ifdef NS_DEBUG
@@ -3389,9 +3381,7 @@ void CreateBrowserMenus(nsIMenuBar * aMenuBar)
   {"Debug Robot",   "R", VIEWER_DEBUGROBOT},
   {"-", NULL, 0},
   {"Show Content Quality",   ".", VIEWER_SHOW_CONTENT_QUALITY},
-#ifdef NGEDITOR
   {"Editor",   "E", EDITOR_MODE},
-#endif
   {NULL, NULL, 0}
   };
 
@@ -3422,7 +3412,7 @@ void CreateBrowserMenus(nsIMenuBar * aMenuBar)
   CreateMenuItem(fileMenu, "-", 0);
   CreateMenuItem(fileMenu, "Exit", VIEWER_EXIT);
 
-#ifdef NGEDITOR
+#if EDITOR_NOT_YET
   nsIMenu * editMenu = CreateMenu(aMenuBar,  "Edit", 'E');
   i = 0;
   while (editMenus[i].title != nsnull) {
