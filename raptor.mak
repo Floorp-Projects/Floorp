@@ -80,6 +80,7 @@ THIS_MAKEFILE = raptor.mak
 real_all: pass1_all pass2_all
 
 pass1_all:
+    cd $(MOZ_SRC)\ns
     $(NMAKE) -f $(THIS_MAKEFILE) export
     cd $(MOZ_SRC)\ns\base
     $(NMAKE) -f makefile.win export
@@ -88,23 +89,28 @@ pass1_all:
     $(NMAKE) -f $(THIS_MAKEFILE) install
 
 pass2_all: 
+    cd $(MOZ_SRC)\ns
     $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 export
     $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 libs
     $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 install
 
 real_export:
+    cd $(MOZ_SRC)\ns
     $(NMAKE) -f $(THIS_MAKEFILE) export
     $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 export
 
 real_libs:
+    cd $(MOZ_SRC)\ns
     $(NMAKE) -f $(THIS_MAKEFILE) libs
     $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 libs
 
 real_install:
+    cd $(MOZ_SRC)\ns
     $(NMAKE) -f $(THIS_MAKEFILE) install
     $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 install
 
 real_clobber:
+    cd $(MOZ_SRC)\ns
     $(NMAKE) -f $(THIS_MAKEFILE) clobber
     $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 clobber
     $(NMAKE) -f $(THIS_MAKEFILE) final_clobber
@@ -114,6 +120,7 @@ final_clobber:
 	-rd /s /q dist
 
 real_depend:
+    cd $(MOZ_SRC)\ns
     $(NMAKE) -f $(THIS_MAKEFILE) depend
     $(NMAKE) -f $(THIS_MAKEFILE) RAPTOR_PASS2=pass2 depend
 
