@@ -259,7 +259,8 @@ vreport_java_error(JSContext *cx, JNIEnv *jEnv, const char *format, va_list ap)
             (*jEnv)->GetIntField(jEnv, java_exception,
             njJSException_wrappedExceptionType);
         
-        if (wrapped_exception_type != JSTYPE_EMPTY) {
+        /* (int) to suppress warning */
+        if ((int)wrapped_exception_type != JSTYPE_EMPTY) {
             java_obj = 
                 (*jEnv)->GetObjectField(jEnv, java_exception, 
                 njJSException_wrappedException);

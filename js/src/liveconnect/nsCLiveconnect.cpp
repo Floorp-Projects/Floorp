@@ -501,8 +501,8 @@ nsCLiveconnect::GetWindow(JNIEnv *jEnv, void *java_applet_obj,  void* principals
     JSErrorReporter    saved_state    = NULL;
     jobject            java_obj       = NULL;
     JSJavaThreadState *jsj_env        = NULL;
-    int                dummy_cost     = 0;
-    JSBool             dummy_bool     = PR_FALSE;
+//      int                dummy_cost     = 0; // unused
+//      JSBool             dummy_bool     = PR_FALSE; // unused
     JSObjectHandle    *handle         = NULL;
 
     jsj_env = jsj_enter_js(jEnv, java_applet_obj, NULL, &cx, NULL, &saved_state, principalsArray, numPrincipals, pNSISecurityContext);
@@ -596,7 +596,7 @@ nsCLiveconnect::ToString(JNIEnv *jEnv, jsobject obj, jstring *pjstring)
         result = jEnv->NewStringUTF("*JavaObject*");
 
     if (!jsj_exit_js(cx, jsj_env, saved_state))
-        return NULL;
+        return NS_ERROR_FAILURE;
     *pjstring = result;     
     return NS_OK;
 }

@@ -421,7 +421,8 @@ JSObjectOps JavaArray_ops = {
     NULL,                       /* call */
     NULL,                       /* construct */
     NULL,                       /* xdrObject */
-    NULL                        /* hasInstance */
+    NULL,                       /* hasInstance */
+    {0, 0},                     /* spare */
 };
 
 static JSObjectOps *
@@ -434,7 +435,15 @@ JSClass JavaArray_class = {
     "JavaArray", JSCLASS_HAS_PRIVATE,
     NULL, NULL, NULL, NULL,
     NULL, NULL, JavaObject_convert, JavaObject_finalize,
+
+    /* Optionally non-null members start here. */
     JavaArray_getObjectOps,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    {0, 0},
 };
 
 extern JS_IMPORT_DATA(JSObjectOps) js_ObjectOps;

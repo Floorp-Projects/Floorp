@@ -559,6 +559,7 @@ JSObjectOps JavaClass_ops = {
     jsj_JavaConstructorWrapper, /* construct */
     NULL,                       /* xdrObject */
     JavaClass_hasInstance,      /* hasInstance */
+    {0, 0},
 };
 
 static JSObjectOps *
@@ -571,7 +572,15 @@ JSClass JavaClass_class = {
     "JavaClass", JSCLASS_HAS_PRIVATE,
     NULL, NULL, NULL, NULL,
     NULL, NULL, JavaClass_convert, JavaClass_finalize,
-    JavaClass_getObjectOps
+
+    /* Optionally non-null members start here. */
+    JavaClass_getObjectOps,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    {0, 0},
 };
 
 static JSObject *

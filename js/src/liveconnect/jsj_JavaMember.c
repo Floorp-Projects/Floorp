@@ -158,9 +158,14 @@ JSClass JavaMember_class = {
     JS_PropertyStub, JS_PropertyStub, JS_PropertyStub, JS_PropertyStub,
     JS_EnumerateStub, JS_ResolveStub, 
     JavaMember_convert, JavaMember_finalize,
+
     NULL, /* getObjectOps */
     NULL, /* checkAccess */
-    JavaMember_Call
+    JavaMember_Call,
+    NULL, /* construct */
+    NULL, /* xdrObject */
+    NULL, /* hasInstance */
+    {0, 0}, /* spare */
 };
 
 JSBool
