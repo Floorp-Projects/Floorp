@@ -30,24 +30,6 @@
 
 
 
-class nsMacMessenger
-{
-	// CLASS MEMBERS
-  private:
-	PRBool						mRunning;
-
-	// CLASS METHODS
-	private:		    
-		    	    
-  public:
-    				nsMacMessenger(){mRunning=PR_TRUE;}
-    virtual ~nsMacMessenger() {}
-  
-		PRBool	IsRunning() {return mRunning;}
-		void		Quit() {mRunning = PR_FALSE;}
-
-};
-
 //================================================
 
 
@@ -57,9 +39,9 @@ class nsMacMessagePump
 	// CLASS MEMBERS
   private:
 	PRBool						mRunning;
-	nsMacMessenger		*mMessenger;
 	Point							mMousePoint;				// keep track of where the mouse is at all times
 	PRBool						mInBackground;
+	nsToolkit					*mToolkit;
   static  nsWindow	*gCurrentWindow;
   static  nsWindow  *gGrabWindow;
 
@@ -68,7 +50,7 @@ class nsMacMessagePump
 	private:		    
 		    	    
   public:
-    				nsMacMessagePump(nsMacMessenger *aTheMessageProc);
+    				nsMacMessagePump(nsToolkit	*aTookKit);
     virtual ~nsMacMessagePump();
   
 		PRBool			DoMessagePump();
