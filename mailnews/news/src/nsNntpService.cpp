@@ -19,12 +19,6 @@
 #include "msgCore.h"    // precompiled header...
 #include "nntpCore.h"
 #include "nsMsgNewsCID.h"
-
-#ifdef XP_PC
-#include <windows.h>    // for InterlockedIncrement
-#endif
-
-#include "nsNntpService.h"
 #include "nsINntpUrl.h"
 #include "nsNNTPProtocol.h"
 #include "nsNNTPNewsgroupPost.h"
@@ -42,13 +36,11 @@
 #include "nsINetSupportDialogService.h"
 #include "nsIPref.h"
 #include "nsCRT.h"  // for nsCRT::strtok
+#include "nsNntpService.h"
+#undef GetPort  // XXX Windows!
+#undef SetPort  // XXX Windows!
 
 #define PREF_NETWORK_HOSTS_NNTP_SERVER	"network.hosts.nntp_server"
-
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
@@ -75,20 +67,20 @@ nsresult nsNntpService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
     if (nsnull == aInstancePtr)
         return NS_ERROR_NULL_POINTER;
  
-    if (aIID.Equals(nsINntpService::GetIID()) 
-        || aIID.Equals(kISupportsIID)) 
+    if (aIID.Equals(NS_GET_IID(nsINntpService)) 
+        || aIID.Equals(NS_GET_IID(nsISupports)) )
 	{
         *aInstancePtr = (void*) ((nsINntpService*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-    if (aIID.Equals(nsIMsgMessageService::GetIID())) 
+    if (aIID.Equals(NS_GET_IID(nsIMsgMessageService)))
 	{
         *aInstancePtr = (void*) ((nsIMsgMessageService*)this);
         NS_ADDREF_THIS();
         return NS_OK;
     }
-	if (aIID.Equals(nsIProtocolHandler::GetIID()))
+	if (aIID.Equals(NS_GET_IID(nsIProtocolHandler)))
 	{
 		*aInstancePtr = (void *) ((nsIProtocolHandler*) this);
 		NS_ADDREF_THIS();
@@ -842,16 +834,14 @@ NS_IMETHODIMP nsNntpService::GetDefaultPort(PRInt32 *aDefaultPort)
 NS_IMETHODIMP nsNntpService::MakeAbsolute(const char *aRelativeSpec, nsIURI *aBaseURI, char **_retval)
 {
 	// no such thing as relative urls for smtp.....
-	NS_ASSERTION(0, "unimplemented");
-	return NS_OK;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsNntpService::NewURI(const char *aSpec, nsIURI *aBaseURI, nsIURI **_retval)
 {
     *_retval = nsnull;
 	// i just haven't implemented this yet...I will be though....
-	NS_ASSERTION(0, "unimplemented");
-	return NS_ERROR_FAILURE;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, nsIURI *aURI, nsIEventSinkGetter *eventSinkGetter, nsIChannel **_retval)
@@ -860,6 +850,5 @@ NS_IMETHODIMP nsNntpService::NewChannel(const char *verb, nsIURI *aURI, nsIEvent
 	// mscott - right now, I don't like the idea of returning channels to the caller. They just want us
 	// to run the url, they don't want a channel back...I'm going to be addressing this issue with
 	// the necko team in more detail later on.
-	NS_ASSERTION(0, "unimplemented");
-	return NS_ERROR_FAILURE;
+	return NS_ERROR_NOT_IMPLEMENTED;
 }
