@@ -73,7 +73,7 @@
   
   <hbox id="panel-bar" class="toolbar">
     <toolbarbutton id="btnAddBookmark" label="&command.addBookmark.label;"
-            oncommand="document.getElementById('bookmarks-view').addBookmark();"/>
+            oncommand="addBookmark();"/>
     <toolbarbutton id="btnManageBookmarks" label="&command.manageBookmarks.label;"
             oncommand="manageBookmarks();"/>
     <spacer flex="1"/>
