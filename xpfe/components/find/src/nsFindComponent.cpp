@@ -34,13 +34,22 @@
 #include "nsINameSpaceManager.h"
 #include "nsIURL.h"
 #include "nsFileSpec.h"
+#include "nsIFactory.h"
+#include "pratom.h"
+#include "nsIServiceManager.h"
 
 static nsresult setAttribute( nsIWebShell *shell,
                               const char *id,
                               const char *name,
                               const nsString &value );
 
+// {4AA267A0-F81D-11d2-8067-00600811A9C3}
+#define NS_FINDCOMPONENT_CID \
+    { 0x4aa267a0, 0xf81d, 0x11d2, { 0x80, 0x67, 0x0, 0x60, 0x8, 0x11, 0xa9, 0xc3} }
+
 struct nsFindComponent : public nsIFindComponent {
+    NS_DEFINE_STATIC_CID_ACCESSOR( NS_FINDCOMPONENT_CID );
+
     // ctor/dtor
     nsFindComponent();
     ~nsFindComponent();
@@ -121,12 +130,15 @@ nsFindComponent::QueryInterface( REFNSIID anIID, void **anInstancePtr ) {
         *anInstancePtr = 0;
 
         // Check for IIDs we support and cast this appropriately.
-        if ( anIID.Equals( GetIID() ) ) {
+        if ( anIID.Equals( nsIFindComponent::GetIID() ) ) {
             *anInstancePtr = (void*) this;
+            NS_ADDREF_THIS();
         } else if ( anIID.Equals( nsIAppShellComponent::GetIID() ) ) {
             *anInstancePtr = (void*) ( (nsIAppShellComponent*)this );
+            NS_ADDREF_THIS();
         } else if ( anIID.Equals( nsISupports::GetIID() ) ) {
             *anInstancePtr = (void*) ( (nsISupports*)this );
+            NS_ADDREF_THIS();
         } else {
             // Not an interface we support.
             rv = NS_NOINTERFACE;
@@ -191,8 +203,9 @@ struct nsFindDialog : public nsIXULWindowCallbacks,
     NS_IMETHOD ContentChanged(nsIDocument *aDocument,
                               nsIContent* aContent,
                               nsISupports* aSubContent) { return NS_OK; }
-    NS_IMETHOD ContentStateChanged(nsIDocument* aDocument,
-                                   nsIContent* aContent) { return NS_OK; }
+    NS_IMETHOD ContentStatesChanged(nsIDocument* aDocument,
+                                    nsIContent* aContent1,
+                                    nsIContent* aContent2) { return NS_OK; }
     // This one we care about; see implementation below.
     NS_IMETHOD AttributeChanged(nsIDocument *aDocument,
                                 nsIContent*  aContent,
@@ -264,10 +277,13 @@ nsFindDialog::QueryInterface( REFNSIID anIID, void **anInstancePtr) {
         // Check for interfaces we support and cast this appropriately.
         if ( anIID.Equals( nsIXULWindowCallbacks::GetIID() ) ) {
             *anInstancePtr = (void*) ((nsIXULWindowCallbacks*)this);
+            NS_ADDREF_THIS();
         } else if ( anIID.Equals( nsIDocumentObserver::GetIID() ) ) {
             *anInstancePtr = (void*) ((nsIDocumentObserver*)this);
+            NS_ADDREF_THIS();
         } else if ( anIID.Equals( ::nsISupports::GetIID() ) ) {
             *anInstancePtr = (void*) ((nsISupports*)(nsIDocumentObserver*)this);
+            NS_ADDREF_THIS();
         } else {
             // Not an interface we support.
             rv = NS_ERROR_NO_INTERFACE;
@@ -541,4 +557,213 @@ static nsresult setAttribute( nsIWebShell *shell,
         if (APP_DEBUG) printf("GetContentViewer failed, rv=0x%X\n",(int)rv);
     }
     return rv;
+}
+
+
+static PRInt32 g_InstanceCount = 0;
+static PRInt32 g_LockCount = 0;
+
+// Factory stuff
+struct nsFindComponentFactory : public nsIFactory {   
+    // ctor/dtor
+    nsFindComponentFactory() {
+        NS_INIT_REFCNT();
+    }
+    virtual ~nsFindComponentFactory() {
+    }
+
+    // This class implements the nsISupports interface functions.
+	NS_DECL_ISUPPORTS 
+
+    // nsIFactory methods   
+    NS_IMETHOD CreateInstance( nsISupports *aOuter,
+                               const nsIID &aIID,
+                               void **aResult );   
+    NS_IMETHOD LockFactory( PRBool aLock );
+};   
+
+// nsISupports interface implementation.
+NS_IMPL_ADDREF(nsFindComponentFactory)
+NS_IMPL_RELEASE(nsFindComponentFactory)
+NS_IMETHODIMP
+nsFindComponentFactory::QueryInterface( const nsIID &anIID, void **aResult ) {   
+    nsresult rv = NS_OK;
+
+    if ( aResult ) {
+        *aResult = 0;
+        if ( 0 ) {
+        } else if ( anIID.Equals( nsIFactory::GetIID() ) ) {
+            *aResult = (void*) (nsIFactory*)this;
+            NS_ADDREF_THIS();
+        } else if ( anIID.Equals( nsISupports::GetIID() ) ) {
+            *aResult = (void*) (nsISupports*)this;
+            NS_ADDREF_THIS();
+        } else {
+            rv = NS_ERROR_NO_INTERFACE;
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+
+    return rv;
+}   
+
+NS_IMETHODIMP
+nsFindComponentFactory::CreateInstance( nsISupports *anOuter,
+                                        const nsIID &anIID,
+                                        void*       *aResult ) {
+    nsresult rv = NS_OK;
+
+    if ( aResult ) {
+        // Allocate new find component object.
+        nsFindComponent *component = new nsFindComponent();
+
+        if ( component ) {
+            // Allocated OK, do query interface to get proper
+            // pointer and increment refcount.
+            rv = component->QueryInterface( anIID, aResult );
+            if ( NS_FAILED( rv ) ) {
+                // refcount still at zero, delete it here.
+                delete component;
+            }
+        } else {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+
+    return rv;
+}  
+
+NS_IMETHODIMP
+nsFindComponentFactory::LockFactory(PRBool aLock) {  
+	if (aLock)
+		PR_AtomicIncrement(&g_LockCount); 
+	else
+		PR_AtomicDecrement(&g_LockCount);
+
+	return NS_OK;
+}
+
+extern "C" NS_EXPORT nsresult
+NSRegisterSelf( nsISupports* aServiceMgr, const char* path ) {
+    nsresult rv = NS_OK;
+
+    nsCOMPtr<nsIServiceManager> serviceMgr( do_QueryInterface( aServiceMgr, &rv ) );
+
+    if ( NS_SUCCEEDED( rv ) ) {
+        // Get the component manager service.
+        nsCID cid = NS_COMPONENTMANAGER_CID;
+        nsIComponentManager *componentMgr = 0;
+        rv = serviceMgr->GetService( cid,
+                                     nsIComponentManager::GetIID(),
+                                     (nsISupports**)&componentMgr );
+        if ( NS_SUCCEEDED( rv ) ) {
+            // Register our component.
+            rv = componentMgr->RegisterComponent( nsFindComponent::GetCID(),
+                                                  NS_IFINDCOMPONENT_CLASSNAME,
+                                                  NS_IFINDCOMPONENT_PROGID,
+                                                  path,
+                                                  PR_TRUE,
+                                                  PR_TRUE );
+
+            #ifdef NS_DEBUG
+            if ( NS_SUCCEEDED( rv ) ) {
+                printf( "nsFindComponent's NSRegisterSelf successful\n" );
+            } else {
+                printf( "nsFindComponent's NSRegisterSelf failed, RegisterComponent rv=0x%X\n", (int)rv );
+            }
+            #endif
+
+            // Release the component manager service.
+            serviceMgr->ReleaseService( cid, componentMgr );
+        } else {
+            #ifdef NS_DEBUG
+            printf( "nsFindComponent's NSRegisterSelf failed, GetService rv=0x%X\n", (int)rv );
+            #endif
+        }
+    } else {
+        #ifdef NS_DEBUG
+        printf( "nsFindComponent's NSRegisterSelf failed, QueryInterface rv=0x%X\n", (int)rv );
+        #endif
+    }
+
+    return rv;
+}
+
+extern "C" NS_EXPORT nsresult
+NSUnregisterSelf( nsISupports* aServiceMgr, const char* path ) {
+    nsresult rv = NS_OK;
+
+    nsCOMPtr<nsIServiceManager> serviceMgr( do_QueryInterface( aServiceMgr, &rv ) );
+
+    if ( NS_SUCCEEDED( rv ) ) {
+        // Get the component manager service.
+        nsCID cid = NS_COMPONENTMANAGER_CID;
+        nsIComponentManager *componentMgr = 0;
+        rv = serviceMgr->GetService( cid,
+                                     nsIComponentManager::GetIID(),
+                                     (nsISupports**)&componentMgr );
+        if ( NS_SUCCEEDED( rv ) ) {
+            // Register our component.
+            rv = componentMgr->UnregisterComponent( nsFindComponent::GetCID(), path );
+
+            #ifdef NS_DEBUG
+            if ( NS_SUCCEEDED( rv ) ) {
+                printf( "nsFindComponent's NSUnregisterSelf successful\n" );
+            } else {
+                printf( "nsFindComponent's NSUnregisterSelf failed, UnregisterComponent rv=0x%X\n", (int)rv );
+            }
+            #endif
+
+            // Release the component manager service.
+            serviceMgr->ReleaseService( cid, componentMgr );
+        } else {
+            #ifdef NS_DEBUG
+            printf( "nsFindComponent's NSRegisterSelf failed, GetService rv=0x%X\n", (int)rv );
+            #endif
+        }
+    } else {
+        #ifdef NS_DEBUG
+        printf( "nsFindComponent's NSRegisterSelf failed, QueryInterface rv=0x%X\n", (int)rv );
+        #endif
+    }
+
+    return rv;
+}
+
+extern "C" NS_EXPORT nsresult
+NSGetFactory( nsISupports *aServMgr,
+              const nsCID &aClass,
+              const char  *aClassName,
+              const char  *aProgID,
+              nsIFactory* *aFactory ) {
+    nsresult rv = NS_OK;
+
+    if ( aFactory ) {
+        nsFindComponentFactory *factory = new nsFindComponentFactory();
+        if ( factory ) {
+            rv = factory->QueryInterface( nsIFactory::GetIID(), (void**)aFactory );
+            if ( NS_FAILED( rv ) ) {
+                #ifdef NS_DEBUG
+                printf( "nsFindComponent's NSGetFactory failed, QueryInterface rv=0x%X\n", (int)rv );
+                #endif
+                // Delete this bogus factory.
+                delete factory;
+            }
+        } else {
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        }
+    } else {
+        rv = NS_ERROR_NULL_POINTER;
+    }
+
+    return rv;
+}
+
+extern "C" NS_EXPORT PRBool
+NSCanUnload( nsISupports* aServiceMgr ) {
+    PRBool result = g_InstanceCount == 0 && g_LockCount == 0;
+    return result;
 }
