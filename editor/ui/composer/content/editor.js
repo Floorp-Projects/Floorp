@@ -262,9 +262,7 @@ function EditorSharedStartup()
   // And add "Del" or "Clear"
   SafeSetAttribute("menu_DeleteCellContents", "acceltext", delStr);
 
-  // Remove a Privacy menu that causes problems
-  // (method is in tasksOverlay.js)
-  // HideImage();
+  // Set text for indent, outdent keybinding
 
   // hide UI that we don't have components for
   RemoveInapplicableUIElements();
@@ -312,8 +310,8 @@ function GetDefaultBrowserColors()
   if (!colors.BackgroundColor)
     colors.BackgroundColor = "window";
 
-  colors.LinkColor = gPrefs.CopyCharPref("browser.anchor_color");
-  colors.VisitedLinkColor = gPrefs.CopyCharPref("browser.visited_color");
+  try { colors.LinkColor = gPrefs.CopyCharPref("browser.anchor_color"); } catch (e) {}
+  try { colors.VisitedLinkColor = gPrefs.CopyCharPref("browser.visited_color"); } catch (e) {}
 
   return colors;
 }
@@ -558,6 +556,20 @@ function onParagraphFormatChange(paraMenuList, commandID)
         break;
       }
     }
+  }
+}
+
+function toggleFixedWidthFont()
+{
+  var commandNode = document.getElementById("cmd_fontFace");
+  if (commandNode)
+  {
+    var state = commandNode.getAttribute("state");
+
+    commandNode.setAttribute("state", state == "tt" ? "" : "tt");
+
+    gContentWindow.focus();
+    goDoCommand("cmd_fontFace");
   }
 }
 
@@ -977,7 +989,36 @@ function EditorSelectColor(colorType, mouseEvent)
       }
     }
     else if (currentColor != gColorObj.BackgroundColor)
+    {
+      window.editorShell.BeginBatchChanges();
       window.editorShell.SetBackgroundColor(gColorObj.BackgroundColor);
+      if (gColorObj.Type == "Page" && gColorObj.BackgroundColor)
+      {
+        // Set all page colors not explicitly set,
+        //  else you can end up with unreadable pages
+        //  because viewer's default colors may not be same as page author's
+        var bodyelement = GetBodyElement();
+        if (bodyelement)
+        {
+          var defColors = GetDefaultBrowserColors();
+          if (defColors)
+          {
+            if (!bodyelement.getAttribute("text"))
+              window.editorShell.SetAttribute(bodyelement, "text", defColors.TextColor);
+
+            if (!bodyelement.getAttribute("link"))
+              window.editorShell.SetAttribute(bodyelement, "link", defColors.LinkColor);
+
+            if (!bodyelement.getAttribute("alink"))
+              window.editorShell.SetAttribute(bodyelement, "alink", defColors.LinkColor);
+
+            if (!bodyelement.getAttribute("vlink"))
+              window.editorShell.SetAttribute(bodyelement, "vlink", defColors.VisitedLinkColor);
+          }
+        }
+      }
+      window.editorShell.EndBatchChanges();
+    }
 
     goUpdateCommand("cmd_backgroundColor");
   }
@@ -1107,10 +1148,13 @@ function SetEditMode(mode)
       // Get the entire document's source string
 
       var flags = gOutputEncodeEntities;
-      //
-      var prettyPrint = gPrefs.GetBoolPref("editor.prettyprint");
-      if (prettyPrint)
-        flags |= gOutputFormatted;
+
+      try { 
+        var prettyPrint = gPrefs.GetBoolPref("editor.prettyprint");
+        if (prettyPrint)
+          flags |= gOutputFormatted;
+
+      } catch (e) {}
 
       var source = editorShell.GetContentsAs("text/html", flags);
       var start = source.search(/<html/i);
