@@ -25,6 +25,8 @@
 
 #include <Types.h>
 
+#warning "This file should not be used"
+
 typedef struct FreeMemoryStats FreeMemoryStats;
 
 struct FreeMemoryStats {
