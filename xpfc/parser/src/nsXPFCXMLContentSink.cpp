@@ -546,6 +546,8 @@ NS_IMETHODIMP nsXPFCXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
         nsIIterator * iterator2 ;
         nsIXPFCMenuContainer * menu_container;
         nsString child;
+        nsIXPFCMenuItem * container_item = nsnull;
+
 
         nsresult res = mOrphanMenuList->CreateIterator(&iterator2);
 
@@ -558,8 +560,6 @@ NS_IMETHODIMP nsXPFCXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
         {
           menu_container = (nsIXPFCMenuContainer *) iterator2->CurrentItem();
 
-
-          nsIXPFCMenuItem * container_item = nsnull;
 
           res = menu_container->QueryInterface(kCIXPFCMenuItemIID,(void**)&container_item);
 
@@ -584,15 +584,18 @@ NS_IMETHODIMP nsXPFCXMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
               }
 
               mOrphanMenuList->Remove(child);
+              NS_RELEASE(container_item);
               break;
             }
 
             NS_RELEASE(container_item);
+
           }
 
           iterator2->Next();
         }
 
+        
         NS_RELEASE(iterator2);
 
       iterator->Next();

@@ -46,11 +46,11 @@ nsMenuManager :: ~nsMenuManager()
 	  mMenuContainers->CreateIterator(&iterator);
 	  iterator->Init();
 
-    nsISupports * item;
+    nsIXPFCMenuContainer * item;
 
 	  while(!(iterator->IsDone()))
 	  {
-		  item = (nsISupports *) iterator->CurrentItem();
+		  item = (nsIXPFCMenuContainer *) iterator->CurrentItem();
 		  NS_RELEASE(item);
 		  iterator->Next();
 	  }
