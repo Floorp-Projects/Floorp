@@ -982,6 +982,9 @@ function SidebarFinishClick() {
 ///////////////////////////////////////////////////////////////
 // Handy Debug Tools
 //////////////////////////////////////////////////////////////
+var debug = null;
+var dump_attributes = null;
+var dump_tree = null;
 if (!SB_DEBUG) {
   debug = function (s) {};
   dump_attributes = function (node, depth) {};
