@@ -23,6 +23,7 @@
 #include "pratom.h"
 #include "nsCharDetDll.h"
 #include "nsISupports.h"
+#include "nsIRegistry.h"
 #include "nsIComponentManager.h"
 #include "nsIFactory.h"
 #include "nsIServiceManager.h"
@@ -60,7 +61,7 @@ NS_DEFINE_CID(kUKProbDetectorCID,  NS_UK_PROBDETECTOR_CID);
 NS_DEFINE_CID(kUKStringProbDetectorCID,  NS_UK_STRING_PROBDETECTOR_CID);
 
 
-#define INCLUDE_DBGDETECTOR
+//#define INCLUDE_DBGDETECTOR
 #ifdef INCLUDE_DBGDETECTOR
 // for debuging only
 #include "nsDebugDetector.h"
@@ -146,6 +147,8 @@ extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) {
 extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *path)
 {
   nsresult rv;
+  nsIRegistry * registry = nsnull;
+  nsIRegistry::Key key;
 
   nsCOMPtr<nsIServiceManager> servMgr(do_QueryInterface(aServMgr, &rv));
   if (NS_FAILED(rv)) return rv;
@@ -154,122 +157,229 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
   rv = servMgr->GetService(kComponentManagerCID, 
                            nsIComponentManager::GetIID(), 
                            (nsISupports**)&compMgr);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) goto done;
 
+  // get the registry
+  rv = servMgr->GetService(NS_REGISTRY_PROGID,
+                            nsIRegistry::GetIID(),
+                            (nsISupports**)&registry);
+  if (NS_FAILED(rv)) goto done;
+
+  // open the registry
+  rv = registry->OpenWellKnownRegistry(
+      nsIRegistry::ApplicationComponentRegistry);
+  if (NS_FAILED(rv)) goto done;
+
+  rv = registry -> AddSubtree(nsIRegistry::Common, 
+                           NS_CHARSET_DETECTOR_REG_BASE "off" ,&key);
+  if (NS_SUCCEEDED(rv)) {
+    rv = registry-> SetString(key, "type", "off");
+    rv = registry-> SetString(key, "defaultEnglishText", "Off");
+  }
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kMetaCharsetCID, 
                                   "Meta Charset", 
                                   NS_META_CHARSET_PROGID, 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kXMLEncodingCID, 
                                   "XML Encoding", 
                                   NS_XML_ENCODING_PROGID, 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kCharsetDetectionAdaptorCID, 
                                   "Charset Detection Adaptor", 
                                   NS_CHARSET_DETECTION_ADAPTOR_PROGID, 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kJAPSMDetectorCID, 
                                   "PSM based Japanese Charset Detector", 
                                   NS_CHARSET_DETECTOR_PROGID_BASE "japsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
   rv = compMgr->RegisterComponent(kJAStringPSMDetectorCID, 
                                   "PSM based Japanese String Charset Detector", 
                                   NS_STRCDETECTOR_PROGID_BASE "japsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  rv = registry -> AddSubtree(nsIRegistry::Common, 
+                           NS_CHARSET_DETECTOR_REG_BASE "japsm" ,&key);
+  if (NS_SUCCEEDED(rv)) {
+    rv = registry-> SetString(key, "type", "japsm");
+    rv = registry-> SetString(key, "defaultEnglishText", "Japaneser");
+  }
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kKOPSMDetectorCID, 
                                   "PSM based Korean Charset Detector", 
                                   NS_CHARSET_DETECTOR_PROGID_BASE "kopsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
   rv = compMgr->RegisterComponent(kKOStringPSMDetectorCID, 
                                   "PSM based Korean String Charset Detector", 
                                   NS_STRCDETECTOR_PROGID_BASE "kopsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  rv = registry -> AddSubtree(nsIRegistry::Common, 
+                           NS_CHARSET_DETECTOR_REG_BASE "kopsm" ,&key);
+  if (NS_SUCCEEDED(rv)) {
+    rv = registry-> SetString(key, "type", "kopsm");
+    rv = registry-> SetString(key, "defaultEnglishText", "Korean");
+  }
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kZHTWPSMDetectorCID, 
                                   "PSM based Traditional Chinese Charset Detector", 
                                   NS_CHARSET_DETECTOR_PROGID_BASE "zhtwpsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
   rv = compMgr->RegisterComponent(kZHTWStringPSMDetectorCID, 
                                   "PSM based Traditional Chinese String Charset Detector", 
                                   NS_STRCDETECTOR_PROGID_BASE "zhtwpsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  rv = registry -> AddSubtree(nsIRegistry::Common, 
+                           NS_CHARSET_DETECTOR_REG_BASE "zhtwpsm" ,&key);
+  if (NS_SUCCEEDED(rv)) {
+    rv = registry-> SetString(key, "type", "zhtwpsm");
+    rv = registry-> SetString(key, "defaultEnglishText", "Traditional Chinese");
+  }
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kZHCNPSMDetectorCID, 
                                   "PSM based Simplified Chinese Charset Detector", 
                                   NS_CHARSET_DETECTOR_PROGID_BASE "zhcnpsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
   rv = compMgr->RegisterComponent(kZHCNStringPSMDetectorCID, 
                                   "PSM based Simplified Chinese String Charset Detector", 
                                   NS_STRCDETECTOR_PROGID_BASE "zhcnpsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  rv = registry -> AddSubtree(nsIRegistry::Common, 
+                           NS_CHARSET_DETECTOR_REG_BASE "zhcnpsm" ,&key);
+  if (NS_SUCCEEDED(rv)) {
+    rv = registry-> SetString(key, "type", "zhtwpsm");
+    rv = registry-> SetString(key, "defaultEnglishText", "Simplified Chinese");
+  }
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kZHPSMDetectorCID, 
                                   "PSM based Chinese Charset Detector", 
                                   NS_CHARSET_DETECTOR_PROGID_BASE "zhpsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
   rv = compMgr->RegisterComponent(kZHStringPSMDetectorCID, 
                                   "PSM based Chinese String Charset Detector", 
                                   NS_STRCDETECTOR_PROGID_BASE "zhpsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  rv = registry -> AddSubtree(nsIRegistry::Common, 
+                           NS_CHARSET_DETECTOR_REG_BASE "zhpsm" ,&key);
+  if (NS_SUCCEEDED(rv)) {
+    rv = registry-> SetString(key, "type", "zhpsm");
+    rv = registry-> SetString(key, "defaultEnglishText", "Chinese");
+  }
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kCJKPSMDetectorCID, 
                                   "PSM based CJK Charset Detector", 
                                   NS_CHARSET_DETECTOR_PROGID_BASE "cjkpsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
   rv = compMgr->RegisterComponent(kCJKStringPSMDetectorCID, 
                                   "PSM based CJK String Charset Detector", 
                                   NS_STRCDETECTOR_PROGID_BASE "cjkpsm", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  rv = registry -> AddSubtree(nsIRegistry::Common, 
+                           NS_CHARSET_DETECTOR_REG_BASE "cjkpsm" ,&key);
+  if (NS_SUCCEEDED(rv)) {
+    rv = registry-> SetString(key, "type", "cjkpsm");
+    rv = registry-> SetString(key, "defaultEnglishText", "East Asian");
+  }
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kRUProbDetectorCID, 
                                   "Probability based Russian Charset Detector", 
                                   NS_CHARSET_DETECTOR_PROGID_BASE "ruprob", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
   rv = compMgr->RegisterComponent(kUKProbDetectorCID, 
                                   "Probability based Ukrainian Charset Detector", 
                                   NS_CHARSET_DETECTOR_PROGID_BASE "ukprob", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  rv = registry -> AddSubtree(nsIRegistry::Common, 
+                           NS_CHARSET_DETECTOR_REG_BASE "ruprob" ,&key);
+  if (NS_SUCCEEDED(rv)) {
+    rv = registry-> SetString(key, "type", "ruprob");
+    rv = registry-> SetString(key, "defaultEnglishText", "Russian");
+  }
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(kRUStringProbDetectorCID, 
                                   "Probability based Russian String Charset Detector", 
                                   NS_STRCDETECTOR_PROGID_BASE "ruprob", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
   rv = compMgr->RegisterComponent(kUKStringProbDetectorCID, 
                                   "Probability based Ukrainian String Charset Detector", 
                                   NS_STRCDETECTOR_PROGID_BASE "ukprob", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  rv = registry -> AddSubtree(nsIRegistry::Common, 
+                           NS_CHARSET_DETECTOR_REG_BASE "ukprob" ,&key);
+  if (NS_SUCCEEDED(rv)) {
+    rv = registry-> SetString(key, "type", "ukprob");
+    rv = registry-> SetString(key, "defaultEnglishText", "Ukrainian");
+  }
+  //------------------------------------------------------------------------
 #ifdef INCLUDE_DBGDETECTOR
   rv = compMgr->RegisterComponent(k1stBlkDbgDetectorCID,
                                   "Debuging Detector 1st block", 
                                   NS_CHARSET_DETECTOR_PROGID_BASE "1stblkdbg", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(k2ndBlkDbgDetectorCID,
                                   "Debuging Detector 2nd block", 
                                   NS_CHARSET_DETECTOR_PROGID_BASE "2ndblkdbg", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
+  //------------------------------------------------------------------------
   rv = compMgr->RegisterComponent(klastBlkDbgDetectorCID,
                                   "Debuging Detector last block", 
                                   NS_CHARSET_DETECTOR_PROGID_BASE "lastblkdbg", 
                                   path,
                                   PR_TRUE, PR_TRUE);
+  NS_ASSERTION((NS_SUCCEEDED(rv)||(NS_ERROR_FACTORY_EXISTS == rv)), "cannot RegisterComponent");
 #endif /* INCLUDE_DBGDETECTOR */
 
-  (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+done:
+  if(nsnull != compMgr)
+      (void)servMgr->ReleaseService(kComponentManagerCID, compMgr);
+  if(nsnull != registry) {
+      registry->Close();
+      (void)servMgr->ReleaseService(NS_REGISTRY_PROGID, registry);
+  }
   return rv;
 }
 
