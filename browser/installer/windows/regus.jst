@@ -75,6 +75,9 @@ if(verifyDiskSpace(fProgram, srDest))
     // register chrome
     var cf = getFolder(fProgram, "chrome/"+ chromeName);
     registerChrome(chromeType, cf, localeName + "global-region/");
+    registerChrome(chromeType, cf, localeName + "browser-region/");
+
+    // XXXben Stuff that will become obsolete
     registerChrome(chromeType, cf, localeName + "communicator-region/");
     registerChrome(chromeType, cf, localeName + "navigator-region/");
 
