@@ -749,7 +749,140 @@
 
 
 
+/* begin mail/news netlib */
+#define HG37838
 
+#define HG64967 \
+    XP_Bool m_syncX1;
+
+#define HG20039 \
+    m_syncX1 = FALSE;
+
+#define HG65202
+
+#define HG46644
+
+#define HG38728
+
+#define HG09874
+#define HG56327
+#define HG78485
+
+#define HG22334 \
+        url = PR_smprintf("repl-ldap://%s%s:%d/%s", auth ? auth : "", \
+						  server->serverName, server->port, \
+						  server->searchBase); \
+
+#define HG40923
+#define HG75778
+#define HG17482 XP_STRDUP
+#define HG15296 XP_STRDUP
+
+#define HG47233 \
+"ssl.h" \
+
+#define HG09893 \
+"secnav.h"
+
+#define HG64643 XP_STRDUP
+#define HG63218 XP_STRDUP
+
+#define HG40855 \
+"ssl.h" \
+
+#define HG07711
+#define HG25430
+#define HG43574
+#define HG43072
+#define HG51514
+#define HG28477
+#define HG42871
+#define HG25431
+#define HG55785
+
+#define HG51966 \
+		  net_graceful_shutdown(con->csock, FALSE); \
+
+#define HG72589 \
+				urlScheme = "news:"; \
+
+#define HG56946 \
+			urlScheme = "news:"; \
+
+#define HG43575
+#define HG05417 \
+				defport = 0;\
+
+#define HG05998 \
+	  port == NEWS_PORT \
+
+#define HG45873 \
+				*bValP = FALSE; \
+
+#define HG66376
+#define HG78293 0
+#define HG01869
+#define HG51154 ce->URL_s->address
+#define HG28465 NEWS_PORT
+#define HG42817 FALSE
+#define HG65321 cd->control_con->hostname
+#define HG31966 "secnav.h"
+#define HG31996 "ssl.h"
+#define HG79357 "sslerr.h"
+#define HG17322
+#define HG54697 IMAP4_PORT
+#define HG72598 FALSE
+#define HG94391 FALSE
+#define HG65837
+#define HG17406
+#define HG32397
+#define HG26051
+#define HG03686 0
+#define HG47042
+#define HG41242
+#define HG53733
+
+#define HG57771 \
+		if (!password) return -1; \
+
+#define HG12837 XP_STRDUP
+#define HG04206
+#define HG68978 TRUE
+#define HG09609
+#define HG56055
+#define HG10349
+#define HG40702
+#define HG30626
+#define HG16713
+#define HG92990 \
+		if (CD_AUTH_LOGIN_METHOD) \
+		{ \
+			CD_NEXT_STATE = SMTP_SEND_AUTH_LOGIN_USERNAME; \
+			CD_NEXT_STATE_AFTER_RESPONSE = SMTP_AUTH_LOGIN_RESPONSE; \
+		} \
+		else  \
+		{ \
+			CD_NEXT_STATE = SMTP_SEND_HELO_RESPONSE; \
+		} \
+
+#define HG18210
+#define HG76227
+#define HG79144
+#define HG26788
+#define HG77067
+#define HG15779
+#define HG06474 FALSE
+#define HG70187 TRUE
+#define HG50707 FALSE
+#define HG27293
+#define HG68946
+#define HG11764
+#define HG18517 FALSE
+#define HG74130 FALSE
+#define HG38712
+#define HG12690
+
+/* end mail/news netlib */
 
 
 
