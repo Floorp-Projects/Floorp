@@ -74,9 +74,10 @@ private:
 #ifdef OLD_PERSONALTOOLBAR
   XFE_PersonalToolbar *		m_personalToolbar;
 #endif /*OLD_PERSONALTOOLBAR*/
+#ifdef OLD_URLBAR
   XFE_URLBar *				m_urlBar;
+#endif
   XFE_RDFToolbox *          m_rdfToolbars;
-
 #ifdef ENDER
   XFE_EditorToolbar *			m_editorStyleToolbar;
 #endif /* ENDER */
