@@ -33,8 +33,13 @@
 #include "MRJContext.h"
 #include "MRJPlugin.h"
 #include "MRJSession.h"
+#include "MRJMonitor.h"
+#include "nsIPluginManager2.h"
+
+#include <vector>
 
 extern nsIPluginManager* thePluginManager;		// now in badaptor.cpp.
+extern nsIPluginManager2* thePluginManager2;
 
 static char* JMTextToEncoding(JMTextRef textRef, JMTextEncoding encoding)
 {
@@ -55,16 +60,21 @@ static char* JMTextToEncoding(JMTextRef textRef, JMTextEncoding encoding)
     return text;
 }
 
-class MRJInputStreamListener : public nsIPluginStreamListener {
+class MRJInputStream : public nsIPluginStreamListener {
+    MRJMonitor mMonitor;
+    typedef vector<char> buffer_t;
+    buffer_t mBuffer;
+    size_t mOffset;
+    bool mComplete;
 public:
     NS_DECL_ISUPPORTS
 
-    MRJInputStreamListener()
+    MRJInputStream(MRJSession* session)
+        :   mMonitor(session), mOffset(0), mComplete(false)
     {
         NS_INIT_ISUPPORTS();
+        mBuffer.reserve(8192);
     }
-    
-    ~MRJInputStreamListener() {}
     
     NS_IMETHOD
     OnStartBinding(nsIPluginStreamInfo* pluginInfo)
@@ -73,10 +83,7 @@ public:
     }
 
     NS_IMETHOD
-    OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length)
-    {
-        return NS_OK;
-    }
+    OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length);
 
     NS_IMETHOD
     OnFileAvailable(nsIPluginStreamInfo* pluginInfo, const char* fileName)
@@ -87,16 +94,59 @@ public:
     NS_IMETHOD
     OnStopBinding(nsIPluginStreamInfo* pluginInfo, nsresult status)
     {
+        if (!mComplete) {
+            mComplete = true;
+            mMonitor.notify();
+        }
         return NS_OK;
     }
     
     NS_IMETHOD
     GetStreamType(nsPluginStreamType *result)
     {
+        *result = nsPluginStreamType_Normal;
         return NS_OK;
     }
+
+    OSStatus read(void* buffer, SInt32 bufferSize, SInt32* bytesRead);
 };
-NS_IMPL_ISUPPORTS1(MRJInputStreamListener, nsIPluginStreamListener);
+NS_IMPL_ISUPPORTS1(MRJInputStream, nsIPluginStreamListener);
+
+NS_IMETHODIMP
+MRJInputStream::OnDataAvailable(nsIPluginStreamInfo* pluginInfo, nsIInputStream* input, PRUint32 length)
+{
+    size_t oldSize = mBuffer.size();
+    mBuffer.resize(oldSize + length);
+    buffer_t::iterator buffer = mBuffer.begin() + oldSize;
+    input->Read(buffer, length, &length);
+    mMonitor.notify();
+    return NS_OK;
+}
+
+OSStatus MRJInputStream::read(void* buffer, SInt32 bufferSize, SInt32* bytesRead)
+{
+    size_t sz = mBuffer.size();
+    while (mOffset >= sz && !mComplete) {
+        // wait until there is some data to read.
+        mMonitor.wait();
+        sz = mBuffer.size();
+    }
+    
+    SInt32 available = (sz - mOffset);
+    if (bufferSize > available)
+        bufferSize = available;
+
+    if (bufferSize <= 0 && mComplete) {
+        *bytesRead = 0;
+        return noErr;
+    }
+
+    ::BlockMoveData(mBuffer.begin() + mOffset, buffer, bufferSize);
+    *bytesRead = bufferSize;
+    mOffset += bufferSize;
+    
+    return noErr;
+}
 
 class MRJURLConnection {
 public:
@@ -107,18 +157,22 @@ public:
     ~MRJURLConnection();
 
     MRJPluginInstance* getInstance();
+    const char* getURL();
+    const char* getRequestMethod();
+    Boolean getUsingProxy();
 
 private:
     MRJPluginInstance* mInstance;
     char* mURL;
     char* mRequestMethod;
     JMURLConnectionOptions mOptions;
+    Boolean mUsingProxy;
 };
 
 MRJURLConnection::MRJURLConnection(JMTextRef url, JMTextRef requestMethod,
                                    JMURLConnectionOptions options,
                                    JMAppletViewerRef appletViewer)
-    :   mInstance(0), mURL(0), mRequestMethod(0), mOptions(options)
+    :   mInstance(0), mURL(0), mRequestMethod(0), mOptions(options), mUsingProxy(false)
 {
     MRJPluginInstance* instance = MRJPluginInstance::getInstances();
     if (appletViewer != NULL) {
@@ -143,6 +197,15 @@ MRJURLConnection::MRJURLConnection(JMTextRef url, JMTextRef requestMethod,
     // pull the text out of the url and requestMethod.
     mURL = ::JMTextToEncoding(url, utf8);
     mRequestMethod = ::JMTextToEncoding(requestMethod, utf8);
+    
+    // see if a proxy will be used for this URL.
+    if (thePluginManager2 != NULL) {
+        char* proxyForURL = NULL;
+        if (thePluginManager2->FindProxyForURL(mURL, &proxyForURL) == NS_OK) {
+            mUsingProxy = (::strcmp("DIRECT", proxyForURL) != 0);
+            delete[] proxyForURL;
+        }
+    }
 }
 
 MRJURLConnection::~MRJURLConnection()
@@ -156,6 +219,21 @@ inline MRJPluginInstance* MRJURLConnection::getInstance()
     return mInstance;
 }
 
+inline const char* MRJURLConnection::getURL()
+{
+    return mURL;
+}
+
+inline const char* MRJURLConnection::getRequestMethod()
+{
+    return mRequestMethod;
+}
+
+inline Boolean MRJURLConnection::getUsingProxy()
+{
+    return mUsingProxy;
+}
+
 static OSStatus openConnection(
 	/* in URL = */ JMTextRef url,
 	/* in RequestMethod = */ JMTextRef requestMethod,
@@ -166,11 +244,6 @@ static OSStatus openConnection(
 {
     MRJURLConnection* connection = new MRJURLConnection(url, requestMethod,
                                                         options, appletViewer);
-    if (connection->getInstance() == NULL) {
-        delete connection;
-        *urlConnectionRef = NULL;
-        return paramErr;
-    }
     *urlConnectionRef = connection;
     return noErr;
 }
@@ -188,7 +261,8 @@ static Boolean usingProxy(
 	/* in URLConnectionRef = */ JMURLConnectionRef urlConnectionRef
 	)
 {
-    return false;
+    MRJURLConnection* connection = reinterpret_cast<MRJURLConnection*>(urlConnectionRef);
+    return connection->getUsingProxy();
 }
 
 static OSStatus getCookie(
@@ -218,7 +292,7 @@ static OSStatus setRequestProperties(
 }
 
 static OSStatus getResponsePropertiesCount(
-	/* in URLConnectionRef = */ JMURLInputStreamRef iStreamRef,
+	/* in URLConnectionRef = */ JMURLInputStreamRef urlInputStreamRef,
 	/* out numberOfProperties = */ int* numberOfProperties
 	)
 {
@@ -229,13 +303,13 @@ static OSStatus getResponsePropertiesCount(
 }
 
 static OSStatus getResponseProperties(
-	/* in URLConnectionRef = */ JMURLInputStreamRef iStreamRef,
+	/* in URLConnectionRef = */ JMURLInputStreamRef urlInputStreamRef,
 	/* in numberOfProperties = */ int numberOfProperties,
 	/* out PropertyNames = */ JMTextRef* keys,
 	/* out Values = */ JMTextRef* values
 	)
 {
-    return paramErr;
+    return noErr;
 }
 
 static OSStatus openInputStream(
@@ -243,7 +317,16 @@ static OSStatus openInputStream(
 	/* out URLStreamRef = */ JMURLInputStreamRef* urlInputStreamRef
 	)
 {
-    return paramErr;
+    MRJURLConnection* connection = reinterpret_cast<MRJURLConnection*>(urlConnectionRef);
+    MRJInputStream* inputStream = new MRJInputStream(connection->getInstance()->getSession());
+    inputStream->AddRef();
+    *urlInputStreamRef = inputStream;
+
+	nsIPluginInstance* pluginInstance = connection->getInstance();
+	nsIPluginStreamListener* listener = inputStream;
+	nsresult rv = thePluginManager->GetURL(pluginInstance, connection->getURL(), NULL, listener);
+    
+    return noErr;
 }
 
 static OSStatus openOutputStream(
@@ -258,7 +341,9 @@ static OSStatus closeInputStream(
 	/* in URLInputStreamRef = */ JMURLInputStreamRef urlInputStreamRef
 	)
 {
-    return paramErr;
+    MRJInputStream* inputStream = reinterpret_cast<MRJInputStream*>(urlInputStreamRef);
+    inputStream->Release();
+    return noErr;
 }
 
 static OSStatus closeOutputStream(
@@ -269,13 +354,14 @@ static OSStatus closeOutputStream(
 }
 
 static OSStatus readInputStream(
-	/* in URLConnectionRef = */ JMURLInputStreamRef iStreamRef,
+	/* in URLConnectionRef = */ JMURLInputStreamRef urlInputStreamRef,
 	/* out Buffer = */ void* buffer,
 	/* in BufferSize = */ UInt32 bufferSize,
 	/* out BytesRead = */ SInt32* bytesRead
 	)
 {
-    return paramErr;
+    MRJInputStream* inputStream = reinterpret_cast<MRJInputStream*>(urlInputStreamRef);
+    return inputStream->read(buffer, bufferSize, bytesRead);
 }
 
 static OSStatus writeOutputStream(
@@ -305,6 +391,8 @@ OSStatus OpenMRJNetworking(MRJSession* session)
     if (&::JMURLSetCallbacks != 0) {
         rv = ::JMURLSetCallbacks(session->getSessionRef(),
                                  "http", &theURLCallbacks);
+        rv = ::JMURLSetCallbacks(session->getSessionRef(),
+                                 "https", &theURLCallbacks);
     }
     return rv;
 }
