@@ -73,7 +73,7 @@ const NC_BASE = RDF.GetResource(NC + "base");
 const NC_DEFAULTTOPIC = RDF.GetResource(NC + "defaulttopic"); 
 
 const RDFCUtils = Components.classes["@mozilla.org/rdf/container-utils;1"].getService(Components.interfaces.nsIRDFContainerUtils);
-const RDFContainer = Components.classes["@mozilla.org/rdf/container;1"].getService(Components.interfaces.nsIRDFContainer);
+var RDFContainer = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
 const CONSOLE_SERVICE = Components.classes['@mozilla.org/consoleservice;1'].getService(Components.interfaces.nsIConsoleService);
             
 var urnID = 0;

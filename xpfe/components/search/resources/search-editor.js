@@ -55,14 +55,11 @@ try
   pref = Components.classes["@mozilla.org/preferences-service;1"]
                    .getService(Components.interfaces.nsIPrefBranch);
 
-  RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService();
-  if (RDF)  RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+  RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Components.interfaces.nsIRDFService);
 
-  RDFC = Components.classes["@mozilla.org/rdf/container;1"].getService();
-  if (RDFC) RDFC = RDFC.QueryInterface(Components.interfaces.nsIRDFContainer);
+  RDFC = Components.classes["@mozilla.org/rdf/container;1"].createInstance(Components.interfaces.nsIRDFContainer);
 
-  RDFCUtils = Components.classes["@mozilla.org/rdf/container-utils;1"].getService();
-  if (RDFCUtils)  RDFCUtils = RDFCUtils.QueryInterface(Components.interfaces.nsIRDFContainerUtils);
+  RDFCUtils = Components.classes["@mozilla.org/rdf/container-utils;1"].getService(Components.interfaces.nsIRDFContainerUtils);
 }
 catch(e)
 {

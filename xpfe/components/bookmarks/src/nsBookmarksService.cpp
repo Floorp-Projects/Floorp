@@ -2579,7 +2579,7 @@ nsBookmarksService::InsertResource(nsIRDFResource* aResource,
     // Add to container if the parent folder is non null 
     if (aParentFolder)
     {
-        nsCOMPtr<nsIRDFContainer> container(do_GetService("@mozilla.org/rdf/container;1", &rv));
+        nsCOMPtr<nsIRDFContainer> container(do_CreateInstance("@mozilla.org/rdf/container;1", &rv));
         if (NS_FAILED(rv)) 
             return rv;
         rv = container->Init(mInner, aParentFolder);
@@ -4539,7 +4539,7 @@ nsBookmarksService::insertBookmarkItem(nsIRDFResource *aRelativeNode,
         if (NS_FAILED(rv)) return rv;
     }
 
-    nsCOMPtr<nsIRDFContainer> container(do_GetService("@mozilla.org/rdf/container;1", &rv));
+    nsCOMPtr<nsIRDFContainer> container(do_CreateInstance("@mozilla.org/rdf/container;1", &rv));
     if (NS_FAILED(rv)) return rv;
 
     rv = container->Init(this, rParent);
