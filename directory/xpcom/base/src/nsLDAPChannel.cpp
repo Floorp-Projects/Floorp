@@ -50,7 +50,7 @@
 
 static NS_DEFINE_CID(kProxyObjectManagerCID, NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_IID(kILDAPMessageListenerIID, NS_ILDAPMESSAGELISTENER_IID);
-
+static NS_DEFINE_IID(kILoadGroupIID, NS_ILOADGROUP_IID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsLDAPChannel, nsIChannel, nsIRequest,	
 			      nsILDAPMessageListener);
@@ -177,6 +177,23 @@ nsLDAPChannel::Cancel(nsresult aStatus)
 	rv = mReadPipeOut->Close();
 	NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
 		     "mReadPipeOut->Close() failed");
+    }
+
+    // remove self from loadgroup to stop the throbber
+    //
+    if (mLoadGroup) {
+        rv = mLoadGroup->RemoveChannel(this, mResponseContext, aStatus,
+				       nsnull);
+        if (NS_FAILED(rv)) 
+	    return rv;
+    }
+
+    // call listener's onstoprequest
+    //
+    if (mUnproxiedListener) {
+        rv = mListener->OnStopRequest(this, mResponseContext, aStatus, nsnull);
+        if (NS_FAILED(rv)) 
+	    return rv;
     }
 
     return NS_OK;
@@ -386,7 +403,7 @@ nsLDAPChannel::SetOwner(nsISupports *aOwner)
 NS_IMETHODIMP
 nsLDAPChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 {
-  *aLoadGroup = mLoadGroup;
+  *aLoadGroup = mUnproxiedLoadGroup;
   NS_IF_ADDREF(*aLoadGroup);
   
   return NS_OK;
@@ -395,9 +412,35 @@ nsLDAPChannel::GetLoadGroup(nsILoadGroup* *aLoadGroup)
 NS_IMETHODIMP
 nsLDAPChannel::SetLoadGroup(nsILoadGroup* aLoadGroup)
 {
-  mLoadGroup = aLoadGroup;
+    mUnproxiedLoadGroup = aLoadGroup;
 
-  return NS_OK;
+    // in the case where the LDAP callbacks happen on the connection thread,
+    // we'll need to call into the loadgroup from there
+    //
+#if INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
+
+    mLoadGroup = mUnproxiedLoadGroup;
+
+#else
+    nsresult rv;
+
+    // get the proxy object manager
+    //
+    nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
+	do_GetService(kProxyObjectManagerCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv); 
+
+    // and use it to get and save a proxy for the load group
+    //
+    rv = proxyObjMgr->GetProxyForObject(NS_UI_THREAD_EVENTQ, kILoadGroupIID,
+					mUnproxiedLoadGroup, 
+					PROXY_SYNC|PROXY_ALWAYS,
+					getter_AddRefs(mLoadGroup));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+#endif
+
+    return NS_OK;
 }
 
 // getter and setter for the notificationCallbacks
@@ -562,14 +605,15 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
     nsXPIDLCString host;
     PRInt32 port;
 
-    // save off the context
+    // save off the args
     //
     mResponseContext = aCtxt;
+    mUnproxiedListener = aListener;
 
     // add ourselves to the appropriate loadgroup
     //
     if (mLoadGroup) {
-	mLoadGroup->AddChannel(this, nsnull);
+	mLoadGroup->AddChannel(this, mResponseContext);
     }
 
     // slurp out relevant pieces of the URL
@@ -610,21 +654,21 @@ nsLDAPChannel::AsyncRead(nsIStreamListener* aListener,
 			  NS_ERROR_UNEXPECTED);
     } 
 
-    // we already know the content type, so we can fire this now (aListener
-    // will always be on the main thread, so we use it here).
-    //
-    aListener->OnStartRequest(this, mResponseContext);
-
-    // set mListener to the appropriate thing, depending on how we're
-    // compiled
+    // get an AsyncStreamListener to proxy for mListener, if we're
+    // compiled to have the LDAP callbacks happen on the LDAP connection=
+    // thread.
     //
 #if INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD
     mListener = aListener;
 #else
-    rv = NS_NewAsyncStreamListener(getter_AddRefs(mListener), aListener, 
-				   NS_UI_THREAD_EVENTQ);
+    rv = NS_NewAsyncStreamListener(getter_AddRefs(mListener), 
+				   mUnproxiedListener, NS_UI_THREAD_EVENTQ);
     NS_ENSURE_SUCCESS(rv, rv);
 #endif
+
+    // we already know the content type, so we can fire this now
+    //
+    mUnproxiedListener->OnStartRequest(this, mResponseContext);
 
     // initialize it with the defaults
     // XXXdmose - need to deal with bind name
@@ -692,8 +736,9 @@ nsLDAPChannel::pipeWrite(char *str)
 
   // XXXdmose deal more gracefully with an error here
   //
-  rv = mListener->OnDataAvailable(this, mResponseContext, mReadPipeIn, 
-				  mReadPipeOffset, nsCRT::strlen(str));
+  rv = mListener->OnDataAvailable(this, mResponseContext, 
+				  mReadPipeIn, mReadPipeOffset, 
+				  nsCRT::strlen(str));
   NS_ENSURE_SUCCESS(rv, rv);
 
   mReadPipeOffset += bytesWritten;
@@ -823,21 +868,38 @@ nsLDAPChannel::OnLDAPSearchResult(nsILDAPMessage *aMessage)
 	return NS_ERROR_FAILURE;
     }
 
-    // close the pipe 
-    //
-    rv = mReadPipeOut->Close();
-    NS_ENSURE_SUCCESS(rv, rv);
-    mReadPipeClosed = PR_TRUE;
-
     // we're done with the current operation.  cause nsCOMPtr to Release() it
     // so that if nsLDAPChannel::Cancel gets called, that doesn't try to call 
     // mCurrentOperation->Abandon().
     //
     mCurrentOperation = 0;
 
-    // all done
+    // if the read pipe exists and hasn't already been closed, close it
     //
-    mListener->OnStopRequest(this, mResponseContext, NS_OK, nsnull);
+    if (mReadPipeOut != 0 && !mReadPipeClosed) {
+
+	// if this fails in a non-debug build, there's not much we can do
+	//
+	rv = mReadPipeOut->Close();
+	NS_ASSERTION(NS_SUCCEEDED(rv), "nsLDAPChannel::Cancel(): "
+		     "mReadPipeOut->Close() failed");
+    }
+
+    // remove self from loadgroup to stop the throbber
+    //
+    if (mLoadGroup) {
+        rv = mLoadGroup->RemoveChannel(this, mResponseContext, NS_OK, nsnull);
+        if (NS_FAILED(rv)) 
+	    return rv;
+    }
+
+    // call listener's onstoprequest
+    //
+    if (mListener) {
+        rv = mListener->OnStopRequest(this, mResponseContext, NS_OK, nsnull);
+        if (NS_FAILED(rv)) 
+	    return rv;
+    }
 
     return NS_OK;
 }

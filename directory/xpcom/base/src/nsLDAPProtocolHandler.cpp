@@ -93,9 +93,7 @@ nsLDAPProtocolHandler::NewURI(const char *aSpec, nsIURI *aBaseURI,
     url = do_CreateInstance(kLDAPURLCID, &rv);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // XXX - possibly should implement using our own nsILDAPURI which 
-    // validates the URI on SetSpec().  alternatively, we could call 
-    // ldap_url_parse and friends here.
+    // XXX - better error handling
     //
     rv = url->SetSpec(aSpec);
     NS_ENSURE_SUCCESS(rv, rv);

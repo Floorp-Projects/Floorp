@@ -47,7 +47,8 @@
 #include "nsILDAPMessageListener.h"
 
 // if the code related to the following #define ever gets removed, also
-// be sure to remove mCallback and any references to it.
+// be sure to remove mCallback as well as the most (but not all) of the 
+// various mUnproxied stuff
 //
 #define INVOKE_LDAP_CALLBACKS_ON_MAIN_THREAD 0
 
@@ -87,7 +88,7 @@ protected:
   //
   nsresult mStatus;
   nsCOMPtr<nsIURI> mURI; // the URI we're processing
-  nsCOMPtr<nsILoadGroup> mLoadGroup; // the LoadGroup that we belong to
+  nsCOMPtr<nsILoadGroup> mUnproxiedLoadGroup; // the load group we belong to
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks; 
   nsCOMPtr<nsIURI> mOriginalURI; // the URI we started prcessing
   nsLoadFlags mLoadAttributes; // load attributes for this channel
@@ -95,11 +96,12 @@ protected:
 
   // various other instance vars
   //
-  nsCOMPtr<nsIStreamListener> mAsyncListener; // since we can't call mListener
-                                             // directly from the worker thread
+  nsCOMPtr<nsIStreamListener> mUnproxiedListener; // for calls on main thread
+  nsCOMPtr<nsILoadGroup> mLoadGroup; // possibly an nsISupports proxy
   nsCOMPtr<nsILDAPConnection> mConnection; // LDAP connection for this channel
   nsCOMPtr<nsIThread> mThread; // worker thread for this channel
-  nsCOMPtr<nsIStreamListener> mListener; // whoever is listening to us
+  nsCOMPtr<nsIStreamListener> mListener; // for calls on LDAP callback thread
+                                         // which _might_ be the main thread
   nsCOMPtr<nsISupports> mResponseContext; 
   nsCOMPtr<nsIBufferInputStream> mReadPipeIn; // this end given to the listener
   nsCOMPtr<nsIBufferOutputStream> mReadPipeOut; // for writes from the channel
@@ -107,6 +109,7 @@ protected:
   PRUint32 mReadPipeOffset; // how many bytes written so far?
   PRBool mReadPipeClosed; // has the pipe already been closed?
   nsCOMPtr<nsILDAPMessageListener> mCallback; // callback
+
 };
 
 #endif // nsLDAPChannel_h__
