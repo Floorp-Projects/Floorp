@@ -178,13 +178,16 @@ fips_140_1()
   echo "mangling ${SOFTOKEN}"
   echo "mangle -i ${SOFTOKEN} -o 60000 -b 5"
   mangle -i ${SOFTOKEN} -o 60000 -b 5 2>&1
-  diff ${SOFTOKEN} ${TMP}/softokn3.sav
-  echo "dbtest -r  -d ${P_R_FIPSDIR} "
+  if [ $? -eq 0 ]; then
+    echo "dbtest -r  -d ${P_R_FIPSDIR} "
 # suppress the expected failure message
-  dbtest -r  -d ${P_R_FIPSDIR}  > ${TMP}/dbtestoutput.txt 2>&1
-  html_msg $? 46 "Init NSS with a corrupted library (dbtest -r)"
-  echo "cp ${TMP}/softokn3.sav ${SOFTOKEN}"
-  cp ${TMP}/softokn3.sav ${SOFTOKEN}
+    dbtest -r  -d ${P_R_FIPSDIR}  > ${TMP}/dbtestoutput.txt 2>&1
+    html_msg $? 46 "Init NSS with a corrupted library (dbtest -r)"
+    echo "cp ${TMP}/softokn3.sav ${SOFTOKEN}"
+    cp ${TMP}/softokn3.sav ${SOFTOKEN}
+  else
+    html_msg 0 0 "Skipping corruption test, can't open ${DLL_PREFIX}softokn3.${DLL_SUFFIX}"
+  fi
   echo "rm ${TMP}/softokn3.sav"
   rm ${TMP}/softokn3.sav
 }
