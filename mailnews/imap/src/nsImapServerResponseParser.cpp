@@ -2688,14 +2688,15 @@ void nsImapServerResponseParser::SetSyntaxError(PRBool error)
 
 nsresult nsImapServerResponseParser::BeginMessageDownload(const char *content_type)
 {
-		NS_ASSERTION(fSizeOfMostRecentMessage > 0, "most recent message has 0 or negative size");
-    nsresult rv = fServerConnection.BeginMessageDownLoad(fSizeOfMostRecentMessage, 
-                                                content_type);
-    if (NS_FAILED(rv))
-    {
-        skip_to_CRLF();
-        fServerConnection.PseudoInterrupt(PR_TRUE);
-        fServerConnection.AbortMessageDownLoad();
-    }
+  // if we're downloading a message, assert that we know its size.
+  NS_ASSERTION(fDownloadingHeaders || fSizeOfMostRecentMessage > 0, "most recent message has 0 or negative size");
+  nsresult rv = fServerConnection.BeginMessageDownLoad(fSizeOfMostRecentMessage, 
+    content_type);
+  if (NS_FAILED(rv))
+  {
+    skip_to_CRLF();
+    fServerConnection.PseudoInterrupt(PR_TRUE);
+    fServerConnection.AbortMessageDownLoad();
+  }
   return rv;
 }
