@@ -93,7 +93,7 @@ public:
   NS_IMETHOD GetRowGroupType(nsIAtom *& aType);
 
   /** set aCount to the number of child rows (not necessarily == number of child frames) */
-  NS_METHOD nsTableRowGroupFrame::GetRowCount(PRInt32 &aCount);
+  NS_METHOD GetRowCount(PRInt32 &aCount);
 
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;
 
