@@ -2,6 +2,7 @@ config.ini
 xpcom.js
 browser.js
 mail.js
+psm.js
 chatzilla.js
 talkback.js
 deflenus.js
