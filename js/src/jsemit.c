@@ -2988,23 +2988,8 @@ js_EmitTree(JSContext *cx, JSCodeGenerator *cg, JSParseNode *pn)
             return JS_FALSE;
 
         if (pn2->pn_type == TOK_IN) {
-            /*
-             * Generate the object and iterator pop opcodes after popping the
-             * stmtInfo stack, so breaks will go to this pop bytecode.
-             */
-            if (pn3->pn_type != TOK_LB) {
-                if (js_Emit1(cx, cg, JSOP_POP2) < 0)
-                    return JS_FALSE;
-            } else {
-                /*
-                 * With 'for(x[i]...)', there's only the object on the stack,
-                 * so we need to hide the pop.
-                 */
-                if (js_NewSrcNote(cx, cg, SRC_HIDDEN) < 0)
-                    return JS_FALSE;
-                if (js_Emit1(cx, cg, JSOP_POP) < 0)
-                    return JS_FALSE;
-            }
+            if (js_Emit1(cx, cg, JSOP_POP2) < 0)
+                return JS_FALSE;
         }
         break;
 
