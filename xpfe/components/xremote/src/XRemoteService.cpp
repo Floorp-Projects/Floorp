@@ -39,10 +39,12 @@
 
 #include "XRemoteService.h"
 #include "XRemoteContentListener.h"
+#include "nsIBrowserDOMWindow.h"
 
 #include <nsIGenericFactory.h>
 #include <nsIWebNavigation.h>
 #include <nsIDOMWindowInternal.h>
+#include <nsIDOMChromeWindow.h>
 #include <nsIDocShell.h>
 #include <nsIScriptGlobalObject.h>
 #include <nsIBaseWindow.h>
@@ -761,6 +763,8 @@ XRemoteService::OpenURL(nsCString &aArgument,
       aArgument.Truncate(index);
   }
 
+  nsCOMPtr<nsIBrowserDOMWindow> bwin;
+
   // If it's OK to open a new browser window and a new window flag
   // wasn't passed in then try to find a current window.  If that's
   // not found then go ahead and open a new window.
@@ -776,9 +780,20 @@ XRemoteService::OpenURL(nsCString &aArgument,
     FindWindow(NS_LITERAL_STRING("navigator:browser").get(),
 	       getter_AddRefs(lastUsedWindow));
 
-    if (lastUsedWindow)
+    if (lastUsedWindow) {
       finalWindow = lastUsedWindow;
-    else
+      nsCOMPtr<nsIWebNavigation> navNav(do_GetInterface(finalWindow));
+      nsCOMPtr<nsIDocShellTreeItem> navItem(do_QueryInterface(navNav));
+      if (navItem) {
+        nsCOMPtr<nsIDocShellTreeItem> rootItem;
+        navItem->GetRootTreeItem(getter_AddRefs(rootItem));
+        nsCOMPtr<nsIDOMWindow> rootWin(do_GetInterface(rootItem));
+        nsCOMPtr<nsIDOMChromeWindow> chromeWin(do_QueryInterface(rootWin));
+        if (chromeWin)
+          chromeWin->GetBrowserDOMWindow(getter_AddRefs(bwin));
+      }
+    }
+    if (!finalWindow || !bwin)
       newWindow = PR_TRUE;
   }
 #endif
@@ -787,11 +802,14 @@ XRemoteService::OpenURL(nsCString &aArgument,
   if (!MayOpenURL(aArgument))
     return NS_ERROR_ABORT;
 
+  nsresult rv = NS_OK;
+
   // try to fixup the argument passed in
   nsString url;
   url.AssignWithConversion(aArgument.get());
 
-  nsresult rv = NS_OK;
+  nsCOMPtr<nsIURI> uri;
+  NS_NewURI(getter_AddRefs(uri), url);
 
   if (newWindow) {
     nsXPIDLCString urlString;
@@ -833,10 +851,8 @@ XRemoteService::OpenURL(nsCString &aArgument,
     // now the listenerref is the only reference
     NS_RELEASE(listener);
 
-    // create our uri object
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), url);
-    if (NS_FAILED(rv))
+    // double-check our uri object
+    if (!uri)
       return NS_ERROR_FAILURE;
 
     // open a channel
@@ -850,22 +866,27 @@ XRemoteService::OpenURL(nsCString &aArgument,
   }
 
   else if (newTab && aOpenBrowser) {
-    // We open new tabs simply by broadcasting a request to all interested
-    // observers, which will typically be all open windows.  The observers
-    // can check the notification subject against themselves (in the case of
-    // a browser window observer, anyway) to determine if they should be
-    // opening the tab.
-    nsCOMPtr<nsIObserverService>
-      obsServ(do_GetService("@mozilla.org/observer-service;1"));
-
-    if (!obsServ)
-      return NS_ERROR_FAILURE;
-
-    return obsServ->NotifyObservers(finalWindow, "open-new-tab-request",
-                                    url.get());
+    NS_ASSERTION(bwin && uri, "failed to open remote URL in new tab");
+    if (bwin && uri) {
+      nsCOMPtr<nsIDOMWindow> container;
+      rv = bwin->OpenURI(uri, 0,
+                         nsIBrowserDOMWindow::OPEN_NEWTAB,
+                         nsIBrowserDOMWindow::OPEN_EXTERNAL,
+                         getter_AddRefs(container));
+    }
   }
 
-  else {
+  else if (bwin && uri) { // unspecified new browser URL; use prefs
+    nsCOMPtr<nsIDOMWindow> container;
+    rv = bwin->OpenURI(uri, 0,
+                       nsIBrowserDOMWindow::OPEN_DEFAULTWINDOW,
+                       nsIBrowserDOMWindow::OPEN_EXTERNAL,
+                       getter_AddRefs(container));
+    if (NS_SUCCEEDED(rv))
+      return NS_OK;
+  }
+
+  else { // non-browser URLs
     // find the primary content shell for the window that we've been
     // asked to load into.
     nsCOMPtr<nsIScriptGlobalObject> scriptObject;
