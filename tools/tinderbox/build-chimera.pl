@@ -37,6 +37,221 @@ sub checkout {
 }
 
 
+sub ReadHeapDumpToHash($$)
+{
+  my($dumpfile, $hashref) = @_;
+
+  local(*DUMP_FILE);
+  open(DUMP_FILE, "< $dumpfile") || die "Can't open heap output file $dumpfile\n";
+
+  my $section = 0;
+  my $zone = "";
+  
+  while (<DUMP_FILE>)
+  {
+    my($line) = $_;
+    chomp($line);
+
+    if ($line =~ /^\#/ || $line =~ /^\s*$/ || $line =~ /------------------------/) {    # ignore comments and empty lines
+      next;
+    }
+    
+    # use the 'All zones' lines as section markers
+    if ($line =~ /^All zones:/) {
+      $section ++; 
+      next;
+    }
+    
+    if ($section == 2) # we're in the detailed section
+    {
+      if ($line =~ /^Zone ([^_]+)/)
+      {
+        $zone = $1;
+        TinderUtils::print_log "  $line\n";
+        next;
+      }
+      
+      if ($zone eq "DefaultMallocZone")
+      {
+        if ($line =~ /(\w+)\s*=\s*(\d+)\s*\((\d+).+\)/)
+        {
+          #TinderUtils::print_log "$2 $1 ($3 bytes)\n";
+          my(%entry_hash) = ("count", $2,
+                             "bytes", $3);
+          $hashref->{$1} = \%entry_hash;
+        }
+        elsif ($line =~ /^<not.+>\s*=\s*(\d+)\s*\((\d+).+\)/)
+        {
+          #TinderUtils::print_log "$1 malloc blocks ($2 bytes)\n";
+          my(%entry_hash) = ("count", $1,
+                             "bytes", $2);
+          $hashref->{"malloc_block"} = \%entry_hash;
+        }
+      }
+    }
+  }
+ 
+  close(DUMP_FILE);
+}
+
+sub DumpHash($)
+{
+  my($hashref) = @_;
+  
+  print "Dumping values\n";
+  
+  my($key);
+  foreach $key (keys %{$hashref})
+  {
+    my($value) = $hashref->{$key};
+    print "Class $key count $value->{'count'} bytes $value->{'bytes'}\n";
+  }
+}
+
+sub ClassEntriesEqual($$)
+{
+  my($hashone, $hashtwo) = @_;
+  
+  return ($hashone->{"count"} == $hashtwo->{"count"}) and ($hashone->{"bytes"} == $hashtwo->{"bytes"})
+}
+
+
+sub DumpHashDiffs($$)
+{
+  my($beforehash, $afterhash) = @_;
+  
+  # common keys
+  my(%changed_keys);
+  #my(%before_only);
+  #my(%after_only);
+  
+  my($name_width) = 50;
+  my($print_format) = "%10s %-${name_width}s %8d %8d\n";
+
+  TinderUtils::print_log sprintf "%10s %-${name_width}s %8s %8s\n", "", "Class", "Count", "Bytes";
+  TinderUtils::print_log "--------------------------------------------------------------------------------\n";
+  
+  my($key);
+  foreach $key (keys %{$beforehash})
+  {
+    my($beforevalue) = $beforehash->{$key};
+
+    if (exists $afterhash->{$key})
+    {
+      my($aftervalue) = $afterhash->{$key};
+      if (!ClassEntriesEqual($beforevalue, $aftervalue))
+      {
+        my($count_change) = $aftervalue->{"count"} - $beforevalue->{"count"};
+        my($bytes_change) = $aftervalue->{"bytes"} - $beforevalue->{"bytes"};
+        
+        if ($bytes_change > 0) {
+          TinderUtils::print_log sprintf $print_format, "Leaked", $key, $count_change, $bytes_change;
+        } else {
+          TinderUtils::print_log sprintf $print_format, "Freed", $key, $count_change, $bytes_change;
+        }
+      }
+    }
+    else
+    {
+      #$before_only{$key} = $beforevalue;
+      TinderUtils::print_log sprintf $print_format, "Freed", $key, $beforevalue->{'count'}, $beforevalue->{'bytes'};
+    }
+  }
+
+  # now look for things only in the after cache
+  foreach $key (keys %{$afterhash})
+  {
+    my($value) = $afterhash->{$key};
+
+    if (!exists $beforehash->{$key})
+    {
+      #$after_only{$key} = $value;
+      TinderUtils::print_log sprintf $print_format, "Leaked", $key, $value->{'count'}, $value->{'bytes'};
+    }
+  }
+ 
+  TinderUtils::print_log "--------------------------------------------------------------------------------\n";
+
+}
+
+
+sub ParseHeapOutput($$)
+{
+  my($beforedump, $afterdump) = @_;
+
+  TinderUtils::print_log "Before window open:\n";
+  my %before_data;
+  ReadHeapDumpToHash($beforedump, \%before_data);
+  
+  TinderUtils::print_log "After window open and close:\n";
+  my %after_data;
+  ReadHeapDumpToHash($afterdump, \%after_data);
+
+#  DumpHash(\%before_data);
+#  DumpHash(\%after_data);
+
+  TinderUtils::print_log "Open/close window leaks:\n";
+  DumpHashDiffs(\%before_data, \%after_data);
+
+}
+
+
+
+sub ChimeraWindowLeaksTest($$$$$)
+{
+  my ($test_name, $build_dir, $binary, $args, $timeout_secs) = @_;
+
+  my $close_window_script =<<END_SCRIPT;
+tell application "Navigator"
+  delay 5
+  close the first window
+end tell
+END_SCRIPT
+  
+  my $new_window_script =<<END_SCRIPT;
+tell application "Navigator"
+  Get URL "http://www.mozilla.org"
+  delay 5
+  close the first window
+end tell
+END_SCRIPT
+
+  TinderUtils::print_log "Window leak test\n";
+  
+  my($status) = 'success';
+
+  my $binary_basename = File::Basename::basename($binary);
+  my $binary_dir = File::Basename::dirname($binary);
+  my $binary_log = "$build_dir/$test_name.log";
+  my $cmd = $binary_basename;
+    
+  my $pid = TinderUtils::fork_and_log($build_dir, $binary_dir, $cmd, $binary_log);
+  print "got pid $pid\n";
+
+  # close the existing window 
+  system("echo '$close_window_script' | osascript");
+  # open and close a window to get to a stable point
+  system("echo '$new_window_script' | osascript");
+
+  # dump before data
+  my $beforefile = "/tmp/nav_before_heap.dat";
+  system("heap $pid > $beforefile");
+
+  # run the test
+  system("echo '$new_window_script' | osascript");
+
+  # dump after data
+  my $afterfile = "/tmp/nav_after_heap.dat";
+  system("heap $pid > $afterfile");
+  
+  my $result = TinderUtils::wait_for_pid($pid, $timeout_secs);
+  
+  ParseHeapOutput($beforefile, $afterfile);
+
+  return $status;
+}
+
+
 sub main {
   my ($mozilla_build_dir) = @_;
 
@@ -55,6 +270,7 @@ sub main {
   my $chimera_test8_test              = 1;
   my $chimera_startup_test            = 1;
   my $chimera_layout_performance_test = 1;
+  my $chimera_window_leaks_test       = 1;
 
   my $chimera_clean_profile = 1;
 
@@ -240,6 +456,15 @@ sub main {
                                             "$chimera_dir/build/Navigator.app/Contents/MacOS",
                                             "-url",
                                             "file:$chimera_dir/../../../startup-test.html");      
+  }
+  
+  if ($chimera_window_leaks_test and $post_status eq 'success') {
+        $post_status = ChimeraWindowLeaksTest("ChimeraWindowLeakTest",
+                                              "$chimera_dir/build/Navigator.app/Contents/MacOS/",
+                                              "./Navigator",
+                                              "-url \"http://www.mozilla.org\"",
+                                              20);
+
   }
   
   # Pass our status back to calling script.
