@@ -27,6 +27,7 @@
 
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?> 
 
 <!DOCTYPE window SYSTEM "chrome://editor/locale/EditorColorProperties.dtd">
 
@@ -41,12 +42,15 @@
   <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
   <broadcaster id="args" value=""/>
+  <popupset id="aTooltipSet" />
 
   <text class="label bold" value="&pageColors.label;"/>
   <box orient="vertical">
     <radiogroup orient="vertical" autostretch="never">
-      <radio id="DefaultColorsRadio" value="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"/>
-      <radio id="CustomColorsRadio" value="&customColorsRadio.label;" oncommand="UseCustomColors()"/>
+      <radio id="DefaultColorsRadio" value="&defaultColorsRadio.label;" oncommand="UseDefaultColors()"
+        tooltip="aTooltip"     tooltiptext="&defaultColorsRadio.tooltip;" />
+      <radio id="CustomColorsRadio" value="&customColorsRadio.label;" oncommand="UseCustomColors()"
+        tooltip="aTooltip"     tooltiptext="&customColorsRadio.tooltip;" />
     </radiogroup>
   </box>
   <spring class="spacer"/>
@@ -55,7 +59,8 @@
       <columns><column/><column/></columns>
       <rows>
         <row>
-          <text class="label" value="&normalText.label;"/>
+          <text class="label" value="&normalText.label;&colon.character;"
+              tooltip="aTooltip" tooltiptext="&normalText.tooltip;" />
           <menu class="colorpicker">
     	      <box>
               <spring id="textCW" class="color-well"/>
@@ -67,7 +72,8 @@
           </menu>
         </row>
         <row>
-        <text class="label" value="&linkText.label;"/>
+        <text class="label" value="&linkText.label;&colon.character;"
+              tooltip="aTooltip" tooltiptext="&linkText.tooltip;" />
           <menu class="colorpicker">
     	      <box>
               <spring id="linkCW" class="color-well"/>
@@ -79,7 +85,8 @@
           </menu>
         </row>
         <row>
-          <text class="label" value="&activeLinkText.label;"/>
+          <text class="label" value="&activeLinkText.label;&colon.character;"
+              tooltip="aTooltip" tooltiptext="&activeLinkText.tooltip;" />
           <menu class="colorpicker">
     	      <box>
               <spring id="activeCW" class="color-well"/>
@@ -91,7 +98,8 @@
           </menu>
         </row>
         <row>
-          <text class="label" value ="&visitedLinkText.label;"/>
+          <text class="label" value ="&visitedLinkText.label;&colon.character;"
+              tooltip="aTooltip" tooltiptext="&visitedLinkText.tooltip;" />
           <menu class="colorpicker">
     	      <box>
               <spring id="visitedCW" class="color-well"/>
@@ -103,13 +111,14 @@
           </menu>
         </row>
         <row>
-          <text class="label" value="&background.label;"/>
+          <text class="label" value="&background.label;"
+              tooltip="aTooltip" tooltiptext="&background.tooltip;" />
           <menu class="colorpicker">
     	      <box>
               <spring id="backgroundCW" class="color-well"/>
               <image class="popup-trigger"/>
             </box>
-    	      <menupopup>
+    	      <menupopup tooltip="aTooltip" tooltiptext="&background.tooltip;">
               <colorpicker id="backgroundCP" palettename="standard" onclick="GetColorAndUpdate('backgroundCP','backgroundCW',this);"/>
     	      </menupopup>
           </menu>
@@ -124,17 +133,20 @@
     </box>
   </box>
   <separator class="groove"/>
-  <checkbox id="BackgroundImageCheckbox" value="&backgroundImage.label;" oncommand="onBackgroundImageCheckbox()"/>
+  <checkbox id="BackgroundImageCheckbox" value="&backgroundImage.label;" oncommand="onBackgroundImageCheckbox()"
+       tooltip="aTooltip" tooltiptext="&backgroundImage.tooltip;" />
   <grid>
     <columns><column/><column/></columns>
     <rows>
       <row>
         <textfield id="BackgroundImageInput"/>
-        <button class="dialog" id="ChooseFile" flex="1"/>
+        <button class="dialog" id="ChooseFile" flex="1"
+              tooltip="aTooltip" tooltiptext="&ChooseFile.tooltip;" />
       </row>
       <row autostretch="never" valign="middle">
         <html class="label wrap" flex="1">&saveImageMsg.label;</html>
-        <button class="dialog" id="AdvancedEditButton" flex="1"/>
+        <button class="dialog" id="AdvancedEditButton" flex="1"
+              tooltip="aTooltip" tooltiptext="&AdvancedEditButton.tooltip;" />
       </row>
     </rows>
   </grid>
