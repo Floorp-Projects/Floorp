@@ -86,7 +86,7 @@ Contributors:
     </rows>
   </grid>
 
-  <spring class="spacer"/>
+  <spacer class="spacer"/>
 
   <groupbox>
   <caption label="&serverSettings.label;"/>
@@ -146,7 +146,7 @@ Contributors:
         <menuitem value="2" label="&modelDeleteImmediately.label;"/>
       </menupopup>
     </menulist>
-    <spring flex="1"/>
+    <spacer flex="1"/>
   </hbox>
   <separator class="thin"/>
 
@@ -161,7 +161,7 @@ Contributors:
 
   <hbox iscontrolcontainer="true" flex="1">
     <hbox flex="1">
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <button label="&advancedButton.label;"
               oncommand="openImapAdvanced(event);"
               wsm_persist="true" id="server.advancedbutton" 
@@ -222,7 +222,7 @@ Contributors:
   </vbox>
   </vbox>
   </groupbox>
-  <spring flex="100%"/>
+  <spacer flex="100%"/>
     <vbox>
     <text class="label" value="&localPath.label;" for="server.localPath"/>
     <textbox wsm_persist="true" id="server.localPath"

@@ -46,35 +46,35 @@ tabpanels.light {
   border-bottom: 1px solid ThreeDShadow;
 }
 
-/* tabs-spring ========================== */
+/* tabs-spacer ========================== */
 
 /* top tabs */
-tabbox[orient="vertical"] > tabs > .tabs-spring {
+tabbox[orient="vertical"] > tabs > .tabs-spacer {
   border-bottom: 1px solid ThreeDHighlight;
 }
 
 /* bottom tabs */
-tabbox[orient="vertical"] > tabpanels + tabs > .tabs-spring {
+tabbox[orient="vertical"] > tabpanels + tabs > .tabs-spacer {
   border-top: 1px solid ThreeDShadow !important;
   border-bottom: none;
 }
 
 /* left tabs */
-tabbox[orient="horizontal"] > tabs > .tabs-spring {
+tabbox[orient="horizontal"] > tabs > .tabs-spacer {
   border-right: 1px solid ThreeDHighlight;
 }
 
 /* right tabs */
-tabbox[orient="horizontal"] > tabpanels + tabs > .tabs-spring {
+tabbox[orient="horizontal"] > tabpanels + tabs > .tabs-spacer {
   border-left: 1px solid ThreeDShadow !important;
   border-right: none;
 }
 
 /*============ tab widget ============*/
 /* NOTE: there should be code in here for indenting the first tab
-   by two pixels, however, this needs to be done with a spring to
-   fill in the border, but current attempts to use said spring 
-   result in said spring not rendering.  Will revisit.  - JRH */
+   by two pixels, however, this needs to be done with a spacer to
+   fill in the border, but current attempts to use said spacer 
+   result in said spacer not rendering.  Will revisit.  - JRH */
    
 tab {
   border: none;

@@ -83,12 +83,12 @@
       </hbox>
     </vbox> 
     <vbox>
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <button id="up_button" class="up small" disabled="true"
               oncommand="MoveUp();"/>
       <button id="down_button" class="down small" disabled="true"
               oncommand="MoveDown();"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </vbox>
   </hbox>
 

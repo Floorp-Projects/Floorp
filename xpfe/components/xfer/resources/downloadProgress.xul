@@ -103,7 +103,7 @@ Contributor(s):
         </row>
         <separator class="thin"/>
         <row>
-          <spring/>
+          <spacer/>
           <progressmeter id="dialog.progress" mode="normal" value="0"/>
         </row>
       </rows>
@@ -112,9 +112,9 @@ Contributor(s):
     <separator/>
     
     <hbox id="CancelButton">
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <button class="dialog" id="cancel" label="&dialogCancel.label;" onclick="doCancelButton()"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </hbox>
 
 </window>

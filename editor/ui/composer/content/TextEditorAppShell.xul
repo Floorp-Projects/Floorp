@@ -122,7 +122,7 @@ editor.xul has these - do we need them?
       <!-- help menu filled from globalOverlay -->
       <menu accesskey="h" id="menu_Help"/>
 
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </menubar>
 
      <!-- toolbar filled out from editorOverlay -->
@@ -130,10 +130,10 @@ editor.xul has these - do we need them?
       <button id="newButton"/>
       <button id="openButton"/>
       <button id="saveButton"/>
-      <spring class="separator_small"/>
+      <spacer class="separator_small"/>
       <menubutton id="printButton"/>
       <button id="spellingButton"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </toolbar>    
   </toolbox>
 

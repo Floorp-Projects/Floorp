@@ -77,39 +77,39 @@
       </row>
       <row>
         <checkbox id="resizable" label="resizable"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <checkbox id="scrollbars" label="scrollbars"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <checkbox id="alwaysRaised" label="raised"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <checkbox id="alwaysLowered" label="lowered"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <checkbox id="menubar" label="menubar"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <checkbox id="toolbar" label="toolbar"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <checkbox id="status" label="status"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <checkbox id="location" label="location"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <checkbox id="chrome" label="chrome"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <checkbox id="dialog" label="dialog"/>
@@ -117,25 +117,25 @@
       </row>
       <row>
         <checkbox id="modal" label="modal"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <checkbox id="dependent" label="dependent"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <checkbox id="centerscreen" label="centered"/>
-        <spring/>
+        <spacer/>
       </row>
     </rows>
   </grid>
 </vbox>
-<spring style="width: 8px"/>
+<spacer style="width: 8px"/>
 <vbox>
   <hbox>
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <text value="Open"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
   </hbox>
   <grid>
     <columns><column/><column/></columns>

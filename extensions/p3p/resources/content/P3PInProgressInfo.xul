@@ -49,12 +49,12 @@
   <text id="currentURI" value=""/>
 
   <separator/>
-  <spring flex="1"/>
+  <spacer flex="1"/>
   <hbox autostretch="never">
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button id="refresh" value="&refreshButton.label;" onclick="doRefreshButton()"/>
     <button id="cancel"  value="&cancelButton.label;"  onclick="doCancelButton()"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
   </hbox>
 
 </window>

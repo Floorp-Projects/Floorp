@@ -9,9 +9,9 @@
   <binding id="nav-bar-inner">
     <content>
       <xul:vbox class="navbar-inner-groove-lft">
-        <xul:spring class="navbar-inner-groove-lft-top"/>
-        <xul:spring class="navbar-inner-groove-lft-mid" flex="1"/>
-        <xul:spring class="navbar-inner-groove-lft-btm"/>
+        <xul:spacer class="navbar-inner-groove-lft-top"/>
+        <xul:spacer class="navbar-inner-groove-lft-mid" flex="1"/>
+        <xul:spacer class="navbar-inner-groove-lft-btm"/>
       </xul:vbox>
       <xul:hbox flex="1" class="navbar-inner-border-outer">
         <xul:hbox flex="1" class="navbar-inner-border-middle">
@@ -21,9 +21,9 @@
         </xul:hbox>
       </xul:hbox>
       <xul:vbox class="navbar-inner-groove-rit">
-        <xul:spring class="navbar-inner-groove-rit-top"/>
-        <xul:spring class="navbar-inner-groove-rit-mid" flex="1"/>
-        <xul:spring class="navbar-inner-groove-rit-btm"/>
+        <xul:spacer class="navbar-inner-groove-rit-top"/>
+        <xul:spacer class="navbar-inner-groove-rit-mid" flex="1"/>
+        <xul:spacer class="navbar-inner-groove-rit-btm"/>
       </xul:vbox>
     </content>
   </binding>
@@ -31,21 +31,21 @@
   <binding id="urlbar-group">
     <content>
       <xul:vbox class="urlbar-lft">
-        <xul:spring class="urlbar-lft-top"/>
-        <xul:spring class="urlbar-lft-mid" flex="1"/>
-        <xul:spring class="urlbar-lft-btm"/>
+        <xul:spacer class="urlbar-lft-top"/>
+        <xul:spacer class="urlbar-lft-mid" flex="1"/>
+        <xul:spacer class="urlbar-lft-btm"/>
       </xul:vbox>
       <xul:vbox flex="1" class="urlbar-mid">
-        <xul:spring class="urlbar-mid-top"/>
+        <xul:spacer class="urlbar-mid-top"/>
         <xul:hbox class="urlbar-mid-mid" flex="1">
           <children/>
         </xul:hbox>
-        <xul:spring class="urlbar-mid-btm"/>
+        <xul:spacer class="urlbar-mid-btm"/>
       </xul:vbox>
       <xul:vbox class="urlbar-rit">
-        <xul:spring class="urlbar-rit-top"/>
-        <xul:spring class="urlbar-rit-mid" flex="1"/>
-        <xul:spring class="urlbar-rit-btm"/>
+        <xul:spacer class="urlbar-rit-top"/>
+        <xul:spacer class="urlbar-rit-mid" flex="1"/>
+        <xul:spacer class="urlbar-rit-btm"/>
       </xul:vbox>
     </content>
   </binding>

@@ -9,7 +9,7 @@
     <content>
       <xul:box class="box-smallheader-box toolbar-primary" align="center" flex="1">
         <xul:text class="box-smallheader-left" inherits="value=title"/>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
         <xul:text class="box-smallheader-right" inherits="value=description"/>
       </xul:box>
     </content>
@@ -30,7 +30,7 @@
         <xul:box align="center" class="box-header-text-box">
           <xul:text class="box-header-text" inherits="value"/>
         </xul:box>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
       </xul:box>
     </content>
   </binding>
@@ -39,7 +39,7 @@
     <content>
       <xul:box class="box-status-bg toolbar-standard" flex="1">
         <xul:text class="box-status-text" inherits="label"/>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
         <xul:text class="box-status-progress" inherits="value=progress"/>
       </xul:box>  
     </content>

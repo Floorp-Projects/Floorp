@@ -355,7 +355,7 @@
           <xul:box class="console-row-file" inherits="hidden=hideSource">
             <xul:text class="label" value="&errFile.label;"/>
             <xul:box class="console-error-source" inherits="url"/>
-            <spring flex="1"/>
+            <spacer flex="1"/>
             <xul:text class="label" value="&errLine.label;"/>
             <xul:text class="label" inherits="value=line" flex="1"/>
           </xul:box>
@@ -364,7 +364,7 @@
             <xul:box inherits="hidden=hideCaret">
               <xul:text class="monospace console-dots" inherits="value=errorDots"/>
               <xul:text class="monospace console-caret" inherits="value=errorCaret"/>
-              <xul:spring flex="1"/>
+              <xul:spacer flex="1"/>
             </xul:box>
           </xul:vbox>
         </xul:vbox>

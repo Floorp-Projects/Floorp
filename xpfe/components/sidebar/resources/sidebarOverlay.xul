@@ -53,9 +53,9 @@
   <vbox id="sidebar-box" persist="hidden width collapsed">
     <splitter id="sidebar-panels-splitter" collapse="after" persist="state"
       onmouseup="PersistHeight();" hidden="true">
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <grippy/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </splitter>
 
     <vbox id="sidebar-panels-splitter-box" flex="1" 
@@ -139,7 +139,7 @@
                     <button label="&sidebar.loading.stop.label;" hidden="true"
                       onclick="SidebarStopPanelLoad(this.parentNode.parentNode.parentNode.previousSibling);"/>
                   </hbox>
-                  <spring flex="100%"/>
+                  <spacer flex="100%"/>
                 </vbox>
                 <iframe class="iframe-panel" flex="1*" src="about:blank"
                   hidden="true" collapsed="true" content="?content"/>

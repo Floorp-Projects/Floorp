@@ -58,13 +58,13 @@
     </menupopup>
   </menulist>
 </groupbox>
-<spring flex="1" /></hbox>
+<spacer flex="1" /></hbox>
 <hbox><groupbox orient="horizontal"><caption label="stats" />
   <text value="tests run: "/><text id="tests_run" value="0" />
   <text value="  tests passed: "/><text id="tests_passed" value="0"/>
   <text value="  tests failed: "/><text id="tests_failed" value="0"/>
 </groupbox>  
-<spring flex="1" /></hbox>
+<spacer flex="1" /></hbox>
 
 <outliner id="out" flex="1">
   <outlinercol id="name" label="Name" flex="1"/>

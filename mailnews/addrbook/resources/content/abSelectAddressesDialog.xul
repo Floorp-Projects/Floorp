@@ -71,13 +71,13 @@ Rights Reserved.
           
           <!-- Box that holds (to,cc,bcc buttons) -->
           <hbox id="addToBucketButtonBox">
-            <spring flex="50%"/>
+            <spacer flex="50%"/>
             <button id="toButton" label="&toButton.label;" class="dialog" oncommand="SelectAddressToButton()"/> 
-            <spring class="middle-button-spring"/>
+            <spacer class="middle-button-spacer"/>
             <button id="ccButton" label="&ccButton.label;" class="dialog" oncommand="SelectAddressCcButton()"/> 
-            <spring class="middle-button-spring"/>
+            <spacer class="middle-button-spacer"/>
             <button id="bccButton" label="&bccButton.label;" class="dialog" oncommand="SelectAddressBccButton()"/>  
-            <spring flex="50%"/>
+            <spacer flex="50%"/>
           </hbox>
         </vbox>
         
@@ -99,16 +99,16 @@ Rights Reserved.
     <!-- Box with buttons on right edge of window -->
     <vbox id="rightColumnButtonBox">
       <vbox flex="50%">
-        <spring class="third-column-spring"/>
+        <spacer class="third-column-spacer"/>
         <button id="new" label="&newButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerNewButton.tooltip;" oncommand="AbNewCard()"/> 
-        <spring class="third-column-spring"/>
+        <spacer class="third-column-spacer"/>
         <button id="edit" label="&editButton.label;" class="dialog" tooltip="aTooltip" tooltiptext="&addressPickerEditButton.tooltip;" oncommand="AbEditCard()"/> 
-        <spring flex="100%"/>
+        <spacer flex="100%"/>
       </vbox>
       <vbox flex="50%">
-        <spring flex="50%"/>
+        <spacer flex="50%"/>
         <button id="remove" label="&removeButton.label;" class="dialog" oncommand="RemoveSelectedFromBucket()"/>  
-        <spring flex="50%"/>
+        <spacer flex="50%"/>
       </vbox>
     </vbox>
   </hbox>

@@ -58,18 +58,18 @@ var Listener = {
 ]]></script>
 
 <vbox flex="1">
-<spring flex="1"/>
+<spacer flex="1"/>
 <text value="Enter a state code:"/>
 <textbox id="statecode"/>
 <text value="Statename:"/>
 <text id="statename" value=" "/>
-<spring flex="1"/>
+<spacer flex="1"/>
 </vbox>
 
 <vbox>
-<spring flex="1"/>
+<spacer flex="1"/>
 <button label="Call Async." onclick="callAsync()"/>
 <button label="Call Sync." onclick="callSync()"/>
-<spring flex="1"/>
+<spacer flex="1"/>
 </vbox>
 </window>

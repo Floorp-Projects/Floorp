@@ -166,10 +166,10 @@
         </tree>
       
         <hbox>
-          <spring flex="1" />
+          <spacer flex="1" />
           <button class="button-slimline" id="saveQueryButton"
                   label="&savesearch.button.label;" oncommand="return saveSearch();"/>
-          <spring flex="1" />
+          <spacer flex="1" />
         </hbox>
       </vbox>
     

@@ -119,9 +119,9 @@
 
   <separator/>
   <hbox autostretch="never">
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button id="ok" value="&okButton.label;" default="true" align="center" onclick="doOKButton()"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
   </hbox>
 
 </window>

@@ -29,7 +29,7 @@
   <separator/>
   
   <hbox>
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button label="&advanced.label;" oncommand="onAdvanced(event);"
             wsm_persist="true" id="smtp.advancedbutton" 
             pref="true" preftype="bool" prefattribute="disabled" 

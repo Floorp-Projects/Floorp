@@ -63,13 +63,13 @@
           </treeitem>
         </treechildren>
       </tree>
-      <spring flex="5%"/>
+      <spacer flex="5%"/>
       <vbox>
         <button class="dialog push" id="pref:0:bool:smartupdate" label="&uninstallButton.label;" accesskey="&uninstallButton.accesskey;"/>
-        <spring flex="100%"/>
+        <spacer flex="100%"/>
       </vbox>
     </hbox>
-    <spring style="height: 28px;"/>
+    <spacer style="height: 28px;"/>
   </html:fieldset>
 -->
 </window>

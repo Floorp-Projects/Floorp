@@ -55,11 +55,11 @@ Rights Reserved.
     </menulist>
   </hbox>
 
-  <spring style="height:1em"/>
+  <spacer style="height:1em"/>
 
   <vbox id="editlist"/>
     
-  <spring style="height:1em"/>
+  <spacer style="height:1em"/>
     
   <hbox id="okCancelButtons"/>
 

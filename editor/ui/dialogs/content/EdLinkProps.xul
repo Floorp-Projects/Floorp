@@ -44,7 +44,7 @@
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
   <broadcaster id="args" value=""/>
-  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
 
@@ -62,22 +62,22 @@
       <hbox autostretch="never" valign="middle">
         <!-- from EdDialogOverlay.xul 'for' identifies the textfield to get URL from -->
         <checkbox id="MakeRelativeCheckbox" for="hrefInput"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <button class="dialog" id="ChooseFile"/>
       </hbox>
       <html class="wrap" flex="1" id="RemoveLinkMsg" style="margin-bottom: 7px">&RemoveLinkMsg.label;</html>
-      <spring class="smallspacer"/>
+      <spacer class="smallspacer"/>
       <hbox autostretch="never">
         <button class="dialog" id="MoreFewerButton" oncommand="onMoreFewer()" persist="more"/>
       </hbox>
-      <spring class="spacer"/>
+      <spacer class="spacer"/>
       <vbox id="MoreSection">
-        <spring class="spacer"/>
+        <spacer class="spacer"/>
         <text class="label" value="&NamedAnchorMsg.label;"/>
         <tree rows="4" class="list" id="NamedAnchorList" onselect="SelectNamedAnchor()">
           <treecolgroup><treecol flex="1"/></treecolgroup>
         </tree>
-        <spring class="spacer"/>
+        <spacer class="spacer"/>
         <text class="label" value="&HeadingMsg.label;"/>
         <tree rows="4" class="list" id="HeadingsList" onselect="SelectHeading()">
           <treecolgroup><treecol flex="1"/></treecolgroup>

@@ -126,7 +126,7 @@
     </menupopup>
   </menu>
 
-  <spring flex="1"/>
+  <spacer flex="1"/>
 </menubar>
 
 
@@ -136,7 +136,7 @@
   <button id="pasteButton" class="button-toolbar-2 top" command="Map:Paste"/>
   <button id="zoomInButton" class="button-toolbar-2 top" command="Map:ZoomIn"/>
   <button id="zoomOutButton" class="button-toolbar-2 top" command="Map:ZoomOut"/>
-  <spring flex="1"/>
+  <spacer flex="1"/>
 </toolbar> 
 </toolbox>
 
@@ -148,7 +148,7 @@
     <button id="rectButton" class="tool" oncommand="changeTool(event, 'rect');"/>
     <button id="cirButton" class="tool" oncommand="changeTool(event, 'cir');"/>
     <button id="polyButton" class="tool" oncommand="changeTool(event, 'poly');"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
   </vbox>
   </toolbar>
 

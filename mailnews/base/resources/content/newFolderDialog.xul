@@ -44,7 +44,7 @@
 
   <vbox>
 
-    <spring flex="1"/>
+    <spacer flex="1"/>
 
     <text value="&name.label;" class="label" accesskey="&name.accesskey;" for="name"/>
     <textbox tabindex="0" id="name" oninput="doEnabling();"/>
@@ -55,7 +55,7 @@
 
     <hbox>
       <menu id="msgNewFolderPicker" oncommand="doEnabling();" crop="right" flex="1"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </hbox>
 
     <vbox hidden="true" id="newFolderTypeBox">
@@ -70,12 +70,12 @@
       <radiogroup id="folderGroup">
         <radio group="folderGroup" oncommand="onFoldersOnly();" label="&foldersOnly.label;"/>
         <radio group="folderGroup" oncommand="onMessagesOnly();" label="&messagesOnly.label;" checked="true"/>
-        <spring flex="100%"/>
+        <spacer flex="100%"/>
       </radiogroup>
 
     </vbox>
 
-    <spring flex="1"/>
+    <spacer flex="1"/>
 
     <separator/>
 

@@ -250,7 +250,7 @@
         <button id="customizebutton" value="&customize.label;"
                 accesskey="&custom.accesskey;"
                 oncommand="doCustomize();"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
       </hbox>
     </radiogroup>
   </groupbox>
@@ -461,7 +461,7 @@
             <vbox style="width:100px">>
               <text class="header" value="physical"/>
               <html>&physical.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -479,7 +479,7 @@
                         <checkbox id="P3PPhysicalHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -493,7 +493,7 @@
                         <checkbox id="P3PPhysicalIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -512,7 +512,7 @@
                         <checkbox id="P3PPhysicalIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -526,7 +526,7 @@
                         <checkbox id="P3PPhysicalTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.physical.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -553,7 +553,7 @@
             <vbox style="width:100px">
               <text class="header" value="location"/>
               <html>&location.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -571,7 +571,7 @@
                         <checkbox id="P3PLocationHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.location.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -585,7 +585,7 @@
                         <checkbox id="P3PLocationIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.location.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -604,7 +604,7 @@
                         <checkbox id="P3PLocationIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.location.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -618,7 +618,7 @@
                         <checkbox id="P3PLocationTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.location.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -651,7 +651,7 @@
             <vbox style="width:100px">
               <text class="header" value="online"/>
               <html>&online.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -669,7 +669,7 @@
                         <checkbox id="P3POnlineHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.online.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -683,7 +683,7 @@
                         <checkbox id="P3POnlineIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.online.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -702,7 +702,7 @@
                         <checkbox id="P3POnlineIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.online.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -716,7 +716,7 @@
                         <checkbox id="P3POnlineTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.online.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -749,7 +749,7 @@
             <vbox style="width:100px">
               <text class="header" value="computer"/>
               <html>&computer.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -767,7 +767,7 @@
                         <checkbox id="P3PComputerHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -781,7 +781,7 @@
                         <checkbox id="P3PComputerIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -800,7 +800,7 @@
                         <checkbox id="P3PComputerIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -814,7 +814,7 @@
                         <checkbox id="P3PComputerTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.computer.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -841,7 +841,7 @@
             <vbox style="width:100px">
               <text class="header" value="state"/>
               <html>&state.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -859,7 +859,7 @@
                         <checkbox id="P3PStateHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.state.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -873,7 +873,7 @@
                         <checkbox id="P3PStateIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.state.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -892,7 +892,7 @@
                         <checkbox id="P3PStateIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.state.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -906,7 +906,7 @@
                         <checkbox id="P3PStateTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.state.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -933,7 +933,7 @@
             <vbox style="width:100px">
               <text class="header" value="uniqueid"/>
               <html>&uniqueid.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -951,7 +951,7 @@
                         <checkbox id="P3PUniqueIDHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -965,7 +965,7 @@
                         <checkbox id="P3PUniqueIDIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -984,7 +984,7 @@
                         <checkbox id="P3PUniqueIDIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -998,7 +998,7 @@
                         <checkbox id="P3PUniqueIDTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.uniqueid.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1025,7 +1025,7 @@
             <vbox style="width:100px">
               <text class="header" value="government"/>
               <html>&government.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -1043,7 +1043,7 @@
                         <checkbox id="P3PGovernmentHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.government.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1057,7 +1057,7 @@
                         <checkbox id="P3PGovernmentIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.government.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1076,7 +1076,7 @@
                         <checkbox id="P3PGovernmentIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.government.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1090,7 +1090,7 @@
                         <checkbox id="P3PGovernmentTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.government.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1123,7 +1123,7 @@
             <vbox style="width:100px">
               <text class="header" value="purchase"/>
               <html>&purchase.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -1141,7 +1141,7 @@
                         <checkbox id="P3PPurchaseHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1155,7 +1155,7 @@
                         <checkbox id="P3PPurchaseIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1174,7 +1174,7 @@
                         <checkbox id="P3PPurchaseIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1188,7 +1188,7 @@
                         <checkbox id="P3PPurchaseTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.purchase.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1221,7 +1221,7 @@
             <vbox style="width:100px">
               <text class="header" value="financial"/>
               <html>&financial.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -1239,7 +1239,7 @@
                         <checkbox id="P3PFinancialHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1253,7 +1253,7 @@
                         <checkbox id="P3PFinancialIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1272,7 +1272,7 @@
                         <checkbox id="P3PFinancialIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1286,7 +1286,7 @@
                         <checkbox id="P3PFinancialTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.financial.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1313,7 +1313,7 @@
             <vbox style="width:100px">
               <text class="header" value="health"/>
               <html>&health.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -1331,7 +1331,7 @@
                         <checkbox id="P3PHealthHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.health.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1345,7 +1345,7 @@
                         <checkbox id="P3PHealthIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.health.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1364,7 +1364,7 @@
                         <checkbox id="P3PHealthIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.health.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1378,7 +1378,7 @@
                         <checkbox id="P3PHealthTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.health.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1405,7 +1405,7 @@
             <vbox style="width:100px">
               <text class="header" value="political"/>
               <html>&political.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -1423,7 +1423,7 @@
                         <checkbox id="P3PPoliticalHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.political.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1437,7 +1437,7 @@
                         <checkbox id="P3PPoliticalIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.political.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1456,7 +1456,7 @@
                         <checkbox id="P3PPoliticalIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.political.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1470,7 +1470,7 @@
                         <checkbox id="P3PPoliticalTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.political.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1503,7 +1503,7 @@
             <vbox style="width:100px">
               <text class="header" value="navigation"/>
               <html>&navigation.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -1521,7 +1521,7 @@
                         <checkbox id="P3PNavigationHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1535,7 +1535,7 @@
                         <checkbox id="P3PNavigationIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1554,7 +1554,7 @@
                         <checkbox id="P3PNavigationIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1568,7 +1568,7 @@
                         <checkbox id="P3PNavigationTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.navigation.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1595,7 +1595,7 @@
             <vbox style="width:100px">
               <text class="header" value="interactive"/>
               <html>&interactive.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -1613,7 +1613,7 @@
                         <checkbox id="P3PInteractiveHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1627,7 +1627,7 @@
                         <checkbox id="P3PInteractiveIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1646,7 +1646,7 @@
                         <checkbox id="P3PInteractiveIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1660,7 +1660,7 @@
                         <checkbox id="P3PInteractiveTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.interactive.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1693,7 +1693,7 @@
             <vbox style="width:100px">
               <text class="header" value="demographic"/>
               <html>&demographic.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -1711,7 +1711,7 @@
                         <checkbox id="P3PDemographicHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1725,7 +1725,7 @@
                         <checkbox id="P3PDemographicIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1744,7 +1744,7 @@
                         <checkbox id="P3PDemographicIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1758,7 +1758,7 @@
                         <checkbox id="P3PDemographicTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.demographic.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1785,7 +1785,7 @@
             <vbox style="width:100px">
               <text class="header" value="preference"/>
               <html>&preference.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -1803,7 +1803,7 @@
                         <checkbox id="P3PPreferenceHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1817,7 +1817,7 @@
                         <checkbox id="P3PPreferenceIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1836,7 +1836,7 @@
                         <checkbox id="P3PPreferenceIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1850,7 +1850,7 @@
                         <checkbox id="P3PPreferenceTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.preference.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1883,7 +1883,7 @@
             <vbox style="width:100px">
               <text class="header" value="content"/>
               <html>&content.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -1901,7 +1901,7 @@
                         <checkbox id="P3PContentHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.content.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1915,7 +1915,7 @@
                         <checkbox id="P3PContentIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.content.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1934,7 +1934,7 @@
                         <checkbox id="P3PContentIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.content.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -1948,7 +1948,7 @@
                         <checkbox id="P3PContentTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.content.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -1981,7 +1981,7 @@
             <vbox style="width:100px">
               <text class="header" value="other"/>
               <html>&other.tip;</html>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <groupbox orient="horizontal">
                 <caption><text value="&purpose.label;" tooltip="purposetip"/></caption>
                 <grid>
@@ -1999,7 +1999,7 @@
                         <checkbox id="P3POtherHistorical" value="historical" tooltip="historicaltip"
                                   pref="true" preftype="bool" prefstring="P3P.other.historical" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -2013,7 +2013,7 @@
                         <checkbox id="P3POtherIndividual-analysis" value="individual-analysis" tooltip="individual-analysistip"
                                   pref="true" preftype="bool" prefstring="P3P.other.individual-analysis" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 
@@ -2032,7 +2032,7 @@
                         <checkbox id="P3POtherIndividual-decision" value="individual-decision" tooltip="individual-decisiontip"
                                   pref="true" preftype="bool" prefstring="P3P.other.individual-decision" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
 
                       <groupbox orient="vertical">
@@ -2046,7 +2046,7 @@
                         <checkbox id="P3POtherTelemarketing" value="telemarketing" tooltip="telemarketingtip"
                                   pref="true" preftype="bool" prefstring="P3P.other.telemarketing" prefattribute="checked"
                                   />
-                        <spring flex="1"/>
+                        <spacer flex="1"/>
                       </groupbox>
                     </row>
 

@@ -7,15 +7,15 @@
   <binding id="sidebar-splitter" extends="xul:splitter">
     <content>
       <xul:vbox class="sidebar-splitter-topright-cap">
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
       </xul:vbox>
-      <xul:spring flex="1"/>
+      <xul:spacer flex="1"/>
       <xul:hbox>
         <children/>
       </xul:hbox>
-      <xul:spring flex="1"/>
+      <xul:spacer flex="1"/>
       <xul:vbox class="sidebar-splitter-bottomright-cap">
-        <xul:spring flex="100%"/>
+        <xul:spacer flex="100%"/>
       </xul:vbox>
     </content>
   </binding>

@@ -68,17 +68,17 @@
       <row align="center">
         <text class="label" value="&name.label;" accesskey="&name.accesskey;" for="name"/>
         <textbox id="name"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <separator class="thin"/>
         <separator class="thin"/>
-        <spring/>
+        <spacer/>
       </row>
       <row align="center">
         <text class="label" value="&url.label;" accesskey="&url.accesskey;" for="url"/>
         <textbox id="url" oninput="onLocationInput();"/>
-        <spring/>
+        <spacer/>
       </row>
     </rows>
   </grid>

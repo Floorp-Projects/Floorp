@@ -55,7 +55,7 @@ thumb {
   height: 14px;
 }
 
-.thumb-horz-spring-left {
+.thumb-horz-spacer-left {
   width: 3px;
   background: url("chrome://global/skin/scrollbar/thumb-hrz-lft.gif") no-repeat;
 }
@@ -64,7 +64,7 @@ thumb {
   background: url("chrome://global/skin/scrollbar/thumb-hrz-mid.gif") repeat-x;
 }
 
-.thumb-horz-spring-right {
+.thumb-horz-spacer-right {
   width: 3px;
   background: url("chrome://global/skin/scrollbar/thumb-hrz-rit.gif") no-repeat;
 }
@@ -77,7 +77,7 @@ thumb {
 
 /* ..... active state ..... */
 
-thumb:active > .thumb-horz-spring-left {
+thumb:active > .thumb-horz-spacer-left {
   background: url("chrome://global/skin/scrollbar/thumb-hrz-act-lft-act.gif") no-repeat;
 }
 
@@ -85,7 +85,7 @@ thumb:active > .thumb-horz-box-middle {
   background: url("chrome://global/skin/scrollbar/thumb-hrz-mid-act.gif") repeat-x;
 }
 
-thumb:active > .thumb-horz-spring-right {
+thumb:active > .thumb-horz-spacer-right {
   background: url("chrome://global/skin/scrollbar/thumb-hrz-rit-act.gif") no-repeat;
 }
 
@@ -99,7 +99,7 @@ thumb[orient="vertical"] {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#thumb-vertical");
 }
 
-.thumb-vert-spring-top {
+.thumb-vert-spacer-top {
   background: url("chrome://global/skin/scrollbar/thumb-vrt-top.gif") no-repeat;
   height: 3px;
   width: 14px;
@@ -110,7 +110,7 @@ thumb[orient="vertical"] {
   width: 14px;
 }
 
-.thumb-vert-spring-bottom {
+.thumb-vert-spacer-bottom {
   background: url("chrome://global/skin/scrollbar/thumb-vrt-btm.gif") no-repeat;
   height: 3px;
   width: 14px;
@@ -124,7 +124,7 @@ thumb[orient="vertical"] {
 
 /* ..... active state ..... */
 
-thumb:active > .thumb-vert-spring-top {
+thumb:active > .thumb-vert-spacer-top {
   background: url("chrome://global/skin/scrollbar/thumb-vrt-top-act.gif") no-repeat;
 }
 
@@ -132,7 +132,7 @@ thumb:active > .thumb-vert-box-middle {
   background: url("chrome://global/skin/scrollbar/thumb-vrt-mid-act.gif") repeat-y;
 }
 
-thumb:active > .thumb-vert-spring-bottom {
+thumb:active > .thumb-vert-spacer-bottom {
   background: url("chrome://global/skin/scrollbar/thumb-vrt-btm-act.gif") no-repeat;
 }
 

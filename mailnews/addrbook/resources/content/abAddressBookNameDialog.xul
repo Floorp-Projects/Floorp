@@ -39,13 +39,13 @@ Rights Reserved.
 
 	<vbox style="width:36em; min-height:12em">
 		
-		<spring flex="1"/>
+		<spacer flex="1"/>
 
 		<text for="name" style="margin-bottom:.3em" value="&name.label;"/>
 		
 		<textbox tabindex="0" id="name" style="width: 100%"/>
 		
-		<spring flex="1"/>
+		<spacer flex="1"/>
 		
 		<hbox id="okCancelButtons"/>
 		

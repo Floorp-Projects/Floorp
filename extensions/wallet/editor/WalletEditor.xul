@@ -41,12 +41,12 @@
   <keyset id="dialogKeys"/>
            
     <vbox id="system" flex="100%">
-      <spring style="height: 7px;"/>
+      <spacer style="height: 7px;"/>
       <text class="label" value="&div.walletdataonsystem.label;"/>
       <separator orient="horizontal" class="groove"/>
-      <spring style="height: 10px;"/>
+      <spacer style="height: 10px;"/>
       <hbox id="system1" flex="100%">
-        <spring style="width: 7px;"/>
+        <spacer style="width: 7px;"/>
         <vbox>
           <text class="label" value="&treehead.schemaname.label;"/>
           <tree multiple="true" id="schematree" class="inset"
@@ -61,7 +61,7 @@
             <button id="addSchema" class="dialog push" disabled="false" label="&button.addschema.label;" oncommand="AddSchema();"/>
           </hbox>
         </vbox>
-        <spring style="width: 7px;"/>
+        <spacer style="width: 7px;"/>
         <vbox>
           <text class="label" id="entrytext" value2="&treehead.entries.label;" value3="&treehead.entries1.label;"/>
           <tree multiple="true" id="entrytree" class="inset"
@@ -71,7 +71,7 @@
             </treecolgroup>
             <treechildren flex="1" id="entrieslist"/>
           </tree>
-          <spring style="height: 7px;"/>
+          <spacer style="height: 7px;"/>
           <text class="label" id="synonymtext" value2="&treehead.synonyms.label;" value3="&treehead.synonymsoff.label;" value4="&treehead.synonyms1.label;"/>
           <tree multiple="true" id="synonymtree" class="inset"
             style="height: 113px;" orient="vertical" onclick="SynonymSelected();">
@@ -81,26 +81,26 @@
             <treechildren flex="1" id="synonymslist"/>
           </tree>
         </vbox>
-        <spring style="width: 7px;"/>
+        <spacer style="width: 7px;"/>
         <vbox>
-          <spring style="height: 15px;"/>
+          <spacer style="height: 15px;"/>
           <button id="removeEntry" class="dialog push" disabled="true" label="&button.remove.label;" oncommand="DeleteEntry();"/>
           <button id="addEntry" class="dialog push" disabled="false" label="&button.addentry.label;" oncommand="AddEntry();"/>
-          <spring style="height: 93px;"/>
+          <spacer style="height: 93px;"/>
           <button id="removeSynonym" class="dialog push" disabled="true" label="&button.remove.label;" oncommand="DeleteSynonym();"/>
           <button id="addSynonym" class="dialog push" disabled="false" label="&button.addsynonym.label;" oncommand="AddSynonym();"/>
         </vbox>
-        <spring style="width: 7px;"/>
+        <spacer style="width: 7px;"/>
       </hbox>
     </vbox>
     <separator orient="horizontal" class="groove"/>
 
   <!-- from dialogOverlay.xul -->
-  <spring style="height: 5px;"/>
+  <spacer style="height: 5px;"/>
   <hbox>
-    <spring flex="100%"/>
+    <spacer flex="100%"/>
     <hbox id="okCancelButtons"/>
   </hbox>
-  <spring style="height: 5px;"/>
+  <spacer style="height: 5px;"/>
 
 </window>

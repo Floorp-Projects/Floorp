@@ -9,7 +9,7 @@
       <xul:hbox class="box-smallheader-text-container" align="center" flex="1">
         <children/>
         <xul:text class="box-smallheader-left" inherits="value=title"/>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
         <xul:text class="box-smallheader-right" inherits="value=description"/>
       </xul:hbox>
     </content>
@@ -19,13 +19,13 @@
     <content>
       <xul:hbox class="largeheader-box" flex="1">
         <xul:vbox class="largeheader-text-container">
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
           <xul:text class="largeheader-header-text" inherits="value=title" crop="right"/>
           <xul:html class="largeheader-desc-text" inherits="value=description"/>
           <children/>
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
         </xul:vbox>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
         <xul:hbox class="largeheader-icon-container" align="center">
           <xul:image class="largeheader-icon" inherits="src"/>
         </xul:hbox>

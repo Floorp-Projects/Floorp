@@ -9,7 +9,7 @@
       <xul:hbox class="tabcontainer">
         <children/>
       </xul:hbox>
-      <xul:spring class="tabs-spring" flex="1"/>
+      <xul:spacer class="tabs-spacer" flex="1"/>
     </content>
   </binding>
 

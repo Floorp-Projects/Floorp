@@ -41,7 +41,7 @@
 
   <keyset id="dialogKeys"/>
   <broadcaster id="args" value=""/>
-  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
 
   <groupbox orient="vertical" flex="1"><caption label="&ListType.label;"/>
     <menulist id="ListType" oncommand="SelectListType()">
@@ -57,18 +57,18 @@
       <radio group="RadioGroup" id="ChangeSelected" label="&changeSelectedRadio.label;"/>
     </radiogroup>
   </groupbox>
-  <spring class="spacer"/>
+  <spacer class="spacer"/>
 
   <!-- message text and list items are set in JS 
        text value should be identical to string with id=BulletStyle in editor.properties 
   -->
   <groupbox orient="vertical" flex="1"><caption id="BulletStyleLabel" label="&bulletStyle.label;"/>
     <menulist class="MinWidth10em" id="BulletStyle" oncommand="SelectBulletStyle()"/>
-    <spring class="spacer"/>
+    <spacer class="spacer"/>
     <hbox>
       <text class="label" id="StartingNumberLabel" value="&startingNumber.label;"/>
       <textbox class="narrow" id="StartingNumber" oninput="forceInteger(this.id)"/>
-      <spring/>
+      <spacer/>
     </hbox>
     <html id="StartExample" class="wrap" flex="1" style="width: 1em">&startingHelp.label;</html>
   </groupbox>

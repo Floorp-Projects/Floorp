@@ -56,7 +56,7 @@ Rights Reserved.
 
   </hbox>
   
-  <spring style="height:1em"/>
+  <spacer style="height:1em"/>
     
   <vbox id="editcard"/>
   

@@ -80,7 +80,7 @@
             oncommand="gBookmarksShell.addBookmark();"/>
     <button class="button-toolbar" label="&command.manageBookmarks.label;"
             oncommand="gBookmarksShell.manageBookmarks();"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <toolbarseparator/>
     <button class="button-toolbar" label="&command.findBookmarks.label;"
             oncommand="gBookmarksShell.findInBookmarks();"/>

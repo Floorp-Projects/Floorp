@@ -31,7 +31,7 @@
 
   <hbox class="header">  
     <button class="left-header-text" label="&lHeader;"/>
-    <spring class="header-spring" flex="1"/>
+    <spacer class="header-spacer" flex="1"/>
     <button class="right-header-text" label="&rHeader;"/>
   </hbox>
 

@@ -43,14 +43,14 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdNamedAnchorProps.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
 
-  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
 
   <text class="label" align="left" for="nameInput" value="&anchorNameEditField.label;"/>
   <textbox class="MinWidth20em" id="nameInput" oninput="ChangeName()" 
              tooltip="aTooltip" tooltiptext="&nameInput.tooltip;"/>
-  <spring class="spacer"/>
+  <spacer class="spacer"/>
   <!-- from EdDialogOverlay -->
   <vbox id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->

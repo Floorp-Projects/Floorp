@@ -20,13 +20,13 @@
 
 <keyset id="dialogKeys"/>
 
-    <spring style="height:0.5em"/>
+    <spacer style="height:0.5em"/>
     <hbox>
-        <spring style="width:10px"/>
+        <spacer style="width:10px"/>
         <vbox id="askImageBox">
             <image id="convertDefault" />
         </vbox>
-        <spring style="width:10px"/>
+        <spacer style="width:10px"/>
         <vbox flex="1">
             <html>&recipient.label;</html>
             <deck id="mailSendFormatExplanation">
@@ -36,7 +36,7 @@
                 <vbox><html>&convertibleNo.label;</html></vbox>
             </deck>
             <html>&question.label;</html>
-            <spring style="height:1em"/>
+            <spacer style="height:1em"/>
 
       <radiogroup id="mailDefaultHTMLAction" orient="vertical" autostretch="never">
          <hbox>
@@ -55,10 +55,10 @@
       </radiogroup>
 
         </vbox>
-        <spring style="width:10px"/>
+        <spacer style="width:10px"/>
     </hbox>
 
-    <spring style="height:1em"/>
+    <spacer style="height:1em"/>
   <hbox id="okCancelButtons"
         button1Label="&send.label;"
         button2Label="&cancel.label;"
@@ -70,6 +70,6 @@
         plainTextOnlyRecommendedLabel="&plainTextOnlyRecommended.label;"
         htmlOnlyRecommendedLabel="&htmlOnlyRecommended.label;"
   />
-    <spring style="height:1em" />
+    <spacer style="height:1em" />
 
 </window>

@@ -29,27 +29,27 @@
              xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <hbox id="okCancelButtons">
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button class="right exit-dialog" id="ok" label="&okButton.label;" default="true" oncommand="doOKButton();"/> 
     <button class="exit-dialog" id="Button2" label="&cancelButton.label;" collapsed="true" oncommand="doButton2();"/> 
     <button class="exit-dialog" id="Button3" label="&cancelButton.label;" collapsed="true" oncommand="doButton3();"/> 
     <button class="exit-dialog" id="cancel" label="&cancelButton.label;" oncommand="doCancelButton();"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
   </hbox>
 
   <hbox id="okCancelHelpButtons">
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button class="right exit-dialog" id="ok" label="&okButton.label;" default="true" oncommand="doOKButton();"/>
     <button class="exit-dialog" id="Button2" label="&cancelButton.label;" collapsed="true" oncommand="doButton2();"/>
     <button class="exit-dialog" id="Button3" label="&cancelButton.label;" collapsed="true" oncommand="doButton3();"/>
     <button class="exit-dialog" id="cancel" label="&cancelButton.label;" oncommand="doCancelButton();"/>
     <button class="exit-dialog" id="help" label="&helpButton.label;" oncommand="doHelpButton();"/>
-    <spring flex="1"/>
+    <spacer flex="1"/>
   </hbox>
 
 
   <hbox id="okCancelButtonsRight">
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button class="right exit-dialog" id="ok" label="&okButton.label;" default="true" oncommand="doOKButton();"/> 
     <button class="exit-dialog" id="Button2" label="&cancelButton.label;" collapsed="true" oncommand="doButton2();"/> 
     <button class="exit-dialog" id="Button3" label="&cancelButton.label;" collapsed="true" oncommand="doButton3();"/> 
@@ -57,7 +57,7 @@
   </hbox>
   
   <hbox id="okCancelHelpButtonsRight">
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button class="right exit-dialog" id="ok" label="&okButton.label;" default="true" oncommand="doOKButton();"/>
     <button class="exit-dialog" id="Button2" label="&cancelButton.label;" collapsed="true" oncommand="doButton2();"/>
     <button class="exit-dialog" id="Button3" label="&cancelButton.label;" collapsed="true" oncommand="doButton3();"/>

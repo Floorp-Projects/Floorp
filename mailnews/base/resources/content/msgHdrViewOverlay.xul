@@ -92,7 +92,7 @@ Rights Reserved.
       <hbox class="headerValueBox" align="center">
         <image id="toggleHeaderView" class="expandHeaderViewButton" 
           onclick="ToggleHeaderView();"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <text class="headerdisplayname" value="&subjectField.label;"/>
       </hbox>
         <html id="expandedsubjectValue" class="headerValue subjectvalue" flex="1">*</html>
@@ -173,9 +173,9 @@ Rights Reserved.
    </vbox>
 
    <vbox id="editMessageBox" class="header-part1" collapsed="true">
-    <spring class="buttonSpacer"/> 
+    <spacer class="buttonSpacer"/> 
     <button id="editMessageButton" label="&editMessage.label;" orient="right" onclick="MsgComposeDraftMessage()"/>
-    <spring class="buttonSpacer"/> 
+    <spacer class="buttonSpacer"/> 
    </vbox> 
 
    <hbox id="expandedAttachmentBox" class="header-part1">

@@ -6,7 +6,7 @@
 
   <binding id="stringbundleset" extends="xul:box"/>
 
-  <binding id="stringbundle" extends="xul:spring">
+  <binding id="stringbundle" extends="xul:spacer">
     <implementation name="XStringBundle">
 
       <method name="getString">

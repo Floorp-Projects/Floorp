@@ -370,7 +370,7 @@
       <xul:vbox class="wizard-buttons-box-1" flex="1">
         <xul:separator class="wizard-buttons-separator groove"/>
         <xul:hbox class="wizard-buttons-box-2">
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
           <xul:button class="wizard-button" wizardbutton="back"/>
           <xul:deck class="wizard-next-deck" anonid="WizardButtonDeck">
             <xul:button class="wizard-button" wizardbutton="finish" default="true"/> 
@@ -409,7 +409,7 @@
           </xul:vbox>
         </xul:vbox>
         <xul:hbox class="wizard-header-box-icon">
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
           <xul:image class="wizard-header-icon" inherits="src=iconsrc"/>
         </xul:hbox>
       </xul:stack>
@@ -420,13 +420,13 @@
     <content>
       <xul:vbox flex="1">
         <xul:hbox class="wizard-buttons-top" inherits="hidden=hidetoprow">
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
           <xul:button class="wizard-button" wizardbutton="cancel"/> 
           <xul:button class="wizard-button" wizardbutton="finish" default="true"/> 
         </xul:hbox>
         <xul:separator class="wizard-buttons-separator groove"/>
         <xul:hbox class="wizard-buttons-btm">
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
           <xul:button class="wizard-button wizard-nav-button" wizardbutton="back"/>
           <xul:hbox class="wizard-label-box" align="center">
             <xul:text class="wizard-page-label" inherits="value=pagestep"/>

@@ -125,10 +125,10 @@ Contributor(s):  Håkan Waara <hwaara@chello.se>
           <button id="newButton" label="&newButton.label;" oncommand="onNewFilter();"/>
           <button id="editButton" label="&editButton.label;" oncommand="onEditFilter();"/>
           <button id="deleteButton" label="&deleteButton.label;" oncommand="onDeleteFilter();"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <button id="reorderUpButton" label="&reorderUpButton.label;" oncommand="onUp(event);"/>
           <button id="reorderDownButton" label="&reorderDownButton.label;" oncommand="onDown(event);"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
         </vbox>
       </row>
     </rows>

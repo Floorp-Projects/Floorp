@@ -35,7 +35,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdDictionary.js"/>
   
   <broadcaster id="args" value=""/>
-  <spring id="location" offsetX="10" offsetY="10" persist="offsetX offsetY"/>
+  <spacer id="location" offsetX="10" offsetY="10" persist="offsetX offsetY"/>
   <keyset id="keys">
     <key keycode="VK_ENTER"  oncommand="Close()"/>
     <key keycode="VK_RETURN" oncommand="Close()"/>
@@ -47,7 +47,7 @@
     <rows>
       <row>
         <text class="label" value="&wordEditField.label;"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <textbox id="WordInput" flex="1"/>
@@ -55,7 +55,7 @@
       </row>
       <row>
         <text class="label" value="&DictionaryList.label;"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <tree rows="8" class="list" id="DictionaryList" flex="1">
@@ -63,10 +63,10 @@
         </tree>
         <vbox flex="1">
           <button class="dialog"  id="ReplaceWord" oncommand="ReplaceWord()" label="&ReplaceButton.label;"/>
-          <spring class="spacer"/>
+          <spacer class="spacer"/>
           <button class="dialog"  id="RemoveWord" oncommand="RemoveWord()" label="&RemoveButton.label;"/>
-          <spring class="spacer"/>
-          <spring flex="1"/>
+          <spacer class="spacer"/>
+          <spacer flex="1"/>
           <button class="exit-dialog" id="close" label="&CloseButton.label;" default="true" oncommand="Close();"/>  
         </vbox>
       </row>

@@ -382,7 +382,7 @@
                id="button-save" label="&saveButton.label;" 
                tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" 
                command="cmd_saveDefault"/>
-       <spring flex="1"/>
+       <spacer flex="1"/>
        <hbox id="throbber-box" autostretch="never">
          <button id="navigator-throbber" 
                oncommand="goClickThrobber('compose.throbber.url')" tooltip="aTooltip" tooltiptext="&throbber.tooltip;">
@@ -450,7 +450,7 @@
       <menubutton id="AlignPopupButton"/>
       <menubutton id="InsertPopupButton"/>
       <menubutton id="smileButtonMenu" padwithspace="true"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </toolbar>
   </toolbox>
 

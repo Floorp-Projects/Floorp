@@ -65,11 +65,11 @@
   <iframe id="maintext" class="output-container" type="content" flex="1"/>
 
   <!-- from dialogOverlay.xul -->
-  <spring style="height: 5px;"/>
+  <spacer style="height: 5px;"/>
   <hbox>
-    <spring flex="100%"/>
+    <spacer flex="100%"/>
    <button class="right dialog" id="ok" label="&ok;" default="true" oncommand="doOKButton();"/> 
   </hbox>
-  <spring style="height: 5px;"/>
+  <spacer style="height: 5px;"/>
 
 </window>

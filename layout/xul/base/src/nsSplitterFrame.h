@@ -29,14 +29,13 @@
 
 
 #include "nsBoxFrame.h"
-#include "nsIAnonymousContentCreator.h"
 
 class nsISupportsArray;
 class nsSplitterFrameInner;
 
 nsresult NS_NewSplitterFrame(nsIPresShell* aPresShell, nsIFrame** aResult) ;
 
-class nsSplitterFrame : public nsBoxFrame, public nsIAnonymousContentCreator
+class nsSplitterFrame : public nsBoxFrame
 {
 public:
   nsSplitterFrame(nsIPresShell* aPresShell);
@@ -57,30 +56,23 @@ public:
                               PRInt32 aModType, 
                               PRInt32 aHint);
 
-  NS_IMETHOD  Init(nsIPresContext*  aPresContext,
-                                    nsIContent*      aContent,
-                                    nsIFrame*        aParent,
-                                    nsIStyleContext* aContext,
-                                    nsIFrame*        aPrevInFlow);
+  NS_IMETHOD Init(nsIPresContext*  aPresContext,
+                  nsIContent*      aContent,
+                  nsIFrame*        aParent,
+                  nsIStyleContext* aContext,
+                  nsIFrame*        aPrevInFlow);
 
   NS_IMETHOD GetCursor(nsIPresContext* aPresContext,
-                                     nsPoint&        aPoint,
-                                     PRInt32&        aCursor);
+                       nsPoint&        aPoint,
+                       PRInt32&        aCursor);
 
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
-
-  // nsIAnonymousContentCreator
-  NS_IMETHOD  CreateAnonymousContent(nsIPresContext* aPresContext,
-                                     nsISupportsArray& aAnonymousItems);
-  NS_IMETHOD CreateFrameFor(nsIPresContext*   aPresContext,
-                            nsIContent *      aContent,
-                            nsIFrame**        aFrame) { if (aFrame) *aFrame = nsnull; return NS_ERROR_FAILURE; }
 
   NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
 
-   NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
+  NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,
                          nsEventStatus*  aEventStatus);
 

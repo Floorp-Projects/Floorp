@@ -18,7 +18,7 @@
       <xul:hbox align="center">
         <xul:image class="toolbargrippy-twisty"/>
       </xul:hbox>
-      <xul:spring class="toolbargrippy-texture" flex="1"/>
+      <xul:spacer class="toolbargrippy-texture" flex="1"/>
     </content>
   </binding>
 
@@ -27,7 +27,7 @@
       <xul:hbox align="center">
         <xul:image class="toolbargrippy-twisty-collapsed"/>
       </xul:hbox>
-      <xul:spring class="toolbargrippy-texture-collapsed" flex="1"/>
+      <xul:spacer class="toolbargrippy-texture-collapsed" flex="1"/>
     </content>
   </binding>
 
@@ -63,13 +63,13 @@
 <binding id="thumb" extends="chrome://global/content/bindings/scrollbar.xml#thumb">
     <content>
       <xul:vbox class="thumb-border" flex="1">
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
         <xul:hbox>
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
           <xul:image inherits="src"/>
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
         </xul:hbox>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
       </xul:vbox>
     </content>
   </binding>
@@ -148,24 +148,24 @@
 
   <binding id="tab" extends="chrome://global/content/bindings/tabbox.xml#tab">
     <content>
-      <xul:spring class="tab-image-left" inherits="selected"/>
+      <xul:spacer class="tab-image-left" inherits="selected"/>
       <xul:hbox flex="1" class="tab-image-middle" align="center" inherits="selected">
         <xul:image class="tab-left"/>
         <xul:text flex="1" inherits="value=label,crop,accesskey" crop="right" class="tab-text"/>
       </xul:hbox>
-      <xul:spring class="tab-image-right" inherits="selected"/>
+      <xul:spacer class="tab-image-right" inherits="selected"/>
     </content>
   </binding>
 
   <binding id="tabs" extends="chrome://global/content/bindings/tabbox.xml#tabs">
     <content>
-      <xul:spring class="tab-border-top-left-cap"/>
-      <xul:spring class="tab-border-top-left"/>
+      <xul:spacer class="tab-border-top-left-cap"/>
+      <xul:spacer class="tab-border-top-left"/>
       <xul:box inherits="orient,align,pack">
         <children/>
       </xul:box>
-      <xul:spring class="tab-border-top-right" flex="1"/>
-      <xul:spring class="tab-border-top-right-cap"/>
+      <xul:spacer class="tab-border-top-right" flex="1"/>
+      <xul:spacer class="tab-border-top-right-cap"/>
     </content>
   </binding>
   
@@ -178,7 +178,7 @@
         <xul:hbox class="box-header-text-box" align="center">
           <xul:text class="box-header-text" inherits="value=title"/>
         </xul:hbox>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
       </xul:hbox>
     </content>
   </binding>  

@@ -15,7 +15,7 @@
         ref="chrome://communicator-region/locale/taskbar.rdf#root" 
         containment="http://home.netscape.com/NC-rdf#entry http://home.netscape.com/NC-rdf#child">
        
-   <spring flex="1"/>
+   <spacer flex="1"/>
    
    <template>
       <!-- Rules for content hanging _directly_ off the toolbar -->
@@ -26,7 +26,7 @@
                     label="rdf:http://home.netscape.com/NC-rdf#title">
           <menupopup popupalign="bottomleft" popupanchor="topleft"/>
         </menubutton>
-        <spring uri="rdf:*" class="taskbarspacer" flex="1"/>
+        <spacer uri="rdf:*" class="taskbarspacer" flex="1"/>
       </rule>
       
       <rule parent="box">
@@ -68,7 +68,7 @@
       </rule>
 
     </template>
-    <spring class="taskbarspacer" flex="9"/>
+    <spacer class="taskbarspacer" flex="9"/>
   </hbox>
     
   <hbox id="taskbarGotoMenuBox" flex="1">
@@ -87,7 +87,7 @@
     </menubutton>
   
     <!-- spacer to accommodate mac resize box -->
-    <spring id="resizer" style="width: 20px;"/>
+    <spacer id="resizer" style="width: 20px;"/>
   </hbox>
 
 </overlay>

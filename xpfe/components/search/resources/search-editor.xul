@@ -136,10 +136,10 @@
           
         </tree>
         <vbox>
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <button class="up" oncommand="MoveUp();" id="up" disabled="true"/>
           <button class="down" oncommand="MoveDown();" id="down" disabled="true"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
         </vbox>
       </hbox>          
       <hbox>

@@ -38,7 +38,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdSpellCheck.js"/>
   <script type="application/x-javascript" src="chrome://global/content/strres.js" />
 
-  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <keyset id="keys">
     <key keycode="VK_ENTER"  oncommand="doDefault()"/>
     <key keycode="VK_RETURN" oncommand="doDefault()"/>
@@ -55,7 +55,7 @@
       <row valign="middle" autostretch="never">
         <text class="label" id="MisspelledWordLabel" value="&misspelledWord.label;"/>
         <text class="label bold" id="MisspelledWord" crop="right"/>
-        <spring/>
+        <spacer/>
       </row>
       <row valign="middle" autostretch="never">
         <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
@@ -91,7 +91,7 @@
               </row>
             </rows> 
           </grid>
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <text class="label" value="&userDictionary.label;"/>
           <hbox flex="1" autostretch="never">
             <button class="dialog spell-check" id="AddToDictionary" oncommand="AddToDictionary()" label="&addToUserDictionaryButton.label;" />
@@ -101,7 +101,7 @@
       </row>
       <row>
         <text class="label" value ="&languagePopup.label;"/>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <menulist id="LanguageMenulist" oncommand="SelectLanguage()"/>

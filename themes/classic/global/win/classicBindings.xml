@@ -19,7 +19,7 @@
       <xul:hbox align="center" pack="center">
         <xul:image class="toolbargrippy-twisty"/>
       </xul:hbox>
-      <xul:spring class="toolbargrippy-texture" flex="1"/>
+      <xul:spacer class="toolbargrippy-texture" flex="1"/>
     </content>
   </binding>
 
@@ -28,7 +28,7 @@
       <xul:hbox align="center">
         <xul:image class="toolbargrippy-twisty-collapsed"/>
       </xul:hbox>
-      <xul:spring class="toolbargrippy-texture-collapsed" flex="1"/>
+      <xul:spacer class="toolbargrippy-texture-collapsed" flex="1"/>
     </content>
   </binding>
 
@@ -66,7 +66,7 @@
   <binding id="thumb" extends="chrome://global/content/bindings/scrollbar.xml#thumb">
     <content>
       <xul:vbox class="thumb-box" align="center" flex="1">
-        <xul:spring class="thumb-spring" flex="1"/>
+        <xul:spacer class="thumb-spacer" flex="1"/>
       </xul:vbox>
     </content>
   </binding>
@@ -111,7 +111,7 @@
       <xul:vbox class="menu-iconic-left" align="center" inherits="selected,menuactive,disabled,checked">
         <xul:image/>
       </xul:vbox>
-      <xul:spring class="menuitem-iconic-spring"/>
+      <xul:spacer class="menuitem-iconic-spacer"/>
       <xul:text class="menu-iconic-text" flex="1" align="left" inherits="value=label,accesskey,crop" crop="right"/>
       <xul:text class="menu-iconic-accel" inherits="value=acceltext"/>
     </content>
@@ -121,12 +121,12 @@
     <content>
       <xul:hbox class="largeheader-box" flex="1">
         <xul:vbox class="largeheader-text-container">
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
           <xul:text class="largeheader-header-text" inherits="value=title" crop="right"/>
           <xul:html class="largeheader-desc-text" inherits="value=description"/>
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
         </xul:vbox>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
         <xul:hbox class="largeheader-icon-container" align="center">
           <xul:image class="largeheader-icon" inherits="src"/>
         </xul:hbox>

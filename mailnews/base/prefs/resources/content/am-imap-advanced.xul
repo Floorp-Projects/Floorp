@@ -67,9 +67,9 @@
   </rows>
 </grid>
 
-<spring class="spacer"/>
+<spacer class="spacer"/>
 <separator class="groove"/>
-<spring class="spacer"/>
+<spacer class="spacer"/>
 
 <hbox id="okCancelButtonsRight"/>
 

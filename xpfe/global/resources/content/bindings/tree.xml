@@ -419,7 +419,7 @@
   <binding id="treecell-align-right"
            extends="chrome://global/content/bindings/tree.xml#tree-base">
     <content>
-      <xul:spring flex="5"/>
+      <xul:spacer flex="5"/>
       <xul:text class="tree-cell-text" inherits="crop,value=label,align" flex="1" crop="right"/>
     </content>
   </binding>

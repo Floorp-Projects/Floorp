@@ -8,16 +8,16 @@
   <binding id="nine-slice-menulist" extends="chrome://global/content/bindings/menulist.xml#menulist">
   	<content>
       <xul:vbox class="menulist-box-left" inherits="disabled">
-        <xul:spring class="menulist-left-top" inherits="disabled"/>
-        <xul:spring class="menulist-left-mid" inherits="disabled" flex="1"/>
-        <xul:spring class="menulist-left-btm" inherits="disabled"/>
+        <xul:spacer class="menulist-left-top" inherits="disabled"/>
+        <xul:spacer class="menulist-left-mid" inherits="disabled" flex="1"/>
+        <xul:spacer class="menulist-left-btm" inherits="disabled"/>
       </xul:vbox>
 
       <xul:stack class="menulist-stack" flex="1">
         <xul:vbox class="menulist-box-mid" inherits="disabled">
-           <xul:spring class="menulist-mid-top" inherits="disabled"/>
-           <xul:spring class="menulist-mid-mid" inherits="disabled" flex="1"/>
-           <xul:spring class="menulist-mid-btm" inherits="disabled"/>
+           <xul:spacer class="menulist-mid-top" inherits="disabled"/>
+           <xul:spacer class="menulist-mid-mid" inherits="disabled" flex="1"/>
+           <xul:spacer class="menulist-mid-btm" inherits="disabled"/>
         </xul:vbox>
 
         <xul:hbox class="menulist-text-box" align="center">
@@ -32,7 +32,7 @@
         		<xul:image class="menulist-dropmarker" inherits="disabled"/>
           </xul:hbox>
         </xul:hbox>
-        <xul:spring class="menulist-right-btm" inherits="disabled"/>
+        <xul:spacer class="menulist-right-btm" inherits="disabled"/>
       </xul:vbox>
 	  <children includes="menupopup"/>
     </content>
@@ -42,7 +42,7 @@
     <content flex="1">
       <xul:hbox class="menulist-compact-internal-box" flex="1" align="center">
         <xul:image class="menulist-compact-dropmarker" inherits="disabled"/>
-        <xul:spring flex="1"/>
+        <xul:spacer flex="1"/>
         <xul:text class="menulist-compact-text" inherits="value=label,accesskey,crop,disabled" crop="right"/>
       </xul:hbox>
 	  <children includes="menupopup"/>

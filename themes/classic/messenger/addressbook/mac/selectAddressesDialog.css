@@ -89,10 +89,10 @@
   padding-right  : 0px;
 }
 
-.third-column-spring {  /* Vertical Springs between 3rd column buttons */
+.third-column-spacer {  /* Vertical Spacers between 3rd column buttons */
   height      : 10px;
 }
 
-.middle-button-spring { /* Springs between To, CC, and BCC buttons */
+.middle-button-spacer { /* Spacers between To, CC, and BCC buttons */
   width      : 10px;
 }

@@ -13,13 +13,13 @@
         <xul:stack class="toolbar-primary-mid" flex="1">
           <xul:hbox class="toolbar-primary-mid-2" flex="1">
             <xul:vbox class="toolbar-primary-mid-bg" flex="1">
-              <xul:spring class="toolbar-primary-mid-top" flex="1"/> 
-              <xul:spring class="toolbar-primary-mid-btm"/> 
+              <xul:spacer class="toolbar-primary-mid-top" flex="1"/> 
+              <xul:spacer class="toolbar-primary-mid-btm"/> 
             </xul:vbox>
             <xul:vbox class="toolbar-primary-right">
-              <xul:spring class="toolbar-primary-right-top"/> 
-              <xul:spring class="toolbar-primary-right-mid" flex="1"/> 
-              <xul:spring class="toolbar-primary-right-btm"/> 
+              <xul:spacer class="toolbar-primary-right-top"/> 
+              <xul:spacer class="toolbar-primary-right-mid" flex="1"/> 
+              <xul:spacer class="toolbar-primary-right-btm"/> 
             </xul:vbox>
           </xul:hbox>
           <xul:hbox class="toolbar-primary-mid-fg"

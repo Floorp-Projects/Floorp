@@ -164,7 +164,7 @@ public:
 
     void GetValue(nsIPresContext* aPresContext, const nsSize& a, const nsSize& b, char* value);
     void GetValue(nsIPresContext* aPresContext, PRInt32 a, PRInt32 b, char* value);
-    void DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord springSize);
+    void DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
     void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
 
@@ -1693,7 +1693,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
         }
         PRBool isHorizontal = IsHorizontal();
 
-        nscoord x, y, borderSize, springSize;
+        nscoord x, y, borderSize, spacerSize;
         
         nsRect cr(0,0,0,0);
         kid->GetBounds(cr);
@@ -1706,12 +1706,12 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
             cr.y = inner.y;
             x = cr.x;
             y = cr.y + onePixel;
-            springSize = debugBorder.top - onePixel*4;
+            spacerSize = debugBorder.top - onePixel*4;
         } else {
             cr.x = inner.x;
             x = cr.y;
             y = cr.x + onePixel;
-            springSize = debugBorder.left - onePixel*4;
+            spacerSize = debugBorder.left - onePixel*4;
         }
 
         nsBoxLayoutState state(aPresContext);
@@ -1730,7 +1730,7 @@ nsBoxFrame::PaintChildren(nsIPresContext*      aPresContext,
           else 
               borderSize = cr.height;
         
-          mInner->DrawSpring(aPresContext, aRenderingContext, isHorizontal, flex, x, y, borderSize, springSize);
+          mInner->DrawSpacer(aPresContext, aRenderingContext, isHorizontal, flex, x, y, borderSize, spacerSize);
         }
 
         kid->GetNextBox(&kid);
@@ -2126,8 +2126,8 @@ nsBoxFrameInner::PaintDebug(nsIBox* aBox,
            aRenderingContext.DrawRect(dirtyr);
         }
 
-        // paint the springs.
-        nscoord x, y, borderSize, springSize;
+        // paint the spacers.
+        nscoord x, y, borderSize, spacerSize;
         
         aRenderingContext.SetColor(NS_RGB(255,255,255));
         
@@ -2136,12 +2136,12 @@ nsBoxFrameInner::PaintDebug(nsIBox* aBox,
             x = inner.x;
             y = inner.y + onePixel;
             x += debugBorder.left;
-            springSize = debugBorder.top - onePixel*4;
+            spacerSize = debugBorder.top - onePixel*4;
         } else {
             x = inner.y;
             y = inner.x + onePixel;
             x += debugBorder.top;
-            springSize = debugBorder.left - onePixel*4;
+            spacerSize = debugBorder.left - onePixel*4;
         }
 
         nsIBox* box = nsnull;
@@ -2165,7 +2165,7 @@ nsBoxFrameInner::PaintDebug(nsIBox* aBox,
                 nscoord flex = 0;
                 box->GetFlex(state, flex);
 
-                DrawSpring(aPresContext, aRenderingContext, isHorizontal, flex, x, y, borderSize, springSize);
+                DrawSpacer(aPresContext, aRenderingContext, isHorizontal, flex, x, y, borderSize, spacerSize);
                 x += borderSize;
             }
             box->GetNextBox(&box);
@@ -2194,7 +2194,7 @@ nsBoxFrameInner::FillRect(nsIRenderingContext& aRenderingContext, PRBool aHorizo
 }
 
 void 
-nsBoxFrameInner::DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord springSize)
+nsBoxFrameInner::DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize)
 {    
         float p2t;
         aPresContext->GetScaledPixelsToTwips(&p2t);
@@ -2205,10 +2205,10 @@ nsBoxFrameInner::DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& a
         int center = 0;
         int offset = 0;
         int coilSize = COIL_SIZE*onePixel;
-        int halfSpring = springSize/2;
+        int halfSpacer = spacerSize/2;
 
         distance = size;
-        center = y + halfSpring;
+        center = y + halfSpacer;
         offset = x;
 
         int coils = distance/coilSize;
@@ -2216,21 +2216,21 @@ nsBoxFrameInner::DrawSpring(nsIPresContext* aPresContext, nsIRenderingContext& a
         int halfCoilSize = coilSize/2;
 
         if (flex == 0) {
-            DrawLine(aRenderingContext, aHorizontal, x,y + springSize/2, x + size, y + springSize/2);
+            DrawLine(aRenderingContext, aHorizontal, x,y + spacerSize/2, x + size, y + spacerSize/2);
         } else {
             for (int i=0; i < coils; i++)
             {
-                   DrawLine(aRenderingContext, aHorizontal, offset, center+halfSpring, offset+halfCoilSize, center-halfSpring);
-                   DrawLine(aRenderingContext, aHorizontal, offset+halfCoilSize, center-halfSpring, offset+coilSize, center+halfSpring);
+                   DrawLine(aRenderingContext, aHorizontal, offset, center+halfSpacer, offset+halfCoilSize, center-halfSpacer);
+                   DrawLine(aRenderingContext, aHorizontal, offset+halfCoilSize, center-halfSpacer, offset+coilSize, center+halfSpacer);
 
                    offset += coilSize;
             }
         }
 
-        FillRect(aRenderingContext, aHorizontal, x + size - springSize/2, y, springSize/2, springSize);
-        FillRect(aRenderingContext, aHorizontal, x, y, springSize/2, springSize);
+        FillRect(aRenderingContext, aHorizontal, x + size - spacerSize/2, y, spacerSize/2, spacerSize);
+        FillRect(aRenderingContext, aHorizontal, x, y, spacerSize/2, spacerSize);
 
-        //DrawKnob(aPresContext, aRenderingContext, x + size - springSize, y, springSize);
+        //DrawKnob(aPresContext, aRenderingContext, x + size - spacerSize, y, spacerSize);
 }
 
 void
@@ -2356,7 +2356,7 @@ nsBoxFrameInner::DisplayDebugInfoFor(nsIBox* aBox,
                nsIFrame* childFrame = nsnull;
                child->GetFrame(&childFrame);
 
-                // if we are not in the child. But in the spring above the child.
+                // if we are not in the child. But in the spacer above the child.
                 if ((isHorizontal && x >= r.x && x < r.x + r.width) ||
                     (!isHorizontal && y >= r.y && y < r.y + r.height)) {
                     aCursor = NS_STYLE_CURSOR_POINTER;

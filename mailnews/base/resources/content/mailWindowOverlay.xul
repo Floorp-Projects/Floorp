@@ -1218,7 +1218,7 @@ Rights Reserved.
 
 <menu id="tasksMenu"/>
 <menu id="menu_Help"/>
-<spring flex="100%"/>
+<spacer flex="100%"/>
 </menubar>
 
 <toolbox id="mailToolbarToolbox">
@@ -1341,7 +1341,7 @@ Rights Reserved.
           </menupopup>
       </menubutton>
       <button class="button-toolbar-2 top" id="button-stop" label="&stopButton.label;"  tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" oncommand="MsgStop();"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
             <hbox id="throbber-box" autostretch="never">
                 <button id="navigator-throbber" oncommand='goClickThrobber("messenger.throbber.url")' tooltip="aTooltip" tooltiptext="&throbber.tooltip;"/>
             </hbox>

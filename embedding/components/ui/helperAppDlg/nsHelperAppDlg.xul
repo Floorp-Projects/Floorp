@@ -96,7 +96,7 @@
     <hbox>
       <button class="dialog" id="default.set" label="&default.set.label;" accesskey="&default.set.accesskey;"
         oncommand="dialog.setDefault()"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <hbox id="okCancelButtonsRight"/>
     </hbox>
            

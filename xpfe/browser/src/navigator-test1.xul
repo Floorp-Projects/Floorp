@@ -543,10 +543,10 @@
   <vbox id="outer-box">
   <hbox style="margin: 5px;">
   <vbox flex="100%">
-  <spring flex="100%"/>
+  <spacer flex="100%"/>
   <html:input id="urlbar" type="text" style="min-width: 100px; min-height: 25px"
     onkeyup="if (event.keyCode == 13) { BrowserLoadURL(); }"/>   
-  <spring flex="100%"/>
+  <spacer flex="100%"/>
   </vbox>
   <button id="Throbber" onclick="window.frames[0].home()">
      <observes element="Browser:Throbber" attribute="busy"/>
@@ -588,7 +588,7 @@
       onclick="BrowserHome()"/>
     <button id="netscape-button" align="bottom" label="Netscape" 
       onclick="window.frames[0].location.href='http://my.netscape.com'"/>
-    <spring flex="100%"/>
+    <spacer flex="100%"/>
   </toolbar>
   </toolbox>
   
@@ -726,19 +726,19 @@
 
   <hbox id="security-box" class="insecure" flex="100%">
     <vbox style="width:100px">
-      <spring flex="100%"/>
+      <spacer flex="100%"/>
       <progressmeter id="statusbar-icon" mode="normal" value="0" onclick="dumpProgress()">
         <observes element="Browser:LoadingProgress" attribute="mode"/>
         <observes element="Browser:Throbber" attribute="busy" onbroadcast="onProgress()"/>
       </progressmeter>
-      <spring flex="100%"/>
+      <spacer flex="100%"/>
     </vbox>
 
     <button id="statusText" align="right" flex="1%" label="Document: Done" style="font-family:sans-serif;font-size:2.5mm">
              <observes element="Browser:Status" attribute="label" onbroadcast="onStatus()"/>      
     </button>
 
-    <spring flex="100%"/>
+    <spacer flex="100%"/>
 
     <button align="right" label="Build ID: 99032911" style="font-family:sans-serif;font-size:2.5mm">
     </button>
@@ -754,13 +754,13 @@
            <button align="left" class="popup"  label="Mail" />
            <button align="left" class="popup"  label="Chat" />
       </hbox>
-      <spring flex="100%"/>
+      <spacer flex="100%"/>
       <hbox>
         <button align="left"  class="popup"  label="DayPlanner" />
         <button align="left"  class="popup"  label="Shopping" />
         <button align="left"  class="popup"  label="My Desk" />
           </hbox>
-      <spring flex="100%"/>
+      <spacer flex="100%"/>
         <hbox>
         <button align="left" class="popup" label="Open Windows" />
         <button align="left" id="mini-nav" label="" />

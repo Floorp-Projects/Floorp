@@ -255,7 +255,7 @@ statusbarpanel,
   border-top: none;
 }
 
-spring.spacer {
+spacer.spacer {
   width: 5px;
   height: 5px;
 }

@@ -137,7 +137,7 @@
         <button class="dialog push" label="&select;" align="left"/>
       </html:div>
     </vbox>
-    <spring style="height: 30px;"/>
+    <spacer style="height: 30px;"/>
   </html:fieldset>
 
 </window>

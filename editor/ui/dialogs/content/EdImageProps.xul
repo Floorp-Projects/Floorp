@@ -49,7 +49,7 @@
   <script type="application/x-javascript" src="chrome://global/content/globalOverlay.js"/>
   <script type="application/x-javascript" src="chrome://help/content/help.js"/>
 
-  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
@@ -71,11 +71,11 @@
       <checkbox 
         id  = "MakeRelativeCheckbox"
         for = "srcInput"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <!-- from EdDialogOverlay.xul -->
       <button id="ChooseFile"/>
     </hbox>
-    <spring class="spacer"/>
+    <spacer class="spacer"/>
     <hbox>
       <text class = "label"
         id      = "altTextLabel" 
@@ -88,9 +88,9 @@
         tooltip = "aTooltip" tooltiptext="&altTextEditField.tooltip;"
         flex       = "1"/>
     </hbox>
-    <spring class="spacer"/>
+    <spacer class="spacer"/>
   </groupbox>
-  <spring class="spacer"/>
+  <spacer class="spacer"/>
   <hbox align="center"> 
     <button 
       class   = "dialog" 
@@ -98,32 +98,32 @@
       oncommand = "onMoreFewer()" 
       tooltip = "aTooltip" tooltiptext = "&MoreFewerButton.tooltip;"
       persist = "more"/>
-    <spring class="bigspacer"/>
+    <spacer class="bigspacer"/>
     <groupbox style="padding-left: 8px; padding-right: 8px">
       <caption label="&previewBox.label;"/>
       <hbox id="preview-image-box" align="center">
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <html id="preview-image-holder"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
       </hbox>
       <vbox id="PreviewSize" collapsed="true">
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <text class="label" value="&actualSize.label;"/>
         <hbox>
           <text class="label" value="&widthEditField.label;"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <text id="PreviewWidth" class="label"/>
         </hbox>
         <hbox>
           <text class="label" value="&heightEditField.label;"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <text id="PreviewHeight" class="label"/>
         </hbox>
-        <spring flex="1"/>
+        <spacer flex="1"/>
       </vbox>
     </groupbox>
   </hbox>
-  <spring class="spacer"/>
+  <spacer class="spacer"/>
   <!-- Area that shows and hides via MoreFewerButton --> 
   <vbox id="MoreSection" flex="1">
     <hbox>
@@ -146,17 +146,17 @@
                 tooltip = "aTooltip" tooltiptext="&customSizeRadio.tooltip;"
                 oncommand = "doDimensionEnabling();" />
             </radiogroup>
-            <spring flex="1"/>
+            <spacer flex="1"/>
             <vbox>
-              <spring flex="1"/>
+              <spacer flex="1"/>
               <!--////// CONSTRAIN DIMENSIONS //////-->
               <checkbox id="constrainCheckbox" label="&constrainCheckbox.label;"
                    oncommand="ToggleConstrain()"
                    tooltip="aTooltip" tooltiptext="&constrainCheckbox.tooltip;"/>
             </vbox>
-            <spring flex="1"/>
+            <spacer flex="1"/>
           </hbox>
-          <spring class="spacer"/>
+          <spacer class="spacer"/>
           <grid class="big-left-margin">
             <columns><column/><column/><column flex="1"/></columns>
             <rows>
@@ -190,7 +190,7 @@
               </row>
             </rows>          
           </grid>
-          <spring flex="1"/>
+          <spacer flex="1"/>
         </groupbox>
         <!--////// IMAGE MAP BUTTONS //////-->
         <groupbox orient="vertical" flex="1">
@@ -212,9 +212,9 @@
               oncommand = "removeImageMap()"
               label   = "&removeImageMapButton.label;"
               flex    = "1"/>
-            <spring flex="1"/><!-- remove when we restore Image Map Editor -->
+            <spacer flex="1"/><!-- remove when we restore Image Map Editor -->
             </hbox>
-          <spring class="spacer"/>
+          <spacer class="spacer"/>
         </groupbox>
       </vbox> <!-- vert. box on bottom left side -->
 
@@ -223,7 +223,7 @@
         <!--//////// Alignment ////////-->
         <groupbox flex="1" orient="vertical">
           <caption id="alignLabel" label="&alignment.label;"/>
-          <spring class="spacer"/>
+          <spacer class="spacer"/>
           <menulist id="alignTypeSelect" class="align-menu">
             <menupopup>
               <menuitem class="align-menu" value="top" label="&topPopup.value;"/>

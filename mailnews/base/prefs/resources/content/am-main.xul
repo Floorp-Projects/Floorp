@@ -88,10 +88,10 @@
                   prefstring="mail.identity.%identitykey%.compose_html"/>
       </hbox>
 
-      <spring flex="1"/>
+      <spacer flex="1"/>
 
       <hbox>
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <button oncommand="onAdvanced();" label="&advancedButton.label;"
                 wsm_persist="true" id="identity.advancedbutton"
                 pref="true" preftype="bool" prefattribute="disabled"

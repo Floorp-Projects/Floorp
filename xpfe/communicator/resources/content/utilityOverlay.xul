@@ -254,26 +254,26 @@
   <!-- XXX needs xbl-ification! gray horizontal splitter -->
   <splitter id="gray_horizontal_splitter" class="gray-horizontal-splitter">
     <hbox id="begincap">
-      <spring flex="100%"/>
+      <spacer flex="100%"/>
     </hbox>
-    <spring flex="100%"/>
+    <spacer flex="100%"/>
     <grippy/>
-    <spring flex="100%"/>
+    <spacer flex="100%"/>
     <hbox id="endcap">
-      <spring flex="100%"/>
+      <spacer flex="100%"/>
     </hbox>
  </splitter>
 
   <!-- XXX needs xbl-ification! gray vertical splitter -->
   <splitter id="gray_vertical_splitter" class="gray-vertical-splitter">
     <vbox id="begincap">
-      <spring flex="100%"/>
+      <spacer flex="100%"/>
     </vbox>
-    <spring flex="100%"/>
+    <spacer flex="100%"/>
     <grippy/>
-    <spring flex="100%"/>
+    <spacer flex="100%"/>
     <vbox id="endcap">
-      <spring flex="100%"/>
+      <spacer flex="100%"/>
     </vbox>
  </splitter>
 

@@ -57,7 +57,7 @@ Contributor(s):
   <hbox autostretch="never">
     <text class="label" value="&filterName.label;"/>
     <textbox flex="50%" id="filterName"/>
-    <spring flex="50%"/>
+    <spacer flex="50%"/>
   </hbox>
 
   <separator/>
@@ -96,7 +96,7 @@ Contributor(s):
         </menulist>
         <text id="actionValueNone"/>
       </deck>
-      <spring flex="100%"/>
+      <spacer flex="100%"/>
       <button id="newFolderButton" label="&newFolderButton.label;" 
               oncommand="MsgNewFolder(SearchNewFolderOkCallback);"/>
     </hbox>

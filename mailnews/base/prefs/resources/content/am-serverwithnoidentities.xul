@@ -31,7 +31,7 @@
       </row>
     </rows>
   </grid>
-  <spring flex="1"/>
+  <spacer flex="1"/>
   <vbox>
     <text value="&localPath.label;"/>
     <textbox wsm_persist="true" size="60" id="server.localPath" datatype="nsIFileSpec"

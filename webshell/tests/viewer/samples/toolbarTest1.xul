@@ -29,9 +29,9 @@
 	  <button id="print-button"   align="top" value="Print"/> 
 
           <vbox flex="100%">
-            <spring flex="100%"/>
+            <spacer flex="100%"/>
             <html:input id="urlbar" type="text"/>   
-	    <spring flex="100%"/>
+	    <spacer flex="100%"/>
           </vbox>
 
           <button src="resource:/res/throbber/anims00.gif" align="right"/>
@@ -41,7 +41,7 @@
     <toolbar>
       <button align="left" id="translate-button" value="Mozilla" />
       <button align="left" id="translate-button" value="ABC News"/>
-	  <spring flex="100%"/>
+	  <spacer flex="100%"/>
     </toolbar>
     
     <toolbar>

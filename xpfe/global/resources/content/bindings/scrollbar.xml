@@ -92,9 +92,9 @@
 
   <binding id="thumb">
     <content>
-      <xul:spring flex="1"/>
+      <xul:spacer flex="1"/>
       <xul:image inherits="src"/>
-      <xul:spring flex="1"/>
+      <xul:spacer flex="1"/>
     </content>
   </binding>
 

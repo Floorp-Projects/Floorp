@@ -42,7 +42,7 @@
         <separator class="thin"/>
       </vbox>
   
-      <spring flex="1"/>
+      <spacer flex="1"/>
       
       <!-- checkbox -->
       <hbox id="checkboxContainer" collapsed="true" align="middle">

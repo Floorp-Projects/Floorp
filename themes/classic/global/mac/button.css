@@ -145,11 +145,11 @@ button {
 	height				: 20px;
 }
 
-.button-top-spring {
+.button-top-spacer {
 	height				: 2px;
 }
 
-.button-bottom-spring {
+.button-bottom-spacer {
 	height				: 3px;
 }
 
@@ -566,11 +566,11 @@ button[default="true"] {
 	height				: 26px;
 }
 
-.button-image-middle[default="true"] > .button-top-spring {
+.button-image-middle[default="true"] > .button-top-spacer {
 	height				: 3px;
 }
 
-.button-image-middle[default="true"] > .button-bottom-spring {
+.button-image-middle[default="true"] > .button-bottom-spacer {
 	height				: 2px;
 }
 

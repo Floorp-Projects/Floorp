@@ -71,7 +71,7 @@
       <vbox>
         <button class="dialog" label="&addSite.label;" accesskey="&addSite.accesskey;"
                 oncommand="addSite();"/>
-        <spring flex="1"/>              
+        <spacer flex="1"/>              
       </vbox>    
     </hbox>
     

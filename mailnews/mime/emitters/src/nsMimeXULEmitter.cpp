@@ -543,25 +543,25 @@ nsMimeXULEmitter::DumpSubjectFromDate()
   UtilityWriteCRLF("<box name=\"header-splitter\" align=\"horizontal\" flex=\"1\" >");
 
       UtilityWriteCRLF("<box name=\"header-part1\" align=\"vertical\" flex=\"1\">");
-      UtilityWriteCRLF("<spring flex=\"2\"/>");
+      UtilityWriteCRLF("<spacer flex=\"2\"/>");
 
           // This is the envelope information
           OutputGenericHeader(HEADER_SUBJECT);
           OutputGenericHeader(HEADER_FROM);
           OutputGenericHeader(HEADER_DATE);
 
-      UtilityWriteCRLF("<spring flex=\"2\"/>");
+      UtilityWriteCRLF("<spacer flex=\"2\"/>");
       UtilityWriteCRLF("</box>");
 
 
       UtilityWriteCRLF("<box name=\"header-attachment\" align=\"horizontal\" flex=\"1\">");
-      UtilityWriteCRLF("<spring flex=\"1\"/>");
+      UtilityWriteCRLF("<spacer flex=\"1\"/>");
 
         // Now the addbook and attachment icons need to be displayed
         DumpAddBookIcon(GetHeaderValue(HEADER_FROM, mHeaderArray));
         DumpAttachmentMenu();
 
-      UtilityWriteCRLF("<spring flex=\"1\"/>");
+      UtilityWriteCRLF("<spacer flex=\"1\"/>");
       UtilityWriteCRLF("</box>");
 
   UtilityWriteCRLF("</box>");

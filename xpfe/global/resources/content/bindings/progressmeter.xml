@@ -17,9 +17,9 @@
             <xul:box class="progress-remainder"/>
           </xul:progressbar>
           <xul:hbox>
-            <xul:spring flex="1"/>
+            <xul:spacer flex="1"/>
             <xul:text class="progress-text" inherits="value=label"/>
-            <xul:spring flex="1"/>
+            <xul:spacer flex="1"/>
           </xul:hbox>
         </xul:stack>
       </xul:hbox>

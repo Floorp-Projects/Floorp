@@ -38,7 +38,7 @@
 <script src="chrome://communicator/content/sidebar/sidebar.js" />
 <vbox id="sidebox" flex="1">
  <hbox class="sidebartitle">
-  <spring flex="1"/>
+  <spacer flex="1"/>
   <button class="dialog borderless paneltitle" 
         label="&sidebar.reload.label;"
         oncommand="window.location.reload()" />

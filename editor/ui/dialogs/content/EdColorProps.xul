@@ -42,7 +42,7 @@
   <script type="application/x-javascript" src="chrome://editor/content/EdColorProps.js"/>
   <script type="application/x-javascript" src="chrome://global/content/dialogOverlay.js" />
 
-  <spring id="location" offsetY="50" persist="offsetX offsetY"/>
+  <spacer id="location" offsetY="50" persist="offsetX offsetY"/>
   <broadcaster id="args" value=""/>
   <keyset id="dialogKeys"/>
   <popupset id="aTooltipSet" />
@@ -64,9 +64,9 @@
             <stack>
               <button id="TextButton" class="dialog color-button" oncommand="GetColorAndUpdate('textCW');"/>
               <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spring flex="1"/>
-                <spring id="textCW" class="color-well"/>
-                <spring flex="1"/>
+                <spacer flex="1"/>
+                <spacer id="textCW" class="color-well"/>
+                <spacer flex="1"/>
               </hbox>
             </stack>
           </row>
@@ -75,9 +75,9 @@
             <stack>
               <button id="LinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('linkCW');"/>
               <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spring flex="1"/>
-                <spring id="linkCW" class="color-well"/>
-                <spring flex="1"/>
+                <spacer flex="1"/>
+                <spacer id="linkCW" class="color-well"/>
+                <spacer flex="1"/>
               </hbox>
             </stack>
           </row>
@@ -86,9 +86,9 @@
             <stack>
               <button id="ActiveLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('activeCW');"/>
               <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spring flex="1"/>
-                <spring id="activeCW" class="color-well"/>
-                <spring flex="1"/>
+                <spacer flex="1"/>
+                <spacer id="activeCW" class="color-well"/>
+                <spacer flex="1"/>
               </hbox>
             </stack>
           </row>
@@ -97,9 +97,9 @@
             <stack>
               <button id="VisitedLinkButton" class="dialog color-button" oncommand="GetColorAndUpdate('visitedCW');"/>
               <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spring flex="1"/>
-                <spring id="visitedCW" class="color-well"/>
-                <spring flex="1"/>
+                <spacer flex="1"/>
+                <spacer id="visitedCW" class="color-well"/>
+                <spacer flex="1"/>
               </hbox>
             </stack>
           </row>
@@ -108,30 +108,30 @@
             <stack>
               <button id="BackgroundButton" class="dialog color-button" oncommand="GetColorAndUpdate('backgroundCW');"/>
               <hbox autostretch="never" valign="middle" mousethrough="always">
-                <spring flex="1"/>
-                <spring id="backgroundCW" class="color-well"/>
-                <spring flex="1"/>
+                <spacer flex="1"/>
+                <spacer id="backgroundCW" class="color-well"/>
+                <spacer flex="1"/>
               </hbox>
             </stack>
           </row>
         </rows>
       </grid>
       <vbox id="ColorPreview" flex="1">
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <text class="label larger" id="NormalText"      value="&normalText.label;"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <text class="label larger" id="LinkText"        value="&linkText.label;"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <text class="label larger" id="ActiveLinkText"  value="&activeLinkText.label;"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <text class="label larger" id="VisitedLinkText" value="&visitedLinkText.label;"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
       </vbox>
-      <spring flex="1"/>
+      <spacer flex="1"/>
     </hbox>
-    <spring class="spacer"/>
+    <spacer class="spacer"/>
   </groupbox>
-  <spring class="spacer"/>
+  <spacer class="spacer"/>
   <text class="label" value="&backgroundImage.label;"/>
   <hbox>
     <textbox id="BackgroundImageInput" oninput="ChangeBackgroundImage()"
@@ -142,9 +142,9 @@
   </hbox>
   <!-- from EdDialogOverlay.xul 'for' identifies the textfield to get URL from -->
   <checkbox id="MakeRelativeCheckbox" for="BackgroundImageInput"/>
-  <spring class="smallspacer"/>
+  <spacer class="smallspacer"/>
   <hbox>
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <!-- from EdDialogOverlay.xul -->
     <button class="dialog" id="AdvancedEditButton"/>
   </hbox>

@@ -70,7 +70,7 @@ Rights Reserved.
       <html id="description" class="box-padded" flex="1"/>
     </vbox>
     <vbox class="wizard-box">
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <groupbox orient="vertical">
         <caption id="progressTitle" label="&title.label;"/>
         <text class="label indent" id="progressStatus" value="&processing.label;"/>
@@ -106,7 +106,7 @@ Rights Reserved.
   <separator class="groove"/>
   
   <hbox class="box-padded">
-    <spring flex="1"/>
+    <spacer flex="1"/>
     <button id="back" label="&back.label;" disabled="true"
             oncommand="back();"/>
     <button id="forward" label="&forward.label;" nextval="&forward.label;" finishedval="&finish.label;" 

@@ -65,23 +65,23 @@ div#table-housing {
   width                     : 32em;
 }
 
-spring#verticalSmallSpacer {
+spacer#verticalSmallSpacer {
   height                    : 1ex;
 }
 
-spring#verticalLargeSpacer {
+spacer#verticalLargeSpacer {
   height                    : 6ex;
 }
 
-spring#verticalMediumSpacer {
+spacer#verticalMediumSpacer {
   height                    : 3ex;
 }
 
-spring#horizontalSmallSpacer {
+spacer#horizontalSmallSpacer {
   width                     : 2em;
 }
 
-spring#horizontalLargeSpacer {
+spacer#horizontalLargeSpacer {
   width                     : 10em;
 }
 

@@ -65,7 +65,7 @@ Rights Reserved.
 				</vbox>
 			</vbox>
 			
-			<spring style="width:20px"/>
+			<spacer style="width:20px"/>
 
 			<vbox flex="1" style="width:200px">
 				<vbox id="cvbPhone" class="cardViewGroup">

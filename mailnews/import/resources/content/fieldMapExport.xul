@@ -43,13 +43,13 @@ Rights Reserved.
 
   <hbox>
   
-    <spring style="width:3em"/>
+    <spacer style="width:3em"/>
     
     <!-- field list -->
     <vbox>
-      <spring style="height:1em"/>
+      <spacer style="height:1em"/>
       <html:div id="fieldLabel">Ye old fields</html:div>
-      <spring style="height:.5em"/>
+      <spacer style="height:.5em"/>
         
       <vbox style="border: 1px inset white">
         <html:div style="width:10em; height:200px" flex="1">
@@ -62,26 +62,26 @@ Rights Reserved.
         </html:div>
       </vbox>
             
-      <spring style="height:1.5em"/>
+      <spacer style="height:1.5em"/>
       
     </vbox>
     
-    <spring style="width: 1em"/>
+    <spacer style="width: 1em"/>
 
     <vbox style="height:270px">
-      <spring flex="50%"/>
+      <spacer flex="50%"/>
       <button class="dialog push" onclick="OnAddExport()" label="&fieldMapExport.add;"/>
       <button class="dialog push" onclick="OnAddAllExport()" label="&fieldMapExport.addAll;"/>
-      <spring flex="50%"/>
+      <spacer flex="50%"/>
     </vbox>
 
-    <spring style="width:1em"/>
+    <spacer style="width:1em"/>
 
     <!-- export list -->
     <vbox>
-      <spring style="height:1em"/>
+      <spacer style="height:1em"/>
       <html:div id="exportLabel">Export fields</html:div>
-      <spring style="height:.5em"/>
+      <spacer style="height:.5em"/>
         
       <vbox style="border: 1px inset white">
         <html:div style="width:10em; height:200px" flex="1">
@@ -97,11 +97,11 @@ Rights Reserved.
         </html:div>
       </vbox>
             
-      <spring style="height:1.5em"/>
+      <spacer style="height:1.5em"/>
       
     </vbox>
   
-    <spring style="width:3em"/>
+    <spacer style="width:3em"/>
 
   </hbox>
 

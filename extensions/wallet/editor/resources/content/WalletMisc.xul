@@ -94,7 +94,7 @@
                 <menuitem label="" len="0"/>
               </menupopup>
             </menulist>
-            <spring style="width: 5px;"/>
+            <spacer style="width: 5px;"/>
             <text value="&miscLicenseState.label;" />
             <menulist id="license.state" editable="true" autoSelectMenuitem="false" flex="30" width="0"
                       onchange="Append(this)">

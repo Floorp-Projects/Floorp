@@ -16,15 +16,15 @@
 
 	<keyset id="dialogKeys"/>
 
-    <spring style="height:0.5em" />
+    <spacer style="height:0.5em" />
 	<hbox>
-        <spring style="width:10px" />
+        <spacer style="width:10px" />
 		<text value="Web Page (URL):"/>
 		<textbox id="attachurl" align="bottom" style="min-width:200px; padding-bottom:0px" />
-        <spring style="width:10px" />
+        <spacer style="width:10px" />
 	</hbox>
 	
-    <spring style="height:1em"/>
+    <spacer style="height:1em"/>
 	<hbox id="okCancelButtons"/> 
-    <spring style="height:0.5em" />
+    <spacer style="height:0.5em" />
 </window>

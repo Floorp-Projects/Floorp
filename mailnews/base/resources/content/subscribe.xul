@@ -87,11 +87,11 @@ Rights Reserved.
             </row>
           </rows>
         </grid>
-        <spring/>
+        <spacer/>
       </row>
       <row>
         <separator class="thin"/>
-        <spring/>
+        <spacer/>
       </row>
       <row flex="1">
       <deck id="subscribedeck" index="0">
@@ -148,7 +148,7 @@ Rights Reserved.
           <button id="unsubscribe" class="dialog" label="&unsubscribeButton.label;" oncommand="SetSubscribeState(false)"/>
           <button id="refresh" class="dialog" label="&refreshButton.label;" oncommand="Refresh()"/>
           <button id="stop" class="dialog" label="&stopButton.label;" oncommand="Stop()"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
         </vbox>
       </row>
       <row>

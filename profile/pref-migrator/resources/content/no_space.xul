@@ -40,19 +40,19 @@ Contributor(s):
   <hbox flex="1">
     <hbox>
         <text id="outOfSpace" value="&errorText1.label;"/>
-        <spring flex="100%"/>
+        <spacer flex="100%"/>
         <image id="info.icon" class="message-icon"/>
     </hbox>
     <separator orient="vertical" class="thin"/>
   </hbox>
 
-  <spring flex="50%"/>
+  <spacer flex="50%"/>
 
   <hbox id="errorTextBody">
       <text value="&errorText2.label;"/>
   </hbox>
 
-  <spring flex="50%"/>
+  <spacer flex="50%"/>
 
   <separator class="thin"/>
   <hbox class="selection" id="RetryNewCancelButtons">

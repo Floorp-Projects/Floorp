@@ -405,7 +405,7 @@
          <text id="channel-name" value="(none)" crop="right"/>
          <text id="channel-topicby" value="(nobody)" crop="right"/>
       </vbox>
-      <spring flex="20%"/>
+      <spacer flex="20%"/>
       <vbox class="status-label" crop="right">
          <text value="&server.label;" crop="right"/>
          <text value="&mode.label;" crop="right"/>
@@ -417,7 +417,7 @@
             <text id="server-name" value="(none)" crop="right"/>
             <text id="channel-mode" value="(none)" crop="right"/>
           </vbox>
-          <spring flex="100%"/>
+          <spacer flex="100%"/>
           <vbox class="status-label" crop="right">
             <text value="&nickname.label;" crop="right"/>
             <text value="&users.label;" crop="right"/>
@@ -426,7 +426,7 @@
             <text id="server-nick" value="(unknown)" crop="right"/>
             <text id="channel-users" value="(none)" crop="right"/>
           </vbox>
-          <spring flex="100%"/>
+          <spacer flex="100%"/>
           <vbox class="status-label" crop="right">
             <text value="&lag.label;" crop="right"/>
             <text value="&limit.label;" crop="right"/>
@@ -435,7 +435,7 @@
             <text id="server-lag" value="-1" crop="right"/>
             <text id="channel-limit" value="(none)" crop="right"/>
           </vbox>
-          <spring flex="100%"/>
+          <spacer flex="100%"/>
           <vbox class="status-label" crop="right"
             collapsed="true">
             <text value="&lastPing.label;" crop="right"/>

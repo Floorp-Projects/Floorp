@@ -40,11 +40,11 @@
            
   <hbox>
     <text value="&heading.label;"/>
-    <spring flex="100%"/>
+    <spacer flex="100%"/>
     <button label="&viewdata.label;" oncommand="formShow();"/>
   </hbox>
 
-  <spring style="height: 20px;"/>
+  <spacer style="height: 20px;"/>
   <hbox class="tabpanel" autostretch="never" style="overflow: auto; height: 260px;">
     <grid class="indent">
       <columns>
@@ -57,14 +57,14 @@
     </grid>
   </hbox>
 
-  <spring style="height: 20px;"/>
+  <spacer style="height: 20px;"/>
 
   <hbox>
     <checkbox id="checkbox" label="&bypass.label;"/>
-    <spring flex="100%"/>
+    <spacer flex="100%"/>
   </hbox>
 
-  <spring style="height: 20px;"/>
+  <spacer style="height: 20px;"/>
 
   <hbox id="okCancelButtons"/>
 </window>

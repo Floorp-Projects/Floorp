@@ -75,7 +75,7 @@
                 accesskey="&languages.customize.moveDown.accesskey;"
                 pref="true" preftype="bool"
                 prefstring="pref.browser.language.disable_button.down" prefattribute="disabled"/>
-        <spring flex="1"/>
+        <spacer flex="1"/>
         <button class="dialog" id="add"
                 label="&languages.customize.addButton.label;"
                 oncommand="AddLanguage();"

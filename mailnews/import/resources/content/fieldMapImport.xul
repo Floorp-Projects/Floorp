@@ -60,21 +60,21 @@ Rights Reserved.
     </tree>
   </vbox>
   
-  <spring style="height: .5em"/>
+  <spacer style="height: .5em"/>
 
   <hbox>
-    <spring flex="50%"/>
+    <spacer flex="50%"/>
     <button class="dialog" id="previous" oncommand="OnPreviousRecord()" label="&fieldMapImport.previous;"/>
-    <spring style="width: 2em"/>
+    <spacer style="width: 2em"/>
     <text value="&fieldMapImport.recordNumber;"/>
-    <spring style="width: 1em"/>
+    <spacer style="width: 1em"/>
     <text id="recordNumber"/>
-    <spring style="width: 2em"/>
+    <spacer style="width: 2em"/>
     <button class="dialog" id="next" oncommand="OnNextRecord()" label="&fieldMapImport.next;"/>
-    <spring flex="50%"/>    
+    <spacer flex="50%"/>    
   </hbox>
 
-  <spring style="height: 2em"/>
+  <spacer style="height: 2em"/>
 
   <!-- OK & Cancel buttons -->
   <hbox id="okCancelButtons"/>

@@ -36,21 +36,21 @@ Rights Reserved.
 
 	<vbox style="width:100%">
 		<hbox>
-			<spring flex="1"/>
+			<spacer flex="1"/>
 			<text for="ListName" value="&ListName.label;" class="CardEditLabel"/>
 			<hbox class="CardEditWidth">
 				<textbox id="ListName" flex="1"/>
 			</hbox>
 		</hbox>
 		<hbox>
-			<spring flex="1"/>
+			<spacer flex="1"/>
 			<text for="ListNickName" value="&ListNickName.label;" class="CardEditLabel"/>
 			<hbox class="CardEditWidth">
 				<textbox id="ListNickName" flex="1"/>
 			</hbox>
 		</hbox>
 		<hbox>
-			<spring flex="1"/>
+			<spacer flex="1"/>
 			<text for="ListDescription" value="&ListDescription.label;" class="CardEditLabel"/>
 			<hbox class="CardEditWidth">
 				<textbox id="ListDescription" flex="1"/>
@@ -58,10 +58,10 @@ Rights Reserved.
 		</hbox>
 	</vbox>
 
-	<spring style="height:1em"/>
+	<spacer style="height:1em"/>
 		
 	<text value="&AddressTitle.label;"/>
-	<spring style="height:0.1em"/>
+	<spacer style="height:0.1em"/>
 	<hbox  flex="100%">
 		<vbox flex="80%">
 			<tree id="addressListTree" class="inset"

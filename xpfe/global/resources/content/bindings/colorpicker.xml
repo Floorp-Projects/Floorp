@@ -13,88 +13,88 @@
       <xul:vbox flex="1">
 
         <xul:hbox>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #FFFFFF" color="#FFFFFF"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #FFCCCC" color="#FFCCCC"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #FFCC99" color="#FFCC99"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #FFFF99" color="#FFFF99"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #FFFFCC" color="#FFFFCC"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #99FF99" color="#99FF99"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #99FFFF" color="#99FFFF"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #CCFFFF" color="#CCFFFF"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #CCCCFF" color="#CCCCFF"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #FFCCFF" color="#FFCCFF"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFFFF" color="#FFFFFF"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFCCCC" color="#FFCCCC"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFCC99" color="#FFCC99"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFF99" color="#FFFF99"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFFCC" color="#FFFFCC"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #99FF99" color="#99FF99"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #99FFFF" color="#99FFFF"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #CCFFFF" color="#CCFFFF"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #CCCCFF" color="#CCCCFF"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFCCFF" color="#FFCCFF"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spring class="colorpickertile" style="background-color: #CCCCCC" color="#CCCCCC"/>
-          <xul:spring class="colorpickertile" style="background-color: #FF6666" color="#FF6666"/>
-          <xul:spring class="colorpickertile" style="background-color: #FFCC33" color="#FFCC33"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #FFFF66" color="#FFFF66"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #FFFF99" color="#FFFF99"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #66FF99" color="#66FF99"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #33FFFF" color="#33FFFF"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #66FFFF" color="#66FFFF"/>
-          <xul:spring class="colorpickertile" style="background-color: #9999FF" color="#9999FF"/>
-          <xul:spring class="colorpickertile" style="background-color: #FF99FF" color="#FF99FF"/>
+          <xul:spacer class="colorpickertile" style="background-color: #CCCCCC" color="#CCCCCC"/>
+          <xul:spacer class="colorpickertile" style="background-color: #FF6666" color="#FF6666"/>
+          <xul:spacer class="colorpickertile" style="background-color: #FFCC33" color="#FFCC33"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFF66" color="#FFFF66"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFF99" color="#FFFF99"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #66FF99" color="#66FF99"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #33FFFF" color="#33FFFF"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #66FFFF" color="#66FFFF"/>
+          <xul:spacer class="colorpickertile" style="background-color: #9999FF" color="#9999FF"/>
+          <xul:spacer class="colorpickertile" style="background-color: #FF99FF" color="#FF99FF"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spring class="colorpickertile" style="background-color: #C0C0C0" color="#C0C0C0"/>
-          <xul:spring class="colorpickertile" style="background-color: #FF0000" color="#FF0000"/>
-          <xul:spring class="colorpickertile" style="background-color: #FF9900" color="#FF9900"/>
-          <xul:spring class="colorpickertile" style="background-color: #FFCC66" color="#FFCC66"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #FFFF00" color="#FFFF00"/>
-          <xul:spring class="colorpickertile cp-light" style="background-color: #33FF33" color="#33FF33"/>
-          <xul:spring class="colorpickertile" style="background-color: #66CCCC" color="#66CCCC"/>
-          <xul:spring class="colorpickertile" style="background-color: #33CCFF" color="#33CCFF"/>
-          <xul:spring class="colorpickertile" style="background-color: #6666CC" color="#6666CC"/>
-          <xul:spring class="colorpickertile" style="background-color: #CC66CC" color="#CC66CC"/>
+          <xul:spacer class="colorpickertile" style="background-color: #C0C0C0" color="#C0C0C0"/>
+          <xul:spacer class="colorpickertile" style="background-color: #FF0000" color="#FF0000"/>
+          <xul:spacer class="colorpickertile" style="background-color: #FF9900" color="#FF9900"/>
+          <xul:spacer class="colorpickertile" style="background-color: #FFCC66" color="#FFCC66"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #FFFF00" color="#FFFF00"/>
+          <xul:spacer class="colorpickertile cp-light" style="background-color: #33FF33" color="#33FF33"/>
+          <xul:spacer class="colorpickertile" style="background-color: #66CCCC" color="#66CCCC"/>
+          <xul:spacer class="colorpickertile" style="background-color: #33CCFF" color="#33CCFF"/>
+          <xul:spacer class="colorpickertile" style="background-color: #6666CC" color="#6666CC"/>
+          <xul:spacer class="colorpickertile" style="background-color: #CC66CC" color="#CC66CC"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spring class="colorpickertile" style="background-color: #999999" color="#999999"/>
-          <xul:spring class="colorpickertile" style="background-color: #CC0000" color="#CC0000"/>
-          <xul:spring class="colorpickertile" style="background-color: #FF6600" color="#FF6600"/>
-          <xul:spring class="colorpickertile" style="background-color: #FFCC33" color="#FFCC33"/>
-          <xul:spring class="colorpickertile" style="background-color: #FFCC00" color="#FFCC00"/>
-          <xul:spring class="colorpickertile" style="background-color: #33CC00" color="#33CC00"/>
-          <xul:spring class="colorpickertile" style="background-color: #00CCCC" color="#00CCCC"/>
-          <xul:spring class="colorpickertile" style="background-color: #3366FF" color="#3366FF"/>
-          <xul:spring class="colorpickertile" style="background-color: #6633FF" color="#6633FF"/>
-          <xul:spring class="colorpickertile" style="background-color: #CC33CC" color="#CC33CC"/>
+          <xul:spacer class="colorpickertile" style="background-color: #999999" color="#999999"/>
+          <xul:spacer class="colorpickertile" style="background-color: #CC0000" color="#CC0000"/>
+          <xul:spacer class="colorpickertile" style="background-color: #FF6600" color="#FF6600"/>
+          <xul:spacer class="colorpickertile" style="background-color: #FFCC33" color="#FFCC33"/>
+          <xul:spacer class="colorpickertile" style="background-color: #FFCC00" color="#FFCC00"/>
+          <xul:spacer class="colorpickertile" style="background-color: #33CC00" color="#33CC00"/>
+          <xul:spacer class="colorpickertile" style="background-color: #00CCCC" color="#00CCCC"/>
+          <xul:spacer class="colorpickertile" style="background-color: #3366FF" color="#3366FF"/>
+          <xul:spacer class="colorpickertile" style="background-color: #6633FF" color="#6633FF"/>
+          <xul:spacer class="colorpickertile" style="background-color: #CC33CC" color="#CC33CC"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spring class="colorpickertile" style="background-color: #666666" color="#666666"/>
-          <xul:spring class="colorpickertile" style="background-color: #990000" color="#990000"/>
-          <xul:spring class="colorpickertile" style="background-color: #CC6600" color="#CC6600"/>
-          <xul:spring class="colorpickertile" style="background-color: #CC9933" color="#CC9933"/>
-          <xul:spring class="colorpickertile" style="background-color: #999900" color="#999900"/>
-          <xul:spring class="colorpickertile" style="background-color: #009900" color="#009900"/>
-          <xul:spring class="colorpickertile" style="background-color: #339999" color="#339999"/>
-          <xul:spring class="colorpickertile" style="background-color: #3333FF" color="#3333FF"/>
-          <xul:spring class="colorpickertile" style="background-color: #6600CC" color="#6600CC"/>
-          <xul:spring class="colorpickertile" style="background-color: #993399" color="#993399"/>
+          <xul:spacer class="colorpickertile" style="background-color: #666666" color="#666666"/>
+          <xul:spacer class="colorpickertile" style="background-color: #990000" color="#990000"/>
+          <xul:spacer class="colorpickertile" style="background-color: #CC6600" color="#CC6600"/>
+          <xul:spacer class="colorpickertile" style="background-color: #CC9933" color="#CC9933"/>
+          <xul:spacer class="colorpickertile" style="background-color: #999900" color="#999900"/>
+          <xul:spacer class="colorpickertile" style="background-color: #009900" color="#009900"/>
+          <xul:spacer class="colorpickertile" style="background-color: #339999" color="#339999"/>
+          <xul:spacer class="colorpickertile" style="background-color: #3333FF" color="#3333FF"/>
+          <xul:spacer class="colorpickertile" style="background-color: #6600CC" color="#6600CC"/>
+          <xul:spacer class="colorpickertile" style="background-color: #993399" color="#993399"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spring class="colorpickertile" style="background-color: #333333" color="#333333"/>
-          <xul:spring class="colorpickertile" style="background-color: #660000" color="#660000"/>
-          <xul:spring class="colorpickertile" style="background-color: #993300" color="#993300"/>
-          <xul:spring class="colorpickertile" style="background-color: #996633" color="#996633"/>
-          <xul:spring class="colorpickertile" style="background-color: #666600" color="#666600"/>
-          <xul:spring class="colorpickertile" style="background-color: #006600" color="#006600"/>
-          <xul:spring class="colorpickertile" style="background-color: #336666" color="#336666"/>
-          <xul:spring class="colorpickertile" style="background-color: #000099" color="#000099"/>
-          <xul:spring class="colorpickertile" style="background-color: #333399" color="#333399"/>
-          <xul:spring class="colorpickertile" style="background-color: #663366" color="#663366"/>
+          <xul:spacer class="colorpickertile" style="background-color: #333333" color="#333333"/>
+          <xul:spacer class="colorpickertile" style="background-color: #660000" color="#660000"/>
+          <xul:spacer class="colorpickertile" style="background-color: #993300" color="#993300"/>
+          <xul:spacer class="colorpickertile" style="background-color: #996633" color="#996633"/>
+          <xul:spacer class="colorpickertile" style="background-color: #666600" color="#666600"/>
+          <xul:spacer class="colorpickertile" style="background-color: #006600" color="#006600"/>
+          <xul:spacer class="colorpickertile" style="background-color: #336666" color="#336666"/>
+          <xul:spacer class="colorpickertile" style="background-color: #000099" color="#000099"/>
+          <xul:spacer class="colorpickertile" style="background-color: #333399" color="#333399"/>
+          <xul:spacer class="colorpickertile" style="background-color: #663366" color="#663366"/>
         </xul:hbox>
         <xul:hbox>
-          <xul:spring class="colorpickertile" style="background-color: #000000" color="#000000"/>
-          <xul:spring class="colorpickertile" style="background-color: #330000" color="#330000"/>
-          <xul:spring class="colorpickertile" style="background-color: #663300" color="#663300"/>
-          <xul:spring class="colorpickertile" style="background-color: #663333" color="#663333"/>
-          <xul:spring class="colorpickertile" style="background-color: #333300" color="#333300"/>
-          <xul:spring class="colorpickertile" style="background-color: #003300" color="#003300"/>
-          <xul:spring class="colorpickertile" style="background-color: #003333" color="#003333"/>
-          <xul:spring class="colorpickertile" style="background-color: #000066" color="#000066"/>
-          <xul:spring class="colorpickertile" style="background-color: #330099" color="#330099"/>
-          <xul:spring class="colorpickertile" style="background-color: #330033" color="#330033"/>
+          <xul:spacer class="colorpickertile" style="background-color: #000000" color="#000000"/>
+          <xul:spacer class="colorpickertile" style="background-color: #330000" color="#330000"/>
+          <xul:spacer class="colorpickertile" style="background-color: #663300" color="#663300"/>
+          <xul:spacer class="colorpickertile" style="background-color: #663333" color="#663333"/>
+          <xul:spacer class="colorpickertile" style="background-color: #333300" color="#333300"/>
+          <xul:spacer class="colorpickertile" style="background-color: #003300" color="#003300"/>
+          <xul:spacer class="colorpickertile" style="background-color: #003333" color="#003333"/>
+          <xul:spacer class="colorpickertile" style="background-color: #000066" color="#000066"/>
+          <xul:spacer class="colorpickertile" style="background-color: #330099" color="#330099"/>
+          <xul:spacer class="colorpickertile" style="background-color: #330033" color="#330033"/>
         </xul:hbox>
       </xul:vbox>
       <!-- Something to take tab focus

@@ -13,7 +13,7 @@
           <xul:vbox flex="1">
             <xul:text class="panelheader-icon" inherits="value=label" crop="right"/>
           </xul:vbox>
-          <xul:spring flex="1"/>
+          <xul:spacer flex="1"/>
         </xul:hbox>
         <xul:hbox class="panelheader-texture"/>
       </xul:hbox>

@@ -108,7 +108,7 @@
                 tooltip="aTooltip"
                 oncommand="goHome();"/>
 
-        <spring flex="1"/>
+        <spacer flex="1"/>
 
         <button id="print" class="button-toolbar-1 top" label="&printButton.label;"
                 tooltip="aTooltip" tooltiptext="&printButton.tooltip;" oncommand="print();"/>

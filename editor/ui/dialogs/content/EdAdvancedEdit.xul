@@ -98,7 +98,7 @@
         </tree>
         <hbox valign="middle" autostretch="never" flex="1">
           <text class="label" value="&editAttribute.label;"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveHTMLAttribute();"/>
         </hbox>
         <grid>
@@ -148,7 +148,7 @@
         </tree>
         <hbox valign="middle" autostretch="never" flex="1">
           <text class="label" value="&editAttribute.label;"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveCSSAttribute();"/>
         </hbox>
         <grid>
@@ -193,7 +193,7 @@
         </tree>
         <hbox valign="middle" autostretch="never" flex="1">
           <text class="label" value="&editAttribute.label;"/>
-          <spring flex="1"/>
+          <spacer flex="1"/>
           <button class="dialog" label="&removeAttribute.label;" oncommand="RemoveJSEAttribute()"/>
         </hbox>
         <grid>
@@ -217,7 +217,7 @@
       </vbox>
     </tabpanels>
   </tabbox>
-  <spring class="spacer"/>
+  <spacer class="spacer"/>
   <hbox id="okCancelHelpButtonsRight"/> 
 
 </window>

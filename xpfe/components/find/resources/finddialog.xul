@@ -63,7 +63,7 @@ Contributor(s):
         </hbox>
       </row>
       <row>
-        <spring/>
+        <spacer/>
         <vbox>
           <checkbox id="dialog.caseSensitive" label="&caseSensitiveCheckbox.label;"/>
           <checkbox id="dialog.wrap" label="&wrapCheckbox.label;"/>

@@ -14,7 +14,7 @@
 
   <vbox style="width:100%">
   <hbox style="width:100%">
-      <spring flex="1"/>
+      <spacer flex="1"/>
      <text class="label" value="&notInToCc.label;" accesskey="&notInToCc.accesskey;" for="NotInToCc"/>
       <menulist id="NotInToCc" pref="true" preftype="int" prefstring="mail.mdn.report.not_in_to_cc"
                 prefattribute="value">
@@ -27,7 +27,7 @@
   </hbox>
 
   <hbox style="width:100%">
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <text class="label" value="&outside.label;" accesskey="&outside.accesskey;" for="OutsideDomain"/>
       <menulist id="OutsideDomain" pref="true" preftype="int" prefstring="mail.mdn.report.outside_domain"
                 prefattribute="value">
@@ -40,7 +40,7 @@
   </hbox>
 
   <hbox style="width:100%">
-      <spring flex="1"/>
+      <spacer flex="1"/>
      <text class="label" value="&other.label;" accesskey="&other.accesskey;" for="Other"/>
       <menulist id="Other" pref="true" preftype="int" prefstring="mail.mdn.report.other"
                 prefattribute="value">
@@ -53,7 +53,7 @@
   </hbox>
   </vbox>
 
-  <spring style="height:1em"/>
+  <spacer style="height:1em"/>
     
   <hbox id="okCancelButtons"/>
 

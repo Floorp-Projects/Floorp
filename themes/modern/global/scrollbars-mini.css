@@ -53,7 +53,7 @@ thumb {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#thumb-horizontal");
 }
 
-.thumb-horz-spring-left {
+.thumb-horz-spacer-left {
   width: 3px;
   height: 8px;
   background: url("chrome://global/skin/scrollbar/mini-thumb-hrz-lft.gif") no-repeat;
@@ -64,7 +64,7 @@ thumb {
   background: url("chrome://global/skin/scrollbar/mini-thumb-hrz-mid.gif") repeat-x;
 }
 
-.thumb-horz-spring-right {
+.thumb-horz-spacer-right {
   width: 3px;
   height: 8px;
   background: url("chrome://global/skin/scrollbar/mini-thumb-hrz-rit.gif") no-repeat;
@@ -78,7 +78,7 @@ thumb {
 
 /* ..... active state ..... */
 
-thumb:active > .thumb-horz-spring-left {
+thumb:active > .thumb-horz-spacer-left {
   background-image: url("chrome://global/skin/scrollbar/mini-thumb-hrz-lft-act.gif");
 }
 
@@ -86,7 +86,7 @@ thumb:active > .thumb-horz-box-middle {
   background-image: url("chrome://global/skin/scrollbar/mini-thumb-hrz-mid-act.gif");
 }
 
-thumb:active > .thumb-horz-spring-right {
+thumb:active > .thumb-horz-spacer-right {
   background-image: url("chrome://global/skin/scrollbar/mini-thumb-hrz-rit-act.gif");
 }
 
@@ -100,7 +100,7 @@ thumb[orient="vertical"] {
   -moz-binding: url("chrome://global/skin/globalBindings.xml#thumb-vertical");
 }
 
-.thumb-vert-spring-top {
+.thumb-vert-spacer-top {
   background: url("chrome://global/skin/scrollbar/mini-thumb-vrt-top.gif") no-repeat;
   height: 3px;
   width: 8px;
@@ -111,7 +111,7 @@ thumb[orient="vertical"] {
   width: 8px;
 }
 
-.thumb-vert-spring-bottom {
+.thumb-vert-spacer-bottom {
   background: url("chrome://global/skin/scrollbar/mini-thumb-vrt-btm.gif") no-repeat;
   height: 3px;
   width: 8px;
@@ -125,7 +125,7 @@ thumb[orient="vertical"] {
 
 /* ..... active state ..... */
 
-thumb:active > .thumb-vert-spring-top {
+thumb:active > .thumb-vert-spacer-top {
   background-image: url("chrome://global/skin/scrollbar/mini-thumb-vrt-top-act.gif") no-repeat;
 }
 
@@ -133,7 +133,7 @@ thumb:active > .thumb-vert-box-middle {
   background-image: url("chrome://global/skin/scrollbar/mini-thumb-vrt-mid-act.gif") repeat-y;
 }
 
-thumb:active > .thumb-vert-spring-bottom {
+thumb:active > .thumb-vert-spacer-bottom {
   background-image: url("chrome://global/skin/scrollbar/mini-thumb-vrt-btm-act.gif") no-repeat;
 }
 

@@ -49,7 +49,7 @@ Contributor(s):
     
     <hbox autostretch="never">
       <text class="label" value="&selectWindowLayout.label;"/>
-      <spring flex="1"/>
+      <spacer flex="1"/>
       <radiogroup id="mailPaneConfig" pref="true" preftype="int" prefstring="mail.pane_config"
                   prefattribute="value">
         <radio group="mailPaneConfig" class="iconic" value="0" id="classic"/>

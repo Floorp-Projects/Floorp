@@ -213,7 +213,7 @@ Rights Reserved.
 	    
 		<menu id="tasksMenu"/>
 		<menu id="menu_Help"/>
-		<spring flex="100%"/>
+		<spacer flex="100%"/>
 	</menubar>
 	
 	<!-- toolbar -->
@@ -227,10 +227,10 @@ Rights Reserved.
         <button class="button-toolbar-2 top" orient="vertical" id="button-delete" observes="button_delete" label="&deleteButton.label;" tooltip="aTooltip" tooltiptext="&deleteButton.tooltip;" oncommand="goDoCommand('button_delete');"/>
 
         <vbox flex="100%">
-          <spring flex="1"/> 
+          <spacer flex="1"/> 
           <!--html id="searchlabel">&showNames.label;</html>
           <textbox id="searchtext" type="text" align="bottom"/> 
-          <spring flex="1"/--> 
+          <spacer flex="1"/--> 
         </vbox>
 
         <!--button id="button_stop" class="other28" align="top" label="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;" disabled="true" oncommand="AbStop()"/>

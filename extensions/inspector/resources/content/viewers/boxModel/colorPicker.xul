@@ -54,7 +54,7 @@
   ]]></script>
         
   <vbox>
-    <spring id="bxColorSwatch" width="50" height="50" style="background-color: #FFFFFF"/>
+    <spacer id="bxColorSwatch" width="50" height="50" style="background-color: #FFFFFF"/>
     <textbox id="txColor" readonly="true"/>
   </vbox>
   <vbox flex="1">

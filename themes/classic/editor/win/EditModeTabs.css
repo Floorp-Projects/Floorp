@@ -4,7 +4,7 @@
   border-top: none;
 }
 
-.tabs-bottom > .tabs-spring {
+.tabs-bottom > .tabs-spacer {
   border-top: 1px solid ThreeDShadow !important;
   border-bottom: none;
 }
