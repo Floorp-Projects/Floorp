@@ -812,8 +812,8 @@ sub init {
              # If the numbers are the same, all flags match the condition,
              # so this bug should be included.
              if ($t =~ m/not/) {
-                push(@fields, "SUM($ff IS NOT NULL) AS allflags_$chartid");
-                push(@fields, "SUM($term) AS matchingflags_$chartid");
+                push(@fields, "SUM(CASE WHEN $ff IS NOT NULL THEN 1 ELSE 0 END) AS allflags_$chartid");
+                push(@fields, "SUM(CASE WHEN $term THEN 1 ELSE 0 END) AS matchingflags_$chartid");
                 push(@having, "allflags_$chartid = matchingflags_$chartid");
                 $term = "0=0";
              }
