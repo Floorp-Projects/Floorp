@@ -72,29 +72,6 @@
 #include <fullsoft.h>
 #endif
 
-/*********************************************
- SilentDownload
-*********************************************/
-#include "nsSilentDownload.h"
-#include "nsIDOMSilentDownload.h"
-
-static nsIDOMSilentDownload *silentDownload = NULL;
-static NS_DEFINE_IID(kISilentDownloadIID, NS_IDOMSILENTDOWNLOAD_IID);
-static NS_DEFINE_IID(kSilentDownloadCID,  NS_SilentDownload_CID);
-/*********************************************/
-
-/*********************************************
- SoftwareUpdate
-*********************************************/
-#include "nsISoftwareUpdate.h"
-#include "nsSoftwareUpdateIIDs.h"
-
-static nsISoftwareUpdate *softwareUpdate= NULL;
-static NS_DEFINE_IID(kISoftwareUpdateIID, NS_ISOFTWAREUPDATE_IID);
-static NS_DEFINE_IID(kSoftwareUpdateCID,  NS_SoftwareUpdate_CID);
-/*********************************************/
-
-
 extern nsresult NS_NewBrowserWindowFactory(nsIFactory** aFactory);
 extern nsresult NS_NewXPBaseWindowFactory(nsIFactory** aFactory);
 extern "C" void NS_SetupRegistry();
@@ -325,18 +302,6 @@ nsViewerApp::Initialize(int argc, char** argv)
     return rv;
   }
 
-
-  rv = nsComponentManager::CreateInstance(kSoftwareUpdateCID, 
-                                      nsnull,
-                                      kISoftwareUpdateIID,
-                                      (void**) &softwareUpdate);
-    
-
-  rv = nsComponentManager::CreateInstance(kSilentDownloadCID, 
-                                      nsnull,
-                                      kISilentDownloadIID,
-                                      (void**) &silentDownload);
-
   // Finally process our arguments
   rv = ProcessArguments(argc, argv);
 
@@ -347,12 +312,6 @@ nsViewerApp::Initialize(int argc, char** argv)
 nsresult
 nsViewerApp::Exit()
 {
-  if (silentDownload != nsnull)
-    NS_RELEASE(silentDownload);
-  
-  if (softwareUpdate!= nsnull)
-    NS_RELEASE(softwareUpdate);
-  
 
   Destroy();
   mAppShell->Exit();
