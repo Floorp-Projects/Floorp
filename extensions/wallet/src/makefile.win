@@ -20,7 +20,7 @@ DEPTH=..\..\..
 LIBRARY_NAME=wallet
 CPP_OBJS= .\$(OBJDIR)\wallet.obj		\
 	.\$(OBJDIR)\nsWalletFactory.obj		\
-	.\$(OBJDIR)\nsWalletService.obj
+	.\$(OBJDIR)\nsWalletService.obj		\
 	$(NULL)
 
 CPPSRCS = \
