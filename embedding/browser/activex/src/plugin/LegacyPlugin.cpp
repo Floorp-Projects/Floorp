@@ -342,7 +342,7 @@ WillHandleCLSID(const CLSID &clsid)
     memcpy(&cid, &clsid, sizeof(nsCID));
     PRBool isSafe = PR_FALSE;
     PRBool classExists = PR_FALSE;
-    dispSupport->IsClassSafeToHost(cid, &isSafe, &classExists);
+    dispSupport->IsClassSafeToHost(cid, &classExists, &isSafe);
     if (classExists && !isSafe)
         return FALSE;
     return TRUE;
