@@ -44,32 +44,32 @@
 #define FONT_HASH_SIZE		127
 #define DEFAULT_BASE_FONT_SIZE	3
 
-#define PRE_TEXT_NO		0
-#define PRE_TEXT_YES		1
-#define PRE_TEXT_WRAP		2
-#define PRE_TEXT_COLS		3
+#define PRE_TEXT_NO			0  /* not preformatted */
+#define PRE_TEXT_YES		1  /* preformatted, no wrapping */
+#define PRE_TEXT_WRAP		2  /* preformatted, but wrapped */
+#define PRE_TEXT_COLS		3  /* preformatted, but set to wrap at a specific column */
 
-#define QUOTE_NONE		0
-#define QUOTE_MQUOTE		1
-#define QUOTE_JWZ		2
-#define QUOTE_CITE		3
+#define QUOTE_NONE			0  /* no quote marker */
+#define QUOTE_MQUOTE		1  /* use blue bars to mark the quoted area. */
+#define QUOTE_JWZ			2  /* use '>'s to mark the quoted area. */
+#define QUOTE_CITE			3  /* use extra leading space to indicate the quoted area */
 
-#define SUBDOC_NOT		0
-#define SUBDOC_IS		1
-#define SUBDOC_CELL		2
-#define SUBDOC_CAPTION		3
+#define SUBDOC_NOT			0  /* not really a subdoc. */
+#define SUBDOC_IS			1  /* normal subdoc -- not used. */
+#define SUBDOC_CELL			2  /* table cell */
+#define SUBDOC_CAPTION		3  /* table caption */
 
-#define LO_ALIGN_DEFAULT	-1
-#define LO_ALIGN_CENTER		0
-#define LO_ALIGN_LEFT		1
-#define LO_ALIGN_RIGHT		2
-#define LO_ALIGN_TOP		3
-#define LO_ALIGN_BOTTOM		4
-#define LO_ALIGN_BASELINE	5
+#define LO_ALIGN_DEFAULT		-1
+#define LO_ALIGN_CENTER			0
+#define LO_ALIGN_LEFT			1
+#define LO_ALIGN_RIGHT			2
+#define LO_ALIGN_TOP			3
+#define LO_ALIGN_BOTTOM			4
+#define LO_ALIGN_BASELINE		5
 #define LO_ALIGN_NCSA_CENTER	6
 #define LO_ALIGN_NCSA_BOTTOM	7
-#define LO_ALIGN_NCSA_TOP	8
-#define LO_ALIGN_JUSTIFY	9
+#define LO_ALIGN_NCSA_TOP		8
+#define LO_ALIGN_JUSTIFY		9
 
 #define ICON_X_OFFSET 4
 #define ICON_Y_OFFSET 4
