@@ -478,7 +478,9 @@ nsTableCellMap::InsertRows(nsTableRowGroupFrame& aParent,
       cellMap->InsertRows(*this, aRows, rowIndex, aConsiderSpans, aDamageArea);
       aDamageArea.y = aFirstRowIndex;
       aDamageArea.height = PR_MAX(0, GetRowCount() - aFirstRowIndex);
-      //Dump("after InsertRows");
+#ifdef DEBUG_TABLE_CELLMAP 
+      Dump("after InsertRows");
+#endif
       if (mBCInfo) {
         BCData* bcData;
         PRInt32 count = mBCInfo->mRightBorders.Count();
@@ -536,7 +538,9 @@ nsTableCellMap::RemoveRows(PRInt32         aFirstRowIndex,
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
   }
-  //Dump("after RemoveRows");
+#ifdef DEBUG_TABLE_CELLMAP
+  Dump("after RemoveRows");
+#endif
 }
 
 PRInt32
@@ -582,7 +586,9 @@ nsTableCellMap::AppendCell(nsTableCellFrame& aCellFrame,
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
   }
-  //Dump("after AppendCell");
+#ifdef DEBUG_TABLE_CELLMAP
+  Dump("after AppendCell");
+#endif
   return result;
 }
 
@@ -606,7 +612,9 @@ nsTableCellMap::InsertCells(nsVoidArray&          aCellFrames,
     rowIndex -= cellMap->GetRowCount();
     cellMap = cellMap->GetNextSibling();
   }
-  //Dump("after InsertCells");
+#ifdef DEBUG_TABLE_CELLMAP
+  Dump("after InsertCells");
+#endif
 }
 
 
@@ -628,7 +636,9 @@ nsTableCellMap::RemoveCell(nsTableCellFrame* aCellFrame,
       PRInt32 colIndex;
       aCellFrame->GetColIndex(colIndex);
       aDamageArea.width = PR_MAX(0, GetColCount() - colIndex - 1);
-      //Dump("after RemoveCell");
+#ifdef DEBUG_TABLE_CELLMAP
+      Dump("after RemoveCell");
+#endif
       return;
     }
     rowIndex -= cellMap->GetRowCount();
@@ -1255,7 +1265,15 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
 
   // Setup CellData for this cell
   if (origData) {
+    NS_ASSERTION(origData->IsDead(), "replacing a non dead cell is a memory leak");
     origData->Init(aCellFrame);
+    // we are replacing a dead cell, increase the number of cells 
+    // originating at this column
+    nsColInfo* colInfo = aMap.GetColInfoAt(startColIndex);
+    NS_ASSERTION(colInfo, "access to a non existing column");
+    if (colInfo) { 
+      colInfo->mNumCellsOrig++;
+    }
   }
   else {
     origData = (aMap.mBCInfo) ? new BCCellData(aCellFrame) : new CellData(aCellFrame); if (!origData) ABORT1(origData);
@@ -1331,8 +1349,10 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
       }
     }
   }
-  //printf("appended cell=%p row=%d \n", aCellFrame, aRowIndex);
-  //aMap.Dump();
+#ifdef DEBUG_TABLE_CELLMAP
+  printf("appended cell=%p row=%d \n", aCellFrame, aRowIndex);
+  aMap.Dump();
+#endif
   return origData;
 }
 
