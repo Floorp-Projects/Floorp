@@ -154,8 +154,8 @@ DefParam("blurbhtml",
          "l",
          "This is <B>Bugzilla</B>: the Mozilla bug system.  For more 
 information about what Bugzilla is and what it can do, see 
-<A HREF=http://www.mozilla.org/>mozilla.org</A>'s
-<A HREF=http://www.mozilla.org/bugs/><B>bug pages</B></A>.");
+<A HREF=\"http://www.mozilla.org/>mozilla.org\"</A>'s
+<A HREF=\"http://www.mozilla.org/bugs/\"><B>bug pages</B></A>.");
 
 
 
@@ -298,7 +298,7 @@ DefParam("usedependencies",
          1);
 
 DefParam("webdotbase",
-         "This is the URL prefix that is common to all requests for webdot.  The <a href=http://www.research.att.com/~north/cgi-bin/webdot.cgi>webdot package</a> is a very swell thing that generates pictures of graphs.  If you have an installation of bugsplat that hides behind a firewall, then to get graphs to work, you will have to install a copy of webdot behind your firewall, and change this path to match.  Also, webdot has some trouble with software domain names, so you may have to play games and hack the %urlbase% part of this.  If this all seems like too much trouble, you can set this paramater to be the empty string, which will cause the graphing feature to be disabled entirely.",
+         "This is the URL prefix that is common to all requests for webdot.  The <a href=\"http://www.research.att.com/~north/cgi-bin/webdot.cgi\">webdot package</a> is a very swell thing that generates pictures of graphs.  If you have an installation of bugsplat that hides behind a firewall, then to get graphs to work, you will have to install a copy of webdot behind your firewall, and change this path to match.  Also, webdot has some trouble with software domain names, so you may have to play games and hack the %urlbase% part of this.  If this all seems like too much trouble, you can set this paramater to be the empty string, which will cause the graphing feature to be disabled entirely.",
          "t",
          "http://www.research.att.com/~north/cgi-bin/webdot.cgi/%urlbase%");
 
