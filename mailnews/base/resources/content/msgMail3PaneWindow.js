@@ -43,6 +43,9 @@ var gActiveThreadPaneSortColumn = "";
 
 var gStartFolderUri = null;
 
+//If we've loaded a message, set to true.  Helps us keep the start page around.
+var gHaveLoadedMessage;
+
 // the folderListener object
 var folderListener = {
     OnItemAdded: function(parentItem, item, view) {},
@@ -241,6 +244,8 @@ function OnLoadMessenger()
 	catch (ex) {
 		dump("failed to set the view headers menu item\n");
 	}
+
+	gHaveLoadedMessage = false;
 
 	var afterLoadMessenger = new Date();
 
@@ -565,11 +570,14 @@ function ClearThreadTreeSelection()
 
 function ClearMessagePane()
 {
-	gCurrentDisplayedMessage = null;
-    if (window.frames["messagepane"].location != "about:blank")
-        window.frames["messagepane"].location = "about:blank";
-    // hide the message header view AND the message pane...
-    HideMessageHeaderPane();
+	if(gHaveLoadedMessage)
+	{	
+		gCurrentDisplayedMessage = null;
+		if (window.frames["messagepane"].location != "about:blank")
+			window.frames["messagepane"].location = "about:blank";
+		// hide the message header view AND the message pane...
+		HideMessageHeaderPane();
+	}
 }
 
 function StopUrls()
@@ -641,7 +649,8 @@ function ThreadPaneDoubleClick(treeitem)
 	}
 	else
 	{
-		MsgOpenNewWindowForMessage();
+		var messageUri = treeitem.getAttribute("id");
+		MsgOpenNewWindowForMessage(messageUri, null);
 	}
 }
 
@@ -937,6 +946,15 @@ var DefaultController =
 			case "cmd_shiftDelete":
 			case "cmd_nextUnreadMsg":
 			case "cmd_nextUnreadThread":
+			case "cmd_sortBySubject":
+			case "cmd_sortByDate":
+			case "cmd_sortByFlag":
+			case "cmd_sortByPriority":
+			case "cmd_sortBySender":
+			case "cmd_sortBySize":
+			case "cmd_sortByStatus":
+			case "cmd_sortByUnread":
+			case "cmd_sortByOrderReceived":
 				return true;
             
 			default:
@@ -979,6 +997,16 @@ var DefaultController =
 				{
 					return true;
 				}
+			case "cmd_sortBySubject":
+			case "cmd_sortByDate":
+			case "cmd_sortByFlag":
+			case "cmd_sortByPriority":
+			case "cmd_sortBySender":
+			case "cmd_sortBySize":
+			case "cmd_sortByStatus":
+			case "cmd_sortByUnread":
+			case "cmd_sortByOrderReceived":
+				return true;
 			default:
 				return false;
 		}
@@ -1004,6 +1032,33 @@ var DefaultController =
 				break;
 			case "cmd_nextUnreadThread":
 				MsgNextUnreadThread();
+				break;
+			case "cmd_sortBySubject":
+				MsgSortBySubject();
+				break;
+			case "cmd_sortByDate":
+				MsgSortByDate();
+				break;
+			case "cmd_sortByFlag":
+				MsgSortByFlag();
+				break;
+			case "cmd_sortByPriority":
+				MsgSortByPriority();
+				break;
+			case "cmd_sortBySender":
+				MsgSortBySender();
+				break;
+			case "cmd_sortBySize":
+				MsgSortBySize();
+				break;
+			case "cmd_sortByStatus":
+				MsgSortByStatus();
+				break;
+			case "cmd_sortByUnread":
+				MsgSortByUnread();
+				break;
+			case "cmd_sortByOrderReceived":
+				MsgSortByOrderReceived();
 				break;
 		}
 	},
@@ -1040,6 +1095,15 @@ function CommandUpdate_Mail()
 	goUpdateCommand('cmd_shiftDelete');
 	goUpdateCommand('cmd_nextUnreadMsg');
 	goUpdateCommand('cmd_nextUnreadThread');
+	goUpdateCommand('cmd_sortBySubject');
+	goUpdateCommand('cmd_sortByDate');
+	goUpdateCommand('cmd_sortByFlag');
+	goUpdateCommand('cmd_sortByPriority');
+	goUpdateCommand('cmd_sortBySender');
+	goUpdateCommand('cmd_sortBySize');
+	goUpdateCommand('cmd_sortByStatus');
+	goUpdateCommand('cmd_sortByUnread');
+	goUpdateCommand('cmd_sortByOrderReceived');
 }
 
 function SetupUndoRedoCommand(command)
@@ -1251,3 +1315,51 @@ function SetNextMessageAfterDelete(messagesToCheck, useSelection)
 			gNextMessageAfterDelete = null;
 	}
 }
+
+//3pane related commands.  Need to go in own file.  Putting here for the moment.
+function MsgSortByDate()
+{
+	SortThreadPane('DateColumn', 'http://home.netscape.com/NC-rdf#Date', null, true, null);
+}
+
+function MsgSortBySender()
+{
+	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Sender', 'http://home.netscape.com/NC-rdf#Date', true, null);
+}
+
+function MsgSortByRecipient()
+{
+	SortThreadPane('AuthorColumn', 'http://home.netscape.com/NC-rdf#Recipient', 'http://home.netscape.com/NC-rdf#Date', true, null);
+}
+
+function MsgSortByStatus()
+{
+	SortThreadPane('StatusColumn', 'http://home.netscape.com/NC-rdf#Status', 'http://home.netscape.com/NC-rdf#Date', true, null);
+}
+
+function MsgSortBySubject()
+{
+	SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject', 'http://home.netscape.com/NC-rdf#Date', true, null);
+}
+
+function MsgSortByFlagged() 
+{
+	SortThreadPane('FlaggedButtonColumn', 'http://home.netscape.com/NC-rdf#Flagged', 'http://home.netscape.com/NC-rdf#Date', true, null);
+}
+function MsgSortByPriority()
+{
+	SortThreadPane('PriorityColumn', 'http://home.netscape.com/NC-rdf#Priority', 'http://home.netscape.com/NC-rdf#Date',true, null);
+}
+function MsgSortBySize() 
+{
+	SortThreadPane('SizeColumn', 'http://home.netscape.com/NC-rdf#Size', 'http://home.netscape.com/NC-rdf#Date', true, null);
+}
+function MsgSortByUnread()
+{
+	SortThreadPane('UnreadColumn', 'http://home.netscape.com/NC-rdf#TotalUnreadMessages','http://home.netscape.com/NC-rdf#Date', true, null);
+}
+function MsgSortByOrderReceived()
+{
+	SortThreadPane('OrderReceivedColumn', 'http://home.netscape.com/NC-rdf#OrderReceived','http://home.netscape.com/NC-rdf#Date', true, null);
+}
+

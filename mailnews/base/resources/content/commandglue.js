@@ -71,6 +71,7 @@ function LoadMessage(messageNode)
       setTitleFromFolder(message.GetMsgFolder(), message.mime2DecodedSubject);
 
 	  gCurrentDisplayedMessage = uri;
+	  gHaveLoadedMessage = true;
 	  OpenURL(uri);
   }
 }
@@ -506,6 +507,7 @@ function ToggleMessageFlagged(treeItem)
 //Called when the splitter in between the thread and message panes is clicked.
 function OnClickThreadAndMessagePaneSplitter()
 {
+	dump("We are in OnClickThreadAndMessagePaneSplitter()\n");
 	var collapsed = IsThreadAndMessagePaneSplitterCollapsed();
 	//collapsed is the previous state so we know we are opening.
 	if(collapsed)
