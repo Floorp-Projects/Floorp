@@ -264,7 +264,7 @@ PK11SDR_Decrypt(SECItem *data, SECItem *result, void *cx)
   if (!ctx) { rv = SECFailure; goto loser; }
 
   paddedResult.len = sdrResult.data.len;
-  paddedResult.data = PORT_ArenaAlloc(arena, result->len);
+  paddedResult.data = PORT_ArenaAlloc(arena, paddedResult.len);
 
   rv = PK11_CipherOp(ctx, paddedResult.data, &paddedResult.len, paddedResult.len,
                      sdrResult.data.data, sdrResult.data.len);
