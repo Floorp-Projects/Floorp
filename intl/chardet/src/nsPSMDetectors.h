@@ -107,7 +107,8 @@ typedef struct {
   float mSecoundByteWeight;
 } nsEUCStatistics;
 
-static nsEUCStatistics gBig5Statistics = 
+/*
+extern nsEUCStatistics gBig5Statistics = 
 #include "Big5Statistics.h"
 // end of UECTWStatistics.h include
 
@@ -136,130 +137,26 @@ static nsEUCStatistics gEUCKRStatistics =
    
    May need improvement ....
  */
-
 #define ZHTW_DETECTOR_NUM_VERIFIERS 7
+extern nsVerifier *gZhTwVerifierSet[];
+extern nsEUCStatistics *gZhTwStatisticsSet[];
 
-static nsVerifier *gZhTwVerifierSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
-      &nsUTF8Verifier,
-      &nsBIG5Verifier,
-      &nsISO2022CNVerifier,
-      &nsEUCTWVerifier,
-      &nsCP1252Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier
-};
-
-static nsEUCStatistics *gZhTwStatisticsSet[ZHTW_DETECTOR_NUM_VERIFIERS] = {
-      nsnull,
-      &gBig5Statistics,
-      nsnull,
-      &gEUCTWStatistics,
-      nsnull,
-      nsnull,
-      nsnull
-};
-
-//==========================================================
 #define KO_DETECTOR_NUM_VERIFIERS 6
+extern nsVerifier *gKoVerifierSet[];
 
-static nsVerifier *gKoVerifierSet[KO_DETECTOR_NUM_VERIFIERS] = {
-      &nsUTF8Verifier,
-      &nsEUCKRVerifier,
-      &nsISO2022KRVerifier,
-      &nsCP1252Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier
-};
-
-//==========================================================
 #define ZHCN_DETECTOR_NUM_VERIFIERS 7
+extern nsVerifier *gZhCnVerifierSet[];
 
-static nsVerifier *gZhCnVerifierSet[ZHCN_DETECTOR_NUM_VERIFIERS] = {
-      &nsUTF8Verifier,
-      &nsGB2312Verifier,
-      &nsISO2022CNVerifier,
-      &nsHZVerifier,
-      &nsCP1252Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier
-};
-
-//==========================================================
 #define JA_DETECTOR_NUM_VERIFIERS 7
+extern nsVerifier *gJaVerifierSet[];
 
-static nsVerifier *gJaVerifierSet[JA_DETECTOR_NUM_VERIFIERS] = {
-      &nsUTF8Verifier,
-      &nsSJISVerifier,
-      &nsEUCJPVerifier,
-      &nsISO2022JPVerifier,
-      &nsCP1252Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier
-};
-
-//==========================================================
 #define ZH_DETECTOR_NUM_VERIFIERS 9
+extern nsVerifier *gZhVerifierSet[];
+extern nsEUCStatistics *gZhStatisticsSet[];
 
-static nsVerifier *gZhVerifierSet[ZH_DETECTOR_NUM_VERIFIERS] = {
-      &nsUTF8Verifier,
-      &nsGB2312Verifier,
-      &nsBIG5Verifier,
-      &nsISO2022CNVerifier,
-      &nsHZVerifier,
-      &nsEUCTWVerifier,
-      &nsCP1252Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier
-};
-
-static nsEUCStatistics *gZhStatisticsSet[ZH_DETECTOR_NUM_VERIFIERS] = {
-      nsnull,
-      &gGB2312Statistics,
-      &gBig5Statistics,
-      nsnull,
-      nsnull,
-      &gEUCTWStatistics,
-      nsnull,
-      nsnull,
-      nsnull
-};
-
-//==========================================================
 #define CJK_DETECTOR_NUM_VERIFIERS 14
-
-static nsVerifier *gCJKVerifierSet[CJK_DETECTOR_NUM_VERIFIERS] = {
-      &nsUTF8Verifier,
-      &nsSJISVerifier,
-      &nsEUCJPVerifier,
-      &nsISO2022JPVerifier,
-      &nsEUCKRVerifier,
-      &nsISO2022KRVerifier,
-      &nsBIG5Verifier,
-      &nsEUCTWVerifier,
-      &nsGB2312Verifier,
-      &nsISO2022CNVerifier,
-      &nsHZVerifier,
-      &nsCP1252Verifier,
-      &nsUCS2BEVerifier,
-      &nsUCS2LEVerifier
-};
-
-static nsEUCStatistics *gCJKStatisticsSet[CJK_DETECTOR_NUM_VERIFIERS] = {
-      nsnull,
-      nsnull,
-      &gEUCJPStatistics,
-      nsnull,
-      &gEUCKRStatistics,
-      nsnull,
-      &gBig5Statistics,
-      &gEUCTWStatistics,
-      &gGB2312Statistics,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull,
-      nsnull
-};
+extern nsVerifier *gCJKVerifierSet[];
+extern nsEUCStatistics *gCJKStatisticsSet[];
 
 class nsEUCSampler {
   public:
