@@ -127,7 +127,7 @@ ifdef MOZ_CO_BRANCH
 endif
 
 ifdef MOZ_CO_DATE
-  CVS_CO_FLAGS := $(CVS_CO_FLAGS) -D "$(MOZ_CO_DATE)"
+  CVS_CO_FLAGS := $(CVS_CO_FLAGS) -D "'$(MOZ_CO_DATE)'"
 endif
 
 ifndef MOZ_CO_MODULE
