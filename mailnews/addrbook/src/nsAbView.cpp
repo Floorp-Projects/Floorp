@@ -1089,6 +1089,10 @@ NS_IMETHODIMP nsAbView::DeleteSelectedCards()
   nsresult rv = GetSelectedCards(getter_AddRefs(cardsToDelete));
   NS_ENSURE_SUCCESS(rv,rv);
 
+  // mDirectory should not be null
+  // bullet proof (and assert) to help figure out bug #127748
+  NS_ENSURE_TRUE(mDirectory, NS_ERROR_UNEXPECTED);
+
   rv = mDirectory->DeleteCards(cardsToDelete);
   NS_ENSURE_SUCCESS(rv,rv);
   return rv;
