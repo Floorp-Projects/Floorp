@@ -112,7 +112,7 @@ for $br (last_successful_builds($tree)) {
 
   # Make it live
   use File::Copy 'move';
-  move($warn_file, "$tree/warnings-test.html");
+  move($warn_file, "$tree/warnings.html");
 
   my $warn_summary = "$tree/warn$log_file";
   $warn_summary =~ s/.gz$/.pl/;
