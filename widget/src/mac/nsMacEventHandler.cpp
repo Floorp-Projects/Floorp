@@ -1186,6 +1186,9 @@ PRBool nsMacEventHandler::HandleUKeyEvent(PRUnichar* text, long charCount, Event
     for (i = 0; i < charCount; i++)
     {
       keyEvent.charCode = text[i];
+      if (keyEvent.isShift && keyEvent.charCode <= 'z' && keyEvent.charCode >= 'a') 
+        keyEvent.charCode -= 32;
+
       result = focusedWidget->DispatchWindowEvent(keyEvent);
       NS_ASSERTION(NS_SUCCEEDED(result), "cannot DispatchWindowEvent");
     }
