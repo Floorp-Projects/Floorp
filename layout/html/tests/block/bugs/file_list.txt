@@ -135,6 +135,7 @@ file:///s:/mozilla/layout/html/tests/block/bugs/44264-1.html
 file:///s:/mozilla/layout/html/tests/block/bugs/44264-2.html
 file:///s:/mozilla/layout/html/tests/block/bugs/44264-3.html
 file:///s:/mozilla/layout/html/tests/block/bugs/44709.html
+file:///s:/mozilla/layout/html/tests/block/bugs/45621.html
 file:///s:/mozilla/layout/html/tests/block/bugs/47456.html
 file:///s:/mozilla/layout/html/tests/block/bugs/47456_1.html
 file:///s:/mozilla/layout/html/tests/block/bugs/48057.html
