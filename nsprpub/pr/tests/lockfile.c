@@ -70,7 +70,7 @@ const static PRIntervalTime contention_interval = 50;
 
 typedef struct LockContentious_s {
     PRLock *ml;
-    PRUint32 loops;
+    PRInt32 loops;
     PRIntervalTime overhead;
     PRIntervalTime interval;
 } LockContentious_t;
@@ -79,7 +79,7 @@ typedef struct LockContentious_s {
 
 
 
-static PRIntervalTime NonContentiousLock(PRUint32 loops)
+static PRIntervalTime NonContentiousLock(PRInt32 loops)
 {
     PRFileDesc *_lockfile;
     while (loops-- > 0)
@@ -124,7 +124,7 @@ static void PR_CALLBACK LockContender(void *arg)
 */
 static LockContentious_t contention;
 
-static PRIntervalTime ContentiousLock(PRUint32 loops)
+static PRIntervalTime ContentiousLock(PRInt32 loops)
 {
     PRStatus status;
     PRThread *thread = NULL;
@@ -157,8 +157,8 @@ static PRIntervalTime ContentiousLock(PRUint32 loops)
 }  /* ContentiousLock */
 
 static PRIntervalTime Test(
-    const char* msg, PRIntervalTime (*test)(PRUint32 loops),
-    PRUint32 loops, PRIntervalTime overhead)
+    const char* msg, PRIntervalTime (*test)(PRInt32 loops),
+    PRInt32 loops, PRIntervalTime overhead)
 { 
     /*
      * overhead - overhead not measured by the test.
@@ -180,18 +180,19 @@ static PRIntervalTime Test(
     elapsed = (PRFloat64)PR_IntervalToMicroseconds(accountable);
     if (debug_mode) printf("%s:", msg);
     while (spaces++ < 50) if (debug_mode) printf(" ");
-    if ((PRInt32)accountable < 0)
+    if ((PRInt32)accountable < 0) {
         if (debug_mode) printf("*****.** usecs/iteration\n");
-    else
+    } else {
         if (debug_mode) printf("%8.2f usecs/iteration\n", elapsed/loops);
+    }
     return duration;
 }  /* Test */
 
 int main(int argc,  char **argv)
 {
-    PRBool rv = PR_TRUE;
     PRIntervalTime duration;
-    PRUint32 cpu, cpus = 2, loops = 100;
+    PRUint32 cpu, cpus = 2;
+    PRInt32 loops = 100;
 
 	
 	/* The command line argument: -d is used to determine if the test is being run
@@ -240,17 +241,13 @@ int main(int argc,  char **argv)
         if (debug_mode) printf("\nLockFile: Using %d CPU(s)\n", cpu);
         PR_SetConcurrency(cpu);
         
-        (void)Test("LockFile non-contentious locking/unlocking", NonContentiousLock, loops, 0);
+        duration = Test("LockFile non-contentious locking/unlocking", NonContentiousLock, loops, 0);
         (void)Test("LockFile contentious locking/unlocking", ContentiousLock, loops, duration);
     }
 
     PR_Delete(LOCKFILE);  /* try to get rid of evidence */
 
-    if (debug_mode) printf("%s: test %s\n", "Lock(mutex) test", ((rv) ? "passed" : "failed"));
-	else {
-		if (!rv)
-			failed_already=1;
-	}
+    if (debug_mode) printf("%s: test %s\n", "Lock(mutex) test", ((failed_already) ? "failed" : "passed"));
 	if(failed_already)	
 		return 1;
 	else
