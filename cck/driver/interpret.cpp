@@ -1403,6 +1403,25 @@ BOOL CInterpret::interpret(CString cmds, WIDGET *curWidget)
 
         ((CPrefEditView*)w->control)->SetFocus();
       }
+
+      else if (strcmp(pcmd, "CheckHomePageURL") == 0)
+      {
+     	  CString str;
+        str = GetGlobal("HomePageURL");
+
+        // if URL is set (and not the default string), don't show recapture dlg)
+        if (str.GetLength() && str.CompareNoCase("http://home.netscape.com") != 0)
+        {
+          SetGlobal("ShowHomepageOption","FALSE");
+          SetGlobal("RecaptureHomepage","FALSE");
+        }
+        else
+        {
+          SetGlobal("ShowHomepageOption","TRUE");
+          SetGlobal("RecaptureHomepage","TRUE");
+        }
+      }
+
       else if (strcmp(pcmd, "SynchHomeURLLockRemote") == 0)
       {
      	  WIDGET* tmpWidget = findWidget("HomePageURLLocked");
