@@ -1009,7 +1009,7 @@ Usage(char *progName)
         "\t\t [-p phone] [-1] [-2] [-3] [-4] [-5] [-6]\n",
 	progName);
     FPS "\t%s -U [-d certdir] [-P dbprefix]\n", progName);
-    exit(-1);
+    exit(1);
 }
 
 static void LongUsage(char *progName)
@@ -2506,40 +2506,40 @@ main(int argc, char **argv)
 	               certutil.options[opt_BinaryDER].activated,
 	               certutil.options[opt_ASCIIForIO].activated, 
                        (outFile) ? outFile : PR_STDOUT, &pwdata);
-	return (!rv - 1) % 255;
+	return (!rv - 1) % 256;
     }
     /*  XXX needs work  */
     /*  List keys (-K)  */
     if (certutil.commands[cmd_ListKeys].activated) {
 	rv = ListKeys(slot, name, 0 /*keyindex*/, keytype, PR_FALSE /*dopriv*/,
 	              &pwdata);
-	return (!rv - 1) % 255;
+	return (!rv - 1) % 256;
     }
     /*  List modules (-U)  */
     if (certutil.commands[cmd_ListModules].activated) {
 	rv = ListModules();
-	return (!rv - 1) % 255;
+	return (!rv - 1) % 256;
     }
     /*  Delete cert (-D)  */
     if (certutil.commands[cmd_DeleteCert].activated) {
 	rv = DeleteCert(certHandle, name);
-	return (!rv - 1) % 255;
+	return (!rv - 1) % 256;
     }
     /*  Delete key (-F)  */
     if (certutil.commands[cmd_DeleteKey].activated) {
 	rv = DeleteKey(name, &pwdata);
-	return (!rv - 1) % 255;
+	return (!rv - 1) % 256;
     }
     /*  Modify trust attribute for cert (-M)  */
     if (certutil.commands[cmd_ModifyCertTrust].activated) {
 	rv = ChangeTrustAttributes(certHandle, name, 
 	                           certutil.options[opt_Trust].arg);
-	return (!rv - 1) % 255;
+	return (!rv - 1) % 256;
     }
     /*  Change key db password (-W) (future - change pw to slot?)  */
     if (certutil.commands[cmd_ChangePassword].activated) {
 	rv = SECU_ChangePW(slot, 0, certutil.options[opt_PasswordFile].arg);
-	return (!rv - 1) % 255;
+	return (!rv - 1) % 256;
     }
     /*  Check cert validity against current time (-V)  */
     if (certutil.commands[cmd_CheckCertValidity].activated) {
@@ -2554,7 +2554,7 @@ main(int argc, char **argv)
 			  certutil.options[opt_VerifySig].activated,
 			  certutil.options[opt_DetailedInfo].activated,
 	                  &pwdata);
-	return (!rv - 1) % 255;
+	return (!rv - 1) % 256;
     }
 
     /*
