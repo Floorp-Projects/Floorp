@@ -2150,8 +2150,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresContext*          aPresCo
   // build a scrollframe
   if (!isPaginated && isScrollable) {
     nsIFrame* newScrollFrame = nsnull;
-    nsIDocument* document;
-    aDocElement->GetDocument(document);
+    nsCOMPtr<nsIDocument> document;
+    aDocElement->GetDocument(*getter_AddRefs(document));
  
     BeginBuildingScrollFrame( aPresContext,
                               aState,
