@@ -133,7 +133,9 @@ void CButton::Draw(RgnHandle inSuperDrawRgnH)
 
 			StColorPenState thePenSaver;
 			StColorPenState::Normalize();
-			
+
+// beard:  this doesn't work if parent is also double buffering.
+#if 0			
 			// Fail safe offscreen drawing
 			StValueChanger<EDebugAction> okayToFail(UDebugging::gDebugThrow, debugAction_Nothing);
 			try
@@ -153,6 +155,7 @@ void CButton::Draw(RgnHandle inSuperDrawRgnH)
 				{
 				// 	& draw onscreen
 				}
+#endif
 
 			if (!bDidDraw)
 				{
