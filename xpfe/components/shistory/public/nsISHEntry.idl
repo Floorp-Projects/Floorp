@@ -32,6 +32,8 @@
 #include "domstubs.idl"
 #include "nsIInputStream.idl"
 
+interface nsILayoutHistoryState;
+
 [scriptable, uuid(65281BA1-988A-11d3-BDC7-0050040A9B44)]
 interface nsISHEntry : nsISupports 
 {
@@ -49,14 +51,14 @@ attribute wstring title;
 attribute nsIInputStream postData;
 
 /** LayoutHistoryState for scroll position and form values */
-attribute nsISupports layoutHistoryState;
+attribute nsILayoutHistoryState layoutHistoryState;
 
 /** Parent of the current entry */
 attribute nsISHEntry parent;
 
 /** Additional ways to create an entry */
 void create(in nsIURI aURI, in wstring aTitle, in nsIDOMDocument aDocument,
-			         in nsIInputStream aInputStream, in nsISupports aHistoryLayoutState);
+			         in nsIInputStream aInputStream, in nsILayoutHistoryState aHistoryLayoutState);
 
 };
 
