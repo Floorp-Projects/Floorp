@@ -61,6 +61,13 @@ package org.mozilla.javascript;
  *
  * class MyFactory extends ContextFactory
  * {
+ *
+ *     // Custom {@link Context} to store execution time.
+ *     private static class MyContext extends Context
+ *     {
+ *         long startTime;
+ *     }
+ *
  *     static {
  *         // Initialize GlobalFactory with custom factory
  *         ContextFactory.initGlobal(new MyFactory());
@@ -71,9 +78,9 @@ package org.mozilla.javascript;
  *     {
  *         MyContext cx = new MyContext();
  *         // Use pure interpreter mode to allow for
- *         // {@link Context#observeInstructionCount(int)} to work
+ *         // {@link #observeInstructionCount(Context, int)} to work
  *         cx.setOptimizationLevel(-1);
- *         // Make Rhino runtime to call MyContext.observeInstructionCount(int)
+ *         // Make Rhino runtime to call observeInstructionCount
  *         // each 10000 bytecode instructions
  *         cx.setInstructionObserverThreshold(10000);
  *         return cx;
@@ -82,33 +89,29 @@ package org.mozilla.javascript;
  *     // Override {@link #hasFeature(Context, int)}
  *     public boolean hasFeature(Context cx, int featureIndex)
  *     {
- *         // Turn on maximim compatibility with MSIE scripts
+ *         // Turn on maximum compatibility with MSIE scripts
  *         switch (featureIndex) {
- *             case Context.FEATURE_NON_ECMA_GET_YEAR:
+ *             case {@link Context#FEATURE_NON_ECMA_GET_YEAR}:
  *                 return true;
  *
- *             case Context.FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME:
+ *             case {@link Context#FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME}:
  *                 return true;
  *
- *             case Context.FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER:
+ *             case {@link Context#FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER}:
  *                 return true;
  *
- *             case Context.FEATURE_PARENT_PROTO_PROPRTIES:
+ *             case {@link Context#FEATURE_PARENT_PROTO_PROPRTIES}:
  *                 return false;
  *         }
  *         return super.hasFeature(cx, featureIndex);
  *     }
- * }
  *
- * class MyContext extends Context
- * {
- *     private long creationTime = System.currentTimeMillis();
- *
- *     // Override {@link Context#observeInstructionCount(int)}
- *     protected void observeInstructionCount(int instructionCount)
+ *     // Override {@link #observeInstructionCount(Context, int)}
+ *     protected void observeInstructionCount(Context cx, int instructionCount)
  *     {
+ *         MyContext mcx = (MyContext)cx;
  *         long currentTime = System.currentTimeMillis();
- *         if (currentTime - creationTime > 10000) {
+ *         if (currentTime - mcx.startTime > 10*1000) {
  *             // More then 10 seconds from Context creation time:
  *             // it is time to stop the script.
  *             // Throw Error instance to ensure that script will never
@@ -117,7 +120,19 @@ package org.mozilla.javascript;
  *         }
  *     }
  *
+ *     // Override {@link #doTopCall(Callable, Context, Scriptable scope, Scriptable thisObj, Object[] args)}
+ *     protected Object doTopCall(Callable callable,
+ *                                Context cx, Scriptable scope,
+ *                                Scriptable thisObj, Object[] args)
+ *     {
+ *         MyContext mcx = (MyContext)cx;
+ *         mcx.startTime = System.currentTimeMillis();
+ *
+ *         return super.doTopCall(callable, cx, scope, thisObj, args);
+ *     }
+ *
  * }
+ *
  * </pre>
  */
 
@@ -256,6 +271,30 @@ public class ContextFactory
         }
         // It is a bug to call the method with unknown featureIndex
         throw new IllegalArgumentException(String.valueOf(featureIndex));
+    }
+
+    /**
+     * Execute top call to script or function.
+     * When the runtime is about to execute a script or function that will
+     * create the first stack frame with scriptable code, it calls this method
+     * to perform the real call. In this way execution of any script
+     * happens inside this function.
+     */
+    protected Object doTopCall(Callable callable,
+                               Context cx, Scriptable scope,
+                               Scriptable thisObj, Object[] args)
+    {
+        return callable.call(cx, scope, thisObj, args);
+    }
+
+    /**
+     * Implementation of
+     * {@link Context#observeInstructionCount(int instructionCount)}.
+     * This can be used to customize {@link Context} without introducing
+     * additional subclasses.
+     */
+    protected void observeInstructionCount(Context cx, int instructionCount)
+    {
     }
 
     protected void onContextCreated(Context cx)

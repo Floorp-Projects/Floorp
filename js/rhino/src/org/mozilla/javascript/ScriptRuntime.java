@@ -2787,6 +2787,33 @@ public class ScriptRuntime {
         return (cx.topCallScope != null);
     }
 
+    public static Object doTopCall(Callable callable,
+                                   Context cx, Scriptable scope,
+                                   Scriptable thisObj, Object[] args)
+    {
+        if (scope == null) throw new IllegalArgumentException();
+        if (cx.topCallScope != null) throw new IllegalStateException();
+
+        Object result;
+        cx.topCallScope = ScriptableObject.getTopLevelScope(scope);
+        cx.useDynamicScope = cx.hasFeature(Context.FEATURE_DYNAMIC_SCOPE);
+        ContextFactory f = cx.getFactory();
+        try {
+            result = f.doTopCall(callable, cx, scope, thisObj, args);
+        } finally {
+            cx.topCallScope = null;
+            // Cleanup cached references
+            cx.cachedXMLLib = null;
+
+            if (cx.currentActivationCall != null) {
+                // Function should always call exitActivationFunction
+                // if it creates activation record
+                throw new IllegalStateException();
+            }
+        }
+        return result;
+    }
+
     private static Scriptable locateDynamicScope(Context cx, Scriptable scope)
     {
         // Return cx.topCallScope is scope is present on its prototype chain
@@ -2804,37 +2831,6 @@ public class ScriptRuntime {
             if (proto == null) {
                 return scope;
             }
-        }
-    }
-
-    public static Object doTopCall(Callable callable,
-                                   Context cx, Scriptable scope,
-                                   Scriptable thisObj, Object[] args)
-    {
-        if (cx.topCallScope != null)
-            throw new IllegalStateException();
-
-        Object result;
-        cx.topCallScope = ScriptableObject.getTopLevelScope(scope);
-        cx.useDynamicScope = cx.hasFeature(Context.FEATURE_DYNAMIC_SCOPE);
-        try {
-            result = callable.call(cx, scope, thisObj, args);
-        } finally {
-            releaseTopCall(cx);
-        }
-        return result;
-    }
-
-    private static void releaseTopCall(Context cx)
-    {
-        cx.topCallScope = null;
-        // Cleanup cached references
-        cx.cachedXMLLib = null;
-
-        if (cx.currentActivationCall != null) {
-            // Function should always call exitActivationFunction
-            // if it creates activation record
-            throw new IllegalStateException();
         }
     }
 

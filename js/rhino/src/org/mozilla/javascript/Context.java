@@ -640,11 +640,17 @@ public class Context
     }
 
     /**
-     * Return {@link ContextFactory} instance used to create this Context.
+     * Return {@link ContextFactory} instance used to create this Context
+     * or the result of {@link ContextFactory#getGlobal()} if no factory
+     * was used for Context creation.
      */
-    public ContextFactory getFactory()
+    public final ContextFactory getFactory()
     {
-        return factory;
+        ContextFactory result = factory;
+        if (result == null) {
+            result = ContextFactory.getGlobal();
+        }
+        return result;
     }
 
     /**
@@ -2073,6 +2079,7 @@ public class Context
      * that allows to customize Context behavior without introducing
      * Context subclasses.  {@link ContextFactory} documentation gives
      * an example of hasFeature implementation.
+     *
      * @param featureIndex feature index to check
      * @return true if the <code>featureIndex</code> feature is turned on
      * @see #FEATURE_NON_ECMA_GET_YEAR
@@ -2084,10 +2091,7 @@ public class Context
      */
     public boolean hasFeature(int featureIndex)
     {
-        ContextFactory f = factory;
-        if (f == null) {
-            f = ContextFactory.getGlobal();
-        }
+        ContextFactory f = getFactory();
         return f.hasFeature(this, featureIndex);
     }
 
@@ -2121,6 +2125,13 @@ public class Context
      * <p>
      * The instruction counting support is available only for interpreted
      * scripts generated when the optimization level is set to -1.
+     * <p>
+     * The default implementation calls
+     * {@link ContextFactory#observeInstructionCount(Context cx,
+     *                                               int instructionCount)}
+     * that allows to customize Context behavior without introducing
+     * Context subclasses.
+     *
      * @param instructionCount amount of script instruction executed since
      * last call to <code>observeInstructionCount</code>
      * @throws Error to terminate the script
@@ -2128,6 +2139,8 @@ public class Context
      */
     protected void observeInstructionCount(int instructionCount)
     {
+        ContextFactory f = getFactory();
+        f.observeInstructionCount(this, instructionCount);
     }
 
     public GeneratedClassLoader createClassLoader(ClassLoader parent)
