@@ -93,7 +93,6 @@ protected:
   
 
   virtual void MouseClicked(nsIPresContext & aPresContext);
- 
 
   NS_IMETHOD  PaintTitle(nsIPresContext& aPresContext,
                          nsIRenderingContext& aRenderingContext,
