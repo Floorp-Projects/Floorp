@@ -33,6 +33,8 @@
 #include "nsStackLayout.h"
 #include "nsIMonument.h"
 #include "nsCOMPtr.h"
+#include "nsIBox.h"
+
 class nsTempleLayout;
 class nsMonumentLayout;
 class nsBoxSizeList;
