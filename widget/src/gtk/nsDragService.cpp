@@ -60,41 +60,16 @@ nsDragService::nsDragService()
 //-------------------------------------------------------------------------
 nsDragService::~nsDragService()
 {
+  gtk_widget_destroy(mWidget);
+  /* free the target list */
   g_print("nsDragService::~nsDragService\n");
 }
-
-enum {
-  TARGET_STRING,
-  TARGET_ROOTWIN
-};
-
-static GtkTargetEntry target_table[] = {
-  { "STRING",     0, TARGET_STRING },
-  { "text/plain", 0, TARGET_STRING },
-  { "application/x-rootwin-drop", 0, TARGET_ROOTWIN }
-};
-
-static guint n_targets = sizeof(target_table) / sizeof(target_table[0]);
-
 
 NS_IMETHODIMP nsDragService::StartDragSession()
 {
   printf("nsDragService::StartDragSession()\n");
   nsBaseDragService::StartDragSession();
   
-  /*
-  gtk_drag_source_set(mWidget,
-                      GDK_MODIFIER_MASK,
-                      targetlist,
-                      mNumFlavors,
-                      action);
-  */
-  gtk_drag_source_set(mWidget,
-                      GDK_MODIFIER_MASK,
-                      target_table,
-                      n_targets,
-                      mActionType);
-
   return NS_OK;
 }
 
@@ -115,7 +90,8 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray *aTransferableA
                                                 PRUint32 aActionType)
 {
   g_print("nsDragService::InvokeDragSession\n");
-  mWidget = gtk_get_event_widget(gtk_get_current_event());
+  mWidget = gtk_invisible_new();
+  gtk_widget_show(mWidget);
 
   // add the flavors from the transferables. Cache this array for the send data proc
   GtkTargetList *targetlist = RegisterDragItemsAndFlavors(aTransferableArray);
@@ -139,7 +115,7 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray *aTransferableA
   StartDragSession();
 
   // XXX 3rd param ???    &                last param should be a real event...
-  gtk_drag_begin(mWidget, targetlist, mActionType, 1, gtk_get_current_event());
+  gtk_drag_begin(mWidget, targetlist, mActionType, 1, gdk_event_get());
 
 
 
