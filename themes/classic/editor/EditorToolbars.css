@@ -38,6 +38,11 @@
   overflow:      hidden;
 }
 
+/* TODO: Make a Windows-specific version to use "threedface",
+         "threedhighlight", and "threedshadow" 
+         for button background-color and shading
+*/
+
 button.edit-mode:hover, button.edit-mode:hover:active,
 button.edit-mode {
   /* We need this to suppress Ben's different bindings for classic buttons */
@@ -851,14 +856,10 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
   border:  1px solid #000000;
 }
 
-#TextColorPopupButton {
+#TextColorButton {
   margin: 2px 9px 9px 2px;
-  /* TEMP: Set color here. TODO: Set color from page */
-  background-color: #AA0000;
 }
 
-#BackColorPopupButton {
+#BackgroundColorButton {
   margin: 9px 2px 2px 9px;
-  /* TEMP: Set color here. TODO: Set color from page */
-  background-color: #FFFF00;
 }

@@ -47,6 +47,11 @@
   border: 1px inset white;
 }
 
+.button-toolbar-2 {
+  min-width: 3.4em; 
+}
+
+
 /* THIS DOESN'T WORK ON <text>! */
 .center {
   text-align: center;
@@ -334,14 +339,10 @@ button.edit-mode > .button-internal-box > .button.icon:hover:active
   border:  1px solid white;
 }
 
-#TextColorPopupButton {
+#TextColorButton {
   margin: 2px 9px 9px 2px;
-  /* TEMP: Set color here. TODO: Set color from page */
-  background-color: #AA0000;
 }
 
-#BackColorPopupButton {
+#BackgroundColorButton {
   margin: 9px 2px 2px 9px;
-  /* TEMP: Set color here. TODO: Set color from page */
-  background-color: #FFFF00;
 }

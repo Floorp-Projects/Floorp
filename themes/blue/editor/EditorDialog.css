@@ -82,14 +82,32 @@ titledbox {
 
 .color-well {
   width:20px;
-  height: 1em; 
+  height: 1.2em; 
   border: 1px inset #CCCCCC;
-  /* Background color is set at runtime */
 }
 
 .color-well[default="true"] {
   border: 1px solid transparent;
   background-color: inherit;
+}
+
+#ColorPickerSwatch {
+  border : 2px outset #CCCCCC;
+  width: 25px;
+  height: 20px;
+  margin: 0px 3px 0px 0px;
+}
+
+#ColorPickerSwatch[default="true"] {
+  border : 2px solid transparent;
+  background-color: inherit;
+}
+
+#LastPickedColor {
+  width: 17px;
+  height: 1.2em; 
+  border: 1px inset #CCCCCC;
+  margin-bottom: 2px;
 }
 
 .popup-trigger {
