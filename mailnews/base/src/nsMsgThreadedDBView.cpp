@@ -229,6 +229,10 @@ nsresult nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const ch
     m_flags.Add(flag);
     m_levels.Add(pLevels[i]);
     numAdded++;
+    // we expand as we build the view, which allows us to insert at the end of the key array,
+    // instead of the middle, and is much faster.
+    if (!(m_viewFlags & nsMsgViewFlagsType::kThreadedDisplay) && flag & MSG_FLAG_ELIDED)
+       ExpandByIndex(m_keys.GetSize() - 1, NULL);
   }
   return numAdded;
 }
@@ -495,7 +499,7 @@ void	nsMsgThreadedDBView::OnExtraFlagChanged(nsMsgViewIndex index, PRUint32 extr
 
 void nsMsgThreadedDBView::OnHeaderAddedOrDeleted()
 {
-	ClearPrevIdArray();
+  ClearPrevIdArray();
 }
 
 void nsMsgThreadedDBView::ClearPrevIdArray()
