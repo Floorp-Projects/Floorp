@@ -73,8 +73,12 @@
               sortDirection="ascending"
               datasources="rdf:msgaccountmanager rdf:mailnewsfolders"
               ref="...">
-            <template>
+            <menupopup>
+              <menuitem  id="rssAccountMenuItem"/>
+              <menuseparator/>
+            </menupopup>
                
+            <template>              
               <!-- cheat and use the CanRename property to make sure we don't list the Trash folder as a possible feed folder -->
               <rule nc:CanFileMessages="true" iscontainer="true" isempty="false" nc:CanRename="true">
                 <menupopup>

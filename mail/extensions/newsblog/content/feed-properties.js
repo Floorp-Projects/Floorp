@@ -40,6 +40,9 @@ function onLoad()
   document.getElementById('selectFolder').setAttribute('ref', window.arguments[0].serverURI);
 
   SetFolderPicker(window.arguments[0].folderURI ? window.arguments[0].folderURI : window.arguments[0].serverURI, 'selectFolder');
+
+  document.getElementById('rssAccountMenuItem').label = window.arguments[0].serverPrettyName;
+  document.getElementById('rssAccountMenuItem').value = window.arguments[0].serverURI;
 }
 
 function onOk()

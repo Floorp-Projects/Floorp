@@ -117,7 +117,7 @@ var feedDownloadCallback = {
 
 function doAdd() {
     var userAddedFeed = false; 
-    var feedProperties = { feedName: "", feedLocation: "", serverURI: gRSSServer.serverURI, folderURI: "", result: userAddedFeed};
+    var feedProperties = { feedName: "", feedLocation: "", serverURI: gRSSServer.serverURI, serverPrettyName: gRSSServer.prettyName, folderURI: "", result: userAddedFeed};
 
     feedProperties = openFeedEditor(feedProperties);
 
@@ -171,7 +171,7 @@ function doEdit() {
     currentFolder = rdf.GetResource(currentFolderURI).QueryInterface(Components.interfaces.nsIMsgFolder);
    
     var userModifiedFeed = false; 
-    var feedProperties = { feedLocation: old_url, serverURI: gRSSServer.serverURI, folderURI: currentFolderURI, result: userModifiedFeed};
+    var feedProperties = { feedLocation: old_url, serverURI: gRSSServer.serverURI, serverPrettyName: gRSSServer.prettyName, folderURI: currentFolderURI, result: userModifiedFeed};
 
     feedProperties = openFeedEditor(feedProperties);
     if (!feedProperties.result) // did the user cancel?
