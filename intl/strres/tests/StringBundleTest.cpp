@@ -113,7 +113,7 @@ main(int argc, char *argv[])
   nsresult ret;
 
   ret = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
-                                         "components");
+                                         NULL /* default */);
   if (NS_FAILED(ret)) {
     printf("auto-registration failed\n");
     return 1;
