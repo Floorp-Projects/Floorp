@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: blapi.h,v 1.5 2000/12/19 23:43:07 mcgreer%netscape.com Exp $
+ * $Id: blapi.h,v 1.6 2000/12/27 18:47:57 wtc%netscape.com Exp $
  */
 
 #ifndef _BLAPI_H_
@@ -665,7 +665,7 @@ extern void SHA1_End(SHA1Context *cx, unsigned char *digest,
 /*
 ** trace the intermediate state info of the SHA1 hash.
 */
-extern void SHA1_TraceState(MD5Context *cx);
+extern void SHA1_TraceState(SHA1Context *cx);
 
 /*
  * Return the the size of a buffer needed to flatten the SHA-1 Context into
