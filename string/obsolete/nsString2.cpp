@@ -924,6 +924,9 @@ nsString& nsString::Assign(const nsStr& aString,PRInt32 aCount) {
  * assign given char* to this string
  * @update  gess 01/04/99
  * @param   aCString: buffer to be assigned to this 
+ * @param   aCount -- length of given buffer or -1 if you want me to compute length.
+ * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+ *
  * @return  this
  */
 nsString& nsString::Assign(const char* aCString,PRInt32 aCount) {
@@ -938,6 +941,9 @@ nsString& nsString::Assign(const char* aCString,PRInt32 aCount) {
  * assign given unichar* to this string
  * @update  gess 01/04/99
  * @param   aString: buffer to be assigned to this 
+ * @param   aCount -- length of given buffer or -1 if you want me to compute length.
+ * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+ *
  * @return  this
  */
 nsString& nsString::Assign(const PRUnichar* aString,PRInt32 aCount) {
@@ -1028,7 +1034,9 @@ nsString& nsString::Append(const nsString& aString,PRInt32 aCount) {
  * append given c-string to this string
  * @update  gess 01/04/99
  * @param   aString : string to be appended to this
- * @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
+ * @param   aCount -- length of given buffer or -1 if you want me to compute length.
+ * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+ *
  * @return  this
  */
 nsString& nsString::Append(const char* aCString,PRInt32 aCount) {
@@ -1061,7 +1069,9 @@ nsString& nsString::Append(const char* aCString,PRInt32 aCount) {
  * append given unicode string to this 
  * @update  gess 01/04/99
  * @param   aString : string to be appended to this
- * @param   aCount -- number of chars to copy; -1 tells us to compute the strlen for you
+ * @param   aCount -- length of given buffer or -1 if you want me to compute length.
+ * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+ *
  * @return  this
  */
 nsString& nsString::Append(const PRUnichar* aString,PRInt32 aCount) {
@@ -1251,7 +1261,9 @@ nsString& nsString::Insert(const nsString& aCopy,PRUint32 anOffset,PRInt32 aCoun
  * @update  gess4/22/98
  * @param   char* aCString to be inserted into this string
  * @param   anOffset is insert pos in str 
- * @param   aCounttells us how many chars to insert
+ * @param   aCount -- length of given buffer or -1 if you want me to compute length.
+ * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+ *
  * @return  this
  */
 nsString& nsString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount){
@@ -1287,6 +1299,9 @@ nsString& nsString::Insert(const char* aCString,PRUint32 anOffset,PRInt32 aCount
  * @update  gess4/22/98
  * @param   aChar char to be inserted into this string
  * @param   anOffset is insert pos in str 
+ * @param   aCount -- length of given buffer or -1 if you want me to compute length.
+ * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+ *
  * @return  this
  */
 nsString& nsString::Insert(const PRUnichar* aString,PRUint32 anOffset,PRInt32 aCount){
@@ -2062,18 +2077,6 @@ void nsString::Recycle(nsString* aString){
 }
 
 #if 0
-/**
- * 
- * @update  gess 01/04/99
- * @param 
- * @return
- */
-void nsString::DebugDump(ostream& aStream) const {
-  for(PRUint32 i=0;i<mLength;i++) {
-    aStream <<mStr[i];
-  }
-  aStream << endl;
-}
 
 /**
  * 
@@ -2105,6 +2108,7 @@ ostream& operator<<(ostream& aStream,const nsString& aString){
 }
 #endif
 
+
 /**
  * 
  * @update  gess 01/04/99
@@ -2129,6 +2133,26 @@ NS_COM int fputs(const nsString& aString, FILE* out)
   return (int) len;
 }
        
+/**
+ * Dumps the contents of the string to stdout
+ * @update  gess 11/15/99
+ */
+void nsString::DebugDump(void) const {
+  
+  const char* theBuffer=mStr;
+  nsCAutoString temp;
+
+  if(eTwoByte==mCharSize) {    
+    temp.Assign(*this);
+    theBuffer=temp.GetBuffer();
+  }
+
+  if(theBuffer) {
+    printf("\n%s",theBuffer);
+  }
+}
+       
+
 
 /***********************************************************************
   IMPLEMENTATION NOTES: AUTOSTRING...

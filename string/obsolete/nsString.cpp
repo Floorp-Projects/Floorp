@@ -765,6 +765,9 @@ nsCString& nsCString::Assign(const nsStr& aString,PRInt32 aCount) {
  * assign given char* to this string
  * @update  gess 01/04/99
  * @param   aCString: buffer to be assigned to this 
+ * @param   aCount -- length of given buffer or -1 if you want me to compute length.
+ * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+ *
  * @return  this
  */
 nsCString& nsCString::Assign(const char* aCString,PRInt32 aCount) {
@@ -779,6 +782,9 @@ nsCString& nsCString::Assign(const char* aCString,PRInt32 aCount) {
  * assign given unichar* to this string
  * @update  gess 01/04/99
  * @param   aCString: buffer to be assigned to this 
+ * @param   aCount -- length of given buffer or -1 if you want me to compute length.
+ * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+ *
  * @return  this
  */
 nsCString& nsCString::Assign(const PRUnichar* aString,PRInt32 aCount) {
@@ -888,6 +894,8 @@ nsCString& nsCString::Append(const nsStr& aString,PRInt32 aCount) {
  * @update  gess 01/04/99
  * @param   aString : string to be appended to this
  * @param   aCount: #of chars to be copied; -1 means to copy the whole thing
+ * NOTE:    IFF you pass -1 as aCount, then your buffer must be null terminated.
+ *
  * @return  this
  */
 nsCString& nsCString::Append(const char* aCString,PRInt32 aCount) {
@@ -1660,18 +1668,6 @@ void nsCString::Recycle(nsCString* aString){
 }
 
 #if 0
-/**
- * 
- * @update  gess 01/04/99
- * @param 
- * @return
- */
-void nsCString::DebugDump(ostream& aStream) const {
-  for(PRUint32 i=0;i<mLength;i++) {
-    aStream <<mStr[i];
-  }
-  aStream << endl;
-}
 
 /**
  * 
@@ -1725,6 +1721,17 @@ NS_COM int fputs(const nsCString& aString, FILE* out)
     delete[] cp;
   }
   return (int) len;
+}
+
+/**
+ * Dumps the contents of the string to stdout
+ * @update  gess 11/15/99
+ */
+void nsCString::DebugDump(void) const {
+  
+  if(mStr && (eOneByte==mCharSize)) {
+    printf("\n%s",mStr);
+  }
 }
        
 
