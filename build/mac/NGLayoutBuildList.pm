@@ -461,6 +461,8 @@ sub BuildClientDist()
    		_InstallFromManifest(":mozilla:netwerk:protocol:jar:public:MANIFEST_IDL",		"$distdirectory:idl:");
    		_InstallFromManifest(":mozilla:netwerk:protocol:res:public:MANIFEST_IDL",		"$distdirectory:idl:");
 		_InstallFromManifest(":mozilla:netwerk:util:public:MANIFEST",					"$distdirectory:netwerk:");
+		_InstallFromManifest(":mozilla:netwerk:cache:public:MANIFEST",					"$distdirectory:idl:");
+		
 	} else {
 	#NETWORK
 	    _InstallFromManifest(":mozilla:network:public:MANIFEST",						"$distdirectory:network:");
@@ -831,6 +833,9 @@ sub BuildIDLProjects()
 		
 		# mime service
 		# Just a placeholder as mime.xpt is currently part of the netwerkIDL.mcp build
+
+		# cache
+		BuildIDLProject(":mozilla:netwerk:cache:macbuild:nkcacheIDL.mcp","nkcache");
 		
 		# stream conversion.
 		BuildIDLProject(":mozilla:netwerk:streamconv:macbuild:streamconvIDL.mcp","streamconv");
@@ -1043,6 +1048,8 @@ sub BuildCommonProjects()
 	BuildOneProject(":mozilla:modules:libimg:macbuild:pngdecoder.mcp",			"pngdecoder$D.shlb", "pngdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:modules:libimg:macbuild:jpgdecoder.mcp",			"jpgdecoder$D.shlb", "jpgdecoder.toc", 1, $main::ALIAS_SYM_FILES, 1);
 
+	BuildOneProject(":mozilla:dbm:macbuild:DBM.mcp",							"DBM$D.o", "", 0, 0, 0);
+
 	if ( $main::NECKO )
 	{
 		BuildOneProject(":mozilla:netwerk:macbuild:netwerk.mcp",					"Network$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1050,6 +1057,9 @@ sub BuildCommonProjects()
 		# utils library
 		BuildOneProject(":mozilla:netwerk:util:macbuild:netwerkUtil.mcp",			"NetworkModular$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 0);
 
+        # cache
+		BuildOneProject(":mozilla:netwerk:cache:macbuild:nkcache.mcp",				"nkcache$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
+        
 		# protocols
 		BuildOneProject(":mozilla:netwerk:protocol:about:macbuild:about.mcp",		"about$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:netwerk:protocol:data:macbuild:data.mcp",			"data$D.shlb", "", 1, $main::ALIAS_SYM_FILES, 1);
@@ -1441,7 +1451,7 @@ sub MakeLibAliases()
 		MakeAlias("$wastelibpath", "$dist_dir"."Essential Files:");
 
 		#// ProfilerLib
-		if ($main::DEBUG)
+		if ($main::PROFILE)
 		{
 			my($profilerlibpath) = $appath;
 			$profilerlibpath =~ s/[^:]*$/MacOS Support:Libraries:Profiler Common:ProfilerLib/;
