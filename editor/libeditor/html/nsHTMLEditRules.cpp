@@ -7155,7 +7155,7 @@ nsHTMLEditRules::ReapplyCachedStyles()
   // for them, so that they will be reinserted when new 
   // content is added.
   
-  // When we apply cahced styles to TypeInState, we always want
+  // When we apply cached styles to TypeInState, we always want
   // to blow away prior TypeInState:
   mHTMLEditor->mTypeInState->Reset();
 
