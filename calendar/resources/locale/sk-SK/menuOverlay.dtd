@@ -139,25 +139,26 @@
 <!ENTITY addressBookCmd.label     "Adresár">
 <!ENTITY addressBookCmd.accesskey "A">
 
-<!ENTITY helpMenu.label         "Help"> 
-<!ENTITY helpMenu.accesskey            "H">
+<!ENTITY helpMenu.label         "Pomocník"> 
+<!ENTITY helpMenu.accesskey            "P">
 
-<!ENTITY walletPasswordManager.label     "Password Manager">
-<!ENTITY walletPasswordManager.accesskey "p">
+<!ENTITY walletPasswordManager.label     "Manažér hesiel">
+<!ENTITY walletPasswordManager.accesskey "M">
 
 <!-- Toolbar items -->
-<!ENTITY fileMenu.label         "File"> 
-<!ENTITY fileMenu.accesskey       "F">
+<!ENTITY fileMenu.label         "Súbor"> 
+<!ENTITY fileMenu.accesskey       "S">
 
-<!ENTITY editMenu.label         "Edit"> 
-<!ENTITY editMenu.accesskey       "E"> 
-<!ENTITY preferencesCmd.label       "Options...">
-<!ENTITY preferencesCmd.accesskey     "O"> 
+<!ENTITY editMenu.label         "Upraviť"> 
+<!ENTITY editMenu.accesskey       "U"> 
+<!ENTITY preferencesCmd.label       "Nastavenia">
+<!ENTITY preferencesCmd.accesskey     "N"> 
 
-<!ENTITY viewMenu.label         "View"> 
-<!ENTITY viewMenu.accesskey       "V"> 
+<!ENTITY viewMenu.label         "Zobraziť"> 
+<!ENTITY viewMenu.accesskey       "Z"> 
 
-<!ENTITY releaseCmd.label       "Release Notes">
-<!ENTITY releaseCmd.accesskey       "R">
-<!ENTITY aboutCmd.label         "About &brandFullName;">
-<!ENTITY aboutCmd.accesskey       "A">
+<!ENTITY releaseCmd.label       "Zoznam verzií">
+
+<!ENTITY releaseCmd.accesskey       "V">
+<!ENTITY aboutCmd.label         "O &brandFullName;">
+<!ENTITY aboutCmd.accesskey       "O">
