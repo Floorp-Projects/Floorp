@@ -689,7 +689,7 @@ function WhichPaneHasFocus(){
 
 function SetupCommandUpdateHandlers()
 {
-	dump("SetupCommandUpdateHandlers\n");
+	//dump("SetupCommandUpdateHandlers\n");
 
 	var widget;
 	
@@ -823,7 +823,7 @@ var viewShowWatched = 3;
 
 function MsgViewAllMsgs() 
 {
-	dump("MsgViewAllMsgs");
+	//dump("MsgViewAllMsgs\n");
 
 	if(messageView)
 	{
@@ -835,7 +835,7 @@ function MsgViewAllMsgs()
 
 function MsgViewUnreadMsg()
 {
-	dump("MsgViewUnreadMsgs");
+	//dump("MsgViewUnreadMsgs\n");
 
 	if(messageView)
 	{
