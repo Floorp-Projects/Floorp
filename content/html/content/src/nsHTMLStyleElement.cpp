@@ -167,7 +167,6 @@ public:
   nsresult SetInnerHTML(const nsAString& aInnerHTML);
 
 protected:
-  nsresult GetHrefCString(char* &aBuf);
   void GetStyleSheetURL(PRBool* aIsInline,
                         nsAString& aUrl);
   void GetStyleSheetInfo(nsAString& aTitle,
@@ -205,12 +204,12 @@ NS_NewHTMLStyleElement(nsIHTMLContent** aInstancePtrResult,
 
 nsHTMLStyleElement::nsHTMLStyleElement()
 {
-  nsHTMLUtils::AddRef(); // for GetHrefCString
+  nsHTMLUtils::AddRef(); // for GetHrefUTF8ForAnchors
 }
 
 nsHTMLStyleElement::~nsHTMLStyleElement()
 {
-  nsHTMLUtils::Release(); // for GetHrefCString
+  nsHTMLUtils::Release(); // for GetHrefUTF8ForAnchors
 }
 
 
@@ -313,43 +312,6 @@ nsHTMLStyleElement::SetInnerHTML(const nsAString& aInnerHTML)
   return rv;
 }
 
-nsresult
-nsHTMLStyleElement::GetHrefCString(char* &aBuf)
-{
-  // Get src= attribute (relative URL).
-  nsAutoString relURLSpec;
-
-  if (NS_CONTENT_ATTR_HAS_VALUE ==
-      nsGenericHTMLContainerElement::GetAttr(kNameSpaceID_None,
-                                             nsHTMLAtoms::src, relURLSpec)) {
-    // Clean up any leading or trailing whitespace
-    relURLSpec.Trim(" \t\n\r");
-
-    // Get base URL.
-    nsCOMPtr<nsIURI> baseURL;
-    GetBaseURL(getter_AddRefs(baseURL));
-
-    if (baseURL) {
-      // Get absolute URL.
-      nsCAutoString buf;
-      NS_MakeAbsoluteURIWithCharset(buf, relURLSpec, mDocument, baseURL,
-                                    nsHTMLUtils::IOService,
-                                    nsHTMLUtils::CharsetMgr);
-      aBuf = ToNewCString(buf);
-    }
-    else {
-      // Absolute URL is same as relative URL.
-      aBuf = ToNewUTF8String(relURLSpec);
-    }
-  }
-  else {
-    // Absolute URL is empty because we have no HREF.
-    aBuf = nsnull;
-  }
-
-  return NS_OK;
-}
-
 void
 nsHTMLStyleElement::GetStyleSheetURL(PRBool* aIsInline,
                                      nsAString& aUrl)
@@ -367,9 +329,9 @@ nsHTMLStyleElement::GetStyleSheetURL(PRBool* aIsInline,
   }
 
   char *buf;
-  GetHrefCString(buf);
+  GetHrefUTF8ForAnchors(&buf);
   if (buf) {
-    aUrl.Assign(NS_ConvertASCIItoUCS2(buf));
+    aUrl.Assign(NS_ConvertUTF8toUCS2(buf));
     nsCRT::free(buf);
   }
   return;

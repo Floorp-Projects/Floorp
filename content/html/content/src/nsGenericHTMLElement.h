@@ -206,13 +206,18 @@ public:
   /**
    * Standard anchor HandleDOMEvent, used by A, AREA and LINK (parameters
    * are the same as HandleDOMEvent)
+   *
+   * Callers must hold a reference to nsHTMLUtils's global reference count.
    */
-  nsresult HandleDOMEventForAnchors(nsIContent* aOuter,
-                                    nsIPresContext* aPresContext,
+  nsresult HandleDOMEventForAnchors(nsIPresContext* aPresContext,
                                     nsEvent* aEvent,
                                     nsIDOMEvent** aDOMEvent,
                                     PRUint32 aFlags,
                                     nsEventStatus* aEventStatus);
+
+  // Used by A, AREA, LINK, and STYLE.
+  // Callers must hold a reference to nsHTMLUtils's global reference count.
+  nsresult GetHrefUTF8ForAnchors(char** aHref);
 
   // Implementation for nsIHTMLContent
   NS_IMETHOD SetHTMLAttribute(nsIAtom* aAttribute, const nsHTMLValue& aValue,

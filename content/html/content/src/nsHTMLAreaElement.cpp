@@ -83,7 +83,7 @@ public:
   // nsILink
   NS_IMETHOD GetLinkState(nsLinkState &aState);
   NS_IMETHOD SetLinkState(nsLinkState aState);
-  NS_IMETHOD GetHrefCString(char* &aBuf);
+  NS_IMETHOD GetHrefUTF8(char** aBuf);
 
   NS_IMETHOD StringToAttribute(nsIAtom* aAttribute,
                                const nsAString& aValue,
@@ -140,12 +140,12 @@ NS_NewHTMLAreaElement(nsIHTMLContent** aInstancePtrResult,
 nsHTMLAreaElement::nsHTMLAreaElement()
   : mLinkState(eLinkState_Unknown)
 {
-  nsHTMLUtils::AddRef(); // for GetHrefCString
+  nsHTMLUtils::AddRef(); // for GetHrefUTF8
 }
 
 nsHTMLAreaElement::~nsHTMLAreaElement()
 {
-  nsHTMLUtils::Release(); // for GetHrefCString
+  nsHTMLUtils::Release(); // for GetHrefUTF8
 }
 
 NS_IMPL_ADDREF_INHERITED(nsHTMLAreaElement, nsGenericElement) 
@@ -225,7 +225,7 @@ nsHTMLAreaElement::HandleDOMEvent(nsIPresContext* aPresContext,
                                   PRUint32 aFlags,
                                   nsEventStatus* aEventStatus)
 {
-  return HandleDOMEventForAnchors(this, aPresContext, aEvent, aDOMEvent, 
+  return HandleDOMEventForAnchors(aPresContext, aEvent, aDOMEvent, 
                                   aFlags, aEventStatus);
 }
 
@@ -274,7 +274,7 @@ NS_IMETHODIMP
 nsHTMLAreaElement::GetHref(nsAString& aValue)
 {
   char *buf;
-  nsresult rv = GetHrefCString(buf);
+  nsresult rv = GetHrefUTF8(&buf);
   if (NS_FAILED(rv)) return rv;
   if (buf) {
     aValue.Assign(NS_ConvertASCIItoUCS2(buf));
@@ -571,36 +571,7 @@ nsHTMLAreaElement::SetLinkState(nsLinkState aState)
 }
 
 NS_IMETHODIMP
-nsHTMLAreaElement::GetHrefCString(char* &aBuf)
+nsHTMLAreaElement::GetHrefUTF8(char** aBuf)
 {
-  // Get href= attribute (relative URL).
-  nsAutoString relURLSpec;
-
-  if (GetAttr(kNameSpaceID_None, nsHTMLAtoms::href, relURLSpec) ==
-      NS_CONTENT_ATTR_HAS_VALUE) {
-    // Clean up any leading or trailing whitespace
-    relURLSpec.Trim(" \t\n\r");
-
-    // Get base URL.
-    nsCOMPtr<nsIURI> baseURL;
-    GetBaseURL(getter_AddRefs(baseURL));
-
-    if (baseURL) {
-      // Get absolute URL.
-      nsCAutoString buf;
-      NS_MakeAbsoluteURIWithCharset(buf, relURLSpec, mDocument, baseURL,
-                                    nsHTMLUtils::IOService, nsHTMLUtils::CharsetMgr);
-      aBuf = ToNewCString(buf);
-    }
-    else {
-      // Absolute URL is same as relative URL.
-      aBuf = ToNewUTF8String(relURLSpec);
-    }
-  }
-  else {
-    // Absolute URL is empty because we have no HREF.
-    aBuf = nsnull;
-  }
-
-  return NS_OK;
+  return GetHrefUTF8ForAnchors(aBuf);
 }
