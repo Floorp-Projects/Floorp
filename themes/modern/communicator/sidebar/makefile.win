@@ -38,6 +38,9 @@ install::
 	$(MAKE_INSTALL) sidebar.css $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sidebarSplitterBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sbgrippy-right.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
+	$(MAKE_INSTALL) sbgrippy-left.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
+	$(MAKE_INSTALL) sbgrippy-right-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
+	$(MAKE_INSTALL) sbgrippy-left-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sbtab-dark.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sbtab-darkondark-left.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar
 	$(MAKE_INSTALL) sbtab-darkondark-right.gif $(DIST)\bin\chrome\skins\$(THEME)\communicator\skin\sidebar

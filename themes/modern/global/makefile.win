@@ -63,6 +63,7 @@ install::
 	$(MAKE_INSTALL) columnselect-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) columnselect.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) commonDialog.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) colorpicker.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) console.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) dir-closed.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) dir-open.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
@@ -78,6 +79,10 @@ install::
 	$(MAKE_INSTALL) grippy-horizontal-before.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) grippy-vertical-after.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) grippy-vertical-before.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) grippy-horizontal-after-h.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) grippy-horizontal-before-h.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) grippy-vertical-after-h.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) grippy-vertical-before-h.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) lessCOls_dis.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) lessCols.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) lessCols_mo.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
@@ -139,17 +144,15 @@ install::
 	$(MAKE_INSTALL) scroll-up.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) scrollbars.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) search.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) seltab-leftedge.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) seltab-rightedge.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) sortAscending.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) sortDescending.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) splitter.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) splitter-horizontal-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) splitter-vertical-bg.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) stop.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) stop-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) stop-disabled.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) stop-hover.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tab-leftedge.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
-	$(MAKE_INSTALL) tab-rightedge.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) tabcontrol.css $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-addressbook-clicked.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) taskbar-addressbook.gif $(DIST)\bin\chrome\skins\$(THEME)\global\skin

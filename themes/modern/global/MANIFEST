@@ -33,6 +33,7 @@ closedtwisty.gif
 columnselect-hover.gif
 columnselect.gif
 commonDialog.css
+colorpicker.css
 console.css
 dir-closed.gif
 dir-open.gif
@@ -109,8 +110,16 @@ scroll-up-hover.gif
 scroll-up.gif
 scrollbars.css
 search.gif
-seltab-leftedge.gif
-seltab-rightedge.gif
+grippy-horizontal-after-h.gif
+grippy-horizontal-after.gif
+grippy-horizontal-before-h.gif
+grippy-horizontal-before.gif
+grippy-vertical-after-h.gif
+grippy-vertical-after.gif
+grippy-vertical-before-h.gif
+grippy-vertical-before.gif
+splitter-horizontal-bg.gif
+splitter-vertical-bg.gif
 sortAscending.gif
 sortDescending.gif
 splitter.css
@@ -118,8 +127,6 @@ stop.gif
 stop-clicked.gif
 stop-disabled.gif
 stop-hover.gif
-tab-leftedge.gif
-tab-rightedge.gif
 tabcontrol.css
 taskbar-addressbook-clicked.gif
 taskbar-addressbook.gif
