@@ -68,37 +68,47 @@ sub parse_params {
 }
 
 sub print_script_preview {
-  my ($saveoptions) = '';
+  my ($saveopts) = '';
   foreach $param ($query->param()) {
     if ($param =~ /^(MOZ_|--)/) {
       next if $query->param($param) eq '';
       $saveopts .= "$param=".$query->param($param).'&';
     }
   }
-  chop($saveopts);
 
   print qq(    
     <HTML>
     <HEAD>
-      <TITLE>myconfig.sh Preview</TITLE>
+      <TITLE>Configurator Script Preview</TITLE>
     </HEAD>
     <body BGCOLOR="#FFFFFF" TEXT="#000000"LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
 
+	<form action='config.cgi' method='get'>);
+
+    foreach $param ($query->param()) {
+      if ($param =~ /^(MOZ_|--)/) {
+		next if $query->param($param) eq '';
+		print "<input type='hidden' name=$param value='".$query->param($param)."'>\n";
+      }
+	}
+
+  print qq(
+    <table cellspacing=2 cellpading=0 border=0 width=500><tr><td>
+
     <font size='+1' face='Helvetica,Arial'><b>
-    Configurator Script Preview</b></font><p>
+    Configurator Script Preview</b></font>
+    </td></tr><tr></tr><tr><td>
+    Check the script to make sure your options are correct. When you are done,
+    save this script to <code><b>\$HOME/.mozmyconfig.sh</b></code>.*
+    </td></tr></table>
 
+    <table cellpadding=0 cellspacing=1><tr><td>
+	<input type='submit' value='Save this script'>
+	</td></tr></table>
 
-Check the script to make sure your options are correct. When you are done,<br>
-<a href="config.cgi?$saveopts">save this script</a> to <code><b>\$HOME/.mozmyconfig.sh</b></code>.*
-<p>
-Once you have saved the script, build the tree with,
-<ol>
-  <li><code>cd mozilla</code>
-  <li><code>gmake -f client.mk</code><br>
-      (default targets = "<code>checkout build</code>")
-</ol>
-    <table bgcolor="#FF0000" cellspacing=0 cellpadding=0><tr><td>
-    <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=10 width="500"><tr><td>
+    <table cellspacing=2 cellpading=0 border=0><tr><td>
+	<table bgcolor="#FF0000" cellspacing=0 cellpadding=2 border=0><tr valign=middle><td align=center>
+    <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=10 width="500" border=0><tr><td>
     <pre>);
 
   &print_script;
@@ -106,18 +116,44 @@ Once you have saved the script, build the tree with,
   print qq(</pre>
 	   </td></tr></table>
 	   </td></tr></table>
-<P>
+	   </td></tr></table>
+
+    <table cellpadding=0 cellspacing=1><tr><td>
+	<input type='submit' value='Save this script'>
+	</td></tr></table>
+
+<table cellspacing=0 cellpadding=0>
+<tr><td colspan=3>
+After the script is saved,build the tree with,
+</td></tr><tr><td>&nbsp;</td><td>
+  1.</td><td> <code>cd mozilla</code>
+</td></tr><tr><td></td><td>
+  2.</td><td> <code>gmake -f client.mk</code><br>
+</td></tr><tr><td></td><td>
+</td><td>     (default targets = "<code>checkout build</code>")
+</td></tr>
+<tr></tr><tr><td colspan=3>
+Steps to run the viewer,
+</td></tr><tr><td></td><td>
+  1.</td><td> <code>cd &lt;objdir&gt;</code>
+</td></tr><tr><td></td><td>
+  2.</td><td> <code>gmake run_viewer</code>
+</td></tr><tr><td>&nbsp;</td></tr><tr><td colspan=3>
 * The build searches for this script in the following places,
-<ul>
-   If <code>\$MOZ_MYCONFIG</code> is set, use that file,<br>
-   else try <code>&lt;objdir&gt;/myconfig.sh</code></br>
-   else try <code>&lt;topsrcdir&gt/myconfig.sh</code><br>
-   else try <code>\$HOME/.mozmyconfig.sh</code><br>
-</ul>
+</td></tr><tr><td></td><td></td><td>
+   If <code>\$MOZ_MYCONFIG</code> is set, use that file,
+</td></tr><tr><td></td><td></td><td>
+   else try <code>&lt;objdir&gt;/myconfig.sh</code>
+</td></tr><tr><td></td><td></td><td>
+   else try <code>&lt;topsrcdir&gt/myconfig.sh</code>
+</td></tr><tr><td></td><td></td><td>
+   else try <code>\$HOME/.mozmyconfig.sh</code>
+</td></tr></table>
 <hr>
-	   <p>
            Send questions or comments to 
            &lt;<a href="mailto:slamm\@netscape.com?subject=About the Build Configurator">slamm\@netcape.com</a>&gt;.
+	</form>
+
 	  );
 }
 
@@ -163,11 +199,16 @@ sub print_configure_form {
     <font size='+1' face='Helvetica,Arial'><b>
     Mozilla Unix Build Configurator</b></font><p>
 
-    This form produces a script that you can save and use to configure your
-    mozilla build.
-
     <FORM action='config.cgi' method='POST'>
     <INPUT Type='hidden' name='preview' value='yes'>
+
+    This form produces a script that you can save and use to configure your
+    mozilla build. If this form does not have some options you want, you can
+	add them to the script later.
+
+    <table><tr><td>
+	<input type="Submit" value="Preview Build Script">
+    </td></tr></table>
 
     <table bgcolor="$chrome_color" cellspacing=0 cellpadding=0><tr><td>
     <table bgcolor="#FFFFFF" cellspacing=0 cellpadding=0><tr><td>
@@ -265,7 +306,9 @@ sub print_configure_form {
 	   </table>
 	   </td></tr></table>
 	   </td></tr></table>
+       <table><tr><td>
 	   <input type="Submit" value="Preview Build Script">
+       </td></tr></table>
 	   </form>
 	  );
   print "\n</body>\n</html>\n";
