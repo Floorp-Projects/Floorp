@@ -20,7 +20,7 @@
 #include "nsIRDFNode.h"
 #include "nsIRDFResourceManager.h"
 #include "nsIServiceManager.h"
-#include "nsBookmarkDataSource.h"
+#include "nsMemoryDataSource.h"
 #include "nsRDFCID.h"
 #include "nsString.h"
 #include "nsVoidArray.h"
@@ -427,12 +427,28 @@ BookmarkParser::Assert(nsIRDFNode* subject,
 }
 
 ////////////////////////////////////////////////////////////////////////
-// nsBookmarkDataSource
+// BookmarkDataSourceImpl
+
+class BookmarkDataSourceImpl : public nsMemoryDataSource {
+protected:
+    static const char* kBookmarksFilename;
+
+    nsresult ReadBookmarks(void);
+    nsresult WriteBookmarks(void);
+
+public:
+    BookmarkDataSourceImpl(void);
+    virtual ~BookmarkDataSourceImpl(void);
+
+    NS_IMETHOD Flush(void);
+};
+
+////////////////////////////////////////////////////////////////////////
 
 // XXX we should get this from prefs.
-const char* nsBookmarkDataSource::kBookmarksFilename = "bookmarks.html";
+const char* BookmarkDataSourceImpl::kBookmarksFilename = "bookmarks.html";
 
-nsBookmarkDataSource::nsBookmarkDataSource(void)
+BookmarkDataSourceImpl::BookmarkDataSourceImpl(void)
 {
     // XXX rvg there should be only one instance of this class. 
     // this is actually true of all datasources.
@@ -441,7 +457,7 @@ nsBookmarkDataSource::nsBookmarkDataSource(void)
     Init(kURI_bookmarks);
 }
 
-nsBookmarkDataSource::~nsBookmarkDataSource(void)
+BookmarkDataSourceImpl::~BookmarkDataSourceImpl(void)
 {
     Flush();
 }
@@ -449,7 +465,7 @@ nsBookmarkDataSource::~nsBookmarkDataSource(void)
 
 
 NS_IMETHODIMP
-nsBookmarkDataSource::Flush(void)
+BookmarkDataSourceImpl::Flush(void)
 {
     return WriteBookmarks();
 }
@@ -457,7 +473,7 @@ nsBookmarkDataSource::Flush(void)
 
 
 nsresult
-nsBookmarkDataSource::ReadBookmarks(void)
+BookmarkDataSourceImpl::ReadBookmarks(void)
 {
     nsresult rv = NS_ERROR_FAILURE;
 
@@ -474,7 +490,7 @@ nsBookmarkDataSource::ReadBookmarks(void)
 
 
 nsresult
-nsBookmarkDataSource::WriteBookmarks(void)
+BookmarkDataSourceImpl::WriteBookmarks(void)
 {
     //PR_ASSERT(0);
     return NS_ERROR_NOT_IMPLEMENTED;
@@ -577,3 +593,16 @@ HT_WriteOutAsBookmarks1 (RDF rdf, PRFileDesc *fp, RDF_Resource u, RDF_Resource t
 
 
 
+////////////////////////////////////////////////////////////////////////
+
+nsresult
+NS_NewRDFBookmarkDataSource(nsIRDFDataSource** result)
+{
+    BookmarkDataSourceImpl* ds = new BookmarkDataSourceImpl();
+    if (! ds)
+        return NS_ERROR_NULL_POINTER;
+
+    *result = ds;
+    NS_ADDREF(*result);
+    return NS_OK;
+}

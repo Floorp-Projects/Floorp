@@ -16,24 +16,28 @@
  * Reserved.
  */
 
+// This header file just contains prototypes for the factory methods
+// for "builtin" data sources that are included in rdf.dll. Each of
+// these data sources is exposed to the external world via its CID in
+// ../include/nsRDFCID.h.
 
-#ifndef nsBookmarkDataSource_h__
-#define nsBookmarkDataSource_h__
+#ifndef nsBuiltinDataSources_h__
+#define nsBuiltinDataSources_h__
 
-#include "nsMemoryDataSource.h"
+#include "nsError.h"
 
-class nsBookmarkDataSource : public nsMemoryDataSource {
-protected:
-    static const char* kBookmarksFilename;
+class nsIRDFDataSource;
+class nsIRDFDataBase;
 
-    nsresult ReadBookmarks(void);
-    nsresult WriteBookmarks(void);
+// in nsBookmarkDataSource.cpp
+nsresult NS_NewRDFBookmarkDataSource(nsIRDFDataSource** result);
 
-public:
-    nsBookmarkDataSource(void);
-    virtual ~nsBookmarkDataSource(void);
+// in nsMemoryDataSource.cpp
+nsresult NS_NewRDFMemoryDataSource(nsIRDFDataSource** result);
 
-    NS_IMETHOD Flush(void);
-};
+// in nsSimpleDataBase.cpp
+nsresult NS_NewRDFSimpleDataBase(nsIRDFDataBase** result);
 
-#endif nsBookmarkDataSource_h__
+#endif // nsBuiltinDataSources_h__
+
+

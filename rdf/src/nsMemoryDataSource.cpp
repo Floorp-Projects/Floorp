@@ -728,3 +728,16 @@ nsMemoryDataSource::Ensure(nsIRDFNode* node)
 
 
 
+////////////////////////////////////////////////////////////////////////
+
+nsresult
+NS_NewRDFMemoryDataSource(nsIRDFDataSource** result)
+{
+    nsMemoryDataSource* ds = new nsMemoryDataSource();
+    if (! ds)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    *result = ds;
+    NS_ADDREF(*result);
+    return NS_OK;
+}
