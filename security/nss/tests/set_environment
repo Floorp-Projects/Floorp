@@ -20,8 +20,19 @@ then
     QASCRIPT_DIR=`dirname $0`
 fi
 
-#FIXME - put back in place for UNIX, remove for NT
-#PATH=.:$HOME/bin:/tools/ns/bin:/bin:/usr/bin:/usr/sbin:/usr/ccs/bin:/usr/dist/local/exe:/usr/bin/X11:/usr/audio/bin:/u/sonmi/bin:$PATH
+os_name=`uname -s`
+if [ "$os_name" != "Windows_95" -a \
+    "$os_name" != "Windows_NT" -a \
+    "$os_name" != "WINNT" -a \
+    "$os_name" != "Windows" -a \
+    "$os_name" != "Windows_98" -a \
+    "$os_name" != "CYGWIN_NT-4.0" -a \
+    "$os_name" != "CYGWIN_NT-5.0" -a \
+    "$os_name" != "CYGWIN_95-4.0" -a \
+    "$os_name" != "CYGWIN_98-4.10" ]
+then
+    PATH=.:$HOME/bin:/tools/ns/bin:/bin:/usr/bin:/usr/sbin:/usr/ccs/bin:/usr/dist/local/exe:/usr/bin/X11:/usr/audio/bin:/u/sonmi/bin:$PATH
+fi
 
 CVSROOT=:pserver:svbld@redcvs.red.iplanet.com:/m/src
 
