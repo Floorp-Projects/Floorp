@@ -178,10 +178,12 @@ public:
   
 private:
   nsNSSShutDownList();
-  static PLDHashOperator evaporateAllNSSResourcesHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
+  static PLDHashOperator PR_CALLBACK
+  evaporateAllNSSResourcesHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                                         PRUint32 number, void *arg);
 
-  static PLDHashOperator doPK11LogoutHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
+  static PLDHashOperator PR_CALLBACK
+  doPK11LogoutHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                                     PRUint32 number, void *arg);
 protected:
   PRLock* mListLock;
