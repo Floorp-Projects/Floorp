@@ -279,8 +279,8 @@ int main(int argc, char *argv[])
 	    else
 		    nBodyLength = 0;
 
-      //nsMsgAttachedFile *ptr = NULL;
-      nsMsgAttachedFile *ptr = GetAttachments();
+      nsMsgAttachedFile *ptr = NULL;
+      //nsMsgAttachedFile *ptr = GetAttachments();
 
       pMsgSend->SendMessage(pMsgCompFields, 
                 "",               // const char *smtp,
