@@ -147,8 +147,7 @@ static char *keyStrings[] = {
  *  reads all tokens until the next end-of-line.
  */
  
-static char *token(stream)
-  FILE *stream;
+static char *token(FILE *stream)
 {
     int ch, idx;
 
@@ -181,8 +180,7 @@ static char *token(stream)
  *  more than one word (like Comment lines and FullName).
  */
 
-static char *linetoken(stream)
-  FILE *stream;
+static char *linetoken(FILE *stream)
 {
     int ch, idx;
 
@@ -213,8 +211,7 @@ static char *linetoken(stream)
  *  The algorithm is a standard Knuth binary search.
  */
 
-static enum parseKey recognize(ident)
-  register char *ident;
+static enum parseKey recognize(register char *ident)
 {
     int lower = 0, upper = (int) NOPE, midpoint, cmpvalue;
     BOOL found = FALSE;
@@ -237,9 +234,7 @@ static enum parseKey recognize(ident)
 
 /************************* parseGlobals *****************************/
 
-static BOOL parseGlobals(fp, gfi)
-  FILE *fp;
-  register PS_FontInfo *gfi;
+static BOOL parseGlobals(FILE *fp, register PS_FontInfo *gfi)
 {  
     BOOL cont = TRUE, save = (gfi != NULL);
     int error = ok;
@@ -363,9 +358,7 @@ static BOOL parseGlobals(fp, gfi)
 
 /************************* parseCharMetrics ************************/
 
-static int parseCharMetrics(fp, fi)
-  FILE *fp;
-  register PS_FontInfo *fi;
+static int parseCharMetrics(FILE *fp, register PS_FontInfo *fi)
 {  
     BOOL cont = TRUE;
     int error = ok, count = 0, code = 0;
