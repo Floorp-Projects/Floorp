@@ -97,7 +97,7 @@ xpidl_sprint_iid(nsID *id, char iidbuf[])
 #endif
 }
 
-/* We only parse the {}-less format.  (xpidl_header never has, so we're safe.) */
+/* We only parse the {}-less format. */
 static const char nsIDFmt2[] =
   "%08x-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02x";
 
@@ -144,6 +144,63 @@ xpidl_parse_iid(nsID *id, const char *str)
     return (gboolean)(count == 11);
 }
 
+gboolean
+verify_attribute_declaration(IDL_tree attr_tree)
+{
+    IDL_tree iface;
+    IDL_tree ident;
+    IDL_tree attr_type;
+    gboolean scriptable_interface;
+
+    /* 
+     * Verify that we've been called on an interface, and decide if the
+     * interface was marked [scriptable].
+     */
+    if (IDL_NODE_UP(attr_tree) && IDL_NODE_UP(IDL_NODE_UP(attr_tree)) &&
+        IDL_NODE_TYPE(iface = IDL_NODE_UP(IDL_NODE_UP(attr_tree))) 
+        == IDLN_INTERFACE)
+    {
+        scriptable_interface =
+            (IDL_tree_property_get(IDL_INTERFACE(iface).ident, "scriptable")
+             != NULL);
+    } else {
+        IDL_tree_error(attr_tree,
+                    "verify_attribute_declaration called on a non-interface?");
+        return FALSE;
+    }
+
+    /*
+     * Grab the first of the list of idents and hope that it'll
+     * say scriptable or no.
+     */
+    ident = IDL_LIST(IDL_ATTR_DCL(attr_tree).simple_declarations).data;
+
+    /*
+     * If the interface isn't scriptable, or the attribute is marked noscript,
+     * there's no need to check.
+     */
+    if (!scriptable_interface ||
+        IDL_tree_property_get(ident, "noscript") != NULL)
+        return TRUE;
+
+    /*
+     * If it should be scriptable, check that the type is non-native.  nsid
+     * is exempted.
+     */
+    attr_type = IDL_ATTR_DCL(attr_tree).param_type_spec;
+
+    if (attr_type != NULL && UP_IS_NATIVE(attr_type) &&
+        IDL_tree_property_get(attr_type, "nsid") == NULL)
+    {
+        IDL_tree_error(attr_tree,
+                       "attributes in [scriptable] interfaces which are "
+                       "non-scriptable because they refer to native "
+                       "types must be marked [noscript]\n");
+        return FALSE;
+    }
+    return TRUE;
+}
+
 /*
  * Common method verification code, called by *op_dcl in the various backends.
  */
@@ -172,7 +229,8 @@ verify_method_declaration(IDL_tree method_tree)
             (IDL_tree_property_get(IDL_INTERFACE(iface).ident, "scriptable")
              != NULL);
     } else {
-        IDL_tree_error(method_tree, "verify_op_dcl called on a non-interface?");
+        IDL_tree_error(method_tree,
+                       "verify_method_declaration called on a non-interface?");
         return FALSE;
     }
 

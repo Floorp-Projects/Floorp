@@ -992,6 +992,9 @@ typelib_attr_dcl(TreeState *state)
     XPTMethodDescriptor *meth;
     gboolean ro = IDL_ATTR_DCL(state->tree).f_readonly;
 
+    if (!verify_attribute_declaration(state->tree))
+        return FALSE;
+
     if (!XPT_InterfaceDescriptorAddMethods(id, (PRUint16) (ro ? 1 : 2)))
         return FALSE;
 
