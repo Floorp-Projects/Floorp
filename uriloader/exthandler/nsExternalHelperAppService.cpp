@@ -1169,15 +1169,7 @@ nsresult nsExternalAppHandler::SetUpTempFile(nsIChannel * aChannel)
     // try to extract the file name from the url and use that as a first pass as the
     // leaf name of our temp file...
     nsCAutoString leafName, query; // may be shortened by NS_UnescapeURL
-    // See if the source URL specifies the output from a cgi query.
-    url->GetQuery(query);
-    if (query.IsEmpty()) {
-      // Use the file name and extension from the URL.
-      url->GetFileName(leafName);
-    } else {
-      // Just use the file name, ignoring the extension.
-      url->GetFileBaseName(leafName);
-    }
+    url->GetFileName(leafName);
     if (!leafName.IsEmpty())
     {
 
