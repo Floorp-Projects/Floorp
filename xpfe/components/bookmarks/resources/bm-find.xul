@@ -42,7 +42,7 @@
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         orient="vertical"
         width="630" height="400"
-        persist="width height screenX screenY" sizemode
+        persist="width height screenX screenY sizemode"
         windowtype="bookmarks:find"
         onload="doLoad();">
 
