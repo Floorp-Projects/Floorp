@@ -85,10 +85,13 @@
 #define PROFILE_MANAGER_URL "chrome://profile/content/profileManager.xul"
 #define PROFILE_MANAGER_CMD_LINE_ARG "-ProfileManager"
 #define PROFILE_WIZARD_URL "chrome://profile/content/createProfileWizard.xul"
+#define CONFIRM_AUTOMIGRATE_URL "chrome://profile/content/confirmMigration.xul"
 #define PROFILE_WIZARD_CMD_LINE_ARG "-ProfileWizard"
 #define INSTALLER_CMD_LINE_ARG "-installer"
 #define CREATE_PROFILE_CMD_LINE_ARG "-CreateProfile"
 #define PROFILE_CMD_LINE_ARG "-P"   
+
+#define PREF_CONFIRM_AUTOMIGRATION	"profile.confirm_automigration"
 
 #if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
 #define DEBUG_profile_ 1
@@ -140,6 +143,8 @@ nsresult GetStringFromSpec(nsFileSpec inSpec, char **string)
  */
 nsProfile::nsProfile()
 {
+	mAutomigrate = PR_FALSE;
+
 	if(!gProfileDataAccess)
 		gProfileDataAccess = new nsProfileAccess();
 
@@ -174,6 +179,20 @@ NS_IMPL_QUERY_INTERFACE(nsProfile, kIProfileIID)
  */
 NS_IMETHODIMP nsProfile::Startup(const char *filename)
 {
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+nsProfile::GetAutomigrate(PRBool *aAutomigrate)
+{
+	if (!aAutomigrate) return NS_ERROR_NULL_POINTER;
+	*aAutomigrate = mAutomigrate;
+	return NS_OK;
+}
+NS_IMETHODIMP
+nsProfile::SetAutomigrate(PRBool aAutomigrate)
+{
+	mAutomigrate = aAutomigrate;
 	return NS_OK;
 }
 
@@ -278,6 +297,30 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
         rv = profAppShell->Run();
     }
 
+    PRBool confirmAutomigration = PR_FALSE;
+    if (NS_SUCCEEDED(rv) && prefs) {
+	rv = prefs->GetBoolPref(PREF_CONFIRM_AUTOMIGRATION, &confirmAutomigration);
+	if (NS_FAILED(rv)) confirmAutomigration = PR_FALSE;
+    }
+	
+    if (confirmAutomigration) {
+	    if (profileURLStr == (const char *)(CONFIRM_AUTOMIGRATE_URL)) {
+		PRBool automigrate = PR_FALSE;
+		rv = GetAutomigrate(&automigrate);
+		if (NS_SUCCEEDED(rv) && automigrate) {
+			AutoMigrate();
+		}
+		else {
+			// the user hit cancel.
+			// so they don't want to automatically migrate
+			// so call this again with the profile manager ui
+			nsCString profileManagerUrl(PROFILE_MANAGER_URL);
+			rv = LoadDefaultProfileDir(profileManagerUrl);
+			return rv;
+		}
+	    }
+    }
+
 	// if we get here, and we don't have a current profile, 
 	// return a failure so we will exit
 	// this can happen, if the user hits Exit in the profile manager dialog
@@ -296,6 +339,16 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     // Now we have the right profile, read the user-specific prefs.
     rv = prefs->ReadUserPrefs();
     return rv;
+}
+
+nsresult 
+nsProfile::AutoMigrate()
+{
+	// automatically migrate the one 4.x profile
+	MigrateAllProfiles();
+	gProfileDataAccess->UpdateRegistry();
+
+	return NS_OK;
 }
 
 nsresult
@@ -425,12 +478,21 @@ nsProfile::ProcessArgs(nsICmdLineService *cmdLineArgs,
 				profileURLStr = PROFILE_WIZARD_URL;
             }
             else if (num4xProfiles == 1 && numProfiles == 0) {
-				// automatically migrate the one 4.x profile
-                MigrateAllProfiles();
-		gProfileDataAccess->UpdateRegistry();
-            }
+		PRBool confirmAutomigration = PR_FALSE;
+		NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv)
+		if (NS_SUCCEEDED(rv) && prefs) {
+			rv = prefs->GetBoolPref(PREF_CONFIRM_AUTOMIGRATION, &confirmAutomigration);
+			if (NS_FAILED(rv)) confirmAutomigration = PR_FALSE;
+		}
+		if (confirmAutomigration) {
+			profileURLStr = CONFIRM_AUTOMIGRATE_URL;
+		}
+		else {
+			AutoMigrate();
+		}
+	    }
             else {
-				// show the profile manager
+		// show the profile manager
                 profileURLStr = PROFILE_MANAGER_URL;
             }
         }

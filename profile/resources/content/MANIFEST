@@ -11,3 +11,5 @@ profileManager.xul
 renameProfile.xul
 profileSelection.js
 profileSelection.xul
+confirmMigration.xul
+confirmMigration.js

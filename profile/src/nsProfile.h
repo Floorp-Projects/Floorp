@@ -41,6 +41,7 @@ private:
 					   PRBool *profileDirSet,
 					   nsCString & profileURLStr);
 	nsresult LoadDefaultProfileDir(nsCString & profileURLStr);
+	PRBool mAutomigrate;
 
 public:
 	nsProfile();
@@ -59,5 +60,7 @@ public:
 
 	// Routine that frees the memory allocated to temp profile struct
 	void FreeProfileStruct(ProfileStruct* aProfile);
+
+	nsresult AutoMigrate();
 };
 

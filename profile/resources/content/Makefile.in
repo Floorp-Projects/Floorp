@@ -41,6 +41,8 @@ FILES		= \
 	newProfile1_2.js			\
 	profileSelection.xul			\
 	profileSelection.js			\
+	confirmMigration.xul			\
+	confirmMigration.js			\
         $(NULL)
 
 include $(topsrcdir)/config/rules.mk

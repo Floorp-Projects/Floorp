@@ -38,6 +38,7 @@ FILES		= \
 		createProfileWizard.properties	\
 		newProfile1_2.properties	\
 		profileSelection.dtd		\
+		confirmMigration.dtd		\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

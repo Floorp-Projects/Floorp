@@ -90,6 +90,8 @@ interface nsIProfile : nsISupports {
     void migrateAllProfiles();
     void cloneProfile(in string profileName);
     void forgetCurrentProfile();
+
+    attribute boolean automigrate;
 };
 
 #endif /* nsIProfile_h__ */
