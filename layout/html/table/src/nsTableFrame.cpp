@@ -3035,7 +3035,7 @@ void nsTableFrame::BuildColumnCache( nsIPresContext&          aPresContext,
     delete mColCache;
   }
 
-  mColCache = new ColumnInfoCache(mColCount);
+  mColCache = new ColumnInfoCache(GetColCount());
   nsIFrame * childFrame = mFirstChild;
   while (nsnull!=childFrame)
   { // in this loop, we cache column info and set column style info from cells in first row
