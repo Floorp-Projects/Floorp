@@ -43,6 +43,10 @@
 interface nsIDOMRange;
 interface nsISelectionListener;
 
+%{C++
+class nsIPresShell;
+%}
+
 [ptr] native nsIPresShell(nsIPresShell);
 
 [scriptable, uuid(2d5535e2-1dd2-11b2-8e38-d53ec833adf6)]
