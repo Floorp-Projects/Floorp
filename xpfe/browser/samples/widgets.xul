@@ -195,6 +195,6 @@
   
   <separator/>
   
-  <scrollbar align="horizontal"/>
+  <scrollbar orient="horizontal"/>
   
  </window>
