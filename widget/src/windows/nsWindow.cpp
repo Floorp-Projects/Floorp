@@ -581,6 +581,7 @@ public:
       info->timerWindow = timerWindow;
       info->flashWindow = flashWindow;
       info->timerID = timerID;
+      info->hasFlashed = PR_FALSE;
       info->next = 0;
       if (newInfo)
         AppendTimer(info);
@@ -594,11 +595,17 @@ public:
     TimerInfo *info = FindInfo(timerWindow);
     if (info) {
       // make sure it's unflashed and kill the timer
-      ::FlashWindow(info->flashWindow, FALSE);
+      if (info->hasFlashed)
+        ::FlashWindow(info->flashWindow, FALSE);
       ::KillTimer(info->timerWindow, info->timerID);
       RemoveTimer(info);
       delete info;
     }
+  }
+  void SetFlashed(HWND timerWindow) {
+    TimerInfo *info = FindInfo(timerWindow);
+    if (info)
+      info->hasFlashed = PR_TRUE;
   }
 
 private:
@@ -606,6 +613,7 @@ private:
     HWND       timerWindow,
                flashWindow;
     UINT       timerID;
+    PRBool     hasFlashed;
     TimerInfo *next;
   };
   TimerInfo *FindInfo(HWND timerWindow) {
@@ -6369,12 +6377,15 @@ void nsWindow::GetCompositionWindowPos(HIMC hIMC, PRUint32 aEventType, COMPOSITI
 // status until the window comes to the foreground.
 static VOID CALLBACK nsGetAttentionTimerFunc(HWND hwnd, UINT uMsg, UINT idEvent, DWORD dwTime) {
 
-  // flash the outermost owner if we're not the foreground
-  HWND flashwnd = gAttentionTimerMonitor->GetFlashWindowFor(hwnd);
-
   // flash the window until we're in the foreground.
   if (::GetForegroundWindow() != hwnd)
+  {
+    // flash the outermost owner
+    HWND flashwnd = gAttentionTimerMonitor->GetFlashWindowFor(hwnd);
+    
     ::FlashWindow(flashwnd, TRUE);
+    gAttentionTimerMonitor->SetFlashed(hwnd);
+  }
   else
     gAttentionTimerMonitor->KillTimer(hwnd);
 }
