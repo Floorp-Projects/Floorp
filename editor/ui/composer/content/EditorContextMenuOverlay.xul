@@ -31,8 +31,7 @@
 
 <popupset id="editorContentContextSet">
  <popup id="editorContentContext"   
-   onpopupshowing="EditorFillContextMenu(event, this);" 
-   onpopuphiding="EditorCleanupContextMenu(event, this);">
+   onpopupshowing="EditorFillContextMenu(event, this);"> 
     <menuitem id="menu_undo_cm"   label="&undoCmd.label;" accesskey="&undo.accesskey;"  oncommand="goDoCommand('cmd_undo')"/>
     <menuitem id="menu_redo_cm"   label="&redoCmd.label;" accesskey="&redo.accesskey;"  oncommand="goDoCommand('cmd_redo')"/>
     <menuseparator id="undoredo-separator"/>
@@ -60,7 +59,6 @@
 
     <!-- label and accesskey are set in InitObjectProperties -->
     <menuitem id="objectProperties_cm" observes="cmd_objectProperties"/>
-    <menuitem id="menu_saveImage_cm"/>
     <menuitem id="editLink_cm" label="&editLinkCmd.label;" accesskey="&editlink.accesskey;" observes="cmd_editLink"/>
     <menuseparator id="property-separator"/>
 

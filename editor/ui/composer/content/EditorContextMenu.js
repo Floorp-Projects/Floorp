@@ -35,11 +35,10 @@ function EditorFillContextMenu(event, contextMenuNode)
 
   // Setup object property menuitem
   var objectName = InitObjectPropertiesMenuitem("objectProperties_cm");
-  var isImage = objectName == "img";
   var isInLink = objectName == "href";
 
   // Special case of an image inside a link
-  if (isImage)
+  if (objectName == "img")
     isInLink = gEditor.getElementOrParentByTagName("href", GetObjectForProperties());
 
   // Disable "Create Link" if in a link
@@ -66,9 +65,6 @@ function EditorFillContextMenu(event, contextMenuNode)
       HideDisabledItem(children.item(i));
   }
 
-  // The 'Save image (imagename)' menuitem:
-  ShowMenuItem("menu_saveImage_cm", isImage);
-
   // Remove separators if all items in immediate group above are hidden
   // A bit complicated to account if multiple groups are completely hidden!
   var haveUndo =
@@ -87,38 +83,21 @@ function EditorFillContextMenu(event, contextMenuNode)
     IsMenuItemShowing("removeLinksMenuitem_cm") ||
     IsMenuItemShowing("removeNamedAnchorsMenuitem_cm");
 
-  var havePropsOrImage =
-    IsMenuItemShowing("objectProperties_cm") ||
-    IsMenuItemShowing("menu_saveImage_cm");
+  var haveProps =
+    IsMenuItemShowing("objectProperties_cm");
 
   ShowMenuItem("undoredo-separator", haveUndo && haveEdit);
 
   ShowMenuItem("edit-separator", haveEdit || haveUndo);
 
-  if (isImage)   //we have an image
-  {
-     var saveImageMenuItem= document.getElementById("menu_saveImage_cm");
-
-     var imagePtr = window.editorShell.GetSelectedElement(objectName);
-     var imageName = extractFileNameFromUrl(imagePtr.getAttribute("src"));
-
-     var menutext = window.editorShell.GetString("SaveImageAs").replace(/%NAME%/,imageName);
-
-     saveImageMenuItem.setAttribute('label',menutext);
-
-    // XXX BUSTED! This command was removed!
-     var onCommand = "saveURL('"+ imagePtr.getAttribute("src") + "','SaveImageTitle',false)";
-     saveImageMenuItem.setAttribute('oncommand',onCommand);
-  }
-
   // Note: Item "menu_selectAll_cm" and
   // following separator are ALWAYS enabled,
   // so there will always be 1 separator here
 
-  var showStyleSep = haveStyle && (havePropsOrImage || inCell);
+  var showStyleSep = haveStyle && (haveProps || inCell);
   ShowMenuItem("styles-separator", showStyleSep);
 
-  var showPropSep = (havePropsOrImage && inCell);
+  var showPropSep = (haveProps && inCell);
   ShowMenuItem("property-separator", showPropSep);
 
   // Remove table submenus if not in table
