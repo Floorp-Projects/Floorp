@@ -224,7 +224,7 @@ nsImageMac::Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth, nsMaskRequirem
     return NS_ERROR_FAILURE;
   }
   
-  mBytesPerPixel = (aDepth < 8) ? 1 : aDepth / 8;
+  mBytesPerPixel = (mImagePixmap.pixelSize <= 8) ? 1 : mImagePixmap.pixelSize / 8;
 
   mRowBytes = mImagePixmap.rowBytes & 0x3FFF;   // we only set the top bit, but QuickDraw can use the top 2 bits
 			
