@@ -21,6 +21,8 @@
 #include "nsCOMPtr.h"
 #include "nsICharsetConverterManager.h"
 #include "nsCharsetConverterManager.h"
+#include "nsIUnicodeDecodeHelper.h"
+#include "nsUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncodeHelper.h"
 #include "nsUnicodeEncodeHelper.h"
 #include "nsIPlatformCharset.h"
@@ -58,6 +60,19 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
   // the converter manager
   if (aClass.Equals(kCharsetConverterManagerCID)) {
     nsManagerFactory *factory = new nsManagerFactory();
+    nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
+
+    if (NS_FAILED(res)) {
+      *aFactory = NULL;
+      delete factory;
+    }
+
+    return res;
+  }
+
+  // the Unicode Decode helper
+  if (aClass.Equals(kUnicodeDecodeHelperCID)) {
+    nsDecodeHelperFactory *factory = new nsDecodeHelperFactory();
     nsresult res = factory->QueryInterface(kIFactoryIID, (void **) aFactory);
 
     if (NS_FAILED(res)) {
@@ -119,6 +134,10 @@ extern "C" NS_EXPORT nsresult NSRegisterSelf(nsISupports* aServMgr, const char *
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
 
+  rv = compMgr->RegisterComponent(kUnicodeDecodeHelperCID, NULL, NULL,
+      path, PR_TRUE, PR_TRUE);
+  if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
+
   rv = compMgr->RegisterComponent(kUnicodeEncodeHelperCID, NULL, NULL,
       path, PR_TRUE, PR_TRUE);
   if(NS_FAILED(rv) && (NS_ERROR_FACTORY_EXISTS != rv)) goto done;
@@ -151,6 +170,9 @@ extern "C" NS_EXPORT nsresult NSUnregisterSelf(nsISupports* aServMgr, const char
                            nsIComponentManager::GetIID(), 
                            (nsISupports**)&compMgr);
   if (NS_FAILED(rv)) return rv;
+
+  rv = compMgr->UnregisterFactory(kUnicodeDecodeHelperCID, path);
+  if(NS_FAILED(rv)) goto done;
 
   rv = compMgr->UnregisterFactory(kUnicodeEncodeHelperCID, path);
   if(NS_FAILED(rv)) goto done;

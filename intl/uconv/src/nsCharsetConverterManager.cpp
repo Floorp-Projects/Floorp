@@ -31,6 +31,7 @@
 #include "registryhack1.h"
 
 // just for CIDs
+#include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncodeHelper.h"
 
 // XXX to be moved with its own factory
