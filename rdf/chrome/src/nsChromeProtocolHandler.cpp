@@ -175,7 +175,7 @@ nsChromeProtocolHandler::NewChannel(const char* verb, nsIURI* uri,
     rv = serv->NewChannelFromURI(verb, chromeURI, aGroup, eventSinkGetter, 
                                  result);
 
-    // Create a special principal for chrome and set the creator property
+    // Get a system principal for chrome and set the owner property
     //  of the result
     if (NS_SUCCEEDED(rv)) {
         nsresult rv2;
