@@ -48,7 +48,6 @@
 
 
 #include "resource.h"
-#include "zlib.h"
 #include "nsINIParser.h"
 
 #define MAX_BUF       4096
@@ -64,6 +63,7 @@
 #define PP_PATH_ONLY                    2
 #define PP_ROOT_ONLY                    3
 
+#define CLASS_NAME_SETUP_DLG            "MozillaSetupDlg"
 
 /////////////////////////////////////////////////////////////////////////////
 // Global Declarations
@@ -76,6 +76,32 @@ static ULONG	nTotalBytes = 0;  // sum of all the FILE resources
 
 /////////////////////////////////////////////////////////////////////////////
 // Utility Functions
+
+HWND FindWindow(PCSZ pszAtomString)
+{
+  ATOM atom;
+  HENUM henum;
+  HWND hwndClient, hwnd = NULLHANDLE;
+
+
+  atom = WinFindAtom(WinQuerySystemAtomTable(), pszAtomString);
+  if (atom) {
+    henum = WinBeginEnumWindows(HWND_DESKTOP);
+    while ((hwnd = WinGetNextWindow(henum)) != NULLHANDLE)
+    {
+      ULONG ulWindowWord;
+      ulWindowWord = WinQueryWindowULong(hwnd, QWL_STYLE);
+      if (ulWindowWord & CS_FRAME) {
+        ulWindowWord = WinQueryWindowULong(hwnd, QWL_USER);
+        if (ulWindowWord == atom) {
+          break;
+        }
+      }
+    }
+  }
+  WinEndEnumWindows(henum);
+  return  hwnd;
+}
 
 // This function is similar to GetFullPathName except instead of
 // using the current drive and directory it uses the path of the
@@ -519,7 +545,7 @@ main(int argc, char *argv[], char *envp[])
   HAB hab;
   HMQ hmq;
   QMSG qmsg;
-  HWND hwndDlg;
+  HWND hwndFW, hwndDlg;
 
   hab = WinInitialize(0);
   hmq = WinCreateMsgQueue(hab,0);
@@ -530,18 +556,17 @@ main(int argc, char *argv[], char *envp[])
   /* Allow only one instance of nsinstall to run.
    * Detect a previous instance of nsinstall, bring it to the 
    * foreground, and quit current instance */
-  if(FindWindow("NSExtracting", "Extracting...") != NULL)
+  if(FindWindow(CLASS_NAME_SETUP_DLG) != NULL)
     return(1);
+#endif
 
   /* Allow only one instance of Setup to run.
    * Detect a previous instance of Setup, and quit */
-  if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG, NULL)) != NULL)
+  if((hwndFW = FindWindow(CLASS_NAME_SETUP_DLG)) != NULL)
   {
-    ShowWindow(hwndFW, SW_RESTORE);
-    SetForegroundWindow(hwndFW);
+    WinSetActiveWindow(HWND_DESKTOP, hwndFW);
     return(1);
   }
-#endif
 
   // Parse the command line
   ParseCommandLine(argc, argv);
