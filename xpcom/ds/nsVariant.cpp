@@ -812,6 +812,21 @@ static nsresult ToString(const nsDiscriminatedUnion& data,
         nsMemory::Free(ptr);
         return NS_OK;
 
+    // Can't use PR_smprintf for floats, since it's locale-dependent
+#define CASE__APPENDFLOAT_NUMBER(type_, member_)                        \
+    case nsIDataType :: type_ :                                         \
+    {                                                                   \
+        nsCAutoString str;                                              \
+        str.AppendFloat(data.u. member_);                               \
+        outString.Assign(str);                                          \
+        return NS_OK;                                                   \
+    }
+
+    CASE__APPENDFLOAT_NUMBER(VTYPE_FLOAT,  mFloatValue)
+    CASE__APPENDFLOAT_NUMBER(VTYPE_DOUBLE, mDoubleValue)
+
+#undef CASE__APPENDFLOAT_NUMBER
+
     // the rest can be PR_smprintf'd and use common code.
 
 #define CASE__SMPRINTF_NUMBER(type_, format_, cast_, member_)                 \
@@ -828,9 +843,6 @@ static nsresult ToString(const nsDiscriminatedUnion& data,
     CASE__SMPRINTF_NUMBER(VTYPE_UINT16, "%u",   unsigned, mUint16Value)
     CASE__SMPRINTF_NUMBER(VTYPE_UINT32, "%u",   unsigned, mUint32Value)
     CASE__SMPRINTF_NUMBER(VTYPE_UINT64, "%llu", PRInt64,  mUint64Value)
-
-    CASE__SMPRINTF_NUMBER(VTYPE_FLOAT,  "%f",   float,    mFloatValue)
-    CASE__SMPRINTF_NUMBER(VTYPE_DOUBLE, "%f",   double,   mDoubleValue)
 
     // XXX Would we rather print "true" / "false" ?
     CASE__SMPRINTF_NUMBER(VTYPE_BOOL,   "%d",   int,      mBoolValue)
