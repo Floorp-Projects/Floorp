@@ -252,6 +252,10 @@ public:
                      const PRUnichar* aReferrer=nsnull,
                      const char * aWindowTarget = nsnull);
 
+  NS_IMETHOD SessionHistoryInternalLoadURL(const PRUnichar *aURLSpec,
+   nsLoadFlags aType, nsISupports * aHistoryState, const PRUnichar* aReferrer);
+
+
   NS_IMETHOD GetCanGoBack(PRBool* aCanGoBack);
   NS_IMETHOD GetCanGoForward(PRBool* aCanGoForward);
   NS_IMETHOD GoBack();
@@ -1811,6 +1815,12 @@ NS_IMETHODIMP nsWebShell::Stop(void)
 }
 
 //----------------------------------------
+
+NS_IMETHODIMP nsWebShell::SessionHistoryInternalLoadURL(const PRUnichar *aURLSpec,
+   nsLoadFlags aType, nsISupports * aHistoryState, const PRUnichar* aReferrer)
+{
+   return LoadURL(aURLSpec, nsnull, PR_FALSE, aType, 0, aHistoryState, aReferrer);
+}
 
 // History methods
 
