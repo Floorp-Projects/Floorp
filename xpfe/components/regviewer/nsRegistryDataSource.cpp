@@ -365,7 +365,7 @@ nsRegistryDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProper
             if (PL_strncmp(uri, kValuePrefix, sizeof(kValuePrefix) -1) == 0) {
                 const char* path = uri + sizeof(kValuePrefix) - 1;
 
-                uint32 type;
+                PRUint32 type;
                 rv = mRegistry->GetValueType(key, path, &type);
                 if (NS_FAILED(rv)) return rv;
 
@@ -383,7 +383,7 @@ nsRegistryDataSource::GetTarget(nsIRDFResource *aSource, nsIRDFResource *aProper
                 }
 
                 case nsIRegistry::Int32: {
-                    int32 value;
+                    PRInt32 value;
                     rv = mRegistry->GetInt(key, path, &value);
                     if (NS_FAILED(rv)) return rv;
 
