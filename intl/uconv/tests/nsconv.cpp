@@ -83,6 +83,8 @@ int main(int argc, const char** argv)
   nsICharsetConverterManager* ccMain=nsnull;
   nsICharsetAlias* aliasmgr = nsnull;
 
+  NS_InitXPCOM2(nsnull, nsnull, nsnull);
+
   // get ccMain;
   res = nsServiceManager::GetService(kCharsetConverterManagerCID,
                                      kICharsetConverterManagerIID, (nsISupports**) &ccMain);
