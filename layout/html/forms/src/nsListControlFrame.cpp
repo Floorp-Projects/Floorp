@@ -2781,7 +2781,9 @@ nsListControlFrame::SetProperty(nsIPresContext* aPresContext, nsIAtom* aName,
           }
           // if it is a multiple, select the new item
           if (multiple) {
+            Deselect();
             SetOptionSelected(selectedIndex, PR_TRUE);
+            mSelectedIndex = selectedIndex;
           } else {
             // if it is a single select, 
             // check to see if it is the currect selection
