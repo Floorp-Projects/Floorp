@@ -557,26 +557,38 @@ nsresult nsClipboard::GetDataFromDataObject(IDataObject     * aDataObject,
 
       void   * data;
       PRUint32 dataLen;
+      PRBool success = PR_FALSE;
 
       if (nsnull != aDataObject) {
         res = GetNativeDataOffClipboard(aDataObject, format, &data, &dataLen);
-        if (NS_OK == res) {
+        if ( NS_SUCCEEDED(res) ) {
           nsCOMPtr<nsISupports> genericDataWrapper;
           nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
           aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
-          break;
+          success = PR_TRUE;
         }
       } else if (nsnull != aWindow) {
         res = GetNativeDataOffClipboard(aWindow, format, &data, &dataLen);
-        if (NS_OK == res) {
+        if ( NS_SUCCEEDED(res) ) {
           nsCOMPtr<nsISupports> genericDataWrapper;
           nsPrimitiveHelpers::CreatePrimitiveForData ( flavorStr, data, dataLen, getter_AddRefs(genericDataWrapper) );
           aTransferable->SetTransferData(flavorStr, genericDataWrapper, dataLen);
-          break;
+          success = PR_TRUE;
         }
       }
+
+      if ( success ) {
+        // the DOM only wants LF, so convert from Win32 line endings to DOM line
+        // endings.
+        PRInt32 signedLen = NS_STATIC_CAST(PRInt32, dataLen);
+        nsLinebreakHelpers::ConvertPlatformToDOMLinebreaks ( flavorStr, &data, &signedLen );
+        dataLen = signedLen;
+        break;
+      }
+
     }
-  }
+  } // foreach flavor
+
   return res;
 
 }
