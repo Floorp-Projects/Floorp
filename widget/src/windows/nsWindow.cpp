@@ -702,10 +702,16 @@ NS_METHOD nsWindow::Show(PRBool bState)
     if (mWnd) {
         if (bState) {
           DWORD flags = SWP_NOSIZE | SWP_NOMOVE | SWP_SHOWWINDOW;
+          if ((mIsVisible) || (mWindowType == eWindowType_popup)) {
+             flags |= SWP_NOZORDER;
+          }
+
           if (mWindowType == eWindowType_popup) {
             flags |= SWP_NOACTIVATE;
-          }
+            ::SetWindowPos(mWnd, HWND_TOPMOST, 0, 0, 0, 0, flags);
+          } else {
             ::SetWindowPos(mWnd, HWND_TOP, 0, 0, 0, 0, flags);
+          }
         }
         else
             ::ShowWindow(mWnd, SW_HIDE);
