@@ -91,8 +91,9 @@ final class NativeDate extends IdScriptable
     protected void fillConstructorProperties
         (Context cx, IdFunction ctor, boolean sealed)
     {
-        addIdFunctionProperty(ctor, ConstructorId_UTC, sealed);
+        addIdFunctionProperty(ctor, ConstructorId_now, sealed);
         addIdFunctionProperty(ctor, ConstructorId_parse, sealed);
+        addIdFunctionProperty(ctor, ConstructorId_UTC, sealed);
         super.fillConstructorProperties(cx, ctor, sealed);
     }
 
@@ -100,8 +101,9 @@ final class NativeDate extends IdScriptable
     {
         if (prototypeFlag) {
             switch (methodId) {
-                case ConstructorId_UTC:     return 1;
+                case ConstructorId_now:     return 0;
                 case ConstructorId_parse:   return 1;
+                case ConstructorId_UTC:     return 1;
                 case Id_constructor:        return 1;
                 case Id_toString:           return 0;
                 case Id_toTimeString:       return 0;
@@ -159,18 +161,21 @@ final class NativeDate extends IdScriptable
     {
         if (prototypeFlag) {
             switch (methodId) {
-                case ConstructorId_UTC:
-                    return wrap_double(jsStaticFunction_UTC(args));
+                case ConstructorId_now:
+                    return wrap_double(now());
 
                 case ConstructorId_parse:
                     return wrap_double(date_parseString
                         (ScriptRuntime.toString(args, 0)));
 
+                case ConstructorId_UTC:
+                    return wrap_double(jsStaticFunction_UTC(args));
+
                 case Id_constructor: {
                     // if called as a function, just return a string
                     // representing the current time.
                     if (thisObj != null)
-                        return date_format(Now(), Id_toString);
+                        return date_format(now(), Id_toString);
                     return jsConstructor(args);
                 }
 
@@ -540,7 +545,7 @@ final class NativeDate extends IdScriptable
         return (int) result;
     }
 
-    private static double Now()
+    private static double now()
     {
         return (double) System.currentTimeMillis();
     }
@@ -1062,7 +1067,7 @@ final class NativeDate extends IdScriptable
         // if called as a constructor with no args,
         // return a new Date with the current time.
         if (args.length == 0) {
-            obj.date = Now();
+            obj.date = now();
             return obj;
         }
 
@@ -1476,8 +1481,9 @@ final class NativeDate extends IdScriptable
     {
         if (prototypeFlag) {
             switch (id) {
-                case ConstructorId_UTC:     return "UTC";
+                case ConstructorId_now:     return "now";
                 case ConstructorId_parse:   return "parse";
+                case ConstructorId_UTC:     return "UTC";
                 case Id_constructor:        return "constructor";
                 case Id_toString:           return "toString";
                 case Id_toTimeString:       return "toTimeString";
@@ -1647,8 +1653,9 @@ final class NativeDate extends IdScriptable
     }
 
     private static final int
-        ConstructorId_UTC       = -2,
-        ConstructorId_parse     = -1,
+        ConstructorId_now       = -3,
+        ConstructorId_parse     = -2,
+        ConstructorId_UTC       = -1,
 
         Id_constructor          =  1,
         Id_toString             =  2,
