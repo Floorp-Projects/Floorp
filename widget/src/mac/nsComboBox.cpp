@@ -58,20 +58,6 @@ nsComboBox::~nsComboBox()
 //
 //
 //-------------------------------------------------------------------------
-void nsComboBox::GetRectForMacControl(nsRect &outRect)
-{
-	//¥TODO: we can certainly remove this function if we
-	// implement GetDesiredSize() in nsComboboxControlFrame
-	outRect = mBounds;
-	outRect.x = 0;
-	outRect.y = 3;
-	outRect.height -= 6;
-}
-
-//-------------------------------------------------------------------------
-//
-//
-//-------------------------------------------------------------------------
 NS_IMETHODIMP nsComboBox::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,

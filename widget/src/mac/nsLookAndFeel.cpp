@@ -133,13 +133,13 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 0;
         break;
     case eMetric_ListHorizontalInsideMinimumPadding:
-        aMetric = 3;
+        aMetric = 4;
         break;
     case eMetric_ListShouldUseVerticalInsidePadding:
-        aMetric = 0;
+        aMetric = 1;
         break;
     case eMetric_ListVerticalInsidePadding:
-        aMetric = 0;
+        aMetric = 3;
         break;
     default:
         aMetric = 0;
@@ -165,7 +165,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetri
         aMetric = 0.40f;
         break;
     case eMetricFloat_ListVerticalInsidePadding:
-        aMetric = 0.10f;
+        aMetric = 0.08f;
         break;
     case eMetricFloat_ListHorizontalInsidePadding:
         aMetric = 0.40f;

@@ -63,10 +63,6 @@ public:
 	virtual PRBool			DispatchMouseEvent(nsMouseEvent &aEvent);
 
 protected:
-	// nsMacControl
-	virtual void			GetRectForMacControl(nsRect &outRect);
-
-protected:
 	PRInt16		mMenuID;
 	MenuHandle	mMenuHandle;
 };
