@@ -119,6 +119,8 @@ PRBool              gRollupConsumeRollupEvent = PR_FALSE;
 PRBool gJustGotActivate = PR_FALSE;
 PRBool gJustGotDeactivate = PR_FALSE;
 
+HWND   gHwndBeingDestroyed = NULLHANDLE;
+
 ////////////////////////////////////////////////////
 // Mouse Clicks - static variable defintions 
 // for figuring out 1 - 3 Clicks
@@ -970,7 +972,11 @@ NS_METHOD nsWindow::Destroy()
          nsBaseWidget::Destroy();
 
       if( mWnd)
-         WinDestroyWindow( mHackDestroyWnd ? mHackDestroyWnd : mWnd);
+      {
+         gHwndBeingDestroyed = (mHackDestroyWnd ? mHackDestroyWnd : mWnd);
+         WinDestroyWindow( gHwndBeingDestroyed);
+         gHwndBeingDestroyed = NULLHANDLE;
+      }
    }
    return NS_OK;
 }
@@ -1258,7 +1264,8 @@ NS_METHOD nsWindow::SetFocus(void)
         mOS2Toolkit->CallMethod(&info);
     }
     else
-    if (mWnd) {
+    if (mWnd && 
+        (!gHwndBeingDestroyed || !WinIsChild(mWnd, gHwndBeingDestroyed))) {
         WinSetFocus( HWND_DESKTOP, mWnd);
     }
     return NS_OK;
