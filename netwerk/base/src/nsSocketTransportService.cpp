@@ -226,6 +226,7 @@ nsresult nsSocketTransportService::ProcessWorkQ(void)
   //       available in the select set...
   //
   PR_Lock(mThreadLock);
+  NS_ASSERTION(MAX_OPEN_CONNECTIONS > mSelectFDSetCount, "reached max open connections");
   while (!PR_CLIST_IS_EMPTY(&mWorkQ) && 
          (MAX_OPEN_CONNECTIONS > mSelectFDSetCount)) {
     nsSocketTransport* transport;
@@ -270,6 +271,7 @@ nsresult nsSocketTransportService::AddToSelectList(nsSocketTransport* aTransport
 {
   nsresult rv = NS_OK;
 
+  NS_ASSERTION(MAX_OPEN_CONNECTIONS > mSelectFDSetCount, "reached max open connections");
   if (aTransport && (MAX_OPEN_CONNECTIONS > mSelectFDSetCount) ) {
     PRPollDesc* pfd;
     int i;
@@ -338,6 +340,9 @@ nsresult nsSocketTransportService::RemoveFromSelectList(nsSocketTransport* aTran
     }
   }
 
+#ifdef DEBUG_sspitzer
+  printf("mSelectFDSetCount = %d\n",mSelectFDSetCount);
+#endif
   return rv;
 }
 

@@ -140,12 +140,19 @@ nsresult nsMsgProtocol::SetupTransportState()
 
 nsresult nsMsgProtocol::CloseSocket()
 {
+	nsresult rv = NS_OK;
+
 	// release all of our socket state
 	m_socketIsOpen = PR_FALSE;
 	m_outputStream = null_nsCOMPtr();
+
+	// we need to call Cancel so that we remove the socket transport from the mActiveTransportList.  see bug #30648
+	if (m_channel) {
+		rv = m_channel->Cancel();
+	}
 	m_channel = null_nsCOMPtr();
 
-	return NS_OK;
+	return rv;
 }
 
 /*
@@ -218,8 +225,12 @@ NS_IMETHODIMP nsMsgProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports *c
 	// happens to be using
 	if (m_channelListener)
 		rv = m_channelListener->OnStopRequest(this, m_channelContext, aStatus, aMsg);
-
-	if (NS_FAILED(aStatus)) {
+	
+	// !NS_BINDING_ABORTED because we don't want to see an alert if the user 
+	// cancelled the operation.  also, we'll get here because we call Cancel()
+	// to force removal of the nsSocketTransport.  see CloseSocket()
+	// bugs #30775 and #30648 relate to this
+	if (NS_FAILED(aStatus) && (aStatus != NS_BINDING_ABORTED)) {
 		NS_WITH_SERVICE(nsIPrompt, dialog, kNetSupportDialogCID, &rv);
 		if (NS_SUCCEEDED(rv) && dialog) {
 			// todo, put this into a string bundle
