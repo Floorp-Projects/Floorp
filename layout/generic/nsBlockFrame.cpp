@@ -400,8 +400,17 @@ nsBlockFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) cons
         numInlineLines++;
     }
   }
-  fprintf(out, " sc=%p(i=%d,b=%d)<\n",
+  fprintf(out, " sc=%p(i=%d,b=%d)",
           NS_STATIC_CAST(void*, mStyleContext), numInlineLines, numBlockLines);
+  nsIAtom* pseudoTag = mStyleContext->GetPseudoType();
+  if (pseudoTag) {
+    nsAutoString atomString;
+    pseudoTag->ToString(atomString);
+    fprintf(out, " pst=%s",
+            NS_LossyConvertUCS2toASCII(atomString).get());
+  }
+  fputs("<\n", out);
+
   aIndent++;
 
   // Output the lines

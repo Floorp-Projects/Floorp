@@ -1298,6 +1298,13 @@ nsContainerFrame::List(nsPresContext* aPresContext, FILE* out, PRInt32 aIndent) 
             overflowArea->width, overflowArea->height);
   }
   fprintf(out, " [sc=%p]", NS_STATIC_CAST(void*, mStyleContext));
+  nsIAtom* pseudoTag = mStyleContext->GetPseudoType();
+  if (pseudoTag) {
+    nsAutoString atomString;
+    pseudoTag->ToString(atomString);
+    fprintf(out, " pst=%s",
+            NS_LossyConvertUCS2toASCII(atomString).get());
+  }
 
   // Output the children
   nsIAtom* listName = nsnull;
