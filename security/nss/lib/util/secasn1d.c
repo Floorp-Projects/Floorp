@@ -35,7 +35,7 @@
  * Support for DEcoding ASN.1 data based on BER/DER (Basic/Distinguished
  * Encoding Rules).
  *
- * $Id: secasn1d.c,v 1.22 2003/04/26 03:41:24 nelsonb%netscape.com Exp $
+ * $Id: secasn1d.c,v 1.23 2003/04/28 20:19:21 wtc%netscape.com Exp $
  */
 
 /* #define DEBUG_ASN1D_STATES 1 */
@@ -715,7 +715,7 @@ sec_asn1d_init_state_based_on_template (sec_asn1d_state *state)
     return state;
 }
 
-PRBool
+static PRBool
 sec_asn1d_parent_is_indefinite(sec_asn1d_state *state)
 {
     for (state = state->parent; state; state = state->parent) {
