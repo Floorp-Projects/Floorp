@@ -28,7 +28,7 @@ class nsDOMTextRange : public nsIDOMTextRange
 public:
 
 	nsDOMTextRange(PRUint16 aRangeStart, PRUint16 aRangeEnd, PRUint16 aRangeType);
-	~nsDOMTextRange(void);
+	virtual ~nsDOMTextRange(void);
 
 	NS_IMETHOD    GetRangeStart(PRUint16* aRangeStart);
 	NS_IMETHOD    SetRangeStart(PRUint16 aRangeStart);
@@ -52,7 +52,7 @@ class nsDOMTextRangeList: public nsIDOMTextRangeList
 public:
 	
 	nsDOMTextRangeList(PRUint16 aLength,nsIDOMTextRange** aList);
-	~nsDOMTextRangeList(void);
+	virtual ~nsDOMTextRangeList(void);
 
 	NS_IMETHOD    GetLength(PRUint16* aLength);
 
