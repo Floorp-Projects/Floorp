@@ -24,6 +24,8 @@
 #include HG40855
 
 #include "nsIOutputStream.h"
+#include "nsIBufferInputStream.h"
+#include "nsIBufferOutputStream.h"
 #include "nsINntpUrl.h"
 
 #include "nsIWebShell.h"  // mscott - this dependency should only be temporary!
@@ -134,7 +136,8 @@ NEWS_DONE,
 NEWS_POST_DONE,
 NEWS_ERROR,
 NNTP_ERROR,
-NEWS_FREE
+NEWS_FREE,
+NEWS_FINISHED
 } StatesEnum;
 
 class nsNNTPProtocol : public nsMsgProtocol
@@ -178,9 +181,6 @@ private:
 	nsCOMPtr<nsIOutputStream> m_tempErrorStream;
 	nsFileSpec m_tempErrorFileSpec;
 
-    // uber copy service support
-    nsCOMPtr<nsIStreamListener> m_copyStreamListener; // per message
-
 	// News Event Sinks
     nsCOMPtr <nsINNTPNewsgroupList> m_newsgroupList;
     nsCOMPtr <nsINNTPArticleList> m_articleList;
@@ -189,10 +189,13 @@ private:
 	nsCOMPtr <nsIMsgOfflineNewsState> m_offlineNewsState;
 
 	nsCOMPtr<nsIWebShell> m_displayConsumer;
+	nsCOMPtr<nsIBufferInputStream> mDisplayInputStream;
+	nsCOMPtr<nsIBufferOutputStream> mDisplayOutputStream;
 	nsMsgLineStreamBuffer   * m_lineStreamBuffer; // used to efficiently extract lines from the incoming data stream
 
 	// the nsINntpURL that is currently running
 	nsCOMPtr<nsINntpUrl> m_runningURL;
+	nsNewsAction m_newsAction;
 
 	// Generic state information -- What state are we in? What state do we want to go to
 	// after the next response? What was the last response code? etc. 
@@ -297,6 +300,7 @@ private:
 	PRInt32 SendArticleNumber();
 	PRInt32 BeginArticle();
 	PRInt32 ReadArticle(nsIInputStream * inputStream, PRUint32 length);
+	PRInt32 DisplayArticle(nsIInputStream * inputStream, PRUint32 length);
 
 	PRInt32 BeginAuthorization();
 	PRInt32 AuthorizationResponse();

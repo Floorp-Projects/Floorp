@@ -28,7 +28,7 @@
 #include "nsIInputStream.h"
 #include "nsFileStream.h"
 #include "nsIAllocator.h"
-
+#include "nsIPipe.h"
 #include "nsCOMPtr.h"
 
 // mscott: this is a short term hack for the demo...we should be able to remove this webshell
@@ -460,6 +460,8 @@ nsresult nsNNTPProtocol::Initialize(nsIURI * aURL)
     nsresult rv = NS_OK;
 	if (!aURL)
 		return NS_ERROR_NULL_POINTER;
+
+	SetUrl(aURL);
     
     NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
     if (NS_SUCCEEDED(rv) && prefs) {
@@ -549,26 +551,16 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   nsresult rv = NS_OK;
 
   m_articleNumber = -1;
-
-  // Query the url for its nsINntpUrl interface...assert and fail to load if they passed us a non news url...
-
-  if (aConsumer) // did the caller pass in a display stream?
-  {
-	  rv = aConsumer->QueryInterface(kIWebShell,
-                                     getter_AddRefs(m_displayConsumer));
-      if (NS_FAILED(rv) && !m_displayConsumer) // is this a copy operation
-          m_copyStreamListener = do_QueryInterface(aConsumer, &rv);
-  }
-
-
-  if (aURL)
+ if (aURL)
   {
 	  rv = aURL->GetHost(getter_Copies(m_hostName));
       if (NS_FAILED(rv)) return rv;
       rv = aURL->GetPreHost(getter_Copies(m_userName));
       if (NS_FAILED(rv)) return rv;
       
-	  m_runningURL = do_QueryInterface(aURL);
+	  m_runningURL = do_QueryInterface(aURL, &rv);
+	  if (NS_FAILED(rv)) return rv;
+	  m_runningURL->GetNewsAction(&m_newsAction);
 
 	  // okay, now fill in our event sinks...Note that each getter ref counts before
 	  // it returns the interface to us...we'll release when we are done
@@ -855,7 +847,7 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIChannel * aChannel, nsISupports * aContext, nsresult aStatus, const PRUnichar* aMsg)
 {
-	nsMsgProtocol::OnStopRequest(aChannel, aContext, aStatus, aMsg);
+		nsMsgProtocol::OnStopRequest(aChannel, aContext, aStatus, aMsg);
 
 	// okay, we've been told that the send is done and the connection is going away. So 
 	// we need to release all of our state
@@ -2033,33 +2025,88 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   if (!cd->stream) return -1;
 #endif
 
-  // mscott: short term mime hack.....until libmime plays "nice" with a new stream converter
-  // interface, we have to interact with it like we did in the old networking world...however this
-  // would be hard to do now...in addition the code and effort would be wasted as we'd have to through
-  // it away once libmime did use a new stream converter interface. So we are going to cheat and write
-  // the article to file. We'll then call a load file url on our "temp" file. Then mkfile does all the work
-  // with talking to the RFC-822->HTML stream converter....clever huh =).....
-
-  // we are about to display an article so open up a temp file on the
-  // article...
-  if (m_copyStreamListener)
+  if (m_newsAction == nsINntpUrl::ActionDisplayArticle)
   {
-      m_tempMsgFileSpec.Delete(PR_FALSE);
-      m_tempArticleStream = null_nsCOMPtr();
-      nsCOMPtr<nsISupports> aURL(do_QueryInterface(m_runningURL));
-      m_copyStreamListener->OnStartRequest(nsnull, aURL);
+	  // create a pipe to pump the message into...the output will go to whoever
+	  // is consuming the message display
+	  nsresult rv = NS_NewPipe(getter_AddRefs(mDisplayInputStream), getter_AddRefs(mDisplayOutputStream));
   }
-  else
+
+  if (m_newsAction == nsINntpUrl::ActionSaveMessageToDisk)
   {
-      m_tempMsgFileSpec.Delete(PR_FALSE);
-      nsCOMPtr <nsISupports> supports;
-      NS_NewIOFileStream(getter_AddRefs(supports), m_tempMsgFileSpec,
+      // get the file involved from the url
+      nsCOMPtr<nsIFileSpec> msgSpec;
+      nsCOMPtr<nsIMsgMessageUrl> msgurl = do_QueryInterface(m_runningURL);
+      msgurl->GetMessageFile(getter_AddRefs(msgSpec));
+
+      nsFileSpec fileSpec;
+      if (msgSpec)
+      {
+          msgSpec->GetFileSpec(&fileSpec);
+
+          fileSpec.Delete(PR_FALSE);
+          nsCOMPtr <nsISupports> supports;
+          NS_NewIOFileStream(getter_AddRefs(supports), fileSpec,
                          PR_WRONLY | PR_CREATE_FILE | PR_TRUNCATE, 00700);
-      m_tempArticleStream = do_QueryInterface(supports);
+          m_tempArticleStream = do_QueryInterface(supports);
+      }
   }
   m_nextState = NNTP_READ_ARTICLE;
 
   return 0;
+}
+
+PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 length)
+{
+	char *line;
+	PRUint32 status = 0;
+	char outputBuffer[OUTPUT_BUFFER_SIZE];
+	
+	PRBool pauseForMoreData = PR_FALSE;
+	if (m_channelListener)
+	{
+
+		line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
+ 		if(pauseForMoreData)
+		{
+			PRUint32 inlength = 0;
+			mDisplayInputStream->Available(&inlength);
+			if (inlength > 0) // broadcast our batched up ODA changes
+				m_channelListener->OnDataAvailable(this, m_channelContext, mDisplayInputStream, 0, inlength);
+			SetFlag(NNTP_PAUSE_FOR_READ);
+			return status;
+		}
+
+		if (line[0] == '.' && line[1] == 0)
+		{
+			m_nextState = NEWS_DONE;
+			nsCOMPtr<nsIMsgDBHdr> msgHdr;
+			nsresult rv = NS_OK;
+
+			rv = m_runningURL->GetMessageHeader(getter_AddRefs(msgHdr));
+
+			if (NS_SUCCEEDED(rv))
+				msgHdr->MarkRead(PR_TRUE);
+
+			ClearFlag(NNTP_PAUSE_FOR_READ);
+
+			PRUint32 inlength = 0;
+			mDisplayInputStream->Available(&inlength);
+			if (inlength > 0) // broadcast our batched up ODA changes
+				m_channelListener->OnDataAvailable(this, m_channelContext, mDisplayInputStream, 0, inlength);
+			return status;
+		}
+		else // we aren't finished with the message yet
+		{
+			PRUint32 count = 0;
+			mDisplayOutputStream->Write(line, PL_strlen(line), &count);
+			mDisplayOutputStream->Write(MSG_LINEBREAK, PL_strlen(MSG_LINEBREAK), &count);
+		}
+
+		PR_FREEIF(line);
+	}
+ 
+	return 0;	
 }
 
 PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 length)
@@ -2069,6 +2116,13 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	char outputBuffer[OUTPUT_BUFFER_SIZE];
 	
 	PRBool pauseForMoreData = PR_FALSE;
+
+	// if we have a channel listener, spool directly to it....
+	// otherwise we must be doing something like save to disk or cancel
+	// in which case we are doing the work.
+	if (m_newsAction == nsINntpUrl::ActionDisplayArticle)
+		return DisplayArticle(inputStream, length);
+
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 	if(pauseForMoreData)
 	{
@@ -2111,23 +2165,11 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 		// and close the article file if it was open....
 		if (m_tempArticleStream)
 			m_tempArticleStream->Close();
-        else if (m_copyStreamListener)
-            m_copyStreamListener->OnStopRequest(nsnull, ctxt, 0, nsnull);
-
-		if (m_displayConsumer)
-		{
-			nsFileURL  fileURL(m_tempMsgFileSpec);
-			char * article_path_url = PL_strdup(fileURL.GetAsString());
-
-#ifdef DEBUG_NEWS
-			printf("load this url to display the message: %s\n", article_path_url);
-#endif
-			m_displayConsumer->LoadURL(nsAutoString(article_path_url).GetUnicode(), nsnull, PR_TRUE);			
-			PR_FREEIF(article_path_url);
-		}
 
 		// now mark the message as read
+#ifdef DEBUG_NEWS
 		printf("should we be marking later, after the message has finished loading?\n");
+#endif
 		nsCOMPtr<nsIMsgDBHdr> msgHdr;
 		nsresult rv = NS_OK;
 
@@ -2171,22 +2213,12 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
             if (m_typeWanted == CANCEL_WANTED) {
                 ParseHeaderForCancel(outputBuffer);
             }
+
 			if (m_tempArticleStream)
 			{
 				PRUint32 count = 0;
 				m_tempArticleStream->Write(outputBuffer, PL_strlen(outputBuffer), &count);
 			}
-            else if (m_copyStreamListener)
-            {
-                nsDummyBufferStream *dummyStream = 
-                    new nsDummyBufferStream (outputBuffer,
-                                             PL_strlen(outputBuffer));
-                nsCOMPtr<nsIInputStream> aInputStream =
-                    do_QueryInterface(dummyStream);
-                if (aInputStream)
-                    m_copyStreamListener->OnDataAvailable(nsnull, ctxt,
-                            aInputStream, 0 /* source offset */, PL_strlen(outputBuffer));
-            }
 		}
 	}
 
@@ -3095,14 +3127,11 @@ PRInt32 nsNNTPProtocol::ReadXover(nsIInputStream * inputStream, PRUint32 length)
 #endif
 	}
 
-	rv = m_newsgroupList->ProcessXOVERLINE(line, &status);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "failed to process the XOVERLINE");
-	
-	if (NS_SUCCEEDED(rv)) {
-		m_numArticlesLoaded++;
-    }
+    rv = m_newsgroupList->ProcessXOVERLINE(line, &status);
+	PR_ASSERT(NS_SUCCEEDED(rv));
 
-	PR_FREEIF(line);
+    m_numArticlesLoaded++;
+    PR_FREEIF(line);
     return status; /* keep going */
 }
 
@@ -4784,13 +4813,8 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 					status = ListGroupResponse(inputStream, length);
 				break;
 	        case NEWS_DONE:
-			  /* call into libmsg and see if the article counts
-			   * are up to date.  If they are not then we
-			   * want to do a "news://host/group" URL so that we
-			   * can finish up the article counts.
-
-			   */
 				m_nextState = NEWS_FREE;
+
 #if 0   // mscott 01/04/99. This should be temporary until I figure out what to do with this code.....
 			  if (cd->stream)
 				COMPLETE_STREAM;
@@ -4887,9 +4911,12 @@ nsresult nsNNTPProtocol::ProcessProtocolState(nsIURI * url, nsIInputStream * inp
 				// but until that time, we always want to properly shutdown the connection
 
 				SendData(mailnewsurl, NNTP_CMD_QUIT); // this will cause OnStopRequest get called, which will call CloseSocket()
+				m_nextState = NEWS_FINISHED; // so we don't spin in the free state
 				return NS_OK;
 				break;
-
+			case NEWS_FINISHED:
+				return NS_OK;
+				break;
             default:
                 /* big error */
                 return NS_ERROR_FAILURE;
