@@ -20,10 +20,6 @@
  * Contributor(s): 
  */
 
-// A datetime channel retrieves date time information from 
-// RFC 867 compliant datetime servers. The date/time returned
-// to the caller is of MIME type "text/plain".
-
 #ifndef nsFingerChannel_h___
 #define nsFingerChannel_h___
 

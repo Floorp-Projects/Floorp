@@ -30,9 +30,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
 
-// Using StandardURL instead of SimpleURI so that we can get the
-// username and port parsed for us.  We ignore the path.
-
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
