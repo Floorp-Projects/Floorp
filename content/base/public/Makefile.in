@@ -56,7 +56,6 @@ nsContentUtils.h \
 nsIDocument.h \
 nsIDocumentEncoder.h \
 nsIDocumentObserver.h \
-nsNameSpaceMap.h \
 nsINameSpaceManager.h \
 nsINodeInfo.h \
 nsIRangeUtils.h \
@@ -72,6 +71,7 @@ mozISanitizingSerializer.h \
 nsContentCID.h \
 nsCopySupport.h \
 nsContentCreatorFunctions.h \
+nsXMLNameSpaceMap.h \
 $(NULL)
 
 SDK_XPIDLSRCS   = \

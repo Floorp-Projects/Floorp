@@ -111,7 +111,6 @@ CPPSRCS		= \
 		nsImageLoadingContent.cpp \
 		nsMappedAttributes.cpp \
 		nsNameSpaceManager.cpp \
-		nsNameSpaceMap.cpp \
 		nsNodeInfo.cpp \
 		nsNodeInfoManager.cpp \
 		nsParserUtils.cpp \
@@ -127,6 +126,7 @@ CPPSRCS		= \
 		nsTextNode.cpp \
 		nsTreeWalker.cpp \
 		nsXMLContentSerializer.cpp \
+		nsXMLNameSpaceMap.cpp \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a

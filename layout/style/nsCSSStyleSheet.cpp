@@ -86,7 +86,7 @@
 #include "nsRuleWalker.h"
 #include "nsCSSPseudoClasses.h"
 #include "nsINameSpaceManager.h"
-#include "nsNameSpaceMap.h"
+#include "nsXMLNameSpaceMap.h"
 #include "nsITextContent.h"
 #include "prlog.h"
 #include "nsCOMPtr.h"
@@ -1317,8 +1317,8 @@ CreateNameSpace(nsISupports* aRule, void* aNameSpacePtr)
   rule->GetType(type);
   if (nsICSSRule::NAMESPACE_RULE == type) {
     nsICSSNameSpaceRule*  nameSpaceRule = (nsICSSNameSpaceRule*)rule;
-    nsNameSpaceMap *nameSpaceMap =
-      NS_STATIC_CAST(nsNameSpaceMap*, aNameSpacePtr);
+    nsXMLNameSpaceMap *nameSpaceMap =
+      NS_STATIC_CAST(nsXMLNameSpaceMap*, aNameSpacePtr);
 
     nsIAtom*      prefix = nsnull;
     nsAutoString  urlSpec;
@@ -1339,7 +1339,7 @@ nsCSSStyleSheetInner::RebuildNameSpaces()
   if (mNameSpaceMap) {
     mNameSpaceMap->Clear();
   } else {
-    mNameSpaceMap = nsNameSpaceMap::Create();
+    mNameSpaceMap = nsXMLNameSpaceMap::Create();
     if (!mNameSpaceMap) {
       return; // out of memory
     }
@@ -1870,7 +1870,7 @@ nsCSSStyleSheet::AppendStyleRule(nsICSSRule* aRule)
       aRule->GetType(type);
       if (nsICSSRule::NAMESPACE_RULE == type) {
         if (!mInner->mNameSpaceMap) {
-          mInner->mNameSpaceMap = nsNameSpaceMap::Create();
+          mInner->mNameSpaceMap = nsXMLNameSpaceMap::Create();
           NS_ENSURE_TRUE(mInner->mNameSpaceMap, NS_ERROR_OUT_OF_MEMORY);
         }
 
@@ -1946,7 +1946,7 @@ nsCSSStyleSheet::GetStyleRuleAt(PRInt32 aIndex, nsICSSRule*& aRule) const
   return result;
 }
 
-nsNameSpaceMap*
+nsXMLNameSpaceMap*
 nsCSSStyleSheet::GetNameSpaceMap() const
 {
   if (mInner)
@@ -2486,7 +2486,7 @@ nsCSSStyleSheet::InsertRule(const nsAString& aRule,
     cssRule->GetType(type);
     if (type == nsICSSRule::NAMESPACE_RULE) {
       if (!mInner->mNameSpaceMap) {
-        mInner->mNameSpaceMap = nsNameSpaceMap::Create();
+        mInner->mNameSpaceMap = nsXMLNameSpaceMap::Create();
         NS_ENSURE_TRUE(mInner->mNameSpaceMap, NS_ERROR_OUT_OF_MEMORY);
       }
 

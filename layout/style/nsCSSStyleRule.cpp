@@ -61,7 +61,7 @@
 #include "nsIDOMCSSStyleDeclaration.h"
 #include "nsDOMCSSDeclaration.h"
 #include "nsINameSpaceManager.h"
-#include "nsNameSpaceMap.h"
+#include "nsXMLNameSpaceMap.h"
 #include "nsILookAndFeel.h"
 #include "nsRuleNode.h"
 #include "nsUnicharUtils.h"
@@ -580,7 +580,7 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       // before it.
       aString.Append(PRUnichar('|'));
     } else {
-      nsNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
+      nsXMLNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
     
       // sheetNS is non-null if and only if we had an @namespace rule.  If it's
       // null, that means that the only namespaces we could have are the
@@ -669,7 +669,7 @@ void nsCSSSelector::ToStringInternal(nsAString& aString,
       aString.Append(PRUnichar('['));
       // Append the namespace prefix
       if (list->mNameSpace > 0) {
-        nsNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
+        nsXMLNameSpaceMap *sheetNS = aSheet->GetNameSpaceMap();
         // will return null if namespace was the default
         nsIAtom *prefixAtom = sheetNS->FindPrefix(list->mNameSpace);
         if (prefixAtom) { 

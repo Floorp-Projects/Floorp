@@ -68,7 +68,7 @@
 #include "nsCSSPseudoElements.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsINameSpaceManager.h"
-#include "nsNameSpaceMap.h"
+#include "nsXMLNameSpaceMap.h"
 #include "nsThemeConstants.h"
 #include "nsContentErrors.h"
 #include "nsUnitConversion.h"
@@ -367,7 +367,7 @@ protected:
   };
   nsCSSSection  mSection;
 
-  nsNameSpaceMap *mNameSpaceMap;  // weak, mSheet owns it
+  nsXMLNameSpaceMap *mNameSpaceMap;  // weak, mSheet owns it
 
   // After an UngetToken is done this flag is true. The next call to
   // GetToken clears the flag.

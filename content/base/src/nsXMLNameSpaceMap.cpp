@@ -36,7 +36,7 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsNameSpaceMap.h"
+#include "nsXMLNameSpaceMap.h"
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 #include "nsINameSpaceManager.h"
@@ -52,10 +52,10 @@ struct nsNameSpaceEntry
   PRInt32 nameSpaceID;
 };
 
-/* static */ nsNameSpaceMap*
-nsNameSpaceMap::Create()
+/* static */ nsXMLNameSpaceMap*
+nsXMLNameSpaceMap::Create()
 {
-  nsNameSpaceMap *map = new nsNameSpaceMap();
+  nsXMLNameSpaceMap *map = new nsXMLNameSpaceMap();
   NS_ENSURE_TRUE(map, nsnull);
 
   nsresult rv = map->AddPrefix(nsLayoutAtoms::xmlnsNameSpace,
@@ -70,13 +70,13 @@ nsNameSpaceMap::Create()
   return map;
 }
 
-nsNameSpaceMap::nsNameSpaceMap()
+nsXMLNameSpaceMap::nsXMLNameSpaceMap()
   : mNameSpaces(4)
 {
 }
 
 nsresult
-nsNameSpaceMap::AddPrefix(nsIAtom *aPrefix, PRInt32 aNameSpaceID)
+nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, PRInt32 aNameSpaceID)
 {
   PRInt32 count = mNameSpaces.Count();
   nsNameSpaceEntry *foundEntry = nsnull;
@@ -108,7 +108,7 @@ nsNameSpaceMap::AddPrefix(nsIAtom *aPrefix, PRInt32 aNameSpaceID)
 }
 
 nsresult
-nsNameSpaceMap::AddPrefix(nsIAtom *aPrefix, nsString &aURI)
+nsXMLNameSpaceMap::AddPrefix(nsIAtom *aPrefix, nsString &aURI)
 {
   PRInt32 id;
   nsresult rv = nsContentUtils::GetNSManagerWeakRef()->RegisterNameSpace(aURI,
@@ -120,7 +120,7 @@ nsNameSpaceMap::AddPrefix(nsIAtom *aPrefix, nsString &aURI)
 }
 
 void
-nsNameSpaceMap::RemovePrefix(nsIAtom *aPrefix)
+nsXMLNameSpaceMap::RemovePrefix(nsIAtom *aPrefix)
 {
   PRInt32 count = mNameSpaces.Count();
 
@@ -138,7 +138,7 @@ nsNameSpaceMap::RemovePrefix(nsIAtom *aPrefix)
 }
 
 PRInt32
-nsNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
+nsXMLNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
 {
   PRInt32 count = mNameSpaces.Count();
 
@@ -160,7 +160,7 @@ nsNameSpaceMap::FindNameSpaceID(nsIAtom *aPrefix) const
 }
 
 nsIAtom*
-nsNameSpaceMap::FindPrefix(PRInt32 aNameSpaceID) const
+nsXMLNameSpaceMap::FindPrefix(PRInt32 aNameSpaceID) const
 {
   PRInt32 count = mNameSpaces.Count();
 
@@ -185,7 +185,7 @@ PR_STATIC_CALLBACK(PRBool) DeleteEntry(void *aElement, void *aData)
 }
 
 void
-nsNameSpaceMap::Clear()
+nsXMLNameSpaceMap::Clear()
 {
   mNameSpaces.EnumerateForwards(DeleteEntry, nsnull);
 }
