@@ -352,24 +352,27 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
     SetDefaultStatus(nsString());
   }
 
+  PRBool had_document = PR_FALSE;
+  nsXPIDLCString url;
+
   if (mDocument) {
     nsCOMPtr<nsIDocument> doc(do_QueryInterface(mDocument));
     nsCOMPtr<nsIURI> docURL;
+
+    had_document = PR_TRUE;
 
     if (doc) {
       doc->GetDocumentURL(getter_AddRefs(docURL));
       doc = nsnull;             // Forces release now
     }
 
-    if (docURL) {
-      char *str;
-      docURL->GetSpec(&str);
-
-      nsAutoString url;
-      url.AssignWithConversion(str);
+    PRBool is_about = PR_FALSE;
+    if (docURL && NS_SUCCEEDED(docURL->SchemeIs("about", &is_about)) &&
+        is_about) {
+      docURL->GetSpec(getter_Copies(url));
 
       //about:blank URL's do not have ClearScope called on page change.
-      if (!url.EqualsWithConversion("about:blank")) {
+      if (nsCRT::strcmp(url.get(), "about:blank") != 0) {
         ClearAllTimeouts();
 
         if (mSidebar) {
@@ -390,7 +393,6 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
           ::JS_ClearScope((JSContext *)mContext->GetNativeContext(), mJSObject);
         }
       }
-      nsCRT::free(str);
     }
 
     //XXX Should this be outside the about:blank clearscope exception?
@@ -405,7 +407,8 @@ NS_IMETHODIMP GlobalWindowImpl::SetNewDocument(nsIDOMDocument* aDocument)
 
   mDocument = aDocument;
 
-  if (mDocument && mContext) {
+  if (mDocument && mContext && had_document &&
+      (nsCRT::strcmp(url.get(), "about:blank") != 0)) {
     mContext->InitContext(this);
   }
 

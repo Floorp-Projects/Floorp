@@ -151,8 +151,7 @@ NS_INTERFACE_MAP_BEGIN(nsDOMStyleSheetList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMStyleSheetList)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentObserver)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDOMStyleSheetList)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO_WITH_NAME(DocumentStyleSheetList,
-                                                     StyleSheetList)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(DocumentStyleSheetList)
 NS_INTERFACE_MAP_END
 
 

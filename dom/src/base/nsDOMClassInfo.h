@@ -33,7 +33,6 @@ class nsIDOMNSHTMLOptionCollection;
 class nsIPluginInstance;
 class nsIForm;
 
-struct nsDOMClassInfoData;
 typedef void (*GetDOMClassIIDsFnc)(nsVoidArray& aArray);
 
 class nsDOMClassInfo : public nsIXPCScriptable,
@@ -58,9 +57,7 @@ public:
   // GetClassInfoA so I can't, those $%#@^! bastards!!! What gives
   // them the right to do that?
 
-  static nsISupports* GetClassInfoInstance(nsDOMClassInfoID aID,
-                                           GetDOMClassIIDsFnc aGetIIDsFptr,
-                                           const char *aName);
+  static nsIClassInfo* GetClassInfoInstance(nsDOMClassInfoID aID);
 
   static void ShutDown();
 
@@ -74,7 +71,11 @@ public:
                              jsval *vp);
 
 protected:
+  const nsDOMClassInfoID mID;
+
   static nsresult Init();
+  static nsresult RegisterClassName(PRInt32 aDOMClassInfoID);
+  static nsresult RegisterClassProtos(PRInt32 aDOMClassInfoID);
 
   // Checks if id is a number and returns the number, if aIsNumber is
   // non-null it's set to true if the id is a number and false if it's
@@ -82,7 +83,7 @@ protected:
   static PRInt32 GetArrayIndexFromId(JSContext *cx, jsval id,
                                      PRBool *aIsNumber = nsnull);
 
-  nsDOMClassInfoID mID;
+  static JSClass sDOMConstructorProtoClass;
 
   static nsIXPConnect *sXPConnect;
   static nsIScriptSecurityManager *sSecMan;
@@ -131,6 +132,8 @@ protected:
   static JSString *sOnpaint_id;
   static JSString *sOnresize_id;
   static JSString *sOnscroll_id;
+
+  static const JSClass *sObjectClass;
 };
 
 typedef nsDOMClassInfo nsDOMGenericSH;
@@ -904,9 +907,7 @@ public:
 #define NS_DOM_INTERFACE_MAP_ENTRY_CLASSINFO(_class)                          \
   if (aIID.Equals(NS_GET_IID(nsIClassInfo))) {                                \
     foundInterface =                                                          \
-      nsDOMClassInfo::GetClassInfoInstance(eDOMClassInfo_##_class##_id,       \
-                                           Get##_class##IIDs,                 \
-                                           #_class);                          \
+      nsDOMClassInfo::GetClassInfoInstance(eDOMClassInfo_##_class##_id);      \
     NS_ENSURE_TRUE(foundInterface, NS_ERROR_OUT_OF_MEMORY);                   \
                                                                               \
     *aInstancePtr = foundInterface;                                           \
