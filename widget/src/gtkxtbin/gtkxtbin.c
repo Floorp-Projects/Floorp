@@ -420,6 +420,10 @@ gtk_xtbin_shutdown (GtkObject *object)
                         GDK_WINDOW_XWINDOW(GTK_WIDGET(object)->window)));
 #endif
 
+    /* flush the queue before we returning origin top_widget->core.window
+       or we can get X error since the window is gone */
+    XSync(xtbin->xtdisplay, False);
+
     xtbin->xtwidget->core.window = GPOINTER_TO_UINT(gtk_object_get_data(object, "oldwindow"));
     XtUnrealizeWidget(xtbin->xtwidget);
 
