@@ -19,6 +19,8 @@
 
 DEPTH		= ../..
 
+include $(DEPTH)/config/config.mk
+
 MODULE		= mocha
 LIBRARY_NAME	= mocha
 
