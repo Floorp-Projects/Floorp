@@ -2089,7 +2089,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
 
     // Lookup the image
     nsSize imageSize;
-    nsIImage* image = nsnull;
+    nsCOMPtr<nsIImage> image;
     nsIFrameImageLoader* loader = nsnull;
     nsresult rv = aPresContext->StartLoadImage(aColor.mBackgroundImage,
                                               transparentBG
@@ -2100,7 +2100,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
                                               nsnull, nsnull,
                                               &loader);
     if ((NS_OK != rv) || (nsnull == loader) ||
-        (loader->GetImage(&image), (nsnull == image))) {
+        (loader->GetImage(getter_AddRefs(image)), (!image))) {
       NS_IF_RELEASE(loader);
       // Redraw will happen later
       if (!transparentBG) {
@@ -2460,7 +2460,6 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
     // Restore clipping
     aRenderingContext.PopState(clipState);
 #endif
-    NS_IF_RELEASE(image);
   } else {
     // See if there's a background color specified. The background color
     // is rendered over the 'border' 'padding' and 'content' areas
