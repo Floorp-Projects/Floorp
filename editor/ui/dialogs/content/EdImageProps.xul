@@ -169,7 +169,6 @@
                 <textbox
                   id       = "widthInput" 
                   class    = "narrow"
-                  onfocus  = "oldSourceInt = this.value;"
                   oninput  = "constrainProportions(this.id, 'heightInput')"/>
                 <menulist id = "widthUnitsMenulist"
                   oncommand = "doDimensionEnabling();" />
@@ -184,7 +183,6 @@
                 <textbox
                   id       = "heightInput" 
                   class    = "narrow"
-                  onfocus  = "oldSourceInt = this.value;"
                   oninput  = "constrainProportions(this.id, 'widthInput')"/>
                 <menulist id = "heightUnitsMenulist"
                   oncommand = "doDimensionEnabling();" />
