@@ -54,14 +54,34 @@ use Carp;
 
 $|++;
 
-my $VERSION = "1.8"; # keep me in sync with the mozilla.org cvs repository
+my $VERSION = "1.11"; # keep me in sync with the mozilla.org cvs repository
 my $debug = 1; # debug output also includes warnings, errors
 
-my %cmds = 
-    (
-    "about" => \&bot_about, "hi" => \&bot_hi, "moon" => \&bot_moon,
-    "up" => \&bot_up, "trees" =>  \&bot_tinderbox, "url" => \&bot_urls,
-    );
+
+
+my %msgcmds = (
+               "url" => \&bot_urls,
+               );
+
+my %pubcmds = (
+               "(help|about)" => \&bot_about,
+               "(hi|hello|lo|sup)" => \&bot_hi,
+               "moon" => \&bot_moon,
+               "up" => \&bot_up,
+               "trees" => \&bot_tinderbox,
+               "(slashdot|sd|\/\.)" => \&bot_slashdot,
+               "(mozillazine|zine|mz)" => \&bot_mozillazine
+               );
+
+my %admincmds = (
+                 "bless" => \&bot_bless,
+                 "unbless" => \&bot_unbless,
+                 "shutdown" => \&bot_shutdown,
+                 "say" => \&bot_say,
+                 "list" => \&bot_list,
+                 );
+               
+               
 
 @::origargv = @ARGV;
 
@@ -88,7 +108,7 @@ my $uptime = 0;
 
 $::moon = "./moon";
 $::moon = (-f $::moon) ? $::moon : ""; 
-delete $cmds{'moon'} if (! $::moon);
+delete $pubcmds{'moon'} if (! $::moon);
 
 my $phase;
 my $last_moon = 0;
@@ -187,6 +207,20 @@ sub on_nick_taken
     die "hey! somebody took my nick!";
     }
 
+
+sub do_command {
+    my ($hashref, $nick, $cmd, $rest) = (@_);
+    foreach my $m (keys %$hashref) {
+        if ($cmd =~ m/^$m$/) {
+            &{$hashref->{$m}} ($nick, $cmd, $rest);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+
+
 # on_msg: private message received via /msg
 
 sub on_msg
@@ -194,221 +228,172 @@ sub on_msg
   	my ($self, $event) = @_;
   	my ($nick) = $event->nick;
   	my ($arg) = $event->args;
-  	my ($cmd, $rest) = split ' ', $arg;
- 		
-		# hoo dee boo
+    my @arglist = split(' ', $arg);
+    my $cmd = shift @arglist;
+    my $rest = join(' ', @arglist);
+    $::speaker = $nick;         # Hack!!!
 
-		if (exists $admins{$nick})
-			{
-			if ((my ($who, $where) = $arg =~ /^bless\s+(\S+)\s+(\S+)$/i) or
-				$arg =~ /^bless/i)
-				{
-				if (! $who or ! $where)	
-					{
-					$self->privmsg ($nick, "usage: bless [ user ] [ host ] " . 
+
+    if (exists $admins{$nick}) {
+        if (do_command(\%admincmds, $nick, $cmd, $rest)) {
+            return;
+        }
+    }
+    if (do_command(\%pubcmds, $nick, $cmd, $rest)) {
+        return;
+    }
+    do_command(\%msgcmds, $nick, $cmd, $rest);
+}
+
+
+
+sub bot_bless {
+    my ($nick, $cmd, $rest) = (@_);
+    my ($who, $where) = split(' ', $rest);
+    if (! $who or ! $where) {
+        $bot->privmsg ($nick, "usage: bless [ user ] [ host ] " . 
 						"(example: bless marca netscape.com)");
-					return;
-					}
-				$admins{$who} = $where;
-				&debug ("$nick blessed $who ($where)");
-				&store_admin_conf (\%admins);
-				$self->privmsg ($nick, 
+        return;
+    }
+    $admins{$who} = $where;
+    &debug ("$nick blessed $who ($where)");
+    &store_admin_conf (\%admins);
+    $bot->privmsg ($nick, 
 					"mozbot admins: " . join ' ', (sort keys %admins));
-				return;
-				}
-			elsif ($arg =~ /^unbless (\S+)$/i && exists ($admins{$1}))
-				{
-				delete $admins{$1};
-				&debug ("$nick unblessed $1");
-				&store_admin_conf (\%admins);
-				$self->privmsg ($nick, 
-					"mozbot admins: " . join ' ', (sort keys %admins));
-				return;
-				}
-			elsif ($arg eq "shutdown yes")
-				{
-				&debug ("forced shutdown from $nick");
-				$::dontQuitOnSignal++;
-				$self->quit ("$nick told me to shutdown");
-				exit (0);
-				}
-			elsif ($arg =~ /^shutdown/)
-				{
-				$self->privmsg ($nick, "usage: shutdown yes");
-				return;
-				}
-			elsif ($arg =~ /^say (.*)/)
-				{
-                    my $text = $1;
-                    if ($text =~ m@^/me (.*)@) {
-                        $self->me($channel, $1);
-                    } else {
-                        $self->privmsg ($channel, $text);
-                    }
-                    return;
-				}
-			elsif ($arg =~ /^list$/)
-				{
-				foreach (sort keys %admins)
-					{
-					$self->privmsg ($nick, "$_ $admins{$_}");
-					}
-				return;
-				}
-			elsif ($arg =~ /^help/)
-				{
-				$self->privmsg($nick, 
-					"mozbot admin commands: bless help list say shutdown unbless");
-				return;
-				}
-			}
-   	else
-			{
-			&debug ("msg from $nick: $arg") if ($arg);
-			}
-		
-		if ($cmd ne "help")
-			{
-    	foreach (sort keys %cmds)
-        	{
-        	if ($_ =~ /^$cmd/i) # matched a command 
-            	{
-            	&debug ("command: $_");
-							
-							# see %cmds hash defined at the top
-            	my $msg = &{$cmds{$_}} ($nick, $cmd, $rest);
-							
-							# bot functions return either a reference to an 
-							# array or just a scalar
-           	 
-							if (ref ($msg) eq "ARRAY")
-                	{
-                	foreach (@$msg)
-                    	{
-                    	$self->privmsg ($nick, $_);
-                    	}
-                	}
-            	else
-                	{
-                	$self->privmsg ($nick, $msg);
-                	}
-            	return;
-            	}
-        	}
-			}
+}
 
-    # print help message
-    
-    $self->privmsg ($nick, "unknown command \"$cmd\". " . &bot_hi ($nick));
+sub bot_unbless {
+    my ($nick, $cmd, $rest) = (@_);
+    my ($who) = ($rest);
+    if (exists ($admins{$who})) {
+        delete $admins{$who};
+        &debug ("$nick unblessed $who");
+        &store_admin_conf (\%admins);
+        $bot->privmsg ($nick, 
+                        "mozbot admins: " . join ' ', (sort keys %admins));
+        return;
     }
+    $bot->privmsg($nick, "Can only unbless one of: " .
+                   join(' ', (sort keys %admins)));
+}
 
-
-
-# Call longmsg with bits of messages.  They will be appended together using 
-# "..." as a spacer.  Call flushlongmsg when you're done.
-
-
-sub longmsg
-{
-    my $MAXPROTOCOLLENGTH = 255;
-    my ($self, $text) = (@_);
-    if (!defined $::longtext) {
-        $::longtext = "";
+sub bot_shutdown {
+    my ($nick, $cmd, $rest) = (@_);
+    if ($rest ne "yes") {
+        $bot->privmsg ($nick, "usage: shutdown yes");
+        return;
     }
-    if (length($::longtext) + length($text) + 5 > $MAXPROTOCOLLENGTH) {
-        flushlongmsg($self);
-    }
-    if ($::longtext eq "") {
-        $::longtext = $text;
+    &debug ("forced shutdown from $nick");
+    $::dontQuitOnSignal++;
+    $bot->quit ("$nick told me to shutdown");
+    exit (0);
+}
+
+
+sub bot_say {
+    my ($nick, $cmd, $rest) = (@_);
+    my $text = $rest;
+    if ($text =~ m@^/me (.*)@) {
+        $bot->me($channel, $1);
     } else {
-        $::longtext .= " ... " . $text;
+        $bot->privmsg ($channel, $text);
     }
 }
 
 
-sub flushlongmsg
-{
-    my ($self) = (@_);
-    if ($::longtext ne "") {
-        $self->privmsg($channel, $::longtext);
-        $::longtext = "";
+sub bot_list {
+    my ($nick, $cmd, $rest) = (@_);
+    foreach (sort keys %admins) {
+        $bot->privmsg ($nick, "$_ $admins{$_}");
     }
 }
-    
 
 
-sub on_public
-    {
-  my ($self, $event) = @_;
-  my ($to) = $event->to;
+
+
+sub on_public {
+    my ($self, $event) = @_;
+    my ($to) = $event->to;
     my ($arg) = $event->args;
     my ($nick, $me) = ($event->nick, $self->nick);
-
-    if (my ($cmd, $rest) = $arg =~ /^$me[:,]?\s+(\S+)(?:\s+(.*))?$/i)
-        {
-        # if this gets any larger, break this
-        # out into a command/subroutine hash
+    $::speaker = $nick;         # Hack!!!
     
-        if ($cmd =~ /tree/i)
-            {
-            my $t = &bot_tinderbox (undef, undef, undef, 
-							(defined $rest && $rest eq "all") ? 0 : 1);
-            foreach (@$t)
-                {
-                next if ($_ eq ".");
-                $self->privmsg ($channel, "$_");
-                }
-            }
-				elsif ($cmd =~ /^(slashdot|sd|\/\.)/)
-					{
-					longmsg($self,
-                            "Headlines from http://slashdot.org:");
-					if ($#slashdot == -1)
-						{
-						longmsg ($self, "- no slashdot headlines yet -");
-						}
-					else
-						{
-						foreach (@slashdot)
-							{
-							longmsg ($self, $_);
-							}
-						}
-                    flushlongmsg($self);
-					}
-				elsif ($cmd =~ /^(zine|mozillazine|mz)/)
-					{
-					longmsg ($self, 
-						"Headlines from mozillaZine (http://www.mozillazine.org/)");
-					if ($#mozillazine == -1)
-						{
-						longmsg ($self, "- sorry, no mozillazine headlines -");
-						}
-					else
-						{
-						foreach (@mozillazine)
-							{
-							longmsg ($self, $_);
-							}
-						}
-                    flushlongmsg($self);
-					}
-        elsif ($cmd =~ /^(hi|hello|lo|sup)/)
-            {
-            $self->privmsg ($channel, $greetings[$greet++] . " $nick");
-						$greet = 0 if ($greet > $#greetings);
-            }
-        }
+# catch urls, stick them in a list for mozbot's url command
 
-        # catch urls, stick them in a list for mozbot's url command
-
-    if ($arg =~ /(http|ftp|gopher):/i && $nick ne $me)
-        {
-    push @urls, "$arg (" . &logdate() . ")";
-    while ($#urls > 10) 
-            { shift @urls; }
+    if ($arg =~ /(http|ftp|gopher):/i && $nick ne $me) {
+        push @urls, "$arg (" . &logdate() . ")";
+        while ($#urls > 10) {
+            shift @urls;
         }
     }
+    if (my ($cmd, $rest) = $arg =~ /^$me[:,]?\s+(\S+)(?:\s+(.*))?$/i) {
+        if (do_command(\%pubcmds, $channel, $cmd, $rest)) {
+            return;
+        } else {
+            $self->privmsg($channel, $nick . ": Um, your what hurts?");
+        }
+    }
+}
+
+
+
+
+sub saylongline {
+    my ($nick, $str, $spacer) = (@_);
+    my $MAXPROTOCOLLENGTH = 255;
+    while (length ($str) > $MAXPROTOCOLLENGTH) {
+        my $pos;
+        $pos = rindex($str, $spacer, $MAXPROTOCOLLENGTH - length($spacer));
+        if ($pos < 0) {
+            $pos = rindex($str, " ", $MAXPROTOCOLLENGTH - 1);
+            if ($pos < 0) {
+                $pos = $MAXPROTOCOLLENGTH - 1;
+            }
+        }
+        $bot->privmsg($nick, substr($str, 0, $pos));
+        $str = substr($str, $pos);
+        if (index($str, $spacer) == 0) {
+            $str = substr($str, length($spacer));
+        }
+    }
+    if ($str ne "") {
+        $bot->privmsg($nick, $str);
+    }
+}
+
+
+
+
+sub do_headlines {
+    my ($nick, $header, $ref) = (@_);
+    my $spacer = " ... ";
+    my $str = $header . ": " . join($spacer, @$ref);
+    saylongline($nick, $str, $spacer);
+}
+    
+
+
+sub bot_slashdot {
+    my ($nick, $cmd, $rest) = (@_);
+    do_headlines($nick, "Headlines from http://slashdot.org/", \@slashdot);
+}
+
+
+sub bot_mozillazine {
+    my ($nick, $cmd, $rest) = (@_);
+    do_headlines($nick,
+                 "Headlines from mozillaZine (http://www.mozillazine.org/)",
+                 \@mozillazine);
+}
+
+
+sub bot_hi {
+    my ($nick, $cmd, $rest) = (@_);
+    $bot->privmsg($nick, $greetings[$greet++] . " $::speaker");
+    $greet = 0 if ($greet > $#greetings);
+}
+
+ 
 
 sub on_join
 	{
@@ -435,6 +420,24 @@ sub on_boot
         }
     }
 
+
+sub listcmds {
+    my ($hashref) = (@_);
+    my @list;
+    foreach my $k (keys %$hashref) {
+        if ($k =~ m/^\(([a-z]+)\|/) {
+            push @list, $1;
+        } else {
+            push @list, $k;
+        }
+    }
+    return join(' ', sort(@list));
+}
+
+
+
+
+
 ################
 # bot commands #
 ################
@@ -443,33 +446,31 @@ sub on_boot
 # address of the guy to blame when the bot 
 # breaks
 
-sub bot_about
-    {
-    return "i am mozbot version $VERSION. hack on me! " .
+sub bot_about {
+    my ($nick, $cmd, $rest) = @_;
+    $bot->privmsg($::speaker,  "i am mozbot version $VERSION. hack on me! " .
         "harrison\@netscape.com 10/16/98. " .
         "connected to $server since " .
-        &bot_up . ". " .
+                  &logdate ($uptime) . " (" . &days ($uptime) . "). " .
 				"see http://cvs-mirror.mozilla.org/webtools/bonsai/cvsquery.cgi?branch=HEAD&file=mozilla/webtools/mozbot/&date=week " .
-				"for a changelog.";
+                  "for a changelog.");
+    $bot->privmsg($::speaker, "Known commands are: " .
+                  listcmds(\%pubcmds));
+    $bot->privmsg($::speaker, "If you /msg me, I'll also respond to: " .
+                  listcmds(\%msgcmds));
+    if (exists $admins{$::speaker}) {
+        $bot->privmsg($::speaker, "And you're an admin, so you can also do: " .
+                      listcmds(\%admincmds));
+    }
+    if ($nick eq $channel) {
+        $bot->privmsg($nick, "[ Directions on talking to me have been sent to $::speaker ]");
     }
 
-# bot_hi: list commands, also default function for 
-# unknown commands
-
-sub bot_hi
-    {
-    my ($nick, $cmd, $rest) = @_;
-
-    carp "bot_hi wants nick and optional first word of line, rest of line" 
-        unless $nick;
-    
-    my @cmds = sort keys %cmds;
-    return "i am mozbot. i know these commands: @cmds";
-    }
+}
 
 # bot_moon: goodnight moon
 
-sub bot_moon
+sub get_moon_str
     {
     return "- no moon -" if (! defined $::moon); 
     return $phase if ($phase && (time - $last_moon > (60 * 60 * 24)));
@@ -480,31 +481,47 @@ sub bot_moon
     return $phase;
     }
 
+sub bot_moon {
+    my ($nick, $cmd, $rest) = @_;
+    $bot->privmsg($nick, get_moon_str());
+}
+
+
 # bot_up: report uptime
 
-sub bot_up  
-    {
-    return &logdate ($uptime) . " (" . &days ($uptime) . ")";
-    }
+sub bot_up {
+    my ($nick, $cmd, $rest) = @_;
+    $bot->privmsg($nick,  &logdate ($uptime) . " (" . &days ($uptime) . ")");
+}
 
 # bot_urls: show last ten urls caught by mozbot
 
-sub bot_urls
-    {
-    return ($#urls == -1 ? "- mozbot has seen no URLs yet -" : \@urls);
+sub bot_urls {
+    my ($nick, $cmd, $rest) = @_;
+    if ($#urls == -1) {
+        $bot->privmsg($nick, "- mozbot has seen no URLs yet -");
+    } else {
+        foreach my $m (@urls) {
+            $bot->privmsg($nick, $m);
+        }
     }
+}
 
 # show tinderbox status
 #
 # this is a messy little function but it works. 
 
-sub bot_tinderbox
-    {
-    my ($nick, $cmd, $rest, $terse) = @_;
+sub bot_tinderbox {
+    my ($nick, $cmd, $rest) = @_;
     my $bustage;
     my $buf;
     my @buf;
     my @tree;
+
+    my $terse = (defined $rest && $rest eq "all");
+    if ($nick eq $channel) {
+        $terse = 1;
+    }
     
     # user can supply a list of trees separated
     # by whitespace, default is all trees
@@ -537,7 +554,7 @@ sub bot_tinderbox
         
         $buf .= "- no known bustage -" if (! $bustage);
         
-        push @buf, $buf, ".";
+        push @buf, $buf;
         }
 
     $buf = $buf || 
@@ -547,8 +564,13 @@ sub bot_tinderbox
 
     push @buf, "last update: " .
         &logdate ($last_tree) . " (" . &days ($last_tree) . " ago)";
-    return \@buf;
+
+
+    foreach my $m (@buf) {
+         $bot->privmsg($nick, $m);
     }
+
+}
 
 #############
 # utilities #
