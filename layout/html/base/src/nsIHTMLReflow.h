@@ -20,6 +20,7 @@
 
 #include "nsIFrameReflow.h"
 #include "nsStyleConsts.h"
+#include "nsRect.h"
 class nsISpaceManager;
 class nsLineLayout;
 
@@ -44,12 +45,23 @@ struct nsHTMLReflowMetrics : nsReflowMetrics {
   // value.
   PRUintn mCarriedOutMarginFlags;
 
+  // For frames that have children that stick outside their rect
+  // (NS_FRAME_OUTSIDE_CHILDREN) this rectangle will contain the
+  // absolute bounds of the frame. Since the frame doesn't know where
+  // it is going to be positioned in its parent, the assumption is
+  // that it is placed at 0,0 when computing this area.
+  nsRect mCombinedArea;
+
   nsHTMLReflowMetrics(nsSize* aMaxElementSize)
     : nsReflowMetrics(aMaxElementSize)
   {
     mCarriedOutTopMargin = 0;
     mCarriedOutBottomMargin = 0;
     mCarriedOutMarginFlags = 0;
+    mCombinedArea.x = 0;
+    mCombinedArea.y = 0;
+    mCombinedArea.width = 0;
+    mCombinedArea.height = 0;
   }
 };
 
@@ -293,6 +305,13 @@ public:
   NS_IMETHOD TrimTrailingWhiteSpace(nsIPresContext& aPresContext,
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth) = 0;
+
+  // Any objects in the frame that impact the spacemanager (e.g. a
+  // floater) are to be moved in the spacemanager by the given delta
+  // values.
+  NS_IMETHOD MoveInSpaceManager(nsIPresContext& aPresContext,
+                                nsISpaceManager* aSpaceManager,
+                                nscoord aDeltaX, nscoord aDeltaY) = 0;
 };
 
 //----------------------------------------------------------------------
