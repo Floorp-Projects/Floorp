@@ -75,9 +75,10 @@ int main(int argc, char** argv)
   PRInt32 count = 0;
   for (;;) {
     PRUnichar buf[1000];
-    PRInt32 nb = uin->Read(&ec, buf, 0, 1000);
-    if (nb <= 0) {
-      if (nb < 0) {
+    PRInt32 nb;
+    ec = uin->Read(buf, 0, 1000, &nb);
+    if (ec < 0) {
+      if (ec != NS_BASE_STREAM_EOF) {
         printf("i/o error: %d\n", ec);
       }
       break;

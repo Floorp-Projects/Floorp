@@ -31,7 +31,7 @@ public:
   virtual PRInt32 GetBufferSize() const;
   virtual PRUnichar* GetBuffer() const;
   virtual PRBool Grow(PRInt32 aNewSize);
-  virtual PRInt32 Fill(PRInt32* aErrorCode, nsIUnicharInputStream* aStream,
+  virtual PRInt32 Fill(nsresult* aErrorCode, nsIUnicharInputStream* aStream,
                        PRInt32 aKeep);
 
   PRUnichar* mBuffer;
@@ -94,7 +94,7 @@ PRBool UnicharBufferImpl::Grow(PRInt32 aNewSize)
   return PR_FALSE;
 }
 
-PRInt32 UnicharBufferImpl::Fill(PRInt32* aErrorCode,
+PRInt32 UnicharBufferImpl::Fill(nsresult* aErrorCode,
                                 nsIUnicharInputStream* aStream,
                                 PRInt32 aKeep)
 {
@@ -102,7 +102,7 @@ PRInt32 UnicharBufferImpl::Fill(PRInt32* aErrorCode,
   NS_PRECONDITION(PRUint32(aKeep) < PRUint32(mLength), "illegal keep count");
   if ((nsnull == aStream) || (PRUint32(aKeep) >= PRUint32(mLength))) {
     // whoops
-    *aErrorCode = NS_INPUTSTREAM_ILLEGAL_ARGS;
+    *aErrorCode = NS_BASE_STREAM_ILLEGAL_ARGS;
     return -1;
   }
 
@@ -115,10 +115,13 @@ PRInt32 UnicharBufferImpl::Fill(PRInt32* aErrorCode,
   // Read in some new data
   mLength = aKeep;
   PRInt32 amount = mSpace - aKeep;
-  PRInt32 nb = aStream->Read(aErrorCode, mBuffer, aKeep, amount);
-  if (nb > 0) {
+  PRInt32 nb;
+  *aErrorCode = aStream->Read(mBuffer, aKeep, amount, &nb);
+  if (NS_SUCCEEDED(*aErrorCode)) {
     mLength += nb;
   }
+  else
+    nb = 0;
   return nb;
 }
 

@@ -33,7 +33,7 @@ public:
   virtual PRInt32 GetBufferSize() const = 0;
   virtual PRUnichar* GetBuffer() const = 0;
   virtual PRBool Grow(PRInt32 aNewSize) = 0;
-  virtual PRInt32 Fill(PRInt32* aErrorCode, nsIUnicharInputStream* aStream,
+  virtual PRInt32 Fill(nsresult* aErrorCode, nsIUnicharInputStream* aStream,
                        PRInt32 aKeep) = 0;
 };
 

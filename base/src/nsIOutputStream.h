@@ -25,20 +25,21 @@
 { 0x7f13b870, 0xe95f, 0x11d1, \
   {0xbe, 0xae, 0x00, 0x80, 0x5f, 0x8a, 0x66, 0xdc} }
 
-/** Abstract byte input stream */
+/** Abstract byte output stream */
 class nsIOutputStream : public nsIBaseStream {
 public:
-  /** Write data into the stream.
-   *  @param aErrorCode the error code if an error occurs
-   *  @param aBuf the buffer into which the data is read
-   *  @param aOffset the start offset of the data
-   *  @param aCount the maximum number of bytes to read
-   *  @return number of bytes read or -1 if error
-   */   
-  virtual PRInt32 Write(PRInt32* aErrorCode,
-                        const char* aBuf,
-                        PRInt32 aOffset,
-                        PRInt32 aCount) = 0;
+
+    /** Write data into the stream.
+     *  @param aBuf the buffer into which the data is read
+     *  @param aOffset the start offset of the data
+     *  @param aCount the maximum number of bytes to read
+     *  @param aWriteCount out parameter to hold the number of
+     *         bytes written. if an error occurs, the writecount
+     *         is undefined
+     *  @return error status
+     */   
+    NS_IMETHOD
+    Write(const char* aBuf, PRInt32 aOffset, PRInt32 aCount, PRInt32 *aWriteCount) = 0; 
 };
 
 

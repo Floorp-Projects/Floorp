@@ -31,12 +31,27 @@
 class nsIBaseStream : public nsISupports {
 public:
 
-  /** Return the number of bytes in the stream */
-  virtual PRInt32 GetLength() = 0;
-
-  /** Close the stream. */
-  virtual void Close() = 0;
+    /** Close the stream. */
+    NS_IMETHOD
+    Close(void) = 0;
 };
+
+/** Error codes */
+//@{ 
+// XXX fix up the values so they are not total hacks... MMP
+/// End of file
+#define NS_BASE_STREAM_EOF            0x80001001
+/// Stream closed
+#define NS_BASE_STREAM_CLOSED         0x80001002
+/// Error from the operating system
+#define NS_BASE_STREAM_OSERROR        0x80001003
+/// Illegal arguments
+#define NS_BASE_STREAM_ILLEGAL_ARGS   0x80001004
+/// For unichar streams
+#define NS_BASE_STREAM_NO_CONVERTER   0x80001005
+/// For unichar streams
+#define NS_BASE_STREAM_BAD_CONVERSION 0x80001006
+//@}
 
 
 #endif /* nsInputStream_h___ */

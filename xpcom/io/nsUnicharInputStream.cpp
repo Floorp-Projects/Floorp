@@ -36,11 +36,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual PRInt32 Read(PRInt32* aErrorCode,
-                       PRUnichar* aBuf,
-                       PRInt32 aOffset,
-                       PRInt32 aCount);
-  virtual void Close();
+  NS_IMETHOD Read(PRUnichar* aBuf,
+                  PRInt32 aOffset,
+                  PRInt32 aCount,
+                  PRInt32 *aReadCount);
+  NS_IMETHOD Close();
 
   nsString* mString;
   PRInt32 mPos;
@@ -62,12 +62,13 @@ StringUnicharInputStream::~StringUnicharInputStream()
   }
 }
 
-PRInt32 StringUnicharInputStream::Read(PRInt32* aErrorCode,
-                                       PRUnichar* aBuf,
-                                       PRInt32 aOffset,
-                                       PRInt32 aCount)
+nsresult StringUnicharInputStream::Read(PRUnichar* aBuf,
+                                        PRInt32 aOffset,
+                                        PRInt32 aCount,
+                                        PRInt32 *aReadCount)
 {
   if (mPos >= mLen) {
+    *aReadCount = 0;
     return -1;
   }
   const PRUnichar* us = mString->GetUnicode();
@@ -77,15 +78,17 @@ PRInt32 StringUnicharInputStream::Read(PRInt32* aErrorCode,
   }
   nsCRT::memcpy(aBuf + aOffset, us + mPos, sizeof(PRUnichar) * amount);
   mPos += amount;
-  return amount;
+  *aReadCount = amount;
+  return NS_OK;
 }
 
-void StringUnicharInputStream::Close()
+nsresult StringUnicharInputStream::Close()
 {
   mPos = mLen;
   if (nsnull != mString) {
     delete mString;
   }
+  return NS_OK;
 }
 
 NS_IMPL_ISUPPORTS(StringUnicharInputStream, kIUnicharInputStreamIID);
@@ -163,7 +166,7 @@ NS_NewB2UConverter(nsIB2UConverter** aInstancePtrResult,
     return NS_ERROR_NO_AGGREGATION;
   }
   if (eCharSetID_IsoLatin1 != aCharSet) {
-    return NS_INPUTSTREAM_NO_CONVERTER;
+    return NS_BASE_STREAM_NO_CONVERTER;
   }
   IsoLatin1Converter* it = new IsoLatin1Converter();
   if (nsnull == it) {
@@ -182,14 +185,14 @@ public:
   ~ConverterInputStream();
 
   NS_DECL_ISUPPORTS
-  virtual PRInt32 Read(PRInt32* aErrorCode,
-                       PRUnichar* aBuf,
-                       PRInt32 aOffset,
-                       PRInt32 aCount);
-  virtual void Close();
+  NS_IMETHOD Read(PRUnichar* aBuf,
+                  PRInt32 aOffset,
+                  PRInt32 aCount,
+                  PRInt32 *aReadCount);
+  NS_IMETHOD Close();
 
 protected:
-  PRInt32 Fill(PRInt32* aErrorCode);
+  PRInt32 Fill(nsresult * aErrorCode);
 
   nsIInputStream* mInput;
   nsIB2UConverter* mConverter;
@@ -224,7 +227,7 @@ ConverterInputStream::~ConverterInputStream()
   Close();
 }
 
-void ConverterInputStream::Close()
+nsresult ConverterInputStream::Close()
 {
   if (nsnull != mInput) {
     mInput->Release();
@@ -242,19 +245,23 @@ void ConverterInputStream::Close()
     mUnicharData->Release();
     mUnicharData = nsnull;
   }
+
+  return NS_OK;
 }
 
-PRInt32 ConverterInputStream::Read(PRInt32* aErrorCode,
-                                   PRUnichar* aBuf,
-                                   PRInt32 aOffset,
-                                   PRInt32 aCount)
+nsresult ConverterInputStream::Read(PRUnichar* aBuf,
+                                    PRInt32 aOffset,
+                                    PRInt32 aCount,
+                                    PRInt32 *aReadCount)
 {
   PRInt32 rv = mUnicharDataLength - mUnicharDataOffset;
+  nsresult errorCode;
   if (0 == rv) {
     // Fill the unichar buffer
-    rv = Fill(aErrorCode);
+    rv = Fill(&errorCode);
     if (rv <= 0) {
-      return rv;
+      *aReadCount = 0;
+      return errorCode;
     }
   }
   if (rv > aCount) {
@@ -263,14 +270,15 @@ PRInt32 ConverterInputStream::Read(PRInt32* aErrorCode,
   nsCRT::memcpy(aBuf + aOffset, mUnicharData->GetBuffer() + mUnicharDataOffset,
                 rv * sizeof(PRUnichar));
   mUnicharDataOffset += rv;
-  return rv;
+  *aReadCount = rv;
+  return NS_OK;
 }
 
-PRInt32 ConverterInputStream::Fill(PRInt32* aErrorCode)
+PRInt32 ConverterInputStream::Fill(nsresult * aErrorCode)
 {
   if (nsnull == mInput) {
     // We already closed the stream!
-    *aErrorCode = NS_INPUTSTREAM_CLOSED;
+    *aErrorCode = NS_BASE_STREAM_CLOSED;
     return -1;
   }
 
