@@ -34,6 +34,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  */
+#include "cryptohi.h"
 #include "secasn1.h"
 #include "secitem.h"
 #include "prerr.h"
@@ -138,7 +139,7 @@ common_EncodeDerSig(SECItem *dest, SECItem *src)
     DSA_ASN1Signature sig;
     unsigned char     *signedR;
     unsigned char     *signedS;
-    int len;
+    unsigned int len;
 
     /* Allocate memory with room for an extra byte that
      * may be required if the top bit in the first byte
@@ -191,7 +192,7 @@ common_EncodeDerSig(SECItem *dest, SECItem *src)
 ** For ECDSA, len depends on the key size used to create the signature.
 */
 static SECItem *
-common_DecodeDerSig(SECItem *item, int len)
+common_DecodeDerSig(SECItem *item, unsigned int len)
 {
     SECItem *         result = NULL;
     SECStatus         status;
@@ -264,7 +265,7 @@ DSAU_EncodeDerSig(SECItem *dest, SECItem *src)
 ** by len/2 bytes of s). dest is the signature DER encoded.
 */
 SECStatus
-DSAU_EncodeDerSigWithLen(SECItem *dest, SECItem *src, int len)
+DSAU_EncodeDerSigWithLen(SECItem *dest, SECItem *src, unsigned int len)
 {
 
     PORT_Assert((src->len == len) && (len % 2 == 0));
@@ -293,7 +294,7 @@ DSAU_DecodeDerSig(SECItem *item)
 ** r followed by s (both padded to take up exactly len/2 bytes).
 */
 SECItem *
-DSAU_DecodeDerSigToLen(SECItem *item, int len)
+DSAU_DecodeDerSigToLen(SECItem *item, unsigned int len)
 {
     return common_DecodeDerSig(item, len/2);
 }
