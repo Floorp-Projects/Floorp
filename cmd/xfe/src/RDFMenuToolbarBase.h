@@ -107,54 +107,6 @@ public:
                                           HT_Event whatHappened);
 protected:
 
-    static Pixmap _bookmarkPixmap;
-    static Pixmap _bookmarkMask;
-
-    static Pixmap _bookmarkChangedPixmap;
-    static Pixmap _bookmarkChangedMask;
-
-    static Pixmap _mailBookmarkPixmap;
-    static Pixmap _mailBookmarkMask;
-
-    static Pixmap _newsBookmarkPixmap;
-    static Pixmap _newsBookmarkMask;
-
-    static Pixmap _folderArmedPixmap;
-    static Pixmap _folderArmedMask;
-    static Pixmap _folderPixmap;
-    static Pixmap _folderMask;
-
-    static Pixmap _personalFolderArmedMask;
-    static Pixmap _personalFolderArmedPixmap;
-    static Pixmap _personalFolderMask;
-    static Pixmap _personalFolderPixmap;
-
-    static Pixmap _newFolderArmedMask;
-    static Pixmap _newFolderArmedPixmap;
-    static Pixmap _newFolderMask;
-    static Pixmap _newFolderPixmap;
-
-    static Pixmap _menuFolderArmedMask;
-    static Pixmap _menuFolderArmedPixmap;
-    static Pixmap _menuFolderMask;
-    static Pixmap _menuFolderPixmap;
-
-    static Pixmap _newMenuFolderArmedMask;
-    static Pixmap _newMenuFolderArmedPixmap;
-    static Pixmap _newMenuFolderMask;
-    static Pixmap _newMenuFolderPixmap;
-
-    static Pixmap _newPersonalFolderArmedMask;
-    static Pixmap _newPersonalFolderArmedPixmap;
-    static Pixmap _newPersonalFolderMask;
-    static Pixmap _newPersonalFolderPixmap;
-
-    static Pixmap _newPersonalMenuFolderArmedMask;
-    static Pixmap _newPersonalMenuFolderArmedPixmap;
-    static Pixmap _newPersonalMenuFolderMask;
-    static Pixmap _newPersonalMenuFolderPixmap;
-
-
     void getPixmapsForEntry(HT_Resource   entry,
                             Pixmap *      pixmap,
                             Pixmap *      mask,
@@ -165,8 +117,6 @@ protected:
     /* static */ Pixmap bookmarkPixmapFromEntry(HT_Resourceentry);
     /* static */ Pixmap bookmarkMaskFromEntry(HT_Resourceentry);
 #endif
-
-    static void getBookmarkPixmaps(Pixmap & pixmap_out,Pixmap & mask_out);
 
 #if 0
     // Access bookmark entries

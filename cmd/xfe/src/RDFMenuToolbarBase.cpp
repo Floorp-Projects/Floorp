@@ -78,8 +78,6 @@ XFE_RDFMenuToolbarBase::XFE_RDFMenuToolbarBase( XFE_Frame *  frame,
         XFE_MozillaApp::updateToolbarAppearance,
         this,
         (XFE_FunctionNotification)updateIconAppearance_cb);
-
-    createPixmaps();
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */
@@ -98,155 +96,6 @@ XFE_RDFMenuToolbarBase::~XFE_RDFMenuToolbarBase()
     if (_dropTitleBuffer)
     {
         XtFree(_dropTitleBuffer);
-    }
-}
-//////////////////////////////////////////////////////////////////////////
-
-Pixmap XFE_RDFMenuToolbarBase::_bookmarkPixmap = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_bookmarkMask = XmUNSPECIFIED_PIXMAP;
-
-Pixmap XFE_RDFMenuToolbarBase::_mailBookmarkPixmap = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_mailBookmarkMask = XmUNSPECIFIED_PIXMAP;
-
-Pixmap XFE_RDFMenuToolbarBase::_newsBookmarkPixmap = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_newsBookmarkMask = XmUNSPECIFIED_PIXMAP;
-
-Pixmap XFE_RDFMenuToolbarBase::_folderArmedPixmap = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_folderArmedMask = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_folderPixmap = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_folderMask = XmUNSPECIFIED_PIXMAP;
-
-Pixmap XFE_RDFMenuToolbarBase::_newFolderArmedMask = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_newFolderArmedPixmap = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_newFolderMask = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_newFolderPixmap = XmUNSPECIFIED_PIXMAP;
-
-Pixmap XFE_RDFMenuToolbarBase::_menuFolderArmedMask = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_menuFolderArmedPixmap = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_menuFolderMask = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_menuFolderPixmap = XmUNSPECIFIED_PIXMAP;
-
-Pixmap XFE_RDFMenuToolbarBase::_newMenuFolderArmedMask = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_newMenuFolderArmedPixmap = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_newMenuFolderMask = XmUNSPECIFIED_PIXMAP;
-Pixmap XFE_RDFMenuToolbarBase::_newMenuFolderPixmap = XmUNSPECIFIED_PIXMAP;
-
-//////////////////////////////////////////////////////////////////////////
-void
-XFE_RDFMenuToolbarBase::createPixmaps()
-{
-    // Create icons
-     Pixel fg = XfeForeground(_frame->getBaseWidget());
-     Pixel bg = XfeBackground(_frame->getBaseWidget());
-
-    if (!XfePixmapGood(XFE_RDFMenuToolbarBase::_bookmarkPixmap))
-    {
-        IconGroup_createAllIcons(&BM_Bookmark_group,
-                                 _frame->getBaseWidget(),
-                                 fg,bg);
-
-        _bookmarkPixmap = BM_Bookmark_group.pixmap_icon.pixmap;
-        _bookmarkMask = BM_Bookmark_group.pixmap_icon.mask;
-    }
-
-    if (!XfePixmapGood(XFE_RDFMenuToolbarBase::_mailBookmarkPixmap))
-    {
-        IconGroup_createAllIcons(&BM_MailBookmark_group,
-                                 _frame->getBaseWidget(),
-                                 fg,bg);
-
-        _mailBookmarkPixmap = BM_MailBookmark_group.pixmap_icon.pixmap;
-        _mailBookmarkMask = BM_MailBookmark_group.pixmap_icon.mask;
-    }
-
-    if (!XfePixmapGood(XFE_RDFMenuToolbarBase::_newsBookmarkPixmap))
-    {
-        IconGroup_createAllIcons(&BM_NewsBookmark_group,
-                                 _frame->getBaseWidget(),
-                                 fg,bg);
-
-        _newsBookmarkPixmap = BM_NewsBookmark_group.pixmap_icon.pixmap;
-        _newsBookmarkMask = BM_NewsBookmark_group.pixmap_icon.mask;
-    }
-
-    if (!XfePixmapGood(XFE_RDFMenuToolbarBase::_folderPixmap))
-    {
-        IconGroup_createAllIcons(&BM_Folder_group,
-                                 _frame->getBaseWidget(),
-                                 fg,bg);
-
-        _folderPixmap = BM_Folder_group.pixmap_icon.pixmap;
-        _folderMask = BM_Folder_group.pixmap_icon.mask;
-    }
-
-    if (!XfePixmapGood(XFE_RDFMenuToolbarBase::_folderArmedPixmap))
-    {
-        IconGroup_createAllIcons(&BM_FolderO_group,
-                                 _frame->getBaseWidget(),
-                                 fg,bg);
-
-        _folderArmedPixmap = BM_FolderO_group.pixmap_icon.pixmap;
-        _folderArmedMask = BM_FolderO_group.pixmap_icon.mask;
-    }
-
-    if (!XfePixmapGood(XFE_RDFMenuToolbarBase::_newFolderPixmap))
-    {
-        IconGroup_createAllIcons(&BM_NewFolder_group,
-                                 _frame->getBaseWidget(),
-                                 fg,bg);
-
-        _newFolderPixmap = BM_NewFolder_group.pixmap_icon.pixmap;
-        _newFolderMask = BM_NewFolder_group.pixmap_icon.mask;
-    }
-
-    if (!XfePixmapGood(XFE_RDFMenuToolbarBase::_newFolderArmedPixmap))
-    {
-        IconGroup_createAllIcons(&BM_NewFolderO_group,
-                                 _frame->getBaseWidget(),
-                                 fg,bg);
-
-        _newFolderArmedPixmap = BM_NewFolderO_group.pixmap_icon.pixmap;
-        _newFolderArmedMask = BM_NewFolderO_group.pixmap_icon.mask;
-    }
-
-    if (!XfePixmapGood(XFE_RDFMenuToolbarBase::_menuFolderPixmap))
-    {
-        IconGroup_createAllIcons(&BM_MenuFolder_group,
-                                 _frame->getBaseWidget(),
-                                 fg,bg);
-
-        _menuFolderPixmap = BM_MenuFolder_group.pixmap_icon.pixmap;
-        _menuFolderMask = BM_MenuFolder_group.pixmap_icon.mask;
-    }
-
-    if (!XfePixmapGood(XFE_RDFMenuToolbarBase::_menuFolderArmedPixmap))
-    {
-        IconGroup_createAllIcons(&BM_MenuFolderO_group,
-                                 _frame->getBaseWidget(),
-                                 fg,bg);
-
-        _menuFolderArmedPixmap = BM_MenuFolderO_group.pixmap_icon.pixmap;
-        _menuFolderArmedMask = BM_MenuFolderO_group.pixmap_icon.mask;
-    }
-
-    if (!XfePixmapGood(XFE_RDFMenuToolbarBase::_newMenuFolderPixmap))
-    {
-        IconGroup_createAllIcons(&BM_NewAndMenuFolder_group,
-                                 _frame->getBaseWidget(),
-                                 fg,bg);
-
-        _newMenuFolderPixmap = BM_NewAndMenuFolder_group.pixmap_icon.pixmap;
-        _newMenuFolderMask = BM_NewAndMenuFolder_group.pixmap_icon.mask;
-    }
-
-    if (!XfePixmapGood(XFE_RDFMenuToolbarBase::_newMenuFolderArmedPixmap))
-    {
-        IconGroup_createAllIcons(&BM_NewAndMenuFolderO_group,
-                                 _frame->getBaseWidget(),
-                                 fg,bg);
-
-        _newMenuFolderArmedPixmap = BM_NewAndMenuFolderO_group.pixmap_icon.pixmap;
-        _newMenuFolderArmedMask = BM_NewAndMenuFolderO_group.pixmap_icon.mask;
     }
 }
 //////////////////////////////////////////////////////////////////////////
@@ -476,40 +325,25 @@ XFE_RDFMenuToolbarBase::getPixmapsForEntry(HT_Resource    entry,
                                      Pixmap *    armedPixmapOut,
                                      Pixmap *    armedMaskOut)
 {
-    Pixmap pixmap          = _bookmarkPixmap;
-    Pixmap mask            = _bookmarkMask;
-    Pixmap armedPixmap     = XmUNSPECIFIED_PIXMAP;
-    Pixmap armedMask       = XmUNSPECIFIED_PIXMAP;
+    IconGroup * ig = NULL;
 
     // Right now the only way an entry can be NULL is for the 
     // bookmarkMoreButton which kinda looks and acts like a folder so
     // we use folder pixmaps for it
     if (!entry)
     {
-        pixmap         = _folderPixmap;
-        mask           = _folderMask;
-        armedPixmap    = _folderArmedPixmap;
-        armedMask      = _folderArmedMask;
+        ig = &BM_Folder_group;
     }
     else
     {
 #ifdef NOT_YET
-        if (hasCustomIcon(entry)
-        {
-        } else
+        if (hasCustomIcon(entry)) {} /*else {*/
 #endif /*NOT_YET*/
         if (ht_IsFECommand(entry))
         {
             const char* url = HT_GetNodeURL(entry);
             
-            IconGroup *ig = IconGroup_findGroupForName(url + 8);
-            if (ig)
-            {
-                pixmap        = ig->pixmap_icon.pixmap;
-                mask          = ig->pixmap_icon.mask;
-                armedPixmap   = ig->pixmap_mo_icon.pixmap;
-                armedMask     = ig->pixmap_mo_icon.mask;
-            }
+            ig = IconGroup_findGroupForName(url + 8);
         } 
         else
         {
@@ -518,65 +352,41 @@ XFE_RDFMenuToolbarBase::getPixmapsForEntry(HT_Resource    entry,
                 XP_Bool is_menu = (entry == getMenuFolder());
                 XP_Bool is_add  = (entry == getAddFolder());
             
-                if (is_add && is_menu)
-                {
-                    pixmap         = _newMenuFolderPixmap;
-                    mask           = _newMenuFolderMask;
-                    armedPixmap    = _newMenuFolderArmedPixmap;
-                    armedMask      = _newMenuFolderArmedMask;
-                }
-                else if (is_add)
-                {
-                    pixmap         = _newFolderPixmap;
-                    mask           = _newFolderMask;
-                    armedPixmap    = _newFolderArmedPixmap;
-                    armedMask      = _newFolderArmedMask;
-                }
-                else if (is_menu)
-                {
-                    pixmap         = _menuFolderPixmap;
-                    mask           = _menuFolderMask;
-                    armedPixmap    = _menuFolderArmedPixmap;
-                    armedMask      = _menuFolderArmedMask;
-                }
-                else
-                {
-                    pixmap         = _folderPixmap;
-                    mask           = _folderMask;
-                    armedPixmap    = _folderArmedPixmap;
-                    armedMask      = _folderArmedMask;
-                }
+                if (is_add && is_menu)     ig = &BM_NewAndMenuFolder_group;
+                else if (is_add)           ig = &BM_NewFolder_group;
+                else if (is_menu)          ig = &BM_MenuFolder_group;
+                else                       ig = &BM_Folder_group;
             }
             else
             {
                 int url_type = NET_URL_Type(HT_GetNodeURL(entry));
                 
-                switch (url_type)
-                {
-                case IMAP_TYPE_URL:
-                case MAILBOX_TYPE_URL:
-                    
-                    pixmap    = _mailBookmarkPixmap;
-                    mask      = _mailBookmarkMask;
-                    
-                    break;
-                    
-                case NEWS_TYPE_URL:
-                    
-                    pixmap    = _newsBookmarkPixmap;
-                    mask      = _newsBookmarkMask;
-                    
-                    break;
-                    
-                default:
-                    
-                    pixmap    = _bookmarkPixmap;
-                    mask      = _bookmarkMask;
-                    
-                    break;
-                }
+                if (url_type == IMAP_TYPE_URL || url_type == MAILBOX_TYPE_URL)
+                    ig = &BM_MailBookmark_group;
+                else if (url_type == NEWS_TYPE_URL)
+                    ig = &BM_NewsBookmark_group;
+                else
+                    ig = &BM_Bookmark_group;
             }
         }
+    }
+
+    Pixmap pixmap          = XmUNSPECIFIED_PIXMAP;
+    Pixmap mask            = XmUNSPECIFIED_PIXMAP;
+    Pixmap armedPixmap     = XmUNSPECIFIED_PIXMAP;
+    Pixmap armedMask       = XmUNSPECIFIED_PIXMAP;
+
+    if (ig)
+    {
+        IconGroup_createAllIcons(ig, 
+                                 _frame->getBaseWidget(),
+                                 XfeForeground(_frame->getBaseWidget()),
+                                 XfeBackground(_frame->getBaseWidget()));
+        
+        pixmap        = ig->pixmap_icon.pixmap;
+        mask          = ig->pixmap_icon.mask;
+        armedPixmap   = ig->pixmap_mo_icon.pixmap;
+        armedMask     = ig->pixmap_mo_icon.mask;
     }
 
     if (pixmapOut)
@@ -599,13 +409,6 @@ XFE_RDFMenuToolbarBase::getPixmapsForEntry(HT_Resource    entry,
         *armedMaskOut = armedMask;
     }
 
-}
-//////////////////////////////////////////////////////////////////////////
-/* static */ void
-XFE_RDFMenuToolbarBase::getBookmarkPixmaps(Pixmap & pixmap_out,Pixmap & mask_out)
-{
-    pixmap_out = _bookmarkPixmap;
-    mask_out = _bookmarkMask;
 }
 #if 0
 //////////////////////////////////////////////////////////////////////////
@@ -1087,10 +890,6 @@ XFE_RDFMenuToolbarBase::configureXfeBmButton(Widget item,HT_Resource entry)
     int32 toolbar_style;
     PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
 
-    D(printf("XFE_RDFMenuToolbarBase::configureXfeCascade: toolbar_style = %d\n",
-             toolbar_style););
-
-
     if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
     {
         XtVaSetValues(item,
@@ -1119,8 +918,6 @@ XFE_RDFMenuToolbarBase::configureXfeBmCascade(Widget item,HT_Resource entry)
     int32 toolbar_style;
     PREF_GetIntPref("browser.chrome.toolbar_style", &toolbar_style);
 
-    D(printf("XFE_RDFMenuToolbarBase::configureXfeBmCascade: toolbar_style = %d\n",
-             toolbar_style););
     if (toolbar_style == BROWSER_TOOLBAR_TEXT_ONLY)
     {
         XtVaSetValues(item,
