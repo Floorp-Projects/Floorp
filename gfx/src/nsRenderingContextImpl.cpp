@@ -137,6 +137,16 @@ nsTransform2D       *theTransform;
   return NS_OK;
 }
 
+/** ---------------------------------------------------
+ *  See documentation in nsIRenderingContext.h
+ *	@update 3/29/00 dwc
+ */
+NS_IMETHODIMP 
+nsRenderingContextImpl::DrawPath(nsPoint aPointArray[],PRInt32 aNumPts)
+{
+
+  return NS_OK;
+}
 
 /** ---------------------------------------------------
  *  See documentation in nsRenderingContextImpl.h
@@ -164,3 +174,8 @@ PRInt32 flag = NS_COPYBITS_TO_BACK_BUFFER | NS_COPYBITS_XFORM_DEST_VALUES;
     TileImage(aDS,aSrcRect,aWidth,aHeight);
   } 
 }
+
+/** ---------------------------------------------------
+ *  See documentation in nsRenderingContextImpl.h
+ *	@update 3/29/00 dwc
+ */

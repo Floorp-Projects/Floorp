@@ -39,6 +39,11 @@ public:
    */
   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,nscoord aWidth,nscoord aHeight);
 
+  /** ---------------------------------------------------
+   *  See documentation in nsIRenderingContext.h
+   *	@update 03/29/00 dwc
+   */
+  NS_IMETHOD DrawPath(nsPoint aPointArray[],PRInt32 aNumPts);
 
 protected:
   virtual ~nsRenderingContextImpl();
