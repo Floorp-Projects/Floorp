@@ -1175,6 +1175,7 @@ nsresult nsMsgDatabase::CreateNewHdr(nsMsgKey key, nsMsgHdr **pnewHdr)
 	{
 		err = m_mdbAllMsgHeadersTable->AddRow(GetEnv(), hdrRow);
 		*pnewHdr = new nsMsgHdr(this, hdrRow);
+		(*pnewHdr)->AddRef();
 	}
 	return err;
 }
@@ -1232,7 +1233,10 @@ nsresult nsMsgDatabase::CreateNewHdr(PRBool *newThread, MessageHdrStruct *hdrStr
 	}
 
 	if (err == NS_OK)
+	{
 		*pnewHdr = new nsMsgHdr(this, hdrRow);
+		(*pnewHdr)->AddRef();
+	}
 
 	return err;
 }

@@ -450,3 +450,44 @@ void nsMailDatabase::SetReparse(PRBool reparse)
 	m_reparse = reparse;
 }
 
+
+#ifdef DEBUG	// strictly for testing purposes
+nsresult nsMailDatabase::PrePopulate()
+{
+	nsMsgHdr	*newHdr;
+	PRTime resultTime, intermediateResult, microSecondsPerSecond;
+	resultTime = PR_Now();
+	time_t resDate;
+
+	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+	LL_DIV(intermediateResult, resultTime, microSecondsPerSecond);
+	LL_L2I(resDate, intermediateResult);
+
+	nsresult	res = CreateNewHdr(1, &newHdr);
+	newHdr->SetAuthor("bird@celtics.com (Larry Bird)");
+	newHdr->SetSubject("Why the Lakers suck");
+	newHdr->SetDate(resDate);
+	newHdr->SetRecipients("riley@heat.com (Pat Riley)", FALSE);
+	newHdr->Release();
+
+	res = CreateNewHdr(2, &newHdr);
+	newHdr->SetAuthor("shaq@brick.com (Shaquille O'Neal)");
+	newHdr->SetSubject("Anyone here know how to shoot free throws?");
+	newHdr->SetDate(resDate);
+	newHdr->Release();
+
+	res = CreateNewHdr(3, &newHdr);
+	newHdr->SetAuthor("dj@celtics.com (Dennis Johnson)");
+	newHdr->SetSubject("Has anyone seen my jump shot?");
+	newHdr->SetDate(resDate);
+	newHdr->Release();
+
+	res = CreateNewHdr(4, &newHdr);
+	newHdr->SetAuthor("sichting@celtics.com (Jerry Sichting)");
+	newHdr->SetSubject("Tips for fighting 7' 4\" guys");
+	newHdr->SetDate(resDate);
+	newHdr->Release();
+	return NS_OK;
+}
+
+#endif

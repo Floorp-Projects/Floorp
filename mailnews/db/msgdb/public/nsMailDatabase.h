@@ -70,8 +70,9 @@ public:
 	virtual nsresult		SetSummaryValid(PRBool valid = PR_TRUE);
 	
 	nsresult 				GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds);
-
-
+#ifdef DEBUG	// strictly for testing purposes
+	virtual	nsresult		PrePopulate();
+#endif
 protected:
 	virtual PRBool			SetHdrFlag(nsMsgHdr *, PRBool bSet, MsgFlags flag);
 	virtual void			UpdateFolderFlag(nsMsgHdr *msgHdr, PRBool bSet, 
