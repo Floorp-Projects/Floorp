@@ -1,5 +1,5 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- *
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/*
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -17,30 +17,18 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Modified: syd@netscape.com 10/18/99 wired in margins 
  * Contributor(s): 
+ *   Vino Fernando Crescini <vino@igelaus.com.au>
  */
 
-#ifndef nsDeviceContextSpecFactoryX_h___
-#define nsDeviceContextSpecFactoryX_h___
+#include <X11/xlib.h>
+#include "nsPrintdXlib.h"
 
-#include "nsIDeviceContextSpecFactory.h"
-#include "nsIDeviceContextSpec.h"
-
-class nsDeviceContextSpecFactoryXlib : public nsIDeviceContextSpecFactory
+void UnixPrDialog(UnixPrData *prData)
 {
+  // IMPLEMENT ME 
+  // Draw a print dialog using Xlib
 
-public:
-  nsDeviceContextSpecFactoryXlib();
-
-  NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Init(void);
-  NS_IMETHOD CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
-                                     nsIDeviceContextSpec *&aNewSpec,
-                                     PRBool aQuiet);
-
-protected:
-  virtual ~nsDeviceContextSpecFactoryXlib();
-};
-
-#endif
+  return;
+}
