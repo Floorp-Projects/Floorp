@@ -39,12 +39,21 @@ import org.mozilla.javascript.*;
 
 public abstract class XMLLib
 {
-    public static XMLLib extractFromScope(Scriptable scope)
+    public static XMLLib extractFromScopeOrNull(Scriptable scope)
     {
         scope = ScriptableObject.getTopLevelScope(scope);
         Object testXML = ScriptableObject.getClassPrototype(scope, "XML");
         if (testXML instanceof XMLObject) {
             return ((XMLObject)testXML).lib();
+        }
+        return null;
+    }
+
+    public static XMLLib extractFromScope(Scriptable scope)
+    {
+        XMLLib lib = extractFromScopeOrNull(scope);
+        if (lib != null) {
+            return lib;
         }
         String msg = ScriptRuntime.getMessage0("msg.XML.not.available");
         throw Context.reportRuntimeError(msg);
@@ -97,4 +106,15 @@ public abstract class XMLLib
      * Construct namespace for default xml statement.
      */
     public abstract Object toDefaultXmlNamespace(Context cx, Object uriValue);
+
+    /**
+     * Return wrap of the given Java object as appropritate XML object or
+     * null if Java object has no XML representation.
+     * The default implementation returns null to indicate no special
+	 * wrapping of XML objects.
+	 */
+    public Scriptable wrapAsXMLOrNull(Context cx, Object javaObject)
+	{
+		return null;
+	}
 }

@@ -38,6 +38,8 @@
 
 package org.mozilla.javascript;
 
+import org.mozilla.javascript.xml.XMLLib;
+
 /**
  * Embeddings that wish to provide their own custom wrappings for Java
  * objects may extend this class and call
@@ -141,7 +143,15 @@ public class WrapFactory
     public Scriptable wrapAsJavaObject(Context cx, Scriptable scope,
                                        Object javaObject, Class staticType)
     {
-        return new NativeJavaObject(scope, javaObject, staticType);
+        Scriptable wrap = null;
+        XMLLib lib = XMLLib.extractFromScopeOrNull(scope);
+        if (lib != null) {
+            wrap = lib.wrapAsXMLOrNull(cx, javaObject);
+        }
+        if (wrap == null) {
+            wrap = new NativeJavaObject(scope, javaObject, staticType);
+        }
+        return wrap;
     }
 
     /**
