@@ -10,17 +10,23 @@
 /*** TAB: TOP <tab> ***/
 
 tab {
+  -moz-appearance: tab;
   -moz-box-align: stretch;
   color				: #000000;
 }
 
+/* we use |tab-left-edge| for all 3, which is not drawn in the theme impl
+ * and let the |tab| take care of everything.
+ */
 .tab-image-left {
+  -moz-appearance: tab-left-edge;
   background		: url(chrome://global/skin/tabbox/tab-unselect-left.gif) no-repeat;
   width				: 11px;
   height			: 25px;
 }
 
 .tab-image-middle {
+  -moz-appearance: tab-left-edge;
   background-color  : #CECECE;
   border-top        : 3px solid;
   border-bottom     : 3px solid;
@@ -29,6 +35,7 @@ tab {
 }
 
 .tab-image-right {
+  -moz-appearance: tab-left-edge;
   background		: url(chrome://global/skin/tabbox/tab-unselect-right.gif) no-repeat;
   width				: 12px;
   height			: 25px;
@@ -235,6 +242,7 @@ tabpanels.light {
 }
 
 tabpanels {
+  -moz-appearance: tabpanels; 
   border-top: 0px;
   border-bottom: 2px ridge #000000;
   border-left: 2px groove #000000;
