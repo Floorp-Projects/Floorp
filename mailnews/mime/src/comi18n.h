@@ -53,6 +53,8 @@ public:
                   char** outBuffer, PRInt32* outLength,
                   PRInt32* numUnConverted);
 
+  static nsIStringCharsetDetector *mDetector;  // charset detector
+
 protected:
   nsIUnicodeDecoder * GetUnicodeDecoder() {return (mAutoDetect && NULL != mDecoderDetected) ? mDecoderDetected : mDecoder;}
   nsIUnicodeEncoder * GetUnicodeEncoder() {return mEncoder;}
@@ -68,7 +70,7 @@ private:
   PRBool mAutoDetect;                   // true if apply auto detection
   nsString mInputCharset;               // input charset for auto detection hint as well as need conversion check
   nsString mOutputCharset;              // output charset for need conversion check
-  nsIStringCharsetDetector *mDetector;  // charset detector
+  static nsCString mDetectorProgID;     // ProgID of charset detector
 };
 
   

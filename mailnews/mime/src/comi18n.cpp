@@ -1206,6 +1206,9 @@ char *intl_decode_mime_part2_str(const char *header, char* charset)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+nsIStringCharsetDetector* MimeCharsetConverterClass::mDetector = NULL;
+nsCString MimeCharsetConverterClass::mDetectorProgID;
+
 MimeCharsetConverterClass::MimeCharsetConverterClass()
 {
   mDecoder = NULL;
@@ -1214,7 +1217,6 @@ MimeCharsetConverterClass::MimeCharsetConverterClass()
   mMaxNumCharsDetect = -1;
   mNumChars = 0;
   mAutoDetect = PR_FALSE;
-  mDetector = NULL;
 }
 
 MimeCharsetConverterClass::~MimeCharsetConverterClass()
@@ -1222,7 +1224,6 @@ MimeCharsetConverterClass::~MimeCharsetConverterClass()
   NS_IF_RELEASE(mDecoder);
   NS_IF_RELEASE(mEncoder);
   NS_IF_RELEASE(mDecoderDetected);
-  NS_IF_RELEASE(mDetector);
 }
 
 PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const char* to_charset, 
@@ -1279,10 +1280,19 @@ PRInt32 MimeCharsetConverterClass::Initialize(const char* from_charset, const ch
       }
     }
 
-    res = nsComponentManager::CreateInstance(detector_progid, nsnull, 
-                                             NS_GET_IID(nsIStringCharsetDetector), (void**)&mDetector);
-    if (NS_FAILED(res)) {
-      mDetector = NULL;   // no charset detector is available
+    if (!mDetectorProgID.Equals(detector_progid)) {
+      // may have multi-thread issue updating these static variables
+      // but charset detector can only be changed globally through UI
+      NS_IF_RELEASE(mDetector);
+      mDetectorProgID.Assign("");
+      // create instance when the detector name is not empty
+      if (nsCRT::strcmp(detector_progid, NS_STRCDETECTOR_PROGID_BASE)) {
+        res = nsComponentManager::CreateInstance(detector_progid, nsnull, 
+                                                 NS_GET_IID(nsIStringCharsetDetector), (void**)&mDetector);
+        if (NS_SUCCEEDED(res)) {
+          mDetectorProgID.Assign(detector_progid);
+        }
+      }
     }
   }
 
@@ -1532,6 +1542,13 @@ char *MIME_EncodeMimePartIIStr(const char* header, const char* mailCharset, cons
 char * NextChar_UTF8(char *str)
 {
   return (char *) utf8_nextchar((unsigned char *) str);
+}
+
+// Destructor called when unloading the DLL
+void comi18n_destructor()
+{
+  NS_IF_RELEASE(MimeCharsetConverterClass::mDetector);
+  printf("comi18n_destructor\n");
 }
 
 } /* end of extern "C" */
