@@ -19,15 +19,15 @@ HTML {
 }
 
 BODY {
-  background: rgb(255,255,255);
-  color: black;
+  background: rgb(255,255,255);	// XXX this needs to go away
+//  color: black;
   cursor: arrow;
   display: block;
-  font-family: serif;
-  font-style: normal;
-  font-variant: normal;
-  font-weight: normal;
-  font-size: 11pt;
+//  font-family: serif;
+//  font-style: normal;
+//  font-variant: normal;
+//  font-weight: normal;
+//  font-size: 11pt;
   line-height: 1.1;
   padding: 8px;
 }
@@ -55,32 +55,32 @@ DIV {
 }
 H1 {
   display: block;
-  font-size: 22pt;
+  font-size: x-large;
   font-weight: bold;
 }
 H2 {
   display: block;
-  font-size: 16pt;
+  font-size: large;
   font-weight: bold;
 }
 H3 {
   display: block;
-  font-size: 13pt;
+  font-size: medium;
   font-weight: bold;
 }
 H4 {
   display: block;
-  font-size: 12pt;
+  font-size: small;
   font-weight: bold;
 }
 H5 {
   display: block;
-  font-size: 9pt;
+  font-size: x-small;
   font-weight: bold;
 }
 H6 {
   display: block;
-  font-size: 8pt;
+  font-size: xx-small;
   font-weight: bold;
 }
 LAYER {
@@ -118,11 +118,11 @@ TD, TH {
   text-align: left;
   border-style: inset;
   border-color: #C0C0C0;
-  font-family: serif;
-  font-style: normal;
-  font-variant: normal;
-  font-weight: normal;
-  font-size: 11pt;
+//  font-family: serif;
+//  font-style: normal;
+//  font-variant: normal;
+//  font-weight: normal;
+//  font-size: 11pt;
   line-height: 1.1;
   display: table-cell;
   cursor: arrow;
@@ -337,12 +337,12 @@ INPUT {
 }
 SELECT {
   vertical-align: bottom;
-  font-family: "Times New Roman";
-  font-size: 10pt;
+//  font-family: "Times New Roman";
+//  font-size: 10pt;
 }
 OPTION {
-  font-family: "Times New Roman";
-  font-size: 10pt;
+//  font-family: "Times New Roman";
+//  font-size: 10pt;
 }
 TEXTAREA {
   vertical-align: bottom;
