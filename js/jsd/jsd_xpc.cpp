@@ -1053,8 +1053,8 @@ jsdScript::InvalidateAll ()
     
     JSD_LockScriptSubsystem(cx);
     while((script = JSD_IterateScripts(cx, &iter)) != NULL) {
-        jsdIScript *jsdis = NS_STATIC_CAST(jsdIScript *,
-                                           JSD_GetScriptPrivate(script));
+        nsCOMPtr<jsdIScript> jsdis = 
+            NS_STATIC_CAST(jsdIScript *, JSD_GetScriptPrivate(script));
         if (jsdis)
             jsdis->Invalidate();
     }
