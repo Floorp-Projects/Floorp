@@ -46,12 +46,13 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 
+#include "nsNetUtil.h"
+
 // URL file handling, copied and modified from xpfe/components/bookmarks/src/nsBookmarksService.cpp
 #ifdef XP_WIN
 #include <shlobj.h>
 #include <intshcut.h>
 #include "nsIFileURL.h"
-#include "nsNetUtil.h"
 #ifdef CompareString
 #undef CompareString
 #endif
