@@ -54,13 +54,13 @@
 #include "nsUrlbarHistory.h"
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
-#include "nsWindowsHooks.h"
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsLDAPAutoCompleteSession.h"
 #endif
 #endif
 #if defined(XP_WIN)
 #ifndef MOZ_PHOENIX
+#include "nsWindowsHooks.h"
 #include "nsAlertsService.h"
 #endif
 #include "nsUrlWidget.h"
@@ -93,13 +93,13 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #if defined(MOZ_LDAP_XPCOM)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
 #endif
 #endif
 #if defined(XP_WIN)
 #ifndef MOZ_PHOENIX
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
