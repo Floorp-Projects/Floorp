@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 
-$::Version = '$Revision: 1.65 $ ';
+$::Version = '$Revision: 1.66 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -77,7 +77,6 @@ sub PrintExampleConfig {
 sub ParseArgs {
     PrintUsage() if $#ARGV == -1;
 
-    package Settings;
     while (my $arg = shift @ARGV) {
         $Settings::BuildDepend = 0, next if $arg eq '--clobber';
         $Settings::BuildDepend = 1, next if $arg eq '--depend';
@@ -95,7 +94,7 @@ sub ParseArgs {
             PrintUsage() if $arg_arg eq '' or $arg_arg =~ /^-/;
             $Settings::DisplayServer = $arg_arg;
         }
-        if ($arg eq '-tag') {
+        elsif ($arg eq '-tag') {
             my $arg_arg = shift @ARGV;
             PrintUsage() if $arg_arg eq '' or $arg_arg =~ /^-/;
             $Settings::BuildTag = $arg_arg;
@@ -707,7 +706,7 @@ sub RunBloatTest {
         # HACK.  Clobber isn't reporting bloat status properly,
         # only turn tree orange for depend build.  This has
         # been filed as bug 22052.  -mcafee
-        if ($Settings::BuildDepend == 1) {
+        if ($Settings::BuildDepend) {
             return 'testfailed';
         } else {
             return 'success';
