@@ -766,11 +766,9 @@ HRESULT STDMETHODCALLTYPE CMozillaBrowser::GoHome(void)
 	// Find the home page stored in prefs
 	if (m_pIPref)
 	{
-		char szBuffer[512];
+		char *szBuffer;
 		nsresult rv;
-		int nBufLen = sizeof(szBuffer) / sizeof(szBuffer[0]);
-		memset(szBuffer, 0, sizeof(szBuffer));
-		rv = m_pIPref->GetCharPref(c_szPrefsHomePage, szBuffer, &nBufLen);
+		rv = m_pIPref->CopyCharPref(c_szPrefsHomePage, &szBuffer);
 		if (rv == NS_OK)
 		{
 			sUrl = A2T(szBuffer);
