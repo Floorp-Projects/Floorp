@@ -23,7 +23,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= nkcache
-LIBRARY_NAME	= nkcache
+LIBRARY_NAME	= necko_cache
 IS_COMPONENT	= 1
 
 CPPSRCS		= nsNetDataCacheModule.cpp
