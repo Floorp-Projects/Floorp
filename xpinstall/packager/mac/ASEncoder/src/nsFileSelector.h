@@ -42,6 +42,19 @@ private:
 	FSSpecPtr	mFile;
 };
 
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+pascal void
+OurNavEventFunction(NavEventCallbackMessage callBackSelector, NavCBRecPtr callBackParms,
+					NavCallBackUserData callBackUD);
+
+#ifdef __cplusplus
+}
+#endif
+
 #define ERR_CHECK(_func) 			\
 			err = _func;			\
 			if (err != noErr)		\

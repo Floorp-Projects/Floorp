@@ -247,12 +247,12 @@ nsASEApp::MakeMenus()
 	mbarHdl = ::GetNewMBar(rMenuBar);
 	::SetMenuBar(mbarHdl);
 	
-	if (menuHdl = ::GetMenuHandle(rMenuApple)) 
+	if ((menuHdl = ::GetMenuHandle(rMenuApple))!=nil) 
 	{
 		::AppendResMenu(menuHdl, 'DRVR');
 	}
 		
-	if (menuHdl = GetMenuHandle(rMenuEdit))
+	if ((menuHdl = GetMenuHandle(rMenuEdit))!=nil)
 		::DisableItem(menuHdl, 0);
 	
 	::HMGetHelpMenuHandle(&menuHdl);
