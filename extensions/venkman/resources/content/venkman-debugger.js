@@ -41,6 +41,15 @@ const jsdIProperty = Components.interfaces.jsdIProperty;
 
 var $ = new Array(); /* array to store results from evals in debug frames */
 
+console.breakpointHooker = new Object();
+console.breakpointHooker.onExecute =
+function dh_bphook (cx, state, type, rv)
+{
+    dd ("onBreakpointHook (" + cx + ", " + state + ", " + type + ")");
+
+    return debugTrap(cx, state, type);
+}
+
 console.scriptHooker = new Object();
 console.scriptHooker.onScriptLoaded =
 function sh_scripthook (cx, script, creating)
@@ -137,7 +146,8 @@ function detachDebugger()
 
     ASSERT (console.stopLevel == 0,
             "console.stopLevel != 0 after detachDebugger");
-    
+
+    console.jsds.off();
     console.jsds.scriptHook = null;
     console.jsds.debuggerHook = null;
 }
@@ -251,8 +261,12 @@ function initDebugger()
     console.continueCodeStack = new Array();
     
     /* create the debugger instance */
+    if (!Components.classes[JSD_CTRID])
+        throw BadMojo (ERR_NO_DEBUGGER);
+    
     console.jsds = Components.classes[JSD_CTRID].getService(jsdIDebuggerService);
-    console.jsds.init();
+    console.jsds.on();
+    console.jsds.breakpointHook = console.breakpointHooker;
     //console.jsds.scriptHook = console.scriptHooker;
     console.jsds.debuggerHook = console.debuggerHooker;
     //dbg.interruptHook = interruptHooker;
@@ -268,7 +282,10 @@ function displayProperties (v)
 {
     if (!v)
         throw BadMojo (ERR_REQUIRED_PARAM, "v");
-    
+
+    if (!(v instanceof jsdIValue))
+        throw BadMojo (ERR_INVALID_PARAM, "v", String(v));
+
     var p = new Object();
     v.getProperties (p, {});
     for (var i in p.value) display(formatProperty (p.value[i]));
