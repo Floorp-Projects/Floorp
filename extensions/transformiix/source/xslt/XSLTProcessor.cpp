@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- 
+ *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
  * except in compliance with the License. You may obtain a copy of
@@ -50,6 +51,7 @@
 #include "Numbering.h"
 #include "Tokenizer.h"
 #include "URIUtils.h"
+#include "txAtom.h"
 #ifndef TX_EXE
 #include "nsIObserverService.h"
 #include "nsIURL.h"
@@ -80,6 +82,16 @@
 **/
 const String XSLTProcessor::NON_TEXT_TEMPLATE_WARNING =
 "templates for the following element are not allowed to generate non character data: ";
+
+/*
+ * Implement static variables for standalone 
+ * atomservice
+ * and dom
+ */
+#ifdef TX_EXE
+TX_IMPL_ATOM_STATICS;
+#endif
+TX_IMPL_DOM_STATICS;
 
 /**
  * Creates a new XSLTProcessor
@@ -152,6 +164,40 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(XSLTProcessor)
 NS_IMPL_RELEASE(XSLTProcessor)
 
+#else
+
+/*
+ * Initialize atom tables, hardcode xml and xmlns prefixes.
+ */
+MBool txInit()
+{
+    if (!txAtomService::Init())
+        return MB_FALSE;
+    if (!txNamespaceManager::Init())
+        return MB_FALSE;
+    String xml;
+    xml.append("xml");
+    txXMLAtoms::XMLPrefix = TX_GET_ATOM(xml);
+    if (!txXMLAtoms::XMLPrefix)
+        return MB_FALSE;
+    xml.append("ns");
+    txXMLAtoms::XMLNSPrefix = TX_GET_ATOM(xml);
+    if (!txXMLAtoms::XMLNSPrefix)
+        return MB_FALSE;
+    return MB_TRUE;
+}
+
+/*
+ * To be called when done with transformiix
+ *
+ * Free atom table, namespace manager
+ */
+MBool txShutdown()
+{
+    txNamespaceManager::Shutdown();
+    txAtomService::Shutdown();
+    return MB_TRUE;
+}
 #endif
 
 /**
@@ -1021,18 +1067,10 @@ void XSLTProcessor::processAction
             //-- documents
             const String curValue = xslAction->getNodeValue();
 
-            //-- set leading + trailing whitespace stripping flags
-            #ifdef DEBUG_ah
-            Node* priorNode = xslAction->getPreviousSibling();
-            Node* nextNode = xslAction->getNextSibling();
-            if (priorNode && (priorNode->getNodeType()==Node::TEXT_NODE))
-                cout << "Textnode found in prior in whitespace strip"<<endl;
-            if (nextNode && (nextNode->getNodeType()==Node::TEXT_NODE))
-                cout << "Textnode found in next in whitespace strip"<<endl;
-            #endif
             if (XMLUtils::shouldStripTextnode(curValue))
                 textValue="";
-            else textValue=curValue;
+            else 
+                textValue=curValue;
         }
         else {
             textValue = xslAction->getNodeValue();

@@ -27,11 +27,14 @@
    interface into a TransforMIIX Node interface.
 */
 
+#include "txAtom.h"
 #include "mozilladom.h"
+#include "nsIContent.h"
+#include "nsINameSpaceManager.h"
 
 MOZ_DECL_CTOR_COUNTER(Node)
 
-/**
+/*
  * Construct a wrapper with the specified Mozilla object and document owner.
  *
  * @param aNode the nsIDOMNode you want to wrap
@@ -41,9 +44,10 @@ Node::Node(nsIDOMNode* aNode, Document* aOwner) :
             MozillaObjectWrapper(aNode, aOwner)
 {
     MOZ_COUNT_CTOR(Node);
+    namespaceID=0;
 }
 
-/**
+/*
  * Destructor
  */
 Node::~Node()
@@ -51,7 +55,7 @@ Node::~Node()
     MOZ_COUNT_DTOR(Node);
 }
 
-/**
+/*
  * Wrap a different Mozilla object with this wrapper.
  *
  * @param aNode the nsIDOMNode you want to wrap
@@ -73,7 +77,7 @@ void Node::setNSObj(nsIDOMNode* aNode)
         ownerDocument->addWrapper(this);
 }
 
-/**
+/*
  * Call nsIDOMNode::GetNodeName to get the node's name.
  *
  * @return the node's name
@@ -88,7 +92,7 @@ const String& Node::getNodeName()
     return nodeName;
 }
 
-/**
+/*
  * Call nsIDOMNode::GetNodeValue to get the node's value.
  *
  * @return the node's name
@@ -103,7 +107,7 @@ const String& Node::getNodeValue()
     return nodeValue;
 }
 
-/**
+/*
  * Call nsIDOMNode::GetNodeType to get the node's type.
  *
  * @return the node's type
@@ -118,7 +122,7 @@ unsigned short Node::getNodeType() const
     return nodeType;
 }
 
-/**
+/*
  * Call nsIDOMNode::GetParentNode to get the node's parent.
  *
  * @return the node's parent
@@ -134,7 +138,7 @@ Node* Node::getParentNode()
         return NULL;
 }
 
-/**
+/*
  * Call nsIDOMNode::GetChildNodes to get the node's childnodes.
  *
  * @return the node's children
@@ -150,7 +154,7 @@ NodeList* Node::getChildNodes()
         return NULL;
 }
 
-/**
+/*
  * Call nsIDOMNode::GetFirstChild to get the node's first child.
  *
  * @return the node's first child
@@ -166,7 +170,7 @@ Node* Node::getFirstChild()
         return NULL;
 }
 
-/**
+/*
  * Call nsIDOMNode::GetLastChild to get the node's last child.
  *
  * @return the node's first child
@@ -182,7 +186,7 @@ Node* Node::getLastChild()
         return NULL;
 }
 
-/**
+/*
  * Call nsIDOMNode::GetPreviousSibling to get the node's previous sibling.
  *
  * @return the node's previous sibling
@@ -198,7 +202,7 @@ Node* Node::getPreviousSibling()
         return NULL;
 }
 
-/**
+/*
  * Call nsIDOMNode::GetNextSibling to get the node's next sibling.
  *
  * @return the node's next sibling
@@ -214,7 +218,7 @@ Node* Node::getNextSibling()
         return NULL;
 }
 
-/**
+/*
  * Call nsIDOMNode::GetAttributes to get the node's attributes.
  *
  * @return the node's attributes
@@ -230,7 +234,7 @@ NamedNodeMap* Node::getAttributes()
         return NULL;
 }
 
-/**
+/*
  * Get this wrapper's owning document.
  *
  * @return the wrapper's owning document
@@ -240,7 +244,7 @@ Document* Node::getOwnerDocument()
     return ownerDocument;
 }
 
-/**
+/*
  * Call nsIDOMNode::SetNodeValue to set this node's value.
  *
  * @param aNewNodeValue the new value for the node
@@ -253,7 +257,7 @@ void Node::setNodeValue(const String& aNewNodeValue)
         nsNode->SetNodeValue(aNewNodeValue.getConstNSString());
 }
 
-/**
+/*
  * Call nsIDOMNode::insertBefore to insert a new child before an existing child.
  *
  * @param aNewChild the new child to insert
@@ -275,7 +279,7 @@ Node* Node::insertBefore(Node* aNewChild, Node* aRefChild)
         return NULL;
 }
 
-/**
+/*
  * Call nsIDOMNode::ReplaceChild to replace an existing child with a new child.
  *
  * @param aNewChild the new child to insert
@@ -297,7 +301,7 @@ Node* Node::replaceChild(Node* aNewChild, Node* aOldChild)
         return NULL;
 }
 
-/**
+/*
  * Call nsIDOMNode::RemoveChild to remove a child.
  *
  * @param aOldChild the child to remove
@@ -317,7 +321,7 @@ Node* Node::removeChild(Node* aOldChild)
         return NULL;
 }
 
-/**
+/*
  * Call nsIDOMNode::AppendChild to append a child to the current node.
  *
  * @param aNewChild the child to append
@@ -337,7 +341,7 @@ Node* Node::appendChild(Node* aNewChild)
         return NULL;
 }
 
-/**
+/*
  * Call nsIDOMNode::CloneNode to clone this node.
  *
  * @param aDeep recursive cloning?
@@ -359,7 +363,7 @@ Node* Node::cloneNode(MBool aDeep, Node* aDest)
         return NULL;
 }
 
-/**
+/*
  * Call nsIDOMNode::HasChildNodes to return if this node has children.
  *
  * @return boolean value that says if this node has children
@@ -374,12 +378,121 @@ MBool Node::hasChildNodes() const
     return returnValue;
 }
 
-/**
+/*
+ * Returns the Namespace URI
+ * uses the Mozilla dom
+ * Intoduced in DOM2
+ */
+String Node::getNamespaceURI()
+{
+    NSI_FROM_TX(Node)
+    String uri;
+    if (nsNode)
+        nsNode->GetNamespaceURI(uri.getNSString());
+    return uri;
+}
+
+/*
+ * Returns the local name atomized
+ *
+ * @return the node's localname atom
+ */
+MBool Node::getLocalName(txAtom** aLocalName)
+{
+    if (!aLocalName)
+        return MB_FALSE;
+    *aLocalName = 0;
+    return MB_TRUE;
+}
+
+/*
+ * Returns the namespace ID of the node
+ *
+ * @return the node's namespace ID
+ */
+PRInt32 Node::getNamespaceID()
+{
+    return namespaceID;
+}
+
+/*
+ * Returns the parent node according to the XPath datamodel
+ */
+Node* Node::getXPathParent()
+{
+    return getParentNode();
+}
+
+/*
+ * Returns the namespace ID associated with the given prefix in the context
+ * of this node.
+ *
+ * Creating our own implementation until content provides us with a way
+ * to do it, that is a way that jst doesn't want to kill.
+ *
+ * @param prefix atom for prefix to look up
+ * @return namespace ID for prefix
+ */
+PRInt32 Node::lookupNamespaceID(txAtom* prefix)
+{
+    NSI_FROM_TX(Node)
+    nsresult rv;
+    
+    if (!nsNode)
+        return kNameSpaceID_Unknown;
+    if (prefix == txXMLAtoms::XMLNSPrefix)
+        return kNameSpaceID_XMLNS;
+    if (prefix == txXMLAtoms::XMLPrefix)
+        return kNameSpaceID_XML;
+
+    nsCOMPtr<nsIContent> elem;
+    unsigned short nodeType = 0;
+    nsNode->GetNodeType(&nodeType);
+    switch(nodeType) {
+        case Node::ATTRIBUTE_NODE :
+        {
+            nsCOMPtr<nsIDOMElement> owner;
+            nsCOMPtr<nsIDOMAttr> attr(do_QueryInterface(nsNode));
+
+            rv = attr->GetOwnerElement(getter_AddRefs(owner));
+            NS_ENSURE_SUCCESS(rv, kNameSpaceID_Unknown);
+                
+            elem = do_QueryInterface(owner);
+            break;
+        }
+        default:
+            //XXX Namespace: we have to handle namespace nodes here
+            elem = do_QueryInterface(nsNode);
+    }
+
+    while (elem) {
+        nsAutoString uri;
+        rv = elem->GetAttr(kNameSpaceID_XMLNS, prefix, uri);
+        NS_ENSURE_SUCCESS(rv, kNameSpaceID_Unknown);
+        if (rv != NS_CONTENT_ATTR_NOT_THERE) {
+            PRInt32 nsId;
+            NS_ASSERTION(ownerDocument->nsNSManager,
+                         "owner document lacks namespace manager");
+            if (!ownerDocument->nsNSManager)
+                return kNameSpaceID_Unknown;
+            ownerDocument->nsNSManager->RegisterNameSpace(uri, nsId);
+            return nsId;
+        }
+
+        nsCOMPtr<nsIContent> temp(elem);
+        rv = temp->GetParent(*getter_AddRefs(elem));
+        NS_ENSURE_SUCCESS(rv, kNameSpaceID_Unknown);
+    }
+    // Error, namespace not found
+    return kNameSpaceID_Unknown;
+}
+
+/*
  * Returns the base URI of the node. Acccounts for xml:base
  * attributes.
  *
  * @return base URI for the node
-**/
+ */
 String Node::getBaseURI()
 {
     NSI_FROM_TX(Node)
@@ -390,12 +503,4 @@ String Node::getBaseURI()
         nsDOM3Node->GetBaseURI(url.getNSString());
 
     return url;
-}
-
-/*
- * Returns the parent node according to the XPath datamodel
- */
-Node* Node::getXPathParent()
-{
-    return getParentNode();
 }

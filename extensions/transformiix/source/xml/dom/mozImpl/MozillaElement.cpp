@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -22,13 +23,15 @@
  *
  */
 
-/* Implementation of the wrapper class to convert the Mozilla nsIDOMElement
-   interface into a TransforMIIX Element interface.
-*/
+/* 
+ * Implementation of the wrapper class to convert the Mozilla nsIDOMElement
+ * interface into a TransforMiiX Element interface.
+ */
 
 #include "mozilladom.h"
+#include "nsIContent.h"
 
-/**
+/*
  * Construct a wrapper with the specified Mozilla object and document owner.
  *
  * @param aElement the nsIDOMElement you want to wrap
@@ -37,16 +40,20 @@
 Element::Element(nsIDOMElement* aElement, Document* aOwner) :
         Node(aElement, aOwner)
 {
+    nsCOMPtr<nsIContent> cont(do_QueryInterface(aElement));
+    NS_ASSERTION(cont, "Element doesn't implement nsIContent");
+    if (cont)
+        cont->GetNameSpaceID(namespaceID);
 }
 
-/**
+/*
  * Destructor
  */
 Element::~Element()
 {
 }
 
-/**
+/*
  * Call nsIDOMElement::GetTagName to retrieve the tag name for this element.
  *
  * @return the element's tag name
@@ -61,7 +68,7 @@ const String& Element::getTagName()
     return nodeName;
 }
 
-/**
+/*
  * Get the attribute node for the specified name and return it's value or the
  * null string if the attribute node doesn't exist.
  *
@@ -78,7 +85,7 @@ const String& Element::getAttribute(const String& aName)
     return NULL_STRING;
 }
 
-/**
+/*
  * Call nsIDOMElement::SetAttribute to set an attribute to the specified value.
  *
  * @param aName the name of the attribute you want to set
@@ -92,7 +99,7 @@ void Element::setAttribute(const String& aName, const String& aValue)
         nsElement->SetAttribute(aName.getConstNSString(), aValue.getConstNSString());
 }
 
-/**
+/*
  * Call nsIDOMElement::SetAttributeNS to set an attribute to the specified
  * value.
  *
@@ -111,7 +118,7 @@ void Element::setAttributeNS(const String& aNamespaceURI, const String& aName,
                                   aValue.getConstNSString());
 }
 
-/**
+/*
  * Call nsIDOMElement::RemoveAttribute to remove an attribute. We need to make
  * this call a bit more complicated than usual because we want to make sure
  * we remove the attribute wrapper from the document's wrapper hash table.
@@ -141,7 +148,7 @@ void Element::removeAttribute(const String& aName)
     }
 }
 
-/**
+/*
  * Call nsIDOMElement::GetAttributeNode to get an nsIDOMAttr. If successful,
  * refer to the owner document for an attribute wrapper.
  *
@@ -160,7 +167,27 @@ Attr* Element::getAttributeNode(const String& aName)
     return NULL;
 }
 
-/**
+/*
+ * Call nsIContent::GetAttr for the localname and nsID.
+ */
+MBool Element::getAttr(txAtom* aLocalName, PRInt32 aNSID,
+                       String& aValue)
+{
+    aValue.clear();
+    nsCOMPtr<nsIContent> cont(do_QueryInterface(nsObject));
+    NS_ASSERTION(cont, "Element doesn't implement nsIContent");
+    if (!cont)
+        return MB_FALSE;
+    nsresult rv;
+    rv = cont->GetAttr(aNSID, aLocalName, aValue.getNSString());
+    NS_ENSURE_SUCCESS(rv, MB_FALSE);
+    if (rv != NS_CONTENT_ATTR_NOT_THERE)
+        return MB_TRUE;
+    return MB_FALSE;
+}
+
+
+/*
  * Call nsIDOMElement::SetAttributeNode passing it the nsIDOMAttr object wrapped
  * by the aNewAttr parameter.
  *
@@ -180,7 +207,7 @@ Attr* Element::setAttributeNode(Attr* aNewAttr)
     return NULL;
 }
 
-/**
+/*
  * Call nsIDOMElement::RemoveAttributeNode, then refer to the owner document to
  * remove it from its hash table.  The caller is then responsible for destroying
  * the wrapper.
@@ -197,8 +224,7 @@ Attr* Element::removeAttributeNode(Attr* aOldAttr)
     Attr* attrWrapper = NULL;
 
     if (NS_SUCCEEDED(nsElement->RemoveAttributeNode(oldAttr,
-            getter_AddRefs(removedAttr))))
-    {
+            getter_AddRefs(removedAttr)))) {
         attrWrapper = (Attr*)ownerDocument->removeWrapper(aOldAttr);
         if (!attrWrapper)
             attrWrapper =  new Attr(removedAttr, ownerDocument);
@@ -207,7 +233,7 @@ Attr* Element::removeAttributeNode(Attr* aOldAttr)
     return NULL;
 }
 
-/**
+/*
  * Call nsIDOMElement::GetElementsByTagName. If successful, refer to the owner
  * document for a Nodelist wrapper.
  *
@@ -226,7 +252,7 @@ NodeList* Element::getElementsByTagName(const String& aName)
     return NULL;
 }
 
-/**
+/*
  * Simply call nsIDOMElement::Normalize().
  */
 void Element::normalize()
@@ -235,4 +261,20 @@ void Element::normalize()
 
     if (nsElement)
         nsElement->Normalize(); 
+}
+
+/*
+ * Returns the local name atomized
+ *
+ * @return the node's localname atom
+ */
+MBool Element::getLocalName(txAtom** aLocalName)
+{
+    NS_ENSURE_TRUE(aLocalName, MB_FALSE);
+    nsCOMPtr<nsIContent> cont(do_QueryInterface(nsObject));
+    NS_ASSERTION(cont, "Element doesn't implement nsIContent");
+    if (!cont)
+        return MB_FALSE;
+    cont->GetTag(*aLocalName);
+    return MB_TRUE;
 }

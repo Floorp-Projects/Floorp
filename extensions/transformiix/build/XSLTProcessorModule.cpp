@@ -68,6 +68,40 @@ RegisterTransformiix(nsIComponentManager *aCompMgr,
   return rv;
 }
 
+// Perform our one-time intialization for this module
+static PRBool gInitialized = PR_FALSE;
+
+PR_STATIC_CALLBACK(nsresult)
+Initialize(nsIModule* self)
+{
+  NS_PRECONDITION(!gInitialized, "module already initialized");
+  if (gInitialized)
+    return NS_OK;
+
+  gInitialized = PR_TRUE;
+
+  txXMLAtoms::XMLPrefix = NS_NewAtom("xml");
+  NS_ENSURE_TRUE(txXMLAtoms::XMLPrefix, NS_ERROR_OUT_OF_MEMORY);
+  txXMLAtoms::XMLNSPrefix = NS_NewAtom("xmlns");
+  NS_ENSURE_TRUE(txXMLAtoms::XMLNSPrefix, NS_ERROR_OUT_OF_MEMORY);
+
+  return NS_OK;
+}
+
+// Shutdown this module, releasing all of the module resources
+PR_STATIC_CALLBACK(void)
+Shutdown(nsIModule* self)
+{
+  NS_PRECONDITION(gInitialized, "module not initialized");
+  if (! gInitialized)
+    return;
+
+  gInitialized = PR_FALSE;
+
+  NS_IF_RELEASE(txXMLAtoms::XMLPrefix);
+  NS_IF_RELEASE(txXMLAtoms::XMLNSPrefix);
+}
+
 // Component Table
 static nsModuleComponentInfo components[] = {
     { "Transformiix XSLT Processor",
@@ -85,4 +119,5 @@ static nsModuleComponentInfo components[] = {
       nsSyncLoaderConstructor }
 };
 
-NS_IMPL_NSGETMODULE(TransformiixModule, components)
+NS_IMPL_NSGETMODULE_WITH_CTOR_DTOR(TransformiixModule, components,
+				   Initialize, Shutdown)

@@ -1,4 +1,5 @@
-/*
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * (C) Copyright The MITRE Corporation 1999  All rights reserved.
  *
  * The contents of this file are subject to the Mozilla Public License
@@ -22,14 +23,16 @@
  *
  */
 
-/* Implementation of the wrapper class to convert the Mozilla
-   nsIDOMProcessingInstruction interface into a TransforMIIX
-   ProcessingInstruction interface.
-*/
+/*
+ * Implementation of the wrapper class to convert the Mozilla
+ * nsIDOMProcessingInstruction interface into a TransforMiiX
+ * ProcessingInstruction interface.
+ */
 
 #include "mozilladom.h"
+#include "nsIAtom.h"
 
-/**
+/*
  * Construct a wrapper with the specified Mozilla object and document owner.
  *
  * @param aProcInstr the nsIDOMProcessingInstruction you want to wrap
@@ -42,14 +45,14 @@ ProcessingInstruction::ProcessingInstruction(
 {
 }
 
-/**
+/*
  * Destructor
  */
 ProcessingInstruction::~ProcessingInstruction()
 {
 }
 
-/**
+/*
  * Call nsIDOMProcessingInstruction::GetTarget to retrieve the target of the
  * processing instruction.
  *
@@ -65,7 +68,7 @@ const String& ProcessingInstruction::getTarget()
     return target;
 }
 
-/**
+/*
  * Call nsIDOMProcessingInstruction::GetData to retrieve the data of the
  * processing instruction.
  *
@@ -81,7 +84,7 @@ const String& ProcessingInstruction::getData()
     return data;
 }
 
-/**
+/*
  * Call nsIDOMProcessingInstruction::SetData to set the data of the
  * processing instruction.
  *
@@ -93,4 +96,23 @@ void ProcessingInstruction::setData(const String& aData)
 
     if (nsProcessingInstruction)
         nsProcessingInstruction->SetData(aData.getConstNSString());
+}
+
+/*
+ * Returns the local name atomized
+ *
+ * @return the node's localname atom
+ */
+MBool ProcessingInstruction::getLocalName(txAtom** aLocalName)
+{
+    if (!aLocalName)
+        return MB_FALSE;
+    NSI_FROM_TX(ProcessingInstruction)
+    if (!nsProcessingInstruction)
+        return MB_FALSE;
+    nsAutoString target;
+    nsProcessingInstruction->GetNodeName(target);
+    *aLocalName = NS_NewAtom(target);
+    NS_ENSURE_TRUE(*aLocalName, MB_FALSE);
+    return MB_TRUE;
 }
