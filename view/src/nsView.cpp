@@ -825,8 +825,20 @@ NS_IMETHODIMP nsView :: IgnoreSetPosition(PRBool aShouldIgnore)
 }
 // XXX End Temporary fix for Bug #19416
 
-NS_IMETHODIMP nsView :: SetPosition(nscoord x, nscoord y)
+NS_IMETHODIMP nsView :: SetPosition(nscoord aX, nscoord aY)
 {
+  nscoord x = aX;
+  nscoord y = aY;
+  if (IsRoot()) {
+    // Add view manager's coordinate offset to the root view
+    // This allows the view manager to offset it's coordinate space
+    // while allowing layout to assume it's coordinate space origin is (0,0)
+    nscoord offsetX;
+    nscoord offsetY;
+    mViewManager->GetOffset(&offsetX, &offsetY);
+    x += offsetX;
+    y += offsetY;
+  }
   mBounds.MoveTo(x, y);
 
   // XXX Start Temporary fix for Bug #19416
@@ -858,6 +870,7 @@ NS_IMETHODIMP nsView :: SetPosition(nscoord x, nscoord y)
 
 NS_IMETHODIMP nsView :: GetPosition(nscoord *x, nscoord *y) const
 {
+
   nsIView *rootView;
 
   mViewManager->GetRootView(rootView);
@@ -866,9 +879,12 @@ NS_IMETHODIMP nsView :: GetPosition(nscoord *x, nscoord *y) const
     *x = *y = 0;
   else
   {
+
     *x = mBounds.x;
     *y = mBounds.y;
+
   }
+
 
   return NS_OK;
 }
@@ -1510,4 +1526,17 @@ NS_IMETHODIMP nsView :: GetExtents(nsRect *aExtents)
   calc_extents(this, aExtents, 0, 0);
 
   return NS_OK;
+}
+
+PRBool nsView :: IsRoot()
+{
+nsIView *rootView;
+
+  NS_ASSERTION(mViewManager != nsnull," View manager is null in nsView::IsRoot()");
+  mViewManager->GetRootView(rootView);
+  if (rootView == this) {
+   return PR_TRUE;
+  }
+  
+  return PR_FALSE;
 }
