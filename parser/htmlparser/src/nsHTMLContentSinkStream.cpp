@@ -1068,7 +1068,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
           if (start < 0)
             start = 0;
           
-          indx = str.Find(' ',start);
+          indx = str.FindChar(' ',PR_FALSE,start);
 
           // if there is no break than just add it
           if (indx == kNotFound)
