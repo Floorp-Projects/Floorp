@@ -1247,7 +1247,7 @@ BookmarksService::PerformBookmarkDrop(BookmarkItem* parent, int index, NSArray* 
       draggedParent->IndexOf(draggedNode, existingIndex);
     
     //  if the deleted nodes parent and the proposed parents are equal
-    //  and if the deleted point is eariler in the list than the inserted point
+    //  and if the deleted point is earlier in the list than the inserted point
     if (proposedParent == draggedParent && existingIndex < index) {
       index--;  //  if so, move the inserted point up one to compensate
     }
