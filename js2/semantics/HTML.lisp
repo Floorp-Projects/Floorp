@@ -422,6 +422,8 @@
     ((:empty-10 2) (:script "document.write(U_empty)"))                 ;#x2205
     ((:intersection-10 1) (:script "document.write(U_cap)"))            ;#x2229
     ((:union-10 1) (:script "document.write(U_cup)"))                   ;#x222A
+    ((:subset-10 2) (:script "document.write(U_sub)"))                  ;#x2282
+    ((:subset-eq-10 2) (:script "document.write(U_sube)"))              ;#x2286
     ((:member-10 2) (:script "document.write(U_isin)"))                 ;#x2208
     ((:not-member-10 2) (:script "document.write(U_notin)"))            ;#x2209
     ((:label-assign-10 2) (:script "document.write(U_lArr)"))           ;#x21D0
