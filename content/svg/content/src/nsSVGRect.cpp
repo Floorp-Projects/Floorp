@@ -52,7 +52,7 @@ class nsSVGRect : public nsIDOMSVGRect,
                   public nsSVGValue
 {
 public:
-  nsSVGRect(float x, float y, float w, float h); // addrefs
+  nsSVGRect(float x=0.0f, float y=0.0f, float w=0.0f, float h=0.0f); // addrefs
   
   // nsISupports interface:
   NS_DECL_ISUPPORTS
@@ -72,7 +72,7 @@ protected:
 //----------------------------------------------------------------------
 // implementation:
 
-nsSVGRect::nsSVGRect(float x=0.0f, float y=0.0f, float w=0.0f, float h=0.0f)
+nsSVGRect::nsSVGRect(float x, float y, float w, float h)
     : mRefCnt(1), mX(x), mY(y), mWidth(w), mHeight(h)
 {
 }
