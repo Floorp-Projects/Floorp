@@ -558,6 +558,13 @@ nsImageBoxFrame::DidSetStyleContext( nsIPresContext* aPresContext )
   if (mUseSrcAttr || mSuppressStyleCheck)
     return NS_OK; // No more work required, since the image isn't specified by style.
 
+  // If we're using a native theme implementation, we shouldn't draw anything.
+  const nsStyleDisplay* disp =
+    (const nsStyleDisplay*)mStyleContext->GetStyleData(eStyleStruct_Display);
+  if (disp->mAppearance && nsBox::gTheme && 
+      nsBox::gTheme->ThemeSupportsWidget(nsnull, disp->mAppearance))
+    return NS_OK;
+
   // If list-style-image changes, we have a new image.
   nsAutoString newSrc;
   if (myList->mListStyleImage.Equals(mSrc))
