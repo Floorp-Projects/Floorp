@@ -1499,7 +1499,10 @@ nsStandardURL::Equals(nsIURI *unknownOther, PRBool *result)
         // really failures, so propagate them to caller.
         *result = PR_FALSE;
 
-        if (!SegmentIs(mScheme, other->mSpec.get(), other->mScheme)) {
+        if (!SegmentIs(mScheme, other->mSpec.get(), other->mScheme) ||
+            !SegmentIs(mRef, other->mSpec.get(), other->mRef) ||
+            !SegmentIs(mParam, other->mSpec.get(), other->mParam) ||
+            !SegmentIs(mQuery, other->mSpec.get(), other->mQuery)) {
             // No need to compare files -- these are different beasties
             return NS_OK;
         }
