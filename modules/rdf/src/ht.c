@@ -32,7 +32,9 @@
 #include "rdfparse.h"
 #include "remstore.h"
 #include "ht.h"
+#ifdef	XP_MAC
 #include "allxpstr.h"
+#endif
 
 	/* globals */
 HT_Icon			urlList = NULL;
