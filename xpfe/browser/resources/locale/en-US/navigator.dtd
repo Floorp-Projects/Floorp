@@ -198,4 +198,7 @@
 
 <!ENTITY historyCmd.label           "History">  
 <!ENTITY historyCmd.accesskey       "i">
-<!ENTITY history.commandKey       "h">
+<!ENTITY history.commandKey         "h">
+
+<!ENTITY popupIcon.tooltiptext      "Unblock this site's popups">
+
