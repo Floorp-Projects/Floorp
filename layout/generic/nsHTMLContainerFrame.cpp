@@ -337,8 +337,7 @@ nsHTMLContainerFrame::CreateNextInFlow(nsIPresContext* aPresContext,
 }
 
 static nsresult
-ReparentFrameViewTo(nsIPresContext* aPresContext,
-                    nsIFrame*       aFrame,
+ReparentFrameViewTo(nsIFrame*       aFrame,
                     nsIViewManager* aViewManager,
                     nsIView*        aNewParentView,
                     nsIView*        aOldParentView)
@@ -369,7 +368,7 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
       // a view
       nsIFrame* childFrame = aFrame->GetFirstChild(listName);
       for (; childFrame; childFrame = childFrame->GetNextSibling()) {
-        ReparentFrameViewTo(aPresContext, childFrame, aViewManager,
+        ReparentFrameViewTo(childFrame, aViewManager,
                             aNewParentView, aOldParentView);
       }
       listName = aFrame->GetAdditionalChildListName(listIndex++);
@@ -441,7 +440,7 @@ nsHTMLContainerFrame::ReparentFrameView(nsIPresContext* aPresContext,
   // anything
   if (oldParentView != newParentView) {
     // They're not so we need to reparent any child views
-    return ReparentFrameViewTo(aPresContext, aChildFrame, oldParentView->GetViewManager(), newParentView,
+    return ReparentFrameViewTo(aChildFrame, oldParentView->GetViewManager(), newParentView,
                                oldParentView);
   }
 
@@ -504,7 +503,7 @@ nsHTMLContainerFrame::ReparentFrameViewList(nsIPresContext* aPresContext,
 
     // They're not so we need to reparent any child views
     for (nsIFrame* f = aChildFrameList; f; f = f->GetNextSibling()) {
-      ReparentFrameViewTo(aPresContext, f, viewManager, newParentView,
+      ReparentFrameViewTo(f, viewManager, newParentView,
                           oldParentView);
     }
   }
@@ -577,6 +576,13 @@ nsHTMLContainerFrame::CreateViewForFrame(nsIFrame* aFrame,
   if (NS_STYLE_POSITION_FIXED == display->mPosition) {
     view->CreateWidget(kCChildCID);
   }
+
+  // Reparent views on any child frames (or their descendants) to this
+  // view. We can just call ReparentFrameViewTo on this frame because
+  // we know this frame has no view, so it will crawl the children. Also,
+  // we know that any descendants with views must have 'parentView' as their
+  // parent view.
+  ReparentFrameViewTo(aFrame, viewManager, view, parentView);
 
   // Remember our view
   aFrame->SetView(view);
