@@ -81,11 +81,11 @@ toolbar[mode="text"] .toolbarbutton-text {
 
 #button-address {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar.png");
-  -moz-image-region: rect(0px 60px 30px 30px);
+  -moz-image-region: rect(0px 60px 30px 30px) !important;
 }
 
 #button-address:hover {
-  -moz-image-region: rect(30px 60px 60px 30px);
+  -moz-image-region: rect(30px 60px 60px 30px) !important;
 } 
 
 #button-address[disabled="true"] {
@@ -213,11 +213,11 @@ toolbar[iconsize="small"] #button-send[disabled] {
 
 toolbar[iconsize="small"] #button-address {
   list-style-image: url("chrome://messenger/skin/messengercompose/compose-toolbar-small.png");
-  -moz-image-region: rect(0px 40px 20px 20px);
+  -moz-image-region: rect(0px 40px 20px 20px) !important;
 }
 
 toolbar[iconsize="small"] #button-address:hover {
-  -moz-image-region: rect(20px 40px 40px 20px);
+  -moz-image-region: rect(20px 40px 40px 20px) !important;
 } 
 
 toolbar[iconsize="small"] #button-address[disabled] {
