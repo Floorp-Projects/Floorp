@@ -171,13 +171,14 @@ public:
   NS_IMETHOD  GetStyleData(nsStyleStructID aSID, const nsStyleStruct*& aStyleStruct) const = 0;
 
   /**
-   * Re-resolve style context and either reset or re-resolve children
-   * This is only used when style context parentage has to change for reflow
-   * purposes. aNewParentContext may be null, in which case the old parent 
-   * will be used
+   * Re-resolve style context and either reset or re-resolve children.
+   * This is called in response to style changes that require context
+   * re-resolution.
+   * This is also used when style context parentage has to change for 
+   * reflow purposes. 
    */
   NS_IMETHOD  ReResolveStyleContext(nsIPresContext* aPresContext,
-                                    nsIStyleContext* aNewParentContext) = 0;
+                                    nsIStyleContext* aParentContext) = 0;
 
   /**
    * Accessor functions for geometric and content parent.

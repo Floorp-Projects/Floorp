@@ -60,9 +60,10 @@ public:
   NS_IMETHOD  FirstChild(nsIFrame*& aFirstChild) const;
 
   // re-resolve style context for self and children as necessary
-  // Subclasses need to override if they add child lists
+  // Subclasses need to override if they add child lists or
+  // if they alter normal style context inheritance
   NS_IMETHOD  ReResolveStyleContext(nsIPresContext* aPresContext,
-                                    nsIStyleContext* aNewParentContext);
+                                    nsIStyleContext* aParentContext);
 
   // Debugging
   NS_IMETHOD  List(FILE* out = stdout, PRInt32 aIndent = 0, nsIListFilter *aFilter = nsnull) const;

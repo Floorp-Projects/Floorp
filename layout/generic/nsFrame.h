@@ -122,7 +122,7 @@ public:
   NS_IMETHOD  GetStyleData(nsStyleStructID aSID,
                            const nsStyleStruct*& aStyleStruct) const;
   NS_IMETHOD  ReResolveStyleContext(nsIPresContext* aPresContext,
-                                    nsIStyleContext* aNewParentContext);
+                                    nsIStyleContext* aParentContext);
   NS_IMETHOD  GetContentParent(nsIFrame*& aParent) const;
   NS_IMETHOD  SetContentParent(const nsIFrame* aParent);
   NS_IMETHOD  GetGeometricParent(nsIFrame*& aParent) const;
