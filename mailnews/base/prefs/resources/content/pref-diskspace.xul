@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://global/skin/dialogs.css" type="text/css"?>
+<?xml-stylesheet href="chrome://pref/skin/pref.css" type="text/css"?>
+
+<!DOCTYPE window
+[
+<!ENTITY window.title "Disk Space">
+<!ENTITY pane.title "Disk Space">
+<!ENTITY allMsg.label "All Messages">
+<!ENTITY storeMsgLimit.label "Do not store messages locally that are larger than">
+<!ENTITY autoCompact.label "Automatically compact folders when it will save over">
+<!ENTITY kb.label " kB">
+<!ENTITY newgroupMsgOnly.label " Newsgroup Messages Only">
+<!ENTITY whenToClean.label "When it's time to clean up messages:">
+<!ENTITY keepMsgs.label "Keep messages which have arrived within the past">
+<!ENTITY days.label "days">
+<!ENTITY keepAllMsg.label "Keep all messages">
+<!ENTITY keepTheNewest.label "Keep the newest">
+<!ENTITY messages.label "messages">
+<!ENTITY keepUnread.label "Keep only unread messages">
+<!ENTITY removeMsg.label "Remove message bodies only older than">
+]>
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+		onload="StartUp('Mailnews-Disk Space')" >
+
+<html:script language="javascript" src="chrome://pref/content/PrefsWindow.js"/>
+
+<html:div flex="100%">
+	<html:div id="top">
+		<html:span id="lefttext">&pane.title;</html:span>
+	</html:div>
+
+<html:br/>
+&allMsg.label;
+<html:form>
+	<html:table>
+		<html:tr><html:td>
+			<html:input type="checkbox" id="pref:0:bool:mail.limit_message_size"/>&storeMsgLimit.label;
+			<html:input name="maxsize" id="pref:string:mail.max_size" size="4"/>&kb.label;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input type="checkbox" id="pref:0:bool:mail.prompt_purge_threshhold"/>&autoCompact.label;
+			<html:input name="purgesize" id="pref:string:mail.purge_threshhold" size="4"/>&kb.label;
+		</html:td></html:tr>
+	</html:table>
+</html:form>
+ 
+<html:br/>
+&newgroupMsgOnly.label;
+<html:table>
+		<html:tr><html:td><html:label>&whenToClean.label;</html:label></html:td></html:tr>
+		<html:tr><html:td>
+			<html:input name="keepmsg" type="radio" id="pref:1:int:news.keep.method"/>&keepMsgs.label;
+			<html:input name="keepdays" id="pref:string:news.keep.days" size="4"/>&days.label;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input name="keepmsg" type="radio" id="pref:0:int:news.keep.method" checked="true"/>&keepAllMsg.label;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input name="keepmsg" type="radio" id="pref:2:int:news.keep.method"/>&keepTheNewest.label;
+			<html:input name="keepmsgcount" id="pref:string:news.keep.count" size="4"/>&messages.label;
+		</html:td></html:tr>
+		<html:tr><html:td> </html:td></html:tr>
+		<html:tr><html:td> </html:td></html:tr>
+		<html:tr><html:td>
+			<html:input type="checkbox" id="pref:0:bool:news.keep.only_unread"/>&keepUnread.label;
+		</html:td></html:tr>
+		<html:tr><html:td>
+			<html:input type="checkbox" id="pref:0:bool:news.remove_bodies.by_age"/>&removeMsg.label;
+			<html:input name="removedays" id="pref:string:news.remove_bodies.days" size="4"/>&days.label;
+		</html:td></html:tr>
+</html:table>
+
+</html:div>
+</window>
