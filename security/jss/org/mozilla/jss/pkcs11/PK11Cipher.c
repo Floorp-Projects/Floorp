@@ -98,9 +98,7 @@ Java_org_mozilla_jss_pkcs11_PK11Cipher_initContext
     /* HACK! The previous function doesn't know the key size, so it can't
      * set the RC2 effective key length correctly.  We have to set it by
      * hand in this case. */
-    switch(mech) {
-      case CKM_RC2_CBC:
-      case CKM_RC2_CBC_PAD:
+    if( mech == CKM_RC2_CBC || mech == CKM_RC2_CBC_PAD ) {
         ((CK_RC2_CBC_PARAMS*)param->data)->ulEffectiveBits =
                 PK11_GetKeyStrength(key, NULL);
     }
