@@ -800,8 +800,12 @@ sub SelectVisible {
         # cause all rows to be returned! We work arround this by adding an not isnull
         # test to the JOINed cc table. See http://lists.mysql.com/cgi-ez/ezmlm-cgi?9:mss:11417
         # Its needed, even though it shouldn't be
-        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid) 
-                   OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))";
+        $replace .= "OR (bugs.reporter_accessible = 1 AND bugs.reporter = $userid)" .
+          " OR (bugs.cclist_accessible = 1 AND selectVisible_cc.who = $userid AND not isnull(selectVisible_cc.who))" .
+          " OR (bugs.assigned_to = $userid)";
+        if (Param("useqacontact")) {
+            $replace .= " OR (bugs.qa_contact = $userid)";
+        }
     }
 
     $replace .= ") AND ";
