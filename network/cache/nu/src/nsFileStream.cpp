@@ -65,6 +65,7 @@ PRInt32 nsFileStream::Read(void* o_Buffer, PRUint32 i_Len)
 
 void nsFileStream::Reset()
 {
+	return;
     if (m_pFile)
         PR_Close(m_pFile);
 }

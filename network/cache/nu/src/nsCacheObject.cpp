@@ -15,7 +15,13 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-#include <memory.h>
+
+#ifndef XP_MAC
+#include "memory.h"
+#else
+#include "cstring"
+#endif
+
 #include "prmem.h"
 #include "prprf.h"
 #include "plstr.h"
