@@ -3987,7 +3987,7 @@ nsCSSFrameConstructor::BuildBlockScrollFrame    (nsIPresContext*          aPresC
 {
   // Create an area container for the frame
   nsIFrame* scrolledFrame;
-  NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP);
+  NS_NewAreaFrame(&scrolledFrame, NS_BLOCK_SHRINK_WRAP | NS_BLOCK_MARGIN_ROOT);
 
 
   nsresult rv = BuildScrollFrame(aPresContext, aState, aContent, scrolledFrame, aParentFrame,
