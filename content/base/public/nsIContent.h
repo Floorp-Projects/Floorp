@@ -572,7 +572,7 @@ protected:
   typedef long PtrBits;
 
   // Subclasses may use the low two bits of mParentPtrBits to store other data
-  static const int kParentBitMask = ((PtrBits) 0x3);
+  enum { kParentBitMask = 0x3 };
 
   nsIDocument *mDocument;
   PtrBits      mParentPtrBits;
