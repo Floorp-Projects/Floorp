@@ -56,7 +56,7 @@ class nsAppCoresManager : public nsIScriptObjectOwner, public nsIDOMAppCoresMana
 
   private:
     void        *mScriptObject;
-    nsVoidArray  mList;
+    static nsVoidArray  mList;
 
         
 };
