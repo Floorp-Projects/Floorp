@@ -527,8 +527,6 @@ nsHTMLFramesetFrame::ParseRowColSpec(nsString& aSpec, PRInt32 aMaxNumValues,
   static const PRUnichar PERCENT('%');
   static const PRUnichar COMMA(',');
 
-  aSpec.Trim(" \n\r\t"); // remove leading and trailing whitespace  
-  
   // Count the commas 
   PRInt32 commaX = aSpec.Find(COMMA);
   PRInt32 count = 1;
