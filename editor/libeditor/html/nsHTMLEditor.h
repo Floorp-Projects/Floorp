@@ -593,6 +593,7 @@ protected:
   nsCOMPtr<nsIAtom> mItalicAtom;
   nsCOMPtr<nsIAtom> mUnderlineAtom;
   nsCOMPtr<nsIAtom> mFontAtom;
+  nsCOMPtr<nsIAtom> mLinkAtom;
   nsCOMPtr<nsIDOMNode> mCachedNode;
   
   PRBool mCachedBoldStyle;

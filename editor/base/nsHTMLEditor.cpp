@@ -224,6 +224,7 @@ nsHTMLEditor::nsHTMLEditor()
   mItalicAtom = getter_AddRefs(NS_NewAtom("i"));
   mUnderlineAtom = getter_AddRefs(NS_NewAtom("u"));
   mFontAtom = getter_AddRefs(NS_NewAtom("font"));
+  mLinkAtom = getter_AddRefs(NS_NewAtom("a"));
 
   if (!gTypingTxnName)
     gTypingTxnName = NS_NewAtom("Typing");
@@ -1248,7 +1249,38 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
     if (PR_TRUE==isCollapsed)
     {
       // manipulating text attributes on a collapsed selection only sets state for the next text insertion
-      SetTypeInStateForProperty(*mTypeInState, aProperty, aAttribute, nsnull);
+      // But only if it's a property for which we have TypeInState!
+      if ( (aProperty == mBoldAtom.get()) || 
+           (aProperty == mItalicAtom.get()) || 
+           (aProperty == mUnderlineAtom.get()) )
+      {
+        SetTypeInStateForProperty(*mTypeInState, aProperty, aAttribute, nsnull);
+      }
+      else if (aProperty == mLinkAtom.get())
+      {
+        // a hack for links.  The user is trying to kill the link "style" where
+        // they are typing.  We need to split up through any link elements above the
+        // collapsed insertion point.
+        nsCOMPtr<nsIDOMNode> selNode, tmpNode, parent;
+        PRInt32 selOffset, outOffset;
+        result = GetStartNodeAndOffset(selection, &selNode, &selOffset);
+        if (NS_FAILED(result)) return result;
+        tmpNode = selNode;
+        while (tmpNode)
+        {
+          if (nsHTMLEditUtils::IsBody(tmpNode)) break;
+          if (IsLinkNode(tmpNode))
+          {
+            result = SplitNodeDeep(tmpNode, selNode, selOffset, &outOffset);
+            if (NS_FAILED(result)) return result;
+            tmpNode->GetParentNode(getter_AddRefs(parent));
+            selection->Collapse(parent, outOffset);
+            break;
+          }
+          tmpNode->GetParentNode(getter_AddRefs(parent));
+          tmpNode = parent;
+        }
+      }
     }
     else
     {
