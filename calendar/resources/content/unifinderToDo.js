@@ -282,6 +282,7 @@ var toDoTreeView =
    rowCount : gEventArray.length,
    selectedColumn : null,
    sortDirection : null,
+   sortStartedTime : new Date().getTime(), // updated just before sort
 
    isContainer : function(){return false;},
    // By getCellProperties, the properties defined with 
@@ -372,7 +373,9 @@ var toDoTreeView =
       }
       element.setAttribute("sortActive", sortActive);
       element.setAttribute("sortDirection", this.sortDirection);
-      gTaskArray.sort( sortTasks );
+      this.sortStartedTime = new Date().getTime(); // for null dates during sort
+      gTaskArray.sort( compareTasks );
+
       document.getElementById( ToDoUnifinderTreeName ).view = this;
    },
    setTree : function( tree ){this.tree = tree;},
@@ -414,7 +417,7 @@ var toDoTreeView =
    }
 }
 
-function sortTasks( TaskA, TaskB )
+function compareTasks( taskA, taskB )
 {
    var modifier = 1;
    if (toDoTreeView.sortDirection == "descending")
@@ -424,32 +427,66 @@ function sortTasks( TaskA, TaskB )
 
    switch(toDoTreeView.selectedColumn)
    {
-      case "unifinder-todo-tree-col-completed":
-         return( ((TaskA.completed.getTime() > TaskB.completed.getTime()) ? 1 : -1) * modifier );
-      
-      case "unifinder-todo-tree-col-priority":
-         return( ((TaskA.priority > TaskB.priority) ? 1 : -1) * modifier );
+      case "unifinder-todo-tree-col-priority":  // 0-9
+         return compareNumber(taskA.priority, taskB.priority) * modifier;
    
       case "unifinder-todo-tree-col-title":
-         return( ((TaskA.title > TaskB.title) ? 1 : -1) * modifier );
+         return compareString(taskA.title, taskB.title) * modifier;
    
       case "unifinder-todo-tree-col-startdate":
-         return( ((TaskA.start.getTime() > TaskB.start.getTime()) ? 1 : -1) * modifier );
+         return compareDate(taskA.start, taskB.start) * modifier;
    
       case "unifinder-todo-tree-col-duedate":
-         return( ((TaskA.due.getTime() > TaskB.due.getTime()) ? 1 : -1) * modifier );
+         return compareDate(taskA.due, taskB.due) * modifier;
    
+      case "unifinder-todo-tree-col-completed": // checkbox if date exists
       case "unifinder-todo-tree-col-completeddate":
-         return( ((TaskA.completed.getTime() > TaskB.completed.getTime()) ? 1 : -1) * modifier );
+         return compareDate(taskA.completed, taskB.completed) * modifier;
       
       case "unifinder-todo-tree-col-percentcomplete":
-         return( ((TaskA.percent > TaskB.percent) ? 1 : -1) * modifier );
+         return compareNumber(taskA.percent, taskB.percent) * modifier;
    
       case "unifinder-todo-tree-col-categories":
-         return( ((TaskA.categories > TaskB.categories) ? 1 : -1) * modifier );
+         return compareString(taskA.categories, taskB.categories) * modifier;
+
       default:
-         return true;
+         return 0;
    }
+}
+
+function compareString(a, b) {
+  a = nullToEmpty(a);
+  b = nullToEmpty(b);
+  return ((a < b) ? -1 :
+          (a > b) ?  1 : 0);
+}
+
+function nullToEmpty(value) {
+  return value == null? "" : value;
+}
+
+function compareNumber(a, b) {
+  // Number converts a date to msecs since 1970, and converts a null to 0.
+  a = Number(a); 
+  b = Number(b);
+  return ((a < b) ? -1 :      // avoid underflow problems of subtraction
+          (a > b) ?  1 : 0); 
+}
+function compareDate(a, b) {
+  a = dateToMilliseconds(a);
+  b = dateToMilliseconds(b);
+  return ((a < b) ? -1 :      // avoid underflow problems of subtraction
+          (a > b) ?  1 : 0); 
+}
+function dateToMilliseconds(date) {
+  // Treat null/0 as 'now' when sort started, so incomplete tasks stay current.
+  // Time is computed once per sort (just before sort) so sort is stable.
+  if (date == null)
+    return treeView.sortStartedTime;
+  var ms = date.getTime();   // note: date is not a javascript date.
+  if (ms == -62171262000000) // ms value for (0000/00/00 00:00:00)
+    return treeView.sortStartedTime;
+  return ms;
 }
 
 
@@ -494,7 +531,8 @@ function refreshToDoTree( taskArray )
       {
          toDoTreeView.selectedColumn = ArrayOfTreeCols[i].getAttribute( "id" );
          toDoTreeView.sortDirection = ArrayOfTreeCols[i].getAttribute("sortDirection");
-         gTaskArray.sort(sortTasks);
+         toDoTreeView.sortStartedTime = new Date().getTime(); //for null/0 dates
+         gTaskArray.sort(compareTasks);
          break;
       }
    }

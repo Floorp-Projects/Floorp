@@ -471,6 +471,7 @@ var treeView =
    rowCount : gEventArray.length,
    selectedColumn : null,
    sortDirection : null,
+   sortStartedTime : new Date().getTime(), // updated just before sort
 
    isContainer : function(){return false;},
    getCellProperties : function(){return false;},
@@ -517,9 +518,9 @@ var treeView =
       }
       element.setAttribute("sortActive", sortActive);
       element.setAttribute("sortDirection", this.sortDirection);
-      //dump( "\nabout to sort events "+gEventArray.length );
-      gEventArray.sort( sortEvents );
-      //dump( "\nSORTED!");
+      this.sortStartedTime = new Date().getTime(); // for null/0 dates in sort
+      gEventArray.sort( compareEvents );
+
       document.getElementById( UnifinderTreeName ).view = this;
    },
    setTree : function( tree ){this.tree = tree;},
@@ -596,7 +597,7 @@ var treeView =
    }
 }
 
-function sortEvents( EventA, EventB )
+function compareEvents( eventA, eventB )
 {
    var modifier = 1;
    if (treeView.sortDirection == "descending")
@@ -607,26 +608,54 @@ function sortEvents( EventA, EventB )
    switch(treeView.selectedColumn)
    {
       case "unifinder-search-results-tree-col-title":
-         return( ((EventA.title > EventB.title) ? 1 : -1) * modifier );
+         return compareString(eventA.title,  eventB.title) * modifier;
       
       case "unifinder-search-results-tree-col-startdate":
-         return( ((EventA.start.getTime() > EventB.start.getTime()) ? 1 : -1) * modifier );
+         return compareDate(eventA.start, eventB.start) * modifier;
    
       case "unifinder-search-results-tree-col-enddate":
-         return( ((EventA.end.getTime() > EventB.end.getTime()) ? 1 : -1) * modifier );
+         return compareDate(eventA.end, eventB.end) * modifier;
    
       case "unifinder-search-results-tree-col-categories":
-         return( ((EventA.categories > EventB.categories) ? 1 : -1) * modifier );
+         return compareString(eventA.categories, eventB.categories) * modifier;
    
       case "unifinder-search-results-tree-col-location":
-         return( ((EventA.location > EventB.location) ? 1 : -1) * modifier );
+         return compareString(eventA.location, eventB.location) * modifier;
    
       case "unifinder-search-results-tree-col-status":
-         return( ((EventA.status > EventB.status) ? 1 : -1) * modifier );
+         return compareString(eventA.status, eventB.status) * modifier;
 
       default:
-         return true;
+         return 0;
    }
+}
+
+function compareString(a, b) {
+  a = nullToEmpty(a);
+  b = nullToEmpty(b);
+  return ((a < b) ? -1 :
+          (a > b) ?  1 : 0);
+}
+
+function nullToEmpty(value) {
+  return value == null? "" : value;
+}
+
+function compareDate(a, b) {
+  a = dateToMilliseconds(a);
+  b = dateToMilliseconds(b);
+  return ((a < b) ? -1 :      // avoid underflow problems of subtraction
+          (a > b) ?  1 : 0); 
+}
+function dateToMilliseconds(date) {
+  // Treat null/0 as 'now' when sort started, so incomplete tasks stay current.
+  // Time is computed once per sort (just before sort) so sort is stable.
+  if (date == null)
+    return treeView.sortStartedTime;
+  var ms = date.getTime();   // note: date is not a javascript date.
+  if (ms == -62171262000000) // ms value for (0000/00/00 00:00:00)
+    return treeView.sortStartedTime;
+  return ms;
 }
 
 
@@ -664,7 +693,8 @@ function refreshEventTree( eventArray )
       {
          treeView.selectedColumn = ArrayOfTreeCols[i].getAttribute( "id" );
          treeView.sortDirection = ArrayOfTreeCols[i].getAttribute("sortDirection");
-         gEventArray.sort(sortEvents);
+         treeView.sortStartedTime = new Date().getTime(); //for null/0 dates
+         gEventArray.sort(compareEvents);
          break;
       }
    }
