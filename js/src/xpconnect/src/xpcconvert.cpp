@@ -98,7 +98,7 @@ XPCConvert::IsMethodReflectable(const nsXPTMethodInfo& info)
 * (from John Fairhurst <mjf35@cam.ac.uk>)
 */
 
-#ifdef JS_HAVE_LONG_LONG
+#ifdef HAVE_LONG_LONG
 
 #define JAM_DOUBLE(cx,v,d) (d=JS_NewDouble(cx,(jsdouble)v),DOUBLE_TO_JSVAL(d))
 // Win32 can't handle uint64 to double conversion
