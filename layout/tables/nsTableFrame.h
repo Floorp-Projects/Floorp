@@ -210,18 +210,29 @@ public:
   /** Calculate Layout Information */
   void    AppendLayoutData(nsVoidArray* aList, nsTableCellFrame* aTableCell);
 
-  /* compute all the collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
-  void    ComputeCollapsingBorders(PRInt32 aStartRowIndex, PRInt32 aEndRowIndex);
+  /** compute the left and right collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
+  void    ComputeVerticalCollapsingBorders(PRInt32 aStartRowIndex, PRInt32 aEndRowIndex);
+
+  /** compute the top and bottom collapsed borders between aStartRowIndex and aEndRowIndex, inclusive */
+  void    ComputeHorizontalCollapsingBorders(PRInt32 aStartRowIndex, PRInt32 aEndRowIndex);
+
   void    ComputeLeftBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
   void    ComputeRightBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
   void    ComputeTopBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
   void    ComputeBottomBorderForEdgeAt(PRInt32 aRowIndex, PRInt32 aColIndex);
+  
+  /** at the time we initially compute collapsing borders, we don't yet have the 
+    * column widths.  So we set them as a post-process of the column balancing algorithm.
+    */
+  void    SetCollapsingBorderHorizontalEdgeLengths();
 
   PRUint8 GetOpposingEdge(PRUint8 aEdge);
 
   nscoord GetWidthForSide(const nsMargin &aBorder, PRUint8 aSide);
 
   PRUint8 CompareBorderStyles(PRUint8 aStyle1, PRUint8 aStyle2);
+
+  void    SetBorderEdgeLength(PRUint8 aSide, PRInt32 aIndex, nscoord aLength);
 
   void    ComputeCollapsedBorderSegment(PRUint8       aSide, 
                                         nsVoidArray * aStyles, 

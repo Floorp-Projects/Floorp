@@ -331,6 +331,9 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
     kidFrame = mFirstChild;
   else
     kidFrame = aStartFrame;
+
+  PRUint8 borderStyle = aReflowState.tableFrame->GetBorderCollapseStyle();
+
   for ( ; nsnull != kidFrame; ) 
   {
     nsSize kidAvailSize(aReflowState.availSize);
@@ -405,6 +408,43 @@ NS_METHOD nsTableRowGroupFrame::ReflowMappedChildren(nsIPresContext&      aPresC
     } else {
       aReflowState.prevMaxPosBottomMargin = bottomMargin;
     }
+
+    /* if the table has collapsing borders, we need to reset the length of the shared vertical borders
+     * for the table and the cells that overlap this row
+     */
+    if ((eReflowReason_Initial != aReflowState.reflowState.reason) && (NS_STYLE_BORDER_COLLAPSE==borderStyle))
+    {
+      const nsStyleDisplay *childDisplay;
+      kidFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)childDisplay));
+      if (NS_STYLE_DISPLAY_TABLE_ROW == childDisplay->mDisplay)
+      {
+        PRInt32 rowIndex = ((nsTableRowFrame*)kidFrame)->GetRowIndex();
+        aReflowState.tableFrame->SetBorderEdgeLength(NS_SIDE_LEFT,
+                                                     rowIndex,
+                                                     kidRect.height);
+        aReflowState.tableFrame->SetBorderEdgeLength(NS_SIDE_RIGHT,
+                                                     rowIndex,
+                                                     kidRect.height);
+        nsIFrame *cellFrame=nsnull;
+        kidFrame->FirstChild(nsnull, cellFrame);
+        while (nsnull!=cellFrame)
+        {
+          const nsStyleDisplay *cellDisplay;
+          cellFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)cellDisplay));
+          if (NS_STYLE_DISPLAY_TABLE_CELL == cellDisplay->mDisplay)
+          {
+            ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_LEFT,
+                                                                   rowIndex,
+                                                                   kidRect.height);
+            ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_RIGHT,
+                                                                   rowIndex,
+                                                                   kidRect.height);
+          }
+          cellFrame->GetNextSibling(cellFrame);
+        }
+      }
+    }
+
 
 		// Remember where we just were in case we end up pushing children
 		prevKidFrame = kidFrame;

@@ -181,6 +181,8 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
   nsIFrame *cellFrame = mFirstChild;
   nsTableFrame* tableFrame;
   nsTableFrame::GetTableFrame(this, tableFrame);
+  const nsStyleTable* tableStyle;
+  tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   while (nsnull != cellFrame)
   {
     const nsStyleDisplay *kidDisplay;
@@ -209,6 +211,16 @@ nsTableRowFrame::DidResize(nsIPresContext& aPresContext,
           //XXX nsReflowStatus status;
           //ReflowChild(cellFrame, aPresContext, desiredSize, kidReflowState, status);
           ((nsTableCellFrame *)cellFrame)->VerticallyAlignChild();
+          /* if we're collapsing borders, notify the cell that the border edge length has changed */
+          if (NS_STYLE_BORDER_COLLAPSE==tableStyle->mBorderCollapse)
+          {
+            ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_LEFT,
+                                                                   GetRowIndex(),
+                                                                   cellHeight);
+            ((nsTableCellFrame *)(cellFrame))->SetBorderEdgeLength(NS_SIDE_RIGHT,
+                                                                   GetRowIndex(),
+                                                                   cellHeight);
+          }
         }
       }
       else

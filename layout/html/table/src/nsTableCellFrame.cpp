@@ -48,6 +48,54 @@ static const PRBool gsDebug = PR_FALSE;
 static const PRBool gsDebugNT = PR_FALSE;
 #endif
 
+
+void nsTableCellFrame::InitCellFrame(PRInt32 aColIndex)
+{
+  NS_PRECONDITION(0<=aColIndex, "bad col index arg");
+  mColIndex = aColIndex;
+  nsTableFrame* tableFrame=nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
+  nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+  if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
+  {
+    const nsStyleTable* tableStyle;
+    tableFrame->GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)tableStyle)); 
+    if (NS_STYLE_BORDER_COLLAPSE==tableStyle->mBorderCollapse)
+    {
+      PRInt32 rowspan = GetRowSpan();
+      PRInt32 i;
+      for (i=0; i<rowspan; i++)
+      {
+        nsBorderEdge *borderToAdd = new nsBorderEdge();
+        mBorderEdges.mEdges[NS_SIDE_LEFT].AppendElement(borderToAdd);
+        borderToAdd = new nsBorderEdge();
+        mBorderEdges.mEdges[NS_SIDE_RIGHT].AppendElement(borderToAdd);
+      }
+      PRInt32 colspan = GetColSpan();
+      for (i=0; i<colspan; i++)
+      {
+        nsBorderEdge *borderToAdd = new nsBorderEdge();
+        mBorderEdges.mEdges[NS_SIDE_TOP].AppendElement(borderToAdd);
+        borderToAdd = new nsBorderEdge();
+        mBorderEdges.mEdges[NS_SIDE_BOTTOM].AppendElement(borderToAdd);
+      }
+    }
+  }
+}
+
+void nsTableCellFrame::SetBorderEdgeLength(PRUint8 aSide, PRInt32 aIndex, nscoord aLength)
+{
+  if ((NS_SIDE_LEFT==aSide) || (NS_SIDE_RIGHT==aSide))
+  {
+    PRInt32 rowIndex = aIndex-GetRowIndex();
+    nsBorderEdge *border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(rowIndex));
+    border->mLength = aLength;
+  }
+  else {
+    NS_ASSERTION(PR_FALSE, "bad arg aSide passed to SetBorderEdgeLength");
+  }
+}
+
+
 NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
                                   nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect,
@@ -65,6 +113,8 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
       NS_ASSERTION(nsnull!=myColor, "bad style color");
       NS_ASSERTION(nsnull!=mySpacing, "bad style spacing");
 
+      const nsStyleTable* cellTableStyle;
+      GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)cellTableStyle)); 
       nsRect  rect(0, 0, mRect.width, mRect.height);
 
       nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
@@ -74,15 +124,29 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
       PRBool renderBorder = PR_TRUE;
       if (PR_TRUE==GetContentEmpty())
       {
-        const nsStyleTable* cellTableStyle;
-        GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)cellTableStyle)); 
         if (NS_STYLE_TABLE_EMPTY_CELLS_HIDE==cellTableStyle->mEmptyCells)
           renderBorder=PR_FALSE;
       }
       if (PR_TRUE==renderBorder)
       {
-        nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                    aDirtyRect, rect, *mySpacing, 0);
+        PRIntn skipSides = GetSkipSides();
+        nsTableFrame* tableFrame=nsnull;  // I should be checking my own style context, but border-collapse isn't inheriting correctly
+        nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);
+        if ((NS_SUCCEEDED(rv)) && (nsnull!=tableFrame))
+        {
+          const nsStyleTable* tableStyle;
+          tableFrame->GetStyleData(eStyleStruct_Table, ((const nsStyleStruct *&)tableStyle)); 
+          if (NS_STYLE_BORDER_SEPARATE==tableStyle->mBorderCollapse)
+          {
+            nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
+                                        aDirtyRect, rect, *mySpacing, skipSides);
+          }
+          else
+          {
+            nsCSSRendering::PaintBorderEdges(aPresContext, aRenderingContext, this,
+                                             aDirtyRect, rect, &mBorderEdges, skipSides);
+          }
+        }
       }
     }
   }
@@ -108,6 +172,54 @@ nsTableCellFrame::GetSkipSides() const
     skip |= 1 << NS_SIDE_BOTTOM;
   }
   return skip;
+}
+
+void nsTableCellFrame::SetBorderEdge(PRUint8       aSide, 
+                                     PRInt32       aRowIndex, 
+                                     PRInt32       aColIndex, 
+                                     nsBorderEdge *aBorder)
+{
+  nsBorderEdge *border = nsnull;
+  switch (aSide)
+  {
+    case NS_SIDE_TOP:
+    {
+      PRInt32 colIndex = aColIndex-GetColIndex();
+      border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(colIndex));
+      mBorderEdges.mMaxBorderWidth.top = PR_MAX(aBorder->mWidth, mBorderEdges.mMaxBorderWidth.top);
+      break;
+    }
+
+    case NS_SIDE_BOTTOM:
+    {
+      PRInt32 colIndex = aColIndex-GetColIndex();
+      border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(colIndex));
+      mBorderEdges.mMaxBorderWidth.bottom = PR_MAX(aBorder->mWidth, mBorderEdges.mMaxBorderWidth.bottom);
+      break;
+    }
+  
+    case NS_SIDE_LEFT:
+    {
+      PRInt32 rowIndex = aRowIndex-GetRowIndex();
+      border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(rowIndex));
+      mBorderEdges.mMaxBorderWidth.left = PR_MAX(aBorder->mWidth, mBorderEdges.mMaxBorderWidth.left);
+      break;
+    }
+      
+    case NS_SIDE_RIGHT:  
+    {
+      PRInt32 rowIndex = aRowIndex-GetRowIndex();
+      border = (nsBorderEdge *)(mBorderEdges.mEdges[aSide].ElementAt(rowIndex));
+      mBorderEdges.mMaxBorderWidth.right = PR_MAX(aBorder->mWidth, mBorderEdges.mMaxBorderWidth.right);
+      break;
+    }
+  }
+  if (nsnull!=border) {
+    *border=*aBorder;
+  }
+  else {
+    NS_ASSERTION(PR_FALSE, "bad border edge state");
+  }
 }
 
 /**
