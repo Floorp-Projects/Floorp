@@ -259,7 +259,7 @@ function MsgDeleteMessage(fromToolbar)
 	dump("tree is valid\n");
 	//get the selected elements
 	var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
-    var nextMessage = GetNextMessageAfterDelete(messageList);
+    	var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
 	//get the current folder
 	messenger.DeleteMessages(tree.database, srcFolder.resource, messageList);
 	SelectNextMessage(nextMessage);
@@ -383,7 +383,7 @@ function MsgMoveMessage(destFolder)
 		//Get the selected messages to copy
 		var messageList = ConvertDOMListToResourceArray(tree.selectedItems);
 		//get the current folder
-		var nextMessage = GetNextMessageAfterDelete(messageList);
+		var nextMessage = GetNextMessageAfterDelete(tree.selectedItems);
 		var srcFolder = GetThreadTreeFolder();
 		messenger.CopyMessages(tree.database,
                                srcFolder.resource,
