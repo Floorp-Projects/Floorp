@@ -662,6 +662,7 @@ public:
   NS_IMETHOD  EnumerateRulesForwards(nsISupportsArrayEnumFunc aFunc, void * aData) const;
   NS_IMETHOD  DeleteStyleRuleAt(PRUint32 aIndex);
   NS_IMETHOD  InsertStyleRulesAt(PRUint32 aIndex, nsISupportsArray* aRules);
+  NS_IMETHOD  ReplaceStyleRule(nsICSSRule *aOld, nsICSSRule *aNew);
   
   // nsIDOMCSSRule interface
   NS_DECL_NSIDOMCSSRULE
@@ -872,6 +873,8 @@ CSSMediaRuleImpl::AppendStyleRule(nsICSSRule* aRule)
     aRule->SetStyleSheet(mSheet);
     aRule->SetParentRule(this);
     if (mSheet) {
+      // XXXldb Shouldn't we be using |WillDirty| and |DidDirty| (and
+      // shouldn't |SetModified| be removed?
       mSheet->SetModified(PR_TRUE);
     }
   }
@@ -952,6 +955,18 @@ CSSMediaRuleImpl::InsertStyleRulesAt(PRUint32 aIndex, nsISupportsArray* aRules)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+CSSMediaRuleImpl::ReplaceStyleRule(nsICSSRule* aOld, nsICSSRule* aNew)
+{
+  PRInt32 index = mRules->IndexOf(aOld);
+  NS_ENSURE_TRUE(index != -1, NS_ERROR_UNEXPECTED);
+  mRules->ReplaceElementAt(aNew, index);
+  aNew->SetStyleSheet(mSheet);
+  aNew->SetParentRule(this);
+  aOld->SetStyleSheet(nsnull);
+  aOld->SetParentRule(nsnull);
+  return NS_OK;
+}
 
 nsresult
 NS_NewCSSMediaRule(nsICSSMediaRule** aInstancePtrResult)

@@ -131,13 +131,8 @@ public:
 
   virtual nsresult GetStyleFrameConstruction(nsIStyleFrameConstruction** aResult) = 0;
 
-  // ClearCachedStyleData is used to invalidate portions of both the style context tree
-  // and rule tree without destroying the actual nodes in the two trees.  |aRule| provides
-  // a hint as to which rule has changed, and all subtree data pruning will occur rooted
-  // only on style contexts and rule nodes that use that rule.  If the rule is null, then
-  // it is assumed that both trees are to be entirely wiped.
-  //
-  virtual nsresult ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule) = 0;
+  // Clear all style data cached in the style context tree and rule tree.
+  virtual nsresult ClearStyleData(nsIPresContext* aPresContext) = 0;
 
   // enable / disable the Quirk style sheet: 
   // returns NS_FAILURE if none is found, otherwise NS_OK
@@ -252,18 +247,6 @@ public:
                               nsIAtom* aAttribute,
                               PRInt32 aModType, 
                               nsChangeHint aHint) = 0;
-
-  // Style change notifications
-  NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule,
-                              nsChangeHint aHint) = 0;
-  NS_IMETHOD StyleRuleAdded(nsIPresContext* aPresContext,
-                            nsIStyleSheet* aStyleSheet,
-                            nsIStyleRule* aStyleRule) = 0;
-  NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
-                              nsIStyleSheet* aStyleSheet,
-                              nsIStyleRule* aStyleRule) = 0;
 
   // Notification that we were unable to render a replaced element.
   // Called when the replaced element can not be rendered, and we should

@@ -141,20 +141,6 @@ public:
                               PRInt32         aModType, 
                               nsChangeHint    aHint);
 
-  // Style change notifications
-  NS_IMETHOD StyleRuleChanged(nsIPresContext* aPresContext,
-                              nsIStyleSheet*  aStyleSheet,
-                              nsIStyleRule*   aStyleRule,
-                              nsChangeHint    aHint);
-
-  NS_IMETHOD StyleRuleAdded(nsIPresContext* aPresContext,
-                            nsIStyleSheet*  aStyleSheet,
-                            nsIStyleRule*   aStyleRule);
-
-  NS_IMETHOD StyleRuleRemoved(nsIPresContext* aPresContext,
-                              nsIStyleSheet*  aStyleSheet,
-                              nsIStyleRule*   aStyleRule);
-
   NS_IMETHOD ProcessRestyledFrames(nsStyleChangeList& aRestyleArray, 
                                    nsIPresContext*    aPresContext);
 

@@ -68,35 +68,6 @@ nsDOMCSSAttributeDeclaration::~nsDOMCSSAttributeDeclaration()
   MOZ_COUNT_DTOR(nsDOMCSSAttributeDeclaration);
 }
 
-NS_IMETHODIMP
-nsDOMCSSAttributeDeclaration::RemoveProperty(const nsAString& aPropertyName,
-                                             nsAString& aReturn)
-{
-  aReturn.Truncate();
-
-  nsCSSDeclaration* decl;
-  nsresult rv = GetCSSDeclaration(&decl, PR_FALSE);
-
-  if (NS_SUCCEEDED(rv) && decl) {
-    nsCSSProperty prop = nsCSSProps::LookupProperty(aPropertyName);
-
-    decl->GetValue(prop, aReturn);
-
-    rv = decl->RemoveProperty(prop);
-
-    if (NS_SUCCEEDED(rv)) {
-      rv = SetCSSDeclaration(decl, PR_TRUE, PR_TRUE);
-    } else {
-      // RemoveProperty will throw in all sorts of situations -- eg if
-      // the property is a shorthand one.  Do not propagate its return
-      // value to callers.
-      rv = NS_OK;
-    }
-  }
-
-  return rv;
-}
-
 void
 nsDOMCSSAttributeDeclaration::DropReference()
 {
@@ -104,26 +75,25 @@ nsDOMCSSAttributeDeclaration::DropReference()
 }
 
 nsresult
-nsDOMCSSAttributeDeclaration::SetCSSDeclaration(nsCSSDeclaration* aDecl,
-                                                PRBool aNotify,
-                                                PRBool aDeclOwnedByRule)
+nsDOMCSSAttributeDeclaration::DeclarationChanged()
 {
   NS_ASSERTION(mContent, "Must have content node to set the decl!");
-  NS_PRECONDITION(aDecl, "Null decl!");
-    
-  nsCOMPtr<nsICSSStyleRule> cssRule;
-  nsresult rv = NS_NewCSSStyleRule(getter_AddRefs(cssRule), nsnull);
-  if (NS_FAILED(rv)) {
-    if (!aDeclOwnedByRule) {
-      aDecl->RuleAbort();
-    }
-    return rv;
+  nsHTMLValue val;
+  nsresult rv = mContent->GetHTMLAttribute(nsHTMLAtoms::style, val);
+  NS_ASSERTION(rv == NS_CONTENT_ATTR_HAS_VALUE &&
+               eHTMLUnit_ISupports == val.GetUnit(),
+               "content must have rule");
+  nsCOMPtr<nsICSSStyleRule> oldRule =
+    do_QueryInterface(nsCOMPtr<nsISupports>(val.GetISupportsValue()));
+
+  nsCOMPtr<nsICSSStyleRule> newRule = oldRule->DeclarationChanged(PR_FALSE);
+  if (!newRule) {
+    return NS_ERROR_OUT_OF_MEMORY;
   }
     
-  cssRule->SetDeclaration(aDecl);
   return mContent->SetHTMLAttribute(nsHTMLAtoms::style,
-                                    nsHTMLValue(cssRule),
-                                    aNotify);
+                                    nsHTMLValue(newRule),
+                                    PR_TRUE);
 }
 
 nsresult
@@ -152,7 +122,17 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
         decl->RuleAbort();
         return NS_ERROR_OUT_OF_MEMORY;
       }
-      result = SetCSSDeclaration(decl, PR_FALSE, PR_FALSE);
+
+      nsCOMPtr<nsICSSStyleRule> cssRule;
+      result = NS_NewCSSStyleRule(getter_AddRefs(cssRule), nsnull, decl);
+      if (NS_FAILED(result)) {
+        decl->RuleAbort();
+        return result;
+      }
+        
+      result = mContent->SetHTMLAttribute(nsHTMLAtoms::style,
+                                          nsHTMLValue(cssRule),
+                                          PR_FALSE);
       if (NS_SUCCEEDED(result)) {
         *aDecl = decl;
       }
@@ -165,22 +145,21 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
 /*
  * This is a utility function.  It will only fail if it can't get a
  * parser.  This means it can return NS_OK without aURI or aCSSLoader
- * being initialized
+ * being initialized.
  */
 nsresult
-nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIContent* aContent,
-                                                       nsIURI** aBaseURI,
+nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aBaseURI,
                                                        nsICSSLoader** aCSSLoader,
                                                        nsICSSParser** aCSSParser)
 {
-  NS_ASSERTION(aContent, "Something is severely broken -- there should be an nsIContent here!");
+  NS_ASSERTION(mContent, "Something is severely broken -- there should be an nsIContent here!");
   // null out the out params since some of them may not get initialized below
   *aBaseURI = nsnull;
   *aCSSLoader = nsnull;
   *aCSSParser = nsnull;
   
   nsCOMPtr<nsINodeInfo> nodeInfo;
-  nsresult result = aContent->GetNodeInfo(getter_AddRefs(nodeInfo));
+  nsresult result = mContent->GetNodeInfo(getter_AddRefs(nodeInfo));
   if (NS_FAILED(result)) {
     return result;
   }
@@ -212,85 +191,6 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIContent* aContent,
   (*aCSSParser)->SetCaseSensitive(nodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
 
   return NS_OK;
-}
-
-nsresult
-nsDOMCSSAttributeDeclaration::ParsePropertyValue(const nsAString& aPropName,
-                                                 const nsAString& aPropValue)
-{
-  nsCSSDeclaration* decl;
-  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
-
-  if (!decl) {
-    return result;
-  }
-  
-  nsCOMPtr<nsICSSLoader> cssLoader;
-  nsCOMPtr<nsICSSParser> cssParser;
-  nsCOMPtr<nsIURI> baseURI;
-  
-  result = GetCSSParsingEnvironment(mContent,
-                                    getter_AddRefs(baseURI),
-                                    getter_AddRefs(cssLoader),
-                                    getter_AddRefs(cssParser));
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
-  nsChangeHint uselessHint = NS_STYLE_HINT_NONE;
-  result = cssParser->ParseProperty(aPropName, aPropValue, baseURI, decl,
-                                    &uselessHint);
-  if (NS_SUCCEEDED(result)) {
-    result = SetCSSDeclaration(decl, PR_TRUE, PR_TRUE);
-  }
-
-  if (cssLoader) {
-    cssLoader->RecycleParser(cssParser);
-  }
-
-  return result;
-}
-
-nsresult
-nsDOMCSSAttributeDeclaration::ParseDeclaration(const nsAString& aDecl,
-                                               PRBool aParseOnlyOneDecl,
-                                               PRBool aClearOldDecl)
-{
-  nsCSSDeclaration* decl;
-  nsresult result = GetCSSDeclaration(&decl, PR_TRUE);
-
-  if (!decl) {
-    return result;
-  }
-
-  nsCOMPtr<nsICSSLoader> cssLoader;
-  nsCOMPtr<nsICSSParser> cssParser;
-  nsCOMPtr<nsIURI> baseURI;
-
-  result = GetCSSParsingEnvironment(mContent,
-                                    getter_AddRefs(baseURI),
-                                    getter_AddRefs(cssLoader),
-                                    getter_AddRefs(cssParser));
-
-  if (NS_FAILED(result)) {
-    return result;
-  }
-
-  nsChangeHint uselessHint = NS_STYLE_HINT_NONE;
-  result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
-                                                aParseOnlyOneDecl,
-                                                &uselessHint,
-                                                aClearOldDecl);
-  
-  if (NS_SUCCEEDED(result)) {
-    result = SetCSSDeclaration(decl, PR_TRUE, PR_TRUE);
-  }
-
-  if (cssLoader) {
-    cssLoader->RecycleParser(cssParser);
-  }
-
-  return result;
 }
 
 nsresult

@@ -5657,15 +5657,10 @@ PresShell::StyleSheetApplicableStateChanged(nsIDocument *aDocument,
 NS_IMETHODIMP
 PresShell::StyleRuleChanged(nsIDocument *aDocument,
                             nsIStyleSheet* aStyleSheet,
-                            nsIStyleRule* aStyleRule,
-                            nsChangeHint aHint) 
+                            nsIStyleRule* aOldStyleRule,
+                            nsIStyleRule* aNewStyleRule)
 {
-  WillCauseReflow();
-  nsresult  rv = mStyleSet->StyleRuleChanged(mPresContext, aStyleSheet,
-                                             aStyleRule, aHint);
-  VERIFY_STYLE_TREE;
-  DidCauseReflow();
-  return rv;
+  return ReconstructStyleData(PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -5673,18 +5668,6 @@ PresShell::StyleRuleAdded(nsIDocument *aDocument,
                           nsIStyleSheet* aStyleSheet,
                           nsIStyleRule* aStyleRule) 
 { 
-  WillCauseReflow();
-  nsresult rv = mStyleSet->StyleRuleAdded(mPresContext, aStyleSheet,
-                                          aStyleRule);
-  VERIFY_STYLE_TREE;
-  DidCauseReflow();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  // We don't need to rebuild the
-  // rule tree, since no rule nodes have been rendered invalid by the
-  // addition of new rule content.  
   return ReconstructStyleData(PR_FALSE);
 }
 
@@ -5693,16 +5676,7 @@ PresShell::StyleRuleRemoved(nsIDocument *aDocument,
                             nsIStyleSheet* aStyleSheet,
                             nsIStyleRule* aStyleRule) 
 { 
-  WillCauseReflow();
-  nsresult  rv = mStyleSet->StyleRuleRemoved(mPresContext, aStyleSheet,
-                                             aStyleRule);
-  VERIFY_STYLE_TREE;
-  DidCauseReflow();
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-  // XXX For now reconstruct everything
-  return ReconstructFrames();
+  return ReconstructStyleData(PR_FALSE);
 }
 
 NS_IMETHODIMP
@@ -5796,7 +5770,7 @@ PresShell::BidiStyleChangeReflow()
   nsIFrame* rootFrame;
   mFrameManager->GetRootFrame(&rootFrame);
   if (rootFrame) {
-    mStyleSet->ClearStyleData(mPresContext, nsnull);
+    mStyleSet->ClearStyleData(mPresContext);
     ReconstructFrames();
   }
   return NS_OK;

@@ -553,74 +553,31 @@ nsRuleNode::PathContainsRule(nsIStyleRule* aRule, PRBool* aMatched)
   return NS_OK;
 }
 
-nsresult
-nsRuleNode::ClearCachedData(nsIStyleRule* aRule)
-{
-  NS_ASSERTION(aRule, "you should be using ClearCachedDataInSubtree");
-
-  nsRuleNode* ruleDest = this;
-  while (ruleDest) {
-    if (ruleDest->mRule == aRule)
-      break;
-    ruleDest = ruleDest->mParent;
-  }
-
-  if (ruleDest) {
-    NS_ASSERTION(ruleDest->mParent, "node must not be root");
-
-    // The rule was contained along our branch.  We need to blow away
-    // all cached data along this path.  Note that, because of the definition
-    // of inline style, all nodes along this path must have exactly one child.  This
-    // is not a bushy subtree, and so we know that by clearing this path, we've
-    // invalidated everything that we need to.
-    // XXXldb What about !important :hover rules, and such?
-    nsRuleNode* curr = this;
-    while (curr) {
-      curr->mNoneBits &= ~NS_STYLE_INHERIT_MASK;
-      curr->mDependentBits &= ~NS_STYLE_INHERIT_MASK;
-      if (curr->mStyleData.mResetData || curr->mStyleData.mInheritedData)
-        curr->mStyleData.Destroy(0, mPresContext);
-
-      if (curr == ruleDest)
-        break;
-
-      curr = curr->mParent;
-    }
-  }
-
-  return NS_OK;
-}
-
 PR_STATIC_CALLBACK(PLDHashOperator)
-ClearCachedDataInSubtreeHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
+ClearStyleDataHelper(PLDHashTable *table, PLDHashEntryHdr *hdr,
                                PRUint32 number, void *arg)
 {
   ChildrenHashEntry *entry = NS_STATIC_CAST(ChildrenHashEntry*, hdr);
-  nsIStyleRule* rule = NS_STATIC_CAST(nsIStyleRule*, arg);
-  entry->mRuleNode->ClearCachedDataInSubtree(rule);
+  entry->mRuleNode->ClearStyleData();
   return PL_DHASH_NEXT;
 }
 
 nsresult
-nsRuleNode::ClearCachedDataInSubtree(nsIStyleRule* aRule)
+nsRuleNode::ClearStyleData()
 {
-  if (aRule == nsnull || mRule == aRule) {
-    // We have a match.  Blow away all data stored at this node.
-    if (mStyleData.mResetData || mStyleData.mInheritedData)
-      mStyleData.Destroy(0, mPresContext);
+  // Blow away all data stored at this node.
+  if (mStyleData.mResetData || mStyleData.mInheritedData)
+    mStyleData.Destroy(0, mPresContext);
 
-    mNoneBits &= ~NS_STYLE_INHERIT_MASK;
-    mDependentBits &= ~NS_STYLE_INHERIT_MASK;
-
-    aRule = nsnull;  // Cause everything to be blown away in the descendants.
-  }
+  mNoneBits &= ~NS_STYLE_INHERIT_MASK;
+  mDependentBits &= ~NS_STYLE_INHERIT_MASK;
 
   if (ChildrenAreHashed())
     PL_DHashTableEnumerate(ChildrenHash(),
-                           ClearCachedDataInSubtreeHelper, aRule);
+                           ClearStyleDataHelper, nsnull);
   else
     for (nsRuleList* curr = ChildrenList(); curr; curr = curr->mNext)
-      curr->mRuleNode->ClearCachedDataInSubtree(aRule);
+      curr->mRuleNode->ClearStyleData();
 
   return NS_OK;
 }
@@ -649,11 +606,7 @@ nsRuleNode::PropagateNoneBit(PRUint32 aBit, nsRuleNode* aHighestNode)
 inline void
 nsRuleNode::PropagateDependentBit(PRUint32 aBit, nsRuleNode* aHighestNode)
 {
-  if (mDependentBits & aBit)
-    return; // Already set.
-
-  nsRuleNode* curr = this;
-  while (curr != aHighestNode) {
+  for (nsRuleNode* curr = this; curr != aHighestNode; curr = curr->mParent) {
     if (curr->mDependentBits & aBit) {
 #ifdef DEBUG
       while (curr != aHighestNode) {
@@ -665,7 +618,6 @@ nsRuleNode::PropagateDependentBit(PRUint32 aBit, nsRuleNode* aHighestNode)
     }
 
     curr->mDependentBits |= aBit;
-    curr = curr->mParent;
   }
 }
 
@@ -1148,223 +1100,223 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
 }
 
 const nsStyleStruct*
-nsRuleNode::GetDisplayData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetDisplayData(nsStyleContext* aContext)
 {
   nsRuleDataDisplay displayData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Display, mPresContext, aContext);
   ruleData.mDisplayData = &displayData;
 
-  return WalkRuleTree(eStyleStruct_Display, aContext, &ruleData, &displayData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Display, aContext, &ruleData, &displayData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetVisibilityData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetVisibilityData(nsStyleContext* aContext)
 {
   nsRuleDataDisplay displayData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Visibility, mPresContext, aContext);
   ruleData.mDisplayData = &displayData;
 
-  return WalkRuleTree(eStyleStruct_Visibility, aContext, &ruleData, &displayData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Visibility, aContext, &ruleData, &displayData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetTextData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetTextData(nsStyleContext* aContext)
 {
   nsRuleDataText textData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Text, mPresContext, aContext);
   ruleData.mTextData = &textData;
 
-  return WalkRuleTree(eStyleStruct_Text, aContext, &ruleData, &textData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Text, aContext, &ruleData, &textData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetTextResetData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetTextResetData(nsStyleContext* aContext)
 {
   nsRuleDataText textData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_TextReset, mPresContext, aContext);
   ruleData.mTextData = &textData;
 
-  return WalkRuleTree(eStyleStruct_TextReset, aContext, &ruleData, &textData, aComputeData);
+  return WalkRuleTree(eStyleStruct_TextReset, aContext, &ruleData, &textData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetUserInterfaceData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetUserInterfaceData(nsStyleContext* aContext)
 {
   nsRuleDataUserInterface uiData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_UserInterface, mPresContext, aContext);
   ruleData.mUserInterfaceData = &uiData;
 
-  const nsStyleStruct* res = WalkRuleTree(eStyleStruct_UserInterface, aContext, &ruleData, &uiData, aComputeData);
+  const nsStyleStruct* res = WalkRuleTree(eStyleStruct_UserInterface, aContext, &ruleData, &uiData);
   uiData.mCursor = nsnull;
   return res;
 }
 
 const nsStyleStruct*
-nsRuleNode::GetUIResetData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetUIResetData(nsStyleContext* aContext)
 {
   nsRuleDataUserInterface uiData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_UIReset, mPresContext, aContext);
   ruleData.mUserInterfaceData = &uiData;
 
-  const nsStyleStruct* res = WalkRuleTree(eStyleStruct_UIReset, aContext, &ruleData, &uiData, aComputeData);
+  const nsStyleStruct* res = WalkRuleTree(eStyleStruct_UIReset, aContext, &ruleData, &uiData);
   uiData.mKeyEquivalent = nsnull;
   return res;
 }
 
 const nsStyleStruct*
-nsRuleNode::GetFontData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetFontData(nsStyleContext* aContext)
 {
   nsRuleDataFont fontData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Font, mPresContext, aContext);
   ruleData.mFontData = &fontData;
 
-  return WalkRuleTree(eStyleStruct_Font, aContext, &ruleData, &fontData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Font, aContext, &ruleData, &fontData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetColorData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetColorData(nsStyleContext* aContext)
 {
   nsRuleDataColor colorData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Color, mPresContext, aContext);
   ruleData.mColorData = &colorData;
 
-  return WalkRuleTree(eStyleStruct_Color, aContext, &ruleData, &colorData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Color, aContext, &ruleData, &colorData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetBackgroundData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetBackgroundData(nsStyleContext* aContext)
 {
   nsRuleDataColor colorData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Background, mPresContext, aContext);
   ruleData.mColorData = &colorData;
 
-  return WalkRuleTree(eStyleStruct_Background, aContext, &ruleData, &colorData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Background, aContext, &ruleData, &colorData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetMarginData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetMarginData(nsStyleContext* aContext)
 {
   nsRuleDataMargin marginData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Margin, mPresContext, aContext);
   ruleData.mMarginData = &marginData;
 
-  return WalkRuleTree(eStyleStruct_Margin, aContext, &ruleData, &marginData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Margin, aContext, &ruleData, &marginData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetBorderData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetBorderData(nsStyleContext* aContext)
 {
   nsRuleDataMargin marginData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Border, mPresContext, aContext);
   ruleData.mMarginData = &marginData;
 
-  return WalkRuleTree(eStyleStruct_Border, aContext, &ruleData, &marginData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Border, aContext, &ruleData, &marginData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetPaddingData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetPaddingData(nsStyleContext* aContext)
 {
   nsRuleDataMargin marginData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Padding, mPresContext, aContext);
   ruleData.mMarginData = &marginData;
 
-  return WalkRuleTree(eStyleStruct_Padding, aContext, &ruleData, &marginData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Padding, aContext, &ruleData, &marginData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetOutlineData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetOutlineData(nsStyleContext* aContext)
 {
   nsRuleDataMargin marginData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Outline, mPresContext, aContext);
   ruleData.mMarginData = &marginData;
 
-  return WalkRuleTree(eStyleStruct_Outline, aContext, &ruleData, &marginData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Outline, aContext, &ruleData, &marginData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetListData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetListData(nsStyleContext* aContext)
 {
   nsRuleDataList listData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_List, mPresContext, aContext);
   ruleData.mListData = &listData;
 
-  return WalkRuleTree(eStyleStruct_List, aContext, &ruleData, &listData, aComputeData);
+  return WalkRuleTree(eStyleStruct_List, aContext, &ruleData, &listData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetPositionData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetPositionData(nsStyleContext* aContext)
 {
   nsRuleDataPosition posData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Position, mPresContext, aContext);
   ruleData.mPositionData = &posData;
 
-  return WalkRuleTree(eStyleStruct_Position, aContext, &ruleData, &posData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Position, aContext, &ruleData, &posData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetTableData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetTableData(nsStyleContext* aContext)
 {
   nsRuleDataTable tableData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Table, mPresContext, aContext);
   ruleData.mTableData = &tableData;
 
-  return WalkRuleTree(eStyleStruct_Table, aContext, &ruleData, &tableData, aComputeData);
+  return WalkRuleTree(eStyleStruct_Table, aContext, &ruleData, &tableData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetTableBorderData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetTableBorderData(nsStyleContext* aContext)
 {
   nsRuleDataTable tableData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_TableBorder, mPresContext, aContext);
   ruleData.mTableData = &tableData;
 
-  return WalkRuleTree(eStyleStruct_TableBorder, aContext, &ruleData, &tableData, aComputeData);
+  return WalkRuleTree(eStyleStruct_TableBorder, aContext, &ruleData, &tableData);
 }
 
 const nsStyleStruct*
-nsRuleNode::GetContentData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetContentData(nsStyleContext* aContext)
 {
   nsRuleDataContent contentData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Content, mPresContext, aContext);
   ruleData.mContentData = &contentData;
 
-  const nsStyleStruct* res = WalkRuleTree(eStyleStruct_Content, aContext, &ruleData, &contentData, aComputeData);
+  const nsStyleStruct* res = WalkRuleTree(eStyleStruct_Content, aContext, &ruleData, &contentData);
   contentData.mCounterIncrement = contentData.mCounterReset = nsnull;
   contentData.mContent = nsnull; // We are sharing with some style rule.  It really owns the data.
   return res;
 }
 
 const nsStyleStruct*
-nsRuleNode::GetQuotesData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetQuotesData(nsStyleContext* aContext)
 {
   nsRuleDataContent contentData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_Quotes, mPresContext, aContext);
   ruleData.mContentData = &contentData;
 
-  const nsStyleStruct* res = WalkRuleTree(eStyleStruct_Quotes, aContext, &ruleData, &contentData, aComputeData);
+  const nsStyleStruct* res = WalkRuleTree(eStyleStruct_Quotes, aContext, &ruleData, &contentData);
   contentData.mQuotes = nsnull; // We are sharing with some style rule.  It really owns the data.
   return res;
 }
 
 const nsStyleStruct*
-nsRuleNode::GetXULData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetXULData(nsStyleContext* aContext)
 {
   nsRuleDataXUL xulData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_XUL, mPresContext, aContext);
   ruleData.mXULData = &xulData;
 
-  return WalkRuleTree(eStyleStruct_XUL, aContext, &ruleData, &xulData, aComputeData);
+  return WalkRuleTree(eStyleStruct_XUL, aContext, &ruleData, &xulData);
 }
 
 #ifdef MOZ_SVG
 const nsStyleStruct*
-nsRuleNode::GetSVGData(nsStyleContext* aContext, PRBool aComputeData)
+nsRuleNode::GetSVGData(nsStyleContext* aContext)
 {
   nsRuleDataSVG svgData; // Declare a struct with null CSS values.
   nsRuleData ruleData(eStyleStruct_SVG, mPresContext, aContext);
   ruleData.mSVGData = &svgData;
 
-  return WalkRuleTree(eStyleStruct_SVG, aContext, &ruleData, &svgData, aComputeData);
+  return WalkRuleTree(eStyleStruct_SVG, aContext, &ruleData, &svgData);
 }
 #endif
 
@@ -1372,8 +1324,7 @@ const nsStyleStruct*
 nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
                          nsStyleContext* aContext, 
                          nsRuleData* aRuleData,
-                         nsRuleDataStruct* aSpecificData,
-                         PRBool aComputeData)
+                         nsRuleDataStruct* aSpecificData)
 {
   // We start at the most specific rule in the tree.  
   nsStyleStruct* startStruct = nsnull;
@@ -1496,9 +1447,6 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
   }
 
   // We need to compute the data from the information that the rules specified.
-  if (!aComputeData)
-    return nsnull;
-  
   ComputeStyleDataFn fn = gComputeStyleDataFn[aSID];
   const nsStyleStruct* res = (this->*fn)(startStruct, *aSpecificData, aContext, highestNode, detail,
                                          !aRuleData->mCanStoreInRuleTree);
@@ -4491,14 +4439,17 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
     NS_NOTREACHED("dependent bits set but no cached struct present");
   }
 
+  if (!aComputeData)
+    return nsnull;
+
   // Nothing is cached.  We'll have to delve further and examine our rules.
   GetStyleDataFn fn = gGetStyleDataFn[aSID];
   if (!fn) {
     NS_NOTREACHED("unknown style struct requested");
     return nsnull;
   }
-  data = (this->*fn)(aContext, aComputeData);
-  if (data || !aComputeData)
+  data = (this->*fn)(aContext);
+  if (data)
     return data;
 
   NS_NOTREACHED("could not create style struct");

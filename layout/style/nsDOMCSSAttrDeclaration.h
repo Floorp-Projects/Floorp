@@ -55,28 +55,18 @@ public:
   nsDOMCSSAttributeDeclaration(nsIHTMLContent *aContent);
   ~nsDOMCSSAttributeDeclaration();
 
-  NS_IMETHOD RemoveProperty(const nsAString& aPropertyName,
-                            nsAString& aReturn);
-
   virtual void DropReference();
   // If GetCSSDeclaration returns non-null, then the decl it returns
   // is owned by our current style rule.
   virtual nsresult GetCSSDeclaration(nsCSSDeclaration **aDecl,
                                      PRBool aAllocate);
-  virtual nsresult GetCSSParsingEnvironment(nsIContent* aContent,
-                                            nsIURI** aBaseURI,
+  virtual nsresult GetCSSParsingEnvironment(nsIURI** aBaseURI,
                                             nsICSSLoader** aCSSLoader,
                                             nsICSSParser** aCSSParser);
-  virtual nsresult ParsePropertyValue(const nsAString& aPropName,
-                                      const nsAString& aPropValue);
-  virtual nsresult ParseDeclaration(const nsAString& aDecl,
-                                    PRBool aParseOnlyOneDecl,
-                                    PRBool aClearOldDecl);
   virtual nsresult GetParent(nsISupports **aParent);
 
 protected:
-  nsresult SetCSSDeclaration(nsCSSDeclaration* aDecl, PRBool aNotify,
-                             PRBool aDeclOwnedByRule);
+  virtual nsresult DeclarationChanged();
   
   nsIHTMLContent *mContent;
 };

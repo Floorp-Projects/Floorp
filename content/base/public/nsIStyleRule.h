@@ -51,13 +51,54 @@ struct nsRuleData;
 #define NS_ISTYLE_RULE_IID     \
 {0x40ae5c90, 0xad6a, 0x11d1, {0x80, 0x31, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x5a}}
 
+/**
+ * An object implementing |nsIStyleRule| (henceforth, a rule) represents
+ * immutable stylistic information that either applies or does not apply
+ * to a given element.  It belongs to an object or group of objects that
+ * implement |nsIStyleSheet| and |nsIStyleRuleProcessor| (henceforth, a
+ * sheet).
+ *
+ * A rule becomes relevant to the computation of style data when
+ * |nsIStyleRuleProcessor::RulesMatching| creates a rule node that
+ * points to the rule.  (A rule node, |nsRuleNode|, is a node in the
+ * rule tree, which is a lexicographic tree indexed by rules.  The path
+ * from the root of the rule tree to the |nsRuleNode| for a given
+ * |nsStyleContext| contains exactly the rules that match the element
+ * that the style context is for, in priority (weight, origin,
+ * specificity) order.)
+ *
+ * The computation of style data uses the rule tree, which calls
+ * |nsIStyleRule::MapRuleInfoInto| below.
+ *
+ * It is worth emphasizing that the data represented by a rule
+ * implementation are immutable.  When the data need to be changed, a
+ * new rule object must be created.  Failing to do this will lead to
+ * bugs in the handling of dynamic style changes, since the rule tree
+ * caches the results of |MapRuleInfoInto|.
+ *
+ * |nsIStyleRule| objects are owned by |nsRuleNode| objects (in addition
+ * to typically being owned by their sheet), which are in turn garbage
+ * collected (with the garbage collection roots being style contexts).
+ */
+
+
 class nsIStyleRule : public nsISupports {
 public:
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTYLE_RULE_IID)
 
   NS_IMETHOD GetStyleSheet(nsIStyleSheet*& aSheet) const = 0;
 
-  // The new mapping function.
+  /**
+   * |nsIStyleRule::MapRuleInfoInto| is a request to copy all stylistic
+   * data represented by the rule that:
+   *   + are relevant for |aRuleData->mSID| (the style struct ID)
+   *   + are not already filled into the data struct
+   * into the appropriate data struct in |aRuleData|.  It is important
+   * that only empty data are filled in, since the rule tree is walked
+   * from highest priority rule to least, so that the walk can stop if
+   * all needed data are found.  Thus overwriting non-empty data will
+   * break CSS cascading rules.
+   */
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData)=0;
 
 #ifdef DEBUG

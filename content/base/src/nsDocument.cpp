@@ -2170,7 +2170,8 @@ nsDocument::AttributeChanged(nsIContent* aChild, PRInt32 aNameSpaceID,
 
 NS_IMETHODIMP
 nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
-                             nsIStyleRule* aStyleRule, nsChangeHint aHint)
+                             nsIStyleRule* aOldStyleRule,
+                             nsIStyleRule* aNewStyleRule)
 {
   PRInt32 i;
 
@@ -2183,7 +2184,7 @@ nsDocument::StyleRuleChanged(nsIStyleSheet* aStyleSheet,
     // XXXbz We should _not_ be calling BeginUpdate from in here! The
     // caller of StyleRuleChanged should do that!
     observer->BeginUpdate(this);
-    observer->StyleRuleChanged(this, aStyleSheet, aStyleRule, aHint);
+    observer->StyleRuleChanged(this, aStyleSheet, aOldStyleRule, aNewStyleRule);
 
     // Make sure that the observer didn't remove itself during the
     // notification. If it did, update our index and count.

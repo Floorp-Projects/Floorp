@@ -396,27 +396,20 @@ nsStyleContext::ApplyStyleFixups(nsIPresContext* aPresContext)
 }
 
 void
-nsStyleContext::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule)
+nsStyleContext::ClearStyleData(nsIPresContext* aPresContext)
 {
-  PRBool matched = PR_TRUE;
-  if (aRule)
-    mRuleNode->PathContainsRule(aRule, &matched);
-  
-  if (matched) {
-    // First we need to clear out all of our style data.
-    if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData)
-      mCachedStyleData.Destroy(mBits, aPresContext);
+  // First we need to clear out all of our style data.
+  if (mCachedStyleData.mResetData || mCachedStyleData.mInheritedData)
+    mCachedStyleData.Destroy(mBits, aPresContext);
 
-    mBits = 0; // Clear all bits.
-    aRule = nsnull; // Force all structs to be blown away in the children.
-  }
+  mBits = 0; // Clear all bits.
 
   ApplyStyleFixups(aPresContext);
 
   if (mChild) {
     nsStyleContext* child = mChild;
     do {
-      child->ClearStyleData(aPresContext, aRule);
+      child->ClearStyleData(aPresContext);
       child = child->mNextSibling;
     } while (mChild != child);
   }
@@ -424,7 +417,7 @@ nsStyleContext::ClearStyleData(nsIPresContext* aPresContext, nsIStyleRule* aRule
   if (mEmptyChild) {
     nsStyleContext* child = mEmptyChild;
     do {
-      child->ClearStyleData(aPresContext, aRule);
+      child->ClearStyleData(aPresContext);
       child = child->mNextSibling;
     } while (mEmptyChild != child);
   }
