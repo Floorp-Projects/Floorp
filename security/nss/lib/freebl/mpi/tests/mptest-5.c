@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mptest-5.c,v 1.1 2000/07/14 00:44:44 nelsonb%netscape.com Exp $
+ *  $Id: mptest-5.c,v 1.2 2000/08/09 20:46:59 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -70,9 +70,10 @@ int main(int argc, char *argv[])
 
   mp_gcd(&a, &b, &c);
   printf("Euclid: c = "); mp_print(&c, stdout); fputc('\n', stdout);
+/*
   mp_bgcd(&a, &b, &c);
   printf("Binary: c = "); mp_print(&c, stdout); fputc('\n', stdout);
-
+*/
   mp_init(&x);
   mp_init(&y);
   printf("\nc = (a, b) = ax + by\n");
