@@ -17,8 +17,29 @@ function Startup()
   gOutgoingMime     = document.getElementById("outgoingDefault");
     
   gPrefApplicationsBundle = document.getElementById("bundle_prefApplications");
-  
-  gDescriptionField.focus();
+
+  // If an arg was passed, then it's an nsIHelperAppLauncherDialog
+  if ( "arguments" in window && window.arguments[0] ) {
+      // Get mime info.
+      var info = window.arguments[0].mLauncher.MIMEInfo;
+
+      // Fill the fields we can from this.
+      gDescriptionField.value = info.Description;
+      gExtensionField.value   = info.FirstExtension();
+      gMIMEField.value        = info.MIMEType;
+      var app = info.preferredApplicationHandler;
+      if ( app ) {
+          gAppPath.value      = app.unicodePath;
+      }
+
+      // Don't let user change mime type.
+      gMIMEField.setAttribute( "readonly", "true" );
+
+      // Start user in app field.
+      gAppPath.focus();
+  } else {
+      gDescriptionField.focus();
+  }
 }
 
 function chooseApp()
@@ -106,10 +127,23 @@ function onOK()
   handlerInfo.buildLinks();
   
   // flush the ds to disk.   
-  gDS = gDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
-  if (gDS)
-    gDS.Flush();
+  var remoteDS = gDS.QueryInterface(Components.interfaces.nsIRDFRemoteDataSource);
+  if (remoteDS)
+    remoteDS.Flush();
   
+  // If an arg was passed, then it's an nsIHelperAppLauncherDialog
+  // and we need to update its MIMEInfo.
+  if ( "arguments" in window && window.arguments[0] ) {
+      // Get mime info.
+      var info = window.arguments[0].mLauncher.MIMEInfo;
+
+      // Update fields that might have changed.
+      info.preferredAction = Components.interfaces.nsIMIMEInfo.useHelperApp;
+      info.Description = gDescriptionField.value;
+      info.preferredApplicationHandler = file;
+      info.applicationDescription = handlerInfo.appDisplayName;
+  }
+
   window.opener.gNewTypeRV = gMIMEField.value;
   window.close();  
 }
