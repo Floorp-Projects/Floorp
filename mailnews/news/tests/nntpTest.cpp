@@ -545,6 +545,8 @@ nsNntpTestDriver::OnPostMessage()
     printf("Subject: %s\n", subject);
     printf("Message:\n", message);
 
+	return rv;
+
 }
 nsresult nsNntpTestDriver::OnGetGroup()
 {
@@ -611,7 +613,7 @@ nsresult nsNntpTestDriver::OnReadNewsRC()
 
 nsresult nsNntpTestDriver::SetupUrl(char *groupname)
 {
-    int rv;
+    nsresult rv = NS_OK;
     
 	if (m_protocolInitialized == PR_FALSE)
 		InitializeProtocol(m_urlString);
@@ -637,6 +639,7 @@ nsresult nsNntpTestDriver::SetupUrl(char *groupname)
         }
     
     rv = m_nntpProtocol->LoadURL(m_url);
+	return rv; 
 } // if user provided the data...
 
 
