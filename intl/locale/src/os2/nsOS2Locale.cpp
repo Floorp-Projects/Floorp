@@ -62,7 +62,6 @@ nsOS2Locale::GetPlatformLocale(PRUnichar* os2Locale, size_t length)
 {
 
   LocaleObject locObj = NULL;
-  int          result = 0;
   UniChar      *localeName = NULL;
  
   int  res = UniCreateLocaleObject(UNI_UCS_STRING_POINTER, (UniChar *)L"", &locObj);
@@ -95,7 +94,8 @@ nsOS2Locale::GetXPLocale(const char* os2Locale, nsAString& locale)
     }
     if (!ParseLocaleString(os2Locale,lang_code,country_code,extra,'_')) {
 //      * locale = "x-user-defined";
-      CopyASCIItoUTF16(os2Locale, locale);  // use os2 if parse failed
+      // use os2 if parse failed
+      CopyASCIItoUTF16(nsDependentCString(os2Locale), locale);  
       return NS_OK;
     }
 
@@ -116,7 +116,7 @@ nsOS2Locale::GetXPLocale(const char* os2Locale, nsAString& locale)
       }
     }
 
-    CopyASCIItoUTF16(os2_locale, locale);  
+    CopyASCIItoUTF16(nsDependentCString(os2_locale), locale);  
     return NS_OK;
 
   }
