@@ -38,6 +38,7 @@ class nsIDOMNodeList;
 class nsIRDFNode;
 class nsCString;
 class nsString;
+class nsIRDFResource;
 
 // {3E727CE0-6499-11d3-BE38-00104BDE6048}
 #define NS_IXULCONTENTUTILS_IID \

@@ -6,7 +6,8 @@ interface XULTreeElement : XULElement {
   attribute XULElement currentItem;
   
   void selectItem(in XULElement treeItem);
-  
+  void timedSelect(in XULElement treeItem);
+
   void clearItemSelection();
   
   void addItemToSelection(in XULElement treeItem);

@@ -47,6 +47,8 @@ public:
 
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem)=0;
 
+  NS_IMETHOD    TimedSelect(nsIDOMXULElement* aTreeItem)=0;
+
   NS_IMETHOD    ClearItemSelection()=0;
 
   NS_IMETHOD    AddItemToSelection(nsIDOMXULElement* aTreeItem)=0;
@@ -68,6 +70,7 @@ public:
   NS_IMETHOD    GetCurrentItem(nsIDOMXULElement** aCurrentItem);  \
   NS_IMETHOD    SetCurrentItem(nsIDOMXULElement* aCurrentItem);  \
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem);  \
+  NS_IMETHOD    TimedSelect(nsIDOMXULElement* aTreeItem);  \
   NS_IMETHOD    ClearItemSelection();  \
   NS_IMETHOD    AddItemToSelection(nsIDOMXULElement* aTreeItem);  \
   NS_IMETHOD    RemoveItemFromSelection(nsIDOMXULElement* aTreeItem);  \
@@ -83,6 +86,7 @@ public:
   NS_IMETHOD    GetCurrentItem(nsIDOMXULElement** aCurrentItem) { return _to GetCurrentItem(aCurrentItem); } \
   NS_IMETHOD    SetCurrentItem(nsIDOMXULElement* aCurrentItem) { return _to SetCurrentItem(aCurrentItem); } \
   NS_IMETHOD    SelectItem(nsIDOMXULElement* aTreeItem) { return _to SelectItem(aTreeItem); }  \
+  NS_IMETHOD    TimedSelect(nsIDOMXULElement* aTreeItem) { return _to TimedSelect(aTreeItem); }  \
   NS_IMETHOD    ClearItemSelection() { return _to ClearItemSelection(); }  \
   NS_IMETHOD    AddItemToSelection(nsIDOMXULElement* aTreeItem) { return _to AddItemToSelection(aTreeItem); }  \
   NS_IMETHOD    RemoveItemFromSelection(nsIDOMXULElement* aTreeItem) { return _to RemoveItemFromSelection(aTreeItem); }  \

@@ -35,6 +35,7 @@
 #include "nsIDOMXULTreeElement.h"
 #include "nsIXULTreeContent.h"
 #include "nsRDFDOMNodeList.h"
+#include "nsITimer.h"
 
 class nsXULTreeElement : public nsXULAggregateElement,
                          public nsIDOMXULTreeElement,
@@ -72,6 +73,8 @@ public:
 
 protected:
     // Helpers
+    nsresult SetSelectionInternal(nsIDOMXULElement* aTreeItem, PRBool aTimedFlag);
+
     void ClearItemSelectionInternal();
     void AddItemToSelectionInternal(nsIDOMXULElement* aTreeItem);
     void RemoveItemFromSelectionInternal(nsIDOMXULElement* aTreeItem);
@@ -80,10 +83,15 @@ protected:
                                    PRBool aDescendIntoRows,
                                    PRBool aParentIsOpen,
                                    PRInt32* aResult);
+
+    static void SelectCallback(nsITimer *aTimer, void *aClosure);
+
 protected:
     nsRDFDOMNodeList* mSelectedItems;
     nsIDOMXULElement* mCurrentItem;
     nsIDOMXULElement* mSelectionStart;
+
+    nsCOMPtr<nsITimer> mSelectTimer;
 };
 
 

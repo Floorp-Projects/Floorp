@@ -242,6 +242,53 @@ XULTreeElementSelectItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
 
 //
+// Native method TimedSelect
+//
+PR_STATIC_CALLBACK(JSBool)
+XULTreeElementTimedSelect(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMXULTreeElement *nativeThis = (nsIDOMXULTreeElement*)nsJSUtils::nsGetNativeThis(cx, obj);
+  nsresult result = NS_OK;
+  nsCOMPtr<nsIDOMXULElement> b0;
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  {
+    *rval = JSVAL_NULL;
+    nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+    if (!secMan)
+        return PR_FALSE;
+    result = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_XULTREEELEMENT_TIMEDSELECT, PR_FALSE);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+    if (argc < 1) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_TOO_FEW_PARAMETERS_ERR);
+    }
+
+    if (JS_FALSE == nsJSUtils::nsConvertJSValToObject((nsISupports **)(void**)getter_AddRefs(b0),
+                                           kIXULElementIID,
+                                           NS_ConvertASCIItoUCS2("XULElement"),
+                                           cx,
+                                           argv[0])) {
+      return nsJSUtils::nsReportError(cx, obj, NS_ERROR_DOM_NOT_OBJECT_ERR);
+    }
+
+    result = nativeThis->TimedSelect(b0);
+    if (NS_FAILED(result)) {
+      return nsJSUtils::nsReportError(cx, obj, result);
+    }
+
+    *rval = JSVAL_VOID;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method ClearItemSelection
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -579,6 +626,7 @@ static JSPropertySpec XULTreeElementProperties[] =
 static JSFunctionSpec XULTreeElementMethods[] = 
 {
   {"selectItem",          XULTreeElementSelectItem,     1},
+  {"timedSelect",          XULTreeElementTimedSelect,     1},
   {"clearItemSelection",          XULTreeElementClearItemSelection,     0},
   {"addItemToSelection",          XULTreeElementAddItemToSelection,     1},
   {"removeItemFromSelection",          XULTreeElementRemoveItemFromSelection,     1},

@@ -136,8 +136,8 @@ nsXULTreeElement::GetSelectedItems(nsIDOMNodeList** aSelectedItems)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
+nsresult
+nsXULTreeElement::SetSelectionInternal(nsIDOMXULElement* aTreeItem, PRBool aTimedFlag)
 {
   NS_ASSERTION(aTreeItem, "trying to select a null tree item");
   if (!aTreeItem) return NS_OK;
@@ -163,9 +163,28 @@ nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
   SetCurrentItem(aTreeItem);
   mSelectionStart = nsnull;
 
-  FireOnSelectHandler();
+  if (aTimedFlag) {
+    if (mSelectTimer)
+      mSelectTimer->Cancel();
+
+    mSelectTimer = do_CreateInstance("component://netscape/timer");
+    mSelectTimer->Init(SelectCallback, this, 500, NS_PRIORITY_HIGH); // 100 ms delay
+  }
+  else FireOnSelectHandler();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::SelectItem(nsIDOMXULElement* aTreeItem)
+{
+  return SetSelectionInternal(aTreeItem, PR_FALSE);
+}
+
+NS_IMETHODIMP
+nsXULTreeElement::TimedSelect(nsIDOMXULElement* aTreeItem)
+{
+  return SetSelectionInternal(aTreeItem, PR_TRUE);
 }
 
 NS_IMETHODIMP    
@@ -432,3 +451,15 @@ nsXULTreeElement::SetCurrentItem(nsIDOMXULElement* aCurrentItem)
     current->SetAttribute(kNameSpaceID_None, kCurrentAtom, NS_ConvertASCIItoUCS2("true"), PR_TRUE);
   return NS_OK;
 }
+
+void
+nsXULTreeElement::SelectCallback(nsITimer *aTimer, void *aClosure)
+{
+  nsXULTreeElement* self = NS_STATIC_CAST(nsXULTreeElement*, aClosure);
+  if (self) {
+    self->FireOnSelectHandler();
+    aTimer->Cancel();
+    self->mSelectTimer = nsnull;
+  }
+} // sTimerCallback
+
