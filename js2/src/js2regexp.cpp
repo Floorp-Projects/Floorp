@@ -205,12 +205,12 @@ namespace MetaData {
             js2val inputStr = meta->engine->allocString(str);
             DEFINE_ROOTKEEPER(meta, rk2, inputStr);
             if (!test)
-                meta->createDynamicProperty(A, meta->engine->numberToStringAtom((long)0), matchStr, ReadWriteAccess, false, true);
+                meta->createDynamicProperty(A, meta->engine->numberToStringAtom((uint32)0), matchStr, ReadWriteAccess, false, true);
             js2val parenStr = JS2VAL_VOID;
             DEFINE_ROOTKEEPER(meta, rk3, parenStr);
             if (match->parenCount == 0) // arrange to set the lastParen to "", not undefined (it's a non-ecma 1.2 thing)
                 parenStr = meta->engine->allocString("");
-            for (int32 i = 0; i < match->parenCount; i++) {
+            for (uint32 i = 0; i < match->parenCount; i++) {
                 if (match->parens[i].index != -1) {
                     parenStr = meta->engine->allocString(str->substr((uint32)(match->parens[i].index), (uint32)(match->parens[i].length)));
                     if (!test)
