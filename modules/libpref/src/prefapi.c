@@ -1299,7 +1299,7 @@ PrefResult pref_GetIntPref(const char *pref_name,PRInt32 * return_int, PRBool ge
 		if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
                 {
                         *return_int = pref->defaultPref.intVal;
-                        //check to see if we even had a default
+                        /* check to see if we even had a default */
                         if(*return_int == ((PRInt32) BOGUS_DEFAULT_INT_PREF_VALUE))
                                 return PREF_DEFAULT_VALUE_NOT_INITIALIZED;
                 }
@@ -1324,7 +1324,7 @@ PrefResult pref_GetBoolPref(const char *pref_name, PRBool * return_value, PRBool
 		if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
                 {
                         *return_value = pref->defaultPref.boolVal;
-                        //check to see if we even had a default
+                        /* check to see if we even had a default */
                         if(*return_value == ((PRBool) BOGUS_DEFAULT_BOOL_PREF_VALUE))
                                 return PREF_DEFAULT_VALUE_NOT_INITIALIZED;
                 }
