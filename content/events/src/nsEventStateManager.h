@@ -33,9 +33,6 @@ class nsIDocument;
 class nsIScrollableView;
 class nsISelfScrollingFrame;
 
-#undef USE_FOCUS_FOR_MOUSEWHEEL // experimental code to use only the focus
-                                // system to track the mousewheel
-
 /*
  * Event listener manager
  */
@@ -115,11 +112,6 @@ protected:
   // These functions are all for mousewheel scrolling
   nsISelfScrollingFrame* GetParentSelfScrollingFrame(nsIFrame* aFrame);
   nsIScrollableView* GetNearestScrollingView(nsIView* aView);
-#ifdef USE_FOCUS_FOR_MOUSEWHEEL
-  nsresult  GetScrollableFrameOrView(nsIScrollableView* &sv,
-                                     nsISelfScrollingFrame* &sf,
-                                     nsIView* &focusView);
-#else
 
   // This function MAY CHANGE the PresContext that you pass into it.  It
   // will be changed to the PresContext for the main document.  If the
@@ -136,7 +128,6 @@ protected:
                                      nsIScrollableView* &sv,
                                      nsISelfScrollingFrame* &sf,
                                      nsIView* &focusView);
-#endif
   void ForceViewUpdate(nsIView* aView);
   nsresult getPrefService();
   // end mousewheel functions

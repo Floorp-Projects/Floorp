@@ -83,7 +83,8 @@ PRUint32 nsEventStateManager::mInstanceCount = 0;
 enum {
  MOUSE_SCROLL_N_LINES,
  MOUSE_SCROLL_PAGE,
- MOUSE_SCROLL_HISTORY
+ MOUSE_SCROLL_HISTORY,
+ MOUSE_SCROLL_TEXTSIZE
 };
 
 nsEventStateManager::nsEventStateManager()
@@ -793,13 +794,9 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           nsISelfScrollingFrame* sf = nsnull;
           nsIPresContext* mwPresContext = aPresContext;
           
-#ifdef USE_FOCUS_FOR_MOUSEWHEEL
-          if (NS_SUCCEEDED(GetScrollableFrameOrView(sv, sf, focusView)))
-#else
           if (NS_SUCCEEDED(GetScrollableFrameOrView(mwPresContext,
                                                       aTargetFrame, aView, sv,
                                                       sf, focusView)))
-#endif
             {
               if (sv)
                 {
@@ -825,12 +822,8 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
           nsIScrollableView* sv = nsnull;
           nsISelfScrollingFrame* sf = nsnull;
           
-#ifdef USE_FOCUS_FOR_MOUSEWHEEL
-          if (NS_SUCCEEDED(GetScrollableFrameOrView(sv, sf, focusView)))
-#else
           if (NS_SUCCEEDED(GetScrollableFrameOrView(aPresContext, aTargetFrame,
                                                     aView, sv, sf, focusView)))
-#endif
             {
               if (sv)
                 {
@@ -859,6 +852,10 @@ nsEventStateManager::PostHandleEvent(nsIPresContext* aPresContext,
         }
         break;
 
+      case MOUSE_SCROLL_TEXTSIZE:
+        {
+        break;
+        }
       }
       *aStatus = nsEventStatus_eConsumeNoDefault;
 
@@ -2262,8 +2259,6 @@ nsEventStateManager::UnregisterAccessKey(nsIFrame * aFrame)
   return NS_ERROR_FAILURE;
 }
 
-#ifndef USE_FOCUS_FOR_MOUSEWHEEL
-
 // This function MAY CHANGE the PresContext that you pass into it.  It
 // will be changed to the PresContext for the main document.  If the
 // new PresContext differs from the one you passed in, you should
@@ -2312,69 +2307,20 @@ nsEventStateManager::GetDocumentFrame(nsIPresContext* &aPresContext)
 
   return aFrame;
 }
-#endif // !USE_FOCUS_FOR_MOUSEWHEEL
-
-#ifdef USE_FOCUS_FOR_MOUSEWHEEL
-// This is some work-in-progress code that uses only the focus
-// to determine what to scroll
-
-nsresult
-nsEventStateManager::GetScrollableFrameOrView(nsIScrollableView* &sv,
-                                              nsISelfScrollingFrame* &sf,
-                                              nsIView* &focusView)
-{
-  NS_ASSERTION(mPresContext, "ESM has a null prescontext");
-  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: gLastFocusedContent=%p\n", gLastFocusedContent));
-
-  nsIFrame* focusFrame = nsnull;
-  nsCOMPtr<nsIPresShell> presShell;
-  mPresContext->GetShell(getter_AddRefs(presShell));
-  if (!presShell || !gLastFocusedContent)
-    {
-      sv = nsnull;
-      sf = nsnull;
-      focusView = nsnull;
-      return NS_OK;
-    }
-
-  presShell->GetPrimaryFrameFor(gLastFocusedContent, &focusFrame);
-  if (focusFrame) {
-    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got focusFrame\n"));
-    focusFrame->GetView(mPresContext, &focusView);
-  }
-
-  if (focusView) {
-    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got focusView\n"));
-    sv = GetNearestScrollingView(focusView);
-    if (sv) {
-      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got scrollingView\n"));
-      sf = nsnull;
-      return NS_OK; // success
-    }
-  }
-
-  if (focusFrame)
-    sf = GetParentSelfScrollingFrame(focusFrame);
-  if (sf)
-    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got sf\n"));
-  return NS_OK;
-}
-
-#else // USE_FOCUS_FOR_MOUSEWHEEL
 
 // There are three posibilities for what this function returns:
-//  sv and focusView non-null, sf null  (a view should be scrolled)
+//  sv and focusView non-null, sf null  (a nsIScrollableView should be scrolled)
 //  sv and focusView null, sf non-null  (a frame should be scrolled)
 //  sv, focusView, and sf all null (nothing to scroll)
+//
 // The location works like this:
-//  First, check for a focused frame and try to get its view.
-//    If we can, and can get an nsIScrollableView for it, use that.
-//  If there is a focused frame but it does not have a view, or it has
-//   a view but no nsIScrollableView, check for an nsISelfScrollingFrame.
-//    If we find one, use that.
-//  If there is no focused frame, we first look for an nsISelfScrollingFrame
-//   as an ancestor of the event target.  If there isn't one, we try to get
-//   an nsIView corresponding to the main document.
+//  First, check aTargetFrame (and its ancestors) looking for an
+//    nsISelfScrollingFrame.  If we find this, stop immediately.
+//  Next, check for a focused frame and try to get its view.
+//    If we can, and we can also get an nsIScrollableView for it
+//    (using GetNearestScrollingView), use that view to scroll.
+//  If there is no focused frame, we try to get an nsIView corresponding
+//    to the main document, and then call GetNearestScrollingView  on that.
 // Confused yet?
 // This function may call GetDocumentFrame, so read the warning above
 // regarding the PresContext that you pass into this function.
@@ -2402,6 +2348,15 @@ nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* &aPresContext,
   PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("------------------------\n"));
   PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: aTargetFrame = %p, aView = %p\n", aTargetFrame, aView));
           
+  sf = GetParentSelfScrollingFrame(aTargetFrame);
+  PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: SelfScrollingFrame = %p\n", sf));
+
+  if (sf) {
+    sv = nsnull;
+    focusView = nsnull;
+    return NS_OK;
+  }
+
   if (mCurrentFocus) {
     PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: mCurrentFocus = %p\n", mCurrentFocus));
     
@@ -2427,53 +2382,28 @@ nsEventStateManager::GetScrollableFrameOrView(nsIPresContext* &aPresContext,
     
     PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: mCurrentFocus = NULL\n"));
 
-    // If we can get an nsISelfScrollingFrame, that is preferable to getting
-    // the document view
+    focusFrame = GetDocumentFrame(aPresContext);
+    focusFrame->GetView(aPresContext, &focusView);
 
-    sf = GetParentSelfScrollingFrame(aTargetFrame);
-    if (sf)
-      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Found a SelfScrollingFrame: sf = %p\n", sf));
-    else {
-      focusFrame = GetDocumentFrame(aPresContext);
-      focusFrame->GetView(aPresContext, &focusView);
-
-      if (focusView)
-        PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Got view for document frame!\n"));
-      else
-        PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Couldn't get view for document frame\n"));
-      
-    }
+    if (focusView)
+      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got doc focusView\n"));
   }
 
   PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: focusFrame=%p, focusView=%p\n", focusFrame, focusView));
-  
-  if (focusView)
+
+  sv = nsnull;
+
+  if (focusView) {
     sv = GetNearestScrollingView(focusView);
-
-  if (sv) {
-    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Found a ScrollingView\n"));
-
-   // We can stop now
-    sf = nsnull;
-    return NS_OK;
-  }
-  else {
-    PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: No scrolling view, looking for scrolling frame\n"));
-    if (!sf)
-      sf = GetParentSelfScrollingFrame(aTargetFrame);
-
-    if (sf)
-      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: Found a scrolling frame\n"));
-
-    sv = nsnull;
-    focusView = nsnull;
-    return NS_OK;
+    
+    if (sv)
+      PR_LOG(MOUSEWHEEL, PR_LOG_DEBUG, ("GetScrollableFrameOrView: got sv\n"));
+    else
+      focusView = nsnull;
   }
 
-  return NS_OK;  // should not be reached
+  return NS_OK;
 }
-
-#endif // USE_FOCUS_FOR_MOUSEWHEEL
 
 void nsEventStateManager::ForceViewUpdate(nsIView* aView)
 {
