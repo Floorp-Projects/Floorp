@@ -23,7 +23,10 @@
 #include "nsFileControlFrame.h"
 #include "nsFormFrame.h"
 
-//#define DEBUG_NEWFRAME 1
+#ifdef DEBUG_MJUDGE
+#define DEBUG_NEWFRAME 1
+#endif
+
 
 #ifndef DEBUG_NEWFRAME
 #include "nsGfxTextControlFrame.h"
