@@ -141,7 +141,7 @@ $file_rev = $revision;
 
 # Handle the "line_nums" argument
 #
-$opt_line_nums = 0;
+$opt_line_nums = 1;
 $opt_line_nums = 1 if $cookie_jar{'line_nums'} eq 'on';
 $opt_line_nums = 0 if $form{'line_nums'} =~ /off|no|0/i;
 $opt_line_nums = 1 if $form{'line_nums'} =~ /on|yes|1/i;
