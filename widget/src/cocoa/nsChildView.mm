@@ -2385,9 +2385,11 @@ nsChildView::Idle()
 // Return true if the correct modifiers are pressed to perform hand scrolling.
 + (BOOL) areHandScrollModifiers:(unsigned int)modifiers
 {
-  // The command and option key should be held down. Ignore caps lock;
-  return (modifiers | NSAlphaShiftKeyMask) ==
-    (NSAlphaShiftKeyMask | NSCommandKeyMask | NSAlternateKeyMask);
+  // The command and option key should be held down; ignore caps lock. We only
+  // check the low word because Apple started using it in panther for other purposes
+  // (no idea what).
+  modifiers |= NSAlphaShiftKeyMask;          // ignore capsLock by setting it explicitly to match
+  return modifiers >> 16 == (NSAlphaShiftKeyMask | NSCommandKeyMask | NSAlternateKeyMask) >> 16;
 }
 
 //
