@@ -297,7 +297,7 @@ class basic_nsAReadableString
         // |Equals()| is a synonym for |Compare()|
       PRBool  Equals( const basic_nsAReadableString<CharT>& rhs ) const;
       PRBool  Equals( const CharT* ) const;
-      PRBool  Equals( const CharT*, PRUint32 ) const;
+//    PRBool  Equals( const CharT*, PRUint32 ) const;
 //    PRBool  Equals( CharT ) const;
 
         // Comparison operators are all synonyms for |Compare()|
@@ -655,7 +655,7 @@ class basic_nsLiteralString
             //  constructor if they don't really know the length.
           if ( aLength == PRUint32(-1) )
             {
-              NS_WARNING("Tell scc: Caller constructing a string doesn't know the real length.  Please use the other constructor.");
+//            NS_WARNING("Tell scc: Caller constructing a string doesn't know the real length.  Please use the other constructor.");
               mEnd = mStart + nsCharTraits<CharT>::length(mStart);
             }
         }
