@@ -53,7 +53,7 @@ CControlEventSink::~CControlEventSink()
 }
 
 BOOL
-CControlEventSink::GetEventSinkIID(IUnknown *pControl, IID &iid)
+CControlEventSink::GetEventSinkIID(IUnknown *pControl, IID &iid, ITypeInfo **typeInfo)
 {
 	iid = GUID_NULL;
     if (!pControl)
@@ -62,15 +62,15 @@ CControlEventSink::GetEventSinkIID(IUnknown *pControl, IID &iid)
     }
 
 	// IProvideClassInfo2 way is easiest
-    CComQIPtr<IProvideClassInfo2> classInfo2 = pControl;
-    if (classInfo2)
-    {
-        classInfo2->GetGUID(GUIDKIND_DEFAULT_SOURCE_DISP_IID, &iid);
-        if (!::IsEqualIID(iid, GUID_NULL))
-        {
-            return TRUE;
-        }
-    }
+//    CComQIPtr<IProvideClassInfo2> classInfo2 = pControl;
+//    if (classInfo2)
+//    {
+//        classInfo2->GetGUID(GUIDKIND_DEFAULT_SOURCE_DISP_IID, &iid);
+//        if (!::IsEqualIID(iid, GUID_NULL))
+//        {
+//            return TRUE;
+//        }
+//    }
 
     // Yuck, the hard way
     CComQIPtr<IProvideClassInfo> classInfo = pControl;
@@ -109,6 +109,11 @@ CControlEventSink::GetEventSinkIID(IUnknown *pControl, IID &iid)
                 if (SUCCEEDED(eventSinkTypeInfo->GetTypeAttr(&eventSinkAttr)))
                 {
                     iid = eventSinkAttr->guid;
+                    if (typeInfo)
+                    {
+                        *typeInfo = eventSinkTypeInfo.p;
+                        (*typeInfo)->AddRef();
+                    }
                     eventSinkTypeInfo->ReleaseTypeAttr(eventSinkAttr);
                 }
             }
@@ -145,7 +150,8 @@ HRESULT CControlEventSink::SubscribeToEvents(IUnknown *pControl)
     // to events via the connection point container.
 
     IID iidEventSink;
-    if (!GetEventSinkIID(pControl, iidEventSink))
+    CComPtr<ITypeInfo> typeInfo;
+    if (!GetEventSinkIID(pControl, iidEventSink, &typeInfo))
     {
         return E_FAIL;
     }
@@ -170,6 +176,7 @@ HRESULT CControlEventSink::SubscribeToEvents(IUnknown *pControl)
 
     m_spEventCP = cp;
     m_dwEventCookie = dwCookie;
+    m_spEventSinkTypeInfo = typeInfo;
     return S_OK;
 }
 
@@ -197,7 +204,27 @@ HRESULT STDMETHODCALLTYPE CControlEventSink::GetIDsOfNames(/* [in] */ REFIID rii
 
 HRESULT STDMETHODCALLTYPE CControlEventSink::Invoke(/* [in] */ DISPID dispIdMember, /* [in] */ REFIID riid, /* [in] */ LCID lcid, /* [in] */ WORD wFlags, /* [out][in] */ DISPPARAMS __RPC_FAR *pDispParams, /* [out] */ VARIANT __RPC_FAR *pVarResult, /* [out] */ EXCEPINFO __RPC_FAR *pExcepInfo, /* [out] */ UINT __RPC_FAR *puArgErr)
 {
+    FUNCDESC *pFuncDesc = NULL;
+    if (m_spEventSinkTypeInfo)
+        m_spEventSinkTypeInfo->GetFuncDesc(dispIdMember, &pFuncDesc);
+
+#ifdef DEBUG
     ATLTRACE(_T("Invoke(%d)\n"), (int) dispIdMember);
+    if (m_spEventSinkTypeInfo)
+    {
+        UINT cNames = 0;
+        CComBSTR bstrName;
+        m_spEventSinkTypeInfo->GetNames(dispIdMember, &bstrName, 1, &cNames);
+        ATLTRACE(_T("  %S\n"), bstrName.m_str);
+    }
+    if (pFuncDesc)
+    {
+    }
+#endif
+    if (m_spEventSinkTypeInfo)
+    {
+        m_spEventSinkTypeInfo->ReleaseFuncDesc(pFuncDesc);
+    }
     return S_OK;
 }
 

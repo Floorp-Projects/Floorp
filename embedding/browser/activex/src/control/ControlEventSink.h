@@ -51,6 +51,7 @@ public:
 
     // Current event connection point
     CComPtr<IConnectionPoint> m_spEventCP;
+    CComPtr<ITypeInfo> m_spEventSinkTypeInfo;
     DWORD m_dwEventCookie;
     IID m_EventIID;
 
@@ -77,7 +78,7 @@ END_COM_MAP()
 
     virtual HRESULT SubscribeToEvents(IUnknown *pControl);
     virtual void UnsubscribeFromEvents();
-    virtual BOOL GetEventSinkIID(IUnknown *pControl, IID &iid);
+    virtual BOOL GetEventSinkIID(IUnknown *pControl, IID &iid, ITypeInfo **typeInfo);
 
 // IDispatch
     virtual HRESULT STDMETHODCALLTYPE GetTypeInfoCount(/* [out] */ UINT __RPC_FAR *pctinfo);
