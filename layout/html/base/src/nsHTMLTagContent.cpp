@@ -1110,7 +1110,7 @@ nsresult nsHTMLTagContent::HandleDOMEvent(nsIPresContext& aPresContext,
           mEvent.message = NS_MOUSE_LEFT_CLICK;
           HandleDOMEvent(aPresContext, &mEvent, nsnull, DOM_EVENT_INIT, mStatus);
 
-          if (mStatus != nsEventStatus_eConsumeNoDefault) {
+          if (nsEventStatus_eConsumeNoDefault != mStatus) {
             nsAutoString base, href, target;
             GetAttribute(nsString(NS_HTML_BASE_HREF), base);
             GetAttribute(nsString("href"), href);
