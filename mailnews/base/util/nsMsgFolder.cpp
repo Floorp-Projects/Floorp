@@ -877,16 +877,24 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgF
 	// will return nsnull if we can't find it
 	*child = nsnull;
 
+	nsCOMPtr <nsIEnumerator> aEnumerator;
 
-	PRUint32 count;
-	rv = mSubFolders->Count(&count);
-	if (NS_FAILED(rv)) return rv;
+	rv = GetSubFolders(getter_AddRefs(aEnumerator));
+	if(NS_FAILED(rv)) 
+		return rv;
 
-	for (PRUint32 i = 0; i < count; i++)
+	nsCOMPtr<nsISupports> aItem;
+
+	rv = aEnumerator->First();
+	if (!NS_SUCCEEDED(rv))
+		return NS_OK;	// it's OK, there are no sub-folders.
+
+	while(NS_SUCCEEDED(rv))
 	{
-		nsCOMPtr<nsISupports> supports = getter_AddRefs(mSubFolders->ElementAt(i));
-		nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(supports);
-		nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(supports);
+		rv = aEnumerator->CurrentItem(getter_AddRefs(aItem));
+		if (NS_FAILED(rv)) break;
+		nsCOMPtr<nsIRDFResource> folderResource = do_QueryInterface(aItem);
+		nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(aItem);
 		if(folderResource  && folder)
 		{
 			char *folderURI =nsnull;
@@ -912,7 +920,13 @@ NS_IMETHODIMP nsMsgFolder::GetChildWithURI(const char *uri, PRBool deep, nsIMsgF
 					return NS_OK;
 			}
 		}
-  }
+		rv = aEnumerator->Next();
+		if (!NS_SUCCEEDED(rv))
+		{
+			rv = NS_OK;
+			break;
+		}
+	}
 
   return NS_OK;
 }
@@ -1506,8 +1520,11 @@ NS_IMETHODIMP nsMsgFolder::OnFlagChange(PRUint32 flag)
   rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
   if (NS_SUCCEEDED(rv) && folderInfo)
   {
+#ifdef DEBUG_bienvenu
       nsXPIDLString name;
       rv = GetName(getter_Copies(name));
+      NS_ASSERTION(nsCRT::strcmp(name, "Trash") || (mFlags & MSG_FOLDER_FLAG_TRASH), "lost trash flag");
+#endif
       folderInfo->SetFlags((PRInt32) mFlags);
       if (db)
         db->Commit(nsMsgDBCommitType::kLargeCommit);
