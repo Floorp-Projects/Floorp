@@ -43,11 +43,12 @@
 #include "nsCOMPtr.h"
 #include "nsISupportsArray.h"
 #include "nsCRT.h"
+#include "nsAuthEngine.h"
+#include "nsAuthEngine.h"
 #include "nsIProxy.h"
 
 //Forward decl.
 class nsHashtable;
-class nsIChannel;
 class nsHTTPChannel;
 
 class nsHTTPHandler : public nsIHTTPProtocolHandler, public nsIProxy 
@@ -149,7 +150,14 @@ public:
 
     virtual nsresult CancelPendingChannel(nsHTTPChannel* aChannel);
 
+    virtual nsresult GetAuthEngine(nsAuthEngine** o_AuthEngine)
+    {
+        *o_AuthEngine = &mAuthEngine;
+        return NS_OK;
+    };
+
 protected:
+
     // None
     nsHTTPHandler(void);
     virtual ~nsHTTPHandler();
@@ -158,6 +166,7 @@ protected:
     // maintains to verify unique requests. 
     nsCOMPtr<nsISupportsArray> mConnections;
     nsCOMPtr<nsISupportsArray> mPendingChannelList;
+    nsAuthEngine    mAuthEngine;
     nsCOMPtr<nsISupportsArray> mTransportList;
     // Transports that are idle (ready to be used again)
     nsCOMPtr<nsISupportsArray> mIdleTransports;

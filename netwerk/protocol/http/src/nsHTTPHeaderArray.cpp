@@ -88,8 +88,8 @@ nsHTTPHeaderArray::~nsHTTPHeaderArray()
 }
 
 
-nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, const char* aValue)
-{
+nsresult nsHTTPHeaderArray::SetHeader(nsIAtom* aHeader, 
+        const char* aValue){
   nsHeaderEntry *entry = nsnull;
   PRInt32 i;
 

@@ -20,16 +20,30 @@
  * Contributor(s): 
  */
 
+#include "nscore.h"
 #include "nsAuth.h"
 #include "nsCRT.h"
 
-nsAuth::nsAuth(nsIURI* iURI):
+nsAuth::nsAuth(nsIURI* i_URI, 
+        const char* i_encString, 
+        const char* i_username,
+        const char* i_password,
+        const char* i_realm):
     encodedString(0),
     password(0),
     realm(0),
     username(0),
-    uri(iURI) // Need to do a weak com ptr here. 
+    uri(dont_QueryInterface(i_URI))
 {
+    NS_INIT_REFCNT();
+    if (i_encString)
+        encodedString = nsCRT::strdup(i_encString);
+    if (i_username)
+        username = nsCRT::strdup(i_username);
+    if (i_password)
+        password = nsCRT::strdup(i_password);
+    if (i_realm)
+        realm = nsCRT::strdup(i_realm);
 }
 
 nsAuth::~nsAuth()
@@ -39,3 +53,23 @@ nsAuth::~nsAuth()
     CRTFREEIF(password);
     CRTFREEIF(realm);
 }
+
+NS_IMETHODIMP
+nsAuth::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+{
+    if (NULL == aInstancePtr)
+        return NS_ERROR_NULL_POINTER;
+
+    *aInstancePtr = NULL;
+    
+    if (aIID.Equals(NS_GET_IID(nsISupports))) {
+        // we don't have an nsIAuth
+        *aInstancePtr = NS_STATIC_CAST(nsISupports*, this); 
+        NS_ADDREF_THIS();
+        return NS_OK;
+    }
+    return NS_NOINTERFACE;
+}
+
+NS_IMPL_ADDREF(nsAuth);
+NS_IMPL_RELEASE(nsAuth);
