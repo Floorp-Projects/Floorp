@@ -222,7 +222,7 @@ function ReplaceWhitespace(string, charReplace) {
 //   characters: "a"-"z","A"-"Z","0"-"9", "_", ":", "-", and "."
 function ConvertToCDATAString(string)
 {
-  return ReplaceWhitespace(string,"_").replace(/[^a-zA-Z0-9_\.\-\:]+/g,'');
+  return string.replace(/\s+/g,"_").replace(/[^a-zA-Z0-9_\.\-\:]+/g,'');
 }
 
 // this function takes an elementID and a flag
@@ -905,7 +905,6 @@ function SetMetaElementContent(metaElement, content, insertNew)
     {
       if (insertNew)
       {
-        // Don't need undo for set attribute, just for InsertElement
         metaElement.setAttribute("content", content);
         AppendHeadElement(metaElement);
       }

@@ -45,7 +45,7 @@ function Startup()
 
     // Make a copy to use for AdvancedEdit
     globalElement = anchorElement.cloneNode(false);
-    originalName = anchorElement.name;
+    originalName = ConvertToCDATAString(anchorElement.name);
   } else {
     insertNew = true;
     // We don't have an element selected, 
@@ -74,6 +74,7 @@ function Startup()
 
   InitDialog();
   
+  DoEnabling();
   SetTextboxFocus(nameInput);
   SetWindowLocation();
 }
@@ -92,6 +93,12 @@ function ChangeName()
     //  have to UnEscapeAndConvert beforehand - too messy!
     nameInput.value = ConvertToCDATAString(nameInput.value);
   }
+  DoEnabling();
+}
+
+function DoEnabling()
+{
+  SetElementEnabledById( "ok", nameInput.value.length > 0 );
 }
 
 function AnchorNameExists(name)
