@@ -119,8 +119,10 @@ nsPresContext::~nsPresContext()
   NS_IF_RELEASE(mEventManager);
   NS_IF_RELEASE(mDeviceContext);
   // Unregister preference callbacks
-  mPrefs->UnregisterCallback("browser.", PrefChangedCallback, (void*)this);
-  mPrefs->UnregisterCallback("intl.font2.", PrefChangedCallback, (void*)this);
+  if (nsnull != mPrefs) {
+    mPrefs->UnregisterCallback("browser.", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("intl.font2.", PrefChangedCallback, (void*)this);
+  }
   NS_IF_RELEASE(mPrefs);
   NS_IF_RELEASE(mBaseURL);
 }
