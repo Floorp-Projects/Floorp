@@ -1608,7 +1608,7 @@ nsPkcs11::Addmodule(const nsString& aModuleName,
                              &errorString);
       *aReturn = JS_OK_ADD_MOD;
       goto loser;
-    } else if (status = (CMTStatus)-2) {
+    } else if (status == (CMTStatus)-2) {
       *aReturn = JS_ERR_ADD_DUPLICATE_MOD;
       goto loser;
     } else {
