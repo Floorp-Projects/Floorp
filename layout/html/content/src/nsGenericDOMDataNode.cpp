@@ -294,6 +294,7 @@ nsGenericDOMDataNode::ReplaceData(PRUint32 aOffset, PRUint32 aCount,
 
   // Switch to new buffer
   mText.SetTo(to, newLength);
+  delete [] to;
 
   // Notify the document that the text changed
   if (nsnull != mDocument) {
