@@ -2180,7 +2180,7 @@ nsCSSRendering::PaintBackground(nsIPresContext* aPresContext,
       yDistance = dirtyRect.height;
       needBackgroundOnContinuation = PR_TRUE;
       // We need to render the background color if the image is transparent
-      needBackgroundColor = image->GetHasAlphaMask();
+      //needBackgroundColor = image->GetHasAlphaMask();
       break;
     }
 
