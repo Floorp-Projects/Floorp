@@ -94,7 +94,11 @@ var cmdFileController =
                     out.close();
                     delete out;
                     delete trans;
-                    fp.file.permissions = 420;
+                    try {
+                        fp.file.permissions = 420;
+                    }
+                    catch (e) {
+                    }
                 }
                 break;
             case 'cmd_fl_import':
