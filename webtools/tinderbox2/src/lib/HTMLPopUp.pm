@@ -12,8 +12,8 @@
 # the completed string before it is returned.
 
 
-# $Revision: 1.27 $ 
-# $Date: 2003/08/17 01:44:08 $ 
+# $Revision: 1.28 $ 
+# $Date: 2004/07/12 01:01:19 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/HTMLPopUp.pm,v $ 
 # $Name:  $ 
@@ -283,7 +283,7 @@ sub regenerate_HTML_pages {
     $ENV{"REQUEST_METHOD"} = '';
 
     system(
-           $FileStructure::CGIBIN_DIR.'tinder.cgi', 
+           $FileStructure::CGIBIN_DIR.'/tinder.cgi', 
            '--daemon-mode',
            );
 
