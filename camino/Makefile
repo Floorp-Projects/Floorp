@@ -59,7 +59,7 @@ TARGET		= Camino
 endif
 
 all:
-	pbxbuild -target $(TARGET) -buildstyle $(BUILDSTYLE)
+	$(PBBUILD) -target $(TARGET) -buildstyle $(BUILDSTYLE)
 
 clean clobber:
 	rm -rf build
