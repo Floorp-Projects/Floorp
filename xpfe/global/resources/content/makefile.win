@@ -69,7 +69,6 @@ CHROME_CONTENT= \
 	.\wizardOverlay.js \
 	.\wizardOverlay.xul \
 	.\treePopups.js \
-	.\content.css \
 	.\xulBindings.xml \
 	.\htmlBindings.xml \
 	.\menulistBindings.xml \

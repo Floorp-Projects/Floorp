@@ -78,7 +78,6 @@ CHROME_CONTENT= \
 		wizardOverlay.js \
 		wizardOverlay.xul \
 		treePopups.js \
-		content.css \
 		htmlBindings.xml \
 		menulistBindings.xml \
 		radioBindings.xml \
