@@ -291,9 +291,8 @@ CONST_OID nsExtCertScopeOfUse[]    	= { NETSCAPE_CERT_EXT, 0x11 };
 CONST_OID nsKeyUsageGovtApproved[] 	= { NETSCAPE_POLICY, 0x01 };
 
 /* Netscape other name types */
-CONST_OID netscapeNickname[] 		= { NETSCAPE_NAME_COMPONENTS, 0x01};
-/* Reserved Netscape REF605437
-   (2 16 840 1 113730 7 2) = { NETSCAPE_NAME_COMPONENTS, 0x02 }; */
+CONST_OID netscapeNickname[] 		= { NETSCAPE_NAME_COMPONENTS, 0x01 };
+CONST_OID netscapeAOLScreenname[] 	= { NETSCAPE_NAME_COMPONENTS, 0x02 };
 
 /* OIDs needed for cert server */
 CONST_OID netscapeRecoveryRequest[] 	= { NETSCAPE_CERT_SERVER_CRMF, 0x01 };
@@ -1181,6 +1180,9 @@ const static SECOidData oids[] = {
     OD( secgECsecp521r1, SEC_OID_SECG_EC_SECP521R1,
 	"SECG elliptic curve secp521r1 (aka NIST P-521)", 
 	CKM_INVALID_MECHANISM,
+	INVALID_CERT_EXTENSION ),
+    OD( netscapeAOLScreenname, SEC_OID_NETSCAPE_AOLSCREENNAME,
+	"AOL Screenname", CKM_INVALID_MECHANISM,
 	INVALID_CERT_EXTENSION ),
 
 };
