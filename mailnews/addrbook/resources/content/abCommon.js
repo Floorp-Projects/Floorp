@@ -825,6 +825,9 @@ function InitViewSortByMenu()
 
 function GenerateAddressFromCard(card)
 {
+  if (!card)
+    return "";
+
   var email;
 
   if (card.isMailList) 
