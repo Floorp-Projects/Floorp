@@ -1444,6 +1444,13 @@
             <menuitem label="&markAllReadCmd.label;" key="key_markAllRead" accesskey="&markAllReadCmd.accesskey;" observes="cmd_markAllRead"/>
             <menuseparator/>
             <menuitem type="checkbox" id="markFlaggedMenuItem" label="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
+            <menuseparator/>
+            <menuitem label="&markAsJunkCmd.label;" 
+                      accesskey="&markAsJunkCmd.accesskey;" 
+                      observes="cmd_markAsJunk"/>
+            <menuitem label="&markAsNotJunkCmd.label;" 
+                      accesskey="&markAsNotJunkCmd.accesskey;" 
+                      observes="cmd_markAsNotJunk"/>
           </menupopup>
         </menu>
         <menuseparator/>
