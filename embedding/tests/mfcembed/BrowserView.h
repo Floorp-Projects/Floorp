@@ -40,6 +40,7 @@
 class CBrowserFrame;
 class CBrowserImpl;
 class CFindDialog;
+class CPrintProgressDialog;
 
 class CBrowserView : public CWnd
 {
@@ -94,13 +95,16 @@ public:
 
 	inline void ClearFindDialog() { m_pFindDlg = NULL; }
 	CFindDialog* m_pFindDlg;
-
+  CPrintProgressDialog* m_pPrintProgressDlg;
     // When set to TRUE...
     // indicates that the clipboard operation needs to be 
     // performed on the UrlBar rather than on
     // the web page content
     //
     BOOL m_bUrlBarClipOp;
+
+    // indicates whether we are currently printing
+    BOOL m_bCurrentlyPrinting;
 
 	// Overrides
 	// ClassWizard generated virtual function overrides
@@ -144,6 +148,8 @@ protected:
 	afx_msg void OnSaveLinkAs();
 	afx_msg void OnSaveImageAs();
 	afx_msg void OnShowFindDlg();
+	afx_msg void OnFilePrint();
+	afx_msg void OnUpdateFilePrint(CCmdUI* pCmdUI);
 	afx_msg LRESULT OnFindMsg(WPARAM wParam, LPARAM lParam);
 
 	// Handlers to keep the toolbar/menu items up to date

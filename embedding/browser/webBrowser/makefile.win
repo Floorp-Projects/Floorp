@@ -34,6 +34,7 @@ XPIDLSRCS=                        \
     .\nsIEmbeddingSiteWindow.idl   \
     .\nsIWebBrowserFocus.idl       \
     .\nsIWebBrowserFind.idl        \
+    .\nsIWebBrowserPrint.idl        \
     $(NULL)
 
 LIBRARY_NAME=nsWebBrowser_s

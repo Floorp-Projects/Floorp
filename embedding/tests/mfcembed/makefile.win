@@ -41,6 +41,7 @@ OBJS =                           \
     .\$(OBJDIR)\ProfilesDlg.obj \
     .\$(OBJDIR)\winEmbedFileLocProvider.obj \
     .\$(OBJDIR)\MostRecentUrls.obj \
+    .\$(OBJDIR)\PrintProgressDialog.obj       \
     .\$(OBJDIR)\StdAfx.obj       \
     $(NULL)
 

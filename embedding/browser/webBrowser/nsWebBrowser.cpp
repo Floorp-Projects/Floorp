@@ -45,6 +45,15 @@
 #include "nsIWebProgressListener.h"
 #include "nsIWebBrowserFocus.h"
 
+// Printing Includes
+#include "nsIContentViewer.h"
+#include "nsIContentViewerFile.h"
+// Print Options
+#include "nsIPrintOptions.h"
+#include "nsGfxCIID.h"
+#include "nsIServiceManager.h"
+static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+
 static NS_DEFINE_CID(kWebShellCID,         NS_WEB_SHELL_CID);
 static NS_DEFINE_IID(kChildCID,               NS_CHILD_CID);
 static NS_DEFINE_IID(kDeviceContextCID,       NS_DEVICE_CONTEXT_CID);
@@ -131,6 +140,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowser)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFocus)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserFind)
+    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPrint)
 NS_INTERFACE_MAP_END
 
 ///*****************************************************************************
@@ -1585,5 +1595,40 @@ NS_IMETHODIMP nsWebBrowser::GetFocusedElement(nsIDOMElement * *aFocusedElement)
 }
 NS_IMETHODIMP nsWebBrowser::SetFocusedElement(nsIDOMElement * aFocusedElement)
 {
+  return NS_OK;
+}
+
+//------------------------------------------------------
+/* void Print (in nsIDOMWindow aDOMWindow, in nsIPrintOptions aThePrintOptions); */
+NS_IMETHODIMP nsWebBrowser::Print(nsIDOMWindow *aDOMWindow, 
+                                  nsIPrintOptions *aThePrintOptions,
+                                  nsIPrintListener *aPrintListener)
+{
+  nsresult rv = NS_OK;
+  nsCOMPtr<nsIDOMWindow> thisDOMWin;
+  // XXX this next line may need to be changed
+  // it is unclear what the correct way is to get the document.
+  GetContentDOMWindow(getter_AddRefs(thisDOMWin));
+  if (aDOMWindow == thisDOMWin.get()) {
+     nsCOMPtr<nsIContentViewer> contentViewer;
+     mDocShell->GetContentViewer(getter_AddRefs(contentViewer));
+     if (contentViewer) {
+       nsCOMPtr<nsIContentViewerFile> contentViewerFile(do_QueryInterface(contentViewer));
+       if (contentViewerFile) {
+         rv = contentViewerFile->Print(PR_FALSE, nsnull, aPrintListener);
+       }
+     }
+  }
+  return rv;
+}
+
+  /* void Cancel (); */
+NS_IMETHODIMP nsWebBrowser::Cancel(void)
+{
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
+  if (NS_SUCCEEDED(rv) && printService) {
+    return printService->SetIsCancelled(PR_TRUE);
+  }
   return NS_OK;
 }
