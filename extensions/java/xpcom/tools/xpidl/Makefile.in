@@ -61,7 +61,6 @@ CSRCS		= \
 		xpidl_typelib.c \
 		xpidl_doc.c \
 		xpidl_java.c \
-		xpidl_javastub.c \
 		$(NULL)
 
 SDK_BINARY     =           \

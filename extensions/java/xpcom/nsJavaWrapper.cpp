@@ -45,6 +45,8 @@
 #include "nsCRT.h"
 #include "prmem.h"
 
+#define JAVAPROXY_NATIVE(func) Java_org_mozilla_xpcom_XPCOMJavaProxy_##func
+
 static nsID nullID = {0, 0, 0, {0, 0, 0, 0, 0, 0, 0, 0}};
 
 
@@ -328,13 +330,29 @@ SetupParams(JNIEnv *env, const jobject aParam, const nsXPTParamInfo &aParamInfo,
         java_obj = (jobject) aParam;
       } else {  // 'inout'
         if (aParam)
-          java_obj = (jobject) env->GetObjectArrayElement((jobjectArray) aParam, 0);
+          java_obj = (jobject)
+                       env->GetObjectArrayElement((jobjectArray) aParam, 0);
       }
 
       void* xpcom_obj;
       if (java_obj) {
         // Check if we already have a corresponding XPCOM object
-        void* inst = gBindings->GetXPCOMObject(env, java_obj);
+        jboolean isProxy = env->CallStaticBooleanMethod(xpcomJavaProxyClass,
+                                                        isXPCOMJavaProxyMID,
+                                                        java_obj);
+        if (env->ExceptionCheck()) {
+          rv = NS_ERROR_FAILURE;
+          break;
+        }
+
+        void* inst;
+        if (isProxy) {
+          rv = GetXPCOMInstFromProxy(env, java_obj, &inst);
+          if (NS_FAILED(rv))
+            break;
+        } else {
+          inst = gBindings->GetXPCOMObject(env, java_obj);
+        }
 
         // Get IID for this param
         nsID iid;
@@ -767,7 +785,7 @@ nsresult
 SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
           const nsXPTMethodInfo* aMethodInfo, nsIInterfaceInfo* aIInfo,
           PRUint16 aMethodIndex, nsXPTCVariant* aDispatchParams,
-          nsXPTCVariant &aVariant, jvalue &aResult)
+          nsXPTCVariant &aVariant, jobject* result)
 {
   nsresult rv = NS_OK;
   const nsXPTType &type = aParamInfo.GetType();
@@ -776,54 +794,52 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
   {
     case nsXPTType::T_I8:
     case nsXPTType::T_U8:
-      aResult.b = aVariant.val.u8;
+      *result = env->NewObject(byteClass, byteInitMID, aVariant.val.u8);
       break;
 
     case nsXPTType::T_I16:
     case nsXPTType::T_U16:
-      aResult.s = aVariant.val.u16;
+      *result = env->NewObject(shortClass, shortInitMID, aVariant.val.u16);
       break;
 
     case nsXPTType::T_I32:
     case nsXPTType::T_U32:
-      aResult.i = aVariant.val.u32;
+      *result = env->NewObject(intClass, intInitMID, aVariant.val.u32);
       break;
 
     case nsXPTType::T_I64:
     case nsXPTType::T_U64:
-      aResult.j = aVariant.val.u64;
+      *result = env->NewObject(longClass, longInitMID, aVariant.val.u64);
       break;
 
     case nsXPTType::T_FLOAT:
-      aResult.f = aVariant.val.f;
+      *result = env->NewObject(floatClass, floatInitMID, aVariant.val.f);
       break;
 
     case nsXPTType::T_DOUBLE:
-      aResult.d = aVariant.val.d;
+      *result = env->NewObject(doubleClass, doubleInitMID, aVariant.val.d);
       break;
 
     case nsXPTType::T_BOOL:
-      aResult.z = aVariant.val.b;
+      *result = env->NewObject(booleanClass, booleanInitMID, aVariant.val.b);
       break;
 
     case nsXPTType::T_CHAR:
-      aResult.c = aVariant.val.c;
+      *result = env->NewObject(charClass, charInitMID, aVariant.val.c);
       break;
 
     case nsXPTType::T_WCHAR:
-      aResult.c = aVariant.val.wc;
+      *result = env->NewObject(charClass, charInitMID, aVariant.val.wc);
       break;
 
     case nsXPTType::T_CHAR_STR:
     {
       if (aVariant.ptr) {
-        aResult.l = env->NewStringUTF((const char*) aVariant.ptr);
-        if (aResult.l == nsnull) {
+        *result = env->NewStringUTF((const char*) aVariant.ptr);
+        if (*result == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
-      } else {
-        aResult.l = nsnull;
       }
     }
     break;
@@ -832,13 +848,11 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     {
       if (aVariant.ptr) {
         PRUint32 length = nsCRT::strlen((const PRUnichar*) aVariant.ptr);
-        aResult.l = env->NewString((const jchar*) aVariant.ptr, length);
-        if (aResult.l == nsnull) {
+        *result = env->NewString((const jchar*) aVariant.ptr, length);
+        if (*result == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
-      } else {
-        aResult.l = nsnull;
       }
     }
     break;
@@ -849,15 +863,13 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
         nsID* iid = (nsID*) aVariant.ptr;
         char* iid_str = iid->ToString();
         if (iid_str) {
-          aResult.l = env->NewStringUTF(iid_str);
+          *result = env->NewStringUTF(iid_str);
         }
-        if (iid_str == nsnull || aResult.l == nsnull) {
+        if (iid_str == nsnull || *result == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
         PR_Free(iid_str);
-      } else {
-        aResult.l = nsnull;
       }
     }
     break;
@@ -888,9 +900,7 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
           NS_RELEASE(stub);
         }
 
-        aResult.l = java_obj;
-      } else {
-        aResult.l = nsnull;
+        *result = java_obj;
       }
     }
     break;
@@ -900,13 +910,11 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     {
       if (aVariant.ptr) {
         nsString* str = (nsString*) aVariant.ptr;
-        aResult.l = env->NewString(str->get(), str->Length());
-        if (aResult.l == nsnull) {
+        *result = env->NewString(str->get(), str->Length());
+        if (*result == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
-      } else {
-        aResult.l = nsnull;
       }
     }
     break;
@@ -916,13 +924,11 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     {
       if (aVariant.ptr) {
         nsCString* str = (nsCString*) aVariant.ptr;
-        aResult.l = env->NewStringUTF(str->get());
-        if (aResult.l == nsnull) {
+        *result = env->NewStringUTF(str->get());
+        if (*result == nsnull) {
           rv = NS_ERROR_OUT_OF_MEMORY;
           break;
         }
-      } else {
-        aResult.l = nsnull;
       }
     }
     break;
@@ -930,7 +936,7 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
     case nsXPTType::T_VOID:
       // handle "void *" as an "int" in Java
       LOG((" returns int (void*)"));
-      aResult.i = (jint) aVariant.val.p;
+      *result = env->NewObject(intClass, intInitMID, aVariant.val.p);
       break;
 
     case nsXPTType::T_ARRAY:
@@ -945,31 +951,132 @@ SetRetval(JNIEnv *env, const nsXPTParamInfo &aParamInfo,
   return rv;
 }
 
-void
-CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
-                jint aMethodIndex, jobjectArray aParams, jvalue &aResult)
+/**
+ * Given an interface info struct and a method name, returns the method info
+ * and index, if that method exists.
+ *
+ * Most method names are lower case.  Unfortunately, the method names of some
+ * interfaces (such as nsIAppShell) start with a capital letter.  This function
+ * will try all of the permutations.
+ */
+nsresult
+QueryMethodInfo(nsIInterfaceInfo* aIInfo, const char* aMethodName,
+                PRUint16* aMethodIndex, const nsXPTMethodInfo** aMethodInfo)
 {
-  // Find corresponding XPCOM object
-  void* xpcomObj = gBindings->GetXPCOMObject(env, aJavaObject);
-  if (xpcomObj == nsnull) {
-    ThrowException(env, 0, "Failed to get matching XPCOM object");
-    return;
+  // The common case is that the method name is lower case, so we check
+  // that first.
+  nsresult rv;
+  rv = aIInfo->GetMethodInfoForName(aMethodName, aMethodIndex, aMethodInfo);
+  if (NS_SUCCEEDED(rv))
+    return rv;
+
+  // If there is no method called <aMethodName>, then maybe it is an
+  // 'attribute'.  An 'attribute' will start with "get" or "set".  But first,
+  // we check the length, in order to skip over method names that match exactly
+  // "get" or "set".
+  if (strlen(aMethodName) > 3) {
+    if (strncmp("get", aMethodName, 3) == 0) {
+      char* getterName = strdup(aMethodName + 3);
+      getterName[0] = tolower(getterName[0]);
+      rv = aIInfo->GetMethodInfoForName(getterName, aMethodIndex, aMethodInfo);
+      free(getterName);
+    } else if (strncmp("set", aMethodName, 3) == 0) {
+      char* setterName = strdup(aMethodName + 3);
+      setterName[0] = tolower(setterName[0]);
+      rv = aIInfo->GetMethodInfoForName(setterName, aMethodIndex, aMethodInfo);
+      if (NS_SUCCEEDED(rv)) {
+        // If this succeeded, GetMethodInfoForName will have returned the
+        // method info for the 'getter'.  We want the 'setter', so increase
+        // method index by one ('setter' immediately follows the 'getter'),
+        // and get its method info.
+        (*aMethodIndex)++;
+        rv = aIInfo->GetMethodInfo(*aMethodIndex, aMethodInfo);
+        if (NS_SUCCEEDED(rv)) {
+          // Double check that this methodInfo matches the given method.
+          if (!(*aMethodInfo)->IsSetter() ||
+              strcmp(setterName, (*aMethodInfo)->name) != 0) {
+            rv = NS_ERROR_FAILURE;
+          }
+        }
+      }
+      free(setterName);
+    }
+  }
+  if (NS_SUCCEEDED(rv))
+    return rv;
+
+  // If we get here, then maybe the method name is capitalized.
+  char* methodName = strdup(aMethodName);
+  methodName[0] = toupper(methodName[0]);
+  rv = aIInfo->GetMethodInfoForName(methodName, aMethodIndex, aMethodInfo);
+  free(methodName);
+  if (NS_SUCCEEDED(rv))
+    return rv;
+
+  // If there is no method called <aMethodName>, then maybe it is an
+  // 'attribute'.
+  if (strlen(aMethodName) > 3) {
+    if (strncmp("get", aMethodName, 3) == 0) {
+      char* getterName = strdup(aMethodName + 3);
+      rv = aIInfo->GetMethodInfoForName(getterName, aMethodIndex, aMethodInfo);
+      free(getterName);
+    } else if (strncmp("set", aMethodName, 3) == 0) {
+      char* setterName = strdup(aMethodName + 3);
+      rv = aIInfo->GetMethodInfoForName(setterName, aMethodIndex, aMethodInfo);
+      if (NS_SUCCEEDED(rv)) {
+        // If this succeeded, GetMethodInfoForName will have returned the
+        // method info for the 'getter'.  We want the 'setter', so increase
+        // method index by one ('setter' immediately follows the 'getter'),
+        // and get its method info.
+        (*aMethodIndex)++;
+        rv = aIInfo->GetMethodInfo(*aMethodIndex, aMethodInfo);
+        if (NS_SUCCEEDED(rv)) {
+          // Double check that this methodInfo matches the given method.
+          if (!(*aMethodInfo)->IsSetter() ||
+              strcmp(setterName, (*aMethodInfo)->name) != 0) {
+            rv = NS_ERROR_FAILURE;
+          }
+        }
+      }
+      free(setterName);
+    }
   }
 
-  NS_ASSERTION(!IsXPTCStub(xpcomObj),
-               "Expected JavaXPCOMInstance, but got nsJavaXPTCStub");
-  JavaXPCOMInstance* inst = (JavaXPCOMInstance*) xpcomObj;
+  return rv;
+}
+
+/**
+ *  org.mozilla.xpcom.XPCOMJavaProxy.callXPCOMMethod
+ */
+extern "C" JX_EXPORT jobject JNICALL
+JAVAPROXY_NATIVE(callXPCOMMethod) (JNIEnv *env, jclass that, jobject aJavaProxy,
+                                   jstring aMethodName, jobjectArray aParams)
+{
+  nsresult rv;
+
+  // Get native XPCOM instance
+  void* xpcom_obj;
+  rv = GetXPCOMInstFromProxy(env, aJavaProxy, &xpcom_obj);
+  if (NS_FAILED(rv)) {
+    ThrowException(env, 0, "Failed to get matching XPCOM object");
+    return nsnull;
+  }
+  JavaXPCOMInstance* inst = NS_STATIC_CAST(JavaXPCOMInstance*, xpcom_obj);
 
   // Get method info
+  PRUint16 methodIndex;
   const nsXPTMethodInfo* methodInfo;
   nsIInterfaceInfo* iinfo = inst->InterfaceInfo();
-  nsresult rv = iinfo->GetMethodInfo(aMethodIndex, &methodInfo);
+  const char* methodName = env->GetStringUTFChars(aMethodName, nsnull);
+  rv = QueryMethodInfo(iinfo, methodName, &methodIndex, &methodInfo);
+  env->ReleaseStringUTFChars(aMethodName, methodName);
+
   if (NS_FAILED(rv)) {
-    ThrowException(env, rv, "GetMethodInfo failed");
-    return;
+    ThrowException(env, rv, "GetMethodInfoForName failed");
+    return nsnull;
   }
 
-#ifdef DEBUG_pedemonte
+#ifdef DEBUG_JAVAXPCOM
   const char* ifaceName;
   iinfo->GetNameShared(&ifaceName);
   LOG(("=> Calling %s::%s()\n", ifaceName, methodInfo->GetName()));
@@ -983,7 +1090,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
     params = new nsXPTCVariant[paramCount];
     if (!params) {
       ThrowException(env, NS_ERROR_OUT_OF_MEMORY, "Can't create params array");
-      return;
+      return nsnull;
     }
 
     for (PRUint8 i = 0; i < paramCount && NS_SUCCEEDED(rv); i++)
@@ -993,7 +1100,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
 
       if (paramInfo.IsIn() && !paramInfo.IsDipper()) {
         rv = SetupParams(env, env->GetObjectArrayElement(aParams, i), paramInfo,
-                         methodInfo, iinfo, aMethodIndex, params, params[i]);
+                         methodInfo, iinfo, methodIndex, params, params[i]);
       } else if (paramInfo.IsDipper()) {
         LOG(("dipper"));
         const nsXPTType &type = paramInfo.GetType();
@@ -1036,32 +1143,33 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
     }
     if (NS_FAILED(rv)) {
       ThrowException(env, rv, "SetupParams failed");
-      return;
+      return nsnull;
     }
   }
 
   // Call the XPCOM method
   nsresult invokeResult;
-  invokeResult = XPTC_InvokeByIndex(inst->GetInstance(), aMethodIndex,
+  invokeResult = XPTC_InvokeByIndex(inst->GetInstance(), methodIndex,
                                     paramCount, params);
 
   // Clean up params
+  jobject result = nsnull;
   for (PRUint8 i = 0; i < paramCount && NS_SUCCEEDED(rv); i++)
   {
     const nsXPTParamInfo &paramInfo = methodInfo->GetParam(i);
 
     if (!paramInfo.IsRetval()) {
       rv = FinalizeParams(env, env->GetObjectArrayElement(aParams, i),
-                          paramInfo, methodInfo, iinfo, aMethodIndex,
+                          paramInfo, methodInfo, iinfo, methodIndex,
                           params, params[i]);
     } else {
-      rv = SetRetval(env, paramInfo, methodInfo, iinfo, aMethodIndex, params,
-                     params[i], aResult);
+      rv = SetRetval(env, paramInfo, methodInfo, iinfo, methodIndex, params,
+                     params[i], &result);
     }
   }
   if (NS_FAILED(rv)) {
     ThrowException(env, rv, "FinalizeParams/SetRetval failed");
-    return;
+    return nsnull;
   }
 
   // Normally, we would delete any created nsID object in the above loop.
@@ -1091,7 +1199,7 @@ CallXPCOMMethod(JNIEnv *env, jclass that, jobject aJavaObject,
     ThrowException(env, invokeResult, message.get());
   }
 
-  return;
+  return result;
 }
 
 nsresult
@@ -1101,8 +1209,6 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
   NS_PRECONDITION(aResult != nsnull, "null ptr");
   if (!aResult)
     return NS_ERROR_NULL_POINTER;
-
-  jobject java_obj = nsnull;
 
   nsCOMPtr<nsIInterfaceInfoManager> iim = XPTI_GetInterfaceInfoManager();
   NS_ASSERTION(iim != nsnull, "Failed to get InterfaceInfoManager");
@@ -1125,19 +1231,19 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
   rv = info->GetNameShared(&iface_name);
 
   if (NS_SUCCEEDED(rv)) {
-    // Create proxy class name
-    nsCAutoString class_name("org/mozilla/xpcom/stubs/");
-    class_name.AppendASCII(iface_name);
-    class_name.AppendLiteral("_Stub");
+    jobject java_obj = nsnull;
 
-    // Create java proxy object
-    jclass clazz;
-    clazz = env->FindClass(class_name.get());
-    if (clazz) {
-      jmethodID constructor = env->GetMethodID(clazz, "<init>", "()V");
-      if (constructor) {
-        java_obj = env->NewObject(clazz, constructor);
-      }
+    // Create proper Java interface name
+    nsCAutoString class_name("org/mozilla/xpcom/");
+    class_name.AppendASCII(iface_name);
+    jclass ifaceClass = env->FindClass(class_name.get());
+
+    if (ifaceClass) {
+      java_obj = env->CallStaticObjectMethod(xpcomJavaProxyClass,
+                                             createProxyMID, ifaceClass,
+                                             NS_REINTERPRET_CAST(jlong, inst));
+      if (env->ExceptionCheck())
+        java_obj = nsnull;
     }
 
     if (java_obj) {
@@ -1155,5 +1261,55 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
   // If there was an error, clean up.
   delete inst;
   return rv;
+}
+
+nsresult
+GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject, void** aResult)
+{
+  NS_PRECONDITION(aResult != nsnull, "null ptr");
+  if (!aResult)
+    return NS_ERROR_NULL_POINTER;
+
+  long xpcom_obj = env->CallStaticIntMethod(xpcomJavaProxyClass,
+                                            getNativeXPCOMInstMID, aJavaObject);
+
+  if (!xpcom_obj || env->ExceptionCheck()) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aResult = NS_REINTERPRET_CAST(void*, xpcom_obj);
+  return NS_OK;
+}
+
+/**
+ *  org.mozilla.xpcom.XPCOMJavaProxy.finalizeProxy
+ */
+extern "C" JX_EXPORT void JNICALL
+JAVAPROXY_NATIVE(finalizeProxy) (JNIEnv *env, jclass that, jobject aJavaProxy)
+{
+#ifdef DEBUG_JAVAXPCOM
+  jstring string = nsnull;
+  string = (jstring) env->CallStaticObjectMethod(xpcomJavaProxyClass,
+                                                 proxyToStringMID, aJavaProxy);
+  const char* javaObjectName = env->GetStringUTFChars(string, nsnull);
+  LOG(("*** Finalize(java_obj=%s)\n", javaObjectName));
+  env->ReleaseStringUTFChars(string, javaObjectName);
+#endif
+
+  // Due to Java's garbage collection, this finalize statement may get called
+  // after FreeJavaGlobals().  So check to make sure that everything is still
+  // initialized.
+  if (gJavaXPCOMLock) {
+    nsAutoLock lock(gJavaXPCOMLock);
+
+    // Get native XPCOM instance
+    void* xpcom_obj;
+    nsresult rv = GetXPCOMInstFromProxy(env, aJavaProxy, &xpcom_obj);
+    if (NS_SUCCEEDED(rv)) {
+      JavaXPCOMInstance* inst = NS_STATIC_CAST(JavaXPCOMInstance*, xpcom_obj);
+      gBindings->RemoveBinding(env, aJavaProxy, nsnull);
+      delete inst;
+    }
+  }
 }
 

@@ -51,20 +51,19 @@ GARBAGE_DIRS += org
 
 include $(topsrcdir)/config/rules.mk
 
+ifdef MOZ_DEBUG
+JAVAC_FLAGS = -g
+endif
+
 org/mozilla/xpcom/.class_done:
 	@echo Compiling Java interface classes
-	@$(JAVAC) -classpath . -d . $(JAVA_DIST_DIR)/org/mozilla/xpcom/*.java
+	@$(JAVAC) $(JAVAC_FLAGS) -classpath . -d . $(JAVA_DIST_DIR)/org/mozilla/xpcom/*.java
 	@touch $@
 
-org/mozilla/xpcom/stubs/.class_done:
-	@echo Compiling Java stub classes
-	@$(JAVAC) -classpath . -d . $(JAVA_DIST_DIR)/org/mozilla/xpcom/stubs/*.java
-	@touch $@
-
-$(JARFILE): org/mozilla/xpcom/.class_done org/mozilla/xpcom/stubs/.class_done
+$(JARFILE): org/mozilla/xpcom/.class_done Makefile
 	$(JAR) cf $@ org
 
-$(JARFILE_SRC):
+$(JARFILE_SRC): $(JARFILE)
 	$(JAR) cf $@ -C $(JAVA_DIST_DIR) org
 
 libs:: $(JARFILE) $(JARFILE_SRC)

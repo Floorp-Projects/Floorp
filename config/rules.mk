@@ -1513,14 +1513,9 @@ $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done: $(XPIDL_GEN_DIR)/.done
 	@if test ! -d $(XPIDL_GEN_DIR)/org/mozilla/xpcom; then echo Creating $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done; rm -rf $(XPIDL_GEN_DIR)/org; mkdir $(XPIDL_GEN_DIR)/org; mkdir $(XPIDL_GEN_DIR)/org/mozilla; mkdir $(XPIDL_GEN_DIR)/org/mozilla/xpcom; fi
 	@touch $@
 
-$(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.done: $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done
-	@if test ! -d $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs; then echo Creating $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.done; rm -rf $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs; mkdir $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs; fi
-	@touch $@
-
-$(XPIDL_GEN_DIR)/org/mozilla/xpcom/.%.java.pp: %.idl $(JAVA_IDL_COMPILE) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/.done
+$(XPIDL_GEN_DIR)/org/mozilla/xpcom/.%.java.pp: %.idl $(JAVA_IDL_COMPILE) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/.done
 	$(REPORT_BUILD)
 	$(ELOG) $(JAVA_IDL_COMPILE) -m java -p org.mozilla.xpcom -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/$* $(_VPATH_SRCS)
-	$(ELOG) $(JAVA_IDL_COMPILE) -m javastub -p org.mozilla.xpcom -w -I$(srcdir) -I$(IDL_DIR) -o $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/$*_Stub $(_VPATH_SRCS)
 	@touch $@
 
 
@@ -1532,7 +1527,6 @@ export:: $(JAVA_DIST_DIR)
 export:: $(JAVADEPFILES)
 ifndef NO_DIST_INSTALL
 	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/*.java $(JAVA_DIST_DIR)/org/mozilla/xpcom/
-	$(INSTALL) $(IFLAGS1) $(XPIDL_GEN_DIR)/org/mozilla/xpcom/stubs/*.java $(JAVA_DIST_DIR)/org/mozilla/xpcom/stubs/
 endif
 
 endif # JAVA_XPIDLSRCS

@@ -112,7 +112,6 @@ extern backend *xpidl_header_dispatch(void);
 extern backend *xpidl_typelib_dispatch(void);
 extern backend *xpidl_doc_dispatch(void);
 extern backend *xpidl_java_dispatch(void);
-extern backend *xpidl_javastub_dispatch(void);
 
 typedef struct ModeData {
     char               *mode;

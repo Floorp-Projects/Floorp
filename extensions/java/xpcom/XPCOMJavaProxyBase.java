@@ -35,38 +35,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsJavaWrapper_h_
-#define _nsJavaWrapper_h_
-
-#include "jni.h"
-#include "nsISupports.h"
+package org.mozilla.xpcom;
 
 
 /**
- * Creates a Java proxy around an XPCOM C++ object.
- *
- * @param env           pointer to Java context
- * @param aXPCOMObject  XPCOM object to create proxy for
- * @param aIID          IID for XPCOM object
- * @param aResult       on exit, holds reference to Java proxy
- *
- * @return NS_OK if Java proxy was successfully created;
- *         any other value denotes an error condition.
+ * This interface forms the foundation of any XPCOMJavaProxy that is created.
+ * It allows us to handle any JVM calls to <code>finalize</code> when the Proxy
+ * is garbage collected.
  */
-nsresult CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject,
-                         const nsIID& aIID, jobject* aResult);
+public interface XPCOMJavaProxyBase {
 
-/**
- * Returns the XPCOM object for which the given Java proxy was created.
- *
- * @param env           pointer to Java context
- * @param aJavaObject   a Java proxy created by CreateJavaProxy()
- * @param aResult       on exit, holds pointer to XPCOM instance
- *
- * @return NS_OK if the XPCOM object was successfully retrieved;
- *         any other value denotes an error condition.
- */
-nsresult GetXPCOMInstFromProxy(JNIEnv* env, jobject aJavaObject,
-                               void** aResult);
+  /**
+   * @see java.lang.Object#finalize()
+   */
+  void finalize() throws Throwable;
 
-#endif // _nsJavaWrapper_h_
+}

@@ -43,8 +43,10 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "pldhash.h"
+#include "nsAutoLock.h"
 
-#ifdef DEBUG_pedemonte
+//#define DEBUG_JAVAXPCOM
+#ifdef DEBUG_JAVAXPCOM
 #define LOG(x)  printf x
 #else
 #define LOG(x)  /* nothing */
@@ -60,28 +62,49 @@
 /*********************
  * Java JNI globals
  *********************/
+extern jclass booleanClass;
+extern jclass charClass;
+extern jclass byteClass;
+extern jclass shortClass;
+extern jclass intClass;
+extern jclass longClass;
+extern jclass floatClass;
+extern jclass doubleClass;
 extern jclass stringClass;
 extern jclass nsISupportsClass;
 extern jclass xpcomExceptionClass;
+extern jclass xpcomJavaProxyClass;
 
 extern jmethodID hashCodeMID;
 extern jmethodID booleanValueMID;
+extern jmethodID booleanInitMID;
 extern jmethodID charValueMID;
+extern jmethodID charInitMID;
 extern jmethodID byteValueMID;
+extern jmethodID byteInitMID;
 extern jmethodID shortValueMID;
+extern jmethodID shortInitMID;
 extern jmethodID intValueMID;
+extern jmethodID intInitMID;
 extern jmethodID longValueMID;
+extern jmethodID longInitMID;
 extern jmethodID floatValueMID;
+extern jmethodID floatInitMID;
 extern jmethodID doubleValueMID;
+extern jmethodID doubleInitMID;
+extern jmethodID createProxyMID;
+extern jmethodID isXPCOMJavaProxyMID;
+extern jmethodID getNativeXPCOMInstMID;
 
-#ifdef DEBUG
+#ifdef DEBUG_JAVAXPCOM
 extern jmethodID getNameMID;
+extern jmethodID proxyToStringMID;
 #endif
 
 class nsJavaXPCOMBindings;
 extern nsJavaXPCOMBindings* gBindings;
 
-extern PRBool gJavaXPCOMInitialized;
+extern PRLock* gJavaXPCOMLock;
 PRBool InitializeJavaGlobals(JNIEnv *env);
 void FreeJavaGlobals(JNIEnv* env);
 
@@ -100,8 +123,8 @@ public:
   nsIInterfaceInfo* InterfaceInfo() { return mIInfo; }
 
 private:
-  nsISupports*               mInstance;
-  nsCOMPtr<nsIInterfaceInfo> mIInfo;
+  nsISupports*        mInstance;
+  nsIInterfaceInfo*   mIInfo;
 };
 
 
