@@ -110,6 +110,11 @@ namespace JSTypes {
         }
     };
 
+    /**
+     * Private representation of a JS function. This simply
+     * holds a reference to the iCode module that is the
+     * compiled code of the function.
+     */
     class JSFunction : public JSMap {
         ICodeModule* mICode;
     public:
@@ -186,60 +191,6 @@ namespace JSTypes {
         }
     };
         
-    /**
-     * Represents the current function's invocation state.
-     */
-    struct JSActivation : public gc_base {
-        JSValues mRegisters;
-            
-        JSActivation(ICodeModule* iCode, const JSValues& args)
-            : mRegisters(iCode->itsMaxRegister + 1) 
-        {
-            // copy arg list to initial registers.
-            JSValues::iterator dest = mRegisters.begin();
-            for (JSValues::const_iterator src = args.begin(), 
-                     end = args.end(); src != end; ++src, ++dest) {
-                *dest = *src;
-            }
-        }
-
-        JSActivation(ICodeModule* iCode, JSActivation* caller, 
-                     const RegisterList& list)
-            : mRegisters(iCode->itsMaxRegister + 1)
-        {
-            // copy caller's parameter list to initial registers.
-            JSValues::iterator dest = mRegisters.begin();
-            const JSValues& params = caller->mRegisters;
-            for (RegisterList::const_iterator src = list.begin(), 
-                     end = list.end(); src != end; ++src, ++dest) {
-                *dest = params[*src];
-            }
-        }
-    };
-
-    /**
-     * Stores saved state from the *previous* activation, the current
-     * activation is alive and well in locals of the interpreter loop.
-     */
-    struct JSFrame : public gc_base {
-        JSFrame(InstructionIterator returnPC, InstructionIterator basePC,
-                JSActivation* activation, Register result) 
-            :   itsReturnPC(returnPC), itsBasePC(basePC),
-                itsActivation(activation),
-                itsResult(result)
-        {
-        }
-
-        InstructionIterator itsReturnPC;
-        InstructionIterator itsBasePC;
-        JSActivation* itsActivation;        // caller's activation.
-        // the desired target register for the return value
-        Register itsResult;                 
-    };
-
-    // a stack of JSFrames.
-    typedef std::stack<JSFrame*, std::vector<JSFrame*, gc_allocator<JSFrame*> > > JSFrameStack;
-
     class JS_Exception : public gc_base {
     public:
         JS_Exception() { }
