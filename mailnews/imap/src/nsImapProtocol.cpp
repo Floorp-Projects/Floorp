@@ -4590,7 +4590,8 @@ nsImapProtocol::Store(const char * messageList, const char * messageData,
   // but use the flag state to handle ranges correctly.
   nsCString messageIdList;
   nsMsgKeyArray msgKeys;
-  ParseUidString(messageList, msgKeys);
+  if (idsAreUid)
+    ParseUidString(messageList, msgKeys);
 
   PRInt32 msgCountLeft = msgKeys.GetSize();
   PRUint32 msgsHandled = 0;
@@ -4599,7 +4600,11 @@ nsImapProtocol::Store(const char * messageList, const char * messageData,
     nsCString idString;
 
     PRUint32 msgsToHandle = msgCountLeft;
-    AllocateImapUidString(msgKeys.GetArray() + msgsHandled, msgsToHandle, m_flagState, idString);  // 20 * 200
+    if (idsAreUid)
+      AllocateImapUidString(msgKeys.GetArray() + msgsHandled, msgsToHandle, m_flagState, idString);  // 20 * 200
+    else
+      idString.Assign(messageList);
+
 
     msgsHandled += msgsToHandle;
     msgCountLeft -= msgsToHandle;
