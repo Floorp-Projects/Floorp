@@ -108,7 +108,7 @@
         <bookmarks-tree id="bookmarks-view" flex="1" type="folders"/>
         <vbox>
           <button label="&button.newfolder.label;" accesskey="&button.newfolder.accesskey;"
-                  oncommand="createNewFolder();"/>
+                  oncommand="createNewFolder();" icon="open"/>
           <button label="&button.defaultfolder.label;" 
                   accesskey="&button.defaultfolder.accesskey;"
                   oncommand="useDefaultFolder();"/>

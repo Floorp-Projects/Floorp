@@ -335,7 +335,7 @@
             <label value="&mediaPreview;" class="header"/>
             <spacer flex="1"/>
             <button label="&mediaSaveAs;" accesskey="&mediaSaveAs.accesskey;"
-                    id="imagesaveasbutton" disabled="true"
+                    icon="save" id="imagesaveasbutton" disabled="true"
                     oncommand="saveMedia();"/>
           </hbox>
           <vbox class="inset iframe" flex="1" pack="center">
