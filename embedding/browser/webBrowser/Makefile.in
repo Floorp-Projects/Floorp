@@ -37,6 +37,7 @@ XPIDLSRCS	= \
 		$(NULL)
 
 CPPSRCS		= \
+		nsDocShellTreeOwner.cpp		\
 		nsWebBrowser.cpp		\
 		$(NULL)
 
