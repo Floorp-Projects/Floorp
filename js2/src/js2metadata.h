@@ -449,12 +449,13 @@ public:
     void ValidateAttributeExpression(Context *cxt, Environment *env, ExprNode *p);
 
     jsval EvalExpression(Environment *env, Phase phase, ExprNode *p);
+    bool EvalExprNode(Environment *env, Phase phase, ExprNode *p, String &s);
     Attribute *EvalAttributeExpression(Environment *env, Phase phase, ExprNode *p);
     jsval EvalStmtList(Environment *env, Phase phase, StmtNode *p);
     jsval EvalStmt(Environment *env, Phase phase, StmtNode *p);
 
-    void reportError(Exception::Kind kind, char *message, size_t pos, const char *arg = NULL);
-    void reportError(Exception::Kind kind, char *message, size_t pos, const String& name);
+    void reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg = NULL);
+    void reportError(Exception::Kind kind, const char *message, size_t pos, const String& name);
 
 
     void initializeMonkey();

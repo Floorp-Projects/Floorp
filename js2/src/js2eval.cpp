@@ -69,31 +69,99 @@ namespace JavaScript {
 namespace MetaData {
 
 
-   JSRuntime *gJavaScriptRuntime;
-   JSContext *gJavaScriptContext;
-   JSObject *gJavaScriptGlobalObject;
-   JSClass gJavaScriptGlobalClass = { "MyClass", 0, JS_PropertyStub, JS_PropertyStub,
+    JSRuntime *gMonkeyRuntime;
+    JSContext *gMonkeyContext;
+    JSObject *gMonkeyGlobalObject;
+    JSClass gMonkeyGlobalClass = { "MyClass", 0, JS_PropertyStub, JS_PropertyStub,
                                        JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
                                        JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub };
 
+    JSClass gMonkeyLexicalReferenceClass = { "LexicalReference", 0, JS_PropertyStub, JS_PropertyStub,
+                                       JS_PropertyStub, JS_PropertyStub, JS_EnumerateStub,
+                                       JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub };
+
+    static JSBool
+    LexicalReference_constructor(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+    {
+        ASSERT(argc == 3);
+        ASSERT(JSVAL_IS_STRING(argv[0]));
+        ASSERT(JSVAL_IS_BOOLEAN(argv[1]));
+        ASSERT(JSVAL_IS_NULL(argv[2]) || JSVAL_IS_OBJECT(argv[2]));
+        
+        JSString *str = JSVAL_TO_STRING(argv[0]);
+        if (!str)
+            return JS_FALSE;
+        
+        if (!JS_SetProperty(cx, obj, "name", argv[0]))
+            return JS_FALSE;
+
+
+        return JS_TRUE;
+    }
+
+    static JSBool
+    readReference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+    {
+        // for this reference, use the
+        return JS_TRUE;
+    }
+
+    static JSBool
+    writeReference(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+    {
+        return JS_TRUE;
+    }
+
+    JSFunctionSpec jsfLexicalReference [] =
+    {
+        { "readReference",    readReference,    0, 0, 0 },
+        { "writeReference",   writeReference,   0, 0, 0 },
+	{ 0 }
+    };
+
+    JSFunctionSpec jsfGlobal [] =
+    {
+	{ 0 }
+    };
+
+    void MonkeyError(JSContext *cx, const char *message, JSErrorReport *report)
+    {
+        throw message;
+    }
 
     void JS2Metadata::initializeMonkey( )
     {
-        gJavaScriptRuntime = JS_NewRuntime( 1000000L );
-        if (gJavaScriptRuntime) {
-            gJavaScriptContext = JS_NewContext( gJavaScriptRuntime, 8192 );
-            if (gJavaScriptContext) {
-                gJavaScriptGlobalObject = JS_NewObject(gJavaScriptContext, &gJavaScriptGlobalClass, NULL, NULL);
-                if (gJavaScriptGlobalObject)
-                    JS_SetGlobalObject(gJavaScriptContext, gJavaScriptGlobalObject);
-            }
-        }    
+        gMonkeyRuntime = JS_NewRuntime( 1000000L );
+        if (!gMonkeyRuntime)
+            throw "Monkey start failure";
+
+        gMonkeyContext = JS_NewContext( gMonkeyRuntime, 8192 );
+        if (!gMonkeyContext)
+            throw "Monkey start failure";
+
+        gMonkeyGlobalObject = JS_NewObject(gMonkeyContext, &gMonkeyGlobalClass, NULL, NULL);
+        if (!gMonkeyGlobalObject)
+            throw "Monkey start failure";
+
+        JS_SetErrorReporter(gMonkeyContext, MonkeyError);
+
+        JS_InitStandardClasses(gMonkeyContext, gMonkeyGlobalObject);
+
+        JS_InitClass(gMonkeyContext, gMonkeyGlobalObject, NULL,
+                     &gMonkeyLexicalReferenceClass, LexicalReference_constructor, 0,
+                     NULL, jsfLexicalReference,
+                     NULL, NULL);
+
+        JS_DefineFunctions(gMonkeyContext, gMonkeyGlobalObject, jsfGlobal);
+
     }
+
     
     jsval JS2Metadata::execute(String *str)
     {
         jsval retval;
-        JS_EvaluateUCScript(gJavaScriptContext, gJavaScriptGlobalObject, str->c_str(), str->length(), "file", 1, &retval);
+        JS_EvaluateUCScript(gMonkeyContext, gMonkeyGlobalObject, str->c_str(), str->length(), "file", 1, &retval);
+        
         return retval;
     }
 

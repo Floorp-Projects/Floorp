@@ -44,6 +44,7 @@
 
 
 #include "js2metadata.h"
+#include "numerics.h"
 
 
 
@@ -404,6 +405,14 @@ namespace MetaData {
     void JS2Metadata::ValidateExpression(Context *cxt, Environment *env, ExprNode *p)
     {
         switch (p->getKind()) {
+        case ExprNode::assignment:
+        case ExprNode::add:
+            {
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                ValidateExpression(cxt, env, b->op1);
+                ValidateExpression(cxt, env, b->op2);
+            }
+            break;
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
@@ -428,42 +437,57 @@ namespace MetaData {
      */
     jsval JS2Metadata::EvalExpression(Environment *env, Phase phase, ExprNode *p)
     {
-        String s = EvalExprNode(env, phase, p);
-        return execute(&s);
+        String s;
+        EvalExprNode(env, phase, p, s);
+        try {
+            return execute(&s);
+        }
+        catch (const char *err) {
+            reportError(Exception::internalError, err, p->pos);
+            return JSVAL_VOID;
+        }
     }
 
-
-    String JS2Metadata::EvalExprNode(Environment *env, Phase phase, ExprNode *p)
+    const String numberToString(float64 &number)
     {
+        char buf[dtosStandardBufferSize];
+        const char *chrp = doubleToStr(buf, dtosStandardBufferSize, number, dtosStandard, 0);
+        return JavaScript::String(widenCString(chrp));
+    }
+
+    bool JS2Metadata::EvalExprNode(Environment *env, Phase phase, ExprNode *p, String &s)
+    {
+        bool returningRef = false;
         switch (p->getKind()) {
         case ExprNode::index:
             {
             }
             break;
 
-/*
-
-  pause
-
-  char*
-
-    [FullPostfixExpression .PostfixExpressionOrSuper [no line break] ++] do
-    if phase = compile then throw compileExpressionError end if;
-    r: OBJORREFOPTIONALLIMIT .Eval[PostfixExpressionOrSuper](env, phase);
-    a: OBJOPTIONALLIMIT .readRefWithLimit(r, phase);
-    b: OBJECT .unaryDispatch(incrementTable, null, a, ARGUMENTLIST <<<<positional: [], named: {} >>>, phase);
-    writeReference(r, b, phase);
-    return getObject(a);
-
-            
-                    
-*/
+        case ExprNode::assignment:
+            {
+                if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
+                BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
+                if (EvalExprNode(env, phase, b->op1, s)) {
+                    String r;
+                    s += ".writeReference(";
+                    if (EvalExprNode(env, phase, b->op2, r))
+                        s += r + ".readReference())";
+                    else
+                        s += r + ")";
+                }
+                else
+                    ASSERT(false);  // shouldn't this have been checked by validate?
+            }
+            break;
         case ExprNode::add:
             {
                 BinaryExprNode *b = checked_cast<BinaryExprNode *>(p);
-                s = EvalExprNode(b->op1);
+                if (EvalExprNode(env, phase, b->op1, s))
+                    s += ".readReference()";
                 s += " + ";
-                s += EvalExprNode(b->op2);
+                if (EvalExprNode(env, phase, b->op2, s))
+                    s += ".readReference()";
             }
             break;
 
@@ -471,32 +495,52 @@ namespace MetaData {
             {
                 if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 UnaryExprNode *u = checked_cast<UnaryExprNode *>(p);
-                s = EvalExprNode(env, phase, u->op);
-                s += "++";
-
+                // rather than inserting "(r = , a = readRef(), r.writeRef(a + 1), a)" with
+                // all the attendant performance overhead and temp. handling issues.
+                s += ".postIncrement()";
+                returningRef = true;
             }
             break;
 
-
+        case ExprNode::number:
+            {
+                s += numberToString(checked_cast<NumberExprNode *>(p)->value);
+            }
+            break;
         case ExprNode::identifier:
             {
                 IdentifierExprNode *i = checked_cast<IdentifierExprNode *>(p);
-                Multiname *mn = new Multiname();
-                for (NamespaceListIterator nli = i->cxt->openNamespaces.begin(), end = i->cxt->openNamespaces.end();
-                            (nli != end); nli++)
-                    mn->push_back(new QualifiedName(*nli, i->name));
-                return OBJECT_TO_JSVAL(new LexicalReference(mn, env, i->cxt->strict));
+                s += "new LexicalReference(\"" + i->name + "\", ";
+                s += (i->cxt->strict) ? "true, " : "false, ";
+                NamespaceListIterator nli = i->cxt->openNamespaces.begin(), end = i->cxt->openNamespaces.end();
+                if (nli != end) {
+                    s += "new Multiname(";
+                    while (true) {
+                        s += (*nli)->name;
+                        nli++;
+                        if (nli != end)
+                            s += ", ";
+                        else
+                            break;
+                    }
+                    s += ")";
+                }
+                else
+                    s += "null";
+                s += ")";
+                returningRef = true;
             }
             break;
         case ExprNode::boolean:
             if (checked_cast<BooleanExprNode *>(p)->value) 
-                return JSVAL_TRUE;
+                s += "true";
             else 
-                return JSVAL_FALSE;
+                s += "false";
+            break;
         default:
             NOT_REACHED("Not Yet Implemented");
         }
-        return JSVAL_VOID;
+        return returningRef;
     }
 
     void JS2Metadata::ValidateTypeExpression(ExprNode *e)
@@ -614,7 +658,7 @@ namespace MetaData {
      * with the argument value. [This is intended to be widened into a more complete
      * argument handling scheme].
      */
-    void JS2Metadata::reportError(Exception::Kind kind, char *message, size_t pos, const char *arg)
+    void JS2Metadata::reportError(Exception::Kind kind, const char *message, size_t pos, const char *arg)
     {
         const char16 *lineBegin;
         const char16 *lineEnd;
@@ -633,7 +677,7 @@ namespace MetaData {
 
     inline char narrow(char16 ch) { return char(ch); }
     // Accepts a String as the error argument and converts to char *
-    void JS2Metadata::reportError(Exception::Kind kind, char *message, size_t pos, const String& name)
+    void JS2Metadata::reportError(Exception::Kind kind, const char *message, size_t pos, const String& name)
     {
         std::string str(name.length(), char());
         std::transform(name.begin(), name.end(), str.begin(), narrow);

@@ -99,7 +99,7 @@ const bool showTokens = false;
 
 MetaData::GlobalObject glob(world);
 MetaData::Environment env(new MetaData::SystemFrame(), &glob);
-MetaData::JS2Metadata metadata(world);
+MetaData::JS2Metadata *metadata;
 
 
 static int readEvalPrint(FILE *in)
@@ -139,11 +139,11 @@ static int readEvalPrint(FILE *in)
                     stdOut << '\n';
                 }
 
-                metadata.setCurrentParser(&p);  // for error reporting
+                metadata->setCurrentParser(&p);  // for error reporting
                 MetaData::Context cxt;
 
-                metadata.ValidateStmtList(&cxt, &env, parsedStatements);
-                metadata.EvalStmtList(&env, MetaData::JS2Metadata::RunPhase, parsedStatements);
+                metadata->ValidateStmtList(&cxt, &env, parsedStatements);
+                metadata->EvalStmtList(&env, MetaData::JS2Metadata::RunPhase, parsedStatements);
 
             }
             clear(buffer);
@@ -210,6 +210,9 @@ int main(int argc, char **argv)
 #else
     stdOut << "Welcome to Epimetheus.\n";
 #endif
+
+    metadata = new MetaData::JS2Metadata(world);
+
 
     try {
         bool doInteractive = true;
