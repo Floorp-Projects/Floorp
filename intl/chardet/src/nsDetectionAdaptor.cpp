@@ -58,16 +58,16 @@ NS_IMETHODIMP nsMyObserver::Notify(
         rv = mWebShellSvc->StopDocumentLoad();
         rv = mWebShellSvc->ReloadDocument(aCharset, kCharsetFromAutoDetection);
       } else {
+        nsAutoString existingCharset;
+        PRInt32 existingSource;
         nsAutoString newcharset; newcharset.AssignWithConversion(aCharset);
-        if(mWeakRefDocument) {
-             mWeakRefDocument->SetDocumentCharacterSet(newcharset);
-        }
         if(mWeakRefParser) {
-          nsAutoString existingCharset;
-          PRInt32 existingSource;
           mWeakRefParser->GetDocumentCharset(existingCharset, existingSource);  
-          if (existingSource < kCharsetFromAutoDetection)
+          if (existingSource < kCharsetFromAutoDetection) {
             mWeakRefParser->SetDocumentCharset(newcharset, kCharsetFromAutoDetection);
+            if(mWeakRefDocument) 
+              mWeakRefDocument->SetDocumentCharacterSet(newcharset);
+          }
         }
       }
     }
