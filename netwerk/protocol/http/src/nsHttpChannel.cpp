@@ -171,18 +171,20 @@ nsHttpChannel::Init(nsIURI *uri,
     //
     // Set request headers
     //
-    nsCString hostLine;
-    if (port == -1)
-        hostLine.Assign(host.get());
-    else if (PL_strchr(host.get(), ':')) {
+    nsCAutoString hostLine;
+    if (PL_strchr(host.get(), ':')) {
+        // host is an IPv6 address literal and must be encapsulated in []'s
         hostLine.Assign('[');
-        hostLine.Append(host.get());
+        hostLine.Append(host);
         hostLine.Append(']');
-    } else {
-        hostLine.Assign(host.get());
+    }
+    else
+        hostLine.Assign(host);
+    if (port != -1) {
         hostLine.Append(':');
         hostLine.AppendInt(port);
     }
+
     rv = mRequestHead.SetHeader(nsHttp::Host, hostLine.get());
     if (NS_FAILED(rv)) return rv;
 
