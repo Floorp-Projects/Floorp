@@ -144,12 +144,12 @@ NS_GetFrozenFunctions(XPCOMFunctions *entryPoints, const char* libraryPath);
 
 #else // Unix
 
+#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
+
 // you have to love apple..
 #ifdef XP_MACOSX  
-#define XPCOM_DLL "libxpcom.bundle"
 #define XPCOM_SEARCH_KEY  "DYLD_LIBRARY_PATH"
 #else
-#define XPCOM_DLL "libxpcom"MOZ_DLL_SUFFIX
 #define XPCOM_SEARCH_KEY  "LD_LIBRARY_PATH"
 #endif
 
