@@ -2647,18 +2647,17 @@ GetRootScrollFrame(nsIPresContext* aPresContext, nsIFrame* aRootFrame, nsIFrame*
 
   // Ensure root frame is a viewport frame
   *aScrollFrame = nsnull;
-  nsIFrame* theFrame = nsnull;
   if (aRootFrame) {
     if (nsLayoutAtoms::viewportFrame == aRootFrame->GetType()) {
 
       // If child is scrollframe keep it (native)
-      aRootFrame->FirstChild(aPresContext, nsnull, &theFrame);
+      nsIFrame* theFrame = aRootFrame->GetFirstChild(nsnull);
       if (theFrame) {
         if (nsLayoutAtoms::scrollFrame == theFrame->GetType()) {
           *aScrollFrame = theFrame;
 
           // If the first child of that is scrollframe, use it instead (gfx)
-          theFrame->FirstChild(aPresContext, nsnull, &theFrame);
+          theFrame = theFrame->GetFirstChild(nsnull);
           if (theFrame) {
             if (nsLayoutAtoms::scrollFrame == theFrame->GetType()) {
               *aScrollFrame = theFrame;
@@ -3306,8 +3305,8 @@ PresShell::CompleteMove(PRBool aForward, PRBool aExtend)
     frameType = frame->GetType();
     if (frameType != nsLayoutAtoms::areaFrame)
     {
-      result = frame->FirstChild(mPresContext, nsnull, &frame);
-      if (NS_FAILED(result) || !frame)
+      frame = frame->GetFirstChild(nsnull);
+      if (!frame)
         break;
     }
   }while(frameType != nsLayoutAtoms::areaFrame);
@@ -3496,12 +3495,11 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
   }
 
   nsIFrame*             rootFrame;
-  nsIFrame*             child;
   nsIPageSequenceFrame* pageSequence = nsnull;
 
   // The page sequence frame is the child of the rootFrame
   mFrameManager->GetRootFrame(&rootFrame);
-  rootFrame->FirstChild(mPresContext, nsnull, &child);
+  nsIFrame* child = rootFrame->GetFirstChild(nsnull);
 
   if (nsnull != child) {
 
@@ -3515,7 +3513,7 @@ PresShell::GetPageSequenceFrame(nsIPageSequenceFrame** aResult) const
       } else {
         nsCOMPtr<nsIPrintPreviewContext> ppContext = do_QueryInterface(mPresContext);
         if (ppContext) {
-          child->FirstChild(mPresContext, nsnull, &child);
+          child = child->GetFirstChild(nsnull);
         }
       }
 
@@ -5129,7 +5127,7 @@ PresShell::FlushPendingNotifications(PRBool aUpdateViews)
     ProcessReflowCommands(PR_FALSE);
 
     if (aUpdateViews && mViewManager) {
-      mViewManager->EndUpdateViewBatch(NS_VMREFRESH_NO_SYNC);
+      mViewManager->EndUpdateViewBatch(NS_VMREFRESH_IMMEDIATE);
     }
   }
 
@@ -6708,9 +6706,8 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
   nsIAtom* listName = nsnull;
   PRInt32 listIndex = 0;
   do {
-    nsIFrame* k1, *k2;
-    aFirstFrame->FirstChild(aFirstPresContext, listName, &k1);
-    aSecondFrame->FirstChild(aSecondPresContext, listName, &k2);
+    nsIFrame* k1 = aFirstFrame->GetFirstChild(listName);
+    nsIFrame* k2 = aSecondFrame->GetFirstChild(listName);
     PRInt32 l1 = nsContainerFrame::LengthOf(k1);
     PRInt32 l2 = nsContainerFrame::LengthOf(k2);
     if (l1 != l2) {
@@ -6897,12 +6894,9 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
     if (!ok && (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags))) {
       break;
     }
-    NS_IF_RELEASE(listName);
 
-    nsIAtom* listName1;
-    nsIAtom* listName2;
-    aFirstFrame->GetAdditionalChildListName(listIndex, &listName1);
-    aSecondFrame->GetAdditionalChildListName(listIndex, &listName2);
+    nsIAtom* listName1 = aFirstFrame->GetAdditionalChildListName(listIndex);
+    nsIAtom* listName2 = aSecondFrame->GetAdditionalChildListName(listIndex);
     listIndex++;
     if (listName1 != listName2) {
       if (0 == (VERIFY_REFLOW_ALL & gVerifyReflowFlags)) {
@@ -6924,11 +6918,8 @@ CompareTrees(nsIPresContext* aFirstPresContext, nsIFrame* aFirstFrame,
       else
         fputs("(null)", stdout);
       printf("\n");
-      NS_IF_RELEASE(listName1);
-      NS_IF_RELEASE(listName2);
       break;
     }
-    NS_IF_RELEASE(listName2);
     listName = listName1;
   } while (ok && (listName != nsnull));
 
@@ -6952,8 +6943,7 @@ FindTopFrame(nsIFrame* aRoot)
     }
 
     // Try one of the children
-    nsIFrame* kid;
-    aRoot->FirstChild(nsnull, &kid);
+    nsIFrame* kid = aRoot->GetFirstChild(nsnull);
     while (nsnull != kid) {
       nsIFrame* result = FindTopFrame(kid);
       if (nsnull != result) {
@@ -7698,8 +7688,7 @@ static void RecurseIndiTotals(nsIPresContext* aPresContext,
     nsMemory::Free(name);
   }
 
-  nsIFrame * child;
-  aParentFrame->FirstChild(aPresContext, nsnull, &child);
+  nsIFrame* child = aParentFrame->GetFirstChild(nsnull);
   while (child) {
     RecurseIndiTotals(aPresContext, aHT, child, aLevel+1);
     child = child->GetNextSibling();

@@ -586,15 +586,8 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame *aFrame,
 #endif
 
   // 3) for images and imagemaps, or anything else with a child frame
-  nsCOMPtr<nsIPresShell> shell(do_QueryReferent(weakShell));
-  if (!shell)
-    return NS_ERROR_FAILURE;
-  nsCOMPtr<nsIPresContext> context;
-  shell->GetPresContext(getter_AddRefs(context));
-  if (!context)
-    return NS_ERROR_FAILURE;
   // we have the object frame, get the image frame
-  aFrame->FirstChild(context, nsnull, &frame);
+  frame = aFrame->GetFirstChild(nsnull);
   if (frame) {
     return frame->GetAccessible(aAccessible);
   }
@@ -792,8 +785,7 @@ nsAccessibilityService::CreateHTMLTextAccessible(nsISupports *aFrame, nsIAccessi
   nsCOMPtr<nsIPresShell> presShell(do_QueryReferent(weakShell));
   nsCOMPtr<nsIPresContext> presContext;
   presShell->GetPresContext(getter_AddRefs(presContext));
-  nsIFrame* childFrame = nsnull;
-  parentFrame->FirstChild(presContext, nsnull, &childFrame);
+  nsIFrame* childFrame = parentFrame->GetFirstChild(nsnull);
   PRInt32 index = 0;
   nsIFrame* firstTextFrame = nsnull;
   PRBool ret = nsAccessible::FindTextFrame(index, presContext, childFrame, &firstTextFrame, frame);

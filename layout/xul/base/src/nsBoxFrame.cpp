@@ -1812,10 +1812,10 @@ nsBoxFrame::GetFrameForPoint(nsIPresContext*   aPresContext,
     }
   }
 
-  nsIFrame *kid, *hit = nsnull;
+  nsIFrame *hit = nsnull;
   nsPoint tmp;
 
-  FirstChild(aPresContext, nsnull, &kid);
+  nsIFrame* kid = GetFirstChild(nsnull);
   *aFrame = nsnull;
   tmp.MoveTo(aPoint.x - mRect.x, aPoint.y - mRect.y);
 

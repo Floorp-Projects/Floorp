@@ -649,8 +649,7 @@ nsSplitterFrameInner::MouseDrag(nsIPresContext* aPresContext, nsGUIEvent* aEvent
 void
 nsSplitterFrameInner::AddListener(nsIPresContext* aPresContext)
 {
-  nsIFrame* thumbFrame = nsnull;
-  mOuter->FirstChild(aPresContext, nsnull,&thumbFrame);
+  nsIFrame* thumbFrame = mOuter->GetFirstChild(nsnull);
 
   nsCOMPtr<nsIDOMEventReceiver>
     receiver(do_QueryInterface(mOuter->GetContent()));

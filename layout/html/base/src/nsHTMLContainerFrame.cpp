@@ -228,9 +228,7 @@ nsHTMLContainerFrame::GetTextDecorations(nsIPresContext* aPresContext,
 static PRBool 
 HasTextFrameDescendant(nsIPresContext* aPresContext, nsIFrame* aParent)
 {
-  nsIFrame* kid = nsnull;
-    
-  for (aParent->FirstChild(aPresContext, nsnull, &kid); kid;
+  for (nsIFrame* kid = aParent->GetFirstChild(nsnull); kid;
        kid = kid->GetNextSibling())
   {
     if (kid->GetType() == nsLayoutAtoms::textFrame) {
@@ -364,21 +362,18 @@ ReparentFrameViewTo(nsIPresContext* aPresContext,
     aViewManager->InsertChild(aNewParentView, view, insertBefore, insertBefore != nsnull);
   } else {
     PRInt32 listIndex = 0;
-    nsCOMPtr<nsIAtom> listName;
+    nsIAtom* listName = nsnull;
     // This loop iterates through every child list name, and also
     // executes once with listName == nsnull.
     do {
-      aFrame->GetAdditionalChildListName(listIndex, getter_AddRefs(listName));
-      listIndex++;
-
       // Iterate the child frames, and check each child frame to see if it has
       // a view
-      nsIFrame* childFrame;
-      aFrame->FirstChild(aPresContext, listName, &childFrame);
+      nsIFrame* childFrame = aFrame->GetFirstChild(listName);
       for (; childFrame; childFrame = childFrame->GetNextSibling()) {
         ReparentFrameViewTo(aPresContext, childFrame, aViewManager,
                             aNewParentView, aOldParentView);
       }
+      listName = aFrame->GetAdditionalChildListName(listIndex++);
     } while (listName);
   }
 
@@ -400,9 +395,7 @@ nsHTMLContainerFrame::ReparentFrameView(nsIPresContext* aPresContext,
   // see if we can trivially detect that no work needs to be done
   if (!aChildFrame->HasView()) {
     // Child frame doesn't have a view. See if it has any child frames
-    nsIFrame* firstChild;
-    aChildFrame->FirstChild(aPresContext, nsnull, &firstChild);
-    if (!firstChild) {
+    if (!aChildFrame->GetFirstChild(nsnull)) {
       return NS_OK;
     }
   }

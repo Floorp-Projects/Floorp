@@ -186,10 +186,8 @@ public:
   virtual nsStyleContext* GetAdditionalStyleContext(PRInt32 aIndex) const;
   virtual void SetAdditionalStyleContext(PRInt32 aIndex,
                                          nsStyleContext* aStyleContext);
-  NS_IMETHOD  GetAdditionalChildListName(PRInt32 aIndex, nsIAtom** aListName) const;
-  NS_IMETHOD  FirstChild(nsIPresContext* aPresContext,
-                         nsIAtom*        aListName,
-                         nsIFrame**      aFirstChild) const;
+  virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
+  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
   NS_IMETHOD  Paint(nsIPresContext*      aPresContext,
                     nsIRenderingContext& aRenderingContext,
                     const nsRect&        aDirtyRect,

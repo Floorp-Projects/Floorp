@@ -162,37 +162,28 @@ ViewportFrame::RemoveFrame(nsIPresContext* aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-ViewportFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                          nsIAtom** aListName) const
+nsIAtom*
+ViewportFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(aListName, "null OUT parameter pointer");
-  NS_PRECONDITION(aIndex >= 0, "illegal index"); 
-
-  *aListName = nsnull;
-
-  nsresult rv = NS_OK;
+  NS_PRECONDITION(aIndex >= 0, "illegal index");
 
   if (0 == aIndex) {
-    *aListName = mFixedContainer.GetChildListName();
-    NS_ADDREF(*aListName);
+    return mFixedContainer.GetChildListName();
   }
 
-  return rv;
+  return nsnull;
 }
 
-NS_IMETHODIMP
-ViewportFrame::FirstChild(nsIPresContext* aPresContext,
-                          nsIAtom*        aListName,
-                          nsIFrame**      aFirstChild) const
+nsIFrame*
+ViewportFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  NS_PRECONDITION(aFirstChild, "null OUT parameter pointer");
   if (mFixedContainer.GetChildListName() == aListName) {
-    mFixedContainer.FirstChild(this, aListName, aFirstChild);
-    return NS_OK;
+    nsIFrame* result = nsnull;
+    mFixedContainer.FirstChild(this, aListName, &result);
+    return result;
   }
 
-  return nsContainerFrame::FirstChild(aPresContext, aListName, aFirstChild);
+  return nsContainerFrame::GetFirstChild(aListName);
 }
 
 void

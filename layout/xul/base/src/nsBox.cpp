@@ -828,8 +828,7 @@ nsBox::CollapseChild(nsBoxLayoutState& aState, nsIFrame* aFrame, PRBool aHide)
       }
 
       // collapse the child
-      nsIFrame* child = nsnull;
-      aFrame->FirstChild(presContext, nsnull,&child);
+      nsIFrame* child = aFrame->GetFirstChild(nsnull);
        
       while (nsnull != child) 
       {

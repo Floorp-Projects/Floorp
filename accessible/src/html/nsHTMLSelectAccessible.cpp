@@ -984,13 +984,10 @@ NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetNextSibling(nsIAccessible **
 NS_IMETHODIMP nsHTMLComboboxTextFieldAccessible::GetValue(nsAString& _retval)
 {
   nsIFrame* frame = nsAccessible::GetBoundsFrame();
-  nsCOMPtr<nsIPresContext> context(GetPresContext());
-  if (!frame || !context)
+  if (!frame)
     return NS_ERROR_FAILURE;
 
-  frame->FirstChild(context, nsnull, &frame);
-  frame->FirstChild(context, nsnull, &frame);
-
+  frame = frame->GetFirstChild(nsnull)->GetFirstChild(nsnull);
   nsIContent* content = frame->GetContent();
 
   if (!content) 
@@ -1016,12 +1013,11 @@ void nsHTMLComboboxTextFieldAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame*
 {
   // get our first child's frame
   nsIFrame* frame = nsAccessible::GetBoundsFrame();
-  nsCOMPtr<nsIPresContext> context(GetPresContext());
-  if (!frame || !context)
+  if (!frame)
     return;
 
-  frame->FirstChild(context, nsnull, aBoundingFrame);
-  frame->FirstChild(context, nsnull, &frame);
+  frame = frame->GetFirstChild(nsnull);
+  *aBoundingFrame = frame;
 
   aBounds = frame->GetRect();
 }
@@ -1102,8 +1098,7 @@ NS_IMETHODIMP nsHTMLComboboxButtonAccessible::DoAction(PRUint8 aIndex)
   if (!frame || !context)
     return NS_ERROR_FAILURE;
 
-  frame->FirstChild(context, nsnull, &frame);
-  frame = frame->GetNextSibling();
+  frame = frame->GetFirstChild(nsnull)->GetNextSibling();
 
   // We only have one action, click. Any other index is meaningless(wrong)
   if (aIndex == eAction_Click) {
@@ -1163,8 +1158,8 @@ void nsHTMLComboboxButtonAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** a
   if (!frame || !context)
     return;
 
-  frame->FirstChild(context, nsnull, &frame); // first frame is for the textfield
-  aBounds = frame->GetNextSibling()->GetRect();  // sibling frame is for the button
+  aBounds = frame->GetFirstChild(nsnull)->GetNextSibling()->GetRect();
+    // sibling frame is for the button
 }
 
 /** We are a button. */

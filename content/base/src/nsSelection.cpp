@@ -2209,19 +2209,18 @@ nsSelection::GetPrevNextBidiLevels(nsIPresContext *aPresContext,
   }
 
   // GetFirstLeaf
-  nsIFrame *lookahead = nsnull;
+  nsIFrame *lookahead;
   while (1) {
-    result = firstFrame->FirstChild(aPresContext, nsnull, &lookahead);
-    if (NS_FAILED(result) || !lookahead)
+    lookahead = firstFrame->GetFirstChild(nsnull);
+    if (!lookahead)
       break; //nothing to do
     firstFrame = lookahead;
   }
 
   // GetLastLeaf
-  lookahead = nsnull;
   while (1) {
-    result = lastFrame->FirstChild(aPresContext, nsnull, &lookahead);
-    if (NS_FAILED(result) || !lookahead)
+    lookahead = lastFrame->GetFirstChild(nsnull);
+    if (!lookahead)
       break; //nothing to do
     lastFrame = lookahead;
     while ((lookahead = lastFrame->GetNextSibling()) != nsnull)

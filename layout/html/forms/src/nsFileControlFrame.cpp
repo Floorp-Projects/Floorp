@@ -366,8 +366,7 @@ NS_IMETHODIMP nsFileControlFrame::Reflow(nsIPresContext*          aPresContext,
   if (NS_SUCCEEDED(rv) && mTextFrame != nsnull) {
     const nsStyleVisibility* vis = GetStyleVisibility();
 
-    nsIFrame * child;
-    FirstChild(aPresContext, nsnull, &child);
+    nsIFrame* child = GetFirstChild(nsnull);
     if (child == mTextFrame) {
       child = child->GetNextSibling();
     }
@@ -441,8 +440,7 @@ nsFileControlFrame::GetTextControlFrame(nsIPresContext* aPresContext, nsIFrame* 
   nsNewFrame* result = nsnull;
 #ifndef DEBUG_NEWFRAME
   // find the text control frame.
-  nsIFrame* childFrame = nsnull;
-  aStart->FirstChild(aPresContext, nsnull, &childFrame);
+  nsIFrame* childFrame = aStart->GetFirstChild(nsnull);
 
   while (childFrame) {
     // see if the child is a text control

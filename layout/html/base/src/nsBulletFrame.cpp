@@ -1700,8 +1700,7 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
         // The bullet frame is not in a line list so marking it dirty
         // has no effect. The reflowing of the bullet frame is done 
         // indirectly.
-        nsIFrame* frame = nsnull;
-        mParent->FirstChild(mPresContext, nsnull, &frame);
+        nsIFrame* frame = mParent->GetFirstChild(nsnull);
         NS_ASSERTION(frame, "No frame to mark dirty for bullet frame.");
         if (frame) {
           frame->AddStateBits(NS_FRAME_IS_DIRTY);

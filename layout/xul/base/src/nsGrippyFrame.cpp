@@ -195,8 +195,7 @@ nsGrippyFrame::IndexOf(nsIPresContext* aPresContext, nsIFrame* parent, nsIFrame*
 {
   PRInt32 count = 0;
 
-  nsIFrame* childFrame;
-  parent->FirstChild(aPresContext, nsnull, &childFrame); 
+  nsIFrame* childFrame = parent->GetFirstChild(nsnull); 
   while (nsnull != childFrame) 
   {    
     if (childFrame == child)
@@ -214,8 +213,7 @@ nsGrippyFrame::CountFrames(nsIPresContext* aPresContext, nsIFrame* aFrame)
 {
   PRInt32 count = 0;
 
-  nsIFrame* childFrame;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame); 
+  nsIFrame* childFrame = aFrame->GetFirstChild(nsnull);
   while (nsnull != childFrame) 
   {    
     childFrame = childFrame->GetNextSibling();
@@ -230,8 +228,7 @@ nsGrippyFrame::GetChildAt(nsIPresContext* aPresContext, nsIFrame* parent, PRInt3
 {
   PRInt32 count = 0;
 
-  nsIFrame* childFrame;
-  parent->FirstChild(aPresContext, nsnull, &childFrame); 
+  nsIFrame* childFrame = parent->GetFirstChild(nsnull);
   while (nsnull != childFrame) 
   {    
     if (count == index)

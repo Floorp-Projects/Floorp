@@ -783,8 +783,7 @@ void nsAccessible::GetBoundsRect(nsRect& aTotalBounds, nsIFrame** aBoundingFrame
     if (IsCorrectFrameType(iterFrame, nsAccessibilityAtoms::inlineFrame)) {
       // Only do deeper bounds search if we're on an inline frame
       // Inline frames can contain larger frames inside of them
-      iterFrame->FirstChild(nsCOMPtr<nsIPresContext>(GetPresContext()), 
-                            nsnull, &iterNextFrame);
+      iterNextFrame = iterFrame->GetFirstChild(nsnull);
     }
 
     if (iterNextFrame) 
@@ -1459,19 +1458,17 @@ nsresult nsAccessible::GetParentBlockNode(nsIPresShell *aPresShell, nsIDOMNode *
 
   nsCOMPtr<nsIPresContext> presContext;
   aPresShell->GetPresContext(getter_AddRefs(presContext));
-  nsIFrame* childFrame = nsnull;
-  nsCOMPtr<nsIAtom> frameType;
-  while (frame && frame->GetType() != nsAccessibilityAtoms::textFrame) {
-    frame->FirstChild(presContext, nsnull, &childFrame);
-    frame = childFrame;
+  nsIAtom* frameType = nsnull;
+  while (frame && (frameType = frame->GetType()) != nsAccessibilityAtoms::textFrame) {
+    frame = frame->GetFirstChild(nsnull);
   }
   if (! frame || frameType != nsAccessibilityAtoms::textFrame)
     return NS_ERROR_FAILURE;
 
-  parentFrame->FirstChild(presContext, nsnull, &childFrame);
   PRInt32 index = 0;
   nsIFrame *firstTextFrame = nsnull;
-  FindTextFrame(index, presContext, childFrame, &firstTextFrame, frame);
+  FindTextFrame(index, presContext, parentFrame->GetFirstChild(nsnull),
+                &firstTextFrame, frame);
   if (firstTextFrame) {
     nsIContent *content = firstTextFrame->GetContent();
 
@@ -1540,9 +1537,8 @@ PRBool nsAccessible::FindTextFrame(PRInt32 &index, nsIPresContext *aPresContext,
     }
 
     // we won't expand the tree under a block frame.
-    nsIFrame* childFrame = nsnull;
-    aCurFrame->FirstChild(aPresContext, nsnull, &childFrame);
-    if (FindTextFrame(index, aPresContext, childFrame, aFirstTextFrame, aTextFrame))
+    if (FindTextFrame(index, aPresContext, aCurFrame->GetFirstChild(nsnull),
+                      aFirstTextFrame, aTextFrame))
       return PR_TRUE;
   }
 

@@ -462,8 +462,7 @@ void nsGfxScrollFrame::ReloadChildFrames(nsIPresContext* aPresContext)
   mInner->mVScrollbarBox = nsnull;
   mInner->mScrollCornerBox = nsnull;
 
-  nsIFrame* frame = nsnull;
-  FirstChild(aPresContext, nsnull, &frame);
+  nsIFrame* frame = GetFirstChild(nsnull);
   while (frame) {
     PRBool understood = PR_FALSE;
 
@@ -1633,10 +1632,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
       if (parentFrame->GetType() == nsLayoutAtoms::viewportFrame) {
         // Usually there are no fixed children, so don't do anything unless there's
         // at least one fixed child
-        nsIFrame* child;
-        if (NS_SUCCEEDED(parentFrame->FirstChild(mOuter->mPresContext,
-          nsLayoutAtoms::fixedList, &child)) && child) {
-
+        if (parentFrame->GetFirstChild(nsLayoutAtoms::fixedList)) {
           // force a reflow of the fixed children
           nsFrame::CreateAndPostReflowCommand(mOuter->mPresContext->PresShell(),
             parentFrame,

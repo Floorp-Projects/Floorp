@@ -536,7 +536,6 @@ FrameManager::GetCanvasFrame(nsIFrame** aCanvasFrame) const
 {
   NS_ENSURE_TRUE(mPresShell, NS_ERROR_NOT_AVAILABLE);
   NS_PRECONDITION(aCanvasFrame, "aCanvasFrame argument cannot be null");
-  nsIPresContext *presContext = GetPresContext();
 
   *aCanvasFrame = nsnull;
   if (mRootFrame) {
@@ -556,7 +555,7 @@ FrameManager::GetCanvasFrame(nsIFrame** aCanvasFrame) const
         }
       }
       // move on to the child's child
-      childFrame->FirstChild(presContext, nsnull, &childFrame);
+      childFrame = childFrame->GetFirstChild(nsnull);
     }
   }
   return NS_OK;
@@ -1400,9 +1399,8 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsStyleContext* 
   nsIFrame* child;
 
   do {
-    child = nsnull;
-    nsresult result = aFrame->FirstChild(aPresContext, childList, &child);
-    while ((NS_SUCCEEDED(result)) && child) {
+    child = aFrame->GetFirstChild(childList);
+    while (child) {
       if (NS_FRAME_OUT_OF_FLOW != (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
         // only do frames that are in flow
         if (nsLayoutAtoms::placeholderFrame == child->GetType()) { 
@@ -1425,8 +1423,7 @@ VerifyStyleTree(nsIPresContext* aPresContext, nsIFrame* aFrame, nsStyleContext* 
       child = child->GetNextSibling();
     }
 
-    NS_IF_RELEASE(childList);
-    aFrame->GetAdditionalChildListName(listIndex++, &childList);
+    childList = aFrame->GetAdditionalChildListName(listIndex++);
   } while (childList);
   
   // do additional contexts 
@@ -1481,9 +1478,8 @@ FrameManager::ReParentStyleContext(nsIFrame* aFrame,
           aFrame->SetStyleContext(presContext, newContext);
 
           do {
-            child = nsnull;
-            result = aFrame->FirstChild(presContext, childList, &child);
-            while ((NS_SUCCEEDED(result)) && child) {
+            child = aFrame->GetFirstChild(childList);
+            while (child) {
               if (NS_FRAME_OUT_OF_FLOW != (child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
                 // only do frames that are in flow
                 if (nsLayoutAtoms::placeholderFrame == child->GetType()) {
@@ -1505,8 +1501,7 @@ FrameManager::ReParentStyleContext(nsIFrame* aFrame,
               child = child->GetNextSibling();
             }
 
-            NS_IF_RELEASE(childList);
-            aFrame->GetAdditionalChildListName(listIndex++, &childList);
+            childList = aFrame->GetAdditionalChildListName(listIndex++);
           } while (childList);
 
           // do additional contexts 
@@ -1610,7 +1605,6 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
   // that the frame has the last reference to it, so AddRef it here.
 
   nsStyleContext* oldContext = aFrame->GetStyleContext();
-  nsresult result = NS_OK;
 
   if (oldContext) {
     oldContext->AddRef();
@@ -1889,9 +1883,8 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
       nsChangeHint childChange;
 
       do {
-        nsIFrame* child = nsnull;
-        result = aFrame->FirstChild(aPresContext, childList, &child);
-        while (NS_SUCCEEDED(result) && child) {
+        nsIFrame* child = aFrame->GetFirstChild(childList);
+        while (child) {
           if (!(child->GetStateBits() & NS_FRAME_OUT_OF_FLOW)) {
             // only do frames that are in flow
             if (nsLayoutAtoms::placeholderFrame == child->GetType()) { // placeholder
@@ -1927,8 +1920,7 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
           child = child->GetNextSibling();
         }
 
-        NS_IF_RELEASE(childList);
-        aFrame->GetAdditionalChildListName(listIndex++, &childList);
+        childList = aFrame->GetAdditionalChildListName(listIndex++);
       } while (childList);
       // XXX need to do overflow frames???
     }
@@ -2071,15 +2063,13 @@ FrameManager::CaptureFrameState(nsIFrame* aFrame,
   nsIAtom*  childListName = nsnull;
   PRInt32   childListIndex = 0;
   do {    
-    nsIFrame* childFrame;
-    aFrame->FirstChild(GetPresContext(), childListName, &childFrame);
+    nsIFrame* childFrame = aFrame->GetFirstChild(childListName);
     while (childFrame) {             
       rv = CaptureFrameState(childFrame, aState);
       // Get the next sibling child frame
       childFrame = childFrame->GetNextSibling();
     }
-    NS_IF_RELEASE(childListName);
-    aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
+    childListName = aFrame->GetAdditionalChildListName(childListIndex++);
   } while (childListName);
 
   return rv;
@@ -2144,15 +2134,13 @@ FrameManager::RestoreFrameState(nsIFrame* aFrame, nsILayoutHistoryState* aState)
   nsIAtom*  childListName = nsnull;
   PRInt32   childListIndex = 0;
   do {    
-    nsIFrame* childFrame;
-    aFrame->FirstChild(GetPresContext(), childListName, &childFrame);
+    nsIFrame* childFrame = aFrame->GetFirstChild(childListName);
     while (childFrame) {
       rv = RestoreFrameState(childFrame, aState);
       // Get the next sibling child frame
       childFrame = childFrame->GetNextSibling();
     }
-    NS_IF_RELEASE(childListName);
-    aFrame->GetAdditionalChildListName(childListIndex++, &childListName);
+    childListName = aFrame->GetAdditionalChildListName(childListIndex++);
   } while (childListName);
 
   return rv;

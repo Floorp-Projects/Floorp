@@ -2675,13 +2675,12 @@ nsComputedDOMStyle::GetAbsoluteOffset(PRUint8 aSide, nsIFrame* aFrame,
       // _not_ include the scrollbars.  For fixed positioned frames,
       // the containing block is the viewport, which _does_ include
       // scrollbars.  We have to do some extra work.
-      nsIFrame* scrollingChild;
       nsCOMPtr<nsIPresShell> presShell = do_QueryReferent(mPresShellWeak);
       NS_ASSERTION(presShell, "Must have a presshell!");
       nsCOMPtr<nsIPresContext> presContext;
       presShell->GetPresContext(getter_AddRefs(presContext));
       // the first child in the default frame list is what we want
-      container->FirstChild(presContext, nsnull, &scrollingChild);
+      nsIFrame* scrollingChild = container->GetFirstChild(nsnull);
       nsCOMPtr<nsIScrollableFrame> scrollFrame =
         do_QueryInterface(scrollingChild);
       if (scrollFrame) {

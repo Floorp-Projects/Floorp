@@ -194,6 +194,10 @@ static const char sPrintOptionsContractID[]         = "@mozilla.org/gfx/printset
 
 #include "nsBidiUtils.h"
 
+//paint forcing
+#include "prenv.h"
+#include <stdio.h>
+
 static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
 
 #ifdef NS_DEBUG
@@ -936,6 +940,16 @@ DocumentViewerImpl::LoadComplete(nsresult aStatus)
   // to unsuppress painting.
   if (mPresShell && !mStopped) {
     mPresShell->UnsuppressPainting();
+  }
+
+  static PRBool forcePaint
+    = PR_GetEnv("MOZ_FORCE_PAINT_AFTER_ONLOAD") != nsnull;
+  if (forcePaint) {
+    if (mPresShell) {
+      mPresShell->FlushPendingNotifications(PR_TRUE);
+    }
+    printf("GECKO: PAINT FORCED AFTER ONLOAD\n");
+    fflush(stdout);
   }
 
 #ifdef NS_PRINTING
@@ -3184,8 +3198,7 @@ DocumentViewerImpl::PrintPreviewNavigate(PRInt16 aType, PRInt32 aPageNum)
   // Now, locate the current page we are on and
   // and the page of the page number
   nscoord gap = 0;
-  nsIFrame * pageFrame;
-  seqFrame->FirstChild(mPresContext, nsnull, &pageFrame);
+  nsIFrame* pageFrame = seqFrame->GetFirstChild(nsnull);
   while (pageFrame != nsnull) {
     nsRect pageRect = pageFrame->GetRect();
     if (pageNum == 1) {

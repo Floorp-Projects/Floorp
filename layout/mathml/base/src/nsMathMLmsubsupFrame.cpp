@@ -154,10 +154,9 @@ nsMathMLmsubsupFrame::PlaceSubSupScript(nsIPresContext*      aPresContext,
   nsHTMLReflowMetrics subScriptSize (nsnull);
   nsHTMLReflowMetrics supScriptSize (nsnull);
   nsBoundingMetrics bmBase, bmSubScript, bmSupScript;
-  nsIFrame* baseFrame = nsnull;
   nsIFrame* subScriptFrame = nsnull;
   nsIFrame* supScriptFrame = nsnull;
-  aFrame->FirstChild(aPresContext, nsnull, &baseFrame);
+  nsIFrame* baseFrame = aFrame->GetFirstChild(nsnull);
   if (baseFrame)
     subScriptFrame = baseFrame->GetNextSibling();
   if (subScriptFrame)

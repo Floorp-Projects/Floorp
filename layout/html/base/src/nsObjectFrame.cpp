@@ -2003,8 +2003,7 @@ nsObjectFrame::GetNextObjectFrame(nsIPresContext* aPresContext,
 {
   NS_ENSURE_ARG_POINTER(outFrame);
 
-  nsIFrame * child;
-  aRoot->FirstChild(aPresContext, nsnull, &child);
+  nsIFrame* child = aRoot->GetFirstChild(nsnull);
 
   while (child) {
     *outFrame = nsnull;

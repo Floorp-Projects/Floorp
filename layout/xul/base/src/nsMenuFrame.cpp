@@ -258,17 +258,13 @@ nsMenuFrame::~nsMenuFrame()
 
 // The following methods are all overridden to ensure that the menupopup frame
 // is placed in the appropriate list.
-NS_IMETHODIMP
-nsMenuFrame::FirstChild(nsIPresContext* aPresContext,
-                        nsIAtom*        aListName,
-                        nsIFrame**      aFirstChild) const
+nsIFrame*
+nsMenuFrame::GetFirstChild(nsIAtom* aListName) const
 {
   if (nsLayoutAtoms::popupList == aListName) {
-    *aFirstChild = mPopupFrames.FirstChild();
-  } else {
-    nsBoxFrame::FirstChild(aPresContext, aListName, aFirstChild);
+    return mPopupFrames.FirstChild();
   }
-  return NS_OK;
+  return nsBoxFrame::GetFirstChild(aListName);
 }
 
 NS_IMETHODIMP
@@ -306,23 +302,17 @@ nsMenuFrame::SetInitialChildList(nsIPresContext* aPresContext,
   return rv;
 }
 
-NS_IMETHODIMP
-nsMenuFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                        nsIAtom** aListName) const
+nsIAtom*
+nsMenuFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
-
-  *aListName = nsnull;
-
   // don't expose the child frame list, it slows things down
 #if 0
   if (NS_MENU_POPUP_LIST_INDEX == aIndex) {
-    *aListName = nsLayoutAtoms::popupList;
-    NS_ADDREF(*aListName);
+    return nsLayoutAtoms::popupList;
   }
 #endif
 
-  return NS_OK;
+  return nsnull;
 }
 
 nsresult
@@ -1408,7 +1398,6 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
    */
 
   /* walk siblings, looking for the other checked item with the same name */
-  nsIFrame *sib;
   nsIMenuFrame *sibMenu;
   nsMenuType sibType;
   nsAutoString sibGroup;
@@ -1417,8 +1406,8 @@ nsMenuFrame::UpdateMenuSpecialState(nsIPresContext* aPresContext) {
   // get the first sibling in this menu popup. This frame may be it, and if we're
   // being called at creation time, this frame isn't yet in the parent's child list.
   // All I'm saying is that this may fail, but it's most likely alright.
-  nsresult rv = GetParent()->FirstChild(aPresContext, NULL, &sib);
-  if ( NS_FAILED(rv) || !sib )
+  nsIFrame* sib = GetParent()->GetFirstChild(nsnull);
+  if ( !sib )
     return;
 
   // XXX - egcs 1.1.2 & gcc 2.95.x -Oy builds, where y > 1, 
@@ -2080,8 +2069,7 @@ nsMenuFrame::GetScrollableView(nsIPresContext* aPresContext, nsIScrollableView**
     return NS_OK;
 
   nsMenuPopupFrame* popup = (nsMenuPopupFrame*) mPopupFrames.FirstChild();
-  nsIFrame* childFrame = nsnull;
-  popup->FirstChild(mPresContext, nsnull, &childFrame);
+  nsIFrame* childFrame = popup->GetFirstChild(nsnull);
   if (childFrame) {
     *aView = popup->GetScrollableView(childFrame);
     (*aView)->SetLineHeight(childFrame->GetSize().height);

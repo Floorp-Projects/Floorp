@@ -92,7 +92,7 @@ GetPopupSetFrame(nsIPresContext* aPresContext)
     return nsnull;
 
   if (rootFrame)
-    rootFrame->FirstChild(aPresContext, nsnull, &rootFrame);   
+    rootFrame = rootFrame->GetFirstChild(nsnull);
  
   nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
   if (!rootBox)
@@ -1256,10 +1256,7 @@ nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
     }
   }
   else 
-    immediateParent->FirstChild(mPresContext,
-                                nsnull,
-                                &currFrame);
-
+    currFrame = immediateParent->GetFirstChild(nsnull);
   
   while (currFrame) {
     // See if it's a menu item.
@@ -1272,9 +1269,7 @@ nsMenuPopupFrame::GetNextMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResult)
     currFrame = currFrame->GetNextSibling();
   }
 
-  immediateParent->FirstChild(mPresContext,
-                              nsnull,
-                              &currFrame);
+  currFrame = immediateParent->GetFirstChild(nsnull);
 
   // Still don't have anything. Try cycling from the beginning.
   while (currFrame && currFrame != startFrame) {
@@ -1302,11 +1297,7 @@ nsMenuPopupFrame::GetPreviousMenuItem(nsIMenuFrame* aStart, nsIMenuFrame** aResu
   if (!immediateParent)
     immediateParent = this;
 
-  nsIFrame* first;
-  immediateParent->FirstChild(mPresContext,
-                              nsnull, &first);
-  nsFrameList frames(first);
-  
+  nsFrameList frames(immediateParent->GetFirstChild(nsnull));
                               
   nsIFrame* currFrame = nsnull;
   nsIFrame* startFrame = nsnull;
@@ -1426,7 +1417,7 @@ nsIScrollableView* nsMenuPopupFrame::GetScrollableView(nsIFrame* aStart)
   nsIFrame* childFrame;
   currFrame=aStart;
   do {
-    currFrame->FirstChild(mPresContext, nsnull, &childFrame);
+    childFrame = currFrame->GetFirstChild(nsnull);
     scrollableView=GetScrollableView(childFrame);
     if ( scrollableView )
       return scrollableView;
@@ -1442,7 +1433,7 @@ void nsMenuPopupFrame::EnsureMenuItemIsVisible(nsIMenuFrame* aMenuItem)
   aMenuItem->QueryInterface(NS_GET_IID(nsIFrame), (void**)&frame);
   if ( frame ) {
     nsIFrame* childFrame=nsnull;
-    FirstChild(mPresContext, nsnull, &childFrame);
+    childFrame = GetFirstChild(nsnull);
     nsIScrollableView *scrollableView;
     scrollableView=GetScrollableView(childFrame);
     if ( scrollableView ) {
@@ -1671,7 +1662,7 @@ nsMenuPopupFrame::FindMenuWithShortcut(nsIDOMKeyEvent* aKeyEvent, PRBool& doActi
   //       been destroyed already.  One strategy would be to 
   //       setTimeout(<func>,0) as detailed in:
   //       <http://bugzilla.mozilla.org/show_bug.cgi?id=126675#c32>
-  immediateParent->FirstChild(mPresContext, nsnull, &currFrame);
+  currFrame = immediateParent->GetFirstChild(nsnull);
 
   // We start searching from first child. This process is divided into two parts
   //   -- before current and after current -- by the current item

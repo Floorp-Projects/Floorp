@@ -229,14 +229,12 @@ nsListBoxObject::GetListBoxBody()
      return nsnull;
 
   // this frame will be a nsListBoxScrollPortFrame
-  nsIFrame* scrollPort = nsnull;
-  frame->FirstChild(nsnull, nsnull, &scrollPort);
+  nsIFrame* scrollPort = frame->GetFirstChild(nsnull);
   if (!scrollPort)
      return nsnull;
 
   // this frame will be the one we want
-  nsIFrame* yeahBaby = nsnull;
-  scrollPort->FirstChild(nsnull, nsnull, &yeahBaby);
+  nsIFrame* yeahBaby = scrollPort->GetFirstChild(nsnull);
   if (!yeahBaby)
      return nsnull;
 

@@ -306,15 +306,12 @@ public:
                                  nsIFrame*       aChildList);
 
   /** return the first child belonging to the list aListName. 
-    * @see nsIFrame::FirstChild
+    * @see nsIFrame::GetFirstChild
     */
-  NS_IMETHOD FirstChild(nsIPresContext* aPresContext,
-                        nsIAtom*        aListName,
-                        nsIFrame**      aFirstChild) const;
+  virtual nsIFrame* GetFirstChild(nsIAtom* aListName) const;
 
   /** @see nsIFrame::GetAdditionalChildListName */
-  NS_IMETHOD  GetAdditionalChildListName(PRInt32   aIndex,
-                                         nsIAtom** aListName) const;
+  virtual nsIAtom* GetAdditionalChildListName(PRInt32 aIndex) const;
 
   /** @see nsIFrame::Paint */
   NS_IMETHOD Paint(nsIPresContext*      aPresContext,

@@ -149,8 +149,7 @@ printf("\n");
                       aDesiredSize.mFlags | NS_REFLOW_CALC_BOUNDING_METRICS);
   nsSize availSize(aReflowState.mComputedWidth, aReflowState.mComputedHeight);
   PRInt32 count = 0;
-  nsIFrame* childFrame;
-  FirstChild(aPresContext, nsnull, &childFrame);
+  nsIFrame* childFrame = GetFirstChild(nsnull);
   while (childFrame) {
     nsHTMLReflowState childReflowState(aPresContext, aReflowState,
                                        childFrame, availSize);
@@ -208,8 +207,7 @@ nsMathMLTokenFrame::Place(nsIPresContext*      aPresContext,
 
   if (aPlaceOrigin) {
     nscoord dy, dx = 0;
-    nsIFrame* childFrame;
-    FirstChild(aPresContext, nsnull, &childFrame);
+    nsIFrame* childFrame = GetFirstChild(nsnull);
     while (childFrame) {
       nsRect rect = childFrame->GetRect();
       nsHTMLReflowMetrics childSize(nsnull);
@@ -365,7 +363,7 @@ SetQuote(nsIPresContext* aPresContext,
   nsIFrame* textFrame;
   do {
     // walk down the hierarchy of first children because they could be wrapped
-    aFrame->FirstChild(aPresContext, nsnull, &textFrame);
+    textFrame = aFrame->GetFirstChild(nsnull);
     if (textFrame) {
       if (textFrame->GetType() == nsLayoutAtoms::textFrame)
         break;

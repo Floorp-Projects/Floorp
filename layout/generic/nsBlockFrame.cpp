@@ -403,12 +403,11 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
   nsIAtom* listName = nsnull;
   PRInt32 listIndex = 0;
   for (;;) {
-    nsIFrame* kid;
-    GetAdditionalChildListName(listIndex++, &listName);
+    listName = GetAdditionalChildListName(listIndex++);
     if (nsnull == listName) {
       break;
     }
-    FirstChild(aPresContext, listName, &kid);
+    nsIFrame* kid = GetFirstChild(listName);
     if (kid) {
       IndentBy(out, aIndent);
       nsAutoString tmp;
@@ -428,7 +427,6 @@ nsBlockFrame::List(nsIPresContext* aPresContext, FILE* out, PRInt32 aIndent) con
       IndentBy(out, aIndent);
       fputs(">\n", out);
     }
-    NS_IF_RELEASE(listName);
   }
 
   aIndent--;
@@ -454,71 +452,47 @@ nsBlockFrame::GetType() const
 /////////////////////////////////////////////////////////////////////////////
 // Child frame enumeration
 
-NS_IMETHODIMP
-nsBlockFrame::FirstChild(nsIPresContext* aPresContext,
-                         nsIAtom*        aListName,
-                         nsIFrame**      aFirstChild) const
+nsIFrame*
+nsBlockFrame::GetFirstChild(nsIAtom* aListName) const
 {
-  NS_PRECONDITION(nsnull != aFirstChild, "null OUT parameter pointer");
   if (mAbsoluteContainer.GetChildListName() == aListName) {
-    return mAbsoluteContainer.FirstChild(this, aListName, aFirstChild);
+    nsIFrame* result = nsnull;
+    mAbsoluteContainer.FirstChild(this, aListName, &result);
+    return result;
   }
   else if (nsnull == aListName) {
-    *aFirstChild = (mLines.empty()) ? nsnull : mLines.front()->mFirstChild;
-    return NS_OK;
+    return (mLines.empty()) ? nsnull : mLines.front()->mFirstChild;
   }
   else if (aListName == nsLayoutAtoms::overflowList) {
-    nsLineList* overflowLines = GetOverflowLines(aPresContext, PR_FALSE);
-    *aFirstChild = overflowLines
-                       ? overflowLines->front()->mFirstChild
-                       : nsnull;
-    return NS_OK;
+    nsLineList* overflowLines = GetOverflowLines(GetPresContext(), PR_FALSE);
+    return overflowLines ? overflowLines->front()->mFirstChild : nsnull;
   }
   else if (aListName == nsLayoutAtoms::floatList) {
-    *aFirstChild = mFloats.FirstChild();
-    return NS_OK;
+    return mFloats.FirstChild();
   }
   else if (aListName == nsLayoutAtoms::bulletList) {
     if (HaveOutsideBullet()) {
-      *aFirstChild = mBullet;
+      return mBullet;
     }
-    else {
-      *aFirstChild = nsnull;
-    }
-    return NS_OK;
   }
-  *aFirstChild = nsnull;
-  return NS_ERROR_INVALID_ARG;
+  return nsnull;
 }
 
-NS_IMETHODIMP
-nsBlockFrame::GetAdditionalChildListName(PRInt32   aIndex,
-                                         nsIAtom** aListName) const
+nsIAtom*
+nsBlockFrame::GetAdditionalChildListName(PRInt32 aIndex) const
 {
-  NS_PRECONDITION(nsnull != aListName, "null OUT parameter pointer");
-  if (aIndex < 0) {
-    return NS_ERROR_INVALID_ARG;
-  }
-  *aListName = nsnull;
   switch (aIndex) {
   case NS_BLOCK_FRAME_FLOAT_LIST_INDEX:
-    *aListName = nsLayoutAtoms::floatList;
-    NS_ADDREF(*aListName);
-    break;
+    return nsLayoutAtoms::floatList;
   case NS_BLOCK_FRAME_BULLET_LIST_INDEX:
-    *aListName = nsLayoutAtoms::bulletList;
-    NS_ADDREF(*aListName);
-    break;
+    return nsLayoutAtoms::bulletList;
   case NS_BLOCK_FRAME_OVERFLOW_LIST_INDEX:
-    *aListName = nsLayoutAtoms::overflowList;
-    NS_ADDREF(*aListName);
-    break;
+    return nsLayoutAtoms::overflowList;
   case NS_BLOCK_FRAME_ABSOLUTE_LIST_INDEX:
-    *aListName = mAbsoluteContainer.GetChildListName();
-    NS_ADDREF(*aListName);
-    break;
+    return mAbsoluteContainer.GetChildListName();
+  default:
+    return nsnull;
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -3688,7 +3662,9 @@ nsBlockFrame::ReflowInlineFrame(nsBlockReflowState& aState,
       // Break-after cases
       if (breakType == NS_STYLE_CLEAR_LINE) {
         if (!aLineLayout.GetLineEndsInBR()) {
-          breakType = NS_STYLE_CLEAR_NONE;
+#ifdef DEBUG_roc
+          // breakType = NS_STYLE_CLEAR_NONE;
+#endif
         }
       }
       aLine->SetBreakType(breakType);

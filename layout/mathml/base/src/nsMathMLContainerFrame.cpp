@@ -201,9 +201,8 @@ nsMathMLContainerFrame::GetPreferredStretchSize(nsIPresContext*      aPresContex
                  "invalid call to GetPreferredStretchSize");
     PRBool firstTime = PR_TRUE;
     nsBoundingMetrics bm, bmChild;
-    nsIFrame* childFrame;
     // XXXrbs need overloaded FirstChild() and clean integration of <maction> throughout
-    FirstChild(aPresContext, nsnull, &childFrame);
+    nsIFrame* childFrame = GetFirstChild(nsnull);
     while (childFrame) {
       // initializations in case this child happens not to be a MathML frame
       nsRect rect = childFrame->GetRect();
@@ -528,8 +527,7 @@ nsMathMLContainerFrame::PropagatePresentationDataFor(nsIPresContext* aPresContex
   }
   else {
     // propagate down the subtrees
-    nsIFrame* childFrame;
-    aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+    nsIFrame* childFrame = aFrame->GetFirstChild(nsnull);
     while (childFrame) {
       PropagatePresentationDataFor(aPresContext, childFrame,
         aScriptLevelIncrement, aFlagsValues, aFlagsToUpdate);
@@ -550,8 +548,7 @@ nsMathMLContainerFrame::PropagatePresentationDataFromChildAt(nsIPresContext* aPr
   if (!aFlagsToUpdate && !aScriptLevelIncrement)
     return;
   PRInt32 index = 0;
-  nsIFrame* childFrame;
-  aParentFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  nsIFrame* childFrame = aParentFrame->GetFirstChild(nsnull);
   while (childFrame) {
     if ((index >= aFirstChildIndex) &&
         ((aLastChildIndex <= 0) || ((aLastChildIndex > 0) &&
@@ -672,8 +669,7 @@ nsMathMLContainerFrame::PropagateScriptStyleFor(nsIPresContext* aPresContext,
   }
 
   // recurse down the subtrees for changes that may arise deep down
-  nsIFrame* childFrame;
-  aFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  nsIFrame* childFrame = aFrame->GetFirstChild(nsnull);
   while (childFrame) {
     childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
     if (mathMLFrame) {
@@ -835,8 +831,7 @@ nsMathMLContainerFrame::RebuildAutomaticDataForChildren(nsIPresContext* aPresCon
   // the parent
   // 2. As we ascend the tree, transmit any specific change that we want
   // down the subtrees
-  nsIFrame* childFrame;
-  aParentFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  nsIFrame* childFrame = aParentFrame->GetFirstChild(nsnull);
   while (childFrame) {
     nsIMathMLFrame* childMathMLFrame;
     childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&childMathMLFrame);
@@ -905,8 +900,7 @@ nsMathMLContainerFrame::ReLayoutChildren(nsIPresContext* aPresContext,
 #endif
 
   // re-resolve the style data to sync any change of script sizes
-  nsIFrame* childFrame;
-  aParentFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  nsIFrame* childFrame = aParentFrame->GetFirstChild(nsnull);
   while (childFrame) {
     nsIMathMLFrame* mathMLFrame;
     childFrame->QueryInterface(NS_GET_IID(nsIMathMLFrame), (void**)&mathMLFrame);
@@ -1395,8 +1389,7 @@ GetInterFrameSpacingFor(nsIPresContext* aPresContext,
                         nsIFrame*       aParentFrame,
                         nsIFrame*       aChildFrame)
 {
-  nsIFrame* childFrame;
-  aParentFrame->FirstChild(aPresContext, nsnull, &childFrame);
+  nsIFrame* childFrame = aParentFrame->GetFirstChild(nsnull);
   if (!childFrame || aChildFrame == childFrame)
     return 0;
 
