@@ -2971,7 +2971,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       if (RowGroupsShouldBeConstrained()) {
         // Only applies to the tree widget.
         nscoord tableSpecifiedHeight = CalcBorderBoxHeight(aReflowState.reflowState, PR_TRUE);
-        if ((tableSpecifiedHeight > 0) && (tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE)) {
+        if ((tableSpecifiedHeight != NS_UNCONSTRAINEDSIZE)) {
           kidReflowState.availableHeight = tableSpecifiedHeight - y;
           if (kidReflowState.availableHeight < 0)
             kidReflowState.availableHeight = 0;
