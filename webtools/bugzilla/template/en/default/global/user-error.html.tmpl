@@ -525,8 +525,7 @@
     Sorry; there needs to be at least one component for this product in order
     to create a new [% terms.bug %].
     [% IF UserInGroup("editcomponents") %]
-      <a href="editcomponents.cgi?product=[% product FILTER url_quote %]">
-        Create a new component</a>.
+      <a href="editcomponents.cgi">Create a new component</a>.
     [% ELSE %]
        Please contact [% Param("maintainer") %], giving the name of
        the product in which you tried to create a new [% terms.bug %].
