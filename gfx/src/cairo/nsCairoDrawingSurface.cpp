@@ -43,63 +43,102 @@
 NS_IMPL_ISUPPORTS1(nsCairoDrawingSurface, nsIDrawingSurface)
 
 nsCairoDrawingSurface::nsCairoDrawingSurface()
-    : mSurface(nsnull), mSurfaceData(nsnull), mOwnsData(PR_FALSE)
+    : mSurface(nsnull), mImageSurface(nsnull), mSurfaceData(nsnull), mOwnsData(PR_FALSE)
 {
+#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
+    mPixmap = 0;
+#endif
 }
 
 nsCairoDrawingSurface::~nsCairoDrawingSurface()
 {
     if (mSurface)
         cairo_surface_destroy (mSurface);
-    if (mOwnsData && mSurfaceData)
-        nsMemory::Free(mSurfaceData);
+    if (mImageSurface && !mFastAccess) // otherwise, mImageSurface == mSurface
+        cairo_surface_destroy (mImageSurface);
+
+#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
+    if (mPixmap != 0)
+        XFreePixmap(mXDisplay, mPixmap)
+#endif
 }
 
 nsresult
-nsCairoDrawingSurface::Init(PRUint32 aWidth, PRUint32 aHeight)
+nsCairoDrawingSurface::Init(nsCairoDeviceContext *aDC, PRUint32 aWidth, PRUint32 aHeight, PRBool aFastAccess)
 {
     NS_ASSERTION(mSurface == nsnull, "Surface already initialized!");
     NS_ASSERTION(aWidth > 0 && aHeight > 0, "Invalid surface dimensions!");
 
-    mSurfaceData = (PRUint8*) nsMemory::Alloc(aWidth * aHeight * 4);
-
-    mSurface = cairo_image_surface_create_for_data ((char*) mSurfaceData, CAIRO_FORMAT_ARGB32,
-                                                    aWidth, aHeight, aWidth * 4);
     mWidth = aWidth;
     mHeight = aHeight;
-    mStride = mWidth * 4;
-    mDepth = 32;
-    mOwnsData = PR_TRUE;
+
+    if (aFastAccess) {
+        mSurface = cairo_image_surface_create (CAIRO_FORMAT_ARGB32, aWidth, aHeight);
+        mDepth = 32;
+        mFastAccess = PR_TRUE;
+    } else {
+        // otherwise, we need to do toolkit-specific stuff
+#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
+        mXDisplay = aDC->GetXDisplay();
+        mPixmap = XCreatePixmap(mXDisplay,
+                                aDC->GetXPixmapParentDrawable(),
+                                aWidth, aHeight, 32);
+
+        mSurface = cairo_xlib_surface_create (aDC->GetXDisplay(),
+                                              mPixmap,
+                                              aDC->GetXVisual(),
+                                              CAIRO_FORMAT_ARGB32,
+                                              aDC->GetXColormap());
+        mDepth = 32;
+
+        mFastAccess = PR_FALSE;
+#else
+#error write me
+#endif
+    }
+
+    mLockFlags = 0;
 
     return NS_OK;
 }
 
 nsresult
-nsCairoDrawingSurface::Init (cairo_surface_t *aSurface, PRBool aIsOffscreen,
-                             PRUint32 aWidth, PRUint32 aHeight)
+nsCairoDrawingSurface::Init (nsCairoDeviceContext *aDC, nsIWidget *aWidget)
 {
-    mSurface = aSurface;
-    cairo_surface_reference (mSurface);
-    if (aIsOffscreen) {
-        char *data;
-        int width, height, depth, stride;
-        if (cairo_image_surface_get_data (mSurface, &data, &width, &height, &stride, &depth) == 0) {
-            mSurfaceData = (PRUint8*) data;
-            mWidth = width;
-            mHeight = height;
-            mStride = stride;
-            mDepth = depth;
-            mOwnsData = PR_FALSE;
-            mIsOffscreen = PR_TRUE;
-        } else {
-            NS_WARNING("nsCairoDrawingSurface::Init with non-image offscreen surface");
-        }
-    } else {
-        mWidth = aWidth;
-        mHeight = aHeight;
-        mOwnsData = PR_FALSE;
-        mIsOffscreen = PR_FALSE;
-    }
+    nsNativeWidget nativeWidget = aWidget->GetNativeData(NS_NATIVE_WIDGET);
+
+#ifdef MOZ_ENABLE_GTK2
+    NS_ASSERTION (GDK_IS_WINDOW(aNativeWidget), "unsupported native widget type!");
+    mSurface = cairo_xlib_surface_create
+        (GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(nativeWidget)),
+         GDK_WINDOW_XWINDOW(GDK_DRAWABLE(nativeWidget)),
+         GDK_VISUAL_XVISUAL(gdk_drawable_get_visual(GDK_DRAWABLE(nativeWidget))),
+         CAIRO_FORMAT_ARGB32, // I hope!
+         GDK_COLORMAP_XCOLORMAP(gdk_drawable_get_colormap(GDK_DRAWABLE(nativeWidget))));
+
+    Window root_ignore;
+    int x_ignore, y_ignore, bwidth_ignore;
+    int width, height, depth;
+
+    XGetGeometry(GDK_WINDOW_XDISPLAY(GDK_DRAWABLE(nativeWidget)),
+                 GDK_WINDOW_XWINDOW(GDK_DRAWABLE(nativeWidget)),
+                 &root_ignore, &x_ignore, &y_ignore,
+                 &width, &height,
+                 &bwidth_ignore, &depth);
+
+    if (depth != 32)
+        fprintf (stderr, "**** nsCairoDrawingSurface::Init with Widget: depth is %d!\n", depth);
+
+    mWidth = width;
+    mHeight = height;
+    mFastAccess = PR_FALSE;
+
+#else
+#error write me
+#endif
+
+    mPixmap = 0;
+    mLockFlags = 0;
 }
 
 NS_IMETHODIMP
@@ -108,15 +147,33 @@ nsCairoDrawingSurface::Lock (PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 a
                              PRUint32 aFlags)
 {
     NS_ASSERTION(aX + aWidth <= mWidth, "Invalid aX/aWidth");
-    NS_ASSERTION(aY + aHeight <= mHeight, "Inavlid aY/aHeight");
+    NS_ASSERTION(aY + aHeight <= mHeight, "Invalid aY/aHeight");
+    NS_ASSERTION(mLockFlags == 0, "nsCairoDrawingSurface::Lock while surface is already locked!");
 
-    if (mIsOffscreen) {
-        *aBits = mSurfaceData + ((aWidth * 4) * aY) + (aX * 4);
-        *aStride = mStride;
-        *aWidthBytes = mWidth * 4;
-    } else {
-        NS_WARNING("nsCairoDrawingSurface::Lock with non-offscreen surface!");
+    if (!mFastAccess) {
+        mImageSurface = cairo_surface_get_image (mSurface);
     }
+
+    char *data;
+    int width, height, stride, depth;
+
+    if (cairo_image_surface_get_data (mImageSurface,
+                                      &data, &width, &height, &stride, &depth)
+        != 0)
+    {
+        /* Something went wrong */
+        if (!mFastAccess) {
+            cairo_surface_destroy(mImageSurface);
+            mImageSurface = nsnull;
+        }
+        return NS_ERROR_FAILURE;
+    }
+
+    *aBits = data + (stride * aY) + (aX * (depth / 8));
+    *aStride = stride;
+    *aWidthBytes = width * (depth / 8);
+
+    mLockFlags = 0;
 
     return NS_OK;
 }
@@ -124,6 +181,22 @@ nsCairoDrawingSurface::Lock (PRInt32 aX, PRInt32 aY, PRUint32 aWidth, PRUint32 a
 NS_IMETHODIMP
 nsCairoDrawingSurface::Unlock (void)
 {
+    NS_ASSERT(mLockFlags != 0, "nsCairoDrawingSurface::Unlock on non-locked surface!");
+
+    if (mFastAccess) {
+        mLockFlags = 0;
+        return NS_OK;
+    }
+
+    if (mLockFlags & NS_LOCK_SURFACE_WRITE_ONLY) {
+        /* need to copy back */
+        cairo_surface_set_image (mImageSurface);
+    }
+
+    cairo_surface_destroy (mImageSurface);
+    mImageSurface = nsnull;
+    mLockFlags = 0;
+
     return NS_OK;
 }
 
@@ -138,14 +211,22 @@ nsCairoDrawingSurface::GetDimensions (PRUint32 *aWidth, PRUint32 *aHeight)
 NS_IMETHODIMP
 nsCairoDrawingSurface::IsOffscreen(PRBool *aOffScreen)
 {
-    *aOffScreen = mIsOffscreen;
+    *aOffScreen = PR_FALSE;
+
+    if (mFastAccess)
+        *aOffScreen = PR_TRUE;
+#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
+    else if (mPixmap)
+        *aOffScreen = PR_TRUE;
+#endif
+
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsCairoDrawingSurface::IsPixelAddressable(PRBool *aAddressable)
 {
-    *aAddressable = mIsOffscreen;
+    *aAddressable = mFastAccess;
     return NS_OK;
 }
 

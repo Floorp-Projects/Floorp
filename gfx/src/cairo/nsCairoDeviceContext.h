@@ -97,14 +97,24 @@ public:
     NS_IMETHOD GetAltDevice(nsIDeviceContext** aAltDC);
     NS_IMETHOD SetUseAltDC(PRUint8 aValue, PRBool aOn);
 
-
     // local methods
     NS_IMETHOD CreateCairoFor(nsNativeWidget aNativeWidget, cairo_t **aCairo);
+
+#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
+    Display *GetXDisplay();
+    Visual *GetXVisual();
+    Colormap GetXColormap();
+    Drawable GetXPixmapParentDrawable();
+#endif
 
 private:
     cairo_t *mCairo;
     cairo_surface_t *mSurface;
     nsNativeWidget mWidget;
+
+#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
+    Drawable mPixmapParentDrawable;
+#endif
 
 #ifdef MOZ_ENABLE_XLIB
     XlibRgbHandle *mXlibRgbHandle;

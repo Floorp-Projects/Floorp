@@ -392,3 +392,31 @@ nsCairoDeviceContext::SetUseAltDC(PRUint8 aValue, PRBool aOn)
     return NS_OK;
 }
 
+#if defined(MOZ_ENABLE_GTK2) || defined(MOZ_ENABLE_XLIB)
+Display *
+nsCairoDeviceContext::GetXDisplay()
+{
+#ifdef MOZ_ENABLE_GTK2
+    return gdk_x11_get_default_xdisplay();
+#endif
+}
+
+Visual *
+nsCairoDeviceContext::GetXVisual()
+{
+    return DefaultVisual(GetXDisplay(),DefaultScreen(GetXDisplay()));
+}
+
+Colormap
+nsCairoDeviceContext::GetXColormap()
+{
+    return DefaultColormap(GetXDisplay(),DefaultScreen(GetXDisplay()));
+}
+
+Drawable
+nsCairoDeviceContext::GetXPixmapParentDrawable()
+{
+    return RootWindow(GetXDisplay(),DefaultScreen(GetXDisplay()));
+}
+
+#endif
