@@ -1078,13 +1078,14 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                                       String propertyName, Object value,
                                       int attributes)
     {
-        if (destination instanceof ScriptableObject) {
-            ScriptableObject obj = (ScriptableObject)destination;
-            obj.defineProperty(propertyName, value, attributes);
-        }
-        else {
+        ScriptableObject obj;
+        try {
+            obj = (ScriptableObject)destination;
+        }catch (ClassCastException e) {
             destination.put(propertyName, destination, value);
+            return;
         }
+        obj.defineProperty(propertyName, value, attributes);
     }
 
     /**
@@ -1578,22 +1579,20 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
 
     private static Scriptable getBase(Scriptable obj, String s) {
         Scriptable m = obj;
-        while (m != null) {
-            if (m.has(s, obj))
-                return m;
+        while (!m.has(s, obj)) {
             m = m.getPrototype();
+            if (m == null) { break; }
         }
-        return null;
+        return m;
     }
 
     private static Scriptable getBase(Scriptable obj, int index) {
         Scriptable m = obj;
-        while (m != null) {
-            if (m.has(index, obj))
-                return m;
+        while (!m.has(index, obj)) {
             m = m.getPrototype();
+            if (m == null) { break; }
         }
-        return null;
+        return m;
     }
 
     /**
@@ -1850,7 +1849,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         transient Method setter;
         boolean setterReturnsValue;
 
-        private void writeObject(ObjectOutputStream out) 
+        private void writeObject(ObjectOutputStream out)
             throws IOException
         {
             out.defaultWriteObject();

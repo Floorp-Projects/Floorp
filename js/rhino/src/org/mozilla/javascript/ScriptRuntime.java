@@ -718,13 +718,9 @@ public class ScriptRuntime {
                         ScriptRuntime.getMessage0(msg),
                         scope);
         }
-        Scriptable m = start;
-        do {
-            Object result = m.get(id, start);
-            if (result != Scriptable.NOT_FOUND)
-                return result;
-            m = m.getPrototype();
-        } while (m != null);
+        Object result = ScriptableObject.getProperty(start, id);
+        if (result != Scriptable.NOT_FOUND)
+            return result;
         return Undefined.instance;
     }
 
@@ -764,7 +760,7 @@ public class ScriptRuntime {
         }
         catch (ClassCastException e) {
             return null;
-        } 
+        }
         if (s == null) {
             return null;
         }
@@ -842,16 +838,7 @@ public class ScriptRuntime {
         if (start == null) {
             throw NativeGlobal.typeError0("msg.null.to.object", scope);
         }
-        Scriptable m = start;
-        do {
-            if (m.has(id, start)) {
-                m.put(id, start, value);
-                return value;
-            }
-            m = m.getPrototype();
-        } while (m != null);
-
-        start.put(id, start, value);
+        ScriptableObject.putProperty(start, id, value);
         return value;
     }
 
@@ -978,13 +965,9 @@ public class ScriptRuntime {
      * types.
      */
     public static Object getElem(Scriptable obj, int index) {
-        Scriptable m = obj;
-        while (m != null) {
-            Object result = m.get(index, obj);
-            if (result != Scriptable.NOT_FOUND)
-                return result;
-            m = m.getPrototype();
-        }
+        Object result = ScriptableObject.getProperty(obj, index);
+        if (result != Scriptable.NOT_FOUND)
+            return result;
         return Undefined.instance;
     }
 
@@ -996,13 +979,9 @@ public class ScriptRuntime {
         else if (l == 10) {
             if (id.equals("__parent__")) { return obj.getParentScope(); }
         }
-        Scriptable m = obj;
-        while (m != null) {
-            Object result = m.get(id, obj);
-            if (result != Scriptable.NOT_FOUND)
-                return result;
-            m = m.getPrototype();
-        }
+        Object result = ScriptableObject.getProperty(obj, id);
+        if (result != Scriptable.NOT_FOUND)
+            return result;
         return Undefined.instance;
     }
 
@@ -1045,15 +1024,7 @@ public class ScriptRuntime {
      * types.
      */
     public static Object setElem(Scriptable obj, int index, Object value) {
-        Scriptable m = obj;
-        do {
-            if (m.has(index, obj)) {
-                m.put(index, obj, value);
-                return value;
-            }
-            m = m.getPrototype();
-        } while (m != null);
-        obj.put(index, obj, value);
+        ScriptableObject.putProperty(obj, index, value);
         return value;
     }
 
@@ -1067,15 +1038,7 @@ public class ScriptRuntime {
         else if (l == 10) {
             if (id.equals("__parent__")) return setParent(obj, value, scope);
         }
-        Scriptable m = obj;
-        do {
-            if (m.has(id, obj)) {
-                m.put(id, obj, value);
-                return value;
-            }
-            m = m.getPrototype();
-        } while (m != null);
-        obj.put(id, obj, value);
+        ScriptableObject.putProperty(obj, id, value);
         return value;
     }
 
@@ -1103,15 +1066,10 @@ public class ScriptRuntime {
      */
     public static Object name(Scriptable scopeChain, String id) {
         Scriptable obj = scopeChain;
-        Object prop;
         while (obj != null) {
-            Scriptable m = obj;
-            do {
-                Object result = m.get(id, obj);
-                if (result != Scriptable.NOT_FOUND)
-                    return result;
-                m = m.getPrototype();
-            } while (m != null);
+            Object result = ScriptableObject.getProperty(obj, id);
+            if (result != Scriptable.NOT_FOUND)
+                return result;
             obj = obj.getParentScope();
         }
         throw NativeGlobal.constructError
@@ -1135,29 +1093,18 @@ public class ScriptRuntime {
      */
     public static Scriptable bind(Scriptable scope, String id) {
         Scriptable obj = scope;
-        Object prop;
-        while (obj != null) {
-            Scriptable m = obj;
-            do {
-                if (m.has(id, obj))
-                    return obj;
-                m = m.getPrototype();
-            } while (m != null);
+        while (obj != null && !ScriptableObject.hasProperty(obj, id)) {
             obj = obj.getParentScope();
         }
-        return null;
+        return obj;
     }
 
     public static Scriptable getBase(Scriptable scope, String id) {
         Scriptable obj = scope;
-        Object prop;
         while (obj != null) {
-            Scriptable m = obj;
-            do {
-                if (m.get(id, obj) != Scriptable.NOT_FOUND)
-                    return obj;
-                m = m.getPrototype();
-            } while (m != null);
+            Object result = ScriptableObject.getProperty(obj, id);
+            if (result != Scriptable.NOT_FOUND)
+                return obj;
             obj = obj.getParentScope();
         }
         throw NativeGlobal.constructError(
@@ -1177,17 +1124,14 @@ public class ScriptRuntime {
     public static Object setName(Scriptable bound, Object value,
                                  Scriptable scope, String id)
     {
-        if (bound == null) {
+        if (bound != null) {
+            ScriptableObject.putProperty(bound, id, value);
+        }else {
             // "newname = 7;", where 'newname' has not yet
             // been defined, creates a new property in the
             // global object. Find the global object by
             // walking up the scope chain.
-            Scriptable next = scope;
-            do {
-                bound = next;
-                next = bound.getParentScope();
-            } while (next != null);
-
+            bound = ScriptableObject.getTopLevelScope(scope);
             bound.put(id, bound, value);
             /*
             This code is causing immense performance problems in
@@ -1196,9 +1140,8 @@ public class ScriptRuntime {
             String message = getMessage1("msg.assn.create", id);
             Context.reportWarning(message);
             */
-            return value;
         }
-        return setProp(bound, id, value, scope);
+        return value;
     }
 
     public static Enumeration initEnum(Object value, Scriptable scope) {
@@ -1963,7 +1906,7 @@ public class ScriptRuntime {
 
     public static Scriptable initVarObj(Context cx, Scriptable scope,
                                         NativeFunction funObj,
-                                        Scriptable thisObj, Object[] args) 
+                                        Scriptable thisObj, Object[] args)
     {
         NativeCall result = new NativeCall(cx, scope, funObj, thisObj, args);
         String[] argNames = funObj.argNames;
@@ -2005,12 +1948,8 @@ public class ScriptRuntime {
         fn.setPrototype(ScriptableObject.getClassPrototype(scope, "Function"));
         fn.setParentScope(scope);
         if (doSetName) {
-            try {
-                ((ScriptableObject) scope).defineProperty(fnName, fn,
-                    ScriptableObject.PERMANENT);
-            } catch (ClassCastException e) {
-                setName(scope, fn, scope, fnName);
-            }
+            ScriptableObject.defineProperty(scope, fnName, fn,
+                                            ScriptableObject.PERMANENT);
         }
         return fn;
     }
@@ -2047,7 +1986,7 @@ public class ScriptRuntime {
         if (setName && fnName != null && fnName.length() != 0 &&
             !fnName.equals("anonymous"))
         {
-            setProp(scope, fnName, result, scope);
+            ScriptableObject.putProperty(scope, fnName, result);
         }
 
         return result;
