@@ -619,6 +619,13 @@ public:
 
   static PRBool ShouldFocus(nsIContent *aContent);
 
+  /**
+   * Checks if a node is the ancestor of another.
+   */
+  static PRBool isSelfOrAncestor(nsIContent *aNode,
+                                 nsIContent *aPossibleAncestor);
+
+
   static nsresult InitHashes();
 
   static PLDHashTable sEventListenerManagersHash;
