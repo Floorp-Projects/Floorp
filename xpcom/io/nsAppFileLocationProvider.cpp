@@ -112,7 +112,7 @@ nsAppFileLocationProvider::~nsAppFileLocationProvider()
 // nsAppFileLocationProvider::nsISupports
 //*****************************************************************************   
 
-NS_IMPL_ISUPPORTS1(nsAppFileLocationProvider, nsIDirectoryServiceProvider)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsAppFileLocationProvider, nsIDirectoryServiceProvider)
 
 //*****************************************************************************
 // nsAppFileLocationProvider::nsIDirectoryServiceProvider
