@@ -315,6 +315,19 @@ NS_IMETHODIMP nsNewsDatabase::GetReadSet(nsMsgKeySet **pSet)
 NS_IMETHODIMP nsNewsDatabase::SetReadSet(nsMsgKeySet *pSet)
 {
   m_readSet = pSet;
+
+  if (m_readSet)
+  {
+    // compare this read set with the one in the db folder info.
+    // If not equivalent, sync with this one.
+    nsXPIDLCString dbReadSet;
+    if (m_dbFolderInfo)
+      m_dbFolderInfo->GetCharPtrProperty("readSet", getter_Copies(dbReadSet));
+    nsXPIDLCString newsrcReadSet;
+    m_readSet->Output(getter_Copies(newsrcReadSet));
+    if (!dbReadSet.Equals(newsrcReadSet))
+      SyncWithReadSet();
+  }
   return NS_OK;
 }
  
@@ -391,6 +404,68 @@ NS_IMETHODIMP nsNewsDatabase::MarkAllRead(nsMsgKeyArray *thoseMarked)
     m_readSet->AddRange(1, highWater);	// mark everything read in newsrc.
   
   return err;
+}
+
+nsresult nsNewsDatabase::SyncWithReadSet()
+{
+
+  // The code below attempts to update the underlying nsMsgDatabase's idea
+  // of read/unread flags to match the read set in the .newsrc file. It should
+  // only be called when they don't match, e.g., we crashed after committing the
+  // db but before writing out the .newsrc
+  nsCOMPtr <nsISimpleEnumerator> hdrs;
+  nsresult rv = EnumerateMessages(getter_AddRefs(hdrs));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool hasMore = PR_FALSE, readInNewsrc, isReadInDB, changed = PR_FALSE;
+  nsCOMPtr <nsIMsgDBHdr> header;
+  PRInt32 numMessages = 0, numNewMessages = 0;
+  nsMsgKey messageKey;
+  nsCOMPtr <nsIMsgThread> threadHdr;
+
+  // Scan all messages in DB
+  while (NS_SUCCEEDED(rv = hdrs->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE))
+  {
+      rv = hdrs->GetNext(getter_AddRefs(header));
+      NS_ENSURE_SUCCESS(rv, rv);
+
+      rv = nsMsgDatabase::IsHeaderRead(header, &isReadInDB);
+      NS_ENSURE_SUCCESS(rv, rv);
+  
+      header->GetMessageKey(&messageKey);
+      IsRead(messageKey,&readInNewsrc);
+
+      numMessages++;
+      if (!readInNewsrc) 
+        numNewMessages++;
+
+      // If DB and readSet disagree on Read/Unread, fix DB
+      if (readInNewsrc!=isReadInDB) 
+      {
+        MarkHdrRead(header, readInNewsrc, nsnull);
+        changed = PR_TRUE;
+      }
+  }
+  
+  // Update FolderInfo Counters
+  PRInt32 oldMessages, oldNewMessages;
+  rv = m_dbFolderInfo->GetNumMessages(&oldMessages);
+  if (NS_SUCCEEDED(rv) && oldMessages!=numMessages) 
+  {
+      changed = PR_TRUE;
+      m_dbFolderInfo->ChangeNumMessages(numMessages-oldMessages);
+  }
+  rv = m_dbFolderInfo->GetNumNewMessages(&oldNewMessages);
+  if (NS_SUCCEEDED(rv) && oldNewMessages!=numNewMessages) 
+  {
+      changed = PR_TRUE;
+      m_dbFolderInfo->ChangeNumNewMessages(numNewMessages-oldNewMessages);
+  }
+
+  if (changed)
+      Commit(nsMsgDBCommitType::kLargeCommit);
+
+  return rv;
 }
 
 nsresult nsNewsDatabase::AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr)

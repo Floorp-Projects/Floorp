@@ -72,9 +72,10 @@ public:
   virtual nsresult		ExpireUpTo(nsMsgKey expireKey);
   virtual nsresult		ExpireRange(nsMsgKey startRange, nsMsgKey endRange);
  
-  virtual PRBool        SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead);
+  virtual PRBool    SetHdrReadFlag(nsIMsgDBHdr *msgHdr, PRBool bRead);
  
-  virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
+  virtual nsresult  AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);
+  nsresult          SyncWithReadSet();
   
   // used to handle filters editing on open news groups.
   //static void			NotifyOpenDBsOfFilterChange(MSG_FolderInfo *folder);
