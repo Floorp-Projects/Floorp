@@ -743,18 +743,20 @@ void XXXDomNeverCalled();
 void XXXDomNeverCalled()
 {
   nsJSContext* jcx = new nsJSContext(0);
-  NS_NewScriptGlobalObject(0);
-  NS_NewScriptNavigator(0, 0, 0, 0);
-  NS_NewScriptLocation(0, 0, 0, 0);
-  NS_NewScriptEventListener(0, 0, 0, 0);
-  NS_NewJSEventListener(0, 0, 0);
-  NS_NewScriptCSS2Properties(0, 0, 0, 0);
-  NS_NewScriptCSSStyleSheet(0, 0, 0, 0);
-  NS_NewScriptStyleSheetCollection(0, 0, 0, 0);
-  NS_NewScriptCSSStyleRule(0, 0, 0, 0);
-  NS_NewScriptCSSStyleRuleCollection(0, 0, 0, 0);
-  NS_NewScriptRange(0, 0, 0, 0);
-  NS_NewScriptSelection(0, 0, 0, 0);
-  NS_NewScriptSelectionListener(0, 0, 0, 0);
-  NS_InitDocumentClass(nsnull, nsnull);
+  if (jcx) {
+    NS_NewScriptGlobalObject(0);
+    NS_NewScriptNavigator(0, 0, 0, 0);
+    NS_NewScriptLocation(0, 0, 0, 0);
+    NS_NewScriptEventListener(0, 0, 0, 0);
+    NS_NewJSEventListener(0, 0, 0);
+    NS_NewScriptCSS2Properties(0, 0, 0, 0);
+    NS_NewScriptCSSStyleSheet(0, 0, 0, 0);
+    NS_NewScriptStyleSheetCollection(0, 0, 0, 0);
+    NS_NewScriptCSSStyleRule(0, 0, 0, 0);
+    NS_NewScriptCSSStyleRuleCollection(0, 0, 0, 0);
+    NS_NewScriptRange(0, 0, 0, 0);
+    NS_NewScriptSelection(0, 0, 0, 0);
+    NS_NewScriptSelectionListener(0, 0, 0, 0);
+    NS_InitDocumentClass(nsnull, nsnull);
+  }
 }

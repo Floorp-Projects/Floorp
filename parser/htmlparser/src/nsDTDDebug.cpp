@@ -215,9 +215,9 @@ PRBool CDTDDebug::DebugRecord(char * path, nsString& aURLRef, char * filename)
 	  // vectors are stored on the format iof "URL vector filename"
 	  // where the vector contains the verification path and
 	  // the filename contains the debug source dump
-      char buffer[513];
-      aURLRef.ToCString(buffer,sizeof(buffer));
-      sprintf(string,"%s %s %s\r\n", buffer, path, filename);
+      char ubuffer[513];
+      aURLRef.ToCString(ubuffer,sizeof(ubuffer));
+      sprintf(string,"%s %s %s\r\n", ubuffer, path, filename);
 
 	  // get the file size, read in the file and parse it line at
 	  // a time to check to see if we have already recorded this
