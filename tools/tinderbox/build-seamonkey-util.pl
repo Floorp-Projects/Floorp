@@ -22,7 +22,7 @@ use File::Path;     # for rmtree();
 use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 
-$::UtilsVersion = '$Revision: 1.179 $ ';
+$::UtilsVersion = '$Revision: 1.180 $ ';
 
 package TinderUtils;
 
@@ -621,8 +621,6 @@ sub BuildIt {
     my $exit_early = 0;
     my $start_time = 0;
 
-    my $status = 0;
-
     my $build_failure_count = 0;  # Keep count of build failures.
 
     # Bypass profile manager at startup.
@@ -754,6 +752,7 @@ sub BuildIt {
             mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
 
             # Run the make command.
+            my $status = 0;
             $status = run_shell_command "$make $targets";
             if ($status != 0) {
                 $build_status = 'busted';
@@ -1590,6 +1589,9 @@ sub run_all_tests {
                                             "-P $Settings::MozProfileName",
                                             "file:$startup_build_dir/../startup-test.html");
     }
+
+    # Done with tests.  Pass test result back.
+    return $test_result;
 }
 
 
