@@ -1383,11 +1383,8 @@ nsEditor::DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed)
 // The BeingComposition method is called from the Editor Composition event listeners.
 //
 NS_IMETHODIMP
-nsEditor::BeginComposition(nsTextEventReply* aReply)
+nsEditor::QueryComposition(nsTextEventReply* aReply)
 {
-#ifdef DEBUG_tague
-  printf("nsEditor::StartComposition\n");
-#endif
   nsresult result;
   nsCOMPtr<nsIDOMSelection> selection;
   nsCOMPtr<nsIDOMCharacterData> nodeAsText;
@@ -1401,10 +1398,17 @@ nsEditor::BeginComposition(nsTextEventReply* aReply)
       caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
     }
   }
-
-  mInIMEMode = PR_TRUE;
-
   return result;
+}
+NS_IMETHODIMP
+nsEditor::BeginComposition(nsTextEventReply* aReply)
+{
+#ifdef DEBUG_tague
+  printf("nsEditor::StartComposition\n");
+#endif
+  nsresult ret = QueryComposition(aReply);
+  mInIMEMode = PR_TRUE;
+  return ret;
 }
 
 NS_IMETHODIMP

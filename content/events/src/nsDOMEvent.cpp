@@ -317,7 +317,8 @@ NS_METHOD nsDOMEvent::GetEventReply(nsTextEventReply** aReply)
 
 NS_METHOD nsDOMEvent::GetCompositionReply(nsTextEventReply** aReply)
 {
-  if (mEvent->message==NS_COMPOSITION_START) {
+  if((mEvent->message==NS_COMPOSITION_START) ||
+     (mEvent->message==NS_COMPOSITION_QUERY)) {
     *aReply = &(((nsCompositionEvent*)mEvent)->theReply);
     return NS_OK;
   }
