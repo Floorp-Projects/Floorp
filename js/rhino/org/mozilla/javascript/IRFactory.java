@@ -723,7 +723,6 @@ public class IRFactory {
                 childNode.removeChild(left);
                 childNode.removeChild(right);
             } else {
-                reportError("msg.del.nonref");
                 return new Node(TokenStream.PRIMARY,
                                 new Integer(TokenStream.TRUE));
             }
