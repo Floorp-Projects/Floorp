@@ -2409,7 +2409,7 @@ nsDocShell::LoadURI(const PRUnichar * aURI,
       return NS_OK; // JS may not handle returning of an error code
     }
     nsCOMPtr<nsIURI> uri;
-    nsresult rv;
+    nsresult rv = NS_OK;
     // Create the fixup object if necessary
     if (!mURIFixup) {
         mURIFixup = do_GetService(NS_URIFIXUP_CONTRACTID);
@@ -5652,7 +5652,8 @@ nsresult nsDocShell::DoChannelLoad(nsIChannel * aChannel,
 }
 
 NS_IMETHODIMP
-nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadType, nscoord *cx, nscoord *cy)
+nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor,
+                           PRUint32 aLoadType, nscoord *cx, nscoord *cy)
 {
     NS_ASSERTION(aURI, "null uri arg");
     NS_ASSERTION(aWasAnchor, "null anchor arg");
@@ -5667,7 +5668,14 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
         return NS_OK;
     }
 
-    nsresult rv = NS_OK;
+    nsCOMPtr<nsIPresShell> shell;
+    nsresult rv = GetPresShell(getter_AddRefs(shell));
+    if (NS_FAILED(rv) || !shell) {
+        // If we failed to get the shell, or if there is no shell,
+        // nothing left to do here.
+        
+        return rv;
+    }
 
     // NOTE: we assume URIs are absolute for comparison purposes
 
@@ -5753,72 +5761,66 @@ nsDocShell::ScrollIfAnchor(nsIURI * aURI, PRBool * aWasAnchor, PRUint32 aLoadTyp
     GetCurScrollPos(ScrollOrientation_X, cx);
     GetCurScrollPos(ScrollOrientation_Y, cy);
 
-    nsCOMPtr<nsIPresShell> shell;
-    rv = GetPresShell(getter_AddRefs(shell));
-    if (NS_FAILED(rv))
-        return rv;
-
     if (!sNewRef.IsEmpty()) {
-        if (shell) {
-            *aWasAnchor = PR_TRUE;
+        *aWasAnchor = PR_TRUE;
 
-            // anchor is there, but if it's a load from history,
-            // we don't have any anchor jumping to do
-            PRBool scroll = aLoadType != LOAD_HISTORY &&
-                            aLoadType != LOAD_RELOAD_NORMAL;
+        // anchor is there, but if it's a load from history,
+        // we don't have any anchor jumping to do
+        PRBool scroll = aLoadType != LOAD_HISTORY &&
+                        aLoadType != LOAD_RELOAD_NORMAL;
 
-            char *str = ToNewCString(sNewRef);
+        char *str = ToNewCString(sNewRef);
 
-            // nsUnescape modifies the string that is passed into it.
-            nsUnescape(str);
+        // nsUnescape modifies the string that is passed into it.
+        nsUnescape(str);
 
-            // We assume that the bytes are in UTF-8, as it says in the spec:
-            // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
+        // We assume that the bytes are in UTF-8, as it says in the
+        // spec:
+        // http://www.w3.org/TR/html4/appendix/notes.html#h-B.2.1
 
-            // We try the UTF-8 string first, and then try the
-            // document's charset (see below).
-            // If the string is not UTF-8, conversion will fail and give us
-            // an empty Unicode string.  In that case, we should just fall
-            // through to using the page's charset.
-            rv = NS_ERROR_FAILURE;
-            NS_ConvertUTF8toUCS2 uStr(str);
-            if (!uStr.IsEmpty()) {
-                rv = shell->GoToAnchor(NS_ConvertUTF8toUCS2(str), scroll);
-            }
-            nsMemory::Free(str);
+        // We try the UTF-8 string first, and then try the document's
+        // charset (see below).  If the string is not UTF-8,
+        // conversion will fail and give us an empty Unicode string.
+        // In that case, we should just fall through to using the
+        // page's charset.
+        rv = NS_ERROR_FAILURE;
+        NS_ConvertUTF8toUCS2 uStr(str);
+        if (!uStr.IsEmpty()) {
+            rv = shell->GoToAnchor(NS_ConvertUTF8toUCS2(str), scroll);
+        }
+        nsMemory::Free(str);
 
-            // Above will fail if the anchor name is not UTF-8.
-            // Need to convert from document charset to unicode.
-            if (NS_FAILED(rv)) {
+        // Above will fail if the anchor name is not UTF-8.  Need to
+        // convert from document charset to unicode.
+        if (NS_FAILED(rv)) {
                 
-                // Get a document charset
-                NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
-                nsCOMPtr<nsIDocumentViewer>
-                    docv(do_QueryInterface(mContentViewer));
-                NS_ENSURE_TRUE(docv, NS_ERROR_FAILURE);
-                nsCOMPtr<nsIDocument> doc;
-                rv = docv->GetDocument(*getter_AddRefs(doc));
-                NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
-                nsAutoString aCharset;
-                rv = doc->GetDocumentCharacterSet(aCharset);
-                NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+            // Get a document charset
+            NS_ENSURE_TRUE(mContentViewer, NS_ERROR_FAILURE);
+            nsCOMPtr<nsIDocumentViewer>
+                docv(do_QueryInterface(mContentViewer));
+            NS_ENSURE_TRUE(docv, NS_ERROR_FAILURE);
+            nsCOMPtr<nsIDocument> doc;
+            rv = docv->GetDocument(*getter_AddRefs(doc));
+            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+            nsAutoString aCharset;
+            rv = doc->GetDocumentCharacterSet(aCharset);
+            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-                nsCOMPtr<nsITextToSubURI> textToSubURI =
-                    do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
-                if (NS_FAILED(rv))
-                    return NS_ERROR_FAILURE;
+            nsCOMPtr<nsITextToSubURI> textToSubURI =
+                do_GetService(NS_ITEXTTOSUBURI_CONTRACTID, &rv);
+            if (NS_FAILED(rv))
+                return NS_ERROR_FAILURE;
 
-                // Unescape and convert to unicode
-                nsXPIDLString uStr;
-                NS_LossyConvertUCS2toASCII charset(aCharset);
+            // Unescape and convert to unicode
+            nsXPIDLString uStr;
+            NS_LossyConvertUCS2toASCII charset(aCharset);
 
-                rv = textToSubURI->UnEscapeAndConvert(charset.get(),
-                                                      PromiseFlatCString(sNewRef).get(),
-                                                      getter_Copies(uStr));
-                NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+            rv = textToSubURI->UnEscapeAndConvert(charset.get(),
+                                                  PromiseFlatCString(sNewRef).get(),
+                                                  getter_Copies(uStr));
+            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
-                rv = shell->GoToAnchor(uStr, scroll);
-            }
+            rv = shell->GoToAnchor(uStr, scroll);
         }
     }
     else {

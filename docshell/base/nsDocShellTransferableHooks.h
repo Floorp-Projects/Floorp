@@ -59,4 +59,4 @@ protected:
     nsCOMArray<nsIClipboardDragDropHooks> mHookList;
 };
 
-#endif nsDocShellTransferableHooks_h__
+#endif // nsDocShellTransferableHooks_h__
