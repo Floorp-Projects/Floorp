@@ -394,6 +394,7 @@ NS_IMETHODIMP
 nsPresContext::StartLoadImage(const nsString& aURL,
                               const nscolor* aBackgroundColor,
                               nsIFrame* aTargetFrame,
+                              nsFrameImageLoaderCB aCallBack,
                               PRBool aNeedSizeUpdate,
                               nsIFrameImageLoader*& aLoaderResult)
 {
@@ -447,7 +448,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
   mImageLoaders.AppendElement(loader);
 
   rv = loader->Init(this, mImageGroup, aURL, aBackgroundColor, aTargetFrame,
-                    aNeedSizeUpdate);
+                    aCallBack, aNeedSizeUpdate);
   if (NS_OK != rv) {
     mImageLoaders.RemoveElement(loader);
     NS_RELEASE(loader);

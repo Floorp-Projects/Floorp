@@ -22,6 +22,7 @@
 #include "nsISupports.h"
 #include "nsRect.h"
 #include "nsColor.h"
+#include "nsIFrameImageLoader.h"
 
 struct nsFont;
 
@@ -30,7 +31,6 @@ class nsIDocument;
 class nsIDeviceContext;
 class nsIFontMetrics;
 class nsIFrame;
-class nsIFrameImageLoader;
 class nsIImageGroup;
 class nsILinkHandler;
 class nsIPresShell;
@@ -162,6 +162,7 @@ public:
   NS_IMETHOD StartLoadImage(const nsString& aURL,
                             const nscolor* aBackgroundColor,
                             nsIFrame* aTargetFrame,
+                            nsFrameImageLoaderCB aCallBack,
                             PRBool aNeedSizeUpdate,
                             nsIFrameImageLoader*& aLoader) = 0;
 

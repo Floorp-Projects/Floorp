@@ -741,7 +741,8 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
                                               transparentBG
                                               ? nsnull
                                               : &aColor.mBackgroundColor,
-                                              aForFrame, PR_FALSE, loader);
+                                              aForFrame, nsnull,
+                                              PR_FALSE, loader);
     if ((NS_OK != rv) || (nsnull == loader) ||
         (loader->GetImage(image), (nsnull == image))) {
       NS_IF_RELEASE(loader);

@@ -67,11 +67,14 @@ public:
 
   nsresult StartLoadImage(nsIPresContext* aPresContext,
                           nsIFrame* aForFrame,
+                          nsFrameImageLoaderCB aCallBack,
                           PRBool aNeedSizeUpdate,
                           PRIntn& aLoadStatus);
 
   void GetDesiredSize(nsIPresContext* aPresContext,
                       const nsReflowState& aReflowState,
+                      nsIFrame* aTargetFrame,
+                      nsFrameImageLoaderCB aCallBack,
                       nsReflowMetrics& aDesiredSize);
 
   PRBool GetLoadImageFailed() {
