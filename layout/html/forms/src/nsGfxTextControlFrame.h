@@ -253,7 +253,7 @@ public:
 
   virtual nsresult RequiresWidget(PRBool &aRequiresWidget);
 
-  NS_IMETHOD ContentChanged();
+  NS_IMETHOD InternalContentChanged();
 
   void RemoveNewlines(nsString &aString);
 
