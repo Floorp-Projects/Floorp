@@ -27,14 +27,8 @@
 #include "nsICharsetConverterInfo.h"
 #include "nsUCvCnCID.h"
 #include "nsUCvCnDll.h"
-#include "nsBIG5ToUnicode.h"
-#include "nsEUCTWToUnicode.h"
 #include "nsGB2312ToUnicode.h"
-#include "nsEUCKRToUnicode.h"
-#include "nsUnicodeToBIG5.h"
-#include "nsUnicodeToEUCTW.h"
 #include "nsUnicodeToGB2312.h"
-#include "nsUnicodeToEUCKR.h"
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
@@ -67,40 +61,10 @@ struct FactoryData
 FactoryData g_FactoryData[] =
 {
   {
-    &kBIG5ToUnicodeCID,
-    nsBIG5ToUnicode::CreateInstance,
-    "BIG5",
-    "Unicode"
-  },
-  {
-    &kEUCTWToUnicodeCID,
-    nsEUCTWToUnicode::CreateInstance,
-    "X-EUC-TW",
-    "Unicode"
-  },
-  {
     &kGB2312ToUnicodeCID,
     nsGB2312ToUnicode::CreateInstance,
     "GB2312",
     "Unicode"
-  },
-  {
-    &kEUCKRToUnicodeCID,
-    nsEUCKRToUnicode::CreateInstance,
-    "EUC-KR",
-    "Unicode"
-  },
-  {
-    &kUnicodeToBIG5CID,
-    nsUnicodeToBIG5::CreateInstance,
-    "Unicode",
-    "BIG5"
-  },
-  {
-    &kUnicodeToEUCTWCID,
-    nsUnicodeToEUCTW::CreateInstance,
-    "Unicode",
-    "X-EUC-TW"
   },
   {
     &kUnicodeToGB2312CID,
@@ -108,12 +72,6 @@ FactoryData g_FactoryData[] =
     "Unicode",
     "GB2312"
   },
-  {
-    &kUnicodeToEUCKRCID,
-    nsUnicodeToEUCKR::CreateInstance,
-    "Unicode",
-    "EUC-KR"
-  }
 };
 
 #define ARRAY_SIZE(_array)                                      \
