@@ -40,16 +40,12 @@ function doCheckAll(activeFlag)
 	if (treeChildrenNode == null)	return(false);
 
 	var numEngines = treeChildrenNode.childNodes.length;
-	dump("doCheckAll():  " + numEngines + " engines.\n");
 
 	for (var x = 0; x<numEngines; x++)
 	{
 		var treeItem = treeChildrenNode.childNodes[x];
-		if (!treeItem)
-		{
-			dump("doCheckAll(): huh? treeItem is null.\n");
-			continue;
-		}
+                if (!treeItem)
+                  continue;
 
 		var checkedFlag = false;
 
@@ -77,8 +73,6 @@ function doCheckAll(activeFlag)
 		}
 	}
 
-	dump("doCheckAll() done.\n");
-
 	return(true);
 }
 
@@ -90,8 +84,6 @@ function saveSearch()
 	if (!resultsTree)	return(false);
 	var searchURL = resultsTree.getAttribute("ref");
 	if ((!searchURL) || (searchURL == ""))		return(false);
-
-	dump("Bookmark search URL: " + searchURL + "\n");
 
 	var bmks = Components.classes["@mozilla.org/browser/bookmarks-service;1"].getService();
 	if (bmks)	bmks = bmks.QueryInterface(Components.interfaces.nsIBookmarksService);
