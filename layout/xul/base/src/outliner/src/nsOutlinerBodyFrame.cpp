@@ -1287,6 +1287,7 @@ NS_IMETHODIMP
 nsOutlinerBodyFrame::PositionChanged(PRInt32 aOldIndex, PRInt32& aNewIndex)
 {
   float t2p;
+  if (!mRowHeight) return NS_ERROR_UNEXPECTED;
   mPresContext->GetTwipsToPixels(&t2p);
   nscoord rh = NSToCoordRound((float)mRowHeight*t2p);
 
