@@ -26,7 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= public bookmarks directory filepicker find history search sidebar related regviewer xfer prefwindow shistory remote timebomb console autocomplete urlbarhistory intl build
+DIRS		= public bookmarks directory filepicker find history search sidebar related regviewer xfer prefwindow shistory remote console autocomplete urlbarhistory intl build
 
 ifdef MOZ_ENABLE_XREMOTE
 DIRS		+= xremote

@@ -64,7 +64,6 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/libappcompintl_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/librelated_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/libsearch_s.$(LIB_SUFFIX) \
-	$(DIST)/lib/libtimebomb_s.$(LIB_SUFFIX) \
 	$(DIST)/lib/liburlbarhistory_s.$(LIB_SUFFIX) \
 	$(NULL)
 
@@ -79,7 +78,6 @@ LOCAL_INCLUDES	= \
 	-I$(srcdir)/../history/src       \
 	-I$(srcdir)/../related/src       \
 	-I$(srcdir)/../search/src        \
-	-I$(srcdir)/../timebomb          \
 	-I$(srcdir)/../urlbarhistory/src \
 	$(NULL)
 
