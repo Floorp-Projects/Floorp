@@ -25,8 +25,9 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= gtkembedmoz
 LIBRARY_NAME	= gtkembedmoz
-REQUIRES	= xpcom string docshell webshell necko widget dom layout locale js uriloader webbrwsr shistory embed_base pref windowwatcher gfx2
+REQUIRES	= xpcom string docshell webshell necko widget dom layout locale js uriloader webbrwsr shistory embed_base pref windowwatcher gfx2 mpfilelocprovider
 
 CPPSRCS		= \
 		gtkmozembed2.cpp \

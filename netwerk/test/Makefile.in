@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= test_necko
-REQUIRES	= xpcom string necko nkcache timer cookie layout widget dom dbm
+REQUIRES	= xpcom string necko nkcache timer cookie dbm
 
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libmozdbm_s.$(LIB_SUFFIX)
 

@@ -27,7 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= apprunner
-REQUIRES	= xpcom string webbrwsr widget dom js necko pref appshell wallet layout chrome rdf profile xpinstall uriloader editor view windowwatcher embed_base embedcomponents
+REQUIRES	= xpcom string webbrwsr widget dom js necko pref appshell wallet layout chrome rdf profile xpinstall uriloader editor view windowwatcher embed_base embedcomponents mpfilelocprovider browser mozcomps
 
 ifeq ($(USE_SHORT_LIBNAME),1)
 PROGRAM		= mozilla$(BIN_SUFFIX)

@@ -26,6 +26,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= mozcomps
 XPIDL_MODULE	= mozcomps
 
 EXPORTS		= nsIAppShellComponentImpl.h

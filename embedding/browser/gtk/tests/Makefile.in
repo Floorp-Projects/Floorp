@@ -25,6 +25,7 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+MODULE		= gtkembedmoz
 REQUIRES	= xpcom string dom
 
 CPPSRCS		= \
