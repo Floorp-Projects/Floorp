@@ -219,6 +219,8 @@
 				29B9732BFDCFA39411CA2CEA,
 				F6BD637B01B30E0F01A962F7,
 				F6BD639001B30F5301A962F7,
+				3FA6DE98042F9B6F0002AD8F,
+				3FA6DEA6042F9BAE0002AD8F,
 				F6BD64B701B3167601A962F7,
 				F6BD650A01B3184301A962F7,
 				F6BD651901B3184301A962F7,
@@ -227,13 +229,13 @@
 				29B9732DFDCFA39411CA2CEA,
 			);
 			buildSettings = {
-				FRAMEWORK_SEARCH_PATHS = ../../../embedding/browser/cocoa/src/build;
+				FRAMEWORK_SEARCH_PATHS = "../../../embedding/browser/cocoa/src/build ../../../embedding/browser/cocoa/src/build";
 				GCC_TREAT_WARNINGS_AS_ERRORS = YES;
 				HEADER_SEARCH_PATHS = "../../../dist/include/string ../../../dist/include/nspr ../../../dist/include/xpcom ../../../dist/sdk/xpcom/include ../../../dist/include/embed_base ../../../embedding/browser/cocoa/src/build/CHBrowserView.framework/Headers";
 				INSTALL_PATH = "$(HOME)/Applications";
-				LIBRARY_SEARCH_PATHS = ../../../dist/bin;
+				LIBRARY_SEARCH_PATHS = "../../../dist/bin ../../../dist/Embed ../../../dist/Embed/components ../../../nsprpub/lib/libc/src";
 				OPTIMIZATION_CFLAGS = "-O2";
-				OTHER_CFLAGS = "-fno-rtti -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\"";
+				OTHER_CFLAGS = "-fno-rtti -fno-exceptions -fpascal-strings -fshort-wchar -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -DIBMBIDI";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				PREBINDING = NO;
 				PREFIX_HEADER = "../../../mozilla-config.h";
@@ -312,13 +314,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				1058C7A3FEA54F0111CA2CBB,
-				F6BD652601B3194901A962F7,
-				F6BD652701B3194901A962F7,
-				F6BD652801B3194901A962F7,
-				F6BD652901B3194901A962F7,
-				F6C4515E01B5A8A701A962F7,
-				F52978AA0371A46C01026DCE,
-				F52978AB0371A46C01026DCE,
+				3FA6DEBF042FC3E20002AD8F,
 			);
 			isa = PBXFrameworksBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -328,6 +324,207 @@
 //292
 //293
 //294
+//3F0
+//3F1
+//3F2
+//3F3
+//3F4
+		3FA6DE8B042F9AFD0002AD8F = {
+			children = (
+				3FA6DE8D042F9B0B0002AD8F,
+				3FA6DE8C042F9B060002AD8F,
+			);
+			isa = PBXGroup;
+			name = "Gecko Security";
+			refType = 4;
+		};
+		3FA6DE8C042F9B060002AD8F = {
+			children = (
+				3FA6DE8E042F9B380002AD8F,
+				3FA6DE8F042F9B380002AD8F,
+				3FA6DE90042F9B380002AD8F,
+				3FA6DE91042F9B380002AD8F,
+				3FA6DE92042F9B380002AD8F,
+			);
+			isa = PBXGroup;
+			name = "Executable Level";
+			refType = 4;
+		};
+		3FA6DE8D042F9B0B0002AD8F = {
+			children = (
+				3FA6DE9E042F9BA40002AD8F,
+				3FA6DE9F042F9BA40002AD8F,
+				3FA6DEA0042F9BA40002AD8F,
+				3FA6DEA1042F9BA40002AD8F,
+			);
+			isa = PBXGroup;
+			name = "Components Level";
+			refType = 4;
+		};
+		3FA6DE8E042F9B380002AD8F = {
+			isa = PBXFileReference;
+			name = libnss3.dylib;
+			path = ../../../dist/Embed/libnss3.dylib;
+			refType = 2;
+		};
+		3FA6DE8F042F9B380002AD8F = {
+			isa = PBXFileReference;
+			name = libnssckbi.dylib;
+			path = ../../../dist/Embed/libnssckbi.dylib;
+			refType = 2;
+		};
+		3FA6DE90042F9B380002AD8F = {
+			isa = PBXFileReference;
+			name = libsmime3.dylib;
+			path = ../../../dist/Embed/libsmime3.dylib;
+			refType = 2;
+		};
+		3FA6DE91042F9B380002AD8F = {
+			isa = PBXFileReference;
+			name = libsoftokn3.dylib;
+			path = ../../../dist/Embed/libsoftokn3.dylib;
+			refType = 2;
+		};
+		3FA6DE92042F9B380002AD8F = {
+			isa = PBXFileReference;
+			name = libssl3.dylib;
+			path = ../../../dist/Embed/libssl3.dylib;
+			refType = 2;
+		};
+		3FA6DE98042F9B6F0002AD8F = {
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 6;
+			files = (
+				3FA6DE99042F9B780002AD8F,
+				3FA6DE9A042F9B780002AD8F,
+				3FA6DE9B042F9B780002AD8F,
+				3FA6DE9C042F9B780002AD8F,
+				3FA6DE9D042F9B780002AD8F,
+			);
+			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3FA6DE99042F9B780002AD8F = {
+			fileRef = 3FA6DE8E042F9B380002AD8F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FA6DE9A042F9B780002AD8F = {
+			fileRef = 3FA6DE8F042F9B380002AD8F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FA6DE9B042F9B780002AD8F = {
+			fileRef = 3FA6DE90042F9B380002AD8F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FA6DE9C042F9B780002AD8F = {
+			fileRef = 3FA6DE91042F9B380002AD8F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FA6DE9D042F9B780002AD8F = {
+			fileRef = 3FA6DE92042F9B380002AD8F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FA6DE9E042F9BA40002AD8F = {
+			isa = PBXFileReference;
+			name = libpipboot.dylib;
+			path = ../../../dist/Embed/components/libpipboot.dylib;
+			refType = 2;
+		};
+		3FA6DE9F042F9BA40002AD8F = {
+			isa = PBXFileReference;
+			name = libpipnss.dylib;
+			path = ../../../dist/Embed/components/libpipnss.dylib;
+			refType = 2;
+		};
+		3FA6DEA0042F9BA40002AD8F = {
+			isa = PBXFileReference;
+			name = pipboot.xpt;
+			path = ../../../dist/Embed/components/pipboot.xpt;
+			refType = 2;
+		};
+		3FA6DEA1042F9BA40002AD8F = {
+			isa = PBXFileReference;
+			name = pipnss.xpt;
+			path = ../../../dist/Embed/components/pipnss.xpt;
+			refType = 2;
+		};
+		3FA6DEA6042F9BAE0002AD8F = {
+			buildActionMask = 2147483647;
+			dstPath = components;
+			dstSubfolderSpec = 6;
+			files = (
+				3FA6DEB9042FC2EE0002AD8F,
+				3FA6DEBA042FC2EE0002AD8F,
+				3FA6DEBB042FC2EE0002AD8F,
+				3FA6DEBC042FC2EE0002AD8F,
+			);
+			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		3FA6DEB9042FC2EE0002AD8F = {
+			fileRef = 3FA6DE9E042F9BA40002AD8F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FA6DEBA042FC2EE0002AD8F = {
+			fileRef = 3FA6DE9F042F9BA40002AD8F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FA6DEBB042FC2EE0002AD8F = {
+			fileRef = 3FA6DEA0042F9BA40002AD8F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FA6DEBC042FC2EE0002AD8F = {
+			fileRef = 3FA6DEA1042F9BA40002AD8F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FA6DEBF042FC3E20002AD8F = {
+			fileRef = F6C4515D01B5A8A601A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FA6DEC2042FC4270002AD8F = {
+			fileRef = F6BD638101B30EA301A962F7;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		3FA6DEC6042FCC4C0002AD8F = {
+			isa = PBXFileReference;
+			name = "security-prefs.js";
+			path = "../../../dist/Embed/defaults/pref/security-prefs.js";
+			refType = 2;
+		};
+		3FA6DEC8042FCC590002AD8F = {
+			fileRef = 3FA6DEC6042FCC4C0002AD8F;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//3F0
+//3F1
+//3F2
+//3F3
+//3F4
 //4A0
 //4A1
 //4A2
@@ -453,18 +650,6 @@
 			path = ../../../dist/bin/chrome/pippki.jar;
 			refType = 2;
 		};
-		F52978AA0371A46C01026DCE = {
-			fileRef = F52978A80371A46C01026DCE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F52978AB0371A46C01026DCE = {
-			fileRef = F52978A90371A46C01026DCE;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F52978AC0371A74D01026DCE = {
 			fileRef = F6BD64D301B3172601A962F7;
 			isa = PBXBuildFile;
@@ -514,6 +699,7 @@
 		};
 		F6BD637A01B30E0F01A962F7 = {
 			children = (
+				3FA6DE8B042F9AFD0002AD8F,
 				F6BD637C01B30E2901A962F7,
 				F6BD637F01B30EA301A962F7,
 				F6BD638001B30EA301A962F7,
@@ -537,10 +723,10 @@
 			files = (
 				F6BD638A01B30F5301A962F7,
 				F6BD638B01B30F5301A962F7,
-				F6BD638C01B30F5301A962F7,
 				F6BD638D01B30F5301A962F7,
 				F6BD638E01B30F5301A962F7,
 				F6BD637D01B30E2901A962F7,
+				3FA6DEC2042FC4270002AD8F,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -626,10 +812,8 @@
 				F6BD63DC01B313EE01A962F7,
 				F6BD63DD01B313EE01A962F7,
 				F6BD63DF01B313EE01A962F7,
-				F6BD63E001B313EE01A962F7,
 				F6BD63E101B313EE01A962F7,
 				F6BD63E201B313EE01A962F7,
-				F6BD63E301B313EE01A962F7,
 				F6BD63E401B313EE01A962F7,
 				F6BD63E501B313EE01A962F7,
 				F6BD63E601B313EE01A962F7,
@@ -647,9 +831,7 @@
 				F6BD641201B3156701A962F7,
 				F6BD641301B3156701A962F7,
 				F6BD641401B3156701A962F7,
-				F6BD641501B3156701A962F7,
 				F6BD641701B3156701A962F7,
-				F6BD641A01B3156701A962F7,
 				F6BD641B01B3156701A962F7,
 				F6BD641C01B3156701A962F7,
 				F6BD641D01B3156701A962F7,
@@ -686,12 +868,6 @@
 		};
 		F6BD638B01B30F5301A962F7 = {
 			fileRef = F6BD638001B30EA301A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD638C01B30F5301A962F7 = {
-			fileRef = F6BD638101B30EA301A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -750,10 +926,8 @@
 				F6BD647C01B3167601A962F7,
 				F6BD647D01B3167601A962F7,
 				F6BD647F01B3167601A962F7,
-				F6BD648001B3167601A962F7,
 				F6BD648101B3167601A962F7,
 				F6BD648201B3167601A962F7,
-				F6BD648301B3167601A962F7,
 				F6BD648401B3167601A962F7,
 				F6BD648501B3167601A962F7,
 				F6BD648601B3167601A962F7,
@@ -771,9 +945,7 @@
 				F6BD649901B3167601A962F7,
 				F6BD649A01B3167601A962F7,
 				F6BD649B01B3167601A962F7,
-				F6BD649C01B3167601A962F7,
 				F6BD649E01B3167601A962F7,
-				F6BD64A101B3167601A962F7,
 				F6BD64A201B3167601A962F7,
 				F6BD64A301B3167601A962F7,
 				F6BD64A401B3167601A962F7,
@@ -1022,12 +1194,6 @@
 			path = ../../../layout/build/libgklayout.dylib;
 			refType = 2;
 		};
-		F6BD63E001B313EE01A962F7 = {
-			isa = PBXFileReference;
-			name = libgkview.dylib;
-			path = ../../../view/src/libgkview.dylib;
-			refType = 2;
-		};
 		F6BD63E101B313EE01A962F7 = {
 			isa = PBXFileReference;
 			name = libhtmlpars.dylib;
@@ -1038,12 +1204,6 @@
 			isa = PBXFileReference;
 			name = libjar50.dylib;
 			path = ../../../modules/libjar/libjar50.dylib;
-			refType = 2;
-		};
-		F6BD63E301B313EE01A962F7 = {
-			isa = PBXFileReference;
-			name = libjsurl.dylib;
-			path = ../../../dom/src/jsurl/libjsurl.dylib;
 			refType = 2;
 		};
 		F6BD63E401B313EE01A962F7 = {
@@ -1148,22 +1308,10 @@
 			path = ../../../rdf/build/librdf.dylib;
 			refType = 2;
 		};
-		F6BD641501B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = libshistory.dylib;
-			path = ../../../xpfe/components/shistory/src/libshistory.dylib;
-			refType = 2;
-		};
 		F6BD641701B3156701A962F7 = {
 			isa = PBXFileReference;
 			name = libuconv.dylib;
 			path = ../../../intl/uconv/src/libuconv.dylib;
-			refType = 2;
-		};
-		F6BD641A01B3156701A962F7 = {
-			isa = PBXFileReference;
-			name = liburiloader.dylib;
-			path = ../../../uriloader/build/liburiloader.dylib;
 			refType = 2;
 		};
 		F6BD641B01B3156701A962F7 = {
@@ -1531,12 +1679,6 @@
 			settings = {
 			};
 		};
-		F6BD648001B3167601A962F7 = {
-			fileRef = F6BD63E001B313EE01A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD648101B3167601A962F7 = {
 			fileRef = F6BD63E101B313EE01A962F7;
 			isa = PBXBuildFile;
@@ -1545,12 +1687,6 @@
 		};
 		F6BD648201B3167601A962F7 = {
 			fileRef = F6BD63E201B313EE01A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD648301B3167601A962F7 = {
-			fileRef = F6BD63E301B313EE01A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1657,20 +1793,8 @@
 			settings = {
 			};
 		};
-		F6BD649C01B3167601A962F7 = {
-			fileRef = F6BD641501B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6BD649E01B3167601A962F7 = {
 			fileRef = F6BD641701B3156701A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD64A101B3167601A962F7 = {
-			fileRef = F6BD641A01B3156701A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -1988,6 +2112,7 @@
 			children = (
 				F6BD64FC01B3184301A962F7,
 				F6BD64FE01B3184301A962F7,
+				3FA6DEC6042FCC4C0002AD8F,
 			);
 			isa = PBXGroup;
 			name = "Gecko Defaults";
@@ -2115,6 +2240,7 @@
 			files = (
 				F6BD652001B3184301A962F7,
 				F6BD652201B3184301A962F7,
+				3FA6DEC8042FCC590002AD8F,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -2148,41 +2274,11 @@
 			settings = {
 			};
 		};
-		F6BD652601B3194901A962F7 = {
-			fileRef = F6BD637C01B30E2901A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD652701B3194901A962F7 = {
-			fileRef = F6BD638001B30EA301A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD652801B3194901A962F7 = {
-			fileRef = F6BD638101B30EA301A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD652901B3194901A962F7 = {
-			fileRef = F6BD638201B30EA301A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
 		F6C4515D01B5A8A601A962F7 = {
 			isa = PBXFrameworkReference;
 			name = CHBrowserView.framework;
 			path = ../../browser/cocoa/src/build/CHBrowserView.framework;
 			refType = 2;
-		};
-		F6C4515E01B5A8A701A962F7 = {
-			fileRef = F6C4515D01B5A8A601A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
 		};
 	};
 	rootObject = 29B97313FDCFA39411CA2CEA;

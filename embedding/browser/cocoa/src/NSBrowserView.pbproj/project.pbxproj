@@ -117,13 +117,14 @@
 				FRAMEWORK_SEARCH_PATHS = "";
 				FRAMEWORK_VERSION = A;
 				HEADER_SEARCH_PATHS = "../../../../dist/include/mimetype ../../../../dist/include/find ../../../../dist/include/webbrowserpersist ../../../../dist/include/commandhandler ../../../../dist/include/exthandler ../../../../dist/include/helperAppDlg ../../../../dist/include/profile ../../../../dist/include/xpcom ../../../../dist/include/string ../../../../dist/include/docshell ../../../../dist/include/webshell ../../../../dist/include/necko ../../../../dist/include/widget ../../../../dist/include/dom ../../../../dist/include/gfx ../../../../dist/include/layout ../../../../dist/include/content ../../../../dist/include/uriloader ../../../../dist/include/webbrwsr ../../../../dist/include/shistory ../../../../dist/include/embed_base ../../../../dist/include/pref ../../../../dist/include/windowwatcher ../../../../dist/include/mpfilelocprovider ../../../../dist/include ../../../../dist/include/nspr";
-				LIBRARY_SEARCH_PATHS = "../../../../dist/bin ../../../../dist/lib";
+				LIBRARY_SEARCH_PATHS = "../../../../dist/bin ../../../../dist/lib ../../../../dist/Embed";
 				OPTIMIZATION_CFLAGS = "-O2";
-				OTHER_CFLAGS = "-fno-rtti \"-DOSTYPE=\\\"Darwin1.4\\\"\" \"-DOSARCH=\\\"Darwin\\\"\"";
+				OTHER_CFLAGS = "-fno-rtti -fno-exceptions -fpascal-strings -fshort-wchar -DOSTYPE=\\\"Darwin1.4\\\" -DOSARCH=\\\"Darwin\\\" -DIBMBIDI";
 				OTHER_LDFLAGS = "-lxpcom -lplds4 -lplc4 -lnspr4 -lpthread -lm";
 				PREFIX_HEADER = "../../../../mozilla-config.h";
 				PRODUCT_NAME = CHBrowserView;
 				SECTORDER_FLAGS = "";
+				USE_GCC3_PFE_SUPPORT = NO;
 				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas -Wall -Wconversion -Wpointer-arith -Wbad-function-cast -Wcast-align -Woverloaded-virtual -Wsynth -Wno-long-long";
 				WRAPPER_EXTENSION = framework;
 			};
@@ -267,6 +268,7 @@
 				F57D38990330DAB701026D5D,
 				F52978A50371981701026DCE,
 				F6BA6D4401B2115301A962F7,
+				3FA6DEB1042FA53F0002AD8F,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -310,6 +312,22 @@
 //102
 //103
 //104
+//3F0
+//3F1
+//3F2
+//3F3
+//3F4
+		3FA6DEB1042FA53F0002AD8F = {
+			isa = PBXFileReference;
+			name = libxpcombase_s.a;
+			path = ../../../../xpcom/base/libxpcombase_s.a;
+			refType = 2;
+		};
+//3F0
+//3F1
+//3F2
+//3F3
+//3F4
 //F50
 //F51
 //F52
