@@ -3170,8 +3170,8 @@ esac
 
 MOZ_ARG_ENABLE_BOOL(strip-libs,
 [  --enable-strip-libs     Enable stripping of .so and .a libs ],
-  [ MOZ_POST_DSO_LIB_COMMAND=strip
-    MOZ_POST_PROGRAM_COMMAND=strip ])
+  [ MOZ_POST_DSO_LIB_COMMAND='$(STRIP)'
+    MOZ_POST_PROGRAM_COMMAND='$(STRIP)' ])
 
 dnl ========================================================
 dnl =
