@@ -59,7 +59,7 @@ public:
     nsIDocument * aDoc,
     nsIDOMXULCommandDispatcher ** aDispatcher)=0;
 
-  /* from nsIBaseWindow
+  /* from nsIBaseWindow */
   /* void setPositionAndSize (in long x, in long y, in long cx, in long cy, in boolean fRepaint); */
   NS_IMETHOD SetPositionAndSize(PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy, PRBool fRepaint) = 0;
 
