@@ -387,18 +387,6 @@
     {0xab, 0x1d, 0x5e, 0x68, 0xa9, 0xf4, 0x5f, 0x08} \
 }
 
-#define NS_FILETRANSPORTSERVICE_CLASSNAME \
-    "nsFileTransportService"
-#define NS_FILETRANSPORTSERVICE_CONTRACTID \
-    "@mozilla.org/network/file-transport-service;1"
-#define NS_FILETRANSPORTSERVICE_CID                  \
-{ /* 2bb2b250-ea35-11d2-931b-00104ba0fd40 */         \
-    0x2bb2b250,                                      \
-    0xea35,                                          \
-    0x11d2,                                          \
-    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
-}
-
 #define NS_LOCALFILEINPUTSTREAM_CLASSNAME \
     "nsFileInputStream"
 #define NS_LOCALFILEINPUTSTREAM_CONTRACTID \
