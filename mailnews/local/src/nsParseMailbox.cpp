@@ -392,7 +392,7 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 //				return NS_MSG_NOT_A_MAIL_FOLDER; /* #### NOT_A_MAIL_FILE */
 		}
 	}
-	m_graph_progress_received += lineLength;
+//	m_graph_progress_received += lineLength;
 
 	// mailbox parser needs to do special stuff when it finds an envelope
 	// after parsing a message body. So do that.
