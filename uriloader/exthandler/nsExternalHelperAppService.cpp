@@ -66,7 +66,13 @@ static PRBool DeleteEntry(nsHashKey *aKey, void *aData, void* closure);
 static nsDefaultMimeTypeEntry defaultMimeEntries [] = 
 {
   { TEXT_PLAIN, "txt,text", "Text File", 'TEXT', 'ttxt' },
+#if defined(VMS)
+  { APPLICATION_OCTET_STREAM, "exe,bin,sav,bck,pcsi,dcx_axpexe,dcx_vaxexe,sfx_axpexe,sfx_vaxexe", "Binary Executable", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
+#else
   { APPLICATION_OCTET_STREAM, "exe,bin", "Binary Executable", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
+#endif
+
+
   { TEXT_HTML, "htm,html,shtml,ehtml", "Hyper Text Markup Language", PRUint32(0x3F3F3F3F), PRUint32(0x3F3F3F3F) },
   { TEXT_RDF, "rdf", "Resource Description Framework", 'TEXT','ttxt' },
   { TEXT_XUL, "xul", "XML-Based User Interface Language", 'TEXT', 'ttxt' },
@@ -592,6 +598,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
     return aChannel->Cancel(NS_BINDING_ABORTED);
 
   nsresult rv = SetUpTempFile(aChannel);
+  ExtractSuggestedFileNameFromChannel(aChannel); 
 
   // now that the temp file is set up, find out if we need to invoke a dialog asking the user what
   // they want us to do with this content...
