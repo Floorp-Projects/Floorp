@@ -1373,6 +1373,34 @@ nsComputedDOMStyle::GetOutlineStyle(nsIFrame *aFrame,
 }
 
 nsresult
+nsComputedDOMStyle::GetOutlineRadiusBottomLeft(nsIFrame *aFrame,
+                                              nsIDOMCSSValue** aValue)
+{
+  return GetOutlineRadiusFor(NS_SIDE_LEFT, aFrame, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetOutlineRadiusBottomRight(nsIFrame *aFrame,
+                                               nsIDOMCSSValue** aValue)
+{
+  return GetOutlineRadiusFor(NS_SIDE_BOTTOM, aFrame, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetOutlineRadiusTopLeft(nsIFrame *aFrame,
+                                           nsIDOMCSSValue** aValue)
+{
+  return GetOutlineRadiusFor(NS_SIDE_TOP, aFrame, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetOutlineRadiusTopRight(nsIFrame *aFrame,
+                                            nsIDOMCSSValue** aValue)
+{
+  return GetOutlineRadiusFor(NS_SIDE_RIGHT, aFrame, aValue);
+}
+
+nsresult
 nsComputedDOMStyle::GetOutlineColor(nsIFrame *aFrame,
                                     nsIDOMCSSValue** aValue)
 {
@@ -1395,6 +1423,44 @@ nsComputedDOMStyle::GetOutlineColor(nsIFrame *aFrame,
     }
 
     val->SetColor(rgb);
+  }
+
+  return CallQueryInterface(val, aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetOutlineRadiusFor(PRUint8 aSide, nsIFrame *aFrame,
+                                        nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleOutline *outline = nsnull;
+  GetStyleData(eStyleStruct_Outline, (const nsStyleStruct*&)outline, aFrame);
+
+  if (outline) {
+    nsStyleCoord coord;
+    outline->mOutlineRadius.Get(aSide, coord);
+
+    switch (coord.GetUnit()) {
+      case eStyleUnit_Coord:
+        val->SetTwips(coord.GetCoordValue());
+        break;
+      case eStyleUnit_Percent:
+        if (aFrame) {
+          val->SetTwips(coord.GetPercentValue() * aFrame->GetSize().width);
+        } else {
+          val->SetPercent(coord.GetPercentValue());
+        }
+        break;
+      default:
+#ifdef DEBUG_ComputedDOMStyle
+        NS_WARNING("double check the outline radius");
+#endif
+        break;
+    }
+  } else {
+    val->SetTwips(0);
   }
 
   return CallQueryInterface(val, aValue);
@@ -3305,24 +3371,8 @@ nsComputedDOMStyle::GetBorderRadiusFor(PRUint8 aSide, nsIFrame *aFrame,
 
   if (border) {
     nsStyleCoord coord;
-    switch (aSide) {
-      case NS_SIDE_TOP:
-        border->mBorderRadius.GetTop(coord);
-        break;
-      case NS_SIDE_BOTTOM:
-        border->mBorderRadius.GetBottom(coord);
-        break;
-      case NS_SIDE_LEFT:
-        border->mBorderRadius.GetLeft(coord);
-        break;
-      case NS_SIDE_RIGHT:
-        border->mBorderRadius.GetRight(coord);
-        break;
-      default:
-        NS_WARNING("double check the side");
-        break;
-    }
-
+    border->mBorderRadius.Get(aSide, coord);
+    
     switch (coord.GetUnit()) {
       case eStyleUnit_Coord:
         val->SetTwips(coord.GetCoordValue());
@@ -3692,6 +3742,10 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_color,            OutlineColor),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_style,            OutlineStyle),
     COMPUTED_STYLE_MAP_ENTRY(_moz_outline_width,            OutlineWidth),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomLeft, OutlineRadiusBottomLeft),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_bottomRight,OutlineRadiusBottomRight),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topLeft,    OutlineRadiusTopLeft),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_outline_radius_topRight,   OutlineRadiusTopRight),
     COMPUTED_STYLE_MAP_ENTRY(user_focus,                    UserFocus),
     COMPUTED_STYLE_MAP_ENTRY(user_input,                    UserInput),
     COMPUTED_STYLE_MAP_ENTRY(user_modify,                   UserModify),
