@@ -29,7 +29,6 @@ var RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
 
 function TopLevelDrag ( event )
 {
-  dump("TOP LEVEL bookmarks window got a drag");
   return(true);
 }
 
@@ -73,14 +72,12 @@ function BeginDragTree ( event )
   {
 	id = event.target.parentNode.parentNode.getAttribute("id");
   }
-  dump("\n    ID: " + id);
 
   var parentID = event.target.parentNode.parentNode.parentNode.parentNode.getAttribute("ref");
   if (!parentID || parentID == "")
   {
 	parentID = event.target.parentNode.parentNode.parentNode.parentNode.getAttribute("id");
   }
-  dump("    Parent ID: " + parentID);
 
   var trueID = id;
   if (parentID != null)
@@ -103,13 +100,11 @@ function BeginDragTree ( event )
   if (target) target = target.QueryInterface(Components.interfaces.nsIRDFResource);
   if (target) target = target.Value;
   if ((!target) || (target == "")) {dump("BAD\n"); return(false);}
-  dump("    Type: '" + target + "'");
 
   if ((target != NC_NS + "BookmarkSeparator") &&
     (target != NC_NS + "Bookmark") &&
     (target != NC_NS + "Folder")) return(false);
 
-dump("genData is " + genData.data + " len is " + genData.data.length + "\n");
   trans.setTransferData ( "moz/rdfitem", genData, genData.data.length * 2);  // double byte data
   trans.setTransferData ( "text/unicode", genDataURL, genDataURL.data.length * 2);  // double byte data
 
@@ -347,15 +342,6 @@ function DropOnTree ( event )
         sourceID = sourceID.substr(0, separator);
     }
 
-    dump("    Node #" + i + ": drop '" + sourceID + "'\n");
-    dump("             from container '" + parentID + "'\n");
-    dump("             action = '" + dropAction + "'\n");
-    dump("             target = '" + targetID + "'\n");
-    if (name)
-    {
-        dump("             name = '" + name + "'\n");
-    }
-
     var sourceNode = RDF.GetResource(sourceID, true);
     if (!sourceNode)  continue;
 
@@ -378,7 +364,6 @@ function DropOnTree ( event )
     {
         // set default bookmark type
         Bookmarks.Assert(sourceNode, typeRes, bmTypeRes, true);
-        dump("Setting default bookmark type\n");
     }
 
     if ((dropAction == "before") || (dropAction == "after"))
@@ -468,7 +453,6 @@ function DropOnTree ( event )
     if (remote)
     {
       remote.Flush();
-      dump("Wrote out bookmark changes.\n");
     }
   }
 
