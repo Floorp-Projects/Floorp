@@ -1150,6 +1150,20 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 // stop binding is a "notification" informing us that the stream associated with aURL is going away. 
 NS_IMETHODIMP nsNNTPProtocol::OnStopRequest(nsIRequest *request, nsISupports * aContext, nsresult aStatus)
 {
+    // If failed, remove incomplete cache entry (and it'll be reloaded next time).
+    if (NS_FAILED(aStatus) && m_runningURL)
+    {
+#ifdef DEBUG_CAVIN
+        printf("*** Status failed in nsNNTPProtocol::OnStopRequest(), so clean up cache entry for the running url.");
+#endif
+        nsCOMPtr <nsICacheEntryDescriptor> memCacheEntry;
+        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+        if (mailnewsurl)
+          mailnewsurl->GetMemCacheEntry(getter_AddRefs(memCacheEntry));
+        if (memCacheEntry)
+          memCacheEntry->Doom();
+    }
+
     nsMsgProtocol::OnStopRequest(request, aContext, aStatus);
 
     // nsMsgProtocol::OnStopRequest() has called m_channelListener. There is
