@@ -227,7 +227,9 @@ foreach my $ref (@checklist) {
     my ($product, $component) = (@$ref);
     SendSQL("select count(*) from components where program = " . SqlQuote($product) . " and value = " . SqlQuote($component));
     if (FetchOneColumn() != 1) {
-        Alert("Bug(s) found with invalid product/component: $product/$component");
+        my $link = "buglist.cgi?product=" . url_quote($product) .
+            "&component=" . url_quote($component);
+        Alert(qq{Bug(s) found with invalid product/component: $product/$component (<a href="$link">bug list</a>)});
     }
 }
 
