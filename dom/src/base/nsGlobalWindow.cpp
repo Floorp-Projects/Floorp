@@ -47,6 +47,7 @@
 // Interfaces Needed
 #include "nsIBaseWindow.h"
 #include "nsICharsetConverterManager.h"
+#include "nsICodebasePrincipal.h"
 #include "nsIContent.h"
 #include "nsIContentViewerFile.h"
 #include "nsIContentViewerEdit.h"
@@ -2193,11 +2194,11 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
    if(aDialog && argc > 3)
       AttachArguments(*aReturn, argv+3, argc-3);
 
+   nsCOMPtr<nsIScriptSecurityManager> secMan;
    if(loadURL)
       {
       // Get security manager, check to see if URI is allowed.
       nsCOMPtr<nsIURI> newUrl;
-      nsCOMPtr<nsIScriptSecurityManager> secMan;
       nsCOMPtr<nsIScriptContext> scriptCX;
       nsJSUtils::nsGetStaticScriptContext(cx, (JSObject*)mScriptObject, 
                                      getter_AddRefs(scriptCX));
@@ -2214,8 +2215,27 @@ NS_IMETHODIMP GlobalWindowImpl::OpenInternal(JSContext* cx, jsval* argv,
       newDocShellItem->SetName(nsnull);
 
    nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(newDocShellItem));
-   if(loadURL)
-      webShell->LoadURL(mAbsURL.GetUnicode());
+   if (loadURL) {
+      nsCOMPtr<nsIPrincipal> principal;
+      if (NS_FAILED(secMan->GetSubjectPrincipal(getter_AddRefs(principal))))
+         return NS_ERROR_FAILURE;
+      nsCOMPtr<nsICodebasePrincipal> codebase = do_QueryInterface(principal);
+      if (codebase) {
+         nsCOMPtr<nsIURI> codebaseURI;
+         nsresult rv;
+         if (NS_FAILED(rv = codebase->GetURI(getter_AddRefs(codebaseURI))))
+            return rv;
+         nsXPIDLCString spec;
+         if (NS_FAILED(rv = codebaseURI->GetSpec(getter_Copies(spec))))
+            return rv;
+         nsAutoString referrer(spec);
+         webShell->LoadURL(mAbsURL.GetUnicode(), nsnull, PR_TRUE, 
+                           nsIChannel::LOAD_NORMAL, 0, nsnull, 
+                           referrer.GetUnicode());
+      } else {
+         webShell->LoadURL(mAbsURL.GetUnicode());
+      }
+   }
 
    if(windowIsNew)
       SizeOpenedDocShellItem(newDocShellItem, options, chromeFlags);

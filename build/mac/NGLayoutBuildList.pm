@@ -562,6 +562,11 @@ sub MakeResourceAliases()
 		_InstallResources(":mozilla:extensions:wallet:cookieviewer:MANIFEST_SKIN",			"$wallet_chrome_dir:skin:default:", 0);
 		_InstallResources(":mozilla:extensions:wallet:signonviewer:MANIFEST_SKIN",			"$wallet_chrome_dir:skin:default:", 0);
 	}
+    {
+		 my($caps_chrome_dir) = "$chrome_dir" . "caps";
+		_InstallResources(":mozilla:caps:src:MANIFEST_PROPERTIES",	"$caps_chrome_dir:locale:en-US:", 0);
+	}
+
 
 
 	# QA Menu

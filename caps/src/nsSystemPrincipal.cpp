@@ -14,10 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1999 Netscape Communications Corporation. All
+ * Copyright (C) 1999-2000 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
  */
 
 /* The privileged system principal. */
@@ -46,6 +47,12 @@ nsSystemPrincipal::ToString(char **result)
     nsAutoString buf("[System]");
     *result = buf.ToNewCString();
     return *result ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::ToUserVisibleString(char **result)
+{
+    return ToString(result);
 }
 
 NS_IMETHODIMP
@@ -105,6 +112,13 @@ nsSystemPrincipal::DisableCapability(const char *capability, void **annotation)
     // Can't disable the capabilities of the system principal.
     // XXX might be handy to be able to do so!
     return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP
+nsSystemPrincipal::ToStreamableForm(char **aResult)
+{
+    // The system principal should never be streamed out
+    return NS_ERROR_FAILURE; 
 }
 
 //////////////////////////////////////////

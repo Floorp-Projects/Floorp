@@ -14,10 +14,11 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All 
+ * Copyright (C) 1998-2000 Netscape Communications Corporation.  All 
  * Rights Reserved.
  *
  * Contributor(s):
+ * Norris Boyd
  */
 
 /* describes principals for use with signed scripts */
@@ -41,13 +42,15 @@ public:
 
     NS_IMETHOD ToString(char **result);
 
+    NS_IMETHOD ToUserVisibleString(char **result);
+
     NS_IMETHOD Equals(nsIPrincipal *other, PRBool *result);
 
     NS_IMETHOD HashValue(PRUint32 *result);
 
     NS_IMETHOD CanEnableCapability(const char *capability, PRInt16 *result);
 
-    NS_IMETHOD Init(const char* data);
+    NS_IMETHOD InitFromPersistent(const char *name, const char* data);
 
     NS_IMETHOD Init(const char* aIssuerName, const char* aSerialNumber);
 

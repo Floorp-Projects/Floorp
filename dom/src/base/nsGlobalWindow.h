@@ -329,7 +329,7 @@ protected:
                            PRBool aReplace);
    nsresult GetSourceURL(JSContext* cx,
                         nsIURI** sourceURL);
-   nsresult CheckURL(nsIURI *url);
+   nsresult CheckURL(nsIURI *url, nsString &aReferrerResult);
 
    nsIDocShell *mDocShell; // Weak Reference
    void *mScriptObject;

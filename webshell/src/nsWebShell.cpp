@@ -2216,7 +2216,8 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   /* Add the page to session history */
   if (aModifyHistory && shist && (!isMail))  {
         PRInt32  ret;
-        ret = shist->Add(spec, this);
+        nsCAutoString referrer(aReferrer);
+        ret = shist->Add(spec, referrer, this);
   }
 
   nsCOMPtr<nsIWebShell> parent;
