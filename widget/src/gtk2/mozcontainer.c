@@ -226,6 +226,8 @@ moz_container_init (MozContainer *container)
        backend so for widgets we just use that colormap instead of the
        default one. */
     gtk_widget_set_colormap(GTK_WIDGET(container), gdk_rgb_get_colormap());
+
+    container->drawing_areas = NULL;
 }
 
 void
@@ -444,3 +446,23 @@ moz_container_add(GtkContainer *container, GtkWidget *widget)
     moz_container_put(MOZ_CONTAINER(container), widget, 0, 0);
 }
 
+GSList*
+moz_container_get_drawing_areas (MozContainer *container)
+{
+    return container->drawing_areas;
+}
+
+void
+moz_container_add_drawing_area (MozContainer *container,
+                                struct _MozDrawingarea *area)
+{
+    container->drawing_areas = g_slist_prepend (container->drawing_areas,
+                                                area);
+}
+
+void
+moz_container_remove_drawing_area (MozContainer *container,
+                                   struct _MozDrawingarea *area)
+{
+    container->drawing_areas = g_slist_remove (container->drawing_areas, area);
+}
