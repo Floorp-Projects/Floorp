@@ -25,9 +25,9 @@
 -->
 
 <!DOCTYPE dialog [
-  <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
+<!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
   %brandDTD;
-  <!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
+<!ENTITY % browserDTD SYSTEM "chrome://browser/locale/browser.dtd" >
 %browserDTD;
 <!ENTITY % globalRegionDTD SYSTEM "chrome://global-region/locale/region.dtd">
 %globalRegionDTD;
@@ -36,6 +36,7 @@
 ]>
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/content/customizeToolbar.css" type="text/css"?>
 
 <dialog id="main-window" onload="buildDialog()"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -43,5 +44,30 @@
 <script type="application/x-javascript" src="chrome://browser/content/customizeToolbar.js"/>
   
 <toolbox style="margin:5px;" id="cloned-bar-container"/>
+
+<separator class="groove"/>
+
+<description>
+Drag your favorite item into the toolbar above:
+</description>
+
+<vbox style="overflow:auto; margin:0px 15px 10px 15px" flex="1" id="palette-box"/>
+
+<separator class="groove"/>
+
+<box align="center">
+<label value="Show:"/>
+<menulist>
+  <menupopup>
+     <menuitem label="Icons and Text"/>
+     <menuitem label="Icons"/>
+     <menuitem label="Text"/>
+  </menupopup>
+</menulist>
+<checkbox label="Use Small Icons"/>
+<button label="Restore Default Set"/>
+</box>
+
+<separator class="groove"/>
 
 </dialog>
