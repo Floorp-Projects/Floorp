@@ -453,6 +453,8 @@ nsMultiMixedConv::OnDataAvailable(nsIRequest *request, nsISupports *context,
             nsCRT::memcpy(tmp+mTokenLen+1, cursor, read);
             nsMemory::Free(buffer);
             buffer = tmp;
+            // need to reset cursor to the buffer again (bug 100595)
+            cursor = buffer;
         }
     }
 
